@@ -50,12 +50,24 @@ physics :{
             plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellAux", "WireCellMatch", "WireCellAIML"]
 
             # wclsTensorSetLabeler reads MCTruth/MCParticle/SimEnergyDeposit from
-            # the art event (MC only; the data fcl overrides inputers without it).
+            # the art event.  TWO instances (docs/5-pr-chain-in-1step sec 6.7):
+            # labeler_truth runs BEFORE the PR node and owns the truth
+            # association; labeler_tagger runs AFTER it and emits only the
+            # tagger verdict Bee sets.  Both must be listed here -- each needs
+            # its own visit(art::Event&) to see run/subrun/event.
             inputers: [
                 "wclsCookedFrameSource:sigs"
                 , "wclsOpFlashSource:tpc0"
                 , "wclsOpFlashSource:tpc1"
-                , "wclsTensorSetLabeler:clus_all_apa"
+                , "wclsTensorSetLabeler:labeler_truth"
+                , "wclsTensorSetLabeler:labeler_tagger"
+                # RSE metadata attachers.  Each MUST be listed here or its
+                # visit(art::Event&) never fires and it passes tensors through
+                # with no RSE (it warns).  One per MultiAlgBlobClustering whose
+                # run/subrun/event must be correct.
+                , "wclsTensorSetMetadataAttacher:rse_apa0"
+                , "wclsTensorSetMetadataAttacher:rse_apa1"
+                , "wclsTensorSetMetadataAttacher:rse_all_apa"
                       ]
 
             # outputers: ["wclsNumpyFrameSaver:signal"]

@@ -76,8 +76,9 @@ hr{border:0;border-top:1px solid var(--rule);margin:2.5em 0}
 <p class="lede">A component-level map of Xin's pattern-recognition (PR) chain, what our 1-step
 <code>wcls-img-clus-matching-xin</code> job already runs, and exactly what is missing to close the gap.</p>
 <p class="meta">Reference: <code>sbnd_xin/docs/pr/41_pr-chain-overview.md</code> ·
-toolkit <code>ap-yuhw</code> @ <code>06a02ccb</code> · install <code>/exp/sbnd/app/users/yuhw/opt</code>
-(libs dated 2026-08-06) · written 2026-08-17</p>
+toolkit <code>ap-yuhw</code> @ <code>598d2195</code> (merged <code>origin/apply-pointcloud</code>
+2026-08-17, 143 commits, zero conflicts) · install <code>/exp/sbnd/app/users/yuhw/opt</code>
+rebuilt 2026-08-17 · written 2026-08-17, iteration 2</p>
 
 <div class="key">
 <strong>The headline.</strong> Our 1-step job <em>already instantiates the PR node</em> — the same
@@ -85,9 +86,85 @@ toolkit <code>ap-yuhw</code> @ <code>06a02ccb</code> · install <code>/exp/sbnd/
 executes 8 of its 15 production stages. Turning on the full chain (neutrino tagger, both BDT scorers,
 the ROOT writers) is a <strong>5-name edit to one list</strong> in
 <code>wcls-img-clus-matching-xin.jsonnet</code>. Every C++ component it needs is compiled into our
-installed <code>libWireCellClus.so</code> / <code>libWireCellRoot.so</code>. Three environment-level things
-are genuinely missing, and they are listed in <a href="#gaps">§7</a>.
+installed <code>libWireCellClus.so</code> / <code>libWireCellRoot.so</code>, verified by a
+1-event smoke test on the rebuilt stack (<a href="#build">§0</a>). The remaining gaps are
+environment-level, not code-level, and are listed in <a href="#gaps">§7</a>.
 </div>
+
+<h2 id="build">0. Build state (2026-08-17 merge + rebuild)</h2>
+
+<p><code>ap-yuhw</code> was <strong>5 ahead / 143 behind</strong> <code>origin/apply-pointcloud</code>.
+Since 4 of our 5 commits were already published on <code>fork/ap-yuhw</code> (<code>13ed5167</code>),
+integrating by <strong>merge, not rebase</strong> — a rebase would have rewritten published history.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Step</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Safety tag</td><td class="mono">pre-merge-20260817 → 06a02ccb</td></tr>
+<tr><td>Merge <code>origin/apply-pointcloud</code></td>
+    <td><strong>zero conflicts</strong> → merge commit <code>598d2195</code>. Only 3 of our 11 files had
+        any upstream churn (<code>clus.jsonnet</code>, <code>MultiAlgBlobClustering.{h,cxx}</code>); our
+        <code>sp/nf/nf-data/chndb-base</code> jsonnet, <code>Microboone.{h,cxx}</code> and
+        <code>DNNROIFinding.{h,cxx}</code> were untouched upstream. All 5 commits verified still
+        ancestors of HEAD; <code>git diff pre-merge..HEAD</code> on our files is <em>empty</em></td></tr>
+<tr><td>WCT <code>./wcb -j16 --notests install</code></td>
+    <td>success, 7 min 18 s. <code>opt/lib/libWireCellClus.so</code> 489 MB,
+        <code>libWireCellRoot.so</code> 87 MB. <code>miniz.h</code> landmine already satisfied</td></tr>
+<tr><td>larwirecell <code>make -j16 install</code></td>
+    <td>compile 100%, then the documented <strong><code>/usr/local</code> prefix trap</strong>
+        (<code>CMAKE_INSTALL_PREFIX</code> is read-only, so <code>install</code> fails <em>after</em> a
+        clean build). Libs taken from <code>$MRB_BUILDDIR/larwirecell/lib/</code> as the build doc
+        prescribes</td></tr>
+<tr><td>Hand-copy to <code>opt</code></td>
+    <td><code>libWireCellLarsoft.so</code>, <code>libWireCellQLMatch.so</code>,
+        <code>libWireCellAIML.so</code> → <code>opt/larwirecell/v10_01_28/slf7.x86_64.e26.prof/lib/</code>.
+        Every <code>libWireCell*</code> dependency resolves under <code>opt/lib</code>, no cvmfs
+        leakage</td></tr>
+<tr><td><strong>Smoke test</strong></td>
+    <td><code>lar -n 1</code> on a production Gen2 MC reco1 file → <strong>rc=0, 15.0 s/event</strong>,
+        peak RSS 1.65 GB. <code>mabc.zip</code> 3.68 MB / 17 entries,
+        <code>mabc-pr.zip</code> 139 KB, <code>nugraph.h5</code> 917 KB,
+        <code>trash-all-apa.tar.gz</code> 1.20 MB. Taggers active
+        (<code>TaggerCheckTGM: cluster 3 → TGM=false</code>,
+        <code>TaggerCheckSTM: cluster 3 → STM=0</code>)</td></tr>
+</tbody></table>
+</div>
+
+<p class="note"><strong>Watch out for the dead sample symlinks.</strong> The first smoke attempt exited
+<code>rc=24</code> with <em>"Input file not found"</em> —
+<code>standalone-sample/2025f-mc.root</code> and <code>2025f-data.root</code> are <strong>broken
+symlinks</strong>, their target directory <code>/exp/sbnd/app/users/yuhw/2025-fall-prod-sample/</code>
+having been cleaned. Only <code>prabhjot.root</code> and <code>2025f-mc-resim.root</code> still
+resolve. This was not a build failure — the entire WCT graph configured and every component finalized
+cleanly before art reported the missing input. Any doc or script still pointing at those two symlinks
+will fail this way.</p>
+
+<div class="key">
+<strong>Incidental confirmation of <a href="#survive">§6</a>.</strong> The smoke-test log says
+<code>TaggerCheckTGM: beam_window_only [0.200, 2.200) us: 1 main(s) evaluated, 8 out of window</code>
+and <code>skipped 2 out-of-scope main cluster(s)</code> — and the resulting
+<code>clustering-global</code> Bee layer still contains those clusters. Out-of-window mains are
+<em>skipped</em>, not discarded, exactly as the source reading predicted.
+</div>
+
+<h4>What the merge brought that matters here</h4>
+<ul>
+<li><strong><code>PrDisplayDump</code></strong> — closes G5 (see <a href="#gaps">§7</a>);
+    <code>pr_display</code> is now the 17th <code>cm_by_name</code> entry.</li>
+<li>New neutrino-PR internals: <code>NeutrinoGraphAudit</code>, <code>NeutrinoRoughPathProbe</code>,
+    <code>NeutrinoSteinerGapGraph</code>, <code>connect_graph_relaxed_strict</code>, plus ~24 new
+    <code>doctest_*</code> suites (<code>pr65</code>, <code>pr74</code>, <code>mvfit_robust</code>,
+    <code>vertex_kink_snap</code>, <code>steiner_gap_penalty</code>, …).</li>
+<li><code>opt/python/SCN_Vertex.py</code> + <code>opt/python/SCN/DeepVtx.py</code> are now
+    <em>installed</em> by <code>wcb</code> (relevant to G2).</li>
+<li>The 15-name production PR pipeline and the 10-name default in
+    <code>wct-pr-perevt.jsonnet</code> are <strong>unchanged</strong> — so
+    <a href="#cm-pr">§3.3</a> still holds as written.</li>
+</ul>
+
+<p class="small">Not pushed. <code>598d2195</code> and <code>06a02ccb</code> are local; roll back with
+<code>git reset --hard pre-merge-20260817</code>.</p>
 
 <h2 id="chains">1. The two chains</h2>
 
@@ -285,8 +362,10 @@ production default in <code>wct-pr-perevt.jsonnet</code> itself is 10 (it includ
   <td>appends <code>T_tagger</code> + <code>T_kine</code> to <code>tracking-pr.root</code> in <strong>UPDATE</strong> mode → must be last</td></tr>
 <tr><td>—</td><td class="mono">stm_magnify</td><td class="mono">SbndMagnifyTrackingVisitor</td><td><span class="tag warn">opt</span></td>
   <td>diagnostic STM-fit dump (<code>tracking-stm.root</code>); needs <code>save_stm_fit=true</code>. Xin's batch driver deliberately omits it</td></tr>
-<tr><td>—</td><td class="mono">pr_display</td><td class="mono">PrDisplayDump</td><td><span class="tag miss">absent</span></td>
-  <td>Bokeh event-display dump (<code>calib-pr-evt&lt;ID&gt;.json</code>). <strong>Not present in our toolkit checkout at all</strong> — see <a href="#gaps">§7 G5</a></td></tr>
+<tr><td>—</td><td class="mono">pr_display</td><td class="mono">PrDisplayDump</td><td><span class="tag warn">opt</span></td>
+  <td>Bokeh event-display dump (<code>calib-pr-evt&lt;ID&gt;.json</code>). Read-only, default OFF.
+      <strong>Available since the 2026-08-17 merge</strong> — appending it must leave every other
+      output hash-identical, which is doc pr/26's own gate</td></tr>
 </tbody></table>
 </div>
 
@@ -437,7 +516,287 @@ It is why every PR pipeline must start with <code>switch_scope</code>, and why
 </tbody></table>
 </div>
 
-<h2 id="gaps">6. Verified gaps and blockers</h2>
+<h2 id="survive">6. Does the PR chain throw away out-of-beam-window clusters?</h2>
+
+<p><strong>No. Nothing in the PR chain deletes a cluster or a blob on beam-window grounds.</strong>
+Three separate mechanisms narrow the population, they are easy to conflate, and only one of them
+touches an output file — and that one filters by <em>active volume</em>, not by time.</p>
+
+<h3>6.1 <code>switch_scope</code> — a volume split, and the only stage that restructures the tree</h3>
+<p><code>clustering_switch_scope.cxx</code> corrects every blob's 3-D points, then calls
+<code>live_grouping.separate(cluster, filter_results, true)</code>, splitting each cluster in two:
+<code>id=1</code> = at least one corrected point lands inside the active detector volume,
+<code>id=0</code> = none do. <strong>Both children stay in the grouping</strong>, distinguished only by a
+<code>scope_filter</code> boolean. Blob count is conserved; the per-blob provenance arrays
+(<code>real_cluster_id</code>, <code>assoc_cluster_id</code>, …) are row-partitioned to follow their
+blobs.</p>
+<p class="note"><strong>This has nothing to do with the beam window.</strong> An out-of-time cosmic
+sitting fully inside the TPC is <code>id=1</code>, in scope, and fully retained. What
+<code>scope_filter=false</code> marks are the geometrically out-of-volume shards — which is why the
+taggers use <code>require_in_scope</code>: on a 10-event sample those shards were 43% of all
+"mains" and tagged TGM at 85% vs 44% for real clusters.</p>
+
+<h3>6.2 The <code>beam_window_only</code> gates are <code>continue;</code> statements</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Component</th><th>What the gate does</th><th>Grouping touched?</th></tr></thead>
+<tbody>
+<tr><td class="mono">TaggerCheckTGM<br>TaggerCheckSTM<br>TaggerCheckFC</td>
+  <td><code>if (t0 &lt; low || t0 &gt;= high) { … continue; }</code> inside the main-cluster loop, then
+      an INFO line "<em>N main(s) evaluated, M out of window</em>"</td>
+  <td><span class="tag have">no</span></td></tr>
+<tr><td class="mono">TaggerCheckNeutrino</td>
+  <td>same <code>continue;</code> on <code>cluster_t0</code>. Grep for <code>separate(</code> /
+      <code>remove</code> / <code>destroy</code> / <code>.erase(</code> in
+      <code>TaggerCheckNeutrino.cxx</code> returns <strong>nothing at all</strong> — it is a pure
+      annotator</td>
+  <td><span class="tag have">no</span></td></tr>
+<tr><td class="mono">CreateSteinerGraph</td>
+  <td>builds a local <code>std::vector&lt;Cluster*&gt; beam_clusters</code> (in-window mains + companions
+      sharing their <code>matched_flash_gid</code>) and does
+      <code>filtered_clusters.swap(beam_clusters)</code>. Out-of-window clusters simply get no Steiner
+      graph — a compute saving. Logs "<em>kept N of M cluster(s)</em>"</td>
+  <td><span class="tag have">no</span></td></tr>
+<tr><td class="mono">ClusteringProtectBundle</td>
+  <td>gate decides <em>which</em> clusters are candidates for splitting; the rest are skipped</td>
+  <td><span class="tag have">no</span></td></tr>
+</tbody></table>
+</div>
+<p class="note"><strong>The consequence to keep in mind is semantic, not lossy.</strong> An
+out-of-window cluster emerges from the PR stage <em>un-evaluated</em>, which is not the same as
+<em>evaluated and found not to be a cosmic</em>. Anything downstream reading
+<code>flag_TGM</code>/<code>STM</code>/<code>FC</code> must not read "no flag" as "not a cosmic". This is
+already how <code>nusel_extract.py</code> behaves — it emits <code>not-tagged</code> for out-of-window
+bundles and <code>-1</code> for an absent FC verdict.</p>
+
+<h3>6.3 The splitters only ever add</h3>
+<p><code>unmerge_bundle</code>, <code>unmerge_assoc</code> and <code>protect_bundle</code> all call
+<code>grouping.separate(cluster, groups)</code> with <strong><code>remove=false</code></strong> — the
+largest part stays put, fragments become new children. Each carries an explicit
+<code>"BLOB LOSS in separate(): {} + {} != {}"</code> error check on the sums. The only
+<code>destroy_child()</code> in the whole PR pipeline is in <code>CreateSteinerGraph</code>, and it
+destroys the <em>temporary retiled copy</em> that same function just created
+(<code>CreateSteinerGraph.cxx:241,254,285</code>) — never a source cluster.</p>
+
+<h3>6.4 Where things <em>do</em> disappear: the Bee display, by volume</h3>
+<p><code>MultiAlgBlobClustering</code>'s <code>bee_points_sets</code> entries take a
+<code>filter</code> that <strong>defaults to 1</strong>
+(<code>MultiAlgBlobClustering.cxx:253,1787</code>): dump a cluster only if its
+<code>scope_filter</code> is true. <code>0</code> = dump everything, <code>-1</code> = inverse.</p>
+<p>So <code>mabc-pr.zip</code>'s <code>clustering</code> layer holds exactly the in-scope set — which is
+precisely why <code>nusel_extract.py</code> reads that zip to recover the scope-filter state
+(it is runtime-only and never persisted). <strong>Out-of-beam-window cosmics are still in the Bee
+dump</strong>, as long as they are inside the active volume; what is dropped are the out-of-volume
+shards from §6.1.</p>
+<p>Separately, the three PR-only Bee layers (<code>track_fit</code>, <code>shower_track</code>,
+<code>vertices</code>) set <code>require_pr_graph: true</code>, so on an event where the neutrino tagger
+selects no candidate those layers come out <em>empty</em> rather than falling back to dumping the whole
+clustering in raw coordinates (doc pr/3 §9).</p>
+
+<h3>6.5 The tensor output is unfiltered</h3>
+<p><code>as_tensors(*node, outpath(...))</code> at <code>MultiAlgBlobClustering.cxx:2701</code>
+serializes the whole grouping node. No scope filter, no beam-window filter. So both the pctree tarball
+<em>and</em> the in-memory edge to the next graph node carry <strong>every</strong> cluster — in or out
+of window, in or out of scope. Nothing is lost for any downstream consumer.</p>
+
+<div class="key">
+<strong>Net answer for the 1-step.</strong> Adding the PR stages is <em>additive</em> with respect to
+content: no cosmic is discarded. But the PR node is <em>not</em> transparent with respect to
+<strong>structure</strong> — <code>switch_scope</code>, <code>unmerge_bundle</code>,
+<code>unmerge_assoc</code> and <code>protect_bundle</code> all split clusters, and the MABC's
+<code>cluster_id_order: 'tree'</code> renumbers idents 1..N after every step. See §6.6, which is the
+one thing I would not have predicted.
+</div>
+
+<h3 id="labeler-order">6.6 The consequence that actually matters: the labeler sits downstream</h3>
+<p>Our graph is <code>clus_all_apa → pr_node → labeler → sink</code>. The
+<code>wclsTensorSetLabeler</code> therefore attaches truth to the <strong>post-PR, already-split and
+already-renumbered</strong> clustering — not to the all-APA one that <code>mabc.zip</code>'s
+<code>clustering-global</code> layer shows.</p>
+<p>That is true today with 8 PR stages. Adding <code>protect_bundle</code> splits more clusters, so
+<strong>cluster idents seen by the labeler — and by its <code>tagger_stm/tgm/fc</code> Bee sets — will
+move</strong>. Anything that joins truth labels to Bee cluster IDs across the existing 13,217-event
+run would need regenerating, not just extending.</p>
+<p>Two ways out, worth deciding before the pilot:</p>
+<ul>
+<li><strong>Move the labeler upstream</strong> of <code>pr_node</code> (<code>clus_all_apa → labeler →
+    pr_node</code>), so truth is attached to the stable all-APA clustering and the PR stage becomes a
+    pure consumer. Cleanest, and it makes truth labels independent of every PR knob.</li>
+<li><strong>Leave it downstream</strong> and accept that truth labels are PR-configuration-dependent.
+    Defensible if the point is to study tagger performance on the PR clustering itself.</li>
+</ul>
+<p class="small">Note this is a pre-existing property of the 1-step, not something the PR extension
+introduces — the extension just makes it bite harder.</p>
+
+<h3 id="two-labelers">6.7 Splitting the labeler in two — reuse, don't fork</h3>
+
+<p>The fix for §6.6 is two labeler nodes, one either side of <code>pr_node</code>.
+<strong>Reuse <code>TensorSetLabeler</code> with two configured instances; do not write a second C++
+module.</strong> It needs one small, surgical addition (~20 lines), against ~1,700 lines duplicated.</p>
+
+<h4>The component already does four separable jobs</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>Job</th><th>Reads</th><th>Belongs</th></tr></thead>
+<tbody>
+<tr><td><strong>J1</strong> truth association — writes <code>trackid</code> into each <em>blob's</em>
+        <code>"scalar"</code> local PC</td><td>depos + geometry</td><td><span class="tag have">before</span></td></tr>
+<tr><td><strong>J2</strong> <code>truth_per_track</code> tensor</td><td>MCParticles</td><td><span class="tag have">before</span></td></tr>
+<tr><td><strong>J3a</strong> Bee <code>truth_*</code> + <code>sed-*</code> sets</td><td>truth</td><td><span class="tag have">before</span></td></tr>
+<tr><td><strong>J3b</strong> Bee <code>tagger_{stm,tgm,fc,lm}</code> sets</td>
+    <td><code>cluster_scalar</code> → <code>flag_STM</code>/<code>flag_TGM</code>/<code>flag_FC</code>/<code>lm_flag</code></td>
+    <td><span class="tag add">after</span></td></tr>
+<tr><td><strong>J4</strong> nugraph HDF5</td><td>reco (+truth if sim)</td><td><span class="tag have">before</span></td></tr>
+</tbody></table>
+</div>
+<p>Only <strong>J3b</strong> needs the PR verdicts. The split is clean and follows the data.</p>
+
+<div class="key">
+<strong>Truth labels survive the PR splits automatically.</strong> J1 writes <code>trackid</code> into the
+<em>blob node's</em> <code>"scalar"</code> local PC, whereas <code>switch_scope</code> erases only the
+<em>cluster-level</em> <code>"perblob"</code> dataset. <code>separate()</code> moves blob nodes wholesale,
+so their node-local PCs travel with them through <code>unmerge_bundle</code>,
+<code>unmerge_assoc</code> and <code>protect_bundle</code> untouched. Putting the labeler before the PR
+node is therefore safe — no carry-list entry needed.
+</div>
+
+<p class="note"><strong>And it passes non-live tensors straight through</strong>
+(<code>TensorSetLabeler.cxx:1656-1662</code>): it re-serializes only
+<code>pointtrees/N/live</code> and copies every other tensor verbatim, so the <strong>dead grouping
+survives</strong> and <code>fiducialutils</code> downstream still gets what it needs. The labeler is
+safe to place mid-graph.</p>
+
+<h4>Three things break with two naive instances</h4>
+<ol>
+<li><strong>The tagger Bee set names are hardcoded</strong>
+    (<code>Bee::Points bpts_stm(m_bee_detector, "tagger_stm")</code>, <code>.cxx:1094-1100</code>) — not
+    derived from <code>bee_algorithm</code>. Both instances writing into the shared
+    <code>bee_sink</code> would emit two <code>data/N/N-tagger_stm.json</code> entries into one zip.
+    Instance A's copy would be all-zero verdicts, since the flags do not exist yet.</li>
+<li><strong>Instance B would destroy instance A's labels.</strong> The <code>trackid</code> write-back at
+    <code>.cxx:1190-1196</code> is <em>not</em> gated on <code>is_sim</code>: <code>int tid = -1;</code>,
+    then an empty projection loop, then an unconditional write. A second instance configured
+    <code>reality: "data"</code> would stamp <code>trackid = -1</code> over every blob A had labeled.
+    Configuring it <code>reality: "sim"</code> avoids that but re-runs the full depo projection —
+    paying the most expensive part of the labeler twice per event.</li>
+<li><strong><code>nugraph.h5</code> collision</strong> — already solvable, <code>hdf5_output</code> and
+    <code>hdf5_filename</code> are both per-instance config.</li>
+</ol>
+
+<h4>The minimal C++ addition</h4>
+<p>Everything else is already per-instance (<code>inpath</code>, <code>grouping</code>,
+<code>reality</code>, <code>bee_sink</code>, <code>hdf5_output</code>, <code>hdf5_filename</code>,
+<code>beam_window</code>, <code>tagger_coords</code>). Add two knobs, both defaulting to the current
+behaviour so every existing config stays byte-identical:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Knob</th><th>Default</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td class="mono">label_blobs</td><td class="mono">true</td>
+    <td><code>false</code> skips the depo projection <em>and</em> the <code>trackid</code> write-back —
+        fixes breakage 2 and makes instance B cheap</td></tr>
+<tr><td class="mono">bee_sets</td><td class="mono">["truth","sed","tagger"]</td>
+    <td>selects which Bee families this instance emits — fixes breakage 1</td></tr>
+</tbody></table>
+</div>
+
+<h4>Resulting configuration</h4>
+<pre><code>clus_all_apa ── labeler_truth ── pr_node ── labeler_tagger ── TensorFileSink
+
+labeler_truth   (A, before PR)        labeler_tagger  (B, after PR)
+  reality:      sim | data              reality:      sim | data
+  label_blobs:  true                    label_blobs:  false      &lt;-- new
+  bee_sets:     ["truth","sed"]         bee_sets:     ["tagger"] &lt;-- new
+  hdf5_output:  true                    hdf5_output:  false
+  bee_sink:     mabc_shared             bee_sink:     mabc_shared</code></pre>
+<p>Both stay registered as fcl inputers under distinct names
+(<code>wclsTensorSetLabeler:labeler_truth</code>, <code>...:labeler_tagger</code>), so each gets its own
+<code>visit(art::Event&amp;)</code>; B's returns early in data mode and is cheap in sim once
+<code>label_blobs=false</code>.</p>
+
+<div class="key">
+<strong>Bonus: this also opens the clean route for G3.</strong> The labeler already stamps the <em>true</em>
+RSE into its output tensor-set metadata (<code>.cxx:1685-1687</code>:
+<code>set_md["runNo"/"subRunNo"/"eventNo"] = m_run/m_sub/m_evt</code>). With instance A sitting
+<em>upstream</em> of <code>pr_node</code>, the PR MABC's input tensor set carries the real run/subrun/event.
+A <code>rse_from_metadata</code> option on MABC and the two ROOT visitors would then give
+<code>tracking-pr.root</code> and every Bee layer the correct RSE — <strong>no new component needed</strong>,
+and it repairs the two-run-numbers-in-one-zip problem from <a href="#g3">§7.1</a> at the same time.
+This supersedes option (d) there: cheaper, and it falls out of a reordering we want anyway.
+</div>
+
+<h3 id="two-labelers-done">6.8 Implemented and verified (2026-08-17)</h3>
+
+<p><span class="tag have">done</span> Both knobs and the rewiring are in. Files touched:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td class="mono">larwirecell/aiml/TensorSetLabeler.h</td>
+    <td>+4 members: <code>m_label_blobs</code>, <code>m_bee_truth</code>, <code>m_bee_sed</code>,
+        <code>m_bee_tagger</code></td></tr>
+<tr><td class="mono">larwirecell/aiml/TensorSetLabeler.cxx</td>
+    <td><code>configure()</code> parses <code>label_blobs</code> + <code>bee_sets</code> (throws on an
+        unknown family); <code>default_configuration()</code> advertises both; depo projection loop
+        gated; <code>trackid</code> write-back gated with a read-back <code>else</code> branch; Bee
+        write block split into three families</td></tr>
+<tr><td class="mono">sbnd/wcls-img-clus-matching-xin.jsonnet</td>
+    <td><code>labeler</code> → <code>labeler_common</code> + <code>labeler_truth</code> +
+        <code>labeler_tagger</code>; edges rewired to
+        <code>clus_all_apa → labeler_truth → pr_node → labeler_tagger → tail_dump</code></td></tr>
+<tr><td class="mono">sbnd/wcls-img-clus-matching-xin.fcl<br>sbnd/wcls-img-clus-matching-xin-data.fcl</td>
+    <td>inputer <code>wclsTensorSetLabeler:clus_all_apa</code> → the two named instances</td></tr>
+</tbody></table>
+</div>
+
+<h4>Verification — one MC event, against the single-labeler baseline</h4>
+<p>The per-instance log lines are the proof that both mechanisms work:</p>
+<pre><code>&lt;TensorSetLabeler:labeler_truth&gt;   projected 120102/120293 depos, labeled 2889/3044 blobs
+&lt;TensorSetLabeler:labeler_tagger&gt;  projected      0/120293 depos, labeled 2889/3044 blobs
+&lt;TensorSetLabeler:clus_all_apa&gt;    projected 120102/120293 depos, labeled 2889/3044 blobs   (baseline)</code></pre>
+<ul>
+<li><strong>projected 0</strong> — <code>label_blobs=false</code> skips the projection.</li>
+<li><strong>labeled 2889/3044 anyway</strong> — instance B <em>read back</em> the labels instance A wrote,
+    which proves they survived <code>switch_scope</code>, <code>unmerge_bundle</code>,
+    <code>unmerge_assoc</code> and <code>protect_bundle</code> intact, and were not overwritten.</li>
+</ul>
+
+<p><strong>Bee zip: 17 entries before, 17 after, zero duplicates, none added or lost.</strong>
+Per-layer MD5:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Layers</th><th>vs baseline</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>all 4 <code>tagger_*</code>, all 3 <code>sed-*</code>, <code>mc</code>,
+        <code>clustering</code>×2, <code>clustering-global</code>, <code>img-global</code>,
+        <code>op</code>, <code>channel-deadarea</code>×2 &nbsp;(<strong>15 of 17</strong>)</td>
+    <td><span class="tag have">byte-identical</span></td>
+    <td>instance B reproduces the verdicts exactly; the reordering does not touch reco output</td></tr>
+<tr><td><code>truth_trackid_labeled</code></td><td><span class="tag warn">reordered</span></td>
+    <td>15,009 points both; <strong>identical point multiset and identical cluster_id multiset</strong> —
+        only the emission order moved, because blob iteration follows cluster order</td></tr>
+<tr><td><code>truth_unlabeled</code></td><td><span class="tag add">changed, as intended</span></td>
+    <td>385 points both, identical point multiset, but <strong>9 distinct <code>cluster_id</code> →
+        6</strong>. This layer colors by reco cluster ident: post-PR those blobs were scattered across
+        9 clusters (ids 17, 20, … are split fragments), pre-PR they belong to 6 parents.
+        <strong>This is §6.6 made visible</strong> — the exact PR-configuration dependence the
+        reordering removes</td></tr>
+</tbody></table>
+</div>
+
+<p>Also confirmed: exactly one nugraph writer (<code>labeler_truth</code>, 1 event record); no labeler
+warnings or errors; pctree tarball unchanged in size. <strong>Cost: 15.0675 s → 15.0866 s per event,
++0.02 s (0.13%)</strong> — with <code>label_blobs=false</code> the second instance is essentially free,
+which is the whole point of gating the projection rather than just the writes.</p>
+
+<p class="note"><strong>Not yet re-verified:</strong> that a <em>single</em>-instance config with neither
+new key present is still byte-identical. The knobs default to the historical behaviour
+(<code>label_blobs=true</code>, all three Bee families on) and the gates are plain
+<code>if</code>s around unchanged code, but the baseline above was produced by the pre-change library,
+so this is reasoning rather than measurement. Worth one explicit A/B if any other chain uses this
+component.</p>
+
+<h2 id="gaps">7. Verified gaps and blockers</h2>
 
 <p>Everything below was checked against this machine, not inferred.</p>
 
@@ -451,56 +810,70 @@ It is why every PR pipeline must start with <code>switch_scope</code>, and why
       <code>UbooneNueBDTScorer</code>, <code>SbndPrMagnifyTrackingVisitor</code>,
       <code>UbooneTaggerOutputVisitor</code> in <code>libWireCellRoot.so</code>. The fcl already
       loads <code>WireCellRoot</code>. <strong>No rebuild needed.</strong></td></tr>
-<tr><td><strong>G1</strong></td><td>nue XGBoost weights</td><td><span class="tag miss">missing</span></td>
-  <td><code>uboone/weights/XGB_nue_seed2_0923.xml</code> is <strong>not in our
-      <code>wire-cell-data</code> clone</strong> (41 of the 42 named files are there;
-      <code>numu_scalars_scores_0923.xml</code> is present). <code>nue_bdt_scorer</code> will fail or
-      return a null <code>nue_score</code>. Fix: pull it into
-      <code>/exp/sbnd/app/users/yuhw/wire-cell-data</code> from Xin's
-      <code>$WCT_BASE/wire-cell-data</code>, or run numu-only first.</td></tr>
-<tr><td><strong>G2</strong></td><td>DL (SCN) neutrino vertex</td><td><span class="tag miss">unavailable</span></td>
-  <td>The <code>.pth</code> weights <em>are</em> present
-      (<code>uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth</code>) and <code>libWCPPyUtil.so</code> is
-      installed, but the Python path is dead: our container python is
-      <code>wire-cell-python/venv/bin/python3</code> <strong>3.9.15</strong> with
-      <strong>no <code>torch</code>, no <code>sparseconvnet</code>, no <code>SCN</code></strong>. Xin gets
-      these from <code>$WCT_BASE/local/python</code> on wcgpu1.
-      <code>NeutrinoVertexFinder.cxx:3715</code> catches the failure and WARNs
-      <code>"DL vertex failed: …"</code>, falling back to the geometric vertex — <strong>silently, per
-      event</strong>. Fix options: (a) accept geometric and set <code>dl_weights=''</code> explicitly so
-      the fallback is a decision not an accident; (b) install torch+sparseconvnet+SCN into a py3.9
-      venv and add <code>pyutil/python</code> to <code>PYTHONPATH</code> plus
-      <code>LD_PRELOAD=libpython3.9.so.1.0</code>. <strong>(a) for the first pass.</strong></td></tr>
-<tr><td><strong>G3</strong></td><td>RSE in the PR ROOT output</td><td><span class="tag warn">design gap</span></td>
-  <td><code>SbndPrMagnifyTrackingVisitor</code> reads <code>runNo</code>/<code>subRunNo</code>/<code>eventNo</code>
-      from <em>config only</em> — there is no <code>rse_from_ident</code> like the MABC nodes have. Our
-      1-step compiles the jsonnet once with all three = 0, so every
-      <code>tracking-pr.root</code> would carry <code>Trun</code> = 0/0/0. And
-      <code>T_tagger</code>/<code>T_kine</code> carry no RSE at all. Fix options: (a) name output files
-      by RSE in the harness (it already greps the RSE from the log) and treat the filename as the
-      key; (b) thread the real RSE in through the fcl <code>params</code> per <code>lar</code>
-      invocation — possible because the harness runs one event per process, but it must look the RSE
-      up first; (c) add <code>rse_from_ident</code> to the two ROOT visitors (cleanest, small C++
-      change). <strong>(a) now, (c) as the real fix.</strong></td></tr>
-<tr><td><strong>G4</strong></td><td>PR Bee layers land in a separate zip</td><td><span class="tag warn">config gap</span></td>
-  <td><code>clus_pr</code>'s MABC has <strong>no <code>bee_sink</code> parameter</strong> — unlike
-      <code>per_apa</code>/<code>all_apa</code> it always writes its own
-      <code>mabc-pr.zip</code>. Our harness currently deletes that file
-      (<code>run-harness.sh:82</code>). Fix: either keep and merge both zips with
-      <code>merge_bee.py</code>, or add a <code>bee_sink</code> pass-through to
-      <code>clus_pr</code> so PR layers join the shared <code>mabc.zip</code> — nicer for Bee, since
-      the PR and clustering layers then share one event index.</td></tr>
-<tr><td><strong>G5</strong></td><td><code>PrDisplayDump</code> / <code>pr_display</code></td><td><span class="tag miss">absent</span></td>
-  <td>Not in our toolkit checkout — neither the C++ nor a <code>cm_by_name</code> entry. So doc pr/26's
-      local Bokeh display and doc pr/75's vertex scoreboard are <strong>not reachable</strong> for us,
-      and <code>calib-pr-evt&lt;ID&gt;.json</code> cannot be produced. It is read-only and optional, so
-      it blocks nothing but the hand-scan tooling. Needs a merge from Xin's tree if we want it.</td></tr>
-<tr><td><strong>G6</strong></td><td>No pctree written before the PR node</td><td><span class="tag warn">config gap</span></td>
-  <td><code>clus_all_apa</code> is called with <code>tensor_outname</code> unset, so the 1-step never
-      persists a post-Q/L pctree — only the post-labeler <code>trash-all-apa.tar.gz</code>. That
-      blocks <code>nusel_extract.py</code> (which wants the pre-PR tree) and blocks the
-      run-2-step-on-1-step-output option. One-line fix: pass
-      <code>tensor_outname='pctree-evt.tar.gz'</code>.</td></tr>
+<tr><td><strong>G1</strong></td><td>nue XGBoost weights</td><td><span class="tag have">resolved</span></td>
+  <td><s><code>uboone/weights/XGB_nue_seed2_0923.xml</code> missing.</s>
+      <strong>Fixed 2026-08-17</strong> — now present at 199 MB in
+      <code>/exp/sbnd/app/users/yuhw/wire-cell-data/uboone/weights/</code>. All 36 weight files named
+      by <code>numu_bdt_scorer</code> + <code>nue_bdt_scorer</code> now resolve.
+      <span class="small">It is untracked in that git clone (<code>?? uboone/weights/…</code>), which
+      is fine functionally — <code>WIRECELL_PATH</code> resolution does not care — but means a fresh
+      clone elsewhere will not have it. Worth a note in the run doc.</span></td></tr>
+<tr><td><strong>G2</strong></td><td>DL (SCN) neutrino vertex</td><td><span class="tag have">resolved</span></td>
+  <td><s>No torch / sparseconvnet / SCN in our environment; the DL vertex fell back to geometric,
+      silently.</s> <strong>Fixed 2026-08-17 by the uBooNE UPS product
+      <code>scn v01_00_00</code></strong> (flavor <code>Linux64bit+3.10-2.17</code>). Its bundled venv is
+      python <strong>3.9.15 — the same version as our container python</strong>, which is why it loads
+      at all: <code>WCPPyUtil</code> embeds libpython. Carries torch 2.6.0+cu124, numpy 2.0.2 and the
+      sparseconvnet 0.2 egg. Wired up by the new <code>sbnd/setup-dlvtx.sh</code> (opt-in, sourced
+      after <code>setup-ap.sh</code>). <strong><code>LD_PRELOAD</code> is NOT needed on our build</strong>,
+      unlike sbnd_xin's runner. See <a href="#g2">§7.2</a> for the A/B proof and the cost.</td></tr>
+<tr><td><strong>G3</strong></td><td>RSE in the PR ROOT output</td><td><span class="tag have">resolved</span></td>
+  <td><s>Everything written from inside the graph claimed run 0 / subrun 0.</s>
+      <strong>Fixed 2026-08-17</strong> by a new larwirecell component
+      <code>wclsTensorSetMetadataAttacher</code> plus <code>rse_from_metadata</code> on
+      <code>MultiAlgBlobClustering</code> and RSE published on the Ensemble for the ROOT visitors.
+      <code>Trun</code> went (0,0,0) → (713,74,3) and all 17 Bee layers now agree.
+      See <a href="#g3impl">§7.3</a>.</td></tr>
+<tr><td><strong>G4</strong></td><td>PR Bee layers land in a separate zip</td><td><span class="tag have">resolved*</span></td>
+  <td><s><code>clus_pr</code> was the only MABC maker without a <code>bee_sink</code>, so its layers
+      went to <code>mabc-pr.zip</code> — which the harness deletes.</s> <strong>Fixed 2026-08-17</strong>:
+      <code>bee_sink</code> added, colliding sets renamed, duplicate dead-area suppressed. One zip,
+      22 entries, no duplicates, <code>mabc-pr.zip</code> no longer produced.
+      <strong>*One caveat</strong>: the PR particle tree is stored but <em>not rendered</em> by the
+      current Bee viewer — see <a href="#g4impl">§7.4</a>.</td></tr>
+<tr><td><strong>G5</strong></td><td><code>PrDisplayDump</code> / <code>pr_display</code></td><td><span class="tag have">resolved</span></td>
+  <td><s>Not in our toolkit checkout.</s> <strong>Arrived with the 2026-08-17 merge.</strong>
+      <code>clus/src/PrDisplayDump.cxx</code> + <code>clus/inc/WireCellClus/PrDisplayDump.h</code> are in
+      the tree, <code>pr_display</code> is the 17th entry of <code>cm_by_name</code>, and the symbol is
+      in the rebuilt <code>opt/lib/libWireCellClus.so</code>. Doc pr/26's Bokeh display and doc pr/75's
+      vertex scoreboard (<code>SBND_VERTEX_SCOREBOARD</code>) are now reachable, and
+      <code>calib-pr-evt&lt;ID&gt;.json</code> can be produced.</td></tr>
+<tr><td><strong>G6</strong></td><td>no pctree written before the PR node<br>
+      <span class="small">scope: <strong>Route B only</strong></span></td>
+      <td><span class="tag warn">deferred</span></td>
+  <td><strong>Owner decision 2026-08-17: needed for the Route B cross-check only; revisit later.</strong>
+      <code>nusel_extract.py</code> is explicitly <em>not</em> a reason to do it
+      (<a href="#nusel">§7.5</a>), and nothing in the 1-step production path depends on it — the PR
+      chain, the taggers, the ROOT trees and the Bee layers all work without a persisted pre-PR tree.
+      <br><br>
+      What it would take, for when we return to it: the 1-step never persists the
+      <em>post-Q/L, pre-PR</em> tree (the 2-step's
+      <code>ql_evt&lt;ID&gt;/pctree-evt&lt;ID&gt;.tar.gz</code>, read by
+      <code>wct-pr-perevt.jsonnet</code> via <code>TensorFileSource</code>). It is <strong>not</strong>
+      a one-line <code>tensor_outname</code> fix, as an earlier draft of this doc claimed:
+      <code>clus_all_apa</code>'s <code>TensorFileSink</code> is terminal
+      (<code>nin=1, nout=0</code>) and only wired in when <code>dump=true</code>, which would end the
+      graph before <code>labeler_truth</code> and <code>pr_node</code> run. Writing <em>and</em>
+      continuing needs a tee, and there is <strong>no <code>ITensorSetFanout</code></strong> in
+      <code>iface/</code> (only <code>ITensorSetFanin</code>). The cheap route is a small pass-through
+      tap — an <code>ITensorSetFilter</code> that writes the tarball and forwards its input, the same
+      shape as <code>wclsTensorSetMetadataAttacher</code>, but toolkit-side since it needs no art.
+      <br><br>
+      <strong><code>trash-all-apa.tar.gz</code> is not a substitute</strong>: written by the terminal
+      sink at the end of the chain, it is the <em>post-PR</em> tree — measured on one event, 9 clusters
+      pre-PR vs <strong>30</strong> post-PR. Feeding it back would re-run
+      <code>switch_scope</code>/<code>unmerge_*</code>/<code>protect_bundle</code> on already-split
+      clusters.</td></tr>
 <tr><td><strong>G7</strong></td><td>Cost</td><td><span class="tag warn">unmeasured</span></td>
   <td><code>tagger_check_neutrino</code> is by far the heaviest stage in the 2-step (it does the
       proto-vertex/segment build, EM-shower clustering, particle flow and energy reco). The
@@ -517,7 +890,411 @@ It is why every PR pipeline must start with <code>switch_scope</code>, and why
 </tbody></table>
 </div>
 
-<h2 id="plan">7. Two routes, and a proposed order</h2>
+<h3 id="g3">7.1 G3 in detail — where <code>SbndPrMagnifyTrackingVisitor</code> is actually called</h3>
+
+<p>It is <strong>not</strong> a pgraph node. It is an <code>IEnsembleVisitor</code> living inside the
+<code>clus_pr</code> MABC's <code>pipeline:</code> list — the same slot every
+<code>Clustering*</code> module occupies. Full path:</p>
+
+<pre><code>fcl  wcls-img-clus-matching-xin.fcl        producer sig2img, plugin WireCellRoot loaded
+ └─ jsonnet  clus.jsonnet cm_by_name.tracking_visitor
+       { type: 'SbndPrMagnifyTrackingVisitor', name: 'pr',
+         data: { runNo: runNo, subRunNo: subRunNo, eventNo: eventNo, ... } }   ← RSE frozen HERE
+       cm_pipeline = [cm_by_name[n] for n in pipeline_names]
+       clus_pr MABC   data.pipeline = wc.tns(cm_pipeline)
+ └─ C++   MultiAlgBlobClustering::configure()          :224  for (auto jtn : cfg["pipeline"])
+                                                       :227  Factory::find_tn&lt;IEnsembleVisitor&gt;(tn)
+          MultiAlgBlobClustering::operator()           :2900 for (const auto&amp; cmeth : m_pipeline)
+                                                       :2901     cmeth.meth-&gt;visit(ensemble);
+          SbndPrMagnifyTrackingVisitor::visit(Ensemble&amp;)      writes tracking-pr.root
+                                                       uses m_runNo/m_subRunNo/m_eventNo
+                                                       captured in configure()</code></pre>
+
+<p>So the visitor is invoked once per event, in <code>pipeline_names</code> order, by the MABC that
+owns it. It never sees the <code>ITensorSet</code>, the frame, or the art event — the interface is
+<code>virtual void visit(Facade::Ensemble&amp;) const</code> and <strong>that is the whole of it</strong>.
+An <code>Ensemble</code> is the point-cloud tree facade; it carries no ident and no RSE. That is the
+structural reason the visitor cannot identify its own event: <em>there is nothing to ask.</em></p>
+
+<h4>Why <code>rse_from_ident</code> would only be a half-fix</h4>
+<p>MABC's own <code>rse_from_ident</code> reads the ident off the input tensor set and then does
+(<code>MultiAlgBlobClustering.cxx:2813</code>):</p>
+<pre><code>// The tensor ident already carries the real event id (raw, unmasked);
+// run/subrun are not available in this chain.
+m_runNo = 0; m_subRunNo = 0; m_eventNo = ident;</code></pre>
+<p>The ident traces back to <code>CookedFrameSource.cxx:213</code>,
+<code>new Aux::SimpleFrame(event.event(), …)</code> — <strong>the art event number and nothing
+else</strong>. Copying this mechanism into the ROOT visitors would give
+<code>Trun</code> = <code>0/0/&lt;event&gt;</code>, not the true RSE.</p>
+
+<h4>Measured on the smoke-test event — and it exposes a pre-existing inconsistency</h4>
+<p>Every Bee layer in one <code>mabc.zip</code>, by writer:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Layers</th><th>Writer</th><th>runNo</th><th>subRunNo</th><th>eventNo</th></tr></thead>
+<tbody>
+<tr><td class="mono">clustering, clustering-global, img-global,<br>op, channel-deadarea-apa{0,1}</td>
+    <td>MABC (WCT)</td><td class="mono">0</td><td class="mono">0</td><td class="mono">3</td></tr>
+<tr><td class="mono">tagger_{stm,tgm,fc,lm},<br>truth_{trackid_labeled,unlabeled}, sed-*</td>
+    <td>labeler (larwirecell)</td><td class="mono"><strong>713</strong></td><td class="mono"><strong>74</strong></td><td class="mono">3</td></tr>
+</tbody></table>
+</div>
+<p class="note"><strong>The same zip carries two different run numbers.</strong> The event number agrees
+(3) only because <code>ident</code> happens to be the art event number. This is <em>not</em> introduced
+by the PR extension — it is the state of every zip our 13,217-event run produced. It has been harmless
+so far because the harness keys events by filename and by the RSE it greps from the log, never by the
+Bee metadata.</p>
+
+<h4>The real RSE is already inside the process</h4>
+<p><code>TensorSetLabeler</code> is registered in the fcl as an <strong>inputer</strong>, i.e. an art-event
+visitor, and <code>TensorSetLabeler.cxx:495-497</code> does exactly what WCT cannot:</p>
+<pre><code>void AIML::TensorSetLabeler::visit(art::Event& event)   // called at EVENT START,
+{                                                       // before the pgraph runs
+  m_run = event.run();  m_sub = event.subRun();  m_evt = event.event();</code></pre>
+<p>That hook fires <em>before</em> the graph executes, so the true run/subrun/event are known in-process
+before <code>clus_pr</code> — and therefore before <code>tracking_visitor</code> — ever runs. The
+information is present and merely has no route to the WCT side.</p>
+
+<h4>Options, re-ranked with that in mind</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>Option</th><th>Cost</th><th>Gets correct run/subrun?</th></tr></thead>
+<tbody>
+<tr><td><strong>(a)</strong> Harness names outputs by RSE (it already greps it) and treats the filename
+    as the key</td><td>zero code</td><td><span class="tag warn">n/a</span> — sidesteps rather than fixes</td></tr>
+<tr><td><strong>(b)</strong> Pass RSE through fcl <code>params</code> per <code>lar</code> call</td>
+    <td>needs an RSE lookup pass first, since the harness addresses events by <code>--nskip k</code></td>
+    <td><span class="tag have">yes</span></td></tr>
+<tr><td><strong>(c)</strong> <code>rse_from_ident</code> on the two ROOT visitors</td><td>small C++</td>
+    <td><span class="tag miss">no</span> — event only, run/subrun stay 0</td></tr>
+<tr><td><strong>(d)</strong> A wcls inputer that broadcasts the art RSE into the WCT components at
+    event start (the labeler already proves the hook exists and fires early enough)</td>
+    <td>small C++, new component</td>
+    <td><span class="tag have">yes</span> — and it fixes the MABC/labeler mismatch above at the same
+        time</td></tr>
+<tr><td><strong>(e)</strong> Route B — run the 2-step PR job, which takes RSE as per-event TLAs</td>
+    <td>none, already supported</td><td><span class="tag have">yes</span></td></tr>
+</tbody></table>
+</div>
+<div class="key">
+<strong>Revised recommendation:</strong> <strong>(a)</strong> for the pilot, <strong>(e)</strong> as the
+reference arm, and <strong>(d)</strong> as the principled fix if the 1-step goes to production —
+<em>not</em> (c), which I proposed in the first draft before checking what <code>ident</code> actually
+carries. (d) is the only option that also repairs the two-run-numbers-in-one-zip problem.
+</div>
+
+<h3 id="g2">7.2 G2 resolved — and the full PR chain has now run end to end</h3>
+
+<p>The missing piece was a UPS product, not a build: <code>scn v01_00_00</code> under
+<code>/cvmfs/uboone.opensciencegrid.org/products</code>. Its <code>ups/scn.table</code> is just two
+<code>PYTHONPATH</code> prepends, which <code>sbnd/setup-dlvtx.sh</code> now replicates by hand (rather
+than <code>setup scn</code>, which would pull a second <code>python</code> product on top of the one
+<code>setup-local-opt.sh</code> already established).</p>
+
+<p>The reason it works is a coincidence worth writing down: <strong>the product's venv is python
+3.9.15, the same version as our container python.</strong> <code>WCPPyUtil</code> embeds libpython, so a
+venv built against any other python would not have loaded. There is a sibling product
+<code>SparseConvNet v01_00_00</code> with the same contents but flavor <code>NULL</code>;
+<code>scn</code> is the SL7-flavored one and the right choice.</p>
+
+<h4>The A/B, on one MC event with the full 15-stage pipeline</h4>
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>with <code>scn</code></th><th>without</th></tr></thead>
+<tbody>
+<tr><td><code>"DL vertex failed"</code> in log</td><td class="mono"><strong>0</strong></td><td class="mono">1</td></tr>
+<tr><td>message</td><td>—</td>
+    <td class="mono">SCN_Vertex: import failed … No module named 'torch'</td></tr>
+<tr><td><code>overall main vertex</code></td><td class="mono"><strong>6523 ms</strong></td><td class="mono">29 ms</td></tr>
+<tr><td>full event</td><td class="mono">21.63 s</td><td class="mono">14.86 s</td></tr>
+</tbody></table>
+</div>
+<p>The 29 ms → 6.5 s jump <em>is</em> the SCN inference, and it is the cleanest available proof the DL
+path executes. <strong><code>LD_PRELOAD</code> was not needed</strong> — sbnd_xin's runner sets
+<code>libpython3.11.so.1.0</code> because its toolkit build resolves libpython differently; ours does
+not. The correct preload for this python is recorded in <code>setup-dlvtx.sh</code> in case that
+regresses.</p>
+
+<p class="note"><strong>Cost.</strong> The DL vertex is <strong>+6.8 s/event, ~45% of a
+cosmic-dominated event.</strong> On this event the scores and vertex came out <em>bit-identical</em> to
+the geometric arm — but the selected main cluster was 1.6 cm long, so that says nothing about the
+general case. Both the cost and the physics effect need a real multi-event sample before any scale
+run; treat this line as "measured once", not "characterised".</p>
+
+<h4>Incidental: the full PR chain ran</h4>
+<p>Testing G2 required the neutrino tagger, so a scratch copy of the entry jsonnet was run with the
+complete 15-name <code>pipeline_names</code> (<a href="#cm-pr">§3.3</a>). It succeeded on the first
+attempt, <code>rc=0</code> — no code change, only the added stage names:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Output</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td class="mono">tracking-pr.root</td><td>211 KB; trees <code>T_tagger</code>, <code>T_kine</code>,
+    <code>Trun</code>, <code>T_rec_charge</code>, <code>T_proj</code>, <code>T_proj_data</code>,
+    <code>T_bad_ch</code></td></tr>
+<tr><td class="mono">T_tagger</td><td>1 entry, <strong>1216 branches</strong>.
+    <code>numu_score = -1.7148</code>, <code>nue_score = -15.0</code>,
+    <code>cosmict_score = 0</code>, vertex <code>(-152.38, 58.19, 489.74)</code></td></tr>
+<tr><td class="mono">T_kine</td><td>1 entry, 21 branches, <code>kine_reco_Enu = 107.46</code></td></tr>
+<tr><td class="mono">Trun</td><td><code>runNo=0 subRunNo=0 eventNo=0</code> —
+    <strong>G3 confirmed in the real artifact</strong>, exactly as <a href="#g3">§7.1</a> predicted</td></tr>
+</tbody></table>
+</div>
+<p>So with G1, G2 and G5 closed, <strong>Route A is no longer blocked by anything except G3
+(identification) and G4 (Bee zip)</strong> — neither of which stops a pilot. The 5-name edit in
+<a href="#plan">§8</a> is now a tested change rather than a proposal.
+<span class="small">The scratch jsonnet lives in the session scratchpad; the repo copy still carries the
+8-name pipeline, unchanged.</span></p>
+
+<h3 id="g3impl">7.3 G3 implemented (2026-08-17)</h3>
+
+<p>Seven pieces. The design question that shaped all of them: an
+<code>IEnsembleVisitor</code> receives <em>only</em> the <code>Ensemble</code>, so the RSE has to be
+carried to it rather than fetched by it.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>Where</th><th>What</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="mono">larwirecell/Components/<br>TensorSetMetadataAttacher.{h,cxx}</td>
+    <td><strong>New</strong> <code>wclsTensorSetMetadataAttacher</code>:
+        <code>IArtEventVisitor</code> + <code>ITensorSetFilter</code>. Stamps
+        <code>runNo</code>/<code>subRunNo</code>/<code>eventNo</code> into set metadata and shares
+        <code>in-&gt;tensors()</code> by pointer — no pctree round trip, O(1). Warns and passes through
+        if it was never listed as an fcl inputer, rather than silently stamping 0/0/0</td></tr>
+<tr><td>2</td><td class="mono">MultiAlgBlobClustering</td>
+    <td><code>rse_from_metadata</code>, precedence <strong>metadata &gt; ident &gt; config</strong>;
+        absent keys fall through, so it is safe to leave on</td></tr>
+<tr><td>3</td><td class="mono">MultiAlgBlobClustering</td>
+    <td>metadata passthrough: <code>as_tensorset(outtens, ident, m_in_metadata)</code> — it previously
+        dropped the input metadata entirely</td></tr>
+<tr><td>4</td><td class="mono">MultiAlgBlobClustering</td>
+    <td>publishes the resolved RSE on the ensemble scalar PC
+        (<code>ensemble.set_scalar&lt;int&gt;("runNo", …)</code>) — the only channel to a visitor</td></tr>
+<tr><td>5</td><td class="mono">Sbnd{Pr,}MagnifyTrackingVisitor</td>
+    <td>read <code>ensemble.get_scalar&lt;int&gt;("runNo", m_runNo)</code> at the top of
+        <code>visit()</code>; config stays the fallback. Members made <code>mutable</code> because
+        <code>visit()</code> is <code>const</code> and the helpers are member functions</td></tr>
+<tr><td>6</td><td class="mono">cfg/…/sbnd/clus.jsonnet</td>
+    <td><code>rse_from_metadata</code> threaded beside <code>rse_from_ident</code>; plus a new
+        <code>pre_mabc</code> hook on <code>clus_per_face</code>/<code>per_apa</code> — the per-APA
+        <code>PointTreeBuilding → MABC</code> pipeline is otherwise opaque, so there was no way to
+        splice an attacher between them from the entry config</td></tr>
+<tr><td>7</td><td class="mono">sbnd/wcls-img-clus-matching-xin.{jsonnet,fcl}<br>…-data.fcl</td>
+    <td>three attachers — <code>rse_apa0</code>, <code>rse_apa1</code> (post-PTB, via
+        <code>pre_mabc</code>) and <code>rse_all_apa</code> (before <code>clus_all_apa</code>) —
+        all registered as inputers in both fcls</td></tr>
+</tbody></table>
+</div>
+
+<p><code>clus_pr</code> needs no attacher: <code>labeler_truth</code> sits directly upstream and stamps
+the same three keys from its own <code>art::Event</code>.</p>
+
+<h4>Verified, one MC event</h4>
+<pre><code>TensorSetMetadataAttacher:rse_apa0&gt;    stamped rse=(713,74,3)
+TensorSetMetadataAttacher:rse_apa1&gt;    stamped rse=(713,74,3)
+TensorSetMetadataAttacher:rse_all_apa&gt; stamped rse=(713,74,3)
+MultiAlgBlobClustering:apa0-0&gt;         rse_from_metadata: (713,74,3)
+MultiAlgBlobClustering:apa1-0&gt;         rse_from_metadata: (713,74,3)
+MultiAlgBlobClustering:clus_all_apa&gt;   rse_from_metadata: (713,74,3)
+MultiAlgBlobClustering:clus_pr&gt;        rse_from_metadata: (713,74,3)   &lt;- via labeler_truth</code></pre>
+<ul>
+<li><strong>All 17 Bee layers now report 713/74/3.</strong> The two-run-numbers-in-one-zip problem is
+    gone — previously 7 MABC layers said 0/0/3 while 10 labeler layers said 713/74/3.</li>
+<li><strong><code>Trun</code>: (0,0,0) → (713,74,3)</strong> in <code>tracking-pr.root</code>, with
+    <code>numu_score</code> and <code>kine_reco_Enu</code> bit-identical to the pre-change run.</li>
+<li><strong>Payload identical in 17/17 layers</strong> with the RSE fields excluded — only the
+    identification moved.</li>
+<li><strong>Cost 15.0866 s → 15.1155 s (+0.2%)</strong> for three attachers, as intended by making
+    them metadata-only.</li>
+</ul>
+
+<p class="note"><strong>Two traps hit while building this.</strong> (1) The first draft assigned the new
+RSE to <code>m_runNo</code> <em>before</em> calling <code>flush()</code>, which writes the
+<em>previous</em> event — that would have stamped each Bee event with its successor's RSE. Fixed by
+reading into locals and flushing first. (2) Jsonnet top-level <code>local</code>s are not
+forward-visible: defining the attachers after <code>clus_pipes</code> failed with
+<code>Unknown variable: rse_attach</code>. They must precede first use.</p>
+
+<p class="small">Item 8 of the plan — three RSE branches on <code>T_tagger</code> — was deliberately
+left for later. <code>T_tagger</code> and <code>T_kine</code> still carry no RSE of their own; join via
+<code>Trun</code> or the filename.</p>
+
+<h3 id="g4impl">7.4 G4 implemented — and what Bee actually renders</h3>
+
+<p>Three jsonnet changes, no C++:</p>
+<ol>
+<li><code>clus_pr</code> gains a <code>bee_sink</code> pass-through, matching
+    <code>clus_per_face</code>/<code>clus_all_apa</code>.</li>
+<li>The two colliding set names are renamed <strong>only when a sink is shared</strong>:
+    <code>clustering</code> → <code>clustering-pr</code>, <code>mc</code> → <code>mc-pr</code>.
+    Standalone keeps the historical names, because sbnd_xin's <code>nusel_extract.py</code> requires a
+    member ending <code>-clustering-global.json</code> inside <code>mabc-pr.zip</code> — renaming
+    unconditionally would have broken the 2-step tooling.</li>
+<li><code>save_deadarea: bee_sink == null</code>. Found by running it: the first attempt produced
+    <strong>24 entries with <code>channel-deadarea-apa0/1</code> duplicated</strong>, because
+    <code>clus_pr</code> wrote dead area unconditionally on top of <code>clus_all_apa</code>'s.
+    <code>clus_per_face</code> already had this guard; <code>clus_pr</code> did not.</li>
+</ol>
+<p>Result: one <code>mabc.zip</code>, <strong>22 entries, zero duplicates</strong>, no
+<code>mabc-pr.zip</code>. The five PR layers — <code>clustering-pr-global</code>,
+<code>track_fit-global</code>, <code>shower_track-global</code>, <code>vertices-global</code>,
+<code>mc-pr</code> — now travel with everything else.</p>
+
+<h4>Uploaded to Bee and inspected</h4>
+<p>Bee's event list registers <strong>19 layers</strong> (22 zip entries − 2 dead-area − 1 empty
+<code>op</code>), including both <code>mc</code> and <code>mc-pr</code>, and shows
+<strong>DAQ ID <code>713-74-3</code></strong> — the <a href="#g3impl">§7.3</a> RSE fix, visible in the
+display.</p>
+
+<div class="key">
+<strong>But registered ≠ rendered, and the two layer families differ.</strong> From
+<code>bee.js</code>:
+<ul>
+<li><strong>Point sets are generic.</strong> The loader builds
+    <code>${event_url}${eventId}/${this.name}/</code> — any name works, so
+    <code>clustering-pr-global</code>, <code>track_fit-global</code>,
+    <code>shower_track-global</code> and <code>vertices-global</code> are all viewable.</li>
+<li><strong>The particle tree is hardcoded.</strong> <code>this.url = base_url + "mc/"</code>, a literal,
+    feeding a single <code>&lt;div id="mc"&gt;</code> panel. Bee renders <strong>exactly one</strong>
+    particle tree per event, and only the one named <code>mc</code>.</li>
+</ul>
+So <code>mc-pr.json</code> is stored and listed but <strong>never displayed</strong>. The rename was
+right for <code>clustering</code> and is a dead end for <code>mc</code>.
+</div>
+
+<h4>Resolved by merging the two trees</h4>
+<p>Rather than choose which tree gets the panel, both are now emitted as <strong>one</strong>
+<code>mc.json</code>: the labeler's truth nodes stay at top level and the PR reco flow is grafted under
+a sibling node whose text carries the reconstructed neutrino summary.</p>
+<pre><code>id=9000000   1 numu RES CC Etot 1821.6 MeV Edep 19.8 MeV T 0.418 us
+   id=10000001  mu-  1242.5 MeV
+   id=10000002  neutron  197.4 MeV
+   …
+id=19999999  reco nu  107.5 MeV   numu -1.715   nue -15.000
+   id=20015000  mu-  1 MeV</code></pre>
+
+<p>Transport: <code>wclsTensorSetLabeler</code> gains <code>pf_metadata_key</code>, publishing its
+particle array into the output TensorSet metadata; <code>labeler_truth</code> sits directly upstream of
+<code>pr_node</code>, so <code>MultiAlgBlobClustering</code> picks it up from the
+<code>m_in_metadata</code> it already keeps for <a href="#g3impl">§7.3</a> and merges inside
+<code>fill_bee_pf_tree</code>. A new <code>'pf'</code> Bee family lets the labeler hand the tree over
+without also writing it, so there is still exactly one <code>mc</code>.</p>
+
+<p>Reco node ids are shifted by <code>merge_id_offset</code> (20,000,000). The two id spaces do not
+overlap today — the labeler uses 9,000,000+/10,000,000+, the reco side <code>cluster*1000+seg</code> —
+but a duplicate id silently drops a branch from jsTree, so the separation is made structural rather
+than lucky. Verified: 22 nodes, 22 unique ids.</p>
+
+<div class="note"><strong>The scores were 0.000 on the first attempt.</strong> The pf dump fires
+<em>inside</em> the pipeline loop, immediately after its trigger visitor — and the trigger was
+<code>TaggerCheckNeutrino</code>, which runs <em>before</em> the BDT scorers. The text read
+<code>numu 0.000 nue 0.000</code> while <code>T_tagger</code> held <code>-1.7148</code>. Fixed by
+keying the dump on <code>UbooneNueBDTScorer:pr</code> when <code>nue_bdt_scorer</code> is in
+<code>pipeline_names</code>, falling back to <code>TaggerCheckNeutrino:pr</code> otherwise so the tree
+is still emitted for the 8-stage pipeline. The text now matches <code>T_tagger</code>/<code>T_kine</code>
+exactly. The same trap would bite anything else that reads scores at Bee-fill time.
+<span class="small">Where the scorers are absent the node says <code>(no BDT scores)</code> rather
+than printing TaggerInfo's zero-initialised values as if they were real.</span></div>
+
+<p><strong>Verified against Bee itself</strong>, at the exact endpoint <code>bee.js</code> fetches
+(<code>…/event/0/mc/</code>): HTTP 200, and the served tree has <strong>both</strong> top-level nodes —
+the truth interaction and <code>reco nu  107.5 MeV   numu -1.715   nue -15.000</code>. 18 layers
+registered, <code>mc-pr</code> gone.</p>
+
+<p class="small">Verification note: that the four PR point-set layers <em>render</em> is inferred from
+the generic loader plus their appearance in the set listing — not from opening the viewer, which I
+cannot do headlessly. The <code>mc-pr</code> finding, by contrast, is read directly off the hardcoded
+URL in <code>bee.js</code>.</p>
+
+<h3 id="nusel">7.5 Do we actually want <code>nusel_extract.py</code>?</h3>
+
+<p>It was listed as a G6 motivation because it is part of Xin's 2-step tooling, not because we had a
+question it answers. On inspection the case is weak.</p>
+
+<p><strong>What it uniquely provides:</strong> one row <em>per qualifying bundle</em> — every cluster
+that is both <code>flag_main_cluster</code> and in scope — labelled
+TGM / STM / LM / nu-candidate / not-tagged / no-bundle, with flashes de-duplicated across APAs.
+Nothing else we produce covers that population:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Artifact</th><th>Population</th><th>Tagger info</th></tr></thead>
+<tbody>
+<tr><td class="mono">T_tagger</td><td><strong>1 entry per event</strong> — the single neutrino
+    candidate the tagger selected</td><td>~580 branches of detail on that one</td></tr>
+<tr><td class="mono">tagger_{stm,tgm,fc,lm} Bee sets</td><td>in-window main candidates</td>
+    <td>verdict per candidate, but as a <em>display</em>, not a table</td></tr>
+<tr><td class="mono">harness <code>summary.csv</code></td><td>every event</td>
+    <td>none — <code>rc</code>, wall time, zip size only</td></tr>
+<tr><td class="mono">the run log</td><td>every evaluated main</td>
+    <td><code>cluster N → TGM=…</code> per cluster, plus
+        <code>"N main(s) evaluated, M out of window"</code></td></tr>
+</tbody></table>
+</div>
+
+<p>So if the question is <em>"what fraction of bundles get TGM-tagged across 13k events"</em>,
+<code>T_tagger</code> genuinely cannot answer it. But the log already carries the per-cluster verdicts
+that <code>nusel_extract.py</code> itself parses — it needs the pctree only for bundle structure and
+<code>mabc-pr.zip</code> only to recover the runtime scope filter. A small tabulator over the logs plus
+the <code>clustering-pr</code> Bee layer would answer the same question <strong>without</strong> G6.</p>
+
+<div class="note"><strong>And it would now give a wrong answer on our output.</strong>
+<code>nusel_extract.py</code> selects the in-scope set with
+<code>endswith('-clustering-global.json')</code>. After the <a href="#g4impl">§7.4</a> merge our single
+zip contains <em>both</em> <code>0-clustering-global.json</code> (all-APA, 9 clusters) and
+<code>0-clustering-pr-global.json</code> (PR in-scope, 30). That grep matches the <strong>all-APA</strong>
+layer — the wrong one — and would silently produce a bad in-scope set rather than failing. Anyone
+pointing it at a 1-step zip must pass the PR layer explicitly.</div>
+
+<p><strong>Recommendation:</strong> keep G6 on the list for <strong>Route B alone</strong>, and treat
+<code>nusel_extract.py</code> as optional — worth running only if we specifically want numbers directly
+comparable to Xin's <code>nusel-table.tsv</code>, which is a provenance argument rather than a physics
+one.</p>
+
+<h2 id="adopted">8. Route A adopted (2026-08-17)</h2>
+
+<p>Until now every full-chain run used a <em>scratch copy</em> of the entry config; the repo still
+carried the 8-name pipeline. That is no longer true —
+<code>sbnd/wcls-img-clus-matching-xin.jsonnet</code> now carries the full 15-stage production
+<code>pipeline_names</code>, matching sbnd_xin's <code>run_pr_chain_batch.sh</code> exactly, including
+<code>protect_bundle</code> + <code>steiner_refresh</code> (SBND production default since
+2026-08-02).</p>
+
+<p>Verified from the repo config, no scratch: <strong>rc=0</strong>, <code>tracking-pr.root</code>
+211 KB, <code>mabc.zip</code> 3.8 MB, zero DL-vertex failures, merged particle tree reading
+<code>reco nu  107.5 MeV   numu -1.715   nue -15.000</code>, <strong>21.43 s/event</strong>.</p>
+
+<div class="note"><strong>Route A now runs without the reference arm it was meant to be checked
+against.</strong> The original plan was Route B first, then A validated against it. G6 is deferred
+(<a href="#gaps">§7</a>), which defers Route B with it. Route A is validated only in the sense that it
+runs, produces every expected artifact, and reproduces <code>T_tagger</code>/<code>T_kine</code> values
+across configuration changes — <em>not</em> in the sense that it has been shown to agree with the
+2-step. That comparison remains the outstanding piece of work.</div>
+
+<h3>Cost</h3>
+<p>15.0 s → <strong>21.4 s/event, +43%</strong>, driven almost entirely by the DL vertex
+(<a href="#g2">§7.2</a>: 29 ms → 6.5 s). Scaling the issue-11 run naively: 13,217 events went 13h39m /
+261.5 core-hours at 8 stages, so 15 stages projects to <strong>~374 core-hours, ~19 h wall at 20
+cores</strong>. Treat that as an order-of-magnitude figure — it extrapolates a single
+cosmic-dominated event, which is exactly what <strong>G7</strong> exists to replace.</p>
+
+<h3 id="checker">The silent-failure checker</h3>
+<p>Making the full chain the default promotes one hazard to production-critical: if
+<code>setup-dlvtx.sh</code> is not sourced, every event falls back to the geometric vertex, logs one
+WARN, and <strong>still exits 0</strong>. A whole campaign could be computed the wrong way and look
+fine.</p>
+<p>New: <code>sbnd/check-pr-run.sh &lt;lar.log&gt;…</code>, which exits non-zero if any known silent
+mode fired — DL fallback, an RSE attacher missing from the fcl <code>inputers</code>,
+<code>rse_from_metadata</code> falling back, the labeler passing an event through unlabeled,
+<code>BLOB LOSS</code> in a split, or <code>tracking_visitor</code> running with no ROOT file to show
+for it. Every entry corresponds to a bug this chain has actually shipped; the recurring shape is
+plausible output with wrong provenance, starting with the <code>sp.jsonnet</code> extVar that silently
+selected the wrong ROI thresholds. Tested both ways: <code>OK</code> on the Route A run,
+<code>FAIL</code> with the right diagnosis on the no-torch control.</p>
+<p><strong>Any bulk harness should call it per event.</strong> A run that is not audited is not
+validated.</p>
+
+<h2 id="plan">9. The two routes, for the record</h2>
 
 <div class="cols">
 <div class="card">
@@ -541,7 +1318,8 @@ I/O; harness unchanged apart from keeping new outputs.<br>
 
 <div class="card">
 <h3>Route B — write a pctree, run the 2-step PR job on it</h3>
-<p>Set <code>tensor_outname</code> on <code>clus_all_apa</code> (G6), then run the canonical
+<p>Persist a post-Q/L pctree (<strong>G6</strong> — a small pass-through tap, not the
+one-line <code>tensor_outname</code> an earlier draft claimed), then run the canonical
 <code>toolkit cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet</code> per event —
 the same file Xin's driver runs.</p>
 <p><strong>Pros:</strong> bit-comparable with Xin's chain by construction; per-event TLAs work, so real
@@ -563,12 +1341,14 @@ clustering+matching half.
 
 <h4>Suggested sequence</h4>
 <ol>
-<li><strong>Unblock G1</strong> — copy <code>XGB_nue_seed2_0923.xml</code> into our
-    <code>wire-cell-data</code>. Cheap, and without it <code>nue_score</code> is meaningless.</li>
-<li><strong>Decide G2</strong> — I suggest setting <code>dl_weights=''</code> explicitly for now, so the
-    geometric vertex is a recorded choice rather than a silent per-event fallback. Installing
-    torch+sparseconvnet+SCN is a separate, self-contained task if we want the DL vertex.</li>
-<li><strong>G6</strong> — one-line <code>tensor_outname</code>, giving us a pctree.</li>
+<li><s><strong>Unblock G1</strong> (nue XGBoost weights) and <strong>G5</strong> (<code>pr_display</code>)</s> — <strong>both done 2026-08-17.</strong></li>
+<li><s><strong>Decide G2</strong></s> — <strong>done 2026-08-17</strong>: the uBooNE
+    <code>scn</code> UPS product supplies torch+sparseconvnet, wired by
+    <code>setup-dlvtx.sh</code> (<a href="#g2">§7.2</a>). Remaining decision is whether the
+    +6.8 s/event is worth it, which needs a multi-event measurement.</li>
+<li><strong>G6</strong> — <span class="tag warn">deferred</span> by owner decision
+    2026-08-17: it buys <em>only</em> Route B, so it is done when we take Route B up, not before.
+    Needs a pass-through tap component (<a href="#gaps">§7</a>), not a config argument.</li>
 <li><strong>Route B pilot, 10 events</strong> — <code>wct-pr-perevt.jsonnet</code> with the full
     15-name pipeline. Measures G7. Produces <code>tracking-pr.root</code> +
     <code>mabc-pr.zip</code> + <code>nusel-evt*.tsv</code> with correct RSE.</li>
@@ -577,8 +1357,12 @@ clustering+matching half.
     divergence, not noise.</li>
 <li><strong>Fix G4</strong> — add <code>bee_sink</code> to <code>clus_pr</code> so PR Bee layers share
     <code>mabc.zip</code> and the event index stays aligned.</li>
-<li><strong>Fix G3 properly</strong> — <code>rse_from_ident</code> in the two ROOT visitors, so
-    Route A's ROOT output is self-identifying.</li>
+<li><s><strong>Split the labeler in two</strong></s> — <strong>done 2026-08-17</strong>
+    (<a href="#two-labelers">§6.7</a>, verified <a href="#two-labelers-done">§6.8</a>): truth is now
+    attached upstream of the PR node and is independent of every PR knob.</li>
+<li><strong>Fix G3 via the labeler's metadata</strong> — with instance A upstream, the PR node's input
+    tensor set already carries the true RSE; add <code>rse_from_metadata</code> to MABC and the two
+    ROOT visitors. <em>Not</em> <code>rse_from_ident</code>, which yields run/subrun = 0.</li>
 <li><strong>Scale</strong>, once 4≡5 and the per-event cost is known.</li>
 </ol>
 
@@ -603,7 +1387,7 @@ toolkit <code>cfg/pgrapher/experiment/sbnd/{clus,img,qlmatching,wct-pr-perevt}.j
 <code>clus/src/NeutrinoVertexFinder.cxx</code>;
 <code>root/src/{UbooneTaggerOutputVisitor,SbndPrMagnifyTrackingVisitor}.cxx</code>;
 <code>sbnd_xin/{run_pr_chain_batch.sh,run_ql_evt.sh,nusel_extract.py}</code>;
-ai-helper issue 11 harness.</p>
+ai-helper issue 11 harness.<br>Tracking issue: <a href="https://github.com/HaiwangYu/wire-cell-toolkit-ai-helper/issues/13">ai-helper #13</a> · <a href="https://github.com/HaiwangYu/wire-cell-toolkit-ai-helper/blob/main/issues/13-pr-chain-1step/13-pr-chain-1step.md">issues/13-pr-chain-1step</a></p>
 
 </div>
 </body>

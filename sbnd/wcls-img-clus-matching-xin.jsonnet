@@ -29,13 +29,14 @@ local reality = std.extVar('reality');
 // The reco chain's reality config (use_sce, pos_offset_on) is grouped inside
 // the toolkit clus maker keyed by `reality` -- see clus.jsonnet `reco` local.
 
-// The follow-up tail -- STM/TGM/FC PR taggers -> wclsTensorSetLabeler -> dump --
+// The follow-up tail -- labeler_truth -> STM/TGM/FC PR taggers -> labeler_tagger -> dump --
 // is assembled below in this entry config (see the "follow-up tail" section);
 // clus.jsonnet now produces only the clustering+matching all-APA MABC.  Requires
-// the "WireCellAIML" plugin + "wclsTensorSetLabeler:clus_all_apa" inputer in the
-// fcl (both fcls have them); the labeler runs in BOTH realities (sim attaches nu
-// truth + truth_per_track + truth Bee sets + nugraph-with-truth, data attaches
-// RSE + input-only HDF5).  The tagger_stm/tgm/fc Bee sets are emitted in both.
+// the "WireCellAIML" plugin + BOTH "wclsTensorSetLabeler:labeler_truth" and
+// ":labeler_tagger" inputers in the fcl (both fcls have them); the labelers run
+// in BOTH realities (sim attaches nu truth + truth_per_track + truth Bee sets +
+// nugraph-with-truth, data attaches RSE + input-only HDF5).  The
+// tagger_stm/tgm/fc Bee sets are emitted in both realities.
 
 // Canonical SBND simparams (toolkit).  drift_speed (1.563 mm/us) flows into
 // QLMatching from here; no DL/DT/lifetime/driftSpeed extVars are needed.
@@ -108,7 +109,12 @@ local img_pipes = [
 local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 // rse_from_ident: each frame's tensor ident carries the real event id, so the
 // Bee display is labelled with the true event number (matches Xin's chain).
-local clus_maker = clus(rse_from_ident=true, reality=reality);
+// rse_from_metadata=true: every MABC prefers the run/subrun/event carried in
+// its input tensor-set metadata, stamped by the wclsTensorSetMetadataAttacher
+// nodes below.  rse_from_ident stays on as the fallback for any node whose
+// input carries no metadata (C++ precedence: metadata > ident > config), so
+// nothing regresses if an attacher is removed.
+local clus_maker = clus(rse_from_ident=true, rse_from_metadata=true, reality=reality);
 // Single shared Bee sink: every MABC node (per-APA + all-APA) writes into this
 // one zip instead of one zip per node.
 local bee_shared = {
@@ -116,6 +122,37 @@ local bee_shared = {
     name: 'mabc_shared',
     data: { outname: 'mabc.zip', initial_index: 0 },
 };
+// ---- RSE metadata attachers (larwirecell wclsTensorSetMetadataAttacher) ----
+// The WCT graph cannot otherwise know the art run/subrun: a tensor ident is the
+// EVENT number alone (CookedFrameSource -> SimpleFrame(event.event(), ...)),
+// which is why MABC's rse_from_ident writes run=subrun=0.  These nodes stamp
+// runNo/subRunNo/eventNo into the tensor-set metadata; each downstream MABC
+// picks them up via rse_from_metadata and forwards them to its own output.
+//
+// They are O(1): the output shares the input's ITensor vector by pointer, with
+// no point-cloud round trip, so instantiating three costs microseconds.
+//
+// Placement -- one immediately upstream of every MABC whose RSE matters:
+//   rse_apa0/1  after PointTreeBuilding, before the per-APA MABCs
+//   rse_all_apa after the joint matcher, before clus_all_apa
+// clus_pr needs none: labeler_truth sits directly upstream and stamps the same
+// three keys from its own art::Event.
+// Each MUST also be listed in the fcl 'inputers' or it never sees an
+// art::Event; it warns and passes through rather than stamping 0/0/0.
+local rse_attach = [
+    g.pnode({
+        type: 'wclsTensorSetMetadataAttacher',
+        name: 'rse_apa%d' % n,
+        data: {},
+    }, nin=1, nout=1)
+    for n in std.range(0, nanode - 1)
+];
+local rse_all_apa = g.pnode({
+    type: 'wclsTensorSetMetadataAttacher',
+    name: 'rse_all_apa',
+    data: {},
+}, nin=1, nout=1);
+
 // save_assoc_id=true: the per-APA clustering_isolated pass writes the isolated-
 // grouping provenance (assoc_cluster_id/assoc_cluster_main); this flag
 // homogenizes it so it SURVIVES serialization out of the per-APA MABC (the
@@ -128,7 +165,9 @@ local bee_shared = {
 // all_apa save_real/assoc_cluster_id below (real_cluster_id is instead created
 // by all_apa's own examine_bundles, so it needs no per-APA flag).
 local clus_pipes = [
-    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared, save_assoc_id=true)
+    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared, save_assoc_id=true,
+                       // spliced between PointTreeBuilding and the per-APA MABC
+                       pre_mabc=rse_attach[n])
     for n in std.range(0, nanode - 1)
 ];
 
@@ -177,53 +216,126 @@ local beam_window = [0.2 * wc.us, 2.2 * wc.us];
 local pds = (import 'pgrapher/experiment/sbnd/particle_dataset.jsonnet')();
 local pr_node = clus_maker.pr(
     tools.anodes, dump=false,
+    // Share the ONE Bee zip.  Without this the PR display layers
+    // (track_fit / shower_track / vertices -- the only place the fitted
+    // trajectory, per-particle shower/track colouring and reconstructed
+    // vertices appear) go to mabc-pr.zip, which the bulk harness deletes.
+    // Sharing renames this node's two colliding sets to clustering-pr /
+    // mc-pr; see clus.jsonnet.
+    bee_sink=bee_shared,
+    // FULL 15-stage SBND production PR chain, matching sbnd_xin's
+    // run_pr_chain_batch.sh PIPELINE string exactly (docs/5-pr-chain-in-1step).
+    // Ordering is load-bearing, not stylistic:
+    //   * protect_bundle + steiner_refresh sit AFTER the cosmic taggers (uboone
+    //     takes cosmic verdicts on UNSPLIT clusters, wire-cell-prod-stm.cxx:806)
+    //     and BEFORE tagger_check_neutrino (Protect_Over_Clustering exists only
+    //     in the nue executable, wire-cell-prod-nue.cxx:1322).  SBND production
+    //     default since 2026-08-02.
+    //   * steiner_refresh must immediately follow protect_bundle: it rebuilds
+    //     only the steiner products the split purged.
+    //   * nue_bdt_scorer after numu_bdt_scorer.
+    //   * tagger_output after tracking_visitor -- it reopens tracking-pr.root
+    //     in UPDATE mode.
+    // The last four need the WireCellRoot plugin (both fcls load it).
     pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
-                    'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc'],
+                    'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
+                    'protect_bundle', 'steiner_refresh', 'tagger_check_neutrino',
+                    'numu_bdt_scorer', 'nue_bdt_scorer', 'tracking_visitor', 'tagger_output'],
     particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window,
     // Match the SBND production operating point (apc doc pr/24 sec 16): the
     // 2-step wct-pr-perevt.jsonnet sets iso_endpoint=true; mirror it here so the
     // 1-step uses the same endpoint finder for the FC/containment check.
     iso_endpoint=true);
 
-// wclsTensorSetLabeler (larwirecell "WireCellAIML" plugin).  Node name kept as
-// 'clus_all_apa' so the fcl inputer "wclsTensorSetLabeler:clus_all_apa" still
-// resolves.  Deps come from clus_maker primitives so the config is identical to
-// what clus.jsonnet used to build; reads raw (non-t0-corrected) blob coords, so
+// wclsTensorSetLabeler (larwirecell "WireCellAIML" plugin).  Deps come from
+// clus_maker primitives; reads raw (non-t0-corrected) blob coords, so
 // drift_speed/time_offset/tick MUST match the BlobSampler.
 local lbl_dv = clus_maker.detector_volumes(tools.anodes, face='');
 local lbl_pcts = clus_maker.pc_transforms(lbl_dv);
 local lbl_fv = clus_maker.fiducial_box();
-local labeler = g.pnode({
+
+// TWO labeler instances, one either side of pr_node (docs/5-pr-chain-in-1step
+// sec 6.7).  The labeler does four separable jobs and only the tagger Bee sets
+// need the PR verdicts, so truth is attached UPSTREAM of the PR stage:
+//
+//   clus_all_apa -> labeler_truth -> pr_node -> labeler_tagger -> tail_dump
+//
+// Why it matters: the PR stage SPLITS clusters (switch_scope, unmerge_bundle,
+// unmerge_assoc, protect_bundle) and the MABC renumbers idents 1..N after every
+// step, so a labeler placed after it attaches truth to a PR-configuration-
+// dependent clustering.  Upstream, the truth labels are stable against every PR
+// knob.  They still survive the splits: trackid is written into each BLOB
+// node's "scalar" local PC, while switch_scope erases only the CLUSTER-level
+// "perblob" dataset, and separate() moves blob nodes wholesale.
+//
+// The labeler passes every non-live tensor through untouched (it re-serializes
+// only pointtrees/N/live), so the dead grouping still reaches pr_node's
+// fiducialutils.
+local labeler_common = {
+    inpath: 'pointtrees/%d',
+    grouping: 'live',
+    reality: reality,
+    anodes: [wc.tn(anode) for anode in tools.anodes],
+    detector_volumes: wc.tn(lbl_dv),
+    pc_transforms: wc.tn(lbl_pcts),
+    drift_speed: clus_maker.drift_speed,
+    time_offset: clus_maker.time_offset,
+    tick: 0.5 * wc.us,
+    // shift the priorSCE (true) depos true->reco before association.
+    sce_field: wc.tn(clus_maker.sce_field_fwd),
+    sce_correction: true,
+    n_sample_truth_depo_sce: 1,
+    pf_ke_min: 10 * wc.MeV,
+    pf_fiducial: wc.tn(lbl_fv),
+    pf_nu_only: true,
+    truth_tracks_nu_only: true,
+    bee_sink: wc.tn(bee_shared),
+    // tagger_stm/tgm/fc Bee sets use the SAME corrected coords as
+    // clustering_global (data x_t0cor/y_cor/z_cor, sim x_t0cor/y/z).
+    tagger_coords: clus_maker.bee_coords,
+    // beam gate for the 4-case tagger cluster_id (0 non-main, 1 out-of-window
+    // main, 2 in-window untagged, 3 in-window tagged); matches pr's window.
+    beam_window: beam_window,
+};
+local labeler_uses =
+    tools.anodes + [lbl_dv, lbl_pcts, clus_maker.sce_field_fwd, lbl_fv, bee_shared];
+
+// (A) BEFORE pr_node: owns the truth association (writes the per-blob trackid),
+// the truth_per_track tensor, the truth/sed Bee sets and the nugraph HDF5.
+// Emits NO tagger sets -- the flags do not exist yet, so they would be all-zero
+// AND would collide with (B)'s entries in the shared zip (the tagger set names
+// are hardcoded, not derived from bee_algorithm).
+local labeler_truth = g.pnode({
     type: 'wclsTensorSetLabeler',
-    name: 'clus_all_apa',
-    data: {
-        inpath: 'pointtrees/%d',
-        grouping: 'live',
-        reality: reality,
-        anodes: [wc.tn(anode) for anode in tools.anodes],
-        detector_volumes: wc.tn(lbl_dv),
-        pc_transforms: wc.tn(lbl_pcts),
-        drift_speed: clus_maker.drift_speed,
-        time_offset: clus_maker.time_offset,
-        tick: 0.5 * wc.us,
-        // shift the priorSCE (true) depos true->reco before association.
-        sce_field: wc.tn(clus_maker.sce_field_fwd),
-        sce_correction: true,
-        n_sample_truth_depo_sce: 1,
-        pf_ke_min: 10 * wc.MeV,
-        pf_fiducial: wc.tn(lbl_fv),
-        pf_nu_only: true,
-        truth_tracks_nu_only: true,
-        bee_sink: wc.tn(bee_shared),
-        // tagger_stm/tgm/fc Bee sets use the SAME corrected coords as
-        // clustering_global (data x_t0cor/y_cor/z_cor, sim x_sce/y_sce/z_sce).
-        tagger_coords: clus_maker.bee_coords,
-        // beam gate for the 4-case tagger cluster_id (0 non-main, 1 out-of-window
-        // main, 2 in-window untagged, 3 in-window tagged); matches pr's window.
-        beam_window: beam_window,
+    name: 'labeler_truth',
+    data: labeler_common {
+        label_blobs: true,
+        // NO 'pf': the truth particle tree is not written here.  It is handed to
+        // pr_node via pf_metadata_key and comes back out as ONE merged 'mc',
+        // with the reco flow hung under a "reco nu" node -- Bee shows only one
+        // particle tree per event, so this is the only way to see both.
+        bee_sets: ['truth', 'sed'],
+        pf_metadata_key: 'bee_pf_truth',
+        hdf5_output: true,
     },
-}, nin=1, nout=1,
-   uses=tools.anodes + [lbl_dv, lbl_pcts, clus_maker.sce_field_fwd, lbl_fv, bee_shared]);
+}, nin=1, nout=1, uses=labeler_uses);
+
+// (B) AFTER pr_node: emits ONLY the tagger verdict Bee sets, which need
+// flag_STM/flag_TGM/flag_FC/lm_flag from the PR stage.
+// label_blobs=false is REQUIRED, not an optimization: the trackid write-back is
+// not reality-gated, so a second labeling pass would stamp trackid=-1 over (A)'s
+// labels in data mode, and would pay the (expensive) depo projection twice in
+// sim.  With it false the projection is skipped and the existing per-blob
+// trackid is read instead.
+local labeler_tagger = g.pnode({
+    type: 'wclsTensorSetLabeler',
+    name: 'labeler_tagger',
+    data: labeler_common {
+        label_blobs: false,
+        bee_sets: ['tagger'],
+        hdf5_output: false,
+    },
+}, nin=1, nout=1, uses=labeler_uses);
 
 // Terminal sink for the labeled pctree tarball (dump_mode=false -> real tensors,
 // the historical labeler deliverable).  Bee -> mabc.zip and nugraph HDF5 are
@@ -242,13 +354,13 @@ local tail_dump = g.pnode({
 //  sigs ─FrameFanout─┬─ img[0] ─(live,dead)─ clus[0] ─ flash_attach[0] ─┐
 //                    └─ img[1] ─(live,dead)─ clus[1] ─ flash_attach[1] ─┤
 //  opflash[n] ───────────────────────────────────────(port1) flash_attach[n]
-//        flash_attach[n] ─(port n)─ matching_joint ─ clus_all_apa (all-APA MABC)
-//        clus_all_apa ─ pr_node (taggers) ─ labeler ─ tail_dump
+//        flash_attach[n] ─(port n)─ matching_joint ─ rse_all_apa ─ clus_all_apa (all-APA MABC)
+//        clus_all_apa ─ labeler_truth ─ pr_node (taggers) ─ labeler_tagger ─ tail_dump
 local graph = g.intern(
     innodes=[wcls_input.sigs],
     centernodes=[frame_fan] + img_pipes + clus_pipes + flash_attach
                 + [matching_joint] + wcls_input.opflashes
-                + [clus_all_apa, pr_node, labeler],
+                + [rse_all_apa, clus_all_apa, labeler_truth, pr_node, labeler_tagger],
     outnodes=[tail_dump],
     edges=
         [g.edge(wcls_input.sigs, frame_fan, 0, 0)]
@@ -258,10 +370,12 @@ local graph = g.intern(
         + [g.edge(clus_pipes[n], flash_attach[n], 0, 0) for n in std.range(0, nanode - 1)]
         + [g.edge(wcls_input.opflashes[n], flash_attach[n], 0, 1) for n in std.range(0, nanode - 1)]
         + [g.edge(flash_attach[n], matching_joint, 0, n) for n in std.range(0, nanode - 1)]
-        + [g.edge(matching_joint, clus_all_apa, 0, 0)]
-        + [g.edge(clus_all_apa, pr_node, 0, 0)]
-        + [g.edge(pr_node, labeler, 0, 0)]
-        + [g.edge(labeler, tail_dump, 0, 0)]
+        + [g.edge(matching_joint, rse_all_apa, 0, 0)]
+        + [g.edge(rse_all_apa, clus_all_apa, 0, 0)]
+        + [g.edge(clus_all_apa, labeler_truth, 0, 0)]
+        + [g.edge(labeler_truth, pr_node, 0, 0)]
+        + [g.edge(pr_node, labeler_tagger, 0, 0)]
+        + [g.edge(labeler_tagger, tail_dump, 0, 0)]
 );
 
 local app = {
