@@ -558,15 +558,17 @@ names. Fixed and re-uploaded; the links above are the corrected sets.
 ## 9. Round 2 continued (2026-08-17 pm) — class B root cause and fix design
 
 Owner asked to dig into §8.6's 9 undiagnosed class-B findings and propose a
-fix (design only, not implemented). **Result: two distinct, well-evidenced
-mechanisms account for 7 of the 9; the remaining 2 resist this round's
-instrumentation and are left open.**
+fix (design only, not implemented). **Result (updated after a follow-up
+round on the 2 initially-unresolved events, §9.5): three distinct,
+well-evidenced mechanisms account for 8 of the 9; the 9th (`506746`) was
+owner-reviewed and is not a defect.**
 
 ### 9.1 New diagnostics (committed, opt-in, byte-identical when off)
 
-Two additions to `clus/src/NeutrinoGraphAudit.cxx` / `TaggerCheckNeutrino.cxx`,
-both proven byte-identical to production on every event they touched
-(`hash_archive.py` PASS on all 12 reruns below, before and after each build):
+Additions to `clus/src/NeutrinoGraphAudit.cxx` / `TaggerCheckNeutrino.cxx`,
+all proven byte-identical to production on every event they touched
+(`hash_archive.py` PASS on every rerun below, before and after each of 5
+builds this round):
 
 - **Four new TRACE lines inside op1** (the existing duplicate-corridor
   merge): `op1 scope` + `op1 scope-member` (which segments were even
@@ -578,22 +580,31 @@ both proven byte-identical to production on every event they touched
   visible with `SBND_WCT_LOGLEVEL=trace`, no code path changed.
 - **`dup_stage_census()`** (new, `TaggerCheckNeutrino.cxx`, gated on a new
   env var `WCT_DUP_STAGE_DEBUG`, independent of the existing `WCT_DET_DEBUG`
-  checksum tool): at 5 pipeline checkpoints (`overall_main_vertex`,
+  checksum tool): at 7 pipeline checkpoints (`main:find_proto_vertex`,
+  `main:determine_main_vertex`, `overall_main_vertex`,
   `snap_main_vertex_to_kink`, `main_vertex_graph_audit`,
-  `improve_vertex`/`examine_direction`, `shower_clustering_with_nv`) scans
-  **every** pair of segments on `main_cluster` — unscoped, unlike op1 — with
-  op1's own metric (path-point fraction within 1.4 cm, chord angle), logging
-  any pair clearing overlap 0.5 (looser than production's 0.8, to see a pair
+  `improve_vertex`/`examine_direction`, `shower_clustering_with_nv` — the
+  first two added in a follow-up round, §9.5, once the first five proved
+  insufficient to locate 350935's generator) scans **every** pair of
+  segments on `main_cluster` — unscoped, unlike op1 — with op1's own metric
+  (path-point fraction within 1.4 cm, chord angle), logging any pair
+  clearing overlap 0.5 (looser than production's 0.8, to see a pair
   *approaching* duplication) plus an unconditional segment-count line per
   checkpoint. Answers "does this duplicate already exist, and is it in
   op1's scope, at each named stage" without per-segment coordinate matching.
+- **Coordinate-matching against `WCT_DET_DEBUG=2`'s pre-existing lineage
+  backtraces** (§9.5): the tool is unchanged, but note for future use —
+  its `v1`/`v2`/`wf`/`wb` fields are **millimeters**, and the raw fprintf
+  output lands in `stdout.log`, not the spdlog `wct_pr_evt<ID>.log` (round 1's
+  doc used mm-scale examples throughout but did not call the unit out
+  explicitly; this round lost time to a cm/mm mismatch before finding it).
 
 Repro:
 ```bash
 SBND_WCT_LOGLEVEL=trace WCT_DUP_STAGE_DEBUG=1 PR_JOBS=1 ./run_pr_chain_batch.sh \
     <ql_root> <out> data <event>
 ```
-Freshness/gates: `wcbuild` four times this round (one per instrumentation
+Freshness/gates: `wcbuild` five times this round (one per instrumentation
 addition), each followed by `./build/clus/wcdoctest-clus` (2105/2105 PASS
 every time) and a hash-identity rerun of the affected event(s) before reading
 any new TRACE line.
@@ -641,37 +652,87 @@ final overlap 0.741 matches op1's mid-pipeline 0.74 almost exactly, so this
 is not a timing artifact: **op1 saw this pair and declined it purely on the
 now-stricter threshold.**
 
-### 9.4 Unresolved (2/9): `350935`, `506746`
-
-`dup_stage_census`, run unscoped over the whole main cluster at all 5
-checkpoints, found **no** pair clearing overlap 0.5 at any checkpoint for
-either event, yet the final Bee output shows one (350935: 251.4/13.4 cm,
-overlap 1.00; 506746: 15.9/11.5 cm, overlap 0.95). `main_cluster`'s ident is
-stable across checkpoints in the log (17 and 21 respectively) but does
-**not** match the final Bee `cluster_id` (11 and 13) — so whatever the Bee
-dump reports as the duplicated cluster is not straightforwardly the same
-object my checkpoints tracked as `main_cluster`, and/or the duplication is
-introduced by something after `shower_clustering_with_nv` (the last
-graph-mutating call before the taggers) that the added checkpoints do not
-cover — a global multi-segment refit is the leading candidate but is not
-confirmed. 350935's 420-point, 251 cm single segment is far more heavily
-fitted than anything visible at `shower_clustering_with_nv` time (2
-segments, unremarkable point counts), consistent with a late, whole-cluster
-refit reshaping already-merged segments into an apparently duplicated pair
-— but this is a hypothesis, not a proven mechanism. Left open; not attributed
-to Mechanism A or B.
+### 9.4 `506746`: owner-reviewed, not a defect
 
 Bee (production only, `docs/pr/83_bee-r2.index.txt`):
 <https://www.phy.bnl.gov/twister/bee/set/4e9e6863-8bf0-4943-8dc3-3d9c22513561/event/list/>
-(idx 0 = 350935 mcp1k, idx 1 = 506746 NCpi0).
+(idx 1). Owner looked at both remaining candidates and confirmed 506746 is
+fine — the 15.9/11.5 cm pair is not a real duplication. No further
+investigation.
 
-### 9.5 Fix design (not implemented this round)
+### 9.5 Mechanism C — `350935`: the ORIGINAL main cluster is abandoned mid-pipeline, and never audited again
 
-Two independent, narrowly-targeted knobs, matching the two confirmed
-mechanisms — deliberately **not** a single "raise everything" change, since
-op1's current scope and threshold were each set for reasons unrelated to
-this defect (mvga_radius bounds an expensive near-vertex audit; 0.8 closed a
-different marginal-overlap gap in pr/86) and loosening either broadly risks
+`350935` **is a real defect**, now fully root-caused: it is not scope, not
+threshold, but a *third, distinct* mechanism — `main_cluster` gets silently
+re-pointed away from cluster 11 (the one the bundle/nusel layer selected and
+what Bee ultimately reports) to a different, unrelated cluster 17, and
+**every single downstream duplicate-corridor audit runs on 17, never again on
+11.** Owner-flagged coordinate `(-16.3, 35.2, 292.2)` sits (within ~4 cm)
+exactly on the vertex where the two duplicate segments meet.
+
+**Trail (`WCT_DET_DEBUG=2` lineage + two new `dup_stage_census` checkpoints
+at `main:find_proto_vertex` and `main:determine_main_vertex`, both proven
+byte-identical to production, `wcdoctest-clus` 2105/2105 throughout):**
+
+- `TaggerCheckNeutrino: selected main cluster 11` (bundle/nusel selection,
+  before `TaggerCheckNeutrino::visit()` even starts pattern recognition —
+  this is the cluster id Bee ultimately reports, fixed at this point).
+- `find_proto_vertex` on cluster 11 → `init_first_segment` creates the seed
+  of the eventual 251.4 cm long segment; `find_other_segments` (called
+  immediately after, same `find_proto_vertex` call) creates the 13.4 cm stub
+  from the identical vertex `(-16.51, 37.39, 294.82)` cm. `dup_stage_census`
+  at this checkpoint already reads **overlap 1.00, angle 4.0°, len
+  13.4/250.7 cm** — the defect is born in the *very first* pattern-recognition
+  step, before main-vertex determination, before any audit could possibly
+  run.
+- `determine_main_vertex` on cluster 11 (still the same duplicate, now
+  13.4/251.4 cm — its final, Bee-reported lengths) picks the far end of the
+  251 cm muon as cluster 11's own vertex candidate, `compare_main_vertices:
+  selected vertex (-19.01,-99.01,57.97) score=-0.625` — a **negative**
+  score, i.e. a weak/unconvincing determination.
+- `determine_overall_main_vertex` (the ordinary, non-DL fallback — separate
+  from and *not* gated by pr/89's `dl_vtx_swap_guard`/
+  `main_vertex_swap_apply`, which only cover the DL path) then evaluates
+  other candidate clusters, runs a *fresh* `find_proto_vertex` on a
+  genuinely different, unrelated cluster (physically ~800 cm away in x, near
+  what becomes the event's real interaction region), and
+  `check_switch_main_cluster` calls `swap_main_cluster(new=17, old=11, ...)`
+  (log: `pr59 assoc-census: swap_main_cluster 11 -> 17`,
+  `NeutrinoPatternBase.cxx:3440`). **From this point on `main_cluster` is
+  17** — confirmed directly: `main_vertex_graph_audit`, `improve_vertex`,
+  `shower_clustering_with_nv` all log `cluster=17` for the rest of the event
+  (§9.4's old table, now explained rather than mysterious).
+- Cluster 11 goes into `other_clusters` and is never revisited by any
+  duplicate-corridor pass. Its two segments' final lengths (251.39 cm,
+  13.35 cm) match their state immediately after that first
+  `determine_main_vertex` call almost exactly (250.7→251.4 cm across the two
+  checkpoints, both well before the swap) — **nothing after the swap ever
+  touches cluster 11 again**, yet it is what Bee (and `nusel-evt350935.tsv`'s
+  `main_id=11`) reports, because the bundle-level cluster identity assigned
+  before `TaggerCheckNeutrino::visit()` started is never updated to reflect
+  the swap.
+
+This is a **structural gap, not a threshold or scope tuning issue**: no
+knob controls whether an *abandoned* main cluster gets a duplicate-corridor
+pass before being set aside — op1/mvga's entire design assumes it always
+runs on the cluster that ends up being reported, which `swap_main_cluster`
+silently breaks. §9.2/§9.3's op1-only knobs (`mvga_op1_radius`,
+`mvga_op1_dup_frac`) would not have caught this even if fully unscoped and
+threshold-relaxed, because op1 never runs on cluster 11 at all after the
+swap — this is orthogonal to Mechanisms A and B, not a variant of them.
+
+Bee (production only, `docs/pr/83_bee-r2.index.txt`):
+<https://www.phy.bnl.gov/twister/bee/set/4e9e6863-8bf0-4943-8dc3-3d9c22513561/event/list/>
+(idx 0 = 350935 mcp1k — the duplication is the two segments meeting at
+`(-15.5, 37.5, 295.7)` cm, i.e. the owner-flagged coordinate).
+
+### 9.6 Fix design (not implemented this round)
+
+Three independent, narrowly-targeted knobs, one per confirmed mechanism —
+deliberately **not** a single "raise everything" change, since op1's current
+scope and threshold were each set for reasons unrelated to this defect
+(mvga_radius bounds an expensive near-vertex audit; 0.8 closed a different
+marginal-overlap gap in pr/86) and loosening either broadly risks
 re-litigating that tuning:
 
 - **`mvga_op1_radius`** (default `0` = use `mvga_radius`, legacy): a
@@ -689,24 +750,44 @@ re-litigating that tuning:
   `mvga_dup_frac`'s other consumer (op3's satellite-anchor absorb gate,
   `mvga_sat_dup_frac`'s fallback). Set to the pre-pr/86 0.7 to recover
   404684 without touching op3's pr/86-tuned behavior at all.
+- **`swap_orphan_dup_audit`** (default `false`, Mechanism C, §9.5): inside
+  `swap_main_cluster` (`clus/src/NeutrinoPatternBase.cxx:3440`, the single
+  choke point for all 3 call sites in `NeutrinoVertexFinder.cxx` — the
+  DL-path one already covered by `dl_vtx_swap_guard`/`main_vertex_swap_apply`
+  plus the two non-DL ones neither of those touches), when true, run op1's
+  duplicate-corridor merge **unscoped** (no vertex to center a radius on —
+  the whole point is this cluster is being abandoned) on `old_main_cluster`
+  before it is set aside into `other_clusters`. One-shot, cheap (op1 is
+  already proven RSS/wall neutral in §8), and directly closes the gap: an
+  abandoned cluster that is *still* what the bundle/nusel layer reports
+  gets exactly the one duplicate-corridor pass it would otherwise never
+  receive. Does not address *why* the bundle-selected cluster (11) and the
+  pattern-recognition-refined cluster (17) can diverge in the first place —
+  that is a bigger question (should Bee/nusel's reported cluster id track
+  the swap?) intentionally left out of scope for a single knob.
 
-Both are op1-only, additive (nothing about op2/op3/op3.5 changes), and
-should compose: with both set, 6/9 (§9.2) + 1/9 (§9.3) = **7 of 9 class-B
-findings should merge cleanly**, leaving only 350935/506746 (§9.4) for a
-future round once their mechanism is understood.
+The two op1 knobs are additive and should compose: with both set, 6/9
+(§9.2) + 1/9 (§9.3) = **7 of 9 class-B findings should merge cleanly**.
+`swap_orphan_dup_audit` is independent of them (§9.5 confirmed op1 never
+runs on cluster 11 at all, scoped or not) and targets 350935 specifically;
+between the three, **8 of 9 class-B findings have a proposed fix** — only
+the owner-reviewed non-issue (§9.4, 506746) needs nothing.
 
 Touch list: `clus/src/NeutrinoGraphAudit.cxx` (op1's `in_scope_segments()`
 radius check and the `frac < m_mvga_dup_frac` gate — two one-line changes to
-consult the new members when set), `clus/inc/WireCellClus/NeutrinoPatternBase.h`
-(two new members alongside `m_mvga_radius`/`m_mvga_dup_frac`),
-`clus/src/TaggerCheckNeutrino.cxx` (`get()` + `default_configuration()` +
-`pattern_algos.` thread), `cfg/pgrapher/common/clus.jsonnet` (key-suppression
-idiom), `cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet` (TLA
-thread, left OFF), `clus/test/doctest_clus_knob_defaults.cxx`. Gates it would
-owe: knob-off byte-identical over the 511-event manifest; knob-on census
-6/9+1/9 → 0 (via `pr83r2_census.py`, cross-checked against `dup_stage_census`
-TRACE); a `numu_score`/`nue_score`/`kine_reco_Enu`/vertex A/B on the 7
+consult the new members when set), `clus/src/NeutrinoPatternBase.cxx`
+(`swap_main_cluster` — the new unscoped op1 call on `old_main_cluster`),
+`clus/inc/WireCellClus/NeutrinoPatternBase.h` (three new members alongside
+`m_mvga_radius`/`m_mvga_dup_frac`), `clus/src/TaggerCheckNeutrino.cxx`
+(`get()` + `default_configuration()` + `pattern_algos.` thread),
+`cfg/pgrapher/common/clus.jsonnet` (key-suppression idiom),
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet` (TLA thread,
+left OFF), `clus/test/doctest_clus_knob_defaults.cxx`. Gates it would owe:
+knob-off byte-identical over the 511-event manifest; knob-on census
+6/9+1/9+1/9 → 0 (via `pr83r2_census.py`, cross-checked against
+`dup_stage_census` TRACE — the swap-orphan case needs a fresh `WCT_DET_DEBUG`
+or `pr59 assoc-census` confirmation that op1 actually ran on the pre-swap
+cluster); a `numu_score`/`nue_score`/`kine_reco_Enu`/vertex A/B on the 8
 recovered events (NCpi0's untouched-in-round-1 status makes it the most
 informative arm to watch here — all 4 of its class-B findings are Mechanism
-A); `./build/clus/wcdoctest-clus`. **Not proposed**: any change addressing
-§9.4 — mechanism unknown, no knob to design yet.
+A); `./build/clus/wcdoctest-clus`.
