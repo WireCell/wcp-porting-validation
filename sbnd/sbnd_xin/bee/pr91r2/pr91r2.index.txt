@@ -2,11 +2,12 @@
 # Same 24 events and the SAME ORDER as the pr/84 round-3 sets, so idx N is the
 # same event there and the two rounds can be scanned side by side.
 #
-# BEFORE (knob off = shipped SBND production today, byte-identical to
+# BEFORE (knob off = the PREVIOUS production, byte-identical to
 #         work-pr84r3-dedup-*, gate PASS=48/48):
 #   https://www.phy.bnl.gov/twister/bee/set/e81dfbf9-3801-46a4-ad61-31b5511127f1/event/list/
-# AFTER  (shower_endpoint_skip_orphan_vtx = true; knob still DEFAULT OFF in
-#         cfg, SBND NOT flipped -- this arm is the proposal, not production):
+# AFTER  (shower_endpoint_skip_orphan_vtx = true).  FLIPPED SBND PRODUCTION ON
+#         2026-08-18 (toolkit 4ff9870f) -- this arm IS production now; bare-run
+#         composition gate vs it PASS=48/48:
 #   https://www.phy.bnl.gov/twister/bee/set/04107fda-6306-44e0-aa8c-12a352e32235/event/list/
 #
 # FIVE events differ; the other 19 are byte-identical between the two sets.

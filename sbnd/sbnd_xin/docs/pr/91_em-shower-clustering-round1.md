@@ -3,9 +3,10 @@
 **Status.** Sections 1 and 3–9 are **diagnosis and report only** — three
 `std::getenv`-gated debug probes, proven byte-neutral below, and no behaviour
 change. Section **2b** adds the one fix the owner asked for on top:
-`shower_endpoint_skip_orphan_vtx`, **DEFAULT OFF**, SBND **not** flipped,
-validated on a 24-event sample at the owner's instruction (*"no need to do full
-blown validation yet"*).
+`shower_endpoint_skip_orphan_vtx` — C++ default OFF, **SBND PRODUCTION ON since
+2026-08-18** (owner flip), validated on a 24-event sample at the owner's
+instruction (*"no need to do full blown validation yet"*). A standard-manifest
+gate is still owed; see the footprint caveat in sec 2b.
 
 Owner scope, verbatim: *"for these events, it seems that they did not go through
 the EM shower clustering like what we usually do. And treated as tracks in the
@@ -314,9 +315,23 @@ It also means the knob's footprint is **not** bounded by the dedup's: 1 of the
 estimate a rate — that is the gate this round did not run, and it is what a
 flip decision needs.
 
-**Not flipped.** `shower_endpoint_skip_orphan_vtx` ships **default OFF** and
-SBND stays off. The V2 evidence above is a 24-event sample chosen for this
-defect, not a production gate.
+**FLIPPED — SBND PRODUCTION ON, 2026-08-18** (toolkit `4ff9870f`), owner's
+call after scanning the Bee pair below: *"This is good, you can flip is on this
+for SBND production for now."* The C++ default stays `false`; only the SBND
+operating point turns it on (the `v3_extension_guard` idiom).
+
+**V3 — bare-run production composition.** Re-ran the same 24 events with **no
+`-A` override at all**, so the cfg flip is the only thing in play, and gated
+against the knob-on arm: **PASS=48 FAIL=0**. The SBND operating point remains
+the single source of truth (doc 68: a bare run *is* production). Compiled-config
+proof: the bare compile now carries `"shower_endpoint_skip_orphan_vtx" : true`
+and is byte-identical to the earlier explicit knob-on compile.
+
+**Footprint caveat, on the record in the cfg comment and here.** The 24 events
+were chosen for this defect, so V2 is a targeted sample, not a population gate.
+168596 — the one mover nobody hand-picked — shows the population is not the
+dedup's. **1 of the 20 non-hand-picked events moved**: a footprint signal, not
+a rate. A standard-manifest gate is still owed and is the obvious next round.
 
 ### Bee sets for the owner's scan
 
@@ -325,8 +340,8 @@ same event in both rounds.
 
 - **BEFORE** (knob off = shipped production today):
   `https://www.phy.bnl.gov/twister/bee/set/e81dfbf9-3801-46a4-ad61-31b5511127f1/event/list/`
-- **AFTER** (`shower_endpoint_skip_orphan_vtx = true`; the proposal, not
-  production):
+- **AFTER** (`shower_endpoint_skip_orphan_vtx = true`; **this is production as
+  of the 2026-08-18 flip**):
   `https://www.phy.bnl.gov/twister/bee/set/04107fda-6306-44e0-aa8c-12a352e32235/event/list/`
 
 Five differ — **idx 5 (347129), 6 (169626), 7 (174752), 11 (394532), 14
