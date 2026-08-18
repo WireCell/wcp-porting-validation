@@ -661,6 +661,10 @@ refit reshaping already-merged segments into an apparently duplicated pair
 — but this is a hypothesis, not a proven mechanism. Left open; not attributed
 to Mechanism A or B.
 
+Bee (production only, `docs/pr/83_bee-r2.index.txt`):
+<https://www.phy.bnl.gov/twister/bee/set/4e9e6863-8bf0-4943-8dc3-3d9c22513561/event/list/>
+(idx 0 = 350935 mcp1k, idx 1 = 506746 NCpi0).
+
 ### 9.5 Fix design (not implemented this round)
 
 Two independent, narrowly-targeted knobs, matching the two confirmed

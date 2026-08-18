@@ -29,3 +29,11 @@
 0	350935	mcp1k (251 cm duplicated segment, clus 11)
 1	404684	mcp1k (62 cm duplicated segment, clus 9, cathode-crossing)
 2	246579	nueCC48 (short near-parallel prong pair, doc 83 sec 6.2 class)
+#
+# class B unresolved pair only (sec 9.4 -- 350935 + 506746, production
+# only; the 2 of 9 that dup_stage_census could NOT attribute to Mechanism
+# A/B, mechanism unknown):
+# https://www.phy.bnl.gov/twister/bee/set/4e9e6863-8bf0-4943-8dc3-3d9c22513561/event/list/
+# bee_idx	event	sample
+0	350935	mcp1k (clus 11 in Bee / 17 during pattern recognition -- ident mismatch, see sec 9.4)
+1	506746	NCpi0 (clus 13 in Bee / 21 during pattern recognition -- ident mismatch, see sec 9.4)
