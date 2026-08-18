@@ -972,6 +972,9 @@ fi
 if [ -n "${SBND_MVGA_PROJ_DQDX_RATIO:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_proj_dqdx_ratio=${SBND_MVGA_PROJ_DQDX_RATIO}")
 fi
+if [ -n "${SBND_MVGA_PROJ_ANGLE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_angle=${SBND_MVGA_PROJ_ANGLE}")
+fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
 # SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet

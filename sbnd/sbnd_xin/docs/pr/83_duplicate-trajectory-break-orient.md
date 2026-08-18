@@ -1108,3 +1108,23 @@ PR'd-with-vertex events of the four arms.
 - Bee sets + owner-scan status: `docs/pr/83_bee-r4.index.txt`.
 - Census/mover TSVs: `docs/pr/83_r4-census-{on511,m2kon}.tsv`,
   `docs/pr/83_r4-movers-{nue,mc,ncpi0,m2k}.tsv`.
+
+### 11.7 r4b addendum -- 284206's third stem track (owner request)
+
+After r4, 284206's stem went 3 tracks -> 2: op1-proj merged 10045/10049
+but the residual pair 10048/10049 reads chord angle 22 deg -- just over
+op1's SHARED 20 deg gate (trace-proven: the pair never reaches the view
+computation; its ratio 0.52 would pass).  A shared-knob bump would
+loosen op1 too, so op1-proj gets its own ceiling: `mvga_proj_angle`
+(C++ default 0 = use `mvga_dup_angle` = byte-identical), SBND ON at 25.
+
+Small-set validation (owner-scoped, no full campaign): 284206 stem
+3 -> 1 track + the genuine 4.4 cm proton stub kept (duplicate 161 MeV
+electron gone from T_kine, shower 437 -> 484 MeV); the 7 other
+knob-affected events (138009 168596 74544 278046 169658 71642 178931)
+are byte-identical at 25 (hash gates 8/8 + 3/3 IDENTICAL vs the r4
+arms); doctest 2121/2121; compiled-config off byte-identical / on adds
+exactly `mvga_proj_angle: 25`; bare-config smoke of 284206 hash-matches
+the knob-on probe (arm `work-pr83r4b-smoke` vs `work-pr83r4b-t2`).
+Repro: `SBND_MVGA_PROJ_ANGLE=25 SBND_WCT_LOGLEVEL=trace
+bash run_pr_chain_batch.sh work-cbr3-census-on <tag> data 284206`.
