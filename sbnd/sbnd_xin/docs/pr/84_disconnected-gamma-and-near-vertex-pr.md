@@ -648,3 +648,237 @@ physically right.
 - Sample-collision note (§11): 14 of the 45 pr40r7-scan events live in
   nueCC48/NCpi0, not mcp1k.
 
+
+---
+
+# ROUND 3 (2026-08-18) — two showers on one start segment
+
+Owner scan of the round-2 Bee sets reported six PF problems. Four of them
+("duplicated electron", "clicking is weird", "the entire PF disappeared") are
+one defect, and it is **not cosmetic**: the same shower is also counted twice
+in the reconstructed neutrino energy. Owner directive: *"this is a clear bug
+... Isn't that coming from the same underlying issue. If we fix the underlying
+issue, not just display, we are better, right? Aim to fix the underlying issue
+please."* — so this round fixes the shower set, not the renderer.
+
+## 17. Round 3 repro
+
+```
+cd sbnd_xin
+# attribution of the twin (which pass built it) -- log-only, byte-neutral:
+WCT_SHOWER_CREATE_DEBUG=1 PR_EXTRA_STAGES=pr_display PR_JOBS=4 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr84r3-dbg-mc data \
+      169626 174752 347129 394532
+grep SHOWER_CREATE_DEBUG work-pr84r3-dbg-mc/pr_evt394532/stdout.log
+
+# arms: manifest = the 24 round-2 Bee events (the 4 twin events are inside it)
+PR_EXTRA_STAGES=pr_display PR_JOBS=32 ./run_pr_chain_batch.sh \
+    work-mcp1k-cb0805 work-pr84r3-off-mc data $(cat /home/xqian/tmp/pr84r3-mc.txt)
+#   ... same for {off,dedup,prod} x {mc,nue,ncpi0}; dedup adds
+#   SBND_SHOWER_DEDUP_START_SEG=1 SBND_PF_UNIQUE_NODE_IDS=1; prod is a BARE
+#   run against the flipped cfg (production-composition proof).
+
+# gates
+python3 scripts/pr83r3_hash_gate.py work-pr84r3-off-mc work-pr84r2-prod-mc ...
+python3 scripts/pr84r2_disp_gate.py work-pr84r3-off-mc work-pr84r3-dedup-mc ...
+python3 scripts/pr84r3_dedup_census.py work-pr84r3-off-mc work-pr84r3-dedup-mc
+```
+
+## 18. Root cause: the shower set contains twins
+
+`fill_bee_pf_tree` ids a shower node by the prototype convention
+`cluster_id*1000 + seg_id` (`MultiAlgBlobClustering.cxx:1588`,
+`NeutrinoID.cxx:1268`) — the START SEGMENT's id. Two `PR::Shower` objects
+built on the same start segment therefore emit two nodes carrying one jsTree
+id, and jsTree keys its model by id (`_model.data[...]`,
+`wire-cell-bee3/events/static/js/lib/jstree.min.js`). In 394532 the repeated
+id sat on a node **and its own descendant** (`e- 66 MeV` [8033] inside
+`e- 66 MeV` [8033]) — selecting it blanked the whole panel, exactly as the
+owner saw. The id addresses nothing else: `events/static/js/bee/physics/mc.js`
+draws each node as one straight line from `data.start` to `data.end`.
+
+`WCT_SHOWER_CREATE_DEBUG` attributes every twin to one of two passes:
+
+| evt | twin | built by | why it was allowed |
+|---|---|---|---|
+| 169626 | seg 22024: sid0 conn1 88.1 MeV 1 seg · sid1 conn3 107.9 MeV 6 segs | `nv_in_main_cluster` + `in_other_clusters_A` | the start-segment pick in `shower_clustering_in_other_clusters` (`NeutrinoShowerClustering.cxx:1752-1766`) consults **no claim at all**, and the segment it takes off the cluster's own vertex can belong to another cluster entirely |
+| 174752 | seg 48010: sid0 conn1 9.6 · sid2 conn3 22.0 | same | same |
+| 347129 | seg 53021: sid0 conn1 65.0 2 segs · sid1 conn3 156.7 8 segs | same | same |
+| 347129 | seg 11000: sid14 · sid15, both conn3 63.9 MeV 1 seg | `in_other_clusters_B` + `conn3_unreachable` (pr/74 K5) | K5 *does* guard on `map_segment_in_shower` (`:2030`), but `update_shower_maps` only refreshes that map at the END of the function, so K5 reads a map that predates loop B |
+| 394532 | seg 39023 (conn1 30.6 / conn3 38.0) and seg 8033 (sid8/sid9, both 66.0) | both patterns | both |
+
+**The prototype has the identical hole** (`NeutrinoID_shower_clustering.h`
+:1481-1495 picks `sg` off `map_vertex_segments[vertex]` with no
+`map_segment_in_shower` test, and its `mc_id` is the same
+`cluster_id*1000 + seg_id`), so this is not a porting divergence (M15) — it is
+a latent defect both codebases share, and the fix is a deliberate improvement
+over the prototype, shipped behind a knob.
+
+**The twins predate round 2.** They are present in the round-2 `off` arm
+(`169626 off: dup_ids={22024: 2}`); round-2's F1 removed the pseudo-gamma
+wrapper that had been hiding them.
+
+## 19. The same twins inflate the neutrino energy
+
+`fill_kine_tree` is called with the same `showers` set
+(`TaggerCheckNeutrino.cxx:1937`), so a twin is counted twice:
+
+| evt | `kine_reco_Enu` off | on | delta | what was removed |
+|---|---|---|---|---|
+| 169626 | 825.4 | 737.3 | −88.1 | the 1-segment 88.1 MeV view of the same electron the 107.9 MeV view describes |
+| 174752 | 188.7 | 176.0 | −12.6 | 9.6 + 22.0 replaced by one 18.9 MeV entry |
+| 347129 | 700.8 | 571.9 | −128.9 | 65.0 (small view of the 156.7 electron) + a verbatim 63.9 duplicate |
+| 394532 | 352.2 | 248.2 | −104.1 | 38.0 (same segment as the kept 30.6) + a verbatim 66.0 duplicate |
+
+Note the census metric `kine_dup` (identical `(pdg, energy)` entries) only sees
+the *verbatim* duplicates: 169626 and 174752 double-count with two different
+energies for one electron and are invisible to it. The authoritative metric is
+`twins` (showers sharing a start segment). One false positive is worth
+recording: nueCC **256587** has two genuinely different 1.961 MeV showers
+(segs 50150 / 95195) — coincidence, not a twin, and it is unchanged by the fix.
+
+## 20. The fixes
+
+**S1 `shower_dedup_start_seg`** (bool, C++ default **false**) —
+`PatternAlgorithms::merge_showers_sharing_start_segment`
+(`NeutrinoShowerClustering.cxx`), called from `shower_clustering_with_nv`
+**after `examine_showers` and before the pi0 finders**, i.e. after every pass
+that can create or retarget a shower and before every consumer (pi0 pairing,
+`fill_kine_tree`, the Bee PF writer) reads the set. Each group of showers
+sharing a start segment collapses onto its most directly connected member
+(order: lowest `start_connection_type`, then most segments, then highest
+`kine_best`, then lowest `shower_id`), which **absorbs** the others via
+`Shower::add_shower` — whose membership gate makes the overlap idempotent — so
+no charge is lost; the survivor's `flag_kinematics` is cleared and the
+production `calculate_shower_kinematics` recomputes **only** it. Grouping is
+keyed on the start segment's graph index (true identity, deterministic map
+order), never a pointer (pr/34 §6). `conn_type == 4` members never participate:
+they are skipped by both the PF tree and the kine tree, so folding their charge
+in would be a change with no reported defect behind it.
+
+Measured effect — the survivor keeps the fuller view AND the direct anchor:
+
+```
+169626  seg 22024  sid0 (88.1, 1 seg, conn1)  <- absorbs sid1 (107.9, 6 segs, conn3)
+                => (107.9, 6 segs, conn1), one root node instead of two
+347129  seg 53021  sid0 (65.0, 2 segs, conn1) <- absorbs sid1 (156.7, 8 segs, conn3)
+                => (156.7, 8 segs, conn1); the `e- 156` that used to sit inside
+                   its own descendant `e- 63` is now the root
+```
+
+**G1 `pf_unique_node_ids`** (bool, C++ default **false**) — in
+`fill_bee_pf_tree`, a node whose id is already taken is re-issued from a range
+above the natural id space and the collision is logged
+(`pr84 pf_id_collision`). This is the standing guarantee that `mc.json` is
+valid jsTree input; with S1 on it fired **0 times** on the gate manifest, which
+is the intended state (a firing is itself a finding: a shower leaf can still
+collide with the track node of the same segment, and the pseudo/pi0 counter
+starts at 1 inside the same number space).
+
+## 21. Verification (24-event gate manifest = the round-2 Bee set)
+
+- **V0** `wcbuild` rc=0; `build/clus/libWireCellClus.so` 06:49 newer than every
+  edit (libs load from `build/<pkg>/`); `./build/clus/wcdoctest-clus`
+  **210 cases / 2131 assertions, 0 failed**, including the two new default pins.
+- **V1 knob-off byte gate**: `work-pr84r3-off-*` vs the round-2 production arms
+  `work-pr84r2-prod-*` — `pr83r3_hash_gate.py` **PASS=48 FAIL=0** (24 events ×
+  {`mabc-pr.zip`, `pctree-pr-evt*.tar.gz`}, member-content hashes, never raw
+  `cmp`). This doubles as the proof that the round-2 arms correspond to this
+  source, so no separate `base` arm was needed.
+- **V2 knob-on blast radius**: `dedup` vs `off` — `pr83r3_hash_gate.py`
+  **PASS=44 FAIL=4**, and the 4 failures are the 4 twin events' `mabc-pr.zip`
+  only; **every pctree tarball is byte-identical**, so no fit or graph moved.
+  `pr84r2_disp_gate.py`: the only moved member is `data/0/0-mc.json`
+  (`mc.json-moved=4 / 0 / 0`). `pr84r3_dedup_census.py`: `changed=4`,
+  `dup_ids` 4 events → **0**, `twins` 4 events → **0**.
+- **V2b physics movers**: calib `tagger`/`kine` blocks move in exactly those 4
+  events and nowhere else (0/7 nueCC, 0/3 NCpi0, 10/14 mcp1k untouched). Enu as
+  in §19. Score movers are all BDT-input shifts with no selection change; the
+  largest is **347129**, where `cosmict_flag`/`cosmict_flag_7` 1.0 → 0.0 lifts
+  the cosmic sentinel and `nue_score` moves −15.0 (sentinel) → −4.30 (real BDT
+  output) — still negative, still not a candidate. **Zero nusel label flips**
+  across all 24 events (`nusel-evt*.tsv` identical everywhere).
+- **V3 production composition**: bare-config `work-pr84r3-prod-*` (no env
+  overrides, flipped cfg) vs `work-pr84r3-dedup-*` — `pr83r3_hash_gate.py`
+  **PASS=48 FAIL=0**, i.e. the shipped operating point reproduces the gate arm
+  exactly.
+- **Sentinels**: 6 `pr84 shower_dedup` absorptions in 4 events, 0
+  `pr84 pf_id_collision`, and both are silent in the knob-off arm.
+- **Compiled-config proof (M6)**: with the runner's `pipeline_names` TLA, the
+  knob-off compile of `wct-pr-perevt.jsonnet` is byte-identical to the
+  pre-change compile and contains neither key; knob-on shows
+  `"shower_dedup_start_seg" : true` and `"pf_unique_node_ids" : true`.
+
+## 22. Flip records (SBND production, 2026-08-18)
+
+| knob | value | evidence |
+|---|---|---|
+| `shower_dedup_start_seg` | **true** | V1/V2/V2b/V3 above; owner directive to fix the underlying issue |
+| `pf_unique_node_ids` | **true** | standing invariant; fires 0 times with S1 on |
+
+This one **changes physics output** (Enu on 4 events of the 492-event round-2
+census) — the §1 bar is met by the knob-off byte gate, and the population is
+bounded by that census rather than by a fresh full A/B, per the owner's
+instruction to keep this round's validation small.
+
+## 23. Answers to the owner's other three reports (no code this round)
+
+- **168596 — "pi0 does not make sense: 21 + 33 MeV"**: correct, and the
+  suspicion that the pi0 should hold the major electron is confirmed by the
+  code's own numbers. The display grouping pairs shower sid3 (start seg 14072)
+  with sid6 (128147) at mass **114.1 MeV** — computed from `get_kine_charge()`,
+  where sid3 was **179.9 MeV** at pairing time. After pairing,
+  `set_start_vertex` + a re-`calculate_kinematics` moved sid3's `kine_best`
+  onto its range estimate, **21.5 MeV**, which is what the leaf prints. So the
+  node text and the mass come from two different energy estimates of the same
+  shower. Separately, the tagger's own `pio_kine` block pairs **33.5 + 2039.1
+  MeV, mass 96.4** — the kinematic pi0 *does* contain the major electron.
+  Also note the pi0 node prints a reconstructed **invariant mass** in a slot
+  labelled MeV of KE; the toolkit matches the prototype here
+  (`fill_pi0_reco_tree` uses `map_pio_id_mass[...].first` as the KE), so this
+  is M15 territory: both readings recorded, neither picked.
+- **285567 — "which PF contains (59.7, −165.5, 294.2)?"**: segment **8040**
+  (cluster 8 = the main cluster, pdg 11, 34.5 cm, part of shower 8105 = the
+  1193 MeV node). It looks missing for two reasons. (i) The point sits in a
+  **disconnected component of the main cluster**: only 8 vertices are reachable
+  from main vertex 8007, and segments 8035/8040/8041 (vertices 8022/8023/8024/
+  8027) plus 8001/8015/8016 are not — the round-2 conn-3 family again, with
+  gaps 2.06/2.30 cm, above the shipped `conn3_stitch_max = 1 cm` (3 cm was
+  measured ADVERSE on nueCC 38856, §13). (ii) Bee draws every PF node as ONE
+  straight `start → end` line (`mc.js`), so a 14-segment shower's interior is
+  invisible by construction. The 1193 MeV "electron" spans that detached piece
+  and absorbs the muon's continuation, which is also why `mu- 111 MeV` shows
+  too few daughters, and it is pi0-paired with a 5.3 MeV blip at mass 119.7.
+  Graph round, as the owner said.
+- **Proposal (not this round)**: `mc.js` already supports optional
+  `traj_x/traj_y/traj_z` polylines. Emitting them for PF nodes would make
+  "which PF contains this point" answerable by clicking. Not done here: it
+  would change every event's `mc.json`, and the deployed viewer may not match
+  the local `wire-cell-bee3` checkout.
+
+## 24. Round 3 Bee sets (before/after, same 24 events, same order as round 2)
+
+- BEFORE (round-3 knobs off = byte-identical to the round-2 production arms,
+  i.e. exactly what the owner scanned):
+  <https://www.phy.bnl.gov/twister/bee/set/3ac3c39e-eac5-446d-a741-7e4133cd3032/event/list/>
+- AFTER (post-flip production):
+  <https://www.phy.bnl.gov/twister/bee/set/9d145c32-eebe-4470-aa9b-4495322a5368/event/list/>
+- Index: `bee/pr84r3/pr84r3.index.txt`.  **Only idx 5 / 6 / 7 / 11**
+  (347129, 169626, 174752, 394532) differ between the two sets; the other 20
+  events are byte-identical, which is the visual form of the V2 gate.
+
+**Scan requests to the owner:** (a) the four fixed events -- one node per
+electron, no self-nesting, and the panel survives clicking; (b) 168596 and
+285567 read as the §23 answers describe (no code changed for them this round);
+(c) still open from round 2: the three rung-2-class predictions
+286906 / 409546 / 521075 and the deferred 64921.
+
+## 25. Round 3 records
+
+- `scripts/pr84r3_dedup_census.py` — twins / duplicate-id / kine-duplicate
+  census, one or two arms.
+- Probes (permanent, env-gated, byte-neutral): `WCT_SHOWER_CREATE_DEBUG`
+  (creation site + retarget of every shower) and `shower_id` in the
+  `WCT_BEE_PF_PRINT` shower-leaf line.
+- Arms: `work-pr84r3-{dbg,off,dedup,prod}-{mc,nue,ncpi0}`; manifests
+  `/home/xqian/tmp/pr84r3-{mc,nue,ncpi0}.txt`.

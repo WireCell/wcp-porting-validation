@@ -1,0 +1,36 @@
+# doc pr/84 round 3 -- before/after Bee sets (identical event order, same 24
+# events and same order as the round-2 sets, so idx N is the same event there).
+# BEFORE (= what the owner scanned; round-3 knobs off, byte-identical to the
+#          round-2 production arms, pr83r3_hash_gate PASS=48/48):
+#   https://www.phy.bnl.gov/twister/bee/set/3ac3c39e-eac5-446d-a741-7e4133cd3032/event/list/
+# AFTER (post-flip production: shower_dedup_start_seg + pf_unique_node_ids):
+#   https://www.phy.bnl.gov/twister/bee/set/9d145c32-eebe-4470-aa9b-4495322a5368/event/list/
+#
+# Only FOUR events differ between the two sets (all others are byte-identical):
+# idx 5, 6, 7, 11.
+#
+# bee_idx	event	sample	round-3 status
+0	283713	mcp1k	unchanged (round-2 F3 fix)
+1	316025	mcp1k	unchanged (round-2 F3 fix)
+2	407280	mcp1k	unchanged (round-2 F1 fix)
+3	64921	mcp1k	unchanged; still DEFERRED (vertex-in-fragment, pr/52 territory)
+4	65289	mcp1k	unchanged
+5	347129	mcp1k	FIXED: 2 twins absorbed (seg 53021 65.0<-156.7, seg 11000 63.9 dup); the self-nested `gamma 63 -> e- 63` is gone; Enu 700.8 -> 571.9
+6	169626	mcp1k	FIXED: twin on seg 22024 absorbed; one `e- 107 MeV` root instead of e-88 + e-107; Enu 825.4 -> 737.3
+7	174752	mcp1k	FIXED: twin on seg 48010 absorbed; one `e- 18 MeV`; Enu 188.7 -> 176.0
+8	66272	mcp1k	unchanged (round-2 F3 rescue)
+9	286906	mcp1k	unchanged; rung-2-class prediction, still unscanned
+10	409546	mcp1k	unchanged; rung-2-class prediction, still unscanned
+11	394532	mcp1k	FIXED: 2 twins absorbed (seg 39023, seg 8033); the duplicate `e- 66 MeV` that blanked the panel is gone; Enu 352.2 -> 248.2
+12	284235	mcp1k	unchanged
+13	71178	mcp1k	unchanged
+14	168596	nueCC48	unchanged; the pi0 "114 MeV vs 21+33" report is answered in doc sec 23 (energy-source inconsistency, no code this round)
+15	10550	nueCC48	unchanged
+16	489330	nueCC48	unchanged
+17	256587	nueCC48	unchanged; control -- its two 1.961 MeV showers are a coincidence, NOT a twin
+18	360535	nueCC48	unchanged
+19	433451	nueCC48	unchanged
+20	74544	nueCC48	unchanged
+21	521075	ncpi0	unchanged; rung-2-class prediction, still unscanned
+22	285567	ncpi0	unchanged; the missing point (59.7,-165.5,294.2) is seg 8040 in a DISCONNECTED component of the main cluster (doc sec 23) -- graph round
+23	359980	ncpi0	unchanged
