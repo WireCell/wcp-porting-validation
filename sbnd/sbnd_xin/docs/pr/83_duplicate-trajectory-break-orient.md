@@ -986,8 +986,13 @@ display-only), then the mcp2k six: 159569, 58919, 289508, 179912,
   359980 506746) hash gate **12/12** vs the gateon2 arms — bare run ==
   production knob-on.
 - `wcdoctest-clus` 2115/2115.
-- Bee sets (uploaded from `/home/xqian/tmp/pr83r3-bee/`): links in
-  `docs/pr/83_bee-r3.index.txt`.
+- Bee sets (index `docs/pr/83_bee-r3.index.txt`):
+  - 511 recovered (17 evts) before: https://www.phy.bnl.gov/twister/bee/set/b8edf683-5cb8-4d1e-a041-0148e8a591a2/event/list/
+  - 511 recovered after: https://www.phy.bnl.gov/twister/bee/set/fc044d24-d936-4bb0-b2ac-5ce37169a547/event/list/
+  - mcp2k recovered (14 evts) before: https://www.phy.bnl.gov/twister/bee/set/61d5e03c-f106-4132-9913-955b44966fdd/event/list/
+  - mcp2k recovered after: https://www.phy.bnl.gov/twister/bee/set/b6219330-3572-486f-b6cb-82f1899c5009/event/list/
+  - owner-scan (12 evts) before: https://www.phy.bnl.gov/twister/bee/set/357e34e0-42eb-4e7e-9916-6b44ee5b2833/event/list/
+  - owner-scan after: https://www.phy.bnl.gov/twister/bee/set/2e912475-9ad4-4523-b176-71ec7d876e59/event/list/
 - Commits: toolkit `apply-pointcloud` (code + cfg flip + doctest pins),
   wcp-porting-img `main` (runner env mappings, census/mover TSVs, this
   doc, Bee index) — hashes recorded in the index/commit log.

@@ -1,13 +1,12 @@
 # doc pr/83 round 3 bee sets (2026-08-17)
 # All sets: before = knob-off (production pre-flip), after = knob-on
 # (= SBND production post-flip; bare-config smoke hash gate 12/12).
-# Zips staged at /home/xqian/tmp/pr83r3-bee/bee-r3-*.zip; URLs filled
-# after upload (upload-to-bee.sh).
+# Zips staged at /home/xqian/tmp/pr83r3-bee/bee-r3-*.zip; uploaded 2026-08-17.
 #
 # set 1: 511-sample recovered events, BEFORE
-# URL: TBD-UPLOAD (bee-r3-511-before.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/b8edf683-5cb8-4d1e-a041-0148e8a591a2/event/list/
 # set 2: 511-sample recovered events, AFTER
-# URL: TBD-UPLOAD (bee-r3-511-after.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/fc044d24-d936-4bb0-b2ac-5ce37169a547/event/list/
 # bee_idx	event	sample	class/mech
 0	138009	nueCC48	A
 1	168596	nueCC48	A
@@ -28,9 +27,9 @@
 16	521075	NCpi0	B-MechA
 #
 # set 3: mcp2k recovered events (census 14->0), BEFORE
-# URL: TBD-UPLOAD (bee-r3-m2k-before.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/61d5e03c-f106-4132-9913-955b44966fdd/event/list/
 # set 4: mcp2k recovered events, AFTER
-# URL: TBD-UPLOAD (bee-r3-m2k-after.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/b6219330-3572-486f-b6cb-82f1899c5009/event/list/
 # bee_idx	event	class
 0	175952	A
 1	275011	A
@@ -48,9 +47,9 @@
 13	98844	B
 #
 # set 5: owner-scan movers, BEFORE
-# URL: TBD-UPLOAD (bee-r3-scan-before.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/357e34e0-42eb-4e7e-9916-6b44ee5b2833/event/list/
 # set 6: owner-scan movers, AFTER
-# URL: TBD-UPLOAD (bee-r3-scan-after.zip)
+# URL: https://www.phy.bnl.gov/twister/bee/set/2e912475-9ad4-4523-b176-71ec7d876e59/event/list/
 # bee_idx	event	sample	why
 0	285567	nueCC48	nue -4.2 -> +4.3 (2.5cm overlap-1.00 op1-post merge)
 1	268067	nueCC48	nue 2.6 -> 1.6, Enu -115
