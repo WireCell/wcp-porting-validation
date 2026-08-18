@@ -1,0 +1,48 @@
+# doc pr/91 sec 2b -- before/after Bee sets for shower_endpoint_skip_orphan_vtx.
+# Same 24 events and the SAME ORDER as the pr/84 round-3 sets, so idx N is the
+# same event there and the two rounds can be scanned side by side.
+#
+# BEFORE (knob off = shipped SBND production today, byte-identical to
+#         work-pr84r3-dedup-*, gate PASS=48/48):
+#   https://www.phy.bnl.gov/twister/bee/set/e81dfbf9-3801-46a4-ad61-31b5511127f1/event/list/
+# AFTER  (shower_endpoint_skip_orphan_vtx = true; knob still DEFAULT OFF in
+#         cfg, SBND NOT flipped -- this arm is the proposal, not production):
+#   https://www.phy.bnl.gov/twister/bee/set/04107fda-6306-44e0-aa8c-12a352e32235/event/list/
+#
+# FIVE events differ; the other 19 are byte-identical between the two sets.
+# In every one of them the ONLY change is a PF node's drawn END POINT: the
+# node's own charge, its energy, kine_reco_Enu and every nusel score/label are
+# unchanged (V2: only data/0/0-mc.json moved, nusel tsv identical).
+#
+# What to look for: the moving node's line should now stop on its OWN charge
+# instead of reaching across to a neighbouring shower.
+#
+# bee_idx  event   sample   status
+0   283713  mcp1k    unchanged
+1   316025  mcp1k    unchanged
+2   407280  mcp1k    unchanged
+3   64921   mcp1k    unchanged; still DEFERRED (vertex-in-fragment, pr/52)
+4   65289   mcp1k    unchanged
+5   347129  mcp1k    CHANGED: shower 11000 (e- 63 MeV, ONE 13.6 cm segment) ended 69.5 cm away in cluster 53; now ends at vtx 11001, the far end of its own segment
+6   169626  mcp1k    CHANGED: e- 107 MeV ended on a cluster-13 vertex owned by the 567 MeV shower; now ends at vtx 57074, its own member (moved 57.9 cm)
+7   174752  mcp1k    CHANGED: e- 18 MeV ended on vtx 14001, the 34.7 MeV shower's start; now ends at its own vtx 48010 (moved 7.5 cm)
+8   66272   mcp1k    unchanged
+9   286906  mcp1k    unchanged; rung-2-class prediction, still unscanned
+10  409546  mcp1k    unchanged; rung-2-class prediction, still unscanned
+11  394532  mcp1k    CHANGED x2: the 30 MeV and 66 MeV showers ended on EACH OTHER; both now end on their own charge, reproducing the pre-dedup geometry exactly
+12  284235  mcp1k    unchanged
+13  71178   mcp1k    unchanged
+14  168596  nueCC48  CHANGED: shower 128147 (e- 33 MeV, conn-2, pi0_id=0) ended 121 cm away.  NOT a dedup case -- the orphan came from id_pi0_with_vertex's pi0 re-seat.  This is the one mover we did NOT hand-pick.
+15  10550   nueCC48  unchanged
+16  489330  nueCC48  unchanged
+17  256587  nueCC48  unchanged
+18  360535  nueCC48  unchanged
+19  433451  nueCC48  unchanged
+20  74544   nueCC48  unchanged
+21  521075  ncpi0    unchanged; rung-2-class prediction, still unscanned
+22  285567  ncpi0    unchanged; the missing point (59.7,-165.5,294.2) is still the deferred graph round (pr/84 sec 23)
+23  359980  ncpi0    unchanged
+#
+# Arms: work-pr91r2-{off,on}-{mc,nue,ncpi0}.  Toolkit cca9f167.
+# Note the pr/91 sec 4 answers (why showers did not MERGE) are unaffected by
+# this knob -- it only repairs where a shower's drawn line stops.

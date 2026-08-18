@@ -318,6 +318,21 @@ flip decision needs.
 SBND stays off. The V2 evidence above is a 24-event sample chosen for this
 defect, not a production gate.
 
+### Bee sets for the owner's scan
+
+Same 24 events and the same order as the pr/84 round-3 sets, so `idx N` is the
+same event in both rounds.
+
+- **BEFORE** (knob off = shipped production today):
+  `https://www.phy.bnl.gov/twister/bee/set/e81dfbf9-3801-46a4-ad61-31b5511127f1/event/list/`
+- **AFTER** (`shower_endpoint_skip_orphan_vtx = true`; the proposal, not
+  production):
+  `https://www.phy.bnl.gov/twister/bee/set/04107fda-6306-44e0-aa8c-12a352e32235/event/list/`
+
+Five differ — **idx 5 (347129), 6 (169626), 7 (174752), 11 (394532), 14
+(168596)** — and in each the only visible change is where a PF node's drawn
+line stops. Per-event notes in `bee/pr91r2/pr91r2.index.txt`.
+
 ---
 
 ## 3. F2 — one physical EM shower split across several `PR::Shower` objects
