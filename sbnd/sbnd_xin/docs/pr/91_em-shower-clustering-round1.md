@@ -42,6 +42,13 @@ PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
 python3 scripts/pr91_shower_content.py work-pr91r1-dbg-mc            # all tables below
 python3 scripts/pr91_point_owner.py \
   work-pr91r1-dbg-mc/pr_evt169626/calib-pr-evt169626.json -4.5 157.5 442.9
+
+# F1 attribution control: same binary + probes, dedup knob forced OFF.
+# The runner's tri-state is 0/1 -- `=false` leaves the cfg default (ON).
+export SBND_SHOWER_DEDUP_START_SEG=0
+PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr91r1-dedupoff-mc data \
+  169626 174752 347129 394532
 ```
 
 Probe byte-neutrality (member-content hashes via `abtest/hash_archive.py`, never
@@ -149,6 +156,28 @@ start vertex.
 
 Node-count deltas from the same probe: 169626 `2 -> 13`, 174752 `2 -> 4`,
 347129 `3 -> 14` and `2 -> 3`, 394532 `3 -> 4` and `2 -> 3`.
+
+### The knob-off control — F1 does not exist without the dedup
+
+Third arm, `work-pr91r1-dedupoff-mc`: same binary, same probes, only
+`SBND_SHOWER_DEDUP_START_SEG=0` added (the runner's tri-state is `0`/`1`, not
+`false` — an earlier `=false` attempt silently ran with the knob still ON, and
+that mislabelled arm `work-pr91r1-nodedup-mc` is kept but must not be read as a
+knob-off record). Sentinel proof it took: `pr84 shower_dedup` fires **0** times
+per event, against 2/2/3/3 in the probe arm. With the knob off:
+
+- orphan vertices that are **not** the shower's own start vertex: **0**
+- end points with `touched_by_member=0`: **0**
+- `Shower::add_shower` calls of any kind: **0**
+
+So in these four events `shower_dedup_start_seg` is the *only* caller of
+`add_shower` — `examine_merge_showers`, the `in_other_clusters` absorb and the
+`examine_showers` absorb all decline (§4/§6) — and F1 appears **only** with the
+knob on. Scope that honestly: this establishes the attribution *for these
+events*, not that no other caller could ever import an orphan. In particular
+`examine_showers`' retarget calls `set_start_vertex(main_vertex, 1)`, which
+would demote a shower's previous start vertex to a plain orphan by the same
+step-2 logic; that path did not fire here and is untested.
 
 The 347129 shower-14 row is the starkest: a **single 13.6 cm segment** in
 cluster 11 reports an end point **67.8 cm** away in cluster 53, because that is
@@ -425,7 +454,9 @@ Ordered by how well the evidence supports them.
 
 ## 9. Records
 
-- Arms: `work-pr91r1-off-mc` (probes off), `work-pr91r1-dbg-mc` (probes on) —
+- Arms: `work-pr91r1-off-mc` (probes off), `work-pr91r1-dbg-mc` (probes on),
+  `work-pr91r1-dedupoff-mc` (probes on + `SBND_SHOWER_DEDUP_START_SEG=0`); the
+  earlier `work-pr91r1-nodedup-mc` used `=false` and did NOT disable the knob —
   169626 / 174752 / 347129 / 394532, hub `work-mcp1k-cb0805`, `data` reality.
 - Scripts: `scripts/pr91_shower_content.py`, `scripts/pr91_point_owner.py`.
 - Toolkit commit: the three env-gated probes only, no behaviour change.
