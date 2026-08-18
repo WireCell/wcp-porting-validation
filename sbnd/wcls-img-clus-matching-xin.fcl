@@ -79,6 +79,13 @@ physics :{
                 reality: "sim"
                 # Image configuration
                 img_config: "active2view+masked2view"
+                # "false" drops tracking_visitor + tagger_output, i.e. no
+                # tracking-pr.root.  REQUIRED when running >1 event per lar
+                # process: both writers share one filename (RECREATE + UPDATE)
+                # and multi-event silently corrupts it.  Costs you T_tagger /
+                # T_kine, hence numu_score / nue_score / kine_reco_Enu; the Bee
+                # "mc" node keeps Enu and both scores regardless.
+                enable_tracking_root: "true"
                 opflash0_input_label: "opflashtpc0:"
                 opflash1_input_label: "opflashtpc1:"
             }

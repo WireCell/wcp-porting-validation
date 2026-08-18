@@ -214,6 +214,25 @@ local beam_window = [0.2 * wc.us, 2.2 * wc.us];
 // running the nusel tagger visitors so each cluster carries flag_STM/TGM/FC for
 // the labeler to read.  dump=false -> a pass-through tensor node.
 local pds = (import 'pgrapher/experiment/sbnd/particle_dataset.jsonnet')();
+// enable_tracking_root: emit tracking-pr.root (tracking_visitor + tagger_output).
+//
+// MUST be false when running more than one event per lar process.  Both
+// writers use ONE fixed filename -- SbndPrMagnifyTrackingVisitor opens it
+// RECREATE and UbooneTaggerOutputVisitor opens it UPDATE, every event -- so
+// `lar -n 5` leaves an 8 KB file with T_tagger and T_kine ABSENT and Trun
+// holding only the last event.  It is silent: rc=0 and every other output is
+// fine.  One event per process (the issue-11 harness pattern) is safe.
+//
+// CONSEQUENCE OF TURNING IT OFF: tagger_output is what writes T_tagger and
+// T_kine, so you also lose numu_score / nue_score / kine_reco_Enu.  The Bee
+// side is unaffected -- the merged "mc" node still carries Enu and both
+// scores, and the tagger_* layers still carry the cosmic verdicts.
+//
+// Set via the fcl:
+//   physics.producers.sig2img.wcls_main.params.enable_tracking_root: "false"
+local enable_tracking_root =
+    if std.extVar('enable_tracking_root') == 'false' then false else true;
+
 local pr_node = clus_maker.pr(
     tools.anodes, dump=false,
     // Share the ONE Bee zip.  Without this the PR display layers
@@ -240,7 +259,8 @@ local pr_node = clus_maker.pr(
     pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
                     'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
                     'protect_bundle', 'steiner_refresh', 'tagger_check_neutrino',
-                    'numu_bdt_scorer', 'nue_bdt_scorer', 'tracking_visitor', 'tagger_output'],
+                    'numu_bdt_scorer', 'nue_bdt_scorer']
+                   + (if enable_tracking_root then ['tracking_visitor', 'tagger_output'] else []),
     particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window,
     // Match the SBND production operating point (apc doc pr/24 sec 16): the
     // 2-step wct-pr-perevt.jsonnet sets iso_endpoint=true; mirror it here so the
