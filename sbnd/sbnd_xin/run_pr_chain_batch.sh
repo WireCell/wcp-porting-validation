@@ -716,6 +716,7 @@ for _pr84 in \
     "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
     "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" \
     "SBND_SHOWER_DEDUP_START_SEG:shower_dedup_start_seg" \
+    "SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX:shower_endpoint_skip_orphan_vtx" \
     "SBND_PF_UNIQUE_NODE_IDS:pf_unique_node_ids" ; do
     _env=${_pr84%%:*}; _key=${_pr84#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")

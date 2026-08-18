@@ -1,8 +1,11 @@
 # doc pr/91 round 1 — EM shower clustering: why one shower comes out as many, and why end points land on the neighbour
 
-**Status: DIAGNOSIS AND REPORT ONLY.** No behaviour knob is shipped by this
-round, no default is changed, no SBND flip is proposed. The only code added is
-three `std::getenv`-gated debug probes, proven byte-neutral below.
+**Status.** Sections 1 and 3–9 are **diagnosis and report only** — three
+`std::getenv`-gated debug probes, proven byte-neutral below, and no behaviour
+change. Section **2b** adds the one fix the owner asked for on top:
+`shower_endpoint_skip_orphan_vtx`, **DEFAULT OFF**, SBND **not** flipped,
+validated on a 24-event sample at the owner's instruction (*"no need to do full
+blown validation yet"*).
 
 Owner scope, verbatim: *"for these events, it seems that they did not go through
 the EM shower clustering like what we usually do. And treated as tracks in the
@@ -223,6 +226,97 @@ Three candidate remedies, all default-OFF knobs, **none implemented**:
 
 R1 is the one whose footprint is plausibly small enough to gate on the standard
 manifest; R2 and R3 are not census-boundable and would need a full A/B.
+
+---
+
+## 2b. F1 FIXED behind `shower_endpoint_skip_orphan_vtx` (DEFAULT OFF)
+
+Owner's call after reading §2: *"This is a easy fix that you can work out
+first… no need to do full blown validation yet. Just validate with smaller
+sample."* Remedy **R1** implemented — the narrow one, acting at the point of
+use rather than on the view.
+
+**The change.** `Shower::calculate_kinematics` gains a trailing
+`bool endpoint_skip_orphan_vertices = false`. When set, both farthest-vertex
+searches (`PRShower.cxx:1197`, `:1309`) skip any node no member segment
+touches; the touched set is built once per call from `ordered_edges`, and is
+not even built when the knob is off. `calculate_kinematics_long_muon` needs
+nothing — it already restricts candidates to `muon_vertices_by_index`.
+
+Threaded the standard way: `m_shower_endpoint_skip_orphan_vtx{false}` in
+`NeutrinoPatternBase.h` and `TaggerCheckNeutrino.h`, `configure` read,
+`default_configuration` round-trip, pass-through, all 11 `calculate_kinematics`
+call sites, `cfg/pgrapher/common/clus.jsonnet` signature + key suppression,
+sbnd `clus.jsonnet` (2 param blocks + 2 pass-throughs), and
+`wct-pr-perevt.jsonnet` **at `false`**. Runner env
+`SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX` (tri-state `0`/`1`). Doctest pin added.
+
+**Proofs.**
+
+- Doctests: 210 cases / 2134 assertions, 0 failed.
+- Freshness (M1): `build/clus/libWireCellClus.so` 08:12:23 vs last source edit
+  08:10:49.
+- Compiled config (M6): knob-off `wcsonnet` output **byte-identical** to the
+  pre-change compile with the runner's own `pipeline_names`; knob-on shows
+  `"shower_endpoint_skip_orphan_vtx" : true` at line 617.
+
+**V1 — knob off is byte-identical to shipped production.** 24-event pr/84 r3
+manifest (`work-pr91r2-off-{mc,nue,ncpi0}`) vs `work-pr84r3-dedup-*`,
+member-content hashes over `mabc-pr.zip` + the pctree tarball:
+**PASS=48 FAIL=0.**
+
+**V2 — knob on moves exactly the end points, nothing else.**
+`work-pr91r2-on-*` vs `work-pr91r2-off-*`, same 24 events:
+**PASS=43 FAIL=5** — and the five are `mabc-pr.zip` only. **Every pctree
+tarball is byte-identical**, and within each moving zip the only member that
+changed is `data/0/0-mc.json`. `nusel-evt<ID>.tsv` is byte-identical for all
+five, i.e. **zero score or label movers**.
+
+Six showers changed, in five events, and `end` is the only field that moved on
+any of them. `kine_reco_Enu` and the whole `kine_energy_particle` list are
+byte-identical in all five — the prediction in §2 that this is geometry-only
+holds exactly:
+
+| evt | shower (node) | conn | nseg | end before | end after | moved |
+|---|---|---|---|---|---|---|
+| 169626 | 0 (22024) | 1 | 6 | (−15.78, 118.73, 461.16) — cl 13 | (−32.35, 96.75, 410.27) = vtx 57074, its own member | 57.86 cm |
+| 174752 | 0 (48010) | 1 | 2 | (−57.06, −191.10, 411.12) — cl 14 | (−62.05, −195.73, 408.10) = vtx 48010, its own | 7.45 cm |
+| 347129 | 14 (11000) | 3 | 1 | (−192.29, −38.06, 184.47) — cl 53 | (−196.62, −107.29, 179.89) = vtx 11001, the far end of its ONE segment | 69.51 cm |
+| 394532 | 0 (39023) | 1 | 2 | (192.79, −182.39, 26.71) — cl 8 | (201.18, −191.20, 17.05) = vtx 39031, its own | 15.54 cm |
+| 394532 | 8 (8033) | 3 | 1 | (199.93, −190.25, 16.44) — cl 39 | (198.24, −187.84, 21.53) = vtx 8001, its own | 5.88 cm |
+| 168596 | 6 (128147) | 2 | 3 | (−177.36, 40.71, 175.58) | (−190.83, 57.07, 295.12) | 121.41 cm |
+
+Independent cross-check: 394532's two repaired end points are **exactly** the
+values the pre-dedup arm `work-pr91r1-dedupoff-mc` produces —
+`(201.18, −191.20, 17.05)` and `(198.24, −187.84, 21.53)`. The fix restores the
+geometry the dedup had perturbed, rather than inventing a third answer.
+
+### 168596 — F1 has a second source, and it is not the dedup
+
+nueCC **168596** was not one of the four reported events and is the round's
+most useful surprise. `pr84 shower_dedup` fires **0** times there, and the two
+`add_shower` calls in the event both target shower 2, not shower 6. Yet
+shower 6 carried orphan vertex **14051** (same cluster, 85.5 cm from its start)
+and reported an end point 121 cm away.
+
+Provenance: shower 6 has `pio_id = 0`, `pio_mass = 114.06`, and
+`start_vertex_id = 14052` — it was **re-seated onto the π⁰ vertex by
+`id_pi0_with_vertex`**, whose `set_start_vertex(pi0_vertex, 2)` demotes the
+shower's previous start vertex to a plain orphan by exactly the step-2 logic in
+§2. So the general statement is: **any pass that re-seats a shower's start
+vertex leaves the old one behind as an orphan**, and `shower_dedup_start_seg`
+is the loudest but not the only such pass. R1 catches all of them because it
+acts where the vertex is *used*, not where it is introduced. (This is precisely
+the untested path flagged in §2's control-arm note; it is now measured.)
+
+It also means the knob's footprint is **not** bounded by the dedup's: 1 of the
+20 events we did not hand-pick moved. Twenty events is far too small to
+estimate a rate — that is the gate this round did not run, and it is what a
+flip decision needs.
+
+**Not flipped.** `shower_endpoint_skip_orphan_vtx` ships **default OFF** and
+SBND stays off. The V2 evidence above is a 24-event sample chosen for this
+defect, not a production gate.
 
 ---
 
@@ -459,7 +553,11 @@ Ordered by how well the evidence supports them.
   earlier `work-pr91r1-nodedup-mc` used `=false` and did NOT disable the knob —
   169626 / 174752 / 347129 / 394532, hub `work-mcp1k-cb0805`, `data` reality.
 - Scripts: `scripts/pr91_shower_content.py`, `scripts/pr91_point_owner.py`.
-- Toolkit commit: the three env-gated probes only, no behaviour change.
+- Toolkit commits: `77353cf4` (the three env-gated probes, no behaviour
+  change) and the §2b knob commit.
+- Gate arms: `work-pr91r2-{off,on}-{mc,nue,ncpi0}` (24 events); V1 PASS=48/48
+  vs `work-pr84r3-dedup-*`, V2 PASS=43/48 with the 5 movers enumerated in §2b.
+  `work-pr91r2-dbg168596-nue` carries the probe trace for the pi0-re-seat path.
 - Permanent probes now in the tree: `WCT_SHOWER_CREATE_DEBUG` (pr/84 r3),
   `WCT_SHOWER_CONTENT_DEBUG`, `WCT_SHOWER_MERGE_DEBUG`,
   `WCT_SHOWER_ENDPOINT_DEBUG` (this round).
