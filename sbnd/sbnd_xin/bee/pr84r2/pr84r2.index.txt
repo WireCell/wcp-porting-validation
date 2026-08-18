@@ -1,0 +1,30 @@
+# doc pr/84 round 2 -- before/after Bee sets (identical event order)
+# BEFORE (off arm, all pr/84 r2 knobs off):
+#   https://www.phy.bnl.gov/twister/bee/set/46300d3c-70b6-4e3d-b755-81bcc0d1ae8d/event/list/
+# AFTER (post-flip production: pf_direct_when_touching + pf_pseudo_gap_from_main + conn3_stitch_max=1):
+#   https://www.phy.bnl.gov/twister/bee/set/d595c5d2-5633-4f23-ac76-352ee1027ec3/event/list/
+# bee_idx	event	sample	why
+0	283713	mcp1k	owner: gamma-209 + neutron-567 at vertex; F3 bridged 0.34cm, muon rejoins (enu 1513->2034)
+1	316025	mcp1k	owner: gamma-477 at 0.33cm; F3 bridged; now e-197 + pi+222 at vertex
+2	407280	mcp1k	owner: gamma-414 at 2.98cm, vertex in 25-pt fragment; F1 renders e- direct
+3	64921	mcp1k	owner ("54921"): gamma-283 at 6.75cm cross-cluster; DEFERRED (rung-2 probe failed), unchanged
+4	65289	mcp1k	round-1 owner event: two gammas (202+109 MeV); F3 bridged 0.31cm
+5	347129	mcp1k	round-1 unscanned prediction; F1 suppressed gamma-156
+6	169626	mcp1k	round-1 unscanned prediction; F1 suppressed gamma-107
+7	174752	mcp1k	round-1 unscanned prediction; F1 suppressed gamma-21
+8	66272	mcp1k	F3 rescue: invisible pi+ -> proton branch appears (enu 162->442)
+9	286906	mcp1k	rung-2 class prediction (gamma-63 at 4.5cm cross-cluster), unscanned, DEFERRED
+10	409546	mcp1k	rung-2 class prediction (gamma-91 at 4.0cm cross-cluster), unscanned, DEFERRED
+11	394532	mcp1k	F1 triple suppression (gamma-66 x2 + gamma-38)
+12	284235	mcp1k	F1 double suppression (gamma-183 + gamma-79)
+13	71178	mcp1k	F1 double suppression (gamma-138 + gamma-56)
+14	168596	nueCC48	F3: 1929 MeV primary e- consolidates its satellites (30->17 nodes, ke 2039)
+15	10550	nueCC48	F1 double suppression (gamma-257 + gamma-59)
+16	489330	nueCC48	F3 bridge 0.32cm (numu -0.36 -> -0.88)
+17	256587	nueCC48	F3 bridge 0.15cm
+18	360535	nueCC48	F3 bridge 0.90cm
+19	433451	nueCC48	F3 bridge 0.99cm
+20	74544	nueCC48	F3 bridge 0.83cm
+21	521075	ncpi0	rung-2 class prediction (gamma-675 at 6.8cm cross-cluster), unscanned, DEFERRED
+22	285567	ncpi0	F1 suppressed gamma-8; NOT stitched at 1cm (gaps 2.06/2.30 -- deliberate)
+23	359980	ncpi0	F1 suppressed neutron-9 + 10 F2 re-anchors

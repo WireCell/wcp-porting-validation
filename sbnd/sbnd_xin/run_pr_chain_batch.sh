@@ -708,6 +708,21 @@ unset _pr74 _env _key _val
 [ -n "${SBND_STEM_BACKFILL_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_hi=${SBND_STEM_BACKFILL_MIP_HI}")
 [ -n "${SBND_STEM_BACKFILL_MIN_SHOWER_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_min_shower_len=${SBND_STEM_BACKFILL_MIN_SHOWER_LEN}")
 [ -n "${SBND_CONN3_UNREACHABLE_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "conn3_unreachable_min_len=${SBND_CONN3_UNREACHABLE_MIN_LEN}")
+# doc pr/84 round 2.  Tri-state bools (unset = cfg default, 1 = on, 0 = off)
+# + scalar radii in cm (EMPTY = no TLA = cfg default).  F1/F2 are
+# display-only (move mc.json only); conn3_stitch_max moves fits + PF.
+for _pr84 in \
+    "SBND_PF_DIRECT_WHEN_TOUCHING:pf_direct_when_touching" \
+    "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
+    "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" ; do
+    _env=${_pr84%%:*}; _key=${_pr84#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr84 _env _key _val
+[ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
+[ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
+[ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.
