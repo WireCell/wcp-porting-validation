@@ -1,0 +1,22 @@
+# doc pr/83 round 4 bee sets (2026-08-18)
+# before = SBND production post-round-3; after = mvga_proj_dup_frac=0.7 +
+# mvga_proj_dqdx_ratio=0.55 (= production post-r4-flip; smoke hash gate
+# 12/12).  Owner scanned set pair 1/2 (4 events) 2026-08-18: APPROVED.
+#
+# set 1: 511-sample + mcp1k recovered, BEFORE
+# URL: https://www.phy.bnl.gov/twister/bee/set/ca593da2-eda0-4c82-9a23-4728eae36b81/event/list/
+# set 2: same events, AFTER
+# URL: https://www.phy.bnl.gov/twister/bee/set/68b5764a-dbee-49ba-8125-f57a3fc7c656/event/list/
+# bee_idx	event	sample	note
+0	138009	nueCC48	pair 12094/12095, Enu 1969->1444 (matches r2 no-interp control)
+1	168596	nueCC48	pair 14168/14172; 180 MeV proton misID -> single 1929 MeV electron; nue 1.84->4.30
+2	74544	nueCC48	pair 12105/12107, low-dQ/dx stem track collapsed, Enu -129
+3	278046	mcp1k	pair 3033/3034, 11 cm twin stems ratio 0.21, Enu 606->437
+#
+# set 3: mcp2k recovered, BEFORE
+# URL: https://www.phy.bnl.gov/twister/bee/set/d7b3595a-8c43-4151-ae8a-5222451554d7/event/list/
+# set 4: same events, AFTER
+# URL: https://www.phy.bnl.gov/twister/bee/set/55e23508-3f6b-423f-9f78-809e913520d1/event/list/
+# bee_idx	event	note
+0	169658	13.2 cm ghost beside 270.6 cm vertex track, ratio 0.35
+1	284206	pair 10045/10049, 20.6/26.6 cm stems, ratio 0.18

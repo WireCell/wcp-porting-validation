@@ -996,3 +996,115 @@ display-only), then the mcp2k six: 159569, 58919, 289508, 179912,
 - Commits: toolkit `apply-pointcloud` (code + cfg flip + doctest pins),
   wcp-porting-img `main` (runner env mappings, census/mover TSVs, this
   doc, Bee index) — hashes recorded in the index/commit log.
+
+## 11. Round 4 — projective duplicates at the shower stem (owner report 2026-08-17)
+
+### 11.0 Repro
+
+```
+# census (metric calibrated in 11.2; vertices via pr_scores_table.py):
+python3 scripts/pr83r4_projdup_census.py work-pr83r3-gateon2-nue \
+    work-pr83r3-gateon2-ncpi0 work-pr83r3-gateon2-mc work-pr83r3-m2kon \
+    --tsv docs/pr/83_r4-census-off.tsv
+# knob-on probe (debug logs):
+SBND_MVGA_PROJ_DUP_FRAC=0.7 PR_JOBS=3 bash run_pr_chain_batch.sh \
+    work-nuecc48-vfcbr3on work-pr83r4-probe3 data 138009 168596 74544
+```
+
+### 11.1 Symptom (owner report)
+
+A clear 1-track-1-shower topology (exemplar 138009) ends up with TWO
+tracks inside the EM shower connecting to the neutrino vertex in the
+final particle flow.  They overlap in the projective (wire) views and
+differ inside the plane of ambiguity; one has very low dQ/dx.  This
+threatens the e/gamma separation (stem dQ/dx is the discriminant), and
+on 74544 one of the split tracks was identified as a proton instead of
+an EM shower.  Also reported: 168596.
+
+### 11.2 Root cause + why rounds 1-3 cannot see it
+
+The track fitter split a single projective charge corridor across two 3D
+trajectory interpretations.  The 2D measurements cannot distinguish
+them; the fit starves one interpretation of charge.  Measured on the
+round-3 knob-on arms (`pr83r4_projdup_census.py` numbers):
+
+| evt | pair | 3D overlap @1.4cm | per-view overlap | stem dQ/dx (8cm) | ratio |
+|---|---|---|---|---|---|
+| 138009 | 12094/12095 | 0.58 | 1.00/0.82/0.61 | 8613 / 2384 | 0.28 |
+| 168596 | 14168/14172 | 0.14 | 0.98/0.96/0.16 | 5416 / 439 | 0.08 |
+| 74544  | 12105/12107 | 0.46 | 1.00/1.00/0.91 | 1010 / 3935 | 0.26 |
+
+Every round-1-3 metric is a 3D corridor overlap (op1/op1-post/orphan
+gates at 0.7-0.8): these pairs read 0.14-0.58 and never fire.  The
+divergence lives in ONE view (168596: W and V track within <=1 cm over
+30 cm while U walks out to 6 cm) — the classic wire-plane ambiguity.
+Discrimination against a genuine collinear two-prong vertex: the
+projective ghost is charge-starved (ratios 0.08-0.28), a real prong
+carries MIP-level charge on both members (every non-target vertex pair
+in the three events fails BOTH the angle gate, 70-90 deg, and the view
+overlap, <=0.16).
+
+### 11.3 Fix — `mvga_op1-proj` (knobs `mvga_proj_dup_frac`, `mvga_proj_dqdx_ratio`)
+
+New pass in `main_vertex_graph_audit` (NeutrinoGraphAudit.cxx), after
+op1-post, in its own fixed-point merge->refit loop (kEditCap-bounded).
+Candidates are ONLY segment pairs incident on the main vertex (the
+shower-stem beginning; the 390842-class near-vertex riders are not
+incident and cannot enter).  Gates, in order: op1's chord-angle gate
+(`mvga_dup_angle`, 20 deg) -> same (apa,face) -> per-view 2D overlap in
+the three wire views (coord `(x, cos(a)z - sin(a)y)`, angles from
+`grouping->wire_angles`, tol = `mvga_dup_tol` 1.4 cm), 2nd-best view
+>= `mvga_proj_dup_frac` -> stem dQ/dx ratio (first 8 cm of fitted path
+from the main vertex) < `mvga_proj_dqdx_ratio` (default 0.4).  Merge
+recipe is op1's own: keep the higher-integrated-charge member,
+pre-verified reconnects, cleanup, refit.  `mvga_proj_dup_frac = 0`
+(C++ default) skips the pass entirely => byte-identical; the ratio knob
+is inert while the pass is off.
+
+### 11.4 Tuning: the ratio gate at mvga time
+
+The C++ gate acts at mvga time, where the starvation is milder than in
+the final geometry: 138009/74544 read ratio 0.47/0.48 there (final
+0.28/0.26) and declined at the 0.4 default; 168596 read 0.33 and fired.
+SBND ships `mvga_proj_dqdx_ratio = 0.55` -- margin over the measured
+0.47/0.48, far below MIP-parity two-prongs, and safe because the
+geometry gates alone admit ZERO false pairs: with the ratio gate fully
+open the census finds only the 6 target pairs across all 559
+PR'd-with-vertex events of the four arms.
+
+### 11.5 Validation (all gates PASS)
+
+- Knob-off byte-gate (new binary, knobs off, vs the r3 production
+  state): **1024/1024** (`work-pr83r4-gateoff-{mc,nue,ncpi0}` vs
+  `work-pr83r3-gateon2-*`, 890+96+38) + mcp2k spot 12/12
+  (`work-pr83r4-m2kspot` vs `work-pr83r3-m2kon`).
+- Knob-on arms (frac=0.7 ratio=0.55, 32 jobs): `work-pr83r4-gateon-*`
+  (445+48+19, 0 failed), `work-pr83r4-m2kon` (2000, 0 failed).
+- Projective census: **4 -> 0** (511: 138009/168596/74544 + 278046) and
+  **2 -> 0** (mcp2k: 169658/284206), zero new
+  (`docs/pr/83_r4-census-{on511,m2kon}.tsv`).
+- Round-3 census on every knob-on arm: **stays 0** (no regression).
+- pr/86 orphan census: **byte-identical** (0/1/2/3-orphan histogram
+  471/24/11/3; VIA 24 / CUT 51 / BENIGN 6 both arms).
+- Scores A/B: 511 sample = **exactly the 4 census events move, zero
+  collateral** (nue 3, mc 1, ncpi0 0; `docs/pr/83_r4-movers-*.tsv`).
+  mcp2k: **4 movers / 2000** -- the 2 census targets plus 71642 and
+  178931, both attributed by debug rerun (`work-pr83r4-diag2`, hash gate
+  4/4 vs the arm) to genuine projective riders (9.1 / 7.8 cm at view
+  overlap 1.00/1.00, ratio 0.52) whose Bee endpoints sit just outside
+  the census's 1.5 cm vertex net; score moves are small (Enu +-40 MeV).
+- PID outcome: 168596's split-track **proton (180 MeV) is gone**, shower
+  consolidates to one 1929 MeV electron (T_kine); 138009's two stem
+  electrons (564+1133) -> one 1172 MeV; totals via the movers table.
+- `wcdoctest-clus` 2118/2118.  Owner Bee scan of the 4-event 511 set:
+  APPROVED (2026-08-18).
+
+### 11.6 Records
+
+- Flip: `mvga_proj_dup_frac = 0.7`, `mvga_proj_dqdx_ratio = 0.55` in
+  `wct-pr-perevt.jsonnet`; compiled-config diff = exactly the two keys;
+  bare-config smoke (138009 168596 74544 / 278046 / 169658 284206)
+  hash gate **12/12** vs the knob-on arms -- bare run == production.
+- Bee sets + owner-scan status: `docs/pr/83_bee-r4.index.txt`.
+- Census/mover TSVs: `docs/pr/83_r4-census-{on511,m2kon}.tsv`,
+  `docs/pr/83_r4-movers-{nue,mc,ncpi0,m2k}.tsv`.

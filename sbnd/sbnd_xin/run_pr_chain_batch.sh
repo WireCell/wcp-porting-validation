@@ -963,6 +963,15 @@ fi
 if [ -n "${SBND_SWAP_ORPHAN_DUP_AUDIT:-}" ]; then
     CATH_TLA+=(--tla-code "swap_orphan_dup_audit=${SBND_SWAP_ORPHAN_DUP_AUDIT}")
 fi
+# doc pr/83 r4 -- projective duplicate collapse (see wct-pr-perevt.jsonnet)
+#   SBND_MVGA_PROJ_DUP_FRAC
+#   SBND_MVGA_PROJ_DQDX_RATIO
+if [ -n "${SBND_MVGA_PROJ_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_dup_frac=${SBND_MVGA_PROJ_DUP_FRAC}")
+fi
+if [ -n "${SBND_MVGA_PROJ_DQDX_RATIO:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_dqdx_ratio=${SBND_MVGA_PROJ_DQDX_RATIO}")
+fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
 # SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet
