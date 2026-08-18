@@ -874,19 +874,34 @@ component.</p>
       pre-PR vs <strong>30</strong> post-PR. Feeding it back would re-run
       <code>switch_scope</code>/<code>unmerge_*</code>/<code>protect_bundle</code> on already-split
       clusters.</td></tr>
-<tr><td><strong>G7</strong></td><td>Cost</td><td><span class="tag warn">unmeasured</span></td>
-  <td><code>tagger_check_neutrino</code> is by far the heaviest stage in the 2-step (it does the
-      proto-vertex/segment build, EM-shower clustering, particle flow and energy reco). The
-      13,217-event 1-step run cost ~71 s/event on 261.5 core-hours <em>without</em> it. The full PR
-      chain will cost materially more — <strong>must be measured on a 10-event pilot before any
-      scale run.</strong></td></tr>
-<tr><td><strong>G8</strong></td><td>Doc drift</td><td><span class="tag warn">stale</span></td>
-  <td><code>sbnd/CLAUDE.md</code> documents an <code>enable_downstream_pr</code> toggle at the top of
-      <code>clus.jsonnet</code>. <strong>That key no longer exists</strong> — the PR tail was moved out
-      of <code>clus.jsonnet</code> into the entry config. Also
-      <code>wcls-img-clus-matching-xin.jsonnet:219</code> claims sim tagger Bee coords are
-      <code>x_sce/y_sce/z_sce</code>, but <code>reality:'sim'</code> ⇒ <code>use_sce=false</code> ⇒
-      <code>['x_t0cor','y','z']</code>.</td></tr>
+<tr><td><strong>G7</strong></td><td>cost of the full chain</td><td><span class="tag have">measured</span></td>
+  <td><strong>10 events, run 925-23</strong> (MCP2025C v10_14_02, one file): mean
+      <strong>48.8 s/event</strong>, median ~29 s. Imaging ~45%, per-APA clustering 12.4 s,
+      QL 3.2 s, all-APA 7.3 s, <strong>PR 3.8 s (8%)</strong>. The DL vertex is
+      <strong>6.4-6.8 s wherever a neutrino candidate exists</strong> (4/10 events) — 78% of the PR
+      section on those events, and near-constant regardless of event size, so it is a fixed-cost
+      inference rather than something that scales with occupancy. Peak RSS <strong>2350 MB</strong>
+      (mean 1777 over 621 samples); at 20 workers budget ~47 GB.
+      <br><br>The tail matters more than the mean for a scale run, and <strong>the tail is in
+      clustering, not PR</strong>: one event took 212 s, 4x the next slowest, of which per-APA
+      clustering was 93.8 s and all-APA 57.6 s (71%) while PR was 8.9 s.</td></tr>
+<tr><td><strong>G8</strong></td><td>doc drift</td><td><span class="tag warn">half open</span></td>
+  <td><s>The <code>x_sce</code> comment in the entry jsonnet</s> — fixed during the labeler rewiring;
+      the string no longer appears. <strong>Still open:</strong> <code>sbnd/CLAUDE.md</code> documents
+      an <code>enable_downstream_pr</code> toggle at the top of <code>clus.jsonnet</code>; verified
+      2026-08-18 that CLAUDE.md still mentions it (1 hit) while the key no longer exists in
+      <code>clus.jsonnet</code> (0 hits).</td></tr>
+<tr><td><strong>G9</strong></td><td>tracking-pr.root is not multi-event safe</td><td><span class="tag warn">worked around</span></td>
+  <td><code>SbndPrMagnifyTrackingVisitor</code> opens the file <strong>RECREATE</strong> and
+      <code>UbooneTaggerOutputVisitor</code> opens it <strong>UPDATE</strong>, on one fixed filename,
+      every event. <code>lar -n 5</code> therefore leaves an <strong>8 KB file with
+      <code>T_tagger</code> and <code>T_kine</code> absent</strong> and <code>Trun</code> holding only
+      the last event — while <code>rc=0</code> and every other output is fine.
+      <strong>Worked around</strong> by <code>enable_tracking_root</code> (fcl param, default true):
+      set it "false" to drop both stages and make multi-event runs safe. Not fixed — the writers are
+      still unsafe, and turning the toggle off costs <code>numu_score</code> /
+      <code>nue_score</code> / <code>kine_reco_Enu</code> (the Bee "mc" node keeps Enu and both
+      scores). A real fix is a per-event filename or an append-mode writer.</td></tr>
 </tbody></table>
 </div>
 
@@ -1349,7 +1364,60 @@ selected the wrong ROI thresholds. Tested both ways: <code>OK</code> on the Rout
 <p><strong>Any bulk harness should call it per event.</strong> A run that is not audited is not
 validated.</p>
 
-<h2 id="plan">9. The two routes, for the record</h2>
+<h2 id="plan">9. Open tasks</h2>
+
+<p>Everything below is deliberately deferred, not forgotten. G0-G5 are resolved, G7 is measured,
+Route A is adopted and running (<a href="#adopted">§8</a>).</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Task</th><th>Why it is parked</th></tr></thead>
+<tbody>
+<tr><td><strong>T1</strong></td>
+    <td><strong>Validate Route A against Xin's original 2-step chain.</strong> Run the same input
+        events through <code>sbnd_xin</code>'s own chain and compare final outputs.</td>
+    <td>The 1-step PR chain has <strong>never been compared to anything external</strong>. All
+        verification so far is internal — it runs, produces every artifact, values stay stable across
+        config changes. Owner decision 2026-08-18: use Xin's <em>original</em> chain, not the
+        Route B in <a href="#routes">§10</a>. That is the stronger test — Route B would run
+        <em>our</em> toolkit build on a 1-step pctree, sharing our code, so it could not catch
+        build- or port-level differences. It also removes the need for <strong>G6</strong>
+        entirely, since no pctree handoff is involved; the work becomes input matching, as Xin's
+        chain runs from dumped files.</td></tr>
+<tr><td><strong>T2</strong></td>
+    <td><strong>Make <code>tracking-pr.root</code> multi-event safe</strong> (per-event filename, or
+        an append-mode writer), and drop the <code>enable_tracking_root</code> workaround.</td>
+    <td><a href="#gaps">G9</a>. The toggle makes multi-event runs safe but costs
+        <code>T_tagger</code>/<code>T_kine</code>, i.e. the scores. Only worth doing if something
+        needs the ROOT trees from a multi-event process — the CAF work may not.</td></tr>
+<tr><td><strong>T3</strong></td>
+    <td><strong>RSE branches on <code>T_tagger</code> / <code>T_kine</code>.</strong></td>
+    <td>Re-verified 2026-08-18: 1216 and 21 branches, <strong>zero</strong> RSE in either. Only
+        <code>Trun</code> identifies the event, so any <code>T_tagger</code> analysis must join
+        through <code>Trun</code> or the filename. Three branches in
+        <code>UbooneTaggerOutputVisitor</code>.</td></tr>
+<tr><td><strong>T4</strong></td>
+    <td><strong>Exercise the empty particle-flow branch on data.</strong></td>
+    <td>The priority chain is truth+reco &gt; truth alone &gt; empty, and the empty arm fires only
+        when there is neither. On MC that never happens — the labeler always makes a truth tree — so
+        all 10 test events took arm 1 or 2. But the data fcl sets <code>reality: "data"</code>, which
+        produces <em>no</em> truth tree, so on data every event the tagger declines takes the empty
+        arm: <strong>a path that has never executed, on the majority of a data campaign</strong>. Two
+        lines, low risk, but one data event would close it.</td></tr>
+<tr><td><strong>T5</strong></td>
+    <td><strong>Fix <code>sbnd/CLAUDE.md</code></strong> — drop the <code>enable_downstream_pr</code>
+        reference.</td>
+    <td><a href="#gaps">G8</a>, cosmetic. The key no longer exists in <code>clus.jsonnet</code>.</td></tr>
+</tbody></table>
+</div>
+
+<p class="small">Dropped from an earlier version of this list: "verify a single-instance labeler
+config is still byte-identical". Checked 2026-08-18 — <strong>nothing else instantiates
+<code>wclsTensorSetLabeler</code></strong> (only our sim fcl, data fcl and entry jsonnet;
+<code>sbndcode</code> has none, and the standalone jsonnet mentions it only in a comment saying it is
+absent), so there is no single-instance consumer to break.</p>
+
+<h2 id="routes">10. The two routes, for the record</h2>
 
 <div class="cols">
 <div class="card">
