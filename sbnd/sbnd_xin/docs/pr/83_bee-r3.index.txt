@@ -1,0 +1,66 @@
+# doc pr/83 round 3 bee sets (2026-08-17)
+# All sets: before = knob-off (production pre-flip), after = knob-on
+# (= SBND production post-flip; bare-config smoke hash gate 12/12).
+# Zips staged at /home/xqian/tmp/pr83r3-bee/bee-r3-*.zip; URLs filled
+# after upload (upload-to-bee.sh).
+#
+# set 1: 511-sample recovered events, BEFORE
+# URL: TBD-UPLOAD (bee-r3-511-before.zip)
+# set 2: 511-sample recovered events, AFTER
+# URL: TBD-UPLOAD (bee-r3-511-after.zip)
+# bee_idx	event	sample	class/mech
+0	138009	nueCC48	A
+1	168596	nueCC48	A
+2	246579	nueCC48	B-MechA
+3	268784	nueCC48	A
+4	269774	nueCC48	B-MechA
+5	46363	nueCC48	B-MechA
+6	74544	nueCC48	A
+7	174224	mcp1k	A
+8	281837	mcp1k	A
+9	349945	mcp1k	A
+10	350935	mcp1k	B-MechC
+11	404684	mcp1k	B-MechB
+12	64409	mcp1k	A
+13	359980	NCpi0	B (losing-candidate orphan)
+14	506114	NCpi0	B-MechA
+15	506746	NCpi0	B (owner-cleared; orphan sweep merges at 0.95)
+16	521075	NCpi0	B-MechA
+#
+# set 3: mcp2k recovered events (census 14->0), BEFORE
+# URL: TBD-UPLOAD (bee-r3-m2k-before.zip)
+# set 4: mcp2k recovered events, AFTER
+# URL: TBD-UPLOAD (bee-r3-m2k-after.zip)
+# bee_idx	event	class
+0	175952	A
+1	275011	A
+2	280159	A
+3	284206	A
+4	291072	A
+5	323301	B
+6	348594	B
+7	392901	B
+8	393538	B
+9	396222	A
+10	415278	B
+11	478880	B
+12	69232	B
+13	98844	B
+#
+# set 5: owner-scan movers, BEFORE
+# URL: TBD-UPLOAD (bee-r3-scan-before.zip)
+# set 6: owner-scan movers, AFTER
+# URL: TBD-UPLOAD (bee-r3-scan-after.zip)
+# bee_idx	event	sample	why
+0	285567	nueCC48	nue -4.2 -> +4.3 (2.5cm overlap-1.00 op1-post merge)
+1	268067	nueCC48	nue 2.6 -> 1.6, Enu -115
+2	168596	nueCC48	nue 4.3 -> 1.8, Enu +236 (also class A recovery)
+3	46363	nueCC48	nue -2.3 -> +0.8, Enu +250 (recovered Mech-A target)
+4	172090	mcp1k	vtx moved 1.7 cm, no hand label
+5	506746	NCpi0	owner-cleared pair merged at 0.95 (display-only)
+6	159569	mcp2k	Enu 1697 -> 593 (overlap-1.00 vertex pair + refit)
+7	58919	mcp2k	2.15cm rider @0.75 op1-post, Enu -203
+8	289508	mcp2k	op1+op1-post+orphan-dup all fire, nue -15 -> -4.3
+9	179912	mcp2k	numu 0.23 -> 2.38 UP (recovered selection)
+10	396222	mcp2k	class A cleared; Enu 4117 -> 5639, numu 0.69 -> -0.87
+11	497311	mcp2k	numu -0.07 -> 0.92 (crosses 0)

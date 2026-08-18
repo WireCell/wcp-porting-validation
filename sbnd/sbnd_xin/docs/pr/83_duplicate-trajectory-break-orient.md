@@ -791,3 +791,203 @@ cluster); a `numu_score`/`nue_score`/`kine_reco_Enu`/vertex A/B on the 8
 recovered events (NCpi0's untouched-in-round-1 status makes it the most
 informative arm to watch here — all 4 of its class-B findings are Mechanism
 A); `./build/clus/wcdoctest-clus`.
+
+## 10. Round 3 (2026-08-17 evening) — the fixes, implemented, tuned and flipped
+
+Owner instruction: implement the §9.6 knobs **and** the class-A fix (§8.5),
+"make sure it does not regress much on the pr/86 issues"; validate on nueCC +
+NCpi0 + mcp1k(1000) + mcp2k(2000) PR'd events (mcp2k regenerated — no PR
+product survived the 2026-08-17 retire round); iterate at small scale first;
+flip SBND ON if validation passes; Bee before/after links; unsure movers to
+the owner for scanning.
+
+### 10.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# knob-off byte-identity (1022/1022 over the 511-event manifest):
+python3 scripts/pr83r3_hash_gate.py work-pr83r3-gateoff-mc    work-vfmcp1k-cbr3on
+python3 scripts/pr83r3_hash_gate.py work-pr83r3-gateoff-nue   work-vfnuecc48-cbr3on
+python3 scripts/pr83r3_hash_gate.py work-pr83r3-gateoff-ncpi0 work-vfncpi0-cbr3on
+# census A/B (baseline arms carry calib dumps: PR_EXTRA_STAGES=pr_display):
+python3 scripts/pr83r2_census.py work-pr83r3-gateoff-{mc,nue,ncpi0} --tsv /dev/null
+python3 scripts/pr83r2_census.py work-pr83r3-gateon2-{mc,nue,ncpi0} --tsv /dev/null
+# scores/movers A/B:
+python3 scripts/pr83r3_scores_ab.py work-pr83r3-gateoff-mc work-pr83r3-gateon2-mc
+# pr/86 regression metric (per arm):
+PR86_DUMP_ARMS=work-pr83r3-gateoff-mc:work-pr83r3-gateoff-nue:work-pr83r3-gateoff-ncpi0 \
+  python3 pr86_orphan_census.py
+# knob-on operating point (runner envs; == the flipped production values):
+#   SBND_MVGA_OP1_RADIUS=-1 SBND_MVGA_OP1_DUP_FRAC=0.7 \
+#   SBND_MVGA_OP1_POST=true SBND_SWAP_ORPHAN_DUP_AUDIT=true
+# mcp2k event list: work-cbr3-census-on ql_evt ids minus the 1000 mcp1k ids
+# (work-pr40r7cen-mcp1k) == exactly 2000; arms work-pr83r3-m2koff / -m2kon.
+```
+
+### 10.1 What shipped (five knobs, all C++ default OFF/legacy)
+
+| knob | default | SBND production | mechanism |
+|---|---|---|---|
+| `mvga_op1_radius` | 0 = use `mvga_radius` | **-1 (unscoped)** | §9.2 Mech A |
+| `mvga_op1_dup_frac` | 0 = use `mvga_dup_frac` | **0.7** (≥10 cm pairs only, §10.3) | §9.3 Mech B |
+| `mvga_op1_post` | false | **true** | §8 class A |
+| `swap_orphan_dup_audit` | false | **true** | §9.5 Mech C + §10.4 |
+| `mvga_carry_max` | 0 = unlimited | OFF (not needed) | §8.5 fallback |
+
+Touch list as predicted in §9.6 plus: `clus/src/NeutrinoPatternBase.cxx`
+(`swap_main_cluster` gains optional `Graph*/TrackFitting*/dv` params, all 4
+call sites threaded), `clus/src/TaggerCheckNeutrino.cxx` (the §10.4
+pre-shower sweep), `clus/src/NeutrinoGraphAudit.cxx` (op1 knob consults,
+`op1-post` pass, `orphan_dup_audit` fork), `run_pr_chain_batch.sh`
+(five `SBND_*` env mappings).  `wcdoctest-clus` green at every build.
+
+### 10.2 Class A: op1-post must run AFTER the refit, and iterate
+
+The §9.6-style "post-op3 dup pass" (before op4) cleared **0 of 7**
+carry-stacked events: measured at TRACE (74544/138009), the carried prongs
+read overlap 0.30–0.50 *pre-refit* — it is the op4 refit that routes them
+onto the shared charge ridge (≥0.7, the census geometry).  Moved after the
+refit it cleared 5/8; the last three (138009/74544/268784) re-emerged at
+0.71–0.81 after op1-post's *own* refit — each merge round's refit pulls the
+remaining prongs further onto the consolidated ridge.  Final form: iterate
+merge-round → refit to a **fixed point** (kEditCap-bounded); 138009 took two
+rounds (5 merges + 1).  Class A cleared 8/8 with `mvga_carry_max` left OFF —
+the owner's no-pr/86-regression constraint satisfied *by construction* (no
+carry is ever declined) and *by measurement* (§10.6).
+
+### 10.3 Mech B's threshold needed a length gate — the 390842 lesson
+
+The flat 0.7 op1 threshold produced one catastrophic mover in the mcp1k A/B:
+**390842**, where a **1.91 cm** rider at the main vertex merges at overlap
+0.75 (production 0.8 declines it; in scope even at 15 cm) and the kine tree
+then loses the entire 1.03 GeV muon chain — `kine_reco_Enu` 1147.8 → **9.8
+MeV**, numu_score 4.30 → 0.80 (the muon vanishes from `T_kine` entirely, not
+even flagged excluded).  Bisect: with only the threshold reverted the event
+is byte-restored, so the other three knobs have zero footprint there.  Two
+more short-rider merges at 0.75 flipped scores the same way (285567 op1
+1.98 cm, 268067 op1 1.66 cm).  A main-vertex-incidence guard (pr/86 P4's
+split) did NOT catch these — the riders' endpoints are near, not on, the
+main vertex.  What separates every adverse merge from the one wanted Mech-B
+merge (404684: 15.8/61.5 cm at 0.74) is **length**: the relaxed threshold now
+applies only when both members are ≥ 10 cm — the census's own min-length for
+a duplicate finding, i.e. exactly the class the knob exists to recover.
+Sub-10 cm riders stay at `mvga_dup_frac` (0.8).  With the gate: 390842
+byte-restored, 404684 still fixed, all 16 targets still clear.
+
+### 10.4 Mech C generalises: 359980 is a LOSING-CANDIDATE orphan (no swap)
+
+§9.2 misattributed 359980 to Mechanism A.  With the knobs on, its duplicate
+(cluster **75**) survived — because the main cluster is **21** and no
+`swap_main_cluster` ever fired: cluster 75 went through `find_proto_vertex`
+as a candidate during `determine_overall_main_vertex`, lost the contest, and
+kept its segments in the final output with no audit — §9.5's gap without the
+swap.  `swap_orphan_dup_audit` therefore grew a second layer: one unscoped
+`orphan_dup_audit` over every **non-main cluster**, run right before
+`shower_clustering_with_nv` consumes them (so shower maps never hold a
+removed segment), sorted by cluster id.  This also covers 350935 (still
+audited at the swap site first) and merged 506746's 15.9/11.5 cm pair at
+overlap 0.95 — an event the owner reviewed as NOT a defect, flagged in
+§10.7's scan list for that reason.
+
+### 10.5 Gates
+
+- **Knob-off byte-identity**: 1022/1022 archives (445+47+19 events × mabc +
+  pctree) vs `work-vf{mcp1k,nuecc48,ncpi0}-cbr3on` — labels
+  `work-pr83r3-gateoff-{mc,nue,ncpi0}`, PASS.  nueCC's 48th ql event
+  (116962) has no production reference (the vf arm holds 47) — run, rc=0,
+  reported, not comparable.  Final-binary spot checks after each of the two
+  guard rebuilds: 6/6 and 6/6.  `PR_EXTRA_STAGES=pr_display` proven
+  output-inert first (506114: mabc+pctree MATCH production with dumps on).
+- **Compiled config**: knob-off wcsonnet output byte-identical (full PR
+  pipeline incl. tagger_check_neutrino); knob-on shows exactly the five keys.
+- **`wcdoctest-clus`**: 2115/2115 at the final binary (5 new knob-default
+  pins).
+- **Census, 511 events**: 17 findings (8 class A + 9 class B) → **0**, zero
+  new findings.  mcp1k 6→0 (445 evts), nueCC 7→0 (48), NCpi0 4→0 (19).
+  506746 (owner-cleared, §9.4) merges by design (§10.4) with **zero score
+  footprint** (numu/Enu byte-level unchanged — the merge touches only the
+  non-main display cluster).
+- **mcp2k 2000×2**: baseline `work-pr83r3-m2koff` 2000/2000 rc=0 (46
+  first-pass failures were this session's own mid-batch `wcb install` races
+  — "failed to load plugin: WireCellClus" — rerun clean); production
+  provenance anchored by a 20/20 archive-hash match against the surviving
+  `work-cbr3-census-pr-on` on 10 shared mcp2k events, plus 6/6 + 6/6
+  mixed-binary spot checks across the two mid-batch rebuilds.  Baseline
+  census: **872 PR'd events, 14 findings (6 class A / 8 class B)** —
+  `docs/pr/83_r3-census-m2koff.tsv`.  Knob-on A/B: §10.6a.
+- **pr/86 regression**: orphan census off-vs-on — NCpi0 identical, nueCC
+  identical, mcp1k **improved** by 2 pooled CUT orphans (66→64, histogram
+  otherwise identical).  The class-A fix declines no carry (op1-post merges
+  after the fact), so the constraint holds by construction and by
+  measurement.
+
+### 10.6 Numbers (A/B over the final arms, 511-event manifest)
+
+| sample | events | findings off→on | movers (numu>0.05 / nue>0.05 / Enu>5 MeV / vtx>1 cm) |
+|---|---|---|---|
+| mcp1k (`gateoff-mc` vs `gateon2-mc`) | 445 | 6 → 0 | 16 (one 1.7 cm vtx move: 172090, unlabeled, scan list) |
+| nueCC48 (`-nue`) | 48 | 7 → 0 | 18 (no downward nue-selection flip; 46363 flips UP — a recovered target) |
+| NCpi0 (`-ncpi0`) | 19 | 4 → 0 | 7 |
+
+Mover TSVs: `docs/pr/83_r3-movers-{mcp1k,nuecc48,ncpi0}.tsv`.  The recovered
+targets dominate the large Enu movers (74544 −502, 268784 −396, 64409 −291,
+404684 −164, 174224 −213 MeV — the double count leaving); secondary movers
+are small refit drifts.  390842 and 394642 — the flat-0.7 adverse cases —
+do not appear at all under the §10.3 length gate (byte-restored).
+
+### 10.6a mcp2k A/B
+
+Arms `work-pr83r3-m2koff` / `work-pr83r3-m2kon`, 2000/2000 events each
+(rc=0 all; ql_root `work-cbr3-census-on`).  Census
+(`docs/pr/83_r3-census-m2ko{ff,n}.tsv`): 872 PR'd events, **14 findings
+(6 class A / 8 class B) → 0, zero new findings**.  Scores A/B
+(`docs/pr/83_r3-movers-mcp2k.tsv`): 2000 joined, 41 movers.  13/14 census
+events move (the double count leaving); 323301 clears with zero score
+footprint (display-only, like 506746).  28 movers are sub-census
+duplicates (below the 10 cm census min-length or the 0.7 census overlap
+gate) newly merged by the knobs.
+
+Attribution of the 8 largest (fresh debug rerun `work-pr83r3-diag8`,
+byte-identical to the m2kon arm — hash gate 16/16): every merge is a
+genuine duplicate corridor at overlap 0.75–1.00 @14 mm; the dominant
+mechanism is `op1-post` catching post-refit duplicates that production's
+scoped 0.8-gated op1 misses.  Notables (→ §10.7 scan list): 159569
+(Enu 1697→593 from an overlap-1.00 vertex-region pair + refit), 396222
+(class A; 15.3 cm + 30.3 cm stacked segments leave, Enu 4117→5639, numu
+0.69→−0.87), 289508 (op1+op1-post+orphan-dup all fire, nue −15→−4.3),
+179912 (numu 0.23→2.38 UP — recovered selection), 497311 (numu
+−0.07→0.92, crosses 0), 58919 (2.15 cm rider @0.75 via op1-post,
+Enu −203; op1-post is deliberately un-length-gated, §10.3, so this class
+is expected — flagged for scan).
+
+### 10.7 Owner-scan list (movers I cannot adjudicate)
+
+Bee set: 12 events, before (knob-off) vs after (knob-on = production
+post-flip), index `docs/pr/83_bee-r3.index.txt` (sets 5/6).  In Bee-index
+order: 285567 (nue −4.2 → +4.3 from a 2.5 cm overlap-1.00 op1-post
+merge), 268067 (nue 2.6 → 1.6, Enu −115), 168596 (nue 4.3 → 1.8, Enu
++236), 46363 (nue −2.3 → +0.8, Enu +250 — recovered Mech-A target),
+172090 (1.7 cm vertex move, unlabeled), 506746 (owner-cleared 15.9/11.5
+pair now merged at 0.95 by the orphan sweep — zero score footprint,
+display-only), then the mcp2k six: 159569, 58919, 289508, 179912,
+396222, 497311 (§10.6a).
+
+### 10.8 Records
+
+- Knob-off gate: 1022/1022 member-content identical
+  (`work-pr83r3-gateoff-{mc,nue,ncpi0}` vs `work-vf{mcp1k,nuecc48,ncpi0}-cbr3on`);
+  mcp2k provenance spot-checks 6/6+6/6+20/20 vs `work-cbr3-census-pr-on`.
+- Knob-on arms: `work-pr83r3-gateon2-{mc,nue,ncpi0}`,
+  `work-pr83r3-m2ko{ff,n}`; debug attribution `work-pr83r3-diag8`.
+- Flip verification: compiled-config diff = exactly the four keys
+  (`mvga_op1_radius=-1, mvga_op1_dup_frac=0.7, mvga_op1_post=true,
+  swap_orphan_dup_audit=true`; `mvga_carry_max` absent); bare-config
+  smoke `work-pr83r3-smoke-{nue,mc,ncpi0}` (138009 46363 349945 350935
+  359980 506746) hash gate **12/12** vs the gateon2 arms — bare run ==
+  production knob-on.
+- `wcdoctest-clus` 2115/2115.
+- Bee sets (uploaded from `/home/xqian/tmp/pr83r3-bee/`): links in
+  `docs/pr/83_bee-r3.index.txt`.
+- Commits: toolkit `apply-pointcloud` (code + cfg flip + doctest pins),
+  wcp-porting-img `main` (runner env mappings, census/mover TSVs, this
+  doc, Bee index) — hashes recorded in the index/commit log.

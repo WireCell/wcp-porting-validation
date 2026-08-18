@@ -936,6 +936,33 @@ fi
 if [ -n "${SBND_MVGA_STRAIGHTEN_RADIUS:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_straighten_radius=${SBND_MVGA_STRAIGHTEN_RADIUS}")
 fi
+# doc pr/83 r3: the duplicate-corridor round.  op1-only scope radius (cm;
+# C++ default 0 = use mvga_radius, -1 = unscoped) and overlap threshold
+# (fraction; 0 = use mvga_dup_frac); post-op3 dup pass incl. created
+# segments (boolean, class A); interposed-carry prong ceiling (count; 0 =
+# unlimited); abandoned-main-cluster dup audit inside swap_main_cluster
+# (boolean, Mechanism C).  Numeric/boolean TLAs, unset/empty omits
+# (jsonnet defaults null/false => keys suppressed => byte-identical).
+#   SBND_MVGA_OP1_RADIUS
+#   SBND_MVGA_OP1_DUP_FRAC
+#   SBND_MVGA_OP1_POST
+#   SBND_MVGA_CARRY_MAX
+#   SBND_SWAP_ORPHAN_DUP_AUDIT
+if [ -n "${SBND_MVGA_OP1_RADIUS:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_radius=${SBND_MVGA_OP1_RADIUS}")
+fi
+if [ -n "${SBND_MVGA_OP1_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_dup_frac=${SBND_MVGA_OP1_DUP_FRAC}")
+fi
+if [ -n "${SBND_MVGA_OP1_POST:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_post=${SBND_MVGA_OP1_POST}")
+fi
+if [ -n "${SBND_MVGA_CARRY_MAX:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_carry_max=${SBND_MVGA_CARRY_MAX}")
+fi
+if [ -n "${SBND_SWAP_ORPHAN_DUP_AUDIT:-}" ]; then
+    CATH_TLA+=(--tla-code "swap_orphan_dup_audit=${SBND_SWAP_ORPHAN_DUP_AUDIT}")
+fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
 # SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet
