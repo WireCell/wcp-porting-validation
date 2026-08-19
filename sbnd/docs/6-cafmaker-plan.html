@@ -244,7 +244,52 @@ The tiering recommendation stands; the justification changes.
 
 <h2 id="wc-output">4. What Wire-Cell actually produces</h2>
 
-<p>Measured on a real event (run 925-23 event 4, MCP2025C), not read off the source.</p>
+<h3>4.1 Where to find one</h3>
+
+<p><code>tracking-pr.root</code> is written into the job's <strong>current working directory</strong>,
+under that fixed name — there is no path or run/subrun/event in it
+(<a href="5-pr-chain-in-1step.html">PR-chain doc</a> §7.1). In the 1-step chain that means one file per
+per-event working directory, e.g. the issue-11 harness layout:</p>
+<pre><code>&lt;outdir&gt;/work/e_&lt;fileidx&gt;_&lt;evtidx&gt;/tracking-pr.root      # 1-step, one event per lar process
+&lt;out_root&gt;/pr_evt&lt;ID&gt;/tracking-pr.root                    # sbnd_xin 2-step, run_pr_chain_batch.sh</code></pre>
+
+<p>Because the harness deletes its per-event working directory after moving the Bee zip out, no
+durable copy existed anywhere on disk. A reference set has been preserved for this project, renamed by
+RSE (which the file itself cannot tell you):</p>
+<pre><code>/exp/sbnd/data/users/yuhw/production-prep/cafmaker-dev/sample-tracking-pr/
+    tracking-pr_r925_s23_e2.root        8 kB
+    tracking-pr_r925_s23_e4.root      267 kB     &lt;- the event described below
+    tracking-pr_r925_s23_e6.root        8 kB
+    tracking-pr_r925_s23_e9.root      318 kB
+    tracking-pr_r925_s23_e11.root       8 kB
+    tracking-pr_r925_s23_e18.root     218 kB
+    tracking-pr_r925_s23_e20.root     272 kB
+    tracking-pr_r925_s23_e22.root       8 kB
+    tracking-pr_r925_s23_e24.root       8 kB
+    tracking-pr_r925_s23_e25.root       8 kB</code></pre>
+<p class="small">All ten events of MCP2025C v10_14_02 run 925-23 (the first file of
+<code>prabhjot/…/cluster_evaluation/mc_paths-100files.lst</code>), produced by the current build with
+the full 15-stage pipeline. 1.2 MB total.</p>
+
+<div class="note"><strong>Those sizes are not noise — they are the two states of this file, and they
+matter for CAFMaker.</strong> The 8 kB files contain <strong>only</strong>
+<code>T_bad_ch</code>, <code>T_proj</code> and <code>Trun</code>:
+<code>T_tagger</code>, <code>T_kine</code>, <code>T_rec_charge</code> and <code>T_proj_data</code> are
+<strong>entirely absent</strong>. That is every event where the neutrino tagger selected no candidate —
+<strong>6 of these 10</strong>. So "no PR content at all" is the <em>common</em> case, not the
+exception, and a filler must treat absent trees as normal rather than as an error.
+<br><br>
+<strong>Worse, that signature is indistinguishable from the multi-event corruption of
+<a href="5-pr-chain-in-1step.html">G9</a>.</strong> The corrupted <code>lar -n 5</code> file measured
+8261 bytes with <code>T_tagger</code>/<code>T_kine</code> absent; a legitimate no-candidate event here
+measures 8243–8282 bytes with exactly the same three trees. <strong>You cannot tell a silently
+corrupted production run from a run where the tagger declined every event</strong> by inspecting the
+files. That is a strong additional argument for <a href="#design">§7</a>: read the products in memory,
+where "no candidate" is an explicit state rather than an absent tree.</div>
+
+<h3>4.2 Tree inventory</h3>
+<p>Measured on <code>tracking-pr_r925_s23_e4.root</code> — an event that <em>does</em> have a
+candidate, so every tree is present.</p>
 <div class="scroll">
 <table>
 <thead><tr><th>Tree</th><th>Entries</th><th>Content</th><th>To CAF?</th></tr></thead>
