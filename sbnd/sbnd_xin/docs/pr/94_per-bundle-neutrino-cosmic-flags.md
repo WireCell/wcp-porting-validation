@@ -640,6 +640,40 @@ function. This is exactly the failure the owner asked for ("you should ensure th
 root file are synced and good") and it is invisible to a hash gate, because the
 knob-off path never exercises it.
 
+### 9.3 Candidate ordering, and what still reads only the primary candidate
+
+Candidates are **ordered by their selected activity's length, longest first**
+(ties by gid), not by gid. That is a correctness requirement, not cosmetics:
+candidate 0 keeps the *unnamed* `TrackFitting` slot, and every consumer not
+converted to walk the `"nu<i>"` slots still reads exactly that slot. Enumerating
+by gid put a 1.7 cm shard from the low-gid drift side in slot 0 on nueCC48 evts
+10550 / 234638 / 267597 -- and because a shard reconstructs no vertex, the three
+Bee PR **point** layers (`track_fit-global`, `shower_track-global`,
+`vertices-global`) came out *empty* for those events, while the real 18.5 /
+114.5 / 127.2 cm candidate sat unused in slot 1. Caught by `make_pr_bee.py`
+warning "has no ['track_fit-global', ...]" while building the review zips.
+
+Longest-first is also the legacy selector's own rule, so slot 0 now holds the
+same candidate the pre-pr/94 chain would have chosen, `nu_index == 0` means
+"the primary candidate", and every unconverted consumer behaves exactly as it
+did before.
+
+**Known limitation, deliberately out of scope for this round.** These still
+describe candidate 0 only:
+
+- the three Bee PR point layers (`MultiAlgBlobClustering.cxx:3159-3170`, which
+  read `gs[0]->get_pr_graph()`),
+- `SbndPrMagnifyTrackingVisitor`'s `T_rec_charge` / `T_proj_data`,
+- `PrDisplayDump`.
+
+§8.3 scoped the Bee work to exactly three changes and all three are done, so
+extending these is a separable follow-up rather than an omission. The practical
+effect on review: a second bundle's *fitted trajectory points* are not drawn,
+but its full particle flow **is** in the `mc` forest with per-node start/end
+coordinates, so clicking a node still shows where it is -- which is what the
+owner's "if there are two neutrinos, the PF just go from two neutrino vertices
+... when we click we can see where the tracks are" asks for.
+
 **Phase 5 — scale up + Option A. TOOLING DONE, POPULATION ARMS NOT RUN.** The
 mcp1k (1000) and mcp2k (2000) arms are deliberately **not** run yet: §10.2
 requires owner sign-off on the small-sample cases first. What is done:
@@ -711,19 +745,19 @@ cd $SX
 # 2. knob-off recheck + knob-on arms (new binary)
 for n in nuecc48 ncpi0; do
   q=work-$n-cb0805; [ $n = nuecc48 ] && q=work-nuecc48-cb0805
-  PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94f-off-$n data
-  SBND_NU_PER_BUNDLE=1 PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94f-on-$n data
+  PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94g-off-$n data
+  SBND_NU_PER_BUNDLE=1 PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94g-on-$n data
 done
 # the motivating event lives in the mcp1k Q/L root, not in either sample:
 SBND_NU_PER_BUNDLE=1 PR_JOBS=4 \
-  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr94f-on-evt395148 data 395148
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr94g-on-evt395148 data 395148
 
 # 3. gates
 for n in nuecc48 ncpi0; do
-  python3 scripts/pr85_hash_gate.py work-pr94p2-base-$n work-pr94f-off-$n   # PASS
-  python3 scripts/pr94_root_gate.py work-pr94p2-base-$n work-pr94f-off-$n   # PASS
-  python3 scripts/pr94_sync_check.py work-pr94f-on-$n                       # PASS
-  python3 scripts/pr94_mains_sidecar.py work-pr94f-on-$n
+  python3 scripts/pr85_hash_gate.py work-pr94p2-base-$n work-pr94g-off-$n   # PASS
+  python3 scripts/pr94_root_gate.py work-pr94p2-base-$n work-pr94g-off-$n   # PASS
+  python3 scripts/pr94_sync_check.py work-pr94g-on-$n                       # PASS
+  python3 scripts/pr94_mains_sidecar.py work-pr94g-on-$n
 done
 
 # 4. Phase 3, its own arm, judged against a criterion fixed in advance
@@ -733,9 +767,36 @@ SBND_NU_PER_BUNDLE=1 SBND_PROTECT_SKIP_CONVICTED=0 PR_JOBS=32 \
 ```
 
 Arm labels, for later re-checking: `work-pr94p2-base-{nuecc48,ncpi0}`
-(pre-edit baseline), `work-pr94f-off-{nuecc48,ncpi0}` (knob off, final binary),
-`work-pr94f-on-{nuecc48,ncpi0}` (knob on), `work-pr94f-on-evt395148`,
+(pre-edit baseline), `work-pr94g-off-{nuecc48,ncpi0}` (knob off, final binary),
+`work-pr94g-on-{nuecc48,ncpi0}` (knob on), `work-pr94g-on-evt395148`,
 `work-pr94p3-open-{nuecc48,ncpi0}` (Phase 3).
+
+### 9.4 Review package (§10.2) -- built, NOT uploaded
+
+Bee zips are under `sbnd_xin/bee/pr94/` (a fresh label, M13). They are **not**
+uploaded: `upload-to-bee.sh` POSTs to the public BNL server, which is
+outward-facing (CLAUDE.md escalation rule 6). Say the word and they go up.
+
+| zip | case | events |
+|---|---|---|
+| `pr94-evt395148.zip` | the motivating event: one bundle, STM cosmic + selected neutrino | 395148 |
+| `pr94-case2a-ncpi0-18625.zip` | **2a** two bundles, BOTH reconstruct a candidate | 18625 (Enu 352.2 and 1498.1 MeV) |
+| `pr94-case2b-nuecc48.zip` | **2b** two bundles, one candidate (the other is a 1.4-3.3 cm shard) | 10550, 234638, 267597 |
+| `pr94-case1-nuecc48.zip` | **1** one bundle, several evaluated activities; the last two also have an all-cosmic bundle alongside | 116962 (3 acts), 122660 (8), 360535, 444187 |
+
+Case census over both small samples (67 events, 76 rows):
+
+| case | n |
+|---|---|
+| 1 — single bundle, >= 2 evaluated activities | 49 |
+| 2b — multiple bundles, one candidate | 8 |
+| plain single bundle, single activity | 8 |
+| 2b' — an all-cosmic bundle alongside a candidate (no row, see §9.1) | 2 |
+| **2a — multiple bundles, BOTH candidates** | **1** |
+| 2c — no candidate anywhere | 0 (needs the mcp2k arm; both these samples are neutrino-enriched) |
+
+Per-activity tables for every event are in each ON arm's `nusel-mains.tsv`
+(246 and 156 activity rows), written by `scripts/pr94_mains_sidecar.py`.
 
 **Phase 6 — SBND production flip. NOT DONE, correctly blocked.**
 `wct-pr-perevt.jsonnet` still has `nu_per_bundle = false`. It stays there until
