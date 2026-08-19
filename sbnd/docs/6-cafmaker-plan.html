@@ -86,7 +86,7 @@ whatsoever</strong>, which CAF requires for any MC analysis. That information ex
 different output stream.
 <br><br>
 There is also a <strong>design question that outranks both</strong>: CAFMaker should almost certainly
-not read <code>tracking-pr.root</code> at all. See <a href="#design">§7</a>.
+not read <code>tracking-pr.root</code> at all. See <a href="#design">§8</a>.
 </div>
 
 <h2 id="example">1. How <code>sbncode/CAFMaker</code> works</h2>
@@ -114,7 +114,7 @@ not read <code>tracking-pr.root</code> at all. See <a href="#design">§7</a>.
 not classes, so they compose and test independently of art. <code>CAFMaker</code> links
 <code>sbnanaobj::StandardRecord</code> and <code>sbnanaobj::StandardRecordFlat</code> — the data model
 lives in a <strong>separate repository</strong> from the maker, which matters for
-<a href="#design">§7</a>.</p>
+<a href="#design">§8</a>.</p>
 
 <h2 id="model">2. The CAF data model, and where a second reconstruction goes</h2>
 
@@ -248,7 +248,7 @@ The tiering recommendation stands; the justification changes.
 
 <p><code>tracking-pr.root</code> is written into the job's <strong>current working directory</strong>,
 under that fixed name — there is no path or run/subrun/event in it
-(<a href="5-pr-chain-in-1step.html">PR-chain doc</a> §7.1). In the 1-step chain that means one file per
+(<a href="5-pr-chain-in-1step.html">PR-chain doc</a> §8.1). In the 1-step chain that means one file per
 per-event working directory, e.g. the issue-11 harness layout:</p>
 <pre><code>&lt;outdir&gt;/work/e_&lt;fileidx&gt;_&lt;evtidx&gt;/tracking-pr.root      # 1-step, one event per lar process
 &lt;out_root&gt;/pr_evt&lt;ID&gt;/tracking-pr.root                    # sbnd_xin 2-step, run_pr_chain_batch.sh</code></pre>
@@ -284,7 +284,7 @@ exception, and a filler must treat absent trees as normal rather than as an erro
 8261 bytes with <code>T_tagger</code>/<code>T_kine</code> absent; a legitimate no-candidate event here
 measures 8243–8282 bytes with exactly the same three trees. <strong>You cannot tell a silently
 corrupted production run from a run where the tagger declined every event</strong> by inspecting the
-files. That is a strong additional argument for <a href="#design">§7</a>: read the products in memory,
+files. That is a strong additional argument for <a href="#design">§8</a>: read the products in memory,
 where "no candidate" is an explicit state rather than an absent tree.</div>
 
 <h3>4.2 Tree inventory</h3>
@@ -417,9 +417,117 @@ Whatever lands in CAF must be named and documented so that is unmissable.</p>
 Pandora slices; Wire-Cell has no slice. It has clusters, flash bundles, and one selected main vertex.
 Any attempt to populate <code>slc</code> would either invent a slice per WC cluster or claim one slice
 per event — both misleading. This is the strongest argument for the interaction model in
-<a href="#design">§7</a>.</p>
+<a href="#design">§8</a>.</p>
 
-<h2 id="design">7. Proposed design</h2>
+<h2 id="spine">7. <code>rec.dlp</code> is SPINE — and how SPINE actually gets into a CAF</h2>
+
+<p><strong>Yes, <code>rec.dlp</code> is SPINE.</strong> "DLP" is the older name for the ML
+reconstruction chain now called SPINE; <code>SRInteractionDLP</code> / <code>SRParticleDLP</code> are
+its interaction and particle records. And it is filled by neither <code>sbncode/CAFMaker</code> nor any
+art module.</p>
+
+<h3>7.1 <code>justinjmueller/sbn_ml_cafmaker</code></h3>
+<p>A small standalone C++/CMake project — no art, no LArSoft. SPINE runs
+<strong>outside</strong> the LArSoft ecosystem and writes HDF5; this tool moves that into CAF two ways:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Executable</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td class="mono">merge_sources</td><td>takes an <strong>existing CAF</strong> + the SPINE HDF5,
+    matches event-by-event on <code>(run, subrun, evt)</code>, and writes a new CAF carrying both</td></tr>
+<tr><td class="mono">make_standalone</td><td>writes a fresh CAF containing <strong>only</strong> the ML
+    output, from one or more HDF5 files</td></tr>
+<tr><td class="mono">merge_sources_multi</td><td>the multi-input variant</td></tr>
+</tbody></table>
+</div>
+<p>The merge loop is the interesting part:</p>
+<pre><code>TFile input_caf(argv[2], "read");
+TTree *input_tree = (TTree*)input_caf.Get("recTree");
+caf::StandardRecord *rec = new caf::StandardRecord;
+input_tree-&gt;SetBranchAddress("rec", &amp;rec);          // &lt;-- NESTED CAF
+...
+for (size_t n = 0; n &lt; input_tree-&gt;GetEntries(); ++n) {
+    input_tree-&gt;GetEntry(n);
+    rec-&gt;dlp.clear();  rec-&gt;ndlp = 0;
+    rec-&gt;dlp_true.clear();  rec-&gt;ndlp_true = 0;
+    index_t index(rec-&gt;hdr.run, rec-&gt;hdr.subrun, rec-&gt;hdr.evt);
+    if (event_map.count(index)) package_event(rec, input_h5, events[event_map[index]]);
+    output_tree-&gt;Fill();                            // rebuilt, not cloned
+}</code></pre>
+<p>It reads the whole record, clears only its own four members, fills them if the event matches, and
+rebuilds <code>recTree</code> entry by entry. Everything else passes through untouched.</p>
+
+<div class="key">
+<strong>This is the closest precedent to what we need, and it is better than an art module.</strong>
+Wire-Cell, like SPINE, produces its output from its own chain rather than as art products a CAFMaker
+would naturally see. The merge pattern means: no change to <code>sbncode/CAFMaker</code>, no art
+integration, no coupling to reco2, and the WC block can be re-made or re-merged independently whenever
+the PR chain changes. It also explains <strong>why <code>ndlp = 0</code></strong> in our production
+sample — the branches are in the schema, but filling them is a downstream step this production never
+ran.
+</div>
+
+<p class="note"><strong>One practical obstacle, and it is ours specifically.</strong>
+<code>merge_sources</code> does <code>SetBranchAddress("rec", &amp;rec)</code> — it requires a
+<strong>nested</strong> CAF, one branch of type <code>caf::StandardRecord</code>. Verified on our
+production sample: there is <strong>no branch named <code>rec</code></strong>; the branches are
+<code>rec.crt_hits..length</code>, <code>rec.dlp.cathode_offset</code>, … i.e. flattened. And a
+<code>find</code> over the whole <code>caf/</code> tree returns <strong>no non-flat
+<code>.caf.root</code> at all</strong> — SBND Gen2 production keeps only <code>.flat.caf.root</code>.
+So the SPINE tool could not be pointed at our files as-is. Either the nested CAF has to be obtained
+(it is presumably transient upstream of the flattening step) or the merge has to work on the flat form,
+which is harder: flat branches are fixed-layout, so adding a block means rewriting the schema rather
+than setting a member.</p>
+
+<h3>7.2 So can we add <code>rec.wc</code>?</h3>
+
+<p>Yes — but one correction first: <strong><code>rec.dlp</code> is not a TTree.</strong> There is a
+single <code>recTree</code>. In the <em>nested</em> CAF it has one branch, <code>rec</code>, holding a
+<code>caf::StandardRecord</code>, and <code>dlp</code> is a member of that object. In the <em>flat</em>
+CAF the object is exploded into ~2662 dotted branches, of which 433 begin <code>rec.dlp</code>. So
+<code>rec.wc</code> would be a <strong>member of <code>StandardRecord</code></strong> (and hence a set
+of branches), not a tree of its own.</p>
+
+<p>That gives three real options:</p>
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Option</th><th>Cost</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong></td>
+    <td><code>std::vector&lt;SRWireCellInteraction&gt; wc</code> + <code>nwc</code> as new
+        <code>StandardRecord</code> members, exactly parallel to <code>dlp</code>/<code>ndlp</code>.
+        Becomes <code>rec.wc.*</code> in both forms.</td>
+    <td>an <code>sbnanaobj</code> PR: the record, the flat mirror, dictionaries, SBN-wide review</td>
+    <td><span class="tag have">the real destination</span></td></tr>
+<tr><td><strong>B</strong></td>
+    <td>Reuse the existing, <em>empty</em> <code>dlp</code> block for WC output.</td>
+    <td>zero schema work</td>
+    <td><span class="tag miss">no</span> — the fields are SPINE-shaped and it would make WC
+        indistinguishable from SPINE the moment SBND enables SPINE. Tempting because
+        <code>ndlp = 0</code> today; a trap tomorrow.</td></tr>
+<tr><td><strong>C</strong></td>
+    <td>A <strong>sidecar TTree</strong> — e.g. <code>wcTree</code>, keyed by
+        <code>(run, subrun, evt)</code> — written into the same file beside <code>recTree</code>.</td>
+    <td>none: no <code>sbnanaobj</code> change at all</td>
+    <td><span class="tag warn">good first step</span> — but it is not "in the CAF" as far as the
+        tooling is concerned. SRProxy, the flat/nested machinery and CAFAna all address
+        <code>recTree</code>; analysers would have to join by hand or via a friend tree.</td></tr>
+</tbody></table>
+</div>
+
+<p>Recommended sequence: <strong>C to prove the content, A to ship it.</strong> C gives real WC-in-CAF
+output within days and costs nothing that has to be un-done — the fillers and the RSE join are the same
+work either way. A then converts a schema argument into a review of something already producing
+numbers, which is exactly how the DLP block presumably got in.</p>
+
+<p class="small">Note this also supersedes the "sibling visitor / read in memory" idea in
+<a href="#design">§8</a> as the <em>primary</em> route. Reading in memory is still the right way to
+<em>obtain</em> the WC quantities — it avoids the 8 kB ambiguity of
+<a href="#wc-output">§4.1</a> — but the CAF-side plumbing should follow the SPINE merge pattern rather
+than an art producer. The two are complementary: a WCT visitor writes a compact per-event WC summary,
+and a merge step joins it to the CAF on RSE.</p>
+
+<h2 id="design">8. Proposed design</h2>
 
 <div class="key">
 <strong>Decision that outranks the two questions: do not read
@@ -438,7 +546,7 @@ i.e. a sibling visitor, not a downstream parser. <code>tracking-pr.root</code> t
 should be: a debug dump.
 </div>
 
-<h3>7.1 Where the data model should live</h3>
+<h3>8.1 Where the data model should live</h3>
 <div class="cols">
 <div class="card">
 <h3>(a) Reuse <code>SRInteractionDLP</code></h3>
@@ -459,7 +567,7 @@ review culture.</p>
 upstream with real output in hand. That converts an abstract schema discussion into a review of
 something that already works.</p>
 
-<h3>7.2 Sketch</h3>
+<h3>8.2 Sketch</h3>
 <pre><code>larwirecell/CAFMaker/
   WireCellCAF_module.cc      art producer, or a wcls visitor -- see 6.1
   FillWCInteraction.{h,cxx}  TaggerInfo + KineInfo  -> SR interaction
@@ -471,7 +579,7 @@ something that already works.</p>
 <p>Mirroring <code>sbncode/CAFMaker</code>'s free-function filler convention exactly, so the code reads
 familiarly to anyone who knows that package.</p>
 
-<h3>7.3 Phasing</h3>
+<h3>8.3 Phasing</h3>
 <ol>
 <li><strong>Verify the particle-id join.</strong> Confirm <code>T_kine</code>'s particle ordering and
     <code>T_rec_charge</code>'s <code>particle_id</code> agree. Everything downstream depends on it.</li>
@@ -480,13 +588,13 @@ familiarly to anyone who knows that package.</p>
 <li><strong>Particles</strong> — PDG, KE, geometry aggregated per <code>particle_id</code>.</li>
 <li><strong>Truth</strong> (gap 1) — the big one; needs the labeler stream, not this file.</li>
 <li><strong>Score tiers + flash/verdict plumbing</strong> (gaps 2 and 3).</li>
-<li><strong>Propose the schema upstream</strong> (7.1b).</li>
+<li><strong>Propose the schema upstream</strong> (8.1b).</li>
 </ol>
 
-<h2 id="open">8. Open questions for you</h2>
+<h2 id="open">9. Open questions for you</h2>
 <ol>
 <li><strong>Who consumes this CAF?</strong> If it is SBN-wide analysis, the schema must go through
-    <code>sbnanaobj</code> review and 7.1b is mandatory. If it is our own studies for now, a private
+    <code>sbnanaobj</code> review and 8.1b is mandatory. If it is our own studies for now, a private
     block is far faster. This changes the whole shape of the work.</li>
 <li><strong>Does WC output need to sit alongside Pandora in the <em>same</em> CAF file</strong>
     (so analysers can compare per event), or is a separate WC-only CAF acceptable? The former is much
@@ -499,7 +607,7 @@ familiarly to anyone who knows that package.</p>
     call to make silently.</li>
 </ol>
 
-<h2 id="risks">9. Risks</h2>
+<h2 id="risks">10. Risks</h2>
 <div class="scroll">
 <table>
 <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
