@@ -1,19 +1,25 @@
 # doc pr/94 — per-bundle T_tagger/T_kine rows: cosmic-tagged sibling bundles
 # must not discard a co-bundled neutrino candidate (SBND run 18255)
 
-**Status (2026-08-19): Phase 1 DONE — schema + plumbing SHIPPED, knob OFF
-(`nu_per_bundle`, default false).** Byte-identical proven both at compile
-time (compiled JSON diff empty vs pre-edit baseline) and at runtime (every
-pre-existing `T_tagger`/`T_kine`/`T_bad_ch`/`T_proj`/`T_proj_data`/
-`T_rec_charge`/`Trun` branch, on a real event, bit-for-bit identical between
-OFF and ON). Knob ON books exactly the 12 new branches, all correctly at
-their sentinel defaults (-1 scalars, empty vectors) — nothing populates them
-yet, as designed. `wcdoctest-clus` 2215/2215. See §9 Phase 1 for full
-results and Repro. Phases 2-6 (per-bundle selection logic, opening convicted
-bundles, Bee, scale-up, SBND flip) are still plan-only, not started. Do not
-treat any Phase 2-6 numbers below as implemented — they are measurements
-against the *current* (pre-Phase-2) production chain, used to size the
-problem and the fix.
+**Status (2026-08-19): Phases 1, 2 and 4 SHIPPED, knob still OFF
+(`nu_per_bundle`, default false). Phase 3 validated and NOT recommended.
+Phase 5 tooling done, population arms not run. Phase 6 (production flip) not
+done -- it is blocked on the owner review below.**
+
+Knob OFF is proven byte-identical after every phase: `pr85_hash_gate.py` PASS
+on 96/96 + 38/38 archives and a new per-branch/per-entry ROOT gate PASS on
+48/48 + 19/19 events, re-run after each of Phase 2 and Phase 4. Knob ON
+reproduces the legacy candidate **bit-identically in 67/67 events** and adds
+per-bundle rows beside it at no measurable runtime cost (-1.0 % / +0.3 % wall,
+RSS unchanged). The §10.1 sync check passes on every row, and it caught one real
+bug no byte gate could (§9, Phase 4). `wcdoctest-clus` 2215/2215.
+
+**Two things need the owner before this goes further**, both detailed in §9:
+(i) per-bundle mode bypasses ONE of the three cosmic vetoes §5 named, not three
+-- bypassing the per-main veto would emit a full neutrino result for every
+convicted cosmic muon and would make §10.2's case 2c unreachable; and (ii) §10.2
+case-by-case Bee sign-off on the small samples, which gates the mcp1k/mcp2k
+arms and Phase 6.
 
 Owner's framing, verbatim, of what "done" means: *"Now, I wonder how the
 flags (including FC) are saved for this kind of cases? In the final result, I
@@ -476,30 +482,265 @@ print('new in ON:', sorted(set(tt_on.keys()) - set(tt_off.keys())))
 "
 ```
 
-**Phase 2 — per-bundle selection, knob ON, small sample only.** Turn on the
-bundle loop in `TaggerCheckNeutrino` (§5), bypass the three cosmic vetoes in
-per-bundle mode, wire the BDT scorers and `tagger_output` to iterate.
-Validate on nueCC48 (48) + NCpi0 (19) first. Smoke-check 395148 specifically
-against the expected `act_*` content (cluster 10 STM=1/FC=0, cluster 21
-STM=0/FC=1/selected=1).
+**Phase 2 — per-bundle selection. DONE 2026-08-19, knob still OFF.**
+`TaggerCheckNeutrino::visit()` now builds a *candidate list* and runs the PR
+chain once per candidate. The two legacy selection branches are **textually
+untouched**: the beam-gate branch is gated `else if (!m_nu_per_bundle)` and the
+new per-bundle branch is a sibling `else`, so with the knob off the code that
+picks the single event-wide winner is byte-for-byte the pre-pr/94 code. The
+~980-line post-selection body was wrapped in `for (nu_index ...)`, which is a
+pure re-indent plus two mechanical substitutions -- `git diff -w` on the file
+is **268 insertions / 39 deletions**, and all 39 deletions are the 35
+`m_track_fitter` -> `track_fitter` renames plus the 4 intended structural lines.
 
-**Phase 3 — open convicted bundles.** `protect_skip_convicted=false` (§8.1)
-is a separate, independently toggleable change — it changes what
-`ClusteringProtectBundle` does to 870 in-beam bundles, on top of Phase 2's
-selection change. Validate it as its own step so a regression is
-attributable.
+Per-candidate state: `acc_segment_id` is hoisted above the loop (it restarts at
+0 per candidate, so shower ids would otherwise collide between bundles); the
+first candidate reuses the configured member fitter (hence the legacy path is
+untouched) and later candidates get their own `TrackFitting` seeded from
+`m_track_fitter->get_parameters()` -- `TrackFitting::sync_from_graph()`
+*accumulates* clusters and blobs, so a shared fitter would leak bundle i-1's
+charge into bundle i, and a freshly-preset one would silently drop the whole
+`trackfitting_config` file. Each candidate publishes into a `"nu<i>"` named
+slot; the unnamed slot keeps pointing at candidate 0. The four process-wide
+audit blocks (PR30/31/32/33/36AUDIT) were deliberately left *outside* the loop,
+so they stay one line per event and existing log parsers are unaffected.
 
-**Phase 4 — Bee (§8.3).** Independent of Phases 2-3's physics content; can
-proceed once Phase 1's plumbing exists.
+Downstream consumers walk the `"nu<i>"` slots until one returns null, which is
+empty in legacy mode -- so `UbooneNumuBDTScorer`, `UbooneNueBDTScorer` and the
+Bee producer needed **no knob of their own** and collapse to exactly their
+pre-pr/94 single-fitter code path. `UbooneTaggerOutputVisitor` keeps its knob
+(it books branches) and fills `T_tagger`/`T_kine` **in the same loop iteration**,
+so row i of each refers to the same bundle by construction.
 
-**Phase 5 — scale up + Option A.** Run mcp1k (1000) + mcp2k (2000). Fix the
-7 Python consumers (§6) and the `nusel_extract.py` sidecar + `event_label`
-fix (§7) in lockstep with the population arm, since they're what actually
-reports the validation numbers.
+**Divergence from this plan's §5, deliberate -- needs the owner's confirmation.**
+§5 said to bypass *three* cosmic vetoes in per-bundle mode. Only **one** is
+bypassed: the event-level `cosmic_gids` BUNDLE veto, which is the one that
+actually discards a clean activity because a *sibling* was convicted -- the
+395148 defect. The **per-main** veto is kept (a TGM/STM/LM-convicted activity is
+not a neutrino candidate) and so is `skip_cosmic_companions`. Bypassing the
+per-main veto would emit a full neutrino result -- vertex, Enu, BDT scores --
+for every convicted cosmic muon, and would make this plan's own §10.2 case 2c
+("multiple bundles, neither produces a candidate") unreachable by construction.
+The two halves of the plan disagree; this is the reading that satisfies §10.2
+and the owner's "at most one neutrino candidate per bundle". See §9.1 below for
+the consequence this has for Phase 3.
 
-**Phase 6 — SBND production flip.** Only after Phase 5's numbers are
-reported and accepted — flip `wct-pr-perevt.jsonnet` ON for SBND, per the
-owner's "default on after validation."
+**Phase 2 results** (nueCC48 48 + NCpi0 19, `PR_JOBS=32`):
+
+| gate | result |
+|---|---|
+| `wcdoctest-clus` | 2215/2215 |
+| compiled config, knob OFF, vs pre-Phase-2 baseline | diff **empty** |
+| compiled config, knob ON | `nu_per_bundle` x2 (tagger_check_neutrino + tagger_output), `nu_per_bundle_demoted_acts` x1; absent when off |
+| knob OFF, `pr85_hash_gate.py` vs `work-pr94p2-base-*` | **PASS 96/96 + 38/38** archives byte-identical |
+| knob OFF, `pr94_root_gate.py` (every tree, branch, entry of `tracking-pr.root`) | **PASS 48/48 + 19/19** events |
+| knob ON, primary row vs the legacy single row | **identical in 67/67 events** (vertex, `numu_score`, `nue_score`, `cosmict_flag`, `Enu`) |
+| knob ON, §10.1 sync check | **PASS**, 53 + 23 rows |
+| wall time ON vs OFF | nueCC48 **-1.0 %**, NCpi0 **+0.3 %** (median 25.0->24.5 s / 19.0->19.0 s); peak RSS unchanged at 1.56 G |
+
+So per-bundle mode is **purely additive**: it reproduces the legacy answer
+exactly and adds bundle rows next to it, at no measurable runtime cost. (§8.2
+budgeted ~+5 %; the prediction was pessimistic because only ~10 % of events gain
+a bundle and the extra bundles are mostly short shards.)
+
+Row census: nueCC48 48 events -> **53 rows** (5 events gain a second bundle);
+NCpi0 19 events -> **23 rows** (4 events gain). Of the extra rows, 8 are
+"opened, nothing reconstructed" (selected activity 1.19-14.73 cm, no vertex, so
+`fill_bee_pf_tree` correctly emits no particle flow) and **one is a genuine
+second neutrino candidate** -- NCpi0 evt 18625 bundle gid 1000000, cluster 11,
+Enu 1498.1 MeV. That is this plan's §10.2 **case 2a**, found in the wild.
+
+**Smoke on 18255/395148** (§10 step 4) -- the motivating event, exactly as
+predicted:
+
+```
+row 0: gid=0 selected_cluster=21 vtx=(-154.19,-62.46,181.99) Enu=992.1 numu=3.655 cosmict_flag=0
+   cid    len_cm    sel  dem  TGM  STM  FC   LM
+   10     508.5     0    0    0    1    0    0
+   21     198.9     1    1    0    0    1    0
+```
+
+The row is now self-describing: the STM conviction is visibly attached to
+cluster 10, *not* to the selected candidate 21, so a cut on a cosmic flag can no
+longer discard this neutrino. `act_evaluated=1` on both is independently
+confirmed by the taggers' own log lines ("TaggerCheckFC: beam_window_only
+[0.200, 2.200) us: **2** main(s) evaluated, 19 out of window") -- the count
+matches because `nu_per_bundle_demoted_acts` is wired straight from
+`evaluate_demoted_mains` rather than from its own TLA, so the two cannot drift.
+
+**Phase 3 — open convicted bundles. VALIDATED AND NOT RECOMMENDED; knob left at
+its default (OFF).** `SBND_PROTECT_SKIP_CONVICTED=0` was run on top of Phase 2
+on both small samples. Acceptance criterion, fixed **before** the numbers were
+read: the primary row must stay bit-identical to the legacy result, since
+anything else is a change to production physics for already-good events.
+
+Result: it **fails**, and buys nothing.
+
+| | nueCC48 | NCpi0 |
+|---|---|---|
+| rows (Phase 2 alone -> Phase 3) | 53 -> **53** | 23 -> **23** |
+| rows with a vertex | 48 -> **48** | 20 -> **20** |
+| primary row identical to legacy | **46 / 48** | 19 / 19 |
+
+The two perturbed nueCC48 events are evt 10550 (`numu_score` -1.663 -> -1.379)
+and evt 116962 (vertex moves 38 cm in z, `nue_score` -1.028 -> **-4.301**);
+`ClusteringProtectBundle` lines in evt 116962 go 8 -> 16, i.e. the extra charge
+really is entering the PR ensemble.
+
+### 9.1 Why Phase 3 is inert here, and the fork it exposes
+
+Every bundle Phase 3 opens is one the taggers **convicted** (the withheld-bundle
+log lines are all `convicted TGM=1`). Phase 2 keeps the per-main cosmic veto, so
+an all-convicted bundle yields no candidate and therefore **no row** -- while its
+clusters still join the ensemble and perturb the reconstruction of the bundles
+that do produce rows. Cost without benefit. Phase 3 only becomes meaningful if
+the per-main veto is dropped too, which is the reading rejected above.
+
+Three readings, for the owner to choose between -- this is not a call to make
+silently:
+
+- **(a) as shipped.** Per-main veto kept, Phase 3 off. An all-cosmic in-beam
+  bundle produces *no row at all*, so the output does not record that the bundle
+  existed. Costs nothing, changes nothing, matches "at most one neutrino
+  candidate per bundle".
+- **(b) the plan's literal §5.** Drop the per-main veto as well and turn Phase 3
+  on. Every in-beam bundle gets a full row -- but that means a vertex, an Enu and
+  BDT scores computed for a known cosmic muon, plus ~1.15 s of DL inference each,
+  plus the 2/48 perturbation measured above.
+- **(c) flags-only rows.** Emit a row for an all-cosmic in-beam bundle carrying
+  the identity and the `act_*` block but **no** PR result (vertex 0, Enu 0,
+  scores at defaults), by skipping the chain for those bundles. Complete bundle
+  coverage -- which is what "for each bundle in coincidence with beam, we should
+  have a set of results" literally asks for -- at near-zero cost and with no
+  misleading physics. Not implemented; it is a genuine design decision.
+
+Recommendation: **(c)**, with **(a)** as shipped in the meantime. Phase 3's
+`SBND_PROTECT_SKIP_CONVICTED` env hook is wired into `run_pr_chain_batch.sh`
+either way, so the arm can be re-run whenever this is settled.
+
+**Phase 4 — Bee. DONE 2026-08-19.** `fill_bee_pf_tree` gained three optional
+arguments, all defaulting to the pre-pr/94 behaviour (§8.3's three fixes):
+render a caller-supplied `TrackFitting`; share the `pf_unique_node_ids` reissue
+set across bundles so ids cannot collide between them; and append this bundle's
+roots, wrapped in one synthetic node labelled `"nu <i> (gid G, cluster C)"`, to a
+caller-owned array instead of calling `set_particles()` (a plain overwrite,
+`Bee.cxx:549-551`, which would erase bundle i-1). The caller sets the
+concatenation once, after the loop. The Bee `mc` layer stays a bare JSON forest,
+so **no format change was needed** -- only the producer.
+
+**One real bug, found by the §10.1 sync check and not by any byte gate.**
+`fill_bee_pf_tree` also resolved its *graph* implicitly, via
+`grouping.get_pr_graph()`, which is defined as `m_track_fitting->get_graph()`
+(`Facade_Grouping.cxx:76-79`) -- the **unnamed** slot. Passing the right fitter
+was therefore not enough: bundle i's vertex was being walked against bundle 0's
+graph. It surfaced on NCpi0 evt 18625, whose second bundle reconstructed a real
+1498 MeV candidate and emitted **no Bee node at all**. Fixed to `tf->get_graph()`;
+an audit confirms these were the only two implicit unnamed-slot reads in the
+function. This is exactly the failure the owner asked for ("you should ensure the
+root file are synced and good") and it is invisible to a hash gate, because the
+knob-off path never exercises it.
+
+**Phase 5 — scale up + Option A. TOOLING DONE, POPULATION ARMS NOT RUN.** The
+mcp1k (1000) and mcp2k (2000) arms are deliberately **not** run yet: §10.2
+requires owner sign-off on the small-sample cases first. What is done:
+
+- `scripts/pr94_rows.py` -- `primary_index()`, the shared "which row is THE
+  candidate" helper. It reproduces the legacy meaning (longest selected main
+  activity), so a single-bundle event reports exactly as before, and falls back
+  to row 0 for pre-pr/94 and knob-off files.
+- The five consumers that report one number per event and hard-indexed `[0]` now
+  use it: `pr_scores_table.py` (which also gained `nu_row` / `n_nu_rows`),
+  `pr51/nuvtx_census.py`, `pr74/pr74_pf_roots.py`, `pr20/pr20_partI_pftree.py`,
+  `pr73/f3a_change_map.py` (14 sites). The remaining two named in §6,
+  `misc/ssm_tagger_ab.py` and `misc/tagger_tree_ab.py`, print `[0]` only as a
+  sample value beside a full-array comparison, so they are annotated rather than
+  changed.
+- `scripts/pr94_root_gate.py` -- per-branch, per-entry value gate on
+  `tracking-pr.root` (the pr85 hash gate covers `mabc-pr.zip` and the pctree but
+  not the ROOT file, which is precisely where this doc changes the schema).
+  NaN maps to a sentinel: `T_rec_charge.reduced_chi2` legitimately carries NaN
+  (2 of 962 entries on nueCC48 evt 389538 -- pre-existing, unrelated to pr/94,
+  noted here and not touched), and `NaN != NaN` would make identical files
+  compare as different.
+- `scripts/pr94_sync_check.py` -- §10.1, described above.
+- `scripts/pr94_mains_sidecar.py` -- §7's per-activity sidecar
+  (`nusel-mains.tsv`) and the corrected event label
+  (`nusel-events-pr94.tsv`), read from `T_tagger`'s `act_*` block.
+
+**Deliberate deferral, owner's call.** §12 named `nusel_extract.py` itself as the
+place for the sidecar and the `event_label` fix. It was **not** modified: its
+`nusel-table.tsv` is parsed by roughly twenty scripts and the hand-scan viewer,
+and changing its columns or its label logic in the same round as a C++ schema
+change puts two unrelated risks in one commit. The consequence is real and worth
+stating plainly: **`nusel-events.tsv` still carries the wrong `event_label`** --
+the 68/629 miscount in §1 is *not* fixed by writing a second file next to it.
+`nusel-events-pr94.tsv` carries the corrected label; migrating the consumers, or
+patching `nusel_extract.py` in place, is a follow-up the owner should schedule.
+
+### 9.2 Repro (Phases 2-4)
+
+Every number in the Phase 2/3/4 blocks above comes from these commands. The
+baseline arms are generated **before** any source edit, on purpose: Phase 2
+refactors the knob-off path (the ~980-line body moves inside a loop), so a
+single-event value diff is no longer adequate evidence -- the knob-off arm needs
+the real manifest.
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+git log --oneline -1                       # must be the pre-Phase-2 commit
+ls -la --time-style=full-iso build/clus/libWireCellClus.so   # freshness, M1
+
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin; cd $SX
+# 1. pre-edit baseline (knob off, old binary)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94p2-base-nuecc48 data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr94p2-base-ncpi0   data
+
+# ... apply Phases 2+4, then:
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+bash -ic 'wcbuild' > /home/xqian/tmp/b.log 2>&1; echo rc=$?
+./build/clus/wcdoctest-clus                # 2215/2215
+# the extraction is mechanical -- this is the proof:
+git diff -w --stat clus/src/TaggerCheckNeutrino.cxx      # 268 ins / 39 del
+git diff -w clus/src/TaggerCheckNeutrino.cxx | grep '^-' # all 39 accounted for
+
+# compiled-config proofs (see the Phase 1 Repro for the full wcsonnet line);
+# knob off must diff EMPTY against a `git stash`ed pre-edit compile, and
+# knob on must show nu_per_bundle twice + nu_per_bundle_demoted_acts once.
+
+cd $SX
+# 2. knob-off recheck + knob-on arms (new binary)
+for n in nuecc48 ncpi0; do
+  q=work-$n-cb0805; [ $n = nuecc48 ] && q=work-nuecc48-cb0805
+  PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94f-off-$n data
+  SBND_NU_PER_BUNDLE=1 PR_JOBS=32 ./run_pr_chain_batch.sh $q work-pr94f-on-$n data
+done
+# the motivating event lives in the mcp1k Q/L root, not in either sample:
+SBND_NU_PER_BUNDLE=1 PR_JOBS=4 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr94f-on-evt395148 data 395148
+
+# 3. gates
+for n in nuecc48 ncpi0; do
+  python3 scripts/pr85_hash_gate.py work-pr94p2-base-$n work-pr94f-off-$n   # PASS
+  python3 scripts/pr94_root_gate.py work-pr94p2-base-$n work-pr94f-off-$n   # PASS
+  python3 scripts/pr94_sync_check.py work-pr94f-on-$n                       # PASS
+  python3 scripts/pr94_mains_sidecar.py work-pr94f-on-$n
+done
+
+# 4. Phase 3, its own arm, judged against a criterion fixed in advance
+#    (primary row must stay bit-identical to legacy -- it does not)
+SBND_NU_PER_BUNDLE=1 SBND_PROTECT_SKIP_CONVICTED=0 PR_JOBS=32 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94p3-open-nuecc48 data
+```
+
+Arm labels, for later re-checking: `work-pr94p2-base-{nuecc48,ncpi0}`
+(pre-edit baseline), `work-pr94f-off-{nuecc48,ncpi0}` (knob off, final binary),
+`work-pr94f-on-{nuecc48,ncpi0}` (knob on), `work-pr94f-on-evt395148`,
+`work-pr94p3-open-{nuecc48,ncpi0}` (Phase 3).
+
+**Phase 6 — SBND production flip. NOT DONE, correctly blocked.**
+`wct-pr-perevt.jsonnet` still has `nu_per_bundle = false`. It stays there until
+Phase 5's population numbers exist and are accepted (§10.2), which needs the
+small-sample human review first.
 
 ## 10. Verification
 

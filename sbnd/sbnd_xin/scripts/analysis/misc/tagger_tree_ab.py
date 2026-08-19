@@ -39,6 +39,11 @@ for k in ka:
     else:
         moved.append(k)
 
+# doc pr/94 Phase 5: the [0] below is only a SAMPLE value printed next to a
+# full-array comparison, so it stays correct when T_tagger/T_kine go multi-row
+# (one entry per in-beam-window bundle under nu_per_bundle) -- the identity
+# test itself already compares the whole array.  Reporting scripts that return
+# one number per event use scripts/pr94_rows.primary_index() instead.
 print(f"tree {TREE}: branches {len(ka)}   identical {same}   moved {len(moved)}")
 for k in moved:
     print(f"  MOVED {k:38s} A={np.asarray(da[k])[0]!r}  B={np.asarray(db[k])[0]!r}")

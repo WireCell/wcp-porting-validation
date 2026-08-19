@@ -200,6 +200,19 @@ fi
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# doc pr/94 Phase 2: per-bundle neutrino candidates.  One T_tagger/T_kine row
+# per in-beam-window flash bundle instead of one per event, each carrying its
+# own vertex/kinematics/BDT scores plus a vectorised per-activity cosmic block
+# (act_*).  EMPTY = no TLA = the job default false = the single event-wide
+# candidate = byte-identical.  Set to 1 for the ON arm.
+# Env: SBND_NU_PER_BUNDLE=<1|true>.
+[ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=true")
+# doc pr/94 Phase 3: stop ClusteringProtectBundle withholding cosmic-convicted
+# bundles from the PR ensemble, so every in-beam bundle is actually openable by
+# Phase 2's per-bundle loop.  EMPTY = no TLA = the job default null = the C++
+# default true = legacy = byte-identical.  Set to 0 to open them.
+# Env: SBND_PROTECT_SKIP_CONVICTED=<0|1>.
+[ -n "${SBND_PROTECT_SKIP_CONVICTED:-}" ] && CATH_TLA+=(--tla-code "protect_skip_convicted=$([ "${SBND_PROTECT_SKIP_CONVICTED}" = 0 ] && echo false || echo true)")
 # doc pr/89 Arm D2: post-DL adjustment reach, cm.  EMPTY = no TLA = the cfg
 # default null = the C++ defaults (vks 5.0 / mvga 15.0) = byte-identical.
 # The TLAs already exist and are fully threaded (wct-pr-perevt.jsonnet:1977,

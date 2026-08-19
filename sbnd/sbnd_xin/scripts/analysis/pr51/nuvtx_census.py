@@ -22,6 +22,17 @@ if '--enu-mev' in sys.argv:
     enu_cut = float(sys.argv[sys.argv.index('--enu-mev') + 1])
 
 
+
+# doc pr/94 Phase 5: T_tagger/T_kine hold ONE ROW PER IN-BEAM-WINDOW BUNDLE when
+# the nu_per_bundle knob is on, so a hard [0] silently reports whichever bundle
+# was enumerated first.  primary_index() reproduces the legacy meaning of "the
+# candidate" (longest selected main activity) and falls back to 0 for pre-pr/94
+# and knob-off files.
+import os as _pr94_os, sys as _pr94_sys
+_pr94_sys.path.insert(0, _pr94_os.path.join(
+    _pr94_os.path.dirname(_pr94_os.path.abspath(__file__)), "../.."))
+from pr94_rows import primary_index  # noqa: E402
+
 def read(arm, evt):
     p = os.path.join(SB, arm, 'pr_evt%d' % evt, 'tracking-pr.root')
     if not os.path.exists(p):
@@ -29,8 +40,9 @@ def read(arm, evt):
     try:
         f = uproot.open(p)
         t = f['T_tagger']
-        v = np.array([t['nu_x'].array()[0], t['nu_y'].array()[0], t['nu_z'].array()[0]])
-        e = float(f['T_kine']['kine_reco_Enu'].array()[0])
+        i = primary_index(t)
+        v = np.array([t['nu_x'].array()[i], t['nu_y'].array()[i], t['nu_z'].array()[i]])
+        e = float(f['T_kine']['kine_reco_Enu'].array()[i])
         return v, e
     except Exception as ex:
         print('  [skip] %s evt %d: %s' % (arm, evt, ex), file=sys.stderr)

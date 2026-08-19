@@ -74,6 +74,15 @@ RE_COSMIC_SKIP = re.compile(r'TaggerCheckNeutrino: in-window cluster .* cosmic-t
                              r'skipping \(nu_skip_cosmic\)')
 
 
+
+# doc pr/94 Phase 5: T_tagger/T_kine hold ONE ROW PER IN-BEAM-WINDOW BUNDLE when
+# the nu_per_bundle knob is on, so a hard [0] silently reports whichever bundle
+# was enumerated first.  primary_index() reproduces the legacy meaning of "the
+# candidate" (longest selected main activity) and falls back to 0 for pre-pr/94
+# and knob-off files.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts"))
+from pr94_rows import primary_index, n_rows  # noqa: E402
+
 def read_time_meta(path):
     d = {}
     if os.path.isfile(path):
@@ -189,20 +198,24 @@ def read_tagger_root(root_path):
     except Exception as e:
         print(f'WARN: cannot open {root_path}: {e}', file=sys.stderr)
         return out
+    row = 0
     if 'T_tagger' in f:
         t = f['T_tagger']
+        row = primary_index(t)
+        out['nu_row'] = row
+        out['n_nu_rows'] = n_rows(t)
         for k in ('numu_score', 'nue_score', 'cosmic_flag', 'cosmict_flag',
                   'cosmict_10_score', 'cosmict_score', 'nu_x', 'nu_y', 'nu_z'):
             if k in t:
                 arr = t[k].array()
-                if len(arr):
-                    out[k] = arr[0]
+                if len(arr) > row:
+                    out[k] = arr[row]
     if 'T_kine' in f:
         ki = f['T_kine']
         if 'kine_reco_Enu' in ki:
             arr = ki['kine_reco_Enu'].array()
-            if len(arr):
-                out['kine_reco_Enu'] = arr[0]
+            if len(arr) > row:
+                out['kine_reco_Enu'] = arr[row]
     return out
 
 

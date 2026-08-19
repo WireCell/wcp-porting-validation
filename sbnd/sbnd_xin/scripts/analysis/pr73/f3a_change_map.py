@@ -43,6 +43,17 @@ ENU_QUIET = 20.0    # MeV
 PIO_QUIET = 1.0     # MeV
 
 
+
+# doc pr/94 Phase 5: T_tagger/T_kine hold ONE ROW PER IN-BEAM-WINDOW BUNDLE when
+# the nu_per_bundle knob is on, so a hard [0] silently reports whichever bundle
+# was enumerated first.  primary_index() reproduces the legacy meaning of "the
+# candidate" (longest selected main activity) and falls back to 0 for pre-pr/94
+# and knob-off files.
+import os as _pr94_os, sys as _pr94_sys
+_pr94_sys.path.insert(0, _pr94_os.path.join(
+    _pr94_os.path.dirname(_pr94_os.path.abspath(__file__)), "../.."))
+from pr94_rows import primary_index  # noqa: E402
+
 def read_nusel(arm, evt):
     p = os.path.join(SB, arm, 'pr_evt%s' % evt, 'nusel-evt%s.tsv' % evt)
     if not os.path.exists(p):
@@ -85,6 +96,7 @@ def read_root(arm, evt):
     try:
         f = uproot.open(p)
         t, k = f['T_tagger'], f['T_kine']
+        _i = primary_index(t)
         # T_rec_charge is the nu candidate's OWN fitted trajectory -- the thing
         # drawn in Bee.  Using it instead of the nusel main_id join makes the
         # "did the guard touch the neutrino" question epoch-proof: cluster
@@ -93,18 +105,18 @@ def read_root(arm, evt):
         rc = f['T_rec_charge'].arrays(
             ['x', 'y', 'z', 'q', 'flag_shower', 'particle_id'], library='np')
         d = dict(
-            vtx=np.array([t['nu_x'].array()[0], t['nu_y'].array()[0], t['nu_z'].array()[0]]),
-            enu=float(k['kine_reco_Enu'].array()[0]),
-            add=float(k['kine_reco_add_energy'].array()[0]),
-            ep=np.asarray(k['kine_energy_particle'].array()[0], dtype=float),
-            pt=np.asarray(k['kine_particle_type'].array()[0], dtype=int),
-            inc=np.asarray(k['kine_energy_included'].array()[0], dtype=int),
-            info=np.asarray(k['kine_energy_info'].array()[0], dtype=int),
-            pio_mass=float(k['kine_pio_mass'].array()[0]),
-            pio_flag=int(k['kine_pio_flag'].array()[0]),
-            pio_e1=float(k['kine_pio_energy_1'].array()[0]),
-            pio_e2=float(k['kine_pio_energy_2'].array()[0]),
-            pio_ang=float(k['kine_pio_angle'].array()[0]),
+            vtx=np.array([t['nu_x'].array()[_i], t['nu_y'].array()[_i], t['nu_z'].array()[_i]]),
+            enu=float(k['kine_reco_Enu'].array()[_i]),
+            add=float(k['kine_reco_add_energy'].array()[_i]),
+            ep=np.asarray(k['kine_energy_particle'].array()[_i], dtype=float),
+            pt=np.asarray(k['kine_particle_type'].array()[_i], dtype=int),
+            inc=np.asarray(k['kine_energy_included'].array()[_i], dtype=int),
+            info=np.asarray(k['kine_energy_info'].array()[_i], dtype=int),
+            pio_mass=float(k['kine_pio_mass'].array()[_i]),
+            pio_flag=int(k['kine_pio_flag'].array()[_i]),
+            pio_e1=float(k['kine_pio_energy_1'].array()[_i]),
+            pio_e2=float(k['kine_pio_energy_2'].array()[_i]),
+            pio_ang=float(k['kine_pio_angle'].array()[_i]),
             traj=np.stack([rc['x'], rc['y'], rc['z']], axis=1),
             tq=np.asarray(rc['q'], dtype=float),
             tshw=np.asarray(rc['flag_shower'], dtype=int),
