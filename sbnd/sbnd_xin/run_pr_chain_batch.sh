@@ -750,6 +750,27 @@ done
 unset _pr40r9 _env _key _val
 [ -n "${SBND_SFV_KINK_MAX:-}" ] && CATH_TLA+=(--tla-code "sfv_kink_max=${SBND_SFV_KINK_MAX}")
 [ -n "${SBND_SHOWER_NV_BRIDGE_MAX_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_nv_bridge_max_gap=${SBND_SHOWER_NV_BRIDGE_MAX_GAP}")
+# doc pr/92 -- drop stray satellite showers (overclustered cosmics / second
+# neutrinos) from kine_reco_Enu + the Bee PF tree.  Same tri-state contract
+# (unset = cfg default, 1 = force on, 0 = force off); scalars EMPTY = no TLA
+# = cfg default (null = the C++ defaults: 20 MeV / 8 cm / 60 deg / 45 deg /
+# 90 cm / 30 cm / 25 deg).  pf_drop_stray_satellites mirrors the kine-side
+# drop in the PF tree; inert unless kine_drop_stray_satellites is also on.
+for _pr92 in \
+    "SBND_KINE_DROP_STRAY_SATELLITES:kine_drop_stray_satellites" \
+    "SBND_PF_DROP_STRAY_SATELLITES:pf_drop_stray_satellites" ; do
+    _env=${_pr92%%:*}; _key=${_pr92#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr92 _env _key _val
+[ -n "${SBND_KINE_SAT_MIN_ENERGY:-}" ] && CATH_TLA+=(--tla-code "kine_sat_min_energy=${SBND_KINE_SAT_MIN_ENERGY}")
+[ -n "${SBND_KINE_SAT_PROX_MAX:-}" ] && CATH_TLA+=(--tla-code "kine_sat_prox_max=${SBND_KINE_SAT_PROX_MAX}")
+[ -n "${SBND_KINE_SAT_ANGLE_BAD:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_bad=${SBND_KINE_SAT_ANGLE_BAD}")
+[ -n "${SBND_KINE_SAT_ANGLE_MAIN:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_main=${SBND_KINE_SAT_ANGLE_MAIN}")
+[ -n "${SBND_KINE_SAT_FAR_DIS:-}" ] && CATH_TLA+=(--tla-code "kine_sat_far_dis=${SBND_KINE_SAT_FAR_DIS}")
+[ -n "${SBND_KINE_SAT_AXIS_DIS_CUT:-}" ] && CATH_TLA+=(--tla-code "kine_sat_axis_dis_cut=${SBND_KINE_SAT_AXIS_DIS_CUT}")
+[ -n "${SBND_KINE_SAT_CONT_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_sat_cont_kink=${SBND_KINE_SAT_CONT_KINK}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.
