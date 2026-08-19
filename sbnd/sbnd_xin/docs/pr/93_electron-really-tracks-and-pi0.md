@@ -4,6 +4,10 @@
 knob, no A/B gate. Per owner scope: *"collect some information on the root
 cause of these, and think of what can we do to rescue them but not lead to
 regression in EM shower."* pr/91 is the template for this shape of round.
+**Round 2** (owner: *"why don't you investigate 315167 and add them to the md
+file"*) traces Cause D (§1) to rule out three specific mechanisms with direct
+evidence and narrows the remaining search to one well-supported, not-yet-
+confirmed hypothesis — see the round-2 subsection under Cause D.
 
 Owner's five events, verbatim: *"18255-55595 458 MeV electron: long track in
 it. 18255-348471 750 MeV electron: track + shower? 18255-69314 595 electron
@@ -45,14 +49,27 @@ python3 scripts/pr93_shower_composition.py \
     work-pr93r1-dbg-mcp1k:CASES_mcp1k work-pr93r1-dbg-nuecc48:CASES_69314 \
     work-pr92r2-bare-nuecc48:nueCC48 work-pr92r2-bare-ncpi0:NCpi0 \
     --out docs/pr/pr93-composition.tsv
+
+# round 2 -- 315167 only, add the merge-decision probe to find Cause D's
+# absorption site
+export WCT_PID_WRITE_DEBUG=2 WCT_SHOWER_CONTENT_DEBUG=1 WCT_SHOWER_MERGE_DEBUG=1
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-mcp1k-cb0805 work-pr93r2-dbg-mcp1k data 315167
+unset WCT_PID_WRITE_DEBUG WCT_SHOWER_CONTENT_DEBUG WCT_SHOWER_MERGE_DEBUG
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-mcp1k-cb0805 work-pr93r2-off-mcp1k data 315167
+python3 scripts/pr85_hash_gate.py work-pr93r2-off-mcp1k work-pr93r2-dbg-mcp1k
 ```
 
 **Probe byte-neutrality** (member-content hashes via `pr85_hash_gate.py`, over
-`mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz`, never raw `cmp` — M2): probes-off
-vs probes-on — **PASS 8/8 archives** (mcp1k, 4 events) and **PASS 2/2**
-(nueCC48, 69314). Both arms produced by the same `build/clus/libWireCellClus.so`
-built 2026-08-18 18:45:38, newer than every source file in the tree (the peer
-session's pr/40 round 10 build; no source was edited this round — M1).
+`mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz`, never raw `cmp` — M2): round 1
+probes-off vs probes-on — **PASS 8/8 archives** (mcp1k, 4 events) and
+**PASS 2/2** (nueCC48, 69314). Round 2 (315167 only, adds
+`WCT_SHOWER_MERGE_DEBUG`) — **PASS 2/2**. All arms produced by the same
+`build/clus/libWireCellClus.so`, round 1 at mtime 2026-08-18 18:45:38 and
+round 2 at 18:58:36 (the peer session's own follow-up build of its round-10
+work), both newer than every source file in the tree — no source was edited
+this round, in either pass (M1).
 
 Toolkit HEAD `6657e2a5` (a peer session's pr/40 round 10 —
 `shower_bragg_protect_start_segment`, confirmed by that session to fire on
@@ -156,7 +173,7 @@ The one case matching the original hypothesis. Segment 18009 goes
 counted the pion-PID'd member as `shower_length` (not `track_length`, which
 is reserved for `|pdg|==2212` only) and the vote flipped to electron.
 
-### Cause D — 315167: a structurally different bug — energy/length aggregation, not mislabeling
+### Cause D — 315167: a structurally different bug — energy/length aggregation, not mislabeling. Traced round 2.
 
 Segment 8013 itself (15.7 cm) is a legitimate small EM stub, correctly
 topology-flagged and correctly pdg 11 via the ordinary
@@ -172,30 +189,67 @@ regardless of what any individual member's own (correct) PID says, so a
 150.7 cm proton folded into an "electron" shower inflates its reported energy
 under the wrong physics.
 
-Under the **existing, unmodified** accumulator in
-`Shower::update_particle_type`, this proton is *already* excluded from
-`shower_length` (`is_not_proton = |pdg| != 2212` is false for it) and counted
-as `track_length` — so if the vote had run on the shower's final composition,
-`shower_length(65.1 cm: the two EM members + one small unflagged e- member) <
-track_length(150.7 cm: the proton)` would have flipped the label *back* to
-non-electron. It did not. Either (a) the proton was absorbed via a path that
-does not call `update_particle_type` at all (a candidate: a late PF-tree- or
-merge-level attachment downstream of `NeutrinoShowerClustering.cxx`'s nine
-call sites), or (b) it was absorbed via a shower-to-shower merge pass that
-**pr/91 already documents has no per-member size/PID gate** ("Route B... only
-the shower-to-shower merge passes can attach it, and `get_total_length()<3cm`
-applies" — 150.7 cm is nowhere near that floor, so if this proton first
-became its **own** small `PR::Shower` object through some other topology
-error, the 3 cm floor would not have stopped a subsequent merge).
-`shower_absorb_track_guard` (the flood-fill's own brake) would very likely
-have excluded this proton had it arrived via `complete_structure_with_start_segment`
-directly — `segment_is_straight_long_track` on a 150.7 cm object is very
-likely true — so the absorbing pass is probably one of the ungated
-shower-to-shower routes, not the guarded flood-fill. **This needs one more
-targeted probe (`WCT_SHOWER_MERGE_DEBUG`) to pin down exactly which pass and
-is named here as follow-up work, not resolved this round** — it is a
-different-shaped bug from A/B/C and deserves its own trace rather than being
-forced into the same fix.
+**Round 2 trace (`WCT_SHOWER_MERGE_DEBUG=1`, same 315167 event, probe
+byte-neutrality PASS 2/2 vs a probes-off control arm).** Three specific
+hypotheses were tested and **ruled out** with direct evidence, narrowing the
+remaining search space precisely:
+
+1. **Not `examine_shower_1`'s merge pass** (`ex_shower1_merge` tag). Its very
+   first log line for this shower already reports `cand_len=215.736
+   cand_ke=1046.672` — the shower's *final*, full composition, proton
+   included — **before** this pass evaluates a single merge candidate. The
+   proton was already a member when this pass started.
+2. **Not the flood-fill's own guard failing to apply its predicate.** Read
+   directly from the shower's own 252-point fit trajectory in the calib dump
+   (not the coarser vertex-to-vertex chord used in §2's post-hoc census):
+   `direct_length = 141.14 cm`, `length = 150.73 cm`, ratio **0.936** — this
+   satisfies `segment_is_straight_long_track`'s own threshold
+   (`direct_length>=34cm` **and** `direct_length>0.93*length`, both true).
+   Had `shower_absorb_track_guard`'s `apply_guard` been active when
+   `complete_structure_with_start_segment` first considered this segment, its
+   `guard_excludes` lambda would have returned true and the proton's far
+   vertex would never have been enqueued.
+3. **Not the long-muon pre-stamp exemption**
+   (`apply_guard = absorb_track_guard && get_particle_type()!=13`, which
+   disables the guard entirely for a shower whose *seed segment* carried
+   `|pdg|==13` at creation, `NeutrinoShowerClustering.cxx:552-556`). The
+   `WCT_PID_WRITE_DEBUG=2` tape for segment 8013 (`clus=8 gidx=13`) shows it
+   was born `pdg 0 -> 11` directly at `PRSegmentFunctions.cxx:3046` (the
+   ordinary shower-trajectory writer) — it never carried pdg 13, so this
+   shower was never exempted from the guard by the long-muon path.
+4. **Not `nv_bridge_track` or `shower_stem_backfill`** — neither logs a
+   firing line for this event, and `stem_backfill`'s own ceiling
+   (`m_stem_backfill_max_len = 30 cm`) would reject a 150.7 cm segment
+   outright even if it had run.
+
+So the guarded flood-fill (`shower_clustering_with_nv_in_main_cluster`'s own
+call to `complete_structure_with_start_segment`) is **ruled out** as the
+absorption site — its guard's own predicate says it should have excluded
+this exact segment, and the long-muon exemption that would disable that
+guard did not apply. **Leading remaining hypothesis, not yet confirmed**:
+`shower_clustering_with_nv_connecting_to_main_vertex` (pass 2 of the four
+seeding passes, `NeutrinoShowerClustering.cxx:705+`) has its **own**,
+separate per-segment acceptance test —
+`!seg_dir_weak(sg1) && (length>3.6cm || (length>2.4cm &&
+medium_dQ_dx_norm>2.5))` (`:878-880`) — which is a bare length/dQ-dx
+threshold with **no PID check and no straightness check at all**, and is not
+gated by `shower_absorb_track_guard` (that guard lives only inside
+`complete_structure_with_start_segment`, which this pass's own acceptance
+logic does not appear to route every candidate through the same way pass 1
+does). A 150.7 cm confidently-PID'd proton trivially clears `length>3.6cm`.
+No existing env probe instruments this specific function's segment-accept
+decision, so this is reported as the **best-supported open hypothesis, not a
+confirmed writer** — confirming it needs one more targeted probe (a new,
+env-gated print inside `shower_clustering_with_nv_connecting_to_main_vertex`'s
+accept test) in a follow-up round, since adding new instrumentation is a
+(byte-neutral, but still new) code change and this round's scope was
+diagnosis with the existing probes plus offline analysis.
+
+**Practical implication for a future fix**: if pass 2 is confirmed, the
+rescue is structurally identical in shape to K-ACCEPT (§4) — pass 2's own
+segment-acceptance test needs the same kind of guard the flood-fill already
+has (`shower_absorb_track_guard`'s predicate, or a call to
+`segment_is_straight_long_track` directly), since it currently has none.
 
 ## 2. Composition census — why a length/segment-count discriminator is not gate-able
 
@@ -316,6 +370,38 @@ a diagnostic) are the next thing to pull into a composition census before
 designing a gate — not attempted this round for time. (`tro_3` is not emitted
 in this dump.)
 
+### A physical mechanism for the class, and a discriminator it suggests
+
+The owner separately raised a concrete physical pathway that gives the class
+a name: a **charged pion undergoing charge exchange** (e.g.
+`π⁺ + n → π⁰ + p`) mid-trajectory, with the resulting π⁰ promptly decaying to
+two photons. This is mechanistically distinct from a photon converting near a
+primary hadronic vertex — the charged pion travels as an ordinary track
+(dE/dx ≈ 1×MIP, indistinguishable from a muon or a charge-exchange-bound
+charged pion) up to the interaction point, and the shower begins *at that
+point*, mid-flight, with no gap and no separate vertex. This is a direct fit
+to 292643's own measurement above: `stem_dqdx=0.99×MIP` (pion/muon-like, not
+proton-like) feeding directly into a shower with `trk_frac=0.263` — exactly
+the shape a track that later underwent an inelastic hadronic interaction
+would leave.
+
+This reframes what the *right* discriminator should look for. §2/§3's
+`trk_frac` and `stem_dqdx` are aggregate/endpoint statistics; a charge-
+exchange (or any inelastic hadronic scatter that seeds a shower) instead
+predicts a **single, localized transition point along the object's own
+trajectory** — track-like topology and dQ/dx up to a specific interaction
+vertex, shower-like topology and elevated dQ/dx immediately after it, with the
+transition itself geometrically sharp (a real inelastic vertex, not a gradual
+statistical drift). That is a qualitatively different, and likely more
+powerful, discriminator than any of the aggregate quantities measured in this
+round — a real EM shower's own conversion stem should not show a comparably
+sharp track→shower dQ/dx step at a well-defined 3-D point, since it is not
+seeded by an interaction vertex. **Not measured this round** (it needs a
+per-point, along-trajectory scan rather than a per-shower aggregate, which the
+existing composition census does not attempt) — named here as the most
+promising concrete next measurement for the deferred trace, ahead of or
+alongside the `tro_1/2/4/5` BDT features above.
+
 ## 4. Named rescue designs (documented only — NOT implemented this round)
 
 Each below is scoped to the specific cause it addresses; none is a universal
@@ -375,11 +461,21 @@ follow-up trace.
 
 ## 5. Scope and not-claimed
 
-- Cause D (315167) is diagnosed as a distinct bug class but not fully traced
-  to its absorbing call site — needs `WCT_SHOWER_MERGE_DEBUG` next.
-- The π⁰/hadronic class (§3) is qualitatively supported by `trk_frac` but not
-  reduced to a gate-able predicate; `tro_1/2/4/5` BDT features are the named
-  next measurement, not run this round.
+- Cause D (315167) is narrowed but **still not fully traced**. Round 2 ruled
+  out, with direct evidence, the guarded flood-fill, the long-muon exemption,
+  and `nv_bridge_track`/`shower_stem_backfill` as the absorption site, and
+  named `shower_clustering_with_nv_connecting_to_main_vertex`'s own ungated
+  per-segment accept test as the best-supported remaining hypothesis — **not
+  confirmed**; confirming it needs a new env-gated probe inside that specific
+  function, which is a (small, byte-neutral) code change and was left for a
+  follow-up round rather than added under this round's diagnosis-only scope.
+- The π⁰/hadronic class (§3) is qualitatively supported by `trk_frac` and,
+  now, by a named physical mechanism (charged-pion charge exchange to π⁰),
+  but still not reduced to a gate-able predicate this round. Two concrete next
+  measurements are now named: `tro_1/2/4/5` BDT features, and — the more
+  promising one — a per-point along-trajectory scan for a localized
+  track→shower dQ/dx transition, rather than the aggregate statistics this
+  round measured.
 - K-ACCEPT's exact predicate needs one more probe (pre-write `particle_score`
   for 69314's pion) before implementation; stated as an open item, not
   assumed.
