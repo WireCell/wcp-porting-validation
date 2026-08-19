@@ -203,6 +203,68 @@ Accepted residuals / notes:
   cosmic-satellite classes surveyed in §Per-event evidence; 386948 alone
   sheds 1548.8 MeV of overclustered cosmics.
 
+## Round 2 (owner retune, 2026-08-18): track/EM topology split
+
+Owner review of the round-1 Bee A/B: the three top non-owner movers
+(386948 −1549, 52672 −453, 259542 −384) are **NCpi0-like — genuinely
+detached EM showers — and should NOT be reduced**. The discriminators are
+(1) distance and (2) **track vs shower topology**: a track-like satellite
+with a bad direction is very likely overclustering; an EM-shower-like
+satellite rarely is.
+
+Topology audit over all round-1 drops confirmed a clean split:
+
+| class | signature | examples |
+|---|---|---|
+| track-like | straight-long start segment, ≤3 segments (or out-of-shower continuation) | 350935/11001 (249 cm, 2 seg), 321371/18004, 55539 (108.9/63.6 cm, 1 seg), 349461 (40.4 cm, 1 seg) |
+| EM-like | branched, stubby non-straight trunk | ALL of 386948/52672/259542/359980/506746 — and 389538's second-nu pieces |
+
+What separates 389538's EM satellites from legit detached showers is
+**distance from the main vertex**: second-neutrino pieces sit 169-250 cm
+out; legit detached fragments 18-119 cm (52672's 453 MeV at 89 cm; its
+171° axis is a flipped-sign estimate — anti-aligned ≡ collinear).
+
+**Retuned decision** (same master knob; two new C++-held scalars
+`kine_sat_track_max_nseg` = 3, `kine_sat_em_far_dis` = 150 cm):
+
+- `track_like = straight_cont || (num_segments <= 3 && start segment
+  straight-long)`.
+- track-like → arms A/B/C exactly as round 1.
+- EM-like → drop only when `d_mainvtx > 150 cm` AND the **folded**
+  (sign-insensitive, `min(ang, 180−ang)`) main-vertex angle ≥ 45°
+  (arm E).  Folding keeps anti-aligned flipped-axis showers
+  (52672/80079 at 171°, 283713/67050 at 168°).
+
+### Round-2 verification (all PASS)
+
+Repro: same commands as the Repro block with `work-pr92r2-*` out_roots
+(probe first, then bare production runs — the flip stays ON, the round-2
+logic is in the C++).
+
+- Build + doctest 2173/2173; compiled production config byte-identical to
+  the round-1 flip compile (new keys null-suppressed).
+- **Probe r2** (100 events, same 1202 candidates, all rc=0): **13 drops in
+  7 events** (was 51 in 30).  All round-1 owner-endorsed drops retained;
+  all 23 owner-flagged/EM events un-dropped — the NCpi0 sample has **zero**
+  movers.
+- **Gate** (`pr85_hash_gate.py work-pr92r2-probe-<s> work-pr92r2-bare-<s>`):
+  diffs = exactly the 7 events, mabc-pr.zip only; ncpi0 PASS 38/38;
+  nusel tables byte-identical 3/3.
+- Enu deltas: 350935 −449.1, 321371 −97.9, 389538 −1361.8 (unchanged from
+  round 1 — all six second-nu pieces still drop, now via arm E), 55539
+  −443.9, 349461 −122.7 (clear single-segment straight cosmic tracks,
+  arm B), 46363 −21.8, 268784 −20.7 (far EM blips, arm E).  Total
+  −2518 MeV over 7 events.
+- Accepted residual unchanged: 389538/78099 (40.5 MeV, folded 38.1° < 45°).
+
+### Round-2 Bee A/B (7 movers; `bee/pr92r2/pr92r2.index.txt`)
+
+- OFF: https://www.phy.bnl.gov/twister/bee/set/12c9a88f-a7b1-461a-bd12-7c778fca75db/event/list/
+- ON:  https://www.phy.bnl.gov/twister/bee/set/80cd519a-d686-46ec-8d4c-c7ae8f8ae9b0/event/list/
+
+The round-1 Bee sets (530142d5 / ab20e00c) remain as the record of the
+rejected round-1 tuning.
+
 ## Files
 
 - toolkit `clus/src/NeutrinoKinematics.cxx` — decision block + probe + skip

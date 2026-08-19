@@ -771,6 +771,8 @@ unset _pr92 _env _key _val
 [ -n "${SBND_KINE_SAT_FAR_DIS:-}" ] && CATH_TLA+=(--tla-code "kine_sat_far_dis=${SBND_KINE_SAT_FAR_DIS}")
 [ -n "${SBND_KINE_SAT_AXIS_DIS_CUT:-}" ] && CATH_TLA+=(--tla-code "kine_sat_axis_dis_cut=${SBND_KINE_SAT_AXIS_DIS_CUT}")
 [ -n "${SBND_KINE_SAT_CONT_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_sat_cont_kink=${SBND_KINE_SAT_CONT_KINK}")
+[ -n "${SBND_KINE_SAT_TRACK_MAX_NSEG:-}" ] && CATH_TLA+=(--tla-code "kine_sat_track_max_nseg=${SBND_KINE_SAT_TRACK_MAX_NSEG}")
+[ -n "${SBND_KINE_SAT_EM_FAR_DIS:-}" ] && CATH_TLA+=(--tla-code "kine_sat_em_far_dis=${SBND_KINE_SAT_EM_FAR_DIS}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.

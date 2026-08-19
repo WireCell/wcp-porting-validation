@@ -1,0 +1,21 @@
+# doc pr/92 round 2 (owner retune: track/EM topology split + EM far-drop)
+# A/B over the 7 remaining mover events.  Round-1's 30-event mover list is
+# retired: the 23 events the retune un-drops (386948, 52672, 259542,
+# 359980, 506746, 71372, ...) are now byte-identical to pre-pr/92 output.
+#
+# OFF (knob logic disabled):
+#   https://www.phy.bnl.gov/twister/bee/set/12c9a88f-a7b1-461a-bd12-7c778fca75db/event/list/
+# ON  (production, round-2 logic):
+#   https://www.phy.bnl.gov/twister/bee/set/80cd519a-d686-46ec-8d4c-c7ae8f8ae9b0/event/list/
+#
+# bee_idx  evt     sample   dEnu(MeV)  what drops
+0   55539   mcp1k    -443.9   two single-segment straight track satellites (270 MeV/108.9 cm + 174 MeV/63.6 cm), arm B
+1   321371  mcp1k     -97.9   OWNER EVT: cosmic tail, track continuation (arm C)
+2   349461  mcp1k    -122.7   single-segment straight 40.4 cm track satellite, arm B
+3   350935  mcp1k    -449.1   OWNER EVT: 249 cm overclustered cosmic, arm A
+4   46363   nuecc48   -21.8   21.8 MeV EM blip 163 cm from main vtx, angle-failed (arm E)
+5   268784  nuecc48   -20.7   20.7 MeV EM blip 235 cm from main vtx, angle-failed (arm E)
+6   389538  nuecc48 -1361.8   OWNER EVT: second neutrino, all via EM far-drop (arm E,
+#                             169-250 cm from main vtx): 955 neutron->proton + 236.6 +
+#                             63.9 + 47.6 + 29.8 + 20.2; only the 40.5 MeV blip at
+#                             38.1 deg survives (accepted residual)
