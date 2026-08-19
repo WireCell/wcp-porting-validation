@@ -776,6 +776,20 @@ for _pr40r10 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40r10 _env _key _val
+# doc pr/93 round 3 -- the "electron is really tracks / hadronic-pi0 shower"
+# knob family (SBND 18255-55595/348471/69314/292643/315167).  Same tri-state
+# contract (unset = cfg default, 1 = force on, 0 = force off).
+for _pr93 in \
+    "SBND_SHOWER_RECLASS_CASE_B_DQDX_GUARD:shower_reclass_case_b_dqdx_guard" \
+    "SBND_SHOWER_ACCEPT_PID_GUARD:shower_accept_pid_guard" \
+    "SBND_SHOWER_VOTE_TRACK_PID_COUNTS:shower_vote_track_pid_counts" \
+    "SBND_SHOWER_CONE_ABSORB_GUARD:shower_cone_absorb_guard" ; do
+    _env=${_pr93%%:*}; _key=${_pr93#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr93 _env _key _val
+[ -n "${SBND_SHOWER_PID_GUARD_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pid_guard_min_len=${SBND_SHOWER_PID_GUARD_MIN_LEN}")
 [ -n "${SBND_KINE_SAT_MIN_ENERGY:-}" ] && CATH_TLA+=(--tla-code "kine_sat_min_energy=${SBND_KINE_SAT_MIN_ENERGY}")
 [ -n "${SBND_KINE_SAT_PROX_MAX:-}" ] && CATH_TLA+=(--tla-code "kine_sat_prox_max=${SBND_KINE_SAT_PROX_MAX}")
 [ -n "${SBND_KINE_SAT_ANGLE_BAD:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_bad=${SBND_KINE_SAT_ANGLE_BAD}")

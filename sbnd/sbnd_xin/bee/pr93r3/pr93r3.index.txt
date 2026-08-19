@@ -1,0 +1,52 @@
+# doc pr/93 round 3 A/B index -- OFF b5bbc0d3 / ON f96bf816
+# bee_idx	event	status
+0	55595	RESCUED: fake 458.3 MeV e- gone (10.4 MeV stub remains); 193.8cm muon keeps mu- (Cause A)
+1	348471	RESCUED: e- 750.8 -> proton 719.0 (score 0.23 kept, Cause B)
+2	69314	RESIDUAL: unchanged (pion stamp carries unscored-100 sentinel at 38.4cm, below safe floor)
+3	292643	RESCUED: e- 289.1 -> pion 162.3 (Cause C vote declined)
+4	315167	RESCUED: e- 1046.7 -> 164.3 MeV EM stub; 150.7cm proton separate, keeps pdg 2212 (Cause D)
+5	350935	mover: e- 449.1 -> mu 578.3 (census event)
+6	283713	mover: e- 99.4 -> mu 80.8 (census event)
+7	407280	unchanged
+8	281837	unchanged
+9	55539	unchanged
+10	314507	unchanged
+11	64921	unchanged
+12	71222	unchanged
+13	316025	unchanged
+14	395610	mover: e- 175.0 -> mu 163.0 (census event)
+15	285567	mover: pr/74 shape-A fake 85.0 e- -> proton 81.4; mis-clustered 57.6cm proton chain separated (fix direction)
+16	280972	unchanged
+17	401450	unchanged
+18	290729	mover: mu-shower E 297.3 -> 287.6 (resegmentation, census event)
+19	138009	unchanged
+20	395060	unchanged
+21	286191	unchanged
+22	30504	unchanged
+23	286681	unchanged
+24	90055	unchanged
+25	293149	unchanged
+26	56982	unchanged
+27	321371	unchanged
+28	349461	unchanged
+29	352233	unchanged
+30	234638	unchanged
+31	214469	unchanged
+32	389538	unchanged
+33	277298	unchanged
+34	349549	unchanged
+35	433451	unchanged
+36	278684	unchanged
+37	268067	unchanged
+38	239794	unchanged
+39	386948	unchanged
+40	64409	unchanged
+41	437699	unchanged
+42	348691	unchanged
+43	54095	unchanged
+44	320865	unchanged
+45	286906	unchanged
+46	409546	unchanged
+47	521075	unchanged
+48	137238	mover: pr/74 shape-B pencil 82.5cm excluded, shower 362.6 -> 152.0 (documented-defect event)
+49	46363	mover: 13.5cm conn-2 satellite 47.7 e- -> proton 39.6 (flagged for owner adjudication)

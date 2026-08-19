@@ -1,13 +1,14 @@
 # doc pr/93 — "electrons" that are really tracks, or a hadronic interaction's π⁰ shower (SBND run 18255)
 
-**Status: diagnosis + proposed-design round only.** No C++ change, no jsonnet
-knob, no A/B gate. Per owner scope: *"collect some information on the root
-cause of these, and think of what can we do to rescue them but not lead to
-regression in EM shower."* pr/91 is the template for this shape of round.
-**Round 2** (owner: *"why don't you investigate 315167 and add them to the md
-file"*) traces Cause D (§1) to rule out three specific mechanisms with direct
-evidence and narrows the remaining search to one well-supported, not-yet-
-confirmed hypothesis — see the round-2 subsection under Cause D.
+**Status (round 3, 2026-08-18): FOUR knobs + one shared tunable SHIPPED,
+SBND PRODUCTION ON — 4/5 owner events rescued, 69314 named residual, gate
+PASS 200/200, zero unadjudicated EM regressions.  See §6.**
+Rounds 1+2 were diagnosis + design only (no C++ change, no knob, no gate).
+Per owner scope: *"collect some information on the root cause of these, and
+think of what can we do to rescue them but not lead to regression in EM
+shower."* **Round 2** (owner: *"why don't you investigate 315167 and add
+them to the md file"*) traced Cause D to a narrowed — and, per round 3's
+probe, ultimately **wrong** — hypothesis; §6 has the confirmed site.
 
 Owner's five events, verbatim: *"18255-55595 458 MeV electron: long track in
 it. 18255-348471 750 MeV electron: track + shower? 18255-69314 595 electron
@@ -509,3 +510,174 @@ events. This round makes no source change. K-CASEB's future implementation
 site (`improve_maps_shower_in_track_out`, a different function in the same
 file) and K-ACCEPT/K-VOTE's sites (`NeutrinoShowerClustering.cxx`,
 `PRShower.cxx`) do not overlap that peer's block.
+
+## 6. Round 3 — implementation, validation, SBND production flip (2026-08-18)
+
+**Status: FOUR knobs + one shared tunable SHIPPED, SBND PRODUCTION ON
+(toolkit, this round's commits). 4/5 owner events rescued; 69314 is the
+named residual with its blocker measured.  Byte-identity gate PASS 200/200
+(final binary).  Bee A/B pair uploaded (links below).**
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+bash -ic 'wcbuild'                      # freshness proof: build/clus/libWireCellClus.so
+./build/clus/wcdoctest-clus             # 2194/2194 pass
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+MC="277298 278684 280972 281837 283713 286191 286681 286906 290729 292643 \
+293149 314507 315167 316025 320865 321371 348471 348691 349461 349549 350935 \
+352233 386948 395060 395610 401450 407280 409546 55539 55595 64409 64921 71222"
+# production baseline (pre-change binary), then OFF (new binary, knobs off):
+PR_JOBS=32 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr93r3-bare-mcp1k   data $MC
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr93r3-bare-nuecc48 data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr93r3-bare-ncpi0   data
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr93r3-off4-mcp1k data $MC
+# (same for off4-nuecc48 / off4-ncpi0)
+python3 scripts/pr85_hash_gate.py work-pr93r3-bare-mcp1k   work-pr93r3-off4-mcp1k    # PASS 66/66
+python3 scripts/pr85_hash_gate.py work-pr93r3-bare-nuecc48 work-pr93r3-off4-nuecc48  # PASS 96/96
+python3 scripts/pr85_hash_gate.py work-pr93r3-bare-ncpi0   work-pr93r3-off4-ncpi0    # PASS 38/38
+# knob-ON arms (validated = the production operating point):
+export SBND_SHOWER_RECLASS_CASE_B_DQDX_GUARD=1 SBND_SHOWER_ACCEPT_PID_GUARD=1 \
+       SBND_SHOWER_VOTE_TRACK_PID_COUNTS=1 SBND_SHOWER_CONE_ABSORB_GUARD=1
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr93r3-on3-mcp1k data $MC
+# (same for on3-nuecc48 / on3-ncpi0)
+# flip-equivalence: bare production config (post-flip) == env-driven ON arm:
+#   work-pr93r3-flipchk-{mcp1k,nuecc48} vs on3 -> PASS 8/8 + 2/2
+# Cause-D absorption-site probe (byte-neutral, stderr only):
+WCT_SHOWER_ABSORB_DEBUG=1 PR_JOBS=1 ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr93r3-dbgD2-mcp1k data 315167
+# mis-ID census (reads tracking-pr.root, no pr_display needed):
+python3 scripts/analysis/pr40/pr40r7_census.py work-pr93r3-{off4,on3}-mcp1k ... --out census_{off,on}.tsv
+# shower-level regression screen:
+python3 scripts/pr93_shower_ab_diff.py work-pr93r3-off4-nuecc48 work-pr93r3-on3-nuecc48 --sample nueCC48
+# Bee A/B (50 events: 5 owner first, then BEE45 rest, r9 extras, 2 adjudication movers):
+python3 scripts/bee/make_pr_bee.py -q work-mcp1k-cb0805 -q work-nuecc48-cb0805 -q work-ncpi0-cb0805 \
+  -p work-pr93r3-off4-mcp1k -p work-pr93r3-off4-nuecc48 -p work-pr93r3-off4-ncpi0 \
+  -o bee/pr93r3/pr93r3-off.zip <see bee/pr93r3/pr93r3-off.index.txt for order>
+./upload-to-bee.sh bee/pr93r3/pr93r3-{off,on}.zip
+```
+
+### The knobs (all C++ default OFF; SBND production ON via `wct-pr-perevt.jsonnet`)
+
+| knob | cause / evt | site | when ON |
+|---|---|---|---|
+| `shower_reclass_case_b_dqdx_guard` | A / 55595 | `NeutrinoTrackShowerSep.cxx` Case B (`improve_maps_no_dir_tracks`) | decline the unconditional pdg-11 reclass when the segment is dQ/dx-decisively non-electron (`segment_dqdx_spares_electron_reclass`, the F2 test Case E already carries) **AND** longer than the shared floor |
+| `shower_accept_pid_guard` | B / 348471 (+315167's 3rd seat) | `NeutrinoShowerClustering.cxx` `new_shower_accepted`, `merged_shower_start_segment`, `conn3_unreachable` promote, + the `update_particle_type` flip (co-guard, threaded param) | decline the forced `set_pdg(11)` when the segment already carries a confident (<1.0) non-electron template score **AND** is longer than the shared floor |
+| `shower_pid_guard_min_len` (=50cm) | shared floor | consumed by all Cause A/B/D declines | below it a confident non-electron template score is NOT evidence against electron (the template competition never considers e-) — see the attribution table |
+| `shower_vote_track_pid_counts` | C / 292643 | `Shower::update_particle_type` (threaded param, 10 call sites) | any unflagged member with `|pdg|` in {13,211,2212} counts as `track_length` (legacy: confirmed protons only) |
+| `shower_cone_absorb_guard` | D / 315167 | pass-3 direction-cone absorber + its cluster-sibling backfill (`shower_clustering_with_nv_from_main_cluster`) | decline absorbing a confidently-labelled non-electron **straight-long** track above the floor (the flood-fill `guard_excludes` predicate, pr/40 F12, at the two sites that lacked it) |
+
+### Cause D corrected — the round-2 hypothesis was wrong, the probe settled it
+
+Round 2's best-supported hypothesis (pass 2's ungated accept test) and the
+initial architect trace (the `examine_showers` retarget re-flood-fill) were
+**both wrong**.  A new byte-neutral probe (`WCT_SHOWER_ABSORB_DEBUG=1`:
+walk-begin/ADD/EXCLUDE lines inside `complete_structure_with_start_segment`,
+site tags at all 8 flood-fill call sites, DIRECT/SPLICE probes at every
+`add_segment`/`add_shower` membership write) shows, on 315167:
+
+```
+SHOWER_ABSORB DIRECT site=pass3_orphan_sibling shower_start_seg=8013 seg=8001 pdg=2212
+```
+
+i.e. **pass 3's direction-cone absorber**.  Three production knobs conspire:
+`shower_absorb_track_guard` (pr/40 F12, ON) protects only the flood-fill;
+`shower_absorb_unreachable_main` (pr/65, ON) makes the graph-unreachable
+main-cluster proton *eligible* for the cone sweep; and the cone sweep itself
+has no PID/straightness check.  Fixing the cone alone was not enough — the
+cluster-sibling backfill immediately re-adopted the declined proton AND
+force-stamped it pdg 11 (`orphan_sibling_adopt`), and once freed from both,
+the `conn3_unreachable` promote (pr/74 K5, ON) re-stamped it e- via its
+`pdg==2212 && score<0.3` arm (tuned for 142421's short EM chunk).  The final
+fix guards all three seats with the same knob family; the freed proton ends
+the chain as a plain PF track, `pdg 2212, score 0.10, shower_id -1`.
+
+### Iteration history — why the floor exists (the round-1 census was optimistic)
+
+The first ON pass (un-floored predicates) rescued 3/5 but **regressed 23/48
+nueCC48 events**, including real primary electrons relabelled proton/muon
+(168596 2053.6 MeV e- → p; 360535 1922.8 → p; 116962 517.3 → mu).  Per-knob
+attribution arms (`work-pr93r3-k{caseb,accept,vote,cone}-nuecc48`):
+
+| knob alone | nueCC48 movers | mechanism |
+|---|---|---|
+| K-CASEB un-floored | 17/48 | declines fired on 2–34cm genuine EM fragments (Case B fires on ANY between-shower segment, unlike Case E's `|pdg|==13` entry) |
+| K-ACCEPT un-floored | 9/48 | real electron stems of **22–47cm** carry confident (0.11–0.64) proton/muon template scores — the template competition never considers electron, so a "confident" non-e verdict below ~50cm is not evidence |
+| K-VOTE | 1/48 | 46363 satellite (adjudicated below) |
+| K-CONE | 0/48 | clean |
+
+The separation that works: the true mis-ID tracks are **>50cm** (55595
+193.8cm, 348471 53.5cm, 315167 150.7cm, 137238 82.5cm, 285567 57.6cm) while
+every regressed real-electron stem is **≤47cm** — and 50cm is already SBND's
+own `shower_topo_demote_len` scale ("a >50cm segment is not EM-flaggable").
+Hence `shower_pid_guard_min_len{50cm}`, one floor shared by all declines.
+A second iteration bug: the un-floored cone/backfill guard split real
+showers (38856 1244.9 → 862+968 double-count; 281837; 285567 churn) by
+declining 43.5/20.1cm segments — the same floor fixed all three.
+
+### Validation (final binary, 100-event manifest = mcp1k-33 + nueCC48 + NCπ0)
+
+- **Byte-identity gate (knobs off)**: `pr85_hash_gate.py` bare vs off4 —
+  **PASS 66/66 + 96/96 + 38/38 = 200/200** (labels `work-pr93r3-bare-*`,
+  `work-pr93r3-off4-*`).  Compiled-config proof: keys absent when off,
+  byte-identical compiled JSON; all four present when on.
+- **Flip equivalence**: post-flip bare production config reproduces the
+  env-driven ON arm byte-identically (10/10 archives,
+  `work-pr93r3-flipchk-*` vs `work-pr93r3-on3-*`).
+- **Owner events** (off4 → on3, `(pdg, kine_best MeV)`):
+  - 55595 **RESCUED**: fake `(11, 458.3)` gone; only a 10.4 MeV stub remains;
+    the 193.8cm muon keeps mu- (decline line: `case_b_dqdx_guard ... len=195.0cm`).
+  - 348471 **RESCUED**: `(11, 750.8)` → `(2212, 719.0)` (decline:
+    `accept_pid_guard ... pdg=2212 score=0.232`).
+  - 292643 **RESCUED**: `(11, 289.1)` → `(211, 162.3)` (the vote now counts
+    its 45.0cm unflagged mu/pi chain as track vs 39.4cm flagged EM).
+  - 315167 **RESCUED**: `(11, 1046.7)` → `(11, 164.3)` = the true 65cm EM
+    stub; the 150.7cm proton is out of the shower and keeps `2212/0.10`.
+  - 69314 **RESIDUAL** (unchanged): its start segment's pdg-211 stamp
+    (`NeutrinoVertexFinder.cxx:2051`) carries the unscored-100 sentinel, and
+    at 38.4cm it sits below any floor that does not regress real electrons.
+    Rescuing it needs the deferred §3 discriminator (localized track→shower
+    transition), not a wider score/length predicate — every widening tested
+    this round regressed nueCC48.
+- **nueCC48 regression screen: 2/48 movers, both adjudicated, zero real-EM
+  losses**: 137238 (pr/74 shape-B pencil roster — its 82.5cm track is now
+  excluded, shower 362.6 → 152.0, the documented-defect direction) and
+  46363 (a 13.5cm conn-2 *satellite*, 47.7 → proton 39.6, membership
+  dominated by a 9.2cm unflagged muon fragment; the event's real 606.3 MeV
+  primary electron is untouched — flagged for owner adjudication, not
+  assumed).
+- **NCπ0: 1/19 movers**: 285567 (pr/74 shape-A) — the documented fake
+  `(11, 85.0)` → `(2212, 81.4)` and its mis-clustered 57.6cm proton chain
+  now separate `(2212, 350.5)`; the genuine γ content stays e-.  No other
+  π0 event moved: no genuine two-gamma π0 destroyed.
+- **mcp1k: 8/33 movers, ALL in the pr/40 mis-ID census, all fix-direction**
+  (the 4 rescues + 283713 e-→mu 80.8, 350935 e-→mu 578.3, 395610 e-→mu
+  163.0, 290729 mu-shower resegmentation 297.3→287.6).
+- **Census**: manifest straight-long pdg-11 rows **41 → 35** (candidate rows
+  146 → 140), `pr40r7_census.py`.
+- **Runtime**: wall median 23→24s, max 75→75s; peak RSS unchanged (1.49GB
+  median) — no cost.
+
+### Bee A/B (50 events: idx 0-4 = the five owner events)
+
+- BEFORE (production until this flip):
+  <https://www.phy.bnl.gov/twister/bee/set/b5bbc0d3-f34b-470c-982f-0292f8c0f48c/event/list/>
+- AFTER (new production):
+  <https://www.phy.bnl.gov/twister/bee/set/f96bf816-884b-4b20-879d-6eb2e184f389/event/list/>
+- Per-event annotated index: `bee/pr93r3/pr93r3.index.txt` (idx 45-47 = the
+  r9 extras 286906/409546/521075, idx 48-49 = adjudication movers
+  137238/46363).
+
+### Scope and residuals
+
+- 69314 is the named residual (above).  The two unguarded sibling writers
+  (`long_muon_to_EM` at NeutrinoShowerClustering.cxx:687-area,
+  `in_other_clusters`' own force-writes) were NOT touched — none fired on
+  this round's movers.
+- The `WCT_SHOWER_ABSORB_DEBUG` probe instrumentation (byte-neutral,
+  stderr-only, proven by the 200/200 gate which ran on the instrumented
+  binary) stays in as the standing membership-attribution tape.
+- `work-pr93r3-off-*`/`-off2-*`/`-off3-*`/`-on-*`/`-on2-*` are
+  intermediate-iteration arms retained for the attribution record;
+  `-off4-*`/`-on3-*` are the final gate/validation arms.
