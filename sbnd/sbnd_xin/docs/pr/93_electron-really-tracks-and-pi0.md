@@ -1,5 +1,12 @@
 # doc pr/93 — "electrons" that are really tracks, or a hadronic interaction's π⁰ shower (SBND run 18255)
 
+**Status (round 4, 2026-08-18): SIX more knobs SHIPPED, SBND PRODUCTION ON
+— the owner's four PF-hierarchy fine-tunes fixed (348471 proton→pi0;
+292643 pi+→mu→gammas; 315167 orphan proton emitted in PF+kine; 69314
+67 MeV e- re-parented to its muon) AND 137238's long muon reassembled
+across the pr/57 W-gap split (e- 152 → full mu- chain).  Gate PASS
+200/200; movers = exactly the targets + one nil carrier renumber; NCπ0
+0/19 touched.  See §7.**
 **Status (round 3, 2026-08-18): FOUR knobs + one shared tunable SHIPPED,
 SBND PRODUCTION ON — 4/5 owner events rescued, 69314 named residual, gate
 PASS 200/200, zero unadjudicated EM regressions.  See §6.**
@@ -681,3 +688,168 @@ declining 43.5/20.1cm segments — the same floor fixed all three.
 - `work-pr93r3-off-*`/`-off2-*`/`-off3-*`/`-on-*`/`-on2-*` are
   intermediate-iteration arms retained for the attribution record;
   `-off4-*`/`-on3-*` are the final gate/validation arms.
+
+## 7. Round 4 — PF-hierarchy fine-tunes + 137238 long muon, SBND production flip (2026-08-18)
+
+Owner scanned the round-3 Bee A/B and asked for four fine-tunes, then
+corrected two of them mid-round:
+
+1. **348471** — "the shower is now proton, but can it be Particle-flow
+   proton -> gamma or pi0?  The latter is more aligned with physics."
+2. **292643** — first reported as a missing pion tail at (80.2, 16.3,
+   169.0); owner correction: "the EM shower is labeled as pion; it should
+   be a pion + gamma or pi0 like the other event."
+3. **315167** — "the long proton is separated out, but it is also missing
+   from the final particle flow???"
+4. **69314** (owner addition) — "there is a 67 MeV electron, which is
+   actually connected to the long muon, but in the PF it is inside the
+   595 MeV electron.  This is not right."
+5. **137238** — "the 152 MeV electron is actually a muon ... it has a
+   delta ray, which may have tricked the track/shower separation, but it
+   is really long, so clearly a muon."  Owner follow-up: "since the angle
+   is very aligned, maybe use this condition with a larger allowed gap."
+
+### Repro block
+
+```
+cd /nfs/data/1/xqian/toolkit-dev/toolkit          # HEAD = this round's commits
+bash -ic 'wcbuild'                                # freshness: build/clus/libWireCellClus.so
+./build/clus/wcdoctest-clus                       # 2215/2215 pass
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+MC="<the 33-event mcp1k list of section 6>"
+# OFF arms (new binary, knobs off = round-3 production config):
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr93r4-off2-mcp1k   data $MC
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr93r4-off2-nuecc48 data
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr93r4-off2-ncpi0   data
+python3 scripts/pr85_hash_gate.py work-pr93r3-on3-mcp1k   work-pr93r4-off2-mcp1k    # PASS 66/66
+python3 scripts/pr85_hash_gate.py work-pr93r3-on3-nuecc48 work-pr93r4-off2-nuecc48  # PASS 96/96
+python3 scripts/pr85_hash_gate.py work-pr93r3-on3-ncpi0   work-pr93r4-off2-ncpi0    # PASS 38/38
+# ON arms (validated = the new production operating point):
+export SBND_SHOWER_DETACH_TRACK_STEM=1 SBND_KINE_COUNT_ORPHAN_TRACKS=1 \
+       SBND_STRAIGHT_CONT_CROSS_CLUSTER=1 SBND_SCCC_BRIDGE_BODY=1 \
+       SBND_PF_ORPHAN_CONFIDENT_TRACK=1 SBND_PF_TRACK_OWNS_LOOSE_VERTEX=1 \
+       SBND_SCCC_MAX_GAP=6 SBND_SCCC_KINK_MAX=18
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr93r4-on2-mcp1k   data $MC
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr93r4-on2-nuecc48 data
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr93r4-on2-ncpi0   data
+# pr/57 negative controls not in the standard arms:
+PR_JOBS=2 ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr93r4-ctrlon2-mcp1k data 61579 55715
+python3 scripts/pr85_hash_gate.py work-pr93r4-ctrloff-mcp1k work-pr93r4-ctrlon2-mcp1k  # PASS 4/4
+# PF-tree structural mover census (new script this round):
+python3 scripts/pr93_pf_tree_diff.py work-pr93r4-off2-<arm> work-pr93r4-on2-<arm>
+```
+
+### The four fixes (all C++ default OFF; SBND production ON this round)
+
+| knob | fixes | mechanism |
+|---|---|---|
+| `shower_detach_track_stem` | 348471, 292643 | post-pass after shower dedup: peel the main-cluster track prefix (walk from the start vertex along un-shower-flagged non-±11 same-cluster members) off a TRACK-HEADED shower; re-root the EM remainder at the prefix's far vertex (conn 2, `Shower::detach_track_prefix` with full point-cloud rebuild); prefix returns to the track pool; vote/kinematics/charge recomputed; pi0 pairing then sees real EM showers.  STRUCTURE-keyed (not score/floor: 21/50 census stems carry the score-100 sentinel; 292643's stem is 22.9cm).  Long-muon pseudo-showers (cached ±13) exempt; refuses to empty a shower. |
+| `pf_orphan_confident_track` + `kine_count_orphan_tracks` | 315167 | shared predicate `segment_orphan_confident_track` (confident non-e template PID + >50cm + straight-long): the PF audit branch emits a root node for a qualifying unclaimed main-cluster segment; a kine post-pass counts it via `push_segment_kine` (range KE + 8.6 binding).  pr/65 rung 4, narrowed to the class `shower_cone_absorb_guard` frees. |
+| `straight_cont_cross_cluster` + `sccc_bridge_body` (+ `sccc_max_gap=6`, `sccc_kink_max=18`, aligned tier 12cm/7.5° at C++ defaults) | 137238 | between examine_direction and shower clustering: demote a main-vertex kShowerTrajectory stem whose cross-cluster continuation across a degree-1 pr/57 W-gap split reaches straight-long, under the owner's two-tier gate (base gap/kink OR aligned tighter-kink-buys-larger-gap); re-PID as track, dirsign preserved; record a bridge request replayed through `nv_bridge_connect` at nv_bridge's own point in the pass sequence (before from_vertices), so the body joins PF and kine through a real graph edge. |
+| `pf_track_owns_loose_vertex` | 69314 | F3a root-branch guard: a vertex the REAL track BFS walked to (snapshot set) is not claimable by a root shower none of whose member segments touch it (pure loose `fill_sets` association).  The general "track BFS beats shower set" rule the pr/74-r4 comment deferred; render-only. |
+
+### Iteration history (what failed before it worked)
+
+1. **137238 round A**: predicate never fired.  Measured (new byte-neutral
+   `WCT_SCCC_DEBUG` tape): the muon body candidate reads g=5.68cm K=17.0°
+   (tangent kink 11.1°) in the fitted 15cm tangents — between the tiers
+   (base 5cm/15°, aligned 12cm/7.5°).  The entry stubs carry the
+   pr/57-recorded ~53° local kink and correctly fail.  Retune: base tier
+   6cm/18° (production values; C++ defaults unchanged).
+2. **137238 round B**: demote+bridge fired, but the demoted stem was
+   RE-CAPTURED as an "e- 116 MeV" shower: the replay originally ran right
+   after `shower_clustering_with_nv`'s entry clears, exposing the bridged
+   cluster to pass 2, which seeded a conn-1 shower on the stem.  Fix:
+   replay moved to nv_bridge's own point in the pass sequence (just before
+   from_vertices) so passes 1-3 see the pre-bridge graph exactly as legacy.
+3. **137238 round C**: still re-captured ("e- 71 MeV") — the
+   `WCT_SHOWER_CREATE_DEBUG`/`WCT_SHOWER_ABSORB_DEBUG` tapes attribute it
+   to THREE cooperating sites: pass 2 seeding on the demoted stem,
+   from_vertices Path C breaking the bridged cluster's 3.2cm entry stub
+   off as a conn-2 electron, and examine_shower_1 splicing that back onto
+   the stem.  Fix: two sccc-scoped shields — `m_sccc_shield_segs` (demoted
+   stems; consulted by pass-2 seeding and the examine_showers retarget)
+   and `m_sccc_bridged_cluster_ids` (replay-bridged clusters; consulted by
+   from_vertices Step 3).  nv_bridge_track's own Step-5 population keeps
+   its legacy behavior untouched.
+
+### Per-event results (off2 -> on2)
+
+- **348471**: one "proton 719 MeV" 16-segment aggregate ->
+  `proton 308 MeV` (range) with daughters `pi0 113 MeV` (gamma 355 +
+  gamma 20), `gamma 74 -> e-`, `gamma 11 -> e-` — the owner's
+  "proton -> pi0" realized; `kine_reco_Enu` 2075.7 -> 1090.8 (the round-3
+  proton-mass-on-charge-aggregate regression repaired).
+  Log: `pr93 detach_track_stem: ... peel 1 track seg(s) head_pdg=2212
+  reroot_vtx_idx=0 conn=2 n_remain=15`.
+- **292643**: one "pi+ 162 MeV" 11-member aggregate -> `pi+ 88 MeV` ->
+  `mu- 58 MeV` -> four gammas (172 = the re-rooted EM shower + the three
+  pre-existing daughters), all at the track prefix's far vertex 18004;
+  Enu 950.4 -> 1073.6 (pi/mu chain costed with masses, flag_reduce
+  collapses the continuation).  Log: `peel 2 track seg(s) head_pdg=211
+  n_remain=9`.  The originally-reported "missing tail at (80.2,16.3,
+  169.0)" was NOT reproduced — that point is fitted point 21/313 of the
+  mu- 440 MeV PF node, present byte-identically in both arms; the only
+  nearby non-PF objects are two ~1 MeV satellites at the muon endpoint
+  below the em_ke_min=5 MeV display floor (both arms).
+- **315167**: PF gains root `proton 595 MeV`; kine gains the same segment
+  (info=range +8.6 binding): Enu 722.1 -> 1326.0.  Logs:
+  `pr93 pf-orphan-confident-track: EMIT root seg=8001 ... ke_mev=595.29
+  len_cm=150.7` + `kine_count_orphan_tracks: COUNT ...`.
+- **69314**: `e- 67 MeV` (direct, conn-1) and the `gamma -> e- 18 MeV`
+  carrier chain re-parent from the 595 MeV shower to `mu- 362 MeV`; root
+  count unchanged; Enu byte-unchanged (render-only).  Log:
+  `pf_track_owns_loose_vertex: vtx_gidx=3 kept by track seg_gidx=5`.
+  The 595 MeV shower's own stem mislabel (38.4cm pion, score-100
+  sentinel) remains the round-3 named residual.
+- **137238**: `e- 152 MeV` -> `mu- 60 MeV` (stem) -> zero-charge bridge ->
+  `mu- 211 MeV` (81cm body) -> `mu- 65 MeV` (continuation), delta rays as
+  small EM leaves (e- 6/7/8/10 MeV); Enu 1087.1 -> 1101.4.  Logs:
+  `sccc demote: seg ... len_cm=14.6 pdg 11 -> 13 sib_cluster=7
+  sib_len_cm=81.2` + `sccc bridge: cluster 7 -> main 143 ... bridge=OK`.
+
+### Validation (final arms work-pr93r4-{off2,on2}-{mcp1k,nuecc48,ncpi0})
+
+- OFF gate: PASS 200/200 (66+96+38) vs the round-3 production arms
+  (work-pr93r3-on3-*), final binary.
+- Mover census (PF-tree structural diff, `scripts/pr93_pf_tree_diff.py`):
+  **exactly 6/100 events touched** — the five targets + 447477 (a
+  pseudo-carrier node renumber under the same parent with the same child;
+  nil physics content).  NCpi0: **0/19 touched**.  Zero real-EM-shower
+  regressions.
+- Enu movers (|delta| > 1 MeV): exactly the four expected (348471 -984.9,
+  292643 +123.2, 315167 +603.9, 137238 +14.3).
+- Per-knob fire census across all 100 events: detach 2 (the two targets),
+  sccc demote/bridge 1 (137238), orphan EMIT/COUNT 1 (315167),
+  loose-vertex skip 4 events (69314 + 447477 render changes; 37112 +
+  469665 skips with identical rendered trees).
+- pr/57 negative controls: 61579 + 55715 byte-identical (ctrl pair gate
+  PASS 4/4); 21073, 84229 (ncpi0 arm), 122660 (nuecc48 arm) untouched.
+- Flip-equivalence: bare production config (post-flip) vs env-driven on2
+  arms — work-pr93r4-flipchk-{mcp1k,nuecc48}, gate PASS (see below).
+- Runtime: wall median 26.0 -> 24.5 s (nuecc48), 23 -> 24 s (mcp1k);
+  peak-RSS median unchanged (~1.52 GB).
+- Doctests: 2215/2215 (13 new knob-default rows).  Compiled-config
+  proofs: all 12 new keys absent when off (compiled JSON byte-identical
+  to pre-change HEAD via git-worktree compare), present when on.
+
+### Bee A/B (six events: the five + the one mover)
+
+Order: 348471, 292643, 315167, 69314, 137238, 447477.
+- BEFORE (round-3 production):
+  <https://www.phy.bnl.gov/twister/bee/set/5d0a509a-7f2f-4591-87ba-a45e8b6a5888/event/list/>
+- AFTER (round-4 production):
+  <https://www.phy.bnl.gov/twister/bee/set/a2ccec16-484c-481b-b17f-0b4fc2d5a807/event/list/>
+- Per-event annotated index: `bee/pr93r4/pr93r4.index.txt`.
+
+### Scope and residuals
+
+- 69314's 595 MeV shower stem (38.4cm pion, score-100 sentinel) remains
+  the round-3 residual — untouched by design this round.
+- The `WCT_SCCC_DEBUG` candidate tape joins the standing byte-neutral
+  instrumentation (env-gated stderr only; the 200/200 gate ran on the
+  instrumented binary).
+- The intermediate iteration arms (work-pr93r4-off-*, -on-*, the
+  -on{3..6}-nuecc48-137238 singles, -dbg*-137238) are retained as the
+  attribution record; -off2-*/-on2-* are the final gate/validation arms.

@@ -789,6 +789,27 @@ for _pr93 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr93 _env _key _val
+# doc pr/93 round 4 -- PF-hierarchy fine-tunes (detach track stem, orphan
+# track PF/kine emission, cross-cluster straight continuation + bridge).
+# Same tri-state contract.
+for _pr93r4 in \
+    "SBND_SHOWER_DETACH_TRACK_STEM:shower_detach_track_stem" \
+    "SBND_KINE_COUNT_ORPHAN_TRACKS:kine_count_orphan_tracks" \
+    "SBND_STRAIGHT_CONT_CROSS_CLUSTER:straight_cont_cross_cluster" \
+    "SBND_SCCC_BRIDGE_BODY:sccc_bridge_body" \
+    "SBND_PF_ORPHAN_CONFIDENT_TRACK:pf_orphan_confident_track" \
+    "SBND_PF_TRACK_OWNS_LOOSE_VERTEX:pf_track_owns_loose_vertex" ; do
+    _env=${_pr93r4%%:*}; _key=${_pr93r4#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr93r4 _env _key _val
+[ -n "${SBND_KINE_ORPHAN_TRACK_MIN:-}" ] && CATH_TLA+=(--tla-code "kine_orphan_track_min=${SBND_KINE_ORPHAN_TRACK_MIN}")
+[ -n "${SBND_SCCC_MAX_GAP:-}" ] && CATH_TLA+=(--tla-code "sccc_max_gap=${SBND_SCCC_MAX_GAP}")
+[ -n "${SBND_SCCC_KINK_MAX:-}" ] && CATH_TLA+=(--tla-code "sccc_kink_max=${SBND_SCCC_KINK_MAX}")
+[ -n "${SBND_SCCC_GAP_ALIGNED:-}" ] && CATH_TLA+=(--tla-code "sccc_gap_aligned=${SBND_SCCC_GAP_ALIGNED}")
+[ -n "${SBND_SCCC_KINK_TIGHT:-}" ] && CATH_TLA+=(--tla-code "sccc_kink_tight=${SBND_SCCC_KINK_TIGHT}")
+[ -n "${SBND_PF_ORPHAN_TRACK_MIN_CM:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_track_min_cm=${SBND_PF_ORPHAN_TRACK_MIN_CM}")
 [ -n "${SBND_SHOWER_PID_GUARD_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pid_guard_min_len=${SBND_SHOWER_PID_GUARD_MIN_LEN}")
 [ -n "${SBND_KINE_SAT_MIN_ENERGY:-}" ] && CATH_TLA+=(--tla-code "kine_sat_min_energy=${SBND_KINE_SAT_MIN_ENERGY}")
 [ -n "${SBND_KINE_SAT_PROX_MAX:-}" ] && CATH_TLA+=(--tla-code "kine_sat_prox_max=${SBND_KINE_SAT_PROX_MAX}")
