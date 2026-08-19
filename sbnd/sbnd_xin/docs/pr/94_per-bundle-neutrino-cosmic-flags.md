@@ -1,25 +1,35 @@
 # doc pr/94 — per-bundle T_tagger/T_kine rows: cosmic-tagged sibling bundles
 # must not discard a co-bundled neutrino candidate (SBND run 18255)
 
-**Status (2026-08-19): Phases 1, 2 and 4 SHIPPED, knob still OFF
+**Status (2026-08-19): Phases 1, 2, 4 and 4b SHIPPED, knob still OFF
 (`nu_per_bundle`, default false). Phase 3 validated and NOT recommended.
 Phase 5 tooling done, population arms not run. Phase 6 (production flip) not
 done -- it is blocked on the owner review below.**
 
 Knob OFF is proven byte-identical after every phase: `pr85_hash_gate.py` PASS
 on 96/96 + 38/38 archives and a new per-branch/per-entry ROOT gate PASS on
-48/48 + 19/19 events, re-run after each of Phase 2 and Phase 4. Knob ON
-reproduces the legacy candidate **bit-identically in 67/67 events** and adds
-per-bundle rows beside it at no measurable runtime cost (-1.0 % / +0.3 % wall,
-RSS unchanged). The §10.1 sync check passes on every row, and it caught one real
-bug no byte gate could (§9, Phase 4). `wcdoctest-clus` 2215/2215.
+48/48 + 19/19 events, re-run after each of Phase 2, Phase 4 and Phase 4b, plus
+a byte `cmp` on the `pr_display` JSON (which no other gate covers -- §9.5).
+Knob ON reproduces the legacy candidate **bit-identically in 67/67 events** and
+adds per-bundle rows beside it at no measurable runtime cost (-1.0 % / +0.3 %
+wall, RSS unchanged). The §10.1 sync check passes on every row, and it has now
+caught **three** real bugs no byte gate could (§9 Phase 4, §9.5).
+`wcdoctest-clus` 2215/2215.
 
-**Two things need the owner before this goes further**, both detailed in §9:
+**Phase 4b (2026-08-19, owner Bee scan)** closes the last three consumers that
+still described candidate 0 only: the Bee **point** layers
+(`track_fit`/`shower_track`/`vertices`), Magnify's `T_rec_charge`/`T_proj_data`,
+and the `pr_display` dump + viewer. See §9.5.
+
+**Three things need the owner before this goes further**, all detailed in §9:
 (i) per-bundle mode bypasses ONE of the three cosmic vetoes §5 named, not three
 -- bypassing the per-main veto would emit a full neutrino result for every
-convicted cosmic muon and would make §10.2's case 2c unreachable; and (ii) §10.2
-case-by-case Bee sign-off on the small samples, which gates the mcp1k/mcp2k
-arms and Phase 6.
+convicted cosmic muon and would make §10.2's case 2c unreachable; (ii) whether
+to patch `nusel_extract.py` in place so `nusel-events.tsv`'s `event_label` is
+fixed at the source (§7) rather than only in the pr/94 sidecar; and (iii)
+§10.2 case-by-case Bee sign-off, which gates the mcp1k/mcp2k arms and Phase 6.
+The 2026-08-19 scan signed off on the *physics* of the nine review events; it
+did not address (i) or (ii).
 
 Owner's framing, verbatim, of what "done" means: *"Now, I wonder how the
 flags (including FC) are saved for this kind of cases? In the final result, I
@@ -198,6 +208,25 @@ entry-count sync concept applies; §7 covers the tsv/json side directly.
 scoped by §4.** No other tree in either file needs a schema or cardinality
 change.
 
+> **Correction (Phase 4b, 2026-08-19).** The sentence above is right about
+> *schema* and wrong about *content*, and the distinction cost a review round.
+> `T_rec_charge` and `T_proj_data` need no new branch — but both were written
+> from `grouping.get_track_fitting()`, the **unnamed** slot, which in
+> per-bundle mode is always candidate 0. So with the knob on they described one
+> candidate while `T_tagger`/`T_kine` described N: a real sync gap, invisible to
+> a schema audit because nothing about the branch list changes. Fixed in §9.5
+> by looping the candidates *inside* each writer. Verified on NCpi0 evt 18625:
+> `T_rec_charge` 705 -> 883 entries, `T_proj_data`'s per-cluster vectors gaining
+> candidate 1's clusters, `T_tagger`/`T_kine` untouched at 2 rows each.
+>
+> **Answer to "how many trees are in the final root file": seven**, listed
+> above, each at exactly one ROOT cycle (`;1`) — checked explicitly, because
+> `UbooneTaggerOutputVisitor.cxx:1126`'s `Write()` carries no `kOverwrite` and a
+> duplicated writer call would leave `T_tagger;2` cycles that `uproot` and every
+> gate here silently resolve to the *latest* of. That hazard is why Phase 4b's
+> candidate loops all live **inside** the writer functions: calling a writer
+> once per candidate would have created exactly those hidden cycles.
+
 ## 4. Design: T_tagger/T_kine become multi-entry rows, not vectorised branches
 
 **Decision, with the owner's explicit sign-off to prefer whichever is
@@ -304,6 +333,12 @@ Each currently assumes exactly one `TrackFitting`:
   `cluster_id`, which is already per-cluster there.
 - `clus/src/PrDisplayDump.cxx:175-203` — singular `main_vertex`/`kine`/
   `tagger` keys, one JSON per event => make those arrays.
+  **Superseded by §9.5: do NOT make them arrays.** Every reader of this JSON —
+  `pr_display_viewer.py` and any saved analysis — would break unconditionally,
+  knob on or off, for a change that only ever matters when the knob is on. The
+  shipped shape keeps all existing keys meaning candidate 0 and adds the extras
+  under a new `candidates` array, which is the same key-suppression discipline
+  the jsonnet knobs use.
 
 **Seven Python consumers need actual fixes** (not just re-baselining) — they
 hard-index `array()[0]` and would silently keep reporting bundle 0 forever
@@ -382,6 +417,17 @@ bare repeat of the existing call — three specific changes, all small:
 3. **Kill the id collision.** `pf_unique_node_ids`'s `used_node_ids` set
    starts fresh at `1000000` per call (`:1806-1814`); hoist it to loop scope
    so bundle 2's reissued ids don't collide with bundle 1's.
+
+> **Scoping error, corrected in Phase 4b (§9.5).** "Bee" here meant only the
+> `mc` particle-flow layer. The **point** layers (`track_fit`, `shower_track`,
+> `vertices`) come from two *different* functions —
+> `fill_bee_points_from_pr_graph` and `fill_bee_vertices_from_pr_graph` — which
+> have the same implicit-fitter problem as change 1 above and were not listed.
+> The audit that produced this section went looking for callers of
+> `fill_bee_pf_tree` rather than for readers of the unnamed slot; grepping the
+> *symptom* (`get_track_fitting()` / `get_pr_graph()` with no argument) instead
+> of the suspected *function* would have found all three at once, and is how
+> §9.5 was scoped.
 
 ## 9. Phased execution
 
@@ -658,21 +704,21 @@ same candidate the pre-pr/94 chain would have chosen, `nu_index == 0` means
 "the primary candidate", and every unconverted consumer behaves exactly as it
 did before.
 
-**Known limitation, deliberately out of scope for this round.** These still
-describe candidate 0 only:
+**Known limitation at the time of the review round — CLOSED by Phase 4b
+(§9.5).** These three described candidate 0 only:
 
 - the three Bee PR point layers (`MultiAlgBlobClustering.cxx:3159-3170`, which
   read `gs[0]->get_pr_graph()`),
 - `SbndPrMagnifyTrackingVisitor`'s `T_rec_charge` / `T_proj_data`,
 - `PrDisplayDump`.
 
-§8.3 scoped the Bee work to exactly three changes and all three are done, so
-extending these is a separable follow-up rather than an omission. The practical
-effect on review: a second bundle's *fitted trajectory points* are not drawn,
-but its full particle flow **is** in the `mc` forest with per-node start/end
-coordinates, so clicking a node still shows where it is -- which is what the
-owner's "if there are two neutrinos, the PF just go from two neutrino vertices
-... when we click we can see where the tracks are" asks for.
+The judgement recorded here — that this was *"a separable follow-up rather than
+an omission"*, because a second bundle's particle flow is still in the `mc`
+forest with per-node coordinates — did not survive contact with the owner's
+scan, which read the missing points as the defect they are. Kept as written
+because the reasoning is instructive: "the information is recoverable from
+another layer" is not the same as "the display is right", and the review is
+about the display. All three are now per-candidate; see §9.5.
 
 **Phase 5 — scale up + Option A. TOOLING DONE, POPULATION ARMS NOT RUN.** The
 mcp1k (1000) and mcp2k (2000) arms are deliberately **not** run yet: §10.2
@@ -769,7 +815,11 @@ SBND_NU_PER_BUNDLE=1 SBND_PROTECT_SKIP_CONVICTED=0 PR_JOBS=32 \
 Arm labels, for later re-checking: `work-pr94p2-base-{nuecc48,ncpi0}`
 (pre-edit baseline), `work-pr94g-off-{nuecc48,ncpi0}` (knob off, final binary),
 `work-pr94g-on-{nuecc48,ncpi0}` (knob on), `work-pr94g-on-evt395148`,
-`work-pr94p3-open-{nuecc48,ncpi0}` (Phase 3).
+`work-pr94p3-open-{nuecc48,ncpi0}` (Phase 3). Phase 4b adds
+`work-pr94i-{off,on}-{nuecc48,ncpi0}`, `work-pr94i-on-evt395148` and the three
+`work-pr94h-disp-{base,off,on}` single-event `pr_display` arms. The
+`work-pr94h-*` arms are the pre-`any_fitted` intermediates kept as the
+before-side of §9.5's ON differential.
 
 ### 9.4 Review package (§10.2) -- built, NOT uploaded
 
@@ -782,6 +832,15 @@ carries all nine scan events**, ordered by case:
 (`bee/pr94/pr94-all.zip`, index in `pr94-all.index.txt`.  The four per-case sets
 uploaded first are superseded by this one and kept only as a record:
 `1f6a89dc` evt395148, `3b678e3d` case2a, `f4cb4d8b` case2b, `700c45bd` case1.)
+
+**Phase 4b rebuild — `bee/pr94/pr94b-all.zip`, BUILT, NOT UPLOADED.** The same
+nine events in the same index order, rebuilt from the fixed arms
+(`work-pr94i-on-*`), 4.6 MB, all nine layers on all nine events. This is what
+shows the §9.5 fix: at index 1 (NCpi0 18625) the second neutrino now has
+`track_fit` / `shower_track` / `vertices` points instead of a bare PF root. It
+is deliberately **not** POSTed — the 2026-08-19 upload authorization was for
+that scan round, and a new upload is a fresh outward-facing action
+(CLAUDE.md escalation rule 6).
 
 Scan sheet -- what each Bee index should show (`*SEL` = the bundle's selected
 candidate; a trailing TGM/STM/LM is that activity's own conviction):
@@ -837,6 +896,138 @@ Per-activity tables for every event are in each ON arm's `nusel-mains.tsv`
 Phase 5's population numbers exist and are accepted (§10.2), which needs the
 small-sample human review first.
 
+### 9.5 Phase 4b — the three consumers that still showed candidate 0 only
+
+The 2026-08-19 owner Bee scan of the nine §9.4 events found the physics good
+everywhere but one display defect: on NCpi0 evt 18625, *"for the second
+neutrino, I do not see points for the track_fit and shower_track etc in Bee."*
+
+**Symptom.** Candidate 1 appeared in the Bee `mc` (particle-flow) layer as a
+correctly-labelled root with a full shower hierarchy, but contributed **zero
+points** to `track_fit`, `shower_track` and `vertices`. Its vertex sat 352.7 cm
+from the nearest point of every one of those layers.
+
+**Root cause — the same unnamed-slot read, in two more places.**
+`fill_bee_points_from_pr_graph` took its graph from `grouping.get_pr_graph()`
+and its shower list from `grouping.get_track_fitting()`;
+`fill_bee_vertices_from_pr_graph` did the same. `Grouping::get_pr_graph()` is
+*defined* as `m_track_fitting->get_graph()` (`Facade_Grouping.cxx:76-79`) —
+the unnamed slot, i.e. candidate 0 — so both functions re-emitted candidate 0's
+trajectories once per candidate. This is the identical mechanism already fixed
+once in `fill_bee_pf_tree` (§9, Phase 4); Phase 4 fixed the layer the sync check
+covered and left the two it did not.
+
+**Why the sync check missed it.** §10.1 checked the `mc` layer's roots and
+nothing else, so a candidate with a root but no points passed. Check **E** now
+covers the point layers.
+
+**Fix.** Three consumers, all made per-candidate:
+
+| consumer | change | hazard avoided |
+|---|---|---|
+| `fill_bee_points_from_pr_graph`, `fill_bee_vertices_from_pr_graph` | take `tf_in` + `do_reset`; graph and shower list from that fitter; caller loops the `"nu<i>"` slots | both **reset** their `Bee::Points` at entry — resetting per candidate would have left only the LAST candidate's points, a bug whose symptom ("candidate 1 now has points") looks exactly like the cure |
+| `SbndPrMagnifyTrackingVisitor::write_t_rec_data` / `write_proj_data` | candidate loop **inside** each function; `T_proj_data`'s per-cluster maps merged before its single `Fill()` | looping *around* the functions would `new TTree(...)` per candidate, leaving `T_rec_charge;2` cycles that uproot silently resolves to the last of (§3 correction) |
+| `PrDisplayDump` + `pr_display_viewer.py` | seven per-candidate dumps gain an optional fitter; the extras are emitted **additively** under a new top-level `candidates` array; viewer gains a "nu candidate" selector | making the seven existing keys into arrays (as §6 proposed) would have broken every reader of this JSON *unconditionally*, knob on or off |
+
+Event-level blocks (`meta`, `steiner`, `dead`, `dqdx_ref`) are deliberately not
+repeated per candidate.
+
+**Exhaustive audit — grep the symptom, not the function.** Every
+argument-less `get_track_fitting()` / `get_pr_graph()` in `clus/src` and
+`root/src` was re-checked after the fix. What remains is, in full:
+
+| site | verdict |
+|---|---|
+| `PrDisplayDump.cxx:175` | presence guard in `visit()` ("is this stage after tagger_check_neutrino?") — not a render |
+| `MultiAlgBlobClustering.cxx:3189` | decides *whether* a PR-graph set is filled; candidate 0 always also publishes to the unnamed slot, so the decision is unchanged |
+| `MultiAlgBlobClustering.cxx:3242` | `if (!tf) continue` guard ahead of the `nu<i>` loop |
+| `SbndPrMagnifyTrackingVisitor.cxx:44` | the deliberate legacy fallback inside `collect_nu_fitters` |
+| `UbooneTaggerOutputVisitor.cxx:53`, `UbooneNumuBDTScorer.cxx:260`, `UbooneNueBDTScorer.cxx:607` | the Phase 2 `if (fitters.empty()) fitters.push_back(tf)` fallback |
+| `UbooneMagnifyTrackingVisitor.cxx:180,260` | wired into **no** experiment config (§3); left untouched per CLAUDE.md's rule on other experiments' production files |
+
+No unconverted per-candidate reader is left in the SBND PR path.
+
+**A gate bug found on the way, worth recording.** Check E first joined
+T_tagger's `cluster_id` to the Bee layers' `cluster_id` and reported evt 10550
+row 0 — a correctly-rendered *primary* candidate — as missing. Cluster ids are
+re-issued by `enumerate_idents` after **every** visitor in MABC's main loop, so
+the id `TaggerCheckNeutrino` recorded is a different **epoch** from the id the
+Bee dump writes: on 10550 the selected activity is cluster 7 in `T_tagger` and
+62 by the time the magnify visitor sees it. The join is now **positional** —
+the candidate's vertex against the nearest point of each layer, which is
+epoch-independent. Separation is better than an order of magnitude at both ends:
+0.00-0.45 cm when rendered, 352.7 cm when not; tolerance 10 cm. (Same family as
+doc 53's `real_cluster_id` epochs.)
+
+**Gates.**
+
+- Knob OFF byte-identical, final binary: `pr85_hash_gate` 96/96 + 38/38,
+  `pr94_root_gate` 48/48 + 19/19.
+- **`pr_display` has its own gate** — it is `PR_EXTRA_STAGES`-opt-in, so it is
+  covered by *neither* hash gate (not in the arms) nor ROOT gate (not a ROOT
+  file). Knob-OFF `calib-pr-evt18625.json` from the final binary is a byte
+  `cmp` match against the same file built from a `git stash`ed pre-Phase-4b
+  binary: 1 444 299 B identical. (`cmp` is legitimate here — plain JSON text,
+  none of M2's archive timestamps.)
+- **Knob-ON differential** vs the pre-Phase-4b ON arms: of 67 events, exactly
+  **2 differ** — NCpi0 18625 and nueCC48 389538, both multi-candidate with a
+  second *reconstructed* candidate. All 65 others, including the 7
+  multi-candidate events whose second bundle reconstructed nothing, are
+  identical. Only `T_proj_data` and `T_rec_charge` branches moved;
+  `T_tagger`/`T_kine`/`T_bad_ch`/`Trun`/`T_proj` untouched. This is the sharp
+  gate: single-candidate events *must* be identical, because with one candidate
+  `nu0` **is** the unnamed slot and all three changes collapse to the old call.
+- §10.1 sync check including new check E: PASS on all 76 rows of both ON arms;
+  and it **FAILS** on the pre-Phase-4b arm at exactly evt 18625 row 1, which is
+  what makes it a gate rather than a formality.
+- `wcdoctest-clus` 2215/2215.
+
+**Before/after on the reported event (NCpi0 18625, candidate 1, cluster 26):**
+
+| layer | before | after |
+|---|---|---|
+| Bee `track_fit` | 705 pts, cluster 26 absent | 884 pts, present |
+| Bee `shower_track` | 6223 pts, absent | 6903 pts, present |
+| Bee `vertices` | 65 pts, absent | 98 pts, present |
+| `T_rec_charge` | 705 entries | 883 entries |
+| nearest point to candidate 1's vertex | 352.7 cm | 0.00 cm |
+
+`pr_display` knob ON now emits `candidates[0..1]` carrying distinct vertices
+(cluster 11 / cluster 26), distinct kinematics (`kine_reco_Enu` 1498.1 /
+352.2 MeV) and distinct BDT scores (`numu_score` 2.729 / -1.175) — and
+`top["kine"] == top["candidates"][0]["kine"]` and
+`top["segments"] == top["candidates"][0]["segments"]` hold exactly, which is the
+backward-compatibility guarantee proven rather than asserted.
+
+**Repro (Phase 4b).**
+
+```bash
+cd sbnd_xin
+# gate arms, final binary
+for p in nuecc48:work-nuecc48-cb0805 ncpi0:work-ncpi0-cb0805; do
+  n=${p%%:*}; q=${p##*:}
+  PR_JOBS=16 ./run_pr_chain_batch.sh $q work-pr94i-off-$n data
+  SBND_NU_PER_BUNDLE=1 PR_JOBS=16 ./run_pr_chain_batch.sh $q work-pr94i-on-$n data
+  python3 scripts/pr85_hash_gate.py work-pr94g-off-$n work-pr94i-off-$n
+  python3 scripts/pr94_root_gate.py work-pr94g-off-$n work-pr94i-off-$n
+  python3 scripts/pr94_root_gate.py work-pr94g-on-$n  work-pr94i-on-$n   # DIFF set
+  python3 scripts/pr94_sync_check.py work-pr94i-on-$n                    # incl. check E
+done
+# pr_display gate: baseline needs the pre-Phase-4b binary
+git -C ../.. stash push -- clus/src/MultiAlgBlobClustering.cxx \
+    clus/inc/WireCellClus/MultiAlgBlobClustering.h clus/src/PrDisplayDump.cxx \
+    clus/inc/WireCellClus/PrDisplayDump.h root/src/SbndPrMagnifyTrackingVisitor.cxx
+wcbuild && PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr94h-disp-base data 18625
+git -C ../.. stash pop && wcbuild
+PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr94h-disp-off data 18625
+SBND_NU_PER_BUNDLE=1 PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr94h-disp-on data 18625
+cmp work-pr94h-disp-base/pr_evt18625/calib-pr-evt18625.json \
+    work-pr94h-disp-off/pr_evt18625/calib-pr-evt18625.json    # must be identical
+```
+
 ## 10. Verification
 
 1. `wcbuild`, then freshness proof on `build/clus/libWireCellClus.so` (M1)
@@ -870,6 +1061,22 @@ must agree to floating-point tolerance. Script this once, run it over every
 population arm, and report a pass count — this turns "I built N rows" into
 "the rows are the right rows," and it is the load-bearing check the owner
 asked for, not just the branch-value diff in step 5 above.
+
+**As implemented** (`scripts/pr94_sync_check.py`) the check cross-joins **five**
+producers per row, not three — the two extra ones each caught a real bug:
+
+| | producer | what it pins |
+|---|---|---|
+| A | `T_tagger[i]` | `cluster_id`, `matched_flash_gid`, `nu_index`, `nu_x/y/z` |
+| B | `T_kine[i]` | the same three identity fields + `kine_nu_*_corr` |
+| C | the log's **publish-time** `[nu_per_bundle] ROW i gid G cluster C` sentinel | that the row was stashed for the bundle it says. Joining on the *selection* line instead was the check's own first bug: `swap_main_cluster` can repoint `main_cluster` between selection and publish |
+| D | `mabc-pr.zip` `0-mc.json` root labelled `nu <i> (gid G, cluster C)` | the particle-flow tree — this is what caught the Phase 4 graph bug |
+| E | `mabc-pr.zip` **point layers** `track_fit`/`shower_track`/`vertices` | that the candidate's trajectories were actually drawn — added in Phase 4b (§9.5); D passing while E failed is precisely the defect the owner's scan reported |
+
+Rows that reconstructed **no** vertex are exempt from D and E: they have no
+particle flow and no points, by design, and demanding either was an earlier
+false failure. E joins on **position, not `cluster_id`** — see §9.5 for the
+`enumerate_idents` epoch trap that makes an id join wrong.
 
 ### 10.2 Human verification (owner review, Bee-based)
 
@@ -928,3 +1135,21 @@ peak RSS). ~40 min per arm, ~8.5 G disk per arm (923 G free at plan time).
   append status blocks the way doc pr/93 does, per §Repro-style convention).
 - Commit both, then push (owner asked for push), after each phase's gate
   passes — not held until the whole plan is done.
+
+**As shipped (2026-08-19).** toolkit `apply-pointcloud`:
+
+| commit | phase |
+|---|---|
+| `68952e5f` | Phase 1 — schema + branch booking |
+| `7d1bbde6` | Phase 2 — per-bundle candidates, scorers, tagger output |
+| `3f01ea90` | Phase 4 — Bee particle flow per candidate |
+| `d5f87a13` | candidate ordering (longest-selected first) |
+| *this round* | Phase 4b — Bee point layers, Magnify `T_rec_charge`/`T_proj_data`, `PrDisplayDump` + viewer |
+
+wcp-porting-img `main`: `986c819` (harness), `91d6555` (doc), `9cf5c8e` +
+`7b385b4` (Bee review links), *this round* (Phase 4b doc, sync check E, viewer).
+
+`nusel_extract.py` is **not** patched — the corrected `event_label` lives in
+`scripts/pr94_mains_sidecar.py`'s `nusel-events-pr94.tsv` instead, so
+`nusel-table.tsv`'s row cardinality and its ~20 parsers are untouched. Patching
+it in place is open decision (ii) in the status header.

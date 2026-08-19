@@ -15,6 +15,13 @@ rows".  Four independent producers are cross-joined per row i:
      the id the row carries.
   D. mabc-pr.zip's data/0/0-mc.json roots, whose synthetic per-bundle root is
      labelled "nu <i> (gid G, cluster C)"
+  E. mabc-pr.zip's POINT layers (track_fit / shower_track / vertices), which
+     are produced by a different function than D and were missed by the first
+     version of this check -- the owner's 2026-08-19 Bee scan of NCpi0 evt
+     18625 found the second candidate rendered as a bare particle-flow root
+     with no points behind it.  Root cause was the same unnamed-slot read
+     already fixed once in fill_bee_pf_tree; D passing while E failed is
+     exactly why the two are now checked separately.
 
 Checks per row: A.identity == B.identity (exact); A.nu_* == B.kine_nu_*_corr
 (exact -- T_tagger's nu_x/y/z ARE KineInfo's corrected vertex, so any drift
@@ -60,6 +67,52 @@ def read_log(path):
     return out
 
 
+POINT_LAYERS = ("track_fit", "shower_track", "vertices")
+
+# cm.  Every row that reconstructed a vertex must have SOME point of each layer
+# near that vertex.  Measured on the fixed arms: track_fit and vertices land
+# exactly on it (0.00 cm -- the vertex's own fit point is appended to both) and
+# shower_track's nearest associate point is 0.2-0.5 cm away.  A candidate that
+# was NOT rendered misses by the distance between the two bundles: 352.7 cm on
+# the pre-fix NCpi0 evt 18625.  10 cm therefore separates the two populations
+# by more than an order of magnitude at both ends.
+LAYER_TOL = 10.0
+
+
+def read_bee_layers(path):
+    """{layer: [(x,y,z), ...]} for the PR point layers, or None if absent.
+
+    NOTE the join is POSITIONAL, not by cluster_id.  cluster ids are re-issued
+    by `enumerate_idents` after every visitor in MultiAlgBlobClustering's main
+    loop, so the id T_tagger recorded at TaggerCheckNeutrino time is a
+    DIFFERENT EPOCH from the id the Bee dump writes (SBND 18255/10550: selected
+    cluster 7 in T_tagger, the same activity carries 62 by the time the magnify
+    visitor sees it).  An id-keyed check reports that as a missing render and
+    is simply wrong -- the vertex position is the epoch-independent identity.
+    """
+    if not os.path.exists(path):
+        return None
+    out = {}
+    with zipfile.ZipFile(path) as z:
+        for layer in POINT_LAYERS:
+            names = [n for n in z.namelist()
+                     if n.endswith("-%s-global.json" % layer)]
+            if not names:
+                continue
+            d = json.loads(z.read(sorted(names)[0]))
+            out[layer] = list(zip(d.get("x", []), d.get("y", []), d.get("z", [])))
+    return out or None
+
+
+def nearest(pts, v):
+    best = None
+    for p in pts:
+        d = ((p[0] - v[0]) ** 2 + (p[1] - v[1]) ** 2 + (p[2] - v[2]) ** 2) ** 0.5
+        if best is None or d < best:
+            best = d
+    return best
+
+
 def read_bee(path):
     if not os.path.exists(path):
         return None
@@ -94,6 +147,7 @@ def check_event(prdir, evt, verbose):
 
     cands = read_log(log) if os.path.exists(log) else None
     beeroots = read_bee(bee)
+    beelayers = read_bee_layers(bee)
 
     bad = []
     for i in range(n):
@@ -147,6 +201,20 @@ def check_event(prdir, evt, verbose):
                     if dv > POS_TOL:
                         bad.append("evt %d row %d: Bee root %.4f cm from the tree vertex"
                                    % (evt, i, dv))
+
+        # E. the point layers.  Same has_vtx gate as D: a row that
+        # reconstructed nothing legitimately contributes no points either.
+        if beelayers is not None and has_vtx:
+            v = (float(tt["nu_x"][i]), float(tt["nu_y"][i]), float(tt["nu_z"][i]))
+            for layer in POINT_LAYERS:
+                pts = beelayers.get(layer)
+                if not pts:
+                    continue
+                dmin = nearest(pts, v)
+                if dmin is None or dmin > LAYER_TOL:
+                    bad.append("evt %d row %d: nearest Bee '%s' point is %.1f cm from "
+                               "this candidate's vertex -- it was not rendered"
+                               % (evt, i, layer, -1 if dmin is None else dmin))
     if verbose and not bad:
         print("evt %d: %d row(s) OK" % (evt, n))
     return n, bad
