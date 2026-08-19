@@ -764,6 +764,18 @@ for _pr92 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr92 _env _key _val
+# doc pr/40 round 10 -- shower_bragg_protect_start_segment: a Shower start
+# segment already typed muon/proton with a confident Bragg/dE-dx-template PID
+# (particle_score < 1.0) keeps that type through update_particle_type's
+# majority vote instead of being relabelled e-.  Same tri-state contract
+# (unset = cfg default, 1 = force on, 0 = force off).
+for _pr40r10 in \
+    "SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT:shower_bragg_protect_start_segment" ; do
+    _env=${_pr40r10%%:*}; _key=${_pr40r10#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r10 _env _key _val
 [ -n "${SBND_KINE_SAT_MIN_ENERGY:-}" ] && CATH_TLA+=(--tla-code "kine_sat_min_energy=${SBND_KINE_SAT_MIN_ENERGY}")
 [ -n "${SBND_KINE_SAT_PROX_MAX:-}" ] && CATH_TLA+=(--tla-code "kine_sat_prox_max=${SBND_KINE_SAT_PROX_MAX}")
 [ -n "${SBND_KINE_SAT_ANGLE_BAD:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_bad=${SBND_KINE_SAT_ANGLE_BAD}")

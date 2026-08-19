@@ -2491,3 +2491,259 @@ Set = the 45 round-7 Bee events (same order) + 286906/409546/521075 (idx
 - Runtime-trace confirmation of the round-8 static attribution is now DONE
   (the `pr40r9 nv_bridge`/guard log lines above are the runtime evidence).
 
+# Round 10 (2026-08-18) -- `shower_bragg_protect_start_segment`: a Bragg-PID-
+confident track spared from `examine_all_showers`' blanket reclassification,
+SBND PRODUCTION ON
+
+## Repro block
+
+```bash
+cd sbnd_xin
+# fresh build (clus package touched)
+cd ../../toolkit && wcbuild && ls -la local/lib/libWireCellClus.so && \
+  ./build/clus/wcdoctest-clus
+cd ../wcp-porting-img/sbnd/sbnd_xin
+
+# owner-motivating case
+SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=0 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 <off-out> data 314507
+SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=1 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 <on-out> data 314507
+
+# validation manifests (32 CPUs)
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=0 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 <off-nuecc48> data
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 <on-nuecc48> data
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=0 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 <off-ncpi0> data
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=1 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 <on-ncpi0> data
+# 31-event mcp1k subset = the round-7 45-event electron-misID Bee census's
+# mcp1k slice (the nueCC48/ncpi0 slices are already covered by the full
+# 48/19 manifests above)
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=0 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 <off-mcp1k> data \
+  55539 55595 64409 64921 71222 277298 278684 280972 281837 283713 286191 \
+  286681 290729 292643 293149 314507 315167 316025 320865 321371 348471 \
+  348691 349461 349549 350935 352233 386948 395060 395610 401450 407280
+PR_JOBS=32 SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT=1 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 <on-mcp1k> data <same 31 ids>
+
+python3 ../../abtest/hash_archive.py <archive>       # M2 member-content hash
+python3 scripts/pr85_hash_gate.py <armA> <armB>       # per-manifest gate
+```
+
+## Symptom (owner, 2026-08-18)
+
+SBND 18255-314507: a muon that ends in a genuine Michel electron is
+reconstructed as a single 151 MeV electron (`kine_particle_type` 11, energy
+151.6 MeV, `kine_energy_info` 2 = charge-method) instead of a ~104 MeV muon
+(range) + a few-MeV Michel.  Owner also asked (separately, same event) why
+18255-280972's 564 MeV proton is legitimately a `PR::Shower` with pdg 2212
+(binding-energy-corrected proton shower, `NeutrinoKinematics.cxx` -- not a
+bug, explained but out of scope for this round) and why muon+Michel
+mis-ID is *rare* given how common the topology is.
+
+## Root cause (traced with `WCT_PID_WRITE_DEBUG=2`, the object-level
+particle_info-write audit already in `PRSegment.cxx`)
+
+Segment 17002 (32.34 cm, xMIP 1.57x) is a genuine, disconnected muon
+fragment.  `segment_determine_dir_track` (`PRSegmentFunctions.cxx`) PIDs it
+correctly: `pdg_code=13`, `particle_score=0.082` (a confident fit; above
+20 cm the electron template is never in that comparison's competition, so
+this score is unambiguous muon-or-proton evidence regardless of what pdg a
+later caller may attach).  Two rounds of tracing were needed to find where
+that correct call gets overwritten:
+
+- **First hypothesis (WRONG, corrected in-session before any validation
+  spend): `Shower::update_particle_type`'s majority vote.** A knob
+  (`protect_bragg_confident_track`, gated on `particle_info()->pdg()`) was
+  designed and implemented against this function, but `WCT_BRAGG_PROTECT_
+  DEBUG` instrumentation showed the vote already saw `pdg=11` *on entry* --
+  it is not the writer, and the knob was a byte-identical no-op on 314507
+  (confirmed empirically, not assumed).  Fully reverted before any doc/
+  commit; see below for why it's noted at all.
+- **Second hypothesis (WRONG): one of four `NeutrinoShowerClustering.cxx`
+  "force PDG=0/short-weak-muon segment to electron" sites**
+  (`shower_clustering_in_other_clusters` x2, `conn3_unreachable`,
+  `shower_clustering_with_nv_from_vertices`).  Instrumented all four;
+  silent for the whole event.
+- **Actual writer (found via `WCT_PID_WRITE_DEBUG=2`, which logs every
+  `particle_info()` write across all ~40 call sites for zero call-site
+  churn):** `NeutrinoTrackShowerSep.cxx:2091`, inside `examine_all_showers`.
+  This function counts shower vs. track segments per cluster; when a single
+  short (<10 cm), confidently-directioned "good track" sits among enough
+  shower material and daughter-shower geometry, it sets
+  `flag_change_showers = true` and then **unconditionally reclassifies
+  every non-shower-flagged segment in the whole cluster to electron** --
+  comment: "every non-shower segment in a shower-dominated cluster becomes
+  electron unconditionally."  Segment 17002 is a bystander in that same
+  cluster; the blanket rule doesn't ask what PID its own track fit already
+  gave it.
+
+This function already has one guard against exactly this failure mode:
+`shower_reclass_dqdx_guard` / `segment_dqdx_spares_electron_reclass` (doc
+pr/40 F2, SBND ON) spares a segment whose median-dQ/dx ratio is `>1.75`
+(proton-like) or `<1.2` (clean MIP).  Segment 17002's ratio is 1.57 -- **in
+the gap between those two thresholds**, the same structural blind spot as
+the `segments_in_long_muon` flat-cut gate `shower_long_muon_keep_type` (doc
+pr/44) depends on, just at a different call site.  The gap is exactly where
+a real, disconnected muon fragment sits near end-of-range (dQ/dx rising
+toward the Bragg peak without yet being unambiguously proton-like by the
+crude ratio test).
+
+## Fix -- `shower_bragg_protect_start_segment` (C++ default `false`)
+
+Additive sibling spare-test for `examine_all_showers`' reclassification, not
+a modification of the existing F2 guard (F2's 5 other call sites --
+`improve_maps_shower_in_track_out` x2, the F3 topology-flag site -- are
+untouched):
+
+- **`clus/inc/WireCellClus/PRSegmentFunctions.h` /
+  `clus/src/PRSegmentFunctions.cxx`** -- new function
+  `segment_bragg_spares_electron_reclass(SegmentPtr seg)`:
+  `segment_track_length(seg) > 20*cm && seg->particle_score() < 1.0`.
+  Deliberately does **not** read `particle_info()->pdg()`: `particle_score`
+  is left untouched by `examine_all_showers`' own reclassification (which
+  only rewrites `particle_info`), so a stale-but-still-valid Bragg score
+  survives independent of whatever pdg a caller may already have
+  overwritten -- reading pdg here would make the test see its own target's
+  prior verdict instead of the PID's.  The `20 cm` cut reuses
+  `segment_do_track_pid`'s own electron-eligibility boundary
+  (`PRSegmentFunctions.cxx` ~2540); the `1.0` cut reuses the same
+  "good enough to stay a track" bar `segment_determine_dir_track` already
+  applies to its own output (~2893, `particle_score > 1.0` -> demote to
+  shower/200).  No new arbitrary thresholds.
+- **`clus/src/NeutrinoTrackShowerSep.cxx`** (`examine_all_showers`) -- the
+  reclassification `continue` test becomes an OR of the existing F2 guard
+  and the new one, both under their own knob:
+  ```cpp
+  if (!is_shower &&
+      ((m_shower_reclass_dqdx_guard && segment_dqdx_spares_electron_reclass(sg, m_mip_dqdx)) ||
+       (m_shower_bragg_protect_start_segment && segment_bragg_spares_electron_reclass(sg)))) {
+      continue;
+  }
+  ```
+- **`clus/inc/WireCellClus/NeutrinoPatternBase.h`** /
+  **`TaggerCheckNeutrino.h`/`.cxx`** -- new member
+  `m_shower_bragg_protect_start_segment{false}`, threaded through
+  `configure`/`default_configuration`/pattern_algos pass-through, same
+  mechanical pattern as every other pr/40 knob.
+- **`clus/test/doctest_clus_knob_defaults.cxx`** -- `CHECK_KNOB_BOOL(cfg,
+  "shower_bragg_protect_start_segment", false)`.
+- **`cfg/pgrapher/common/clus.jsonnet`** -- function-arg default `false` +
+  key-suppression line.
+- **`cfg/pgrapher/experiment/sbnd/clus.jsonnet`** -- 2 param defaults + 2
+  pass-throughs (mirrors `shower_long_muon_keep_type`'s 4 sites exactly).
+- **`run_pr_chain_batch.sh`** -- `SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT`
+  tri-state env (unset = cfg default, 1 = force on, 0 = force off).
+
+Purely protective: the new clause can only add a `continue` (spare) the
+existing code path would not otherwise take -- it can never invent a new
+electron label, so it cannot make an already-correctly-tagged shower worse
+by relabeling something new.
+
+Note: `shower_long_muon_keep_type` (doc pr/44) and the abandoned
+`update_particle_type`-guard hypothesis above are a *different* choke point
+(`Shower::update_particle_type`'s majority vote, downstream of shower
+construction) from this round's actual fix (`examine_all_showers`'
+reclassification, upstream of shower construction) -- both are real,
+independently-discovered defects in the same "how does a track's own PID
+survive shower clustering" problem space, but only the second one is what
+produces 314507's mislabeling.  Left as a discovered-but-inert candidate
+for a future round if a case is found where the majority-vote path is the
+actual writer.
+
+## Validation
+
+Samples: **nueCC48** (48 events, `work-nuecc48-cb0805`), **ncpi0** (19
+events, `work-ncpi0-cb0805`), and the **31-event mcp1k slice** of the
+round-7 45-event electron-misID Bee census (`work-mcp1k-cb0805`; the
+nueCC48/ncpi0 slices of that same 45-event set are already covered by the
+full 48/19 manifests -- together the three manifests cover all 45 events).
+98 events total, both arms from the *same* freshly built binary (M1
+freshness proof: `local/lib/libWireCellClus.so` mtime 2026-08-18 18:06:10
+vs. last source edit 18:04:59).  `./build/clus/wcdoctest-clus`: 210/210
+test cases, 2175/2175 assertions, 0 failed.
+
+- **V1 -- knob OFF byte-identical to a bare (no-`-A`) run at this HEAD.**
+  `pr85_hash_gate.py`: nueCC48 96/96, ncpi0 38/38, mcp1k 62/62 -- **PASS
+  196/196 archives** (`mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz`).
+- **V2 -- knob ON: every mover enumerated.**
+  - **nueCC48: ZERO movers (48/48 byte-identical).** Directly answers the
+    owner's "most EM showers are already correctly tagged, this should not
+    make them worse" -- the fix's population (a >20 cm confidently-PID'd
+    non-electron segment sitting in a cluster examine_all_showers wants to
+    blanket-convert) simply does not occur in this manifest.
+  - **ncpi0: ONE mover, evt 259542.** `WCT_PID_WRITE_DEBUG` trace: cluster
+    124, segment (local gidx 91) previously force-relabelled 13->11 at
+    `NeutrinoTrackShowerSep.cxx:2091` (pre-fix line number) now stays 13.
+    `T_kine`: `kine_pio_energy_1` 189.16 -> 71.92 MeV, `kine_pio_mass`
+    144.98 -> 89.40 MeV; `kine_pio_energy_2` (998.99 MeV), both photons'
+    `theta`/`phi`/`dis`, and `kine_pio_angle` (19.2 deg) are **all
+    unchanged** -- same two-shower pairing, same geometry, only photon 1's
+    accumulated charge changed (mass scales as `sqrt(E1)` at fixed
+    E2/angle: `sqrt(189.16/71.92) = 1.622 = 144.98/89.40`, consistent to 4
+    sig figs).  The spared segment satisfies the fix's own criteria (>20 cm,
+    confident non-electron template match) -- real EM shower material does
+    not typically produce a single long segment that PIDs as a clean
+    muon/proton track, so the mechanistic read is that this segment was
+    contaminating charge, not photon substance, and its removal purifies
+    photon 1's energy.  144.98 MeV sits closer to the true pi0 mass
+    (135 MeV) than 89.40 MeV does, but with a 999 MeV partner shower
+    dominating the pairing kinematics neither value is a precision
+    measurement; this is flagged for owner hand-scan, not resolved by
+    inspection alone.
+  - **mcp1k: ONE mover, evt 314507 (the motivating case).** Segment 17002
+    restored to muon; `T_kine` `kine_reco_Enu` 323.5 -> 446.6 MeV, the fake
+    "e- 151 MeV" replaced by "mu- 104 MeV" (range-method, `einfo=1`) plus
+    the genuine Michel fragment now standing on its own.
+- **V3 -- bare-run composition gate (post-flip).** Bare reruns
+  (`work-pr40r10-v3-bare-{nuecc48,ncpi0,mcp1k}`) vs the knob-ON arms --
+  **PASS 96/96 + 38/38 + 62/62 = 196/196 archives byte-identical** (doc 68:
+  bare run == production, single-sourced in cfg).
+
+### Flip -- SBND PRODUCTION ON (2026-08-18)
+
+`shower_bragg_protect_start_segment = true` in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`. C++ default stays
+`false`.
+
+## Owner hand-scan requested
+
+- **259542** (ncpi0) -- confirm segment (cluster 124, local gidx 91,
+  displayed pre-fix as part of the "e- 189 MeV" / post-fix "e- 71 MeV"
+  object near (88-92, 26-28, 75-83) cm) is genuinely non-EM contamination
+  rather than part of the true photon shower. This is the only case in the
+  98-event manifest where the fix's mechanism is plausible-but-not-certain
+  rather than clearly correct.
+- **314507** -- confirm "mu- 104 MeV" + separate Michel matches the
+  expected topology (reference case for the fix's intended effect).
+
+## Scope and not-claimed
+
+- Only `examine_all_showers`' reclassification is fixed. The abandoned
+  `update_particle_type`-guard hypothesis (above) targets a genuinely
+  different, real defect class (the majority vote's blanket "any non-proton
+  member counts as shower_length" logic, same family as doc pr/44) that
+  this round did NOT implement -- no case in this manifest needed it, and
+  shipping an unexercised guard was judged not worth the added surface
+  given the advisor-flagged soundness risk (a MIP-like EM trunk segment
+  could in principle also score well against the muon template; the
+  `examine_all_showers` fix is far more narrowly scoped because `length>20cm
+  && score<1.0` there only ever *removes* a specific writer's action, never
+  gates a downstream vote whose own inputs are shower-composition-dependent).
+- `segment_dqdx_spares_electron_reclass`'s other 5 call sites
+  (`improve_maps_shower_in_track_out` x2, `improve_maps_multiple_tracks_in`,
+  the F3 topology-flag site) are untouched -- this round is scoped to the
+  one call site (`examine_all_showers`) empirically proven responsible for
+  314507.
+- mcp2k and the full mcp1k (1000 events) are not covered; only the round-7
+  45-event electron-misID census subset (minus events already in nueCC48/
+  ncpi0) was run.
+- 18255-280972's proton-typed shower (the user's second original question)
+  is not a bug -- `NeutrinoKinematics.cxx`'s binding-energy correction for
+  proton showers >5 cm is designed to let a `PR::Shower` legitimately carry
+  pdg 2212; out of scope for this round, not touched.
+
