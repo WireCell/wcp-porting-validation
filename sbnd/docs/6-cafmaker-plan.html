@@ -86,7 +86,7 @@ whatsoever</strong>, which CAF requires for any MC analysis. That information ex
 different output stream.
 <br><br>
 There is also a <strong>design question that outranks both</strong>: CAFMaker should almost certainly
-not read <code>tracking-pr.root</code> at all. See <a href="#design">§6</a>.
+not read <code>tracking-pr.root</code> at all. See <a href="#design">§7</a>.
 </div>
 
 <h2 id="example">1. How <code>sbncode/CAFMaker</code> works</h2>
@@ -114,7 +114,7 @@ not read <code>tracking-pr.root</code> at all. See <a href="#design">§6</a>.
 not classes, so they compose and test independently of art. <code>CAFMaker</code> links
 <code>sbnanaobj::StandardRecord</code> and <code>sbnanaobj::StandardRecordFlat</code> — the data model
 lives in a <strong>separate repository</strong> from the maker, which matters for
-<a href="#design">§6</a>.</p>
+<a href="#design">§7</a>.</p>
 
 <h2 id="model">2. The CAF data model, and where a second reconstruction goes</h2>
 
@@ -145,7 +145,104 @@ described as "neutrino ID features for BDT inputs", which sounds like a home for
 (<code>nufspfos</code>, <code>nutothits</code>, <code>nuvtxy</code>, …). It is not a general BDT-input
 container, and T_tagger's 1216 have no home there.</p>
 
-<h2 id="wc-output">3. What Wire-Cell actually produces</h2>
+<h2 id="caf-content">3. What is actually in an SBND CAF file</h2>
+
+<p>Measured on a real Gen2 production CAF, linked into the work dir at
+<code>sample-gen2-caf/sample.flat.caf.root</code> →
+<code>/pnfs/sbn/data_add/sbn_nd/aurora/mc/v10_14_02_03/prodgenie_corsika_proton_rockbox0p1_sbnd/<wbr>Gen2_2026/CV/caf/000240/002404/reco2-…-008e-40b3-d81b-e73b.flat.caf.root</code>.
+That directory holds 298 files, ~11 MB each, and <strong>all of them are
+<code>.flat.caf.root</code></strong> — this production ships only the flattened
+(<code>StandardRecordFlat</code>) form, no nested CAF.</p>
+
+<h3>3.1 File-level shape</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Object</th><th>Type</th><th>Entries</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td class="mono">recTree</td><td>TTree</td><td><strong>15</strong></td>
+    <td>one entry per <em>spill</em>, <strong>2662 branches</strong>, <strong>631 kB/event
+        compressed</strong></td></tr>
+<tr><td class="mono">GenieEvtRecTree</td><td>TTree</td><td>30</td><td>GENIE event records (2 per spill here)</td></tr>
+<tr><td class="mono">globalTree</td><td>TTree</td><td>1</td><td><code>SRGlobal</code> — systematic-weight config. <span class="small">Present twice, as two TKey cycles.</span></td></tr>
+<tr><td class="mono">TotalPOT / TotalEvents / TotalGenEvents</td><td>TH1D</td><td>1 bin</td><td>exposure bookkeeping for POT normalisation</td></tr>
+<tr><td class="mono">env/ , metadata/</td><td>TDirectoryFile</td><td>—</td><td>provenance: build env and SAM metadata</td></tr>
+</tbody></table>
+</div>
+
+<h3>3.2 Where the bytes go</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Branch family</th><th>#branches</th><th>kB/event</th><th>share</th></tr></thead>
+<tbody>
+<tr><td class="mono">rec.slc.reco</td><td>614</td><td>174.4</td><td><strong>27.6%</strong></td></tr>
+<tr><td class="mono">rec.mc.nu</td><td>146</td><td>84.5</td><td>13.4%</td></tr>
+<tr><td class="mono">rec.true_particles.genp</td><td>3</td><td>84.0</td><td>13.3%</td></tr>
+<tr><td class="mono">rec.true_particles.gen</td><td>3</td><td>58.1</td><td>9.2%</td></tr>
+<tr><td class="mono">rec.true_particles.daughters</td><td>4</td><td>33.1</td><td>5.3%</td></tr>
+<tr><td class="mono">rec.true_particles.G4ID</td><td>1</td><td>28.0</td><td>4.4%</td></tr>
+<tr><td class="mono">rec.slc.truth</td><td>145</td><td>23.6</td><td>3.7%</td></tr>
+<tr><td class="mono">rec.reco.pfp</td><td>491</td><td>4.5</td><td>0.7%</td></tr>
+</tbody></table>
+</div>
+<p><strong>Truth dominates.</strong> Summing the <code>true_particles</code> families with
+<code>rec.mc.nu</code> and <code>rec.slc.truth</code> gives well over half the file; slice
+reconstruction is ~28%. Note <code>rec.reco.pfp</code> has 491 branches but 0.7% of the bytes — in a
+flat CAF, branch count and size are only loosely related.</p>
+
+<h3>3.3 Blocks by branch count, and per-event occupancy</h3>
+<div class="cols">
+<div class="card">
+<h3>Top blocks</h3>
+<pre><code>rec.slc              981
+rec.reco             608
+rec.dlp_true         269
+rec.hdr              210
+rec.mc               179
+rec.dlp              164
+rec.true_particles    56
+rec.crt_tracks        42</code></pre>
+<p class="small">Plus <code>opflashes</code>, <code>crt_*</code>, <code>sbnd_crt_veto</code>,
+<code>sbnd_timings</code>, <code>sbnd_frames</code>, <code>soft_trig</code>,
+<code>fake_reco</code> and the <code>n*</code> counters.</p>
+</div>
+<div class="card">
+<h3>Occupancy, per event</h3>
+<pre><code>nslc              2 - 14   (8.5 avg)
+ntrue_particles   4922 - 13275
+                  (7144 avg)
+nopflashes        30 - 63  (43.6)
+ndlp                   0
+ndlp_true              0</code></pre>
+<p class="small">128 slices, 107,154 true particles and 654 flashes across the 15 events.</p>
+</div>
+</div>
+
+<div class="note"><strong>The DLP block is present but empty — <code>ndlp = 0</code> in every
+event.</strong> 433 <code>rec.dlp*</code> branches exist in the schema and cost real space in the
+file, but SBND production does not run the ML reconstruction that fills them. So
+<code>SRInteractionDLP</code> is a <strong>schema precedent, not a working example</strong>: it proves
+the "second reconstruction at top level" slot is legitimate and already carried, but nobody has
+exercised that path in SBND, so there is no operational pattern to copy — and no contention if
+Wire-Cell takes an adjacent slot.</div>
+
+<div class="key">
+<strong>This forces a correction to §5.2 as first drafted.</strong> I argued the ~1174 BDT-input
+branches were a <em>size</em> problem. Against a measured <strong>631 kB/event</strong>, 1023 floats
+is ~4.1 kB — about <strong>0.65%</strong>. Size is a weak argument and I should not have led with it.
+<br><br>
+What survives, and is stronger:
+<ul>
+<li><strong>Branch count.</strong> The flat CAF has 2662 branches; adding ~1200 is a
+    <strong>+45%</strong> increase in schema width. Flat-CAF tooling, dictionaries and review all
+    scale with branch count, not bytes.</li>
+<li><strong>Meaning.</strong> They are one selection's intermediate features, uncharacterised on SBND,
+    shipped to every analyser.</li>
+<li><strong>Review burden.</strong> Every branch is a permanent commitment in a shared schema.</li>
+</ul>
+The tiering recommendation stands; the justification changes.
+</div>
+
+<h2 id="wc-output">4. What Wire-Cell actually produces</h2>
 
 <p>Measured on a real event (run 925-23 event 4, MCP2025C), not read off the source.</p>
 <div class="scroll">
@@ -192,7 +289,7 @@ Nothing verifies that today. It is the first thing to check, and a silent mismat
 mis-assign every energy.
 </div>
 
-<h2 id="q1">4. Q1 — can all of <code>tracking-pr.root</code> go into CAF?</h2>
+<h2 id="q1">5. Q1 — can all of <code>tracking-pr.root</code> go into CAF?</h2>
 
 <p><strong>Mechanically, most of it. In practice, no — and you would not want it to.</strong> Three
 separate reasons, in decreasing order of importance.</p>
@@ -231,7 +328,7 @@ Whatever lands in CAF must be named and documented so that is unmissable.</p>
 </tbody></table>
 </div>
 
-<h2 id="q2">5. Q2 — what does CAF need that I cannot fill?</h2>
+<h2 id="q2">6. Q2 — what does CAF need that I cannot fill?</h2>
 
 <p>Five gaps. The first is the one that matters.</p>
 
@@ -275,9 +372,9 @@ Whatever lands in CAF must be named and documented so that is unmissable.</p>
 Pandora slices; Wire-Cell has no slice. It has clusters, flash bundles, and one selected main vertex.
 Any attempt to populate <code>slc</code> would either invent a slice per WC cluster or claim one slice
 per event — both misleading. This is the strongest argument for the interaction model in
-<a href="#design">§6</a>.</p>
+<a href="#design">§7</a>.</p>
 
-<h2 id="design">6. Proposed design</h2>
+<h2 id="design">7. Proposed design</h2>
 
 <div class="key">
 <strong>Decision that outranks the two questions: do not read
@@ -296,7 +393,7 @@ i.e. a sibling visitor, not a downstream parser. <code>tracking-pr.root</code> t
 should be: a debug dump.
 </div>
 
-<h3>6.1 Where the data model should live</h3>
+<h3>7.1 Where the data model should live</h3>
 <div class="cols">
 <div class="card">
 <h3>(a) Reuse <code>SRInteractionDLP</code></h3>
@@ -317,7 +414,7 @@ review culture.</p>
 upstream with real output in hand. That converts an abstract schema discussion into a review of
 something that already works.</p>
 
-<h3>6.2 Sketch</h3>
+<h3>7.2 Sketch</h3>
 <pre><code>larwirecell/CAFMaker/
   WireCellCAF_module.cc      art producer, or a wcls visitor -- see 6.1
   FillWCInteraction.{h,cxx}  TaggerInfo + KineInfo  -> SR interaction
@@ -329,7 +426,7 @@ something that already works.</p>
 <p>Mirroring <code>sbncode/CAFMaker</code>'s free-function filler convention exactly, so the code reads
 familiarly to anyone who knows that package.</p>
 
-<h3>6.3 Phasing</h3>
+<h3>7.3 Phasing</h3>
 <ol>
 <li><strong>Verify the particle-id join.</strong> Confirm <code>T_kine</code>'s particle ordering and
     <code>T_rec_charge</code>'s <code>particle_id</code> agree. Everything downstream depends on it.</li>
@@ -338,13 +435,13 @@ familiarly to anyone who knows that package.</p>
 <li><strong>Particles</strong> — PDG, KE, geometry aggregated per <code>particle_id</code>.</li>
 <li><strong>Truth</strong> (gap 1) — the big one; needs the labeler stream, not this file.</li>
 <li><strong>Score tiers + flash/verdict plumbing</strong> (gaps 2 and 3).</li>
-<li><strong>Propose the schema upstream</strong> (6.1b).</li>
+<li><strong>Propose the schema upstream</strong> (7.1b).</li>
 </ol>
 
-<h2 id="open">7. Open questions for you</h2>
+<h2 id="open">8. Open questions for you</h2>
 <ol>
 <li><strong>Who consumes this CAF?</strong> If it is SBN-wide analysis, the schema must go through
-    <code>sbnanaobj</code> review and 6.1b is mandatory. If it is our own studies for now, a private
+    <code>sbnanaobj</code> review and 7.1b is mandatory. If it is our own studies for now, a private
     block is far faster. This changes the whole shape of the work.</li>
 <li><strong>Does WC output need to sit alongside Pandora in the <em>same</em> CAF file</strong>
     (so analysers can compare per event), or is a separate WC-only CAF acceptable? The former is much
@@ -357,7 +454,7 @@ familiarly to anyone who knows that package.</p>
     call to make silently.</li>
 </ol>
 
-<h2 id="risks">8. Risks</h2>
+<h2 id="risks">9. Risks</h2>
 <div class="scroll">
 <table>
 <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
@@ -371,7 +468,7 @@ familiarly to anyone who knows that package.</p>
 <tr><td><strong>CAF bloat.</strong> 1216 branches per interaction if the tiers default wrong</td>
     <td>BDT-input tier off by default; measure bytes/event before any scale run</td></tr>
 <tr><td><strong>Building on <code>tracking-pr.root</code></strong>, which is not multi-event safe</td>
-    <td>read in memory (§6); or fix G9/T2 first</td></tr>
+    <td>read in memory (§7); or fix G9/T2 first</td></tr>
 <tr><td><strong>Uncalibrated scores read as probabilities</strong></td><td>name and document them so
     the provenance is unmissable in the branch itself</td></tr>
 </tbody></table>
