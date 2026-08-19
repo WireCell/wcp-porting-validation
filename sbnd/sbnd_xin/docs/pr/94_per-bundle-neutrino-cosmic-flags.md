@@ -774,61 +774,49 @@ Arm labels, for later re-checking: `work-pr94p2-base-{nuecc48,ncpi0}`
 ### 9.4 Review package (§10.2) -- built, NOT uploaded
 
 Bee zips are under `sbnd_xin/bee/pr94/` (a fresh label, M13) and were uploaded
-to the BNL server on 2026-08-19 at the owner's explicit request:
+to the BNL server on 2026-08-19 at the owner's explicit request.  **One set
+carries all nine scan events**, ordered by case:
 
-| link | zip |
-|---|---|
-| https://www.phy.bnl.gov/twister/bee/set/1f6a89dc-73d0-47f2-9aaa-a90f1c59f08d/event/list/ | `pr94-evt395148.zip` |
-| https://www.phy.bnl.gov/twister/bee/set/3b678e3d-9e9e-4431-b553-c025884503bb/event/list/ | `pr94-case2a-ncpi0-18625.zip` |
-| https://www.phy.bnl.gov/twister/bee/set/f4cb4d8b-c3c0-4a47-8db9-43c70fa21ba7/event/list/ | `pr94-case2b-nuecc48.zip` |
-| https://www.phy.bnl.gov/twister/bee/set/700c45bd-4be2-4093-bd00-96c27315f030/event/list/ | `pr94-case1-nuecc48.zip` |
+> https://www.phy.bnl.gov/twister/bee/set/32a8f441-c3d8-4a80-a2a2-21c69a47c38a/event/list/
+
+(`bee/pr94/pr94-all.zip`, index in `pr94-all.index.txt`.  The four per-case sets
+uploaded first are superseded by this one and kept only as a record:
+`1f6a89dc` evt395148, `3b678e3d` case2a, `f4cb4d8b` case2b, `700c45bd` case1.)
 
 Scan sheet -- what each Bee index should show (`*SEL` = the bundle's selected
 candidate; a trailing TGM/STM/LM is that activity's own conviction):
 
 ```
-pr94-evt395148
-  idx 0  evt 395148   1 row, 1 PF root
-    row 0 gid 0       cid 21  VTX  Enu 992.1  numu  3.655   acts: c10/508cm STM, c21/199cm *SEL
+idx 0  evt 395148  1 row, 1 PF root   <-- the motivating event
+   row 0 gid 0       cid 21  VTX  Enu  992.1 numu  3.655   acts: c10/508cm STM, c21/199cm *SEL
 
-pr94-case2a-ncpi0-18625            <-- the headline case: TWO reconstructed candidates
-  idx 0  evt 18625    2 rows, 2 PF roots
-    row 0 gid 1000000 cid 11  VTX  Enu 1498.1 numu  2.729   acts: c10/2cm, c11/119cm *SEL
-    row 1 gid 0       cid 26  VTX  Enu  352.2 numu -1.175   acts: c2/1cm, c17/15cm *SEL, c26/12cm, c27/7cm TGM, c130/1cm
+idx 1  evt 18625   2 rows, 2 PF roots <-- case 2a: TWO reconstructed candidates
+   row 0 gid 1000000 cid 11  VTX  Enu 1498.1 numu  2.729   acts: c10/2cm, c11/119cm *SEL
+   row 1 gid 0       cid 26  VTX  Enu  352.2 numu -1.175   acts: c2/1cm, c17/15cm *SEL, c26/12cm, c27/7cm TGM, c130/1cm
 
-pr94-case2b-nuecc48                <-- 2 bundles, only one reconstructs
-  idx 0  evt 10550    2 rows, 1 PF root
-    row 0 gid 1000002 cid 7   VTX  Enu  834.8 numu -1.663   acts: c7/19cm *SEL, c11/378cm TGM, + 7 shards
-    row 1 gid 7       cid 5   no-vtx                        acts: c5/2cm *SEL, c6/1cm
-  idx 1  evt 234638   2 rows, 1 PF root
-    row 0 gid 1000001 cid 10  VTX  Enu 1435.3 nue   4.301   acts: c10/114cm *SEL, c14/5cm TGM, + 9 shards
-    row 1 gid 9       cid 4   no-vtx                        acts: c4/1cm *SEL
-  idx 2  evt 267597   2 rows, 1 PF root
-    row 0 gid 1000000 cid 5   VTX  Enu 1866.0 nue   4.301   acts: c5/127cm *SEL, + 11 shards
-    row 1 gid 5       cid 2   no-vtx                        acts: c2/3cm *SEL
+idx 2  evt 10550   2 rows, 1 PF root  <-- case 2b: 2 bundles, one reconstructs
+   row 0 gid 1000002 cid 7   VTX  Enu  834.8 numu -1.663   acts: c7/19cm *SEL, c11/378cm TGM, + 7 shards
+   row 1 gid 7       cid 5   no-vtx                        acts: c5/2cm *SEL, c6/1cm
+idx 3  evt 234638  2 rows, 1 PF root
+   row 0 gid 1000001 cid 10  VTX  Enu 1435.3 nue   4.301   acts: c10/114cm *SEL, c14/5cm TGM, + 9 shards
+   row 1 gid 9       cid 4   no-vtx                        acts: c4/1cm *SEL
+idx 4  evt 267597  2 rows, 1 PF root
+   row 0 gid 1000000 cid 5   VTX  Enu 1866.0 nue   4.301   acts: c5/127cm *SEL, + 11 shards
+   row 1 gid 5       cid 2   no-vtx                        acts: c2/3cm *SEL
 
-pr94-case1-nuecc48                 <-- 1 bundle, several evaluated activities
-  idx 0  evt 116962   1 row   acts: c15/186cm TGM, c21/75cm *SEL, c22/31cm     Enu  837.3
-  idx 1  evt 122660   1 row   acts: c9/49cm *SEL, c15/2cm TGM, + 6 shards       Enu 1624.4
-  idx 2  evt 360535   1 row   acts: c6/3cm, c7/101cm *SEL, c12/4cm              Enu 2259.9
-  idx 3  evt 444187   1 row   acts: c19/170cm *SEL, c23/2cm                     Enu 1075.2
+idx 5  evt 116962  1 row    acts: c15/186cm TGM, c21/75cm *SEL, c22/31cm   Enu  837.3  <-- case 1
+idx 6  evt 122660  1 row    acts: c9/49cm *SEL, c15/2cm TGM, + 6 shards     Enu 1624.4
+idx 7  evt 360535  1 row    acts: c6/3cm, c7/101cm *SEL, c12/4cm            Enu 2259.9  (+1 all-cosmic bundle, no row)
+idx 8  evt 444187  1 row    acts: c19/170cm *SEL, c23/2cm                   Enu 1075.2  (+1 all-cosmic bundle, no row)
 ```
 
-The two cases worth the closest look: **evt 18625**, where the `mc` layer now
-carries two neutrino roots and both should look like real neutrinos rather than
-one being a cosmic fragment; and **evt 116962 / 395148 / 10550 / 234638 /
-122660**, where a TGM- or STM-convicted activity shares a bundle with the
-selected candidate -- the conviction must visibly belong to the *other* track.
-The `no-vtx` rows are bundles that were opened and reconstructed nothing (1-3 cm
-shards); they carry no PF root by design, so the PF-root count is below the row
-count on purpose.
-
-| zip | case | events |
-|---|---|---|
-| `pr94-evt395148.zip` | the motivating event: one bundle, STM cosmic + selected neutrino | 395148 |
-| `pr94-case2a-ncpi0-18625.zip` | **2a** two bundles, BOTH reconstruct a candidate | 18625 (Enu 352.2 and 1498.1 MeV) |
-| `pr94-case2b-nuecc48.zip` | **2b** two bundles, one candidate (the other is a 1.4-3.3 cm shard) | 10550, 234638, 267597 |
-| `pr94-case1-nuecc48.zip` | **1** one bundle, several evaluated activities; the last two also have an all-cosmic bundle alongside | 116962 (3 acts), 122660 (8), 360535, 444187 |
+The two things worth the closest look: **idx 1 (evt 18625)**, where the `mc`
+layer now carries two neutrino roots and both should read as real neutrinos
+rather than one being a cosmic fragment; and **idx 0/2/3/5/6**, where a TGM- or
+STM-convicted activity shares a bundle with the selected candidate -- the
+conviction must visibly belong to the *other* track.  The `no-vtx` rows are
+bundles that were opened and reconstructed nothing (1-3 cm shards); they carry
+no PF root by design, so a PF-root count below the row count is expected.
 
 Case census over both small samples (67 events, 76 rows):
 
