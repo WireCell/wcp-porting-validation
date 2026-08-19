@@ -2721,6 +2721,67 @@ test cases, 2175/2175 assertions, 0 failed.
 - **314507** -- confirm "mu- 104 MeV" + separate Michel matches the
   expected topology (reference case for the fix's intended effect).
 
+### Follow-up -- owner Bee review of 259542: topology, not dQ/dx, is the
+tell; `is_main_cluster` restriction added (same day)
+
+Owner reviewed both Bee sets (before/after, idx 0=314507, idx 1=259542,
+requested and uploaded the same round) and identified 259542's spared
+segment as a genuine photon by its topology -- not the dQ/dx shape the fix
+was keyed on.
+
+Investigation (env-gated probes, temporary, stripped before commit):
+tried a 1-hop graph-degree signature (both cases show the SAME shape: one
+free end, one end touching exactly one shower-flagged neighbor -- does not
+separate), then a kink-angle-at-the-junction signature
+(`segment_cal_dir_3vector`, same idiom as this function's own `good_track`
+daughter-angle logic ~1826-1845) -- 314507 gives 126.8 deg, 259542 gives
+31.0 deg, no clean threshold with only two points -- then a downstream
+daughter-shower-size signature (`calculate_num_daughter_showers`, already
+used by this same function) -- 259542's downstream blob is *smaller*
+(1 segment, 4.10 cm) than 314507's genuine Michel (1 segment, 9.69 cm),
+backwards from the "big cascade vs small Michel" expectation, so size alone
+doesn't separate them either.
+
+The actual answer was structural, not a hand-tuned metric: 259542's cluster
+124 is a **separate SATELLITE cluster**, disjoint from the main interaction
+cluster (confirmed: `clus=124` vs `clus=17` in the `WCT_PID_WRITE_DEBUG`
+traces for the two events), while 314507's segment 17002 sits inside the
+**main** interaction cluster. `examine_all_showers` already computes this
+distinction for its own internal logic
+(`bool is_main_cluster = cluster.get_flag(Facade::Flags::main_cluster);`,
+NeutrinoTrackShowerSep.cxx ~1993) -- no new parameter or plumbing needed.
+Satellite clusters already have a dedicated EM-vs-track topology
+classifier (`kine_drop_stray_satellites` / `NeutrinoKinematics.cxx`'s
+satellite-drop logic, doc pr/92), which independently examined this exact
+event and correctly decided to KEEP 259542's satellite as EM (round-2
+commit message names 259542 explicitly among the keeps, 18-75 cm "nearby
+fragment" class vs the 169-250 cm "second neutrino" drop class). A locally
+good Bragg/dE-dx-template fit is not trustworthy evidence inside a
+satellite blob: a photon's early conversion stem can plausibly score well
+against the muon template over the same 20-35 cm comparison window before
+the cascade visibly multiplies, so this is a real, not merely
+theoretical, failure mode of the fix's approach when applied outside the
+main cluster.
+
+**Fix refinement**: the `shower_bragg_protect_start_segment` spare in
+`examine_all_showers` now additionally requires `is_main_cluster`:
+```cpp
+if (!is_shower &&
+    ((m_shower_reclass_dqdx_guard && segment_dqdx_spares_electron_reclass(sg, m_mip_dqdx)) ||
+     (m_shower_bragg_protect_start_segment && is_main_cluster && segment_bragg_spares_electron_reclass(sg)))) {
+    continue;
+}
+```
+No signature/threading change -- `is_main_cluster` was already computed
+locally in this function.
+
+**Re-validation** (same 98-event manifest, fresh build, doctest 210/210):
+V1 (knob off vs bare) PASS 196/196; V2 (off vs on) -- nueCC48 **0** movers,
+ncpi0 **0** movers (259542 now reverts to legacy, confirmed), mcp1k **1**
+mover (314507, unchanged: fake e- 151 MeV -> mu- 104 MeV + Michel); V3
+(fresh bare at the flipped default vs on) PASS 96/96 + 38/38 + 62/62 =
+196/196. The fix's population on this manifest is now exactly one event.
+
 ## Scope and not-claimed
 
 - Only `examine_all_showers`' reclassification is fixed. The abandoned
