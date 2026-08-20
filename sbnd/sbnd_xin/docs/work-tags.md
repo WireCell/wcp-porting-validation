@@ -11,6 +11,12 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 36 after the 2026-08-20 pr/97 crash-sweep round
+                                 #   (520 before it: the 484 work-pr97* arms from
+                                 #   doc pr/97's gojsonnet-crash investigation,
+                                 #   closed and gated -- see that section); GiB
+                                 #   unchanged to the du tool's rounding (54G before
+                                 #   and after -- the 484 dirs held only ~1.5 GiB);
                                  # 51 after the 2026-08-19 PASS 1 (362 before it,
                                  #   regrown from 08-17's 30 in 54 hours); the
                                  #   ql0819/prod0819 campaign then added 8 arms
@@ -37,6 +43,10 @@ du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
                                  #   follow-up, 158G before it; 20G after
                                  #   2026-08-13, 74G before it; 23G after
                                  #   2026-08-11, 103G before it)
+
+# the 2026-08-20 pr/97 crash-sweep retirement (see that section below):
+python3 scripts/retire/archive_records_20260820_pr97.py  # integrity PASS 484/484
+rm -rf work-pr97*                                         # what was ACTUALLY removed (all of it)
 
 # the 2026-08-19 retirement round, PASS 1 (see that section below):
 python3 scripts/retire/plan_20260819.py            # explicit 51-name KEEP + 9 asserts
@@ -164,6 +174,51 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-20 — the doc pr/97 gojsonnet-crash sweep, 484 arms, ~1.5 GiB
+
+**STATUS: EXECUTED.** All 484 `work-pr97*` dirs from doc pr/97's investigation
+(`97_address_dependent_pr_chain.md`, status "TWO DEFECTS FOUND, BOTH FIXED,
+GATED") retired in one shot — a single closed, self-contained investigation,
+not a multi-doc campaign sweep, so no KEEP/PROTECTED tier logic was needed:
+
+* **Named nowhere else.** Checked before removal: absent from `PROTECTED.txt`,
+  absent from every other section of this file, and no doc besides pr/97 itself
+  cites a `work-pr97*` tag by name. No symlink anywhere in the tree (inside or
+  outside the removal set) resolves into one of these dirs (`find . -xtype l`
+  cross-check, 0 hits touching `work-pr97*`).
+* **Every load-bearing number is already text in the doc, not a pointer to
+  these dirs.** The crash-rate table (§5.5, 108→4/3.7% then the padding/gdb/
+  precompile arms' 0-vs-2-in-48 tallies), both gdb backtraces (`work-pr97g-r7`,
+  `-r32`, quoted verbatim), and every byte-identical gate PASS (§7: 96/96,
+  38/38, plus the uBooNE 35/35) are already quoted in the doc as tables/text.
+* **This round's removal set does include the doc's own gate arms**
+  (`work-pr97gate-{nuecc48,ncpi0}`, `work-pr97L-{prgate,prod1}`,
+  `work-pr97on-nuecc48b`) — per the standing rule above ("retiring a directory
+  permanently retires the ability to re-check the doc table it backs"), the
+  doc's stated PASS numbers for those arms are now the only surviving record;
+  they cannot be regenerated identically (binary has moved, PR chain is
+  ASLR-non-deterministic on top of that).
+* Archiver: `scripts/retire/archive_records_20260820_pr97.py` (forked from
+  `archive_records_20260819b.py`'s HEAVY classification, group/KEEP logic
+  dropped as unneeded for a single-investigation sweep). Drops reproducible
+  heavy blobs (`mabc-*.zip` 828.9 MiB, `pctree-*.tar.gz` 441.8 MiB,
+  `opflash_apa*.tar.gz` 7.2 MiB, `tracking-pr.root` 57.4 MiB — 1.30 GiB total,
+  all regeneratable from the repro block at the top of doc pr/97) and archives
+  only the small record layer (logs, `.status`, compiled config — 218.5 MiB
+  raw) as one integrity-checked `.tar.gz` per arm.
+* **Integrity gate: PASS 484/484** (tar member count == manifest record-file
+  count, every arm) — `archive/records/pr97-crash-sweep-20260820/sweep/`,
+  30 MiB gzipped.
+* No core files or unexamined crash logs existed in the set at removal time —
+  the only two `.log.log` files carrying a live SIGSEGV (`work-pr97g-r7`,
+  `-r32`) were already backtraced and quoted in the doc; nothing was lost that
+  wasn't already captured as text.
+
+`work*` dirs 520 → 36; disk unchanged to `du`'s rounding (54G before and
+after — this set held ~1.5 GiB against a 54 GiB tree). Deletion executed by
+the owner directly (`rm -rf work-pr97*`) after the archive integrity gate
+passed.
 
 ## RETIREMENT ROUND 2026-08-19 — the pr/40+83+84+91-94 sweep, 149G → 54G (pass 1 of 2)
 
