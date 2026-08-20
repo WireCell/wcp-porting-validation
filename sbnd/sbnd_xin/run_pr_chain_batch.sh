@@ -219,6 +219,19 @@ CATH_TLA=()
 # default true = legacy = byte-identical.  Set to 0 to open them.
 # Env: SBND_PROTECT_SKIP_CONVICTED=<0|1>.
 [ -n "${SBND_PROTECT_SKIP_CONVICTED:-}" ] && CATH_TLA+=(--tla-code "protect_skip_convicted=$([ "${SBND_PROTECT_SKIP_CONVICTED}" = 0 ] && echo false || echo true)")
+# doc pr/94 round 3: let a cosmic-convicted main OPEN its bundle so the
+# bundle's unconvicted members get ClusteringProtectBundle's graph examination
+# (the convicted cluster itself is still never split).  Narrower than
+# SBND_PROTECT_SKIP_CONVICTED=0 above, which also splits the cosmic tree.
+# EMPTY = no TLA = the job default null = C++ default false = byte-identical.
+# Env: SBND_OPEN_CONVICTED_BUNDLES=<0|1>.
+[ -n "${SBND_OPEN_CONVICTED_BUNDLES:-}" ] && CATH_TLA+=(--tla-code "protect_open_convicted_bundles=$([ "${SBND_OPEN_CONVICTED_BUNDLES}" = 0 ] && echo false || echo true)")
+# doc pr/94 round 3: give the SELECTED neutrino candidate the main-cluster PR
+# treatment for its own pass even when it is a demoted main (examine_vertices_3,
+# improve_vertex, main_cluster_initial_pair_vertices, break_two_end_dqdx, the
+# main-branch endpoint ordering).  EMPTY = no TLA = the job default false =
+# byte-identical.  Env: SBND_NU_SELECTED_AS_MAIN=<1|true>.
+[ -n "${SBND_NU_SELECTED_AS_MAIN:-}" ] && CATH_TLA+=(--tla-code "nu_selected_as_main=true")
 # doc pr/89 Arm D2: post-DL adjustment reach, cm.  EMPTY = no TLA = the cfg
 # default null = the C++ defaults (vks 5.0 / mvga 15.0) = byte-identical.
 # The TLAs already exist and are fully threaded (wct-pr-perevt.jsonnet:1977,

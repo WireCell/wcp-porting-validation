@@ -6,6 +6,15 @@
 Phase 5 tooling done, population arms not run. Phase 6 (production flip) not
 done -- it is blocked on the owner review below.**
 
+**ROUND 3 (2026-08-19, later the same day): the two owner-reported bugs from
+the round-2 Bee scan are fixed, all three new knobs default OFF -- §9.9 (evt
+73038, the "matched to no flash" display filter -> `bee_flash_pred_min`),
+§9.10 (evt 395148, the secondary activity missing the main cluster's treatment
+-> `open_convicted_bundles` + `nu_selected_as_main`), §9.11 (gates: OFF
+byte-identical 96/96 + 38/38 archives and 48/48 + 19/19 events; ON footprint on
+nueCC48 = 1 mover of 48), §9.12 (repro). Review package `bee/pr94r3/`,
+23 events, uploaded.**
+
 Knob OFF is proven byte-identical after every phase: `pr85_hash_gate.py` PASS
 on 96/96 + 38/38 archives and a new per-branch/per-entry ROOT gate PASS on
 48/48 + 19/19 events, re-run after each of Phase 2, Phase 4 and Phase 4b, plus
@@ -1363,6 +1372,269 @@ merge-window fix, not before it.
 - Round-2 length floor (§9.7) is independently complete, gated, and safe to
   ship on its own merits whenever the flash-attribution bug is resolved —
   the two are unrelated defects.
+
+### 9.9 Round 3, bug 1 -- "this piece is shown as matched to no flash" (evt 73038)
+
+**Symptom.** Owner Bee scan of the round-2 set (`d47318ad`, idx 3 = mcp2k evt
+73038): the promoted candidate at `(-1.2, -34.7, 121.3)`, `real_cluster_id
+24000`, is drawn as matched to **no flash** in `img-global` / the `op` layer,
+yet the PR chain reconstructs it as that bundle's neutrino. *"I do not
+understand what happened for this, or at what point this cluster was matched to
+the beam flash."*
+
+**Root cause -- a display filter, proven, not inferred.** The activity is
+`img-global` cluster 5: 129 points, a cathode sliver at
+`x[-1.5,-0.9] y[-42.4,-28.8] z[110.4,132.9]` cm, L 26.5 cm. It **is** matched,
+to **APA0 flash gid 14** (t 0.9676 us, 602.6 PE) -- in the beam window -- but
+its own predicted light is **3.6 PE**, and `fill_bee_flashes` dropped every
+matched cluster under 100 PE (`MultiAlgBlobClustering.cxx:2896`, the legacy
+`dump_light` value):
+
+```
+op-dump debug: cluster  5 matched_flash_gid=14      pred_tot=    3.644 PE L= 26.53 cm nblobs= 11 kept_by_display=false  <- the sliver
+op-dump debug: cluster  2 matched_flash_gid=14      pred_tot=   18.465 PE L=  1.55 cm nblobs=  4 kept_by_display=false
+op-dump debug: cluster  4 matched_flash_gid=14      pred_tot=  204.592 PE L= 15.94 cm nblobs= 22 kept_by_display=true
+op-dump debug: cluster 25 matched_flash_gid=1000000 pred_tot=11093.789 PE L=208.45 cm nblobs=616 kept_by_display=true   <- the STM muon
+```
+
+(New env-gated probe `WCT_OPDUMP_DEBUG=1`, placed **inside** the op-dump loop so
+the ids printed are the display's own epoch. That mattered: the QLMatching log
+prints a per-run `ident` which is a different epoch -- apa1 log `ident 9` is
+display cluster 25 -- so the artifacts on disk could not settle it and a probe
+run was required. `op_pes_pred` row 16 sums to 204.59192, matching the logged
+`total_pred_light` exactly, which is how the surviving row was identified.)
+
+**Why it hid.** The filter is silent: `op.json` simply lists fewer clusters, and
+both the Bee viewer's flash navigation and `make_pr_bee.py`'s remap read that
+one array -- which is also why the remap reported "NO-FLASH-MATCH (fallback:
+dominant)" for this cluster. **This closes the "loose end" §9.8 left open**
+(`op` said 4, the remap found 5): 4 is the only member of that flash above
+100 PE, 5 is the sliver, and both are genuine.
+
+**Fix (owner decision: dumper only).** New knob `bee_flash_pred_min` on
+`MultiAlgBlobClustering`, **C++ default 100** = the legacy filter =
+byte-identical display. Set to 0 the `op` layer lists every genuine match.
+Verified on evt 73038: flash row 16 `op_cluster_ids` **`[4]` -> `[2, 4, 5]`**,
+and a member-content hash of `mabc-all-apa.zip` shows **`0-op.json` as the only
+differing member**. Across the 23 review events the fix reveals **156** matches
+the display was hiding, and the op rows, times, PE and `apa` are unchanged --
+each row's cluster-id list is a strict **superset** of production's.
+
+**Explicitly NOT fixed this round (owner decision).** The second, separate
+half of §9.8 stands: the sliver is *evaluated* inside the **muon's** bundle
+because `ClusteringExamineBundles`' flash-t0 merge (80 ns window, no spatial
+check, single-linkage chaining -- `ClusteringFuncs.cxx:617-624`) fused it with
+the APA1 205 cm STM muon 33 ns away, `merge_clusters` kept only the longest
+flash-bearing member's `matched_flash_gid` (`:368-378`, `:563-567`), and
+`ClusteringUnmergeBundle` split it back out with the muon's gid inherited via
+`separate()->from()`. No per-blob gid provenance is saved, so nothing
+downstream can recover the true bundle. The owner chose the dumper fix alone
+for this round; the bookkeeping fix (save/restore the pre-merge gid) and a
+predicted-light floor on per-bundle candidates were both offered and declined.
+`nu_per_bundle` therefore stays OFF in production.
+
+### 9.10 Round 3, bug 2 -- the secondary activity does not get the main
+cluster's treatment (evt 395148)
+
+**Symptom.** Owner scan of `e1357e60` idx 5 (evt 395148): the secondary
+(demoted-main) neutrino's `track_fit` point at `(-172.7, -131.5, 205.7)`,
+`real_cluster_id 21016`, has ~zero dQ/dx and no charge under it. *"I feel this
+is coming from a jumping of gaps... Apparently, for the secondary neutrino
+activity, the Graph creation is different from the main activity."*
+
+Measured on the round-2 arm: of 586 fitted points, **15 lie more than 3 cm from
+any imaged charge in the event**, 8 beyond 5 cm, worst **8.40 cm**; 12 of them
+are in segment `21016`. The excursion is **interior** to the segment -- both its
+ends sit on charge (0.22 and 0.30 cm) -- so it is a chord across a void, not an
+over-extended terminus.
+
+**Root cause -- two independent mechanisms, both real.**
+
+1. **The bundle is never opened for the second graph examination.**
+   `ClusteringProtectBundle` (the uboone `Protect_Over_Clustering` port, whose
+   whole job is splitting a cluster at graph-component boundaries) populates
+   `beam_gids` from in-window mains, and `skip_convicted` makes a cosmic-tagged
+   main *not open its bundle at all* (`:205-217`):
+   `OC53SKIP main ident=10 nblobs=929 gid=0 t0=1.53us convicted TGM=0 STM=1 lm=0 -- bundle not opened`,
+   then `split 0 bundle cluster(s) into 0 extra cluster(s)`. So when the main is
+   a cosmic, **nothing in the bundle** is examined -- including the secondary
+   the demoted-main fallback then selects as the neutrino. The code already
+   separates "open the bundle" from "split this cluster": a per-member guard
+   (`:234-248`) keeps a convicted cluster from ever being split even when an
+   unconvicted mate opens the bundle.
+2. **The selected candidate is not treated as a main.**
+   `NeutrinoPatternBase.cxx:2797` re-derives main-ness from
+   `Flags::main_cluster`, which `ClusteringUnmergeBundle` deliberately clears on
+   a demoted main (`:404`), even though `TaggerCheckNeutrino.cxx:1854` passes
+   that very cluster as the selected main. The candidate therefore silently
+   loses the main-branch endpoint ordering honouring `flag_back_search`
+   (`:1438-1451` vs the ascending-z `else` at `:1470-1478`),
+   `main_cluster_initial_pair_vertices` (`:2805-2809`), `examine_vertices_3`
+   (`:2962-2964`), `break_two_end_dqdx` (`:3001`), and -- read from the flag
+   **directly, in two other files** -- `improve_vertex` +
+   `fix_maps_shower_in_track_out` (`NeutrinoVertexFinder.cxx:3450`) and the
+   main-cluster track/shower reclassification cut set
+   (`NeutrinoTrackShowerSep.cxx:2013`). A cross-check written to catch exactly
+   this (`NeutrinoPatternBase.cxx:1433-1438`) is dead code, because the pointer
+   it compares is constructed from the same flag.
+
+Graph *creation* is symmetric -- no `main_cluster` guard exists in any
+`connect_graph*` / `find_graph` / Steiner entry point, and `steiner_gap_penalty`
+is ON for SBND and applies to both. The defect is the main-cluster **treatment**,
+not the builder.
+
+**Fix -- two knobs, both C++ default false.**
+
+| knob | component | effect when on |
+|---|---|---|
+| `open_convicted_bundles` | `ClusteringProtectBundle` | a convicted main still inserts its gid into `beam_gids` (log `OC94OPEN`), so the bundle's **unconvicted** members are examined and split; the convicted cluster itself is still never split |
+| `nu_selected_as_main` | `TaggerCheckNeutrino` | the selected candidate carries `Flags::main_cluster` for the duration of **its own PR pass** and only that, via an exception-safe RAII guard around the per-candidate loop body -- no later visitor, bundle-veto set or output dump sees a changed flag |
+
+`nu_selected_as_main` is deliberately **not** gated on `nu_per_bundle`: the
+legacy `nu_fallback_demoted_mains` path (which is how 395148 selects cluster 21
+in production today) has the identical defect.
+
+**Verification -- which knob actually fixes the reported trail.** Distance from
+every fitted point to the nearest imaged charge, evt 395148:
+
+| arm | n | > 3 cm | > 5 cm | max | mean | worst segments |
+|---|---|---|---|---|---|---|
+| OFF (production) | 586 | **15** | 8 | **8.40 cm** | 0.54 | 21016 (12 pts, 8.4 cm) |
+| `nu_selected_as_main` only | 594 | 19 | 11 | 8.58 cm | 0.58 | 21006 (14 pts, 8.6 cm) |
+| `open_convicted_bundles` only | 503 | **0** | 0 | **0.90 cm** | 0.35 | -- |
+| both (the ON arm) | 550 | **0** | 0 | **0.83 cm** | 0.34 | -- |
+
+`open_convicted_bundles` is the fix for the owner's symptom, and the mechanism
+is visible in the log:
+`OC94OPEN main ident=10 ... -- bundle OPENED for its unconvicted members`,
+`OC53SKIP member ident=10 ... -- never split`,
+`split 1 bundle cluster(s) into 8 extra cluster(s)`. `nu_selected_as_main`
+alone does **not** remove this particular trail -- expected, since
+`examine_vertices_3` only touches degree-1 vertices
+(`NeutrinoStructureExaminer.cxx:2780`) and this excursion is interior -- but it
+is a genuine parity defect and it does change the fit (Enu 992.1 -> 877.4 alone,
+1000.8 with both). Reported as measured rather than as predicted.
+
+Remaining lever, **not** taken this round: `organize_segments_path`
+(`TrackFitting.cxx:1781-1808`) fills any inter-blob jump longer than
+`1.6 x low_dis_limit` with synthetic points at 0.6 cm spacing with **no** charge
+or dead-region test. That is the mechanism that mints such points for main and
+secondary alike; a support test there would be a third knob and a much wider
+blast radius.
+
+### 9.11 Round 3 -- gates, arms and the review package
+
+**Knob-OFF byte-identical gate (new binary vs the pre-round-3 arms):**
+
+| gate | arms | result |
+|---|---|---|
+| member-content hash (`pr85_hash_gate.py`) | `work-pr94n-off-nuecc48` vs `work-pr94r3-off-nuecc48` | **PASS 96/96** |
+| per-branch/per-entry ROOT (`pr94_root_gate.py`) | ″ | **PASS 48/48** |
+| member-content hash | `work-pr94m-off-ncpi0` vs `work-pr94r3-off-ncpi0` | **PASS 38/38** |
+| per-branch/per-entry ROOT | ″ | **PASS 19/19** |
+| compiled config, PR job | knobs off vs a HEAD-`cfg` compile | **diff EMPTY**; on shows `nu_selected_as_main` + `open_convicted_bundles` |
+| compiled config, Q/L job | knob off vs HEAD-`cfg` | **diff EMPTY**; on shows `bee_flash_pred_min` |
+| `wcdoctest-clus` | -- | 211 cases / **2214 assertions pass**, 1 skipped |
+
+`pr_display` is not separately gated this round: unlike Phase 4b, nothing in
+`PrDisplayDump` was touched, and the two knobs that can change PR output are off
+by construction on the gated arms.
+
+**Knob-ON footprint on nueCC48 (48 events)** -- ON = `nu_per_bundle` +
+`nu_per_bundle_min_length=15` + both round-3 knobs:
+
+* tagger output produced on **48/48**, lost on **0**;
+* a reconstructed vertex on **48/48** in both arms (0 lost, 0 gained);
+* the primary row is identical on **47/48**; the single mover is evt **116962**
+  (`anc_acc_forward_length`, `anc_acc_backward_length`, `anc_angle`), whose
+  vertex moves 34 cm in z and whose `numu_score` goes 0.59 -> -0.50. It is
+  index 22 of the review package and needs an owner verdict:
+
+| arm | vertex (cm) | Enu | numu |
+|---|---|---|---|
+| OFF | (-72.3, -78.2, 121.7) | 837.3 | 0.59 |
+| `nu_selected_as_main` only | (-73.0, -79.6, 118.4) | 684.4 | -0.07 |
+| `open_convicted_bundles` only | (-69.7, -78.5, 159.7) | 1268.1 | 0.63 |
+| both | (-69.4, -79.6, 156.2) | 877.8 | -0.50 |
+
+Per owner instruction ("no need to go to full blown 1000 + 2000 numu events"),
+the mcp1k/mcp2k population arms were **not** run this round.
+
+**Review package -- `bee/pr94r3/`, 23 events, UPLOADED 2026-08-19:**
+
+> OFF https://www.phy.bnl.gov/twister/bee/set/0ee25b32-949f-4262-ba9d-6f73f0865d91/event/list/
+> ON&nbsp; https://www.phy.bnl.gov/twister/bee/set/7414c7c1-c705-47df-9aca-07eb573ca4b6/event/list/
+
+idx 0-20 are the round-2 scan set re-run with the round-3 fixes, idx 21 is
+395148 (bug 2), idx 22 is 116962 (the nueCC48 mover). Per-event OFF -> ON
+numbers and a "where to look" guide are in `bee/pr94r3/pr94r3.index.txt`. On
+idx 8-20 the primary row is byte-identical to OFF and only the added second
+bundle is new; on idx 0-7 every number shifted relative to round 2 -- those are
+the events where the two round-3 knobs bite.
+
+**The ON display root, and one honest caveat.** The Bee `op` layer for the ON
+set comes from a Q/L re-run with `bee_flash_pred_min=0`
+(`work-pr94r3-ql22`), which reproduces the production Q/L zip **byte-for-byte
+except `0-op.json`** on 22 of the 23 events -- verified by member-content hash,
+including against the untouched production arm. The 23rd, evt **65053**, also
+shows a `clustering-global` difference: a 1005-point piece joins a different
+neighbour (prod 7176+1005 / 561; re-run 7176 / 1005+561). That is **not** caused
+by this knob -- three independent re-runs reproduce it identically, `img-global`
+is unchanged, and the op layer is emitted pre-pipeline -- it is drift between
+the ~2 week old `work-mcp1k-cb0805` Q/L arm and today's binary. Because both PR
+arms consumed the **production** pctree, the display root
+(`work-pr94r3-ql22disp`) is built as the production zip with its `op.json`
+member replaced by the knob-on one: byte-identical to the knob-on run on all 22
+other events, and consistent with the fitted pctree on 65053.
+
+### 9.12 Round 3 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild                                                       # then, M1:
+ls -la --time-style=full-iso build/clus/libWireCellClus.so
+./build/clus/wcdoctest-clus                                   # 2214/2214
+
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin; cd $SX
+# knob-OFF gate arms (new binary)
+PR_JOBS=24 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94r3-off-nuecc48 data
+PR_JOBS=24 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr94r3-off-ncpi0   data
+python3 scripts/pr85_hash_gate.py work-pr94n-off-nuecc48 work-pr94r3-off-nuecc48 --jobs 8
+python3 scripts/pr94_root_gate.py work-pr94n-off-nuecc48 work-pr94r3-off-nuecc48
+python3 scripts/pr85_hash_gate.py work-pr94m-off-ncpi0   work-pr94r3-off-ncpi0   --jobs 8
+python3 scripts/pr94_root_gate.py work-pr94m-off-ncpi0   work-pr94r3-off-ncpi0
+
+# knob-ON arms
+export SBND_NU_PER_BUNDLE=1 SBND_NU_SELECTED_AS_MAIN=1 SBND_OPEN_CONVICTED_BUNDLES=1
+PR_JOBS=8  ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr94r3-on-mcp1k data \
+    62583 174422 280466 65053 286681 400636 487303 395148
+PR_JOBS=14 ./run_pr_chain_batch.sh work-cbr3-census-on work-pr94r3-on-mcp2k data \
+    73038 78032 90751 167612 407798 68748 174661 175094 179054 179369 287638 351564 409624 410698
+PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94r3-on-nuecc48 data
+unset SBND_NU_SELECTED_AS_MAIN SBND_OPEN_CONVICTED_BUNDLES   # per-knob attribution arms
+
+# bug 1: the probe that settled it, and the fix (isolated scratch root -- NEVER
+# point run_ql_evt.sh at a production ql_evt dir, it rm -rf's it, M13)
+WCT_OPDUMP_DEBUG=1 SBND_WORK_ROOT=/home/xqian/tmp/ql73038probe1 \
+  SBND_INPUT_DIR=/home/xqian/tmp/ql73038trace_input ./run_ql_evt.sh data 1
+SBND_QL_BEE_FLASH_PRED_MIN=0 SBND_WORK_ROOT=/home/xqian/tmp/ql73038fix1 \
+  SBND_INPUT_DIR=/home/xqian/tmp/ql73038trace_input ./run_ql_evt.sh data 1
+
+# bug 2: the gap metric quoted above (scripts/pr94r3_gap_metric.py)
+python3 scripts/pr94r3_gap_metric.py work-pr94p5-off-mcp1k/pr_evt395148/mabc-pr.zip \
+    work-pr94r3-a1only-395148/pr_evt395148/mabc-pr.zip \
+    work-pr94r3-a2only-395148/pr_evt395148/mabc-pr.zip \
+    work-pr94r3-on-mcp1k/pr_evt395148/mabc-pr.zip
+
+# review package
+python3 scripts/bee/make_pr_bee.py --allow-unevaluated \
+    -q work-mcp1k-cb0805 -q work-cbr3-census-on -q work-nuecc48-cb0805 \
+    -p work-pr94p5-off-mcp1k -p work-pr94p5-off-mcp2k -p work-pr94r3-off-nuecc48 \
+    -o bee/pr94r3/pr94r3-off.zip $EVENTS
+python3 scripts/bee/make_pr_bee.py --allow-unevaluated -q work-pr94r3-ql22disp \
+    -p work-pr94r3-on-mcp1k -p work-pr94r3-on-mcp2k -p work-pr94r3-on-nuecc48 \
+    -o bee/pr94r3/pr94r3-on.zip $EVENTS
+```
 
 ## 10. Verification
 

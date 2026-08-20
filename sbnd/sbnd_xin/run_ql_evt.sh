@@ -268,6 +268,13 @@ knob_bool save_assoc "$SAVE_ASSOC"
 # null (= inherit), so only the OFF case is expressible; 1 means "inherit", not
 # "emit true", and must stay silent to keep the compiled config unchanged.
 [ "$RCID_GLOBAL" = 0 ] && KNOB_TLA+=(--tla-code "rcid_global=false")
+# doc pr/94 round 3: minimum predicted light (PE) for a genuinely matched
+# cluster to appear in the Bee "op" layer's op_cluster_ids.  EMPTY = no TLA =
+# the C++ default 100 (the legacy dump_light filter) = byte-identical display.
+# Set 0 to show every genuine match -- SBND 18255/73038's 26.5 cm beam-flash
+# activity predicts 3.6 PE and was therefore drawn as matched to NO flash.
+# Env: SBND_QL_BEE_FLASH_PRED_MIN=<PE>.
+[ -n "${SBND_QL_BEE_FLASH_PRED_MIN:-}" ] && KNOB_TLA+=(--tla-code "bee_flash_pred_min=${SBND_QL_BEE_FLASH_PRED_MIN}")
 [ "$REALIGN" = 0 ]     && KNOB_TLA+=(--tla-code "realign=false")
 # -beam-pref re-asserts the overlay; its numbers are only read then.
 if [ "$BEAMPREF" = 1 ]; then
