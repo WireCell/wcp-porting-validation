@@ -438,6 +438,13 @@ fi
 # is suppressed in the compiled config unless set, so an unset run is
 # byte-identical.  SBND_TRAJ_COVER_PROBE=1 turns the diagnostic lines on.
 [ "${SBND_TRAJ_COVER_PROBE:-}" = 1 ] && CATH_TLA+=(--tla-code "traj_cover_probe=true")
+# doc pr/96: MEASUREMENT hook for pr/30's P1 port-fidelity gap.  fit_exclusion
+# is the SBND config default FALSE and pr/30 sec 12.8 DECLINED flipping it (net
+# regression at that operating point, and still blocked on the sec 3.1
+# transverse-coordinate unit question inside update_association).  This hook
+# exists only so a diagnostic arm can measure it on named events; it is NOT a
+# step toward a flip.  EMPTY = no TLA = the job default false = byte-identical.
+[ -n "${SBND_FIT_EXCLUSION:-}" ] && CATH_TLA+=(--tla-code "fit_exclusion=${SBND_FIT_EXCLUSION}")
 # docs/73 sec 12 (round 3).  Both SBND config default FALSE; unset inherits
 # that, =1/=0 forces for an A/B arm.
 #   SBND_NU_FALLBACK_DEMOTED   when NO candidate survives TaggerCheckNeutrino's
