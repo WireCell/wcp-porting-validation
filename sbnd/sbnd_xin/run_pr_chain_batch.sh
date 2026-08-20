@@ -445,6 +445,13 @@ fi
 # exists only so a diagnostic arm can measure it on named events; it is NOT a
 # step toward a flip.  EMPTY = no TLA = the job default false = byte-identical.
 [ -n "${SBND_FIT_EXCLUSION:-}" ] && CATH_TLA+=(--tla-code "fit_exclusion=${SBND_FIT_EXCLUSION}")
+# doc pr/97 D1: deterministic main_pi sentinel in
+# shower_clustering_with_nv_from_vertices.  The legacy path compares
+# INDETERMINATE stack bytes, so which vertex an other-cluster shower attaches
+# to depends on the address-space layout (ASLR, or just the size of the
+# environment).  SBND config default FALSE; unset => no TLA => byte-identical.
+# SBND_MAIN_PI_INIT=true is the knob-on arm.
+[ -n "${SBND_MAIN_PI_INIT:-}" ] && CATH_TLA+=(--tla-code "shower_nv_main_pi_init=${SBND_MAIN_PI_INIT}")
 # docs/73 sec 12 (round 3).  Both SBND config default FALSE; unset inherits
 # that, =1/=0 forces for an A/B arm.
 #   SBND_NU_FALLBACK_DEMOTED   when NO candidate survives TaggerCheckNeutrino's
