@@ -1,0 +1,9 @@
+# doc pr/93 round 4 Bee A/B -- six events (five owner fine-tunes + one mover)
+# OFF = round-3 production (work-pr93r4-off2-*), ON = round-4 production (work-pr93r4-on2-*)
+# idx	event	status (off -> on)
+0	348471	proton 719 (16-seg aggregate) -> proton 308 + pi0 113 (g355+g20) + g74 + g11; Enu 2075.7->1090.8
+1	292643	pi+ 162 (11-member aggregate) -> pi+ 88 -> mu- 58 -> 4 gammas at vtx 18004; Enu 950.4->1073.6
+2	315167	freed 150.7cm proton absent from PF -> root "proton 595 MeV"; Enu 722.1->1326.0
+3	69314	e- 67 + gamma-18 chain under e- 595 -> re-parented to mu- 362 (render-only, Enu unchanged)
+4	137238	e- 152 -> mu- 60 -> bridge -> mu- 211 + mu- 65, delta rays as small EM leaves; Enu 1087.1->1101.4
+5	447477	mover for the record: pseudo-carrier renumber only (same parent, same child) -- nil

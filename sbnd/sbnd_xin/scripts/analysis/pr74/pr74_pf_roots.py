@@ -51,6 +51,17 @@ SB = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))))
 
 
+
+# doc pr/94 Phase 5: T_tagger/T_kine hold ONE ROW PER IN-BEAM-WINDOW BUNDLE when
+# the nu_per_bundle knob is on, so a hard [0] silently reports whichever bundle
+# was enumerated first.  primary_index() reproduces the legacy meaning of "the
+# candidate" (longest selected main activity) and falls back to 0 for pre-pr/94
+# and knob-off files.
+import os as _pr94_os, sys as _pr94_sys
+_pr94_sys.path.insert(0, _pr94_os.path.join(
+    _pr94_os.path.dirname(_pr94_os.path.abspath(__file__)), "../.."))
+from pr94_rows import primary_index  # noqa: E402
+
 def nu_vertex(arm, evt):
     """T_tagger nu_{x,y,z} row 0, in cm.  None if unreadable."""
     p = os.path.join(SB, arm, 'pr_evt%d' % evt, 'tracking-pr.root')
@@ -59,9 +70,10 @@ def nu_vertex(arm, evt):
     try:
         import uproot
         t = uproot.open(p)['T_tagger']
-        return (float(t['nu_x'].array()[0]),
-                float(t['nu_y'].array()[0]),
-                float(t['nu_z'].array()[0]))
+        i = primary_index(t)
+        return (float(t['nu_x'].array()[i]),
+                float(t['nu_y'].array()[i]),
+                float(t['nu_z'].array()[i]))
     except Exception:
         return None
 

@@ -118,3 +118,24 @@ echo "  finished $(date -Is) ($(( $(date +%s) - t0 ))s)"
 nok=$(cat "$ROOT"/.status/* 2>/dev/null | grep -c '^rc=0 ')
 echo "  rc=0 on $nok/${#work[@]}"
 grep -h . "$ROOT"/.status/* 2>/dev/null | grep -v 'fired=0' | sed 's/^/  FIRED /'
+
+# doc pr/97 sec.5: a failed event used to be one quiet line in a long log --
+# doc pr/95 lost evt 178410 out of 2000 to a 0-byte mabc-all-apa.zip and the
+# batch still read as a success.  Fail LOUDLY and with a non-zero exit code.
+_bad=$(grep -h . "$ROOT"/.status/* 2>/dev/null | grep -v '^rc=0 ')
+if [ -n "$_bad" ]; then
+    echo
+    echo "  ############################################################"
+    echo "  # FAILED EVENTS -- their output is MISSING or TRUNCATED."
+    echo "  # Do NOT use this arm for a census or a gate until they are"
+    echo "  # re-run: every consumer downstream reads the zips silently."
+    echo "  #   rc=139 = SIGSEGV. On a job living past ~120 s this is very likely the"
+    echo "  #   doc pr/97 gojsonnet Go-runtime crash (~4 %/run): a libgojsonnet thread"
+    echo "  #   jumps to PC 0x0 while WireCell's own thread is healthy. Re-run the event;"
+    echo "  #   SBND_PRECOMPILE_CFG=1 (the default) is meant to prevent it."
+    echo "  #"
+    printf '%s\n' "$_bad" | sed 's/^/  # /'
+    echo "  ############################################################"
+    exit 1
+fi
+exit 0

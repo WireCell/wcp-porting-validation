@@ -1,0 +1,43 @@
+# doc pr/92 -- stray-satellite-drop A/B over the 30 mover events
+# (every event whose mabc-pr.zip moved in the V2 OFF-vs-ON gate; only
+# mabc moved -- pctree archives and nusel selections identical).
+#
+# OFF (knobs off = pre-pr/92 production):
+#   https://www.phy.bnl.gov/twister/bee/set/530142d5-e75b-42f0-9346-4f08cfa052bd/event/list/
+# ON  (kine_drop_stray_satellites + pf_drop_stray_satellites, C++ default thresholds):
+#   https://www.phy.bnl.gov/twister/bee/set/ab20e00c-251a-4c6a-bc44-38e8fa052b65/event/list/
+#
+# bee_idx  evt      sample   dEnu(MeV)  expected change (PF panel)
+0   55539   mcp1k    -443.9   cosmic satellites dropped (270 B + 174 B)
+1   278684  mcp1k     -45.5   45.5 MeV backward satellite dropped (A)
+2   283713  mcp1k     -99.4   99.4 MeV satellite dropped (B)
+3   293149  mcp1k    -198.2   198 MeV satellite dropped (B)
+4   321371  mcp1k     -97.9   OWNER EVT: 97.9 MeV neutron->mu- cosmic tail dropped (C)
+5   349461  mcp1k    -122.7   122.7 MeV pdg-13 satellite dropped (B)
+6   350935  mcp1k    -449.1   OWNER EVT: 449 MeV gamma->e- overclustered cosmic dropped (A)
+7   386948  mcp1k   -1548.8   six cosmic satellites dropped (532/349/343/189/105/31)
+8   401450  mcp1k    -152.0   152 MeV satellite dropped (B)
+9   388     nuecc48   -30.7   30.7 MeV satellite dropped (B)
+10  10550   nuecc48   -80.5   58.8 (A) + 21.7 (A) dropped
+11  30504   nuecc48  -197.1   197 MeV satellite dropped (B)
+12  46363   nuecc48   -21.8   21.8 MeV satellite dropped (B)
+13  52672   nuecc48  -453.2   453 MeV backward satellite (axis 171 deg off main vtx) dropped (B)
+14  90055   nuecc48   -92.8   84.2 MeV pdg-2212 satellite dropped (A) + its 8.6 MeV binding-energy add
+15  122660  nuecc48   -47.1   47.1 MeV satellite dropped (A)
+16  214469  nuecc48  -105.4   105 MeV pdg-2212 satellite dropped (A)
+17  219295  nuecc48   -21.1   21.1 MeV satellite dropped (B)
+18  268784  nuecc48   -20.7   20.7 MeV far satellite (d=329cm) dropped (B)
+19  271851  nuecc48   -44.9   23.8 (A) + 21.1 (B) dropped
+20  342199  nuecc48   -67.4   67.4 MeV satellite dropped (B)
+21  389538  nuecc48 -1361.8   OWNER EVT: 2nd neutrino dropped -- 955 MeV neutron->proton (B) +
+#                             236.6 (A) + 63.9 (B) + 47.6 (B) + 29.8 (B) + 20.2 (B) gammas;
+#                             kept 9.3 MeV blip re-anchors to root (dropped-parent guard)
+22  400474  nuecc48   -27.6   27.6 MeV satellite dropped (A)
+23  447477  nuecc48   -73.0   39.3 (A) + 33.7 (B) dropped
+24  71372   ncpi0     -67.2   67.2 MeV backward blip dropped (A); 1975 MeV gamma UNTOUCHED (proximity exemption)
+25  180801  ncpi0     -32.4   32.4 MeV satellite dropped (B)
+26  259542  ncpi0    -384.3   six chained/backward satellites dropped (156/106/47/27/27/22,
+#                             axis 62-143 deg off main vtx); 999 + 189 MeV real gammas UNTOUCHED
+27  314838  ncpi0     -31.4   31.4 MeV satellite dropped (A)
+28  359980  ncpi0    -225.3   115 (B) + 110 (A) dropped
+29  506746  ncpi0    -114.2   68.0 (B) + 46.2 (B) dropped; 1057 MeV gamma UNTOUCHED

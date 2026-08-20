@@ -28,12 +28,25 @@ PDG = {13: 'mu-', -13: 'mu+', 11: 'e-', -11: 'e+', 22: 'gamma', 211: 'pi+',
        -211: 'pi-', 2212: 'p', 2112: 'n', 111: 'pi0'}
 
 
+
+# doc pr/94 Phase 5: T_tagger/T_kine hold ONE ROW PER IN-BEAM-WINDOW BUNDLE when
+# the nu_per_bundle knob is on, so a hard [0] silently reports whichever bundle
+# was enumerated first.  primary_index() reproduces the legacy meaning of "the
+# candidate" (longest selected main activity) and falls back to 0 for pre-pr/94
+# and knob-off files.
+import os as _pr94_os, sys as _pr94_sys
+_pr94_sys.path.insert(0, _pr94_os.path.join(
+    _pr94_os.path.dirname(_pr94_os.path.abspath(__file__)), "../.."))
+from pr94_rows import primary_index  # noqa: E402
+
 def kine(root, arm, evt):
-    a = uproot.open("%s/pr_evt%d/tracking-pr.root" % (arm, evt))["T_kine"].arrays(library="np")
-    vtx = [float(a['kine_nu_%s_corr' % c][0]) for c in "xyz"]
+    f = uproot.open("%s/pr_evt%d/tracking-pr.root" % (arm, evt))
+    i = primary_index(f["T_tagger"]) if "T_tagger" in f else 0
+    a = f["T_kine"].arrays(library="np")
+    vtx = [float(a['kine_nu_%s_corr' % c][i]) for c in "xyz"]
     parts = [(int(t), float(e)) for t, e in
-             zip(a['kine_particle_type'][0], a['kine_energy_particle'][0])]
-    return float(a['kine_reco_Enu'][0]), vtx, parts
+             zip(a['kine_particle_type'][i], a['kine_energy_particle'][i])]
+    return float(a['kine_reco_Enu'][i]), vtx, parts
 
 
 def main():

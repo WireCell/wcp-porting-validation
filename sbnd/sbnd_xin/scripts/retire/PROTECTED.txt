@@ -43,16 +43,77 @@ work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protect
 # (r1qlmc/r2mc/plus the -full nusel stage for all).  Each PR arm's Q/L input
 # is re-verified against KEEP by plan_20260817.py ASSERT 8 on every run, not
 # just hand-checked once.
-work-cbr3-census-on work-cbr3-census-pr-on work-cbr3-bare2evt work-cbr3-bare2evt-pr	current-production Q/L + PR reference (toolkit 2d8c9e5a, doc 73 sec.12.9 seven-knob flip)	doc 73 sec.12.9
-work-mcp1kall-vfcbr3on work-ncpi0-vfcbr3on work-nuecc48-vfcbr3on work-r1qlmc-vfcbr3on work-r2mc-vfcbr3on	post-flip Q/L, valfast -full nusel roots (per-sample tagger tail census-on lacks)	doc 73 sec.12.5, docs/work-tags.md 2026-08-17
-work-vfmcp1k-cbr3on work-vfncpi0-cbr3on work-vfnuecc48-cbr3on work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	post-flip PR out-roots, one per sample; reads the -vfcbr3on Q/L root above	doc 73 sec.12.5, docs/work-tags.md 2026-08-17
+# RELEASED 2026-08-19 (pass 2), see the RETIRED section: the four work-cbr3-*
+# arms are superseded by prod0819 end-to-end.  Line kept commented so the
+# parser stops protecting them; the provenance is at the bottom.
+work-r1qlmc-vfcbr3on work-r2mc-vfcbr3on	post-flip Q/L for the two SIM samples; NOT reprocessed by prod0819, so cbr3on is still their latest	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
+work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	latest PR out-root for each SIM sample; reads the -vfcbr3on Q/L root above	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
 
 # --- the r1qlmc/r2mc prod0813 family (added 2026-08-13, still active) -----
+# 2026-08-19: THE VIEWER PIN IS RELEASED.  Owner, asked directly during the
+# doc pr/95 round: "you can turn off display in 5017 5018".  There was in
+# fact nothing to turn off -- `pgrep -af 'bokeh|serve_pr_display'` returns
+# nothing and `ss -ltnp` shows nothing listening on 5013-5019, so the
+# ":5017/:5018 LIVE" ground recorded on 2026-08-13 had already lapsed some
+# time before this round and nobody had noticed.  Do not re-derive a
+# protection from it.
+#
+# These two survive on the OTHER stated ground only, which still holds:
+# they are the only FULL-coverage PR product for either sim sample (10 and
+# 13 pr_evt vs the cbr3on arms' nu_evaluated subset of 4 and 6), neither
+# sim sample is in the doc pr/95 campaign, and the pair costs 30 MB.  If a
+# later round wants them gone, that is now a one-line decision with no
+# viewer to check first.
 # No pr83/85/86/87 arm exists for either MC sample -- prod0813 remains their
 # latest and only PR product.  Also LIVE on the bokeh viewers, ports 5017/5018.
 work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 campaign; only surviving PR products for either MC sample; LIVE on bokeh :5017/:5018	doc pr/76
 
+# --- the prod0819 single-epoch baseline (added 2026-08-19) ----------------
+# doc pr/95.  The FIRST product in this tree where Q/L and PR come from ONE
+# software epoch (toolkit fd6a116d, libWireCellClus.so md5 3fae4385f9dc27fa63ac280faebb71df)
+# -- with ONE documented exception: a concurrent session relinked the library at
+# 23:04:06 (toolkit f0e69780, a log-only env-gated probe), so 1889 of
+# work-mcp2k-prod0819's 2000 events ran on md5 75652e607a7f3d7ceec2c0632dd2e9f5.
+# The two binaries were PROVEN byte-equivalent on this chain -- 30 archives, 15
+# nusel TSVs, 3 calib-pr dumps identical (work-pr96gate-mcp2k, -nuedisp; doc
+# pr/95 sec.4b).  Each arm's .build-fingerprint carries its own record.
+# Every prior campaign mixed epochs -- prod0813 ran the PR chain onto 08-05
+# cb0805 pctrees, and census-on's Q/L predates the pr/94 flip.  This is the
+# reference tomorrow's PR rounds A/B against, so it is the one family that
+# must not be swept by a routine round.
+#
+# READ THIS BEFORE COMPARING ANYTHING TO IT: since fd6a116d production emits
+# ONE T_tagger/T_kine ROW PER IN-BEAM FLASH BUNDLE.  Row 0 is NOT the event's
+# answer -- scripts/pr94_rows.py primary_index() is.  pr_scores_table.py
+# already applies it; anything else that hard-indexes [0] is wrong.
+work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
+work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
+
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-19 (pass 2) -- the whole cbr3 family, the three DATA-sample valfast
+# cbr3on arms, and the 21 doc-pr/94 r3 flip-evidence arms.  SUPERSEDED by the
+# prod0819 baseline above, which is single-epoch where all of these were not.
+#
+# Owner decision, asked directly 2026-08-19: retire ALL 21 work-pr94r3* arms.
+# They were kept through pass 1 as the only on-disk proof of that day's
+# production flip; pass 2 releases them, and dropping the two mcp2k arms is
+# what unpinned work-cbr3-census-on (9.6 GiB, the largest pass-1 survivor).
+#
+# COST, stated before running and accepted: doc pr/94's flip-equivalence gates
+# (bare == env-forced ON: 96/96+48/48 nuecc48, 16/16+8/8 mcp1k, 28/28+14/14
+# mcp2k) and its pre-flip escape-hatch reproduction (96/96) become TEXT-ONLY.
+# This is knowingly the same shape as the work-pr87-postflip-* loss recorded
+# below -- taken deliberately this time, not by oversight, because prod0819
+# IS the production reference from here on.  Also text-only: doc 73 sec.12.9's
+# bare-run 4/4 member-hash proof, whose arms were census-on + bare2evt.
+#
+# work-cbr3-census-on work-cbr3-census-pr-on work-cbr3-bare2evt work-cbr3-bare2evt-pr	SUPERSEDED by prod0819 (single-epoch); census-on was also the Q/L input for the pr94r3 mcp2k arms, released the same round	doc 73 sec.12.9, doc pr/95
+# work-mcp1kall-vfcbr3on work-ncpi0-vfcbr3on work-nuecc48-vfcbr3on	SUPERSEDED by work-{mcp1k,ncpi0,nuecc48}-ql0819	doc pr/95
+# work-vfmcp1k-cbr3on work-vfncpi0-cbr3on work-vfnuecc48-cbr3on	SUPERSEDED by work-{mcp1k,ncpi0,nuecc48}-prod0819	doc pr/95
+# work-pr94r3-off-nuecc48 work-pr94r3-off-ncpi0 work-pr94r3-on-nuecc48 work-pr94r3-on-mcp1k work-pr94r3-on-mcp2k work-pr94r3-flip-nuecc48 work-pr94r3-flip-mcp1k work-pr94r3-flip-mcp2k work-pr94r3-flipA-nuecc48 work-pr94r3b-off-nuecc48 work-pr94r3-preflip-nuecc48	doc pr/94 Phase 6 flip gates + escape-hatch reproduction; owner released 2026-08-19	docs/pr/94, docs/work-tags.md 2026-08-19
+# work-pr94r3-a1only-116962 work-pr94r3-a1only-395148 work-pr94r3-a1only-73038 work-pr94r3-a2only-116962 work-pr94r3-a2only-395148 work-pr94r3-a2only-73038	doc pr/94 per-knob attribution arms (pr94r3_gap_metric.py)	docs/pr/94
+# work-pr94r3-ql22 work-pr94r3-ql22disp work-pr94r3-ql65053r2 work-pr94r3-ql65053r3	doc pr/94 Q/L-side arms; ql22disp was the Bee -q source for bee/pr94r3 (already built and uploaded, the zip survives under bee/)	docs/pr/94
+#
 # 2026-08-17 -- work-{mcp1k,nuecc48,ncpi0}-pr87ion3, SUPERSEDED by today's
 # seven-knob flip; work-mcp2k-cb0816 + the four work-*-harv3 arms, RELEASED
 # by owner narrowing "latest" to post-flip only.

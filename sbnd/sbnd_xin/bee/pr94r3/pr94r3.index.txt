@@ -1,0 +1,88 @@
+# doc pr/94 ROUND 3 A/B index -- two owner-reported bugs fixed
+# OFF https://www.phy.bnl.gov/twister/bee/set/0ee25b32-949f-4262-ba9d-6f73f0865d91/event/list/
+# ON  https://www.phy.bnl.gov/twister/bee/set/7414c7c1-c705-47df-9aca-07eb573ca4b6/event/list/
+#
+# 23 events, same bee index on both sides.
+#   idx 0-20  the round-2 scan set (pr94r5b2), re-run with the round-3 fixes
+#   idx 21    395148 -- the BUG 2 case (secondary activity's gap-jumping fit)
+#   idx 22    116962 -- the ONLY nueCC48 event (of 48) whose primary row moves
+#
+# OFF arm = today's production: every round-3 knob off, nu_per_bundle off.
+#           pr roots work-pr94p5-off-{mcp1k,mcp2k} + work-pr94r3-off-nuecc48,
+#           ql roots work-{mcp1k,nuecc48}-cb0805 + work-cbr3-census-on.
+# ON  arm = nu_per_bundle + nu_per_bundle_min_length=15 (round 2) PLUS the two
+#           round-3 PR knobs (nu_selected_as_main, open_convicted_bundles),
+#           display root work-pr94r3-ql22disp (bee_flash_pred_min=0).
+#           pr roots work-pr94r3-on-{mcp1k,mcp2k,nuecc48}.
+#
+# WHAT CHANGED SINCE THE ROUND-2 SET YOU SCANNED
+#  1. BUG 1 (evt 73038, idx 3) -- "this piece is shown as matched to no flash".
+#     It always WAS matched: to APA0 beam flash gid 14 (t 0.968 us, 602.6 PE),
+#     predicting 3.6 PE.  The Bee "op" writer dropped any match under 100 PE,
+#     so the display hid it.  Knob bee_flash_pred_min (C++ default 100 = the
+#     legacy filter) now makes that a config value; the ON display uses 0.
+#     evt 73038 flash row 16 op_cluster_ids: [4] -> [2, 4, 5]; cluster 5 IS the
+#     26.5 cm activity.  156 genuine matches across the 23 events were hidden.
+#     NOTE this is a DISPLAY fix only -- the piece is STILL PROMOTED.  Its row
+#     is now 51.3 MeV (round 2: 204.3 MeV); per-knob arms attribute that drop to
+#     nu_selected_as_main, not to open_convicted_bundles.  51.3 MeV on a 26.5 cm
+#     activity is BELOW MUON MASS -- the signature you rejected a round over in
+#     sec 9.6 -- and its numu_score is -1.77, so it fails any numu selection.
+#     The display fix makes its flash provenance visible; it does not make the
+#     row defensible.  The piece that would stop the promotion is the
+#     bookkeeping half of sec 9.8 (the 80 ns flash-t0 merge overwrote the
+#     activity's own gid, so it is EVALUATED in the muon's bundle) -- offered
+#     and declined this round.  See doc sec 9.9.
+#  2. BUG 2 (evt 395148, idx 21) -- the secondary neutrino's track_fit trail
+#     through empty space at (-172.7,-131.5,205.7).  Two knobs, both default OFF:
+#       open_convicted_bundles -- a cosmic-convicted main now OPENS its bundle,
+#         so the bundle's unconvicted members get ClusteringProtectBundle's
+#         graph examination (the convicted cluster itself is still never split).
+#         THIS is what removes the trail: fit points more than 3 cm from any
+#         charge 15 -> 0, worst excursion 8.40 cm -> 0.83 cm.
+#       nu_selected_as_main -- the selected candidate is treated as the main
+#         cluster for its own PR pass, so a demoted main stops silently losing
+#         examine_vertices_3 / improve_vertex / break_two_end_dqdx / the
+#         main-branch endpoint ordering.  Alone it does NOT remove the trail
+#         (19 pts > 3 cm); it is a parity fix that changes the fit elsewhere.
+#
+# WHERE TO LOOK
+#   idx 3  (73038)   step the flashes: the 26.5 cm cathode piece now lights up
+#                    with the 0.968 us APA0 beam flash instead of nothing.
+#   idx 21 (395148)  track_fit: the ~17 cm dotted trail into empty space is gone.
+#   idx 22 (116962)  the vertex moves 34 cm in z and numu_score 0.59 -> -0.50.
+#                    THE ONE nueCC48 EVENT THAT MOVES -- verdict wanted.
+#                    Read "1 of 48" with the coverage: on nueCC48 the bundle-
+#                    opening knob fired on only 5 events and nu_selected_as_main
+#                    on only 1, so that is a thin test, not a 48-event stability
+#                    proof.  On this 23-event set they fire on 9 and 9.
+#   idx 8-20         primary row is byte-identical to OFF; only the ADDED
+#                    second bundle is new (unchanged from the round-2 scan).
+#   idx 0-7          OFF has no vertex anywhere; ON reconstructs one.  Their
+#                    numbers all shifted vs round 2 -- these are the events
+#                    where the two round-3 knobs actually bite.
+#
+# bee_idx  event   OFF (row 0)  ->  ON (row 0 | row 1)
+0	62583	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c25 569.1 MeV numu 0.81 vtx(-81,7,146) | c12 0.0 MeV numu -1.94 vtx(0,0,0)
+1	174422	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c18 431.9 MeV numu 0.96 vtx(1,167,190) | c8 0.0 MeV numu -1.94 vtx(0,0,0)
+2	280466	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c15 614.2 MeV numu 0.97 vtx(136,-87,8) | c8 0.0 MeV numu -1.94 vtx(0,0,0)
+3	73038	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c24 51.3 MeV numu -1.77 vtx(-2,-30,113) | c1 0.0 MeV numu -1.94 vtx(0,0,0)
+4	78032	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c18 1119.0 MeV numu 4.30 vtx(-91,117,75) | c9 0.0 MeV numu -1.94 vtx(0,0,0)
+5	90751	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c30 865.8 MeV numu -1.31 vtx(-4,100,356) | c5 0.0 MeV numu -1.94 vtx(0,0,0)
+6	167612	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c26 852.4 MeV numu 0.65 vtx(-130,-56,67) | c7 0.0 MeV numu -1.94 vtx(0,0,0)
+7	407798	c-1 0.0 MeV numu -1.94 vtx(0,0,0)	->	c28 639.9 MeV numu 0.56 vtx(-4,111,323) | c4 0.0 MeV numu -1.94 vtx(0,0,0)
+8	65053	c-1 532.7 MeV numu 1.71 vtx(-144,46,300)	->	c6 532.7 MeV numu 1.71 vtx(-144,46,300) | c9 243.1 MeV numu 1.10 vtx(15,-136,2)
+9	286681	c-1 1452.8 MeV numu 2.72 vtx(-139,3,432)	->	c3 1452.8 MeV numu 2.72 vtx(-139,3,432) | c10 270.0 MeV numu 0.55 vtx(163,188,339)
+10	400636	c-1 738.2 MeV numu 4.22 vtx(58,33,133)	->	c13 738.2 MeV numu 4.22 vtx(58,33,133) | c6 577.9 MeV numu 0.22 vtx(-178,97,246)
+11	487303	c-1 501.3 MeV numu 4.30 vtx(132,72,376)	->	c7 501.3 MeV numu 4.30 vtx(132,72,376) | c4 383.7 MeV numu -1.07 vtx(-82,-158,406)
+12	68748	c-1 1033.5 MeV numu 2.35 vtx(-29,-21,133)	->	c13 1033.5 MeV numu 2.35 vtx(-29,-21,133) | c11 775.7 MeV numu -1.09 vtx(147,-55,429)
+13	174661	c-1 619.8 MeV numu 3.65 vtx(101,40,115)	->	c7 619.8 MeV numu 3.65 vtx(101,40,115) | c2 458.3 MeV numu -0.20 vtx(-27,-154,137)
+14	175094	c-1 508.1 MeV numu 2.95 vtx(-117,-5,74)	->	c5 508.1 MeV numu 2.95 vtx(-117,-5,74) | c4 100.9 MeV numu -1.08 vtx(178,25,0)
+15	179054	c-1 1075.4 MeV numu 0.89 vtx(-124,5,217)	->	c22 1075.4 MeV numu 0.89 vtx(-124,5,217) | c19 572.4 MeV numu 2.82 vtx(54,153,330)
+16	179369	c-1 1589.0 MeV numu 0.79 vtx(6,59,106)	->	c17 1589.0 MeV numu 0.79 vtx(6,59,106) | c12 1159.0 MeV numu 2.19 vtx(-28,58,41)
+17	287638	c-1 386.8 MeV numu 1.95 vtx(-106,-118,416)	->	c4 386.8 MeV numu 1.95 vtx(-106,-118,416) | c16 229.4 MeV numu 0.04 vtx(98,184,233)
+18	351564	c-1 903.5 MeV numu 3.73 vtx(-63,70,209)	->	c11 903.5 MeV numu 3.73 vtx(-63,70,209) | c15 1081.4 MeV numu 4.30 vtx(95,19,253)
+19	409624	c-1 599.0 MeV numu 1.36 vtx(-146,-57,330)	->	c5 599.0 MeV numu 1.36 vtx(-146,-57,330) | c92 775.9 MeV numu -0.68 vtx(93,45,46)
+20	410698	c-1 497.4 MeV numu 3.45 vtx(180,43,184)	->	c13 497.4 MeV numu 3.45 vtx(180,43,184) | c5 797.5 MeV numu -0.20 vtx(-42,61,152)
+21	395148	c-1 992.1 MeV numu 3.66 vtx(-154,-62,182)	->	c21 1000.8 MeV numu 3.25 vtx(-154,-63,182)
+22	116962	c-1 837.3 MeV numu 0.59 vtx(-72,-78,122)	->	c21 877.8 MeV numu -0.50 vtx(-69,-80,156)

@@ -268,6 +268,14 @@ knob_bool save_assoc "$SAVE_ASSOC"
 # null (= inherit), so only the OFF case is expressible; 1 means "inherit", not
 # "emit true", and must stay silent to keep the compiled config unchanged.
 [ "$RCID_GLOBAL" = 0 ] && KNOB_TLA+=(--tla-code "rcid_global=false")
+# doc pr/94 round 3: minimum predicted light (PE) for a genuinely matched
+# cluster to appear in the Bee "op" layer's op_cluster_ids.  **SBND PRODUCTION
+# VALUE 0 since the 2026-08-19 owner flip (doc pr/94 sec 9.13)** -- EMPTY
+# inherits that, so every genuine match is shown.  Set 100 for the pre-flip
+# display (the legacy dump_light filter), under which SBND 18255/73038's
+# 26.5 cm beam-flash activity -- 3.6 PE predicted -- was drawn as matched to
+# NO flash.  Env: SBND_QL_BEE_FLASH_PRED_MIN=<PE>.
+[ -n "${SBND_QL_BEE_FLASH_PRED_MIN:-}" ] && KNOB_TLA+=(--tla-code "bee_flash_pred_min=${SBND_QL_BEE_FLASH_PRED_MIN}")
 [ "$REALIGN" = 0 ]     && KNOB_TLA+=(--tla-code "realign=false")
 # -beam-pref re-asserts the overlay; its numbers are only read then.
 if [ "$BEAMPREF" = 1 ]; then
@@ -500,23 +508,49 @@ process_event() {
     [ ${#KNOB_TLA[@]} -gt 0 ] && _ov=", overrides: ${KNOB_TLA[*]}"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}${_ov}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
+    # The full top-level-argument list, collected once so that BOTH the jsonnet
+    # compiler and wire-cell see exactly the same arguments (doc pr/97 sec.5).
+    local -a _TLA=(
+        --tla-str  "input=$QLDIR"
+        "${ANODE_TLA[@]}"
+        --tla-str  "output_dir=$QLDIR"
+        --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}"
+        --tla-str  "reality=$REALITY"
+        "${CALIB_TLA[@]}"
+        "${CATHODE_TLA[@]}"
+        "${SAVEPCT_TLA[@]}"
+        "${CRESCUE_TLA[@]}"
+        "${VVETO_TLA[@]}"
+        "${ISOGUARD_TLA[@]}"
+        "${BANDVETO_TLA[@]}"
+        "${OC_TLA[@]}"
+        "${KNOB_TLA[@]}"
+    )
+    # doc pr/97 sec.5: compile the config in a SEPARATE, short-lived wcsonnet
+    # process and hand wire-cell plain JSON.  Handing wire-cell the .jsonnet
+    # makes it run gojsonnet IN PROCESS, which leaves a 64-thread Go runtime
+    # alive for the whole job; at ~120 s of process life (Go sysmon's forced-GC
+    # period) one of those threads jumps to PC 0x0 and the job dies with
+    # SIGSEGV -- ~4 % of runs on SBND 18255-178410, and the WireCell thread is
+    # provably healthy at the time (two gdb captures).  The compile costs 0.13 s
+    # and the compiled config is IDENTICAL, so output is unchanged: proven by
+    # equal hash_archive.py member hashes on mabc-all-apa.zip.
+    # Set SBND_PRECOMPILE_CFG=0 for the legacy in-process path (A/B only).
+    local -a _CFG=(-c "$JSONNET")
+    if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
+        local _cfgjson="$QLDIR/.wct-cfg-evt${EVT_ID}.json"
+        rm -f "$_cfgjson"
+        if wcsonnet "${_TLA[@]}" -o "$_cfgjson" "$JSONNET"; then
+            _CFG=(-c "$_cfgjson")
+            _TLA=()          # the arguments are baked into the JSON now
+        else
+            echo "[evt $EVT_ID] WARN: wcsonnet failed -- falling back to in-process jsonnet" >&2
+        fi
+    fi
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
-        --tla-str  "input=$QLDIR" \
-        "${ANODE_TLA[@]}" \
-        --tla-str  "output_dir=$QLDIR" \
-        --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
-        --tla-str  "reality=$REALITY" \
-        "${CALIB_TLA[@]}" \
-        "${CATHODE_TLA[@]}" \
-        "${SAVEPCT_TLA[@]}" \
-        "${CRESCUE_TLA[@]}" \
-        "${VVETO_TLA[@]}" \
-        "${ISOGUARD_TLA[@]}" \
-        "${BANDVETO_TLA[@]}" \
-        "${OC_TLA[@]}" \
-        "${KNOB_TLA[@]}" \
-        -c "$JSONNET"
+        "${_TLA[@]}" \
+        "${_CFG[@]}"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
 

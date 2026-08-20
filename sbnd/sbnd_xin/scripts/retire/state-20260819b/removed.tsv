@@ -1,0 +1,43 @@
+# retire_20260819b.sh  tiers=A
+# started              2026-08-19T23:50:36-07:00
+# wcp-porting-img HEAD 5dc6d09
+# toolkit HEAD         f0e69780
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  71G
+# df /nfs/data/1 pre   958G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-08-19T23:50:36-07:00	work-cbr3-bare2evt	A	7	work-cbr3-bare2evt.tar.gz	2026-08-17T14:47:35-07:00	0
+2026-08-19T23:50:36-07:00	work-cbr3-bare2evt-pr	A	7	work-cbr3-bare2evt-pr.tar.gz	2026-08-17T14:48:17-07:00	0
+2026-08-19T23:50:38-07:00	work-cbr3-census-on	A	9802	work-cbr3-census-on.tar.gz	2026-08-18T18:09:02-07:00	0
+2026-08-19T23:50:38-07:00	work-cbr3-census-pr-on	A	134	work-cbr3-census-pr-on.tar.gz	2026-08-17T14:01:10-07:00	0
+2026-08-19T23:50:39-07:00	work-mcp1kall-vfcbr3on	A	3931	work-mcp1kall-vfcbr3on.tar.gz	2026-08-17T13:25:13-07:00	0
+2026-08-19T23:50:39-07:00	work-ncpi0-vfcbr3on	A	180	work-ncpi0-vfcbr3on.tar.gz	2026-08-17T13:37:44-07:00	0
+2026-08-19T23:50:39-07:00	work-nuecc48-vfcbr3on	A	476	work-nuecc48-vfcbr3on.tar.gz	2026-08-17T13:33:51-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a1only-116962	A	6	work-pr94r3-a1only-116962.tar.gz	2026-08-19T21:15:10-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a1only-395148	A	3	work-pr94r3-a1only-395148.tar.gz	2026-08-19T21:08:48-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a1only-73038	A	5	work-pr94r3-a1only-73038.tar.gz	2026-08-19T21:25:48-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a2only-116962	A	5	work-pr94r3-a2only-116962.tar.gz	2026-08-19T21:15:20-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a2only-395148	A	2	work-pr94r3-a2only-395148.tar.gz	2026-08-19T21:08:58-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-a2only-73038	A	5	work-pr94r3-a2only-73038.tar.gz	2026-08-19T21:25:57-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-flip-mcp1k	A	22	work-pr94r3-flip-mcp1k.tar.gz	2026-08-19T21:49:49-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-flip-mcp2k	A	56	work-pr94r3-flip-mcp2k.tar.gz	2026-08-19T21:50:10-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-flip-nuecc48	A	184	work-pr94r3-flip-nuecc48.tar.gz	2026-08-19T21:49:34-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-flipA-nuecc48	A	184	work-pr94r3-flipA-nuecc48.tar.gz	2026-08-19T21:45:02-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-off-ncpi0	A	68	work-pr94r3-off-ncpi0.tar.gz	2026-08-19T21:03:58-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-off-nuecc48	A	185	work-pr94r3-off-nuecc48.tar.gz	2026-08-19T21:03:30-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-on-mcp1k	A	22	work-pr94r3-on-mcp1k.tar.gz	2026-08-19T21:07:13-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-on-mcp2k	A	56	work-pr94r3-on-mcp2k.tar.gz	2026-08-19T21:07:35-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-on-nuecc48	A	184	work-pr94r3-on-nuecc48.tar.gz	2026-08-19T21:11:21-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-preflip-nuecc48	A	185	work-pr94r3-preflip-nuecc48.tar.gz	2026-08-19T21:54:05-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-ql22	A	28	work-pr94r3-ql22.tar.gz	2026-08-19T21:15:20-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-ql22disp	A	12	work-pr94r3-ql22disp.tar.gz	2026-08-19T21:16:08-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-ql65053r2	A	2	work-pr94r3-ql65053r2.tar.gz	2026-08-19T21:11:24-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3-ql65053r3	A	2	work-pr94r3-ql65053r3.tar.gz	2026-08-19T21:11:32-07:00	0
+2026-08-19T23:50:39-07:00	work-pr94r3b-off-nuecc48	A	185	work-pr94r3b-off-nuecc48.tar.gz	2026-08-19T21:29:10-07:00	0
+2026-08-19T23:50:39-07:00	work-vfmcp1k-cbr3on	A	1376	work-vfmcp1k-cbr3on.tar.gz	2026-08-17T13:30:30-07:00	0
+2026-08-19T23:50:39-07:00	work-vfncpi0-cbr3on	A	68	work-vfncpi0-cbr3on.tar.gz	2026-08-17T13:38:12-07:00	0
+2026-08-19T23:50:39-07:00	work-vfnuecc48-cbr3on	A	180	work-vfnuecc48-cbr3on.tar.gz	2026-08-17T13:35:17-07:00	0
+# finished             2026-08-19T23:50:41-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 54G
+# df /nfs/data/1 post  975G avail

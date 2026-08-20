@@ -200,6 +200,42 @@ fi
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# doc pr/94 Phase 2: per-bundle neutrino candidates.  One T_tagger/T_kine row
+# per in-beam-window flash bundle instead of one per event, each carrying its
+# own vertex/kinematics/BDT scores plus a vectorised per-activity cosmic block
+# (act_*).  **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc
+# pr/94 sec 9.13)** -- EMPTY now inherits that.  Set 0 for the PRE-FLIP arm
+# (one event-wide candidate, the pre-pr/94 behaviour).
+# Env: SBND_NU_PER_BUNDLE=<0|1>.
+[ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=$([ "${SBND_NU_PER_BUNDLE}" = 0 ] && echo false || echo true)")
+# doc pr/94 Phase 5b round 2: the dot guard.  Length floor (cm) for a
+# per-bundle candidate, exempting the legacy event-wide winner.  EMPTY = no
+# TLA = the job default 15 cm.  Set to 0 to reproduce the pre-5b behavior (no
+# floor), which is what promoted sub-cm blobs to neutrino candidates.
+# Env: SBND_NU_PER_BUNDLE_MIN_LENGTH=<cm>.
+[ -n "${SBND_NU_PER_BUNDLE_MIN_LENGTH:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle_min_length=${SBND_NU_PER_BUNDLE_MIN_LENGTH}")
+# doc pr/94 Phase 3: stop ClusteringProtectBundle withholding cosmic-convicted
+# bundles from the PR ensemble, so every in-beam bundle is actually openable by
+# Phase 2's per-bundle loop.  EMPTY = no TLA = the job default null = the C++
+# default true = legacy = byte-identical.  Set to 0 to open them.
+# Env: SBND_PROTECT_SKIP_CONVICTED=<0|1>.
+[ -n "${SBND_PROTECT_SKIP_CONVICTED:-}" ] && CATH_TLA+=(--tla-code "protect_skip_convicted=$([ "${SBND_PROTECT_SKIP_CONVICTED}" = 0 ] && echo false || echo true)")
+# doc pr/94 round 3: let a cosmic-convicted main OPEN its bundle so the
+# bundle's unconvicted members get ClusteringProtectBundle's graph examination
+# (the convicted cluster itself is still never split).  Narrower than
+# SBND_PROTECT_SKIP_CONVICTED=0 above, which also splits the cosmic tree.
+# **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc pr/94 sec
+# 9.13)** -- EMPTY inherits that; set 0 for the pre-flip arm.
+# Env: SBND_OPEN_CONVICTED_BUNDLES=<0|1>.
+[ -n "${SBND_OPEN_CONVICTED_BUNDLES:-}" ] && CATH_TLA+=(--tla-code "protect_open_convicted_bundles=$([ "${SBND_OPEN_CONVICTED_BUNDLES}" = 0 ] && echo false || echo true)")
+# doc pr/94 round 3: give the SELECTED neutrino candidate the main-cluster PR
+# treatment for its own pass even when it is a demoted main (examine_vertices_3,
+# improve_vertex, main_cluster_initial_pair_vertices, break_two_end_dqdx, the
+# main-branch endpoint ordering).  EMPTY = no TLA = the job default false =
+# **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc pr/94 sec
+# 9.13)** -- EMPTY inherits that; set 0 for the pre-flip arm.
+# Env: SBND_NU_SELECTED_AS_MAIN=<0|1>.
+[ -n "${SBND_NU_SELECTED_AS_MAIN:-}" ] && CATH_TLA+=(--tla-code "nu_selected_as_main=$([ "${SBND_NU_SELECTED_AS_MAIN}" = 0 ] && echo false || echo true)")
 # doc pr/89 Arm D2: post-DL adjustment reach, cm.  EMPTY = no TLA = the cfg
 # default null = the C++ defaults (vks 5.0 / mvga 15.0) = byte-identical.
 # The TLAs already exist and are fully threaded (wct-pr-perevt.jsonnet:1977,
@@ -402,6 +438,20 @@ fi
 # is suppressed in the compiled config unless set, so an unset run is
 # byte-identical.  SBND_TRAJ_COVER_PROBE=1 turns the diagnostic lines on.
 [ "${SBND_TRAJ_COVER_PROBE:-}" = 1 ] && CATH_TLA+=(--tla-code "traj_cover_probe=true")
+# doc pr/96: MEASUREMENT hook for pr/30's P1 port-fidelity gap.  fit_exclusion
+# is the SBND config default FALSE and pr/30 sec 12.8 DECLINED flipping it (net
+# regression at that operating point, and still blocked on the sec 3.1
+# transverse-coordinate unit question inside update_association).  This hook
+# exists only so a diagnostic arm can measure it on named events; it is NOT a
+# step toward a flip.  EMPTY = no TLA = the job default false = byte-identical.
+[ -n "${SBND_FIT_EXCLUSION:-}" ] && CATH_TLA+=(--tla-code "fit_exclusion=${SBND_FIT_EXCLUSION}")
+# doc pr/97 D1: deterministic main_pi sentinel in
+# shower_clustering_with_nv_from_vertices.  The legacy path compares
+# INDETERMINATE stack bytes, so which vertex an other-cluster shower attaches
+# to depends on the address-space layout (ASLR, or just the size of the
+# environment).  SBND config default FALSE; unset => no TLA => byte-identical.
+# SBND_MAIN_PI_INIT=true is the knob-on arm.
+[ -n "${SBND_MAIN_PI_INIT:-}" ] && CATH_TLA+=(--tla-code "shower_nv_main_pi_init=${SBND_MAIN_PI_INIT}")
 # docs/73 sec 12 (round 3).  Both SBND config default FALSE; unset inherits
 # that, =1/=0 forces for an A/B arm.
 #   SBND_NU_FALLBACK_DEMOTED   when NO candidate survives TaggerCheckNeutrino's
@@ -730,6 +780,96 @@ unset _pr84 _env _key _val
 [ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
 [ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
 [ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
+# doc pr/40 round 9 -- the rounds-7+8 straight-track PID guard family + the
+# B2 cross-cluster bridge.  Tri-state bools (unset = cfg default, 1 = force
+# on, 0 = force off) + two scalars (EMPTY = no TLA = cfg default: C++
+# 25 deg / 1.8 cm).  pf_track_bridged_clusters is the PF-side gate widening
+# that lets the track BFS traverse an nv-bridged cluster.
+for _pr40r9 in \
+    "SBND_SHOWER_CONNECT_FROM_VERTICES_STRAIGHT_GUARD:shower_connect_from_vertices_straight_guard" \
+    "SBND_SHOWER_CONNECT_START_SEG_STRAIGHT_GUARD:shower_connect_start_seg_straight_guard" \
+    "SBND_EXAMINE_DIRECTION_DIRSIGN_SHOWER_IN_GUARD:examine_direction_dirsign_shower_in_guard" \
+    "SBND_DAUGHTER_SHOWER_ANGLE_RECLASS_STRAIGHT_GUARD:daughter_shower_angle_reclass_straight_guard" \
+    "SBND_SHOWER_TOPO_REEXAM_STRAIGHT_GUARD:shower_topo_reexam_straight_guard" \
+    "SBND_SHOWER_NV_BRIDGE_TRACK:shower_nv_bridge_track" \
+    "SBND_PF_TRACK_BRIDGED_CLUSTERS:pf_track_bridged_clusters" ; do
+    _env=${_pr40r9%%:*}; _key=${_pr40r9#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r9 _env _key _val
+[ -n "${SBND_SFV_KINK_MAX:-}" ] && CATH_TLA+=(--tla-code "sfv_kink_max=${SBND_SFV_KINK_MAX}")
+[ -n "${SBND_SHOWER_NV_BRIDGE_MAX_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_nv_bridge_max_gap=${SBND_SHOWER_NV_BRIDGE_MAX_GAP}")
+# doc pr/92 -- drop stray satellite showers (overclustered cosmics / second
+# neutrinos) from kine_reco_Enu + the Bee PF tree.  Same tri-state contract
+# (unset = cfg default, 1 = force on, 0 = force off); scalars EMPTY = no TLA
+# = cfg default (null = the C++ defaults: 20 MeV / 8 cm / 60 deg / 45 deg /
+# 90 cm / 30 cm / 25 deg).  pf_drop_stray_satellites mirrors the kine-side
+# drop in the PF tree; inert unless kine_drop_stray_satellites is also on.
+for _pr92 in \
+    "SBND_KINE_DROP_STRAY_SATELLITES:kine_drop_stray_satellites" \
+    "SBND_PF_DROP_STRAY_SATELLITES:pf_drop_stray_satellites" ; do
+    _env=${_pr92%%:*}; _key=${_pr92#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr92 _env _key _val
+# doc pr/40 round 10 -- shower_bragg_protect_start_segment: a Shower start
+# segment already typed muon/proton with a confident Bragg/dE-dx-template PID
+# (particle_score < 1.0) keeps that type through update_particle_type's
+# majority vote instead of being relabelled e-.  Same tri-state contract
+# (unset = cfg default, 1 = force on, 0 = force off).
+for _pr40r10 in \
+    "SBND_SHOWER_BRAGG_PROTECT_START_SEGMENT:shower_bragg_protect_start_segment" ; do
+    _env=${_pr40r10%%:*}; _key=${_pr40r10#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r10 _env _key _val
+# doc pr/93 round 3 -- the "electron is really tracks / hadronic-pi0 shower"
+# knob family (SBND 18255-55595/348471/69314/292643/315167).  Same tri-state
+# contract (unset = cfg default, 1 = force on, 0 = force off).
+for _pr93 in \
+    "SBND_SHOWER_RECLASS_CASE_B_DQDX_GUARD:shower_reclass_case_b_dqdx_guard" \
+    "SBND_SHOWER_ACCEPT_PID_GUARD:shower_accept_pid_guard" \
+    "SBND_SHOWER_VOTE_TRACK_PID_COUNTS:shower_vote_track_pid_counts" \
+    "SBND_SHOWER_CONE_ABSORB_GUARD:shower_cone_absorb_guard" ; do
+    _env=${_pr93%%:*}; _key=${_pr93#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr93 _env _key _val
+# doc pr/93 round 4 -- PF-hierarchy fine-tunes (detach track stem, orphan
+# track PF/kine emission, cross-cluster straight continuation + bridge).
+# Same tri-state contract.
+for _pr93r4 in \
+    "SBND_SHOWER_DETACH_TRACK_STEM:shower_detach_track_stem" \
+    "SBND_KINE_COUNT_ORPHAN_TRACKS:kine_count_orphan_tracks" \
+    "SBND_STRAIGHT_CONT_CROSS_CLUSTER:straight_cont_cross_cluster" \
+    "SBND_SCCC_BRIDGE_BODY:sccc_bridge_body" \
+    "SBND_PF_ORPHAN_CONFIDENT_TRACK:pf_orphan_confident_track" \
+    "SBND_PF_TRACK_OWNS_LOOSE_VERTEX:pf_track_owns_loose_vertex" ; do
+    _env=${_pr93r4%%:*}; _key=${_pr93r4#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr93r4 _env _key _val
+[ -n "${SBND_KINE_ORPHAN_TRACK_MIN:-}" ] && CATH_TLA+=(--tla-code "kine_orphan_track_min=${SBND_KINE_ORPHAN_TRACK_MIN}")
+[ -n "${SBND_SCCC_MAX_GAP:-}" ] && CATH_TLA+=(--tla-code "sccc_max_gap=${SBND_SCCC_MAX_GAP}")
+[ -n "${SBND_SCCC_KINK_MAX:-}" ] && CATH_TLA+=(--tla-code "sccc_kink_max=${SBND_SCCC_KINK_MAX}")
+[ -n "${SBND_SCCC_GAP_ALIGNED:-}" ] && CATH_TLA+=(--tla-code "sccc_gap_aligned=${SBND_SCCC_GAP_ALIGNED}")
+[ -n "${SBND_SCCC_KINK_TIGHT:-}" ] && CATH_TLA+=(--tla-code "sccc_kink_tight=${SBND_SCCC_KINK_TIGHT}")
+[ -n "${SBND_PF_ORPHAN_TRACK_MIN_CM:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_track_min_cm=${SBND_PF_ORPHAN_TRACK_MIN_CM}")
+[ -n "${SBND_SHOWER_PID_GUARD_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pid_guard_min_len=${SBND_SHOWER_PID_GUARD_MIN_LEN}")
+[ -n "${SBND_KINE_SAT_MIN_ENERGY:-}" ] && CATH_TLA+=(--tla-code "kine_sat_min_energy=${SBND_KINE_SAT_MIN_ENERGY}")
+[ -n "${SBND_KINE_SAT_PROX_MAX:-}" ] && CATH_TLA+=(--tla-code "kine_sat_prox_max=${SBND_KINE_SAT_PROX_MAX}")
+[ -n "${SBND_KINE_SAT_ANGLE_BAD:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_bad=${SBND_KINE_SAT_ANGLE_BAD}")
+[ -n "${SBND_KINE_SAT_ANGLE_MAIN:-}" ] && CATH_TLA+=(--tla-code "kine_sat_angle_main=${SBND_KINE_SAT_ANGLE_MAIN}")
+[ -n "${SBND_KINE_SAT_FAR_DIS:-}" ] && CATH_TLA+=(--tla-code "kine_sat_far_dis=${SBND_KINE_SAT_FAR_DIS}")
+[ -n "${SBND_KINE_SAT_AXIS_DIS_CUT:-}" ] && CATH_TLA+=(--tla-code "kine_sat_axis_dis_cut=${SBND_KINE_SAT_AXIS_DIS_CUT}")
+[ -n "${SBND_KINE_SAT_CONT_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_sat_cont_kink=${SBND_KINE_SAT_CONT_KINK}")
+[ -n "${SBND_KINE_SAT_TRACK_MAX_NSEG:-}" ] && CATH_TLA+=(--tla-code "kine_sat_track_max_nseg=${SBND_KINE_SAT_TRACK_MAX_NSEG}")
+[ -n "${SBND_KINE_SAT_EM_FAR_DIS:-}" ] && CATH_TLA+=(--tla-code "kine_sat_em_far_dis=${SBND_KINE_SAT_EM_FAR_DIS}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.
@@ -1307,24 +1447,48 @@ process_event() {
         # byte-flat RSS for 8h17m in shower_clustering_with_nv_from_vertices and
         # stalled the whole 1000-event batch on its last slot (doc pr/11 sec 6).
         # `timeout` sits INSIDE timecmd.py so .time.meta is still written (rc=124).
+        # The full TLA list, collected once so the jsonnet compiler and
+        # wire-cell see exactly the same arguments (doc pr/97 sec.5).
+        _TLA=(
+            --tla-str  "input=$PCT"
+            --tla-code "anode_indices=[0,1]"
+            --tla-str  "output_dir=$PRDIR"
+            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}"
+            --tla-str  "reality=$REALITY"
+            `# doc 68: the LAr set, the beam window and every tgm_*/stm_* knob`
+            `# spelled out here were byte-for-byte the job's own defaults, so`
+            `# they are gone.  PIPELINE stays explicit -- this chain adds the`
+            `# neutrino taggers + BDT scorers on top of the default list.`
+            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+            "${TFJSON_TLA[@]}"
+            "${CATH_TLA[@]}"
+            --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz"
+        )
+        # doc pr/97 sec.5: compile in a SEPARATE short-lived wcsonnet process
+        # so this long job never hosts gojsonnet's Go runtime.  In-process, that
+        # runtime keeps 64 threads alive for the whole job and one of them jumps
+        # to PC 0x0 at ~120 s of process life (Go sysmon's forced-GC period),
+        # killing the job with SIGSEGV while WireCell's own thread is provably
+        # healthy.  The PR chain is the MOST exposed job here: it routinely runs
+        # far past 120 s.  Costs 0.13 s; compiled config and output unchanged.
+        # SBND_PRECOMPILE_CFG=0 restores the legacy in-process path (A/B only).
+        _CFG=(-c "$JSONNET")
+        if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
+            _cfgjson="$PRDIR/.wct-cfg-evt${EVT_ID}.json"
+            rm -f "$_cfgjson"
+            if wcsonnet "${_TLA[@]}" -o "$_cfgjson" "$JSONNET"; then
+                _CFG=(-c "$_cfgjson")
+                _TLA=()
+            else
+                echo "[evt $EVT_ID] WARN: wcsonnet failed -- in-process jsonnet" >&2
+            fi
+        fi
         setarch x86_64 -R python3 "$AB/timecmd.py" "$PRDIR/.time.meta" \
         timeout --signal=TERM --kill-after=60 "${PR_TIMEOUT:-3600}" \
         wire-cell \
             -l stderr -l "${LOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
-            --tla-str  "input=$PCT" \
-            --tla-code "anode_indices=[0,1]" \
-            --tla-str  "output_dir=$PRDIR" \
-            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
-            --tla-str  "reality=$REALITY" \
-            `# doc 68: the LAr set, the beam window and every tgm_*/stm_* knob` \
-            `# spelled out here were byte-for-byte the job's own defaults, so` \
-            `# they are gone.  PIPELINE stays explicit -- this chain adds the` \
-            `# neutrino taggers + BDT scorers on top of the default list.` \
-            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
-            "${TFJSON_TLA[@]}" \
-            "${CATH_TLA[@]}" \
-            --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
-            -c "$JSONNET"
+            "${_TLA[@]}" \
+            "${_CFG[@]}"
         echo "rc=$?" > "$PRDIR/rc.txt"
     ) > "$PRDIR/stdout.log" 2>&1
     rm -f "$PRDIR/trash-pr.tar.gz"
@@ -1393,3 +1557,30 @@ if [ "${#_tsvs[@]}" -gt 0 ]; then
 fi
 
 echo "loadavg: $(cat /proc/loadavg)"
+
+# doc pr/97 sec.5: batch_summary() returns 0 as long as ANY event succeeded, so
+# one crashed event in 2000 exited 0 and read as a clean batch (doc pr/95, evt
+# 178410).  Re-derive the failures from the per-event rc.txt and fail loudly.
+_bad=""
+for evt in "${EVENT_IDS[@]}"; do
+    _r=$(sed -n 's/^rc=//p' "$OUTROOT/pr_evt${evt}/rc.txt" 2>/dev/null); _r=${_r:-missing}
+    [ "$_r" = 0 ] || _bad="${_bad}evt=${evt} rc=${_r}
+"
+done
+if [ -n "$_bad" ]; then
+    echo
+    echo "############################################################"
+    echo "# FAILED EVENTS -- their mabc-pr.zip / pctree are MISSING or"
+    echo "# TRUNCATED, and nusel_extract was skipped for them, so the"
+    echo "# merged nusel table below is SHORT by these events."
+    echo "#   rc=139 = SIGSEGV. On a job living past ~120 s this is very likely the"
+    echo "#   doc pr/97 gojsonnet Go-runtime crash (~4 %/run): a libgojsonnet thread"
+    echo "#   jumps to PC 0x0 while WireCell's own thread is healthy. Re-run the event;"
+    echo "#   SBND_PRECOMPILE_CFG=1 (the default) is meant to prevent it."
+    echo "#   rc=124 = PR_TIMEOUT, 250 = SIGABRT, 241 = SIGTERM."
+    echo "#"
+    printf '%s' "$_bad" | sed 's/^/# /'
+    echo "############################################################"
+    exit 1
+fi
+exit 0

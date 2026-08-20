@@ -556,6 +556,13 @@ event_select = Select(title="event", options=LABELS,
 prev_btn = Button(label="< prev", width=80)
 next_btn = Button(label="next >", width=80)
 
+# doc pr/94: with the nu_per_bundle knob on, the chain reconstructs one
+# neutrino candidate per in-beam flash bundle and the calib dump carries the
+# extra ones in a `candidates` array.  Every top-level key still describes
+# candidate 0, so a pre-pr/94 dump (or a knob-off one) leaves this Select with
+# its single "0" entry and the viewer behaves exactly as it always did.
+cand_select = Select(title="nu candidate", options=["0"], value="0", width=190)
+
 LAYERS = [("trackfit", "track fit"), ("shower", "shower pts"),
           ("track", "track pts"), ("steiner", "steiner"),
           ("terminals", "terminals"), ("vertices", "vertices"),
@@ -2237,12 +2244,71 @@ def fill_arrows(d, frac=0.35, cap=12.0):
         arrowhead_src[key].data = heads[key]
 
 
+# The nine top-level keys PrDisplayDump emits per neutrino candidate.  That is
+# nine KEYS from seven DUMPS -- segments, vertices and main_vertex all come out
+# of dump_graph() -- so the count here and the "seven per-candidate dumps" in
+# the C++ agree.  meta, steiner, dead and dqdx_ref are event-level and are NOT
+# swapped.
+CAND_KEYS = ("segments", "vertices", "main_vertex", "showers", "kine",
+             "tagger", "track_shower", "proj", "vertex_scoreboard")
+
+
+def apply_candidate(d, idx):
+    """Overlay candidate `idx`'s blocks onto the top-level dump.
+
+    Returns `d` itself for candidate 0 or a dump with no `candidates` array, so
+    the pre-pr/94 path is untouched -- not merely equivalent, but the same
+    object.  For idx > 0 a shallow copy is returned with only CAND_KEYS
+    rebound; nothing downstream in load() has to know candidates exist.
+    """
+    cands = d.get("candidates") or []
+    if idx <= 0 or idx >= len(cands):
+        return d
+    out = dict(d)
+    for k in CAND_KEYS:
+        if k in cands[idx]:
+            out[k] = cands[idx][k]
+    return out
+
+
+def cand_options(d):
+    """Select options for a dump: "<i>  (cluster N)" so the operator can tell
+    the candidates apart without switching to read the tables."""
+    cands = d.get("candidates") or []
+    opts = []
+    for i in range(max(1, len(cands))):
+        mv = (cands[i].get("main_vertex") if i < len(cands) and i > 0
+              else d.get("main_vertex")) or {}
+        cid = mv.get("cluster_id")
+        opts.append("%d" % i if cid is None else "%d  (cluster %s)" % (i, cid))
+    return opts
+
+
 def load(label):
     """Read one event's calib JSON and push every layer to its CDS."""
     path = EVENTS[label]
     with open(path) as fh:
         d = json.load(fh)
     state["label"] = label
+    state["raw"] = d
+
+    # Repopulate the candidate list for THIS event.  Assigning .options never
+    # fires the value callback; assigning .value does, hence the guard -- an
+    # unguarded reset would re-enter load() and double every CDS update.
+    opts = cand_options(d)
+    state["_cand_guard"] = True
+    try:
+        cand_select.options = opts
+        if cand_select.value not in opts:
+            cand_select.value = opts[0]
+    finally:
+        state["_cand_guard"] = False
+
+    try:
+        cand_idx = int(str(cand_select.value).split()[0])
+    except (ValueError, IndexError):
+        cand_idx = 0
+    d = apply_candidate(d, cand_idx)
     state["data"] = d
 
     # Hand-scan panel first: it resets the picks, so a stale pick from the
@@ -2545,7 +2611,23 @@ def apply_ranges():
 # Callbacks
 # ---------------------------------------------------------------------------
 def on_event(attr, old, new):
+    # A new event always starts on candidate 0.  Reset under the guard so the
+    # assignment does not re-enter load() before we have loaded the new event.
+    state["_cand_guard"] = True
+    try:
+        cand_select.options = ["0"]
+        cand_select.value = "0"
+    finally:
+        state["_cand_guard"] = False
     load(new)
+
+
+def on_candidate(attr, old, new):
+    """doc pr/94: redraw the same event against a different neutrino candidate."""
+    if state.get("_cand_guard"):
+        return
+    if state.get("label"):
+        load(state["label"])
 
 
 def step(delta):
@@ -2587,6 +2669,7 @@ def on_dqdx_seg(attr, old, new):
 
 
 event_select.on_change("value", on_event)
+cand_select.on_change("value", on_candidate)   # doc pr/94
 prev_btn.on_click(step(-1))
 next_btn.on_click(step(+1))
 zoom_btn.on_change("active", on_zoom)
@@ -2605,7 +2688,8 @@ dqdx_seg_sel.on_change("value", on_dqdx_seg)
 # Layout
 # ---------------------------------------------------------------------------
 header = Div(text="<h2>SBND PR event display</h2>", width=1400)
-controls = row(event_select, prev_btn, next_btn, Spacer(width=20),
+controls = row(event_select, prev_btn, next_btn, Spacer(width=15),
+               cand_select, Spacer(width=20),
                zoom_btn, cx_in, cy_in, cz_in, half_in, vtx_btn)
 
 # The hand-scan panel (sbnd_xin/docs/pr/75) sits directly under the
