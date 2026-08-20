@@ -243,6 +243,27 @@ CATH_TLA=()
 # Env: SBND_VKS_RADIUS=<cm> SBND_MVGA_RADIUS=<cm>.
 [ -n "${SBND_VKS_RADIUS:-}" ]  && CATH_TLA+=(--tla-code "vks_radius=${SBND_VKS_RADIUS}")
 [ -n "${SBND_MVGA_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_radius=${SBND_MVGA_RADIUS}")
+# doc pr/99 round 2 -- op3.5 approach-collapse guards + op1-post charge
+# second-opinion + shower ghost-member drop.  Numeric knobs: unset/empty
+# omits the TLA (jsonnet default null => C++ default 0 = legacy =>
+# byte-identical).  Bool knobs: tri-state (unset = cfg default, 1 = force
+# on, 0 = force off).
+[ -n "${SBND_MVGA_AC_VETO_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_ac_veto_radius=${SBND_MVGA_AC_VETO_RADIUS}")
+[ -n "${SBND_MVGA_AC_CHORD_MAX:-}" ]   && CATH_TLA+=(--tla-code "mvga_ac_chord_max=${SBND_MVGA_AC_CHORD_MAX}")
+[ -n "${SBND_MVGA_DUP_STARVED_ASYM:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_asym=${SBND_MVGA_DUP_STARVED_ASYM}")
+[ -n "${SBND_MVGA_DUP_STARVED_MIP:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_mip=${SBND_MVGA_DUP_STARVED_MIP}")
+[ -n "${SBND_MVGA_DUP_STARVED_SPAN:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_span=${SBND_MVGA_DUP_STARVED_SPAN}")
+[ -n "${SBND_SHOWER_GHOST_OVERLAP_FRAC:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_overlap_frac=${SBND_SHOWER_GHOST_OVERLAP_FRAC}")
+[ -n "${SBND_SHOWER_GHOST_DQDX_RATIO:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_dqdx_ratio=${SBND_SHOWER_GHOST_DQDX_RATIO}")
+[ -n "${SBND_SHOWER_GHOST_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_min_len=${SBND_SHOWER_GHOST_MIN_LEN}")
+for _pr99 in \
+    "SBND_MVGA_AC_NO_CASCADE:mvga_ac_no_cascade" \
+    "SBND_SHOWER_GHOST_MEMBER_DROP:shower_ghost_member_drop" ; do
+    _env=${_pr99%%:*}; _key=${_pr99#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr99 _env _key _val
 # doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
 # composite.  EMPTY = no TLA = C++ default 0 = term never computed =
 # byte-identical.  The offline C1 replay selected weight 3.0, center 0.

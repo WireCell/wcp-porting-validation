@@ -2308,3 +2308,11 @@ remains the pre-flip reference.
 The `*-prodflip-*` arms this round reads (pr96-prodflip-mcp2k,
 scan-prodflip-{mcp1k,ncpi0}) belong to the concurrent session's round — not
 tagged here, never written to.
+
+## doc pr/99 round 2 (2026-08-20)
+- work-pr99r2-base-{ncpi0,mcp1k,mcp2k} -- pre-edit baselines at f4b4d0ec (19+35+15 evts), proven ≡ prodflip arms; **KEEP: standing numu50/ncpi0 comparison baselines**
+- work-pr99r2-off-{nuecc48,ncpi0,mcp1k,mcp2k} / -off2-* / -off3-* -- knob-off gate arms (3 binary iterations, all gates PASS); off/off2 releasable now, off3 releasable after next round
+- work-pr99r2-on-{...} / -on2-* -- campaign iterations 1-2 (veto-radius adverse / pre-span-guard); releasable now
+- work-pr99r2-on3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL knob-on arms (production operating point); **KEEP until owner scan done**
+- work-pr99r2-smoke-*, -smoke2-*, -smoket-*, -probe285567 -- single-event smokes/probes; releasable after doc
+- work-pr99r2-flip-*, -floff-* -- flip proofs (13 evts x2); releasable after doc

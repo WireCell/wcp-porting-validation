@@ -1,0 +1,63 @@
+# numu50 -- standing 50-event numu validation manifest (doc pr/99 round 2).
+# Built from past PR-improvement docs (owner request 2026-08-20); the
+# cathode-crossing topic (docs 72/73) is deliberately excluded.
+# Format: <sample> <event>.  Samples: mcp1k = work-mcp1k-ql0819,
+# mcp2k = work-mcp2k-ql0819 (both reality=data).
+# Composition:
+#   mcp1k (35): the pr93r3 standing scan set's 33 mcp1k events
+#     (bee/pr93r3/pr93r3.index.txt) + owner pr/99 events 315167, 395148
+#     + op3.5 design case 349945 (doc pr/86 sec 15 -- must keep firing).
+#   mcp2k (15): pr/99 owner events 70084, 279955 + op3.5 offenders
+#     242550, 475140; doc 90 kink cases 54629, 405707, 398115, 237798,
+#     281165; doc 96 uncovered-prong cases 99860, 91653, 91697, 317077,
+#     51546, 285680.
+mcp1k 55539
+mcp1k 55595
+mcp1k 64409
+mcp1k 64921
+mcp1k 71222
+mcp1k 277298
+mcp1k 278684
+mcp1k 280972
+mcp1k 281837
+mcp1k 283713
+mcp1k 286191
+mcp1k 286681
+mcp1k 286906
+mcp1k 290729
+mcp1k 292643
+mcp1k 293149
+mcp1k 314507
+mcp1k 315167
+mcp1k 316025
+mcp1k 320865
+mcp1k 321371
+mcp1k 348471
+mcp1k 348691
+mcp1k 349461
+mcp1k 349549
+mcp1k 350935
+mcp1k 352233
+mcp1k 386948
+mcp1k 395060
+mcp1k 395610
+mcp1k 401450
+mcp1k 407280
+mcp1k 409546
+mcp1k 395148
+mcp1k 349945
+mcp2k 70084
+mcp2k 279955
+mcp2k 242550
+mcp2k 475140
+mcp2k 54629
+mcp2k 405707
+mcp2k 398115
+mcp2k 237798
+mcp2k 281165
+mcp2k 99860
+mcp2k 91653
+mcp2k 91697
+mcp2k 317077
+mcp2k 51546
+mcp2k 285680

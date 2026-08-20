@@ -300,3 +300,138 @@ background campaign.
   residual), pr/86 §15 (op3.5), pr/83 §11.2 (projective ghosts), pr/93
   (EM-vs-track guards + §3 open design), pr/94 §9.10 (395148's earlier
   symptom), pr/51 (285567 zoo), pr/98 (fit_exclusion flip).
+
+---
+
+## Round 2 (2026-08-20) — implementation: A1 + A2 + A3, validated, SBND PRODUCTION ON
+
+Owner instruction: implement the round-1 action items (scope answer: A1+A2+A3),
+validate on nueCC48 + NCπ0 + a new ~50-event numu manifest built from past
+PR-doc events (cathode-crossing topic excluded), and flip ON if validation
+passes.  All shipped as default-OFF C++ knobs; the flip lives only in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`.
+
+### Repro block
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin           # all arms: PR_JOBS=32, PR_EXTRA_STAGES=pr_display, reality=data
+# numu50 standing manifest: scripts/manifests/numu50.txt (35 mcp1k + 15 mcp2k)
+# pre-edit baselines at HEAD f4b4d0ec (proven ≡ production prodflip arms):
+#   work-pr99r2-base-{ncpi0,mcp1k,mcp2k}; nueCC48 baseline = work-pr98-flip-nuecc48
+# knob-off gate arms (final binary): work-pr99r2-off3-{nuecc48,ncpi0,mcp1k,mcp2k}
+python3 scripts/pr85_hash_gate.py work-pr99r2-off3-<s> <baseline>   # 96+38+70+30 all PASS
+# knob-on arms (final operating point): work-pr99r2-on3-* with
+#   SBND_MVGA_AC_CHORD_MAX=30 SBND_MVGA_AC_NO_CASCADE=1
+#   SBND_MVGA_DUP_STARVED_ASYM=0.55 SBND_MVGA_DUP_STARVED_MIP=0.8 SBND_MVGA_DUP_STARVED_SPAN=0.5
+#   SBND_SHOWER_GHOST_MEMBER_DROP=1
+python3 scripts/pr83r3_scores_ab.py work-pr99r2-off2-<s> work-pr99r2-on3-<s>
+python3 scripts/pr93_shower_ab_diff.py work-pr99r2-off2-<s> work-pr99r2-on3-<s>
+# flip proofs (13-event subset): work-pr99r2-flip-* ≡ on3; work-pr99r2-floff-* ≡ baselines
+# panels: scripts/pr99_point_panels.py work-pr99r2-base-<s> work-pr99r2-on3-<s> <out> <evt> <x> <y> <z>
+```
+
+### Knobs (all C++ defaults OFF = byte-identical; production values below)
+
+| knob | seat | prod | mechanism |
+|---|---|---|---|
+| `mvga_ac_chord_max` | op3.5, `NeutrinoGraphAudit.cxx` | **30 cm** | decline a collapse whose replacement chord \|vtx1−vtx2\| exceeds the cap.  Kills the off-envelope population (285567 53.6/58.3, 315167 146.2, 242550 338.5 cm; design case 5.8 cm keeps firing) |
+| `mvga_ac_no_cascade` | op3.5 | **true** | never collapse a candidate whose sg1/sg2 is a `created` product (285567's second fire consumed its own nfits=0 chord) |
+| `mvga_ac_veto_radius` | op3.5 charge veto | **OFF** | dedicated collapse-chord is_good_point radius.  Measured ADVERSE at the prototype 0.2 cm — kills the 349945 design case and benign small collapses (359980 vtx moved 34 cm) — re-confirming pr/86 Stage A's deliberate 1.0 cm relax (M15: the divergence was documented).  Knob retained for future scans |
+| `mvga_dup_starved_asym` | op1-post angle-decline | **0.55** | pair min/max median-dQ/dx asymmetry.  The refit SPLITS corridor charge across a duplicate pair (70084: 1.16/0.62 — an absolute MIP floor can never fire post-refit); asymmetry is the op1-proj-shaped discriminator (production op1-proj gate is also 0.55) |
+| `mvga_dup_starved_mip` | op1-post | **0.8** | the same threshold separates the pair BOTH ways: loser ≤ 0.8 ≤ survivor (a proton+MIP V's muon reads ~1.0 → protected; a 0.61-ratio "survivor" carries no verdict) |
+| `mvga_dup_starved_span` | op1-post | **0.5** | pair min/max LENGTH comparability: a projective duplicate shares its whole span (70084: 0.83); a track paired with its own Bragg stub does not (138009: 0.15) |
+| `shower_ghost_member_drop` | new pass in `shower_clustering_with_nv`, before `id_pi0_with_vertex` | **true** | drop a charge-starved shower member (median ratio ≤ 0.25 OR frac(dQ≤0)>0.5, len ≥ 10 cm) whose fit points are 2D-shadowed in ≥2 of 3 wire views (ov[1] ≥ 0.7, tol = mvga_dup_tol) by a healthy (≥ 2×0.25) partner segment ANYWHERE in the graph, same (apa,face).  View removal (leaf-only strand guard, new `Shower::drop_ghost_member`, forked from detach_track_prefix) + graph deletion (leaves the PF/Bee display) + vote/kine/charge recompute + maps rebuild |
+| `shower_ghost_{overlap_frac,dqdx_ratio,min_len}` | — | C++ defaults 0.7 / 0.25 / 10 cm | thresholds, inert while the bool is off |
+
+Runner hooks: `SBND_MVGA_AC_{VETO_RADIUS,CHORD_MAX,NO_CASCADE}`,
+`SBND_MVGA_DUP_STARVED_{ASYM,MIP,SPAN}`, `SBND_SHOWER_GHOST_{MEMBER_DROP,
+OVERLAP_FRAC,DQDX_RATIO,MIN_LEN}` in `run_pr_chain_batch.sh`.
+
+### Design corrections measured during the campaign (3 iterations)
+
+1. **A1 veto-radius retreat.**  Campaign 1 set the collapse veto to the
+   prototype's 0.2 cm ("prototype parity").  It killed the 349945 design
+   case (enu 1109→419, numu 2.47→0.22) and benign small collapses (359980:
+   a 9.3 cm collapse vetoed, vertex moved 34 cm) — exactly what pr/86
+   Stage A measured when it deliberately relaxed the radius to 1.0 cm.
+   Charge-veto declines log at TRACE, so the first firing census missed
+   this entirely.  Production keeps the radius knob OFF; the chord cap +
+   no-cascade alone remove every owner-scan monster.
+2. **A2 absolute-MIP form dead on arrival.**  The round-1 diagnosis quoted
+   qmed 440 ≈ 0.18 MIP for 70084's chord — that was DISPLAY charge
+   (T_rec q).  In fit space the refit splits the corridor charge: the pair
+   reads 1.16/0.62, so "starved ≤ 0.25" never fires.  Redesigned to pair
+   asymmetry (0.53 ≤ 0.55).
+3. **A2 span guard + survivor floor.**  The asym form alone fired on
+   31/117 events and LOST two nueCC48 nue selections: 138009 (nue 4.3→−15)
+   deleted a 21 cm MIP electron stem paired with its own 3.2 cm Bragg-peak
+   stub (span 0.15), 489330 (4.3→−15) a 14.8 cm limb vs a 6.4 cm spur.
+   `mvga_dup_starved_span=0.5` + the survivor floor (hi ≥ 0.8) restore
+   both; final footprint 5/117 events, all span-comparable corridor pairs.
+4. **A3 partner is NOT a member.**  395148's ghost 2D-shadows the 65.7 cm
+   track seg 21008 (non-member, ratio 1.32) at views 1.00/1.00/0.25 — the
+   member-pair-only scan never fires.  Partner pool widened to the whole
+   graph; the candidate stays member-only.  Also: the ghost's fit-space
+   signature is starved ratio 0.11 with frac(dQ≤0)=0.20 — the NEGATIVE
+   display-charge reading lives in T_rec space; the starved-ratio arm of
+   the test is what fires.
+
+### Gates and proofs (final binary, labels)
+
+- Baselines ≡ production: `work-pr96-prodflip-mcp2k` 4/4,
+  `work-scan-prodflip-mcp1k` 10/10, `work-scan-prodflip-ncpi0` 2/2 PASS.
+- Knob-off byte-identical: `work-pr99r2-off3-{nuecc48 96/96, ncpi0 38/38,
+  mcp1k 70/70, mcp2k 30/30}` — ALL PASS (pr85_hash_gate vs the baselines).
+- Compiled-config proofs (M6): off-arm `.wct-cfg` diff vs base = arm-path
+  lines only; knob-on `.wct-cfg` carries exactly the passed keys.
+- `wcdoctest-clus`: 215 cases / 2243 assertions PASS (knob-defaults doctest
+  extended with all 10 new keys).
+- Flip proofs (13-event subset: 138009 235435 168596 / 285567 / 315167
+  395148 349945 55595 / 70084 279955 242550 475140 54629):
+  flip-bare ≡ explicit-on3 PASS 6+2+8+10 archives; forced-off ≡ pre-flip
+  baselines PASS 6+2+8+10 archives (work-pr99r2-flip-* / work-pr99r2-floff-*).
+
+### Owner-event outcomes (off2 → on3)
+
+| evt | knob(s) fired | outcome |
+|---|---|---|
+| 285567 | chord-cap ×1, no-cascade ×2 (2 small collapses still fire) | the 53.6/58.3 cm fake chords declined; census track-like uncovered group (52 cm, rms 0.53) clears (TRACKLIKE 1→0, q 31.3→30.5%).  Residual ~30% uncovered is diffuse shower spread + the 279955-class interior fit collapse (FOS still SELECTs the prong, its segment 8105 exists in BOTH arms; the ribbon rides 4–7 cm off the fit) — pr/96 §10.1 territory, not op3.5 |
+| 315167 | chord-cap ×1 | the 146.25 cm chord (the fake 44.8 cm EM-trunk source) declined.  The 172 MeV object remains typed 11 (the vote only ever writes 11) — typing stays with A5, as designed.  enu 1180→1305 |
+| 70084 | starved-override ×1 | the 15.69 cm chord (0.62 vs 1.16, overlap 0.87 @ 30°) deleted; triangle OPEN, real chain 20034→20022→20020 intact.  enu 598→543 |
+| 395148 | ghost drop ×1 | ghost member (23.4 cm, ratio 0.11, views 1.00/1.00/0.30, partner 1.18) removed from shower AND graph — the owner's "ghost blue track" point A is gone from the display.  Shower 4→3 members, kine_best 295.6→87.6 MeV, kine_charge 295.6→231.8; enu 940→732.  Object keeps its 11 label (vote never unwrites) — the "many tracks" energy inflation is fixed, the label is A5's |
+| 279955 | none | unchanged, as expected (pr/96 §10.1 blocker stands) |
+
+Panels (pr99_point_panels.py, base vs on3): `docs/pr/99_r2_evt{285567_p1click,
+285567_prong,70084_triangle,395148_ghostA,395148_p1,279955_p1}.png`.
+
+### Campaign screens (117 events; off2 vs on3)
+
+- Firing footprint: chord-cap 5 evts, no-cascade 6, starved-override 5,
+  ghost drop 1 (= 395148 only).
+- Score movers 10 total, every one attributed:
+  nueCC48 4 — 46363/433451/168596 (span-comparable starved-dup kills;
+  nue selections unchanged; 168596 enu 2619→3533), 235435 (no-cascade ×10;
+  nue already −4.2 pre-knob, → −15 sentinel; enu +67).
+  **No nue selection lost** (campaign-1's 138009/489330 losses recovered).
+  NCπ0 2 — 56982 (nue −3.6→−4.3, good direction), 285567 (nue −2.6→−1.6,
+  still far from selection).
+  numu50 4 — the owner events (315167, 395148, 70084) + 475140, which
+  GAINS its numu selection (numu −0.62→1.25) after the 338 cm-class
+  chord-cap decline.
+- pr/93 shower harness: no shower disappears, no type flips; member-energy
+  shifts of a few MeV confined to the dup-kill events; adverse gamma
+  506114 untouched.
+
+### numu50 — standing numu validation manifest
+
+`scripts/manifests/numu50.txt`: 35 mcp1k (pr93r3 standing scan set + owner
+events + 349945) + 15 mcp2k (owner events, op3.5 offenders, doc 90/94/96
+cases).  Baselines `work-pr99r2-base-{mcp1k,mcp2k}` at production HEAD are
+the standing comparison arms going forward.
+
+### Production flip
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`: `mvga_ac_chord_max=30`,
+`mvga_ac_no_cascade=true`, `mvga_dup_starved_asym=0.55`,
+`mvga_dup_starved_mip=0.8`, `mvga_dup_starved_span=0.5`,
+`shower_ghost_member_drop=true`.  C++ defaults stay false/0.
