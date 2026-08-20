@@ -1,4 +1,6 @@
-# doc pr/99 round 2 A/B index -- OFF <uuid-after-upload> / ON <uuid-after-upload>
+# doc pr/99 round 2 A/B index -- OFF 0f1b95f2 / ON 70f2fdbc
+# OFF https://www.phy.bnl.gov/twister/bee/set/0f1b95f2-b3ed-4aa1-99b9-6964bd324017/event/list/
+# ON  https://www.phy.bnl.gov/twister/bee/set/70f2fdbc-7aae-400d-8f38-2d188e6346e2/event/list/
 # 12 events: 5 owner scan events first (idx 0-4), then the round's movers.
 # OFF = work-pr99r2-off3-* (production-equivalent, gate PASS), ON = work-pr99r2-on3-*
 # (chord_max=30 no_cascade starved asym/mip/span=0.55/0.8/0.5 ghost_drop -- the shipped flip).

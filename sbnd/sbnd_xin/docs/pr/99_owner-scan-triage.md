@@ -404,6 +404,10 @@ OVERLAP_FRAC,DQDX_RATIO,MIN_LEN}` in `run_pr_chain_batch.sh`.
 Panels (pr99_point_panels.py, base vs on3): `docs/pr/99_r2_evt{285567_p1click,
 285567_prong,70084_triangle,395148_ghostA,395148_p1,279955_p1}.png`.
 
+Bee A/B (12 events, owner 5 first then movers; `bee/pr99r2/pr99r2.index.txt`):
+OFF 0f1b95f2 <https://www.phy.bnl.gov/twister/bee/set/0f1b95f2-b3ed-4aa1-99b9-6964bd324017/event/list/> /
+ON 70f2fdbc <https://www.phy.bnl.gov/twister/bee/set/70f2fdbc-7aae-400d-8f38-2d188e6346e2/event/list/>.
+
 ### Campaign screens (117 events; off2 vs on3)
 
 - Firing footprint: chord-cap 5 evts, no-cascade 6, starved-override 5,
