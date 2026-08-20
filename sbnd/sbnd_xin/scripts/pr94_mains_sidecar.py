@@ -92,6 +92,16 @@ def main():
         if not os.path.exists(rp):
             continue
         with uproot.open(rp) as f:
+            # An event where TaggerCheckNeutrino selected no candidate anywhere
+            # has no TrackFitting, so UbooneTaggerOutputVisitor returns before
+            # booking anything and the file carries only Trun/T_proj/T_bad_ch.
+            # That is a legitimate outcome (rc=0), and a common one: 539 of 1000
+            # mcp1k events with the knob off.  It is exactly the `no-bundle`
+            # label, so record it rather than crashing or silently skipping.
+            if "T_tagger" not in [k.split(";")[0] for k in f.keys()]:
+                run, subrun = rse(prdir, e)
+                ev_rows.append([run, subrun, e, 0, 0, 0, "no-bundle"])
+                continue
             t = f["T_tagger"]
             if "act_cluster_id" not in t.keys():
                 nolabel += 1

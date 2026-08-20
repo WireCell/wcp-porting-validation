@@ -1028,6 +1028,342 @@ cmp work-pr94h-disp-base/pr_evt18625/calib-pr-evt18625.json \
     work-pr94h-disp-off/pr_evt18625/calib-pr-evt18625.json    # must be identical
 ```
 
+### 9.6 Phase 5b — the dot guard (`nu_per_bundle_min_length`)
+
+**Symptom.** The first Phase 5 population arm was reported here as "+143
+gained neutrinos, validation passes". The owner rejected the number on
+physics grounds without opening a file: *"107 MeV looks like a muon (mass 105
+MeV) + some energy, so these must be dots like activities? I thought that we
+have some cuts to avoid promoting dots like activities as neutrino
+candidates?"*
+
+Confirmed on the pre-guard mcp1k arm: of the 143 gained candidates, **87 sat
+in the 100-149 MeV bin**, **143 of 155 seeds were under 5 cm**, and only **1
+of the 97 non-cosmic-flagged ones** scored `numu_score > 0`. A dot fitted as
+a muon at rest. The "+143" claim is **retracted**; it measured a defect.
+
+**Root cause.** SBND runs `nu_skip_cosmic_bundle_min_length = 0`, i.e. the
+legacy bundle veto removes *every* bundle-mate of a convicted main and the
+chain reaches the real interaction through `nu_fallback_demoted_mains`.
+Per-bundle mode drops that veto by design (§5), and nothing else in the chain
+imposes a length floor — so every sub-cm shard inside a convicted bundle
+became eligible to be "the neutrino" of that bundle.
+
+**Fix.** New knob `nu_per_bundle_min_length` (cm; **C++ default 0** = the
+Phase 2 behavior, no floor). SBND production value **15**. The floor applies
+to an activity only when its bundle also holds a cosmic-tagged main — exactly
+the bundles the legacy event-level veto emptied.
+
+**Why that scoping is provably additive.** With
+`nu_skip_cosmic_bundle_min_length = 0` both legacy emission sites reduce to
+`!(0 > 0 && …)` = skip: the main loop (`:1048-1053`) and the demoted fallback
+(`:1113-1120`). So legacy emits *nothing at all* from a convicted bundle, and
+a floor scoped to convicted bundles **cannot remove a legacy row by
+construction** — not merely "was not observed to".
+
+#### The first cut of the guard was wrong, and the gate caught it
+
+Scoping the floor by "does this bundle hold a cosmic-tagged main" is only
+additive if "main" means the same thing it means in the legacy chain. It did
+not. Legacy builds `cosmic_gids` (`TaggerCheckNeutrino.cxx:999-1011`) from
+**`flag_main_cluster` activities only**; the first guard scanned `cand.acts`,
+which also holds demoted mains. Bundles whose *only* cosmic-tagged activity
+was demoted were therefore convicted by the guard and not by legacy, and the
+floor then deleted rows legacy reports.
+
+| arm | NCpi0 evt 114446 |
+|---|---|
+| OFF (legacy) | 1 row, cluster 21, `Enu` 126.4 MeV |
+| ON, no guard | 1 row, cluster 21, `Enu` 126.4 MeV — identical |
+| ON, first guard | **no `T_tagger` at all** |
+| ON, fixed guard | 1 row, cluster 21, `Enu` 126.4 MeV — identical |
+
+gid 0 there holds main 21 (10.9 cm, FC — the legacy selection) beside
+**demoted** main 33 (2.4 cm, TGM). Cost on mcp1k: **8 events lost a vertex**
+(169488, 171892, 279643, 281727, 283463, 389588, 391238, 398514).
+
+Fix: `!a.is_demoted && (a.tgm || a.stm || a.lm > 0)` — an exact mirror of the
+legacy `cosmic_gids` predicate. This is the M15 family: the guard and the
+legacy veto must agree on the *scope word*, not just the flag test.
+
+#### What the guard actually removes (mcp1k, 1000 events)
+
+Splitting ON rows by index is the load-bearing decomposition, because row 0
+is the legacy result and rows ≥ 1 are what pr/94 adds:
+
+| rows | n | < 15 cm | with a vertex | < 15 cm **and** with a vertex |
+|---|---|---|---|---|
+| primary (row 0 — the legacy result) | 461 | 61 | 446 | 49 |
+| **added (row ≥ 1 — what pr/94 introduces)** | **40** | 34 | **5** | **1** |
+
+The legacy chain selects sub-15 cm activities routinely — 49 of its own
+reported vertices are under 15 cm — so a floor applied to *its* row would be
+a behavior change, not a fix.
+
+Among the 40 added rows, whether a vertex reconstructs tracks length almost
+perfectly, which is why only 5 of 40 produce one:
+
+| added rows | < 15 cm | ≥ 15 cm |
+|---|---|---|
+| with a vertex | 1 | 4 |
+| no vertex | 33 | 2 |
+
+| evt | selected L | `Enu` | bundle convicted? |
+|---|---|---|---|
+| 400636 | 112.9 cm | 577.9 MeV | no |
+| 65053 | 46.9 cm | 243.1 MeV | no |
+| 286681 | 35.3 cm | 270.0 MeV | no |
+| 487303 | 21.7 cm | 383.7 MeV | no |
+| **391854** | **1.7 cm** | **108.9 MeV** | no |
+
+The 35 no-vertex added rows (median 1.7 cm) select a sub-cm main and
+reconstruct nothing (`Enu` 0), making no physics claim — but they are still
+`T_tagger` rows.
+
+**All five vertex-producing added rows sit in UNCONVICTED bundles**, so the
+floor never applied to any of them: as scoped by bundle conviction,
+`nu_per_bundle_min_length` did nothing for the added rows that matter, and
+391854's 1.7 cm → 108.9 MeV dot — precisely the muon-at-rest signature the
+owner flagged — survived. §9.7 rescopes the floor to close that.
+
+#### Why an activity can exist with no vertex (owner question)
+
+*"I thought that we will at least identify a vertex if we have some
+activities."* The vertex is not a property of the cluster; it is derived from
+a fitted **trajectory**, and `find_proto_vertex` refuses to start without one
+(`NeutrinoPatternBase.cxx:2791-2794`):
+
+```cpp
+if (!cluster.has_pc("steiner_pc")) return false;
+if (steiner_pc.size() < 2) return false;
+```
+
+A ~1.6 cm blob carries fewer than two Steiner points, so no segment is built,
+`determine_main_vertex` returns nullptr, and the whole refinement block
+(`if (final_main_vertex)`, `:1968`) is skipped — leaving `nu_x/y/z` at their
+initialised zeros. Both candidates of mcp1k evt 62583 show it in one log:
+
+| candidate | selected L | initial PR | Steiner graph | vertex |
+|---|---|---|---|---|
+| cluster 26 | 31.6 cm | **209.5 ms** | 186 vertices / 248 edges | (-82.1, 91.5, 327.4) |
+| cluster 12 | 1.6 cm | **0.016 ms** | none built | (0, 0, 0) |
+
+The row is still emitted because the per-bundle loop emits one row per bundle
+that *selected* a candidate, and selection is on **length alone, before any
+fitting**. "Has an activity" and "can fit a vertex to it" are different bars.
+
+### 9.7 Phase 5b round 2 — the floor is scoped by row role, not bundle
+
+Owner instruction: *"Prevent sub 15 cm sounds good to me."*
+
+The obvious reading — drop added rows under 15 cm — is **wrong**, and mcp1k
+says so in one table:
+
+| evt | row | selected L | is it the legacy row? |
+|---|---|---|---|
+| 62583 | 1 | 1.6 cm | **yes** — 0 differing branches vs the OFF row |
+| 391854 | 1 | 1.7 cm | no — genuinely added |
+
+Same length, opposite required verdicts. No length rule, and no bundle-
+conviction rule, separates them; only *"is this the legacy selection?"* does.
+
+**Final rule.** The floor applies to every candidate **except the legacy
+event-wide winner**, in any bundle. `legacy_main` is recomputed inside the
+per-bundle branch as a side-effect-free duplicate of the legacy selector
+(`:999-1135`; M10 — the production branch stays textually untouched). This
+subsumes the round-1 convicted-bundle scoping, so it is one rule, not two,
+and additivity becomes structural: **the row the legacy chain reports can
+never be floored away.**
+
+#### Additivity, measured rather than assumed
+
+On the 3 mcp1k events whose primary row changed (62583, 174422, 280466) the
+legacy row is preserved **byte-for-byte as row 1** — 0 differing branches on
+every shared tagger/kine branch. pr/94 is strictly additive at the row-set
+level; only the *primary designation* moves, to the better-reconstructed
+candidate. `primary_index` returns 0 on all 1000 events.
+
+#### Round-2 effect on the small arms
+
+Every second row removed was a no-vertex dot; the one genuine second neutrino
+survived:
+
+| sample | removed second rows (all `Enu` 0) | kept |
+|---|---|---|
+| nueCC48 | 1.7, 1.4, 3.3, 1.2 cm | — |
+| NCpi0 | 1.7, 7.9, 1.6 cm | **evt 18625, 15.3 cm → 352.2 MeV** |
+
+**Caveat worth carrying forward:** evt 18625 — the only hand-validated
+multi-bundle event (§9.5, owner-scanned) — clears the 15 cm floor by 0.3 cm.
+A 20 cm floor would delete it. That argues against raising the floor.
+
+395148 is unaffected: 1 row, cluster 21, `Enu` 992.1 MeV, `numu_score` 3.655,
+with cluster 10's STM verdict recorded in its `act_*` slot.
+
+#### Round-2 on mcp1k (1000 events)
+
+| | round 1 | **round 2** | OFF |
+|---|---|---|---|
+| total rows | 501 | **470** | 461 |
+| rows pr/94 adds | 40 | **9** | — |
+| events gaining a first vertex | 4 | **3** | — |
+| events LOSING a vertex | 0 | **0** | — |
+| reconstructed vertices | 442 | **450** | 443 |
+
+All nine added rows, and what each one is:
+
+| evt | selected L | vertex | what it is |
+|---|---|---|---|
+| 400636 | 112.9 cm | 577.9 MeV | genuine second neutrino |
+| 65053 | 46.9 cm | 243.1 MeV | genuine |
+| 286681 | 35.3 cm | 270.0 MeV | genuine |
+| 487303 | 21.7 cm | 383.7 MeV | genuine |
+| 317939 | 16.8 cm | — | above the floor, no vertex |
+| 409634 | 15.6 cm | — | above the floor, no vertex |
+| 174422 | 10.3 cm | — | **preserved legacy row** (exempt) |
+| 62583 | 1.6 cm | — | **preserved legacy row** (exempt) |
+| 280466 | 1.3 cm | — | **preserved legacy row** (exempt) |
+
+Sub-15 cm added rows carrying a vertex: **0** (round 1: 1). The only sub-15 cm
+survivors are the three preserved legacy rows — the exemption demonstrating
+itself on data rather than in principle. Dot promotion across the round:
+**143 → 1 → 0**.
+
+Dot promotion: **143 → 1**. Sub-15 cm selections inside a convicted bundle:
+**0** (the floor is doing exactly its job where scoped).
+
+`15` rather than `5`: on the small arms the guard removed activities at 1.2,
+1.5, 1.8 and **14.7** cm; the 14.7 cm one is nueCC48 evt 389538's second
+bundle (anode 1), which selected a 14.7 cm main and reconstructed `nu_x = 0`,
+`Enu = 0`. A 5 cm floor keeps that zero-vertex row.
+
+#### Correction: `matched_flash_gid = 1000000` is not a sentinel
+
+Rows at gid 1000000 were briefly read here as a "no matched flash" pseudo-
+bundle. They are not: `gid = anode_ident * kFlashGidStride + flash_row` with
+`kFlashGidStride = 1000000` (`QLMatching.cxx:37,3693`), so gid 1000000 is
+**anode 1, flash row 0** — a genuine second in-beam bundle, consistent with
+§1's "max 2 bundles per event" census.
+
+#### Phase 5b gates
+
+| gate | arms | result |
+|---|---|---|
+| OFF hash (mabc + pctree) | `pr94i-off-*` vs `pr94j-off-*` | PASS 96/96, 38/38 |
+| OFF ROOT, all branches | ″ | PASS 48/48, 19/19 |
+| OFF unaffected by the guard edit | `pr94j-off-*` vs `pr94k-off-*` | PASS 96/96, 38/38, 48/48, 19/19 |
+| primary-row gate (0 lost, 0 differing) | `pr94k-off-*` vs `pr94k-on-*` | PASS nueCC48 48/48, NCpi0 19/19 |
+| sync check (A-E) | `pr94k-on-*` | PASS 52/52 rows, 23/23 rows |
+| additivity on mcp1k | `pr94p5-off-mcp1k` vs `pr94k-on-mcp1k` | **0 events lost a vertex** |
+| 395148 (the motivating event) | `pr94k-on-evt395148` | 1 row, cluster 21 selected, `act` = {10: STM, 198.9 cm 21: FC selected} |
+| `wcdoctest-clus` | — | 2215/2215 |
+
+### 9.8 Phase 5b round 2 — a second, DIFFERENT defect found during Bee scan (OPEN, not fixed)
+
+Owner scan of the round-2 Bee package (`bee/pr94r5b2/`) flagged mcp2k evt
+73038 (idx 3, NEW): *"it seems that your current code also recover the
+activities that are not matched to the beam flash time... we only need to
+consider the bundles with beam flash."*
+
+**Not a length-floor issue** — cluster 24 (the promoted candidate, 26.5 cm)
+clears the 15 cm floor regardless of scoping, so §9.7's round-2 fix does not
+touch this. This is a separate, deeper defect in shared production
+clustering code, confirmed by direct trace, NOT yet fixed.
+
+**Wrong initial diagnosis, corrected.** First pass compared the Bee-display
+remap script's (`make_pr_bee.py`) charge-fingerprint heuristic against
+`op.json`'s `op_cluster_ids` and concluded cluster 24 was built from charge
+that "never matched any flash." **That conclusion was wrong** — retracted
+after a direct trace of the authoritative C++ scalars (below). The
+display-heuristic disagreement is a real but separate, lower-priority
+artifact (see "Loose end" below); it is not the mechanism.
+
+**Confirmed root cause, by direct trace.** Added an env-gated diagnostic
+(`WCT_FLASHT0_DEBUG=1`, byte-identical when unset — verified: nueCC48 96/96
+hash + 48/48 ROOT PASS against the pre-instrumentation arm) in two places:
+
+- `clustering_examine_bundles.cxx`, right before the flash-t0 merge
+  (`ClusteringExamineBundles`, `assign_flash_t0_groups`/`merge_clusters`)
+  — dumps every in-scope cluster's ident, `flash`/`matched_flash_gid`,
+  `cluster_t0`, length, `main_cluster` flag, and flash-time group.
+- `ClusteringUnmergeBundle.cxx`'s `mark_demoted_main` — dumps the
+  `real_cluster_id` provenance of each split-off demoted main.
+
+Re-ran the Q/L stage for evt 73038 in an isolated scratch workspace
+(`/home/xqian/tmp/ql73038trace*`, reusing the existing imaging npz + opflash
+tarballs read-only — `work-cbr3-census-on` itself was never touched,
+`run_ql_evt.sh` does `rm -rf $QLDIR` unconditionally so this must never be
+pointed at a production ql_root, M13). Result (Q/L-stage cluster idents, at
+the exact merge point):
+
+```
+cluster 2  flash=14 matched_flash_gid=14      cluster_t0=0.967555us L=1.55cm   group=6
+cluster 5  flash=14 matched_flash_gid=14      cluster_t0=0.967555us L=4.92cm   group=6
+cluster 6  flash=14 matched_flash_gid=14      cluster_t0=0.967555us L=26.53cm  group=6  <- becomes the promoted candidate
+cluster 24 flash=0  matched_flash_gid=1000000 cluster_t0=0.934404us L=208.45cm group=6  <- the cosmic muon
+```
+
+Cluster 6 (11 blobs, 26.53 cm — matches the final candidate's 26.5 cm) **is
+genuinely, independently flash-matched** — to gid **14**, a weak 602-PE flash
+on APA0, the *exact same flash the legacy chain's own single-event candidate
+(cluster 1, 15.4 cm, reconstructs no vertex) also matched*. It is NOT
+unmatched charge.
+
+**The mechanism:** `ClusteringExamineBundles`'s flash-t0 merge
+(`clustering_examine_bundles.cxx:130-253`) groups clusters whose
+`cluster_t0` differ by less than `flash_t0_window` (default **80 ns**,
+`TaggerCheckNeutrino.h`/`ClusteringFuncs.h` `flash_t0_window_{80*units::ns}`)
+— **with no spatial/geometric check at all** (the code's own comment says so:
+"this stage's edges are gated ONLY on shared flash time"). Cluster 6's time
+(0.967555 us) and the muon's time (0.934404 us) differ by **33 ns** — under
+the window — so the merge fuses them. `merge_clusters()`'s "longest
+flash-bearing member" rule then makes the 616-blob muon the group's donor,
+and cluster 6 **inherits the muon's gid=1000000** instead of keeping its own
+gid=14 (`ClusteringUnmergeBundle.cxx`'s own comment: "separate()->from()
+copied the merged cluster's flags and cluster_scalar... matched_flash_gid").
+Found the identical pattern on a second bundle in the same event (a 1.45 cm
+piece merged with a 352 cm cluster, times 30.8 ns apart) — not a one-off.
+
+**Physical reading:** cluster 6/24 is very plausibly the *same small, real
+activity* the legacy chain's own candidate (cluster 1, gid=14) also sees —
+just a larger piece of it — mislabeled onto the bright cosmic muon's flash
+purely because the merge ignores geometry. The bookkeeping is wrong; the
+underlying charge may well be real.
+
+**Why this is out of scope for tonight.** The flash-t0 merge is shared
+production clustering code (used far beyond per-bundle mode — it runs
+unconditionally whenever `use_flash_t0` is on, i.e. in the all-APA stage for
+every SBND event). A correct fix needs a design decision (tighten the
+window? add a spatial/geometric check? stop propagating gid onto demoted
+members and instead report the piece's own true gid?) that affects
+production reconstruction broadly, not just this knob. Owner instruction:
+*"Let's commit the code and summarize the finding first, we will use a new
+session to track down this bug, you can keep the flag off for now."*
+
+**Loose end, not yet reconciled:** the Bee-display remap script
+(`make_pr_bee.py`) independently flagged cluster 24 as
+"NO-FLASH-MATCH (fallback: dominant)" against `op.json`'s `op_cluster_ids`.
+Given the C++ trace above shows a genuine match (gid=14), `op.json`'s
+per-flash `op_cluster_ids` list likely does not enumerate every genuine
+match (a display-layer limitation), or there is a numbering/id gap between
+the two data products this session did not close. Re-check when picking this
+up: `op.json`'s flash i=16 (apa0, PE=602.6, t=0.967555us — exactly gid=14)
+lists `cluster_ids=[4]`, one off from the img-global cluster (5) the Bee
+remap found at the fitted vertex position — worth resolving alongside the
+merge-window fix, not before it.
+
+**State left for the next session:**
+- `WCT_FLASHT0_DEBUG=1` diagnostic in `clustering_examine_bundles.cxx` and
+  `ClusteringUnmergeBundle.cxx` — env-gated, verified byte-identical when
+  unset, left in place (removable, but useful for the next trace).
+- `nu_per_bundle` stays `false` everywhere in SBND production config
+  (`wct-pr-perevt.jsonnet:1098`, `clus.jsonnet:1258,3039`) — **not flipped**.
+- Scratch trace workspace: `/home/xqian/tmp/ql73038trace*` (not committed;
+  regenerate from `work-cbr3-census-on/{evt,ql_evt}73038` if needed again).
+- Round-2 length floor (§9.7) is independently complete, gated, and safe to
+  ship on its own merits whenever the flash-attribution bug is resolved —
+  the two are unrelated defects.
+
 ## 10. Verification
 
 1. `wcbuild`, then freshness proof on `build/clus/libWireCellClus.so` (M1)

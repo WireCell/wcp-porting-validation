@@ -207,6 +207,12 @@ CATH_TLA=()
 # candidate = byte-identical.  Set to 1 for the ON arm.
 # Env: SBND_NU_PER_BUNDLE=<1|true>.
 [ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=true")
+# doc pr/94 Phase 5b round 2: the dot guard.  Length floor (cm) for a
+# per-bundle candidate, exempting the legacy event-wide winner.  EMPTY = no
+# TLA = the job default 15 cm.  Set to 0 to reproduce the pre-5b behavior (no
+# floor), which is what promoted sub-cm blobs to neutrino candidates.
+# Env: SBND_NU_PER_BUNDLE_MIN_LENGTH=<cm>.
+[ -n "${SBND_NU_PER_BUNDLE_MIN_LENGTH:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle_min_length=${SBND_NU_PER_BUNDLE_MIN_LENGTH}")
 # doc pr/94 Phase 3: stop ClusteringProtectBundle withholding cosmic-convicted
 # bundles from the PR ensemble, so every in-beam bundle is actually openable by
 # Phase 2's per-bundle loop.  EMPTY = no TLA = the job default null = the C++

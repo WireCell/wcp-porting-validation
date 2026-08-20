@@ -1,0 +1,59 @@
+# doc pr/94 Phase 5b round 2 A/B index
+# OFF https://www.phy.bnl.gov/twister/bee/set/4ad2c3ed-a5cc-4707-a24e-991f411fc213/event/list/
+# ON  https://www.phy.bnl.gov/twister/bee/set/d47318ad-ff05-4d4b-97ca-10531f7e343b/event/list/
+#
+# 21 events: every event in the 3000-event campaign (mcp1k 1000 + mcp2k 2000)
+# where per-bundle mode reports a neutrino the legacy chain did not.
+#   idx 0-7   NEW   -- OFF reconstructed NO vertex anywhere in the event; ON does.
+#                      These are the "newly identified neutrinos" to scan first.
+#   idx 8-20  EXTRA -- OFF already had a vertex; ON adds a SECOND reconstructed
+#                      bundle.  The primary row is byte-identical to OFF in every
+#                      one of these (pr94_primary_gate.py), so the only question
+#                      is whether the ADDED bundle is a real second activity.
+#
+# Arms: OFF work-pr94p5-off-{mcp1k,mcp2k} / ON work-pr94m-on-{mcp1k,mcp2k}
+# Binary: libWireCellClus.so 2026-08-19 17:26 (nu_per_bundle_min_length=15,
+#         legacy-winner-exempt scoping).
+# Gates: OFF byte-identical (hash+ROOT); 0 events lost a vertex in 3000;
+#        sync check PASS 470/470 (mcp1k) + 922/922 (mcp2k).
+#
+# "cosmic sibling" = the longest NON-demoted TGM/STM-tagged main sharing the
+# bundle -- i.e. the activity whose conviction made the legacy chain silent.
+# That is the whole point of pr/94: the sibling's verdict is now recorded in
+# act_* instead of discarding the bundle.
+#
+# TWO ROWS I WANT A VERDICT ON (both clear the 15 cm floor but look thin):
+#   idx 14  175094  18.1 cm -> 100.9 MeV  <- near the muon-at-rest signature
+#   idx 17  287638  16.8 cm -> 229.4 MeV
+# And three NEW events have a NEGATIVE numu_score (idx 2, 3, 5) -- reconstructed,
+# but they would not pass a numu selection; worth judging as physics, not plumbing.
+#
+# bee_idx	event	status
+0	62583	NEW: cosmic sibling 406cm TGM; neutrino 31.6cm -> 712.5 MeV numu 0.95 (OFF: no vertex) [mcp1k]
+1	174422	NEW: cosmic sibling 388cm STM; neutrino 92.8cm -> 432.4 MeV numu 0.91 (OFF: no vertex) [mcp1k]
+2	280466	NEW: cosmic sibling 290cm TGM; neutrino 112.5cm -> 531.2 MeV numu -0.44 (OFF: no vertex) [mcp1k]
+3	73038	NEW: cosmic sibling 205cm STM; neutrino 26.5cm -> 204.3 MeV numu -1.60 (OFF: no vertex) [mcp2k]
+4	78032	NEW: cosmic sibling 423cm STM; neutrino 408.4cm -> 1187.3 MeV numu 4.30 (OFF: no vertex) [mcp2k]
+5	90751	NEW: cosmic sibling 449cm TGM; neutrino 305.5cm -> 795.8 MeV numu -1.31 (OFF: no vertex) [mcp2k]
+6	167612	NEW: cosmic sibling 118cm STM; neutrino 74.2cm -> 529.5 MeV numu 1.19 (OFF: no vertex) [mcp2k]
+7	407798	NEW: cosmic sibling 450cm TGM; neutrino 150.8cm -> 645.6 MeV numu -0.01 (OFF: no vertex) [mcp2k]
+8	65053	EXTRA: primary 532.7 MeV unchanged; ADDED bundle 46.9cm -> 243.1 MeV numu 1.10 [mcp1k]
+9	286681	EXTRA: primary 1452.8 MeV unchanged; ADDED bundle 35.3cm -> 270.0 MeV numu 0.55 [mcp1k]
+10	400636	EXTRA: primary 738.2 MeV unchanged; ADDED bundle 112.9cm -> 577.9 MeV numu 0.22 [mcp1k]
+11	487303	EXTRA: primary 501.3 MeV unchanged; ADDED bundle 21.7cm -> 383.7 MeV numu -1.07 [mcp1k]
+12	68748	EXTRA: primary 1033.5 MeV unchanged; ADDED bundle 171.5cm -> 775.7 MeV numu -1.09 [mcp2k]
+13	174661	EXTRA: primary 619.8 MeV unchanged; ADDED bundle 130.1cm -> 458.3 MeV numu -0.20 [mcp2k]
+14	175094	EXTRA: primary 508.1 MeV unchanged; ADDED bundle 18.1cm -> 100.9 MeV numu -1.08 [mcp2k] <-- THIN, verdict wanted
+15	179054	EXTRA: primary 1075.4 MeV unchanged; ADDED bundle 110.5cm -> 572.4 MeV numu 2.82 [mcp2k]
+16	179369	EXTRA: primary 1589.0 MeV unchanged; ADDED bundle 114.9cm -> 1159.0 MeV numu 2.19 [mcp2k]
+17	287638	EXTRA: primary 386.8 MeV unchanged; ADDED bundle 16.8cm -> 229.4 MeV numu 0.04 [mcp2k] <-- THIN, verdict wanted
+18	351564	EXTRA: primary 903.5 MeV unchanged; ADDED bundle 277.6cm -> 1081.4 MeV numu 4.30 [mcp2k]
+19	409624	EXTRA: primary 599.0 MeV unchanged; ADDED bundle 48.2cm -> 775.9 MeV numu -0.68 [mcp2k]
+20	410698	EXTRA: primary 497.4 MeV unchanged; ADDED bundle 35.8cm -> 797.5 MeV numu -0.20 [mcp2k]
+#
+# NOT in this set, deliberately:
+#   391854 -- the 1.7 cm -> 108.9 MeV dot the owner's ~107 MeV observation
+#             exposed.  The round-2 floor removes it, so ON now equals OFF for
+#             that event and there is nothing to scan.
+#   18625  -- NCpi0, 15.3 cm -> 352.2 MeV second bundle, already owner-approved
+#             in Phase 4b.  Kept by the floor with a 0.3 cm margin.

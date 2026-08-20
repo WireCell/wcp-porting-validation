@@ -43,28 +43,59 @@ import uproot
 
 POS_TOL = 0.01  # cm; Bee JSON rounds, the ROOT branches do not
 
+# NOT anchored on the "[nu_per_bundle]" prefix, and searched over the whole
+# file rather than line by line, ON PURPOSE.  WCT's logger is written from
+# several threads into one fd, so a record's PREFIX can be destroyed by an
+# interleaved write while its body survives -- e.g. mcp2k evt 90751 holds a
+# line that begins bare at "ROW 0 gid 1000002 ...", with its neighbours'
+# timestamps running backwards (18:02:37.474 then 18:02:34.207).  A
+# prefix-anchored, per-line parse reported 7 sync FAILURES across mcp1k+mcp2k
+# that were purely its own fragility: every one of those tree rows matched its
+# surviving log record exactly on gid, cluster and vertex.  A gate that fails
+# on log corruption when the DATA is right is a broken gate.
 RE_ROW = re.compile(
-    r"\[nu_per_bundle\] ROW (\d+) gid (-?\d+) cluster (-?\d+) "
+    r"ROW (\d+) gid (-?\d+) cluster (-?\d+) "
     r"vertex \((-?[\d.]+), (-?[\d.]+), (-?[\d.]+)\) cm")
 RE_ROOT = re.compile(r"^nu (\d+) \(gid (-?\d+), cluster (-?\d+)\)$")
 
 
 def read_root(path):
+    """-> (T_tagger, T_kine) arrays, or (None, None) when the event produced
+    no tagger output at all.
+
+    TaggerCheckNeutrino selecting no candidate anywhere leaves the grouping
+    with no TrackFitting, so UbooneTaggerOutputVisitor returns before booking
+    either tree and the file carries only Trun/T_proj/T_bad_ch.  rc is still 0
+    and this is common (539 of 1000 mcp1k events with the knob off), so it is
+    a state to recognise, not an error.
+    """
     with uproot.open(path) as f:
+        names = [k.split(";")[0] for k in f.keys()]
+        if "T_tagger" not in names or "T_kine" not in names:
+            return None, None
         tt = f["T_tagger"].arrays(library="np")
         tk = f["T_kine"].arrays(library="np")
     return tt, tk
 
 
 def read_log(path):
-    out = []
-    with open(path, errors="replace") as fh:
-        for line in fh:
-            m = RE_ROW.search(line)
-            if m:
-                out.append((int(m.group(1)), int(m.group(2)), int(m.group(3)),
-                            [float(m.group(4)), float(m.group(5)), float(m.group(6))]))
-    return out
+    """Collect ROW records, keyed by row index and de-duplicated.
+
+    Both `wct_pr_evt<ID>.log` and its sibling `stdout.log` carry the same
+    records, so a record lost to interleaved writes in one file is usually
+    intact in the other -- read both and take the union.  Keyed by row index
+    rather than appended, so the same record appearing in both files counts
+    once and order is by index, not by which file was read first.
+    """
+    recs = {}
+    for p in (path, os.path.join(os.path.dirname(path), "stdout.log")):
+        if not os.path.exists(p):
+            continue
+        for m in RE_ROW.finditer(open(p, errors="replace").read()):
+            recs.setdefault(int(m.group(1)),
+                            (int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                             [float(m.group(4)), float(m.group(5)), float(m.group(6))]))
+    return [recs[k] for k in sorted(recs)]
 
 
 POINT_LAYERS = ("track_fit", "shower_track", "vertices")
@@ -138,6 +169,8 @@ def check_event(prdir, evt, verbose):
         return 0, ["evt %d: no tracking-pr.root" % evt]
 
     tt, tk = read_root(root)
+    if tt is None:
+        return 0, []          # no candidate selected anywhere; nothing to sync
     n = len(tt["nu_index"])
     if n != len(tk["nu_index"]):
         return 0, ["evt %d: T_tagger has %d rows, T_kine has %d"
