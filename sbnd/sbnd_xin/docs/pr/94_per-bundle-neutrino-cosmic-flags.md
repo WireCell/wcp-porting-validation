@@ -1420,6 +1420,25 @@ differing member**. Across the 23 review events the fix reveals **156** matches
 the display was hiding, and the op rows, times, PE and `apa` are unchanged --
 each row's cluster-id list is a strict **superset** of production's.
 
+**What the round-3 PR knobs do to this row, measured.** The candidate's energy
+drops from round 2's 204.3 MeV to 51.3 MeV, and it is **`nu_selected_as_main`**
+that does it (both knobs fire on this event, so the attribution needed its own
+arms):
+
+| arm | selected | Enu | numu | vertex (cm) |
+|---|---|---|---|---|
+| round 2 (both round-3 knobs off) | c24 | 204.3 | -1.60 | (-1.8, -29.9, 112.8) |
+| `nu_selected_as_main` only | c24 | **51.3** | -1.77 | (-1.7, -29.9, 113.2) |
+| `open_convicted_bundles` only | c24 | 204.3 | -1.60 | (-1.8, -29.9, 112.8) |
+| both (the ON arm) | c24 | **51.3** | -1.77 | (-1.7, -29.9, 113.2) |
+
+**Say the quiet part out loud:** 51.3 MeV on a 26.5 cm activity is below the
+muon mass, which is the same signature §9.6 records the owner rejecting a whole
+round over. Its `numu_score` is -1.77, so the row fails any numu selection --
+but the display fix does **not** make this row defensible, it only makes its
+flash provenance visible. The piece that would stop the promotion is the
+bookkeeping fix declined below.
+
 **Explicitly NOT fixed this round (owner decision).** The second, separate
 half of §9.8 stands: the sliver is *evaluated* inside the **muon's** bundle
 because `ClusteringExamineBundles`' flash-t0 merge (80 ns window, no spatial
@@ -1534,7 +1553,11 @@ blast radius.
 | per-branch/per-entry ROOT | ″ | **PASS 19/19** |
 | compiled config, PR job | knobs off vs a HEAD-`cfg` compile | **diff EMPTY**; on shows `nu_selected_as_main` + `open_convicted_bundles` |
 | compiled config, Q/L job | knob off vs HEAD-`cfg` | **diff EMPTY**; on shows `bee_flash_pred_min` |
-| `wcdoctest-clus` | -- | 211 cases / **2214 assertions pass**, 1 skipped |
+| `wcdoctest-clus` | -- | 211 cases / **2214 assertions pass**, 0 failed, 1 skipped |
+
+(Earlier sections of this doc quote 2215/2215. The one-assertion delta predates
+round 3 -- it is not a regression from these knobs; 2214 is what the suite
+reports at this commit, with 0 failures.)
 
 `pr_display` is not separately gated this round: unlike Phase 4b, nothing in
 `PrDisplayDump` was touched, and the two knobs that can change PR output are off
@@ -1557,8 +1580,34 @@ by construction on the gated arms.
 | `open_convicted_bundles` only | (-69.7, -78.5, 159.7) | 1268.1 | 0.63 |
 | both | (-69.4, -79.6, 156.2) | 877.8 | -0.50 |
 
+**How much of nueCC48 actually exercised the knobs -- read the mover count with
+this, not without it.** `open_convicted_bundles` can only bite in a bundle whose
+main is cosmic-convicted, and `nu_selected_as_main` only when the selected
+candidate is a demoted main. On nueCC48 that is a thin slice:
+
+| | nueCC48 (48) | review set (22) |
+|---|---|---|
+| events where `OC94OPEN` fired (bundle opened) | **5** | 9 |
+| events where `nu_selected_as_main` engaged | **1** | 9 |
+| events with >= 1 protect_bundle split, OFF -> ON | 46 -> 47 | -- |
+| extra clusters made by protect_bundle, OFF -> ON | 466 -> 487 | -- |
+
+So "1 mover of 48" is a statement about a sample that gave the knobs 5 and 1
+chances respectively, not a 48-event stability proof. The events where the
+knobs really bite are the review set, which is what the owner scan covers.
+
 Per owner instruction ("no need to go to full blown 1000 + 2000 numu events"),
 the mcp1k/mcp2k population arms were **not** run this round.
+
+**Post-review fix, log-only.** The first cut of `open_convicted_bundles`
+incremented `n_convicted` before the early-continue, so an opened bundle's main
+was counted twice (395148 logged `2 convicted main(s) skipped` for its single
+convicted main). Moved inside the non-open branch; a census script parsing that
+line would otherwise have read the wrong number. `n_convicted` feeds one debug
+line and nothing else, so the uploaded ON arms (built with the pre-fix binary)
+are unaffected -- and the OFF gate was re-run after the change:
+`work-pr94r3-off-nuecc48` vs `work-pr94r3b-off-nuecc48` **PASS 96/96 archives
+and 48/48 events**.
 
 **Review package -- `bee/pr94r3/`, 23 events, UPLOADED 2026-08-19:**
 

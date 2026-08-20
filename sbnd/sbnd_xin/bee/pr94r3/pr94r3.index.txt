@@ -23,11 +23,16 @@
 #     legacy filter) now makes that a config value; the ON display uses 0.
 #     evt 73038 flash row 16 op_cluster_ids: [4] -> [2, 4, 5]; cluster 5 IS the
 #     26.5 cm activity.  156 genuine matches across the 23 events were hidden.
-#     NOTE this is a DISPLAY fix only -- the piece is still promoted (its row is
-#     now 51.3 MeV rather than round-2's 204.3 MeV, an effect of fix 2 below).
-#     The separate question -- it is EVALUATED in the muon's bundle because the
-#     80 ns flash-t0 merge overwrote its own gid -- is NOT fixed in this round
-#     (owner decision: dumper only).  See doc sec 9.9.
+#     NOTE this is a DISPLAY fix only -- the piece is STILL PROMOTED.  Its row
+#     is now 51.3 MeV (round 2: 204.3 MeV); per-knob arms attribute that drop to
+#     nu_selected_as_main, not to open_convicted_bundles.  51.3 MeV on a 26.5 cm
+#     activity is BELOW MUON MASS -- the signature you rejected a round over in
+#     sec 9.6 -- and its numu_score is -1.77, so it fails any numu selection.
+#     The display fix makes its flash provenance visible; it does not make the
+#     row defensible.  The piece that would stop the promotion is the
+#     bookkeeping half of sec 9.8 (the 80 ns flash-t0 merge overwrote the
+#     activity's own gid, so it is EVALUATED in the muon's bundle) -- offered
+#     and declined this round.  See doc sec 9.9.
 #  2. BUG 2 (evt 395148, idx 21) -- the secondary neutrino's track_fit trail
 #     through empty space at (-172.7,-131.5,205.7).  Two knobs, both default OFF:
 #       open_convicted_bundles -- a cosmic-convicted main now OPENS its bundle,
@@ -47,6 +52,10 @@
 #   idx 21 (395148)  track_fit: the ~17 cm dotted trail into empty space is gone.
 #   idx 22 (116962)  the vertex moves 34 cm in z and numu_score 0.59 -> -0.50.
 #                    THE ONE nueCC48 EVENT THAT MOVES -- verdict wanted.
+#                    Read "1 of 48" with the coverage: on nueCC48 the bundle-
+#                    opening knob fired on only 5 events and nu_selected_as_main
+#                    on only 1, so that is a thin test, not a 48-event stability
+#                    proof.  On this 23-event set they fire on 9 and 9.
 #   idx 8-20         primary row is byte-identical to OFF; only the ADDED
 #                    second bundle is new (unchanged from the round-2 scan).
 #   idx 0-7          OFF has no vertex anywhere; ON reconstructs one.  Their
