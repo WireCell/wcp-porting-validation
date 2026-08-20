@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt51219",
+ "eventNo": 51219,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": -84.38035790530589,
+  "y": -110.24188523929838,
+  "z": 15.09011719237291
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 12,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 12005,
+   "x": -84.38035790530589,
+   "y": -110.24188523929838,
+   "z": 15.09011719237291
+  }
+ ],
+ "reco_sep_cm": 0.001922487313987259,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-4 junction: 27.6cm proton rises monotonically to 260k at 12001 and the 187cm muon has its 220k Bragg at 12000, both pointing away, and 12005 is the lowest-z candidate.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt51219/calib-pr-evt51219.json",
+ "subRunNo": 1
+}

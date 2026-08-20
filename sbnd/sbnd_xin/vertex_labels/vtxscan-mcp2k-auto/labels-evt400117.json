@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt400117",
+ "eventNo": 400117,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -82.8911445385228,
+  "y": -8.581230319702922,
+  "z": 165.32728432616932
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15002,
+   "x": -82.8911445385228,
+   "y": -8.581230319702922,
+   "z": 165.32728432616932
+  }
+ ],
+ "reco_sep_cm": 0.0031935152037006376,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with an ~86-degree kink: p4 shows the 47.8 cm proton rising monotonically to 305k at 15001 while the muon leaves MIP-flat, and the rival 15003 is a 172-degree collinear scatter point (trap 3).",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt400117/calib-pr-evt400117.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt76280",
+ "eventNo": 76280,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 173.7812540989027,
+  "y": 65.418976949967,
+  "z": 267.44356537770386
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15002,
+   "x": 173.7812540989027,
+   "y": 65.418976949967,
+   "z": 267.44356537770386
+  }
+ ],
+ "reco_sep_cm": 0.003915522136190908,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with two of two rising away at 126 degrees: the 73cm muon ends in a 240k stopping blob at 15000 and the 18cm proton climbs along the proton template to 230k at 15001, so both far ends genuinely stop.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt76280/calib-pr-evt76280.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt178885",
+ "eventNo": 178885,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 60.54655898760309,
+  "y": -88.21795178576393,
+  "z": 137.01459417663804
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 9,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 9001,
+   "x": 60.54655898760309,
+   "y": -88.21795178576393,
+   "z": 137.01459417663804
+  }
+ ],
+ "reco_sep_cm": 0.006094440651454773,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "The two-Bragg-ends trap resolved on p4: 9004 carries the 199 cm muon's genuine Bragg plus a 6.5 cm Michel, while the 6.7 cm proton beside 9001 climbs monotonically to 285k as it runs away from 9001, which is also ringed by four sub-cm blobs.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt178885/calib-pr-evt178885.json",
+ "subRunNo": 1
+}

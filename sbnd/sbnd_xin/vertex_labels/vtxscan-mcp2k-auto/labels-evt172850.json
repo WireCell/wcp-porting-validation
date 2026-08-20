@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt172850",
+ "eventNo": 172850,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": 193.19730046021715,
+  "y": 68.43149862631131,
+  "z": 391.3511194262295
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 12,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 12002,
+   "x": 193.19730046021715,
+   "y": 68.43149862631131,
+   "z": 391.3511194262295
+  }
+ ],
+ "reco_sep_cm": 0.0032842824091884534,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 junction: a 53 cm MIP muon leaving through the x+ face and a 5.6 cm proton whose profile rises 165k to 270k away from 12002; prongs open at 63 deg so no collinearity trap.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt172850/calib-pr-evt172850.json",
+ "subRunNo": 1
+}

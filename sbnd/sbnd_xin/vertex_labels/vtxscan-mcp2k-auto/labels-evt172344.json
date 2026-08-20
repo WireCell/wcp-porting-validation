@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt172344",
+ "eventNo": 172344,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": -79.28766209523873,
+  "y": -185.29131277323046,
+  "z": 478.55724517191845
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 6002,
+   "x": -79.28766209523873,
+   "y": -185.29131277323046,
+   "z": 478.55724517191845
+  }
+ ],
+ "reco_sep_cm": 0.0038442489495768115,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: three of three prongs rise away from this lowest-z vertex, with the 10.8 cm pi+ Bragging to 188k at 6005.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt172344/calib-pr-evt172344.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt77328",
+ "eventNo": 77328,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -45.956240305505425,
+  "y": -142.9114112414961,
+  "z": 222.34311945291424
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16002,
+   "x": -45.956240305505425,
+   "y": -142.9114112414961,
+   "z": 222.34311945291424
+  }
+ ],
+ "reco_sep_cm": 0.005085065558769624,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: both prongs leave 16002 (lowest z, 222.3) getting hotter away - a flat-MIP muon that continues collinearly through 16004 for 320cm and exits at z=499.8, and a 28cm proton (seg16008 plus cluster-36 seg36011) rising 100k->220k and stopping at 36012; prongs 91 deg apart.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt77328/calib-pr-evt77328.json",
+ "subRunNo": 1
+}

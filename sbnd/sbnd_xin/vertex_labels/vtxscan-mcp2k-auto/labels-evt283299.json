@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt283299",
+ "eventNo": 283299,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -19.82652934922524,
+  "y": 20.829074624309634,
+  "z": 222.91946221862835
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11003,
+   "x": -19.82652934922524,
+   "y": 20.829074624309634,
+   "z": 222.91946221862835
+  }
+ ],
+ "reco_sep_cm": 0.0036319341640958414,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "The zoom shows seg11003 kinking ~100 deg at (x=-20,y=14.5,z=229) with its last 6.5cm dark-red saturated and a fan of ~15 low-energy fragments radiating from that point while a 319cm muon leaves it forward in +z; 11003 is the nearest candidate to that interaction point at 8.8cm against 21cm for 11002, and the 350k e/cm peak there is past single-track saturation, so it is vertex activity and not a Bragg peak.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt283299/calib-pr-evt283299.json",
+ "subRunNo": 1
+}

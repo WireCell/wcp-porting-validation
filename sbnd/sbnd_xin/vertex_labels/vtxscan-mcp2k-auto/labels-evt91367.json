@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt91367",
+ "eventNo": 91367,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 7,
+  "x": -8.28055596270795,
+  "y": -142.05407351848993,
+  "z": 180.73261195030454
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 7,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 7019,
+   "x": -8.28055596270795,
+   "y": -142.05407351848993,
+   "z": 180.73261195030454
+  }
+ ],
+ "reco_sep_cm": 0.004870824551736394,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Clean V apex: a 334cm flat-MIP beam-aligned track exiting the anode leaves 7019 one way and a 7.8cm 134-160k stopping proton leaves at 99 degrees the other, both cooling toward 7019, which is also the lowest-z point of the event.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt91367/calib-pr-evt91367.json",
+ "subRunNo": 1
+}

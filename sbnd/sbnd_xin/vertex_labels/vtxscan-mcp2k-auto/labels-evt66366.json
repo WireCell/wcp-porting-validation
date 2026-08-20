@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt66366",
+ "eventNo": 66366,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": 56.49227495486035,
+  "y": -106.85486142164673,
+  "z": 253.77365322226547
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 22,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 22001,
+   "x": 56.49227495486035,
+   "y": -106.85486142164673,
+   "z": 253.77365322226547
+  }
+ ],
+ "reco_sep_cm": 0.006492678412242698,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at the interior upstream end of a 320 cm chain: an 8.3 cm proton rises monotonically 130k->280k away to 22002, while the muon arm is flat MIP with only a one-point junction spike and exits the z=500 wall with no Bragg.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt66366/calib-pr-evt66366.json",
+ "subRunNo": 1
+}

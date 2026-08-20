@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt97231",
+ "eventNo": 97231,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": -35.49403760674216,
+  "y": 51.37055463280768,
+  "z": 167.30490691598365
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 18,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 18006,
+   "x": -35.49403760674216,
+   "y": 51.37055463280768,
+   "z": 167.30490691598365
+  }
+ ],
+ "reco_sep_cm": 0.006378691889892661,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:23Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1, 2 of 2 rising away: 184 cm muon and 93 cm proton (Bragg 290000 at 18008) leave it with a 46 deg opening that the principal-frame panel shows as a clean V apex, and it is the most upstream candidate at z=167.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt97231/calib-pr-evt97231.json",
+ "subRunNo": 1
+}

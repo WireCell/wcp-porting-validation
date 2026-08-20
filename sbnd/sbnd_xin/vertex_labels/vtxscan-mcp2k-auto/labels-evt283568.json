@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt283568",
+ "eventNo": 283568,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": -141.7006546412294,
+  "y": 119.87213751064726,
+  "z": 224.799557915221
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 18,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 18002,
+   "x": -141.7006546412294,
+   "y": 119.87213751064726,
+   "z": 224.799557915221
+  }
+ ],
+ "reco_sep_cm": 0.002278803602380978,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 in its clean form at a degree-4 star: seg18001 (98.2cm) rises away x2.78 to a 212545 stop, seg18003 (32.1cm) rises away x1.32, seg18004 (6.4cm proton) reads 168880 here and 215294 away, seg18008 (59.1cm mu) is flat, and no segment rises toward it; the zoom shows four prongs leaving one point.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt283568/calib-pr-evt283568.json",
+ "subRunNo": 1
+}

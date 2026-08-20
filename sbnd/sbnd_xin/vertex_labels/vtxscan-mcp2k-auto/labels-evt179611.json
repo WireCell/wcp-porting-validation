@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt179611",
+ "eventNo": 179611,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 44.14960626583059,
+  "y": 21.37238288326054,
+  "z": 422.98013239020077
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10002,
+   "x": 44.14960626583059,
+   "y": 21.37238288326054,
+   "z": 422.98013239020077
+  }
+ ],
+ "reco_sep_cm": 0.0024188192149811744,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Only junction in the event and the most upstream candidate; zoom shows a clean 112 deg V with a 2x-MIP proton arm (34.8 cm, ending 128k) against a MIP muon arm that continues collinearly through clusters 71/42/69/70 and exits at z=500.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt179611/calib-pr-evt179611.json",
+ "subRunNo": 1
+}

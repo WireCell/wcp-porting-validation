@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt95074",
+ "eventNo": 95074,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 48.48063439207455,
+  "y": 8.561256336835987,
+  "z": 217.44847445699833
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10002,
+   "x": 48.48063439207455,
+   "y": 8.561256336835987,
+   "z": 217.44847445699833
+  }
+ ],
+ "reco_sep_cm": 0.0020756003949777176,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "All three prongs stop away from it: the 89cm muon has a textbook Bragg rise at 10001, the 9.1cm proton peaks at 10000, plus a 2.4cm 252k stub.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt95074/calib-pr-evt95074.json",
+ "subRunNo": 1
+}

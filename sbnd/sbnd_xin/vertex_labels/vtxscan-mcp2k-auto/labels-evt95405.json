@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt95405",
+ "eventNo": 95405,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -35.50967584461651,
+  "y": -130.15291066022115,
+  "z": 443.5393298106148
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 17012,
+   "x": -35.50967584461651,
+   "y": -130.15291066022115,
+   "z": 443.5393298106148
+  }
+ ],
+ "reco_sep_cm": 0.0030043590743601793,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "A 23cm proton Bragg-stops at 17003 (208k) and a 79cm MIP leaves at 82 degrees; the other multi-prong vertex 17004 has 0 of 3 rising away and is just where the muon exits the corner.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt95405/calib-pr-evt95405.json",
+ "subRunNo": 1
+}

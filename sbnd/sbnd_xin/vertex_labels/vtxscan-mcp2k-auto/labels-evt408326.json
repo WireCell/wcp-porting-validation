@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt408326",
+ "eventNo": 408326,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": 66.57255401068218,
+  "y": -99.33219014389414,
+  "z": 231.67589436873922
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 21,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 21003,
+   "x": 66.57255401068218,
+   "y": -99.33219014389414,
+   "z": 231.67589436873922
+  }
+ ],
+ "reco_sep_cm": 0.00530809842517169,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 201.6cm MIP muon plus a 59.7cm proton rising away x1.98 to a 158629 Bragg stop, opening 76 degrees in 3-D so it is not the collinear-kink case; textbook mu+p CC vertex.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt408326/calib-pr-evt408326.json",
+ "subRunNo": 1
+}

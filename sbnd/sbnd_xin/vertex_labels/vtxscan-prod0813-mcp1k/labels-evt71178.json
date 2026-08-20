@@ -1,0 +1,44 @@
+{
+ "arm": "work-mcp1k-prod0813",
+ "confidence": null,
+ "dl_best_score": 7.832172311867259,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt71178",
+ "eventNo": 71178,
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 77.68808012905211,
+  "y": -136.27119878668955,
+  "z": 463.6186669587422
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 79,
+   "degree": 1,
+   "dis_to_main": 19.228801559560907,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": null,
+   "trad_winner": false,
+   "vertex_id": 79026,
+   "x": 89.43041244455709,
+   "y": -121.04920089963613,
+   "z": 464.0126486026808
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 18259,
+ "saved_utc": "2026-08-15T03:36:09+00:00",
+ "scan_tag": "vtxscan-prod0813-mcp1k",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0813/pr_evt71178/calib-pr-evt71178.json",
+ "subRunNo": 1
+}

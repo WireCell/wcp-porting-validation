@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt73727",
+ "eventNo": 73727,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": 2.27792235371411,
+  "y": -155.4572201487559,
+  "z": 66.15993441580329
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 12,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 12001,
+   "x": 2.27792235371411,
+   "y": -155.4572201487559,
+   "z": 66.15993441580329
+  }
+ ],
+ "reco_sep_cm": 0.0034710932449952456,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the contained 227 cm muon is flat MIP at 12001 and spikes to 235000 at 12000 (stopping end), and the only other deposits (5 cm 'e' cluster 22 and cluster 52) sit right on top of 12001.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt73727/calib-pr-evt73727.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt91235",
+ "eventNo": 91235,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": -43.12230174481403,
+  "y": 36.52147652612783,
+  "z": 96.80543121114769
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": -43.12230174481403,
+   "y": 36.52147652612783,
+   "z": 96.80543121114769
+  }
+ ],
+ "reco_sep_cm": 0.005324658690665074,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the 253 cm muon rises away x2.17 from 13002 and stops hot at 13000, while a 21.7 cm pion leaves 13002 at 87 degrees toward the cluster-64 complex; 13002 is also the lowest-z candidate.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt91235/calib-pr-evt91235.json",
+ "subRunNo": 1
+}

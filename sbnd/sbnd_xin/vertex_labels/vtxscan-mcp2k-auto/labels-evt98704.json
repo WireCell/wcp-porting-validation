@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt98704",
+ "eventNo": 98704,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 2,
+  "x": -179.38399073456728,
+  "y": -151.3980364740583,
+  "z": 156.36878241107914
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 2,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 2002,
+   "x": -179.38399073456728,
+   "y": -151.3980364740583,
+   "z": 156.36878241107914
+  }
+ ],
+ "reco_sep_cm": 0.004611281740520596,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:23Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Lone 20 cm proton whose profile follows the proton template anchored at 2000 (260k falling to 120k), so it stops at 2000 and starts at the cooler 2002 end, travelling +z",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt98704/calib-pr-evt98704.json",
+ "subRunNo": 1
+}

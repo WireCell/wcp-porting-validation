@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt94224",
+ "eventNo": 94224,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -10.363249867671247,
+  "y": 136.88458616516553,
+  "z": 418.5262378471849
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 5,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17004,
+   "x": -10.363249867671247,
+   "y": 136.88458616516553,
+   "z": 418.5262378471849
+  }
+ ],
+ "reco_sep_cm": 0.006763752258178633,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: deg-5 hub with two protons Bragg-stopping away from it (216k at 17005, 203k at 17009) plus a 33cm MIP leaving.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt94224/calib-pr-evt94224.json",
+ "subRunNo": 1
+}

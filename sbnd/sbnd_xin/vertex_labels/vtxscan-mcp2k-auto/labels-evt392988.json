@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt392988",
+ "eventNo": 392988,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 144.9623416518993,
+  "y": -184.45567327989744,
+  "z": 453.75780840635537
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 14003,
+   "x": 144.9623416518993,
+   "y": -184.45567327989744,
+   "z": 453.75780840635537
+  }
+ ],
+ "reco_sep_cm": 0.005385807568653043,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Degree-3 junction carrying a 6.4 cm 190k proton and a 1.6 cm 269k proton stub, with the 38 cm MIP leaving it and cooling away toward the bottom-downstream corner; the elevated dQ/dx at the point is vertex pile-up, not a stop.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt392988/calib-pr-evt392988.json",
+ "subRunNo": 1
+}

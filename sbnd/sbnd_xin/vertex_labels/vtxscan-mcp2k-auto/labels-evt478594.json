@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt478594",
+ "eventNo": 478594,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 171.86378632252408,
+  "y": -155.3943198292398,
+  "z": 107.2368754315144
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 9,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 9002,
+   "x": 171.86378632252408,
+   "y": -155.3943198292398,
+   "z": 107.2368754315144
+  }
+ ],
+ "reco_sep_cm": 0.006539120058430239,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at its cleanest: two protons, 2 of 2 rising away at a 72.3deg opening, seg9001 falling 265k(9000) -> 140k(9002) and seg9002 rising 150k(9002) -> 280k(9001), so both stop at their far free ends and 9002 is the coolest point of the cluster.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt478594/calib-pr-evt478594.json",
+ "subRunNo": 1
+}

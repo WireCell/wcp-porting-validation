@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt175117",
+ "eventNo": 175117,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": 39.96281171359378,
+  "y": 29.366369027798033,
+  "z": 323.4966985241596
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 2,
+   "dis_to_main": 0.5792034322113233,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17003,
+   "x": 40.046088131126155,
+   "y": 29.868649060235846,
+   "z": 323.22055286842226
+  }
+ ],
+ "reco_sep_cm": 0.5812125486598274,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Deg-3 junction with two very hot short protons (114k and 260k) pointing away plus a 28 cm track rising away x1.72 to its stop at 17001.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt175117/calib-pr-evt175117.json",
+ "subRunNo": 1
+}

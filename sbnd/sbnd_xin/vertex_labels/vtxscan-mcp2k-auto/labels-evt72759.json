@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt72759",
+ "eventNo": 72759,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": -6.977103727056526,
+  "y": -189.00709196899953,
+  "z": 247.87245950470782
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 5001,
+   "x": -6.977103727056526,
+   "y": -189.00709196899953,
+   "z": 247.87245950470782
+  }
+ ],
+ "reco_sep_cm": 0.004784788884631961,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: cluster 29's 21.7 cm track starts 1.7 cm from 5001 and p4 shows a clean monotone Bragg rise over its last 6 cm to 165000 e/cm at the far end 29007, while the 104 cm muon and two short pi/e stubs leave the same degree-3 point.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt72759/calib-pr-evt72759.json",
+ "subRunNo": 1
+}

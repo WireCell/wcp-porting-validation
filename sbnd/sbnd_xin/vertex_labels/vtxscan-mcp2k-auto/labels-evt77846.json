@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt77846",
+ "eventNo": 77846,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": -23.407530211090865,
+  "y": 98.51421930323706,
+  "z": 252.0060356913706
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 12,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 12002,
+   "x": -23.407530211090865,
+   "y": 98.51421930323706,
+   "z": 252.0060356913706
+  }
+ ],
+ "reco_sep_cm": 0.0062942926505550655,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: a 158.9cm flat-MIP muon with no Bragg at either end leaves 12002 and exits the y+ wall, while a 14.4cm proton leaves the other way rising monotonically 95k->210k on the proton template and stopping at 12001; prongs 95 deg apart, zoom is a clean cyan/dark-red V.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt77846/calib-pr-evt77846.json",
+ "subRunNo": 1
+}

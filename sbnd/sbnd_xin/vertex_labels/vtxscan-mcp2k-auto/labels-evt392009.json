@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt392009",
+ "eventNo": 392009,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": 150.09114620960563,
+  "y": 178.13555134315862,
+  "z": 166.97160826151645
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 6002,
+   "x": 150.09114620960563,
+   "y": 178.13555134315862,
+   "z": 166.97160826151645
+  }
+ ],
+ "reco_sep_cm": 0.004867324650926403,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 3 then rule 1: clusters 6 and 58 are one collinear ~360 cm track whose far end 58018 shows a x5.30 rise plus a 13 cm electron segment, i.e. a stopping muon with a Michel, so the vertex is the 77 degree kink at 6002 where a 70 cm proton branches off and rises away x2.34 to a 218000 Bragg.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt392009/calib-pr-evt392009.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt72940",
+ "eventNo": 72940,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 81.36251953569919,
+  "y": 8.908445335882469,
+  "z": 355.43132982227587
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10002,
+   "x": 81.36251953569919,
+   "y": 8.908445335882469,
+   "z": 355.43132982227587
+  }
+ ],
+ "reco_sep_cm": 0.0032455304563706916,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 in its strongest form: 2 of 2 prongs rise away from 10002 at a 99 degree opening, and p4 confirms both far ends stop - the 228 cm muon decays from 185000 e/cm at 10000 and the 78.5 cm proton rises onto the template to 295000 at 10004.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt72940/calib-pr-evt72940.json",
+ "subRunNo": 1
+}

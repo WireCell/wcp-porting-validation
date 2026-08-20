@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt105316",
+ "eventNo": 105316,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 108.22627916550161,
+  "y": -38.45827178416627,
+  "z": 176.8373765372839
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 20,
+   "degree": 5,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 20004,
+   "x": 108.22627916550161,
+   "y": -38.45827178416627,
+   "z": 176.8373765372839
+  }
+ ],
+ "reco_sep_cm": 0.0048696915667474925,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 in its strong form at a degree-5 knot: every prong long enough to measure rises away (6.4 cm proton to 196509 at 20007, 15 cm track feeding the 32 cm muon that Braggs to 115335 at 20000); the three 'flat' prongs are all under 9 cm so their two 5 cm windows overlap.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt105316/calib-pr-evt105316.json",
+ "subRunNo": 1
+}

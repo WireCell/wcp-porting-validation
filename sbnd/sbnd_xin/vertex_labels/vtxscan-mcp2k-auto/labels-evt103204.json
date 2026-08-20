@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt103204",
+ "eventNo": 103204,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 91.76545282454384,
+  "y": -39.97163669991223,
+  "z": 154.02822243566374
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 20,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 20002,
+   "x": 91.76545282454384,
+   "y": -39.97163669991223,
+   "z": 154.02822243566374
+  }
+ ],
+ "reco_sep_cm": 0.005149303467587368,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 53 cm proton rises monotonically 55k->315k onto the proton template at 20003 while the 116 cm pi+ leaves at MIP; zoom confirms a ~93 deg V, p1 shows no competing structure anywhere else in the detector, and 20002 is the most upstream candidate (z=154).",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt103204/calib-pr-evt103204.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt392527",
+ "eventNo": 392527,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": 94.03807738157613,
+  "y": -57.289981598810925,
+  "z": 454.6184288054609
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13003,
+   "x": 94.03807738157613,
+   "y": -57.289981598810925,
+   "z": 454.6184288054609
+  }
+ ],
+ "reco_sep_cm": 0.002483032921110257,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with both prongs: at 13003 the 100 cm MIP muon rises away x1.33 and the 7.3 cm proton rises away x1.33 to a 191000 Bragg at 13001, opening ~103 degrees, and it is the most upstream point with the muon running +z to the wall.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt392527/calib-pr-evt392527.json",
+ "subRunNo": 1
+}

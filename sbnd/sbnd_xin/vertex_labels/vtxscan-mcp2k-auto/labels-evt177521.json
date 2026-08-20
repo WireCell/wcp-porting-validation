@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt177521",
+ "eventNo": 177521,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -142.06956600168562,
+  "y": -136.27073097016927,
+  "z": 153.58908672030952
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 8,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 8040,
+   "x": -142.06956600168562,
+   "y": -136.27073097016927,
+   "z": 153.58908672030952
+  }
+ ],
+ "reco_sep_cm": 0.001247698568673414,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the 8.6 cm proton Braggs away to 230k at 8003 and the 71 cm flat-MIP muon leaves at 68 degrees, with the charge concentration sitting exactly at 8040.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt177521/calib-pr-evt177521.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt410680",
+ "eventNo": 410680,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -80.4660816265488,
+  "y": 10.132608274709714,
+  "z": 11.70334571528819
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11003,
+   "x": -80.4660816265488,
+   "y": 10.132608274709714,
+   "z": 11.70334571528819
+  }
+ ],
+ "reco_sep_cm": 0.0057749942211250075,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at its strongest: deg-4 star with 3 of 4 prongs rising away and none toward (32.1cm p 128933->225667, 11cm p 133639->196812, 136cm pi+ 42221->64015), cool green at the junction and reddening along every arm.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt410680/calib-pr-evt410680.json",
+ "subRunNo": 1
+}

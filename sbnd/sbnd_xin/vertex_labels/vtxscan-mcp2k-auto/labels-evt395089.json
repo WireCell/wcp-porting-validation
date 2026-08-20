@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt395089",
+ "eventNo": 395089,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": -193.1865884030689,
+  "y": 193.3167116611304,
+  "z": 369.61344093906496
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 21,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 21004,
+   "x": -193.1865884030689,
+   "y": 193.3167116611304,
+   "z": 369.61344093906496
+  }
+ ],
+ "reco_sep_cm": 0.005855956607613496,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: a 4-prong star at 21004 with zero segments rising toward it - a 24.8cm MIP muon rising x2.66 into a Bragg at 21002, a 9.1cm proton rising x1.64 into a Bragg at 21001, plus a 10.9cm proton and a 5.3cm pion, and the small-fragment spray fans away from it.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395089/calib-pr-evt395089.json",
+ "subRunNo": 1
+}

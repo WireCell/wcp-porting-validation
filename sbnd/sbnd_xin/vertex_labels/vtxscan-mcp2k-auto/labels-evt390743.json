@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt390743",
+ "eventNo": 390743,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -60.35518019002145,
+  "y": -94.30737684771927,
+  "z": 21.208014715961646
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 17004,
+   "x": -60.35518019002145,
+   "y": -94.30737684771927,
+   "z": 21.208014715961646
+  }
+ ],
+ "reco_sep_cm": 0.005835481885002304,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Degree-3 star with two short protons at 155-280k pointing away (17009 falls from 280k at 17006 to 100k at 17004) and a 60 cm pi+ leaving at exactly MIP and rising away to 17001 -- rule 1 satisfied on all three prongs.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt390743/calib-pr-evt390743.json",
+ "subRunNo": 1
+}

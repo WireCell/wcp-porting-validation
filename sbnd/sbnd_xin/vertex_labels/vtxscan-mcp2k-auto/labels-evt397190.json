@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt397190",
+ "eventNo": 397190,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -48.41018496282733,
+  "y": -25.877436638956226,
+  "z": 346.77217712336915
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10001,
+   "x": -48.41018496282733,
+   "y": -25.877436638956226,
+   "z": 346.77217712336915
+  }
+ ],
+ "reco_sep_cm": 0.0033682187061996514,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rules 1 and 3 agree: the 174 cm track is fully contained (so not an entering cosmic), Braggs to 94350 at 10003 where a 13.6 cm MIP Michel branch hangs off at 102 deg, so the cool 49525 end 10001 is the start.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt397190/calib-pr-evt397190.json",
+ "subRunNo": 1
+}

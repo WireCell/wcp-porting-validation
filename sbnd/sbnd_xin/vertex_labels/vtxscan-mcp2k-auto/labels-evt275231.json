@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt275231",
+ "eventNo": 275231,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": 172.17761924730118,
+  "y": 105.19054837094745,
+  "z": 26.96991720527645
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 6002,
+   "x": 172.17761924730118,
+   "y": 105.19054837094745,
+   "z": 26.96991720527645
+  }
+ ],
+ "reco_sep_cm": 0.002444493623479291,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 79 degree junction: a 54cm proton rises monotonically along the template from 20k to 240k at 6003, starting exactly where the 520cm MIP track terminates at z=27, the most upstream point in the event.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt275231/calib-pr-evt275231.json",
+ "subRunNo": 1
+}

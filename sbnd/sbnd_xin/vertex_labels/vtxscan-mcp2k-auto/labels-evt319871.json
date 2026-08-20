@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt319871",
+ "eventNo": 319871,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 29,
+  "x": -142.0587736224124,
+  "y": 174.7900320182627,
+  "z": 122.61624370781833
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 29,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 29019,
+   "x": -142.0587736224124,
+   "y": 174.7900320182627,
+   "z": 122.61624370781833
+  }
+ ],
+ "reco_sep_cm": 0.003951551354933551,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "29019 is the only junction in the event, a degree-3 apex opening 107 degrees at the lowest z (122.6) with both prongs running forward in z: a 61.7 cm flat-MIP muon exiting the top corner and a 34.1 cm 2x-MIP prong downstream.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt319871/calib-pr-evt319871.json",
+ "subRunNo": 1
+}

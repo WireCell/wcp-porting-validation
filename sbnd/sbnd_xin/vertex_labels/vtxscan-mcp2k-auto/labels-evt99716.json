@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt99716",
+ "eventNo": 99716,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": -29.728548390472195,
+  "y": -10.60222221968554,
+  "z": 64.86201673396256
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": -29.728548390472195,
+   "y": -10.60222221968554,
+   "z": 64.86201673396256
+  }
+ ],
+ "reco_sep_cm": 0.0033335636228778607,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:23Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Two-Bragg-ends trap resolved by rule 1: 13002 is the 82-degree V both hot ends point away from - 136 cm proton rising monotonically to 260k at 13001 and a 290 cm muon stopping at 13000 with an 11 cm Michel, while 13004 is a 169-degree collinear break.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt99716/calib-pr-evt99716.json",
+ "subRunNo": 1
+}

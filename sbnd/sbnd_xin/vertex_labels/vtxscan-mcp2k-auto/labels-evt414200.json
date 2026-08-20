@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt414200",
+ "eventNo": 414200,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": -75.28961553948477,
+  "y": -94.89421241882012,
+  "z": 377.784500637717
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 6002,
+   "x": -75.28961553948477,
+   "y": -94.89421241882012,
+   "z": 377.784500637717
+  }
+ ],
+ "reco_sep_cm": 0.006176408508473621,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at an 85 deg junction: a MIP muon exiting at z=500 and a 70 cm proton climbing the proton template to 210k at 6001, with no other candidate within 70 cm.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt414200/calib-pr-evt414200.json",
+ "subRunNo": 1
+}

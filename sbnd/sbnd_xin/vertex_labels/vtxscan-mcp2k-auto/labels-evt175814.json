@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt175814",
+ "eventNo": 175814,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 71.78481453617465,
+  "y": 167.798443214532,
+  "z": 131.2347524229072
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 71.78481453617465,
+   "y": 167.798443214532,
+   "z": 131.2347524229072
+  }
+ ],
+ "reco_sep_cm": 0.0069418198665375346,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Hot 6.4 cm stopping proton at 11002 with the 401 cm muon rising away x1.78 to a Bragg at 11000, where two small clusters sit as a Michel (rule 3 far end).",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt175814/calib-pr-evt175814.json",
+ "subRunNo": 1
+}

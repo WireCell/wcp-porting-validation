@@ -1,0 +1,63 @@
+{
+ "arm": "work-mcp1k-prod0813",
+ "confidence": null,
+ "dl_best_score": 14.107294341055942,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt174114",
+ "eventNo": 174114,
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": 174.8868276900051,
+  "y": -144.68643130649002,
+  "z": 325.7749375468083
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": null,
+   "trad_winner": false,
+   "vertex_id": 17024,
+   "x": 174.8868276900051,
+   "y": -144.68643130649002,
+   "z": 325.7749375468083
+  },
+  {
+   "cluster_id": 17,
+   "degree": 2,
+   "dis_to_main": 0.6336579560326008,
+   "dl_score": 0.010322272777557373,
+   "dl_winner": true,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 2,
+   "rerank_total": 14.107294341055942,
+   "snap_dis": 3.18612435814642,
+   "trad_score": 1.375,
+   "trad_winner": true,
+   "vertex_id": 17002,
+   "x": 175.3121721358236,
+   "y": -144.2237349241253,
+   "z": 325.8556627931775
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 18259,
+ "saved_utc": "2026-08-14T20:08:38+00:00",
+ "scan_tag": "vtxscan-prod0813-mcp1k",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0813/pr_evt174114/calib-pr-evt174114.json",
+ "subRunNo": 1
+}

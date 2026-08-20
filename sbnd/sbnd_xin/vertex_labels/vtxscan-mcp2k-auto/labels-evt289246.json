@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt289246",
+ "eventNo": 289246,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -134.0929409592573,
+  "y": 22.44876258129119,
+  "z": 443.1720121761776
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16002,
+   "x": -134.0929409592573,
+   "y": 22.44876258129119,
+   "z": 443.1720121761776
+  }
+ ],
+ "reco_sep_cm": 0.003772174357530059,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Textbook two-prong V: a 100 cm MIP muon exiting the z=499 wall and a 16 cm dark-red proton rising x1.41 to 177446; the only other activity is a fragment cloud with no apex sitting on the y=200 top wall.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt289246/calib-pr-evt289246.json",
+ "subRunNo": 1
+}

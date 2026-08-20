@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt174352",
+ "eventNo": 174352,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -83.36149136708931,
+  "y": -76.91646498085134,
+  "z": 238.15088636700366
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11001,
+   "x": -83.36149136708931,
+   "y": -76.91646498085134,
+   "z": 238.15088636700366
+  }
+ ],
+ "reco_sep_cm": 0.003937789054995246,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-3 junction: 10 cm proton Braggs away to 168k at 11003, hot 2.4 cm pi+ stub, and the 66 cm muon leaves and rises to its own stop at 11000/11006.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt174352/calib-pr-evt174352.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt168209",
+ "eventNo": 168209,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 94.36657835528055,
+  "y": 106.4012875137428,
+  "z": 431.13678697004644
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 94.36657835528055,
+   "y": 106.4012875137428,
+   "z": 431.13678697004644
+  }
+ ],
+ "reco_sep_cm": 0.004867124993916279,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 textbook deg-3 vertex: a 13.4cm proton rising monotonically to 270k at 11001, a 49.9cm proton rising to 145k at 11003 and a 78.7cm flat-MIP muon all leave 11002 cool, and 11002 is the lowest-z point of the cluster.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt168209/calib-pr-evt168209.json",
+ "subRunNo": 1
+}

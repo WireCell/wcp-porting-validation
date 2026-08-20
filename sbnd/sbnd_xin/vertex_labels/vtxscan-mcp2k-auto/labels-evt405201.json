@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt405201",
+ "eventNo": 405201,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 33.270069118879476,
+  "y": 13.955561592753948,
+  "z": 72.76556586809667
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 20,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 20001,
+   "x": 33.270069118879476,
+   "y": 13.955561592753948,
+   "z": 72.76556586809667
+  }
+ ],
+ "reco_sep_cm": 0.006274214057344751,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 in the profiles rather than the 5cm table: the 25cm proton rises monotonically to 191k at 20003 and the 330cm muon Braggs hard at 20000, so both start at this V (42 deg apart, lowest-z end); the hot 5cm mean here is vertex-region overlap, and 20002 is a 162 deg fake junction inside the muon.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt405201/calib-pr-evt405201.json",
+ "subRunNo": 1
+}

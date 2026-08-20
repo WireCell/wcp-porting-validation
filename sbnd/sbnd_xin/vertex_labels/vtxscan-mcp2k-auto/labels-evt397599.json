@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt397599",
+ "eventNo": 397599,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": -172.00657048653088,
+  "y": 178.25334333007123,
+  "z": 483.49207547958684
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 22,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 22002,
+   "x": -172.00657048653088,
+   "y": 178.25334333007123,
+   "z": 483.49207547958684
+  }
+ ],
+ "reco_sep_cm": 0.0052198691665035655,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the 4 cm proton falls monotonically 300k->130k away from the deg-2 junction (stops at 22003) while the 20 cm mu leaves it flat, and the sub-cm blobs sit around this point.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt397599/calib-pr-evt397599.json",
+ "subRunNo": 1
+}

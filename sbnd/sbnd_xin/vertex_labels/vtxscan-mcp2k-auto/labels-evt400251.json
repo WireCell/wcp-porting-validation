@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt400251",
+ "eventNo": 400251,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -63.60245623346499,
+  "y": 126.2183617332003,
+  "z": 69.88175279216654
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17003,
+   "x": -63.60245623346499,
+   "y": 126.2183617332003,
+   "z": 69.88175279216654
+  }
+ ],
+ "reco_sep_cm": 0.0034335522889034024,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Three-prong star where p4 shows both measurable prongs cool at 17003 (65k) and Bragg at their far ends (310k at 17002, 150k at 17001), plus a 188k proton stub - rule 1 with nothing rising toward it.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt400251/calib-pr-evt400251.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt321015",
+ "eventNo": 321015,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 143.66207326355564,
+  "y": 53.24149314170326,
+  "z": 384.28667624379096
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 16049,
+   "x": 143.66207326355564,
+   "y": 53.24149314170326,
+   "z": 384.28667624379096
+  }
+ ],
+ "reco_sep_cm": 0.0041922844911107485,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 3-prong: 13.8 cm proton rises monotonically 75k->230k to its stop at 16004 and the 51 cm muon leaves at MIP, while the third prong is a pi+ that stops at 16001 and decays to the 9.8 cm muon braggging at 16005; 56 deg kink, not collinear.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt321015/calib-pr-evt321015.json",
+ "subRunNo": 1
+}

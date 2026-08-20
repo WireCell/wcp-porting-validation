@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt81420",
+ "eventNo": 81420,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 8.443812474609015,
+  "y": 141.606215464986,
+  "z": 401.38925690517925
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15002,
+   "x": 8.443812474609015,
+   "y": 141.606215464986,
+   "z": 401.38925690517925
+  }
+ ],
+ "reco_sep_cm": 0.005423085637275569,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Clean V apex where a 94.6 cm muon that exits the top wall meets a 17 cm 110-118k proton at about 70 degrees, both prongs forward in z, and the muon does not follow the stopping-muon template there.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt81420/calib-pr-evt81420.json",
+ "subRunNo": 1
+}

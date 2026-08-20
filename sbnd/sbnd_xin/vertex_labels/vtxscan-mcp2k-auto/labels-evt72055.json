@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt72055",
+ "eventNo": 72055,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -171.555996464082,
+  "y": -148.653072433317,
+  "z": 6.687963545108232
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 14001,
+   "x": -171.555996464082,
+   "y": -148.653072433317,
+   "z": 6.687963545108232
+  }
+ ],
+ "reco_sep_cm": 0.0054419936475775576,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 and rule 2: the 14.6 cm proton rises along the proton template to a 310k Bragg at 14002 while the 246 cm MIP muon leaves the same point and exits at x=-201, and the vertex is at z=6.7, the most upstream point in the event.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt72055/calib-pr-evt72055.json",
+ "subRunNo": 1
+}

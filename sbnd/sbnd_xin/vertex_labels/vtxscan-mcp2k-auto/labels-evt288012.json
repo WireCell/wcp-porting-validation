@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt288012",
+ "eventNo": 288012,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -160.1229776891858,
+  "y": 37.525849124482164,
+  "z": 112.80597399763344
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 10023,
+   "x": -160.1229776891858,
+   "y": 37.525849124482164,
+   "z": 112.80597399763344
+  }
+ ],
+ "reco_sep_cm": 0.0065042367351847916,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-3 vertex: all three zoom arrows green, with a 28.6 cm prong rising x9.95 from 16390 to 163036 at its far end, plus a 2 cm 255689 e/cm proton blob 13 cm away.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt288012/calib-pr-evt288012.json",
+ "subRunNo": 1
+}

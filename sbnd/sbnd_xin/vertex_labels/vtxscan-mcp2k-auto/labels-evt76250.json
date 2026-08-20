@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt76250",
+ "eventNo": 76250,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -165.54251561452256,
+  "y": -116.01128854742618,
+  "z": 175.13988998115525
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 16009,
+   "x": -165.54251561452256,
+   "y": -116.01128854742618,
+   "z": 175.13988998115525
+  }
+ ],
+ "reco_sep_cm": 0.0028285641307612282,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Both prongs rise away at 119 degrees: the 19.6cm proton climbs monotonically to a 210k Bragg at 16001 while the 130cm muon runs flat MIP out through the y=-198 bottom face and terminates here with no Bragg.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt76250/calib-pr-evt76250.json",
+ "subRunNo": 1
+}

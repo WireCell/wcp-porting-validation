@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt393089",
+ "eventNo": 393089,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": -127.81988121587703,
+  "y": 113.11131228122687,
+  "z": 487.89707169990817
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 19,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 19001,
+   "x": -127.81988121587703,
+   "y": 113.11131228122687,
+   "z": 487.89707169990817
+  }
+ ],
+ "reco_sep_cm": 0.0032110953137466243,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a clean 53 deg kink: a 6.2 cm 188k-213k stopping proton meets a 15 cm MIP track at 19001, both prongs forward in z, confirmed by zoom.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt393089/calib-pr-evt393089.json",
+ "subRunNo": 1
+}

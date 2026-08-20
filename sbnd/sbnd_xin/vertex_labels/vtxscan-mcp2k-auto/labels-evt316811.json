@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt316811",
+ "eventNo": 316811,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -91.88479487633025,
+  "y": -26.662069713160072,
+  "z": 199.10846006503945
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 8,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 8036,
+   "x": -91.88479487633025,
+   "y": -26.662069713160072,
+   "z": 199.10846006503945
+  }
+ ],
+ "reco_sep_cm": 0.00544480957152227,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: zoom shows a cool V apex with a 14.7 cm dark-red proton rising away to 203677 at 8001 and a 69 cm muon rising away to 133950 at 8000, opening at 126 deg.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt316811/calib-pr-evt316811.json",
+ "subRunNo": 1
+}

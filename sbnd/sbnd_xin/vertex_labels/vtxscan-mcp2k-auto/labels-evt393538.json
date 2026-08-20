@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt393538",
+ "eventNo": 393538,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -167.90575809474927,
+  "y": -73.90192131342414,
+  "z": 227.5711409507991
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 8,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 8002,
+   "x": -167.90575809474927,
+   "y": -73.90192131342414,
+   "z": 227.5711409507991
+  }
+ ],
+ "reco_sep_cm": 0.004794473292850938,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with 2 of 2 prongs rising away at a 74 deg V: a 20.5 cm proton climbing 90k to 235k on the proton template plus a track whose charge peaks 25 cm away at 8004, both pointing away from 8002.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt393538/calib-pr-evt393538.json",
+ "subRunNo": 1
+}

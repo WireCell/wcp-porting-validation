@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt406147",
+ "eventNo": 406147,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": 87.28335325884876,
+  "y": -117.04367425842118,
+  "z": 60.76666294784508
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 22,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 22011,
+   "x": 87.28335325884876,
+   "y": -117.04367425842118,
+   "z": 60.76666294784508
+  }
+ ],
+ "reco_sep_cm": 0.005990028124895485,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Textbook 61 deg V: a 57cm proton rising to 224k at 22004 and a 354cm muon that Braggs at 116k at 22000, both cooling toward this point, and every downstream vertex (22005/22007/22009) has its segments rising back toward it.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt406147/calib-pr-evt406147.json",
+ "subRunNo": 1
+}

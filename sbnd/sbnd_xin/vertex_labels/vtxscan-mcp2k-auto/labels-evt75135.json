@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt75135",
+ "eventNo": 75135,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 141.9144127819771,
+  "y": 26.57180968029143,
+  "z": 74.93692429129159
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 14020,
+   "x": 141.9144127819771,
+   "y": 26.57180968029143,
+   "z": 74.93692429129159
+  }
+ ],
+ "reco_sep_cm": 0.005675171503447546,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: a 19.8-cm proton stopping at 14005 (210000, template match) and a 147-cm muon stopping at 14003 both rise away from 14020, the prongs leave it at about 100 degrees, and a Michel stub sits at the muon far end.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt75135/calib-pr-evt75135.json",
+ "subRunNo": 1
+}

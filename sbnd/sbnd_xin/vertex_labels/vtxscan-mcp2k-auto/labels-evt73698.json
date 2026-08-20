@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt73698",
+ "eventNo": 73698,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 185.7940347521722,
+  "y": 157.1098007945914,
+  "z": 214.78704990317618
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 14002,
+   "x": 185.7940347521722,
+   "y": 157.1098007945914,
+   "z": 214.78704990317618
+  }
+ ],
+ "reco_sep_cm": 0.005002197432705851,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 2 of 2 prongs rise away - the 30 cm proton follows the template monotonically up to 193660 at 14000 and the 15 cm muon rises to 14001, with a 106 degree opening so it is not a single scattered track.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt73698/calib-pr-evt73698.json",
+ "subRunNo": 1
+}

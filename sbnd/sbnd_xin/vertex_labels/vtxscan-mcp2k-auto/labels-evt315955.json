@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt315955",
+ "eventNo": 315955,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -146.01858787893147,
+  "y": 149.68068618893355,
+  "z": 321.8425039849684
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17002,
+   "x": -146.01858787893147,
+   "y": 149.68068618893355,
+   "z": 321.8425039849684
+  }
+ ],
+ "reco_sep_cm": 0.0029554833592566735,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "p4 shows both prongs on template away from 17002 (54 cm proton falling from 320000 at its stop 17000, 36 cm muon rising to 190000 at its stop 17001) and the zoom shows the cool V apex at 109 deg.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt315955/calib-pr-evt315955.json",
+ "subRunNo": 1
+}
