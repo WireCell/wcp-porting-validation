@@ -210,10 +210,26 @@ isolated probe root (`work-probe178410a`), the same event succeeds:
 rc=0   sample=2k entry=1774 evt=178410 rc=0   wall_s=126 maxrss_kb=682544   fired=0
 ```
 
+> **CORRECTED 2026-08-20 by doc pr/97 §5 — read that instead of the paragraph
+> below.** I concluded "concurrency-dependent" from a single successful retry
+> (n=1). doc pr/97 reproduced the crash **at `-j 1`, no load, no second
+> process**, and measured it as a **~5 % per-run** failure that is *not*
+> layout-determined: 6 single-event roots differing only in environment size
+> gave 1 crash, and a 10-run repeat confirmed the padding is irrelevant. The
+> `pad16` run matches this crash's signature to within noise (2311 MB vs
+> 2403 MB, 129 s vs 132 s, same 0-byte apa0 `mabc`, same `get_hull 21608` log
+> tail). It also verified by **inode** that `work-probe178410a/evt178410` and
+> `work-mcp2k-ql0819/evt178410` are the same directory, so both runs consumed
+> byte-identical imaging — closing the one input-difference loophole my reading
+> left open. **So the 32-way batch never mattered.** What survives from below:
+> the crash is real, pre-existing, silent at the batch level, and the RSS
+> excursion is its signature. What does not: the attribution to concurrency.
+
 The tell is **peak RSS: 2403 MB in the crashing run vs 683 MB alone — 3.5×**,
 at nearly identical wall time (132 s vs 126 s). Both runs are under
-`setarch x86_64 -R`, so this is **not** the M4 ASLR ghost. It is a
-concurrency-dependent memory blow-up under 32-way load, on an event that is
+`setarch x86_64 -R`, so this is **not** the M4 ASLR ghost. It looked like a
+concurrency-dependent memory blow-up under 32-way load (**superseded — see the
+correction above**), on an event that is
 already a heavy one (the log fills with
 `Cluster::get_hull number of points is too large: 21608 (cap 10000)` — 21 k
 points against a 10 k cap, so the hull cache is being hit hard). The crash
@@ -230,8 +246,8 @@ non-empty `mabc-all-apa.zip`, **0 non-rc0**. So the baseline is whole.
 > campaign changes no code). Two things make it worth its own round: it is
 > *silent at the batch level* — `run_ql_batch.sh`'s driver still exits 0, and
 > only the `.status` line and a 0-byte pctree betray it — and a 3.5× RSS
-> excursion under concurrency is the signature of something unbounded, which
-> at `PR_JOBS`/`-j` 32 × 2.4 GB is 77 GB of the box. Anyone re-running a large
+> excursion is the signature of something unbounded, which at `PR_JOBS`/`-j`
+> 32 × 2.4 GB would be 77 GB of the box. Anyone re-running a large
 > mcp2k Q/L batch should check `grep -c '^rc=0 ' .status/*` against the event
 > count rather than trusting the driver's exit code.
 
