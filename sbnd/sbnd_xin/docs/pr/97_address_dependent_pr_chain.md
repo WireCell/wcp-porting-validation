@@ -550,14 +550,30 @@ unlimited`) had the *shortest* walls of any arm, 119-130 s, and crashed **0/40**
 those runs barely reach the deadline before exiting.  The gdb arm, walls
 135-142 s, crashed 2/48.
 
-**Three arms are in flight at the time of writing** to separate "the Go runtime
-is present" from "the forced GC is the trigger", all against the contemporaneous
-control of 2/48 in the gdb arm: `work-pr97h-r*` (100 runs, config precompiled to
-JSON — no Go runtime), `work-pr97i-r*` (60 runs, `GODEBUG=asyncpreemptoff=1`),
-`work-pr97j-r*` (100 runs, `GOGC=off`, which disables `gcTriggerTime` and hence
-the 2-minute forced GC). Results appended below when they land. Note the power:
-at a 4 % baseline, a clean 100-run arm is p≈1.7 %, a clean 60-run arm only
-p≈9 % — the 60-run arm can suggest, not establish.
+**The arms.** All against the contemporaneous control of 2/48 in the gdb arm,
+each run in a fresh root (M13), same event, same binary:
+
+| arm | root | runs | crashes | rate |
+|---|---|---|---|---|
+| control, `.jsonnet` config, under gdb | `work-pr97g-r*` | 48 | **2** | 4.2 % |
+| control, `.jsonnet` + `GOTRACEBACK=crash` | `work-pr97k-r*` | 32 | **1** | 3.1 % |
+| **config precompiled to JSON by `wcsonnet`** | `work-pr97h-r*` | **100** | **0** | — |
+| `.jsonnet` + `GODEBUG=asyncpreemptoff=1` | `work-pr97i-r*` | 60 | 0 | — |
+| `.jsonnet` + `GOGC=off` | `work-pr97j-r*` | 55+ | 0 | — |
+
+Read these with the power in mind. Against a 4 % null, a clean 100-run arm is
+p≈1.7 % — **the precompiled-JSON arm is the load-bearing evidence**, and it
+says: remove the Go runtime from the process and the crash goes away. A clean
+60-run arm is only p≈9 %, i.e. exactly as weak as "one padding out of ten
+crashed" was, so `asyncpreemptoff` and `GOGC=off` **suggest and do not
+establish** which Go subsystem is at fault; a null there refutes one mechanism
+inside the runtime, not the runtime.
+
+`GOTRACEBACK=crash` was meant to make the Go runtime print its own traceback,
+which is the Go-side stack the gdb captures cannot give. It produced none:
+**ROOT's SIGSEGV handler wins over Go's**, prints its own trace and exits. That
+is worth knowing on its own — Go's protections for its own threads are not in
+force in a process that has initialised ROOT.
 
 ### 5.6 What is established, and what is not
 
@@ -585,11 +601,44 @@ Not established:
   that runs longer than ~120 s carries the same Go runtime, so in principle yes,
   and 178410 is not special beyond being long enough.
 
-**No toolkit change is proposed from this round.** The finding is about how jobs
-are launched, not about clustering, and the fix belongs to the owner:
-precompiling every long job's config with `wcsonnet` removes the Go runtime from
-the process and is output-neutral (proven above). That is a runner change in
-`wcp-porting-img`, and it is the owner's call.
+**No toolkit change is proposed from this round** — the finding is about how
+jobs are launched, not about clustering. The toolkit-side fix is written up for
+the maintainer in `97_upstream_brief.md`. What *was* deployed here, on the
+owner's instruction, is §5.7.
+
+### 5.7 Deployed: precompiled configs, and batches that fail loudly
+
+Two changes in `wcp-porting-img`, both aimed at the immediate exposure:
+
+**(a) Compile the config in a separate `wcsonnet` process** — `run_ql_evt.sh`
+and `run_pr_chain_batch.sh` now collect their TLAs into one array, run
+`wcsonnet` with exactly those arguments, and hand `wire-cell` the resulting
+JSON. `SBND_PRECOMPILE_CFG=0` restores the legacy in-process path for A/B
+archaeology. The Q/L job's process drops from **65 threads to 1**; the compile
+costs **0.13 s** of the ~135 s job. The PR chain matters more than the Q/L job
+here: it routinely runs far past the 120 s deadline.
+
+**(b) Fail loudly on a failed event** — `run_ql_batch.sh` and
+`run_pr_chain_batch.sh` now print a boxed banner naming every event whose output
+is missing or truncated, and **exit non-zero**. `batch_summary()` in
+`_runlib.sh` returns 0 as long as *any* event succeeded, which is how doc pr/95
+lost evt 178410 out of 2000 and still read as a clean batch. `_runlib.sh` itself
+is untouched (it is shared by many runners); the banner lives in the two
+drivers. The banner names `rc=139` explicitly and points at this doc.
+
+Gates for (a), knob ON vs the pre-change baseline arm `work-pr97gate-nuecc48`
+(same binary `d57c750c`, same manifest, 48 nueCC48 events):
+
+| gate | label | result |
+|---|---|---|
+| PR-chain member-content hashes (`scripts/pr85_hash_gate.py`) | `work-pr97L-prgate` | **PASS — 96/96 archives byte-identical** (`mabc-pr.zip` + `pctree`) |
+| per-branch/per-entry ROOT compare (`scripts/pr94_root_gate.py`) | same | **PASS — 48 identical, 0 differing** |
+| `nusel-table.tsv` / `nusel-events.tsv` | same | **identical** |
+| Q/L job, member-content hashes | `work-pr97L-prod1` vs `work-pr97g-r1` | **identical** |
+| crash rate with (a) on | `work-pr97h-r*` | **0 in 100** vs 2/48 control |
+
+So (a) is byte-identical on the production manifest and removes the failure
+mode. (b) changes only diagnostics and exit codes.
 
 ## 6. What changed
 

@@ -1447,24 +1447,48 @@ process_event() {
         # byte-flat RSS for 8h17m in shower_clustering_with_nv_from_vertices and
         # stalled the whole 1000-event batch on its last slot (doc pr/11 sec 6).
         # `timeout` sits INSIDE timecmd.py so .time.meta is still written (rc=124).
+        # The full TLA list, collected once so the jsonnet compiler and
+        # wire-cell see exactly the same arguments (doc pr/97 sec.5).
+        _TLA=(
+            --tla-str  "input=$PCT"
+            --tla-code "anode_indices=[0,1]"
+            --tla-str  "output_dir=$PRDIR"
+            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}"
+            --tla-str  "reality=$REALITY"
+            `# doc 68: the LAr set, the beam window and every tgm_*/stm_* knob`
+            `# spelled out here were byte-for-byte the job's own defaults, so`
+            `# they are gone.  PIPELINE stays explicit -- this chain adds the`
+            `# neutrino taggers + BDT scorers on top of the default list.`
+            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+            "${TFJSON_TLA[@]}"
+            "${CATH_TLA[@]}"
+            --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz"
+        )
+        # doc pr/97 sec.5: compile in a SEPARATE short-lived wcsonnet process
+        # so this long job never hosts gojsonnet's Go runtime.  In-process, that
+        # runtime keeps 64 threads alive for the whole job and one of them jumps
+        # to PC 0x0 at ~120 s of process life (Go sysmon's forced-GC period),
+        # killing the job with SIGSEGV while WireCell's own thread is provably
+        # healthy.  The PR chain is the MOST exposed job here: it routinely runs
+        # far past 120 s.  Costs 0.13 s; compiled config and output unchanged.
+        # SBND_PRECOMPILE_CFG=0 restores the legacy in-process path (A/B only).
+        _CFG=(-c "$JSONNET")
+        if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
+            _cfgjson="$PRDIR/.wct-cfg-evt${EVT_ID}.json"
+            rm -f "$_cfgjson"
+            if wcsonnet "${_TLA[@]}" -o "$_cfgjson" "$JSONNET"; then
+                _CFG=(-c "$_cfgjson")
+                _TLA=()
+            else
+                echo "[evt $EVT_ID] WARN: wcsonnet failed -- in-process jsonnet" >&2
+            fi
+        fi
         setarch x86_64 -R python3 "$AB/timecmd.py" "$PRDIR/.time.meta" \
         timeout --signal=TERM --kill-after=60 "${PR_TIMEOUT:-3600}" \
         wire-cell \
             -l stderr -l "${LOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
-            --tla-str  "input=$PCT" \
-            --tla-code "anode_indices=[0,1]" \
-            --tla-str  "output_dir=$PRDIR" \
-            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
-            --tla-str  "reality=$REALITY" \
-            `# doc 68: the LAr set, the beam window and every tgm_*/stm_* knob` \
-            `# spelled out here were byte-for-byte the job's own defaults, so` \
-            `# they are gone.  PIPELINE stays explicit -- this chain adds the` \
-            `# neutrino taggers + BDT scorers on top of the default list.` \
-            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
-            "${TFJSON_TLA[@]}" \
-            "${CATH_TLA[@]}" \
-            --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
-            -c "$JSONNET"
+            "${_TLA[@]}" \
+            "${_CFG[@]}"
         echo "rc=$?" > "$PRDIR/rc.txt"
     ) > "$PRDIR/stdout.log" 2>&1
     rm -f "$PRDIR/trash-pr.tar.gz"
@@ -1533,3 +1557,30 @@ if [ "${#_tsvs[@]}" -gt 0 ]; then
 fi
 
 echo "loadavg: $(cat /proc/loadavg)"
+
+# doc pr/97 sec.5: batch_summary() returns 0 as long as ANY event succeeded, so
+# one crashed event in 2000 exited 0 and read as a clean batch (doc pr/95, evt
+# 178410).  Re-derive the failures from the per-event rc.txt and fail loudly.
+_bad=""
+for evt in "${EVENT_IDS[@]}"; do
+    _r=$(sed -n 's/^rc=//p' "$OUTROOT/pr_evt${evt}/rc.txt" 2>/dev/null); _r=${_r:-missing}
+    [ "$_r" = 0 ] || _bad="${_bad}evt=${evt} rc=${_r}
+"
+done
+if [ -n "$_bad" ]; then
+    echo
+    echo "############################################################"
+    echo "# FAILED EVENTS -- their mabc-pr.zip / pctree are MISSING or"
+    echo "# TRUNCATED, and nusel_extract was skipped for them, so the"
+    echo "# merged nusel table below is SHORT by these events."
+    echo "#   rc=139 = SIGSEGV. On a job living past ~120 s this is very likely the"
+    echo "#   doc pr/97 gojsonnet Go-runtime crash (~4 %/run): a libgojsonnet thread"
+    echo "#   jumps to PC 0x0 while WireCell's own thread is healthy. Re-run the event;"
+    echo "#   SBND_PRECOMPILE_CFG=1 (the default) is meant to prevent it."
+    echo "#   rc=124 = PR_TIMEOUT, 250 = SIGABRT, 241 = SIGTERM."
+    echo "#"
+    printf '%s' "$_bad" | sed 's/^/# /'
+    echo "############################################################"
+    exit 1
+fi
+exit 0
