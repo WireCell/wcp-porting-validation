@@ -1,0 +1,17 @@
+# doc pr/99 round 2 A/B index -- OFF <uuid-after-upload> / ON <uuid-after-upload>
+# 12 events: 5 owner scan events first (idx 0-4), then the round's movers.
+# OFF = work-pr99r2-off3-* (production-equivalent, gate PASS), ON = work-pr99r2-on3-*
+# (chord_max=30 no_cascade starved asym/mip/span=0.55/0.8/0.5 ghost_drop -- the shipped flip).
+# bee_idx	event	status
+0	285567	RESCUED(partial): op3.5 fake 53.6/58.3cm chords DECLINED (chord-cap+no-cascade); track-like uncovered 52cm group clears (TRACKLIKE 1->0). Residual ~30% diffuse uncovered = 279955-class fit collapse, pr/96 s10.1
+1	315167	RESCUED(partial): 146.25cm chord (fake 44.8cm EM trunk source) DECLINED. 172 MeV object keeps e- label (typing = A5, not this round); enu 1180->1305
+2	395148	RESCUED: 23.4cm charge-starved ghost member (views 1.00/1.00/0.30 vs the 65.7cm track) dropped from shower AND display; shower 295.6->87.6 MeV, enu 940->732. e- label residual (A5)
+3	70084	RESCUED: 15.69cm starved chord (0.62 vs 1.16 MIP, overlap 0.87@30deg) deleted at op1-post; triangle OPEN, real chain intact; enu 598->543
+4	279955	RESIDUAL: unchanged by design (interior fit collapse onto the 11x-brighter muon; pr/96 s10.1 blocker stands)
+5	168596	mover: two 4-7cm starved dups near vertex deleted (0.63/2.45, 0.67/1.88); nue selection KEPT; enu 2619->3533
+6	475140	mover: 338cm-class op3.5 chord declined; GAINS numu selection (numu -0.62->1.25)
+7	235435	mover: no-cascade x10 declines op3.5 self-collapse chain; nue already -4.2 pre-knob (-> -15 sentinel); enu 862->929
+8	433451	mover: two 5-6cm starved dups deleted; nue unchanged; numu -0.37->-1.93
+9	46363	mover: 2.3cm+10.8cm starved dups deleted; nue unchanged; enu -37
+10	56982	mover: nue -3.6->-4.3 (good direction, NC pi0 stays non-nue)
+11	405707	unchanged (enu +6)
