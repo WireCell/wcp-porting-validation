@@ -273,10 +273,12 @@ Two facts correct that reading.
    `work-mcp2k-ql0819/evt178410` are the *same directory* — both are symlinks
    to `work-img-mcp2k/evt178410` (verified by inode). So the crashing run and
    the clean run consumed byte-identical imaging.
-2. **The trigger is the address-space layout, and 16 bytes of environment is
-   enough.** Six fresh roots, one event each, `-j 1`, every run under
-   `setarch x86_64 -R` (as the driver always does), differing *only* in the
-   length of one extra exported variable:
+2. **It reproduces at `-j 1`, with no load and no ASLR.** Six fresh roots, one
+   event each, every run under `setarch x86_64 -R` (as the driver always does),
+   differing only in the length of one extra exported variable. *At the time I
+   read this table as "the environment size is the trigger"; the repeat test
+   further down shows that was wrong — the padding is irrelevant and these are
+   samples of a ~5 %-per-run failure. The table is kept as measured.*
 
 | padding bytes | rc | wall s | peak RSS kB |
 |---|---|---|---|
@@ -294,11 +296,11 @@ in this directory is that script, committed, and it is what produced the
 The `pad16` run reproduces the pr/95 signature to within noise (2311 MB vs
 2403 MB, 129 s vs 132 s, apa0 `mabc` left 0 bytes and apa1 partial, the log
 tail full of `Cluster::get_hull number of points is too large: 21608`). So the
-32-way batch never mattered: what differed between the batch and the "solo"
-probe was the *environment*, and hence the stack contents, and hence the value
-of some indeterminate read.
+32-way batch never mattered — the crash needs neither load nor a second
+process. What it *does* need is answered below.
 
 ### Neither D1 nor D2 is the cause, and the crash is NOT fixed by this round
+
 
 Checked rather than assumed. The Q/L job's own compiled config
 (`cfg_work_out/sbnd_ql.json`) contains **no `TaggerCheck*` / PR-stage component
@@ -318,35 +320,89 @@ knob off), 10 paddings this time:
 | 0, 8, 16, 24, 32, 64, 96, 128, 192 | 0 | 131-134 | ~680 000 |
 | **48** | **139** | **127** | **2 309 136** |
 
-**The crash is still live at HEAD + these fixes.** Which padding is fatal moved
-(16 → 48) because the binary's own layout changed, and the signature is
-unchanged to within noise (2309 MB vs 2311 MB vs pr/95's 2403 MB). Two
-independent sweeps, 1 fatal layout out of 6 and out of 10.
+**The crash is still live at HEAD + these fixes**, with the signature unchanged
+to within noise (2309 MB vs 2311 MB vs pr/95's 2403 MB). One crash in each of
+these two sweeps — which, as the next subsection shows, is a per-run rate and
+not a property of any particular padding.
 
-So this is a **class-level attribution, not a line-level one**. What is
-established:
+### CORRECTION — it is not layout-determined either; it is ~5 % per run
 
-* the crash is deterministic given a fixed layout, and reproducible on demand
-  at `-j 1` in ~130 s (roots `work-pr97-pad16` / `work-pr97b-pad48`);
-* it is the same failure *mode* as D1/D2 — a branch decided by an address;
-* it is not ASLR (M4), not concurrency, not the inputs, and not D1 or D2;
-* it lives in the **clustering + Q/L matching** chain, so at least one more
-  indeterminate read (or another layout-sensitive UB) is there.
+The two sweeps above invited the reading "padding 16 / padding 48 is the fatal
+layout". **That reading is wrong, and it was my own overclaim.** The test I had
+not run is the obvious one: re-run *the same configuration* and see whether it
+crashes every time. The ROOT path is part of the environment, so this needs the
+same root string reused, with each run's products archived under a fresh name
+first (`work-pr97e-pad14.run{1..5}`; nothing deleted or overwritten):
 
-A valgrind memcheck pass over the Q/L job on this event is running through a
-fork of the runner (`run_ql_evt_pr97vg.sh`, M10: the production script is
-byte-untouched). At the time of writing the job **has** entered `Pgrapher`
-execution (it is inside `MultiAlgBlobClustering`, past
-`ClusteringExtendLoop`, and has already logged the same
-`get_hull ... 21608 (cap 10000)` warnings as the crashing run) and has emitted
-~3900 contexts, **all** Go-runtime (gojsonnet) / ROOT-streamer false positives
-plus configure-time `SCEFieldTH3` noise — **zero** WireCell-algorithm contexts
-so far. Read that carefully: memcheck reports an indeterminate *use* whether or
-not the branch is taken, but only for code that actually runs, and valgrind's
-own layout is a different layout — so a clean pass would say "this layout does
-not execute the bad path", not "there is no bad path".
-**Finishing that pass, and naming the line, is what this round hands to
-pr/98.** The `pad48` root is the reproducer to bisect against.
+| repeat | `ulimit -c` | rc | wall s | peak RSS kB |
+|---|---|---|---|---|
+| 1 | 0 | 0 | 125 | 686 500 |
+| 2 | 0 | 0 | 125 | 683 524 |
+| **3** | 0 | **139** | 128 | **2 309 684** |
+| 4 | unlimited | 0 | 124 | 681 400 |
+
+Identical binary, identical inputs, identical environment down to the byte,
+`setarch x86_64 -R`, one job on the box: **1 crash in 4**. So the environment
+padding never *caused* anything — the sweeps were sampling a per-run
+probability, and reading "1 of 6" as "this padding is special" was a
+small-sample artifact.
+
+Tally over every `-j 1` run of this event in this round:
+
+| binary | runs | crashes | rate |
+|---|---|---|---|
+| pre-fix (`f0e69780`) | 7 | 1 (`pad16`) | 14 % |
+| post-fix (`d57c750c`) | 61 | 3 (`pr97b-pad48`, `pr97e-pad14`, `pr97e-pad14.run3`) | 4.9 % |
+
+The two rates are the same within Poisson error on these counts, which is
+expected: neither D1 nor D2 executes in this job (above).
+
+This also reconciles with pr/95's 1-in-2000: the rate is a property of **this
+event**, not of the sample. 178410 is the heavy one (21 608-point hulls against
+a 10 000 cap); a few-percent chance on a handful of heavy events gives ~1
+failure per 2000-event batch, and pr/95's re-run at `-j 1` succeeding was a 95 %
+outcome, not evidence about concurrency.
+
+### What is actually established
+
+* the crash is **intermittent at ~5 % per run for this event**, reproducible by
+  simply repeating the run (`pr97_layout_sweep.sh`, or any driver, `-j 1`);
+* it is **not** concurrency (every run above is one job on an idle-ish box),
+  **not** ASLR (M4 — all under `setarch -R`), **not** the environment, **not**
+  the inputs, **not** D1 or D2, and **not** `ulimit -c`;
+* it lives in the **clustering + Q/L matching** chain;
+* the mechanism is *not yet named*, and the usual suspects are ruled out by
+  inspection: `clus/src` contains **no** `std::thread` / TBB / OpenMP, **no**
+  RNG (`gRandom`/`TRandom`/`mt19937`/`rand`), and **no** time-gated or
+  deadline-driven behaviour, and the job runs `Pgrapher` (sequential) with
+  "executing with 15 nodes". So a single-threaded, deterministic-input process
+  is producing run-to-run divergence — which is exactly the signature of
+  reading memory the program did not write, and is why D1's class of defect is
+  still the leading hypothesis, just not D1 itself.
+
+A full valgrind memcheck pass over the Q/L job on this event **completed** —
+through a fork of the runner (`run_ql_evt_pr97vg.sh`, M10: the production script
+is byte-untouched, root `work-pr97-vgql`). It ran the whole event to a good
+1.1 MB `mabc-all-apa.zip` (~30× slowdown, 4.5 h) and reported **9 590 008
+errors from 3878 contexts, of which ZERO are in WireCell algorithm code** —
+every context is the gojsonnet Go runtime (memcheck cannot follow Go's stack
+growth), ROOT streamer/`TStorage` noise, or configure-time `SCEFieldTH3`.
+
+That is not an exoneration, for two reasons worth writing down:
+
+* memcheck reports an indeterminate *use* whether or not the branch is taken,
+  but only for code that actually executes, and this run did not crash;
+* memcheck **cannot see an out-of-bounds access that stays inside a live heap
+  block** — indexing a large `std::vector` / point cloud past `size()` but
+  inside `capacity()`, or with a garbage index that happens to land in another
+  live allocation, is invisible to it. Given the 3.5× RSS excursion, a bad
+  index or size is exactly the shape to suspect.
+
+**Naming the line is what this round hands to pr/98.** Reproduce by simply
+repeating the run; a 40-run sweep with `ulimit -c unlimited` is the way to
+capture a core (in flight at the time of writing, `work-pr97f-r*`). ASan/UBSan
+builds, or a `-D_GLIBCXX_ASSERTIONS` / `_GLIBCXX_DEBUG` build, would catch the
+in-block overrun that memcheck cannot.
 
 Note on the numbers: 139 is SIGSEGV, not the OOM killer (137), and a failed
 allocation would throw `bad_alloc` — so the 3.5× RSS is a symptom of the wrong
