@@ -352,7 +352,10 @@ Tally over every `-j 1` run of this event in this round:
 | binary | runs | crashes | rate |
 |---|---|---|---|
 | pre-fix (`f0e69780`) | 7 | 1 (`pad16`) | 14 % |
-| post-fix (`d57c750c`) | 61 | 3 (`pr97b-pad48`, `pr97e-pad14`, `pr97e-pad14.run3`) | 4.9 % |
+| post-fix (`d57c750c`) | 61 | 3 (`pr97b-pad48`, `pr97e-pad14.run1`, `pr97e-pad14.run4`) | 4.9 % |
+
+(Superseded by the 108-run inventory two subsections below, which adds 40 more
+post-fix runs and settles the rate at 3.7 %.)
 
 The two rates are the same within Poisson error on these counts, which is
 expected: neither D1 nor D2 executes in this job (above).
@@ -365,7 +368,8 @@ outcome, not evidence about concurrency.
 
 ### What is actually established
 
-* the crash is **intermittent at ~5 % per run for this event**, reproducible by
+* the crash is **intermittent at ~4 % per run for this event** (4 in 108),
+  reproducible by
   simply repeating the run (`pr97_layout_sweep.sh`, or any driver, `-j 1`);
 * it is **not** concurrency (every run above is one job on an idle-ish box),
   **not** ASLR (M4 — all under `setarch -R`), **not** the environment, **not**
@@ -398,9 +402,46 @@ That is not an exoneration, for two reasons worth writing down:
   live allocation, is invisible to it. Given the 3.5× RSS excursion, a bad
   index or size is exactly the shape to suspect.
 
+### The 40-run core-capture sweep: 0/40, and no core anywhere
+
+`work-pr97f-r{1..40}` (fresh root per run, `ulimit -c unlimited`, 5-way
+concurrency, D2-fixed binary) finished **40/40 rc=0**, wall 119-130 s, peak RSS
+674-686 MB, `core=` empty on every run. No crash, so no backtrace.
+
+Full inventory of every `-j 1` run of 178410 in this round, read back from the
+per-run `.status` files rather than from memory
+(`for d in work-pr97*; do cat $d/.status/*; done`):
+
+| runs | crashes | rate | crashing dirs |
+|---|---|---|---|
+| 108 | 4 | **3.7 %** | `work-pr97-pad16`, `work-pr97b-pad48`, `work-pr97e-pad14.run1`, `work-pr97e-pad14.run4` |
+
+Split by binary: pre-fix 7 runs / 1 crash, post-fix 101 runs / 3 crashes
+(3.0 %). Same within Poisson error, as expected — neither D1 nor D2 runs in
+this job. The `pr97e-pad14` root crashed **2 of its 5 runs** while `pad16`,
+`pad24`, `pad32` and forty `pr97f` roots never crashed once; with a ~4 % rate
+that clustering is unremarkable, and it is the last reason anyone might still
+read the padding table as causal.
+
+Why no core exists even under `ulimit -c unlimited`: `/proc/sys/kernel/core_pattern`
+is the bare `core`, so the kernel writes into the *dying process's* CWD, and a
+2.3 GB core there is easy to lose or to have silently fail. **For pr/98, do not
+chase cores** — run the event under gdb directly, which needs no kernel or
+`ulimit` cooperation:
+
+```
+until gdb -q -batch -ex run -ex bt -ex 'info locals' \
+        --args wire-cell -c <precompiled>.json 2>&1 | tee /home/xqian/tmp/gdb-178410.log \
+      | grep -q SIGSEGV; do :; done
+```
+
+At ~130 s/run and ~4 %, expect a hit inside ~25 runs (~1 h serial, less at
+5-way). Precompile the config with `wcsonnet` first (M17).
+
 **Naming the line is what this round hands to pr/98.** Reproduce by simply
-repeating the run; a 40-run sweep with `ulimit -c unlimited` is the way to
-capture a core (in flight at the time of writing, `work-pr97f-r*`). ASan/UBSan
+repeating the run. The 40-run `ulimit -c unlimited` sweep produced no crash and
+no core, and `core_pattern` makes core capture unreliable here — use the gdb
+loop given above instead. ASan/UBSan
 builds, or a `-D_GLIBCXX_ASSERTIONS` / `_GLIBCXX_DEBUG` build, would catch the
 in-block overrun that memcheck cannot.
 
