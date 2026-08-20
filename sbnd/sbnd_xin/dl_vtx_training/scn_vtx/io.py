@@ -189,15 +189,31 @@ def is_corrective(label, tol=1.0):
 
 
 def sample_of_label(label, numu_events=None, numu_name='numu50'):
-    """Coarse sample name for reporting: nuecc / ncpi0 / mcp1k (data);
-    `numu_name` if the event is in the provided numu_events set."""
+    """Coarse sample name for reporting: nuecc / ncpi0 / mcp1k / mcp2k (data);
+    `numu_name` if the event is in the provided numu_events set.
+
+    doc pr/100 addition: `mcp2k` and the harv3-delta case, both introduced
+    after this function was written (pr/77) and never previously routed
+    through it -- no existing caller passes those tags (ab_vertex_compare.py
+    and taxonomy.py both default to the 3 old prod0813 tags), so this is
+    purely additive.  `vtxscan-harv3-delta` spans several samples' arms
+    (doc pr/82 sec 4), resolved the same way carry_labels.py does: from the
+    label's own recorded `arm`, never the tag."""
     tag = label.get('scan_tag') or ''
+    if 'mcp2k' in tag:
+        return 'mcp2k'
     if 'ncpi0' in tag:
         return 'ncpi0'
     if 'mcp1k' in tag:
         if numu_events and label['eventNo'] in numu_events:
             return numu_name
         return 'mcp1k'
+    if 'delta' in tag:
+        arm = label.get('arm') or ''
+        for s, name in (('nuecc48', 'nuecc'), ('ncpi0', 'ncpi0'),
+                        ('mcp1k', 'mcp1k'), ('mcp2k', 'mcp2k')):
+            if s in arm:
+                return name
     return 'nuecc'
 
 

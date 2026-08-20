@@ -25,6 +25,17 @@ before any tuned number is quoted.
 Repro:
   python3 rerank_tune.py --search          # coordinate ascent + report
   python3 rerank_tune.py --eval w_snap=1 ... min_accept=10 scale=1000
+
+doc pr/100 addition: --arm-template and --ipw-tsv let a later epoch point this
+at its own arms/weights without editing the file.  Defaults reproduce the
+pr/89 round-5 invocation exactly (arms `work-<sample>-pr89{base,topo,swap}`,
+weights `runs/ipw-mcp2k-closed-20260816.tsv`) -- the closure check at the top
+of main() still gates every run, tuned or not, so a wrong template/weights
+path fails loudly (0 events loaded, or CLOSURE mismatches) rather than
+silently scoring the wrong arms:
+  python3 rerank_tune.py --search \
+      --arm-template '{root}/work-vtx100-{arm}-{sample}/pr_evt{evt}/calib-pr-evt{evt}.json' \
+      --ipw-tsv runs/ipw-mcp2k-<date>.tsv
 '''
 import os, sys, json, csv, argparse, collections
 import numpy as np
@@ -58,23 +69,35 @@ GRIDS = dict(
 
 
 def sample_of(lab):
+    # doc pr/100: 'mcp2k' checked first and by substring (not the old exact
+    # `in (...)` match) so a later epoch's tag names (e.g. vtxscan-vtx100-*,
+    # vtxscan-mcp2k-ragree) still resolve -- ==(...) matched only the two
+    # pr/88-era literal tag strings and silently misrouted anything renamed.
     t = lab['scan_tag']
-    if t in ('vtxscan-mcp2k', 'vtxscan-mcp2k-auto'):
+    if 'mcp2k' in t:
         return 'mcp2k'
     for s in ('nuecc48', 'ncpi0', 'mcp1k'):
         if s in t:
             return s
     a = lab.get('arm') or ''
-    return 'nuecc48' if 'nuecc48' in a else 'mcp1k'
+    for s in ('nuecc48', 'ncpi0', 'mcp1k', 'mcp2k'):
+        if s in a:
+            return s
+    return 'mcp1k'
 
 
-def load_all():
+DEFAULT_ARM_TEMPLATE = '{root}/work-{sample}-pr89{arm}/pr_evt{evt}/calib-pr-evt{evt}.json'
+DEFAULT_IPW_TSV = os.path.join(HERE, 'runs/ipw-mcp2k-closed-20260816.tsv')
+
+
+def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TAGS):
     ipw = {}
-    with open(os.path.join(HERE, 'runs/ipw-mcp2k-closed-20260816.tsv')) as fh:
-        for r in csv.DictReader(fh, delimiter='\t'):
-            ipw[int(r['evt'])] = float(r['weight'])
+    if ipw_tsv and os.path.exists(ipw_tsv):
+        with open(ipw_tsv) as fh:
+            for r in csv.DictReader(fh, delimiter='\t'):
+                ipw[int(r['evt'])] = float(r['weight'])
     events, seen = [], set()
-    for lab in vio.iter_labels(ROOT, TAGS):
+    for lab in vio.iter_labels(ROOT, tags):
         e = lab['eventNo']
         if e in seen:
             continue
@@ -83,7 +106,7 @@ def load_all():
         truth = np.array(lab['truth_xyz'])
         arms = {}
         for arm in ('base', 'topo', 'swap'):
-            p = '%s/work-%s-pr89%s/pr_evt%d/calib-pr-evt%d.json' % (ROOT, s, arm, e, e)
+            p = arm_template.format(root=ROOT, sample=s, arm=arm, evt=e)
             if os.path.exists(p):
                 arms[arm] = json.load(open(p))['vertex_scoreboard']
         if 'base' not in arms or 'topo' not in arms:
@@ -182,9 +205,20 @@ def main():
                     metavar='K=V', help='evaluate one theta')
     ap.add_argument('--tol', type=float, default=1.0)
     ap.add_argument('--tsv', default=None)
+    ap.add_argument('--arm-template', default=DEFAULT_ARM_TEMPLATE,
+                    help='{root}/{sample}/{arm}/{evt} format string for the '
+                         'per-arm calib path; default reproduces the pr/89 '
+                         'round-5 arms exactly')
+    ap.add_argument('--ipw-tsv', default=DEFAULT_IPW_TSV,
+                    help='ipw_weights.py output; default is the pr/89-round '
+                         'weights file')
+    ap.add_argument('--tags', nargs='+', default=TAGS,
+                    help='label tags to load; default is the pr/89 six tags '
+                         '(does not include vtxscan-mcp2k-ragree)')
     args = ap.parse_args()
 
-    events = load_all()
+    events = load_all(arm_template=args.arm_template, ipw_tsv=args.ipw_tsv,
+                      tags=args.tags)
     print('loaded %d events (rows from pr89topo, outcomes from base/topo/swap)'
           % len(events))
     ncand = sum(1 for ev in events if ev['rows'])
