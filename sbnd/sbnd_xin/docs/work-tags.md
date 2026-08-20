@@ -2295,3 +2295,16 @@ nueCC48**, round-3 identity 96/96, KEEP), `work-pr98-floff-nuecc48`
 (SBND_FIT_EXCLUSION=false == pre-flip prod0819, 96/96).  fit_exclusion is SBND
 PRODUCTION ON as of toolkit flip commit (doc pr/98 §10); `work-nuecc48-prod0819`
 remains the pre-flip reference.
+
+## doc pr/99 (2026-08-20) — owner scan triage, log-only probe arms
+
+| arm | what | keep? |
+|---|---|---|
+| `work-pr99-probe-mcp2k` | evts 279955+70084, all diag env probes, hash PASS 4/4 vs work-pr96-prodflip-mcp2k | releasable after doc |
+| `work-pr99-probe-mcp1k` | evts 395148+315167, same probes, hash PASS 4/4 vs work-scan-prodflip-mcp1k | releasable after doc |
+| `work-pr99-probe-ncpi0` | evt 285567, same probes, hash PASS 2/2 vs work-scan-prodflip-ncpi0 | releasable after doc |
+| `work-pr99-t70084` | evt 70084 at trace level + WCT_SHOWER_CREATE_DEBUG (the op1-post 0.87-overlap decline evidence) | releasable after doc |
+
+The `*-prodflip-*` arms this round reads (pr96-prodflip-mcp2k,
+scan-prodflip-{mcp1k,ncpi0}) belong to the concurrent session's round — not
+tagged here, never written to.
