@@ -6,8 +6,18 @@
 Phase 5 tooling done, population arms not run. Phase 6 (production flip) not
 done -- it is blocked on the owner review below.**
 
-**ROUND 3 (2026-08-19, later the same day): the two owner-reported bugs from
-the round-2 Bee scan are fixed, all three new knobs default OFF -- §9.9 (evt
+**PHASE 6 DONE (2026-08-19): all four knobs are SBND PRODUCTION ON --
+`nu_per_bundle`, `nu_selected_as_main`, `protect_open_convicted_bundles` and
+`bee_flash_pred_min=0` (owner flip after the round-3 Bee scan). Flip-equivalence
+PASS on 140 archives / 70 events plus the Q/L display; the pre-flip arm stays
+reproducible via the tri-state env hooks. See §9.13. Production now emits one
+`T_tagger`/`T_kine` row per in-beam bundle -- consumers reading one number per
+event must use `scripts/pr94_rows.py primary_index()`. The §9.9 bookkeeping
+defect (an activity reported under a bundle it was not matched to) is knowingly
+carried into production.**
+
+**ROUND 3 (2026-08-19, earlier the same day): the two owner-reported bugs from
+the round-2 Bee scan are fixed, all three new knobs shipped default OFF -- §9.9 (evt
 73038, the "matched to no flash" display filter -> `bee_flash_pred_min`),
 §9.10 (evt 395148, the secondary activity missing the main cluster's treatment
 -> `open_convicted_bundles` + `nu_selected_as_main`), §9.11 (gates: OFF
@@ -1683,6 +1693,82 @@ python3 scripts/bee/make_pr_bee.py --allow-unevaluated \
 python3 scripts/bee/make_pr_bee.py --allow-unevaluated -q work-pr94r3-ql22disp \
     -p work-pr94r3-on-mcp1k -p work-pr94r3-on-mcp2k -p work-pr94r3-on-nuecc48 \
     -o bee/pr94r3/pr94r3-on.zip $EVENTS
+```
+
+### 9.13 Phase 6 -- SBND PRODUCTION FLIP (owner, 2026-08-19)
+
+Owner decision after the round-3 Bee scan (`bee/pr94r3`): **all four knobs ON
+for SBND production**, i.e. Phase 6 as well as the three round-3 fixes. The
+owner was shown, and accepted, that this ships the evt 73038 row (51.3 MeV on a
+26.5 cm activity, `numu_score` -1.77) with the §9.9 bookkeeping half still
+unfixed.
+
+| knob | file | pre-flip | production |
+|---|---|---|---|
+| `nu_per_bundle` | `wct-pr-perevt.jsonnet:1119` | false | **true** |
+| `nu_per_bundle_min_length` | `:1133` | 15 | 15 (unchanged) |
+| `nu_selected_as_main` | `:1146` | false | **true** |
+| `protect_open_convicted_bundles` | `:548` | null (C++ false) | **true** |
+| `bee_flash_pred_min` | `wct-clus-matching-perevt.jsonnet:345` | null (C++ 100) | **0** |
+
+Config-only -- no rebuild, no C++ change. The escape hatches are now tri-state
+so the pre-flip arm stays reproducible: `SBND_NU_PER_BUNDLE=0`,
+`SBND_NU_SELECTED_AS_MAIN=0`, `SBND_OPEN_CONVICTED_BUNDLES=0`,
+`SBND_QL_BEE_FLASH_PRED_MIN=100`.
+
+**What production now emits that it did not before.** One `T_tagger`/`T_kine`
+row per in-beam-window flash bundle instead of one per event. **Every consumer
+that reads one number per event must go through `scripts/pr94_rows.py`
+`primary_index()`** -- the five that hard-indexed `[0]` were converted in
+Phase 5 (`pr_scores_table.py`, `pr51/nuvtx_census.py`, `pr74/pr74_pf_roots.py`,
+`pr20/pr20_partI_pftree.py`, `pr73/f3a_change_map.py`). Row 0 is the longest
+selected activity, i.e. the candidate the pre-pr/94 chain would itself have
+chosen, so a single-bundle event reads exactly as before.
+
+#### Flip gates
+
+| gate | arms | result |
+|---|---|---|
+| flip-equivalence, nueCC48 (bare == env-forced ON) | `work-pr94r3-on-nuecc48` vs `work-pr94r3-flip-nuecc48` | **PASS 96/96 archives, 48/48 events** |
+| flip-equivalence, mcp1k review events | `work-pr94r3-on-mcp1k` vs `work-pr94r3-flip-mcp1k` | **PASS 16/16, 8/8** |
+| flip-equivalence, mcp2k review events | `work-pr94r3-on-mcp2k` vs `work-pr94r3-flip-mcp2k` | **PASS 28/28, 14/14** |
+| flip-equivalence, Q/L display (bare == forced 0) | evt 73038 | **PASS**, 0 differing zip members; bare production op row for the 0.968 us APA0 beam flash = `[2, 4, 5]` |
+| pre-flip escape hatch reproduces pre-flip production | `work-pr94r3b-off-nuecc48` vs `work-pr94r3-preflip-nuecc48` | **PASS 96/96, 48/48** |
+| compiled config, bare == env-forced ON | -- | **diff EMPTY**; bare shows `nu_per_bundle: true` (x2), `nu_per_bundle_min_length: 15`, `nu_selected_as_main: true`, `open_convicted_bundles: true` |
+| compiled config, escape hatch vs pre-flip | -- | one line: an explicit `open_convicted_bundles: false`, which **is** the C++ default -- behaviourally identical, same tri-state pattern as `protect_skip_convicted` |
+
+Total flip-equivalence coverage: **140 archives / 70 events byte-identical**
+plus the Q/L display, so the bare production chain provably reproduces the arms
+the owner scanned.
+
+#### What changes in production output, measured
+
+* **nueCC48 (48 events)**: tagger output on 48/48, a reconstructed vertex on
+  48/48, **0 lost**; the primary row is identical on **47/48**; evt **116962**
+  moves (vertex +34 cm in z, `Enu` 837.3 -> 877.8, `numu_score` 0.59 -> -0.50).
+  Coverage caveat from §9.11 stands: on this sample the bundle-opening knob
+  fired on only 5/48 events and `nu_selected_as_main` on 1/48.
+* **The 22 review events**: 8 events gain a first neutrino where production
+  reconstructed none; 13 keep a byte-identical primary row and gain a second
+  bundle; 395148's 17 cm trajectory excursion through empty space is gone
+  (fit points > 3 cm from any charge 15 -> 0).
+* **Not measured**: mcp1k/mcp2k at population scale -- the owner capped this
+  round's validation at "bee links + nueCC". The row-count and label impact on
+  `nusel-events.tsv` (§7's 68/629 miscount) is therefore still carried by the
+  `nusel-events-pr94.tsv` sidecar rather than fixed at the source.
+
+#### Repro
+
+```bash
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin; cd $SX
+# bare production (post-flip) == the env-forced ON arms
+PR_JOBS=24 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94r3-flip-nuecc48 data
+python3 scripts/pr85_hash_gate.py work-pr94r3-on-nuecc48 work-pr94r3-flip-nuecc48 --jobs 8
+python3 scripts/pr94_root_gate.py work-pr94r3-on-nuecc48 work-pr94r3-flip-nuecc48
+# the pre-flip arm is still reproducible
+SBND_NU_PER_BUNDLE=0 SBND_NU_SELECTED_AS_MAIN=0 SBND_OPEN_CONVICTED_BUNDLES=0 \
+  PR_JOBS=24 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr94r3-preflip-nuecc48 data
+python3 scripts/pr85_hash_gate.py work-pr94r3b-off-nuecc48 work-pr94r3-preflip-nuecc48 --jobs 8
 ```
 
 ## 10. Verification

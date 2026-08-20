@@ -203,10 +203,11 @@ CATH_TLA=()
 # doc pr/94 Phase 2: per-bundle neutrino candidates.  One T_tagger/T_kine row
 # per in-beam-window flash bundle instead of one per event, each carrying its
 # own vertex/kinematics/BDT scores plus a vectorised per-activity cosmic block
-# (act_*).  EMPTY = no TLA = the job default false = the single event-wide
-# candidate = byte-identical.  Set to 1 for the ON arm.
-# Env: SBND_NU_PER_BUNDLE=<1|true>.
-[ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=true")
+# (act_*).  **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc
+# pr/94 sec 9.13)** -- EMPTY now inherits that.  Set 0 for the PRE-FLIP arm
+# (one event-wide candidate, the pre-pr/94 behaviour).
+# Env: SBND_NU_PER_BUNDLE=<0|1>.
+[ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=$([ "${SBND_NU_PER_BUNDLE}" = 0 ] && echo false || echo true)")
 # doc pr/94 Phase 5b round 2: the dot guard.  Length floor (cm) for a
 # per-bundle candidate, exempting the legacy event-wide winner.  EMPTY = no
 # TLA = the job default 15 cm.  Set to 0 to reproduce the pre-5b behavior (no
@@ -223,15 +224,18 @@ CATH_TLA=()
 # bundle's unconvicted members get ClusteringProtectBundle's graph examination
 # (the convicted cluster itself is still never split).  Narrower than
 # SBND_PROTECT_SKIP_CONVICTED=0 above, which also splits the cosmic tree.
-# EMPTY = no TLA = the job default null = C++ default false = byte-identical.
+# **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc pr/94 sec
+# 9.13)** -- EMPTY inherits that; set 0 for the pre-flip arm.
 # Env: SBND_OPEN_CONVICTED_BUNDLES=<0|1>.
 [ -n "${SBND_OPEN_CONVICTED_BUNDLES:-}" ] && CATH_TLA+=(--tla-code "protect_open_convicted_bundles=$([ "${SBND_OPEN_CONVICTED_BUNDLES}" = 0 ] && echo false || echo true)")
 # doc pr/94 round 3: give the SELECTED neutrino candidate the main-cluster PR
 # treatment for its own pass even when it is a demoted main (examine_vertices_3,
 # improve_vertex, main_cluster_initial_pair_vertices, break_two_end_dqdx, the
 # main-branch endpoint ordering).  EMPTY = no TLA = the job default false =
-# byte-identical.  Env: SBND_NU_SELECTED_AS_MAIN=<1|true>.
-[ -n "${SBND_NU_SELECTED_AS_MAIN:-}" ] && CATH_TLA+=(--tla-code "nu_selected_as_main=true")
+# **SBND PRODUCTION DEFAULT ON since the 2026-08-19 owner flip (doc pr/94 sec
+# 9.13)** -- EMPTY inherits that; set 0 for the pre-flip arm.
+# Env: SBND_NU_SELECTED_AS_MAIN=<0|1>.
+[ -n "${SBND_NU_SELECTED_AS_MAIN:-}" ] && CATH_TLA+=(--tla-code "nu_selected_as_main=$([ "${SBND_NU_SELECTED_AS_MAIN}" = 0 ] && echo false || echo true)")
 # doc pr/89 Arm D2: post-DL adjustment reach, cm.  EMPTY = no TLA = the cfg
 # default null = the C++ defaults (vks 5.0 / mvga 15.0) = byte-identical.
 # The TLAs already exist and are fully threaded (wct-pr-perevt.jsonnet:1977,
