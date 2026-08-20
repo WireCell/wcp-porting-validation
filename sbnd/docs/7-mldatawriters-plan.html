@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MLDataWriters plan</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1a;--muted:#63635e;--rule:#dededa;--card:#ffffff;--code-bg:#f2f2ef;
+ --accent:#2f6f4f;--warn:#8a4b1c;--bad:#9c2b2b;--ok:#2f6f4f;--new:#3a4fa0;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#16171a;--fg:#e6e6e2;--muted:#9b9b95;--rule:#2f3237;--card:#1d1f23;--code-bg:#22252a;
+ --accent:#7fc39b;--warn:#e0a56a;--bad:#e88b8b;--ok:#7fc39b;--new:#96aaf0;}}
+:root[data-theme="dark"]{--bg:#16171a;--fg:#e6e6e2;--muted:#9b9b95;--rule:#2f3237;--card:#1d1f23;
+ --code-bg:#22252a;--accent:#7fc39b;--warn:#e0a56a;--bad:#e88b8b;--ok:#7fc39b;--new:#96aaf0;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+ font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ -webkit-font-smoothing:antialiased;}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 120px}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .3em;letter-spacing:-.01em}
+h2{font-size:1.3rem;margin:2.6em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--rule)}
+h3{font-size:1.02rem;margin:1.8em 0 .5em}
+h4{font-size:.94rem;margin:1.4em 0 .4em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p{margin:.7em 0}
+.lede{color:var(--muted);font-size:1.05rem;margin-bottom:0}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .35em;border-radius:3px;font-size:.87em}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+pre code{background:none;padding:0;font-size:1em}
+.scroll{overflow-x:auto;margin:1em 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:560px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+ border-bottom:1.5px solid var(--rule);white-space:nowrap}
+td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.05em;padding:.1em .45em;
+ border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.tag.have{color:var(--ok);border:1px solid var(--ok)}
+.tag.miss{color:var(--bad);border:1px solid var(--bad)}
+.tag.add{color:var(--new);border:1px solid var(--new)}
+.tag.warn{color:var(--warn);border:1px solid var(--warn)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin:1.2em 0}
+.card h3{margin-top:0}
+.note{border-left:3px solid var(--warn);padding:2px 0 2px 14px;margin:1.2em 0}
+.note strong{color:var(--warn)}
+.key{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:1.2em 0}
+.key strong{color:var(--accent)}
+ul,ol{padding-left:1.4em;margin:.6em 0}
+li{margin:.3em 0}
+.meta{color:var(--muted);font-size:.83rem;margin-top:.4em}
+.small{font-size:.85rem;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5em 0}
+.cols{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:820px){.cols{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>MLDataWriters — plan</h1>
+<p class="lede">One modular family of writers for nugraph, DL-vertexing and BDT training data, built on
+the MABC visitor pattern: no extra serialization, and <code>TensorSetLabeler</code> stops growing.</p>
+<p class="meta">Work dir <code>/exp/sbnd/data/users/yuhw/production-prep/mldatawriters-dev</code> ·
+ai-helper #15 · not related to the CAF project (#14) · 2026-08-20</p>
+
+<div class="key">
+<strong>Short answer: yes, the MABC + visitor pattern is the right shape</strong>, and there is already
+a working in-tree precedent — three MABC visitors write their own output files today
+(<code>SbndPrMagnifyTrackingVisitor</code> and <code>UbooneTaggerOutputVisitor</code> write ROOT,
+<code>PrDisplayDump</code> writes JSON), and the toolkit ships HDF5 via <code>hio</code>
+(<code>HDF</code>, <code>HioTensorSink</code>).
+<br><br>
+<strong>But one hard constraint shapes everything:</strong> a WCT visitor cannot reach
+<code>art::Event</code>, and all three writers need truth. So the design is <em>one</em> art-side truth
+injector plus <em>N</em> pure-WCT writers — which is also exactly what stops
+<code>TensorSetLabeler</code> growing.
+</div>
+
+<h2 id="why">1. Why this needs restructuring</h2>
+
+<p><code>TensorSetLabeler</code> is <strong>1731 lines of <code>.cxx</code> and 370 of header</strong>
+doing four separable jobs: truth association, the <code>truth_per_track</code> tensor, several families
+of Bee sets, and the nugraph HDF5. Two more writers (DL-vertexing, BDT) would push it past any
+reasonable size, and its Bee half already needed splitting once — the <code>bee_sets</code> /
+<code>label_blobs</code> knobs added for the two-instance PR-chain work.</p>
+
+<p>The other pressure is serialization. Each art-level module in the chain deserializes the
+point-cloud tree, mutates it, and re-serializes: <code>as_pctree</code> → work →
+<code>as_tensors</code>. Chaining writers as separate <code>ITensorSetFilter</code>s multiplies that
+round trip for no benefit, since they all want the same tree.</p>
+
+<h2 id="split">2. The constraint that decides the architecture</h2>
+
+<p>Each writer's inputs, and where those inputs actually live. Measured, not assumed — the PC list is
+read off a real serialized tree and the runtime objects off the source.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Writer</th><th>Needs</th><th>Survives serialization?</th><th>Can be a visitor?</th></tr></thead>
+<tbody>
+<tr><td><strong>nugraph</strong></td>
+    <td><code>3d</code> blob points, the six 2-D <code>ctpc_a{0,1}f0p{U,V,W}</code> PCs, per-blob truth
+        <code>trackid</code>, nu truth</td>
+    <td><span class="tag have">yes, all of it</span></td>
+    <td><span class="tag have">yes</span> — or downstream, either works</td></tr>
+<tr><td><strong>DL-vertexing</strong></td>
+    <td><code>3d</code> (x, y, z, q) + the true neutrino vertex</td>
+    <td><span class="tag have">yes</span> — <code>3d</code> is a PC; <code>nu_vtx_*</code> is in the
+        tensor-set metadata</td>
+    <td><span class="tag have">yes</span></td></tr>
+<tr><td><strong>BDT</strong></td>
+    <td><code>TaggerInfo</code>, <code>KineInfo</code>, the PR graph / <code>TrackFitting</code></td>
+    <td><span class="tag miss">NO</span></td>
+    <td><span class="tag add">visitor ONLY</span></td></tr>
+</tbody></table>
+</div>
+
+<div class="key">
+<strong>The asymmetry is the whole design.</strong> <code>as_tensors</code> serializes only
+<code>node->value.local_pcs()</code> (<code>aux/src/TensorDMpointtree.cxx:82</code>), while
+<code>TrackFitting</code> is a private facade member —
+<code>std::shared_ptr&lt;TrackFitting&gt; m_track_fitting</code>
+(<code>Facade_Grouping.h:392</code>), with a named-slot map at <code>:393</code>. It is not a point
+cloud, so it is never written and dies when <code>MABC::operator()</code> returns.
+<br><br>
+So <strong>BDT training data can only be produced from inside the MABC pipeline</strong> — there is no
+downstream position from which it is even visible. That single fact settles the question: the visitor
+pattern is not merely convenient here, it is required for one of the three writers, and adopting it for
+all three makes them uniform.
+</div>
+
+<p class="small">For the record, the full set of PCs that <em>do</em> survive:
+<code>3d</code>, <code>scalar</code>, <code>cluster_scalar</code>, <code>grouping_scalar</code>,
+<code>perblob</code>, <code>steiner_pc</code>, <code>corner</code>,
+<code>ctpc_a{0,1}f0p{U,V,W}</code>, <code>dead_winds_*</code>, <code>dead_gap_*</code>,
+<code>flash</code>, <code>flashlight</code>, <code>opflash</code>, <code>light</code>.</p>
+
+<h2 id="art">3. The art boundary, and the one channel across it</h2>
+
+<p>Truth comes from <code>art::Event</code> — <code>MCTruth</code>, <code>MCParticle</code>,
+<code>SimEnergyDeposit</code>. A WCT visitor gets <code>visit(Facade::Ensemble&amp;)</code> and nothing
+else: no art event, no <code>ITensorSet</code>, not even an ident. So truth must be <em>injected</em>
+into the tree by an art-aware component before any visitor can use it.</p>
+
+<p>Two injection channels already exist and are proven:</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Channel</th><th>Carries</th><th>Proven by</th></tr></thead>
+<tbody>
+<tr><td>blob-level <code>scalar</code> PC</td><td>per-blob truth <code>trackid</code></td>
+    <td>the labeler writes it; verified to survive <code>switch_scope</code>,
+        <code>unmerge_bundle</code>, <code>unmerge_assoc</code> and <code>protect_bundle</code>
+        (issue #13) because it rides the <em>blob node</em>, while <code>switch_scope</code> erases only
+        the cluster-level <code>perblob</code></td></tr>
+<tr><td>ensemble scalar PC</td><td>event-level values, e.g. RSE and the true nu vertex</td>
+    <td><code>MABC</code> already stamps
+        <code>ensemble.set_scalar&lt;int&gt;("runNo", …)</code> so the ROOT visitors can identify their
+        event (issue #13 §7.3). The same channel carries <code>nu_vtx_{x,y,z}</code>.</td></tr>
+</tbody></table>
+</div>
+<p class="note"><strong>Note the gap this closes.</strong> The nu truth currently lives in the
+<em>tensor-set metadata</em> (<code>n_nu</code>, <code>nu_pdg</code>, <code>nu_energy</code>,
+<code>nu_vtx_{x,y,z}</code>, <code>nu_ccnc</code>, <code>nu_int_type</code>, <code>nu_flavor</code>,
+<code>nu_edep</code>). Visitors cannot see set metadata — only the Ensemble. So a DL-vertexing visitor
+needs the vertex re-published as an ensemble scalar. That is a few lines in the injector, using a
+mechanism that already exists.</p>
+
+<h2 id="design">4. Proposed shape</h2>
+
+<pre><code>art  ┌─────────────────────────────────────────────────────────────┐
+     │ larwirecell:  TruthInjector        (the ONLY art touchpoint) │
+     │   reads MCTruth / MCParticle / SimEnergyDeposit once         │
+     │   writes  blob scalar.trackid  +  truth_per_track tensor     │
+     │   publishes nu truth as ensemble scalars                     │
+     └─────────────────────────────────────────────────────────────┘
+                                 │  one tree, no extra round trip
+WCT  ┌──────────────────────────┴──────────────────────────────────┐
+     │ MABC pipeline (visitors, in declaration order)               │
+     │   … clustering / tagger stages …                             │
+     │   NuGraphWriter      3d + ctpc_* + trackid   -> HDF5         │
+     │   DLVertexWriter     3d + nu_vtx             -> HDF5         │
+     │   BDTDataWriter      TaggerInfo / KineInfo   -> ROOT or HDF5 │
+     └─────────────────────────────────────────────────────────────┘</code></pre>
+
+<div class="cols">
+<div class="card">
+<h3>What this buys</h3>
+<ul>
+<li><strong>No extra serialization.</strong> Visitors read the live tree. The only
+    <code>as_pctree</code>/<code>as_tensors</code> pair is the one the chain already pays.</li>
+<li><strong>One art touchpoint.</strong> Truth is ingested once, not once per writer.</li>
+<li><strong>TensorSetLabeler shrinks.</strong> It becomes the injector; nugraph and the Bee sets move
+    out. Each writer is independently readable and testable.</li>
+<li><strong>Uniform placement.</strong> A writer is enabled by adding its name to
+    <code>pipeline_names</code> — the same switch that controls every other stage.</li>
+<li><strong>BDT becomes possible at all</strong>, which it is not downstream.</li>
+</ul>
+</div>
+<div class="card">
+<h3>What it costs</h3>
+<ul>
+<li>Writers live in WCT, so they cannot ever touch art — anything new they need from truth must go
+    through the injector.</li>
+<li>Placement is no longer free: a writer must be named in the pipeline of the <em>right</em> MABC (see
+    §5), which is a real ordering constraint rather than a wiring detail.</li>
+<li>Moving nugraph out of <code>TensorSetLabeler</code> must be proven byte-identical, or it is a
+    silent physics change to training data.</li>
+</ul>
+</div>
+</div>
+
+<h3>4.1 Which MABC does each writer belong to?</h3>
+<p>Not interchangeable — the chain has three MABC instances and they see different things.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Writer</th><th>MABC</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><code>BDTDataWriter</code></td><td><code>clus_pr</code></td>
+    <td>the only place <code>TaggerInfo</code>/<code>TrackFitting</code> exists. Must also come
+        <em>after</em> the BDT scorers in <code>pipeline_names</code>, or the scores read zero — the
+        exact trap that made the merged Bee node print <code>numu 0.000</code> against
+        <code>T_tagger</code>'s <code>-1.7148</code> (issue #13)</td></tr>
+<tr><td><code>NuGraphWriter</code></td><td><code>clus_all_apa</code></td>
+    <td>where nugraph is produced today; needs the merged all-APA tree and the 2-D <code>ctpc</code> PCs</td></tr>
+<tr><td><code>DLVertexWriter</code></td><td><code>clus_all_apa</code></td>
+    <td>wants the assembled 3-D cloud before the PR stage splits clusters</td></tr>
+</tbody></table>
+</div>
+
+<h2 id="pitfalls">5. Pitfalls to design out from the start</h2>
+
+<div class="note"><strong>Fixed output filenames break multi-event runs.</strong> This is not
+hypothetical: <code>tracking-pr.root</code> is written by two visitors sharing one filename, one
+opening <code>RECREATE</code> and the other <code>UPDATE</code>, so <code>lar -n N</code> silently
+yields an 8 kB file with <code>T_tagger</code> and <code>T_kine</code> absent (issue #13 G9). A new
+writer family must handle many events per process <em>by construction</em> — append per event, or take
+the filename per event — and must never leave a truncated file looking like a legitimate one.</div>
+
+<div class="note"><strong>"No content" must be distinguishable from "failed".</strong> On the
+run-925-23 sample, 6 of 10 events had no neutrino candidate, and their
+<code>tracking-pr.root</code> is byte-indistinguishable from the corrupted multi-event case. A writer
+should record an explicit empty record rather than omit the event, so a downstream trainer can tell the
+two apart.</div>
+
+<div class="note"><strong>Silent fallbacks.</strong> The recurring failure mode in this chain is
+plausible output computed the wrong way — the <code>sp.jsonnet</code> extVar that silently selected the
+wrong ROI thresholds, the DL vertex that silently falls back to geometric without torch. Each writer
+should assert its inputs are present and say so loudly when they are not, and
+<code>sbnd/check-pr-run.sh</code> should gain a check per writer.</div>
+
+<h2 id="phasing">6. Phasing</h2>
+<ol>
+<li><strong>Split, do not add.</strong> Move nugraph out of <code>TensorSetLabeler</code> into
+    <code>NuGraphWriter</code> with no behaviour change, and gate it byte-identically against the
+    current <code>nugraph.h5</code>. This proves the pattern on something whose right answer is already
+    known.</li>
+<li><strong><code>DLVertexWriter</code></strong> — the smallest new writer: <code>3d</code> + the nu
+    vertex re-published as an ensemble scalar.</li>
+<li><strong><code>BDTDataWriter</code></strong> — the one that needs the visitor position. Start from
+    what <code>UbooneTaggerOutputVisitor</code> already reads
+    (<code>tf-&gt;get_tagger_info()</code>, <code>get_kine_info()</code>).</li>
+<li><strong>Shared plumbing</strong> — factor the common HDF5/append/empty-record handling once the
+    third writer shows what is actually common. Not before.</li>
+</ol>
+
+<h2 id="open">7. Open questions</h2>
+<ol>
+<li><strong>Is BDT here "write the existing 1216 features for retraining", or "write a new feature
+    set"?</strong> The first is a dump of <code>TaggerInfo</code> and is nearly free; the second is a
+    physics project. This changes the scope more than anything else on the page.</li>
+<li><strong>One file per writer per job, or one shared HDF5?</strong> Shared is tidier for a trainer;
+    separate is far simpler for multi-event append and for re-running one writer alone.</li>
+<li><strong>Does the DL-vertexing training data need the <em>fitted</em> trajectory</strong>
+    (<code>T_rec_charge</code>-equivalent), or only blob points? If the fit is wanted, it must first be
+    persisted into PCs — <code>TaggerCheckSTM</code>'s <code>save_stm_fit</code> shows how
+    (<code>cluster.local_pcs()["stm_fit"]</code>, <code>.cxx:808</code>), and
+    <code>TaggerCheckNeutrino</code> has no equivalent yet.</li>
+<li><strong>Do these writers run in production, or only in dedicated training-data jobs?</strong>
+    Production-on means every knob is a physics commitment; training-only means they can move fast.</li>
+<li><strong>Keep the name <code>TensorSetLabeler</code> for the slimmed injector,</strong> or rename to
+    something like <code>TruthInjector</code>? Renaming is honest but breaks every existing fcl.</li>
+</ol>
+
+<hr>
+<p class="small">Grounding: <code>aux/src/TensorDMpointtree.cxx:82</code> (what serializes);
+<code>clus/inc/WireCellClus/Facade_Grouping.h:392-393</code> (what does not);
+<code>clus/src/TaggerCheckSTM.cxx:808,825,846</code> (persisting a fit as PCs);
+<code>root/src/{SbndPrMagnifyTrackingVisitor,UbooneTaggerOutputVisitor}.cxx</code> and
+<code>clus/src/PrDisplayDump.cxx</code> (visitors that write files);
+<code>hio/</code> (<code>HDF</code>, <code>HioTensorSink</code>);
+<code>larwirecell/aiml/TensorSetLabeler.cxx</code> (1731 lines, four jobs);
+and a serialized <code>trash-all-apa.tar.gz</code> for the surviving-PC inventory.
+Related: <a href="5-pr-chain-in-1step.html">PR chain</a> (#13),
+<a href="6-cafmaker-plan.html">CAFMaker</a> (#14).</p>
+
+</div>
+</body>
+</html>
