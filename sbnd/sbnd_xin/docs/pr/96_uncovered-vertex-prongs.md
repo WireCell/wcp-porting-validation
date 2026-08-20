@@ -87,10 +87,11 @@ main vertex:
 | PF tree (Bee `mc` layer is the **reco** PF tree) | μ⁻ 515 MeV only | e⁻ 8 → μ⁻ 247 MeV; e⁻ 178 MeV |
 
 **These are identical to the numbers on the owner's own (stale) Bee zip**, so the
-symptom survived pr/93 r1-4 and the pr/94 four-knob flip. 70084's row also
-reproduces **bit-for-bit in bare production** (`work-mcp2k-prod0819`, no probe,
-no env) — 179 pts, 19.1 %, 9.62 cm — which is the independent confirmation that
-`traj_cover_probe` is log-only.
+symptom survived pr/93 r1-4 and the pr/94 four-knob flip. **Both** rows also
+reproduce **bit-for-bit in bare production** (`work-mcp2k-prod0819`, no probe,
+no env): 70084 at 179 pts / 19.1 % / 9.62 cm, and 279955 at 232 pts / 13.9 % /
+20.22 cm / rms 0.431 / dvtx 4.86 — the independent confirmation that
+`traj_cover_probe` is log-only and that the diagnostic arm is production.
 
 In both events the uncovered charge is a **straight, dense prong at the neutrino
 vertex**, carrying 14–19 % of the cluster's charge, with no trajectory on it. It
@@ -159,11 +160,31 @@ remedy **S1 `other_seg_keep_isolated_min_nnf` was specified and never built**
 
 The two new segments **20022** (9.4 cm) and **20034** (13.0 cm) meet at
 (-196.2, 16.8, 121.8) — the centre of the uncovered group is (-195.1, 16.8,
-123.7). The prong now has a trajectory. `oseg_iso_drop` is still 2, so the
-pr/54 floor still fires; what changed is that with exclusion the *neighbouring*
-segments' fits no longer absorb the prong's 2-D cells, and the prong is
-recovered through the ordinary segment path instead of the isolated-residual
-path.
+123.7). The prong now has a trajectory.
+
+**But the recovery is not an admission change, and this is the sharper finding
+of the two.** With the probe on in both arms, `find_other_segments` makes the
+*same decisions* under exclusion as without it:
+
+```
+dbg1 (production)          fx1 (fit_exclusion=true)
+round 1/2 segments 5 -> 8 (added 3)      round 1/2 segments 5 -> 8 (added 3)
+round 2/2 segments 8 -> 8 (added 0)      round 2/2 segments 8 -> 8 (added 0)
+pr54 isolated-residual drop  x2          pr54 isolated-residual drop  x2
+```
+
+Same component KEPT at step 8 with the same bbox, same `SELECTED` at step 9,
+same two `pr54` drops, `oseg_iso_drop = 2` either way. What exclusion changes is
+the **fits** of the segments that exist regardless — and therefore which of them
+survive the downstream `examine_*` / mvga passes and where their trajectories
+run. Which stage created 20022 / 20034 specifically is **not established** by
+these logs (mvga op3 `stub-interposed` fires in both arms, at `len=8.50 cm` here
+and `len=9.69`/`8.56 cm` in production, close enough to the prong's 8.8 cm to be
+a candidate but not evidence).
+
+So for 70084 as well as for 279955, the causal variable is the **fit**, not the
+admission. That is the single most consequential statement in this document, and
+§7 is written against it.
 
 ---
 
@@ -327,29 +348,55 @@ flagged.
 end-to-end). No probe, no env: the census reads only `mabc-pr.zip` and the
 already-unconditional log lines.
 
-| sample | events | uncovered groups | track-like groups | **events flagged** | rate | with a `pr54` hit |
+| sample | events scored | uncovered groups | track-like groups | **events flagged** | rate | with a `pr54` hit |
 |---|---|---|---|---|---|---|
-| nueCC48 + NCπ⁰ | 67 | 516 | 9 | **8** | **11.9 %** | 3 |
-| mcp1k | 1000 | 1163 | 28 | **24** | **2.4 %** | 3 |
-| mcp2k (686/2000 done) | 686 | 1422 | 32 | **27** | **3.9 %** | 4 |
+| nueCC48 + NCπ⁰ | 66 | 516 | 9 | **8** | **12.1 %** | 3 |
+| mcp1k | 999 | 1163 | 28 | **24** | **2.4 %** | 3 |
+| mcp2k (frozen 1941-event snapshot) | 1940 | 3275 | 89 | **76** | **3.9 %** | — |
 
-10 of the 69 track-like groups carry a `pr54 isolated-residual drop` at the
-charge (**70084 class**, and `fit_exclusion` is measured to fix that class on
-70084). The other 59 do not, and 279955 is one of them — so the residual class
-is the larger one, which is the single most important number here.
+(Two events carry no `track_fit` layer at all and are excluded from the
+denominators: `73422` in mcp1k, `99860` in mcp2k. mcp2k was at 686/2000 when the
+first pass ran and gave the same **3.9 %**; the row above is the frozen
+1941-event list in `/home/xqian/tmp/pr96/mcp2k_snap.list`.)
+
+**Sensitivity — the one cut that is not pinned by data.** The calibration set has
+nothing between 6.5 cm and 70 cm, so `--dvtx 15` sits at an unconstrained point
+inside a 63 cm gap. The flagged-event counts across that window:
+
+| `--dvtx` | nueCC48+NCπ⁰ | mcp1k | mcp2k (1941) |
+|---|---|---|---|
+| 10 cm | 5 | 21 | 65 |
+| **15 cm** (quoted above) | **8** | **24** | **76** |
+| 25 cm | 11 | 28 | 85 |
+
+So the population is **5–11 / 66, 21–28 / 999, 65–85 / 1940** across a
+±10 cm swing of the least-constrained cut, i.e. the rates are 8–17 %, 2–3 % and
+3–4 %. Read §6 as that range; the point estimates are the 15 cm column. Pinning
+this cut wants owner labels on events between 7 and 70 cm from the vertex, which
+is the cheapest thing a next round could add.
+
+Of the 69 track-like groups in the first pass, **10 carried a
+`pr54 isolated-residual drop`** at the charge (the **70084 class**); the other 59
+did not, and **279955 is one of them** — so the residual class is the larger one.
+That split is the single most important number here, and §2.1 sharpens rather
+than softens it: even in the 70084 class the measured lever acted on the fit, not
+on the admission.
 
 **Worse exhibits than either owner event exist.** Sorted by fraction of the
 cluster's charge left uncovered:
 
-| event | cid | q uncovered | extent | group centre (x,y,z) | angle | `pr54`? |
-|---|---|---|---|---|---|---|
-| mcp2k **91653** | 13 | **52.7 %** | 17.7 cm | (-73.1, 187.9, 259.7) | 3.6° | — |
-| mcp2k **91697** | 2 | **35.8 %** | 8.8 cm | (-175.0, 43.8, 493.1) | 52.7° | **yes** |
-| mcp2k **51546** | 16 | 24.8 % | 32.1 cm | (-159.0, 173.8, 435.4) | 0.7° | — |
-| mcp2k **52121** | 11 | 19.4 % | 31.3 cm | (-28.8, -157.2, 72.0) | 7.2° | — |
-| mcp2k 70084 | 20 | 19.1 % | 9.6 cm | (-195.1, 16.7, 123.7) | 32.4° | **yes** |
-| nueCC48 **469665** | 15 | 17.7 % + 12.0 % | 17.2 + 23.4 cm | (25.6, 68.2, 295.2) | 11.7° | one of two |
-| nueCC48 **116962** | 21 | 14.8 % | 23.0 cm | — | 30.9° | — |
+| event | cid | q uncovered | extent | group centre (x,y,z) | dvtx | angle | `pr54`? |
+|---|---|---|---|---|---|---|---|
+| mcp2k **91653** | 13 | **52.7 %** | 17.7 cm | (-73.1, 187.9, 259.7) | 3.3 | 3.6° | — |
+| mcp2k **91697** | 2 | **35.8 %** | 8.8 cm | (-175.0, 43.8, 493.1) | 10.0 | 52.7° | **yes** |
+| mcp2k **317077** | 14 | 26.5 % | 9.1 cm | (-85.7, -70.7, 437.3) | 4.0 | 56.5° | — |
+| mcp2k **51546** | 16 | 24.8 % | 32.1 cm | (-159.0, 173.8, 435.4) | 5.9 | 0.7° | — |
+| mcp2k **285680** | 37 | 21.5 % | 11.8 cm | (-21.6, 129.8, 83.2) | 4.5 | 2.8° | **yes** |
+| mcp2k **410698** | 5 | 20.8 % | 10.8 cm | (-40.6, 58.8, 155.7) | 3.0 | 10.7° | **yes** |
+| mcp2k 70084 | 20 | 19.1 % | 9.6 cm | (-195.1, 16.7, 123.7) | 6.5 | 32.4° | **yes** |
+| mcp2k 279955 | 16 | 13.9 % | 20.2 cm | (-97.7, 134.3, 277.0) | 4.9 | 5.6° | — |
+| nueCC48 **469665** | 15 | 17.7 % + 12.0 % | 17.2 + 23.4 cm | (25.6, 68.2, 295.2) | 5.1 | 11.7° | one of two |
+| nueCC48 **116962** | 21 | 14.8 % | 23.0 cm | — | 7.6 | 30.9° | — |
 
 Several flagged events are already named in earlier docs — 116962 (pr/94 r3's
 one primary mover), 395148 (pr/94 §9.10), 122660 (pr/86 §14.5's named loss),
@@ -358,9 +405,8 @@ consistent with one under-measured failure family rather than seven unrelated
 bugs. Two events could not be scored (`73422`, `99860`: no `track_fit` layer);
 that is doc pr/55's `require_pr_graph` empty-layer path, out of scope here.
 
-279955 itself is not in the table only because `work-mcp2k-prod0819` had reached
-686/2000 when this was written; it is measured in `work-pr96-dbg1-mcp2k` off the
-same Q/L root and the same binary.
+Both owner events are in the bare-production table, with numbers identical to the
+diagnostic arm (§1).
 
 ---
 
@@ -391,6 +437,14 @@ predicate shape and the doctest file
 *Instrumentation gap to close with it:* the `pr54 isolated-residual drop` line
 does not print `nnf`, so an ON census must join the `step8 KEEP` line by bbox —
 or add that one field, log-only.
+**F1 is not measured to fix 70084, and §2.1 is the reason to be careful about
+assuming it will.** The only measured fix there acts on the fit, and the
+admission decisions were bit-identical across it. F1 admits a component that
+production drops — but whether the resulting fit follows the prong's charge or
+collapses onto its neighbour (279955's failure) is exactly the untested
+question. The first measurement of any F1 arm must therefore be
+`pr96_uncover_census.py`, not a segment count: a segment that exists and does
+not cover the charge is not a fix.
 
 **F2 — uncovered-charge admission**, as an additional disjunct **inside** the
 existing predicate, never a new pass. Admit when the component's imaged charge
@@ -492,7 +546,15 @@ fraction.
    11×-brighter neighbour.
 2. **pr/30 §3.1 unit question** — blocking any honest re-read of `fit_exclusion`.
    Owner decision (§8).
-3. **mcp2k census is partial** (686/2000). Re-run §6's last row when pr/95
+3. **mcp2k census is a 1941/2000 snapshot.** Re-run §6's last row when pr/95
    Phase 3 finishes; the two `MISSING_LAYER` events want a separate look.
-4. **New exhibits for a scan** — 91653 (52.7 %), 91697 (35.8 %), 51546, 52121,
-   469665 (two prongs), 116962. Not packaged for Bee; no upload authorized.
+   `--dvtx` wants owner labels between 7 and 70 cm from the vertex (§6).
+4. **`docs/work-tags.md` does not yet list this round's four arms**
+   (`work-pr96-{dbg1,dbg2,dbg3,fx1}-mcp2k`, plus
+   `/home/xqian/tmp/pr96/mcp2k_snap.list`). That file was held open by a
+   concurrent session running the pr/95 campaign and was deliberately not
+   touched; register the arms there before the next retirement pass so they are
+   not read as untracked disk.
+5. **New exhibits for a scan** — 91653 (52.7 %), 91697 (35.8 %), 317077, 51546,
+   285680, 410698, 469665 (two prongs), 116962. Not packaged for Bee; no upload
+   authorized.
