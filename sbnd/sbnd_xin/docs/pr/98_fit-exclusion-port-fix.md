@@ -305,7 +305,11 @@ segment's fit on its own charge.  What the measurement says:
    measure the third-pass refinement (§5) and/or the pr/96 narrower 3-site
    variant, both cheap arms from this round's binary.
 
-No flip is performed in this round.
+**Owner decision, same day (2026-08-20): "this feature is clearly better —
+turn it on by default for SBND, after making the running time efficient."**
+Perf rounds 2-3 (§9) brought the cost to 1.08x median / 1.7x worst on
+nueCC48; the flip is §10.  Options (b)-retune and (c)-third-pass/narrower
+variants remain open follow-ups, now to be measured against the ON baseline.
 
 ## 8. Artifacts and labels
 
@@ -321,3 +325,80 @@ No flip is performed in this round.
   `work-nuecc48-ql0819`; baseline `work-nuecc48-prod0819`.
 - Panels: `/home/xqian/tmp/pr98_panels/pr98_evt*.png` (scratch; regenerate
   with the Repro block + `scripts/pr98_fit_panels.py`).
+- Perf/flip arms (§9-§10): `work-pr98-fx4-nuecc48` (round-2 identity + timing),
+  `work-pr98-off3-nuecc48` (round-2 off gate), `work-pr98-flip-nuecc48`
+  (post-flip bare = the new production baseline, round-3 identity + timing),
+  `work-pr98-floff-nuecc48` (post-flip SBND_FIT_EXCLUSION=false = pre-flip
+  production).
+
+## 9. Perf rounds 2-3 — all exact, all hash-gated
+
+Round 1 (§5, commit 2ecfc630) replaced the 3-plane query with a single-plane
+helper: 256587 757→228 s.  Rounds 2-3 (this commit):
+
+- **Round 2**: (i) per-segment decision cache — the keep/strip decision
+  depends only on (cell, segment), never the fit point, and clouds are static
+  while one segment's points are processed, so consecutive fit points
+  re-claiming the same cells reuse the decision; (ii) the 0.3 cm floor is
+  checked FIRST — such cells keep unconditionally, skipping the whole
+  competitor scan; (iii) early break — one competitor at distance
+  <= min_dis_track already forces the drop (strict keep rule).  All three
+  reproduce the plain rule decision-for-decision.
+- **Round 3** (owner picked items 1-3 of the §9 menu): (1)
+  `DynamicPointCloud::get_closest_2d_dis` — distance-only query via
+  `NFKDVec::knn1` (documented identical to `knn(1)`), skipping the
+  l2g/global-index + cluster lookups the exclusion path discards and the
+  result-vector allocation; (2) stack-array query point (no per-query heap
+  vector); (3) the decision cache keyed by a packed 64-bit
+  (apa,face,plane,wire,time) in an unordered_map instead of
+  std::map<Coord2D,...>.
+
+**Timing, evt 256587 (heaviest; profiled runs share the identical setup):**
+757 s (r0, unprofiled) → 228 s (r1, unprofiled) → 203.9 s (r1 profiled) →
+99.7 s (r2 profiled) → **90.1 s (r3 profiled)** — cumulative **8.4x**, now
+~1.4x over the 63 s knob-off floor.  Sample-wide (48 events, PR_JOBS=6,
+.time.meta wall): OFF median 13 s / total 766 s; ON median 14 s / total
+877 s / max 107 s ⇒ **1.08x median, 1.14x total, 1.7x worst**.
+
+**Profile evidence** (google-pprof, 250 Hz): pre-round-2 the exclusion term
+dominated (wall 12x knob-off; the r1 baseline profile could not be
+re-symbolized after the install overwrote the sampled lib — recorded
+honestly, the wall deltas above carry the claim).  Post-round-3:
+nanoflann searchLevel/findNeighbors 19.7% cumulative of a 90 s total,
+`Coord2D::operator<` gone from the top table, remaining Rb_tree traffic is
+the fitter's own m_2d_to_3d/m_3d_to_2d maps (out of scope).  No structural
+hotspot remains; the §9 menu's item 4 (single labeled kd-tree per plane,
+~10-15% more on segment-rich events) is banked, not taken.
+
+**Identity proofs (behavior-neutral, every round):** round-2 binary
+`work-pr98-fx4-nuecc48` vs `work-pr98-fx-nuecc48` PASS 96/96 + off gate
+`work-pr98-off3-nuecc48` vs prod0819 PASS 96/96; round-3 binary
+`work-pr98-flip-nuecc48` vs `work-pr98-fx-nuecc48` PASS 96/96 + off gate
+`work-pr98-floff-nuecc48` vs prod0819 PASS 96/96; plus the single-event
+scratch reruns (54095/196649/256587) at each step.  wcdoctest-clus 215/215
+at every binary.
+
+## 10. SBND production flip (owner 2026-08-20)
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` TLA default
+`fit_exclusion = false → true` (C++ default stays false; doc 68 single-source
+rule).  Flip-equivalence, all four proofs PASS:
+
+1. flipped bare run == pre-flip explicit-on: `work-pr98-flip-nuecc48` vs
+   `work-pr98-fx-nuecc48` hash gate **PASS 96/96**;
+2. post-flip `SBND_FIT_EXCLUSION=false` == pre-flip production:
+   `work-pr98-floff-nuecc48` vs `work-nuecc48-prod0819` **PASS 96/96**;
+3. compiled-config: flip-bare cfg == explicit-on cfg and forced-off cfg ==
+   pre-flip bare cfg, byte-equal after normalizing the embedded arm paths
+   (the pr/83 printed-path trap);
+4. key-suppression: `"fit_exclusion" : true` appears exactly once in the
+   flip-bare compiled JSON and zero times in the forced-off one.
+
+`work-pr98-flip-nuecc48` is the new production reference on nueCC48.
+Rollback at any time: `-A fit_exclusion=false` / `SBND_FIT_EXCLUSION=false`.
+
+## 11. Ops note (owner 2026-08-20)
+
+The PR chain is ~1 core per event (Timer core-sec == wall-sec), so batch
+runs should use `PR_JOBS=32` on this 64-core box — the M5 ~6-job cap is for
+the multi-threaded imaging/clustering stages, not this chain.

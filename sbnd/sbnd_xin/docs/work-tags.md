@@ -2287,3 +2287,11 @@ All on the nueCC48 manifest, Q/L root `work-nuecc48-ql0819`, baseline
 | `work-pr98-fx-nuecc48` | THE measurement: SBND_FIT_EXCLUSION=true, fixed binary; Bee ON set 6f30f958 | KEEP while pr/98 open |
 | `work-pr98-fx2-smoke` | evts 54095+196649 perf-helper identity (hash PASS) + timing | releasable after doc |
 | `work-pr98-fx3-smoke` | evt 256587 perf-helper identity (hash PASS) + timing | releasable after doc |
+
+Addendum (same day, perf rounds 2-3 + PRODUCTION FLIP): `work-pr98-fx4-nuecc48`
+(round-2 identity 96/96 + timing), `work-pr98-off3-nuecc48` (round-2 off gate),
+`work-pr98-flip-nuecc48` (**post-flip bare = new production baseline on
+nueCC48**, round-3 identity 96/96, KEEP), `work-pr98-floff-nuecc48`
+(SBND_FIT_EXCLUSION=false == pre-flip prod0819, 96/96).  fit_exclusion is SBND
+PRODUCTION ON as of toolkit flip commit (doc pr/98 §10); `work-nuecc48-prod0819`
+remains the pre-flip reference.
