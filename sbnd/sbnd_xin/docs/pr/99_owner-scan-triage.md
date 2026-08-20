@@ -603,9 +603,11 @@ bools=0 on the flipped cfg; the 0.7/2.8 numerics provably inert) == off
 
 ### 7. Bee A/B
 
-bee/pr99r3/pr99r3-{off,on}.zip, 12 events owner-first (index:
-bee/pr99r3/pr99r3.index.txt).  OFF = round-2 production (on3), ON = onf.
-Upload held for owner request.  [UUIDs after upload.]
+bee/pr99r3/pr99r3x20-{off,on}.zip, 20 events (fixes 0-4, adjudicated pi0
+losses 5-6, top Enu movers 7-12, pi0 gains 13-14, A5 retypes 15-19; index:
+bee/pr99r3/pr99r3.index.txt).  OFF = round-2 production (on3)
+001c22e1-9b17-4a2b-9cd5-24e3dba0d5c0 / ON = onf
+90038859-db19-4c31-9937-986ec34121c6.
 
 ### Incident note (concurrent-session build race, 2026-08-20)
 
