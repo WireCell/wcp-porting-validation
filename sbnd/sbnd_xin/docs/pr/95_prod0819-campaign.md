@@ -222,14 +222,19 @@ rc=0   sample=2k entry=1774 evt=178410 rc=0   wall_s=126 maxrss_kb=682544   fire
 > `work-mcp2k-ql0819/evt178410` are the same directory, so both runs consumed
 > byte-identical imaging — closing the one input-difference loophole my reading
 > left open. **So the 32-way batch never mattered.** What survives from below:
-> the crash is real, pre-existing, silent at the batch level, and the RSS
-> excursion is its signature. What does not: the attribution to concurrency.
+> the crash is real, pre-existing, silent at the batch level. What does not:
+> the attribution to concurrency — **nor the RSS excursion as "its signature"**.
+> doc pr/97 §5.4 shows the extra 1.7 GB is the `gdb` that ROOT's
+> `TUnixSystem::StackTrace()` spawns to print the backtrace, which `timecmd.py`
+> counts because it reports `RUSAGE_CHILDREN`. There is no memory blow-up: the
+> crashing wire-cell process peaks where a healthy one does.
 
 The tell is **peak RSS: 2403 MB in the crashing run vs 683 MB alone — 3.5×**,
 at nearly identical wall time (132 s vs 126 s). Both runs are under
 `setarch x86_64 -R`, so this is **not** the M4 ASLR ghost. It looked like a
-concurrency-dependent memory blow-up under 32-way load (**superseded — see the
-correction above**), on an event that is
+concurrency-dependent memory blow-up under 32-way load (**superseded twice —
+not concurrency, and not a memory blow-up at all; see the correction above and
+doc pr/97 §5.4**), on an event that is
 already a heavy one (the log fills with
 `Cluster::get_hull number of points is too large: 21608 (cap 10000)` — 21 k
 points against a 10 k cap, so the hull cache is being hit hard). The crash

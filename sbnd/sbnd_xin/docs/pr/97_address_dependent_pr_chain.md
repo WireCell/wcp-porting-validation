@@ -46,6 +46,20 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 ./pr97_layout_sweep.sh work-pr97-pad 0 16 64 256 1024 4096      # six fresh roots
 #   pad16  -> rc=139  maxrss_kb=2310648   <-- crashes
 #   others -> rc=0    maxrss_kb~=675000
+#   ...but see sec 5: the padding is NOT the trigger, the rate is ~4 %/run.
+#
+# 5b. WHAT THE CRASH ACTUALLY IS (sec 5.4-5.6).  Run it under gdb until one dies:
+#   ./pr97_gdb_loop.sh work-pr97g-r 48 6      # 2 captures in 48 runs
+#   grep -l 'received signal SIG' work-pr97g-r*/.log.log   # NOT rc=139 under gdb
+#   -> SIGSEGV on a libgojsonnet Go-runtime thread at PC=0x0, while WireCell's
+#      main thread is healthy inside hough_transform.
+#   thread census (the Go runtime is there only because the config is .jsonnet):
+#   ls /proc/$(pgrep -f 'wire-cell.*perevt.jsonnet')/task | wc -l   # 65
+#   ls /proc/$(pgrep -f 'wire-cell.*precompiled')/task    | wc -l   # 1
+#   the arms:
+#   ./pr97_json_loop.sh    work-pr97h-r 100 6   # config precompiled by wcsonnet
+#   ./pr97_godebug_loop.sh work-pr97i-r  60 5   # GODEBUG=asyncpreemptoff=1
+#   ./pr97_gogc_loop.sh    work-pr97j-r 100 5   # GOGC=off (kills the 120 s forced GC)
 
 # 6. the gates (see sec 7)
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
@@ -399,8 +413,10 @@ That is not an exoneration, for two reasons worth writing down:
 * memcheck **cannot see an out-of-bounds access that stays inside a live heap
   block** — indexing a large `std::vector` / point cloud past `size()` but
   inside `capacity()`, or with a garbage index that happens to land in another
-  live allocation, is invisible to it. Given the 3.5× RSS excursion, a bad
-  index or size is exactly the shape to suspect.
+  live allocation, is invisible to it. (I argued here that the 3.5× RSS
+  excursion made a bad index the shape to suspect. **Retracted** — §5.4 shows
+  the excursion is ROOT's crash handler, and the fault is not in WireCell code
+  at all.)
 
 ### The 40-run core-capture sweep: 0/40, and no core anywhere
 
@@ -438,7 +454,10 @@ until gdb -q -batch -ex run -ex bt -ex 'info locals' \
 At ~130 s/run and ~4 %, expect a hit inside ~25 runs (~1 h serial, less at
 5-way). Precompile the config with `wcsonnet` first (M17).
 
-**Naming the line is what this round hands to pr/98.** Reproduce by simply
+**Naming the line was handed to pr/98 — and then answered in this round; the
+rest of this section supersedes the paragraph below.**
+
+*(Original plan, kept for the record:)* Reproduce by simply
 repeating the run. The 40-run `ulimit -c unlimited` sweep produced no crash and
 no core, and `core_pattern` makes core capture unreliable here — use the gdb
 loop given above instead. ASan/UBSan
@@ -446,8 +465,131 @@ builds, or a `-D_GLIBCXX_ASSERTIONS` / `_GLIBCXX_DEBUG` build, would catch the
 in-block overrun that memcheck cannot.
 
 Note on the numbers: 139 is SIGSEGV, not the OOM killer (137), and a failed
-allocation would throw `bad_alloc` — so the 3.5× RSS is a symptom of the wrong
-branch being taken, not the mechanism of death.
+allocation would throw `bad_alloc`. I read the 3.5× RSS as "a symptom of the
+wrong branch being taken"; **that is retracted in §5.4** — the extra 1.7 GB is
+the `gdb` that ROOT's `TUnixSystem::StackTrace()` spawns to print the
+backtrace, and `timecmd.py` reports `getrusage(RUSAGE_CHILDREN).ru_maxrss`,
+i.e. the peak over **all descendants**. Only crashing runs spawn it, which is
+exactly why only they show 2.3-2.4 GB.
+
+
+### 5.4 The gdb loop: the fault is not in WireCell code at all
+
+Repro:
+
+```
+cd sbnd/sbnd_xin
+./pr97_gdb_loop.sh work-pr97g-r 48 6      # 48 runs, 6 at a time, fresh root each (M13)
+```
+
+`pr97_gdb_loop.sh` inlines the `run_ql_batch.sh` worker for this one event and
+calls `run_ql_evt_pr97gdb.sh` — `run_ql_evt.sh` with the wire-cell step wrapped
+in `gdb -q -batch ... -ex run -ex "thread apply all bt" -ex "bt full"`, every
+signal the Go runtime uses passed through silently (M10: the production runner
+is byte-untouched).  Note the detector: under gdb a caught SIGSEGV leaves the
+runner with **rc=0**, because gdb reaps the inferior — a crash in this arm is
+found by grepping `received signal SIG`, never by `rc=139`.
+
+**Two captures in 48 runs (4.2 %, matching the 4-in-108 baseline):**
+
+| run | signal delivered to | its PC | thread 1 (the clustering) at that instant |
+|---|---|---|---|
+| `work-pr97g-r7` | Thread 34, LWP 466906 | **0x0**, empty stack | healthy — `__dynamic_cast` from `hough_transform` (`Facade_Cluster.cxx:1729`) |
+| `work-pr97g-r32` | Thread 9, LWP 485373 | **0x0**, empty stack | healthy — `std::vector<double>::operator[](15451)` in `hough_transform` (`:1727`), a valid index into the 64 800-bin grid |
+
+The faulting thread has jumped to address 0 and has no stack, so **nothing in
+the dump names it directly**.  What identifies it is a thread census of a live
+process (`ls /proc/<pid>/task | wc -l`):
+
+| config handed to `wire-cell` | threads |
+|---|---|
+| `wct-clus-matching-perevt.jsonnet` (in-process gojsonnet) | **65** |
+| the same config precompiled by `wcsonnet` to JSON | **1** |
+
+Every non-main thread in this process comes from the Go runtime inside
+`libgojsonnet.so`, and it stays alive for the whole job — in r7's dump, of 34
+threads **32 were parked in `runtime.futex`** and one in `runtime.usleep` (Go's
+`sysmon`).  The faulting thread is a non-main thread whose LWP falls inside the
+startup-created range (r7: 466906, top of 466703-466906), so it is a Go runtime
+thread.  The WireCell main thread is mid-computation with sane arguments in both
+captures.
+
+**This retracts the four ROOT backtraces quoted earlier in this section as
+fault sites.** ROOT's
+`TUnixSystem::StackTrace()` prints **thread 1's** stack, not the faulting
+thread's, so those traces were a *time sample* of whatever the main thread
+happened to be doing.  That is why their leaf frames were pure arithmetic
+(`__ieee754_acos`, `boost::histogram::axis::regular::index`) on perfectly valid
+arguments — a shape that never made sense as a segfault, and which I should have
+treated as a contradiction rather than a clue.  `connect_graph_relaxed` appears
+in all six traces simply because that is where this event spends its time.
+
+It also explains the "3.5× RSS excursion" that this section and doc pr/95 §4 both read
+as a memory blow-up: `StackTrace()` **spawns gdb**, and `timecmd.py` reports
+`getrusage(RUSAGE_CHILDREN).ru_maxrss`, the peak over all descendants.  Measured
+here, `gdb -batch -ex "thread apply all bt"` on this 55-thread process costs
+**6.8 s and ~1.8 GB**.  Only crashing runs spawn it.  There is no memory blow-up.
+
+### 5.5 The trigger is a ~120 s process-life timer
+
+Peak RSS was never the tell; **wall time is**.  Across five crashes from
+different sweeps, days and load levels:
+
+| | wall s |
+|---|---|
+| the five crashing runs | **126, 127, 128, 128, 129** |
+| clean runs, same arms | 119 … 142 |
+
+A 3-second spread on the crashes against a 23-second spread on healthy runs is a
+fixed *process-life* deadline, not an algorithm phase — and subtracting the
+measured ~7 s stack-trace gdb puts every crash at **≈120 s of process life**.
+Go's `sysmon` forces a garbage collection at exactly `forcegcperiod = 2 min`.
+
+The internal consistency check: the `work-pr97f-r*` arm (40 runs, `ulimit -c
+unlimited`) had the *shortest* walls of any arm, 119-130 s, and crashed **0/40** —
+those runs barely reach the deadline before exiting.  The gdb arm, walls
+135-142 s, crashed 2/48.
+
+**Three arms are in flight at the time of writing** to separate "the Go runtime
+is present" from "the forced GC is the trigger", all against the contemporaneous
+control of 2/48 in the gdb arm: `work-pr97h-r*` (100 runs, config precompiled to
+JSON — no Go runtime), `work-pr97i-r*` (60 runs, `GODEBUG=asyncpreemptoff=1`),
+`work-pr97j-r*` (100 runs, `GOGC=off`, which disables `gcTriggerTime` and hence
+the 2-minute forced GC). Results appended below when they land. Note the power:
+at a 4 % baseline, a clean 100-run arm is p≈1.7 %, a clean 60-run arm only
+p≈9 % — the 60-run arm can suggest, not establish.
+
+### 5.6 What is established, and what is not
+
+Established:
+
+* the crash is **not in WireCell code**; the WireCell main thread is healthy at
+  the moment of the fault, in both live captures;
+* the faulting thread is a Go runtime thread from `libgojsonnet.so`, jumping to
+  PC = 0x0;
+* the Go runtime is present for the whole job — 64 extra threads, 130 s after the
+  config finished compiling — purely because the config is handed to `wire-cell`
+  as `.jsonnet` rather than precompiled JSON;
+* the trigger is a ~120 s process-life deadline, matching Go's forced-GC period;
+* the "memory blow-up" and the four ROOT backtraces are both artifacts of ROOT's
+  crash handler (§5.4).
+
+Not established:
+
+* the exact Go-runtime path that lands at PC 0 — that needs a Go-side stack, and
+  the Go thread has none by the time gdb stops it;
+* whether anything WireCell does *provokes* it (a signal-handler interaction with
+  ROOT's own handlers is the obvious suspect, since ROOT installs handlers over
+  Go's and Go's preemption/GC signals then land in them);
+* whether other detectors/jobs are exposed — every `wire-cell -c *.jsonnet` job
+  that runs longer than ~120 s carries the same Go runtime, so in principle yes,
+  and 178410 is not special beyond being long enough.
+
+**No toolkit change is proposed from this round.** The finding is about how jobs
+are launched, not about clustering, and the fix belongs to the owner:
+precompiling every long job's config with `wcsonnet` removes the Go runtime from
+the process and is output-neutral (proven above). That is a runner change in
+`wcp-porting-img`, and it is the owner's call.
 
 ## 6. What changed
 
@@ -492,9 +634,19 @@ the right bytes — which is exactly why this survived unnoticed.
 
 ## 8. Residuals and things deliberately not done
 
-* **178410 line-level attribution is open** (§5). Next step: finish the
-  valgrind pass on the Q/L job and, if it comes up empty, bisect by padding —
-  the reproducer is cheap (130 s, one event, `-j 1`).
+* **178410 is no longer a WireCell-code question** (§5.4-5.6): the fault is on a
+  `libgojsonnet` Go-runtime thread at PC 0x0 while WireCell's main thread is
+  healthy, triggered at ~120 s of process life. What is still open is the
+  Go-side path, and whether ROOT's signal handlers (installed over Go's) are
+  what turns Go's forced-GC/preemption signal into a jump to 0. That needs a
+  Go-side stack — e.g. a build with `runtime-gdb.py` auto-load allowed
+  (`add-auto-load-safe-path`), or `GOTRACEBACK=crash` so the Go runtime prints
+  its own traceback before dying.
+* **A workaround exists and is the owner's call, not shipped here**: precompile
+  the job config with `wcsonnet` and hand `wire-cell` the JSON. That drops the
+  process from 65 threads to 1 and is output-neutral (member-content hashes
+  identical). It is a runner change in `wcp-porting-img`, and it would apply to
+  every long-running `wire-cell -c *.jsonnet` job, not just this event.
 * **`Cluster::get_hull(int max_points)` caches cap-insensitively**
   (`Facade_Cluster.cxx:2349`): the first caller's hull is returned to every
   later caller regardless of that caller's `max_points`. Reported, not touched
