@@ -269,16 +269,60 @@ away from, and the delta list (§3.2) exists precisely so a human can decide
 whether to rescan them, rather than either silently dropping them or
 silently scoring them against a vertex they no longer describe.
 
-**On comparing to pr/89's own 79.0%/80.9%±1.8 headline: don't.** Different
-denominator (1014 vs this round's 878), different label epoch (labels
-re-anchored since), different candidate graph (~30 more knobs). Nothing in
-this round's data supports a "flat" or "regressed" claim against that
-number, and none is made.
+**On comparing the two epochs' *headline* numbers (77.3%/878 vs pr/89's
+79.0%/1014): don't** — different denominator, different label epoch,
+different candidate graph. But see §3.4 for a same-event-set comparison that
+*is* valid, and it does support a claim.
 
 **This is still the answer to "can we still use the old hand scans": yes —
 carry them by position every time pattern recognition moves (`carry_labels.py`,
 TOL=1.0), read the delta list as a rescan candidate list, and never score a
 frozen coordinate against a graph it was not taken on.**
+
+### 3.4 Same-event-set check against the pr/89 epoch: worse, not flat
+
+§3.3 ruled out comparing the two epochs' headline percentages because the
+denominators differ. That does not rule out a comparison *restricted to the
+identical event set* — and one is available for free: the pr/89 §11.13 live
+A/B tsvs (`ab-pr89topo-<sample>-20260817.tsv`, toolkit `a681b3e1`) already
+carry each event's `cls_base` — the base-arm classification against the
+*same* final vertex position used everywhere else in this doc (not a
+scoreboard row, so the row-coordinate bias from §11.13's own offline-replay
+warning does not apply here). Joining those files' `evt` column against this
+round's 878 carried events finds 831 in common (47 of the 878 are outside
+the pr/89 tsvs' six-tag pool — mostly `mcp2k-ragree`, added after that
+round). Scoring both epochs on exactly those 831 events, same carried truth,
+tol = 1.0 cm:
+
+| sample | n | pr/89 (`a681b3e1`) | this round (`8573877f`) | Δ |
+|---|---|---|---|---|
+| nuecc | 37 | 32/37 = 86.5% [72.0, 94.1] | 27/37 = 73.0% [57.0, 84.6] | −13.5 pp |
+| ncpi0 | 16 | 13/16 = 81.2% [57.0, 93.4] | 11/16 = 68.8% [44.4, 85.8] | −12.5 pp |
+| mcp1k | 342 | 273/342 = 79.8% [75.3, 83.7] | 269/342 = 78.7% [74.0, 82.7] | −1.2 pp |
+| mcp2k | 436 | 351/436 = 80.5% [76.5, 84.0] | 335/436 = 76.8% [72.7, 80.6] | −3.7 pp |
+| **ALL** | **831** | **669/831 = 80.5% [77.7, 83.1]** | **642/831 = 77.3% [74.3, 80.0]** | **−3.2 pp** |
+
+(brackets are Wilson 95% CIs). Repro: join `dl_vtx_training/runs/vtx-report-vtx100-20260820.tsv`
+(`evt`,`sample`,`cls1.0`) against `dl_vtx_training/runs/ab-pr89topo-<sample>-20260817.tsv`
+(`evt`,`cls_base`) on `evt` per sample; no new script was written for this,
+it is a five-line join over two files already in this doc's asset list.
+
+**Reading it straight: worse, not flat, on the one apples-to-apples check
+available.** The aggregate CIs don't overlap (77.7–83.1 vs 74.3–80.0), so the
+−3.2 pp move on 831 events is not just noise. The per-sample CIs on nuecc
+(n=37) and ncpi0 (n=16) are wide enough that either sample alone is
+consistent with no change — don't hang the finding on those two rows — but
+all four samples move the same direction, which a single noisy sample
+wouldn't do.
+
+**What this is not**: it is not an indictment of any one pr/90–99 knob.
+Roughly 30 knobs shipped between these two epochs (§2), each validated at
+the time against its own targeted symptom events with a live Bee A/B — not
+against this full labeled corpus. This is the first time the whole pool has
+been re-checked since pr/89, and the honest statement is exactly that: a
+real, non-artifactual net regression on the full labeled pool, cause not
+yet decomposed. Decomposing it (bisecting pr/90→99 knob-by-knob against this
+same 831-event set) is follow-up work, not done here — flagged in §5.
 
 ## 4. Q3 — the plan for a final re-rank tuning round
 
@@ -346,6 +390,11 @@ decision, not planned.
 
 ## 5. Known limits
 
+- §3.4's −3.2 pp same-event regression (pr/89 epoch vs this round, 831
+  events) is not decomposed by knob. Bisecting the ~30 knobs shipped between
+  `a681b3e1` and `8573877f` (§2) against this same 831-event set — one knob
+  flipped OFF at a time, or a handful of intermediate-commit arms — would
+  attribute it; not done here, flagged for a follow-up round.
 - The 172 held-back delta events are a real, quantified rescan candidate —
   worst-first at `dl_vtx_training/runs/vtx100-20260820/delta.txt` — not
   scheduled here.
