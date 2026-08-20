@@ -1,0 +1,17 @@
+# doc pr/98 A/B index -- fit_exclusion OFF da8df549-376a-4eb7-8be3-a271fee42112 / ON 6f30f958-3cce-473b-9a9e-4f79e30b082d (fixed binary, nueCC48)
+# 48 events: 12 largest movers first (rank = vertex shift + nue flip + coverage delta), then the remaining 36 by event number.
+# OFF arm work-pr98-off-nuecc48 (= production byte-identical, gate PASS 96/96) / ON arm work-pr98-fx-nuecc48 (SBND_FIT_EXCLUSION=true).
+# bee_idx	event	status
+0	389538	mover: DL vertex re-selected 213.5 cm away, nue -15.0 -> +4.30 (GAINED); clean 2-track V at both sites, fits track charge at both -- vertex CHOICE change, not a fit-shape change
+1	46363	mover: vertex moves 45.1 cm into the multi-prong hub; ON visually BETTER (prongs fan from the vertex; OFF sat at a track tip 44 cm away in z)
+2	111412	mover: vertex slides 41.3 cm along the muon, nue 4.30 -> 0.47; both arms leave the big EM cloud under-fitted (uncovered charge 39.6% -> 43.2%); ambiguous
+3	271851	mover: vertex 35.2 cm along the trunk, nue 1.66 -> 4.30 (up); ON one clean trajectory through the shower vs OFF's overlapping jumble, at the cost of raw coverage
+4	52672	ADVERSE: ON vertex lands in visibly empty space between charge blobs (31.0 cm move); nue stays negative (-15 -> -4.30) so no selection impact, but the placement is worse
+5	235435	mover: nue +4.30 -> -4.24 (LOST) yet ON visually BETTER: vertex moves into the multi-prong activity with 4-5 fitted prongs; OFF had the vertex at a bare track end beside a nearly-unfitted blob; uncovered 14.1% -> 20.9% is shower rind
+6	38856	mover: nue 3.25 -> -15 (BDT no longer filled); topology and fits near-identical, vertex 8.1 cm -- selection-path change, not fit degradation
+7	122660	mover: nue GAINED (vtx 5.9 cm); fits comparable; uncovered 21.0% -> 29.4% (rind)
+8	423981	mover: nue 4.30 -> -0.04 (LOST) with essentially identical 3-prong fits (vtx 2.1 cm) -- pure fit-value/dQ/dx score sensitivity
+9	163543	mover: nue 1.33 -> -2.62 (LOST); busy multi-prong, comparable fit quality both arms
+10	69314	mover: nue LOST; 4-prong star identical; ON adds one straight-chord segment artifact along z~164.5 not following charge
+11	116962	mover: vertex 7.1 cm; ON BETTER: fit covers the shower column below the vertex that OFF left bare; uncovered 30.5% -> 28.0%
+# idx 12-47: remaining 36 events by event number; score deltas in the round doc's TSV (numu moved on 44/44 evaluable); not hand-scanned this round

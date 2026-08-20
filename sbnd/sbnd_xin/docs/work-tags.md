@@ -2274,3 +2274,16 @@ any of them, so the deletion broke nothing. Nothing inside `work/` was touched.
 | `work-mcp1000b-stmoff` | B | 30 | 2M | STM-tagger off-arm |
 | `work-mcsim-unmerge` | A | 20 | 6K | doc 45 empty stub (run produced no output) |
 | `work-why285185` | A | 15 | 740K | one-off "why is evt 285185 like this" probe |
+
+## 2026-08-20 — doc pr/98 arms (fit_exclusion port fix + nueCC48 re-evaluation)
+
+All on the nueCC48 manifest, Q/L root `work-nuecc48-ql0819`, baseline
+`work-nuecc48-prod0819`.  Round doc: `docs/pr/98_fit-exclusion-port-fix.md`.
+
+| arm | role | keep? |
+|---|---|---|
+| `work-pr98-off-nuecc48` | knob-off gate arm, first post-fix binary (gate PASS 96/96 vs prod0819) | until round closes |
+| `work-pr98-off2-nuecc48` | knob-off gate arm, FINAL binary incl. perf helper (gate PASS 96/96) | until round closes |
+| `work-pr98-fx-nuecc48` | THE measurement: SBND_FIT_EXCLUSION=true, fixed binary; Bee ON set 6f30f958 | KEEP while pr/98 open |
+| `work-pr98-fx2-smoke` | evts 54095+196649 perf-helper identity (hash PASS) + timing | releasable after doc |
+| `work-pr98-fx3-smoke` | evt 256587 perf-helper identity (hash PASS) + timing | releasable after doc |
