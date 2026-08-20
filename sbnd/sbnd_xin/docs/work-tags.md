@@ -2316,3 +2316,9 @@ tagged here, never written to.
 - work-pr99r2-on3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL knob-on arms (production operating point); **KEEP until owner scan done**
 - work-pr99r2-smoke-*, -smoke2-*, -smoket-*, -probe285567 -- single-event smokes/probes; releasable after doc
 - work-pr99r2-flip-*, -floff-* -- flip proofs (13 evts x2); releasable after doc
+- work-pr99r3-off-{nuecc48,ncpi0,mcp1k,mcp2k} -- round-3 knob-off gate arms (234 archives PASS vs on3); releasable after next round
+- work-pr99r3-on-* -- first knob-on pass (no display, stem 3.0, superseded by onf); releasable now
+- work-pr99r3-ond-{ncpi0,nuecc48} -- PARTIAL arms aborted at the stem 3.0->2.8 correction; releasable now
+- work-pr99r3-onf-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL round-3 knob-on arms (production operating point + pr_display); **KEEP until owner scan done**
+- work-pr99r3-dduponly-ncpi0 -- 4-evt dedup-only attribution probe (pi0-pair losses); keep with doc
+- work-pr99r3-flip-*, -floff-* -- flip proofs (8 evts x2); releasable after doc

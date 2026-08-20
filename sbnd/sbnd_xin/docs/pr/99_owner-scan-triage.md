@@ -439,3 +439,190 @@ the standing comparison arms going forward.
 `mvga_ac_no_cascade=true`, `mvga_dup_starved_asym=0.55`,
 `mvga_dup_starved_mip=0.8`, `mvga_dup_starved_span=0.5`,
 `shower_ghost_member_drop=true`.  C++ defaults stay false/0.
+
+## Round 3 (2026-08-20) -- 168596 Enu double count + A5 hadronic-shower tag
+
+Owner (round-2 Bee scan): (1) *"for 168596, I feel there are double counting
+on the electron EM shower"* -- confirmed and fixed; (2) *"many of the
+hadronic shower, or particle flow are still labeled as electrons"* = A5,
+implemented; (3) same validation as round 2, flip if passed.
+
+### Repro
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin     # toolkit at 8573877f; PR_JOBS=16 (shared box, see incident note)
+# knob-off gates (vs round-2 production arms; PR_EXTRA_STAGES unset):
+./run_pr_chain_batch.sh work-<s>-ql0819 work-pr99r3-off-<s> data <evts>      # s in {nuecc48,ncpi0,mcp1k,mcp2k}
+python3 scripts/pr85_hash_gate.py work-pr99r3-off-<s> work-pr99r2-on3-<s> --jobs 8
+# knob-on (final operating point) + displays:
+SBND_KINE_CHARGE_DEDUP=1 SBND_KINE_CHARGE_REBUILD=1 SBND_SHOWER_HADRONIC_TAG=1 \
+SBND_SHOWER_HADRONIC_GROWTH_MAX=0.7 SBND_SHOWER_HADRONIC_STEM_RATIO=2.8 \
+PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-<s>-ql0819 work-pr99r3-onf-<s> data <evts>
+# A5 calibration table (109 showers) + screens:
+python3 scripts/analysis/pr99/pr99_hadronic_calib.py work-pr99r2-on3-{nuecc48:nuecc48,...}
+python3 scripts/pr83r3_scores_ab.py  work-pr99r2-on3-<s> work-pr99r3-onf-<s>
+python3 scripts/pr93_shower_ab_diff.py work-pr99r2-on3-<s> work-pr99r3-onf-<s> --sample <s>
+```
+
+### 1. 168596 -- the double count is the ENERGY ACCOUNTING, and it is generic
+
+Anatomy (round-2 arms): the op1-post starved-dup deletions re-routed the
+shower-seed BFS (`NeutrinoShowerClustering.cxx:582` mints conn-1 showers with
+no spatial-overlap test at all), so one EM cascade became TWO conn-1 showers
+-- 14153 (41 members) + NEW 14058 (20 members, start vertex 13 cm out,
+stem ~0.2 MIP).  Memberships are disjoint and member length grew only +4.6%,
+yet summed EM energy grew +46%: `kine_charge_from_maps`
+(`NeutrinoEnergyReco.cxx:47-190`) credits a 2D cell's FULL charge to every
+shower whose `associate_points`/`fit` cloud passes within 0.6 cm, with **no
+cell ownership anywhere**, and the Enu sum
+(`NeutrinoKinematics.cxx:511-515`) flat-adds every shower's kine_best
+(`kine_energy_included` is written but never read).  14058's own trajectory
+supports ~300 MeV (its kine_dQdx) but its kine_charge read 1265 -- the
+cascade's charge absorbed by proximity.  Enu 2619 -> 3533.
+
+Two structural facts established against `prototype_base`:
+- **The prototype is equally ownership-free** (`NeutrinoID_energy_reco.h:44-248`,
+  flat sum `NeutrinoID_kine.h:251-256`; no used-flags, no ownership map in
+  either tree).  Its only protection is structural -- one cascade stays one
+  WCShower -- and a conn-1/conn-1 pair is outside the domain of every merge
+  gate in BOTH trees.  The dedup below is therefore a **deliberate
+  divergence**, not a port fix.
+- One genuine port gap: the prototype calls `shower->rebuild_point_clouds()`
+  before every energy cloud read (`NeutrinoID_energy_reco.h:99`); the
+  toolkit clouds are add-only merges, so departed members' stale points keep
+  pulling charge in.  Closed by `kine_charge_rebuild` (ephemeral rebuilt
+  clouds at the final recompute only -- stored clouds untouched, taggers and
+  pi0 query them later).
+
+OFF-arm mini-instances of the same disease exist (14059: an 11 cm stub
+claiming 111 MeV; doc pr/91 measured a ~7 MeV case) -- the fix reclaims
+those too, which is why the whole-sample screens below matter.
+
+### 2. C1 -- `kine_charge_dedup` (+ C1b `kine_charge_rebuild`)
+
+`recompute_shower_kine_charge_final` (NeutrinoEnergyReco.cxx), hooked in
+`shower_clustering_with_nv` after ALL structure passes and BEFORE the pi0
+finders (which cache `get_kine_charge()` at entry), so every mid-pipeline
+gate ran on legacy values and every consumer downstream reads one consistent
+set.  ONE scan of the three plane maps over per-shower contexts
+(IndexedShowerSet order = stable creation-id order; `ChargeMap` is an
+ordered map; no pointer-keyed iteration): per cell each context computes the
+legacy acceptance (pcloud1 then pcloud2, `dis < 0.6 cm`), and the
+**min-distance context wins the cell's full charge** (tie -> lowest shower
+id).  A single-context input reproduces the legacy sum exactly; the
+legacy `kine_charge_from_maps` is byte-untouched (fork-by-duplication).
+Same kNN count as legacy (cells x k either way).  DEBUG census
+`kine final recompute: ... old -> new` per shower.
+
+**168596 measured (onf arms): 14153 1843->1433, 14058 1265->595; EM total
+3108 -> 2028 (pre-split reconstruction read 2016+112); Enu 3533 -> 2445;
+nue selection kept (4.30).**
+
+### 3. A5 (`shower_hadronic_tag`) -- calibration forced two design corrections
+
+Round-1's n=5 growth scalar did NOT survive the roster.  Calibration
+(scripts/analysis/pr99/pr99_hadronic_calib.py, 109 conn-1 |11| showers over
+the four on3 samples):
+
+1. **Raw in-cylinder growth mislabels real electrons whose vertex sits in
+   hadronic debris** -- other prongs' charge inflates the early bins (46363
+   primary: 2365->335 pts/bin reads "shrinking"); 41/99 fired at the seed
+   thresholds including nue-selected primaries.  Fix: **ownership filter** --
+   an imaged point counts only if its nearest fit point over ALL graph
+   segments belongs to a member (event-level all-fit cloud + row->segment
+   map).  With it, all 36 nue-selected primaries read ends-ratio growth
+   >= 2.32 while the misID'd hadrons read <= 0.7.  Margin 3.3x.
+2. **395148 needs a proton-stem branch**: its ownership growth is 0.87
+   (above any safe cut) but its stem reads 3.0 MIP -- a proton, while
+   pair-conversion gamma stems read ~2 MIP.  Branch: stem >= 2.8 (C++
+   median convention reads ~7% below the python np.median -- hence 2.8, not
+   the python-basis 3.0) AND growth < 1.2.  On the full census exactly ONE
+   additional shower fires (395148) and the only other high-stem object
+   (268784's real 1075 MeV primary, stem 2.89) is protected by its growth
+   2.84 >= the 1.2 ceiling.
+
+Verdict: `smax>=10cm && (growth<0.7 || (bragg>=3.0 && growth<1.2) ||
+(stem>=2.8 && growth<1.2))`.  On verdict the START segment is stamped
+pdg 211 + mass + 4-mom refresh (the id_pi0 incoming-track recipe; durable
+because `calculate_kinematics` re-copies the start segment's pdg) plus the
+shower's cached type; NOT 13 (long-muon routing); re-typed shower ids guard
+the pi0 finders' four collection points (empty set = byte-identical).
+A DEBUG census line for EVERY evaluated shower makes each knob-on arm a
+calibration sample.  Adverse gamma control 506114: growth 2.3, untouched.
+
+### 4. Gates and proofs
+
+- knob-off byte-identical vs round-2 production arms: **234 archives PASS**
+  (work-pr99r3-off-{nuecc48,ncpi0,mcp1k,mcp2k} vs work-pr99r2-on3-*:
+  96+38+70+30).
+- `wcdoctest-clus` 2267 assertions PASS (12 new knob defaults).
+- Compiled-config proofs: bare `wct-pr-perevt.jsonnet` with the production
+  pipeline at HEAD == at round-3, byte-identical; knob-on keys present in
+  the per-event `.wct-cfg-evt*.json` of every onf arm.
+
+### 5. Knob-on screens (on3 vs onf, 117 events)
+
+- **Selections: ZERO flips** -- nue (thr 3) and numu (thr 0.9) selections
+  identical event-by-event across all four samples (lost=0 gained=0).
+- Retype census: **20 re-types / 117 events** (11 nuecc48 satellite hadrons
+  in nue events -- none a selected primary; 5 ncpi0; 4 numu incl. all four
+  design objects).  116962: one 80 MeV re-typed shower was then dissolved to
+  a pi+ TRACK by an existing production pass -- the intended endpoint; the
+  only structural change in the whole shower A/B.
+- Design events: 315167 pdg 211 + numu 1.77->2.23; 395148 pdg 211 + numu
+  2.41->2.94; 285567 BOTH fakes 211, sham nue -1.65->-15; 70084 211;
+  91653 numu 0.03->0.65.  Enu of re-typed events gains the pi rest mass
+  (+139.6) per the existing non-EM kine convention.
+- **NCpi0 pairing (the adjudicated cost)**: in-window pi0 pairs 10 -> 9.
+  Lost: 37112 (135.8; gammas 635+386 -> 505+243 under dedup ALONE -- the
+  pair genuinely shares halo charge and the mass is a product), 399860
+  (138.4; the 26 MeV gamma of an asymmetric pair stripped to 3), 56982
+  (121.9; its "gamma" stem reads -0.44 MIP, pathological), 359980 (93.4;
+  A5-driven, pr/53-touchy event).  Gained: 314838 (145.3), 71372 (153.5).
+  Attribution proven with a dedup-only probe arm
+  (work-pr99r3-dduponly-ncpi0).  **Owner decision (this round): ship FULL
+  winner-take-all.**  Noted: this is a deliberate divergence from the
+  prototype's ownership-free accounting (both trees double-count), the
+  shower fudge/recom calibration was historically tuned WITH shared-charge
+  accounting, and -- owner: *"we have not done the EM shower clustering
+  validation etc ... there is really no clear truth yet"* -- the pi0-mass
+  shift is a number for that future campaign to adjudicate, not a truth
+  claim either way.
+
+### 6. Production flip
+
+wct-pr-perevt.jsonnet: `kine_charge_dedup=true`, `kine_charge_rebuild=true`,
+`shower_hadronic_tag=true`, `shower_hadronic_growth_max=0.7`,
+`shower_hadronic_stem_ratio=2.8` (other A5 numerics = C++ defaults:
+scan 30 / bin 3 / r_cyl 8 / r_core 1.2 / min_len 10 / growth_bragg 1.2 /
+bragg_ratio 3.0).  Flip proofs (8-evt subset x 3 samples): flip-bare ==
+onf 6+4+6 archives PASS (work-pr99r3-flip-* vs -onf-*); forced-off (env
+bools=0 on the flipped cfg; the 0.7/2.8 numerics provably inert) == off
+6+4+6 archives PASS (work-pr99r3-floff-* vs -off-*).  Toolkit commit
+8573877f (PUSHED, ls-remote verified).
+
+### 7. Bee A/B
+
+bee/pr99r3/pr99r3-{off,on}.zip, 12 events owner-first (index:
+bee/pr99r3/pr99r3.index.txt).  OFF = round-2 production (on3), ON = onf.
+Upload held for owner request.  [UUIDs after upload.]
+
+### Incident note (concurrent-session build race, 2026-08-20)
+
+A 14:34 `./wcb build` while the peer session's vtx100-base batch was
+launching jobs broke 4 of its events with "failed to load plugin:
+WireCellRoot" -- wire-cell dlopens `build/<pkg>/`, NOT `local/lib` (the M1
+correction memory is right).  Events re-run clean; all later relinks
+coordinated by explicit pause/resume messages between the sessions, and the
+two campaigns shared the box at PR_JOBS=16 each.  Rule: **no toolkit build
+while ANY sbnd_xin batch (either session) is launching.**  Also: both
+sessions independently forgot `PR_EXTRA_STAGES=pr_display` on their first
+knob-on pass -- it is required from the start whenever a campaign reads
+`calib-pr-evt*.json`.
+
+### Arms (docs/work-tags.md)
+
+work-pr99r3-off-* (gate arms), work-pr99r3-on-* (first knob-on, no display,
+stem 3.0 -- superseded), work-pr99r3-ond-* (partial, aborted at the stem
+correction -- releasable), work-pr99r3-onf-* (FINAL knob-on arms, keep until
+owner scan), work-pr99r3-dduponly-ncpi0 (attribution probe).

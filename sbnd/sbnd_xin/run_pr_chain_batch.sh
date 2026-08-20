@@ -264,6 +264,26 @@ for _pr99 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr99 _env _key _val
+# doc pr/99 round 3 -- same convention: numerics pass through when set,
+# bool knobs tri-state (unset = cfg default, 1 = force on, 0 = force off).
+[ -n "${SBND_SHOWER_HADRONIC_MIN_LEN:-}" ]      && CATH_TLA+=(--tla-code "shower_hadronic_min_len=${SBND_SHOWER_HADRONIC_MIN_LEN}")
+[ -n "${SBND_SHOWER_HADRONIC_SCAN_LEN:-}" ]     && CATH_TLA+=(--tla-code "shower_hadronic_scan_len=${SBND_SHOWER_HADRONIC_SCAN_LEN}")
+[ -n "${SBND_SHOWER_HADRONIC_BIN:-}" ]          && CATH_TLA+=(--tla-code "shower_hadronic_bin=${SBND_SHOWER_HADRONIC_BIN}")
+[ -n "${SBND_SHOWER_HADRONIC_R_CYL:-}" ]        && CATH_TLA+=(--tla-code "shower_hadronic_r_cyl=${SBND_SHOWER_HADRONIC_R_CYL}")
+[ -n "${SBND_SHOWER_HADRONIC_R_CORE:-}" ]       && CATH_TLA+=(--tla-code "shower_hadronic_r_core=${SBND_SHOWER_HADRONIC_R_CORE}")
+[ -n "${SBND_SHOWER_HADRONIC_GROWTH_MAX:-}" ]   && CATH_TLA+=(--tla-code "shower_hadronic_growth_max=${SBND_SHOWER_HADRONIC_GROWTH_MAX}")
+[ -n "${SBND_SHOWER_HADRONIC_GROWTH_BRAGG:-}" ] && CATH_TLA+=(--tla-code "shower_hadronic_growth_bragg=${SBND_SHOWER_HADRONIC_GROWTH_BRAGG}")
+[ -n "${SBND_SHOWER_HADRONIC_BRAGG_RATIO:-}" ]  && CATH_TLA+=(--tla-code "shower_hadronic_bragg_ratio=${SBND_SHOWER_HADRONIC_BRAGG_RATIO}")
+[ -n "${SBND_SHOWER_HADRONIC_STEM_RATIO:-}" ]   && CATH_TLA+=(--tla-code "shower_hadronic_stem_ratio=${SBND_SHOWER_HADRONIC_STEM_RATIO}")
+for _pr99r3 in \
+    "SBND_KINE_CHARGE_DEDUP:kine_charge_dedup" \
+    "SBND_KINE_CHARGE_REBUILD:kine_charge_rebuild" \
+    "SBND_SHOWER_HADRONIC_TAG:shower_hadronic_tag" ; do
+    _env=${_pr99r3%%:*}; _key=${_pr99r3#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr99r3 _env _key _val
 # doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
 # composite.  EMPTY = no TLA = C++ default 0 = term never computed =
 # byte-identical.  The offline C1 replay selected weight 3.0, center 0.

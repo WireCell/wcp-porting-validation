@@ -1,0 +1,18 @@
+# doc pr/99 round 3 A/B index -- OFF <uuid-after-upload> / ON <uuid-after-upload>
+# 12 events: owner complaint first (168596), then the A5 design events, then
+# this round's adjudication movers.  OFF = work-pr99r2-on3-* (round-2
+# production); ON = work-pr99r3-onf-* (kine_charge_dedup+rebuild +
+# shower_hadronic_tag @ growth<0.7 / bragg>=3 / stem>=2.8).
+# bee_idx	event	status
+0	168596	FIXED: Enu 3533->2445 (owner: "double counting on the electron EM shower"); split-cascade pair 1843+1265 -> 1433+595 MeV under cell ownership; nue selection kept (4.30)
+1	315167	RESCUED (A5): 174.7 MeV hadronic object 11 -> 211; numu 1.77->2.23; enu 1305->1442 (+pi mass)
+2	395148	RESCUED (A5, stem branch): 87.6 MeV "many-tracks electron" 11 -> 211 (stem 2.98 MIP); numu 2.41->2.94
+3	285567	RESCUED (A5): BOTH fake objects (156.3 + 165.0 MeV) 11 -> 211; sham nue -1.65 -> -15
+4	70084	RESCUED (A5): residual 175 MeV object 11 -> 211; sham nue -4.3 -> -15
+5	37112	ADVERSE (adjudicated, owner decision): pi0 pair 635+386 mass 135.8 LOST under dedup (gammas deflate to 505+243); dedup-alone effect, no retype
+6	399860	ADVERSE (adjudicated): asymmetric pi0 pair 997+26 mass 138.4 LOST (26 MeV gamma stripped to 3 by ownership); dedup-alone
+7	56982	mover: pathological 357 MeV "gamma" (stem -0.44 MIP) retyped 211; its 121.9 pair lost
+8	359980	mover (A5): 296 MeV object retyped; 93.4 pair lost; vtx moved 33.8cm (pr/53-touchy event)
+9	46363	mover: proton satellite 585->465 MeV retyped 211 (stem 3.19); nue selection kept (4.30)
+10	116962	mover: 3 retypes; 80 MeV retyped shower dissolved to pi+ track by existing production pass (the intended endpoint)
+11	91653	mover (A5): retype; numu 0.03->0.65
