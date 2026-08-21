@@ -2403,3 +2403,7 @@ tagged here, never written to.
 ## doc pr/107 -- dqdx_fit_keep_all_points (2026-08-21)
 - work-pr107-off-{nuecc48,ncpi0} -- new binary, no env: OFF gate PASS 94/94, 38/38 vs work-vtx106-cne-off-*; keep until the owner decision
 - work-pr107-on-{nuecc48,ncpi0} -- SBND_DQDX_FIT_KEEP_ALL_POINTS=true + harvest (doc sec 3-6); keep until the owner decision
+## doc pr/108 -- exclusion-fit parity, prototype vs toolkit (2026-08-21)
+- work-pr108-off1-nuecc48 (10550) -- Test A OFF gate vs work-pr107-off: PASS 2/2; disposable
+- work-pr108-assoccheck-nuecc48 (10550 46363 81597) -- WCT_DQDX_ASSOC_CHECK=1: 382 fits max|dQ|=0; keep the logs with the doc
+- qlport/scripts/sweep/pr108_{wct_off,wct_on,wct_onkeep,wcp_on,wcp_off} -- uBooNE 5384 six-event four-arm set (WCP arms from the patched prototype build); **KEEP** with the doc

@@ -402,3 +402,12 @@ Rollback at any time: `-A fit_exclusion=false` / `SBND_FIT_EXCLUSION=false`.
 The PR chain is ~1 core per event (Timer core-sec == wall-sec), so batch
 runs should use `PR_JOBS=32` on this 64-core box — the M5 ~6-job cap is for
 the multi-threaded imaging/clustering stages, not this chain.
+
+## 12. Correction (doc pr/108, 2026-08-21)
+
+§1's "Toolkit-only third pass" paragraph is wrong on one point: the prototype's `dQ_dx_multi_fit`
+does **not** consume the round-2 exclusion-filtered associations (it reads none — the sets are not
+even in its signature); its `reset_fit_prop` resize only keeps the fit indices.  Passing
+`flag_exclusion` to the toolkit's third `form_map_graph` is therefore not "the parity-consistent
+choice"; that pass's zero-quantity drop (442 points / 47 nueCC48 events) was a toolkit-only
+divergence, addressed by pr/107 `dqdx_fit_keep_all_points`.  See pr/108 §1 and Test A.
