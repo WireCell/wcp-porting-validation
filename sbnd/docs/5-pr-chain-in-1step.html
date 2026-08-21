@@ -1373,9 +1373,12 @@ Route A is adopted and running (<a href="#adopted">§8</a>).</p>
 <table>
 <thead><tr><th></th><th>Task</th><th>Why it is parked</th></tr></thead>
 <tbody>
-<tr><td><strong>T1</strong></td>
+<tr><td><strong>T1</strong><br><span class="bad">ANSWERED 2026-08-21</span></td>
     <td><strong>Validate Route A against Xin's original 2-step chain.</strong> Run the same input
-        events through <code>sbnd_xin</code>'s own chain and compare final outputs.</td>
+        events through <code>sbnd_xin</code>'s own chain and compare final outputs.
+        <strong>Answered by config audit instead of by running &mdash; see
+        <a href="#cfgaudit">&sect;11</a>. Route A was NOT equivalent: 160 PR knobs
+        differ.</strong></td>
     <td>The 1-step PR chain has <strong>never been compared to anything external</strong>. All
         verification so far is internal — it runs, produces every artifact, values stay stable across
         config changes. Owner decision 2026-08-18: use Xin's <em>original</em> chain, not the
@@ -1513,5 +1516,105 @@ toolkit <code>cfg/pgrapher/experiment/sbnd/{clus,img,qlmatching,wct-pr-perevt}.j
 ai-helper issue 11 harness.<br>Tracking issue: <a href="https://github.com/HaiwangYu/wire-cell-toolkit-ai-helper/issues/13">ai-helper #13</a> · <a href="https://github.com/HaiwangYu/wire-cell-toolkit-ai-helper/blob/main/issues/13-pr-chain-1step/13-pr-chain-1step.md">issues/13-pr-chain-1step</a></p>
 
 </div>
+
+<h2 id="cfgaudit">11. Config audit vs Xin's 2-step chain (2026-08-21) &mdash; 160 knobs differ</h2>
+
+<p>Done by compiling both chains with <code>wcsonnet</code> and diffing the component
+<code>data</code> blocks, not by reading jsonnet. The full machine-generated list lives in the
+ai-helper repo as
+<code>issues/16-mc-1000file-pr/config-diff-1step-vs-2step.md</code>.</p>
+
+<p class="note"><strong>Method trap, recorded because the first attempt fell into it.</strong>
+The 2-step must be compiled with the production <code>pipeline_names</code> TLA that
+<code>run_pr_chain_batch_isolated75base.sh</code> passes. Compiling its <em>bare</em> defaults
+shows a 10-stage pipeline against our 15 &mdash; a phantom difference that does not exist in the
+real chain, because the run script supplies the same 15 names in the same order.</p>
+
+<h3 id="cfg-same">11.1 The clus jsonnets are shared, so they cannot diverge</h3>
+
+<p><code>sbnd_xin/clus.jsonnet</code> is a <strong>10-line re-export</strong> of
+<code>pgrapher/experiment/sbnd/clus.jsonnet</code>, and <code>sbnd_xin/wct-pr-perevt.jsonnet</code>
+is a one-line re-export of the in-tree file. <code>cfg/pgrapher/common/clus.jsonnet</code> is
+imported from exactly one place (the sbnd <code>clus.jsonnet</code>). Both chains therefore compile
+<em>the same two clus jsonnets</em> &mdash; every difference comes from the <strong>entry
+point</strong>.</p>
+
+<p>The clustering half matches. <code>apa0-0</code>, <code>apa1-0</code> and
+<code>clus_all_apa</code> differ only in keys added deliberately for the 1-step
+(<code>bee_sink</code>, <code>rse_from_ident</code>, <code>rse_from_metadata</code>) plus
+<code>save_deadarea</code> false-vs-true &mdash; which is the G4 dead-area guard, without which two
+nodes write duplicate <code>channel-deadarea</code> entries. Xin additionally sets
+<code>bee_flash_pred_min: 0</code> on <code>clus_all_apa</code>.</p>
+
+<h3 id="cfg-diff">11.2 The PR operating point does not match</h3>
+
+<p><code>wct-pr-perevt.jsonnet</code> passes <strong>351</strong> named arguments to
+<code>clus_maker.pr()</code>. Our 1-step passes <strong>7</strong>. The compiled effective
+difference is <strong>160 knobs</strong>.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>Component</th><th>Knobs Xin sets that we do not</th></tr></thead>
+<tbody>
+<tr><td><code>TaggerCheckNeutrino:pr</code></td><td><strong>139</strong> &mdash; 39 <code>shower_*</code>, 24 <code>mvga_*</code>, 10 <code>kine_*</code>, <code>fit_exclusion</code>, <code>mvfit_robust</code>, <code>fiducial</code>+<code>fv_tolerance</code>, <code>nu_per_bundle</code>, <code>neutrino_type_bitmask</code></td></tr>
+<tr><td><code>ClusteringProtectBundle:pr</code></td><td>5, plus <code>graph_name</code> = <code>relaxed</code> vs <code>relaxed_strict_img_2d_rescue_long_wtrack</code></td></tr>
+<tr><td><code>CreateSteinerGraph:pr</code>, <code>:prrefresh</code></td><td>3 each</td></tr>
+<tr><td><code>ClusteringUnmergeBundle:pr</code></td><td>2 (<code>require_provenance</code>, <code>restore_demoted_mains</code>)</td></tr>
+<tr><td><code>TaggerCheckTGM:pr</code></td><td>2</td></tr>
+<tr><td><code>UbooneTaggerOutputVisitor:pr</code></td><td>2 (<code>nu_per_bundle</code>, <code>neutrino_type_bitmask</code>)</td></tr>
+<tr><td><code>TaggerCheckFC:pr</code>, <code>TaggerCheckSTM:pr</code></td><td>1 each (<code>evaluate_demoted_mains</code>)</td></tr>
+<tr><td><code>ClusteringExamineBundles:all</code></td><td>1 (<code>save_bundle_main_provenance</code>)</td></tr>
+<tr><td><strong>total</strong></td><td><strong>160</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="cfg-why">11.3 Why &mdash; it is structural, and the code says so</h3>
+
+<p>This is <strong>by design on Xin's side and an oversight on ours</strong>.
+<code>wct-pr-perevt.jsonnet:568</code>:</p>
+
+<blockquote>Per doc 68 the SBND operating point lives HERE only; clus.jsonnet's
+<code>clus_pr()</code>/<code>pr()</code> function defaults stay null.</blockquote>
+
+<p>Route A calls <code>clus_maker.pr()</code> directly, bypassing that entry point, so it was
+always going to inherit the conservative defaults. These knobs are default-OFF in C++
+<em>specifically</em> so that config selects them &mdash; therefore <strong>absent means pre-flip
+behaviour, not &ldquo;same as production&rdquo;</strong>.</p>
+
+<p class="bad">Worth recording as a process failure, not just a config bug: the 1-step jsonnet
+carries the comment &ldquo;Match the SBND production operating point (apc doc pr/24 sec 16) &hellip;
+mirror it here&rdquo; &mdash; and mirrors <code>iso_endpoint</code> alone. One knob of roughly 160,
+with a comment that reads as though the whole operating point had been handled. A comment asserting
+parity is not parity; only a compiled diff is.</p>
+
+<h3 id="cfg-impact">11.4 What it means for the 13k dataset</h3>
+
+<ul>
+<li><code>T_tagger</code>/<code>T_kine</code> are <strong>pre-flip</strong>. The 10
+    <code>kine_*</code> knobs (charge dedup/rebuild, mass rules, hadronic dQ/dx, long-muon mode)
+    feed <code>kine_reco_Enu</code> directly.</li>
+<li><code>nu_per_bundle=true</code> books per-bundle <code>T_tagger</code> branches in Xin's chain,
+    so the dataset is <strong>not schema-compatible</strong> with a production 2-step
+    <code>T_tagger</code>.</li>
+<li>The 45.1% candidate yield and the hand-scan false positives are <strong>not production
+    numbers</strong>. Several missing knobs
+    (<code>shower_bragg_protect_start_segment</code>, the <code>*_straight_guard</code> family,
+    <code>shower_nv_bridge_track</code>) exist to suppress exactly the misclassification the scan
+    found &mdash; including the w-prolonged cosmic that was reconstructed as a candidate.</li>
+<li>14 <code>pf_*</code> particle-flow knobs are off, so the Bee <code>mc.json</code> reco tree uses
+    pre-flip parentage/shower rules. Display only.</li>
+<li>The clustering half matches, so <code>T_rec_charge</code> geometry and the nugraph inputs are
+    least affected.</li>
+</ul>
+
+<h3 id="cfg-fix">11.5 Fix (not applied)</h3>
+
+<p>Factor the operating point out of <code>wct-pr-perevt.jsonnet</code> into <strong>one jsonnet
+that both entry points import</strong>. Copying 351 arguments into the 1-step would work today and
+drift again tomorrow &mdash; copying is how this happened. After the fix: re-run the 10-event
+pilot, <strong>diff the compiled configs to zero</strong>, then regenerate the 13k. The diff-to-zero
+step is the gate; it is the only check that would have caught this.</p>
+
 </body>
 </html>
