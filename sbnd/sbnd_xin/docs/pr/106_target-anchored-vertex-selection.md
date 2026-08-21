@@ -350,9 +350,12 @@ proposal outside the net.
 1. Owner decision on `min_accept 10→20` (§6): +13/1012 target hits vs 10 ADVERSE
    1 cm movers and one nueCC48 nue-selection loss.  Cfg-only (existing TLA).
 2. nueCC heat-map blindness (§7): 7 of 12 misses have no vertex-like voxel;
-   needs nueCC labels in the SCN training set, or a shower-aware fallback
-   (accept only if best dl ≥ ~0.03, else the traditional vertex) — the
-   latter is a one-knob C++ change that this round's data can pre-score.
+   needs nueCC labels in the SCN training set.  A DL-score floor ("net
+   abstained ⇒ traditional vertex") was pre-scored offline (1012 events):
+   floor 0.01/0.015 → 780, **0.02 → 782 (= min_accept 20 exactly)**, 0.03 →
+   778, 0.05 → 772; all 10 ADVERSE events of §6 have best dl 0.006–0.019,
+   so any helpful floor rejects the same events — it is `min_accept 20` by
+   another name, not a separate lever.  Dropped.
 3. Re-adjudicate ft2u live on the target metric (§7.1) if wanted.
 4. `hv_trad_main_vertex_id` is the pre-fallback state, not the fallback
    outcome (§2) — a harvest of the post-fallback vertex id would remove the
