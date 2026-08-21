@@ -305,6 +305,17 @@ for _d74 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _d74 _env _key _val
+# doc 75 -- nue/single-photon consistent-FV knob + the flag-leak snapshot
+# guard.  Same tri-state idiom: EMPTY = no TLA = the job default, 1 = force
+# on, 0 = force off.
+for _d75 in \
+    "SBND_NUE_SP_CONSISTENT_FV:nue_sp_consistent_fv" \
+    "SBND_NU_SELECTED_AS_MAIN_SNAPSHOT_ALL:nu_selected_as_main_snapshot_all" ; do
+    _env=${_d75%%:*}; _key=${_d75#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d75 _env _key _val
 [ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")

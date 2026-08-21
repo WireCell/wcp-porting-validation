@@ -2335,3 +2335,10 @@ tagged here, never written to.
 - work-pr102-head-mcp1k -- fresh full 1000-evt mcp1k PR arm at HEAD (post pr/98+99+101 flips), PR_EXTRA_STAGES=pr_display + SBND_TRAJ_COVER_PROBE=1 (log-only); the round's "after" epoch; **KEEP until doc pr/102 closes**
 - work-pr102-dbg-mcp1k -- reserved for targeted probe reruns (WCT_PR96_REMSEG_DEBUG etc.) of pr/102 exhibits; may stay unused
 - This round READS work-{mcp1k,mcp2k}-prod0819 as its "before" epoch and as the relocated pr/96 6-event calibration source (cbr3 arms retired) -- do not release them while pr/102 is open.
+
+## doc 75 -- tagger-family FV + main-flag audit, two knobs (2026-08-20)
+- work-d75r1-bare-{nuecc48,ncpi0,mc50,enriched} -- pre-edit baselines (peer pr/102r2 WIP binary, no doc-75 source edits); Gate reference; releasable after next round
+- work-d75r1-off1-{nuecc48,ncpi0,mc50,enriched} -- knob-off gate arms, new binary; PASS 286/286 archives + 143/143 events vs bare; releasable after next round
+- work-d75r1-onfv-{nuecc48,ncpi0,mc50} -- `nue_sp_consistent_fv` ON census arms; **KEEP until owner review**
+- work-d75r1-onflag-enriched -- `nu_selected_as_main_snapshot_all` ON census arm (enriched 26-evt manifest); **KEEP until owner review**
+- enriched manifest = union of promoted-main (21) + multi-candidate (8) events read from the peer's `work-pr102-head-mcp1k` (read-only; unique ids listed in doc 75 §Repro)
