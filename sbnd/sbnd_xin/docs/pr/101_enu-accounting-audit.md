@@ -23,7 +23,7 @@ K4 `kine_long_muon_mode = 2`, K5 `kine_mainvtx_used_guard`.  Knob-off gate
 ways; zero nue selection flips, two NCπ0 numu flips attributed to K3 (§7.2).
 Owner pre-authorised the flip ("these principles are all general").  Bee A/B
 zips built (`bee/pr101/pr101x20-{off,on}.zip`, index `pr101.index.txt`),
-upload on owner ask.
+uploaded on owner ask: **OFF** https://www.phy.bnl.gov/twister/bee/set/776fa302-59e7-497c-abc9-a3ca3431f0af/event/list/ **ON** https://www.phy.bnl.gov/twister/bee/set/16d583d0-534f-4b69-a7f4-1abe7bf6158f/event/list/ (same 20 events, same order; index `bee/pr101/pr101.index.txt`).
 
 Companion rounds: pr/35 (energy-reco port fidelity audit, F1 `kine_shower_
 pdg_live` ON), pr/99 round 3 (shower↔shower cell ownership `kine_charge_dedup`

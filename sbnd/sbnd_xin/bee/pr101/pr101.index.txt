@@ -1,4 +1,4 @@
-# doc pr/101 Enu accounting round A/B index -- OFF <uuid> / ON <uuid>
+# doc pr/101 Enu accounting round A/B index -- OFF 776fa302-59e7-497c-abc9-a3ca3431f0af / ON 16d583d0-534f-4b69-a7f4-1abe7bf6158f
 # OFF = work-pr101-off3-* (= pr/99 r3 production, gate PASS 234), ON = work-pr101-all3-* (K1-K5 on, long-muon mode 2)
 # 20 events: 0-5 owner/design events, 6-11 top Enu movers, 12-14 long muons + adjudicated, 15-19 A5-pion-shower energy cases
 # bee_idx	event	status
