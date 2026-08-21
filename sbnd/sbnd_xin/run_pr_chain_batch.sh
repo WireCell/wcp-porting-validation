@@ -1342,6 +1342,24 @@ fi
 if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
 fi
+# doc pr/102 P1: OR-disjuncts on the pr/54 keep -- min_nnf (integer
+# not-faked-terminal floor) admits a well-measured candidate below the
+# 25-terminal floor; len_admit (cm) admits any candidate at least that
+# long.  EMPTY = no TLA = the C++ defaults 0 = off, byte-identical.
+#   SBND_OSEG_MIN_NNF  SBND_OSEG_LEN_ADMIT (cm)
+if [ -n "${SBND_OSEG_MIN_NNF:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_nnf=${SBND_OSEG_MIN_NNF}")
+fi
+if [ -n "${SBND_OSEG_LEN_ADMIT:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_len_admit=${SBND_OSEG_LEN_ADMIT}")
+fi
+# doc pr/102 P2: 3-D uncovered-charge radius (cm) for the
+# find_other_segments tagging/nnf seats (the B2 nnf=0 fragmentation
+# family).  EMPTY = no TLA = the C++ default 0 = off, byte-identical.
+#   SBND_OSEG_UNCOVER_3D (cm)
+if [ -n "${SBND_OSEG_UNCOVER_3D:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_uncover_3d=${SBND_OSEG_UNCOVER_3D}")
+fi
 # doc pr/67 round 3 (S2): size gate on the isochronous snap in
 # find_other_segments -- the machinery that ATTACHES a short isochronously
 # displaced branch to its parent.  Bare value in cm; unset means the C++

@@ -2336,6 +2336,13 @@ tagged here, never written to.
 - work-pr102-dbg-mcp1k -- reserved for targeted probe reruns (WCT_PR96_REMSEG_DEBUG etc.) of pr/102 exhibits; may stay unused
 - This round READS work-{mcp1k,mcp2k}-prod0819 as its "before" epoch and as the relocated pr/96 6-event calibration source (cbr3 arms retired) -- do not release them while pr/102 is open.
 
+## doc pr/102 round 2 -- P1+P2 knobs (2026-08-20)
+- work-pr102r2-base-{nuecc48,ncpi0,mcp1k,mcp2k} -- pre-edit baselines at toolkit 2979bd26 (48/19/35/15 evts, numu50 manifest for the mc samples); Gate-1 reference; releasable after next round
+- work-pr102r2-off-{nuecc48,ncpi0,mcp1k,mcp2k} -- knob-off gate arms, new binary; Gate 1 PASS 234/234 vs base; releasable after next round
+- work-pr102r2-onA-{mcp1k,mcp2k} -- Stage A exhibit smoke (12+2 evts, min_nnf=4 len_admit=30 uncover_3d=3.0); keep with doc
+- work-pr102r2-offfull-mcp1k / -onfull-mcp1k -- full 1000-evt census before/after at the operating point; **KEEP until owner scan done**
+- work-pr102r2-on-{nuecc48,ncpi0} -- knob-on physics-ledger arms; **KEEP until owner scan done**
+
 ## doc 75 -- tagger-family FV + main-flag audit, two knobs (2026-08-20)
 - work-d75r1-bare-{nuecc48,ncpi0,mc50,enriched} -- pre-edit baselines (peer pr/102r2 WIP binary, no doc-75 source edits); Gate reference; releasable after next round
 - work-d75r1-off1-{nuecc48,ncpi0,mc50,enriched} -- knob-off gate arms, new binary; PASS 286/286 archives + 143/143 events vs bare; releasable after next round
@@ -2343,3 +2350,13 @@ tagged here, never written to.
 - work-d75r1-onflag-{nuecc48,mc50,enriched} -- `nu_selected_as_main_snapshot_all` ON census arms (round 2: the flip-equivalence check found this fires on 16/143 standard-sample events, not just the enriched manifest); SBND PRODUCTION ON; **KEEP**
 - work-d75r1-flipchk-ncpi0 -- post-flip config, no env; flip-equivalence PASS (same 8/19 archives as onflag-ncpi0 alone); **KEEP**
 - enriched manifest = union of promoted-main (21) + multi-candidate (8) events read from the peer's `work-pr102-head-mcp1k` (read-only; unique ids listed in doc 75 §Repro)
+- work-pr102r2-beq-mcp1k -- DEAD (wrong event list, 0-archive gate); work-pr102r2-beq2-mcp1k -- peer-binary equivalence proof (6/6 archives vs off arm)
+- work-pr102r2-off2-{nuecc48,ncpi0,mcp1k,mcp2k} -- knob-off gate arms on the SHIPPING binary (post UAF fix); Gate 1 PASS 234/234 vs base; releasable after next round
+- work-pr102r2-{offfullp,onfullp,onfull2p}-mcp1k -- patch arms for the peer build-race / cfg-collision failures; members of the merged arms below
+- work-pr102r2-{offmerged,onmerged}-mcp1k -- SYMLINK-MERGED 1000-evt census arms (offfull+offfullp / onfull2+onfull2p); derived, keep while pr/102 r2 open
+- work-pr102r2-onfull-mcp1k / -on-{nuecc48,ncpi0} -- pre-UAF-fix ON arms, superseded by onfull2/on2; releasable now
+- work-pr102r2-dbgp1/dbgp2/dbgp2b-mcp1k -- 399998 crash factorization (P1-only ok / P2-only rc=135 / P2-only after fix ok); keep with doc
+- work-pr102r2-{kA,kB,kC}-mcp1k -- single-knob attribution on the 28 ADVERSE events (kA=min_nnf 1 ADVERSE, kB=len_admit ZERO movers, kC=uncover_3d 23 ADVERSE); keep with doc
+- work-pr102r2-p1full-mcp1k / -p1-{nuecc48,ncpi0} -- P1-only (min_nnf=4 len_admit=30) full validation arms; **KEEP until owner scan done**
+- work-pr102r2-{nnf4,nnf8,len30,n8l30}-nuecc48 -- P1 disjunct sweep (nue ledger: -4/+1, -1/+1, 0/0, -1/+1); keep with doc
+- work-pr102r2-l30full-mcp1k / -l30-ncpi0 -- len_admit=30-only operating-point arms (the flip candidate); **KEEP until owner scan done**

@@ -386,3 +386,174 @@ lever for this family).
 - No toolkit edit: `git -C toolkit status` clean in `clus/ cfg/`;
   the two named probes are the pr/96-gated ones, both proven byte-neutral in
   that round.
+
+---
+
+# ROUND 2 (2026-08-20/21) — P1+P2 implemented; len_admit=30 SBND PRODUCTION ON; min_nnf + uncover_3d built, validated, STAY OFF
+
+Owner request: *implement P1 and P2 with default-OFF knobs, validate, and if
+validation passes turn them on by default for SBND production; 32 CPUs.*
+Outcome in one line: **three knobs shipped default-OFF; the length disjunct
+(`other_seg_keep_isolated_len_admit = 30`) passed every gate and is
+PRODUCTION ON; the nnf disjunct and the P2 3-D uncovered radius FAILED
+validation (measured below) and stay OFF**; one latent shower-view
+use-after-free crash found and fixed along the way.
+
+## 7. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# knobs (all default OFF in C++): SBND_OSEG_MIN_NNF / SBND_OSEG_LEN_ADMIT (cm)
+# / SBND_OSEG_UNCOVER_3D (cm) -> other_seg_keep_isolated_{min_nnf,len_admit} /
+# other_seg_uncover_3d on tagger_check_neutrino.
+
+# Gate 1 (knob-off byte identity, SHIPPING binary), 234/234 PASS:
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  python3 scripts/pr85_hash_gate.py work-pr102r2-base-$s work-pr102r2-off2-$s; done
+
+# the operating-point arms (before/after for every number below):
+#   before work-pr102r2-offmerged-mcp1k   after work-pr102r2-l30full-mcp1k
+SBND_OSEG_LEN_ADMIT=30 PR_JOBS=32 PR_EXTRA_STAGES=pr_display SBND_TRAJ_COVER_PROBE=1 \
+  ./run_pr_chain_batch.sh work-mcp1k-ql0819 work-pr102r2-l30full-mcp1k data
+
+# adjudication:
+python3 scripts/pr90_movers.py work-pr102r2-offmerged-mcp1k work-pr102r2-l30full-mcp1k --tags harv3
+python3 scripts/pr102_region_census.py work-pr102r2-l30full-mcp1k --quiet
+python3 scripts/pr102_ab_compare.py docs/pr/102_events-r2off.tsv docs/pr/102_events-l30.tsv
+
+# flip-equivalence (bare config, no env, vs the validated arms): 18/18 PASS
+python3 scripts/pr85_hash_gate.py work-pr102r2-l30full-mcp1k work-pr102r2-flip-mcp1k
+python3 scripts/pr85_hash_gate.py work-pr102r2-l30-ncpi0    work-pr102r2-flip-ncpi0
+```
+
+Binary: toolkit at this round's two commits on top of `2979bd26` (doc 74);
+`wcdoctest-clus` 2305/2305; freshness proofs before every gate. The round rode
+through two concurrent-session hazards, both proven harmless: a mid-arm
+library relink (binary equivalence 6/6 archives, `work-pr102r2-beq2-mcp1k`)
+and a transient cfg-signature collision (167 affected events patch-rerun and
+key-audited: 1000/1000 compiled configs carry the knob keys).
+
+## 8. What was built (all C++ defaults OFF ⇒ byte-identical)
+
+- **P1a `other_seg_keep_isolated_min_nnf`** (int, 0=off): admit an isolated
+  residual below the 25-Steiner-terminal floor when its number_not_faked ≥ N
+  (pr/67 §10.3 S1; nnf was computed at the seat and thrown away).
+- **P1b `other_seg_keep_isolated_len_admit`** (cm, 0=off): admit any isolated
+  candidate whose fitted track length ≥ L, at any terminal count — the §4 B1
+  answer (the floor counts terminals, not size; the dropped tail was
+  67–145 cm against noise ≤ 10 cm).
+- **P2 `other_seg_uncover_3d`** (cm, 0=off): imaged charge farther than R in
+  3-D from every existing fitted trajectory (i) cannot be 2-D-tagged in
+  find_other_segments step 1, and (ii)+(iii) counts toward nnf at step 8 and
+  the re-eval — the §4 B2 (nnf=0 fragmentation) answer.
+- Threading: `NeutrinoPatternBase.h` → `TaggerCheckNeutrino.{h,cxx}` →
+  `cfg/pgrapher/common/clus.jsonnet` → `sbnd/clus.jsonnet` (4 sites) →
+  `sbnd/wct-pr-perevt.jsonnet` → `run_pr_chain_batch.sh` envs; doctest pins +
+  6 new predicate cases (`doctest_other_seg_keep_isolated.cxx`).
+- **Crash fix (unknobbed, UB, gated)**: the pr/99 ghost-member drop removes
+  a segment + degree-0 vertices from the FULL graph after purging only the
+  dropping shower's view; any other shower still holding those descriptors
+  iterates freed storage (`Shower::fill_sets` UAF — reproducible SIGSEGV on
+  18255-399998 with P2 on, rc=135 twice). Fixed by purging every shower's
+  view first (`NeutrinoShowerClustering.cxx`, pure filter-set erase).
+  Knobs-off byte-identity re-proven after the fix (Gate 1 below is on the
+  post-fix binary).
+
+## 9. Gates
+
+| gate | result |
+|---|---|
+| Gate 0: build + doctest | rc=0; **2305/2305** |
+| compiled-config OFF (pristine cfg tree vs edited, same TLAs) | byte-identical |
+| compiled-config ON | exactly the 3 keys appear |
+| Gate 1 knob-off, shipping binary, 4 samples (nuecc48 96, ncpi0 38, mcp1k numu50 70, mcp2k numu50 30 archives) | **PASS 234/234** |
+| peer-binary equivalence (mid-round relink) | PASS 6/6 |
+| flip compiled-diff | exactly `other_seg_keep_isolated_len_admit: 30` added |
+| flip-equivalence bare-vs-env (mcp1k 16 + ncpi0 2 archives) | **PASS 18/18** |
+
+## 10. Validation statistics (this is §"statistics" the owner asked for)
+
+### 10.1 The failed operating point: P1(min_nnf=4, len_admit=30) + P2(3.0 cm)
+
+Full mcp1k before/after (`offmerged` vs `onmerged`, identical 445-event
+evaluated set):
+
+- Census: flagged events 40 → 33; flagged uncovered charge Σqfrac
+  3.28 → 2.09 (−36%); on the 12 §5 exhibit events, flagged groups 15 → 4.
+- **Vertex movers: 106, of which 28 ADVERSE** (moves up to 237.6 cm off a
+  correct click) — the stop-the-line class.
+- **nueCC48 nue-score sign flips: 12 (≈8 losses incl. six 4.30 → −15)**;
+  14 numu flips; 45/48 events changed. The pr/30 fit_exclusion failure
+  shape, reproduced.
+
+Single-knob attribution on the 28 ADVERSE events:
+
+| knob alone | movers | ADVERSE |
+|---|---|---|
+| min_nnf=4 | 3 | 1 (170792, 2.16 cm) |
+| len_admit=30 | **0** | **0** |
+| uncover_3d=3.0 | 24 | **23** |
+
+**P2 is the destroyer** — its step-1 re-tagging changes component formation
+in every cluster with any 3-D-far charge, and the resulting segments re-anchor
+vertex selection globally. Powerful (it produced most of the −36% charge
+recovery) but far too blunt at 3.0 cm. **STAYS OFF.**
+
+### 10.2 The nue ledger sweep that set the operating point (nuecc48, 48 evts)
+
+| corner | events changed | nue lost | nue gained |
+|---|---|---|---|
+| min_nnf=4 | 36/48 | **4** (42280, 350186, 389538, 444187) | 1 (30504) |
+| min_nnf=8 | 24/48 | 1 (389538 4.3 → −15) | 1 (30504) |
+| **len_admit=30** | **2/48** | **0** | **0** |
+| min_nnf=8 + len_admit=30 | 24/48 | 1 | 1 |
+
+min_nnf's admissions of small (4–8-terminal) fragments inside shower-rich
+nue events perturb the nue BDT at scale; even at 8 it carries the named
+389538 loss. **min_nnf STAYS OFF** pending an owner hand-scan of
+389538-vs-30504 (the machinery is built, gated, and one env var away).
+
+### 10.3 The shipped point: len_admit = 30 cm, full-sample numbers
+
+- **Footprint: 5 admissions / 1000 events**, every one `reason=len`:
+  292384 (145.5 cm, nnf 18), 284794 (71.4 cm, nnf 0), 387850 (67.1 cm,
+  nnf 16), 279256 (45.3 cm, nnf 19), 288859 (43.9 cm, nnf 5).
+- mcp1k: 6/1000 events changed (the 5 admits + none); movers **2, zero
+  ADVERSE**; cosmict flips 0; numu sign flips **1** — 18255-284794
+  (2.12 → −1.28, vertex unmoved 0.14 cm) — the round's named hand-check
+  item: its recovered 71.4 cm second track is real charge, and whether the
+  event should still select numu is the owner's call (Bee idx 2).
+  (349549/401450 diffs are the M4 DL-vertex bit-instability: identical PR
+  structure — 50 seg/86 vtx/13 shower and identical keep/drop lines — with
+  a jittered score; not the knob.)
+- nuecc48: 2/48 changed, zero nue/numu sign flips. ncpi0: 1/19 changed
+  (37112 nue −2.50 → −2.47).
+- Census: flagged events 40 → 38; the two rescues are exactly the §4 B1
+  giants (292384, 387850). 284794's track is admitted but its event region
+  stays flagged (partial coverage).
+- The B1 tail of doc pr/102 §4 is closed: **no candidate ≥ 30 cm can die on
+  the terminal floor in SBND production any more.**
+
+### 10.4 Bee review (before/after, 10 events, index `bee/pr102r2/pr102r2.index.txt`)
+
+- before (knobs off): https://www.phy.bnl.gov/twister/bee/set/c94d6274-7628-4f82-b0a5-ce1021bc9c60/event/list/
+- after (len_admit=30): https://www.phy.bnl.gov/twister/bee/set/a5710cfa-5f69-43f0-85b3-1d64f269bbdd/event/list/
+- Priority: idx 0/1 (the rescued 145.5/67.1 cm tracks), **idx 2 (284794
+  numu flip — the one open adjudication)**, idx 5–8 (what min_nnf / P2
+  would additionally recover, for a future round's scope decision).
+
+## 11. Residuals and the P2 path forward (recorded, not chased)
+
+1. The B2 family (nnf=0 fragmentation, 7 of the audit's top 14) remains the
+   dominant unfixed near-vertex-hadronic mechanism. P2 as built fixes it
+   (Stage A: exhibit flagged groups 15 → 4) but at 23 ADVERSE movers. The
+   measured narrowing for a next round: apply the 3-D escape ONLY at the
+   step-8/re-eval nnf seats (no step-1 re-tagging — the re-eval is the seat
+   pr/67 P5 already named as able to kill real charge with no 3-D
+   evidence), and/or a larger radius; the knob split is trivial on top of
+   this round's plumbing.
+2. min_nnf=8: −1/+1 on nueCC48; owner scan of 389538 (lost) vs 30504
+   (gained) decides.
+3. 170792 (min_nnf's one small ADVERSE, 2.16 cm) — Bee-able on request.
+4. 18255-399998's crash was the exposed instance of the ghost-drop UAF; the
+   fix is unconditional (UB), gated by this round's 234/234.

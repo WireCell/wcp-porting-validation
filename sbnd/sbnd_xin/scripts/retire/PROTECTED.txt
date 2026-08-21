@@ -91,6 +91,7 @@ work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod081
 
 # --- doc pr/102 missing-orphan-segment audit (added 2026-08-20) ------------
 work-pr102-head-mcp1k work-pr102-dbg-mcp1k	pr/102 "after" epoch (fresh mcp1k at HEAD, pr_display + traj_cover_probe) and its reserved debug arm; also the round READS work-{mcp1k,mcp2k}-prod0819 above as before-epoch + relocated pr/96 calibration events	doc pr/102, docs/work-tags.md 2026-08-20
+work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	pr/102 round-2 P1+P2 validation arms (census before/after + physics ledgers + exhibit smoke); owner scan pending	doc pr/102 round 2, docs/work-tags.md 2026-08-20
 
 # --- RETIRED (kept for provenance) ---------------------------------------
 # 2026-08-19 (pass 2) -- the whole cbr3 family, the three DATA-sample valfast
