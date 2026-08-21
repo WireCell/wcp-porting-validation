@@ -2330,3 +2330,8 @@ tagged here, never written to.
 - work-pr101-all3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL all-five-knobs arms (K1-K5, long-muon mode 2); **KEEP until owner scan done**
 - work-pr101-flip-*, -floff-* -- flip proofs (8 evts x2, 16/16 PASS both ways); releasable after doc
 - work-pr101-{a,b2,c,d}-* -- single-knob attribution arms (a=K1 track_ctx, b2=K2+K5 mass rules+guard, c=K3 hadronic dQ/dx, d=K4 long-muon mode 2); releasable after doc
+
+## doc pr/102 missing-orphan-segment audit (2026-08-20)
+- work-pr102-head-mcp1k -- fresh full 1000-evt mcp1k PR arm at HEAD (post pr/98+99+101 flips), PR_EXTRA_STAGES=pr_display + SBND_TRAJ_COVER_PROBE=1 (log-only); the round's "after" epoch; **KEEP until doc pr/102 closes**
+- work-pr102-dbg-mcp1k -- reserved for targeted probe reruns (WCT_PR96_REMSEG_DEBUG etc.) of pr/102 exhibits; may stay unused
+- This round READS work-{mcp1k,mcp2k}-prod0819 as its "before" epoch and as the relocated pr/96 6-event calibration source (cbr3 arms retired) -- do not release them while pr/102 is open.

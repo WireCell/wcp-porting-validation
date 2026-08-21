@@ -89,6 +89,9 @@ work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 cam
 work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
 work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
 
+# --- doc pr/102 missing-orphan-segment audit (added 2026-08-20) ------------
+work-pr102-head-mcp1k work-pr102-dbg-mcp1k	pr/102 "after" epoch (fresh mcp1k at HEAD, pr_display + traj_cover_probe) and its reserved debug arm; also the round READS work-{mcp1k,mcp2k}-prod0819 above as before-epoch + relocated pr/96 calibration events	doc pr/102, docs/work-tags.md 2026-08-20
+
 # --- RETIRED (kept for provenance) ---------------------------------------
 # 2026-08-19 (pass 2) -- the whole cbr3 family, the three DATA-sample valfast
 # cbr3on arms, and the 21 doc-pr/94 r3 flip-evidence arms.  SUPERSEDED by the
