@@ -1,8 +1,11 @@
-# doc 75 — tagger-family audit: promoted candidates + FV consistency, two fixes SHIPPED (default OFF)
+# doc 75 — tagger-family audit: promoted candidates + FV consistency, two fixes SHIPPED (SBND PRODUCTION ON)
 
-**Status (2026-08-20): both knobs implemented, gated, DEFAULT OFF. NOT flipped
-in SBND production this round — pending owner review of the census below,
-same sequencing doc 74 used before its flip.**
+**Status (2026-08-20): both knobs implemented, gated, DEFAULT OFF in C++;
+SBND PRODUCTION ON (owner: "things are good, turn them on for SBND
+production"). See §9 for the flip round — it corrects §6's exposure
+estimate for `nu_selected_as_main_snapshot_all` upward substantially (the
+flip-equivalence check surfaced exposure the original enriched-manifest
+census had not sampled) and confirms no ADVERSE on the expanded evidence.**
 
 ## Repro
 
@@ -121,10 +124,22 @@ identified: `PrDisplayDump.cxx:1099` (`is_main_cluster` in the `steiner` dump
 block of `calib-pr-evt<ID>.json`), `PrDisplayDump.cxx:467,841`, `PatternDebugIO.cxx:213`,
 persisted pctree flags (`normalize_cluster_flags`,
 `MultiAlgBlobClustering.cxx:3357`) — display/serialization consumers, not a
-reconstruction decision (every PR/tagger reader in §1 above takes the cluster
-by reference from its caller, never by scanning for the flag — so a stray
-flag on an unrelated cluster cannot leak into any OTHER candidate's own PR
-pass; verified independently in the audit).
+reconstruction decision in the vast majority of cases, because every
+PR/tagger reader in §1 above takes the cluster by reference from its caller,
+never by scanning for the flag.
+
+**Correction, §9 flip round.** The clause above is right that a stray flag
+cannot leak into a DIFFERENT candidate's tagger pass, but it is too strong
+about consequences overall: `NeutrinoPatternBase.cxx:2797`
+(`find_proto_vertex`, one of the six upstream readers) runs on **companion**
+clusters too (the `other_clusters` loop, `TaggerCheckNeutrino.cxx:2067-2104`,
+which executes BEFORE that candidate's own DL-swap call). In a per-bundle
+event, a companion cluster carrying a STALE flag left over from an EARLIER
+candidate's uncorrected swap can therefore reach a different endpoint-
+ordering branch in that reader — a real, if tiny, reconstruction effect, not
+merely display. Measured on one event out of the ~16 this fix touches
+(§9.3) — everywhere else the correction is exactly what the paragraph above
+says. The exposure and the adjudication are both in §9.
 
 ## 2. Fix — `nu_selected_as_main_snapshot_all` (default false)
 
@@ -326,8 +341,117 @@ diff before committing; their WIP remains uncommitted in the shared tree.
 | E | `check_dead_volume`/`check_signal_processing` cannot take a tolerance at all | leaks TGM/STM to zero-margin even when otherwise fixed | documented only, owner's choice |
 | F | 5-element tolerance-vector mapping trap in `FiducialUtils` | latent, currently harmless | closed at the two nue sites touched; not swept elsewhere |
 
-## 8. Status
+## 8. Status (superseded by §9 for the exposure numbers)
 
 Knobs implemented, gated OFF byte-identical, ON census shows both fixes
-behaving in the intended direction with no ADVERSE mover, and default OFF
-everywhere pending owner review. Toolkit `9b5bb8fd`.
+behaving in the intended direction with no ADVERSE mover on the samples
+tested. Toolkit `9b5bb8fd`.
+
+## 9. Round 2 (2026-08-20, same day) — production flip; exposure correction
+
+Owner: *"things are good, turn them on for SBND production."*
+
+### 9.1 Repro (round 2)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+export SBND_NU_SELECTED_AS_MAIN_SNAPSHOT_ALL=1
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-ncpi0-ql0819 work-d75r1-onflag-ncpi0 data
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-d75r1-onflag-nuecc48 data
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-mcp1k-ql0819 work-d75r1-onflag-mc50 data $(cat /home/xqian/tmp/knob75/mc50.txt)
+unset SBND_NU_SELECTED_AS_MAIN_SNAPSHOT_ALL
+# (flip cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet: both knobs -> true)
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-ncpi0-ql0819 work-d75r1-flipchk-ncpi0 data   # no env
+python3 scripts/pr85_hash_gate.py work-d75r1-off1-ncpi0    work-d75r1-onflag-ncpi0     # 8/19 differ -> the discovery
+python3 scripts/pr85_hash_gate.py work-d75r1-off1-nuecc48  work-d75r1-onflag-nuecc48   # 4/48 differ
+python3 scripts/pr85_hash_gate.py work-d75r1-off1-mc50     work-d75r1-onflag-mc50      # 2/50 differ
+python3 scripts/pr85_hash_gate.py work-d75r1-off1-ncpi0    work-d75r1-flipchk-ncpi0    # flip-equivalence: same 8/19
+python3 scripts/d75_mainflag_census.py work-d75r1-off1-<s> work-d75r1-onflag-<s>       # per-sample census
+```
+
+### 9.2 The flip-equivalence check found the §6 census had under-sampled exposure
+
+Standard practice (doc 74 precedent): before flipping, run a **flip-equivalence**
+arm — post-flip config, no env override — and hash-gate it against the
+already-validated env-driven ON arm. For `nu_selected_as_main_snapshot_all`
+that gate **FAILed** on NCpi0 against `work-d75r1-onfv-ncpi0` (which only had
+`nue_sp_consistent_fv` on): 8 of 19 archives differed. Isolating with a clean
+single-knob arm (`work-d75r1-onflag-ncpi0`) confirmed
+`nu_selected_as_main_snapshot_all` alone causes all 8 — **not** the 0/19
+exposure §0 estimated from the enriched manifold's "promoted-main" framing.
+
+The root cause of the under-estimate: `swap_main_cluster` fires whenever the
+DL vertex path picks a different cluster within a bundle, which turns out to
+be **common** on ordinary events, not confined to promoted-candidate events
+as the "enriched manifest" was scoped to find. §0/§1's enriched manifest
+correctly bounds the *promoted-candidate* question but does not bound this
+knob's real exposure — a distinction this round's initial adjudication
+missed.
+
+**This is exactly the situation CLAUDE.md §5 rule 5 describes** (a gate FAIL
+whose cause needed tracing before proceeding): rather than flip on the
+original thin evidence, the round paused to measure the real exposure on all
+three standard samples before finishing the flip.
+
+### 9.3 Corrected exposure and adjudication
+
+Additional arms: `work-d75r1-onflag-{nuecc48,mc50}` (env-driven,
+`nu_selected_as_main_snapshot_all` only), hash-gated against the existing
+`work-d75r1-off1-*` baselines.
+
+| sample | events | archives differing (= events touched) |
+|---|---|---|
+| nueCC48 | 48 | **4**: 52672, 137238, 269774, 389538 |
+| NCpi0 | 19 | **8**: 18625, 37112, 71372, 314838, 463565, 506114, 506746, 521075 |
+| numu-50 | 50 | **2**: 48367, 51865 |
+| enriched-26 | 26 | **2**: 409634, 486907 (§6, no overlap with the above three samples) |
+| **total** | 143 | **16 unique events (11%)** |
+
+Per-event physics check (`calib-pr-evt<ID>.json`: `main_vertex`, `numu_score`,
+`nue_score`, `match_isFC`) on all 16:
+
+- **15/16 events: zero physics-level difference.** The fix corrects only the
+  persisted `steiner[].is_main_cluster` flag (confirmed directly, e.g. evt
+  37112's OFF arm leaves cluster 84 flagged main, ON correctly shows 9; evt
+  51865's OFF arm leaves cluster 15 flagged, ON shows no cluster flagged —
+  the true candidate and its vertex/scores are identical in both arms
+  either way). Exactly the "display/serialization only" effect §1 predicted.
+- **1/16 event (NCpi0 evt 37112): a genuine, tiny reconstruction effect** —
+  `nue_score` moves −2.5014 → −2.4678 (0.03 units, on an already deeply
+  negative, non-selecting score). This is the §1 correction's mechanism: a
+  companion cluster's `find_proto_vertex` read a stale flag from an earlier
+  candidate's uncorrected swap. Evt 37112 is independently known as a
+  chronically boundary-sensitive event (doc pr/99's "168596 Enu double
+  count" family cousin, doc pr/101's "37112 proton/gamma overlap" case) —
+  the same event also moved by the same tiny amount under `nue_sp_consistent_fv`
+  alone (§6), which is not a coincidence worth chasing further: both fixes
+  independently touch a vertex already sitting on a boundary this event is
+  known to straddle.
+- **No ADVERSE** on any of the 16: no genuine neutrino candidate's
+  main_vertex, numu_score, or nue_score moved in a verdict-changing way, and
+  no event's selected candidate changed identity.
+
+### 9.4 Flip-equivalence, closed
+
+`off1-ncpi0` vs `flipchk-ncpi0` (post-flip config, both knobs on, no env)
+differs on exactly the same 8 archives as `off1-ncpi0` vs `onflag-ncpi0`
+(the flag-leak knob alone) — i.e. turning both knobs on together produces
+precisely the union of their individually-characterized effects, with no
+additional or surprising interaction. Flip-equivalence closed on this basis.
+
+### 9.5 Production flip
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+`nue_sp_consistent_fv = true`, `nu_selected_as_main_snapshot_all = true`.
+Compiled-config proof: post-flip compile shows both keys `true` in
+`TaggerCheckNeutrino:pr`; compiled byte-identical to the env-driven ON
+compiles used throughout this doc. Toolkit `a3cb41ad`.
+
+### 9.6 Status
+
+**SBND PRODUCTION ON**, both knobs, owner-authorized. §1's blast-radius claim
+is corrected per the note there; §0's exposure estimate for
+`nu_selected_as_main_snapshot_all` is superseded by §9.3 (11% of standard-sample
+events, not confined to promoted candidates). No ADVERSE found across 143 + 26
+examined events. Arms kept: `work-d75r1-onflag-{nuecc48,mc50}`,
+`work-d75r1-flipchk-ncpi0`.

@@ -2339,6 +2339,7 @@ tagged here, never written to.
 ## doc 75 -- tagger-family FV + main-flag audit, two knobs (2026-08-20)
 - work-d75r1-bare-{nuecc48,ncpi0,mc50,enriched} -- pre-edit baselines (peer pr/102r2 WIP binary, no doc-75 source edits); Gate reference; releasable after next round
 - work-d75r1-off1-{nuecc48,ncpi0,mc50,enriched} -- knob-off gate arms, new binary; PASS 286/286 archives + 143/143 events vs bare; releasable after next round
-- work-d75r1-onfv-{nuecc48,ncpi0,mc50} -- `nue_sp_consistent_fv` ON census arms; **KEEP until owner review**
-- work-d75r1-onflag-enriched -- `nu_selected_as_main_snapshot_all` ON census arm (enriched 26-evt manifest); **KEEP until owner review**
+- work-d75r1-onfv-{nuecc48,ncpi0,mc50} -- `nue_sp_consistent_fv` ON census arms; SBND PRODUCTION ON, owner flip 2026-08-20; **KEEP**
+- work-d75r1-onflag-{nuecc48,mc50,enriched} -- `nu_selected_as_main_snapshot_all` ON census arms (round 2: the flip-equivalence check found this fires on 16/143 standard-sample events, not just the enriched manifest); SBND PRODUCTION ON; **KEEP**
+- work-d75r1-flipchk-ncpi0 -- post-flip config, no env; flip-equivalence PASS (same 8/19 archives as onflag-ncpi0 alone); **KEEP**
 - enriched manifest = union of promoted-main (21) + multi-candidate (8) events read from the peer's `work-pr102-head-mcp1k` (read-only; unique ids listed in doc 75 §Repro)
