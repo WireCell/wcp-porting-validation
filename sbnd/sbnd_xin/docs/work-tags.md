@@ -2399,3 +2399,4 @@ tagged here, never written to.
 - work-vtx106-harv-topo3-<sample> -- same + dl_vtx_topo_weight=3: the rows source (only a topo arm emits s_topo/topo_frac/votes); row set asserted identical to harv-base; **KEEP** with the doc
 - work-vtx106-ma20-<sample> -- live validation arm, SBND_DL_VTX_MIN_ACCEPT=20 (doc sec 6); keep until the owner decision on the flip is recorded
 - work-vtx106-harv-nofitx-<sample> / work-vtx106-nofitx-trad-<sample> -- fit_exclusion=false harvest (own pre-DL cloud) + no-DL fallback arms (doc sec 9: the OFF gain is real, heat-map channel); **KEEP** with the doc
+- work-vtx106-cne-{off,on}-{nuecc48,ncpi0} -- dl_vtx_cloud_no_exclusion OFF gate (PASS vs vtx105 base) and ON trial with harvest (doc sec 10); keep until the owner decision

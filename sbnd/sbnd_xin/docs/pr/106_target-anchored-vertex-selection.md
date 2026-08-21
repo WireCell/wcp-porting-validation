@@ -1,6 +1,6 @@
 # doc pr/106 — target-anchored re-optimization of the DL main-vertex selection
 
-**Status: OPEN 2026-08-21 (§9 added) — production UNCHANGED so far. On the target metric production is the best of the four strategies (tuning 510/673, lockbox 259/339); the re-rank surface is flat (scan + joint fit both ≤ +11); the one lever, stricter acceptance (`min_accept` 10→20), was live-validated (+13/1012, closure 0) but carries 10 ADVERSE 1-cm movers incl. a nueCC48 nue-selection loss → NOT flipped, owner's call. nueCC is blocked by the heat map (8 net-blind + 4 confidently-wrong of 12 misses), not by θ; ft2u does not change nueCC admission.**
+**Status: OPEN 2026-08-21 (§10 added) — production UNCHANGED; `dl_vtx_cloud_no_exclusion` implemented DEFAULT OFF (toolkit), tried on nueCC48+NCpi0: vertex +3/47 but nue-selected 35→32 and 2 ADVERSE — not a win as is, owner review. On the target metric production is the best of the four strategies (tuning 510/673, lockbox 259/339); the re-rank surface is flat (scan + joint fit both ≤ +11); the one lever, stricter acceptance (`min_accept` 10→20), was live-validated (+13/1012, closure 0) but carries 10 ADVERSE 1-cm movers incl. a nueCC48 nue-selection loss → NOT flipped, owner's call. nueCC is blocked by the heat map (8 net-blind + 4 confidently-wrong of 12 misses), not by θ; ft2u does not change nueCC admission.**
 
 Owner (2026-08-21), after doc pr/105 closed with "production optimal":
 the pr/105 ruler was wrong for the question.  The hand-scan labels were
@@ -425,3 +425,70 @@ Options (none implemented; owner decision):
    were exclusion-on fit dQ or raw blob charge decides what the "right"
    input is; worth checking against the uBooNE training set before any
    retraining.
+
+## 10. `dl_vtx_cloud_no_exclusion` — the surgical knob, nueCC48 + NCpi0 first (owner 2026-08-21)
+
+Implementation (toolkit 14dd031d, DEFAULT OFF): `NeutrinoPatternBase::m_dl_vtx_cloud_no_exclusion`;
+in `determine_overall_main_vertex_DL`, when it and `m_fit_exclusion` are on,
+snapshot every segment `fits()` / vertex `fit()`, refit each cluster once
+with `flag_exclusion=false` through a child `TrackFitting`
+(`inherit_from` + the parent's graph; the parent's association caches are
+untouched), build `vec_xyzq` from that fit, then restore the snapshot
+bit-for-bit (fits vector + the "fit" point cloud, the fitter's own write
+path) before the snap/score/fallback logic runs.  Config
+`dl_vtx_cloud_no_exclusion` in `TaggerCheckNeutrino` (+ `default_configuration`),
+threaded `common/clus.jsonnet` → `sbnd/clus.jsonnet` (`clus_pr`/`pr`) →
+`wct-pr-perevt.jsonnet` TLA with key suppression; runner env
+`SBND_DL_VTX_CLOUD_NO_EXCLUSION`; doctest `doctest_clus_knob_defaults`
+pins OFF.  Compiled-config proof (evt 10550 TLA set): unset md5
+`6baabf1a…` == HEAD; `=true` → exactly one added key.  `wcdoctest-clus`
+225/225.  Lib 13:57 > src 13:55.
+
+Gates / arms (`work-vtx106-cne-{off,on}-{nuecc48,ncpi0}`, pr_display;
+ON also harvests):
+- **OFF gate** (new binary, no env) vs `work-vtx105-base`: `pr85_hash_gate`
+  PASS 94/94 (nueCC48), 38/38 (NCpi0).
+- ON: candidate id lists identical to the production harvest on 47/47 —
+  the topology is untouched, only the net's cloud changes (log:
+  "refit 39 clusters (58 segments, 95 vertices snapshotted)" on 10550).
+- Wall (PR tail, nueCC48, 47 events): mean 21.9 → 23.6 s (+8 %), sum
+  1030 → 1109 s.
+
+Target metric (original labels, same targets as §9):
+
+| | nueCC48 M3 | nueCC48 DL-alone | NCpi0 M3 | NCpi0 DL-alone |
+|---|---|---|---|---|
+| production | 35/47 | 34/47 | 14/19 | 12/19 |
+| **cloud_no_exclusion ON** | **38/47** | 37/47 | 14/19 | 13/19 |
+| global fit_exclusion OFF (§9) | 41/47 | 42/47 | 13/19 | 11/19 |
+
+nueCC48 flips vs production: fixes 111412, 235435, 360535, 389538, 46363;
+breaks 271851, 433451 (net +3).  The two §9 fixes it does *not* reproduce
+(122660, 268067) are the "net confidently prefers another candidate" pair
+whose cure in §9 came with the OFF *topology*, not only the OFF charge.
+
+But the selection ledgers say it is not a win as is:
+- `pr90_movers` (1 cm): nueCC48 9 movers, **ADVERSE 2** (433451 0.00→6.3 cm,
+  one more), toward 7; NCpi0 3 movers, ADVERSE 1.
+- nue-selected (`nue_score ≥ 4.3`) on nueCC48: **35 → 32**; `nue_score > 0`
+  40 → 37.  Flips (`nue_score ≥ 4.3`): 111412 gains (0.04→4.30); **271851** loses (4.30→−0.15, also the §9 break); **389538** loses (4.30→−15)
+  even though its vertex is now on the label — the label sits in a different
+  cluster 213 cm from production's pick and that cluster is *not* fully
+  contained (`match_isFC` 1→0), so the nue tagger never runs: either the
+  label is on a partially-contained event that production "selected" on
+  another cluster, or the FV call is the problem — owner's eye needed;
+  **433451** loses (4.30→−15): the 2 GeV shower's start vertex moves
+  4007→4029 (6.3 cm) on the OFF cloud and the nue preselection fails — a
+  real break; **10550** loses (4.30→−0.13) while moving toward but not onto
+  the click (47→36 cm).  NCpi0: 84229 / 259542 nue 0.69/−1.08 → −15 (fine
+  for a background), 506746 −15→−2.18, numu>0 10→12.
+
+Verdict: the knob does what it was designed to do — it recovers about
+half of the §9 nueCC heat-map gain (DL-alone 34→37, M3 35→38) with the
+topology and every fit unchanged and an 8 % wall cost — but on nueCC48
+the nue *selection* goes down (−3) and two labelled vertices move off the
+click.  Not flipped.  Open questions for the owner before extending to the
+numu samples: (a) 389538's FC/label conflict; (b) whether the 6 cm shift on
+433451 is the DL voxel landing on the now-filled junction cell cluster a
+few cm from the true start (a resolution effect of the OFF cloud, which
+§9's global-OFF arm did not show because its topology also changed).

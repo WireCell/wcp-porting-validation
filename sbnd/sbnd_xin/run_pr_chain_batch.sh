@@ -1252,6 +1252,13 @@ fi
 if [ -n "${SBND_DL_VTX_SWAP_GUARD:-}" ]; then
     CATH_TLA+=(--tla-code "dl_vtx_swap_guard=${SBND_DL_VTX_SWAP_GUARD}")
 fi
+# doc sbnd_xin/docs/pr/106 sec 10: exclusion-free charge cloud for the DL
+# vertex net (one extra non-exclusion refit per cluster, fits restored).
+# Boolean TLA, same contract.  EMPTY = no TLA = the job default false.
+#   SBND_DL_VTX_CLOUD_NO_EXCLUSION
+if [ -n "${SBND_DL_VTX_CLOUD_NO_EXCLUSION:-}" ]; then
+    CATH_TLA+=(--tla-code "dl_vtx_cloud_no_exclusion=${SBND_DL_VTX_CLOUD_NO_EXCLUSION}")
+fi
 # doc sbnd_xin/docs/pr/75: per-event vertex scoreboard (recording only, read
 # by PrDisplayDump for the neutrino-vertex hand scan).  Boolean TLA, same
 # contract.  Defaulted to true above when PR_EXTRA_STAGES names pr_display.
