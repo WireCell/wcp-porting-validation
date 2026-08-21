@@ -1,0 +1,15 @@
+# doc pr/104 PREVIEW index (2026-08-21, before the final validation closed)
+# before:  https://www.phy.bnl.gov/twister/bee/set/a1120446-9fde-44bd-b094-65685483e337/event/list/   (work-pr104-bare-*, HEAD)
+# after:   https://www.phy.bnl.gov/twister/bee/set/ae7fad8d-d431-453f-a643-f8bbd0710add/event/list/   (final binary, work-pr104-smoke7-*; idx 7-9 from on3-nuecc48)
+# round3:  https://www.phy.bnl.gov/twister/bee/set/1f6a5506-50f8-406d-a413-a9c8a9dcb9a5/event/list/   (work-pr104-on3-*, binary BEFORE min_move + ambiguity veto -- shows the adverse cases)
+# bee_idx	event	sample	status
+0	405707	mcp2k	OWNER -- FIXED (after): main vertex re-pointed 1.56 cm from the kink-snap point onto the junction J (muon + proton); tier A
+1	65289	mcp1k	FIXED (after): two candidate junctions 1.9 / 0.9 cm away, joint fit picks the owner's (fit_d 0.28 vs 2.68 cm); click->main 2.38 -> 0.00
+2	66712	mcp1k	FIXED (after): tier B (joint fit 0.72 cm from J vs 1.97 from M); click->main 2.62 -> 0.61
+3	282072	mcp1k	FIXED (after): DL vertex was a 2.4 cm stub end; re-pointed onto the deg-3 junction; click->main 1.98 -> 0.00
+4	345633	mcp1k	RESIDUAL (unchanged in both): the junction's long arms are still shower-flagged when the snap runs -> no qualified candidate
+5	281837	mcp1k	ADVERSE in round3 (6-prong star split in two partial junctions; snap took one side, click->main 2.87 -> 5.43, Enu 1397 -> 990); VETOED in after (joint fit rms 2.87 cm) -> unchanged
+6	400474	nuecc48	ADVERSE in round3 (0.84 cm move off a vertex the kink snap had put on the click); VETOED in after (min_move 1 cm) -> unchanged
+7	423981	nuecc48	FIXED (owner 2026-08-21 "looks like a nueCC"): 4.1 cm move onto the 5-prong junction, nue -1.5 -> +3.4 (now selected), numu 1.43 -> 0.01; tier A on a kink-snap product
+8	163543	nuecc48	round3 fire: vertex 33 -> 37 cm from click, never nue-selected either way (wrong-object event); after-set shows the same (on3 arm)
+9	38856	nuecc48	round3 fire: toward (24.5 -> 22.8 cm), tier A; after-set shows the same (on3 arm)

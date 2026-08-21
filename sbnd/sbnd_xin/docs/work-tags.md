@@ -2375,3 +2375,16 @@ tagged here, never written to.
 - work-pr103-off3-{nuecc48,ncpi0} -- shipping-binary knob-off re-gate; releasable after next round
 - work-pr103-flipchk-{mcp1k(14),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence PASS 28/28+96/96+38/38+30/30 vs on2; **KEEP**
 - work-pr103-floff-{nuecc48,ncpi0} -- post-flip forced-off == legacy bare, PASS 96/96+38/38; releasable after next round
+
+## doc pr/104 -- junction snap (2026-08-21)
+- work-pr104-bare-{mcp1k(1000),nuecc48,ncpi0,mcp2k(15)} -- HEAD 5b6b289c binary + post-pr/103-flip config baselines, pr_display; **KEEP until pr/104 closes** (mcp1k nusel-table merged by hand: runner edited mid-batch)
+- work-pr104-off-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #1 knob-off gate, PASS 2000/96/38/30; releasable after next round
+- work-pr104-on-mcp2k -- binary #1 ON, KILLED mid-run (partial, do not read); releasable
+- work-pr104-smoke{,2,3,4,5,6,7}-{mcp2k,mcp1k,nuecc48} -- trace-level probe arms on the exhibit events per binary iteration (doc sec 3.0/3.0.1); releasable after next round
+- work-pr104-off2-mcp2k -- binary #2 partial (batch killed); releasable
+- work-pr104-off3-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #5 knob-off gate, PASS 2000/96/38/30; releasable after next round
+- work-pr104-on3-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #5 ON (before min_move + ambiguity veto): the round-3 ledger with the 2 adverse cases (281837, 400474); keep with doc (sec 3.1, Bee round3 set)
+- work-pr104-off4-{mcp1k,nuecc48,ncpi0,mcp2k} -- FINAL-binary knob-off gate, PASS 2000/2000 + 96/96 + 38/38 + 30/30; releasable after next round
+- work-pr104-on4-{mcp1k,nuecc48,ncpi0,mcp2k} -- FINAL-binary knob-on (vertex_junction_snap + vjs_override_kink_snap): the round's adjudicated arm, Bee "after" set e87695c6; **KEEP**
+- work-pr104-flipchk-{mcp1k(28),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence vs on4; **KEEP**
+- work-pr104-floff-{nuecc48,ncpi0} -- post-flip forced-off == bare; releasable after next round

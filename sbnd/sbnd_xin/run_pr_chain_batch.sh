@@ -1083,6 +1083,26 @@ fi
 if [ -n "${SBND_VERTEX_KINK_SNAP:-}" ]; then
     CATH_TLA+=(--tla-code "vertex_kink_snap=${SBND_VERTEX_KINK_SNAP}")
 fi
+# doc pr/104: main-vertex junction snap (405707/65289/66712/282072/345633
+# class: main vertex 2-4 cm off the multi-prong junction).  Boolean TLA,
+# same contract as the kink snap; numerics are bare cm/deg/count values,
+# unset/empty omits the override (jsonnet default null => byte-identical).
+#   SBND_VERTEX_JUNCTION_SNAP  SBND_VJS_RADIUS  SBND_VJS_MIN_ARM
+#   SBND_VJS_MIN_PRONGS  SBND_VJS_COLLINEAR  SBND_VJS_FIT_MARGIN  SBND_VJS_FIT_RMS
+if [ -n "${SBND_VERTEX_JUNCTION_SNAP:-}" ]; then
+    CATH_TLA+=(--tla-code "vertex_junction_snap=${SBND_VERTEX_JUNCTION_SNAP}")
+fi
+[ -n "${SBND_VJS_RADIUS:-}" ]     && CATH_TLA+=(--tla-code "vjs_radius=${SBND_VJS_RADIUS}")
+[ -n "${SBND_VJS_MIN_ARM:-}" ]    && CATH_TLA+=(--tla-code "vjs_min_arm=${SBND_VJS_MIN_ARM}")
+[ -n "${SBND_VJS_MIN_PRONGS:-}" ] && CATH_TLA+=(--tla-code "vjs_min_prongs=${SBND_VJS_MIN_PRONGS}")
+[ -n "${SBND_VJS_COLLINEAR:-}" ]  && CATH_TLA+=(--tla-code "vjs_collinear=${SBND_VJS_COLLINEAR}")
+[ -n "${SBND_VJS_FIT_MARGIN:-}" ] && CATH_TLA+=(--tla-code "vjs_fit_margin=${SBND_VJS_FIT_MARGIN}")
+[ -n "${SBND_VJS_FIT_RMS:-}" ]    && CATH_TLA+=(--tla-code "vjs_fit_rms=${SBND_VJS_FIT_RMS}")
+#   SBND_VJS_OVERRIDE_KINK_SNAP (boolean TLA, same contract as the snap switch)
+if [ -n "${SBND_VJS_OVERRIDE_KINK_SNAP:-}" ]; then
+    CATH_TLA+=(--tla-code "vjs_override_kink_snap=${SBND_VJS_OVERRIDE_KINK_SNAP}")
+fi
+[ -n "${SBND_VJS_MIN_MOVE:-}" ]   && CATH_TLA+=(--tla-code "vjs_min_move=${SBND_VJS_MIN_MOVE}")
 # doc pr/51: main-vertex graph audit (near-vertex graph-shape repair --
 # duplicate-corridor merge / charge-less-bridge removal / micro-stub absorb
 # + re-seat / one refit).  Boolean TLA, same contract as the snap knob.
