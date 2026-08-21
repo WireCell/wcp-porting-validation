@@ -2400,3 +2400,6 @@ tagged here, never written to.
 - work-vtx106-ma20-<sample> -- live validation arm, SBND_DL_VTX_MIN_ACCEPT=20 (doc sec 6); keep until the owner decision on the flip is recorded
 - work-vtx106-harv-nofitx-<sample> / work-vtx106-nofitx-trad-<sample> -- fit_exclusion=false harvest (own pre-DL cloud) + no-DL fallback arms (doc sec 9: the OFF gain is real, heat-map channel); **KEEP** with the doc
 - work-vtx106-cne-{off,on}-{nuecc48,ncpi0} -- dl_vtx_cloud_no_exclusion OFF gate (PASS vs vtx105 base) and ON trial with harvest (doc sec 10); keep until the owner decision
+## doc pr/107 -- dqdx_fit_keep_all_points (2026-08-21)
+- work-pr107-off-{nuecc48,ncpi0} -- new binary, no env: OFF gate PASS 94/94, 38/38 vs work-vtx106-cne-off-*; keep until the owner decision
+- work-pr107-on-{nuecc48,ncpi0} -- SBND_DQDX_FIT_KEEP_ALL_POINTS=true + harvest (doc sec 3-6); keep until the owner decision

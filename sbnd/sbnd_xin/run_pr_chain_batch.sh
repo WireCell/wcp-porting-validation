@@ -1259,6 +1259,14 @@ fi
 if [ -n "${SBND_DL_VTX_CLOUD_NO_EXCLUSION:-}" ]; then
     CATH_TLA+=(--tla-code "dl_vtx_cloud_no_exclusion=${SBND_DL_VTX_CLOUD_NO_EXCLUSION}")
 fi
+# doc sbnd_xin/docs/pr/107: dQ/dx fit keeps every trajectory point (prototype
+# parity; the toolkit-only pre-dQ/dx form_map_graph pass no longer deletes the
+# junction-adjacent points fit_exclusion stripped).  Boolean TLA, same
+# contract.  EMPTY = no TLA = the job default false.
+#   SBND_DQDX_FIT_KEEP_ALL_POINTS
+if [ -n "${SBND_DQDX_FIT_KEEP_ALL_POINTS:-}" ]; then
+    CATH_TLA+=(--tla-code "dqdx_fit_keep_all_points=${SBND_DQDX_FIT_KEEP_ALL_POINTS}")
+fi
 # doc sbnd_xin/docs/pr/75: per-event vertex scoreboard (recording only, read
 # by PrDisplayDump for the neutrino-vertex hand scan).  Boolean TLA, same
 # contract.  Defaulted to true above when PR_EXTRA_STAGES names pr_display.
