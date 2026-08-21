@@ -250,6 +250,10 @@ CATH_TLA=()
 # on, 0 = force off).
 [ -n "${SBND_MVGA_AC_VETO_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_ac_veto_radius=${SBND_MVGA_AC_VETO_RADIUS}")
 [ -n "${SBND_MVGA_AC_CHORD_MAX:-}" ]   && CATH_TLA+=(--tla-code "mvga_ac_chord_max=${SBND_MVGA_AC_CHORD_MAX}")
+# doc pr/103: mvga op0 pass-through split radius (cm) + miss tolerance (cm).  EMPTY = no TLA = the job default (off).
+[ -n "${SBND_MVGA_PASSTHRU:-}" ]       && CATH_TLA+=(--tla-code "mvga_passthru=${SBND_MVGA_PASSTHRU}")
+[ -n "${SBND_MVGA_PASSTHRU_TOL:-}" ]   && CATH_TLA+=(--tla-code "mvga_passthru_tol=${SBND_MVGA_PASSTHRU_TOL}")
+[ -n "${SBND_MVGA_INTERPOSED_FALLBACK_MIN_ANGLE:-}" ] && CATH_TLA+=(--tla-code "mvga_interposed_fallback_min_angle=${SBND_MVGA_INTERPOSED_FALLBACK_MIN_ANGLE}")
 [ -n "${SBND_MVGA_DUP_STARVED_ASYM:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_asym=${SBND_MVGA_DUP_STARVED_ASYM}")
 [ -n "${SBND_MVGA_DUP_STARVED_MIP:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_mip=${SBND_MVGA_DUP_STARVED_MIP}")
 [ -n "${SBND_MVGA_DUP_STARVED_SPAN:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_span=${SBND_MVGA_DUP_STARVED_SPAN}")
@@ -258,6 +262,7 @@ CATH_TLA=()
 [ -n "${SBND_SHOWER_GHOST_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_min_len=${SBND_SHOWER_GHOST_MIN_LEN}")
 for _pr99 in \
     "SBND_MVGA_AC_NO_CASCADE:mvga_ac_no_cascade" \
+    "SBND_MVGA_INTERPOSED_FALLBACK:mvga_interposed_fallback" \
     "SBND_SHOWER_GHOST_MEMBER_DROP:shower_ghost_member_drop" ; do
     _env=${_pr99%%:*}; _key=${_pr99#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")

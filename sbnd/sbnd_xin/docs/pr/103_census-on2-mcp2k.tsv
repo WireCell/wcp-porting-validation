@@ -1,0 +1,14 @@
+evt	arm	em_excl	deg	n_trk_near	n_sh_near	n_stubs	n_passthru	n_shortcut	n_orphans	kink	kink_seg	numu	nue	detail
+237798	work-pr103-on2-mcp2k	0	3	3	0	0	0	0	0	0.48	13001	4.301008224487305	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+242550	work-pr103-on2-mcp2k	0	4	3	0	1	0	0	0	0.62	14020	3.9853179454803467	-15.0	{"stubs": [[14019, 1.9]], "passthru": [], "shortcut": [], "orphans": []}
+279955	work-pr103-on2-mcp2k	0	1	1	0	0	0	0	0	0.48	16001	3.02604603767395	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+281165	work-pr103-on2-mcp2k	0	2	2	0	0	0	0	0	3.09	16034	3.285480499267578	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+285680	work-pr103-on2-mcp2k	0	3	3	0	0	0	0	0	0.3	37010	0.9562458992004395	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+317077	work-pr103-on2-mcp2k	1	1	0	1	0	0	0	0	0.0	-1	-1.8222262859344482	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+405707	work-pr103-on2-mcp2k	0	3	2	1	0	0	0	0	1.99	17038	4.301008224487305	-4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+475140	work-pr103-on2-mcp2k	0	1	1	0	0	0	0	0	0.98	10005	2.2607123851776123	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+51546	work-pr103-on2-mcp2k	0	1	1	0	0	0	0	0	2.07	16000	0.8249834775924683	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+54629	work-pr103-on2-mcp2k	0	1	1	0	0	0	0	0	0.25	15005	-2.362574577331543	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+70084	work-pr103-on2-mcp2k	0	2	2	0	0	0	0	0	6.71	20034	2.3370680809020996	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+91653	work-pr103-on2-mcp2k	0	2	1	0	1	0	0	0	1.14	13003	0.4939940571784973	-15.0	{"stubs": [[13004, 1.81]], "passthru": [], "shortcut": [], "orphans": []}
+91697	work-pr103-on2-mcp2k	0	3	3	0	0	0	0	0	2.98	2021	2.7506167888641357	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}

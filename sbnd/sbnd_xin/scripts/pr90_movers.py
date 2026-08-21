@@ -41,6 +41,7 @@ TAGSETS = {
     "harv3": vtx_io.TAGS_HARV3,
     "prod0813": vtx_io.TAGS,
     "mcp2k": vtx_io.TAGS_MCP2K,
+    "vtx100": vtx_io.TAGS_VTX100,   # doc pr/103: 2026-08-20 carried epoch (all samples)
 }
 
 

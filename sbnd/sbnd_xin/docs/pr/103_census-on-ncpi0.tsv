@@ -1,0 +1,20 @@
+evt	arm	em_excl	deg	n_trk_near	n_sh_near	n_stubs	n_passthru	n_shortcut	n_orphans	kink	kink_seg	numu	nue	detail
+105946	work-pr103-on-ncpi0	0	1	1	0	0	0	0	0	0.23	14001	-0.13145321607589722	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+114446	work-pr103-on-ncpi0	0	1	1	0	0	0	0	0	0.0	-1	-2.7398416996002197	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+142421	work-pr103-on-ncpi0	0	3	3	0	0	0	0	0	0.74	7015	3.6016459465026855	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+180801	work-pr103-on-ncpi0	0	4	2	2	0	0	0	0	1.57	15001	1.3564549684524536	-3.2104573249816895	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+18625	work-pr103-on-ncpi0	0	2	2	0	0	0	0	0	1.0	11009	2.409459352493286	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+21073	work-pr103-on-ncpi0	1	1	0	1	0	0	1	0	0.0	-1	0.9323965311050415	-15.0	{"stubs": [], "passthru": [], "shortcut": [{"seg": 60081, "len": 12.5, "sh": 1, "J": 60087, "dJ": 3.38, "Jdeg": 1, "link": []}], "orphans": []}
+259542	work-pr103-on-ncpi0	0	2	2	0	0	0	0	0	0.3	17006	-0.78542160987854	-1.078873634338379	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+285567	work-pr103-on-ncpi0	0	5	5	0	0	0	0	0	2.33	8107	0.9874169230461121	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+314838	work-pr103-on-ncpi0	0	1	1	0	0	0	0	0	0.83	18025	-0.3140154182910919	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+359980	work-pr103-on-ncpi0	0	2	2	1	1	0	7	1	4.86	21117	-0.29083120822906494	-15.0	{"stubs": [[21110, 0.88]], "passthru": [], "shortcut": [{"seg": 21034, "len": 3.8, "sh": 0, "J": 21015, "dJ": 0.88, "Jdeg": 3, "link": [[21110, 0.88]]}, {"seg": 21045, "len": 3.3, "sh": 1, "J": 21015, "dJ": 0.88, "Jdeg": 3, "link": [[21110, 0.88]]}, {"seg": 21034, "len": 3.8, "sh": 0, "J": 21016, "dJ": 3.75, "Jdeg": 3, "link": []}, {"seg": 21035, "len": 20.7, "sh": 0, "J": 21016, "dJ": 3.75, "Jdeg": 3, "link": []}, {"seg": 21036, "len": 10.0, "sh": 1, "J": 21016, "dJ": 3.75, "Jdeg": 3, "link": []}, {"seg": 21036, "len": 10.0, "sh": 1, "J": 21017, "dJ": 3.61, "Jdeg": 1, "link": []}, {"seg": 21045, "len": 3.3, "sh": 1, "J": 21022, "dJ": 3.04, "Jdeg": 1, "link": []}], "orphans": [{"seg": 21034, "len": 3.8, "dmin": 0.88}]}
+37112	work-pr103-on-ncpi0	0	4	2	1	1	0	0	0	0.0	-1	0.3361494541168213	-2.467849016189575	{"stubs": [[84073, 2.01]], "passthru": [], "shortcut": [], "orphans": []}
+399860	work-pr103-on-ncpi0	0	4	2	1	1	0	0	0	2.87	17065	0.5341717600822449	4.300936222076416	{"stubs": [[17123, 2.22]], "passthru": [], "shortcut": [], "orphans": []}
+463565	work-pr103-on-ncpi0	0	2	2	0	0	0	0	0	0.0	-1	-0.4496241509914398	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+506114	work-pr103-on-ncpi0	0	1	1	0	0	0	0	0	0.2	28050	-1.0116671323776245	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+506746	work-pr103-on-ncpi0	0	3	3	0	0	0	0	0	1.07	21054	1.1115888357162476	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+521075	work-pr103-on-ncpi0	0	1	1	0	0	0	0	0	0.19	94036	-0.202107772231102	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+56982	work-pr103-on-ncpi0	0	3	3	0	0	0	2	0	2.59	22120	-0.36244964599609375	-15.0	{"stubs": [], "passthru": [], "shortcut": [{"seg": 22045, "len": 3.6, "sh": 0, "J": 22031, "dJ": 3.8, "Jdeg": 2, "link": []}, {"seg": 22121, "len": 13.9, "sh": 0, "J": 22031, "dJ": 3.8, "Jdeg": 2, "link": []}], "orphans": []}
+71372	work-pr103-on-ncpi0	0	2	2	0	0	0	0	0	0.54	92124	2.62573504447937	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+84229	work-pr103-on-ncpi0	1	4	1	2	0	0	0	0	0.63	9156	0.31588587164878845	0.6870406270027161	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}

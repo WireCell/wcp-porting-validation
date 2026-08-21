@@ -68,6 +68,14 @@ TAGS_MCP2K = ["vtxscan-mcp2k"]
 # was wrong on one, and the owner's pick wins.
 TAGS_MCP2K_AUTO = ["vtxscan-mcp2k-auto"]
 
+# doc pr/100 / pr/103: the labels carried onto the work-vtx100-base-* arms
+# (2026-08-20 epoch, post pr/98-99 flips).  Same events as TAGS_HARV3 (+ the
+# mcp2k core/auto/ragree scans), re-anchored -- kept out of TAGS for the same
+# duplicate-key reason as TAGS_HARV3.  Ask for it: load_labels(tags=vtx_io.TAGS_VTX100).
+TAGS_VTX100 = ["vtxscan-vtx100-nuecc48", "vtxscan-vtx100-ncpi0",
+               "vtxscan-vtx100-mcp1k", "vtxscan-vtx100-delta",
+               "vtxscan-vtx100-mcp2k"]
+
 TOL = 1.0            # cm, the pr/78/79 headline tolerance
 TOL_LOOSE = 3.0      # cm, the column printed beside it
 

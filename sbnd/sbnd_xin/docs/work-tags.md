@@ -2360,3 +2360,18 @@ tagged here, never written to.
 - work-pr102r2-p1full-mcp1k / -p1-{nuecc48,ncpi0} -- P1-only (min_nnf=4 len_admit=30) full validation arms; **KEEP until owner scan done**
 - work-pr102r2-{nnf4,nnf8,len30,n8l30}-nuecc48 -- P1 disjunct sweep (nue ledger: -4/+1, -1/+1, 0/0, -1/+1); keep with doc
 - work-pr102r2-l30full-mcp1k / -l30-ncpi0 -- len_admit=30-only operating-point arms (the flip candidate); **KEEP until owner scan done**
+
+## doc pr/103 -- near-vertex busy-vertex revisit: mvga op0 pass-through + interposed fallback (2026-08-20/21)
+- work-pr103-bare-mcp1k -- full 1000-evt HEAD b4670d9b baseline, pr_display; 204 events FAILED (plugin-load race with a concurrent wcbuild, rc=1) -- read through work-pr103-baremerged-mcp1k only; **KEEP until pr/103 closes**
+- work-pr103-bare2-{mcp1k(204),nuecc48,ncpi0,mcp2k(15)} -- legacy-binary (stash-restored HEAD) baselines; Gate-1 reference; **KEEP**
+- work-pr103-baremerged-mcp1k -- SYMLINK-MERGED bare(796 rc=0)+bare2(204); derived; keep while pr/103 open
+- work-pr103-off-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-off gate arms, new binary; Gate 1 PASS 2000/2000 + 96/96 + 38/38 + 30/30; releasable after next round
+- work-pr103-off2-{nuecc48,ncpi0} -- final-binary knob-off re-gate; releasable after next round
+- work-pr103-on-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-on arms (mvga_passthru=4 + mvga_interposed_fallback); the round's census/mover/Bee "after"; **KEEP until owner scan done**
+- work-pr103-tr-{mcp1k(283713),mcp2k(405707)}, work-pr103-tr2-mcp1k (6 shortcut evts) -- trace-level diagnosis arms; keep with doc
+- work-pr103-on{A,B,C,D}-mcp2k -- FAILED/partial op0 iterations on 405707 (nearest-wcpt test; op1 re-deleting the connector); dead, releasable now
+- work-pr103-onE-{mcp2k,mcp1k} -- Stage A smoke (fallback WITHOUT the degree-2 restriction); keep with doc (sec 4.2 table)
+- work-pr103-on2-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-on ROUND 2 on the shipping binary (passthru=4 + fallback + fallback_min_angle=45): the round's adjudicated "after"; **KEEP until owner scan done**
+- work-pr103-off3-{nuecc48,ncpi0} -- shipping-binary knob-off re-gate; releasable after next round
+- work-pr103-flipchk-{mcp1k(14),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence PASS 28/28+96/96+38/38+30/30 vs on2; **KEEP**
+- work-pr103-floff-{nuecc48,ncpi0} -- post-flip forced-off == legacy bare, PASS 96/96+38/38; releasable after next round
