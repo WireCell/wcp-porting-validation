@@ -64,6 +64,19 @@ SAMPLING_LIMIT_NOTE = (
     "table as a bound, not a point (see ipw_weights.py).")
 
 
+def read_event_file(path):
+    """doc pr/105: eventNo per line, '#' comments; None when no path given."""
+    if not path:
+        return None
+    out = set()
+    with open(path) as fh:
+        for line in fh:
+            line = line.split('#', 1)[0].strip()
+            if line:
+                out.add(int(line))
+    return out
+
+
 def parse_sample_roots(pairs):
     """['sample=path', ...] -> {sample: path}.  Keys must be a subset of
     SAMPLES; unlisted samples have no root and their events are reported
@@ -100,7 +113,17 @@ def main():
                     help='ipw_weights.py output; enables the IPW estimand '
                          'for whichever events it covers')
     ap.add_argument('--tsv', default=None, help='per-event record TSV')
+    # doc pr/105: honour a sealed lockbox.  --exclude-events drops the listed
+    # eventNo (one per line, # comments) from every number printed; --only-events
+    # keeps only them (the one-time lockbox read).  Default: neither (the
+    # pr/100 behaviour, which read everything).
+    ap.add_argument('--exclude-events', default=None,
+                    help='file of eventNo to exclude (a sealed lockbox)')
+    ap.add_argument('--only-events', default=None,
+                    help='file of eventNo to keep (the one-time lockbox read)')
     args = ap.parse_args()
+    excl = read_event_file(args.exclude_events)
+    only = read_event_file(args.only_events)
 
     roots = parse_sample_roots(args.arm_roots)
     ipw = load_ipw(args.ipw_tsv)
@@ -108,6 +131,10 @@ def main():
     recs, missing = [], []
     for label in vio.iter_labels(args.sbnd_root, args.tags):
         evt = label['eventNo']
+        if excl and evt in excl:
+            continue
+        if only is not None and evt not in only:
+            continue
         sample = vio.sample_of_label(label)
         root = roots.get(sample)
         if root is None:

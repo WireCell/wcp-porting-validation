@@ -36,6 +36,23 @@ silently scoring the wrong arms:
   python3 rerank_tune.py --search \
       --arm-template '{root}/work-vtx100-{arm}-{sample}/pr_evt{evt}/calib-pr-evt{evt}.json' \
       --ipw-tsv runs/ipw-mcp2k-<date>.tsv
+
+doc pr/105 additions (all additive; every default reproduces the pr/100 call):
+  --arm-names   comma list of arm names whose live finals feed the outcome map
+                (default base,topo,swap).  pr/105 passes every selection-only
+                arm of the round (base,topo3,dlonly,ma4,topk10,trad) -- they
+                share the PR graph, so a (route, winner) decision one of them
+                took has the same downstream outcome for all of them.  Arms
+                that change the graph (nofitx, pre103) must NOT be listed.
+  --rows-arm    the arm whose rows carry all 8 terms (default topo).
+  --exclude-events / --only-events   sealed-lockbox discipline.
+  --guard-samples  coordinate ascent refuses a step that lowers the correct
+                count of any listed sample (the owner's nueCC priority).
+  --events-tsv  per-event decision/outcome for the evaluated theta.
+  --mode dlonly approximate legacy single-argmax replay (min voxel_rank row,
+                dl_vtx_cut 2.5 cm on snap_dis; the proton-topology veto of the
+                legacy branch is not replayed) -- the live dlonly arm is the
+                number that counts, this mode is a cross-check only.
 '''
 import os, sys, json, csv, argparse, collections
 import numpy as np
@@ -47,7 +64,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..'))
 TAGS = ['vtxscan-mcp2k', 'vtxscan-mcp2k-auto', 'vtxscan-harv3-nuecc48',
         'vtxscan-harv3-ncpi0', 'vtxscan-harv3-mcp1k', 'vtxscan-harv3-delta']
-ACCEPT_FAMILY = ('dl-rerank-accept', 'dl-veto-protected')
+ACCEPT_FAMILY = ('dl-rerank-accept', 'dl-veto-protected', 'dl-legacy-accept')
+# doc pr/105: arms whose REJECT route is not the plain traditional fallback and
+# therefore must not supply ('reject',) outcomes.
+REJECT_EXCLUDED_ARMS = ('swap',)
+DL_VTX_CUT_CM = 2.5
 GEO = ['s_snap', 's_fwd_z', 's_clen', 's_isol', 's_main', 's_fv']
 PROD = dict(w_snap=1.0, w_fwd_z=1.0, w_clen=1.0, w_isol=1.0, w_main=1.0,
             w_fv=1.0, w_topo=0.0, center=0.0, min_accept=10.0, scale=1000.0)
@@ -90,7 +111,22 @@ DEFAULT_ARM_TEMPLATE = '{root}/work-{sample}-pr89{arm}/pr_evt{evt}/calib-pr-evt{
 DEFAULT_IPW_TSV = os.path.join(HERE, 'runs/ipw-mcp2k-closed-20260816.tsv')
 
 
-def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TAGS):
+def read_event_file(path):
+    '''doc pr/105: eventNo per line, # comments; None when no path.'''
+    if not path:
+        return None
+    out = set()
+    with open(path) as fh:
+        for line in fh:
+            line = line.split('#', 1)[0].strip()
+            if line:
+                out.add(int(line))
+    return out
+
+
+def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TAGS,
+             arm_names=('base', 'topo', 'swap'), rows_arm='topo',
+             exclude=None, only=None):
     ipw = {}
     if ipw_tsv and os.path.exists(ipw_tsv):
         with open(ipw_tsv) as fh:
@@ -102,25 +138,31 @@ def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TA
         if e in seen:
             continue
         seen.add(e)
+        if exclude and e in exclude:
+            continue
+        if only is not None and e not in only:
+            continue
         s = sample_of(lab)
         truth = np.array(lab['truth_xyz'])
         arms = {}
-        for arm in ('base', 'topo', 'swap'):
+        for arm in arm_names:
             p = arm_template.format(root=ROOT, sample=s, arm=arm, evt=e)
             if os.path.exists(p):
                 arms[arm] = json.load(open(p))['vertex_scoreboard']
-        if 'base' not in arms or 'topo' not in arms:
+        if 'base' not in arms or rows_arm not in arms:
             continue
-        # candidate rows from the TOPO arm (carries all 8 terms + frac/votes)
+        # candidate rows from the rows arm (topo: carries all 8 terms + frac/votes)
         rows = []
-        for r in arms['topo'].get('rows', []):
+        for r in arms[rows_arm].get('rows', []):
             if not r.get('dl_snapped'):
                 continue
             rows.append(dict(
                 vid=r['vertex_id'], dl=float(r['dl_score']),
                 geo={t: float(r.get(t) or 0.0) for t in GEO},
                 frac=float(r.get('topo_frac', -1.0)),
-                votes=int(r.get('topo_votes') or 0)))
+                votes=int(r.get('topo_votes') or 0),
+                voxel_rank=int(r.get('voxel_rank') if r.get('voxel_rank') is not None else 999),
+                snap_dis=float(r.get('snap_dis') or 0.0)))
         # outcome map from live finals
         out = {}
         for arm, sb in arms.items():
@@ -129,9 +171,12 @@ def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TA
             win = next((r['vertex_id'] for r in sb.get('rows', [])
                         if r.get('dl_winner')), None)
             if sb['route'] in ACCEPT_FAMILY and win is not None:
-                out[('accept', win)] = d
-            elif arm in ('base', 'topo'):
-                out[('reject',)] = d
+                out.setdefault(('accept', win), d)
+            elif arm not in REJECT_EXCLUDED_ARMS:
+                # every other route (dl-rerank-reject, dl-legacy-reject,
+                # dl-not-run, dl-no-candidates...) ends in the traditional
+                # fallback on the same graph
+                out.setdefault(('reject',), d)
         db = float(np.linalg.norm(np.array(
             [arms['base']['final_x'], arms['base']['final_y'],
              arms['base']['final_z']]) - truth))
@@ -146,6 +191,11 @@ def load_all(arm_template=DEFAULT_ARM_TEMPLATE, ipw_tsv=DEFAULT_IPW_TSV, tags=TA
 
 def decide(ev, th):
     '''(route, winner_vid) for this event under theta; None if no candidates.'''
+    if th.get('mode') == 'dlonly':
+        if not ev['rows']:
+            return None
+        r = min(ev['rows'], key=lambda r: r['voxel_rank'])
+        return ('accept', r['vid']) if r['snap_dis'] <= DL_VTX_CUT_CM else ('reject',)
     best, bvid = -1e18, None
     for r in ev['rows']:
         tot = r['dl'] * th['scale'] + sum(
@@ -215,12 +265,26 @@ def main():
     ap.add_argument('--tags', nargs='+', default=TAGS,
                     help='label tags to load; default is the pr/89 six tags '
                          '(does not include vtxscan-mcp2k-ragree)')
+    # doc pr/105 additions
+    ap.add_argument('--arm-names', default='base,topo,swap',
+                    help='comma list of arms feeding the outcome map')
+    ap.add_argument('--rows-arm', default='topo')
+    ap.add_argument('--exclude-events', default=None)
+    ap.add_argument('--only-events', default=None)
+    ap.add_argument('--guard-samples', nargs='*', default=[],
+                    help='samples whose correct count may not drop in --search')
+    ap.add_argument('--events-tsv', default=None,
+                    help='per-event decision/outcome for --eval theta')
+    ap.add_argument('--mode', default='composite', choices=['composite', 'dlonly'])
     args = ap.parse_args()
 
     events = load_all(arm_template=args.arm_template, ipw_tsv=args.ipw_tsv,
-                      tags=args.tags)
-    print('loaded %d events (rows from pr89topo, outcomes from base/topo/swap)'
-          % len(events))
+                      tags=args.tags, arm_names=args.arm_names.split(','),
+                      rows_arm=args.rows_arm,
+                      exclude=read_event_file(args.exclude_events),
+                      only=read_event_file(args.only_events))
+    print('loaded %d events (rows from %s, outcomes from %s)'
+          % (len(events), args.rows_arm, args.arm_names))
     ncand = sum(1 for ev in events if ev['rows'])
     print('events with snapped candidates: %d' % ncand)
     bad = closure(events)
@@ -232,16 +296,33 @@ def main():
     print('production: correct %d/%d  IPW %.2f%%  (uncovered %d)'
           % (base['correct'], base['n'], base['ipw'], base['uncovered']))
 
-    if args.eval is not None:
+    if args.eval is not None or args.mode != 'composite':
         th = dict(PROD)
-        for kv in args.eval:
+        for kv in (args.eval or []):
             k, v = kv.split('=')
             th[k] = float(v)
+        if args.mode != 'composite':
+            th['mode'] = args.mode
         r = evaluate(events, th, args.tol)
         print('theta %s' % th)
         print('correct %d/%d (%+d)  IPW %.2f%%  uncovered %d'
               % (r['correct'], r['n'], r['correct'] - base['correct'],
                  r['ipw'], r['uncovered']))
+        print('per-sample correct: ' + '  '.join(
+            '%s %d/%d (prod %d)' % (sm, r['per'][sm + '+'],
+                                    r['per'][sm + '+'] + r['per'][sm + '-'],
+                                    base['per'][sm + '+'])
+            for sm in ('nuecc48', 'ncpi0', 'mcp1k', 'mcp2k')))
+        if args.events_tsv:
+            with open(args.events_tsv, 'w') as fh:
+                fh.write('evt\tsample\tdecision\tcovered\td\tbase_d\n')
+                for ev in events:
+                    dec = decide(ev, th)
+                    d = ev['base_d'] if dec is None else ev['out'].get(dec)
+                    fh.write('%d\t%s\t%s\t%d\t%s\t%.3f\n' % (
+                        ev['evt'], ev['sample'], dec, int(d is not None),
+                        '' if d is None else '%.3f' % d, ev['base_d']))
+            print('wrote %s' % args.events_tsv)
         return
 
     if not args.search:
@@ -263,6 +344,9 @@ def main():
                 t2 = dict(th)
                 t2[k] = v
                 r = evaluate(events, t2, args.tol)
+                if any(r['per'][g + '+'] < base['per'][g + '+']
+                       for g in args.guard_samples):
+                    continue   # doc pr/105: guarded sample may not regress
                 if (r['correct'], -r['uncovered']) > (best_r['correct'],
                                                       -best_r['uncovered']):
                     best_v, best_r = v, r

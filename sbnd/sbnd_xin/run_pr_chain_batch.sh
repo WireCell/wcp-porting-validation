@@ -1509,6 +1509,11 @@ unset _pr43 _env _key _val
 # 2026-07-30).  Numeric values, passed as --tla-code.
 [ -n "${SBND_DL_VTX_MIN_ACCEPT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_min_accept_score=${SBND_DL_VTX_MIN_ACCEPT}")
 [ -n "${SBND_DL_VTX_TOP_K:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_top_k=${SBND_DL_VTX_TOP_K}")
+# doc pr/105: DL vertex WITHOUT the composite re-rank (legacy single-argmax
+# branch: top voxel snapped, dl_vtx_cut 2.5 cm gate, else the traditional
+# vertex).  EMPTY = no TLA = the job default true (production).  Strategy 3.1
+# of the vertex-selection comparison; pass false for the no-rerank arm.
+[ -n "${SBND_DL_VTX_RERANK:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_rerank=${SBND_DL_VTX_RERANK}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

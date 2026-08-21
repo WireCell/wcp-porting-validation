@@ -2388,3 +2388,8 @@ tagged here, never written to.
 - work-pr104-on4-{mcp1k,nuecc48,ncpi0,mcp2k} -- FINAL-binary knob-on (vertex_junction_snap + vjs_override_kink_snap): the round's adjudicated arm, Bee "after" set e87695c6; **KEEP**
 - work-pr104-flipchk-{mcp1k(28),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence vs on4; **KEEP**
 - work-pr104-floff-{nuecc48,ncpi0} -- post-flip forced-off == bare; releasable after next round
+
+## doc pr/105 -- neutrino-vertex strategy comparison + re-rank re-optimization (2026-08-21)
+- work-vtx105-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- SBND production (toolkit c550541f) over the 1054-label universe ONLY, pr_display; the carry target of vtxscan-vtx105-*; **KEEP**
+- work-vtx105-{nofitx,dlonly,ma4,topo3,topk10,trad,pre103}-<sample> -- selection-strategy / attribution arms, same universe (doc sec 2 table rows); keep with doc until a later vertex round supersedes them
+- work-vtx100-{base,topo}-<sample> -- pr/100 epoch reference rows (doc pr/105 sec 1); **KEEP** (previously untagged here)

@@ -42,6 +42,7 @@ TAGSETS = {
     "prod0813": vtx_io.TAGS,
     "mcp2k": vtx_io.TAGS_MCP2K,
     "vtx100": vtx_io.TAGS_VTX100,   # doc pr/103: 2026-08-20 carried epoch (all samples)
+    "vtx105": vtx_io.TAGS_VTX105,   # doc pr/105: 2026-08-21 carried epoch, all 7 tags incl. mcp2k auto/ragree
 }
 
 
