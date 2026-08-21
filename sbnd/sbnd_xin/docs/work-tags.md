@@ -2393,3 +2393,8 @@ tagged here, never written to.
 - work-vtx105-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- SBND production (toolkit c550541f) over the 1054-label universe ONLY, pr_display; the carry target of vtxscan-vtx105-*; **KEEP**
 - work-vtx105-{nofitx,dlonly,ma4,topo3,topk10,trad,pre103}-<sample> -- selection-strategy / attribution arms, same universe (doc sec 2 table rows); keep with doc until a later vertex round supersedes them
 - work-vtx100-{base,topo}-<sample> -- pr/100 epoch reference rows (doc pr/105 sec 1); **KEEP** (previously untagged here)
+
+## doc pr/106 -- target-anchored re-optimization of the DL vertex selection (2026-08-21)
+- work-vtx106-harv-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- production config + dl_vtx_harvest over the 1054-label universe: the pre-DL candidate cloud (hv_cloud) every pr/106 target is defined on; hash-gate PASS vs work-vtx105-base-*; **KEEP**
+- work-vtx106-harv-topo3-<sample> -- same + dl_vtx_topo_weight=3: the rows source (only a topo arm emits s_topo/topo_frac/votes); row set asserted identical to harv-base; **KEEP** with the doc
+- work-vtx106-ma20-<sample> -- live validation arm, SBND_DL_VTX_MIN_ACCEPT=20 (doc sec 6); keep until the owner decision on the flip is recorded
