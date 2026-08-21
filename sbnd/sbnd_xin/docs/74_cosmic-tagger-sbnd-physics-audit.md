@@ -10,8 +10,10 @@
 39, 49) — they appear only as the FV infrastructure this tagger reuses.
 **Method:** principle-level only. No cosmic sample exists for a rate measurement, so
 every claim below is a structural/code-level statement, not a measured efficiency.
-**Status: no code changed, no config changed. All verdicts in production are unchanged
-by this document.**
+**Status: §1–8 were the audit round (no code change).  §9 (2026-08-20, owner:
+"please implement these fixes") implements G1/G2 as the `cosmic_consistent_fv`
+knob — OFF gate 234/234 byte-identical on nueCC48 + NCpi0-19 + numu-50, SBND
+PRODUCTION ON, flip-equivalence PASS.**
 
 ## Repro
 
@@ -265,3 +267,90 @@ SBND**. The owner's premise holds: the algorithm transfers; the geometry/FV plum
 is the only place it currently falls short, and it falls short in exactly the pattern
 (missing consistent-FV wiring) that docs 27/49/pr36-F1 already fixed for the sibling
 taggers.
+
+## 9. Round 1 (2026-08-20) — `cosmic_consistent_fv` implemented, gated, SBND ON
+
+Owner: *"YEs, please implement these fixes, you can test against the nueCC, NCpi0
+and 50 numu samples."* No cosmic sample exists, so the ON adjudication is
+principle-plus-nu-MC: prove the knob-off path byte-identical, then verify the ON
+effect on the three neutrino samples is the fix direction (fewer false cosmic tags
+on genuine ν, BDT features move only where containment sits near a margin).
+
+### Repro
+
+```
+# toolkit @ apply-pointcloud (this round's two commits), wcp-porting-img @ this commit
+cd sbnd_xin
+# arms (PR_JOBS=10 -- a peer 1000-evt campaign held the box at load ~40)
+MC50=$(ls -d work-mcp1k-ql0819/ql_evt* | sed 's/.*ql_evt//' | sort -n | head -50)
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-<s>-ql0819 work-d74r1-bare-<s> data [<MC50>]   # pre-change binary+config
+# (edit + wcbuild + freshness proof build/clus/libWireCellClus.so + wcdoctest-clus: 2281/2281)
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-<s>-ql0819 work-d74r1-off1-<s> data [<MC50>]   # new binary, knob off
+SBND_COSMIC_CONSISTENT_FV=1 PR_EXTRA_STAGES=pr_display PR_JOBS=10 \
+  ./run_pr_chain_batch.sh work-<s>-ql0819 work-d74r1-on1-<s> data [<MC50>]                                        # env-driven ON
+python3 scripts/pr85_hash_gate.py work-d74r1-bare-<s> work-d74r1-off1-<s>          # OFF gate, per sample
+python3 scripts/d74_cosmict_census.py work-d74r1-off1-<s> work-d74r1-on1-<s>       # ON census, per sample
+# flip (wct-pr-perevt.jsonnet cosmic_consistent_fv = true), then:
+PR_EXTRA_STAGES=pr_display PR_JOBS=10 ./run_pr_chain_batch.sh work-ncpi0-ql0819 work-d74r1-flipchk-ncpi0 data     # no env
+python3 scripts/pr85_hash_gate.py work-d74r1-on1-ncpi0 work-d74r1-flipchk-ncpi0    # flip-equivalence
+```
+
+Samples: `work-nuecc48-ql0819` (48 evts), `work-ncpi0-ql0819` (19), and the numu-50
+subset of `work-mcp1k-ql0819` (first 50 event ids sorted: 48301 … 55925).
+
+### What was implemented
+
+- **C++** (`clus`): `PatternAlgorithms::{m_cosmic_fiducial, m_cosmic_fv_tolerance}`
+  (`NeutrinoPatternBase.h`); in `NeutrinoTaggerCosmic.cxx cosmic_tagger()` a
+  `contained_tol` shifted-point lambda (deliberate M10 duplication of
+  `FiducialUtils::inside_fiducial_volume`) now backs both the `inside_fv` lambda
+  (stage margins) and the flag-1 vertex test (prototype-faithful uniform −1.5 cm on
+  the **bare** configured volume — the SCB arrays carried no `boundary_dis_cut`
+  either); `TaggerCheckNeutrino` key `cosmic_consistent_fv` (default **false** =
+  legacy FiducialUtils path, textually untouched) routes the already-configured
+  `m_fiducial`/`m_fv_tolerance` in.  No pointer-keyed iteration added.
+- **jsonnet**: key-suppressed threading `common/clus.jsonnet` →
+  `sbnd/clus.jsonnet` (both entry points; `sbnd_pr_fv` uses-gate extended) →
+  `wct-pr-perevt.jsonnet` TLA; runner env `SBND_COSMIC_CONSISTENT_FV`
+  (`run_pr_chain_batch.sh` doc-74 block).
+
+### Gates and census
+
+- **Compiled-config**: knob-off compile byte-identical to the pre-change baseline
+  (`diff` empty); knob-on emits `"cosmic_consistent_fv": true` in
+  `TaggerCheckNeutrino:pr`.
+- **OFF gate** (bare vs off1, `pr85_hash_gate.py`): **PASS 96/96** (nuecc48),
+  **PASS 38/38** (ncpi0), **PASS 100/100** (numu-50) — 234/234 archives, 0 failed
+  events in any arm.
+- **Sentinel**: every ON job logs `cosmic_consistent_fv on: … (6 tolerance
+  value(s), fiducial configured)` (`TaggerCheckNeutrino.cxx` configure).
+- **ON census** (`d74_cosmict_census.py`, off1 vs on1; calib-pr JSONs exist for
+  48/48, 19/19, 22/50 events — the other 28 numu events have no in-beam candidate
+  and never reach the tagger):
+  - numu-50: **cosmict_flag 5→3**. evt **52085**: flag_1 1→0 — main vertex at
+    **x = −1.09 cm**, i.e. inside the predicted G2 false-cosmic band
+    (−1.95, −1.05) cm; a genuine ν vertex 1.1 cm from the cathode was hard-tagged
+    cosmic by the CPA-hole artifact and is now kept (numu_score 1.01→4.30).
+    evt **48895**: flag_2 1→0 (its far-end `flag_inside` flips with the inset
+    volume, migrating the test to the `!flag_inside && angle>40°` branch, which
+    fails; numu_score 0.07→2.81). 8/22 events move numu_score.
+  - nuecc48: 0 flag changes; numu_score moves only on **168596** and **360535** —
+    two of the same six events whose containment flipped in the
+    `neutrino_consistent_fv` (F1) round, as expected for margin-adjacent
+    endpoints.  **nue_score never moves on any sample** (cosmict features feed
+    only the numu XGBoost + cos_tagger_10).
+  - ncpi0: 0 flag changes; numu_score moves on 71372 and 142421.
+  - Adjudication: both flag movers are RESCUED false cosmic tags on ν MC; no
+    ADVERSE (no genuine ν newly tagged cosmic anywhere).  The intended
+    cosmic-rejection *gain* (the five near-dead exit tests coming alive) is
+    structural and untestable without a cosmic sample — revisit when one exists.
+- **Flip**: `wct-pr-perevt.jsonnet cosmic_consistent_fv = true` (owner words
+  quoted in the commit).  Post-flip compile is byte-identical to the env-ON
+  compile, and the runtime flip-equivalence arm gates **PASS 38/38**
+  (on1-ncpi0 vs flipchk-ncpi0).
+
+Arms kept: `work-d74r1-{bare,off1,on1}-{nuecc48,ncpi0,mc50}`,
+`work-d74r1-flipchk-ncpi0`.  Census: `scripts/d74_cosmict_census.py`.
+`clus/docs/tagger/cosmic_tagger_review.md` updated in the same toolkit commit
+(F1 stale note, F2 record).  **NOT bit-identical with the knob ON by design**
+— that is the fix.

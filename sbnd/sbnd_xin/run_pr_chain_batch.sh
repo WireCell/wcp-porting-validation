@@ -296,6 +296,15 @@ for _pr101 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr101 _env _key _val
+# doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
+# above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
+for _d74 in \
+    "SBND_COSMIC_CONSISTENT_FV:cosmic_consistent_fv" ; do
+    _env=${_d74%%:*}; _key=${_d74#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d74 _env _key _val
 [ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")
