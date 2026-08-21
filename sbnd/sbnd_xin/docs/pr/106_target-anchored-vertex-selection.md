@@ -1,6 +1,6 @@
 # doc pr/106 — target-anchored re-optimization of the DL main-vertex selection
 
-**Status: CLOSED 2026-08-21 — production UNCHANGED. On the target metric production is the best of the four strategies (tuning 510/673, lockbox 259/339); the re-rank surface is flat (scan + joint fit both ≤ +11); the one lever, stricter acceptance (`min_accept` 10→20), was live-validated (+13/1012, closure 0) but carries 10 ADVERSE 1-cm movers incl. a nueCC48 nue-selection loss → NOT flipped, owner's call. nueCC is blocked by the heat map (8 net-blind + 4 confidently-wrong of 12 misses), not by θ; ft2u does not change nueCC admission.**
+**Status: OPEN 2026-08-21 (§9 added) — production UNCHANGED so far. On the target metric production is the best of the four strategies (tuning 510/673, lockbox 259/339); the re-rank surface is flat (scan + joint fit both ≤ +11); the one lever, stricter acceptance (`min_accept` 10→20), was live-validated (+13/1012, closure 0) but carries 10 ADVERSE 1-cm movers incl. a nueCC48 nue-selection loss → NOT flipped, owner's call. nueCC is blocked by the heat map (8 net-blind + 4 confidently-wrong of 12 misses), not by θ; ft2u does not change nueCC admission.**
 
 Owner (2026-08-21), after doc pr/105 closed with "production optimal":
 the pr/105 ruler was wrong for the question.  The hand-scan labels were
@@ -360,3 +360,68 @@ proposal outside the net.
 4. `hv_trad_main_vertex_id` is the pre-fallback state, not the fallback
    outcome (§2) — a harvest of the post-fallback vertex id would remove the
    position-resolution tier (55 unresolved picks).
+
+## 9. Is the pr/105 `fit_exclusion`-OFF gain real?  (owner 2026-08-21: "run this arm and see")
+
+Arms: `work-vtx106-harv-nofitx-<s>` (`SBND_FIT_EXCLUSION=false` + harvest →
+its own pre-DL candidate cloud) and `work-vtx106-nofitx-trad-<s>` (+
+`SBND_DL_WEIGHTS=''`, the reject fallback on that topology), 1054/1054 rc=0.
+Both topologies scored against the **original** labels only (no carried
+positions, so the truth favours neither); closure of the nofitx offline
+replay vs its live arm (`work-vtx105-nofitx`) **0 mismatches**.
+`runs/vtx106/{prod-orig-eval,nofitx-eval}.log`, `106_events-{prod-orig,nofitx}.tsv`.
+
+| | ALL | nueCC48 | NCpi0 | mcp1k | mcp2k | admission@5 | d_target ≤ 1 cm |
+|---|---|---|---|---|---|---|---|
+| production (exclusion ON) | 767/1012 (75.8 %) | 35/47 | 14/19 | 300/394 | 418/552 | 687/1012 | 842/1050 |
+| **exclusion OFF** | **810/1024 (79.1 %)** | **41/47** | 13/19 | 309/399 | 447/559 | 707/1024 | 898/1050 |
+| DL alone, ON → OFF | 578 → 602 | 34 → **42** | 12 → 11 | 203 → 207 | 329 → 342 | | |
+| no DL, ON → OFF | 708 → 739 | 27 → 34 | 8 → 6 | 288 → 295 | 385 → 404 | | |
+
+Movers (target metric, production → OFF): nueCC48 **7 fix / 1 break**
+(fixes 111412, 122660, 235435, 268067, 360535, 389538, 46363; break
+271851), NCpi0 1/3, mcp1k 27/22, mcp2k 49/23 — net +36, i.e. a large
+reshuffle on numu and a clean gain on nueCC.  The DL-alone flips are the
+same events (nueCC 8/0, mcp1k 28/21, mcp2k 46/24): the channel is the
+**heat map**, not the re-rank.  The four production nueCC misses where the
+net confidently preferred another candidate (§7: 122660, 268067, 360535,
+389538) all become top-1-on-target on the OFF cloud; two of the net-blind
+ones (235435 best dl 0.011 → 0.032, 46363 0.010 → 0.089) become visible.
+
+Mechanism.  The net input is the fitted dQ (`q = dQ·0.1 − 1000`) at every
+vertex and segment-interior point.  With exclusion on, `update_association`
+keeps a 2-D cell for a segment only if it is strictly nearer to that segment
+than to every other one (or < 0.3 cm) — identical rule in the prototype
+(`PR3DCluster_multi_track_fitting.h:1030-1036`) and the toolkit
+(`TrackFitting.cxx:2688+`), so this is **not a port divergence**.  At a
+multi-prong junction the cells around the vertex are (near-)equidistant from
+several segments and are dropped from all of them: charge within 3 cm of the
+target, ON → OFF, +4 % (122660), +6 % (268067), +12 % (389538), +18 %
+(235435), +50 % (360535), while the median over all 47 nueCC events is
+1.01 — neutral in general, a hole exactly at the vertex the net must find.
+The break 271851 is the opposite sign (−82 % near-target charge OFF, a
+candidate lost).
+
+Why it was invisible until now: pr/105 judged nofitx with the 1 cm ruler on
+labels clicked at the OFF fit positions (+135, mostly epoch); the target
+metric separates the selection from the fit position, and shows the real
+part is the heat map, +6 nueCC.
+
+Options (none implemented; owner decision):
+1. **Global `fit_exclusion=false`** — +36 net but 49 numu breaks and the
+   pr/105 nue/numu score churn; gives up the fit-quality gain pr/98 was
+   adopted for.  Not recommended.
+2. **Surgical knob, proposed**: keep exclusion for every fit, but give the
+   net an exclusion-free charge — e.g. `dl_vtx_cloud_no_exclusion`: before
+   `determine_overall_main_vertex_DL` builds `vec_xyzq`, one extra
+   `do_multi_tracking(…, flag_exclusion=false)` on the main cluster, build
+   the cloud from its dQ, then restore the exclusion fit (or read the
+   non-excluded association charge without refitting).  Isolates the
+   heat-map channel from the graph reshuffle; expected to reproduce the
+   DL-alone nueCC 8/0 without the numu breaks that come from the changed
+   topology.  Default OFF, ~2 extra fits on one cluster per event; pre-
+   scoreable live on the 1054 universe in 12 min.
+3. Longer term: the SCN was trained on prototype clouds — whether those
+   were exclusion-on fit dQ or raw blob charge decides what the "right"
+   input is; worth checking against the uBooNE training set before any
+   retraining.

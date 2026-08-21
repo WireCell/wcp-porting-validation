@@ -2398,3 +2398,4 @@ tagged here, never written to.
 - work-vtx106-harv-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- production config + dl_vtx_harvest over the 1054-label universe: the pre-DL candidate cloud (hv_cloud) every pr/106 target is defined on; hash-gate PASS vs work-vtx105-base-*; **KEEP**
 - work-vtx106-harv-topo3-<sample> -- same + dl_vtx_topo_weight=3: the rows source (only a topo arm emits s_topo/topo_frac/votes); row set asserted identical to harv-base; **KEEP** with the doc
 - work-vtx106-ma20-<sample> -- live validation arm, SBND_DL_VTX_MIN_ACCEPT=20 (doc sec 6); keep until the owner decision on the flip is recorded
+- work-vtx106-harv-nofitx-<sample> / work-vtx106-nofitx-trad-<sample> -- fit_exclusion=false harvest (own pre-DL cloud) + no-DL fallback arms (doc sec 9: the OFF gain is real, heat-map channel); **KEEP** with the doc
