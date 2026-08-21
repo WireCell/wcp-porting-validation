@@ -256,3 +256,50 @@ Answer to the owner's question "what did pr/107 change then?": it changed the *p
 to the fit (443 junction points un-deleted), not the fit given a point set; the retained points took
 the neighbouring prong's overlap charge and moved the prongs' early dQ/dx, which the EM-shower
 clustering reads.  Consistent with Test A.
+
+## 9. The dQ/dx system itself (owner 2026-08-21: "you see the smoking gun, continue on this dQ/dx dump")
+
+Both sides now dump the assembled system after the solve (`WCT_DQDX_DUMP` / `WCP_DQDX_DUMP`, debug
+only): per 3-D position the coupled rows per plane, the response-column sums, the data pull
+b = Rᵀ·data per plane, the regulariser row, the connected list with overlaps, the solution, plus the
+full sparse A, b and the solver's iteration count/error (`scripts/pr108_dqdx_diff.py`; arms
+`qlport/scripts/sweep/pr108g_{wct_on,wct_off,wcp_on,wcp_off}`).  Same Eigen 3.4.0 on both sides.
+
+**6806 J0 (the 2.2× junction), matched position by position (43/46):**
+- The local terms agree: same coupled rows per plane (U 30–47, V 35–55), response sums within
+  10 %, data pulls b within 0.65–1.17, diagonals of A within 0.85–1.03 (two points 1.7), regulariser
+  entries within 10 %, identical dead-W flags, identical `local_dx`.
+- The solver is converged on both sides (BiCGSTAB 68–82 iterations, err ≈ 1e-16; a direct solve of
+  the dumped A,b reproduces each side's solution to 1e-6) — **the solve is not the difference**.
+- Swapping the systems: WCT-A with WCP-b → 764 k (≈ WCT's 747 k); WCP-A with WCT-b → 397 k
+  (≈ WCP's 416 k): the factor sits in A, not in the data.  Yet swapping only the diagonals sends
+  the near-junction charge to −308 k / +78 k.
+- Perturbation test: multiplying the entries of A by (1 + N(0, ε)) and re-solving, the charge
+  within 1.5 cm of J0 spans **[−0.70, +1.76]× at ε = 1 %** on WCP-ON and [−1.28, +1.86]× on WCT-ON
+  (same on the OFF arms).  On 6528 J0: ε = 1 % → ±10–25 %, 3 % → ±30–60 %.  cond(A) 1–3·10³.
+
+So at a junction with a dead plane and an overlapped second plane the simultaneous dQ/dx fit is an
+ill-conditioned system in **both** implementations: the overlapped V charge can be split among the
+four prongs and the vertex in many ways at nearly equal χ², the regulariser (λ = 8·10⁻⁴, dead-plane
+weights 0.3/0.9) does not pin the split, and a few-percent change of the couplings (a 0.2 cm
+re-sampling of the trajectory, one more or one fewer point) moves the junction charge by a factor of
+two.  The ON-vs-OFF delta (+74 % WCT, −13 % WCP) and the WCT-vs-WCP difference are both inside that
+band.  No port bug produces this; the two codes are functionally identical up to the sampling phase,
+and the instability is a property of the method at such junctions.
+
+**SBND (toolkit only, same dump):** 46363 (the pr/107 vertex fix): the system at the target vertex
+is well-conditioned (ε = 3 % → ±3 %) and the near-vertex charge is the same ON and OFF (119.5 k /
+119.5 k): that vertex changed by selection/topology, not charge.  360535 (one of the largest §5
+contributors, OFF 742 k vs ON 494 k within 3 cm at DL time): both systems are well-conditioned
+(±2 %) — the difference is which trajectory points lie within the radius (ON: 9 points from two
+prongs, OFF: 5), i.e. how the prongs are organised at the vertex, not the charge solution.
+
+**Where this leaves the owner's goal** (exclusion-ON pattern recognition *and* a DL-friendly vertex
+charge): the exclusion fit is not the defect to fix; the two implementations already agree.  The
+instability to address is the dQ/dx split at multi-prong junctions when a plane is dead or overlapped —
+candidate levers, all default-OFF knobs: (a) a stronger junction regulariser (raise the dead-plane /
+close-wire weights or λ when ≥3 prongs meet within the coupling window; C4 sits in this term),
+(b) a positivity/smoothness prior for the vertex column, (c) for the DL cloud specifically, a
+charge proxy that does not depend on the split (e.g. the summed 2-D charge within the window, which
+both sides agree on to 5–10 %).  The prototype's training data carry the same instability, so (c)
+would also have to be evaluated against the existing net.
