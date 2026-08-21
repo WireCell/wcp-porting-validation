@@ -194,3 +194,65 @@ Sidecars: `108_junction-charge.txt` (four arms, R = 1/2/3), `108_point-deltas.tx
 `pr108_fit_point_compare.py`, `pr108_junction_charge.py`, `pr108_testA.sh`, `pr108_wct.sh`,
 `run_wcp.sh`; arms `qlport/scripts/sweep/pr108_{wct_off,wct_on,wct_onkeep,wcp_on,wcp_off}`,
 `sbnd_xin/work-pr108-{off1,assoccheck}-nuecc48`.
+
+## 8. Stage-by-stage dump (owner 2026-08-21: "track down where the ON-vs-OFF delta diverges")
+
+Both sides now carry a debug-only, env-gated dump of every trajectory round (`WCT_TRAJ_DUMP` /
+`WCP_TRAJ_DUMP`, same record layout; toolkit `TrackFitting::traj_dump_fits` + a per-point record in
+`form_map_graph`; prototype `wcp_traj_dump_fits` + a record in `form_map_multi_segments`): per
+interior point the association cell counts before exclusion, after `update_association`, after
+`examine_point_association`, the live-plane quantity, kept/dropped, `dis_cut`; and the fitted
+positions (+dQ, dx) after round 1, round 2 and the dQ/dx fit.  Arms re-run with the dump
+(`qlport/scripts/sweep/pr108e_{wct_off,wct_on,wcp_on,wcp_off}`; `scripts/pr108_stage_diff.py`; full
+output `108_stage-diff-all.txt`, summary `108_stage-summary.txt`).  The call compared on each side is
+the last `do_multi_tracking` whose final trajectory reaches the junction.
+
+Per junction, first association round (points within 3 cm; cells stripped by exclusion / cells
+associated, WCP-on vs WCT-on), then the final near-junction ΣdQ delta off→on on each side:
+
+| junction | map1 stripped / assoc (WCP / WCT) | map2 stripped / assoc | WCP off→on | WCT off→on | fit3 \|Δpos\| WCP-vs-WCT (ON / OFF) |
+|---|---|---|---|---|---|
+| 6505 J0 | 260/1258 vs 204/1283 (n 6/6) | 115/1114 vs 154/993 | +13 % | +7 % | 0.18 / 0.08 |
+| 6505 J1 | 474/1480 vs 509/1603 (7/7) | 286/1439 vs 423/1519 | +15 % | +12 % | 0.26 / 0.30 |
+| 6528 J0 | 386/1249 vs 464/1057 (7/6) | 229/1218 vs 299/1060 | +1 % | **+27 %** | 0.30 / 0.30 |
+| 6528 J1 | 374/1121 vs 351/753 (6/4) | 216/902 vs 279/782 | −4 % | **+34 %** | 0.29 / 0.31 |
+| 6532 J0 | 261/1127 vs 145/1017 (5/5) | 139/1018 vs 226/1025 | **+29 %** | −3 % | 0.18 / 0.17 |
+| 6650 J0 | 257/879 vs 468/1243 (6/8) | 158/968 vs 419/1303 | +4 % | −8 % | 0.26 / 0.31 |
+| 6650 J1 | 315/1058 vs 244/1087 (7/6) | 127/946 vs 239/1009 | +2 % | 0 | 0.24 / 0.11 |
+| 6805 J0 | 114/840 vs 48/818 (4/3) | 62/837 vs 48/560 | +12 % | −2 % | 0.19 / 0.11 |
+| 6805 J1 | 114/840 vs 48/552 (4/2) | 62/774 vs 48/565 | +15 % | −2 % | 0.19 / 0.13 |
+| 6806 J0 | 456/1413 vs 447/1236 (7/6) | 211/1042 vs 281/1058 | −13 % | **+74 %** | 0.19 / 0.31 |
+| 6806 J1 | 423/1094 vs 409/1048 (5/5) | 189/809 vs 258/829 | −14 % | **+73 %** | 0.19 / 0.37 |
+
+Where the divergence is and is not:
+- **Association stage — same.** With exclusion ON the two implementations associate the same number
+  of cells per point (within the 0.2 cm sampling phase), strip comparable numbers of cells
+  (6806: 456 vs 447; 6528 J1: 374 vs 351; 6505 J1: 474 vs 509), keep the same points, and compute the
+  same live-plane quantities (`<q>` within 0.05).  The toolkit strips more on the second round at most
+  junctions (its round-2 trajectory is re-sampled more finely: n 14–20 vs 13–17 points) — a
+  difference in `organize_segments_path_2nd` sampling, not in the exclusion rule.
+- **Trajectory positions — same to the sampling phase.** Final fitted positions agree at
+  0.08–0.37 cm median on every junction, ON and OFF alike; the ON→OFF displacement within each side
+  is also ≤ 0.3 cm.
+- **dQ/dx solution — where it diverges.** With trajectories this close, 6806's +74 % (WCT) vs −13 %
+  (WCP) and 6528's +30 % vs 0 come out of the charge *solution*, not the trajectory.  6806's
+  junction sits where the W plane is dead (`T_proj_data` W: 0 cells on WCT, 162 zero-charge cells on
+  WCP) and the V plane is heavily overlapped (measured 3.8 M vs predicted 1.3–1.8 M within ±6
+  channels): a two-plane, overlapped system is ill-conditioned, and there WCT-ON over-predicts U
+  (1458 k predicted vs 1195 k measured) while WCT-OFF (993 k) and WCP-ON (767 k) do not — every point
+  within 2 cm of J0 carries ~2× the charge in WCT-ON (seg 1 pt 1: 115 k vs 60 k OFF vs 52 k WCP).
+  The PR topology also differs: the prototype's final fit of that cluster has 11 segments / 64 points,
+  the toolkit's 4 / 50.
+- On SBND this is the same class of place (junction, shared cells, one plane weak) where the
+  ON trajectory loses 13 % of the charge within 1 cm (§5).
+
+So the exclusion *mechanism* is parity-exact through the association stage; what is not identical is
+how the dQ/dx solution (and the pattern recognition that decides how many prongs share the junction)
+responds to the exclusion-ON trajectory at ill-conditioned junctions.  That is the place to look next:
+the regulariser/`connected_vec`/dead-plane weights path of `dQ_dx_multi_fit` at a junction with a dead
+or overlapped plane (C4 is exactly there), and why the toolkit's PR keeps fewer segments at 6806.
+
+Answer to the owner's question "what did pr/107 change then?": it changed the *point set* given
+to the fit (443 junction points un-deleted), not the fit given a point set; the retained points took
+the neighbouring prong's overlap charge and moved the prongs' early dQ/dx, which the EM-shower
+clustering reads.  Consistent with Test A.
