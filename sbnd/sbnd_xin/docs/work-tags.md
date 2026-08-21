@@ -2322,3 +2322,11 @@ tagged here, never written to.
 - work-pr99r3-onf-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL round-3 knob-on arms (production operating point + pr_display); **KEEP until owner scan done**
 - work-pr99r3-dduponly-ncpi0 -- 4-evt dedup-only attribution probe (pi0-pair losses); keep with doc
 - work-pr99r3-flip-*, -floff-* -- flip proofs (8 evts x2); releasable after doc
+
+## doc pr/101 Enu accounting round (2026-08-20)
+- work-pr101-off-{nuecc48,ncpi0,mcp1k,mcp2k} / -all-* -- first binary (pre K2-gate/K3-scope refinement); releasable now
+- work-pr101-off2-* / -all2-* / -b-* -- second binary (before the K2 leftover mu/pi rule); gate PASS 234; releasable now
+- work-pr101-off3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL-binary knob-off gate arms vs work-pr99r3-onf-*; releasable after next round
+- work-pr101-all3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL all-five-knobs arms (K1-K5, long-muon mode 2); **KEEP until owner scan done**
+- work-pr101-flip-*, -floff-* -- flip proofs (8 evts x2, 16/16 PASS both ways); releasable after doc
+- work-pr101-{a,b2,c,d}-* -- single-knob attribution arms (a=K1 track_ctx, b2=K2+K5 mass rules+guard, c=K3 hadronic dQ/dx, d=K4 long-muon mode 2); releasable after doc

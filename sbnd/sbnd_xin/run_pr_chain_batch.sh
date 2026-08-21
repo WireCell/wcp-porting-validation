@@ -284,6 +284,21 @@ for _pr99r3 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr99r3 _env _key _val
+# doc pr/101 Enu accounting round.  Bools tri-state as above; numerics
+# pass-through (EMPTY = no TLA = C++ default).
+for _pr101 in \
+    "SBND_KINE_CHARGE_TRACK_CTX:kine_charge_track_ctx" \
+    "SBND_KINE_MASS_RULES:kine_mass_rules" \
+    "SBND_KINE_HADRONIC_DQDX:kine_hadronic_dqdx" \
+    "SBND_KINE_MAINVTX_USED_GUARD:kine_mainvtx_used_guard" ; do
+    _env=${_pr101%%:*}; _key=${_pr101#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr101 _env _key _val
+[ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
+[ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
+[ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")
 # doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
 # composite.  EMPTY = no TLA = C++ default 0 = term never computed =
 # byte-identical.  The offline C1 replay selected weight 3.0, center 0.
