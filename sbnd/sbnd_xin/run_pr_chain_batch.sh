@@ -1477,42 +1477,18 @@ fi
 if [ -n "${SBND_PF_ORPHAN_AUDIT_ONLY:-}" ]; then
     CATH_TLA+=(--tla-code "pf_orphan_audit_only=${SBND_PF_ORPHAN_AUDIT_ONLY}")
 fi
-# doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
-# 56463, 57661) -- one segment absorbed and missing from both the flow tree
-# and the energy sum, and three muon/pion mis-selections at the
-# single-muon-per-cluster rule and the topology shower test.  Same
-# tri-state contract.  All default OFF pending gates.
-#   F1  SBND_MUON_CHAIN_PROTON_VETO         multi-hop generalization of the
-#                                            muon-candidate loop's 1-hop
-#                                            proton veto
-#       SBND_SHOWER_TYPE_CACHE_REFRESH      keep Shower's cached
-#                                            particle_type in lock-step with
-#                                            update_particle_type's own
-#                                            segment relabel
-#       SBND_SHOWER_TRAJ_DQDX_GUARD         trust a confident non-electron
-#                                            track-PID conclusion inside
-#                                            segment_determine_shower_
-#                                            direction_trajectory instead
-#                                            of discarding it
-#       SBND_SHOWER_TRAJ_CHAIN_PION         companion to the above: relabel
-#                                            a main-vertex proton's short
-#                                            muon-pdg continuation chain to
-#                                            pion except the deepest,
-#                                            confirmed-muon segment
-#       SBND_KINE_SHOWER_VERTEX_BARRIER     kine-tree parity with pr/38's
-#                                            pf_shower_vertex_barrier;
-#                                            MOVES kine_reco_Enu when on
-for _pr43 in \
-    "SBND_MUON_CHAIN_PROTON_VETO:muon_chain_proton_veto" \
-    "SBND_SHOWER_TYPE_CACHE_REFRESH:shower_type_cache_refresh" \
-    "SBND_SHOWER_TRAJ_DQDX_GUARD:shower_traj_dqdx_guard" \
-    "SBND_SHOWER_TRAJ_CHAIN_PION:shower_traj_chain_pion" \
-    "SBND_KINE_SHOWER_VERTEX_BARRIER:kine_shower_vertex_barrier" ; do
-    _env=${_pr43%%:*}; _key=${_pr43#*:}; _val=${!_env:-}
-    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
-    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
-done
-unset _pr43 _env _key _val
+# doc pr/43 round 1 (the F1 family: muon_chain_proton_veto,
+# shower_type_cache_refresh, shower_traj_dqdx_guard, shower_traj_chain_pion,
+# kine_shower_vertex_barrier) was ROLLED BACK on 2026-08-07 -- the owner asked
+# for the five knobs to be pulled from the code entirely rather than left
+# dead-OFF (toolkit 225d7e7e, revert of 4aabef3e).  The C++ and the cfg keys
+# went with it; this env->TLA block did not, and was left emitting --tla-code
+# for five top-level parameters that wct-pr-perevt.jsonnet no longer declares.
+# That is a HARD jsonnet error (wcsonnet aborts, rc=134), not a silent no-op,
+# so the vars were landmines rather than dead weight.  Removed 2026-08-22
+# (doc pr/109 sec 9.8).  An audit of all 305 TLA names this runner can emit
+# found these five and no others.  The three NARROWER round-2 knobs that
+# replaced them are live and are handled by the _pr43r2 block above.
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

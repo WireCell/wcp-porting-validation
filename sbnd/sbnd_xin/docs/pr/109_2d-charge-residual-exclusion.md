@@ -879,10 +879,45 @@ round identified. That would be a default-OFF knob and a new round, not a change
 - **No code changed this round.** `./build/clus/wcdoctest-clus` re-run on the same binary; the
   libraries' md5s are quoted in §9.0 and match §8's post-fix build.
 
-### 9.8 Found, not fixed
+### 9.8 Five landmine env vars in the runner — found and FIXED
 
-`run_pr_chain_batch.sh:1506-1510` maps five env vars — `SBND_MUON_CHAIN_PROTON_VETO`,
+`run_pr_chain_batch.sh` mapped five env vars — `SBND_MUON_CHAIN_PROTON_VETO`,
 `SBND_SHOWER_TYPE_CACHE_REFRESH`, `SBND_SHOWER_TRAJ_DQDX_GUARD`, `SBND_SHOWER_TRAJ_CHAIN_PION`,
-`SBND_KINE_SHOWER_VERTEX_BARRIER` — to TLA names that exist nowhere in `cfg/` or `clus/`. Setting
-any of them emits `--tla-code` for an undeclared top-level parameter, which is a hard jsonnet
-error, not a silent no-op. Not touched in this round.
+`SBND_KINE_SHOWER_VERTEX_BARRIER` — to TLA names that exist nowhere in `cfg/`, `clus/` or `root/`.
+
+**Provenance.** These are the doc pr/43 **round 1** F1 family. Round 1 was *rolled back* on
+2026-08-07: the owner asked for the five knobs to be pulled from the code entirely rather than left
+dead-OFF (toolkit `225d7e7e`, revert of `4aabef3e`). The C++ and the cfg keys went with the revert;
+this env→TLA block did not. Round 2's three narrower replacements
+(`single_muon_proton_chain_veto`, `single_muon_long_muon_claim`, `pid_flag_reconcile`) are live and
+sit in a separate block, which is untouched.
+
+**Severity — not dead weight, a landmine.** Setting any of the five emits `--tla-code` for a
+top-level parameter `wct-pr-perevt.jsonnet` no longer declares. Verified empirically:
+
+```
+$ wcsonnet --tla-code "muon_chain_proton_veto=true" cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+terminate called after throwing an instance of 'boost::wrapexcept<WireCell::ValueError>'
+  what():  ../util/src/Persist.cxx(445): Throw in function load
+rc=134
+```
+
+**Audit.** Every TLA name the runner can emit — **305** of them, across the `--tla-code`,
+`--tla-str` and `"ENV:key"` loop forms — was checked against `cfg/`. Exactly these five are dead;
+there are no others.
+
+**Fix.** The block is removed and replaced by a tombstone comment recording the rollback, so the
+vars are not re-added. Gate on the edited runner (1 event, 46363, `SBND_FIT_EXCLUSION=true`, arm
+`work-pr109g-gate-on-nuecc48` vs §8's `work-pr109e-on-nuecc48`, which was produced by the *old*
+runner):
+
+| check | result |
+|---|---|
+| compiled config, output paths normalised | **identical**, md5 `a08df6c8b608194110000d79a5774b7b` both |
+| `pr85_hash_gate.py` | **PASS, all archives byte-identical** |
+| `tracking-pr.root`, all 7 trees incl. `T_proj_data` (15336 rows) | **identical, row-for-row and in order** |
+| `nusel-evt46363.tsv` | **identical** |
+| `bash -n` | clean |
+
+The only compiled-config differences are the four output paths, which necessarily carry the arm
+directory name.
