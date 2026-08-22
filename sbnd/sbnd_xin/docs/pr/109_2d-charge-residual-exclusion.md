@@ -182,9 +182,10 @@ explains more of the charge near the vertex on 6/6 events, in U and W, with χ²
 the coverage discriminators of §4b passed. The effect is modest — +2.5 pp of unexplained charge,
 of which ~0.5 pp is coverage — so it is a consistent direction, not a large one.
 
-**Does not settle.** Why SBND leaves ~20 % of the near-vertex charge unpredicted in both arms
-(against 0.3 % for the prototype on uBooNE) — that common shortfall is larger than the ON/OFF
-effect and is the first thing to look at next. And why the two detectors disagree. The measurement says it is not the port
+**Does not settle.** Why the two detectors disagree on the sign. The ~20 % of near-vertex charge
+SBND leaves unpredicted in both arms is investigated in **§7** (owner request) — it is a static,
+induction-plane, per-cell condition that largely cancels in the ON/OFF comparison, and its cause is
+only partly identified. The measurement says it is not the port
 (the prototype and the toolkit agree on uBooNE, and SBND has no prototype arm to compare with).
 Candidates, all consistent with the numbers above: SBND's finer effective sampling and 2-face
 geometry putting more prongs inside one coupling window; the `dis_end_point_ext` / close-wire
@@ -209,3 +210,83 @@ does not depend on the split (pr/108 §9 lever (c)); (b) re-tune the near-vertex
 same measurement as the acceptance test — it is cheap and now automated; (c) revisit
 `fit_exclusion` for SBND with a full nueCC48 + mcp1k arm pair, judged on this metric *and* on the
 vertex/selection census, since the two have disagreed before.
+
+## 7. Why does SBND leave ~20 % of the near-vertex charge unpredicted? (owner 2026-08-22: "uBooNE and SBND share the same toolkit code … investigate, I do not need a fix yet")
+
+Repro: `scripts/pr109_uncov_probe.py --arm L=<root>[:wcp] --box-cm 3.0` (per-cell classification and
+the distance profile); the `flag` column comes from one extra arm run with `PR_EXTRA_STAGES=pr_display`
+(`work-pr109-dbgflag-on-nuecc48`, the proj section of `calib-pr-evt46363.json`) because `T_proj_data`
+does not carry it.
+
+**First correction to the framing: the larger split is implementation, not detector.** Median
+uncovered charge in the 3 cm box is **0.3 % (prototype, uBooNE)**, **12 % (toolkit, uBooNE)**,
+**20 % (toolkit, SBND)**. Same detector, same event, different implementation already costs a
+factor 40; the detector change then adds a factor 1.7. Per event the box values run 0.1-28 %
+(toolkit uBooNE), 0.1-15 % (prototype uBooNE) and 3-47 % (toolkit SBND).
+
+### 7.1 What the uncovered cells are
+
+| observable | SBND (toolkit) | uBooNE (toolkit) | uBooNE (prototype) |
+|---|---|---|---|
+| uncovered cells inside the ±10 wire/slice coupling window | 98-100 % | 100 % (except 6805, see below) | 100 % |
+| signed offset (nearest fitted point − cell), **covered** cells, U/V | ≈ 0.0 wires, IQR ±0.6 | ≈ 0.0, IQR ±0.75 | ≈ 0.0, IQR ±0.75 |
+| same, **uncovered** cells, U/V | **≈ 0.0, IQR ±0.6** | ±2.5 (genuinely off-track) | ±2.5 |
+| uncovered fraction at distance < 1 wire *and* < 1 slice | **41-43 %** | **0 %** | **0 %** |
+| plane structure of that near-track uncovered set | **U 65 %, V 48 %, W 0 %** | — | — |
+| same cells uncovered in the ON and OFF arms | 84-93 % | 99 % | — |
+
+Read together: on SBND the unpredicted cells are **not** a lateral tail the Gaussian response fails
+to reach, and not charge the trajectory never visits — they sit at exactly the same offsets from the
+trajectory as the predicted ones, **interleaved with them**, on the two induction planes only, and
+they are largely the *same cells* whichever arm is run. That last line also means this shortfall
+mostly cancels in ΔU, consistent with §4b (Δ`uncov` is a fifth of ΔU).
+
+### 7.2 What it is not
+
+- **Not the dead-channel list.** Only 0.1 % of the uncovered cells sit on a channel named in
+  `T_bad_ch` (SBND 46363: 98 rows, none of them in the box).
+- **Not the `int` cast.** `charge_pred` is `int32` in *both* implementations' `T_proj_data`, and
+  the charges are 10³-10⁵, so truncation cannot make a cell zero.
+- **Not a units or frame error.** SBND `pt` is in slices exactly like `time_slice` (point range
+  107-716 vs cell range 496-600 for the main cluster), the local affine map has residual 0.0000,
+  and the two `(apa, face)` groups SBND writes are (0,0) and (1,0) — both face 0, no wire-index
+  collision, 0 duplicate `(channel, time_slice)` keys inside a cluster.
+- **Not uBooNE-tuned response widths.** SBND has its own fitted parameter file
+  (`cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`): `ind_sigma_u_T` 0.484 vs uBooNE's
+  0.363, `ind_sigma_v_T` 0.806 vs 0.604, `col_sigma_w_T` 0.094 vs 0.113, `add_sigma_L` 2.49 vs
+  1.57, DL/DT 4.0/8.8 vs 6.4/9.8 — 38 of the 44 keys are shared, 6 differ, and the ones that
+  differ are exactly the smearing widths, derived from SBND's own SP filters.
+- **Not trajectory sampling.** The fitted step is 0.60 cm on both detectors, i.e. a median
+  1.0-1.6 wires and 0.5-1.6 slices between consecutive points (p95 ≤ 2.0 wires) — small compared
+  with the ±10 wire window, so the window anchoring at `centers_U.front()`
+  (`TrackFitting.cxx:6806-6812`) cannot be dropping cells at this spacing.
+
+### 7.3 What it most likely is — and the one measurement that would settle it
+
+Everything above leaves a **per-cell** switch inside the response fill, not a geometric one. The
+fill inserts a response entry only when `value > 0 && row.charge > 0 && row.flag != 0`
+(`TrackFitting.cxx:6814-6820`, and the V/W twins at :6839 / :6864); `fill_fitted_charge_2d` then
+writes `pred_charge = 0` for any cell failing `charge > 0 && flag != 0` (:1133-1140). Two candidates
+remain, and they are not exclusive:
+
+1. **Dead-*region* fillers (`flag == 0`), which are not the same thing as dead channels.**
+   `prepare_data` spreads dead-channel-blob charge into cells that carry `flag = 0`
+   (`TrackFitting.cxx:906-912`). The display dump — the only output that keeps the flag — shows
+   **6196 of 16759 cells (37 %) with `flag = 0` on SBND 46363, 70 % of the V-plane cells**, every
+   one of them unpredicted by construction. They carry only 4.3 % of the charge, so they explain
+   the V-plane *cell* count but not the missing *charge*.
+2. **Live induction cells that still get `value == 0` or are otherwise skipped.** On U the
+   near-track uncovered cells are `flag = 1` (live) in the display dump, and their neighbours at
+   the same offset are predicted. Nothing measurable from the outputs distinguishes them.
+
+Settling (2) needs the per-cell instrument this round deliberately did not build: an env-gated dump
+at the fill site of `(apa, face, plane, wire, time, charge, flag, value, row)` for every cell the
+loop visits, on both implementations — the Phase-2 dump described in the plan. Until that exists,
+the honest statement is: **the near-vertex shortfall is dominated by a static, induction-plane,
+per-cell condition that both arms share, of which dead-region fillers are a demonstrated part and
+the remainder is unidentified.** It is larger than the ON/OFF effect this doc measures, it mostly
+cancels in the ON/OFF comparison, and it deserves its own round.
+
+One uBooNE case belongs with it: event **6805 toolkit**, the only uBooNE entry where 75 % of the
+uncovered charge sits on a cluster with **no fitted points at all** (distance = ∞) — a different
+mechanism (a cluster that was never fitted) from the interleaved SBND pattern.
