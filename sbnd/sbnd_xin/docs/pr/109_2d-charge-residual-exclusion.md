@@ -921,3 +921,75 @@ runner):
 
 The only compiled-config differences are the four output paths, which necessarily carry the arm
 directory name.
+
+### 9.9 Do the two proposed relaxations help? Measured: **no** — and the reason redirects the search
+
+§9.6 floated two ways to buy back part of the ON→OFF gap while keeping exclusion: a **tie margin**
+(drop only when a sibling beats this segment by more than `m`, so exact ties no longer drop the cell
+from *both*) and a **larger keep floor** (raise the unconditional-keep radius above 0.3 cm). Both
+interpolate ON→OFF, so both are bounded above by the +3.6 pp gap. Rather than build either, the
+decision itself was instrumented and the recovery curves computed offline.
+
+**Instrument** (toolkit, debug-only): `WCT_EXCL_DUMP=<path>` makes `update_association` emit one line
+per fresh `(segment, cell)` decision with the two distances the rule turns on, the charge, the fit
+point, and `all_segments.size()`. Unset ⇒ no code path. The dump runs the competitor scan to
+completion instead of early-breaking, so the recorded `min_other` is the *true* nearest competitor;
+the decision is provably unchanged, since `drop ⟺ ∃ other with dis ≤ min_dis ⟺ min-over-others ≤
+min_dis`. Verified empirically: the dump-ON and dump-OFF arms are **byte-identical**
+(`pr85_hash_gate.py` PASS). Knob-OFF gate for the new binary: archives byte-identical, all 7 trees
+identical including `T_proj_data` row-for-row (15336 rows), `nusel` identical,
+`wcdoctest-clus` 228/228.
+
+**Key definition.** A cell only *loses support* if **every** segment that considered it dropped it —
+a cell reassigned from segment A to segment B still anchors the trajectory. Counting unique live
+readout cells (`flag ≠ 0`, `q > 0`), not per-segment decisions, so charge is not double-counted:
+
+| | decisions | unique live cells | **cells losing ALL support** |
+|---|---|---|---|
+| SBND 46363 | 1 394 008 | 9 166 | **41 cells, 0.2 % of charge** (near-vertex: 9 cells, 0.3 %) |
+| uBooNE 6505 | 422 452 | 5 666 | **0 cells, 0.0 %** |
+
+**So exclusion reassigns cells; it does not delete them.** The 53.6 % near-vertex strip of §9.3 is a
+*per-segment* reassignment, and at the cell level almost nothing goes uncovered. Recovery curves on
+that 0.2 %, SBND 46363, all cells:
+
+| tie margin m (cm) | 0 | 0.05 | 0.1 | 0.15 | 0.2 | 0.3 | 0.5 | 1.0 | 2.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| % of lost charge recovered | 29.9 | 44.5 | 65.8 | 69.9 | 71.6 | 74.2 | 77.6 | 96.5 | 98.5 |
+
+| keep floor f (cm) | 0.3 | 0.35 | 0.4 | 0.45 | 0.5 | 0.6 | 0.8 | 1.0 | 2.0 |
+|---|---|---|---|---|---|---|---|---|---|
+| % of lost charge recovered | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.1 | 0.7 | 2.3 | 77.5 |
+
+**Verdict on both: not worth building.** A tie margin of 0.1 cm recovers 66 % of 0.2 % — about
+**0.13 % of the near-vertex charge**, against a +3.6 pp effect. The keep floor is worse: cells that
+lose all support are ones a sibling is *much* closer to, not marginal ties, so raising 0.3 → 0.8 cm
+recovers 0.7 % of 0.2 %, i.e. nothing. §9.6's suggestion is withdrawn on its own evidence.
+
+**Where the penalty actually comes from — trajectory *length*, not cell coverage and not point
+density.** Comparing the main-cluster trajectory inside the 3 cm anchor balls, ON vs OFF:
+
+| evt | points ON / OFF | **length ON / OFF (cm)** | mean spacing ON / OFF (cm) |
+|---|---|---|---|
+| 10550 | 67 / 80 | 40.0 / 42.3 | 0.597 / 0.529 |
+| 46363 | 50 / 71 | **26.5 / 39.5** | 0.530 / 0.556 |
+| 81597 | 75 / 97 | **45.0 / 63.2** | 0.600 / 0.651 |
+| 360535 | 71 / 102 | **44.6 / 70.4** | 0.628 / 0.690 |
+| 256587 | 66 / 92 | **41.7 / 62.5** | 0.632 / 0.680 |
+| 433451 | 87 / 86 | 43.2 / 45.7 | 0.496 / 0.531 |
+
+Point spacing is unchanged (0.50–0.63 cm in both arms), while length falls by the same ~30 % as the
+count. Exclusion is not *thinning* the near-vertex trajectory — it is **shortening it**. Segments
+lose their associations to a neighbour, their points die, and the segment is trimmed back from the
+junction or disappears; the charge is then claimed by a neighbour whose trajectory does not actually
+run through it. That is what leaves the dQ/dx system with no basis function over the last centimetre
+before a junction, and it is why the prediction is biased low there (§9.2).
+
+**Redirected recommendation.** Any useful lever has to protect **trajectory extent near a vertex**,
+not cell arbitration. The natural candidate is already half-present in the code: `form_map_graph`
+exempts the two endpoints from exclusion unconditionally (`i != 0 && i + 1 != fits.size()`), and
+`fit_blob_coverage` exempts them via `flag_end_point`. Extending that exemption from "the endpoint"
+to "within R of a vertex" would target exactly the population measured here, in the existing idiom,
+as a default-OFF knob. It is a deliberate divergence from the prototype, which exempts only the
+endpoints (M15) — so it needs owner sign-off before it is built, not just a gate. Its ceiling is the
+same +3.6 pp, and unlike the two knobs tested above it acts on the quantity that actually moved.

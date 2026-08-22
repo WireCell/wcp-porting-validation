@@ -850,3 +850,22 @@ evt      arm          nuv  mainpts  nreg   ncell vs prodON  nusel
 433451   prod-OFF    True     1258     4    1625     -3.6%    yes
 433451   fbc-ON      True     1247     4    1701     +0.9%    yes
 433451   fbc-OFF     True     1244     4    1597     -5.3%    yes
+
+6f. sec 9.9 -- recovery curves for the two proposed relaxations, and the
+    trajectory length-vs-density decomposition (pr109_excl_recovery.py, WCT_EXCL_DUMP)
+
+# SBND 46363   1394008 decision lines, 9166 unique live cells
+  all cells      cells   9166  charge 1.061e+08   LOST to exclusion: 41 cells, 2.433e+05 (0.2%)
+    tie margin m (cm) :     0   0.05    0.1   0.15    0.2    0.3    0.5      1      2
+    charge recovered %%:  29.9   44.5   65.8   69.9   71.6   74.2   77.6   96.5   98.5
+    keep floor f (cm) :   0.3   0.35    0.4   0.45    0.5    0.6    0.8      1      2
+    charge recovered %%:   0.0    0.0    0.0    0.0    0.0    0.1    0.7    2.3   77.5
+  within 3.0 cm  cells    744  charge 1.87e+07   LOST to exclusion: 9 cells, 4.916e+04 (0.3%)
+    tie margin m (cm) :     0   0.05    0.1   0.15    0.2    0.3    0.5      1      2
+    charge recovered %%:  65.9   87.5   87.5   87.5   87.5   87.5   87.5  100.0  100.0
+    keep floor f (cm) :   0.3   0.35    0.4   0.45    0.5    0.6    0.8      1      2
+    charge recovered %%:   0.0    0.0    0.0    0.0    0.0    0.0    0.0    3.7   32.7
+
+# uBooNE 6505   422452 decision lines, 5666 unique live cells
+  all cells      cells   5666  charge 3.389e+07   LOST to exclusion: 0 cells, 0 (0.0%)
+  within 3.0 cm  cells    398  charge 3.672e+06   LOST to exclusion: 0 cells, 0 (0.0%)
