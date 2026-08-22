@@ -319,7 +319,9 @@ bash scripts/pr108h_wcp_dump.sh on ; bash scripts/pr108h_wcp_dump.sh off   # ev 
 python3 scripts/pr108_dqdx_cond.py --j 108.84 48.26 1029.27 \
   --dump WCP-on=…/pr108h_wcp_on/dqdx_6505.dump --dump WCT-on=…/pr108h_wct_on/dqdx_1.dump \
   --dump WCP-off=…/pr108h_wcp_off/dqdx_6505.dump --dump WCT-off=…/pr108h_wct_off/dqdx_1.dump
-# full output for all 9 junctions x 4 arms: docs/pr/108_dqdx-conditioning.txt
+python3 scripts/pr108h_kappa_loc.py        # kappa over all of A vs the near-J block only (table 1b)
+python3 scripts/pr108h_sbnd_census.py      # SBND: kappa at every junction of the main cluster (sec 10.2b)
+# full output for all 9 junctions x 4 arms + the SBND census: docs/pr/108_dqdx-conditioning.txt
 ```
 
 **Instrument.** §9's perturbation was an ad-hoc script that was not kept; §10's
@@ -330,7 +332,16 @@ heavy tails — the qualitative statement is unchanged). It adds a deterministic
 with no Monte-Carlo tail to argue about:
 
   **κ** = σ(Δs)/s per unit relative change of A's entries, from Δs = −yᵀ ΔA x with y = A⁻¹u,
-  u the near-junction selector: *a 1 % change of the couplings moves the junction charge by κ %*.
+  u the near-junction selector. It is a *relative stiffness* measure — how much the junction charge
+  moves when the assembled couplings are jiggled — and is used only to rank junctions against each
+  other; because A = RᵀMR + F is quadratic in the couplings and its entries are correlated, κ is not
+  a calibrated map from a physical trajectory change to a charge error (§9's "a 0.2 cm re-sampling →
+  factor two" inherits that caveat and should be read the same way). κ is reported twice: over all of
+  A, and over the near-J block only (`kappa_loc`) — they agree to within 10 % at every uBooNE junction
+  (sidecar table 1), so the number is a property of the junction and not of how many positions the
+  cluster's system happens to hold. That also answers the obvious objection that the clean junctions
+  sit in bigger systems (n3d 109–243) than 6806 J0 (n3d 46): 6505 J0 and J1 share *the same* A and
+  give κ 0.5 vs 3.8–5.4, and 6805 J0 (n3d 58) vs 6806 J0 (n3d 46) is size-matched at κ 1.4 vs 93.
 
 **Selection, blind to the answer.** "No dead channel" is read off the dump's `reg` flags, which are
 in fact the *stronger* condition: `reg=1` marks a position whose fit loses that plane either because
@@ -381,7 +392,7 @@ this removes the point-density difference that makes a per-point median misleadi
 | 6532 J0 | 104.1 | 104.0 | 76.9 | 107.0 | **0.999** | 1.392 | +35 % | −2.8 % |
 | 6650 J0 (clean) | 98.6 | 68.0 | 97.6 | 76.2 | 0.690 | 0.781 | +1.1 % | −10.7 % |
 | 6650 J1 | 82.2 | 112.9 | 91.9 | 111.1 | 1.374 | 1.210 | −10.6 % | +1.6 % |
-| **6650 J0+J1** | **180.8** | **180.9** | 189.5 | 187.3 | **1.000** | 0.988 | **−4.6 %** | **−3.4 %** |
+| **6650 J0+J1 pooled** (Σq/Σdx) | **90.0** | **83.0** | 94.7 | 87.6 | **0.922** | 0.925 | **−5.0 %** | **−5.2 %** |
 | 6805 J0 | 49.3 | 63.8 | 65.3 | 63.1 | 1.296 | 0.965 | −24.5 % | +1.2 % |
 | 6528 J0 (§9) | 68.2 | 76.2 | 68.9 | 45.8 | 1.117 | 0.665 | −1.0 % | +66 % |
 | 6806 J0 (§9) | 88.2 | 166.0 | 92.7 | 111.8 | **1.882** | 1.207 | −4.8 % | **+48 %** |
@@ -389,17 +400,24 @@ this removes the point-density difference that makes a per-point median misleadi
 At the clean junctions the two implementations agree on the fitted charge to **5 %** (6505 J0 0.948,
 6505 J1 0.983, 6532 J0 0.999), and the per-position matched (dQ/dx) medians agree to 2–4 %
 (0.968 / 0.965 / 0.976, spread 0.81–1.17 — sidecar table 3). 6650's two junction vertices are 4.4 cm
-apart and the arms split the charge between them differently (0.69 at J0, 1.37 at J1) — but their
-**sum agrees to 0.1 %** (180.8 vs 180.9): that is a per-vertex assignment difference in how the
-prongs are organised, not a difference in what the fit puts on the trajectory. The only place where
+apart and the arms split the charge between them differently (0.69 at J0, 1.37 at J1); pooling the
+two spheres properly (Σ dQ / Σ local_dx over both, 838.8 k/9.32 cm vs 747.1 k/9.00 cm) gives
+**0.922 ON and 0.925 OFF** — in the same 0.92–1.0 band as the other clean junctions. So the large
+per-vertex ratios there are a per-vertex assignment difference in how the prongs are organised, not
+a disagreement of that size about what the fit puts on the trajectory. (Only 6505 and 6650 can be
+pooled this way: 6528's and 6805's two vertices are 1.1 and 1.5 cm apart, so their R = 1.5 cm spheres
+overlap.) The only place where
 the two codes genuinely disagree on charge is 6806 J0 (1.88×), i.e. the one junction whose system is
 100× more sensitive than the rest.
 
-**And the exclusion knob's effect is the same in both codes there too**: 6505 J0 +14.8 % (WCP) vs
-+12.7 % (WCT); 6650 J0+J1 −4.6 % vs −3.4 %; matched per-position ON/OFF medians 1.122 vs 1.075
-(6505 J0) and 0.981 vs 0.966 (6650 J0). The ON/OFF *sign* disagreements in the table (6532 J0,
-6805 J0, 6528 J0) all sit at junctions with κ ≥ 6 in at least one arm, or — 6650 J0/J1, 6805 J0 —
-are the per-vertex split of a total that agrees.
+**And the exclusion knob's effect agrees in both codes there too**: 6505 J0 +14.8 % (WCP) vs +12.7 %
+(WCT); 6650 J0+J1 pooled −5.0 % vs −5.2 %; matched per-position ON/OFF medians 1.122 vs 1.075
+(6505 J0) and 0.981 vs 0.966 (6650 J0). The honest bound is: at clean junctions the two codes agree
+on the charge to ~5 % and on the *sign* of the exclusion delta, while the delta's *magnitude* can
+still differ by ~2× — 6505 J1 is reg-free with κ ≤ 5.4 and gives +5.9 % (WCP) vs +14.3 % (WCT) —
+because exclusion also moves the point set, which the fit then re-splits. The outright sign
+disagreements (6532 J0, 6528 J0) sit at junctions with κ ≥ 6 in at least one arm; 6650 J0/J1 and
+6805 J0 are per-vertex splits of a total that agrees.
 
 Cross-solve at 6505 J0 (A of one arm with b of the other, 239/243 positions matched): 519 k against
 nominals 493 k (WCP) and 479 k (WCT) — mixing the two systems moves the answer by 6–8 %, where the
@@ -407,10 +425,33 @@ same operation at 6806 J0 reproduced whichever arm's **A** was used (§9). At 66
 not interpretable (the arms carry different numbers of points in the sphere, so the b-substitution is
 not one-to-one) and is not quoted.
 
+### 10.2b SBND on the same instrument (§9's SBND paragraph re-derived, and extended)
+
+§9's SBND numbers came from the lost ad-hoc script and covered one vertex per event. Re-run with
+`pr108_dqdx_cond.py`'s κ over **every** junction vertex of the main cluster (junction = a
+`flag_vertex` point of the main cluster with ≥ 3 sub-clusters within 1.5 cm, read from the arm's own
+`T_rec_charge`), on the pr/108 §9 SBND dumps (`/home/xqian/tmp/pr108_sbnd_{on,off}_{46363,360535}.dump`):
+
+| event / arm | junctions | κ_loc median [min, max] | reg-free junctions | κ_loc median, reg-free | κ_loc median, flagged |
+|---|---|---|---|---|---|
+| 46363 ON | 13 | 5.6 [0.4, 42.3] | 7/13 | **2.9** [0.4, 5.7] | 22.8 |
+| 46363 OFF | 24 | 7.7 [0.5, 165.6] | 10/24 | **4.9** [0.5, 111.8] | 14.7 |
+| 360535 ON | 8 | 4.1 [0.4, 90.5] | 4/8 | **0.8** [0.4, 1.1] | 32.6 |
+| 360535 OFF | 16 | 3.1 [0.4, 40.2] | 6/16 | **1.1** [0.4, 3.2] | 6.5 |
+
+The same ordering holds on SBND: junctions where every plane constrains the fit are stiff (κ_loc
+median 0.8–4.9, the uBooNE clean band), junctions that lose a plane are 3–30× softer. Two things to
+carry forward that §9 did not say: (i) SBND main clusters are much larger systems (n3d 546–708 vs
+46–243 on uBooNE) with global cond(A) 1.7·10⁴–1.6·10⁵, and **roughly half** their junctions have at
+least one flagged position, so the soft class is common there, not exotic; (ii) the flags are the
+dominant but not the only driver — 46363 OFF has one reg-free junction at κ_loc 112. §9's two
+specific vertices remain as quoted (well conditioned, ON = OFF charge at 46363's target); the census
+says they are not representative of every junction in those events.
+
 ### 10.3 What this settles
 
 - **The dQ/dx fit is not the issue.** Where every plane constrains the fit, it is well conditioned
-  (κ ≈ 0.5–3), the prototype and the toolkit agree on the junction charge to ~5 % and on the
+  (κ ≈ 0.5–5 on uBooNE and SBND alike), the prototype and the toolkit agree on the junction charge to ~5 % and on the
   *exclusion delta* to ~2 percentage points, and the direct solve confirms the iterative solver at
   every junction. This is the confirmation the owner asked for, on junctions chosen by the flag
   criterion and not by their agreement.
@@ -420,5 +461,9 @@ not one-to-one) and is not quoted.
   junctions rather than to junctions generally — and lever (a) (a junction regulariser) should be
   keyed on *"all near-J positions lose the same plane"*, which is what separates 6806 from 6805 J0,
   not on the presence of a dead channel or on the prong count.
+- **On SBND the soft class is not rare** (§10.2b): about half the junctions of 46363/360535 have at
+  least one position that loses a plane, and those sit at κ_loc 6–33 while their reg-free neighbours
+  sit at 0.8–5. So "the fit is fine" is a statement about the *fit*, not a promise that every SBND
+  junction charge is well determined — which is the right frame for the DL-cloud lever (c).
 - Nothing here changes production: still no knob, no default change; the dumps are env-gated
   (`WCT_DQDX_DUMP` needs `WCT_TRAJ_DUMP` set too — it supplies the call counter).

@@ -16,7 +16,9 @@ within --r of the junction:
     (--eps, --draws, --seed; the seed is fixed so the numbers are reproducible): the
     discriminator for an ill-conditioned split of overlapped charge, together with
     the deterministic first-order sensitivity kappa (sigma of the relative change of
-    the near-J charge per unit relative change of A's entries).
+    the near-J charge per unit relative change of A's entries), reported both over all
+    of A and over the near-J block only (they agree when the sensitivity is a property
+    of the junction rather than of the system's size).
   - the reg flags (1 = plane cannot constrain this position: dead channel, or the
     projected wire/time carries no measured 2-D point) and the connected-vertex
     overlaps of the near-J positions.
@@ -123,19 +125,26 @@ def report(lab, d, J, r, eps_list, draws, seed, sym=True):
     u = sel.astype(float)
     y = np.linalg.solve(A, u)
     C = np.outer(y, xs) * A                      # c_ij = y_i A_ij x_j
-    if sym:
-        M = C + C.T
-        var = (np.triu(M, 1) ** 2).sum() + (np.diag(C) ** 2).sum()
-    else:
-        var = (C ** 2).sum()
-    kappa = np.sqrt(var) / abs(q_solve)
+    def kap(mask):
+        if sym:
+            M = (C + C.T) * mask
+            var = (np.triu(M, 1) ** 2).sum() + ((np.diag(C) * np.diag(mask)) ** 2).sum()
+        else:
+            var = ((C * mask) ** 2).sum()
+        return np.sqrt(var) / abs(q_solve)
+    kappa = kap(np.ones_like(A))
+    # kappa_loc: perturb only the rows/columns of the near-J positions -- the local block.
+    # If kappa_loc ~ kappa the sensitivity is a property of the junction, not of how many
+    # positions the cluster's system happens to contain.
+    kappa_loc = kap((sel[:, None] | sel[None, :]).astype(float))
     spd = True
     try:
         np.linalg.cholesky(A)
     except np.linalg.LinAlgError:
         spd = False
-    print(f"   sensitivity: kappa = {kappa:.1f}  (1 sigma relative change of the near-J charge per 1 unit"
-          f" relative change of A's entries; a 1 % coupling change -> {kappa*0.01:.0%} 1-sigma); A pos-def: {spd}")
+    print(f"   sensitivity: kappa = {kappa:.1f} (all of A) / {kappa_loc:.1f} (near-J block only)"
+          f"  -- 1 sigma relative change of the near-J charge per unit relative change of A's entries;"
+          f" a relative conditioning measure, not a calibrated physical error; A pos-def: {spd}")
     rng = np.random.default_rng(seed)
     for eps in eps_list:
         vals = []
