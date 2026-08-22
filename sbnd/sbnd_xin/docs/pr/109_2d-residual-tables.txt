@@ -157,8 +157,7 @@ sbnd-81597       6   0.8237   0.7124   0.1233   0.1360   0.0010    165      4  e
   entries 33: ON-better 2, equivalent 11, ON-worse 20
   per-event sign test: ON-better 0/6, ON-worse 6/6
 
-
-############ 3. per-plane and aggregate roll-up (box 3.0 cm, both anchors) ############
+############ 3. per-plane roll-up + the coverage discriminators (sec 4b) ############
 [mdirenv: loading /nfs/data/1/xqian/toolkit-dev/.envrc
 === ub_wct
   plane    n   med U_ON  med U_OFF     med dU  f(dU<0)  med d(chi2/N)    f(<0)
@@ -166,15 +165,18 @@ sbnd-81597       6   0.8237   0.7124   0.1233   0.1360   0.0010    165      4  e
   V      30      0.509      0.550    -0.0119     0.57        +0.0738     0.40
   W      26      0.312      0.399    -0.0134     0.62          -2.05     0.69
   ALL    32      0.522      0.535    -0.0244     0.72          -1.73     0.72
+       coverage check: med dUncov -0.0006, dU-dUncov -0.0222 (frac<0 0.69); low-cov half dU -0.0377 (cov 0.51) vs high-cov half -0.0244 (cov 0.85), corr +0.384
 === ub_wcp
   plane    n   med U_ON  med U_OFF     med dU  f(dU<0)  med d(chi2/N)    f(<0)
   U      25      0.418      0.368    -0.0231     0.68         -0.497     0.68
   V      25      0.282      0.367    -0.0228     0.88         -0.516     0.80
   W      22      0.155      0.166    -0.0157     0.82          -2.58     0.82
   ALL    25      0.319      0.355    -0.0352     0.72          -2.47     0.76
+       coverage check: med dUncov -0.0007, dU-dUncov -0.0081 (frac<0 0.56); low-cov half dU -0.0257 (cov 0.68) vs high-cov half -0.0360 (cov 0.98), corr -0.258
 === sbnd
   plane    n   med U_ON  med U_OFF     med dU  f(dU<0)  med d(chi2/N)    f(<0)
   U      45      0.703      0.662    +0.0231     0.29          +1.07     0.36
   V      44      0.636      0.590    +0.0005     0.50       +0.00658     0.50
   W      45      0.501      0.434    +0.0356     0.27          +7.23     0.22
   ALL    45      0.624      0.607    +0.0249     0.11          +2.36     0.22
+       coverage check: med dUncov +0.0052, dU-dUncov +0.0124 (frac<0 0.22); low-cov half dU +0.0260 (cov 0.35) vs high-cov half +0.0242 (cov 0.74), corr -0.085

@@ -12,11 +12,15 @@ detector and it is the same in both implementations, so it is not a port defect:
 `U = Σ|y − ŷ| / Σy` is the unexplained fraction of the *measured* 2-D charge inside the 2-D shadow
 of a 3 cm sphere around the vertex/junction; lower is better. So:
 
+Against the pre-registered bar (same sign on ≥ 5/6 events) the two answers are **not equally
+strong, and the doc says so in both places**: SBND *reaches* it (6/6); uBooNE does *not*
+(4/5 toolkit, 4/6 prototype) and rests on the entry counts and the medians instead.
+
 - **On uBooNE the exclusion fit describes the measured 2-D charge better** — in the prototype
   *and* in the toolkit, by the same amount (−2.4 / −3.5 pp of unexplained charge, ~72 % of anchors).
   That is a second, independent confirmation that the dQ/dx fit has no bug: the two codes agree
   on which trajectory the data prefers, not merely on the numbers each produces.
-- **On SBND the exclusion fit describes it measurably worse** — +2.5 pp unexplained charge,
+- **On SBND the exclusion fit describes it worse** — +2.5 pp unexplained charge,
   **every one of the 6 events**, and the same sign in χ²/N (+2.4). This is the owner's claim, now
   measured against the data rather than inferred from the vertex efficiency: at the SBND operating
   point the exclusion-OFF trajectory is the better description of the 2-D charge.
@@ -143,6 +147,29 @@ does on uBooNE (0.46-0.92; toolkit uBooNE 0.50-0.84 with 6528's 0.03 excluded) �
 mostly clusters that never got a final fit, which is why the comparison is done *inside* the
 vertex box and repeated with coverage removed.
 
+### 4b. Is the SBND result just a coverage statement? No.
+
+`U` is a ratio to the *measured* charge, so an arm that simply predicts nothing over more cells
+scores worse without fitting worse. Two discriminators, both on the same tables:
+
+| family | median ΔU | median Δ`uncov` | ΔU − Δ`uncov` | `uncov` ON / OFF |
+|---|---|---|---|---|
+| uBooNE toolkit | −0.0244 | −0.0006 | −0.0222 | 0.118 / 0.131 |
+| uBooNE prototype | −0.0352 | −0.0007 | −0.0081 | 0.003 / 0.005 |
+| SBND toolkit | +0.0249 | +0.0052 | **+0.0124** | 0.218 / 0.195 |
+
+So on SBND the uncovered charge accounts for about a fifth of the effect; the rest is genuine
+residual on cells both arms do predict, and only 22 % of entries flip sign when it is removed.
+Second: ΔU is **flat in coverage** — splitting the SBND entries at the median in-box coverage
+(Σŷ/Σy = 1+`B`) gives median ΔU +0.0260 on the low-coverage half (coverage 0.35, n = 22) and
++0.0242 on the high-coverage half (coverage 0.74, n = 23), corr(coverage, ΔU) = −0.085. The
+artifact signature (ON-worse entries clustering at low coverage) is absent. The `--common-pred`
+run in §0 is the third form of the same check.
+
+What the table *does* show is that SBND leaves ~20 % of the near-vertex measured charge
+unpredicted in **both** arms, against 0.3 % for the prototype on uBooNE — a large common
+shortfall that this round measures but does not explain (see §5).
+
 ## 5. What this settles — and what it does not
 
 **Settles.** (i) The exclusion fit is not a broken dQ/dx: on uBooNE both implementations agree
@@ -150,10 +177,14 @@ that the exclusion-ON trajectory describes the measured 2-D charge *better*, by 
 and with the same per-plane pattern. Combined with pr/108 Test A (dQ/dx is association-independent,
 max|ΔdQ| = 0) and §10 (the fit is stiff where every plane constrains it), that closes the
 "is the fit buggy" line for a third time, from the data side. (ii) On SBND the owner's claim is
-confirmed against the 2-D measurement: the exclusion-OFF trajectory explains more of the charge
-near the vertex, on 6/6 events, in U and W, with χ² agreeing.
+supported against the 2-D measurement at the registered bar: the exclusion-OFF trajectory
+explains more of the charge near the vertex on 6/6 events, in U and W, with χ² agreeing and with
+the coverage discriminators of §4b passed. The effect is modest — +2.5 pp of unexplained charge,
+of which ~0.5 pp is coverage — so it is a consistent direction, not a large one.
 
-**Does not settle.** Why the two detectors disagree. The measurement says it is not the port
+**Does not settle.** Why SBND leaves ~20 % of the near-vertex charge unpredicted in both arms
+(against 0.3 % for the prototype on uBooNE) — that common shortfall is larger than the ON/OFF
+effect and is the first thing to look at next. And why the two detectors disagree. The measurement says it is not the port
 (the prototype and the toolkit agree on uBooNE, and SBND has no prototype arm to compare with).
 Candidates, all consistent with the numbers above: SBND's finer effective sampling and 2-face
 geometry putting more prongs inside one coupling window; the `dis_end_point_ext` / close-wire

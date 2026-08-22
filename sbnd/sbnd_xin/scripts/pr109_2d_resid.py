@@ -303,17 +303,19 @@ def main():
                           (pl, o['N'], '', o['sy'], o['U'], o['B'], o['chi2'] / max(o['N'], 1)))
                     rows.append([args.tag, al, rname, '%.2f' % A[0], '%.2f' % A[1], '%.2f' % A[2],
                                  args.box_cm, lab, pl, o['N'], o['sy'], o['U'], o['B'],
-                                 o['chi2'] / max(o['N'], 1), m['_ncol'], o['nshared'], o['ndead']])
+                                 o['chi2'] / max(o['N'], 1), m['_ncol'], o['nshared'], o['ndead'],
+                                 o['uncov'] / max(o['sy'], 1e-9)])
                 rows.append([args.tag, al, rname, '%.2f' % A[0], '%.2f' % A[1], '%.2f' % A[2],
                              args.box_cm, lab, 'ALL', t['N'], t['sy'], t['U'], t['B'],
-                             t['chi2'] / max(t['N'], 1), m['_ncol'], t['nshared'], t['ndead']])
+                             t['chi2'] / max(t['N'], 1), m['_ncol'], t['nshared'], t['ndead'],
+                             t['uncov'] / max(t['sy'], 1e-9)])
                 if lab == labs[0]:
                     print('      affine residual (u,v,w,t) = %s' % np.round(m['_res'], 4).tolist())
     if args.tsv:
         new = not os.path.exists(args.tsv)
         with open(args.tsv, 'a') as fh:
             if new:
-                fh.write('tag\tanchor_arm\tregion\tax\tay\taz\tbox\tarm\tplane\tN\tsum_y\tU\tB\tchi2_per_N\tncol\tnshared\tndead\n')
+                fh.write('tag\tanchor_arm\tregion\tax\tay\taz\tbox\tarm\tplane\tN\tsum_y\tU\tB\tchi2_per_N\tncol\tnshared\tndead\tuncov\n')
             for r in rows:
                 fh.write('\t'.join(str(x) for x in r) + '\n')
 
