@@ -8,7 +8,7 @@ the pre-fix record, and the post-fix one is §8.4:
 
 | family | entries (event × region) | per-event sign test | median ΔU (post-fix) |
 |---|---|---|---|
-| **uBooNE toolkit** | 10 / 4 / 3 | 3 better, 2 worse of 5 | **−0.018** |
+| **uBooNE toolkit** | 10 / 4 / 4 | 3 better, 2 worse of 5 | **−0.018** |
 | **uBooNE prototype** | 9 / 0 / 2 | 4 better, 2 worse of 6 | **−0.036** |
 | **SBND toolkit** | 1 / 10 / **22** | **0 better, 6 worse of 6** | **+0.037** |
 
@@ -336,26 +336,26 @@ byte-identical bar that choice gives up.
 # Always read the value back from the job's own log rather than the env:
 #   grep -o "fit_exclusion=[a-z]*" sweep/<arm>/<idx>_<ev>/wct_5384_<ev>.log
 cd qlport/scripts
-QL_FIT_EXCLUSION=true  ./sweep_5384.sh pr109c_wct_on  6   # post-fix, exclusion ON   (verified true)
-QL_FIT_EXCLUSION=false ./sweep_5384.sh pr109c_wct_off 6   # post-fix, exclusion OFF  (verified false)
+QL_FIT_EXCLUSION=true  ./sweep_5384.sh pr109e_wct_on  6   # post-fix, exclusion ON   (verified true)
+QL_FIT_EXCLUSION=false ./sweep_5384.sh pr109e_wct_off 6   # post-fix, exclusion OFF  (verified false)
 QL_FIT_EXCLUSION=1     ./sweep_5384.sh pr109b_bare_on 6   # PRE-fix binary, exclusion OFF -- gate baseline
 QL_FIT_EXCLUSION=1     ./sweep_5384.sh pr109b_wct_on  6   # first post-fix build,  exclusion OFF   } same-config
 QL_FIT_EXCLUSION=true  ./sweep_5384.sh pr109b_wct_on2 6   # ALSO landed exclusion OFF (the trap)    } repeat pair
 # SBND, same 6 events and the same Q/L baseline as §0:
 sbnd_xin/  SBND_FIT_EXCLUSION=true|false PR_JOBS=6 \
-    ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-pr109c-{on,off}-nuecc48 data \
+    ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-pr109e-{on,off}-nuecc48 data \
         10550 46363 81597 360535 256587 433451
 # the grid and the rule, re-pointed at the post-fix arms:
-sbnd_xin/scripts/pr109b_run_all.sh /home/xqian/tmp/pr109c
-python3 scripts/pr109_summary.py /home/xqian/tmp/pr109c/{ub_wct,ub_wcp,sbnd}.tsv
+sbnd_xin/scripts/pr109b_run_all.sh /home/xqian/tmp/pr109e
+python3 scripts/pr109_summary.py /home/xqian/tmp/pr109e/{ub_wct,ub_wcp,sbnd}.tsv
 python3 scripts/pr109_uncov_probe.py --arm A=<root>[:wcp] --box-cm 3.0     # §7's probe
 # gates (both sides of each pair at the SAME fit_exclusion):
-python3 scripts/pr85_hash_gate.py work-pr109-on-nuecc48 work-pr109c-on-nuecc48
-diff qlport/scripts/sweep/pr109b_bare_on/hashes.txt qlport/scripts/sweep/pr109c_wct_off/hashes.txt
+python3 scripts/pr85_hash_gate.py work-pr109-on-nuecc48 work-pr109e-on-nuecc48
+diff qlport/scripts/sweep/pr109b_bare_on/hashes.txt qlport/scripts/sweep/pr109e_wct_off/hashes.txt
 ```
 
-The `pr109b_*` uBooNE arms are the first post-fix build (before the de-duplication of §8.3.1);
-`pr109c_*` are the arms every number below is quoted from. Both are kept.
+The `pr109b_*` and `pr109c_*` uBooNE arms are earlier post-fix builds (before, and midway
+through, §8.3.1); `pr109e_*` are the arms every number below is quoted from. All are kept.
 
 ### 8.1 Stage-by-stage: the fit is not the problem
 
@@ -428,10 +428,31 @@ emitted nothing — and the first post-fix build therefore put **duplicate `(cha
 keys in a row: 33 % of uBooNE cells, 6.9 % of SBND cells, against 0 % pre-fix and 0 % in the
 prototype**, breaking the one-row-per-cell precondition §0 relies on (an analysis that builds
 `cells[(ch, ts)]` silently keeps one of them). Caught by review, not by the gate. The three
-writers now accumulate into an ordered per-cell map before filling the branches — charge added
-(the filler split the blob's charge across those ticks), errors added in quadrature, predictions
-added, all three identities for a live cell, which occurs exactly once per slice. Verified
-**0 duplicate keys** over the 35 uBooNE and 6 SBND post-fix trees.
+writers now accumulate into an ordered per-cell map before filling the branches. Two rules make
+that aggregation safe, both added after review found the naive "sum everything" version wrong:
+
+- **Within one snapshot**, the tick entries of a slice add up — the filler split the blob's charge
+  across them, so their sum is the slice's dead charge. Live entries and fillers are kept in
+  separate accumulators and the fillers are used only when the slice carries no live entry
+  (`prepare_data` inserts a filler *only* where no key exists, `TrackFitting.cxx:904`, so a slice
+  can hold a real readout at one tick and fillers at the others; adding those onto a measured cell
+  would inflate the measured charge the tree reports).
+- **Across snapshots** landing in the same row (two live clusters sharing an ident), `charge` and
+  `charge_err` are properties of the **readout** and are taken once, not summed; only the
+  predictions add.
+
+Verified **0 duplicate keys** over the 35 uBooNE and 6 SBND trees. Verified also, by intersecting
+the pre-fix and final trees on `(cluster_id, channel, time_slice)` over all 35 uBooNE events at the
+same `fit_exclusion`: of 204290 cells in common, the measured charge changes on **217 (0.11 %)**,
+**all of them with `charge_pred == 0` in both trees**, by a median factor of exactly
+`nticks_per_slice = 4`. Those are dead-region cells that now carry the slice's whole spread charge
+instead of one tick's quarter — the prototype's per-slice convention. **No live cell's measured
+charge moved**, so control 1 of §3 still means what it says.
+
+One ordering note for anyone reading the branches by eye: cells within a row are now ordered by
+`(channel, time_slice)` rather than by `(apa, face, plane) → (wire, tick)`. On uBooNE the two
+coincide; on SBND `ChanScheme::global` is plane-major across APAs, so the interleaving differs.
+The cell *set* and the parallel-branch alignment are unchanged.
 
 Tests: `clus/test/doctest_pr109_proj_data_per_cluster.cxx`, two cases — the merge losing the main
 cluster's answer on a shared cell (the contract the writers rely on), and two clusters sharing an
@@ -460,7 +481,7 @@ uncovered *charge* fraction):
 |---|---|---|---|---|---|---|---|
 | 6505 | 0.2 % | 0.2 % | 0.1 % | | SBND 10550 | 17.1 % | 14.9 % |
 | 6528 | 100 % | *(see below)* | 1.8 % | | SBND 46363 | 42.1 % | **3.3 %** |
-| 6532 | 28.0 % | **12.8 %** | 5.6 % | | SBND 81597 | 30.8 % | **12.8 %** |
+| 6532 | 28.0 % | **9.3 %** | 5.6 % | | SBND 81597 | 30.8 % | **12.8 %** |
 | 6650 | 7.2 % | **0.2 %** | 0.1 % | | SBND 360535 | 29.9 % | **6.3 %** |
 | 6805 | 15.4 % | 14.2 % | 15.2 % | | SBND 256587 | 46.9 % | **3.3 %** |
 | 6806 | 3.0 % | 3.0 % | 2.3 % | | SBND 433451 | 2.9 % | 2.6 % |
@@ -489,7 +510,7 @@ so the recipe is the same one):
 | family | ΔU (U) | ΔU (V) | ΔU (W) | ΔU pooled | Δ(χ²/N) |
 |---|---|---|---|---|---|
 | uBooNE toolkit, **pre-fix** | −0.016 | −0.012 | −0.013 | −0.024 | −1.73 |
-| uBooNE toolkit, **post-fix** | −0.023 | −0.005 | −0.020 | **−0.026** | −1.87 |
+| uBooNE toolkit, **post-fix** | −0.016 | −0.012 | −0.015 | **−0.026** | −1.67 |
 | uBooNE prototype (untouched) | −0.023 | −0.023 | −0.014 | −0.026 | −1.36 |
 | SBND toolkit, **pre-fix** | +0.030 | +0.003 | +0.039 | +0.026 | +2.37 |
 | SBND toolkit, **post-fix** | +0.047 | +0.008 | +0.036 | **+0.036** | +2.53 |
@@ -498,7 +519,7 @@ Decision rule, post-fix (`pr109_summary.py`, entries = (event, region), `U` pool
 
 | family | entries B/E/W | per-event sign test | median ΔU |
 |---|---|---|---|
-| uBooNE toolkit | 10 / 4 / 3 | 3 better, 2 worse of 5 | −0.018 |
+| uBooNE toolkit | 10 / 4 / 4 | 3 better, 2 worse of 5 | −0.018 |
 | uBooNE prototype | 9 / 0 / 2 | 4 better, 2 worse of 6 | −0.036 |
 | SBND toolkit | 1 / 10 / 22 | **0 better, 6 worse of 6** | **+0.037** |
 
@@ -527,14 +548,14 @@ Every pair below has the **same `fit_exclusion`** on both sides, read back from 
 | SBND Bee/pctree archives, pre-fix vs post-fix ON arm (`pr85_hash_gate.py`) | **PASS, all 12 archives byte-identical** |
 | SBND `tracking-pr.root`, per-tree content hash, 6 events | `T_bad_ch` `T_kine` `T_proj` `T_rec_charge` `T_tagger` `Trun` identical **6/6**; `T_proj_data` differs 6/6 |
 | SBND `nusel-evt*.tsv` (per-event scores) and merged `nusel-table.tsv` | identical **6/6** and identical |
-| uBooNE Bee `mabc_*.zip` member-content rollup, `pr109b_bare_on` vs `pr109c_wct_off` (35 events) | **identical 35/35** (`diff` of the two `hashes.txt`) |
+| uBooNE Bee `mabc_*.zip` member-content rollup, `pr109b_bare_on` vs `pr109e_wct_off` (35 events) | **identical 35/35** (`diff` of the two `hashes.txt`) |
 | uBooNE `track_com_*.root` per-tree, same pair, 35 events | `T_bad_ch` `T_kine` `T_proj` `T_tagger` `Trun` identical **35/35**; `T_proj_data` differs 35/35 |
 | uBooNE `T_rec_charge`, same pair | identical **as a row set 35/35**; its row *order* differs, and it also differs on **34/35 events between two same-config runs of the same binary** (`pr109b_wct_on` vs `pr109b_wct_on2`, both `fit_exclusion=false`) — a pre-existing write-order non-determinism, mentioned and not touched |
 | uBooNE repeat-run band on the metric itself, same pair | `T_proj_data`, `T_kine` and `T_tagger` **identical 35/35 between the two repeat runs**, so ΔU on uBooNE carries **no rerun band** — the same control §3 ran on SBND |
 | duplicate `(channel, time_slice)` keys within a row (§8.3.1) | **0** over the 35 uBooNE + 6 SBND post-fix trees (33 % / 6.9 % before the de-duplication) |
 | `SbndMagnifyTrackingVisitor` (the third writer changed) | not exercised by these arms *by construction*: `clus.jsonnet:2088` gives it `track_fitting_name: 'stm'`, a holder fed by `merge_fitted_charge_2d` that carries no snapshots, so it takes the unchanged fallback, and it is only instantiated with `-stm-fit` |
 | `./build/clus/wcdoctest-clus` | 228 cases / 2381 assertions, SUCCESS |
-| freshness (M1) | `local/lib/libWireCellRoot.so` 15:10 vs sources 15:0x |
+| freshness (M1) | `local/lib/libWireCellRoot.so` 15:30 vs sources 15:29 |
 
 So: no Bee layer, no pctree tensor, no tagger verdict, no selection score changes. The change is
 confined to the tree it was aimed at.
