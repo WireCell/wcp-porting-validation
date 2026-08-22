@@ -1,7 +1,7 @@
 #!/bin/bash
 # doc pr/109 sec 8 -- the same grid as pr109_run_all.sh, re-pointed at the arms
 # produced AFTER the T_proj_data writer fix (uBooNE pr109b_wct_{on,off}, SBND
-# work-pr109b-{on,off}-nuecc48).  Forked rather than parameterised so the
+# work-pr109c-{on,off}-nuecc48).  Forked rather than parameterised so the
 # pre-fix numbers stay reproducible from the original script (M13: the sec 4
 # table is a record).  The WCP arms are unchanged and shared with it.
 #
@@ -18,8 +18,8 @@ for box in 3.0 2.25 3.75; do
   for ev in 6505 6528 6532 6650 6805 6806; do
     i=${IDX[$ev]}; sr=${SR[$ev]}
     python3 $R --box-cm $box --max-junctions 3 --sigma-from OFF --anchors-from OFF --anchors-from ON \
-      --arm ON=$S/pr109b_wct_ontrue/${i}_${ev}/track_com_5384_${ev}.root:wct \
-      --arm OFF=$S/pr109b_wct_off/${i}_${ev}/track_com_5384_${ev}.root:wct \
+      --arm ON=$S/pr109c_wct_on/${i}_${ev}/track_com_5384_${ev}.root:wct \
+      --arm OFF=$S/pr109c_wct_off/${i}_${ev}/track_com_5384_${ev}.root:wct \
       --tag ub-wct-$ev --tsv $OUT/ub_wct$sfx.tsv $extra
     python3 $R --box-cm $box --max-junctions 3 --sigma-from OFF --anchors-from OFF --anchors-from ON \
       --arm ON=$S/pr108_wcp_on/nue_5384_${sr}_${ev}.root:wcp \
@@ -28,8 +28,8 @@ for box in 3.0 2.25 3.75; do
   done
   for ev in 10550 46363 81597 360535 256587 433451; do
     python3 $R --box-cm $box --max-junctions 3 --sigma-from OFF --anchors-from OFF --anchors-from ON \
-      --arm ON=$W/work-pr109b-on-nuecc48/pr_evt$ev/tracking-pr.root:wct \
-      --arm OFF=$W/work-pr109b-off-nuecc48/pr_evt$ev/tracking-pr.root:wct \
+      --arm ON=$W/work-pr109c-on-nuecc48/pr_evt$ev/tracking-pr.root:wct \
+      --arm OFF=$W/work-pr109c-off-nuecc48/pr_evt$ev/tracking-pr.root:wct \
       --tag sbnd-$ev --tsv $OUT/sbnd$sfx.tsv $extra
   done
 done
