@@ -1,7 +1,19 @@
 # doc pr/109 — Near the vertex, which fit describes the measured 2-D charge better: exclusion ON or OFF? (2026-08-22)
 
-**Status:** measurement only, **no production change, no code change**. The answer differs by
-detector and it is the same in both implementations, so it is not a port defect:
+**Status:** §1-§7 measurement only. **§8 (2026-08-22) fixes a real bug** in the toolkit's
+`T_proj_data` writer — the tree reported another cluster's prediction — and re-derives every
+number below on the fixed arms. **No production/physics change**: the Bee, pctree and score
+outputs are byte-identical across the fix (§8.5). The verdicts did not change; the table below is
+the pre-fix record, and the post-fix one is §8.4:
+
+| family | entries (event × region) | per-event sign test | median ΔU (post-fix) |
+|---|---|---|---|
+| **uBooNE toolkit** | 9 / 4 / 4 | 3 better, 2 worse of 5 | **−0.017** |
+| **uBooNE prototype** | 9 / 0 / 2 | 4 better, 2 worse of 6 | **−0.036** |
+| **SBND toolkit** | 1 / 10 / **22** | **0 better, 6 worse of 6** | **+0.037** |
+
+The answer differs by detector and it is the same in both implementations, so it is not a port
+defect. Pre-fix table (the record §4 was written from):
 
 | family | entries (event × region) | per-event sign test | median ΔU = U_ON − U_OFF |
 |---|---|---|---|
@@ -122,6 +134,11 @@ Over the variants v = {2 anchor arms} × {box 2.25, 3.0, 3.75 cm}: `ΔU = median
 
 ## 4. Results
 
+> **Superseded in part by §8** (2026-08-22). Every number in this section was computed from a
+> `T_proj_data` whose `charge_pred` was corrupted by a cross-cluster overwrite in the toolkit's
+> writer. The section is kept verbatim as the record; §8.4 carries the same table recomputed on
+> the fixed arms. The verdicts did not change — they sharpened.
+
 Verdict counts and the per-event sign test are in the Status table; the full per-entry tables
 (with `Bsys`, `ΔB`, `N`, `ΔNcol`) are in `docs/pr/109_2d-residual-tables.txt`. Per plane
 (median over all anchors, box 3 cm):
@@ -211,6 +228,9 @@ same measurement as the acceptance test — it is cheap and now automated; (c) r
 `fit_exclusion` for SBND with a full nueCC48 + mcp1k arm pair, judged on this metric *and* on the
 vertex/selection census, since the two have disagreed before.
 
+> **Root cause superseded by §8** (2026-08-22): the answer is a cross-cluster overwrite in the
+> toolkit's `T_proj_data` writer, not a per-cell condition. §8.6 lists what stands and what falls.
+
 ## 7. Why does SBND leave ~20 % of the near-vertex charge unpredicted? (owner 2026-08-22: "uBooNE and SBND share the same toolkit code … investigate, I do not need a fix yet")
 
 Repro: `scripts/pr109_uncov_probe.py --arm L=<root>[:wcp] --box-cm 3.0` (per-cell classification and
@@ -290,3 +310,232 @@ cancels in the ON/OFF comparison, and it deserves its own round.
 One uBooNE case belongs with it: event **6805 toolkit**, the only uBooNE entry where 75 % of the
 uncovered charge sits on a cluster with **no fitted points at all** (distance = ∞) — a different
 mechanism (a cluster that was never fitted) from the interleaved SBND pattern.
+
+---
+
+## 8. The toolkit's unpredicted near-vertex charge was a SAVING bug — found, fixed, and §7 superseded
+
+Owner, 2026-08-22, after §7: *"I think we are very close to figure out what's going on … take the
+MicroBooNE case and compare the toolkit and prototype implementation of the track trajectory and
+dQ/dx fitting to figure out the issue. I wonder if it is a bug in the actual fitting (e.g. getting
+the data integrated) or a bug in presenting or saving the predicted charge. If it is a bug, we
+should fix them."*
+
+**Answer: presenting/saving. The fit integrates the same data in both implementations; the tree
+that reports the prediction did not report the fitting cluster's own answer.** Fixed. On the
+owner's instruction the fix is unconditional (no knob) — see §8.5 for the gate that replaces the
+byte-identical bar that choice gives up.
+
+### 8.0 Repro
+
+```bash
+# toolkit fc3f16bf + the fix; wcbuild; ./build/clus/wcdoctest-clus  (228/228, incl. 2 new cases)
+# uBooNE, 35-event filelist, concurrency 6 (NOTE: the TLA is compared with == "true",
+# so QL_FIT_EXCLUSION must be the STRING true/false -- "1" silently means false):
+cd qlport/scripts
+QL_FIT_EXCLUSION=true  ./sweep_5384.sh pr109b_wct_ontrue 6     # post-fix ON
+QL_FIT_EXCLUSION=false ./sweep_5384.sh pr109b_wct_off    6     # post-fix OFF
+QL_FIT_EXCLUSION=1     ./sweep_5384.sh pr109b_bare_on    6     # PRE-fix binary (gate baseline, =OFF)
+QL_FIT_EXCLUSION=1     ./sweep_5384.sh pr109b_wct_on     6     # post-fix, same TLA as the line above
+QL_FIT_EXCLUSION=true  ./sweep_5384.sh pr109b_wct_on2    6     # repeat of ON (run-to-run band)
+# SBND, same 6 events and the same Q/L baseline as §0:
+sbnd_xin/  SBND_FIT_EXCLUSION=true|false PR_JOBS=6 \
+    ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-pr109b-{on,off}-nuecc48 data \
+        10550 46363 81597 360535 256587 433451
+# the grid and the rule, re-pointed at the post-fix arms:
+sbnd_xin/scripts/pr109b_run_all.sh /home/xqian/tmp/pr109b
+python3 scripts/pr109_summary.py /home/xqian/tmp/pr109b/{ub_wct,ub_wcp,sbnd}.tsv
+python3 scripts/pr109_uncov_probe.py --arm A=<root>[:wcp] --box-cm 3.0     # §7's probe
+# gates:
+python3 scripts/pr85_hash_gate.py work-pr109-on-nuecc48 work-pr109b-on-nuecc48
+diff qlport/scripts/sweep/pr109b_{bare_on,wct_on}/hashes.txt
+```
+
+### 8.1 Stage-by-stage: the fit is not the problem
+
+`dQ_dx_multi_fit`, toolkit (`clus/src/TrackFitting.cxx`) against prototype
+(`prototype_base/pid/src/PR3DCluster_multi_dQ_dx_fit.h`):
+
+| stage | prototype | toolkit | verdict |
+|---|---|---|---|
+| 2-D data map | `prepare_data` (`PR3DCluster_trajectory_fit.h:1804`): cluster projection (flag 0/1/2) **+** the good-channel rectangle (flag 3) | `prepare_data` (`:762`): good-channel rectangle over the cluster bbox ±5 wires / ±20 ticks (flag 1; flag 2 with charge zeroed if q<0) + dead-blob spread (flag 0) | **equivalent in size**: 6528 `n2d` = 836/627/838 (WCP) vs 879/627/825 (WCT) |
+| R fill window | `\|wire − centers_U.front()\| ≤ 10 && \|t − centers_T.front()\| ≤ 10` slices (`:371`) | wire-indexed `round(centers_U.front()) ± 10`, `\|row.time − centers_T.front()\| ≤ 10·ntick` (`:6807`) | equivalent |
+| fill guard | `value>0 && charge>0 && flag!=0` (`:376`) | identical (`:6815/6840/6865`) | equivalent |
+| regulariser | multi-fit constants 0.25/0.75, λ=0.0008 (`:762,793`); the *single*-fit file uses 0.15/0.45, λ=0.0005 | `m_params` carries the single-fit values and the code scales them ×5/3 and λ ×8/5 at `:7266,7315` | **not a bug** (checked before claiming one — M15) |
+| **data actually integrated** | — | — | per-position coupling counts from the pr/108 §9 dumps agree: 6528 mean `cu/cv/cw` = **40.9/30.5/37.3** (WCP) vs **39.2/33.2/35.4** (WCT), zero-coupling positions 0/0/0 on both |
+| **saving** | `proj_data_{u,v,w}_map` is a **per-cluster** member; the app writes one row per cluster straight out of it (`wire-cell-prod-nue-port.cxx:3272-3320`) | the writer read the **merged** map and tagged cells by **blob ownership** | **the defect** |
+
+### 8.2 The three defects, all in the save path
+
+Nothing in reconstruction reads the merged map: its only consumers are the three Magnify tracking
+writers, `PrDisplayDump::dump_proj`, and `TaggerCheckSTM`'s `stm_fit` record — all output/display.
+
+- **S1 — cross-cluster overwrite.** `assemble_fitted_charge_2d()` (`TrackFitting.cxx:1192`)
+  flattens every per-cluster snapshot into one cell map, last-writer-wins in **ascending cluster
+  ident order**. A satellite cluster holds a main-cluster cell inside its own padded bounding box
+  and predicts **0** there; having the higher ident it writes last and wins. That is §7's whole
+  signature: damage concentrated near the vertex (where satellites are), cells interleaved with
+  covered ones at the same offset, identical in both arms, and induction-heavy — in the collection
+  view neighbouring clusters rarely overlap, which is why §7 measured **U 65 % / V 48 % / W 0 %**.
+- **S2 — ownership tagging.** `write_proj_data` emitted a row for every cluster owning a *blob* at
+  the cell (`fc.clusters`, from `global_rb_map`), carrying whatever prediction survived the merge.
+  A row labelled cluster A could therefore be entirely cluster B's answer.
+- **S3 — ident-collision discard.** The snapshot store was
+  `std::map<Facade::Cluster*, …, PR::ClusterPtrCmp>` — keyed by **ident** — so two live clusters
+  sharing an ident compared equal and the earlier snapshot was discarded whole. It fired on uBooNE
+  **5384-6528** (twice) and cost the main cluster its entire prediction: cid 19, 2141 cells,
+  Σpred = 0. That is the event pr/109 §4 excluded "with cause".
+
+Measured before the fix (`T_proj_data`, main cluster, whole map, ON arm):
+
+| event | arm | cid | cells | cov | Σŷ/Σy |   | event | arm | cid | cells | cov | Σŷ/Σy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 6505 | WCT | 14 | 5214 | 0.991 | 0.954 | | 6650 | WCT | 28 | 2178 | 0.817 | 0.773 |
+| 6505 | WCP | 14 | 6067 | 0.865 | 0.845 | | 6650 | WCP | 28 | 2494 | 0.848 | 0.850 |
+| 6528 | WCT | 19 | 2141 | **0.000** | **0.000** | | 6805 | WCT | 23 | 1525 | 0.786 | 0.643 |
+| 6528 | WCP | 19 | 2322 | 0.967 | 1.001 | | 6806 | WCT | 25 | 853 | 0.920 | 0.579 |
+| 6532 | WCT | 20 | 4766 | 0.613 | 0.483 | | 6806 | WCP | 26 | 1376 | 0.868 | 0.405 |
+| 6532 | WCP | 20 | 8257 | 0.561 | 0.543 | | SBND 46363 | WCT | 19 | 7833 | 0.704 | **0.437** |
+
+### 8.3 The fix
+
+Two commits, separable:
+
+1. `clus/inc/WireCellClus/TrackFitting.h`, `clus/src/TrackFitting.cxx`,
+   `root/src/{SbndPr,Sbnd,Uboone}MagnifyTrackingVisitor.cxx` — new
+   `TrackFitting::ClusterFitted2D` + `get_cluster_fitted_charge_2d()`; `write_proj_data` emits
+   **one row per fitted cluster, out of that cluster's own snapshot**, tagged with its ident (the
+   prototype's semantics). The merged-map + blob-ownership path is kept as a documented fallback
+   for a fitter that never ran with a cluster filter (the STM holder fed by
+   `merge_fitted_charge_2d`), so the tree can never come out empty.
+2. Same files — the snapshot store becomes a capture-ordered `std::vector<ClusterFitted2D>` keyed
+   on the cluster **pointer** (refits replace in place), and `assemble_fitted_charge_2d()`
+   stable-sorts by ident before merging. That keeps the determinism guarantee ident order was
+   introduced for (doc pr/28 §4.3) while ending the S3 discard.
+
+Tests: `clus/test/doctest_pr109_proj_data_per_cluster.cxx`, two cases — the merge losing the main
+cluster's answer on a shared cell (the contract the writers rely on), and two clusters sharing an
+ident both keeping their snapshot (revert-proven: the old ident-keyed map holds one).
+`./build/clus/wcdoctest-clus` 228/228, 2381 assertions.
+
+Two divergences found and **surfaced, not fixed** (M15 — neither is in `porting_dictionary.md`):
+
+- **Time-bin centring.** The toolkit integrates the time dimension over
+  `[tbin − ntick/2, tbin + ntick/2]`, treating the slice's tick as the bin **centre**
+  (`TrackFitting.cxx:5684`); the prototype integrates `[tbin, tbin+1]` in slice units with the
+  centre at `tbin + 0.5` (`PR3DCluster_dQ_dx_fit.h:169`). If `slice_index` is the slice's *start*
+  tick, the toolkit's response is half a slice (≈2 ticks, ≈1 µs) early. Needs the per-cell dump to
+  settle; it biases predictions, it does not zero them.
+- **6806's W map.** `n2d` W = 1980 (WCT) vs 609 (WCP) while U and V agree to a few percent. The
+  bbox-padding hypothesis predicts all three planes inflate, so it does not explain this. The two
+  clusters also differ (WCT cid 25 / 853 cells vs WCP cid 26 / 1376), so part of it is genuine
+  clustering difference. Unexplained.
+
+### 8.4 What the fix does to the numbers
+
+**§7's headline, recomputed with §7's own probe** (`pr109_uncov_probe.py`, 3 cm box, ON arm,
+uncovered *charge* fraction):
+
+| event | pre-fix | post-fix | prototype |   | event | pre-fix | post-fix |
+|---|---|---|---|---|---|---|---|
+| 6505 | 0.2 % | 0.2 % | 0.1 % | | SBND 10550 | 17.1 % | 14.9 % |
+| 6528 | 100 % | *(see below)* | 1.8 % | | SBND 46363 | 42.1 % | **3.3 %** |
+| 6532 | 28.0 % | **7.4 %** | 5.6 % | | SBND 81597 | 30.8 % | **12.8 %** |
+| 6650 | 7.2 % | **0.2 %** | 0.1 % | | SBND 360535 | 29.9 % | **6.3 %** |
+| 6805 | 15.4 % | 14.2 % | 15.2 % | | SBND 256587 | 46.9 % | **3.3 %** |
+| 6806 | 3.0 % | 3.0 % | 2.3 % | | SBND 433451 | 2.9 % | 2.6 % |
+
+and the same quantity read off the grid TSVs (median `uncov` over all anchors, box 3 cm):
+
+| family | pre-fix ON | post-fix ON | pre-fix OFF | post-fix OFF |
+|---|---|---|---|---|
+| uBooNE toolkit | 11.8 % | **1.6 %** | 13.1 % | **2.2 %** |
+| uBooNE prototype | 1.7 % | 1.7 % (untouched) | 1.6 % | 1.6 % |
+| SBND toolkit | 20.1 % | **4.0 %** | 19.3 % | **3.7 %** |
+
+**The toolkit now sits on the prototype's number (1.6 % vs 1.7 %), event by event.** uBooNE 6805
+is the one event that does not move — §7 already identified it as a different mechanism (75 % of
+its uncovered charge is on a cluster with no fitted points at all), and the prototype shows the
+same 15 % there, which is now visible as agreement rather than as toolkit breakage. uBooNE 6528's
+main cluster recovers from Σŷ/Σy = 0.000 to **1.013** (prototype 1.001), but the event drops out of
+the *probe* for a new and honest reason: with each fitted cluster emitting its whole 2-D map, the
+maps of cid 19 and the twin cid-1909 clusters overlap, and every cell in its vertex box is now
+multi-owner, which the probe's single-owner filter removes.
+
+**§4's verdicts, recomputed on the post-fix arms with §4's own recipe** (median over all anchors,
+box 3 cm; the pre-fix row reproduces the published toolkit-uBooNE row exactly and SBND to ≤0.007,
+so the recipe is the same one):
+
+| family | ΔU (U) | ΔU (V) | ΔU (W) | ΔU pooled | Δ(χ²/N) |
+|---|---|---|---|---|---|
+| uBooNE toolkit, **pre-fix** | −0.016 | −0.012 | −0.013 | −0.024 | −1.73 |
+| uBooNE toolkit, **post-fix** | −0.023 | −0.012 | −0.017 | **−0.026** | −1.87 |
+| uBooNE prototype (untouched) | −0.023 | −0.023 | −0.014 | −0.026 | −1.36 |
+| SBND toolkit, **pre-fix** | +0.030 | +0.003 | +0.039 | +0.026 | +2.37 |
+| SBND toolkit, **post-fix** | +0.047 | +0.008 | +0.036 | **+0.036** | +2.53 |
+
+Decision rule, post-fix (`pr109_summary.py`, entries = (event, region), `U` pooled over planes):
+
+| family | entries B/E/W | per-event sign test | median ΔU |
+|---|---|---|---|
+| uBooNE toolkit | 9 / 4 / 4 | 3 better, 2 worse of 5 | −0.017 |
+| uBooNE prototype | 9 / 0 / 2 | 4 better, 2 worse of 6 | −0.036 |
+| SBND toolkit | 1 / 10 / 22 | **0 better, 6 worse of 6** | **+0.037** |
+
+**Every conclusion of §4 and §5 survives, and the two that mattered get stronger.** The two
+implementations still agree on uBooNE that the exclusion-ON trajectory describes the 2-D data
+better — and they now agree *quantitatively* (pooled ΔU −0.026 vs −0.026, where before the toolkit
+was measured through a corrupted tree). On SBND the owner's claim still holds at the registered bar
+(6/6 events ON-worse) and the effect size grows from **+2.6 pp to +3.6 pp**. The plane pattern is
+unchanged: SBND damage in U and W, V neutral.
+
+One caveat the fix introduces on the metric side, stated rather than buried: because each fitted
+cluster now emits its whole 2-D map, overlapping maps make more cells multi-owner (median shared
+fraction on SBND 7 % → 16 %), so the post-fix sample is not the identical set of cells. It is,
+however, the *same* convention the prototype has always used, so this is the first
+apples-to-apples comparison of the three families.
+
+### 8.5 Gates — scoped, because the fix is unknobbed
+
+The owner chose an unconditional fix, which gives up the byte-identical bar of CLAUDE.md §1 by
+construction (`T_proj_data` is *supposed* to change). What replaces it is a blast-radius proof:
+
+| check | result |
+|---|---|
+| SBND Bee/pctree archives, pre-fix vs post-fix ON arm (`pr85_hash_gate.py`) | **PASS, all 12 archives byte-identical** |
+| SBND `tracking-pr.root`, per-tree content hash, 6 events | `T_bad_ch` `T_kine` `T_proj` `T_rec_charge` `T_tagger` `Trun` identical **6/6**; `T_proj_data` differs 6/6 |
+| SBND `nusel-evt*.tsv` (per-event scores) and merged `nusel-table.tsv` | identical **6/6** and identical |
+| uBooNE Bee `mabc_*.zip` member-content rollup, pre-fix vs post-fix (35 events) | **identical 35/35** (`diff` of the two `hashes.txt`) |
+| uBooNE `track_com_*.root` per-tree, 35 events | `T_bad_ch` `T_kine` `T_proj` `T_tagger` `Trun` identical **35/35**; `T_proj_data` differs 35/35 |
+| uBooNE `T_rec_charge` | identical **as a row set 35/35**; its row *order* is not reproducible — it differs on **34/35 events between two runs of the same binary** (`pr109b_wct_on` vs `pr109b_wct_on2`), a pre-existing write-order non-determinism, mentioned and not touched |
+| `./build/clus/wcdoctest-clus` | 228 cases / 2381 assertions, SUCCESS |
+| freshness (M1) | `local/lib/libWireCell{Clus,Root}.so` 14:35 vs sources 14:24 |
+
+So: no Bee layer, no pctree tensor, no tagger verdict, no selection score changes. The change is
+confined to the tree it was aimed at.
+
+### 8.6 What §7 got right, and what it got wrong
+
+§7 stands as the measurement that located the problem — the uncovered cells really are inside the
+coupling window, really are interleaved with covered ones at the same offset, really are
+induction-only, and really are the same cells in both arms. Every one of those is what a
+**cross-cluster overwrite** looks like, and §7's own framing ("a static per-cell condition, not
+geometry") was pointing at it.
+
+What §7 got wrong is the attribution in §7.3: it read the condition as a property of the *cell*
+(the fill guard, dead-region `flag = 0` fillers, an unidentified live-U-plane skip) when it was a
+property of the *writer*. Concretely, superseded:
+
+- "the near-vertex shortfall is dominated by a static, induction-plane, per-cell condition … the
+  remainder is unidentified" — **superseded**: the remainder was S1+S2 and is now measured (§8.4).
+- the Phase-2 per-cell `(flag, value, row)` dump named in §7.3 as "the one measurement that would
+  settle it" — **not needed** for this question; it would still be the instrument for the
+  time-bin-centring divergence of §8.3.
+- "the larger split is implementation, not detector" — **still true**, but the split was in the
+  saving, not in the fitting, and it is now closed (1.6 % vs 1.7 %).
+
+What survives unchanged from §7: dead-region `flag = 0` fillers are real and are a separate,
+smaller contributor (6196/16759 cells on SBND 46363, 70 % of the V-plane cells, but only 4.3 % of
+the charge); the ON/OFF stability that made the corruption largely cancel in ΔU is confirmed
+directly — the verdicts did not flip, they sharpened; and uBooNE 6805's never-fitted cluster is a
+genuinely different mechanism, now shown to be shared with the prototype.
