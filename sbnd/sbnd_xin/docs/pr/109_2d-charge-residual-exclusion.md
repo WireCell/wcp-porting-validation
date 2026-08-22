@@ -3,8 +3,11 @@
 **Status:** §1-§7 measurement only. **§9 (2026-08-22) answers the owner's "why is SBND worse"
 question**: `update_association` keeps a 2-D cell only if its segment is *strictly closest of all
 siblings in the cluster*, so the strip rate scales with the cluster's segment count — SBND reaches
-37 segments per exclusion call against uBooNE's 9, strips 53.6 % of the associations within 3 cm of
-the vertex against 21.1 %, and ends with 21 % fewer near-vertex trajectory points against 1 %. The
+26-37 segments per exclusion call in the calls that carry 78 % of its associations -- a regime
+uBooNE never enters (max 9) -- strips 53.6 % of the associations within 3 cm of the vertex against
+21.1 %, and ends with 21 % fewer near-vertex trajectory points against 1 %. Strip rate rises
+monotonically with sibling count *within* each detector (Spearman +0.98 SBND, +0.53 uBooNE; calls
+with a single segment strip exactly 0 %). The
 SBND pattern-recognition knobs are implicated collectively, through the segment population they
 produce, not individually; `fit_blob_coverage` is a secondary modulator (flips 2/6 events, removes
 all of the bias deepening, leaves the stripping). No code changed in §9. **§8 (2026-08-22) fixes a
@@ -604,10 +607,12 @@ different knobs. I suspected that these may lead to the difference that you obse
 are after the reason behind why adding exclusion fit makes the charge matching slightly worse."*
 
 **Answer.** `update_association`'s keep rule is a *tournament*: a 2-D cell stays with a segment only
-if that segment is **strictly closest of all the sibling segments in the same cluster**. SBND's
-pattern recognition builds clusters with three-to-four times more segments than uBooNE's, so the
-same rule strips far more charge — **53.6 % of the associated cells within 3 cm of the neutrino
-vertex on SBND 46363 against 21.1 % on uBooNE 6505, and 30.5 % against 6.4 % overall.** The
+if that segment is **strictly closest of all the sibling segments in the same cluster**. The strip
+rate is therefore a rising function of how many siblings the cluster has — measured **within** each
+detector below — and SBND's pattern recognition routinely runs that tournament with **26–37**
+competing segments, a regime uBooNE never enters (its largest is 9). The same rule consequently
+strips far more charge on SBND: **53.6 % of the associated cells within 3 cm of the neutrino vertex
+on SBND 46363 against 21.1 % on uBooNE 6505, and 30.5 % against 6.4 % overall.** The
 near-vertex trajectory then carries **21 % fewer fitted points** (SBND) versus **1 %** (uBooNE
 toolkit) / **4 %** (prototype), so the dQ/dx system has less support exactly where the metric looks,
 and its prediction falls further below the measured charge. This is not a knob defect and not a port
@@ -729,18 +734,32 @@ scores. The null control (calls that pass `flag_exclusion = false` by constructi
 `NeutrinoPatternBase.cxx:2264/2339/2531`, `NeutrinoVertexFinder.cxx:780/4806`) strips exactly
 nothing, confirming the dump is measuring the flag and not something else.
 
-**Why SBND strips more — the arbitration universe.** The keep test is "strictly closest of all
-siblings", so its severity grows with the number of siblings. Counting distinct segments per
-exclusion call in the same dumps:
+**Why SBND strips more — the arbitration universe, with a dose-response.** The keep test is
+"strictly closest of all siblings", so its severity should grow with the number of siblings. Both
+fields are on the same dump lines, so this is testable *within* each detector rather than inferred
+from a between-detector comparison. Grouping exclusion calls by the number of distinct segments they
+arbitrate over, and pooling the associations in each band:
 
-| | calls | median | mean | **max** |
-|---|---|---|---|---|
-| SBND 46363 | 97 | 1.0 | **11.0** | **37** |
-| uBooNE 6505 | 23 | 7.0 | 5.5 | **9** |
+| segments per call | SBND 46363: calls / strip % | uBooNE 6505: calls / strip % |
+|---|---|---|
+| 1 (no competitor) | 54 / **0.0 %** | 6 / **0.0 %** |
+| 2–5 | 6 / 23.5 % | 4 / 2.8 % |
+| 6–10 | 3 / 6.4 % | 13 / 5.9 % |
+| 11–25 | 9 / 17.5 % | **none** |
+| **26–99** | **25 / 30.3 %** | **none** |
+| Spearman ρ(nseg, strip) over calls | **+0.98** | +0.53 |
 
-SBND's distribution has a heavy tail — 33 calls at 26–37 segments — that uBooNE simply does not
-have. A cell surviving a 37-way tournament is far rarer than one surviving a 9-way tournament, and
-the excess segments sit where the pattern recognition works hardest, i.e. at the vertex.
+Single-segment calls strip **exactly 0.0 %** in both detectors — there is no competitor to lose to —
+which is a second null control on the instrument. Above that the strip rate climbs monotonically
+with the sibling count in both detectors, so the tournament interpretation is earned rather than
+assumed.
+
+The between-detector difference is then a difference of **regime, not of average**: uBooNE's calls
+never exceed 10 segments, while SBND runs 34 of its 97 calls at 11+ and 25 at 26–37, and those 25
+carry **78 % of all of SBND's associations**. Their 30.3 % strip is what drives the 30.5 % aggregate;
+the rest of SBND's calls strip 15.2 %. Note that the *medians* point the other way (SBND 1.0,
+uBooNE 7.0) because SBND's distribution is bimodal — 54 of 97 calls are single-segment and strip
+nothing. The claim is about the tail, and the tail is where the charge is.
 
 **And the trajectory loses points as a result.** Counting `T_rec_charge` fitted points within 3 cm
 of the *same* anchors (main vertex + 3 junctions, taken from the OFF arm so both arms are scored on
@@ -802,9 +821,16 @@ third of the ON-worse events and all of the bias deepening (§9.2), but four eve
 and the stripping is essentially unchanged (21 % → 18 % point loss). It is a modulator, not the
 cause.
 
-Validity guard on the `fbcoff` arms: all 12 jobs rc=0, all 6 events retain a main vertex and main
-cluster in both arms, and the near-vertex cell counts stay within the production arm's range
-(entry count 31 vs 33, i.e. the anchor set is comparable). No event was excluded.
+**Validity guard, per event** (turning off a production-ON knob can degrade reconstruction to where
+`U` is not comparable, so this is checked before any `fbcoff` number is believed). All 12 jobs rc=0.
+Every one of the 24 arm-events retains a space-charge-corrected neutrino vertex, a main cluster
+(440–1931 points), all 4 anchor regions, and a non-empty `nusel-evt*.tsv`: **structurally PASS
+6/6**. The plan's fourth criterion — in-box single-owner cell count within ±20 % of the production
+ON arm — is exceeded on three arm-events (81597 `fbc-ON` +21.2 %, 256587 `fbc-OFF` +20.5 %), **but
+it is also exceeded by the production OFF arm itself** (256587 −26.4 %, 10550 +18.7 %, 360535
++11.6 %). That criterion is therefore measuring the anchor/box shift that exclusion produces by
+design, not a degenerate reconstruction, and it does not separate the `fbcoff` arms from the §8
+baseline. No event was excluded; the per-event numbers are in the sidecar §6e.
 
 ### 9.5 A structural difference that is not a knob, and cannot be tuned away
 

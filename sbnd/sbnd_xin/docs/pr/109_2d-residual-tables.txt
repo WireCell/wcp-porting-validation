@@ -803,3 +803,50 @@ sbnd-81597       5   0.7643   0.7314   0.0301   0.0157   0.0893    486     22  O
   entries 31: ON-better 4, equivalent 12, ON-worse 15
   per-event sign test: ON-better 2/6, ON-worse 4/6
 
+
+6e. strip fraction vs arbitration-universe size, WITHIN each detector, and the
+    per-event validity guard on the fbcoff arms (doc sec 9.3 / 9.4)
+
+== SBND 46363  (97 exclusion calls with associations)
+  nseg band     calls     sum_n0     sum_n1   strip%
+  1-1              54      24033      24033     0.0%
+  2-5               6      13974      10689    23.5%
+  6-10              3     118423     110875     6.4%
+  11-25             9     562509     464042    17.5%
+  26-99            25    2508267    1747298    30.3%
+  corr(nseg,strip) pearson +0.918  spearman +0.980
+  tail nseg>=26: 25 calls, 78% of all associations, strip 30.3%; rest 15.2%
+== uBooNE 6505  (23 exclusion calls with associations)
+  nseg band     calls     sum_n0     sum_n1   strip%
+  1-1               6       4448       4448     0.0%
+  2-5               4      58508      56869     2.8%
+  6-10             13     760942     715989     5.9%
+  corr(nseg,strip) pearson +0.272  spearman +0.529
+
+--- per-event validity guard (nuv present / main-cluster points / anchor regions /
+    in-box single-owner cells vs production-ON arm) ---
+evt      arm          nuv  mainpts  nreg   ncell vs prodON  nusel
+10550    prod-ON     True      440     4    1384     +0.0%    yes
+10550    prod-OFF    True      474     4    1643    +18.7%    yes
+10550    fbc-ON      True      443     4    1382     -0.1%    yes
+10550    fbc-OFF     True      474     4    1643    +18.7%    yes
+46363    prod-ON     True      887     4    1375     +0.0%    yes
+46363    prod-OFF    True     1059     4    1350     -1.8%    yes
+46363    fbc-ON      True      832     4    1410     +2.5%    yes
+46363    fbc-OFF     True      925     4    1506     +9.5%    yes
+81597    prod-ON     True      680     4    1033     +0.0%    yes
+81597    prod-OFF    True      711     4     922    -10.7%    yes
+81597    fbc-ON      True      656     4    1252    +21.2%    yes
+81597    fbc-OFF     True      707     4     922    -10.7%    yes
+360535   prod-ON     True      795     4    1529     +0.0%    yes
+360535   prod-OFF    True      893     4    1706    +11.6%    yes
+360535   fbc-ON      True      821     4    1505     -1.6%    yes
+360535   fbc-OFF     True      914     4    1706    +11.6%    yes
+256587   prod-ON     True     1769     4    1036     +0.0%    yes
+256587   prod-OFF    True     1869     4     762    -26.4%    yes
+256587   fbc-ON      True     1931     4     999     -3.6%    yes
+256587   fbc-OFF     True     1787     4    1248    +20.5%    yes
+433451   prod-ON     True     1204     4    1686     +0.0%    yes
+433451   prod-OFF    True     1258     4    1625     -3.6%    yes
+433451   fbc-ON      True     1247     4    1701     +0.9%    yes
+433451   fbc-OFF     True     1244     4    1597     -5.3%    yes
