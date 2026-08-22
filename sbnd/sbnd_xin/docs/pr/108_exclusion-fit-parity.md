@@ -10,7 +10,10 @@ on two events and 0…−4 % on three. Absolute ON-vs-ON junction charge agrees 
 junctions, 0.72–0.75 on 6805 and 2.2× on 6806 (input-data treatment, §6). On SBND the toolkit's
 exclusion-ON trajectory carries **13 % less charge within 1 cm of the target vertex** than OFF,
 and pr/107's keep-all does not recover it (§5) — the opposite sign from what both implementations
-do on uBooNE. Owner to direct the next step (§7).
+do on uBooNE. §9 traced the 6806 2.2× to an ill-conditioned dQ/dx system, and §10 (owner: repeat the
+exercise at a junction with no dead channel) confirms the fit itself is sound: at junctions where
+every plane constrains the fit it is 100–300× stiffer (κ ≈ 0.5–3), the two implementations agree on
+the junction charge to ~5 % and on the exclusion delta to ~2 pp. Owner to direct the next step (§7).
 
 Owner (2026-08-21): "double check between the prototype and toolkit implementations carefully …
 1. organization of the input data for the fit? 2. possible sharing of dQ/dx fit? … if the fitted
@@ -303,3 +306,119 @@ close-wire weights or λ when ≥3 prongs meet within the coupling window; C4 si
 charge proxy that does not depend on the split (e.g. the summed 2-D charge within the window, which
 both sides agree on to 5–10 %).  The prototype's training data carry the same instability, so (c)
 would also have to be evaluated against the existing net.
+
+## 10. A junction with no dead channel (owner 2026-08-21: "pick another vertex where there is no dead channel involved and do the same exercise again — I want to confirm again the dQ/dx fit is not an issue")
+
+Repro (dumps ~10 s/event/arm; the analysis is offline):
+
+```bash
+# the four remaining test events, all four arms, same binaries as sec 9 (libWireCellClus.so and
+# prototype_base/build/pid/* both 16:36, the sec-9 dumps 16:38 -- one binary era, no rebuild between)
+bash scripts/pr108h_wct_dump.sh                # WCT off/on, idx 1 6 16 22 -> sweep/pr108h_wct_{off,on}
+bash scripts/pr108h_wcp_dump.sh on ; bash scripts/pr108h_wcp_dump.sh off   # ev 6505 6532 6650 6805
+python3 scripts/pr108_dqdx_cond.py --j 108.84 48.26 1029.27 \
+  --dump WCP-on=…/pr108h_wcp_on/dqdx_6505.dump --dump WCT-on=…/pr108h_wct_on/dqdx_1.dump \
+  --dump WCP-off=…/pr108h_wcp_off/dqdx_6505.dump --dump WCT-off=…/pr108h_wct_off/dqdx_1.dump
+# full output for all 9 junctions x 4 arms: docs/pr/108_dqdx-conditioning.txt
+```
+
+**Instrument.** §9's perturbation was an ad-hoc script that was not kept; §10's
+`scripts/pr108_dqdx_cond.py` is the durable one and re-derives §9's cases in the same table (its
+numbers differ from §9's in detail — it keeps the perturbed A symmetric, as A = RᵀMR + F is, and
+discards draws whose perturbed A is no longer positive definite, which is what produced §9's
+heavy tails — the qualitative statement is unchanged). It adds a deterministic figure of merit
+with no Monte-Carlo tail to argue about:
+
+  **κ** = σ(Δs)/s per unit relative change of A's entries, from Δs = −yᵀ ΔA x with y = A⁻¹u,
+  u the near-junction selector: *a 1 % change of the couplings moves the junction charge by κ %*.
+
+**Selection, blind to the answer.** "No dead channel" is read off the dump's `reg` flags, which are
+in fact the *stronger* condition: `reg=1` marks a position whose fit loses that plane either because
+the channel is dead (`row.flag==0`, `TrackFitting.cxx:6814`) **or** because the projected wire/time
+carries no measured 2-D point at all (`:6877`). Of the 11 reference junctions of the six test events,
+**two are `reg=0` at every near-J position in all four arms — 6505 J0 and 6650 J0** — and three more
+are clean in the ON arms (6505 J1, 6532 J0, 6650 J1). All of them are reported below, together with
+the §9 cases, so nothing is selected on how tidy it looks. The clean junctions are *not* free of the
+second §9 ingredient: their prongs still overlap (12–20 connected pairs with overlap > 0.5, max 0.9–1.0).
+
+### 10.1 Conditioning — the clean junctions are stable, the dead one is not
+
+| junction | reg flags near J (WCP-on / WCT-on) | κ (4 arms) | ε = 1 % band p10–p90 | draws staying pos-def |
+|---|---|---|---|---|
+| **6505 J0** (clean) | 0/7, 0/7 | **0.5–0.7** | 0.99–1.01 | 199–200 / 200 |
+| **6650 J0** (clean) | 0/7, 0/9 | **1.7–2.8** | 0.97–1.04 | 200/200 |
+| 6650 J1 | 1/8, 0/5 | 0.9–1.8 | 0.98–1.03 | 200/200 |
+| 6505 J1 | 0/9, 0/9 | 3.8–5.4 | 0.94–1.09 | 199–200/200 |
+| 6532 J0 | 0/7, 1/7 | 3.0–6.6 | 0.79–1.08 | 94–194/200 |
+| 6805 J0 | 4/6, 3/5 (V, not all) | 1.2–1.6 | 0.98–1.02 | 200/200 |
+| 6528 J0 (§9) | 3/9, 0/8 | 7–19 | 0.87–1.83 | 43–195/200 |
+| 6528 J1 (§9) | 1/4, 0/4 | 2.4–22 | 0.80–1.56 | 43–195/200 |
+| **6806 J0** (§9, W dead at *every* near-J position) | 8/8, 10/10 | **90–183** | 0.26–4.76 | 57–120/200 |
+
+The dQ/dx system at a junction where every plane constrains the fit is **well conditioned**: a 1 %
+change of the couplings moves the junction charge by ~1 % (6505 J0) to ~3 % (6650 J0), and a random
+1 % perturbation keeps it inside ±1–4 % — 100 to 300× stiffer than 6806 J0, where the same 1 % spans
+0.26–4.8×. The direct (dense LU) solve reproduces the dumped BiCGSTAB solution to ≤3·10⁻⁷ at every
+junction and in every arm, so nothing here is a solver artefact.
+
+κ tracks the flags, not the overlaps: the clean junctions have the same prong overlaps as 6806 and
+are stable anyway. But the flags alone are not sufficient either — **6805 J0** has 3–4 of 5–6
+positions flagged and is still stiff (κ 1.4). What 6806 J0 has and the others do not is that *every*
+near-J position loses *the same* plane (`001` = W) while four prongs share the surviving wires: the
+overlapped charge can then slide between prongs at nearly equal χ². 6528 J0's WCT-off (4/10 flagged
+on V, κ 19) is the same pattern one notch weaker.
+
+### 10.2 Do the two implementations agree there? Yes.
+
+Path-length-normalised charge in the junction sphere (Σ dQ / Σ local_dx, R = 1.5 cm, 10³ e/cm) —
+this removes the point-density difference that makes a per-point median misleading when one arm puts
+9 points where the other puts 7:
+
+| junction | WCP-on | WCT-on | WCP-off | WCT-off | WCT/WCP on | WCT/WCP off | WCP on/off | WCT on/off |
+|---|---|---|---|---|---|---|---|---|
+| 6505 J0 (clean) | 106.2 | 100.6 | 92.5 | 89.3 | **0.948** | 0.965 | **+14.8 %** | **+12.7 %** |
+| 6505 J1 | 77.2 | 75.9 | 72.9 | 66.4 | **0.983** | 0.911 | +5.9 % | +14.3 % |
+| 6532 J0 | 104.1 | 104.0 | 76.9 | 107.0 | **0.999** | 1.392 | +35 % | −2.8 % |
+| 6650 J0 (clean) | 98.6 | 68.0 | 97.6 | 76.2 | 0.690 | 0.781 | +1.1 % | −10.7 % |
+| 6650 J1 | 82.2 | 112.9 | 91.9 | 111.1 | 1.374 | 1.210 | −10.6 % | +1.6 % |
+| **6650 J0+J1** | **180.8** | **180.9** | 189.5 | 187.3 | **1.000** | 0.988 | **−4.6 %** | **−3.4 %** |
+| 6805 J0 | 49.3 | 63.8 | 65.3 | 63.1 | 1.296 | 0.965 | −24.5 % | +1.2 % |
+| 6528 J0 (§9) | 68.2 | 76.2 | 68.9 | 45.8 | 1.117 | 0.665 | −1.0 % | +66 % |
+| 6806 J0 (§9) | 88.2 | 166.0 | 92.7 | 111.8 | **1.882** | 1.207 | −4.8 % | **+48 %** |
+
+At the clean junctions the two implementations agree on the fitted charge to **5 %** (6505 J0 0.948,
+6505 J1 0.983, 6532 J0 0.999), and the per-position matched (dQ/dx) medians agree to 2–4 %
+(0.968 / 0.965 / 0.976, spread 0.81–1.17 — sidecar table 3). 6650's two junction vertices are 4.4 cm
+apart and the arms split the charge between them differently (0.69 at J0, 1.37 at J1) — but their
+**sum agrees to 0.1 %** (180.8 vs 180.9): that is a per-vertex assignment difference in how the
+prongs are organised, not a difference in what the fit puts on the trajectory. The only place where
+the two codes genuinely disagree on charge is 6806 J0 (1.88×), i.e. the one junction whose system is
+100× more sensitive than the rest.
+
+**And the exclusion knob's effect is the same in both codes there too**: 6505 J0 +14.8 % (WCP) vs
++12.7 % (WCT); 6650 J0+J1 −4.6 % vs −3.4 %; matched per-position ON/OFF medians 1.122 vs 1.075
+(6505 J0) and 0.981 vs 0.966 (6650 J0). The ON/OFF *sign* disagreements in the table (6532 J0,
+6805 J0, 6528 J0) all sit at junctions with κ ≥ 6 in at least one arm, or — 6650 J0/J1, 6805 J0 —
+are the per-vertex split of a total that agrees.
+
+Cross-solve at 6505 J0 (A of one arm with b of the other, 239/243 positions matched): 519 k against
+nominals 493 k (WCP) and 479 k (WCT) — mixing the two systems moves the answer by 6–8 %, where the
+same operation at 6806 J0 reproduced whichever arm's **A** was used (§9). At 6650 the cross-solve is
+not interpretable (the arms carry different numbers of points in the sphere, so the b-substitution is
+not one-to-one) and is not quoted.
+
+### 10.3 What this settles
+
+- **The dQ/dx fit is not the issue.** Where every plane constrains the fit, it is well conditioned
+  (κ ≈ 0.5–3), the prototype and the toolkit agree on the junction charge to ~5 % and on the
+  *exclusion delta* to ~2 percentage points, and the direct solve confirms the iterative solver at
+  every junction. This is the confirmation the owner asked for, on junctions chosen by the flag
+  criterion and not by their agreement.
+- The one divergence in the whole set (6806 J0, 1.9×) is confined to the configuration §9 identified:
+  every near-junction position blind on the same plane, with several prongs sharing the surviving
+  wires. §9's proposed levers stay as stated, but they are now known to apply to a **narrow** class of
+  junctions rather than to junctions generally — and lever (a) (a junction regulariser) should be
+  keyed on *"all near-J positions lose the same plane"*, which is what separates 6806 from 6805 J0,
+  not on the presence of a dead channel or on the prong count.
+- Nothing here changes production: still no knob, no default change; the dumps are env-gated
+  (`WCT_DQDX_DUMP` needs `WCT_TRAJ_DUMP` set too — it supplies the call counter).
