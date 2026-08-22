@@ -1,6 +1,14 @@
 # doc pr/109 — Near the vertex, which fit describes the measured 2-D charge better: exclusion ON or OFF? (2026-08-22)
 
-**Status:** §1-§7 measurement only. **§8 (2026-08-22) fixes a real bug** in the toolkit's
+**Status:** §1-§7 measurement only. **§9 (2026-08-22) answers the owner's "why is SBND worse"
+question**: `update_association` keeps a 2-D cell only if its segment is *strictly closest of all
+siblings in the cluster*, so the strip rate scales with the cluster's segment count — SBND reaches
+37 segments per exclusion call against uBooNE's 9, strips 53.6 % of the associations within 3 cm of
+the vertex against 21.1 %, and ends with 21 % fewer near-vertex trajectory points against 1 %. The
+SBND pattern-recognition knobs are implicated collectively, through the segment population they
+produce, not individually; `fit_blob_coverage` is a secondary modulator (flips 2/6 events, removes
+all of the bias deepening, leaves the stripping). No code changed in §9. **§8 (2026-08-22) fixes a
+real bug** in the toolkit's
 `T_proj_data` writer — the tree reported another cluster's prediction — and re-derives every
 number below on the fixed arms. **No production/physics change**: the Bee, pctree and score
 outputs are byte-identical across the fix (§8.5). The verdicts did not change; the table below is
@@ -585,3 +593,270 @@ smaller contributor (6196/16759 cells on SBND 46363, 70 % of the V-plane cells, 
 the charge); the ON/OFF stability that made the corruption largely cancel in ΔU is confirmed
 directly — the verdicts did not flip, they sharpened; and uBooNE 6805's never-fitted cluster is a
 genuinely different mechanism, now shown to be shared with the prototype.
+
+---
+
+## 9. Why the exclusion fit costs SBND and pays on uBooNE (2026-08-22)
+
+Owner: *"zoom in to the toolkit's performance difference regarding the exclusion fit for MicroBooNE
+and SBND. SBND has made quite a few improvements in the pattern recognition, which are gated by
+different knobs. I suspected that these may lead to the difference that you observed… Basically, we
+are after the reason behind why adding exclusion fit makes the charge matching slightly worse."*
+
+**Answer.** `update_association`'s keep rule is a *tournament*: a 2-D cell stays with a segment only
+if that segment is **strictly closest of all the sibling segments in the same cluster**. SBND's
+pattern recognition builds clusters with three-to-four times more segments than uBooNE's, so the
+same rule strips far more charge — **53.6 % of the associated cells within 3 cm of the neutrino
+vertex on SBND 46363 against 21.1 % on uBooNE 6505, and 30.5 % against 6.4 % overall.** The
+near-vertex trajectory then carries **21 % fewer fitted points** (SBND) versus **1 %** (uBooNE
+toolkit) / **4 %** (prototype), so the dQ/dx system has less support exactly where the metric looks,
+and its prediction falls further below the measured charge. This is not a knob defect and not a port
+defect: it is the arbitration rule meeting a denser segment population. The owner's suspicion is
+**confirmed in substance** — the SBND pattern-recognition knobs are implicated, but collectively,
+through the segment count they produce, rather than through any single one.
+
+`fit_blob_coverage` (SBND production ON, uBooNE absent) is a genuine **secondary** modulator: it
+accounts for essentially all of the exclusion-induced *bias* deepening and flips 2 of the 6 events,
+but it does not cause the stripping.
+
+### 9.0 Repro
+
+```bash
+# Same binary as §8 (no source edit this round): toolkit 56683366,
+#   local/lib/libWireCellClus.so md5 6524549bb4a064fcc5ca83b0474d2352
+#   local/lib/libWireCellRoot.so md5 0d85ff1fa144c201132e63b3bd6627f7
+# TRAP (§8.0, still live): the uBooNE TLA is compared with == "true"
+#   (uboone-mabc.jsonnet:1513), so QL_FIT_EXCLUSION=1 SILENTLY MEANS false.
+#   Always read the value back:  grep -o "fit_exclusion=[a-z]*" .../wct_5384_<ev>.log
+# TRAP (§8.0): pr109b_run_all.sh:3's header comment names pr109b_wct_{on,off};
+#   the BODY correctly uses pr109e_*.  "Fixing" the body to match the comment
+#   silently yields an OFF-vs-OFF comparison with plausible-looking dU.
+
+# (a) the factorial: same post-fix binary, fit_blob_coverage forced to the C++ default -1
+cd sbnd_xin
+SBND_FIT_EXCLUSION=true  SBND_FIT_BLOB_COVERAGE=-1 PR_JOBS=6 ./run_pr_chain_batch.sh \
+    work-nuecc48-ql0819 work-pr109f-on-fbcoff-nuecc48  data 10550 46363 81597 360535 256587 433451
+SBND_FIT_EXCLUSION=false SBND_FIT_BLOB_COVERAGE=-1 PR_JOBS=6 ./run_pr_chain_batch.sh \
+    work-nuecc48-ql0819 work-pr109f-off-fbcoff-nuecc48 data 10550 46363 81597 360535 256587 433451
+scripts/pr109f_run_all.sh /home/xqian/tmp/pr109f
+python3 scripts/pr109_summary.py /home/xqian/tmp/pr109f/sbnd_fbcoff.tsv   # vs .../pr109e/sbnd.tsv
+
+# (b) the channel decomposition -- read-only on the §8 arms, no run at all
+python3 scripts/pr109_chanb_probe.py --tag <evt> \
+    --arm ON=<arm>/tracking-pr.root:wct --arm OFF=<arm>/tracking-pr.root:wct
+
+# (c) the strip fraction -- the pr/108 §8 stage dump, one event per file
+WCT_TRAJ_DUMP=/home/xqian/tmp/traj_sbnd46363.txt SBND_FIT_EXCLUSION=true PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-pr109f-dbgtraj-on-nuecc48 data 46363
+cd ../../../toolkit/qlport/scripts
+WCT_TRAJ_DUMP=/home/xqian/tmp/traj_ub6505.txt QL_FIT_EXCLUSION=true ./run_one.sh 1 pr109f_dbgtraj_on
+python3 scripts/pr109_traj_strip.py --dump <dump> --root <tracking root> --label "<name>"
+```
+
+Arms: `work-pr109f-{on,off}-fbcoff-nuecc48` (6 events each, all rc=0),
+`work-pr109f-dbgtraj-on-nuecc48`, `qlport/scripts/sweep/pr109f_dbgtraj_on`. §8's
+`pr109e_*` / `work-pr109e-*` arms are the unchanged reference. Compiled-config proof, evt 46363:
+`on-fbcoff` → `fit_exclusion=True fit_blob_coverage=-1`; `off-fbcoff` → `fit_exclusion=<absent>
+fit_blob_coverage=-1` (key-suppression idiom ⇒ C++ default false).
+
+### 9.1 First: which cells carry ΔU? Not the ones that lose their prediction
+
+`scripts/pr109_chanb_probe.py` classifies every in-box cell present in **both** arms by what
+happened to its prediction — *lost* (`ŷ_OFF > 0, ŷ_ON = 0`), *gained*, *moved* (both non-zero),
+*uncovered in both*. Cells uncovered in both arms contribute `|y − 0|` identically on each side and
+cancel exactly in ΔU, so §7's uncovered population cannot be the cause; and the *lost* population
+turns out to be nearly irrelevant too:
+
+| detector | event | ΔU | share of Δ numerator from **moved** cells | lost − gained (e⁻) |
+|---|---|---|---|---|
+| SBND | 10550 | +0.037 | **91 %** | +7.7e5 |
+| SBND | 46363 | +0.051 | **98 %** | +4.0e4 |
+| SBND | 81597 | −0.002 | (Δ numerator ≈ 0) | −1.2e5 |
+| SBND | 360535 | +0.061 | **107 %** | −3.5e5 |
+| SBND | 256587 | +0.027 | **71 %** | −5.2e4 |
+| SBND | 433451 | +0.075 | **97 %** | +3.7e5 |
+| uBooNE | 6505 | −0.076 | **100 %** | −1.1e4 |
+| uBooNE | 6532 | +0.043 | **99 %** | −5.7e4 |
+| uBooNE | 6650 | +0.019 | **100 %** | −7.7e3 |
+| uBooNE | 6805 | −0.021 | **62 %** | −1.3e5 |
+| uBooNE | 6806 | −0.183 | **100 %** | −1.1e5 |
+
+So ΔU is carried, in both detectors, by cells that **both** arms predict — the prediction moved, it
+did not vanish. That also kills the coverage/geometry hypothesis (the §8 time-bin-centring
+divergence) as an explanation of ΔU: it would have to act through cells that change coverage class.
+
+### 9.2 The direction: exclusion deepens an existing charge deficit on SBND and relieves it on uBooNE
+
+Median over all (event, region, box) entries, `B = (Σŷ − Σy)/Σy`:
+
+| family | B, exclusion ON | B, exclusion OFF | Δ |
+|---|---|---|---|
+| SBND, production (`fit_blob_coverage = 0`) | **−0.323** | −0.273 | **−0.049** (worse) |
+| SBND, `fit_blob_coverage = -1` | −0.365 | −0.372 | **+0.007** (gone) |
+| uBooNE toolkit | −0.178 | −0.225 | **+0.048** (better) |
+| uBooNE prototype | −0.061 | −0.074 | +0.013 (better) |
+
+Both detectors *under*-predict near-vertex charge; exclusion makes SBND's deficit deeper and
+uBooNE's shallower. Note the third row: with `fit_blob_coverage` off, SBND's ON-vs-OFF bias gap
+**disappears entirely** — that knob, not exclusion, is what makes the deficit exclusion-sensitive.
+
+Whole-event (not near-vertex) bias is large on both detectors and agrees between implementations
+(SBND −0.33…−0.54; uBooNE WCT −0.10…−0.42 with WCP within a few pp on the same events), so the
+deficit itself is a shared property of the 2-D projection, not a toolkit defect. What is
+SBND-specific is that uBooNE's near-vertex bias is *much better than its own whole-event average*
+(−0.086 vs −0.28 near/all) while SBND's is not (−0.36 vs −0.41): the extra trajectory density at a
+vertex buys uBooNE a better local description and buys SBND nothing.
+
+### 9.3 The mechanism: exclusion strips half of SBND's near-vertex associations
+
+`update_association` (`TrackFitting.cxx:2789-2799`) keeps a cell iff
+`min_dis_track < min-over-other-segments` or `min_dis_track < 0.3 cm`, arbitrating **only among the
+fitted cluster's own segments** (`m_cluster_filter` → `get_segment_edges()`, `:2731-2735`). The
+pr/108 §8 stage dump records the association size before (`n0`) and after (`n1`) that call, so the
+strip fraction is directly measurable. `scripts/pr109_traj_strip.py`, exclusion ON:
+
+| | SBND 46363 | uBooNE 6505 |
+|---|---|---|
+| strip %, pass 1 / 2 / 3 | **30.5 / 27.8 / 21.6** | **6.4 / 6.1 / 4.1** |
+| strip % within 3 cm of the ν vertex | **53.6** | **21.1** |
+| 3–6 cm | 38.9 | 8.8 |
+| 6–10 cm | 24.7 | 0.2 |
+| > 20 cm | 23.4 | 2.8 |
+| **null control** — the 5 hard-`false` call sites | **0.0 %** all passes | **0.0 %** all passes |
+
+Exclusion is ~5× more aggressive overall on SBND and ~2.5× more aggressive in the region the metric
+scores. The null control (calls that pass `flag_exclusion = false` by construction —
+`NeutrinoPatternBase.cxx:2264/2339/2531`, `NeutrinoVertexFinder.cxx:780/4806`) strips exactly
+nothing, confirming the dump is measuring the flag and not something else.
+
+**Why SBND strips more — the arbitration universe.** The keep test is "strictly closest of all
+siblings", so its severity grows with the number of siblings. Counting distinct segments per
+exclusion call in the same dumps:
+
+| | calls | median | mean | **max** |
+|---|---|---|---|---|
+| SBND 46363 | 97 | 1.0 | **11.0** | **37** |
+| uBooNE 6505 | 23 | 7.0 | 5.5 | **9** |
+
+SBND's distribution has a heavy tail — 33 calls at 26–37 segments — that uBooNE simply does not
+have. A cell surviving a 37-way tournament is far rarer than one surviving a 9-way tournament, and
+the excess segments sit where the pattern recognition works hardest, i.e. at the vertex.
+
+**And the trajectory loses points as a result.** Counting `T_rec_charge` fitted points within 3 cm
+of the *same* anchors (main vertex + 3 junctions, taken from the OFF arm so both arms are scored on
+one window), ON vs OFF, summed over the events:
+
+| family | points, ON | points, OFF | **loss** |
+|---|---|---|---|
+| SBND, production | 416 | 528 | **21 %** |
+| SBND, `fit_blob_coverage = -1` | 449 | 548 | 18 % |
+| uBooNE toolkit | 341 | 346 | **1 %** |
+| uBooNE prototype | 183 | 190 | **4 %** |
+
+Per event the SBND loss reaches 30 % (46363, 360535) with individual junctions far worse
+(360535 J2: 36 → 16 points; 81597 J0: 23 → 9). uBooNE is within ±2 points on every region.
+
+Note that this is **not** the logged zero-quantity drop of the final pre-dQ/dx pass: that drop is
+0.1 % of points in the dump and 1–9 points per event in the log (`:8909-8918`), exclusion-driven on
+5/6 SBND events and 0/6 uBooNE. The 21 % is the *topological* consequence — segments trimmed and
+restructured across the 34 exclusion call sites — not a single drop site. It follows that
+`dqdx_fit_keep_all_points` (pr/107), which only neutralises the third pass, cannot recover it, which
+is consistent with pr/107 measuring so little from it.
+
+### 9.4 The knob: `fit_blob_coverage` is a real but secondary modulator
+
+`fit_blob_coverage` is SBND production ON (`0`, `wct-pr-perevt.jsonnet:1880`, owner flip
+2026-08-08) and absent on uBooNE (neither `uboone-mabc.jsonnet` nor `uboone_track_fitting.json`
+carries the key ⇒ C++ default `-1` = off, `TrackFittingPresets.h:59`). It deweights, to ×0.1 in the
+trajectory fit, live cells outside the fitted cluster's own blob coverage that sit inside an
+out-of-scope cluster's. It composes with exclusion on the same cell set — exclusion strips at
+`:3608`, coverage deweights the survivors at `:3615`, both keyed off the same `m_cluster_filter` —
+and it fires in **every** SBND event, concentrated exactly where the metric looks. Counting its log
+line (`:3145`, which carries `vtx_dis` and `vtx_deg`) on the §8 arms:
+
+| evt | arm | positions | cells | pos ≤3 cm | cells ≤3 cm | deg ≥2 |
+|---|---|---|---|---|---|---|
+| 10550 | ON / OFF | 804 / 891 | 16769 / 17567 | 337 / 483 | 5666 / 9321 | 555 / 724 |
+| 46363 | ON / OFF | 1096 / 1365 | 7016 / 8321 | 617 / 802 | 3893 / 5104 | 671 / 805 |
+| 81597 | ON / OFF | 289 / 258 | 1545 / 1488 | 177 / 165 | 935 / 902 | 173 / 139 |
+| 360535 | ON / OFF | 377 / 494 | 2005 / 2688 | 253 / 381 | 1481 / 2200 | 25 / 164 |
+| 256587 | ON / OFF | 1792 / 1290 | 5051 / 3575 | 1112 / 508 | 3266 / 1826 | 1057 / 522 |
+| 433451 | ON / OFF | 684 / 851 | 2330 / 3038 | 340 / 442 | 1518 / 2038 | 342 / 438 |
+
+30–60 % of the deweighted charge sits inside the metric's own 3 cm box, and the near-vertex count is
+not a fixed offset between arms — it swings +119 % (256587) to −34 % (360535), i.e. the two
+mechanisms interact in the measured region.
+
+**Pre-registered rule** (fixed before the numbers were seen, stated in the instrument's own terms —
+`pr109_summary.py` calls ON-worse only when `dU > +Bsys`, the entry's own systematic band): flip on
+**≥4 of 6** events ⇒ the knob is the cause; **≥5 of 6** still ON-worse ⇒ refuted; between ⇒ partial.
+
+| | entries: better / equiv / worse | per-event sign test |
+|---|---|---|
+| production, `fit_blob_coverage = 0` | 1 / 10 / **22** | **ON-worse 6/6** |
+| `fit_blob_coverage = -1` | **4** / 12 / 15 | ON-**better 2/6**, ON-worse 4/6 |
+
+Per event, with the knob off: 46363 flips (2 better, 3 equivalent, 0 worse), 433451 flips to
+mixed, 10550 improves; 360535, 81597, 256587 stay ON-worse. **Verdict: partial** — it removes a
+third of the ON-worse events and all of the bias deepening (§9.2), but four events remain ON-worse
+and the stripping is essentially unchanged (21 % → 18 % point loss). It is a modulator, not the
+cause.
+
+Validity guard on the `fbcoff` arms: all 12 jobs rc=0, all 6 events retain a main vertex and main
+cluster in both arms, and the near-vertex cell counts stay within the production arm's range
+(entry count 31 vs 33, i.e. the anchor set is comparable). No event was excluded.
+
+### 9.5 A structural difference that is not a knob, and cannot be tuned away
+
+Fitted from each arm's own `T_rec_charge` (`affine()`, residual 0.0000): the two detectors have the
+**same wire pitch** — 3.33 wires/cm on U, V and W in both — but **different drift sampling**:
+
+| | wires/cm (U/V/W) | slices/cm | one slice |
+|---|---|---|---|
+| SBND | 3.33 / 3.33 / 3.33 | **3.20** | **3.13 mm** |
+| uBooNE (WCT and WCP identical) | 3.33 / 3.33 / 3.33 | **4.54** | **2.20 mm** |
+
+`update_association` converts each cell to a physical point and applies a **hard-coded 0.3 cm
+always-keep floor** (`TrackFitting.cxx:2790/2837/2884`). That floor spans **±0.96 slices on SBND**
+against **±1.36 slices on uBooNE**: a cell one slice off the trajectory is auto-kept on uBooNE and
+must win the tournament on SBND. This is a plausible additional contributor and it is *reported, not
+claimed* — separating it from the segment-count effect would need the floor made configurable, which
+is a code change and therefore out of scope for this round (§5 rule 1).
+
+Two further non-knob asymmetries recorded for the record, both affecting where the box is placed
+rather than what is inside it: uBooNE runs with the **DL vertex disabled** (`run_one.sh:61` forces
+`-A dl_weights=`) while SBND runs it on; and `fit_vertex_min_seg_length` is 1.0 cm on SBND
+(`cfg/…/sbnd/clus.jsonnet:3050`) against the C++ default 0 on uBooNE, deciding which segments enter
+the vertex fit — it has **no TLA and no runner env**, so it cannot be A/B'd today.
+
+### 9.6 What this does and does not say about production
+
+It does **not** say `fit_exclusion` should be turned off for SBND. This metric scores one thing —
+how well the fitted trajectory's dQ/dx explains the near-vertex 2-D charge — and pr/98 §7 shipped
+`fit_exclusion` ON for a different and independently validated reason (fits equal-or-better in 11/12
+top movers). §9 explains the cost side of that trade honestly; it does not re-price it. The
+candidate follow-ups §6 listed are unchanged, and one new one is suggested by §9.3: because the
+penalty scales with the sibling-segment count, a **segment-count-aware** relaxation of the
+arbitration (for example, exempting cells whose two best competitors are within the fit's own
+position resolution, rather than the current strict `<`) would target exactly the population this
+round identified. That would be a default-OFF knob and a new round, not a change here.
+
+### 9.7 Scope and limitations
+
+- **n = 6 events per detector**, and the strip-fraction measurement is **n = 1 per detector**
+  (46363 and 6505). The segment-count contrast is large (37 vs 9) and the point-loss contrast is
+  consistent across all 6+5 events, but a knob-level attribution on 6 events is thin. Widening to
+  the full nueCC48 manifest (47 events × 2 arms) plus the 35-event uBooNE sweep would cost roughly
+  the same as one pr-round arm pair and is the obvious next step if the conclusion is load-bearing.
+- Cross-detector *levels* (U, B) inherit the anchor asymmetry of §9.5; the within-detector ON-vs-OFF
+  comparisons, which is what every verdict here rests on, do not.
+- **No code changed this round.** `./build/clus/wcdoctest-clus` re-run on the same binary; the
+  libraries' md5s are quoted in §9.0 and match §8's post-fix build.
+
+### 9.8 Found, not fixed
+
+`run_pr_chain_batch.sh:1506-1510` maps five env vars — `SBND_MUON_CHAIN_PROTON_VETO`,
+`SBND_SHOWER_TYPE_CACHE_REFRESH`, `SBND_SHOWER_TRAJ_DQDX_GUARD`, `SBND_SHOWER_TRAJ_CHAIN_PION`,
+`SBND_KINE_SHOWER_VERTEX_BARRIER` — to TLA names that exist nowhere in `cfg/` or `clus/`. Setting
+any of them emits `--tla-code` for an undeclared top-level parameter, which is a hard jsonnet
+error, not a silent no-op. Not touched in this round.
