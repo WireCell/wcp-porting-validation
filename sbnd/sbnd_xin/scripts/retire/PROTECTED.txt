@@ -113,6 +113,32 @@ work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod08
 # full coverage for all four samples.  Release them in that follow-up pass,
 # not before -- until it exists they are the tree's ONLY PR product for the
 # three data samples.
+# --- prod0823: THE production PR baseline (added 2026-08-23, same day) -----
+# The re-run the owner authorised the prod0819 release against.  Full coverage
+# for all four data samples -- 48 / 19 / 1000 / 2000 = 3067 events, every one
+# rc=0 -- bare production (no SBND_* overrides), PR_EXTRA_STAGES=pr_display,
+# toolkit b5c9f43a, libWireCellClus.so md5 628444a7de4f9d224288b0ebf7c34e20,
+# each arm reading its matching -ql0819 Q/L root.  This is what mcp2k has not
+# had since the pr/104 flip: a 2000-event PR product at current production.
+#
+# PROVEN a same-epoch continuation of the pr/104 arms, not a new epoch:
+# pr85_hash_gate vs work-pr104-on4-* is PASS 96/96 (nueCC48), 38/38 (NCpi0),
+# 2000/2000 (mcp1k), 30/30 (the mcp2k 15-evt overlap), and vs the bare-config
+# work-pr104-flipchk-* another 96/96 + 38/38 -- 2164 archives byte-identical.
+# nusel-{table,events}.tsv identical on both small samples.  CONTROL, so the
+# PASS is not a stale-binary artefact (M1): tracking-pr.root DIFFERS on 10/10
+# nueCC48 events checked -- the three unknobbed pr/109 commits (a46b0ddb,
+# dd4d1373, 56683366) changed the T_proj_data ROOT dump and nothing else.
+# Consequence: any A/B a doc took against work-pr104-on4-* stays valid against
+# these arms.
+work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod0823	THE production PR baseline, 3067 evts at toolkit b5c9f43a; reads the -ql0819 roots (ASSERT 8)	docs/work-tags.md 2026-08-23
+
+# --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
+# prod0823 above covers every sample at least as widely and is byte-identical
+# on every overlapping event, so these 8 arms (4.3 G) are redundant and are
+# the OBVIOUS release candidate for the next round.  NOT released here: that
+# is an owner call, and the round that created prod0823 should not also be the
+# round that destroys the thing it was gated against.
 work-pr104-on4-nuecc48 work-pr104-on4-ncpi0 work-pr104-on4-mcp1k work-pr104-on4-mcp2k	current-production PR product (junction snap ON), 48/19/1000/15 evts; each reads its matching -ql0819 root (ASSERT 8)	doc pr/104 sec.5
 work-pr104-flipchk-nuecc48 work-pr104-flipchk-ncpi0 work-pr104-flipchk-mcp1k work-pr104-flipchk-mcp2k	the ONLY on-disk evidence the shipped post-flip jsonnet reproduces -on4 with no env	doc pr/104 sec.6
 

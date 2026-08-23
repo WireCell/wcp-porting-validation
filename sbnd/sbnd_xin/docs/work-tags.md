@@ -11,6 +11,8 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 42 after the 2026-08-23 prod0823 campaign
+                                 #   added its four PR arms (72G);
                                  # 38 after the 2026-08-23 minimal-state round
                                  #   (418 before it, regrown from 08-20's 36 in
                                  #   three days by docs pr/98-111); 380 removed,
@@ -40,6 +42,8 @@ find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
                                  #   it; 23 after 2026-08-02, 254 / 155 GiB
                                  #   before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+                                 # 72G after the 2026-08-23 prod0823 campaign
+                                 #   (+15G of PR product for 3067 events);
                                  # 57G after the 2026-08-23 minimal-state round
                                  #   (203G before it); the floor is ~18G of
                                  #   non-work* (archive/ 11G incl. this round's
@@ -193,6 +197,99 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## CAMPAIGN 2026-08-23 — `prod0823`, the full-coverage PR re-run the retirement round was gated on
+
+**STATUS: COMPLETE.**  3067 events across all four data samples, **every one
+`rc=0`**, bare production (no `SBND_*` overrides), `PR_EXTRA_STAGES=pr_display`,
+toolkit `b5c9f43a`, `libWireCellClus.so` md5
+`628444a7de4f9d224288b0ebf7c34e20`, `./build/clus/wcdoctest-clus` 228/228 /
+2381 assertions.  Each arm reads its own sample's `-ql0819` Q/L root; **Q/L and
+imaging are NOT regenerated** (M11 — `ql0819` IS the latest production Q/L).
+
+```bash
+cd sbnd_xin
+# provenance BEFORE anything ran (M1): tree clean at b5c9f43a, and the lib
+# (Aug 22 16:43) is NEWER than the newest source (TrackFitting.cxx, 16:42),
+# so nothing needed rebuilding and no shared binary was touched.
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+      ./run_pr_chain_batch.sh work-$s-ql0819 work-$s-prod0823 data
+done
+```
+
+| sample | pr_evt | rc=0 | wall |
+|---|---|---|---|
+| nueCC48 | 48 | 48 | 2 min 24 s |
+| NC π⁰ | 19 | 19 | 28 s |
+| mcp1k | 1000 | 1000 | 22 min |
+| mcp2k | 2000 | 2000 | 3 min + 20 min (see the interruption below) |
+
+### It is a same-epoch continuation of the pr/104 arms, not a new epoch
+
+Production last moved at the pr/104 flip (toolkit a07222e2 + c550541f), but
+**three unknobbed commits landed after those arms were produced** — `a46b0ddb`,
+`dd4d1373`, `56683366`, the doc pr/109 `T_proj_data` fix — so "a fresh run at
+HEAD reproduces the pr/104 arms" was an open question, not an assumption.
+Measured, `scripts/pr85_hash_gate.py`:
+
+| gate | result |
+|---|---|
+| `work-pr104-on4-nuecc48` vs `work-nuecc48-prod0823` | **PASS 96/96** |
+| `work-pr104-on4-ncpi0` vs `work-ncpi0-prod0823` | **PASS 38/38** |
+| `work-pr104-on4-mcp1k` vs `work-mcp1k-prod0823` | **PASS 2000/2000** |
+| `work-pr104-on4-mcp2k` vs `work-mcp2k-prod0823` (15-evt overlap) | **PASS 30/30** |
+| `work-pr104-flipchk-{nuecc48,ncpi0}` vs `prod0823` | **PASS 96/96 + 38/38** |
+| `nusel-{table,events}.tsv`, both small samples | identical |
+
+**2164 archives byte-identical.**  So every A/B a doc took against
+`work-pr104-on4-*` remains valid against these arms.
+
+**The control that makes the PASS mean something (M1).**  A byte-identical
+result is also exactly what a stale binary produces.  `tracking-pr.root`
+**DIFFERS on 10/10** nueCC48 events checked — the pr/109 commits *are* in the
+running binary, and their effect is confined to the `T_proj_data` ROOT dump.
+Had that come back identical too, the gate would have been vacuous.
+
+### The interruption, and what it says about this box
+
+The first mcp2k attempt was **SIGKILLed at 01:10:55**, 3 min in — 136 events
+started, 104 finished `rc=0`, 32 truncated (zero-byte `mabc-pr.zip`, deleted
+before the resume).  Diagnosis, corrected once:
+
+* It is **not** an OOM or a run failure: every completed event across all four
+  samples exited `rc=0`, and memory was 25 G used of 251 with no swap.
+* The first read was "a peer session cleared the box" — a concurrent session's
+  `work-pr112-*` arms were created at 01:10, seconds before the kill.  **That
+  is wrong.**  Those four `pr112` mcp1k arms *also* stopped writing at 01:10,
+  at 195/437/439/443 of 1000 events.  Everything on the machine died within
+  the same few seconds — a box-wide kill, not one session evicting another.
+* **A `pr_evt<ID>/` directory is not evidence the event ran.**  The peer's arms
+  look complete by directory count and are ~44 % populated.  Count `rc.txt`
+  with `rc=0`, never `ls -d pr_evt*` — this round's own coverage table above
+  is built that way.
+
+The resume ran only the 1896 missing ids (`comm -23` of the `ql_evt` list
+against the completed `rc=0` list) into the same arm — same binary, same
+config, so the arm stays single-epoch.
+
+### Cost of a harness bug, recorded so it is not repeated
+
+The resume was supposed to start as soon as the box freed.  Its watcher used
+`n=$(pgrep -c -f 'wire-cell ' || echo 0)`; `pgrep -c` prints `0` **and** exits
+non-zero when nothing matches, so `n` became the two-line string `"0\n0"`,
+`[ "$n" -eq 0 ]` errored every minute, the idle streak never advanced, and the
+watcher sat until its 8-hour timeout.  The box was free from **01:28**; mcp2k
+actually restarted at **09:20**.  ~8 h lost, no data affected.  *Use
+`pgrep -f … | wc -l`, and make a watcher log the value it is testing.*
+
+### What this changes for the next round
+
+`work-pr104-{on4,flipchk}-*` (8 arms, 4.3 G) are now **redundant** — prod0823
+covers every sample at least as widely and is byte-identical on every
+overlapping event.  They are the obvious release candidate, deliberately NOT
+taken here: the round that creates a baseline should not also destroy the
+arms it was gated against.  `PROTECTED.txt` carries them with that note.
 
 ## RETIREMENT ROUND 2026-08-23 — back to a minimal state at the latest production, 203G → 57G
 
