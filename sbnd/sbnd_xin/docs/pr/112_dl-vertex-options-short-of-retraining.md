@@ -40,6 +40,8 @@ python3 scripts/pr112_offvtx_sim.py --sample nuecc48 \
         --tsv runs/pr112-offvtx-nuecc48.tsv                                      # sec 4.2, 5
 python3 scripts/pr112_abstain.py --samples nuecc48 --n 8 \
         --tsv runs/pr112-abstain-nuecc48.tsv                                     # sec 6
+python3 scripts/pr112_dualchain_sim.py --sample nuecc48 \
+        --tsv runs/pr112-dual-nuecc48.tsv                                        # sec 5.2, 5.5
 python3 scripts/pr112_pool.py    --n 8     --tsv runs/pr112-pool-nuecc48.tsv     # sec 7
 ```
 
@@ -100,15 +102,19 @@ distinction decides this round.
 | option | what it is | measured effect | verdict |
 |---|---|---|---|
 | **C — exclusion distillation** (idea 1) | fine-tune so the ON cloud gives the OFF cloud's answer | **+2 / 42** (4 fixed, **2 broken**) | least-bad, but inside the churn band |
-| **B — OFF branch supplies the vertex** (idea 2) | same graph, exclusion-free fit nominates the vertex | **+1 / 42**, and **−1 vs the knob that already exists** (§5) | already built; the extra step does not pay |
+| **B — true dual chain** (idea 2) | **whole PR run exclusion-free**, its vertex transferred in | **+4 / 42** (5 fixed, 1 broken) (§5.2) | **the best result in this round**; costs ~2× PR wall |
+| B′ — last-step refit only | `dl_vtx_cloud_no_exclusion`, same graph | +2 / 42 (4 fixed, 2 broken) (§5.1) | already built, default OFF; not idea 2 |
 | **A — instability abstention** | don't let the DL override when its answer is unstable | **+0 / 42** best case (§6) | null as a lever, **11× as a flag** |
 | **D — pooled readout** | replace the hard argmax with a neighbourhood integral | **+1 / 42**, and **no stability gain** (§7) | refuted on its own prediction |
 
-**Every option lands between +0 and +2 on 42 events.** §5's table shows 11 of 47
-events churning for a net +1 under a different lever, so that is the noise floor of
-this sample: **nothing measured here clears it.** The pre-registered reading of that
-outcome (§9, written before the check that produced it) is that nothing in this
-round beats waiting for a retrain — see §10.
+**One option clears the noise floor and it is the owner's idea 2, run properly.**
+The readout-side ideas (A, D) and the last-step refit (B′) all land at +0..+2,
+inside the churn band (§5.1's table shows 11 of 47 events churning for a net +1
+under a different lever). The **true dual chain** — the whole pattern recognition
+run a second time with `fit_exclusion=false`, used only to name the vertex — is
+**+4 with a 5:1 fix/break ratio**, and it is the only design here that reaches the
+events whose cure needs the exclusion-free *topology* rather than just its charge.
+Its price is roughly **2× PR wall time**.
 
 ## 4. Option C — idea 1, and the ruler that decides it
 
@@ -204,82 +210,180 @@ fine-tuned on the new distribution can be exactly as chaotic on it.
   inference cloud includes a vertex block. A structural train/inference mismatch,
   independent of exclusion.
 
-## 5. Option B — idea 2, and it is already built
+## 5. Option B — idea 2, and the distinction that decides it
 
-The owner's constraint — same graph, OFF branch supplies only a position — collapses the
-dual chain onto machinery that already exists. `dl_vtx_cloud_no_exclusion` (toolkit
-`14dd031d`, **DEFAULT OFF**) already snapshots every fit, refits each cluster
-exclusion-free through a child `TrackFitting` sharing the parent graph, builds the net
-input from that fit, and restores bit-for-bit. Candidate id lists identical to
-production on 47/47; cost **+8 % PR wall**.
+**Correction, owner 2026-08-23:** *"this `dl_vtx_cloud_no_exclusion` is not what I
+want, right? I thought that it only has the last step of fitting? Note, the entire
+PR is different if I keep the no exclusion fit off, multiple steps, right?"*
 
-It differs from the owner's design in exactly one place, which pr/111 §11 recorded as
-found-not-fixed (**F4**): the cloud's *vertex rows* are read at
-`NeutrinoVertexFinder.cxx:4818` **while the refit is live**, but every downstream snap
-target (`:4933`, `:5054`, `:5109`) is read **after** the restore at `:4840-4848`. So
-today the net sees OFF-fit candidate positions and then snaps to ON-fit ones. **The
-owner's design is that asymmetry resolved the other way.** `scripts/pr112_offvtx_sim.py`
-simulates all three selections on one graph, one net:
+Correct on both points, and the distinction is worth more than +2 events.
+
+`m_fit_exclusion` reaches **34 `do_multi_tracking` call sites across five stages** —
+`NeutrinoStructureExaminer` (15), `NeutrinoVertexFinder` (7), `NeutrinoGraphAudit`
+(5), `NeutrinoPatternBase`/`break_segments` (4), `NeutrinoOtherSegments` (3). Those
+stages **edit the graph**: they break segments, merge them, and add and drop
+vertices. An exclusion-free chain therefore diverges from production at every one of
+them and **ends with a different graph**, not merely a differently-fitted one.
+
+`dl_vtx_cloud_no_exclusion` does something much smaller: **one** refit per cluster,
+at DL-vertex time, on the graph the exclusion chain has already finished building
+(`NeutrinoVertexFinder.cxx:4796-4809`), then restores it. **Last step only.**
+
+Measured, the two are not close.
+
+### 5.1 The last-step refit — `dl_vtx_cloud_no_exclusion`, already built
+
+Toolkit `14dd031d`, **DEFAULT OFF**; candidate id lists identical to production on
+47/47; cost **+8 % PR wall**. `scripts/pr112_offvtx_sim.py` runs all three
+same-graph selections on one net:
 
 ```
-CLOSURE  A (production replay == live winner): 42/42
-CLOSURE  B (cne replay == live cne winner)   : 40/42   [confirms F4 empirically]
-
-candidate position shift ON vs OFF fit, all candidates pooled (n=4559):
-  median 0.0000 cm   p90 0.5094   p99 1.796   max 4.684 cm
-
 TARGET-hit, n=42
   A production          net(ON ) snap ON   32/42
   B cne knob today      net(OFF) snap ON   34/42
-  C owner's design      net(OFF) snap OFF  33/42
+  C snap on OFF positions too                33/42
 
-  B - A = +2      C - A = +1      C - B = -1
+B - A decomposition (epoch-immune ruler):
+  fix 4  [46363, 235435, 360535, 389538]      break 2  [271851, 433451]
 ```
 
-**The extra step costs a vertex.** The gain comes from the exclusion-free *cloud*, which
-the existing knob already delivers; giving the OFF branch its own candidate positions
-adds nothing and loses one event. `271851` and `433451` break under C while A gets them
-right. Most candidates do not move at all between the two fits (median shift exactly
-0.0000 cm) — only a tail does, so there is little for the extra machinery to work with.
+Those six are exactly pr/106 §10's named movers for this knob — the cross-check that
+this is the real quantity. Resolving pr/111's **F4** ordering asymmetry (the cloud's
+vertex rows are read at `:4818` while the refit is live, the snap targets at
+`:4933`/`:5054`/`:5109` after the restore at `:4840-4848`) makes it *worse* by one,
+so that asymmetry is not worth fixing for this purpose.
 
-**So idea 2's answer is: the thing you want already exists, and running the OFF branch's
-own vertex determination on top of it does not improve on it.** What blocks the existing
-knob is not the vertex count but the selection cost, and that cost is a *hybrid* effect
-— newly measured this round on nueCC48 (`nue_score ≥ 4.3`, the pr/106 §10 threshold; the
-`cne-on` column reproduces that doc's number exactly, which is the control):
+### 5.2 The true dual chain — what idea 2 actually is
 
-| arm | vertex (target metric) | nue-selected |
-|---|---|---|
-| base, exclusion ON | 35/47 | **35** |
-| global `fit_exclusion=false` | 41/47 | **36** (−5/+6) |
-| `dl_vtx_cloud_no_exclusion` ON | 38/47 | **32** (−4/+1) |
+`scripts/pr112_dualchain_sim.py`. The `harv-nofitx` arm **is** the exclusion-free
+chain; take its final neutrino vertex and transfer that position into production by
+snapping to the nearest production candidate — *"use the no exclusion fit to
+determine the neutrino vertex on the exclusion fit"*. Scored on the target metric
+defined on the **production** candidate set, since that is the chain that ships.
 
-Global OFF costs nothing on selection; **the hybrid costs −3.** The penalty belongs to
-the mismatch between an exclusion-free vertex and an exclusion-fit downstream — which is
-precisely what idea 2 institutionalises, and what Option C avoids by changing the net
-instead of the geometry. Two cautions on that table: the churn is 11/47 for a net +1, and
-four of the seven vertex "fixes" (`46363, 122660, 268067, 389538`) *lose* nue selection
-under global OFF. **Vertex-right and nue-selected are close to anti-correlated here** —
-which is the standing reason vertex count is not the objective.
+```
+HOW DIFFERENT ARE THE TWO GRAPHS (candidate sets)?
+  candidates: production median 104, exclusion-free chain median 106
+  same candidate COUNT on 7/42 events
+  vertex-id overlap: median 30 % of the production set
+  events with an IDENTICAL candidate id set: 0/42
 
-### If a general "both fits everywhere" design is ever wanted
+TRANSFER COST (exclusion-free chain vertex -> nearest production candidate):
+  median 0.441 cm   p90 1.86   max 3.7 cm ; beyond 2 cm on 4/42 events
 
-Recorded from the plumbing audit so the narrow version's advantage is visible:
+TARGET-hit on the PRODUCTION candidate set, n=42
+  production (exclusion ON everywhere)      31/42
+  TRUE dual chain (OFF chain names the vtx) 35/42   (+4)
+  fixed  : 5  [46363, 111412, 235435, 389538, 469665]
+  broken : 1  [271851]
+```
 
-- `Segment::m_fits_noexcl` / `Vertex::m_fit_noexcl` plus a `"fit_noexcl"` named cloud are
-  additive and namespace-safe — every existing reader defaults to `"fit"`.
+**Three things this establishes.**
+
+1. **The graphs genuinely differ** — 30 % median id overlap, and *no* event has an
+   identical candidate set. §5.1's "same graph" premise, which the owner's first
+   scoping assumed and this doc's first version adopted, does not describe a real
+   exclusion-free chain.
+2. **+4 with a 5:1 fix/break ratio**, against the last-step refit's +2 at 4:2. It
+   reaches `111412` and `469665`, which no same-graph design does — consistent with
+   pr/106 §10's finding that the cures it could not reproduce "came with the OFF
+   *topology*, not only the OFF charge".
+3. **The transfer is not where the loss is.** The exclusion-free chain's vertex sits
+   0.441 cm (median) from a production candidate; only 4/42 events transfer further
+   than 2 cm. Snapping across the two graphs is cheap.
+
+⚠ Baseline reads 31/42 here vs 32/42 in §5.1 because this script derives
+production's pick by snapping its shipped `main_vertex` to the nearest candidate,
+while §5.1 uses the rerank replay's winner. Both arms are treated identically within
+each script, so the deltas are sound; the two baselines are not interchangeable.
+
+### 5.3 What it would cost, and the question that is still open
+
+- **~2× PR wall time.** Bounded by pr/98 (exclusion ON is 1.08× median, 1.7× worst)
+  and pr/106 (+8 % for one extra full pass at one site). The owner's scoping —
+  *"we do not need anything after the nu vtx determination in the no-exclusion
+  case"* — caps it: the OFF chain can stop once it has named a vertex, so the
+  taggers, kinematics, BDT scorers and output stages run once, not twice.
+- **A knob, as the owner said**, and retired when a retrained net lands.
+- **The open question is selection, not vertex count.** §5.1's table shows the
+  hybrid penalty is real: global exclusion-OFF costs nothing on nue selection
+  (35→36) while the *last-step hybrid* costs −3 (35→32). A dual chain is also a
+  hybrid — an exclusion-free vertex handed to an exclusion-fit downstream — so it
+  may inherit that penalty. **This round cannot answer it offline**: it needs a live
+  arm running the transfer, because the taggers have to re-run on the moved vertex.
+  That is the single measurement standing between this result and a build decision.
+
+  | arm | vertex (target metric) | nue-selected |
+  |---|---|---|
+  | base, exclusion ON | 35/47 | **35** |
+  | global `fit_exclusion=false` | 41/47 | **36** (−5/+6) |
+  | `dl_vtx_cloud_no_exclusion` ON | 38/47 | **32** (−4/+1) |
+
+  Two cautions on that table: the churn is 11/47 for a net +1, and four of the seven
+  vertex "fixes" (`46363, 122660, 268067, 389538`) *lose* nue selection under global
+  OFF. **Vertex-right and nue-selected are close to anti-correlated here** — the
+  standing reason vertex count is not the objective.
+
+### 5.5 The best result in this round: chain AGREEMENT is a 14× error flag
+
+Running both chains does not only give a better vertex. It gives **two
+reconstructions of the same event that are decorrelated in exactly the way that
+matters** — different graph, different fit, different net input. pr/111 showed the
+SCN argmax is a near-coin-flip on a large minority of events; two physically
+distinct chains are two draws from that, and whether they land together is
+information.
+
+Measured on the same 42 events (`runs/pr112-dual-nuecc48.tsv`), agreement = the two
+chains name the same production candidate:
+
+```
+  agree    : 32/42 (76%)   production right 30/32 = 94%
+  DISagree : 10/42 (24%)   production right  1/10 = 10%   dual right 5/10 = 50%
+
+  => production wrong 90% when they disagree vs 6% when they agree  =  14.4x
+
+ORACLE (always pick whichever chain is right): 36/42
+  headroom above dual-chain: +1     above production: +5
+```
+
+**Three consequences, and they are the most useful things this round found.**
+
+1. **Essentially all of production's vertex error is inside the 24 % disagreement
+   bucket** — 10 of its 11 misses. Agreement is a sharper flag than the jitter
+   ensemble of §6 (14.4× vs 11×), it is physically motivated rather than synthetic,
+   and unlike §6's flag it comes with a *better alternative to route to*: on those
+   events the OFF chain is right 50 % of the time against production's 10 %.
+2. **Simply taking the OFF chain's answer captures 4 of the 5 available points.**
+   The oracle that always picks the better chain scores 36/42; the dual chain
+   already scores 35/42. So there is **no meaningful gain left in arbitrating
+   between the two** — build the transfer, not a chooser.
+3. **The remaining error is a 6-event population that neither chain gets** (36/42
+   oracle). That is where a retrain, a hand-scan campaign, or a targeted algorithm
+   should be aimed — and the flag identifies it prospectively, without labels. It
+   shrinks the population needing attention by 4×.
+
+The agreement flag is **free** once both chains run, ships as a per-event quality
+label, and is available to every downstream consumer of the vertex. No amount of
+net tuning produces it.
+
+### 5.4 If a general "both fits everywhere" design is ever wanted
+
+Recorded from the plumbing audit. Note the dual chain above needs **none** of this —
+it runs the chain twice and keeps only a position, so no data structure has to hold
+two fits at once.
+
+- `Segment::m_fits_noexcl` / `Vertex::m_fit_noexcl` plus a `"fit_noexcl"` named cloud
+  are additive and namespace-safe — every existing reader defaults to `"fit"`.
 - **Prerequisite:** `dqdx_fit_keep_all_points`, or the two fits are not index-aligned
   (exclusion's third `form_map_graph` pass drops 442 interior points over 47 nueCC48
-  events vs 86 with it off), and no consumer can index across them.
-- **The blocker:** `TrackFitting::m_cluster_fitted_charge_2d` merges last-writer-wins per
-  cell and already has a documented failure mode (uBooNE 5384-6528, `T_proj_data`
-  Σpred = 0). Two fits per cluster double-write it.
+  events vs 86 with it off).
+- **The blocker:** `TrackFitting::m_cluster_fitted_charge_2d` merges last-writer-wins
+  per cell and already has a documented failure mode (uBooNE 5384-6528,
+  `T_proj_data` Σpred = 0). Two fits per cluster double-write it.
 - **dQ/dx consumers need nothing** — pr/108 Test A proved dQ/dx is exactly
-  association-independent (382 fits, 45 552 points, max|ΔdQ| = max|Δdx| = 0). The
-  difference is entirely the trajectory point set and positions. This also kills the
-  pr/106 §9 shortcut of reading non-excluded association charge without refitting.
-- Cost bound ≈ 2× the *fitting* budget (pr/98: exclusion ON is 1.08× median, 1.7× worst;
-  pr/106: +8 % for one extra full pass).
+  association-independent (382 fits, 45 552 points, max|ΔdQ| = max|Δdx| = 0). This
+  also kills the pr/106 §9 shortcut of reading non-excluded association charge
+  without refitting.
 
 ## 6. Option A — instability abstention: a null as a lever, an 11× flag
 
@@ -387,57 +491,89 @@ as unsized rather than dismissed.
 - **Changing a production-ON default on these numbers.** n = 42 labelled nueCC48 events
   is one sample; §9 states what widening costs.
 
-## 9. Scope, and what would firm this up
+## 9. Scope
 
-n = **42** labelled nueCC48 events for every number in §4–§7 — one sample, and
-small. **All four options move by +0 to +2**, and §5's table shows 11 of 47 events
-churning for a net +1 under a different lever. At this n nothing here is
-distinguishable from noise. That is the round's actual result.
+n = **42** labelled nueCC48 events for every number in §4–§7. **Owner (2026-08-23):
+"for the actual test run nueCC is more than enough."** The mcp1k widening launched
+earlier in the round was stopped on that instruction; partial
+`work-pr112-{harv,cne,nofitx,trad}-mcp1k` arms remain on disk, incomplete
+(~100–120 of 406 events each) and should not be read as arms.
 
-The widening is cheap and in flight: `work-pr112-{harv,cne,nofitx,trad}-mcp1k`
-(406 events) is regenerating, which takes §4's `B − A` and §6's flag to n ≈ 440;
-mcp2k (579) would reach the full ~1000. The Q/L roots (`work-<sample>-ql0819`)
-survived the retire, so nothing else is needed.
+**The all-sample no-exclusion performance already exists** — pr/106 §9, on the
+target metric, original labels, 1054 events:
 
-⚠ **The widening must use the same-graph pair.** `pr112_offvtx_sim.py`
-(`harv` vs `cne`, ids aligned, target metric) is the instrument; `pr112_pair.py`
-(`harv` vs `nofitx`, click ruler) would only measure §4.1's biased quantity more
-precisely, because the `harv3-mcp1k` labels carry the same anchoring. The `cne`
-mcp1k arm was added for exactly this reason.
+| | ALL | nueCC48 | NCpi0 | mcp1k | mcp2k |
+|---|---|---|---|---|---|
+| production (exclusion ON) | 767/1012 (75.8 %) | 35/47 | 14/19 | 300/394 | 418/552 |
+| **exclusion OFF** | **810/1024 (79.1 %)** | **41/47** | 13/19 | 309/399 | 447/559 |
+| DL alone, ON → OFF | 578 → 602 | 34 → **42** | 12 → 11 | 203 → 207 | 329 → 342 |
+| no DL, ON → OFF | 708 → 739 | 27 → 34 | 8 → 6 | 288 → 295 | 385 → 404 |
 
-Two further gaps, recorded rather than closed:
+⚠ **Denominators differ** (1012 vs 1024; mcp1k 394→399, mcp2k 552→559) because the
+OFF arm has a different candidate cloud — pr/106 flags this, and the percentages
+must be quoted with it. NCpi0 goes the other way (14→13, DL-alone 12→11).
 
-- §6's flag is worth its own round with a metric suited to a confidence estimate
-  rather than a routing decision — ranking events for hand-scan, weighting a
-  selection, gating a downstream tagger's trust in the vertex.
+That table is the **reference ceiling for §5.2's dual chain across all samples**:
++43/1012 ≈ **+3.3 pp** overall. §5.2 measures nueCC48 at +4/42 ≈ +9.5 pp, i.e. this
+sample is on the favourable side of the average — nueCC is where the exclusion-free
+chain gains most, and NCpi0 is where it loses. A production decision should carry
+the all-sample number, not nueCC48's.
+
+Two gaps, recorded rather than closed:
+
+- §6's jitter flag is superseded by §5.5's agreement flag wherever both chains run,
+  but remains the only option if only one chain does.
 - The 35 owner adjudications in `qlport/dl_vtx_optimization/dl_master.log` remain
   unscored (pr/111 F6) — keyed to DL voxel rank, and the toolkit's DL decision lines
   still never reach any log at any level tried (pr/111 F3).
 
-## 10. Recommendation
+## 10. Recommendation — the best way to gain the most on the neutrino vertex
 
-**On this sample, nothing here beats waiting for a retrain.** That is §9's
-pre-registered reading of a ±1–2 outcome, written before the check that produced
-it, and it is the honest conclusion at n = 42.
+**Build the true dual chain (§5.2), and ship its agreement flag (§5.5).** That is
+the largest measured gain in this round and the only design that clears the sample's
+noise floor.
 
-Concretely:
+Why this and not the alternatives:
 
-- **Do not start a training campaign on these numbers.** Option C is the least-bad
-  at +2/42, but with **2 known breaks** (`271851`, `433451`) and a churn floor above
-  its own effect. Its earlier +7/−0 headline came from the click ruler and does not
-  survive §4.1. **Finish the mcp1k widening first** (§9): if `B − A` holds a
-  positive fix/break ratio at n ≈ 440, that is the green light; if it lands at ±1
-  like the rest, the answer is to wait for the retrain and spend the effort there.
-- **Do not build Options A, B or D as vertex levers.** B's target is already built
-  and default-OFF, and the owner's extension of it measures *worse* than the
-  existing knob. A and D are flat, and D is refuted on its own prediction.
-- **Keep Option A's stability number as a flag.** It costs 10 ms and is an 11×
-  error concentrator. It is the one genuinely new instrument this round produced,
-  and its value is not vertex routing (§6, §9).
-- **`fit_exclusion` stays ON.** Nothing here is evidence against it.
+- **It is the biggest measured gain.** +4/42 on nueCC48 at a 5:1 fix/break ratio,
+  against +2 (4:2) for the last-step refit, +1 for the pooled readout, and +0 for
+  jitter abstention. The all-sample ceiling from pr/106 §9 is **75.8 % → 79.1 %**,
+  ≈ +43/1012.
+- **It reaches what nothing else can.** `111412` and `469665` need the exclusion-free
+  *topology*, not just its charge; no same-graph design gets them (§5.2).
+- **The transfer is cheap and safe.** The OFF chain's vertex sits 0.441 cm (median)
+  from a production candidate; only 4/42 transfer beyond 2 cm.
+- **Arbitration is not worth building.** The oracle is 36/42 and the plain transfer
+  already gives 35/42 — take the OFF answer, don't write a chooser (§5.5).
+- **The flag is the compounding benefit.** 76 % of events ship a vertex that is right
+  94 % of the time; the other 24 % carry essentially all the error. That is a
+  per-event quality label available to every downstream consumer, free once both
+  chains run, and it shrinks the population needing a retrain or a hand-scan by 4×.
 
-**What changed during review.** §3, §4, §9 and §10 were rewritten after the
-headline number was found to rest on the click ruler; the first commit of this doc
-(`3a9a25b`) and its message carry the superseded +7/−0 framing and the
-"build Option C" recommendation. Both are corrected here rather than rewritten in
-history.
+**Cost and shape.** ~2× PR wall, capped by the owner's own scoping: the OFF branch
+stops once it has named a vertex, so taggers, kinematics, BDT scorers and output run
+once. A knob, default OFF, retired when a retrained net lands.
+
+**The one measurement standing between this and a build decision.** A dual chain is
+a hybrid — an exclusion-free vertex handed to an exclusion-fit downstream — and the
+*last-step* hybrid cost **−3 nue-selected** while global exclusion-OFF cost nothing
+(§5.3). This cannot be settled offline, because the taggers must re-run on the moved
+vertex. **Run one live nueCC48 arm** that performs the transfer and re-runs the
+downstream stages, and read `nue_score` off it. If selection holds, build it; if it
+repeats the −3, the vertex gain is not worth the selection loss and the answer
+reverts to waiting for the retrain.
+
+**Do not build** Options A, D, or the last-step refit as vertex levers (§4.2, §6,
+§7). **Option C (fine-tuning)** stays a live but unproven direction: its honest
+number is +2 with 2 breaks (§4.1), and its earlier +7/−0 headline came from a ruler
+pr/105–106 rejected.
+
+**`fit_exclusion` stays ON** in the production chain. Nothing here is evidence
+against it — the dual chain does not turn it off, it runs a second chain beside it.
+
+**What changed during review.** §3, §4, §9 and §10 were rewritten after the Option C
+headline was found to rest on the click ruler; §5 was rewritten after the owner
+pointed out that `dl_vtx_cloud_no_exclusion` is the *last fitting step only* while a
+real exclusion-free chain differs at 34 call sites across five graph-editing stages.
+The first two commits (`3a9a25b`, `bc9e050`) carry the superseded framings; they are
+corrected here rather than rewritten in history.
