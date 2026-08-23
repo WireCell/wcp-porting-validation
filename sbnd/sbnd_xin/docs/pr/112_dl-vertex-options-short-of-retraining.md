@@ -463,6 +463,9 @@ necessary; it is not sufficient. §5.7.5's probe gate is what makes it safe.
 
 #### 5.7.1 Where the split goes
 
+Line numbers are as of `b5c9f43a` and go stale the moment `run_off_chain()` is
+inserted; every row names its symbol, which does not.
+
 | line | stage | OFF pass |
 |---|---|---|
 | `:1627` | `for nu_index` — the candidate loop | shares the loop body |
@@ -571,21 +574,37 @@ re-run whenever the production sequence changes.
 
 #### 5.7.4 Knob surface
 
-Three keys, all defaulting to today's behaviour, threaded the standard way
+Four keys, all defaulting to today's behaviour, threaded the standard way
 (C++ member default → `get(config, …)` → jsonnet key-suppression → `SBND_*` env
 in `run_pr_chain_batch.sh`):
 
 | key | default | meaning |
 |---|---|---|
 | `dl_vtx_dual_chain` | `false` | run the exclusion-free pass at all. **False ⇒ not one instruction executes** — no second graph, no second fitter, no second inference. |
-| `dual_chain_transfer_max` | `0.0` cm | transfer only when the OFF vertex's nearest production vertex is within this distance. **`0` ⇒ run the pass, log and record its vertex, transfer nothing.** |
-| `dual_chain_allow_cluster_swap` | `true` | may the transfer target live on a different cluster (§5.7.7). |
+| `dual_chain_transfer` | `false` | may the OFF vertex replace production's pick. **False = probe: the pass runs, its vertex is recorded, nothing moves.** |
+| `dual_chain_transfer_max` | `2.0` cm | the §5.6 guard `D`. Read **only** when `dual_chain_transfer` is true; transfer iff the snap distance `<= D`. |
+| `dual_chain_allow_cluster_swap` | `true` | may the transfer target live on a different cluster (§5.7.8). |
 
-`dual_chain_transfer_max` is the §5.6 guard `D` made configurable rather than
-fitted. The prototype's own DL gate, `dl_vtx_cut = 2.0 cm`
-(`wire-cell-prod-nue-port.cxx:40`), is the physically-motivated starting value
-and lands on the conservative 4-fixed/0-broken plateau rather than the
-single-event-determined one.
+⚠ **The probe must be its own boolean — do not encode it as `transfer_max = 0`.**
+A snap distance is ≥ 0 and **`0.00 cm` is a reachable, and load-bearing, transfer
+distance**: §5.6's listing has three events at exactly 0.00 cm (`235435`, `46363`,
+`52672`), and two of them are *fixes* — the OFF chain's vertex coincides with a
+production candidate that is **not** the one production picked. The offline
+instrument already uses `d <= D`. So a `transfer_max = 0` "probe" would move the
+vertex on ~3/42 events, `pr85_hash_gate.py` would FAIL, and the failure would look
+exactly like the leak the gate exists to detect. Same class of trap as
+`QL_FIT_EXCLUSION=1` silently meaning *false* (§0).
+
+`dual_chain_transfer_max` defaults to the prototype's own DL gate,
+`dl_vtx_cut = 2.0 cm` (`wire-cell-prod-nue-port.cxx:40`) — physically motivated,
+and on the conservative 4-fixed/0-broken plateau rather than the
+single-event-determined 2.5–3.5 one. It is inert until `dual_chain_transfer` is on.
+
+**Null-vertex fallback.** If the OFF pass names no vertex, **keep production's own
+answer, log it, and count it** — never fall through to an unset pointer. Low risk
+but it should not be discovered at implementation time: 0/42 missing on nueCC48,
+and pr/106 §9 has the exclusion-free chain succeeding on *more* events than
+production (1024 vs 1012 denominators).
 
 #### 5.7.5 Build order — the probe ships first, and it ships §5.5
 
@@ -598,6 +617,13 @@ recorded next to production's; nothing moves. This is two things at once:
    the check that covers what §5.7.2's grep could not, including the double SCN
    inference. It is also the acceptance test for §5.7.3's duplicated sequence
    at the reachability level (the equality test in §5.7.3 covers fidelity).
+
+   **If the probe gate FAILs, separate the two causes before debugging.** A
+   failure conflates a real Facade/fitter leak with interpreter state carried
+   across two SCN inferences. Re-run the probe with `SBND_DL_WEIGHTS=''` on both
+   passes: nothing transfers in probe mode anyway, so a DL-off probe is still a
+   valid leak test and it removes the inference entirely. DL-off probe PASSes and
+   DL-on probe FAILs ⇒ the second inference is the culprit, not the pass.
 2. **A shippable deliverable on its own.** The probe *is* §5.5's chain-agreement
    flag — the strongest result this round found, a **14.4×** error concentrator
    holding 10 of production's 11 vertex misses in a 24 % bucket — and it produces
@@ -677,7 +703,8 @@ code picks, and refinement moves the position, not the identity — which is why
 the offline number is meaningful at all. It is the shipped position, and
 everything downstream reading it, that the arm has to measure.
 
-**The arm:** nueCC48, `dl_vtx_dual_chain=true`, `dual_chain_transfer_max=2.0`,
+**The arm:** nueCC48, `dl_vtx_dual_chain=true`, `dual_chain_transfer=true`,
+`dual_chain_transfer_max=2.0`,
 `PR_EXTRA_STAGES=pr_display`, against `work-vtx106-harv-base-nuecc48`. Read
 `nue_score` / nue-selected from `nusel-table.tsv`, the shipped vertex from
 `calib-pr-evt*.json`, and run `scripts/pr90_movers.py --tags vtxscan-harv3-nuecc48`
@@ -713,9 +740,12 @@ against the permissive one on the same arm.
 
 - [ ] `dl_vtx_dual_chain=false` byte-identical: `pr85_hash_gate.py` PASS on the
       nueCC48 and mcp1k manifests, labels reported.
-- [ ] **Probe gate**: `dl_vtx_dual_chain=true, dual_chain_transfer_max=0`
+- [ ] **Probe gate**: `dl_vtx_dual_chain=true, dual_chain_transfer=false`
       byte-identical to production on the same manifests. This is the leakage
-      proof (§5.7.5) and it is not optional.
+      proof (§5.7.5) and it is not optional. **Not** `transfer_max=0` — that is a
+      live guard at zero distance, and it transfers (§5.7.4).
+- [ ] On a probe-gate FAIL: the `SBND_DL_WEIGHTS=''` discriminator run (§5.7.5)
+      before any other debugging.
 - [ ] **Duplicate-fidelity gate**: OFF pass run with `fit_exclusion=true` names
       the same vertex as production, event by event (§5.7.3).
 - [ ] Knob-on smoke: the transfer fires and is visible in a quoted log line.
@@ -933,7 +963,8 @@ default OFF, retired when a retrained net lands.
 
 **Build it in two stages, and the first stage carries no vertex risk (§5.7.5).** Ship
 the **probe** first — the OFF pass runs, its vertex is recorded beside production's,
-`dual_chain_transfer_max = 0` so nothing moves. That single arm is both the leakage
+`dual_chain_transfer = false` so nothing moves (**not** `transfer_max = 0`, which
+is a live guard at zero distance and does transfer — §5.7.4). That single arm is both the leakage
 gate (a probe arm must be byte-identical under `pr85_hash_gate.py`, which is the only
 check that covers what a source grep cannot — including the second SCN inference) and
 a shippable deliverable on its own, because **the probe *is* §5.5's agreement flag**.
