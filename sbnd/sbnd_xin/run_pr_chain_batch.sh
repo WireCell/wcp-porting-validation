@@ -1505,6 +1505,18 @@ fi
 # vertex).  EMPTY = no TLA = the job default true (production).  Strategy 3.1
 # of the vertex-selection comparison; pass false for the no-rerank arm.
 [ -n "${SBND_DL_VTX_RERANK:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_rerank=${SBND_DL_VTX_RERANK}")
+# doc pr/112 sec 11: the DUAL CHAIN -- a second, exclusion-free PR pass
+# suggests the neutrino vertex; production decides.  EMPTY = no TLA = the job
+# default (off, byte-identical).  SBND_DL_VTX_DUAL_CHAIN=true runs the pass;
+# SBND_DUAL_CHAIN_TRANSFER=true lets it move the vertex (unset = PROBE: the
+# agreement flag only).  MODE snap|voxels|union (string), TRANSFER_MAX in cm,
+# ALLOW_CLUSTER_SWAP true|false, VTX_WEIGHT number (union only).
+[ -n "${SBND_DL_VTX_DUAL_CHAIN:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_dual_chain=${SBND_DL_VTX_DUAL_CHAIN}")
+[ -n "${SBND_DUAL_CHAIN_MODE:-}" ] && CATH_TLA+=(--tla-str "dual_chain_mode=${SBND_DUAL_CHAIN_MODE}")
+[ -n "${SBND_DUAL_CHAIN_TRANSFER:-}" ] && CATH_TLA+=(--tla-code "dual_chain_transfer=${SBND_DUAL_CHAIN_TRANSFER}")
+[ -n "${SBND_DUAL_CHAIN_TRANSFER_MAX:-}" ] && CATH_TLA+=(--tla-code "dual_chain_transfer_max=${SBND_DUAL_CHAIN_TRANSFER_MAX}")
+[ -n "${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP:-}" ] && CATH_TLA+=(--tla-code "dual_chain_allow_cluster_swap=${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP}")
+[ -n "${SBND_DUAL_CHAIN_VTX_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dual_chain_vtx_weight=${SBND_DUAL_CHAIN_VTX_WEIGHT}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

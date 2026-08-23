@@ -1,13 +1,13 @@
 # doc pr/112 — what we can do about the DL vertex, short of retraining
 
-**Status 2026-08-23 — INVESTIGATION + DESIGN, NO CODE.** No knob is built, no default
-moves, no production cfg is touched, no toolkit C++ is edited. Every option below is
-*sized* on data and left for the owner to choose. `./build/clus/wcdoctest-clus` is
-quoted unchanged as proof the round changed no code. **§5.7 is the implementation
-design** for the option this doc recommends (owner, 2026-08-23: *"design this approach
-… we will implement it later today"*) — a feasibility audit against the source with
-file+line citations, a three-knob surface, a probe-first build order, and a measured
-cost. It is a design, not a patch.
+**Status 2026-08-23 (evening) — §11: IMPLEMENTED, DEFAULT OFF.** The dual chain of
+§5.7 is built (toolkit `6ea4dff6` + `077bc5b7`), every gate of §5.7.9 PASSes, and the
+§11 optimisation round selected the **pooled-rerank** operating point (`union`,
+`vtx_weight=0`) over the snap transfer the offline round simulated. **No production
+default moves in this round** — one ADVERSE mover (18255-62281) survives every
+operating point, and ADVERSE is the stop-the-line class; the flip is the owner's
+call on the §11 numbers. Everything above this line up to §10 is the earlier
+investigation+design record, unchanged.
 
 **The owner's question.** pr/111 concluded that `fit_exclusion` should stay ON even
 though the DL vertex is better with it off. The follow-up:
@@ -48,6 +48,17 @@ python3 scripts/pr112_dualchain_sim.py --sample nuecc48 \
         --tsv runs/pr112-dual-nuecc48.tsv                                        # sec 5.2, 5.5
 python3 scripts/pr112_pool.py    --n 8     --tsv runs/pr112-pool-nuecc48.tsv     # sec 7
 python3 scripts/pr112_design_sizing.py --sample nuecc48                          # sec 5.7.6, 5.7.7b, 5.7.8
+
+# sec 11 -- the implementation round (toolkit 6ea4dff6+077bc5b7 built + installed)
+./scripts/pr112_dual_arms.sh off    nuecc48 16   # knob-off gate arm (and eval base)
+./scripts/pr112_dual_arms.sh probe  nuecc48 16   # leakage gate, snap stop
+./scripts/pr112_dual_arms.sh probev nuecc48 16   # leakage gate, voxels stop
+./scripts/pr112_dual_arms.sh fid    nuecc48 16   # duplicate-fidelity gate
+for a in snapD1 snapD2 snapD3 vox uniW0 uniW1 uniW2 snapD2-noswap; do
+  for s in nuecc48 ncpi0 numu100; do ./scripts/pr112_dual_arms.sh $a $s 16; done; done
+python3 scripts/pr85_hash_gate.py work-pr112i-off-nuecc48 work-pr112i-probe-nuecc48
+./scripts/pr112_dual_eval.py --sample nuecc48 --base work-pr112i-off-nuecc48 \
+    work-pr112i-uniW0-nuecc48 ... --tsv runs/pr112i-opt-nuecc48.tsv           # sec 11.4
 ```
 
 **Traps carried forward (pr/111 §12).** `SCN_Vertex` returns **packed float32 bytes**,
@@ -1006,3 +1017,146 @@ pointed out that `dl_vtx_cloud_no_exclusion` is the *last fitting step only* whi
 real exclusion-free chain differs at 34 call sites across five graph-editing stages.
 The first two commits (`3a9a25b`, `bc9e050`) carry the superseded framings; they are
 corrected here rather than rewritten in history.
+
+## 11. The implementation round — built, gated, optimised (owner request 2026-08-23)
+
+Owner: *"implement this approach following the plan … use the no exclusion fit to
+suggest the neutrino vertex, and then use it on the one with exclusion fit"*, with
+four additions: (1) the OFF pass runs nothing non-essential; (2) test whether the
+re-rank should live in the OFF chain or in the production chain, on nueCC + NCpi0 +
+~100 numuCC PR events; (3) a dedicated knob so a retrained-net era can switch the
+whole thing off; (4) check whether something beats the closest-distance match.
+**The metric is the neutrino-vertex evaluation against the hand scan** (owner,
+same day) — the pr/106 target metric on the `vtxscan-harv3-*` labels; selection
+counts and the 1 cm ruler ride along as guards.
+
+### 11.1 What was built (toolkit `6ea4dff6` C++, `077bc5b7` cfg)
+
+§5.7's design, with one structural improvement over the doc: the transfer lives
+*inside* `determine_overall_main_vertex_DL` as an optional `DualChainHint*`
+argument (nullptr = the legacy path line for line), so an accepted transfer reuses
+the existing post-accept block — `swap_main_cluster`, `examine_direction`, proton
+tagging, long-muon cleanup, the scoreboard route — instead of duplicating it.
+The OFF pass is `TaggerCheckNeutrino::run_dual_chain_off_pass`, a duplicate of the
+production stage sequence `:2145-2373` (§5.7.3 / M10) with `fit_exclusion=false`
+and everything non-essential stripped: no scoreboard/harvest, no detg/census dumps,
+no `std::cout`, no `rough_path_probe`; its timers log under a `[dual-off]` prefix
+(the §5.7.6 double-count trap, closed). It snapshots and restores every
+`Flags::main_cluster` bit it could touch.
+
+Requirement (2) turned the §5.7.4 four-knob surface into six — the mode knob is
+where the re-rank question becomes testable on one binary:
+
+| key | default | meaning |
+|---|---|---|
+| `dl_vtx_dual_chain` | `false` | run the OFF pass at all — the retrain-era off switch (requirement 3) |
+| `dual_chain_mode` | `"snap"` | `snap` \| `voxels` \| `union` (below) |
+| `dual_chain_transfer` | `false` | false = probe: pass runs, agreement flag recorded, nothing moves |
+| `dual_chain_transfer_max` | `2.0` cm | snap guard D; also the `s_dual` range in union |
+| `dual_chain_allow_cluster_swap` | `true` | §5.7.8 |
+| `dual_chain_vtx_weight` | `0.0` | union: weight of the OFF-vertex proximity term |
+
+- **`snap`** — the §5 design as simulated: the OFF chain runs its own full vertex
+  determination *and refinement*; its final vertex snaps to the nearest production
+  candidate; accepted iff `d <= D`, bypassing the composite. Re-rank in the OFF chain.
+- **`voxels`** — the OFF chain stops right after its SCN inference (cheapest stop);
+  its top-K *replaces* production's own inference and **production's composite
+  re-rank decides** (min_accept, swap guard, protected-break veto all live).
+  Re-rank in the production chain.
+- **`union`** — as `voxels` but both nets' top-K are pooled (per-candidate dedup
+  keeps the higher score), optionally plus `s_dual = w·max(0, 1−d/D)` toward the
+  OFF chain's refined vertex — requirement (4)'s "better than closest distance"
+  candidate: both score fields and the OFF answer, scored through production's own
+  geometry, instead of a bare argmin.
+
+Env → TLA wiring in `run_pr_chain_batch.sh` (`SBND_DL_VTX_DUAL_CHAIN`,
+`SBND_DUAL_CHAIN_{MODE,TRANSFER,TRANSFER_MAX,ALLOW_CLUSTER_SWAP,VTX_WEIGHT}`),
+key-suppression in the jsonnet chain, scoreboard `dual_chain` block (emitted only
+when the pass ran), `WCT_DUAL_CHAIN_OFF_EXCL=1` as the env-only fidelity switch.
+Doctest `doctest_dual_chain_pick.cxx` pins the snap arithmetic, including that
+**0.00 cm is a transfer even at D=0** (§5.7.4's trap).
+
+### 11.2 Gates (§5.7.9, all PASS)
+
+- **Knob-off byte-identical**: `pr85_hash_gate.py` `work-pr112i-off-nuecc48` vs
+  `work-pr112-harv-nuecc48` PASS 96/96 archives; `work-pr112i-off-numu100` vs
+  `work-pr112-harv-mcp1k` PASS 200/200.
+- **Probe gate (the leakage proof)**: `work-pr112i-probe-nuecc48` (snap stop) and
+  `work-pr112i-probev-nuecc48` (voxels stop, i.e. the second SCN inference live)
+  both byte-identical to the off arm, 96/96; `probe-numu100` 200/200. The OFF
+  pass — graph, fitter, second inference and all — leaks nothing into production.
+- **Duplicate-fidelity**: `work-pr112i-fid-nuecc48` (`WCT_DUAL_CHAIN_OFF_EXCL=1`,
+  both passes exclusion-ON): the OFF vertex equals production's **stop-point**
+  position (the refinement block's own `After improve vertex/graph audit` print)
+  on **48/48 events, exact float match**. 47/48 also equal the *shipped* vertex;
+  the one exception (52672) is production moving the vertex in its **second**
+  `improve_vertex` block after `:2380` — beyond the stop point, i.e. not a
+  fidelity defect. (Also 1/48 measures how rarely post-stop stages move it.)
+- `wcdoctest-clus` 233/233 (2397 assertions; 228+5). Freshness proof done
+  (`local/lib/libWireCellClus.so` newer than the last source edit) before any arm.
+- Compiled-config proof: all six keys present in the smoke event's
+  `.wct-cfg-evt10550.json`; absent (grep empty) in the off arm's.
+
+### 11.3 The optimisation round — 8 operating points × 3 samples
+
+Arms `work-pr112i-<arm>-<sample>`, base = the knob-off arm of the same binary;
+samples nueCC48 (42 labels), NCpi0 (19), numu100 (the 100 lowest-id
+`vtxscan-harv3-mcp1k` labeled events, list frozen in `scripts/pr112_numu100.txt`).
+Scored by `scripts/pr112_dual_eval.py` (target metric on each arm's own `hv_cloud`
+candidate rows — built before any transfer in every mode, so base and arm share
+the candidate set; shipped `main_vertex` resolves the pick). TSVs:
+`runs/pr112i-opt-{nuecc48,ncpi0,numu100}.tsv`.
+
+target-hit (base: nueCC48 31/42, NCpi0 14/19, numu100 80/100 = **125/161**):
+
+| arm | nueCC48 | NCpi0 | numu100 | pooled | ADVERSE (1 cm) | nue≥4.3 (nueCC48, base 32) |
+|---|---|---|---|---|---|---|
+| snapD1 | 34 | 15 | 78 | 127 (+2) | 3 | 31 |
+| snapD2 | 34 | 15 | 81 | 130 (+5) | 3 | 31 |
+| snapD3 | 35 | 14 | 81 | 130 (+5) | 4 | 32 |
+| snapD2-noswap | 34 | 14 | 81 | 129 (+4) | 3 | 31 |
+| vox | 33 | 14 | 82 | 129 (+4) | 1 | **30** |
+| **uniW0** | 33 | 15 | 82 | **130 (+5)** | **1** | **32** |
+| uniW1 | 33 | 15 | 82 | 130 (+5) | 1 | 32 |
+| uniW2 | 33 | 15 | 82 | 130 (+5) | 1 | 32 |
+
+**The re-rank belongs in the production chain (requirement 2 answered).** The
+snap modes — re-rank in the OFF chain, hard override in production — hit the same
+pooled +5 but carry 3–4 ADVERSE movers, because the transfer bypasses the
+composite: on 59335 and 63359 the OFF chain's wrong vertex transfers at 0.8/0.3 cm
+(distance cannot veto it — the numu breaks sit at *smaller* d than the numu fixes
+55595/58717/168432 at 1.1–1.5 cm, so no D separates them), while in
+`voxels`/`union` the same wrong suggestion is **rejected by production's own
+composite** (`dl-rerank-reject` → traditional fallback, still right). The
+distance guard that §5.6 found break-free on nueCC48 does not transfer to numu
+topologies; the composite veto does. This also answers requirement (4): the
+better-than-closest-distance match is *no positional match at all* — hand the
+production re-rank both nets' voxels and let its geometry terms and threshold
+arbitrate. The `s_dual` proximity term adds nothing (uniW1/2 ≡ uniW0 on all 161).
+
+**The one survivor: 18255-62281, ADVERSE in every voxel-carrying mode.** Base is
+right *because* production's DL rerank rejects (best 9.06 < min_accept 10) and the
+traditional fallback lands on the click. The OFF net puts its top voxel 28 cm
+away at `dl_score` 0.014 — three times the ON net's 0.005, still deep in the
+uncertain regime — and `score_scale` 1000 turns that 0.009 into +9 composite
+points: 18.45 > 10, accepted, wrong. That is pr/111's brittleness verbatim (the
+OFF cloud re-rolls the argmax), reachable now through the pooled path. No knob in
+this round's surface separates it from the four numu fixes without tuning a
+threshold to one event — which is exactly what CLAUDE.md §5 rule 7 forbids.
+
+**Operating point: `uniW0`** — `dl_vtx_dual_chain=true, dual_chain_transfer=true,
+dual_chain_mode=union, dual_chain_vtx_weight=0` (identical physics to uniW1/2 and
+strictly cheaper: the OFF pass stops after inference). Pooled **+5** at **1
+ADVERSE / 3 broken**, nue-selected untouched (32→32; snap costs −1, vox −2),
+numu-selected untouched (71→71). Cost on nueCC48: TCN visit median 6.41 s (off) →
+**8.54 s (uniW0, 1.33×)**, vs snap 10.1 s (1.58×) — under the §5.7.6 1.65×
+projection because the voxels stop skips the OFF re-rank and refinement.
+Trade-off recorded: with `vtx_weight=0` the OFF pass computes no final vertex, so
+the §5.5 *agreement flag* is not produced; `uniW1` buys it back at snap-like cost
+with identical selection numbers, and the probe mode provides it with no transfer
+at all.
+
+**Pre-registered rule verdict: no operating point qualifies for a default flip**
+(the rule demanded zero ADVERSE). The knobs ship DEFAULT OFF; 62281 is reported,
+not tuned away. The flip — accept 1 ADVERSE + 3 broken for +5 pooled targets with
+clean selection guards — is the owner's decision on this table.
