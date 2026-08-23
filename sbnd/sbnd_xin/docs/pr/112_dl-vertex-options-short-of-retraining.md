@@ -1,12 +1,15 @@
 # doc pr/112 — what we can do about the DL vertex, short of retraining
 
-**Status 2026-08-23 (evening) — §11: IMPLEMENTED, DEFAULT OFF.** The dual chain of
-§5.7 is built (toolkit `6ea4dff6` + `077bc5b7`), every gate of §5.7.9 PASSes, and the
-§11 optimisation round selected the **pooled-rerank** operating point (`union`,
-`vtx_weight=0`) over the snap transfer the offline round simulated. **No production
-default moves in this round** — one ADVERSE mover (18255-62281) survives every
-operating point, and ADVERSE is the stop-the-line class; the flip is the owner's
-call on the §11 numbers. Everything above this line up to §10 is the earlier
+**Status 2026-08-23 (late) — §12: SBND PRODUCTION ON, `snapD2`.** The dual chain of
+§5.7 is built (toolkit `6ea4dff6` + `077bc5b7`), every gate of §5.7.9 PASSes, and
+after the owner restated the metric (per-arm target + the pr/88 scannability filter)
+§12 re-measured all five strategies on 1011 scannable labels: production 777,
+`uniW0` 784, **`snapD2` 805 (+28)**, `snapD3` 804, exclusion-free chain alone 812.
+The owner flipped **`snapD2` ON for SBND production** on those numbers
+(`dl_vtx_dual_chain=true`, `dual_chain_mode='snap'`, `dual_chain_transfer=true`,
+`dual_chain_transfer_max=2.0`) — **not byte-identical, a deliberate production
+change**, carrying 18 ADVERSE against 44 rescued at 1.58× the TCN visit. §11's
+`uniW0` selection is superseded by §12; everything up to §10 is the earlier
 investigation+design record, unchanged.
 
 **The owner's question.** pr/111 concluded that `fit_exclusion` should stay ON even
@@ -1218,3 +1221,158 @@ The flip decision on the table for the owner:
   this round's knob is also the input-generation switch — and the §5.5
   agreement flag (probe mode, or uniW1) remains available as a zero-risk
   error-concentration label regardless of the flip.
+
+## 12. Round 2 — the owner's metric, the transfer's real loss channels, and the SBND flip
+
+Owner, 2026-08-23, three instructions that reopened §11: *"the metric is on the
+nu vertex evaluation against the hand scan"*; *"for each graph case … find the
+vertex that is closest to this position and then use this one as true target …
+this will be different for each of the situation"*; and *"if the event's longest
+cluster length is too small, it is very difficult for me to decide through hand
+scan … these should be excluded"*.
+
+**Repro block.**
+
+```bash
+cd sbnd_xin                                   # toolkit 077bc5b7 binary
+./scripts/pr112_dual_arms.sh nofitx <sample> 24     # NEW arm type: SBND_FIT_EXCLUSION=false
+./scripts/pr112_dual_arms.sh snapD2 <sample> 24
+./scripts/pr112_dual_arms.sh snapD3 <sample> 24
+./scripts/pr112_ladder.py    --sample <sample> --arms uniW0 snapD2      # R0..R3 ladder
+./scripts/pr112_five_eval.py --sample <sample> --drop-unscannable       # the owner's table
+```
+
+### 12.1 The metric, restated and implemented
+
+`scripts/pr112_five_eval.py`. **Per arm, independently**: `target` = that arm's
+own `hv_cloud` candidate vertex nearest the hand-scan click. Two scorings are
+reported because the owner's wording admits both and they must agree for a
+result to be trusted: **IDENTITY** (the candidate nearest the arm's shipped
+`main_vertex` *is* the target) and **DIST ≤ X cm** (the shipped vertex is within
+X cm of the target's position; tolerant of the post-selection refinement).
+Events whose **longest fitted segment is under 5 cm** are dropped —
+`vtx_rules/scannability.py`, `DEFAULT_LONGEST_CM = 5.0`, the pr/88 §8 filter
+validated against the owner's own skip behaviour. It removes **14 of 1025**
+(12 mcp1k, 2 mcp2k), and all five arms score those 14 identically (12 hits,
+2 misses), so it moves the denominators and not one delta.
+
+### 12.2 The five strategies, four samples — the table this round exists for
+
+Arms `work-pr112i-{nofitx,off,uniW0,snapD2,snapD3}-<sample>`, all rc=0.
+IDENTITY, unscannable dropped (n = 1011):
+
+| arm | nueCC48 (42) | NCpi0 (19) | mcp1k (373) | mcp2k (577) | **ALL** | rate |
+|---|---|---|---|---|---|---|
+| exclusion-free chain (`nofitx`) | **35** | 14 | 296 | **467** | **812 (+35)** | 80.3 % |
+| production (`off`) | 31 | 14 | 291 | 441 | **777** | 76.9 % |
+| `uniW0` | 33 | **15** | 291 | 445 | 784 (+7) | 77.5 % |
+| **`snapD2`** | 34 | **15** | **297** | 459 | **805 (+28)** | **79.6 %** |
+| `snapD3` | **35** | 14 | 296 | 459 | 804 (+27) | 79.5 % |
+
+DIST ≤ 1 cm, same events: 693 / 649 / 656 / **676** / 674. The two scorings give
+the same ordering, and so do the no-filter (1025) and min-segment-cut variants:
+**nofitX > snapD2 ≳ snapD3 > uniW0 > production**, everywhere. `snapD2`
+captures **28 of the 35** points the exclusion-free chain has to give.
+
+### 12.3 Why §11's `uniW0` reached only +7 — the four-rung ladder
+
+`scripts/pr112_ladder.py`, no scannability filter (n = 1025):
+
+| rung | | nueCC48 | NCpi0 | mcp1k | mcp2k | ALL |
+|---|---|---|---|---|---|---|
+| R0 | production, own cloud | 31 | 14 | 302 | 442 | 789 |
+| R1 | exclusion-free alone, own cloud | +4 | +0 | +5 | +26 | **+35** |
+| R2 | transfer ceiling (OFF vertex → production's cloud) | +4 | +0 | +8 | +31 | **+43** |
+| R3 | delivered `uniW0` | +2 | +1 | +0 | +4 | +7 |
+
+**The transfer is not lossy**: every one of the OFF chain's wins survives the
+snap into production's candidate set (5/5, 1/1, 23/23, 45/45; "transfer LOSES 0"
+on every sample). The candidate-set channel that was expected to be the loss is
+not it. Three real channels, each measured:
+
+1. **The union mode carries only the net's heat map.** Of the 74 events where
+   the exclusion-free chain is right and production is wrong, **34 (46 %) were
+   won by its *traditional* vertex — its own DL was rejected** (`dl_best <
+   min_accept`). No voxel-level mode can carry a fallback. `snap` transfers the
+   final vertex whatever produced it.
+2. **Union can only add candidates and raise scores, never demote.** evt 389538:
+   production's own net is confidently wrong (dl 0.982 on row 19014, 213 cm from
+   the click, vs 0.748 on the target); pooling adds a row at 0.179 and the best
+   composite is bit-identical, so the pick does not move. `snap` bypasses the
+   composite and lands 0.26 cm from the click.
+3. **The guard, once, and the refinement, once.** Censusing all 161 optimisation
+   events in `snapD2`: 150 accepted (85 of them no-ops — production had already
+   chosen that row), 11 rejected by `dual_chain_transfer_max`, and **exactly one
+   correct transfer blocked by a guard** (evt 111412 at d = 2.069 cm vs D = 2.0;
+   `snapD3` transfers it and hits). One further loss is not a guard at all
+   (evt 469665: transfer accepted onto the target row, then the refinement block
+   walks the shipped vertex 1.55 cm and the nearest row becomes another one).
+
+Bee sets for hand scan: `bee/pr112j/` (the three loss-channel events × 5 arms)
+and `bee/pr112k/` (all 18 nueCC48+NCpi0 events where either chain misses × 5
+arms); URLs in the respective `*.index.txt`.
+
+### 12.4 `min_accept` is not the lever — measured in both directions
+
+The acceptance floor (`dl_vtx_min_accept_score = 10`, pr/79 step 1) is what
+routes the uncertain regime (`dl ≈ 0.005`, most events) to the traditional
+vertex. Because `s_dl = dl_score × 1000` swamps the ±2-scale geometric terms, it
+is a raw net-confidence floor in composite-score units.
+
+- **Lower it to 4** (so the pooled ranking of evt 52672 can be accepted):
+  replay over 1025 events gives production 789 → 689 and **`uniW0` 796 → 712
+  (−84)**. Live arms confirm the replay exactly where it predicts a gain
+  (nueCC48 33 → 34, NCpi0 15 → 15 — `work-pr112i-uniW0ma4-{nuecc48,ncpi0}`).
+  This is pr/79's +36/473 run backwards.
+- **Corroboration-gated lowering**, i.e. accept below the floor only when both
+  nets' DL winners agree within 1 cm: **also negative** — −61 (floor 4), −53
+  (6), −28 (8). Two nets reading the same image fail together; this is a
+  different quantity from §5.5's chain-agreement flag, and it does not work.
+  The suggestion is retracted.
+- **Raise it to 20**: proxy replay gives production +7 and `uniW0` +9, but on
+  `snapD2` it is **inert (13 events touched, net −1)** — an accepted snap sets
+  `flag_pass` regardless of the composite. A stricter floor and the snap are two
+  routes to the same destination; the snap gets there first and on more events.
+  Arms were launched and **stopped on owner instruction** ("you can stop the
+  min_accept 20 for now"); `work-pr112i-{offma20-mcp1k}` is incomplete at
+  443/461 and is **not an arm** — do not read it.
+
+### 12.5 SBND PRODUCTION FLIP — `snapD2` ON
+
+Owner, 2026-08-23: *"Can you make snapD2 as the default for SBND production for
+now?"* `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+`dl_vtx_dual_chain = true`, `dual_chain_mode = 'snap'`,
+`dual_chain_transfer = true`, `dual_chain_transfer_max = 2.0`
+(`allow_cluster_swap`/`vtx_weight` stay at their C++ defaults true/0). Mode and
+D are pinned explicitly so the operating point is visible in the compiled config
+rather than inherited. **This is not byte-identical — it is a deliberate
+production change.** Revert: `--tla-code dl_vtx_dual_chain=false` (or
+`SBND_DL_VTX_DUAL_CHAIN=''`), which is also the retrain-era off switch.
+
+What ships with it, measured on the full arms:
+
+| | mcp1k | mcp2k | nueCC48 | NCpi0 |
+|---|---|---|---|---|
+| target hits | 302 → **308** (15 fix / 9 break) | 442 → **460** (30 / 12) | 31 → 34 | 14 → 15 |
+| 1 cm ADVERSE / rescued | 9 / 11 | 9 / 28 | 0 / 3 | 0 / 2 |
+| numu-selected | 246 → **249** | 403 → 393 | — | — |
+| nue-selected | — | 2 → 3 | 32 → 31 | — |
+
+Pooled: **+28/1011 target hits, 44 rescued vs 18 ADVERSE**, cost **1.58×** the
+TaggerCheckNeutrino visit (arm walls at PR_JOBS=24: mcp1k 461 events 11 min,
+mcp2k 905 events 23 min). The 18 ADVERSE and the mcp2k numu-selected −10 are the
+open items this flip carries; the owner flipped with those numbers in hand.
+
+### 12.6 Flip gates
+
+- **Compiled-config proof** — post-flip job, **no env at all**, first smoke
+  event's `.wct-cfg-evt10550.json` carries
+  `{'dl_vtx_dual_chain': True, 'dual_chain_mode': 'snap', 'dual_chain_transfer': True, 'dual_chain_transfer_max': 2}`.
+- **Flip-equivalence** — `work-pr112i-flipchk-{nuecc48,ncpi0}` (post-flip cfg,
+  every `SBND_DUAL_CHAIN_*` unset) vs the env-driven `work-pr112i-snapD2-*`
+  arms, `scripts/pr85_hash_gate.py`:
+  **PASS 96/96 archives byte-identical (nueCC48, 48 events, rc=0)** and
+  **PASS 38/38 (NCpi0, 19 events, rc=0)**. The cfg flip is exactly the
+  validated operating point, not something that merely resembles it.
+- Knob-off remains available and byte-identical to pre-flip production: the
+  §11.2 gates (96/96 + 200/200) were taken with these same keys absent.
