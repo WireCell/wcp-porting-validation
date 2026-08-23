@@ -14,7 +14,17 @@ slice pitch, far below the fitter's own precision) relocates the net's argmax by
 gives **38 %**. Exclusion perturbs the cloud by **5.5×** that. So switching `fit_exclusion` re-rolls
 a winner-take-all competition over the whole event rather than improving the vertex region. The
 nueCC48 **35 → 41 / 47** is that re-roll landing favourably 7 times and unfavourably once — and of
-the 7, only **4 are genuine DL improvements** (§2). The pre-registered test returns **H2**, 6/8.
+the 7, only **4 are genuine DL improvements** (§2). The two directly comparable numbers are the
+**30 %** relocation rate at 0.05 cm and the **0.277 cm** displacement exclusion actually applies;
+the pre-registered band test agrees (**H2**, 6/8) but compares two different clouds against a
+same-cloud spread, so it is corroboration rather than the primary evidence (§7).
+
+**And the owner's own suggested control settles the remaining alternative.** Running the uBooNE
+2×2 — toolkit and prototype, exclusion ON and OFF, DL available in all four — the **prototype is
+affected just as much as the toolkit**: turning exclusion off relocates the SCN argmax > 2 cm on
+**10/34** events for WCP against **11/34** for WCT, and the prototype's own live `NeutrinoID_DL`
+decision flips on **5 of 35** events. So this is not a toolkit port defect (pr/110 hypothesis B) and
+§8 shows it is not an SBND out-of-distribution effect either — it is the net (§12).
 
 ---
 
@@ -236,6 +246,13 @@ PRE-REGISTERED VERDICT: inside the P1 band on 6/8, outside on 2/8  =>  H2
 **Pre-registered rule, fixed before the numbers were seen:** inside on ≥5 of 8 ⇒ **H2** (the
 exclusion effect is within the net's own input sensitivity); outside on ≥6 ⇒ H1/H3. **Result: H2.**
 
+> **The band comparison is not symmetric, and the headline does not rest on it.** `|Δnet ON−OFF|`
+> compares two *different* clouds; the P1 band is the spread of the *same* cloud jittered. A wide
+> band says "this cloud's argmax is unstable", not "a 0.28 cm displacement produces effects of this
+> size". The load-bearing evidence is the directly comparable pair below — **30 % relocation at
+> 0.05 cm vs 0.277 cm of actual displacement** — together with §6's 3.4 %-charge flip and §8's and
+> §12's independent replications. Those stand without the band.
+
 Two further facts pin the scale:
 
 - **How far does exclusion actually move the cloud?** Nearest-neighbour ON→OFF displacement over
@@ -308,6 +325,11 @@ argmax within 2.0 cm of target:  raw 33/47   ensemble-mean 35/47
 **+2 net, with 2 lost.** Same shuffling character, same order as everything else in this family.
 This is a measured ceiling on a proposal, not a proposal to ship.
 
+⚠ **Different rulers, do not add these up.** §9's +2 is on the *net's raw argmax within 2 cm*
+(33/47 baseline); §10's "+3/47 ceiling" is on the *production target metric* (35/47 baseline). They
+measure the same family of effect at the same order of magnitude, but they are not the same
+denominator and the two gains are not additive.
+
 ---
 
 ## 10. What this means for the levers already on the table
@@ -316,7 +338,13 @@ This is a measured ceiling on a proposal, not a proposal to ship.
   (missing `122660`, `268067`), breaks `433451`, and costs **nue-selected 35 → 32 with 2 ADVERSE**.
   Read against §7, that is exactly what re-rolling a chaotic argmax looks like: it wins some, loses
   others, and the physics selection pays. **It should stay off, and the reason is now mechanistic
-  rather than empirical.**
+  rather than empirical.** (Footnote, since the recommendation is "stay off": that knob has an
+  ordering asymmetry — the cloud's **vertex rows** are read at `NeutrinoVertexFinder.cxx:4818`
+  while the no-exclusion refit is live, but every downstream snap target (`:4933`, `:5054`,
+  `:5109`) is read *after* the restore at `:4840-4848`. The in-code comment at `:4775-4778` claims
+  the whole remainder of the function sees the exclusion fit; that is true of the snap targets but
+  not of the cloud's own vertex block. Sub-voxel in most events — but §7 is precisely about
+  sub-voxel effects.)
 - **A *fully* exclusion-free cloud buys +3/47 on the target metric — that is the hard ceiling** on
   any cloud-side intervention, and §9 shows readout-side stabilisation buys about the same. There
   is no large systematic gain hiding in this direction.
@@ -341,12 +369,12 @@ evaluated (or a retrain with jitter augmentation), and both are outside a knob r
 
 - n = 47 nueCC48 events (SBND) and 8 of 35 (uBooNE, stability only). The M-a/M-b/M-c/M-d ledger is
   8 exhibit events — every flip in the sample, but a single sample.
-- The uBooNE section compares **stability only**, on end-of-job clouds (§8 caveat). It does **not**
-  measure a uBooNE DL vertex, and it does **not** run the prototype. Running the owner's full 2×2
-  (`DL_WEIGHTS=…CP24.pth` × `QL_FIT_EXCLUSION` for the toolkit, `WCP_FIT_EXCLUSION=0` for the
-  prototype, scored against the 35 owner adjudications in `qlport/dl_vtx_optimization/dl_master.log`)
-  is the natural next step and is now cheap — but §8 already answers the question it was proposed to
-  answer, so it was not spent uninvited.
+- §8 compares **stability only**; the owner's actual 2×2 is **§12**, and it was run (4 arms × 35
+  events, all complete). §12 is still label-free: it compares each code against *itself* across the
+  exclusion switch. It does **not** score either code against the 35 owner adjudications in
+  `qlport/dl_vtx_optimization/dl_master.log` — that ledger is keyed to DL *voxel rank*, so scoring
+  it would require the live top-5 from each arm, and the toolkit's DL decision lines are not emitted
+  at the log level these runs used (see §12's note). That is the natural next step and is cheap.
 - SCN inference is not bit-stable (M4); every number here is from a **deterministic offline re-run**
   of stored clouds with a fixed seed, which sidesteps that entirely. Any *live* uBooNE DL arm would
   need repeat runs first.
@@ -356,3 +384,74 @@ evaluated (or a retrain with jitter augmentation), and both are outside a knob r
   (`NeutrinoVertexFinder.cxx:4814-4825`). That is a structural train/inference difference in the
   net's own input format, independent of exclusion, and it is the kind of thing that would decide a
   future retraining question.
+
+
+---
+
+## 12. The owner's uBooNE 2×2: **the prototype is affected just as much**
+
+> *"I wonder if the MicroBooNE toolkit code (turn on and off this feature) vs. prototype running
+> may help."* — owner, 2026-08-22
+
+Four arms, **35 events**, all complete, DL available in all four
+(`scripts/pr111_ub_arms.sh`, forked from `pr108_wct.sh` + `run_wcp.sh` so the pr/108 arms and the
+stored references `prototype_base/nue_5384_*.root` are untouched, M13):
+
+| arm | code | lever | location |
+|---|---|---|---|
+| `pr111_wct_on_dl` / `_off_dl` | toolkit | `QL_FIT_EXCLUSION=true` / `false` | `qlport/scripts/sweep/` |
+| `pr111_wcp/{on,off}` | prototype | default ON / `WCP_FIT_EXCLUSION=0` | `/home/xqian/tmp/pr111_wcp/` |
+
+`fit_exclusion` read back from each toolkit job's own log (`fit_exclusion=true` / `false`) — never
+from the env, because the uBooNE TLA compares `== "true"`.
+
+### 12.1 Like-for-like, label-free (`scripts/pr111_ub_2x2.py`)
+
+Both codes' clouds rebuilt the same way from their own `T_rec_charge`, then the **same frozen CP24
+weights with the same top-1 rule** — which removes the live asymmetry (toolkit `dl_vtx_rerank=true`,
+top-5 composite, `min_accept=4`; prototype top-1 argmax + `dl_vtx_cut`; `uboone-mabc.jsonnet`
+exposes no rerank TLA). Same end-of-job-cloud caveat as §8, and it applies identically to both
+sides, which is what a WCT-vs-WCP comparison needs.
+
+| code | cloud ON→OFF displacement (median) | SCN argmax move (median) | > 2 cm | > 20 cm |
+|---|---|---|---|---|
+| **toolkit** | 0.071 cm | 0.71 cm | **11/34 (32 %)** | 7/34 |
+| **prototype** | **0.143 cm** | 0.50 cm | **10/34 (29 %)** | 8/34 |
+
+**32 % vs 29 %** — statistically indistinguishable, and the *prototype's* cloud actually moves
+**twice as far** when exclusion is switched.
+
+### 12.2 The prototype's own live decision, from its own logs
+
+Independent of the offline reconstruction — counting `Change to DL vertex!` /
+`Stay with the traditional vertex!` and the logged `NeutrinoID_DL: DNN:` regressed point:
+
+| prototype arm | Change to DL vertex | Stay with traditional |
+|---|---|---|
+| exclusion **ON** | 34/35 | 0 |
+| exclusion **OFF** | 29/35 | **5** |
+
+**The prototype's live DL decision flips on 5 of 35 events**, and its DNN regressed point moves
+> 2 cm on **12/34** events (median 0.61 cm). Events where the decision flips: **6520, 6650, 6786, 6806, 6888** — with DNN
+displacements of 3.4, 86.4, 284.3, 102.8 and 292.8 cm respectively.
+
+### 12.3 What this settles
+
+- **pr/110 hypothesis (B) — "the toolkit's exclusion is not WCP's exclusion, and that is why the DL
+  vertex suffers" — is refuted as an explanation for the DL-vertex sensitivity.** Both codes are
+  perturbed at the same rate. (pr/108's finding that the two implementations differ in *measured
+  impact* stands; it is simply not what drives the DL vertex.)
+- Combined with §8 (uBooNE 38 % vs SBND 37 %), **neither the implementation nor the detector is the
+  variable.** The sensitivity is the net's own argmax instability, and `fit_exclusion` is one of
+  many things that perturbs the cloud enough to re-roll it.
+- It follows that **uBooNE production carries this too**: the prototype relocates the vertex in
+  34/35 events on the DL's say-so, and that say-so moves on 5 of them for a switch that is supposed
+  to be a fit-quality improvement.
+
+**Note on logging, found not fixed.** The toolkit's DL decision lines never appear in these logs.
+`-L clus:debug` does not reach the sub-logger; `scripts/pr111_run_one.sh` (a one-line fork of
+`run_one.sh` adding `-L clus.NeutrinoPattern:debug`, committed here) does make `[clus.NeutrinoPattern]`
+lines appear — but still no DL lines, and **the SBND production logs show the same zero count** even
+on events whose scoreboard proves the DL ran. So this is a general toolkit logging gap, not a uBooNE
+harness problem. It did not affect any result here (everything is read from the scoreboard or
+computed offline), but it is why §12 scores the toolkit offline rather than from its own log.
