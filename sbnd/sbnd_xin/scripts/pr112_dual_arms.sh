@@ -5,6 +5,7 @@
 #
 # Arm names: work-pr112i-<arm>-<sample>  (M13: never reuse a name)
 #   off        new binary, every dual-chain key absent  (knob-off gate)
+#   nofitx     SBND_FIT_EXCLUSION=false, no dual chain (sec 11.6 ceiling rung 1)
 #   probe      dl_vtx_dual_chain=true, transfer unset   (leakage gate, snap mode)
 #   probev     same, mode=voxels                        (leakage gate, voxels stop)
 #   fid        probe + WCT_DUAL_CHAIN_OFF_EXCL=1        (duplicate-fidelity gate)
@@ -28,6 +29,7 @@ base=${ARM%-noswap}
 [ "$base" != "$ARM" ] && export SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP=false
 case "$base" in
   off)    ;;
+  nofitx) export SBND_FIT_EXCLUSION=false ;;
   probe)  export SBND_DL_VTX_DUAL_CHAIN=true ;;
   probev) export SBND_DL_VTX_DUAL_CHAIN=true SBND_DUAL_CHAIN_MODE=voxels ;;
   fid)    export SBND_DL_VTX_DUAL_CHAIN=true WCT_DUAL_CHAIN_OFF_EXCL=1 ;;

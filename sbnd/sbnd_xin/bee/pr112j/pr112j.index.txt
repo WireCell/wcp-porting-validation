@@ -1,0 +1,18 @@
+# doc pr/112 sec 11.6 -- the three guard/loss-channel events, five arms, same 3 events, same order.
+# All arms: toolkit 077bc5b7, ql root work-nuecc48-ql0819, PR_EXTRA_STAGES=pr_display.
+#
+#   nofitx  work-pr112i-nofitx-nuecc48   SBND_FIT_EXCLUSION=false, no dual chain  (the "no exclusion fit" chain)
+#           https://www.phy.bnl.gov/twister/bee/set/eecf3073-9330-4c9a-8bdd-a4aa2a805d77/event/list/
+#   off     work-pr112i-off-nuecc48      production, exclusion ON, dual chain OFF (the "exclusion fit only" chain)
+#           https://www.phy.bnl.gov/twister/bee/set/c80d3c77-17d1-44e6-9e38-f977fe87d599/event/list/
+#   snapD2  work-pr112i-snapD2-nuecc48   dual chain, snap transfer, D=2.0 cm      (composite, validated point)
+#           https://www.phy.bnl.gov/twister/bee/set/be95bf10-a61a-4306-a827-4d070e65ce98/event/list/
+#   snapD3  work-pr112i-snapD3-nuecc48   dual chain, snap transfer, D=3.0 cm      (composite, guard relaxed)
+#           https://www.phy.bnl.gov/twister/bee/set/36fe72b1-fb51-4828-9a7c-358e5957bb7e/event/list/
+#   uniW0   work-pr112i-uniW0-nuecc48    dual chain, union of both nets' top-K    (composite, sec 11.3 shipped point)
+#           https://www.phy.bnl.gov/twister/bee/set/673eb804-e2bb-490f-b7fe-c93fac146f70/event/list/
+#
+# bee_idx	event	status
+0	111412	G1 distance guard.  click (154.7,79.6,173.2) cm.  nofitx ships the click exactly (0.00 cm, target 18001, HIT, route dl-rerank-reject = its traditional vertex).  off ships 41.3 cm away on row 18014.  snapD2: OFF vertex's nearest production candidate IS the target 18001 but at d=2.069 cm > D=2.0 -> REJECTED, production keeps 18014 (route dl-dual-snap-reject-accept).  snapD3: same 2.069 cm now inside D -> TRANSFER, ships 1.96 cm from the click, HIT.  uniW0: no distance guard involved, composite keeps 18014.
+1	469665	post-accept refinement, NOT a guard.  click (24.7,63.0,282.9) cm.  nofitx ships the click exactly (target 15003, HIT).  off ships 1.55 cm away and its nearest row is 15001 -> miss.  snapD2/snapD3: transfer ACCEPTED at d=0.76 cm onto 15003, transferred=False because production's own rerank had already selected 15003 -- the refinement block after the pick (kink snap -> improve_vertex -> mvga -> stitch) moves the shipped vertex to 1.55 cm from the click, where the nearest row is 15001.  Selection right, shipped position loses it.
+2	389538	the composite cannot demote a confident-wrong voxel.  click (-97.4,146.0,417.1) cm.  nofitx ships the click exactly (HIT).  off ships 213.5 cm away on row 19014 of another cluster (its own net: dl 0.982 on 19014 vs 0.748 on target 11002).  uniW0 pools the OFF net's top-K (adds row 11003 at dl 0.179) but union keeps the MAX per candidate, so 19014 still wins -> unchanged, 213.5 cm.  snapD2/snapD3 bypass the composite: transfer at d=0.30 cm -> ships 0.26 cm from the click, HIT.
