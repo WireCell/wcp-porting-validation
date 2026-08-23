@@ -1,5 +1,24 @@
 #!/usr/bin/env python3
-'''doc pr/112 -- the measured CEILING on exclusion-consistency fine-tuning.
+'''doc pr/112 sec 4.1 -- SUPERSEDED AS AN ACCURACY MEASUREMENT.  Read this first.
+
+This script scores "right" as the net's argmax landing within TOL of the
+hand-scan click.  That ruler is INVALID for comparing an exclusion-ON arm
+against an exclusion-OFF one.  vtx_target_eval.py's docstring states why: the
+labels were clicked on fit_exclusion-OFF reconstructions, so click distance is
+biased toward the OFF arm -- pr/106 sec 9 measured the bias on this exact arm
+(pr/105 got +135 on the click ruler, "mostly epoch").  Run here it reports
++7 ON-wrong-OFF-right with 0 breaks; the same quantity on the epoch-immune
+target metric with candidate ids aligned (pr112_offvtx_sim.py, B - A) is
++2 with 4 fixes and 2 breaks.  Use THAT number.
+
+What this script is still good for: the raw pair-DISAGREEMENT rate and the
+median argmax displacement, which are same-quantity comparisons and carry no
+epoch bias; and the confidence check re-measuring pr/111 sec 4.  It is kept,
+with this warning, because the doc cites those.
+
+Original docstring follows.
+
+doc pr/112 -- the measured CEILING on exclusion-consistency fine-tuning.
 
 Owner's idea #1: "use the O(1000) to fine tune the model so that they can work
 with the result in exclusion fit.  Note, for each event we can get both images

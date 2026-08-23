@@ -34,8 +34,10 @@ cd wcp-porting-img/sbnd/sbnd_xin
 ./scripts/pr112_arms.sh nofitx mcp1k   16      # fit_exclusion=false + harvest
 python3 scripts/pr112_repro_gate.py --sample nuecc48          # sec 1 gate
 
-python3 scripts/pr112_pair.py    --tol 2.0 --tsv runs/pr112-pair-nuecc48.tsv     # sec 4
-python3 scripts/pr112_offvtx_sim.py        --tsv runs/pr112-offvtx-nuecc48.tsv   # sec 5
+python3 scripts/pr112_pair.py    --tol 2.0 --tsv runs/pr112-pair-nuecc48.tsv     # sec 4.1 (superseded ruler)
+python3 scripts/pr112_offvtx_sim.py --sample nuecc48 \
+        --on-arm work-vtx106-harv-base-%s --off-arm work-vtx106-cne-on-%s \
+        --tsv runs/pr112-offvtx-nuecc48.tsv                                      # sec 4.2, 5
 python3 scripts/pr112_abstain.py --samples nuecc48 --n 8 \
         --tsv runs/pr112-abstain-nuecc48.tsv                                     # sec 6
 python3 scripts/pr112_pool.py    --n 8     --tsv runs/pr112-pool-nuecc48.tsv     # sec 7
@@ -90,86 +92,117 @@ That diagnosis constrains every option below. It separates them into two familie
 
 ## 3. Summary — four options, sized
 
-nueCC48, n = 42 labelled events, original labels only (pr/106 convention).
+nueCC48, n = 42 labelled events, original labels (pr/106 convention). **All four
+numbers are on the epoch-immune target metric** — target = the pre-DL candidate
+nearest the click, hit = the code *picks* that candidate. See §4 for why that
+distinction decides this round.
 
 | option | what it is | measured effect | verdict |
 |---|---|---|---|
-| **C — exclusion distillation** (idea 1) | fine-tune so the ON cloud gives the OFF cloud's answer | **+7 / 42 recoverable, 0 broken** (§4) | **the one worth building** |
+| **C — exclusion distillation** (idea 1) | fine-tune so the ON cloud gives the OFF cloud's answer | **+2 / 42** (4 fixed, **2 broken**) | least-bad, but inside the churn band |
 | **B — OFF branch supplies the vertex** (idea 2) | same graph, exclusion-free fit nominates the vertex | **+1 / 42**, and **−1 vs the knob that already exists** (§5) | already built; the extra step does not pay |
 | **A — instability abstention** | don't let the DL override when its answer is unstable | **+0 / 42** best case (§6) | null as a lever, **11× as a flag** |
 | **D — pooled readout** | replace the hard argmax with a neighbourhood integral | **+1 / 42**, and **no stability gain** (§7) | refuted on its own prediction |
 
-The ordering is the opposite of what the mechanism suggested at the start of the round:
-the readout-side ideas (A, D) that looked like the natural response to a brittleness
-diagnosis both come out flat, and the training-side idea comes out strongest — but for
-a reason that is *not* the distribution-mismatch story, see §4.
+**Every option lands between +0 and +2 on 42 events.** §5's table shows 11 of 47
+events churning for a net +1 under a different lever, so that is the noise floor of
+this sample: **nothing measured here clears it.** The pre-registered reading of that
+outcome (§9, written before the check that produced it) is that nothing in this
+round beats waiting for a retrain — see §10.
 
-## 4. Option C — idea 1, and it is the strongest thing here
+## 4. Option C — idea 1, and the ruler that decides it
 
 `dl_vtx_training/train.py` already carries a **`consistency`** term (label-free view
-agreement), today fed the ×4 reflection and jitter views. **The ON/OFF pair is a drop-in
-second view**, so the build is small. The question is what it could buy.
+agreement), today fed the ×4 reflection and jitter views. **The ON/OFF pair is a
+drop-in second view**, so the build is small. The question is what it could buy.
 
-A symmetric consistency objective makes the two views *agree*; it does not make them
-agree on the *right* answer. So the honest ceiling is the signed quantity
+A consistency objective makes the two views *agree*; it does not make them agree on
+the *right* answer. So the honest ceiling is the signed quantity
 
 ```
 gain = #(ON wrong AND OFF right) − #(ON right AND OFF wrong)
 ```
 
-measured on the net's own argmax, before the selector, on positions rather than ids (the
-two arms are different graphs, and pr/111 §2 recorded ids drifting between arms).
-`scripts/pr112_pair.py`, ruler = argmax within 2.0 cm of the hand-scan click:
+### 4.1 The ruler matters more than the option
+
+Measured two ways, this quantity gives two different answers, and only one of them
+is admissible.
+
+**Click ruler (INVALID here) — `scripts/pr112_pair.py`.** Compares the ON arm
+against the *global* `fit_exclusion=false` arm, scoring "right" as the net's argmax
+landing within 2.0 cm of the hand-scan click. Those are different graphs, so ids do
+not correspond and a position ruler is the only option:
 
 ```
 net argmax correct:  exclusion ON 28/42      exclusion OFF 35/42
-pair disagreement (argmax moves > 2.0 cm): 10/42 = 24 %   [the trainable signal]
-  median |argmax_ON - argmax_OFF| = 0.707 cm
-
-CEILING on making ON behave like OFF:
-  ON wrong & OFF right (recoverable) : 7   [42280, 46363, 137238, 196649, 235435, 389538, 489330]
-  ON right & OFF wrong (would break) : 0   []
-  net gain                           : +7 / 42
+pair disagreement (argmax moves > 2.0 cm): 10/42 = 24 %
+  ON wrong & OFF right : 7      ON right & OFF wrong : 0      net +7 / 42
 ```
 
-**The asymmetry is the finding.** Seven events are recoverable and **none** would be
-broken. Compare the other three options, which all move ±1.
+**That +7/−0 does not survive contact with the right ruler, and it was predictable
+that it would not.** `vtx_target_eval.py`'s own docstring records why: *"the
+hand-scan labels were taken on fit_exclusion-OFF reconstructions, so a 1 cm match
+of the CURRENT fitted vertex to the click is biased against the current sample."*
+pr/106 §9 measured what that bias is worth on this exact arm — pr/105 judged nofitx
+on the click ruler and got **+135, "mostly epoch."** A click-distance comparison of
+an exclusion-ON arm against an exclusion-OFF arm rewards the OFF arm for being the
+epoch the labels were clicked in. The 24 % disagreement rate stands (it is a
+same-quantity comparison), but the +7/−0 is not a measurement of accuracy.
 
-**This changes the recommended form of the objective.** A *symmetric* consistency loss
-pulls the two views toward each other and could just as easily drag the OFF answer onto
-the ON answer — it has no way to know which view is right. The measurement says the OFF
-view is right strictly more often, never less. So the objective to build is
-**distillation, not consistency**: the exclusion-free cloud is the **teacher**, the
-exclusion cloud is the **student**, and the loss is one-directional. That is the owner's
-idea 1, sharpened by the measurement — and it needs no labels at all for the
-distillation term, so the 999 hand-scan labels stay available for the supervised term
-rather than being spent on it.
+**Target metric (admissible) — `scripts/pr112_offvtx_sim.py`, `B − A`.** The
+same-graph pair (`harv` ON cloud vs `cne` OFF cloud) keeps candidate ids
+corresponding, so the epoch-immune metric applies, and the production selector is
+used rather than a bare argmax:
 
-**Confidence, re-measured on all 42** (pr/111 §4 measured it on the same sample):
-median `dl_score` **ON 0.8478 vs OFF 0.8318**. Still no systematic confidence gain from
-removing exclusion. This matters for *how* the option is framed: the gain is **not**
-evidence that the net is out of distribution on exclusion clouds, so a plain
-fine-tune-on-exclusion-clouds does **not** follow from it — a net fine-tuned on the new
-distribution can be exactly as chaotic on it. Only the teacher/student form targets what
-was actually measured.
+```
+B - A decomposition (the exclusion-free CLOUD, epoch-immune ruler):
+  ON wrong -> OFF right (fix)  : 4  [46363, 235435, 360535, 389538]
+  ON right -> OFF wrong (break): 2  [271851, 433451]
+  net +2 / 42
+```
 
-### Constraints any tuned net must clear
+Those six events are **exactly** pr/106 §10's named fixes and breaks for the same
+knob, which is the cross-check that this is the real quantity.
+
+### 4.2 What that does to the recommendation
+
+The case for a **one-directional distillation** objective (OFF = teacher, ON =
+student) rested entirely on the **0 breaks** in the click-ruler number. On the
+admissible ruler there are **2 breaks against 4 fixes**, so the exclusion-free view
+is *not* uniformly the better teacher — it is better on balance, by two events, on
+a sample whose churn is larger than that.
+
+**The direction argument is withdrawn.** A distillation objective is still the form
+that matches the mechanism (a symmetric consistency loss cannot tell which view is
+right, and would average a 4–2 split toward nothing), but "the teacher is never
+wrong" is no longer supported, and any campaign would have to carry `271851` and
+`433451` as known regressions from the outset.
+
+**Confidence, re-measured on all 42:** median `dl_score` **ON 0.8478 vs OFF
+0.8318**. Still no systematic confidence gain from removing exclusion, consistent
+with pr/111 §4. So this was never the training-distribution story: a plain
+fine-tune on exclusion clouds does not follow from these numbers, and a net
+fine-tuned on the new distribution can be exactly as chaotic on it.
+
+### 4.3 Constraints any tuned net must clear
 
 - **`calib_guard.py` before anything live.** The deployed composite consumes
   `1000·dl_score` against `min_accept`, so a score-scale shift is fatal even when
-  rank-based metrics look fine — this is exactly how ft2u passed offline and lost
-  −40/473 live (pr/79 §3). `train.py`'s `scale_anchor` / `max_anchor` terms exist for
-  this.
-- **Labels are hand-scan clicks only.** There is no MC truth in this tree. 999 unique
-  labelled events, 700 human / 299 AI-scanner, of which 449 in the current epoch are an
-  unvalidated bulk carry. Lockboxes are spent (`vtx106` 353 events, `vtx105`, `ft2u` 95)
-  — a new held-out split has to be cut before training, not after.
-- **Prior fine-tuning rounds never shipped** (pr/78 ft2u, pr/89 hr3/hr4), and no tuned
-  checkpoint survives on disk. This would be a fresh campaign, not a resumption.
-- **Report, don't build on it yet:** pr/111 F5 — the training tree `T_rec_charge_blob`
-  omits the vertex rows (`flag_skip_vertex=true`) while the inference cloud includes a
-  vertex block. A structural train/inference mismatch, independent of exclusion, and the
-  kind of thing a retrain should fix while it is in there.
+  rank-based metrics look fine — exactly how ft2u passed offline and lost −40/473
+  live (pr/79 §3). `train.py`'s `scale_anchor` / `max_anchor` terms exist for this.
+- **Labels are hand-scan clicks only.** No MC truth exists in this tree. 999 unique
+  labelled events, 700 human / 299 AI-scanner, of which 449 in the current epoch are
+  an unvalidated bulk carry. Lockboxes are spent (`vtx106` 353 events, `vtx105`,
+  `ft2u` 95) — a new held-out split has to be cut before training, not after.
+- **And the labels carry the same epoch bias** that invalidated §4.1's first number.
+  Any training target defined by click distance inherits it; the target-anchored
+  definition does not.
+- **Prior fine-tuning rounds never shipped** (pr/78 ft2u, pr/89 hr3/hr4), and no
+  tuned checkpoint survives on disk. This would be a fresh campaign.
+- **Report, don't build on it yet:** pr/111 F5 — the training tree
+  `T_rec_charge_blob` omits the vertex rows (`flag_skip_vertex=true`) while the
+  inference cloud includes a vertex block. A structural train/inference mismatch,
+  independent of exclusion.
 
 ## 5. Option B — idea 2, and it is already built
 
@@ -356,42 +389,55 @@ as unsized rather than dismissed.
 
 ## 9. Scope, and what would firm this up
 
-n = **42** labelled nueCC48 events for every number in §4–§7 — one sample, and small.
-Three of the four options move by ±1 event, which at this n is indistinguishable from
-noise; only Option C's **+7 with 0 breaks** is larger than the sample's own churn (§5's
-table shows 11/47 events churning for a net +1 under a *different* lever).
+n = **42** labelled nueCC48 events for every number in §4–§7 — one sample, and
+small. **All four options move by +0 to +2**, and §5's table shows 11 of 47 events
+churning for a net +1 under a different lever. At this n nothing here is
+distinguishable from noise. That is the round's actual result.
 
-The widening is cheap and is in flight: `work-pr112-{harv,nofitx,trad}-mcp1k`
-(406 events) is regenerating as this is written, which takes the §4 ceiling and the §6
-flag to n ≈ 440; mcp2k (579) would reach the full ~1000. The Q/L roots
-(`work-<sample>-ql0819`) survived the retire, so nothing else is needed.
+The widening is cheap and in flight: `work-pr112-{harv,cne,nofitx,trad}-mcp1k`
+(406 events) is regenerating, which takes §4's `B − A` and §6's flag to n ≈ 440;
+mcp2k (579) would reach the full ~1000. The Q/L roots (`work-<sample>-ql0819`)
+survived the retire, so nothing else is needed.
 
-Two further gaps, both recorded rather than closed:
+⚠ **The widening must use the same-graph pair.** `pr112_offvtx_sim.py`
+(`harv` vs `cne`, ids aligned, target metric) is the instrument; `pr112_pair.py`
+(`harv` vs `nofitx`, click ruler) would only measure §4.1's biased quantity more
+precisely, because the `harv3-mcp1k` labels carry the same anchoring. The `cne`
+mcp1k arm was added for exactly this reason.
 
-- Option C's ceiling is measured at the **net** level (argmax within 2 cm of the click),
-  not the production **target metric**. The two rulers are not interchangeable and must
-  never be added (pr/111 §9 flags the same trap). A distillation campaign would be scored
-  on the target metric with `calib_guard.py` as the live-scale screen.
+Two further gaps, recorded rather than closed:
+
+- §6's flag is worth its own round with a metric suited to a confidence estimate
+  rather than a routing decision — ranking events for hand-scan, weighting a
+  selection, gating a downstream tagger's trust in the vertex.
 - The 35 owner adjudications in `qlport/dl_vtx_optimization/dl_master.log` remain
-  unscored (pr/111 F6) — they are keyed to DL voxel rank and the toolkit's DL decision
-  lines still never reach any log at any level tried (pr/111 F3).
+  unscored (pr/111 F6) — keyed to DL voxel rank, and the toolkit's DL decision lines
+  still never reach any log at any level tried (pr/111 F3).
 
 ## 10. Recommendation
 
-**Build Option C, as distillation rather than consistency.** It is the only option whose
-measured effect exceeds the sample's own noise, it is the only one with zero measured
-breaks, its dataset needs no new labels, and `train.py` already has the loss term and the
-scale anchors it requires. The teacher/student direction is not a stylistic choice — it
-is what the +7/−0 asymmetry says, and a symmetric loss would discard exactly that
-information.
+**On this sample, nothing here beats waiting for a retrain.** That is §9's
+pre-registered reading of a ±1–2 outcome, written before the check that produced
+it, and it is the honest conclusion at n = 42.
 
-**Do not build Options A, B or D as vertex levers.** B's target is already built and
-default-OFF, and the owner's extension of it measures worse than the existing knob; A and
-D are flat. Keep A's stability number as a *flag*, which is cheap (10 ms) and genuinely
-discriminating (11×), and give it its own round with a metric that suits a confidence
-estimate rather than a routing decision.
+Concretely:
 
-**Sequencing.** Finish the mcp1k widening (§9) before committing to a training campaign;
-if C's +7/−0 asymmetry survives at n ≈ 440, that is the green light, and if it collapses
-to ±1 like the others, this round's recommendation should be re-read as "nothing here
-beats waiting for a retrain."
+- **Do not start a training campaign on these numbers.** Option C is the least-bad
+  at +2/42, but with **2 known breaks** (`271851`, `433451`) and a churn floor above
+  its own effect. Its earlier +7/−0 headline came from the click ruler and does not
+  survive §4.1. **Finish the mcp1k widening first** (§9): if `B − A` holds a
+  positive fix/break ratio at n ≈ 440, that is the green light; if it lands at ±1
+  like the rest, the answer is to wait for the retrain and spend the effort there.
+- **Do not build Options A, B or D as vertex levers.** B's target is already built
+  and default-OFF, and the owner's extension of it measures *worse* than the
+  existing knob. A and D are flat, and D is refuted on its own prediction.
+- **Keep Option A's stability number as a flag.** It costs 10 ms and is an 11×
+  error concentrator. It is the one genuinely new instrument this round produced,
+  and its value is not vertex routing (§6, §9).
+- **`fit_exclusion` stays ON.** Nothing here is evidence against it.
+
+**What changed during review.** §3, §4, §9 and §10 were rewritten after the
+headline number was found to rest on the click ruler; the first commit of this doc
+(`3a9a25b`) and its message carry the superseded +7/−0 framing and the
+"build Option C" recommendation. Both are corrected here rather than rewritten in
+history.

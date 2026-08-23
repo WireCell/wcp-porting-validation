@@ -47,9 +47,13 @@ from calib_guard import replay_rerank      # noqa: E402
 
 WEIGHTS = ('/nfs/data/1/xqian/toolkit-dev/wire-cell-data/uboone/scn_vtx/'
            't48k-m16-l5-lr5d-res0.5-CP24.pth')
-ON_ARM = 'work-vtx106-harv-base-nuecc48'    # exclusion ON, harvest
-OFF_ARM = 'work-vtx106-cne-on-nuecc48'      # SAME graph, exclusion-free cloud
-TAGS = ['vtxscan-harv3-nuecc48']
+# Same-graph pair.  work-pr112-harv-* is proven bit-identical to the retired
+# work-vtx106-harv-base-* (pr112_repro_gate.py 46/46).
+ON_ARM = 'work-pr112-harv-%s'     # exclusion ON, harvest
+OFF_ARM = 'work-pr112-cne-%s'     # SAME graph, exclusion-free cloud
+TAGS = {'nuecc48': ['vtxscan-harv3-nuecc48'], 'ncpi0': ['vtxscan-harv3-ncpi0'],
+        'mcp1k': ['vtxscan-harv3-mcp1k'],
+        'mcp2k': ['vtxscan-mcp2k', 'vtxscan-mcp2k-auto', 'vtxscan-mcp2k-ragree']}
 
 
 def net(c, top_k):
@@ -69,16 +73,20 @@ def cands(sb):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--sample', default='nuecc48')
+    ap.add_argument('--on-arm', default=ON_ARM)
+    ap.add_argument('--off-arm', default=OFF_ARM)
     ap.add_argument('--tsv', default=None)
     a = ap.parse_args()
     root = vio.default_sbnd_root()
+    on_arm, off_arm = a.on_arm % a.sample, a.off_arm % a.sample
 
     rows, shifts = [], []
     nclos_b = 0
-    for lab in vio.iter_labels(root, TAGS):
+    for lab in vio.iter_labels(root, TAGS[a.sample]):
         e = int(lab['eventNo'])
-        pon = os.path.join(root, ON_ARM, 'pr_evt%d' % e, 'calib-pr-evt%d.json' % e)
-        pof = os.path.join(root, OFF_ARM, 'pr_evt%d' % e, 'calib-pr-evt%d.json' % e)
+        pon = os.path.join(root, on_arm, 'pr_evt%d' % e, 'calib-pr-evt%d.json' % e)
+        pof = os.path.join(root, off_arm, 'pr_evt%d' % e, 'calib-pr-evt%d.json' % e)
         if not (os.path.exists(pon) and os.path.exists(pof)):
             continue
         sb_on = (vio.load_calib(pon).get('vertex_scoreboard') or {})
@@ -147,6 +155,11 @@ def main():
     print('\n  B - A = %+d      C - A = %+d      C - B = %+d'
           % (sum(r['hitB'] for r in ok) - fa, sum(r['hitC'] for r in ok) - fa,
              sum(r['hitC'] for r in ok) - sum(r['hitB'] for r in ok)))
+    fixB = [r['evt'] for r in ok if r['hitB'] and not r['hitA']]
+    brkB = [r['evt'] for r in ok if r['hitA'] and not r['hitB']]
+    print('\nB - A decomposition (the exclusion-free CLOUD, epoch-immune ruler):')
+    print('  ON wrong -> OFF right (fix)  : %d  %s' % (len(fixB), sorted(fixB)))
+    print('  ON right -> OFF wrong (break): %d  %s' % (len(brkB), sorted(brkB)))
     print('\nC vs A movers:')
     for r in ok:
         if r['hitC'] != r['hitA']:
