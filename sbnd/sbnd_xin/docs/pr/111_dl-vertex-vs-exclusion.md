@@ -19,6 +19,11 @@ the 7, only **4 are genuine DL improvements** (§2). The two directly comparable
 the pre-registered band test agrees (**H2**, 6/8) but compares two different clouds against a
 same-cloud spread, so it is corroboration rather than the primary evidence (§7).
 
+**It reaches the physics output.** In uBooNE, ~**a quarter** of events ship a different neutrino
+vertex (`T_tagger.nu_*` moves > 2 cm) depending on `fit_exclusion` — **9/34 prototype, 10/35
+toolkit**, 8 of them by more than 20 cm. The prototype's `dl_vtx_cut = 2.0 cm` gate does not absorb
+it (§13).
+
 **And the owner's own suggested control settles the remaining alternative.** Running the uBooNE
 2×2 — toolkit and prototype, exclusion ON and OFF, DL available in all four — the **prototype is
 affected just as much as the toolkit**: turning exclusion off relocates the SCN argmax > 2 cm on
@@ -421,6 +426,14 @@ sides, which is what a WCT-vs-WCP comparison needs.
 **32 % vs 29 %** — statistically indistinguishable, and the *prototype's* cloud actually moves
 **twice as far** when exclusion is switched.
 
+⚠ **How good is that reconstruction? Measured, and it is a rate proxy only.** §13(A) joins these
+offline numbers against the prototype's own *live* logged DNN point, event by event: they agree
+within 2 cm on **23/34** and fall in the same class (both > 2 cm or both ≤ 2 cm) on **26/34**, but
+disagree badly on individual events (`6888` live 292.8 cm vs offline 0.00; `6852` live 0.00 vs
+offline 332.8). The **aggregate rates** track well (live 12/34 vs offline 10/34 above 2 cm), which
+is what the WCT-vs-WCP comparison above uses — but **no per-event claim should be read off §12.1**,
+and the toolkit column inherits the same uncertainty since it is built the same way.
+
 ### 12.2 The prototype's own live decision, from its own logs
 
 Independent of the offline reconstruction — counting `Change to DL vertex!` /
@@ -444,9 +457,11 @@ displacements of 3.4, 86.4, 284.3, 102.8 and 292.8 cm respectively.
 - Combined with §8 (uBooNE 38 % vs SBND 37 %), **neither the implementation nor the detector is the
   variable.** The sensitivity is the net's own argmax instability, and `fit_exclusion` is one of
   many things that perturbs the cloud enough to re-roll it.
-- It follows that **uBooNE production carries this too**: the prototype relocates the vertex in
-  34/35 events on the DL's say-so, and that say-so moves on 5 of them for a switch that is supposed
-  to be a fit-quality improvement.
+- **uBooNE production carries this too — and §13(B) shows it is not absorbed by the gate.** The
+  prototype rejects a DL pick further than `dl_vtx_cut = 2.0 cm` from the nearest candidate
+  (`wire-cell-prod-nue-port.cxx:40`), so one could hope the instability never reaches the output. It
+  does: the **shipped** neutrino vertex `T_tagger.nu_{x,y,z}` moves > 2 cm between the exclusion-ON
+  and exclusion-OFF arms on **9/34 prototype** and **10/35 toolkit** events (> 20 cm on 8 each).
 
 **Note on logging, found not fixed.** The toolkit's DL decision lines never appear in these logs.
 `-L clus:debug` does not reach the sub-logger; `scripts/pr111_run_one.sh` (a one-line fork of
@@ -455,3 +470,44 @@ lines appear — but still no DL lines, and **the SBND production logs show the 
 on events whose scoreboard proves the DL ran. So this is a general toolkit logging gap, not a uBooNE
 harness problem. It did not affect any result here (everything is read from the scoreboard or
 computed offline), but it is why §12 scores the toolkit offline rather than from its own log.
+
+
+---
+
+## 13. Two checks §12 does not settle on its own
+
+`scripts/pr111_ub_propagate.py`, on the same four arms.
+
+### (A) Is the end-of-job cloud a good stand-in for the DL-time cloud?
+
+The prototype is the one arm where ground truth exists — it logs its live
+`NeutrinoID_DL: DNN: x y z` point — so §12.1's offline argmax can be joined against it per event.
+
+```
+n=34: |live - offline| < 2 cm on 23/34;  same class (both >2 or both <=2) on 26/34
+      aggregate rate above 2 cm: live 12/34  vs  offline 10/34
+```
+
+**Verdict: a good *rate* proxy, a poor *per-event* one.** Some events disagree completely — `6888`
+moves 292.8 cm live and 0.00 cm offline; `6852` is the reverse (0.00 live, 332.8 offline). So §8's
+and §12.1's caveat is **strengthened, not weakened**: the aggregate WCT-vs-WCP and
+SBND-vs-uBooNE *rates* are sound, and no per-event statement from those sections is.
+
+This does not touch §2–§7 or §9, which are all computed on the **harvested** SBND cloud that
+reproduces the live network bit-exactly (§3).
+
+### (B) Does the instability reach the shipped vertex, or does `dl_vtx_cut` absorb it?
+
+The prototype rejects a DL pick further than **2.0 cm** from the nearest candidate
+(`wire-cell-prod-nue-port.cxx:40`) — and §12.2's 5 decision flips are exactly that gate firing. So
+the fair question is what happens to `T_tagger.nu_{x,y,z}`, the vertex that actually ships.
+
+| code | final ν vertex move, exclusion ON vs OFF | > 2 cm | > 20 cm |
+|---|---|---|---|
+| prototype | median 0.14 cm | **9/34 (26 %)** | 8/34 |
+| toolkit | median 0.26 cm | **10/35 (29 %)** | 8/35 |
+
+**The gate does not absorb it.** Roughly **a quarter of uBooNE events ship a different neutrino
+vertex** depending on `fit_exclusion` — the same rate in both codes, and 8 of them by more than
+20 cm. The instability characterised in §7 is not an internal wobble of an intermediate quantity;
+it propagates to the physics output, on the net's native detector, in the reference implementation.
