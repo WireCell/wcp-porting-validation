@@ -1,9 +1,13 @@
 # doc pr/112 — what we can do about the DL vertex, short of retraining
 
-**Status 2026-08-23 — INVESTIGATION ONLY.** No knob is built, no default moves, no
-production cfg is touched, no toolkit C++ is edited. Every option below is *sized* on
-data and left for the owner to choose. `./build/clus/wcdoctest-clus` is quoted
-unchanged as proof the round changed no code.
+**Status 2026-08-23 — INVESTIGATION + DESIGN, NO CODE.** No knob is built, no default
+moves, no production cfg is touched, no toolkit C++ is edited. Every option below is
+*sized* on data and left for the owner to choose. `./build/clus/wcdoctest-clus` is
+quoted unchanged as proof the round changed no code. **§5.7 is the implementation
+design** for the option this doc recommends (owner, 2026-08-23: *"design this approach
+… we will implement it later today"*) — a feasibility audit against the source with
+file+line citations, a three-knob surface, a probe-first build order, and a measured
+cost. It is a design, not a patch.
 
 **The owner's question.** pr/111 concluded that `fit_exclusion` should stay ON even
 though the DL vertex is better with it off. The follow-up:
@@ -43,6 +47,7 @@ python3 scripts/pr112_abstain.py --samples nuecc48 --n 8 \
 python3 scripts/pr112_dualchain_sim.py --sample nuecc48 \
         --tsv runs/pr112-dual-nuecc48.tsv                                        # sec 5.2, 5.5
 python3 scripts/pr112_pool.py    --n 8     --tsv runs/pr112-pool-nuecc48.tsv     # sec 7
+python3 scripts/pr112_design_sizing.py --sample nuecc48                          # sec 5.7.6, 5.7.7b, 5.7.8
 ```
 
 **Traps carried forward (pr/111 §12).** `SCN_Vertex` returns **packed float32 bytes**,
@@ -102,7 +107,7 @@ distinction decides this round.
 | option | what it is | measured effect | verdict |
 |---|---|---|---|
 | **C — exclusion distillation** (idea 1) | fine-tune so the ON cloud gives the OFF cloud's answer | **+2 / 42** (4 fixed, **2 broken**) | least-bad, but inside the churn band |
-| **B — true dual chain** (idea 2) | **whole PR run exclusion-free**, its vertex transferred in | **+4 / 42** (5 fixed, 1 broken) (§5.2) | **the best result in this round**; costs ~2× PR wall |
+| **B — true dual chain** (idea 2) | **whole PR run exclusion-free**, its vertex transferred in | **+4 / 42** (5 fixed, 1 broken) (§5.2); **+5 guarded** (§5.6) | **the best result in this round**; **1.65× PR wall** (§5.7.6); design in **§5.7** |
 | B′ — last-step refit only | `dl_vtx_cloud_no_exclusion`, same graph | +2 / 42 (4 fixed, 2 broken) (§5.1) | already built, default OFF; not idea 2 |
 | **A — instability abstention** | don't let the DL override when its answer is unstable | **+0 / 42** best case (§6) | null as a lever, **11× as a flag** |
 | **D — pooled readout** | replace the hard argmax with a neighbourhood integral | **+1 / 42**, and **no stability gain** (§7) | refuted on its own prediction |
@@ -112,9 +117,18 @@ The readout-side ideas (A, D) and the last-step refit (B′) all land at +0..+2,
 inside the churn band (§5.1's table shows 11 of 47 events churning for a net +1
 under a different lever). The **true dual chain** — the whole pattern recognition
 run a second time with `fit_exclusion=false`, used only to name the vertex — is
-**+4 with a 5:1 fix/break ratio**, and it is the only design here that reaches the
-events whose cure needs the exclusion-free *topology* rather than just its charge.
-Its price is roughly **2× PR wall time**.
+**+4 with a 5:1 fix/break ratio** (**+5 and break-free** once the transfer distance
+guards it, §5.6), and it is the only design here that reaches the events whose cure
+needs the exclusion-free *topology* rather than just its charge. Its price, measured
+rather than guessed, is **1.65× PR wall** (§5.7.6) — not 2×, because the
+exclusion-free chain is itself 0.85× production per visit. **§5.7 designs it**, and
+finds the chain is already re-entrant: `TaggerCheckNeutrino::visit()` runs its PR
+sequence inside a per-candidate loop that already documents what a second pass needs.
+
+⚠ These are **injection-point** numbers — what the transfer *selects*. The production
+refinement block then re-points the vertex (0.476 cm median, 13.60 cm max), so the
+shipped number is what §5.7.7's live arm has to measure, alongside the `nue_score`
+question.
 
 ## 4. Option C — idea 1, and the ruler that decides it
 
@@ -424,6 +438,298 @@ break — sits at 3.69 cm, cleanly above the furthest *helpful* transfer (`11141
 This also composes with §5.5 rather than replacing it: the guard decides *whether to
 transfer*, the agreement flag reports *how much to trust the result either way*.
 
+### 5.7 The design — how the dual chain would actually be built
+
+Owner, 2026-08-23: *"Can you design this approach and add the information into
+the md file? We will implement it later today."* This section is that design.
+It is a **feasibility audit against the source**, not a patch: every claim below
+names the file and line it was read from, and the four numbers that size it were
+measured this round from the two arms already on disk.
+
+**Headline: the chain is already re-entrant.** `TaggerCheckNeutrino::visit()`
+runs its whole PR sequence inside a loop over neutrino candidates
+(`TaggerCheckNeutrino.cxx:1627`, `for nu_index < candidates.size()`), and the
+code already documents what a second pass needs — a fresh `TrackFitting` seeded
+from the member fitter's parameters (`:1652-1659`), a fresh `PR::Graph`
+(`:1710`), and a main-cluster flag guard (`:1590-1624`). A dual chain is that
+same second pass with one knob flipped. Nothing structural has to be invented.
+
+**Counter-headline, and the reason the build order in §5.7.5 matters:** that
+recipe is **dormant**. Production never takes it. Measured on the arms:
+`nu_index > 0` fires on **0 of 47** nueCC48 events and **0 of 437** mcp1k events
+(437 events, 192 PR passes total, no event with two). So the dual chain would be
+the *first real user* of a code path that has never run. The audit below is
+necessary; it is not sufficient. §5.7.5's probe gate is what makes it safe.
+
+#### 5.7.1 Where the split goes
+
+| line | stage | OFF pass |
+|---|---|---|
+| `:1627` | `for nu_index` — the candidate loop | shares the loop body |
+| `:1652-1659` | fitter selection (member, or fresh for `nu_index>0`) | **needs its own fresh fitter** |
+| `:1692` | `preload_clusters` | own preload onto its own fitter |
+| `:1710` | `make_shared<PR::Graph>` + `add_graph` | **own graph** |
+| `:1713-2140` | `PatternAlgorithms pattern_algos` + ~430 config assignments | own instance, identical except `m_fit_exclusion=false` |
+| `:2145-2183` | main-cluster PR (`find_proto_vertex` … `determine_main_vertex`) | runs |
+| `:2196-2228` | other-cluster PR | runs |
+| `:2241` | `deghosting` | runs |
+| `:2250-2304` | `determine_overall_main_vertex[_DL]` | runs — **the OFF pass calls the SCN net too** |
+| `:2310-2373` | `snap_to_kink` → `snap_to_junction` → `improve_vertex` → `main_vertex_graph_audit` → `stitch_disconnected` | **runs** — see the note below |
+| `:2380` onward | `rough_path_probe`, second `clustering_points`, showers, taggers, kine, trees | **stops here** |
+| `:2776-2778` | `grouping.set_track_fitting(...)` | **never reached** ⇒ the OFF fitter is never published |
+
+⚠ **The refinement block is part of vertex determination.** The owner's scoping
+was *"we do not need anything after the nu vtx determination in the
+no-exclusion case"* — and `:2310-2373` sits after `determine_overall_main_vertex`
+but is still vertex determination: it is where `improve_vertex` and the graph
+audit settle the position. `pr112_dualchain_sim.py` reads the OFF arm's
+**shipped** `main_vertex`, i.e. post-`:2373`, so **the measured +4/+5 requires
+this block**. Stopping at `:2304` would price and build a design that was never
+measured. The stop point is `:2373`, not `:2304`.
+
+Injection into production: after `:2304` (production's own
+`final_main_vertex` is known and its candidate set exists) and **before** `:2310`
+(so the snaps and `improve_vertex` polish the transferred vertex, exactly as they
+polish today's). The snap target set is every vertex in the production graph —
+the same set `determine_overall_main_vertex_DL` builds at
+`NeutrinoVertexFinder.cxx:4813-4825`, which is what the offline `hv_cloud`
+vertex rows record, so the simulation and the implementation address the same
+set by construction.
+
+#### 5.7.2 Re-entrancy audit — what a second pass touches
+
+The question that decides feasibility: does a PR pass leave residue outside the
+graph and fitter it was handed? Read out of the source:
+
+- **`PR::Graph`** — created per pass at `:1710`. Segment identity is
+  `edge_bundle.index`, the edge index *within its own graph*
+  (`NeutrinoPatternBase.cxx:3244`), so there is **no global id counter** for the
+  OFF pass to consume and no id shift in production output.
+- **`TrackFitting`** — the OFF pass takes its own, per the `:1652` recipe. Its
+  `m_cluster_fitted_charge_2d` (the `T_proj_data` source, doc pr/109 §8) is
+  therefore isolated, and the writers reach fitters only through
+  `collect_nu_fitters` (`root/src/SbndPrMagnifyTrackingVisitor.cxx:38`), which
+  walks the `"nu0"`, `"nu1"`, … names registered at `:2776-2778` — a line the
+  OFF pass never reaches.
+- **`PatternAlgorithms`** — own instance. That isolates the vertex scoreboard by
+  construction: `m_vtx_board` is read at exactly one place (`:2746`) and off the
+  pass's own object, so `dl_vtx_harvest` and `vertex_scoreboard` cannot pick up
+  OFF-pass rows.
+- **Facade layer (clusters, blobs, grouping)** — the only write the whole PR
+  family makes is `Flags::main_cluster`
+  (`NeutrinoPatternBase.cxx:3506/3512` via `swap_main_cluster`, and
+  `TaggerCheckNeutrino.cxx:1566/1570/1620`), and it is already guarded and
+  restored. Grepped tree-wide, no PR stage writes `cluster.local_pcs()`, a blob
+  flag, or grouping state.
+- **The one channel that could have broken this, and why it does not.**
+  `PatternAlgorithms::transfer_info_from_segment_to_cluster`
+  (`NeutrinoPatternBase.cxx:3225`) writes `point_segment_id` and
+  `point_flag_shower` into the cluster's `"3d"` cloud and calls
+  `cluster.invalidate_segment_data()` — a genuine Facade write that an OFF pass
+  would leak. It is **uncalled**: grepped across the whole repo (`clus/`,
+  `root/`, `img/`, `aux/`, tests) the only hits are its declaration
+  (`NeutrinoPatternBase.h:3090`) and its definition. Pre-existing dead code,
+  reported here and **not** touched in this round (CLAUDE.md §5 tie-breaker).
+  If a future round revives it, the OFF pass needs a save/restore guard around
+  those two arrays.
+- **Process-wide PR globals** — `PR::g_shower_traj_refresh_flag`,
+  `PR::g_graph_endpoint_policy`, `PR::set_traj_cover_probe`
+  (`TaggerCheckNeutrino.cxx:1896-1901`, `:1919`) are written once from config
+  and are not exclusion-related, so both passes want the same values.
+  `g_port_audit` (`PRGraph.cxx:103`) is a diagnostic atomic counter and would
+  simply double-count.
+
+**What the audit cannot see, and the honest limit of it.** A grep finds channels
+it is asked about. Two it does not cover: (a) the embedded-Python SCN call — the
+OFF pass makes a **second** `WCPPyUtil::SCN_Vertex` inference per event, where
+`dl_vtx_cloud_no_exclusion` still makes only one, so per-interpreter state across
+two inferences in one event is unaudited (cost is nil, ~10 ms; statefulness is
+the question); and (b) anything reached through a pointer the grep did not
+follow. That is the whole reason the first thing built is a probe that must pass
+a byte-identical gate, not a transfer.
+
+#### 5.7.3 Duplicate the sequence, do not extract it — and test the duplicate
+
+The tempting implementation is to hoist `:2145-2373` into a lambda or helper both
+passes call. **That is the refactor CLAUDE.md M10 / §2 forbids**: a production
+file with live consumers stays byte-for-byte untouched, and rewriting the
+production stage sequence into a shared callable is not byte-identical-when-off
+however careful the lambda is.
+
+So: a new private `run_off_chain()` carrying a **duplicated** stage sequence, with
+the production block unmodified. Cost, stated so the owner can accept it
+knowingly: **241 lines (144 non-comment) duplicated**, and a standing drift risk —
+a future round that inserts a stage into the production sequence must insert it
+here too or the two chains silently stop being comparable.
+
+**The duplicate has a cheap correctness test, and it should be run before any
+physics is read off the OFF chain:** run the OFF pass with
+`fit_exclusion=true` — i.e. both passes identical — and assert its vertex equals
+production's, event by event. A faithful duplicate must agree exactly. One arm,
+and it converts "I copied it carefully" into a measurement. A drift check to
+re-run whenever the production sequence changes.
+
+#### 5.7.4 Knob surface
+
+Three keys, all defaulting to today's behaviour, threaded the standard way
+(C++ member default → `get(config, …)` → jsonnet key-suppression → `SBND_*` env
+in `run_pr_chain_batch.sh`):
+
+| key | default | meaning |
+|---|---|---|
+| `dl_vtx_dual_chain` | `false` | run the exclusion-free pass at all. **False ⇒ not one instruction executes** — no second graph, no second fitter, no second inference. |
+| `dual_chain_transfer_max` | `0.0` cm | transfer only when the OFF vertex's nearest production vertex is within this distance. **`0` ⇒ run the pass, log and record its vertex, transfer nothing.** |
+| `dual_chain_allow_cluster_swap` | `true` | may the transfer target live on a different cluster (§5.7.7). |
+
+`dual_chain_transfer_max` is the §5.6 guard `D` made configurable rather than
+fitted. The prototype's own DL gate, `dl_vtx_cut = 2.0 cm`
+(`wire-cell-prod-nue-port.cxx:40`), is the physically-motivated starting value
+and lands on the conservative 4-fixed/0-broken plateau rather than the
+single-event-determined one.
+
+#### 5.7.5 Build order — the probe ships first, and it ships §5.5
+
+**Stage 1: probe (`transfer_max = 0`).** The OFF pass runs; its vertex is
+recorded next to production's; nothing moves. This is two things at once:
+
+1. **The leakage gate.** A probe arm must be byte-identical to production under
+   `scripts/pr85_hash_gate.py`. If it is not, the second pass leaked — and we
+   learn that with zero physics at stake, before any vertex has moved. This is
+   the check that covers what §5.7.2's grep could not, including the double SCN
+   inference. It is also the acceptance test for §5.7.3's duplicated sequence
+   at the reachability level (the equality test in §5.7.3 covers fidelity).
+2. **A shippable deliverable on its own.** The probe *is* §5.5's chain-agreement
+   flag — the strongest result this round found, a **14.4×** error concentrator
+   holding 10 of production's 11 vertex misses in a 24 % bucket — and it produces
+   it **without moving the vertex**. So it needs no `nue_score` gate, no ADVERSE
+   census, no owner flip on a physics default. It is a new per-event quality
+   label available to every downstream consumer, and no amount of net tuning
+   produces it.
+
+**Stage 2: transfer (`transfer_max = D`).** Only after the live arm in §5.7.7
+reports. This is the part that moves the vertex and therefore carries the whole
+validation burden.
+
+Two consequences to write down. The OFF pass must run **first** within the
+candidate iteration — it cannot inform a decision already made. And because the
+pass sits inside the `nu_index` loop, an N-candidate event costs 2N passes;
+today N = 1 on 47/47 nueCC48 and 437/437 mcp1k, so the §5.7.6 projection holds,
+but it is an assumption a busier sample could break.
+
+#### 5.7.6 Cost — measured, not bounded
+
+From the per-stage timers already in every arm's log
+(`TaggerCheckNeutrino timing: … took … ms`), on the same 47 nueCC48 events:
+
+```
+  production (work-vtx106-harv-base-nuecc48)
+    TaggerCheckNeutrino visit   median 7436 ms   (80.7 % of the MABC PR job)
+    PR job (MABC cumulative)    median 9.32 s    arm total 651 s
+  exclusion-free (work-vtx106-harv-nofitx-nuecc48)
+    TaggerCheckNeutrino visit   median 6004 ms   = 0.85x production, per event
+    up-to-vertex share of it    86.9 % median
+
+  PROJECTED dual chain (OFF pass runs :2145-2373, production runs everything)
+    PR-job wall     median 1.65x   mean 1.68x   max 2.08x
+    TCN stage       median 1.82x   mean 1.86x   max 2.33x
+    arm total       651 s -> 1080 s   (1.66x)
+    upper bound, OFF pass running the whole visit: 1.67x / 1.70x / 2.10x
+```
+
+Two things worth noting. **The exclusion-free chain is cheaper than production**
+(0.85× per visit, and its worst-case tail is far shorter: 42 s vs 77 s on the
+slowest main-cluster PR), so the dual chain costs *less* than 2×. And the
+projection's spread is narrow — the upper bound differs from the estimate by 1 %,
+because the block the OFF pass skips is a small share of the visit.
+
+Not measured: **peak RSS**. The OFF pass adds one graph plus one preloaded
+fitter's charge data. The `MEM:` lines in the arm logs are a flat snapshot with
+zero increments and do not resolve the PR stage, so this must be read off the
+probe arm with `timecmd.py`, not inferred.
+
+Instrument trap, self-inflicted: `/home/xqian/tmp/pr112_time.py` accumulates by
+log pattern (`acc[k] += …`). On a real dual-chain arm every timer line appears
+twice and it will silently double-count. Any re-use of it must first key on the
+pass, or the OFF pass must prefix its timing lines.
+
+#### 5.7.7 What the offline work cannot close — one live arm, two unknowns
+
+**(a) The `nue_score` question (§5.3).** Global exclusion-OFF costs nothing on
+selection (35→36); the *last-step hybrid* costs **−3** (35→32). A dual chain is
+also a hybrid — an exclusion-free vertex handed to an exclusion-fit downstream —
+so it may inherit that penalty. The taggers must re-run on the moved vertex, so
+no offline replay can answer it.
+
+**(b) The refinement re-point, which bounds how literally 35/42 and 36/42 can be
+read.** Those are **injection-point** numbers: the simulation scores the candidate
+the transfer selects. In the real chain that candidate then goes through
+`:2310-2373`, and `snap_main_vertex_to_kink` / `snap_main_vertex_to_junction` /
+`improve_vertex` *re-point* `final_main_vertex`, they do not merely nudge its fit.
+Measured, that block displaces production's vertex by **0.476 cm median, p90
+1.13 cm, max 13.60 cm, and beyond 1 cm on 6/42 events** (the OFF chain's own:
+0.329 / 1.00 / 1.94). On those events production's refinement of a transferred
+vertex may land somewhere the OFF chain's refinement did not — in either
+direction. So **35/42 and 36/42 are what the transfer selects, not a predicted
+shipped number**, and the same live arm must report the shipped one.
+
+The target metric itself is refinement-immune — it asks which *candidate* the
+code picks, and refinement moves the position, not the identity — which is why
+the offline number is meaningful at all. It is the shipped position, and
+everything downstream reading it, that the arm has to measure.
+
+**The arm:** nueCC48, `dl_vtx_dual_chain=true`, `dual_chain_transfer_max=2.0`,
+`PR_EXTRA_STAGES=pr_display`, against `work-vtx106-harv-base-nuecc48`. Read
+`nue_score` / nue-selected from `nusel-table.tsv`, the shipped vertex from
+`calib-pr-evt*.json`, and run `scripts/pr90_movers.py --tags vtxscan-harv3-nuecc48`
+for the ADVERSE census. **ADVERSE movers are the stop-the-line class** — report,
+do not tune `D` until the number looks right (CLAUDE.md §5).
+
+#### 5.7.8 One decision the owner should make explicitly
+
+**May the transfer cross clusters?** The snap target set is every vertex in the
+production graph, and on **2/42** events the nearest one lives on a different
+cluster than production's own pick (`vertex_id // 1000` is the cluster id,
+verified 0 mismatches over 39 scoreboard rows):
+
+```
+  evt 389538   prod cluster 19 -> 11   at 0.30 cm   production WRONG, dual RIGHT
+  evt 52672    prod cluster 76 -> 82   at 0.00 cm   both wrong
+```
+
+Restricting the transfer to the production main cluster's own vertices costs
+**exactly one event**: 35/42 → 34/42 unguarded, and the guarded sweep tops out at
+35/42 (4 fixed / 0 broken) instead of 36/42 (5 fixed / 0 broken). Both are still
+break-free at every `D` from 0.5 to 3.5 cm.
+
+Recommendation: **allow it** (`dual_chain_allow_cluster_swap = true`) — it is
+worth +1 and 389538 is a genuine 0.30 cm cluster-boundary disagreement, not a
+distant jump. But allowing it means the transfer must also carry the main-cluster
+swap, and that must **reuse the existing path** — `swap_main_cluster`,
+`m_main_vertex_swap_apply` (`:2280-2289`), and `dl_vtx_swap_guard` — rather than
+inventing a second one. The knob exists so the restricted variant can be gated
+against the permissive one on the same arm.
+
+#### 5.7.9 Acceptance bar (CLAUDE.md §4, instantiated)
+
+- [ ] `dl_vtx_dual_chain=false` byte-identical: `pr85_hash_gate.py` PASS on the
+      nueCC48 and mcp1k manifests, labels reported.
+- [ ] **Probe gate**: `dl_vtx_dual_chain=true, dual_chain_transfer_max=0`
+      byte-identical to production on the same manifests. This is the leakage
+      proof (§5.7.5) and it is not optional.
+- [ ] **Duplicate-fidelity gate**: OFF pass run with `fit_exclusion=true` names
+      the same vertex as production, event by event (§5.7.3).
+- [ ] Knob-on smoke: the transfer fires and is visible in a quoted log line.
+- [ ] `./build/clus/wcdoctest-clus` passes; a new doctest covers the transfer's
+      snap-and-guard arithmetic.
+- [ ] No iterated pointer-keyed containers introduced (the OFF pass's stage
+      sequence inherits `ordered_nodes` / `ordered_edges` throughout).
+- [ ] Freshness proof (M1) before the A/B; compiled-config proof for all three
+      new jsonnet keys.
+- [ ] Wall + peak RSS from `timecmd.py` on the probe arm, against the 1.65×
+      projection.
+- [ ] `nue_score` and ADVERSE census from the §5.7.7 arm reported **before** any
+      flip is proposed.
+
 ### 5.4 If a general "both fits everywhere" design is ever wanted
 
 Recorded from the plumbing audit. Note the dual chain above needs **none** of this —
@@ -615,18 +921,45 @@ Why this and not the alternatives:
   per-event quality label available to every downstream consumer, free once both
   chains run, and it shrinks the population needing a retrain or a hand-scan by 4×.
 
-**Cost and shape.** ~2× PR wall, capped by the owner's own scoping: the OFF branch
-stops once it has named a vertex, so taggers, kinematics, BDT scorers and output run
-once. A knob, default OFF, retired when a retrained net lands.
+**Cost and shape — measured, not guessed (§5.7.6).** **1.65× PR wall** (median; mean
+1.68×, worst 2.08×; arm total 651 s → 1080 s), *not* 2× — the exclusion-free chain is
+itself 0.85× production per visit and has a much shorter tail. The owner's scoping
+caps it: the OFF branch stops once the vertex is settled, so taggers, kinematics, BDT
+scorers and output run once. One clarification the cost turns on: the vertex is not
+settled at `determine_overall_main_vertex` — the refinement block after it
+(`snap_to_kink` → `improve_vertex` → graph audit → stitch, `:2310-2373`) *is* part of
+vertex determination, and the measured +4/+5 requires the OFF pass to run it. A knob,
+default OFF, retired when a retrained net lands.
 
-**The one measurement standing between this and a build decision.** A dual chain is
-a hybrid — an exclusion-free vertex handed to an exclusion-fit downstream — and the
-*last-step* hybrid cost **−3 nue-selected** while global exclusion-OFF cost nothing
-(§5.3). This cannot be settled offline, because the taggers must re-run on the moved
-vertex. **Run one live nueCC48 arm** that performs the transfer and re-runs the
-downstream stages, and read `nue_score` off it. If selection holds, build it; if it
-repeats the −3, the vertex gain is not worth the selection loss and the answer
+**Build it in two stages, and the first stage carries no vertex risk (§5.7.5).** Ship
+the **probe** first — the OFF pass runs, its vertex is recorded beside production's,
+`dual_chain_transfer_max = 0` so nothing moves. That single arm is both the leakage
+gate (a probe arm must be byte-identical under `pr85_hash_gate.py`, which is the only
+check that covers what a source grep cannot — including the second SCN inference) and
+a shippable deliverable on its own, because **the probe *is* §5.5's agreement flag**.
+The transfer follows only after the live arm below reports.
+
+**The one measurement standing between this and a build decision — one arm, two
+unknowns (§5.7.7).** (a) A dual chain is a hybrid — an exclusion-free vertex handed to
+an exclusion-fit downstream — and the *last-step* hybrid cost **−3 nue-selected**
+while global exclusion-OFF cost nothing (§5.3); the taggers must re-run on the moved
+vertex, so no offline replay settles it. (b) **35/42 and 36/42 are injection-point
+numbers, not predicted shipped numbers**: the transferred candidate still goes through
+the refinement block, which *re-points* the vertex (0.476 cm median but 13.60 cm max,
+beyond 1 cm on 6/42), so on those events production's refinement may land somewhere
+the OFF chain's did not. The target metric is refinement-immune — it scores candidate
+identity — which is why the offline number means anything; the shipped position is
+not. **Run one live nueCC48 arm** performing the transfer with the downstream stages,
+and read both `nue_score` and the shipped vertex off it. If selection holds, build it;
+if it repeats the −3, the vertex gain is not worth the selection loss and the answer
 reverts to waiting for the retrain.
+
+**The design is §5.7** — split point and code map (§5.7.1), the re-entrancy audit and
+its honest limits (§5.7.2), why the stage sequence must be *duplicated* rather than
+extracted and the cheap test that validates the duplicate (§5.7.3), the three-knob
+surface (§5.7.4), build order (§5.7.5), cost (§5.7.6), what only a live arm can close
+(§5.7.7), the one decision the owner should make explicitly — may the transfer cross
+clusters, worth +1 on 2/42 events (§5.7.8), and the acceptance bar (§5.7.9).
 
 **Do not build** Options A, D, or the last-step refit as vertex levers (§4.2, §6,
 §7). **Option C (fine-tuning)** stays a live but unproven direction: its honest
