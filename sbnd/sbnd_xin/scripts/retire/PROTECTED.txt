@@ -87,13 +87,77 @@ work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 cam
 # answer -- scripts/pr94_rows.py primary_index() is.  pr_scores_table.py
 # already applies it; anything else that hard-indexes [0] is wrong.
 work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
-work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
+# RELEASED 2026-08-23 (see RETIRED section): owner chose to DROP the prod0819 PR
+# arms and re-run production for all four samples at current HEAD instead.  The
+# four -ql0819 Q/L roots above are UNCHANGED and remain the campaign input.
+# work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
 
 # --- doc pr/102 missing-orphan-segment audit (added 2026-08-20) ------------
-work-pr102-head-mcp1k work-pr102-dbg-mcp1k	pr/102 "after" epoch (fresh mcp1k at HEAD, pr_display + traj_cover_probe) and its reserved debug arm; also the round READS work-{mcp1k,mcp2k}-prod0819 above as before-epoch + relocated pr/96 calibration events	doc pr/102, docs/work-tags.md 2026-08-20
-work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	pr/102 round-2 P1+P2 validation arms (census before/after + physics ledgers + exhibit smoke); owner scan pending	doc pr/102 round 2, docs/work-tags.md 2026-08-20
+# RELEASED 2026-08-23, owner: doc pr/102 r2 has shipped (len_admit=30 ON)
+# work-pr102-head-mcp1k work-pr102-dbg-mcp1k	pr/102 "after" epoch (fresh mcp1k at HEAD, pr_display + traj_cover_probe) and its reserved debug arm; also the round READS work-{mcp1k,mcp2k}-prod0819 above as before-epoch + relocated pr/96 calibration events	doc pr/102, docs/work-tags.md 2026-08-20
+# work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	pr/102 round-2 P1+P2 validation arms (census before/after + physics ledgers + exhibit smoke); owner scan pending	doc pr/102 round 2, docs/work-tags.md 2026-08-20
+
+# --- the current-production PR arms (added 2026-08-23) --------------------
+# doc pr/104 shipped SBND production ON 2026-08-21 (vertex_junction_snap +
+# vjs_override_kink_snap; toolkit a07222e2 + cfg flip c550541f).  Docs pr/105
+# and pr/106 then measured the selection stack and left production UNCHANGED,
+# and pr/107-111 are studies -- so pr/104 is still the production epoch on
+# disk.  -on4 is the env-forced product (48/19/1000 full, mcp2k 15-evt
+# subset); -flipchk is the post-flip BARE run (no env) that proves the
+# shipped jsonnet reproduces it, PASS 30/30 + 38/38 + 96/96 (doc pr/104 sec.6).
+# Keeping -flipchk is the lesson PROTECTED.txt records twice below
+# (work-pr87-postflip-*, work-cbr3-bare2evt): drop the bare-config arm and the
+# "shipped config == validated arm" claim becomes text-only the same day.
+#
+# THESE ARE SUPERSEDED THE MOMENT the 2026-08-23 re-run campaign lands with
+# full coverage for all four samples.  Release them in that follow-up pass,
+# not before -- until it exists they are the tree's ONLY PR product for the
+# three data samples.
+work-pr104-on4-nuecc48 work-pr104-on4-ncpi0 work-pr104-on4-mcp1k work-pr104-on4-mcp2k	current-production PR product (junction snap ON), 48/19/1000/15 evts; each reads its matching -ql0819 root (ASSERT 8)	doc pr/104 sec.5
+work-pr104-flipchk-nuecc48 work-pr104-flipchk-ncpi0 work-pr104-flipchk-mcp1k work-pr104-flipchk-mcp2k	the ONLY on-disk evidence the shipped post-flip jsonnet reproduces -on4 with no env	doc pr/104 sec.6
+
+# --- the current vertex-label epoch (added 2026-08-23) --------------------
+# 1756 of vertex_labels/vtxscan-vtx105-*'s `source` entries resolve into these
+# four arms -- the NEWEST label epoch (docs pr/105, pr/106).  The label JSON is
+# self-contained and survives regardless; these arms are what keeps the calib-pr
+# dumps behind them re-openable (pr85_panels2d.py, pr86_kink_census.py,
+# vtx_rules/carry_labels.py).  Every older epoch's dumps (harv3, prod0813,
+# vtx100) is already gone -- see the RETIRED section; this is the last one left.
+work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx105-base-mcp2k	calib-pr dumps behind the current vtxscan-vtx105-* label epoch (47/19/407/581 evts)	docs/pr/105, docs/pr/106, owner 2026-08-23
+
+# --- doc pr/111's live inputs (added 2026-08-23) --------------------------
+# The OPEN round.  Five scripts hardcode these two paths -- scripts/pr111_
+# {brittle,ensemble,dl_decomp,rival,rival_where}.py -- as the fit_exclusion
+# ON/OFF pair for the DL-vertex brittleness measurement.  Not a citation
+# inference: grep of scripts/ finds the absolute paths.
+work-vtx106-harv-base-nuecc48 work-vtx106-harv-nofitx-nuecc48	fit_exclusion ON/OFF pair read by scripts/pr111_*.py (open round)	docs/pr/111
+work-vtx106-cne-on-nuecc48 work-vtx106-cne-off-nuecc48	the pr/106 sec.10 dl_vtx_cloud_no_exclusion pair; listed in doc pr/111's own arm table (sec.2), which is why a script grep alone would have missed it	docs/pr/111 sec.2
+
+# --- non-reproducible crash evidence (added 2026-08-23) -------------------
+work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 6.7 MB	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-23 -- the prod0819 PR arms and the whole pr/102 family, RELEASED.
+#
+# Owner, asked directly 2026-08-23 during the 203 G -> minimal round: "we can
+# drop this, and redo the production for the samples, so we keep the latest PR
+# production for all samples".  So the 08-19 baseline's PR layer goes and a
+# fresh full-coverage campaign at current HEAD replaces it.  The four -ql0819
+# Q/L roots are NOT released -- they are that campaign's input.
+#
+# COST, stated before running and accepted: doc pr/95's single-epoch baseline
+# is the reference docs pr/98-104 A/B'd against, and after this round those
+# comparisons are text-only.  mcp2k loses its only 2000-event PR product until
+# the re-run lands (work-pr104-on4-mcp2k covers 15 of 2000).  Also released
+# with it: work-pr96gate-{mcp2k,nuedisp} and work-pr96-{dbg1,dbg2,dbg3,fx1}
+# -mcp2k / work-pr96gate-disp -- the pr96gate pair was kept in 08-19 pass 1
+# solely to prove the mid-campaign relink was byte-equivalent ON THE PROD0819
+# ARMS (doc pr/95 sec.4b); with those arms gone the proof has no subject.
+#
+# work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	the 08-19 single-epoch PR baseline; owner released 2026-08-23 in favour of a fresh full-coverage re-run at HEAD	doc pr/95, docs/work-tags.md 2026-08-23
+# work-pr96gate-mcp2k work-pr96gate-nuedisp	mixed-binary equivalence proof for the prod0819 arms; released with its subject	doc pr/95 sec.4b
+# work-pr102-head-mcp1k work-pr102-dbg-mcp1k work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	doc pr/102 audit + round-2 validation arms; the "owner scan pending" note dated 08-20 is discharged -- r2 shipped len_admit=30 ON and pr/103+pr/104 have flipped production twice since	docs/pr/102, docs/work-tags.md 2026-08-23
+#
 # 2026-08-19 (pass 2) -- the whole cbr3 family, the three DATA-sample valfast
 # cbr3on arms, and the 21 doc-pr/94 r3 flip-evidence arms.  SUPERSEDED by the
 # prod0819 baseline above, which is single-epoch where all of these were not.

@@ -11,6 +11,11 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 38 after the 2026-08-23 minimal-state round
+                                 #   (418 before it, regrown from 08-20's 36 in
+                                 #   three days by docs pr/98-111); 380 removed,
+                                 #   148 GiB, all 10 asserts PASS -- see that
+                                 #   section below;
                                  # 36 after the 2026-08-20 pr/97 crash-sweep round
                                  #   (520 before it: the 484 work-pr97* arms from
                                  #   doc pr/97's gojsonnet-crash investigation,
@@ -35,6 +40,11 @@ find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
                                  #   it; 23 after 2026-08-02, 254 / 155 GiB
                                  #   before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+                                 # 57G after the 2026-08-23 minimal-state round
+                                 #   (203G before it); the floor is ~18G of
+                                 #   non-work* (archive/ 11G incl. this round's
+                                 #   2.7G record layer, input_files* 6.9G, bee/
+                                 #   1.8G) + 38G of KEEP;
                                  # 54G after PASS 2 (71G before it, i.e. the
                                  #   campaign's own +17G came back out);
                                  # 54G after the 2026-08-19 PASS 1 (149G before
@@ -43,6 +53,15 @@ du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
                                  #   follow-up, 158G before it; 20G after
                                  #   2026-08-13, 74G before it; 23G after
                                  #   2026-08-11, 103G before it)
+
+# the 2026-08-23 minimal-state retirement (see that section below):
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise,
+# which is the point of it.
+python3 scripts/retire/plan_20260823.py             # 38-name KEEP + 10 asserts (10 is new)
+RETIRE_JOBS=16 python3 scripts/retire/archive_records_20260823.py  # integrity PASS 380/380
+./scripts/retire/retire_20260823.sh A               # dry run of the removal list
+CONFIRM=yes ./scripts/retire/retire_20260823.sh A   # the deletion
+cat scripts/retire/state-20260823/removed.tsv       # what was ACTUALLY removed
 
 # the 2026-08-20 pr/97 crash-sweep retirement (see that section below):
 python3 scripts/retire/archive_records_20260820_pr97.py  # integrity PASS 484/484
@@ -174,6 +193,136 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-23 — back to a minimal state at the latest production, 203G → 57G
+
+**STATUS: EXECUTED.** `python3 scripts/retire/plan_20260823.py` — universe
+**418**, KEEP **38** / remove **380**, all **10** asserts PASS (9 carried + a
+new ASSERT 10, see below).  `RETIRE_JOBS=16 python3
+scripts/retire/archive_records_20260823.py` — integrity **PASS 380/380**,
+16254.8 MiB raw → 2.7 G gz.  `CONFIRM=yes scripts/retire/retire_20260823.sh A`
+— 380 dirs / 148 GiB removed, refused=0, **broken symlinks 0 before and
+after**, no git-tracked file deleted, survivor census 38 == `len(KEEP)`,
+manifest 380 rows.  `work-*` **418 → 38**, `sbnd_xin` **203G → 57G**,
+`/nfs/data/1` free 824G → 970G.  wcp HEAD `feb839c`, toolkit HEAD `b5c9f43a`.
+
+Labels: `scripts/retire/state-20260823/{plan.json,removed.tsv}`,
+`scripts/retire/tierA_20260823.txt`,
+`archive/records/prod0823-minimal-20260823/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`.
+
+### Why this round exists
+
+Owner, 2026-08-23: *"the sbnd_xin directory now goes to 203 G … what we want
+is to go back to a minimal state with the latest production available
+(QLMatching, and PR)."*  Since 08-20's 36 survivors / 54 G, docs pr/98–104
+(four production flips) and pr/105–111 (vertex-strategy, dQ/dx, exclusion and
+DL-vertex studies) regrew the tree to 418 `work-*` dirs / 188 G, plus 15 G
+outside `work-*`.
+
+### The one gap the owner's reading exposes, and the answer
+
+"Latest production PR" is `work-pr104-on4-*` — doc pr/104 shipped SBND
+production ON 2026-08-21 (`vertex_junction_snap` + `vjs_override_kink_snap`,
+toolkit a07222e2 + cfg flip c550541f), and pr/105–106 then left production
+UNCHANGED while pr/107–111 are studies.  But the pr/104 round validated mcp2k
+on a **15-event subset**, so at the production epoch mcp2k has no
+full-coverage PR product; only the released `work-mcp2k-prod0819` (2000 evts,
+08-19, pre-flip) had one.  Coverage as it stood:
+
+| arm family | nueCC48 | NCpi0 | mcp1k | mcp2k |
+|---|---|---|---|---|
+| `work-*-ql0819` (Q/L) | 48 | 19 | 1000 | 2000 |
+| `work-pr104-on4-*` | 48 | 19 | 1000 | **15** |
+| `work-pr104-flipchk-*` | 48 | 19 | 26 | 15 |
+| `work-*-prod0819` (released) | 48 | 19 | 1000 | 2000 |
+| `work-vtx105-base-*` | 47 | 19 | 407 | 581 |
+
+Owner, asked directly before anything ran: *"we can drop this, and redo the
+production for the samples, so we keep the latest PR production for all
+samples."*  So the four `prod0819` **PR** arms are released and a fresh
+full-coverage PR re-run at current HEAD replaces them — **the four `-ql0819`
+Q/L roots are NOT released**, they are that re-run's input.  That makes this a
+sweep *before* a campaign again, the 08-19 pass-1 shape, so ASSERT 9 (KEEP
+closed FORWARD over the campaign input set) applies and is re-pointed at this
+round's arms.
+
+### KEEP — 38 names, 38.42 GiB, in seven groups
+
+| group | n | what |
+|---|---|---|
+| campaign INPUT | 8 | six `work-img-*` hubs (19.2 G) + the two **SIM** `cb0805` Q/L hubs |
+| latest production Q/L | 4 | `work-{nuecc48,ncpi0,mcp1k,mcp2k}-ql0819`, 48/19/1000/2000 |
+| latest production PR | 8 | `work-pr104-on4-*` (the product) + `work-pr104-flipchk-*` (the shipped-cfg proof) |
+| current vertex-label epoch | 4 | `work-vtx105-base-*` — 1756 `vertex_labels/vtxscan-vtx105-*` `source` entries resolve here |
+| doc pr/111 live inputs | 4 | `work-vtx106-harv-{base,nofitx}-nuecc48` + `work-vtx106-cne-{on,off}-nuecc48` |
+| the two SIM samples | 6 | `work-{r1qlmc,r2mc}-{prod0813,vfcbr3on}` + `work-vf{r1qlmc,r2mc}-cbr3on` |
+| git-tracked / not reproducible | 4 | `work-tfix388-r9`, `work-stmcamp-d66new`, `work-nuecc48-prsmoke2`, `work-probe178410a` |
+
+`work-pr104-flipchk-*` is kept for the reason `PROTECTED.txt` records twice
+(`work-pr87-postflip-*`, `work-cbr3-bare2evt`): it is the only on-disk evidence
+that the shipped post-flip jsonnet reproduces `-on4` with no env, and dropping
+the bare-config arm turns that claim into text the same day.  **Both pr/104
+families are superseded the moment the re-run lands with full coverage** —
+release them in that follow-up pass, not before.
+
+### ASSERT 10 (new) — every script literal into the removal set is acknowledged
+
+Two prior rounds discovered *after* the fact that a script hardcoded an arm
+they had just deleted (`vtx_rules/baselines.py:deployed_dump_path()`,
+`scripts/analysis/pr57/oc56_truth.py:DEFAULT_ARMS`).  The standing safety net
+is a citation check over `docs/`, which cannot see a path literal in a `.py`.
+ASSERT 10 greps `scripts/`, `vtx_rules/`, `dl_vtx_training/` and the top-level
+`*.py`/`*.sh` (1128 files) for every `work-*` literal and **refuses** if a
+removal-set name is not in `ACK_BROKEN_REFS`.  It is not there to save the arm
+— it is to make every broken reference a cost written down before the round,
+never a surprise weeks later.  This round: **24 names acknowledged**, the
+heaviest being `work-vtx100-base-mcp2k` (114 refs) and `-mcp1k` (50).
+
+### What the citation-and-script checks did NOT catch, and what did
+
+`work-vtx106-cne-{on,off}-nuecc48` are in **doc pr/111's own arm table**
+(§2) — the OPEN round — but no script hardcodes them, so ASSERT 10 was blind
+to them and the first plan listed them for removal.  They were caught by
+reading the open doc's arm table by hand.  This is the 08-19 pass-2 lesson in
+a new costume: *a dated rule protects yesterday*.  **Do this next round: read
+the newest `docs/pr/*.md`'s arm table before trusting any automated check.**
+(The `ncpi0` legs of the same pair are NOT in that table and were released.)
+
+### Known cost, stated rather than silently absorbed
+
+* **doc pr/95's single-epoch baseline is gone.**  Every pr/98–104 A/B that
+  cites `work-*-prod0819` is text-only from here.  mcp2k has **no**
+  2000-event PR product until the re-run lands.
+* **`work-pr96gate-{mcp2k,nuedisp}`** — the mixed-binary equivalence proof for
+  the mid-campaign relink (doc pr/95 §4b) — released with its subject.
+* **The three DATA `cb0805` Q/L hubs are gone.**
+  `scripts/analysis/pr48/backtoback_census.py`'s 445-dump census and
+  `scripts/runners/run_pr_geom_arm_dl.sh`'s pctree pin stop resolving; doc
+  pr/48's numbers survive as text.
+* **The whole pr/102 family (45 dirs, 21.7 G)** including the eight arms
+  `PROTECTED.txt` still marked "owner scan pending" on 08-20 — discharged:
+  r2 shipped `len_admit=30` ON and production has flipped twice since.
+* **The `vtx100` label epoch's dumps are gone** (the `vtx105` epoch is kept in
+  its place, one epoch deep — same precedent as the 08-16 `prod0813` and 08-17
+  `harv3` drops).  `vertex_labels/` JSON is self-contained and survives.
+* **Every pr/98, pr/99, pr/101, pr/103, pr/107, pr/108, pr/109 arm** — all
+  those rounds are closed and their gates are text in their docs.
+
+### What was NOT touched
+
+`dl_vtx_training` (67 M, still 0 `*.pth` — no `thin_dlruns` needed),
+`vertex_labels/`, `overclustering_labels/`, `archive/` (the record layer,
+M13), `input_files*/` (ASSERT 1's SP sources), `bee/` (backs uploaded doc
+links).  Those are ~15 G and are the floor below which this tree does not go;
+this round's own 2.7 G record layer takes `archive/` to 11 G.
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260823/plan.json` (KEEP + KEEP_WHY + PR_PROVENANCE +
+ACK_BROKEN_REFS + the full script-reference map),
+`scripts/retire/state-20260823/removed.tsv` (380 rows, each with its archive
+tarball name, size and pre-removal mtime),
+`scripts/retire/tierA_20260823.txt`.
 
 ## RETIREMENT ROUND 2026-08-20 — the doc pr/97 gojsonnet-crash sweep, 484 arms, ~1.5 GiB
 

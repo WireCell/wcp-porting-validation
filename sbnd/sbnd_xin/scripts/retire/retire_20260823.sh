@@ -1,0 +1,205 @@
+#!/bin/bash
+# Retirement round 2026-08-23 -- back to a minimal state at the latest
+# production, 203 G -> ~55 G.  382 arms removed, 36 kept.
+#
+# Fork of retire_20260819b.sh.  Every earlier fix is carried verbatim: the
+# `cd -P` symlink fix, the `-type d` survivor census, the real-tier-file
+# Bokeh interlock, the widened interlock-2 grep, interlocks 0/1/2 exiting in
+# dry run too, and 08-17's interlock-0 refinement (a broken symlink whose
+# top-level dir is itself in the removal set is a WARNING, since it vanishes
+# with its dir; any broken link OUTSIDE the removal set still refuses).
+#
+# Owner scope for this round, answered 2026-08-23 before anything ran:
+#   * work-*-prod0819 PR arms: DROPPED -- "we can drop this, and redo the
+#     production for the samples, so we keep the latest PR production for all
+#     samples".  The four -ql0819 Q/L roots stay: they are the re-run's input.
+#   * vtx100/105/106 study families: dropped EXCEPT work-vtx105-base-* (the
+#     current vertex-label epoch's calib dumps) and the two
+#     work-vtx106-harv-{base,nofitx}-nuecc48 arms that scripts/pr111_*.py
+#     hardcode (pr/111 is the OPEN round).
+#   * the whole pr/102 family: released, PROTECTED.txt edited by hand first.
+#   * the three DATA cb0805 Q/L hubs: released (superseded by -ql0819); the
+#     two SIM ones stay as ASSERT-8 input to work-*-prod0813.
+#
+#   ./retire_20260823.sh A              # dry run (default action)
+#   CONFIRM=yes ./retire_20260823.sh A  # actually delete
+#
+# Tier dispositions: tier A archives (already done via
+# archive_records_20260819.py) then deletes -- all removal-set dirs this round.
+#
+# Pre-flights (all must have passed before CONFIRM=yes):
+#   scripts/retire/plan_20260819.py             (9 asserts, "OVERALL: PASS")
+#   scripts/retire/archive_records_20260819.py  (integrity gate PASS n/n)
+#
+# THE cd -P FIX (inherited from 08-13/08-16, carried verbatim): every round
+# before 08-13 did `cd "$(dirname "$0")/../.." ; BASE=$PWD`. Invoked through
+# toolkit/sbnd_xin -- a SYMLINK to wcp-porting-img/sbnd/sbnd_xin, the normal
+# way to reach this tree -- $PWD was the logical path, so $BASE named a
+# symlink. `find "$BASE" ...` does not descend a symlink argument and
+# `du -sh "$BASE"` measures the link itself, which made interlock 0 and the
+# post-round survivor census vacuous in the 08-13 round. `rm -rf "$BASE/$d"`
+# was unaffected -- only the final path component matters there. Fixed with
+# `cd -P`; this script keeps the explicit BASE echo right after it.
+set -u
+cd -P "$(dirname "$0")/../.." || exit 1     # -P: resolve the symlink
+BASE=$PWD
+echo "BASE=$BASE"
+case "$BASE" in
+    */toolkit/sbnd_xin*) echo "!! BASE is still the symlink path -- cd -P failed"; exit 1 ;;
+esac
+STATE=$BASE/scripts/retire/state-20260823
+REC=$BASE/archive/records/prod0823-minimal-20260823
+TIERS=${1:-A}
+CONFIRM=${CONFIRM:-no}
+
+PROTECTED=$(python3 -c "
+import json;print(' '.join(json.load(open('$STATE/plan.json'))['PROTECTED']))")
+KEEP=$(python3 -c "
+import json;print(' '.join(json.load(open('$STATE/plan.json'))['KEEP']))")
+
+# ---- interlock 0: broken symlinks BEFORE the round --------------------------
+# See header note: broken links whose top-level dir is already in tier A are
+# a WARNING (they vanish with their dir); any other broken link REFUSES,
+# same as every prior round.
+tierfiles=""
+for t in ${TIERS//,/ }; do
+    f=$BASE/scripts/retire/tier${t}_20260823.txt
+    [ -f "$f" ] || { echo "no such tier list: $f"; exit 1; }
+    tierfiles="$tierfiles $f"
+done
+list=$(cat $tierfiles)
+
+pre_broken=$(find "$BASE" -xtype l | wc -l)
+echo "broken symlinks before the round: $pre_broken"
+if [ "$pre_broken" -ne 0 ]; then
+    outside=0
+    while IFS= read -r l; do
+        [ -z "$l" ] && continue
+        rel=${l#"$BASE"/}
+        top=${rel%%/*}
+        hit=no
+        for d in $list; do [ "$d" = "$top" ] && hit=yes && break; done
+        if [ "$hit" = no ]; then
+            outside=$((outside+1))
+            [ "$outside" -le 20 ] && echo "     $l -> ($top not in this round's removal set)"
+        fi
+    done < <(find "$BASE" -xtype l)
+    if [ "$outside" -ne 0 ]; then
+        echo "!! $outside broken symlink(s) OUTSIDE the removal set -- fix them before deleting anything."
+        exit 2
+    fi
+    echo "   all $pre_broken are self-contained inside dirs already in the removal set"
+    echo "   (doc 73 sec.12.5 harness bug, work-*-vfcbr3off; real data lives in the KEEP"
+    echo "    imaging hubs via a separate working symlink) -- WARNING, not a refusal."
+fi
+
+# ---- interlock 1: Bokeh viewers --------------------------------------------
+viewers=$(pgrep -a -f 'bokeh serve' 2>/dev/null)
+if [ -n "$viewers" ]; then
+    echo "!! a Bokeh viewer is running:"
+    echo "$viewers" | cut -c1-160 | sed 's/^/     /'
+    vhit=""
+    for d in $list; do
+        case "$viewers" in *"$d"*) vhit="$vhit $d";; esac
+    done
+    if [ -n "$vhit" ]; then
+        echo "   viewer references REMOVAL CANDIDATES:$vhit"
+        echo "refusing -- stop the viewer first"; exit 2
+    else
+        echo "   viewer references no dir in the removal set -- safe to proceed."
+    fi
+fi
+
+# ---- interlock 2: a live wire-cell / runner batch (M5) ---------------------
+jobs=$(pgrep -a -f 'wire-cell |run_(ql|pr|nusel)_evt' 2>/dev/null \
+       | grep -F 'sbnd_xin' \
+       | grep -v 'retire_2026' \
+       | grep -vE 'snapshot-bash|/claude|[[:space:]]claude([[:space:]]|$)|pgrep|grep -')
+if [ -n "$jobs" ]; then
+    echo "!! an sbnd_xin wire-cell / runner batch is live ($(echo "$jobs" | wc -l) processes):"
+    echo "$jobs" | head -5 | cut -c1-120 | sed 's/^/     /'
+    echo "     loadavg $(cut -d' ' -f1-3 /proc/loadavg)  ncores $(nproc)"
+    if [ "${ALLOW_LIVE_JOBS:-no}" != yes ]; then
+        echo "refusing to delete while an sbnd_xin batch is running (M5)."
+        exit 2
+    fi
+fi
+
+# ---- interlock 3: no KEEP / PROTECTED dir in any tier list ------------------
+for p in $KEEP $PROTECTED; do
+    for d in $list; do
+        [ "$d" = "$p" ] && { echo "!! survivor $p is in the tier list -- refusing"; exit 2; }
+    done
+done
+
+need_archive=$(python3 -c "
+import json;print(' '.join(json.load(open('$STATE/plan.json'))['ARCHIVE']))")
+
+MAN=$STATE/removed.tsv
+if [ "$CONFIRM" = yes ]; then
+    {
+      echo "# retire_20260823.sh  tiers=$TIERS"
+      echo "# started              $(date -Is)"
+      echo "# wcp-porting-img HEAD $(git -C "$BASE" rev-parse --short HEAD)"
+      echo "# toolkit HEAD         $(git -C /nfs/data/1/xqian/toolkit-dev/toolkit rev-parse --short HEAD)"
+      echo "# broken symlinks pre  $pre_broken"
+      echo "# du -sh sbnd_xin pre  $(du -sh "$BASE" | cut -f1)"
+      echo "# df /nfs/data/1 pre   $(df -h /nfs/data/1 | tail -1 | awk '{print $4" avail"}')"
+      printf 'iso_ts\tdir\ttier\tMB\tarchive_tarball\tdir_mtime\tcitations\n'
+    } > "$MAN"
+fi
+
+miss=0; n=0; bytes=0
+for d in $list; do
+    [ -d "$BASE/$d" ] || { echo "SKIP (already gone): $d"; continue; }
+    tier=D; note="tier-D drop (no archive)"; tgzname="-"
+    case " $need_archive " in
+        *" $d "*)
+            tier=A
+            tgz=$(find "$REC" -name "$d.tar.gz" -print -quit 2>/dev/null)
+            if [ -z "$tgz" ]; then echo "REFUSE (no archive): $d"; miss=$((miss+1)); continue; fi
+            tgzname=$(basename "$tgz"); note="archive $tgzname" ;;
+    esac
+    sz=$(du -sm "$BASE/$d" | cut -f1)
+    n=$((n+1)); bytes=$((bytes+sz))
+    if [ "$CONFIRM" = yes ]; then
+        mt=$(date -Is -r "$BASE/$d")
+        if rm -rf "$BASE/$d"; then
+            echo "removed  $d  (${sz} MB, $note)"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                   "$(date -Is)" "$d" "$tier" "$sz" "$tgzname" "$mt" "0" >> "$MAN"
+        else
+            echo "!! rm FAILED: $d"; miss=$((miss+1))
+        fi
+    else
+        echo "would remove  $d  (${sz} MB, $note)"
+    fi
+done
+
+echo
+echo "tiers=$TIERS  dirs=$n  bytes=$((bytes/1024)) GiB  refused=$miss  CONFIRM=$CONFIRM"
+
+[ "$CONFIRM" = yes ] || { echo; echo "dry run only -- re-run with CONFIRM=yes to delete"; exit 0; }
+
+echo
+echo "== post-deletion checks =="
+python3 "$BASE/relink_tags.py"
+post_broken=$(find "$BASE" -xtype l | wc -l)
+echo "broken symlinks: $post_broken   (MUST be 0; was $pre_broken before)"
+echo "git-deleted tracked files (MUST be empty):"
+git -C "$BASE" status --short -- . 2>/dev/null | grep '^ D' || echo "    none"
+exp=$(python3 -c "
+import json;p=json.load(open('$STATE/plan.json'))
+print(len(p['KEEP']))")
+survivors=$(find "$BASE" -maxdepth 1 -name 'work*' -type d | wc -l)
+echo "work* DIRS remaining: $survivors   (expect $exp = KEEP)"
+echo "removal manifest rows: $(grep -vc '^#\|^iso_ts' "$MAN")   (expect $n)"
+{
+  echo "# finished             $(date -Is)"
+  echo "# broken symlinks post $post_broken"
+  echo "# du -sh sbnd_xin post $(du -sh "$BASE" | cut -f1)"
+  echo "# df /nfs/data/1 post  $(df -h /nfs/data/1 | tail -1 | awk '{print $4" avail"}')"
+} >> "$MAN"
+du -sh "$BASE"
+df -h /nfs/data/1 | tail -1
+echo "manifest: $MAN"
