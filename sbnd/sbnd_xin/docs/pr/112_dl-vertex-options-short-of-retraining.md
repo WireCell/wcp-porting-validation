@@ -1160,3 +1160,61 @@ at all.
 (the rule demanded zero ADVERSE). The knobs ship DEFAULT OFF; 62281 is reported,
 not tuned away. The flip — accept 1 ADVERSE + 3 broken for +5 pooled targets with
 clean selection guards — is the owner's decision on this table.
+
+### 11.4 The full evaluation — every available event, uniW0 vs exclusion-only
+
+Owner: *"After the optimization feel free to run through all available events for
+the final evaluation compare to the exclusion fit only approach."* Arms
+`work-pr112i-{off,uniW0}-{mcp1k,mcp2k}` (1000 + 2000 events each, all rc=0),
+scored with the nueCC48/NCpi0 arms of §11.3 on **every current-epoch label**
+(`runs/pr112i-full-{mcp1k,mcp2k}.tsv`; numu100 is a subset of mcp1k and is not
+double-counted):
+
+| sample | n labels | base (excl-only) | uniW0 | Δ | fixed/broken | ADVERSE | rescued (1 cm) |
+|---|---|---|---|---|---|---|---|
+| nueCC48 | 42 | 31 | 33 | +2 | 2/0 | 0 | 2 |
+| NCpi0 | 19 | 14 | 15 | +1 | 1/0 | 0 | 1 |
+| mcp1k (numu-dom.) | 385 | 302 | 302 | **+0** | 5/5 | **5** | 3 |
+| mcp2k (537 nue / 42 other) | 579 | 442 | 446 | +4 | 10/6 | **4** | 11 |
+| **ALL** | **1025** | **789** | **796** | **+7** | 18/11 | **9** | 17 |
+
+Selection guards at scale: numu-selected mcp1k **246 → 246**; mcp2k 403 → 398,
+of which 3 of the 6 losses are **vertex corrections on nue-sample events** (the
+shipped vertex moved *onto* the click from 31/78/120 cm and the numu misID score
+fell — the score getting more honest, not damage) and 2 are the ADVERSE movers
+169724/180645. nue-selected: nueCC48 32 → 32, mcp2k 2 → 3. Arm walls at
+PR_JOBS=16: mcp1k 29 min both arms, mcp2k 57 vs 58 min — at arm level the dual
+chain is nearly free on numu-sized events (the PR stage is a small share); the
+visit-level cost stands at 1.33× (§11.3).
+
+**Reading.** The gain concentrates exactly where pr/106 §9 located the
+exclusion sensitivity: nue-like topologies (+2/+1/+4 on nueCC48/NCpi0/mcp2k-nue)
+— while on the numu-dominated mcp1k the dual chain is a wash (+0: 5 fixed, 5
+broken, and on the stricter 1 cm ruler 3 rescued vs 5 ADVERSE, i.e. slightly
+negative). Population-wide: **+7/1025 target-hits (789→796) at 9 ADVERSE
+(0.9 %)**, selection essentially unchanged. The nueCC48-only promise of §5
+(+4/42 ≈ +10 %) does not extrapolate; the honest full-population rate is +0.7 %.
+
+### 11.5 Where this leaves the campaign
+
+The chain is production-ready and **shipped DEFAULT OFF**: probe-gated, byte-
+identical when off, one knob (`dl_vtx_dual_chain`) away in either direction, and
+the retrain-era rollback the owner asked for is the same knob. The optimised
+operating point is `dual_chain_mode=union, dual_chain_transfer=true,
+dual_chain_vtx_weight=0` (env `SBND_DL_VTX_DUAL_CHAIN=true
+SBND_DUAL_CHAIN_TRANSFER=true SBND_DUAL_CHAIN_MODE=union`).
+
+The flip decision on the table for the owner:
+
+- **For**: +7/1025 targets, gains concentrated in the nue-like population the
+  analysis cares most about (nueCC48 31→33, mcp2k-nue +4), selection guards
+  intact, ~free at arm level.
+- **Against**: 9 ADVERSE movers (5 on the numu sample where the method is
+  otherwise a wash), all of the 62281 class — the OFF net confidently wrong and
+  clearing `min_accept` through the pooled path; the pre-registered 0-ADVERSE
+  bar of §11.3 is not met.
+- **Not an option**: tuning a threshold until 62281 goes away (CLAUDE.md §5.7).
+  The principled attack on that class is the retrain (Option C / §4), for which
+  this round's knob is also the input-generation switch — and the §5.5
+  agreement flag (probe mode, or uniW1) remains available as a zero-risk
+  error-concentration label regardless of the flip.
