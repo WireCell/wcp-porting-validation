@@ -366,6 +366,64 @@ The agreement flag is **free** once both chains run, ships as a per-event qualit
 label, and is available to every downstream consumer of the vertex. No amount of
 net tuning produces it.
 
+### 5.6 The transfer distance is itself the guard — and it removes the only break
+
+Owner: *"We can also use the closest position approach once we have the recommended
+nu vtx candidate, right?"* Yes — that is the transfer in §5.2 (nearest production
+candidate to the OFF chain's vertex). But the *distance* of that snap is also a
+quality signal, and using it as a gate is strictly better than transferring blindly.
+
+Take the OFF chain's vertex only when its nearest production candidate is within
+D cm; otherwise keep production's own answer.
+
+```
+  D (cm)  hit       xferred  fixed    broken
+  0.5     34/42     25       3        0
+  1.0     35/42     35       4        0
+  2.0     35/42     38       4        0
+  2.5     36/42     41       5        0     <- ORACLE
+  3.0     36/42     41       5        0
+  3.5     36/42     41       5        0
+  4.0     35/42     42       5        1
+  99      35/42     42       5        1     (unguarded, sec 5.2)
+```
+
+Every disagreement event, by transfer distance:
+
+```
+   0.00 cm  evt 235435   prod wrong dual RIGHT   <- helps
+   0.00 cm  evt 46363    prod wrong dual RIGHT   <- helps
+   0.00 cm  evt 52672    prod wrong dual wrong
+   0.22 cm  evt 163543   prod wrong dual wrong
+   0.30 cm  evt 389538   prod wrong dual RIGHT   <- helps
+   0.76 cm  evt 469665   prod wrong dual RIGHT   <- helps
+   2.05 cm  evt 38856    prod wrong dual wrong
+   2.07 cm  evt 111412   prod wrong dual RIGHT   <- helps
+   2.17 cm  evt 30504    prod wrong dual wrong
+   3.69 cm  evt 271851   prod RIGHT dual wrong   <- HURTS
+```
+
+**The break and the largest transfer are the same event.** `271851` — the one
+regression in §5.2, and the one pr/106 §9 also recorded as global-OFF's only nueCC48
+break — sits at 3.69 cm, cleanly above the furthest *helpful* transfer (`111412`,
+2.07 cm). A guard rejects exactly the bad transfer.
+
+**What is robust and what is not.**
+
+- **Robust: zero breaks at every threshold from 0.5 to 3.5 cm.** That is the property
+  that matters for adoption here, where an ADVERSE mover is the stop-the-line class.
+  Even a conservative D = 1.0 gives 35/42 at **4 fixed / 0 broken**, strictly better
+  than the unguarded 35/42 at 5/1.
+- **Not robust: the exact 2.5–3.5 plateau**, which is fixed by a single event's
+  separation (3.69 vs 2.17) on n = 42. Treat D as a knob to be set on another sample,
+  not as a measured constant. A physically-motivated prior is available: the prototype
+  already gates its DL vertex the same way, `dl_vtx_cut = 2.0 cm`
+  (`wire-cell-prod-nue-port.cxx:40`), which lands on the conservative 4/0 plateau
+  rather than the fitted one.
+
+This also composes with §5.5 rather than replacing it: the guard decides *whether to
+transfer*, the agreement flag reports *how much to trust the result either way*.
+
 ### 5.4 If a general "both fits everywhere" design is ever wanted
 
 Recorded from the plumbing audit. Note the dual chain above needs **none** of this —
@@ -543,8 +601,15 @@ Why this and not the alternatives:
   *topology*, not just its charge; no same-graph design gets them (§5.2).
 - **The transfer is cheap and safe.** The OFF chain's vertex sits 0.441 cm (median)
   from a production candidate; only 4/42 transfer beyond 2 cm.
-- **Arbitration is not worth building.** The oracle is 36/42 and the plain transfer
-  already gives 35/42 — take the OFF answer, don't write a chooser (§5.5).
+- **A distance guard reaches the oracle with no regressions.** Transferring only
+  when the OFF vertex lands within D cm of a production candidate gives 36/42 at
+  D = 2.5–3.5 and **0 breaks at every D from 0.5 to 3.5** (§5.6) — the single break
+  is also the single largest transfer. Set D conservatively (the prototype's
+  `dl_vtx_cut = 2.0 cm` sits on the 4-fixed/0-broken plateau); the exact optimum is
+  fit on one event and must not be treated as measured.
+- **Arbitration beyond that is not worth building.** The oracle is 36/42 and the
+  guarded transfer already reaches it — take the OFF answer when the guard passes,
+  don't write a chooser (§5.5).
 - **The flag is the compounding benefit.** 76 % of events ship a vertex that is right
   94 % of the time; the other 24 % carry essentially all the error. That is a
   per-event quality label available to every downstream consumer, free once both
