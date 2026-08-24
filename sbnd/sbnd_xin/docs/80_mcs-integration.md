@@ -187,10 +187,35 @@ Verified in `waft/`:
   headers elsewhere under `inc/` compile but never install.
 - `build/mcs/wcdoctest-mcs` appears automatically from `mcs/test/doctest_*.cxx`
   with no registration anywhere.
-- CMake keeps an **explicit** list.  Add `mcs/CMakeLists.txt` and append `mcs`
-  to `WCT_PACKAGES` at `CMakeLists.txt:191`, or `cmake/test/parity.sh` fails.
-  (`flash/` is the standing precedent for a waf-only local package — it has a
-  `wscript_build` and no `CMakeLists.txt`.  See sec 11(a).)
+- CMake keeps an **explicit** list (`CMakeLists.txt:185-191`), so a package is
+  invisible to it until named there.  **Decision: rounds 0–4 are waf-only** —
+  no `mcs/CMakeLists.txt`, and `CMakeLists.txt:191` untouched (sec 11 #10).
+
+  `flash/` is the precedent, and it is a stronger one than it first looks: it
+  is an **upstream** package (present on `origin/master`) that has *no*
+  `CMakeLists.txt` and does not appear in `WCT_PACKAGES` **at all**.  So
+  waf-only is an existing upstream state, not local debt.  Every other package
+  (`match`, `clus`, `img`, `sig`, `quickhull`, `spng`) does carry CMake.
+
+  Two costs of deferring, both accepted deliberately:
+
+  1. **The CMake build of `clus/` breaks from round 2 on.**  `wct_package`
+     globs `src/*.cxx` (`cmake/WCTPackage.cmake:70`), so
+     `clus/src/MuonMCSDriver.cxx` *will* be compiled by CMake and *will* fail on
+     `#include "WireCellMcs/MuonMCS.h"` — regardless of the `USE` line, so
+     leaving `WireCellMcs` out of `clus/CMakeLists.txt` does not avoid it.
+     Tolerable here because this tree has **no CI, no cmake build tree, and
+     `parity.sh` is not routinely run** — waf is the build.  But it is a real
+     breakage and anyone attempting an upstream-style cmake build after round 2
+     will hit it.  Fixing it is part of the round-5 upstream step.
+  2. `cmake/test/parity.sh` treats the installed-library list as a hard check
+     and would fail if run.
+
+  Deferring also avoids a recurring cost: `CMakeLists.txt` is upstream-tracked
+  and currently **identical on `origin/master` and `HEAD`**, so adding `mcs` to
+  line 191 creates a local delta that must survive every future master merge.
+  A new `mcs/CMakeLists.txt` file, by contrast, is conflict-free — which is why
+  round 5 can add both together at no extra cost.
 
 ## 4. Mapping the uBooNE inputs onto the SBND PR model
 
@@ -317,12 +342,33 @@ changing **only** what ROOT forces.
 | `TGraph::Eval` on the 20-point CSDA table (`setUKEfromRR` :437) | a small **local** piecewise-linear interpolator | low, *if* extrapolation is matched | exact to 1e-12 on the fixture grid |
 | `TF1::GetMinimumX` (:585-589) | Brent 1-D minimisation reproducing ROOT's recipe: `npx = 100` uniform grid pre-scan to bracket, then Brent with `epsilon = 1e-10` as both abs and rel tolerance, `maxiter = 100` | **the real risk** | see 6.2 |
 
-> **Licence note.**  Write the minimiser **from the published algorithm
-> description, not from ROOT's source.**  ROOT is LGPL-2.1; WCT is LGPL-3+
-> (`LICENSE`).  Upstream `mcs.cxx` is MIT and vendors freely; ROOT's
-> `BrentMethods.cxx` does not.  Boost.Math's `brent_find_minima` is already
-> available but uses a bits-of-precision criterion and will **not** reproduce
-> ROOT's iterates — do not substitute it.  See sec 11(b).
+> **Write the minimiser from the published algorithm description, not from
+> ROOT's source** — for engineering reasons, not legal ones.
+>
+> *Licence, corrected.*  An earlier revision of this doc claimed vendoring
+> ROOT's `BrentMethods.cxx` was unlawful here.  **That was wrong.**  ROOT's
+> `LICENSE` reads *"either version 2.1 of the License, or (at your option) any
+> later version"* — LGPL-2.1-**or-later** — and WCT's `LICENSE` is
+> LGPL-3-or-later.  Exercising the "or later" option relicenses ROOT's code as
+> LGPL-3, so vendoring **is** permitted (preserving ROOT's copyright notice).
+> It is a choice, not a constraint.
+>
+> *Why re-implement anyway.*  `MinimStep` — the uniform `npx = 100` grid
+> prescan, which is precisely what gate #3 tests — is trivially exact from its
+> description: evaluate the grid, take the argmin, return the bracket.  There is
+> no numerical subtlety to lose.  The Brent refinement then only needs 1e-3 MeV
+> agreement (gate #6), which any correct Brent delivers once the bracket
+> matches.  So vendoring buys almost nothing, while putting ROOT-derived source
+> inside a package whose entire purpose is to be ROOT-free, and creating a
+> drift obligation against future ROOT releases.
+>
+> *Escape hatch:* if round 1 cannot meet gate #3 from the description, fall back
+> to vendoring rather than loosening the gate.  The gate is the thing worth
+> protecting.
+>
+> Boost.Math's `brent_find_minima` is already a configured dependency but uses a
+> bits-of-precision stopping criterion and will **not** reproduce ROOT's
+> iterates — it cannot substitute for either path.
 
 > **The interpolator must linearly EXTRAPOLATE outside its range, not clamp.**
 > That is what `TGraph::Eval` does, and `estimate_energy` scans KE from ~0 —
@@ -1113,9 +1159,9 @@ diff.)
   shuffled-input invariance test (sec 6.3).
 - **Exit-code discipline**: `cmd > log 2>&1; echo rc=$?` throughout (M14).
 
-## 11. Decisions (owner, 2026-08-24) and what remains open
+## 11. Decisions (owner, 2026-08-24)
 
-Eight decisions taken; three items remain.
+All eleven decided; nothing is left open.
 
 | # | question | decision |
 |---|---|---|
@@ -1129,27 +1175,49 @@ Eight decisions taken; three items remain.
 | 8 | `mcs_root_gate.py` location | **`sbnd_xin/scripts/`** (SBND-only), beside `pr85_hash_gate.py` |
 | 9 | cathode crossers | **INCLUDED**, with the crossing *section* excised via `mcs_cathode_xcut = 5` — sec 7.5.  Naive excision would bias `emu_MCS` **low**; the fix is to drop the straddling *angle*, not just the points |
 
-### Still open
+| 10 | CMake parity / where `mcs/` lives | **Develop local, upstream after round 4.**  Rounds 0–4 waf-only (`flash/` precedent, sec 3.1); CMake + the `WCT_PACKAGES` line land together as part of the round-5 upstream contribution |
+| 11 | ROOT licence posture | **Re-implement `MinimStep`/`MinimBrent`** — on *engineering* grounds.  Vendoring is lawful (ROOT is LGPL-2.1-**or-later**); an earlier revision of this doc wrongly said otherwise, corrected in sec 6.1.  Vendoring stays as the fallback if gate #3 cannot be met |
 
-**a. CMake parity** — *proposed: add it.*  Ship `mcs/CMakeLists.txt`
-(`wct_package(WireCellMcs USE WireCellUtil)`) **and** append `mcs` to
-`WCT_PACKAGES` at `CMakeLists.txt:191`.  `cmake/test/parity.sh` treats the
-installed-library list as a hard check, so a waf-only package makes it fail.
-`flash/` is waf-only today, but that reads as pre-existing debt rather than a
-precedent worth extending.  Cost is two lines.  Override if you would rather
-keep `mcs/` out of the CMake build until it has proven itself.
+**No open items remain.**  Round 0 can start.
 
-**b. ROOT licence posture** — *proposed: re-implement, and there is really only
-one lawful option.*  Write `MinimStep`/`MinimBrent` from the published algorithm
-description (sec 6.1), not from ROOT's source.  ROOT is **LGPL-2.1**; WCT is
-**LGPL-3+**.  Absent an "or later" grant, LGPL-2.1 source cannot be combined
-into an LGPL-3+ work, so vendoring `BrentMethods.cxx` is not available to us
-regardless of preference.  Upstream `mcs.cxx` is MIT and vendors freely.
-Boost.Math's `brent_find_minima` is already a configured dependency but uses a
-bits-of-precision stopping criterion and will **not** reproduce ROOT's iterates
-— it cannot substitute (sec 6.2 gate #3).
+## 12. Round 5 — upstreaming (after round 4 validates the physics)
 
-## 12. Summary of the staging
+Deferred deliberately (decision 10), and cheap to do once the physics is
+settled.  What it involves:
+
+**Build.**  Add `mcs/CMakeLists.txt` (`wct_package(WireCellMcs USE
+WireCellUtil)`), append `mcs` to `WCT_PACKAGES` at `CMakeLists.txt:191`, and add
+`WireCellMcs` to `clus/CMakeLists.txt`'s `_clus_use`.  This also repairs the
+CMake build of `clus/`, which is knowingly broken from round 2 onward
+(sec 3.1).  Then run `cmake/test/parity.sh` — its installed-library check is the
+acceptance criterion.
+
+**Project policy** (`toolkit/CLAUDE.md`, in force and not weakened by anything
+here):
+
+- **No new external dependency.**  `mcs/` uses only `WireCellUtil`, so this is
+  satisfied by construction — and it is the main reason the ROOT-free port was
+  worth the effort (sec 3).
+- **No plugin→plugin dependency.**  `mcs/` is a plain library, not a plugin, and
+  must never appear in a jsonnet `plugins:` list (sec 3).
+- **New code ships with tests.**  `mcs/test/doctest_mcs_*.cxx` already satisfy
+  this from round 1 — the golden, interp, Brent, and shuffle tests.
+- **The human writes the Issue/PR preamble.**  The owner must describe the
+  problem and how the solution works, in their own words.  A model may only
+  *append* a clearly-attributed summary.  This is not negotiable and is why
+  upstreaming is a separate, owner-driven step rather than something folded into
+  a round.
+
+**Attribution.**  The port carries MicroBooNE's MIT copyright notice plus the
+per-function `// upstream (mcs.cxx lines N-M)` citations (sec 2).  MIT into
+LGPL-3-or-later is compatible; the notice must be preserved, not merely cited.
+
+**Provenance to state in the PR:** upstream `uboone/Multiple_Coulomb_Scattering`
+at `6aa0b9c`, the physics reference arXiv:2605.03048, and the fact that the
+shipped tune is MicroBooNE's — with round 4's SBND transfer result (sec 9.3)
+quoted, whether it passed as-is or needed the twelve-constant refit.
+
+## 13. Summary of the staging
 
 | round | what | gate |
 |---|---|---|
@@ -1158,6 +1226,8 @@ bits-of-precision stopping criterion and will **not** reproduce ROOT's iterates
 | 2 | `clus/` call site in `TaggerCheckNeutrino` behind `mcs_enable`, default OFF; `muon_segments`, vertex endpoints, per-bundle beam-window-only | byte-identical OFF (archives **+ `mcs_root_gate.py`**); knob-ON smoke + timing.  **No perf work needed** (sec 7.3) |
 | 3 | 5 knob-gated `T_kine` branches | byte-identical OFF *including the schema*; `--expect-new` diff shows only the new branches |
 | 4 | validation on beam-spill-coincident bundles (cosmics + cathode crossers included): pull test, then Parts A/B/C | pull core width ≈ 1; crosser width = non-crosser width (sec 7.5 closure); bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
+
+| 5 | upstreaming: CMake + parity.sh, owner-written Issue/PR preamble | `parity.sh` green; project-policy checklist in sec 12 |
 
 Two hard stops:
 
