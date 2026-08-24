@@ -190,7 +190,7 @@ Verified in `waft/`:
 - CMake keeps an **explicit** list.  Add `mcs/CMakeLists.txt` and append `mcs`
   to `WCT_PACKAGES` at `CMakeLists.txt:191`, or `cmake/test/parity.sh` fails.
   (`flash/` is the standing precedent for a waf-only local package — it has a
-  `wscript_build` and no `CMakeLists.txt`.  See sec 11 Q1.)
+  `wscript_build` and no `CMakeLists.txt`.  See sec 11(b).)
 
 ## 4. Mapping the uBooNE inputs onto the SBND PR model
 
@@ -219,11 +219,37 @@ conversion wrong instead of forty.
 
 | mode | rule | rationale |
 |---|---|---|
-| `pf_muon` **(default)** | walk the PR graph; take the segment with `abs(particle_info()->pdg()) == 13` and the largest `particle_info()->kinetic_energy()`; start/end = that segment's first/last `Fit::point` | reproduces `WireCellMCS_module.cc:197-207` |
-| `long_muon` | the `segments_in_long_muon` chain built by `examine_direction` (`clus/src/NeutrinoVertexFinder.cxx:1859-1919`); start/end = the two extreme vertices of the chain | the owner's *"a long muon"*; spans segments, closest to a real muon track |
+| `pf_muon` **(default)** | walk the PR graph; take the segment with `abs(particle_info()->pdg()) == 13` and the largest `particle_info()->kinetic_energy()` | reproduces `WireCellMCS_module.cc:197-207` |
+| `long_muon` | the `segments_in_long_muon` chain built by `examine_direction` (`clus/src/NeutrinoVertexFinder.cxx:1859-1919`) | the owner's *"a long muon"*; spans segments, closest to a real muon track |
 | `longest_segment` | longest `PR::Segment` by `segment_track_length()` above `muon_min_length_cm`, no PID required | PID-independent control arm; catches muons the PF chain mislabels |
 
 All three ship.  One becomes the SBND default after the round-4 comparison.
+
+**`pf_muon` matching (OWNER-DECIDED).**  Match `abs(pdg) == 13`, rank by
+`particle_info()->kinetic_energy()`, and **emit a WARN when a muon-typed segment
+exists but none is selected.**
+
+This diverges from ubreco, which tests `PdgCode() == 13` *exactly* and ranks by
+*total* energy — deliberately, to remove a silent-failure mode: on an exact
+match a stamped `−13` would select nothing and MCS would report `−1` with no
+error at all.  The ranking change is cosmetic (`E = KE + m` is monotone in `KE`
+at fixed mass, so for muons the order is identical).  In practice WCT's
+long-muon path stamps `13` (`NeutrinoVertexFinder.cxx:1913`), so the two rules
+should agree on every real event — the WARN is there to prove it rather than
+assume it.
+
+**Endpoints (OWNER-DECIDED): the endpoint vertices' `fit().point`** — for
+`long_muon`, the two extreme vertices of the chain.  Not the segment's
+`fits().front()/back()`.
+
+This is also the *more faithful* choice, which is worth stating because it is
+not obvious.  ubreco's endpoints were the PF particle's `Position()` /
+`EndPosition()`, which were **likewise not members** of the
+`T_rec_charge_blob` cloud handed to MCS.  So upstream's structural situation is
+exactly reproduced: `trim_trajectory`'s nearest-point search resolves each
+endpoint to a neighbouring cloud point, and the true endpoint is then
+re-inserted at `mcs.cxx:353-354`.  Using `fits().front()/back()` would have made
+the endpoints cloud members and quietly changed that behaviour.
 
 **Two verified facts constrain the design**, and together they are why the
 driver is a *call site* rather than a new visitor (sec 6):
@@ -296,7 +322,7 @@ changing **only** what ROOT forces.
 > (`LICENSE`).  Upstream `mcs.cxx` is MIT and vendors freely; ROOT's
 > `BrentMethods.cxx` does not.  Boost.Math's `brent_find_minima` is already
 > available but uses a bits-of-precision criterion and will **not** reproduce
-> ROOT's iterates — do not substitute it.  See sec 11 Q9.
+> ROOT's iterates — do not substitute it.  See sec 11(c).
 
 > **The interpolator must linearly EXTRAPOLATE outside its range, not clamp.**
 > That is what `TGraph::Eval` does, and `estimate_energy` scans KE from ~0 —
@@ -480,8 +506,20 @@ Several are *silent* — they publish a wrong number rather than failing:
     blending, `emu_edges = {600,950,1300}`).
 
 Bugs 7–12 and 15 change behaviour relative to upstream.  Ship each behind its
-own `McsOptions` bool so its effect is separately gate-able, and see sec 11 Q5
-for the default.
+own `McsOptions` bool so its effect is separately gate-able.
+
+**Default: FIXED (OWNER-DECIDED).**  The guards are **on** by default, with a
+round-1 gate demonstrating that each fires *only* where upstream produced NaN,
+inf, or the `nsegs == 1` garbage.  Flipping the bools off reproduces upstream
+exactly, so the round-0 golden reference stays reachable and the divergence
+stays auditable.
+
+The rationale is worth recording, because it inverts this tree's usual default:
+normally an unproven change ships OFF.  Here the "unchanged" path is the one
+that publishes a **known-garbage number as if it were a real measurement** —
+`emu_MCS` from a minimised constant, or a `res_sigma` 4× too wide from the
+`|vx| ≥ 1` bin fallthrough.  A documented divergence from upstream is strictly
+safer than that, so the burden of proof flips.
 
 **Acceptance for round 1:** `build/mcs/wcdoctest-mcs` passes, reproducing
 0.699 GeV and every round-0 intermediate within tolerance.  Nothing outside
@@ -535,6 +573,8 @@ or extracted (M10).
 | `mcs_enable` | `false` | the whole driver is skipped |
 | `muon_source` | `"pf_muon"` | selection rule (sec 4.2) |
 | `muon_min_length_cm` | `40` | below this, skip.  Upstream's own guards are `2*seg_length = 28 cm` and `npoints ≥ 20` |
+| `mcs_endpoints` | `"vertex"` | endpoint vertices' `fit().point` (sec 4.2) |
+| `mcs_beam_window_only` | `true` | run only on bundles in coincidence with the beam spill — a **correctness** requirement, sec 7.4 |
 | `mcs_point_source` | `"muon_segments"` | `"muon_segments"` = the selected muon's own `Segment::fits()` points (N ~ 10²–10³); `"whole_event"` = ubreco-literal whole-event cloud (N ~ 5e4, **validation only**) |
 | `mcs_max_points` | `20000` | perf guard, see 7.2 |
 
@@ -612,6 +652,36 @@ sec 9.4 parity check, run under `mcs_max_points` with a WARN.
 `mcs_enable = true` completes on ≥1 event with the MCS energy visible in the
 log; `./build/clus/wcdoctest-clus` and `./build/mcs/wcdoctest-mcs` pass; timing
 on the slowest event quoted.
+
+### 7.4 Granularity: per bundle, beam-window only — and WHY (OWNER-DECIDED)
+
+MCS runs **once per bundle**, restricted to bundles **in coincidence with the
+beam spill**.
+
+The restriction is a **correctness requirement, not a cost bound.**  Outside the
+spill the full readout window is not guaranteed to cover the activity, so the
+track can be **truncated** — and a truncated track silently corrupts *both*
+estimators that round 4 compares:
+
+- `mu_tracklen` is short ⇒ the range-based energy is wrong, so the truth proxy
+  is wrong;
+- the trajectory ends where the readout ends rather than where the muon does
+  ⇒ the terminal segments are spurious and their scattering angles are
+  meaningless.
+
+Neither failure announces itself: both produce a plausible-looking number.  So
+this gate must be applied at the *driver*, not left to a downstream cut, and it
+is `true` by default.
+
+**Corollary for validation (sec 9): cosmic muons ARE usable — if they are
+beam-spill-coincident.**  The selecting criterion is *spill coincidence*, not
+*neutrino-candidate-ness*.  A cosmic crossing during the spill has a full
+readout window and is perfectly good calibration material — and cosmics are by
+far the richest source of long, often-stopping muons in SBND.  Out-of-spill
+bundles are skipped regardless of what tagged them.
+
+This also matches the existing beam-window tagger gate (doc 56), so the
+machinery to express it already exists.
 
 ## 8. Round 3 — the output, knob-gated
 
@@ -719,10 +789,28 @@ muons, where no independent truth exists.  Pretending one sample answers both
 questions is how this kind of study goes wrong, so it runs in two parts.
 
 **Part A — calibration on stopping muons.**
-Selection: `Facade::Flags::STM` set (`clus/src/TaggerCheckSTM.cxx`), fully
-contained, `muon_source` picking a muon of length in a band (say 50–250 cm, so
-range is well-measured *and* there are ≥ 3 MCS segments).  For each such muon
-compute all three:
+Selection (OWNER-DECIDED):
+
+- **in coincidence with the beam spill** — the governing criterion, *not*
+  neutrino-candidate-ness.  Out-of-spill bundles may lack the full readout
+  window, which truncates the track and corrupts range and MCS together
+  (sec 7.4).  **Cosmic-tagged bundles that are spill-coincident are included**,
+  and are expected to supply most of the calibration statistics: cosmics are
+  SBND's richest source of long, often-stopping muons.
+- `Facade::Flags::STM` set (`clus/src/TaggerCheckSTM.cxx`), fully contained
+- muon length in a band (say 50–250 cm, so range is well-measured *and* there
+  are ≥ 3 MCS segments)
+- **cathode crossers excluded** — see the note below
+
+> **Cathode crossers: excluded from Part A; recommendation, not yet
+> owner-confirmed.**  They are the longest tracks available, which is tempting,
+> but they carry a known position distortion (doc 72/73 family) that feeds
+> *directly* into the per-segment scattering angles.  Since the pull-test width
+> is the single number deciding whether the uBooNE tune transfers, contaminating
+> it risks attributing a reconstruction artifact to MCS.  Revisit them as their
+> own study once the tune is validated.
+
+For each selected muon compute all three:
 
 - `E_range = cal_kine_range(L, 13, particle_data)`
   (`clus/src/PRSegmentFunctions.cxx:2620`)
@@ -924,53 +1012,45 @@ diff.)
   shuffled-input invariance test (sec 6.3).
 - **Exit-code discipline**: `cmd > log 2>&1; echo rc=$?` throughout (M14).
 
-## 11. Open questions for the owner
+## 11. Decisions (owner, 2026-08-24) and what remains open
 
-1. **CMake parity** — add `mcs/CMakeLists.txt` + append to `WCT_PACKAGES`
-   (keeps `cmake/test/parity.sh` green), or follow `flash/`'s waf-only
-   precedent?
-2. **The call site inside `TaggerCheckNeutrino` — confirm the placement.**  The
-   design puts MCS immediately after `fill_kine_tree` (`:2704`) rather than in a
-   new visitor, because that is the only place all three `muon_source` modes can
-   be served (sec 7).  This means touching a heavily-shared production file,
-   which the owner may want to review before implementation starts.  The
-   alternative — persisting `segments_in_long_muon` so a standalone visitor can
-   run later — is a *larger* and more invasive change, not a smaller one.
-3. **Per-bundle or per-event?**  `T_kine` fills one row per flash bundle under
-   `nu_per_bundle`.  Does MCS run per bundle (one muon per neutrino candidate)
-   or once per event on the main candidate?
-4. **Cosmic muons.**  The richest MCS validation sample in SBND is cosmics, not
-   neutrino candidates — but the PR chain's `KineInfo` is neutrino-centric.
-   Does round 4 need a separate cosmic-muon path, or is the in-beam sample
-   enough?
-5. **Multi-APA / cathode crossers.**  SBND muons crossing the cathode have a
-   known position distortion (doc 72/73 family).  Exclude them from Part A, or
-   treat them?
-6. **`mcs_point_source` default** — this doc recommends `muon_segments` (sec
-   7.3).  It is the single biggest departure from ubreco literalism and the
-   difference between 10 ms and 10 minutes per event.  **Blocking for round 2.**
-7. **Muon endpoints.**  ubreco used the PF particle's own
-   `Position()`/`EndPosition()`.  In WCT that is either the endpoint vertices'
-   `fit().point` or the segment's `fits().front()`/`.back()` — they differ (the
-   vertex fit point is the junction; the first/last fit point is offset).  The
-   choice shifts `segs_distance`'s offset and the `< 2*seg_length` short-track
-   cut.  **Do not pick silently** (§5.4).
-8. **`pf_muon` PDG matching.**  ubreco tests `PdgCode() == 13` **exactly**, not
-   `abs(...) == 13`, and ranks by **total** energy, not KE.  If WCT ever assigns
-   −13, `pf_muon` silently selects nothing and MCS reports −1 with no error.
-   WCT's long-muon path assigns `13` (`NeutrinoVertexFinder.cxx:1913`), so it is
-   probably safe — confirm.  One line; silent-failure mode if wrong.
-9. **Bug-guard defaults.**  Fixing #8 (`|vx| ≥ 1`) and #9 (NaN singularity)
-   *changes behaviour vs upstream*.  Default them to the **fixed** behaviour
-   with a gate showing each guard fires only where upstream produced
-   NaN/garbage, or default to upstream behaviour behind opt-in bools?
-   Recommend the former; owner's call under §5.4.
-10. **Who owns `mcs_root_gate.py`** (sec 10.1), and does it belong in `abtest/`
-    (shared) or `sbnd_xin/scripts/` (SBND-only)?  **It must exist before round
-    3's gate means anything.**
-11. **ROOT licence posture** — confirm re-implementing `MinimStep`/`MinimBrent`
-    from the published algorithm rather than vendoring ROOT's LGPL-2.1 source
-    into an LGPL-3+ tree (sec 6.1).
+Eight decisions taken; three items remain.
+
+| # | question | decision |
+|---|---|---|
+| 1 | `mcs_point_source` default | **`muon_segments`** — sec 7.3.  `whole_event` retained as validation-only |
+| 2 | driver wiring | **knob-gated call site in `TaggerCheckNeutrino::visit()`** after `fill_kine_tree` (:2704) — sec 7.  Not a new visitor |
+| 3 | granularity | **per bundle, beam-window only** — and the restriction is a *correctness* requirement, sec 7.4 |
+| 4 | bug-guard defaults | **FIXED by default**, each behind its own `McsOptions` bool, difference gated — sec 6.4 |
+| 5 | muon endpoints | **endpoint vertices' `fit().point`** (chain extremes for `long_muon`) — sec 4.2.  Also the more ubreco-faithful choice |
+| 6 | `pf_muon` matching | **`abs(pdg)==13`, rank by KE, WARN if none selected** — sec 4.2 |
+| 7 | validation populations | **beam-spill-coincident bundles, cosmic-tagged included** — sec 9.1.  Out-of-spill skipped |
+| 8 | `mcs_root_gate.py` location | **`sbnd_xin/scripts/`** (SBND-only), beside `pr85_hash_gate.py` |
+
+### Still open
+
+**a. Cathode crossers in Part A.**  This doc *recommends excluding* them from
+the calibration sample (sec 9.1) — their known position distortion feeds
+straight into the scattering angles, and the pull-test width is the number that
+decides the tune transfer.  Not yet owner-confirmed.
+
+**b. CMake parity** — *proposed: add it.*  Ship `mcs/CMakeLists.txt`
+(`wct_package(WireCellMcs USE WireCellUtil)`) **and** append `mcs` to
+`WCT_PACKAGES` at `CMakeLists.txt:191`.  `cmake/test/parity.sh` treats the
+installed-library list as a hard check, so a waf-only package makes it fail.
+`flash/` is waf-only today, but that reads as pre-existing debt rather than a
+precedent worth extending.  Cost is two lines.  Override if you would rather
+keep `mcs/` out of the CMake build until it has proven itself.
+
+**c. ROOT licence posture** — *proposed: re-implement, and there is really only
+one lawful option.*  Write `MinimStep`/`MinimBrent` from the published algorithm
+description (sec 6.1), not from ROOT's source.  ROOT is **LGPL-2.1**; WCT is
+**LGPL-3+**.  Absent an "or later" grant, LGPL-2.1 source cannot be combined
+into an LGPL-3+ work, so vendoring `BrentMethods.cxx` is not available to us
+regardless of preference.  Upstream `mcs.cxx` is MIT and vendors freely.
+Boost.Math's `brent_find_minima` is already a configured dependency but uses a
+bits-of-precision stopping criterion and will **not** reproduce ROOT's iterates
+— it cannot substitute (sec 6.2 gate #3).
 
 ## 12. Summary of the staging
 
@@ -978,9 +1058,9 @@ diff.)
 |---|---|---|
 | 0 | scratch ROOT build of upstream; reproduce 0.699 GeV; dump intermediates + side probes to a JSON fixture; one shuffled pass | the number reproduces, **or stop** |
 | 1 | ROOT-free `mcs/` package (`Interp1D`, `Minimize1D`, then the physics) | `wcdoctest-mcs` vs the fixture, gates #1–#7 of sec 6.2; shuffle test; `setarch -R` ×5 |
-| 2 | `clus/` driver behind `mcs_enable`, default OFF, `muon_segments` | byte-identical OFF (archives **+ `mcs_root_gate.py`**); knob-ON smoke + timing.  **No perf work needed** (sec 7.3) |
+| 2 | `clus/` call site in `TaggerCheckNeutrino` behind `mcs_enable`, default OFF; `muon_segments`, vertex endpoints, per-bundle beam-window-only | byte-identical OFF (archives **+ `mcs_root_gate.py`**); knob-ON smoke + timing.  **No perf work needed** (sec 7.3) |
 | 3 | 5 knob-gated `T_kine` branches | byte-identical OFF *including the schema*; `--expect-new` diff shows only the new branches |
-| 4 | validation: pull test, then Parts A/B/C | pull core width ≈ 1; bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
+| 4 | validation on beam-spill-coincident bundles (cosmics included): pull test, then Parts A/B/C | pull core width ≈ 1; bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
 
 Two hard stops:
 
