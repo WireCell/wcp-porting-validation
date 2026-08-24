@@ -219,6 +219,9 @@ EB_FAST="${SBND_EB_FAST:-}"
 # doc 78 round 3: ProtectOverclustering busy-cluster lazy walk.  OFF in the
 # config; SBND_PO_FAST=1 turns it on.
 PO_FAST="${SBND_PO_FAST:-}"
+# doc 79 round 2: ClusteringDeghost busy-cluster lazy walk (the 'ctpc_fast'
+# graph flavor).  Tri-state: empty inherits the jsonnet default.
+DG_FAST="${SBND_DG_FAST:-}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -272,6 +275,7 @@ knob_bool trace_bee  "$TRACE_BEE"
 knob_bool save_assoc "$SAVE_ASSOC"
 knob_bool eb_fast    "$EB_FAST"
 knob_bool po_fast    "$PO_FAST"
+knob_bool dg_fast    "$DG_FAST"
 # rcid_global / realign are C++-default-TRUE tri-states whose config default is
 # null (= inherit), so only the OFF case is expressible; 1 means "inherit", not
 # "emit true", and must stay silent to keep the compiled config unchanged.
