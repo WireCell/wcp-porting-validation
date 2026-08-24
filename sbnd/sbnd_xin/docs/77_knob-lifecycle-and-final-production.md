@@ -663,7 +663,7 @@ object keys sorted, so source reordering cannot hide in it):
 | `wcls-img-clus.jsonnet`, legacy standalone Q/L (`compile_sbnd_prod.sh`) | identical |
 | **uBooNE MABC** (`qlport/scripts/compile_ub_cfg.sh`) | identical |
 | PDHD nfsp / img / clus, PDVD nfsp / img / clus | identical ×6 |
-| PDHD / PDVD / SBND sim-check, PDHD sim-track + sim-noise, PDVD sim-track | identical ×5 |
+| PDHD / PDVD / SBND sim-check, PDHD sim-track + sim-noise, PDVD sim-track | identical ×6 |
 
 **Gate 2 — per-TLA probe sweep, 373/373 and 46/46 identical.** The production
 compile only exercises the knobs that are ON; the 115 `null` + 15 `false` TLAs
@@ -702,10 +702,23 @@ Arms: `$SCRATCH/cons/c2-{mcp1k,nuecc48,ncpi0}` vs
 `$SCRATCH/dgtail/dg79pr-{mcp1k,nuecc48,ncpi0}`; event list
 `$SCRATCH/cons/numu100.txt`.
 
-Not run, and why: no C++ was touched, so there is no `wcbuild`, no freshness
-proof, no `wcdoctest-clus`, and no abtest/qlport *binary* gate. `common/clus.jsonnet`
-is shared, which is exactly why uBooNE, PDHD and PDVD appear in Gate 1 as
-compile checks.
+Not run, and why. **No C++ was touched**, so there is no `wcbuild`, no
+freshness proof, no `wcdoctest-clus`, and no abtest/qlport *binary* gate;
+`common/clus.jsonnet` is shared, which is exactly why uBooNE, PDHD and PDVD
+appear in Gate 1 as compile checks. **The doc-68 runner-argv capture** (shim
+`wire-cell`, compile what each runner really passes) was planned and dropped:
+it proves "no runner flag lost its TLA", and Gate 2 already proves that
+strictly harder — it fails outright if the TLA name set moves, and it compiles
+*every* TLA individually against both trees, whereas the shim only exercises
+the ones a runner happens to set. The bare-job compile in Gate 1 pins the
+defaults for the rest.
+
+**Third-party callers.** `tagger_check_neutrino(` and `.pr(` were grepped
+across both repos: exactly three call sites exist — the SBND job and
+`qlport/uboone-mabc.jsonnet` (both rewritten here, both gate-proven) and the
+stale file in §10.7. The three other importers of `common/clus.jsonnet`
+(`sbnd/sbnd_abhat/`, `sbnd/obsolete/`, `pdhd/old/`) call neither, so nothing
+they use changed.
 
 ### 10.5 Tooling added (`scripts/cfg/`)
 
