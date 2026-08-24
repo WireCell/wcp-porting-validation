@@ -190,7 +190,7 @@ Verified in `waft/`:
 - CMake keeps an **explicit** list.  Add `mcs/CMakeLists.txt` and append `mcs`
   to `WCT_PACKAGES` at `CMakeLists.txt:191`, or `cmake/test/parity.sh` fails.
   (`flash/` is the standing precedent for a waf-only local package — it has a
-  `wscript_build` and no `CMakeLists.txt`.  See sec 11(b).)
+  `wscript_build` and no `CMakeLists.txt`.  See sec 11(a).)
 
 ## 4. Mapping the uBooNE inputs onto the SBND PR model
 
@@ -322,7 +322,7 @@ changing **only** what ROOT forces.
 > (`LICENSE`).  Upstream `mcs.cxx` is MIT and vendors freely; ROOT's
 > `BrentMethods.cxx` does not.  Boost.Math's `brent_find_minima` is already
 > available but uses a bits-of-precision criterion and will **not** reproduce
-> ROOT's iterates — do not substitute it.  See sec 11(c).
+> ROOT's iterates — do not substitute it.  See sec 11(b).
 
 > **The interpolator must linearly EXTRAPOLATE outside its range, not clamp.**
 > That is what `TGraph::Eval` does, and `estimate_energy` scans KE from ~0 —
@@ -575,6 +575,8 @@ or extracted (M10).
 | `muon_min_length_cm` | `40` | below this, skip.  Upstream's own guards are `2*seg_length = 28 cm` and `npoints ≥ 20` |
 | `mcs_endpoints` | `"vertex"` | endpoint vertices' `fit().point` (sec 4.2) |
 | `mcs_beam_window_only` | `true` | run only on bundles in coincidence with the beam spill — a **correctness** requirement, sec 7.4 |
+| `mcs_cathode_x` | `0` | cathode plane position, cm |
+| `mcs_cathode_xcut` | `0` C++ / **`5`** SBND | half-width (cm) of the excised cathode band; drops the straddling angle — sec 7.5 |
 | `mcs_point_source` | `"muon_segments"` | `"muon_segments"` = the selected muon's own `Segment::fits()` points (N ~ 10²–10³); `"whole_event"` = ubreco-literal whole-event cloud (N ~ 5e4, **validation only**) |
 | `mcs_max_points` | `20000` | perf guard, see 7.2 |
 
@@ -682,6 +684,108 @@ bundles are skipped regardless of what tagged them.
 
 This also matches the existing beam-window tagger gate (doc 56), so the
 machinery to express it already exists.
+
+### 7.5 Cathode crossers: excise the crossing SECTION, not the track (OWNER-DECIDED)
+
+Owner: *"We do want to have the cathode crossing track — is there any way we can
+exclude the section crossing the cathode?  This part would lead to bias?"*
+
+**Yes to both, and the bias question has a specific answer: naive excision
+biases `emu_MCS` LOW.**  Getting this right takes three steps, and only the
+first is obvious.
+
+#### Why dropping the points is not enough — it fails two ways, both silently
+
+`get_seg` (`mcs.cxx:217-229`) slices by **projection extent**
+(`proj < first_proj + seg_length`), *not* by point count.  Segment boundaries
+are therefore fixed in projection, and deleting points does not move them — it
+**starves** the affected segments instead:
+
+1. **A starved segment is fitted, not rejected.**  A segment straddling the
+   cathode keeps points on both sides with the middle removed, so `fitPCA` fits
+   a line through two separated clusters.  If those clusters carry the very
+   position offset we are trying to avoid, the fitted direction comes out
+   **rotated** — the distortion enters the angle at full strength, and the fit
+   *succeeds*, so nothing flags it.
+2. **Or the segmentation terminates early.**  `fitSegPCA` returns `false` when
+   `seg.N <= 1`, and `form_segs` turns that into `break` (`:412`) — ending the
+   whole segmentation at the cathode and silently keeping only the first half of
+   the muon.  That is doc 72/73's "PR gets one half" symptom reappearing inside
+   MCS.
+
+#### The bias, and its sign
+
+`setSegAngles` is called as
+`setSegAngles(segPCAFit_vec[iseg-1], segs_aAxis_vec.back(), …)` (`:418`) — the
+angle is always between segments **consecutive by index**.  So if segments are
+dropped, the next angle is formed across the gap, spanning `2*X0` or more of
+argon, while `lnlikelihood_theta_{xz,yz}` scores it against a PDF built for
+**exactly one** radiation length (sec 7.1: `seg_length` = X0(LAr) = 14.004 cm).
+
+An angle that is wider than the PDF expects, at fixed energy, is explained by
+the likelihood as **lower energy**.  So the naive excision drags `emu_MCS`
+**down** — and on precisely the longest, highest-energy tracks in the sample.
+
+#### The fix: drop the straddling ANGLE
+
+Excise at the **segment** level, then treat the excision as splitting the muon
+into two independent runs of segments and **form angles only within a run**.
+Concretely: mark every segment whose point set intersects the band
+`|x - mcs_cathode_x| < mcs_cathode_xcut`, drop those segments, and **do not emit
+the angle that bridges the resulting gap**.
+
+This is safe because `lnlikelihood_track` is a **sum of independent per-angle
+terms** (`:544-564`) — terms can be dropped without changing the form of the
+likelihood.  The cost is **resolution, not accuracy**: fewer angles widen the
+minimum, they do not move it.
+
+#### The energy bookkeeping is already correct — for free
+
+The second bias one would expect does **not** arise, and it is worth recording
+why rather than trusting it.  `segs_distance[k]` feeds the per-segment energy
+via `rrguess = rrtot_guess - distance` (`:551-553`), so if the excised length
+were removed from the distance accounting, every downstream segment would be
+assigned too *much* remaining range — i.e. too high an energy — biasing
+`emu_MCS` **up**.
+
+It is not removed, because `segs_distance` is computed as a pure **projection
+difference** from the muon start,
+`(currentFirstPointProj + currentLastPointProj)/2 - dot(muon_start, aAxis)`
+(`:414`), and **not** as a sum of point-to-point steps.  The gap length stays in
+automatically — which is physically right: the muon really did traverse that
+argon and really did lose energy there.  Had upstream accumulated a step sum, we
+would have had to add the gap back by hand.
+
+#### The knob
+
+| knob | C++ default | SBND |
+|---|---|---|
+| `mcs_cathode_x` | `0` | `0` |
+| `mcs_cathode_xcut` | `0` (= OFF, upstream behaviour) | `5` (cm, half-width) |
+
+Deliberately mirroring the established SBND cathode convention —
+`cathode_x = 0`, `cathode_kink_xcut = 5` at
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet:128-129` — so the two cuts
+cannot drift apart and the 5 cm has one source of justification rather than two.
+C++ default `0` keeps the library bit-for-bit upstream; the SBND config turns it
+on, exactly as `cathode_kink_xcut` does.
+
+#### How we will know it worked
+
+The fix makes a falsifiable prediction, so round 4 tests it rather than assuming
+it:
+
+1. **Closure:** cathode crossers with the knob **on** should have the same
+   pull-test width (sec 9.3) as the non-crossing population.  If they are still
+   wider, the residual distortion extends beyond 5 cm — scan `mcs_cathode_xcut`
+   in {3, 5, 8, 12} and report the width vs cut.
+2. **Sign check:** `emu_MCS(knob on) > emu_MCS(knob off)` on crossers, since off
+   means the straddling angle is included and drags the energy down.  A null or
+   negative shift would mean the mechanism above is not what is happening, and
+   should be reported rather than tuned around (§5.7).
+3. **Cost:** report the mean number of angles lost per crosser.  Two segments
+   plus one angle is the expectation; materially more means the band is eating
+   the track.
 
 ## 8. Round 3 — the output, knob-gated
 
@@ -800,15 +904,12 @@ Selection (OWNER-DECIDED):
 - `Facade::Flags::STM` set (`clus/src/TaggerCheckSTM.cxx`), fully contained
 - muon length in a band (say 50–250 cm, so range is well-measured *and* there
   are ≥ 3 MCS segments)
-- **cathode crossers excluded** — see the note below
-
-> **Cathode crossers: excluded from Part A; recommendation, not yet
-> owner-confirmed.**  They are the longest tracks available, which is tempting,
-> but they carry a known position distortion (doc 72/73 family) that feeds
-> *directly* into the per-segment scattering angles.  Since the pull-test width
-> is the single number deciding whether the uBooNE tune transfers, contaminating
-> it risks attributing a reconstruction artifact to MCS.  Revisit them as their
-> own study once the tune is validated.
+- **cathode crossers INCLUDED** (owner), with `mcs_cathode_xcut = 5` excising
+  the crossing section — sec 7.5.  They are the longest tracks in the sample and
+  excluding them would have thrown away the best-measured end of the length
+  range.  Report crossers and non-crossers as **separate pull-test populations**
+  so the excision can be closure-tested (sec 7.5) rather than assumed; only
+  merge them once their widths agree.
 
 For each selected muon compute all three:
 
@@ -1026,15 +1127,11 @@ Eight decisions taken; three items remain.
 | 6 | `pf_muon` matching | **`abs(pdg)==13`, rank by KE, WARN if none selected** — sec 4.2 |
 | 7 | validation populations | **beam-spill-coincident bundles, cosmic-tagged included** — sec 9.1.  Out-of-spill skipped |
 | 8 | `mcs_root_gate.py` location | **`sbnd_xin/scripts/`** (SBND-only), beside `pr85_hash_gate.py` |
+| 9 | cathode crossers | **INCLUDED**, with the crossing *section* excised via `mcs_cathode_xcut = 5` — sec 7.5.  Naive excision would bias `emu_MCS` **low**; the fix is to drop the straddling *angle*, not just the points |
 
 ### Still open
 
-**a. Cathode crossers in Part A.**  This doc *recommends excluding* them from
-the calibration sample (sec 9.1) — their known position distortion feeds
-straight into the scattering angles, and the pull-test width is the number that
-decides the tune transfer.  Not yet owner-confirmed.
-
-**b. CMake parity** — *proposed: add it.*  Ship `mcs/CMakeLists.txt`
+**a. CMake parity** — *proposed: add it.*  Ship `mcs/CMakeLists.txt`
 (`wct_package(WireCellMcs USE WireCellUtil)`) **and** append `mcs` to
 `WCT_PACKAGES` at `CMakeLists.txt:191`.  `cmake/test/parity.sh` treats the
 installed-library list as a hard check, so a waf-only package makes it fail.
@@ -1042,7 +1139,7 @@ installed-library list as a hard check, so a waf-only package makes it fail.
 precedent worth extending.  Cost is two lines.  Override if you would rather
 keep `mcs/` out of the CMake build until it has proven itself.
 
-**c. ROOT licence posture** — *proposed: re-implement, and there is really only
+**b. ROOT licence posture** — *proposed: re-implement, and there is really only
 one lawful option.*  Write `MinimStep`/`MinimBrent` from the published algorithm
 description (sec 6.1), not from ROOT's source.  ROOT is **LGPL-2.1**; WCT is
 **LGPL-3+**.  Absent an "or later" grant, LGPL-2.1 source cannot be combined
@@ -1060,7 +1157,7 @@ bits-of-precision stopping criterion and will **not** reproduce ROOT's iterates
 | 1 | ROOT-free `mcs/` package (`Interp1D`, `Minimize1D`, then the physics) | `wcdoctest-mcs` vs the fixture, gates #1–#7 of sec 6.2; shuffle test; `setarch -R` ×5 |
 | 2 | `clus/` call site in `TaggerCheckNeutrino` behind `mcs_enable`, default OFF; `muon_segments`, vertex endpoints, per-bundle beam-window-only | byte-identical OFF (archives **+ `mcs_root_gate.py`**); knob-ON smoke + timing.  **No perf work needed** (sec 7.3) |
 | 3 | 5 knob-gated `T_kine` branches | byte-identical OFF *including the schema*; `--expect-new` diff shows only the new branches |
-| 4 | validation on beam-spill-coincident bundles (cosmics included): pull test, then Parts A/B/C | pull core width ≈ 1; bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
+| 4 | validation on beam-spill-coincident bundles (cosmics + cathode crossers included): pull test, then Parts A/B/C | pull core width ≈ 1; crosser width = non-crosser width (sec 7.5 closure); bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
 
 Two hard stops:
 
