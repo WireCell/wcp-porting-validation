@@ -532,3 +532,222 @@ record, not just this round's.
 §7 **Phase 2 status: DONE** for the kind-2 population identified as of
 2026-08-24. Phase 0's full census (the un-audited remainder of the 121-null
 population) would be needed before calling kind-2 exhaustively covered.
+
+## 10. Round 2 executed (2026-08-24) — §5b1 consolidation, cfg only
+
+Owner: *"I believe we have removed the bad knobs and their implementations.
+Now, it is time to consolidate the knobs."* Two scope decisions, taken before
+any edit:
+
+- **Plumbing only.** Every TLA name and every runner flag keeps working exactly
+  as it did. The 373-TLA signature of `wct-pr-perevt.jsonnet` is **untouched**,
+  so no historical `-A` recipe, arm script, or doc-quoted invocation breaks.
+- **§5b2 (the 290-line `pattern_algos.m_X = m_X;` mirror block) stays.** No
+  `.cxx`/`.h` is touched in this round — doc 68's precedent, so no rebuild, no
+  `wcdoctest`, no abtest/qlport *binary* gate. (It is also not the pure copy
+  §5b2 assumed: ~half its lines carry `* units::cm` conversions, so removing it
+  means relocating a unit conversion inside a shared production file — M10.)
+
+### 10.1 What was actually there: four hand-written layers, not three
+
+§2.6 counted six restatements per knob. Measured on the tree at `2cd25e82`, the
+PR path was worse than the table suggested — `pr()` and `clus_pr()` were the
+*same signature twice*:
+
+| layer | file | size |
+|---|---|---:|
+| job TLAs | `sbnd/wct-pr-perevt.jsonnet:43-2469` | 373 |
+| job → `pr()` | `wct-pr-perevt.jsonnet:2502-2871` | 368 kwargs, 351 pure `x=x` |
+| `pr(...)::` | `sbnd/clus.jsonnet:2985-3632` | 394 params |
+| `pr()` → `clus_pr` | `sbnd/clus.jsonnet:3633-4023` | 399 kwargs, **zero** non-`x=x` |
+| `clus_pr(...)` | `sbnd/clus.jsonnet:719-1836` | 400 params |
+| `clus_pr` → components | `sbnd/clus.jsonnet:1837-2915` | one `x=x` per knob |
+| `tagger_check_neutrino(...)` | `common/clus.jsonnet:483` | **336 params on one 9147-char line** |
+| its suppression clauses | `common/clus.jsonnet:484-1446` | 364 `+ (if …)` |
+
+`clus_pr` had exactly one caller; `tagger_check_neutrino` has exactly two
+(SBND's `pr()` and `qlport/uboone-mabc.jsonnet:1258` — PDHD/PDVD never call it).
+
+### 10.2 What changed
+
+**Step 1 (`436915f2`) — merge `clus_pr()` into `pr()`.** The kept signature is
+`clus_pr`'s, the richer one (its per-knob comments carry the doc reference and
+the C++ default), with `pr()`'s *public* defaults preserved verbatim where the
+two differed (`dump`, `cathode_x`, `cathode_kink_xcut`,
+`cathode_wide_kink_angle`, `protect_cathode_x` and the three
+`protect_cathode_rejoin_*` lengths), so no caller sees a different default. The
+two `name: 'clus_pr'` component names are string literals in the compiled config
+and are untouched. **−1039 lines.**
+
+**Step 2 (`b5384c2c`) — one knob bag into `TaggerCheckNeutrino`.** 293 knobs
+now travel in a single object:
+
+- `common/clus.jsonnet`: `tagger_check_neutrino` **336 → 44** named parameters
+  plus `knobs={}`, merged last into `data`; the 293 clauses are gone. An absent
+  key still means the C++ default — which is exactly what those clauses said.
+- `sbnd/clus.jsonnet`: `pr()` **394 → 107** params, gains `tcn_knobs={}`. Five
+  knobs (`cathode_x`, `cosmic_consistent_fv`, `mip_dqdx`,
+  `neutrino_type_bitmask`, `nue_sp_consistent_fv`) are read elsewhere in `pr()`,
+  so they stay named parameters and `pr()` adds them to the bag itself.
+- `wct-pr-perevt.jsonnet`: TLA signature unchanged; its 370-line `pr()` call
+  becomes an 80-line call plus a 288-entry `local tcn_knobs`, one line per knob,
+  carrying the family comments. The 11 knobs the job passes as an *expression*
+  (the four `pr_y_top` offsets, the seven null-coalesced `kine_*` flags) keep
+  that expression.
+- `qlport/uboone-mabc.jsonnet`: `fit_exclusion` and `dqdx_fit_keep_all_points`
+  move into an inline two-entry bag.
+
+**The rule for what gets absorbed:** a knob is absorbed only where **the job's
+TLA is its single documented home**. That keeps the prose where it is richest
+(the job's TLA block averages ~5.5 comment lines per knob) and never orphans a
+knob whose only description lives at a lower layer. Deliberately **not**
+absorbed, and unchanged by this round:
+
+- the **20** knobs `pr()` declares but the job never sets — the whole `teb_*`
+  family, `stm_proton_*`, `kink_dqdx_hot_ratio`, `dir_weak_use_score`,
+  `endpoint_trim_retry`, `mip_dqdx_median`, `proton_dir_vote`, …;
+- the **3** that are not `pr()` parameters at all — `fiducial`,
+  `proton_dir_score_max`, `proton_dir_asym_min`;
+- everything with a **compound predicate** — `nu_per_bundle` and its two riders,
+  `nu_skip_cosmic_bundle_min_length` (`> 0`), `fv_tolerance`
+  (`std.length(…) > 0`).
+
+**Deliberate deviation from §5b1's wording.** The bag keys are the **existing
+C++ key names, grouped visually by family**, not doc 77's nested-and-renamed
+fields (`two_end_break: {enabled, min_len, …}`). A rename table would be a new
+per-knob restatement and a new silent-failure surface — the very thing this
+round removes. The payoff §5b1 asked for is still delivered: "what did
+production run" is one object, and `scripts/cfg/compile_prjob_cfg.sh` hashes it.
+
+**Step 3 was evaluated and skipped.** The other knob-taking builders were
+measured for the same treatment: `tagger_check_stm` (11 absorbable),
+`tagger_check_tgm` (8). Both were left alone, on purpose. Their parameter names
+differ from the job's TLA names (`stm_accept_guards` → `accept_guards`,
+`tgm_component_extremes` → `component_extremes`), so absorbing them would
+require exactly the rename table rejected above; and four of the nineteen
+(`beam_window_only`, `evaluate_demoted_mains`, `require_in_scope`,
+`save_stm_fit`) genuinely fan out to several components, which a named
+parameter expresses better than a bag. ~19 knobs and ~95 lines are not worth
+either cost.
+
+### 10.3 Net
+
+| file | lines |
+|---|---|
+| `cfg/pgrapher/common/clus.jsonnet` | 2301 → 1459 |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | 4052 → 2460 |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | 2911 → 2923 |
+| **cfg total** | **+1169 / −3591 = −2422** |
+
+Restatements per absorbed knob: **6 → 2** (its TLA declaration, and one line in
+the bag). A knob that is added from now on needs no plumbing at all — any C++
+key is reachable by naming it in the bag.
+
+The 373 job TLAs, their defaults, and their comments are bit-for-bit what they
+were.
+
+### 10.4 Verification
+
+Three gates, each run against a pristine tree extracted from the pre-round
+commit (`git archive 2cd25e82 cfg | tar -x`) and the working tree.
+
+**Gate 1 — compiled-config identity, 21/21 byte-identical.** Every live consumer
+of the SBND/common clustering config, `cmp` on the compiled JSON (jsonnet emits
+object keys sorted, so source reordering cannot hide in it):
+
+| what | result |
+|---|---|
+| SBND PR job at the **production operating point** (`compile_prjob_cfg.sh`: full PR pipeline + BDTs) | identical |
+| SBND PR job bare (default pipeline) | identical |
+| `sbnd_pr`, `sbnd_img`, `sbnd_clus`, `sbnd_ql` (abtest `compile_all_cfg.sh`) | identical |
+| `wcls-img-clus.jsonnet`, legacy standalone Q/L (`compile_sbnd_prod.sh`) | identical |
+| **uBooNE MABC** (`qlport/scripts/compile_ub_cfg.sh`) | identical |
+| PDHD nfsp / img / clus, PDVD nfsp / img / clus | identical ×6 |
+| PDHD / PDVD / SBND sim-check, PDHD sim-track + sim-noise, PDVD sim-track | identical ×5 |
+
+**Gate 2 — per-TLA probe sweep, 373/373 and 46/46 identical.** The production
+compile only exercises the knobs that are ON; the 115 `null` + 15 `false` TLAs
+emit no key, so a broken forward for any of them would pass Gate 1 silently —
+M6 with a 130-knob blast radius. Every TLA is therefore set **in turn** to a
+distinctive non-default value and compiled against both trees, which must agree
+(including agreeing on the failure text where a probe value is illegal):
+
+- PR job: 373 TLAs — 9 already supplied by the base invocation, 364 probed,
+  **373/373 identical**. Coverage check on the pristine tree: **359 of the 373
+  probes visibly move the compiled JSON**. The five that do not are `DL`, `DT`,
+  `lifetime`, `driftSpeed` (documented inert at `wct-pr-perevt.jsonnet:57-73` —
+  they feed only the sim Drifter) and `neutrino_consistent_fv`, which at this
+  operating point only ever appears inside `neutrino_consistent_fv ||
+  cosmic_consistent_fv || nue_sp_consistent_fv` with the other two already ON.
+- Q/L job (`wct-clus-matching-perevt.jsonnet`, untouched but downstream of
+  `common/clus.jsonnet`): **46/46 identical**.
+- uBooNE knob probes: `dir_weak_use_score`, `fit_exclusion`,
+  `dqdx_fit_keep_all_points`, each ON and OFF, pristine `uboone-mabc.jsonnet` +
+  pristine cfg vs the new pair — **6/6 identical**, key present exactly when ON.
+
+**Gate 3 — physics, the owner's samples.** 167 PR-chain events, `reality=data`
+on all three (the `-ql0819` Q/L roots carry no `.lineage_reality`, so the
+runner's check is a silent no-op — doc 78 was bitten by this), `PR_JOBS=8`,
+all `rc=0`. A side = the doc-79 arms, which sit at the last PR-affecting commit
+(`c8e0b9f5`; `2cd25e82` moved only the Q/L job):
+
+| sample | events | `pr85_hash_gate.py` | `pr94_root_gate.py` | sorted `nusel-table.tsv` diff |
+|---|---:|---|---|---|
+| numuCC (mcp1k, first 100 of the doc-77 241) | 100 | **PASS** 200 archives | **PASS** 100 events | **0 lines** (1171 rows) |
+| nueCC48 | 48 | **PASS** 96 archives | **PASS** 48 events | **0 lines** |
+| NCpi0 | 19 | **PASS** 38 archives | **PASS** 19 events | **0 lines** |
+| **total** | **167** | **334 archives byte-identical** | **167 events identical** | **0** |
+
+Arms: `$SCRATCH/cons/c2-{mcp1k,nuecc48,ncpi0}` vs
+`$SCRATCH/dgtail/dg79pr-{mcp1k,nuecc48,ncpi0}`; event list
+`$SCRATCH/cons/numu100.txt`.
+
+Not run, and why: no C++ was touched, so there is no `wcbuild`, no freshness
+proof, no `wcdoctest-clus`, and no abtest/qlport *binary* gate. `common/clus.jsonnet`
+is shared, which is exactly why uBooNE, PDHD and PDVD appear in Gate 1 as
+compile checks.
+
+### 10.5 Tooling added (`scripts/cfg/`)
+
+- `compile_consumers.sh <cfgroot> <outdir>` — compiles all 21 consumers above
+  against an arbitrary cfg tree.
+- `cmp_consumers.sh <dirA> <dirB>` — exact `cmp` of the two output dirs.
+- `tla_probe_gate.py <cfgA> <cfgB> [--job pr|ql] [--jobs N]` — the per-TLA probe
+  sweep. **Any future cfg refactor should run all three**; Gate 1 alone cannot
+  see the OFF knobs.
+
+### 10.6 Repro
+
+```bash
+T=/nfs/data/1/xqian/toolkit-dev/toolkit
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+D=/home/xqian/tmp/cons                      # scratch
+mkdir -p $D/pristine && git -C $T archive 2cd25e82 cfg | tar -x -C $D/pristine
+
+$SX/scripts/cfg/compile_consumers.sh $D/pristine/cfg $D/before
+$SX/scripts/cfg/compile_consumers.sh $T/cfg          $D/after
+$SX/scripts/cfg/cmp_consumers.sh     $D/before $D/after            # 21/21 identical
+
+$SX/scripts/cfg/tla_probe_gate.py $D/pristine/cfg $T/cfg --job pr --jobs 24
+$SX/scripts/cfg/tla_probe_gate.py $D/pristine/cfg $T/cfg --job ql --jobs 12
+
+cd $SX                                       # physics, 167 events
+PR_JOBS=8 ./run_pr_chain_batch.sh work-mcp1k-ql0819   $D/c2-mcp1k   data $(cat $D/numu100.txt)
+PR_JOBS=8 ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/c2-nuecc48 data $(cat <48-evt list>)
+PR_JOBS=8 ./run_pr_chain_batch.sh work-ncpi0-ql0819   $D/c2-ncpi0   data $(cat <19-evt list>)
+for s in mcp1k nuecc48 ncpi0; do
+  python3 scripts/pr85_hash_gate.py --jobs 8 $D/c2-$s <dg79pr-$s>; python3 scripts/pr94_root_gate.py $D/c2-$s <dg79pr-$s>
+done
+```
+
+### 10.7 Known-stale file, unchanged in kind
+
+`wcp-porting-img/sbnd/wcls-img-clus-matching-xin.jsonnet` (HaiwangYu's, doc 68
+§5) does not compile before **or** after, and fails at the same line both ways
+(`function has no parameter rse_from_metadata`). If it is ever repaired it will
+additionally need its `iso_endpoint` argument moved into the knob bag.
+
+§7 **Phase 3 status: DONE** for the PR path. The Q/L path
+(`wct-clus-matching-perevt.jsonnet`, 46 TLAs, zero physics-knob overlap with the
+PR job) was not consolidated — there is nothing there to consolidate. §5b2 and
+§5c remain open decisions (§8).

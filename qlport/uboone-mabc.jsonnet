@@ -1255,7 +1255,15 @@ local ub = {
             cm.steiner(retiler=improve_cluster_2, perf=perf),
             cm.fiducialutils(),
             // //cm.tagger_check_stm(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset)),
-            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper), dir_weak_use_score=dir_weak_use_score, fit_exclusion=fit_exclusion, dqdx_fit_keep_all_points=dqdx_fit_keep_all_points),
+            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper), dir_weak_use_score=dir_weak_use_score,
+                                     // doc 77 round 2 (toolkit): the pattern-recognition knobs now
+                                     // reach TaggerCheckNeutrino through one `knobs` object instead
+                                     // of one named parameter each.  Key present = knob on; key
+                                     // absent = the C++ default, exactly as before.
+                                     knobs={
+                                         [if fit_exclusion then 'fit_exclusion']: true,
+                                         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
+                                     }),
         ] + (if numu_weights_dir != "" then [numu_bdt_scorer] else [])
           + (if nue_weights_dir  != "" then [nue_bdt_scorer]  else [])
           + (if tracking_output != "" then [tracking_visitor, tagger_output_visitor] else []);
