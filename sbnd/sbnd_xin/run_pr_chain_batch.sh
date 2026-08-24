@@ -321,6 +321,19 @@ for _d75 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _d75 _env _key _val
+# docs/76 round 2 -- fast_xgb_forest: book the numu/nue XGB BDT combiners
+# with TmvaGradForest (compact exact re-evaluation of the same XML) instead of
+# TMVA::Reader.  **SBND PRODUCTION DEFAULT ON since 2026-08-23 (docs/76 sec
+# 6)** -- EMPTY inherits that.  Same tri-state idiom: EMPTY = no TLA = the job
+# default, 1 = force on, 0 = force off (= the pre-docs/76 TMVA::Reader path,
+# byte-identical outputs, ~3 s and ~0.3-0.8 GB more per event).
+for _d76 in \
+    "SBND_FAST_XGB_FOREST:fast_xgb_forest" ; do
+    _env=${_d76%%:*}; _key=${_d76#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d76 _env _key _val
 [ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")
