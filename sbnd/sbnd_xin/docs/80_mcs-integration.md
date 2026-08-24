@@ -289,7 +289,14 @@ changing **only** what ROOT forces.
 |---|---|---|---|
 | `TMatrixDEigen` in `fitPCA` (:169) | `Eigen::SelfAdjointEigenSolver<Matrix3d>` on the covariance.  Symmetric ⇒ real eigenvalues.  Eigen returns them **ascending** where ROOT does not sort — order descending explicitly, and fix each eigenvector's sign by a stable rule (largest-\|component\| positive) *before* the muon-direction flip | low | eigenvector components to ~1e-12 |
 | `TGraph::Eval` on the 20-point CSDA table (`setUKEfromRR` :437) | a small **local** piecewise-linear interpolator | low, *if* extrapolation is matched | exact to 1e-12 on the fixture grid |
-| `TF1::GetMinimumX` (:585-589) | Brent 1-D minimisation reproducing ROOT's recipe: `npx = 100` uniform grid pre-scan to bracket, then Brent to `1e-10` relative | **the real risk** | see 6.2 |
+| `TF1::GetMinimumX` (:585-589) | Brent 1-D minimisation reproducing ROOT's recipe: `npx = 100` uniform grid pre-scan to bracket, then Brent with `epsilon = 1e-10` as both abs and rel tolerance, `maxiter = 100` | **the real risk** | see 6.2 |
+
+> **Licence note.**  Write the minimiser **from the published algorithm
+> description, not from ROOT's source.**  ROOT is LGPL-2.1; WCT is LGPL-3+
+> (`LICENSE`).  Upstream `mcs.cxx` is MIT and vendors freely; ROOT's
+> `BrentMethods.cxx` does not.  Boost.Math's `brent_find_minima` is already
+> available but uses a bits-of-precision criterion and will **not** reproduce
+> ROOT's iterates — do not substitute it.  See sec 11 Q9.
 
 > **The interpolator must linearly EXTRAPOLATE outside its range, not clamp.**
 > That is what `TGraph::Eval` does, and `estimate_energy` scans KE from ~0 —
@@ -300,40 +307,97 @@ changing **only** what ROOT forces.
 > (`return points.begin()->second` / `points.rbegin()->second`).  Same for
 > `Aux::LinterpFunction`.  Write ~20 lines in `MuonMCS.cxx` instead.
 
-### 6.2 Two separate tolerances
+### 6.2 Acceptance — gate the mechanism, not the output number
 
-`emu_MCS` sits at a broad likelihood minimum and should agree with round 0 to
-**< 0.5 %**.
+The governing principle, and the most useful sentence in this section:
 
-`ambiguity_MCS` is a ratio of likelihoods evaluated at **three separately
-located minima**, so a different minimiser relocates all three.  It is expected
-to move more.  Acceptance: **< 5 %**, and because the round-0 fixture records
-the three minimum locations, a failure can be attributed to *which* of the three
-moved rather than just "the number changed".
+> **Match the expression form, not just the mathematics.**  A last-bit
+> difference in the covariance matrix moves an eigenvector at 1e-15, flips one
+> point across a segment boundary, and changes that segment's angle by O(mrad).
+> That is the mechanism by which 1 ULP becomes 100 MeV.
 
-If `ambiguity_MCS` cannot be held to 5 %, the fallback is to define it on a
-fixed KE grid instead of on minimiser output — a deliberate, documented
-divergence from upstream, not a silent one.
+Concretely: `fitPCA` accumulates the covariance with the triple loop
+`covData[3*i+j] += meanPoints[k][i]*meanPoints[k][j]`, then `/= track.N`.
+**Keep that loop verbatim** — do not write `X.transpose()*X`, whose blocked and
+vectorised accumulation order differs.  Same for `MCSHelper::norm`
+(`sqrt(Σ pow(v[i],2))`, in that order).
+
+**The gates, in dependency order.**  Each one is only meaningful if the one
+above it passed:
+
+| # | quantity | acceptance |
+|---|---|---|
+| 1 | `Interp1D` vs the round-0 side probes (incl. below- and above-range) | **bitwise `==`** |
+| 2 | number of segments, and point count **per segment** | **identical** |
+| 3 | the pre-scan bracket triple, for **each** of the 3 `GetMinimumX` calls | **identical** |
+| 4 | `vx[k]` and the resulting `ivx[k]` bin | `< 1e-12`, **identical bin** |
+| 5 | `θ_xz[k]`, `θ_yz[k]` | `< 1e-9` rad |
+| 6 | `keguess`, `keguess_lower`, `keguess_higher` (each separately) | `< 1e-3` MeV |
+| 7 | `emu_MCS` | `< 0.5 %` (implied by 6) |
+
+**Gate #2 and #3 are FAILs, not tolerances.**  Gate 2 is what a 1e-15
+eigenvector wobble breaks — if it fails you have a segment-boundary flip; chase
+it, do not loosen it.  Gate 3 matters because the objective is **multimodal**
+(that is the entire reason `ambiguity_MCS` exists): with `npx = 100` over
+`[0, 4000]` the grid spacing is 40 MeV, so a different pre-scan lands in a
+**different basin** — an O(100 MeV) error.  Once the bracket matches, both
+implementations converge to the same true minimum.
+
+**Do NOT put a tolerance on `ambiguity_MCS` itself.**  It is
+`max(exp(lnl − lnl_lo), exp(lnl − lnl_hi))` — an *exponential* of a likelihood
+difference — so a basin change moves it by orders of magnitude while `emu_MCS`
+is untouched.  A loose tolerance on the ratio hides exactly the failure it is
+meant to catch.  Gate the three minimum *locations* independently (#6); then
+`ambiguity_MCS` is a deterministic function of already-gated quantities and can
+be asserted at 1e-9 relative as a derived check.
 
 ### 6.3 Determinism
 
-This tree's recurring failure mode, and upstream walks straight into it.
-`mcs.h` is built on raw `Point*`: `std::vector<Point*> edges`, a `Comparator`
-ordering `Point*` by `score`, and **unstable** `std::sort` in both
-`sort_edges()` and `ComparePCAProjection::sort_points`.  Ties then propagate
-into index-based segment slicing in `get_seg`/`fitSegPCA`.
+**Correcting the obvious first diagnosis, because it selects the wrong test.**
+`mcs.h` is built on raw `Point*`, which looks like this tree's classic
+address-dependence bug (M4).  It is not.  `Comparator::operator()` reads
+`exhausted` and `score`; `compare_edges` reads the distance;
+`ComparePCAProjection`'s lambda reads `dot(a,axis)`.  **None of them
+dereferences a pointer *value*.**
 
-Required:
+So `mcs.cxx` is order-**deterministic** but order-**sensitive**: the same input
+sequence gives the same answer every run, and ties are broken by position in the
+input vector.
 
-- every `Point` carries its input index as a stable `id` (upstream already does
-  this) and **every** comparator breaks ties on `id`;
-- `ComparePCAProjection::sort_points` sorts `vector<vector<double>>` with no id
-  at all — carry the index alongside the point and tie-break on it, or use
-  `std::stable_sort`;
-- the Dijkstra `Comparator` compares a double `score` — tie-break on `id`;
-- verify by N-run identity under `setarch x86_64 -R` (M4) **plus** a
-  shuffled-input test: permuting the input point order must not change
-  `emu_MCS`.
+*Therefore an N-run repeat-identity test passes even with every tie-break
+missing.*  It is the wrong test.  **The right test is a shuffle test**: permute
+the input point vector by K fixed permutations and require byte-identical
+output.  Run it *alongside* `setarch x86_64 -R` (M4), not instead of it.
+
+The exposure is real because **unstable** `std::sort` is used in both
+`sort_edges()` and `ComparePCAProjection::sort_points`, and ties propagate into
+index-based segment slicing in `get_seg`/`fitSegPCA`.
+
+Required, in order of leverage:
+
+1. **`ComparePCAProjection::sort_points` — highest leverage.**  It sorts
+   `vector<vector<double>>` with no id at all, and `get_seg` slices a *prefix of
+   that order*, so a tie flip changes segment membership → different PCA →
+   different angle → different energy.  Exact ties are plausible: 0.6 cm regular
+   spacing with a segment axis near a coordinate axis gives exactly-equal
+   projections.  → sort key `(dot(p,axis), p.index)`.
+2. **`add_edge`'s 20-nearest retention.**  Mirror-symmetric neighbours on a
+   regular grid give exactly-equal `d + d²`.  → `compare_edges` key
+   `(dist, p->id)`.
+3. **`Comparator`.**  Add `id` as secondary key among non-exhausted points.  Two
+   payoffs: permutation-independence, and it makes a lazy binary heap *provably*
+   equivalent to the full re-sort — which is what licenses the 7.2 perf rewrite.
+4. **`Track::remove_seg`'s exact-float coordinate match** → match by index
+   (bug 6.4/#4-6 below).
+5. **Input-assembly audit (clus side).**  `Segment::fits()` is a `std::vector`
+   and `segments_in_long_muon` is index-ordered, so `muon_segments` is
+   deterministic by construction.  `whole_event` is the only mode needing an
+   audit for pointer-keyed iteration (§2 Code: never iterate `std::set<T*>`).
+
+Verification: `doctest_mcs_shuffle` with 20 fixed permutations of the round-0
+cloud, then the same on ≥3 real SBND clouds; **plus** `setarch x86_64 -R` × 5 in
+the round 3/4 gates.  Round 0 also runs one pre-shuffled pass (sec 5), so we
+learn *which* ties actually fire on real data before writing the port.
 
 ### 6.4 Upstream defects to fix in the port
 
@@ -349,6 +413,75 @@ not to move any number:
 - `mcs.h:22-49` defines free functions in a header with **no `inline`** — an ODR
   hazard the moment two TUs include it.  Ours will.
 - `estimate_energy` reallocates its parameter vector per call; hoist.
+
+**Further defects found on a full read** (numbered for the round-2 checklist).
+Several are *silent* — they publish a wrong number rather than failing:
+
+7. **`nsegs == 1` publishes a garbage energy with no flag — the nastiest.**
+   `seg_vec.push_back(Track())` runs *before* `fitSegPCA`
+   (`form_segs`, mcs.cxx:406-412), so `if (!can_fit) break;` leaves an empty
+   `Track` behind and `segs.size()` is **one longer** than
+   `segs_distance`/`segs_angle_*`.  The guard at `:111` tests `segs.size() < 2`,
+   so a single *real* segment passes it.  Then `estimate_energy` packs
+   `par[0] = 1`, and `lnlikelihood_track`'s loop `for (i=2; i<nsegs+1; i++)`
+   **never executes** → the objective is identically 0 → Brent minimises a
+   constant → `keguess` is whatever the grid scan returns, `ambiguity = 1`, and
+   `emu_MCS` is published as if it were real.
+   *Fix:* require `segs_distance.size() >= 2` (≥1 real angle), else return −1.
+8. **`|vx| >= 1` falls into `ivx = 0`.**  `mcs.cxx:520`'s five indicator terms
+   cover `[0,1)` only, so `vx_abs == 1.0` (segment exactly along drift) — or
+   `1.0 + ε` from rounding — makes every term false and selects `ivx = 0`, the
+   *most-perpendicular* bin, whose `res_sigma1_yz = 0.0449` is 4× the correct
+   bin's.  More reachable on SBND than uBooNE.  *Fix:* clamp `ivx = 4` for
+   `vx_abs >= 0.75`.
+9. **NaN singularity for drift-parallel segments.**  `mcs.cxx:151-154`:
+   `vecy_plane = cross(aAxis_prior, x̂)` is the zero vector when
+   `aAxis_prior ∥ x̂`; normalising gives NaN → `-log(NaN)`.  Also `:526,537`,
+   where `probability` can underflow to 0 → `-log(0) = +inf`.  Interacts with
+   #8: a drift-parallel track hits both.
+10. **`get_angle` can return NaN** from `acos(>1)` (`:139`) — clamp to [−1,1].
+11. **`cleanUp()` leaks both `TGraph`s and then bricks the object** (`:54-58`):
+    sets the pointers to `nullptr` *without* `delete`, and any later `run()`
+    dereferences null (`:85`).  In WCT the tables are compile-time constants —
+    make them `static const` and delete `cleanUp()` entirely.
+12. **`emu_tracklen` is published on `bad_path` events.**  `rr_path` is computed
+    *before* the early return (`:83-95`), and on `bad_path`
+    `trajectory_points_final` holds only the two vertices, so `rr_path` is the
+    straight-line chord — published as a track length.  *Fix:* set both to −1.
+13. **`uEnergy[]` is mislabelled.**  `:441` calls it "Total particle energy in
+    MeV", but a 10 MeV *total* energy is impossible for a 105.658 MeV muon and
+    `:87`/`:126` add `Mmu` to it.  It is **kinetic** energy (cross-checked
+    against PDG: KE 10 MeV ↔ CSDA 0.9833 g/cm²).  Fix the comment.
+14. **`fitPCA` is wrong for non-unit weights** (`:187-196`): weights enter the
+    covariance *squared*, and the normalisation divides by `track.N` rather than
+    `total_weight`.  **Latent only** — nothing ever passes a weight ≠ 1.
+    *Note it; do NOT "fix" it* — that would break the golden (M15).
+15. **`Track::remove_seg` can erase the wrong points.**  `mcs.h:164-186`: the
+    segment is chosen as a prefix along `segFitVector[0]`, then `remove_seg`
+    erases `seg.N` **contiguous** entries from `track`'s `aAxis` order.  When the
+    two axes differ — the entire point of the refit — the segment's points are
+    not contiguous there.  Related: `first_index == -1` gives UB
+    (`weights[-1]`, `erase(begin()-1, …)`), and identity is matched by
+    **exact float coordinate equality**, which mis-matches duplicate points.
+    *Fix all three by tracking indices.*  Behaviour-changing → own knob + gate.
+16. **`-1` as a sentinel for a signed angle** (`:417`) — safe only because
+    `lnlikelihood_track` starts at `i = 2`.  Fragile; use NaN or an explicit
+    count.
+17. **Dead code to drop from the port:** `axes[1]`/`axes[2]` (`:381-382`) and
+    `bAxis_prior`/`cAxis_prior` (`:147-148`) are assigned and never used;
+    `beta()`, `gamma()`, `increment_energy()`, `decrement_dist()` are never
+    called; **`setUKEfromEX` is declared (`mcs.h:224`) and never defined** — a
+    link error if anything ever references it.
+18. **A stale duplicate tune lives in the art module.**
+    `WireCellMCS_module.cc:388-421` carries a commented-out earlier
+    `lnlikelihood_theta_yz` with different `emu_edges` and a
+    `probability = pvx[ivx]; //debugging` override.  **The standalone
+    `mcs.cxx` is the source of truth** — port its live version (sigmoid
+    blending, `emu_edges = {600,950,1300}`).
+
+Bugs 7–12 and 15 change behaviour relative to upstream.  Ship each behind its
+own `McsOptions` bool so its effect is separately gate-able, and see sec 11 Q5
+for the default.
 
 **Acceptance for round 1:** `build/mcs/wcdoctest-mcs` passes, reproducing
 0.699 GeV and every round-0 intermediate within tolerance.  Nothing outside
@@ -402,9 +535,17 @@ or extracted (M10).
 | `mcs_enable` | `false` | the whole driver is skipped |
 | `muon_source` | `"pf_muon"` | selection rule (sec 4.2) |
 | `muon_min_length_cm` | `40` | below this, skip.  Upstream's own guards are `2*seg_length = 28 cm` and `npoints ≥ 20` |
-| `mcs_seg_length_cm` | `14` | upstream default |
-| `mcs_point_source` | `"event"` | `"event"` = whole-event cloud + `trim_trajectory` (ubreco parity); `"segment"` = the muon's own segment fits only |
+| `mcs_point_source` | `"muon_segments"` | `"muon_segments"` = the selected muon's own `Segment::fits()` points (N ~ 10²–10³); `"whole_event"` = ubreco-literal whole-event cloud (N ~ 5e4, **validation only**) |
 | `mcs_max_points` | `20000` | perf guard, see 7.2 |
+
+> **`seg_length` is deliberately absent from the knob table.**  14 cm is one
+> radiation length of liquid argon: X0(LAr)/rho = 19.55 / 1.396 = **14.004 cm**.
+> That is *why* the bare Highland term `sigmaH = 13.6(T+M)/(T(T+2M))` carries no
+> `sqrt(l/X0)(1 + 0.038 ln(l/X0))` factor — the factor is exactly 1 at l = X0.
+> Changing `seg_length` silently invalidates the prefactor **and** every `par_*`
+> quartic fitted on top of it.  It is a structural constant, not a tunable — and
+> it is a property of **argon**, not of MicroBooNE, so it transfers to SBND
+> unchanged.
 
 ### 7.2 Performance — the largest engineering risk
 
@@ -412,9 +553,18 @@ or extracted (M10).
 `sort_edges()` of up to 20 entries; the Dijkstra loop then `std::sort`s the
 **entire** point vector on every iteration, i.e. **O(N² log N)**.
 
-On a uBooNE single-muon cloud (N ~ 10³) this is fine.  An SBND whole-event
-`T_rec_charge`-equivalent cloud is 10⁴–10⁵ points, where N² log N is 10⁹–10¹¹
-operations — almost certainly prohibitive at production rates.
+**Measured, not estimated.**  SBND nueCC evt 168596:
+
+| cloud | source | N | O(N²) `add_edge` calls |
+|---|---|---|---|
+| whole-event live | `mabc-pr.zip: 0-clustering-global.json` | **50 087** | 2.5e9 → **~10 min/muon/event** |
+| PR fit points (= `T_rec_charge`) | `0-track_fit-global.json` | **867** | 7.5e5 → **< 10 ms** |
+
+Four orders of magnitude.  Each `add_edge` call additionally passes
+`std::vector<double>` **by value** through `diff`/`norm`, so it costs 2–3 heap
+allocations even for the ~50 % rejected by the `in_dir` test; the Dijkstra loop
+adds ~4e10 comparisons on top.  Whole-event is prohibitive — confirmed, not
+suspected.
 
 *Behaviour-preserving* mitigations (same graph, same path, same answer —
 provable against the round-0 fixture):
@@ -428,17 +578,35 @@ provable against the round-0 fixture):
   facility, **not a new dependency**.  A radius query at the 20th-nearest
   distance returns the identical edge set.
 
-*Not behaviour-preserving* (must be knobs, must be justified by numbers):
+*Not behaviour-preserving* (knob + its own gate):
 
-- `mcs_point_source = "segment"` — feeding only the muon's own segment fits.
-  This is *better* input, but it is not what the uBooNE resolution terms were
-  tuned against, so it stays non-default until sec 9 says otherwise.
+- k-d tree for the 20-nearest-in-direction retention.  An *exactly* equivalent
+  version exists (expanding-k kNN until 20 in-direction candidates are found,
+  since `d + d²` is monotone in `d`); a fixed-k approximation is not.  Build the
+  exact one or none.
 - `mcs_max_points` down-sampling.
 
-**Sequencing:** land the behaviour-preserving rewrites **first**, gated on the
-round-0 fixture, and *measure* before adding any approximation.  If the
-behaviour-preserving set alone brings a worst-case SBND event under ~1 s, the
-two approximation knobs stay off and the question closes.
+### 7.3 Why `muon_segments` is the default
+
+`trim_trajectory` exists **only** because ubreco had no muon isolation: it had
+to hand MCS the whole `T_rec_charge_blob` cloud and let a shortest-path hack
+find the muon inside it.  WCT's PR graph already solved that problem, properly.
+Re-solving it with a Dijkstra over 50 k blob points, to rediscover a
+`PR::Segment` we are already holding, is not ubreco *fidelity* — it is ubreco
+*scar tissue*.
+
+Supporting evidence: **the shipped reference cloud is itself a 456-point,
+0.600 cm-spaced fitted trajectory**, i.e. upstream's own demonstration input
+already has the `muon_segments` shape.  `trim_trajectory` is close to an
+identity map on it.
+
+`trim_trajectory` still *runs* in `muon_segments` mode, so the code path and the
+`bad_path` semantics stay identical to upstream — it just runs on N ~ 10²–10³.
+
+**Consequence: with `muon_segments` as the default, rounds 1–4 need no
+performance work at all.**  Stated explicitly so nobody funds a k-d-tree round
+for a mode that may never run in production.  `whole_event` is retained for the
+sec 9.4 parity check, run under `mcs_max_points` with a WARN.
 
 **Acceptance for round 2:** `mcs_enable = false` byte-identical (sec 10);
 `mcs_enable = true` completes on ≥1 event with the MCS energy visible in the
@@ -534,8 +702,9 @@ Deriving both from one `mcs_enable` argument is deliberate: independent knobs
 would allow `mcs_output` on with `mcs_enable` off (branches full of `-1`) or the
 reverse (computed and discarded).  Neither is useful and both are confusing.
 
-Mirror the same gate in `clus/src/PrDisplayDump.cxx` `dump_kine()` (`:619`) so
-the Bee/JSON display gains the fields only when the knob is on.
+`clus/src/PrDisplayDump.cxx` `dump_kine()` needs **no change and no gate** —
+see sec 10.2: it enumerates fields explicitly, so new `KineInfo` members are
+inert for `calib-pr-evt<N>.json`.
 
 ## 9. Round 4 — validation (the owner's ask)
 
@@ -572,9 +741,21 @@ the published MicroBooNE performance and make the tune transfer defensible.
 Anything worse is a **retune** signal, not a bug signal — that distinction has
 to be drawn before the numbers arrive, not after.
 
-**Part B — MC truth where available.**  On the MC samples the tree already uses,
-compare `E_MCS` to the true muon energy directly, for both contained and exiting
-muons.  This is the only handle on the exiting population.
+**Part B — exiting muons, with a free hard inequality.**  No absolute reference
+exists for exiting muons, but **range on the *visible* track is a strict lower
+bound on the true energy**.  So `E_MCS > E_range(visible length)` **must hold
+event by event** — violations are a real failure mode (basin collapse, `ivx`
+misassignment, NaN) and the check costs nothing.  Report the distribution of
+`E_MCS / E_range,visible` vs visible length; it should rise systematically with
+the exiting fraction.  On MC, additionally compare `E_MCS` to the true muon
+energy directly for both populations.
+
+**Part C — validate `ambiguity_MCS` itself**, or it ships with no acceptance
+criterion at all.  On Part A's sample, plot median
+`|(E_MCS − E_range)/E_range|` in bins of `ambiguity_MCS`.  *Success:* monotone
+rise, with the top ambiguity decile at ≥2× the residual of the bottom decile.
+**If flat, the score is noise — say so, and do not publish it as a quality
+flag.**
 
 ### 9.2 Sample
 
@@ -590,22 +771,85 @@ output.
 
 ### 9.3 Tune-transfer sanity check — run FIRST, and cheaply
 
-This can kill or bless the whole transfer before any tuning effort is spent.
-All the `res_sigma*` / `par_*` constants are MicroBooNE angular-**resolution**
-terms added in quadrature to Highland, and the `|vx|` slicing is
-drift-geometry-specific.  Three measurements:
+#### What transfers for free — measured, no work needed
 
-1. **Point spacing.**  Upstream's `get_dist_score` comment pins the scoring
-   exponents to uBooNE's ~0.6 cm WCP trajectory spacing.  Measure the actual
-   spacing between consecutive `Segment::fits()` points on SBND muons
-   (histogram + median).  If SBND is materially different, the `d + d²` score
-   and `nedges_max = 20` need re-derivation — a round of its own.
-2. **Angular resolution.**  Estimate SBND's directly: on high-energy (≳ 2 GeV,
-   near-straight) muons the measured per-segment angle distribution is dominated
-   by *resolution* rather than scattering, so its width is a direct read of
-   `res_sigma`.  Compare to the uBooNE values.
-3. **`|vx|` occupancy.**  Check SBND's `|vx|` distribution is comparable across
-   the 5 slices and that no slice is starved.
+1. **`seg_length` = X0(LAr) = 14.004 cm** (sec 7.1) — argon physics, not uBooNE
+   geometry.
+2. **Point spacing: ANSWERED, no measurement required.**  Upstream's
+   `get_dist_score` comment pins the exponents to uBooNE's ~0.6 cm WCP
+   trajectory spacing.  SBND's fitted-trajectory density **already equals it**:
+   `clus/src/TrackFitting.cxx:8856` sets `low_dis_limit = 0.6*units::cm`, and
+   the shipped reference cloud measures **0.600 cm median NN spacing** over 456
+   points.  ~23 points per 14 cm segment on both detectors.
+3. **The `|vx|` slicing survives SBND's two-TPC geometry** because the code uses
+   `std::abs(vx)` (`mcs.cxx:519`).  Both detectors drift along x.  (Still worth
+   confirming no slice is starved — one histogram.)
+
+#### What does NOT transfer for free — and it is worse than it looks
+
+The `res_sigma*` terms add in quadrature to Highland.  Their relative weight:
+
+| KE (MeV) | `sigmaH` (rad) | res share of θ_xz variance | res share of θ_yz variance (ivx=0) |
+|---|---|---|---|
+| 200 | 0.0505 | 1.3 % | 44 % |
+| 500 | 0.0232 | 5.9 % | 79 % |
+| 1000 | 0.0124 | 18 % | 93 % |
+| 1500 | 0.00851 | 32 % | 97 % |
+| 2000 | 0.00648 | 44 % | 98 % |
+
+(`res_sigma1_xz = 0.005776`, `res_sigma1_yz[0] = 0.0449`.)
+
+**The θ_yz channel is resolution-dominated above ~230 MeV**, and half the
+likelihood comes from it.  Reading `setSegAngles` (`mcs.cxx:151-154`) explains
+why: `vecy_plane = â × x̂`, so `theta_xz` measures scattering **in the plane
+containing the drift axis** (measured by drift time — precise) and `theta_yz`
+measures scattering **in the wire plane** (imprecise).  That 8× resolution gap
+*is* the geometry-specific part.  SBND's wire layout is close to uBooNE's, but
+drift length (200 vs 256 cm) and field (0.5 vs 0.273 kV/cm) — hence diffusion —
+differ.
+
+#### The measurement: a pull test.  One plot, tests the whole tune at once
+
+On contained stopping muons (`Flags::STM`), using range as the truth proxy:
+
+1. per segment k, `T_k = cal_kine_range(residual length from segment midpoint to
+   track end, 13, particle_data)`;
+2. `σ_pred,xz(T_k)` from `pred_theta_xz_pars(T_k)`, likewise yz for the
+   segment's `ivx`;
+3. histogram the **pulls** `θ_xz,k / σ_pred,xz` and `θ_yz,k / σ_pred,yz`.
+
+If the uBooNE tune transfers, the pull core width is **1.00**.  That single
+number exercises Highland + the quartic modifiers + the resolution terms + the
+`ivx` slicing simultaneously.
+
+Then slice by predicted `T` (200/400/800/1500 MeV) and by `ivx`.  The slicing
+says *which* term is wrong, because their T-dependences differ: a wrong
+resolution term gives a pull width that **grows with T** (resolution is
+T-independent while `sigmaH` falls as 1/p), a wrong Highland modifier gives one
+that is flat-in-T or quartic-shaped.
+
+**Complementary intercept fit** (if the pull test fails): per `ivx` bin, fit
+measured θ RMS² vs `sigmaH(T)²`.  Slope tests the Highland modifier; the
+**intercept is `res_sigma²` directly**.  That yields SBND's numbers without
+touching the 60+ tune parameters.
+
+#### Fallback ladder — this is what makes "the transfer failed" fundable
+
+- pull width within ~20–30 % of 1 → **ship as-is**, capping quoted MCS validity
+  at ~1.5 GeV;
+- 1.3–2× → **refit twelve numbers** (`res_sigma{1,2}_xz` + `res_sigma{1,2}_yz[0..4]`)
+  via the intercept fit, shipped as an SBND tune variant behind a knob with the
+  uBooNE tune retained as default so the round-1 golden gate never breaks;
+- \> 2×, or strongly T-dependent → **do not tune to make it look right** (§5.7).
+  Report it as a *trajectory-fitting-quality* finding, not an MCS finding: a 2×
+  angular-resolution deficit is a statement about `TrackFitting`.
+
+#### Validated window — state it up front
+
+MCS needs ≥2 real segments (≥28 cm) to produce anything and ≥5 (~70 cm ≈
+200 MeV by range) to be meaningful; the resolution crossover caps the top.
+**~200 MeV – 1.5 GeV.**  Publishing that range prevents someone scanning the
+tails and reporting an out-of-scope failure.
 
 **Fallback if the transfer fails:** the constants are already fhicl-driven
 upstream (`wirecellmcs.fcl`), so they become jsonnet knobs in the style of
@@ -618,10 +862,54 @@ hard-coding them into `MuonMCS.cxx`.
 
 Per `CLAUDE.md` §1/§4, every "no behavior change" claim ships with a gate label:
 
+### 10.1 BLOCKING — the existing PR gate does not cover the artifact we change
+
+`sbnd_xin/scripts/pr85_hash_gate.py::archives_of()` (`:34-40`) compares **only**
+`mabc-pr.zip` and `pctree-pr-evt<N>.tar.gz`.  It never opens
+`tracking-pr.root`.  Verified:
+
+```python
+for name in ("mabc-pr.zip", "pctree-pr-evt%d.tar.gz" % evt):
+```
+
+| artifact | written by | affected by this change? | gated today |
+|---|---|---|---|
+| `clusters-apa-*.tar.gz` | imaging | no | `abtest/ab_compare.sh` ✅ |
+| `mabc-pr.zip` | MABC | no | `pr85_hash_gate.py` ✅ |
+| `pctree-pr-evt<N>.tar.gz` | pctree writer | no | `pr85_hash_gate.py` ✅ |
+| `calib-pr-evt<N>.json` | `PrDisplayDump` | no (see 10.2) | **NOTHING** ⚠ |
+| `tracking-pr.root` → `T_kine` | `UbooneTaggerOutputVisitor` | **YES** | **NOTHING** ⚠ |
+
+**A "byte-identical PASS" from `pr85_hash_gate.py` would be vacuous for exactly
+the artifact round 3 touches.**  This must be fixed before round 3's gate means
+anything.
+
+**New gate helper, `sbnd_xin/scripts/mcs_root_gate.py`** (uproot):
+
+1. tree list identical (`Trun, T_bad_ch, T_proj, T_proj_data, T_rec_charge,
+   T_tagger, T_kine`);
+2. per tree: branch **name list** identical, `num_entries` identical;
+3. per branch: array-level `np.array_equal`, with an explicit NaN-equal path;
+4. `--expect-new kine_mcs_energy,…` mode: knob-**on** must differ **only** by
+   the named branches, every pre-existing branch bit-identical.
+
+### 10.2 `PrDisplayDump` is inert — do not touch it in round 3
+
+`dump_kine()` enumerates fields **explicitly**
+(`clus/src/PrDisplayDump.cxx:626-652`: `out["kine_reco_Enu"] = …` etc.), so new
+`KineInfo` members do **not** appear in `calib-pr-evt<N>.json`.  Adding them
+there is a separate, later, knob-gated change with its own hash check.  (This
+supersedes an earlier draft of this doc that called for mirroring the gate into
+`dump_kine()` in round 3 — unnecessary, and it would have created an ungated
+diff.)
+
+### 10.3 The gates
+
 - **Knob-off byte-identical**, rounds 2 and 3: `/ab-verify` on the standard SBND
   PR manifest, comparing archive **member content hashes** via
-  `abtest/hash_archive.py` — never `md5sum`/`cmp` on the tarball (M2).  Report
-  the snapshot labels and hash-file paths.
+  `abtest/hash_archive.py` — never `md5sum`/`cmp` on the tarball (M2) — **plus
+  `mcs_root_gate.py` for `tracking-pr.root`** (10.1).  Report the snapshot
+  labels and hash-file paths.
 - **Compiled-config proof**: grep the compiled JSON for **both** keys in **both**
   states — `wcsonnet … | grep -E 'mcs_enable|mcs_output'` must be **empty** with
   the knob off and show **both** keys with it on (M6).  Checking only one key,
@@ -658,18 +946,50 @@ Per `CLAUDE.md` §1/§4, every "no behavior change" claim ships with a gate labe
 5. **Multi-APA / cathode crossers.**  SBND muons crossing the cathode have a
    known position distortion (doc 72/73 family).  Exclude them from Part A, or
    treat them?
-6. **Is `mcs_point_source = "segment"` worth pursuing at all**, given it
-   invalidates the tune the algorithm ships with?
+6. **`mcs_point_source` default** — this doc recommends `muon_segments` (sec
+   7.3).  It is the single biggest departure from ubreco literalism and the
+   difference between 10 ms and 10 minutes per event.  **Blocking for round 2.**
+7. **Muon endpoints.**  ubreco used the PF particle's own
+   `Position()`/`EndPosition()`.  In WCT that is either the endpoint vertices'
+   `fit().point` or the segment's `fits().front()`/`.back()` — they differ (the
+   vertex fit point is the junction; the first/last fit point is offset).  The
+   choice shifts `segs_distance`'s offset and the `< 2*seg_length` short-track
+   cut.  **Do not pick silently** (§5.4).
+8. **`pf_muon` PDG matching.**  ubreco tests `PdgCode() == 13` **exactly**, not
+   `abs(...) == 13`, and ranks by **total** energy, not KE.  If WCT ever assigns
+   −13, `pf_muon` silently selects nothing and MCS reports −1 with no error.
+   WCT's long-muon path assigns `13` (`NeutrinoVertexFinder.cxx:1913`), so it is
+   probably safe — confirm.  One line; silent-failure mode if wrong.
+9. **Bug-guard defaults.**  Fixing #8 (`|vx| ≥ 1`) and #9 (NaN singularity)
+   *changes behaviour vs upstream*.  Default them to the **fixed** behaviour
+   with a gate showing each guard fires only where upstream produced
+   NaN/garbage, or default to upstream behaviour behind opt-in bools?
+   Recommend the former; owner's call under §5.4.
+10. **Who owns `mcs_root_gate.py`** (sec 10.1), and does it belong in `abtest/`
+    (shared) or `sbnd_xin/scripts/` (SBND-only)?  **It must exist before round
+    3's gate means anything.**
+11. **ROOT licence posture** — confirm re-implementing `MinimStep`/`MinimBrent`
+    from the published algorithm rather than vendoring ROOT's LGPL-2.1 source
+    into an LGPL-3+ tree (sec 6.1).
 
 ## 12. Summary of the staging
 
 | round | what | gate |
 |---|---|---|
-| 0 | scratch ROOT build of upstream; reproduce 0.699 GeV; dump intermediates to a JSON fixture | the number reproduces, or stop |
-| 1 | ROOT-free `mcs/` package | `wcdoctest-mcs` vs the fixture; `emu_MCS` < 0.5 %, `ambiguity_MCS` < 5 % |
-| 2 | `clus/` driver behind `mcs_enable`, default OFF; perf work | byte-identical OFF; knob-ON smoke + timing |
-| 3 | 5 knob-gated `T_kine` branches | byte-identical OFF *including* the schema |
-| 4 | validation: stopping muons vs range vs dQ/dx; tune-transfer check | bias ±5 %, resolution ~15 % — or a retune round |
+| 0 | scratch ROOT build of upstream; reproduce 0.699 GeV; dump intermediates + side probes to a JSON fixture; one shuffled pass | the number reproduces, **or stop** |
+| 1 | ROOT-free `mcs/` package (`Interp1D`, `Minimize1D`, then the physics) | `wcdoctest-mcs` vs the fixture, gates #1–#7 of sec 6.2; shuffle test; `setarch -R` ×5 |
+| 2 | `clus/` driver behind `mcs_enable`, default OFF, `muon_segments` | byte-identical OFF (archives **+ `mcs_root_gate.py`**); knob-ON smoke + timing.  **No perf work needed** (sec 7.3) |
+| 3 | 5 knob-gated `T_kine` branches | byte-identical OFF *including the schema*; `--expect-new` diff shows only the new branches |
+| 4 | validation: pull test, then Parts A/B/C | pull core width ≈ 1; bias ±5 %, resolution ~15 % — or the sec 9.3 fallback ladder |
 
-No code ships before round 0's number reproduces, and nothing goes to SBND
-production before round 4 says the MicroBooNE tune transfers.
+Two hard stops:
+
+- **No code ships before round 0's 0.699 GeV reproduces.**
+- **`sbnd_xin/scripts/mcs_root_gate.py` must exist before round 3's gate means
+  anything** — the existing `pr85_hash_gate.py` does not open
+  `tracking-pr.root`, so a PASS from it would be vacuous for the one artifact
+  this change touches (sec 10.1).
+
+Nothing goes to SBND production before round 4 says the MicroBooNE tune
+transfers — and if it does not, sec 9.3's ladder says refit twelve resolution
+constants, **not** tune until the plot looks right (§5.7).
