@@ -347,3 +347,98 @@ DL-vertex python stack it loads, not by the BDTs.
   guards the lazy booking; `evaluate()` is pure.
 * Other experiments: `pgrapher/common/clus.jsonnet` builders default the
   new key off and omit it ⇒ uBooNE / every other job compiles byte-identically.
+
+## 9. Follow-up review of the §7 parked items (2026-08-24, analysis only, no code)
+
+Owner asked how much each §7 item is actually worth, and whether the Q/L
+tail carries any free (byte-identical) redundancy before reaching for an
+approximation.  No code changed in this section — sizing and a code read
+only, recorded so the next round doesn't re-derive it.
+
+### 9.1 Ceiling on each §7 item, against the current (post round-1+2)
+per-event chain: imaging 8.3 s + Q/L 8 s (median) + PR 2.8 s
+(population-weighted) = **19.1 s**
+
+| item | save | applies to | % of full chain |
+|---|---:|---|---:|
+| Q/L `TensorFileSink` per-tensor flush (1.0 s wall, 0.18 core-s) | ~0.8 s | every event | **~4 %** |
+| sub-BDT double parse (`BookMVA(tag,file)`→`GetMethodTypeFromFile`, sec 7) | ~0.3 s | only the ~46 % of data events that score | **~0.7 %** weighted |
+| multi-event process (amortise ROOT/Cling 150 MB × 3 processes, wire geometry, SCE map) | ~1.0–1.5 s in the limit of a large batch | every event, but only pays off batched | **~5–8 %**, ceiling ~20–26 % if all remaining fixed cost were amortised away |
+| Q/L heavy tail (`hough_transform`/`has_closest_point`, sec 7) | bounded by its own share | rare outlier events | **~3–4 %** (doc's own "~8 % of Q/L stage" ÷ chain) |
+
+None of the four is in the same class as round 1+2 (which cut the PR
+job's own solo cost 55–80 % and the 308-event gate manifest −24 %); all
+four are chasing single-digit-percent residual margin.  The multi-event
+process model is the only one whose ceiling is comparable in size, and
+it is a runner/config restructuring, not a component change (docs 20, 65
+reached the same conclusion previously).
+
+### 9.2 Q/L tail: checked for a free (byte-identical) win, found none
+
+Read `clus/src/connect_graph_relaxed.cxx`, `make_graphs.cxx`,
+`Facade_Cluster.cxx`'s `find_graph`/`give_graph`, and
+`Facade_Grouping.cxx`'s `has_closest_point`:
+
+* `Facade::Cluster::find_graph()` (`Facade_Cluster.cxx:2795`) already
+  memoizes by `flavor` (`if (this->has_graph(flavor)) return
+  get_graph(flavor);`) — a second call for the same flavor on the same
+  cluster is free.  No duplicate-graph-build bug across the many
+  `make_graph_relaxed*` entry points in `make_graphs.cxx`.
+* Inside `connect_graph_relaxed`'s O(num²) component-pair loop, every
+  `vhough_transform`/`hough_transform` call uses a different origin
+  point (each pair's own closest points) and the different radii
+  (15/30/50/80 cm at different call sites) are genuinely different
+  queries, not restatements of one query.
+* `has_closest_point` (`Facade_Grouping.cxx:680`) is called once per
+  1 cm step along each pair's connecting path
+  (`grouping->test_good_point`, via `connect_graph_relaxed.cxx`'s
+  "check points along path" loop) — cost is O(num² × path length),
+  which is what the algorithm is defined to check, not redundant work.
+  `has_closest_point` itself is already at its floor: `exists_within`
+  early-terminates on the first in-radius point rather than resolving
+  a true kNN.
+
+Conclusion: unlike the PR-stage TMVA double-parse, there is no
+zero-risk lever here.  Any further speedup (coarser Hough bins, cheaper
+trig, approximate/early-truncated radius search, reordering the
+per-bin `+=` accumulation) changes output bits — precision traded for
+speed, not waste removed — and would need a knob plus real physics
+validation, not a hash gate, for a ≤4 % average win.  Consistent with
+the sec 7 parked verdict; not chased.
+
+### 9.3 Idea: gate an approximation on `num` to confine it to the tail (not implemented)
+
+The O(num²) pair loop means cost is predicted by `num` (the connected-
+component count) — already computed before any of the expensive work
+runs, so it is a free, existing signal to gate on:
+
+```
+if (num > relaxed_fast_threshold) {
+    // coarser-bin / cheaper-trig approximate path — new
+} else {
+    // today's exact path — untouched, byte-identical
+}
+```
+
+Why this shape is better than a blanket knob: the legacy path stays
+provably bit-identical for the large majority of events (only clusters
+over the threshold ever reach the approximation), so validation effort
+shrinks to just the handful of events that cross it — e.g. the two
+named in sec 7 (280884, 286617) — rather than a general sample.  It
+also targets the actual pain (worst-case/straggler latency in a batch),
+which is what this lever is good for, rather than average throughput
+(recall: even fully eliminating the tail only buys ~8 % of the Q/L
+stage on average, sec 9.1).
+
+Caveat that keeps this from being low-stakes despite the small event
+count: events that cross a `num` threshold are disproportionately the
+busy, multi-track topologies — often the physically interesting ones.
+Confining the blast radius shrinks the *validation scope*, not the
+*rigor required per affected event*; each event that takes the fast
+path would still need the same handscan-level check as a general
+knob's gate, just on far fewer events.
+
+Not scoped further this round — would need the distribution of `num`
+across a normal mcp1k/mcp2k sample (to find where the cost cliff
+actually sits and how many production events would cross a candidate
+threshold) before deciding whether to pursue it.
