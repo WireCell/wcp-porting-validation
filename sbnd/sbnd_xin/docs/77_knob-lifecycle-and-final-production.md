@@ -332,10 +332,16 @@ asked first).
 Two distinct, independently-doable pieces:
 
 **b1 — jsonnet: turn the naming convention (§2.6) into real structure.**
-380 flat TLAs collapse to roughly 60 named nested groups matching the
-`teb_*`/`vks_*`/`mvga_*`/etc. families that already exist as a naming
-convention (`two_end_break: {enabled, min_len, turn_angle, …}` instead of 19
-flat siblings). TLAs are the right shape for per-run things — `input`,
+Measured by prefix-grouping the 380 TLA names: 39 are true singletons (no
+sibling with the same first token) and stay flat; the remaining 341 fall into
+44 first-token families (`teb_*`, `vks_*`, `mvga_*`, etc.) covering 90% of
+the total. Three of those families are umbrella prefixes spanning several
+independent algorithmic features rather than one gated group — `shower_*`
+(56 TLAs), `kine_*` (30), `pf_*` (18) — so at "one nested object per real
+feature" granularity (`two_end_break: {enabled, min_len, turn_angle, …}`
+instead of 19 flat siblings) the honest count is **roughly 70–90 named
+groups**, not a single round number. TLAs are the right shape for per-run
+things — `input`,
 `event`, `output_dir`, `anode_indices`, `reality` — not for 229 physics
 settings threaded by hand through three jsonnet layers. The payoff: "what did
 production run" becomes one hashable JSON object that can be **frozen and
@@ -445,3 +451,84 @@ doc prose has (§3.2 Trap 1).
    left alone as "working code, don't touch."
 4. Timing — should any of this happen before or after the final production
    run, given §3.3's population-gate prerequisite?
+
+## 9. Round 1 executed (2026-08-24)
+
+Owner: *"safe to remove the clearly negative ones, but leave the debugging
+knobs in for now"* — confirmed the kind-2 taxonomy (§4) and requested
+implementation. This section records Phase 2 (§7) for exactly the 10 knobs
+with a closed, measured-negative verdict; nothing else was touched (the 6
+diagnostic knobs, the 37 `WCT_*` env probes, and every deferred/mixed-
+evidence knob stay).
+
+| Knob | Verdict | Source |
+|---|---|---|
+| `graph_endpoint_strict` | must stay OFF — false positive as placed; 22/48 events change, 5 nue lost vs 1 gained | pr/30 P8; pr/86:450 |
+| `shower_connect_protected_pion_guard` (F13) | measured dead, never flipped | pr/40:1459 |
+| `dl_vtx_swap_guard` | live A/B **−36/1014** (6 fixed / 42 regressed); rider closed | pr/89 r5; pr/100:113 |
+| `dl_vtx_topo_weight` / `dl_vtx_topo_center` (Arm C2) | live A/B **−8/1014** | pr/89 C2 / r5 |
+| `other_seg_uncover_3d` (P2) | **23 ADVERSE** movers, stays OFF | pr/102 r2 |
+| `teb_second_max` | negative on its own motivating events; superseded by `teb_chain_topology` | pr/90 §8.5, :714, :984 |
+| `pf_touch_cross_main` / `pf_touch_cross_max` (F1 rung 2) | **zero movers** on all 7 census candidates — F1.0 probe failure | pr/84:607, :622 |
+| `mvga_carry_max` | not needed — class A cleared 8/8 with it OFF | pr/83 r3 §8.5, :835, :854 |
+
+**Why this is not a behavior change.** All 10 were key-suppressed in jsonnet
+when off (`[if k then …]` / `!= null then …`, verified per knob before
+editing), so the compiled SBND JSON never carried them; their C++ defaults
+(`false` / `0`) made every guarded branch unreachable. Deletion is
+unreachable-code removal, held to the full byte-identity bar anyway
+(CLAUDE.md §4).
+
+**Scope, full depth (owner's choice, not minimal).** Removed the 10 config
+keys and their guarded branches, plus the scaffolding that existed only to
+serve them: `GraphEndpointPolicy::strict` and the `endpoint_refused` counter
+(the `endpoint_mismatch` tripwire and `graph_endpoint_tol` stay — that is the
+kept diagnostic); `TopoVote`/`topo_rule1_vote()` in `NeutrinoVertexFinder.cxx`;
+the vertex-scoreboard fields `s_topo`/`topo_frac`/`topo_votes`/`topo_used`/
+`topo_weight`/`topo_center`/`skipped_by_swap_guard` (every other scoreboard
+field is untouched — a kept diagnostic). One accepted, understood consequence:
+new diagnostic calib JSON (`PrDisplayDump`) no longer emits the always-`false`
+`skipped_by_swap_guard` key; the `topo_*` keys were already absent with the
+knob off, so that half is a no-op. All `dl_vtx_training/*.py` readers use
+`.get(...)` with falsy defaults, so both archived and new dumps still parse.
+Six 6-CHECK-line doctest pins dropped deliberately (doc 70's rule — a removed
+default must show up in the diff, never silently); the `pr30 P8 strict mode`
+`TEST_CASE` (only test of the removed refusal) removed; the preceding
+non-strict tripwire `TEST_CASE` is untouched.
+
+**Files touched** — 19, all `clus/` + `cfg/pgrapher/{common,experiment/sbnd}/`
+(toolkit repo) plus `sbnd_xin/run_pr_chain_batch.sh` (this repo, M9): the 7
+env-var passthroughs (`SBND_DL_VTX_SWAP_GUARD`, `SBND_MVGA_CARRY_MAX`,
+`SBND_TEB_SECOND_MAX`, `SBND_OSEG_UNCOVER_3D`, `SBND_SHOWER_CONNECT_
+PROTECTED_PION_GUARD`, `SBND_PF_TOUCH_CROSS_MAIN`, `SBND_PF_TOUCH_CROSS_MAX`,
+`SBND_DL_VTX_TOPO_WEIGHT`/`_CENTER`) removed so a stale env var can no longer
+reference a jsonnet TLA that no longer exists. No other experiment's cfg
+touched; no C++ default changed (escalation rule 1); nothing under
+`work/`/`abtest/snap/`/`decisions*/` touched or regenerated.
+
+**Verification.**
+- Compiled-config: unreachable by construction (verified per knob before
+  editing — see "why this is not a behavior change" above).
+- `./build/clus/wcdoctest-clus`: **232/232 cases, 2379/2379 assertions,
+  0 failed** (fresh install, `local/lib/libWireCellClus.so` 2026-08-24 01:15,
+  after all source edits).
+- Byte-identity gate, base (pre-edit HEAD) vs after (this round), 308 events
+  = 241 mcp1k (first 241 sorted `work-mcp1k-prod0823` events) + 48 nueCC48 +
+  19 NCpi0, `PR_JOBS=8`, manifest saved at
+  `$SCRATCH/knob-rm10/gate308.txt`:
+  - `pr85_hash_gate.py` (mabc-pr.zip + pctree member hashes): **PASS**,
+    482+96+38 = 616 archives byte-identical, 0 missing/unpaired.
+  - `pr94_root_gate.py` (every `tracking-pr.root` branch): **PASS**,
+    241+48+19 = 308 events identical, 0 differing.
+  - `nusel-table.tsv` diff (sorted): **0 lines** on all three samples.
+  - Arm labels: `base-{mcp1k,nuecc48,ncpi0}` vs `rm10-{mcp1k,nuecc48,ncpi0}`
+    under the session scratchpad (not a `work-*` label).
+
+**Ledger** — `sbnd_xin/docs/77_knob-ledger.tsv` (new), one row per knob:
+the 10 above plus the 7 already deleted before this round (`225d7e7e`,
+`df40b2a4`, `ff541919`, `60bad894`), so the ledger is the complete removal
+record, not just this round's.
+
+§7 **Phase 2 status: DONE** for the kind-2 population identified as of
+2026-08-24. Phase 0's full census (the un-audited remainder of the 121-null
+population) would be needed before calling kind-2 exhaustively covered.

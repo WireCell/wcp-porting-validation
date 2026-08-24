@@ -337,12 +337,8 @@ unset _d76 _env _key _val
 [ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
 [ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")
-# doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
-# composite.  EMPTY = no TLA = C++ default 0 = term never computed =
-# byte-identical.  The offline C1 replay selected weight 3.0, center 0.
-# Env: SBND_DL_VTX_TOPO_WEIGHT=<w> SBND_DL_VTX_TOPO_CENTER=<c>.
-[ -n "${SBND_DL_VTX_TOPO_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_weight=${SBND_DL_VTX_TOPO_WEIGHT}")
-[ -n "${SBND_DL_VTX_TOPO_CENTER:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_center=${SBND_DL_VTX_TOPO_CENTER}")
+# doc 77 round 1 (2026-08-24): dl_vtx_topo_weight/_center (pr/89 Arm C2)
+# removed -- live A/B -8/1014.  SBND_DL_VTX_TOPO_WEIGHT/_CENTER no longer wired.
 # doc pr/47 sec 8 (O1): wide-baseline cathode kink accept, degrees.  EMPTY =
 # no TLA = the job default (SBND ON at 25 deg since 2026-08-07).  0 = force
 # the C++ OFF path (legacy kink search, byte-identical); "null" also works
@@ -778,19 +774,17 @@ for _pr40r5 in \
 done
 unset _pr40r5 _env _key _val
 # doc pr/40 round 6: the boundary-level fixes round 5's G2 measurement
-# demanded.  Same tri-state contract.  All three default OFF pending gates.
+# demanded.  Same tri-state contract.  Both default OFF pending gates.
+# doc 77 round 1 (2026-08-24): F13 shower_connect_protected_pion_guard
+# removed -- measured dead, never flipped (pr/40:1459).
 #   F12 SBND_SHOWER_ABSORB_TRACK_GUARD           shower flood-fill no longer
 #                                                 absorbs a confident straight
 #                                                 non-electron track
-#   F13 SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD connecting_to_main_vertex no
-#                                                 longer force-sets a proton-
-#                                                 daughter pion to electron
 #   F14 SBND_MICHEL_STEM_MUON_RESCUE             Michel stopping-muon rescue
 #                                                 reaches a proton-called stem
 #                                                 at a multi-prong vertex
 for _pr40r6 in \
     "SBND_SHOWER_ABSORB_TRACK_GUARD:shower_absorb_track_guard" \
-    "SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD:shower_connect_protected_pion_guard" \
     "SBND_MICHEL_STEM_MUON_RESCUE:michel_stem_muon_rescue" ; do
     _env=${_pr40r6%%:*}; _key=${_pr40r6#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
@@ -860,7 +854,6 @@ unset _pr74 _env _key _val
 # contract is identical.
 for _pr84 in \
     "SBND_PF_DIRECT_WHEN_TOUCHING:pf_direct_when_touching" \
-    "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
     "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" \
     "SBND_SHOWER_DEDUP_START_SEG:shower_dedup_start_seg" \
     "SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX:shower_endpoint_skip_orphan_vtx" \
@@ -872,7 +865,6 @@ for _pr84 in \
 done
 unset _pr84 _env _key _val
 [ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
-[ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
 [ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
 # doc pr/40 round 9 -- the rounds-7+8 straight-track PID guard family + the
 # B2 cross-cluster bridge.  Tri-state bools (unset = cfg default, 1 = force
@@ -1042,16 +1034,11 @@ unset _pr48 _env _key _val
 # 320865/172832/61681 -- unbroken kink, wrong nu vertex).
 # teb_turn_min_arm_frac: route R2's turn argmax only considers indices whose
 # PCA arms can each span this fraction of teb_turn_baseline (dimensionless).
-# teb_second_max: the entry gate tolerates extra >stub prongs when exactly
-# one segment exceeds this cap (cm).  Numeric TLAs, unset/empty omits
-# (jsonnet default null => C++ default 0 = legacy => byte-identical).
+# doc 77 round 1 (2026-08-24): teb_second_max removed -- negative on its
+# own motivating events (pr/90 sec 8.5).  SBND_TEB_SECOND_MAX no longer wired.
 #   SBND_TEB_TURN_MIN_ARM_FRAC
-#   SBND_TEB_SECOND_MAX
 if [ -n "${SBND_TEB_TURN_MIN_ARM_FRAC:-}" ]; then
     CATH_TLA+=(--tla-code "teb_turn_min_arm_frac=${SBND_TEB_TURN_MIN_ARM_FRAC}")
-fi
-if [ -n "${SBND_TEB_SECOND_MAX:-}" ]; then
-    CATH_TLA+=(--tla-code "teb_second_max=${SBND_TEB_SECOND_MAX}")
 fi
 # doc pr/90 round 4 (sec 9.5 D1/D3/D4): chain-topology gate admission
 # (boolean TLA true/false), route R3 local-turn threshold (deg) + activity
@@ -1219,10 +1206,11 @@ fi
 # unlimited); abandoned-main-cluster dup audit inside swap_main_cluster
 # (boolean, Mechanism C).  Numeric/boolean TLAs, unset/empty omits
 # (jsonnet defaults null/false => keys suppressed => byte-identical).
+# doc 77 round 1 (2026-08-24): mvga_carry_max removed -- not needed, class A
+# cleared 8/8 with it OFF (pr/83 r3 sec 8.5).
 #   SBND_MVGA_OP1_RADIUS
 #   SBND_MVGA_OP1_DUP_FRAC
 #   SBND_MVGA_OP1_POST
-#   SBND_MVGA_CARRY_MAX
 #   SBND_SWAP_ORPHAN_DUP_AUDIT
 if [ -n "${SBND_MVGA_OP1_RADIUS:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_op1_radius=${SBND_MVGA_OP1_RADIUS}")
@@ -1232,9 +1220,6 @@ if [ -n "${SBND_MVGA_OP1_DUP_FRAC:-}" ]; then
 fi
 if [ -n "${SBND_MVGA_OP1_POST:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_op1_post=${SBND_MVGA_OP1_POST}")
-fi
-if [ -n "${SBND_MVGA_CARRY_MAX:-}" ]; then
-    CATH_TLA+=(--tla-code "mvga_carry_max=${SBND_MVGA_CARRY_MAX}")
 fi
 if [ -n "${SBND_SWAP_ORPHAN_DUP_AUDIT:-}" ]; then
     CATH_TLA+=(--tla-code "swap_orphan_dup_audit=${SBND_SWAP_ORPHAN_DUP_AUDIT}")
@@ -1259,12 +1244,8 @@ fi
 if [ -n "${SBND_VKS_CARRY_PRONG:-}" ]; then
     CATH_TLA+=(--tla-code "vks_carry_prong=${SBND_VKS_CARRY_PRONG}")
 fi
-# doc pr/51 (18255-506746): DL rerank cross-cluster swap guard.  Boolean
-# TLA, same contract.
-#   SBND_DL_VTX_SWAP_GUARD
-if [ -n "${SBND_DL_VTX_SWAP_GUARD:-}" ]; then
-    CATH_TLA+=(--tla-code "dl_vtx_swap_guard=${SBND_DL_VTX_SWAP_GUARD}")
-fi
+# doc 77 round 1 (2026-08-24): dl_vtx_swap_guard removed -- live A/B
+# -36/1014 (pr/89 round 5).  SBND_DL_VTX_SWAP_GUARD no longer wired.
 # doc sbnd_xin/docs/pr/106 sec 10: exclusion-free charge cloud for the DL
 # vertex net (one extra non-exclusion refit per cluster, fits restored).
 # Boolean TLA, same contract.  EMPTY = no TLA = the job default false.
@@ -1406,13 +1387,8 @@ fi
 if [ -n "${SBND_OSEG_LEN_ADMIT:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_len_admit=${SBND_OSEG_LEN_ADMIT}")
 fi
-# doc pr/102 P2: 3-D uncovered-charge radius (cm) for the
-# find_other_segments tagging/nnf seats (the B2 nnf=0 fragmentation
-# family).  EMPTY = no TLA = the C++ default 0 = off, byte-identical.
-#   SBND_OSEG_UNCOVER_3D (cm)
-if [ -n "${SBND_OSEG_UNCOVER_3D:-}" ]; then
-    CATH_TLA+=(--tla-code "other_seg_uncover_3d=${SBND_OSEG_UNCOVER_3D}")
-fi
+# doc 77 round 1 (2026-08-24): other_seg_uncover_3d (pr/102 P2) removed --
+# 23 ADVERSE movers, stays OFF.  SBND_OSEG_UNCOVER_3D no longer wired.
 # doc pr/67 round 3 (S2): size gate on the isochronous snap in
 # find_other_segments -- the machinery that ATTACHES a short isochronously
 # displaced branch to its parent.  Bare value in cm; unset means the C++
