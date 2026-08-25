@@ -960,3 +960,84 @@ Q/L both — for all four data samples. There is no second copy of these product
 anywhere in the tree; there is only the frozen manifest. A future round that
 releases a `grp0825` arm is deleting the product itself, not one copy of two.
 `PROTECTED.txt` now says so at that entry.
+
+---
+
+## 12. Round 4 — recompressing the imaging already on disk
+
+Round 2 (§10.2) fixed the *writer*: `split_group_products.py` had been writing
+every per-event `icluster-*.npz` `ZIP_STORED` on a false premise, where WCT's
+own `ClusterFileSink` writes DEFLATE.  That fixes future runs.  The arms already
+on disk were still 3.8x larger than they needed to be, and the owner asked for
+both halves:
+
+> if you can naturally store the [imaging npz] as compressed next time of
+> running, and then also compress these and save space for the 0825 directories
+
+### Repro
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+python3 scripts/multi/recompress_npz.py --dry-run work-mcp1k-grp0825
+python3 scripts/multi/recompress_npz.py --jobs 8 \
+        work-{nuecc48,ncpi0,mcp1k,mcp2k}-grp0825
+```
+
+### 12.1 Why an in-place rewrite needed to be paranoid
+
+Round 3 (§11) retired `work-img-<s>`.  That was the right call and its freeze
+is sound, but it changes the risk on *this* operation: **`grp0825` is now the
+only copy of that imaging anywhere**, so a rewrite that corrupts a file has
+nothing to fall back on.  `scripts/multi/recompress_npz.py` therefore never
+edits in place in the naive sense.  Per file:
+
+1. read the original; record the namelist **order** and `sha256` of every
+   payload (order is load-bearing for a group archive, doc 76 round 2);
+2. write a sibling `.recompress.tmp` with `ZIP_DEFLATED`, same order;
+3. re-open the tmp and require **identical order and identical payload
+   hashes** — any mismatch unlinks the tmp, leaves the original untouched and
+   counts as an error;
+4. `fsync`, then `os.replace` (atomic on one filesystem).
+
+Already-DEFLATE files are skipped, so it is idempotent and safe to re-run after
+an interruption.
+
+### 12.2 One correction to §10.2
+
+§10.2 said `hash_archive.py` *and* `stagea_gate.py` hash decompressed payloads,
+so neither can see a container change.  Only the second half is right, and it
+is the half that matters — `stagea_gate.py:31` dispatches on
+`zipfile.is_zipfile(path)`, i.e. by content, and hashes `z.read(name)`.
+`hash_archive.py:20` dispatches on the **`.zip` extension**, so an `.npz` falls
+through to its tarfile branch and raises; it has never been usable on imaging
+npz at all.  The conclusion is unchanged (the gate that compares imaging is
+`stagea_gate.py`), but the first verification attempt of this round was vacuous
+because of it — it compared two identical *error* lines and reported them equal.
+Recorded because a check that cannot fail is worth less than no check.
+
+### 12.3 Verification
+
+| check | result |
+|---|---|
+| independent member compare, ncpi0 evt105946, all 4 npz | order + payload sha256 **IDENTICAL**; 5 760 756 → 1 288 608 B on the largest |
+| `stagea_gate.members()` on the same 4, before vs after | **equal**, 4/4 |
+| end-to-end: Q/L re-run off the **recompressed** `work-mcp2k-grp0825`, evt 100002 | `mabc-all-apa.zip`, both per-APA zips, `pctree-evt100002.tar.gz` all **SAME**, rc=0 |
+| residual `STORED` after the run | **0 of 12 268** |
+| stray `.recompress.tmp` | **0** |
+| errors | **0** — `{'done': 12268}` |
+
+### 12.4 Result
+
+| | before | after |
+|---|---:|---:|
+| imaging npz, 4 arms, 12 268 files | 55.93 GiB | **14.70 GiB** |
+| `sbnd_xin` | 108 G | **66 G** |
+| `/nfs/data/1` free | 917 G | **958 G** |
+
+41.23 GiB reclaimed with no product deleted and no reconstruction output
+touched — only the containers changed, and every gate in this tree reads
+through them.  Combined with round 3, `sbnd_xin` is 144 G → 66 G.
+
+Note for the re-baseline (§10.4): `work-<s>-grp0826` will be written compressed
+from the start by the round-2 splitter fix, so its stage A should land near
+~26 G rather than 66.6 G, and this script is not needed for it.
