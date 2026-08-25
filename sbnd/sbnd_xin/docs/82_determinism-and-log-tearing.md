@@ -11,9 +11,11 @@ byte-identical, and recorded two residuals it deliberately did not chase:
 
 Round 1 root-caused and **fixed** the log tear, and root-caused the Q/L flip as
 far as "a read of memory the program never wrote".  **Round 2 retracts that
-second conclusion** (§2c) — memcheck is clean in all reconstruction code and the
-heap *fill byte* turns out to be inert; the channel is address **reuse**, and
-the mechanism is narrowed but still unnamed.  Round 2 also tests event 99438 as
+second conclusion** (§2c) — memcheck is clean in every line of WCT
+reconstruction code, on runs landing in *both* states.  Round 2 does **not**
+supply a replacement: it also proposed one (address reuse) and withdrew it when
+the replicate came in.  The flip is real, binary and heap-history dependent; the
+mechanism is unidentified.  Round 2 also tests event 99438 as
 the separate thread doc 81 asked for (§2b, it is not separate), and fixes the
 group-mode `rc=0` coverage defect (Part 4).
 
@@ -59,12 +61,14 @@ python3 ./scripts/multi/state_census.py /home/xqian/tmp/d82r2
 #   -> 1 or 2 states per event, never 3.
 
 # 7. memcheck on the same event (~4 min; needs no rebuild).  "-" = no fill.
-#    These two differ ONLY in the freelist volume and land in DIFFERENT states,
-#    which is what shows the channel is address reuse, not heap contents.
-./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/vg-b0 99438 - -  20000000
-./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/vg-e  99438 - - 500000000
-#   -> 20 MB : state A       500 MB : state B
-#   and neither run reports a single memcheck error in WCT reconstruction code.
+#    NOT ONE memcheck error in WCT reconstruction code, in either state.
+#    Run each arm THREE times: a single pair here appears to make the freelist
+#    volume decisive and it is not -- the event is bistable under valgrind too.
+for i in 1 2 3; do
+  ./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/fl20-$i  99438 - -  20000000
+  ./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/fl500-$i 99438 - - 500000000
+done
+#   -> 20 MB : 2 A / 1 B     500 MB : 2 A / 1 B   (i.e. the knob does nothing)
 
 # 8. permutation or genuinely different numbers?  (8% relative, so: different.)
 python3 ./scripts/multi/numdiff.py \
@@ -367,8 +371,9 @@ real latent hazard and are recorded as such in §Latent below.
 > observations below are reproducible and stand.  The *conclusion* does not:
 > valgrind memcheck is clean in every line of WCT reconstruction code on runs
 > landing in **both** states, and separating `--malloc-fill` from `--free-fill`
-> shows the answer tracks neither.  What it tracks is heap address **reuse**.
-> The section is kept unedited as the record of how the round got there.
+> shows the answer tracks neither — nor does any other valgrind knob tried.
+> Round 2 offers no replacement mechanism.  The section is kept unedited as the
+> record of how the round got there.
 
 
 Three named hypotheses were tested and all three failed:
@@ -584,28 +589,40 @@ memory is precisely what memcheck does, and **one of the clean runs is a run
 that produced the anomalous state** (below).  If the flip were decided by
 reading never-written or freed memory, this is where it would appear.
 
-**(ii) the fill byte does not decide the answer.**  Under valgrind
-`--malloc-fill` and `--free-fill` are *independent*, which glibc's single
-`MALLOC_PERTURB_` byte is not — so the 2×2 separates "never written" from
-"freed":
+**(ii) no valgrind allocator knob controls it — the event is bistable under
+valgrind too.**  Under valgrind `--malloc-fill` and `--free-fill` are
+*independent*, which glibc's single `MALLOC_PERTURB_` byte is not, so a 2×2
+should separate "never written" from "freed":
 
 | run | `--malloc-fill` | `--free-fill` | freelist | outcome |
 |---|---|---|---|---|
-| B0 | *(none)* | *(none)* | 20 MB | **state A** |
 | A2 | `0xfe` | `0x01` | 500 MB | state B |
 | B2 | `0x55` | `0xaa` | 500 MB | state B |
 | C2 | `0xfe` | `0xaa` | 500 MB | state B |
 | D2 | `0x55` | `0x01` | 500 MB | state B |
-| E | *(none)* | *(none)* | **500 MB** | **state B** |
 
-The outcome tracks **neither** fill.  What it tracks is `--freelist-vol` — the
-one knob that decides how long valgrind withholds freed blocks from **reuse**.
-B0 and E differ in nothing else and land in different states.  So the channel is
-heap **address reuse**, not heap **contents** — and the round-1 sentence "the
-defect is about memory *contents*, not addresses" has it exactly backwards.
-(Round 1 offered `setarch -R` as evidence against addresses.  That was a bad
-inference: `-R` removes ASLR, i.e. the *base*, and leaves the relative order and
-reuse of heap chunks — which is what actually varies — untouched.)
+The outcome tracks **neither** fill — four maximally different content
+regimes, one answer.  A single pair run without fills then *appeared* to
+implicate `--freelist-vol`, the knob controlling how long valgrind withholds
+freed blocks from reuse (20 MB → state A, 500 MB → state B), and an earlier
+draft of this section built an "address reuse is the channel" conclusion on it.
+
+**That was one run per arm, and replicating it at n=3 destroys it:**
+
+| freelist, no fills | state A | state B |
+|---|---:|---:|
+| 20 MB | 2 | 1 |
+| 500 MB | 2 | 1 |
+
+Identical.  The event is simply **bistable under valgrind as well**, at about
+the same rate, and the 20 MB/500 MB pair was two draws of that coin.  *Recorded
+because the wrong version was committed and pushed before the replicate ran —
+n=1 per arm is not a lever, and the fill matrix's 4/4 is no longer strong
+evidence either once the underlying rate is known to be ~1-in-3.*
+
+So: no valgrind knob varied here controls the outcome.  Combined with (i), what
+this rules out is a bad read that memcheck can see; it does **not** identify the
+channel, and this round does not.
 
 **(iii) it is not floating point either.**  Comparing the two states array by
 array (`numdiff.py`) inside `pctree-evt99438.tar.gz`:
@@ -636,34 +653,53 @@ are each order-neutral, most by an explicit tie-break or an immediate sort.
 
 ### What survives, and what the next round should do
 
-Four mechanisms are now excluded by measurement rather than by argument:
-**the `blob_less`/`cluster_less` tie-break** (0 ties in 446972 blobs, round 1),
-**a read of never-written or freed memory** (memcheck clean on both states; fill
-bytes inert), **floating-point drift** (differences are 8 %, not ulps), and
-**address-ordered iteration of a pointer-keyed container** (census empty).
+Round 2's contribution is subtraction.  Five mechanisms are now excluded by
+measurement rather than argument:
 
-What fits every observation is a narrower thing that all four searches were
-built to miss: **a pointer VALUE reused as an identity.**  A memo or cache keyed
-on `const Blob*` / `const Cluster*` that outlives the object it keys on will be
-hit by a *different* object allocated later at the same address.  Such a cache
-is never iterated, so the order census skips it; the memory is live and fully
-defined, so memcheck cannot see it; the value read is real data, not a fill
-byte, so `--malloc-fill` is inert — and whether the collision happens at all
-depends on **address reuse**, which is exactly the knob that flips the answer.
-The census listed several such caches as "lookup-only, benign" — correct about
-*order*, and silent about *stale keys*.  This tree has form for the same shape:
-doc 76 round 3's ident-keyed `m_cluster_xext_cache` gave a wrong answer while
-crashing nothing.
+| mechanism | how it died |
+|---|---|
+| `blob_less` / `cluster_less` pointer tie-break | 0 ties in 446972 blobs, 74 events (round 1) |
+| a read of never-written or freed memory | memcheck clean in all WCT reconstruction code, on runs landing in **both** states |
+| floating-point drift | differences are **8 % relative**, not ulps |
+| address-ordered iteration of a pointer-keyed container | `clus/`+`match/`+`img/` census empty; doc 81's five suspects are lookup-only |
+| a stale pointer key in the three caches this doc first nominated | all three are safe — checked, below |
 
-So the next round's target is concrete, and different from the one round 1
-handed it: **enumerate the pointer-keyed caches reachable from the Q/L stage and
-check each for a key that can outlive its object** — starting with
-`Facade_Cluster.cxx:3698` and `NeutrinoPatternBase.cxx:952`
-(`unordered_map<const Blob*, double> blob_total_charge`) and the mutable
-per-cluster memos at `QLMatching.h:922-955`.  The handle is unchanged and cheap:
-one event, ~1 min per draw, a binary outcome, and `--freelist-vol` to move it on
-demand.  **No fix is proposed here and none should be guessed at**
-(CLAUDE.md §5.7): the mechanism is narrowed, not identified.
+The stale-key idea is worth stating carefully because an earlier draft of this
+section nominated three specific sites and **all three are fine**:
+
+* `Facade_Cluster.cxx:3698` and `NeutrinoPatternBase.cxx:952`
+  (`unordered_map<const Blob*, double> blob_total_charge`) are **function-local**
+  memos, built from `blob_with_point(i)` on a live cluster and destroyed with the
+  call.  A key cannot outlive its object.
+* the four mutable per-cluster memos at `QLMatching.h:922-955` are **cleared at
+  the top of `operator()`**, per event, with a comment naming exactly this risk.
+
+The *class* is not dead — the Q/L pipeline does destroy and create clusters
+mid-run (`ClusteringSeparate`, `ClusteringDeghost`, `ClusteringProtectOverclustering`
+all appear in the compiled pipeline), so address reuse within one job is real —
+but no instance of it has been found, and nothing in this round's data points at
+it specifically.  **The mechanism is unidentified.  Say so; do not adopt the
+nearest surviving story.**
+
+What the next round has that this one did not:
+
+* **a shorter list.** The five rows above do not need re-running.  In
+  particular, **do not run memcheck on this again** — seven runs, clean where it
+  matters — and do not re-test doc 81's five container suspects.
+* **a warning about n.** Both this round's wrong turn and doc 81's were the same
+  error: a conclusion from one or three draws of a coin that lands ~1-in-3 the
+  other way.  Anything claimed about this event needs N draws with N stated.
+* **the handle, unchanged**: one event, ~1 min a draw, a binary outcome, and
+  `MALLOC_PERTURB_` / precompile / thread count to shift the *bias* — no longer
+  believed to *determine* the answer, but still enough to make either state
+  appear on demand.
+* the honest next step is probably not another environment knob but
+  **bisection inside the pipeline**: the compiled pipeline is 16 named
+  clustering stages plus matching, the outcome is binary, and dumping the
+  pctree after each stage would localise the flip to one stage before anyone
+  reads a line of its source.
+
+**No fix is proposed and none should be guessed at** (CLAUDE.md §5.7).
 
 ### Latent: the comparator tie-breaks
 
@@ -833,21 +869,31 @@ Round 2 adds two more, both retracting round 1 rather than an intermediate:
    states, and `--malloc-fill` / `--free-fill` are inert.  §2c.  What stands is
    the weaker, still-useful form: the flip is heap-dependent, and the channel is
    address **reuse**.
-4. **"The defect is about memory contents, not addresses."**  Backwards.
-   `--freelist-vol` — reuse — is the only valgrind knob that moves it, and
-   round 1's `setarch -R` argument does not bear on relative heap layout at all.
+4. **"The defect is about memory contents, not addresses."**  Round 1's
+   supporting `setarch -R` argument is still bad — `-R` removes the ASLR *base*
+   and leaves relative heap layout untouched — but round 2 cannot supply the
+   replacement.  An earlier draft of §2c, **committed and pushed as `f902e9b`**,
+   claimed `--freelist-vol` identified address *reuse* as the channel.  That
+   rested on one run per arm; replicating at n=3 gives **2 A / 1 B on both
+   settings**, so the knob does nothing and the claim is withdrawn.  The channel
+   is unidentified.
+5. **"The stale pointer key is at `blob_total_charge` / `QLMatching.h:922-955`."**
+   Same draft, same commit.  All three are safe: the two `blob_total_charge`
+   memos are function-local, and the QL caches are cleared per event with a
+   comment naming this exact risk.  The *class* of bug is not excluded; these
+   instances are.
 
 ### Open, for the next round
 
-* **Find the stale pointer key.**  Round 1 put "find the bad read" here and
-  round 2 spent itself showing there isn't one to find (§2c).  The replacement
-  target: enumerate the pointer-keyed caches reachable from the Q/L stage and
-  check each for a key that can outlive its object — `Facade_Cluster.cxx:3698`
-  and `NeutrinoPatternBase.cxx:952` (`unordered_map<const Blob*, double>
-  blob_total_charge`), the mutable per-cluster memos at `QLMatching.h:922-955`.
-  Same cheap handle: one event, ~1 min a draw, binary outcome, and
-  `--freelist-vol` moves it on demand.  **Do not run memcheck again for this** —
-  seven runs say it is clean where it matters.
+* **Localise the flip to a pipeline stage before theorising about it again.**
+  Round 1 put "find the bad read" here; round 2 showed there is no read memcheck
+  can see, and then produced — and withdrew — a wrong replacement of its own
+  (§2c).  Two rounds of guessing the mechanism from environment knobs is enough.
+  The compiled Q/L pipeline is 16 named clustering stages plus matching and the
+  outcome is binary, so dumping the pctree after each stage over a handful of
+  draws localises the flip to **one stage** with no hypothesis at all.  Then read
+  that stage.  **Do not re-run memcheck** (seven runs, clean where it matters)
+  and do not re-test doc 81's five container suspects (§2c iv).
 * **`SBND_PRECOMPILE_CFG=1` for stage A**, gated on the standard manifest.  It
   is worth doing on its own merits — it cuts the job from 38 threads to 7 and
   closes doc pr/97's SIGSEGV hazard, which is currently unmitigated in the only
