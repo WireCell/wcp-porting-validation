@@ -336,6 +336,9 @@ DL-vertex python stack it loads, not by the BDTs.
   (150 MB, ~0.5 s), the SCE map and — in PR — the BDTs.  A multi-event
   job would amortise all of it; that is a runner/config restructuring, not
   a code round (docs 20 and 65 reached the same conclusion).
+  **Corrected by round 2 (sec 10): it IS a code round.**  The PR/tagger
+  stages carry a use-after-free that only fires from the second event of a
+  process, so it could not be reached one-event-per-process -- sec 10.1.
 
 ## 8. Verification summary
 
@@ -682,8 +685,9 @@ events differ**: mcp1k 5/100, nueCC48 17/48, NCpi0 4/19.  Characterised:
 
 * the differing branches are `T_kine` (66 + 25 + …), `T_rec_charge` and
   `T_proj_data` — every one of them downstream of the vertex POSITION;
-* **`T_tagger` never differs** (0 events on mcp1k, 0 on nueCC48): the tagger
-  verdicts and the nue/numu BDT scores are unchanged;
+* **`T_tagger` never differs** -- 0 events on all three samples (mcp1k,
+  nueCC48, NCpi0): the tagger verdicts and the nue/numu BDT scores are
+  unchanged;
 * across all **1938 matched bundles** the nusel `label` changes **0 times**, and
   no bundle appears or disappears.
 
