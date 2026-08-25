@@ -126,6 +126,44 @@ else
     GIDS=(); for ((k=0;k<NGROUP;k++)); do GIDS+=("$k"); done
 fi
 
+# doc 82 -- compile the config in a SEPARATE, short-lived wcsonnet process and
+# hand wire-cell plain JSON.  Passing wire-cell a .jsonnet makes it run
+# gojsonnet IN-PROCESS, which leaves a 64-thread Go runtime alive for the whole
+# job.  Both other drivers in this tree already precompile for exactly that
+# reason (run_ql_evt.sh:552, run_pr_chain_batch.sh:1617/1751) -- doc pr/97
+# sec 5, a SIGSEGV at ~120 s of process life -- and THIS driver was the only one
+# left that did not, though a group job runs far longer than 120 s.
+#
+# It also made stage A non-reproducible: with the Go runtime alive the Q/L
+# stage's output varies run to run on marginal events, which is where doc 81
+# sec 7.1's seven events came from.  Precompiled runs are deterministic and
+# reproduce work-<s>-ql0819 exactly (doc 82 part 2).
+#
+# The SAME path string goes to wcsonnet and to wire-cell, so the two can never
+# resolve different files.  The entry points are named by absolute path rather
+# than bare, which is what the bare name resolved to anyway -- via the CWD, so
+# the runner silently depended on being invoked from sbnd_xin.
+#
+# DEFAULT OFF here, unlike the other two drivers.  Precompiling changes the
+# process's allocation history, and doc 82 part 2 shows that the Q/L stage's
+# answer on a bistable event is a function of exactly that -- so turning this on
+# is a stage-A behavior change that needs its own byte-identity gate on the
+# standard manifest, not a free win.  SBND_PRECOMPILE_CFG=1 enables it; unset or
+# 0 reproduces what this driver did before, byte for byte.
+# Sets the caller's _CFG from the caller's _TLA, and empties _TLA on success.
+precompile_cfg() {           # precompile_cfg <tag> <jsonnet> <outjson>
+    local _tag=$1 _jsonnet=$2 _out=$3
+    _CFG=(-c "$_jsonnet")
+    [ "${SBND_PRECOMPILE_CFG:-0}" = 1 ] || return 0
+    rm -f "$_out"
+    if wcsonnet "${_TLA[@]}" -o "$_out" "$_jsonnet" > "$_out.log" 2>&1; then
+        _CFG=(-c "$_out")
+        _TLA=()
+    else
+        echo "[$_tag] WARN: wcsonnet failed -- falling back to in-process jsonnet" >&2
+    fi
+}
+
 run_group() {
     local K=$1
     local GDIR="$OUTROOT/g$(( K + GBASE ))"
@@ -144,16 +182,18 @@ run_group() {
     fi
     if [ "$FROM" = img ] && [ ! -s "$GDIR/frames-dnn.tar.bz2" ]; then
         local FS_TLA=(); [ -n "$FSPRODUCT" ] && FS_TLA=(--tla-str "frameshift_product=$FSPRODUCT")
+        local -a _TLA=(--tla-str "input=$INPUT"
+                       --tla-str "output_dir=$GDIR"
+                       --tla-str "caf_offset_mode=product"
+                       --tla-str "caf_offset_override=0"
+                       "${FS_TLA[@]}"
+                       --tla-str "entry=-1"
+                       --tla-str "entry_begin=$BEG"
+                       --tla-str "entry_count=$GSIZE")
+        local -a _CFG=()
+        precompile_cfg "g$K" "$SX/wct-reco1-dump.jsonnet" "$GDIR/.wct-cfg-dump.json"
         wire-cell -l stderr -l "$GDIR/wct_dump.log:info" -L info \
-            --tla-str "input=$INPUT" \
-            --tla-str "output_dir=$GDIR" \
-            --tla-str "caf_offset_mode=product" \
-            --tla-str "caf_offset_override=0" \
-            "${FS_TLA[@]}" \
-            --tla-str "entry=-1" \
-            --tla-str "entry_begin=$BEG" \
-            --tla-str "entry_count=$GSIZE" \
-            -c "$SX/wct-reco1-dump.jsonnet" > "$GDIR/dump.stdout" 2>&1 \
+            "${_TLA[@]}" "${_CFG[@]}" > "$GDIR/dump.stdout" 2>&1 \
             || { rm -f "$GDIR/frames-dnn.tar.bz2"
                  echo "[g$K] reco1 dump FAILED (see $GDIR/wct_dump.log)" >&2; return 1; }
     fi
@@ -182,12 +222,14 @@ run_group() {
     # and its ClusterFileSinks key every member by cluster ident, so the four
     # npz hold the whole group.
     if [ "$FROM" != ql ]; then
+        local -a _TLA=(--tla-str  "input=$GDIR/frames-dnn.tar.bz2"
+                       --tla-code "anode_indices=[0,1]"
+                       --tla-str  "output_dir=$GDIR")
+        local -a _CFG=()
+        precompile_cfg "g$K" "$SX/wct-img-all.jsonnet" "$GDIR/.wct-cfg-img.json"
         setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.img.time.meta" \
         wire-cell -l stderr -l "$GDIR/wct_img.log:debug" -L debug \
-            --tla-str  "input=$GDIR/frames-dnn.tar.bz2" \
-            --tla-code "anode_indices=[0,1]" \
-            --tla-str  "output_dir=$GDIR" \
-            -c wct-img-all.jsonnet > "$GDIR/img.stdout" 2>&1 \
+            "${_TLA[@]}" "${_CFG[@]}" > "$GDIR/img.stdout" 2>&1 \
             || { echo "[g$K] imaging FAILED (see $GDIR/wct_img.log)" >&2; return 1; }
     fi
     [ "$TO" = img ] && { echo "[g$K] ok (stopped after imaging)"; return 0; }
@@ -219,18 +261,20 @@ print(v[0], v[1])' "$GDIR/rse.json")
         while read -r _e; do [ -n "$_e" ] && mkdir -p "$OUTROOT/ql_evt$_e"; done < "$GDIR/events.txt"
     fi
 
+    local -a _TLA=(--tla-str  "input=$GDIR"
+                   --tla-code "anode_indices=[0,1]"
+                   --tla-str  "output_dir=$QL_OUT"
+                   "${QL_TLA[@]}"
+                   --tla-code "run=$RUN0" --tla-code "subrun=$SUB0" --tla-code "event=0"
+                   --tla-str  "reality=$REALITY"
+                   --tla-code "multi_event=true"
+                   --tla-code "rse_map=$(cat "$GDIR/rse.json")"
+                   --tla-str  "save_tensors=$QL_TENSORS")
+    local -a _CFG=()
+    precompile_cfg "g$K" "$SX/wct-clus-matching-perevt.jsonnet" "$GDIR/.wct-cfg-ql.json"
     setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.ql.time.meta" \
     wire-cell -l stderr -l "$GDIR/wct_ql.log:debug" -L debug \
-        --tla-str  "input=$GDIR" \
-        --tla-code "anode_indices=[0,1]" \
-        --tla-str  "output_dir=$QL_OUT" \
-        "${QL_TLA[@]}" \
-        --tla-code "run=$RUN0" --tla-code "subrun=$SUB0" --tla-code "event=0" \
-        --tla-str  "reality=$REALITY" \
-        --tla-code "multi_event=true" \
-        --tla-code "rse_map=$(cat "$GDIR/rse.json")" \
-        --tla-str  "save_tensors=$QL_TENSORS" \
-        -c wct-clus-matching-perevt.jsonnet > "$GDIR/ql.stdout" 2>&1 \
+        "${_TLA[@]}" "${_CFG[@]}" > "$GDIR/ql.stdout" 2>&1 \
         || { echo "[g$K] Q/L FAILED (see $GDIR/wct_ql.log)" >&2; return 1; }
 
     if [ "$LAYOUT" = perevt ]; then
