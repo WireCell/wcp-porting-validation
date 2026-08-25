@@ -242,7 +242,18 @@ RE_STM = re.compile(r'cluster (\d+) \S+ STM=' + VERDICT
 RE_SKIP = re.compile(r'cluster (\d+) already TGM')
 RE_FC = re.compile(r'cluster (\d+) \S+ FC=' + VERDICT + r'\b')
 # "cluster N no STM fit: <reason>" -- the pre-fit exits of check_stm_conditions.
-RE_STM_SKIP = re.compile(r'check_stm_conditions: cluster (\d+) no STM fit: (.+)')
+# doc 76 round 3.  The prefix used to be required verbatim as
+# 'check_stm_conditions: cluster N no STM fit: ...'.  WCT writes long spdlog
+# messages non-atomically, and a GROUP job writes far more of them through one
+# pair of sinks, so the prefix itself gets torn: NCpi0 285567 logged
+# 'aph: create_steiner_tree produced nnditions: cluster 8 no STM fit: single
+# exit point ...' -- another message's tail spliced over 'check_stm_co'.  The
+# reason text survived and stmfit_code() is already tear-tolerant, but the
+# regex threw the line away and the row read 'eval' instead of 'midkink'.
+# 'no STM fit:' is unique to the seven check_stm_conditions DEBUG lines
+# (TaggerCheckSTM.cxx:521,2950,2964,2976,3063,3075,3109), so anchoring on
+# 'cluster N no STM fit:' alone cannot match anything else.
+RE_STM_SKIP = re.compile(r'cluster (\d+) no STM fit: (.+)')
 
 
 # The PR job announces the doc-56 beam-window gate once per tagger, e.g.

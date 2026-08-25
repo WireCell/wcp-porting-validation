@@ -461,11 +461,15 @@ any process** (sec 10.1), unreachable one-event-per-process and therefore
 invisible to every gate this project has ever run.  On the 100 numuCC events,
 stage B goes from **100 processes / 526 s of summed process wall to 7 / 373 s
 (-29 %)** with peak RSS per process flat (sec 10.7).  Everything is
-byte-identical -- legacy path, other detectors, and group-vs-per-event -- with
-**one exception, which is the owner's to rule on**: with the DL (SCN) vertex ON,
-26 of 167 events differ in vertex-position-derived kinematics, while `T_tagger`
-(the tagger verdicts and BDT scores) and all 1938 bundle labels are unchanged
-(sec 10.6).
+byte-identical -- legacy path, other detectors, and group-vs-per-event.
+
+> Round 2 shipped with **one exception** it attributed to the DL (SCN) vertex,
+> 26 of 167 events (sec 10.6).  **Round 3 (sec 10.9) found that diagnosis wrong**:
+> the SCN inference is bit-reproducible, and the cause was `TrackFitting` state
+> carried across the event boundary that round 2's own reset did not drop --
+> chiefly `m_cluster_xext_cache`, a memo keyed by a cluster ident that repeats
+> from event to event.  With it dropped, group mode is byte-identical to
+> per-event on **all 167 events**, and no owner decision is left open.
 
 This is §7's parked "per-event process model", the last item whose ceiling
 (§9.1: ~1.0–1.5 s/event, ~5–8 % of the chain, 20–26 % if all fixed cost went)
@@ -675,10 +679,23 @@ evaluated, clean" instead of "-1 not evaluated".
 | PR job, 100 mcp1k events, this binary vs the recorded pre-round arm | `pr85` **PASS 200/200 archives**, `pr94` **PASS 100/100 ROOT files**, nusel table **0 differing lines** |
 | unit tests | `wcdoctest-clus` 2390, `-root` 4013, `-sio` 11 (new), `-util` 42566 — all pass |
 
+> **SUPERSEDED BY SEC 10.9 — READ THAT INSTEAD.**  Everything from here to the
+> "Shared components" heading below was round 2's account of a group-vs-per-event
+> divergence it attributed to the DL (SCN) vertex.  The measurement was real; the
+> diagnosis was wrong, and the control quoted for it was not a control.  Round 3
+> found the actual cause (`TrackFitting` state carried across the event boundary),
+> fixed it, and **group mode is now byte-identical to per-event on all 167
+> events** — there is no open owner decision.  The text is kept, not deleted,
+> because the wrong reasoning is the useful part: see sec 10.9.7.
+
 **Group vs per-event, 167 events (100 numuCC + 48 nueCC48 + 19 NCpi0).**
 With the **DL (SCN) neutrino vertex OFF**, a group of 8 is **byte-identical** to
 eight per-event processes — `pr85` 16/16 archives, `pr94` 8/8 ROOT files —
-*including the three events that differ with it on*.
+*including the three events that differ with it on*.  *(Sec 10.9.1: this is an
+8-event sample on the arm whose divergence rate is 5/100, and `SBND_NO_DL=1`
+removes the dual chain's OFF-pass inference as well as production's, so it never
+isolated the DL in the first place.  Re-run on a differing event, the divergence
+survives with the DL off.)*
 
 With the DL vertex **ON** (the production default for this driver), **26 of 167
 events differ**: mcp1k 5/100, nueCC48 17/48, NCpi0 4/19.  Characterised:
@@ -691,20 +708,14 @@ events differ**: mcp1k 5/100, nueCC48 17/48, NCpi0 4/19.  Characterised:
 * across all **1938 matched bundles** the nusel `label` changes **0 times**, and
   no bundle appears or disappears.
 
-The cause is not new and not this round's: the DL vertex is a python/torch
-inference, CLAUDE.md M4 already records it as not bit-stable and keeps it out of
-byte-identity gates (`qlport` runs `-A dl_weights=` for exactly this reason),
-and doc pr/111 measured its argmax as unstable at 1/10 of a voxel.  A per-event
-process gets a fresh interpreter each time; a group process does not, so
-whatever state carries between calls is enough to move that argmax on ~16 % of
-events.  `SBND_NO_DL=1` on the driver is the switch that demonstrates it.
-
-**This is the owner's call, not a defect to tune away** (escalation rule 7).
-Group mode is opt-in (`PR_GROUP_SIZE` unset = today's per-event path, byte for
-byte), so nothing in production changes by shipping it.  What the owner decides
-is whether a selection-preserving, vertex-position-level difference on ~16 % of
-events is acceptable in exchange for the throughput below — and if not, whether
-to spend a round making the DL vertex reproducible across events in one process.
+~~The cause is not new and not this round's: the DL vertex is a python/torch
+inference, CLAUDE.md M4 already records it as not bit-stable ... so whatever
+state carries between calls is enough to move that argmax on ~16 % of events.~~
+**Wrong — sec 10.9.**  The SCN inference is bit-reproducible for identical input
+(measured standalone and in the live job); what carried between events was
+`TrackFitting`'s ident-keyed `m_cluster_xext_cache` and friends, and the voxel
+grid's `coords.min(axis=0)` origin is what turned a sub-millimetre fit
+perturbation into a centimetre vertex jump.
 
 **Shared components — the other detectors.**  `clus`, `util` and `sio` are
 shared, so:
@@ -784,3 +795,263 @@ SBND_NO_DL=1 ...                                             # the DL-vertex con
 Arms: `$S/mevt/{m1,m2}-{mcp1k,nuecc48,ncpi0}` (per-event / group-16),
 `$S/mevt/{dlA,dlB}` (the DL-off control), `$S/mevt/qlgate2` (Q/L),
 `abtest/snap/post_doc76r2c`, `qlport/scripts/sweep/doc76r2`.
+
+### 10.9  Round 3 — the group/per-event divergence was never the DL vertex
+
+Owner ask (2026-08-24): *"somehow during the group processing, the DL vtx is not
+the same as individual event.  This is not ideal.  Can you investigate this
+thoroughly, understand the issue, and implement a fix?"*
+
+**Result.**  Sec 10.6 blamed the DL (SCN) vertex.  That was wrong twice over: the
+SCN inference is bit-reproducible, and the control quoted for the claim was not a
+control.  The real cause is **`TrackFitting` state carried across the event
+boundary** — round 2's `reset_for_new_event()` dropped every member that would
+*crash* on reuse and none of the members that would silently give the *wrong
+answer*.  The DL vertex was only the amplifier that turned a fit-level
+perturbation into a centimetre-scale vertex jump.  With the rest of the state
+dropped, **group mode is byte-identical to per-event on all 167 events** (was 26
+differing), and there is no open owner decision left from sec 10.6.
+
+#### 10.9.1  Why the round-2 diagnosis was wrong
+
+**Claim 1 — "the DL vertex is a python/torch inference and is not bit-stable."**
+Measured two ways; it is bit-stable:
+
+* *Standalone.*  The same cloud through the cached model after 1, 2 and 5
+  intervening inferences returns byte-identical output.  Every module is in
+  `eval` mode and the model's 54 buffers (`running_mean`, `running_var`, …) are
+  unchanged by a forward pass — hashing `state_dict()` before and after three
+  inferences gives one value.  `SCN_Vertex.py` caches the model by weights path
+  and pins `torch.set_num_threads(1)` at import.
+* *In the live job.*  With a byte-hash probe wrapped around the real inference
+  (a `sitecustomize` shim on `PYTHONPATH`; no repo file touched), nueCC48 event
+  46363's dual-chain **OFF-pass** SCN call is identical whether the event runs
+  alone or sixth in a group — same 907-point input hash `be868d98…`, same output
+  hash `2e2e8275…`, with ten inferences already behind it in the group process.
+
+**Claim 2 — "`SBND_NO_DL=1` makes a group byte-identical, so the DL is the
+cause."**  `SBND_NO_DL=1` sets `dl_weights=""`, which removes **both** DL call
+sites — production's *and* the dual chain's OFF pass
+(`TaggerCheckNeutrino.cxx:3088`) — so it cannot separate "the DL writes the
+difference" from "the DL reads it".  It was also underpowered: 8 mcp1k events on
+a sample whose divergence rate is 5/100.  Re-run on a known-differing event,
+**46363 still differs with the DL off** (`T_kine.kine_nu_{x,y,z}_corr`).
+
+#### 10.9.2  What is actually carried
+
+The probe compares the two SCN calls each event makes:
+
+| call | 46363 alone | 46363 sixth in a group |
+|---|---|---|
+| dual-chain OFF pass | 907 pts, `be868d98…` | 907 pts, `be868d98…` — **identical** |
+| production (ON) pass | **731 pts**, `7e2dbd7a…` | **800 pts**, `0b9036d5…` |
+
+The OFF pass runs **first** (`TaggerCheckNeutrino.cxx:2153`), on its own graph and
+a **freshly constructed** `TrackFitting`, and is bit-identical.  The production
+pass runs on the **member** fitter — the one that lives for the whole process —
+and its cloud differs by 69 points.  That is a structural difference in the
+fitted trajectory, not floating-point noise.
+
+`WCT_TF_RESET_CENSUS=1` (new, env-gated, diagnostic-only) logs what each fitter
+still holds at reset entry.  On a group of six, at the top of every event after
+the first:
+
+```
+tf_reset_census: carried from the previous event: graph=1 clusters=51 blobs=1779
+  segments=91 global_rb_map=82422 charge_data=13420 cluster_xext_cache=36
+  cov_fit_scope=47 cov_vtx_info=139 main_vertex=1 showers=12 hot_cache=6
+```
+
+Everything through `charge_data` is what round 2 already dropped.  The rest is
+new, and one member in it can change a physics number:
+
+**`m_cluster_xext_cache` — an ident-keyed memo, and cluster idents repeat across
+events.**  It memoises `cluster->ident()` → blob-centre drift-x extent for
+`skip_revert_iso_xext_cut` (`TrackFitting.cxx:5638`), which is **200.0 = 20 cm in
+SBND production** (`sbnd_track_fitting.json:31`, owner flip 2026-08-06).  A memo
+is read before it is written, by definition, so event N's cluster 11 was answered
+with event N−1's cluster 11 extent.  When the two straddle the 20 cm cut, the
+trajectory point's charge-consistency revert is abstained — or not — for the
+wrong reason, and the fitted trajectory moves.  36 idents were carried into each
+event here.
+
+The others are carried but not read stale: `m_cov_fit_scope`/`m_cov_vtx_info` are
+cleared at the top of every `rebuild_cov_fit_scope()`, and `m_main_vertex` /
+`m_showers` / the pi0 maps / `m_kine_info` / `m_tagger_info` /
+`m_vertex_scoreboard` are written for downstream consumers and never read back by
+the fitter.  They are dropped anyway: an event that finishes *without* writing one
+(no vertex, a knob off, or a selected candidate >0 whose values landed on a fresh
+fitter) would otherwise serve its predecessor's vertex, showers or neutrino
+energy as its own, and the shower and vertex handles point into the destroyed
+event tree.
+
+#### 10.9.3  Why it surfaced as a DL vertex jump
+
+`SCN_Vertex.py` voxelises with `coords -= coords.min(axis=0)` then
+`(coords / 0.5 cm).astype(int64)`.  **The voxel grid's origin is the extreme point
+of the cloud**, so moving any extremal point re-bins every point in the event and
+re-rolls a winner-take-all `argmax` over voxel scores.  Doc pr/111 measured
+exactly this: 0.05 cm of jitter relocates the argmax by >2 cm in 30 % of draws.  A
+fit-level perturbation of a fraction of a millimetre therefore reaches the output
+as a vertex that has moved centimetres — large, discrete, and looking for all the
+world like model nondeterminism.  It is a lever with enormous gain sitting
+downstream of a small real difference.
+
+#### 10.9.4  The fix
+
+`TrackFitting::reset_for_new_event()` now drops the wrong-answer half as well as
+the crash half.  It is still called once per `visit()`, never per candidate (the
+round-2 invariant is unchanged), and it is still **inert on a one-event process**:
+at the first and only `visit()` there is nothing to drop, so the legacy per-event
+job is byte-identical by construction — which is why this ships without a knob.
+
+Two adjacent defects found while gating, both **pre-existing from round 2** and
+both fixed here:
+
+* **The group `nusel-table.tsv` stamped every event with the group leader's run.**
+  `process_group` passed the job's `RUN_NO`/`SUBRUN_NO` to `nusel_extract.py` for
+  all its events.  The ROOT trees were always right (`rse_map` corrects them
+  inside wire-cell, and `pr94` covers `Trun.runNo`), but the table was wrong on
+  198 of 547 nueCC48 rows — invisible on single-run mcp1k, which is why round 2
+  did not see it.  It now reads each event's own pair from the same `rse_map`.
+* **A torn log line lost an STM verdict.**  `RE_STM_SKIP` required the literal
+  `check_stm_conditions:` prefix.  WCT writes long spdlog messages
+  non-atomically and a group job writes far more of them through one pair of
+  sinks, so the prefix itself gets torn: NCpi0 285567 logged
+  `aph: create_steiner_tree produced nnditions: cluster 8 no STM fit: single exit
+  point …`.  `no STM fit:` is unique to the seven `check_stm_conditions` DEBUG
+  lines, so the regex now anchors on `cluster N no STM fit:` alone.
+
+#### 10.9.5  Attribution: which member moved the number
+
+The census names five carried members; only one is read stale.  Three builds, the
+same six-event group `388 10550 30504 38856 42280 46363`, reading the
+**production**-pass SCN input for the last event and comparing with that event
+run alone:
+
+| binary | evt 46363 production-pass cloud | verdict |
+|---|---|---|
+| **solo** — the reference (unchanged by the fix; the legacy gate below re-proves it) | 731 pts, `7e2dbd7a…` | — |
+| group, round 2 (no clears) | **800 pts, `0b9036d5…`** | diverged |
+| group, round 3 **minus** the `m_cluster_xext_cache` clear | **800 pts, `0b9036d5…`** | **bit-for-bit the same bug** |
+| group, round 3 full | 731 pts, `7e2dbd7a…` | matches solo |
+
+Clearing the other four changes nothing at all — row 3 is not merely "still
+different", it is the *same* 800-point cloud with the *same* hash.  Adding the
+memo clear restores the solo answer exactly.  The ident-keyed memo is the
+carrier: necessary, and together with the rest sufficient.
+
+#### 10.9.6  Gates
+
+**Legacy path (production, one event per process) — byte-identical.**
+
+| gate | result |
+|---|---|
+| nueCC48 48 events, pre-fix per-event vs post-fix per-event | `pr85` **96/96 archives**, `pr94` **48/48 ROOT files**, nusel **0 differing lines** |
+| mcp1k 100 events, the **recorded** `work-pr112i-snapD2-mcp1k` arm vs post-fix per-event | `pr85` **200/200**, `pr94` **100/100** |
+| `wcdoctest-{clus,root,sio,util}` | all pass; the new `doctest_trackfitting_event_reset.cxx` is revert-proven — with the round-3 clears `#if 0`-ed out, **6 of its 18 assertions fail** |
+
+The mcp1k row is the one that matters most: it is a *recorded* arm, not a fresh
+run of both sides, so it also re-proves round 2's per-event path at the same time.
+
+**Group vs per-event — now byte-identical on the whole manifest.**
+
+| sample | before (round 2) | after (round 3) |
+|---|---|---|
+| mcp1k 100 | 5 events differ | `pr85` **200/200**, `pr94` **100/100** |
+| nueCC48 48 | 17 events differ | `pr85` **96/96**, `pr94` **48/48** |
+| NCpi0 19 | 4 events differ | `pr85` **38/38**, `pr94` **19/19**, nusel **0 of 224 rows** |
+| **167 total** | **26 differ** | **0 differ** |
+
+**Residual, stated rather than rounded away.**  On nueCC48 the group and
+per-event `nusel-table.tsv` still differ on **3 rows of 547**, in the parsed-log
+columns `fc` and `stmfit` only (`0`↔`-1`, `tgm`↔`eval`, `eval`↔`contained`) — and
+`pr94`, which compares every branch of every `tracking-pr.root`, passes 48/48, so
+the reconstruction behind those rows is identical.  The cause is
+`slice_group_log.py`: for evt 389538 the slice recovers 203 of the event's 1191
+log lines, so a verdict line is simply not in the slice to be parsed.  That is a
+round-2 log-reconstruction limitation, not a physics difference, and it is the
+one thing this round leaves open.
+**Shared components — the other detectors.**  `clus` is shared, and the reset is
+on a code path every detector runs, so:
+
+| gate | result |
+|---|---|
+| `abtest/ab_compare.sh post_doc76r2c post_doc76r3` — PDHD + PDVD clustering, 6 events | **OVERALL PASS**, all 11 archives byte-identical |
+| `qlport/ab_check.sh doc76r3 doc76r2` — uBooNE MABC, 35 events | **zips 35/35 content-identical**; tagger 34/35, the one diff is **ev 6805**, the binary-LAYOUT-dependent case of doc pr/97 that docs 78, 79 and round 2 all recorded before this round |
+
+Both are one-event-per-process jobs, so both are gating the "inert on a single
+event" claim directly, on binaries built from this source.
+
+#### 10.9.7  What this changes about sec 10.6, and the lesson
+
+Sec 10.6's "the one thing that is not byte-identical" no longer exists, and the
+reasoning that produced it was wrong in three separate places:
+
+* the DL vertex is **not** the cause and **is** bit-reproducible for identical
+  input.  CLAUDE.md M4 keeps DL output out of byte gates for the uBooNE
+  `-A dl_weights=` reason — run-to-run drift across *processes* — which is a
+  different statement from the one sec 10.6 made about *events within* one
+  process, and it was borrowed without checking that it applied;
+* `SBND_NO_DL=1` is not a DL isolator: it removes the dual chain's OFF-pass
+  inference too.  It must not be used again as the discriminator it was used as;
+* the control behind the claim was 8 events on the sample with the lowest
+  divergence rate of the three.
+
+**The lesson, which is the reason round 2 shipped a wrong diagnosis: "the group
+differs from per-event" is a statement about carried state, and the first move
+must be a census of what is carried, not a hypothesis about which component is
+flaky.**  Round 2 reached for the component with a known reputation for
+nondeterminism and stopped when a control appeared to confirm it.  One
+`WCT_TF_RESET_CENSUS=1` run — which took minutes — named the carrier outright.
+That knob is now in the tree so the next multi-event surprise starts there.
+
+A second, cheaper lesson: the round-2 reset was written against the symptom it
+had (a SIGSEGV), so it dropped exactly the members whose staleness *crashes*.
+Nothing prompted the question "which of the rest would be silently wrong?", and
+a memo keyed by an identifier that repeats across events is precisely the kind of
+member that answers it.
+
+#### 10.9.8  Repro
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+D=<scratch>
+
+# per-event (legacy) and group-16 arms of one sample
+PR_GROUP_SIZE=0  PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/pe  data
+PR_GROUP_SIZE=16 PR_JOBS=3 ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/g16 data
+python3 scripts/pr85_hash_gate.py --jobs 6 $D/pe $D/g16     # mabc-pr.zip + pctree
+python3 scripts/pr94_root_gate.py          $D/pe $D/g16     # every tracking-pr.root branch
+diff <(sort $D/pe/nusel-table.tsv) <(sort $D/g16/nusel-table.tsv)
+
+# what the previous event left behind, per fitter, at reset entry
+WCT_TF_RESET_CENSUS=1 PR_GROUP_SIZE=6 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/census data 388 10550 30504 38856 42280 46363
+grep -a tf_reset_census $D/census/wct_pr_g0.log
+
+# byte-hash the live SCN input/output without touching a repo file:
+#   $D/shim/{sitecustomize.py,SCN_Vertex.py} wrap toolkit/pyutil/python/SCN_Vertex.py
+PYTHONPATH=$D/shim:$PYTHONPATH WCT_SCN_PROBE=$D/scn.txt PR_GROUP_SIZE=6 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/probe data 388 10550 30504 38856 42280 46363
+# two calls per event: seq odd = dual-chain OFF pass, seq even = production
+
+# unit tests, and the revert proof for them
+(cd ../../../toolkit && ./build/clus/wcdoctest-clus -tc="doc76r3*")
+```
+
+Arms: `$D/{r3_nue_pe,r4_nue_g16}`, `$D/{r3_mcp_pe,r4_mcp_g16}`,
+`$D/{r4_nc_pe,r4_nc_g16}`, `$D/perevt` (pre-fix per-event A-side),
+`$D/{q1solo,q1six,q3six,qAsix}` (the four probe runs),
+`abtest/snap/post_doc76r3`, `qlport/scripts/sweep/doc76r3`.
+
+#### 10.9.9  One trap, walked into again
+
+**Editing `run_pr_chain_batch.sh` while its own batch was running** corrupted the
+running shell's parse (`syntax error near unexpected token '('`, then `'done'`)
+and killed both NCpi0 arms with rc=2.  bash re-reads a script from a byte offset
+as it executes, so any edit that shifts offsets derails a run already in flight.
+This is the same mistake doc pr/104 records and sec 10.5 of this document
+records; it has now cost three arms across two rounds.  All four arms that could
+have been touched were re-run from scratch into fresh directories before any
+number in this section was taken.

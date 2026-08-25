@@ -1785,6 +1785,22 @@ process_group() {
         local PRDIR="$OUTROOT/pr_evt${evt}"
         local QLPCT="$QLROOT/ql_evt${evt}/pctree-evt${evt}.tar.gz"
         local QLBEE="$QLROOT/ql_evt${evt}/mabc-all-apa.zip"
+        # doc 76 round 3.  RUN_NO/SUBRUN_NO are the JOB's TLAs -- the FIRST
+        # event's run -- and rse_map corrects the rest inside wire-cell, so the
+        # ROOT trees are right.  The table is written out here, though, and
+        # stamping every row with the job's run gave every event in a group the
+        # run of its group leader.  Silent on a single-run sample (mcp1k) and
+        # wrong on 198 of 547 nueCC48 rows, which span 12 runs.  Take each
+        # event's own pair from the same rse_map the job was given.
+        local E_RUN=$RUN_NO E_SUBRUN=$SUBRUN_NO _erse
+        _erse=$(python3 -c 'import json,sys
+try:
+    m = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(1)
+v = m.get(sys.argv[2])
+if not v: raise SystemExit(1)
+print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_erse" ] && read -r E_RUN E_SUBRUN <<< "$_erse"
         # A stage-A group dir keeps one archive for the whole group instead of a
         # tree per event; nusel_extract wants one event, so fall back to this
         # job's own re-saved per-event tree and skip the Q/L Bee cross-check.
@@ -1802,7 +1818,7 @@ process_group() {
             ${QLBEE:+--qlbee "$QLBEE"} \
             --beam-window "$PR_BEAM_WINDOW_US" \
             --bw-gate "$PR_BEAM_WINDOW_US" \
-            --run "$RUN_NO" --subrun "$SUBRUN_NO" \
+            --run "$E_RUN" --subrun "$E_SUBRUN" \
             --out "$PRDIR/nusel-evt${evt}.tsv" 2>>"$PRDIR/stdout.log"
     done
     echo "[group $GIDX] rc=0  -> $OUTROOT (${#EVTS[@]} events)"
