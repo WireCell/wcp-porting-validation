@@ -60,7 +60,7 @@
 //     --tla-str input=<reco1.root> --tla-str output_dir=<dir> \
 //     -c wct-reco1-dump.jsonnet
 
-function(input, output_dir='.', entry='-1', caf_offset_mode='none', caf_offset_override='0',
+function(input, output_dir='.', entry='-1', entry_begin='0', entry_count='-1', caf_offset_mode='none', caf_offset_override='0',
          wire_product='', badmask_product='', summary_product='', flash_process='Reco1',
          frameshift_product='')
 // caf_offset_mode: none | product | auto | override (validated in C++)
@@ -90,6 +90,13 @@ function(input, output_dir='.', entry='-1', caf_offset_mode='none', caf_offset_o
 local g = import 'pgraph.jsonnet';
 
 local entry_num = std.parseInt(entry);
+// Entry-range streaming (doc 76 round 2).  Only consulted when no single-event
+// selection is made (entry < 0).  Defaults 0 / -1 = the whole file, i.e. what
+// this job has always done, so the compiled config is byte-identical unless a
+// caller asks for a range.  A range is what lets stage A run ONE dump process
+// per GROUP of events instead of one per event.
+local entry_begin_num = std.parseInt(entry_begin);
+local entry_count_num = std.parseInt(entry_count);
 local caf_override_ns = std.parseJson(caf_offset_override);
 
 local frame_src = g.pnode({
@@ -98,6 +105,8 @@ local frame_src = g.pnode({
     data: {
         filename: input,
         entry: entry_num,
+        [if entry_begin_num != 0 then 'entry_begin']: entry_begin_num,
+        [if entry_count_num >= 0 then 'entry_count']: entry_count_num,
         // wire/badmask/summary products, tag, scales, nticks, tick:
         // C++ defaults match the SBND data reco1 files (sptpc2d, dnnsp).
         // Keys omitted when the TLA is '' => compiled config byte-identical
@@ -125,6 +134,8 @@ local flash_srcs = [
         data: {
             filename: input,
             entry: entry_num,
+            [if entry_begin_num != 0 then 'entry_begin']: entry_begin_num,
+            [if entry_count_num >= 0 then 'entry_count']: entry_count_num,
             flash_product: 'recob::OpFlashs_opflashtpc%d__%s.' % [n, flash_process],
             caf_offset_mode: caf_offset_mode,
             // Only meaningful in override mode; C++ default 0.  Key omitted

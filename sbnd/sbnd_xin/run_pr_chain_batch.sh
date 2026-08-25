@@ -144,7 +144,14 @@ TFJSON_TLA=()
 # the split clusters' steiner products are rebuilt -- the prototype-faithful
 # order (cosmic verdicts on unsplit clusters, wire-cell-prod-stm.cxx:806;
 # protect only in the nue executable, wire-cell-prod-nue.cxx:1322).
-PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
+# PR_PIPELINE: replace the whole stage list.  EMPTY BY DEFAULT => the string
+# below, so every existing invocation compiles and outputs exactly as before.
+# Its reason for existing (doc 76 round 2): stage A of the two-stage chain runs
+# only the cosmic-rejection half to produce the selection table, and the P0.1
+# probe that proved the chain cannot be SPLIT there needed to run each half on
+# its own.  Do not use it to ship a different production pipeline -- the
+# production list is the default below.
+PIPELINE="${PR_PIPELINE:-switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output}"
 
 # PR_EXTRA_STAGES: comma-separated cm_by_name stages APPENDED to the pipeline
 # above.  EMPTY BY DEFAULT => the pipeline string, and therefore every compiled
@@ -156,6 +163,14 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 # appends PrDisplayDump, which writes pr_evt<ID>/calib-pr-evt<ID>.json next to
 # the usual outputs.  That stage is read-only, so an arm run with it must hash
 # identically to one run without -- which is the doc's gate.
+# The beam window, in us, that this driver runs the job at.  ONE variable so
+# the per-event and the group path cannot drift: nusel_extract.py takes it
+# twice -- as --beam-window (labelling) and, in group mode, as --bw-gate (which
+# mains the taggers evaluated at all).  It must match the job's own
+# beam_window_us default in wct-pr-perevt.jsonnet; this driver passes no
+# beam-window TLA, so the default is what runs.
+PR_BEAM_WINDOW_US="0.2,2.2"
+
 if [ -n "${PR_EXTRA_STAGES:-}" ]; then
     PIPELINE="$PIPELINE,$PR_EXTRA_STAGES"
 fi
@@ -198,6 +213,16 @@ fi
 # script is byte-identical to before the knob existed.
 # Env: SBND_CATHODE_KINK_XCUT=<cm> SBND_CATHODE_X=<cm>.
 CATH_TLA=()
+# SBND_NO_DL=1: force the GEOMETRIC neutrino vertex by passing an empty
+# dl_weights, the same thing run_nusel_evt.sh always does.  UNSET BY DEFAULT so
+# this driver keeps running the DL (SCN) vertex, which is the production
+# default.  Its reason for existing is diagnosis, not production: the DL vertex
+# is a python/torch inference and CLAUDE.md M4 already records that it is not
+# bit-stable, so when a group run and a per-event run disagree this is the knob
+# that says whether the DL vertex is the reason.
+if [ "${SBND_NO_DL:-0}" = 1 ]; then
+    CATH_TLA+=(--tla-str "dl_weights=")
+fi
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
 # doc pr/94 Phase 2: per-bundle neutrino candidates.  One T_tagger/T_kine row
@@ -1638,7 +1663,7 @@ process_event() {
         --pctree "$PCT" --prbee "$PRDIR/mabc-pr.zip" --prlog "$LOG" \
         --prtree "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --qlbee "$QLDIR/mabc-all-apa.zip" \
-        --beam-window "0.2,2.2" \
+        --beam-window "$PR_BEAM_WINDOW_US" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \
         --out "$PRDIR/nusel-evt${EVT_ID}.tsv" 2>>"$PRDIR/stdout.log"
 
@@ -1646,9 +1671,161 @@ process_event() {
     [ "$rc" = 0 ]
 }
 
+# ---------------------------------------------------------------------------
+# doc 76 round 2: GROUP mode -- run several events through ONE wire-cell
+# process.  PR_GROUP_SIZE unset or 0 => the per-event path above, untouched and
+# byte-identical.  Set it and the events are chunked; each chunk is one process.
+#
+# What makes this safe: the PR job's TLAs are IDENTICAL to the per-event ones
+# except for four, so the operating point (all 300+ SBND_* knobs in CATH_TLA)
+# cannot drift between the two modes:
+#   input        one group archive instead of one event's pctree
+#   output_dir   the batch root; evt_subdir puts each event back in pr_evt<ID>/
+#   multi_event  event number from each tensor ident, not the constant `event`
+#   rse_map      per-event run/subrun, because a group can span many runs
+# Everything each event writes therefore lands on exactly the path the
+# per-event driver writes, which is what lets pr85_hash_gate.py /
+# pr94_root_gate.py / nusel_extract.py compare the two modes file for file.
+process_group() {
+    local GIDX=$1; shift
+    local -a EVTS=("$@")
+    local GDIR="$OUTROOT/.groups"
+    local GTAR="$GDIR/g${GIDX}.tar.gz"
+    local GRSE="$GDIR/g${GIDX}-rse.json"
+    local GLOG="$OUTROOT/wct_pr_g${GIDX}.log"
+    mkdir -p "$GDIR"
+
+    # RSE for the *job* TLAs: the first event's, with rse_map correcting the
+    # rest.  Same metadata source as process_event.
+    local RUN_NO=0 SUBRUN_NO=0 _md
+    _md=$(tar xzOf "$QLROOT/ql_evt${EVTS[0]}/opflash_apa0.tar.gz" \
+            "opflash_tensorset_${EVTS[0]}_metadata.json" 2>/dev/null) || _md=''
+    if [ -n "$_md" ]; then
+        local _rse
+        _rse=$(printf '%s' "$_md" | python3 -c \
+            'import json,sys; d=json.load(sys.stdin); print(int(d.get("run",0)), int(d.get("subrun",0)))' \
+            2>/dev/null) && [ -n "$_rse" ] && read -r RUN_NO SUBRUN_NO <<< "$_rse"
+    fi
+
+    # The sinks do not create directories -- the runner must.
+    local evt
+    for evt in "${EVTS[@]}"; do
+        rm -rf "$OUTROOT/pr_evt${evt}"; mkdir -p "$OUTROOT/pr_evt${evt}"
+    done
+
+    if [ -s "$QLROOT/pctree-ql.tar.gz" ] && [ "${#EVTS[@]}" -eq "$(wc -l < "$QLROOT/events.txt" 2>/dev/null || echo -1)" ]; then
+        # ql_root IS a stage-A group directory and we were asked for exactly its
+        # events: its pctree-ql.tar.gz already holds them, in the right order,
+        # so use it rather than take it apart and put it back together.
+        GTAR="$QLROOT/pctree-ql.tar.gz"
+        cp -f "$QLROOT/rse.json" "$GRSE" 2>/dev/null || echo '{}' > "$GRSE"
+        echo "[group $GIDX] using stage-A archive $GTAR"
+    elif ! python3 "$SX/scripts/multi/make_group_pctree.py" \
+            --ql-root "$QLROOT" --out "$GTAR" --rse-map "$GRSE" "${EVTS[@]}" \
+            > "$GDIR/g${GIDX}-build.log" 2>&1; then
+        echo "ERROR: [group $GIDX] could not build $GTAR (see $GDIR/g${GIDX}-build.log)" >&2
+        return 1
+    fi
+
+    echo "[group $GIDX] ${#EVTS[@]} events (${EVTS[0]}..${EVTS[-1]}) rse=($RUN_NO, $SUBRUN_NO) reality=$REALITY"
+
+    (
+        cd "$OUTROOT" || exit 1
+        export LD_PRELOAD="$PYLIB"
+        export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+        _TLA=(
+            --tla-str  "input=$GTAR"
+            --tla-code "anode_indices=[0,1]"
+            --tla-str  "output_dir=$OUTROOT"
+            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVTS[0]}"
+            --tla-str  "reality=$REALITY"
+            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+            "${TFJSON_TLA[@]}"
+            "${CATH_TLA[@]}"
+            --tla-code "multi_event=true"
+            --tla-str  "evt_subdir=pr_evt%1%"
+            --tla-code "rse_map=$(cat "$GRSE")"
+            --tla-str  "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz"
+        )
+        _CFG=(-c "$JSONNET")
+        if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
+            _cfgjson="$GDIR/.wct-cfg-g${GIDX}.json"
+            rm -f "$_cfgjson"
+            if wcsonnet "${_TLA[@]}" -o "$_cfgjson" "$JSONNET"; then
+                _CFG=(-c "$_cfgjson")
+                _TLA=()
+            else
+                echo "[group $GIDX] WARN: wcsonnet failed -- in-process jsonnet" >&2
+            fi
+        fi
+        setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/g${GIDX}.time.meta" \
+        timeout --signal=TERM --kill-after=60 "${PR_GROUP_TIMEOUT:-${PR_TIMEOUT:-3600}}" \
+        wire-cell \
+            -l stderr -l "${GLOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
+            "${_TLA[@]}" \
+            "${_CFG[@]}"
+        echo "rc=$?" > "$GDIR/g${GIDX}.rc"
+    ) > "$OUTROOT/.batch_pr_g${GIDX}.stdout" 2>&1
+
+    local rc; rc=$(sed -n 's/^rc=//p' "$GDIR/g${GIDX}.rc" 2>/dev/null); rc=${rc:-1}
+    if [ "$rc" != 0 ]; then
+        echo "[group $GIDX] wire-cell rc=$rc -- see $GLOG" >&2
+        for evt in "${EVTS[@]}"; do echo "rc=$rc" > "$OUTROOT/pr_evt${evt}/rc.txt"; done
+        return 1
+    fi
+
+    # Per-event tables.  nusel_extract.py wants ONE event's log; the group log
+    # is sequential, so slice it on the MABC load line that opens each event.
+    # --bw-gate: the group log interleaves two logger sinks, so a per-event
+    # slice of it can lose the beam_window_only line.  Pass the gate the job
+    # actually ran with rather than let nusel_extract guess from a possibly
+    # incomplete log -- without it an out-of-window main reads 0 "evaluated,
+    # clean" instead of -1 "not evaluated" (seen on mcp1k 48367).
+    for evt in "${EVTS[@]}"; do
+        local PRDIR="$OUTROOT/pr_evt${evt}"
+        local QLPCT="$QLROOT/ql_evt${evt}/pctree-evt${evt}.tar.gz"
+        local QLBEE="$QLROOT/ql_evt${evt}/mabc-all-apa.zip"
+        # A stage-A group dir keeps one archive for the whole group instead of a
+        # tree per event; nusel_extract wants one event, so fall back to this
+        # job's own re-saved per-event tree and skip the Q/L Bee cross-check.
+        if [ ! -s "$QLPCT" ]; then
+            QLPCT="$PRDIR/pctree-pr-evt${evt}.tar.gz"
+            QLBEE=""
+        fi
+        echo "rc=0" > "$PRDIR/rc.txt"
+        python3 "$SX/scripts/multi/slice_group_log.py" "$GLOG" "$evt" \
+            > "$PRDIR/wct_pr_evt${evt}.log" 2>/dev/null
+        python3 "$SX/nusel_extract.py" \
+            --pctree "$QLPCT" \
+            --prbee "$PRDIR/mabc-pr.zip" --prlog "$PRDIR/wct_pr_evt${evt}.log" \
+            --prtree "$PRDIR/pctree-pr-evt${evt}.tar.gz" \
+            ${QLBEE:+--qlbee "$QLBEE"} \
+            --beam-window "$PR_BEAM_WINDOW_US" \
+            --bw-gate "$PR_BEAM_WINDOW_US" \
+            --run "$RUN_NO" --subrun "$SUBRUN_NO" \
+            --out "$PRDIR/nusel-evt${evt}.tsv" 2>>"$PRDIR/stdout.log"
+    done
+    echo "[group $GIDX] rc=0  -> $OUTROOT (${#EVTS[@]} events)"
+    return 0
+}
+
 batch_init
 BATCH_MAX=${PR_JOBS:-6}
-echo "ql_root=$QLROOT out_root=$OUTROOT reality=$REALITY events=${#EVENT_IDS[@]} jobs=$BATCH_MAX"
+GROUP_SIZE=${PR_GROUP_SIZE:-0}
+echo "ql_root=$QLROOT out_root=$OUTROOT reality=$REALITY events=${#EVENT_IDS[@]} jobs=$BATCH_MAX group_size=$GROUP_SIZE"
+if [ "$GROUP_SIZE" -gt 0 ]; then
+    _gi=0
+    _n=${#EVENT_IDS[@]}
+    for ((_i=0; _i<_n; _i+=GROUP_SIZE)); do
+        _chunk=("${EVENT_IDS[@]:_i:GROUP_SIZE}")
+        _blog="$OUTROOT/.batch_pr_g${_gi}.log"
+        batch_wait_slot
+        ( process_group "$_gi" "${_chunk[@]}" ) > "$_blog" 2>&1 &
+        BATCH_PIDS[$!]="g$_gi"
+        echo "  [start] group=$_gi n=${#_chunk[@]} log: $_blog"
+        _gi=$((_gi+1))
+    done
+else
 for evt in "${EVENT_IDS[@]}"; do
     _blog="$OUTROOT/.batch_pr_evt${evt}.log"
     batch_wait_slot
@@ -1656,6 +1833,7 @@ for evt in "${EVENT_IDS[@]}"; do
     BATCH_PIDS[$!]=$evt
     echo "  [start] evt=$evt  log: $_blog"
 done
+fi
 batch_drain
 batch_summary
 

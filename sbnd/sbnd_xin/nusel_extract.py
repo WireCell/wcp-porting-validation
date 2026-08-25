@@ -539,6 +539,9 @@ def one_event(args):
     # were evaluated at all, so their verdict columns must read -1 (unknown),
     # not 0 (evaluated, clean).  None => ungated run, every main was evaluated.
     gate = parse_bwonly(args.prlog)
+    if args.bw_gate:
+        lo, hi = (float(x) for x in args.bw_gate.split(','))
+        gate = (lo, hi)
 
     def evaluated(c):
         return gate is None or gate[0] <= c['t0_us'] < gate[1]
@@ -700,6 +703,16 @@ def main():
     ap.add_argument('--prtree', help="post-PR pctree tarball (authoritative "
                                      "tagger verdicts from flag_TGM/STM/FC; "
                                      "needs run_nusel_evt.sh -save-pr-tree)")
+    ap.add_argument('--bw-gate', default=None,
+                    help='"low,high" us: the beam-window GATE the PR job applied, '
+                         'i.e. which mains it evaluated at all.  Normally read '
+                         'from --prlog.  Pass it explicitly when the log cannot '
+                         'be trusted to carry it -- a group job (doc 76 round 2) '
+                         'writes ONE log for many events and its two logger '
+                         'sinks interleave, so a per-event slice of it may lose '
+                         'the line.  Without the gate an out-of-window main '
+                         'reads as "evaluated, clean" (0) instead of "not '
+                         'evaluated" (-1).')
     ap.add_argument('--beam-window', default='0.2,2.2',
                     help='low,high in us on cluster_t0 (default 0.2,2.2)')
     ap.add_argument('--run', type=int, default=0)
