@@ -160,9 +160,19 @@ run_group() {
 
     # The group's event ids, in archive order -- the order every downstream
     # archive must keep (see scripts/multi/make_group_pctree.py).
-    tar tjf "$GDIR/frames-dnn.tar.bz2" \
-        | sed -n 's/^frame_dnnsp_\([0-9][0-9]*\)\.npy$/\1/p' | awk '!seen[$0]++' \
-        > "$GDIR/events.txt"
+    # Derive the group's event ids from the frame archive when we have one.
+    # Under --from ql there may be no frames archive at all (an imaging-only
+    # checkpoint, or a hand-assembled group): keep an existing non-empty
+    # events.txt rather than truncating it to nothing.  doc 76 noted this ran
+    # unconditionally; doc 81 makes it conditional.
+    if tar tjf "$GDIR/frames-dnn.tar.bz2" 2>/dev/null | grep -q '^frame_dnnsp_'; then
+        tar tjf "$GDIR/frames-dnn.tar.bz2" \
+            | sed -n 's/^frame_dnnsp_\([0-9][0-9]*\)\.npy$/\1/p' | awk '!seen[$0]++' \
+            > "$GDIR/events.txt"
+    elif [ ! -s "$GDIR/events.txt" ]; then
+        echo "[g$K] no frames archive and no events.txt in $GDIR" >&2
+        : > "$GDIR/events.txt"
+    fi
     local NEV; NEV=$(wc -l < "$GDIR/events.txt")
     echo "[g$K] entries [$BEG,$((BEG+GSIZE))) -> $NEV events"
     [ "$NEV" -gt 0 ] || { echo "[g$K] no events in the group -- refusing to run downstream stages" >&2; return 1; }
