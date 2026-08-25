@@ -133,14 +133,24 @@ work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod08
 # these arms.
 work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod0823	THE production PR baseline, 3067 evts at toolkit b5c9f43a; reads the -ql0819 roots (ASSERT 8)	docs/work-tags.md 2026-08-23
 
+# doc 81 (2026-08-25): the group-mode re-baseline.  work-<s>-grp0825 is stage A
+# (imaging + Q/L, per-event layout) and work-<s>-prod0825 is stage B (PR) at the
+# CURRENT operating point -- dl_vtx_dual_chain/snapD2 (doc pr/112) and
+# fast_xgb_forest (doc 76 r1), both flipped ON AFTER prod0823 was produced.
+# Stage A is byte-identical to work-img-<s> + work-<s>-ql0819 on all 3067 events
+# (24536/24536 archives, scripts/multi/stagea_gate.py); stage B is byte-identical
+# to the pr112i-snapD2/flipchk arms.  These are the MCS and PR baseline.
+work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A, 48/19/1000/2000 evts, per-event layout	docs/81_group-mode-production.md
+work-nuecc48-prod0825 work-ncpi0-prod0825 work-mcp1k-prod0825 work-mcp2k-prod0825	doc 81 stage B PR at the current operating point; ASSERT 8 reads its group build log	docs/81_group-mode-production.md
+
 # --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
 # prod0823 above covers every sample at least as widely and is byte-identical
 # on every overlapping event, so these 8 arms (4.3 G) are redundant and are
 # the OBVIOUS release candidate for the next round.  NOT released here: that
 # is an owner call, and the round that created prod0823 should not also be the
 # round that destroys the thing it was gated against.
-work-pr104-on4-nuecc48 work-pr104-on4-ncpi0 work-pr104-on4-mcp1k work-pr104-on4-mcp2k	current-production PR product (junction snap ON), 48/19/1000/15 evts; each reads its matching -ql0819 root (ASSERT 8)	doc pr/104 sec.5
-work-pr104-flipchk-nuecc48 work-pr104-flipchk-ncpi0 work-pr104-flipchk-mcp1k work-pr104-flipchk-mcp2k	the ONLY on-disk evidence the shipped post-flip jsonnet reproduces -on4 with no env	doc pr/104 sec.6
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-pr104-on4-nuecc48 ...
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-pr104-flipchk-nuecc48 ...
 
 # --- the current vertex-label epoch (added 2026-08-23) --------------------
 # 1756 of vertex_labels/vtxscan-vtx105-*'s `source` entries resolve into these
@@ -156,13 +166,23 @@ work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx1
 # {brittle,ensemble,dl_decomp,rival,rival_where}.py -- as the fit_exclusion
 # ON/OFF pair for the DL-vertex brittleness measurement.  Not a citation
 # inference: grep of scripts/ finds the absolute paths.
-work-vtx106-harv-base-nuecc48 work-vtx106-harv-nofitx-nuecc48	fit_exclusion ON/OFF pair read by scripts/pr111_*.py (open round)	docs/pr/111
-work-vtx106-cne-on-nuecc48 work-vtx106-cne-off-nuecc48	the pr/106 sec.10 dl_vtx_cloud_no_exclusion pair; listed in doc pr/111's own arm table (sec.2), which is why a script grep alone would have missed it	docs/pr/111 sec.2
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-vtx106-harv-base-nuecc48 ...
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-vtx106-cne-on-nuecc48 ...
 
 # --- non-reproducible crash evidence (added 2026-08-23) -------------------
 work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 6.7 MB	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+
+# RELEASED 2026-08-25 by doc 81, after work-<s>-prod0825 passed its gates.
+# COST, stated rather than absorbed: doc pr/104's flip-equivalence evidence and
+# doc pr/111's fit_exclusion pair become TEXT-ONLY, and doc 81's own stage-B
+# PASS against work-pr112i-snapD2-* / -flipchk-* becomes text-only the same day.
+# The owner accepted that explicitly; prod0825 is the reference from here on.
+# work-pr104-on4-nuecc48 work-pr104-on4-ncpi0 work-pr104-on4-mcp1k work-pr104-on4-mcp2k	current-production PR product (junction snap ON), 48/19/1000/15 evts; each reads its matching -ql0819 root (ASSERT 8)	doc pr/104 sec.5
+# work-pr104-flipchk-nuecc48 work-pr104-flipchk-ncpi0 work-pr104-flipchk-mcp1k work-pr104-flipchk-mcp2k	the ONLY on-disk evidence the shipped post-flip jsonnet reproduces -on4 with no env	doc pr/104 sec.6
+# work-vtx106-harv-base-nuecc48 work-vtx106-harv-nofitx-nuecc48	fit_exclusion ON/OFF pair read by scripts/pr111_*.py (open round)	docs/pr/111
+# work-vtx106-cne-on-nuecc48 work-vtx106-cne-off-nuecc48	the pr/106 sec.10 dl_vtx_cloud_no_exclusion pair; listed in doc pr/111's own arm table (sec.2), which is why a script grep alone would have missed it	docs/pr/111 sec.2
 # 2026-08-23 -- the prod0819 PR arms and the whole pr/102 family, RELEASED.
 #
 # Owner, asked directly 2026-08-23 during the 203 G -> minimal round: "we can

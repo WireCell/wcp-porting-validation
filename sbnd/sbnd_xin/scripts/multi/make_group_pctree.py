@@ -68,6 +68,10 @@ def main():
                         continue
                     out.addfile(m, tf.extractfile(m))
                     n += 1
+    # doc 81: record the Q/L root this group was built from.  ASSERT 8 of the
+# retirement plan re-derives PR-arm provenance from evidence on disk, and a
+# group job's per-event logs never name the ql_evt paths a per-event job logs.
+    print("group provenance: ql_root=%s" % os.path.abspath(args.ql_root))
     print("%s: %d events, %d members" % (args.out, len(args.events), n))
 
     if args.rse_map:
