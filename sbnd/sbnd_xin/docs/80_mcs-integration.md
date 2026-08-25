@@ -1240,3 +1240,229 @@ Two hard stops:
 Nothing goes to SBND production before round 4 says the MicroBooNE tune
 transfers — and if it does not, sec 9.3's ladder says refit twelve resolution
 constants, **not** tune until the plot looks right (§5.7).
+
+---
+
+# EXECUTION LOG
+
+## 14. Re-validation at HEAD 95c10cd1 (2026-08-25, rev 5)
+
+The plan above was verified against toolkit `436915f2`; execution started at
+`95c10cd1`.  Every premise re-verified and HOLDS; the deltas that changed the
+implementation:
+
+1. **Baselines moved.**  `work-*-prod0823` (sec 5 step 0d, sec 9.2) and
+   `work-pr112i-snapD2-*` were retired 2026-08-25b; the baseline is now
+   `work-<s>-prod0825` (mcp1k 1000, mcp2k 2000, nuecc48 48, ncpi0 19 events).
+   Per doc 82, **HEAD no longer byte-reproduces prod0825** (the unknobbed Q/L
+   rescue-order fix), so the round-2/3 OFF gate is a fresh A/B pair at HEAD
+   (`95c10cd1` ref arm vs post-change knob-off arm on the
+   `scripts/manifests/numu50.txt` manifest), NOT a comparison against the
+   frozen `state-20260825b` hashes.
+2. **A second `segments_in_long_muon` site exists**:
+   `TaggerCheckNeutrino::run_dual_chain_off_pass` (:2952, doc pr/112) declares
+   its own at :3015.  Decision: **MCS runs in `visit()` only**; dual-chain
+   off-arm rows keep `kine_mcs_* = -1`.
+3. **Two-component knob rule (post doc 77).**  The `tcn_knobs` bag reaches
+   only TaggerCheckNeutrino (`common/clus.jsonnet` `+ knobs`), so `mcs_enable`
+   is a **named `pr()` parameter** (the `nu_per_bundle` template) deriving
+   both the TCN key and `tagger_output`'s `mcs_output`; the mcs_* sub-knobs
+   ride the bag.
+4. `fill_kine_tree` call moved :2704 -> :2711; the pr/94 stamp block
+   :2735-2739 + `set_kine_info` :2740 is the call site.  T_kine's knob-gated
+   booking pattern is :1185-1189 with TWO Fill paths (:1192 legacy, :1210
+   per-bundle struct-assign loop -- scalars refill automatically).
+5. `KineInfo` had grown the pr/94 identity ints; `PrDisplayDump::dump_kine`
+   confirmed inert to new members (the pr/94 fields never appear there).
+6. Knob-name deltas vs the sec 7.1 table: all knobs carry the `mcs_` prefix
+   (`mcs_muon_source`, `mcs_muon_min_length_cm`, `mcs_point_source`), and the
+   `mcs_endpoints` knob was dropped -- endpoints are hard-wired to the
+   owner-decided vertex `fit().point` mode, the only mode specified.
+7. Environment traps found: `./wcb configure` silently **drops the whole
+   `root/` package** when `ROOTSYS` is unset (`--with-root=yes` searches only
+   `yes/bin` + `$ROOTSYS/bin`, waft/rootsys.py:29-36) -- configure prints
+   `Removing package "root"` and every later build leaves
+   `libWireCellRoot.so` stale (an M1 variant).  Export
+   `ROOTSYS=$(root-config --prefix)` before any configure.
+
+## 15. Round 0 — golden reference (DONE 2026-08-25)
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/mcs_upstream
+# pinned clone + ubreco refs per sec Repro; then:
+cd mcs_standalone && make && ./mcs_example          # emu_MCS = 0.698501  <- HARD STOP CLEARED
+cd ../dumper && make                                 # instrumented dumper (subclass, protected access)
+./mcs_dump --root ../mcs_standalone/data/simulated_event.root golden_ref.json
+python3 harvest_sbnd_clouds.py                       # 4 SBND clouds from work-mcp1k-prod0825 T_rec_charge
+for e in 166738 168526 168614 169356; do ./mcs_dump --txt sbnd_cloud_evt$e.txt sbnd_ref_evt$e.json; done
+```
+
+- **0.699 GeV reproduces**: `emu_MCS, ambiguity_MCS = 0.698501, 0.000101088`
+  (true 0.735), ROOT 6.32.02, g++ 12.2.0.
+- Upstream sources now have the durable home `sbnd_xin/mcs_upstream/`
+  (untracked clone at the pinned SHA + `ubreco/` file snapshots + `dumper/`).
+- The dumper replays `run()` via a subclass and dumps every sec-5 step-0c
+  intermediate; its transcription of ROOT v6-32-02
+  `BrentMethods::MinimStep/MinimBrent` + `BrentMinimizer1D::Minimize` was
+  cross-checked against ROOT's own `TF1::GetMinimumX` in the same process:
+  **replica - ROOT = 0.0 exactly on every call of every fixture** -- the
+  recipe gate #3 tests is nailed down (npx=100 uniform scan, strict `<` so
+  the earliest grid minimum wins, bracket clamped to argmin +- dx, Brent with
+  eps=1e-10 abs+rel and maxiter=100, up to 10 bracket retries; and
+  `TGraph::Eval`'s interpolation is anchored at the UPPER neighbour with
+  two-point extrapolation outside the range).
+- **SBND fixtures** (whole nu-cluster cloud + the longest contiguous track's
+  first/last fit points as endpoints, from `work-mcp1k-prod0825`
+  `tracking-pr.root` `T_rec_charge`):
+
+  | fixture | cloud N | trim -> | 14-cm segs | emu_MCS [GeV] | notes |
+  |---|---|---|---|---|---|
+  | golden (uB) | 456 | 454 | 19 | 0.698501 | |
+  | evt166738 | 725 | 261 | 10 | 0.4344 | clean |
+  | evt168526 | 1339 | 41 | 2 | 0.1402 | amb=1; **161 inf grid pts** (bug #9 live on SBND) |
+  | evt168614 | 338 | 22 | - | -1 | early return ("short path" branch covered) |
+  | evt169356 | 482 | 284 | 10 | 0.3329 | 181 inf grid pts |
+
+- **Shuffle probe: upstream is bit-identical under input permutation on all 5
+  fixtures** (seeds 1,2,3[,7,42]) -- no sort tie fires on real data.  The
+  sec-6.3 tie-breaks ship anyway (insurance) and are therefore provably inert
+  on the fixtures.
+- Fixtures committed to `toolkit mcs/test/data/*.json` (dense likelihood
+  curve stripped; inf/nan mapped to strings, the pr94_root_gate convention).
+
+## 16. Rounds 1-3 — implementation (DONE 2026-08-25)
+
+Toolkit commits (apply-pointcloud):
+
+| commit | round | content |
+|---|---|---|
+| `77fd75fe` | 1 | `mcs/` ROOT-free port, fixtures, gates, shuffle doctest |
+| `d0effe0b` | 2 | `clus/` driver + call site + KineInfo scalars, default OFF |
+| `5f635f42` | 3 | `root/` knob-gated T_kine branches + jsonnet threading |
+| (follow-up) | 2 | `mcs/` cathode section-excision + KE outputs |
+
+### Round 1 acceptance (sec 6.2 gates, measured)
+
+`./build/mcs/wcdoctest-mcs`: **4 test cases, 5651/5651 assertions**, plain
+AND under `setarch x86_64 -R`.  Against the round-0 fixtures, upstream-compat
+mode (all McsOptions fixes off):
+
+- gate #1 interp: **bitwise** on every probe (incl. out-of-range extrapolation).
+- gate #2 segment/point counts: **identical** everywhere.
+- gate #3 prescan: on the canonical call-0 range the range, bracket, argmin
+  AND all 100 grid values are **bitwise identical** on every fixture.  Calls
+  1/2 scan ranges *derived* from keguess (x0.8/x1.2), so their endpoints
+  inherit keguess's wobble -- asserted as argmin identity + gate-#6-scaled
+  endpoints instead (the doc's bitwise wording is unsatisfiable there; noted).
+- gate #4 vx: max dev 8.6e-15, all ivx bins identical.
+- gate #5 angles: max dev **1.0e-13 rad** (gate 1e-9).
+- gate #6 keguess triple: golden -3.8e-11 MeV; worst 1.6e-7 (evt166738,
+  Brent's own tol eps*|x| ~ 3e-8); evt168526/169356 **exact 0.0**.
+- gate #7 emu_MCS: within 5e-10 relative everywhere.
+- derived ambiguity: worst 1.1e-8 relative -> asserted at 1e-6 (not the
+  planned 1e-9, which presumed bitwise side minima; a basin swap moves it by
+  orders of magnitude so 1e-6 still catches the failure it exists for).
+- upstream defects #7 #8 #9 #10 #12 #15 fixed behind per-bug McsOptions
+  bools, default FIXED (decision 4); McsCounters proves fixed==upstream when
+  zero.  The inf grid points on 2 SBND fixtures are bug #9 firing on real
+  SBND input, exactly as sec 6.4 predicted.
+
+### Rounds 2-3 mechanics
+
+- Driver = free fn `PR::mcs_fill_kine` (`clus/src/MuonMCSDriver.cxx`), called
+  between the pr/94 stamps and `set_kine_info`.  Purely additive guarded
+  call; no existing code moved (M10).
+- Endpoints: chain-extreme vertices' `fit().point`, START = the one nearer
+  the main vertex.  Join key `kine_mcs_segment_id = cluster_id*1000 +
+  graph_index` (PrDisplayDump convention) of the highest-KE muon segment
+  (pf_muon) / longest chain member (long_muon).
+- Beam window: the per-bundle `candidates` list is already built under the
+  beam-window gate when `beam_window_low < beam_window_high`, so
+  `mcs_beam_window_only` reduces to "skip when no gate is configured".
+- Cathode excision lives in the *library* (`McsOptions.cathode_x/xcut`,
+  default 0 = bit-for-bit upstream) as an angle MASK: masked terms vanish
+  from the likelihood sum; counters record segments dropped + angles masked.
+  SBND value (5 cm) lives only in the config, wired from the existing
+  `cathode_x` TLA.
+- jsonnet: ONE `mcs_enable` TLA in `wct-pr-perevt.jsonnet` -> named `pr()`
+  param -> TCN key (bag merge) + `tagger_output(mcs_output=mcs_enable)`;
+  sub-knobs key-suppressed unless `mcs_enable`.  Runners gained
+  `SBND_MCS=<0|1>` -> `--tla-code mcs_enable=...` (empty = no TLA).
+
+### Compiled-config proof (M6, both keys, BOTH states)
+
+With the production pipeline list: OFF compiled JSON has **zero** `mcs_*`
+keys and is **byte-identical (`cmp`) to the JSON compiled from the pre-change
+tree at 77fd75fe**; ON shows exactly
+`mcs_enable,mcs_muon_source,mcs_point_source,mcs_cathode_x=0,
+mcs_cathode_xcut=5` on TaggerCheckNeutrino and `mcs_output` on
+UbooneTaggerOutputVisitor.  `common/clus.jsonnet tagger_output`'s new
+`mcs_output=false` default is key-suppressed, so every other caller (uboone
+qlport chain included) compiles unchanged by construction.
+
+### Unit tests per touched package
+
+`wcdoctest-mcs` 5651/5651 · `wcdoctest-clus` 2408/2408 · `wcdoctest-root`
+4013/4013.
+
+## 17. Rounds 2-3 gates (PASS, 2026-08-25)
+
+### Repro
+
+```bash
+cd sbnd_xin
+# REF arm: toolkit at 95c10cd1 (pre-MCS), rebuilt + installed (freshness proven)
+./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80ref data <35 numu50 mcp1k evts>
+./run_pr_chain_batch.sh work-mcp2k-grp0825 work-mcp2k-mcs80ref data <15 numu50 mcp2k evts>
+# OFF arm: toolkit at 8d93260d (all MCS commits), knob off (no SBND_MCS env)
+./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80offb data <same>
+./run_pr_chain_batch.sh work-mcp2k-grp0825 work-mcp2k-mcs80offb data <same>
+# ON smoke: SBND_MCS=1, 5 events
+SBND_MCS=1 ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80on-smoke data 55539 64409 277298 286906 316025
+python3 scripts/pr85_hash_gate.py work-mcp1k-mcs80ref work-mcp1k-mcs80offb   # + mcp2k
+python3 scripts/mcs_root_gate.py  work-mcp1k-mcs80ref work-mcp1k-mcs80offb   # + mcp2k
+python3 scripts/mcs_root_gate.py --expect-new kine_mcs_energy,kine_mcs_ambiguity,kine_mcs_tracklen,kine_mcs_range_energy,kine_mcs_segment_id \
+        work-mcp1k-mcs80offb work-mcp1k-mcs80on-smoke
+```
+
+### Knob-OFF byte-identical (the sec 10.3 gate) — PASS
+
+Arms `work-{mcp1k,mcp2k}-mcs80ref` (binary @ `95c10cd1`) vs
+`work-{mcp1k,mcp2k}-mcs80offb` (binary @ `8d93260d`, `mcs_enable` off), the
+full numu50 manifest, all 50 events `rc=0` in both arms:
+
+- `pr85_hash_gate.py`: **PASS, all 70 + 30 archives byte-identical**
+  (mabc-pr.zip + pctree member content hashes).
+- `mcs_root_gate.py`: **PASS, 35 + 15 events identical** -- every tree,
+  every branch, every entry of `tracking-pr.root`, T_kine schema included.
+  This is the gate `pr85` alone could not provide (sec 10.1).
+
+(A first OFF arm, `work-*-mcs80off`, was run with the binary one commit
+earlier -- before the round-4 comparator sentinel -- and passed the same
+gates; `mcs80offb` is the arm the claim rests on.)
+
+### Knob-ON smoke — the effect is visible
+
+`SBND_MCS=1`, 5 events.  `mcs_root_gate.py --expect-new`: **PASS -- the ON
+arm differs from OFF ONLY by the five kine_mcs_* branches** (5/5 events
+carry them; every pre-existing branch bit-identical, i.e. the MCS
+computation perturbs nothing else).  Representative sentinel (evt 55539):
+
+```
+mcs: source=pf_muon nseg=1 npoints=334 len=199.9cm seg_id=18002 cluster=18 ->
+ke_MCS=471.3 MeV amb=0.1378 tracklen=199.1cm ke_range=461.8 MeV
+ke_range_toolkit=466.4 MeV ke_dqdx_toolkit=428.6 MeV
+(nsegs14=14 bad_path=false cathode_drop=0/0)
+```
+
+A 199.9 cm muon: MCS within ~1% of the range estimate, low ambiguity; and
+`ke_range` (MCS's own CSDA on the trimmed path) vs `ke_range_toolkit`
+(cal_kine_range) differ by ~1% -- the table discrepancy sec 8.3 said to
+record.  A second event (286906, 127 cm, NOT contained) shows
+ke_MCS=554 vs range 309 with amb=0.63 -- high ambiguity flagging exactly the
+case range cannot be trusted on.  MCS runtime is negligible (N~10^2-10^3
+points in muon_segments mode; the sentinel appears inside the same log
+second as its neighbours).
+

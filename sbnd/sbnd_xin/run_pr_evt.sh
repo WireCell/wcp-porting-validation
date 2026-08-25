@@ -264,6 +264,10 @@ case "${SBND_REQUIRE_WASMAIN:-}" in
     0) PROT_TLA+=(--tla-code "require_provenance=false") ;;
 esac
 
+# doc 80: MCS muon momentum.  EMPTY = no TLA = job default false =
+# byte-identical pre-MCS config AND T_kine schema.  Env: SBND_MCS=<0|1>.
+[ -n "${SBND_MCS:-}" ] && PROT_TLA+=(--tla-code "mcs_enable=$([ "${SBND_MCS}" = 0 ] && echo false || echo true)")
+
 PIPELINE_CODE="[]"
 if [ -n "$PIPELINE" ]; then
     PIPELINE_CODE="[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
