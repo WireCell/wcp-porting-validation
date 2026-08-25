@@ -1781,6 +1781,7 @@ process_group() {
     # actually ran with rather than let nusel_extract guess from a possibly
     # incomplete log -- without it an out-of-window main reads 0 "evaluated,
     # clean" instead of -1 "not evaluated" (seen on mcp1k 48367).
+    local _NOK=0; local -a _MISSING=()
     for evt in "${EVTS[@]}"; do
         local PRDIR="$OUTROOT/pr_evt${evt}"
         local QLPCT="$QLROOT/ql_evt${evt}/pctree-evt${evt}.tar.gz"
@@ -1808,7 +1809,22 @@ print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_
             QLPCT="$PRDIR/pctree-pr-evt${evt}.tar.gz"
             QLBEE=""
         fi
-        echo "rc=0" > "$PRDIR/rc.txt"
+        # doc 82 round 2.  This used to be an unconditional `echo "rc=0"`.
+        # The GROUP's own rc is checked above, and a non-zero group correctly
+        # stamps every member -- but a group that exits 0 having produced
+        # nothing for ONE member still reported that member as rc=0, so any
+        # coverage count taken from rc.txt silently over-counted.  Take the
+        # per-event verdict from the per-event product wire-cell was told to
+        # write (save_tensors=.../pctree-pr-evt%1%.tar.gz, unconditional in
+        # the group path) instead of asserting success.
+        if [ -s "$PRDIR/pctree-pr-evt${evt}.tar.gz" ]; then
+            echo "rc=0" > "$PRDIR/rc.txt"
+            _NOK=$((_NOK+1))
+        else
+            echo "rc=1" > "$PRDIR/rc.txt"
+            _MISSING+=("$evt")
+            echo "[group $GIDX] event $evt: NO per-event product though the group exited 0" >&2
+        fi
         python3 "$SX/scripts/multi/slice_group_log.py" "$GLOG" "$evt" \
             > "$PRDIR/wct_pr_evt${evt}.log" 2>/dev/null
         python3 "$SX/nusel_extract.py" \
@@ -1821,7 +1837,11 @@ print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_
             --run "$E_RUN" --subrun "$E_SUBRUN" \
             --out "$PRDIR/nusel-evt${evt}.tsv" 2>>"$PRDIR/stdout.log"
     done
-    echo "[group $GIDX] rc=0  -> $OUTROOT (${#EVTS[@]} events)"
+    if [ "$_NOK" -ne "${#EVTS[@]}" ]; then
+        echo "[group $GIDX] rc=0 from wire-cell but ${_NOK}/${#EVTS[@]} events have products; missing: ${_MISSING[*]}" >&2
+        return 1
+    fi
+    echo "[group $GIDX] rc=0  -> $OUTROOT (${_NOK}/${#EVTS[@]} events)"
     return 0
 }
 

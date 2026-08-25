@@ -9,8 +9,17 @@ byte-identical, and recorded two residuals it deliberately did not chase:
   events; 7 of 3067 had to be re-run outside the group to reach the stage-A
   PASS.
 
-This round root-causes both.  Neither cause was what the earlier write-ups
-assumed.
+Round 1 root-caused and **fixed** the log tear, and root-caused the Q/L flip as
+far as "a read of memory the program never wrote".  **Round 2 retracts that
+second conclusion** (§2c) — memcheck is clean in all reconstruction code and the
+heap *fill byte* turns out to be inert; the channel is address **reuse**, and
+the mechanism is narrowed but still unnamed.  Round 2 also tests event 99438 as
+the separate thread doc 81 asked for (§2b, it is not separate), and fixes the
+group-mode `rc=0` coverage defect (Part 4).
+
+Neither cause was what the earlier write-ups assumed, and round 1's own answer
+to the second was wrong too.  Every claim below is labelled with the round that
+made it.
 
 ## Repro block
 
@@ -34,6 +43,33 @@ MALLOC_PERTURB_=170 DRAWS=5 PRECOMPILE=1 ./scripts/multi/repro_ql_nondet.sh \
 # --- 3. the original doc-81 pair, for the ~10%-flip version of it -------
 DRAWS=10 ./scripts/multi/repro_ql_nondet.sh \
     work-mcp1k-grp0825 /home/xqian/tmp/d82/base-inproc 285993 286191
+
+# --- ROUND 2 -----------------------------------------------------------
+# 4. the cell round 1 never measured: 99438 alone and IN-PROCESS, which is
+#    the configuration doc 81 actually failed in.  PRECOMPILE=0 is the point.
+DRAWS=10 PRECOMPILE=0 ./scripts/multi/repro_ql_nondet.sh \
+    work-mcp2k-grp0825 /home/xqian/tmp/d82r2/e99438-inproc 99438
+#   -> 2 draws match ql0819, 8 do NOT.  Doc 81 saw 3 of 3 in the 8-side.
+
+# 5. the control: the other six, same configuration, 3 draws each.
+./scripts/multi/run_e2.sh /home/xqian/tmp/d82r2   # 292643, 321101, 53793 also flip
+
+# 6. how many distinct outcomes exist, over every draw of every arm.
+python3 ./scripts/multi/state_census.py /home/xqian/tmp/d82r2
+#   -> 1 or 2 states per event, never 3.
+
+# 7. memcheck on the same event (~4 min; needs no rebuild).  "-" = no fill.
+#    These two differ ONLY in the freelist volume and land in DIFFERENT states,
+#    which is what shows the channel is address reuse, not heap contents.
+./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/vg-b0 99438 - -  20000000
+./scripts/multi/run_vg.sh /home/xqian/tmp/d82r2/vg-e  99438 - - 500000000
+#   -> 20 MB : state A       500 MB : state B
+#   and neither run reports a single memcheck error in WCT reconstruction code.
+
+# 8. permutation or genuinely different numbers?  (8% relative, so: different.)
+python3 ./scripts/multi/numdiff.py \
+    /home/xqian/tmp/d82r2/e99438-inproc/draw5/ql_evt99438/pctree-evt99438.tar.gz \
+    /home/xqian/tmp/d82r2/e99438-inproc/draw1/ql_evt99438/pctree-evt99438.tar.gz
 ```
 
 The reproducer rebuilds a group from surviving per-event products, so it needs
@@ -327,6 +363,14 @@ real latent hazard and are recorded as such in §Latent below.
 
 ### It is a read of memory the program never wrote
 
+> **SUPERSEDED BY ROUND 2 — read §2c before relying on this section.**  The
+> observations below are reproducible and stand.  The *conclusion* does not:
+> valgrind memcheck is clean in every line of WCT reconstruction code on runs
+> landing in **both** states, and separating `--malloc-fill` from `--free-fill`
+> shows the answer tracks neither.  What it tracks is heap address **reuse**.
+> The section is kept unedited as the record of how the round got there.
+
+
 Three named hypotheses were tested and all three failed:
 
 | hypothesis | test | result |
@@ -346,9 +390,17 @@ settles it:
 | `MALLOC_PERTURB_=1` | 5 | **all 5 identical to `ql0819`** |
 | `MALLOC_PERTURB_=170` | 5 | **all 5 identical to each other, all differ from `ql0819`** |
 
-Each arm is internally *perfectly* stable and the two arms disagree.  The
-result is a deterministic function of the byte glibc uses to fill heap memory
-the program itself never wrote.
+Each arm is internally stable **in this configuration** and the two arms
+disagree, so the answer moves with the byte glibc uses to fill heap memory the
+program itself never wrote.  That the fill byte *changes* the answer is the
+finding, and it stands.
+
+**Corrected in round 2:** the stronger reading — that the answer is a
+deterministic *function* of the fill byte — does not generalise, and this
+section originally implied it did.  Fixing `MALLOC_PERTURB_` pins some arms and
+not others (§2b): 53793 precompiled pins 3/3 either way, 321101 precompiled at
+`=1` still splits 2/1, and **every in-process arm splits** even with the byte
+fixed.  Read the table below as one configuration, not as the general law.
 
 **Which of the two kinds it is, is NOT settled here.**  `MALLOC_PERTURB_` fills
 fresh allocations *and* poisons freed blocks, so this is consistent with either
@@ -367,20 +419,32 @@ composition flips — over every draw of every configuration:
 | 99438 | 50 | 6 | **2** |
 | 286191 | 57 | 4 | **2** |
 
-| event 99438 configuration | state A (= `ql0819`) | state B |
-|---|---:|---:|
-| alone, default threads | 10 | 0 |
-| alone, one BLAS thread | 5 | 5 |
-| alone, `MALLOC_PERTURB_=1` | 5 | 0 |
-| alone, `MALLOC_PERTURB_=170` | 0 | 5 |
-| 16-event group, in-process | 5 | 5 |
-| 16-event group, precompiled | 1 | 9 |
+| event 99438 configuration | jsonnet | state A (= `ql0819`) | state B |
+|---|---|---:|---:|
+| alone, default threads | **precompiled** | 10 | 0 |
+| alone, one BLAS thread | **precompiled** | 5 | 5 |
+| alone, `MALLOC_PERTURB_=1` | **precompiled** | 5 | 0 |
+| alone, `MALLOC_PERTURB_=170` | **precompiled** | 0 | 5 |
+| 16-event group | in-process | 5 | 5 |
+| 16-event group | **precompiled** | 1 | 9 |
+| *round 2:* alone, default threads | in-process | 2 | 8 |
+| *round 2:* alone, `MALLOC_PERTURB_=1` | in-process | 4 | 1 |
+| *round 2:* alone, `MALLOC_PERTURB_=170` | in-process | 3 | 2 |
+
+The `jsonnet` column was **missing in round 1 and it mattered**: every "alone"
+row was precompiled, which is *not* how `run_chain_group.sh` ran, and the
+omission is what made §2b's discrepancy look like a contradiction.
 
 One binary decision flips.  `work-<s>-ql0819` is simply one of its two values —
 not a "correct" answer the group mode failed to reproduce.  Every doc-81 §7.1
 event that "converged" when re-run did so by landing on state A again, which is
-why re-running worked and why 99438, whose bias is near 50/50 in a group,
-needed several tries.
+why re-running worked.
+
+*(Round 1 ended that paragraph with "and why 99438, whose bias is near 50/50 in
+a group, needed several tries."  That was wrong: doc 81's tries were
+**single-event**, not in a group, and it silently moved them onto a
+configuration they never ran in.  §2b measures the configuration they actually
+used — 8 of 10 draws land in state B — and the sentence is withdrawn.)*
 
 This also explains, without any of them being separately true: why group
 context matters (a different allocation history leaves different bytes behind),
@@ -403,6 +467,203 @@ in `clus/`, upstream of matching, the differing arrays are exact permutations
 rather than perturbed values, and the `MALLOC_PERTURB_` dependence is not an FP
 signature.  Whether the `match/` residual has the same underlying cause is worth
 a look in the next round, but nothing here settles it.
+
+### Part 2b — event 99438, tested as its own thread
+
+Doc 81 flagged 99438 as a **separate** problem from the other six: the others
+converged when re-run as single-event groups, 99438 "did not converge in three
+tries" and only matched via the legacy `run_ql_evt.sh` driver, so doc 81
+recorded that it "differs *systematically* between the two drivers, not just
+occasionally, which is a second thread for the audit round to pull."  Round 1
+of this doc folded it into the general story without testing that.  This
+section tests it, and the answer is **no — same mechanism, different bias**.
+
+**The discrepancy that had to be resolved first.**  Doc 81: 99438 failed **3 of
+3** as a single-event group.  Round 1 of this doc: "alone, default threads —
+**10 state A / 0 state B**".  Same nominal configuration, 13 draws split 10-A /
+3-B.  Reading the round-1 scratch arms settles it without a single new run:
+
+| arm | jsonnet |
+|---|---|
+| `d82/e99438-{thr,1thr,perturb1,perturb170}` — *every* round-1 single-event arm | **precompiled** |
+| doc 81's three tries, via `run_chain_group.sh` before this doc gave it the knob | **in-process** |
+
+Round 1 never measured *99438 alone, in-process* — the one cell doc 81 was
+actually in.  **E1** fills it: 10 draws, in-process, single-event.
+
+| 99438 alone, in-process, 10 draws | state A (= `ql0819`) | state B |
+|---|---:|---:|
+| E1 | **2** | **8** |
+
+At an 80 % bias toward state B, three tries all landing in B has probability
+0.51 — *more likely than not*.  Doc 81 saw an ordinary run of a biased coin and
+read it as a systematic difference.  And the "driver difference" is fully
+accounted for without any second mechanism: **`run_ql_evt.sh:552` defaults
+`SBND_PRECOMPILE_CFG=1` and `run_chain_group.sh` had no such path at all**, so
+"legacy driver" and "group driver" were precompiled and in-process
+respectively — 0/10 state B versus 8/10 on the same event (E3).
+
+**The control that decides "distinct".**  Driver arms on 99438 alone cannot
+show that 99438 is *special*; only the other six can.  **E2** runs each of them
+in the configuration doc 81 actually used — alone, in-process, 3 draws:
+
+| event | state A | state B | product that differs |
+|---|---:|---:|---|
+| mcp1k 286191 | 3 | 0 | — |
+| mcp1k 292643 | 2 | **1** | `mabc-all-apa.zip` |
+| mcp2k 53793 | 0 | **3** | `pctree` `clustering_tensor_53793_32_array.npy` |
+| mcp2k 161043 | 3 | 0 | — |
+| mcp2k 321101 | 1 | **2** | `mabc-all-apa.zip` |
+| mcp2k 350816 | 3 | 0 | — |
+| mcp2k 99438 *(E1, 10 draws)* | 2 | **8** | `mabc-all-apa.zip` |
+
+Three of the six are bistable in exactly the configuration where doc 81
+recorded them as "converged", and **53793 landed in the non-reference state 3
+times out of 3** — by doc 81's own criterion *more* systematic than 99438, yet
+it was written down as converged because the re-runs stopped at the first
+match.  99438 is not distinguished.
+
+**Verdict, against the rule written before the runs.**  One mechanism, not two:
+
+* every arm's outcome set is `{A, B}` — an 84-draw census over all of round 2's
+  arms (`state_census.py`, digesting member-content hashes of every Q/L product
+  a draw wrote) finds **1 or 2 distinct states per event and never 3**;
+* `MALLOC_PERTURB_` moves 99438 in the in-process arm as it does elsewhere, and
+  53793 precompiled pins **3/3 state A at `=1` and 3/3 state B at `=170`** —
+  the same fill-byte control, on a different event and a different product;
+* the two drivers differ by `SBND_PRECOMPILE_CFG` and nothing semantic.  The
+  group driver additionally passes `multi_event=true`, `evt_subdir`, `rse_map`
+  and `save_tensors`, but at one event `multi_event=true` reproduces the legacy
+  answer 10 times out of 10 (round 1's precompiled arm), so it is inert here.
+
+**What round 2 did find, and it cuts the other way.**  Fixing the fill byte
+does **not** always pin the outcome:
+
+| arm | `MALLOC_PERTURB_=1` (A/B) | `=170` (A/B) |
+|---|---|---|
+| 99438, precompiled *(round 1)* | 5 / 0 | 0 / 5 |
+| 53793, precompiled | 3 / 0 | 0 / 3 |
+| 321101, precompiled | **2 / 1** | 0 / 3 |
+| 99438, **in-process** | **4 / 1** | **3 / 2** |
+| 53793, **in-process** | **1 / 2** | **2 / 1** |
+
+Every in-process arm still splits with the byte held fixed.  That is consistent
+with the diagnosis rather than against it: the fill byte fixes the *contents* of
+never-written memory, but gojsonnet's Go runtime allocates and frees on ~31
+extra threads concurrently with WCT, so *which* block a given request lands on
+varies run to run — and a block the process itself wrote earlier carries real
+data, not the fill byte.  Precompiled (7 threads, no concurrent allocator) the
+sequence is reproducible and the byte usually decides; in-process it is not.
+
+So the honest form of round 1's claim: **the fill byte demonstrably changes the
+answer, which is what proves the read; it does not always determine it.**
+
+### Part 2c — round 2 takes the diagnosis apart
+
+Round 1 concluded the flip is **a read of heap memory the program never wrote**.
+Round 2 tested that directly, and **it does not survive.**  Two independent
+lines say so, and a third kills the obvious alternative.  Nothing here changes
+what is *observed* — the flip is real, binary, and heap-dependent — only what it
+is *caused by*.
+
+**(i) memcheck is clean in every line of reconstruction code, on both states.**
+`run_vg.sh` runs the same single event under valgrind memcheck, config
+precompiled, in about four minutes and with no rebuild.  Seven runs.  The WCT
+error inventory is *identical* in all of them:
+
+| memcheck finding | count | where |
+|---|---:|---|
+| Conditional jump on uninitialised value | 98 | ROOT's `TFile::Open` path — `SCEFieldTH3::configure` is only the WCT *caller* |
+| Invalid read of size 4 | 1 | ROOT's `DeleteChangesMemoryImpl`, which frees a block and reads it back **on purpose** |
+| Invalid read of size 32 | 1 | Go's `indexbytebody` SIMD over-read of a 42-byte string, `Persist::Parser` at startup |
+| **anything in `libWireCellClus` / `libWireCellImg` / `libWireCellAux`** | **0** | — |
+
+All of it is third-party, all of it at configuration time, none of it per-point.
+This is not a weak negative: detecting a conditional that depends on undefined
+memory is precisely what memcheck does, and **one of the clean runs is a run
+that produced the anomalous state** (below).  If the flip were decided by
+reading never-written or freed memory, this is where it would appear.
+
+**(ii) the fill byte does not decide the answer.**  Under valgrind
+`--malloc-fill` and `--free-fill` are *independent*, which glibc's single
+`MALLOC_PERTURB_` byte is not — so the 2×2 separates "never written" from
+"freed":
+
+| run | `--malloc-fill` | `--free-fill` | freelist | outcome |
+|---|---|---|---|---|
+| B0 | *(none)* | *(none)* | 20 MB | **state A** |
+| A2 | `0xfe` | `0x01` | 500 MB | state B |
+| B2 | `0x55` | `0xaa` | 500 MB | state B |
+| C2 | `0xfe` | `0xaa` | 500 MB | state B |
+| D2 | `0x55` | `0x01` | 500 MB | state B |
+| E | *(none)* | *(none)* | **500 MB** | **state B** |
+
+The outcome tracks **neither** fill.  What it tracks is `--freelist-vol` — the
+one knob that decides how long valgrind withholds freed blocks from **reuse**.
+B0 and E differ in nothing else and land in different states.  So the channel is
+heap **address reuse**, not heap **contents** — and the round-1 sentence "the
+defect is about memory *contents*, not addresses" has it exactly backwards.
+(Round 1 offered `setarch -R` as evidence against addresses.  That was a bad
+inference: `-R` removes ASLR, i.e. the *base*, and leaves the relative order and
+reuse of heap chunks — which is what actually varies — untouched.)
+
+**(iii) it is not floating point either.**  Comparing the two states array by
+array (`numdiff.py`) inside `pctree-evt99438.tar.gz`:
+
+| | arrays |
+|---|---:|
+| byte-identical | 356 |
+| **pure permutation** — same multiset, different order | 48 |
+| **values genuinely differ** | 6 |
+
+and the largest float difference is `max rel = 8.2e-2` over 28 of 31536 entries
+— **8 %, not 8 ulp**.  Points really are assigned to different clusters.  A
+rounding or SIMD-alignment story would show differences near 1e-16; this is a
+decision flip, not drift.
+
+**(iv) the order-dependence census comes back empty.**  Doc 81 proposed the
+mechanism was an address-ordered walk of an unguarded pointer-keyed container,
+and named five: `flash_t0_group` and `used_clusters` in
+`clustering_{close,extend,cathode_connect,parallel_prolong,examine_bundles}.cxx`.
+A sweep of `clus/`, `match/` and `img/` refutes all five — **every one is
+lookup-only** (`.at()` / `.find()` / `.insert()`), never walked, so its order is
+unobservable.  `used_clusters` does not exist at all in three of the five files.
+Nor is there a surviving hit elsewhere: the containers that *are* iterated
+(`TrackFitting.cxx:2397`, `retile_cluster`'s `blobs_to_remove` ×3,
+`QLMatching.cxx:4667`, `clustering_deghost.cxx:262`, `NeutrinoDeghoster.cxx:61`)
+are each order-neutral, most by an explicit tie-break or an immediate sort.
+`img/` holds no pointer-keyed container at all.
+
+### What survives, and what the next round should do
+
+Four mechanisms are now excluded by measurement rather than by argument:
+**the `blob_less`/`cluster_less` tie-break** (0 ties in 446972 blobs, round 1),
+**a read of never-written or freed memory** (memcheck clean on both states; fill
+bytes inert), **floating-point drift** (differences are 8 %, not ulps), and
+**address-ordered iteration of a pointer-keyed container** (census empty).
+
+What fits every observation is a narrower thing that all four searches were
+built to miss: **a pointer VALUE reused as an identity.**  A memo or cache keyed
+on `const Blob*` / `const Cluster*` that outlives the object it keys on will be
+hit by a *different* object allocated later at the same address.  Such a cache
+is never iterated, so the order census skips it; the memory is live and fully
+defined, so memcheck cannot see it; the value read is real data, not a fill
+byte, so `--malloc-fill` is inert — and whether the collision happens at all
+depends on **address reuse**, which is exactly the knob that flips the answer.
+The census listed several such caches as "lookup-only, benign" — correct about
+*order*, and silent about *stale keys*.  This tree has form for the same shape:
+doc 76 round 3's ident-keyed `m_cluster_xext_cache` gave a wrong answer while
+crashing nothing.
+
+So the next round's target is concrete, and different from the one round 1
+handed it: **enumerate the pointer-keyed caches reachable from the Q/L stage and
+check each for a key that can outlive its object** — starting with
+`Facade_Cluster.cxx:3698` and `NeutrinoPatternBase.cxx:952`
+(`unordered_map<const Blob*, double> blob_total_charge`) and the mutable
+per-cluster memos at `QLMatching.h:922-955`.  The handle is unchanged and cheap:
+one event, ~1 min per draw, a binary outcome, and `--freelist-vol` to move it on
+demand.  **No fix is proposed here and none should be guessed at**
+(CLAUDE.md §5.7): the mechanism is narrowed, not identified.
 
 ### Latent: the comparator tie-breaks
 
@@ -459,6 +720,88 @@ Verified on one 16-event group, `--from ql`, both ways:
 ON versus OFF differ on 286191 alone, and it lands on `eed0bc8753`, its known
 state B — the part-2 defect, not a runner regression.
 
+## Part 4 — the rc=0 coverage defect in group mode
+
+Neither "log related" nor "Q/L determinism", which is how it survived doc 81
+and nearly survived this doc too: it is a **runner** defect, and it falls in the
+gap between this round's two labels.  Doc 81 §7 recorded it in one line and left
+it open.
+
+### Symptom
+
+`work-<s>-prod0825/pr_evt<ID>/rc.txt` says `rc=0` for every member of every
+group that ran.  A coverage count taken from those files therefore always
+reports 100 %, whatever actually happened.
+
+### Root cause
+
+`run_pr_chain_batch.sh`, in `process_group()`.  The **group's** own exit code is
+handled correctly — at `:1772-1776` a non-zero wire-cell stamps the real rc into
+every member's `rc.txt` and returns 1.  The defect is narrower than "always
+rc=0" and worth stating precisely:
+
+```bash
+        echo "rc=0" > "$PRDIR/rc.txt"        # unconditional, inside the per-event loop
+```
+
+**Whenever the group process exits 0, every member is stamped `rc=0` — including
+a member for which the job produced nothing.**  One wire-cell process now covers
+16 events; it can complete and still leave a single event's products unwritten,
+and that is exactly the case the file is silent about.  `nusel_extract.py`'s own
+exit code is discarded on the next line too (`2>>"$PRDIR/stdout.log"` with no
+check), so a member with a missing or unparsable table also reads as rc=0.
+
+### Why it hid
+
+Per-event mode never had the failure mode: one process, one event, and its rc
+*is* the event's rc.  Group mode inherited the line unchanged, where the
+identity no longer holds.  And it fails **silently and optimistically** — the
+wrong answer is "everything is fine", which nothing downstream contradicts.
+
+### Fix
+
+Take the per-event verdict from the per-event product wire-cell was told to
+write.  `save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz` is
+unconditional in the group path, so its absence is unambiguous:
+
+```bash
+        if [ -s "$PRDIR/pctree-pr-evt${evt}.tar.gz" ]; then
+            echo "rc=0" > "$PRDIR/rc.txt"; _NOK=$((_NOK+1))
+        else
+            echo "rc=1" > "$PRDIR/rc.txt"; _MISSING+=("$evt")
+            echo "[group $GIDX] event $evt: NO per-event product though the group exited 0" >&2
+        fi
+```
+
+and the group tail now reports the count rather than asserting it, returning
+non-zero when a member is missing so the group lands in `BATCH_FAIL_LIST`
+(`_runlib.sh:179`) instead of passing quietly.
+
+### Verification
+
+`smoke_rc.sh` lifts the decision block **out of the runner with `sed`** so the
+test cannot drift from the source, then runs it over a real four-event group
+reached through read-only symlinks, once complete and once with one member's
+product removed:
+
+```
+[complete]    _NOK=4/4  missing=''        rc.txt: rc=0 rc=0 rc=0 rc=0
+[onemissing]  _NOK=3/4  missing='166738'  rc.txt: rc=0 rc=1 rc=0 rc=0
+              [group 0] event 166738: NO per-event product though the group exited 0
+```
+
+Existing arms are untouched — no `rc.txt` under any `work-*` was written, and
+the change affects future runs only.
+
+### The standing rule, which does not change
+
+**Count group-mode coverage from real per-event product existence, never from
+`rc.txt`.**  Doc 81 §8 already did exactly this, which is why its 3067-event
+coverage numbers are sound despite the defect being live at the time.  The fix
+makes `rc.txt` *agree* with that rule; it does not make it the authority.  Any
+arm produced before this commit still has uniformly optimistic `rc.txt` files
+and must be counted from products.
+
 ## What shipped, and what did not
 
 | | status |
@@ -467,8 +810,11 @@ state B — the part-2 defect, not a runner regression.
 | `scripts/multi/log_tear_scan.py` | shipped |
 | `scripts/multi/{merge_group_products.py, repro_ql_nondet.sh, repro_cmp.py}` | shipped |
 | `run_chain_group.sh` `SBND_PRECOMPILE_CFG` | shipped **default OFF** — knob-off is byte-identical |
-| `stable_facade_order` knob (the round's approved scope) | **NOT built** — its mechanism was falsified |
-| the bad read itself (uninitialised *or* freed) | **NOT fixed** — reported, not tuned (CLAUDE.md §5.7) |
+| `stable_facade_order` knob (round 1's approved scope) | **NOT built** — its mechanism was falsified |
+| *round 2:* `run_pr_chain_batch.sh` per-event rc from product existence | **SHIPPED** — smoke-tested both ways, existing arms untouched |
+| *round 2:* `scripts/multi/{run_e2.sh, run_vg.sh, state_census.py, smoke_rc.sh, numdiff.py}` | shipped |
+| *round 2:* event 99438 as a separate thread | **TESTED, and it is not one** (§2b) |
+| the Q/L flip itself | **NOT fixed** — mechanism narrowed, not identified; reported, not tuned (CLAUDE.md §5.7) |
 
 Two honest retractions, recorded because the intermediate claims were made out
 loud during the round:
@@ -480,12 +826,28 @@ loud during the round:
 2. "The comparator pointer tie-break is the prime suspect" — carried from the
    plan.  446972 blobs say it is unreachable.
 
+Round 2 adds two more, both retracting round 1 rather than an intermediate:
+
+3. **"The Q/L flip is a read of memory the program never wrote."**  Memcheck is
+   clean in every line of WCT reconstruction code on runs landing in *both*
+   states, and `--malloc-fill` / `--free-fill` are inert.  §2c.  What stands is
+   the weaker, still-useful form: the flip is heap-dependent, and the channel is
+   address **reuse**.
+4. **"The defect is about memory contents, not addresses."**  Backwards.
+   `--freelist-vol` — reuse — is the only valgrind knob that moves it, and
+   round 1's `setarch -R` argument does not bear on relative heap layout at all.
+
 ### Open, for the next round
 
-* **Find the bad read.**  Handle: `MALLOC_PERTURB_=1` versus `=170` on event
-  99438 alone, ~1 min per run, binary outcome.  Use **valgrind memcheck or
-  ASan** — it may be a use-after-free rather than an uninitialised read, and
-  MSan would be blind to that case.
+* **Find the stale pointer key.**  Round 1 put "find the bad read" here and
+  round 2 spent itself showing there isn't one to find (§2c).  The replacement
+  target: enumerate the pointer-keyed caches reachable from the Q/L stage and
+  check each for a key that can outlive its object — `Facade_Cluster.cxx:3698`
+  and `NeutrinoPatternBase.cxx:952` (`unordered_map<const Blob*, double>
+  blob_total_charge`), the mutable per-cluster memos at `QLMatching.h:922-955`.
+  Same cheap handle: one event, ~1 min a draw, binary outcome, and
+  `--freelist-vol` moves it on demand.  **Do not run memcheck again for this** —
+  seven runs say it is clean where it matters.
 * **`SBND_PRECOMPILE_CFG=1` for stage A**, gated on the standard manifest.  It
   is worth doing on its own merits — it cuts the job from 38 threads to 7 and
   closes doc pr/97's SIGSEGV hazard, which is currently unmitigated in the only
@@ -493,8 +855,15 @@ loud during the round:
   events, not a free win.
 * **The comparator tie-breaks and `Facade_Grouping.cxx:130-137`**, in the order
   given above.
-* Whether `QLMatching`'s accepted "~7 marginal bundles" FP residual is in fact
-  this same bad read.
+* Whether `QLMatching`'s accepted "~7 marginal bundles" FP residual shares this
+  cause.  Round 2 makes this *less* likely, not more: the two states here differ
+  by **8 % relative**, not by ulps, so whatever this is, it is not the floating
+  point that verdict was about.
+* **The doc-81 §7.1 event list is not a list of unstable events.**  §2b shows
+  292643, 321101 and 53793 flip in the very configuration doc 81 marked
+  "converged", and 53793 landed in the non-reference state 3 times of 3.  A
+  campaign that re-runs until an event matches records only the last draw.  Any
+  future stability claim needs N draws per event, not one.
 
 ### Status flags
 
@@ -504,3 +873,12 @@ loud during the round:
   event landed on its known second state.  Not a revalidation trigger for the
   logging change; it is the part-2 defect.
 * `work-*-{grp,prod}0825` remain the current reference arms and are untouched.
+* **Round 2 changed no C++ and no reconstruction output.**  The only code change
+  is `run_pr_chain_batch.sh`'s per-event `rc.txt`, which is bookkeeping: it is
+  written *after* wire-cell has finished and is read by nothing in the chain.
+  No gate was needed and none is claimed.
+* Round 2's runs are all in `/home/xqian/tmp/d82r2/` scratch.  Nothing under
+  `work-*`, `abtest/snap/`, `sweep/` or any `decisions*` tree was written to,
+  and no `rc.txt` in any existing arm was touched (CLAUDE.md M13).
+* **Every `rc.txt` written before this commit is uniformly optimistic** and must
+  not be used for coverage retrospectively — count from products (Part 4).
