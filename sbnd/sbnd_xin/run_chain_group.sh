@@ -31,6 +31,25 @@
 #   --groups L   comma-separated group list.
 #   --from/--to  run only part of the chain on an existing group dir, e.g.
 #                `--from ql` to redo Q/L from the imaging checkpoint.
+#   --fsproduct T  art InputTag of the FrameShiftInfo product for the reco1
+#                dump's caf_offset_mode=product.  Default is the standard
+#                '...__FRAMESHIFT.'; the NCpi0 sideband file carries
+#                '...__FILTERFRAMESHIFT.' instead (doc 71 sec 3), and the
+#                dump ABORTS rather than silently falling back.
+#   --gbase N    offset the g<K> directory NAMES by N (entry ranges are
+#                unaffected).  A sample split across several reco1 files --
+#                mcp2k is two 1000-entry parts -- is one invocation per
+#                file into ONE out_root; without an offset the second
+#                invocation's g0 lands on the first's, and the
+#                skip-if-present guard would then reuse the WRONG frames.
+#   --layout L   'group' (default) keeps one archive set per group.
+#                'perevt' ALSO writes the per-event layout a per-event job
+#                writes -- <out>/evt<ID>/icluster-*.npz and
+#                <out>/ql_evt<ID>/{pctree-evt<ID>.tar.gz, mabc*.zip,
+#                opflash_apa*.tar.gz} -- so the products are a file-for-file
+#                drop-in for work-<s>-ql0819 and can be gated with the
+#                existing tools.  Uses the Q/L job's evt_subdir TLA plus
+#                scripts/multi/split_group_products.py (doc 81 round 1).
 #
 # Env: SBND_MAX_JOBS (concurrent GROUPS, default 4 -- each wire-cell process is
 #      itself multi-threaded, CLAUDE.md M5), SBND_RECO1 (plugin install dir).
@@ -56,7 +75,12 @@ INPUT=$1; OUTROOT=$2; REALITY=$3; shift 3
 case "$REALITY" in data|sim) ;; *) echo "ERROR: reality must be data|sim" >&2; exit 1;; esac
 [ -r "$INPUT" ] || { echo "ERROR: no such reco1 file: $INPUT" >&2; exit 1; }
 
-GSIZE=16; ONLY=""; FROM=img; TO=ql
+GSIZE=16; ONLY=""; FROM=img; TO=ql; LAYOUT=group
+# Empty => the TLA is not passed at all, so wct-reco1-dump.jsonnet omits the
+# key (its own default is '') and the C++ default applies -- i.e. exactly
+# what this runner did before --fsproduct existed.
+FSPRODUCT=''
+GBASE=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --size)   GSIZE=$2; shift 2;;
@@ -65,6 +89,9 @@ while [ $# -gt 0 ]; do
         --groups) ONLY=$2; shift 2;;
         --from)   FROM=$2; shift 2;;
         --to)     TO=$2; shift 2;;
+        --layout) LAYOUT=$2; shift 2;;
+        --gbase)  GBASE=$2; shift 2;;
+        --fsproduct) FSPRODUCT=$2; shift 2;;
         -h|--help) usage 0;;
         *) echo "ERROR: unknown argument: $1" >&2; usage;;
     esac
@@ -101,22 +128,34 @@ fi
 
 run_group() {
     local K=$1
-    local GDIR="$OUTROOT/g$K"
+    local GDIR="$OUTROOT/g$(( K + GBASE ))"
     local BEG=$(( K * GSIZE ))
     mkdir -p "$GDIR"
 
     # ---- 1. reco1 -> the group's frames + opflash (one process) -------------
+    # doc 81 round 1: a FAILED dump leaves a short, unreadable frames archive
+    # behind, and plain `-s` counts it as done -- the retry then skips the dump
+    # and every later stage runs on zero events.  Require the archive to
+    # actually list frames, and delete it when the dump fails.
+    if [ -e "$GDIR/frames-dnn.tar.bz2" ] \
+       && ! tar tjf "$GDIR/frames-dnn.tar.bz2" 2>/dev/null | grep -q '^frame_dnnsp_'; then
+        echo "[g$K] discarding an unreadable frames-dnn.tar.bz2 from an earlier failed dump" >&2
+        rm -f "$GDIR/frames-dnn.tar.bz2"
+    fi
     if [ "$FROM" = img ] && [ ! -s "$GDIR/frames-dnn.tar.bz2" ]; then
+        local FS_TLA=(); [ -n "$FSPRODUCT" ] && FS_TLA=(--tla-str "frameshift_product=$FSPRODUCT")
         wire-cell -l stderr -l "$GDIR/wct_dump.log:info" -L info \
             --tla-str "input=$INPUT" \
             --tla-str "output_dir=$GDIR" \
             --tla-str "caf_offset_mode=product" \
             --tla-str "caf_offset_override=0" \
+            "${FS_TLA[@]}" \
             --tla-str "entry=-1" \
             --tla-str "entry_begin=$BEG" \
             --tla-str "entry_count=$GSIZE" \
             -c "$SX/wct-reco1-dump.jsonnet" > "$GDIR/dump.stdout" 2>&1 \
-            || { echo "[g$K] reco1 dump FAILED (see $GDIR/wct_dump.log)" >&2; return 1; }
+            || { rm -f "$GDIR/frames-dnn.tar.bz2"
+                 echo "[g$K] reco1 dump FAILED (see $GDIR/wct_dump.log)" >&2; return 1; }
     fi
 
     # The group's event ids, in archive order -- the order every downstream
@@ -126,6 +165,7 @@ run_group() {
         > "$GDIR/events.txt"
     local NEV; NEV=$(wc -l < "$GDIR/events.txt")
     echo "[g$K] entries [$BEG,$((BEG+GSIZE))) -> $NEV events"
+    [ "$NEV" -gt 0 ] || { echo "[g$K] no events in the group -- refusing to run downstream stages" >&2; return 1; }
 
     # ---- 2. imaging, whole group in one process ----------------------------
     # wct-img-all.jsonnet has no event TLA: hand it the group's frame archive
@@ -140,7 +180,7 @@ run_group() {
             -c wct-img-all.jsonnet > "$GDIR/img.stdout" 2>&1 \
             || { echo "[g$K] imaging FAILED (see $GDIR/wct_img.log)" >&2; return 1; }
     fi
-    [ "$TO" = img ] && { echo "[g$K] stopped after imaging"; return 0; }
+    [ "$TO" = img ] && { echo "[g$K] ok (stopped after imaging)"; return 0; }
 
     # ---- 3. clustering + Q/L matching, whole group in one process ----------
     # multi_event: each event's Bee layers take their number from that event's
@@ -156,18 +196,38 @@ d=json.load(open(sys.argv[1]))
 v=next(iter(d.values()),[0,0])
 print(v[0], v[1])' "$GDIR/rse.json")
 
+    # doc 81 round 1: in perevt layout each event's Q/L products go to
+    # <out>/ql_evt<ID>/ via the evt_subdir TLA -- the same names and the same
+    # places a per-event job writes.  The sinks do not create directories, so
+    # the runner must (same as run_pr_chain_batch.sh).
+    local QL_TLA=() QL_OUT="$GDIR" QL_TENSORS="$GDIR/pctree-ql.tar.gz"
+    if [ "$LAYOUT" = perevt ]; then
+        QL_OUT="$OUTROOT"
+        QL_TENSORS="$OUTROOT/ql_evt%1%/pctree-evt%1%.tar.gz"
+        QL_TLA=(--tla-str "evt_subdir=ql_evt%1%")
+        local _e
+        while read -r _e; do [ -n "$_e" ] && mkdir -p "$OUTROOT/ql_evt$_e"; done < "$GDIR/events.txt"
+    fi
+
     setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.ql.time.meta" \
     wire-cell -l stderr -l "$GDIR/wct_ql.log:debug" -L debug \
         --tla-str  "input=$GDIR" \
         --tla-code "anode_indices=[0,1]" \
-        --tla-str  "output_dir=$GDIR" \
+        --tla-str  "output_dir=$QL_OUT" \
+        "${QL_TLA[@]}" \
         --tla-code "run=$RUN0" --tla-code "subrun=$SUB0" --tla-code "event=0" \
         --tla-str  "reality=$REALITY" \
         --tla-code "multi_event=true" \
         --tla-code "rse_map=$(cat "$GDIR/rse.json")" \
-        --tla-str  "save_tensors=$GDIR/pctree-ql.tar.gz" \
+        --tla-str  "save_tensors=$QL_TENSORS" \
         -c wct-clus-matching-perevt.jsonnet > "$GDIR/ql.stdout" 2>&1 \
         || { echo "[g$K] Q/L FAILED (see $GDIR/wct_ql.log)" >&2; return 1; }
+
+    if [ "$LAYOUT" = perevt ]; then
+        python3 "$SX/scripts/multi/split_group_products.py" "$GDIR" "$OUTROOT" \
+            > "$GDIR/split.log" 2>&1 \
+            || { echo "[g$K] product split FAILED (see $GDIR/split.log)" >&2; return 1; }
+    fi
 
     echo "[g$K] ok -> $GDIR"
     return 0
