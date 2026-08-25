@@ -2653,3 +2653,10 @@ tagged here, never written to.
 - work-pr108-off1-nuecc48 (10550) -- Test A OFF gate vs work-pr107-off: PASS 2/2; disposable
 - work-pr108-assoccheck-nuecc48 (10550 46363 81597) -- WCT_DQDX_ASSOC_CHECK=1: 382 fits max|dQ|=0; keep the logs with the doc
 - qlport/scripts/sweep/pr108_{wct_off,wct_on,wct_onkeep,wcp_on,wcp_off} -- uBooNE 5384 six-event four-arm set (WCP arms from the patched prototype build); **KEEP** with the doc
+
+## doc 81 -- group-mode re-baseline of the four production samples (2026-08-25)
+- work-{nuecc48,ncpi0,mcp1k,mcp2k}-grp0825 -- stage A run in GROUP mode from reco1: `evt<ID>/` imaging + `ql_evt<ID>/` Q/L per event, 3067 events; member-content gate PASS 24536/24536 vs work-img-* and work-*-ql0819; **KEEP** (the input the MCS and PR rounds consume)
+- work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0825 -- stage B, `PR_GROUP_SIZE=16 PR_JOBS=8 PR_EXTRA_STAGES=pr_display`; pr85 6134/6134 archives + pr94 3067/3067 ROOT files byte-identical vs work-pr112i-snapD2-*; **KEEP** (current production at the shipped operating point)
+- work-*-prod0823 -- **PRE-flip** (before `fast_xgb_forest` and the pr/112 dual chain / snapD2 went ON); NOT current production, kept as the prior epoch's reference; see doc 81 sec 4
+- released this round: the 54-arm pr/112 + pr/112i option scan, work-pr104-on4-*, work-pr104-flipchk-*, and the four work-vtx106-*-nuecc48 pr/111 arms -- 66 dirs, 72.6 G
+- `scripts/retire/state-20260825/hashes/*.tsv` -- the frozen reference side of doc 81 sec 8.1 (9402 rollups: pr85 archive rollups + a pr94 per-branch rollup of every tracking-pr.root) for the six retiring arms the gate is taken against, since work-pr112i-snapD2-* was the ONLY per-event arm at the current operating point; **KEEP** (git-tracked, 888K)
