@@ -50,7 +50,7 @@ google-pprof --text --cum $(which wire-cell) $S/ql280884.prof | grep -Ei "hough|
 QL_EXTRA=-save-pctree ROOT=$S/base-ql ./run_ql_batch.sh -j 6 -f $S/ql_manifest.txt
 # (build round 1) then:
 QL_EXTRA=-save-pctree ROOT=$S/r1-ql   ./run_ql_batch.sh -j 6 -f $S/ql_manifest.txt
-python3 $S/ql_gate_r1.py $S          # all 6 archives x 186 events
+python3 scripts/analysis/qltail/ql_gate_r1.py $S   # all 6 archives x 186 events
 # PR gate (base arms = doc 77's rm10-{mcp1k,nuecc48,ncpi0}, same binary as HEAD):
 PR_JOBS=8 ./run_pr_chain_batch.sh work-mcp1k-ql0819   $S/r1pr-mcp1k   data $(cat <gate>/mcp1k241.txt)
 PR_JOBS=8 ./run_pr_chain_batch.sh work-nuecc48-ql0819 $S/r1pr-nuecc48 sim
@@ -169,7 +169,8 @@ Houghs + PO/Deghost — see sec 8.
   (`.build-fingerprint`-style header lines are quoted in each launch log).
 * `./build/clus/wcdoctest-clus`: 232 cases, 2379/2379 assertions, twice
   (after first r1 build and after the final one).
-* **SBND Q/L gate** (`$S/qltail/ql_gate_r1.py`): 186-event manifest
+* **SBND Q/L gate** (`scripts/analysis/qltail/ql_gate_r1.py`, rescued into
+  the repo 2026-08-25 from `$S/qltail/` when that arm was deleted): 186-event manifest
   (30 mcp1k tails + 56 mcp2k tails + first 100 regular mcp1k), 6 archives
   per event incl. the two per-face mabc zips that `ql_arm_compare.py`
   does not hash: **185/186 events byte-identical**.  The 1 "FAIL"

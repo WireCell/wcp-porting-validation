@@ -1033,7 +1033,9 @@ WCT_TF_RESET_CENSUS=1 PR_GROUP_SIZE=6 PR_JOBS=1 \
 grep -a tf_reset_census $D/census/wct_pr_g0.log
 
 # byte-hash the live SCN input/output without touching a repo file:
-#   $D/shim/{sitecustomize.py,SCN_Vertex.py} wrap toolkit/pyutil/python/SCN_Vertex.py
+#   scripts/analysis/doc76r3/shim/{sitecustomize.py,SCN_Vertex.py} wrap
+#   toolkit/pyutil/python/SCN_Vertex.py -- copy that dir to $D/shim, or point
+#   PYTHONPATH straight at it
 PYTHONPATH=$D/shim:$PYTHONPATH WCT_SCN_PROBE=$D/scn.txt PR_GROUP_SIZE=6 PR_JOBS=1 \
     ./run_pr_chain_batch.sh work-nuecc48-ql0819 $D/probe data 388 10550 30504 38856 42280 46363
 # two calls per event: seq odd = dual-chain OFF pass, seq even = production

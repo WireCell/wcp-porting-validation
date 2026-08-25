@@ -42,7 +42,7 @@ google-pprof --text --cum $(which wire-cell) $S/dg280884.prof | head -45
 # 1+2. A/B on the doc-78 186-event manifest (base = doc-78 base-ql/base-ql-fix composite)
 QL_EXTRA=-save-pctree ROOT=$S/dg79off-ql ./run_ql_batch.sh -j 6 -f <qltail>/ql_manifest.txt
 SBND_DG_FAST=1 QL_EXTRA=-save-pctree ROOT=$S/dg79on-ql ./run_ql_batch.sh -j 6 -f <qltail>/ql_manifest.txt
-python3 <qltail>/ql_gate_r1.py <qltail> ../dgtail/dg79off-ql   # and dg79on-ql
+python3 scripts/analysis/qltail/ql_gate_r1.py <qltail> ../dgtail/dg79off-ql   # and dg79on-ql
 # PR gate (base arms = doc 78's r3pr-{mcp1k,nuecc48,ncpi0}, all reality=data):
 PR_JOBS=8 ./run_pr_chain_batch.sh work-mcp1k-ql0819   $S/dg79pr-mcp1k   data $(cat <rm10>/mcp1k241.txt)
 PR_JOBS=8 ./run_pr_chain_batch.sh work-nuecc48-ql0819 $S/dg79pr-nuecc48 data

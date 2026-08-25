@@ -906,8 +906,8 @@ cd .../sbnd_xin && ./pr_display/serve_pr_display.sh 5017 \
   'work-r2mc-prod0813/pr_evt*/calib-pr-evt*.json'
 ```
 
-(also saved at `/home/xqian/tmp/pr82/5017-relaunch.sh`, with the raw command
-line at `5017-previous-cmdline.txt`). **5018 was not touched** and still serves
+(the scratch copies `/home/xqian/tmp/pr82/{5017-relaunch.sh,5017-previous-cmdline.txt}`
+were deleted in the 2026-08-25 tmp cleanup; the block above is the record). **5018 was not touched** and still serves
 `uitest-dqdx`.
 
 **What is now on 5017:**
