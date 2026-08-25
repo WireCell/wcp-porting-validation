@@ -392,9 +392,9 @@ reference arm's own per-event logs tear *more* than the group slices.
 
 ## 9. Retirement
 
-The campaign's own products supersede four families of study arms.  The plan is
-built and all ten asserts pass; **the deletion itself is held for the owner** —
-this section records what is staged, not what has been removed.
+The campaign's own products supersede four families of study arms.  Run
+2026-08-25 with the owner's go-ahead, after all ten asserts, the archive
+integrity gate and a full dry run had passed.
 
 ```
 python3 scripts/retire/plan_20260825.py        # 10 asserts -> OVERALL: PASS
@@ -499,3 +499,62 @@ record tar.
 The record layer is dominated by 20891 `.wct-cfg-evt<N>.json` at 266 KB each —
 the compiled config each arm actually ran, i.e. its operating point.  That is
 the thing worth keeping, and it compresses hard.
+
+
+### 9.5 Executed
+
+```
+prune_group_scratch.sh   CONFIRM=yes   20 G      rc=0
+archive_records_20260825.py            66/66     rc=0
+retire_20260825.sh A     CONFIRM=yes   66 dirs   rc=0
+```
+
+| | before | after |
+|---|---:|---:|
+| `sbnd_xin` | 236 G | **144 G** |
+| `work*` dirs | 104 | **38** (= `len(KEEP)`) |
+| `/nfs/data/1` free | 622 G | **714 G** |
+| broken symlinks | 0 | **0** |
+
+Post-deletion checks all clean: `refused=0`, dangling-link repair
+`repaired=0 unresolved=0`, **no git-tracked file deleted**, survivor census 38
+== `len(KEEP)`, removal manifest 66 rows at
+`scripts/retire/state-20260825/removed.tsv`.  The record layer went to
+`archive/records/prod0825-groupmode-20260825/` — 8.4 GiB raw compressed to
+1.4 G, integrity PASS 66/66 (tar members == manifest record files).
+
+**The freeze was then exercised for real.**  With every `work-pr112i-snapD2-*`
+arm deleted, re-running `hash_manifest_20260825.py` on the surviving
+`work-<s>-prod0825` arms and diffing against the frozen manifests reproduces
+sec 8.1 in full:
+
+| sample | rollups re-verified against a deleted reference |
+|---|---:|
+| nueCC48 | 144/144 |
+| NCpi0 | 57/57 |
+| mcp1k | 3000/3000 |
+| mcp2k | 6000/6000 |
+| **total** | **9201/9201** |
+
+So sec 8.1's PASS is still checkable by anyone, at any later date, from the
+git-tracked manifests alone — which is what the tree's "report gates by label
+so any PASS can be re-checked later" rule actually requires once the reference
+arm is gone.
+
+### 9.6 One layout claim, now tested
+
+Sec 3 justifies the per-event layout partly by "a single event can be re-run in
+place".  Stage B exercised the layout at scale (3067 events), but *that* claim
+— the legacy per-event driver working out of a group-produced root — was
+untested.  It is now:
+
+```
+SBND_IMGBASE=$PWD/work-mcp1k-grp0825 \
+  scripts/multi/ql_legacy_gate.sh $PWD/work-mcp1k-grp0825 <fresh> 166650
+```
+
+`run_ql_evt.sh` re-runs event 166650 out of the `grp0825` root into a fresh
+work root and reproduces the group's own Q/L output: `mabc-all-apa.zip`,
+`mabc-apa0-face0.zip`, `mabc-apa1-face0.zip` and `pctree-evt166650.tar.gz` all
+**SAME**, `rc=0`.  The layout is drop-in for the legacy driver, not merely for
+stage B.
