@@ -1,0 +1,11 @@
+muons used: 114  angle pairs: 977
+pull core width xz = 1.022   yz = 1.185  (transfer target 1.00)
+  T in [   0, 200): N= 482  xz=0.738  yz=0.818
+  T in [ 200, 400): N= 319  xz=1.335  yz=1.397
+  T in [ 400, 800): N= 159  xz=2.149  yz=2.579
+  T in [ 800,1500): N=  17  xz=4.278  yz=1.619
+  ivx=0: N= 110  yz=1.422
+  ivx=1: N=  95  yz=1.372
+  ivx=2: N= 211  yz=0.974
+  ivx=3: N= 407  yz=1.278
+  ivx=4: N= 154  yz=1.010

@@ -200,6 +200,14 @@ def main():
                 label="(dQdx-range)/range  med=%.3f MAD=%.3f" % med_mad(rd))
         summary.append("PartA MCS  bias/res = %.4f / %.4f" % med_mad(rm))
         summary.append("PartA dQdx bias/res = %.4f / %.4f" % med_mad(rd))
+        # the sec-9.1 headline band (range well-measured AND >=3 MCS segments)
+        Ab = [r for r in A if 100 <= r["sel_len"] <= 250]
+        if Ab:
+            summary.append("PartA MCS  bias/res (100-250cm, N=%d) = %.4f / %.4f"
+                           % (len(Ab), *med_mad(resid(Ab, "ke_mcs"))))
+            rdb = [r for r in Ab if r["ke_dqdx_tk"] > 0]
+            summary.append("PartA dQdx bias/res (100-250cm, N=%d) = %.4f / %.4f"
+                           % (len(rdb), *med_mad(resid(rdb, "ke_dqdx_tk"))))
         if Ax:
             summary.append("PartA non-cross MCS bias/res = %.4f / %.4f" % med_mad(resid(Ax, "ke_mcs")))
         if Ac:

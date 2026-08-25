@@ -237,6 +237,9 @@ fi
 # both derived from ONE mcs_enable TLA).  EMPTY = no TLA = job default false
 # = byte-identical pre-MCS config AND schema.  Env: SBND_MCS=<0|1>.
 [ -n "${SBND_MCS:-}" ] && CATH_TLA+=(--tla-code "mcs_enable=$([ "${SBND_MCS}" = 0 ] && echo false || echo true)")
+# doc 80 sec 7.5: cathode excised half-band (cm); 0 = excision off (the
+# sign-check arm).  EMPTY = no TLA = the job default 5.
+[ -n "${SBND_MCS_CATHODE_XCUT:-}" ] && CATH_TLA+=(--tla-code "mcs_cathode_xcut=${SBND_MCS_CATHODE_XCUT}")
 # doc pr/94 Phase 5b round 2: the dot guard.  Length floor (cm) for a
 # per-bundle candidate, exempting the legacy event-wide winner.  EMPTY = no
 # TLA = the job default 15 cm.  Set to 0 to reproduce the pre-5b behavior (no

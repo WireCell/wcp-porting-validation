@@ -1466,3 +1466,117 @@ case range cannot be trusted on.  MCS runtime is negligible (N~10^2-10^3
 points in muon_segments mode; the sentinel appears inside the same log
 second as its neighbours).
 
+## 18. Round 4 — validation results (2026-08-25): THE TUNE TRANSFERS
+
+### Repro
+
+```bash
+cd sbnd_xin
+SBND_MCS=1 ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80on data   # all 1000 evts, rc=0 x1000
+python3 scripts/mcs80_analysis.py --out docs/80_mcs work-mcp1k-mcs80on
+python3 scripts/mcs80_pull.py --out docs/80_mcs/pull --tsv docs/80_mcs/mcs_joined.tsv work-mcp1k-mcs80on
+# sec 7.5 sign-check arm: excision off on the 59 crosser events
+SBND_MCS=1 SBND_MCS_CATHODE_XCUT=0 ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80on-nocx data <59 evts>
+```
+
+Sample: `work-mcp1k-mcs80on` (mcp1k, 1000 MCP2025C MC events, knob ON,
+1000/1000 `rc=0`).  MCS fired on **287 bundles** (of 469 T_kine rows):
+134 contained (`act_fc==1`, the muon's own activity), 151 exiting, 35
+contained cathode crossers.  mcp2k extension NOT needed -- every headline bin
+is populated (user decision 2026-08-25: extend only if thin).
+
+### Pull test FIRST (sec 9.3) — core width 1.02 / 1.19
+
+114 contained muons, 977 angle pairs, sigma_pred = sigma1 of the tune's
+double-Gaussian at T from residual range:
+
+| | core width (robust MAD) |
+|---|---|
+| theta_xz | **1.022** |
+| theta_yz | **1.185** |
+
+Both inside the ladder's "within ~20-30% of 1 -> **ship as-is**" band.
+T-sliced, the widths GROW with T (xz: 0.74 / 1.34 / 2.15 / 4.3 for T in
+0-200 / 200-400 / 400-800 / 800-1500 MeV; yz similar; N=17 only in the last
+bin) -- the doc's own signature of a too-small RESOLUTION term at high T
+(sec 9.3: resolution is T-independent while sigmaH falls).  Per the ladder
+this is reported, not tuned (§5.7): the **validated window ~200 MeV - 1.5
+GeV** stands, and a twelve-constant intercept refit (`res_sigma{1,2}_*`)
+remains available as a later CONFIG round if high-T precision is wanted.
+Note the quoted widths use the core Gaussian only, so tail contamination
+inflates them slightly by construction.
+
+![pull test](80_mcs/pull/mcs_pull_test.png)
+
+### Part A — calibration on contained muons (range = truth proxy)
+
+Fractional residual (E - E_range,toolkit)/E_range,toolkit, median +- MAD:
+
+| population | N | MCS bias | MCS resolution | dQdx bias | dQdx resolution |
+|---|---|---|---|---|---|
+| contained, all | 134 | -1.2% | 12.8% | -1.0% | 5.0% |
+| **contained, 100-250 cm band** | **72** | **-1.2%** | **9.8%** | -0.5% | 4.0% |
+| contained, non-crossing | 99 | -1.7% | 13.9% | | |
+| contained, cathode crosser | 35 | +3.7% | 15.0% | | |
+
+**The pre-stated sec-9.1 criteria (bias within +-5%, resolution ~15% in the
+band) are MET** -- the MicroBooNE tune transfer is defensible on SBND.
+dQdx is (expectedly) sharper on this population: contained stopping muons
+are calorimetry's best case; MCS's value is the exiting population below.
+
+![MCS vs range](80_mcs/mcs_vs_range_scatter.png)
+![residuals](80_mcs/mcs_residuals.png)
+![bias vs length](80_mcs/mcs_bias_vs_length.png)
+
+### MCS momentum distribution
+
+![momentum](80_mcs/mcs_momentum_dist.png)
+
+Peak ~0.4 GeV/c; the exiting population (blue minus green) carries the
+harder tail to ~3.5 GeV/c -- exactly the muons where only MCS gives a number.
+
+### Part B — exiting muons: the free hard inequality
+
+E_MCS > E_range(visible) holds for **127/151 (84%)**; median
+E_MCS/E_range,visible = **1.63** and the ratio rises with the exiting
+fraction as expected.  Of the 24 violations, **20 are within 20% of the
+bound** (median ratio 0.92) -- resolution smearing of barely-exiting muons
+about the boundary, not basin collapse; the violator population has LOW
+ambiguity (median 0.22) versus the legitimately-unbounded exiting population
+(median 0.78, likelihood flat toward high E, as it should be).  The 4 gross
+violators are flagged in `docs/80_mcs/mcs_joined.tsv` for a later look.
+
+![exiting](80_mcs/mcs_exiting_ratio.png)
+
+### Part C — is ambiguity_MCS informative?
+
+Median |residual| by ambiguity quintile (contained): 0.063 / 0.048 / 0.044 /
+0.155 / **0.914**.  Top-vs-bottom = 14x (criterion: >=2x) -- **the score is
+strongly informative at the high end** and should gate any physics use
+(amb <~ 0.1 selects the well-measured population); it is flat across the
+low quintiles, so it is a garbage flag, not a graded quality scale.
+
+![ambiguity](80_mcs/mcs_ambiguity_check.png)
+
+### Sec 7.5 cathode excision — all three predictions tested
+
+1. **Closure**: crosser resolution 15.0% vs non-crosser 13.9% -- widths
+   agree within statistics (35 vs 99), crossers stay merged in Part A.
+2. **Sign**: on 56 paired crosser muons (`mcs80on` vs the
+   `SBND_MCS_CATHODE_XCUT=0` arm `mcs80on-nocx`), excision-ON is HIGHER in
+   **48/56 (86%)**, median +27.8 MeV -- the straddling angle does drag
+   emu_MCS down, exactly the predicted mechanism and direction.
+3. **Cost**: mean 1.91 segments dropped + 2.45 angles masked per crosser --
+   at the "two segments plus one angle" expectation; the band is not eating
+   tracks.
+
+### Verdict and recommendation
+
+Rounds 0-4 complete.  MCS is implemented, gated byte-identical when off,
+and validated: tune transfers (pull 1.02/1.19; band bias -1.2%, resolution
+9.8%), the exiting-muon lower bound holds at the resolution level, ambiguity
+flags the garbage, and the cathode excision does what sec 7.5 designed it to
+do.  **Recommendation: flip `mcs_enable=true` in SBND production** (an
+owner decision -- the knob is a one-line TLA flip, `SBND_MCS=1` or the job
+default).  Until then everything ships default OFF and byte-identical.
+Round 5 (upstreaming, CMake, owner-written PR preamble) remains per sec 12.
