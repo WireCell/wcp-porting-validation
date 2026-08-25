@@ -14,14 +14,25 @@ far as "a read of memory the program never wrote".  **Round 2 retracts that
 second conclusion** (§2c) — memcheck is clean in every line of WCT
 reconstruction code, on runs landing in *both* states.  Round 2 does **not**
 supply a replacement: it also proposed one (address reuse) and withdrew it when
-the replicate came in.  The flip is real, binary and heap-history dependent; the
-mechanism is unidentified.  Round 2 also tests event 99438 as
+the replicate came in.  Round 2 also tests event 99438 as
 the separate thread doc 81 asked for (§2b, it is not separate), and fixes the
 group-mode `rc=0` coverage defect (Part 4).
 
-Neither cause was what the earlier write-ups assumed, and round 1's own answer
-to the second was wrong too.  Every claim below is labelled with the round that
-made it.
+**Round 3 finds the mechanism and fixes it** (§2d):
+`QLMatching::rescue_empty_flashes()` recorded which flash a cluster is
+matched to by walking `std::map<Opflash*, …>` in raw heap-address order; when
+a cluster had surviving bundles on two flashes, the winner of that overwrite
+depended on the two `Opflash` objects' relative addresses.  Proven causally by
+instrumenting the walk and catching a state-A and a state-B draw with
+identical inputs differing only in the overwrite winner.  Fixed by using this
+file's own existing stable order, `flash_iter_order()`, already used at every
+other walk of the same map.  Gated: mcp1k 25-event + mcp2k 30-event manifests,
+zero unexpected movers; every formerly-bistable event, repeated 12–25 times
+post-fix, now returns exactly one answer.
+
+Neither cause round 1 and round 2 chased was what the earlier write-ups
+assumed, and round 1's own answer to the second was wrong too.  Every claim
+below is labelled with the round that made it.
 
 ## Repro block
 
@@ -74,6 +85,18 @@ done
 python3 ./scripts/multi/numdiff.py \
     /home/xqian/tmp/d82r2/e99438-inproc/draw5/ql_evt99438/pctree-evt99438.tar.gz \
     /home/xqian/tmp/d82r2/e99438-inproc/draw1/ql_evt99438/pctree-evt99438.tar.gz
+
+# --- ROUND 3 (post-fix; confirms the flip is gone) --------------------
+# 9. the exact repro that caught the bug, 25 draws, fixed binary.
+DRAWS=25 PRECOMPILE=0 ./scripts/multi/repro_ql_nondet.sh \
+    work-mcp1k-grp0825 /home/xqian/tmp/d82r3/verify 285993 286191
+#   -> 0 of 300 draw-vs-draw pairs differ (was ~1 in 9-10 pre-fix)
+
+# 10. the mcp2k known-bistable events, 12 repeated draws.
+DRAWS=12 PRECOMPILE=0 REF=work-mcp2k-ql0819 ./scripts/multi/repro_ql_nondet.sh \
+    work-mcp2k-grp0825 /home/xqian/tmp/d82r3/verify2k \
+    53793 99438 161043 321101 350816
+#   -> 0 of 66 draw-vs-draw pairs differ; each event now has exactly one answer
 ```
 
 The reproducer rebuilds a group from surviving per-event products, so it needs
@@ -701,6 +724,112 @@ What the next round has that this one did not:
 
 **No fix is proposed and none should be guessed at** (CLAUDE.md §5.7).
 
+### Part 2d — round 3 finds and fixes the mechanism
+
+Round 2's own instruction was to localise by pctree bisection, not another
+environment knob.  Round 3 did something narrower and cheaper first: the
+per-APA clustering archives (`mabc-apa0-face0.zip`, `mabc-apa1-face0.zip`) for
+draw1 (state A) and draw5 (state B) of the 286191 pair were **byte-identical
+member-content hashes**, while `mabc-all-apa.zip` and `pctree-evt286191.tar.gz`
+differed.  All 16 per-APA clustering stages are therefore innocent on this
+event; the flip is born strictly downstream of them, in
+`FlashTensorToOpticalPCs → QLMatching → PointTreeMerging → MABC(all-apa)`. That
+already excludes the class round 2 spent most of its budget on.
+
+**The site.** `match/src/QLMatching.cxx`, `QLMatching::rescue_empty_flashes()`
+(§I, SBND production ON — `empty_rescue: true`,
+`cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet:289`). Before the rescue can
+run it records where each cluster is currently matched:
+
+```cpp
+std::map<Cluster*, std::pair<Opflash*, double>> matched;
+for (auto& kv : run.flash_bundles_map) {
+    for (auto& b : kv.second) matched[b->get_main_cluster()] = {kv.first, metric(b)};
+}
+```
+
+`run.flash_bundles_map` is `std::map<Opflash*, TimingTPCBundleSelection>` —
+**heap-address order**.  When a cluster is the main cluster of surviving
+bundles on *two* flashes — unremarkable; "one flash per cluster" is exactly
+what this function goes on to *enforce*, not something guaranteed on entry —
+the second bundle's `matched[C] = …` plain-overwrites the first, and *which*
+flash's `(flash, metric)` pair survives depends on which `Opflash` object this
+walk visits second, i.e. on the two objects' relative heap addresses. That
+recorded pair is load-bearing a few lines later (`steal_bar =
+mit->second.second`) in deciding whether a later rescue candidate can steal
+the cluster. This is exactly the ten-other-call-sites-hardened, two-still-not
+class this file already has a fix for: `flash_iter_order()`
+(`QLMatching.cxx:4688`, flashes sorted by `get_flash_id()`) is used at every
+other walk of `flash_bundles_map` in this file; this loop and its sibling
+`rescue_empty_flashes_shared()` were the two that were not.
+
+**Causal proof, not inference.** An env-gated probe
+(`WCT_QLRESCUE_CENSUS=1`) logged, for every overwrite, the cluster ident and
+the before/after flash id — no log call inside the metric loop itself, so it
+could not perturb the allocation history under study. On mcp1k 286191, over
+20 draws, the *count* of overwrites was identical in every draw regardless of
+outcome state (`0 of 7`, `0 of 14`, `0 of 8`, `2 of 15`) — ruling out a naive
+"more overwrites in state B" story. The *identity* was not:
+
+```
+state A (draw1, draw19): cluster 1 was flash 17, now overwritten by flash 21
+                          cluster 3 was flash 6,  now overwritten by flash 3
+state B (draw20):        cluster 1 was flash 21, now overwritten by flash 17
+                          cluster 3 was flash 6,  now overwritten by flash 3
+```
+
+Same two clusters, same two flash pairs, same binary, same input — only
+cluster 1's final owner flips (`matched[1]` = flash 21 in A, flash 17 in B),
+tracking the two `Opflash` objects' relative heap addresses between runs.
+Cluster 3 is unaffected because its overwrite is not a tie (flash 3 always
+wins in the census, both states) — consistent with an address-order channel
+that only matters when it is the sole thing deciding the outcome.
+
+**Fix.** Walk `flash_iter_order(run.flash_bundles_map)` instead of the raw
+map in `rescue_empty_flashes()`, and the identical raw walk in
+`rescue_empty_flashes_shared()` (currently **inert everywhere** —
+`empty_rescue_shared`/`m_shared_flash` combination is never set true by any
+cfg in the tree today; fixed anyway because it is the same defect in the same
+file, and it costs nothing to fix while looking at it). Unknobbed: this is a
+determinism fix on an already-nondeterministic value, the same category as
+doc 76 r3 and doc 81's `GridTiling` fix, not a new behavior.
+`match/src/QLMatching.cxx`.
+
+**Verification.**
+
+| gate | result |
+|---|---|
+| `wcdoctest-match` | 36/36 assertions, 4/4 cases |
+| repro (mcp1k 285993/286191, 25 draws, no fill/env tricks) | **0 of 300** draw-vs-draw pairs differ (was ~1 in 9–10 before the fix) |
+| mcp1k 25-event manifest (incl. bistable 286191, 292643 + 23 controls) | **100/100** archives member-identical to `work-mcp1k-ql0819` |
+| mcp2k 30-event manifest (incl. bistable 53793, 99438, 161043, 321101, 350816 + 25 controls), 1 draw | only **53793** differs from the reference (1/410 pctree members) — every control and every other listed event matches |
+| mcp2k 5 bistable events, 12 repeated draws | **0 of 66** draw-vs-draw pairs differ for any of the 5 events — each has converged to a single answer. 53793's answer differs from `ql0819` on **all 12/12** draws (its own new fixed point, not a residual flip); 99438/161043/321101/350816 match `ql0819` on all 12/12 |
+
+No control event moved in either manifest — the only mover anywhere is
+53793, a member of the already-known-bistable set, and it is no longer
+bistable. This is the owner-approved bar: fix unknobbed if the read is named,
+gate on the standard manifest, require the only movers to be the
+already-known bistable events. `53793`'s new answer legitimately differs from
+its old `ql0819` archive because `ql0819` itself was recorded from one
+arbitrary draw of a formerly-bistable event, before this fix existed — not
+because the fix is wrong.
+
+Freshness proof: `build/match/libWireCellMatch.so` and
+`local/lib/libWireCellMatch.so` both `13:43:50`, source edit `13:43:11`
+(both copies checked — `LD_LIBRARY_PATH` puts `build/` ahead of `local/lib`
+here, doc 82's own gotcha).
+
+**What this settles about round 2.** The "mechanism unidentified" verdict
+(§2c/§2d) stands *for the memcheck-clean, five-container-excluded space it
+searched* — QLMatching's `flash_bundles_map` walk is match-package code, not
+in `clus/`, `img/` or the five suspects doc 81 named, so nothing round 2
+excluded is contradicted. It was simply outside the search area: round 2's
+census covered `clus/`+`match/`+`img/` for **iterated raw-pointer-keyed**
+containers, and this one is keyed on the concrete `Opflash*`
+class member typedef via `FlashBundlesMap`, walked with the ordinary
+`for (auto& kv : map)` idiom rather than anything the earlier greps were
+shaped to catch.
+
 ### Latent: the comparator tie-breaks
 
 Not the cause of anything observed, but recorded because the census had to be
@@ -850,7 +979,7 @@ and must be counted from products.
 | *round 2:* `run_pr_chain_batch.sh` per-event rc from product existence | **SHIPPED** — smoke-tested both ways, existing arms untouched |
 | *round 2:* `scripts/multi/{run_e2.sh, run_vg.sh, state_census.py, smoke_rc.sh, numdiff.py}` | shipped |
 | *round 2:* event 99438 as a separate thread | **TESTED, and it is not one** (§2b) |
-| the Q/L flip itself | **NOT fixed** — mechanism narrowed, not identified; reported, not tuned (CLAUDE.md §5.7) |
+| *round 3:* `match/src/QLMatching.cxx` — `flash_iter_order()` in `rescue_empty_flashes()` + `rescue_empty_flashes_shared()` | **SHIPPED, unknobbed** — the Q/L flip mechanism, found and fixed (§2d) |
 
 Two honest retractions, recorded because the intermediate claims were made out
 loud during the round:
@@ -866,34 +995,42 @@ Round 2 adds two more, both retracting round 1 rather than an intermediate:
 
 3. **"The Q/L flip is a read of memory the program never wrote."**  Memcheck is
    clean in every line of WCT reconstruction code on runs landing in *both*
-   states, and `--malloc-fill` / `--free-fill` are inert.  §2c.  What stands is
-   the weaker, still-useful form: the flip is heap-dependent, and the channel is
-   address **reuse**.
+   states, and `--malloc-fill` / `--free-fill` are inert.  §2c.
 4. **"The defect is about memory contents, not addresses."**  Round 1's
    supporting `setarch -R` argument is still bad — `-R` removes the ASLR *base*
    and leaves relative heap layout untouched — but round 2 cannot supply the
    replacement.  An earlier draft of §2c, **committed and pushed as `f902e9b`**,
    claimed `--freelist-vol` identified address *reuse* as the channel.  That
    rested on one run per arm; replicating at n=3 gives **2 A / 1 B on both
-   settings**, so the knob does nothing and the claim is withdrawn.  The channel
-   is unidentified.
+   settings**, so the knob does nothing and the claim is withdrawn.  Round 2
+   left the channel unidentified — **round 3 (§2d) identifies it**: not memory
+   contents, and not free-list reuse either, but the iteration order of a live
+   `std::map<Opflash*, …>` deciding a last-write-wins overwrite.  Round 2's
+   instinct that it was address-shaped was right; both of its specific guesses
+   at *which* address-shaped thing were wrong.
 5. **"The stale pointer key is at `blob_total_charge` / `QLMatching.h:922-955`."**
    Same draft, same commit.  All three are safe: the two `blob_total_charge`
    memos are function-local, and the QL caches are cleared per event with a
    comment naming this exact risk.  The *class* of bug is not excluded; these
-   instances are.
+   instances are — the real instance is `QLMatching.cxx`'s
+   `rescue_empty_flashes()`, a different container in the same file (§2d).
 
 ### Open, for the next round
 
-* **Localise the flip to a pipeline stage before theorising about it again.**
-  Round 1 put "find the bad read" here; round 2 showed there is no read memcheck
-  can see, and then produced — and withdrew — a wrong replacement of its own
-  (§2c).  Two rounds of guessing the mechanism from environment knobs is enough.
-  The compiled Q/L pipeline is 16 named clustering stages plus matching and the
-  outcome is binary, so dumping the pctree after each stage over a handful of
-  draws localises the flip to **one stage** with no hypothesis at all.  Then read
-  that stage.  **Do not re-run memcheck** (seven runs, clean where it matters)
-  and do not re-test doc 81's five container suspects (§2c iv).
+* ~~Localise the flip to a pipeline stage before theorising about it again.~~
+  **DONE, round 3 (§2d).** The per-APA clustering archives were the
+  localisation: byte-identical between draw1/draw5, which put the flip
+  strictly downstream of all 16 clustering stages, in matching. **Do not
+  re-run memcheck** (seven runs, clean where it matters) and do not re-test
+  doc 81's five container suspects (§2c iv) — neither is where this lived.
+* **Two more address-ordered hazards found while hunting this one, not yet
+  fixed, both PR-job (not the Q/L job that flips) so out of this round's gate
+  scope:** `NeutrinoDeghoster.cxx:59-66` sorts a `map<Facade::Cluster*,double>`
+  by length with **no ident tie-break** (`sortbysec`) after iterating the map
+  raw at `:59` — a genuine, live address-order leak, not a laundered one.
+  `clustering_neutrino.cxx:191` and `clustering_connect.cxx:198/746` sort
+  clusters by `get_length()` alone, unlike every sibling length-sort in the
+  same files, which all carry an `ident()` tie-break.
 * **`SBND_PRECOMPILE_CFG=1` for stage A**, gated on the standard manifest.  It
   is worth doing on its own merits — it cuts the job from 38 threads to 7 and
   closes doc pr/97's SIGSEGV hazard, which is currently unmitigated in the only
@@ -928,3 +1065,14 @@ Round 2 adds two more, both retracting round 1 rather than an intermediate:
   and no `rc.txt` in any existing arm was touched (CLAUDE.md M13).
 * **Every `rc.txt` written before this commit is uniformly optimistic** and must
   not be used for coverage retrospectively — count from products (Part 4).
+* **Round 3 changes reconstruction output on the formerly-bistable events, and
+  only those.** `match/src/QLMatching.cxx` is a real C++ behavior change —
+  gated: mcp1k 25-event manifest 100/100 identical, mcp2k 30-event manifest
+  only the known-bistable 53793 differs, every formerly-bistable event
+  converges to one answer under repeated post-fix draws (§2d table).  No
+  control event moved in either manifest.  `wcdoctest-match` 36/36.  This is
+  **NOT byte-identical** on the bistable events by design (that was the bug);
+  it is byte-identical on every event whose Q/L answer never depended on
+  `Opflash*` heap order.
+* Round 3's runs are all in `/home/xqian/tmp/d82r3/` scratch.  Nothing under
+  `work-*`, `abtest/snap/`, `sweep/` or any `decisions*` tree was written to.
