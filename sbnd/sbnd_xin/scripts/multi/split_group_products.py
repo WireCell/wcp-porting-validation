@@ -41,13 +41,30 @@ def split_npz(gdir, out, evts):
         unknown = set(per) - set(evts)
         if unknown:
             raise SystemExit("members for events not in the group: %s" % sorted(unknown))
+        # The converse, which this script used to skip: an event NAMED in
+        # events.txt that produced no member at all.  Only "extra" events were
+        # ever checked, so a group that silently dropped one split clean, printed
+        # "ok", and run_chain_group.sh's `grep -q "^\[g$K\] ok"` could not see it
+        # either -- the stage-A twin of the rc=0 defect doc 82 part 4 fixed in
+        # run_pr_chain_batch.sh.  Coverage must be refused here, not hand-counted
+        # from products afterwards.
+        missing = set(evts) - set(per)
+        if missing:
+            raise SystemExit("%s: no members for %d of %d group events: %s"
+                             % (src, len(missing), len(evts), sorted(missing)))
         written = 0
         for e, names in per.items():
             d = os.path.join(out, "evt" + e)
             os.makedirs(d, exist_ok=True)
-            # ZIP_STORED: npz is uncompressed, and the member payloads are what
-            # hash_archive.py compares (CLAUDE.md M2).
-            with zipfile.ZipFile(os.path.join(d, base + ".npz"), "w", zipfile.ZIP_STORED) as o:
+            # ZIP_DEFLATED, because that is what the LEGACY path already writes:
+            # WCT's own ClusterFileSink goes through custard's miniz_sink, which
+            # calls mz_zip_writer_add_mem(..., MZ_BEST_SPEED) -- so work-img-<s>'s
+            # npz are DEFLATE and only this splitter ever produced STORED ones,
+            # inflating each event 3.8x (2.89 MB -> 10.84 MB on mcp1k evt166650)
+            # for no gain.  Safe by construction and measured both ways: the
+            # member PAYLOADS are unchanged, and payloads are what hash_archive.py
+            # and stagea_gate.py hash (CLAUDE.md M2), so no gate can see this.
+            with zipfile.ZipFile(os.path.join(d, base + ".npz"), "w", zipfile.ZIP_DEFLATED) as o:
                 for n in names:                       # source order preserved
                     o.writestr(n, z.read(n))
                     written += 1
@@ -70,6 +87,14 @@ def split_opflash(gdir, out, evts):
             if not m:
                 raise SystemExit("unkeyed member %r in %s" % (ti.name, src))
             per.setdefault(m.group(1), []).append(ti)
+        unknown = set(per) - set(evts)
+        if unknown:
+            raise SystemExit("%s: members for events not in the group: %s"
+                             % (src, sorted(unknown)))
+        missing = set(evts) - set(per)
+        if missing:
+            raise SystemExit("%s: no members for %d of %d group events: %s"
+                             % (src, len(missing), len(evts), sorted(missing)))
         written = 0
         for e, tis in per.items():
             d = os.path.join(out, "ql_evt" + e)

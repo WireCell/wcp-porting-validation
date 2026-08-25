@@ -558,3 +558,189 @@ work root and reproduces the group's own Q/L output: `mabc-all-apa.zip`,
 `mabc-apa0-face0.zip`, `mabc-apa1-face0.zip` and `pctree-evt166650.tar.gz` all
 **SAME**, `rc=0`.  The layout is drop-in for the legacy driver, not merely for
 stage B.
+
+---
+
+## 10. Round 2 — two stage-A runner defects, and the re-baseline they precede
+
+Round 1 delivered `work-<s>-{grp,prod}0825` and gated them byte-identical to
+the per-event production.  Doc 82 then shipped an **unknobbed** determinism fix
+in `match/` (`95c10cd1`, `QLMatching::rescue_empty_flashes()` walking
+`std::map<Opflash*,…>` in heap order), which by its own status flag "changes
+reconstruction output on the formerly-bistable events".  Those arms are
+therefore no longer reproducible at HEAD, and this round prepares their
+replacement: fix the two stage-A runner defects first, then re-run.
+
+**Nothing was re-run in this round.**  The campaign below is a plan, costed
+from round 1's own `.time.meta`, not a result.
+
+### Repro
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+
+# 1. the staleness, measured rather than inferred (~2 min, scratch only)
+SBND_STAGE=$PWD/input_files_reco1/staged-mcp2025c-2nd-2000evt \
+SBND_IMGBASE=$PWD/work-mcp2k-grp0825 \
+  scripts/multi/ql_legacy_gate.sh $PWD/work-mcp2k-grp0825 <scratch> 53793 100002
+
+# 2. the splitter round-trip + the fail-first coverage test (~10 s, scratch only)
+python3 scripts/multi/merge_group_products.py work-mcp2k-grp0825 <s>/g0 100002 100032
+python3 scripts/multi/split_group_products.py <s>/g0 <s>/out
+printf '100002 100032 999999\n' > <s>/gbad/events.txt   # + the same archives
+python3 scripts/multi/split_group_products.py <s>/gbad <s>/outbad     # must rc=1
+```
+
+Binary: toolkit `95c10cd1`, unchanged by this round — **no C++ was touched.**
+
+### 10.1 `work-*-{grp,prod}0825` no longer reproduce at HEAD
+
+Chain: round 1 gated `grp0825` byte-identical to `work-<s>-ql0819`
+(24536/24536), and doc 82 §2d reports post-fix mcp2k 53793 differing from
+`ql0819` on 12/12 draws.  Verified directly, with a control so the test is not
+vacuous:
+
+| event | products vs `work-mcp2k-grp0825` |
+|---|---|
+| 53793 (known bistable) | `mabc-*` 3/3 SAME, **`pctree-evt53793.tar.gz` DIFFER** |
+| 100002 (control) | all four **SAME** |
+
+`prod0825` reads that Q/L output, so it inherits the divergence.  Any round
+that A/Bs against these arms now gets a mover its own change did not cause
+(CLAUDE.md §5 rule 5).
+
+**This supersedes the `WCT_QLRESCUE_CENSUS` recommendation.**  A census was the
+right idea when the arms were staying; a re-baseline produces the same mover
+list for free, as the diff of the new arms against the old ones, and is
+strictly more informative.  Doc 82's own warning applies to reading the doc-81
+§7.1 seven as "the unstable events": it is not that list.
+
+### 10.2 The splitter was inflating every imaging npz 3.8x
+
+**Symptom.**  Stage A is 66.6 G for 3067 events and 83 % of it is
+`evt<ID>/icluster-apa{0,1}-{active,masked}.npz`.
+
+**Root cause.**  `split_group_products.py` wrote them `ZIP_STORED`, on the
+stated premise that "npz is uncompressed".  The premise is false: WCT's own
+`ClusterFileSink` writes through custard's `miniz_sink`, which calls
+`mz_zip_writer_add_mem(..., MZ_BEST_SPEED)` — **DEFLATE**.  So the legacy
+per-event path has always compressed these, and only the group path's splitter
+produced STORED ones.  Same event, same members:
+
+| writer | `evt166650/icluster-apa0-active.npz` |
+|---|---|
+| `work-img-mcp1k` (legacy, WCT `ClusterFileSink`) | 2 886 252 B, DEFLATE |
+| `work-mcp1k-grp0825` (group, this splitter) | 10 836 412 B, **STORED** |
+
+Uncompressed member total is 10 834 864 B in both — the payloads were never in
+question, only the container.
+
+**Why it hid.**  Every stage-A gate in this tree hashes member *payloads*
+(`hash_archive.py:19-30`, `stagea_gate.py:22-30` both `z.read(name)`), so a
+STORED-vs-DEFLATE container difference is invisible to all of them — correctly,
+since it is not a difference in the data.  The gate that would have caught it
+is one nobody runs: comparing file sizes against the legacy hub.
+
+**Fix.**  `ZIP_DEFLATED` (level 6, zipfile's default).  Not a knob: the member
+payloads are bit-identical, so this cannot change reconstruction output or any
+gate verdict — CLAUDE.md §1's knob rule does not bite.
+
+**Verification.**
+
+| check | result |
+|---|---|
+| round-trip, mcp2k 100002+100032 rebuilt via `merge_group_products.py` then re-split | **10/10** archives member-content identical to the recorded per-event products |
+| size | 17 718 124 → 4 711 389 B (**26.6 %**) and 18 713 712 → 4 762 582 B (25.4 %) |
+| WCT reads DEFLATE npz | Q/L re-run of mcp2k 100002 off a hand-compressed imaging dir: `mabc-all-apa.zip`, both per-APA zips and `pctree-evt100002.tar.gz` all **SAME**, rc=0 |
+| levels measured | 1 → 38.4 %, **6 → 26.6 %**, 9 → 24.0 % (0.2 s/event at 6) |
+
+Projected: ~55 G of imaging → ~14 G, i.e. stage A **66.6 G → ~26 G**.
+
+### 10.3 Stage A had the coverage hole doc 82 part 4 closed in stage B
+
+**Symptom.**  None yet — latent.  All four `grp0825` arms were audited this
+round and are complete (48/19/1000/2000 events with both an imaging npz and a
+Q/L pctree), so no delivered product is affected.
+
+**Root cause.**  `split_npz` checked `set(per) - set(evts)` — members for an
+event *not* in the group — and never the converse.  `split_opflash` had
+neither check.  `link_imaging` skips a missing npz silently, `main` prints
+"ok", and `run_chain_group.sh:299` only greps `^\[g$K\] ok`.  So a group that
+produced nothing for one of its events split cleanly and reported success at
+every level.  This is the stage-A twin of the `rc=0`-unconditional defect doc
+82 part 4 fixed in `run_pr_chain_batch.sh:1811`.
+
+**Why it hid.**  Round 1 counted coverage by hand from real per-event product
+existence, exactly because of the stage-B defect — so the campaign was safe,
+and the runner was never asked the question.
+
+**Fix.**  Both splitters now refuse on `set(evts) - set(per)`, naming the
+events.  `split_opflash` also gains the `unknown` check it never had.
+
+**Verification** (revert-proof, on a 3-event `events.txt` over 2 events' worth
+of archives):
+
+| splitter | result |
+|---|---|
+| fixed | `no members for 1 of 3 group events: ['999999']`, **rc=1** |
+| pre-fix, `git show HEAD:` | `24 members -> 2 events` … `ok`, **rc=0** |
+
+### 10.4 The re-baseline campaign, planned
+
+Fresh tag (M13 — never write into `grp0825`/`prod0825`): `work-<s>-grp0826`
+and `work-<s>-prod0826`, `<s>` ∈ {nuecc48, ncpi0, mcp1k, mcp2k} = 3067 events.
+
+```bash
+# stage A -- from reco1, with the fixed splitter
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  SBND_MAX_JOBS=8 ./run_chain_group.sh <reco1-$s.root> work-$s-grp0826 data \
+      --size 16 --layout perevt
+done      # ncpi0 adds --fsproduct '...__FILTERFRAMESHIFT.'; mcp2k part 2 --gbase 63
+
+# stage B
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  PR_GROUP_SIZE=16 PR_JOBS=16 PR_EXTRA_STAGES=pr_display \
+      ./run_pr_chain_batch.sh work-$s-grp0826 work-$s-prod0826 data
+done
+```
+
+**Full re-run from reco1, not `--from ql`.**  Only `match/` moved
+(`git log 2aba11dc..HEAD -- img/ clus/ sio/` is empty), so re-running imaging
+is strictly redundant — but round 5 pruned the group scratch, so `--from ql`
+would first have to rebuild the group archives with
+`merge_group_products.py`, a path never exercised in a campaign, and it would
+leave the new arm's imaging inherited rather than produced.  The redundant
+imaging costs ~35 min and buys a single-epoch from-source baseline.
+
+**Sizing**, from round 1's own `.time.meta` (sum of per-group wall):
+
+| stage | groups | Σ group-wall | peak RSS/job |
+|---|---:|---:|---:|
+| A imaging | 194 | 19 225 s | 1.05 G |
+| A Q/L | 194 | 13 537 s | 0.98 G |
+| B PR | 193 | 14 057 s | 1.49 G |
+
+At `SBND_MAX_JOBS=8` / `PR_JOBS=16` that is ≈ 68 min + ≈ 15 min, plus the
+reco1 dump, which has no `.time.meta` and must be measured on the first group.
+M5 still governs: check `cut -d' ' -f1 /proc/loadavg` a few minutes in and back
+off if it exceeds ncores — the job counts above are a starting point, not a
+result.  Disk: ~26 G (A) + ~16 G (B) against 881 G free.
+
+**`SBND_PRECOMPILE_CFG` stays OFF for this campaign.**  It would cut stage A
+from 38 threads to 7 and close doc pr/97's SIGSEGV hazard, but doc 82's open
+list calls it "a behavior change on bistable events".  That may well be stale
+now that §2d removed the bistability — which is exactly why it needs its own
+gate, in its own round, and not a debut inside the arm everything else will be
+compared against.
+
+**Gates.**  Three, plus one this round adds:
+
+| gate | expectation |
+|---|---|
+| `stagea_gate.py work-<s>-grp0826 --img work-img-<s> --ql work-<s>-ql0819` | Q/L movers only on formerly-bistable events; **imaging must be 100 % identical** |
+| `pr85_hash_gate.py` + `pr94_root_gate.py` vs `work-<s>-prod0825` | the mover list — the census, for free |
+| `nusel-table.tsv` diff vs `prod0825` | the 72 torn rows (§8.2) should clear: doc 82 fixed the tear at `7822a440` |
+| imaging as a **control** | no `img/` commit since `2aba11dc`, so any imaging difference means a stale binary, the wrong reco1 file or a wrong `--fsproduct` — stronger than an mtime freshness proof, and free |
+
+**Do not retire `grp0825`/`prod0825` until that mover list is recorded.**
+§9.3's own lesson: a gate whose reference has been deleted is not a gate.
