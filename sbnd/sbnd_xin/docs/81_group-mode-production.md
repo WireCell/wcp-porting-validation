@@ -1041,3 +1041,119 @@ through them.  Combined with round 3, `sbnd_xin` is 144 G → 66 G.
 Note for the re-baseline (§10.4): `work-<s>-grp0826` will be written compressed
 from the start by the round-2 splitter fix, so its stage A should land near
 ~26 G rather than 66.6 G, and this script is not needed for it.
+
+---
+
+## 13. Round 5 — the disk census, and the three things it found
+
+Owner asked what dominates disk after round 4 and then to act on the answer.
+Census of all 104 075 files: tar archives 19.37 GiB (29.6 %), imaging npz 14.81
+(22.6 %), PR pctree 9.32, Q/L pctree 6.89, **PR `.groups` scratch 5.08**, the
+rest under 3 % each.  Round 4 had knocked imaging off the top spot; what took
+its place was `archive/records/` (16 G) plus the staged reco1 inputs (4.0 GiB).
+
+### Repro
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+python3 scripts/multi/prune_pr_group_scratch.py \
+        work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0825 \
+        work-{nuecc48,ncpi0,mcp1k,mcp2k}-grp0825      # dry run; --apply to act
+```
+(the real call pairs them `<pr_root> <ql_root>`, four pairs.)
+
+### 13.1 `.groups/` was 5.08 GiB of the group job's own input
+
+`run_pr_chain_batch.sh:1692` builds `<pr_root>/.groups/g<N>.tar.gz` by merging
+the group's per-event `<ql_root>/ql_evt<ID>/pctree-evt<ID>.tar.gz`.  It is the
+**input** staged for one wire-cell process, not a product; nothing reads it
+after the job, since `pr85_hash_gate.py`, `pr94_root_gate.py` and
+`nusel_extract.py` all work off `pr_evt<ID>/`.  It is the stage-B twin of the
+stage-A group scratch `prune_group_scratch.sh` already reclaims.
+
+`scripts/multi/prune_pr_group_scratch.py` does not delete on that reasoning.
+For each `g<N>.tar.gz` it rebuilds the member→sha256 map of the corresponding
+`ql_evt<ID>` pctrees and requires **exact equality** — same names, same
+payloads, nothing extra either side — before unlinking; anything failing, or
+with a missing Q/L side, is kept and named.
+
+| | result |
+|---|---|
+| verified duplicates | **193 / 193**, 0 kept, 0 mismatches |
+| freed | **5.08 GiB** |
+| preserved | every `g<N>.rc`, `.time.meta`, `-rse.json`, `-build.log` — the provenance |
+
+### 13.2 A record archive was holding 2.44 GiB of frame data
+
+`archive/records/stagea-refside-20260825b/imaging-hubs/work-img-mcp2k.tar.gz`
+was 2.45 GiB where the mcp1k hub of the same round is 21 MB.  The difference is
+2000 `sp-frames.tar.bz2`, and the manifests show it plainly: mcp1k archived
+2001 record files / 306 MB, mcp2k **4000 / 2.92 GB**.
+
+**Root cause.**  `archive_records_20260825b.py`'s `HEAVY` list (`:49-56`) has
+eight patterns — `pctree.*\.tar\.gz`, `mabc.*\.zip`, `calib(-pr)?-evt.*\.json`,
+`.*\.npz`, `clusters-apa.*\.tar\.gz`, `opflash_apa.*\.tar\.gz`,
+`tracking-pr\.root`, `oc56scan-evt.*\.jsonl`.  **`sp-frames.tar.bz2` matches
+none of them**, so frame data was classified `record` and archived.
+
+**Why the guard did not catch it.**  The docstring's assurance is "a census of
+all 66 removal arms finds ZERO unclassified file above 5 MiB, so nothing heavy
+can slip into the record tar".  That check is **per file**, and each sp-frames
+is ~1.25 MB.  2000 of them are 2.44 GiB and every one is under the threshold.
+A per-file cap cannot see a many-small-files class.
+
+**Action.**  Verified all 2000 against the staged reco1 input they were copied
+from — `input_files_reco1/staged-mcp2025c-2nd-2000evt/e<N>/frames-dnn.tar.bz2`,
+still on disk — **2000/2000 member-content identical, 0 mismatches**, then
+repacked the tar without them: order and payloads of the 2000 kept log members
+verified identical before the atomic replace.  **2.45 GiB → 0.020 GiB.**  The
+drop is recorded, not silent: `work-img-mcp2k.dropped-members.tsv` lists all
+2000 with their recovery path, and the manifest carries a `record-after-round5`
+row plus the explanation.
+
+**Not fixed here, and deliberately so.**  `archive_records_20260825b.py` is
+round 3's script and has already produced a committed archive; editing it would
+falsify the record of what that round ran.  The next fork should take both
+halves of the fix:
+
+```python
+# HEAVY: name the class
+("frames",  re.compile(r'^(sp-)?frames(-dnn)?.*\.tar\.(bz2|gz)$')),
+# and stop relying on a per-file cap: refuse if any single unclassified
+# basename PATTERN exceeds, say, 500 MiB in aggregate -- that catches the
+# next unnamed heavy class without having to guess its name first.
+```
+
+### 13.3 The third candidate was wrong, and is retracted
+
+§13's census listed `input_files/input-3files-lan-reco2` (1.1 G),
+`input-10evt-mc` (471 M) and `bee/prod0819` + `bee/prod0813` (855 M) as
+"stale-looking", on age alone.  Checked properly before touching anything:
+
+| candidate | references | tracked |
+|---|---:|---|
+| `input_files/input-3files-lan-reco2` | 5, incl. `scripts/analysis/light/pmt_health_study.py:6` and `flash_t0_lan_reco2.py:20` as a hardcoded `BASE` | — |
+| `input_files/input-10evt-mc` | 11, incl. `dump_truth_sed.C`, `flash_coincidence.py`, `check_dead5.py`, `saturation_pe.py` | — |
+| `input_files/` + `bee/` overall | — | **238 git-tracked files** |
+
+All of them have live consumers, and deleting them is exactly the ASSERT 10
+failure this tree has already hit twice (`vtx_rules/baselines.py`,
+`scripts/analysis/pr57/oc56_truth.py`).  **Nothing deleted.**  If that 3.5 G is
+wanted back it needs the retirement-round treatment — an explicit
+`ACK_BROKEN_REFS` decision per script — not a sweep.  Recorded because the
+casual recommendation came first and the check came second, which is the wrong
+order.
+
+### 13.4 Result
+
+| | before | after |
+|---|---:|---:|
+| `.groups` scratch | 5.08 GiB | **0** |
+| `work-img-mcp2k.tar.gz` | 2.45 GiB | **0.020 GiB** |
+| `archive/` | 16 G | **13 G** |
+| `sbnd_xin` | 66 G | **59 G** |
+| `/nfs/data/1` free | 958 G | **966 G** |
+
+Across rounds 3–5, `sbnd_xin` is **144 G → 59 G** with no product lost: round 3
+retired superseded arms behind frozen manifests, round 4 recompressed, and this
+round removed only bytes proven to exist elsewhere.
