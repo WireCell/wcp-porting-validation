@@ -726,18 +726,47 @@ M5 still governs: check `cut -d' ' -f1 /proc/loadavg` a few minutes in and back
 off if it exceeds ncores — the job counts above are a starting point, not a
 result.  Disk: ~26 G (A) + ~16 G (B) against 881 G free.
 
-**`SBND_PRECOMPILE_CFG` stays OFF for this campaign.**  It would cut stage A
-from 38 threads to 7 and close doc pr/97's SIGSEGV hazard, but doc 82's open
-list calls it "a behavior change on bistable events".  That may well be stale
-now that §2d removed the bistability — which is exactly why it needs its own
-gate, in its own round, and not a debut inside the arm everything else will be
-compared against.
+**`SBND_PRECOMPILE_CFG` is now DEFAULT ON** (owner decision), so the two
+`run_chain_group.sh` invocations above need no env.  This was planned as OFF
+one paragraph earlier in this round, on doc 82 part 3's ground that
+precompiling changes the process's allocation history and part 2 had shown the
+Q/L answer on a bistable event to be a function of exactly that — part 3's own
+ON-vs-OFF test differed on 286191.  Doc 82 round 3 then removed that dependence
+at the source (toolkit `95c10cd1`), so the condition part 3 attached — "needs
+its own byte-identity gate on the standard manifest" — is **discharged**, not
+waived.  Gate, at `95c10cd1`, 32 events over two samples covering **all seven**
+known-bistable events plus controls:
+
+| arm | vs `work-<s>-grp0825` |
+|---|---|
+| mcp1k, 16 evts (incl. 286191, 292643), OFF | **IDENTICAL 64/64** |
+| mcp1k, 16 evts, **ON** | **IDENTICAL 64/64** |
+| mcp2k, 16 evts (incl. 53793, 99438, 161043, 321101, 350816), OFF | 60/64 — 4 archives of **53793** only |
+| mcp2k, 16 evts, **ON** | 60/64 — the **same** 4 archives of 53793, same first differing member |
+
+| direct comparison | result |
+|---|---|
+| `PRECOMPILE=1` vs `PRECOMPILE=0`, all 32 events | **128/128 archives member-content identical** |
+
+53793 is round 3's own documented mover (doc 82 §2d: it differs from `ql0819`
+on 12/12 post-fix draws, its new fixed point), so the only event that moves is
+one already on the record as moving, and it moves identically in both arms.
+Buys 38 threads → 7 and closes doc pr/97's SIGSEGV hazard, which this was the
+only driver still exposed to.  `SBND_PRECOMPILE_CFG=0` restores the old path.
+
+**Scope limit, stated rather than glossed:** `precompile_cfg` is called at all
+three stage-A steps (`run_chain_group.sh:194` dump, `:229` imaging, `:274`
+Q/L), but `repro_ql_nondet.sh` runs `--from ql`, so the gate above covers
+**Q/L only**.  Imaging determinism rests on §2's rep-A/rep-B control
+(672/672).  Run **nueCC48 first as a pilot** and check its imaging against
+`work-img-nuecc48` (48 events, ~2 min) before the remaining 3019 events start
+— that is the imaging leg, and the campaign runs it anyway as a gate row.
 
 **Gates.**  Three, plus one this round adds:
 
 | gate | expectation |
 |---|---|
-| `stagea_gate.py work-<s>-grp0826 --img work-img-<s> --ql work-<s>-ql0819` | Q/L movers only on formerly-bistable events; **imaging must be 100 % identical** |
+| `verify_frozen_stagea_20260825b.py`-style rollup diff of `work-<s>-grp0826` against `state-20260825b/hashes/stagea-<s>.tsv` | Q/L movers only on formerly-bistable events; **imaging must be 100 % identical**.  NOTE: `stagea_gate.py --img/--ql` no longer applies — §11 retired both reference arms; the frozen manifest is the reference now, and `work-<s>-grp0825` is the on-disk one |
 | `pr85_hash_gate.py` + `pr94_root_gate.py` vs `work-<s>-prod0825` | the mover list — the census, for free |
 | `nusel-table.tsv` diff vs `prod0825` | the 72 torn rows (§8.2) should clear: doc 82 fixed the tear at `7822a440` |
 | imaging as a **control** | no `img/` commit since `2aba11dc`, so any imaging difference means a stale binary, the wrong reco1 file or a wrong `--fsproduct` — stronger than an mtime freshness proof, and free |

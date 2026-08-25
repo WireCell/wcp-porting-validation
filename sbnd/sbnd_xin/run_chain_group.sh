@@ -144,17 +144,36 @@ fi
 # than bare, which is what the bare name resolved to anyway -- via the CWD, so
 # the runner silently depended on being invoked from sbnd_xin.
 #
-# DEFAULT OFF here, unlike the other two drivers.  Precompiling changes the
-# process's allocation history, and doc 82 part 2 shows that the Q/L stage's
-# answer on a bistable event is a function of exactly that -- so turning this on
-# is a stage-A behavior change that needs its own byte-identity gate on the
-# standard manifest, not a free win.  SBND_PRECOMPILE_CFG=1 enables it; unset or
-# 0 reproduces what this driver did before, byte for byte.
+# DEFAULT ON since doc 81 round 2 (owner decision), matching run_ql_evt.sh and
+# run_pr_chain_batch.sh -- this driver is no longer the odd one out.
+#
+# Doc 82 part 3 shipped it OFF on the ground that precompiling changes the
+# process's allocation history and part 2 had shown the Q/L answer on a bistable
+# event to be a function of exactly that: its own ON-vs-OFF test differed on
+# 286191.  Doc 82 round 3 then removed that dependence at the source
+# (QLMatching::rescue_empty_flashes walking flash_bundles_map in heap order,
+# toolkit 95c10cd1), so the condition it attached -- "needs its own byte-identity
+# gate on the standard manifest" -- is now DISCHARGED rather than waived:
+#
+#   32 events over 2 samples, all 7 known-bistable ones plus controls, ON vs OFF
+#   at 95c10cd1: 128/128 archives member-content IDENTICAL.  Against
+#   work-<s>-grp0825 both arms agree exactly -- mcp1k 64/64 identical, mcp2k the
+#   same 4 archives of 53793 alone, which is round 3's own documented mover.
+#   (doc 81 sec 10.4)
+#
+# Buys 38 threads -> 7 and closes the doc pr/97 SIGSEGV hazard, which this was
+# the only driver still exposed to.  SBND_PRECOMPILE_CFG=0 restores the
+# in-process gojsonnet path byte for byte.
+#
+# NOTE the gate above covers the Q/L stage only (repro_ql_nondet.sh runs
+# --from ql); this function is also called for the dump and imaging stages, so
+# a campaign should pilot its smallest sample first and check imaging against
+# work-img-<s> before the rest of the events run.
 # Sets the caller's _CFG from the caller's _TLA, and empties _TLA on success.
 precompile_cfg() {           # precompile_cfg <tag> <jsonnet> <outjson>
     local _tag=$1 _jsonnet=$2 _out=$3
     _CFG=(-c "$_jsonnet")
-    [ "${SBND_PRECOMPILE_CFG:-0}" = 1 ] || return 0
+    [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ] || return 0
     rm -f "$_out"
     if wcsonnet "${_TLA[@]}" -o "$_out" "$_jsonnet" > "$_out.log" 2>&1; then
         _CFG=(-c "$_out")
