@@ -947,7 +947,7 @@ carrier: necessary, and together with the rest sufficient.
 
 | gate | result |
 |---|---|
-| nueCC48 48 events, pre-fix per-event vs post-fix per-event | `pr85` **96/96 archives**, `pr94` **48/48 ROOT files**, nusel **0 differing lines** |
+| nueCC48 48 events, pre-fix per-event vs post-fix per-event | `pr85` **96/96 archives**, `pr94` **48/48 ROOT files**, nusel **0 differing lines** (both tables re-parsed with the round-3 `RE_STM_SKIP`; the relaxation is itself a **no-op on per-event logs** — re-parsing the pre-fix arm's own logs old-parser vs new gives 0 differing lines, so no per-event log in this sample carried a torn prefix) |
 | mcp1k 100 events, the **recorded** `work-pr112i-snapD2-mcp1k` arm vs post-fix per-event | `pr85` **200/200**, `pr94` **100/100** |
 | `wcdoctest-{clus,root,sio,util}` | all pass; the new `doctest_trackfitting_event_reset.cxx` is revert-proven — with the round-3 clears `#if 0`-ed out, **6 of its 18 assertions fail** |
 
@@ -956,22 +956,24 @@ run of both sides, so it also re-proves round 2's per-event path at the same tim
 
 **Group vs per-event — now byte-identical on the whole manifest.**
 
-| sample | before (round 2) | after (round 3) |
-|---|---|---|
-| mcp1k 100 | 5 events differ | `pr85` **200/200**, `pr94` **100/100** |
-| nueCC48 48 | 17 events differ | `pr85` **96/96**, `pr94` **48/48** |
-| NCpi0 19 | 4 events differ | `pr85` **38/38**, `pr94` **19/19**, nusel **0 of 224 rows** |
-| **167 total** | **26 differ** | **0 differ** |
+| sample | before (round 2) | after (round 3) | nusel table |
+|---|---|---|---|
+| mcp1k 100 | 5 events differ | `pr85` **200/200**, `pr94` **100/100** | 1 of 1171 rows |
+| nueCC48 48 | 17 events differ | `pr85` **96/96**, `pr94` **48/48** | 3 of 547 rows |
+| NCpi0 19 | 4 events differ | `pr85` **38/38**, `pr94` **19/19** | **0 of 224 rows** |
+| **167 total** | **26 differ** | **0 differ** | 4 of 1942 rows |
 
-**Residual, stated rather than rounded away.**  On nueCC48 the group and
-per-event `nusel-table.tsv` still differ on **3 rows of 547**, in the parsed-log
-columns `fc` and `stmfit` only (`0`↔`-1`, `tgm`↔`eval`, `eval`↔`contained`) — and
-`pr94`, which compares every branch of every `tracking-pr.root`, passes 48/48, so
-the reconstruction behind those rows is identical.  The cause is
-`slice_group_log.py`: for evt 389538 the slice recovers 203 of the event's 1191
-log lines, so a verdict line is simply not in the slice to be parsed.  That is a
-round-2 log-reconstruction limitation, not a physics difference, and it is the
-one thing this round leaves open.
+**Residual, stated rather than rounded away.**  The group and per-event
+`nusel-table.tsv` still differ on **4 rows out of 1942** across the manifest
+(nueCC48 3/547, mcp1k 1/1171, NCpi0 0/224), and every one of them is in a
+**parsed-log** column — `fc` and `stmfit` only (`0`↔`-1`, `tgm`↔`eval`,
+`eval`↔`contained`, `-`↔`contained`).  `pr94` compares every branch of every
+`tracking-pr.root` and passes on all 167 events, so the reconstruction behind
+those rows is identical; what differs is what could be recovered from the log.
+The cause is `slice_group_log.py`: for nueCC48 evt 389538 the slice recovers 203
+of that event's 1191 log lines, so a verdict line is simply not there to parse.
+That is a round-2 log-reconstruction limitation, not a physics difference, and
+it is the one thing this round leaves open.
 **Shared components — the other detectors.**  `clus` is shared, and the reset is
 on a code path every detector runs, so:
 
@@ -1055,3 +1057,10 @@ This is the same mistake doc pr/104 records and sec 10.5 of this document
 records; it has now cost three arms across two rounds.  All four arms that could
 have been touched were re-run from scratch into fresh directories before any
 number in this section was taken.
+
+A quieter one from the same family: the `nusel_extract.py` parser was relaxed
+*after* the legacy gate's nusel row had been computed, and the tables were then
+regenerated **in place** inside an arm that had already been quoted.  Nothing
+was wrong in the end — the relaxation is a no-op on per-event logs, verified
+after the fact — but the number and the files on disk were briefly out of step.
+**Regenerate into a new arm; never over the side you have already reported.**
