@@ -86,7 +86,12 @@ work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 cam
 # ONE T_tagger/T_kine ROW PER IN-BEAM FLASH BUNDLE.  Row 0 is NOT the event's
 # answer -- scripts/pr94_rows.py primary_index() is.  pr_scores_table.py
 # already applies it; anything else that hard-indexes [0] is wrong.
-work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
+# RELEASED 2026-08-25b (doc 81 sec 10), see the RETIRED section.  Superseded by
+# work-<s>-grp0825, which doc 81 sec 7 proved carries the SAME Q/L products
+# member-for-member (24536/24536 with the imaging half).  The reference side is
+# frozen in scripts/retire/state-20260825b/hashes/stagea-<s>.tsv before deletion,
+# so that PASS stays re-checkable.
+# work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
 # RELEASED 2026-08-23 (see RETIRED section): owner chose to DROP the prod0819 PR
 # arms and re-run production for all four samples at current HEAD instead.  The
 # four -ql0819 Q/L roots above are UNCHANGED and remain the campaign input.
@@ -131,7 +136,23 @@ work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod08
 # dd4d1373, 56683366) changed the T_proj_data ROOT dump and nothing else.
 # Consequence: any A/B a doc took against work-pr104-on4-* stays valid against
 # these arms.
-work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod0823	THE production PR baseline, 3067 evts at toolkit b5c9f43a; reads the -ql0819 roots (ASSERT 8)	docs/work-tags.md 2026-08-23
+# RELEASED 2026-08-25b (doc 81 sec 10), owner: "I assume we can safely retire
+# ... and recover the disk".  prod0823 is explicitly PRE-flip (doc 81 sec 4) and
+# prod0825 is the production epoch on disk.  Its one remaining job -- serving as
+# the revert-proof reference -- was already exercised and the result is text in
+# doc 81 sec 4.
+#
+# COST, stated rather than absorbed: this was the LAST on-disk carrier of the
+# pr/104 production epoch, so every A/B docs pr/104 through pr/111 took against
+# that epoch is now TEXT-ONLY.  Knowingly the same shape as the pr94r3 and
+# work-pr87-postflip-* losses recorded below, taken deliberately.
+# What survives it: scripts/retire/state-20260825b/hashes/work-<s>-prod0823.tsv,
+# 9201 member-content rollups (3 products x 3067 events).  Read that as
+# INSURANCE, not gate preservation -- prod0825 sits at a different operating
+# point, so there was never a byte-identity claim between the two to keep
+# re-checkable.  What it buys is a future revert-reproduction: re-run at toolkit
+# b5c9f43a and diff against the frozen file.
+# work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod0823	THE production PR baseline, 3067 evts at toolkit b5c9f43a; reads the -ql0819 roots (ASSERT 8)	docs/work-tags.md 2026-08-23
 
 # doc 81 (2026-08-25): the group-mode re-baseline.  work-<s>-grp0825 is stage A
 # (imaging + Q/L, per-event layout) and work-<s>-prod0825 is stage B (PR) at the
@@ -140,6 +161,13 @@ work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod082
 # Stage A is byte-identical to work-img-<s> + work-<s>-ql0819 on all 3067 events
 # (24536/24536 archives, scripts/multi/stagea_gate.py); stage B is byte-identical
 # to the pr112i-snapD2/flipchk arms.  These are the MCS and PR baseline.
+#
+# 2026-08-25b: BOTH reference sides named above are now retired, so grp0825 is
+# the sole carrier of stage A -- imaging AND Q/L -- for all four data samples.
+# Its protection is correspondingly harder: there is no longer a second copy of
+# these products anywhere in the tree, only the frozen member-content rollups in
+# state-20260825b/hashes/stagea-<s>.tsv.  A future round that releases a grp0825
+# arm is deleting the product itself, not one copy of two.
 work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A, 48/19/1000/2000 evts, per-event layout	docs/81_group-mode-production.md
 work-nuecc48-prod0825 work-ncpi0-prod0825 work-mcp1k-prod0825 work-mcp2k-prod0825	doc 81 stage B PR at the current operating point; ASSERT 8 reads its group build log	docs/81_group-mode-production.md
 
@@ -170,7 +198,14 @@ work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx1
 # RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-vtx106-cne-on-nuecc48 ...
 
 # --- non-reproducible crash evidence (added 2026-08-23) -------------------
-work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 6.7 MB	doc pr/97
+# 2026-08-25b: MADE SELF-CONTAINED, and this is why the round's ASSERT 4 earns
+# its keep.  This arm's evt178410/ was a SYMLINK into work-img-mcp2k, and its
+# ql_evt178410/*.npz linked through it -- so retiring the imaging hubs would
+# have left five broken links inside the one arm this file calls
+# not-re-capturable, silently, with no error at delete time.  The link was
+# replaced by the real bytes it pointed at (cp -rL) BEFORE any deletion; the arm
+# grew 6.7 MB -> 17 MB and now depends on nothing outside itself.
+work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 17 MB, self-contained	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
 

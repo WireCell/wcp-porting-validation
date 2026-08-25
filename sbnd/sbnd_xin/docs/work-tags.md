@@ -11,6 +11,12 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 26 after the 2026-08-25b round retired the
+                                 #   stage-A reference side (work-img-* for the
+                                 #   4 data samples + work-*-ql0819) and the
+                                 #   pre-flip work-*-prod0823; 38 before it,
+                                 #   12 removed, 39 GiB (~36 G net) -- see that
+                                 #   section below and doc 81 sec 11;
                                  # 42 after the 2026-08-23 prod0823 campaign
                                  #   added its four PR arms (72G);
                                  # 38 after the 2026-08-23 minimal-state round
@@ -197,6 +203,82 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-25b — the stage-A reference side and the pre-flip PR baseline, 144G → 108G
+
+**12 arms, 39 GiB removed, ~36 G net.** `work*` dirs 38 → 26. Full write-up:
+`docs/81_group-mode-production.md` §11. Owner scope, given directly: *"I assume
+we can safely retire [`work-img-{4 samples}`, `work-*-ql0819`,
+`work-*-prod0823`], and recover the disk"*.
+
+| released | why | frozen as |
+|---|---|---|
+| `work-img-{nuecc48,ncpi0,mcp1k,mcp2k}` | doc 81 §7: byte-identical to the imaging half of `work-<s>-grp0825` (24536/24536) | `state-20260825b/hashes/stagea-<s>.tsv` |
+| `work-{nuecc48,ncpi0,mcp1k,mcp2k}-ql0819` | the Q/L half of that same gate | same file |
+| `work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0823` | PRE-flip (doc 81 §4), superseded by `prod0825` | `state-20260825b/hashes/work-<s>-prod0823.tsv` |
+
+**NOT released:** `work-img-{r1qlmc,r2mc}`. No `grp0825` arm exists for either
+sim sample, so these are the only copy, not duplicates.
+
+### The substitution rule — read this before re-running any older repro block
+
+Every repro block in docs 71/74/76/77/78/79, pr/102 and pr/108, and the five
+closed-round arm scripts (`pr107_arms.sh`, `pr108_testA.sh`,
+`pr109_sbnd_arms.sh`, `pr112_arms.sh`, `pr112_dual_arms.sh`), still name the
+retired arms. They were deliberately **not** repointed: a script that records
+how a finished round was run should keep naming the arm that round actually
+read. To re-run one:
+
+* `work-<s>-ql0819` → **`work-<s>-grp0825`** (its `ql_evt<N>/` carries every
+  product `ql0819`'s did except `calib-evt*.json` and `wct_ql_evt*.log`)
+* `work-img-<s>` → **`work-<s>-grp0825`** (its `evt<N>/` layer, same layout)
+
+The two *live* tools were repointed instead, and a new ASSERT 12 + interlock 5
+verify it: `scripts/multi/repro_ql_nondet.sh` (doc 82's reproducer — its
+command #10 passed `REF=work-mcp2k-ql0819` explicitly, which would have been
+`exit 1`) and `scripts/multi/ql_legacy_gate.sh`.
+
+### What the round proved before it deleted anything
+
+`verify_frozen_stagea_20260825b.py` reproduces doc 81 §7's gate from the frozen
+manifest against the surviving `grp0825` arms — **24536/24536**, run once before
+the deletion and again after it, with both reference arms gone. `prod0823`'s
+9201 rollups are frozen the same way, but that one is **insurance, not gate
+preservation**: `prod0825` is at a different operating point, so no byte-identity
+claim existed between them.
+
+### Costs, stated rather than absorbed
+
+* **docs pr/104–pr/111's A/B references against the pr/104 production epoch are
+  now text-only** — `prod0823` was that epoch's last on-disk carrier.
+* `work-{nuecc48,ncpi0}-ql0819`'s `ql_evt*/calib-evt*.json` (146 + 53 MB) are
+  gone; `grp0825` does not carry them. Precedent: `thin_hubs_20260811.py`
+  dropped mcp1k's and mcp2k's for the same reason in the 08-11 round.
+* **NOT a cost, checked rather than assumed:** `sp-frames.tar.bz2` (2067 files)
+  is preserved verbatim in `archive/records/stagea-refside-20260825b/` —
+  `archive_records`' `HEAVY` list has no pattern matching it, so it lands in the
+  record tar. That is also most of the 2.9 G archive, hence ~36 G net vs 39 GiB
+  gross.
+
+### Two catches worth carrying forward
+
+* **`work-probe178410a` was about to be silently broken.** Its `evt178410/` was
+  a symlink into `work-img-mcp2k` with four npz linking through it. ASSERT 4
+  caught it; the link was replaced with the real bytes (`cp -rL`) before any
+  deletion. 6.7 MB → 17 MB, now self-contained. It is PROTECTED precisely
+  because a non-deterministic crash cannot be re-captured on demand.
+* **A shared freeze tool would have failed silently.**
+  `hash_manifest_20260825.py` matches `pr_evt(\d+)$`; stage-A arms are
+  `evt<N>`/`ql_evt<N>`, so it would have written a header-only `.tsv` that
+  passes `[ -s ]`. Hence a second tool, and hence interlock 4 / ASSERT 11 check
+  **row counts** summing to 24536, never existence.
+
+### `grp0825` is now load-bearing alone
+
+`work-<s>-grp0825` is the **sole** on-disk carrier of stage A — imaging and Q/L
+— for all four data samples. No second copy exists anywhere in the tree; there
+is only the frozen manifest. A future round releasing a `grp0825` arm deletes
+the product itself, not one copy of two. `PROTECTED.txt` says so at that entry.
 
 ## CAMPAIGN 2026-08-23 — `prod0823`, the full-coverage PR re-run the retirement round was gated on
 

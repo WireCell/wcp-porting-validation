@@ -1,8 +1,10 @@
 # numu50 -- standing 50-event numu validation manifest (doc pr/99 round 2).
 # Built from past PR-improvement docs (owner request 2026-08-20); the
 # cathode-crossing topic (docs 72/73) is deliberately excluded.
-# Format: <sample> <event>.  Samples: mcp1k = work-mcp1k-ql0819,
-# mcp2k = work-mcp2k-ql0819 (both reality=data).
+# Format: <sample> <event>.  Samples: mcp1k = work-mcp1k-grp0825,
+# mcp2k = work-mcp2k-grp0825 (both reality=data).  These named the -ql0819
+# arms until the 2026-08-25b round retired them; the grp0825 arms carry the
+# same Q/L products, member-content identical (doc 81 sec 7).
 # Composition:
 #   mcp1k (35): the pr93r3 standing scan set's 33 mcp1k events
 #     (bee/pr93r3/pr93r3.index.txt) + owner pr/99 events 315167, 395148

@@ -50,8 +50,8 @@ MALLOC_PERTURB_=1   DRAWS=5 PRECOMPILE=1 ./scripts/multi/repro_ql_nondet.sh \
     work-mcp2k-grp0825 /home/xqian/tmp/d82/e99438-perturb1   99438
 MALLOC_PERTURB_=170 DRAWS=5 PRECOMPILE=1 ./scripts/multi/repro_ql_nondet.sh \
     work-mcp2k-grp0825 /home/xqian/tmp/d82/e99438-perturb170 99438
-#   -> =1   : 5/5 IDENTICAL to work-mcp2k-ql0819
-#   -> =170 : 5/5 identical to each other, 5/5 DIFFER from ql0819
+#   -> =1   : 5/5 IDENTICAL to the reference
+#   -> =170 : 5/5 identical to each other, 5/5 DIFFER from the reference
 
 # --- 3. the original doc-81 pair, for the ~10%-flip version of it -------
 DRAWS=10 ./scripts/multi/repro_ql_nondet.sh \
@@ -62,7 +62,7 @@ DRAWS=10 ./scripts/multi/repro_ql_nondet.sh \
 #    the configuration doc 81 actually failed in.  PRECOMPILE=0 is the point.
 DRAWS=10 PRECOMPILE=0 ./scripts/multi/repro_ql_nondet.sh \
     work-mcp2k-grp0825 /home/xqian/tmp/d82r2/e99438-inproc 99438
-#   -> 2 draws match ql0819, 8 do NOT.  Doc 81 saw 3 of 3 in the 8-side.
+#   -> 2 draws match the reference, 8 do NOT.  Doc 81 saw 3 of 3 in the 8-side.
 
 # 5. the control: the other six, same configuration, 3 draws each.
 ./scripts/multi/run_e2.sh /home/xqian/tmp/d82r2   # 292643, 321101, 53793 also flip
@@ -93,7 +93,7 @@ DRAWS=25 PRECOMPILE=0 ./scripts/multi/repro_ql_nondet.sh \
 #   -> 0 of 300 draw-vs-draw pairs differ (was ~1 in 9-10 pre-fix)
 
 # 10. the mcp2k known-bistable events, 12 repeated draws.
-DRAWS=12 PRECOMPILE=0 REF=work-mcp2k-ql0819 ./scripts/multi/repro_ql_nondet.sh \
+DRAWS=12 PRECOMPILE=0 REF=work-mcp2k-grp0825 ./scripts/multi/repro_ql_nondet.sh \
     work-mcp2k-grp0825 /home/xqian/tmp/d82r3/verify2k \
     53793 99438 161043 321101 350816
 #   -> 0 of 66 draw-vs-draw pairs differ; each event now has exactly one answer
@@ -101,6 +101,16 @@ DRAWS=12 PRECOMPILE=0 REF=work-mcp2k-ql0819 ./scripts/multi/repro_ql_nondet.sh \
 
 The reproducer rebuilds a group from surviving per-event products, so it needs
 no reco1 file and no re-imaging.
+
+**Reference arm, changed 2026-08-25b.** Every number above was originally taken
+against `work-<sample>-ql0819`, which the 08-25b retirement round released (doc
+81 sec 10). The commands now name `work-<sample>-grp0825`, which is also the
+reproducer's new default. The substitution is exact rather than approximate:
+doc 81 sec 7 gated the two arms at 24536/24536 archives member-content
+identical, and that gate was re-run from the frozen manifest against the
+surviving arm on the day of the retirement -- 24536/24536 again
+(`scripts/retire/verify_frozen_stagea_20260825b.py`). So none of the results
+above change; only the path does.
 
 ## Part 1 — the log tear
 

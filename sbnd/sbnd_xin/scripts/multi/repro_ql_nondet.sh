@@ -26,7 +26,7 @@
 #                      other two drivers in this tree precompile precisely to
 #                      avoid it (doc pr/97 sec 5).
 #   REF=<root>         reference root to gate each draw against, in the
-#                      per-event layout (default: the ql0819 arm for the
+#                      per-event layout (default: the grp0825 arm for the
 #                      sample the src_root names).
 #   REALITY=data|sim   default data.
 #
@@ -49,10 +49,24 @@ DRAWS=${DRAWS:-3}
 PRECOMPILE=${PRECOMPILE:-0}
 REALITY=${REALITY:-data}
 
-# Default reference: work-<sample>-ql0819, derived from the src root's name.
+# Default reference: work-<sample>-grp0825, derived from the src root's name.
+#
+# This defaulted to work-<sample>-ql0819 until the 2026-08-25b retirement round
+# released that arm.  The substitution is exact, not approximate: doc 81 sec 7
+# gated grp0825 against work-img-<s> + work-<s>-ql0819 and got 24536/24536
+# archives member-content identical, and that reference side is frozen in
+# scripts/retire/state-20260825b/hashes/stagea-<s>.tsv, so the equality is
+# still checkable after the deletion.  Every doc-82 number taken against
+# ql0819 therefore stands unchanged against this default.
+#
+# Note SRC and REF are normally the SAME grp0825 arm now -- that is correct and
+# is what this tool has always done: SRC supplies the per-event products a
+# synthetic multi-event GROUP is assembled from, and REF is the per-event
+# recorded answer each group draw is compared against.  The comparison is
+# group-mode output vs per-event output, not a root against itself.
 if [ -z "${REF:-}" ]; then
     _s=$(basename "$SRC"); _s=${_s#work-}; _s=${_s%%-*}
-    REF=$SX/work-${_s}-ql0819
+    REF=$SX/work-${_s}-grp0825
 fi
 [ -d "$REF" ] || { echo "ERROR: no reference root: $REF" >&2; exit 1; }
 

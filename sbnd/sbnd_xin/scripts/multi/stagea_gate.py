@@ -10,6 +10,13 @@ byte compare of the container is meaningless (CLAUDE.md M2).
 
 usage: stagea_gate.py <new_root> --img <work-img-<s>> --ql <work-<s>-ql0819>
                       [--events E [E ...]] [--jobs N]
+
+2026-08-25b: the reference side this was written to compare against
+(work-img-<s> + work-<s>-ql0819) has been retired.  The 24536/24536 PASS it
+produced is preserved as member-content rollups in
+scripts/retire/state-20260825b/hashes/stagea-<s>.tsv; re-check a surviving root
+against those with scripts/retire/hash_manifest_stagea_20260825b.py and diff,
+rather than with this tool, unless you have restored a reference arm.
 """
 import argparse, hashlib, os, sys, tarfile, zipfile
 from concurrent.futures import ProcessPoolExecutor

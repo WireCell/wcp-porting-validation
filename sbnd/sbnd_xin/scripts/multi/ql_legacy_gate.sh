@@ -18,7 +18,12 @@ REF=${1:?ref ql root}; NEW=${2:?fresh root}; shift 2
 [ $# -gt 0 ] || { echo "give at least one event id" >&2; exit 1; }
 
 STAGE=${SBND_STAGE:-$SX/input_files_reco1/staged-mcp2025c-1000evt}
-IMGBASE=${SBND_IMGBASE:-$SX/work-img-mcp1k}
+# Imaging source.  Defaulted to the mcp1k entry of the work-img-* family until
+# the 2026-08-25b round released the four DATA hubs; work-mcp1k-grp0825 carries the same
+# icluster-*.npz in the same evt<N>/ layout, proven member-content identical by
+# doc 81 sec 7 (24536/24536) and frozen in
+# scripts/retire/state-20260825b/hashes/stagea-mcp1k.tsv.
+IMGBASE=${SBND_IMGBASE:-$SX/work-mcp1k-grp0825}
 
 mkdir -p "$NEW"
 MAP=${SBND_STAGE_MAP:-$NEW/.stage_map}
