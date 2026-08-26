@@ -159,14 +159,31 @@ def run_probe_replay(cloud_txt, out_json, maskmax=True):
     return json.load(open(out_json))
 
 
-def run_probe_synthetic(nsegs, T_mev, ntrials, seed, out_json, ivx=2):
+def run_probe_synthetic(nsegs, T_mev, ntrials, seed, out_json, ivx=2, sigma_scale=None):
     args = [PROBE, "synthetic", str(nsegs), str(T_mev), str(ntrials), str(seed), out_json,
             "--ivx", str(ivx)]
+    if sigma_scale is not None:
+        args += ["--sigma-scale", str(sigma_scale)]
     r = subprocess.run(args, capture_output=True, text=True)
     if r.returncode != 0 or not os.path.exists(out_json):
         print("WARN mcs_probe synthetic failed:", r.stderr, file=sys.stderr)
         return None
     return json.load(open(out_json))
+
+
+def pull_sigma_scale(T_mev):
+    """doc 80 sec 9.3's own pull-test core widths, by T band -- the shipped
+    tune's assumed angular width is too NARROW at T>~200 MeV (and slightly
+    too WIDE below 200) relative to what SBND data actually shows. A toy
+    drawn from sigma_scale=1 (the nominal tune) is therefore a BIASED
+    estimate of the true outlier rate, not a fair one; this is the doc 83
+    correction to the naive step-2 toy. Values are the (xz+yz)/2 average
+    pull width doc 80 quoted per band."""
+    if T_mev < 200:
+        return 0.778
+    if T_mev < 400:
+        return 1.366
+    return 2.364
 
 
 # ---------------------------------------------------------------------------
@@ -345,36 +362,70 @@ def main():
     with open(os.path.join(args.out, "deep_dives.json"), "w") as fh:
         json.dump(dives, fh, indent=1)
 
-    # ---- step 2: statistical null (toy) per nseg14 bucket present among outliers ----
+    # ---- step 2: statistical null (toy) per nseg14 bucket present among outliers.
+    # TWO variants: the nominal shipped tune (sigma_scale=1, matches what the
+    # estimator itself assumes) AND the doc-80-pull-corrected tune (sigma_scale
+    # = the MEASURED pull width per T band, pull_sigma_scale()) -- the nominal
+    # number alone is a BIASED estimate (doc 80 sec 9.3 found the tune's own
+    # assumed width is wrong as a function of T), so both are reported and the
+    # doc quotes the bracket, not a single number.
     toy_summary = []
     buckets = sorted(set(out_nseg))
+    exp_nom = exp_scaled = 0.0
     for nb in buckets:
         rs = [r for r in outliers if r["nseg14"] == nb]
         if not rs:
             continue
+        n_pop = sum(1 for r in A if r["nseg14"] == nb)
         T_med = float(np.median([r["ke_range_tk"] for r in rs]))
-        out_json = os.path.join(args.out, f"toy_nseg{nb}.json")
-        res = run_probe_synthetic(nb, T_med, 4000, 1000 + nb, out_json)
-        if res is None:
+        scale = pull_sigma_scale(T_med)
+        res_nom = run_probe_synthetic(nb, T_med, 4000, 1000 + nb,
+                                      os.path.join(args.out, f"toy_nseg{nb}.json"))
+        res_scl = run_probe_synthetic(nb, T_med, 4000, 5000 + nb,
+                                      os.path.join(args.out, f"toy_nseg{nb}_pullcorrected.json"),
+                                      sigma_scale=scale)
+        if res_nom is None or res_scl is None:
             continue
-        ratios = np.array(res["keguess_over_T"])
-        frac15 = float((ratios > 1.5).mean())
-        frac20 = float((ratios > 2.0).mean())
+        r_nom = np.array(res_nom["keguess_over_T"])
+        r_scl = np.array(res_scl["keguess_over_T"])
+        f15_nom = float((r_nom > 1.5).mean())
+        f15_scl = float((r_scl > 1.5).mean())
         actual = len(rs)
-        toy_summary.append(dict(nseg14=nb, T_MeV=T_med, n_outliers_here=actual,
-                                toy_frac_gt1p5=frac15, toy_frac_gt2p0=frac20,
-                                toy_ratios=ratios.tolist()))
-        summary.append(f"step2 toy: nseg14={nb} T={T_med:.0f}MeV -> P(ratio>1.5)={frac15:.3f} "
-                       f"P(ratio>2.0)={frac20:.3f}  (this bucket has {actual} real outlier(s))")
+        exp_nom += f15_nom * n_pop
+        exp_scaled += f15_scl * n_pop
+        toy_summary.append(dict(nseg14=nb, T_MeV=T_med, n_pop=n_pop, n_outliers_here=actual,
+                                sigma_scale=scale,
+                                toy_frac_gt1p5_nominal=f15_nom, toy_frac_gt1p5_pullcorrected=f15_scl,
+                                toy_ratios=r_nom.tolist()))
+        summary.append(f"step2 toy: nseg14={nb} T={T_med:.0f}MeV pull_scale={scale:.3f} "
+                       f"-> P(ratio>1.5) nominal={f15_nom:.3f} pull-corrected={f15_scl:.3f} "
+                       f"(N_pop={n_pop}, {actual} real outlier(s) here)")
+    summary.append(f"step2 TOTAL expected(ratio>1.5): nominal-tune={exp_nom:.2f} "
+                   f"pull-corrected={exp_scaled:.2f}  observed=18  "
+                   f"(doc 80's pull test shows the nominal number is BIASED LOW -- "
+                   f"report the bracket, not a single multiplier)")
 
     with open(os.path.join(args.out, "toy_null.json"), "w") as fh:
         json.dump(toy_summary, fh, indent=1)
 
-    # ---- fragmentation summary across all outliers ----
+    # ---- fragmentation summary across all outliers, AND a population baseline.
+    # A raw outlier-only rate is not evidence of anything without a baseline --
+    # this population census (over ALL contained muons, not just the outlier
+    # sample) is what retracted the naive "12/18 = fragmentation" reading
+    # (doc 83 sec 2 step 4b correction): a busy SBND event is full of nearby
+    # track-like fragments regardless of whether the muon is an MCS outlier.
     n_frag = sum(1 for d in dives["outlier"]
                 if any(f["min_dist_cm"] < 10 for f in d.get("fragments", [])))
     summary.append(f"step4b: {n_frag}/{len(outliers)} outliers have another track-like "
                    f"fragment within 10cm of the selected segment (candidate PR break)")
+    n_frag_pop = 0
+    for r in A:
+        froot = os.path.join(r["prdir"], "tracking-pr.root")
+        if any(f["min_dist_cm"] < 10 for f in fragmentation_census(froot, r["cid"], r["segid"])):
+            n_frag_pop += 1
+    summary.append(f"step4b BASELINE: {n_frag_pop}/{len(A)} of ALL contained muons (not just "
+                   f"outliers) have such a fragment -- if this rate is not below the outlier "
+                   f"rate above, adjacency has NO discriminating power for this question")
     n_bragg = sum(1 for d in dives["outlier"]
                  if isinstance(d.get("bragg_contrast"), float) and d["bragg_contrast"] >= 2.0)
     n_bragg_scored = sum(1 for d in dives["outlier"] if not np.isnan(d.get("bragg_contrast", np.nan)))
@@ -440,22 +491,34 @@ def main():
             return None
         return max(mags), np.median(mags)
 
+    # RESTRICTED to replay-verified muons (same fidelity gate as step 5) --
+    # the segments/angles come from the same approximate-endpoint replay, so
+    # an unverified muon's angles are for an approximately-, not exactly-,
+    # right trimmed path.
     fig, ax = plt.subplots(figsize=(6, 5))
+    med_by_tag = {}
     for tag, marker, color in [("outlier", "o", "tab:red"), ("control", "s", "tab:blue")]:
         xs, ys = [], []
         for d in dives[tag]:
+            if not d.get("replay_verified"):
+                continue
             st = angle_stats(d)
             if st:
                 xs.append(st[1]); ys.append(st[0])
-        ax.scatter(xs, ys, marker=marker, c=color, alpha=0.7, label=f"{tag} (N={len(xs)})")
+        ax.scatter(xs, ys, marker=marker, c=color, alpha=0.7,
+                  label=f"{tag}, replay-verified (N={len(xs)})")
+        med_by_tag[tag] = float(np.median(xs)) if xs else float("nan")
     lim = ax.get_xlim()
     ax.plot([0, lim[1]], [0, lim[1]], "k:", lw=1, label="max = median")
     ax.set_xlabel("median |angle| per muon [rad]")
     ax.set_ylabel("max |angle| per muon [rad]")
-    ax.set_title("per-muon angle spectrum: outliers vs matched controls")
+    ax.set_title("per-muon angle spectrum: REPLAY-VERIFIED outliers vs controls")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(args.out, "angle_spectrum.png"), dpi=150)
+    summary.append(f"angle spectrum (replay-verified only): median-of-medians "
+                   f"outlier={med_by_tag.get('outlier'):.3f} rad vs "
+                   f"control={med_by_tag.get('control'):.3f} rad")
 
     # (ii) lnL curve overlay -- REPLAY-VERIFIED outliers only (see the
     # fidelity gate above); an unverified replay's curve is for an

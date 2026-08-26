@@ -267,7 +267,19 @@ int mode_synthetic(int argc, char** argv)
     long seed = std::atol(argv[5]);
     std::string out_path = argv[6];
     int ivx = 2;
-    for (int i = 7; i + 1 < argc; i++) { if (std::string(argv[i]) == "--ivx") ivx = std::atoi(argv[i + 1]); }
+    // doc 83 correction: the toy's angles are drawn from the SHIPPED tune,
+    // but doc 80's own pull test (sec 9.3) found the tune's sigma is too
+    // NARROW at T>~400 MeV (pull core width 1.34 at 200-400, 2.15 at
+    // 400-800) -- exactly where several outlier buckets sit.  A toy drawn
+    // from the nominal tune therefore UNDERSTATES the true outlier rate in
+    // those buckets.  --sigma-scale inflates BOTH double-Gaussian widths by
+    // a constant factor so the toy can be re-run at the MEASURED pull width
+    // for an honest bracket instead of a single (biased-low) number.
+    double sigma_scale = 1.0;
+    for (int i = 7; i + 1 < argc; i++) {
+        if (std::string(argv[i]) == "--ivx") ivx = std::atoi(argv[i + 1]);
+        if (std::string(argv[i]) == "--sigma-scale") sigma_scale = std::atof(argv[i + 1]);
+    }
     ivx = std::max(0, std::min(4, ivx));
     const double vx_edges[6] = {0, 0.1, 0.2, 0.35, 0.75, 1};
     double vx_val = 0.5 * (vx_edges[ivx] + vx_edges[ivx + 1]);
@@ -294,7 +306,7 @@ int mode_synthetic(int argc, char** argv)
             VD pyz = pred_theta_yz_pars(T_local, ivx);
             auto draw_mixture = [&](const VD& pars) {
                 double sigma = (uni(rng) < pars[2]) ? pars[0] : pars[1];
-                return sigma * nrm(rng);
+                return sigma_scale * sigma * nrm(rng);
             };
             ax[i] = draw_mixture(pxz);
             ay[i] = draw_mixture(pyz);
@@ -306,8 +318,9 @@ int mode_synthetic(int argc, char** argv)
 
     FILE* jf = fopen(out_path.c_str(), "w");
     if (!jf) { fprintf(stderr, "cannot open %s\n", out_path.c_str()); return 1; }
-    fprintf(jf, "{\"nsegs\":%d,\"T_MeV\":%.3f,\"ntrials\":%d,\"seed\":%ld,\"ivx\":%d,\"vx\":%.4f,\n",
-            nsegs, T_mev, ntrials, seed, ivx, vx_val);
+    fprintf(jf, "{\"nsegs\":%d,\"T_MeV\":%.3f,\"ntrials\":%d,\"seed\":%ld,\"ivx\":%d,\"vx\":%.4f,"
+                "\"sigma_scale\":%.4f,\n",
+            nsegs, T_mev, ntrials, seed, ivx, vx_val, sigma_scale);
     fprintf(jf, "\"keguess_over_T\":"); jvec(jf, ratios);
     fprintf(jf, "\n}\n");
     fclose(jf);

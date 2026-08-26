@@ -12,19 +12,26 @@ PR display where useful, with plots in this doc.
 **Status.** MCS costs ~0.2% of the PR stage per active event — three
 independent measurements agree, and the arm-level A/B noise floor (~66 ms/evt)
 is >6x bigger than the whole MCS cost, so it cannot even see it. The outlier
-tail (18/134 contained muons at ratio > 1.5) is **mostly a
-reconstruction-fragmentation signal, not an MCS defect**: 12/18 have another
-track-like PR fragment *touching* the selected segment (a broken/mis-split
-trajectory — the toy statistical null predicts only ~2.6 outliers from angle-
-count statistics alone, ~7x fewer than the 18 observed), and the ambiguity
-score already flags 16/18 of them on its own. A provisional "single dominant
-kink angle" reading did **not** survive a replay-fidelity check and is
-retracted below — read that correction before the classification table. These
-are **SBND data events** (doc 80 §18's "MC" label was wrong: the batch log
-records `reality=data` and the input art file carries no `simb::MCTruth`
-products) with no truth available; every conclusion below is from
-reconstruction-internal evidence — dQ/dx, geometry, and the estimator's own
-likelihood.
+tail (18/134 contained muons at ratio > 1.5) is **mostly not explained by
+pure MCS-fit statistics**: even after correcting the statistical-null toy for
+a tune-width bias doc 80's own pull test exposed (§2 step 2), it predicts
+only ~5 of the 18. What it *is not* is a simple "broken track" signal in the
+naive sense: an adjacent-fragment census, which sounded like the smoking gun
+on first pass, turned out to have **no discriminating power** — 67% of
+outliers have one, but so do 73% of ALL contained muons in this busy SBND
+environment (§2 step 4b; this claim was corrected mid-analysis after a
+proper population baseline was run, not just the outlier arm). What DOES
+hold up: the ambiguity score flags 16/18 on its own, and a replay-verified
+angle-spectrum check shows outliers have systematically smaller measured
+scattering angles than matched controls at the same segment count — the
+statistical mechanism, even if the toy alone underestimates its rate. A
+provisional "single dominant kink angle" reading also did **not** survive a
+replay-fidelity check and is retracted below — read both corrections before
+the classification table. These are **SBND data events** (doc 80 §18's "MC"
+label was wrong: the batch log records `reality=data` and the input art file
+carries no `simb::MCTruth` products) with no truth available; every
+conclusion below is from reconstruction-internal evidence — dQ/dx, geometry,
+and the estimator's own likelihood.
 
 ## Repro block
 
@@ -151,25 +158,42 @@ estimator variance even with *zero* reconstruction defect. `mcs_probe
 synthetic` draws angles from the tune's own double-Gaussian at the
 Bragg-degraded local energy (`ke_from_rr(rr_from_ke(T) − distance_i)`, the
 same physics the estimator scores against) and re-runs the shipped
-`estimate_energy` 4000 times per bucket:
+`estimate_energy` 4000 times per bucket — **twice**: once from the nominal
+shipped tune (`sigma_scale=1`), and once with the angular width inflated by
+doc 80's own measured pull-test core width for that T band (sec 9.3: 0.78 at
+T<200 MeV, 1.37 at 200–400, 2.36 at 400–800 — the tune's own assumed width is
+systematically wrong there, so drawing from it alone is a **biased** toy):
 
-| nseg14 | T (median, MeV) | N contained here | N outliers here | toy P(ratio>1.5) | toy P(ratio>2.0) |
-|---|---|---|---|---|---|
-| 3 | 132 | 10 | 5 | 0.091 | 0.036 |
-| 4 | 155 | 7 | 2 | 0.041 | 0.009 |
-| 5 | 189 | 14 | 2 | 0.032 | 0.004 |
-| 6 | 235 | 14 | 2 | 0.030 | 0.005 |
-| 7 | 255 | 17 | 1 | 0.015 | 0.002 |
-| 8 | 275 | 13 | 2 | 0.008 | 0.001 |
-| 9 | 324 | 10 | 2 | 0.010 | 0.000 |
-| 10 | 352 | 9 | 1 | 0.007 | 0.000 |
-| 14 | 511 | 6 | 1 | 0.004 | 0.000 |
+| nseg14 | T (median, MeV) | N contained here | N outliers here | pull scale | toy P(ratio>1.5) nominal | toy P(ratio>1.5) pull-corrected |
+|---|---|---|---|---|---|---|
+| 3 | 132 | 10 | 5 | 0.778 | 0.091 | 0.235 |
+| 4 | 155 | 7 | 2 | 0.778 | 0.041 | 0.136 |
+| 5 | 189 | 14 | 2 | 0.778 | 0.032 | 0.124 |
+| 6 | 235 | 14 | 2 | 1.366 | 0.030 | 0.004 |
+| 7 | 255 | 17 | 1 | 1.366 | 0.015 | 0.000 |
+| 8 | 275 | 13 | 2 | 1.366 | 0.008 | 0.000 |
+| 9 | 324 | 10 | 2 | 1.366 | 0.010 | 0.000 |
+| 10 | 352 | 9 | 1 | 1.366 | 0.007 | 0.000 |
+| 14 | 511 | 6 | 1 | 2.364 | 0.004 | 0.000 |
 
-Summed over these buckets: pure angle-count statistics predicts **~2.6**
-muons above 1.5x and **~0.6** above 2x. **Observed: 18 and 14.** The toy
-null explains roughly a **sixth to a seventh** of the tail — most of it needs
-a reconstruction-level explanation, not just "the estimator is noisy at low
-segment count" (`docs/83_mcs/toy_null.png`).
+Summed (weighted by each bucket's population, not just its outlier count):
+pure angle-count statistics predicts **~2.6** muons above 1.5x from the
+nominal tune, or **~5.1** from the pull-corrected one. The two move in
+*opposite* directions per bucket — inflating the width helps at low T
+(nseg14 3–5, T<200 MeV, where the *true* spread is narrower than the tune
+assumes: 5 of the 9 lowest-`nseg14` observed outliers live here) but
+*shrinks* the predicted rate at higher T (nseg14 6–14), where a wider drawn
+angle looks to the fit like a lower-KE particle. The net effect very nearly
+doubles the naive estimate.
+
+**Observed: 18 outliers above 1.5x.** Even at the corrected ~5.1, pure
+MCS-fit statistics accounts for only **about a quarter to a third** of the
+tail (not the "~seventh" a naive single-tune toy would suggest) — most of it
+still needs a reconstruction- or estimator-level explanation beyond angle-
+count statistics alone, but the gap is smaller, and less dramatic, than the
+first pass through this analysis found (`docs/83_mcs/toy_null.png` shows the
+nominal-tune toy only; the pull-width-scaled bracket is quoted here, not
+re-plotted).
 
 ### Steps 3/4 — mis-ID and the Bragg test
 
@@ -190,25 +214,36 @@ matched controls 2.42 (`docs/83_mcs/bragg_contrast.png`) — the tail is
 systematically *less* likely to show a real Bragg peak than a typical
 contained muon, consistent with truncation being enriched in this population.
 
-### Step 4b — fragmentation/adjacency census (the incomplete-muon test)
+### Step 4b — fragmentation/adjacency census (the incomplete-muon test) — CORRECTED
 
 For every outlier, every *other* track-like (`|pdg| ∈ {13, 211, 2212}`)
 `real_cluster_id` group sharing the same parent PR cluster, and its closest
-point-to-point distance to the selected segment's own cloud:
+point-to-point distance to the selected segment's own cloud: **12/18
+outliers (67%) have another track-like fragment touching or within 10 cm** of
+the selected segment. On its own, that reads like a smoking gun for "part of
+the muon lost", and an earlier pass through this doc reported it that way.
 
-**12/18 outliers have another track-like fragment touching or within 10 cm**
-of the selected segment. The clearest case, `evt287621 seg6007`
-(`docs/83_mcs/outlier_evt287621_seg6007.png`): the selected 55 cm, 93-point
-muon fragment sits flush against a **pion-tagged** 42-point fragment
-(`real_cluster_id=6019`, `pdg=211`), which itself connects to a *second*
-muon-tagged fragment (`rid=6020`, 88 points) — all three visibly form **one
-continuous trajectory** in the X-Z/Y-Z projections. The dQ/dx profile of the
-selected 55 cm piece alone sits *above* the muon reference curve and close to
-the proton curve near the stopping end, which is odd for a segment tagged
-`pdg=13` — consistent with a single physical track that pattern recognition
-broke into three pieces and mis-tagged the middle one. This is exactly the
-owner's "part of the muon lost" hypothesis, compounded with an adjacent
-mis-ID rather than a mis-ID of the segment MCS actually saw.
+**It is not one, once a proper baseline is run.** The same census over ALL
+134 contained muons (not just the outlier population) finds **98/134 (73%)**
+have an adjacent track-like fragment within 10 cm — a rate at least as high
+as the outliers' 67%, in some samples higher. **A busy SBND event is simply
+full of small nearby track-like fragments** (delta rays, short proton stubs,
+vertex debris) regardless of whether the selected muon is an MCS outlier;
+10 cm adjacency by itself carries no discriminating power for this question,
+and the doc's earlier framing of "12/18 = mostly fragmentation" is retracted.
+
+`evt287621 seg6007` (`docs/83_mcs/outlier_evt287621_seg6007.png`) remains a
+genuine, individually-verified **case study**, not a population statistic:
+the selected 55 cm, 93-point muon fragment sits flush against a
+**pion-tagged** 42-point fragment (`real_cluster_id=6019`, `pdg=211`), which
+itself connects to a *second* muon-tagged fragment (`rid=6020`, 88 points) —
+all three visibly form **one continuous trajectory** in the X-Z/Y-Z
+projections, and the dQ/dx profile of the selected 55 cm piece alone sits
+*above* the muon reference curve and close to the proton curve near the
+stopping end, which is odd for a segment tagged `pdg=13`. This one event is
+a real, look-at-the-picture example of the owner's "part of the muon lost"
+hypothesis (compounded with an adjacent mis-ID) — it is just not
+representative of the tail as a population, per the base-rate check above.
 
 ### Step 5 — kink/over-clustering: a finding that did NOT survive verification
 
@@ -237,27 +272,35 @@ angle in this sample. A proper check would need the true fitted vertex
 points from the PR graph (a C++-side dump, not reachable from ROOT alone) —
 listed as an open item, not attempted here.
 
-One directionally-consistent piece of corroborating (not proof-grade, same
-endpoint-proxy caveat) evidence: outliers have systematically *smaller*
-median per-muon scattering angle than matched controls at the same `nseg14`
-(`docs/83_mcs/angle_spectrum.png`). A **small** realized angle sample pushes
+One piece of evidence from this same replay DOES survive the fidelity gate,
+because it only needs the segments/angles the replay derived, not an exact
+match to the shipped `ke_MCS`: restricting to the 8 replay-verified outliers
+and 13 replay-verified controls, outliers have a systematically *smaller*
+median per-muon scattering angle (median of medians 0.040 rad) than the
+verified controls (0.132 rad) — a clean, non-overlapping separation in
+`docs/83_mcs/angle_spectrum.png`. A **small** realized angle sample pushes
 the fit toward a **higher** KE (less scattering expected there) — exactly
 the direction of every one of these outliers, and exactly what "too few
-angles, unlucky draw" predicts.
+angles, unlucky draw" predicts. This is the most solid mechanistic evidence
+in the doc for *why* the estimator lands high on these particular muons, even
+though the corrected toy null (step 2) shows plain angle-count statistics is
+not sufficient by itself to produce this many unlucky draws.
 
-### Classification (18 outliers)
+### Classification (18 outliers) — read with the step-4b correction above
 
 | tag | count | meaning |
 |---|---|---|
-| adjacent fragment (FRAG) | 12/18 | another track-like PR piece touches the selected segment |
+| adjacent fragment (FRAG) | 12/18 (67%) | **not enriched vs the 73% population base rate — no discriminating power** |
 | genuine Bragg on the segment (BRAGG-OK) | 8/18 | the selected fragment itself really stops |
-| FRAG ∩ BRAGG-OK | 6/18 | stops at the far end, but may still be missing entrance-side track |
-| neither FRAG nor BRAGG-OK | 5/18 | closest to "MCS-fit statistics alone", per the toy null |
+| FRAG ∩ BRAGG-OK | 6/18 | stops at the far end; FRAG here carries no special meaning per above |
+| neither FRAG nor BRAGG-OK | 5/18 | no individual red flag beyond ambiguity/angle-spectrum |
 | single-dominant-angle (kink) | **0/8 replay-verified** | retracted, see step 5 |
+| small median angle vs matched controls | **8/8 replay-verified** | the one mechanism that DOES hold up (see above) |
 
-Case-study panels (`docs/83_mcs/outlier_evt*.png`): `evt287621` (fragmentation
-example above), `evt406796` (touching fragment, replay-unverified — the
-masking response for this one should NOT be read as a confirmed kink, see
+Case-study panels (`docs/83_mcs/outlier_evt*.png`): `evt287621` (an
+individually-inspected fragmentation case, NOT representative of the
+population per step 4b), `evt406796` (touching fragment, replay-unverified —
+the masking response for this one should NOT be read as a confirmed kink, see
 step 5), `evt282899` (genuine Bragg peak, contrast 4.4, yet still an outlier —
 the few-angle-statistics case), `evt291570` (the longest track in the sample,
 220 cm/14 segments, no nearby fragment, flat dQ/dx — possibly not a true
@@ -273,24 +316,26 @@ opposite sign, "for a later look". Same machinery, on the 4:
 | 286681 | 3004 | 0.09 | **1.000** | 4 | 0.97 | touching (0.0 cm), **pdg=2212 (proton)** |
 | 315849 | 11000 | 0.17 | **1.000** | 5 | 0.93 | 68 cm away |
 | 172788 | 26004 | 0.78 | 0.065 | 8 | 1.85 | touching (0.0 cm) |
-| 349241 | 15001 | 0.78 | 0.958 | 3 | 4.02 | touching (0.0 cm) |
+| 349241 | 15001 | 0.78 | 0.578 | 3 | 4.02 | touching (0.0 cm) |
 
-Two of the four (286681, 315849) sit at the ambiguity ceiling (1.000 —
-Part C's own "garbage flag" threshold), so their MCS numbers are already
-self-flagged as unusable. `evt286681` (`docs/83_mcs/outlier_evt286681_seg3004.png`)
-is a **busy multi-prong vertex**: the selected 3004 fragment is short and
-visibly bent, sitting in a cluster with a dozen+ small fragments including
-two **proton-tagged** pieces (`rid=3005, 3006`, `pdg=2212`) touching it
-directly — an over-clustering/busy-vertex read, not a clean single muon. The
-other two (172788, 349241) have low-to-moderate ambiguity and a genuine
-Bragg rise (1.85, 4.02) yet still read low relative to the (larger) *visible*
-range used for the exiting-population denominator — plausibly the visible
-range itself is inflated by a merged prong at the busy end (172788 and
-349241 both have a touching fragment too), which doc 80's own machinery
-cannot distinguish from a real longer muon without a look at the vertex.
-None of the 4 needed the replay-fidelity caveat of §2 step 5 for this
-reading — the finding here rests on the fragmentation/ambiguity census
-alone.
+**The "nearest fragment" column carries the same caveat as §2 step 4b** — a
+touching fragment is common (73% base rate among contained muons; no
+equivalent baseline was run for the exiting population here, so treat 3/4
+touching as suggestive, not proof) and is not on its own evidence of
+anything unusual. What IS solid: two of the four (286681, 315849) sit at the
+ambiguity ceiling (1.000 — Part C's own "garbage flag" threshold), so their
+MCS numbers are already self-flagged as unusable regardless of cause.
+`evt286681` (`docs/83_mcs/outlier_evt286681_seg3004.png`) is, by direct
+look at the picture (not a population statistic), a **busy multi-prong
+vertex**: the selected 3004 fragment is short and visibly bent, sitting in a
+cluster with a dozen+ small fragments including two **proton-tagged** pieces
+(`rid=3005, 3006`, `pdg=2212`) touching it directly. The other two (172788,
+349241) have low-to-moderate ambiguity and a genuine Bragg rise (1.85, 4.02)
+yet still read low relative to the (larger) *visible* range used for the
+exiting-population denominator; whether a merged prong at a busy end inflates
+that visible range, versus these simply being longer real muons, is not
+settled by the census here and would need a by-eye vertex look (the
+`pr_display` command in the Repro block, not run for this doc).
 
 ## 4. What this means for using MCS
 
@@ -298,21 +343,28 @@ alone.
   sub-millisecond-to-tens-of-ms per call even at the largest cloud seen in
   1000 events; nowhere near the ~66 ms/event noise floor of the arms
   themselves. Doc 80's production-flip recommendation is unaffected.
-- **The high-side tail is a data-quality flag more than an MCS bug.** For
-  physics use, an **ambiguity cut** (`amb ≲ 0.5`, following doc 80 Part C's
-  own reading of the score) removes 16/18 of these outliers directly, and the
-  toy null (§2 step 2) shows the estimator's *own* statistical floor at low
-  `nseg14` accounts for only a small fraction of what remains — most of the
-  tail traces to broken/mis-split trajectories the pattern-recognition stage
-  produced, which an ambiguity cut also happens to catch (broken tracks give
-  few, poorly-constrained angles).
-- **This is a reconstruction finding worth its own follow-up, not a fix
-  here** (CLAUDE.md §5 tie-breaker: report, don't fix in the same change).
-  The concrete lead is `evt287621`: three real_cluster_id fragments
-  (6007/6019/6020) that visibly form one continuous trajectory, with the
-  middle one mis-tagged `pdg=211`. Whether `pf_muon` selection should walk
-  across such adjacent same-cluster fragments (not just `long_muon`'s
-  vertex-chain) is an owner decision outside this doc's scope.
+- **The high-side tail is a data-quality flag, not a demonstrated MCS bug —
+  and not, on the evidence here, a demonstrated fragmentation bug either.**
+  For physics use, an **ambiguity cut** (`amb ≲ 0.5`, following doc 80 Part
+  C's own reading of the score) removes 16/18 of these outliers directly.
+  The mechanism that survives scrutiny is angle-count statistics on short
+  tracks: the corrected toy null (§2 step 2) and the replay-verified
+  angle-spectrum check (§2 step 5) both point to "too few, atypically small
+  measured scattering angles" as the proximate cause — even though the toy
+  alone underestimates the rate, so something beyond pure chance (an
+  estimator sensitivity at low `nseg14` the tune doesn't fully capture, or a
+  reconstruction effect this analysis didn't isolate) still makes up part of
+  the gap. **Nearby-fragment adjacency does NOT explain the tail** — that
+  reading was tested against a proper population baseline and retracted
+  (§2 step 4b); do not carry it forward as a cause.
+- **`evt287621` is a genuine, individually-verified case worth a look**, but
+  is reported as ONE case study, not as evidence the tail is generally a
+  fragmentation problem: three `real_cluster_id` fragments that visibly form
+  one continuous trajectory, with the middle one mis-tagged `pdg=211`. If the
+  owner wants to pursue whether `pf_muon` selection should walk across
+  adjacent same-cluster fragments (not just `long_muon`'s vertex-chain),
+  that's a decision outside this doc's scope, motivated by this one event —
+  not by a population-level finding.
 - **No kink/over-clustering defect is confirmed** in this sample once the
   replay-fidelity gate is applied (§2 step 5) — do not carry the earlier
   5/18 "kink" reading forward.
@@ -323,11 +375,13 @@ alone.
   kink test and the lnL-curve plot cover all 18 outliers instead of 8; needs
   a C++-side dump of the PR graph's fitted `Vertex::fit().point`, not
   reachable from `tracking-pr.root` alone.
-- The `evt287621`-style fragmentation is worth a dedicated PR-quality census
-  across the full sample (how often does a `pf_muon`-selected segment sit
-  flush against another track-like fragment, muon-selected or not) —
-  this doc only characterizes it on the 18+4 muons MCS already flagged.
-  A fresh label/arm, per M13, not this doc's existing outputs.
+- **What actually distinguishes an outlier, beyond ambiguity and the angle
+  spectrum, is still open.** The 12/18-vs-73%-baseline result rules
+  adjacency OUT as the explanation but doesn't supply a replacement; a
+  dedicated census (e.g. does the SIZE or PDG mix of the nearby fragment
+  matter, even if its mere presence doesn't) is future work, not attempted
+  here. `evt287621` remains a lead for a specific pattern (a mis-tagged
+  middle fragment splitting a real track), not a validated general rule.
   Owner-facing check: `evt291570`'s flat dQ/dx despite an `isfc==1` tag is
   worth a look — it may not be a true stopping muon.
   Interactive follow-up: `PR_EXTRA_STAGES=pr_display` + the live viewer
