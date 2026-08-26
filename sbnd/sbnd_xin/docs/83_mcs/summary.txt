@@ -1,0 +1,16 @@
+contained(A)=134  exiting(B)=151  outliers(ratio>1.5)=18
+step0: ambiguity quintile edges = [0.0, 0.096, 0.234, 0.501, 0.729, 0.97]
+step0: 16/18 outliers sit in the top ambiguity quintile (>= 0.729); residue (low-ambiguity outliers) = 2
+step2 toy: nseg14=3 T=132MeV -> P(ratio>1.5)=0.091 P(ratio>2.0)=0.036  (this bucket has 5 real outlier(s))
+step2 toy: nseg14=4 T=155MeV -> P(ratio>1.5)=0.041 P(ratio>2.0)=0.009  (this bucket has 2 real outlier(s))
+step2 toy: nseg14=5 T=189MeV -> P(ratio>1.5)=0.032 P(ratio>2.0)=0.004  (this bucket has 2 real outlier(s))
+step2 toy: nseg14=6 T=235MeV -> P(ratio>1.5)=0.030 P(ratio>2.0)=0.005  (this bucket has 2 real outlier(s))
+step2 toy: nseg14=7 T=255MeV -> P(ratio>1.5)=0.015 P(ratio>2.0)=0.002  (this bucket has 1 real outlier(s))
+step2 toy: nseg14=8 T=275MeV -> P(ratio>1.5)=0.008 P(ratio>2.0)=0.001  (this bucket has 2 real outlier(s))
+step2 toy: nseg14=9 T=324MeV -> P(ratio>1.5)=0.010 P(ratio>2.0)=0.000  (this bucket has 2 real outlier(s))
+step2 toy: nseg14=10 T=352MeV -> P(ratio>1.5)=0.007 P(ratio>2.0)=0.000  (this bucket has 1 real outlier(s))
+step2 toy: nseg14=14 T=511MeV -> P(ratio>1.5)=0.004 P(ratio>2.0)=0.000  (this bucket has 1 real outlier(s))
+step4b: 12/18 outliers have another track-like fragment within 10cm of the selected segment (candidate PR break)
+step4: 8/18 scoreable outliers show a genuine Bragg rise (contrast>=2) on the SELECTED segment alone
+replay fidelity (probe reproduces shipped ke_mcs within 20%, using the segment's own first/last on-disk point as an endpoint PROXY -- the true vertex fit point is not stored per-point in this tree): outliers 8/18, controls 13/15 -- outliers are markedly harder to replay exactly, consistent with them being the short/marginal tracks where the exact endpoint matters most
+step5 (replay-verified subset only, N=8): 0/8 have the residual cut by >=50% when the single largest angle is masked -- i.e. NO single-dominant-angle (kink/over-clustering) signature survives the fidelity gate; the excess is spread across multiple angles, not concentrated in one
