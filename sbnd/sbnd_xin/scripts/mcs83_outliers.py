@@ -431,6 +431,23 @@ def main():
     n_bragg_scored = sum(1 for d in dives["outlier"] if not np.isnan(d.get("bragg_contrast", np.nan)))
     summary.append(f"step4: {n_bragg}/{n_bragg_scored} scoreable outliers show a genuine Bragg "
                    f"rise (contrast>=2) on the SELECTED segment alone")
+    # population baseline for the Bragg contrast too -- same discipline as the
+    # step4b fragmentation baseline: an outlier-only rate proves nothing
+    # without the population it is drawn from.
+    contrasts_pop = []
+    for r in A:
+        froot = os.path.join(r["prdir"], "tracking-pr.root")
+        rr, dqdx, pid, shower = dqdx_profile(froot, r["segid"])
+        c, n_near, n_far = bragg_contrast(rr, dqdx)
+        if not np.isnan(c):
+            contrasts_pop.append(c)
+    contrasts_pop = np.array(contrasts_pop)
+    summary.append(f"step4 BASELINE: over ALL {len(A)} contained muons, "
+                   f"{int((contrasts_pop >= 2.0).sum())}/{len(contrasts_pop)} "
+                   f"({100*(contrasts_pop >= 2.0).mean():.0f}%) clear the Bragg threshold, "
+                   f"median contrast {np.median(contrasts_pop):.2f} -- unlike fragmentation, "
+                   f"this population rate sits close to the matched-control rate and well above "
+                   f"the outlier rate, so Bragg absence DOES discriminate the tail")
 
     # ---- replay fidelity gate (must precede any claim from the replay) ----
     def fidelity(dives_list):

@@ -210,7 +210,15 @@ genuine Bragg rise** on the selected segment alone (contrast ≥ 2) —
 for those, the fragment truly stops, so its own local range/energy accounting
 is not wrong; the excess is on the MCS side (few-angle variance, §2 step 2).
 The other 10 do not clear the threshold. Median contrast: outliers 1.72 vs
-matched controls 2.42 (`docs/83_mcs/bragg_contrast.png`) — the tail is
+matched controls 2.42 (`docs/83_mcs/bragg_contrast.png`) — **and, checked
+against the same population baseline that retracted the fragmentation
+reading below (step 4b), this one holds up**: median contrast over ALL 134
+contained muons is 2.24 (91/134 = 68% clear the ≥2 stopping-track threshold),
+statistically indistinguishable from the 15 matched controls (median 2.42,
+80% clear it) and clearly above the 18 outliers (median 1.72, **8/18 = 44%**
+clear it — the number quoted above). Unlike fragmentation adjacency, Bragg
+absence is genuinely enriched in the tail relative to the general contained-
+muon population, not just relative to a small control sample — the tail is
 systematically *less* likely to show a real Bragg peak than a typical
 contained muon, consistent with truncation being enriched in this population.
 
@@ -285,6 +293,25 @@ angles, unlucky draw" predicts. This is the most solid mechanistic evidence
 in the doc for *why* the estimator lands high on these particular muons, even
 though the corrected toy null (step 2) shows plain angle-count statistics is
 not sufficient by itself to produce this many unlucky draws.
+
+**Checked for the obvious confound: is this just an energy/length
+difference between the two groups, not a "small realized angle" effect?**
+Highland scattering width scales as ~1/p, so if the matched controls simply
+happened to be *higher*-energy muons than the outliers, they would be
+*expected* to scatter less, not more — controls having the *larger* angles
+would then be unremarkable, and (since the outlier ratio's own denominator is
+`ke_range_tk`) partly circular with how the outlier sample was defined in the
+first place. Checked directly on the same 8 verified outliers / 13 verified
+controls: median `ke_range_tk` is 173.9 MeV (outliers) vs 197.2 MeV
+(controls) — controls are *higher* energy, by ~13%, not lower, and the
+`nseg14` distributions the controls were matched on overlap closely (3–9 for
+both, controls add one 6/7/14 the outlier set lacks). A ~13% higher-energy
+population should scatter **less**, per Highland — the opposite of the 3.3x
+*larger* angles actually observed for controls. The energy difference between
+the groups therefore argues against the angle separation, not for it: it is
+not an artifact of comparing a low-energy tail to a high-energy control
+sample, and the ratio-based outlier definition is not silently driving this
+particular result.
 
 ### Classification (18 outliers) — read with the step-4b correction above
 
@@ -407,7 +434,7 @@ settled by the census here and would need a by-eye vertex look (the
 
 ![statistical-null KE_MCS/T distribution by segment count](83_mcs/toy_null.png)
 
-![per-muon angle spectrum: outliers vs matched controls](83_mcs/angle_spectrum.png)
+![per-muon angle spectrum: REPLAY-VERIFIED outliers vs controls](83_mcs/angle_spectrum.png)
 
 ![Bragg-peak presence: outliers vs matched controls](83_mcs/bragg_contrast.png)
 

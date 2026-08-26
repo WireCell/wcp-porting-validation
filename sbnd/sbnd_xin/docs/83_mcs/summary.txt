@@ -14,6 +14,7 @@ step2 TOTAL expected(ratio>1.5): nominal-tune=2.61 pull-corrected=5.11  observed
 step4b: 12/18 outliers have another track-like fragment within 10cm of the selected segment (candidate PR break)
 step4b BASELINE: 98/134 of ALL contained muons (not just outliers) have such a fragment -- if this rate is not below the outlier rate above, adjacency has NO discriminating power for this question
 step4: 8/18 scoreable outliers show a genuine Bragg rise (contrast>=2) on the SELECTED segment alone
+step4 BASELINE: over ALL 134 contained muons, 91/134 (68%) clear the Bragg threshold, median contrast 2.24 -- unlike fragmentation, this population rate sits close to the matched-control rate and well above the outlier rate, so Bragg absence DOES discriminate the tail
 replay fidelity (probe reproduces shipped ke_mcs within 20%, using the segment's own first/last on-disk point as an endpoint PROXY -- the true vertex fit point is not stored per-point in this tree): outliers 8/18, controls 13/15 -- outliers are markedly harder to replay exactly, consistent with them being the short/marginal tracks where the exact endpoint matters most
 step5 (replay-verified subset only, N=8): 0/8 have the residual cut by >=50% when the single largest angle is masked -- i.e. NO single-dominant-angle (kink/over-clustering) signature survives the fidelity gate; the excess is spread across multiple angles, not concentrated in one
 angle spectrum (replay-verified only): median-of-medians outlier=0.040 rad vs control=0.132 rad
