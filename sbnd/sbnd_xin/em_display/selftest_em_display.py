@@ -399,13 +399,17 @@ check("the viewer splices em3d's JS, it does not keep a second copy",
 
 # ---- 3-D selection resolves to SEGMENTS ------------------------------------
 V.on_event(None, None, "evt84229")
-V.pick_mode.active = 0
+V.tap_action.value = V.TAP_SELECT
 _sids = V.pick_src.data["sid"]
 _idx = [i for i, s in enumerate(_sids) if s == _sids[0]]
 V.pick_src.selected.indices = _idx + [len(_sids) - 1]
 check("a 3-D box over many points resolves to a handful of segments",
       len(V.selected_cand_ids()) <= 2 and len(_idx) > 2,
       "%d points -> %d segment(s)" % (len(_idx) + 1, len(V.selected_cand_ids())))
+check("  ... and the cyan halo shows exactly what would be marked",
+      len(V.sel3_src.data["xs3"]) == len(V.selected_cand_ids())
+      and len(V.sel_src["xy"].data["xs"]) == len(V.selected_cand_ids()),
+      "%d polylines" % len(V.sel3_src.data["xs3"]))
 V.state["sel_shower"] = 69134
 V.fill_cand_table()
 V.mark("in")()
@@ -415,7 +419,7 @@ V.pick_src.selected.indices = []
 
 # tap in "fill x/y/z" mode must land on a REAL fitted point (a ray needs an
 # anchor; this is the 3-D answer to the two-panel tap).
-V.pick_mode.active = 1
+V.tap_action.value = V.TAP_XYZ
 V.pick_src.selected.indices = [5]
 _want = (V.pick_src.data["x"][5], V.pick_src.data["y"][5], V.pick_src.data["z"][5])
 check("tap in fill mode writes a real fitted point into x/y/z",
@@ -423,7 +427,298 @@ check("tap in fill mode writes a real fitted point into x/y/z",
       and abs(float(V.man_y.value) - _want[1]) < 0.06
       and abs(float(V.man_z.value) - _want[2]) < 0.06,
       "%s %s %s" % (V.man_x.value, V.man_y.value, V.man_z.value))
-V.pick_mode.active = 0
+
+# ---- round 4: a tap that IS the mark ---------------------------------------
+V.state["marks"] = {}
+_target = _sids[7]
+_hit = [i for i, s in enumerate(_sids) if s == _target][:3]
+for want in ("in", "out", None):
+    V.tap_action.value = V.TAP_TOGGLE
+    V.pick_src.selected.indices = list(_hit)
+    got = V.state["marks"].get(_target)
+    check("toggle tap: %s -> %s" % (want and "next" or "third", want or "cleared"),
+          got == want, "seg %s -> %r" % (_target, got))
+    # THE re-arm check: Bokeh does not re-fire selected.indices for the same
+    # index, so a toggle that did not clear its own selection would be dead
+    # after one click.  The loop above only works if _clear_pick ran.
+    check("  ... and the selection re-armed for the next tap on the SAME segment",
+          list(V.pick_src.selected.indices) == [])
+V.tap_action.value = V.TAP_IN
+V.pick_src.selected.indices = list(_hit)
+check("tap in 'mark IN' mode marks on the click itself",
+      V.state["marks"].get(_target) == "in")
+# Found by the REAL browser, not by this file: a selection left standing from
+# the previous action makes the first gesture of the new one a no-op, because
+# Bokeh fires selected.indices only on a change and the index list is identical.
+V.pick_src.selected.indices = list(_hit)
+V.tap_action.value = V.TAP_OUT
+check("  ... and switching the action drops the standing selection, so the "
+      "next gesture fires",
+      list(V.pick_src.selected.indices) == []
+      and not V.sel3_src.data["xs3"])
+V.tap_action.value = V.TAP_OUT
+V.pick_src.selected.indices = list(_hit)
+check("  ... and 'mark OUT' overrides it", V.state["marks"].get(_target) == "out")
+
+# ---- round 4: orbit centre --------------------------------------------------
+V.tap_action.value = V.TAP_CENTRE
+_span0 = V.f3d.x_range.end - V.f3d.x_range.start
+_R0 = V.state["cam_R"]
+V.pick_src.selected.indices = [11]
+_p = (V.pick_src.data["x"][11], V.pick_src.data["y"][11], V.pick_src.data["z"][11])
+check("tap in 'orbit around it' re-centres the camera on that point",
+      max(abs(V.state["cam_c"][i] - _p[i]) for i in range(3)) < 0.06,
+      "centre %s" % (tuple(round(v, 1) for v in V.state["cam_c"]),))
+check("  ... keeping the zoom (span unchanged) and centred on zero",
+      abs((V.f3d.x_range.end - V.f3d.x_range.start) - _span0) < 1e-6
+      and abs(V.f3d.x_range.start + V.f3d.x_range.end) < 1e-6,
+      "span %.1f" % (V.f3d.x_range.end - V.f3d.x_range.start))
+check("  ... and NOT rewriting cam_R, which the depth cue normalises by",
+      V.state["cam_R"] == _R0)
+check("  ... the browser is told the new centre", V.cam_src.data["cx"][0] == _p[0])
+# The ON-SCREEN reprojection is the browser's job: pushing cam_src.data fires
+# em3d.JS_APPLY, which rewrites u/v in place for every source without shipping
+# 25 000 points back.  So do NOT assert on the server's stale u/v columns here --
+# assert the invariant the server actually owns, that its projection of the
+# clicked point is now the origin, because that is what every later Python-side
+# fill will use.
+_pu, _pv, _ = V._proj([_p])[0]
+check("  ... and the server's own projection now puts it at the origin",
+      abs(_pu) < 1e-9 and abs(_pv) < 1e-9, "u=%.2e v=%.2e" % (_pu, _pv))
+V.refit_camera()
+
+# ---- round 4: a vertex is clickable, and can never be marked ----------------
+V.tap_action.value = V.TAP_PIO
+_vx = (V.vtx3_src.data["x"][2], V.vtx3_src.data["y"][2], V.vtx3_src.data["z"][2])
+V.vtx3_src.selected.indices = [2]
+check("tapping a reconstructed vertex sets the pi0 vertex",
+      V.vtx_mode_group.active == 2
+      and max(abs(V.state["vtx_manual"][i] - _vx[i]) for i in range(3)) < 0.06,
+      "manual=%s" % (tuple(round(v, 1) for v in (V.state["vtx_manual"] or ())),))
+check("  ... and the pi0 vertex marker moved there",
+      V.piovtx_src.data["x"] and abs(V.piovtx_src.data["x"][0] - _vx[0]) < 0.06)
+check("  ... x/y/z boxes agree with the state (no stale-read reentrancy)",
+      abs(float(V.man_x.value) - _vx[0]) < 0.06)
+_marks_before = dict(V.state["marks"])
+V.tap_action.value = V.TAP_IN
+V.vtx3_src.selected.indices = [3]
+check("a vertex tap can NEVER reach state['marks']",
+      V.state["marks"] == _marks_before, str(V.state["marks"]))
+check("  ... and box-select cannot pick vertices up at all",
+      [r.data_source for r in V._box3.renderers] == [V.pick_src]
+      and V.vtx3_src in [r.data_source for r in V._tap3.renderers],
+      "box sees %d source(s), tap sees %d"
+      % (len(V._box3.renderers), len(V._tap3.renderers)))
+V.tap_action.value = V.TAP_SELECT
+V.vtx_mode_group.active = 0
+
+# ---- round 4: the reco/hand distinction is DRAWN, not just stored -----------
+V.on_event(None, None, "evt84229")
+V.state["sel_shower"] = 69134
+V.push_polys(V.mem_src, V.members_of(69134), V.mem3_src)
+_mem = V.members_of(69134)
+V.state["marks"] = {_mem[0]: "out", _sids[0] if _sids[0] not in _mem else _mem[1]: "in"}
+V.refresh_marks()
+check("reco membership and your marks are separate, simultaneous layers",
+      len(V.mem3_src.data["xs3"]) == len(_mem)
+      and len(V.out3_src.data["xs3"]) == 1 and len(V.in3_src.data["xs3"]) == 1,
+      "member %d / in %d / out %d" % (len(V.mem3_src.data["xs3"]),
+                                      len(V.in3_src.data["xs3"]),
+                                      len(V.out3_src.data["xs3"])))
+_order = [r.data_source for r in V.f3d.renderers if r in V.RENDER.get("mark", [])
+          + V.RENDER.get("member", []) + V.RENDER.get("select", [])]
+check("  ... and the widest halo is UNDERNEATH, so a mark cannot erase the "
+      "reco band",
+      _order.index(V.sel3_src) < _order.index(V.in3_src) < _order.index(V.mem3_src),
+      " -> ".join({id(V.sel3_src): "select", id(V.in3_src): "in",
+                   id(V.out3_src): "out", id(V.mem3_src): "member",
+                   id(V.g1mem3_src): "g1", id(V.g2mem3_src): "g2"}[id(s)]
+                  for s in _order))
+_srcs = [r.data_source for r in V.f3d.renderers]
+_iseg = _srcs.index(V.seg3_src)
+_dash = [i for i, r in enumerate(V.f3d.renderers)
+         if getattr(r.glyph, "line_dash", None) == "dashed"]
+check("  ... the dashed repeat of your mark is drawn ON TOP of the segment",
+      len(_dash) == 2 and min(_dash) > _iseg
+      and {_srcs[i] for i in _dash} == {V.in3_src, V.out3_src},
+      "segment at %d, dashes at %s" % (_iseg, _dash))
+check("dim is OFF by default (hiding markable segments went backwards once)",
+      V.dim_toggle.active is False and set(V.seg3_src.data["a"]) == {0.95})
+# refresh_dim runs on EVERY mark, and since round 4 every tap is a mark.
+# Assigning .data there re-serialises every polyline in all four segment sources
+# (~7 400 coordinates) and ships them down the ssh tunnel to change one list of
+# floats.  Static guard, in the spirit of the JS lint: it must patch, not assign.
+import inspect as _insp                                             # noqa: E402
+_dimsrc = _insp.getsource(V.refresh_dim)
+_dimcode = __import__("re").sub(r"#[^\n]*", "", _dimsrc.split('"""')[-1])
+check("  ... and marking patches the alpha column, it does not re-push geometry",
+      ".patch(" in _dimcode and "m.data =" not in _dimcode
+      and "continue" in _dimcode,
+      "patch=%s assign=%s early-return=%s"
+      % (".patch(" in _dimcode, "m.data =" in _dimcode, "continue" in _dimcode))
+V.dim_toggle.active = True
+V.refresh_dim()
+_a = dict(zip(V.seg3_src.data["sid"], V.seg3_src.data["a"]))
+check("  ... and with it on, members stay bright and the rest fade",
+      _a[_mem[0]] > 0.9 and min(_a.values()) < 0.2,
+      "members %.2f, faintest %.2f" % (_a[_mem[0]], min(_a.values())))
+V.dim_toggle.active = False
+V.refresh_dim()
+
+# ---- round 4: a reopened label draws its own marks --------------------------
+V.state["marks"] = {_mem[0]: "out"}
+V.state["sel_shower"] = 69134
+V.em_verdict.active = 1
+V.on_save()
+V.on_event(None, None, "evt21073")
+V.on_event(None, None, "evt84229")
+check("re-opening a labelled event DRAWS the marks it restores",
+      V.state["marks"].get(_mem[0]) == "out"
+      and len(V.out3_src.data["xs3"]) == 1
+      and len(V.mem3_src.data["xs3"]) == len(_mem),
+      "marks=%s out-halos=%d member-halos=%d"
+      % (V.state["marks"], len(V.out3_src.data["xs3"]),
+         len(V.mem3_src.data["xs3"])))
+check("  ... and the shower table row is selected again",
+      list(V.shower_src.selected.indices) != [])
+
+# ---- round 4: the neutrino-candidate cloud filter --------------------------
+V.on_event(None, None, "evt84229")
+_cl_on = V.state["cloud"]
+check("the cloud defaults to the neutrino candidate, not the whole readout",
+      V.cloud_scope.active == 0 and _cl_on["filtered"]
+      and _cl_on["candidate"] < _cl_on["total"],
+      "%d of %d points, %d of %d clusters (ids %s)"
+      % (_cl_on["candidate"], _cl_on["total"], _cl_on["ncluster_kept"],
+         _cl_on["ncluster"], _cl_on["kept_ids"]))
+check("  ... the readout names all three numbers, not two",
+      "of %s clusters" % _cl_on["ncluster"] in V.cloud_div.text
+      and "{:,}".format(_cl_on["total"]) in V.cloud_div.text)
+V.cloud_scope.active = 1
+V.on_cloud_opt(None, None, 1)
+_cl_off = V.state["cloud"]
+check("  ... 'all clusters' really does put the cosmics back",
+      not _cl_off["filtered"] and _cl_off["candidate"] == _cl_off["total"]
+      and _cl_off["total"] == _cl_on["total"],
+      "%d points" % _cl_off["candidate"])
+V.cloud_scope.active = 0
+V.on_cloud_opt(None, None, 0)
+# The filter must run BEFORE decimation, or the budget eats the candidate twice.
+V.cloud_max.value = "10000"
+V.on_cloud_opt(None, None, None)
+_cl_small = V.state["cloud"]
+check("  ... and the budget is spent on the CANDIDATE, not on the whole cloud",
+      _cl_small["kept"] == min(10000, _cl_small["candidate"]),
+      "kept %d of candidate %d (total %d)"
+      % (_cl_small["kept"], _cl_small["candidate"], _cl_small["total"]))
+V.cloud_max.value = "25000"
+V.on_cloud_opt(None, None, None)
+V.tap_action.value = V.TAP_SELECT
+
+# ---- round 4: framing on the shower rather than on the whole TPC -----------
+# EM mode explicitly: focus_points() follows the MODE (the selected shower in EM,
+# the two assigned gammas in pi0), and an earlier check left the app in pi0.
+V.mode_group.active = 0
+V.on_event(None, None, "evt64591")
+V.fit_mode.active = 0
+V.refit_camera()
+_R_all = V.state["cam_R"]
+V.fit_mode.active = 2
+V.on_shower_select(None, None, [0])          # the biggest shower, row 0
+_R_shw = V.state["cam_R"]
+check("'frame the shower' fills the panel with the thing being judged",
+      _R_shw < 0.5 * _R_all,
+      "R %.0f cm over all reco -> %.0f cm over the shower" % (_R_all, _R_shw))
+check("  ... and it is NOT the default: a table click must not move the camera "
+      "under the scanner",
+      V.fit_mode.labels[0] == "frame the reco")
+V.state["sel_shower"] = None
+V.refit_camera()
+check("  ... with nothing selected it falls back to the reco, not to nothing",
+      abs(V.state["cam_R"] - _R_all) < 1e-9, "R=%.0f" % V.state["cam_R"])
+V.fit_mode.active = 0
+
+# ---- round 4: the filter, over the WHOLE sample ----------------------------
+# Two things that a single-event check cannot say, and that the doc quotes:
+#   (a) the numpy grid hash and scipy's cKDTree return the SAME kept set.  The
+#       grid is the fallback when scipy is absent, and a fallback that quietly
+#       disagreed would change what is on screen depending on the box.
+#   (b) the filter does not eat the charge of the thing being scanned -- the
+#       largest shower's fitted points stay covered by a KEPT cluster.
+# Slow (~40 s: it parses all 94 clouds) but this is the claim the round rests on.
+import time as _time                                                # noqa: E402
+try:
+    from scipy.spatial import cKDTree as _KD                        # noqa: E402
+except ImportError:
+    _KD = None
+_zips, _same, _cov, _covall, _frac = {}, 0, [], [], []
+_t0 = _time.time()
+_rows = [l.rstrip("\n").split("\t")
+         for l in open(os.path.join(SX, "em_display", "em114-manifest.tsv"))]
+_MAN = [dict(zip(_rows[0], r)) for r in _rows[1:] if len(r) == len(_rows[0])]
+for _r in _MAN:
+    _d = json.load(open(os.path.join(SX, _r["dump"])))
+    _zp = D3.bee_zip_path(SX, _r)
+    _zi = D3.bee_event_index(SX, _r, _r["event"])
+    import zipfile as _zf                                           # noqa: E402
+    _z = _zips.setdefault(_zp, _zf.ZipFile(_zp))
+    _c = json.loads(_z.read("data/%d/%d-clustering-global.json" % (_zi, _zi)))
+    _cid = _c.get("real_cluster_id") or _c["cluster_id"]
+    _pts = [(p["x"], p["y"], p["z"]) for s in (_d.get("segments") or [])
+            for p in (s.get("points") or []) if p.get("x") is not None]
+    _ts = _d.get("track_shower") or {}
+    _pts += [(_ts["x"][i], _ts["y"][i], _ts["z"][i])
+             for i in range(len(_ts.get("x") or []))]
+    _keep, _ = D3.candidate_clusters(_c["x"], _c["y"], _c["z"], _cid, _pts)
+    _kg, _ = D3.candidate_clusters(_c["x"], _c["y"], _c["z"], _cid, _pts,
+                                   force_grid=True)
+    _same += (_keep == _kg)
+    _frac.append(sum(1 for q in _cid if q in _keep) / max(1, len(_cid)))
+    # Coverage of the largest shower's own fitted points.  NOTE the join key:
+    # segments carry the shower's `id`, not its `shower_id` field (`shower_id` on
+    # a segment is 78025 while the shower's own `shower_id` is 4).  Joining on the
+    # wrong one silently yields an empty member list and a vacuous check.
+    _sh = max((_d.get("showers") or []), key=lambda s: s.get("kine_charge") or 0,
+              default=None)
+    if _sh is not None and _KD is not None:
+        _seg = [s for s in (_d.get("segments") or [])
+                if s.get("shower_id") == _sh.get("id")]
+        _q = [(p["x"], p["y"], p["z"]) for s in _seg for p in (s.get("points") or [])
+              if p.get("x") is not None]
+        import numpy as _np                                         # noqa: E402
+        _tree = _KD(_np.column_stack([_c["x"], _c["y"], _c["z"]]))
+        _cida = _np.asarray(_cid)
+        if _q:
+            _dd, _ii = _tree.query(_np.asarray(_q), distance_upper_bound=2.0)
+            _ok = _np.isfinite(_dd)
+            if _ok.any():
+                _cov.append(float(_np.isin(_cida[_ii[_ok]], list(_keep)).mean()))
+        # and of EVERY reco point, which is the stronger statement
+        _dd, _ii = _tree.query(_np.asarray(_pts), distance_upper_bound=2.0)
+        _ok = _np.isfinite(_dd)
+        _covall.append(float(_np.isin(_cida[_ii[_ok]], list(_keep)).mean())
+                       if _ok.any() else 1.0)
+check("scipy and the numpy fallback agree on the kept clusters, 94/94",
+      _same == len(_MAN), "%d/%d agree (%.0f s)" % (_same, len(_MAN),
+                                                    _time.time() - _t0))
+_frac.sort()
+check("  ... and the candidate is a minority of the cloud on every event",
+      max(_frac) < 0.75,
+      "kept median %.3f p90 %.3f max %.3f" % (_frac[len(_frac) // 2],
+                                              _frac[int(0.9 * len(_frac))],
+                                              max(_frac)))
+check("  ... while the largest shower's own charge stays covered",
+      bool(_cov) and min(_cov) > 0.95,
+      ("largest shower: min %.4f median %.4f over %d events"
+       % (min(_cov), sorted(_cov)[len(_cov) // 2], len(_cov))) if _cov
+      else "NOT MEASURED (no scipy) -- the claim in the doc is unchecked here")
+check("  ... and so does every reco point of the candidate, not just that shower",
+      bool(_covall) and min(_covall) > 0.98,
+      ("all reco: min %.4f median %.4f"
+       % (min(_covall), sorted(_covall)[len(_covall) // 2])) if _covall
+      else "NOT MEASURED (no scipy)")
+for _z in _zips.values():
+    _z.close()
 
 # A stale selection would make the next "mark IN" hit a segment of the PREVIOUS
 # event: replacing a CDS's .data does not clear its .selected.

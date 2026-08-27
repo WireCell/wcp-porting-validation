@@ -667,3 +667,264 @@ What still needs a human, because it is a judgement and not an assertion:
 
 A stray untracked file named `angle` at the root of `wcp-porting-img`, almost
 certainly a mis-redirect. Reported rather than deleted (CLAUDE.md §5).
+
+---
+
+## 12. Round 4 — the scan-ergonomics round
+
+**Status: SHIPPED.** 105/105 static self-test checks and **29/29 in a real
+headless browser**. Still **no C++ and no jsonnet — the toolkit repo is
+untouched, so no A/B gate is owed and none is claimed.**
+
+The owner's ask, verbatim, four items:
+
+> *"1. currently, everything is shown on the left side, and it would be good to
+> spread things to the right in the browser as well, since I have a bigger
+> screen. 2. In the 3D plot, I only need to see the results related to the
+> neutrino candidate, not the cosmic muons, which makes the display noisier.
+> 3. I wonder if there is a way for me to a) click a point in the 3D display, so
+> that I can rotate around that point b) be able to click the 3D display so that
+> I can use that to select things in and out? 4. when I click an EM shower, it
+> would be bettet to improve the highlight in the display, so I know exactly
+> which part is included, and which part is not, so that I can further click to
+> include them or not. Note, it would be great if there is a way to diferentiate
+> what initially have vs. what I clicked for the hand scan. Similar comment to
+> the pi0, since I want a way to click a vertex to say if this is pi0's vertex
+> point."*
+
+### 12.1 Repro
+
+```sh
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+python em_display/selftest_em_display.py    # 105 static checks, 0 failures (~60 s)
+python em_display/selftest_em3d_browser.py  # 29 checks in headless chromium, 0 failures
+python em_display/selftest_repro.py         # unchanged: 1567/1567
+./em_display/serve_em_display.sh 5022 --scan-tag <your-tag>
+```
+
+### 12.2 Item 2 first, because it needed a measurement before a design
+
+"Only the neutrino candidate, not the cosmic muons" splits into two questions
+with different answers, and the split is the finding.
+
+**The skeleton is already the candidate.** `WCPPID::NeutrinoID` is constructed
+from the main cluster plus the other clusters of the same flash bundle and never
+sees anything else, so every segment in a `calib-pr-evt*.json` belongs to the
+candidate by construction. What makes it *look* spread out is real: measured over
+all 94 events, the bounding radius of all reco is a median **162 cm** while the
+main cluster alone is **38 cm**, and the furthest reco point sits a median
+**239 cm** from the main vertex. In evt 64591 the main cluster is a 186 cm track
+and the 298 MeV shower hangs off its *far* end, 190 cm from the vertex. Hiding
+any of that would hide segments the scan exists to judge, so nothing is hidden.
+
+**The charge cloud is where the cosmics are.** `clustering-global` is every
+cluster in the readout — 22 of them in evt 64591, of which 3 carry the
+reconstruction. So the filter belongs there, and the reduction is large:
+
+| | median | p90 | max |
+|---|---|---|---|
+| cloud points, all clusters | 33 868 | 56 255 | 81 814 |
+| cloud points, candidate only | **6 135** | 12 584 | 30 323 |
+| fraction of the cloud kept | **0.186** | 0.396 | 0.552 |
+| clusters kept | 2 | — | 7 |
+
+**How the two are matched.** The numberings do not meet — the dump's
+`cluster_id` is WCP's PR sub-cluster index (17, 24, 25, 57…85 in evt 64591) and
+the cloud's `real_cluster_id` is WCT's clustering id (3, 13…20, 30) — and the Bee
+PR layers do not bridge them either: `track_fit-global` carries dump *segment*
+ids (17002, 81037), not cluster ids in either namespace. So the link is made in
+space, and the direction that works is **reco → cloud**: every reco point sits on
+real charge, so whichever cloud clusters the reconstruction lives on *are* the
+candidate's clusters. A cloud cluster is kept when ≥ 5 reco points have their
+nearest cloud point (within 2 cm) in it.
+
+The check that licenses this is coverage, not the reduction. Over all 94 events:
+
+```
+largest shower's fitted points on a KEPT cluster : min 0.9966  median 1.0000
+every reco point on a KEPT cluster               : min 0.9989  median 1.0000
+```
+
+i.e. the filter essentially never eats charge the scan is about. A relative
+threshold (≥ 0.5 % of matched points) was measured as well: it moves the kept
+fraction by 0.001 and drops the worst coverage to 0.971, so the flat, explainable
+number wins.
+
+**Two implementation notes that are not cosmetic.**
+
+*Filter before decimating.* The candidate cut runs on the full arrays and the
+`max points` budget is then spent on what survives. The other order is silently
+wrong: the 54 477-point event would go to 25 000, then the candidate's ~2 100
+points would be scaled to about a thousand, while the readout said "showing
+25 000". The readout now names three numbers, not two — drawn, of candidate, of
+total, plus the cluster count — so which reduction bit is always visible.
+
+*scipy is an accelerator, never a requirement.* The nearest-neighbour match is
+`cKDTree` when scipy imports (median 7 ms) and a hand-rolled uniform grid hash
+when it does not (median 164 ms, worst 951 ms — correct, but a second per click
+is not a scan). The fallback is not assumed equivalent: the selftest runs **both
+over all 94 events and asserts the kept-cluster sets are identical**, 94/94. A
+per-event cache of the parsed cloud and the match result makes changing `max
+points` or the colour mode cost 2 ms instead of a reload.
+
+Net effect on the scan loop: event load is **mean 0.184 s, median 0.178,
+p90 0.225, max 0.297** — slightly *faster* than round 3's 0.22 s mean, because
+the smaller payload and the JSON cache more than pay for the match.
+
+**Reading older labels.** The saved `camera` block now carries `cloud_scope`
+(`"neutrino-candidate"` / `"all-clusters"`), `cloud_candidate` and
+`cloud_cluster_ids`, because a verdict of "under-clustered" means something
+different if four fifths of the charge was filtered out of the view. Records
+written before this round have **no `cloud_scope` key at all**, and a reader must
+treat that absence as **`"all-clusters"`** — round 3 had no filter and drew the
+whole readout. Reading a missing key as the new default would silently relabel
+every event scanned before today. At the time of writing that is one record,
+`em_labels/emscan-0827/labels-evt64591.json`.
+
+### 12.3 Item 1 — two columns, and the tab that was silently setting the width
+
+The app was one 880-wide strip down the left of the screen. It is now a header
+band over `row(3-D view + its controls, everything else)`, default total width
+**1980 px**, with a **3-D panel size** selector (620 / 760 / 900 / 1100) for a
+bigger screen.
+
+One thing had to be found by measuring the DOM rather than by reading the layout
+code: the page came out **2233 px** wide, ~200 px more than the 3-D tab needs.
+The cause is that a `Tabs` is as wide as its *widest* panel including the
+inactive ones, and the 2-D tab was three 420-wide projections = 1260 px — wider
+than the 3-D tab's 1082, so an invisible tab was setting the page width and
+adding a horizontal scrollbar. The projections are now stacked 2-over-1 and are
+**bigger** as a result (520 × 400 each, was 420 × 330), and the page is 2065 px.
+
+The browser test asserts the two-column claim geometrically — the acceptance
+plot's canvas must start to the right of where the 3-D canvas ends — because
+"they are in a `row`" is a statement about source code and not about pixels.
+
+### 12.4 Item 3 — one gesture, seven jobs
+
+`a tap in 3-D does` (a `Select`, because seven actions do not fit as radio
+buttons and a scanner sets it once and then clicks):
+
+| action | what a tap / box does |
+|---|---|
+| `select segment(s)` | as round 3 — leaves a selection for the mark buttons |
+| `mark IN` / `mark OUT` | marks on the click itself, no trip to a button |
+| `toggle IN / OUT / clear` | cycles the same segment on repeated clicks |
+| `orbit around it` | re-centres the camera on the clicked point — item 3(a) |
+| `fill x / y / z` | as round 3 |
+| `make it the pi0 vertex` | item 4's last sentence, in one click |
+
+**Orbiting** sets `cam_c` to the clicked point, which puts it at the projection's
+origin, and re-centres the ranges on zero *keeping their current span* so the
+zoom survives. `cam_R` is deliberately **not** rewritten: it is the
+zoom-independent scale the depth cue normalises by. The known consequence,
+documented rather than fixed: orbit far from the bounding-sphere centre and the
+depth fading flattens, because the event no longer spans ±R about the new centre.
+
+**Vertices are tappable, and can never be marked.** They are reachable from
+`_tap3.renderers` but deliberately *not* from `_box3.renderers`, and they have
+their own handler on their own source. The reason is concrete: `mark` keys
+`state["marks"]` by segment id, and a vertex swept up by a bulk box carries none
+— a `kind`-column-in-`pick_src` design would have put `"-1": "in"` into a saved
+label file. Different renderer lists make that impossible rather than unlikely.
+
+Setting the π⁰ vertex from a tap is a reentrancy edge and is ordered for it: the
+x/y/z boxes are written first under `_suspend`, *then* the mode radio moves to
+`manual`, then the redraws are called explicitly. Flipping the radio first runs
+`on_vtx_mode`, which re-reads the boxes — and at that instant they still hold the
+previous point.
+
+### 12.5 Item 4 — the halo stack, and the bug the order was hiding
+
+Six halo layers now draw in a fixed order, and **the order is the message**:
+
+```
+selection (cyan, 17 px)   what the next mark button will hit
+your mark (13 px)         green IN / red OUT
+gamma members (11 px)     pi0 slot colours, blue / red
+reco members (9 px)       what the CLUSTERING said
+the segment itself (2 px)
+your mark again (4 px, dashed, ON TOP)
+```
+
+Before this round the reco halo was drawn *first* and the mark halo over it, so
+**marking a member erased the evidence that it was a member** — precisely the
+thing the owner asked to be able to see. Widest underneath keeps the bands
+concentric and every state readable at once: yellow inside green = a member you
+confirmed, yellow inside red = a member you are removing, green with no yellow =
+a non-member you are adding. The dashed repeat on top is a second, redundant
+channel for the same distinction, because a thin yellow band inside a thick green
+one is easy to miss on a laptop panel. A legend under the controls spells out all
+five states with swatches.
+
+Three more things in the same direction:
+
+- **The selection is now drawn** (cyan). Round 3's pick surface is invisible by
+  design — Bokeh hit-tests geometry, not paint — so a box-select gave no feedback
+  at all until something was already marked. It reads the *same* resolver the
+  mark buttons read, so what is drawn and what would be marked cannot disagree.
+- **`frame the shower`**, a third framing mode: with it on, picking a shower in
+  the table also frames it. Measured on evt 64591 that is **R 300 cm → 32 cm**, a
+  9× zoom onto the thing being judged. Not the default — a table click must not
+  move the camera under the scanner unless asked — and it falls back to framing
+  the reco when nothing is selected.
+- **π⁰ mode draws both gammas' members** in their slot colours, because in π⁰
+  mode the shower table's selection is usually pointed at the gamma you are
+  *about* to assign, and nothing on screen said what slot 1 already held.
+
+`dim what is not in this shower` exists and is **default OFF**. The
+`show_all_toggle` comment three screens up is the record of exactly this default
+going the wrong way on the owner once already: fading what is not in the shower
+fades the segments the scan is deciding about.
+
+### 12.6 Two bugs found on the way, one of them by the browser
+
+**(a) A re-opened label drew none of its own marks.** `load_label` restores
+`sel_shower` and `marks` from disk, and it ran *last* in `load()` — after every
+draw. So re-opening a labelled event put the marks back into state and then drew
+nothing from them: the halos were blank on exactly the events that already had an
+answer. `load_label` now runs first, and the shower's table row is re-selected
+too. Present since round 1; it took item 4's "I know exactly which part is
+included" to make it visible.
+
+**(b) A standing selection made the next gesture a no-op** — found by the real
+browser, and *not* findable by the static test. Bokeh fires `selected.indices`
+only when the list **changes**, so: box a region in `select`, switch the action to
+`mark IN`, box the same region again → nothing happens, because the index list is
+identical. The static test could not see it because it assigns indices directly
+and had cleared them in between. Changing the action now drops any standing
+selection. (The related re-arm inside the marking path — clearing after a mark so
+`toggle` can fire on the same segment twice — was designed in from the start and
+is asserted both ways.)
+
+### 12.7 What is verified
+
+`selftest_em_display.py`: **30 → 66 → 105** checks. New in this round: the toggle
+cycle and its re-arm; mark-on-tap for IN and OUT; orbit re-centring with the zoom
+and `cam_R` held and the clicked point landing on the origin; a vertex tap
+setting the π⁰ vertex, agreeing with the x/y/z boxes, and *never* reaching
+`state["marks"]`; box-select's renderer list being `[pick_src]` alone; the halo
+draw order and the dashed-on-top repeat; dim defaulting off and working when on;
+a re-opened label drawing its marks; the cloud filter's three-number readout,
+its `all clusters` escape, and the budget being spent on the candidate; the
+scipy/numpy agreement and the coverage numbers over all 94 events; and
+`frame the shower` zooming and falling back.
+
+`selftest_em3d_browser.py`: **21 → 29** checks. It was also **re-anchored**: it
+used to find canvases by literal pixel widths (`w > 410 && w < 425`) from the
+round-3 layout, and this round both resized the 3-D panel and added a size
+selector. A filter that matches nothing does not fail — it passes vacuously —
+so every rect filter now reads the width off the model by `name=`. New checks:
+the right-hand column really being to the right of the 3-D canvas; the selection
+halo existing and matching the selected-segment count; a box marking IN and then
+OUT and re-arming in between; `orbit around it` moving `cam_c` *and* reprojecting
+the whole cloud; and the readout confirming the drawn cloud is the candidate.
+
+Still open, still a human judgement:
+
+| on | check |
+|---|---|
+| ncpi0 **evt256587** | with the candidate filter on, its cloud is 30 323 points, the sample's worst. Is a drag still smooth? |
+| any event | does the depth fading read as depth, or as fog? |
+| any event | is `frame the reco` still the right default now that `frame the shower` exists? |
+| any event | is `dim what is not in this shower` useful enough to be worth its default being OFF? |

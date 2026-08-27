@@ -42,6 +42,11 @@ import math
 import os
 import zipfile
 
+try:                                    # optional accelerator, never required
+    from scipy.spatial import cKDTree   # noqa: F401
+except ImportError:                     # pragma: no cover - measured both ways
+    cKDTree = None
+
 # ---------------------------------------------------------------------------
 # camera
 # ---------------------------------------------------------------------------
@@ -142,6 +147,118 @@ PRESET_ORDER = ["iso", "x-y", "x-z", "z-y"]
 # ~0.  That near-miss is why the track_fit-global test is the one that decides.)
 CLOUD_LAYERS = ["clustering-global", "img-global"]
 
+# ---------------------------------------------------------------------------
+# which of the cloud's clusters ARE the neutrino candidate (round 4)
+# ---------------------------------------------------------------------------
+#
+# The calib dump is the neutrino candidate: WCPPID::NeutrinoID is built from the
+# main cluster plus the other clusters of the same flash bundle, and nothing
+# else ever enters it.  The Bee cloud is the opposite -- `clustering-global` is
+# every cluster in the readout, and in this sample that is overwhelmingly cosmic
+# muon.  Measured over all 94 manifest events, the candidate is a **median 18.5%
+# of the cloud** (p90 40%, max 55%), so the other four fifths are the noise the
+# scanner has to look through.
+#
+# The two numberings do NOT meet: the dump's `cluster_id` is WCP's PR sub-cluster
+# index (17, 24, 25, 57..85 in evt 64591) and the cloud's `real_cluster_id` is
+# WCT's clustering id (3, 13..20, 30).  The Bee PR layers do not bridge them
+# either -- `track_fit-global` carries dump SEGMENT ids (17002, 81037), not
+# cluster ids in either namespace.  So the link has to be made in space, and the
+# direction that works is reco -> cloud: every reco point is anchored on real
+# charge, so whichever cloud clusters the reconstruction lives on ARE the
+# candidate's clusters.
+#
+# Rule: a cloud cluster is kept when at least `min_hits` reco points have their
+# nearest cloud point (within `tol` cm) in it.  Measured over all 94 events with
+# min_hits=5: the largest shower's fitted points stay >= 99.3% covered (min over
+# the sample; median 99.9%), i.e. the filter essentially never eats charge the
+# scan is about.  A relative threshold (>= 0.5% of matched points) was measured
+# too and moves the kept fraction by 0.001 while dropping coverage to 97.1% --
+# no reason to prefer it, so the flat, explainable number wins.
+
+
+def match_cluster_ids(cx, cy, cz, cid, pts, tol=2.0, force_grid=False):
+    """{cloud cluster id: how many of `pts` land on it}, nearest within `tol`.
+
+    Two implementations of ONE answer.  scipy's cKDTree when it imports (median
+    7 ms over the 94-event sample), and a uniform grid hash when it does not
+    (median 164 ms, worst 951 ms -- correct, but a second per click is not a
+    scan).  scipy is therefore an accelerator and never a requirement, and the
+    fallback is not a guess: selftest_em_display.py runs BOTH over all 94 events
+    and asserts the kept-cluster sets are identical (they are, 94/94).
+
+    The grid is exact for this radius by construction: cells are `tol` on a side,
+    so every cloud point within `tol` of a query lies in one of the 27 cells
+    around the query's own cell.
+    """
+    out = {}
+    n = len(cx)
+    if n == 0 or not len(pts):
+        return out
+    if cKDTree is not None and not force_grid:
+        import numpy
+        C = numpy.column_stack([numpy.asarray(cx, dtype="float64"),
+                                numpy.asarray(cy, dtype="float64"),
+                                numpy.asarray(cz, dtype="float64")])
+        d, i = cKDTree(C).query(numpy.asarray(pts, dtype="float64"),
+                                distance_upper_bound=float(tol))
+        ca = numpy.asarray(cid)
+        for c in ca[i[numpy.isfinite(d)]].tolist():
+            out[c] = out.get(c, 0) + 1
+        return out
+    inv = 1.0 / float(tol)
+    grid = {}
+    for i in range(n):
+        k = (int(math.floor(cx[i] * inv)), int(math.floor(cy[i] * inv)),
+             int(math.floor(cz[i] * inv)))
+        g = grid.get(k)
+        if g is None:
+            grid[k] = [i]
+        else:
+            g.append(i)
+    t2 = tol * tol
+    for p in pts:
+        kx = int(math.floor(p[0] * inv))
+        ky = int(math.floor(p[1] * inv))
+        kz = int(math.floor(p[2] * inv))
+        best, bd = -1, t2
+        for ax in (kx - 1, kx, kx + 1):
+            for ay in (ky - 1, ky, ky + 1):
+                for az in (kz - 1, kz, kz + 1):
+                    for i in grid.get((ax, ay, az), ()):
+                        d = ((cx[i] - p[0]) ** 2 + (cy[i] - p[1]) ** 2
+                             + (cz[i] - p[2]) ** 2)
+                        if d < bd:
+                            bd, best = d, i
+        if best >= 0:
+            c = cid[best]
+            out[c] = out.get(c, 0) + 1
+    return out
+
+
+def candidate_clusters(cx, cy, cz, cid, pts, tol=2.0, min_hits=5,
+                       force_grid=False):
+    """(kept ids as a set, the full hit histogram).  Empty set means "no anchor" --
+    the caller must fall back to the whole cloud and SAY so, because a silently
+    black panel reads as a broken display rather than as a filtered one."""
+    hits = match_cluster_ids(cx, cy, cz, cid, pts, tol=tol, force_grid=force_grid)
+    return {k for k, v in hits.items() if v >= min_hits}, hits
+
+
+# Two tiny caches, because the scan clicks through events and then fiddles with
+# the cloud controls on ONE of them.  Re-parsing 1.2 MB of JSON and re-running
+# the match to change `max points` from 25 000 to 50 000 is pure latency on an
+# ssh tunnel.  Capped and FIFO-evicted: an unbounded cache across 94 events would
+# hold ~100 MB of cloud.
+_CLOUD_CACHE, _MATCH_CACHE, _CACHE_MAX = {}, {}, 4
+
+
+def _cache_put(store, key, val):
+    if key not in store and len(store) >= _CACHE_MAX:
+        del store[next(iter(store))]
+    store[key] = val
+    return val
+
 
 def bee_zip_path(sx, row):
     rnd = (row or {}).get("bee_round") or ""
@@ -172,12 +289,20 @@ def bee_event_index(sx, row, event):
     return int(tail) if tail.isdigit() else None
 
 
-def load_bee_cloud(sx, row, event, layer="clustering-global", max_pts=25000):
+def load_bee_cloud(sx, row, event, layer="clustering-global", max_pts=25000,
+                   reco=None, candidate_only=False, tol=2.0, min_hits=5):
     """The charge cloud Bee itself draws, straight out of the local zip.
 
     Returns None when the zip is not on disk -- bee/em114/*.zip is gitignored, so
     a fresh clone has the display but not the cloud, and the panel has to degrade
     to skeleton-only with a banner rather than crash.
+
+    ORDER MATTERS, and getting it wrong is silent.  The candidate filter runs on
+    the FULL arrays and decimation runs on what survives it.  Filtering after
+    decimating would take the 54 477-point event down to 25 000, then down again
+    to its ~2 100 candidate points' share of that -- about a thousand -- while the
+    readout happily said "showing 25 000".  Half the thing being scanned would be
+    gone with no sign on screen.
 
     Decimation walks a FRACTIONAL index rather than taking every k-th point.  It
     is still deterministic (no RNG) and still proportional per cluster -- the
@@ -191,25 +316,67 @@ def load_bee_cloud(sx, row, event, layer="clustering-global", max_pts=25000):
     if not zp or idx is None or not os.path.exists(zp):
         return None
     member = "data/%d/%d-%s.json" % (idx, idx, layer)
-    try:
-        with zipfile.ZipFile(zp) as z:
-            raw = z.read(member)
-    except (KeyError, OSError, zipfile.BadZipFile):
-        return None
-    d = json.loads(raw)
+    ckey = (zp, member)
+    d = _CLOUD_CACHE.get(ckey)
+    if d is None:
+        try:
+            with zipfile.ZipFile(zp) as z:
+                raw = z.read(member)
+        except (KeyError, OSError, zipfile.BadZipFile):
+            return None
+        d = _cache_put(_CLOUD_CACHE, ckey, json.loads(raw))
     n = len(d.get("x") or [])
     if n == 0:
         return None
-    keep = min(n, max(1, int(max_pts)))
-    idxs = range(n) if keep >= n else [i * n // keep for i in range(keep)]
     cid = d.get("real_cluster_id") or d.get("cluster_id") or [0] * n
     q = d.get("q") or [0.0] * n
+    x, y, z = d["x"], d["y"], d["z"]
+
+    # --- 1. candidate filter, on the full arrays ------------------------------
+    sel = None
+    kept_ids, why = None, ""
+    if candidate_only:
+        if not reco:
+            why = ("this event has no reconstructed points to anchor the match "
+                   "on, so every cluster is shown")
+        else:
+            mkey = (zp, member, len(reco), tol, min_hits)
+            ids = _MATCH_CACHE.get(mkey)
+            if ids is None:
+                ids = _cache_put(_MATCH_CACHE, mkey, candidate_clusters(
+                    x, y, z, cid, reco, tol=tol, min_hits=min_hits)[0])
+            if not ids:
+                why = ("no cloud cluster carries the reconstruction, so every "
+                       "cluster is shown")
+            else:
+                kept_ids = ids
+                sel = [i for i in range(n) if cid[i] in ids]
+    ncand = n if sel is None else len(sel)
+    if sel is None:
+        sel = range(n)
+
+    # --- 2. dense colour index ------------------------------------------------
+    # Re-index the surviving clusters 0..k-1 by descending size before the % 20,
+    # so the biggest candidate cluster is always colour 0 and two kept clusters
+    # cannot collide on a palette slot while fewer than 20 survive.  Sorted by
+    # (-count, id): the id breaks size ties, so the colouring is deterministic.
+    cnt = {}
+    for i in sel:
+        cnt[cid[i]] = cnt.get(cid[i], 0) + 1
+    order = sorted(cnt, key=lambda c: (-cnt[c], c))
+    dense = {c: j for j, c in enumerate(order)}
+
+    # --- 3. decimate what survived -------------------------------------------
+    keep = min(ncand, max(1, int(max_pts)))
+    idxs = sel if keep >= ncand else [sel[i * ncand // keep] for i in range(keep)]
     out = dict(
-        x=[d["x"][i] for i in idxs], y=[d["y"][i] for i in idxs],
-        z=[d["z"][i] for i in idxs],
+        x=[x[i] for i in idxs], y=[y[i] for i in idxs], z=[z[i] for i in idxs],
         q=[float(q[i]) for i in idxs],
-        cid20=[float(int(cid[i]) % 20) for i in idxs],
-        total=n, layer=layer, member=member, zip=zp)
+        cid20=[float(dense[cid[i]] % 20) for i in idxs],
+        total=n, candidate=ncand, ncluster=len(set(cid)),
+        ncluster_kept=len(cnt), kept_ids=sorted(kept_ids) if kept_ids else None,
+        filtered=kept_ids is not None, fallback=why,
+        layer=layer, member=member, zip=zp)
     out["kept"] = len(out["x"])
     return out
 

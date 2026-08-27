@@ -27,13 +27,18 @@ hand scan is made of, and Bokeh's JS does not auto-reconnect (doc pr/88).
 
 ## What is on the screen
 
-**Row 1 — two tabs.** **3-D** (the default) and **2-D projections** (X-Y, Y-Z,
-X-Z, active volume and cathode in red). See [The 3-D view](#the-3-d-view) below.
-The projections stay because the free-space manual x/y/z pin needs them: two
-panels each give two of the three coordinates, and a rotatable canvas gives a
-*ray*, not a point.
+**Two columns**, under a header band. The **left** is the view and its controls;
+the **right** is everything you read or click while looking at it. Total width
+1980 px by default, and the **3-D panel size** selector (620 / 760 / 900 / 1100)
+takes the left column up on a bigger screen.
 
-**Row 2 left — the acceptance plot.** Angle to the shower axis vs distance from
+**Left — two tabs.** **3-D** (the default) and **2-D projections** (X-Y, Y-Z,
+X-Z stacked 2-over-1, active volume and cathode in red). See
+[The 3-D view](#the-3-d-view) below. The projections stay because the free-space
+manual x/y/z pin needs them: two panels each give two of the three coordinates,
+and a rotatable canvas gives a *ray*, not a point.
+
+**Right — the acceptance plot.** Angle to the shower axis vs distance from
 the shower start, with the three pass-1 tiers drawn as dashed steps. Every
 segment is a dot; a dot **under** a step is inside that tier.
 
@@ -43,7 +48,7 @@ the wrong reading. Distance and angle are the two quantities
 `NeutrinoShowerClustering.cxx:1310-1312` actually tests, so this panel is the
 gate itself with nothing approximated.
 
-**Row 3 — the shower table.** One row per `showers[]`. Click a row to select it.
+**Right — the shower table.** One row per `showers[]`. Click a row to select it.
 
 **Then one of two panels**, chosen by the mode switch.
 
@@ -75,29 +80,84 @@ the *reconstruction* — fit points, vertices, shower points — never from the
 projected extent. So an elongated track swinging from broadside to end-on can
 neither balloon out of frame nor shrink to a dot, and all zoom is yours. The
 **charge cloud does not set the frame** by default: a cosmic-laden cloud spans
-the whole TPC and would leave the neutrino a speck. `frame the cloud` switches
-that; `refit` re-frames the current choice.
+the whole TPC and would leave the neutrino a speck. `refit` re-frames the
+current choice, and there are three:
+
+- `frame the reco` (default) — everything the reconstruction put in the event;
+- `frame the cloud` — the charge cloud as currently filtered;
+- `frame the shower` — just the selected shower (or, in π⁰ mode, the two
+  assigned gammas), and with it on, picking a row in the table also frames it.
+  On evt 64591 that is R 300 cm → 32 cm. It is *not* the default because a table
+  click should not move the camera under you unless you asked for it; with
+  nothing selected it falls back to `frame the reco`.
 
 **Presets.** `x-y`, `x-z` and `z-y` reproduce the 2-D panels exactly, so if you
 lose your bearings you can step back to a view you already trust and rotate out
 of it again. (`z-y` is named honestly: there is no roll, so a *z*-horizontal Y-Z
 view is not reachable — that preset shows the same plane with the axes swapped.)
 
-**Tap does one of two jobs**, set by the radio:
+**A tap does one of seven jobs**, set by `a tap in 3-D does`. Every one of them
+works from a box select too, so they all bulk-apply.
 
-- *tap selects segment* — marks then work off the 3-D selection exactly as from
-  the tables;
-- *tap fills x/y/z* — snaps to the nearest **fitted point** and writes its real
-  coordinates into the manual boxes. A single click in 3-D is a ray; anchoring
-  it on a real point is what makes it a position.
+| action | what a tap / box does |
+|---|---|
+| `select segment(s)` | leaves a selection for the mark buttons; the cyan halo shows it |
+| `mark IN` / `mark OUT` | marks on the click itself, no trip to a button |
+| `toggle IN / OUT / clear` | cycles the same segment on repeated clicks |
+| `orbit around it` | re-centres the camera on the clicked point, keeping your zoom |
+| `fill x / y / z` | writes the point's real coordinates into the manual boxes |
+| `make it the pi0 vertex` | sets the π⁰ decay vertex there and switches to `manual` |
+
+A single click in 3-D is a ray; every action anchors it on a real **fitted
+point**, which is what makes it a position. Changing the action drops any
+standing selection — Bokeh only fires a selection change when the index list
+actually changes, so without that the first gesture after a switch would do
+nothing.
+
+**Reconstructed vertices are tappable too** (for `make it the pi0 vertex`, and
+for orbiting), but only by a *tap*, never by a box. A vertex has no segment id,
+so a box that swept one up would have nothing to mark — the two tools carry
+different renderer lists so that cannot happen rather than merely not happening.
+
+**How to read a segment** — the legend under the controls, and the layer order
+that makes it work:
+
+| band | meaning |
+|---|---|
+| soft yellow, 9 px | in this shower, per the **reconstruction** |
+| green / red, 13 px + a dashed repeat on top | **you** marked it IN / OUT |
+| cyan, 17 px | selected — the next *mark* button hits this |
+| blue / red, 11 px | gamma 1 / gamma 2 members (π⁰ mode) |
+
+The widest band is underneath, so they stay concentric and every combination
+reads at once: yellow inside green = a member you confirmed, yellow inside red =
+a member you are taking out, green with no yellow = something you are adding.
+`dim what is not in this shower` fades the rest; it is **off by default**,
+because fading what is not in the shower fades the segments you are deciding
+about.
 
 ### The charge cloud, and which frame it is in
 
 The cloud comes from `../bee/<round>.zip` — the same file the Bee link opens,
-so the panel and the Bee page show the same reconstruction. Median 34 k points
-per event over this sample, max 82 k; `max points` decimates by an evenly-spaced
-pick (deterministic, and proportional per cluster) and the readout says how many
-of how many are drawn.
+so the panel and the Bee page show the same reconstruction.
+
+**It is filtered to the neutrino candidate by default.** `clustering-global`
+holds every cluster in the readout and most of them are cosmic muon: over this
+sample the candidate is a median **18.6 %** of the cloud (median 6 135 points
+of 33 868; worst event 30 323 of 81 814). A cloud cluster is kept when at least
+5 reco points have their nearest cloud point, within 2 cm, in it — the dump is
+the candidate by construction, so whichever clusters the reconstruction lives on
+*are* the candidate's. The two cluster numberings do not meet, so this is matched
+in space, not by id.
+
+It is checked by coverage rather than by the reduction: over all 94 events the
+largest shower's fitted points stay on a kept cluster with a minimum of
+**0.9966** (median 1.0000). `all clusters` puts the cosmics back whenever you
+want them.
+
+The filter runs **before** `max points` decimates, so the budget is spent on the
+candidate and not on the whole readout, and the readout names three numbers —
+drawn, of candidate, of total — plus how many clusters of how many were kept.
 
 **`clustering-global` is the default and `img-global` is not.** They are not the
 same frame. `img-global` is dumped pre-pipeline, before the corrections the
@@ -228,8 +288,8 @@ python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
 python em_display/selftest_repro.py         # reproduction + membership repair
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 66 checks
-python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 21
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 105 checks
+python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 29
 ```
 
 The probes land in `pr_evt<ID>/stdout.log`, **not** in `wct_pr_evt<ID>.log`:
@@ -308,15 +368,28 @@ re-read a dump.
   mis-marks. **Box select in the 3-D view is a different thing and is offered**,
   because the selection unit is the *segment*, not the point — a segment either
   is or is not in the shower, so hitting it through any of its projected points
-  is unambiguous however the view is rotated. The status line names the segments
-  a box resolved to before you mark them.
+  is unambiguous however the view is rotated. The cyan halo draws the segments a
+  box resolved to, and the status line names them, before you mark them.
 - **The 3-D view's browser code IS tested**, by `selftest_em3d_browser.py` — it
   starts a server, drives headless chromium with real mouse gestures, and checks
   that the browser's projection matches Python's exactly, that a bare drag
-  rotates, that shift+drag pans, that the wheel zooms, and that Box Select
-  suspends rotation. What no test can judge is whether a drag *feels* smooth on
-  an 82 k-point cloud, or whether the depth fading reads as depth; doc pr/114
-  §11.7 keeps a short human check-list for exactly those.
+  rotates, that shift+drag pans, that the wheel zooms, that Box Select suspends
+  rotation, that a box can mark and re-arm, and that the right-hand column really
+  lands to the right of the 3-D canvas. What no test can judge is whether a drag
+  *feels* smooth on the worst cloud, or whether the depth fading reads as depth;
+  doc pr/114 §12.7 keeps a short human check-list for exactly those.
 - The two `dir15`-less showers, and any event scanned without a probe sidecar,
   show an empty `absorbed by` column — the banner says so rather than leaving you
   to infer it.
+- **The candidate cloud filter is a spatial match, not an identity.** It keeps
+  whole clusters, so a cosmic that genuinely overlaps the candidate's charge is
+  kept with it, and a piece of the candidate that no reco point reaches is not.
+  Measured worst case over the sample: 0.34 % of the largest shower's fitted
+  points on a dropped cluster. `all clusters` is one click away and the readout
+  always says how many clusters of how many are being drawn.
+- **A label with no `camera.cloud_scope` key predates the candidate filter**, and
+  means `all-clusters` — that was the only behaviour before it existed. Do not
+  read a missing key as the current default.
+- **Orbiting far from the centre flattens the depth cue.** `cam_R` is the
+  zoom-independent scale the fading normalises by and `orbit around it`
+  deliberately does not rewrite it; `refit` restores both.

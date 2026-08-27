@@ -148,13 +148,44 @@ try:
             return out;
         })()"""
 
-        box = page.evaluate("() => " + RECTS
-                            + ".filter(r => r.w > 500 && r.h > 500)"
-                            + ".sort((a, b) => b.w * b.h - a.w * a.h)[0] || null")
-        check("the 3-D canvas is laid out at its full size", box is not None
-              and box["w"] > 500 and box["h"] > 500, str(box))
+        # Every rect filter below is keyed to a width READ OFF THE MODEL, never a
+        # literal.  Round 4 both resized the 3-D panel and added a size selector,
+        # and the previous version of this file filtered on `w > 410 && w < 425`
+        # -- constants from the round-3 layout.  A filter that matches nothing
+        # does not fail, it passes vacuously, which is the worst way for a test
+        # to break.
+        def by_size(model, tol=8):
+            return page.evaluate(
+                "() => { const doc = Bokeh.documents[0];"
+                " const m = doc.get_model_by_name('%s');"
+                " return %s.filter(r => Math.abs(r.w - m.width) < %d"
+                " && Math.abs(r.h - m.height) < %d)"
+                " .filter((r, i, a) => a.findIndex("
+                "     q => Math.abs(q.x - r.x) < 2 && Math.abs(q.y - r.y) < 2)"
+                "   === i); }" % (model, RECTS, tol, tol))
+
+        w3d = js("M('f3d').width")
+        boxes = by_size("f3d")
+        box = boxes[0] if boxes else None
+        check("the 3-D canvas is laid out at the size its model asks for",
+              box is not None and abs(box["w"] - w3d) < 8, "model %s, dom %s"
+              % (w3d, box))
         cx = box["x"] + box["w"] / 2.0
         cy = box["y"] + box["h"] / 2.0
+
+        # ------------------------------------------------------------------
+        # round 4 request 1: the app uses the WIDTH of the screen
+        # ------------------------------------------------------------------
+        # The acceptance plot lives in the right-hand column, so if the layout
+        # really is two columns its canvas starts to the right of where the 3-D
+        # canvas ends.  Stacked in one column (round 3) it would start at the
+        # same left edge.
+        accb = by_size("acc")
+        check("the right-hand column really is to the RIGHT of the 3-D view",
+              bool(accb) and accb[0]["x"] > box["x"] + box["w"],
+              ("3-D spans x %.0f..%.0f, acceptance plot starts at x %.0f"
+               % (box["x"], box["x"] + box["w"], accb[0]["x"])) if accb
+               else "acceptance canvas not found")
 
         # ------------------------------------------------------------------
         # a preset button: compiles and runs JS_REDRAW, and reports the camera
@@ -271,6 +302,52 @@ try:
         check("  ... and the box selected fitted points, resolving to SEGMENTS",
               nsel > 5 and 0 < nseg < nsel,
               "%s point(s) -> %s segment(s)" % (nsel, nseg))
+        # ------------------------------------------------------------------
+        # round 4 requests 3 and 4, exercised through the same box gesture:
+        # the selection is now VISIBLE, and the gesture itself can mark.
+        # ------------------------------------------------------------------
+        def bigbox():
+            drag(box["w"] * 0.8, box["h"] * 0.8,
+                 x0=box["x"] + box["w"] * 0.1, y0=box["y"] + box["h"] * 0.1)
+            page.wait_for_timeout(700)
+
+        def set_tap(v):
+            page.evaluate("(v) => { Bokeh.documents[0]"
+                          ".get_model_by_name('tap_action').value = v; }", v)
+            page.wait_for_timeout(700)
+
+        nsel_halo = js("M('sel3_src').data.xs3.length")
+        check("the selection is DRAWN, not just held (cyan halo)",
+              nsel_halo > 0 and nsel_halo == nseg,
+              "%s halo polyline(s) for %s selected segment(s)"
+              % (nsel_halo, nseg))
+
+        set_tap("mark IN")
+        bigbox()
+        n_in = js("M('in3_src').data.xs3.length")
+        check("a box in 'mark IN' mode marks on the gesture itself",
+              n_in > 0, "%s segment(s) marked IN" % n_in)
+        check("  ... and it re-arms, so the same segments can be clicked again",
+              js("M('pick_src').selected.indices.length") == 0)
+        set_tap("mark OUT")
+        bigbox()
+        check("  ... 'mark OUT' moves them across",
+              js("M('out3_src').data.xs3.length") == n_in
+              and js("M('in3_src').data.xs3.length") == 0,
+              "in %s / out %s" % (js("M('in3_src').data.xs3.length"),
+                                  js("M('out3_src').data.xs3.length")))
+
+        set_tap("orbit around it")
+        cx0 = js("M('cam_src').data.cx[0]")
+        u_before = js("M('cloud_src').data.u[0]")
+        bigbox()
+        check("'orbit around it' moves the camera centre in the browser",
+              abs(js("M('cam_src').data.cx[0]") - cx0) > 1e-6,
+              "cx %.1f -> %.1f" % (cx0, js("M('cam_src').data.cx[0]")))
+        check("  ... and the whole cloud is REPROJECTED about the new centre",
+              abs(js("M('cloud_src').data.u[0]") - u_before) > 1e-6)
+        set_tap("select segment(s)")
+
         page.evaluate("() => { for (const m of Bokeh.documents[0].all_models"
                       ".values()) if (m.type == 'BoxSelectTool') m.active"
                       " = false; }")
@@ -280,6 +357,14 @@ try:
         check("  ... turning it off gives rotation back",
               abs(js("M('cam_src').data.az[0]") - azc) > 0.1)
 
+        # round 4 request 2: the cloud on screen is the candidate, not the readout
+        filt = page.evaluate("""() => {
+            const d = Bokeh.documents[0].get_model_by_name('cloud_div');
+            return d ? d.text : null; }""")
+        check("the cloud drawn is the neutrino candidate, and says so",
+              filt is not None and "carry the reconstruction" in filt,
+              (filt or "")[-150:].replace("<br>", " "))
+
         # ------------------------------------------------------------------
         # the 2-D projections moved into a lazily-rendered tab -- prove they
         # still lay out, and that the two-panel tap still fills x/y/z.
@@ -287,15 +372,17 @@ try:
         page.get_by_text("2-D projections", exact=True).click()
         page.wait_for_timeout(2500)
         # Each figure owns TWO stacked canvases (the plot and its overlay layer)
-        # at the same rect, so dedupe by position or "two panels" is one panel
-        # twice -- which is exactly how the first run of this test filled x and y
-        # but never z.  Width 420 is proj_kw's; the acceptance plot is 430.
-        PROJ_RECTS = (RECTS + ".filter(r => r.w > 410 && r.w < 425 && r.h > 280)"
-                      ".filter((r, i, a) => a.findIndex("
-                      "q => Math.abs(q.x - r.x) < 2) === i)")
-        panels = page.evaluate("() => " + PROJ_RECTS + ".length")
+        # at the same rect, so by_size dedupes by position -- without that, "two
+        # panels" is one panel twice, which is exactly how the first version of
+        # this test filled x and y but never z.
+        # Dedupe on x AND y: the panels are stacked 2-over-1 since round 4, so
+        # f_xy and f_xz share a left edge and an x-only dedupe throws one away.
+        rects = [r for n in ("f_xy", "f_yz", "f_xz") for r in by_size(n)]
+        rects = [r for i, r in enumerate(rects)
+                 if all(abs(q["x"] - r["x"]) > 2 or abs(q["y"] - r["y"]) > 2
+                        for q in rects[:i])]
         check("the 2-D projections still lay out in their (lazy) tab",
-              panels == 3, "%d distinct panels at full size" % panels)
+              len(rects) == 3, "%d distinct panels at full size" % len(rects))
         # tap-to-fill lives in the pi0 panel, which is hidden in EM mode.  Set the
         # mode through the model rather than by clicking: the click still has to
         # round-trip to the server and back before the panel exists, and waiting
@@ -316,7 +403,6 @@ try:
             return null;
         }""")
         check("  ... tap-to-fill can be armed", tapon is True, str(tapon))
-        rects = page.evaluate("() => " + PROJ_RECTS)
         for r in rects[:2]:
             page.mouse.click(r["x"] + r["w"] * 0.55, r["y"] + r["h"] * 0.45)
             page.wait_for_timeout(500)
