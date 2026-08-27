@@ -126,26 +126,55 @@ def bee_build(sample, outdir, dry_run=False):
     by_arm = {}
     for s in sample:
         by_arm.setdefault(s[0], []).append(s[3])
+    NFIXED = 8      # python, script, -q, qlroot, -p, prroot, -o, zip
     cmds = []
     for arm, evts in sorted(by_arm.items()):
         zip_out = os.path.join(outdir, "em114-%s.zip" % arm)
+        # PR side: the stage-2 arm, NOT prod0825.  `make_pr_bee.py:78` decides
+        # whether an event was evaluated by grepping the per-event log for
+        # "TaggerCheckNeutrino: selected main cluster", and ONE prod0825 log is
+        # truncated -- ncpi0 evt399860's is 22 KB against a 207 KB median and is
+        # missing the line, so the builder refuses an event whose dump is
+        # perfectly good (main vertex, 9 showers, 47 segments).  The em114 arms
+        # were written per-event and carry the line for 94 of 94.  Safe to
+        # substitute because the two arms are equal on every physics field
+        # (doc pr/114 sec 3), which is what selftest_repro.py checks.
+        pr_root = os.path.join(SX, "work-em114-%s" % arm)
+        if not os.path.isdir(pr_root):
+            pr_root = os.path.join(SX, "work-%s-%s" % (arm, PROD))
         cmd = [sys.executable, os.path.join(SX, "scripts", "bee", "make_pr_bee.py"),
                "-q", os.path.join(SX, "work-%s-grp0825" % arm),
-               "-p", os.path.join(SX, "work-%s-%s" % (arm, PROD)),
+               "-p", pr_root,
                "-o", zip_out] + sorted(evts, key=int)
         cmds.append((arm, zip_out, cmd))
+
+    def shown(p):
+        """A path relative to SX only when that is actually shorter -- an outdir
+        outside the tree otherwise renders as ../../../../../.. and is unusable
+        as a copy-pasteable command."""
+        r = os.path.relpath(p, SX)
+        return r if not r.startswith("../..") else p
+
+    ok = []
     for arm, zip_out, cmd in cmds:
-        print("[bee] %s -> %s (%d events)" % (arm, zip_out, len(cmd) - 7))
+        print("[bee] %s -> %s (%d events)" % (arm, zip_out, len(cmd) - NFIXED))
         if dry_run:
-            print("      " + " ".join(cmd[:7]) + " <events>")
+            print("      " + " ".join(cmd[:NFIXED]) + " <%d events>" % (len(cmd) - NFIXED))
             continue
         rc = subprocess.call(cmd)
-        print("      rc=%d" % rc)
+        print("      rc=%d%s" % (rc, "" if rc == 0 else "   <-- FAILED"))
+        if rc == 0 and os.path.exists(zip_out):
+            ok.append((arm, zip_out))
+    if dry_run:
+        return cmds
     print()
+    if not ok:
+        print("nothing built.")
+        return cmds
     print("NOT uploaded -- that is outward-facing and owner-gated.  To publish:")
-    for arm, zip_out, _ in cmds:
+    for arm, zip_out in ok:
         print("  ./upload-to-bee.sh %s   # then save the printed URL as %s"
-              % (os.path.relpath(zip_out, SX), os.path.relpath(zip_out, SX)[:-4] + ".url"))
+              % (shown(zip_out), shown(zip_out)[:-4] + ".url"))
     print("Then re-run this script (no flags) and every link fills in.")
     return cmds
 

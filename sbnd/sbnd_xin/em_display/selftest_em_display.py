@@ -7,7 +7,7 @@ a hand-built pi0, the snap, a label round trip and the M13 tag guard.
 
 Run:  python em_display/selftest_em_display.py        (expects 0 failures)
 """
-import os, sys, json, shutil
+import os, sys, json, shutil, collections
 
 SX = "/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin"
 TAG = "selftest114"
@@ -112,6 +112,31 @@ V.vtx_mode_group.active = 1
 v, how, detail = V.pio_vertex()
 check("back-projection returns a verdict", detail.get("verdict") is not None,
       "%s gap=%s" % (detail.get("verdict"), detail.get("gap")))
+
+# ---- back-projection: all three branches must be mirrored --------------
+# 49 of the 78 accepted pairs on disk take the one-short branch, where the C++
+# re-rays the short gamma and keeps the closest point on the LONG gamma's ray
+# instead of the midpoint.  A midpoint-only mirror was wrong by a median 2.7 cm
+# (p90 24.9, max 43.4) on exactly those pairs.
+import glob as _glob
+_br = collections.Counter()
+for _p in sorted(_glob.glob(os.path.join(SX, "work-*-prod0825", "pr_evt*",
+                                         "calib-pr-evt*.json"))):
+    _d = json.load(open(_p))
+    _g = V.G.pi0_groups(_d.get("showers") or [])
+    if not _g:
+        continue
+    _anchor = V.G.pt(_d.get("main_vertex"))
+    if _anchor is None:
+        continue
+    for _pid, _shl in _g.items():
+        if len(_shl) == 2:
+            _br[V.G.pi0_backproject(_shl[0], _shl[1], _d["segments"],
+                                    _anchor)["branch"]] += 1
+check("back-projection exercises both live branches",
+      _br.get("both_long", 0) > 0 and _br.get("one_short", 0) > 0, str(dict(_br)))
+check("  ... and the one-short branch is the majority (49/78)",
+      _br.get("one_short", 0) == 49 and sum(_br.values()) == 78, str(dict(_br)))
 
 # ---- snap ----
 V.gstart_slot.active = 0

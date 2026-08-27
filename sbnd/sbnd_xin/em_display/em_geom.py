@@ -451,6 +451,17 @@ def pi0_backproject(sh1, sh2, segments, anchor):
     """Mirror of the two-gamma vertex reconstruction in
     `id_pi0_without_vertex`, `NeutrinoShowerClustering.cxx:4158-4256`.
 
+    THREE branches, all mirrored, because they produce DIFFERENT vertices:
+      both gammas > 15 cm (`:4182-4200`)  -> the midpoint of closest approach
+      exactly one > 15 cm (`:4203-4247`)  -> re-ray the SHORT gamma from that
+                                            midpoint, re-intersect, and keep the
+                                            closest point on the LONG gamma's ray
+                                            (NOT the midpoint, and no 3 cm
+                                            fallback on this branch)
+      both <= 15 cm       (`:4254-4255`)  -> no pi0
+    `branch` in the result says which one ran.  Getting this wrong would show a
+    vertex the code never computes for any pair with one short gamma.
+
     Returns a dict the display can render directly.  `verdict` is the honest
     summary: "ok", "parallel", "degenerate", "both_short" (the C++ `break` at
     `:4255`), "angle_gate" (one of the 25 deg checks failed), or "no_direction".
@@ -463,7 +474,8 @@ def pi0_backproject(sh1, sh2, segments, anchor):
     """
     out = {"verdict": "no_direction", "vertex": None, "gap": None,
            "theta": None, "mass": None, "angle1": None, "angle2": None,
-           "dis1": None, "dis2": None, "len1": None, "len2": None}
+           "dis1": None, "dis2": None, "len1": None, "len2": None,
+           "branch": None}
 
     r1, p1s, d1 = gamma_ray(sh1, segments, anchor)
     r2, p2s, d2 = gamma_ray(sh2, segments, anchor)
@@ -487,21 +499,70 @@ def pi0_backproject(sh1, sh2, segments, anchor):
     center = vscale(vadd(a, b), 0.5)
     out["gap"] = vmag(vsub(a, b))
 
-    # `:4183-4191` -- direction from the candidate vertex out to each shower,
-    # falling back to the shower's own axis when the vertex lands within 3 cm of
-    # the start (where that chord is numerically meaningless).
-    v1 = vsub(r1[0], center)
-    v2 = vsub(r2[0], center)
-    if vmag(v1) < 3.0:
-        v1 = d1
-    if vmag(v2) < 3.0:
-        v2 = d2
+    if l1 > 15.0 and l2 > 15.0:
+        # ---- both long: `:4182-4200` -------------------------------------
+        out["branch"] = "both_long"
+        # `:4183-4191` -- direction from the candidate vertex out to each shower,
+        # falling back to the shower's own axis when the vertex lands within 3 cm
+        # of the start (where that chord is numerically meaningless).
+        v1 = vsub(r1[0], center)
+        v2 = vsub(r2[0], center)
+        if vmag(v1) < 3.0:
+            v1 = d1
+        if vmag(v2) < 3.0:
+            v2 = d2
+        ref1, ref2 = d1, d2
+    else:
+        # ---- exactly one long: `:4203-4247` ------------------------------
+        # The code does NOT keep the midpoint here.  It re-rays the SHORT gamma
+        # from the provisional centre, re-intersects, and keeps the closest point
+        # on the LONG gamma's ray -- a different vertex from the midpoint above.
+        # There is also no 3 cm fallback on this branch.  Mirroring the both-long
+        # branch here would hand the owner a vertex the code never computes.
+        out["branch"] = "one_short"
+        long_is_1 = l1 > l2
+        short_sh = sh2 if long_is_1 else sh1
+        members = shower_members(short_sh, segments)
+        best, bestd = None, None
+        for seg in members:
+            dd, q = segment_closest_point(seg, center)
+            if dd is not None and (bestd is None or dd < bestd):
+                bestd, best = dd, q
+        if best is None:
+            out["verdict"] = "no_direction"
+            return out
+        dir3 = shower_cal_dir_3vector(members, best, 15.0)
+        if vmag(dir3) == 0:
+            out["verdict"] = "no_direction"
+            return out
+        r3 = (best, vadd(best, dir3))
+        if long_is_1:
+            n1, n2, st = ray_closest_points(r1, r3)   # `:4213-4214`
+            if st != "ok":
+                out["verdict"] = st
+                return out
+            center = n1
+            v1 = vsub(r1[0], center)
+            v2 = vsub(best, center)
+            ref1, ref2 = d1, dir3
+        else:
+            n1, n2, st = ray_closest_points(r3, r2)   # `:4234-4235`
+            if st != "ok":
+                out["verdict"] = st
+                return out
+            center = n2
+            v2 = vsub(r2[0], center)
+            v1 = vsub(best, center)
+            ref1, ref2 = dir3, d2
 
     out["vertex"] = center
     out["dis1"] = vmag(vsub(r1[0], center))
     out["dis2"] = vmag(vsub(r2[0], center))
-    out["angle1"] = angle_deg(v1, d1)
-    out["angle2"] = angle_deg(v2, d2)
+    # The reference each back-angle is measured against differs per branch: both
+    # -long uses each shower's own 15 cm axis, one-short uses the RE-RAYED
+    # direction for the short gamma (`:4223-4224` / `:4244-4245`).
+    out["angle1"] = angle_deg(v1, ref1)
+    out["angle2"] = angle_deg(v2, ref2)
     out["theta"] = angle_deg(v1, v2)
     out["mass"] = pi0_mass(sh1.get("kine_charge"), sh2.get("kine_charge"),
                            out["theta"])

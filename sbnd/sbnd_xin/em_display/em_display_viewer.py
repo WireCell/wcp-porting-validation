@@ -707,12 +707,18 @@ def refresh_kine():
 
     if how == "backproject" and detail:
         rows.append("<b>back-projection</b> (mirror of id_pi0_without_vertex, "
-                    "NeutrinoShowerClustering.cxx:4158-4256): verdict "
-                    "<b>%s</b>%s" % (
-                        detail.get("verdict"),
+                    "NeutrinoShowerClustering.cxx:4158-4256): branch "
+                    "<b>%s</b>, verdict <b>%s</b>%s" % (
+                        detail.get("branch") or "-", detail.get("verdict"),
                         "" if detail.get("verdict") == "ok" else
                         " &mdash; <span style='color:#d62728'>the code would "
                         "REFUSE this pair here</span>"))
+        if detail.get("branch") == "one_short":
+            rows.append(
+                "&nbsp;&nbsp;<i>one gamma is under 15 cm, so the code takes its "
+                "re-ray branch (:4203-4247): the short gamma is re-rayed from the "
+                "provisional midpoint and the vertex is the closest point on the "
+                "LONG gamma's ray, not the midpoint.</i>")
         if detail.get("gap") is not None:
             rows.append(
                 "&nbsp;&nbsp;closest-approach gap <b>%.2f cm</b>; conversion "

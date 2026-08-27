@@ -61,8 +61,7 @@ The candidate table's columns:
 
 `absorbed by` is the column this display exists for. It is not inferred — it is
 the `site=` tag the clustering itself printed at the moment it absorbed the
-segment. Values seen so far: `from_vertices`, `pass3_proximity`, `pass4_angle`,
-`in_main_cluster`, `examine_shower_1_*`, `in_other_clusters_*`.
+segment. Fifteen distinct values occur over the sample; the census is below.
 
 **The pass-1 tiers are pass 1 only — read the plot in both directions.** The
 gate the steps draw (`pass3_cone`) is the single largest absorber — **41 % of
@@ -128,9 +127,9 @@ not that the event lacks a neutrino vertex; that case returns early at `:3961`.)
 
 `segments[].shower_id` stores **one** shower per segment, so when two showers
 overlap the loser's members vanish from the join and it looks empty rather than
-nested. Measured over the 67 curated events: **11 of 1081 showers (1.0 %)**, all
-of them EM. Worst cases are ncpi0 evt84229 shower 69134 (43 of 50 joined, a
-958 MeV shower) and ncpi0 evt463565 shower 109073 (**0 of 5** — renders empty).
+nested. Measured over the 94-event sample: **15 of 1567 showers (1.0 %)**, all of
+them EM. Worst cases are ncpi0 evt84229 shower 69134 (43 of 50 joined, a 958 MeV
+shower) and ncpi0 evt463565 shower 109073 (**0 of 5** — renders empty).
 
 The display never guesses. It compares the join against the shower's own
 `num_segments` and says so in the `joined` column and a banner. With a probe
@@ -175,10 +174,21 @@ sibling `.index.txt`, and `/event/<n>/` is used directly as the on-disk director
 name server-side. For the other 16:
 
 ```bash
-python em_display/prep_em_scan.py --bee-build bee/em114
+python em_display/prep_em_scan.py --bee-build bee/em114   # ALREADY DONE, see below
 ./upload-to-bee.sh bee/em114/em114-<arm>.zip     # <- YOURS to run, not mine
 # save the printed URL as bee/em114/em114-<arm>.url, then re-run prep
 ```
+
+`bee/em114/` is **already built**: four zips (mcp1k 10, mcp2k 17, ncpi0 19,
+nuecc48 48 events; 51 MB total) with their `.index.txt` and `.prid-map.txt`
+sidecars, each starting at `data/0/` as the server requires. Only the upload is
+left.
+
+*Gotcha the build exposed:* `make_pr_bee.py` decides "was this event evaluated"
+by grepping the per-event **log**, and ncpi0 evt399860's prod0825 log is
+truncated (22 KB vs a 207 KB median) so it refuses an event whose dump is fine.
+`prep_em_scan.py` therefore points it at the **em114** arms, which carry the line
+for 94 of 94 and are equal to prod0825 on every physics field.
 
 The upload is outward-facing and owner-gated (CLAUDE.md §5.6). The build step is
 local and touches no network.

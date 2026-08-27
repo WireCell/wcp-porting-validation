@@ -72,6 +72,8 @@ print(' '.join(sorted(e for a, e in sel if a == arm)))
 PY
 }
 
+nskip=0
+nrun=0
 for arm in "${ARMS[@]}"; do
     evts=$(events_for "$arm")
     if [ -z "$evts" ]; then
@@ -81,9 +83,14 @@ for arm in "${ARMS[@]}"; do
     n=$(echo "$evts" | wc -w)
     out="work-em114-$arm"
     if [ -d "$out" ]; then
-        echo "[$arm] $out exists -- skipped (M13: a fresh arm per run; remove it deliberately or pick a new tag)"
+        echo "[$arm] $out already exists with $(ls -d "$out"/pr_evt* 2>/dev/null | wc -l) events -- SKIPPED, nothing re-run"
+        echo "       (M13: a fresh arm per run.  This arm is already built and the"
+        echo "        sidecars in em_display/emprep/ came from it -- there is normally"
+        echo "        nothing to do.  To genuinely redo it, move it aside first.)"
+        nskip=$((nskip+1))
         continue
     fi
+    nrun=$((nrun+1))
     echo "[$arm] $n events -> $out"
     WCT_SHOWER_CONTENT_DEBUG=1 \
     WCT_SHOWER_ABSORB_DEBUG=1 \
@@ -94,3 +101,12 @@ for arm in "${ARMS[@]}"; do
         > "/home/xqian/tmp/em114-$arm.log" 2>&1
     echo "[$arm] rc=$? log=/home/xqian/tmp/em114-$arm.log"
 done
+
+echo
+if [ "$nrun" -eq 0 ] && [ "$nskip" -gt 0 ]; then
+    echo "NOTHING WAS RUN: all $nskip arm(s) already exist.  This is the normal"
+    echo "state after the first build -- it is a no-op, not a success.  The data"
+    echo "the display uses is already in em_display/emprep/."
+else
+    echo "ran $nrun arm(s), skipped $nskip.  Next: python em_display/prep_em_scan.py --parse-probes"
+fi

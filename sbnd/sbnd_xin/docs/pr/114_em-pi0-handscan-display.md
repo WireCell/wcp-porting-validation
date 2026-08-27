@@ -28,7 +28,10 @@ by 10× — found because this display re-derives the pairing independently.
 ```sh
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
 
-# stage 2 -- re-run the 94-event sample with the shower probes on (~10 min, 4 fresh arms)
+# stage 2 -- re-run the 94-event sample with the shower probes on (~10 min, 4 fresh arms).
+# ALREADY DONE: the four work-em114-* arms exist, so this now prints "NOTHING WAS RUN"
+# and exits 0.  That is the expected steady state, not a success -- move an arm aside
+# to genuinely redo it.
 ./em_display/run_em114_probe.sh
 
 # parse the probes, rebuild the manifest, resolve Bee links offline (no network)
@@ -286,6 +289,37 @@ is why that column runs 10 → 1166 MeV and is almost never 135.
 
 ---
 
+## 6.3 The back-projection has three branches, and the middle one is the common case
+
+Caught by review *after* the first commit, and worth recording because a
+plausible-looking mirror was wrong on the majority of real pairs.
+
+`id_pi0_without_vertex` does not compute one vertex; it computes one of three:
+
+| condition | vertex | line |
+|---|---|---|
+| both γ longer than 15 cm | midpoint of closest approach | `:4182-4200` |
+| **exactly one** longer than 15 cm | **re-ray the short γ from that midpoint, re-intersect, keep the closest point on the LONG γ's ray** (not the midpoint; and no 3 cm fallback on this branch) | `:4203-4247` |
+| both ≤ 15 cm | no π⁰ | `:4254-4255` |
+
+The first mirror implemented only the first branch. Over the 78 accepted pairs on
+disk the split is **29 both-long / 49 one-short** — so the majority took a branch
+that did not exist in the code. Measured displacement between the midpoint the
+first version would have shown and the vertex the code actually computes, over
+those 49 pairs:
+
+| | cm |
+|---|---|
+| median | **2.68** |
+| p90 | **24.89** |
+| max | **43.40** |
+| pairs off by >1 cm / >5 cm / >20 cm | 36 / 20 / 6 |
+
+All three branches are now mirrored, `pi0_backproject` returns which one ran, the
+UI names it, and `selftest_em_display.py` asserts both live branches are
+exercised and that one-short is 49 of 78 — so a regression that silently drops a
+branch fails the test rather than quietly moving a vertex 25 cm.
+
 ## 7. Verification
 
 `selftest_em_display.py`, 30 checks, all passing, over the real sample:
@@ -299,6 +333,12 @@ is why that column runs 10 → 1166 MeV and is almost never 135.
   block is labelled a BDT feature and its 207.25 shown separately.
 - A hand-built pair (60081 + 31023) gives θ = 32.1°, m = **125.7 MeV**; the
   back-projection returns verdict `ok` with a 2.44 cm closest-approach gap.
+  (The reco's own accepted group for those same two showers reads **127.2 MeV** —
+  not a discrepancy: 125.7 is the *axis* convention, the reco's is `local_dirs`
+  per §6.1. A 1.5 MeV spread between the two conventions on a well-behaved pair
+  is the scale to have in mind when reading the >5 % misses.)
+- Both back-projection branches fire on the real sample, 29 both-long and
+  **49 one-short**, and the test pins that split (§6.3).
 - Snap moves a γ start onto a real fitted point; a label round-trips through
   save → reload with both γ slots and both verdicts restored; the record carries
   the reco's groups **and** the `kine_pio_*` block **and** full provenance.
@@ -351,3 +391,26 @@ being safe the moment it does fire.
   intersect (`Point.cxx:153`), yielding inf/nan silently. The Python reports
   `parallel` / `degenerate` instead of propagating either. That is a deliberate
   divergence in the *display*, not a proposed change to the code.
+
+## 10. Two operational notes
+
+**One prod0825 log is truncated, and a shipped tool greps it.**
+`scripts/bee/make_pr_bee.py:78` decides whether an event was evaluated by
+grepping the per-event log for `TaggerCheckNeutrino: selected main cluster`.
+ncpi0 **evt399860**'s prod0825 log is **22 KB against a 207 KB median** and is
+missing that line, so the builder refuses an event whose dump is perfectly good
+(main vertex, 9 showers, 47 segments). It is isolated — 18 of 19 ncpi0 and 48 of
+48 nuecc48 prod0825 logs carry the line, and the em114 arms carry it 94 of 94 —
+so this is one truncated file, not a group-mode pattern. `prep_em_scan.py`
+therefore points `make_pr_bee.py` at the **em114** arms, which is safe precisely
+because §3 shows the two are equal on every physics field. Mentioned, not fixed
+(CLAUDE.md §5): the general lesson is that a **log-derived** predicate is weaker
+than a **product-derived** one, and `has_main` from the dump disagrees with it
+here.
+
+**The Bee set is built and waiting.** `bee/em114/` holds four zips (94 events,
+51 MB) with their `.index.txt` and `.prid-map.txt` sidecars; every zip's first
+member is `data/0/...`, which is what the server validates (`views.py:241`).
+Upload is the owner's step (§5.6) — after it, dropping each returned URL beside
+its zip as `.url` and re-running `prep_em_scan.py` fills the remaining 16 links
+with no other change.
