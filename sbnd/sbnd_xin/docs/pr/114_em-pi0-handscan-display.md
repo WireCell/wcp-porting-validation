@@ -1,8 +1,9 @@
 # doc pr/114 — `em_display`: a hand-scan display for EM shower clustering and π⁰
 
-**Status: SHIPPED, scan-ready.** 94-event sample, probes parsed, 66/66 self-test
-checks pass. **No C++ and no jsonnet changed — the toolkit repo is untouched, so
-no A/B gate is owed and none is claimed.**
+**Status: SHIPPED, scan-ready.** 94-event sample, probes parsed, **66/66 static
+self-test checks and 21/21 in a real headless browser**. **No C++ and no jsonnet
+changed — the toolkit repo is untouched, so no A/B gate is owed and none is
+claimed.**
 
 > **Round 3 (§11) added a real 3-D view** — rotate/zoom/pan with Bee's own charge
 > cloud under the skeleton, inside the display, so the labels come along. Row 1
@@ -41,9 +42,10 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
 # parse the probes, rebuild the manifest, resolve Bee links offline (no network)
 python em_display/prep_em_scan.py --parse-probes
 
-# the two self-tests behind every number in this doc
-python em_display/selftest_repro.py         # reproduction + membership repair
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 66 checks
+# the three self-tests behind every number in this doc
+python em_display/selftest_repro.py          # reproduction + membership repair
+python em_display/selftest_em_display.py     # drives the viewer's callbacks, 66 checks
+python em_display/selftest_em3d_browser.py   # drives the 3-D view in headless chromium, 21
 
 # serve
 ./em_display/serve_em_display.sh 5021 --scan-tag <your-tag>
@@ -115,10 +117,12 @@ getter adds to `PrDisplayDump.cxx` were considered and **declined** (§6).
 ```
 em_display/em_display_viewer.py    the app: one program, two modes
 em_display/em_geom.py              the C++ geometry, mirrored with citations
+em_display/em3d.py                 round 3: the 3-D camera, its CustomJS, the Bee cloud
 em_display/prep_em_scan.py         manifest + probe parser + Bee index/build
 em_display/run_em114_probe.sh      stage-2 launcher
 em_display/serve_em_display.sh     bokeh serve wrapper, port 5021
-em_display/selftest_em_display.py  30 headless checks over the real sample
+em_display/selftest_em_display.py  66 headless checks over the real sample
+em_display/selftest_em3d_browser.py  21 checks driving a real headless chromium
 em_display/selftest_repro.py       reproduction + membership repair
 em_display/em114-manifest.tsv      the 94-event sample, links, per-event stats
 em_display/emprep/emprep-evt*.json 94 probe sidecars
@@ -423,7 +427,8 @@ with no other change.
 
 ## 11. Round 3 — a real 3-D view inside the display
 
-**Status: SHIPPED.** 66/66 self-test checks. Still **no C++ and no jsonnet — the
+**Status: SHIPPED.** 66/66 static self-test checks **and 21/21 in a real
+headless browser**. Still **no C++ and no jsonnet — the
 toolkit repo is untouched, so no A/B gate is owed and none is claimed.**
 
 The owner's ask, verbatim: *"the em_display is good, but for the hand scan, it is
@@ -441,7 +446,8 @@ whole segments.
 
 ```sh
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
-python em_display/selftest_em_display.py    # 66 checks, expects 0 failures
+python em_display/selftest_em_display.py     # 66 static checks, 0 failures
+python em_display/selftest_em3d_browser.py  # 21 checks in headless chromium, 0 failures
 python em_display/selftest_repro.py         # unchanged: 1567/1567
 ./em_display/serve_em_display.sh 5022 --scan-tag <your-tag>
 ```
@@ -581,7 +587,7 @@ because it lets one table (`_PT_CFG`) be the single source of truth that both th
 Python fill and the JS frames read. The selftest guards the trap **as it actually
 is**: no *non-string-keyed* dict in `args`.
 
-### 11.7 What is verified, and what is not
+### 11.7 What is verified
 
 `selftest_em_display.py` grew from 30 to **66** checks. The new ones:
 
@@ -607,25 +613,55 @@ is**: no *non-string-keyed* dict in `args`.
   reported 150 false positives because it only took the first declarator of
   `const rx = …, ry = …, rz = …`).
 
-**Not verified, and stated plainly: the browser-side code is not machine-tested.**
-There is no JS engine and no node in this tree (`node`, `deno`, `esprima`,
-`js2py`, `dukpy`, `quickjs` all absent). What is proven is that the app builds
-and serves — `bokeh serve` on 5022 returns HTTP 200 with an empty error log, and
-the whole document serialises. Rotation, zoom, picking and the box-select gesture
-are covered by this check-list, to be run once on first use:
+**And the browser-side code IS machine-tested after all** —
+`selftest_em3d_browser.py`, **21 checks, 0 failures**. The first pass of this
+round concluded it could not be: there is no `node`, `deno`, `esprima`, `js2py`,
+`dukpy` or `quickjs` in the tree, so the JS could not even be parsed here, and
+§11.7 was written around a manual check-list. That was the wrong conclusion from
+the right evidence — a *JS engine* is absent, but **playwright's bundled chromium
+is installed** (`~/.cache/ms-playwright/chromium-1228`), and a headless browser
+executes the code the same way the owner's will. The lesson is narrow and worth
+keeping: *"no interpreter for this language"* is not the same question as
+*"nothing here can run this code"*.
+
+The script starts its own bokeh server, drives real mouse gestures, and reads the
+result back out of the live models. Bokeh compiles a `CustomJS` body **lazily**,
+on first execution, so loading the page proves nothing — every check triggers a
+handler. Two of them could not have been obtained any other way:
+
+- **The two mirrors of the projection agree exactly.** After a camera change the
+  browser's own `u`/`v` are read back out of the `ColumnDataSource` and compared
+  point by point against `em3d.project` in Python: over 200 sampled points the
+  **worst |Δu|, |Δv| is 0.00e+00 cm**. That is the drift risk the whole
+  two-mirror design carries, closed by measurement rather than by discipline.
+- **The gestures do what §11.3 claims.** A synthetic drag really produces `Pan`
+  events with no drag tool active and really rotates (az −1.571 → −0.371);
+  shift+drag pans (`x_range.start` −300 → −434) and leaves the camera untouched;
+  the wheel zooms (span 600 → 246 cm); and **activating Box Select really
+  suspends rotation** — the §11.6(a) bug, confirmed fixed rather than merely
+  reasoned about — while selecting **493 points that resolve to 27 segments**,
+  which is §11.3's selection-unit claim demonstrated.
+
+It also closes a hole the tab change opened. Moving the three projections into a
+`TabPanel` changed their render path: they now initialise *lazily*, and Bokeh has
+a long-standing wart where a plot in an inactive tab comes up mis-sized. So "the
+2-D path is untouched" was not quite true, and the test now asserts it directly —
+switch to the tab, **three distinct panels at full size**, and a tap in two of
+them still pins a full 3-D point (`['6.1', '10.0', '258.1']`). (Writing that check
+needed one correction of its own: every Bokeh figure owns *two* stacked canvases
+at the same rect, so the first version tapped the same panel twice and filled x
+and y but never z.) Bokeh 3 also renders every view inside an **open shadow root**
+— five deep here — so `document.querySelectorAll('canvas')` finds nothing at all
+and the walker has to descend `shadowRoot` explicitly.
+
+What still needs a human, because it is a judgement and not an assertion:
 
 | on | check |
 |---|---|
-| any event | drag rotates; the event stays framed all the way round |
-| any event | wheel zooms and the **page** does not scroll |
-| any event | shift+drag pans; `refit` restores the framing |
-| any event | `x-z` preset matches the 2-D X-Z panel |
-| ncpi0 **evt256587** (82 k cloud) | drag is still smooth at `max points` 100 000; if not, lower the default — do not cap silently |
-| ncpi0 **evt84229** | tap a segment, mark it OUT, and see it in the impact line |
-| ncpi0 **evt84229** | Box Select marks whole segments and **rotation is suspended** while it is on |
-| ncpi0 **evt21073** | tap-fills-x/y/z lands on a fitted point; `snap` then agrees |
-| ncpi0 **evt463565** | the 0-of-5 shower still banners; layer checkboxes drive 3-D and 2-D together |
-| any event | the camera survives a shower-table click (it must not reset) |
+| ncpi0 **evt256587** (82 k cloud) | is a drag still smooth at `max points` 100 000? If not, lower the default — do not cap silently |
+| any event | does the depth fading actually read as depth, or does the cloud read as fog? |
+| ncpi0 **evt84229** | is the cloud+skeleton overlay legible enough to judge membership from? |
+| any event | is `frame the reco` the right default, or is `frame the cloud` wanted more often? |
 
 ### 11.8 Noticed, not touched
 

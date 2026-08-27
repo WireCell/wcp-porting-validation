@@ -246,11 +246,15 @@ for f, hx, hy in PROJ:
 EMPTY3D = dict(x=[], y=[], z=[], c=[], tag=[], u=[], v=[], al=[], sz=[])
 EMPTY3L = dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[])
 
-cam_src = ColumnDataSource(data=dict(
+# The `name=` on these four is not decoration: selftest_em3d_browser.py drives a
+# real headless chromium and reaches them with `get_model_by_name`, which is how
+# the CustomJS below gets tested at all in a tree with no JS engine.
+cam_src = ColumnDataSource(name="cam_src", data=dict(
     az=[state["cam"][0]], el=[state["cam"][1]], cx=[0.0], cy=[0.0], cz=[0.0],
     R=[100.0], az0=[0.0], el0=[0.0], xs0=[0.0], xe0=[0.0], ys0=[0.0], ye0=[0.0]))
 
-cloud_src = ColumnDataSource(data=dict(x=[], y=[], z=[], q=[], cid20=[],
+cloud_src = ColumnDataSource(name="cloud_src",
+                             data=dict(x=[], y=[], z=[], q=[], cid20=[],
                                        u=[], v=[], al=[], sz=[]))
 shwpt3_src = ColumnDataSource(data=dict(EMPTY3D))
 vtx3_src = ColumnDataSource(data=dict(EMPTY3D))
@@ -262,10 +266,12 @@ piovtx3_src = ColumnDataSource(data=dict(EMPTY3D))
 # on the PROJECTED columns, so 3-D selection needs no JS at all -- and because a
 # hit resolves to a segment id, a box in a rotated view marks whole segments, not
 # a prism of loose points.
-pick_src = ColumnDataSource(data=dict(x=[], y=[], z=[], sid=[], u=[], v=[],
+pick_src = ColumnDataSource(name="pick_src",
+                            data=dict(x=[], y=[], z=[], sid=[], u=[], v=[],
                                       al=[], sz=[]))
 det3_src = ColumnDataSource(data=dict(EMPTY3L))
-seg3_src = ColumnDataSource(data=dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[], c=[],
+seg3_src = ColumnDataSource(name="seg3_src",
+                            data=dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[], c=[],
                                       sid=[], pid=[], cid=[], owner=[], mark=[]))
 mem3_src = ColumnDataSource(data=dict(EMPTY3L))
 in3_src = ColumnDataSource(data=dict(EMPTY3L))
@@ -277,7 +283,7 @@ head3_src = ColumnDataSource(data=dict(x=[], y=[], z=[], x0=[], y0=[], z0=[],
 _wheel3 = WheelZoomTool(dimensions="both")
 _tap3 = TapTool()
 _box3 = BoxSelectTool()
-f3d = figure(title="3-D  —  drag rotates, shift+drag pans, wheel zooms",
+f3d = figure(name="f3d", title="3-D  —  drag rotates, shift+drag pans, wheel zooms",
              width=660, height=660,
              x_range=Range1d(-100, 100), y_range=Range1d(-100, 100),
              tools=[_wheel3, _tap3, _box3, ResetTool(), SaveTool()],
@@ -1962,7 +1968,7 @@ view_tabs = Tabs(tabs=[
         Div(text="<b>tap / box in 3-D</b>", width=330), pick_mode)),
              title="3-D"),
     TabPanel(child=row(f_xy, f_yz, f_xz), title="2-D projections"),
-], active=0)
+], active=0, name="view_tabs")
 
 layout = column(
     header,

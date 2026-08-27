@@ -227,8 +227,9 @@ and only into `../em_labels/<tag>/labels-evt<ID>.json`.
 python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
-python em_display/selftest_repro.py        # reproduction + membership repair
-python em_display/selftest_em_display.py   # drives the viewer's callbacks
+python em_display/selftest_repro.py         # reproduction + membership repair
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 66 checks
+python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 21
 ```
 
 The probes land in `pr_evt<ID>/stdout.log`, **not** in `wct_pr_evt<ID>.log`:
@@ -309,12 +310,13 @@ re-read a dump.
   is or is not in the shower, so hitting it through any of its projected points
   is unambiguous however the view is rotated. The status line names the segments
   a box resolved to before you mark them.
-- **The 3-D view's browser-side code is not machine-tested.** There is no JS
-  engine and no node in this tree, so `selftest_em_display.py` lints the
-  handlers (every free name supplied through `args`, brackets balanced, no
-  divergent copy of the projection, the live-gesture guard) and tests the Python
-  mirrors of the geometry — but the actual rotate/zoom/pick is covered by the
-  manual check-list in doc pr/114 §11, not by a test.
+- **The 3-D view's browser code IS tested**, by `selftest_em3d_browser.py` — it
+  starts a server, drives headless chromium with real mouse gestures, and checks
+  that the browser's projection matches Python's exactly, that a bare drag
+  rotates, that shift+drag pans, that the wheel zooms, and that Box Select
+  suspends rotation. What no test can judge is whether a drag *feels* smooth on
+  an 82 k-point cloud, or whether the depth fading reads as depth; doc pr/114
+  §11.7 keeps a short human check-list for exactly those.
 - The two `dir15`-less showers, and any event scanned without a probe sidecar,
   show an empty `absorbed by` column — the banner says so rather than leaving you
   to infer it.
