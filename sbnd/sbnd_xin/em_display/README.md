@@ -168,7 +168,18 @@ follows the subshell redirect in `run_pr_chain_batch.sh:1642`.
 
 ## Bee links
 
-78 of the 94 sample events already resolve to a Bee link with **no upload**: the
+**All 94 events have a live Bee link** (uploaded 2026-08-27, `bee/em114/*.url`).
+Two things about them worth knowing:
+
+- **They point at the `em114` sets on purpose.** The same event exists in many
+  older sets — `prod0813` among them — and those are *different reconstructions*.
+  `bee_index(prefer="em114")` makes the matching epoch win every collision;
+  without it, sorted-glob order silently sent 78 of 94 events to a Bee page whose
+  clustering disagrees with the panels beside it.
+- **A freshly-uploaded set can return 500 on the very first hit** while the
+  server finishes unpacking it. Reload once. Verified: 94/94 return 200.
+
+The mechanics, for the next round:  the
 set UUID comes from `../bee/<round>/<tag>.url` and the per-event index from the
 sibling `.index.txt`, and `/event/<n>/` is used directly as the on-disk directory
 name server-side. For the other 16:

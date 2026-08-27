@@ -77,7 +77,7 @@ def scan_sample(docdir):
 # ---------------------------------------------------------------------------
 
 
-def bee_index(beedir):
+def bee_index(beedir, prefer="em114"):
     """event -> (url, round_tag).  Fully offline.
 
     A Bee set's UUID is minted SERVER-side (wire-cell-bee3/events/views.py:226,
@@ -87,11 +87,23 @@ def bee_index(beedir):
     and that is the same `bee_idx` make_pr_bee.py wrote into the sibling
     .index.txt (:193, :239).  So url + idx are both on disk.
 
-    Later rounds win on collision: the same event appears in many sets and the
-    most recent reconstruction is the one worth looking at.
+    **`prefer` wins every collision, and that matters more than it looks.** The
+    same event appears in many sets, and those sets are DIFFERENT
+    RECONSTRUCTIONS -- `prod0813` is an older epoch entirely.  Sorted-glob order
+    put `em114` (an 'e') before `prod0813` (a 'p'), so a plain last-wins map sent
+    78 of 94 events to a Bee set whose clustering does not match the calib dump
+    the display draws beside it.  Clicking through would have shown a different
+    answer to the one being scanned -- silently, since both render fine.
+
+    So: build the map from every round first, then let `prefer` overwrite.  A
+    Bee link is only trustworthy next to a scan if it is the SAME epoch.
     """
     out = {}
-    for urlfile in sorted(glob.glob(os.path.join(beedir, "*", "*.url"))):
+    urlfiles = sorted(glob.glob(os.path.join(beedir, "*", "*.url")))
+    # preferred round last => it wins
+    urlfiles = ([u for u in urlfiles if os.path.basename(os.path.dirname(u)) != prefer]
+                + [u for u in urlfiles if os.path.basename(os.path.dirname(u)) == prefer])
+    for urlfile in urlfiles:
         with open(urlfile) as fh:
             url = fh.read().strip()
         m = re.search(r"/set/([0-9a-f-]{36})/", url)
