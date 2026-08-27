@@ -27,7 +27,11 @@ hand scan is made of, and Bokeh's JS does not auto-reconnect (doc pr/88).
 
 ## What is on the screen
 
-**Row 1 — three projections** X-Y, Y-Z, X-Z, active volume and cathode in red.
+**Row 1 — two tabs.** **3-D** (the default) and **2-D projections** (X-Y, Y-Z,
+X-Z, active volume and cathode in red). See [The 3-D view](#the-3-d-view) below.
+The projections stay because the free-space manual x/y/z pin needs them: two
+panels each give two of the three coordinates, and a rotatable canvas gives a
+*ray*, not a point.
 
 **Row 2 left — the acceptance plot.** Angle to the shower axis vs distance from
 the shower start, with the three pass-1 tiers drawn as dashed steps. Every
@@ -42,6 +46,70 @@ gate itself with nothing approximated.
 **Row 3 — the shower table.** One row per `showers[]`. Click a row to select it.
 
 **Then one of two panels**, chosen by the mode switch.
+
+## The 3-D view
+
+Rotatable and zoomable like Bee, with the same charge cloud under it — but
+inside em_display, so every label control works off it.
+
+| gesture | effect |
+|---|---|
+| **drag** | rotate |
+| **shift + drag** | pan the view |
+| **wheel** | zoom |
+| **tap** | pick (see below) |
+| toolbar **Box Select** | select segments — and it *suspends rotation* while it is on |
+
+There is no separate "rotate mode / select mode" switch: picking Box Select (or
+Pan) in the toolbar is what steps rotation aside, and un-picking it brings
+rotation back.
+
+**Depth is shown by fading, not perspective.** The projection is orthographic —
+nearer points are drawn more opaque and slightly larger. That is a deliberate
+choice, not a shortcut: an orthographic map composes exactly with Bokeh's own
+zoom, keeps every glyph in ordinary data space (which is what keeps tap, box
+select and hover working), and does not distort the angles this scan is about.
+
+**Framing is rotation-proof.** The view is set from the 3-D bounding sphere of
+the *reconstruction* — fit points, vertices, shower points — never from the
+projected extent. So an elongated track swinging from broadside to end-on can
+neither balloon out of frame nor shrink to a dot, and all zoom is yours. The
+**charge cloud does not set the frame** by default: a cosmic-laden cloud spans
+the whole TPC and would leave the neutrino a speck. `frame the cloud` switches
+that; `refit` re-frames the current choice.
+
+**Presets.** `x-y`, `x-z` and `z-y` reproduce the 2-D panels exactly, so if you
+lose your bearings you can step back to a view you already trust and rotate out
+of it again. (`z-y` is named honestly: there is no roll, so a *z*-horizontal Y-Z
+view is not reachable — that preset shows the same plane with the axes swapped.)
+
+**Tap does one of two jobs**, set by the radio:
+
+- *tap selects segment* — marks then work off the 3-D selection exactly as from
+  the tables;
+- *tap fills x/y/z* — snaps to the nearest **fitted point** and writes its real
+  coordinates into the manual boxes. A single click in 3-D is a ray; anchoring
+  it on a real point is what makes it a position.
+
+### The charge cloud, and which frame it is in
+
+The cloud comes from `../bee/<round>.zip` — the same file the Bee link opens,
+so the panel and the Bee page show the same reconstruction. Median 34 k points
+per event over this sample, max 82 k; `max points` decimates by an evenly-spaced
+pick (deterministic, and proportional per cluster) and the readout says how many
+of how many are drawn.
+
+**`clustering-global` is the default and `img-global` is not.** They are not the
+same frame. `img-global` is dumped pre-pipeline, before the corrections the
+reconstruction works in, and per cluster it can sit up to ~121 cm from the
+skeleton drawn over it (doc pr/13). It is offered, with a red warning, because
+it is occasionally what you want to look at — but never as the default. That the
+dump and the corrected layers really are one frame is measured, not assumed:
+the dump's fit points land on the zip's own `track_fit-global` layer to a
+**median 0.0004 cm**, and the selftest pins it.
+
+**The zips are gitignored**, so a fresh clone has the display but not the cloud.
+The panel then draws the skeleton and says so in a banner.
 
 ## EM mode
 
@@ -144,6 +212,7 @@ sidecar loaded it uses the non-lossy membership instead and the banner says
 | `work-<arm>-prod0825/pr_evt<ID>/calib-pr-evt<ID>.json` | everything drawn |
 | `em_display/emprep/emprep-evt<ID>.json` | non-lossy membership, `dir15` axis, `absorbed by` |
 | `em_display/em114-manifest.tsv` | the event list, the Bee link, per-event stats |
+| `bee/em114/em114-<arm>.zip` | the 3-D charge cloud (optional; absent ⇒ skeleton only) |
 
 Nothing here is ever written. Exactly one code path writes anything — `on_save` —
 and only into `../em_labels/<tag>/labels-evt<ID>.json`.
@@ -212,9 +281,11 @@ upsert independently — scanning EM now and π⁰ later does not drop the first
 
 Each record stores **the reconstruction's answer next to yours**: the shower's
 membership and where it came from (`probe` or `dump-join`), its axis and which
-branch produced it, the `pio_id` groups, the `kine_pio_*` block, and the vertex
-with how it was obtained. A later tuning fit joins one file per event and never
-has to re-read a dump.
+branch produced it, the `pio_id` groups, the `kine_pio_*` block, the vertex with
+how it was obtained, and a `camera` block — the az/el, centre, radius and cloud
+layer you were looking at — so a later re-read can put the event back on screen
+the way it was seen. A later tuning fit joins one file per event and never has to
+re-read a dump.
 
 > **A scan tag is a scientific record (CLAUDE.md M13).** Passing `--scan-tag`
 > explicitly is consent to write into that set. Without it the viewer uses
@@ -231,9 +302,19 @@ has to re-read a dump.
   conn 2/3 and only approximate on the `shower_cal_dir_3vector` fallback branch.
 - **`Σ dQ` in the impact line is fitted-point charge, not a calibrated energy.**
   It sizes the change; it does not price it in MeV.
-- **No lasso.** Selection is by table row or by dot in the acceptance plot. A
-  lasso over a 2-D projection selects everything along the third axis, and that
-  ambiguity is not worth the mis-marks.
+- **No lasso over a 2-D projection**, and there still isn't one: a lasso there
+  selects everything along the third axis, and that ambiguity is not worth the
+  mis-marks. **Box select in the 3-D view is a different thing and is offered**,
+  because the selection unit is the *segment*, not the point — a segment either
+  is or is not in the shower, so hitting it through any of its projected points
+  is unambiguous however the view is rotated. The status line names the segments
+  a box resolved to before you mark them.
+- **The 3-D view's browser-side code is not machine-tested.** There is no JS
+  engine and no node in this tree, so `selftest_em_display.py` lints the
+  handlers (every free name supplied through `args`, brackets balanced, no
+  divergent copy of the projection, the live-gesture guard) and tests the Python
+  mirrors of the geometry — but the actual rotate/zoom/pick is covered by the
+  manual check-list in doc pr/114 §11, not by a test.
 - The two `dir15`-less showers, and any event scanned without a probe sidecar,
   show an empty `absorbed by` column — the banner says so rather than leaving you
   to infer it.

@@ -174,6 +174,281 @@ check("implicit tag refuses to write into a populated tag", not V.write_allowed(
 V.SCAN_TAG_EXPLICIT = True
 check("explicit tag is consent", V.write_allowed())
 
+
+# ===========================================================================
+# round 3 -- the 3-D view
+# ===========================================================================
+import math as _m                                                # noqa: E402
+import zipfile as _zip                                           # noqa: E402
+import em3d as D3                                                # noqa: E402
+
+print()
+
+# ---- camera geometry -------------------------------------------------------
+_ortho_ok = _inv_ok = _fit_ok = True
+for _i in range(13):
+    for _j in range(9):
+        _az = -_m.pi + 2 * _m.pi * _i / 12.0
+        _el = -1.4 + 2.8 * _j / 8.0
+        r, u, f = D3.camera_basis(_az, _el)
+        for _a in (r, u, f):
+            if abs(sum(v * v for v in _a) - 1.0) > 1e-12:
+                _ortho_ok = False
+        for _a, _b in ((r, u), (u, f), (f, r)):
+            if abs(sum(x * y for x, y in zip(_a, _b))) > 1e-12:
+                _ortho_ok = False
+        for _p in ((17.0, -3.5, 220.0), (-201.0, 199.0, 0.9), (0.0, 0.0, 0.0)):
+            _c = (5.0, -2.0, 250.0)
+            (_u, _v, _d), = D3.project([_p], _az, _el, _c)
+            _r2 = sum((a - b) ** 2 for a, b in zip(_p, _c))
+            if abs(_u * _u + _v * _v + _d * _d - _r2) > 1e-8:
+                _inv_ok = False
+check("camera basis is orthonormal over a (az, el) grid", _ortho_ok)
+check("  ... so u^2 + v^2 + d^2 == |p - centre|^2 exactly", _inv_ok)
+
+# The framing guarantee the whole zoom story rests on: |(u,v)| <= R for EVERY
+# camera, so rotating cannot push the event out of frame or shrink it to a dot.
+_pts = [(x, y, z) for x in (-180.0, 12.0, 190.0) for y in (-150.0, 0.0, 170.0)
+        for z in (5.0, 250.0, 495.0)]
+_c, _R = D3.bounding_sphere(_pts)
+for _i in range(24):
+    for _j in range(7):
+        for (_u, _v, _d) in D3.project(_pts, -_m.pi + _m.pi * _i / 12.0,
+                                       -1.5 + 3.0 * _j / 6.0, _c):
+            if _u * _u + _v * _v > _R * _R + 1e-6:
+                _fit_ok = False
+check("bounding sphere frames every camera (no rotation can escape it)", _fit_ok,
+      "R=%.1f" % _R)
+check("  ... and it has a floor so a tiny event is not magnified to noise",
+      D3.bounding_sphere([(0.0, 0.0, 0.0), (0.1, 0.0, 0.0)])[1] >= 30.0)
+
+# Three presets must reproduce the 2-D panels exactly, or "step back to a view
+# you trust" is a lie.
+_r, _u, _f = D3.camera_basis(_m.radians(-90.0), 0.0)
+check("preset x-z reproduces the X-Z panel (right=+x, up=+z)",
+      max(abs(_r[0] - 1), abs(_r[1]), abs(_r[2])) < 1e-9
+      and max(abs(_u[0]), abs(_u[1]), abs(_u[2] - 1)) < 1e-9)
+_r, _u, _f = D3.camera_basis(0.0, 0.0)
+check("preset z-y reproduces the Y-Z panel (right=+y, up=+z)",
+      max(abs(_r[0]), abs(_r[1] - 1), abs(_r[2])) < 1e-9
+      and max(abs(_u[0]), abs(_u[1]), abs(_u[2] - 1)) < 1e-9)
+
+# ---- the frame the charge cloud is in -- doc pr/114 sec 11 -----------------
+# THE blocker of this round, pinned so it cannot rot: the calib dump and the Bee
+# zip's own PR layers are the same numbers, which is what licenses drawing
+# clustering-global (the corrected frame, doc pr/13) under the skeleton.
+_res = []
+for _lbl in ("evt21073", "evt84229", "evt463565"):
+    _row = V.MANIFEST[_lbl[3:]]
+    _idx = D3.bee_event_index(SX, _row, _lbl[3:])
+    _zp = D3.bee_zip_path(SX, _row)
+    with _zip.ZipFile(_zp) as _z:
+        _tf = json.loads(_z.read("data/%d/%d-track_fit-global.json" % (_idx, _idx)))
+    _T = list(zip(_tf["x"], _tf["y"], _tf["z"]))
+    _d = json.load(open(V.EVENTS[_lbl]))
+    _P = [(p["x"], p["y"], p["z"]) for s in _d["segments"]
+          for p in (s.get("points") or [])]
+    _nn = []
+    for _p in _P[::7]:
+        _nn.append(min((_p[0] - t[0]) ** 2 + (_p[1] - t[1]) ** 2
+                       + (_p[2] - t[2]) ** 2 for t in _T) ** 0.5)
+    _nn.sort()
+    _res.append((_lbl, _nn[len(_nn) // 2], _nn[-1]))
+check("dump fit points ARE the Bee track_fit-global layer (same frame)",
+      all(m < 0.001 for _, m, _x in _res),
+      "; ".join("%s med %.5f max %.5f cm" % r for r in _res))
+
+# ---- the cloud loader ------------------------------------------------------
+_row = V.MANIFEST["21073"]
+_cl = D3.load_bee_cloud(SX, _row, "21073", max_pts=5000)
+check("cloud loader honours the point budget exactly",
+      _cl is not None and _cl["kept"] == 5000 and _cl["total"] > 5000,
+      "kept %s of %s" % (_cl["kept"], _cl["total"]))
+check("  ... and returns equal-length columns",
+      len({len(_cl[k]) for k in ("x", "y", "z", "q", "cid20")}) == 1)
+check("  ... a budget above the total keeps everything",
+      D3.load_bee_cloud(SX, _row, "21073", max_pts=10 ** 7)["kept"] == _cl["total"])
+check("  ... every cluster survives decimation (proportional, not truncating)",
+      len({int(v) for v in D3.load_bee_cloud(SX, _row, "21073",
+                                             max_pts=2000)["cid20"]})
+      == len({int(v) for v in D3.load_bee_cloud(SX, _row, "21073",
+                                                max_pts=10 ** 7)["cid20"]}))
+check("  ... a missing zip degrades to None, it does not raise",
+      D3.load_bee_cloud(SX, {"bee_round": "nope/nope", "bee_url": "x/event/0/"},
+                        "21073") is None)
+check("  ... img-global is available but is the RAW frame",
+      D3.CLOUD_LAYERS == ["clustering-global", "img-global"])
+
+# ---- the layer contract ----------------------------------------------------
+# A 3-D renderer not registered under a layer key would silently ignore the
+# checkboxes; one registered under a key nobody lists would be unreachable.
+check("every RENDER key is a listed layer",
+      set(V.RENDER) == set(V.LAYER_KEYS),
+      "render=%s layers=%s" % (sorted(V.RENDER), sorted(V.LAYER_KEYS)))
+_f3d_r = set(V.f3d.renderers)
+_reg = {r for rs in V.RENDER.values() for r in rs}
+_unreg = [r for r in _f3d_r if r not in _reg]
+check("every 3-D renderer is layer-controlled except the pick surface",
+      _unreg == [V.r_pick], "%d unregistered" % len(_unreg))
+V.layer_group.active = [i for i in range(len(V.LAYER_KEYS))]
+V.apply_layers(None, None, None)
+check("  ... turning every layer on shows exactly one cloud colour mode",
+      V.r_cloud_c.visible != V.r_cloud_q.visible)
+V.layer_group.active = [i for i, k in enumerate(V.LAYER_KEYS) if k != "cloud"]
+V.apply_layers(None, None, None)
+check("  ... and the cloud checkbox hides BOTH colour modes",
+      not V.r_cloud_c.visible and not V.r_cloud_q.visible)
+V.layer_group.active = [0, 1, 2, 3, 4, 6, 7, 8]
+V.apply_layers(None, None, None)
+
+# ---- the CustomJS, linted (there is no JS engine in this tree) --------------
+_JS_KEYWORDS = set("""break case catch class const continue debugger default
+delete do else export extends finally for function if import in instanceof let
+new return super switch this throw try typeof var void while with yield of
+true false null undefined Math Number Array Float64Array Float32Array Object
+JSON String Boolean console window document isNaN parseFloat parseInt NaN
+Infinity cb_obj cb_data""".split())
+
+
+def js_free_names(code):
+    """Identifiers a CustomJS body reads without declaring: they must all be
+    supplied through `args` or the browser throws a ReferenceError that nothing
+    here would ever see.
+
+    Deliberately crude, and it has to handle multi-declarator statements --
+    `const rx = -_sa, ry = _ca, rz = 0.0;` declares three names, and a regex that
+    only takes the first reports the other two as missing args.  That false
+    positive is what this comment exists to stop somebody re-introducing."""
+    import re
+    body = re.sub(r"//[^\n]*", "", code)
+    body = re.sub(r'"[^"]*"|\'[^\']*\'', '""', body)
+    decl = set()
+    for m in re.finditer(r"\b(?:const|let|var)\b([^;]*)", body):
+        seg = m.group(1)
+        decl |= set(re.findall(r"([A-Za-z_$][\w$]*)\s*=(?!=)", seg))
+        decl |= {n.strip() for n in seg.split(",")
+                 if re.fullmatch(r"\s*[A-Za-z_$][\w$]*\s*", n)}
+    body = re.sub(r"\.\s*[A-Za-z_$][\w$]*", "", body)
+    names = set(re.findall(r"[A-Za-z_$][\w$]*", body))
+    return {n for n in names if n not in decl and n not in _JS_KEYWORDS}
+
+
+_js_all = [("panstart", V.js_panstart), ("rotate", V.js_rotate),
+           ("panend", V.js_panend), ("apply", V.js_apply)]
+_js_all += [("preset[%d]" % i, cb) for i, cb in enumerate(V.preset_js)]
+_missing = []
+for _nm, _cb in _js_all:
+    for _free in sorted(js_free_names(_cb.code)):
+        if _free not in _cb.args:
+            _missing.append("%s:%s" % (_nm, _free))
+check("every CustomJS free name is supplied through args",
+      not _missing, ", ".join(_missing) or "%d handlers" % len(_js_all))
+# Test the test: a linter that never fires proves nothing.  It must flag a name
+# that is genuinely undefined and must NOT flag a second declarator or a
+# property, which is exactly where the first version of it was wrong.
+check("  ... and the linter itself catches a genuinely missing name",
+      "nosuchthing" in js_free_names("const a = 1, b = 2;\n"
+                                     "cam.data.az[0] = a + b + nosuchthing;")
+      and "b" not in js_free_names("const a = 1, b = 2; a = b;")
+      and "az" not in js_free_names("cam.data.az[0] = 1;"))
+_bal_ok = True
+for _nm, _cb in _js_all:
+    _s = _cb.code
+    for _o, _c in "{}", "()", "[]":
+        if _s.count(_o) != _s.count(_c):
+            _bal_ok = False
+check("  ... and their brackets balance", _bal_ok)
+
+# A shape trap worth pinning, stated as it actually is: Bokeh serialises a Python
+# dict as {"type":"map", ...}, and bokehjs's `_decode_map` (bokeh.js) returns a
+# plain JS object ONLY when every key is a string -- one non-string key and the
+# handler receives a real Map instead, so `cfg.foo` is undefined, sizes go NaN,
+# and the layer vanishes with no server-side error anywhere to notice.
+_dicty = []
+for _nm, _cb in _js_all:
+    for _k, _val in _cb.args.items():
+        for _cand in ([_val] + list(_val) if isinstance(_val, (list, tuple))
+                      else [_val]):
+            if isinstance(_cand, dict) and not all(isinstance(kk, str)
+                                                   for kk in _cand):
+                _dicty.append("%s:%s" % (_nm, _k))
+check("no CustomJS arg is a non-string-keyed dict (that arrives as a JS Map)",
+      not _dicty, ", ".join(sorted(set(_dicty))) or "checked %d handlers"
+      % len(_js_all))
+# ... and the one table that both mirrors read really is one table.
+check("  ... base size/alpha have a single source of truth",
+      [V._PT_CFG[s][0] for s in V._PT_SRC] == V._PT_SIZE
+      and [V._PT_CFG[s][1] for s in V._PT_SRC] == V._PT_ALPHA
+      and V.js_apply.args["ptsize"] is V._PT_SIZE)
+# bokehjs's Toolbar._active_change writes the live gesture state to
+# `gestures[et].active` and never to `active_drag`, which stays at whatever it
+# was configured to.  A guard on active_drag would therefore never fire and
+# rotation would fight box-select on every drag -- with nothing on the server to
+# show for it.  There is no JS engine here to prove the fix, so pin the shape.
+_rot_code = __import__("re").sub(r"//[^\n]*", "", V.js_rotate.code)
+check("rotate guards on the LIVE gesture state, not the config property",
+      "gestures" in _rot_code and "pan.active" in _rot_code
+      and "active_drag" not in _rot_code,
+      "(comments stripped; the code names active_drag only to warn against it)")
+check("  ... and Python still starts with no drag tool auto-activated",
+      V.f3d.toolbar.active_drag is None)
+check("the viewer splices em3d's JS, it does not keep a second copy",
+      D3.JS_PROJECT in V.js_rotate.code and D3.JS_PROJECT in V.js_apply.code
+      and "const rx =" not in open(os.path.join(SX, "em_display",
+                                                "em_display_viewer.py")).read())
+
+# ---- 3-D selection resolves to SEGMENTS ------------------------------------
+V.on_event(None, None, "evt84229")
+V.pick_mode.active = 0
+_sids = V.pick_src.data["sid"]
+_idx = [i for i, s in enumerate(_sids) if s == _sids[0]]
+V.pick_src.selected.indices = _idx + [len(_sids) - 1]
+check("a 3-D box over many points resolves to a handful of segments",
+      len(V.selected_cand_ids()) <= 2 and len(_idx) > 2,
+      "%d points -> %d segment(s)" % (len(_idx) + 1, len(V.selected_cand_ids())))
+V.state["sel_shower"] = 69134
+V.fill_cand_table()
+V.mark("in")()
+check("  ... and marking works off that 3-D selection",
+      V.state["marks"].get(_sids[0]) == "in")
+V.pick_src.selected.indices = []
+
+# tap in "fill x/y/z" mode must land on a REAL fitted point (a ray needs an
+# anchor; this is the 3-D answer to the two-panel tap).
+V.pick_mode.active = 1
+V.pick_src.selected.indices = [5]
+_want = (V.pick_src.data["x"][5], V.pick_src.data["y"][5], V.pick_src.data["z"][5])
+check("tap in fill mode writes a real fitted point into x/y/z",
+      abs(float(V.man_x.value) - _want[0]) < 0.06
+      and abs(float(V.man_y.value) - _want[1]) < 0.06
+      and abs(float(V.man_z.value) - _want[2]) < 0.06,
+      "%s %s %s" % (V.man_x.value, V.man_y.value, V.man_z.value))
+V.pick_mode.active = 0
+
+# A stale selection would make the next "mark IN" hit a segment of the PREVIOUS
+# event: replacing a CDS's .data does not clear its .selected.
+V.pick_src.selected.indices = [3, 4, 5]
+V.on_event(None, None, "evt21073")
+check("switching events clears the 3-D selection",
+      list(V.pick_src.selected.indices) == [] and V.selected_cand_ids() == [],
+      str(list(V.pick_src.selected.indices)))
+V.on_event(None, None, "evt84229")
+
+# ---- camera round trip -----------------------------------------------------
+V.on_camtxt(None, None, "1.2345,-0.5000")
+check("the browser's panend report sets the server-side camera",
+      abs(V.state["cam"][0] - 1.2345) < 1e-9
+      and abs(V.state["cam"][1] + 0.5) < 1e-9)
+check("  ... and the readout shows it", "camera az" in V.cam_div.text)
+V.on_camtxt(None, None, "not-a-camera")
+check("  ... a malformed report is ignored, not crashed on",
+      abs(V.state["cam"][0] - 1.2345) < 1e-9)
+V.on_save()
+_rec = json.load(open(V.label_path("evt84229")))
+check("the saved record carries the view the judgement was made from",
+      (_rec.get("camera") or {}).get("cloud") == "clustering-global"
+      and _rec["camera"]["az_deg"] is not None, str(_rec.get("camera")))
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

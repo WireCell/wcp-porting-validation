@@ -1,8 +1,12 @@
 # doc pr/114 — `em_display`: a hand-scan display for EM shower clustering and π⁰
 
-**Status: SHIPPED, scan-ready.** 94-event sample, probes parsed, 30/30 self-test
+**Status: SHIPPED, scan-ready.** 94-event sample, probes parsed, 66/66 self-test
 checks pass. **No C++ and no jsonnet changed — the toolkit repo is untouched, so
 no A/B gate is owed and none is claimed.**
+
+> **Round 3 (§11) added a real 3-D view** — rotate/zoom/pan with Bee's own charge
+> cloud under the skeleton, inside the display, so the labels come along. Row 1
+> is now a tab set, 3-D by default.
 
 **Result.** A Bokeh display at `sbnd_xin/em_display/` for the owner's next
 validation step. EM mode marks segments in/out of a selected shower against the
@@ -39,7 +43,7 @@ python em_display/prep_em_scan.py --parse-probes
 
 # the two self-tests behind every number in this doc
 python em_display/selftest_repro.py         # reproduction + membership repair
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 30 checks
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 66 checks
 
 # serve
 ./em_display/serve_em_display.sh 5021 --scan-tag <your-tag>
@@ -414,3 +418,216 @@ member is `data/0/...`, which is what the server validates (`views.py:241`).
 Upload is the owner's step (§5.6) — after it, dropping each returned URL beside
 its zip as `.url` and re-running `prep_em_scan.py` fills the remaining 16 links
 with no other change.
+
+---
+
+## 11. Round 3 — a real 3-D view inside the display
+
+**Status: SHIPPED.** 66/66 self-test checks. Still **no C++ and no jsonnet — the
+toolkit repo is untouched, so no A/B gate is owed and none is claimed.**
+
+The owner's ask, verbatim: *"the em_display is good, but for the hand scan, it is
+not as good as bee, where one can easily zoom in rotate etc. and see the result.
+One major advantage of the em_display is that it has all the lable information,
+which is great to record the result. I wonder if we can have this 3D display
+feature (like what's in bee) integrated into the em_display?"*
+
+Row 1 is now a tab set: **3-D** (default) and **2-D projections**. The 3-D panel
+rotates, zooms and pans, draws the same charge cloud Bee draws, and every
+existing label control works off it — including a box select that resolves to
+whole segments.
+
+### 11.1 Repro
+
+```sh
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+python em_display/selftest_em_display.py    # 66 checks, expects 0 failures
+python em_display/selftest_repro.py         # unchanged: 1567/1567
+./em_display/serve_em_display.sh 5022 --scan-tag <your-tag>
+```
+
+### 11.2 Not three.js, and the reason is on disk
+
+Bee loads **three.js r145 from a CDN**
+(`wire-cell-bee3/events/templates/events/event.html:299-306`). The only copy in
+the tree is **r71** (`events/static/js/lib/three.min.js`, 420 KB, 2015), which is
+*not* dead weight — `physics/deadarea.js:20-25` fetches it at runtime and
+concatenates it into a Blob Web Worker that uses `THREE.Geometry`,
+`SplineCurve3` and `BufferGeometry().fromGeometry()`, all removed by r125+. So
+the on-disk copy is the wrong version for the main scene and is pinned to the
+worker. On top of that, Bee's own bundle `js/bee/dist/bee.js` is gitignored and
+**not built** here, there is no `node`/`npm` on this box, and `em_display` is a
+single-script Bokeh app with no `static/` dir (all 19 Bokeh apps in the tree
+are). Vendoring Bee is a project, not a step.
+
+### 11.3 What was built instead, and the fact it rests on
+
+An **orthographic trackball inside an ordinary Bokeh figure**. Every glyph
+carries 3-D columns plus the projected pair it draws; a `CustomJS` recomputes the
+projection in the browser each drag frame and calls `source.change.emit()`. No
+new dependency, no JS asset, no build step — and because the glyphs live in
+normal data space, Bokeh's tap, box-select and hover keep working. That is the
+whole reason for putting the 3-D view *inside* em_display rather than beside it.
+
+It works because of one non-obvious thing, **read in the shipped bokehjs rather
+than recalled** (`bokeh/server/static/js/bokeh.js`):
+
+- `UIEventBus.__trigger` calls `this._trigger_bokeh_event(plot_view, e)` at its
+  tail, **after** the active-tool switch and unconditionally. So `Pan`,
+  `PanStart`, `PanEnd` and `MouseWheel` reach `js_on_event` **with no pan or
+  scroll tool active** — which is what lets a bare drag mean "rotate" with
+  nothing fighting it for the gesture. `PointEvent` carries `modifiers`
+  (shift/ctrl) and cumulative `delta_x`/`delta_y`.
+- `GlyphRendererView.connect_signals` does `this.connect(this.model.data_source
+  .change, update)`. So mutating `source.data.<col>` **in place** and calling
+  `change.emit()` repaints locally without assigning `.data` — the difference
+  between a local repaint and shipping 25 000 points back to the server on every
+  frame of a drag.
+
+| gesture | effect | mechanism |
+|---|---|---|
+| drag | rotate | `js_on_event(Pan)`, guarded by the live gesture state |
+| shift+drag | pan | same handler, `cb_obj.modifiers.shift` |
+| wheel | zoom | a real `WheelZoomTool` as `active_scroll` (it is also what calls `preventDefault`, so the page does not scroll) |
+| Box Select | segment selection | the guard suspends rotation while it is active |
+
+**Framing is set from the 3-D bounding sphere of the reconstruction, never from
+the projected extent.** `right/up/fwd` is orthonormal, so `u² + v² ≤ R²` for
+every camera: rotating an elongated track from broadside to end-on can neither
+balloon it out of frame nor shrink it to a dot, and all zoom stays the user's.
+Framing off the projected extent would re-fit on every drag frame — the same
+failure the `Range1d`-not-`DataRange1d` comment in the viewer already warns
+about, one level up. The **cloud does not set the frame** by default: a
+cosmic-laden cloud spans the whole TPC and would leave the neutrino a speck.
+
+**Depth cueing, not depth sorting.** Bokeh draws in row order, so the only
+occlusion cue available without permuting every column every frame is alpha and
+size falling off with depth. Sorting 34 000 points per frame to get true
+occlusion is not worth it; fading is the cue that carries depth in a still frame
+and motion parallax covers the rest on a drag.
+
+### 11.4 The blocker, cleared before anything was designed
+
+doc pr/13 warns that **`img-global` is the only raw-frame layer** in a Bee zip —
+dumped pre-pipeline, before `ClusteringSwitchScope` creates the corrected arrays
+— while `clustering-global` and the PR layers are in `(x_t0cor, y_cor, z_cor)`,
+with a per-cluster T0 offset running to **±121 cm**. Drawing the skeleton over
+the wrong cloud would be worse than having no 3-D at all, so it was measured
+first. Calib dump vs the zip's **own PR layers**, first 12 manifest events:
+
+```
+dump segments[].points[]  ->  track_fit-global : NN median 0.00043 cm (max 0.00085)
+dump main_vertex          ->  vertices-global  : 0.00007 .. 0.00059 cm
+```
+
+The same numbers, to JSON rounding. The dump is in the PR-layer frame, and pr/13
+pins the PR layers to `clustering-global` (NN median 0.0010 cm). Hence:
+**`clustering-global` is the base layer; `img-global` is offered only behind a
+red warning naming what it is.**
+
+Worth recording *why* the obvious check was not the one that decided it. Fit
+points sit ~0.34 cm from **both** clouds — which reads as "no offset" but is just
+the point spacing, and is that small for both only because fit points live on the
+in-beam cluster, whose T0 shift is ~0. A near-miss like that is exactly how a
+misaligned overlay ships. The `track_fit-global` comparison is the one with
+discriminating power, and `selftest_em_display.py` pins it on three events so it
+cannot rot.
+
+### 11.5 The cloud, and what it costs
+
+`bee/em114/*.zip` (built in round 2) already hold what Bee draws, so the panel
+and the Bee link beside it show the same reconstruction. Over the 94:
+**median 33 868 points, p90 56 255, max 81 814** (ncpi0 evt256587).
+
+- Decimation walks a **fractional index**, not a `[::k]` stride: deterministic,
+  proportional per cluster, and it hits the budget exactly. A stride cannot —
+  at 25 586 points with a 25 000 budget it takes k=2 and throws away half the
+  event to save 586 points.
+- Numeric columns go over the wire as **float32 numpy arrays**, which Bokeh
+  serialises as binary buffers rather than JSON numbers. The initial document
+  went from **3.68 MB to 1.37 MB** (0.42 MB JSON + 0.95 MB buffers), 2.7×
+  smaller and far faster to parse — and this display is always used through an
+  ssh tunnel, so that is felt.
+- Event load, all 94: **mean 0.22 s, worst 0.28 s**. Server-side projection of
+  the largest cloud (81 814 points): **14.6 ms**.
+- The zips are gitignored, so a fresh clone gets the display but not the cloud.
+  The panel then draws the skeleton and says so in a banner — the same pattern
+  as the optional probe sidecar.
+
+### 11.6 Two browser-only bugs, caught by reading bokehjs
+
+Neither would have produced a single server-side error. Both were found by
+reading the shipped `bokeh.js` rather than by testing, because there is nothing
+here to test them with.
+
+**(a) `toolbar.active_drag` is the configuration, not the live state.** The first
+version guarded rotation with `if (p.toolbar.active_drag != null) return;`. But
+`Toolbar._active_change` writes the live gesture to **`this.gestures[et].active`**
+and never touches `active_drag`, which stays at whatever it was configured to
+(here `None`). The guard would have been permanently false and rotation would
+have fought box-select on every drag. The correct read is
+`toolbar.gestures.pan.active` — exactly what `UIEventBus.__trigger` itself
+consults. `BoxSelect`, `BoxZoom`, `Lasso` and `Pan` all declare `event_type`
+`"pan"`, so the one check covers every drag tool.
+
+**(b) A dict in `CustomJS.args` — a trap that turned out narrower than feared,
+and the correction is the point.** Bokeh serialises a Python dict as
+`{"type":"map", entries:[...]}`, which looked like it would arrive as a JS `Map`
+and make `cfg[i].alpha` undefined. Reading `_decode_map` in `bokeh.js` shows it
+returns a **plain object whenever every key is a string**, and a real `Map` only
+when one is not. So string-keyed config dicts were always fine. The code now
+passes three parallel arrays anyway — not to dodge a bug that does not exist, but
+because it lets one table (`_PT_CFG`) be the single source of truth that both the
+Python fill and the JS frames read. The selftest guards the trap **as it actually
+is**: no *non-string-keyed* dict in `args`.
+
+### 11.7 What is verified, and what is not
+
+`selftest_em_display.py` grew from 30 to **66** checks. The new ones:
+
+- `camera_basis` orthonormal over an (az, el) grid, and `u² + v² + d² = |p − c|²`
+  exactly; `u² + v² ≤ R²` for every camera over a 168-camera sweep.
+- Presets `x-z` and `z-y` reproduce the 2-D panels exactly (`right`/`up` to 1e-9).
+- The §11.4 frame assertion on three named events.
+- Cloud loader: exact budget, equal-length columns, every cluster surviving
+  decimation, and a missing zip returning `None` rather than raising.
+- The layer contract: `set(RENDER) == set(LAYER_KEYS)`, every 3-D renderer
+  layer-controlled except the pick surface, and the cloud checkbox hiding *both*
+  colour modes (they share a CDS).
+- Column-length invariant on all 94 events.
+- A 3-D box over many points resolving to a handful of **segments**, marking
+  working off it, tap-in-fill-mode landing on a real fitted point, and a stale
+  selection being cleared on event switch (replacing `.data` does not clear
+  `.selected`, and a stale index would make the next "mark IN" hit the previous
+  event's segment).
+- The JS lint: every free name supplied through `args`, brackets balanced, the
+  live-gesture guard present and `active_drag` absent, no divergent copy of the
+  projection, no non-string-keyed dict in `args` — **plus a test of the linter
+  itself**, since a linter that never fires proves nothing (its first version
+  reported 150 false positives because it only took the first declarator of
+  `const rx = …, ry = …, rz = …`).
+
+**Not verified, and stated plainly: the browser-side code is not machine-tested.**
+There is no JS engine and no node in this tree (`node`, `deno`, `esprima`,
+`js2py`, `dukpy`, `quickjs` all absent). What is proven is that the app builds
+and serves — `bokeh serve` on 5022 returns HTTP 200 with an empty error log, and
+the whole document serialises. Rotation, zoom, picking and the box-select gesture
+are covered by this check-list, to be run once on first use:
+
+| on | check |
+|---|---|
+| any event | drag rotates; the event stays framed all the way round |
+| any event | wheel zooms and the **page** does not scroll |
+| any event | shift+drag pans; `refit` restores the framing |
+| any event | `x-z` preset matches the 2-D X-Z panel |
+| ncpi0 **evt256587** (82 k cloud) | drag is still smooth at `max points` 100 000; if not, lower the default — do not cap silently |
+| ncpi0 **evt84229** | tap a segment, mark it OUT, and see it in the impact line |
+| ncpi0 **evt84229** | Box Select marks whole segments and **rotation is suspended** while it is on |
+| ncpi0 **evt21073** | tap-fills-x/y/z lands on a fitted point; `snap` then agrees |
+| ncpi0 **evt463565** | the 0-of-5 shower still banners; layer checkboxes drive 3-D and 2-D together |
+| any event | the camera survives a shower-table click (it must not reset) |
+
+### 11.8 Noticed, not touched
+
+A stray untracked file named `angle` at the root of `wcp-porting-img`, almost
+certainly a mis-redirect. Reported rather than deleted (CLAUDE.md §5).

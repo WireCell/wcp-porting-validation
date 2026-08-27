@@ -29,18 +29,24 @@ import math
 import os
 import sys
 
+import numpy
+
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, Spacer
 from bokeh.models import (Button, CheckboxButtonGroup, ColumnDataSource, Div,
                           HoverTool, Select, TextInput, Toggle, RadioButtonGroup,
                           DataTable, TableColumn, CDSView, AllIndices, Range1d,
-                          TapTool, Span, NumberFormatter)
-from bokeh.events import Tap
-from bokeh.palettes import Category20_20
+                          TapTool, Span, NumberFormatter, CustomJS, Tabs,
+                          TabPanel, BoxSelectTool, WheelZoomTool, ResetTool,
+                          SaveTool)
+from bokeh.events import Tap, Pan, PanStart, PanEnd
+from bokeh.palettes import Category20_20, Viridis256
 from bokeh.plotting import figure
+from bokeh.transform import linear_cmap
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import em_geom as G  # noqa: E402
+import em3d as D3  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SX = os.path.dirname(HERE)
@@ -128,6 +134,9 @@ state = dict(label=None, data=None, prep=None,
              gstart={1: None, 2: None},  # slot -> (x,y,z) override or None
              vtx_mode="main", vtx_manual=None,
              dirty=False, saved=None,
+             cam=(math.radians(D3.PRESETS["iso"][0]),
+                  math.radians(D3.PRESETS["iso"][1])),
+             cam_c=(0.0, 0.0, 0.0), cam_R=100.0, cloud=None,
              _suspend=False, _guard=False)
 
 
@@ -221,6 +230,195 @@ for f, hx, hy in PROJ:
     _add("gamma", f.scatter(hx, hy, source=piovtx_src, marker="star", size=24,
                             fill_color="#e377c2", line_color="#7b3294", alpha=0.95))
 
+# ---------------------------------------------------------------------------
+# The 3-D panel (doc pr/114 round 3)
+# ---------------------------------------------------------------------------
+# Rotatable like Bee, but inside Bokeh so every label control keeps working off
+# it.  The mechanics, the frame constraint and the honest limits are all in
+# em3d.py's docstring; this block is only the wiring.
+#
+# Sources come in three shapes, matching em3d.JS_REDRAW's three loops:
+#   POINT  x, y, z  ->  u, v, al, sz
+#   LINE   xs3, ys3, zs3  ->  xs, ys
+#   HEAD   x, y, z + x0, y0, z0  ->  u, v, angle
+# Python fills the projected columns too, so the first paint of an event is
+# correct before any drag has happened; the JS then owns every later frame.
+EMPTY3D = dict(x=[], y=[], z=[], c=[], tag=[], u=[], v=[], al=[], sz=[])
+EMPTY3L = dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[])
+
+cam_src = ColumnDataSource(data=dict(
+    az=[state["cam"][0]], el=[state["cam"][1]], cx=[0.0], cy=[0.0], cz=[0.0],
+    R=[100.0], az0=[0.0], el0=[0.0], xs0=[0.0], xe0=[0.0], ys0=[0.0], ye0=[0.0]))
+
+cloud_src = ColumnDataSource(data=dict(x=[], y=[], z=[], q=[], cid20=[],
+                                       u=[], v=[], al=[], sz=[]))
+shwpt3_src = ColumnDataSource(data=dict(EMPTY3D))
+vtx3_src = ColumnDataSource(data=dict(EMPTY3D))
+mainvtx3_src = ColumnDataSource(data=dict(EMPTY3D))
+gstart3_src = ColumnDataSource(data=dict(EMPTY3D))
+piovtx3_src = ColumnDataSource(data=dict(EMPTY3D))
+# Every fitted point of every segment, carrying its segment id.  This is the
+# pick surface: Bokeh's own TapTool and BoxSelectTool hit-test it in screen space
+# on the PROJECTED columns, so 3-D selection needs no JS at all -- and because a
+# hit resolves to a segment id, a box in a rotated view marks whole segments, not
+# a prism of loose points.
+pick_src = ColumnDataSource(data=dict(x=[], y=[], z=[], sid=[], u=[], v=[],
+                                      al=[], sz=[]))
+det3_src = ColumnDataSource(data=dict(EMPTY3L))
+seg3_src = ColumnDataSource(data=dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[], c=[],
+                                      sid=[], pid=[], cid=[], owner=[], mark=[]))
+mem3_src = ColumnDataSource(data=dict(EMPTY3L))
+in3_src = ColumnDataSource(data=dict(EMPTY3L))
+out3_src = ColumnDataSource(data=dict(EMPTY3L))
+arrow3_src = ColumnDataSource(data=dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[], c=[]))
+head3_src = ColumnDataSource(data=dict(x=[], y=[], z=[], x0=[], y0=[], z0=[],
+                                       u=[], v=[], angle=[], c=[]))
+
+_wheel3 = WheelZoomTool(dimensions="both")
+_tap3 = TapTool()
+_box3 = BoxSelectTool()
+f3d = figure(title="3-D  —  drag rotates, shift+drag pans, wheel zooms",
+             width=660, height=660,
+             x_range=Range1d(-100, 100), y_range=Range1d(-100, 100),
+             tools=[_wheel3, _tap3, _box3, ResetTool(), SaveTool()],
+             output_backend="webgl")
+# Square figure + equal spans is what makes the view isotropic; do not let these
+# two drift apart or a sphere stops looking like a circle.
+f3d.toolbar.active_scroll = _wheel3
+f3d.toolbar.active_tap = _tap3
+# Explicitly None, NOT the "auto" default -- auto would make Box Select the
+# active drag tool and a bare drag would box-select instead of rotating.  With
+# it None, picking Box Select in the toolbar is exactly what suspends rotation.
+f3d.toolbar.active_drag = None
+f3d.xaxis.visible = False
+f3d.yaxis.visible = False
+f3d.xgrid.visible = False
+f3d.ygrid.visible = False
+
+_add("det", f3d.multi_line(xs="xs", ys="ys", source=det3_src,
+                           line_color="#cc4444", line_width=1, alpha=0.45))
+# Two renderers over one CDS: the colour mode is a visibility flip, so switching
+# it never re-sends 25 000 points.
+r_cloud_c = f3d.scatter("u", "v", source=cloud_src, size="sz", fill_alpha="al",
+                        line_color=None,
+                        fill_color=linear_cmap("cid20", Category20_20, 0, 19))
+r_cloud_q = f3d.scatter("u", "v", source=cloud_src, size="sz", fill_alpha="al",
+                        line_color=None,
+                        fill_color=linear_cmap("q", Viridis256, 0.0, 40000.0))
+r_cloud_q.visible = False
+_add("cloud", r_cloud_c)
+_add("cloud", r_cloud_q)
+_add("shwpt", f3d.scatter("u", "v", source=shwpt3_src, size="sz",
+                          color="#8fbf8f", fill_alpha="al", line_alpha="al"))
+# Every 3-D point layer draws its size and alpha FROM THE COLUMNS, cued or not,
+# so _PT_SIZE / _PT_ALPHA below are the single source of truth for both the
+# Python fill and the JS frames.  A glyph with its own hardcoded size would drift
+# from the JS the first time one of them was edited.
+_add("member", f3d.multi_line(xs="xs", ys="ys", source=mem3_src,
+                              line_color="#ffd27f", line_width=9, alpha=0.55))
+_add("mark", f3d.multi_line(xs="xs", ys="ys", source=in3_src,
+                            line_color="#2ca02c", line_width=13, alpha=0.45))
+_add("mark", f3d.multi_line(xs="xs", ys="ys", source=out3_src,
+                            line_color="#d62728", line_width=13, alpha=0.40))
+r_seg3 = f3d.multi_line(xs="xs", ys="ys", source=seg3_src, line_color="c",
+                        line_width=2, alpha=0.95)
+_add("segments", r_seg3)
+f3d.add_tools(HoverTool(renderers=[r_seg3], tooltips=[
+    ("segment", "@sid"), ("cluster", "@cid"), ("pdg", "@pid"),
+    ("in shower", "@owner"), ("mark", "@mark")]))
+_add("arrows", f3d.multi_line(xs="xs", ys="ys", source=arrow3_src,
+                              line_color="c", line_width=3, alpha=0.9))
+_add("arrows", f3d.scatter("u", "v", source=head3_src, marker="triangle",
+                           size=11, angle="angle", fill_color="c",
+                           line_color="c", alpha=0.9))
+r_vtx3 = f3d.scatter("u", "v", source=vtx3_src, size="sz", color="#7f7f7f",
+                     fill_alpha="al", line_alpha="al")
+_add("vertices", r_vtx3)
+r_mv3 = f3d.scatter("u", "v", source=mainvtx3_src, marker="star", size="sz",
+                    fill_color="#1f77b4", line_color="#08306b", fill_alpha="al",
+                    line_alpha="al")
+_add("vertices", r_mv3)
+_add("gamma", f3d.scatter("u", "v", source=gstart3_src, marker="diamond",
+                          size="sz", fill_color="c", line_color="#222222",
+                          fill_alpha="al", line_alpha="al"))
+_add("gamma", f3d.scatter("u", "v", source=piovtx3_src, marker="star", size="sz",
+                          fill_color="#e377c2", line_color="#7b3294",
+                          fill_alpha="al", line_alpha="al"))
+# The pick surface is invisible (alpha 0) but still hit-tested -- Bokeh hit tests
+# geometry, not paint.  Deliberately NOT registered in RENDER: a layer checkbox
+# that silently disabled selection would be a trap.
+r_pick = f3d.scatter("u", "v", source=pick_src, size="sz", fill_alpha="al",
+                     line_alpha=0.0)
+r_pick.nonselection_glyph = r_pick.glyph
+for _t in (_tap3, _box3):
+    _t.renderers = [r_pick]
+for _r in (r_vtx3, r_mv3, r_cloud_c, r_cloud_q):
+    _r.nonselection_glyph = _r.glyph
+
+# --- the CustomJS, spliced from em3d so there is one copy of the formula ------
+#                     cloud shwpt  pick  vtx  mainvtx gstart piovtx
+_PT_SRC = [cloud_src, shwpt3_src, pick_src, vtx3_src, mainvtx3_src, gstart3_src,
+           piovtx3_src]
+_PT_SIZE = [2.6, 2.0, 7.0, 6.0, 20.0, 18.0, 24.0]
+_PT_ALPHA = [0.55, 0.45, 0.0, 0.75, 0.95, 0.95, 0.95]
+_PT_CUE = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# The ONE table both mirrors read: Python's fill3_points looks a source up here,
+# and the JS gets the same three lists through args.  Nothing else carries a
+# base size or a base alpha for a 3-D point layer.
+_PT_CFG = {s: (sz, al, cue > 0.5)
+           for s, sz, al, cue in zip(_PT_SRC, _PT_SIZE, _PT_ALPHA, _PT_CUE)}
+# Three parallel lists indexed like `pts`, so _PT_CFG above is the only place a
+# base size or alpha is written.  See em3d.JS_REDRAW's point loop for the note on
+# dict-shaped args (they are fine with string keys, and only with string keys).
+_JS_ARGS = dict(cam=cam_src, pts=_PT_SRC, ptsize=_PT_SIZE, ptalpha=_PT_ALPHA,
+                ptcue=_PT_CUE,
+                lines=[det3_src, seg3_src, mem3_src, in3_src, out3_src,
+                       arrow3_src],
+                heads=[head3_src])
+camtxt = TextInput(value="", visible=False)
+_js_common = dict(_JS_ARGS, p=f3d, xr=f3d.x_range, yr=f3d.y_range, camtxt=camtxt)
+# Named rather than inlined so selftest_em_display.py can lint them: with no JS
+# engine in this tree a missing `args` entry would otherwise surface only as a
+# ReferenceError in somebody's browser console, mid-scan.
+js_panstart = CustomJS(args=_js_common, code=D3.JS_PANSTART)
+js_rotate = CustomJS(args=_js_common, code=D3.JS_ROTATE)
+js_panend = CustomJS(args=_js_common, code=D3.JS_PANEND)
+js_apply = CustomJS(args=_JS_ARGS, code=D3.JS_APPLY)
+f3d.js_on_event(PanStart, js_panstart)
+f3d.js_on_event(Pan, js_rotate)
+f3d.js_on_event(PanEnd, js_panend)
+# Any Python-side push of cam_src.data re-runs the SAME projection in the
+# browser, so the server's fill can never be the version left on screen.
+cam_src.js_on_change("data", js_apply)
+
+# --- the 3-D control column --------------------------------------------------
+preset_btns, preset_js = [], []
+for _name in D3.PRESET_ORDER:
+    _az, _el = D3.PRESETS[_name]
+    _b = Button(label=_name, width=70)
+    _cb = CustomJS(
+        args=dict(_JS_ARGS, camtxt=camtxt, az=math.radians(_az),
+                  el=math.radians(_el)),
+        code=("const d = cam.data; d.az[0] = az; d.el[0] = el;\n"
+              + D3.JS_REDRAW
+              + '\ncamtxt.value = az.toFixed(4) + "," + el.toFixed(4);'))
+    _b.js_on_click(_cb)
+    preset_btns.append(_b)
+    preset_js.append(_cb)
+refit_btn = Button(label="refit", width=70)
+cam_div = Div(text="", width=330)
+cloud_layer = Select(title="charge cloud", value=D3.CLOUD_LAYERS[0],
+                     options=D3.CLOUD_LAYERS + ["(none)"], width=170)
+cloud_color = RadioButtonGroup(labels=["by cluster", "by charge"], active=0,
+                               width=180)
+cloud_max = Select(title="max points", value="25000",
+                   options=["10000", "25000", "50000", "100000"], width=110)
+cloud_div = Div(text="", width=330)
+pick_mode = RadioButtonGroup(labels=["tap selects segment", "tap fills x/y/z"],
+                             active=0, width=330)
+fit_mode = RadioButtonGroup(labels=["frame the reco", "frame the cloud"],
+                            active=0, width=330)
+
 # --- the acceptance plot ----------------------------------------------------
 # Deliberately NOT a cone drawn over the projections.  A 3-D cone does not
 # project to a cone, so any wedge drawn on X-Y would be decorative and would
@@ -269,10 +467,11 @@ prev_btn = Button(label="< prev", width=80)
 next_btn = Button(label="next >", width=80)
 LAYERS = [("segments", "track fit"), ("member", "shower members"),
           ("mark", "your marks"), ("arrows", "axes"), ("vertices", "vertices"),
-          ("shwpt", "shower pts"), ("gamma", "gammas / pi0 vtx"), ("det", "volume")]
+          ("shwpt", "shower pts"), ("gamma", "gammas / pi0 vtx"), ("det", "volume"),
+          ("cloud", "charge cloud (3-D)")]
 LAYER_KEYS = [k for k, _ in LAYERS]
 layer_group = CheckboxButtonGroup(labels=[t for _, t in LAYERS],
-                                  active=[0, 1, 2, 3, 4, 6, 7])
+                                  active=[0, 1, 2, 3, 4, 6, 7, 8])
 banner = Div(text="", width=880)
 info = Div(text="", width=880)
 
@@ -490,12 +689,14 @@ def poly_for(sid):
     return []
 
 
-def push_polys(srcmap, seg_ids):
+def push_polys(srcmap, seg_ids, src3=None):
     dat = {k: dict(xs=[], ys=[]) for k in ("xy", "yz", "xz")}
+    polys = []
     for sid in seg_ids:
         pts = poly_for(sid)
         if len(pts) < 2:
             continue
+        polys.append(pts)
         dat["xy"]["xs"].append([p[0] for p in pts])
         dat["xy"]["ys"].append([p[1] for p in pts])
         dat["yz"]["xs"].append([p[2] for p in pts])
@@ -504,6 +705,190 @@ def push_polys(srcmap, seg_ids):
         dat["xz"]["ys"].append([p[2] for p in pts])
     for k in ("xy", "yz", "xz"):
         srcmap[k].data = dat[k]
+    if src3 is not None:
+        fill3_lines(src3, polys)
+
+
+# ---------------------------------------------------------------------------
+# 3-D fills
+# ---------------------------------------------------------------------------
+# Python writes both the 3-D columns and a projection of them, so the first paint
+# of an event is right before any drag.  The JS then owns every later frame --
+# and because any push of cam_src.data re-runs em3d.JS_REDRAW in the browser, the
+# server's fill can never be the version left on screen even if the two mirrors
+# of the formula ever drifted.
+
+
+def _proj(pts):
+    az, el = state["cam"]
+    return D3.project(pts, az, el, state["cam_c"])
+
+
+def fill3_points(src, pts, **extra):
+    """Numeric columns go over the wire as **numpy arrays**, not Python lists.
+
+    Bokeh serialises an ndarray as a binary buffer and a list as JSON numbers, so
+    the charge cloud goes over the wire several times smaller and parses far
+    faster this way -- and it is the one layer big enough for that to be felt on
+    an ssh tunnel, which is how this display is always used.  float32 halves it
+    again: at a 500 cm coordinate that is ~6e-5 cm of rounding, four orders below
+    the ~0.3 cm point spacing.
+    """
+    base_size, base_alpha, cue = _PT_CFG[src]
+    az, el = state["cam"]
+    r, up, fw = D3.camera_basis(az, el)
+    c = state["cam_c"]
+    n = len(pts)
+    xyz = numpy.asarray(pts, dtype="float64").reshape(n, 3) if n else \
+        numpy.zeros((0, 3))
+    px = xyz[:, 0] - c[0]
+    py = xyz[:, 1] - c[1]
+    pz = xyz[:, 2] - c[2]
+    u = px * r[0] + py * r[1] + pz * r[2]
+    v = px * up[0] + py * up[1] + pz * up[2]
+    if cue:
+        R = state["cam_R"] or 1.0
+        t = numpy.clip(0.5 + 0.5 * (px * fw[0] + py * fw[1] + pz * fw[2]) / R,
+                       0.0, 1.0)
+        al = base_alpha * (0.30 + 0.70 * t)
+        sz = base_size * (0.70 + 0.60 * t)
+    else:
+        al = numpy.full(n, float(base_alpha))
+        sz = numpy.full(n, float(base_size))
+    f32 = (lambda a: numpy.asarray(a, dtype="float32"))
+    d = dict(x=f32(xyz[:, 0]), y=f32(xyz[:, 1]), z=f32(xyz[:, 2]),
+             u=f32(u), v=f32(v), al=f32(al), sz=f32(sz))
+    for k, val in extra.items():
+        d[k] = f32(val) if k in ("q", "cid20") else val
+    src.data = d
+
+
+def fill3_lines(src, polys, **extra):
+    az, el = state["cam"]
+    c = state["cam_c"]
+    d = dict(xs3=[], ys3=[], zs3=[], xs=[], ys=[])
+    for pts in polys:
+        d["xs3"].append([p[0] for p in pts])
+        d["ys3"].append([p[1] for p in pts])
+        d["zs3"].append([p[2] for p in pts])
+        uv = D3.project(pts, az, el, c)
+        d["xs"].append([q[0] for q in uv])
+        d["ys"].append([q[1] for q in uv])
+    d.update(extra)
+    src.data = d
+
+
+def fill3_heads(src, tips, tails, cols):
+    """Arrow heads.  The head angle is the PROJECTED direction, so it has no
+    3-D analogue and has to be recomputed on every camera change -- which is why
+    the tail travels alongside the tip in the CDS."""
+    az, el = state["cam"]
+    c = state["cam_c"]
+    ut = _proj(tips) if tips else []
+    u0 = _proj(tails) if tails else []
+    ang = []
+    for a, b in zip(ut, u0):
+        ang.append(math.atan2(a[1] - b[1], a[0] - b[0]) - math.pi / 2.0)
+    src.data = dict(
+        x=[p[0] for p in tips], y=[p[1] for p in tips], z=[p[2] for p in tips],
+        x0=[p[0] for p in tails], y0=[p[1] for p in tails],
+        z0=[p[2] for p in tails],
+        u=[p[0] for p in ut], v=[p[1] for p in ut], angle=ang, c=list(cols))
+
+
+def reco_points():
+    """Everything the RECONSTRUCTION put in the event -- fit points, vertices,
+    shower points.  This, not the charge cloud, is what frames the view by
+    default: a cosmic-laden cloud spans the whole TPC and would shrink the
+    neutrino to a speck."""
+    pts = [(p[0], p[1], p[2]) for s in cur_segments() for p in G.seg_points(s)]
+    d = state["data"] or {}
+    for v in (d.get("vertices") or []):
+        fp = v.get("fit") or {}
+        if fp.get("x") is not None:
+            pts.append((fp["x"], fp["y"], fp["z"]))
+    ts = d.get("track_shower") or {}
+    for i, fl in enumerate(ts.get("flag_shower") or []):
+        if fl:
+            pts.append((ts["x"][i], ts["y"][i], ts["z"][i]))
+    return pts
+
+
+def refit_camera(push=True):
+    src = reco_points()
+    if fit_mode.active == 1 and state.get("cloud"):
+        cl = state["cloud"]
+        src = list(zip(cl["x"], cl["y"], cl["z"])) or src
+    c, R = D3.bounding_sphere(src)
+    state["cam_c"], state["cam_R"] = c, R
+    f3d.x_range.start, f3d.x_range.end = -R, R
+    f3d.y_range.start, f3d.y_range.end = -R, R
+    if push:
+        push_camera()
+
+
+def push_camera():
+    """Assigning cam_src.data is the one signal the browser needs: it syncs the
+    camera AND fires em3d.JS_APPLY, which reprojects every registered source."""
+    az, el = state["cam"]
+    c, R = state["cam_c"], state["cam_R"]
+    cam_src.data = dict(az=[az], el=[el], cx=[c[0]], cy=[c[1]], cz=[c[2]],
+                        R=[R], az0=[az], el0=[el],
+                        xs0=[f3d.x_range.start], xe0=[f3d.x_range.end],
+                        ys0=[f3d.y_range.start], ye0=[f3d.y_range.end])
+    cam_div.text = ("<span style='font-size:85%%;color:#555'>camera az %.0f&deg; "
+                    "el %.0f&deg; &nbsp; centre (%.0f, %.0f, %.0f) &nbsp; "
+                    "R %.0f cm</span>"
+                    % (math.degrees(az), math.degrees(el), c[0], c[1], c[2], R))
+
+
+def draw_cloud():
+    """The Bee charge cloud, from the local zip.  Absent zip => skeleton only,
+    said out loud rather than left as an empty panel."""
+    evt = (state["label"] or "")[3:]
+    row = MANIFEST.get(evt, {})
+    if cloud_layer.value == "(none)":
+        state["cloud"] = None
+        cloud_src.data = dict(x=[], y=[], z=[], q=[], cid20=[], u=[], v=[],
+                              al=[], sz=[])
+        cloud_div.text = ("<span style='font-size:85%;color:#555'>charge cloud "
+                          "off</span>")
+        return
+    cl = D3.load_bee_cloud(SX, row, evt, layer=cloud_layer.value,
+                           max_pts=int(cloud_max.value))
+    state["cloud"] = cl
+    if not cl:
+        cloud_src.data = dict(x=[], y=[], z=[], q=[], cid20=[], u=[], v=[],
+                              al=[], sz=[])
+        zp = D3.bee_zip_path(SX, row)
+        cloud_div.text = (
+            "<span style='color:#b58900;font-size:85%%'>no charge cloud for this "
+            "event &mdash; <code>%s</code> is not on disk. The zips are "
+            "gitignored; rebuild with <code>prep_em_scan.py --bee-build "
+            "bee/em114</code>. The skeleton below is unaffected.</span>"
+            % html.escape(os.path.relpath(zp, SX) if zp else "bee/&lt;round&gt;.zip"))
+        return
+    fill3_points(cloud_src, list(zip(cl["x"], cl["y"], cl["z"])),
+                 q=cl["q"], cid20=cl["cid20"])
+    warn = ""
+    if cl["layer"] == "img-global":
+        warn = ("<br><span style='color:#c00'><b>raw frame.</b> img-global is "
+                "dumped pre-pipeline, before the T0/pos corrections the "
+                "reconstruction works in (doc pr/13). It can sit up to ~121 cm "
+                "off the skeleton drawn over it, per cluster.</span>")
+    cloud_div.text = (
+        "<span style='font-size:85%%;color:#555'><code>%s</code> &mdash; showing "
+        "<b>%s</b> of %s points%s</span>%s"
+        % (html.escape(cl["layer"]), "{:,}".format(cl["kept"]),
+           "{:,}".format(cl["total"]),
+           " (every %d)" % max(1, cl["total"] // max(1, cl["kept"])) if
+           cl["kept"] < cl["total"] else "", warn))
+
+
+def sync_cloud_vis():
+    on = "cloud" in {LAYER_KEYS[i] for i in layer_group.active}
+    r_cloud_c.visible = on and cloud_color.active == 0
+    r_cloud_q.visible = on and cloud_color.active == 1
 
 
 def flip(view, a, b):
@@ -523,6 +908,7 @@ def draw_arrows():
     one per assigned gamma in pi0 mode."""
     dat = {k: dict(xs=[], ys=[], c=[]) for k in ("xy", "yz", "xz")}
     hdat = {k: dict(x=[], y=[], angle=[], c=[]) for k in ("xy", "yz", "xz")}
+    shafts, tips, tails, cols = [], [], [], []
     todo = []
     if mode_group.active == 0:
         if state["sel_shower"] is not None:
@@ -538,6 +924,10 @@ def draw_arrows():
             continue
         L = 25.0
         p1 = G.vadd(p0, G.vscale(d, L))
+        shafts.append([tuple(p0), tuple(p1)])
+        tips.append(tuple(p1))
+        tails.append(tuple(p0))
+        cols.append(col)
         for k, (a, b) in (("xy", (0, 1)), ("yz", (2, 1)), ("xz", (0, 2))):
             x0, y0, x1, y1 = p0[a], p0[b], p1[a], p1[b]
             if abs(x1 - x0) < 1e-6 and abs(y1 - y0) < 1e-6:
@@ -553,6 +943,10 @@ def draw_arrows():
     for k in ("xy", "yz", "xz"):
         arrow_src[k].data = dat[k]
         head_src[k].data = hdat[k]
+    # The 3-D arrow keeps every axis the projections had to drop: a shaft that is
+    # degenerate in one projection is skipped there but is still drawn here.
+    fill3_lines(arrow3_src, shafts, c=list(cols))
+    fill3_heads(head3_src, tips, tails, cols)
 
 
 def draw_gammas():
@@ -567,12 +961,16 @@ def draw_gammas():
         gx.append(p[0]); gy.append(p[1]); gz.append(p[2])
         gc.append(col); gt.append("gamma %d start" % slot)
     gstart_src.data = dict(x=gx, y=gy, z=gz, c=gc, tag=gt)
+    fill3_points(gstart3_src, list(zip(gx, gy, gz)), c=list(gc), tag=list(gt))
     v = pio_vertex()[0] if mode_group.active == 1 else None
     if v is None:
         piovtx_src.data = dict(EMPTY3)
+        fill3_points(piovtx3_src, [], c=[], tag=[])
     else:
         piovtx_src.data = dict(x=[v[0]], y=[v[1]], z=[v[2]], c=["#e377c2"],
                                tag=["pi0 vertex"])
+        fill3_points(piovtx3_src, [(v[0], v[1], v[2])],
+                     c=["#e377c2"], tag=["pi0 vertex"])
 
 
 def draw_tiers():
@@ -595,8 +993,8 @@ def draw_tiers():
 def refresh_marks():
     ins = [s for s, m in state["marks"].items() if m == "in"]
     outs = [s for s, m in state["marks"].items() if m == "out"]
-    push_polys(in_src, ins)
-    push_polys(out_src, outs)
+    push_polys(in_src, ins, in3_src)
+    push_polys(out_src, outs, out3_src)
 
 
 def refresh_impact():
@@ -895,10 +1293,23 @@ def load(lbl):
         xs_xy=[[xl, xh, xh, xl, xl], [0, 0]], ys_xy=[[yl, yl, yh, yh, yl], [yl, yh]],
         xs_yz=[[zl, zh, zh, zl, zl], []], ys_yz=[[yl, yl, yh, yh, yl], []],
         xs_xz=[[xl, xh, xh, xl, xl], [0, 0]], ys_xz=[[zl, zl, zh, zh, zl], [zl, zh]])
+    # In 3-D the volume is 12 edges and the cathode is a PLANE, not a line -- the
+    # x=0 line the projections draw is that plane seen edge-on.
+    box = []
+    for a, b in ((yl, zl), (yh, zl), (yh, zh), (yl, zh)):
+        box.append([(xl, a, b), (xh, a, b)])
+    for x0 in (xl, xh):
+        box.append([(x0, yl, zl), (x0, yh, zl), (x0, yh, zh), (x0, yl, zh),
+                    (x0, yl, zl)])
+    box.append([(0.0, yl, zl), (0.0, yh, zl), (0.0, yh, zh), (0.0, yl, zh),
+                (0.0, yl, zl)])
+    fill3_lines(det3_src, box)
 
     segs = d.get("segments") or []
     dat = {k: dict(xs=[], ys=[], c=[], sid=[], pid=[], cid=[], owner=[], mark=[])
            for k in ("xy", "yz", "xz")}
+    d3 = dict(polys=[], c=[], sid=[], pid=[], cid=[], owner=[], mark=[])
+    pick = dict(pts=[], sid=[])
     owner_of = {}
     for sh in (d.get("showers") or []):
         for s in members_of(sh.get("id")):
@@ -917,8 +1328,19 @@ def load(lbl):
             dat[k]["cid"].append(s.get("cluster_id"))
             dat[k]["owner"].append(owner_of.get(s.get("id"), "-"))
             dat[k]["mark"].append("")
+        d3["polys"].append([tuple(p) for p in pts])
+        d3["c"].append(c)
+        d3["sid"].append(s.get("id"))
+        d3["pid"].append(s.get("particle_id"))
+        d3["cid"].append(s.get("cluster_id"))
+        d3["owner"].append(owner_of.get(s.get("id"), "-"))
+        d3["mark"].append("")
+        for p in pts:
+            pick["pts"].append(tuple(p))
+            pick["sid"].append(s.get("id"))
     for k in ("xy", "yz", "xz"):
         seg_src[k].data = dat[k]
+    fill3_lines(seg3_src, d3.pop("polys"), **d3)
 
     ts = d.get("track_shower") or {}
     sx, sy, sz = [], [], []
@@ -940,6 +1362,25 @@ def load(lbl):
     mainvtx_src.data = (dict(x=[mv[0]], y=[mv[1]], z=[mv[2]], c=["#1f77b4"],
                              tag=["main vertex"]) if mv else dict(EMPTY3))
 
+    # 3-D siblings of the point layers, then the cloud, then the framing.  Order
+    # matters: refit_camera may frame the cloud, so the cloud has to exist first.
+    draw_cloud()
+    refit_camera(push=False)
+    fill3_points(shwpt3_src, list(zip(sx, sy, sz)),
+                 c=["#8fbf8f"] * len(sx), tag=[""] * len(sx))
+    fill3_points(vtx3_src, list(zip(vx, vy, vz)),
+                 c=["#7f7f7f"] * len(vx), tag=list(vt))
+    fill3_points(mainvtx3_src, [tuple(mv)] if mv else [],
+                 c=["#1f77b4"] if mv else [], tag=["main vertex"] if mv else [])
+    fill3_points(pick_src, pick["pts"], sid=pick["sid"])
+    # Replacing .data does not clear .selected, and a stale index list would make
+    # the next "mark IN" apply to a segment of the PREVIOUS event.
+    pick_src.selected.indices = []
+    if state.get("cloud"):
+        cl = state["cloud"]
+        fill3_points(cloud_src, list(zip(cl["x"], cl["y"], cl["z"])),
+                     q=cl["q"], cid20=cl["cid20"])
+
     nloss = fill_shower_table()
     fill_cand_table()
     draw_tiers()
@@ -951,6 +1392,8 @@ def load(lbl):
     load_label(lbl)
     set_banner(nloss)
     refresh_info()
+    sync_cloud_vis()
+    push_camera()
 
 
 def set_banner(nloss):
@@ -1136,6 +1579,15 @@ def on_save():
         confidence=CONF[conf_group.active] if conf_group.active is not None else None,
         note=note_in.value or None,
         main_vertex=d.get("main_vertex"),
+        # The view the judgement was made from, so a later re-read can put the
+        # event back on screen the way it was seen.
+        camera=dict(az_deg=round(math.degrees(state["cam"][0]), 2),
+                    el_deg=round(math.degrees(state["cam"][1]), 2),
+                    centre=[round(v, 2) for v in state["cam_c"]],
+                    R=round(state["cam_R"], 2),
+                    cloud=(state["cloud"] or {}).get("layer"),
+                    cloud_kept=(state["cloud"] or {}).get("kept"),
+                    cloud_total=(state["cloud"] or {}).get("total")),
         em=em_block, pio=pio_block)
 
     # Upsert: merge onto whatever is already on disk for this event so scanning
@@ -1206,8 +1658,9 @@ def on_shower_select(attr, old, new):
     fill_cand_table()
     draw_tiers()
     draw_arrows()
-    push_polys(mem_src, members_of(node))
+    push_polys(mem_src, members_of(node), mem3_src)
     refresh_impact()
+    push_camera()
 
 
 def selected_cand_ids():
@@ -1222,6 +1675,18 @@ def selected_cand_ids():
             out.append(cand_pt_src.data["sid"][i])
         except (KeyError, IndexError):
             pass
+    # A 3-D tap or box lands on fitted POINTS, but the labelling unit is the
+    # segment, so it resolves to segment ids -- which is what makes a box in a
+    # rotated view unambiguous where a lasso over a flat projection is not.
+    seen = set(out)
+    for i in (pick_src.selected.indices or []):
+        try:
+            sid = pick_src.data["sid"][i]
+        except (KeyError, IndexError):
+            continue
+        if sid not in seen:
+            seen.add(sid)
+            out.append(sid)
     return out
 
 
@@ -1357,6 +1822,67 @@ def apply_layers(attr, old, new):
     for k, rs in RENDER.items():
         for r in rs:
             r.visible = k in on
+    # The two cloud renderers share a CDS and a layer key but only one is ever
+    # the live colour mode, so the checkbox alone must not turn both on.
+    sync_cloud_vis()
+
+
+def on_pick(attr, old, new):
+    """A tap or box on the 3-D pick surface.
+
+    Two jobs on one gesture, chosen by pick_mode, because a rotatable canvas gives
+    a ray and not a point: "select segment" is the labelling path (marks then work
+    off it exactly as from the tables), "fill x/y/z" resolves the ray by snapping
+    to a real fitted point -- which is the same trick the two-panel tap needed the
+    snap button for, done in one click."""
+    if state["_suspend"] or not new:
+        return
+    if pick_mode.active == 1:
+        i = new[0]
+        try:
+            x, y, z = (pick_src.data["x"][i], pick_src.data["y"][i],
+                       pick_src.data["z"][i])
+        except (KeyError, IndexError):
+            return
+        state["_suspend"] = True
+        try:
+            man_x.value = "%.1f" % x
+            man_y.value = "%.1f" % y
+            man_z.value = "%.1f" % z
+        finally:
+            state["_suspend"] = False
+        on_manual(None, None, None)
+        save_note.text = ("picked fitted point (%.1f, %.1f, %.1f) on segment %s"
+                          % (x, y, z, pick_src.data["sid"][i]))
+        return
+    ids = sorted({pick_src.data["sid"][i] for i in new
+                  if i < len(pick_src.data.get("sid", []))})
+    save_note.text = ("3-D selection: %d segment(s) &mdash; %s. Now press mark "
+                      "IN / OUT / ?." % (len(ids), ", ".join(str(s) for s in ids[:8])
+                                         + (" ..." if len(ids) > 8 else "")))
+
+
+def on_camtxt(attr, old, new):
+    """The browser reports the camera once per gesture (on panend), never per
+    frame.  Python only needs it to put in the saved record and the readout."""
+    try:
+        az, el = (float(v) for v in new.split(","))
+    except (ValueError, AttributeError):
+        return
+    state["cam"] = (az, el)
+    c, R = state["cam_c"], state["cam_R"]
+    cam_div.text = ("<span style='font-size:85%%;color:#555'>camera az %.0f&deg; "
+                    "el %.0f&deg; &nbsp; centre (%.0f, %.0f, %.0f) &nbsp; "
+                    "R %.0f cm</span>"
+                    % (math.degrees(az), math.degrees(el), c[0], c[1], c[2], R))
+
+
+def on_cloud_opt(attr, old, new):
+    draw_cloud()
+    sync_cloud_vis()
+    if fit_mode.active == 1:
+        refit_camera(push=False)
+    push_camera()
 
 
 def on_verdict(attr, old, new):
@@ -1389,6 +1915,13 @@ conf_group.on_change("active", on_verdict)
 save_btn.on_click(on_save)
 for _f, _hx, _hy in PROJ:
     _f.on_event(Tap, tap_fill(_hx, _hy))
+pick_src.selected.on_change("indices", on_pick)
+camtxt.on_change("value", on_camtxt)
+cloud_layer.on_change("value", on_cloud_opt)
+cloud_max.on_change("value", on_cloud_opt)
+cloud_color.on_change("active", lambda a, o, n: sync_cloud_vis())
+fit_mode.on_change("active", lambda a, o, n: refit_camera())
+refit_btn.on_click(lambda: refit_camera())
 
 
 # ---------------------------------------------------------------------------
@@ -1415,11 +1948,27 @@ pio_panel = column(
     kine_div,
     Div(text="<b>verdict for this pi0</b>", width=880), pio_verdict)
 
+view_tabs = Tabs(tabs=[
+    TabPanel(child=row(f3d, column(
+        Div(text="<b>3-D view</b> &mdash; <b>drag</b> rotates, "
+                 "<b>shift+drag</b> pans, <b>wheel</b> zooms. Picking "
+                 "<i>Box Select</i> in the toolbar suspends rotation while it is "
+                 "on. Depth is shown by fading, not by perspective.", width=330),
+        row(*preset_btns), row(refit_btn, fit_mode),
+        cam_div,
+        Div(text="<hr style='margin:6px 0'>", width=330),
+        cloud_layer, cloud_color, cloud_max, cloud_div,
+        Div(text="<hr style='margin:6px 0'>", width=330),
+        Div(text="<b>tap / box in 3-D</b>", width=330), pick_mode)),
+             title="3-D"),
+    TabPanel(child=row(f_xy, f_yz, f_xz), title="2-D projections"),
+], active=0)
+
 layout = column(
     header,
     banner,
     row(event_select, prev_btn, next_btn, Spacer(width=20), mode_group),
-    row(f_xy, f_yz, f_xz),
+    view_tabs,
     row(column(acc, acc_note), Spacer(width=20), column(layer_group, info)),
     shower_tab,
     em_panel,
