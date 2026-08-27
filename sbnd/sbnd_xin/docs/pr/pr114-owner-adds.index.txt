@@ -32,6 +32,7 @@ ncpi0	18259	1	37112	ncpi0	no pi0???
 ncpi0	18255	1	142421	ncpi0	a major shower not tagged  (x, y, z) = (111.7, -74.4, 216.5) as shower …
 nuecc48	18255	1	90055	nuecc	shower stem got ided as proton
 nuecc48	18306	1	256587	nuecc	track arm got ided as electron
+nuecc48	18255	1	269774	nuecc	multiple pi0
 # ---------------------------------------------------------------------------
 # NEW to the scan -- reconstructed in work-mcp1k-prod0825 but never in the
 # pr/113 lists, so the display had no row for them.  Probe sidecars for these
@@ -43,17 +44,32 @@ mcp1k	18259	1	174752	owner	Why not a single electron??? Instead of e-g-e?
 mcp1k	18255	1	347129	owner	Two EM showers, 4 gammas inside the electron
 mcp1k	18255	1	394532	owner	One big EM shower???
 # ---------------------------------------------------------------------------
-# ASKED FOR BUT NOT REACHABLE.  Left in as a real row on purpose: prep_em_scan.py
-# names every event whose dump is missing, so this stays visible at every
-# regeneration and turns into a scannable row by itself the day the event is
-# reconstructed.  It is NOT in the display today.
+# RESOLVED AS A TYPO -- 259774 was 269774.  Left in as a real row on purpose: prep_em_scan.py
+# The row is COMMENTED OUT, not deleted: it contributed no manifest row, so
+# demoting it changes nothing in the .tsv, and leaving it live would make
+# prep_em_scan.py report a phantom missing event at every regeneration forever.
+# The reasoning below is kept because it is what identified the typo.
 #
-# 18255-259774 has no calib dump in any arm, no nusel row in any arm, and no Bee
+# The owner asked "is there a similar event number? I must have a typo".  There
+# is exactly one, and it is unambiguous.  Over all 3089 distinct (run, event)
+# pairs reconstructed anywhere in this tree, 269774 is the ONLY string within one
+# edit or one transposition of 259774.  It corroborates three ways:
+#   - same run the owner wrote (18255), sample nuecc48;
+#   - n_pio_groups=2, n_pio_showers=4 -- literally "multiple pi0", and only 7 of
+#     the 98 scan events have >= 2 pi0 groups at all;
+#   - the event named beside it in the same message, 389538, is also nuecc48
+#     run 18255, and in that index 269774 sits between 268784 and 271851 --
+#     consistent with reading down the list and slipping one digit.
+# 269774 was ALREADY in the display; it just had no note.  It is added above as a
+# note-only row, so the fix is one scan_note cell and nothing else.
+#
+# For the record, 18255-259774 as literally written has no calib dump in any arm, no nusel row in any arm, and no Bee
 # index entry in any set.  It was never reconstructed here: mcp1k is the first
 # 1000 events of input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root
 # (staged e0..e999) and mcp2k is a separate 2000-event staging; run 18255 in the
 # mcp1k pool jumps 66615 -> 276198 and in mcp2k 105690 -> 273559, and 259774
-# falls in both gaps.  Reaching it needs the event staged from upstream
-# MCP2025C -- a data step, not a display step.
+# falls in both gaps.  So the number as written could not have been scanned by
+# anyone here -- which is itself evidence for the typo reading rather than for a
+# staging gap to go fill.
 # ---------------------------------------------------------------------------
-mcp1k	18255	1	259774	owner	multiple pi0
+# mcp1k	18255	1	259774	owner	multiple pi0

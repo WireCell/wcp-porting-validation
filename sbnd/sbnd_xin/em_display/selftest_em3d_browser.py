@@ -524,6 +524,30 @@ try:
         check("  ... with the owner's hint for THIS event on screen",
               "567 MeV gamma" in note_txt, note_txt[:80])
 
+        # Round 7.  evt169626 is unscanned in this throwaway tag, so the chip
+        # must SAY so -- the failure mode being guarded is a blank widget that
+        # looks like "no opinion" when the honest answer is "not scanned yet".
+        # Checked in the browser and not only on the Python object because the
+        # whole request was about what is visible at the top of the page.
+        stat_txt = page.evaluate("() => Bokeh.documents[0]"
+                                 ".get_model_by_name('scan_status').text")
+        check("the scanned/not-scanned chip is rendered in the live app",
+              "not scanned yet" in stat_txt, stat_txt[:80])
+        stat_vis = page.evaluate(
+            "() => {"
+            " const hit = (root) => {"
+            "   for (const e of root.querySelectorAll('*')) {"
+            "     if (e.shadowRoot) { const r = hit(e.shadowRoot); if (r) return r; }"
+            "     if (e.children.length === 0 &&"
+            "         e.textContent.indexOf('not scanned yet') >= 0) {"
+            "       const b = e.getBoundingClientRect();"
+            "       return {top: b.top, h: b.height}; } }"
+            "   return null; };"
+            " return hit(document); }")
+        check("  ... and is actually visible near the top of the page",
+              stat_vis is not None and stat_vis["h"] > 0
+              and stat_vis["top"] < 400, str(stat_vis))
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

@@ -690,6 +690,18 @@ banner = Div(name="banner", text="", width=RW + CW)
 # save either overwrote the hint or recorded it as though the scanner had typed
 # it -- and then a later reader could not tell the question from the answer.
 scan_note_div = Div(name="scan_note_div", text="", width=RW + CW)
+# Round 7: has THIS event already been scanned in this tag?  The scan is a long
+# stop-start job across 98 events and the question "did I already do this one"
+# was being answered by squinting at the n/98 counter, which cannot answer it.
+# Read from the FILESYSTEM, not from state["saved"]: state["saved"] is a
+# load-time snapshot, so a second tab open on the same tag would keep claiming
+# "not scanned yet" after this tab wrote the file.  state["saved"] is used only
+# for the timestamp, and dropped when it is not ours to quote.
+#
+# Deliberately DISK STATE ONLY.  Unsaved-edit state is already rendered by
+# refresh_info() as [unsaved]; duplicating it here would give two indicators
+# that can disagree.
+scan_status = Div(name="scan_status", text="", width=RW + CW)
 info = Div(text="", width=RW)
 
 # Dim whole showers out of the way.  The scan question is always "does this
@@ -2279,7 +2291,33 @@ def set_banner(nloss):
         "</span></div>" % html.escape(note)) if note else ""
 
 
+def refresh_scan_status():
+    lbl = state["label"] or ""
+    if not lbl:
+        scan_status.text = ""
+        return
+    if os.path.exists(label_path(lbl)):
+        rec = state["saved"] or {}
+        when = rec.get("saved_utc")
+        scan_status.text = (
+            "<div style='background:#e8f5e9;border-left:4px solid #2e7d32;"
+            "padding:6px 10px;margin:2px 0'><b style='color:#2e7d32'>"
+            "&#10004; you have already scanned this event</b>"
+            "<span style='color:#555'> &mdash; a saved result exists in tag "
+            "<code>%s</code>%s.</span></div>"
+            % (html.escape(SCAN_TAG),
+               ", saved %s" % html.escape(str(when)) if when else ""))
+    else:
+        scan_status.text = (
+            "<div style='background:#f5f5f5;border-left:4px solid #9e9e9e;"
+            "padding:6px 10px;margin:2px 0'><b style='color:#555'>"
+            "not scanned yet</b><span style='color:#777'> &mdash; no saved "
+            "result for this event in tag <code>%s</code>.</span></div>"
+            % html.escape(SCAN_TAG))
+
+
 def refresh_info():
+    refresh_scan_status()
     d = state["data"] or {}
     m = d.get("meta") or {}
     evt = (state["label"] or "")[3:]
@@ -3298,6 +3336,7 @@ right_col = column(
 layout = column(
     row(header, Spacer(width=20), event_select, prev_btn, next_btn,
         Spacer(width=20), mode_group),
+    scan_status,
     banner,
     scan_note_div,
     row(column(view_tabs), Spacer(width=18), right_col))

@@ -1275,6 +1275,12 @@ Counts after 5d: static **165**, browser 37, repro 1567/1567.
 
 ## 14. Round 6 — twelve events the owner named, and one that does not exist
 
+> **Superseded in part by §15.** The thirteenth event, `18255-259774`, was a
+> typo for `18255-269774` — which was in the display all along. The
+> investigation below is still correct on its own terms (259774 as written
+> really was never reconstructed here) and is what made the typo findable,
+> so it is kept rather than rewritten.
+
 ### 14.1 Repro
 
 ```bash
@@ -1416,7 +1422,9 @@ Zero. The labels already saved under `emscan-0827` are unaffected; nothing under
 - **The upload.** `bee/em114b/em114b-mcp1k.zip` is built and not uploaded —
   outward-facing, CLAUDE.md §5.6. Until then those four rows have no external
   Bee link (the 3-D view works regardless).
-- **259774** needs staging from upstream MCP2025C. Worth knowing *where the
+- ~~**259774** needs staging from upstream MCP2025C.~~ **Closed in §15: it was a
+  typo for 269774, already in the display. No staging needed.** Original note:
+  Worth knowing *where the
   owner saw it*: a truth list or someone else's Bee set names which pool to
   stage from.
 - The `vertex_how == "main_vertex"` default ambiguity from §13.9 is still open.
@@ -1440,3 +1448,135 @@ Two latent items, noticed and deliberately not fixed in this round:
 Counts after round 6: static **177**, browser **40**, repro **98/98**
 (1595/1595 showers). The selftests write into `em_labels/selftest114/`; the
 owner's `emscan-0827` tag was read and never written (M13).
+
+
+---
+
+## 15. Round 7 — the typo, and "have I already scanned this one?"
+
+Two small requests, one of which closed round 6's open item.
+
+### 15.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/prep_em_scan.py               # 98 rows, 13 notes
+python em_display/selftest_em_display.py        # 188
+python em_display/selftest_em3d_browser.py      # 42
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-6.
+
+### 15.2 `259774` was `269774`
+
+> *"for this event 259774, is there a similar event number? I must have a typo"*
+
+Yes, and it is unambiguous. Over all **3089** distinct `(run, event)` pairs
+reconstructed anywhere in this tree, exactly **one** string is within one edit or
+one adjacent transposition of `259774`:
+
+```
+run 18255  evt 269774   1 edit   ALREADY IN THE DISPLAY (sample nuecc48)
+```
+
+It corroborates three independent ways:
+
+| signal | value |
+|---|---|
+| run the owner wrote | 18255 — matches, and the sample is nuecc48 |
+| the note, *"multiple pi0"* | `n_pio_groups = 2`, `n_pio_showers = 4` — and only **7 of 98** scan events have ≥ 2 π⁰ groups at all |
+| the event named beside it | 389538 is also nuecc48 run 18255; in that index 269774 sits between 268784 and 271851 |
+
+The third is the one that makes it a *typo* rather than a coincidence: the owner
+was plausibly reading down a nuecc48 index and slipped one digit.
+
+269774 was already a scannable row — it simply had no note. So the fix is one
+cell. `pr114-owner-adds.index.txt` gains a note-only row (the existing 8-row
+pattern) and the phantom `259774` row is **commented out, not deleted**: it
+contributed no manifest row, so demoting it changes nothing in the `.tsv`, while
+leaving it live would make `prep_em_scan.py` report a missing event forever. The
+provenance paragraph stays, reframed — the fact that 259774 could not have been
+scanned by anyone here is itself evidence for the typo reading.
+
+**Regeneration gate** — field-by-field over all 98 rows, both directions:
+
+```
+columns identical: True     rows 98 / 98     added: none     dropped: none
+CELLS CHANGED: 1
+  evt 269774  col scan_note   '' -> 'multiple pi0'
+```
+
+### 15.3 The scan-status chip
+
+> *"On the event display, on the top, can you also add which one that I already
+> scanned?"* … *"I do not need the event list there, but at the top just say
+> whether I have saved result or not."*
+
+The display already counted `3/98 events labelled` — but that counter lives in
+`info`, which is **in the right-hand column**, and a count cannot answer "is
+*this* one done". New `scan_status` Div, placed directly under the header row
+and above the Bee banner:
+
+- green — **✔ you have already scanned this event** — a saved result exists in
+  tag `<tag>`, saved `<utc>`
+- grey — **not scanned yet** — no saved result for this event in tag `<tag>`
+
+Two decisions worth recording, because both are failure modes rather than
+preferences:
+
+1. **Read from the filesystem, not from `state["saved"]`.** `state["saved"]` is a
+   load-time snapshot. With two tabs open on the same tag — likely, since a
+   restart tells the owner to reload — a snapshot-driven chip keeps saying "not
+   scanned yet" after the *other* tab saved. `state["saved"]` is used only for
+   the timestamp, and the timestamp is dropped when it is not ours to quote.
+2. **Disk state only.** Unsaved-edit state is already rendered by `refresh_info`
+   as `[unsaved]`. Duplicating it in the chip would give two indicators that can
+   disagree. A check pins the separation.
+
+The event dropdown was **not** ticked with ✓ marks: the owner explicitly narrowed
+away from a per-event list. It remains an easy add.
+
+### 15.4 Verification
+
+| suite | result |
+|---|---|
+| `selftest_em_display.py` | **188/188**, was 177 |
+| `selftest_em3d_browser.py` | **42/42**, was 40 |
+| `selftest_repro.py` | **98/98** identical, 1595/1595 showers |
+| manifest gate | 1 cell changed (§15.2) |
+
+The owner-note count check was **de-magic-numbered** — it read `== 12` and failed
+on 13. It now parses `pr114-owner-adds.index.txt` and asserts every note in the
+index reaches the manifest *and* that no manifest row invents a note the index
+does not have, so adding an event is a data change while a note that silently
+fails to arrive is still a failure. That is the same class of bug as round 6's
+hardcoded `len(V.LABELS) == 94`.
+
+Live proof on the owner's own instance (port 5017, tag `emscan-0827`), not just
+on a throwaway server:
+
+```
+first event shown : evt64591        # the owner saved this one at 13:25
+chip text         : ...#2e7d32...&#10004; you have already scanned this event
+JS errors: none
+```
+
+The browser check walks **shadow roots** — Bokeh 3 renders every widget in its
+own shadow root, so a plain `document.querySelectorAll('div')` cannot see the
+text and the first version of the check failed with `None`. Measured position:
+`top: 73 px, height: 14` — genuinely at the top of the page.
+
+`em_labels/emscan-0827/` was read throughout and never written: all three of the
+owner's labels still carry their original mtimes (13:25, 13:37, 13:49). The
+selftests write to `em_labels/selftest114/` and `em3dbrowsertest`.
+
+### 15.5 Left open
+
+- The Bee **upload** for round 6's four events is still not done —
+  `bee/em114b/em114b-mcp1k.zip` is built but uploading is outward-facing
+  (CLAUDE.md §5.6). Those four rows show a working 3-D cloud and a blank
+  external link; the banner says so.
+- Pre-existing, not fixed here (noticed while working): `load_label` does a bare
+  `json.load` at :2313 while the save path guards `ValueError`. A truncated label
+  file would raise into the session callback rather than being reported.

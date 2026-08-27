@@ -1204,9 +1204,41 @@ check("  ... the four owner adds are loadable events",
 check("  ... each with a probe sidecar, like the original 94",
       all(V.MANIFEST[_e]["has_probe"] == "1"
           for _e in ("169626", "174752", "347129", "394532")))
-check("12 rows carry an owner note",
-      sum(1 for r in V.MANIFEST.values() if r.get("scan_note")) == 12,
-      str(sum(1 for r in V.MANIFEST.values() if r.get("scan_note"))))
+# Data-driven, not a magic number: the count is whatever the durable input says,
+# so adding an event to pr114-owner-adds.index.txt is a data change -- while a
+# note that silently fails to reach the manifest is still a failure.
+_adds = os.path.join(V.SX, "docs", "pr", "pr114-owner-adds.index.txt")
+_want = {}
+with open(_adds) as _fh:
+    for _l in _fh:
+        if _l.startswith("#") or not _l.strip():
+            continue
+        _f = _l.rstrip("\n").split("\t")
+        if len(_f) >= 6 and _f[5].strip():
+            _want[_f[3]] = _f[5]
+check("every owner note in the index reaches the manifest",
+      all(V.MANIFEST.get(_e, {}).get("scan_note") == _n
+          for _e, _n in _want.items()),
+      "%d notes; missing/mismatched: %s"
+      % (len(_want), [_e for _e, _n in _want.items()
+                      if V.MANIFEST.get(_e, {}).get("scan_note") != _n] or "none"))
+check("  ... and no manifest row invents a note that is not in the index",
+      {_e for _e, _r in V.MANIFEST.items() if _r.get("scan_note")} == set(_want),
+      str(sorted({_e for _e, _r in V.MANIFEST.items()
+                  if _r.get("scan_note")} - set(_want))))
+
+# ---- round 7: the 259774 -> 269774 typo ------------------------------------
+# The owner wrote "18255-259774: multiple pi0"; 259774 was never reconstructed
+# anywhere and 269774 is the unique 1-edit neighbour.  Pin BOTH halves so the
+# resolution cannot quietly rot back.
+check("the mis-typed 259774 is not a live row in the index",
+      "259774" not in _want,
+      str(sorted(_want)))
+check("  ... and the note landed on 269774, which really is multiple-pi0",
+      V.MANIFEST.get("269774", {}).get("scan_note") == "multiple pi0"
+      and int(V.MANIFEST["269774"]["n_pio_groups"]) >= 2,
+      "note=%r groups=%s" % (V.MANIFEST.get("269774", {}).get("scan_note"),
+                             V.MANIFEST.get("269774", {}).get("n_pio_groups")))
 
 # evt84229 is loaded: its hint must be ON SCREEN and OUT of the record.
 check("the owner's hint is shown for an event that has one",
@@ -1230,6 +1262,59 @@ V.on_event(None, None, "evt169626")
 check("a built-but-unuploaded Bee set says so, and says the cloud is fine",
       "not uploaded" in V.banner.text and "3-D" in V.banner.text
       and "no Bee set" not in V.banner.text)
+
+# ---- round 7: "have I already scanned this one?" ---------------------------
+# The counter said 3/98; it could not say whether THIS event was one of the 3.
+# evt84229 was saved a few checks above, so it is a real saved event here.
+V.on_event(None, None, "evt84229")
+check("an already-scanned event says so at the top",
+      "already scanned this event" in V.scan_status.text
+      and "not scanned yet" not in V.scan_status.text,
+      repr(V.scan_status.text[:80]))
+check("  ... and names the tag the result is in",
+      V.SCAN_TAG in V.scan_status.text)
+
+V.on_event(None, None, "evt463565")
+check("an unscanned event says THAT, rather than going blank",
+      "not scanned yet" in V.scan_status.text
+      and "already scanned" not in V.scan_status.text,
+      repr(V.scan_status.text[:80]))
+
+# The two-tab case.  state["saved"] is a load-time snapshot; if the chip were
+# driven from it, a second tab would keep saying "not scanned yet" after this
+# one wrote the file.  Blank the snapshot with the file still on disk: the
+# answer must not change, because the answer comes from the filesystem.
+V.on_event(None, None, "evt84229")
+_snap = V.state["saved"]
+V.state["saved"] = None
+V.refresh_scan_status()
+check("  ... and the answer is read from disk, not from a stale in-memory copy",
+      "already scanned this event" in V.scan_status.text,
+      repr(V.scan_status.text[:80]))
+check("  ... dropping the timestamp it can no longer honestly quote",
+      "saved 20" not in V.scan_status.text)
+V.state["saved"] = _snap
+V.refresh_scan_status()
+
+# Disk state and edit state are different questions and are rendered by
+# different widgets; the chip must not start duplicating [unsaved].
+V.state["dirty"] = True
+V.refresh_info()
+check("the chip reports disk state only -- [unsaved] stays refresh_info's job",
+      "unsaved" not in V.scan_status.text and "unsaved" in V.info.text,
+      "chip=%r" % (V.scan_status.text[:60],))
+V.state["dirty"] = False
+V.refresh_info()
+
+# "at the top" is the whole point of the request, so pin the POSITION, not just
+# the text: directly under the header row and above the Bee banner.  `info`,
+# which already carried the n/98 counter, lives in the right column instead --
+# which is exactly why the counter could not answer this question.
+_kids = [getattr(_w, "name", None) for _w in V.layout.children]
+check("the chip sits at the top, directly under the header row",
+      _kids[1] == "scan_status", str(_kids))
+check("  ... above the Bee banner, not below it",
+      _kids.index("scan_status") < _kids.index("banner"), str(_kids))
 
 print()
 print("FAILURES: %d" % len(fails))

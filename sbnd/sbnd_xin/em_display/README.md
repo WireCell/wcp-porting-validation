@@ -32,6 +32,14 @@ the **right** is everything you read or click while looking at it. Total width
 1980 px by default, and the **3-D panel size** selector (620 / 760 / 900 / 1100)
 takes the left column up on a bigger screen.
 
+**Directly under the header: have you already scanned this event?** A green
+**✔ you have already scanned this event** (with the tag and the save time) or a
+grey **not scanned yet**. It answers for *the event on screen* — the
+`n/98 events labelled` counter in the right column cannot. It reports **disk
+state only**: the separate `[unsaved]` marker next to the counter is the one that
+tracks edits you have not saved yet. Read from the filesystem on every refresh,
+so a second tab open on the same tag sees a save made in the first.
+
 **Left — two tabs.** **3-D** (the default) and **2-D projections** (X-Y, Y-Z,
 X-Z stacked 2-over-1, active volume and cathode in red). See
 [The 3-D view](#the-3-d-view) below. The projections stay because the free-space
@@ -493,8 +501,8 @@ python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
 python em_display/selftest_repro.py         # reproduction + membership repair, 98/98
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 177 checks
-python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 40
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 188 checks
+python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 42
 ```
 
 The probes land in `pr_evt<ID>/stdout.log`, **not** in `wct_pr_evt<ID>.log`:
@@ -548,7 +556,8 @@ local and touches no network.
 ## Labels
 
 `../em_labels/<tag>/labels-evt<ID>.json`, one file per event per tag, written
-tmp + `os.replace` so a record is never half-written. The `em` and `pio` blocks
+tmp + `os.replace` so a record is never half-written. The presence of that file is
+exactly what the scanned/not-scanned chip under the header reports. The `em` and `pio` blocks
 upsert independently — scanning EM now and π⁰ later does not drop the first half.
 
 Each record stores **the reconstruction's answer next to yours**: the shower's
