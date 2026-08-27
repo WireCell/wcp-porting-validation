@@ -1311,6 +1311,45 @@ V.refresh_info()
 # which already carried the n/98 counter, lives in the right column instead --
 # which is exactly why the counter could not answer this question.
 _kids = [getattr(_w, "name", None) for _w in V.layout.children]
+# A disk read is only worth having if something wakes it.  refresh_scan_status
+# otherwise fires only from refresh_info -- load, save, touch -- so a save made
+# in another tab would not show until the scanner navigated away and back.
+_periodic = [cb for cb in V.curdoc().session_callbacks
+             if getattr(getattr(cb, "callback", None), "__name__", "")
+             == "refresh_scan_status"]
+check("a periodic callback wakes the chip while sitting on one event",
+      len(_periodic) == 1, "%d registered" % len(_periodic))
+check("  ... at a period that is cheap (one stat) but not sluggish",
+      2000 <= getattr(_periodic[0], "period", 0) <= 15000 if _periodic else False,
+      str(getattr(_periodic[0], "period", None) if _periodic else None))
+
+# The real two-tab case, end to end: another writer creates the label while this
+# session sits on the event, and the periodic tick must flip the chip.  Done in a
+# THROWAWAY tag so the suite stays re-runnable and no real scan record is
+# touched (M13); the file it creates is the only thing it removes.
+_realtag = V.SCAN_TAG
+V.SCAN_TAG = "selftest114-flip"
+try:
+    V.on_event(None, None, "evt463565")
+    _before = V.scan_status.text
+    _p = V.label_path("evt463565")
+    os.makedirs(os.path.dirname(_p), exist_ok=True)
+    with open(_p, "w") as _fh:
+        json.dump({"saved_utc": "written-by-another-tab"}, _fh)
+    V.refresh_scan_status()          # what the periodic callback calls
+    check("a save made by ANOTHER tab flips the chip without navigating",
+          "not scanned yet" in _before
+          and "already scanned this event" in V.scan_status.text,
+          "before=%r after=%r" % (_before[:40], V.scan_status.text[:40]))
+finally:
+    try:
+        os.remove(_p)
+        os.rmdir(os.path.dirname(_p))
+    except OSError:
+        pass
+    V.SCAN_TAG = _realtag
+    V.on_event(None, None, "evt84229")
+
 check("the chip sits at the top, directly under the header row",
       _kids[1] == "scan_status", str(_kids))
 check("  ... above the Bee banner, not below it",

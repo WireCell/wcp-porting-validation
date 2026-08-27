@@ -37,8 +37,9 @@ takes the left column up on a bigger screen.
 grey **not scanned yet**. It answers for *the event on screen* — the
 `n/98 events labelled` counter in the right column cannot. It reports **disk
 state only**: the separate `[unsaved]` marker next to the counter is the one that
-tracks edits you have not saved yet. Read from the filesystem on every refresh,
-so a second tab open on the same tag sees a save made in the first.
+tracks edits you have not saved yet. Read from the filesystem, and re-checked
+every 5 s, so a second tab open on the same tag picks up a save made in the
+first without you having to navigate away and back.
 
 **Left — two tabs.** **3-D** (the default) and **2-D projections** (X-Y, Y-Z,
 X-Z stacked 2-over-1, active volume and cathode in red). See
@@ -501,7 +502,7 @@ python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
 python em_display/selftest_repro.py         # reproduction + membership repair, 98/98
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 188 checks
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 191 checks
 python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 42
 ```
 

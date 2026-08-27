@@ -1461,7 +1461,7 @@ Two small requests, one of which closed round 6's open item.
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 python em_display/prep_em_scan.py               # 98 rows, 13 notes
-python em_display/selftest_em_display.py        # 188
+python em_display/selftest_em_display.py        # 191
 python em_display/selftest_em3d_browser.py      # 42
 python em_display/selftest_repro.py             # 98/98
 ```
@@ -1525,11 +1525,22 @@ and above the Bee banner:
 Two decisions worth recording, because both are failure modes rather than
 preferences:
 
-1. **Read from the filesystem, not from `state["saved"]`.** `state["saved"]` is a
-   load-time snapshot. With two tabs open on the same tag — likely, since a
-   restart tells the owner to reload — a snapshot-driven chip keeps saying "not
-   scanned yet" after the *other* tab saved. `state["saved"]` is used only for
-   the timestamp, and the timestamp is dropped when it is not ours to quote.
+1. **Read from the filesystem, not from `state["saved"]`, and wake it on a
+   timer.** `state["saved"]` is a load-time snapshot, so with two tabs open on
+   the same tag — likely, since a restart tells the owner to reload — a
+   snapshot-driven chip keeps saying "not scanned yet" after the *other* tab
+   saved. `state["saved"]` supplies only the timestamp, dropped when it is not
+   ours to quote.
+
+   The disk read alone was **not enough**, and this is worth recording because
+   the first version shipped with the gap: `refresh_scan_status` fires only from
+   `refresh_info`, i.e. on load, save and touch. Nothing wakes it while the
+   scanner *sits* on one event, so the other tab's save still would not appear
+   until they navigated away and back — the very case the disk read exists for.
+   A `curdoc().add_periodic_callback(refresh_scan_status, 5000)` closes it: one
+   `stat` every 5 s, and re-assigning an unchanged `Div.text` syncs nothing. The
+   test that covers it creates the label file from outside the session and
+   asserts the chip flips, in a throwaway tag so the suite stays re-runnable.
 2. **Disk state only.** Unsaved-edit state is already rendered by `refresh_info`
    as `[unsaved]`. Duplicating it in the chip would give two indicators that can
    disagree. A check pins the separation.
@@ -1541,7 +1552,7 @@ away from a per-event list. It remains an easy add.
 
 | suite | result |
 |---|---|
-| `selftest_em_display.py` | **188/188**, was 177 |
+| `selftest_em_display.py` | **191/191**, was 177 |
 | `selftest_em3d_browser.py` | **42/42**, was 40 |
 | `selftest_repro.py` | **98/98** identical, 1595/1595 showers |
 | manifest gate | 1 cell changed (§15.2) |
@@ -1559,6 +1570,10 @@ on a throwaway server:
 ```
 first event shown : evt64591        # the owner saved this one at 13:25
 chip text         : ...#2e7d32...&#10004; you have already scanned this event
+
+== evt269774 ==                     # the typo fix, on the owner's instance
+   chip : not scanned yet -- no saved result for this event in tag emscan-0827.
+   note : what you asked to look at here: multiple pi0 -- your note from the ...
 JS errors: none
 ```
 

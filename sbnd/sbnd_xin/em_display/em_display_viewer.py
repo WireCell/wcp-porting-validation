@@ -3355,3 +3355,11 @@ curdoc().title = "EM / pi0 hand scan"
 apply_layers(None, None, None)
 if LABELS:
     load(LABELS[0])
+
+# The chip reads disk, but nothing was WAKING it while the scanner sits on one
+# event: refresh_scan_status only fires from refresh_info, i.e. on load, save and
+# touch.  So a save made in a second tab -- the case the disk read exists for,
+# and a likely one, since every restart tells the owner to reload -- would not
+# show here until they navigated away and back.  One stat every 5 s closes that,
+# and re-assigning an unchanged Div.text syncs nothing.
+curdoc().add_periodic_callback(refresh_scan_status, 5000)
