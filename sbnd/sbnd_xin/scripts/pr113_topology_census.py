@@ -59,6 +59,23 @@ EM_TIERS = (50.0, 100.0, 200.0)
 MU_FLOOR_CM = 30.0
 
 
+def pio_id_of(shower):
+    """`showers[].pio_id`, with -1 for "not pi0-paired".
+
+    ROUND 2 CORRECTION -- do not collapse this back into the `or -1` idiom used
+    everywhere else in this file.  `pio_id` is allocated from **0**, and `0` is
+    falsy in Python, so `(sh.get("pio_id", -1) or -1)` silently reports the
+    FIRST pi0 group of every event as unpaired.  Since almost every event that
+    has a group at all has group 0, round 1 undercounted paired events by 10x:
+    7 of 1433 reported, **70** actual.  The idiom is safe for the other fields
+    it is used on (a 0 energy or a 0 score maps to 0 either way) and is left
+    alone there; it is only ever wrong for a value whose valid domain includes
+    zero.  See doc pr/113 sec 10.
+    """
+    v = shower.get("pio_id")
+    return -1 if v is None else v
+
+
 def evtid(path):
     b = os.path.basename(path)
     return b[len("calib-pr-evt"):-len(".json")]
@@ -137,10 +154,10 @@ def census_event(path, sample, nusel, mu_floor=MU_FLOOR_CM):
     # This is the discriminator kine_pio_flag cannot be: the flag merely says
     # "a pi0 pair was found somewhere" and fires on 37/48 of the curated
     # nueCC arm (doc pr/113 sec 6) -- exactly the failure pr/93 sec 3 warned of.
-    lead_pio = int(bool(em_sorted) and (em_sorted[0].get("pio_id", -1) or -1) >= 0)
+    lead_pio = int(bool(em_sorted) and pio_id_of(em_sorted[0]) >= 0)
     # a primary e-rooted shower that is NOT pi0-paired == an electron candidate
     e_prim_ids = {s["id"] for s in prim if abs(s.get("particle_id", 0)) == 11}
-    has_e_nonpio = int(any((sh.get("pio_id", -1) or -1) < 0
+    has_e_nonpio = int(any(pio_id_of(sh) < 0
                            for sh in em if sh.get("id") in e_prim_ids))
     em_tier = 0
     for t in EM_TIERS:
@@ -150,7 +167,7 @@ def census_event(path, sample, nusel, mu_floor=MU_FLOOR_CM):
     # --- pi0 ----------------------------------------------------------------
     pio_flag = int(kine.get("kine_pio_flag", 0) or 0)
     pio_mass = float(kine.get("kine_pio_mass", -1.0) or -1.0)
-    n_pio_showers = sum(1 for sh in showers if (sh.get("pio_id", -1) or -1) >= 0)
+    n_pio_showers = sum(1 for sh in showers if pio_id_of(sh) >= 0)
 
     run, subrun, label = nusel.get(e, ("", "", ""))
 

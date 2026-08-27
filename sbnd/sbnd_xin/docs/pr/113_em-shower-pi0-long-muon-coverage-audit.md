@@ -17,10 +17,17 @@ re-checked, 7 are already fixed and the single ⚠ CRITICAL is a **false positiv
 The determinism check pr/33 and pr/91 both left open is now **closed at
 container level for this pair** — pr/33's P12 residual is gone. On the sample side, all four prod0825 arms
 are **data** (no MC truth exists, or can), so the delivered lists are
-reconstruction-defined: **98 nueCC, 23 NCπ⁰, 79 numuCC-with-≥100 MeV-EM-shower**,
+reconstruction-defined: **90 nueCC, 46 NCπ⁰, 79 numuCC-with-≥100 MeV-EM-shower**,
 disjoint by construction. A by-product worth the owner's attention:
 **`kine_pio_flag` is not a π⁰ selector** — it fires on 37/48 of the curated nueCC
-arm and on 232 beam events where only 4 actually carry a reconstructed γ pair.
+arm and on 232 beam events where only 55 actually carry a reconstructed γ pair.
+
+> **Round 2 correction (2026-08-27), §10.** The list sizes and every π⁰-pairing
+> count above are the *corrected* ones. Round 1 shipped `98 / 23 / 79` and
+> claimed only 7 of 1433 events carry a γ pair; a falsy-zero bug in the census
+> (`pio_id or -1`, and `pio_id` starts at **0**) hid the first π⁰ group of every
+> event. The true count is **70 of 1433**. The audit sections §1–§5 are
+> unaffected — the bug was in the sample census only. Full accounting in §10.
 
 **No code changed this round.** The findings below are *unfiltered candidates*
 with proposed default-OFF knobs, for the owner to filter (pr/33 precedent: 14 → 5).
@@ -578,14 +585,18 @@ the cut can move without regenerating the list.
 
 ### 6.4 `kine_pio_flag` is not a π⁰ selector — quantified
 
+> ⚠ **The right-hand column below is the round-1 buggy count. See §10 for the
+> corrected table (7 / 8 / 55). The conclusion holds; the margin is 4:1, not
+> 58:1.** Text kept rather than silently rewritten, house style.
+
 This is the sample-side finding worth the owner's attention, and it confirms
 pr/93 §3's warning with numbers:
 
 | | `kine_pio_flag > 0` | actual γ pair (`n_pio_showers ≥ 2`) |
 |---|---|---|
-| curated nueCC48 (48) | **37** | 1 |
-| curated NCπ⁰ (19) | 14 | 2 |
-| beam mcp1k+mcp2k (1366) | **232** | **4** |
+| curated nueCC48 (48) | **37** | ~~1~~ |
+| curated NCπ⁰ (19) | 14 | ~~2~~ |
+| beam mcp1k+mcp2k (1366) | **232** | ~~**4**~~ |
 
 The flag fires on **77 % of the curated *nueCC* arm**. Mechanism (§1.2, shared by
 both trees): `id_pi0_with_vertex` has a *kine* branch that fills `kine_pio_*` for
@@ -596,12 +607,15 @@ means "a pair existed", not "a π⁰ was reconstructed". **Use `pio_id` /
 
 ### 6.5 Delivered lists
 
-| file | n | composition |
-|---|---|---|
-| `docs/pr/pr113-nuecc.index.txt` | **98** | 48 curated + 50 reco |
-| `docs/pr/pr113-ncpi0.index.txt` | **23** | 19 curated + 4 reco |
-| `docs/pr/pr113-numucc-emshower.index.txt` | **79** | reco, beam arms only |
-| `docs/pr/pr113-emshower-sample.tsv` | 1433 rows | master, 32 columns |
+> ⚠ **List sizes updated by §10.** The files on disk are the corrected ones
+> (90 / 46 / 79); the counts in this subsection's prose below are round 1.
+
+| file | n (round 1) | **n (on disk, corrected)** | composition |
+|---|---|---|---|
+| `docs/pr/pr113-nuecc.index.txt` | 98 | **90** | 48 curated + 42 reco |
+| `docs/pr/pr113-ncpi0.index.txt` | 23 | **46** | 19 curated + 27 reco |
+| `docs/pr/pr113-numucc-emshower.index.txt` | 79 | **79** | reco, beam arms only |
+| `docs/pr/pr113-emshower-sample.tsv` | 1433 rows | 1433 rows | master, 32 columns |
 
 Pairwise overlap between the three lists: **0 / 0 / 0.**
 
@@ -612,15 +626,21 @@ with `scripts/pr112_numu100.txt` — so this is a genuinely complementary sample
 as expected: those manifests were built for vertex/track work, not EM-shower
 content.
 
-NCπ⁰ reco additions are thin (4) because a true γ pair is rare in the beam pool
-(4/1366) and `not has_mu` is restrictive on data (791/1366 carry a ≥30 cm
-muon-like primary). The 19 curated events remain the anchor of that list.
+~~NCπ⁰ reco additions are thin (4) because a true γ pair is rare in the beam pool
+(4/1366)~~ **— round-1 text, wrong; the reco additions are 27 and the beam-pool
+pair count is 55 (§10).** What survives: `not has_mu` is restrictive on data
+(791/1366 carry a ≥30 cm muon-like primary), and the 19 curated events are still
+the anchor of that list.
 
 **If a larger π⁰ sample is wanted, the lever is `has_mu`, not the π⁰ predicate.**
-Relaxing `not has_mu` is what actually costs events here. Do **not** widen with
-`kine_pio_flag` — §6.4 is precisely the measurement disqualifying it; the honest
-π⁰ columns are `pio_id` / `n_pio_showers`, and those are already at their
-ceiling (4 events in the beam pool carry a pair at all).
+Of the 55 beam events carrying a γ pair, the ladder sends exactly **27 to NCπ⁰,
+27 to the numuCC rung** (`has_mu`), and drops 1 on the ≥100 MeV floor — so the
+muon veto moves **half** the available π⁰ sample off the NCπ⁰ list. They are not
+lost to the scan, though: **25 of those 27 are in `pr113-numucc-emshower.index.txt`
+already**, which makes that list a π⁰-rich sample in its own right and not only a
+numuCC one. Do **not** widen with `kine_pio_flag` — §6.4/§10 is precisely the
+measurement disqualifying it; the honest π⁰ columns are `pio_id` /
+`n_pio_showers`.
 
 ---
 
@@ -666,3 +686,89 @@ gone. Not regenerated (M13).
   doc's 22 items were not re-checked (§2.2).
 - The findings table is **unfiltered**. pr/33's precedent is 14 → 5 after the
   owner's filter; the proposed knobs are candidates, not designs.
+
+---
+
+## 10. Round 2 — a census bug that changed the lists (2026-08-27)
+
+**Found while building the pr/114 display, which re-derives the same π⁰ pairing
+independently and disagreed.** Round 1 undercounted π⁰-paired events by **10×**.
+Everything in §1–§5 (the audit) is unaffected; §6 (the sample) is corrected here.
+
+### Root cause
+
+`scripts/pr113_topology_census.py` read the pairing with the file's house idiom
+for "absent key ⇒ sentinel":
+
+```python
+n_pio_showers = sum(1 for sh in showers if (sh.get("pio_id", -1) or -1) >= 0)
+```
+
+`pio_id` is allocated **from 0**, and `0` is falsy in Python, so `0 or -1`
+evaluates to `-1`: **the first π⁰ group of every event was reported as
+unpaired.** Almost every event that has a group at all has group 0, so the
+predicate saw almost nothing. The idiom is harmless on the other fields it is
+used for — a zero energy or a zero score maps to zero either way — and is left
+alone there. It is only ever wrong for a value whose valid domain **includes
+zero**, which is exactly `pio_id`.
+
+Fixed by a named helper, `pio_id_of()`, at the three affected sites
+(`n_pio_showers`, `lead_pio`, `has_e_nonpio`).
+
+### What the numbers really are
+
+| | round 1 (buggy) | **round 2 (correct)** |
+|---|---|---|
+| events with a reco γ pair (`n_pio_showers ≥ 2`) | 7 / 1433 | **70 / 1433** |
+| …by arm (ncpi0 / nuecc48 / mcp1k / mcp2k) | 2 / 1 / 0 / 4 | **8 / 7 / 23 / 32** |
+| events by π⁰ group count | — | 63 have 1, 6 have 2, 1 has 3 |
+
+### What the lists really are
+
+| list | round 1 | **round 2** | change |
+|---|---|---|---|
+| `pr113-nuecc.index.txt` | 98 | **90** | −8 |
+| `pr113-ncpi0.index.txt` | 23 | **46** | +23 |
+| `pr113-numucc-emshower.index.txt` | 79 | **79** | **byte-identical** |
+
+The three lists are still disjoint (0/0/0). Two checks that the correction
+behaved as it should, and did:
+
+- **numuCC-EM is byte-identical**, as predicted before running: `has_mu` and
+  `em_max` never touch `pio_id`, so that arm of the ladder could not move.
+- **All 8 events that left nueCC landed in NCπ⁰** — none vanished. That is
+  exactly the priority ladder doing its job: once those events are correctly
+  seen to carry a γ pair, rung 2 claims them before rung 3 can.
+  (mcp1k 172942; mcp2k 165157, 282909, 396222, 47212, 475096, 76346, 76350.)
+
+The remaining +15 NCπ⁰ events were in **no** list in round 1: they have a real γ
+pair but no primary e-rooted shower, so the buggy predicate failed them on both
+rungs.
+
+### §6.4 restated — the conclusion survives, the margin does not
+
+The `kine_pio_flag` table in §6.4 used the buggy column for its "actual γ pair"
+side. Corrected:
+
+| | `kine_pio_flag > 0` | actual γ pair (`n_pio_showers ≥ 2`) |
+|---|---|---|
+| curated nueCC48 (48) | 37 | ~~1~~ → **7** |
+| curated NCπ⁰ (19) | 14 | ~~2~~ → **8** |
+| beam mcp1k+mcp2k (1366) | 232 | ~~4~~ → **55** |
+
+**`kine_pio_flag` is still not a π⁰ selector** — 232 firings against 55 real
+pairs in the beam pool, and 37 of 48 on the *nueCC* arm — and the mechanism in
+§1.2 (a kine branch with no mass window, a pattern branch with one) is unchanged
+and was never derived from the buggy column. But the honest ratio is **4:1, not
+58:1**, and §6.5's "those are already at their ceiling (4 events in the beam pool
+carry a pair at all)" was wrong: the ceiling is 55.
+
+### Lesson
+
+The round-1 number was never sanity-checked against a second, independent path
+to the same quantity. It took an unrelated round re-deriving the pairing from
+`showers[].pio_id` directly to expose it. **A count that lands surprisingly low
+is a hypothesis, not a finding** — "the π⁰ reconstruction almost never fires"
+should have been checked against a single event's dump by hand before it was
+written down. One `grep pio_id` on ncpi0 evt21073 would have shown two accepted
+groups, ids **0** and 1, and the id-0 group missing from the census output.
