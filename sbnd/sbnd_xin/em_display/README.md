@@ -303,7 +303,41 @@ plot is the geometry.
 
 The **verdict** includes `vertex-bad (undecidable)`. Use it. If the neutrino
 vertex is wrong the in/out question has no answer, and recording that is worth
-more than a guess.
+more than a guess. It also includes **`is an EM shower (reco PID wrong)`** — the
+inverse of `not an EM shower`, for a track- or muon-PID'd object that should have
+been a gamma. New verdicts are **appended**, never re-ordered: a label stores the
+verdict string and is read back by index.
+
+### Energy does NOT follow a PID correction
+
+The π⁰ panel shows, per gamma, **which recombination its energy was converted
+with** and what the same charge gives under the other hypothesis. This matters
+because re-labelling an object in the scan does not move its energy:
+`kine_charge` was fixed upstream by
+
+```
+E = Σ_p(w_p Q_p)/Σw / recom / fudge × w_value × 1e-6     NeutrinoEnergyReco.cxx:188
+```
+
+and which `(recom, fudge)` pair is used comes from `Shower::get_flag_shower()` —
+`kShowerTrajectory || kShowerTopology || |pdg| == 11`, evaluated on the **start
+segment only** (`PRShower.cxx:1460-1464`). So:
+
+| object | recom | fudge | 1/(recom·fudge) |
+|---|---|---|---|
+| track-flagged | 0.70 | 0.95 | 1.504 |
+| shower-flagged | 0.50 | 0.80 | 2.500 |
+| \|pdg\|==2212 | 0.35 | 0.95 | 3.008 |
+
+A gamma the reco flagged track-like therefore carries **1.66× less** energy than
+the identical collected charge in a shower-flagged one. The panel quotes the
+π⁰ mass with the track-flagged gammas promoted — **only those**, because the mass
+goes as √(E₁E₂) and flipping both cancels exactly. These are the C++ defaults;
+SBND overrides none of them (`wct-pr-perevt.jsonnet:674-689`).
+
+The record carries `particle_id`, `flag_shower`, `kine_hypothesis` and
+`kine_charge_other_hypothesis` on `em.reco` and on each `pio.gammas[]` slot, so
+a "PID wrong" verdict is checkable later against what the reco actually thought.
 
 ## π⁰ mode
 
@@ -325,6 +359,36 @@ Two masses are shown side by side, and that is the point:
 The code itself uses different direction recipes for the mass it stores
 (`:3771`) and the angle it stores (`:3830`), and they do not close. Seeing both
 is how you tell a genuine π⁰ from a bookkeeping artefact.
+
+### There is no π⁰ verdict — the correction *is* the judgement
+
+Retired in round 5d. The workflow is "start from the code's reconstruction, then
+correct it", and the record already holds both sides independently:
+
+| the code's answer | yours |
+|---|---|
+| `pio.reco_groups` (the accepted `pio_id` pairings and their masses) | `pio.gammas` (the pair you assigned, with starts, energies, members, axes) |
+| `pio.reco_kine` (the whole `kine_pio_*` block) | `pio.vertex` + `pio.vertex_how` |
+| | `mass_axis_convention` / `mass_vertex_convention` |
+
+The difference between the two columns is the judgement, and unlike a verdict it
+is quantitative. The verdict also had no anchor: the panel shows *three* pairings
+(`pio_id`, `kine_pio_*`, yours) and the verdict named none of them, so on an
+event where your pair differs from the reco's — evt166870 — "pi0 correct" and the
+gamma slots could contradict each other with nothing to notice.
+
+**Known loss, not papered over:** *"there is no π⁰ in this event"* cannot be said
+as a correction, because empty gamma slots are also what "not scanned" looks
+like. No replacement has been invented; put it in the note until there is one.
+
+A π⁰ verdict written by an older build is **read and preserved** — re-saving such
+an event will not delete a past judgement — but no new one is written.
+
+**`vertex_how` is what says whose vertex it is.** `main_vertex` and `backproject`
+are the reconstruction's (the first is also the *default*, so it cannot be
+distinguished from never touching the control); `manual` is yours. Clicking a
+point in 3-D with *make it the pi0 vertex* always lands as `manual`, even when
+the point you click is a reconstructed vertex.
 
 ### Two things the panel keeps apart on purpose
 

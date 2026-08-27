@@ -121,10 +121,27 @@ if not LABELS:
 # EM verdicts.  "vertex-bad" is not a nicety: the owner said up front that a
 # wrong neutrino vertex can make the in/out question unanswerable, and without
 # an explicit escape those events get silently mislabelled as merely wrong.
+# APPEND ONLY.  A saved label stores the verdict STRING and is read back with
+# EM_VERDICTS.index(), so appending is safe and re-ordering would silently
+# re-label every record written before the change.
+# "is an EM shower (reco PID wrong)" is the inverse of "not an EM shower" and it
+# was missing: evt166870 had a muon-PID'd object the scanner wanted promoted to a
+# gamma, and the only place to say so was the free-text note.
 EM_VERDICTS = ["correct", "over-clustered", "under-clustered", "both",
-               "vertex-bad (undecidable)", "not an EM shower"]
-PIO_VERDICTS = ["pi0 correct", "wrong pairing", "wrong start point",
-                "wrong vertex", "shower mis-grouped", "not a pi0"]
+               "vertex-bad (undecidable)", "not an EM shower",
+               "is an EM shower (reco PID wrong)"]
+# RETIRED as a control in round 5d, kept to READ labels written before it.
+# The owner's workflow is "start from the code's reconstruction, then correct
+# it", and the record already holds both sides independently: `pio.reco_groups`
+# and `pio.reco_kine` are the code's answer, `pio.gammas`/`vertex`/`vertex_how`
+# are the scanner's, and a mass is computed from each.  The verdict restated
+# what the difference between them already says.  It was also unanchored -- the
+# panel showed three pairings and the verdict named none of them.
+# KNOWN LOSS, stated rather than papered over: "there is no pi0 in this event"
+# cannot be said as a correction, because empty gamma slots are also what
+# "not scanned" looks like.  No replacement is invented here.
+PIO_VERDICTS_LEGACY = ["pi0 correct", "wrong pairing", "wrong start point",
+                       "wrong vertex", "shower mis-grouped", "not a pi0"]
 CONF = ["certain", "likely", "unclear"]
 
 state = dict(label=None, data=None, prep=None,
@@ -133,6 +150,7 @@ state = dict(label=None, data=None, prep=None,
              excl=set(),               # shower nodes dimmed out of the way
              shorder={},               # shower node -> position, for the palette
              legacy_marks=None,        # (shower, n) when a round-4 file was read
+             pio_verdict_legacy=None,  # a pi0 verdict from a pre-5d label
              acc_hidden=0,             # dots outside the zoomed acceptance range
              gamma={1: None, 2: None},  # slot -> node id
              gstart={1: None, 2: None},  # slot -> (x,y,z) override or None
@@ -759,7 +777,6 @@ man_y = TextInput(title="y", value="", width=90)
 man_z = TextInput(title="z", value="", width=90)
 tap_toggle = Toggle(label="tap fills x/y/z", width=140)
 kine_div = Div(text="", width=RW)
-pio_verdict = RadioButtonGroup(labels=PIO_VERDICTS, active=None)
 
 conf_group = RadioButtonGroup(labels=CONF, active=None, width=240)
 note_in = TextInput(title="note (optional)", value="", width=520)
@@ -990,6 +1007,58 @@ def shower_start(node, slot=None):
         return state["gstart"][slot]
     sh = shower_by_node(node)
     return G.pt(sh.get("start")) if sh else None
+
+
+# kine_charge converts collected charge to MeV as
+#     E = sum_p(w_p Q_p)/sum(w) / recom / fudge * w_value * 1e-6
+# (`NeutrinoEnergyReco.cxx:188`), so E scales as 1/(recom*fudge).  WHICH pair is
+# used is decided by `Shower::get_flag_shower()` -- NOT by the PDG:
+#     kShowerTrajectory || kShowerTopology || |pdg| == 11,  on the START SEGMENT
+# (`PRShower.cxx:1460-1464` and `:1578-1582`, `:204`).  A muon-PID'd object with
+# neither shower flag therefore gets the TRACK pair even when a scanner is about
+# to call it a gamma.  Values are the C++ defaults
+# (`NeutrinoPatternBase.h:41-52`); SBND sets none of them
+# (`wct-pr-perevt.jsonnet:674-689` documents them and leaves them at default).
+KINE_TRACK = (0.7, 0.95)          # recom, fudge
+KINE_SHOWER = (0.5, 0.8)
+KINE_PROTON = (0.35, 0.95)        # fudge deliberately stays at the track value
+
+
+def shower_is_em(node):
+    """Mirror of `Shower::get_flag_shower()` off the dump.
+
+    The dump's per-segment `flag_shower` is `kShowerTrajectory ||
+    kShowerTopology` (`PrDisplayDump.cxx:469-470`); the third disjunct, |pdg|==11,
+    is added here.  The shower's `id` IS its start segment's id
+    (`PrDisplayDump.cxx:576`), so the start segment is a lookup, not a guess.
+    Returns None when the start segment is not in the dump.
+    """
+    for s in cur_segments():
+        if s.get("id") == node:
+            return bool(s.get("flag_shower")) or abs(s.get("particle_id") or 0) == 11
+    return None
+
+
+def kine_hypothesis(node):
+    """(label, (recom, fudge), alternative-energy) for one shower.
+
+    The alternative is the SAME collected charge re-converted under the other
+    recombination hypothesis -- what the energy would be if the object's
+    track/shower flag were the other way.  Nothing is re-measured; it is one
+    ratio, which is exactly why it is honest to show it."""
+    sh = shower_by_node(node) or {}
+    e = sh.get("kine_charge")
+    em = shower_is_em(node)
+    if em is None or e is None:
+        return None, None, None
+    if em:
+        used, other, lbl = KINE_SHOWER, KINE_TRACK, "shower"
+    elif abs(sh.get("particle_id") or 0) == 2212:
+        used, other, lbl = KINE_PROTON, KINE_SHOWER, "proton"
+    else:
+        used, other, lbl = KINE_TRACK, KINE_SHOWER, "track"
+    alt = e * (used[0] * used[1]) / (other[0] * other[1])
+    return lbl, used, alt
 
 
 def shower_energy(node):
@@ -1552,6 +1621,13 @@ def pio_vertex():
     if vtx_mode_group.active == 0:
         return G.pt(d.get("main_vertex")), "main_vertex", {}
     if vtx_mode_group.active == 2:
+        # `manual` with the x/y/z boxes empty yields None, which silently drops
+        # the whole vertex convention from the record -- evt166870 was saved that
+        # way.  The verdict detail carries the reason so refresh_kine can say it.
+        if state["vtx_manual"] is None:
+            return None, "manual", {"verdict": "no point set -- type x/y/z, or "
+                                    "set 'a tap in 3-D does' to "
+                                    "'make it the pi0 vertex' and click one"}
         return state["vtx_manual"], "manual", {}
     n1, n2 = state["gamma"][1], state["gamma"][2]
     if n1 is None or n2 is None:
@@ -1605,15 +1681,64 @@ def refresh_kine():
                if G.pi0_mass_accepted(mA) else ""))
         rows.append(
             "&nbsp;&nbsp;<b>vertex convention</b> (%s): &theta; %s &rarr; "
-            "m = <b>%s MeV</b>%s"
+            "m = <b>%s MeV</b>%s%s"
             % (how, "%.1f&deg;" % thB if thB is not None else "-",
                "%.1f" % mB if mB is not None else "-",
                "  <span style='color:#2ca02c'>[in the code's accept window]</span>"
-               if G.pi0_mass_accepted(mB) else ""))
+               if G.pi0_mass_accepted(mB) else "",
+               ("  <span style='color:#d62728'>&#9888; %s</span>"
+                % detail["verdict"]) if v is None and detail.get("verdict")
+               else ""))
         rows.append(
             "<i>The two conventions are shown side by side on purpose: the code "
             "itself uses different direction recipes for the mass it stores "
             "(:3771) and the angle it stores (:3830), and they do not close.</i>")
+        # Which recombination each gamma's energy was converted with, and what
+        # the mass becomes if a track-flagged gamma is really an EM shower.  The
+        # scanner can re-label an object as a shower; the ENERGY does not follow,
+        # because kine_charge was fixed upstream off get_flag_shower().
+        promoted = {}
+        for slot, n, e in ((1, n1, e1), (2, n2, e2)):
+            lbl, used, a = kine_hypothesis(n)
+            if lbl is None:
+                continue
+            sh = shower_by_node(n) or {}
+            rows.append(
+                "&nbsp;&nbsp;<span style='font-size:90%%'>gamma&nbsp;%d "
+                "(shower %s, reco pdg <b>%s</b>) converted as <b>%s</b> "
+                "(recom %.2f, fudge %.2f). As a <b>%s</b> the same charge gives "
+                "<b>%.1f MeV</b>.</span>"
+                % (slot, n, sh.get("particle_id"), lbl, used[0], used[1],
+                   "shower" if lbl != "shower" else "track", a))
+            # Only the TRACK-flagged ones move.  Flipping both gammas is a
+            # non-statement: the mass goes as sqrt(E1 E2), so one going up by
+            # 1.66 and the other down by 1.66 cancels exactly.  The question a
+            # PID correction actually asks is "what if the one the reco called a
+            # track is really a shower".
+            promoted[slot] = a if lbl != "shower" else e
+        if promoted and (e1 or 0) > 0 and (e2 or 0) > 0:
+            a1, a2 = promoted.get(1, e1), promoted.get(2, e2)
+            if (a1, a2) != (e1, e2):
+                for conv, th in (("axis", thA), ("vertex", thB)):
+                    if th is None:
+                        continue
+                    m = G.pi0_mass(a1, a2, th)
+                    if m is None:
+                        continue
+                    rows.append(
+                        "&nbsp;&nbsp;<span style='color:#b58900;font-size:90%%'>"
+                        "if every track-flagged gamma here is really an EM "
+                        "shower, the %s-convention mass becomes <b>%.1f MeV</b> "
+                        "(E %.1f + %.1f).</span>" % (conv, m, a1, a2))
+                rows.append(
+                    "&nbsp;&nbsp;<i style='font-size:88%'>Same collected charge, "
+                    "re-scaled by 1/(recom&times;fudge) &mdash; nothing is "
+                    "re-measured. <b>Re-labelling an object does NOT move its "
+                    "energy</b>: kine_charge was fixed upstream from "
+                    "<code>get_flag_shower()</code>, which reads the START "
+                    "segment's shower flags and |pdg|==11 and nothing else "
+                    "(NeutrinoEnergyReco.cxx:188, PRShower.cxx:1460). The factor "
+                    "is <b>1.66&times;</b>.</i>")
 
     if how == "backproject" and detail:
         rows.append("<b>back-projection</b> (mirror of id_pi0_without_vertex, "
@@ -1954,6 +2079,7 @@ def load(lbl):
     state["excl"] = set()
     state["shorder"] = {}
     state["legacy_marks"] = None
+    state["pio_verdict_legacy"] = None
     state["acc_hidden"] = 0
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
@@ -2152,7 +2278,6 @@ def load_label(lbl):
     state["_suspend"] = True
     try:
         em_verdict.active = None
-        pio_verdict.active = None
         conf_group.active = None
         note_in.value = ""
         if not os.path.exists(p):
@@ -2187,8 +2312,11 @@ def load_label(lbl):
                 state["gamma"][slot] = g.get("shower")
                 if g.get("start_override"):
                     state["gstart"][slot] = tuple(g["start_override"])
-        if pio.get("verdict") in PIO_VERDICTS:
-            pio_verdict.active = PIO_VERDICTS.index(pio["verdict"])
+        # Round 5d: the control is gone, but a verdict written by an older
+        # build is a past judgement on a scientific record -- carried through so
+        # re-saving the event cannot silently destroy it.
+        if pio.get("verdict") in PIO_VERDICTS_LEGACY:
+            state["pio_verdict_legacy"] = pio["verdict"]
         if pio.get("vertex_how") == "manual" and pio.get("vertex"):
             state["vtx_manual"] = tuple(pio["vertex"])
             vtx_mode_group.active = 2
@@ -2318,6 +2446,16 @@ def on_save():
                       join_complete=(j == n), num_segments=n, joined=j,
                       kine_charge=sh.get("kine_charge"),
                       kine_best=sh.get("kine_best"),
+                      kine_dQdx=sh.get("kine_dQdx"),
+                      kine_range=sh.get("kine_range"),
+                      # What the reco thought this was, and therefore WHICH
+                      # recombination its kine_charge used.  A verdict of "is an
+                      # EM shower (reco PID wrong)" is only checkable later if
+                      # the record says what the reco called it at the time.
+                      particle_id=sh.get("particle_id"),
+                      flag_shower=shower_is_em(node),
+                      kine_hypothesis=kine_hypothesis(node)[0],
+                      kine_charge_other_hypothesis=kine_hypothesis(node)[2],
                       start_connection_type=sh.get("start_connection_type"),
                       pio_id=sh.get("pio_id"),
                       axis=list(ax), axis_branch=br, axis_source=axsrc))
@@ -2335,6 +2473,15 @@ def on_save():
                 start=list(shower_start(node, slot) or []),
                 start_override=list(state["gstart"][slot]) if state["gstart"][slot] else None,
                 energy=shower_energy(node),
+                # Which recombination that energy used, and the same charge under
+                # the other hypothesis.  A gamma slot filled with a track-flagged
+                # object -- which is the whole point of "reco PID wrong" -- has an
+                # energy 1.66x smaller than the identical charge in a
+                # shower-flagged one, and the mass goes as sqrt(E1 E2).
+                particle_id=(shower_by_node(node) or {}).get("particle_id"),
+                flag_shower=shower_is_em(node),
+                kine_hypothesis=kine_hypothesis(node)[0],
+                energy_other_hypothesis=kine_hypothesis(node)[2],
                 members=sorted(members_of(node)),
                 axis=list(shower_axis(node)[0]))
         e1 = shower_energy(state["gamma"][1]) if state["gamma"][1] is not None else None
@@ -2354,7 +2501,8 @@ def on_save():
             backproject=detail if how == "backproject" else None,
             mass_axis_convention=mA, theta_axis_convention=thA,
             mass_vertex_convention=mB, theta_vertex_convention=thB,
-            verdict=PIO_VERDICTS[pio_verdict.active] if pio_verdict.active is not None else None,
+            **({"verdict": state["pio_verdict_legacy"]}
+               if state.get("pio_verdict_legacy") else {}),
             reco_groups={str(pid): dict(showers=[s.get("id") for s in shl],
                                         mass=shl[0].get("pio_mass"))
                          for pid, shl in G.pi0_groups(cur_showers()).items()},
@@ -2997,7 +3145,6 @@ for w in (man_x, man_y, man_z):
     w.on_change("value", on_manual)
 layer_group.on_change("active", apply_layers)
 em_verdict.on_change("active", on_verdict)
-pio_verdict.on_change("active", on_verdict)
 conf_group.on_change("active", on_verdict)
 save_btn.on_click(on_save)
 for _f, _hx, _hy in PROJ:
@@ -3077,7 +3224,11 @@ pio_panel = column(
     vtx_mode_group,
     row(man_x, man_y, man_z, tap_toggle),
     kine_div,
-    Div(text="<b>verdict for this pi0</b>", width=RW), pio_verdict)
+    Div(text="<span style='font-size:88%;color:#555'>No pi0 verdict: the record "
+             "keeps the reconstruction's pairing (<code>reco_groups</code>, "
+             "<code>reco_kine</code>) and yours (<code>gammas</code>, "
+             "<code>vertex</code>) side by side, and the difference between them "
+             "IS the judgement.</span>", width=RW))
 
 _hr = (lambda: Div(text="<hr style='margin:6px 0'>", width=CW))
 cam_panel = column(

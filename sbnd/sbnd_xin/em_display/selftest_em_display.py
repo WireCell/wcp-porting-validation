@@ -148,7 +148,6 @@ check("snap moved gamma1's start onto a fitted point",
 
 # ---- save + reload round trip ----
 V.em_verdict.active = 1
-V.pio_verdict.active = 0
 V.conf_group.active = 0
 V.note_in.value = "selftest"
 V.on_save()
@@ -162,9 +161,9 @@ check("  ... and the kine_pio_* block, separately",
       "kine_pio_mass" in ((rec["pio"] or {}).get("reco_kine") or {}))
 check("  ... provenance recorded", bool(rec.get("source")) and bool(rec.get("arm"))
       and bool(rec.get("probe_sidecar")))
+check("  ... and NO pi0 verdict is written (retired in 5d)",
+      "verdict" not in (rec.get("pio") or {}), str(sorted((rec.get("pio") or {}))))
 V.load("evt21073")
-check("reload restores the pi0 verdict",
-      V.pio_verdict.active == 0, str(V.pio_verdict.active))
 check("reload restores both gamma slots",
       V.state["gamma"][1] == 60081 and V.state["gamma"][2] == 31023,
       str(V.state["gamma"]))
@@ -1044,6 +1043,95 @@ check("  ... and marking against it degrades instead of throwing",
       and "no member plotted" in V.cmp_div.text
       and "not on the plot" in V.cmp_div.text,
       re.sub("<[^>]+>", "", V.cmp_div.text)[:80])
+
+# ---------------------------------------------------------------------------
+# round 5c: which recombination an energy was converted with, and what a PID
+# correction does to the pi0 mass
+# ---------------------------------------------------------------------------
+print()
+V.on_event(None, None, "evt166870")
+check("shower_is_em mirrors get_flag_shower off the dump",
+      V.shower_is_em(85045) is False       # pdg 13, neither shower flag
+      and V.shower_is_em(87058) is True    # kShowerTopology on the start segment
+      and V.shower_is_em(10013) is True,   # no flag, but |pdg| == 11
+      "%s %s %s" % (V.shower_is_em(85045), V.shower_is_em(87058),
+                    V.shower_is_em(10013)))
+_lbl, _used, _alt = V.kine_hypothesis(85045)
+check("  ... a muon-PID'd object's kine_charge used the TRACK factors",
+      _lbl == "track" and _used == V.KINE_TRACK, "%s %s" % (_lbl, _used))
+_e85 = V.shower_by_node(85045)["kine_charge"]
+check("  ... and the shower hypothesis is 1.66x, not a re-measurement",
+      abs(_alt - _e85 * (0.7 * 0.95) / (0.5 * 0.8)) < 1e-9
+      and abs(_alt / _e85 - 1.6625) < 1e-9,
+      "%.4f -> %.4f (x%.4f)" % (_e85, _alt, _alt / _e85))
+check("  ... a proton gets its own recombination, fudge stays at the track one",
+      V.kine_hypothesis(10074)[1] == V.KINE_PROTON == (0.35, 0.95))
+V.mode_group.active = 1
+V.state["gamma"] = {1: 87058, 2: 85045}
+V.vtx_mode_group.active = 2
+V.state["vtx_manual"] = None
+V.refresh_kine()
+check("the panel names the hypothesis each gamma's energy was converted with",
+      "converted as <b>shower</b>" in V.kine_div.text
+      and "converted as <b>track</b>" in V.kine_div.text)
+check("  ... and only the TRACK-flagged gamma is promoted (both would cancel)",
+      "149.7 MeV</b> (E 173.8 + 64.2)" in V.kine_div.text,
+      re.sub("<[^>]+>", "", V.kine_div.text.replace("<br>", " | "))[-260:])
+check("a manual pi0 vertex with no point set is called out, not left blank",
+      "no point set" in V.kine_div.text)
+V.state["gamma"] = {1: None, 2: None}
+V.mode_group.active = 0
+
+check("the new EM verdict is APPENDED, so old labels keep their index",
+      V.EM_VERDICTS[:6] == ["correct", "over-clustered", "under-clustered",
+                            "both", "vertex-bad (undecidable)",
+                            "not an EM shower"]
+      and V.EM_VERDICTS[6] == "is an EM shower (reco PID wrong)",
+      str(V.EM_VERDICTS))
+_rowsP = list(V.shower_src.data["node"])
+V.on_shower_select(None, None, [_rowsP.index(85045)])
+V.em_verdict.active = 6
+V.state["gamma"] = {1: 87058, 2: 85045}
+V.on_save()
+_rp = json.load(open(V.label_path("evt166870")))
+check("  ... and the record says what the reco called it at the time",
+      _rp["em"]["verdict"] == "is an EM shower (reco PID wrong)"
+      and _rp["em"]["reco"]["particle_id"] == 13
+      and _rp["em"]["reco"]["flag_shower"] is False
+      and _rp["em"]["reco"]["kine_hypothesis"] == "track"
+      and abs(_rp["em"]["reco"]["kine_charge_other_hypothesis"] - 64.16) < 0.02,
+      json.dumps({k: _rp["em"]["reco"][k] for k in
+                  ("particle_id", "flag_shower", "kine_hypothesis",
+                   "kine_charge_other_hypothesis")}))
+check("  ... and each gamma slot carries its own hypothesis too",
+      _rp["pio"]["gammas"]["2"]["kine_hypothesis"] == "track"
+      and _rp["pio"]["gammas"]["1"]["kine_hypothesis"] == "shower",
+      str({s: g.get("kine_hypothesis")
+           for s, g in _rp["pio"]["gammas"].items()}))
+
+# ---------------------------------------------------------------------------
+# round 5d: the pi0 verdict is retired, but a pre-5d one is not destroyed
+# ---------------------------------------------------------------------------
+print()
+check("the pi0 verdict control is gone", not hasattr(V, "pio_verdict"))
+check("  ... and the old vocabulary is kept only for READING",
+      V.PIO_VERDICTS_LEGACY[0] == "pi0 correct" and len(V.PIO_VERDICTS_LEGACY) == 6)
+_lp = V.label_path("evt21073")
+_old = json.load(open(_lp))
+_old["pio"]["verdict"] = "wrong pairing"          # as a pre-5d build wrote it
+with open(_lp, "w") as _fh:
+    json.dump(_old, _fh)
+V.on_event(None, None, "evt463565")
+V.on_event(None, None, "evt21073")
+check("a pre-5d pi0 verdict is read back into state",
+      V.state["pio_verdict_legacy"] == "wrong pairing",
+      str(V.state["pio_verdict_legacy"]))
+V.on_save()
+check("  ... and re-saving PRESERVES it rather than deleting a past judgement",
+      json.load(open(_lp))["pio"]["verdict"] == "wrong pairing")
+V.on_event(None, None, "evt84229")
+check("  ... while an event that never had one still writes none",
+      V.state["pio_verdict_legacy"] is None)
 
 print()
 print("FAILURES: %d" % len(fails))

@@ -1131,3 +1131,144 @@ left as a **one-segment shower of its own** (which is what most orphan stubs are
 it at all — like the 186 cm track 17002, `shower_id -1`.
 
 Counts after 5b: static **150**, browser 37, repro 1567/1567.
+
+### 13.8 Round 5c — a PID correction does not move the energy
+
+The owner scanned two more events and asked a question the display could not
+answer: *"for the pi0 reconstruction, how is the energy of this muon shower
+calculated for the pi0 mass?"*
+
+**The chain, all read in the source.** The panel's mass uses
+`shower_energy()` = `showers[].kine_charge`, and
+
+```
+E = Σ_p(w_p Q_p)/Σw / recom / fudge × w_value × 1e-6      NeutrinoEnergyReco.cxx:188
+```
+
+so E scales as `1/(recom·fudge)`. **Which pair is used is chosen by
+`Shower::get_flag_shower()`, not by the PDG** (`NeutrinoEnergyReco.cxx:204`):
+
+```
+kShowerTrajectory || kShowerTopology || |pdg| == 11     — on the START SEGMENT
+                                    PRShower.cxx:1460-1464 and :1578-1582
+```
+
+| object | recom | fudge | 1/(recom·fudge) |
+|---|---|---|---|
+| track-flagged | 0.70 | 0.95 | 1.504 |
+| shower-flagged | 0.50 | 0.80 | 2.500 |
+| \|pdg\|==2212 | 0.35 | 0.95 | 3.008 |
+
+Defaults at `NeutrinoPatternBase.h:41-52`; SBND overrides none of them —
+`wct-pr-perevt.jsonnet:674-689` documents the formula and leaves the values
+alone.
+
+**On evt166870 this is not academic.** Shower 85045 is the object the owner wants
+promoted to a gamma: start segment 85045, **pdg 13**, 15.1 cm, and neither shower
+flag — so all three disjuncts are false, `kine_charge` was converted with the
+**track** pair, and its 38.59 MeV is **1.66× smaller** than the identical
+collected charge would give in a shower-flagged object (64.16 MeV). Gamma 1
+(87058) *is* shower-flagged (`kShowerTopology` on its start segment), so it
+already uses the shower pair.
+
+Consequence for the mass, quoted in the panel:
+
+| | E₁ | E₂ | axis-convention mass |
+|---|---|---|---|
+| as reconstructed | 173.8 | 38.6 | **116.1 MeV** |
+| 85045 promoted to a shower | 173.8 | 64.2 | **149.7 MeV** |
+
+Neither is 135. **Only the track-flagged gamma is promoted** in that line, and
+that is a real correction to the first cut of this feature: the mass goes as
+√(E₁E₂), so flipping *both* gammas is an identity — one rises by 1.66 and the
+other falls by 1.66 and they cancel exactly. Flipping both was what the code did
+until the readout was checked against the numbers.
+
+**Two record gaps the same two labels exposed.**
+
+1. `EM_VERDICTS` had `not an EM shower` and no inverse, so "this muon should be a
+   gamma" could only live in the free-text note — evt166870's does. Added
+   **`is an EM shower (reco PID wrong)`**, **appended**: a label stores the
+   verdict string and is read back with `.index()`, so re-ordering would silently
+   re-label every record written before the change. `em.reco` and each
+   `pio.gammas[]` slot now also carry `particle_id`, `flag_shower`,
+   `kine_hypothesis` and the other-hypothesis energy, so a PID verdict is
+   checkable later against what the reco actually thought at the time.
+2. evt166870 was saved with `vertex_how: "manual"` and `vertex: null` — the mode
+   was selected but the x/y/z boxes were empty, so the whole vertex convention
+   silently dropped out of the record. `pio_vertex()` now returns a reason and
+   the panel prints it in red next to the empty mass.
+
+**What the two labels say** (both read, neither edited):
+
+- **evt169356** — π⁰ vertex is the **main vertex** (`vertex_how: main_vertex`,
+  coordinates identical to `main_vertex`). Vertex convention θ 96.93°, mass
+  **138.09**, which reproduces the accepted group's own 138.0899; axis convention
+  155.91. `confidence: certain`, **but both verdicts are null** — the judgement
+  the record exists to hold was not entered.
+- **evt166870** — three different pairings are in play and the label picks a
+  fourth. `pio_id` groups {10013, 87058} (128.75); `kine_pio_*` names
+  87058 + **10074, a proton** (167.35 MeV, mass 329.66) — §5.4's trap live, and
+  the reason the manifest's `kine_pio_mass` column reads 329.7 for this event;
+  the owner assigned 87058 + 85045. Marks: `{87058: {54042: "in"}}` — segment
+  54042 is a 0.38 cm, 2.40 MeV stub, which is a *different* statement from the
+  note about 85045.
+
+Counts after 5c: static **160**, browser 37, repro 1567/1567.
+
+### 13.9 Round 5d — the pi0 verdict is retired
+
+The owner asked what a π⁰ verdict is *about*, and the honest answer was that
+nothing said: not the UI (`verdict for this pi0`), not the README, not the doc,
+not the record. The only evidence was the option list itself — `wrong pairing`,
+`wrong start point`, `wrong vertex`, `shower mis-grouped`, `not a pi0` are all
+**fault descriptions of a reconstruction**, so the list only cohered as a
+judgement on the code, with the scanner's gamma slots as the instrument. But the
+verdict named none of the *three* pairings the panel displays (`pio_id`,
+`kine_pio_*`, the scanner's own), so on an event where they differ it is
+undefined which one it grades.
+
+evt166870 is that event: the accepted group is {10013, 87058} and the owner
+assigned {87058, 85045}. A verdict of "pi0 correct" there would have contradicted
+the gamma slots in the same record, with nothing to notice it.
+
+The owner's resolution: *"what I started is the reconstruction of the code, and
+then I do correction ... you naturally have both information and this is
+sufficient."* That is right, and checkable — the record already carries both
+sides independently:
+
+| the code | the scanner |
+|---|---|
+| `pio.reco_groups` — accepted `pio_id` pairings + masses | `pio.gammas` — pair, starts, energies, members, axes |
+| `pio.reco_kine` — the whole `kine_pio_*` block | `pio.vertex`, `pio.vertex_how` |
+| | `mass_axis_convention`, `mass_vertex_convention` |
+
+The difference between the columns is the judgement, and unlike a verdict string
+it is quantitative and aggregates.
+
+**Known loss, stated rather than papered over.** *"There is no π⁰ in this
+event"* is not expressible as a correction: empty gamma slots are also what "not
+scanned" looks like, and with no gammas assigned no `pio` block is written at
+all. No replacement was invented — the note carries it until the owner asks for
+one.
+
+**A pre-5d verdict is read and preserved.** `PIO_VERDICTS_LEGACY` still parses
+old files, `state["pio_verdict_legacy"]` holds the value, and `on_save` writes it
+straight back. Re-saving an event scanned before this round cannot silently
+destroy a past judgement (M13 in spirit: a saved verdict is a record of a scan).
+Verified by a selftest that plants a `wrong pairing` in a written label, reloads
+and re-saves.
+
+**The EM verdict is untouched** and keeps its anchor (`em.shower` names the
+shower it grades). It also carries statements corrections cannot make —
+`not an EM shower` and, from §13.8, `is an EM shower (reco PID wrong)`.
+
+**A related ambiguity found in the same exchange, NOT fixed.** `vertex_how`
+distinguishes whose vertex it is — `manual` is the scanner's, `main_vertex` and
+`backproject` are the code's — and a 3-D click always lands as `manual` even when
+it snaps to a reconstructed vertex (evt64591: `manual`, coordinates = reco vertex
+17002 to 0.005 cm). But `main vertex` is *option 0, the default*, so
+`vertex_how: "main_vertex"` cannot be told apart from never touching the control.
+evt169356 is in exactly that state. Surfaced to the owner; no field added.
+
+Counts after 5d: static **165**, browser 37, repro 1567/1567.
