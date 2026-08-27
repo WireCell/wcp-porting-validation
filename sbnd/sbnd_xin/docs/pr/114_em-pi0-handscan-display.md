@@ -1272,3 +1272,171 @@ it snaps to a reconstructed vertex (evt64591: `manual`, coordinates = reco verte
 evt169356 is in exactly that state. Surfaced to the owner; no field added.
 
 Counts after 5d: static **165**, browser 37, repro 1567/1567.
+
+## 14. Round 6 — twelve events the owner named, and one that does not exist
+
+### 14.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# stage 2 probes for the four additions (fresh arm, M13)
+WCT_SHOWER_CONTENT_DEBUG=1 WCT_SHOWER_ABSORB_DEBUG=1 WCT_SHOWER_MERGE_DEBUG=1 \
+PR_EXTRA_STAGES=pr_display PR_JOBS=4 \
+  ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-em114b-mcp1k data \
+      169626 174752 347129 394532
+python em_display/prep_em_scan.py --parse-probes work-em114b-mcp1k --no-bee-index \
+      --out /home/xqian/tmp/scratch.tsv
+python em_display/prep_em_scan.py --bee-build bee/em114b \
+      --bee-events 169626,174752,347129,394532
+python em_display/selftest_repro.py            # 98/98
+python em_display/selftest_em_display.py       # 177
+python em_display/selftest_em3d_browser.py     # 40
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-5.
+
+### 14.2 The question that opened the round
+
+> *"I wonder why the display does not have 18255-259774 event?"*
+
+Because the display shows exactly the rows of `em114-manifest.tsv`, and that
+file is generated from `pr113-ncpi0.index.txt` (46) plus the `nuecc48` rows of
+`pr113-nuecc.index.txt` (48). 259774 is in neither.
+
+The deeper answer is that **it was never reconstructed here at all**:
+
+| probe | result |
+|---|---|
+| `work*/pr_evt259774` | none, in any arm |
+| `$3 == 259774` in every arm's `nusel-events.tsv` | no row |
+| `bee/*/*.index.txt` | no entry in any set |
+
+mcp1k is the **first 1000 events** of
+`input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root` (staged as
+`e0..e999`); mcp2k is a separate 2000-event staging. Event numbers inside a run
+are not contiguous, and 259774 falls in a gap in both pools — run 18255 jumps
+66615 → 276198 in mcp1k and 105690 → 273559 in mcp2k. Reaching it means staging
+that event from upstream MCP2025C: a data step, not a display step, so it is an
+ask rather than something done here.
+
+It is nevertheless carried as a **real row** in the adds file. `prep_em_scan.py`
+now *names* every event whose dump is missing rather than counting it, so
+`18255-259774` prints at every regeneration and becomes a scannable row by itself
+on the day it is reconstructed.
+
+### 14.3 What the twelve reachable events needed
+
+Of the thirteen events named, eight were **already in the display** (389538,
+235435, 506114, 84229, 37112, 142421, 90055, 256587) and four were reconstructed
+but had never been in the pr/113 lists (169626, 174752, 347129, 394532).
+
+Two of the owner's run prefixes differ from what is on disk, and the disk values
+are used: **256587 is run 18306**, not 18255, and 84229 is run 18364. Also
+recorded as read: `"90055: shower stem got ided as proton256587, track arm got
+ided as electron"` is two entries with a missing newline — 90055 (shower stem →
+proton) and 256587 (track arm → electron).
+
+The four additions needed all three of dump / probe / cloud:
+
+| | source | result |
+|---|---|---|
+| dump | `work-mcp1k-prod0825` | already there |
+| probe | `work-em114b-mcp1k` (new arm, 4 events, rc=0) | 4 sidecars, 98 total |
+| cloud | `bee/em114b/em114b-mcp1k.zip` (built, 1.4 MB) | 3634 points render for 169626 |
+
+`selftest_repro.py` extends to them: **98/98 events identical** to prod0825 on
+main_vertex, kine, tagger, showers and segments, and probe membership exact on
+1595/1595 showers. So the round-6 arm reproduces production the same way the
+round-2 arm did.
+
+### 14.4 The trap: `bee_round` is not `bee_url`
+
+`bee_round` names the local zip the 3-D cloud is read from
+(`em3d.bee_zip_path`); `bee_url` needs a server-minted UUID and therefore an
+upload. The pre-round-6 `bee_index()` built its map by iterating `*.url` files,
+so **a locally-built set was invisible to it** — the four new events would have
+kept whatever older *uploaded* set happened to contain them.
+
+They are in `prod0813` (uploaded) and `prod0819`. `'em114b'` sorts before
+`'prod0813'`, so the single-string `prefer` would have handed exactly those four
+rows a two-epoch-old reconstruction — the same failure §-earlier describes for 78
+of 94 events, re-armed by adding a round whose name also begins with `e`.
+
+Two changes, and a check that pins them:
+
+- `prefer` is a **sequence**, `("em114", "em114b")`, last wins.
+- a second pass gives *preferred* rounds that have an index and a zip but no
+  `.url` the round with an **empty url** — correct cloud, honest blank link.
+
+The check is spatial, because there is no event id inside the zip to compare:
+for **every** manifest row, the distance from the dump's fit points to that zip
+member's own `track_fit-global` layer.
+
+| binding for evt347129 | zip idx | NN median |
+|---|---|---|
+| `em114b/em114b-mcp1k` | 2 | **0.0005 cm** |
+| `prod0813/mcp1k-prod0813` | 321 | 0.0314 cm |
+| `prod0819/mcp1k-prod0819` | 331 | 0.0314 cm |
+
+Threshold 0.01 cm, so the margin is 60×. Note what the older rows are: the *same
+event*, correctly indexed, but a different reconstruction epoch — the fit points
+moved by ~0.03 cm. A genuinely wrong event would be tens of cm. The check catches
+both. Worst median over all 98 rows: **0.00052 cm**.
+
+### 14.5 The owner's note is a question, not an answer
+
+Each added event carries the hint that came with it. It is a **new manifest
+column** `scan_note`, appended (never inserted, so a diff of the .tsv does not
+show 94 unchanged rows as changed), rendered as a read-only banner, and
+deliberately **not** loaded into `note_in`.
+
+`note_in` is the scanner's editable text and is what becomes `label["note"]`.
+Had the hint been loaded there, the first save would either have overwritten it
+or recorded it as though the scanner had typed it — and a later reader could not
+tell the question from the answer. Pinned by three checks: the hint is on screen,
+it is not in `note_in`, and a save does not put it in the record.
+
+### 14.6 Byte-identity of the scan already in progress
+
+The manifest is regenerated, and a scan is live against it, so the 94
+pre-existing rows were diffed field by field against the committed file:
+
+```
+old rows=94  new rows=98
+column delta: ['scan_note']   columns removed: []
+ADDED: ['169626', '174752', '347129', '394532']   DROPPED: []
+pre-existing rows changed on an OLD column: 0
+```
+
+Zero. The labels already saved under `emscan-0827` are unaffected; nothing under
+`em_labels/` was read for anything but display, and nothing was written to it.
+
+### 14.7 Left open
+
+- **The upload.** `bee/em114b/em114b-mcp1k.zip` is built and not uploaded —
+  outward-facing, CLAUDE.md §5.6. Until then those four rows have no external
+  Bee link (the 3-D view works regardless).
+- **259774** needs staging from upstream MCP2025C. Worth knowing *where the
+  owner saw it*: a truth list or someone else's Bee set names which pool to
+  stage from.
+- The `vertex_how == "main_vertex"` default ambiguity from §13.9 is still open.
+
+Two latent items, noticed and deliberately not fixed in this round:
+
+- **`--parse-probes` with no argument globs `work-em114-*`**, which does *not*
+  match `work-em114b-mcp1k`. Nothing is broken today — the README documents the
+  explicit form, and that is what was run — but the no-arg form silently covers
+  only the original arm. `work-em114*` would cover both.
+- **`bee_build`'s arm resolution is now stricter than it was**: it requires the
+  candidate root to contain `pr_evt<ID>` for *every* event in the arm, where it
+  used to accept any directory that existed. That is what routes round 6's four
+  events to `work-em114b-mcp1k` instead of the em114 arm that lacks them. The
+  consequence to know about: a future *full* `--bee-build bee/em114` over the
+  98-event sample would find mcp1k's 14 events in neither `work-em114-mcp1k`
+  (10) nor `work-em114b-mcp1k` (4), and fall through to prod0825 — the arm whose
+  truncated log the §-earlier gotcha is about. Not exercised by anything run
+  here; build per-round sets, or merge the arms first.
+
+Counts after round 6: static **177**, browser **40**, repro **98/98**
+(1595/1595 showers). The selftests write into `em_labels/selftest114/`; the
+owner's `emscan-0827` tag was read and never written (M13).

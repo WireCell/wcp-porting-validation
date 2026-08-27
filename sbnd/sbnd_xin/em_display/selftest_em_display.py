@@ -27,7 +27,12 @@ def check(name, cond, detail=""):
         fails.append(name)
 
 
-check("events loaded from the manifest", len(V.LABELS) == 94, "%d" % len(V.LABELS))
+# 94 at round 5, 98 from round 6.  Tied to the manifest rather than to a literal
+# so that ADDING events is a data change, with a floor so that LOSING them is
+# still a failure.
+check("events loaded from the manifest",
+      len(V.LABELS) == len(V.MANIFEST) and len(V.LABELS) >= 98,
+      "%d labels, %d manifest rows" % (len(V.LABELS), len(V.MANIFEST)))
 
 # ---- regression case 1: the 0-of-5 lossy shower must not render as empty ----
 V.event_select.value = "evt463565"
@@ -257,6 +262,64 @@ for _lbl in ("evt21073", "evt84229", "evt463565"):
 check("dump fit points ARE the Bee track_fit-global layer (same frame)",
       all(m < 0.001 for _, m, _x in _res),
       "; ".join("%s med %.5f max %.5f cm" % r for r in _res))
+
+# ---- round 6: the same check, but over EVERY row -- the epoch guard ---------
+# The three events above pin the FRAME.  This pins the BINDING: bee_round names
+# a zip and bee_event_index names a directory inside it, and nothing in the zip
+# records which event a directory holds.  So a row pointing at the wrong set, or
+# at the right set but the wrong index, renders a different event's charge cloud
+# under this event's skeleton -- silently, because both halves are valid data.
+#
+# Round 6 armed exactly that trap: the four added events are absent from em114
+# but present in prod0813 (uploaded, so it has a .url) and prod0819.  'em114b'
+# sorts before 'prod0813', so the old single-string `prefer` would have bound
+# them to a two-epoch-old reconstruction.  A spatial test catches it where an
+# id comparison cannot -- there is no id in the zip to compare.
+_worst, _nrows, _skipped = [], 0, []
+for _e, _row in sorted(V.MANIFEST.items(), key=lambda kv: int(kv[0])):
+    _zp = D3.bee_zip_path(SX, _row)
+    _idx = D3.bee_event_index(SX, _row, _e)
+    if not _zp or _idx is None or not os.path.exists(_zp):
+        _skipped.append(_e)
+        continue
+    _lbl = "evt%s" % _e
+    if _lbl not in V.EVENTS:
+        _skipped.append(_e)
+        continue
+    try:
+        with _zip.ZipFile(_zp) as _z:
+            _tf = json.loads(_z.read("data/%d/%d-track_fit-global.json" % (_idx, _idx)))
+    except (KeyError, OSError):
+        _worst.append((_e, float("inf")))
+        continue
+    _T = list(zip(_tf["x"], _tf["y"], _tf["z"]))
+    _d = json.load(open(V.EVENTS[_lbl]))
+    _P = [(p["x"], p["y"], p["z"]) for s in _d["segments"]
+          for p in (s.get("points") or [])]
+    if not _P or not _T:
+        _skipped.append(_e)
+        continue
+    _step = max(1, len(_P) // 40)
+    _nn = sorted(min((_p[0] - t[0]) ** 2 + (_p[1] - t[1]) ** 2
+                     + (_p[2] - t[2]) ** 2 for t in _T) ** 0.5
+                 for _p in _P[::_step])
+    _nrows += 1
+    _worst.append((_e, _nn[len(_nn) // 2]))
+_bad = [w for w in _worst if not (w[1] < 0.01)]
+check("EVERY manifest row's Bee cloud is THIS event (round/idx binding)",
+      _nrows > 90 and not _bad,
+      "%d rows checked, worst median %.5f cm%s"
+      % (_nrows, max((w[1] for w in _worst if w[1] != float("inf")), default=-1),
+         "" if not _bad else "  BAD: %s" % _bad[:4]))
+check("  ... and the four round-6 additions are among them",
+      all(_e in {w[0] for w in _worst}
+          for _e in ("169626", "174752", "347129", "394532")),
+      "skipped: %s" % (_skipped[:6] or "none"))
+check("  ... bound to em114b (prod0825), NOT to prod0813/prod0819",
+      all(V.MANIFEST[_e]["bee_round"] == "em114b/em114b-mcp1k"
+          for _e in ("169626", "174752", "347129", "394532")),
+      ", ".join(V.MANIFEST[_e]["bee_round"]
+                for _e in ("169626", "174752", "347129", "394532")))
 
 # ---- the cloud loader ------------------------------------------------------
 _row = V.MANIFEST["21073"]
@@ -1132,6 +1195,41 @@ check("  ... and re-saving PRESERVES it rather than deleting a past judgement",
 V.on_event(None, None, "evt84229")
 check("  ... while an event that never had one still writes none",
       V.state["pio_verdict_legacy"] is None)
+
+# ---- round 6: the owner's hint, and the four added events -------------------
+check("the scan sample grew to 98 rows", len(V.MANIFEST) == 98, str(len(V.MANIFEST)))
+check("  ... the four owner adds are loadable events",
+      all("evt%s" % _e in V.EVENTS
+          for _e in ("169626", "174752", "347129", "394532")))
+check("  ... each with a probe sidecar, like the original 94",
+      all(V.MANIFEST[_e]["has_probe"] == "1"
+          for _e in ("169626", "174752", "347129", "394532")))
+check("12 rows carry an owner note",
+      sum(1 for r in V.MANIFEST.values() if r.get("scan_note")) == 12,
+      str(sum(1 for r in V.MANIFEST.values() if r.get("scan_note"))))
+
+# evt84229 is loaded: its hint must be ON SCREEN and OUT of the record.
+check("the owner's hint is shown for an event that has one",
+      "pi0 two gamma merged" in V.scan_note_div.text
+      and "what you asked to look at here" in V.scan_note_div.text)
+check("  ... and it is NOT loaded into the editable note box",
+      "pi0 two gamma merged" not in (V.note_in.value or ""),
+      "note_in=%r" % (V.note_in.value,))
+V.on_save()
+_saved = json.load(open(V.label_path("evt84229")))
+check("  ... so a save cannot record the question as if it were the answer",
+      "pi0 two gamma merged" not in json.dumps(_saved.get("note")),
+      "note=%r" % (_saved.get("note"),))
+V.on_event(None, None, "evt463565")
+check("  ... and an event without a hint shows no banner at all",
+      V.scan_note_div.text == "", repr(V.scan_note_div.text[:40]))
+
+# 169626's Bee set is built but not uploaded: the banner must not read as
+# "no 3-D for this event", which is what the pre-round-6 wording said.
+V.on_event(None, None, "evt169626")
+check("a built-but-unuploaded Bee set says so, and says the cloud is fine",
+      "not uploaded" in V.banner.text and "3-D" in V.banner.text
+      and "no Bee set" not in V.banner.text)
 
 print()
 print("FAILURES: %d" % len(fails))

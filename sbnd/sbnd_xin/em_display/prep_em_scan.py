@@ -59,17 +59,53 @@ def read_index(path):
     return out
 
 
+def read_owner_adds(path):
+    """(sample, run, subrun, event, origin, note) rows of pr114-owner-adds.index.txt.
+
+    TAB-separated, unlike the whitespace-split pr113 lists, because the note is
+    free text with spaces in it and is the last field."""
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path) as fh:
+        for ln in fh:
+            if ln.startswith("#"):
+                continue
+            f = ln.rstrip("\n").split("\t")
+            if len(f) >= 5:
+                out.append((f[0], f[1], f[2], f[3], f[4],
+                            f[5].strip() if len(f) > 5 else ""))
+    return out
+
+
 def scan_sample(docdir):
-    """The pr/114 sample: the whole corrected NCpi0 list + the curated nueCC48
-    arm.  Both are doc pr/113 ROUND 2 -- round 1's NCpi0 list was half this size
-    because of the falsy-zero pio_id bug (doc pr/113 sec 10)."""
+    """The pr/114 sample -> (rows, notes).
+
+    The base is the whole corrected NCpi0 list + the curated nueCC48 arm.  Both
+    are doc pr/113 ROUND 2 -- round 1's NCpi0 list was half this size because of
+    the falsy-zero pio_id bug (doc pr/113 sec 10).
+
+    Round 6 adds pr114-owner-adds.index.txt on top.  It does two jobs at once and
+    the ORDER of the two matters: an event already in the pr/113 lists keeps the
+    row it already had (`setdefault`, so its origin and its place in the sample
+    do not move) and gains only a note; an event that is new is appended to the
+    sample.  Doing it the other way round -- letting the adds file overwrite --
+    would silently rewrite the origin of eight rows that are mid-scan.
+    """
     sel = {}
     for r in read_index(os.path.join(docdir, "pr113-ncpi0.index.txt")):
         sel[(r[0], r[3])] = r + ("ncpi0",)
     for r in read_index(os.path.join(docdir, "pr113-nuecc.index.txt")):
         if r[0] == "nuecc48":
             sel.setdefault((r[0], r[3]), r + ("nuecc",))
-    return [sel[k] for k in sorted(sel, key=lambda k: (k[0], int(k[1])))]
+    notes = {}
+    for samp, run, subrun, evt, origin, note in read_owner_adds(
+            os.path.join(docdir, "pr114-owner-adds.index.txt")):
+        sel.setdefault((samp, evt), (samp, run, subrun, evt, origin))
+        if note:
+            notes[evt] = note
+    rows = [sel[k] for k in sorted(sel, key=lambda k: (k[0], int(k[1])))]
+    return rows, notes
 
 
 # ---------------------------------------------------------------------------
@@ -77,7 +113,7 @@ def scan_sample(docdir):
 # ---------------------------------------------------------------------------
 
 
-def bee_index(beedir, prefer="em114"):
+def bee_index(beedir, prefer=("em114", "em114b")):
     """event -> (url, round_tag).  Fully offline.
 
     A Bee set's UUID is minted SERVER-side (wire-cell-bee3/events/views.py:226,
@@ -97,12 +133,23 @@ def bee_index(beedir, prefer="em114"):
 
     So: build the map from every round first, then let `prefer` overwrite.  A
     Bee link is only trustworthy next to a scan if it is the SAME epoch.
+
+    `prefer` is a SEQUENCE for round 6, and it has to be.  The four events the
+    owner added late (169626 174752 347129 394532) are not in the em114 set at
+    all, but they ARE in prod0813 and prod0819 -- and 'em114b' sorts before
+    'prod0813', so a single-string prefer would have handed exactly those four
+    rows a two-epoch-old reconstruction.  That is the same failure the paragraph
+    above describes, re-armed by adding a round whose name still starts with 'e'.
     """
+    if isinstance(prefer, str):
+        prefer = (prefer,)
     out = {}
     urlfiles = sorted(glob.glob(os.path.join(beedir, "*", "*.url")))
-    # preferred round last => it wins
-    urlfiles = ([u for u in urlfiles if os.path.basename(os.path.dirname(u)) != prefer]
-                + [u for u in urlfiles if os.path.basename(os.path.dirname(u)) == prefer])
+    # preferred rounds last, in the order given => the last one wins
+    def _rank(u):
+        rnd = os.path.basename(os.path.dirname(u))
+        return prefer.index(rnd) + 1 if rnd in prefer else 0
+    urlfiles = sorted(urlfiles, key=_rank)
     for urlfile in urlfiles:
         with open(urlfile) as fh:
             url = fh.read().strip()
@@ -127,21 +174,60 @@ def bee_index(beedir, prefer="em114"):
                         out[f[1]] = ("%s/set/%s/event/%s/" % (BEE_BASE, uuid, f[0]),
                                      "%s/%s" % (rnd, tag))
             break
+
+    # --- second pass: preferred rounds that exist LOCALLY but were never
+    # uploaded -----------------------------------------------------------------
+    # `bee_round` and `bee_url` answer two different questions, and only the loop
+    # above can answer the second.  The 3-D charge cloud is read out of
+    # bee/<round>.zip via bee_round (em3d.bee_zip_path); the external link needs a
+    # server-minted UUID, which only exists after an upload.  A round built here
+    # and not yet uploaded has an index and a zip but no .url, so the loop above
+    # skips it entirely and the event keeps whatever OLDER uploaded set happened
+    # to contain it -- for the four round-6 events that is prod0813, two epochs
+    # back, and it would have rendered silently under a prod0825 skeleton.
+    #
+    # So: give the local set the round (the cloud is correct) and leave the url
+    # empty (there is no honest link to give).  Only PREFERRED rounds get this --
+    # a stale local zip from some old sweep must not capture an event.
+    for rnd in prefer:
+        for idxf in sorted(glob.glob(os.path.join(beedir, rnd, "*.index.txt"))):
+            tag = os.path.basename(idxf)[:-len(".index.txt")]
+            if not os.path.exists(os.path.join(beedir, rnd, tag + ".zip")):
+                continue
+            if os.path.exists(os.path.join(beedir, rnd, tag + ".url")):
+                continue                      # already resolved, with a real link
+            with open(idxf) as fh:
+                for ln in fh:
+                    if ln.startswith("#"):
+                        continue
+                    f = ln.split()
+                    if len(f) >= 2 and f[0].isdigit() and f[1].isdigit():
+                        out[f[1]] = ("", "%s/%s" % (rnd, tag))
     return out
 
 
-def bee_build(sample, outdir, dry_run=False):
+def bee_build(sample, outdir, dry_run=False, only=None):
     """Assemble a fresh Bee set for the scan sample.  LOCAL ONLY -- the upload is
     the owner's step.  One zip per arm, because make_pr_bee.py pairs a ql_root
-    with a pr_root and those are per-sample."""
+    with a pr_root and those are per-sample.
+
+    The set is named after `outdir`, so `--bee-build bee/em114b` writes
+    em114b-<arm>.zip and looks for its PR products in work-em114b-<arm> first.
+    That is what lets round 6 add four events WITHOUT rebuilding (or uploading
+    again) the 94-event em114 set the live display is reading right now.
+
+    `only` restricts the build to an explicit event set."""
     os.makedirs(outdir, exist_ok=True)
+    tag = os.path.basename(os.path.normpath(outdir))
     by_arm = {}
     for s in sample:
+        if only is not None and s[3] not in only:
+            continue
         by_arm.setdefault(s[0], []).append(s[3])
     NFIXED = 8      # python, script, -q, qlroot, -p, prroot, -o, zip
     cmds = []
     for arm, evts in sorted(by_arm.items()):
-        zip_out = os.path.join(outdir, "em114-%s.zip" % arm)
+        zip_out = os.path.join(outdir, "%s-%s.zip" % (tag, arm))
         # PR side: the stage-2 arm, NOT prod0825.  `make_pr_bee.py:78` decides
         # whether an event was evaluated by grepping the per-event log for
         # "TaggerCheckNeutrino: selected main cluster", and ONE prod0825 log is
@@ -151,8 +237,21 @@ def bee_build(sample, outdir, dry_run=False):
         # were written per-event and carry the line for 94 of 94.  Safe to
         # substitute because the two arms are equal on every physics field
         # (doc pr/114 sec 3), which is what selftest_repro.py checks.
-        pr_root = os.path.join(SX, "work-em114-%s" % arm)
-        if not os.path.isdir(pr_root):
+        #
+        # The set's OWN arm comes first (work-<tag>-<arm>), so a round that adds
+        # events picks up the probe run that was made for them; work-em114-* is
+        # the fallback for the original 94, and prod0825 the last resort.  A dir
+        # that exists but lacks THIS event is not a match -- work-em114-mcp1k
+        # exists and holds the original ten, so an existence test alone would
+        # have sent round 6's four events to a root that does not contain them.
+        pr_root = None
+        for cand in (os.path.join(SX, "work-%s-%s" % (tag, arm)),
+                     os.path.join(SX, "work-em114-%s" % arm),
+                     os.path.join(SX, "work-%s-%s" % (arm, PROD))):
+            if all(os.path.isdir(os.path.join(cand, "pr_evt%s" % e)) for e in evts):
+                pr_root = cand
+                break
+        if pr_root is None:
             pr_root = os.path.join(SX, "work-%s-%s" % (arm, PROD))
         cmd = [sys.executable, os.path.join(SX, "scripts", "bee", "make_pr_bee.py"),
                "-q", os.path.join(SX, "work-%s-grp0825" % arm),
@@ -373,9 +472,14 @@ def event_stats(dump_path):
         has_main=int(d.get("main_vertex") is not None))
 
 
+# `scan_note` is APPENDED, never inserted: the viewer reads the manifest by
+# column name, but a human reading a diff of this .tsv reads by position, and an
+# inserted column makes all 94 pre-existing rows look changed when none of them
+# are.  Empty for every event the owner did not comment on.
 COLS = ["sample", "run", "subrun", "event", "origin", "n_seg", "n_shower", "n_em",
         "em_max", "n_pio_groups", "n_pio_showers", "lossy_showers", "pio_flag",
-        "kine_pio_mass", "has_main", "has_probe", "bee_round", "bee_url", "dump"]
+        "kine_pio_mass", "has_main", "has_probe", "bee_round", "bee_url", "dump",
+        "scan_note"]
 
 
 def main():
@@ -389,11 +493,13 @@ def main():
     ap.add_argument("--bee-build", metavar="DIR", default=None,
                     help="assemble a fresh Bee set into DIR (local only, never uploads)")
     ap.add_argument("--bee-dry-run", action="store_true")
+    ap.add_argument("--bee-events", default=None,
+                    help="comma-separated events to restrict --bee-build to")
     ap.add_argument("--no-bee-index", action="store_true")
     args = ap.parse_args()
 
-    sample = scan_sample(args.docdir)
-    print("scan sample: %d events" % len(sample))
+    sample, notes = scan_sample(args.docdir)
+    print("scan sample: %d events (%d carry an owner note)" % (len(sample), len(notes)))
 
     if args.parse_probes is not None:
         roots = args.parse_probes or sorted(glob.glob(os.path.join(SX, "work-em114-*")))
@@ -402,23 +508,26 @@ def main():
         parse_probes(roots, args.prepdir)
 
     if args.bee_build:
-        bee_build(sample, args.bee_build, dry_run=args.bee_dry_run)
+        only = (set(e.strip() for e in args.bee_events.split(",") if e.strip())
+                if args.bee_events else None)
+        bee_build(sample, args.bee_build, dry_run=args.bee_dry_run, only=only)
 
     links = {} if args.no_bee_index else bee_index(args.beedir)
     print("bee index: %d events resolvable offline" % len(links))
 
-    rows, missing = [], 0
+    rows, missing = [], []
     for samp, run, subrun, evt, origin in sample:
         dump = os.path.join(SX, "work-%s-%s" % (samp, PROD),
                             "pr_evt%s" % evt, "calib-pr-evt%s.json" % evt)
         if not os.path.exists(dump):
-            missing += 1
+            missing.append("%s-%s" % (run, evt))
             continue
         st = event_stats(dump)
         url, rnd = links.get(evt, ("", ""))
         rows.append(dict(sample=samp, run=run, subrun=subrun, event=evt,
                          origin=origin, bee_url=url, bee_round=rnd,
                          dump=os.path.relpath(dump, SX),
+                         scan_note=notes.get(evt, ""),
                          has_probe=int(os.path.exists(os.path.join(
                              args.prepdir, "emprep-evt%s.json" % evt))),
                          **st))
@@ -430,13 +539,22 @@ def main():
     npio = sum(1 for r in rows if r["n_pio_groups"] > 0)
     nloss = sum(1 for r in rows if r["lossy_showers"] > 0)
     nbee = sum(1 for r in rows if r["bee_url"])
+    nrnd = sum(1 for r in rows if r["bee_round"])
     nprobe = sum(1 for r in rows if r["has_probe"])
-    print("wrote %d rows to %s%s" % (len(rows), args.out,
-                                     "  (%d dumps missing)" % missing if missing else ""))
+    nnote = sum(1 for r in rows if r["scan_note"])
+    print("wrote %d rows to %s" % (len(rows), args.out))
     print("  events with a reconstructed pi0 group : %d" % npio)
     print("  events with a lossy shower join       : %d" % nloss)
     print("  events with a probe sidecar           : %d" % nprobe)
-    print("  events with an offline Bee link       : %d" % nbee)
+    print("  events with a local Bee cloud (round) : %d" % nrnd)
+    print("  events with an offline Bee link (url) : %d" % nbee)
+    print("  events with an owner note             : %d" % nnote)
+    if missing:
+        # NAMED, not counted.  A bare "1 dumps missing" is the kind of line that
+        # gets read as noise; the run-event pair is a to-do that survives.
+        print("  NOT IN THE DISPLAY -- no calib dump under work-<sample>-%s:" % PROD)
+        for m in missing:
+            print("      %s" % m)
 
 
 if __name__ == "__main__":

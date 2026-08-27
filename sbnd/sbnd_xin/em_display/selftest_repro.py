@@ -1,5 +1,12 @@
 """doc pr/114: the reproduction check and the membership-repair check, over the
-whole 94-event scan sample."""
+whole scan sample (94 events at round 5, 98 from round 6).
+
+The sample is read from the manifest rather than hardcoded, so adding events is
+a data change here, not a code change -- but the PROBE ARM is per-round, and a
+round that adds events adds an arm alongside the old one.  Both are searched,
+and an event whose probe arm cannot be found is COUNTED AND NAMED rather than
+skipped: a silent `continue` is how a reproduction gate quietly stops covering
+the events someone just added."""
 import json, os, sys, glob, collections
 sys.path.insert(0, "/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin/em_display")
 import em_geom as G
@@ -14,9 +21,12 @@ with open(os.path.join(SX, "em_display", "em114-manifest.tsv")) as fh:
         f = ln.rstrip("\n").split("\t")
         man[f[cols.index("event")]] = dict(zip(cols, f))
 
+PROBE_ARMS = ("work-em114-%s", "work-em114b-%s")
+
 nev = 0
 diff_fields = collections.Counter()
 bad_events = []
+no_probe_arm = []
 sh_tot = sh_lossy = sh_repaired = sh_exact = 0
 axis_src = collections.Counter()
 
@@ -24,9 +34,15 @@ for evt, row in sorted(man.items(), key=lambda kv: int(kv[0])):
     arm = row["sample"]
     a_p = os.path.join(SX, "work-%s-prod0825" % arm, "pr_evt%s" % evt,
                        "calib-pr-evt%s.json" % evt)
-    b_p = os.path.join(SX, "work-em114-%s" % arm, "pr_evt%s" % evt,
-                       "calib-pr-evt%s.json" % evt)
-    if not (os.path.exists(a_p) and os.path.exists(b_p)):
+    b_p = None
+    for pat in PROBE_ARMS:
+        cand = os.path.join(SX, pat % arm, "pr_evt%s" % evt,
+                            "calib-pr-evt%s.json" % evt)
+        if os.path.exists(cand):
+            b_p = cand
+            break
+    if not os.path.exists(a_p) or b_p is None:
+        no_probe_arm.append(evt)
         continue
     nev += 1
     a = json.load(open(a_p))
@@ -66,7 +82,9 @@ for evt, row in sorted(man.items(), key=lambda kv: int(kv[0])):
         else:
             axis_src["python fallback"] += 1
 
-print("events compared: %d" % nev)
+print("events in manifest: %d   compared: %d" % (len(man), nev))
+if no_probe_arm:
+    print("   NOT COMPARED (no probe arm found): %s" % ", ".join(no_probe_arm))
 print("REPRODUCTION (shower_id excluded -- it is a per-PROCESS counter):")
 if not bad_events:
     print("   all %d events identical on main_vertex, kine, tagger, showers, segments" % nev)

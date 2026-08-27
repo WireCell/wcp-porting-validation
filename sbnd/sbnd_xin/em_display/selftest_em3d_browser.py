@@ -501,6 +501,29 @@ try:
               cols and all(n == 1 for _, n in cols),
               str([c for c in cols if c[1] != 1]))
 
+        # ---- round 6: one of the added events, end to end -------------------
+        # The static test proves the round/idx binding arithmetically.  This
+        # proves the zip built this round actually opens in the RUNNING app:
+        # the four additions are the first rows whose Bee set was never
+        # uploaded, so they are the first to exercise the bee_round-without-
+        # bee_url path all the way to a rendered cloud.
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('event_select').value = 'evt169626'; }")
+        page.wait_for_timeout(6000)
+        npts = js("M('cloud_src').data.x.length")
+        nseg = js("M('seg3_src').data.xs3.length")
+        check("a round-6 addition renders its own cloud in the live app",
+              npts > 500 and nseg > 0,
+              "%s cloud points, %s polylines" % (npts, nseg))
+        banner_txt = page.evaluate("() => Bokeh.documents[0]"
+                                   ".get_model_by_name('banner').text")
+        check("  ... and the banner says the set is built, not missing",
+              "not uploaded" in banner_txt and "no Bee set" not in banner_txt)
+        note_txt = page.evaluate("() => Bokeh.documents[0]"
+                                  ".get_model_by_name('scan_note_div').text")
+        check("  ... with the owner's hint for THIS event on screen",
+              "567 MeV gamma" in note_txt, note_txt[:80])
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

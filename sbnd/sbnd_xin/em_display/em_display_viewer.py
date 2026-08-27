@@ -662,7 +662,8 @@ acc_note = Div(width=430, text=(
 # Controls
 # ---------------------------------------------------------------------------
 mode_group = RadioButtonGroup(labels=["EM shower", "pi0"], active=0, width=240)
-event_select = Select(title="event", options=LABELS, value=LABELS[0], width=190)
+event_select = Select(name="event_select", title="event", options=LABELS,
+                      value=LABELS[0], width=190)
 prev_btn = Button(label="< prev", width=80)
 next_btn = Button(label="next >", width=80)
 LAYERS = [("segments", "track fit"), ("member", "shower members"),
@@ -677,7 +678,18 @@ LAYER_KEYS = [k for k, _ in LAYERS]
 # layer means adding it here too.
 layer_group = CheckboxButtonGroup(labels=[t for _, t in LAYERS],
                                   active=[0, 1, 2, 3, 4, 5, 7, 8, 9])
-banner = Div(text="", width=RW + CW)
+# `name=` on these two so selftest_em3d_browser.py can read them out of the live
+# document -- the banner's wording is a claim about the data ("built, not
+# uploaded") and the hint must be provably on screen, so both are asserted
+# against the RUNNING app, not just against the Python object.
+banner = Div(name="banner", text="", width=RW + CW)
+# The owner's own hint for this event, from the manifest's `scan_note` column
+# (docs/pr/pr114-owner-adds.index.txt).  READ-ONLY, and deliberately not the same
+# widget as `note_in`: note_in is the scanner's editable text and is what gets
+# written into label["note"].  Loading the hint into note_in would mean the first
+# save either overwrote the hint or recorded it as though the scanner had typed
+# it -- and then a later reader could not tell the question from the answer.
+scan_note_div = Div(name="scan_note_div", text="", width=RW + CW)
 info = Div(text="", width=RW)
 
 # Dim whole showers out of the way.  The scan question is always "does this
@@ -2217,13 +2229,23 @@ def set_banner(nloss):
     row = MANIFEST.get(evt, {})
     bits = []
     url = row.get("bee_url") or ""
+    rnd = row.get("bee_round") or ""
     if url:
         bits.append("<a href='%s' target='_blank' style='font-weight:bold'>"
                     "open in Bee &#8599;</a> <span style='color:#666'>(%s)</span>"
-                    % (html.escape(url), html.escape(row.get("bee_round", ""))))
+                    % (html.escape(url), html.escape(rnd)))
+    elif rnd:
+        # bee_round and bee_url answer different questions: the round names the
+        # LOCAL zip the 3-D cloud is read from, the url needs a server-minted
+        # UUID that only an upload produces.  Saying "no Bee link" flatly here
+        # would read as "no 3-D for this event", which is exactly wrong.
+        bits.append("<span style='color:#b58900'>Bee set built but not uploaded"
+                    "</span> <span style='color:#666'>(%s)</span> &mdash; the 3-D "
+                    "cloud below IS this set; only the external link is missing"
+                    % html.escape(rnd))
     else:
-        bits.append("<span style='color:#999'>no Bee link for this event &mdash; "
-                    "build a set with <code>prep_em_scan.py --bee-build bee/em114"
+        bits.append("<span style='color:#999'>no Bee set for this event &mdash; "
+                    "build one with <code>prep_em_scan.py --bee-build bee/em114"
                     "</code>, upload it yourself, then re-run prep</span>")
     if state["prep"]:
         bits.append("<span style='color:#2ca02c'>probe sidecar loaded</span> "
@@ -2248,6 +2270,13 @@ def set_banner(nloss):
             "named). If that is not the shower you meant, re-mark and save; "
             "nothing has rewritten the file." % (n, node))
     banner.text = " &nbsp;|&nbsp; ".join(bits)
+    note = (row.get("scan_note") or "").strip()
+    scan_note_div.text = (
+        "<div style='background:#fff8e1;border-left:4px solid #f0ad4e;"
+        "padding:6px 10px;margin:2px 0'><b>what you asked to look at here:</b> "
+        "%s <span style='color:#888'>&mdash; your note from the scan list, not "
+        "part of the record; the box at the bottom is the one that gets saved."
+        "</span></div>" % html.escape(note)) if note else ""
 
 
 def refresh_info():
@@ -3270,6 +3299,7 @@ layout = column(
     row(header, Spacer(width=20), event_select, prev_btn, next_btn,
         Spacer(width=20), mode_group),
     banner,
+    scan_note_div,
     row(column(view_tabs), Spacer(width=18), right_col))
 
 

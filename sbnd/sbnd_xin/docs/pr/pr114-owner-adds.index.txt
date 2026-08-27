@@ -1,0 +1,59 @@
+# doc pr/114 round 6 -- events the owner named by hand, with the note that came
+# with each one.
+#
+# WHY THIS FILE EXISTS.  em114-manifest.tsv is GENERATED (prep_em_scan.py), and
+# its sample is pr113-ncpi0.index.txt + the nuecc48 rows of pr113-nuecc.index.txt.
+# Hand-appending rows to the .tsv would survive exactly until the next
+# regeneration.  This file is the durable input instead: scan_sample() merges it,
+# adding events that were not in the pr/113 lists and attaching `note` to every
+# event listed here whether it is new or not.
+#
+# The note is the OWNER'S HINT about what to look at.  It is read-only in the
+# display and is NOT the same field as label["note"], which is the scanner's own
+# editable text.  Keeping them separate matters: if the hint were loaded into the
+# editable field, the first save would either overwrite the hint or record it as
+# though the scanner had typed it.
+#
+# Notes are recorded VERBATIM.  Three of them end in an ellipsis in the source
+# message; that is how they were written and they are left that way rather than
+# guessed at.
+#
+# columns: sample <TAB> run <TAB> subrun <TAB> event <TAB> origin <TAB> note
+#
+# ---------------------------------------------------------------------------
+# ALREADY in the pr/113 sample -- these lines add the note only, and the row is
+# otherwise unchanged (same origin, same Bee round, same dump).
+# ---------------------------------------------------------------------------
+nuecc48	18255	1	389538	nuecc	capture second neutrinos …
+nuecc48	18255	1	235435	nuecc	pi0??
+ncpi0	18255	1	506114	ncpi0	incorrect pi0 pair
+ncpi0	18364	1	84229	ncpi0	pi0 two gamma merged …
+ncpi0	18259	1	37112	ncpi0	no pi0???
+ncpi0	18255	1	142421	ncpi0	a major shower not tagged  (x, y, z) = (111.7, -74.4, 216.5) as shower …
+nuecc48	18255	1	90055	nuecc	shower stem got ided as proton
+nuecc48	18306	1	256587	nuecc	track arm got ided as electron
+# ---------------------------------------------------------------------------
+# NEW to the scan -- reconstructed in work-mcp1k-prod0825 but never in the
+# pr/113 lists, so the display had no row for them.  Probe sidecars for these
+# four come from work-em114b-mcp1k (round 6), the Bee cloud from
+# bee/em114b/em114b-mcp1k.zip.
+# ---------------------------------------------------------------------------
+mcp1k	18259	1	169626	owner	What is contained in the 567 MeV gamma, (x, y, z) = (-4.5, 157.5, 442.9) ???
+mcp1k	18259	1	174752	owner	Why not a single electron??? Instead of e-g-e?
+mcp1k	18255	1	347129	owner	Two EM showers, 4 gammas inside the electron
+mcp1k	18255	1	394532	owner	One big EM shower???
+# ---------------------------------------------------------------------------
+# ASKED FOR BUT NOT REACHABLE.  Left in as a real row on purpose: prep_em_scan.py
+# names every event whose dump is missing, so this stays visible at every
+# regeneration and turns into a scannable row by itself the day the event is
+# reconstructed.  It is NOT in the display today.
+#
+# 18255-259774 has no calib dump in any arm, no nusel row in any arm, and no Bee
+# index entry in any set.  It was never reconstructed here: mcp1k is the first
+# 1000 events of input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root
+# (staged e0..e999) and mcp2k is a separate 2000-event staging; run 18255 in the
+# mcp1k pool jumps 66615 -> 276198 and in mcp2k 105690 -> 273559, and 259774
+# falls in both gaps.  Reaching it needs the event staged from upstream
+# MCP2025C -- a data step, not a display step.
+# ---------------------------------------------------------------------------
+mcp1k	18255	1	259774	owner	multiple pi0

@@ -428,10 +428,59 @@ sidecar loaded it uses the non-lossy membership instead and the banner says
 | `work-<arm>-prod0825/pr_evt<ID>/calib-pr-evt<ID>.json` | everything drawn |
 | `em_display/emprep/emprep-evt<ID>.json` | non-lossy membership, `dir15` axis, `absorbed by` |
 | `em_display/em114-manifest.tsv` | the event list, the Bee link, per-event stats |
-| `bee/em114/em114-<arm>.zip` | the 3-D charge cloud (optional; absent ⇒ skeleton only) |
+| `bee/em114/em114-<arm>.zip`, `bee/em114b/em114b-mcp1k.zip` | the 3-D charge cloud (optional; absent ⇒ skeleton only) |
+| `../docs/pr/pr114-owner-adds.index.txt` | events added by hand + the owner's note per event |
 
 Nothing here is ever written. Exactly one code path writes anything — `on_save` —
 and only into `../em_labels/<tag>/labels-evt<ID>.json`.
+
+## Adding an event to the scan
+
+`em114-manifest.tsv` is **generated**. Editing it by hand works until the next
+`prep_em_scan.py` run and then silently loses the edit. The durable input is
+`../docs/pr/pr114-owner-adds.index.txt`:
+
+```
+sample <TAB> run <TAB> subrun <TAB> event <TAB> origin <TAB> note
+```
+
+`scan_sample()` merges it over the pr/113 lists and it does two jobs at once:
+
+- an event **already** in the pr/113 sample keeps the row it had — same origin,
+  same Bee round, same dump — and gains only the note;
+- an event **new** to the sample is appended.
+
+An added event needs three things before it is scannable, and the display tells
+you which one is missing rather than degrading quietly:
+
+1. **a prod0825 dump** — `work-<sample>-prod0825/pr_evt<ID>/calib-pr-evt<ID>.json`.
+   Without it there is no row at all, and `prep_em_scan.py` prints the run-event
+   pair under *NOT IN THE DISPLAY* so it stays visible at every regeneration.
+2. **a probe sidecar** — run the PR chain with the three `WCT_SHOWER_*_DEBUG`
+   env vars into a **fresh** arm (`work-em114b-<sample>`, round 6's), then
+   `prep_em_scan.py --parse-probes work-em114b-<sample>`. Without it the
+   *absorbed by* column is empty and a lossy shower join cannot be repaired.
+3. **a Bee zip** — `--bee-build bee/em114b --bee-events <ids>`. The set is named
+   after the output directory, so this adds a set instead of rebuilding the
+   94-event one the live display is reading.
+
+### `bee_round` and `bee_url` are not the same thing
+
+This is the one trap worth stating twice. `bee_round` names the **local zip** the
+3-D charge cloud is read out of; `bee_url` is the **external link**, and it needs
+a UUID that only the server mints on upload. So a set built here and not yet
+uploaded has a working 3-D view and no link, and the banner says exactly that
+("Bee set built but not uploaded … the 3-D cloud below IS this set").
+
+The danger is what fills the gap if you let it. The four events added in round 6
+are absent from `em114` but present in `prod0813` (uploaded) and `prod0819` —
+two older reconstruction epochs — and `em114b` sorts *before* `prod0813`, so a
+single-string `prefer` would have bound them to a two-epoch-old cloud drawn under
+a prod0825 skeleton, silently. `prefer` is a sequence now, and
+`selftest_em_display.py` checks **every** manifest row by measuring the distance
+from the dump's fit points to the zip's own `track_fit-global` layer: 0.0005 cm
+when the binding is right, 0.0314 cm against prod0813/prod0819 — a 60× margin,
+and a genuinely wrong *event* would be tens of cm.
 
 ### Regenerating
 
@@ -443,9 +492,9 @@ and only into `../em_labels/<tag>/labels-evt<ID>.json`.
 python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
-python em_display/selftest_repro.py         # reproduction + membership repair
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 105 checks
-python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 29
+python em_display/selftest_repro.py         # reproduction + membership repair, 98/98
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 177 checks
+python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 40
 ```
 
 The probes land in `pr_evt<ID>/stdout.log`, **not** in `wct_pr_evt<ID>.log`:
@@ -454,14 +503,20 @@ follows the subshell redirect in `run_pr_chain_batch.sh:1642`.
 
 ## Bee links
 
-**All 94 events have a live Bee link** (uploaded 2026-08-27, `bee/em114/*.url`).
-Two things about them worth knowing:
+**94 of the 98 events have a live Bee link** (uploaded 2026-08-27,
+`bee/em114/*.url`). The four added in round 6 have a **local set only** —
+`bee/em114b/em114b-mcp1k.zip`, built and not uploaded — so their 3-D view works
+and their external link is blank until someone runs `upload-to-bee.sh`.
+
+Two things about the links worth knowing:
 
 - **They point at the `em114` sets on purpose.** The same event exists in many
   older sets — `prod0813` among them — and those are *different reconstructions*.
-  `bee_index(prefer="em114")` makes the matching epoch win every collision;
-  without it, sorted-glob order silently sent 78 of 94 events to a Bee page whose
-  clustering disagrees with the panels beside it.
+  `bee_index(prefer=("em114", "em114b"))` makes the matching epoch win every
+  collision; without it, sorted-glob order silently sent 78 of 94 events to a Bee
+  page whose clustering disagrees with the panels beside it. `prefer` is a
+  **sequence**, last wins — round 6 re-armed this exact trap with a round whose
+  name also starts with `e`.
 - **A freshly-uploaded set can return 500 on the very first hit** while the
   server finishes unpacking it. Reload once. Verified: 94/94 return 200.
 
