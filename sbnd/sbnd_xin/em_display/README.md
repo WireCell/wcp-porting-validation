@@ -40,7 +40,22 @@ and a rotatable canvas gives a *ray*, not a point.
 
 **Right — the acceptance plot.** Angle to the shower axis vs distance from
 the shower start, with the three pass-1 tiers drawn as dashed steps. Every
-segment is a dot; a dot **under** a step is inside that tier.
+segment is a dot; a dot **under** a step is inside that tier. **Squares are the
+segments already in the selected shower**, circles everything else, green/red the
+ones you marked.
+
+By default the axes are **scaled to what is being compared** — the members plus
+anything you marked, with 30 % headroom — not to the 220 cm × 90° box the gate
+needs. Members occupy a corner of the full box (on evt64591's shower 78025 they
+sit inside the first 8 % of the axis), which made "how does this piece compare
+with the ones already in" unanswerable at a glance. **zoom to this shower** turns
+it off and restores the full gate box; anything cropped out is counted in the
+line underneath, never silently dropped.
+
+The **comparison line** below the plot is the same thing in words, and it is what
+aggregates over events: the member spread in distance and angle, then each marked
+segment with its distance, angle, pass-1 tier, `absorbed by`, and whether it sits
+inside the member spread.
 
 This is deliberately *not* a cone drawn over the projections. A 3-D cone does not
 project to a cone, so a wedge on X-Y would be decorative and would invite exactly
@@ -48,7 +63,43 @@ the wrong reading. Distance and angle are the two quantities
 `NeutrinoShowerClustering.cxx:1310-1312` actually tests, so this panel is the
 gate itself with nothing approximated.
 
-**Right — the shower table.** One row per `showers[]`. Click a row to select it.
+**Right — the shower table.** One row per `showers[]`, sorted by `kine_charge`.
+Click a row to select that shower: the view **switches to the 3-D tab and frames
+it** (with `frame the shower`, the default). The leftmost column is the shower's
+**colour swatch** — the same colour its segments are drawn in.
+
+**Right — dim these showers away.** Pick any number of showers here and their
+segments fade almost out in 3-D and in the projections, and drop out of the
+candidate table. The scan question is always "does this piece belong to *that*
+shower", and on a busy event the other showers are the noise in that judgement.
+
+### One colour per shower
+
+Segments are coloured by the shower that owns them, so two pieces of one shower
+look alike and two pieces of different showers do not. Segments no shower claims
+stay neutral grey — they are what the scan is deciding about, and giving them a
+hue of their own would read as membership. `colour by segment` restores the old
+per-segment palette when you need to tell two adjacent segments apart.
+
+**The colour follows your marks.** Mark a segment `IN` and it is repainted in
+that shower's colour immediately; mark a member `OUT` and it drops back to grey.
+So the colours show the clustering *as you are redefining it*, while the
+`in shower` column keeps saying what the reconstruction did. Note that a segment
+the reco left as a one-segment shower of its own — which is what most orphan
+stubs are — starts in **its own** colour, not grey; grey means no shower claims
+it at all.
+
+The palette walks ten distinct hues before it uses their light twins: Bokeh's
+Category20 is ordered as hue *pairs*, and taken raw it gave a π⁰'s two gammas two
+shades of the same blue — the one comparison that must not be ambiguous.
+
+### The views are brushed together
+
+The candidate table, the acceptance plot and the 3-D view are three views of one
+list of segments. Clicking in any of them selects the same segments in the other
+two and draws the cyan halo. The view you clicked is authoritative — the other
+two are rewritten from it, so a stale selection in a panel you are not looking at
+cannot leak into what the mark buttons act on.
 
 **Then one of two panels**, chosen by the mode switch.
 
@@ -83,13 +134,18 @@ neither balloon out of frame nor shrink to a dot, and all zoom is yours. The
 the whole TPC and would leave the neutrino a speck. `refit` re-frames the
 current choice, and there are three:
 
-- `frame the reco` (default) — everything the reconstruction put in the event;
-- `frame the cloud` — the charge cloud as currently filtered;
-- `frame the shower` — just the selected shower (or, in π⁰ mode, the two
-  assigned gammas), and with it on, picking a row in the table also frames it.
-  On evt 64591 that is R 300 cm → 32 cm. It is *not* the default because a table
-  click should not move the camera under you unless you asked for it; with
-  nothing selected it falls back to `frame the reco`.
+- `frame the shower` (**default since round 5**) — just the selected shower (or,
+  in π⁰ mode, the two assigned gammas) **plus anything you have marked into it**,
+  since that is what you are judging. With it on, picking a row in the table also
+  frames it: on evt 64591 that is R 300 cm → 32 cm. With nothing selected it
+  falls back to `frame the reco`.
+- `frame the reco` — everything the reconstruction put in the event;
+- `frame the cloud` — the charge cloud as currently filtered.
+
+The other two modes deliberately do **not** re-frame on a table click — only the
+default moved. If you mark a segment that falls outside the current view the
+status line says so and `refit` will reach it; the camera is never moved under
+you on a mark, because that would throw away your zoom mid-judgement.
 
 **Presets.** `x-y`, `x-z` and `z-y` reproduce the 2-D panels exactly, so if you
 lose your bearings you can step back to a view you already trust and rotate out
@@ -174,8 +230,44 @@ The panel then draws the skeleton and says so in a banner.
 ## EM mode
 
 Select a shower, then mark any segment `IN` / `OUT` / `?` from the candidate
-table or by selecting dots in the acceptance plot. The shower's axis is drawn as
-an arrow, its members are haloed, and your marks are drawn green/red.
+table, by selecting dots in the acceptance plot, or by tapping / boxing straight
+in the 3-D view. The shower's axis is drawn as an arrow, its members are haloed,
+and your marks are drawn green/red.
+
+### A mark belongs to a shower
+
+**Every mark is recorded against the shower selected when you made it**, and with
+no shower selected the mark is **refused** rather than filed somewhere. One event
+can hold marks for several showers at once; the halos show only the shower you
+are scanning, and **marks in this event** underneath the candidate table lists
+all of them with the shower each belongs to.
+
+A segment marked `IN` against **two** showers is a contradiction, not an
+opinion — it is called out in that list with the pass-1 numbers that decide it
+(distance, angle, tier, and the `ellip` tie-break the code itself uses at
+`NeutrinoShowerClustering.cxx:1314-1315`), and again at the save. The record is
+still written: it is yours, not the tool's to veto. Unmark it on the losing
+shower and save again.
+
+This is not a nicety. Until round 5 marks were one flat `{segment: in/out}` per
+event and the record named a single `em.shower` — whichever row happened to be
+selected when *Save* was pressed. A mark made while shower A was up and saved
+after the table moved to B was written against B with nothing to say otherwise,
+and **assigning a π⁰ gamma slot moves the table selection**, so the π⁰ workflow
+reaches that state on its own. **Opening a round-4 label still works** — its
+marks are attributed to the shower the file named — and the banner says so, in
+red, so the attribution is a prompt rather than a silent assumption. Doc pr/114
+§13.2 works one such case through.
+
+If a segment you mark falls outside the current frame, the message says so and
+`refit` will reach it: the frame is the shower **plus what you marked**, since
+that is what you are judging. The camera is not moved under you on a mark.
+
+The saved record carries `marks_by_shower` and, alongside it, `marks_detail`:
+per marked segment its distance, angle, pass-1 tier and ellipsoidal rank against
+the shower it was marked for, plus that shower's own member spread. Those are the
+numbers a gate is cut on, measured at save time so each label is self-contained
+and a later fit needs no re-derivation from the dump.
 
 The candidate table's columns:
 
@@ -348,6 +440,21 @@ layer you were looking at — so a later re-read can put the event back on scree
 the way it was seen. A later tuning fit joins one file per event and never has to
 re-read a dump.
 
+Marks live in `em.marks_by_shower` — `{shower: {segment: in/out/?}}` — and in
+`em.marks_detail`, which carries for each marked segment its `dist`, `angle`,
+`tier`, `ellip`, `length`, `pdg`, `cluster_id`, `absorbed_by` and current
+`owner`, measured against the shower it was marked for, next to that shower's
+`member_span` (n, and the distance and angle range of the segments the
+reconstruction already put in). No flat `marks` map is written: a derived copy
+alongside the authoritative one could disagree with it, and that ambiguity is the
+bug per-shower keying exists to remove.
+
+**Reading older records.** A round-4 file has a flat `em.marks` and one
+`em.shower`; it still loads, its marks are attributed to that shower, and the
+banner says so in red. A round-3 file has no `camera.cloud_scope` key, and that
+absence means `all-clusters` — the whole cloud was on screen. Nothing rewrites an
+old file; re-mark and save if the attribution is not what you meant.
+
 > **A scan tag is a scientific record (CLAUDE.md M13).** Passing `--scan-tag`
 > explicitly is consent to write into that set. Without it the viewer uses
 > `emscan1` and **refuses to write** if that directory already holds labels.
@@ -387,6 +494,19 @@ re-read a dump.
   Measured worst case over the sample: 0.34 % of the largest shower's fitted
   points on a dropped cluster. `all clusters` is one click away and the readout
   always says how many clusters of how many are being drawn.
+- **The acceptance plot's zoom is anchored on the members *and* your marks**, so
+  a mark far outside the shower pulls the range back out and squashes the member
+  spread again. That is the right trade — hiding what you just marked would be
+  worse — but it means the comparison line, not the plot, is the thing to read
+  when a mark is a long way out.
+- **`dim these showers away` fades, it does not delete.** Excluded segments are
+  still tappable in 3-D at alpha 0.05 and still selectable; they are removed from
+  the candidate table but they remain part of the reconstruction, and nothing
+  about a mark on one is blocked.
+- **The colour swatch is per event, not global.** A shower's colour comes from
+  its rank in *this* event's energy-sorted table, so the same shower id in a
+  different event can be a different colour. It is a key for reading one screen,
+  not an identity across the sample.
 - **A label with no `camera.cloud_scope` key predates the candidate filter**, and
   means `all-clusters` — that was the only behaviour before it existed. Do not
   read a missing key as the current default.

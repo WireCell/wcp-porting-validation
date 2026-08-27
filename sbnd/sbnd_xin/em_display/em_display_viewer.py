@@ -38,7 +38,7 @@ from bokeh.models import (Button, CheckboxButtonGroup, ColumnDataSource, Div,
                           DataTable, TableColumn, CDSView, AllIndices, Range1d,
                           TapTool, Span, NumberFormatter, CustomJS, Tabs,
                           TabPanel, BoxSelectTool, WheelZoomTool, ResetTool,
-                          SaveTool)
+                          SaveTool, MultiChoice, HTMLTemplateFormatter)
 from bokeh.events import Tap, Pan, PanStart, PanEnd
 from bokeh.palettes import Category20_20, Viridis256
 from bokeh.plotting import figure
@@ -129,7 +129,11 @@ CONF = ["certain", "likely", "unclear"]
 
 state = dict(label=None, data=None, prep=None,
              sel_shower=None,          # node id of the shower under scan
-             marks={},                 # seg id -> "in" / "out" / "?"
+             marks={},                 # shower node -> {seg id -> "in"/"out"/"?"}
+             excl=set(),               # shower nodes dimmed out of the way
+             shorder={},               # shower node -> position, for the palette
+             legacy_marks=None,        # (shower, n) when a round-4 file was read
+             acc_hidden=0,             # dots outside the zoomed acceptance range
              gamma={1: None, 2: None},  # slot -> node id
              gstart={1: None, 2: None},  # slot -> (x,y,z) override or None
              vtx_mode="main", vtx_manual=None,
@@ -546,9 +550,13 @@ TAP_ACTIONS = [TAP_SELECT, TAP_IN, TAP_OUT, TAP_TOGGLE, TAP_CENTRE, TAP_XYZ,
                TAP_PIO]
 tap_action = Select(name="tap_action", title="a tap in 3-D does", value=TAP_SELECT,
                     options=TAP_ACTIONS, width=CW)
+# Default "frame the shower" since round 5.  Doc pr/114 sec 12.7 left this open;
+# the scanner then asked for a table click to bring the 3-D view up on the thing
+# they clicked, which is that question answered.  The other two modes still must
+# not re-frame on a table click -- only the DEFAULT moved.
 fit_mode = RadioButtonGroup(
     labels=["frame the reco", "frame the cloud", "frame the shower"],
-    active=0, width=CW)
+    active=2, width=CW)
 view_size = Select(title="3-D panel size", value="760",
                    options=["620", "760", "900", "1100"], width=110)
 # Default OFF on purpose.  The show_all_toggle comment further down is the record
@@ -573,7 +581,10 @@ legend_div = Div(width=CW, text=(
     "(pi0 mode)<br>"
     "<i>Yellow inside green = a member you confirmed. Yellow inside red = a "
     "member you are taking out. Green with no yellow = something you are adding."
-    "</i></span>"
+    "<br>A segment you mark IN is <b>repainted in that shower's colour</b> at "
+    "once, and one you mark OUT drops back to grey &mdash; so the colours show "
+    "the clustering as YOU are redefining it, while the <i>in shower</i> column "
+    "keeps saying what the reconstruction did.</i></span>"
     % (_sw("#ffd27f", 6), _sw("#2ca02c", 6, True), _sw("#d62728", 6, True),
        _sw("#00b8d4", 6), _sw("#1f77b4", 4), _sw("#d62728", 4))))
 
@@ -585,7 +596,7 @@ legend_div = Div(width=CW, text=(
 # actually tests, so a dot below a step is inside that tier and a dot above it
 # is not.  Nothing is approximated here.
 acc = figure(name="acc", title="pass-1 acceptance: angle to shower axis vs distance",
-             height=330, width=430, x_range=Range1d(0, 220),
+             height=330, width=520, x_range=Range1d(0, 220),
              y_range=Range1d(0, 90),
              tools="pan,wheel_zoom,box_zoom,reset,save,tap",
              active_scroll="wheel_zoom")
@@ -594,16 +605,29 @@ acc.yaxis.axis_label = "angle to shower axis (deg)"
 tier_src = ColumnDataSource(data=dict(xs=[], ys=[]))
 acc.multi_line(xs="xs", ys="ys", source=tier_src, line_color="#666666",
                line_width=2, line_dash="dashed", alpha=0.9)
-cand_pt_src = ColumnDataSource(data=dict(x=[], y=[], c=[], sid=[], pid=[],
+cand_pt_src = ColumnDataSource(name="cand_pt_src", data=dict(x=[], y=[], c=[], sid=[], pid=[],
                                          length=[], tier=[], owner=[], site=[],
-                                         mark=[]))
-r_cand = acc.scatter("x", "y", source=cand_pt_src, size=9, fill_color="c",
-                     line_color="#333333", alpha=0.85)
+                                         mark=[], mk=[], sz=[]))
+# Members are drawn as SQUARES, everything else as circles.  Colour alone was not
+# enough: a member is orange, a mark is green or red, and on a 20-shower event
+# the eye has to separate those from the palette hue of whatever is underneath.
+r_cand = acc.scatter("x", "y", source=cand_pt_src, size="sz", marker="mk",
+                     fill_color="c", line_color="#333333", alpha=0.85)
 r_cand.nonselection_glyph = r_cand.glyph
 acc.add_tools(HoverTool(renderers=[r_cand], tooltips=[
     ("segment", "@sid"), ("pdg", "@pid"), ("length", "@length{0.0} cm"),
     ("tier", "@tier"), ("now in shower", "@owner"),
     ("absorbed by", "@site"), ("your mark", "@mark")]))
+# Default ON.  The gate box is 220 cm x 90 deg because tier 3 reaches that far,
+# but the members of a real shower live in a corner of it: on evt64591's shower
+# 78025 the two member dots that plot sit inside the first 8% of the axis, among
+# 29 others.  "I do not see the points belonging to the existing EM shower" was a
+# literal and accurate report of that, and a bigger marker does not fix a scale
+# problem -- the range does.
+acc_zoom = Toggle(name="acc_zoom",
+                  label="zoom to this shower (off = the full gate box)",
+                  width=330, active=True)
+cmp_div = Div(name="cmp_div", text="", width=RW)
 acc_note = Div(width=430, text=(
     "<span style='font-size:85%;color:#555'>Steps are the <b>pass-1</b> gate "
     "(<code>pass3_cone</code>, NeutrinoShowerClustering.cxx:1310-1312) &mdash; "
@@ -638,13 +662,32 @@ layer_group = CheckboxButtonGroup(labels=[t for _, t in LAYERS],
 banner = Div(text="", width=RW + CW)
 info = Div(text="", width=RW)
 
-shower_src = ColumnDataSource(data=dict(node=[], pdg=[], nseg=[], joined=[],
+# Dim whole showers out of the way.  The scan question is always "does this
+# piece belong to THAT shower", and on a busy event the other showers' segments
+# are the noise in that judgement -- so this drives the same alpha column the
+# 3-D and 2-D panels already read, and drops the excluded segments from the
+# candidate table, rather than being a table-only filter.
+excl_choice = MultiChoice(name="excl_choice", title="dim these showers away (3-D, projections and "
+                                "the candidate table)", options=[], value=[],
+                          width=RW - 10)
+seg_color_mode = RadioButtonGroup(
+    name="seg_color_mode",
+    labels=["colour by shower", "colour by segment"], active=0, width=CW)
+
+shower_src = ColumnDataSource(name="shower_src", data=dict(node=[], pdg=[], nseg=[], joined=[],
                                         E=[], kb=[], conn=[], pio=[], length=[],
-                                        drift=[], flag=[]))
+                                        drift=[], flag=[], color=[]))
 shower_view_a, shower_view_b = AllIndices(), AllIndices()
 shower_view = CDSView(filter=shower_view_a)
+# The swatch is the whole point of colouring by shower: without a key in the
+# table the hues in the 3-D view say "these two are the same" but never "the same
+# as WHICH row".
+SWATCH = HTMLTemplateFormatter(template=(
+    "<span style='display:inline-block;width:22px;height:11px;border:1px solid "
+    "#555;background:<%= value %>'></span>"))
 shower_tab = DataTable(source=shower_src, view=shower_view, width=RW, height=210,
                        index_position=None, columns=[
+    TableColumn(field="color", title="", width=34, formatter=SWATCH),
     TableColumn(field="node", title="shower id", width=80),
     TableColumn(field="pdg", title="pdg", width=50),
     TableColumn(field="nseg", title="nseg", width=50),
@@ -661,7 +704,7 @@ shower_tab = DataTable(source=shower_src, view=shower_view, width=RW, height=210
     TableColumn(field="pio", title="pio_id", width=60),
     TableColumn(field="flag", title="note", width=180)])
 
-cand_src = ColumnDataSource(data=dict(sid=[], cid=[], pdg=[], length=[], dist=[],
+cand_src = ColumnDataSource(name="cand_src", data=dict(sid=[], cid=[], pdg=[], length=[], dist=[],
                                       angle=[], tier=[], metric=[], owner=[],
                                       site=[], mark=[]))
 cand_view_a, cand_view_b = AllIndices(), AllIndices()
@@ -697,6 +740,10 @@ show_all_toggle = Toggle(label="show members too (off = only segments outside "
                                "this shower)", width=380, active=True)
 em_verdict = RadioButtonGroup(labels=EM_VERDICTS, active=None)
 impact = Div(text="", width=RW)
+# Every mark in the event, by shower.  With marks keyed per shower the halos can
+# only ever show the shower being scanned, so without this the other showers'
+# marks would be invisible until the table moved back to them.
+marks_div = Div(name="marks_div", text="", width=RW)
 
 # --- pi0 controls -----------------------------------------------------------
 g1_btn = Button(label="selected shower -> gamma 1", width=210)
@@ -717,7 +764,7 @@ pio_verdict = RadioButtonGroup(labels=PIO_VERDICTS, active=None)
 conf_group = RadioButtonGroup(labels=CONF, active=None, width=240)
 note_in = TextInput(title="note (optional)", value="", width=520)
 save_btn = Button(label="Save event label", button_type="success", width=170)
-save_note = Div(text="", width=RW)
+save_note = Div(name="save_note", text="", width=RW)
 
 
 # ---------------------------------------------------------------------------
@@ -790,6 +837,115 @@ def members_of(node):
     if not sh:
         return []
     return [s["id"] for s in G.shower_members(sh, cur_segments())]
+
+
+def owner_map():
+    """{segment id: the shower that owns it}, first owner wins.
+
+    Rebuilt on demand rather than cached: membership comes from the probe
+    sidecar, and an event without one falls back to the dump join, so the map is
+    only as stable as `members_of` -- which is the property the callers want.
+    """
+    out = {}
+    for sh in cur_showers():
+        for s in members_of(sh.get("id")):
+            out.setdefault(s, sh.get("id"))
+    return out
+
+
+def marks_for(node):
+    """The marks recorded AGAINST one shower.
+
+    Round 5.  Marks used to be one flat {segment: in/out} for the whole event,
+    and the saved record named a single `em.shower` -- whichever row happened to
+    be selected when Save was pressed.  A mark made while shower A was up and
+    saved after the table had moved to B was therefore written against B, with
+    nothing in the file to say otherwise, and `on_gamma` moves the table
+    selection as a side effect of assigning a pi0 slot -- so the pi0 workflow
+    reaches that state on its own.  Keying by shower removes the ambiguity at
+    the source and lets one event hold marks for several showers at once.
+
+    NOTE: the keys are showers that have been LOOKED at, not showers that have
+    marks -- setdefault creates an entry on read, and `focus_points` reads.
+    `marks_pruned` is what the record is built from.
+    """
+    if node is None:
+        return {}
+    return state["marks"].setdefault(node, {})
+
+
+def marks_flat():
+    """{segment id: (shower node, kind)} over every shower in the event."""
+    out = {}
+    for node, mk in state["marks"].items():
+        for sid, kind in mk.items():
+            out[sid] = (node, kind)
+    return out
+
+
+def marks_pruned():
+    """The mark map with empty per-shower entries dropped.
+
+    `marks_for` uses setdefault, so merely *looking* at a shower creates a key.
+    Saving that would put empty objects in the record and make a shower look
+    scanned when it was only glanced at."""
+    return {n: dict(mk) for n, mk in state["marks"].items() if mk}
+
+
+# Category20 is ordered as ten HUE PAIRS -- dark blue, light blue, dark orange,
+# light orange ... -- so consecutive indices are two shades of one colour.  Taken
+# raw that gave a pi0's two gammas #1f77b4 and #aec7e8, which is the one
+# comparison that must not be ambiguous.  Walk the ten dark entries first and
+# only then their light twins.
+SHOWER_PALETTE = ([Category20_20[i] for i in range(0, 20, 2)]
+                  + [Category20_20[i] for i in range(1, 20, 2)])
+NO_SHOWER_COLOR = "#9aa5b1"
+
+
+def shower_color(node):
+    """One colour per shower, so two segments of the same shower look alike.
+
+    Keyed on the shower's position in this event's own shower list, not on a hash
+    of the id: stable while the event is open, and neighbouring rows in the table
+    get neighbouring palette entries instead of colliding by chance.  Segments no
+    shower claims stay neutral grey -- they are the ones the scan is deciding
+    about, and giving them a hue of their own would read as membership.
+    """
+    if node is None or node == "-":
+        return NO_SHOWER_COLOR
+    order = state.get("shorder") or {}
+    if node not in order:
+        return NO_SHOWER_COLOR
+    return SHOWER_PALETTE[order[node] % len(SHOWER_PALETTE)]
+
+
+def effective_owner(sid, own=None):
+    """Which shower a segment belongs to AFTER the scanner's marks.
+
+    The colour is meant to answer "which pieces are one object", so once you say
+    a piece belongs to a shower it has to LOOK like that shower -- otherwise the
+    display keeps showing the reconstruction's answer while you are recording a
+    different one, which is the confusing half of the picture.  A member marked
+    OUT drops back to neutral for the same reason.  `owner_map` stays the
+    reconstruction's own answer; this is yours.
+    """
+    if own is None:
+        own = owner_map()
+    for node, mk in state["marks"].items():
+        if mk.get(sid) == "in":
+            return node
+    base = own.get(sid)
+    if base is not None and state["marks"].get(base, {}).get(sid) == "out":
+        return None
+    return base
+
+
+def excluded_segments():
+    """Segments belonging to the showers the scanner has dimmed away."""
+    out = set()
+    for node in state["excl"]:
+        out.update(members_of(node))
+    return out
 
 
 def absorb_site(sid):
@@ -1005,6 +1161,11 @@ def focus_points():
     for n in nodes:
         if n is not None:
             want.update(members_of(n))
+            # Round 5: what you MARKED into the shower is part of what you are
+            # judging, so the frame has to reach it.  evt64591's mark sits 84 cm
+            # out against a 35 cm shower -- framing members only put the green
+            # halo off-screen at the exact moment it was placed.
+            want.update(marks_for(n))
     if not want:
         return []
     # One pass over the segments, not one poly_for() linear scan per member:
@@ -1227,11 +1388,77 @@ def draw_tiers():
 
 
 def refresh_marks():
-    ins = [s for s, m in state["marks"].items() if m == "in"]
-    outs = [s for s, m in state["marks"].items() if m == "out"]
-    push_polys(in_src, ins, in3_src)
-    push_polys(out_src, outs, out3_src)
+    """Halos for the marks on the shower being scanned -- and only those.
+
+    A mark now belongs to a shower, so drawing every mark in the event at once
+    would put a green halo on a segment that is IN for a DIFFERENT shower, which
+    is the exact confusion the per-shower keying exists to end.  `marks_div`
+    carries the rest of the event's marks in words."""
+    here = marks_for(state["sel_shower"])
+    push_polys(in_src, [s for s, m in here.items() if m == "in"], in3_src)
+    push_polys(out_src, [s for s, m in here.items() if m == "out"], out3_src)
+    refresh_mark_list()
+    refresh_colors()
     refresh_dim()
+
+
+def refresh_colors():
+    """Repaint segments in the colour of the shower they belong to NOW.
+
+    Patches the `c` column only, for the reason `refresh_dim` patches `a` only:
+    assigning `.data` re-serialises every polyline in four sources on every
+    mark, which since round 4 is every tap.  No-op in per-segment colour mode,
+    where a segment's hue has nothing to do with membership."""
+    if seg_color_mode.active != 0:
+        return
+    own = owner_map()
+    for m in (seg_src["xy"], seg_src["yz"], seg_src["xz"], seg3_src):
+        ids = list(m.data.get("sid") or [])
+        want = [shower_color(effective_owner(i, own)) for i in ids]
+        if list(m.data.get("c") or []) == want:
+            continue
+        m.patch({"c": [(slice(0, len(want)), want)]})
+
+
+def refresh_mark_list():
+    rows = []
+    for node in sorted(state["marks"], key=lambda n: state["shorder"].get(n, 0)):
+        mk = state["marks"][node]
+        if not mk:
+            continue
+        sel = " &larr; scanning" if node == state["sel_shower"] else ""
+        bits = ", ".join(
+            "<span style='color:%s'>%s %s</span>"
+            % ({"in": "#2ca02c", "out": "#d62728"}.get(k, "#666"), s, k.upper())
+            for s, k in sorted(mk.items()))
+        rows.append("<span style='display:inline-block;width:22px;height:9px;"
+                    "border:1px solid #555;background:%s'></span> <b>%s</b>: %s%s"
+                    % (shower_color(node), node, bits, sel))
+    # A segment IN two showers at once is a contradiction, not an opinion, and
+    # the pass-1 numbers that decide it are already computed -- so show them
+    # side by side rather than just flagging the clash.
+    for sid, nodes in sorted(mark_conflicts().items()):
+        cells = []
+        for nd in sorted(nodes, key=lambda n: state["shorder"].get(n, 0)):
+            m = seg_vs_shower(nd, sid)
+            cells.append(
+                "<b>%s</b>: %s cm, %s&deg;, tier <b>%s</b>, ellip %s"
+                % (nd,
+                   "-" if m["dist"] is None else "%.1f" % m["dist"],
+                   "-" if m["angle"] is None else "%.1f" % m["angle"],
+                   m["tier"] if m["tier"] else "-",
+                   "-" if m["ellip"] is None else "%.2f" % m["ellip"]))
+        rows.append(
+            "<span style='color:#d62728'><b>&#9888; %s is marked IN against %d "
+            "showers</b></span> &mdash; it can only belong to one. %s. "
+            "<i>Lower ellip is the code's own tie-break "
+            "(NeutrinoShowerClustering.cxx:1314-1315); unmark it on the other."
+            "</i>" % (sid, len(nodes), " &nbsp;|&nbsp; ".join(cells)))
+    marks_div.text = (
+        "" if not rows else
+        "<span style='font-size:88%;color:#333'><b>marks in this event</b>, by "
+        "shower &mdash; each one is recorded against the shower named here.<br>"
+        + "<br>".join(rows) + "</span>")
 
 
 def refresh_dim():
@@ -1248,11 +1475,23 @@ def refresh_dim():
     keep = None
     if dim_toggle.active and state["sel_shower"] is not None:
         keep = set(members_of(state["sel_shower"]))
-        keep |= {s for s, m in state["marks"].items() if m in ("in", "out")}
+        keep |= {s for s, m in marks_for(state["sel_shower"]).items()
+                 if m in ("in", "out")}
+    # Excluded showers fade harder than "not in this shower" and they fade
+    # whatever the dim toggle says: the scanner asked for them to be out of the
+    # way, not merely de-emphasised.  A segment kept by `keep` still yields to an
+    # explicit exclusion -- naming a shower is the stronger statement.
+    excl = excluded_segments()
     for m in (seg_src["xy"], seg_src["yz"], seg_src["xz"], seg3_src):
         ids = list(m.data.get("sid") or [])
-        want = ([0.95] * len(ids) if keep is None
-                else [0.95 if i in keep else 0.16 for i in ids])
+        want = []
+        for i in ids:
+            if i in excl:
+                want.append(0.05)
+            elif keep is None or i in keep:
+                want.append(0.95)
+            else:
+                want.append(0.16)
         if list(m.data.get("a") or []) == want:
             continue
         m.patch({"a": [(slice(0, len(want)), want)]})
@@ -1286,8 +1525,9 @@ def refresh_impact():
                     if (p.get("dx") or 0) > 0 and (p.get("dQ") or -1) >= 0:
                         t += p["dQ"]
         return t
-    out_m = {s for s, m in state["marks"].items() if m == "out" and s in mem}
-    in_m = {s for s, m in state["marks"].items() if m == "in" and s not in mem}
+    here = marks_for(state["sel_shower"])
+    out_m = {s for s, m in here.items() if m == "out" and s in mem}
+    in_m = {s for s, m in here.items() if m == "in" and s not in mem}
     sh = shower_by_node(state["sel_shower"])
     e = (sh or {}).get("kine_charge") or 0.0
     impact.text = (
@@ -1441,7 +1681,7 @@ def fill_shower_table():
     d = state["data"] or {}
     segs = d.get("segments") or []
     rows = dict(node=[], pdg=[], nseg=[], joined=[], E=[], kb=[], conn=[],
-                pio=[], length=[], drift=[], flag=[])
+                pio=[], length=[], drift=[], flag=[], color=[])
     nloss = 0
     for sh in sorted(cur_showers(), key=lambda s: -(s.get("kine_charge") or 0)):
         j, n = G.join_completeness(sh, segs)
@@ -1471,6 +1711,7 @@ def fill_shower_table():
         rows["length"].append(sh.get("total_length") or 0.0)
         rows["drift"].append(a if a is not None else -1)
         rows["flag"].append("; ".join(note))
+        rows["color"].append(shower_color(sh.get("id")))
     shower_src.data = rows
     flip(shower_view, shower_view_a, shower_view_b)
     return nloss
@@ -1481,29 +1722,38 @@ def fill_cand_table():
     rows = dict(sid=[], cid=[], pdg=[], length=[], dist=[], angle=[], tier=[],
                 metric=[], owner=[], site=[], mark=[])
     pts = dict(x=[], y=[], c=[], sid=[], pid=[], length=[], tier=[], owner=[],
-               site=[], mark=[])
+               site=[], mark=[], mk=[], sz=[])
     if node is None:
         cand_src.data = rows
         cand_pt_src.data = pts
         flip(cand_view, cand_view_a, cand_view_b)
+        refresh_cmp()
         return
     start = shower_start(node)
     ax, _, _ = shower_axis(node)
     off = G.cone_angle_offset(ax)
     mem = set(members_of(node))
-    owner_of = {}
-    for sh in cur_showers():
-        for s in members_of(sh.get("id")):
-            owner_of.setdefault(s, sh.get("id"))
+    mk_here = marks_for(node)
+    owner_of = owner_map()
+    excl = excluded_segments() - mem
     for s in cur_segments():
         sid = s.get("id")
         if sid in mem and not show_all_toggle.active:
+            continue
+        if sid in excl:
             continue
         if start is None or G.vmag(ax) == 0:
             dist = angle = None
         else:
             dist, q = G.segment_closest_point(s, start)
             angle = G.angle_deg(ax, G.vsub(q, start)) if q is not None else None
+            if angle is None and dist is not None and dist < 1e-6:
+                # The shower's own seed segment CONTAINS the start point, so the
+                # vector start->closest is zero and angle_deg returns None.  Left
+                # unhandled it fell through the `angle is not None` guard below
+                # and the seed -- a member, and the one every other member is
+                # measured against -- was silently absent from the plot.
+                angle = 0.0
         tier = G.cone_tier(angle, dist if dist is not None else 1e9, off)
         met = G.cone_metric(angle, dist) if dist is not None else None
         rows["sid"].append(sid)
@@ -1516,9 +1766,9 @@ def fill_cand_table():
         rows["metric"].append(met if met is not None else -1)
         rows["owner"].append(owner_of.get(sid, "-"))
         rows["site"].append(absorb_site(sid))
-        rows["mark"].append(state["marks"].get(sid, ""))
+        rows["mark"].append(mk_here.get(sid, ""))
         if dist is not None and angle is not None:
-            mk = state["marks"].get(sid, "")
+            mk = mk_here.get(sid, "")
             col = {"in": "#2ca02c", "out": "#d62728"}.get(mk)
             if col is None:
                 col = "#ff7f0e" if sid in mem else "#7f9fbf"
@@ -1529,9 +1779,104 @@ def fill_cand_table():
             pts["owner"].append(owner_of.get(sid, "-"))
             pts["site"].append(absorb_site(sid))
             pts["mark"].append(mk or "-")
+            pts["mk"].append("square" if sid in mem else "circle")
+            pts["sz"].append(12 if sid in mem or mk else 9)
     cand_src.data = rows
     cand_pt_src.data = pts
     flip(cand_view, cand_view_a, cand_view_b)
+    fit_acc_ranges(mem)
+    refresh_cmp()
+
+
+def fit_acc_ranges(mem):
+    """Scale the acceptance plot to what is being compared, not to the gate.
+
+    The gate box is 220 cm x 90 deg because pass-1's third tier reaches that far.
+    A real shower's members occupy a corner of it, so the default view answered
+    "where is the gate" while the scanner was asking "how does this piece compare
+    with the ones already in".  Zoomed, the range covers the members and any
+    marked segment with 30% headroom; the tier steps are still drawn and simply
+    run off the edge, which is honest -- and anything outside is counted out loud
+    rather than silently cropped.
+    """
+    d = cand_pt_src.data
+    if not acc_zoom.active or not d.get("x"):
+        acc.x_range.start, acc.x_range.end = 0, 220
+        acc.y_range.start, acc.y_range.end = 0, 90
+        state["acc_hidden"] = 0
+        return
+    keys = [i for i, s in enumerate(d["sid"])
+            if s in mem or (d["mark"][i] not in ("", "-"))]
+    if not keys:                      # nothing to anchor on: show the gate
+        acc.x_range.start, acc.x_range.end = 0, 220
+        acc.y_range.start, acc.y_range.end = 0, 90
+        state["acc_hidden"] = 0
+        return
+    xh = max(40.0, min(220.0, max(d["x"][i] for i in keys) * 1.3))
+    yh = max(15.0, min(90.0, max(d["y"][i] for i in keys) * 1.3))
+    acc.x_range.start, acc.x_range.end = 0, xh
+    acc.y_range.start, acc.y_range.end = 0, yh
+    state["acc_hidden"] = sum(1 for i in range(len(d["x"]))
+                              if d["x"][i] > xh or d["y"][i] > yh)
+
+
+def refresh_cmp():
+    """Is the piece I marked like the ones already in this shower?
+
+    The comparison the scanner is actually making, written out instead of left to
+    be eyeballed off a scatter -- and in a form that aggregates over events,
+    which a plot does not.
+    """
+    node = state["sel_shower"]
+    if node is None:
+        cmp_div.text = ""
+        return
+    d = cand_pt_src.data
+    mem = set(members_of(node))
+    mi = [i for i, s in enumerate(d["sid"]) if s in mem]
+    bits = []
+    if mi:
+        xs = [d["x"][i] for i in mi]
+        ys = [d["y"][i] for i in mi]
+        bits.append("<b>already in shower %s</b>: %d segment(s) plotted &mdash; "
+                    "distance <b>%.1f&ndash;%.1f cm</b>, angle "
+                    "<b>%.1f&ndash;%.1f&deg;</b>"
+                    % (node, len(mi), min(xs), max(xs), min(ys), max(ys)))
+    else:
+        bits.append("<b>shower %s</b> has no member plotted (no start point or "
+                    "no axis)." % node)
+    mk_here = marks_for(node)
+    for sid, kind in sorted(mk_here.items()):
+        if sid not in d["sid"]:
+            bits.append("&nbsp;&nbsp;<b>%s</b> marked <b>%s</b> &mdash; not on "
+                        "the plot (no distance/angle to this shower)."
+                        % (sid, kind.upper()))
+            continue
+        i = d["sid"].index(sid)
+        x, y = d["x"][i], d["y"][i]
+        col = {"in": "#2ca02c", "out": "#d62728"}.get(kind, "#666")
+        rel = []
+        if mi:
+            xs = [d["x"][j] for j in mi]
+            ys = [d["y"][j] for j in mi]
+            rel.append("angle <b>%s</b> the member spread"
+                       % ("inside" if min(ys) <= y <= max(ys) else "outside"))
+            far = max(xs)
+            if far > 0:
+                rel.append("distance <b>%.1f&times;</b> the furthest member"
+                           % (x / far))
+        site = absorb_site(sid) or "nothing"
+        bits.append(
+            "&nbsp;&nbsp;<span style='color:%s'><b>%s marked %s</b></span> "
+            "&mdash; %.1f cm, %.1f&deg;, pass-1 tier <b>%s</b>, absorbed by "
+            "<b>%s</b>. %s"
+            % (col, sid, kind.upper(), x, y, d["tier"][i], site,
+               "; ".join(rel)))
+    if state.get("acc_hidden"):
+        bits.append("<i>%d segment(s) sit outside the zoomed range &mdash; turn "
+                    "the zoom off to see them.</i>" % state["acc_hidden"])
+    cmp_div.text = ("<span style='font-size:88%;color:#333'>"
+                    + "<br>".join(bits) + "</span>")
 
 
 # ---------------------------------------------------------------------------
@@ -1539,11 +1884,77 @@ def fill_cand_table():
 # ---------------------------------------------------------------------------
 
 
+def draw_segments():
+    """Fill the segment polylines in both panels.  Returns the 3-D pick cloud.
+
+    Split out of `load` in round 5 so the colour mode can be changed without
+    re-reading the event.  Colouring by SHOWER is the default: `seg_color(i)`
+    keys on the enumeration index, so two segments of the same shower came out
+    two unrelated hues and the display never said which pieces were already
+    considered one object -- which is the first thing the scan has to know.
+    """
+    d = state["data"] or {}
+    segs = d.get("segments") or []
+    dat = {k: dict(xs=[], ys=[], c=[], a=[], sid=[], pid=[], cid=[], owner=[],
+                   mark=[])
+           for k in ("xy", "yz", "xz")}
+    d3 = dict(polys=[], c=[], a=[], sid=[], pid=[], cid=[], owner=[], mark=[])
+    pick = dict(pts=[], sid=[])
+    owner_of = owner_map()
+    by_shower = (seg_color_mode.active == 0)
+    for i, s in enumerate(segs):
+        pts = G.seg_points(s)
+        if len(pts) < 2:
+            continue
+        sid = s.get("id")
+        own = owner_of.get(sid)
+        c = (shower_color(effective_owner(sid, owner_of)) if by_shower
+             else seg_color(i))
+        for k, (a, b) in (("xy", (0, 1)), ("yz", (2, 1)), ("xz", (0, 2))):
+            dat[k]["xs"].append([p[a] for p in pts])
+            dat[k]["ys"].append([p[b] for p in pts])
+            dat[k]["c"].append(c)
+            dat[k]["a"].append(0.95)
+            dat[k]["sid"].append(sid)
+            dat[k]["pid"].append(s.get("particle_id"))
+            dat[k]["cid"].append(s.get("cluster_id"))
+            dat[k]["owner"].append(own if own is not None else "-")
+            dat[k]["mark"].append("")
+        d3["polys"].append([tuple(p) for p in pts])
+        d3["c"].append(c)
+        d3["a"].append(0.95)
+        d3["sid"].append(sid)
+        d3["pid"].append(s.get("particle_id"))
+        d3["cid"].append(s.get("cluster_id"))
+        d3["owner"].append(own if own is not None else "-")
+        d3["mark"].append("")
+        for p in pts:
+            pick["pts"].append(tuple(p))
+            pick["sid"].append(sid)
+    for k in ("xy", "yz", "xz"):
+        seg_src[k].data = dat[k]
+    fill3_lines(seg3_src, d3.pop("polys"), **d3)
+    return pick
+
+
+def on_seg_color_mode(attr, old, new):
+    if not state.get("data"):
+        return
+    draw_segments()
+    refresh_dim()          # draw_segments resets the alpha column to 0.95
+    refresh_mark_list()
+    push_camera()
+
+
 def load(lbl):
     path = EVENTS.get(lbl)
     state["label"] = lbl
     state["sel_shower"] = None
     state["marks"] = {}
+    state["excl"] = set()
+    state["shorder"] = {}
+    state["legacy_marks"] = None
+    state["acc_hidden"] = 0
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
     state["vtx_manual"] = None
@@ -1560,6 +1971,25 @@ def load(lbl):
             state["prep"] = json.load(fh)
 
     d = state["data"]
+    # Palette order and the exclusion menu, both in the SHOWER TABLE's own order
+    # (energy, descending) rather than the dump's.  The scanner reads the table
+    # top-down, so the biggest showers -- the ones a pi0 pairing is made of --
+    # get the most widely separated hues instead of whatever the dump happened to
+    # list first.  Must precede draw_segments: shower_color reads shorder.
+    _byE = sorted(d.get("showers") or [],
+                  key=lambda s: -(s.get("kine_charge") or 0))
+    state["shorder"] = {sh.get("id"): i for i, sh in enumerate(_byE)}
+    state["_suspend"] = True
+    try:
+        excl_choice.options = [
+            "%s  (%.1f MeV, %d seg)"
+            % (sh.get("id"), sh.get("kine_charge") or 0.0,
+               len(members_of(sh.get("id"))))
+            for sh in _byE]
+        excl_choice.value = []
+    finally:
+        state["_suspend"] = False
+
     xl, xh = DET_BOX["x"]; yl, yh = DET_BOX["y"]; zl, zh = DET_BOX["z"]
     det_src.data = dict(
         xs_xy=[[xl, xh, xh, xl, xl], [0, 0]], ys_xy=[[yl, yl, yh, yh, yl], [yl, yh]],
@@ -1577,45 +2007,7 @@ def load(lbl):
                 (0.0, yl, zl)])
     fill3_lines(det3_src, box)
 
-    segs = d.get("segments") or []
-    dat = {k: dict(xs=[], ys=[], c=[], a=[], sid=[], pid=[], cid=[], owner=[],
-                   mark=[])
-           for k in ("xy", "yz", "xz")}
-    d3 = dict(polys=[], c=[], a=[], sid=[], pid=[], cid=[], owner=[], mark=[])
-    pick = dict(pts=[], sid=[])
-    owner_of = {}
-    for sh in (d.get("showers") or []):
-        for s in members_of(sh.get("id")):
-            owner_of.setdefault(s, sh.get("id"))
-    for i, s in enumerate(segs):
-        pts = G.seg_points(s)
-        if len(pts) < 2:
-            continue
-        c = seg_color(i)
-        for k, (a, b) in (("xy", (0, 1)), ("yz", (2, 1)), ("xz", (0, 2))):
-            dat[k]["xs"].append([p[a] for p in pts])
-            dat[k]["ys"].append([p[b] for p in pts])
-            dat[k]["c"].append(c)
-            dat[k]["a"].append(0.95)
-            dat[k]["sid"].append(s.get("id"))
-            dat[k]["pid"].append(s.get("particle_id"))
-            dat[k]["cid"].append(s.get("cluster_id"))
-            dat[k]["owner"].append(owner_of.get(s.get("id"), "-"))
-            dat[k]["mark"].append("")
-        d3["polys"].append([tuple(p) for p in pts])
-        d3["c"].append(c)
-        d3["a"].append(0.95)
-        d3["sid"].append(s.get("id"))
-        d3["pid"].append(s.get("particle_id"))
-        d3["cid"].append(s.get("cluster_id"))
-        d3["owner"].append(owner_of.get(s.get("id"), "-"))
-        d3["mark"].append("")
-        for p in pts:
-            pick["pts"].append(tuple(p))
-            pick["sid"].append(s.get("id"))
-    for k in ("xy", "yz", "xz"):
-        seg_src[k].data = dat[k]
-    fill3_lines(seg3_src, d3.pop("polys"), **d3)
+    pick = draw_segments()
 
     ts = d.get("track_shower") or {}
     sx, sy, sz = [], [], []
@@ -1721,6 +2113,14 @@ def set_banner(nloss):
                     % ("#2ca02c" if rep else "#d62728", nloss,
                        " &mdash; repaired from the probe" if rep else
                        " &mdash; NOT repairable without a probe sidecar"))
+    if state.get("legacy_marks"):
+        node, n = state["legacy_marks"]
+        bits.append(
+            "<span style='color:#d62728'><b>this label predates per-shower "
+            "marks</b></span> &mdash; its %d mark(s) carried no shower of their "
+            "own, so they are shown against shower <b>%s</b> (the one the record "
+            "named). If that is not the shower you meant, re-mark and save; "
+            "nothing has rewritten the file." % (n, node))
     banner.text = " &nbsp;|&nbsp; ".join(bits)
 
 
@@ -1763,9 +2163,23 @@ def load_label(lbl):
         em = rec.get("em") or {}
         if em.get("shower") is not None:
             state["sel_shower"] = em["shower"]
-            state["marks"] = {int(k): v for k, v in (em.get("marks") or {}).items()}
             if em.get("verdict") in EM_VERDICTS:
                 em_verdict.active = EM_VERDICTS.index(em["verdict"])
+        # Round 5 writes marks_by_shower and nothing else.  A round-4 file has a
+        # flat map plus one `em.shower`, and the only defensible reading of it is
+        # "they all belong to that shower" -- which may be wrong, so the read is
+        # accepted and then SAID OUT LOUD by set_banner rather than absorbed
+        # silently.  Nothing rewrites the old file; the scanner does that by
+        # re-marking if the attribution is not what they meant.
+        mbs = em.get("marks_by_shower")
+        if isinstance(mbs, dict):
+            state["marks"] = {int(n): {int(k): v for k, v in (mk or {}).items()}
+                              for n, mk in mbs.items()}
+        elif em.get("marks"):
+            flat = {int(k): v for k, v in em["marks"].items()}
+            if em.get("shower") is not None:
+                state["marks"] = {em["shower"]: flat}
+                state["legacy_marks"] = (em["shower"], len(flat))
         pio = rec.get("pio") or {}
         for slot in (1, 2):
             g = (pio.get("gammas") or {}).get(str(slot))
@@ -1787,6 +2201,85 @@ def load_label(lbl):
         state["_suspend"] = False
 
 
+def seg_vs_shower(node, sid):
+    """One segment measured against one shower: the pass-1 gate's own inputs."""
+    segs = {s.get("id"): s for s in cur_segments()}
+    s = segs.get(sid)
+    start = shower_start(node)
+    ax, _, _ = shower_axis(node)
+    if s is None or start is None or G.vmag(ax) == 0:
+        return dict(dist=None, angle=None, tier=None, ellip=None)
+    dist, q = G.segment_closest_point(s, start)
+    angle = G.angle_deg(ax, G.vsub(q, start)) if q is not None else None
+    if angle is None and dist is not None and dist < 1e-6:
+        angle = 0.0
+    return dict(dist=dist, angle=angle,
+                tier=G.cone_tier(angle, dist if dist is not None else 1e9,
+                                 G.cone_angle_offset(ax)),
+                ellip=G.cone_metric(angle, dist) if dist is not None else None)
+
+
+def mark_conflicts():
+    """Segments marked IN against MORE THAN ONE shower.
+
+    A segment belongs to one shower or to none, so this is a contradiction in
+    the record rather than a difference of opinion -- and it is reachable
+    without noticing: a round-4 label's migrated mark stays attached to the
+    shower the old file named while you mark the same segment against the one
+    you actually meant.  evt64591 landed in exactly that state.
+    """
+    who = {}
+    for node, mk in state["marks"].items():
+        for sid, kind in mk.items():
+            if kind == "in":
+                who.setdefault(sid, []).append(node)
+    return {sid: nodes for sid, nodes in who.items() if len(nodes) > 1}
+
+
+def mark_metrics(node):
+    """Everything a later fit needs about one shower's marks, measured now.
+
+    The point of the scan is to tune the clustering, and a tuner wants the
+    numbers the gate is cut on -- distance, angle, pass-1 tier, the ellipsoidal
+    rank -- for each marked segment, next to the spread of the segments the
+    reconstruction already put in that shower.  Recomputing those later means
+    re-deriving the axis and the start from the dump and hoping they still match
+    the probe's; measuring at save time makes each label self-contained.
+    """
+    start = shower_start(node)
+    ax, br, axsrc = shower_axis(node)
+    off = G.cone_angle_offset(ax)
+    mem = set(members_of(node))
+    segs = {s.get("id"): s for s in cur_segments()}
+    own = owner_map()
+
+    def one(sid):
+        # One implementation of the gate's inputs, shared with the conflict
+        # readout, so the record and the screen cannot drift apart.
+        m = dict(seg_vs_shower(node, sid))
+        s = segs.get(sid)
+        m.update(length=(s or {}).get("length"), pdg=(s or {}).get("particle_id"),
+                 cluster_id=(s or {}).get("cluster_id"),
+                 absorbed_by=absorb_site(sid) or None, owner=own.get(sid))
+        return m
+
+    memm = [one(s) for s in sorted(mem)]
+    ds = [m["dist"] for m in memm if m["dist"] is not None]
+    as_ = [m["angle"] for m in memm if m["angle"] is not None]
+    return dict(
+        axis=list(ax), axis_branch=br, axis_source=axsrc,
+        angle_offset_deg=off,
+        start=list(start) if start else None,
+        members=sorted(mem),
+        member_span=dict(n=len(memm),
+                         dist_min=min(ds) if ds else None,
+                         dist_max=max(ds) if ds else None,
+                         angle_min=min(as_) if as_ else None,
+                         angle_max=max(as_) if as_ else None),
+        marked={str(sid): dict(kind=kind, **one(sid))
+                for sid, kind in sorted(marks_for(node).items())})
+
+
 def on_save():
     lbl = state.get("label")
     if not lbl or not state.get("data"):
@@ -1801,15 +2294,22 @@ def on_save():
     evt = lbl[3:] if lbl.startswith("evt") else lbl
     mrow = MANIFEST.get(evt, {})
 
+    marks_all = marks_pruned()
     em_block = None
-    if state["sel_shower"] is not None or state["marks"]:
+    if state["sel_shower"] is not None or marks_all:
         node = state["sel_shower"]
         sh = shower_by_node(node) or {}
         j, n = G.join_completeness(sh, cur_segments()) if sh else (0, 0)
         ax, br, axsrc = shower_axis(node) if node is not None else ((0, 0, 0), "", "")
         em_block = dict(
             shower=node,
-            marks={str(k): v for k, v in sorted(state["marks"].items())},
+            # Round 5.  Keyed by shower, and the ONLY mark field written -- a
+            # derived flat copy alongside it could disagree with this one, and
+            # the ambiguity of the flat form is the bug being fixed.
+            marks_by_shower={str(nd): {str(k): v for k, v in sorted(mk.items())}
+                             for nd, mk in sorted(marks_all.items())},
+            marks_detail={str(nd): mark_metrics(nd)
+                          for nd in sorted(marks_all)},
             verdict=EM_VERDICTS[em_verdict.active] if em_verdict.active is not None else None,
             # the reco's own answer, copied in so a later fit never re-reads the dump
             reco=dict(members=sorted(members_of(node)) if node is not None else [],
@@ -1916,8 +2416,19 @@ def on_save():
     os.replace(tmp, path)       # atomic: never leave a half-written record
     state["saved"] = rec
     state["dirty"] = False
-    save_note.text = ("saved <code>%s</code> at %s"
-                      % (html.escape(os.path.relpath(path, SX)), rec["saved_utc"]))
+    # Saved either way -- the record is the scanner's, not ours to veto -- but a
+    # segment claimed by two showers is said out loud AT the save, which is the
+    # moment it would otherwise become a quiet contradiction on disk.
+    warn = ""
+    for sid, nodes in sorted(mark_conflicts().items()):
+        warn += ("<br><span style='color:#d62728'><b>&#9888; %s is marked IN "
+                 "against showers %s.</b> It can belong to only one &mdash; see "
+                 "<i>marks in this event</i> above, unmark it on the other and "
+                 "save again.</span>"
+                 % (sid, " and ".join(str(n) for n in sorted(nodes))))
+    save_note.text = ("saved <code>%s</code> at %s%s"
+                      % (html.escape(os.path.relpath(path, SX)),
+                         rec["saved_utc"], warn))
     refresh_info()
 
 
@@ -1965,8 +2476,13 @@ def on_shower_select(attr, old, new):
     draw_tiers()
     draw_arrows()
     push_polys(mem_src, members_of(node), mem3_src)
-    refresh_dim()
+    refresh_marks()          # the halos follow the shower now that marks do
     refresh_impact()
+    # Round 5: a table click brings the 3-D view up and puts the shower in it.
+    # The scanner asked for exactly this -- picking a row and then having to find
+    # and re-frame the thing by hand was the step that made the table and the
+    # display feel like two unrelated tools.
+    view_tabs.active = 0
     # "frame the shower" is the one mode where picking a row is also a camera
     # move; the other two must NOT re-frame under the scanner on a table click.
     if fit_mode.active == 2:
@@ -1975,22 +2491,85 @@ def on_shower_select(attr, old, new):
         push_camera()
 
 
+def _sel_ids(src):
+    idx = src.selected.indices or []
+    col = list(src.data.get("sid") or [])
+    return [col[i] for i in idx if i < len(col)]
+
+
+def sync_selection(origin):
+    """Linked brushing: one click, the same segments lit everywhere.
+
+    The candidate table, the acceptance plot and the 3-D pick cloud are three
+    views of one list of segments, and until round 5 a click in one left the
+    other two showing something else.  The origin is authoritative -- the other
+    two are rewritten from it rather than unioned with it, so a stale selection
+    left in a view the scanner is not looking at cannot leak into what the mark
+    buttons act on.
+
+    `pick_src` is written under `_suspend` because `on_pick` is the MARKING path:
+    without it, mirroring a table click into the 3-D cloud while `a tap in 3-D
+    does` is set to `mark IN` would apply a mark nobody asked for.
+    """
+    if state["_guard"]:
+        return
+    ids = set(_sel_ids(origin))
+    state["_guard"] = True
+    state["_suspend"] = True
+    try:
+        for src in (cand_src, cand_pt_src, pick_src):
+            if src is origin:
+                continue
+            col = list(src.data.get("sid") or [])
+            src.selected.indices = [i for i, s in enumerate(col) if s in ids]
+    finally:
+        state["_suspend"] = False
+        state["_guard"] = False
+    refresh_selection()
+    if ids:
+        own = owner_map()
+        bits = ", ".join("%s (in shower %s)" % (s, own.get(s, "-"))
+                         for s in sorted(ids)[:6])
+        save_note.text = ("selected %d segment(s): %s%s"
+                          % (len(ids), bits, " ..." if len(ids) > 6 else ""))
+
+
+def _excl_node(opt):
+    """Shower id out of an `excl_choice` option label ("83044  (298.1 MeV...)")."""
+    try:
+        return int(str(opt).split()[0])
+    except (ValueError, IndexError):
+        return None
+
+
+def on_excl(attr, old, new):
+    if state["_suspend"]:
+        return
+    state["excl"] = {n for n in (_excl_node(o) for o in new) if n is not None}
+    refresh_dim()
+    fill_cand_table()
+    push_camera()
+
+
 def selected_cand_ids():
-    out = []
-    for i in (cand_src.selected.indices or []):
-        try:
-            out.append(cand_src.data["sid"][i])
-        except (KeyError, IndexError):
-            pass
-    for i in (cand_pt_src.selected.indices or []):
-        try:
-            out.append(cand_pt_src.data["sid"][i])
-        except (KeyError, IndexError):
-            pass
+    # Deduped across the three views.  Before round 5 they held independent
+    # selections and a segment could realistically be in only one of them; now
+    # sync_selection puts the SAME segment in all three, so without this the
+    # cyan halo was pushed twice per selected segment and any count taken off
+    # this list read double.
+    out, seen = [], set()
+    for src in (cand_src, cand_pt_src):
+        for i in (src.selected.indices or []):
+            try:
+                sid = src.data["sid"][i]
+            except (KeyError, IndexError):
+                continue
+            if sid not in seen:
+                seen.add(sid)
+                out.append(sid)
     # A 3-D tap or box lands on fitted POINTS, but the labelling unit is the
     # segment, so it resolves to segment ids -- which is what makes a box in a
     # rotated view unambiguous where a lasso over a flat projection is not.
-    seen = set(out)
     for i in (pick_src.selected.indices or []):
         try:
             sid = pick_src.data["sid"][i]
@@ -2010,10 +2589,13 @@ def mark(kind):
                               "(table, acceptance plot, or a tap/box in 3-D) "
                               "first.</span>")
             return
-        apply_marks(ids, kind)
-        save_note.text = ("marked %d segment(s) &mdash; %s"
-                          % (len(ids), ", ".join(str(s) for s in ids[:12])
-                             + (" ..." if len(ids) > 12 else "")))
+        if not apply_marks(ids, kind):
+            return          # apply_marks has already said why
+        save_note.text = ("marked %d segment(s) against shower %s &mdash; %s%s"
+                          % (len(ids), state["sel_shower"],
+                             ", ".join(str(s) for s in ids[:12])
+                             + (" ..." if len(ids) > 12 else ""),
+                             offframe_hint(ids)))
     return cb
 
 
@@ -2200,25 +2782,63 @@ def fill_xyz(p, why=""):
 
 
 def apply_marks(ids, kind):
-    """`kind` is "in"/"out"/None, or "toggle" for the cycle."""
+    """`kind` is "in"/"out"/None, or "toggle" for the cycle.
+
+    Refuses outright with no shower selected.  A mark is a statement ABOUT a
+    shower -- "this piece belongs to that one" -- so there is no meaningful place
+    to put one when no shower is named, and the round-4 behaviour of dropping it
+    into a global dict is what let a mark end up filed against the wrong shower.
+    """
     if not ids:
-        return
+        return False
+    node = state["sel_shower"]
+    if node is None:
+        save_note.text = ("<span style='color:#c00'>pick a shower in the table "
+                          "first &mdash; a mark is recorded <i>against</i> a "
+                          "shower, so it needs one to belong to.</span>")
+        return False
+    here = marks_for(node)
     for sid in ids:
         if kind == "toggle":
-            cur = state["marks"].get(sid)
-            nxt = {None: "in", "in": "out", "out": None}.get(cur, "in")
+            nxt = {None: "in", "in": "out", "out": None}.get(here.get(sid), "in")
             if nxt is None:
-                state["marks"].pop(sid, None)
+                here.pop(sid, None)
             else:
-                state["marks"][sid] = nxt
+                here[sid] = nxt
         elif kind is None:
-            state["marks"].pop(sid, None)
+            here.pop(sid, None)
         else:
-            state["marks"][sid] = kind
+            here[sid] = kind
     refresh_marks()
     fill_cand_table()
     refresh_impact()
     touch()
+    return True
+
+
+def offframe_hint(ids):
+    """Warn when a mark landed outside the visible frame.
+
+    `focus_points` includes marks, so *refit* will bring it in -- but the camera
+    is deliberately NOT moved here: re-framing on every mark would throw away the
+    scanner's zoom mid-judgement.  Saying it is the honest middle."""
+    if not ids or not state.get("cam_R"):
+        return ""
+    half = min(f3d.x_range.end - f3d.x_range.start,
+               f3d.y_range.end - f3d.y_range.start) / 2.0
+    out = []
+    for sid in ids:
+        for p in poly_for(sid):
+            u, v, _ = _proj([(p[0], p[1], p[2])])[0]
+            if math.hypot(u, v) > half:
+                out.append(sid)
+                break
+    if not out:
+        return ""
+    return ("  <span style='color:#b58900'>%s outside the current view &mdash; "
+            "press <i>refit</i> to bring %s in.</span>"
+            % (", ".join(str(s) for s in out[:4]),
+               "it" if len(out) == 1 else "them"))
 
 
 def on_pick(attr, old, new):
@@ -2249,17 +2869,27 @@ def on_pick(attr, old, new):
         return
     ids = sorted(set(sids))
     if act == TAP_SELECT:
-        refresh_selection()
+        # Mirror the 3-D pick into the table and the acceptance plot, so a box
+        # drawn in the view lights up the same segments in the numbers.
+        sync_selection(pick_src)
         save_note.text = (
             "3-D selection: %d segment(s) &mdash; %s. Now press mark IN / OUT / ?."
             % (len(ids), ", ".join(str(s) for s in ids[:8])
                + (" ..." if len(ids) > 8 else "")))
         return
-    apply_marks(ids, {TAP_IN: "in", TAP_OUT: "out", TAP_TOGGLE: "toggle"}[act])
-    save_note.text = ("%s: %d segment(s) &mdash; %s"
+    # Only report success if the mark actually landed: apply_marks refuses when
+    # no shower is selected, and overwriting its refusal with this line would
+    # tell the scanner a mark was recorded when none was.
+    if not apply_marks(ids, {TAP_IN: "in", TAP_OUT: "out",
+                             TAP_TOGGLE: "toggle"}[act]):
+        _clear_pick()
+        return
+    save_note.text = ("%s: %d segment(s) &mdash; %s%s"
                       % (act, len(ids), ", ".join(
-                          "%s=%s" % (s, state["marks"].get(s, "-")) for s in ids[:8])
-                         + (" ..." if len(ids) > 8 else "")))
+                          "%s=%s" % (s, marks_for(state["sel_shower"]).get(s, "-"))
+                          for s in ids[:8])
+                         + (" ..." if len(ids) > 8 else ""),
+                         offframe_hint(ids)))
     # Bokeh does not re-fire selected.indices when the SAME index is tapped
     # again, and "toggle" is defined by tapping the same segment repeatedly, so
     # the selection has to be re-armed by hand.  Only for the marking actions:
@@ -2269,12 +2899,18 @@ def on_pick(attr, old, new):
 
 
 def _clear_pick():
+    # The table and the plot are cleared with the 3-D cloud now that the three
+    # are brushed together: leaving a row highlighted after the mark landed would
+    # say the selection still stands when the next mark button would find it
+    # already consumed.  _guard as well as _suspend, so the clears do not each
+    # bounce back through sync_selection.
     state["_suspend"] = True
+    state["_guard"] = True
     try:
-        pick_src.selected.indices = []
-        vtx3_src.selected.indices = []
-        mainvtx3_src.selected.indices = []
+        for src in (pick_src, vtx3_src, mainvtx3_src, cand_src, cand_pt_src):
+            src.selected.indices = []
     finally:
+        state["_guard"] = False
         state["_suspend"] = False
     push_polys(sel_src, [], sel3_src)
 
@@ -2372,8 +3008,12 @@ mainvtx3_src.selected.on_change("indices",
                                 on_vtx_pick(mainvtx3_src, "the main vertex"))
 # The acceptance plot and the candidate table feed the same resolver, so a
 # selection made there lights the same cyan halo a 3-D box does.
-cand_src.selected.on_change("indices", lambda a, o, n: refresh_selection())
-cand_pt_src.selected.on_change("indices", lambda a, o, n: refresh_selection())
+cand_src.selected.on_change("indices", lambda a, o, n: sync_selection(cand_src))
+cand_pt_src.selected.on_change("indices",
+                               lambda a, o, n: sync_selection(cand_pt_src))
+excl_choice.on_change("value", on_excl)
+seg_color_mode.on_change("active", on_seg_color_mode)
+acc_zoom.on_click(lambda a: fill_cand_table())
 camtxt.on_change("value", on_camtxt)
 cloud_layer.on_change("value", on_cloud_opt)
 cloud_max.on_change("value", on_cloud_opt)
@@ -2424,6 +3064,7 @@ em_panel = column(
         width=RW),
     row(mark_in_btn, mark_out_btn, mark_q_btn, mark_clear_btn, show_all_toggle),
     cand_tab,
+    marks_div,
     Div(text="<b>verdict for this shower</b>", width=RW), em_verdict,
     impact)
 
@@ -2445,6 +3086,7 @@ cam_panel = column(
              "suspends rotation while it is on. Depth is shown by fading, not by "
              "perspective.", width=CW),
     row(*preset_btns), row(refit_btn, view_size), fit_mode,
+    seg_color_mode,
     cam_div,
     _hr(),
     cloud_layer, cloud_scope, cloud_color, cloud_max, cloud_div,
@@ -2465,9 +3107,11 @@ view_tabs = Tabs(tabs=[
 right_col = column(
     row(layer_group), info,
     shower_tab,
+    excl_choice,
     em_panel,
     pio_panel,
-    row(column(acc, acc_note)),
+    row(column(acc, row(acc_zoom), acc_note)),
+    cmp_div,
     row(conf_group, note_in, save_btn),
     save_note, width=RW)
 

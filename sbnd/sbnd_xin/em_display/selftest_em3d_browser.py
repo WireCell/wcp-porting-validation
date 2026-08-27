@@ -322,11 +322,32 @@ try:
               "%s halo polyline(s) for %s selected segment(s)"
               % (nsel_halo, nseg))
 
+        # Round 5: a mark is filed AGAINST a shower, so with no row picked the
+        # gesture must be refused rather than dropped into a nameless bucket.
         set_tap("mark IN")
+        bigbox()
+        check("with no shower picked, a marking box is REFUSED",
+              js("M('in3_src').data.xs3.length") == 0
+              and "pick a shower" in js("M('save_note').text"),
+              js("M('save_note').text")[:70])
+
+        def pick_row(i=0):
+            page.evaluate("(i) => { Bokeh.documents[0]"
+                          ".get_model_by_name('shower_src').selected.indices"
+                          " = [i]; }", i)
+            page.wait_for_timeout(900)
+
+        pick_row(0)
+        check("  ... and picking a shower row switches to the 3-D tab",
+              js("M('view_tabs').active") == 0)
         bigbox()
         n_in = js("M('in3_src').data.xs3.length")
         check("a box in 'mark IN' mode marks on the gesture itself",
               n_in > 0, "%s segment(s) marked IN" % n_in)
+        check("  ... and the mark list names the shower it was filed against",
+              js("M('shower_src').data.node[0]").__str__()
+              in js("M('marks_div').text"),
+              js("M('marks_div').text")[-140:])
         check("  ... and it re-arms, so the same segments can be clicked again",
               js("M('pick_src').selected.indices.length") == 0)
         set_tap("mark OUT")
@@ -415,6 +436,71 @@ try:
 
         page.get_by_text("3-D", exact=True).first.click()
         page.wait_for_timeout(1200)
+
+        # ------------------------------------------------------------------
+        # round 5: the tables, the acceptance plot and the 3-D view are one
+        # brushed set, and whole showers can be dimmed out of the way.
+        # ------------------------------------------------------------------
+        page.evaluate("""() => { const d = Bokeh.documents[0];
+            for (const m of d.all_models.values())
+                if (m.type == 'RadioButtonGroup' && m.labels
+                    && m.labels.includes('EM shower')) m.active = 0; }""")
+        page.wait_for_timeout(1200)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('shower_src').selected.indices"
+                      " = [0]; }")
+        page.wait_for_timeout(1500)
+        # Pick a candidate row that is NOT already selected anywhere.
+        sid = page.evaluate("() => Bokeh.documents[0]"
+                            ".get_model_by_name('cand_src').data.sid[2]")
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('cand_src').selected.indices = [2]; }")
+        page.wait_for_timeout(1500)
+        plot_sel = page.evaluate("""() => { const d = Bokeh.documents[0];
+            const s = d.get_model_by_name('cand_pt_src');
+            return s.selected.indices.map(i => s.data.sid[i]); }""")
+        pick_sel = page.evaluate("""() => { const d = Bokeh.documents[0];
+            const s = d.get_model_by_name('pick_src');
+            return [...new Set(s.selected.indices.map(i => s.data.sid[i]))]; }""")
+        check("a candidate-table click brushes the plot and the 3-D view",
+              plot_sel == [sid] and pick_sel == [sid],
+              "row %s -> plot %s, 3-D %s" % (sid, plot_sel, pick_sel))
+        check("  ... and the cyan halo follows, once",
+              js("M('sel3_src').data.xs3.length") == 1,
+              str(js("M('sel3_src').data.xs3.length")))
+
+        opts = page.evaluate("() => Bokeh.documents[0]"
+                             ".get_model_by_name('excl_choice').options")
+        page.evaluate("(o) => { Bokeh.documents[0]"
+                      ".get_model_by_name('excl_choice').value = [o]; }",
+                      opts[1])
+        page.wait_for_timeout(1800)
+        faded = page.evaluate("() => { const s = Bokeh.documents[0]"
+                              ".get_model_by_name('seg3_src');"
+                              " return s.data.a.filter(v => v < 0.1).length; }")
+        check("dimming a shower fades exactly its segments in the live 3-D view",
+              faded > 0, "%s faded polyline(s)" % faded)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('excl_choice').value = []; }")
+        page.wait_for_timeout(1200)
+        check("  ... and clearing it brings them back",
+              page.evaluate("() => { const s = Bokeh.documents[0]"
+                            ".get_model_by_name('seg3_src');"
+                            " return s.data.a.filter(v => v < 0.1).length; }") == 0)
+
+        cols = page.evaluate("""() => { const d = Bokeh.documents[0];
+            const seg = d.get_model_by_name('seg3_src').data;
+            const m = {};
+            for (let i = 0; i < seg.sid.length; i++) {
+                const o = seg.owner[i];
+                if (o === '-' ) continue;
+                (m[o] = m[o] || new Set()).add(seg.c[i]);
+            }
+            return Object.entries(m).map(([k, v]) => [k, v.size]); }""")
+        check("in the live view each shower is drawn in one colour",
+              cols and all(n == 1 for _, n in cols),
+              str([c for c in cols if c[1] != 1]))
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

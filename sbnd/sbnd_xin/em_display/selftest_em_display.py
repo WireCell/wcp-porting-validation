@@ -72,7 +72,8 @@ check("  ... some candidate falls inside a pass-1 tier", len(tiers) > 0,
 sid = V.cand_src.data["sid"][0]
 V.cand_src.selected.indices = [0]
 V.mark("out")()
-check("marking a segment records it", V.state["marks"].get(sid) == "out")
+check("marking a segment records it, against the selected shower",
+      V.marks_for(V.state["sel_shower"]).get(sid) == "out")
 check("  ... impact readout mentions the shower", "kine_charge" in V.impact.text)
 check("  ... marked polyline pushed to the out layer",
       bool(V.out_src["xy"].data["xs"]))
@@ -414,7 +415,7 @@ V.state["sel_shower"] = 69134
 V.fill_cand_table()
 V.mark("in")()
 check("  ... and marking works off that 3-D selection",
-      V.state["marks"].get(_sids[0]) == "in")
+      V.marks_for(V.state["sel_shower"]).get(_sids[0]) == "in")
 V.pick_src.selected.indices = []
 
 # tap in "fill x/y/z" mode must land on a REAL fitted point (a ray needs an
@@ -435,7 +436,7 @@ _hit = [i for i, s in enumerate(_sids) if s == _target][:3]
 for want in ("in", "out", None):
     V.tap_action.value = V.TAP_TOGGLE
     V.pick_src.selected.indices = list(_hit)
-    got = V.state["marks"].get(_target)
+    got = V.marks_for(V.state["sel_shower"]).get(_target)
     check("toggle tap: %s -> %s" % (want and "next" or "third", want or "cleared"),
           got == want, "seg %s -> %r" % (_target, got))
     # THE re-arm check: Bokeh does not re-fire selected.indices for the same
@@ -446,7 +447,7 @@ for want in ("in", "out", None):
 V.tap_action.value = V.TAP_IN
 V.pick_src.selected.indices = list(_hit)
 check("tap in 'mark IN' mode marks on the click itself",
-      V.state["marks"].get(_target) == "in")
+      V.marks_for(V.state["sel_shower"]).get(_target) == "in")
 # Found by the REAL browser, not by this file: a selection left standing from
 # the previous action makes the first gesture of the new one a no-op, because
 # Bokeh fires selected.indices only on a change and the index list is identical.
@@ -458,7 +459,8 @@ check("  ... and switching the action drops the standing selection, so the "
       and not V.sel3_src.data["xs3"])
 V.tap_action.value = V.TAP_OUT
 V.pick_src.selected.indices = list(_hit)
-check("  ... and 'mark OUT' overrides it", V.state["marks"].get(_target) == "out")
+check("  ... and 'mark OUT' overrides it",
+      V.marks_for(V.state["sel_shower"]).get(_target) == "out")
 
 # ---- round 4: orbit centre --------------------------------------------------
 V.tap_action.value = V.TAP_CENTRE
@@ -499,11 +501,13 @@ check("  ... and the pi0 vertex marker moved there",
       V.piovtx_src.data["x"] and abs(V.piovtx_src.data["x"][0] - _vx[0]) < 0.06)
 check("  ... x/y/z boxes agree with the state (no stale-read reentrancy)",
       abs(float(V.man_x.value) - _vx[0]) < 0.06)
-_marks_before = dict(V.state["marks"])
+_marks_before = json.dumps({str(k): v for k, v in V.state["marks"].items()},
+                           sort_keys=True)
 V.tap_action.value = V.TAP_IN
 V.vtx3_src.selected.indices = [3]
 check("a vertex tap can NEVER reach state['marks']",
-      V.state["marks"] == _marks_before, str(V.state["marks"]))
+      json.dumps({str(k): v for k, v in V.state["marks"].items()},
+                 sort_keys=True) == _marks_before, str(V.state["marks"]))
 check("  ... and box-select cannot pick vertices up at all",
       [r.data_source for r in V._box3.renderers] == [V.pick_src]
       and V.vtx3_src in [r.data_source for r in V._tap3.renderers],
@@ -517,7 +521,9 @@ V.on_event(None, None, "evt84229")
 V.state["sel_shower"] = 69134
 V.push_polys(V.mem_src, V.members_of(69134), V.mem3_src)
 _mem = V.members_of(69134)
-V.state["marks"] = {_mem[0]: "out", _sids[0] if _sids[0] not in _mem else _mem[1]: "in"}
+V.state["marks"] = {V.state["sel_shower"]: {
+    _mem[0]: "out",
+    (_sids[0] if _sids[0] not in _mem else _mem[1]): "in"}}
 V.refresh_marks()
 check("reco membership and your marks are separate, simultaneous layers",
       len(V.mem3_src.data["xs3"]) == len(_mem)
@@ -566,14 +572,14 @@ V.dim_toggle.active = False
 V.refresh_dim()
 
 # ---- round 4: a reopened label draws its own marks --------------------------
-V.state["marks"] = {_mem[0]: "out"}
+V.state["marks"] = {V.state["sel_shower"]: {_mem[0]: "out"}}
 V.state["sel_shower"] = 69134
 V.em_verdict.active = 1
 V.on_save()
 V.on_event(None, None, "evt21073")
 V.on_event(None, None, "evt84229")
 check("re-opening a labelled event DRAWS the marks it restores",
-      V.state["marks"].get(_mem[0]) == "out"
+      V.marks_for(V.state["sel_shower"]).get(_mem[0]) == "out"
       and len(V.out3_src.data["xs3"]) == 1
       and len(V.mem3_src.data["xs3"]) == len(_mem),
       "marks=%s out-halos=%d member-halos=%d"
@@ -743,6 +749,301 @@ _rec = json.load(open(V.label_path("evt84229")))
 check("the saved record carries the view the judgement was made from",
       (_rec.get("camera") or {}).get("cloud") == "clustering-global"
       and _rec["camera"]["az_deg"] is not None, str(_rec.get("camera")))
+
+# ---------------------------------------------------------------------------
+# round 5: marks belong to a shower, views are brushed together, showers have
+# colours, and the acceptance plot is scaled to what is being compared
+# ---------------------------------------------------------------------------
+print()
+import re  # noqa: E402
+V.on_event(None, None, "evt64591")
+_rows = list(V.shower_src.data["node"])
+
+
+def pick(node):
+    V.on_shower_select(None, None, [_rows.index(node)])
+
+
+# --- a mark belongs to a shower ---------------------------------------------
+V.view_tabs.active = 1
+pick(83044)
+check("a table click brings the 3-D view up", V.view_tabs.active == 0)
+# Read from the source, not from the live widget: earlier checks in this file
+# drive fit_mode themselves, so the running value says nothing about the DEFAULT.
+_fmblk = (open(os.path.join(SX, "em_display", "em_display_viewer.py")).read()
+          .split("fit_mode = RadioButtonGroup(")[1].split(")")[0])
+check("  ... and 'frame the shower' is the default that makes it useful",
+      "active=2" in _fmblk.replace(" ", ""), _fmblk.strip()[:70])
+V.fit_mode.active = 2
+_R0 = V.state["cam_R"]
+pick(78025)
+check("  ... so picking a small shower actually re-frames onto it",
+      V.state["cam_R"] < _R0, "R %.1f -> %.1f" % (_R0, V.state["cam_R"]))
+pick(83044)
+V.apply_marks([60008], "in")
+pick(78025)
+V.apply_marks([59007], "out")
+check("two showers hold their own marks in one event",
+      V.marks_for(83044) == {60008: "in"} and V.marks_for(78025) == {59007: "out"},
+      "%s / %s" % (V.marks_for(83044), V.marks_for(78025)))
+check("  ... and the halos show only the shower being scanned",
+      len(V.out3_src.data["xs3"]) == 1 and len(V.in3_src.data["xs3"]) == 0,
+      "in=%d out=%d" % (len(V.in3_src.data["xs3"]),
+                        len(V.out3_src.data["xs3"])))
+check("  ... while the mark list names every shower that has one",
+      "83044" in V.marks_div.text and "78025" in V.marks_div.text)
+_before = json.dumps({str(k): v for k, v in V.state["marks"].items()},
+                     sort_keys=True)
+V.state["sel_shower"] = None
+V.apply_marks([24003], "in")
+check("a mark with NO shower selected is refused, not filed somewhere",
+      "pick a shower" in V.save_note.text
+      and json.dumps({str(k): v for k, v in V.state["marks"].items()},
+                     sort_keys=True) == _before)
+
+# --- the record ---------------------------------------------------------
+pick(83044)
+V.em_verdict.active = 0
+V.on_save()
+_r = json.load(open(V.label_path("evt64591")))["em"]
+check("the record keys marks by shower", _r["marks_by_shower"] ==
+      {"78025": {"59007": "out"}, "83044": {"60008": "in"}},
+      str(_r["marks_by_shower"]))
+check("  ... and writes NO flat map that could disagree with it",
+      "marks" not in _r, str(sorted(_r)))
+_d = _r["marks_detail"]["83044"]
+check("  ... and carries the gate numbers a later fit needs",
+      _d["marked"]["60008"]["tier"] == 2
+      and abs(_d["marked"]["60008"]["dist"] - 84.4) < 0.1
+      and abs(_d["marked"]["60008"]["angle"] - 10.8) < 0.1
+      and _d["member_span"]["n"] == 17,
+      json.dumps(_d["marked"]["60008"]))
+
+# --- a round-4 file still reads, and says so --------------------------------
+_legacy = dict(json.load(open(V.label_path("evt64591"))))
+_legacy["em"] = dict(shower=78025, marks={"60008": "in"}, verdict="correct",
+                     reco=_r["reco"])
+with open(V.label_path("evt64591"), "w") as _fh:
+    json.dump(_legacy, _fh)
+V.on_event(None, None, "evt21073")
+V.on_event(None, None, "evt64591")
+check("a round-4 flat-mark label still loads",
+      V.marks_for(78025) == {60008: "in"}, str(V.state["marks"]))
+check("  ... attributed to the shower the file named, and SAID so",
+      V.state["legacy_marks"] == (78025, 1)
+      and "predates per-shower marks" in V.banner.text)
+
+# --- exclusion --------------------------------------------------------------
+pick(83044)
+_n0 = len(V.cand_src.data["sid"])
+_opt = [o for o in V.excl_choice.options if o.startswith("78025")][0]
+V.on_excl(None, None, [_opt])
+_ex = V.excluded_segments()
+_a = V.seg3_src.data["a"]
+_s = V.seg3_src.data["sid"]
+check("excluding a shower dims exactly its segments in 3-D",
+      _ex and {_a[i] for i, q in enumerate(_s) if q in _ex} == {0.05}
+      and {_a[i] for i, q in enumerate(_s) if q not in _ex} == {0.95},
+      str(sorted(_ex)))
+check("  ... and drops them from the candidate table",
+      len(V.cand_src.data["sid"]) == _n0 - len(_ex),
+      "%d -> %d, %d excluded" % (_n0, len(V.cand_src.data["sid"]), len(_ex)))
+V.on_excl(None, None, [])
+
+# --- linked brushing --------------------------------------------------------
+pick(83044)
+_i = list(V.cand_src.data["sid"]).index(60008)
+V.cand_src.selected.indices = [_i]
+check("a candidate-table click lights the acceptance plot and the 3-D view",
+      [V.cand_pt_src.data["sid"][j] for j in V.cand_pt_src.selected.indices]
+      == [60008]
+      and {V.pick_src.data["sid"][j]
+           for j in V.pick_src.selected.indices} == {60008})
+check("  ... without doubling the selection halo",
+      V.selected_cand_ids() == [60008]
+      and len(V.sel_src["xy"].data["xs"]) == 1,
+      "%s / %d" % (V.selected_cand_ids(), len(V.sel_src["xy"].data["xs"])))
+V.cand_src.selected.indices = []
+_j = list(V.cand_pt_src.data["sid"]).index(83050)
+V.cand_pt_src.selected.indices = [_j]
+check("  ... and the acceptance plot drives them back the other way",
+      [V.cand_src.data["sid"][k] for k in V.cand_src.selected.indices] == [83050])
+V.cand_pt_src.selected.indices = []
+
+# --- one colour per shower --------------------------------------------------
+_own = V.owner_map()
+_bad = {}
+for _k, _sid in enumerate(V.seg_src["xy"].data["sid"]):
+    _bad.setdefault(_own.get(_sid), set()).add(V.seg_src["xy"].data["c"][_k])
+check("every segment of a shower is drawn in ONE colour",
+      all(len(v) == 1 for k, v in _bad.items() if k is not None),
+      str({k: v for k, v in _bad.items() if k is not None and len(v) > 1}))
+check("  ... the two pi0 gammas are different HUES, not two shades of one",
+      V.shower_color(83044) != V.shower_color(78025)
+      and V.shower_color(83044)[:4] != V.shower_color(78025)[:4],
+      "%s vs %s" % (V.shower_color(83044), V.shower_color(78025)))
+check("  ... segments no shower claims stay neutral",
+      V.shower_color(None) == V.NO_SHOWER_COLOR)
+check("  ... and the shower table carries the colour key",
+      len(V.shower_src.data["color"]) == len(V.shower_src.data["node"])
+      and V.shower_src.data["color"][0] == V.shower_color(
+          V.shower_src.data["node"][0]))
+V.seg_color_mode.active = 1
+V.on_seg_color_mode(None, None, 1)
+check("  ... and the per-segment mode still works",
+      len({V.seg_src["xy"].data["c"][k]
+           for k, q in enumerate(V.seg_src["xy"].data["sid"])
+           if _own.get(q) == 83044}) > 1)
+V.seg_color_mode.active = 0
+V.on_seg_color_mode(None, None, 0)
+
+# --- the acceptance plot is about the members now ---------------------------
+pick(83044)
+_mem = set(V.members_of(83044))
+_plotted = [q for q in V.cand_pt_src.data["sid"] if q in _mem]
+check("the shower's own seed segment is ON the acceptance plot",
+      len(_plotted) == len(_mem) and 83044 in _plotted,
+      "%d of %d members plotted" % (len(_plotted), len(_mem)))
+check("  ... at angle 0, which is what a zero-length start vector means",
+      abs(V.cand_pt_src.data["y"][list(V.cand_pt_src.data["sid"]).index(83044)])
+      < 1e-9)
+check("  ... members are drawn as squares, the rest as circles",
+      {V.cand_pt_src.data["mk"][k]
+       for k, q in enumerate(V.cand_pt_src.data["sid"]) if q in _mem} == {"square"}
+      and "circle" in set(V.cand_pt_src.data["mk"]))
+V.apply_marks([60008], "in")
+_xh, _yh = V.acc.x_range.end, V.acc.y_range.end
+check("the plot is scaled to the comparison, not to the 220x90 gate box",
+      _xh < 220 and _yh < 90 and _xh > 84.4,
+      "x 0..%.1f  y 0..%.1f" % (_xh, _yh))
+check("  ... and anything cropped out is counted, not silently dropped",
+      V.state["acc_hidden"] > 0
+      and "outside the zoomed range" in V.cmp_div.text,
+      "hidden=%s" % V.state["acc_hidden"])
+check("  ... the readout compares the mark with the members in words",
+      "already in shower 83044" in V.cmp_div.text
+      and "angle <b>inside</b> the member spread" in V.cmp_div.text
+      and "1.6&times;" in V.cmp_div.text
+      and "tier <b>2</b>" in V.cmp_div.text,
+      re.sub("<[^>]+>", "", V.cmp_div.text)[:200])
+V.acc_zoom.active = False
+V.fill_cand_table()
+check("  ... and zoom off restores the full gate box",
+      (V.acc.x_range.end, V.acc.y_range.end) == (220, 90))
+V.acc_zoom.active = True
+
+# --- a mark you cannot see is a trap -----------------------------------------
+V.fit_mode.active = 2
+pick(83044)
+V.state["marks"][83044] = {}          # start from the members alone
+V.refit_camera()
+_R_mem = V.state["cam_R"]
+_i = list(V.cand_src.data["sid"]).index(60008)
+V.cand_src.selected.indices = [_i]
+V.mark("in")()
+check("marking off-frame says so instead of hiding the halo",
+      "outside the current view" in V.save_note.text,
+      re.sub("<[^>]+>", "", V.save_note.text)[:90])
+V.refit_camera()
+check("  ... and refit then reaches it, because the frame counts your marks",
+      V.state["cam_R"] > _R_mem + 5,
+      "R %.1f -> %.1f" % (_R_mem, V.state["cam_R"]))
+check("  ... which is what focus_points now returns",
+      any(abs(p[0] + 172.4) < 1.0 for p in V.focus_points()),
+      "%d points" % len(V.focus_points()))
+
+# --- a marked segment is repainted into its new shower ----------------------
+V.on_event(None, None, "evt64591")
+V.seg_color_mode.active = 0
+# Start from no marks: an earlier block in this file left a label on disk, and
+# load_label restores it -- 60008 would already be painted into a shower.
+V.state["marks"] = {}
+V.refresh_marks()
+_rowsC = list(V.shower_src.data["node"])
+
+
+def _col(sid):
+    d = V.seg3_src.data
+    return d["c"][list(d["sid"]).index(sid)]
+
+
+V.on_shower_select(None, None, [_rowsC.index(83044)])
+# 60008 is a one-segment shower of its OWN in the reco, so it starts in its own
+# colour -- neutral grey is for segments no shower claims at all, like the
+# 186 cm track 17002 (shower_id -1).
+check("a segment starts in the colour of the shower the RECO gave it",
+      _col(60008) == V.shower_color(60008) != V.shower_color(83044),
+      "%s vs its own %s" % (_col(60008), V.shower_color(60008)))
+check("  ... and a segment no shower claims is neutral",
+      _col(17002) == V.NO_SHOWER_COLOR, _col(17002))
+V.apply_marks([60008], "in")
+check("  ... marking it IN repaints it in that shower's colour",
+      _col(60008) == V.shower_color(83044) == _col(83050),
+      "%s vs shower %s" % (_col(60008), V.shower_color(83044)))
+V.apply_marks([83050], "out")
+check("  ... and marking a member OUT drops it back to neutral",
+      _col(83050) == V.NO_SHOWER_COLOR, _col(83050))
+V.apply_marks([60008], None)
+V.apply_marks([83050], None)
+check("  ... unmarking restores the reconstruction's own colouring",
+      _col(60008) == V.shower_color(60008)
+      and _col(83050) == V.shower_color(83044),
+      "%s / %s" % (_col(60008), _col(83050)))
+_csrc = _insp.getsource(V.refresh_colors)
+check("  ... and the repaint patches the colour column, not the geometry",
+      ".patch(" in _csrc and "m.data =" not in _csrc and "continue" in _csrc)
+
+# --- IN against two showers is a contradiction, and must be visible ----------
+V.on_event(None, None, "evt64591")
+_rows3 = list(V.shower_src.data["node"])
+V.on_shower_select(None, None, [_rows3.index(78025)])
+V.apply_marks([60008], "in")
+V.on_shower_select(None, None, [_rows3.index(83044)])
+V.apply_marks([60008], "in")
+check("a segment marked IN against two showers is detected",
+      V.mark_conflicts() == {60008: [78025, 83044]}
+      or V.mark_conflicts() == {60008: [83044, 78025]},
+      str(V.mark_conflicts()))
+check("  ... and called out with the numbers that decide it",
+      "marked IN against 2 showers" in V.marks_div.text
+      and "tier <b>2</b>" in V.marks_div.text
+      and "14.25" in V.marks_div.text and "412.84" in V.marks_div.text,
+      re.sub("<[^>]+>", "", V.marks_div.text)[-190:])
+V.on_save()
+check("  ... and saving a contradictory record warns at the save itself",
+      "marked IN against showers 78025 and 83044" in V.save_note.text,
+      re.sub("<[^>]+>", "", V.save_note.text)[-110:])
+V.on_shower_select(None, None, [_rows3.index(78025)])
+V.apply_marks([60008], None)
+check("  ... and clearing one side ends the conflict",
+      V.mark_conflicts() == {} and "marked IN against" not in V.marks_div.text)
+V.on_save()
+check("  ... after which the save is clean",
+      "marked IN against" not in V.save_note.text
+      and json.load(open(V.label_path("evt64591")))["em"]["marks_by_shower"]
+      == {"83044": {"60008": "in"}},
+      str(json.load(open(V.label_path("evt64591")))["em"]["marks_by_shower"]))
+
+# --- the comparison line survives a shower with NO usable axis ---------------
+# Every other round-5 check runs on events whose showers have the probe's dir15.
+# selftest_repro reports exactly two that do not; evt285567's falls all the way
+# back to a ZERO vector, so nothing plots and refresh_cmp has only the
+# "not on the plot" branch to take.  That branch indexes cand_pt_src, which does
+# not contain the segment -- so this is where it would throw.
+V.on_event(None, None, "evt285567")
+_rows2 = list(V.shower_src.data["node"])
+V.on_shower_select(None, None, [_rows2.index(15047)])
+_ax, _br, _src = V.shower_axis(15047)
+check("the axis-less shower really has no axis (else this proves nothing)",
+      _src == "python" and V.G.vmag(_ax) == 0.0, "%s/%s" % (_br, _src))
+_other = [s for s in V.cand_src.data["sid"]
+          if s not in set(V.members_of(15047))][0]
+V.apply_marks([_other], "in")
+check("  ... and marking against it degrades instead of throwing",
+      len(V.cand_pt_src.data["sid"]) == 0
+      and "no member plotted" in V.cmp_div.text
+      and "not on the plot" in V.cmp_div.text,
+      re.sub("<[^>]+>", "", V.cmp_div.text)[:80])
 
 print()
 print("FAILURES: %d" % len(fails))

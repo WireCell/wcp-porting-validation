@@ -928,3 +928,206 @@ Still open, still a human judgement:
 | any event | does the depth fading read as depth, or as fog? |
 | any event | is `frame the reco` still the right default now that `frame the shower` exists? |
 | any event | is `dim what is not in this shower` useful enough to be worth its default being OFF? |
+
+## 13. Round 5 — correlating the tables, the plot and the display
+
+### 13.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+python em_display/selftest_em_display.py      # 137 checks, 0 failures
+python em_display/selftest_em3d_browser.py    # 37 checks, 0 failures
+python em_display/selftest_repro.py           # 1567/1567 probe joins
+em_display/serve_em_display.sh 5017 emscan-0827
+```
+
+No C++, no jsonnet — **no A/B gate owed**, as in rounds 1–4.
+
+### 13.2 What prompted it
+
+The first real label, `em_labels/emscan-0827/labels-evt64591.json`, recorded two
+judgements — "the π⁰ reconstruction is right" and "this piece belongs in one of
+the EM showers". The first came through cleanly. The second did not, and reading
+it back exposed four more gaps the owner then named directly.
+
+**The mark was filed against the wrong shower, and the format could not say so.**
+The file reads `em.shower: 78025`, `em.marks: {"60008": "in"}`. Segment 60008 is
+a 0.75 cm, 4.10 MeV stub that the reconstruction left as its own shower
+(`shower_id 10`, `pio_id -1`). Measured against the two gammas:
+
+| | vs 83044 (298.06 MeV) | vs 78025 (50.74 MeV) |
+|---|---|---|
+| angle off that shower's fitted axis | **10.8°** | 89.2° |
+| angle from the π⁰ vertex | **12.1°** | 68.5° |
+| perpendicular offset from the axis | 15.9 cm | 101.9 cm |
+| along-axis position | 83.2 cm | 1.4 cm |
+| 3-D gap to nearest fitted point | 41.1 cm | 99.0 cm |
+
+83044's own segments span 0 → 46.8 cm along its axis with a maximum transverse
+spread of 21.7 cm, so the stub sits **past the reconstructed end, on the axis,
+inside the transverse envelope the shower already occupies** — an unabsorbed
+tail. `on_gamma` assigns whichever shower the table has selected, so assigning
+slot 1 = 83044 then slot 2 = 78025 leaves `sel_shower` on 78025; a mark made
+before that step is saved against the wrong one with nothing in the record to
+distinguish the two histories.
+
+Two cross-checks in the same file went the other way and are worth recording as
+validation of round 4:
+
+- `cloud_candidate: 3774` of 28 658 equals `npts_bundle` for `main_id 17` in
+  `nusel-evt64591.tsv` **exactly**. The candidate filter is a purely spatial
+  match that knows nothing about flashes, and it reproduced the point set the
+  neutrino selection itself used.
+- The hand-placed π⁰ vertex is reco vertex **17002** to 0.005 cm, and reproduces
+  `kine_pio_dis_1` (4.167 vs 4.169) and `dis_2` (19.190 vs 19.188). Tap-to-set-
+  vertex is exact to the click's own `%.1f` rounding.
+
+### 13.3 Marks belong to a shower
+
+`state["marks"]` is now `{shower node: {segment: kind}}`. A mark with no shower
+selected is **refused**, not filed; `on_pick` and the mark buttons only report
+success when `apply_marks` returns true, because the first cut of this let the
+refusal be overwritten by a success-looking line (caught by the browser harness,
+which reported 27 segments "marked" with every value reading `-`).
+
+The record writes `em.marks_by_shower` and **no flat map** — a derived copy
+beside the authoritative one can disagree with it, and that ambiguity is the bug.
+Alongside it, `em.marks_detail` carries per marked segment its `dist`, `angle`,
+`tier`, `ellip`, `length`, `pdg`, `cluster_id`, `absorbed_by` and `owner`,
+measured against the shower it was marked for, plus that shower's `member_span`.
+Those are the quantities `pass3_cone` is cut on; measuring them at save time
+means a later fit joins labels without re-deriving axes from the dump.
+
+Round-4 files still load: a flat `marks` is attributed to the `em.shower` the
+file named, `state["legacy_marks"]` is set, and the banner says so in red.
+**Nothing rewrites `labels-evt64591.json`** — the owner has not said which shower
+they meant, and the geometry above is an inference, not their answer.
+
+### 13.4 The acceptance plot was scaled to the gate, not to the comparison
+
+"Why do I not see the points belonging to the existing EM shower cluster" was a
+literal and accurate report. Members *were* plotted, orange, with
+`show_all_toggle` already default ON — but `acc` is 430 px wide with
+`x_range=(0, 220)`, `y_range=(0, 90)`, because tier 3 reaches 200 cm / 5°. For
+shower 78025 the members that plotted sat at 3.9 and 17.8 cm: **8 % of the axis
+width**, two size-9 dots among 29 others. A distinct glyph would have made two
+dots in the corner into slightly clearer dots in the corner; the range was the
+problem.
+
+Three changes:
+
+- **Autoscale** to the members plus any marked segment, ×1.3, floors 40 cm / 15°,
+  caps at the gate box. For shower 83044 that is 0–110 cm × 0–32° instead of
+  0–220 × 0–90. `zoom to this shower` turns it off; segments outside the zoomed
+  range are counted in the line underneath.
+- **The seed segment was missing entirely** — a real bug. The shower's own start
+  segment contains the start point, so `start → closest` is the zero vector,
+  `angle_deg` returns `None`, and the `angle is not None` guard dropped it. It is
+  the segment every other member is measured against. Now plotted at angle 0;
+  shower 83044 went from 16 of 17 members to 17 of 17.
+- **A comparison line in words**, which is the part that aggregates over events:
+  *"already in shower 83044: 17 segments — distance 0.0–51.6 cm, angle 0.0–24.9°;
+  60008 marked IN — 84.4 cm, 10.8°, pass-1 tier 2, absorbed by nothing; angle
+  inside the member spread, distance 1.6× the furthest member."*
+
+That last readout is the tuning signal in one line: **pass-1 tier 2 accepts this
+segment on distance and angle, and nothing absorbed it.**
+
+### 13.5 The other three asks
+
+**A table click drives the 3-D view.** `on_shower_select` sets
+`view_tabs.active = 0`, and `fit_mode` now defaults to `frame the shower` — which
+is §12.7's open question answered by the owner asking for exactly this. The
+invariant in the round-4 comment survives: the other two modes still do not
+re-frame on a table click, only the default moved.
+
+`focus_points` now includes the selected shower's **marks**, so `refit` reaches
+what you marked; and marking something outside the current frame says so rather
+than putting the halo off-screen. The camera is not moved on a mark — that would
+throw away the scanner's zoom mid-judgement.
+
+**Dim whole showers away.** A `MultiChoice` of the event's showers drives the
+same alpha column the panels already read (0.05 for excluded, against 0.16 for
+"not in this shower" and 0.95 normal) and drops those segments from the candidate
+table. Naming a shower is the stronger statement, so an exclusion beats
+`dim what is not in this shower`.
+
+**Linked brushing.** The candidate table, the acceptance plot and the 3-D pick
+cloud are three views of one segment list; `sync_selection(origin)` rewrites the
+other two from the origin rather than unioning with them, so a stale selection in
+a panel nobody is looking at cannot leak into what the mark buttons act on.
+`pick_src` is written under `_suspend` because `on_pick` is the marking path —
+without it, mirroring a table click into the 3-D cloud while `a tap in 3-D does`
+is set to `mark IN` would apply a mark nobody asked for. `selected_cand_ids` is
+now deduped across all three: with the views synced, the same segment is in all
+of them, and the cyan halo was being pushed twice per selection.
+
+**One colour per shower.** `seg_color(i)` keyed on the enumeration index, so two
+segments of one shower came out two unrelated hues and the display never said
+which pieces were already considered one object. Colour now comes from the
+shower's rank in the event's energy-sorted table, with a swatch column in the
+shower table as the key and neutral grey for segments no shower claims.
+Category20 is ordered as hue *pairs*, so taken raw it gave evt64591's two gammas
+`#1f77b4` and `#aec7e8` — two shades of one blue, on the one comparison that must
+not be ambiguous. The palette walks the ten dark entries first.
+
+### 13.6 What is verified
+
+| | |
+|---|---|
+| static | **137/137** (was 105) — per-shower marks on two showers at once, the refusal, the round-4 read path and its banner, the record's `marks_by_shower`/`marks_detail`, exclusion alpha and table filtering, brushing both ways with no doubled halo, one colour per shower and distinct gamma hues, the seed segment at angle 0, the autoscale and its hidden count, the off-frame warning |
+| browser | **37/37** (was 29) — the refusal through a real box gesture, a table click switching tabs, brushing table → plot → 3-D through the live socket, dimming fading exactly the excluded segments in the running view, one colour per shower in `seg3_src`, no JS errors |
+| repro | **1567/1567** probe joins, unchanged |
+
+Still open, still human judgement:
+
+| on | check |
+|---|---|
+| ncpi0 **evt256587** | 30 323-point candidate cloud, the sample's worst. Is a drag still smooth? |
+| any event | does the depth fading read as depth, or as fog? |
+| evt64591 | was the 60008 mark meant for shower 83044 (10.8° off its axis) rather than 78025 (89.2°)? |
+| any event | with the zoom anchored on members *and* marks, is the plot still the thing you read when a mark is far out — or is the comparison line enough? |
+
+### 13.7 Round 5b — the two things the first real re-scan exposed
+
+Both came out of the owner re-marking evt64591 on the round-5 build within the
+hour, which is the fastest possible feedback and worth recording as such.
+
+**A migrated mark plus a new one is a contradiction, and nothing said so.** The
+round-4 file's flat mark was attributed to 78025 on load, exactly as designed and
+as the red banner announced. The owner then marked 60008 against 83044 — the
+shower the geometry pointed at — but nothing removed the migrated one, so the
+saved record claimed the segment for **both**:
+
+| marked against | dist | angle | pass-1 tier | ellip |
+|---|---|---|---|---|
+| **83044** (298 MeV, 17 seg) | 84.4 cm | **10.8°** | **2** | **14.25** |
+| 78025 (50.7 MeV, 3 seg) | 101.6 cm | 89.1° | none | 412.84 |
+
+The migration is still right — the alternative is dropping a real mark on load —
+but "belongs to both" is not a judgement anyone can hold. `mark_conflicts()` now
+finds segments marked IN against more than one shower and the mark list prints
+the competing rows **with the numbers that settle them**, including `ellip`,
+which is the code's own tie-break at `:1314-1315`. The same warning fires at the
+save. The record is still written either way: it is the scanner's, not the
+tool's to veto.
+
+Resolved at 20:25 UTC to `{"83044": {"60008": "in"}}` — one shower, and the one
+78025 does not even accept at pass-1. **This is the answer to §13.6's open
+question**, from the owner rather than from the geometry: the extra piece belongs
+to the 298 MeV gamma.
+
+**A marked segment kept the reconstruction's colour.** Marking a piece into a
+shower and leaving it painted as whatever it was before means the display shows
+the reco's answer while the record holds a different one. `effective_owner`
+now resolves the colour through the marks — IN repaints into the new shower, OUT
+drops back to neutral — patched on the `c` column alone, for the same reason
+`refresh_dim` patches only `a`: this runs on every tap, and assigning `.data`
+re-serialises every polyline in four sources.
+
+One thing worth stating because it surprised the test first: a segment the reco
+left as a **one-segment shower of its own** (which is what most orphan stubs are,
+60008 included) starts in *its own* colour, not grey. Grey means no shower claims
+it at all — like the 186 cm track 17002, `shower_id -1`.
+
+Counts after 5b: static **150**, browser 37, repro 1567/1567.
