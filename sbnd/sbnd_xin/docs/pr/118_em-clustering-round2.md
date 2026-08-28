@@ -281,6 +281,10 @@ numerics at C++ defaults (= the measured operating point).
   OFF `82391d8d-a90c-4596-ad7b-467f3235df52` /
   ON `c8ea5ce3-0f26-40c0-be94-3b44d0ed7132`, idx 0 = 423981, 1 = 281485,
   2 = 469665.
+- **Owner verdict (2026-08-28, on the pr118r1 Bee pair)**: *"the A/B for 3
+  movers are all improvements, actually for them, there are still some
+  underclustering, but it is OK to deal with later."*  Round closed; the
+  residual under-clustering on these three events joins §7's open ledger.
 
 ## 7. What stays open
 
