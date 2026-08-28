@@ -2033,8 +2033,23 @@ if _far:
           _far[0] in _u["unknown"] and abs(V.gamma_energy(1) - _e_before) < 1e-9,
           "unknown=%s" % _u["unknown"])
     V.refresh_kine()
+    # Round 17 rewrote this message.  The check is UPGRADED, not relaxed: the
+    # panel must still say the segment is in no shower AND must now say what
+    # is at stake and that the mark itself survives, which is the whole point
+    # of the round.  Asserting the old string would have passed on a message
+    # that told the scanner nothing.
+    _t = V.kine_div.text
     check("  ... and the panel says so in red",
-          "owned by no shower" in V.kine_div.text, "-")
+          "no shower" in _t and "no per-segment energy" in _t
+          and "your mark is kept either way" in _t, "-")
+    check("  ... naming the segment and what it is",
+          ("&gamma;1 &middot; %s" % _far[0]) in _t and "cm segment" in _t,
+          "seg %s" % _far[0])
+    check("  ... and refusing to invent a MeV, with this event's own spread",
+          "no estimate is offered" in _t and "MeV per electron" in _t, "-")
+    _lo, _hi = V.conv_span()
+    check("  ... which is a real spread, not a slogan",
+          _lo is not None and _hi > _lo, "%.2e .. %.2e MeV/e" % (_lo, _hi))
     V.marks_for(69032).pop(_far[0])
 else:
     check("evt409634 has no unowned segment to test with (skipped)", True,
@@ -2732,6 +2747,244 @@ V.on_event(None, None, "evt409634")
 check("a record with no pi0 block takes the new default",
       V.emark_mode.value == V.EMARK_MARKS, V.emark_mode.value)
 os.remove(_p16b)
+
+# ---------------------------------------------------------------------------
+# Round 17 -- a marked segment that no shower owns is EXPLAINED, not just named
+#
+# Reported on evt169626: segment 53070 was added to gamma1 (53069) in EM mode
+# and the pi0 panel answered "marked but owned by no shower ... no dQ estimate
+# is offered because E_est/dQ is not constant between showers", which reads as
+# a hole in the display.  It is not one.  The reconstruction considered that
+# exact segment for that exact shower and refused it by a named guard, the dump
+# records shower_id -1 for it on its own, and its charge is 20% of the gamma's.
+# All three facts were already on disk.  The ENERGY behaviour is deliberately
+# unchanged -- what is tested here is that the panel now says all of it.
+# ---------------------------------------------------------------------------
+print()
+
+V.on_event(None, None, "evt169626")
+_n17, _sid17 = 53069, 53070
+# The reported mark lives in the OWNER's scan tag, not this test's; reproduced
+# here rather than borrowed, so the check does not depend on a scan that may be
+# re-saved (M13 -- nothing under `emscan-0827` is written or relied on).
+V.marks_for(_n17)[_sid17] = "in"
+_mk17 = V.marks_energy(_n17)
+check("round 17: evt169626 reproduces the reported orphan mark",
+      _mk17["unknown"] == [_sid17], str(_mk17["unknown"]))
+check("  ... and it now comes with a measured row, not just an id",
+      len(_mk17["unknown_rows"]) == 1
+      and _mk17["unknown_rows"][0]["seg"] == _sid17,
+      str([r["seg"] for r in _mk17["unknown_rows"]]))
+_r17 = _mk17["unknown_rows"][0]
+
+# The dump's own verdict, which needs no probe at all.
+check("the dump says shower_id -1 by itself", V.dump_shower_id(_sid17) == -1,
+      str(V.dump_shower_id(_sid17)))
+check("  ... and the row carries what the segment IS",
+      _r17["pdg"] == 2212 and abs(_r17["length"] - 14.09) < 0.01
+      and _r17["score"] == 100.0,
+      "pdg %s, %.2f cm, score %s" % (_r17["pdg"], _r17["length"], _r17["score"]))
+
+# The charge, on the same scale as the probe's -- the claim `seg_dq` rests on.
+check("seg_dq matches the probe's dQ for a MEMBER segment",
+      abs(V.seg_dq(53069) - 612324.1) < 1.0, "%.1f" % V.seg_dq(53069))
+_worst17, _n_cmp = 0.0, 0
+for _e17, _row17 in MANIFEST_EVENTS:
+    _pp = os.path.join(SX, "em_display", "emprep", "emprep-evt%s.json" % _e17)
+    _dp = os.path.join(SX, _row17["dump"])
+    if not (os.path.exists(_pp) and os.path.exists(_dp)):
+        continue
+    _pj, _dj = json.load(open(_pp)), json.load(open(_dp))
+    _sg = {x["id"]: x for x in _dj.get("segments") or []}
+    for _sh17 in (_pj.get("showers") or {}).values():
+        for _m17 in _sh17.get("members") or []:
+            _s17 = _sg.get(_m17["seg"])
+            if _s17 is None:
+                continue
+            _raw = sum(p.get("dQ") or 0.0 for p in _s17.get("points") or [])
+            _worst17 = max(_worst17,
+                           abs(_raw - _m17["dQ"]) / max(abs(_m17["dQ"]), 1.0))
+            _n_cmp += 1
+check("  ... and that identity holds over the WHOLE sample",
+      _n_cmp > 5000 and _worst17 < 1e-4,
+      "%d member segments, worst relative %.2e" % (_n_cmp, _worst17))
+check("the fraction is measured, and it is large here",
+      abs(_r17["dq"] - 1690299.7) < 1.0
+      and abs(_r17["dq_frac"] - 0.2007) < 0.001,
+      "dQ %.1f = %.1f%% of %.1f" % (_r17["dq"], 100 * _r17["dq_frac"],
+                                    _r17["shower_dq"]))
+
+# The reason, and the reason it is looked up the way it is.
+check("absorb_reason finds the EXCLUDE that names this shower",
+      (_r17["reason"] or {}).get("how") == "walk_exclude"
+      and _r17["reason"].get("shower") == _n17,
+      str(_r17["reason"]))
+# 13023 carries TWO records (walk_add into 13012, then direct into 53069).
+# `absorb_site` takes the last; `absorb_reason` must take the one asked for,
+# or the message names the wrong shower on the next event that hits this.
+check("  ... and it does not just take the last record, as absorb_site does",
+      (V.absorb_reason(13023, 13012) or {}).get("shower") == 13012
+      and (V.absorb_reason(13023, 53069) or {}).get("shower") == 53069
+      and (V.absorb_reason(13023) or {}).get("shower") == 53069,
+      "13012 -> %s, 53069 -> %s, no node -> %s"
+      % ((V.absorb_reason(13023, 13012) or {}).get("how"),
+         (V.absorb_reason(13023, 53069) or {}).get("how"),
+         (V.absorb_reason(13023) or {}).get("how")))
+
+# The pi0 panel.
+V.mode_group.active = 1
+V.state["gamma"][1], V.state["gamma"][2] = _n17, 22034
+V.refresh_kine()
+_t17 = V.kine_div.text
+for _want, _label in (
+        ("no shower", "says it is in no shower"),
+        ("shower_id -1", "cites the dump's own verdict"),
+        ("14.1 cm segment", "says what the segment is"),
+        ("PID'd proton", "and what the reco called it"),
+        ("20%", "quantifies what is left out"),
+        ("considered it for this very shower and refused",
+         "names the decision as a decision"),
+        ("PRShower.cxx:722-727", "cites the guard"),
+        ("Your mark overrules that one decision", "frames the mark honestly"),
+        ("your mark is kept either way", "says the scan is not lost"),
+        ("marks_detail", "and names where it is kept"),
+        ("no estimate is offered", "still refuses to invent a MeV"),
+        ("MeV per electron", "with this event's own spread as the reason"),
+        ("0.35&times;0.95", "and the proton pair the code would use")):
+    check("  pi0 panel %s" % _label, _want in _t17, _want)
+check("  ... and the old bare wording is gone",
+      "owned by no shower" not in _t17
+      and "not constant between showers" not in _t17, "-")
+
+# The EM mark list -- said where the mark was actually MADE, which is the half
+# the scanner hit first.  Same source as the pi0 block, so they cannot drift.
+V.mode_group.active = 0
+V.state["sel_shower"] = _n17
+V.refresh_mark_list()
+_m17t = V.marks_div.text
+check("the EM mark list explains it too",
+      str(_sid17) in _m17t and "no shower" in _m17t
+      and "Your mark IS recorded" in _m17t, "-")
+check("  ... naming the same guard the pi0 panel names",
+      "PRShower.cxx:722-727" in _m17t and "PRShower.cxx:722-727" in _t17, "-")
+check("  ... and staying shorter than the pi0 block",
+      "SHOWER_ABSORB EXCLUDE" not in _m17t
+      and "SHOWER_ABSORB EXCLUDE" in _t17, "-")
+
+# Nothing that a record holds may move.  This is the round's whole safety
+# claim, and it is checked by construction: `delta` is computed before the new
+# key exists and cannot see it.
+# Structural, so it cannot rot: the energy path must not be able to SEE the new
+# key.  A full numeric A/B over all 98 events (every `marks_energy` delta under
+# both hypotheses, every `energy_for` under all four switch combinations, every
+# stored candidate's `_pair_sig` and JSON, and the live pairing) was byte-
+# identical before and after -- 9 698 rows, same md5 -- and this keeps it so.
+import inspect as _inspect17
+_src17 = _inspect17.getsource(V.energy_for) + _inspect17.getsource(V._pair_sig)
+check("the energy path cannot see `unknown_rows` at all",
+      "unknown_rows" not in _src17 and '["delta"]' in _src17, "-")
+
+# Two orphans on one shower: both reported, neither counted.  Found rather than
+# hardcoded -- evt169626 has exactly one, which is why it cannot be this event.
+_ev2, _nd2, _o2 = None, None, []
+for _e17 in V.LABELS:
+    V.on_event(None, None, _e17)
+    _own17 = set(V._est_map())
+    _free = [sg.get("id") for sg in V.cur_segments()
+             if sg.get("id") is not None and sg.get("id") not in _own17]
+    if len(_free) >= 2 and V.cur_showers():
+        _ev2, _nd2, _o2 = _e17, V.cur_showers()[0].get("id"), _free[:2]
+        break
+check("an event with two segments no shower owns was found",
+      _ev2 is not None, "%s: shower %s, segs %s" % (_ev2, _nd2, _o2))
+if _ev2:
+    V.state["gamma"][1], V.state["gamma"][2] = _nd2, None
+    _e17_before = V.gamma_energy(1)
+    for _sg17 in _o2:
+        V.marks_for(_nd2)[_sg17] = "in"
+    _mk2 = V.marks_energy(_nd2)
+    check("  ... both are reported, not just the first",
+          sorted(r["seg"] for r in _mk2["unknown_rows"]) == sorted(_o2),
+          str([r["seg"] for r in _mk2["unknown_rows"]]))
+    check("  ... the energy is unmoved by either",
+          abs(V.gamma_energy(1) - _e17_before) < 1e-9,
+          "%.4f vs %.4f" % (V.gamma_energy(1), _e17_before))
+    check("  ... and the delta is exactly zero",
+          _mk2["delta"] == 0.0 and _mk2["rows"] == [], "%.g" % _mk2["delta"])
+    for _sg17 in _o2:
+        V.marks_for(_nd2).pop(_sg17)
+V.on_event(None, None, "evt169626")
+V.marks_for(_n17)[_sid17] = "in"
+
+# Without a probe the reason is unavailable -- and the message must degrade to
+# what the dump alone supports rather than assert a decision it cannot see.
+_prep17 = V.state["prep"]
+V.state["prep"] = None
+_mk17b = V.marks_energy(_n17)
+_r17b = [r for r in _mk17b["unknown_rows"] if r["seg"] == _sid17]
+check("with no probe the segment is still flagged",
+      len(_mk17b["unknown_rows"]) >= 1 and bool(_r17b), "-")
+if _r17b:
+    check("  ... with no invented reason",
+          _r17b[0]["reason"] is None
+          and V.unknown_mark_why(_n17, _r17b[0]) == "", "-")
+    _l17b = " ".join(V.unknown_mark_lines(1, _n17, _r17b[0], 537.079))
+    check("  ... but the dump's own verdict survives",
+          "shower_id -1" in _l17b and "refused" not in _l17b, "-")
+V.state["prep"] = _prep17
+
+# An OUT mark reads as an OUT mark.  Only reachable without a probe (an orphan
+# is never a member, so the `out` branch returns before the E_est lookup), but
+# the sentence must not say "added" when it means "taken off".
+_r17c = dict(_r17, kind="out")
+check("an OUT mark is not described as an addition",
+      "not taken off" in " ".join(V.unknown_mark_lines(1, _n17, _r17c, 537.1)),
+      "-")
+
+# --- live-data guard: every orphan mark ever written must render -------------
+# Read-only over the real scan dirs (M13): the message has to hold for the marks
+# the owner actually made, not only for the one this file reproduces.  Also
+# asserts no rendered reason names a shower other than the one the mark was
+# filed against -- the `absorb_site` last-wins trap, on live data.
+_marks17 = collections.defaultdict(dict)     # {event: {shower: {seg: kind}}}
+for _tag in sorted(os.listdir(os.path.join(SX, "em_labels"))):
+    _d17 = os.path.join(SX, "em_labels", _tag)
+    if not os.path.isdir(_d17) or _tag == TAG:
+        continue
+    for _f17 in sorted(os.listdir(_d17)):
+        if not _f17.startswith("labels-evt"):
+            continue
+        try:
+            _L17 = json.load(open(os.path.join(_d17, _f17)))
+        except ValueError:
+            continue
+        _ev17 = "evt" + _f17[len("labels-evt"):-len(".json")]
+        for _nd, _mm in (((_L17.get("em") or {}).get("marks_by_shower")
+                          or {}).items()):
+            _marks17[_ev17].setdefault(int(_nd), {}).update(
+                {int(k): v for k, v in _mm.items()})
+_seen17, _orph17, _bad17 = 0, 0, []
+for _ev17 in sorted(_marks17):
+    if _ev17 not in V.EVENTS:
+        continue
+    V.on_event(None, None, _ev17)
+    for _nd17, _mm17 in sorted(_marks17[_ev17].items()):
+        V.state["marks"][_nd17] = dict(_mm17)
+        _seen17 += len(_mm17)
+        for _rr in V.marks_energy(_nd17)["unknown_rows"]:
+            _orph17 += 1
+            _txt = V.unknown_mark_note(_nd17, _rr)
+            if not _txt or "no per-segment energy" not in _txt:
+                _bad17.append((_ev17, _nd17, _rr["seg"], "no note"))
+            _rec = _rr.get("reason")
+            if _rec and _rec.get("shower") not in (None, _nd17):
+                _bad17.append((_ev17, _nd17, _rr["seg"], "wrong shower"))
+check("every orphan mark on the real scan renders, against the right shower",
+      _seen17 > 0 and not _bad17,
+      "%d mark(s) over %d event(s), %d orphan, %d bad"
+      % (_seen17, len(_marks17), _orph17, len(_bad17)))
+check("  ... and the reported one is among them",
+      _orph17 >= 1, "%d orphan mark(s) on the real scan" % _orph17)
 
 print()
 print("FAILURES: %d" % len(fails))

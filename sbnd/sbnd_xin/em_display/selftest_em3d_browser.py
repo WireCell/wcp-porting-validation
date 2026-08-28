@@ -884,6 +884,51 @@ try:
         check("  ... with no JS error from any of it", not errors,
               "; ".join(errors[:2]))
 
+        # ------------------------------------------------------------------
+        # round 17: a marked segment no shower owns, explained in the real page
+        # ------------------------------------------------------------------
+        # The report was made against the running app, so it is pinned in a
+        # browser: the mark is made through the real buttons on evt169626 and
+        # both panels are read back off the live document.  Nothing is saved --
+        # this event's real record lives in the owner's tag (M13).
+        setm("event_select", "value", "evt169626")
+        page.wait_for_timeout(2000)
+        setm("mode_group", "active", 0)
+        # `assign` closes over `rows`, so rebind it for THIS event rather than
+        # shadowing it -- the row order is per-event.
+        rows = js("M('shower_src').data.node")
+        pick_row(rows.index(53069))
+        i17 = js("M('cand_src').data.sid.indexOf(53070)")
+        check("round 17: segment 53070 is offered on evt169626",
+              isinstance(i17, int) and i17 >= 0, "cand_src row %s" % i17)
+        page.evaluate("(i) => { Bokeh.documents[0]"
+                      ".get_model_by_name('cand_src').selected.indices = [i]; }",
+                      i17)
+        page.wait_for_timeout(900)
+        page.get_by_role("button", name="mark IN", exact=True).click()
+        page.wait_for_timeout(1800)
+        mtxt17 = js("M('marks_div').text") or ""
+        check("  ... marking it IN explains itself where the mark is MADE",
+              "53070" in mtxt17 and "no shower" in mtxt17
+              and "PRShower.cxx:722-727" in mtxt17, mtxt17[-150:])
+        setm("mode_group", "active", 1)
+        page.wait_for_timeout(1200)
+        rows = js("M('shower_src').data.node")
+        assign(53069, 1)
+        assign(22034, 2)
+        ktxt17 = js("M('kine_div').text") or ""
+        for _w17, _l17 in (("shower_id -1", "cites the dump's own verdict"),
+                           ("considered it for this very shower and refused",
+                            "names the decision as a decision"),
+                           ("20%", "quantifies what is left out"),
+                           ("no estimate is offered", "still refuses a MeV")):
+            check("  ... and the pi0 panel %s" % _l17, _w17 in ktxt17, _w17)
+        check("  ... while the old bare wording is gone from the live page",
+              "owned by no shower" not in ktxt17
+              and "not constant between showers" not in ktxt17, "-")
+        check("  ... with no JS error from any of it", not errors,
+              "; ".join(errors[:2]))
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

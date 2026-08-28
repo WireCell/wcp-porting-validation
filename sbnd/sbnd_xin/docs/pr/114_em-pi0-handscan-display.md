@@ -3069,3 +3069,239 @@ and the round-16 row flags are what make it visible per stored pairing.
 The round-12 selftest check that asserted the old default is **inverted, not
 deleted**: it is the one that would catch this default moving again by accident.
 `selftest_em_display.py` 351 → **358**, `selftest_em3d_browser.py` 78 → **79**.
+
+---
+
+## 25. Round 17 — a marked segment no shower owns is explained, not just named
+
+> *"For evt 169626 … for the segment 53070, in the EM clustering, I added it to
+> the gamma1 (53069), but in the pi0 mode, I see this warning `γ1: 53070 marked
+> but owned by no shower, so the probe has no per-segment energy for it — not
+> counted either way, and no dQ estimate is offered because E_est/dQ is not
+> constant between showers.` This is somewhat strange. Can you check and improve
+> the presentation?"*
+
+The message was **true and useless**. Every fact needed to make it useful was
+already on disk — in the dump, in the probe sidecar, and in the scanner's own
+saved label — and none of it was on screen. Nothing about the energy arithmetic
+changes in this round.
+
+### 25.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 397
+python em_display/selftest_em3d_browser.py      # 86
+python em_display/selftest_repro.py             # 98/98
+
+# the reported message, before and after, off the owner's own scan tag:
+python /home/xqian/tmp/em114r17/probe.py
+
+# nothing a record can hold moves (pre-change copy vs live):
+python /home/xqian/tmp/em114r17/ab.py /home/xqian/tmp/em114r17/pre.tsv  \
+       /home/xqian/tmp/em114r17/pre
+python /home/xqian/tmp/em114r17/ab.py /home/xqian/tmp/em114r17/post.tsv \
+       /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/em_display
+cmp /home/xqian/tmp/em114r17/pre.tsv /home/xqian/tmp/em114r17/post.tsv
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-16.
+
+### 25.2 What is actually true about evt169626 / segment 53070
+
+Read out of `work-mcp1k-prod0825/pr_evt169626/calib-pr-evt169626.json` and
+`em_display/emprep/emprep-evt169626.json`:
+
+| fact | value | source |
+|---|---|---|
+| `shower_id` | **-1** — in no shower | the dump, `segments[]`, on its own |
+| `particle_id` / `particle_score` | 2212 (proton) / 100 | the dump |
+| `flag_shower` | false | the dump |
+| length | 14.09 cm, 24 fitted points | the dump |
+| where it attaches | `start_vertex_id 53063` = γ1 start segment 53069's `end_vertex_id` | the dump |
+| the reco's decision | `SHOWER_ABSORB EXCLUDE shower_start_seg=53069 seg=53070 pdg=2212` at `in_other_clusters_A` | the probe log |
+| a second, independent one | `SHOWER_MERGE … cand_seg=53070 angle=148.173 dis=28.207 verdict=outside_cone` | the probe log |
+| its charge | ΣdQ 1 690 300 e = **20.1 %** of γ1's own 8 421 799 e | the dump's per-point `dQ` |
+
+So the reconstruction did not overlook this segment. The exclusion is F12
+(`PRShower.cxx:722-727`, doc pr/40 round 6, knob `absorb_track_guard`): a
+straight long track with a confident non-electron PID is not absorbed into a
+shower. It considered *that* segment for *that* shower and refused. The
+scanner's mark overrules one named, sourced decision — which is exactly what a
+hand scan is for, and is a very different act from working around a hole in the
+display. The old message read like the latter.
+
+The scan record was never the problem. `labels-evt169626.json` already carries
+
+```json
+"53070": {"kind": "in", "owner": null, "pdg": 2212, "length": 14.09,
+          "absorbed_by": "in_other_clusters_A (walk_exclude)",
+          "angle": 48.56, "dist": 1.2e-05, "tier": null}
+```
+
+**Arm check.** The `absorb` records come from `work-em114b-mcp1k` (probes on)
+while the dump on screen is `work-mcp1k-prod0825` (probes off — zero
+`SHOWER_ABSORB` lines, which is the debug print being off, not a different
+configuration). Since `apply_guard` is a knob state, that had to be settled
+before quoting the guard as the reason: shower membership is **identical across
+the two arms for all 8 showers** (6/1/1/1/2/1/30/1 segments, same ids), and the
+prod0825 dump independently lists 53070 as the event's only `shower_id == -1`
+segment. The two arms agree on this event's clustering.
+
+### 25.3 Why the old message was wrong to blame dQ
+
+> *"no dQ estimate is offered because E_est/dQ is not constant between showers"*
+
+The between-shower spread is real — on this event alone the eight showers convert
+at 1.22e-5 to 7.20e-5 MeV per collected electron, a factor of **5.9** — but the
+sentence points at the wrong thing. The charge is not missing; it is sitting in
+the dump. What is missing is a defensible *conversion*, and saying "no dQ
+estimate" made it sound like a data gap.
+
+It is also worth recording why the obvious fix was **rejected**: convert the
+segment with the target shower's own factor. Within a shower `E_est/dQ` is
+constant to 0.04 %, which looks like licence — but it is constant **by
+construction**: `E_est` is `kine_charge` split across members in proportion to
+`dQ`, so the ratio is identically `kine_charge / ΣdQ` and says nothing about a
+segment the reconstruction never converted. For 53070 it would give +107.8 MeV
+(537.1 → 644.9, and the π⁰ mass with it), while the same charge under a
+neighbouring shower's factor gives anything from 20.7 to 121.7 MeV. And the
+reco's PID here is proton at score 100: the code's own converter would use
+`KINE_PROTON` (0.35 × 0.95), not the shower pair (0.50 × 0.80) — the same
+tens-of-percent axis round 9 exists to expose. The no-fallback rule
+(`marks_energy` docstring) stands; it was a decision, not an oversight.
+
+What *can* be said with no conversion at all is the **charge fraction**: the same
+`dQ` field on both sides of the ratio. That is the number the panel now gives.
+
+### 25.4 The fix
+
+Six pieces, all presentation.
+
+1. **`seg_dq` / `shower_dq`** — a segment's collected charge from the dump's
+   fitted points, and the sum over a shower's members. The claim these rest on is
+   pinned in the selftest: the probe's per-member `dQ` equals this sum to
+   **5.9e-6 relative over 5 700 member segments across all 98 events**, which is
+   the sidecar printing one decimal. That identity is what puts an orphan segment
+   on the same scale as a member without inventing a conversion. Deliberately
+   *not* `refresh_impact`'s filtered sum (it drops `dQ < 0` points; the two differ
+   by ~1 % over a shower).
+2. **`dump_shower_id`** — the reco's own assignment, read from the dump so the
+   "in no shower" half of the message needs no probe.
+3. **`absorb_reason(sid, node)`** — the probe record that names *this* shower.
+   `absorb_site` takes `recs[-1]`, which answers "where did it end up"; asked why
+   it is *not* in a given shower, last-wins names the wrong shower. 13023 on this
+   very event carries a `walk_add` into 13012 then a `direct` into 53069, and 9 of
+   the sample's 23 `walk_exclude` segments were absorbed elsewhere afterwards.
+4. **`unknown_mark_row` / `unknown_mark_why` / `unknown_mark_note` /
+   `unknown_mark_lines`** — one measurement and one explanation, rendered long for
+   the π⁰ panel and short for the EM mark list.
+5. **`marks_energy` returns `unknown_rows`** beside the existing `unknown`.
+   `delta` is untouched — that is the round's safety guarantee, and it is checked
+   structurally (`energy_for` and `_pair_sig` must not contain the string
+   `unknown_rows`) as well as numerically (§25.6).
+6. **The EM mark list says it too**, where the mark is made. The report's shape
+   was "I did this in EM clustering and met the objection in π⁰ mode"; both
+   panels now read from `marks_energy`, so they cannot drift.
+
+What the π⁰ panel says on evt169626 now:
+
+```
+⚠ γ1 · 53070 — a 14.1 cm segment the reconstruction PID'd proton (score 100)
+  and put in no shower (the dump gives it shower_id -1). There is no per-segment
+  energy for it, so it is not added and γ1 stays at 537.1 MeV — though its
+  charge, ΣdQ 1.69e+06 e, is 20% of γ1's own 8.42e+06 e.
+  why: the code considered it for this very shower and refused —
+  SHOWER_ABSORB EXCLUDE shower_start_seg=53069 seg=53070 pdg=2212 at
+  in_other_clusters_A, the straight-long-track guard, which declines a
+  confidently PID'd non-electron (PRShower.cxx:722-727, F12 / doc pr/40 round 6).
+  Your mark overrules that one decision.
+  your mark is kept either way — marks_by_shower and marks_detail record it with
+  that reason, and the membership you scanned is what the record is for. What is
+  missing is only the MeV: no estimate is offered because charge→energy is a
+  per-object choice — this event's own showers convert at 1.22e-05 to 7.20e-05
+  MeV per electron, a factor of 5.9. And for a proton-PID'd object the code
+  would not use the shower recombination pair either (0.35×0.95 against
+  0.50×0.80).
+```
+
+and the EM mark list, where the mark is made:
+
+```
+53069: 39039 IN, 42042 IN, 43043 IN, 53070 IN  ← scanning
+  ↳ 53070 — a 14.1 cm segment the reconstruction PID'd proton (score 100) and
+    put in no shower (the dump gives it shower_id -1). Your mark IS recorded,
+    with the reason, but there is no per-segment energy for it: ΣdQ 1.69e+06 e,
+    20% of shower 53069's own charge, will not reach the π⁰ mass. Why: the code
+    considered it for this very shower and refused — the straight-long-track
+    guard (PRShower.cxx:722-727).
+```
+
+### 25.5 How often this is met
+
+Over the 98 manifest events:
+
+```
+segments with no per-segment E_est : 196 of 5830 (3.4%), on 84 of 98 events
+walk_exclude records               : 23 segments over 21 events
+   of those, still owned by nothing : 14
+   pdg of the excluded segment      : muon 12, proton 10, pion 1
+orphan marks on the owner's own scan: 1 of 87 marks (evt169626 / 53070)
+```
+
+So this is not a one-off; it is a message the scan meets on most events as soon
+as a mark lands outside the reconstruction's own membership. (The README's
+earlier "177 of 5830" is corrected to 196 — the count of dump segments absent
+from `_est_map`, which is what the code actually tests.)
+
+### 25.6 Nothing a record can hold moves
+
+`/home/xqian/tmp/em114r17/ab.py` walks all 98 events and dumps, per shower,
+every `marks_energy` delta under both hypotheses, every `energy_for` under all
+four switch combinations, and per stored candidate its `_pair_sig` and its full
+JSON, plus the live pairing JSON:
+
+```
+pre.tsv  : 9698 rows over 98 events   f080d03bfc1821163940d054a52a71de
+post.tsv : 9698 rows over 98 events   f080d03bfc1821163940d054a52a71de
+cmp -> IDENTICAL
+```
+
+Cost of the extra `marks_energy` in `refresh_mark_list`, measured rather than
+assumed (`/home/xqian/tmp/em114r17/cost.py`): 0.02-0.09 ms per refresh, of which
+`marks_energy` is 0.00-0.02 ms.
+
+### 25.7 Tests
+
+`selftest_em_display.py` 358 → **397**, `selftest_em3d_browser.py` 79 → **86**,
+`selftest_repro.py` 98/98 unchanged.
+
+The round-12 check that asserted the old wording is **upgraded, not deleted**:
+it now requires the panel to say the segment is in no shower *and* what is at
+stake *and* that the mark survives — asserting the old string would have passed
+on a message that told the scanner nothing. Also pinned: the probe-`dQ`
+identity over the whole sample; that `absorb_reason` does not behave like
+`absorb_site`; that with `state["prep"]` blanked the message degrades to what
+the dump alone supports and invents no reason; that an OUT mark is not described
+as an addition; and a live-data guard that reads every scan tag on disk
+read-only and renders each orphan mark found (87 marks over 11 events, 1 orphan,
+0 bad).
+
+The browser test makes the mark through the real buttons on evt169626 —
+`cand_src` row for 53070, `mark IN` — and reads both panels back off the live
+document. Nothing is saved: that event's real record lives in the owner's tag
+(M13).
+
+### 25.8 Not done, and left to the owner
+
+- **The MeV is not offered.** §25.3 gives the two candidate conversions and the
+  spread that blocks choosing between them. If the owner wants an orphan
+  segment's charge counted, it needs its own control and its own decision about
+  which factor — and it must **not** be folded into `gamma energy membership`,
+  which means "marks with a known `E_est`"; giving that switch a second meaning
+  would break the round-12/16b restore logic.
+- **`refresh_impact`'s filtered ΣdQ** drops `dQ < 0` points where the probe keeps
+  them, so its number is ~1 % from the probe's for the same segments. Reported,
+  not changed — it is a different, older readout and not this round's business.
+- Two stray files at the repo root remain from earlier mis-redirects and are not
+  touched: `angle` (empty, Aug 4) and `sbnd_xin/--quiet` (74 KB of TSV, Aug 20).

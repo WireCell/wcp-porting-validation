@@ -526,15 +526,55 @@ Four cases the panel keeps apart:
 - **a non-member marked OUT takes nothing off** — it was never in it;
 - a **member** marked OUT does take its `E_est` off;
 - a segment **no shower owns** has no `E_est`. It is named in red and **not
-  counted either way**, and no dQ-derived estimate is offered: `E_est/dQ` is not
-  constant between showers (6.05e-5 against 4.99e-5 MeV per electron on
-  evt409634 alone), so that number would be a different quantity in the same
-  units. 3 % of segments (177 of 5830) are in this position.
+  counted**, and no dQ-derived estimate is offered: `E_est/dQ` is not constant
+  between showers (6.05e-5 against 4.99e-5 MeV per electron on evt409634 alone),
+  so that number would be a different quantity in the same units. 3.4 % of
+  segments (196 of 5830) are in this position, on 84 of the 98 events, so it is
+  a case the scan meets often — see below for what the panel now says about it.
 
 A marked segment's `E_est` was converted with **its own** shower's recombination
 pair, so under `as EM shower (charge-inferred)` the same round-9 ratio is applied
 per segment — a segment coming from a track-flagged shower is scaled by
 0.665/0.4 = 1.6625, exactly as the shower itself would be.
+
+#### A mark on a segment no shower owns is a decision being overruled
+
+Marking such a segment in is not working around a gap in the display. The
+reconstruction has an opinion about that segment, and it is on disk. Both panels
+now say it — the EM mark list where the mark is *made*, the π⁰ panel where its
+energy goes missing — in three parts:
+
+1. **what it is and where the code put it** — its length, the PID the
+   reconstruction gave it, and `shower_id -1` straight out of the dump. That
+   half needs no probe sidecar and survives on an event without one.
+2. **why** — the probe's own absorb record for *this* shower. On evt169626,
+   `SHOWER_ABSORB EXCLUDE shower_start_seg=53069 seg=53070 pdg=2212` at
+   `in_other_clusters_A`: the straight-long-track guard
+   (`PRShower.cxx:722-727`, F12 / doc pr/40 round 6) declined a confidently
+   PID'd non-electron. The reconstruction considered that exact segment for
+   that exact shower and refused. The mark overrules one named decision.
+3. **how much is at stake, and why it is still not a MeV** — `ΣdQ` for the
+   segment against `ΣdQ` over the shower's members, as a percentage. On
+   evt169626 segment 53070 carries 1.69e6 e, **20 % of γ1's own 8.42e6 e** — so
+   the scanner can see the size of what is left out without being handed a
+   number that would need a conversion nobody can pin. The conversion is the
+   blocker, not the charge: this event's own eight showers convert at 1.22e-5 to
+   7.20e-5 MeV per electron, a factor of 5.9, and for a proton-PID'd object the
+   code would not use the shower recombination pair (0.35×0.95) either.
+
+`ΣdQ` here is the sum of the segment's fitted-point `dQ` from the dump. That is
+the same quantity the probe reports per member segment — checked over the 5 700
+member segments of all 98 events, worst relative difference 5.9e-6 — which is
+what puts a segment the probe never saw on the same scale as one it did. It is
+*not* the filtered sum the EM-mode **impact** line uses (that one drops points
+with `dQ < 0`); the two differ by about 1 % over a shower and are deliberately
+kept apart.
+
+The energy behaviour is unchanged: the marked segment is still not summed, and
+no stored mass moves. The reason it is looked up per shower rather than
+last-record-wins is that a segment can carry several absorb records (13023 on
+evt169626 has a `walk_add` then a `direct`), and 9 of the 23 `walk_exclude`
+segments in the sample were absorbed somewhere else afterwards.
 
 The record keeps both numbers and the working: `energy_includes_marks`,
 `energy_marks_delta`, `energy_without_marks`, and `energy_marks_detail` with each

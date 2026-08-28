@@ -1461,6 +1461,270 @@ def _est_map():
     return out
 
 
+PDG_SAYS = {11: "electron", -11: "electron", 13: "muon", -13: "muon",
+            211: "pion", -211: "pion", 2212: "proton", 321: "kaon",
+            -321: "kaon", 0: "no PID"}
+
+
+def seg_dq(sid):
+    """Collected charge on ONE segment: the sum of its fitted points' `dQ`, in
+    electrons, straight out of the dump.
+
+    This is the same quantity the probe reports per member segment.  Measured,
+    not assumed: over the 5 700 member segments of all 98 manifest events the
+    worst relative difference between the sidecar's `dQ` and this sum is
+    5.9e-6, which is the sidecar printing one decimal.  That identity is the
+    whole reason a segment the probe never saw can be put on the same scale as
+    one it did WITHOUT inventing a charge-to-energy conversion for it.
+
+    Deliberately NOT `refresh_impact`'s sum, which drops points with dQ < 0 or
+    dx <= 0.  The probe keeps those (segment 53075 on evt169626 is -12 500 e)
+    and the two differ by ~1% over a shower, so a fraction whose numerator and
+    denominator came from different filters would not mean anything.  Noted
+    rather than unified: `refresh_impact` is a different, older readout with
+    its own wording, and changing its number is not this round's business.
+    """
+    for s in cur_segments():
+        if s.get("id") == sid:
+            return sum(p.get("dQ") or 0.0 for p in (s.get("points") or []))
+    return None
+
+
+def shower_dq(node):
+    """Sum of collected charge over one shower's members.
+
+    The probe's own numbers when there is a sidecar, so the denominator is
+    exactly what `E_est` decomposes -- see `_est_map`.
+    """
+    e = ((state.get("prep") or {}).get("showers") or {}).get(str(node))
+    if e:
+        return sum(m.get("dQ") or 0.0 for m in (e.get("members") or []))
+    tot = 0.0
+    for sid in members_of(node):
+        q = seg_dq(sid)
+        if q is not None:
+            tot += q
+    return tot
+
+
+def dump_shower_id(sid):
+    """The reconstruction's OWN shower assignment for a segment, from the dump.
+
+    -1 means it put the segment in no shower at all.  Read from the dump rather
+    than inferred from the probe on purpose: on evt169626 the dump says
+    `shower_id -1` for 53070 by itself, so the "in no shower" half of the
+    message stands on an event with no sidecar.  None = not in the dump.
+    """
+    for s in cur_segments():
+        if s.get("id") == sid:
+            return s.get("shower_id")
+    return None
+
+
+def absorb_reason(sid, node=None):
+    """Why the reconstruction did what it did with one segment, from the probe.
+
+    `absorb_site` answers "where did this end up", so it takes `recs[-1]`.
+    This answers the opposite question -- why is it NOT in the shower being
+    scanned -- and a segment can carry several records (13023 on evt169626 has
+    a `walk_add` then a `direct`), so the record naming `node` is picked
+    EXPLICITLY.  Last-wins would name the wrong shower on the second event that
+    hits this: 21 of the 98 manifest events carry a `walk_exclude`, and 9 of
+    those 23 segments were absorbed somewhere else afterwards.
+
+    Returns the record dict, or None when the probe has nothing to say.
+    """
+    recs = ((state.get("prep") or {}).get("absorb") or {}).get(str(sid)) or []
+    if not recs:
+        return None
+    if node is not None:
+        here = [r for r in recs if r.get("shower") == node]
+        if here:
+            return here[-1]
+    return recs[-1]
+
+
+def conv_span():
+    """(min, max) MeV per collected electron over THIS event's showers.
+
+    The concrete form of the reason no MeV is quoted for a segment no shower
+    owns: on evt169626 the eight showers run 1.23e-5 to 7.20e-5, a factor of
+    5.8, so "convert it like the others" is not a defined instruction.  Shown
+    rather than asserted -- the scanner can see the spread that blocks it.
+    """
+    vals = []
+    for sh in cur_showers():
+        nd = sh.get("id")
+        e, q = sh.get("kine_charge"), shower_dq(nd)
+        if e is not None and q:
+            vals.append(e / q)
+    return (min(vals), max(vals)) if vals else (None, None)
+
+
+def unknown_mark_row(node, sid, kind):
+    """Everything either panel needs to explain ONE marked segment that carries
+    no per-segment energy.
+
+    Measured in one place so the EM mark list and the pi0 panel say the same
+    thing: round 17's complaint was that the mark was made in EM mode and the
+    objection only turned up in pi0 mode, with no way to connect them.
+    """
+    seg = None
+    for s in cur_segments():
+        if s.get("id") == sid:
+            seg = s
+            break
+    q = seg_dq(sid)
+    tot = shower_dq(node)
+    return dict(seg=sid, kind=kind, in_dump=seg is not None,
+                pdg=(seg or {}).get("particle_id"),
+                score=(seg or {}).get("particle_score"),
+                length=(seg or {}).get("length"),
+                shower_id=(seg or {}).get("shower_id"),
+                dq=q, shower_dq=tot,
+                dq_frac=(q / tot) if (q is not None and tot) else None,
+                reason=absorb_reason(sid, node))
+
+
+def _seg_says(r):
+    """"a 14.1 cm segment the reconstruction PID'd proton (score 100)" -- what
+    the marked segment IS, in the reconstruction's own terms."""
+    if not r.get("in_dump"):
+        return "a segment that is not in the dump at all"
+    bits = []
+    if r.get("length") is not None:
+        bits.append("a %.1f cm segment" % r["length"])
+    else:
+        bits.append("a segment")
+    pdg = r.get("pdg")
+    if pdg not in (None, 0):
+        bits.append("the reconstruction PID'd %s" % PDG_SAYS.get(pdg, "pdg %s" % pdg))
+        if r.get("score") is not None:
+            bits[-1] += " (score %.0f)" % r["score"]
+    elif pdg == 0:
+        bits.append("with no PID")
+    return " ".join(bits)
+
+
+def _placed_says(r):
+    """Where the reconstruction put it -- the half that needs no probe."""
+    if not r.get("in_dump"):
+        return ""
+    if r.get("shower_id") == -1:
+        return (" and put in <b>no shower</b> (the dump gives it "
+                "<code>shower_id -1</code>)")
+    return " that no shower reports as a member"
+
+
+def unknown_mark_why(node, r, brief=False):
+    """The reconstruction's own decision about a marked segment it owns nowhere,
+    in one clause -- or "" when the probe has nothing on it.
+
+    The point of saying it at all: the code did not overlook this segment, it
+    considered it for this shower and refused.  A hand scan overruling one
+    named decision is a very different act from a hand scan working around a
+    hole in the display, and until this round the panel read like the latter.
+
+    `brief` drops the probe log line and the source citation: the EM mark list
+    is a list of marks, not a reading of one, and the pi0 panel carries the
+    full form.  Two renderings of one fact, not two facts.
+    """
+    rec = r.get("reason") or {}
+    how, site = rec.get("how"), rec.get("site") or "?"
+    if how == "walk_exclude":
+        if brief:
+            return ("the code considered it for this very shower and refused "
+                    "&mdash; the straight-long-track guard "
+                    "(<code>PRShower.cxx:722-727</code>)")
+        return ("the code <b>considered it for this very shower and refused"
+                "</b> &mdash; <code>SHOWER_ABSORB EXCLUDE shower_start_seg=%s "
+                "seg=%s pdg=%s</code> at <code>%s</code>, the straight-long-"
+                "track guard, which declines a confidently PID'd non-electron "
+                "(<code>PRShower.cxx:722-727</code>, F12 / doc pr/40 round 6)"
+                % (rec.get("shower"), r["seg"], rec.get("pdg"), site))
+    if how in ("walk_add", "direct"):
+        if brief:
+            return ("the probe last records it going into shower %s, yet no "
+                    "shower reports it as a member" % rec.get("shower"))
+        return ("the probe last records it going <b>into shower %s</b> "
+                "(<code>%s</code> at <code>%s</code>), yet no shower reports it "
+                "as a member &mdash; that pair of facts is worth a look before "
+                "the mark is trusted" % (rec.get("shower"), how, site))
+    if how:
+        return "the probe records <code>%s</code> at <code>%s</code>" % (how, site)
+    return ""
+
+
+def unknown_mark_note(node, r):
+    """One line for the EM mark list: said where the mark is MADE.
+
+    Deliberately shorter than the pi0 block -- this is a list of marks, not a
+    reading of one -- so it carries the fact, the size and the guard's name and
+    leaves the full citation to the pi0 panel.
+    """
+    why = unknown_mark_why(node, r, brief=True)
+    frac = ("" if r.get("dq_frac") is None else
+            " &Sigma;dQ <b>%.3g e</b>, <b>%.0f%%</b> of shower %s's own charge, "
+            "will not reach the &pi;&#8304; mass." % (r["dq"], 100 * r["dq_frac"], node))
+    return ("<span style='color:#b58900'>&#8627; <b>%s</b> &mdash; %s%s. Your "
+            "mark IS recorded, with the reason, but there is no per-segment "
+            "energy for it:%s%s</span>"
+            % (r["seg"], _seg_says(r), _placed_says(r),
+               frac or " it cannot move the &pi;&#8304; mass.",
+               (" Why: %s." % why) if why else ""))
+
+
+def unknown_mark_lines(slot, node, r, e_reco):
+    """The pi0 panel's block for one such segment: what, why, and what is kept.
+
+    Three separate spans rather than one paragraph because they answer three
+    different questions and the scanner reads them at different moments.
+    """
+    lo, hi = conv_span()
+    out = []
+    out.append(
+        "<span style='font-size:88%%;color:#d62728'>&#9888; <b>&gamma;%d "
+        "&middot; %s</b> &mdash; %s%s. There is no per-segment energy for it, "
+        "so it is <b>not %s</b> and &gamma;%d stays at <b>%s MeV</b>%s</span>"
+        % (slot, r["seg"], _seg_says(r), _placed_says(r),
+           "added" if r["kind"] == "in" else "taken off", slot,
+           "-" if e_reco is None else "%.1f" % e_reco,
+           "." if r.get("dq_frac") is None else
+           " &mdash; though its charge, &Sigma;dQ <b>%.3g e</b>, is <b>%.0f%%</b>"
+           " of &gamma;%d's own %.3g e." % (r["dq"], 100 * r["dq_frac"],
+                                            slot, r["shower_dq"])))
+    why = unknown_mark_why(node, r)
+    if why:
+        out.append("<span style='font-size:88%%;color:#b58900'>&nbsp;&nbsp;"
+                   "<b>why</b>: %s. Your mark overrules that one decision."
+                   "</span>" % why)
+    tail = ""
+    if lo is not None:
+        tail = (" &mdash; this event's own showers convert at %.2e to %.2e MeV "
+                "per electron, a factor of %.1f" % (lo, hi, hi / lo if lo else 0))
+    pair = ""
+    if r.get("pdg") == 2212:
+        pair = (" And for a proton-PID'd object the code would not use the "
+                "shower recombination pair either (%.2f&times;%.2f against "
+                "%.2f&times;%.2f)."
+                % (KINE_PROTON[0], KINE_PROTON[1],
+                   KINE_SHOWER[0], KINE_SHOWER[1]))
+    elif r.get("pdg") not in (None, 0, 11, -11):
+        pair = (" And for a track-PID'd object the code would not use the "
+                "shower recombination pair either (%.2f&times;%.2f against "
+                "%.2f&times;%.2f)."
+                % (KINE_TRACK[0], KINE_TRACK[1],
+                   KINE_SHOWER[0], KINE_SHOWER[1]))
+    out.append(
+        "<span style='font-size:88%%;color:#555'>&nbsp;&nbsp;<b>your mark is "
+        "kept either way</b> &mdash; <code>marks_by_shower</code> and "
+        "<code>marks_detail</code> record it with that reason, and the "
+        "membership you scanned is what the record is for. What is missing is "
+        "only the MeV: no estimate is offered because charge&rarr;energy is a "
+        "per-object choice%s.%s</span>" % (tail, pair))
+    return out
+
+
 def marks_energy(node, as_em=False):
     """What the scanner's marks add to, or take off, one shower's energy.
 
@@ -1479,11 +1743,18 @@ def marks_energy(node, as_em=False):
     across showers (6.05e-5 against 4.99e-5 MeV per electron on evt409634
     alone), so a dQ-derived number would be a different quantity in the same
     units.  Those segments are named in `unknown` and never summed.
+
+    Round 17 leaves that decision exactly as it was and adds `unknown_rows`
+    beside it: the same segments, with what the reconstruction itself decided
+    about them and how much charge is at stake.  `delta` is untouched, which is
+    the guarantee that no stored pairing and no saved mass can move -- the new
+    key is read by the two panels and by nothing that computes a number
+    (`energy_for` reads only `delta`; `_pair_sig` does not read this at all).
     """
     mem = set(members_of(node))
     est = _est_map()
     delta = 0.0
-    rows, unknown = [], []
+    rows, unknown, unknown_rows = [], [], []
     for sid, kind in sorted(marks_for(node).items()):
         if kind == "in" and sid in mem:
             continue          # already inside kine_charge
@@ -1494,6 +1765,7 @@ def marks_energy(node, as_em=False):
         e, owner = est.get(sid, (None, None))
         if e is None:
             unknown.append(sid)
+            unknown_rows.append(unknown_mark_row(node, sid, kind))
             continue
         lbl, used, _alt = (kine_hypothesis(owner) if owner is not None
                            else (None, None, None))
@@ -1504,7 +1776,8 @@ def marks_energy(node, as_em=False):
         delta += sign * conv
         rows.append(dict(seg=sid, kind=kind, E_est=e, energy=conv, owner=owner,
                          owner_kine=lbl))
-    return dict(delta=delta, rows=rows, unknown=unknown)
+    return dict(delta=delta, rows=rows, unknown=unknown,
+                unknown_rows=unknown_rows)
 
 
 def ehyp_widget(slot):
@@ -2013,6 +2286,12 @@ def refresh_mark_list():
         rows.append("<span style='display:inline-block;width:22px;height:9px;"
                     "border:1px solid #555;background:%s'></span> <b>%s</b>: %s%s"
                     % (shower_color(node), node, bits, sel))
+        # Round 17.  Said HERE, where the mark is made, and not only in the pi0
+        # panel: the scanner marked 53070 into 53069 in EM mode on evt169626 and
+        # met the objection two modes later, with nothing to connect the two.
+        # Same source as the pi0 block (`marks_energy`), so they cannot drift.
+        for _u in marks_energy(node)["unknown_rows"][:3]:
+            rows.append("&nbsp;&nbsp;" + unknown_mark_note(node, _u))
     # A segment IN two showers at once is a contradiction, not an opinion, and
     # the pass-1 numbers that decide it are already computed -- so show them
     # side by side rather than just flagging the clash.
@@ -2637,15 +2916,25 @@ def refresh_kine():
                        "counted in the energies below."  if _on else
                        "<b>not counted below</b>. Switch <i>gamma energy "
                        "membership</i> to <i>%s</i>." % EMARK_MARKS))
-            if _m["unknown"]:
+            # Round 17.  The old one-liner here said only "marked but owned
+            # by no shower", which reads like a hole in the display -- the
+            # scanner's report was that it "is somewhat strange".  It is not a
+            # hole: on evt169626 the reconstruction considered 53070 for THIS
+            # shower and refused it by a named, knob-gated guard, the dump
+            # records `shower_id -1` for it on its own, and its charge is 20%
+            # of the gamma's.  All three were already on disk and none was on
+            # screen.  The energy behaviour is unchanged -- `delta` still does
+            # not include these segments -- only what the panel says about it.
+            for _u in _m["unknown_rows"][:3]:
+                rows.extend(unknown_mark_lines(_sl, _nd, _u, shower_energy(_nd)))
+            if len(_m["unknown_rows"]) > 3:
                 rows.append(
-                    "<span style='font-size:88%%;color:#d62728'>&gamma;%d: %s "
-                    "marked but owned by no shower, so the probe has no "
-                    "per-segment energy for %s &mdash; <b>not counted either "
-                    "way</b>, and no dQ estimate is offered because E_est/dQ is "
-                    "not constant between showers.</span>"
-                    % (_sl, ", ".join(str(x) for x in _m["unknown"][:6]),
-                       "it" if len(_m["unknown"]) == 1 else "them"))
+                    "<span style='font-size:88%%;color:#d62728'>&#9888; "
+                    "&gamma;%d: %d more marked segment(s) in no shower "
+                    "(%s) &mdash; same story for each.</span>"
+                    % (_sl, len(_m["unknown_rows"]) - 3,
+                       ", ".join(str(r["seg"])
+                                 for r in _m["unknown_rows"][3:9])))
         rows.append(
             "E1 <b>%.1f</b> MeV (shower %s) &nbsp; E2 <b>%.1f</b> MeV (shower %s)"
             " &nbsp; E&pi;&#8304; <b>%.1f</b> MeV &nbsp; asym %s"
