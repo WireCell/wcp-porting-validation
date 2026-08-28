@@ -315,6 +315,14 @@ C++ defaults remain false everywhere — no other detector is affected.
 Discarded arm: `work-pr117r1-onK13d15-*` ran while a rebuild was in flight
 (binary-mixed) — no claims drawn from it.
 
+## 10b. Owner-review Bee pair (uploaded 2026-08-28 on owner request)
+
+Two-event before/after sets, index `bee/pr117r1/pr117r1.index.txt`
+(idx 0 = 389538 control change, idx 1 = 168596 rescue):
+
+- OFF (bare): https://www.phy.bnl.gov/twister/bee/set/c01a0af0-4f84-40a5-b3cb-942ee1c8beeb/event/list/
+- ON (flipped config): https://www.phy.bnl.gov/twister/bee/set/2df29aff-4b56-4e4e-a2ed-540349b9c17c/event/list/
+
 ## 11. What stays open
 
 - The 21-of-25 wrong-owner marks that fail every start-anchored cone (§5):
