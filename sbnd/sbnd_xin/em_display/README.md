@@ -483,6 +483,56 @@ The code itself uses different direction recipes for the mass it stores
 (`:3771`) and the angle it stores (`:3830`), and they do not close. Seeing both
 is how you tell a genuine π⁰ from a bookkeeping artefact.
 
+### More than one π⁰, and more than one way to pair the gammas
+
+Two slots hold **one** pairing. An event with two π⁰ needs two masses in the
+record, and an event where the pairing is uncertain needs the alternatives side
+by side — so pairings are **stored** rather than overwritten.
+
+Assign both gamma slots, press **store this pairing**, repeat. Each stored entry
+freezes its own gammas, their starts, their energy hypotheses, the vertex and
+**both** mass conventions:
+
+| # | γ1 | γ2 | E1 | E2 | θ | m axis | m vertex | vertex |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 15036 | 87078 | 164.7 | 82.0 | 141.9° | 219.7 | 208.4 | main_vertex |
+| 2 | 84070 | 91112 | 73.4 | 68.7 | 69.7° | 81.2 | 93.7 | main_vertex |
+
+Pick a row and **load into the slots** to put one back on screen — the arrows and
+the start markers follow, so pairing 2 can be looked at and then pairing 1 again.
+**remove** drops a row, and the rest are renumbered (a note that names one by
+number goes stale; say the shower ids instead).
+
+**A stored pairing is frozen numbers, not a reference.** Everything a mass is
+built from stays editable afterwards — `em_start` in particular is keyed by
+*shower* and lives in EM mode — so a candidate that merely named its showers
+would be silently re-priced by a later start correction. Loading one back
+recomputes it live and **says so if the two disagree**:
+
+> ⚠ what is on screen is **not** what was stored — axis-convention mass
+> 81.2 → 47.6 MeV. The stored candidate is unchanged…
+
+That is the one real asymmetry: `load into the slots` pins the start
+(slot-scoped, so loading candidate 2 cannot move candidate 1's), but the
+*axis*-convention angle comes from `shower_axis`, which reads the per-shower
+`em_start` and cannot be pinned per slot. So a start correction made after
+storing moves the axis mass and not the vertex mass, and the message names which
+one moved.
+
+**A shower in two candidates is not an error.** It means they are *alternative
+pairings of the same gamma*, and the panel says so — two real π⁰ in one event
+need four distinct showers, and when they are distinct it says that instead.
+
+**Nothing is auto-added.** If the slots hold a pairing that is not in the list,
+the panel says so and Save still records it, as the record's single top-level
+`pio.gammas`. Silently appending to a list you curated would be worse than
+saying it.
+
+The record grows one key. `pio.candidates` is **always written, empty list
+included**, so a reader can tell "this scanner stored no alternatives" from
+"this record predates the list". A record saved before round 11 has no key at
+all, and re-opens showing exactly the one pairing it always did.
+
 ### There is no π⁰ verdict — the correction *is* the judgement
 
 Retired in round 5d. The workflow is "start from the code's reconstruction, then

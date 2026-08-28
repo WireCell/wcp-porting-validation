@@ -21,6 +21,7 @@ only ever touches ../em_labels/<tag>/.
 Serve:  ./em_display/serve_em_display.sh 5021 --scan-tag <tag>
 """
 import argparse
+import copy
 import datetime
 import glob
 import html
@@ -155,6 +156,11 @@ state = dict(label=None, data=None, prep=None,
              acc_hidden=0,             # dots outside the zoomed acceptance range
              gamma={1: None, 2: None},  # slot -> node id
              gstart={1: None, 2: None},  # slot -> (x,y,z) override or None
+             # Round 11.  Stored pi0 pairings, in the order they were added.
+             # An event with two pi0 needs two masses in the record, and an
+             # event where the pairing is uncertain needs the alternatives side
+             # by side -- neither fits in one pair of slots.
+             pio_cands=[],
              # Round 8.  The scanner's own start point and direction for an EM
              # shower, keyed BY SHOWER NODE because mark_metrics runs for every
              # marked shower, not just the selected one -- a flat pair would be
@@ -277,7 +283,7 @@ cloud_src = ColumnDataSource(name="cloud_src",
 shwpt3_src = ColumnDataSource(data=dict(EMPTY3D))
 vtx3_src = ColumnDataSource(name="vtx3_src", data=dict(EMPTY3D))
 mainvtx3_src = ColumnDataSource(name="mainvtx3_src", data=dict(EMPTY3D))
-gstart3_src = ColumnDataSource(data=dict(EMPTY3D))
+gstart3_src = ColumnDataSource(name="gstart3_src", data=dict(EMPTY3D))
 piovtx3_src = ColumnDataSource(data=dict(EMPTY3D))
 emstart3_src = ColumnDataSource(name="emstart3_src", data=dict(EMPTY3D))
 emdir3_src = ColumnDataSource(name="emdir3_src", data=dict(EMPTY3D))
@@ -860,6 +866,43 @@ g1_ehyp = Select(name="g1_ehyp", title="gamma 1 energy", value=EHYP_RECO,
                  options=[EHYP_RECO, EHYP_EM], width=250)
 g2_ehyp = Select(name="g2_ehyp", title="gamma 2 energy", value=EHYP_RECO,
                  options=[EHYP_RECO, EHYP_EM], width=250)
+# Round 11.  One event, several pi0 -- and, just as often, several ways to pair
+# the gammas of one.  evt281485 is the case: 19 EM showers, the reconstruction
+# found ONE group at 208.4 MeV, and the scanner reads more than one pi0 in it.
+# Two slots hold one pairing, so until now a second mass could only be recorded
+# by overwriting the first.
+#
+# A stored candidate is FROZEN NUMBERS, not a reference to the slots.  Every
+# input a mass is built from stays editable afterwards -- `state["em_start"]` in
+# particular is keyed by SHOWER and lives in EM mode -- so a candidate that
+# merely named its showers would be silently re-priced by a later start
+# correction.  Same discipline as `marks_detail`, measured at save time.
+pio_add_btn = Button(name="pio_add_btn", label="store this pairing",
+                     button_type="success", width=180)
+pio_load_btn = Button(name="pio_load_btn", label="load into the slots",
+                      width=170)
+pio_del_btn = Button(name="pio_del_btn", label="remove", width=100)
+pio_cand_src = ColumnDataSource(name="pio_cand_src",
+                                data=dict(n=[], g1=[], g2=[], e1=[], e2=[],
+                                          th=[], mA=[], mB=[], how=[], flag=[]))
+pio_cand_tab = DataTable(source=pio_cand_src, width=RW, height=170,
+                         index_position=None, columns=[
+    TableColumn(field="n", title="#", width=30),
+    TableColumn(field="g1", title="gamma 1", width=75),
+    TableColumn(field="g2", title="gamma 2", width=75),
+    TableColumn(field="e1", title="E1 MeV", width=70,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="e2", title="E2 MeV", width=70,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="th", title="theta deg", width=75,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="mA", title="m axis", width=70,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="mB", title="m vertex", width=75,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="how", title="vertex", width=90),
+    TableColumn(field="flag", title="note", width=230)])
+pio_cand_div = Div(name="pio_cand_div", text="", width=RW)
 snap_btn = Button(label="snap start to nearest fit point", width=230)
 # Round 8, EM mode.  Separate widgets from the pi0 ones on purpose: man_x/y/z
 # and snap_btn belong to the pi0 vertex, the panels are switchable, and one pair
@@ -1867,6 +1910,185 @@ def refresh_impact():
 # ---------------------------------------------------------------------------
 
 
+def gamma_record(slot):
+    """Everything the record keeps about ONE gamma slot, or None if it is empty.
+
+    Round 11 lifted this out of `on_save` unchanged, so that a stored pi0
+    candidate and the record's top-level pairing are built by the same code.
+    Two builders would drift, and the fields that would drift first are exactly
+    the ones that must not: `energy_hypothesis` and `energy_as_reconstructed`
+    are per PAIRING, not per event, so a candidate that re-converted a
+    track-flagged gamma has to be distinguishable from one that did not.
+    """
+    node = state["gamma"][slot]
+    if node is None:
+        return None
+    return dict(
+        shower=node,
+        start=list(shower_start(node, slot) or []),
+        start_override=list(state["gstart"][slot]) if state["gstart"][slot] else None,
+        # Round 8b.  Both mass conventions below are computed from this
+        # point and this axis; naming their provenance is what makes the
+        # two numbers comparable months later.
+        start_source=start_source(node, slot),
+        reco_start=list(reco_start(node) or []),
+        em_start_correction=(list(state["em_start"][node])
+                             if state["em_start"].get(node) else None),
+        dir_point=(list(state["em_dir"][node])
+                   if state["em_dir"].get(node) else None),
+        axis_source=shower_axis(node)[2],
+        energy=gamma_energy(slot),
+        # Round 9.  Which pair the energy above was converted with, and
+        # the reco's own number, so a later reader can recompute either
+        # without going back to the dump.
+        energy_hypothesis=("as_em_shower"
+                           if ehyp_widget(slot).value == EHYP_EM
+                           else "as_reconstructed"),
+        energy_as_reconstructed=shower_energy(node),
+        # Which recombination that energy used, and the same charge under
+        # the other hypothesis.  A gamma slot filled with a track-flagged
+        # object -- which is the whole point of "reco PID wrong" -- has an
+        # energy 1.66x smaller than the identical charge in a
+        # shower-flagged one, and the mass goes as sqrt(E1 E2).
+        particle_id=(shower_by_node(node) or {}).get("particle_id"),
+        flag_shower=shower_is_em(node),
+        kine_hypothesis=kine_hypothesis(node)[0],
+        energy_other_hypothesis=kine_hypothesis(node)[2],
+        members=sorted(members_of(node)),
+        axis=list(shower_axis(node)[0]))
+
+
+def pio_pairing():
+    """The pi0 currently in the slots: both gammas, the vertex, both masses.
+
+    The record's top-level pi0 block and every stored candidate are this same
+    dict, so the two can never carry different fields.
+    """
+    v, how, detail = pio_vertex()
+    gam = {}
+    for slot in (1, 2):
+        g = gamma_record(slot)
+        if g is not None:
+            gam[str(slot)] = g
+    e1 = gamma_energy(1)
+    e2 = gamma_energy(2)
+    thA = mA = thB = mB = None
+    if state["gamma"][1] is not None and state["gamma"][2] is not None:
+        thA = G.angle_deg(shower_axis(state["gamma"][1])[0],
+                          shower_axis(state["gamma"][2])[0])
+        mA = G.pi0_mass(e1, e2, thA)
+        p1 = shower_start(state["gamma"][1], 1)
+        p2 = shower_start(state["gamma"][2], 2)
+        if v and p1 and p2:
+            thB = G.angle_deg(G.vsub(p1, v), G.vsub(p2, v))
+            mB = G.pi0_mass(e1, e2, thB)
+    return dict(
+        gammas=gam, vertex=list(v) if v else None, vertex_how=how,
+        backproject=detail if how == "backproject" else None,
+        mass_axis_convention=mA, theta_axis_convention=thA,
+        mass_vertex_convention=mB, theta_vertex_convention=thB)
+
+
+def _pair_sig(c):
+    """What makes two stored pairings the SAME pairing.
+
+    Not the shower ids alone: the same two gammas under a different vertex
+    convention, a different energy hypothesis or a moved start are a different
+    mass, and storing both is exactly what this list is for.  Rounded, because
+    the numbers are re-derived floats and an exact compare would let a
+    re-stored identical pairing through on the last bit.
+    """
+    g = c.get("gammas") or {}
+    g1, g2 = g.get("1") or {}, g.get("2") or {}
+    rnd = lambda v: tuple(round(float(x), 4) for x in (v or []))
+    return (g1.get("shower"), g2.get("shower"), c.get("vertex_how"),
+            rnd(c.get("vertex")), g1.get("energy_hypothesis"),
+            g2.get("energy_hypothesis"), rnd(g1.get("start")),
+            rnd(g2.get("start")))
+
+
+def _mev(v):
+    return "-" if v is None else "%.1f" % v
+
+
+def refresh_pio_cands():
+    """The stored pairings table, and what the set of them says together."""
+    rows = dict(n=[], g1=[], g2=[], e1=[], e2=[], th=[], mA=[], mB=[], how=[],
+                flag=[])
+    used = {}
+    for i, c in enumerate(state["pio_cands"]):
+        g = c.get("gammas") or {}
+        g1, g2 = g.get("1") or {}, g.get("2") or {}
+        n1, n2 = g1.get("shower"), g2.get("shower")
+        rows["n"].append(i + 1)
+        rows["g1"].append(n1 if n1 is not None else "-")
+        rows["g2"].append(n2 if n2 is not None else "-")
+        rows["e1"].append(g1.get("energy") or 0.0)
+        rows["e2"].append(g2.get("energy") or 0.0)
+        for k, src in (("th", "theta_axis_convention"),
+                       ("mA", "mass_axis_convention"),
+                       ("mB", "mass_vertex_convention")):
+            v = c.get(src)
+            rows[k].append(-1 if v is None else v)
+        rows["how"].append(c.get("vertex_how") or "-")
+        bits = []
+        if G.pi0_mass_accepted(c.get("mass_axis_convention")):
+            bits.append("axis mass in the code's window")
+        elif G.pi0_mass_accepted(c.get("mass_vertex_convention")):
+            bits.append("vertex mass in the code's window")
+        for sl, gg in (("1", g1), ("2", g2)):
+            if gg.get("energy_hypothesis") == "as_em_shower":
+                bits.append("g%s re-converted as EM" % sl)
+        rows["flag"].append("; ".join(bits))
+        for nd in (n1, n2):
+            if nd is not None:
+                used.setdefault(nd, []).append(i + 1)
+    pio_cand_src.data = rows
+
+    if not state["pio_cands"]:
+        pio_cand_div.text = (
+            "<span style='font-size:88%;color:#666'>No pairing stored yet. "
+            "Assign both gamma slots, then <b>store this pairing</b> &mdash; "
+            "repeat for a second \u03c0\u2070, or for another way of pairing the "
+            "same gammas. Every stored pairing keeps its own vertex, starts and "
+            "energy hypotheses.</span>")
+        return
+    bits = ["<b>%d pairing(s) stored</b> for this event."
+            % len(state["pio_cands"])]
+    # A shower in two candidates is NOT a contradiction the way a segment marked
+    # into two showers is -- it is how alternatives are expressed.  But two real
+    # pi0 in one event need four distinct gammas, so which reading applies has
+    # to be visible rather than inferred from the ids.
+    shared = {nd: ns for nd, ns in used.items() if len(ns) > 1}
+    if shared:
+        bits.append(
+            "<span style='color:#b58900'>%s</span> &mdash; those are "
+            "<i>alternative pairings</i> of the same gamma, not two separate "
+            "\u03c0\u2070. Two real \u03c0\u2070 in one event need four distinct showers."
+            % "; ".join("shower <b>%s</b> is in candidates %s"
+                        % (nd, " and ".join(str(x) for x in ns))
+                        for nd, ns in sorted(shared.items())))
+    else:
+        bits.append("<span style='color:#2ca02c'>No shower is used twice, so "
+                    "these read as separate \u03c0\u2070.</span>")
+    # The forgotten pairing: the slots hold something that is not in the list,
+    # and Save writes it only to the top-level block.  Nothing is lost either
+    # way -- this is said, not auto-corrected, because silently appending to a
+    # list the scanner curated is the worse failure.
+    if state["gamma"][1] is not None and state["gamma"][2] is not None:
+        live = _pair_sig(pio_pairing())
+        if all(_pair_sig(c) != live for c in state["pio_cands"]):
+            bits.append(
+                "<span style='color:#b58900'>The pairing now in the slots "
+                "(&gamma;1 %s + &gamma;2 %s) is <b>not one of them</b> &mdash; "
+                "press <i>store this pairing</i> to add it. Saving without that "
+                "still records it, but as the record's single top-level pairing "
+                "rather than as one of the list.</span>"
+                % (state["gamma"][1], state["gamma"][2]))
+    pio_cand_div.text = ("<span style='font-size:88%;color:#333'>"
+                         + "<br>".join(bits) + "</span>")
+
+
 def pio_vertex():
     """(point, how, detail).  `how` is what goes in the saved record."""
     d = state["data"] or {}
@@ -2380,6 +2602,7 @@ def load(lbl):
     state["acc_hidden"] = 0
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
+    state["pio_cands"] = []
     # Node ids are per-event: a leaked override would land on a DIFFERENT
     # shower in the next event and move its start with no sign on screen.
     state["em_start"] = {}
@@ -2516,6 +2739,7 @@ def load(lbl):
     refresh_selection()
     refresh_impact()
     refresh_kine()
+    refresh_pio_cands()
     refresh_emstart()
     set_banner(nloss)
     refresh_info()
@@ -2695,6 +2919,11 @@ def load_label(lbl):
                 ehyp_widget(slot).value = (
                     EHYP_EM if g.get("energy_hypothesis") == "as_em_shower"
                     else EHYP_RECO)
+        # Round 11.  Absent MUST mean an empty list: a record saved before the
+        # list existed stored exactly one pairing, at the top level, and has to
+        # re-open showing precisely that and no phantom candidate.
+        _cands = pio.get("candidates")
+        state["pio_cands"] = list(_cands) if isinstance(_cands, list) else []
         # Round 5d: the control is gone, but a verdict written by an older
         # build is a past judgement on a scientific record -- carried through so
         # re-saving the event cannot silently destroy it.
@@ -2865,65 +3094,19 @@ def on_save():
                 str(nd): list(p) for nd, p in sorted(state["em_dir"].items())})
 
     pio_block = None
-    if state["gamma"][1] is not None or state["gamma"][2] is not None:
-        v, how, detail = pio_vertex()
-        gam = {}
-        for slot in (1, 2):
-            node = state["gamma"][slot]
-            if node is None:
-                continue
-            gam[str(slot)] = dict(
-                shower=node,
-                start=list(shower_start(node, slot) or []),
-                start_override=list(state["gstart"][slot]) if state["gstart"][slot] else None,
-                # Round 8b.  Both mass conventions below are computed from this
-                # point and this axis; naming their provenance is what makes the
-                # two numbers comparable months later.
-                start_source=start_source(node, slot),
-                reco_start=list(reco_start(node) or []),
-                em_start_correction=(list(state["em_start"][node])
-                                     if state["em_start"].get(node) else None),
-                dir_point=(list(state["em_dir"][node])
-                           if state["em_dir"].get(node) else None),
-                axis_source=shower_axis(node)[2],
-                energy=gamma_energy(slot),
-                # Round 9.  Which pair the energy above was converted with, and
-                # the reco's own number, so a later reader can recompute either
-                # without going back to the dump.
-                energy_hypothesis=("as_em_shower"
-                                   if ehyp_widget(slot).value == EHYP_EM
-                                   else "as_reconstructed"),
-                energy_as_reconstructed=shower_energy(node),
-                # Which recombination that energy used, and the same charge under
-                # the other hypothesis.  A gamma slot filled with a track-flagged
-                # object -- which is the whole point of "reco PID wrong" -- has an
-                # energy 1.66x smaller than the identical charge in a
-                # shower-flagged one, and the mass goes as sqrt(E1 E2).
-                particle_id=(shower_by_node(node) or {}).get("particle_id"),
-                flag_shower=shower_is_em(node),
-                kine_hypothesis=kine_hypothesis(node)[0],
-                energy_other_hypothesis=kine_hypothesis(node)[2],
-                members=sorted(members_of(node)),
-                axis=list(shower_axis(node)[0]))
-        e1 = gamma_energy(1)
-        e2 = gamma_energy(2)
-        thA = mA = thB = mB = None
-        if state["gamma"][1] is not None and state["gamma"][2] is not None:
-            thA = G.angle_deg(shower_axis(state["gamma"][1])[0],
-                              shower_axis(state["gamma"][2])[0])
-            mA = G.pi0_mass(e1, e2, thA)
-            p1 = shower_start(state["gamma"][1], 1)
-            p2 = shower_start(state["gamma"][2], 2)
-            if v and p1 and p2:
-                thB = G.angle_deg(G.vsub(p1, v), G.vsub(p2, v))
-                mB = G.pi0_mass(e1, e2, thB)
+    # Round 11: a stored candidate list keeps the pi0 block alive even after the
+    # slots are cleared.  Without this clause, adding two pairings and then
+    # pressing `clear gammas` before Save would drop both on the floor.
+    if (state["gamma"][1] is not None or state["gamma"][2] is not None
+            or state["pio_cands"]):
         pio_block = dict(
-            gammas=gam, vertex=list(v) if v else None, vertex_how=how,
-            backproject=detail if how == "backproject" else None,
-            mass_axis_convention=mA, theta_axis_convention=thA,
-            mass_vertex_convention=mB, theta_vertex_convention=thB,
+            pio_pairing(),
             **({"verdict": state["pio_verdict_legacy"]}
                if state.get("pio_verdict_legacy") else {}),
+            # Round 11.  ALWAYS written, empty list included: a reader must be
+            # able to tell "this scanner stored no alternatives" from "this
+            # record predates the list", and an absent key cannot say either.
+            candidates=[copy.deepcopy(c) for c in state["pio_cands"]],
             reco_groups={str(pid): dict(showers=[s.get("id") for s in shl],
                                         mass=shl[0].get("pio_mass"))
                          for pid, shl in G.pi0_groups(cur_showers()).items()},
@@ -2999,6 +3182,16 @@ def on_save():
                  "<i>marks in this event</i> above, unmark it on the other and "
                  "save again.</span>"
                  % (sid, " and ".join(str(n) for n in sorted(nodes))))
+    if state["pio_cands"]:
+        warn += ("<br><span style='color:#333'>%d stored \u03c0\u2070 pairing(s) "
+                 "written to <code>pio.candidates</code>%s.</span>"
+                 % (len(state["pio_cands"]),
+                    "" if not (state["gamma"][1] is not None
+                               and state["gamma"][2] is not None
+                               and all(_pair_sig(c) != _pair_sig(pio_pairing())
+                                       for c in state["pio_cands"]))
+                    else ", plus the unstored pairing in the slots as the "
+                         "record's top-level <code>pio.gammas</code>"))
     save_note.text = ("saved <code>%s</code> at %s%s"
                       % (html.escape(os.path.relpath(path, SX)),
                          rec["saved_utc"], warn))
@@ -3308,18 +3501,162 @@ def on_gamma(slot):
         draw_arrows()
         draw_gammas()
         refresh_kine()
+        refresh_pio_cands()
         if fit_mode.active == 2:
             refit_camera()
         touch()
     return cb
 
 
+def on_pio_add():
+    if state["gamma"][1] is None or state["gamma"][2] is None:
+        save_note.text = ("<span style='color:#c00'>assign <b>both</b> gamma "
+                          "slots first &mdash; a stored pairing is a mass, and "
+                          "a mass needs two gammas.</span>")
+        return
+    cand = pio_pairing()
+    cand["stored_utc"] = datetime.datetime.now(
+        datetime.timezone.utc).isoformat(timespec="seconds")
+    sig = _pair_sig(cand)
+    for i, c in enumerate(state["pio_cands"]):
+        if _pair_sig(c) == sig:
+            save_note.text = (
+                "<span style='color:#b58900'>that pairing is already stored as "
+                "candidate <b>%d</b> &mdash; same gammas, vertex, starts and "
+                "energy hypotheses, so it would be the same mass twice. Change "
+                "one of them, or leave it.</span>" % (i + 1))
+            return
+    state["pio_cands"].append(cand)
+    refresh_pio_cands()
+    touch()
+    save_note.text = (
+        "stored as candidate <b>%d</b>: &gamma;1 shower %s + &gamma;2 shower "
+        "%s &rarr; m = <b>%s</b> MeV (axis) / <b>%s</b> MeV (vertex, %s). "
+        "%d pairing(s) now stored for this event."
+        % (len(state["pio_cands"]), state["gamma"][1], state["gamma"][2],
+           _mev(cand.get("mass_axis_convention")),
+           _mev(cand.get("mass_vertex_convention")), cand.get("vertex_how"),
+           len(state["pio_cands"])))
+
+
+def on_pio_load():
+    """Put a stored pairing back in the slots so it can be looked at again.
+
+    Restores the slot-scoped `gstart`, never the per-shower `em_start`:
+    `shower_start` consults gstart FIRST, and gstart is scoped to one slot, so
+    loading candidate 2 cannot move candidate 1's geometry.  The stored record
+    is never rewritten by a load -- what comes back on screen is recomputed
+    live, and if it disagrees with what was stored the difference is reported
+    rather than absorbed.
+    """
+    idx = list(pio_cand_src.selected.indices or [])
+    if not idx:
+        save_note.text = ("<span style='color:#c00'>pick a row in the stored "
+                          "pairings table first.</span>")
+        return
+    i = idx[0]
+    if i >= len(state["pio_cands"]):
+        return
+    c = state["pio_cands"][i]
+    g = c.get("gammas") or {}
+    state["_suspend"] = True
+    try:
+        for slot in (1, 2):
+            gg = g.get(str(slot)) or {}
+            node = gg.get("shower")
+            state["gamma"][slot] = node
+            # Pin the stored start ONLY where the live chain would not already
+            # produce it.  Setting gstart unconditionally would pin every
+            # candidate's start to a slot override, and `start_source` would
+            # then report `gamma_slot_override` for a start that came from the
+            # reconstruction -- a provenance the record would carry forever.
+            state["gstart"][slot] = None
+            st = gg.get("start")
+            if st and node is not None:
+                livep = shower_start(node, slot)
+                if livep is None or G.vmag(G.vsub(tuple(st), livep)) > 1e-6:
+                    state["gstart"][slot] = tuple(st)
+            ehyp_widget(slot).value = (
+                EHYP_EM if gg.get("energy_hypothesis") == "as_em_shower"
+                else EHYP_RECO)
+        how = c.get("vertex_how")
+        vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
+                                 "manual": 2}.get(how, 0)
+        if how == "manual" and c.get("vertex"):
+            state["vtx_manual"] = tuple(c["vertex"])
+            man_x.value, man_y.value, man_z.value = (
+                "%.1f" % c["vertex"][0], "%.1f" % c["vertex"][1],
+                "%.1f" % c["vertex"][2])
+    finally:
+        state["_suspend"] = False
+    draw_arrows()
+    draw_gammas()
+    refresh_kine()
+    refresh_pio_cands()
+    if fit_mode.active == 2:
+        refit_camera()
+    else:
+        push_camera()
+    touch()
+    live = pio_pairing()
+    drift = []
+    for k, lab in (("mass_axis_convention", "axis-convention mass"),
+                   ("mass_vertex_convention", "vertex-convention mass")):
+        a, b = c.get(k), live.get(k)
+        if a is None and b is None:
+            continue
+        if a is None or b is None or abs(a - b) > 0.05:
+            drift.append("%s %s &rarr; %s MeV" % (lab, _mev(a), _mev(b)))
+    msg = ("loaded candidate <b>%d</b> into the slots: &gamma;1 %s + &gamma;2 "
+           "%s, vertex <i>%s</i>."
+           % (i + 1, state["gamma"][1], state["gamma"][2], c.get("vertex_how")))
+    if drift:
+        # The one way this happens: shower_axis reads the per-shower em_start,
+        # which gstart cannot pin, so an EM-mode start correction made AFTER the
+        # candidate was stored changes the axis-convention angle.  The stored
+        # number stands; the screen shows today's.
+        msg += ("<br><span style='color:#d62728'>&#9888; what is on screen is "
+                "<b>not</b> what was stored &mdash; %s. The stored candidate is "
+                "unchanged; something it was built from (most likely this "
+                "shower's EM-mode start correction) has moved since. Press "
+                "<i>store this pairing</i> if today's numbers are the ones you "
+                "mean.</span>" % "; ".join(drift))
+    save_note.text = msg
+
+
+def on_pio_del():
+    idx = sorted(pio_cand_src.selected.indices or [], reverse=True)
+    if not idx:
+        save_note.text = ("<span style='color:#c00'>pick the row(s) to remove "
+                          "in the stored pairings table first.</span>")
+        return
+    gone = []
+    for i in idx:
+        if i < len(state["pio_cands"]):
+            gone.append(i + 1)
+            state["pio_cands"].pop(i)
+    state["_suspend"] = True
+    try:
+        pio_cand_src.selected.indices = []
+    finally:
+        state["_suspend"] = False
+    refresh_pio_cands()
+    touch()
+    save_note.text = ("removed pairing %s. %d left &mdash; they are renumbered, "
+                      "so a note that names one by number is now stale."
+                      % (" and ".join(str(x) for x in sorted(gone)),
+                         len(state["pio_cands"])))
+
+
 def on_gamma_clear():
+    """Clears the SLOTS.  The stored pairings are untouched -- they are the
+    record, and a control labelled `clear gammas` must not delete them."""
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
     draw_arrows()
     draw_gammas()
     refresh_kine()
+    refresh_pio_cands()
     touch()
 
 
@@ -3901,6 +4238,9 @@ show_all_toggle.on_click(lambda a: fill_cand_table())
 g1_btn.on_click(on_gamma(1))
 g2_btn.on_click(on_gamma(2))
 g_clear_btn.on_click(on_gamma_clear)
+pio_add_btn.on_click(on_pio_add)
+pio_load_btn.on_click(on_pio_load)
+pio_del_btn.on_click(on_pio_del)
 for _w in (g1_ehyp, g2_ehyp):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
 snap_btn.on_click(on_snap)
@@ -4016,6 +4356,16 @@ pio_panel = column(
     vtx_mode_group,
     row(man_x, man_y, man_z, tap_toggle),
     kine_div,
+    Div(text="<b>stored \u03c0\u2070 pairings</b> &mdash; one event can hold "
+             "more than one \u03c0\u2070, and one \u03c0\u2070 more than one "
+             "plausible pairing. <b>store this pairing</b> freezes what is in "
+             "the slots &mdash; both gammas, their starts, their energy "
+             "hypotheses, the vertex and both masses &mdash; as its own entry. "
+             "Pick a row and <b>load into the slots</b> to look at it again.",
+        width=RW),
+    row(pio_add_btn, pio_load_btn, pio_del_btn),
+    pio_cand_tab,
+    pio_cand_div,
     Div(text="<span style='font-size:88%;color:#555'>No pi0 verdict: the record "
              "keeps the reconstruction's pairing (<code>reco_groups</code>, "
              "<code>reco_kine</code>) and yours (<code>gammas</code>, "

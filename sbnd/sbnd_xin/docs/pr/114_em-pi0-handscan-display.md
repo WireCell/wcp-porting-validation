@@ -2004,3 +2004,148 @@ button reads membership directly, which makes the question moot for this task.
   showers. But a scanner who had already marked those segments against 71022
   itself can now produce ten conflicts in one gesture instead of one at a time.
   They are still caught in the marks list and at save; nothing warns earlier.
+
+## 19. Round 11 — more than one π⁰ per event
+
+> *"In evt 281485, I have multiple pi0, so I need to select multiple pi0 mass to
+> store, different combination of the gamma, how to achieve that in the
+> display?"*
+
+### 19.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 270
+python em_display/selftest_em3d_browser.py      # 63
+python em_display/selftest_repro.py             # 98/98
+```
+
+The case: **evt281485** — 48 segments, 20 showers, **19 EM**, and the
+reconstruction groups exactly **one** π⁰, from showers 15036 + 90104. The
+scanner reads more than one. Seven showers carry more than 25 MeV, so the
+pairing is a judgement, not a lookup.
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-10.
+
+### 19.2 What was missing
+
+Two gamma slots hold one pairing, and the record had one `pio.gammas` /
+`mass_axis_convention` / `mass_vertex_convention`. A second π⁰ could only be
+recorded by overwriting the first, and an *alternative* pairing of the same π⁰
+could not be recorded at all — which is the more common need, since the question
+being scanned is usually "which two of these seven".
+
+### 19.3 A stored pairing is frozen numbers
+
+`store this pairing` snapshots the live pairing: both gammas with their resolved
+start, axis, `start_source`, energy, `energy_hypothesis` and
+`energy_as_reconstructed`, plus the vertex, both θ and both masses.
+
+Frozen **numbers**, not a reference to the slots, and this is the load-bearing
+decision. Every input a mass is built from stays editable afterwards —
+`state["em_start"]` in particular is keyed by *shower* and is edited in **EM**
+mode — so a candidate that merely named its showers would be silently re-priced
+by a start correction made later, in a different panel. That is the round-8b
+failure class exactly. Same discipline as `marks_detail`, measured at save time.
+
+On evt281485:
+
+| # | γ1 | γ2 | E1 | E2 | θ axis | m axis | m vertex |
+|---|---|---|---|---|---|---|---|
+| 1 | 15036 | 87078 | 164.7 | 82.0 | 141.9° | 219.7 | 208.4 |
+| 2 | 84070 | 91112 | 73.4 | 68.7 | 69.7° | **81.2** | 93.7 |
+| 3 | 15036 | 88090 | 164.7 | 65.9 | 84.7° | **140.4** | 162.0 |
+
+(π⁰ rest mass 134.98. The `note` column flags which masses fall in the code's own
+accept window.)
+
+### 19.4 One builder, not two
+
+`gamma_record(slot)` and `pio_pairing()` were lifted out of `on_save` **unchanged**
+so that a stored candidate and the record's top-level block are built by the same
+code. Two builders would drift, and the fields that would drift first are the
+ones that must not: round 9's `energy_hypothesis` and `energy_as_reconstructed`
+are per **pairing**, not per event, so a candidate that re-converted a
+track-flagged gamma has to be distinguishable from one that did not.
+
+The extraction was **proved** behaviour-preserving rather than asserted: the
+record produced by the pre-change viewer (`git show HEAD:…`) and by the new one
+was compared on three different pairing shapes — two gammas with an EM-mode start
+correction, an energy-hypothesis switch and a manual vertex; a single filled slot
+with the main vertex; two gammas with a back-projected vertex. The only
+difference across all three is the intended new key:
+
+```
+37a38
+>    "candidates": [],
+215a217
+>    "candidates": [],
+412a415
+>    "candidates": [],
+```
+
+### 19.5 Load-back, and the one honest asymmetry
+
+`load into the slots` restores the gammas, the energy hypotheses and the vertex
+mode, and pins the start through **`gstart`** — the slot-scoped override, which
+beats `em_start` in `shower_start`'s precedence — so loading candidate 2 cannot
+move candidate 1's geometry.
+
+It pins the start only where the live chain would not already produce it.
+Pinning unconditionally would make every loaded candidate report
+`start_source = gamma_slot_override` for a start that came from the
+reconstruction, and the record would carry that false provenance forever.
+
+`shower_axis` reads the per-shower `em_start` and there is no per-slot equivalent,
+so the **axis**-convention angle cannot be pinned. An EM-mode start correction
+made after storing therefore moves the axis mass and not the vertex mass. The
+load reports it instead of absorbing it:
+
+> ⚠ what is on screen is **not** what was stored — axis-convention mass
+> 81.2 → 47.6 MeV. The stored candidate is unchanged…
+
+### 19.6 What is deliberately not automatic
+
+- **Nothing is auto-added at save.** If the slots hold a pairing that is not in
+  the list, the panel and the save note say so; Save still records it as the
+  record's top-level `pio.gammas`, so nothing is lost. Appending to a curated
+  list on the scanner's behalf, using a dedup key the tool invented, is the worse
+  failure — it either drops a real candidate or duplicates one.
+- **A shower in two candidates is not flagged as an error.** It means they are
+  alternative pairings of the same gamma. The panel says which reading applies —
+  two real π⁰ need four distinct showers — rather than leaving it to be inferred
+  from the ids.
+- **`clear gammas` clears the slots only.** The stored pairings are the record.
+- The dedup key is not the shower pair: the same two gammas under a different
+  vertex convention, energy hypothesis or start are a different mass, and storing
+  both is what the list is for. An exactly identical re-store is refused **by
+  candidate number**.
+
+### 19.7 The record
+
+```
+pio.candidates            [ … ]  ALWAYS written, empty list included
+pio.candidates[i]         gammas{1,2}, vertex, vertex_how, backproject,
+                          mass_axis_convention, theta_axis_convention,
+                          mass_vertex_convention, theta_vertex_convention,
+                          stored_utc
+pio.gammas / mass_*       unchanged: the pairing in the slots at save time
+```
+
+Always written so a reader can tell *"this scanner stored no alternatives"* from
+*"this record predates the list"* — an absent key says neither. A record saved
+before round 11 has no key, and re-opens showing exactly the one pairing it
+always did; a test pins that, as in round 9.
+
+The pi0 block is now also built when the slots are **empty** but candidates
+exist. Without that clause, storing two pairings and pressing `clear gammas`
+before Save would have dropped both.
+
+### 19.8 Left open
+
+- Candidates are per event and there is no way to mark one as *the* answer. The
+  list is a set of measurements, not a ranking; if a later pass needs "the
+  scanner's chosen pairing", that is a new field, not a re-reading of this one.
+- `gstart3_src` gained a `name=` so the browser test could read the gamma markers
+  back. Inert at runtime; noted because it is the only line in this round that
+  touches a round-3 model.

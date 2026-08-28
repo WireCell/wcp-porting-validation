@@ -1758,6 +1758,173 @@ check("  ... with the pass-1 numbers measured for every one of them",
       "%d measured, keys %s" % (len(_mk),
                                 sorted(list(_mk.values())[0]) if _mk else "-"))
 
+# ---------------------------------------------------------------------------
+# round 11: more than one pi0 pairing per event
+#
+# evt281485 -- 20 showers, 19 EM, and the reconstruction groups exactly one pi0.
+# The scanner reads more than one, which needs more than one pair of slots.
+# ---------------------------------------------------------------------------
+V.on_event(None, None, "evt281485")
+V.mode_group.active = 1
+V.on_mode(None, None, 1)
+_grp = V.G.pi0_groups(V.cur_showers())
+check("evt281485: the reco finds exactly one pi0 group",
+      len(_grp) == 1, str({k: [s.get("id") for s in v] for k, v in _grp.items()}))
+check("  ... and nothing is stored yet",
+      V.state["pio_cands"] == [] and not V.pio_cand_src.data["n"])
+
+
+def _pair(a, b, how=0):
+    V.state["gamma"][1] = a
+    V.state["gamma"][2] = b
+    V.state["gstart"] = {1: None, 2: None}
+    V.vtx_mode_group.active = how
+    V.refresh_kine()
+
+
+# two pi0 made of four DISTINCT showers
+_pair(15036, 87078)
+V.on_pio_add()
+_pair(84070, 91112)
+V.on_pio_add()
+check("two pairings store as two candidates", len(V.state["pio_cands"]) == 2,
+      "%d" % len(V.state["pio_cands"]))
+check("  ... each with its own mass, both conventions",
+      [round(c["mass_axis_convention"], 1) for c in V.state["pio_cands"]]
+      == [219.7, 81.2]
+      and [round(c["mass_vertex_convention"], 1) for c in V.state["pio_cands"]]
+      == [208.4, 93.7],
+      str([(round(c["mass_axis_convention"], 1),
+            round(c["mass_vertex_convention"], 1)) for c in V.state["pio_cands"]]))
+check("  ... and four distinct showers read as two separate pi0",
+      "No shower is used twice" in V.pio_cand_div.text,
+      V.pio_cand_div.text[-120:])
+
+# an ALTERNATIVE pairing that reuses a gamma: legal, but it is not a third pi0
+_pair(15036, 88090)
+V.on_pio_add()
+check("an alternative pairing that reuses a gamma is stored too",
+      len(V.state["pio_cands"]) == 3)
+check("  ... and is called what it is, not counted as a third pi0",
+      "alternative pairings" in V.pio_cand_div.text
+      and "15036" in V.pio_cand_div.text
+      and "candidates 1 and 3" in V.pio_cand_div.text,
+      V.pio_cand_div.text[-200:])
+
+V.on_pio_add()
+check("storing the identical pairing twice is refused, by name",
+      len(V.state["pio_cands"]) == 3
+      and "already stored as candidate <b>3</b>" in V.save_note.text,
+      V.save_note.text[:100])
+
+# the same two gammas under a DIFFERENT vertex convention is a different mass,
+# and must be storable -- the dedup key is not the shower pair
+_pair(84070, 91112, how=1)
+V.on_pio_add()
+check("the same gammas under another vertex convention do store",
+      len(V.state["pio_cands"]) == 4
+      and V.state["pio_cands"][3]["vertex_how"] == "backproject",
+      "%d, how=%s" % (len(V.state["pio_cands"]),
+                      V.state["pio_cands"][3].get("vertex_how")))
+
+# clearing the SLOTS must not clear the record
+V.on_gamma_clear()
+check("`clear gammas` clears the slots and keeps the stored pairings",
+      V.state["gamma"] == {1: None, 2: None}
+      and len(V.state["pio_cands"]) == 4)
+
+# ... and a save with the slots empty must still write them
+V.on_save()
+_r11 = json.load(open(V.label_path("evt281485")))
+check("a save with empty slots still writes the stored pairings",
+      _r11["pio"] is not None
+      and len(_r11["pio"]["candidates"]) == 4,
+      "%s" % (len(_r11["pio"]["candidates"]) if _r11.get("pio") else "no pio"))
+check("  ... each candidate self-contained: gammas, starts, energies, vertex",
+      all({"gammas", "vertex", "vertex_how", "mass_axis_convention",
+           "mass_vertex_convention", "stored_utc"} <= set(c)
+          and {"1", "2"} == set(c["gammas"])
+          and all({"shower", "start", "axis", "energy", "energy_hypothesis",
+                   "energy_as_reconstructed", "start_source"} <= set(g)
+                  for g in c["gammas"].values())
+          for c in _r11["pio"]["candidates"]))
+
+V.on_event(None, None, "evt64591")
+V.on_event(None, None, "evt281485")
+check("re-opening the event restores all four",
+      len(V.state["pio_cands"]) == 4
+      and len(V.pio_cand_src.data["n"]) == 4,
+      "%d in state, %d rows" % (len(V.state["pio_cands"]),
+                                len(V.pio_cand_src.data["n"])))
+
+# load one back into the slots
+V.pio_cand_src.selected.indices = [1]
+V.on_pio_load()
+check("loading a stored pairing puts it back in the slots",
+      V.state["gamma"] == {1: 84070, 2: 91112},
+      str(V.state["gamma"]))
+# The provenance trap: pinning gstart unconditionally would make every loaded
+# candidate report `gamma_slot_override` for a start that came from the reco.
+check("  ... without inventing a slot override the scanner never made",
+      V.state["gstart"] == {1: None, 2: None}
+      and V.start_source(84070, 1) == "reco",
+      "%s / %s" % (V.state["gstart"], V.start_source(84070, 1)))
+
+# THE one that matters: a stored mass must not be re-priced by a later edit.
+_before = round(V.state["pio_cands"][1]["mass_axis_convention"], 1)
+V.state["em_start"][84070] = (-170.0, 175.0, 285.0)
+V.state["_axis_cache"] = {}
+V.pio_cand_src.selected.indices = [1]
+V.on_pio_load()
+check("an EM-mode start correction does NOT re-price a stored mass",
+      round(V.state["pio_cands"][1]["mass_axis_convention"], 1) == _before,
+      "%s, was %s" % (round(V.state["pio_cands"][1]["mass_axis_convention"], 1),
+                      _before))
+check("  ... and the drift is reported, not absorbed",
+      "not</b> what was stored" in V.save_note.text
+      and "axis-convention mass" in V.save_note.text,
+      V.save_note.text[-200:])
+V.state["em_start"].pop(84070, None)
+V.state["_axis_cache"] = {}
+
+# remove
+V.pio_cand_src.selected.indices = [0]
+V.on_pio_del()
+check("removing a pairing drops exactly that one",
+      len(V.state["pio_cands"]) == 3
+      and round(V.state["pio_cands"][0]["mass_axis_convention"], 1) == 81.2,
+      "%d left, first now %s" % (len(V.state["pio_cands"]),
+                                 round(V.state["pio_cands"][0]["mass_axis_convention"], 1)))
+check("  ... and says the numbering moved", "renumbered" in V.save_note.text,
+      V.save_note.text[:90])
+
+# the forgotten-pairing warning, rather than a silent auto-add
+_pair(89095, 90104)
+V.refresh_pio_cands()
+check("a pairing in the slots that is not stored is called out",
+      "not one of them" in V.pio_cand_div.text, V.pio_cand_div.text[-180:])
+check("  ... and is NOT auto-added to the list",
+      len(V.state["pio_cands"]) == 3, "%d" % len(V.state["pio_cands"]))
+
+# a record written before the list existed: absent must mean empty
+_p11 = V.label_path("evt281485")
+V.on_save()
+_old11 = json.load(open(_p11))
+_top = _old11["pio"]["mass_axis_convention"]
+_old11["pio"].pop("candidates")
+with open(_p11, "w") as _fh:
+    json.dump(_old11, _fh)
+V.on_event(None, None, "evt64591")
+V.on_event(None, None, "evt281485")
+check("a pre-round-11 record re-opens with no candidates and its own mass",
+      V.state["pio_cands"] == []
+      and V.state["gamma"] == {1: 89095, 2: 90104}
+      and abs(V.pio_pairing()["mass_axis_convention"] - _top) < 1e-9,
+      "%d candidates, mass %s vs %s"
+      % (len(V.state["pio_cands"]),
+         V.pio_pairing()["mass_axis_convention"], _top))
+os.remove(_p11)
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

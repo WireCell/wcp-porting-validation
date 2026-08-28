@@ -655,6 +655,57 @@ try:
               "4002" in js("M('marks_div').text"),
               js("M('marks_div').text")[-120:])
 
+        # ------------------------------------------------------------------
+        # round 11: two pi0 in one event, stored through the real buttons
+        # ------------------------------------------------------------------
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('event_select').value = 'evt281485'; }")
+        page.wait_for_timeout(3500)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 1; }")
+        page.wait_for_timeout(1500)
+        rows = js("M('shower_src').data.node")
+
+        def assign(node, slot):
+            pick_row(rows.index(node))
+            page.get_by_role("button",
+                             name="selected shower -> gamma %d" % slot,
+                             exact=True).click()
+            page.wait_for_timeout(900)
+
+        for pair in ((15036, 87078), (84070, 91112)):
+            assign(pair[0], 1)
+            assign(pair[1], 2)
+            page.get_by_role("button", name="store this pairing",
+                             exact=True).click()
+            page.wait_for_timeout(1200)
+        ns = js("M('pio_cand_src').data.n")
+        check("two pi0 pairings store as two rows in the live app",
+              ns == [1, 2], str(ns))
+        mA = [round(v, 1) for v in js("M('pio_cand_src').data.mA")]
+        check("  ... each carrying its own mass",
+              mA == [219.7, 81.2], str(mA))
+        check("  ... and four distinct showers read as two separate pi0",
+              "No shower is used twice" in js("M('pio_cand_div').text"),
+              js("M('pio_cand_div').text")[-110:])
+        # load one back through the real button
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('pio_cand_src').selected.indices"
+                      " = [0]; }")
+        page.wait_for_timeout(700)
+        page.get_by_role("button", name="load into the slots",
+                         exact=True).click()
+        page.wait_for_timeout(1500)
+        check("a stored pairing loads back into the slots in the browser",
+              "loaded candidate <b>1</b>" in js("M('save_note').text"),
+              js("M('save_note').text")[:110])
+        check("  ... and its two gamma markers are redrawn in the 3-D view",
+              js("M('gstart3_src').data.x.length") == 2,
+              "%s marker(s)" % js("M('gstart3_src').data.x.length"))
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 0; }")
+        page.wait_for_timeout(1200)
+
         lbls = js("M('event_flag_group').labels")
         check("the no-vertex NCpi0 topology flag reads as text, not entities",
               lbls and "&" not in lbls[0] and "NC" in lbls[0], str(lbls))
