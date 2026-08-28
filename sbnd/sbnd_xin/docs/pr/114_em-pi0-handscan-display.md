@@ -2397,3 +2397,242 @@ happened yet. Found by the question, not by a symptom.
 Nothing new. The `g1_ehyp` / `g2_ehyp` cross-event leak noted in §20.8 is still
 open and is the same class of bug — a control whose state and its widget can
 disagree across a `load`.
+
+## 22. Round 14 — the corrected start and axis reach the back-projected vertex
+
+> *"for event 76346, I made some corrections to the EM shower start point and
+> direction, but when I tries to calculate pi0 mass again, and use the
+> back-project the two gamma, it does not seem to use the latest hand scan
+> information, so the pi0 vertex is not at the correct position."*
+
+Correct, and it was a real gap. The report is confirmed and fixed.
+
+### 22.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 310
+python em_display/selftest_em3d_browser.py      # 70
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-13.
+
+Event 76346 is in the manifest as written; no typo this round. It is pinned by
+fingerprint rather than by number: the three showers the owner corrected —
+14058, 14059, 50052 — co-occur in exactly one of the 98 events.
+
+### 22.2 Root cause
+
+`pio_vertex()` called
+
+```python
+bp = G.pi0_backproject(sh1, sh2, cur_segments(), anchor)
+```
+
+and `pi0_backproject` builds each gamma's ray itself, from the reconstruction
+(`em_geom.gamma_ray`, mirroring `NeutrinoShowerClustering.cxx:4139-4142`):
+
+```
+test_p = the shower's fitted point closest to the main vertex
+dir    = shower_cal_dir_3vector(shower, test_p, 15 cm)
+```
+
+Neither input consults `state["em_start"]`, `state["gstart"]` or
+`state["em_dir"]`. So the panel printed **"your corrected start from EM mode"**
+for the two mass conventions — round 8b made `shower_start` honour the
+correction on the π⁰ path for exactly that reason — and then back-projected from
+the reconstruction's geometry anyway, in the same readout, with nothing saying
+so. Round 8b fixed this disease for the masses and did not reach this function.
+
+### 22.3 How badly it showed on evt76346
+
+From the owner's own label (`emscan-0827/labels-evt76346.json`, `em` block):
+
+| shower | reco `test_p` | their start | moved | reco axis vs theirs |
+|---|---|---|---|---|
+| 14059 | (-106.52, -10.22, 362.29) | (-109.94, -35.38, 345.82) | 30.3 cm | **155.5°** |
+| 14058 | (-106.52, -10.22, 362.29) | (-92.01, -58.29, 338.36) | 55.6 cm | 47.4° |
+| 50052 | (54.25, -145.12, 466.60) | (-109.94, -35.38, 345.82) | **231.5 cm** | 84.0° |
+
+The 155.5° on 14059 is the headline: the reconstruction had that shower
+effectively pointing the other way, and the owner turned it round. Its reco
+`test_p` is also the main vertex itself, to 12 decimal places — and so is
+14058's, because both showers' closest fitted point to the anchor *is* the
+anchor.
+
+Which is why, for the pair 14059 + 14058, the back-projection did not merely
+land in the wrong place:
+
+```
+today  (reco rays)  branch -           verdict degenerate   vertex (-106.52, -10.22, 362.29)
+                    theta -   gap -    -- both rays start at the same point
+with the hand scan  branch one_short   verdict ok           vertex (-114.72, -58.77, 328.04)
+                    theta 65.9  gap 2.03  angles 0.0 / 4.7
+```
+
+`degenerate` means the two rays share an origin, so the returned "vertex" is
+just that origin — the main vertex. The scanner's geometry turns that into a
+real back-projection with a 2.0 cm closest approach that passes both 25° gates.
+The vertex moves **60.0 cm**.
+
+The π⁰ slots were never recorded for this event (`pio` is `null` — it was saved
+from EM mode), so which pair the owner had in the slots is not knowable from the
+record. All three plausible pairs are therefore reported rather than one being
+picked:
+
+| pair | today | with the hand scan | moves |
+|---|---|---|---|
+| 14059 + 14058 | `degenerate`, at the main vertex | `ok`, gap 2.03 cm | 60.0 cm |
+| 14059 + 50052 | `angle_gate`, gap 140.7 cm, angle1 180.0° | `degenerate` (they pinned both starts to vertex 48038) | 47.3 cm |
+| 14059 + 41031 (the reco's own `pio_id=0` pair) | `angle_gate`, gap 7.02 cm | `angle_gate`, gap 1.09 cm | 9.9 cm |
+
+Shower 50052 is the clearest case for the fix and for one of its details: it is
+**0.4 cm long**, and its reco `test_p` sits 231 cm away, in a different part of
+the detector. `shower_cal_dir_3vector` over a 0.4 cm stub is not a direction
+anybody should use.
+
+### 22.4 The fix
+
+One injection point, in `em_geom.pi0_backproject`:
+
+```python
+def pi0_backproject(sh1, sh2, segments, anchor, ray1=None, ray2=None):
+```
+
+`rayN` is `(point, direction)` for a gamma whose start or axis the scanner has
+corrected, or `None` to build that gamma's ray the way the code does. The
+viewer's `gamma_scan_ray(node, slot)` produces it, with the same precedence
+`shower_start` and `shower_axis` use, so the ray, the two mass conventions and
+the EM gate cannot disagree about what the scanner said:
+
+| what the scanner set | ray origin | ray direction | provenance string |
+|---|---|---|---|
+| nothing | — | — | `None` — the mirror builds its own |
+| start only | that start | `shower_cal_dir_3vector` at it, 15 cm | `em_start_correction + dir15@probe_members` |
+| axis only | the mirror's own `test_p` | through the aimed point | `reco_ray_point + manual_axis` |
+| both | that start | through the aimed point | `em_start_correction + manual_axis` |
+| a π⁰-slot start | `gstart[slot]` | as above | `gamma_slot_override + …` |
+
+Three details are load-bearing.
+
+**`None` is the guarantee, not the arithmetic.** A gamma the scanner never
+touched injects no ray at all, so `pi0_backproject` falls through to its own
+`gamma_ray` and is byte-for-byte the pre-round-14 function. Rebuilding the
+un-overridden ray in the viewer would look equivalent and is not:
+`gamma_scan_ray` resolves membership through `members_of` (the probe sidecar)
+while `gamma_ray` uses the dump join, and the two differ on exactly the lossy
+showers `em_geom.join_completeness` names — evt347129 among them, which is one
+of the two records on disk that already use back-projection. Measured across all
+2490 shower pairs of the 98 manifest events: `pi0_backproject(a, b, segs,
+anchor)` and `pi0_backproject(..., ray1=None, ray2=None)` differ **0 times**.
+
+**Probe membership when only the start moved.** The dir15 recompute uses
+`members_of`, which is `shower_axis`'s own `python@start_override` branch — the
+axis the panel is displaying. Building the ray from the mirror's dump-join
+membership instead would have recreated round 8b's disease inside one record: a
+vertex from one member set, an axis on screen from another. It is a deliberate
+divergence from the mirror and it is named in the provenance string.
+
+**The short gamma is not re-rayed when the scanner has stated it.** The
+one-short branch (`:4203-4247`) re-derives the short shower's direction because
+the code does not trust the stub's own. A scanner who has said where the stub
+starts and where it points has answered exactly that question. The branch's own
+arithmetic — keep the closest point on the *long* gamma's ray, not the midpoint
+— is untouched, because that is what the branch is. `short_rerayed` in the
+result says which happened.
+
+Degradation is honest: on evt76346, shower 14058 is 6.9 cm long and its start
+was moved 55.6 cm, so no member point falls inside the 15 cm window and there is
+no direction to be had. That gamma injects no ray, the mirror builds its own,
+and the provenance reads `em_start_correction + dir15 undefined (no member point
+within 15 cm)` rather than quietly substituting some other vector.
+
+### 22.5 Both readings, and which one is the default
+
+They answer different questions — *"what vertex would the code compute here"*
+versus *"what vertex does my geometry imply"* — so both are offered under
+**back-projection geometry**, and the panel always shows the one it is not
+using, with the distance between them:
+
+```
+rays: your corrected start / axis — γ1 em_start_correction + manual_axis,
+                                    γ2 em_start_correction + manual_axis
+the other reading (the reconstruction's own rays) puts it at
+(-106.5, -10.2, 362.3), verdict degenerate — 60.0 cm away
+```
+
+On the legacy setting the same line appears in amber with *"you have corrected
+this pair's geometry and the vertex above is **not using it**"*, so the state
+round 14 fixes can no longer be silent.
+
+The default is the scanner's geometry. A start override or an aimed axis exists
+for exactly one reason, and unlike round 12's marks it carries no other reading.
+**Nothing on disk is re-priced by that default**, by two separate mechanisms:
+
+* a gamma the scanner never touched injects no ray (§22.4), so the 14 records
+  with no correction cannot move at all; and
+* `pio.backproject_geometry` is written into every record, and `load_label`
+  restores it. Absent — every record written before this round — means the
+  reconstruction's own rays. The rule is applied by **what the record says**,
+  never by whether the number happens to differ.
+
+Both back-projected records on disk therefore re-open exactly as saved. Measured
+read-only, for the record, what the new default *would* give if the owner ever
+chose to re-save them:
+
+| record | as saved | under the new default | moves | m(vertex) |
+|---|---|---|---|---|
+| evt169626 (53069 + 22034) | (3.75, 208.54, 414.68), gap 11.36 cm, angles 4.9°/5.5° | (9.05, 207.00, 411.87), gap **1.05 cm**, angles 0.6°/0.5° | 6.19 cm | 145.4 → 144.7 MeV |
+| evt347129 (53021 + 11000) | (-203.01, -100.17, 208.14) | identical | **0.00 cm** | 131.1 MeV |
+
+evt347129 does not move because the owner's start override for shower 11000 is
+the reco's `test_p`, to the last bit. evt169626's correction *improves* the
+back-projection sharply — the two rays go from missing each other by 11.4 cm to
+1.1 cm — while the mass barely moves, which is the expected signature of a
+correction that fixes a vertex without changing the opening angle.
+
+**Neither record was re-saved** (M13). Re-pricing a past judgement is the
+owner's call, made per event.
+
+### 22.6 What the record now carries
+
+`pio.backproject_geometry` at the top level (`"handscan"` / `"reco"`), and
+inside `pio.backproject`:
+
+```
+geometry      "handscan"
+ray1_source   "em_start_correction + manual_axis"
+ray2_source   "em_start_correction + manual_axis"
+ray1_given    true          ray2_given  true
+short_rerayed false
+alt           { geometry "reco", verdict "degenerate", vertex […], … }
+```
+
+`alt` is the full result under the other geometry, present whenever either gamma
+was corrected. So a record carries both vertices and a later reader can see how
+far the hand scan moved it without re-running anything. Round 11's stored
+pairings each carry their own copy, and `on_pio_load` restores a candidate's
+geometry along with its start and energy hypothesis — a stored pairing is frozen
+numbers, and the geometry its vertex was built from is one of them.
+
+### 22.7 One thing that deliberately does not move
+
+The 15 cm branch test reads `showers[].total_length`, a reconstruction number.
+Round 12's IN / OUT marks move a gamma's **energy**, not its length, so a stub
+built up by hand stays on the one-short branch — 50052 stays a 0.4 cm shower for
+branch selection however much charge is marked into it. That is mirror fidelity,
+not an oversight, but it looks like a bug from the outside, so the panel now says
+it in the back-projection block.
+
+`backproject.mass` also stays the mirror's own: raw `kine_charge`, ignoring
+rounds 9 and 12. It is what the C++ would compute. The masses that honour the
+hypothesis switch and the marks are `mass_axis_convention` and
+`mass_vertex_convention`, as before.
+
+### 22.8 Left open
+
+Unchanged from §20.8 and §21.5: `g1_ehyp` / `g2_ehyp` are still not reset on
+event load, so a round-9 hypothesis switch can leak across events until
+`load_label` overwrites it. `bp_geom` and `emark_mode` are both reset in `load()`
+for exactly that reason; the two energy Selects are the remaining pair.

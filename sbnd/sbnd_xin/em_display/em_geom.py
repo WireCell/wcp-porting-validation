@@ -447,7 +447,7 @@ def gamma_ray(shower, segments, anchor):
     return (best, vadd(best, dirv)), best, dirv
 
 
-def pi0_backproject(sh1, sh2, segments, anchor):
+def pi0_backproject(sh1, sh2, segments, anchor, ray1=None, ray2=None):
     """Mirror of the two-gamma vertex reconstruction in
     `id_pi0_without_vertex`, `NeutrinoShowerClustering.cxx:4158-4256`.
 
@@ -471,14 +471,42 @@ def pi0_backproject(sh1, sh2, segments, anchor):
     are reported rather than enforced, so the owner can see a vertex the code
     would have thrown away and judge it themselves -- but `verdict` records
     that the code would have refused it.
+
+    Round 14.  `ray1` / `ray2` are the one injection point: `(point, direction)`
+    for a gamma whose start or axis the SCANNER has corrected, or None to build
+    that gamma's ray the way the code does.  Passing None for both is not
+    "approximately" today's behaviour, it is byte-for-byte today's behaviour --
+    every override lives above this line, in the viewer, where `members_of` and
+    `shower_start` are.  That matters: the caller resolves membership through the
+    probe sidecar while `gamma_ray` below uses the dump join, and the two differ
+    on exactly the lossy showers (`join_completeness`, which names evt347129).
+    Rebuilding the un-overridden ray up there would therefore have moved
+    vertices nobody corrected.
+
+    A supplied ray also replaces the one-short branch's re-ray for that gamma
+    (`short_rerayed` in the result says which happened).  The re-ray exists
+    because the code does not trust a short shower's own `test_p`; a scanner who
+    has stated where the stub starts and where it points has answered exactly
+    that question, and re-deriving it from a 0.4 cm stub would throw the answer
+    away.  The branch's own arithmetic -- keep the closest point on the LONG
+    gamma's ray, not the midpoint -- is untouched, because that is the branch.
     """
     out = {"verdict": "no_direction", "vertex": None, "gap": None,
            "theta": None, "mass": None, "angle1": None, "angle2": None,
            "dis1": None, "dis2": None, "len1": None, "len2": None,
-           "branch": None}
+           "branch": None, "ray1_given": ray1 is not None,
+           "ray2_given": ray2 is not None, "short_rerayed": None}
 
-    r1, p1s, d1 = gamma_ray(sh1, segments, anchor)
-    r2, p2s, d2 = gamma_ray(sh2, segments, anchor)
+    def _ray(sh, given):
+        if given is None:
+            return gamma_ray(sh, segments, anchor)
+        p, dv = given[0], vnorm(given[1])
+        if p is None or vmag(dv) == 0:
+            return None, p, dv
+        return (p, vadd(p, dv)), p, dv
+
+    r1, p1s, d1 = _ray(sh1, ray1)
+    r2, p2s, d2 = _ray(sh2, ray2)
     if r1 is None or r2 is None:
         return out
 
@@ -521,20 +549,30 @@ def pi0_backproject(sh1, sh2, segments, anchor):
         # branch here would hand the owner a vertex the code never computes.
         out["branch"] = "one_short"
         long_is_1 = l1 > l2
-        short_sh = sh2 if long_is_1 else sh1
-        members = shower_members(short_sh, segments)
-        best, bestd = None, None
-        for seg in members:
-            dd, q = segment_closest_point(seg, center)
-            if dd is not None and (bestd is None or dd < bestd):
-                bestd, best = dd, q
-        if best is None:
-            out["verdict"] = "no_direction"
-            return out
-        dir3 = shower_cal_dir_3vector(members, best, 15.0)
-        if vmag(dir3) == 0:
-            out["verdict"] = "no_direction"
-            return out
+        short_ray = (ray2 if long_is_1 else ray1)
+        if short_ray is not None:
+            # Round 14: the scanner has already answered the question the re-ray
+            # asks.  Nothing else on this branch changes.
+            out["short_rerayed"] = False
+            best, dir3 = short_ray[0], vnorm(short_ray[1])
+            if best is None or vmag(dir3) == 0:
+                out["verdict"] = "no_direction"
+                return out
+        else:
+            out["short_rerayed"] = True
+            members = shower_members(sh2 if long_is_1 else sh1, segments)
+            best, bestd = None, None
+            for seg in members:
+                dd, q = segment_closest_point(seg, center)
+                if dd is not None and (bestd is None or dd < bestd):
+                    bestd, best = dd, q
+            if best is None:
+                out["verdict"] = "no_direction"
+                return out
+            dir3 = shower_cal_dir_3vector(members, best, 15.0)
+            if vmag(dir3) == 0:
+                out["verdict"] = "no_direction"
+                return out
         r3 = (best, vadd(best, dir3))
         if long_is_1:
             n1, n2, st = ray_closest_points(r1, r3)   # `:4213-4214`

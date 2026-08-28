@@ -752,6 +752,66 @@ try:
         check("the no-vertex NCpi0 topology flag reads as text, not entities",
               lbls and "&" not in lbls[0] and "NC" in lbls[0], str(lbls))
 
+        # ------------------------------------------------------------------
+        # round 14: the corrected start reaches the back-projected pi0 vertex
+        # ------------------------------------------------------------------
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('event_select').value = 'evt76346'; }")
+        page.wait_for_timeout(3500)
+        # Back to EM mode first: `em_panel.visible = (new == 0)`, so the start
+        # boxes and their button do not exist in the page while pi0 mode is up.
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 0; }")
+        page.wait_for_timeout(1500)
+        rows = js("M('shower_src').data.node")
+        pick_row(rows.index(14059))
+        for _w, _v in (("em_sx", "-109.9"), ("em_sy", "-35.4"),
+                       ("em_sz", "345.8")):
+            page.evaluate("() => { Bokeh.documents[0].get_model_by_name('%s')"
+                          ".value = '%s'; }" % (_w, _v))
+            page.wait_for_timeout(300)
+        page.get_by_role("button", name="use these", exact=True).click()
+        page.wait_for_timeout(1200)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 1; }")
+        page.wait_for_timeout(1500)
+        for node, slot in ((14059, 1), (14058, 2)):
+            pick_row(rows.index(node))
+            page.get_by_role("button",
+                             name="selected shower -> gamma %d" % slot,
+                             exact=True).click()
+            page.wait_for_timeout(900)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('vtx_mode_group').active = 1; }")
+        page.wait_for_timeout(1500)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('bp_geom').value ="
+                      " \"the reconstruction's own rays (mirror)\"; }")
+        page.wait_for_timeout(1500)
+        kd3 = js("M('kine_div').text")
+        v_reco = [js("M('piovtx3_src').data.%s[0]" % a) for a in "xyz"]
+        check("the reco's own rays degenerate on this hand-corrected pair",
+              "verdict <b>degenerate</b>" in kd3
+              and "not using it" in kd3, kd3[kd3.find("back-projection"):][:90])
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('bp_geom').value ="
+                      " 'my corrected start / axis'; }")
+        page.wait_for_timeout(1500)
+        kd4 = js("M('kine_div').text")
+        v_scan = [js("M('piovtx3_src').data.%s[0]" % a) for a in "xyz"]
+        # NOT "degenerate is gone from the text": it is still there, in the
+        # line reporting the OTHER reading, which is the point of that line.
+        check("switching to the corrected geometry rebuilds the vertex live",
+              "em_start_correction" in kd4 and "cm away" in kd4
+              and "the other reading (<b>the reconstruction's own rays</b>)"
+              in kd4,
+              kd4[kd4.find("rays:"):][:110])
+        moved = math.dist(v_reco, v_scan)
+        check("  ... and the pi0 vertex marker in the 3-D view actually moves",
+              moved > 0.5, "%.2f cm" % moved)
+        check("  ... with no JS error from any of it", not errors,
+              "; ".join(errors[:2]))
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

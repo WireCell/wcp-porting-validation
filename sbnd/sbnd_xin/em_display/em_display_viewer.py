@@ -284,7 +284,7 @@ shwpt3_src = ColumnDataSource(data=dict(EMPTY3D))
 vtx3_src = ColumnDataSource(name="vtx3_src", data=dict(EMPTY3D))
 mainvtx3_src = ColumnDataSource(name="mainvtx3_src", data=dict(EMPTY3D))
 gstart3_src = ColumnDataSource(name="gstart3_src", data=dict(EMPTY3D))
-piovtx3_src = ColumnDataSource(data=dict(EMPTY3D))
+piovtx3_src = ColumnDataSource(name="piovtx3_src", data=dict(EMPTY3D))
 emstart3_src = ColumnDataSource(name="emstart3_src", data=dict(EMPTY3D))
 emdir3_src = ColumnDataSource(name="emdir3_src", data=dict(EMPTY3D))
 # Every fitted point of every segment, carrying its segment id.  This is the
@@ -945,13 +945,35 @@ em_startp_btn = Button(label="start = nearest fit point", width=175)
 em_dirp_btn = Button(label="aim axis at nearest fit point", width=205)
 em_start_reset = Button(label="reset start", width=105)
 em_dir_reset = Button(label="reset axis", width=105)
-em_sx = TextInput(title="start x", value="", width=90)
-em_sy = TextInput(title="start y", value="", width=90)
-em_sz = TextInput(title="start z", value="", width=90)
+em_sx = TextInput(name="em_sx", title="start x", value="", width=90)
+em_sy = TextInput(name="em_sy", title="start y", value="", width=90)
+em_sz = TextInput(name="em_sz", title="start z", value="", width=90)
 em_setxyz_btn = Button(label="use these", width=95)
 gstart_reset = Button(label="reset to reco start", width=170)
 vtx_mode_group = RadioButtonGroup(
+    name="vtx_mode_group",
     labels=["main vertex", "back-project the two gammas", "manual"], active=0)
+# Round 14.  The back-projection is a mirror of id_pi0_without_vertex, and it
+# built BOTH gamma rays from the reconstruction: `test_p` = the shower's fitted
+# point closest to the main vertex, direction = dir15 evaluated there.  So a
+# scanner who had corrected a shower's start and aimed its axis by hand watched
+# the panel print "your corrected start from EM mode" and then back-project from
+# the reco's geometry anyway.  Round 8b fixed exactly this disease for the two
+# mass conventions and did not reach this function.
+#
+# Both readings are legitimate and they answer different questions -- "what
+# vertex would the CODE compute here" versus "what vertex does MY geometry
+# imply" -- so both are offered rather than one being chosen silently.  The
+# default is the scanner's, because a start override or an aimed axis exists for
+# exactly one reason.  Nothing on disk is re-priced by that default: a record
+# written before this round restores to `reco` (see load_label), and a gamma the
+# scanner never touched injects no ray at all, which is byte-for-byte the
+# pre-round-14 mirror -- measured over all 2490 shower pairs of the 98 manifest
+# events, 0 differences.
+BPG_RECO = "the reconstruction's own rays (mirror)"
+BPG_SCAN = "my corrected start / axis"
+bp_geom = Select(name="bp_geom", title="back-projection geometry",
+                 value=BPG_SCAN, options=[BPG_SCAN, BPG_RECO], width=310)
 man_x = TextInput(title="x", value="", width=90)
 man_y = TextInput(title="y", value="", width=90)
 man_z = TextInput(title="z", value="", width=90)
@@ -1265,6 +1287,74 @@ def shower_start(node, slot=None):
     if state["em_start"].get(node) is not None:
         return state["em_start"][node]
     return reco_start(node)
+
+
+def gamma_scan_ray(node, slot):
+    """(ray, provenance) for ONE gamma of the back-projection, or (None, why).
+
+    `None` is the load-bearing return value.  It means "the scanner corrected
+    nothing about this gamma", and it makes `em_geom.pi0_backproject` fall
+    through to its own `gamma_ray` -- which is byte-for-byte the pre-round-14
+    function.  Rebuilding the un-overridden ray here instead would look
+    equivalent and is not: this function resolves membership through
+    `members_of` (the probe sidecar) while `gamma_ray` uses the dump join, and
+    the two differ on exactly the lossy showers em_geom.join_completeness names
+    -- evt347129 among them, which is one of the two records on disk that
+    already used back-projection.  So the guarantee "an untouched gamma cannot
+    move" is a property of returning None, not of the arithmetic agreeing.
+
+    Precedence matches shower_start()/shower_axis() so the ray, the two mass
+    conventions and the EM gate cannot disagree about what the scanner said.
+    """
+    if node is None:
+        return None, "no gamma"
+    dp = state["em_dir"].get(node)
+    moved = start_source(node, slot) != "reco"
+    if not moved and dp is None:
+        return None, "reco@closest_to_anchor"
+
+    if moved:
+        p = shower_start(node, slot)
+        psrc = ("gamma_slot_override" if state["gstart"].get(slot)
+                else "em_start_correction")
+    else:
+        # Only the axis was aimed.  Keep the MIRROR's own origin -- the fitted
+        # point closest to the main vertex.  Not the shower's `start`: those are
+        # different points, and substituting one for the other would move the
+        # vertex for a scanner who only touched the direction.
+        sh = shower_by_node(node)
+        anchor = G.pt((state["data"] or {}).get("main_vertex"))
+        if sh is None or anchor is None:
+            return None, "no anchor to build the reco start point from"
+        _r, p, _d = G.gamma_ray(sh, cur_segments(), anchor)
+        psrc = "reco_ray_point"
+    if p is None:
+        return None, "no fitted point"
+    p = tuple(p)
+
+    if dp is not None:
+        # The ray goes through the point the scanner aimed at, measured FROM the
+        # start this gamma is actually using.  Identical to shower_axis()'s
+        # two_point branch whenever they share a start, which is every case
+        # except a slot-scoped gstart -- and there this is the more faithful of
+        # the two, because the ray it builds is the one drawn on screen.
+        v = G.vsub(dp, p)
+        if G.vmag(v) == 0:
+            return None, psrc + " + axis point sits on the start"
+        return (p, G.vnorm(v)), psrc + " + manual_axis"
+
+    # Start moved, axis not aimed: the code's own recipe re-evaluated at the new
+    # point -- shower_cal_dir_3vector at 15 cm, the same formula gamma_ray uses.
+    # Over PROBE membership, deliberately: this is shower_axis()'s
+    # `python@start_override` branch, and the panel shows that axis, so the ray
+    # has to be built from the same member set.  It is a divergence from the
+    # mirror's dump-join membership and is named in the provenance string.
+    segs = {sg.get("id"): sg for sg in cur_segments()}
+    mem = [segs[i] for i in members_of(node) if i in segs]
+    dv = G.shower_cal_dir_3vector(mem, p, 15.0)
+    if G.vmag(dv) == 0:
+        return None, psrc + " + dir15 undefined (no member point within 15 cm)"
+    return (p, dv), psrc + " + dir15@probe_members"
 
 
 # kine_charge converts collected charge to MeV as
@@ -2093,6 +2183,13 @@ def pio_pairing():
     return dict(
         gammas=gam, vertex=list(v) if v else None, vertex_how=how,
         backproject=detail if how == "backproject" else None,
+        # Round 14.  Which rays the back-projection used.  At the top level as
+        # well as inside `backproject`, because load_label has to read it for a
+        # record whose vertex_how is something else -- and because "absent means
+        # the reconstruction's own rays" is the rule that keeps every record
+        # written before this round exactly where it was.
+        backproject_geometry=("handscan" if bp_geom.value == BPG_SCAN
+                              else "reco"),
         mass_axis_convention=mA, theta_axis_convention=thA,
         mass_vertex_convention=mB, theta_vertex_convention=thB)
 
@@ -2218,7 +2315,29 @@ def pio_vertex():
     anchor = G.pt(d.get("main_vertex"))
     if anchor is None:
         return None, "backproject", {"verdict": "no main vertex to anchor from"}
-    bp = G.pi0_backproject(sh1, sh2, cur_segments(), anchor)
+    a1, as1 = gamma_scan_ray(n1, 1)
+    a2, as2 = gamma_scan_ray(n2, 2)
+    use_scan = bp_geom.value == BPG_SCAN
+    RECO_SRC = "reco@closest_to_anchor"
+
+    def _run(r1, r2, s1, s2, tag):
+        o = G.pi0_backproject(sh1, sh2, cur_segments(), anchor,
+                              ray1=r1, ray2=r2)
+        o["geometry"] = tag
+        o["ray1_source"], o["ray2_source"] = s1, s2
+        return o
+
+    if use_scan:
+        bp = _run(a1, a2, as1, as2, "handscan")
+    else:
+        bp = _run(None, None, RECO_SRC, RECO_SRC, "reco")
+    # Both geometries, whenever the scanner actually corrected something -- so
+    # the panel can say how far the correction moved the vertex and the saved
+    # record carries the number it was NOT using.  Skipped when nothing was
+    # corrected, because then the two are the same run.
+    if a1 is not None or a2 is not None:
+        bp["alt"] = (_run(None, None, RECO_SRC, RECO_SRC, "reco") if use_scan
+                     else _run(a1, a2, as1, as2, "handscan"))
     return bp["vertex"], "backproject", bp
 
 
@@ -2422,6 +2541,49 @@ def refresh_kine():
                         "" if detail.get("verdict") == "ok" else
                         " &mdash; <span style='color:#d62728'>the code would "
                         "REFUSE this pair here</span>"))
+        # Round 14.  Which rays built that vertex, per gamma, in the scanner's
+        # own words -- and, when a correction exists, the vertex the other
+        # reading gives and how far apart the two are.
+        _scan = detail.get("geometry") == "handscan"
+        rows.append(
+            "&nbsp;&nbsp;rays: <b>%s</b> &mdash; &gamma;1 <code>%s</code>, "
+            "&gamma;2 <code>%s</code>"
+            % ("your corrected start / axis" if _scan
+               else "the reconstruction's own",
+               detail.get("ray1_source") or "-",
+               detail.get("ray2_source") or "-"))
+        _alt = detail.get("alt")
+        if _alt is None:
+            if _scan:
+                rows.append(
+                    "&nbsp;&nbsp;<i style='font-size:88%'>Neither gamma has a "
+                    "corrected start or an aimed axis, so this is the "
+                    "reconstruction's own back-projection either way.</i>")
+        else:
+            _v, _av = detail.get("vertex"), _alt.get("vertex")
+            _dd = (G.vmag(G.vsub(_v, _av)) if _v and _av else None)
+            rows.append(
+                "&nbsp;&nbsp;<span style='color:%s'>the other reading "
+                "(<b>%s</b>) puts it at %s, verdict <b>%s</b> &mdash; %s</span>"
+                % ("#2ca02c" if _scan else "#b58900",
+                   "the reconstruction's own rays" if _scan
+                   else "your corrected start / axis",
+                   ("(%.1f, %.1f, %.1f)" % tuple(_av)) if _av else "no vertex",
+                   _alt.get("verdict"),
+                   ("<b>%.1f cm away</b>" % _dd) if _dd is not None
+                   else "not comparable"))
+            if not _scan:
+                rows.append(
+                    "&nbsp;&nbsp;<span style='color:#b58900'>&#9888; you have "
+                    "corrected this pair's geometry and the vertex above is "
+                    "<b>not using it</b>. Switch <i>back-projection "
+                    "geometry</i> to <i>%s</i>.</span>" % BPG_SCAN)
+        if detail.get("short_rerayed") is False:
+            rows.append(
+                "&nbsp;&nbsp;<i style='font-size:88%'>The short gamma was NOT "
+                "re-rayed: the code re-derives a short shower's direction "
+                "because it does not trust the stub's own, and you have stated "
+                "it. The branch's own arithmetic is unchanged.</i>")
         if detail.get("branch") == "one_short":
             rows.append(
                 "&nbsp;&nbsp;<i>one gamma is under 15 cm, so the code takes its "
@@ -2436,6 +2598,16 @@ def refresh_kine():
                 % (detail["gap"], detail.get("dis1") or -1, detail.get("dis2") or -1,
                    detail.get("angle1") or -1, detail.get("angle2") or -1,
                    detail.get("len1") or -1, detail.get("len2") or -1))
+            # Round 14, said out loud because it looks like a bug otherwise: the
+            # 15 cm branch test reads `showers[].total_length`, a reconstruction
+            # number.  Marking segments in or out of a gamma moves its ENERGY
+            # (round 12) and never its length, so a stub built up by hand stays
+            # on the one-short branch.
+            rows.append(
+                "&nbsp;&nbsp;<i style='font-size:88%'>The 15 cm test reads the "
+                "reco\'s total_length. Your IN / OUT marks move a gamma\'s "
+                "energy, not its length, so they cannot change which branch "
+                "runs.</i>")
 
     # --- what the reconstruction itself said, kept in TWO separate blocks -----
     grp = G.pi0_groups(cur_showers())
@@ -2764,6 +2936,11 @@ def load(lbl):
         # are different marks.  load_label turns it back on for a record that
         # was saved with it on.
         emark_mode.value = EMARK_RECO
+        # Round 14.  Same reason emark_mode is reset here: a Select keeps its
+        # value across an event switch, and a geometry chosen for the last
+        # event's corrections has no meaning for this one.  load_label puts a
+        # saved record's own choice back afterwards.
+        bp_geom.value = BPG_SCAN
     finally:
         state["_suspend"] = False
     # Node ids are per-event: a leaked override would land on a DIFFERENT
@@ -3112,6 +3289,18 @@ def load_label(lbl):
             vtx_mode_group.active = 2
         elif pio.get("vertex_how") == "backproject":
             vtx_mode_group.active = 1
+        # Round 14.  A record written before this round has no such key and its
+        # back-projection was built from the reconstruction's rays; restoring
+        # this build's default would silently re-price a vertex already judged.
+        # Of the two backproject records on disk, evt169626 moves 6.19 cm under
+        # the new default and evt347129 does not move at all -- so the rule is
+        # not academic, and it is applied by what the record SAYS, never by
+        # whether the number happens to differ.
+        _bpg = pio.get("backproject_geometry")
+        if _bpg in ("reco", "handscan"):
+            bp_geom.value = BPG_RECO if _bpg == "reco" else BPG_SCAN
+        elif pio.get("vertex_how") == "backproject":
+            bp_geom.value = BPG_RECO
         if rec.get("confidence") in CONF:
             conf_group.active = CONF.index(rec["confidence"])
         note_in.value = rec.get("note") or ""
@@ -3760,6 +3949,13 @@ def on_pio_load():
         how = c.get("vertex_how")
         vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
                                  "manual": 2}.get(how, 0)
+        # Round 14: a stored pairing is frozen numbers, and the geometry its
+        # vertex was built from is one of them.
+        _cbpg = c.get("backproject_geometry")
+        if _cbpg in ("reco", "handscan"):
+            bp_geom.value = BPG_RECO if _cbpg == "reco" else BPG_SCAN
+        elif how == "backproject":
+            bp_geom.value = BPG_RECO
         if how == "manual" and c.get("vertex"):
             state["vtx_manual"] = tuple(c["vertex"])
             man_x.value, man_y.value, man_z.value = (
@@ -3883,6 +4079,14 @@ def on_snap():
 def on_gstart_reset():
     state["gstart"][gstart_slot.active + 1] = None
     draw_arrows()
+    draw_gammas()
+    refresh_kine()
+    touch()
+
+
+def on_bp_geom():
+    if state["_suspend"]:
+        return
     draw_gammas()
     refresh_kine()
     touch()
@@ -4421,6 +4625,11 @@ pio_load_btn.on_click(on_pio_load)
 pio_del_btn.on_click(on_pio_del)
 for _w in (g1_ehyp, g2_ehyp, emark_mode):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
+# Not folded into the loop above: this one MOVES the pi0 vertex, so the marker
+# in the 3-D view has to be redrawn -- the same pair of calls on_vtx_mode makes
+# -- and it must honour _suspend, because load()/load_label set it while an
+# event is half-loaded.
+bp_geom.on_change("value", lambda a, o, n: on_bp_geom())
 snap_btn.on_click(on_snap)
 em_startv_btn.on_click(on_em_startv)
 em_startp_btn.on_click(on_em_startp)
@@ -4532,6 +4741,7 @@ pio_panel = column(
              "<i>%s</i> and click the point straight in the 3-D view "
              "(reconstructed vertices are clickable too)." % TAP_PIO, width=RW),
     vtx_mode_group,
+    row(bp_geom),
     row(man_x, man_y, man_z, tap_toggle),
     kine_div,
     Div(text="<b>stored \u03c0\u2070 pairings</b> &mdash; one event can hold "

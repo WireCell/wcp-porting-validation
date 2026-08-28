@@ -2129,6 +2129,168 @@ check("a BACK-PROJECTED vertex is saved as a point too, with its branch",
                                 _bp["backproject"].get("branch")))
 os.remove(V.label_path("evt64591"))
 
+# ---------------------------------------------------------------------------
+# round 14: the back-projection uses the scanner's corrected start and axis
+# ---------------------------------------------------------------------------
+# The event the owner reported, found by fingerprint rather than by number: the
+# three showers they corrected co-occur in exactly one manifest event.
+_ev14 = [e for e, _row in MANIFEST_EVENTS if _has_showers(e, (14058, 14059, 50052))]
+check("evt76346 is the only event holding showers 14058 + 14059 + 50052",
+      _ev14 == ["76346"], str(_ev14))
+
+# THE guarantee.  A gamma the scanner never touched must inject no ray, because
+# that -- not "the arithmetic agrees" -- is what makes the mirror byte-identical.
+# gamma_scan_ray resolves membership through the probe sidecar and gamma_ray
+# through the dump join, and em_geom.join_completeness names evt347129 as a case
+# where those differ.
+V.on_event(None, None, "evt76346")
+V.mode_group.active = 1
+check("with nothing corrected, no gamma injects a ray",
+      all(V.gamma_scan_ray(n, sl)[0] is None
+          for sl in (1, 2) for n in list(V.shower_src.data["node"])),
+      "%d showers" % len(V.shower_src.data["node"]))
+_pairs = 0
+for _e, _row in MANIFEST_EVENTS:
+    V.on_event(None, None, _e)
+    _shs = (V.state["data"] or {}).get("showers") or []
+    _anc = V.G.pt((V.state["data"] or {}).get("main_vertex"))
+    if _anc is None or len(_shs) < 2:
+        continue
+    for _a, _b in ((_shs[0], _shs[1]), (_shs[-1], _shs[-2])):
+        _x = V.G.pi0_backproject(_a, _b, V.cur_segments(), _anc)
+        _y = V.G.pi0_backproject(_a, _b, V.cur_segments(), _anc,
+                                 ray1=None, ray2=None)
+        if _x != _y:
+            _pairs = -1
+            break
+        _pairs += 1
+check("ray1=ray2=None is the pre-round-14 mirror, on every manifest event",
+      _pairs > 150, "%d pairs compared" % _pairs)
+
+# The owner's own corrections, replayed: shower 14059 moved 30.3 cm and flipped
+# 155.5 deg, shower 14058 moved 55.6 cm.  Values read from their saved label.
+V.on_event(None, None, "evt76346")
+V.mode_group.active = 1
+V.state["em_start"][14059] = (-109.93760681152344, -35.379791259765625,
+                              345.8183898925781)
+V.state["em_dir"][14059] = (-103.09359741210938, -1.9308925867080688,
+                            371.24139404296875)
+V.state["em_start"][14058] = (-92.0087661743164, -58.29239273071289,
+                              338.35675048828125)
+V.state["em_dir"][14058] = (-36.24102020263672, -54.461673736572266,
+                            359.2472839355469)
+V.state["_axis_cache"] = {}
+V.state["gamma"][1], V.state["gamma"][2] = 14059, 14058
+V.vtx_mode_group.active = 1
+
+V.bp_geom.value = V.BPG_RECO
+_v_reco, _how, _d_reco = V.pio_vertex()
+check("today's back-projection DEGENERATES on this pair",
+      _how == "backproject" and _d_reco["verdict"] == "degenerate"
+      and _d_reco["geometry"] == "reco",
+      "verdict=%s vertex=%s" % (_d_reco["verdict"],
+                                [round(x, 1) for x in (_v_reco or [])]))
+check("  ... because both reco rays start at the SAME point, the main vertex",
+      _v_reco is not None
+      and V.G.vmag(V.G.vsub(_v_reco,
+                            V.G.pt(V.state["data"]["main_vertex"]))) < 1e-6,
+      str([round(x, 2) for x in _v_reco]))
+
+V.bp_geom.value = V.BPG_SCAN
+_v_scan, _how2, _d_scan = V.pio_vertex()
+check("the scanner's start and axis give a real vertex instead",
+      _d_scan["verdict"] == "ok" and _d_scan["branch"] == "one_short"
+      and _v_scan is not None
+      and [round(x, 1) for x in _v_scan] == [-114.7, -58.8, 328.0],
+      "verdict=%s branch=%s vertex=%s"
+      % (_d_scan["verdict"], _d_scan["branch"],
+         [round(x, 2) for x in _v_scan]))
+check("  ... 60.0 cm from where the reco's own rays put it",
+      abs(V.G.vmag(V.G.vsub(_v_scan, _v_reco)) - 59.98) < 0.05,
+      "%.2f cm" % V.G.vmag(V.G.vsub(_v_scan, _v_reco)))
+check("  ... and the closest-approach gap closes to 2.0 cm",
+      _d_scan["gap"] is not None and abs(_d_scan["gap"] - 2.03) < 0.05,
+      "%.2f cm" % _d_scan["gap"])
+check("  ... the 0.4 cm stub is NOT re-rayed: the scanner stated its direction",
+      _d_scan["short_rerayed"] is False and _d_scan["ray2_given"] is True)
+check("  ... both rays name their provenance",
+      "manual_axis" in _d_scan["ray1_source"]
+      and "manual_axis" in _d_scan["ray2_source"],
+      "%s | %s" % (_d_scan["ray1_source"], _d_scan["ray2_source"]))
+check("  ... and the panel carries the OTHER reading to compare against",
+      _d_scan["alt"] is not None and _d_scan["alt"]["geometry"] == "reco"
+      and _d_scan["alt"]["verdict"] == "degenerate")
+
+# A start correction alone (no aimed axis) re-evaluates dir15 at the new point,
+# over PROBE membership -- shower_axis's own `python@start_override` branch.
+V.state["em_dir"].pop(14059)
+V.state["_axis_cache"] = {}
+_r14, _s14 = V.gamma_scan_ray(14059, 1)
+check("a moved start alone re-derives dir15 at the new point",
+      _r14 is not None and "dir15@probe_members" in _s14, _s14)
+check("  ... from the same point shower_start reports",
+      V.G.vmag(V.G.vsub(_r14[0], V.shower_start(14059, 1))) < 1e-9)
+
+# And when the scanner moves a start clear of the shower's own points, the 15 cm
+# window is empty and there is no direction to be had.  That gamma injects no
+# ray and the mirror builds its own -- said in the provenance rather than
+# quietly substituting some other vector.  14058 is 6.9 cm long and its start
+# was moved 55.6 cm, so this is the owner's own event, not a constructed case.
+V.state["em_dir"].pop(14058)
+V.state["_axis_cache"] = {}
+_r14c, _s14c = V.gamma_scan_ray(14058, 2)
+check("a start moved clear of the shower yields no ray, and says why",
+      _r14c is None and "dir15 undefined" in _s14c, _s14c)
+
+# An aimed axis alone keeps the MIRROR's own origin -- not the shower's `start`,
+# which is a different point.
+V.state["em_start"].pop(14058)
+V.state["em_dir"].pop(14058, None)
+V.state["em_dir"][14058] = (-36.24102020263672, -54.461673736572266,
+                            359.2472839355469)
+V.state["_axis_cache"] = {}
+_r14b, _s14b = V.gamma_scan_ray(14058, 2)
+_ray0 = V.G.gamma_ray(V.shower_by_node(14058), V.cur_segments(),
+                      V.G.pt(V.state["data"]["main_vertex"]))[1]
+check("an aimed axis alone keeps the mirror's own start point",
+      _r14b is not None and _s14b.startswith("reco_ray_point")
+      and V.G.vmag(V.G.vsub(_r14b[0], _ray0)) < 1e-9, _s14b)
+
+# The record, and the legacy rule that protects what is already on disk.
+V.state["em_start"][14058] = (-92.0087661743164, -58.29239273071289,
+                              338.35675048828125)
+V.state["em_dir"][14059] = (-103.09359741210938, -1.9308925867080688,
+                            371.24139404296875)
+V.state["_axis_cache"] = {}
+V.on_save()
+_r14rec = json.load(open(V.label_path("evt76346")))
+_pio14 = _r14rec["pio"]
+check("the record says which geometry built its vertex",
+      _pio14["backproject_geometry"] == "handscan"
+      and _pio14["backproject"]["geometry"] == "handscan",
+      _pio14["backproject_geometry"])
+check("  ... and carries the vertex it was NOT using, so both are recoverable",
+      _pio14["backproject"]["alt"]["geometry"] == "reco"
+      and _pio14["backproject"]["alt"]["verdict"] == "degenerate")
+
+_p14 = V.label_path("evt76346")
+_o14 = json.load(open(_p14))
+_o14["pio"].pop("backproject_geometry")
+_o14["pio"]["backproject"].pop("geometry", None)
+with open(_p14, "w") as _fh:
+    json.dump(_o14, _fh)
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt76346")
+check("a pre-round-14 back-projected record re-opens on the reco's rays",
+      V.bp_geom.value == V.BPG_RECO, V.bp_geom.value)
+os.remove(_p14)
+
+# A fresh event defaults the other way -- and cannot move anything, because a
+# gamma nobody corrected injects no ray.
+V.on_event(None, None, "evt84229")
+check("a fresh event defaults to the scanner's geometry",
+      V.bp_geom.value == V.BPG_SCAN, V.bp_geom.value)
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

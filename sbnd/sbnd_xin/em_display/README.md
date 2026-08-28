@@ -592,7 +592,7 @@ All three conventions save the **point**, not just the mode:
 |---|---|
 | `main_vertex` | `pio.vertex` — the reconstruction's own vertex |
 | `manual` | `pio.vertex` — the point you typed or tapped |
-| `backproject` | `pio.vertex`, plus `pio.backproject` with the **branch** that produced it (`both_long` / `one_short`), the closest-approach `gap`, `angle1` / `angle2` against the code's 25° gates, `dis1` / `dis2`, `len1` / `len2`, `theta`, `mass` and `verdict` — the last recording whether the code itself would have kept this vertex |
+| `backproject` | `pio.vertex`, plus `pio.backproject` with the **branch** that produced it (`both_long` / `one_short`), the closest-approach `gap`, `angle1` / `angle2` against the code's 25° gates, `dis1` / `dis2`, `len1` / `len2`, `theta`, `mass` and `verdict` — the last recording whether the code itself would have kept this vertex , plus `geometry` / `ray1_source` / `ray2_source` / `short_rerayed` naming the rays it was built from and `alt`, the whole result under the other geometry |
 
 Every stored π⁰ pairing carries its own copy, and the event's reconstructed
 vertex is at the record's top level as `main_vertex` regardless of which
@@ -603,6 +603,46 @@ That matters: `_manual_point()` reads all three boxes, so before round 13 —
 when the restore set only the internal state and left the boxes empty — editing
 any one of them made the other two read as blank and **wiped the vertex**,
 saving `vertex: null` under `vertex_how: "manual"`.
+
+### Which rays the back-projection uses
+
+Back-projecting the two gammas needs a ray per gamma, and there are two honest
+ways to build one. **back-projection geometry** picks between them:
+
+| setting | ray origin | ray direction |
+|---|---|---|
+| **my corrected start / axis** (default) | the start you set for that gamma | the axis you aimed, or the code's 15 cm recipe re-evaluated at your start |
+| the reconstruction's own rays (mirror) | the shower's fitted point closest to the main vertex | `shower_cal_dir_3vector` there, 15 cm |
+
+The second is a faithful mirror of `id_pi0_without_vertex` and answers *"what
+vertex would the code compute here"*. The first answers *"what vertex does my
+geometry imply"*. Both are useful, so **the panel always shows the one it is not
+using, and how far apart the two are** — you never have to flip the control to
+find out whether it matters.
+
+Before round 14 only the second existed, silently: the panel printed *"your
+corrected start from EM mode"* for the two masses and back-projected from the
+reconstruction anyway. On evt76346 that was the difference between a `degenerate`
+result sitting on the main vertex and a clean back-projection 60 cm away.
+
+Three things worth knowing:
+
+* **A gamma you never corrected changes nothing.** It injects no ray and the
+  mirror builds its own, so the default cannot move a vertex you did not touch.
+  Records written before round 14 re-open on the mirror, whatever the setting
+  would default to, because `pio.backproject_geometry` says so — an absent key
+  means the reconstruction's rays.
+* **A short gamma is not re-rayed if you stated its direction.** The code
+  re-derives a sub-15 cm shower's direction because it does not trust the stub's
+  own; if you have aimed it, that question is answered. `short_rerayed` in the
+  record says which happened.
+* **Move a start clear of its shower and there is no direction to be had.** With
+  no member point inside the 15 cm window the gamma injects no ray, and the
+  provenance string in the panel says exactly that instead of substituting some
+  other vector.
+
+Your IN / OUT marks do **not** change which branch runs. The 15 cm test reads the
+reco's `total_length`; marks move a gamma's energy, not its length.
 
 ### There is no π⁰ verdict — the correction *is* the judgement
 
