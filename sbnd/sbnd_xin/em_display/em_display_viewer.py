@@ -881,8 +881,21 @@ g2_ehyp = Select(name="g2_ehyp", title="gamma 2 energy", value=EHYP_RECO,
 # mass becomes; flipping it is one click and both numbers go in the record.
 EMARK_RECO = "reco membership only"
 EMARK_MARKS = "include my IN / OUT marks"
+# Round 16b, and the owner's decision.  Round 12 made counting the scanner's own
+# IN / OUT marks OPT-IN, and the consequence was measured in round 16: of the 18
+# records on disk, every single one that carries marks was saved with
+# `energy_includes_marks: false` on both gammas -- 14 segments marked into 14059
+# on evt76346, 10 into 69032 on evt409634 (worth +105.1 MeV), 10 and 8 on
+# evt54332 -- so no hand-made clustering fix reached ANY saved mass.  The marks
+# exist because the reconstruction's membership is wrong; counting them is the
+# answer the scan is for.  The default is therefore ON.
+#
+# This changes what a NEW save records.  It re-prices nothing already on disk:
+# load_label below sets this switch from the record itself, absent still meaning
+# off, so every existing record re-opens showing exactly the mass it was saved
+# with.  Verified over all 18 labelled events, 0 differences (doc pr/114 24.7).
 emark_mode = Select(name="emark_mode", title="gamma energy membership",
-                    value=EMARK_RECO, options=[EMARK_RECO, EMARK_MARKS],
+                    value=EMARK_MARKS, options=[EMARK_RECO, EMARK_MARKS],
                     width=290)
 # Round 11.  One event, several pi0 -- and, just as often, several ways to pair
 # the gammas of one.  evt281485 is the case: 19 EM showers, the reconstruction
@@ -900,6 +913,11 @@ pio_add_btn = Button(name="pio_add_btn", label="store this pairing",
 pio_load_btn = Button(name="pio_load_btn", label="load into the slots",
                       width=170)
 pio_del_btn = Button(name="pio_del_btn", label="remove", width=100)
+# Round 16.  The exit from the freeze: a stored row can be replaced by today's
+# answer deliberately, in one press, instead of being left stale or deleted and
+# re-stored (which would lose its stored_utc and its place in the list).
+pio_upd_btn = Button(name="pio_upd_btn", label="update to today's numbers",
+                     width=215)
 pio_cand_src = ColumnDataSource(name="pio_cand_src",
                                 data=dict(n=[], g1=[], g2=[], e1=[], e2=[],
                                           th=[], mA=[], mB=[], how=[], flag=[]))
@@ -1493,8 +1511,14 @@ def ehyp_widget(slot):
     return g1_ehyp if slot == 1 else g2_ehyp
 
 
-def gamma_energy(slot):
-    """The energy the pi0 arithmetic uses for one gamma slot.
+def energy_for(node, as_em, with_marks):
+    """One shower's gamma energy with both switches PASSED IN.
+
+    Round 16.  A stored pairing has to be re-priced under the settings IT was
+    stored with -- compare it against a live chain whose switches sit somewhere
+    else and the difference reported is the switch, not the physics.
+    `gamma_energy` delegates here so the two can never drift apart, which is the
+    same reason round 11 gave for lifting `gamma_record` out of `on_save`.
 
     `kine_hypothesis(node)[2]` is the SAME collected charge re-converted under
     the other pair, and for anything the reco did not flag as a shower that
@@ -1502,13 +1526,12 @@ def gamma_energy(slot):
     energy, with no second copy of the ratio to drift from.  Reused rather than
     recomputed for that reason.
     """
-    node = state["gamma"].get(slot)
     if node is None:
         return None
     e = shower_energy(node)
     if e is None:
         return None
-    if ehyp_widget(slot).value == EHYP_EM:
+    if as_em:
         lbl, _used, alt = kine_hypothesis(node)
         # lbl is None when the start segment is not in the dump: "unknown", not
         # "track", so nothing is re-converted on that path.
@@ -1517,10 +1540,16 @@ def gamma_energy(slot):
     # Round 12.  The membership delta is applied LAST and to the already-
     # converted number, because the two questions are independent: the
     # hypothesis is which recombination pair, the marks are which segments.
-    if emark_mode.value == EMARK_MARKS:
-        e += marks_energy(node,
-                          as_em=ehyp_widget(slot).value == EHYP_EM)["delta"]
+    if with_marks:
+        e += marks_energy(node, as_em=as_em)["delta"]
     return e
+
+
+def gamma_energy(slot):
+    """The energy the pi0 arithmetic uses for one gamma slot, off the widgets."""
+    return energy_for(state["gamma"].get(slot),
+                      ehyp_widget(slot).value == EHYP_EM,
+                      emark_mode.value == EMARK_MARKS)
 
 
 def poly_for(sid):
@@ -2208,14 +2237,129 @@ def _pair_sig(c):
     g = c.get("gammas") or {}
     g1, g2 = g.get("1") or {}, g.get("2") or {}
     rnd = lambda v: tuple(round(float(x), 4) for x in (v or []))
+    # Round 16.  The membership switch belongs here: without it a pairing
+    # re-priced by the scanner's own marks had the SAME signature as the one
+    # stored before them, so `store this pairing` refused the corrected version
+    # as a duplicate -- measured on evt409634, where the stored row says 41.03
+    # MeV (axis) and today's marks give 78.80, and the store was declined with
+    # "same gammas, vertex, starts and energy hypotheses".  Through bool() so an
+    # absent key -- every record written before round 12 -- reads as off and
+    # does not make an old row look different from an identical new one.
+    mk = lambda gg: bool(gg.get("energy_includes_marks"))
+    # Round 14's geometry, for the same reason, and only where it can matter.
+    # Absent means the reconstruction's own rays, exactly as load_label reads it.
+    bpg = ((c.get("backproject_geometry") or "reco")
+           if c.get("vertex_how") == "backproject" else None)
     return (g1.get("shower"), g2.get("shower"), c.get("vertex_how"),
             rnd(c.get("vertex")), g1.get("energy_hypothesis"),
             g2.get("energy_hypothesis"), rnd(g1.get("start")),
-            rnd(g2.get("start")))
+            rnd(g2.get("start")), mk(g1), mk(g2), bpg)
 
 
 def _mev(v):
     return "-" if v is None else "%.1f" % v
+
+
+def cand_drift(c):
+    """What has moved under a stored pairing since it was stored.
+
+    Round 16.  A stored candidate is frozen on purpose -- it is the scanner's
+    curated judgement, and `on_pio_load` has always reported rather than
+    absorbed a disagreement.  What the freeze lacked was an EXIT: no way to see
+    from the table that a row is no longer today's answer, and (until the
+    signature was fixed above) no way to store the corrected one.
+
+    Compared here are the candidate's own INPUTS against today's, never the live
+    widgets: each gamma is re-priced under the hypothesis and membership switch
+    IT was stored with, so what comes back is the physics that changed.  Plain
+    text, because these phrases go into a DataTable cell.
+    """
+    out = []
+    g = c.get("gammas") or {}
+    for s in ("1", "2"):
+        gg = g.get(s) or {}
+        node = gg.get("shower")
+        if node is None:
+            continue
+        e_was = gg.get("energy")
+        e_now = energy_for(node, gg.get("energy_hypothesis") == "as_em_shower",
+                           bool(gg.get("energy_includes_marks")))
+        if e_was is not None and e_now is not None and abs(e_now - e_was) > 0.05:
+            out.append("E%s %.1f -> %.1f MeV" % (s, e_was, e_now))
+        # The start and the axis are per SHOWER once EM mode has corrected them,
+        # so a correction made after the row was stored moves it even though the
+        # row itself pinned nothing.  A slot override IS pinned, and does not.
+        if not gg.get("start_override"):
+            p_was, p_now = gg.get("start"), shower_start(node)
+            if p_was and p_now:
+                dd = G.vmag(G.vsub(tuple(p_was), p_now))
+                if dd > 0.05:
+                    out.append("g%s start moved %.1f cm" % (s, dd))
+        a_was = gg.get("axis")
+        a_now = shower_axis(node)[0]
+        if a_was and G.vmag(tuple(a_was)) > 0 and G.vmag(a_now) > 0:
+            da = G.angle_deg(tuple(a_was), a_now)
+            if da is not None and da > 0.5:
+                out.append("g%s axis turned %.1f deg" % (s, da))
+    # The one vertex convention that can move on its own: the reconstruction's.
+    if c.get("vertex_how") == "main_vertex":
+        mv = G.pt((state["data"] or {}).get("main_vertex"))
+        v = c.get("vertex")
+        if mv and v and G.vmag(G.vsub(tuple(v), mv)) > 0.05:
+            out.append("the main vertex moved")
+    return out
+
+
+def cand_unused_marks(c):
+    """Marks that exist on this pairing's gammas but are NOT in its energies.
+
+    Round 16, and the owner's actual question: a row stored with the membership
+    switch off is internally consistent -- re-priced under its own settings it
+    has not moved -- and would never show up in `cand_drift`.  It is still not
+    their best number, because the EM clustering fix they made by hand is
+    sitting outside it.  Said separately from a drift for exactly that reason:
+    one is "this row went out of date", the other is "this row never counted
+    what you corrected".  Same arithmetic the live panel warns with (:2624).
+    """
+    out = []
+    g = c.get("gammas") or {}
+    for s in ("1", "2"):
+        gg = g.get(s) or {}
+        node = gg.get("shower")
+        if node is None or gg.get("energy_includes_marks"):
+            continue
+        d = marks_energy(node,
+                         as_em=gg.get("energy_hypothesis") == "as_em_shower"
+                         )["delta"]
+        if abs(d) > 0.05:
+            out.append("g%s ignores your marks (%+.1f MeV)" % (s, d))
+    return out
+
+
+def cand_convention_note(c):
+    """A row whose vertex convention is not the one this event was last saved with.
+
+    Round 16, and the owner's second example -- "update of the pi0 vertex
+    choice".  Like `cand_unused_marks` this is not staleness: the row is
+    self-consistent, it was simply stored under a convention the scan has since
+    moved off.  Compared against the SAVED record rather than against the live
+    radio, so the note does not flicker while rows are being looked at -- moving
+    the radio is how you look, not how you decide.
+    """
+    saved = ((state.get("saved") or {}).get("pio")) or {}
+    top, mine = saved.get("vertex_how"), c.get("vertex_how")
+    if not top or not mine:
+        return []
+    if mine != top:
+        return ["vertex is %s; this event was last saved as %s" % (mine, top)]
+    if mine == "backproject":
+        # Round 14's two readings.  Absent means the reconstruction's own rays,
+        # exactly as load_label reads it.
+        _g = lambda d: (d.get("backproject_geometry") or "reco")
+        if _g(c) != _g(saved):
+            return ["back-projected from the %s rays; the event was last saved "
+                    "with %s" % (_g(c), _g(saved))]
+    return []
 
 
 def refresh_pio_cands():
@@ -2223,6 +2367,7 @@ def refresh_pio_cands():
     rows = dict(n=[], g1=[], g2=[], e1=[], e2=[], th=[], mA=[], mB=[], how=[],
                 flag=[])
     used = {}
+    drifted = {}
     for i, c in enumerate(state["pio_cands"]):
         g = c.get("gammas") or {}
         g1, g2 = g.get("1") or {}, g.get("2") or {}
@@ -2246,6 +2391,17 @@ def refresh_pio_cands():
         for sl, gg in (("1", g1), ("2", g2)):
             if gg.get("energy_hypothesis") == "as_em_shower":
                 bits.append("g%s re-converted as EM" % sl)
+            if gg.get("energy_includes_marks"):
+                bits.append("g%s counts your marks" % sl)
+        _dr, _um = cand_drift(c), cand_unused_marks(c)
+        _cv = cand_convention_note(c)
+        drifted[i + 1] = (_dr, _um, _cv)
+        if _cv:
+            bits.insert(0, "; ".join(_cv))
+        if _um:
+            bits.insert(0, "; ".join(_um))
+        if _dr:
+            bits.insert(0, "NOT today's numbers: " + "; ".join(_dr))
         rows["flag"].append("; ".join(bits))
         for nd in (n1, n2):
             if nd is not None:
@@ -2262,6 +2418,48 @@ def refresh_pio_cands():
         return
     bits = ["<b>%d pairing(s) stored</b> for this event."
             % len(state["pio_cands"])]
+    # Round 16.  A stored row is frozen numbers; the inputs under it are not.
+    # Every EM-mode start correction and every mark made AFTER a row was stored
+    # leaves that row behind, and until this round the table showed the old
+    # numbers with nothing to say so.  Measured on the owner's own tag when this
+    # was written: 8 of 14 stored pairings no longer matched.
+    _stale = [(k, d) for k, (d, _u, _c) in sorted(drifted.items()) if d]
+    _unm = [(k, u) for k, (_d, u, _c) in sorted(drifted.items()) if u]
+    _cnv = [(k, v) for k, (_d, _u, v) in sorted(drifted.items()) if v]
+    if _stale:
+        bits.append(
+            "<span style='color:#d62728'><b>&#9888; %d of them are no longer "
+            "today's numbers</b> &mdash; %s. Each row is re-priced under the "
+            "hypothesis and membership switch <i>it</i> was stored with, so "
+            "what is listed is what actually moved, not which switch is up. "
+            "Press <b>load into the slots</b> to see today's, then <b>update to "
+            "today's numbers</b> to replace the row &mdash; what it said before "
+            "is kept inside it, never dropped.</span>"
+            % (len(_stale), "; ".join("<b>#%d</b> (%s)" % (k, ", ".join(v))
+                                      for k, v in _stale)))
+    if _unm:
+        bits.append(
+            "<span style='color:#b58900'><b>&#9888; %d of them do not count "
+            "marks you have made</b> on their gammas &mdash; %s. That is not a "
+            "row going stale: it was stored with <i>%s</i>, and re-priced under "
+            "its own setting it has not moved. If the marks are the correction "
+            "you meant, load the row, switch <i>gamma energy membership</i> to "
+            "<i>%s</i>, and either <b>store this pairing</b> to keep both "
+            "readings or <b>update to today's numbers</b> to replace this "
+            "one.</span>"
+            % (len(_unm), "; ".join("<b>#%d</b> (%s)" % (k, ", ".join(v))
+                                    for k, v in _unm),
+               EMARK_RECO, EMARK_MARKS))
+    if _cnv:
+        bits.append(
+            "<span style='color:#b58900'><b>&#9888; %d of them use a different "
+            "vertex convention</b> from the one this event was last saved with "
+            "&mdash; %s. Alternatives are exactly what this list is for, so "
+            "nothing here is wrong; but if the convention moved because you "
+            "changed your mind rather than to compare, load the row and "
+            "<b>update to today's numbers</b>.</span>"
+            % (len(_cnv), "; ".join("<b>#%d</b> (%s)" % (k, ", ".join(v))
+                                    for k, v in _cnv)))
     # A shower in two candidates is NOT a contradiction the way a segment marked
     # into two showers is -- it is how alternatives are expressed.  But two real
     # pi0 in one event need four distinct gammas, so which reading applies has
@@ -2643,6 +2841,15 @@ def refresh_kine():
             "over ALL candidate pairs, accepted or not, so it can name a pair no "
             "reconstruction ever accepted. Do not read it as the pairing.</i>")
     kine_div.text = "<br>".join(rows)
+    # Round 16.  The stored-pairings table carries a live "is this still today's
+    # answer" flag, and the inputs it compares against move with every start
+    # correction and every mark.  Refreshed from here rather than from each of
+    # the fifteen handlers that already end in refresh_kine, so a new handler
+    # cannot forget it.  Measured rather than assumed: refresh_kine including
+    # the table is 0.24 ms on evt281485 (3 stored rows, the most on disk) and
+    # 0.48 ms on evt76346, whose back-projection runs twice for round 14's
+    # `alt`.  The flag functions touch no widget and do no I/O.
+    refresh_pio_cands()
 
 
 # ---------------------------------------------------------------------------
@@ -2935,9 +3142,11 @@ def load(lbl):
     state["_suspend"] = True
     try:
         # Event-level, so it must not leak across events: the next event's marks
-        # are different marks.  load_label turns it back on for a record that
-        # was saved with it on.
-        emark_mode.value = EMARK_RECO
+        # are different marks.  Round 16b: the default this returns to is now
+        # ON.  load_label puts a saved record's own setting back afterwards --
+        # including OFF, which is what keeps every record already on disk at the
+        # mass it was saved with.
+        emark_mode.value = EMARK_MARKS
         # Round 14.  Same reason emark_mode is reset here: a Select keeps its
         # value across an event switch, and a geometry chosen for the last
         # event's corrections has no meaning for this one.  load_label puts a
@@ -3281,11 +3490,20 @@ def load_label(lbl):
                 ehyp_widget(slot).value = (
                     EHYP_EM if g.get("energy_hypothesis") == "as_em_shower"
                     else EHYP_RECO)
-                # Round 12, and absent MUST mean off: six records saved before
-                # this control existed carry marks on a gamma's shower, and
-                # re-opening one has to show the mass it was saved with.
-                if g.get("energy_includes_marks"):
-                    emark_mode.value = EMARK_MARKS
+        # Round 12, and absent MUST mean off: records saved before this control
+        # existed carry marks on a gamma's shower, and re-opening one has to
+        # show the mass it was saved with.  Round 16b made this TOTAL rather
+        # than one-way: with the default now ON, a record saved with the switch
+        # OFF has to turn it back off, or every such record would be silently
+        # re-priced the moment it was re-opened.  Only when the record carries
+        # gammas -- a record with no pi0 block has no mass to protect and takes
+        # the new default.
+        if pio.get("gammas"):
+            emark_mode.value = (
+                EMARK_MARKS
+                if any((pio["gammas"].get(str(_s)) or {}).get(
+                    "energy_includes_marks") for _s in (1, 2))
+                else EMARK_RECO)
         # Round 11.  Absent MUST mean an empty list: a record saved before the
         # list existed stored exactly one pairing, at the top level, and has to
         # re-open showing precisely that and no phantom candidate.
@@ -3978,6 +4196,17 @@ def on_pio_load():
             ehyp_widget(slot).value = (
                 EHYP_EM if gg.get("energy_hypothesis") == "as_em_shower"
                 else EHYP_RECO)
+        # Round 16.  The candidate's own membership switch, the same way round
+        # 9's hypothesis just above and round 14's geometry just below.  Absent
+        # MUST mean off -- that is what every record written before round 12 was
+        # saved with.  Without it a stored row was put on screen under whichever
+        # switch the EVENT had been restored with, so the energies displayed
+        # could differ from the ones in the very row that had just been loaded.
+        emark_mode.value = (
+            EMARK_MARKS
+            if any((g.get(str(_s)) or {}).get("energy_includes_marks")
+                   for _s in (1, 2))
+            else EMARK_RECO)
         how = c.get("vertex_how")
         vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
                                  "manual": 2}.get(how, 0)
@@ -4028,6 +4257,72 @@ def on_pio_load():
                 "<i>store this pairing</i> if today's numbers are the ones you "
                 "mean.</span>" % "; ".join(drift))
     save_note.text = msg
+
+
+def on_pio_update():
+    """Replace one stored pairing with what the chain computes today.
+
+    Round 16.  The freeze stays -- nothing re-prices a stored row on its own --
+    but it now has a deliberate exit.  Two guards make it a judgement rather
+    than an accident: a row has to be SELECTED, and the slots have to be holding
+    that row's own two gammas, which is what `load into the slots` does.  Delete
+    -and-re-store would have done the same arithmetic and lost the row's
+    `stored_utc` and its place in the list, and a note that named it by number
+    would have gone stale.
+    """
+    idx = list(pio_cand_src.selected.indices or [])
+    if not idx:
+        save_note.text = ("<span style='color:#c00'>pick the row to update in "
+                          "the stored pairings table first.</span>")
+        return
+    i = idx[0]
+    if i >= len(state["pio_cands"]):
+        return
+    old = state["pio_cands"][i]
+    og = old.get("gammas") or {}
+    want = ((og.get("1") or {}).get("shower"), (og.get("2") or {}).get("shower"))
+    if (state["gamma"][1], state["gamma"][2]) != want:
+        save_note.text = (
+            "<span style='color:#c00'>the slots hold &gamma;1 %s + &gamma;2 %s "
+            "but candidate <b>%d</b> is %s + %s. Press <i>load into the slots</i> "
+            "first &mdash; updating a row from a different pairing would rewrite "
+            "it into something it never was.</span>"
+            % (state["gamma"][1], state["gamma"][2], i + 1, want[0], want[1]))
+        return
+    moved = cand_drift(old) + cand_unused_marks(old) + cand_convention_note(old)
+    cand = pio_pairing()
+    cand["stored_utc"] = old.get("stored_utc")
+    cand["updated_utc"] = datetime.datetime.now(
+        datetime.timezone.utc).isoformat(timespec="seconds")
+    # Round 5d discipline: a past judgement is carried, never destroyed.  A list
+    # so that a row updated twice keeps both of its earlier readings, and each
+    # entry is small enough that the record does not grow without bound.
+    def _summary(c):
+        g = c.get("gammas") or {}
+        return dict(stored_utc=c.get("stored_utc"),
+                    updated_utc=c.get("updated_utc"),
+                    energies=[(g.get(s) or {}).get("energy") for s in ("1", "2")],
+                    energy_includes_marks=[(g.get(s) or {}).get(
+                        "energy_includes_marks") for s in ("1", "2")],
+                    vertex=c.get("vertex"), vertex_how=c.get("vertex_how"),
+                    mass_axis_convention=c.get("mass_axis_convention"),
+                    mass_vertex_convention=c.get("mass_vertex_convention"),
+                    theta_axis_convention=c.get("theta_axis_convention"))
+    cand["supersedes"] = (old.get("supersedes") or []) + [_summary(old)]
+    state["pio_cands"][i] = cand
+    refresh_pio_cands()
+    touch()
+    save_note.text = (
+        "candidate <b>%d</b> updated to today's numbers: m = <b>%s</b> &rarr; "
+        "<b>%s</b> MeV (axis), <b>%s</b> &rarr; <b>%s</b> MeV (vertex, %s). %s "
+        "The reading it replaced is kept in the row as <code>supersedes</code>."
+        % (i + 1, _mev(old.get("mass_axis_convention")),
+           _mev(cand.get("mass_axis_convention")),
+           _mev(old.get("mass_vertex_convention")),
+           _mev(cand.get("mass_vertex_convention")), cand.get("vertex_how"),
+           ("What moved: %s." % "; ".join(moved)) if moved else
+           "<span style='color:#b58900'>Nothing had moved &mdash; the row "
+           "already was today's answer.</span>"))
 
 
 def on_pio_del():
@@ -4654,6 +4949,7 @@ g2_btn.on_click(on_gamma(2))
 g_clear_btn.on_click(on_gamma_clear)
 pio_add_btn.on_click(on_pio_add)
 pio_load_btn.on_click(on_pio_load)
+pio_upd_btn.on_click(on_pio_update)
 pio_del_btn.on_click(on_pio_del)
 for _w in (g1_ehyp, g2_ehyp, emark_mode):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
@@ -4783,7 +5079,7 @@ pio_panel = column(
              "hypotheses, the vertex and both masses &mdash; as its own entry. "
              "Pick a row and <b>load into the slots</b> to look at it again.",
         width=RW),
-    row(pio_add_btn, pio_load_btn, pio_del_btn),
+    row(pio_add_btn, pio_load_btn, pio_upd_btn, pio_del_btn),
     pio_cand_tab,
     pio_cand_div,
     Div(text="<span style='font-size:88%;color:#555'>No pi0 verdict: the record "

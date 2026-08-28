@@ -2842,3 +2842,230 @@ load: `em_verdict`, `conf_group`, `event_flag_group`, `g1_ehyp`, `g2_ehyp`,
 `gstart_slot`, `mode_group` — persist deliberately: they are how the scanner
 wants to look at events, not answers about one. That split was made by reading
 the widget list, not by test.
+
+## 24. Round 16 — a stored pairing can be told from today's answer, and replaced
+
+> *"When you store the pairing into the stored π⁰ pairing table, I believe the
+> information saved is not the best information (e.g. energy after EM clustering
+> fix, update of the π⁰ vertex choice etc), right? I wonder if it can be fixed?"*
+
+Right, and it is two different things wearing one coat:
+
+- a row can go **stale** — an input under it (a start, an axis, a mark) moved
+  after it was stored, so the frozen numbers are no longer what the chain
+  computes;
+- a row can simply **not count a correction that exists** — it was stored with
+  *gamma energy membership* on `reco membership only`, so the EM clustering fix
+  made by hand sits outside it. Re-priced under its own settings that row has
+  not moved at all; it was never the best number;
+- and the same for the **vertex choice**: a row stored under one convention
+  while the scan has since settled on another is not stale either, it is an
+  alternative that may no longer be wanted.
+
+Both were invisible from the table, and one of them could not even be corrected:
+storing the fixed pairing was **refused as a duplicate**.
+
+### 24.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 358
+python em_display/selftest_em3d_browser.py      # 79
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-15.
+
+The two regressions, run against the pre-round-16 file and the fixed one
+(`/home/xqian/tmp/em114r16/ab.py`, `ab2.py`; evt409634, shower 27015 merged into
+69032 exactly as round 12 did it):
+
+```
+1. store the SAME pairing again with the marks counted
+   before   1 row  ['41.0']   "that pairing is already stored as candidate 1 --
+                               same gammas, vertex, starts and energy hypotheses"
+   after    2 rows ['41.0', '78.8']
+
+2. load a row that was stored WITH the marks counted (E1 144.11 MeV)
+   before   switch reads 'reco membership only', screen shows E1 39.06 MeV
+   after    switch reads 'include my IN / OUT marks', screen shows E1 144.11 MeV
+```
+
+The second one is the worse of the two: the panel displayed 39.06 MeV for a row
+whose own stored energy is 144.11 MeV, immediately after being asked to load
+that row.
+
+### 24.2 Root cause
+
+**`_pair_sig` did not include the membership switch.** It is the key that
+decides "is this pairing already stored", and it carried the gammas, the vertex,
+the starts and the energy *hypothesis* — but not the round-12 switch and not the
+round-14 geometry. Two pairings with different energies therefore collapsed to
+the same signature, so `on_pio_add` declined the corrected one and the "the
+pairing now in the slots is not one of them" nudge stayed silent as well.
+
+**`on_pio_load` restored the hypothesis and the geometry but not the switch.**
+Rounds 9 and 14 both established "the candidate's own setting comes back, absent
+means off"; round 12's switch was left out, so a stored row was put on screen
+under whichever setting the *event* had been restored with.
+
+**The table had no way to say a row was behind.** Deliberately — a stored
+candidate is frozen because it is the scanner's curated judgement, and
+`on_pio_load` has always *reported* a disagreement rather than absorbing it. The
+defect is not the freeze. It is that the freeze had **no exit**: nothing said a
+row had gone stale, and nothing replaced one on purpose.
+
+### 24.3 What that costs on the owner's own tag
+
+Measured read-only over all 15 stored pairings in `emscan-0827`
+(`/home/xqian/tmp/em114r16/survey2.py`, 2026-08-28 04:55 — the scan is live, so
+the counts move), each row re-priced under the settings it was stored with:
+
+| event | row | gammas | flag |
+|---|---|---|---|
+| evt76346 | 1 | 14059+14058 | **stale** — g1 axis turned 6.0°, g2 start moved 55.6 cm, g2 axis turned 47.4°; and g1 ignores marks (−9.4 MeV) |
+| evt409634 | 1 | 21002+69032 | g2 ignores your marks (**+105.1 MeV**) |
+| evt281485 | 1 | 15036+88090 | g2 ignores your marks (+75.7 MeV) |
+| evt54332 | 2 | 122091+27025 | g1 ignores your marks (+52.5 MeV) |
+| evt47212 | 1 | 2103+59027 | g1 ignores your marks (−45.6 MeV) |
+| evt54332 | 1 | 16014+128111 | g1 ignores your marks (−35.8 MeV) |
+| evt347129 | 1 | 53021+11000 | g2 ignores your marks (+19.8 MeV) |
+| evt284235 | 1 | 6004+74027 | g1 +1.6 MeV, g2 +16.7 MeV |
+| evt64591 | 1 | 83044+78025 | g1 ignores your marks (+4.1 MeV) |
+| evt166870 | 1 | 87058+85045 | g1 ignores your marks (+2.4 MeV) |
+
+**1 of 15 rows is stale; 10 of 15 do not count marks that exist on their gammas.**
+The signs matter: three of them are *negative*, so counting the marks would lower
+those energies. Nothing here says which reading is right — that is the scan's
+judgement, and it is exactly why the row is flagged rather than rewritten.
+
+### 24.4 The fix
+
+1. **`_pair_sig` gains `energy_includes_marks` per gamma and
+   `backproject_geometry`.** Both normalised so an absent key reads as the
+   pre-round-12 / pre-round-14 default — otherwise every old row would look
+   different from an identical new one.
+2. **`on_pio_load` restores the candidate's membership switch**, absent meaning
+   off, symmetric with rounds 9 and 14.
+3. **`cand_drift(c)`** compares a candidate's own inputs against today's —
+   energies re-priced under *its* hypothesis and *its* switch, starts and axes
+   against today's `shower_start` / `shower_axis`, and the reconstruction's own
+   vertex for a `main_vertex` row. It touches no widget, so the table can carry
+   the flag without the controls flickering.
+4. **`cand_unused_marks(c)`** is the separate question: marks that exist on this
+   row's gammas and are not in its energies, with what they are worth. Same
+   arithmetic the live panel has warned with since round 12.
+4b. **`cand_convention_note(c)`** is the third: the row's `vertex_how` (and, for
+   a back-projection, its round-14 geometry) against the one this event was last
+   **saved** with — the saved record rather than the live radio, so the note does
+   not flicker while rows are being looked at. No row on disk differs today; it
+   is the owner's own second example and it costs one comparison.
+5. **`update to today's numbers`** — the exit. It replaces the selected row in
+   place, keeps its `stored_utc`, stamps `updated_utc`, and appends what the row
+   said before to a `supersedes` list. Two guards make it a judgement rather than
+   an accident: a row must be selected, and the slots must be holding *that
+   row's* two gammas, which is what `load into the slots` does. Delete-and-
+   re-store would have done the same arithmetic while losing the row's place in
+   the list and its first-stored time, and renumbering every note that named it.
+6. **`energy_for(node, as_em, with_marks)`** — `gamma_energy`'s arithmetic with
+   the switches passed in. `gamma_energy` now delegates to it, so re-pricing a
+   stored row and pricing the live one can never drift apart. Same reason round
+   11 gave for lifting `gamma_record` out of `on_save`.
+
+`refresh_kine` calls `refresh_pio_cands` at its end, so the flag is live from
+every handler that already refreshes the π⁰ panel rather than from fifteen call
+sites a new handler could forget. Measured rather than assumed
+(`/home/xqian/tmp/em114r16/cost.py`): `refresh_kine` including the table is
+**0.24 ms** on evt281485 (3 stored rows, the most on disk) and **0.48 ms** on
+evt76346, whose back-projection runs twice for round 14's `alt`.
+
+### 24.5 What deliberately does not change
+
+**Nothing re-prices itself.** A stored row is still frozen; the update is a
+button the scanner presses, on a row they selected, after loading it. No record
+on disk was rewritten this round.
+
+**The `gamma energy membership` default was the owner's call, and they took it
+— see §24.7.** The finding that prompted it: **every record on disk that carries
+marks had `energy_includes_marks: false` on both gammas** — 14 segments marked
+into 14059 on evt76346, 10 into 69032 on evt409634, 10 and 8 on evt54332 — so no
+hand-made clustering fix reached any saved mass.
+
+**`em_start` / `em_dir` are still not restored by `load into the slots`.** They
+are per *shower*, shared by every candidate that names it, so restoring one row's
+would move another's. The update button absorbs that drift when pressed; the
+load path still will not reverse it. evt76346 row 1 is the live example.
+
+### 24.6 Tests
+
+`selftest_em_display.py` 323 → **351**, `selftest_em3d_browser.py` 75 → **78**.
+
+The static block rebuilds round 12's merge on evt409634 and then pins: the
+delegation (`energy_for` == `gamma_energy` for both switch positions), the
+signature telling the two rows apart while an absent key still reads as off,
+the store that used to be refused, stale-versus-does-not-count as two separate
+flags (including a row that becomes stale when the marks are taken away again,
+and one that becomes stale from an EM start correction), the switch coming back
+with the row it belongs to, the update button's in-place replacement with
+`stored_utc` kept and `supersedes` appended, its refusal when the slots hold a
+different pairing, the vertex-convention note in all three of its states, and
+the plain-text table cell. One guard is live-data: at least one stored row on
+disk must have a gamma with marks and the switch off, so the case the owner
+reported cannot quietly leave the corpus. It is a floor, not an equality — the
+scan is live and the count moves.
+
+The browser block presses the new button in the real page on evt281485 —
+including the honest "nothing had moved" result and the no-row-selected refusal.
+
+### 24.7 Round 16b — the membership default is now ON
+
+Round 12 made counting the scanner's own IN / OUT marks **opt-in**, and §24.5
+measured what that cost: of the 18 records in `emscan-0827`, *every* one that
+carries marks was saved with the switch off, so no hand-made clustering fix
+reached any saved mass — including deltas of +105.1, +75.7 and −45.6 MeV. Put to
+the owner as a question with the numbers, they chose to flip it. The marks exist
+because the reconstruction's membership is wrong; counting them is what the scan
+is for.
+
+```python
+emark_mode = Select(..., value=EMARK_MARKS, ...)   # was EMARK_RECO
+```
+
+and `load()`'s per-event reset returns to `EMARK_MARKS` rather than
+`EMARK_RECO`.
+
+**Nothing already on disk is re-priced, and that is not an assertion.** The flip
+is only safe because `load_label` sets the switch **from the record**, and until
+this round that restore was one-way — it could turn the switch on, never off.
+With the default on, a record saved with it off would have been silently
+re-priced the moment it was re-opened. So the restore was made total, guarded on
+the record actually carrying gammas:
+
+```python
+if pio.get("gammas"):
+    emark_mode.value = (EMARK_MARKS
+                        if any(g["energy_includes_marks"] for g in both slots)
+                        else EMARK_RECO)
+```
+
+Measured over all 18 labelled events, re-opening each and comparing the switch,
+both gamma energies, both masses and every stored candidate's energies
+(`/home/xqian/tmp/em114r16/emark_snap.py`, run against the pre-flip file and the
+flipped one):
+
+```
+events compared      : 18
+events that re-price : 0
+switch restored OFF  : 15   (every record that carries a pi0 block)
+switch takes the new default : 3   (evt172942, evt174752, evt76350 -- pio null,
+                                    no gammas, no mass: nothing to price)
+```
+
+What this **does** change is what a *new* save records, and what a *re-save*
+records: an event re-opened, re-marked and saved again now writes the mass with
+the marks counted unless the switch is put back. That is the intended effect —
+and the round-16 row flags are what make it visible per stored pairing.
+
+The round-12 selftest check that asserted the old default is **inverted, not
+deleted**: it is the one that would catch this default moving again by accident.
+`selftest_em_display.py` 351 → **358**, `selftest_em3d_browser.py` 78 → **79**.

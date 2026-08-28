@@ -7,7 +7,7 @@ a hand-built pi0, the snap, a label round trip and the M13 tag guard.
 
 Run:  python em_display/selftest_em_display.py        (expects 0 failures)
 """
-import os, sys, json, shutil, collections
+import os, sys, json, shutil, collections, copy
 
 SX = "/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin"
 TAG = "selftest114"
@@ -1966,11 +1966,15 @@ V.state["gamma"][1] = 69032
 V.state["gamma"][2] = 21002
 V.vtx_mode_group.active = 0
 V.refresh_kine()
-check("the default is still the reconstruction's membership",
-      V.emark_mode.value == V.EMARK_RECO
-      and abs(V.gamma_energy(1) - 39.06) < 0.01,
+# Round 16b flipped this default.  The check is kept, inverted, rather than
+# deleted: it is the one that would catch the default moving again by accident.
+check("the default now COUNTS the scanner's marks (round 16b)",
+      V.emark_mode.value == V.EMARK_MARKS
+      and abs(V.gamma_energy(1) - 144.11) < 0.02,
       "%s, E1 %.2f" % (V.emark_mode.value, V.gamma_energy(1)))
-check("  ... and the panel says what is not being counted, and what it costs",
+V.emark_mode.value = V.EMARK_RECO
+V.refresh_kine()
+check("  ... and with it off the panel says what is not counted, and what it costs",
       "not counted below" in V.kine_div.text
       and "144.1" in V.kine_div.text and "78.8" in V.kine_div.text,
       "-")
@@ -2433,6 +2437,301 @@ check("every vertex_how on disk maps to a button",
       set(_hows) <= {"main_vertex", "backproject", "manual"}, str(dict(_hows)))
 check("  ... and `main_vertex` -- the case that was never restored -- is on disk",
       _hows["main_vertex"] > 0, "%d record(s)" % _hows["main_vertex"])
+
+# ===========================================================================
+# round 16 -- a stored pairing can be told from today's answer, and replaced
+# ===========================================================================
+print()
+
+# The owner: "when you store the pairing into the stored pi0 pairing table, I
+# believe the information saved is not the best information (e.g. energy after
+# EM clustering fix, update of the pi0 vertex choice etc)."  Two separate
+# things, and both are true: a row can go STALE (an input under it moved after
+# it was stored) and a row can simply NOT COUNT a correction that exists (it was
+# stored with the membership switch off).  The freeze itself stays.
+
+V.on_event(None, None, "evt409634")
+V.mode_group.active = 1
+V.on_mode(None, None, 1)
+V.state["sel_shower"] = 69032
+V.fill_cand_table()
+V.refresh_bulk_options()
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 27015][0]
+V.on_bulk(False)()
+V.mark("in")()
+V.state["gamma"][1] = 69032
+V.state["gamma"][2] = 21002
+V.vtx_mode_group.active = 0
+V.state["pio_cands"] = []
+
+# --- the arithmetic is not duplicated ---------------------------------------
+V.emark_mode.value = V.EMARK_MARKS
+V.g1_ehyp.value = V.EHYP_RECO
+check("energy_for is the same arithmetic gamma_energy uses",
+      all(abs(V.energy_for(V.state["gamma"][sl],
+                           V.ehyp_widget(sl).value == V.EHYP_EM,
+                           V.emark_mode.value == V.EMARK_MARKS)
+              - V.gamma_energy(sl)) < 1e-12 for sl in (1, 2)),
+      "%.4f / %.4f" % (V.gamma_energy(1), V.gamma_energy(2)))
+check("  ... and it answers for BOTH switch positions off one node",
+      abs(V.energy_for(69032, False, False) - 39.06) < 0.01
+      and abs(V.energy_for(69032, False, True) - 144.11) < 0.01,
+      "%.2f / %.2f" % (V.energy_for(69032, False, False),
+                       V.energy_for(69032, False, True)))
+
+# --- storing the corrected pairing was REFUSED as a duplicate ---------------
+V.emark_mode.value = V.EMARK_RECO
+V.refresh_kine()
+V.on_pio_add()
+_c16off = V.state["pio_cands"][0]
+check("a pairing stored with the reco's membership records 41.0 MeV",
+      abs(_c16off["mass_axis_convention"] - 41.0) < 0.1,
+      "%.2f" % _c16off["mass_axis_convention"])
+V.emark_mode.value = V.EMARK_MARKS
+V.refresh_kine()
+_live16 = V.pio_pairing()
+check("  ... and today's marks make the same pairing 78.8 MeV",
+      abs(_live16["mass_axis_convention"] - 78.8) < 0.1,
+      "%.2f" % _live16["mass_axis_convention"])
+check("  ... which the signature now tells apart, so it can be stored",
+      V._pair_sig(_c16off) != V._pair_sig(_live16))
+V.on_pio_add()
+check("  ... and pressing store really does add the corrected row",
+      len(V.state["pio_cands"]) == 2
+      and abs(V.state["pio_cands"][1]["mass_axis_convention"] - 78.8) < 0.1,
+      "%d row(s)" % len(V.state["pio_cands"]))
+# ... without making every pre-round-12 row look different from an identical
+# new one: absent MUST read as off.
+_c16legacy = copy.deepcopy(_c16off)
+for _s in ("1", "2"):
+    _c16legacy["gammas"][_s].pop("energy_includes_marks", None)
+check("  ... while an absent membership key still reads as off",
+      V._pair_sig(_c16legacy) == V._pair_sig(_c16off))
+
+# --- stale vs. does-not-count, which are different things -------------------
+check("a row stored with the marks off has NOT gone stale",
+      V.cand_drift(_c16off) == [], str(V.cand_drift(_c16off)))
+check("  ... it is flagged for not counting them, with what they are worth",
+      any("g1 ignores your marks (+105.1 MeV)" == x
+          for x in V.cand_unused_marks(_c16off)),
+      str(V.cand_unused_marks(_c16off)))
+check("  ... and the row that counts them is flagged for neither",
+      V.cand_drift(V.state["pio_cands"][1]) == []
+      and V.cand_unused_marks(V.state["pio_cands"][1]) == [],
+      "%s %s" % (V.cand_drift(V.state["pio_cands"][1]),
+                 V.cand_unused_marks(V.state["pio_cands"][1])))
+# now take the marks away again: the row that counted them IS stale
+_marks16 = V.state["marks"]
+V.state["marks"] = {}
+check("removing the marks makes the row that counted them stale",
+      any(x.startswith("E1 144.1 -> 39.1")
+          for x in V.cand_drift(V.state["pio_cands"][1])),
+      str(V.cand_drift(V.state["pio_cands"][1])))
+check("  ... and the row that never counted them is still not stale",
+      V.cand_drift(_c16off) == [] and V.cand_unused_marks(_c16off) == [],
+      str(V.cand_drift(_c16off)))
+V.state["marks"] = _marks16
+
+# --- the OTHER thing the owner named: the vertex choice ---------------------
+# A row stored under one convention while the event has since been saved under
+# another is not stale either -- it is an alternative that may or may not still
+# be wanted.  Compared against the SAVED record, not the live radio.
+V.state["saved"] = {"pio": {"vertex_how": "backproject",
+                            "backproject_geometry": "handscan"}}
+check("a row under a different vertex convention than the event says so",
+      V.cand_convention_note(_c16off)
+      == ["vertex is main_vertex; this event was last saved as backproject"],
+      str(V.cand_convention_note(_c16off)))
+V.state["saved"] = {"pio": {"vertex_how": "main_vertex"}}
+check("  ... and says nothing when they agree",
+      V.cand_convention_note(_c16off) == [],
+      str(V.cand_convention_note(_c16off)))
+_bp16 = copy.deepcopy(_c16off)
+_bp16["vertex_how"] = "backproject"
+_bp16["backproject_geometry"] = "handscan"
+V.state["saved"] = {"pio": {"vertex_how": "backproject"}}
+check("  ... and tells round 14's two ray sets apart, absent meaning reco",
+      V.cand_convention_note(_bp16)
+      == ["back-projected from the handscan rays; the event was last saved "
+          "with reco"], str(V.cand_convention_note(_bp16)))
+V.state["saved"] = None
+
+# --- an EM-mode correction made after storing moves the row -----------------
+V.state["em_start"][69032] = tuple(
+    V.G.vadd(V.shower_start(69032), (0.0, 12.0, 0.0)))
+V.state["_axis_cache"] = {}
+check("an EM start correction made after storing shows up as drift",
+      any("g1 start moved 12.0 cm" == x for x in V.cand_drift(_c16off)),
+      str(V.cand_drift(_c16off)))
+V.state["em_start"].pop(69032, None)
+V.state["_axis_cache"] = {}
+
+# --- loading a row brings back ITS membership switch ------------------------
+V.emark_mode.value = V.EMARK_RECO
+V.pio_cand_src.selected.indices = [1]
+V.on_pio_load()
+check("loading a stored row restores the membership switch it was stored with",
+      V.emark_mode.value == V.EMARK_MARKS, V.emark_mode.value)
+V.pio_cand_src.selected.indices = [0]
+V.on_pio_load()
+check("  ... and a row stored without it comes back without it",
+      V.emark_mode.value == V.EMARK_RECO, V.emark_mode.value)
+check("  ... so the energies on screen are the ones in the row it just loaded",
+      abs(V.gamma_energy(1) - (_c16off["gammas"]["1"]["energy"])) < 0.01,
+      "%.2f" % V.gamma_energy(1))
+
+# --- update to today's numbers ----------------------------------------------
+_utc16 = _c16off.get("stored_utc")
+V.emark_mode.value = V.EMARK_MARKS
+V.pio_cand_src.selected.indices = [0]
+V.on_pio_update()
+_c16new = V.state["pio_cands"][0]
+check("update replaces the row with today's numbers, in place",
+      len(V.state["pio_cands"]) == 2
+      and abs(_c16new["mass_axis_convention"] - 78.8) < 0.1,
+      "%.2f" % _c16new["mass_axis_convention"])
+check("  ... keeping when it was first stored, and saying when it changed",
+      _c16new.get("stored_utc") == _utc16 and _c16new.get("updated_utc"),
+      "%s / %s" % (_c16new.get("stored_utc"), _c16new.get("updated_utc")))
+check("  ... and carrying the reading it replaced, never dropping it",
+      len(_c16new.get("supersedes") or []) == 1
+      and abs(_c16new["supersedes"][0]["mass_axis_convention"] - 41.0) < 0.1,
+      str((_c16new.get("supersedes") or [{}])[0].get("mass_axis_convention")))
+check("  ... and the panel names what moved", "105.1" in V.save_note.text,
+      V.save_note.text[:80])
+
+# Updating from the WRONG slots would rewrite a row into something it never was.
+V.state["gamma"][2] = 27015
+V.pio_cand_src.selected.indices = [1]
+_was16 = copy.deepcopy(V.state["pio_cands"][1])
+V.on_pio_update()
+check("updating a row the slots do not hold is refused, not guessed",
+      V.state["pio_cands"][1] == _was16
+      and "load into the slots" in V.save_note.text,
+      V.save_note.text[:70])
+V.state["gamma"][2] = 21002
+
+# --- and it is all visible in the table, not only in the dicts --------------
+V.refresh_pio_cands()
+_flags16 = list(V.pio_cand_src.data["flag"])
+check("the table itself carries the note, in plain text a DataTable renders",
+      any("counts your marks" in f for f in _flags16)
+      and "&" not in "".join(_flags16), str(_flags16)[:120])
+V.state["marks"] = {}
+V.refresh_pio_cands()
+check("  ... and the panel below says how many rows are no longer today's",
+      "no longer" in V.pio_cand_div.text
+      and "update to today's numbers" in V.pio_cand_div.text,
+      "-")
+V.state["marks"] = _marks16
+# Both rows now count the marks, so the second warning needs a row that does
+# not -- stored fresh here rather than asserted against a row the update fixed.
+V.emark_mode.value = V.EMARK_RECO
+V.on_pio_add()
+V.refresh_pio_cands()
+check("  ... and how many simply do not count a correction that exists",
+      "do not count marks you have made" in V.pio_cand_div.text
+      and len(V.state["pio_cands"]) == 3, "%d row(s)" % len(V.state["pio_cands"]))
+
+# --- live-data guard: this is not a hypothetical -----------------------------
+# Pure JSON, no event loads: a stored row whose gamma has marks on disk but was
+# saved with the membership switch off is exactly the case the owner reported.
+_r16 = 0
+_ldir16 = os.path.join(SX, "em_labels")
+for _tag in sorted(os.listdir(_ldir16)):
+    _d16 = os.path.join(_ldir16, _tag)
+    if not os.path.isdir(_d16):
+        continue
+    for _f16 in sorted(os.listdir(_d16)):
+        if not _f16.startswith("labels-evt"):
+            continue
+        try:
+            _rec16 = json.load(open(os.path.join(_d16, _f16)))
+        except ValueError:
+            continue
+        _mk16 = (_rec16.get("em") or {}).get("marks_by_shower") or {}
+        _mk16 = {int(k) for k, v in _mk16.items() if v}
+        for _c in ((_rec16.get("pio") or {}).get("candidates") or []):
+            for _s16 in ("1", "2"):
+                _g16 = ((_c.get("gammas") or {}).get(_s16)) or {}
+                if (_g16.get("shower") in _mk16
+                        and not _g16.get("energy_includes_marks")):
+                    _r16 += 1
+check("stored rows that do not count marks made on their own gammas exist",
+      _r16 > 0, "%d gamma-slot(s) across the label tags" % _r16)
+
+# ===========================================================================
+# round 16b -- the membership default, and what it must NOT re-price
+# ===========================================================================
+print()
+
+# The owner's decision after round 16 measured the cost of the opt-in: of the 18
+# records on disk, every one that carries marks was saved with the switch OFF,
+# so no hand-made clustering fix reached any saved mass.  The default is now ON.
+# The whole safety of that flip is that load_label sets the switch FROM THE
+# RECORD -- including off -- so nothing already saved moves.
+
+V.on_event(None, None, "evt84229")
+check("a fresh event now opens counting the scanner's marks",
+      V.emark_mode.value == V.EMARK_MARKS, V.emark_mode.value)
+
+# A record saved with the switch off must turn it back OFF, or the new default
+# would silently re-price it.  This is the load-bearing check of round 16b.
+V.on_event(None, None, "evt409634")
+V.mode_group.active = 1
+V.on_mode(None, None, 1)
+V.state["sel_shower"] = 69032
+V.fill_cand_table(); V.refresh_bulk_options()
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 27015][0]
+V.on_bulk(False)(); V.mark("in")()
+V.state["gamma"][1] = 69032
+V.state["gamma"][2] = 21002
+V.vtx_mode_group.active = 0
+V.state["pio_cands"] = []
+V.emark_mode.value = V.EMARK_RECO
+V.em_verdict.active = 1
+V.conf_group.active = 0
+V.on_save()
+_p16b = V.label_path("evt409634")
+_r16b = json.load(open(_p16b))
+check("a record saved with the switch off says so on both gammas",
+      all(not (_r16b["pio"]["gammas"][_s].get("energy_includes_marks"))
+          for _s in ("1", "2")),
+      str([_r16b["pio"]["gammas"][_s].get("energy_includes_marks")
+           for _s in ("1", "2")]))
+_E16b = _r16b["pio"]["gammas"]["1"]["energy"]
+V.on_event(None, None, "evt84229")          # away, so the switch takes the default
+check("  ... the default is ON in between", V.emark_mode.value == V.EMARK_MARKS,
+      V.emark_mode.value)
+V.on_event(None, None, "evt409634")
+check("  ... and re-opening it turns the switch back OFF, not the new default",
+      V.emark_mode.value == V.EMARK_RECO, V.emark_mode.value)
+check("  ... so the energy on screen is the one it was saved with",
+      abs(V.gamma_energy(1) - _E16b) < 0.01,
+      "%.2f vs %.2f" % (V.gamma_energy(1), _E16b))
+
+# A record saved WITH the switch on comes back on, as it always did.
+V.emark_mode.value = V.EMARK_MARKS
+V.on_save()
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt409634")
+check("a record saved with the switch on still comes back on",
+      V.emark_mode.value == V.EMARK_MARKS
+      and abs(V.gamma_energy(1) - 144.11) < 0.02,
+      "%s, E1 %.2f" % (V.emark_mode.value, V.gamma_energy(1)))
+
+# A record with no pi0 block has no mass to protect, and takes the new default.
+_o16b = json.load(open(_p16b))
+_o16b["pio"] = None
+with open(_p16b, "w") as _fh:
+    json.dump(_o16b, _fh)
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt409634")
+check("a record with no pi0 block takes the new default",
+      V.emark_mode.value == V.EMARK_MARKS, V.emark_mode.value)
+os.remove(_p16b)
 
 print()
 print("FAILURES: %d" % len(fails))

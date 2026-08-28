@@ -703,6 +703,33 @@ try:
         check("  ... and its two gamma markers are redrawn in the 3-D view",
               js("M('gstart3_src').data.x.length") == 2,
               "%s marker(s)" % js("M('gstart3_src').data.x.length"))
+
+        # round 16: the stored row can be replaced by today's answer, in place.
+        # Candidate 1 is in the slots from the load just above, and nothing has
+        # moved under it -- so the honest result is "nothing had moved", said
+        # rather than a silent no-op, with the row count and mass unchanged.
+        mA_before = [round(v, 1) for v in js("M('pio_cand_src').data.mA")]
+        page.get_by_role("button", name="update to today's numbers",
+                         exact=True).click()
+        page.wait_for_timeout(1500)
+        check("round 16: a stored row can be updated in place from the page",
+              "updated to today's numbers" in js("M('save_note').text")
+              and "Nothing had moved" in js("M('save_note').text"),
+              js("M('save_note').text")[:110])
+        check("  ... and an update that changes nothing changes nothing",
+              [round(v, 1) for v in js("M('pio_cand_src').data.mA")] == mA_before
+              and js("M('pio_cand_src').data.n") == [1, 2], str(mA_before))
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('pio_cand_src').selected.indices"
+                      " = []; }")
+        page.wait_for_timeout(700)
+        page.get_by_role("button", name="update to today's numbers",
+                         exact=True).click()
+        page.wait_for_timeout(1200)
+        check("  ... and with no row picked it says so instead of guessing",
+              "pick the row to update" in js("M('save_note').text"),
+              js("M('save_note').text")[:80])
+
         page.evaluate("() => { Bokeh.documents[0]"
                       ".get_model_by_name('mode_group').active = 0; }")
         page.wait_for_timeout(1200)
@@ -734,6 +761,16 @@ try:
                              name="selected shower -> gamma %d" % slot,
                              exact=True).click()
             page.wait_for_timeout(900)
+        # Round 16b: the default counts the marks now, so the warning path has
+        # to be reached by switching it OFF -- and that the default really is on
+        # is worth one check of its own, in the page rather than in the dicts.
+        check("round 16b: the live page opens counting the scanner's marks",
+              js("M('emark_mode').value") == "include my IN / OUT marks",
+              js("M('emark_mode').value"))
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('emark_mode').value ="
+                      " 'reco membership only'; }")
+        page.wait_for_timeout(1500)
         kd = js("M('kine_div').text")
         check("the panel warns that marked charge is missing from the mass",
               "not counted below" in kd and "144.1" in kd and "78.8" in kd,

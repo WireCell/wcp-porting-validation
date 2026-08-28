@@ -494,17 +494,24 @@ into shower 69032 (39.06 MeV) on evt409634 left the π⁰ mass built on 39.06.
 
 | | E1 | m axis | m vertex |
 |---|---|---|---|
-| `reco membership only` (default) | 39.1 | 41.0 | 83.4 |
-| `include my IN / OUT marks` | **144.1** | **78.8** | **160.3** |
+| `reco membership only` | 39.1 | 41.0 | 83.4 |
+| `include my IN / OUT marks` (default since round 16b) | **144.1** | **78.8** | **160.3** |
 
 The angles do not move — a mark changes *which charge belongs to the shower*,
 not where it points.
 
-**It defaults to the reconstruction's membership**, and not as a matter of taste:
-six of the twelve records already on disk carry marks on a gamma's shower, so a
-default of "include them" would silently re-price six masses already judged. With
-it off the panel says what is being left out and what the mass would become, so
-the number is never hidden — only never applied without a click.
+**It defaults to counting your marks (round 16b).** It did not until then, and
+the reason it changed is a measurement: of the 18 records on disk, *every* one
+carrying marks had been saved with the switch off, so no hand-made clustering fix
+reached any saved mass — including +105.1 MeV on evt409634 and −45.6 on evt47212.
+The marks exist because the reconstruction's membership is wrong.
+
+**Re-opening a saved record still shows the mass it was saved with.** The switch
+is set from the record, in both directions: a record saved with it off turns it
+back off, and only a record with no π⁰ block at all takes the new default.
+Measured over all 18 labelled events at the flip: 0 re-priced, 15 restored off,
+3 (`pio: null`, no gammas, no mass) took the default. With the switch off the
+panel still says what is being left out and what the mass would become.
 
 The arithmetic is exact, not an estimate. The probe gives a per-segment `E_est`
 that **sums to `kine_charge`**: shower 69032's two members are 29.498 + 9.560 =
@@ -570,6 +577,29 @@ That is the one real asymmetry: `load into the slots` pins the start
 storing moves the axis mass and not the vertex mass, and the message names which
 one moved.
 
+**The freeze has an exit (round 16).** Frozen is right — a stored row is your
+curated judgement — but the table now says when a row has fallen behind, and one
+button replaces it. Two different things are flagged, in the row's *note* column
+and summarised under the table:
+
+| flag | what it means |
+|---|---|
+| `NOT today's numbers: …` | an input under the row moved after it was stored — a start, an axis, a mark, or the reconstruction's own vertex. Each row is re-priced under the hypothesis and membership switch **it** was stored with, so what is listed is what actually moved, not which switch happens to be up now. |
+| `gN ignores your marks (+105.1 MeV)` | the row is not stale — re-priced under its own settings it has not moved — but it was stored with *gamma energy membership* on `reco membership only`, so marks you have since made on that gamma are not in its energy. The number is what they are worth. |
+| `vertex is main_vertex; this event was last saved as backproject` | the row uses a different vertex convention (or, for a back-projection, a different one of round 14's two ray sets) from the one this event was **last saved** with. Alternatives are what the list is for, so this is a note and not a fault. |
+
+**update to today's numbers** replaces the selected row in place: it keeps the
+row's `stored_utc`, stamps `updated_utc`, and appends what the row said before
+to a `supersedes` list, so no reading is ever destroyed. It requires the row to
+be selected *and* the slots to be holding that row's own two gammas — press
+**load into the slots** first. (Delete-and-re-store would do the same arithmetic
+while losing the row's place in the list and its first-stored time.)
+
+**load into the slots** also brings back the row's own membership switch, the way
+it already brought back its energy hypothesis and its back-projection geometry.
+Before round 16 it did not, so a row stored at 144.1 MeV could be displayed at
+39.1 MeV the instant it was loaded.
+
 **A shower in two candidates is not an error.** It means they are *alternative
 pairings of the same gamma*, and the panel says so — two real π⁰ in one event
 need four distinct showers, and when they are distinct it says that instead.
@@ -583,6 +613,12 @@ The record grows one key. `pio.candidates` is **always written, empty list
 included**, so a reader can tell "this scanner stored no alternatives" from
 "this record predates the list". A record saved before round 11 has no key at
 all, and re-opens showing exactly the one pairing it always did.
+
+A row that has been updated (round 16) carries two more keys: `updated_utc`, and
+`supersedes` — a list, oldest first, of what the row said each time it was
+replaced (`stored_utc`, both masses, θ, the vertex and its convention, the two
+energies and whether each counted marks). A row that was never updated has
+neither key.
 
 ### The vertex point is in the record, whichever way it was chosen
 
