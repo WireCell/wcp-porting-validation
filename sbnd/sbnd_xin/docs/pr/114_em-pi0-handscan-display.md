@@ -1763,3 +1763,107 @@ start & axis - reco start (-14.1, 118.7, 465.1) | yours (-19.2, 95.7, 475.4)
   intended reading of "aim through this point", but it is a choice.
 - `load_label` still does a bare `json.load` while the save path guards
   `ValueError` (carried from §15.5, not fixed here).
+
+---
+
+## 17. Round 9 — which recombination pair a gamma's charge is converted with
+
+> *"for event 166870, when we calculate the pi0 mass, the energy of the EM shower
+> should use the charge inferred one instead of the kinetic energy."* … *"This is
+> about the display."*
+
+### 17.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 224
+python em_display/selftest_em3d_browser.py      # 53
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-8.
+
+### 17.2 What was actually wrong
+
+`shower_energy()` already returned `kine_charge`, so the first reading — "the
+display uses a range/kinetic energy" — is not what was happening. The owner's own
+saved record named the real case:
+
+> note: *"85045 should be an EM shower, part of pi0"*, with 85045 in gamma slot 2.
+
+`kine_charge` is `charge / (recom × fudge)`, and **which pair** was used is
+decided by `Shower::get_flag_shower()` — a property of the reconstruction, not of
+the slot a scanner later drops the object into:
+
+| shower | pdg | `flag_shower` | converted as | `kine_charge` |
+|---|---|---|---|---|
+| 87058 | 11 | True | shower (0.50, 0.80) | 173.8 MeV |
+| **85045** | **13** | **False** | **track (0.70, 0.95)** | **38.6 MeV** |
+
+So slot 2 was carrying *a track's* energy. Re-converted under the shower pair the
+same collected charge is **64.2 MeV**, and the π⁰ mass moves:
+
+```
+axis convention    116.1 -> 149.7 MeV
+vertex convention  116.3 -> 149.9 MeV      (pi0 rest mass 134.98)
+```
+
+Both conventions share `E1·E2`, so both move together.
+
+### 17.3 The control, and why it defaults OFF
+
+A `Select` per gamma slot: **as reconstructed** (default) / **as EM shower
+(charge-inferred)**.
+
+The default is the reconstruction's number, and that is the important decision.
+Defaulting to the EM hypothesis would have made the saved evt166870 record
+*display* 149.7 where 116.1 was written — a scan record reading differently than
+when it was saved, with no diff and no flag. That is the §1 failure mode exactly.
+A record with no `energy_hypothesis` key (everything saved before this round)
+restores to `as reconstructed`, and a check pins it.
+
+The switch reaches the π⁰ arithmetic and nothing else: all four `shower_energy`
+call sites are on the π⁰ path, so `em.reco.kine_charge`, the shower table and the
+manifest's `em_max` are untouched by design.
+
+The re-conversion **reuses `kine_hypothesis(node)[2]`** rather than computing the
+ratio again — for anything the reco did not flag as a shower, "the other pair" IS
+the shower pair, so that value is already the charge-inferred EM energy. One
+implementation, nothing to drift.
+
+Three cases are handled distinctly, because they are different statements:
+
+- `flag_shower` **False** → the warning names the reco's label and offers the
+  number the switch would give;
+- `flag_shower` **True** → already charge-inferred; the switch is a no-op and
+  says so, rather than silently double-converting;
+- `shower_is_em()` returns **None** (start segment not in the dump) → *unknown*,
+  not "track". Nothing is re-converted and the panel says why.
+
+### 17.4 The record
+
+```
+pio.gammas.<slot>.energy                    what the mass used
+pio.gammas.<slot>.energy_hypothesis         as_reconstructed | as_em_shower
+pio.gammas.<slot>.energy_as_reconstructed   the reco's own number
+pio.gammas.<slot>.energy_other_hypothesis   (pre-existing)
+```
+
+Both numbers on every record, so a later reader can recompute either mass without
+going back to the dump.
+
+### 17.5 Noticed
+
+The panel already *said* the answer before this round — *"if every track-flagged
+gamma here is really an EM shower, the axis-convention mass becomes 149.7 MeV"* —
+it just had no way to apply it. That line now drops out when the switch is on,
+where it would be restating the number in use.
+
+### 17.6 Left open
+
+- The switch is per gamma slot and per event, and is not remembered across
+  events; an object the scanner repeatedly judges mis-flagged must be switched
+  each time.
+- Nothing ties the switch to the EM-mode verdict. That coupling was considered
+  and rejected: verdicts are per-shower in EM mode while gammas are assigned in
+  π⁰ mode, so an EM-mode click would silently move a π⁰ mass.

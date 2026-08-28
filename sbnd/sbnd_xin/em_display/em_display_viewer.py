@@ -823,6 +823,26 @@ g1_btn = Button(label="selected shower -> gamma 1", width=210)
 g2_btn = Button(label="selected shower -> gamma 2", width=210)
 g_clear_btn = Button(label="clear gammas", width=120)
 gstart_slot = RadioButtonGroup(labels=["gamma 1", "gamma 2"], active=0, width=160)
+# Round 9.  Which recombination pair a gamma's CHARGE is converted with.
+#
+# kine_charge is charge / (recom * fudge), and WHICH pair the reconstruction used
+# was decided by Shower::get_flag_shower() -- not by the slot a scanner later
+# puts the object in.  A track- or proton-flagged object dropped into a gamma
+# slot therefore carries a track's or a proton's energy, which is the wrong
+# number for a photon: evt166870's shower 85045 is pdg 13, flag_shower False,
+# and its 38.6 MeV becomes 64.2 MeV under the shower pair -- moving the pi0 mass
+# from 116.1 to 149.7.
+#
+# DEFAULT IS "as reconstructed", deliberately.  Re-opening a record saved before
+# this control existed must show the mass it was saved with; a default of "as EM"
+# would silently re-price every past scan with no diff and no flag.  Flipping it
+# is one click and both numbers are on screen.
+EHYP_RECO = "as reconstructed"
+EHYP_EM = "as EM shower (charge-inferred)"
+g1_ehyp = Select(name="g1_ehyp", title="gamma 1 energy", value=EHYP_RECO,
+                 options=[EHYP_RECO, EHYP_EM], width=250)
+g2_ehyp = Select(name="g2_ehyp", title="gamma 2 energy", value=EHYP_RECO,
+                 options=[EHYP_RECO, EHYP_EM], width=250)
 snap_btn = Button(label="snap start to nearest fit point", width=230)
 # Round 8, EM mode.  Separate widgets from the pi0 ones on purpose: man_x/y/z
 # and snap_btn belong to the pi0 vertex, the panels are switchable, and one pair
@@ -1228,6 +1248,33 @@ def shower_energy(node):
     NeutrinoShowerClustering.cxx:3771)."""
     sh = shower_by_node(node)
     return (sh or {}).get("kine_charge")
+
+
+def ehyp_widget(slot):
+    return g1_ehyp if slot == 1 else g2_ehyp
+
+
+def gamma_energy(slot):
+    """The energy the pi0 arithmetic uses for one gamma slot.
+
+    `kine_hypothesis(node)[2]` is the SAME collected charge re-converted under
+    the other pair, and for anything the reco did not flag as a shower that
+    other pair IS the shower pair -- so it is exactly the charge-inferred EM
+    energy, with no second copy of the ratio to drift from.  Reused rather than
+    recomputed for that reason.
+    """
+    node = state["gamma"].get(slot)
+    if node is None:
+        return None
+    e = shower_energy(node)
+    if e is None or ehyp_widget(slot).value != EHYP_EM:
+        return e
+    lbl, _used, alt = kine_hypothesis(node)
+    # lbl is None when the start segment is not in the dump: "unknown", not
+    # "track", so nothing is re-converted on that path.
+    if lbl is None or lbl == "shower" or alt is None:
+        return e
+    return alt
 
 
 def poly_for(sid):
@@ -1841,7 +1888,7 @@ def refresh_kine():
     if n1 is None or n2 is None:
         rows.append("<i>assign both gamma slots to compute a mass.</i>")
     else:
-        e1, e2 = shower_energy(n1), shower_energy(n2)
+        e1, e2 = gamma_energy(1), gamma_energy(2)
         p1, p2 = shower_start(n1, 1), shower_start(n2, 2)
         d1, _, s1 = shower_axis(n1)
         d2, _, s2 = shower_axis(n2)
@@ -1873,6 +1920,33 @@ def refresh_kine():
                         if _pp else "&gamma;%d: no start" % _sl)
         rows.append("<span style='font-size:88%%;color:#444'>%s</span>"
                     % " &nbsp;|&nbsp; ".join(prov))
+        # Round 9.  Both masses below share E1*E2, so a hypothesis switch moves
+        # both -- say per gamma which pair its energy used and what the other
+        # would give, rather than leaving a number that silently changed.
+        for _sl, _nd in ((1, n1), (2, n2)):
+            _lbl, _u, _alt = kine_hypothesis(_nd)
+            _em = ehyp_widget(_sl).value == EHYP_EM
+            if _lbl is None:
+                rows.append("<span style='font-size:88%%;color:#888'>&gamma;%d: "
+                            "start segment not in the dump, so which "
+                            "recombination pair was used is unknown.</span>" % _sl)
+            elif _lbl == "shower":
+                rows.append("<span style='font-size:88%%;color:#444'>&gamma;%d: "
+                            "already charge-inferred as a shower; the switch "
+                            "changes nothing.</span>" % _sl)
+            elif _em:
+                rows.append("<span style='font-size:88%%;color:#ff7f0e'>"
+                            "<b>&gamma;%d: re-converted as an EM shower</b> "
+                            "&mdash; %.1f MeV, not the reco's %.1f MeV "
+                            "(it called this a %s).</span>"
+                            % (_sl, _alt, shower_energy(_nd), _lbl))
+            else:
+                rows.append("<span style='font-size:88%%;color:#b58900'>"
+                            "&#9888; &gamma;%d: the reco called this a %s, so "
+                            "its %.1f MeV is a %s's energy. As an EM shower the "
+                            "same charge gives <b>%.1f MeV</b> &mdash; switch "
+                            "<i>gamma %d energy</i> above.</span>"
+                            % (_sl, _lbl, shower_energy(_nd), _lbl, _alt, _sl))
         rows.append(
             "E1 <b>%.1f</b> MeV (shower %s) &nbsp; E2 <b>%.1f</b> MeV (shower %s)"
             " &nbsp; E&pi;&#8304; <b>%.1f</b> MeV &nbsp; asym %s"
@@ -2536,6 +2610,8 @@ def load_label(lbl):
         em_verdict.active = None
         conf_group.active = None
         event_flag_group.active = []
+        g1_ehyp.value = EHYP_RECO
+        g2_ehyp.value = EHYP_RECO
         note_in.value = ""
         if not os.path.exists(p):
             return
@@ -2588,6 +2664,12 @@ def load_label(lbl):
                 state["gamma"][slot] = g.get("shower")
                 if g.get("start_override"):
                     state["gstart"][slot] = tuple(g["start_override"])
+                # Absent on every record saved before round 9, and absent MUST
+                # mean "as reconstructed" -- that is the number those records
+                # were saved with, and re-opening one has to show it.
+                ehyp_widget(slot).value = (
+                    EHYP_EM if g.get("energy_hypothesis") == "as_em_shower"
+                    else EHYP_RECO)
         # Round 5d: the control is gone, but a verdict written by an older
         # build is a past judgement on a scientific record -- carried through so
         # re-saving the event cannot silently destroy it.
@@ -2779,7 +2861,14 @@ def on_save():
                 dir_point=(list(state["em_dir"][node])
                            if state["em_dir"].get(node) else None),
                 axis_source=shower_axis(node)[2],
-                energy=shower_energy(node),
+                energy=gamma_energy(slot),
+                # Round 9.  Which pair the energy above was converted with, and
+                # the reco's own number, so a later reader can recompute either
+                # without going back to the dump.
+                energy_hypothesis=("as_em_shower"
+                                   if ehyp_widget(slot).value == EHYP_EM
+                                   else "as_reconstructed"),
+                energy_as_reconstructed=shower_energy(node),
                 # Which recombination that energy used, and the same charge under
                 # the other hypothesis.  A gamma slot filled with a track-flagged
                 # object -- which is the whole point of "reco PID wrong" -- has an
@@ -2791,8 +2880,8 @@ def on_save():
                 energy_other_hypothesis=kine_hypothesis(node)[2],
                 members=sorted(members_of(node)),
                 axis=list(shower_axis(node)[0]))
-        e1 = shower_energy(state["gamma"][1]) if state["gamma"][1] is not None else None
-        e2 = shower_energy(state["gamma"][2]) if state["gamma"][2] is not None else None
+        e1 = gamma_energy(1)
+        e2 = gamma_energy(2)
         thA = mA = thB = mB = None
         if state["gamma"][1] is not None and state["gamma"][2] is not None:
             thA = G.angle_deg(shower_axis(state["gamma"][1])[0],
@@ -3663,6 +3752,8 @@ show_all_toggle.on_click(lambda a: fill_cand_table())
 g1_btn.on_click(on_gamma(1))
 g2_btn.on_click(on_gamma(2))
 g_clear_btn.on_click(on_gamma_clear)
+for _w in (g1_ehyp, g2_ehyp):
+    _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
 snap_btn.on_click(on_snap)
 em_startv_btn.on_click(on_em_startv)
 em_startp_btn.on_click(on_em_startp)
@@ -3756,6 +3847,11 @@ em_panel = column(
 
 pio_panel = column(
     row(g1_btn, g2_btn, g_clear_btn),
+    Div(text="<b>energy hypothesis</b> &mdash; <code>kine_charge</code> was "
+             "converted with the pair <code>get_flag_shower()</code> chose, not "
+             "with the one the slot implies. If the reco called a gamma a track "
+             "or a proton, switch it here and the mass follows.", width=RW),
+    row(g1_ehyp, g2_ehyp),
     row(gstart_slot, snap_btn, gstart_reset),
     Div(text="<b>pi0 decay vertex</b> &mdash; or set <i>a tap in 3-D does</i> to "
              "<i>%s</i> and click the point straight in the 3-D view "

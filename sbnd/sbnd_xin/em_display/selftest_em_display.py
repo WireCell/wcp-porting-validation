@@ -1520,6 +1520,70 @@ check("  ... and the readout is redrawn, not left stale",
       "%d marker(s)" % len(V.emstart_src.data["x"]))
 V.clear_em_start()
 
+# ---- round 9: which recombination pair a gamma's charge is converted with ---
+# evt166870, the owner's own case: "the energy of the EM shower should use the
+# charge inferred one instead of the kinetic energy", with the note on that
+# record reading "85045 should be an EM shower, part of pi0".
+V.on_event(None, None, "evt166870")
+_g1, _g2 = 87058, 85045          # 85045 is pdg 13, flag_shower False
+V.state["gamma"][1] = _g1
+V.state["gamma"][2] = _g2
+V.mode_group.active = 1
+check("the reco converted 85045's charge as a TRACK, not a shower",
+      V.shower_is_em(_g2) is False and V.kine_hypothesis(_g2)[0] == "track",
+      str(V.kine_hypothesis(_g2)[0]))
+check("  ... so the default keeps the reco's number, byte-for-byte",
+      V.g2_ehyp.value == V.EHYP_RECO
+      and abs(V.gamma_energy(2) - V.shower_energy(_g2)) < 1e-12,
+      "%.1f" % V.gamma_energy(2))
+
+_m_reco = V.G.pi0_mass(V.gamma_energy(1), V.gamma_energy(2),
+                       V.G.angle_deg(V.shower_axis(_g1)[0], V.shower_axis(_g2)[0]))
+V.g2_ehyp.value = V.EHYP_EM
+_e_em = V.gamma_energy(2)
+check("switching to the EM hypothesis re-converts the SAME charge",
+      abs(_e_em - V.kine_hypothesis(_g2)[2]) < 1e-12
+      and abs(_e_em - 64.2) < 0.1,
+      "%.1f MeV, was %.1f" % (_e_em, V.shower_energy(_g2)))
+_m_em = V.G.pi0_mass(V.gamma_energy(1), _e_em,
+                     V.G.angle_deg(V.shower_axis(_g1)[0], V.shower_axis(_g2)[0]))
+check("  ... and the pi0 mass follows: 116.1 -> 149.7 MeV",
+      abs(_m_reco - 116.1) < 0.2 and abs(_m_em - 149.7) < 0.2,
+      "%.1f -> %.1f" % (_m_reco, _m_em))
+
+# a gamma the reco ALREADY called a shower must not be re-converted twice
+V.g1_ehyp.value = V.EHYP_EM
+check("a gamma already charge-inferred as a shower is left alone",
+      abs(V.gamma_energy(1) - V.shower_energy(_g1)) < 1e-12,
+      "%.1f" % V.gamma_energy(1))
+V.g1_ehyp.value = V.EHYP_RECO
+
+# the record must carry both numbers and which one was used
+V.on_save()
+_r9 = json.load(open(V.label_path("evt166870")))
+_gm = _r9["pio"]["gammas"]["2"]
+check("the record says which pair was used, and keeps the reco's number too",
+      _gm["energy_hypothesis"] == "as_em_shower"
+      and abs(_gm["energy"] - 64.2) < 0.1
+      and abs(_gm["energy_as_reconstructed"] - 38.6) < 0.1,
+      "%s E=%.1f reco=%.1f" % (_gm["energy_hypothesis"], _gm["energy"],
+                               _gm["energy_as_reconstructed"]))
+
+# THE regression that matters: a record saved before this control existed has no
+# energy_hypothesis key, and re-opening it must show the mass it was saved with.
+_p9 = V.label_path("evt166870")
+_old = json.load(open(_p9))
+for _sl in ("1", "2"):
+    _old["pio"]["gammas"][_sl].pop("energy_hypothesis", None)
+with open(_p9, "w") as _fh:
+    json.dump(_old, _fh)
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt166870")
+check("a pre-round-9 record re-opens on the reco's energy, not the EM one",
+      V.g1_ehyp.value == V.EHYP_RECO and V.g2_ehyp.value == V.EHYP_RECO,
+      "%s / %s" % (V.g1_ehyp.value, V.g2_ehyp.value))
+os.remove(_p9)
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

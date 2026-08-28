@@ -390,6 +390,34 @@ a "PID wrong" verdict is checkable later against what the reco actually thought.
 
 ## π⁰ mode
 
+### Which energy a gamma contributes
+
+`kine_charge` is `charge / (recom × fudge)`, and **which pair** was used was
+decided by `Shower::get_flag_shower()` — a property of the reconstruction, not of
+the slot you drop the object into. A shower the reco called a track or a proton
+therefore carries a track's or a proton's energy, which is the wrong number for a
+photon.
+
+The **energy hypothesis** selector, one per gamma slot:
+
+- **as reconstructed** (default) — the reco's own `kine_charge`, unchanged.
+- **as EM shower (charge-inferred)** — the same collected charge re-converted
+  with the shower pair (0.50, 0.80).
+
+evt166870 is the worked case: shower 85045 is pdg 13 with `flag_shower` false, so
+its 38.6 MeV is a track's energy; as an EM shower the same charge gives 64.2 MeV
+and the mass moves 116.1 → 149.7 (π⁰ rest mass 134.98). The panel warns when a
+slot holds a non-shower-flagged object and names the number the switch would give.
+
+The default is the reconstruction's on purpose: a record saved before this
+control existed has no `energy_hypothesis` key and re-opens on the reco's energy,
+so it still reads the mass it was saved with. The record keeps `energy`,
+`energy_hypothesis` and `energy_as_reconstructed` together.
+
+A gamma the reco already flagged as a shower is left alone — the switch says so
+rather than double-converting.
+
+
 1. Select a shower, hit **selected shower → gamma 1**; repeat for gamma 2.
 2. Each gamma's start point defaults to the reco's `showers[].start`. To override:
    turn on **tap fills x/y/z**, tap the same point in **two** projections (each
@@ -542,7 +570,7 @@ python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
 python em_display/selftest_repro.py         # reproduction + membership repair, 98/98
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 217 checks
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 224 checks
 python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 53
 ```
 
