@@ -706,6 +706,48 @@ try:
                       ".get_model_by_name('mode_group').active = 0; }")
         page.wait_for_timeout(1200)
 
+        # ------------------------------------------------------------------
+        # round 12: the marks reach the pi0 energy, through the real widgets
+        # ------------------------------------------------------------------
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('event_select').value = 'evt409634'; }")
+        page.wait_for_timeout(3500)
+        rows = js("M('shower_src').data.node")
+        pick_row(rows.index(69032))
+        page.evaluate("() => { const d = Bokeh.documents[0];"
+                      " const b = d.get_model_by_name('bulk_shower');"
+                      " b.value = b.options.filter("
+                      "   o => o.indexOf('27015') === 0)[0]; }")
+        page.wait_for_timeout(700)
+        page.get_by_role("button", name="select all its segments",
+                         exact=True).click()
+        page.wait_for_timeout(1200)
+        page.get_by_role("button", name="mark IN", exact=True).click()
+        page.wait_for_timeout(1200)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 1; }")
+        page.wait_for_timeout(1500)
+        for node, slot in ((69032, 1), (21002, 2)):
+            pick_row(rows.index(node))
+            page.get_by_role("button",
+                             name="selected shower -> gamma %d" % slot,
+                             exact=True).click()
+            page.wait_for_timeout(900)
+        kd = js("M('kine_div').text")
+        check("the panel warns that marked charge is missing from the mass",
+              "not counted below" in kd and "144.1" in kd and "78.8" in kd,
+              "-")
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('emark_mode').value ="
+                      " 'include my IN / OUT marks'; }")
+        page.wait_for_timeout(1500)
+        kd2 = js("M('kine_div').text")
+        check("  ... and flipping the membership control applies it live",
+              "E1 <b>144.1</b> MeV" in kd2 and "counted in the energies" in kd2,
+              kd2[kd2.find("E1 <b>"):kd2.find("E1 <b>") + 60])
+        check("  ... with no JS error from the redraw", not errors,
+              "; ".join(errors[:2]))
+
         lbls = js("M('event_flag_group').labels")
         check("the no-vertex NCpi0 topology flag reads as text, not entities",
               lbls and "&" not in lbls[0] and "NC" in lbls[0], str(lbls))

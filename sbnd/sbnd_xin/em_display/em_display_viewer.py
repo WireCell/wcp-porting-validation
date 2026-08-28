@@ -866,6 +866,24 @@ g1_ehyp = Select(name="g1_ehyp", title="gamma 1 energy", value=EHYP_RECO,
                  options=[EHYP_RECO, EHYP_EM], width=250)
 g2_ehyp = Select(name="g2_ehyp", title="gamma 2 energy", value=EHYP_RECO,
                  options=[EHYP_RECO, EHYP_EM], width=250)
+# Round 12.  WHICH SEGMENTS a gamma's energy is summed over.
+#
+# `kine_charge` is the reconstruction's, over the segments the reconstruction
+# put in the shower.  Marking a segment IN changes the membership and nothing
+# else -- so on evt409634, merging shower 27015 (10 segments, 105.05 MeV) into
+# shower 69032 (39.06 MeV) left the pi0 mass built on 39.06.  Round 10 made that
+# merge one gesture, which is how the gap surfaced.
+#
+# DEFAULT IS THE RECONSTRUCTION'S MEMBERSHIP, and not as a matter of taste: six
+# of the twelve records already on disk carry marks on a gamma's shower, so a
+# default of "include them" would silently re-price six masses the scanner has
+# already judged, with no diff and no flag.  The panel says out loud what the
+# mass becomes; flipping it is one click and both numbers go in the record.
+EMARK_RECO = "reco membership only"
+EMARK_MARKS = "include my IN / OUT marks"
+emark_mode = Select(name="emark_mode", title="gamma energy membership",
+                    value=EMARK_RECO, options=[EMARK_RECO, EMARK_MARKS],
+                    width=290)
 # Round 11.  One event, several pi0 -- and, just as often, several ways to pair
 # the gammas of one.  evt281485 is the case: 19 EM showers, the reconstruction
 # found ONE group at 208.4 MeV, and the scanner reads more than one pi0 in it.
@@ -938,7 +956,7 @@ man_x = TextInput(title="x", value="", width=90)
 man_y = TextInput(title="y", value="", width=90)
 man_z = TextInput(title="z", value="", width=90)
 tap_toggle = Toggle(label="tap fills x/y/z", width=140)
-kine_div = Div(text="", width=RW)
+kine_div = Div(name="kine_div", text="", width=RW)
 
 conf_group = RadioButtonGroup(labels=CONF, active=None, width=240)
 note_in = TextInput(title="note (optional)", value="", width=520)
@@ -1310,6 +1328,75 @@ def shower_energy(node):
     return (sh or {}).get("kine_charge")
 
 
+def _est_map():
+    """{segment id: (E_est MeV, owning shower)} from the probe sidecar.
+
+    `E_est` is the probe's own per-segment decomposition of `kine_charge`, and
+    it is EXACT: shower 69032's two members are 29.498 + 9.560 = 39.058, which
+    is its kine_charge to the last digit.  So adding a marked segment's E_est is
+    arithmetic on the same number the C++ mass formula reads
+    (NeutrinoShowerClustering.cxx:3771), not a proxy for it.
+    """
+    pr = state.get("prep")
+    out = {}
+    if not pr:
+        return out
+    for node, e in (pr.get("showers") or {}).items():
+        try:
+            nd = int(node)
+        except (TypeError, ValueError):
+            continue
+        for m in (e.get("members") or []):
+            out.setdefault(m.get("seg"), (m.get("E_est"), nd))
+    return out
+
+
+def marks_energy(node, as_em=False):
+    """What the scanner's marks add to, or take off, one shower's energy.
+
+    Returns dict(delta, rows, unknown).  `rows` is one entry per mark that has
+    an EFFECT; a member marked IN is already inside `kine_charge` and a
+    non-member marked OUT was never in it, so both are dropped here rather than
+    double-counted -- reachable in one gesture since round 10's whole-shower
+    select, with `show members too` on by default.
+
+    A marked segment's E_est was converted with its OWNING shower's
+    recombination pair.  Under the EM hypothesis the same round-9 ratio is
+    applied per segment, reusing `kine_hypothesis` rather than keeping a second
+    copy of the constants.
+
+    There is NO fallback for a segment no shower owns: E_est/dQ is not constant
+    across showers (6.05e-5 against 4.99e-5 MeV per electron on evt409634
+    alone), so a dQ-derived number would be a different quantity in the same
+    units.  Those segments are named in `unknown` and never summed.
+    """
+    mem = set(members_of(node))
+    est = _est_map()
+    delta = 0.0
+    rows, unknown = [], []
+    for sid, kind in sorted(marks_for(node).items()):
+        if kind == "in" and sid in mem:
+            continue          # already inside kine_charge
+        if kind == "out" and sid not in mem:
+            continue          # never was
+        if kind not in ("in", "out"):
+            continue          # "?" is a question, not an answer
+        e, owner = est.get(sid, (None, None))
+        if e is None:
+            unknown.append(sid)
+            continue
+        lbl, used, _alt = (kine_hypothesis(owner) if owner is not None
+                           else (None, None, None))
+        conv = e
+        if as_em and lbl is not None and lbl != "shower" and used:
+            conv = e * (used[0] * used[1]) / (KINE_SHOWER[0] * KINE_SHOWER[1])
+        sign = 1.0 if kind == "in" else -1.0
+        delta += sign * conv
+        rows.append(dict(seg=sid, kind=kind, E_est=e, energy=conv, owner=owner,
+                         owner_kine=lbl))
+    return dict(delta=delta, rows=rows, unknown=unknown)
+
+
 def ehyp_widget(slot):
     return g1_ehyp if slot == 1 else g2_ehyp
 
@@ -1327,14 +1414,21 @@ def gamma_energy(slot):
     if node is None:
         return None
     e = shower_energy(node)
-    if e is None or ehyp_widget(slot).value != EHYP_EM:
-        return e
-    lbl, _used, alt = kine_hypothesis(node)
-    # lbl is None when the start segment is not in the dump: "unknown", not
-    # "track", so nothing is re-converted on that path.
-    if lbl is None or lbl == "shower" or alt is None:
-        return e
-    return alt
+    if e is None:
+        return None
+    if ehyp_widget(slot).value == EHYP_EM:
+        lbl, _used, alt = kine_hypothesis(node)
+        # lbl is None when the start segment is not in the dump: "unknown", not
+        # "track", so nothing is re-converted on that path.
+        if not (lbl is None or lbl == "shower" or alt is None):
+            e = alt
+    # Round 12.  The membership delta is applied LAST and to the already-
+    # converted number, because the two questions are independent: the
+    # hypothesis is which recombination pair, the marks are which segments.
+    if emark_mode.value == EMARK_MARKS:
+        e += marks_energy(node,
+                          as_em=ehyp_widget(slot).value == EHYP_EM)["delta"]
+    return e
 
 
 def poly_for(sid):
@@ -1923,6 +2017,7 @@ def gamma_record(slot):
     node = state["gamma"][slot]
     if node is None:
         return None
+    mk = marks_energy(node, as_em=ehyp_widget(slot).value == EHYP_EM)
     return dict(
         shower=node,
         start=list(shower_start(node, slot) or []),
@@ -1945,6 +2040,19 @@ def gamma_record(slot):
                            if ehyp_widget(slot).value == EHYP_EM
                            else "as_reconstructed"),
         energy_as_reconstructed=shower_energy(node),
+        # Round 12.  Which SEGMENTS the energy above was summed over, what the
+        # scanner's marks moved it by, and the per-segment arithmetic -- so a
+        # later reader can recompute either number without the probe sidecar.
+        energy_includes_marks=(emark_mode.value == EMARK_MARKS),
+        energy_marks_delta=mk["delta"],
+        energy_marks_detail=mk["rows"],
+        energy_marks_unknown=mk["unknown"],
+        # The energy BEFORE the membership delta, always -- so the pair
+        # (energy, energy_without_marks) reads the same way round 9's
+        # (energy, energy_as_reconstructed) does, whichever way the switch was.
+        energy_without_marks=(gamma_energy(slot) - mk["delta"]
+                              if emark_mode.value == EMARK_MARKS
+                              else gamma_energy(slot)),
         # Which recombination that energy used, and the same charge under
         # the other hypothesis.  A gamma slot filled with a track-flagged
         # object -- which is the whole point of "reco PID wrong" -- has an
@@ -2186,6 +2294,39 @@ def refresh_kine():
                             "same charge gives <b>%.1f MeV</b> &mdash; switch "
                             "<i>gamma %d energy</i> above.</span>"
                             % (_sl, _lbl, shower_energy(_nd), _lbl, _alt, _sl))
+        # Round 12.  The marks and the energy are two different questions, and
+        # until this round the answer to the first never reached the second: a
+        # segment marked into a gamma changed the membership and not the mass.
+        _mk = {sl: marks_energy(nd, as_em=ehyp_widget(sl).value == EHYP_EM)
+               for sl, nd in ((1, n1), (2, n2))}
+        _on = emark_mode.value == EMARK_MARKS
+        for _sl, _nd in ((1, n1), (2, n2)):
+            _m = _mk[_sl]
+            if _m["rows"]:
+                _adds = [r for r in _m["rows"] if r["kind"] == "in"]
+                _dels = [r for r in _m["rows"] if r["kind"] == "out"]
+                _who = sorted({r["owner"] for r in _adds
+                               if r["owner"] is not None})
+                rows.append(
+                    "<span style='font-size:88%%;color:%s'>%s&gamma;%d: your "
+                    "marks move this energy by <b>%+.1f MeV</b> "
+                    "(%d segment(s) in%s, %d out) &mdash; %s</span>"
+                    % ("#2ca02c" if _on else "#b58900",
+                       "" if _on else "&#9888; ", _sl, _m["delta"], len(_adds),
+                       (" from shower %s" % ", ".join(str(w) for w in _who))
+                       if _who else "", len(_dels),
+                       "counted in the energies below."  if _on else
+                       "<b>not counted below</b>. Switch <i>gamma energy "
+                       "membership</i> to <i>%s</i>." % EMARK_MARKS))
+            if _m["unknown"]:
+                rows.append(
+                    "<span style='font-size:88%%;color:#d62728'>&gamma;%d: %s "
+                    "marked but owned by no shower, so the probe has no "
+                    "per-segment energy for %s &mdash; <b>not counted either "
+                    "way</b>, and no dQ estimate is offered because E_est/dQ is "
+                    "not constant between showers.</span>"
+                    % (_sl, ", ".join(str(x) for x in _m["unknown"][:6]),
+                       "it" if len(_m["unknown"]) == 1 else "them"))
         rows.append(
             "E1 <b>%.1f</b> MeV (shower %s) &nbsp; E2 <b>%.1f</b> MeV (shower %s)"
             " &nbsp; E&pi;&#8304; <b>%.1f</b> MeV &nbsp; asym %s"
@@ -2208,6 +2349,20 @@ def refresh_kine():
                ("  <span style='color:#d62728'>&#9888; %s</span>"
                 % detail["verdict"]) if v is None and detail.get("verdict")
                else ""))
+        if not _on and (_mk[1]["rows"] or _mk[2]["rows"]):
+            _e1m = (e1 or 0) + _mk[1]["delta"]
+            _e2m = (e2 or 0) + _mk[2]["delta"]
+            _mAm = G.pi0_mass(_e1m, _e2m, thA)
+            _mBm = G.pi0_mass(_e1m, _e2m, thB) if thB is not None else None
+            rows.append(
+                "&nbsp;&nbsp;<span style='color:#b58900'>With your marks "
+                "counted the energies are <b>%.1f</b> / <b>%.1f</b> MeV and the "
+                "mass becomes <b>%s MeV</b> (axis)%s. The angles do not move "
+                "&mdash; a mark changes which charge belongs to the shower, not "
+                "where it points.</span>"
+                % (_e1m, _e2m, _mev(_mAm),
+                   "" if _mBm is None else " / <b>%s MeV</b> (vertex)"
+                   % _mev(_mBm)))
         rows.append(
             "<i>The two conventions are shown side by side on purpose: the code "
             "itself uses different direction recipes for the mass it stores "
@@ -2603,6 +2758,14 @@ def load(lbl):
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
     state["pio_cands"] = []
+    state["_suspend"] = True
+    try:
+        # Event-level, so it must not leak across events: the next event's marks
+        # are different marks.  load_label turns it back on for a record that
+        # was saved with it on.
+        emark_mode.value = EMARK_RECO
+    finally:
+        state["_suspend"] = False
     # Node ids are per-event: a leaked override would land on a DIFFERENT
     # shower in the next event and move its start with no sign on screen.
     state["em_start"] = {}
@@ -2919,6 +3082,11 @@ def load_label(lbl):
                 ehyp_widget(slot).value = (
                     EHYP_EM if g.get("energy_hypothesis") == "as_em_shower"
                     else EHYP_RECO)
+                # Round 12, and absent MUST mean off: six records saved before
+                # this control existed carry marks on a gamma's shower, and
+                # re-opening one has to show the mass it was saved with.
+                if g.get("energy_includes_marks"):
+                    emark_mode.value = EMARK_MARKS
         # Round 11.  Absent MUST mean an empty list: a record saved before the
         # list existed stored exactly one pairing, at the top level, and has to
         # re-open showing precisely that and no phantom candidate.
@@ -4241,7 +4409,7 @@ g_clear_btn.on_click(on_gamma_clear)
 pio_add_btn.on_click(on_pio_add)
 pio_load_btn.on_click(on_pio_load)
 pio_del_btn.on_click(on_pio_del)
-for _w in (g1_ehyp, g2_ehyp):
+for _w in (g1_ehyp, g2_ehyp, emark_mode):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
 snap_btn.on_click(on_snap)
 em_startv_btn.on_click(on_em_startv)
@@ -4348,7 +4516,7 @@ pio_panel = column(
              "converted with the pair <code>get_flag_shower()</code> chose, not "
              "with the one the slot implies. If the reco called a gamma a track "
              "or a proton, switch it here and the mass follows.", width=RW),
-    row(g1_ehyp, g2_ehyp),
+    row(g1_ehyp, g2_ehyp, emark_mode),
     row(gstart_slot, snap_btn, gstart_reset),
     Div(text="<b>pi0 decay vertex</b> &mdash; or set <i>a tap in 3-D does</i> to "
              "<i>%s</i> and click the point straight in the 3-D view "

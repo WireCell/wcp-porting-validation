@@ -483,6 +483,57 @@ The code itself uses different direction recipes for the mass it stores
 (`:3771`) and the angle it stores (`:3830`), and they do not close. Seeing both
 is how you tell a genuine π⁰ from a bookkeeping artefact.
 
+### Which segments a gamma's energy is summed over
+
+`kine_charge` is the **reconstruction's** energy, over the segments the
+**reconstruction** put in the shower. Marking a segment IN changes the
+membership and nothing else — so merging shower 27015 (10 segments, 105.05 MeV)
+into shower 69032 (39.06 MeV) on evt409634 left the π⁰ mass built on 39.06.
+
+**gamma energy membership** decides it:
+
+| | E1 | m axis | m vertex |
+|---|---|---|---|
+| `reco membership only` (default) | 39.1 | 41.0 | 83.4 |
+| `include my IN / OUT marks` | **144.1** | **78.8** | **160.3** |
+
+The angles do not move — a mark changes *which charge belongs to the shower*,
+not where it points.
+
+**It defaults to the reconstruction's membership**, and not as a matter of taste:
+six of the twelve records already on disk carry marks on a gamma's shower, so a
+default of "include them" would silently re-price six masses already judged. With
+it off the panel says what is being left out and what the mass would become, so
+the number is never hidden — only never applied without a click.
+
+The arithmetic is exact, not an estimate. The probe gives a per-segment `E_est`
+that **sums to `kine_charge`**: shower 69032's two members are 29.498 + 9.560 =
+39.058, which is its `kine_charge` to the last digit. So adding a marked
+segment's share is arithmetic on the same number the C++ mass formula reads.
+
+Four cases the panel keeps apart:
+
+- **a member marked IN adds nothing** — it is already inside `kine_charge`.
+  Reachable in one gesture since the whole-shower select, with `show members too`
+  on by default;
+- **a non-member marked OUT takes nothing off** — it was never in it;
+- a **member** marked OUT does take its `E_est` off;
+- a segment **no shower owns** has no `E_est`. It is named in red and **not
+  counted either way**, and no dQ-derived estimate is offered: `E_est/dQ` is not
+  constant between showers (6.05e-5 against 4.99e-5 MeV per electron on
+  evt409634 alone), so that number would be a different quantity in the same
+  units. 3 % of segments (177 of 5830) are in this position.
+
+A marked segment's `E_est` was converted with **its own** shower's recombination
+pair, so under `as EM shower (charge-inferred)` the same round-9 ratio is applied
+per segment — a segment coming from a track-flagged shower is scaled by
+0.665/0.4 = 1.6625, exactly as the shower itself would be.
+
+The record keeps both numbers and the working: `energy_includes_marks`,
+`energy_marks_delta`, `energy_without_marks`, and `energy_marks_detail` with each
+segment's `E_est`, its owning shower and that shower's kine label — so a later
+reader can recompute either energy without the probe sidecar.
+
 ### More than one π⁰, and more than one way to pair the gammas
 
 Two slots hold **one** pairing. An event with two π⁰ needs two masses in the

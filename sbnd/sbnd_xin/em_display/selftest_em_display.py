@@ -1925,6 +1925,164 @@ check("a pre-round-11 record re-opens with no candidates and its own mass",
          V.pio_pairing()["mass_axis_convention"], _top))
 os.remove(_p11)
 
+# ---------------------------------------------------------------------------
+# round 12: the marks reach the pi0 energy
+#
+# evt409634 -- shower 27015 (10 segments, 105.05 MeV) merged into shower 69032
+# (2 segments, 39.06 MeV).  Round 10 made that one gesture; the energy did not
+# follow it, which is the gap this round closes.
+# ---------------------------------------------------------------------------
+_ev12 = [e for e, _row in MANIFEST_EVENTS if _has_showers(e, (69032, 27015))]
+check("shower 69032 + shower 27015 identify exactly one event",
+      _ev12 == ["409634"], str(_ev12))
+
+V.on_event(None, None, "evt409634")
+V.mode_group.active = 1
+V.on_mode(None, None, 1)
+# The load-bearing fact: E_est is an EXACT decomposition of kine_charge, so
+# adding a marked segment's share is arithmetic and not an estimate.
+_pr12 = V.state["prep"]["showers"]["69032"]
+check("the probe's per-segment E_est sums to the shower's kine_charge",
+      abs(sum(m["E_est"] for m in _pr12["members"])
+          - V.shower_energy(69032)) < 5e-3,
+      "%.4f vs %.4f" % (sum(m["E_est"] for m in _pr12["members"]),
+                        V.shower_energy(69032)))
+
+V.state["sel_shower"] = 69032
+V.fill_cand_table()
+V.refresh_bulk_options()
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 27015][0]
+V.on_bulk(False)()
+V.mark("in")()
+_mk12 = V.marks_energy(69032)
+check("merging shower 27015 in is worth its whole kine_charge",
+      abs(_mk12["delta"] - V.shower_energy(27015)) < 5e-3
+      and len(_mk12["rows"]) == 10 and not _mk12["unknown"],
+      "%+.3f vs %.3f, %d rows" % (_mk12["delta"], V.shower_energy(27015),
+                                  len(_mk12["rows"])))
+
+V.state["gamma"][1] = 69032
+V.state["gamma"][2] = 21002
+V.vtx_mode_group.active = 0
+V.refresh_kine()
+check("the default is still the reconstruction's membership",
+      V.emark_mode.value == V.EMARK_RECO
+      and abs(V.gamma_energy(1) - 39.06) < 0.01,
+      "%s, E1 %.2f" % (V.emark_mode.value, V.gamma_energy(1)))
+check("  ... and the panel says what is not being counted, and what it costs",
+      "not counted below" in V.kine_div.text
+      and "144.1" in V.kine_div.text and "78.8" in V.kine_div.text,
+      "-")
+_m_off = V.pio_pairing()
+V.emark_mode.value = V.EMARK_MARKS
+V.refresh_kine()
+check("switching membership on moves the energy, not the angle",
+      abs(V.gamma_energy(1) - 144.11) < 0.02
+      and abs(V.pio_pairing()["theta_axis_convention"]
+              - _m_off["theta_axis_convention"]) < 1e-9,
+      "E1 %.2f, theta %.3f" % (V.gamma_energy(1),
+                               V.pio_pairing()["theta_axis_convention"]))
+check("  ... and the pi0 mass follows: 41.0 -> 78.8 (axis), 83.4 -> 160.3 (vertex)",
+      abs(_m_off["mass_axis_convention"] - 41.0) < 0.1
+      and abs(V.pio_pairing()["mass_axis_convention"] - 78.8) < 0.1
+      and abs(_m_off["mass_vertex_convention"] - 83.4) < 0.1
+      and abs(V.pio_pairing()["mass_vertex_convention"] - 160.3) < 0.1,
+      "%.1f -> %.1f, %.1f -> %.1f"
+      % (_m_off["mass_axis_convention"],
+         V.pio_pairing()["mass_axis_convention"],
+         _m_off["mass_vertex_convention"],
+         V.pio_pairing()["mass_vertex_convention"]))
+
+# Double counting.  Round 10's whole-shower select can sweep up members --
+# `show members too` is ON by default -- so a member marked IN must be worth 0.
+_e_before = V.gamma_energy(1)
+V.marks_for(69032)[69033] = "in"          # 69033 IS a member of 69032
+check("a MEMBER marked IN adds nothing (it is already in kine_charge)",
+      abs(V.gamma_energy(1) - _e_before) < 1e-9,
+      "%.4f vs %.4f" % (V.gamma_energy(1), _e_before))
+V.marks_for(69032)[69033] = "out"
+check("  ... and marking that same member OUT takes its E_est off",
+      abs(V.gamma_energy(1) - (_e_before - 9.56)) < 0.01,
+      "%.2f, expected %.2f" % (V.gamma_energy(1), _e_before - 9.56))
+V.marks_for(69032).pop(69033)
+# A segment that is neither a member of 69032 nor already marked -- picked from
+# the event rather than hardcoded, since every segment of 27015 is now marked IN.
+_free = [sg.get("id") for sg in V.cur_segments()
+         if sg.get("id") not in set(V.members_of(69032))
+         and sg.get("id") not in V.marks_for(69032)
+         and sg.get("id") is not None]
+V.marks_for(69032)[_free[0]] = "out"      # marked OUT but never a member
+check("  ... and a NON-member marked OUT takes nothing off",
+      abs(V.gamma_energy(1) - _e_before) < 1e-9,
+      "seg %s: %.4f vs %.4f" % (_free[0], V.gamma_energy(1), _e_before))
+V.marks_for(69032).pop(_free[0])
+
+# A segment no shower owns has no E_est, and no dQ estimate is invented for it.
+_far = [sg.get("id") for sg in V.cur_segments()
+        if sg.get("id") not in V._est_map() and sg.get("id") is not None
+        and sg.get("id") not in V.marks_for(69032)]
+if _far:
+    V.marks_for(69032)[_far[0]] = "in"
+    _u = V.marks_energy(69032)
+    check("a segment owned by no shower is named, not counted, not estimated",
+          _far[0] in _u["unknown"] and abs(V.gamma_energy(1) - _e_before) < 1e-9,
+          "unknown=%s" % _u["unknown"])
+    V.refresh_kine()
+    check("  ... and the panel says so in red",
+          "owned by no shower" in V.kine_div.text, "-")
+    V.marks_for(69032).pop(_far[0])
+else:
+    check("evt409634 has no unowned segment to test with (skipped)", True,
+          "all segments belong to a shower here")
+
+# the record
+V.on_save()
+_r12 = json.load(open(V.label_path("evt409634")))
+_g12 = _r12["pio"]["gammas"]["1"]
+check("the record carries the membership switch, the delta and the arithmetic",
+      _g12["energy_includes_marks"] is True
+      and abs(_g12["energy_marks_delta"] - 105.05) < 0.01
+      and len(_g12["energy_marks_detail"]) == 10
+      and abs(_g12["energy_without_marks"] - 39.06) < 0.01
+      and abs(_g12["energy"] - 144.11) < 0.02,
+      "delta %+.2f, %d rows, without %.2f, with %.2f"
+      % (_g12["energy_marks_delta"], len(_g12["energy_marks_detail"]),
+         _g12["energy_without_marks"], _g12["energy"]))
+check("  ... and each contribution names the shower it came from",
+      all(r["owner"] == 27015 and r["kind"] == "in"
+          for r in _g12["energy_marks_detail"]),
+      str(sorted({r["owner"] for r in _g12["energy_marks_detail"]})))
+
+# THE regression: six records saved before this control existed carry marks on a
+# gamma's shower, and re-opening one must show the mass it was saved with.
+_p12 = V.label_path("evt409634")
+_o12 = json.load(open(_p12))
+for _sl in ("1", "2"):
+    _o12["pio"]["gammas"][_sl].pop("energy_includes_marks", None)
+with open(_p12, "w") as _fh:
+    json.dump(_o12, _fh)
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt409634")
+check("a pre-round-12 record re-opens on the reco's membership",
+      V.emark_mode.value == V.EMARK_RECO
+      and abs(V.gamma_energy(1) - 39.06) < 0.01,
+      "%s, E1 %.2f" % (V.emark_mode.value, V.gamma_energy(1)))
+os.remove(_p12)
+
+# cross-pair: a marked segment's E_est was converted with ITS OWN shower's pair
+V.on_event(None, None, "evt166870")
+V.mode_group.active = 1
+check("evt166870 shower 85045 is track-flagged, 87058 is not",
+      V.shower_is_em(85045) is False and V.shower_is_em(87058) is True)
+V.marks_for(87058)[85045] = "in"
+_plain = V.marks_energy(87058)["delta"]
+_asem = V.marks_energy(87058, as_em=True)["delta"]
+check("a marked TRACK-flagged segment is re-converted under the EM hypothesis",
+      abs(_asem / _plain - (0.7 * 0.95) / (0.5 * 0.8)) < 1e-9,
+      "%.3f -> %.3f, ratio %.4f" % (_plain, _asem, _asem / _plain))
+V.marks_for(87058).pop(85045)
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

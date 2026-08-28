@@ -2149,3 +2149,136 @@ before Save would have dropped both.
 - `gstart3_src` gained a `name=` so the browser test could read the gamma markers
   back. Inert at runtime; noted because it is the only line in this round that
   touches a round-3 model.
+
+## 20. Round 12 — the marks reach the π⁰ energy
+
+> *"for event 1409534, I have added the cluster 27015 to cluster 69032, but when
+> I calculate the pi0 mass, it still did not account the energy of the 27015"*
+
+### 20.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 287
+python em_display/selftest_em3d_browser.py      # 66
+python em_display/selftest_repro.py             # 98/98
+```
+
+The case: **evt409634**, shower **27015** (10 segments, 105.05 MeV) merged into
+shower **69032** (2 segments, 39.06 MeV).
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-11.
+
+### 20.2 The event, and what "cluster 27015" is
+
+Fingerprint again, and this one leans entirely on the objects rather than the
+digits: evt409634 is the only event of the 98 that holds **both** shower 69032
+and segment 27015. The number as written, 1409534, is seven digits where every
+event id here is six.
+
+27015 is a **shower** — 10 segments over 8 clusters, 105.05 MeV — not a lone
+segment. So the action was round 10's whole-shower merge, and:
+
+> **round 10 created this gap.** It made "move this shower into that one" one
+> gesture, and the energy did not follow.
+
+### 20.3 What was wrong
+
+`kine_charge` is the reconstruction's energy over the segments the
+*reconstruction* put in the shower (`NeutrinoShowerClustering.cxx:3771`). A mark
+changes the membership and nothing else, so the mass stayed built on 39.06 MeV.
+
+| | E1 | m axis | m vertex |
+|---|---|---|---|
+| reco membership (before, and still the default) | 39.1 | 41.0 | 83.4 |
+| with the marks counted | **144.1** | **78.8** | **160.3** |
+
+The angles do not move. A mark changes which charge belongs to the shower, not
+where it points — and the panel says so, because a reader seeing both masses move
+would reasonably assume the geometry changed too.
+
+### 20.4 Why this is arithmetic and not an estimate
+
+The probe sidecar carries a per-segment `E_est`, and it is an **exact
+decomposition** of `kine_charge`: shower 69032's two members are
+29.498 + 9.560 = **39.058**, which is its `kine_charge` to the last digit. So
+adding a marked segment's share operates on the same number the C++ mass formula
+reads.
+
+There is deliberately **no fallback** for the 3 % of segments (177 of 5830) that
+no shower owns and that therefore have no `E_est`. `E_est/dQ` is not constant
+between showers — 6.05e-5 against 4.99e-5 MeV per electron on evt409634 alone —
+so a dQ-derived number would be a different quantity in the same units. Those
+segments are named in red and counted **neither way**.
+
+### 20.5 The default was decided by the data, not by taste
+
+**Six of the twelve records already on disk carry marks on a gamma's shower.** A
+default of "include them" would have silently re-priced six masses the scanner
+had already judged, with no diff and no flag. So the control defaults to the
+reconstruction's membership, the panel states out loud what is being left out and
+what the mass would become, and both numbers go into the record. Same shape as
+round 9, for the same reason.
+
+What those six become, computed read-only against the live `emscan-0827` tag —
+the `m saved` column is reproduced exactly by the default, which is itself the
+check that the OFF path is untouched:
+
+| event | marks on a gamma's shower | m axis | → | m vertex | → |
+|---|---|---|---|---|---|
+| 166870 | γ1 87058 +2.4 | 116.1 | 116.9 | – | – |
+| 169626 | γ1 53069 +23.6 | 144.6 | 147.7 | 145.4 | 148.6 |
+| 269774 | γ1 13237 **−77.9**, γ2 97197 +90.3 | 162.6 | 181.4 | 228.8 | 255.3 |
+| 284235 | γ1 6004 +1.6, γ2 74027 +16.7 | 161.1 | 176.8 | 161.4 | 177.2 |
+| 347129 | γ2 11000 +19.8 | 130.7 | 149.4 | 131.1 | 149.9 |
+| 64591 | γ1 83044 +4.1 | 174.0 | 175.2 | 149.6 | 150.6 |
+
+evt269774 is the one that exercises the sign convention in both directions.
+
+**Nothing was re-saved.** Those records are the scanner's; the numbers are
+reported so the decision to revisit them is theirs (M13).
+
+### 20.6 The four cases the sum keeps apart
+
+| mark | effect | why |
+|---|---|---|
+| **member** marked IN | **nothing** | already inside `kine_charge` |
+| non-member marked OUT | **nothing** | never was in it |
+| member marked OUT | −`E_est` | |
+| non-member marked IN | +`E_est` | the case that was asked for |
+
+The first is not hypothetical: round 10's whole-shower select can sweep up
+members, since `show members too` is on by default. It is pinned by a test that
+bulk-marks a member IN and asserts the energy does not move.
+
+A marked segment's `E_est` was converted with **its own** shower's recombination
+pair, so under the EM hypothesis the round-9 ratio is applied per segment,
+reusing `kine_hypothesis` rather than keeping a second copy of the constants — a
+segment from a track-flagged shower scales by 0.665/0.4 = 1.6625.
+
+### 20.7 The record
+
+```
+pio.gammas.<slot>.energy_includes_marks    false on every pre-round-12 record
+pio.gammas.<slot>.energy_marks_delta       what the marks moved it by
+pio.gammas.<slot>.energy_without_marks     the energy before that delta
+pio.gammas.<slot>.energy_marks_detail      [{seg, kind, E_est, energy, owner,
+                                             owner_kine}]
+pio.gammas.<slot>.energy_marks_unknown     marked, but owned by no shower
+```
+
+Proved additive rather than asserted, the same way round 11's extraction was:
+records from the pre-change viewer and the new one, over three pairing shapes,
+differ **only** by these five keys — every existing value, energy and mass
+included, is byte-for-byte the same.
+
+### 20.8 Noticed, not fixed
+
+`g1_ehyp` / `g2_ehyp` are **not** reset when an event without a π⁰ block is
+opened, so a round-9 hypothesis switch can carry over from the previous event
+until `load_label` overwrites it. `emark_mode` is reset explicitly (round 12), so
+the two now behave differently. Reported rather than fixed in the same change;
+it is a pre-existing leak in a different round's control.
+
+`kine_div` and `gstart3_src` gained `name=` so the browser test could read them.
+Inert at runtime.
