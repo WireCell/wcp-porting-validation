@@ -2509,10 +2509,18 @@ def refresh_impact():
         "<b>%.1f MeV</b> over %d segments.  You marked <span style='color:#d62728'>"
         "%d member(s) OUT</span> (&Sigma;dQ %.3g e) and <span style='color:#2ca02c'>"
         "%d non-member(s) IN</span> (&Sigma;dQ %.3g e). "
-        "<i>&Sigma;dQ is fitted-point charge, not a calibrated energy &mdash; it is "
-        "the size of the change, not its MeV value.</i>"
+        "<i>&Sigma;dQ is fitted-point charge, not a calibrated energy &mdash; it "
+        "is the size of the change, not its MeV value. The &pi;&#8304; panel is "
+        "where the MeV is: the probe's exact per-segment <code>E_est</code> for "
+        "a segment some shower owns, and an estimate for one none does.</i>"
         % (state["sel_shower"], e, len(mem), len(out_m), sumdq(out_m),
            len(in_m), sumdq(in_m)))
+    # Round 18 footnote, and the reason that last sentence changed: this line
+    # and the mark-list note underneath it are about the SAME segment.  Until
+    # this round "not its MeV value" was true of everything on screen; now an
+    # unowned segment's charge IS converted two lines below, so the disclaimer
+    # had to stop reading as a denial that any MeV exists.  The numbers printed
+    # here are untouched -- only the sentence.
 
 
 # ---------------------------------------------------------------------------

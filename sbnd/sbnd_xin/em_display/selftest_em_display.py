@@ -3106,6 +3106,14 @@ check("  ... and says it is not, when it is not",
 # on_change loop calls refresh_kine() only, and this is the one switch the EM
 # mark list reads.  Asserted through the real callback, not by calling the two
 # refreshes by hand -- calling them by hand is exactly what hid it.
+# The impact line sits directly above that note and is about the SAME segment.
+# Until round 18 "not its MeV value" was true of everything on screen; it must
+# not now read as a denial that the MeV two lines below exists.
+V.refresh_impact()
+check("the impact line does not contradict the note beneath it",
+      "not its MeV value" in V.impact.text
+      and "an estimate for one none does" in V.impact.text,
+      V.impact.text[-80:])
 V.orph_mode.value = V.EORPH_IN
 check("flipping the switch rebuilds the EM mark list, not just the pi0 panel",
       "counted into it" in V.marks_div.text, V.marks_div.text[-90:])

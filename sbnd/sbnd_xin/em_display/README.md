@@ -572,6 +572,10 @@ already saved with marks on. Here, absent means off — which is what every reco
 written before round 18 was saved with — while a fresh event takes the default.
 Verified over every record on disk: 44 gamma records read, 0 that would re-price.
 
+So an event **you have already scanned opens with the switch off**, showing the
+mass it was saved with. That is the point of it. To take the estimate on such an
+event, flip the switch and save; the panel names the number before you do.
+
 A stored pairing that leaves the estimate out gets its own table flag,
 `gN leaves out an unowned segment (est +107.8 MeV)`, kept separate from the
 stale and ignores-marks flags for the same reason those are separate from each

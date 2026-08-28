@@ -3324,7 +3324,7 @@ estimate everywhere it appears.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python em_display/selftest_em_display.py        # 426
+python em_display/selftest_em_display.py        # 427
 python em_display/selftest_em3d_browser.py      # 90
 python em_display/selftest_repro.py             # 98/98
 
@@ -3433,9 +3433,18 @@ and re-opens at the mass it was saved with. Exactly 1 of the 87 marks on disk is
 on an unowned segment (evt169626 / 53070), so this changes what a **new** save or
 a **re-save** records, and nothing else.
 
+**The consequence to state plainly, because it is the first thing the scanner
+meets:** opening evt169626 — the event this was reported on — shows the switch
+**off** and γ1 still at 537.1 MeV, because its record predates the switch. That
+is the safety working, not the feature failing. It applies to all 18 events
+already scanned. Taking the estimate on one of them is deliberate: flip *marked
+segments no shower owns* to `count as part of the shower` and save. A fresh,
+unlabelled event opens with it on. Confirmed in the live app: `evt169626 ->
+leave them out`, `evt84229 -> count as part of the shower`.
+
 ### 26.6 Tests
 
-`selftest_em_display.py` 397 → **426**, `selftest_em3d_browser.py` 86 → **90**,
+`selftest_em_display.py` 397 → **427**, `selftest_em3d_browser.py` 86 → **90**,
 `selftest_repro.py` 98/98 unchanged.
 
 One bug the headless test could not have caught, found by the live smoke on
@@ -3468,4 +3477,28 @@ the real buttons and reads `E1 537.1` / `E1 644.9` back out of the document.
   after the algorithm improvement this scan is feeding. The record keeps enough
   to redo the arithmetic when it does.
 - `refresh_impact`'s ΣdQ still uses its own filter (it drops `dQ < 0` points
-  where the probe keeps them, ~1 % over a shower). Reported in §25.8, unchanged.
+  where the probe keeps them, ~1 % over a shower). Reported in §25.8, and its
+  **numbers are unchanged**. Its closing sentence was rewritten, though: it sits
+  directly above the mark-list note and is about the same segment, and until this
+  round *"ΣdQ is … not its MeV value"* was true of everything on screen. It now
+  points at the π⁰ panel and distinguishes the exact `E_est` from the estimate,
+  instead of reading as a denial that the MeV two lines below exists.
+- **With no probe sidecar `_est_map()` is empty, so every mark would land in
+  `unknown` and — with the switch on — become an estimate.** It cannot happen on
+  this sample (`has_probe = 1` for all 98 manifest events), so the protection is
+  the manifest, not the code. No guard was added; it is stated here instead.
+
+### 26.8 Refresh cost
+
+Measured on the same two events round 16 used, since `cand_unused_orphans` calls
+`marks_energy` twice per gamma per stored row and each call now reaches `seg_dq`
+and `shower_dq` (`/home/xqian/tmp/em114r17/cost18.py`):
+
+```
+evt281485  3 stored rows   refresh_kine 0.25 ms   refresh_pio_cands 0.21 ms
+evt76346   1 stored row    refresh_kine 0.49 ms   refresh_pio_cands 0.29 ms
+evt169626  0 stored rows   refresh_kine 0.39 ms   refresh_pio_cands 0.04 ms
+```
+
+Round 16 measured 0.24 ms and 0.48 ms on the first two, so the round-18 work is
+inside the noise.
