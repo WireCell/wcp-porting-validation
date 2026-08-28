@@ -879,7 +879,7 @@ identified π⁰. Measured on all 26 π⁰ events:
 | | n | median \|m − 135\| | events with a pairing |
 |---|---|---|---|
 | `T_kine` fill (`kine_pio_mass`) | 25 | **24.1 MeV** | 15 of 26 in 100–180 |
-| the identification (`showers[].pio_id`) | 21 | **12.4 MeV** | **21 of 26** |
+| the identification (`showers[].pio_id`) | 21 | **12.4 MeV** (over the 21 it found) | **21 of 26** |
 | hand-built (§11) | 26 | 14.3 MeV | 22 of 26 |
 
 The fill's row reproduces §11's "reco 15/26, median 26.6" almost exactly —
@@ -933,10 +933,15 @@ two sides are the **IN set and the OUT set** inside one shower — `evt142421` i
 nothing on the other side. With both idioms handled, over the 10 over-clustered
 and both-direction events that carry a two-sided partition:
 
-| | n |
+| | events |
 |---|---|
-| the two sides are in **different** clusters | **9** |
-| the two sides **share** a cluster | **1** (`evt84229`, cluster 9) |
+| the two sides are in **different** clusters | **6** — 47212, 54332, 76346, 142421, 269774, 314838 |
+| the two sides **share** a cluster | **1** — `evt84229`, cluster 9 |
+
+(Counted in *events*. Three of them — 47212, 76346, 269774 — carry two marked
+showers each and so emit two partition rows; a row count would say 9 of 10 for
+the same fact. Three of the ten over-clustered events carry no two-sided
+partition at all: 176502, 281567, 463565.)
 
 Different clusters means image-level separation **already did its job** and a
 *shower* pass reached across a correct boundary to merge them. That is not
@@ -945,8 +950,8 @@ here were right. And it is not a case for the new `Shower::split_at` pass
 §15.5 proposed either: nothing needs splitting that was not wrongly joined one
 absorb at a time.
 
-**So §15.7 item 10 — the new split pass — is retired for 9 of 10 cases.** What
-those 9 need is a guard on the cross-cluster absorb, which is an ordinary
+**So §15.7 item 10 — the new split pass — is retired for 6 of the 7 events that
+carry a partition.** What those 6 need is a guard on the cross-cluster absorb, which is an ordinary
 default-OFF knob of exactly the kind the campaign already ships. Only
 `evt84229` remains as a genuine one-cluster case, and one event does not
 justify a new pass; it goes back to pr/53 / pr/57 for consideration.
@@ -980,17 +985,39 @@ That turns "over-clustering" from a symptom into a ranked list of call sites.
 | `pass4_proximity` | 5 | 4 % |
 | others (`in_other_clusters_*`, `conn3_unreachable`, `in_main_cluster`) | 14 | 11 % |
 
-**One cut dominates both columns.** `pass4_angle` — the elliptical direction
-cone `(angle < 25 && d < 80 cm) || (angle < 12.5 && d < 130 cm) || (angle < 5 &&
-d < 200 cm)` ranked by `(d·cosθ)²/(40 cm)² + (d·sinθ)²/(5 cm)²` — is 48 % of
-what is wrongly held and 24 % of what is wrongly missed. It is reaching too far
-in some events and not far enough in others, which is the signature of a cone
-whose *shape* is wrong rather than its size, and it is the single highest-value
-thing to instrument. The marks already carry `dist`, `angle` and `ellip` per
-segment, so the accept/reject scatter can be plotted directly against the
-scanner's verdict before any cut is touched.
+**The two columns are not independent, and reading them as such is a trap.** On
+an OUT mark `absorbed_by` names the pass that wrongly *put* the segment in the
+shower. On an IN mark it names where the segment sits **now** — a different
+statement. Cross-tabulating the IN marks by current owner (`./em115_score.py
+--absorb` prints this):
 
-The 33 % orphan share on the under-clustered side is §15.4b's `stub` class
+| where the missed segment sits now | n | meaning |
+|---|---|---|
+| in a **neighbour shower** | **78** | a pass absorbed it into the *wrong* object — over-reach |
+| **orphan**, never absorbed | 41 | genuine non-reach — the `stub` class |
+| already in the scanned shower | 5 | highlighter marks (§2.1) |
+| unowned | 1 | |
+
+So 78 of the 125 "missed" segments were not missed for want of reach; they were
+**taken by the wrong shower**. Of the 30 `pass4_angle` IN marks, **25 sit in a
+neighbour** and only 5 are highlighter marks.
+
+**One cut therefore dominates, and for one reason.** `pass4_angle` — the
+elliptical direction cone `(angle < 25 && d < 80 cm) || (angle < 12.5 && d <
+130 cm) || (angle < 5 && d < 200 cm)` ranked by `(d·cosθ)²/(40 cm)² +
+(d·sinθ)²/(5 cm)²` — is 48 % of what is wrongly held **and** the largest single
+cause of the merge class. Those are the same defect seen from either side: a
+cone that absorbs a segment into the wrong shower is over-clustering for the
+shower that gained it and under-clustering for the shower that lost it. It is
+**over-reaching**, not mis-shapen — an earlier draft of this section said the
+latter, and the cross-tab above does not support it.
+
+That makes `pass4_angle` the single highest-value thing to instrument, and it is
+cheap: the marks already carry `dist`, `angle` and `ellip` per segment, so its
+accept/reject scatter can be plotted against the scanner's verdict before any
+cut is touched.
+
+The 41 orphans are the genuinely separate failure and are §15.4b's `stub` class
 measured: a third of everything the reco missed was never absorbed by any pass
 at all — no cut rejected it, nothing looked at it.
 
@@ -1007,12 +1034,13 @@ at all — no cut rejected it, nothing looked at it.
 | 7 π⁰ pairing knobs | narrowed to 5 named events |
 | 8 merge knobs / P2 | unchanged |
 | 9 absorb-reach knobs | unchanged |
-| **10 `Shower::split_at` + split pass** | **retired for 9 of 10 cases** (16.4) |
+| **10 `Shower::split_at` + split pass** | **retired for 6 of the 7 partitioned events** (16.4) |
 | 11 multi-π⁰ output | promoted — 3 events measured, 24 groups over 21 events |
 
 **Revised order.** (a) Instrument `pass4_angle`'s accept/reject scatter against
-the marks — it is 48 % of the over-clustering and 24 % of the under-clustering,
-and the data to plot it is already in the labels. (b) The π⁰ *reporting* defect,
+the marks — it is 48 % of the over-clustering *and* the largest single cause of
+the merge class, one over-reach seen from both sides, and the data to plot it is
+already in the labels. (b) The π⁰ *reporting* defect,
 which is larger than the pairing defect: `kine_pio_mass` disagrees with or
 exists without the identification on 11 of 26 events. (c) The 5 events with no
 identified π⁰. (d) pr/91 P2. The new split pass is no longer on the list.

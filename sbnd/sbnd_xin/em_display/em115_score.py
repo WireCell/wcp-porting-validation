@@ -468,8 +468,7 @@ def report_level(labs, dumps, buck, preps):
     print("                    a correct boundary.  Lever = the absorb cones.")
     print("   one-cluster   -> pr/53 / pr/57 sec 14 territory, or a shower-level split.")
     print("=" * 78)
-    yes = no = 0
-    seen = set()
+    ev_cross, ev_one, seen = set(), set(), set()
     for ev in sorted(labs):
         b = (buck.get(ev) or {}).get("bucket", "")
         if not (b.startswith("2 ") or b == "1+2 both"):
@@ -488,13 +487,15 @@ def report_level(labs, dumps, buck, preps):
                    str(r["clusters_a"])[:16], str(r["clusters_b"])[:16],
                    "CROSS-CLUSTER" if r["cross_cluster"]
                    else "one-cluster %s" % r["shared"]))
-            if r["cross_cluster"]:
-                yes += 1
-            else:
-                no += 1
-    print("\nover-clustered events examined       : %d" % len(seen))
-    print("cross-cluster (shower pass overreached): %d" % yes)
-    print("one-cluster   (pr/53 / pr/57 territory): %d" % no)
+            (ev_cross if r["cross_cluster"] else ev_one).add(ev)
+    # Count EVENTS: 47212 / 76346 / 269774 each emit two partition rows, so a
+    # row count would read 9-of-10 where the event count reads 6-of-7.
+    print("\nover-clustered events examined        : %d" % len(seen))
+    print("  with a two-sided partition          : %d" % len(ev_cross | ev_one))
+    print("  cross-cluster (shower overreached)  : %d  %s"
+          % (len(ev_cross), sorted(ev_cross)))
+    print("  one-cluster (pr/53 / pr/57 or split): %d  %s"
+          % (len(ev_one), sorted(ev_one)))
     print("\nA cross-cluster row needs a cone guard in the shower passes, NOT a new")
     print("split pass and NOT pr/57 sec 14 -- the clusters were already right.")
     return 0
@@ -533,6 +534,50 @@ def report_absorb(labs, buck):
             print("%-38s %6d %5.0f%%   %s%s" %
                   (k, v, 100.0 * v / tot, evs, " ..." if len(byev[k]) > 4 else ""))
         print()
+    return report_where(labs, buck)
+
+
+def report_where(labs, buck):
+    """Disambiguate what `absorbed_by` means on an IN mark.
+
+    On an OUT mark it names the pass that wrongly PUT the segment in the shower.
+    On an IN mark it names where the segment sits NOW -- which is a different
+    statement, and the one that decides whether a pass is over-reaching or
+    under-reaching.  If an IN-marked segment currently sits in a NEIGHBOUR
+    shower, the named pass absorbed it into the wrong object: that is
+    over-reach, seen from the other side, not failure to reach."""
+    print("=" * 78)
+    print("under-clustered: for each IN mark, where is that segment NOW?")
+    print("  neighbour -> the named pass absorbed it into the WRONG shower (over-reach)")
+    print("  orphan    -> nothing absorbed it at all (genuine non-reach: the stub class)")
+    print("=" * 78)
+    tab, tot = Counter(), Counter()
+    for ev in sorted(labs):
+        if not (buck.get(ev) or {}).get("bucket", "").startswith("1 "):
+            continue
+        for shw, det in ((buck and (labs[ev].get("em") or {}).get("marks_detail")) or {}).items():
+            for sid, m in (det.get("marked") or {}).items():
+                if m.get("kind") != "in":
+                    continue
+                src = m.get("absorbed_by") or "(never absorbed)"
+                own = m.get("owner")
+                if own is None:
+                    where = "unowned"
+                elif int(own) == int(shw):
+                    where = "already in the scanned shower"
+                elif int(own) == int(sid):
+                    where = "orphan"
+                else:
+                    where = "neighbour shower"
+                tab[(src, where)] += 1
+                tot[where] += 1
+    print("%-38s %-30s %s" % ("absorbed_by", "where it sits now", "n"))
+    for (src, where), n in sorted(tab.items(), key=lambda kv: -kv[1]):
+        print("%-38s %-30s %d" % (src, where, n))
+    print("\ntotals: %s" % dict(tot))
+    print("\nSo the two columns above are largely ONE defect seen twice: a cone that")
+    print("absorbs a segment into the wrong shower is over-clustering for the shower")
+    print("that gained it and under-clustering for the shower that lost it.")
     return 0
 
 
