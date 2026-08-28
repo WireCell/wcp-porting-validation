@@ -30,6 +30,19 @@ def check(name, cond, detail=""):
 # 94 at round 5, 98 from round 6.  Tied to the manifest rather than to a literal
 # so that ADDING events is a data change, with a floor so that LOSING them is
 # still a failure.
+MANIFEST_EVENTS = sorted(V.MANIFEST.items())
+
+
+def _has_showers(evt, want):
+    """Does this event's probe sidecar hold every one of these shower ids?"""
+    p = os.path.join(SX, "em_display", "emprep", "emprep-evt%s.json" % evt)
+    if not os.path.exists(p):
+        return False
+    with open(p) as fh:
+        sh = set(int(k) for k in (json.load(fh).get("showers") or {}))
+    return set(want) <= sh
+
+
 check("events loaded from the manifest",
       len(V.LABELS) == len(V.MANIFEST) and len(V.LABELS) >= 98,
       "%d labels, %d manifest rows" % (len(V.LABELS), len(V.MANIFEST)))
@@ -1583,6 +1596,167 @@ check("a pre-round-9 record re-opens on the reco's energy, not the EM one",
       V.g1_ehyp.value == V.EHYP_RECO and V.g2_ehyp.value == V.EHYP_RECO,
       "%s / %s" % (V.g1_ehyp.value, V.g2_ehyp.value))
 os.remove(_p9)
+
+# ---------------------------------------------------------------------------
+# round 10: a WHOLE shower into another one, in one gesture
+#
+# evt172942 is the case that asked for it.  The event number is pinned here
+# rather than in prose because it was reached by fingerprint, not by being
+# quoted: shower 4002 and shower 71022 occur together in exactly ONE of the 98
+# scan events, and that event is 172942 (the owner wrote 179242 -- one adjacent
+# transposition).  If a future manifest change breaks that uniqueness, this
+# check is where it shows up.
+# ---------------------------------------------------------------------------
+_both = [e for e, _row in MANIFEST_EVENTS
+         if _has_showers(e, (4002, 71022))]
+check("shower pair (4002, 71022) identifies exactly one event",
+      _both == ["172942"], str(_both))
+
+# The round-10 bug the browser found: a stale highlight left over from the
+# previous event, with state["sel_shower"] None behind it, made clicking that
+# very row a no-op.  Python cannot see the no-op (it assigns indices directly),
+# but it can pin the invariant the fix installs.
+V.shower_src.selected.indices = [1]
+V.on_event(None, None, "evt172942")
+check("an event switch clears the shower table's stale highlight",
+      list(V.shower_src.selected.indices) == [],
+      str(list(V.shower_src.selected.indices)))
+_rows = list(V.shower_src.data["node"])
+check("evt172942 holds both showers", 4002 in _rows and 71022 in _rows,
+      str(_rows))
+_i = _rows.index(4002)
+V.shower_src.selected.indices = [_i]
+V.on_shower_select(None, None, [_i])
+check("  ... 4002 is the shower being scanned", V.state["sel_shower"] == 4002)
+
+# the menu: everything but the shower being scanned, biggest first
+_opts = list(V.bulk_shower.options)
+check("the bulk menu lists the other showers, energy-ordered",
+      [V._excl_node(o) for o in _opts] == [71022, 47004, 51008, 48005],
+      str([V._excl_node(o) for o in _opts]))
+check("  ... and never the shower being scanned",
+      all(V._excl_node(o) != 4002 for o in _opts))
+V.state["sel_shower"] = 71022
+V.refresh_bulk_options()
+check("  ... which follows the table: scanning 71022 puts 4002 back in it",
+      V._excl_node(V.bulk_shower.options[0]) == 4002
+      and all(V._excl_node(o) != 71022 for o in V.bulk_shower.options),
+      str([V._excl_node(o) for o in V.bulk_shower.options]))
+V.state["sel_shower"] = 4002
+V.refresh_bulk_options()
+
+_want = sorted(V.members_of(71022))
+check("shower 71022 has 10 segments over 8 clusters", len(_want) == 10,
+      str(_want))
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 71022][0]
+V.on_bulk(False)()
+# Resolved through the SAME function the mark buttons call, not by counting
+# table rows: the three views can hold different subsets and only this union is
+# what a mark would act on.
+check("select-all picks up every one of its segments",
+      sorted(V.selected_cand_ids()) == _want,
+      "%d of %d" % (len(V.selected_cand_ids()), len(_want)))
+check("  ... and the note reports the count that will be marked",
+      "10 of 10" in V.save_note.text, V.save_note.text[:90])
+
+# Bokeh fires selected.indices only on CHANGE -- pressing it twice for the same
+# shower must still leave the selection standing.
+V.on_bulk(False)()
+check("  ... pressing it again for the same shower keeps the 10 selected",
+      sorted(V.selected_cand_ids()) == _want,
+      "%d" % len(V.selected_cand_ids()))
+
+V.mark("in")()
+check("one mark IN files all 10 against shower 4002",
+      sorted(V.marks_for(4002)) == _want
+      and set(V.marks_for(4002).values()) == {"in"},
+      "%d marks" % len(V.marks_for(4002)))
+check("  ... and membership of 71022 is not itself a conflict",
+      V.mark_conflicts() == {}, str(V.mark_conflicts()))
+_imp = V.impact.text
+check("  ... impact counts 10 non-members IN",
+      "10 non-member(s) IN" in _imp, _imp[:140])
+
+# THE one that would write a silently incomplete record: a dimmed shower is
+# dropped from the candidate table but kept in pick_src, so a selection built
+# from table rows would be empty and the mark would reach nothing.
+V.mark(None)()
+_o71 = [o for o in V.excl_choice.options if V._excl_node(o) == 71022][0]
+V.excl_choice.value = [_o71]
+V.on_excl(None, None, [_o71])
+check("dimming 71022 away removes its rows from the candidate table",
+      not [s for s in V.cand_src.data["sid"] if s in set(_want)],
+      "%d rows left" % len(V.cand_src.data["sid"]))
+V.on_bulk(False)()
+check("  ... but select-all still reaches all 10 of them",
+      sorted(V.selected_cand_ids()) == _want,
+      "%d of %d" % (len(V.selected_cand_ids()), len(_want)))
+check("  ... and says so rather than letting the empty table read as a loss",
+      "not listed in the candidate table" in V.save_note.text,
+      V.save_note.text[-160:])
+V.mark("in")()
+check("  ... the mark lands on all 10 with the shower dimmed",
+      len(V.marks_for(4002)) == 10, "%d" % len(V.marks_for(4002)))
+V.excl_choice.value = []
+V.on_excl(None, None, [])
+
+# accumulate, then replace
+V.mark(None)()
+V.on_bulk(False)()
+_n1 = len(V.selected_cand_ids())
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 47004][0]
+V.on_bulk(True)()
+check("add-to-selection accumulates a second shower", 
+      len(V.selected_cand_ids()) == _n1 + 1,
+      "%d -> %d" % (_n1, len(V.selected_cand_ids())))
+V.on_bulk(False)()
+check("  ... while select-all replaces rather than accumulating",
+      len(V.selected_cand_ids()) == 1, "%d" % len(V.selected_cand_ids()))
+
+# refuses, rather than filing a mark with nowhere to belong
+_before = {n: dict(m) for n, m in V.state["marks"].items()}
+V.state["sel_shower"] = None
+V.on_bulk(False)()
+check("with no shower scanned it refuses and files nothing",
+      "pick the shower you are scanning" in V.save_note.text
+      and {n: dict(m) for n, m in V.state["marks"].items()} == _before,
+      V.save_note.text[:80])
+V.state["sel_shower"] = 4002
+V.refresh_bulk_options()
+
+# the record round trip: 10 marks, each with the pass-1 numbers behind it
+V.bulk_shower.value = [o for o in V.bulk_shower.options
+                       if V._excl_node(o) == 71022][0]
+V.on_bulk(False)()
+V.mark("in")()
+V.em_verdict.active = 0
+V.on_save()
+_r10 = json.load(open(V.label_path("evt172942")))
+_mb = _r10["em"]["marks_by_shower"].get("4002", {})
+check("the saved record carries all 10 marks against 4002",
+      sorted(int(k) for k in _mb) == _want
+      and set(_mb.values()) == {"in"}, "%d entries" % len(_mb))
+_md = _r10["em"]["marks_detail"].get("4002", {})
+_mk = _md.get("marked") or {}
+# The other half of the round-10 load() change: clearing must not cost the
+# RESTORE.  A labelled event has to re-open with its shower row highlighted, or
+# the fix would have traded a stale highlight for a missing one on every event
+# that already has an answer.
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt172942")
+check("a labelled event still re-opens with its shower row highlighted",
+      V.state["sel_shower"] == 4002
+      and list(V.shower_src.selected.indices)
+          == [list(V.shower_src.data["node"]).index(4002)],
+      "sel=%s indices=%s" % (V.state["sel_shower"],
+                             list(V.shower_src.selected.indices)))
+check("  ... with the pass-1 numbers measured for every one of them",
+      sorted(int(k) for k in _mk) == _want
+      and all({"dist", "angle", "tier"} <= set(v) for v in _mk.values()),
+      "%d measured, keys %s" % (len(_mk),
+                                sorted(list(_mk.values())[0]) if _mk else "-"))
 
 print()
 print("FAILURES: %d" % len(fails))

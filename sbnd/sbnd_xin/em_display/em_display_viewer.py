@@ -804,6 +804,23 @@ mark_in_btn = Button(label="mark IN", button_type="success", width=100)
 mark_out_btn = Button(label="mark OUT", button_type="danger", width=100)
 mark_q_btn = Button(label="mark ?", width=90)
 mark_clear_btn = Button(label="unmark", width=90)
+# Round 10.  A WHOLE shower at once.  The scan question is often "shower B is
+# really part of shower A" -- evt172942 is the case that asked for it: shower
+# 71022 (10 segments across 8 clusters, 96.9 MeV) is the same EM shower as 4002
+# (6 segments, 368.8 MeV) -- and answering it one segment at a time is ten
+# clicks that can each land on the wrong row.
+#
+# It SELECTS, it does not mark.  The selection is what the cyan halo draws and
+# what `selected_cand_ids()` hands the mark buttons, so pressing this puts
+# exactly the segments that are about to be marked on the screen first, and all
+# four mark buttons then work on them unchanged -- including `mark OUT`, which
+# makes "this whole shower is NOT part of the one I am scanning" one gesture
+# too.  A direct "mark all IN" button would save one click and remove the look.
+bulk_shower = Select(name="bulk_shower", title="whole shower", value="",
+                     options=[""], width=330)
+bulk_sel_btn = Button(name="bulk_sel_btn", label="select all its segments",
+                      width=190)
+bulk_add_btn = Button(name="bulk_add_btn", label="add to selection", width=150)
 # Default ON.  The owner's question is symmetric -- "should this be inside or
 # outside" -- and the `absorbed by` column only ever has something to say about a
 # segment that WAS absorbed, i.e. a member.  Hiding members by default made that
@@ -2472,15 +2489,23 @@ def load(lbl):
     # blank on exactly the events that already had an answer.
     load_label(lbl)
     nloss = fill_shower_table()
-    if state["sel_shower"] is not None:
-        state["_suspend"] = True
-        try:
-            _rows = list(shower_src.data.get("node") or [])
-            if state["sel_shower"] in _rows:
-                shower_src.selected.indices = [_rows.index(state["sel_shower"])]
-        finally:
-            state["_suspend"] = False
+    state["_suspend"] = True
+    try:
+        _rows = list(shower_src.data.get("node") or [])
+        # CLEARED FIRST, unconditionally.  Round 10, found by the browser test.
+        # `shower_src.selected` survives an event switch, and Bokeh syncs a
+        # property only when it CHANGES: an unlabelled event therefore opened
+        # with row k of the PREVIOUS event still highlighted while
+        # state["sel_shower"] was None, and clicking that very row did nothing
+        # at all -- the scanner had to click some other row first.  The Python
+        # test cannot see this; it assigns indices directly and had cleared them.
+        shower_src.selected.indices = []
+        if state["sel_shower"] is not None and state["sel_shower"] in _rows:
+            shower_src.selected.indices = [_rows.index(state["sel_shower"])]
+    finally:
+        state["_suspend"] = False
     fill_cand_table()
+    refresh_bulk_options()
     draw_tiers()
     draw_arrows()
     draw_gammas()
@@ -3022,6 +3047,7 @@ def on_shower_select(attr, old, new):
         return
     state["sel_shower"] = node
     fill_cand_table()
+    refresh_bulk_options()   # the scanned shower drops out of the bulk menu
     draw_tiers()
     draw_arrows()
     draw_gammas()            # round 8: the start / direction markers are per shower
@@ -3130,6 +3156,127 @@ def selected_cand_ids():
             seen.add(sid)
             out.append(sid)
     return out
+
+
+def refresh_bulk_options():
+    """The `whole shower` menu: every shower in the event except the one being
+    scanned, in the shower table's own order (energy, descending) so the table,
+    the dim menu and this one all read the same way.
+
+    The scanned shower is left out because every one of its segments is already
+    a member: selecting it would offer a bulk `mark IN` that changes nothing and
+    still writes one entry per segment into the saved record.
+    """
+    sel = state["sel_shower"]
+    opts = []
+    for sh in sorted(cur_showers(),
+                     key=lambda s: state["shorder"].get(s.get("id"), 0)):
+        nid = sh.get("id")
+        if nid is None or nid == sel:
+            continue
+        opts.append("%s  (%.1f MeV, %d seg)"
+                    % (nid, sh.get("kine_charge") or 0.0, len(members_of(nid))))
+    keep = bulk_shower.value if bulk_shower.value in opts else (
+        opts[0] if opts else "")
+    state["_suspend"] = True
+    try:
+        bulk_shower.options = opts or [""]
+        bulk_shower.value = keep
+    finally:
+        state["_suspend"] = False
+
+
+def select_segments(ids, extend=False):
+    """Put a list of SEGMENT IDS into the selection the mark buttons read.
+
+    Written into all three views directly rather than into one and left to
+    `sync_selection`, because sync's fan-out is keyed on the origin view's own
+    `sid` column and the ids here need not appear in any single view: a dimmed
+    shower is dropped from the candidate table but kept in `pick_src`, which
+    `draw_segments` fills from every segment unfiltered.  Selecting through the
+    table would silently return the segments that happened to be listed.
+
+    Cleared before it is set.  Bokeh fires `selected.indices` only when the
+    value CHANGES, so pressing the button twice for the same shower -- which is
+    what a scanner does after an accidental click somewhere else -- would leave
+    the browser showing the stale halo.  Same lesson as `on_tap_action`.
+
+    `_guard` keeps `sync_selection` from re-entering through the on_change
+    handlers; `_suspend` keeps `on_pick`, which since round 4 is a MARKING path,
+    from applying a mark nobody asked for when `a tap in 3-D does` is set to one.
+
+    Returns what is actually selected, resolved by the same function the mark
+    buttons call -- never the list that was asked for.
+    """
+    want = list(dict.fromkeys(ids))
+    if extend:
+        want = list(dict.fromkeys(list(selected_cand_ids()) + want))
+    wset = set(want)
+    state["_guard"] = True
+    state["_suspend"] = True
+    try:
+        for src in (cand_src, cand_pt_src, pick_src):
+            col = list(src.data.get("sid") or [])
+            src.selected.indices = []
+            src.selected.indices = [i for i, s in enumerate(col) if s in wset]
+    finally:
+        state["_suspend"] = False
+        state["_guard"] = False
+    return refresh_selection()
+
+
+def on_bulk(extend):
+    def cb():
+        node = _excl_node(bulk_shower.value)
+        if node is None:
+            save_note.text = ("<span style='color:#c00'>pick a shower in "
+                              "<i>whole shower</i> first.</span>")
+            return
+        if state["sel_shower"] is None:
+            save_note.text = ("<span style='color:#c00'>pick the shower you are "
+                              "scanning in the table above first &mdash; this "
+                              "selects segments <i>to be marked against</i> it, "
+                              "so it needs one.</span>")
+            return
+        want = list(dict.fromkeys(members_of(node)))
+        if not want:
+            save_note.text = ("<span style='color:#c00'>shower %s has no "
+                              "segments.</span>" % node)
+            return
+        got = set(select_segments(want, extend=extend))
+        here = [s for s in want if s in got]
+        lost = [s for s in want if s not in got]
+        # Which of them the CANDIDATE TABLE lists is a different question from
+        # which are selected, and both get answered.  A dimmed-away shower keeps
+        # its fitted points in `pick_src`, so the selection and the mark are
+        # complete while the table shows nothing -- and the table is where the
+        # scanner looks to check, so silence there would read as a lost mark.
+        listed = set(cand_src.data.get("sid") or [])
+        unlisted = [s for s in here if s not in listed]
+        msg = ("selected <b>%d of %d</b> segment(s) of shower %s%s &mdash; press "
+               "<b>mark IN</b> to put them into shower %s, or <b>mark OUT</b> to "
+               "rule them out of it."
+               % (len(here), len(want), node,
+                  " (kept what was already selected)" if extend else "",
+                  state["sel_shower"]))
+        if lost:
+            msg += ("<br><span style='color:#c00'>%s not selectable &mdash; "
+                    "fewer than two fitted points, so %s drawn in no view and a "
+                    "mark cannot reach %s.</span>"
+                    % (", ".join(str(s) for s in lost[:8]),
+                       "it is" if len(lost) == 1 else "they are",
+                       "it" if len(lost) == 1 else "them"))
+        if unlisted:
+            msg += ("<br><span style='color:#b58900'>%d of them %s not listed in "
+                    "the candidate table (dimmed away, or hidden by <i>show "
+                    "members too</i>) &mdash; %s still selected and a mark will "
+                    "reach %s.</span>"
+                    % (len(unlisted), "is" if len(unlisted) == 1 else "are",
+                       "it is" if len(unlisted) == 1 else "they are",
+                       "it" if len(unlisted) == 1 else "them"))
+        msg += offframe_hint(here)
+        save_note.text = msg
+    return cb
 
 
 def mark(kind):
@@ -3748,6 +3895,8 @@ mark_in_btn.on_click(mark("in"))
 mark_out_btn.on_click(mark("out"))
 mark_q_btn.on_click(mark("?"))
 mark_clear_btn.on_click(mark(None))
+bulk_sel_btn.on_click(on_bulk(False))
+bulk_add_btn.on_click(on_bulk(True))
 show_all_toggle.on_click(lambda a: fill_cand_table())
 g1_btn.on_click(on_gamma(1))
 g2_btn.on_click(on_gamma(2))
@@ -3833,6 +3982,14 @@ em_panel = column(
              "(or set <i>a tap in 3-D does</i> to mark on the click itself).",
         width=RW),
     row(mark_in_btn, mark_out_btn, mark_q_btn, mark_clear_btn, show_all_toggle),
+    Div(text="<b>a whole shower at once</b> &mdash; pick it here, press "
+             "<i>select all its segments</i>, then <b>mark IN</b>. That is the "
+             "bulk answer to &ldquo;shower B is really part of shower A&rdquo;, "
+             "and it beats clicking segments one after another because it takes "
+             "the membership from the probe rather than from your aim. "
+             "<i>add to selection</i> keeps what is already selected, so several "
+             "fragments go in together.", width=RW),
+    row(bulk_shower, bulk_sel_btn, bulk_add_btn),
     Div(text="<b>start &amp; direction</b> &mdash; set <i>a tap in 3-D does</i> "
              "to <i>%s</i> and click a vertex (or any fit point); then <i>%s</i> "
              "and click a second point to aim the axis. Everything below is "

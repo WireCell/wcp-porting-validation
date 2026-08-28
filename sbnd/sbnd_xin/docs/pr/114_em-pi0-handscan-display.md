@@ -1867,3 +1867,140 @@ where it would be restating the number in use.
 - Nothing ties the switch to the EM-mode verdict. That coupling was considered
   and rejected: verdicts are per-shower in EM mode while gammas are assigned in
   π⁰ mode, so an EM-mode click would silently move a π⁰ mass.
+
+## 18. Round 10 — a whole shower into another one, in one gesture
+
+> *"For evt 179242, I want the EM shower in 71022 be completely included in
+> shower 4002, how to achieve that in the display? This is better than click one
+> segment after another?"* … *"This above is for EM clustering"*
+
+### 18.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 248
+python em_display/selftest_em3d_browser.py      # 58
+python em_display/selftest_repro.py             # 98/98
+```
+
+The case: **evt172942**, shower **71022** (10 segments over 8 clusters, 96.9 MeV)
+into shower **4002** (6 segments, 368.8 MeV).
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-9.
+
+### 18.2 The event number was 172942, and it was resolved by fingerprint
+
+179242 is not in the scan set, and it is not reconstructed anywhere in this tree.
+It was not guessed at from the digits: the two shower ids in the request are a
+fingerprint, and **shower 4002 and shower 71022 occur together in exactly one of
+the 98 scan events** — 172942. 179242 is that number with one adjacent
+transposition (`…2942` → `…9242`). The uniqueness is pinned by a test, so a
+future manifest change that breaks it fails rather than quietly invalidating this
+section.
+
+This is the second typo in the scan (§15 resolved 259774 → 269774). The
+difference is worth noting: §15 needed edit distance over 3089 pairs plus three
+corroborating facts, because the request carried nothing but the number. Here the
+request carried *data* — two shower ids — and data beats string distance.
+
+### 18.3 The answer to the question as asked: yes, and here it is
+
+Marking segment by segment was the only path. It is ten clicks for this case,
+each of which can land on the wrong row, and the set is never visible before it
+is committed. The new control:
+
+```
+shower table      -> 4002                          (the shower being scanned)
+whole shower      -> 71022  (96.9 MeV, 10 seg)
+                     [select all its segments]     -> 10 lit in cyan
+                     [mark IN]                     -> 10 filed against 4002
+```
+
+Three clicks, and — the part that matters more than the click count — the
+membership comes from the **probe**, not from the scanner's aim. A fragment that
+is hard to hit, off-screen, or hidden behind another segment cannot be the one
+that gets missed.
+
+### 18.4 It selects; it does not mark
+
+A direct *mark all IN* button would have been one click shorter. It was rejected:
+
+- the selection is what the cyan halo draws and what `selected_cand_ids()` hands
+  the mark buttons, so selecting puts the exact set about to be marked on screen
+  **before** it is committed;
+- all four mark buttons then work on it unchanged — **`mark OUT` on a whole
+  shower** says "this is not part of the one I am scanning" in one gesture, which
+  was free;
+- no new marking path exists, so nothing new can misfile a mark against the
+  wrong shower (the round-5 bug).
+
+`add to selection` accumulates, so several fragments of one EM shower go in
+together.
+
+The shower being scanned is excluded from its own menu: every one of its segments
+is already a member, so a bulk `mark IN` there changes nothing and still writes an
+entry per segment into the record.
+
+### 18.5 The failure this design exists to avoid
+
+`fill_cand_table` drops a segment that is `show members too`-hidden or that
+belongs to a **dimmed-away** shower. Dimming is how a scanner reduces clutter
+before judging, so "dim 71022 away, then merge it in" is a realistic order of
+operations — and a selection built by scanning the candidate table's rows would
+have returned **zero** segments and marked nothing, with no complaint.
+
+`select_segments` therefore takes its ids from `members_of(node)` and writes them
+into all three views, including `pick_src` — which `draw_segments` fills from
+every segment, unfiltered. The status line reports the count that will actually
+be marked (`selected 10 of 10`), resolved through the same
+`selected_cand_ids()` the mark buttons call, never the list that was asked for.
+Two honest cases come out of that:
+
+| case | what happens | what is said |
+|---|---|---|
+| shower dimmed away | all 10 selected, mark lands | amber: *"not listed in the candidate table … they ARE selected"* |
+| segment with < 2 fitted points | drawn in no view, unreachable | red, named |
+
+The dimmed case is a test, not a claim.
+
+### 18.6 A real bug the browser found, that Python could not
+
+The first browser run failed all five new checks: the menu still listed the
+scanned shower and the app reported *"pick the shower you are scanning first"*
+after a row had been clicked.
+
+Cause, and it is not in the new code: **`shower_src.selected` survives an event
+switch.** `load()` restored the highlight when the event had a saved label but
+never *cleared* it otherwise, so an unlabelled event opened with row *k* of the
+previous event still highlighted while `state["sel_shower"]` was `None` behind
+it — and because Bokeh syncs a property only when it **changes**, clicking that
+very row did nothing at all. The scanner had to click some other row first and
+come back.
+
+Fixed by clearing unconditionally before restoring. The Python test cannot see
+this class of bug — it assigns `indices` directly and had cleared them — which is
+the same reason round 4 needed the browser for the tap-action re-arm. The
+invariant is now pinned on both sides: Python asserts an event switch leaves the
+highlight empty, the browser asserts the click works.
+
+The *restore* half was checked separately, because the fix touches a path every
+one of the 98 events takes: all five labels in the owner's live `emscan-0827` tag
+re-open with the right shower row highlighted (`87058`, `67030`, `22034`,
+`97197`, `83044`), read-only, and a labelled re-open is pinned in the test tag.
+
+### 18.7 What is not claimed
+
+Whether the candidate table's own rows support shift-click range selection was
+**not** established — a draft README asserted that they do not, the probe meant
+to settle it was inconclusive, and the claim was removed rather than shipped. The
+button reads membership directly, which makes the question moot for this task.
+
+### 18.8 Left open
+
+- The bulk control operates on **showers**. Merging by cluster id — "everything
+  in cluster 54" — is not offered; no case has asked for it.
+- Merging a shower in creates **no** conflict by itself: membership is not a
+  mark, and `mark_conflicts()` fires only on a segment marked IN against two
+  showers. But a scanner who had already marked those segments against 71022
+  itself can now produce ten conflicts in one gesture instead of one at a time.
+  They are still caught in the marks list and at save; nothing warns earlier.

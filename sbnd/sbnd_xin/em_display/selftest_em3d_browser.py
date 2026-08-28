@@ -615,6 +615,46 @@ try:
               js("M('emstart3_src').data.x.length") == 2,
               "%s markers" % js("M('emstart3_src').data.x.length"))
 
+        # ------------------------------------------------------------------
+        # round 10: a WHOLE shower into another one, driven through the real
+        # widgets.  The static test proves the ids resolve; only this proves
+        # that the button exists in the DOM, that the menu the scanner reads is
+        # populated in the browser, and that the cyan halo really shows all ten
+        # BEFORE the mark -- which is the whole reason it selects instead of
+        # marking.
+        # ------------------------------------------------------------------
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('event_select').value = 'evt172942'; }")
+        page.wait_for_timeout(3000)
+        rows = js("M('shower_src').data.node")
+        pick_row(rows.index(4002))
+        opts = js("M('bulk_shower').options")
+        check("the whole-shower menu is populated in the live app",
+              bool(opts) and opts[0].startswith("71022")
+              and all(not o.startswith("4002") for o in opts), str(opts))
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('bulk_shower').value ="
+                      " Bokeh.documents[0].get_model_by_name('bulk_shower')"
+                      ".options[0]; }")
+        page.wait_for_timeout(600)
+        page.get_by_role("button", name="select all its segments",
+                         exact=True).click()
+        page.wait_for_timeout(1500)
+        nsel = js("M('sel3_src').data.xs3.length")
+        check("one button lights all 10 segments of shower 71022",
+              nsel == 10, "%s in the cyan halo" % nsel)
+        check("  ... and says what the next mark will hit",
+              "10 of 10" in js("M('save_note').text"),
+              js("M('save_note').text")[:90])
+        page.get_by_role("button", name="mark IN", exact=True).click()
+        page.wait_for_timeout(1500)
+        nin = js("M('in3_src').data.xs3.length")
+        check("  ... and one mark IN moves the whole shower across",
+              nin == 10, "%s marked IN" % nin)
+        check("  ... filed against 4002, which is the shower being scanned",
+              "4002" in js("M('marks_div').text"),
+              js("M('marks_div').text")[-120:])
+
         lbls = js("M('event_flag_group').labels")
         check("the no-vertex NCpi0 topology flag reads as text, not entities",
               lbls and "&" not in lbls[0] and "NC" in lbls[0], str(lbls))

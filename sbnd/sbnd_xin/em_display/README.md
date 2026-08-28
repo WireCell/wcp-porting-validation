@@ -357,6 +357,52 @@ inverse of `not an EM shower`, for a track- or muon-PID'd object that should hav
 been a gamma. New verdicts are **appended**, never re-ordered: a label stores the
 verdict string and is read back by index.
 
+### A whole shower at once
+
+"Shower B is really part of shower A" is a *merge*, and clicking its segments one
+after another is the wrong tool for it — ten clicks, each of which can land on
+the wrong row, and no way to see the set before committing it.
+
+Pick the shower you are scanning, choose the other one in **whole shower**, press
+**select all its segments**, then **mark IN**:
+
+```
+shower table      -> 4002                          (the shower you are scanning)
+whole shower      -> 71022  (96.9 MeV, 10 seg)
+                     [select all its segments]     -> 10 lit in cyan
+                     [mark IN]                     -> 10 filed against 4002
+```
+
+Three clicks instead of ten, and the membership comes **from the probe**, not
+from your aim — so a fragment that is hard to hit, off-screen, or hidden behind
+another segment cannot be the one you miss.
+
+It **selects; it does not mark.** The cyan halo shows exactly what the next
+button will hit, so you see the set before you commit it, and all four mark
+buttons then work on it unchanged — **mark OUT** on a whole shower says "this is
+not part of the one I am scanning" in one gesture too. **add to selection** keeps
+what is already selected, so several fragments go in together.
+
+The shower being scanned is **not** in its own menu: every one of its segments is
+already a member, so a bulk `mark IN` there would change nothing and still write
+an entry per segment into the record.
+
+The status line always reports **the count that will actually be marked**, e.g.
+`selected 10 of 10`. Two cases make that more than a formality:
+
+- a shower **dimmed away** is dropped from the candidate table but keeps its
+  fitted points in the 3-D pick cloud, so all of it is still selected and the
+  mark still lands — the line says so rather than letting an empty table read as
+  a lost mark;
+- a segment with **fewer than two fitted points** is drawn in no view and cannot
+  be reached by any gesture. It is named in red.
+
+The button reads membership from the probe rather than from the candidate
+table's rows, and that is deliberate: the table is a *view*, filtered by
+`show members too` and by whatever you have dimmed away, so a selection built out
+of its rows is only as complete as what happens to be listed. The dimmed case
+above is exactly that failure, and it is pinned by a test.
+
 ### Energy does NOT follow a PID correction
 
 The π⁰ panel shows, per gamma, **which recombination its energy was converted
