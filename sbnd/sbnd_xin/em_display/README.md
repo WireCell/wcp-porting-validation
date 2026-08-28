@@ -238,6 +238,46 @@ The panel then draws the skeleton and says so in a banner.
 
 ## EM mode
 
+### Changing a shower's start and direction
+
+The reconstruction's start for a shower is not always right, and everything the
+pass-1 gate says depends on it. Set your own:
+
+- **by clicking** — put `a tap in 3-D does` on *make it this shower's START* and
+  click a reconstructed vertex (or any fit point). Then *aim this shower's AXIS
+  through it* and click a second point to set the direction by eye.
+- **by button** — `start = nearest vertex`, `start = nearest fit point`,
+  `aim axis at nearest fit point`, or type x / y / z and press `use these`.
+- `reset start` / `reset axis` put the reconstruction's back.
+
+The **start and the axis always move together**. The probe's `dir15` is anchored
+at the reconstruction's start, so once you move the start it no longer applies:
+the axis is recomputed with the same formula at your new point
+(`axis_source: python@start_override`), or, if you clicked a second point, it is
+exactly the direction through it (`manual@override`). The readout under the
+buttons always says which.
+
+Your start is a correction to the **shower**, so the π⁰ tab uses it too — both
+mass conventions are built on the same geometry, and the π⁰ panel names the
+start each gamma used. A start set for a gamma slot in π⁰ mode is more specific
+and still wins.
+
+The record keeps `em.reco.*` as the reconstruction's own answer and
+`em.axis_used` / `em.start_used` as what the gate actually used, plus both start
+points, so the move is checkable later.
+
+If you already marked segments on that shower, the readout says so: the saved
+tier / angle / distance are recomputed from the start and axis in force at save
+time, not from the ones you marked against.
+
+### This event's topology
+
+A checkbox above the note box, saved as `event_flags` at the root of the record
+beside `em` and `pio`. One entry today — **no-vertex π⁰ (NCπ⁰)** — for events
+that need separate treatment downstream, so a later pass can select them without
+opening a shower block.
+
+
 Select a shower, then mark any segment `IN` / `OUT` / `?` from the candidate
 table, by selecting dots in the acceptance plot, or by tapping / boxing straight
 in the 3-D view. The shower's axis is drawn as an arrow, its members are haloed,
@@ -502,8 +542,8 @@ python em_display/prep_em_scan.py --parse-probes
 
 # self-tests
 python em_display/selftest_repro.py         # reproduction + membership repair, 98/98
-python em_display/selftest_em_display.py    # drives the viewer's callbacks, 191 checks
-python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 42
+python em_display/selftest_em_display.py    # drives the viewer's callbacks, 217 checks
+python em_display/selftest_em3d_browser.py  # drives the 3-D view in headless chromium, 53
 ```
 
 The probes land in `pr_evt<ID>/stdout.log`, **not** in `wct_pr_evt<ID>.log`:

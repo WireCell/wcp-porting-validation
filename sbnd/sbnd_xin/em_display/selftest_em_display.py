@@ -1355,6 +1355,171 @@ check("the chip sits at the top, directly under the header row",
 check("  ... above the Bee banner, not below it",
       _kids.index("scan_status") < _kids.index("banner"), str(_kids))
 
+# ---- round 8: the scanner's own start and direction -------------------------
+# evt169626 is the event the request came from.
+V.on_event(None, None, "evt169626")
+_node = V.shower_src.data["node"][0]
+V.on_shower_select(None, None, [0])
+_rs = V.reco_start(_node)
+_ax0, _br0, _src0 = V.shower_axis(_node)
+check("with no override the axis is still the probe's dir15",
+      _src0 == "probe" and _br0 == "dir15", "%s / %s" % (_br0, _src0))
+check("  ... and the start is the reconstruction's",
+      V.shower_start(_node) == _rs, str(_rs))
+
+_new = (_rs[0] + 20.0, _rs[1], _rs[2])
+V.set_em_start(_new, "")
+check("a new start reaches shower_start",
+      V.shower_start(_node) == _new, str(V.shower_start(_node)))
+
+# THE invariant.  If the start moved and the axis did not, seg_vs_shower would
+# take the angle between a direction anchored at the OLD start and a
+# displacement measured from the NEW one -- not a physical quantity, and one
+# that looks perfectly plausible on screen and in the saved record.
+_ax1, _br1, _src1 = V.shower_axis(_node)
+check("  ... and THE AXIS MOVES WITH IT -- never a stale probe value",
+      _src1 == "python@start_override" and _ax1 != _ax0,
+      "%s / %s" % (_br1, _src1))
+check("  ... recomputed with the same formula, at the new point",
+      all(abs(a - b) < 1e-12 for a, b in zip(
+          _ax1, V.G.shower_cal_dir_3vector(
+              [sg for sg in V.cur_segments()
+               if sg.get("id") in set(V.members_of(_node))], _new, 15.0))),
+      str([round(v, 4) for v in _ax1]))
+
+# and the gate's own inputs follow, which is the point of the whole feature
+_sid = V.cur_segments()[0].get("id")
+V.state["em_start"].pop(_node); V.state["_axis_cache"] = {}
+_m0 = V.seg_vs_shower(_node, _sid)
+V.state["em_start"][_node] = _new; V.state["_axis_cache"] = {}
+_m1 = V.seg_vs_shower(_node, _sid)
+check("  ... so the pass-1 gate's distance/angle are measured from it",
+      _m0["dist"] != _m1["dist"] or _m0["angle"] != _m1["angle"],
+      "before=%s after=%s" % (_m0["dist"], _m1["dist"]))
+
+# direction by clicking a second point
+V.set_em_dir((_new[0], _new[1] + 30.0, _new[2]), "")
+_ax2, _br2, _src2 = V.shower_axis(_node)
+check("aiming through a second point gives exactly that direction",
+      _br2 == "two_point" and _src2 == "manual@override"
+      and all(abs(a - b) < 1e-12
+              for a, b in zip(_ax2, V.G.vnorm((0.0, 30.0, 0.0)))),
+      "%s %s" % ([round(v, 4) for v in _ax2], _src2))
+
+# The pi0 path SEES the correction (round 8b -- round 8 had it ignore one, and
+# that is exactly what the owner reported: "I am also confused which one was
+# used to do the calculation of the pi0 mass").
+check("the pi0 gamma starts follow an EM start correction",
+      V.shower_start(_node, 1) == _new and V.shower_start(_node, 2) == _new,
+      str(V.shower_start(_node, 1)))
+check("  ... unless that gamma slot has its own start, which is more specific",
+      (V.state["gstart"].__setitem__(1, (9.0, 9.0, 9.0)),
+       V.shower_start(_node, 1) == (9.0, 9.0, 9.0),
+       V.state["gstart"].__setitem__(1, None))[1])
+
+# the record: the reco block must stay the RECONSTRUCTION's answer
+V.event_flag_group.active = [0]
+V.on_save()
+_r8 = json.load(open(V.label_path("evt169626")))
+_em8 = _r8["em"]
+check("the record keeps the reco's axis and the one you used APART",
+      _em8["reco"]["axis_source"] == "probe"
+      and _em8["axis_used_source"] == "manual@override",
+      "reco=%s used=%s" % (_em8["reco"]["axis_source"],
+                           _em8["axis_used_source"]))
+check("  ... and both start points, so the move is checkable later",
+      _em8["reco_start"] == list(_rs) and _em8["start_used"] == list(_new),
+      "reco=%s used=%s" % (_em8["reco_start"], _em8["start_used"]))
+check("  ... keyed BY SHOWER, since mark_metrics runs for every marked one",
+      _em8["start_override_by_shower"] == {str(_node): list(_new)},
+      str(_em8["start_override_by_shower"]))
+
+# round 8: the event-level topology flag
+check("the no-vertex NCpi0 flag is saved at the ROOT, beside em and pio",
+      _r8.get("event_flags") == ["no_vertex_ncpi0"],
+      str(_r8.get("event_flags")))
+
+# everything must come back on reload -- including for showers not selected
+V.on_event(None, None, "evt84229")
+check("leaving the event drops the overrides from state",
+      not V.state["em_start"] and not V.state["em_dir"],
+      str(V.state["em_start"]))
+V.on_event(None, None, "evt169626")
+check("  ... and re-opening the event restores them from the record",
+      V.state["em_start"].get(_node) == _new
+      and V.state["em_dir"].get(_node) == (_new[0], _new[1] + 30.0, _new[2]),
+      str(V.state["em_start"]))
+check("  ... and the topology flag comes back too",
+      V.event_flag_group.active == [0], str(V.event_flag_group.active))
+os.remove(V.label_path("evt169626"))
+
+check("clearing puts the reconstruction's own start and axis back",
+      (V.clear_em_start(), V.clear_em_dir(),
+       V.shower_start(_node) == _rs
+       and V.shower_axis(_node)[2] == "probe")[-1],
+      str(V.shower_axis(_node)[2]))
+
+_ei = V.LAYER_KEYS.index("emstart") if "emstart" in V.LAYER_KEYS else None
+check("the start / direction markers register under a nameable layer key",
+      _ei is not None and bool(V.RENDER.get("emstart")),
+      "%s renderers" % len(V.RENDER.get("emstart") or []))
+V.layer_group.active = [_ei]
+V.apply_layers(None, None, None)
+_on = all(r.visible for r in V.RENDER["emstart"])
+V.layer_group.active = []
+V.apply_layers(None, None, None)
+_off = not any(r.visible for r in V.RENDER["emstart"])
+check("  ... and its checkbox actually drives them, both ways",
+      _on and _off, "on=%s off=%s" % (_on, _off))
+V.layer_group.active = [i for i in range(len(V.LAYER_KEYS)) if i != 6]
+V.apply_layers(None, None, None)
+
+# ---- round 8b: the correction must reach the pi0 arithmetic too -------------
+# Reported from the live scan: "I already adjusted the start vertex ... I am
+# also confused which one was used to do the calculation of the pi0 mass."
+V.on_event(None, None, "evt169626")
+V.on_shower_select(None, None, [0])
+_n = V.state["sel_shower"]
+_rs2 = V.reco_start(_n)
+_new2 = (_rs2[0] + 20.0, _rs2[1], _rs2[2])
+V.set_em_start(_new2, "")
+check("an EM start correction reaches the pi0 gamma path as well",
+      V.shower_start(_n, 1) == _new2 and V.shower_start(_n, 2) == _new2,
+      str(V.shower_start(_n, 1)))
+check("  ... so both mass conventions are built on the SAME geometry",
+      # the axis convention takes no slot and always used the correction; the
+      # vertex convention goes through shower_start(node, slot).  When these
+      # disagreed, one mass came from the scanner's start and the other from
+      # the reconstruction's, in the same saved record.
+      V.shower_start(_n, 1) == V.shower_start(_n),
+      "slot=%s bare=%s" % (V.shower_start(_n, 1), V.shower_start(_n)))
+check("  ... and the record names which start each gamma used",
+      V.start_source(_n, 1) == "em_start_correction", V.start_source(_n, 1))
+
+# precedence: a start set for THIS gamma slot is more specific, and still wins
+V.state["gstart"][1] = (1.0, 2.0, 3.0)
+check("a pi0 slot override still beats the EM correction",
+      V.shower_start(_n, 1) == (1.0, 2.0, 3.0)
+      and V.start_source(_n, 1) == "gamma_slot_override",
+      str(V.shower_start(_n, 1)))
+V.state["gstart"][1] = None
+check("  ... and removing it falls back to the correction, not the reco",
+      V.shower_start(_n, 1) == _new2, str(V.shower_start(_n, 1)))
+
+# the reported symptom: a mode round trip must not appear to revert anything
+V.mode_group.active = 1
+V.on_mode(None, None, 1)
+_mid = dict(V.state["em_start"])
+V.mode_group.active = 0
+V.on_mode(None, None, 0)
+check("a pi0-tab round trip leaves the corrected start standing",
+      _mid.get(_n) == _new2 and V.state["em_start"].get(_n) == _new2
+      and V.shower_start(_n) == _new2, str(V.state["em_start"].get(_n)))
+check("  ... and the readout is redrawn, not left stale",
+      "yours" in V.emstart_div.text and len(V.emstart_src.data["x"]) == 2,
+      "%d marker(s)" % len(V.emstart_src.data["x"]))
+V.clear_em_start()
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

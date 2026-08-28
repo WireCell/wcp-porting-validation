@@ -548,6 +548,77 @@ try:
               stat_vis is not None and stat_vis["h"] > 0
               and stat_vis["top"] < 400, str(stat_vis))
 
+        # ---- round 8: the scanner's own start vertex and direction ---------
+        # evt169626 is loaded from the round-6 block above.  Exercised through
+        # the VERTEX source, because "change the start vertex" is the gesture
+        # the request named and it is a different handler from the fit-point one.
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('shower_src').selected.indices = []; }")
+        page.wait_for_timeout(500)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('shower_src').selected.indices = [0]; }")
+        page.wait_for_timeout(1500)
+        sa = js("M('emstart_div').text")
+        check("picking a shower shows what its start and axis currently are",
+              "start" in sa and "axis" in sa, sa[:90])
+        check("  ... and the reco start is drawn, so a move has something to "
+              "be judged against",
+              js("M('emstart3_src').data.x.length") >= 1,
+              "%s marker(s)" % js("M('emstart3_src').data.x.length"))
+
+        page.evaluate("(v) => { Bokeh.documents[0]"
+                      ".get_model_by_name('tap_action').value = v; }",
+                      "make it this shower's START")
+        page.wait_for_timeout(400)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('vtx3_src').selected.indices = [0]; }")
+        page.wait_for_timeout(1500)
+        note = js("M('save_note').text")
+        check("clicking a reconstructed vertex makes it the shower's start",
+              "start set to" in note, note[:120])
+        check("  ... and it says the axis moved with it, never silently",
+              "axis moved too" in note, note[-160:])
+        sa2 = js("M('emstart_div').text")
+        check("  ... and the readout now shows yours next to the reco's",
+              "yours" in sa2 and "reco start" in sa2, sa2[:150])
+        check("  ... with both points on screen to compare",
+              js("M('emstart3_src').data.x.length") == 2,
+              "%s markers" % js("M('emstart3_src').data.x.length"))
+
+        page.evaluate("(v) => { Bokeh.documents[0]"
+                      ".get_model_by_name('tap_action').value = v; }",
+                      "aim this shower's AXIS through it")
+        page.wait_for_timeout(400)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('vtx3_src').selected.indices = [1]; }")
+        page.wait_for_timeout(1500)
+        note2 = js("M('save_note').text")
+        check("clicking a second point aims the axis through it",
+              "aimed through" in note2 and "direction now" in note2, note2[:130])
+        check("  ... and the aim point is drawn too",
+              js("M('emdir3_src').data.x.length") == 1,
+              "%s marker(s)" % js("M('emdir3_src').data.x.length"))
+
+        # The reported symptom, driven through the real widgets: switch to the
+        # pi0 tab and back, and the corrected start must still be standing --
+        # and the pi0 panel must SAY it is the one the mass was built on.
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 1; }")
+        page.wait_for_timeout(2500)
+        page.evaluate("() => { Bokeh.documents[0]"
+                      ".get_model_by_name('mode_group').active = 0; }")
+        page.wait_for_timeout(2500)
+        sa3 = js("M('emstart_div').text")
+        check("a pi0-tab round trip does not revert the corrected start",
+              "yours" in sa3 and "reco start" in sa3, sa3[:150])
+        check("  ... and its markers are redrawn, not left cleared",
+              js("M('emstart3_src').data.x.length") == 2,
+              "%s markers" % js("M('emstart3_src').data.x.length"))
+
+        lbls = js("M('event_flag_group').labels")
+        check("the no-vertex NCpi0 topology flag reads as text, not entities",
+              lbls and "&" not in lbls[0] and "NC" in lbls[0], str(lbls))
+
         check("no JS errors over the whole session", not errors,
               "; ".join(errors[:3]))
         browser.close()

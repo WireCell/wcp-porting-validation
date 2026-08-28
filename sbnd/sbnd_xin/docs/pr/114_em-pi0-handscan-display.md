@@ -1595,3 +1595,171 @@ selftests write to `em_labels/selftest114/` and `em3dbrowsertest`.
 - Pre-existing, not fixed here (noticed while working): `load_label` does a bare
   `json.load` at :2313 while the save path guards `ValueError`. A truncated label
   file would raise into the session callback rather than being reported.
+
+---
+
+## 16. Round 8 — the scanner's own start vertex, direction, and event topology
+
+Three requests from the live scan on evt169626.
+
+### 16.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 217
+python em_display/selftest_em3d_browser.py      # 53
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-7b.
+
+### 16.2 What was asked
+
+> *"one of the EM shower, I need to change the start vertex, I do not have this
+> capability in the display"* … *"with vertex changed, very likely I also need to
+> be able to define the direction, by clicking another end point"* …
+> *"it is an no-vertex pi0 NCpi0, can we also add a label for that?"*
+
+### 16.3 The seam, and the invariant that governs it
+
+`shower_start(node)` and `shower_axis(node)` are the *only* two inputs the
+pass-1 gate has. The candidate table (`:1881`), `seg_vs_shower` (`:2403`) and
+`mark_metrics` (`:2444`) each call exactly those two and nothing else, so an
+override placed in them propagates to the table, the acceptance plot and the
+saved metrics with no other code changed.
+
+The invariant, and it is the thing that would have gone wrong quietly:
+
+> **The start and the axis must move together.** The probe's `dir15` is
+> `shower_cal_dir_3vector(shower, start, 15 cm)` — anchored at the
+> *reconstruction's* start. Had `shower_start` honoured an override while
+> `shower_axis` kept returning `dir15`, `seg_vs_shower` would have taken the
+> angle between a direction anchored at the old start and a displacement
+> measured from the new one. That is not a physical quantity, and it looks
+> entirely plausible in the acceptance plot and in the saved record.
+
+So an overridden start invalidates the probe value. Two ways to replace it:
+
+| the scanner… | axis | `axis_source` |
+|---|---|---|
+| moves the start only | `shower_cal_dir_3vector(members, new_start, 15)` — the same formula, at the new point | `python@start_override` |
+| also clicks a second point | `norm(p2 − start)`, exact by construction | `manual@override` |
+
+`axis_source` stops saying `"probe"` in both cases: em_geom:161's own docstring
+records that the Python mirror is not bit-exact (`shower_ordered_edges` vs
+`fill_sets` membership). The recompute is memoised on `(node, start)` — without
+it, `mark_metrics` would walk every member point once per segment.
+
+The recompute uses the **reco's** member set, not marks-included: moving two
+inputs at once would make the before/after uninterpretable.
+
+### 16.4 Round 8b — the correction has to reach the π⁰ mass too
+
+Reported from the live scan within the hour:
+
+> *"when I clicked the pi0 tab, and then click the EM shower again, it seems that
+> it goes back to the original start vertex … I am also confused which one was
+> used to do the calculation of the pi0 mass."*
+
+Both halves were real, and the second was the serious one.
+
+Round 8 put the override in the `slot is None` branch only, on the reasoning
+that every π⁰ caller passes a slot. That kept the gamma slots off the EM path —
+but `shower_axis` takes **no slot at all**, so it had *already* been using the
+corrected axis. The result inside one saved record:
+
+| | geometry used |
+|---|---|
+| `mass_axis_convention` | the scanner's corrected axis |
+| `mass_vertex_convention` | the reconstruction's start |
+
+Two masses, two different geometries, nothing on screen saying so. An EM start
+correction is a correction to the **shower**, not to EM mode, so the precedence
+is now, most specific first:
+
+```
+gstart[slot]    a start set for THIS gamma slot, in pi0 mode
+em_start[node]  the shower's corrected start          <- was missing
+reco start      the dump's own
+```
+
+`start_source(node, slot)` names which one was returned, and the π⁰ panel prints
+it per gamma — *"γ1: your corrected start from EM mode (…), axis
+python@start_override"* — so the question "which one was used" is answered on
+screen rather than inferred from a number that moved.
+
+The apparent "revert" was a second, smaller bug: `on_mode` did not call
+`refresh_emstart`, so the readout went stale across a tab switch. The state
+itself always survived.
+
+### 16.5 The record
+
+`em.reco` keeps the **reconstruction's** answer, unchanged — `shower_axis` gained
+`use_override=False` for exactly this, because filing a hand-aimed axis inside
+`reco` would let a later reader attribute the scanner's judgement to the
+reconstruction. What the gate actually used is named separately:
+
+```
+em.reco.axis / axis_branch / axis_source     the reco's, always
+em.axis_used / _branch / _source             what the gate used
+em.reco_start, em.start_used                 both points, so the move is checkable
+em.reco_start_vertex_id
+em.start_override_by_shower                  keyed BY SHOWER, not flat
+em.start_override_vertex_id_by_shower        which reconstructed vertex, when it was one
+em.dir_point_by_shower
+pio.gammas.<slot>.start_source               per gamma: which of the three
+event_flags                                  event-level, beside em and pio
+```
+
+Keyed by shower because `mark_metrics` runs for *every* marked shower, not only
+the selected one — a flat pair would be written from the selected shower and read
+back against another. Same reasoning as the round-5 note on `marks_by_shower`.
+
+### 16.6 Gestures
+
+`a tap in 3-D does` gained **"make it this shower's START"** and **"aim this
+shower's AXIS through it"**. Both work on the fit-point surface and on the
+**vertex** surface — the latter is the gesture the request actually named
+("change the start vertex"), and a tap that lands on a reconstructed vertex
+records *which one*. Buttons cover snap-to-nearest-vertex, snap-to-nearest-fit-
+point, typed x/y/z, and reset. The start in use, the reco start it replaced, and
+the aim point are all drawn, under a new `emstart` layer key — a renderer
+registered under a key `apply_layers` cannot name is invisible forever.
+
+Marks made *before* a start moves are warned about out loud: `mark_metrics`
+recomputes tier, angle and distance at save time, so those marks would otherwise
+get a record whose geometry the scanner never saw.
+
+### 16.7 The event-level flag
+
+`event_flags` is a list at the **root** of the record, beside `em` and `pio`, so a
+later pass selecting "the no-vertex NCπ⁰ events" reads one key and never opens a
+shower block. Vocabulary today is one entry, `no_vertex_ncpi0`; adding the next
+class is a one-line change to `EVENT_FLAGS`, with no schema change to labels
+already on disk. `CheckboxGroup` labels are plain text — the first version
+shipped HTML entities and they rendered literally.
+
+### 16.8 Verification
+
+| suite | |
+|---|---|
+| `selftest_em_display.py` | **217/217**, was 191 |
+| `selftest_em3d_browser.py` | **53/53**, was 42 |
+| `selftest_repro.py` | 98/98 identical, 1595/1595 showers |
+
+The round-8 check *"the pi0 gamma starts are NOT touched by an EM override"* was
+**replaced, not deleted**: it asserted the behaviour the owner reported as a bug
+the same day. Live on 5017, clicking vertex 13000:
+
+```
+start & axis - reco start (-14.1, 118.7, 465.1) | yours (-19.2, 95.7, 475.4)
+             = vertex 13000, 25.7 cm away
+```
+
+### 16.9 Left open
+
+- The two-point aim uses the start **in use**; if the start later moves, the
+  aim point is kept and the direction re-derives from the new start. That is the
+  intended reading of "aim through this point", but it is a choice.
+- `load_label` still does a bare `json.load` while the save path guards
+  `ValueError` (carried from §15.5, not fixed here).

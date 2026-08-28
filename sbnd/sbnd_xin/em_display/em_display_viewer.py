@@ -33,7 +33,8 @@ import numpy
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, row, Spacer
-from bokeh.models import (Button, CheckboxButtonGroup, ColumnDataSource, Div,
+from bokeh.models import (Button, CheckboxButtonGroup, CheckboxGroup,
+                          ColumnDataSource, Div,
                           HoverTool, Select, TextInput, Toggle, RadioButtonGroup,
                           DataTable, TableColumn, CDSView, AllIndices, Range1d,
                           TapTool, Span, NumberFormatter, CustomJS, Tabs,
@@ -154,6 +155,14 @@ state = dict(label=None, data=None, prep=None,
              acc_hidden=0,             # dots outside the zoomed acceptance range
              gamma={1: None, 2: None},  # slot -> node id
              gstart={1: None, 2: None},  # slot -> (x,y,z) override or None
+             # Round 8.  The scanner's own start point and direction for an EM
+             # shower, keyed BY SHOWER NODE because mark_metrics runs for every
+             # marked shower, not just the selected one -- a flat pair would be
+             # written from the selected shower and read back against another.
+             em_start={},              # node -> (x,y,z) start override
+             em_dir={},                # node -> (x,y,z) a point the axis goes THROUGH
+             em_startvid={},           # node -> reconstructed vertex id it snapped to
+             _axis_cache={},           # (node, start) -> recomputed dir15
              vtx_mode="main", vtx_manual=None,
              dirty=False, saved=None,
              cam=(math.radians(D3.PRESETS["iso"][0]),
@@ -203,6 +212,12 @@ mainvtx_src = ColumnDataSource(data=dict(EMPTY3))
 shwpt_src = ColumnDataSource(data=dict(EMPTY3))     # shower-flagged assoc points
 gstart_src = ColumnDataSource(data=dict(EMPTY3))    # the two gamma start points
 piovtx_src = ColumnDataSource(data=dict(EMPTY3))    # the pi0 vertex in use
+# Round 8: the EM shower's start, and the point its axis is aimed through.
+# emstart_src carries TWO points when an override is set -- the one in use and
+# the reconstruction's own -- because "did my click take?" is otherwise
+# unanswerable from the screen.
+emstart_src = ColumnDataSource(data=dict(EMPTY3))
+emdir_src = ColumnDataSource(data=dict(EMPTY3))
 det_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
                                      xs_xz=[], ys_xz=[]))
 # Polylines are per-projection: the xs/ys pairs genuinely differ.
@@ -264,6 +279,8 @@ vtx3_src = ColumnDataSource(name="vtx3_src", data=dict(EMPTY3D))
 mainvtx3_src = ColumnDataSource(name="mainvtx3_src", data=dict(EMPTY3D))
 gstart3_src = ColumnDataSource(data=dict(EMPTY3D))
 piovtx3_src = ColumnDataSource(data=dict(EMPTY3D))
+emstart3_src = ColumnDataSource(name="emstart3_src", data=dict(EMPTY3D))
+emdir3_src = ColumnDataSource(name="emdir3_src", data=dict(EMPTY3D))
 # Every fitted point of every segment, carrying its segment id.  This is the
 # pick surface: Bokeh's own TapTool and BoxSelectTool hit-test it in screen space
 # on the PROJECTED columns, so 3-D selection needs no JS at all -- and because a
@@ -397,6 +414,11 @@ for f, hx, hy in PROJ:
                             fill_color="c", line_color="#222222", alpha=0.95))
     _add("gamma", f.scatter(hx, hy, source=piovtx_src, marker="star", size=24,
                             fill_color="#e377c2", line_color="#7b3294", alpha=0.95))
+    _add("emstart", f.scatter(hx, hy, source=emstart_src, marker="x", size=20,
+                              line_color="c", line_width=4, alpha=0.95))
+    _add("emstart", f.scatter(hx, hy, source=emdir_src, marker="triangle",
+                              size=16, fill_color="c", line_color="#222222",
+                              alpha=0.95))
 
 # ---------------------------------------------------------------------------
 # The 3-D panel (doc pr/114 rounds 3-4)
@@ -472,6 +494,11 @@ _add("gamma", f3d.scatter("u", "v", source=gstart3_src, marker="diamond",
 _add("gamma", f3d.scatter("u", "v", source=piovtx3_src, marker="star", size="sz",
                           fill_color="#e377c2", line_color="#7b3294",
                           fill_alpha="al", line_alpha="al"))
+_add("emstart", f3d.scatter("u", "v", source=emstart3_src, marker="x", size="sz",
+                            line_color="c", line_width=4, line_alpha="al"))
+_add("emstart", f3d.scatter("u", "v", source=emdir3_src, marker="triangle",
+                            size="sz", fill_color="c", line_color="#222222",
+                            fill_alpha="al", line_alpha="al"))
 # The pick surface is invisible (alpha 0) but still hit-tested -- Bokeh hit tests
 # geometry, not paint.  Deliberately NOT registered in RENDER: a layer checkbox
 # that silently disabled selection would be a trap.
@@ -492,10 +519,10 @@ for _r in (r_vtx3, r_mv3, r_cloud_c, r_cloud_q):
 # --- the CustomJS, spliced from em3d so there is one copy of the formula ------
 #                     cloud shwpt  pick  vtx  mainvtx gstart piovtx
 _PT_SRC = [cloud_src, shwpt3_src, pick_src, vtx3_src, mainvtx3_src, gstart3_src,
-           piovtx3_src]
-_PT_SIZE = [2.6, 2.0, 7.0, 6.0, 20.0, 18.0, 24.0]
-_PT_ALPHA = [0.55, 0.45, 0.0, 0.75, 0.95, 0.95, 0.95]
-_PT_CUE = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+           piovtx3_src, emstart3_src, emdir3_src]
+_PT_SIZE = [2.6, 2.0, 7.0, 6.0, 20.0, 18.0, 24.0, 20.0, 16.0]
+_PT_ALPHA = [0.55, 0.45, 0.0, 0.75, 0.95, 0.95, 0.95, 0.95, 0.95]
+_PT_CUE = [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 # The ONE table both mirrors read: Python's fill3_points looks a source up here,
 # and the JS gets the same three lists through args.  Nothing else carries a
 # base size or a base alpha for a 3-D point layer.
@@ -564,8 +591,10 @@ TAP_SELECT = "select segment(s)"
 TAP_IN, TAP_OUT, TAP_TOGGLE = "mark IN", "mark OUT", "toggle IN / OUT / clear"
 TAP_CENTRE, TAP_XYZ, TAP_PIO = ("orbit around it", "fill x / y / z",
                                 "make it the pi0 vertex")
+TAP_START, TAP_DIR = ("make it this shower's START",
+                      "aim this shower's AXIS through it")
 TAP_ACTIONS = [TAP_SELECT, TAP_IN, TAP_OUT, TAP_TOGGLE, TAP_CENTRE, TAP_XYZ,
-               TAP_PIO]
+               TAP_PIO, TAP_START, TAP_DIR]
 tap_action = Select(name="tap_action", title="a tap in 3-D does", value=TAP_SELECT,
                     options=TAP_ACTIONS, width=CW)
 # Default "frame the shower" since round 5.  Doc pr/114 sec 12.7 left this open;
@@ -661,7 +690,9 @@ acc_note = Div(width=430, text=(
 # ---------------------------------------------------------------------------
 # Controls
 # ---------------------------------------------------------------------------
-mode_group = RadioButtonGroup(labels=["EM shower", "pi0"], active=0, width=240)
+mode_group = RadioButtonGroup(name="mode_group",
+                              labels=["EM shower", "pi0"], active=0,
+                              width=240)
 event_select = Select(name="event_select", title="event", options=LABELS,
                       value=LABELS[0], width=190)
 prev_btn = Button(label="< prev", width=80)
@@ -670,14 +701,14 @@ LAYERS = [("segments", "track fit"), ("member", "shower members"),
           ("mark", "your marks"), ("select", "selection"), ("arrows", "axes"),
           ("vertices", "vertices"), ("shwpt", "shower pts"),
           ("gamma", "gammas / pi0 vtx"), ("det", "volume"),
-          ("cloud", "charge cloud (3-D)")]
+          ("cloud", "charge cloud (3-D)"), ("emstart", "shower start")]
 LAYER_KEYS = [k for k, _ in LAYERS]
 # Every key except "shower pts" (index 6), which stays off as before.  A renderer
 # registered under a key that is NOT in this list is invisible forever, because
 # apply_layers only ever turns on keys the checkbox group can name -- so adding a
 # layer means adding it here too.
 layer_group = CheckboxButtonGroup(labels=[t for _, t in LAYERS],
-                                  active=[0, 1, 2, 3, 4, 5, 7, 8, 9])
+                                  active=[0, 1, 2, 3, 4, 5, 7, 8, 9, 10])
 # `name=` on these two so selftest_em3d_browser.py can read them out of the live
 # document -- the banner's wording is a claim about the data ("built, not
 # uploaded") and the hint must be provably on screen, so both are asserted
@@ -793,6 +824,33 @@ g2_btn = Button(label="selected shower -> gamma 2", width=210)
 g_clear_btn = Button(label="clear gammas", width=120)
 gstart_slot = RadioButtonGroup(labels=["gamma 1", "gamma 2"], active=0, width=160)
 snap_btn = Button(label="snap start to nearest fit point", width=230)
+# Round 8, EM mode.  Separate widgets from the pi0 ones on purpose: man_x/y/z
+# and snap_btn belong to the pi0 vertex, the panels are switchable, and one pair
+# of boxes meaning two different things depending on a radio elsewhere is how a
+# scanner ends up moving the wrong point.
+# Round 8.  An EVENT-level topology flag, not a per-shower one: it describes the
+# whole event and it is what decides that the event needs different treatment
+# downstream, so it must be readable without knowing which shower was selected
+# when it was set.  A LIST rather than a boolean so the next class the scanner
+# meets is a one-line data change here and in the doc, with no schema change to
+# labels already on disk.
+EVENT_FLAGS = [("no_vertex_ncpi0",
+                "no-vertex \u03c0\u2070 (NC\u03c0\u2070) "
+                "\u2014 needs separate treatment")]
+EVENT_FLAG_KEYS = [k for k, _ in EVENT_FLAGS]
+event_flag_group = CheckboxGroup(name="event_flag_group",
+                                 labels=[t for _, t in EVENT_FLAGS], active=[],
+                                 width=RW)
+emstart_div = Div(name="emstart_div", text="", width=RW)
+em_startv_btn = Button(label="start = nearest vertex", width=175)
+em_startp_btn = Button(label="start = nearest fit point", width=175)
+em_dirp_btn = Button(label="aim axis at nearest fit point", width=205)
+em_start_reset = Button(label="reset start", width=105)
+em_dir_reset = Button(label="reset axis", width=105)
+em_sx = TextInput(title="start x", value="", width=90)
+em_sy = TextInput(title="start y", value="", width=90)
+em_sz = TextInput(title="start z", value="", width=90)
+em_setxyz_btn = Button(label="use these", width=95)
 gstart_reset = Button(label="reset to reco start", width=170)
 vtx_mode_group = RadioButtonGroup(
     labels=["main vertex", "back-project the two gammas", "manual"], active=0)
@@ -1001,10 +1059,48 @@ def absorb_site(sid):
     return "%s (%s)" % (s, last.get("how", ""))
 
 
-def shower_axis(node):
+def shower_axis(node, use_override=True):
     """(dir, branch, source).  Prefers the probe's dir15 -- that is the C++'s own
     `shower_cal_dir_3vector(shower, start, 15cm)`, so it needs no reproduction
-    caveat.  Without a sidecar, falls back to the Python `init_dir` mirror."""
+    caveat.  Without a sidecar, falls back to the Python `init_dir` mirror.
+
+    Round 8, and this is the invariant the whole feature rests on: THE START AND
+    THE AXIS MUST MOVE TOGETHER.  The probe's dir15 is anchored at the
+    reconstruction's start.  If the scanner moves the start and this still
+    returned dir15, seg_vs_shower would compute the angle between a direction
+    anchored at the old start and a displacement measured from the new one --
+    not a physical quantity, and one that looks entirely plausible in the
+    acceptance plot and in the saved marks_detail.  So an overridden start
+    invalidates the probe value, and the source string stops saying "probe".
+    """
+    dp = state["em_dir"].get(node) if use_override else None
+    ov = state["em_start"].get(node) if use_override else None
+    if dp is not None:
+        base = ov if ov is not None else reco_start(node)
+        if base is not None:
+            d = G.vsub(dp, base)
+            if G.vmag(d) > 0:
+                # The scanner aimed it by eye at a second point: exact by
+                # construction, no membership caveat at all.
+                return G.vnorm(d), "two_point", "manual@override"
+    if ov is not None:
+        # Same formula the probe used -- shower_cal_dir_3vector at 15 cm -- just
+        # evaluated at the new point.  Over the RECO's member set, deliberately:
+        # letting marks in here would move two inputs at once and make the
+        # before/after comparison uninterpretable.  Memoised because
+        # mark_metrics calls seg_vs_shower once per segment and this walks every
+        # member point.
+        key = (node, ov)
+        d = state["_axis_cache"].get(key)
+        if d is None:
+            segs = {sg.get("id"): sg for sg in cur_segments()}
+            mem = [segs[i] for i in members_of(node) if i in segs]
+            d = G.shower_cal_dir_3vector(mem, ov, 15.0)
+            state["_axis_cache"][key] = d
+        if G.vmag(d) > 0:
+            # NOT "probe": em_geom:161 says the Python mirror is not bit-exact
+            # (shower_ordered_edges vs fill_sets membership).
+            return d, "dir15", "python@start_override"
     pr = state.get("prep")
     if pr:
         e = (pr.get("showers") or {}).get(str(node))
@@ -1026,11 +1122,51 @@ def shower_axis(node):
     return d, br, "python"
 
 
-def shower_start(node, slot=None):
+def start_source(node, slot=None):
+    """Which of the three starts shower_start() just returned.  One function so
+    the pi0 panel, the EM readout and the saved record cannot disagree."""
     if slot is not None and state["gstart"].get(slot):
-        return state["gstart"][slot]
+        return "gamma_slot_override"
+    if state["em_start"].get(node) is not None:
+        return "em_start_correction"
+    return "reco"
+
+
+def reco_start(node):
+    """The reconstruction's OWN start for a shower, never the scanner's override.
+
+    Kept separate from shower_start so the record can carry both and a later
+    reader can see how far the hand scan moved it."""
     sh = shower_by_node(node)
     return G.pt(sh.get("start")) if sh else None
+
+
+def shower_start(node, slot=None):
+    """The start point the pass-1 gate is measured from.
+
+    Round 8.  `slot is not None` is the pi0 path and is untouched: every pi0
+    caller passes a slot, and the three bare calls -- the candidate table,
+    seg_vs_shower and mark_metrics -- are exactly the EM gate's consumers, which
+    is why the override plugs in here and nothing downstream needs to know.
+    Putting the em_start lookup ahead of the slot test instead would silently
+    move the gamma start points too."""
+    if slot is not None and state["gstart"].get(slot):
+        return state["gstart"][slot]
+    # Round 8b.  An EM start correction belongs to the SHOWER, not to EM mode, so
+    # it applies on the pi0 path too.  Before this it did not, and the result was
+    # worse than a missing feature: shower_axis() takes no slot and so ALREADY
+    # used the corrected start, while shower_start(node, slot) returned the
+    # reco's -- so mass_axis_convention was computed from the scanner's geometry
+    # and mass_vertex_convention from the reconstruction's, in the same record,
+    # with nothing on screen saying so.
+    #
+    # Precedence, most specific first:
+    #   gstart[slot]   a start set for THIS gamma slot, in pi0 mode  (above)
+    #   em_start[node] the shower's corrected start                  (here)
+    #   the dump's own start                                         (fallback)
+    if state["em_start"].get(node) is not None:
+        return state["em_start"][node]
+    return reco_start(node)
 
 
 # kine_charge converts collected charge to MeV as
@@ -1452,6 +1588,34 @@ def draw_gammas():
         gc.append(col); gt.append("gamma %d start" % slot)
     gstart_src.data = dict(x=gx, y=gy, z=gz, c=gc, tag=gt)
     fill3_points(gstart3_src, list(zip(gx, gy, gz)), c=list(gc), tag=list(gt))
+
+    # Round 8.  EM mode only: in pi0 mode the gamma diamonds already own this
+    # corner of the screen and two overlapping "start" glyphs would be a puzzle.
+    ex, ey, ez, ec, et = [], [], [], [], []
+    dx_, dy_, dz_, dc_, dt_ = [], [], [], [], []
+    node = state["sel_shower"]
+    if mode_group.active == 0 and node is not None:
+        used = shower_start(node)
+        ov = state["em_start"].get(node)
+        if used:
+            ex.append(used[0]); ey.append(used[1]); ez.append(used[2])
+            ec.append("#ff7f0e" if ov else "#8c564b")
+            et.append("start in use%s" % (" (yours)" if ov else " (reco)"))
+        if ov:
+            # The reco's own start stays on screen alongside, greyed: without it
+            # there is nothing to judge the move against.
+            rs = reco_start(node)
+            if rs:
+                ex.append(rs[0]); ey.append(rs[1]); ez.append(rs[2])
+                ec.append("#999999"); et.append("reco start (replaced)")
+        dp = state["em_dir"].get(node)
+        if dp:
+            dx_.append(dp[0]); dy_.append(dp[1]); dz_.append(dp[2])
+            dc_.append("#2ca02c"); dt_.append("axis aimed through here")
+    emstart_src.data = dict(x=ex, y=ey, z=ez, c=ec, tag=et)
+    fill3_points(emstart3_src, list(zip(ex, ey, ez)), c=list(ec), tag=list(et))
+    emdir_src.data = dict(x=dx_, y=dy_, z=dz_, c=dc_, tag=dt_)
+    fill3_points(emdir3_src, list(zip(dx_, dy_, dz_)), c=list(dc_), tag=list(dt_))
     v = pio_vertex()[0] if mode_group.active == 1 else None
     if v is None:
         piovtx_src.data = dict(EMPTY3)
@@ -1691,6 +1855,24 @@ def refresh_kine():
             mB = G.pi0_mass(e1, e2, thB)
         esum = (e1 or 0) + (e2 or 0)
         asym = abs((e1 or 0) - (e2 or 0)) / esum if esum else None
+        # Round 8b.  BOTH masses below depend on these points and axes, and the
+        # scanner asked outright "which one was used?".  Said on screen, per
+        # gamma, rather than left to be inferred from a number that moved.
+        _SRC_SAYS = {
+            "gamma_slot_override": "start set here in pi0 mode",
+            "em_start_correction": "<b style='color:#ff7f0e'>your corrected "
+                                   "start from EM mode</b>",
+            "reco": "the reconstruction's start"}
+        prov = []
+        for _sl, _nd, _pp in ((1, n1, p1), (2, n2, p2)):
+            _ss = start_source(_nd, _sl)
+            prov.append("&gamma;%d: %s (%.1f, %.1f, %.1f), axis <code>%s</code>"
+                        % (_sl, _SRC_SAYS[_ss],
+                           _pp[0], _pp[1], _pp[2],
+                           shower_axis(_nd)[2])
+                        if _pp else "&gamma;%d: no start" % _sl)
+        rows.append("<span style='font-size:88%%;color:#444'>%s</span>"
+                    % " &nbsp;|&nbsp; ".join(prov))
         rows.append(
             "E1 <b>%.1f</b> MeV (shower %s) &nbsp; E2 <b>%.1f</b> MeV (shower %s)"
             " &nbsp; E&pi;&#8304; <b>%.1f</b> MeV &nbsp; asym %s"
@@ -2107,6 +2289,12 @@ def load(lbl):
     state["acc_hidden"] = 0
     state["gamma"] = {1: None, 2: None}
     state["gstart"] = {1: None, 2: None}
+    # Node ids are per-event: a leaked override would land on a DIFFERENT
+    # shower in the next event and move its start with no sign on screen.
+    state["em_start"] = {}
+    state["em_dir"] = {}
+    state["em_startvid"] = {}
+    state["_axis_cache"] = {}
     state["vtx_manual"] = None
     state["dirty"] = False
     if not path:
@@ -2229,6 +2417,7 @@ def load(lbl):
     refresh_selection()
     refresh_impact()
     refresh_kine()
+    refresh_emstart()
     set_banner(nloss)
     refresh_info()
     sync_cloud_vis()
@@ -2346,6 +2535,7 @@ def load_label(lbl):
     try:
         em_verdict.active = None
         conf_group.active = None
+        event_flag_group.active = []
         note_in.value = ""
         if not os.path.exists(p):
             return
@@ -2357,6 +2547,22 @@ def load_label(lbl):
             state["sel_shower"] = em["shower"]
             if em.get("verdict") in EM_VERDICTS:
                 em_verdict.active = EM_VERDICTS.index(em["verdict"])
+        # Round 8.  Keyed by shower, so re-opening an event restores every
+        # shower's start and direction, not only the selected one's -- the
+        # saved marks_detail was measured against all of them.
+        for _k, _dst in (("start_override_by_shower", "em_start"),
+                         ("dir_point_by_shower", "em_dir")):
+            for _nd, _p in (em.get(_k) or {}).items():
+                try:
+                    state[_dst][int(_nd)] = (float(_p[0]), float(_p[1]),
+                                             float(_p[2]))
+                except (TypeError, ValueError, IndexError):
+                    continue
+        for _nd, _v in (em.get("start_override_vertex_id_by_shower") or {}).items():
+            try:
+                state["em_startvid"][int(_nd)] = _v
+            except (TypeError, ValueError):
+                continue
         # Round 5 writes marks_by_shower and nothing else.  A round-4 file has a
         # flat map plus one `em.shower`, and the only defensible reading of it is
         # "they all belong to that shower" -- which may be wrong, so the read is
@@ -2372,6 +2578,9 @@ def load_label(lbl):
             if em.get("shower") is not None:
                 state["marks"] = {em["shower"]: flat}
                 state["legacy_marks"] = (em["shower"], len(flat))
+        event_flag_group.active = [
+            EVENT_FLAG_KEYS.index(f) for f in (rec.get("event_flags") or [])
+            if f in EVENT_FLAG_KEYS]
         pio = rec.get("pio") or {}
         for slot in (1, 2):
             g = (pio.get("gammas") or {}).get(str(slot))
@@ -2496,6 +2705,8 @@ def on_save():
         sh = shower_by_node(node) or {}
         j, n = G.join_completeness(sh, cur_segments()) if sh else (0, 0)
         ax, br, axsrc = shower_axis(node) if node is not None else ((0, 0, 0), "", "")
+        rax, rbr, raxsrc = (shower_axis(node, use_override=False)
+                            if node is not None else ((0, 0, 0), "", ""))
         em_block = dict(
             shower=node,
             # Round 5.  Keyed by shower, and the ONLY mark field written -- a
@@ -2525,7 +2736,26 @@ def on_save():
                       kine_charge_other_hypothesis=kine_hypothesis(node)[2],
                       start_connection_type=sh.get("start_connection_type"),
                       pio_id=sh.get("pio_id"),
-                      axis=list(ax), axis_branch=br, axis_source=axsrc))
+                      axis=list(rax), axis_branch=rbr, axis_source=raxsrc),
+            # Round 8.  The start the gate was measured from, the reco's own,
+            # and the scanner's overrides -- all three, because "I moved the
+            # start" is only checkable later against what it was moved FROM.
+            # axis_source above already says whether the axis is the probe's,
+            # recomputed at the new start, or aimed by hand at a second point.
+            # What the gate ACTUALLY used.  Kept out of the `reco` block above:
+            # that block is the reconstruction's own answer, and filing a
+            # hand-aimed axis inside it would let a later reader attribute the
+            # scanner's judgement to the reconstruction.
+            axis_used=list(ax), axis_used_branch=br, axis_used_source=axsrc,
+            start_used=list(shower_start(node) or []) if node is not None else None,
+            reco_start=list(reco_start(node) or []) if node is not None else None,
+            reco_start_vertex_id=sh.get("start_vertex_id"),
+            start_override_by_shower={
+                str(nd): list(p) for nd, p in sorted(state["em_start"].items())},
+            start_override_vertex_id_by_shower={
+                str(nd): v for nd, v in sorted(state["em_startvid"].items())},
+            dir_point_by_shower={
+                str(nd): list(p) for nd, p in sorted(state["em_dir"].items())})
 
     pio_block = None
     if state["gamma"][1] is not None or state["gamma"][2] is not None:
@@ -2539,6 +2769,16 @@ def on_save():
                 shower=node,
                 start=list(shower_start(node, slot) or []),
                 start_override=list(state["gstart"][slot]) if state["gstart"][slot] else None,
+                # Round 8b.  Both mass conventions below are computed from this
+                # point and this axis; naming their provenance is what makes the
+                # two numbers comparable months later.
+                start_source=start_source(node, slot),
+                reco_start=list(reco_start(node) or []),
+                em_start_correction=(list(state["em_start"][node])
+                                     if state["em_start"].get(node) else None),
+                dir_point=(list(state["em_dir"][node])
+                           if state["em_dir"].get(node) else None),
+                axis_source=shower_axis(node)[2],
                 energy=shower_energy(node),
                 # Which recombination that energy used, and the same charge under
                 # the other hypothesis.  A gamma slot filled with a track-flagged
@@ -2590,6 +2830,10 @@ def on_save():
             timespec="seconds"),
         confidence=CONF[conf_group.active] if conf_group.active is not None else None,
         note=note_in.value or None,
+        # Round 8.  Event-level, so it sits beside `em` and `pio` rather than
+        # inside either: a later pass selecting "the no-vertex NCpi0 events"
+        # reads one key and never has to open a shower block.
+        event_flags=[EVENT_FLAG_KEYS[i] for i in sorted(event_flag_group.active)],
         main_vertex=d.get("main_vertex"),
         # The view the judgement was made from, so a later re-read can put the
         # event back on screen the way it was seen.
@@ -2662,6 +2906,7 @@ def on_mode(attr, old, new):
     draw_arrows()
     draw_gammas()
     refresh_kine()
+    refresh_emstart()        # round 8b: otherwise the start readout goes stale
     apply_layers(None, None, None)
 
 
@@ -2690,9 +2935,11 @@ def on_shower_select(attr, old, new):
     fill_cand_table()
     draw_tiers()
     draw_arrows()
+    draw_gammas()            # round 8: the start / direction markers are per shower
     push_polys(mem_src, members_of(node), mem3_src)
     refresh_marks()          # the halos follow the shower now that marks do
     refresh_impact()
+    refresh_emstart()
     # Round 5: a table click brings the 3-D view up and puts the shower in it.
     # The scanner asked for exactly this -- picking a row and then having to find
     # and re-frame the thing by hand was the step that made the table and the
@@ -2958,6 +3205,209 @@ def set_centre(p, why=""):
                       % (p[0], p[1], p[2], why))
 
 
+def _em_redraw():
+    """Everything the pass-1 gate feeds.  The start and the axis are inputs to
+    all of it, so moving either has to sweep the same set a shower selection
+    does -- otherwise the table says one thing and the plot another."""
+    state["_axis_cache"] = {}
+    fill_cand_table()
+    draw_tiers()
+    draw_arrows()
+    draw_gammas()          # the start / direction markers ride along here
+    refresh_marks()
+    refresh_impact()
+    refresh_emstart()
+    touch()
+
+
+def set_em_start(p, why="", vid=None):
+    """Make a clicked point this shower's start."""
+    node = state["sel_shower"]
+    if node is None:
+        save_note.text = ("<b>pick a shower first</b> &mdash; a start point has "
+                          "to belong to one. Click a row in the shower table, "
+                          "then click the point again.")
+        return
+    if mode_group.active != 0:
+        mode_group.active = 0
+    state["em_start"][node] = (float(p[0]), float(p[1]), float(p[2]))
+    if vid is not None:
+        state["em_startvid"][node] = str(vid)
+    else:
+        state["em_startvid"].pop(node, None)
+    _em_redraw()
+    rs = reco_start(node)
+    moved = G.vmag(G.vsub(state["em_start"][node], rs)) if rs else None
+    save_note.text = (
+        "shower %s start set to (%.1f, %.1f, %.1f)%s%s &mdash; the candidate "
+        "table, the acceptance plot and the saved metrics are all measured from "
+        "it now. <b>The axis moved too</b>: %s."
+        % (node, p[0], p[1], p[2], why,
+           "" if moved is None else ", %.1f cm from the reco start" % moved,
+           ("it is aimed through the point you picked"
+            if state["em_dir"].get(node) is not None else
+            "recomputed at 15 cm from the new start, since the probe's value "
+            "was anchored at the old one")))
+
+
+def set_em_dir(p, why=""):
+    """Aim this shower's axis through a clicked point."""
+    node = state["sel_shower"]
+    if node is None:
+        save_note.text = ("<b>pick a shower first</b> &mdash; a direction has to "
+                          "belong to one.")
+        return
+    if mode_group.active != 0:
+        mode_group.active = 0
+    base = shower_start(node)
+    if base is not None and G.vmag(G.vsub(p, base)) < 1e-6:
+        save_note.text = ("that point IS the start &mdash; a direction needs a "
+                          "second, different point to aim through.")
+        return
+    state["em_dir"][node] = (float(p[0]), float(p[1]), float(p[2]))
+    _em_redraw()
+    ax, _, _ = shower_axis(node)
+    save_note.text = (
+        "shower %s axis aimed through (%.1f, %.1f, %.1f)%s &mdash; direction "
+        "now (%.3f, %.3f, %.3f), measured from the start in use."
+        % (node, p[0], p[1], p[2], why, ax[0], ax[1], ax[2]))
+
+
+def _nearest_fit_point(p):
+    best, bd = None, None
+    for sg in cur_segments():
+        for q in G.seg_points(sg):
+            d = G.vmag(G.vsub(q, p))
+            if bd is None or d < bd:
+                best, bd = q, d
+    return best, bd
+
+
+def _nearest_vertex(p):
+    best, bd, bid = None, None, None
+    for v in ((state["data"] or {}).get("vertices") or []):
+        q = G.pt(v.get("fit"))
+        if not q:
+            continue
+        d = G.vmag(G.vsub(q, p))
+        if bd is None or d < bd:
+            best, bd, bid = q, d, v.get("id")
+    return best, bd, bid
+
+
+def _anchor_for_snap():
+    """What the buttons snap RELATIVE to: the typed boxes if they hold a point,
+    else the start currently in use.  Without this the buttons would need a
+    click in the 3-D view to mean anything, which is the trip they exist to
+    save."""
+    try:
+        return (float(em_sx.value), float(em_sy.value), float(em_sz.value))
+    except (TypeError, ValueError):
+        pass
+    node = state["sel_shower"]
+    return shower_start(node) if node is not None else None
+
+
+def on_em_startv():
+    p = _anchor_for_snap()
+    if p is None:
+        return
+    q, d, vid = _nearest_vertex(p)
+    if q is None:
+        save_note.text = "this event has no reconstructed vertices to snap to."
+        return
+    set_em_start(q, " (vertex %s, %.1f cm away)" % (vid, d), vid=vid)
+
+
+def on_em_startp():
+    p = _anchor_for_snap()
+    if p is None:
+        return
+    q, d = _nearest_fit_point(p)
+    if q is None:
+        return
+    set_em_start(q, " (fit point, %.1f cm away)" % d)
+
+
+def on_em_dirp():
+    p = _anchor_for_snap()
+    if p is None:
+        return
+    q, d = _nearest_fit_point(p)
+    if q is None:
+        return
+    set_em_dir(q, " (fit point, %.1f cm away)" % d)
+
+
+def on_em_setxyz():
+    try:
+        p = (float(em_sx.value), float(em_sy.value), float(em_sz.value))
+    except (TypeError, ValueError):
+        save_note.text = "start x / y / z need three numbers."
+        return
+    set_em_start(p, " (typed)")
+
+
+def clear_em_start():
+    node = state["sel_shower"]
+    if node is None:
+        return
+    state["em_start"].pop(node, None)
+    state["em_startvid"].pop(node, None)
+    _em_redraw()
+    save_note.text = "shower %s start back to the reconstruction's." % node
+
+
+def clear_em_dir():
+    node = state["sel_shower"]
+    if node is None:
+        return
+    state["em_dir"].pop(node, None)
+    _em_redraw()
+    save_note.text = "shower %s axis back to being computed, not aimed." % node
+
+
+def refresh_emstart():
+    """Say what the start and the axis currently ARE, and warn when marks were
+    made before they moved."""
+    node = state["sel_shower"]
+    if node is None:
+        emstart_div.text = ""
+        return
+    rs = reco_start(node)
+    ov = state["em_start"].get(node)
+    dp = state["em_dir"].get(node)
+    ax, br, axsrc = shower_axis(node)
+    bits = []
+    if rs:
+        bits.append("reco start (%.1f, %.1f, %.1f)" % rs)
+    if ov:
+        vid = state["em_startvid"].get(node)
+        bits.append("<b style='color:#ff7f0e'>yours (%.1f, %.1f, %.1f)%s, "
+                    "%.1f cm away</b>"
+                    % (ov[0], ov[1], ov[2],
+                       " = vertex %s" % vid if vid else "",
+                       G.vmag(G.vsub(ov, rs)) if rs else float("nan")))
+    bits.append("axis <code>%s</code> / <code>%s</code>" % (br, axsrc))
+    if dp:
+        bits.append("<b style='color:#2ca02c'>aimed through "
+                    "(%.1f, %.1f, %.1f)</b>" % dp)
+    warn = ""
+    if (ov or dp) and marks_for(node):
+        # Said out loud, not silently absorbed: mark_metrics recomputes tier,
+        # angle and distance AT SAVE TIME, so marks made by eye before the move
+        # get a record whose geometry the scanner never saw on screen.
+        warn = ("<div style='color:#b58900;margin-top:3px'>&#9888; you already "
+                "marked %d segment(s) on this shower. The saved tier / angle / "
+                "distance are recomputed from the start and axis above, not "
+                "from the ones you marked against &mdash; re-check the "
+                "candidate table before saving.</div>" % len(marks_for(node)))
+    emstart_div.text = (
+        "<div style='background:#f7f7f7;border-left:4px solid #8c564b;"
+        "padding:5px 9px;margin:2px 0;font-size:90%%'><b>start &amp; axis</b> "
+        "&mdash; %s%s</div>" % (" &nbsp;|&nbsp; ".join(bits), warn))
+
+
 def set_pio_vertex(p, why=""):
     """Make a clicked point the pi0 decay vertex.
 
@@ -3070,7 +3520,7 @@ def on_pick(attr, old, new):
     act = tap_action.value
     sids = [pick_src.data["sid"][i] for i in new
             if i < len(pick_src.data.get("sid", []))]
-    if act in (TAP_CENTRE, TAP_XYZ, TAP_PIO):
+    if act in (TAP_CENTRE, TAP_XYZ, TAP_PIO, TAP_START, TAP_DIR):
         i = new[0]
         try:
             p = (pick_src.data["x"][i], pick_src.data["y"][i],
@@ -3078,8 +3528,8 @@ def on_pick(attr, old, new):
         except (KeyError, IndexError):
             return
         why = " on segment %s" % pick_src.data["sid"][i]
-        {TAP_CENTRE: set_centre, TAP_XYZ: fill_xyz, TAP_PIO: set_pio_vertex}[act](
-            p, why)
+        {TAP_CENTRE: set_centre, TAP_XYZ: fill_xyz, TAP_PIO: set_pio_vertex,
+         TAP_START: set_em_start, TAP_DIR: set_em_dir}[act](p, why)
         _clear_pick()
         return
     ids = sorted(set(sids))
@@ -3154,12 +3604,20 @@ def on_vtx_pick(src, what):
             set_pio_vertex(p, why)
         elif act == TAP_XYZ:
             fill_xyz(p, why)
+        elif act == TAP_START:
+            # "change the start VERTEX": a tap that lands on a reconstructed
+            # vertex records WHICH one, so the record can say "vertex 41" and
+            # not just a bare point.
+            set_em_start(p, why, vid=tag if what == "vertex" else None)
+        elif act == TAP_DIR:
+            set_em_dir(p, why)
         else:
             save_note.text = (
                 "that is %s %s at (%.1f, %.1f, %.1f) &mdash; a vertex, not a "
                 "segment, so <i>%s</i> has nothing to mark. Switch <b>a tap in "
-                "3-D does</b> to <i>%s</i> or <i>%s</i> to use it."
-                % (what, tag, p[0], p[1], p[2], act, TAP_PIO, TAP_CENTRE))
+                "3-D does</b> to <i>%s</i>, <i>%s</i> or <i>%s</i> to use it."
+                % (what, tag, p[0], p[1], p[2], act, TAP_START, TAP_PIO,
+                   TAP_CENTRE))
         _clear_pick()
     return cb
 
@@ -3206,6 +3664,12 @@ g1_btn.on_click(on_gamma(1))
 g2_btn.on_click(on_gamma(2))
 g_clear_btn.on_click(on_gamma_clear)
 snap_btn.on_click(on_snap)
+em_startv_btn.on_click(on_em_startv)
+em_startp_btn.on_click(on_em_startp)
+em_dirp_btn.on_click(on_em_dirp)
+em_setxyz_btn.on_click(on_em_setxyz)
+em_start_reset.on_click(clear_em_start)
+em_dir_reset.on_click(clear_em_dir)
 gstart_reset.on_click(on_gstart_reset)
 vtx_mode_group.on_change("active", on_vtx_mode)
 for w in (man_x, man_y, man_z):
@@ -3213,6 +3677,7 @@ for w in (man_x, man_y, man_z):
 layer_group.on_change("active", apply_layers)
 em_verdict.on_change("active", on_verdict)
 conf_group.on_change("active", on_verdict)
+event_flag_group.on_change("active", lambda a, o, n: touch())
 save_btn.on_click(on_save)
 for _f, _hx, _hy in PROJ:
     _f.on_event(Tap, tap_fill(_hx, _hy))
@@ -3277,6 +3742,13 @@ em_panel = column(
              "(or set <i>a tap in 3-D does</i> to mark on the click itself).",
         width=RW),
     row(mark_in_btn, mark_out_btn, mark_q_btn, mark_clear_btn, show_all_toggle),
+    Div(text="<b>start &amp; direction</b> &mdash; set <i>a tap in 3-D does</i> "
+             "to <i>%s</i> and click a vertex (or any fit point); then <i>%s</i> "
+             "and click a second point to aim the axis. Everything below is "
+             "measured from them." % (TAP_START, TAP_DIR), width=RW),
+    row(em_startv_btn, em_startp_btn, em_dirp_btn),
+    row(em_sx, em_sy, em_sz, em_setxyz_btn, em_start_reset, em_dir_reset),
+    emstart_div,
     cand_tab,
     marks_div,
     Div(text="<b>verdict for this shower</b>", width=RW), em_verdict,
@@ -3330,6 +3802,11 @@ right_col = column(
     pio_panel,
     row(column(acc, row(acc_zoom), acc_note)),
     cmp_div,
+    Div(text="<b>this event's topology</b> &mdash; event-level, saved as "
+             "<code>event_flags</code> beside <code>em</code> and "
+             "<code>pio</code>, so a later pass can select these events "
+             "without opening a shower block.", width=RW),
+    event_flag_group,
     row(conf_group, note_in, save_btn),
     save_note, width=RW)
 
