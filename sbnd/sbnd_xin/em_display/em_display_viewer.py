@@ -5448,8 +5448,15 @@ pio_add_btn.on_click(on_pio_add)
 pio_load_btn.on_click(on_pio_load)
 pio_upd_btn.on_click(on_pio_update)
 pio_del_btn.on_click(on_pio_del)
-for _w in (g1_ehyp, g2_ehyp, emark_mode, orph_mode):
+for _w in (g1_ehyp, g2_ehyp, emark_mode):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
+# Not folded into the loop above, for the same kind of reason on_vtx_mode is
+# not: this switch is the only one the EM-mode MARK LIST reads, so flipping it
+# has to rebuild that too or the note under a mark keeps saying "will not reach
+# the pi0 mass" about charge that is now being counted.  Caught in the live
+# browser smoke, not in the headless test, which called both refreshes by hand.
+orph_mode.on_change("value", lambda a, o, n: (refresh_kine(),
+                                              refresh_mark_list(), touch()))
 # Not folded into the loop above: this one MOVES the pi0 vertex, so the marker
 # in the 3-D view has to be redrawn -- the same pair of calls on_vtx_mode makes
 # -- and it must honour _suspend, because load()/load_label set it while an

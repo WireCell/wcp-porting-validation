@@ -3324,7 +3324,7 @@ estimate everywhere it appears.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python em_display/selftest_em_display.py        # 424
+python em_display/selftest_em_display.py        # 426
 python em_display/selftest_em3d_browser.py      # 90
 python em_display/selftest_repro.py             # 98/98
 
@@ -3435,8 +3435,16 @@ a **re-save** records, and nothing else.
 
 ### 26.6 Tests
 
-`selftest_em_display.py` 397 → **424**, `selftest_em3d_browser.py` 86 → **90**,
+`selftest_em_display.py` 397 → **426**, `selftest_em3d_browser.py` 86 → **90**,
 `selftest_repro.py` 98/98 unchanged.
+
+One bug the headless test could not have caught, found by the live smoke on
+5017: the shared `on_change` loop for the energy switches calls `refresh_kine()`
+only, and this is the one switch the EM-mode **mark list** also reads — so
+flipping it left the note under a mark saying "will not reach the π⁰ mass" about
+charge that was by then being counted. `orph_mode` now has its own handler that
+rebuilds both. The headless test had been calling the two refreshes by hand,
+which is exactly what hid it; the new check drives the real callback instead.
 
 The round-12 and round-17 checks that describe the *uncounted* behaviour are
 **pinned to the switch off, not deleted** — that is still exactly what off has to

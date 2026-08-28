@@ -3100,6 +3100,19 @@ V.refresh_mark_list()
 check("  ... and says it is not, when it is not",
       "will not reach" in V.marks_div.text
       and "counted into it" not in V.marks_div.text, "-")
+# ... and the switch itself has to rebuild that list.  Found in the live browser
+# smoke on 5017, where flipping the switch left the note saying "will not reach
+# the pi0 mass" about charge that was by then being counted: the shared
+# on_change loop calls refresh_kine() only, and this is the one switch the EM
+# mark list reads.  Asserted through the real callback, not by calling the two
+# refreshes by hand -- calling them by hand is exactly what hid it.
+V.orph_mode.value = V.EORPH_IN
+check("flipping the switch rebuilds the EM mark list, not just the pi0 panel",
+      "counted into it" in V.marks_div.text, V.marks_div.text[-90:])
+V.orph_mode.value = V.EORPH_OUT
+check("  ... both ways",
+      "will not reach" in V.marks_div.text, V.marks_div.text[-90:])
+V.orph_mode.value = V.EORPH_IN
 
 # The record, and the two rows telling each other apart.
 V.orph_mode.value = V.EORPH_IN
