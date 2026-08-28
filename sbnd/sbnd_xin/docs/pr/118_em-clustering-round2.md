@@ -301,6 +301,11 @@ numerics at C++ defaults (= the measured operating point).
 - **Connected components**: measured 16 γγ violations; stays a
   measurement, not a knob.
 - π⁰ pairing/reporting — unchanged, deferred by owner instruction.
+- **Follow-on**: doc pr/119 measured the mirror (over-clustering) side —
+  the member-expel/split predicate is killed by the same "no local
+  separator" wall (wrongly-held groups feature-identical to correctly-held
+  ones; half the OUT charge sits at the shower's own root), independently
+  confirming that this whole residual class needs cascade-level context.
 
 ## 8. Files
 
