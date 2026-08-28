@@ -795,3 +795,234 @@ moving a production default.
 
 **No code changed in this round — no C++, no jsonnet, no config. No A/B gate is
 owed.**
+
+## 16. Round 3 — the harness, and three measurements that change §15
+
+§15 proposed six measurements before any code. Four of them turned out to be
+computable from data already on disk, and they are done. Two of the four
+contradict what §15 expected, and one of those contradictions is large enough
+that it retires an item rather than refining it. **Still no C++, no jsonnet, no
+knob flips.**
+
+### Repro
+
+```
+cd sbnd_xin/em_display
+./em115_score.py                  # per-event score table + integrity lines
+./em115_score.py --tsv ../docs/pr/pr115-score-baseline.tsv
+./em115_score.py --pi0            # §15.6a: T_kine fill vs the identification
+./em115_score.py --level          # §15.5: cross-cluster or one-cluster
+./em115_score.py --absorb         # which pass absorbed each wrongly-held segment
+./em115_score.py --baseline A.tsv --compare B.tsv     # after a knob change
+```
+
+Deterministic: two runs give byte-identical stdout and TSV
+(md5 `3e2424a883d24831a2c6ca43fe437f5c`). Read-only over `em_labels/` and over
+the calib dumps (M13).
+
+### 16.1 The harness, and one thing it had to be corrected about
+
+`em115_score.py` scores reconstructed shower membership against the marks:
+
+```
+target = (members at scan time  UNION  IN marks)  MINUS  OUT marks     [fixed]
+actual = membership in the current reconstruction                      [moves]
+completeness = |actual & target| / |target|      purity = |actual & target| / |actual|
+```
+
+Both unweighted and **charge-weighted** — charge is what the π⁰ mass consumes,
+so a missing 30 cm member and a missing 1 cm stub are not the same miss, and
+counting segments says they are. The per-event scalar is the charge-weighted F1
+of each marked shower, itself weighted by that shower's target charge, so a
+300 MeV gamma scored badly is not averaged away by a 2 MeV stub scored well.
+
+**The correction.** The first version read membership from the dump's
+`segments[].shower_id` and reported 8 segments of "drift" against the labels on
+evt84229 and evt314838 — which looks like the dump and the labels coming from
+different runs, i.e. the whole comparison being void. It is not. That field is
+**single-valued**, so a segment held by two overlapping showers is credited to
+one of them; the display reads the non-lossy stage-2 probe sidecar instead
+(`probe_members` in `em_display_viewer.py`). Scoring against the lossy join
+invents misses that are not there — it cost evt84229 0.854 where the truth is
+0.978. The harness now reads the sidecar, as the display does, drift is **0**,
+and the 8-segment loss is reported as what it is: a property of the dump field.
+
+### 16.2 M1 — the baseline
+
+25 of the 97 scanned events carry marks; 33 marked showers scored.
+
+| bucket | n | median charge-weighted F1 | Σ charge missing | Σ charge wrongly held |
+|---|---|---|---|---|
+| 1 under-clustered | 17 | **0.887** | 3.45e7 | 0 |
+| 1+2 both | 3 | **0.740** | 1.10e7 | 2.53e6 |
+| 2 over-clustered | 5 | **0.740** | 1.31e7 | 6.55e6 |
+
+Worst five events: `evt409634` 0.380, `evt76346` 0.446, `evt142421` 0.630,
+`evt342199` 0.670, `evt54332` 0.686. Best: `evt166870` 0.993, `evt64591` 0.991
+— both one-segment corrections, consistent with §12's note that evt64591's own
+verdict says "correct".
+
+One shower is unscorable: `evt76346` shower 40030 has completeness **and**
+purity 0 — the reco's membership and the scanner's intent share nothing at all.
+It is the single worst object in the sample and the natural first test case.
+
+This table is the regression baseline. **What it is not:** MC truth. It measures
+agreement with one scanner's marks on 25 events selected for being wrong. A gain
+here is evidence a change does what was asked, not evidence of a physics
+improvement — which is why the 37 "good" events are carried as the control.
+
+### 16.3 M2 — §15.6a confirmed, and it substantially rehabilitates the reco
+
+§15.6a predicted that `kine_pio_mass` is the energy-ranked pair, not the
+identified π⁰. Measured on all 26 π⁰ events:
+
+| | n | median \|m − 135\| | events with a pairing |
+|---|---|---|---|
+| `T_kine` fill (`kine_pio_mass`) | 25 | **24.1 MeV** | 15 of 26 in 100–180 |
+| the identification (`showers[].pio_id`) | 21 | **12.4 MeV** | **21 of 26** |
+| hand-built (§11) | 26 | 14.3 MeV | 22 of 26 |
+
+The fill's row reproduces §11's "reco 15/26, median 26.6" almost exactly —
+confirming that **§11 measured the fill.** The identification, which §11 never
+looked at, finds a π⁰ on **21 of 26 events at a median 12.4 MeV**, against the
+hand scan's 22 of 26 at 14.3.
+
+Every one of §11's named reco disasters is a fill artifact:
+
+| event | fill (`kine_pio_mass`) | identified |
+|---|---|---|
+| `evt269774` | 1444.0 | **124.3** (and a second at 152.5) |
+| `evt47212` | 764.5 | **148.5** |
+| `evt166870` | 329.7 | **128.8** |
+| `evt21073` | 207.3 | **127.2** (and a second at 111.2) |
+| `evt173093` | 17.1 | **137.3** |
+
+Agreement between the two selections: the fill lands on an identified pair on
+**14** events, differs from every identified pair on **7**, and on **4** reports
+a mass when nothing was identified at all (`evt169626` 145.8, `evt285567` 19.1,
+`evt342199` 315.3, `evt506746` 10.1). One event has neither.
+
+Two consequences, and they point in opposite directions:
+
+* **The π⁰ *pairing* is close to done.** The residual is **5 events with nothing
+  identified** — `evt169626`, `evt285567`, `evt342199`, `evt347129`,
+  `evt506746` — not the 11 that §11's numbers implied. §15.6b's proposed
+  pairing knobs should be aimed at those 5 and judged there, and the
+  conn-1 × conn-1 exclusion is the first thing to test against them.
+* **The *reporting* is the bigger defect.** `kine_pio_mass` is what downstream
+  consumes, and on 11 of 26 events it disagrees with, or exists without, the
+  identification. §15.6d's multi-π⁰ item is also now concrete rather than
+  hypothetical: **3 events carry two identified π⁰** (`evt21073`, `evt54332`,
+  `evt269774`), 24 groups over 21 events, and the single-slot output can express
+  none of the second ones.
+
+*Honest limit:* the identification's window is (100, 160) MeV, so "21 of 21
+inside 100–180" is tautological and must not be quoted as a resolution. The
+meaningful comparison is **recall** — 21 of 26 vs the scanner's 22 of 26 — and
+the median is a median *within* the window.
+
+### 16.4 M3 — group 2 is cross-cluster, and §15.5 had the direction backwards
+
+§15.5 asked, for each over-clustered event, whether the two gammas already live
+in distinct clusters, and framed a "yes" as a pr/57 §14 candidate. **That
+framing was wrong, and the measurement is the opposite of what it assumed.**
+
+Reading the marks needed a fix first: on `split-by-proxy` events the scanner's
+two sides are the **IN set and the OUT set** inside one shower — `evt142421` is
+33 IN + 10 OUT, all 43 owned by shower 108104 — so "marked vs unmarked" leaves
+nothing on the other side. With both idioms handled, over the 10 over-clustered
+and both-direction events that carry a two-sided partition:
+
+| | n |
+|---|---|
+| the two sides are in **different** clusters | **9** |
+| the two sides **share** a cluster | **1** (`evt84229`, cluster 9) |
+
+Different clusters means image-level separation **already did its job** and a
+*shower* pass reached across a correct boundary to merge them. That is not
+pr/57 §14 territory — pr/57 changes how clusters are formed, and the clusters
+here were right. And it is not a case for the new `Shower::split_at` pass
+§15.5 proposed either: nothing needs splitting that was not wrongly joined one
+absorb at a time.
+
+**So §15.7 item 10 — the new split pass — is retired for 9 of 10 cases.** What
+those 9 need is a guard on the cross-cluster absorb, which is an ordinary
+default-OFF knob of exactly the kind the campaign already ships. Only
+`evt84229` remains as a genuine one-cluster case, and one event does not
+justify a new pass; it goes back to pr/53 / pr/57 for consideration.
+
+### 16.5 M4 — which pass did it (not planned, and the most directly actionable)
+
+Every mark carries `absorbed_by`, the pass that put that segment where it is.
+That turns "over-clustering" from a symptom into a ranked list of call sites.
+
+**Segments that should not be in the shower** (150 marks, over-clustered + both):
+
+| absorbed_by | n | share | where |
+|---|---|---|---|
+| **`pass4_angle`** | **72** | **48 %** | `shower_clustering_with_nv_from_main_cluster` step 4 direction cone, `:1310-1312` |
+| *(never absorbed — orphan)* | 23 | 15 % | — |
+| `from_vertices` (walk_add) | 19 | 13 % | `…_with_nv_from_vertices` cross-cluster absorb, `:1944-1980` |
+| `in_other_clusters_seg_cone` | 15 | 10 % | `…_in_other_clusters` sub-pass A, `:2345` |
+| `in_other_clusters_A` (walk_add) | 10 | 7 % | same pass, flood-fill |
+| `pass3_cone` | 8 | 5 % | `…_from_main_cluster` step 3 |
+| `stem_backfill` | 2 | 1 % | pr/93 |
+| `examine_shower_1_tmp` | 1 | 1 % | |
+
+**Segments the reco missed** (125 marks, under-clustered):
+
+| absorbed_by | n | share |
+|---|---|---|
+| *(never absorbed — orphan)* | 41 | 33 % |
+| `pass4_angle` | 30 | 24 % |
+| `pass3_cone` | 19 | 15 % |
+| `from_vertices` (walk_add) | 16 | 13 % |
+| `pass4_proximity` | 5 | 4 % |
+| others (`in_other_clusters_*`, `conn3_unreachable`, `in_main_cluster`) | 14 | 11 % |
+
+**One cut dominates both columns.** `pass4_angle` — the elliptical direction
+cone `(angle < 25 && d < 80 cm) || (angle < 12.5 && d < 130 cm) || (angle < 5 &&
+d < 200 cm)` ranked by `(d·cosθ)²/(40 cm)² + (d·sinθ)²/(5 cm)²` — is 48 % of
+what is wrongly held and 24 % of what is wrongly missed. It is reaching too far
+in some events and not far enough in others, which is the signature of a cone
+whose *shape* is wrong rather than its size, and it is the single highest-value
+thing to instrument. The marks already carry `dist`, `angle` and `ellip` per
+segment, so the accept/reject scatter can be plotted directly against the
+scanner's verdict before any cut is touched.
+
+The 33 % orphan share on the under-clustered side is §15.4b's `stub` class
+measured: a third of everything the reco missed was never absorbed by any pass
+at all — no cut rejected it, nothing looked at it.
+
+### 16.6 What this does to §15.7
+
+| §15.7 item | status after round 3 |
+|---|---|
+| 1 harness | **done** — `em115_score.py`, baseline TSV committed |
+| 2 fill vs identification | **done** (16.3) — reframes §11; π⁰ residual is 5 events, not 11 |
+| 3 cluster vs shower level | **done** (16.4) — 9 of 10 cross-cluster |
+| 4 pr/91 P2 distance | still open; now second priority behind the cone |
+| 5 stub reach | partly done (16.5) — 33 % of misses were never absorbed |
+| 6 which finder claims each π⁰ | superseded by 16.3, which answered the question directly |
+| 7 π⁰ pairing knobs | narrowed to 5 named events |
+| 8 merge knobs / P2 | unchanged |
+| 9 absorb-reach knobs | unchanged |
+| **10 `Shower::split_at` + split pass** | **retired for 9 of 10 cases** (16.4) |
+| 11 multi-π⁰ output | promoted — 3 events measured, 24 groups over 21 events |
+
+**Revised order.** (a) Instrument `pass4_angle`'s accept/reject scatter against
+the marks — it is 48 % of the over-clustering and 24 % of the under-clustering,
+and the data to plot it is already in the labels. (b) The π⁰ *reporting* defect,
+which is larger than the pairing defect: `kine_pio_mass` disagrees with or
+exists without the identification on 11 of 26 events. (c) The 5 events with no
+identified π⁰. (d) pr/91 P2. The new split pass is no longer on the list.
+
+### 16.7 Files
+
+| file | |
+|---|---|
+| `sbnd_xin/em_display/em115_score.py` | the harness — score, `--pi0`, `--level`, `--absorb`, `--baseline/--compare` |
+| `sbnd_xin/docs/pr/pr115-score-baseline.tsv` | 33 marked-shower rows, the regression baseline |
+
+**No code changed in this round — no C++, no jsonnet, no config. No A/B gate is
+owed.**
