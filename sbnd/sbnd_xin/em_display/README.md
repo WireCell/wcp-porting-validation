@@ -584,6 +584,26 @@ included**, so a reader can tell "this scanner stored no alternatives" from
 "this record predates the list". A record saved before round 11 has no key at
 all, and re-opens showing exactly the one pairing it always did.
 
+### The vertex point is in the record, whichever way it was chosen
+
+All three conventions save the **point**, not just the mode:
+
+| `vertex_how` | what is stored |
+|---|---|
+| `main_vertex` | `pio.vertex` — the reconstruction's own vertex |
+| `manual` | `pio.vertex` — the point you typed or tapped |
+| `backproject` | `pio.vertex`, plus `pio.backproject` with the **branch** that produced it (`both_long` / `one_short`), the closest-approach `gap`, `angle1` / `angle2` against the code's 25° gates, `dis1` / `dis2`, `len1` / `len2`, `theta`, `mass` and `verdict` — the last recording whether the code itself would have kept this vertex |
+
+Every stored π⁰ pairing carries its own copy, and the event's reconstructed
+vertex is at the record's top level as `main_vertex` regardless of which
+convention the π⁰ used.
+
+Re-opening an event with a manual vertex fills the x/y/z boxes from the record.
+That matters: `_manual_point()` reads all three boxes, so before round 13 —
+when the restore set only the internal state and left the boxes empty — editing
+any one of them made the other two read as blank and **wiped the vertex**,
+saving `vertex: null` under `vertex_how: "manual"`.
+
 ### There is no π⁰ verdict — the correction *is* the judgement
 
 Retired in round 5d. The workflow is "start from the code's reconstruction, then

@@ -3099,6 +3099,16 @@ def load_label(lbl):
             state["pio_verdict_legacy"] = pio["verdict"]
         if pio.get("vertex_how") == "manual" and pio.get("vertex"):
             state["vtx_manual"] = tuple(pio["vertex"])
+            # Round 13: the BOXES too, not just the state.  A re-opened manual
+            # vertex lived only in state["vtx_manual"] while x/y/z read empty,
+            # so the first edit to any ONE box made `_manual_point()` return
+            # None -- silently wiping the vertex and saving `vertex: null`
+            # under `vertex_how: "manual"`.  evt64591 was one keystroke from it.
+            # Written the same way `set_pio_vertex` writes them, and under
+            # load_label's own _suspend so on_manual does not fire here.
+            man_x.value, man_y.value, man_z.value = (
+                "%.1f" % pio["vertex"][0], "%.1f" % pio["vertex"][1],
+                "%.1f" % pio["vertex"][2])
             vtx_mode_group.active = 2
         elif pio.get("vertex_how") == "backproject":
             vtx_mode_group.active = 1

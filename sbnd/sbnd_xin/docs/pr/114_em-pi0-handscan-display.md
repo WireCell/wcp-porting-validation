@@ -2282,3 +2282,118 @@ it is a pre-existing leak in a different round's control.
 
 `kine_div` and `gstart3_src` gained `name=` so the browser test could read them.
 Inert at runtime.
+
+## 21. Round 13 — the π⁰ vertex point, and one keystroke from losing it
+
+> *"when I save the pi0 with a manual vertex, did you actually save the manual
+> vertex point? same for the NCpi0 vertex point reconstructed by back-tracking.
+> These need to be inside the scan result."*
+
+### 21.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 291
+python em_display/selftest_em3d_browser.py      # 66
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-12.
+
+### 21.2 The answer: yes, both, as points
+
+Checked against the twelve records on disk rather than against the code.
+
+**Manual** — `labels-evt64591.json`:
+
+```
+pio.vertex_how  "manual"
+pio.vertex      [-96.59, -27.60, 175.72]
+```
+
+**Back-projected** (both `no_vertex_ncpi0` events, evt169626 and evt347129) —
+`labels-evt347129.json`:
+
+```
+pio.vertex_how      "backproject"
+pio.vertex          [-203.008, -100.171, 208.143]
+pio.backproject     verdict "ok"      branch "one_short"   gap    7.530
+                    theta   86.033    mass   131.128
+                    angle1  0.000     angle2 23.620
+                    dis1    62.178    dis2   18.795
+                    len1    34.599    len2   13.595
+event_flags         ["no_vertex_ncpi0"]
+main_vertex         {cluster_id 53, x -193.099, y -41.811, z 189.115}
+```
+
+So the back-projected case keeps not just the point but **which of the three C++
+branches produced it** (`one_short` here — the branch that re-rays the short
+gamma), the closest-approach gap, both back-projection angles against the 25°
+gates, and `verdict`, which records whether the code itself would have kept it.
+Round 11's stored candidates each carry their own copy of all of this, so a
+per-pairing vertex is saved too.
+
+The event's own reconstructed vertex is at the record's top level as
+`main_vertex`, independently of which convention the π⁰ used.
+
+### 21.3 What the question turned up
+
+The vertex was saved. It was **one keystroke from not being**.
+
+`load_label` restored a manual vertex into `state["vtx_manual"]` and moved the
+mode radio, but never filled the **x/y/z boxes**. So a re-opened manual-vertex
+event showed the right vertex everywhere while the three boxes read empty — and
+`_manual_point()` reads all three:
+
+```python
+def _manual_point():
+    try:
+        return (float(man_x.value), float(man_y.value), float(man_z.value))
+    except ValueError:
+        return None
+```
+
+Editing any *one* box fires `on_manual`, which re-reads all three, gets `None`
+from the two still-empty ones, and assigns it: `state["vtx_manual"] = None`.
+Reproduced on evt64591 before the fix:
+
+```
+boxes on re-open : '' '' ''
+state vtx_manual : (-96.594, -27.597, 175.720)
+--- nudge x to -96.0 ---
+state vtx_manual : None
+would save vertex: None   how: manual
+```
+
+`vertex: null` under `vertex_how: "manual"` — a record that says a manual vertex
+was chosen and does not say where. Silent, and it survives a save.
+
+`set_pio_vertex` already had the correct order (boxes first, then state, under
+`_suspend`); only the restore path was missing it. Fixed the same way, and the
+round-11 candidate load-back already wrote the boxes.
+
+After:
+
+```
+boxes on re-open : -96.6 -27.6 175.7
+--- nudge x to -96.0 ---
+state vtx_manual : (-96.0, -27.6, 175.7)
+```
+
+Note the restore quantises to 0.1 cm, because that is what `set_pio_vertex`
+writes and the boxes are the display's own convention. A vertex set by tapping a
+fit point keeps full precision in the record but reads back through the boxes at
+0.1 cm if it is then edited — 0.05 cm at worst, against ~0.3 cm fit-point
+spacing, so ~0.06° on a 50 cm baseline.
+
+### 21.4 Why no record on disk hit it
+
+Of the twelve, exactly one (evt64591) uses `manual`, and its vertex is intact:
+the boxes only matter once a re-opened event is edited, and that had not
+happened yet. Found by the question, not by a symptom.
+
+### 21.5 Left open
+
+Nothing new. The `g1_ehyp` / `g2_ehyp` cross-event leak noted in §20.8 is still
+open and is the same class of bug — a control whose state and its widget can
+disagree across a `load`.

@@ -2083,6 +2083,52 @@ check("a marked TRACK-flagged segment is re-converted under the EM hypothesis",
       "%.3f -> %.3f, ratio %.4f" % (_plain, _asem, _asem / _plain))
 V.marks_for(87058).pop(85045)
 
+# ---------------------------------------------------------------------------
+# round 13: the pi0 vertex point itself is in the record, and survives a re-open
+# ---------------------------------------------------------------------------
+V.on_event(None, None, "evt64591")
+V.mode_group.active = 1
+_n13 = list(V.shower_src.data["node"])
+V.state["gamma"][1], V.state["gamma"][2] = _n13[0], _n13[1]
+V.vtx_mode_group.active = 2
+V.set_pio_vertex((-96.6, -27.6, 175.7))
+V.on_save()
+_r13 = json.load(open(V.label_path("evt64591")))
+check("a MANUAL pi0 vertex is saved as a point, not just as a mode",
+      _r13["pio"]["vertex_how"] == "manual"
+      and [round(x, 1) for x in _r13["pio"]["vertex"]] == [-96.6, -27.6, 175.7],
+      "%s %s" % (_r13["pio"]["vertex_how"], _r13["pio"]["vertex"]))
+
+# THE bug: the boxes were left empty on a re-open, so the vertex lived only in
+# state["vtx_manual"] -- and one keystroke in any box wiped it to null.
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt64591")
+check("re-opening it fills the x/y/z boxes, not just the state",
+      (V.man_x.value, V.man_y.value, V.man_z.value)
+      == ("-96.6", "-27.6", "175.7")
+      and V.vtx_mode_group.active == 2,
+      "%s / %s / %s" % (V.man_x.value, V.man_y.value, V.man_z.value))
+V.man_x.value = "-96.0"
+V.on_manual(None, None, "-96.0")
+check("  ... so nudging ONE coordinate keeps the vertex instead of wiping it",
+      V.state["vtx_manual"] is not None
+      and [round(x, 1) for x in V.state["vtx_manual"]] == [-96.0, -27.6, 175.7],
+      str(V.state["vtx_manual"]))
+
+# and the back-projected NCpi0 vertex, with the code's own working
+V.vtx_mode_group.active = 1
+V.on_vtx_mode(None, None, 1)
+_bp = V.pio_pairing()
+check("a BACK-PROJECTED vertex is saved as a point too, with its branch",
+      _bp["vertex_how"] == "backproject"
+      and (_bp["vertex"] is None or len(_bp["vertex"]) == 3)
+      and _bp["backproject"] is not None
+      and {"verdict", "branch", "gap", "theta", "mass", "angle1", "angle2",
+           "dis1", "dis2", "len1", "len2"} <= set(_bp["backproject"]),
+      "verdict=%s branch=%s" % (_bp["backproject"].get("verdict"),
+                                _bp["backproject"].get("branch")))
+os.remove(V.label_path("evt64591"))
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:
