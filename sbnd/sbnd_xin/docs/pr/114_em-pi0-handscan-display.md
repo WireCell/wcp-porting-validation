@@ -2411,8 +2411,8 @@ Correct, and it was a real gap. The report is confirmed and fixed.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python em_display/selftest_em_display.py        # 310
-python em_display/selftest_em3d_browser.py      # 70
+python em_display/selftest_em_display.py        # 311
+python em_display/selftest_em3d_browser.py      # 71
 python em_display/selftest_repro.py             # 98/98
 ```
 
@@ -2636,3 +2636,209 @@ Unchanged from §20.8 and §21.5: `g1_ehyp` / `g2_ehyp` are still not reset on
 event load, so a round-9 hypothesis switch can leak across events until
 `load_label` overwrites it. `bp_geom` and `emark_mode` are both reset in `load()`
 for exactly that reason; the two energy Selects are the remaining pair.
+
+## 23. Round 15 — the π⁰ vertex mode is per-event, on the way back as well
+
+> *"For the pi0 panel, I wonder if you actually save my choice of 'main vertex'
+> 'back-project ...', 'manual'? When I go back to the previous events, I feel
+> that it was just set on the previous event, instead of what I actually chose
+> for this current event before."*
+
+Half right, and the half that is right is the half that matters. **The choice
+was always saved.** Every record on disk carries it, correctly, and nothing has
+to be re-scanned. What was broken is the **restore**: re-opening an event put
+back only two of the three choices, so for the third the radio kept showing
+whatever the previous event had left in it.
+
+### 23.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 323
+python em_display/selftest_em3d_browser.py      # 75
+python em_display/selftest_repro.py             # 98/98
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-14.
+
+The measurement that opened the round, read-only against the owner's own tag
+(`/home/xqian/tmp/em114r15/repro.py`): re-open each of the 18 labelled events of
+`emscan-0827` three times, once with the radio parked on each mode first, and
+compare what comes up against what the record says.
+
+```
+before   27 of 54 re-opens show the WRONG vertex mode
+after     0 of 54
+```
+
+### 23.2 Root cause
+
+`load_label` restored the mode with two positive branches and no default:
+
+```python
+if pio.get("vertex_how") == "manual" and pio.get("vertex"):
+    ...
+    vtx_mode_group.active = 2
+elif pio.get("vertex_how") == "backproject":
+    vtx_mode_group.active = 1
+```
+
+There is no branch for `main_vertex`, and nothing anywhere reset the radio — it
+is not in `load_label`'s reset block (which has handled `em_verdict`,
+`conf_group`, `event_flag_group`, `g1_ehyp`, `g2_ehyp` and `note_in` since round
+9) and not in `load()` (which resets `emark_mode` and, since round 14,
+`bp_geom`). A `RadioButtonGroup` keeps its value across an event switch like any
+other widget, so `main vertex` — the most common answer, and the default — was
+the one choice the display could not put back.
+
+Which records that hits, in `emscan-0827`:
+
+| `vertex_how` | records | restored before round 15 |
+|---|---|---|
+| `main_vertex` | 9 | **no** — showed the previous event's mode |
+| `backproject` | 3 | yes |
+| `manual` | 3 | yes |
+| `pio` absent (saved from EM mode) | 3 | **no** — nothing to restore from, so also inherited |
+
+`on_pio_load` — the button that loads a *stored pairing* back into the slots —
+has had the correct shape since round 11:
+
+```python
+vtx_mode_group.active = {"main_vertex": 0, "backproject": 1, "manual": 2}.get(how, 0)
+```
+
+a total mapping with a fallback. `load_label` never grew one. So loading a
+stored candidate showed the right mode while re-opening the event did not, which
+is the inconsistency behind "I feel that it was just set on the previous event".
+
+### 23.3 A second leak, found while checking the first, and worse
+
+The manual x/y/z boxes leak with the radio, and so do the **EM-mode start
+boxes**. `state["vtx_manual"]` *is* cleared in `load()`, so a leaked `manual`
+mode reads honestly as *no point set* — but the boxes still held the previous
+event's numbers, and one keystroke in one of them would have built a vertex out
+of two coordinates belonging to another event. That is the round-13 evt64591
+failure mode with the sign flipped.
+
+`em_sx / em_sy / em_sz` are worse, because nothing reports them. `_anchor_for_snap`
+reads the boxes **first** and falls back to the selected shower's own start only
+when they do not parse:
+
+```python
+def _anchor_for_snap():
+    try:
+        return (float(em_sx.value), float(em_sy.value), float(em_sz.value))
+    except (TypeError, ValueError):
+        pass
+    node = state["sel_shower"]
+    return shower_start(node) if node is not None else None
+```
+
+So *snap start to nearest reconstructed vertex* and *aim axis at nearest fit
+point* anchored on a point typed into a previous event, with nothing on screen
+to say so. Measured (`/home/xqian/tmp/em114r15/anchor.py`, run against the
+pre-round-15 file and the fixed one):
+
+```
+type a start on evt463565, switch to evt84229, select shower 69134
+  before   _anchor_for_snap() -> (-96.6, -27.6, 175.7)   335.1 cm from the shower's own start
+  after    _anchor_for_snap() -> (103.5, 124.1, 397.5)   the shower's own start
+```
+
+### 23.4 The fix
+
+Three resets into `load_label`'s existing unconditional block — the one that
+already runs before the "does a record exist" test, so it covers an unlabelled
+event, a record with no π⁰ block, and a saved record alike:
+
+```python
+vtx_mode_group.active = 0
+man_x.value = man_y.value = man_z.value = ""
+em_sx.value = em_sy.value = em_sz.value = ""
+```
+
+and the restore made total, the way `on_pio_load` always was:
+
+```python
+_how = pio.get("vertex_how")
+if _how is not None:
+    vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
+                             "manual": 2}.get(_how, 0)
+```
+
+Two details are load-bearing:
+
+- **`manual` with a null vertex stays on `manual`, boxes empty.** That is what
+  such a record was saved as, and `refresh_kine` says *no point set* for it.
+  Falling back to `main vertex` there would put a vertex on screen that the
+  record does not carry.
+- **An unrecognised `vertex_how` falls back to `main vertex`, not to what was on
+  screen.** Such a value can only come from a future build; inheriting would
+  reintroduce exactly this bug for it.
+
+`bp_geom` and `emark_mode` stay where they are, reset in `load()`. They work;
+moving them would only enlarge the diff.
+
+`man_x / man_y / man_z` gained `name=` so the browser test can read them out of
+the live page. Fourth instance of that class (round 11 `gstart3_src`, round 13
+`kine_div`, round 14 `vtx_mode_group`).
+
+### 23.5 What is on disk
+
+Nothing was rewritten this round, and nothing needs to be. All 15 π⁰-bearing
+records of `emscan-0827` were re-priced read-only and every one is
+self-consistent — the stored `vertex` matches its own stated `vertex_how`:
+
+```
+main_vertex (9)   stored vertex == the dump's main_vertex to 1e-6 cm
+backproject (3)   59.56 / 62.18 / 58.49 cm from the main vertex
+manual      (3)   177.04 / 3.48 / 67.91 cm from the main vertex
+```
+
+**What that check can and cannot say.** It rules out a *torn* record — one whose
+label and point disagree. It cannot prove the convention is the one that was
+meant: had the leaked radio ever been re-saved over an event, the point and the
+label would have been recomputed together and would agree with each other while
+both being wrong. What argues against that having happened is provenance, not
+arithmetic — the nine `main_vertex` records were saved 17:27–19:03 on 08-27, and
+the three `backproject` ones are all accounted for (evt169626 and evt347129 from
+the round-14 survey, evt76346 saved 08-28 03:57 under `backproject_geometry:
+handscan`, i.e. deliberately, with the round-14 control). If any event's mode
+still looks wrong on re-opening now, it is worth re-saving that one event; the
+display can no longer be the reason.
+
+### 23.6 Tests
+
+`selftest_em_display.py` 311 → **323**, `selftest_em3d_browser.py` 71 → **75**.
+Eight of the twelve new static checks **fail against the pre-round-15 file** and
+pass after (`/home/xqian/tmp/em114r15/st_pre.log`) — the four that pass in both
+are the save-side check, which was never broken, and the live-data guards.
+
+The save side is checked through the real save path, once per mode, and the
+restore side re-opens with the radio parked on each of the three modes in turn:
+a same-mode test passes on the broken code. One guard is deliberately live-data
+rather than a fixed list — every `vertex_how` present anywhere under `em_labels`
+must map to a button, and `main_vertex` must still be represented, so the
+regression case cannot quietly leave the corpus.
+
+The browser block pins it where the owner saw it: save a manual vertex from the
+real page, switch events (radio back to `main vertex`, all boxes empty), switch
+back (radio on `manual`, boxes refilled).
+
+### 23.7 Correction to §20.8 / §21.5 / §22.8
+
+Those sections carried "`g1_ehyp` / `g2_ehyp` are still not reset on event load".
+That has been **wrong since round 9**: `git log -S 'g1_ehyp.value = EHYP_RECO'`
+returns `8efe41a` (round 9), and the reset sits in `load_label`'s block at
+`em_display_viewer.py:3204`. The note was carried forward across three rounds
+without being re-checked against the file.
+
+After this round every widget that carries a **per-event answer** is reset on
+load: `em_verdict`, `conf_group`, `event_flag_group`, `g1_ehyp`, `g2_ehyp`,
+`note_in`, `vtx_mode_group`, `man_x/y/z`, `em_sx/y/z` in `load_label`, and
+`emark_mode`, `bp_geom`, `excl_choice` in `load()`. The view and cloud controls
+— `fit_mode`, `view_size`, `cloud_layer`, `cloud_color`, `cloud_max`,
+`cloud_scope`, `tap_action`, `tap_toggle`, `dim_toggle`, `seg_color_mode`,
+`gstart_slot`, `mode_group` — persist deliberately: they are how the scanner
+wants to look at events, not answers about one. That split was made by reading
+the widget list, not by test.

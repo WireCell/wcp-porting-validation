@@ -2291,6 +2291,149 @@ V.on_event(None, None, "evt84229")
 check("a fresh event defaults to the scanner's geometry",
       V.bp_geom.value == V.BPG_SCAN, V.bp_geom.value)
 
+# ===========================================================================
+# round 15 -- the pi0 vertex mode is per-event, on the way out AND back
+# ===========================================================================
+print()
+
+# The owner's report: "I wonder if you actually save my choice of main vertex /
+# back-project / manual -- going back to a previous event it looks like it was
+# just set on the PREVIOUS event."  Two halves, and only the second was broken:
+# the save side always recorded the choice, the restore side had a branch for
+# `manual` and one for `backproject` and none for `main vertex`, so 9 of the 15
+# pi0-bearing records on disk re-opened showing whatever was left in the radio.
+
+_MODE = {0: "main_vertex", 1: "backproject", 2: "manual"}
+
+# --- save side: every one of the three choices reaches the record -----------
+V.on_event(None, None, "evt21073")
+check("round 15 setup: evt21073 re-opens with both gammas",
+      V.state["gamma"][1] is not None and V.state["gamma"][2] is not None,
+      str(V.state["gamma"]))
+_saved_how = {}
+for _act, _want in ((0, "main_vertex"), (1, "backproject"), (2, "manual")):
+    V.vtx_mode_group.active = _act
+    if _act == 2:
+        V.man_x.value, V.man_y.value, V.man_z.value = "-30.0", "25.0", "365.0"
+        V.on_manual(None, None, None)
+    V.on_vtx_mode(None, None, _act)
+    V.on_save()
+    _saved_how[_act] = (json.load(open(V.label_path("evt21073")))
+                        .get("pio") or {}).get("vertex_how")
+check("the vertex mode IS saved -- all three choices reach the record",
+      all(_saved_how[a] == w for a, w in
+          ((0, "main_vertex"), (1, "backproject"), (2, "manual"))),
+      str(_saved_how))
+
+# --- restore side: re-opening puts back the record's own mode, not the last --
+# The radio is deliberately parked on each OTHER mode first: that is the exact
+# shape of the report, and the pre-fix code passed a same-mode test.
+_restored = {}
+for _act, _want in ((0, "main_vertex"), (1, "backproject"), (2, "manual")):
+    V.vtx_mode_group.active = _act
+    if _act == 2:
+        V.man_x.value, V.man_y.value, V.man_z.value = "-30.0", "25.0", "365.0"
+        V.on_manual(None, None, None)
+    V.on_vtx_mode(None, None, _act)
+    V.on_save()
+    for _park in (0, 1, 2):
+        V.vtx_mode_group.active = _park          # stand in for another event
+        V.on_event(None, None, "evt84229")       # ... and an event switch
+        V.on_event(None, None, "evt21073")
+        _restored.setdefault(_want, set()).add(_MODE[V.vtx_mode_group.active])
+check("  ... and re-opening restores it whatever the previous event left",
+      all(v == {k} for k, v in _restored.items()),
+      "; ".join("%s -> %s" % (k, sorted(v)) for k, v in sorted(_restored.items())))
+
+# --- the mode a record does NOT carry: back to `main vertex`, never inherited -
+V.vtx_mode_group.active = 2
+V.on_event(None, None, "evt84229")
+check("an UNLABELLED event opens on `main vertex`, not the last event's mode",
+      V.vtx_mode_group.active == 0, _MODE.get(V.vtx_mode_group.active))
+_p15 = V.label_path("evt21073")
+_o15 = json.load(open(_p15))
+_o15["pio"] = None
+with open(_p15, "w") as _fh:
+    json.dump(_o15, _fh)
+V.vtx_mode_group.active = 1
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt21073")
+check("a record with no pi0 block opens on `main vertex` too",
+      V.vtx_mode_group.active == 0, _MODE.get(V.vtx_mode_group.active))
+# A record that says `manual` with no point stays on manual -- that IS what it
+# was saved as, and refresh_kine says "no point set" for it.  Falling back here
+# would show a vertex the record does not carry.
+_o15["pio"] = {"vertex_how": "manual", "vertex": None, "gammas": {}}
+with open(_p15, "w") as _fh:
+    json.dump(_o15, _fh)
+V.vtx_mode_group.active = 0
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt21073")
+check("  ... and `manual` with a null vertex stays on manual, boxes empty",
+      V.vtx_mode_group.active == 2 and V.man_x.value == "",
+      "%s box=%r" % (_MODE.get(V.vtx_mode_group.active), V.man_x.value))
+# An unknown value can only come from a future build; fall back, do not inherit.
+_o15["pio"] = {"vertex_how": "some_future_convention", "vertex": None,
+               "gammas": {}}
+with open(_p15, "w") as _fh:
+    json.dump(_o15, _fh)
+V.vtx_mode_group.active = 1
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt21073")
+check("  ... and an unrecognised vertex_how falls back to `main vertex`",
+      V.vtx_mode_group.active == 0, _MODE.get(V.vtx_mode_group.active))
+os.remove(_p15)
+
+# --- the boxes leak with the radio ------------------------------------------
+V.on_event(None, None, "evt463565")
+V.man_x.value, V.man_y.value, V.man_z.value = "-96.6", "-27.6", "175.7"
+V.on_event(None, None, "evt84229")
+check("the manual x/y/z boxes do not carry the last event's point across",
+      (V.man_x.value, V.man_y.value, V.man_z.value) == ("", "", ""),
+      str((V.man_x.value, V.man_y.value, V.man_z.value)))
+
+# --- and so do the EM-mode start boxes, which is worse ----------------------
+# _anchor_for_snap() reads them FIRST and only falls back to the shower's own
+# start when they do not parse, so before this round "snap to nearest vertex"
+# and "aim axis at nearest fit point" anchored 335 cm away, on a point typed
+# into the PREVIOUS event, with nothing on screen to say so.
+V.on_event(None, None, "evt463565")
+V.em_sx.value, V.em_sy.value, V.em_sz.value = "-96.6", "-27.6", "175.7"
+V.on_event(None, None, "evt84229")
+V.state["sel_shower"] = 69134
+_own = V.shower_start(69134)
+_anc = V._anchor_for_snap()
+check("the EM start boxes do not carry across either",
+      (V.em_sx.value, V.em_sy.value, V.em_sz.value) == ("", "", ""),
+      str((V.em_sx.value, V.em_sy.value, V.em_sz.value)))
+check("  ... so the snap buttons anchor on THIS shower, not the last event's",
+      _anc is not None and _own is not None
+      and V.G.vmag(V.G.vsub(_anc, _own)) < 1e-6,
+      "anchor %s vs start %s" % (_anc, _own))
+
+# --- live-data guard: every vertex_how ever written maps to a button ---------
+# Not a fixed list: the restore is only total if it covers what is actually on
+# disk, and the regression case (`main_vertex`) has to stay represented.
+_hows = collections.Counter()
+_ldir = os.path.join(SX, "em_labels")
+for _tag in sorted(os.listdir(_ldir)):
+    _d = os.path.join(_ldir, _tag)
+    if not os.path.isdir(_d):
+        continue
+    for _f in sorted(os.listdir(_d)):
+        if not _f.startswith("labels-evt"):
+            continue
+        try:
+            _pio = (json.load(open(os.path.join(_d, _f))).get("pio")) or {}
+        except ValueError:
+            continue
+        if _pio.get("vertex_how"):
+            _hows[_pio["vertex_how"]] += 1
+check("every vertex_how on disk maps to a button",
+      set(_hows) <= {"main_vertex", "backproject", "manual"}, str(dict(_hows)))
+check("  ... and `main_vertex` -- the case that was never restored -- is on disk",
+      _hows["main_vertex"] > 0, "%d record(s)" % _hows["main_vertex"])
+
 print()
 print("FAILURES: %d" % len(fails))
 for f in fails:

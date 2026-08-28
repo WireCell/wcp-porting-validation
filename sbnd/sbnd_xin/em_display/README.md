@@ -604,6 +604,17 @@ when the restore set only the internal state and left the boxes empty — editin
 any one of them made the other two read as blank and **wiped the vertex**,
 saving `vertex: null` under `vertex_how: "manual"`.
 
+**The mode is per-event, on the way back as well.** Re-opening an event puts the
+radio on whatever that event's record says, and an event with no record — or a
+record saved from EM mode, with no π⁰ block — opens on `main vertex`. Before
+round 15 only `manual` and `backproject` were restored, so a record saved as
+`main vertex` came back showing whichever mode the *previous* event had left:
+27 of 54 re-opens of the live tag were wrong. The manual x/y/z boxes and the
+EM-mode start boxes are cleared with it — the start boxes are what
+`_anchor_for_snap` reads first, so before round 15 *snap to nearest vertex* and
+*aim axis at nearest fit point* could anchor on a point typed into the previous
+event, 335 cm away, with nothing on screen to say so.
+
 ### Which rays the back-projection uses
 
 Back-projecting the two gammas needs a ray per gamma, and there are two honest

@@ -974,9 +974,11 @@ BPG_RECO = "the reconstruction's own rays (mirror)"
 BPG_SCAN = "my corrected start / axis"
 bp_geom = Select(name="bp_geom", title="back-projection geometry",
                  value=BPG_SCAN, options=[BPG_SCAN, BPG_RECO], width=310)
-man_x = TextInput(title="x", value="", width=90)
-man_y = TextInput(title="y", value="", width=90)
-man_z = TextInput(title="z", value="", width=90)
+# `name=` so the browser test can read the boxes back out of the live page --
+# the round-15 leak was a UI symptom and is pinned where it was seen.
+man_x = TextInput(name="man_x", title="x", value="", width=90)
+man_y = TextInput(name="man_y", title="y", value="", width=90)
+man_z = TextInput(name="man_z", title="z", value="", width=90)
 tap_toggle = Toggle(label="tap fills x/y/z", width=140)
 kine_div = Div(name="kine_div", text="", width=RW)
 
@@ -3202,6 +3204,26 @@ def load_label(lbl):
         g1_ehyp.value = EHYP_RECO
         g2_ehyp.value = EHYP_RECO
         note_in.value = ""
+        # Round 15.  Three more widgets that carry PER-EVENT answers and were
+        # keeping the previous event's, because nothing here or in load() ever
+        # put them back.  The radio is the one the owner reported: 9 of the 15
+        # pi0-bearing records on disk were saved as `main vertex`, and the
+        # restore below had a branch for `manual` and one for `backproject` and
+        # none for that -- so re-opening any of them showed whichever mode the
+        # PREVIOUS event had left.  Measured before the fix: 27 of 54 re-opens
+        # wrong (repro in doc pr/114 sec 23.1).
+        vtx_mode_group.active = 0
+        # The manual boxes leak with it.  state["vtx_manual"] IS cleared in
+        # load(), so a leaked `manual` mode reads as "no point set" rather than
+        # as a foreign point -- but the boxes still held the last event's
+        # numbers, and one keystroke in ONE of them made _manual_point() build a
+        # vertex out of two coordinates from another event.
+        man_x.value = man_y.value = man_z.value = ""
+        # And the EM-mode start boxes, which are worse: _anchor_for_snap() reads
+        # them FIRST and only falls back to the shower's own start when they do
+        # not parse, so "snap to nearest vertex" and "aim axis at nearest fit
+        # point" silently anchored on the previous event's typed coordinates.
+        em_sx.value = em_sy.value = em_sz.value = ""
         if not os.path.exists(p):
             return
         with open(p) as fh:
@@ -3274,7 +3296,20 @@ def load_label(lbl):
         # re-saving the event cannot silently destroy it.
         if pio.get("verdict") in PIO_VERDICTS_LEGACY:
             state["pio_verdict_legacy"] = pio["verdict"]
-        if pio.get("vertex_how") == "manual" and pio.get("vertex"):
+        # Round 15.  TOTAL, the way on_pio_load's mapping has always been --
+        # every `vertex_how` the record can carry maps to a button, and an
+        # unknown one falls back to `main vertex` rather than to whatever was on
+        # screen.  Absent (`pio` null, or no record at all) leaves the reset
+        # above standing, which is the same answer.
+        _how = pio.get("vertex_how")
+        if _how is not None:
+            vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
+                                     "manual": 2}.get(_how, 0)
+        # `manual` with a null vertex stays on `manual` with the boxes empty --
+        # that is what such a record was saved as, and refresh_kine says "no
+        # point set" for it.  Falling back to `main vertex` here would show a
+        # vertex the record does not carry.
+        if _how == "manual" and pio.get("vertex"):
             state["vtx_manual"] = tuple(pio["vertex"])
             # Round 13: the BOXES too, not just the state.  A re-opened manual
             # vertex lived only in state["vtx_manual"] while x/y/z read empty,
@@ -3286,9 +3321,6 @@ def load_label(lbl):
             man_x.value, man_y.value, man_z.value = (
                 "%.1f" % pio["vertex"][0], "%.1f" % pio["vertex"][1],
                 "%.1f" % pio["vertex"][2])
-            vtx_mode_group.active = 2
-        elif pio.get("vertex_how") == "backproject":
-            vtx_mode_group.active = 1
         # Round 14.  A record written before this round has no such key and its
         # back-projection was built from the reconstruction's rays; restoring
         # this build's default would silently re-price a vertex already judged.

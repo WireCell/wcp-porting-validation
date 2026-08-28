@@ -32,6 +32,7 @@ Run:   python em_display/selftest_em3d_browser.py [--port 5029] [--headed]
 Skips cleanly with rc=0 and a loud message if playwright's chromium is absent.
 """
 import argparse
+import json
 import math
 import os
 import signal
@@ -809,6 +810,40 @@ try:
         moved = math.dist(v_reco, v_scan)
         check("  ... and the pi0 vertex marker in the 3-D view actually moves",
               moved > 0.5, "%.2f cm" % moved)
+        check("  ... with no JS error from any of it", not errors,
+              "; ".join(errors[:2]))
+
+        # ------------------------------------------------------------------
+        # round 15: the pi0 vertex mode is per-event, in the real page
+        # ------------------------------------------------------------------
+        # The owner's report is a UI report -- "going back to a previous event
+        # it looks like it was just set on the previous one" -- so it is pinned
+        # where they saw it, not only in the Python callbacks.  Still on
+        # evt76346 in pi0 mode from round 14, with the radio on back-project.
+        def setm(name, prop, val):
+            page.evaluate("() => { Bokeh.documents[0].get_model_by_name('%s')"
+                          ".%s = %s; }" % (name, prop, json.dumps(val)))
+            page.wait_for_timeout(700)
+
+        setm("vtx_mode_group", "active", 2)
+        for _w, _v in (("man_x", "-30.0"), ("man_y", "25.0"), ("man_z", "365.0")):
+            setm(_w, "value", _v)
+        page.get_by_role("button", name="Save event label", exact=True).click()
+        page.wait_for_timeout(2500)
+        check("round 15: a manual vertex is saved from the real page",
+              "manual" in (js("M('kine_div').text") or ""),
+              (js("M('save_note').text") or "")[:70])
+        setm("event_select", "value", "evt84229")
+        page.wait_for_timeout(3500)
+        got = (js("M('vtx_mode_group').active"),
+               js("M('man_x').value"), js("M('em_sx').value"))
+        check("  ... and the NEXT event opens on `main vertex` with empty boxes",
+              got == (0, "", ""), str(got))
+        setm("event_select", "value", "evt76346")
+        page.wait_for_timeout(3500)
+        got2 = (js("M('vtx_mode_group').active"), js("M('man_x').value"))
+        check("  ... while going BACK puts that event's own choice on screen",
+              got2 == (2, "-30.0"), str(got2))
         check("  ... with no JS error from any of it", not errors,
               "; ".join(errors[:2]))
 
