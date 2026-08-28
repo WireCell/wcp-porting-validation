@@ -3502,3 +3502,203 @@ evt169626  0 stored rows   refresh_kine 0.39 ms   refresh_pio_cands 0.04 ms
 
 Round 16 measured 0.24 ms and 0.48 ms on the first two, so the round-18 work is
 inside the noise.
+
+---
+
+## 27. Round 19 — the coverage gap: 141 beam events the sample never contained
+
+**Owner's question.** *"Have I included all the EM shower events (E > 100 MeV)
+in the numuCC samples (1000 + 2000)?"* — **No.** Of the **171** PR-evaluated
+mcp1k+mcp2k events whose leading EM shower clears 100 MeV, **30** are in the
+98-event sample and **141** are not, including **all 79** of the numuCC-EM list
+pr/113 delivered. (171 out of a 1366-event pool, not out of 3000 — §27.2.)
+Those 141 are now prepared and served on **port 5018** under tag
+`emscan-0828-beam141`. The 5017 scan is byte-identically untouched.
+
+### 27.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# 1. name the gap (read-only: reads the pr/113 census and the live manifest)
+python scripts/pr114c_unscanned_em.py       # -> docs/pr/pr114c-beam-em100-unscanned.index.txt
+
+# 2. stage 2 probes for the 141, fresh arms (~9 min, PR_JOBS=6)
+./em_display/run_em114c_probe.sh            # -> work-em114c-{mcp1k,mcp2k}
+
+# 3. epoch-matched Bee clouds, LOCAL ONLY -- not uploaded (owner-gated)
+python em_display/prep_em_scan.py --sample-index docs/pr/pr114c-beam-em100-unscanned.index.txt \
+    --prepdir em_display/emprep-c --no-bee-index --bee-build bee/em114c \
+    --out /home/xqian/tmp/em114c-beebuild.tsv
+
+# 4. probes + manifest.  --bee-prefer MUST name em114c (see 27.4)
+python em_display/prep_em_scan.py --sample-index docs/pr/pr114c-beam-em100-unscanned.index.txt \
+    --prepdir em_display/emprep-c --bee-prefer em114,em114b,em114c \
+    --parse-probes work-em114c-mcp1k work-em114c-mcp2k \
+    --out em_display/em114c-manifest.tsv
+
+# 5. gates
+python em_display/prep_em_scan.py --out /home/xqian/tmp/em114-regen.tsv   # knob-off
+cmp /home/xqian/tmp/em114-regen.tsv em_display/em114-manifest.tsv         # -> identical
+python em_display/selftest_repro.py         # 98/98, the pr/114 record
+python em_display/selftest_repro_c.py       # 141/141, this round
+
+# 6. serve
+./em_display/serve_em_display.sh 5018 --scan-tag emscan-0828-beam141 \
+    --manifest $PWD/em_display/em114c-manifest.tsv --prepdir $PWD/em_display/emprep-c
+```
+
+Toolkit anchor `8d93260d` (**unchanged — no C++ was touched this round**),
+2026-08-28.
+
+### 27.2 The audit
+
+**The pool first, because "all" needs a denominator.** The two arms hold
+**1000 + 2000 = 3000** processed events (`work-mcp{1,2}k-prod0825/pr_evt*`,
+and 3000 rows of `nusel-events.tsv`). Only **1366** of them — mcp1k 461,
+mcp2k 905 — wrote a `calib-pr-evt<ID>.json`, which is what it means for
+`TaggerCheckNeutrino` to have selected and evaluated a main cluster. That 1366
+is the pr/113 census denominator (`pr113_topology_census.py:18`, `n_calib`), and
+it is the pool every number below is out of.
+
+The other **1634** are out of scope *and cannot be brought in by this method*:
+with no main cluster evaluated there is no `showers[]` array, so there is no
+reconstructed EM shower to threshold at 100 MeV and nothing for the display to
+draw. They are not a set of missed EM events — they are events this
+reconstruction pass declined to reconstruct. Finding EM showers among them is a
+different question (a selection-efficiency one) and would need truth or a
+re-run, neither of which exists here: all four prod0825 arms are data (pr/113
+§0). Worth noting the pre-PR bundle verdict disagrees — 1501 of the 3000 carry
+`event_label == nu-candidate` — but the two pools are not joinable (pr/113 §6),
+so it does not move the 1366.
+
+Within that pool: `docs/pr/pr113-emshower-sample.tsv`, rows with
+`sample ∈ {mcp1k, mcp2k}` and `em_max ≥ 100 MeV`, joined against
+`em_display/em114-manifest.tsv` on `(sample, event)`:
+
+| pr/113 bucket | definition | n | in the 5017 scan | unscanned |
+|---|---|---:|---:|---:|
+| `is_numucc_em` | muon primary ≥ 30 cm, `em_max ≥ 100` | 79 | **0** | **79** |
+| `is_ncpi0_reco` | no muon, γγ pair | 27 | 27 | 0 |
+| `is_nuecc_reco` | no muon, no pair, vertex-rooted e | 42 | 2 | 40 |
+| `other_em` | *none of the three* | 23 | 1 | 22 |
+| **total** | | **171** | **30** | **141** |
+
+(Pool 1366 PR-evaluated of 3000 processed; 1195 of the pool have no EM shower
+reaching 100 MeV.)
+
+**The gap is by construction, not by accident.** §2 built the sample as the
+NCπ⁰ list (46) + the curated nueCC48 arm (48), and `scan_sample()` narrows the
+pr/113 nueCC list with `if r[0] == "nuecc48"`. So the numuCC-EM list — the one
+`pr113_topology_census.py:35` annotates `<-- the owner's ask` — was never
+wired in, and neither were the beam rows of the nueCC list. The 30 beam events
+on screen are the 27 NCπ⁰ ones plus 3 of the 4 round-6 owner adds.
+
+**`other_em` has no pr/113 name and appears on no delivered list.** 23 beam
+events carry a ≥ 100 MeV EM shower with no muon primary ≥ 30 cm, no γ pair and
+no vertex-rooted electron — they fall through all three verdicts of the
+priority ladder. They are a hole in pr/113's own selection, found only by
+asking the coverage question this way round, and 22 of them are in this scan.
+
+**One caveat on the 79.** `is_numucc_em` inherits pr/113's 30 cm `mu_len` floor
+(raw flag 1025/1366 beam events, floored 791/1366). A short-muon event with a
+large shower is not in the 79 — it lands in `nuecc` or `other_em`, both of
+which this scan also covers, so at 141 events the floor no longer selects
+anything away.
+
+### 27.3 The sample as served
+
+141 events, `em_display/em114c-manifest.tsv`, `origin` carrying the bucket:
+
+| | n |
+|---|---:|
+| events | 141 |
+| `numucc_em` / `nuecc` / `other_em` | 79 / 40 / 22 |
+| mcp1k / mcp2k | 52 / 89 |
+| …with a probe sidecar | **141** |
+| …with an epoch-matched 3-D charge cloud | **141** |
+| …with a reconstructed π⁰ group | 25 |
+| …with a lossy shower join | 10 |
+| …with an external Bee link | 0 — the set is built, **not uploaded** |
+
+`em_max` over the 79 numuCC rows: min 103.5, median 195.2, max 2498.2 MeV;
+41 in tier 100, 38 in tier 200.
+
+### 27.4 Two traps this round had to step around
+
+**The manifest is the sample definition of a live scan.** `prep_em_scan.py`'s
+`--out` *defaults* to `em_display/em114-manifest.tsv` — the file the 5017
+display reads and the file 97 saved labels in `em_labels/emscan-0827/` join
+against. Every invocation here passes `--out` explicitly. The gate is step 5 of
+the repro: with no flags the script still reproduces the 98-event manifest
+**byte-identically** (`cmp`, not a diff of counts), which is what makes
+`--sample-index` and `--bee-prefer` default-OFF in the CLAUDE.md §1 sense.
+
+**A new Bee round that is not in `prefer` gets captured by an older epoch.**
+This is the failure `bee_index.__doc__` describes, and it was live here: before
+`bee/em114c` existed, 50 of the 141 resolved to an already-uploaded set and
+**46 of those were `prod0813`** — two reconstruction epochs behind the prod0825
+skeleton the display draws over the cloud. Both the 3-D charge cloud and the
+click-through link would have shown a different answer to the one being
+scanned, and both render fine. Hence `--bee-prefer em114,em114b,em114c` in step
+4, and hence all 141 rows now read `em114c/em114c-<arm>`.
+
+### 27.5 What was verified
+
+- **`selftest_repro_c.py`** (a fork of `selftest_repro.py` pointed at the new
+  arm; the pr/114 original is untouched): **all 141 events identical** to
+  prod0825 on `main_vertex`, `kine`, `tagger`, `showers`, `segments`. The §3
+  guarantee now holds for this sample too, so the display keeps reading the
+  prod0825 dumps and takes only probe text from `work-em114c-*`.
+  Membership: 1987 showers, 12 lossy joins, **12 of 12 repaired** by the probe;
+  axis from the probe's `dir15` for 1982 of 1987.
+- **The 5017 scan is untouched**: `em114-manifest.tsv` byte-identical (mtime
+  still 2026-08-27 16:20), `em_display/emprep/` still 98 sidecars,
+  `em_labels/emscan-0827/` still 97 labels, `selftest_repro.py` still 98/98,
+  and the server still answers. Nothing was written into an existing label dir,
+  arm or Bee round (M13).
+- **The 5018 app drives**, checked headlessly through the Bokeh model API: no
+  console errors, `event_select` holds 141 options (`evt54341` … `evt500083`),
+  the charge cloud reaches the browser, the banner reads *"Bee set built but
+  not uploaded (em114c/em114c-mcp1k) — the 3-D cloud below IS this set"* and
+  *"probe sidecar loaded"*, and the scan-status band reads *"not scanned yet"*
+  under tag `emscan-0828-beam141`.
+- **Both arms, not just the first.** 89 of the 141 are mcp2k and the landing
+  event is mcp1k, so a working first screen proves only half the sample and
+  none of the navigation. Driving `event_select` to `evt47696` switches the
+  event, redraws 4211 cloud points, and flips the banner to
+  `em114c/em114c-mcp2k` with the probe still loaded — so the second zip yields
+  points and the event-switch path works.
+- **The new `origin` values are inert.** This manifest's `origin` carries
+  `numucc_em` / `nuecc` / `other_em` where pr/114's carried `reco` / `ncpi0` /
+  `curated`. The viewer never branches on it: `:3884` prints it in the header
+  and `:4230` stores it in the saved label record. So the bucket travels into
+  every label as provenance and changes no behaviour.
+
+### 27.6 Not done
+
+- **The Bee upload.** `bee/em114c/em114c-mcp1k.zip` (25 MB) and
+  `em114c-mcp2k.zip` (44 MB) are built and **not uploaded** — outward-facing
+  and owner-gated (CLAUDE.md §5.6). The 3-D cloud inside em_display does not
+  need them; only the external click-through link does. To publish:
+  `./upload-to-bee.sh bee/em114c/em114c-<arm>.zip`, save the printed URL as
+  `bee/em114c/em114c-<arm>.url`, then re-run step 4.
+- **No filtering of the 141 by bucket.** The `origin` column carries
+  `numucc_em` / `nuecc` / `other_em`, so a narrower scan is a one-line
+  re-filter of the index, not a rebuild.
+- **The Bee upload is the only thing still outstanding.** Everything else in
+  this round is committed: `scripts/pr114c_unscanned_em.py`,
+  `docs/pr/pr114c-beam-em100-unscanned.index.txt`,
+  `em_display/{em114c-manifest.tsv,selftest_repro_c.py,run_em114c_probe.sh}`,
+  and edits to `em_display/prep_em_scan.py`, `em_display/README.md` and this
+  doc. `run_em114c_probe.sh` went in with **`git add -f`** — `*.sh` is
+  gitignored there (M9), so a plain `git add -A` silently drops step 2 of the
+  repro.
+- **`em_display/emprep-c/` (141 sidecars) is NOT committed, and that differs
+  from its 98-event counterpart.** `em_display/emprep/` *is* tracked (98 files,
+  force-added past the `*.json` ignore), so the precedent says the scan's probe
+  input gets frozen with the scan. These 141 are left out as a build product —
+  regenerable by step 2 — but the inconsistency is deliberate-by-omission
+  rather than decided, and is the owner's call: 2.0 MB to make the round
+  reproducible without re-running the probe. `bee/em114c/` (the zips) stays out
+  either way.

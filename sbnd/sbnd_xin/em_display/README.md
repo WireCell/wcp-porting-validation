@@ -25,6 +25,28 @@ ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6 \
 The keepalive flags matter: a bare `ssh -L` gets reaped during the long pauses a
 hand scan is made of, and Bokeh's JS does not auto-reconnect (doc pr/88).
 
+### The second scan: the 141 beam events the pr/114 sample never covered
+
+The sample below (`em114-manifest.tsv`, 98 events) is topology-curated, not
+coverage-complete: of the 171 PR-evaluated mcp1k+mcp2k events whose leading EM
+shower clears 100 MeV (out of a 1366-event pool, itself out of 3000 processed —
+doc pr/114 §27.2) it holds 30, and **none** of the 79 numuCC-EM events pr/113
+delivered.
+The other 141 are a separate scan with its own manifest, sidecars and Bee round
+— doc pr/114 §27. Serve it with three flags, not one:
+
+```bash
+./em_display/serve_em_display.sh 5018 --scan-tag emscan-0828-beam141 \
+    --manifest $PWD/em_display/em114c-manifest.tsv \
+    --prepdir  $PWD/em_display/emprep-c
+```
+
+Both `--manifest` and `--prepdir` are required together. Dropping `--prepdir`
+serves the 141-event list against the 98-event sidecar dir, every row loses its
+probe, and the display says so per event rather than failing — which is exactly
+how it would go unnoticed. The scan tag must stay distinct from `emscan-0827`
+(M13): that dir holds the 97 labels of the scan on 5017.
+
 ## What is on the screen
 
 **Two columns**, under a header band. The **left** is the view and its controls;

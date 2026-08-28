@@ -108,6 +108,37 @@ def scan_sample(docdir):
     return rows, notes
 
 
+def scan_sample_from_index(path):
+    """The sample as ONE explicit index file -> (rows, notes).
+
+    Round 7.  `scan_sample()` hard-codes the pr/114 sample (NCpi0 + the nueCC48
+    arm + the owner adds) and that is the reproduction record of the scan now on
+    port 5017 -- it is not touched.  This is the opt-in path for a DIFFERENT
+    sample, e.g. the coverage extension in
+    docs/pr/pr114c-beam-em100-unscanned.index.txt.
+
+    Same 5-tuple shape as scan_sample() so bee_build() and the manifest writer
+    take either without knowing which.  Column 2 carries the bucket label and
+    lands in the manifest's `origin`, which is what the display shows and what a
+    later filter (numucc_em / nuecc / other_em) reads.
+    """
+    rows, seen = [], set()
+    with open(path) as fh:
+        for ln in fh:
+            if ln.startswith("#"):
+                continue
+            f = ln.split()
+            if len(f) <= 4:
+                continue
+            samp, origin, run, subrun, evt = f[0], f[1], f[2], f[3], f[4]
+            if (samp, evt) in seen:
+                continue
+            seen.add((samp, evt))
+            rows.append((samp, run, subrun, evt, origin))
+    rows.sort(key=lambda r: (r[0], int(r[3])))
+    return rows, {}
+
+
 # ---------------------------------------------------------------------------
 # Bee: offline link resolution
 # ---------------------------------------------------------------------------
@@ -496,10 +527,26 @@ def main():
     ap.add_argument("--bee-events", default=None,
                     help="comma-separated events to restrict --bee-build to")
     ap.add_argument("--no-bee-index", action="store_true")
+    ap.add_argument("--bee-prefer", default="em114,em114b", metavar="R1,R2",
+                    help="rounds that win a Bee collision, LAST wins "
+                         "(round 7).  Default is the pr/114 pair, so the "
+                         "98-event manifest regenerates byte-identically.  A "
+                         "new round MUST be appended here or its events keep "
+                         "an older epoch's cloud -- see bee_index.__doc__.")
+    ap.add_argument("--sample-index", default=None, metavar="INDEX",
+                    help="take the sample from ONE index file instead of "
+                         "the built-in pr/114 sample (round 7).  Absent => "
+                         "identical behaviour to before this option existed.")
     args = ap.parse_args()
 
-    sample, notes = scan_sample(args.docdir)
-    print("scan sample: %d events (%d carry an owner note)" % (len(sample), len(notes)))
+    if args.sample_index:
+        sample, notes = scan_sample_from_index(args.sample_index)
+        print("scan sample: %d events from %s"
+              % (len(sample), args.sample_index))
+    else:
+        sample, notes = scan_sample(args.docdir)
+        print("scan sample: %d events (%d carry an owner note)"
+              % (len(sample), len(notes)))
 
     if args.parse_probes is not None:
         roots = args.parse_probes or sorted(glob.glob(os.path.join(SX, "work-em114-*")))
@@ -512,7 +559,8 @@ def main():
                 if args.bee_events else None)
         bee_build(sample, args.bee_build, dry_run=args.bee_dry_run, only=only)
 
-    links = {} if args.no_bee_index else bee_index(args.beedir)
+    prefer = tuple(r.strip() for r in args.bee_prefer.split(",") if r.strip())
+    links = {} if args.no_bee_index else bee_index(args.beedir, prefer=prefer)
     print("bee index: %d events resolvable offline" % len(links))
 
     rows, missing = [], []
