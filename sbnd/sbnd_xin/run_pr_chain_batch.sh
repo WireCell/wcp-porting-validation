@@ -333,6 +333,25 @@ for _pr101 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr101 _env _key _val
+# doc pr/117 round 1 -- EM clustering knobs (pass-4 best-owner arbitration,
+# late fragment consolidation, orphan flank absorb).  Bools tri-state
+# (unset = cfg default, 1 = force on, 0 = force off); numerics pass-through
+# in cm/deg (EMPTY = no TLA = C++ default 6cm/15deg/6cm/25cm =
+# byte-identical).
+[ -n "${SBND_SHOWER_MERGE_RELAX_DIS:-}" ]      && CATH_TLA+=(--tla-code "shower_merge_relax_dis=${SBND_SHOWER_MERGE_RELAX_DIS}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_ANGLE:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_angle=${SBND_SHOWER_MERGE_RELAX_ANGLE}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_MIN_LEN:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_min_len=${SBND_SHOWER_MERGE_RELAX_MIN_LEN}")
+[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_dis=${SBND_SHOWER_FLANK_ABSORB_MAX_DIS}")
+[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_len=${SBND_SHOWER_FLANK_ABSORB_MAX_LEN}")
+for _pr117 in \
+    "SBND_SHOWER_PASS4_BEST_OWNER:shower_pass4_best_owner" \
+    "SBND_SHOWER_MERGE_RELAX:shower_merge_relax" \
+    "SBND_SHOWER_FLANK_ABSORB:shower_flank_absorb" ; do
+    _env=${_pr117%%:*}; _key=${_pr117#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr117 _env _key _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
 for _d74 in \
