@@ -352,6 +352,25 @@ for _pr117 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr117 _env _key _val
+# doc pr/118 round 1 -- pr/91 P2 body-distance admission + the two-tier
+# axis+charge merge path.  Bools tri-state (unset = cfg default, 1 = force
+# on, 0 = force off); numerics pass-through (EMPTY = no TLA = C++ default
+# 1.0/8cm/5000/7.5deg/120cm/1cm/30deg = byte-identical).
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_FRAC:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_frac=${SBND_SHOWER_MERGE_RELAX_CONT_FRAC}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_GAP:-}" ]     && CATH_TLA+=(--tla-code "shower_merge_relax_cont_gap=${SBND_SHOWER_MERGE_RELAX_CONT_GAP}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_QMED:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_qmed=${SBND_SHOWER_MERGE_RELAX_CONT_QMED}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_AXIS:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_axis=${SBND_SHOWER_MERGE_RELAX_CONT_AXIS}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_DMAX:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_dmax=${SBND_SHOWER_MERGE_RELAX_CONT_DMAX}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_gap=${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD:-}" ] && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_fold=${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD}")
+for _pr118 in \
+    "SBND_SHOWER_EX1_CONN3_BODY_DIS:shower_ex1_conn3_body_dis" \
+    "SBND_SHOWER_MERGE_RELAX_CONTINUITY:shower_merge_relax_continuity" ; do
+    _env=${_pr118%%:*}; _key=${_pr118#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr118 _env _key _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
 for _d74 in \

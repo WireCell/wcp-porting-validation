@@ -1,0 +1,7 @@
+# doc pr/118 round 1 A/B index -- OFF 82391d8d-a90c-4596-ad7b-467f3235df52 / ON c8ea5ce3-0f26-40c0-be94-3b44d0ed7132
+# OFF = pr/117 production (flipchk arms); ON = shower_merge_relax_continuity (onT arms, C++ defaults)
+# 3 events: the round's complete mover set (0 control events changed, nusel 98/98 identical)
+# bee_idx	event	status
+0	423981	RESCUED: T1 touching-aligned merge of the scanner-wanted 65cm fragment 12038 into 12095 (gap 0.07cm, axis 2.2deg, fold 25.2deg); qF1 0.750 -> 1.000 (+0.250)
+1	281485	improved: T2 bright-aligned-stub merge of 78057 (1.0cm, qmed 12406) into 88090; qF1 0.718 -> 0.753 (+0.035)
+2	469665	improved: T2 merges of stubs 57015 (2.0cm) and 63030 (1.7cm) into 15003; qF1 0.899 -> 0.911 (+0.012)

@@ -327,6 +327,10 @@ Two-event before/after sets, index `bee/pr117r1/pr117r1.index.txt`
 
 ## 11. What stays open
 
+*(Pursued in doc pr/118: the P2 route measured near-dead — 1 admit in 98
+events, fails angles; the stub class served by the two-tier axis+charge
+merge path, SBND ON 2026-08-28; see 118 §4 and §7 for what remains.)*
+
 - The 21-of-25 wrong-owner marks that fail every start-anchored cone (§5):
   the recoverable route is pr/91 P2's distance-to-charge admission for
   conn-3, now with this round's measurement in hand.
