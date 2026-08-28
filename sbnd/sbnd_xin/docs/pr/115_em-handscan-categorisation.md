@@ -438,3 +438,360 @@ charge, and that these masses are not evidence against the hand scan.
 | `sbnd_xin/em_display/em114_categorize.py` | the classifier — the reviewable rule |
 | `sbnd_xin/docs/pr/pr115-handscan-buckets.tsv` | one row per event, every field the rule read |
 | `sbnd_xin/docs/pr/115_em-handscan-categorisation.md` | this document |
+
+## 15. Round 2 — a plan of attack for EM clustering and π⁰ pairing
+
+Sections 1–14 say *what* is broken. This one says *where in the code*, *what
+prior art already covers it*, and — the part that was missing — *how we would
+know a change helped*. It is a **plan only**: no C++, no jsonnet, no knob flips.
+
+**Scope, as set by the owner.** In: groups 1–4 (EM clustering and π⁰ pairing).
+Out: PID and ν-vertex finding, hence the 18 wrong-vertex events (§10), the
+too-busy event, and the 3 `note-conflict` events (§9). **In despite sounding
+like vertex work:** group 4 — back-projecting two shower axes to a *decay*
+vertex is π⁰ reconstruction, not ν-vertex finding.
+
+### Repro
+
+Every line number below was re-checked against the working tree immediately
+before this section was written. The file has grown to 5295 lines, so any
+citation from an older doc will not land.
+
+```
+cd toolkit/clus/src
+grep -n 'PatternAlgorithms::' NeutrinoShowerClustering.cxx     # the 16 methods
+awk 'NR>=4375 && NR<=5295' NeutrinoShowerClustering.cxx \
+  | grep -n '^ *\(shower_clustering\|examine_\|id_pi0\|stem_backfill\|if (m_\)'
+grep -n 'shower_\|pi0_\|pio_' ../inc/WireCellClus/NeutrinoPatternBase.h
+grep -n '= true,\|= false,' ../../cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+```
+
+### 15.1 Three things established first, each of which changed this plan
+
+**(a) The toolkit's own review doc is stale, and its bug list is closed.**
+`clus/docs/patternrecognition/shower_clustering_review.md` lists B.1–B.5 + L.1
+against a 3310-line file. Verified in the current tree:
+
+| ID | claim | state today |
+|---|---|---|
+| B.1 | `calculate_num_daughter_showers(…, false)` | superseded by pr/33 F1 — both counts computed, knob selects (`:805`, `:3314`); `daughter_count_proto_examine_showers` is ON in SBND |
+| B.2 | `continue` should be `break` | fixed, `:4255` |
+| B.3 | missing `pdg==11` | fixed, `:4135` |
+| B.4 | missing post-merge update | fixed, `:2420-2421` |
+| B.5 | direction from the shower's own start vertex | fixed, `:3810-3817` |
+| L.1 | hard-coded `0.511 * units::MeV` | **survives**, now at `:1400` (not `:203`) |
+
+None of B.1-B.5 is actionable work. L.1 is cosmetic -- the value is correct,
+only the provenance differs from the dependency-injection pattern used
+elsewhere -- and is carried in §15.10 rather than treated as a finding.
+Reported so the next reader does not chase them; the doc is not repaired here.
+
+**(b) The scan ran on an already heavily-tuned operating point.**
+`wct-pr-perevt.jsonnet` turns on ~45 shower knobs — `shower_stem_backfill`,
+`shower_cone_absorb_guard`, `shower_absorb_unreachable_main`,
+`shower_detach_track_stem`, `shower_ghost_member_drop`, `shower_hadronic_tag`,
+`shower_nv_bridge_track`, `shower_dedup_start_seg`, … — from ~97 `doc pr/`
+citations in `NeutrinoPatternBase.h`. **The 28 failing events are the residual
+of that entire campaign.** Every proposal below therefore has to say why the
+knobs already on do not reach it.
+
+**(c) Two of the four buckets already have named prior art; one has a built,
+un-flipped lever.**
+
+| §13 item | prior art | state |
+|---|---|---|
+| 1 · split showers (`merge`, 20) | **pr/91 §7 P2 + P3** | designed, explicitly **not implemented**; P2 blocked on a measurement, P3 gated behind P2. pr/113 §7 still lists both open |
+| 2 · stub (8) | none found | **uncovered class** |
+| 3 · NCπ⁰ over-clustering (7) | pr/53 r6/r7 shipped; pr/55; pr/56; **pr/57 §14** | pr/57 §14's `relaxed_strict_img_2d_rescue` is *TOOLKIT SHIPPED, DEFAULT NOT SELECTED*, fitted against 899 owner labels over 230 events |
+| 4 · `seed-out` (4) | none found | **uncovered class** |
+
+So this round's contribution to items 1 and 3 is to **supply the measurement
+each was blocked on**, not to re-design them. Its original content is items 2
+and 4. The running ledger of claimed-vs-open for this stage is **pr/113 §7**.
+
+### 15.2 The pass sequence, as it actually runs
+
+Entry `TaggerCheckNeutrino.cxx:2502` → `shower_clustering_with_nv`
+(`NeutrinoShowerClustering.cxx:4375`):
+
+| # | pass | line | note |
+|---|---|---|---|
+| 0 | `shower_absorb_unreachable_main` | 4419 | knob |
+| 1 | `…_with_nv_in_main_cluster` | 4465 | BFS from main vertex; muon→electron re-type |
+| 2 | `…_connecting_to_main_vertex` | 4474 | conn-1 showers at the main vertex |
+| 3 | `…_with_nv_from_main_cluster` | 4481 | conn-2; direction cone |
+| — | `sccc_bridge_body` replay | 4488 | pr/93 bridge edges land here |
+| 4 | `…_with_nv_from_vertices` | 4534 | largest pass; conn-3; `nv_bridge_track` |
+| 5 | `collect_charge_maps` → `calculate_shower_kinematics` | 4545 / 4551 | energy |
+| 6 | `examine_merge_showers` | 4556 | **conn-1 × conn-2 only, angle < 10°** |
+| 7 | `shower_clustering_in_other_clusters` | 4564 | three sub-passes |
+| 8 | `stem_backfill` | 4578 | knob, pr/93 |
+| 9 | `calculate_shower_kinematics` | 4588 | |
+| 10 | `examine_showers` → `examine_shower_1` | 4593 / 3586 | the cut ladders |
+| 11 | `merge_showers_sharing_start_segment` | 4605 | knob, pr/84 |
+| 12 | `shower_detach_track_stem` | 4633 | knob, pr/93 |
+| 13 | `shower_ghost_member_drop` | 4743 | knob, pr/99 r2 |
+| 14 | `shower_hadronic_tag` | 4960 | knob, pr/99 r3 |
+| 15 | `id_pi0_with_vertex` | 5189 | |
+| 16 | `id_pi0_without_vertex` | 5199 | |
+
+**The structural finding: every pass here grows, absorbs, re-types, or drops.
+None partitions one shower into two.** `detach_track_stem` peels a *prefix*;
+`drop_ghost_member` removes a *leaf*. Group 2 has no shower-level lever at all
+today — which is why §15.5 begins with a question about *which level* it fails
+at, rather than with a new pass.
+
+### 15.3 Step 1 — the scoring harness, before any C++
+
+The owner's instruction — *"for the algorithm improvement and validation, we
+want to use the hand scan events to help"* — and CLAUDE.md §5's "propose the
+checkable success criterion first" point at the same first deliverable.
+**Nothing else starts until it exists.**
+
+The bridge is already present on both sides: `PrDisplayDump::dump_showers()`
+(`PrDisplayDump.h:148`) writes per-shower member lists into
+`calib-evt<ID>-group*.json` keyed by the same display id `cluster_id*1000 +
+seg_id` that `em_labels/<tag>/labels-evt<N>.json` records in
+`em.marks_by_shower` / `em.marks_detail[shw].marked{}`. So for every marked
+event we have **target** membership (the marks, with `owner` saying where each
+segment came from) and **actual** membership (the dump).
+
+`em_display/em115_score.py`, beside `em114_categorize.py`:
+
+* per hand-scanned shower — completeness `|A∩T|/|T|`, purity `|A∩T|/|A|`, and
+  **charge-weighted** variants, because charge is what the π⁰ mass consumes and
+  segment counting alone under-reports a missing long member;
+* per event — one scalar (charge-weighted F of the best-matching shower) and,
+  for π⁰ events, `|m − 135|` of the best pairing;
+* `--baseline` / `--compare`, so a knob change is a two-column delta table
+  rather than a re-read of 97 files.
+
+**Objective, two-sided, with the bias stated:** improve the **25 marked**
+events, hold the **37 "good"** ones flat. The 25 were selected for failure and
+are few; the 37 are the regression set. **This is not MC truth** — the toolkit
+has no truth-matching machinery — it measures *agreement with the hand scan*,
+and any result must be quoted in those words.
+
+Also in step 1, cheaply: scan **`evt282909`**, the one event of 98 never opened
+(§1), so the roster is complete before it becomes a benchmark.
+
+### 15.4 Step 2 — group 1, under-clustering (18 + 3 both)
+
+§2.1 already split this by `owner`: **168 IN marks take a segment from a real
+neighbouring shower** (`merge`) vs **63 pick up a never-absorbed stub**
+(`orphan`). Different failures, different repairs.
+
+**(a) `merge` — 20 events, `evt168596` the reference.** Owner: pass 6
+`examine_merge_showers` (`:2079`), narrow in three independent ways — it pairs
+**only conn-1 with conn-2** (`:2118-2120`), the direction cut is a hard-coded
+**10°** (`:2150`), and both directions are taken **from the main vertex**, the
+wrong pivot for two fragments that meet away from it.
+
+pr/91 §7 P2 — measure the conn-3 admission distance to the parent shower's
+**charge** rather than its start segment — is exactly this class, and pr/91's
+own verdict was *"blast radius: not census-boundable; needs a full A/B plus a
+hand scan."* **We now have the hand scan, so the deliverable here is pr/91's
+missing measurement, not a new design.** Run both distance definitions over the
+20 `merge` events and the 37 good ones and report the distributions;
+`marks_detail[shw].member_span {dist_min, dist_max, angle_min, angle_max}` is a
+*measured* record of how far and how wide the intended members actually sit —
+the calibration input pr/91 lacked.
+
+*(pr/91 illustrates P2 with evt174752, 4.914 → 1.704 cm. That number is pr/91's,
+from before this scan; §10 has since put evt174752 in the wrong-vertex bucket.
+It is P2's provenance, not one of our 20.)*
+
+Only if the measurement supports it: ship P2 under pr/91's own proposed name
+`ex_shower1_conn3_dis_to_shower`, plus knobs on the hard-coded merge limits —
+`shower_merge_angle_deg` (C++ default 10.0), `shower_merge_conn11` (allow
+conn-1 × conn-1 under a proximity requirement), `shower_merge_local_pivot`
+(directions from closest approach, not the main vertex). pr/91's P3 stays where
+pr/91 put it: not attempted until P2 is measured.
+
+**(b) `orphan` / `stub` — 8 events. No prior art.** Owner: `stem_backfill` and
+`shower_cone_absorb_guard`, **both already ON** — so this is a *reach* problem
+in machinery that exists, not a missing pass. First deliverable is a
+distribution: the passes' effective reach against `member_span`. Only if those
+separate does a reach knob (`shower_absorb_cone_deg` / `shower_absorb_max_dist`)
+follow. This is also the prerequisite for π⁰ energy work (§15.6).
+
+**(c) `seed-out` — 4 events, `evt47212`. No prior art.** Owner: pass 12
+`shower_detach_track_stem`, **already ON**, so these are its residual. Item:
+run the existing pr/93 probe (`WCT_SHOWER_ABSORB_DEBUG`,
+`NeutrinoShowerClustering.cxx:80`) on the 4 and report *why it declines* before
+touching anything.
+
+### 15.5 Step 3 — group 2, over-clustering (7 + 3 both)
+
+**First establish at which level each of the 7 fails. This is not optional.**
+"Over-clustered" is ambiguous across two stages, and the prior art lives at the
+*other* one:
+
+* **image / graph level** — the two gammas sit in one *cluster* that should have
+  been separated. pr/53's territory, and **pr/57 §14 already has a lever built
+  and validated for it**, awaiting only an owner flip of `protect_graph_name`.
+* **shower-assembly level** — clusters are fine, but `shower_clustering_*`
+  walked both gammas into one `Shower`. Nothing in §15.2 can undo this.
+
+So: for each of the 7, check whether the two gammas' segments already live in
+distinct clusters. If they do, the event is a pr/57 §14 candidate and belongs in
+*that* decision. Only the residual needs a new pass. Doing this first is what
+prevents building new machinery for events an already-validated lever fixes.
+
+**For the residual — a shower-level split.** The bookkeeping already exists
+twice, written to one contract: `Shower::detach_track_prefix` (`PRShower.h:311`,
+pr/93) and `Shower::drop_ghost_member` (`:336`, pr/99 r2). Between them they
+spell out what any member-removal owes — rebuild the named point clouds from the
+survivors (`kine_charge` reads the clouds), erase walked vertex marks,
+invalidate caches, clear `flag_kinematics`, and leave the caller to re-run
+`update_particle_type` / `calculate_kinematics` / `set_kine_charge` /
+`update_shower_maps` — plus the trap: refuse if any survivor would be
+**stranded** from the start segment under view-restricted connectivity.
+
+1. `Shower::split_at(members_to_move)` — **forked by duplication** from
+   `detach_track_prefix` (the production method stays byte-untouched), returning
+   a second `Shower` under the same contract. Unit-testable with no event.
+2. A new pass choosing where to cut, run after `examine_showers` and **before
+   the π⁰ finders** so pairing sees two gammas. `evt314838` and `evt142421`
+   already carry the intended partition in their marks — `evt142421`'s
+   `split-by-proxy` marks (33 IN + 10 OUT, all 43 owned by shower 108104) are a
+   hand-drawn answer key.
+
+Knob `shower_split_pi0`, default OFF. This is the only new pass in the plan.
+
+### 15.6 Step 4 — π⁰ reconstruction (groups 3 and 4)
+
+**Clustering is upstream of mass, in two directions, and both must be respected
+before any π⁰ number is quoted as a π⁰ improvement:** a charge-starved gamma
+gives the wrong mass under a perfect pairing (§11.1 — three of the four worst
+hand masses are `stub` events), and a shower holding *both* gammas gives the
+wrong opening angle by construction (see (c) below).
+
+**(a) The finding that reframes §11 — `kine_pio_mass` is not the identified π⁰.**
+Each finder runs **two independent selections over the same shower pairs**:
+
+| | BDT-feature fill → `T_kine kine_pio_*` | π⁰ identification → `pi0_showers`, `map_pio_id_*` |
+|---|---|---|
+| with-vertex | `:3777-3834` | `:3837-3916` |
+| without-vertex | `:4260-4298` | `:4300-4370` |
+| criterion | **highest summed `kine_charge`, no mass window at all** | **mass window** + greedy best-match |
+
+`pio_kine.flag = 1` is assigned at `:3818`, *inside the fill*, before the
+identification loop runs. So `kine_pio_mass` is the highest-energy pair whatever
+its mass, and `kine_pio_flag` records **which fill ran**, not that a π⁰ was
+identified — despite the `NeutrinoTaggerInfo.h:43` comment reading "0=not
+found".
+
+**§11 must be read in that light.** Its "reco π⁰ mass" column is the
+energy-ranked pair, so the 22-vs-15 comparison there was never against the
+identification. §11 stands as the record of what was believed; this is the
+correction. **The first π⁰ item is therefore a measurement, not a change** —
+re-extract both quantities on the 26 π⁰ events and redo the comparison. It may
+show the identification already agrees with the hand scan far better than §11
+suggests, which would move effort out of (b) entirely.
+
+**(b) Pairing recall — the real cuts.** Both finders use
+`m = √(4·E₁·E₂·sin²(θ/2))` (`:3771`, `:4199`) over `get_kine_charge()`.
+
+* `id_pi0_with_vertex` **never pairs conn-1 × conn-1** (`:3766`) — two showers
+  both directly attached to the same vertex are excluded, which is precisely the
+  NCπ⁰-at-a-vertex topology of group 3. Highest-value lever here:
+  `pi0_pair_conn11`.
+* Its window is **(100, 160) MeV** (`:3854`), with a **6 MeV bonus** for
+  both-conn-2 pairs (`tmp_penalty`, `:3850` — named penalty, applied as a
+  bonus). Both hard-coded; exposing them is what lets the harness scan them.
+* Its greedy loop **does** emit multiple π⁰ (`:3909-3915`).
+  `id_pi0_without_vertex` emits **at most one**, window ±60 MeV (`:4300-4322`).
+* `id_pi0_without_vertex` requires `conn_type == 3` (`:4125`), demands the
+  back-projected midpoint sit within **25°** of both axes (`:4196`), and when
+  **both** showers are ≤ 15 cm it `break`s the inner loop (`:4255`), abandoning
+  every remaining partner for that shower. That `break` is prototype-faithful
+  and was deliberately restored, so relaxing it is a knob
+  (`pi0_pair_short_break`), never a silent edit.
+
+**Flagged, not proposed:** on success `id_pi0_without_vertex` **moves the main
+vertex** to the reconstructed π⁰ decay point (`:4337-4338`). That is π⁰ code
+writing the ν vertex — worth knowing before any group-4 change, even though
+vertex work is out of scope.
+
+**(c) Direction — why an over-clustered shower cannot give a good mass.**
+`shower_cal_dir_3vector` (`PRShowerFunctions.cxx:132-185`) is **not a PCA**: it
+averages every trajectory-fit point within 15 cm of `p` and returns
+`(centroid − p).norm()`. For a shower that swallowed both gammas the centroid is
+a blend of two axes, so the opening angle is wrong by construction however good
+the pairing. **§15.5 is the π⁰ fix for those 7 events**, not anything in §15.6.
+
+**(d) Multi-π⁰ is not representable.** `Pi0KineFeatures`
+(`NeutrinoPatternBase.h:149`) holds one candidate; `evt21073` has two and cannot
+be expressed, even though the greedy loop finds both and `map_pio_id_showers` /
+`map_pio_id_mass` carry them. Only the output struct and the 12 `T_kine`
+branches (`root/src/UbooneTaggerOutputVisitor.cxx:1172-1183`) collapse them. The
+fix is additive — new branches behind a knob, legacy branches byte-identical.
+
+**(e) Vertex routing.** §8 found the `no_vertex_ncpi0` flag catches only 3 of 6;
+the same ambiguity plausibly mis-routes events between the two finders.
+Instrument which finder claims each of the 26 π⁰ events and compare with the
+group-3/group-4 column — a measurement, no code change, and it says whether
+recall is lost in (b)'s cuts or in the routing.
+
+### 15.7 Order of work
+
+Every measurement lands before the change that depends on it.
+
+| # | work | kind |
+|---|---|---|
+| 1 | scoring harness (§15.3); scan `evt282909` | tooling |
+| 2 | `kine_pio_mass` vs the identified π⁰ on the 26 (§15.6a) | measurement |
+| 3 | cluster-level vs shower-level for the 7 (§15.5) | measurement |
+| 4 | pr/91 P2's missing distance measurement on the 20 (§15.4a) | measurement |
+| 5 | stub/orphan reach vs `member_span` (§15.4b) | measurement |
+| 6 | which finder claims each π⁰ event (§15.6e) | measurement |
+| 7 | π⁰ pairing knobs (§15.6b) | C++, default OFF |
+| 8 | merge knobs / pr/91 P2 — only if 4 supports it | C++, default OFF |
+| 9 | absorb-reach knobs — only if 5 supports it | C++, default OFF |
+| 10 | `Shower::split_at` + split pass, for 3's residual only | C++, default OFF |
+| 11 | multi-π⁰ output branches (§15.6d) | C++, default OFF |
+
+Items 1–6 carry no reconstruction risk. Nothing in 7–11 starts before its
+measurement.
+
+### 15.8 How each C++ item ships
+
+Note the wiring: `NeutrinoShowerClustering.cxx` contains **no
+`get(config, …)` at all** — knobs are `PatternAlgorithms` members read there and
+set in `TaggerCheckNeutrino::configure()`, reached from the
+`tagger_check_neutrino` node in `cfg/pgrapher/common/clus.jsonnet` via its
+`knobs={}` parameter. A new knob is therefore three edits: member + default in
+`NeutrinoPatternBase.h`, the `get()` in `TaggerCheckNeutrino::configure()`, and
+the jsonnet.
+
+Then, per item: default OFF so the absent key is byte-identical; the
+key-suppression idiom in `sbnd/wct-pr-perevt.jsonnet` **only**, commented with
+the C++ default; a new pin in `clus/test/doctest_clus_knob_defaults.cxx`, which
+exists precisely to catch a moved default; `./build/clus/wcdoctest-clus` green;
+a byte-identical A/B gate with its label quoted; and a knob-on smoke run on the
+named event. **Nothing here changes an existing default or a constant** — that
+is a stop-and-ask.
+
+### 15.9 One decision this section surfaces but does not take
+
+pr/57 §14's `relaxed_strict_img_2d_rescue` is built and validated against 899
+owner labels, and deliberately left unselected. Flipping `protect_graph_name` is
+a production default change and therefore the owner's call. §15.5's measurement
+will say how many of the 7 it plausibly reaches; that number is offered as
+input to the decision, not as a recommendation — 7 events is not a basis for
+moving a production default.
+
+### 15.10 Noticed while reading, not acted on
+
+* `clus/docs/patternrecognition/shower_clustering_review.md` — line numbers
+  stale by ~2000 lines; B.1–B.5 all closed, only L.1 survives (now `:1400`).
+* `clus/docs/shower_clustering.md` — worse than stale. Its description of
+  `shower_clustering_with_nv_from_vertices` ("runs `find_proto_vertex()`, then
+  calls `shower_clustering_with_nv_in_main_cluster` on each satellite cluster")
+  describes neither what that function does nor what it calls. It also still
+  says "~3,310 lines" and omits all eight post-`examine_showers` passes. Worth
+  its own round.
+
+**No code changed in this round — no C++, no jsonnet, no config. No A/B gate is
+owed.**
