@@ -1,5 +1,5 @@
 # doc pr/117 round 1 A/B index -- OFF c01a0af0-4f84-40a5-b3cb-942ee1c8beeb / ON 2df29aff-4b56-4e4e-a2ed-540349b9c17c
 # OFF = work-pr117r1-bare-nuecc48 (pre-change binary); ON = work-pr117r1-flipchk-nuecc48 (shipped flipped config, hash-equal to onK12c)
 # bee_idx	event	status
-0	389538	review: the one good-bucket control change -- EM shower 65071 (14.3cm) merged into 54056, gap 0.0cm, axes 8.5deg folded; nusel unchanged
-1	168596	RESCUED: neighbour shower 14058 (130.8cm, held 19 of the 20 marks) merged into scanned shower 14153, gap 0.0cm, axes 15.0deg; qF1 0.852 -> 1.000
+0	389538	OWNER-ACCEPTED (2026-08-28 "both events are good"): the one good-bucket control change -- EM shower 65071 (14.3cm) merged into 54056, gap 0.0cm, axes 8.5deg folded; nusel unchanged
+1	168596	RESCUED, owner-confirmed: neighbour shower 14058 (130.8cm, held 19 of the 20 marks) merged into scanned shower 14153, gap 0.0cm, axes 15.0deg; qF1 0.852 -> 1.000

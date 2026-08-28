@@ -272,7 +272,9 @@ Hold-flat (`--diffstat emprep-117bare emprep-117onK12c`): 10 of 98 events
 change, 41 segment slots move.  Of the 37 good events exactly **one** changes:
 evt389538, where two *touching* (gap 0.0 cm) EM showers 8.5° apart merge
 (fragment 65071, 14.3 cm, into 54056) — a collinear-fragment cleanup on an
-event bucketed "good (no major change)"; flagged here for owner review.  The
+event bucketed "good (no major change)"; **owner-reviewed 2026-08-28 on the
+pr117r1 Bee pair: "both events are good"** — the control change is accepted,
+as is the 168596 rescue.  The
 other changed events are the three winners plus scanned-no-correction
 (37112, 281165), vertex-bad (56982, 76350), too-busy (396222), and one
 1-segment move on 235435 with no score effect.
