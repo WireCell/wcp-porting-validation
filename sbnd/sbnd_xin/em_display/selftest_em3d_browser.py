@@ -916,16 +916,40 @@ try:
         rows = js("M('shower_src').data.node")
         assign(53069, 1)
         assign(22034, 2)
+        # Round 18 made counting the default; this block describes the panel
+        # with the segment LEFT OUT, so pin the switch rather than inherit it.
+        setm("orph_mode", "value", "leave them out")
         ktxt17 = js("M('kine_div').text") or ""
         for _w17, _l17 in (("shower_id -1", "cites the dump's own verdict"),
                            ("considered it for this very shower and refused",
                             "names the decision as a decision"),
                            ("20%", "quantifies what is left out"),
-                           ("no estimate is offered", "still refuses a MeV")):
+                           ("marked segments no shower owns",
+                            "offers the switch by name")):
             check("  ... and the pi0 panel %s" % _l17, _w17 in ktxt17, _w17)
         check("  ... while the old bare wording is gone from the live page",
               "owned by no shower" not in ktxt17
               and "not constant between showers" not in ktxt17, "-")
+        check("  ... with no JS error from any of it", not errors,
+              "; ".join(errors[:2]))
+
+        # ------------------------------------------------------------------
+        # round 18: and the same segment's charge is countable, in the real page
+        # ------------------------------------------------------------------
+        # Still on evt169626 with 53070 marked into 53069 and both slots filled.
+        setm("orph_mode", "value", "leave them out")
+        k_off = js("M('kine_div').text") or ""
+        setm("orph_mode", "value", "count as part of the shower")
+        k_on = js("M('kine_div').text") or ""
+        check("round 18: the switch is on screen and changes the reading",
+              "not added" in k_off and "counted in" in k_on, "-")
+        check("  ... naming the estimate and calling it one",
+              "estimated 107.8 MeV" in k_on
+              and "an estimate, not a measurement" in k_on, "-")
+        check("  ... and the mass really moves with it",
+              "E1 <b>644.9</b>" in k_on and "E1 <b>537.1</b>" in k_off,
+              "on/off E1 present: %s / %s"
+              % ("E1 <b>644.9</b>" in k_on, "E1 <b>537.1</b>" in k_off))
         check("  ... with no JS error from any of it", not errors,
               "; ".join(errors[:2]))
 

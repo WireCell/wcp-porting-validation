@@ -2028,6 +2028,11 @@ _far = [sg.get("id") for sg in V.cur_segments()
         and sg.get("id") not in V.marks_for(69032)]
 if _far:
     V.marks_for(69032)[_far[0]] = "in"
+    # Round 18 gave this its own switch and defaulted it ON.  The round-12
+    # behaviour is what the switch OFF still has to mean, exactly, so it is
+    # asserted here under EORPH_OUT rather than deleted -- the ON path gets its
+    # own block at the end of this file.
+    V.orph_mode.value = V.EORPH_OUT
     _u = V.marks_energy(69032)
     check("a segment owned by no shower is named, not counted, not estimated",
           _far[0] in _u["unknown"] and abs(V.gamma_energy(1) - _e_before) < 1e-9,
@@ -2045,12 +2050,13 @@ if _far:
     check("  ... naming the segment and what it is",
           ("&gamma;1 &middot; %s" % _far[0]) in _t and "cm segment" in _t,
           "seg %s" % _far[0])
-    check("  ... and refusing to invent a MeV, with this event's own spread",
-          "no estimate is offered" in _t and "MeV per electron" in _t, "-")
+    check("  ... and offering the switch rather than the number",
+          "no shower owns" in _t and V.EORPH_IN in _t, "-")
     _lo, _hi = V.conv_span()
     check("  ... which is a real spread, not a slogan",
           _lo is not None and _hi > _lo, "%.2e .. %.2e MeV/e" % (_lo, _hi))
     V.marks_for(69032).pop(_far[0])
+    V.orph_mode.value = V.EORPH_IN
 else:
     check("evt409634 has no unowned segment to test with (skipped)", True,
           "all segments belong to a shower here")
@@ -2834,6 +2840,10 @@ check("  ... and it does not just take the last record, as absorb_site does",
 # The pi0 panel.
 V.mode_group.active = 1
 V.state["gamma"][1], V.state["gamma"][2] = _n17, 22034
+# Round 18: this block describes the panel with the unowned segment LEFT OUT,
+# which is still exactly what the switch off must say.  Pinned rather than left
+# to the default, which is now ON.
+V.orph_mode.value = V.EORPH_OUT
 V.refresh_kine()
 _t17 = V.kine_div.text
 for _want, _label in (
@@ -2848,8 +2858,7 @@ for _want, _label in (
         ("Your mark overrules that one decision", "frames the mark honestly"),
         ("your mark is kept either way", "says the scan is not lost"),
         ("marks_detail", "and names where it is kept"),
-        ("no estimate is offered", "still refuses to invent a MeV"),
-        ("MeV per electron", "with this event's own spread as the reason"),
+        ("marked segments no shower owns", "offers the switch by name"),
         ("0.35&times;0.95", "and the proton pair the code would use")):
     check("  pi0 panel %s" % _label, _want in _t17, _want)
 check("  ... and the old bare wording is gone",
@@ -2884,8 +2893,9 @@ _src17 = _inspect17.getsource(V.energy_for) + _inspect17.getsource(V._pair_sig)
 check("the energy path cannot see `unknown_rows` at all",
       "unknown_rows" not in _src17 and '["delta"]' in _src17, "-")
 
-# Two orphans on one shower: both reported, neither counted.  Found rather than
-# hardcoded -- evt169626 has exactly one, which is why it cannot be this event.
+# Two orphans on one shower: both reported, neither counted WITH THE SWITCH OFF.
+# Found rather than hardcoded -- evt169626 has exactly one, which is why it
+# cannot be this event.
 _ev2, _nd2, _o2 = None, None, []
 for _e17 in V.LABELS:
     V.on_event(None, None, _e17)
@@ -2898,6 +2908,9 @@ for _e17 in V.LABELS:
 check("an event with two segments no shower owns was found",
       _ev2 is not None, "%s: shower %s, segs %s" % (_ev2, _nd2, _o2))
 if _ev2:
+    # AFTER the event is loaded: `load()` resets this switch to its default on
+    # every event change, so setting it before the loop would be undone.
+    V.orph_mode.value = V.EORPH_OUT
     V.state["gamma"][1], V.state["gamma"][2] = _nd2, None
     _e17_before = V.gamma_energy(1)
     for _sg17 in _o2:
@@ -2906,13 +2919,14 @@ if _ev2:
     check("  ... both are reported, not just the first",
           sorted(r["seg"] for r in _mk2["unknown_rows"]) == sorted(_o2),
           str([r["seg"] for r in _mk2["unknown_rows"]]))
-    check("  ... the energy is unmoved by either",
+    check("  ... the energy is unmoved by either, with the switch off",
           abs(V.gamma_energy(1) - _e17_before) < 1e-9,
           "%.4f vs %.4f" % (V.gamma_energy(1), _e17_before))
     check("  ... and the delta is exactly zero",
           _mk2["delta"] == 0.0 and _mk2["rows"] == [], "%.g" % _mk2["delta"])
     for _sg17 in _o2:
         V.marks_for(_nd2).pop(_sg17)
+V.orph_mode.value = V.EORPH_IN
 V.on_event(None, None, "evt169626")
 V.marks_for(_n17)[_sid17] = "in"
 
@@ -2985,6 +2999,217 @@ check("every orphan mark on the real scan renders, against the right shower",
       % (_seen17, len(_marks17), _orph17, len(_bad17)))
 check("  ... and the reported one is among them",
       _orph17 >= 1, "%d orphan mark(s) on the real scan" % _orph17)
+
+# ---------------------------------------------------------------------------
+# Round 18 -- an unowned segment marked into a shower is counted AS that shower
+#
+# The owner, after round 17 showed them the 20% that was being dropped: "when we
+# added a particle into an EM shower, it should then be treated as an EM shower
+# to do the calculation. Of course, it is possible this information is not
+# available, in this case, have a reasonable guess, it is fine for now."
+#
+# The guess is the target shower's own kine_charge/SdQ -- the same ratio the
+# probe's E_est decomposition uses for a member -- so a counted orphan is the
+# same arithmetic as a segment the reconstruction HAD put in that shower.  What
+# is tested here is that it is counted, that it is labelled an estimate, that
+# the record can undo it, and above all that NOTHING ALREADY SAVED MOVES.
+# ---------------------------------------------------------------------------
+print()
+
+V.on_event(None, None, "evt169626")
+V.marks_for(_n17)[_sid17] = "in"
+_e18, _f18 = V.orphan_energy(_n17, _sid17)
+check("round 18: the estimate is the target shower's own factor times the charge",
+      abs(_f18 - V.shower_energy(_n17) / V.shower_dq(_n17)) < 1e-15
+      and abs(_e18 - V.seg_dq(_sid17) * _f18) < 1e-9
+      and abs(_e18 - 107.795) < 0.01,
+      "%.3f MeV at %.5e MeV/e" % (_e18, _f18))
+# The claim that makes it "part of the shower": a MEMBER re-priced this way
+# reproduces the probe's own E_est for it.
+_mem18 = [m for m in V.state["prep"]["showers"][str(_n17)]["members"]][:6]
+_worst18 = max(abs(V.seg_dq(m["seg"]) * _f18 - m["E_est"]) for m in _mem18)
+check("  ... and that same factor reproduces the probe's E_est for members",
+      _worst18 < 0.01, "worst %.4f MeV over %d members" % (_worst18, len(_mem18)))
+
+_off = V.marks_energy(_n17, as_em=False, with_orphans=False)
+_on = V.marks_energy(_n17, as_em=False, with_orphans=True)
+check("the switch is what decides, and the delta moves by exactly the estimate",
+      abs((_on["delta"] - _off["delta"]) - _e18) < 1e-9,
+      "%+.3f -> %+.3f" % (_off["delta"], _on["delta"]))
+check("  ... the counted row is FLAGGED as an estimate, with its factor",
+      len(_on["rows"]) == len(_off["rows"]) + 1
+      and [r for r in _on["rows"] if r.get("estimated")][0]["est_factor"] == _f18
+      and not any(r.get("estimated") for r in _off["rows"]),
+      "%d -> %d rows" % (len(_off["rows"]), len(_on["rows"])))
+check("  ... and it is still listed as unowned either way",
+      _off["unknown"] == _on["unknown"] == [_sid17], str(_on["unknown"]))
+
+# The round-9 rescale has to reach it too, or a counted orphan would be in
+# different units from the shower it was counted into.
+V.state["gamma"][1], V.state["gamma"][2] = _n17, 22034
+_n18b = 22034                       # the reco called this one a track (pdg 211)
+V.marks_for(_n18b)[_sid17] = "in"
+_lbl18, _used18, _a18 = V.kine_hypothesis(_n18b)
+_r18 = (V.marks_energy(_n18b, as_em=True, with_orphans=True)["delta"]
+        / V.marks_energy(_n18b, as_em=False, with_orphans=True)["delta"])
+check("a counted orphan follows the EM re-conversion of the shower it joined",
+      _lbl18 == "track"
+      and abs(_r18 - (_used18[0] * _used18[1])
+              / (V.KINE_SHOWER[0] * V.KINE_SHOWER[1])) < 1e-9,
+      "%s: ratio %.4f" % (_lbl18, _r18))
+V.marks_for(_n18b).pop(_sid17)
+
+# The panel, both ways.
+V.mode_group.active = 1
+V.emark_mode.value = V.EMARK_MARKS
+V.orph_mode.value = V.EORPH_IN
+V.refresh_kine()
+_t18 = V.kine_div.text
+_E18on = V.gamma_energy(1)
+for _w18, _l18 in (
+        ("counted in", "says it is counted"),
+        ("estimated 107.8 MeV", "with the number"),
+        ("an estimate, not a measurement", "and says it is an estimate"),
+        ("6.38e-05 MeV per electron", "naming the factor used"),
+        ("constant by construction" if False else
+         "split in proportion", "and why the factor is not evidence"),
+        ("can be undone", "and that the record can undo it")):
+    check("  pi0 panel %s" % _l18, _w18 in _t18, _w18)
+check("  ... and the energy really moved by the estimate",
+      abs(_E18on - (V.shower_energy(_n17) + _e18)) < 1e-9,
+      "E1 %.2f = %.2f + %.2f" % (_E18on, V.shower_energy(_n17), _e18))
+V.orph_mode.value = V.EORPH_OUT
+V.refresh_kine()
+check("  ... while the switch off is the round-12 number, to the last digit",
+      abs(V.gamma_energy(1) - (_E18on - _e18)) < 1e-9,
+      "%.4f vs %.4f" % (V.gamma_energy(1), _E18on - _e18))
+check("  ... and the panel goes back to offering the switch",
+      V.EORPH_IN in V.kine_div.text
+      and "an estimate, not a measurement" not in V.kine_div.text, "-")
+
+# The EM mark list says which of the two is happening.
+V.mode_group.active = 0
+V.state["sel_shower"] = _n17
+V.orph_mode.value = V.EORPH_IN
+V.refresh_mark_list()
+check("the EM mark list says it is being counted",
+      "counted into it" in V.marks_div.text
+      and "107.8 MeV" in V.marks_div.text, "-")
+V.orph_mode.value = V.EORPH_OUT
+V.refresh_mark_list()
+check("  ... and says it is not, when it is not",
+      "will not reach" in V.marks_div.text
+      and "counted into it" not in V.marks_div.text, "-")
+
+# The record, and the two rows telling each other apart.
+V.orph_mode.value = V.EORPH_IN
+V.mode_group.active = 1
+_rec18 = V.gamma_record(1)
+check("the record carries the switch, the delta and the per-segment working",
+      _rec18["energy_includes_orphans"] is True
+      and abs(_rec18["energy_orphan_delta"] - _e18) < 1e-9
+      and _rec18["energy_orphan_detail"][0]["seg"] == _sid17
+      and _rec18["energy_orphan_detail"][0]["est_from"] == _n17
+      and abs(_rec18["energy_orphan_detail"][0]["est_factor"] - _f18) < 1e-15,
+      "delta %+.2f, %d row(s)" % (_rec18["energy_orphan_delta"],
+                                  len(_rec18["energy_orphan_detail"])))
+check("  ... and the estimated row is marked estimated inside marks_detail",
+      any(r.get("estimated") for r in _rec18["energy_marks_detail"]),
+      str([r["seg"] for r in _rec18["energy_marks_detail"]
+           if r.get("estimated")]))
+_p18on = V.pio_pairing()
+V.orph_mode.value = V.EORPH_OUT
+_p18off = V.pio_pairing()
+check("the two readings are DIFFERENT pairings, so both can be stored",
+      V._pair_sig(_p18on) != V._pair_sig(_p18off),
+      "E1 %.1f vs %.1f" % ((_p18on["gammas"]["1"]["energy"]),
+                           (_p18off["gammas"]["1"]["energy"])))
+# ... and a pre-round-18 row must not look different from an identical new one.
+_old18 = copy.deepcopy(_p18off)
+for _g in _old18["gammas"].values():
+    _g.pop("energy_includes_orphans", None)
+check("  ... while an absent key reads as off, so no old row looks new",
+      V._pair_sig(_old18) == V._pair_sig(_p18off), "-")
+
+# The stored-row table's fourth flag.
+V.orph_mode.value = V.EORPH_OUT
+V.state["pio_cands"] = [copy.deepcopy(_p18off)]
+_uo18 = V.cand_unused_orphans(V.state["pio_cands"][0])
+check("a stored row that leaves the estimate out says so",
+      len(_uo18) == 1 and "unowned segment" in _uo18[0]
+      and "107.8" in _uo18[0], str(_uo18))
+V.state["pio_cands"] = [copy.deepcopy(_p18on)]
+check("  ... and a row that counts it does not",
+      V.cand_unused_orphans(V.state["pio_cands"][0]) == []
+      and V.cand_drift(V.state["pio_cands"][0]) == [], "-")
+V.state["pio_cands"] = []
+
+# The restore, which is the whole safety of defaulting this ON.  Same shape as
+# round 16b: absent means OFF, so every record written before round 18 re-opens
+# at exactly the mass it was saved with.
+V.on_event(None, None, "evt84229")
+check("a fresh event opens counting an unowned marked segment",
+      V.orph_mode.value == V.EORPH_IN, V.orph_mode.value)
+
+# Written by this test into its own tag, then edited on disk -- the round-16b
+# idiom, because the question is what `load_label` does with a record, not what
+# the widget happens to hold.
+V.on_event(None, None, "evt169626")
+V.marks_for(_n17)[_sid17] = "in"
+V.mode_group.active = 1
+V.state["gamma"][1], V.state["gamma"][2] = _n17, 22034
+V.orph_mode.value = V.EORPH_IN
+V.on_save()
+_p18 = V.label_path("evt169626")
+_E18saved = json.load(open(_p18))["pio"]["gammas"]["1"]["energy"]
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt169626")
+check("a record saved counting it comes back counting it",
+      V.orph_mode.value == V.EORPH_IN
+      and abs(V.gamma_energy(1) - _E18saved) < 0.01,
+      "%s, E1 %.2f" % (V.orph_mode.value, V.gamma_energy(1)))
+
+# The load-bearing one: a record written BEFORE round 18 has no such key, and
+# must re-open at the mass it was saved with rather than at an estimate.
+_o18 = json.load(open(_p18))
+for _g18 in _o18["pio"]["gammas"].values():
+    _g18.pop("energy_includes_orphans", None)
+    _g18.pop("energy_orphan_delta", None)
+    _g18.pop("energy_orphan_detail", None)
+_o18["pio"]["gammas"]["1"]["energy"] = _E18saved - _e18
+with open(_p18, "w") as _fh:
+    json.dump(_o18, _fh)
+V.on_event(None, None, "evt84229")
+V.on_event(None, None, "evt169626")
+check("  ... while a record written BEFORE this round turns it back off",
+      V.orph_mode.value == V.EORPH_OUT, V.orph_mode.value)
+check("  ... so the mass on screen is the one it was saved with",
+      abs(V.gamma_energy(1) - (_E18saved - _e18)) < 0.01,
+      "%.2f vs %.2f" % (V.gamma_energy(1), _E18saved - _e18))
+os.remove(_p18)
+
+# And on the owner's real scan: no record carries the key, so every one of them
+# restores OFF.  Read-only (M13).
+_hit18, _seen18 = 0, 0
+for _tag18 in sorted(os.listdir(os.path.join(SX, "em_labels"))):
+    _d18 = os.path.join(SX, "em_labels", _tag18)
+    if not os.path.isdir(_d18) or _tag18 == TAG:
+        continue
+    for _f18n in sorted(os.listdir(_d18)):
+        if not _f18n.startswith("labels-evt"):
+            continue
+        try:
+            _pio18 = (json.load(open(os.path.join(_d18, _f18n)))
+                      .get("pio")) or {}
+        except ValueError:
+            continue
+        for _g18 in (_pio18.get("gammas") or {}).values():
+            _seen18 += 1
+            if (_g18 or {}).get("energy_includes_orphans"):
+                _hit18 += 1
+check("  ... and nothing on the real scan carries the key, so none re-prices",
+      _seen18 > 0 and _hit18 == 0,
+      "%d gamma record(s) read, %d would re-price" % (_seen18, _hit18))
 
 print()
 print("FAILURES: %d" % len(fails))

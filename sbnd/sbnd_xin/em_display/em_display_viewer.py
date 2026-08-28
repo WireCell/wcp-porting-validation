@@ -897,6 +897,26 @@ EMARK_MARKS = "include my IN / OUT marks"
 emark_mode = Select(name="emark_mode", title="gamma energy membership",
                     value=EMARK_MARKS, options=[EMARK_RECO, EMARK_MARKS],
                     width=290)
+# Round 18, and the owner's instruction after round 17 showed them what was
+# being dropped: *"when we added a particle into an EM shower, it should then be
+# treated as an EM shower to do the calculation ... have a reasonable guess, it
+# is fine for now."*  A marked segment the reconstruction put in NO shower has
+# no per-segment E_est; this switch decides whether its charge is converted with
+# the target shower's own factor and counted, or left out as rounds 12-17 left
+# it.  196 of the sample's 5 830 segments (3.4%, on 84 of 98 events) are in that
+# position, so it is not a corner.
+#
+# DELIBERATELY ITS OWN SWITCH, not a third state of `gamma energy membership`:
+# that one means "marks with a known E_est" and its round-12/16b restore keys on
+# `energy_includes_marks`.  Giving it a second meaning would re-price every
+# record already saved with marks ON the moment it was re-opened.  Here, absent
+# means OFF -- exactly what every record written before round 18 was saved with
+# -- while a fresh event takes the default below.
+EORPH_OUT = "leave them out"
+EORPH_IN = "count as part of the shower"
+orph_mode = Select(name="orph_mode",
+                   title="marked segments no shower owns",
+                   value=EORPH_IN, options=[EORPH_OUT, EORPH_IN], width=290)
 # Round 11.  One event, several pi0 -- and, just as often, several ways to pair
 # the gammas of one.  evt281485 is the case: 19 EM showers, the reconstruction
 # found ONE group at 208.4 MeV, and the scanner reads more than one pi0 in it.
@@ -1561,6 +1581,42 @@ def conv_span():
     return (min(vals), max(vals)) if vals else (None, None)
 
 
+def orphan_energy(node, sid, as_em=False):
+    """What a segment no shower owns is worth if the shower it was marked into
+    owns it -- (MeV, MeV per electron), or (None, None) when it cannot be had.
+
+    Round 18, and the owner's instruction: *"when we added a particle into an EM
+    shower, it should then be treated as an EM shower to do the calculation. Of
+    course, it is possible this information is not available, in this case, have
+    a reasonable guess, it is fine for now."*
+
+    The guess that invents least is the TARGET shower's own
+    `kine_charge / SigmaDQ(members)`, applied to the segment's own charge.  That
+    is exactly the ratio the probe's `E_est` decomposition uses for a member
+    (see `_est_map`), so an orphan counted this way is treated identically to a
+    segment the reconstruction HAD put in that shower -- including the round-9
+    `as_em` rescale its caller applies, which is what "treated as an EM shower"
+    means when the target is track-flagged.
+
+    What it is NOT, said here so the number is never mistaken for a
+    measurement: the per-shower factor is an AVERAGE over that shower's members.
+    It is constant within a shower only because `E_est` is `kine_charge` split
+    in proportion to `dQ` -- constant by construction, not because
+    charge-to-energy is flat.  Recombination runs with dQ/dx, so a dense
+    track-like segment does not convert like a sparse shower, and between
+    showers the factor spans 1.22e-5 to 7.20e-5 MeV per electron on evt169626
+    alone.  Both the panel and the record say the number is an estimate and
+    carry the factor used, so a later reader can undo it.
+    """
+    q = seg_dq(sid)
+    e = shower_energy(node)
+    tot = shower_dq(node)
+    if q is None or e is None or not tot:
+        return None, None
+    f = e / tot
+    return q * f, f
+
+
 def unknown_mark_row(node, sid, kind):
     """Everything either panel needs to explain ONE marked segment that carries
     no per-segment energy.
@@ -1576,6 +1632,7 @@ def unknown_mark_row(node, sid, kind):
             break
     q = seg_dq(sid)
     tot = shower_dq(node)
+    _e, _f = orphan_energy(node, sid)
     return dict(seg=sid, kind=kind, in_dump=seg is not None,
                 pdg=(seg or {}).get("particle_id"),
                 score=(seg or {}).get("particle_score"),
@@ -1583,6 +1640,7 @@ def unknown_mark_row(node, sid, kind):
                 shower_id=(seg or {}).get("shower_id"),
                 dq=q, shower_dq=tot,
                 dq_frac=(q / tot) if (q is not None and tot) else None,
+                est_energy=_e, est_factor=_f,
                 reason=absorb_reason(sid, node))
 
 
@@ -1655,7 +1713,7 @@ def unknown_mark_why(node, r, brief=False):
     return ""
 
 
-def unknown_mark_note(node, r):
+def unknown_mark_note(node, r, counted=False):
     """One line for the EM mark list: said where the mark is MADE.
 
     Deliberately shorter than the pi0 block -- this is a list of marks, not a
@@ -1663,34 +1721,54 @@ def unknown_mark_note(node, r):
     leaves the full citation to the pi0 panel.
     """
     why = unknown_mark_why(node, r, brief=True)
-    frac = ("" if r.get("dq_frac") is None else
-            " &Sigma;dQ <b>%.3g e</b>, <b>%.0f%%</b> of shower %s's own charge, "
-            "will not reach the &pi;&#8304; mass." % (r["dq"], 100 * r["dq_frac"], node))
-    return ("<span style='color:#b58900'>&#8627; <b>%s</b> &mdash; %s%s. Your "
-            "mark IS recorded, with the reason, but there is no per-segment "
-            "energy for it:%s%s</span>"
-            % (r["seg"], _seg_says(r), _placed_says(r),
-               frac or " it cannot move the &pi;&#8304; mass.",
+    _on = counted and r.get("est_energy") is not None
+    if r.get("dq_frac") is None:
+        body = "it cannot move the &pi;&#8304; mass"
+    elif _on:
+        body = ("&Sigma;dQ <b>%.3g e</b>, <b>%.0f%%</b> of shower %s's own "
+                "charge, counted into it at an <b>estimated %.1f MeV</b>"
+                % (r["dq"], 100 * r["dq_frac"], node, r["est_energy"]))
+    else:
+        body = ("&Sigma;dQ <b>%.3g e</b>, <b>%.0f%%</b> of shower %s's own "
+                "charge, will not reach the &pi;&#8304; mass"
+                % (r["dq"], 100 * r["dq_frac"], node))
+    lead = ("Your mark IS recorded and IS counted" if _on else
+            "Your mark IS recorded, with the reason, but there is no "
+            "per-segment energy for it")
+    return ("<span style='color:%s'>&#8627; <b>%s</b> &mdash; %s%s. %s: %s.%s"
+            "</span>"
+            % ("#2ca02c" if _on else "#b58900", r["seg"], _seg_says(r),
+               _placed_says(r), lead, body,
                (" Why: %s." % why) if why else ""))
 
 
-def unknown_mark_lines(slot, node, r, e_reco):
-    """The pi0 panel's block for one such segment: what, why, and what is kept.
+def unknown_mark_lines(slot, node, r, e_reco, counted=False):
+    """The pi0 panel's block for one such segment: what, why, and what it is worth.
 
     Three separate spans rather than one paragraph because they answer three
-    different questions and the scanner reads them at different moments.
+    different questions and the scanner reads them at different moments.  The
+    third one changes with the switch: round 17 refused to name a MeV at all,
+    round 18 names one and says in the same breath what it is worth as evidence.
     """
     lo, hi = conv_span()
     out = []
+    _est = r.get("est_energy")
+    _on = counted and _est is not None
     out.append(
-        "<span style='font-size:88%%;color:#d62728'>&#9888; <b>&gamma;%d "
-        "&middot; %s</b> &mdash; %s%s. There is no per-segment energy for it, "
-        "so it is <b>not %s</b> and &gamma;%d stays at <b>%s MeV</b>%s</span>"
-        % (slot, r["seg"], _seg_says(r), _placed_says(r),
-           "added" if r["kind"] == "in" else "taken off", slot,
-           "-" if e_reco is None else "%.1f" % e_reco,
+        "<span style='font-size:88%%;color:%s'>%s <b>&gamma;%d "
+        "&middot; %s</b> &mdash; %s%s. %s%s</span>"
+        % ("#2ca02c" if _on else "#d62728", "&#10003;" if _on else "&#9888;",
+           slot, r["seg"], _seg_says(r), _placed_says(r),
+           ("It is <b>%s</b> anyway, as part of &gamma;%d, at an "
+            "<b>estimated %.1f MeV</b>"
+            % ("counted in" if r["kind"] == "in" else "taken off", slot, _est))
+           if _on else
+           ("There is no per-segment energy for it, so it is <b>not %s</b> and "
+            "&gamma;%d stays at <b>%s MeV</b>"
+            % ("added" if r["kind"] == "in" else "taken off", slot,
+               "-" if e_reco is None else "%.1f" % e_reco)),
            "." if r.get("dq_frac") is None else
-           " &mdash; though its charge, &Sigma;dQ <b>%.3g e</b>, is <b>%.0f%%</b>"
+           " &mdash; its charge, &Sigma;dQ <b>%.3g e</b>, is <b>%.0f%%</b>"
            " of &gamma;%d's own %.3g e." % (r["dq"], 100 * r["dq_frac"],
                                             slot, r["shower_dq"])))
     why = unknown_mark_why(node, r)
@@ -1698,34 +1776,45 @@ def unknown_mark_lines(slot, node, r, e_reco):
         out.append("<span style='font-size:88%%;color:#b58900'>&nbsp;&nbsp;"
                    "<b>why</b>: %s. Your mark overrules that one decision."
                    "</span>" % why)
-    tail = ""
-    if lo is not None:
-        tail = (" &mdash; this event's own showers convert at %.2e to %.2e MeV "
-                "per electron, a factor of %.1f" % (lo, hi, hi / lo if lo else 0))
     pair = ""
     if r.get("pdg") == 2212:
-        pair = (" And for a proton-PID'd object the code would not use the "
-                "shower recombination pair either (%.2f&times;%.2f against "
-                "%.2f&times;%.2f)."
-                % (KINE_PROTON[0], KINE_PROTON[1],
-                   KINE_SHOWER[0], KINE_SHOWER[1]))
+        pair = (" The reco PID'd it a proton, whose own pair is %.2f&times;%.2f"
+                " against a shower's %.2f&times;%.2f &mdash; this uses "
+                "&gamma;%d's, which is what <i>%s</i> means."
+                % (KINE_PROTON[0], KINE_PROTON[1], KINE_SHOWER[0],
+                   KINE_SHOWER[1], slot, EORPH_IN))
     elif r.get("pdg") not in (None, 0, 11, -11):
-        pair = (" And for a track-PID'd object the code would not use the "
-                "shower recombination pair either (%.2f&times;%.2f against "
-                "%.2f&times;%.2f)."
-                % (KINE_TRACK[0], KINE_TRACK[1],
-                   KINE_SHOWER[0], KINE_SHOWER[1]))
-    out.append(
-        "<span style='font-size:88%%;color:#555'>&nbsp;&nbsp;<b>your mark is "
-        "kept either way</b> &mdash; <code>marks_by_shower</code> and "
-        "<code>marks_detail</code> record it with that reason, and the "
-        "membership you scanned is what the record is for. What is missing is "
-        "only the MeV: no estimate is offered because charge&rarr;energy is a "
-        "per-object choice%s.%s</span>" % (tail, pair))
+        pair = (" The reco PID'd it a track, whose own pair is %.2f&times;%.2f"
+                " against a shower's %.2f&times;%.2f &mdash; this uses "
+                "&gamma;%d's, which is what <i>%s</i> means."
+                % (KINE_TRACK[0], KINE_TRACK[1], KINE_SHOWER[0],
+                   KINE_SHOWER[1], slot, EORPH_IN))
+    if _on:
+        out.append(
+            "<span style='font-size:88%%;color:#555'>&nbsp;&nbsp;<b>and it is "
+            "an estimate, not a measurement</b> &mdash; %.2e MeV per electron, "
+            "&gamma;%d's own average over the segments the reconstruction did "
+            "give it. That average is flat within a shower only because "
+            "<code>E_est</code> is <code>kine_charge</code> split in proportion "
+            "to dQ; recombination really runs with dQ/dx, and this event's own "
+            "showers span %.2e to %.2e (a factor of %.1f).%s The record keeps "
+            "the factor and the per-segment working, so it can be undone."
+            "</span>"
+            % (r["est_factor"], slot, lo, hi, hi / lo if lo else 0, pair))
+    else:
+        out.append(
+            "<span style='font-size:88%%;color:#555'>&nbsp;&nbsp;<b>your mark "
+            "is kept either way</b> &mdash; <code>marks_by_shower</code> and "
+            "<code>marks_detail</code> record it with that reason. To count its "
+            "charge into &gamma;%d, set <i>marked segments no shower owns</i> "
+            "to <i>%s</i>%s.%s</span>"
+            % (slot, EORPH_IN,
+               "" if _est is None else " &mdash; an estimated %.1f MeV" % _est,
+               pair))
     return out
 
 
-def marks_energy(node, as_em=False):
+def marks_energy(node, as_em=False, with_orphans=False):
     """What the scanner's marks add to, or take off, one shower's energy.
 
     Returns dict(delta, rows, unknown).  `rows` is one entry per mark that has
@@ -1744,12 +1833,17 @@ def marks_energy(node, as_em=False):
     alone), so a dQ-derived number would be a different quantity in the same
     units.  Those segments are named in `unknown` and never summed.
 
-    Round 17 leaves that decision exactly as it was and adds `unknown_rows`
+    Round 17 left that decision exactly as it was and added `unknown_rows`
     beside it: the same segments, with what the reconstruction itself decided
-    about them and how much charge is at stake.  `delta` is untouched, which is
-    the guarantee that no stored pairing and no saved mass can move -- the new
-    key is read by the two panels and by nothing that computes a number
-    (`energy_for` reads only `delta`; `_pair_sig` does not read this at all).
+    about them and how much charge is at stake.
+
+    Round 18 makes counting them possible, on the owner's instruction that a
+    segment added into an EM shower should be *treated as* part of that shower.
+    `with_orphans` is the switch and it is PASSED IN, never read off a widget
+    here, for the round-16 reason: a stored pairing has to be re-priced under
+    the settings it was stored with.  With it off the arithmetic is exactly the
+    round-12 one, byte for byte.  See `orphan_energy` for what the estimate is
+    and, more importantly, what it is not.
     """
     mem = set(members_of(node))
     est = _est_map()
@@ -1765,7 +1859,25 @@ def marks_energy(node, as_em=False):
         e, owner = est.get(sid, (None, None))
         if e is None:
             unknown.append(sid)
-            unknown_rows.append(unknown_mark_row(node, sid, kind))
+            _ur = unknown_mark_row(node, sid, kind)
+            unknown_rows.append(_ur)
+            if with_orphans and _ur.get("est_energy") is not None:
+                # Treated exactly as if the TARGET shower owned it: the rescale
+                # below is the same line an owned segment takes six lines down,
+                # with `node` standing in for the owner the segment has not got.
+                # So an orphan counted here and a member of that shower are the
+                # same arithmetic, which is what "part of the shower" has to
+                # mean if the number is to be comparable with the rest of E1.
+                _lbl, _used, _a = kine_hypothesis(node)
+                _conv = _ur["est_energy"]
+                if as_em and _lbl is not None and _lbl != "shower" and _used:
+                    _conv = _conv * (_used[0] * _used[1]) / (KINE_SHOWER[0]
+                                                             * KINE_SHOWER[1])
+                delta += (1.0 if kind == "in" else -1.0) * _conv
+                rows.append(dict(seg=sid, kind=kind, E_est=_ur["est_energy"],
+                                 energy=_conv, owner=None, owner_kine=_lbl,
+                                 estimated=True, est_factor=_ur["est_factor"],
+                                 est_from=node))
             continue
         lbl, used, _alt = (kine_hypothesis(owner) if owner is not None
                            else (None, None, None))
@@ -1784,7 +1896,7 @@ def ehyp_widget(slot):
     return g1_ehyp if slot == 1 else g2_ehyp
 
 
-def energy_for(node, as_em, with_marks):
+def energy_for(node, as_em, with_marks, with_orphans=False):
     """One shower's gamma energy with both switches PASSED IN.
 
     Round 16.  A stored pairing has to be re-priced under the settings IT was
@@ -1813,8 +1925,10 @@ def energy_for(node, as_em, with_marks):
     # Round 12.  The membership delta is applied LAST and to the already-
     # converted number, because the two questions are independent: the
     # hypothesis is which recombination pair, the marks are which segments.
+    # `with_orphans` defaults to False so that any caller not updated in round
+    # 18 keeps the round-12 number exactly.
     if with_marks:
-        e += marks_energy(node, as_em=as_em)["delta"]
+        e += marks_energy(node, as_em=as_em, with_orphans=with_orphans)["delta"]
     return e
 
 
@@ -1822,7 +1936,8 @@ def gamma_energy(slot):
     """The energy the pi0 arithmetic uses for one gamma slot, off the widgets."""
     return energy_for(state["gamma"].get(slot),
                       ehyp_widget(slot).value == EHYP_EM,
-                      emark_mode.value == EMARK_MARKS)
+                      emark_mode.value == EMARK_MARKS,
+                      orph_mode.value == EORPH_IN)
 
 
 def poly_for(sid):
@@ -2290,8 +2405,9 @@ def refresh_mark_list():
         # panel: the scanner marked 53070 into 53069 in EM mode on evt169626 and
         # met the objection two modes later, with nothing to connect the two.
         # Same source as the pi0 block (`marks_energy`), so they cannot drift.
+        _oc = orph_mode.value == EORPH_IN
         for _u in marks_energy(node)["unknown_rows"][:3]:
-            rows.append("&nbsp;&nbsp;" + unknown_mark_note(node, _u))
+            rows.append("&nbsp;&nbsp;" + unknown_mark_note(node, _u, _oc))
     # A segment IN two showers at once is a contradiction, not an opinion, and
     # the pass-1 numbers that decide it are already computed -- so show them
     # side by side rather than just flagging the clash.
@@ -2417,7 +2533,8 @@ def gamma_record(slot):
     node = state["gamma"][slot]
     if node is None:
         return None
-    mk = marks_energy(node, as_em=ehyp_widget(slot).value == EHYP_EM)
+    mk = marks_energy(node, as_em=ehyp_widget(slot).value == EHYP_EM,
+                      with_orphans=orph_mode.value == EORPH_IN)
     return dict(
         shower=node,
         start=list(shower_start(node, slot) or []),
@@ -2447,6 +2564,20 @@ def gamma_record(slot):
         energy_marks_delta=mk["delta"],
         energy_marks_detail=mk["rows"],
         energy_marks_unknown=mk["unknown"],
+        # Round 18.  Which of those unowned segments were counted, at what
+        # factor, and what they contributed -- kept separately from the marks
+        # delta above because the two are different kinds of number: one is the
+        # probe's exact decomposition, the other is an estimate.  Rows in
+        # `energy_marks_detail` carrying `estimated: true` are the estimated
+        # ones; absent means exact, which is every row written before round 18.
+        energy_includes_orphans=(orph_mode.value == EORPH_IN),
+        energy_orphan_delta=sum(
+            (1.0 if r["kind"] == "in" else -1.0) * r["energy"]
+            for r in mk["rows"] if r.get("estimated")),
+        energy_orphan_detail=[
+            dict(seg=r["seg"], kind=r["kind"], energy=r["energy"],
+                 est_factor=r.get("est_factor"), est_from=r.get("est_from"))
+            for r in mk["rows"] if r.get("estimated")],
         # The energy BEFORE the membership delta, always -- so the pair
         # (energy, energy_without_marks) reads the same way round 9's
         # (energy, energy_as_reconstructed) does, whichever way the switch was.
@@ -2525,6 +2656,11 @@ def _pair_sig(c):
     # absent key -- every record written before round 12 -- reads as off and
     # does not make an old row look different from an identical new one.
     mk = lambda gg: bool(gg.get("energy_includes_marks"))
+    # Round 18, for exactly the same reason and read exactly the same way:
+    # absent is off, so no pre-round-18 row looks different from an identical
+    # new one, and a pairing re-priced by counting an unowned segment can be
+    # stored beside the one that did not count it.
+    orp = lambda gg: bool(gg.get("energy_includes_orphans"))
     # Round 14's geometry, for the same reason, and only where it can matter.
     # Absent means the reconstruction's own rays, exactly as load_label reads it.
     bpg = ((c.get("backproject_geometry") or "reco")
@@ -2532,7 +2668,7 @@ def _pair_sig(c):
     return (g1.get("shower"), g2.get("shower"), c.get("vertex_how"),
             rnd(c.get("vertex")), g1.get("energy_hypothesis"),
             g2.get("energy_hypothesis"), rnd(g1.get("start")),
-            rnd(g2.get("start")), mk(g1), mk(g2), bpg)
+            rnd(g2.get("start")), mk(g1), mk(g2), bpg, orp(g1), orp(g2))
 
 
 def _mev(v):
@@ -2562,7 +2698,8 @@ def cand_drift(c):
             continue
         e_was = gg.get("energy")
         e_now = energy_for(node, gg.get("energy_hypothesis") == "as_em_shower",
-                           bool(gg.get("energy_includes_marks")))
+                           bool(gg.get("energy_includes_marks")),
+                           bool(gg.get("energy_includes_orphans")))
         if e_was is not None and e_now is not None and abs(e_now - e_was) > 0.05:
             out.append("E%s %.1f -> %.1f MeV" % (s, e_was, e_now))
         # The start and the axis are per SHOWER once EM mode has corrected them,
@@ -2608,10 +2745,38 @@ def cand_unused_marks(c):
         if node is None or gg.get("energy_includes_marks"):
             continue
         d = marks_energy(node,
-                         as_em=gg.get("energy_hypothesis") == "as_em_shower"
+                         as_em=gg.get("energy_hypothesis") == "as_em_shower",
+                         with_orphans=bool(gg.get("energy_includes_orphans"))
                          )["delta"]
         if abs(d) > 0.05:
             out.append("g%s ignores your marks (%+.1f MeV)" % (s, d))
+    return out
+
+
+def cand_unused_orphans(c):
+    """Charge this pairing's gammas were marked with but that it does not count.
+
+    Round 18's sibling of `cand_unused_marks`, and separate from it for the same
+    reason that one is separate from `cand_drift`: a row stored with the unowned
+    switch off is self-consistent and will never drift, it simply predates the
+    switch or was stored with it off.  Reported as an ESTIMATE, because that is
+    what it is -- see `orphan_energy`.
+    """
+    out = []
+    g = c.get("gammas") or {}
+    for s in ("1", "2"):
+        gg = g.get(s) or {}
+        node = gg.get("shower")
+        if node is None or gg.get("energy_includes_orphans"):
+            continue
+        if not gg.get("energy_includes_marks"):
+            continue          # cand_unused_marks already says the bigger thing
+        _as = gg.get("energy_hypothesis") == "as_em_shower"
+        d = (marks_energy(node, as_em=_as, with_orphans=True)["delta"]
+             - marks_energy(node, as_em=_as)["delta"])
+        if abs(d) > 0.05:
+            out.append("g%s leaves out an unowned segment (est %+.1f MeV)"
+                       % (s, d))
     return out
 
 
@@ -2672,9 +2837,14 @@ def refresh_pio_cands():
                 bits.append("g%s re-converted as EM" % sl)
             if gg.get("energy_includes_marks"):
                 bits.append("g%s counts your marks" % sl)
+            if gg.get("energy_includes_orphans"):
+                bits.append("g%s counts an unowned segment (est)" % sl)
         _dr, _um = cand_drift(c), cand_unused_marks(c)
         _cv = cand_convention_note(c)
-        drifted[i + 1] = (_dr, _um, _cv)
+        _uo = cand_unused_orphans(c)
+        drifted[i + 1] = (_dr, _um, _cv, _uo)
+        if _uo:
+            bits.insert(0, "; ".join(_uo))
         if _cv:
             bits.insert(0, "; ".join(_cv))
         if _um:
@@ -2702,9 +2872,10 @@ def refresh_pio_cands():
     # leaves that row behind, and until this round the table showed the old
     # numbers with nothing to say so.  Measured on the owner's own tag when this
     # was written: 8 of 14 stored pairings no longer matched.
-    _stale = [(k, d) for k, (d, _u, _c) in sorted(drifted.items()) if d]
-    _unm = [(k, u) for k, (_d, u, _c) in sorted(drifted.items()) if u]
-    _cnv = [(k, v) for k, (_d, _u, v) in sorted(drifted.items()) if v]
+    _stale = [(k, d) for k, (d, _u, _c, _o) in sorted(drifted.items()) if d]
+    _unm = [(k, u) for k, (_d, u, _c, _o) in sorted(drifted.items()) if u]
+    _cnv = [(k, v) for k, (_d, _u, v, _o) in sorted(drifted.items()) if v]
+    _uno = [(k, o) for k, (_d, _u, _c, o) in sorted(drifted.items()) if o]
     if _stale:
         bits.append(
             "<span style='color:#d62728'><b>&#9888; %d of them are no longer "
@@ -2729,6 +2900,16 @@ def refresh_pio_cands():
             % (len(_unm), "; ".join("<b>#%d</b> (%s)" % (k, ", ".join(v))
                                     for k, v in _unm),
                EMARK_RECO, EMARK_MARKS))
+    if _uno:
+        bits.append(
+            "<span style='color:#b58900'><b>&#9888; %d of them leave out a "
+            "marked segment no shower owns</b> &mdash; %s. Those numbers are "
+            "estimates (the target shower's own MeV-per-electron applied to the "
+            "segment's charge), which is why they are named separately from the "
+            "exact marks above. To take them, load the row and set <i>marked "
+            "segments no shower owns</i> to <i>%s</i>.</span>"
+            % (len(_uno), "; ".join("<b>#%d</b> (%s)" % (k, ", ".join(v))
+                                    for k, v in _uno), EORPH_IN))
     if _cnv:
         bits.append(
             "<span style='color:#b58900'><b>&#9888; %d of them use a different "
@@ -2895,7 +3076,9 @@ def refresh_kine():
         # Round 12.  The marks and the energy are two different questions, and
         # until this round the answer to the first never reached the second: a
         # segment marked into a gamma changed the membership and not the mass.
-        _mk = {sl: marks_energy(nd, as_em=ehyp_widget(sl).value == EHYP_EM)
+        _oc = orph_mode.value == EORPH_IN
+        _mk = {sl: marks_energy(nd, as_em=ehyp_widget(sl).value == EHYP_EM,
+                                with_orphans=_oc)
                for sl, nd in ((1, n1), (2, n2))}
         _on = emark_mode.value == EMARK_MARKS
         for _sl, _nd in ((1, n1), (2, n2)):
@@ -2926,7 +3109,8 @@ def refresh_kine():
             # screen.  The energy behaviour is unchanged -- `delta` still does
             # not include these segments -- only what the panel says about it.
             for _u in _m["unknown_rows"][:3]:
-                rows.extend(unknown_mark_lines(_sl, _nd, _u, shower_energy(_nd)))
+                rows.extend(unknown_mark_lines(_sl, _nd, _u,
+                                               shower_energy(_nd), _oc))
             if len(_m["unknown_rows"]) > 3:
                 rows.append(
                     "<span style='font-size:88%%;color:#d62728'>&#9888; "
@@ -3436,6 +3620,10 @@ def load(lbl):
         # including OFF, which is what keeps every record already on disk at the
         # mass it was saved with.
         emark_mode.value = EMARK_MARKS
+        # Round 18.  Same reason, same shape: load_label puts a saved record's
+        # own setting back afterwards -- including OFF, which is what keeps
+        # every record written before this round at the mass it was saved with.
+        orph_mode.value = EORPH_IN
         # Round 14.  Same reason emark_mode is reset here: a Select keeps its
         # value across an event switch, and a geometry chosen for the last
         # event's corrections has no meaning for this one.  load_label puts a
@@ -3793,6 +3981,15 @@ def load_label(lbl):
                 if any((pio["gammas"].get(str(_s)) or {}).get(
                     "energy_includes_marks") for _s in (1, 2))
                 else EMARK_RECO)
+            # Round 18, and TOTAL for the round-16b reason: the default is ON,
+            # so a record saved with it off -- which is every record written
+            # before this round -- has to turn it back off or its mass would be
+            # silently re-priced by an ESTIMATE the moment it was re-opened.
+            orph_mode.value = (
+                EORPH_IN
+                if any((pio["gammas"].get(str(_s)) or {}).get(
+                    "energy_includes_orphans") for _s in (1, 2))
+                else EORPH_OUT)
         # Round 11.  Absent MUST mean an empty list: a record saved before the
         # list existed stored exactly one pairing, at the top level, and has to
         # re-open showing precisely that and no phantom candidate.
@@ -4496,6 +4693,14 @@ def on_pio_load():
             if any((g.get(str(_s)) or {}).get("energy_includes_marks")
                    for _s in (1, 2))
             else EMARK_RECO)
+        # Round 18, read the same way and for the same reason: without it a row
+        # stored counting an unowned segment would come back priced by whatever
+        # the EVENT had been restored with.
+        orph_mode.value = (
+            EORPH_IN
+            if any((g.get(str(_s)) or {}).get("energy_includes_orphans")
+                   for _s in (1, 2))
+            else EORPH_OUT)
         how = c.get("vertex_how")
         vtx_mode_group.active = {"main_vertex": 0, "backproject": 1,
                                  "manual": 2}.get(how, 0)
@@ -4578,7 +4783,8 @@ def on_pio_update():
             "it into something it never was.</span>"
             % (state["gamma"][1], state["gamma"][2], i + 1, want[0], want[1]))
         return
-    moved = cand_drift(old) + cand_unused_marks(old) + cand_convention_note(old)
+    moved = (cand_drift(old) + cand_unused_marks(old)
+             + cand_convention_note(old) + cand_unused_orphans(old))
     cand = pio_pairing()
     cand["stored_utc"] = old.get("stored_utc")
     cand["updated_utc"] = datetime.datetime.now(
@@ -4593,6 +4799,8 @@ def on_pio_update():
                     energies=[(g.get(s) or {}).get("energy") for s in ("1", "2")],
                     energy_includes_marks=[(g.get(s) or {}).get(
                         "energy_includes_marks") for s in ("1", "2")],
+                    energy_includes_orphans=[(g.get(s) or {}).get(
+                        "energy_includes_orphans") for s in ("1", "2")],
                     vertex=c.get("vertex"), vertex_how=c.get("vertex_how"),
                     mass_axis_convention=c.get("mass_axis_convention"),
                     mass_vertex_convention=c.get("mass_vertex_convention"),
@@ -5240,7 +5448,7 @@ pio_add_btn.on_click(on_pio_add)
 pio_load_btn.on_click(on_pio_load)
 pio_upd_btn.on_click(on_pio_update)
 pio_del_btn.on_click(on_pio_del)
-for _w in (g1_ehyp, g2_ehyp, emark_mode):
+for _w in (g1_ehyp, g2_ehyp, emark_mode, orph_mode):
     _w.on_change("value", lambda a, o, n: (refresh_kine(), touch()))
 # Not folded into the loop above: this one MOVES the pi0 vertex, so the marker
 # in the 3-D view has to be redrawn -- the same pair of calls on_vtx_mode makes
@@ -5353,6 +5561,7 @@ pio_panel = column(
              "with the one the slot implies. If the reco called a gamma a track "
              "or a proton, switch it here and the mass follows.", width=RW),
     row(g1_ehyp, g2_ehyp, emark_mode),
+    row(orph_mode),
     row(gstart_slot, snap_btn, gstart_reset),
     Div(text="<b>pi0 decay vertex</b> &mdash; or set <i>a tap in 3-D does</i> to "
              "<i>%s</i> and click the point straight in the 3-D view "

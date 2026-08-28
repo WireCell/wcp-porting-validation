@@ -3305,3 +3305,159 @@ document. Nothing is saved: that event's real record lives in the owner's tag
   not changed — it is a different, older readout and not this round's business.
 - Two stray files at the repo root remain from earlier mis-redirects and are not
   touched: `angle` (empty, Aug 4) and `sbnd_xin/--quiet` (74 KB of TSV, Aug 20).
+
+---
+
+## 26. Round 18 — an unowned segment marked into a shower is counted *as* that shower
+
+> *"I feel when we added a particle into an EM shower, it should then be treated
+> as an EM shower to do the calculation. Of course, it is possible this
+> information is not available, in this case, have a reasonable guess, it is fine
+> for now. We have the information in the toolkit after the algorithm
+> improvement, which will be based on these hand scan."*
+
+The owner's decision after §25 showed them what was being dropped. Round 17
+refused to name a MeV; round 18 names one, under its own switch, labelled an
+estimate everywhere it appears.
+
+### 26.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python em_display/selftest_em_display.py        # 424
+python em_display/selftest_em3d_browser.py      # 90
+python em_display/selftest_repro.py             # 98/98
+
+# both readings of evt169626, off the owner's own scan tag:
+python /home/xqian/tmp/em114r17/probe18.py
+
+# nothing already saved moves (round-17 HEAD vs this):
+python /home/xqian/tmp/em114r17/ab18.py /home/xqian/tmp/em114r17/pre18.tsv  \
+       /home/xqian/tmp/em114r17/pre18
+python /home/xqian/tmp/em114r17/ab18.py /home/xqian/tmp/em114r17/post18.tsv \
+       /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/em_display
+cmp /home/xqian/tmp/em114r17/pre18.tsv /home/xqian/tmp/em114r17/post18.tsv
+```
+
+No C++ and no jsonnet are touched, so **no A/B gate is owed** — as in rounds 1-17.
+
+### 26.2 The number, and why this one
+
+`orphan_energy(node, sid)` = `seg_dq(sid) × kine_charge(node) / ΣdQ(members of node)`.
+
+That factor is **the same ratio the probe's own `E_est` decomposition uses for a
+member of that shower**, which is the property that makes the result comparable
+with the rest of E1 rather than a number in the same units. Checked in the
+selftest rather than asserted: applying γ1's factor to a *member's* `dQ`
+reproduces the probe's `E_est` for it to **0.0005 MeV** over the members tested.
+So a counted orphan is treated identically to a segment the reconstruction had
+put in that shower — which is what *"treated as an EM shower"* has to mean here.
+
+It also follows the round-9 hypothesis switch, by construction: the estimate is
+handed to the same rescale line an owned segment takes, with the target shower
+standing in for the owner the segment has not got. Pinned in the selftest on
+γ2 = 22034, which the reco called a track (pdg 211): the counted orphan's ratio
+between `as_em` and `as_reconstructed` is exactly
+`(0.70 × 0.95) / (0.50 × 0.80) = 1.6625`.
+
+On evt169626, segment 53070:
+
+| | |
+|---|---|
+| factor (γ1's own) | 6.37725e-5 MeV per electron |
+| ΣdQ(53070) | 1 690 300 e |
+| estimate | **107.795 MeV** |
+| γ1 | 537.1 → **644.9** MeV (→ 668.5 with the other three marks) |
+| π⁰ mass, axis convention | 147.7 → **161.3** MeV (both in the code's accept window) |
+| π⁰ mass, vertex convention | 148.6 → **162.3** MeV |
+
+### 26.3 What it is not
+
+Said on screen every time the number is shown, not only here. The per-shower
+factor is an **average** over that shower's members. It is flat within a shower
+only because `E_est` is `kine_charge` split in proportion to `dQ` — constant *by
+construction*, not because charge-to-energy is genuinely flat. Recombination runs
+with dQ/dx, so a dense track-like segment does not convert like a sparse shower;
+and 53070 is exactly that case, PID'd proton at score 100, whose own pair
+(0.35 × 0.95) is not the shower pair (0.50 × 0.80). Between showers the factor
+spans 1.22e-5 to 7.20e-5 MeV/e on this event alone, a factor of 5.9.
+
+This is the "reasonable guess" the owner asked for, and it is recorded as such:
+`energy_orphan_detail` keeps the segment, the kind, the energy, the `est_factor`
+and the shower it was borrowed from, and the estimated rows inside
+`energy_marks_detail` carry `estimated: true`. Absent means exact, which is every
+row written before this round. A later reader — including the toolkit-side
+algorithm this scan is meant to inform — can subtract it exactly.
+
+### 26.4 Its own switch, deliberately
+
+`marked segments no shower owns` — `leave them out` / `count as part of the
+shower`, default **count**.
+
+It is **not** a third state of `gamma energy membership`. That switch means
+"marks with a known `E_est`", and rounds 12/16b key its restore on
+`energy_includes_marks`; giving it a second meaning would silently re-price every
+record already saved with marks on, the moment it was re-opened. As its own key,
+`energy_includes_orphans` follows the idiom rounds 9, 12, 14 and 15 all used:
+**absent means the pre-round default** (off — what every record written before
+this round was saved with), while a fresh event takes the new default.
+
+The restore is **total**, for round 16b's reason: with the default on, a
+one-way restore would re-price every older record. `load_label` sets the switch
+from the record including *off*, and `on_pio_load` does the same per stored row.
+
+`_pair_sig` gains both gammas' flags through `bool()`, so a pairing re-priced by
+counting an unowned segment can be stored beside the one that did not count it,
+and no pre-round-18 row looks different from an identical new one. The stored-row
+table gains a fourth flag, `gN leaves out an unowned segment (est +107.8 MeV)`,
+kept separate from *stale* and *ignores your marks* for the same reason those are
+separate from each other, and reported by `update to today's numbers`.
+
+### 26.5 Nothing already saved moves
+
+`/home/xqian/tmp/em114r17/ab18.py` dumps, per labelled event, what the scanner
+sees the moment it re-opens — the restored switches, both gamma energies, both
+masses, every stored candidate's energies and full JSON — plus the round-12
+off-path arithmetic over every shower (`marks_energy` under both hypotheses and
+`energy_for` under all four switch combinations, with the new switch off):
+
+```
+pre18.tsv  (round-17 HEAD) : 9796 rows over 98 events   4d3b3c069e8ac52b5dac44d6d3f9b70f
+post18.tsv (round 18)      : 9796 rows over 98 events   4d3b3c069e8ac52b5dac44d6d3f9b70f
+cmp -> IDENTICAL
+```
+
+And on the owner's own scan: **44 gamma records read, 0 carry
+`energy_includes_orphans`**, so every one of them restores to `leave them out`
+and re-opens at the mass it was saved with. Exactly 1 of the 87 marks on disk is
+on an unowned segment (evt169626 / 53070), so this changes what a **new** save or
+a **re-save** records, and nothing else.
+
+### 26.6 Tests
+
+`selftest_em_display.py` 397 → **424**, `selftest_em3d_browser.py` 86 → **90**,
+`selftest_repro.py` 98/98 unchanged.
+
+The round-12 and round-17 checks that describe the *uncounted* behaviour are
+**pinned to the switch off, not deleted** — that is still exactly what off has to
+mean, and it is the check that would catch the two paths merging by accident.
+New: the factor identity against the probe's `E_est`; the `as_em` rescale
+reaching a counted orphan; the panel in both states; the EM mark list in both
+states; the record's three new keys and the `estimated` marker; that the two
+readings are different `_pair_sig`s so both can be stored while an absent key
+still reads as off; the fourth table flag; and the restore — a record saved
+counting it comes back counting it, one written before this round turns it back
+off and shows the mass it was saved with, and nothing on the real scan re-prices.
+
+The browser test flips the switch on the live page after marking 53070 through
+the real buttons and reads `E1 537.1` / `E1 644.9` back out of the document.
+
+### 26.7 Left open
+
+- The estimate borrows the *target shower's* factor. A per-segment conversion
+  (the reco's own recombination at that segment's dQ/dx) would be better and is
+  not available from the dump; the owner's note says the toolkit will have it
+  after the algorithm improvement this scan is feeding. The record keeps enough
+  to redo the arithmetic when it does.
+- `refresh_impact`'s ΣdQ still uses its own filter (it drops `dQ < 0` points
+  where the probe keeps them, ~1 % over a shower). Reported in §25.8, unchanged.

@@ -525,17 +525,57 @@ Four cases the panel keeps apart:
   on by default;
 - **a non-member marked OUT takes nothing off** — it was never in it;
 - a **member** marked OUT does take its `E_est` off;
-- a segment **no shower owns** has no `E_est`. It is named in red and **not
-  counted**, and no dQ-derived estimate is offered: `E_est/dQ` is not constant
-  between showers (6.05e-5 against 4.99e-5 MeV per electron on evt409634 alone),
-  so that number would be a different quantity in the same units. 3.4 % of
-  segments (196 of 5830) are in this position, on 84 of the 98 events, so it is
-  a case the scan meets often — see below for what the panel now says about it.
+- a segment **no shower owns** has no `E_est`, so it cannot be counted the exact
+  way the other three are. Since round 18 it is counted anyway, as an explicit
+  **estimate**, under its own switch — see below. 3.4 % of segments (196 of
+  5830) are in this position, on 84 of the 98 events, so it is a case the scan
+  meets often.
 
 A marked segment's `E_est` was converted with **its own** shower's recombination
 pair, so under `as EM shower (charge-inferred)` the same round-9 ratio is applied
 per segment — a segment coming from a track-flagged shower is scaled by
 0.665/0.4 = 1.6625, exactly as the shower itself would be.
+
+#### `marked segments no shower owns`
+
+| setting | what happens |
+|---|---|
+| `leave them out` | the round-12 arithmetic exactly: the segment is named, its charge is quantified, and nothing is added. |
+| `count as part of the shower` *(default since round 18)* | its charge is converted with **the target shower's own** MeV-per-electron and added, flagged everywhere as an estimate. |
+
+The factor is `kine_charge / ΣdQ(members)` of the shower the segment was marked
+into — the same ratio the probe's own `E_est` decomposition uses for a member,
+so a counted orphan is the *same arithmetic* as a segment the reconstruction had
+put in that shower. It also follows the round-9 hypothesis switch: if the gamma
+is re-converted `as EM shower`, so is the segment. That is what "treat it as part
+of the shower" has to mean if the number is to be comparable with the rest of E1.
+
+On evt169626, segment 53070 is worth an estimated **107.8 MeV** at
+6.38e-5 MeV/e: γ1 goes 537.1 → 644.9 MeV, and the π⁰ mass 147.7 → 161.3 MeV
+(axis convention) with the other marks counted too.
+
+**It is an estimate and the panel says so, every time.** The per-shower factor is
+an *average* over that shower's members. It is flat within a shower only because
+`E_est` is `kine_charge` split in proportion to `dQ` — constant by construction,
+not because charge-to-energy is genuinely flat. Recombination runs with dQ/dx, so
+a dense track-like segment does not convert like a sparse shower, and between
+showers the factor spans 1.22e-5 to 7.20e-5 MeV/e on evt169626 alone. The record
+keeps `energy_includes_orphans`, `energy_orphan_delta` and
+`energy_orphan_detail` (segment, kind, energy, `est_factor`, `est_from`), and the
+rows inside `energy_marks_detail` that were estimated carry `estimated: true` —
+so any of it can be undone by a later reader.
+
+This is **its own switch, not a third state of `gamma energy membership`**. That
+one means "marks with a known `E_est`", and its restore keys on
+`energy_includes_marks`; giving it a second meaning would re-price every record
+already saved with marks on. Here, absent means off — which is what every record
+written before round 18 was saved with — while a fresh event takes the default.
+Verified over every record on disk: 44 gamma records read, 0 that would re-price.
+
+A stored pairing that leaves the estimate out gets its own table flag,
+`gN leaves out an unowned segment (est +107.8 MeV)`, kept separate from the
+stale and ignores-marks flags for the same reason those are separate from each
+other.
 
 #### A mark on a segment no shower owns is a decision being overruled
 
@@ -570,11 +610,11 @@ what puts a segment the probe never saw on the same scale as one it did. It is
 with `dQ < 0`); the two differ by about 1 % over a shower and are deliberately
 kept apart.
 
-The energy behaviour is unchanged: the marked segment is still not summed, and
-no stored mass moves. The reason it is looked up per shower rather than
-last-record-wins is that a segment can carry several absorb records (13023 on
-evt169626 has a `walk_add` then a `direct`), and 9 of the 23 `walk_exclude`
-segments in the sample were absorbed somewhere else afterwards.
+Round 17 stopped there and counted nothing; round 18 added the switch above.
+Either way the explanation is the same, and it is the reason it is looked up per
+shower rather than last-record-wins: a segment can carry several absorb records
+(13023 on evt169626 has a `walk_add` then a `direct`), and 9 of the 23
+`walk_exclude` segments in the sample were absorbed somewhere else afterwards.
 
 The record keeps both numbers and the working: `energy_includes_marks`,
 `energy_marks_delta`, `energy_without_marks`, and `energy_marks_detail` with each
