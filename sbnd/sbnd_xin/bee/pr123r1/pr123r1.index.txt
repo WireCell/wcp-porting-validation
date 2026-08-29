@@ -9,6 +9,9 @@
 #   across all 239; nusel TSVs identical).  A pruned component appears as its own new
 #   colour, NOT as unowned points -- except the 3 track-guard muons (idx 0/1/4), which
 #   correctly return to plain track segments.
+# OWNER-REVIEWED 2026-08-28: ALL rows good; idx 13/14 OK (their nu vertices are wrong -- vertex-bad
+#   class, prunes stand).  One follow-up directed: idx 0 (171572) muon correctly leaves the shower but
+#   must not vanish from the PF tree -> doc pr/123 round 2 (orphan-scope fix).
 # bee_idx	event	status
 0	171572	RESCUED: qF1 0.096 -> 1.000; the 125.1cm pdg-13 muon (seg 10008, absorbed at 3.9deg on-axis) + its OUT-marked companion freed by the track guard; fake leading "shower" 412.4 -> 19.0 MeV
 1	393505	RESCUED: qF1 0.273 -> 1.000; 108.5cm muon freed (track guard); leading 325.3 -> 60.5 MeV

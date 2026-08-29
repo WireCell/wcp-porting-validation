@@ -6,8 +6,9 @@ design decisions §0/§6 + "consistent with previous round" pre-authorization).
 141-set marked showers: med qF1 0.887→0.935, Σ q_extra −45 % (the §17.6
 metric no prior knob touched); 8 showers to 1.000; zero orphans beyond the
 3 correctly-freed muons; 0 vertices moved; nusel identical. Bee pair
-uploaded (OFF 24e81f0c / ON 94d3b955) — owner verdict pending, adjudication
-rows idx 13/14.**
+uploaded (OFF 24e81f0c / ON 94d3b955). Owner Bee verdict 2026-08-28: ALL
+rows good; idx 13/14 OK (nu vertices wrong — vertex-bad class). Round 2
+directed: the guard-freed muon must appear in the PF tree (§10).**
 
 Owner directive 2026-08-28: proceed with the recommendation from the pr/121+122
 close-out — the next round is `pass4_angle` over-reach, the largest measured
@@ -295,6 +296,90 @@ session's own OFF gate (100/100 on three samples at report time) attest the
 20:14 build; the 141-set ON/OFF comparison (`off141b` vs `on141`) is
 entirely within the 20:14 binary. The 98-set `on1` ran the 19:59 binary;
 gate 13's flipchk (20:14) vs `on1` spans the rebuild and carries the proof.
+
+## 10. Round 2 — the guard-freed muon must not vanish from the PF tree
+
+**Owner Bee verdict 2026-08-28 (round 1)**: ALL 19 rows good; idx 13/14 OK —
+their nu vertices are wrong (vertex-bad class), so the prunes stand. One
+follow-up directed: on 171572 the muon is *correctly* excluded from the
+shower but is LOST from the PF tree — "it should not be lost".
+
+**Root cause — three independent blockers** (all verified in code + the ON
+dump):
+
+1. The pr/93-r4 PF orphan machinery (`pf_orphan_confident_track`, SBND ON)
+   and the pr/65 orphan audit are **main-cluster-scoped** (prototype
+   `NeutrinoID.cxx:1488` parity). The muon lives in cluster 10; the main
+   vertex in cluster 83 → invisible to both (audit prints "0 unclaimed").
+2. `segment_orphan_confident_track` requires `particle_score < 1.0`; the
+   muon carries the **score-100 sentinel** (rule-assigned PID) → refused.
+3. `kine_count_orphan_tracks` (SBND ON) has the same cluster filter and
+   predicate → the ~390 MeV also left `kine_reco_Enu` (§8's net kine drop).
+
+Legacy only ever displayed this muon as a member of the fake shower; the
+track guard freed it into a class (cross-cluster + sentinel-scored) the
+orphan machinery was never scoped for.
+
+**Exposure census** (offline, ON vs OFF dumps, both manifests): exactly
+**2** guard-freed-and-lost segments — 171572 seg 10008 (125.1 cm µ) and
+393505 seg 15013 (108.5 cm µ). 105074's declined track was re-owned by
+another shower downstream (not lost). Critically, **120 pre-existing**
+unclaimed ≥50 cm track-pdg segments sit in non-main clusters across 96
+events — largely cosmics, which is exactly why the PF orphan scope is
+main-cluster-only. A blanket any-cluster/sentinel relaxation would fabricate
+~120 cosmic PF roots and pour their KE into kine_reco_Enu. **The fix must be
+the guard's own decline set, nothing wider.**
+
+**Design (round 2, both DEFAULT OFF):**
+
+- `SegmentFlags::kPass4GuardFreed` (1<<7): set by the track guard at decline
+  time (kMuonStemGuard precedent — the raw flags word is never serialised,
+  so the bit alone is inert in every output).
+- `pf_orphan_guard_freed` (BeePFConfig): after the orphan audit chain, a
+  flagged-and-unclaimed segment gets a root PF node (pr/93 node shape,
+  dirsign/fit filters, KeepMC floors). Log `pr123 pf-orphan-guard-freed: EMIT`.
+- `kine_count_guard_freed` (TCN → pattern_algos): the kine twin — flagged,
+  unclaimed by BFS and showers → `push_segment_kine` (the pr/93 principle:
+  PF and kine describe the same particle set). Log
+  `kine_count_guard_freed: COUNT`.
+- Seats: `PRSegment.h` / `NeutrinoShowerClustering.cxx` (flag set) /
+  `MultiAlgBlobClustering.{h,cxx}` / `NeutrinoKinematics.cxx` /
+  `NeutrinoPatternBase.h` / `TaggerCheckNeutrino.{h,cxx}` / doctest pin /
+  `wct-pr-perevt.jsonnet` + `clus.jsonnet` decl/threading/suppression /
+  runner env `SBND_PF_ORPHAN_GUARD_FREED`, `SBND_KINE_COUNT_GUARD_FREED`.
+
+Residual noted: 171572 seg 10005 (10 cm, pdg-11, flag_shower, score-100)
+also left the fake shower and stays unowned — below any track threshold, a
+small EM stub; not addressed here.
+
+**Round-2 validation (arms `work-pr123r1-r2*`, binary 21:03 on toolkit
+`9577592e`):**
+
+| # | gate | arms | result |
+|---|---|---|---|
+| R2-1 | knob-off == NEW production baseline (98) | `d84r2-prod98` vs `r2off` | **PASS 196/196** |
+| R2-2 | knob-off + inert flag, spanning the 20:47 bridge fix AND the 21:03 build, incl. all 3 flag-writing events (141) | `flip141` vs `r2off141pin` (peer knobs env-pinned OFF) | **PASS 282/282** |
+| R2-3 | compiled config off / on | keys absent / present | **PASS** |
+| R2-4 | ON vs OFF (141) | `r2off141` vs `r2on141` | **exactly 171572 + 393505**, mabc only |
+| R2-5 | ON vs OFF (mcp1k / 98-set) | — | byte-identical (no flagged events; 0 expected, 0 seen) |
+| R2-6 | flip-equivalence | post-flip cfg no env: `r2flip141` vs `r2on141`, `r2flip98` vs `r2off` | **PASS 282/282 + 196/196** |
+
+Effect on the 2 events: `pr123 pf-orphan-guard-freed: EMIT root seg=10008
+... 304.75 MeV` / `seg=15013 ... 268.70 MeV`; `kine_count_guard_freed:
+COUNT` both; Σ kine_energy_particle 357.3→662.1 and 460.2→728.9; vertices
+identical; nusel TSVs byte-identical; shower membership identical (round-1
+fix untouched). Informational: the fresh no-env `r2off141` vs the pinned
+arm shows the doc-84 r2 knobs move 3 141-set events (321767, 292524,
+499577 — mabc only), recorded for that round's ledger.
+
+**Flip**: `pf_orphan_guard_freed = true` + `kine_count_guard_freed = true`
+SBND PRODUCTION ON 2026-08-28 (owner: "it should not be lost in the PF
+tree"; upload authorized "once validated"). Bee pair (`bee/pr123r2/`):
+OFF `caad3e29-e997-433f-bdd7-37c7e89c8fc9` / ON
+`e1da72ac-2d54-4895-8460-083d509c15d9`, 2 events (owner-directed upload).
+`work-pr123r1-r2off141`+`r2flip141` succeed `flip141` as the 141-set
+production baseline; the 98-set baseline is doc-84's `work-d84r2-prod98-*`
+(+ this flip = `r2flip98`).
 
 ## Repro
 

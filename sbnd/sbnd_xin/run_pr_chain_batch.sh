@@ -399,6 +399,15 @@ _val=${SBND_SHOWER_PASS4_PRUNE:-}
 [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=false")
 [ -n "${SBND_SHOWER_PASS4_PRUNE_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap=${SBND_SHOWER_PASS4_PRUNE_GAP}")
 [ -n "${SBND_SHOWER_PASS4_TRACK_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_track_guard_len=${SBND_SHOWER_PASS4_TRACK_GUARD_LEN}")
+
+# doc pr/123 round 2 -- guard-freed track pickup (PF root node + kine count).
+# Bool tri-states (unset = cfg default, 1 = on, 0 = off).
+_val=${SBND_PF_ORPHAN_GUARD_FREED:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "pf_orphan_guard_freed=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "pf_orphan_guard_freed=false")
+_val=${SBND_KINE_COUNT_GUARD_FREED:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "kine_count_guard_freed=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "kine_count_guard_freed=false")
 unset _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.

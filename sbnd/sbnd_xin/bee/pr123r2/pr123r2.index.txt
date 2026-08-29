@@ -1,0 +1,11 @@
+# doc pr/123 round 2 A/B index -- OFF caad3e29-e997-433f-bdd7-37c7e89c8fc9 / ON e1da72ac-2d54-4895-8460-083d509c15d9
+# OFF = post-round-1 production (work-pr123r1-r2off141-mcp2k: pass4 prune+guard ON, muons expelled
+#   from showers but LOST from the PF tree); ON = + pf_orphan_guard_freed + kine_count_guard_freed
+#   (work-pr123r1-r2on141-mcp2k).  The complete firing set over 239 events: these 2.
+# What to open: the PF/particle tree.  BEFORE: the guard-freed muon appears in NO particle (the
+#   round-1 known issue, owner 2026-08-28: "it should not be lost in the PF tree").  AFTER: it is a
+#   root-level muon track node; kine_reco_Enu regains its KE; nusel TSV byte-identical, vertices
+#   identical, shower content identical (the shower fix from round 1 is untouched).
+# bee_idx	event	status
+0	171572	FIXED: 125.1cm mu- returns as root PF node, 304.8 MeV; sum kine_energy_particle 357.3 -> 662.1
+1	393505	FIXED: 108.5cm mu- returns as root PF node, 268.7 MeV; sum kine_energy_particle 460.2 -> 728.9
