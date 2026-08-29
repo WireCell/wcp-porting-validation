@@ -7,6 +7,7 @@
 #   and the leading EM object is the 92.0 MeV remnant 37017.  AFTER: one 427.8 MeV shower 60026 holds both
 #   sides (ex-60026 members + the 63050 side the scanner marked IN); only the benign proton stem 12052/12054
 #   stays unowned (detach_track_stem, same as the pre-pass4 reconstruction).
+# OWNER-REVIEWED 2026-08-28: "Looks great!" (scan result approved)
 # bee_idx	event	status
 0	348471	RESCUED: qF1 0.205 -> 0.895 vs emscan-0828-agent5 marks (scan-epoch shower was 0.932 and verdict
 	was already "under-clustered" with 63050 marked IN -- the fix lands ABOVE restore by merging the 63050

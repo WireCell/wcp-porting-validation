@@ -3,7 +3,7 @@
 **Status: COMPLETE — `shower_ex1_dedup_rehome` SBND PRODUCTION ON 2026-08-28
 (owner: validation "consistent with previous round"). Fires on exactly 1 event
 in 239; 348471 qF1 0.205→0.895; flip-equivalence PASS 196/196 + 282/282.
-Bee pair uploaded (below) for owner review.**
+Owner Bee verdict 2026-08-28: "Looks great!" — round closed.**
 
 Owner directive 2026-08-28: investigate and improve the regression reported in
 doc [pr/115 §17](115_em-handscan-categorisation.md) — the 141-event
