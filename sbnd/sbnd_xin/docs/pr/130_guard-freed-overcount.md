@@ -404,3 +404,99 @@ and it is the second confirmed instance in two rounds.
 4. Whichever way it goes, `stem_backfill_back_guard` needs a registry entry
    with **both** an assertion for the 47212 win and one for whatever 292643
    settles at — a single-sided sentinel is what let this sit unattributed.
+
+---
+
+# Part 4 — owner verdicts on the guard, and why the obvious fix is dead
+
+## Owner ruling (2026-08-29), on the `bee/pr130r2` A/B
+
+| idx | event | verdict | meaning for the guard |
+|---|---|---|---|
+| 0 | 292643 | **OFF better** | the guard's decline is WRONG — the stem should be absorbed |
+| 1 | 179369 | **OFF better** | decline WRONG |
+| 2 | 283515 | ON better | decline right |
+| 3 | 347824 | ON better | decline right |
+| 4 | 67394  | ON better | decline right |
+| 5 | 286655 | ON better | decline right |
+
+Note this **reverses the framing in Part 3**: 179369 was presented as the
+strongest case *for* the guard (its ON side gains a `pi0 138` + a 216 MeV
+gamma, +376 MeV).  The owner rules that pi0 spurious.  Enu direction was not a
+proxy for correctness, exactly as the caveat warned.
+
+## The complete labelled set — there is no unlabelled exposure
+
+`stem_backfill_back_guard` declines on **exactly 8 candidates in 239 events**:
+the 6 above plus pr/120's own two targets, 47212 and 281567, both
+scanner-condemned (the events the guard was built for).  So every firing is
+labelled.  Features are from the pre-existing byte-neutral `P120_STEM` census
+(`WCT_SHOWER_ABSORB_DEBUG`), which tapes every chain candidate whether or not
+the guard declines:
+
+| evt | verdict | pdg | len_cm | ratio (MIP) | ang15 | ang60 | dist_cm |
+|---|---|---|---|---|---|---|---|
+| 47212  | decline ok (pr/120) |   13 |  3.76 | 1.62 | 150.17 | 152.17 |  4.99 |
+| 281567 | decline ok (pr/120) |  211 |  6.95 | **1.08** | 150.42 | 155.85 |  8.91 |
+| 283515 | decline ok | 2212 | 26.47 | 1.57 | 148.37 | 150.83 | 41.48 |
+| 347824 | decline ok | 2212 |  1.90 | 3.07 | 167.93 | 161.74 | 10.58 |
+| 67394  | decline ok | 2212 |  6.24 | 3.21 | 174.35 | 176.84 | 39.16 |
+| 286655 | decline ok | 2212 |  8.32 | 3.26 | 154.24 | 154.99 | 27.88 |
+| 286655 | decline ok (2nd) | 2212 | 8.32 | 3.26 | 144.06 | 144.35 | 24.71 |
+| **292643** | **absorb wanted** |   13 | 14.02 | **1.27** | 172.84 | 171.67 | 16.87 |
+| **179369** | **absorb wanted** |  211 | 11.26 | **1.46** | 161.94 | 172.83 | 88.11 |
+
+## MEASURED DEAD: no admission-time feature separates
+
+Every taped feature is interleaved between the two classes:
+
+```
+pdg      absorb=[13, 211]        decline=[13, 211, 2212 x5]      NO
+len_cm   absorb=[11.26, 14.02]   decline=[1.9 .. 26.47]          NO
+ratio    absorb=[1.27, 1.46]     decline=[1.08, 1.57 .. 3.26]    NO
+ang15    absorb=[161.94,172.84]  decline=[144.06 .. 174.35]      NO
+ang60    absorb=[171.67,172.83]  decline=[144.35 .. 176.84]      NO
+dist_cm  absorb=[16.87, 88.11]   decline=[4.99 .. 41.48]         NO
+```
+
+**The obvious fix — exempt MIP-like stems — looked perfect on the owner's six
+and is killed by pr/120's own two targets.**  On the 141-set alone the split is
+clean (absorb-wanted are pdg 13/211 at ratio 1.27/1.46; decline-ok are all pdg
+2212 at 1.57-3.26).  But **47212 is pdg 13 at 1.62 MIP and 281567 is pdg 211 at
+1.08 MIP**, and both are scanner-condemned over-clustering.  281567's 1.08 sits
+*below* both absorb-wanted ratios.  A MIP exemption would re-break the two
+events the guard exists for.
+
+*Method note: this is the second time this round that checking a shipped fix's
+ORIGINAL targets killed a hypothesis that fit the new evidence perfectly.  Fit
+a separator only against the complete labelled set, never the current round's
+half of it.*
+
+Two-feature cuts are available on paper (e.g. an 8.32 < len < 26.47 band
+isolates both positives) but with **2 positives and 7 negatives** any such cut
+is fitted noise, not a discriminator.  Not proposed.
+
+## What could still work (ranked, none attempted)
+
+1. **Vertex-relative geometry — the one physically-motivated family not yet
+   taped.**  Every feature above is local to the shower/stem pair; *none
+   references the main vertex*.  The physics: a stem that is the shower's true
+   parent should lie BETWEEN the shower and the neutrino vertex, so absorbing
+   it moves the shower start TOWARD the vertex; a separate hadronic prong sits
+   AT the vertex and points away.  Cheap to test — extend the existing
+   `P120_STEM` tape with `d(stem, main_vertex)`, `d(shower_start, main_vertex)`
+   and the sign of the change, then re-run the two probe arms.  One probe, one
+   arm, and the labelled set is already complete.
+2. **Accept the trade.** The guard is right on 6 of 8, including both events it
+   was built for.  Its two errors cost 234.0 MeV lost (292643) and 376.0 MeV
+   spuriously gained (179369) — both failures of the owner's pr/128 metric, so
+   "accept" is not free.
+3. **A downstream coherence test** — decide after the absorb by asking whether
+   the enlarged shower is a consistent object, rather than at admission.
+   Larger design; matches the recurring finding below.
+
+**Pattern, now four rounds deep**: pr/119 (no local separator), pr/128
+(proximity is not continuation), pr/129 (over-clustering is not a distance),
+and now pr/130 Part 4.  Local admission-time geometry keeps failing to encode
+the owner's judgement.  That is an argument for spending the next effort on
+option 1 and, if it also fails, on option 3 — not on further threshold work.
