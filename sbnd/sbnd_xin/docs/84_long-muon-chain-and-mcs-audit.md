@@ -1668,3 +1668,34 @@ production); AFTER = `work-d84r4-flipchk-*` (the shipped jsonnet flip).
 | 0 | 172794 | G1 lever | the muon → neutron → muon chain collapses to one muon; +68.6 cm |
 | 1 | 347890 | G2 track_partner | the pi+ stub becomes part of the muon (retyped 13), carrier gone |
 | 2 | 67026 | G3 short_gap | the root-attached neutron → muon subtree joins the long muon; 181.7 → 748.6 MeV |
+
+## R4.10 Owner verdict — round 4 CLOSED
+
+Owner scanned the Bee A/B pair (`d6163f8a` / `da1834c6`) 2026-08-29:
+**"They are good."**  All three rescues confirmed — 172794 (G1 lever),
+347890 (G2 track_partner), 67026 (G3 short_gap).  The SBND flip `a8cbfa4a`
+stands as validated production.
+
+**Doc 84 is closed through round 4.**  The whole long-muon family is SBND
+production ON: MCS (`mcs_enable`, `mcs_muon_source=long_muon_else_pf`,
+`mcs_range_comparator_chain`, `mcs_bridged_members`), the chain fixes
+(`long_muon_range_empty_chain_fallback`, `long_muon_angle_relax_long`,
+`long_muon_stub_bridge_len`, `long_muon_members_geometry`) and the cathode
+bridge with its round-4 admission params.
+
+Deferred, deliberately, with no work in flight:
+
+1. **MCS absolute scale vs truth** (owner item, standing since R3.7).  The
+   amb<0.2 population sits at 0.94-0.96 of CSDA range; reco-vs-truth on a
+   truth-level numu sample is the only way to say whether that ~5% is real
+   scale or range-table convention.  Needs MC truth not available here.
+2. **3000-event fire count at the round-4 settings.**  Unmeasured by choice
+   (owner picked the manifest+scanned-set scope).  Expect 10 → 13 whenever a
+   full census next runs; a different number means something is off.
+3. **`min_len` (5 cm) is the last bridge constant with no knob** — it is why
+   410680's far half never reaches geometry.  Owner called that event good, so
+   no action proposed.
+4. **MCS selection vs bridge disagreement** (67026): the bridge absorbed the
+   257.9 cm half into the shower while MCS's `pf_muon` fallback had already
+   selected that same segment, so `bridged_out` added nothing.  Harmless here;
+   worth revisiting only if a case appears with both halves long.
