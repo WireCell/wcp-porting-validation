@@ -264,6 +264,12 @@ Operating points:
 | 5 cm / 20° / 5 cm | 3 | 3 | 556.3 | 55740 +300.6 |
 | 5 cm / 10° / 5 cm | 1 | 1 | 118.5 | 392901 +118.5 |
 
+(Footnote: this census ran on the pre-guard binary. 94392 is in the table at
+kink 13.3° but is guarded out of the shipped pool — its segment is already
+emitted by `pf_orphan_guard_freed` — so the **shipped class-A footprint is 2
+events / 419.1 MeV**, not 3 / 556.3, and the effective margin runs from
+55740's 13.0° to 393505's 41.0°.)
+
 **The separation is real.** All four 72786 cosmics are rejected at the
 default — two on `cand_end` (47.1 and 52.2 cm: the displayed track brushes
 the candidate's *middle*, the signature of a crossing) and two on kink (89.5°
@@ -300,6 +306,30 @@ Class B at the 20 cm default: **6 showers in 4 events, 484.1 MeV.**
 
 The next shower out is at 20–50 cm; the 490 far ones (≥50 cm, 2814 MeV) stay
 skipped, as the owner requires.
+
+**Read that gap column carefully — for three of the six rows it does no
+work.** `pf_conn4_near_gap` measures the shower's closest approach to the
+*main cluster's* point cloud, so for a shower whose material **is** in the
+main cluster the number is ~0 by construction. 105074 reads 0.07/0.08 cm
+because it is in cluster 23, not because it is near anything. The operative
+admission rule for that class is **main-cluster membership**, and the number
+that lets the reader judge it is the producer's own:
+
+| event | KE | admission actually turns on | producer's distance |
+|---|---|---|---|
+| 105074 ×2 | 215.1 + 162.0 | main-cluster membership (gap vacuous) | `anchor_dis` **119.5 / 119.0 cm** from the nearest main-vertex-reachable vertex |
+| 179048 | 34.2 | main-cluster membership (gap vacuous) | shed component 213.2 cm from its parent shower's start vertex |
+| 318769 | 44.0 | **gap 2.59 cm** (binding) | — |
+| 396222 ×2 | 26.3 + 2.5 | **gap 13.7 / 10.1 cm** (binding) | — |
+
+So of the 484 MeV class-B recovery, **411.3 MeV is main-cluster, where the
+gap test is vacuous**, and 72.8 MeV is cross-cluster, where it binds. The
+411 MeV is 34% of the whole round's recovery and its largest single-event
+move, and the judgement it asks for is: *is main-cluster material 119 cm from
+any reachable vertex part of the candidate's energy?* `shower_conn3_unreachable`
+already answered "yes, it is the candidate's" when it built the shower; conn-4
+then answered "no" for the outputs. This round makes the two answers agree.
+That is the call to check, alongside 392901's 102.9 cm in class A.
 
 ## 4. Known-divergence check (M15)
 
@@ -436,11 +466,22 @@ the one place the owner's "do not double count" instruction changed the code.
 - `nusel-evt*.tsv`: **239/239 byte-identical**.
 - Main vertex identical on all six moved events.
 - Reported, not tuned: `numu_score` moves on four of the six —
-  105074 −4.01 → −3.55, 179048 2.857 → 2.805, 318769 0.156 → 0.120,
-  55740 0.259 → **1.099**. The 55740 rise is the expected direction (a
-  300 MeV muon joined the candidate). No `nue_score` field changed. As in
-  pr/127 §3.2, a byte-identical `nusel` table does not by itself prove a νe
-  cut is unaffected — it does not carry `nue_score`.
+  105074 −4.01 → −3.55, 179048 2.857 → 2.805, 318769 0.156 → 0.120, and
+  **55740 0.259 → 1.099, a 4× rise and the largest score movement in the
+  round**. The direction is the expected one (a 300 MeV muon joined the
+  candidate), but it is a selection-relevant number and is reported, not
+  tuned. **The byte-identical `nusel` table does not cover it**: if
+  `numu_score` changed on four events while every `nusel-evt*.tsv` is
+  identical, then that table does not carry `numu_score`, so it proves
+  nothing about a numu cut. (This is the pr/127 §3.2 caveat, pointed at the
+  field that actually moved; `nue_score` did not change on any event.)
+- **EM label metric: provably inert, no probe arm needed.** Neither knob
+  touches shower construction — `pf_conn4_near_candidate` only feeds
+  `conn4_keep_showers`/`conn4_skip_segs`, `kine_count_conn4_near` only the
+  `vtx_type > 3` skip, and class A adds segments. Checked rather than
+  asserted: the `showers` array of the calib dump is **identical on 239/239
+  events**, so `em117_score.py`'s inputs cannot have moved and the
+  qF1/q_extra residual is untouched.
 - **Sentinel suite** (`pr127_sentinels.py`) on the ON arms: **10 PASS, 0 FAIL,
   4 SKIP** — no previously shipped fix regressed.
 
@@ -453,7 +494,13 @@ outside the subset).
 
 **Owner package.** `bee/pr128r1/` — 7 events, the six fires plus 72786 as the
 cosmic control. Built and annotated; **not uploaded** (outward-facing,
-CLAUDE.md §5.6).
+CLAUDE.md §5.6). **Content-verified before any link is reported**: for all
+7 indices on both sides, the md5 of the package's `data/i/i-mc.json` equals
+the md5 of the source arm's `pr_evt<ev>/mabc-pr.zip` `data/0/0-mc.json` —
+14/14 match, including idx 5 (396222), the one row that resolves through the
+98-set root rather than the 141-set root. Idx 6's mc layer is byte-identical
+between the OFF and ON packages, so the package itself carries the
+"72786 unchanged" control claim.
 
 ## 8. Sentinels
 
