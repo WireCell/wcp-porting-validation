@@ -108,11 +108,21 @@ in the notch between the two tiers. Nothing else about the pass changed: the
 stem is still trajectory-flagged, still degree-1 at its tip, the body is
 still a 79.3 cm pdg-13 track.
 
-**Why the geometry moved**: the body is 79.3 cm today vs 81.2 cm in pr/93
-r4, i.e. ~1.9 cm shorter at its near end, and the stem 14.3 vs 14.6 cm. Both
-are consistent with the Q/L era change under the arms
-(`work-nuecc48-cb0805` → `work-nuecc48-grp0825`); the cb0805 root no longer
-exists on disk, so this is attribution by measurement, not a re-run.
+**Why the geometry moved — NOT ESTABLISHED.** The body is 79.3 cm today vs
+81.2 cm in pr/93 r4 (~1.9 cm shorter at its near end) and the stem 14.3 vs
+14.6 cm. Two candidate causes, and the data on disk cannot separate them:
+
+- the Q/L era moved (`work-nuecc48-cb0805` at pr/93 r4 →
+  `work-nuecc48-ql0819` by 2026-08-21 → `work-nuecc48-grp0825` today — the
+  earliest broken arm's own compiled config names `ql0819` as its input);
+- a PR-stage code change landed in the 2026-08-18 → 08-21 window
+  (pr/94–99), moving the fit or the pass.
+
+Neither `cb0805` nor `ql0819` survives on disk for nuecc48, so the working
+state cannot be re-run and the attribution stays open. It does not affect
+the fix — that rests on today's measurement — but it does affect the blast
+radius: an input drift is one event's bad luck, whereas a code change could
+have killed the *other* fixes pr/93 r4 shipped. §5.3 checks them.
 
 **Why it hid**: the loss is invisible to every gate we run. It is not a
 byte-diff of a knob A/B (both arms have the fix "on"); it moved no label
@@ -230,13 +240,18 @@ everywhere including 137238.
 
 Two readings that matter:
 
-1. **−15.0 is the floor, not a cliff**: exactly −15.0 is the *minimum* and
-   the *median* nue_score over all 239 events (125 events, 52 %, sit
-   there); the maximum anywhere in the manifest is 4.30. Both the before
-   and the after value are far below anything a νe selection would accept,
-   and the Q/L selection table is byte-identical — so no selection outcome
-   changes. The event losing its (fake) vertex electron and gaining a
-   vertex muon is exactly the structure the owner adjudicated in pr/93 r4.
+1. **−15.0 is this variable's floor**: exactly −15.0 is both the *minimum*
+   and the *median* nue_score over all 239 events (125 events, 52 %, sit
+   there); the maximum anywhere in the manifest is 4.30. What is *proven*
+   here is that the **Q/L selection table is byte-identical** — and that
+   table (`nusel-evt*.tsv`: flash, tgm/stm/fc/lm, label) does **not**
+   contain nue_score, so it says nothing about a νe selection. Whether the
+   −4.30 → −15.00 move crosses a νe acceptance cut is **not established in
+   this doc** — no such cut was measured. Flagging it that way deliberately:
+   137238 comes from the νe CC sample, and the event losing its (fake)
+   vertex electron and gaining a vertex muon is exactly the structure the
+   owner adjudicated in pr/93 r4, but "the structure is right" is not the
+   same claim as "the selection is unaffected".
 2. **A junk π⁰ pairing appears** and is worth handing to the π⁰ work
    (doc pr/126): Path 1 now pairs the 379.6 MeV electron with a **1.29 MeV**
    crumb 47.3 cm away, 9.3° apart → `kine_pio_mass = 3.25 MeV`. The
@@ -333,6 +348,29 @@ Companion: `scripts/pr127_pf_history.py <event>` prints an event's PF-tree
 signature across every arm on disk in mtime order, marking each change —
 that is how the ~2026-08-21 turnover was located, and it is the tool to
 reach for when a sentinel fails.
+
+### 5.3 The siblings: are the OTHER pr/93 r4 fixes still alive?
+
+Because the attribution above is open (§2), the blast radius had to be
+checked: pr/93 round 4 shipped four fixes, and 137238 was one of them. The
+other three, re-run at today's production config
+(`work-pr127r1-r4check-mcp1k`, Q/L root `work-mcp1k-grp0825`):
+
+| event | shipped 2026-08-18 | today | verdict |
+|---|---|---|---|
+| 348471 | `proton 719` aggregate → `proton 308` + π⁰ 113 + γ | `proton 310`, max EM shower 414 | **alive** (sentinel PASS) |
+| 315167 | orphan machinery emits the 150.7 cm `proton 595` root | `proton 613` root, Enu 1705.1 — but `pf-orphan-audit: 0 unclaimed`, i.e. the ordinary track BFS now reaches it; the knob fires 0× in 98 events | **outcome healthy, mechanism dormant** |
+| 292643 | `pi+ 162` aggregate → `pi+ 88` → `mu- 58` → 4 γ, Enu 1073.6 | no `pi+` at all: head is `e- 227` with γ 65/8/5 + `mu- 59`, plus `mu- 441`; Enu 858.5; `detach_track_stem` does not fire here (it fires in 69 of the 98-manifest events, so the knob is alive) | **drifted — owner look wanted** |
+
+Single look-at Bee set (no A/B is possible — the cb0805/ql0819 roots are
+gone): `5a253c3b-328e-4795-949a-57fe1425aa3a`, idx 0 = 292643, idx 1 =
+315167, annotated `bee/pr127r1sib/pr127r1sib.index.txt`.
+
+The pattern worth naming: of four fixes from one round, one died silently
+(137238), one drifted to a different structure (292643), one is satisfied by
+a different mechanism than the one that shipped (315167), and one is intact
+(348471). None of that was visible from any gate — which is the argument for
+§5.1 rather than a one-off repair.
 
 ### 5.2 What is still open / worth a round (measured, not speculative)
 

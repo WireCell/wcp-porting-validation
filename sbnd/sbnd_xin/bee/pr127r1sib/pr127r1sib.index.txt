@@ -1,0 +1,12 @@
+# doc pr/127 sec 5.3 -- the OTHER two events doc pr/93 round 4 shipped fixes for.
+# SINGLE SET, NOT an A/B: https://www.phy.bnl.gov/twister/bee/set/5a253c3b-328e-4795-949a-57fe1425aa3a/event/list/
+#   (UUID content-verified: per-event mc-layer md5 equals the local zip's.  Arm =
+#    work-pr127r1-r4check-mcp1k = TODAY's production config on work-mcp1k-grp0825.
+#    There is no "before" set: the cb0805 / ql0819 Q/L roots these events last ran on
+#    are gone from disk, so the pr/93 r4 state cannot be re-rendered -- the quoted
+#    2026-08-18 shapes below come from doc pr/93 sec 7.)
+# Why: 137238's fix died silently (doc pr/127).  Its three siblings from the same round
+# were re-run to see whether they are still in the shape the owner approved.
+# bee_idx	event	status
+0	292643	LOOK PLEASE -- drifted away from its shipped shape.  Owner 2026-08-18: "the EM shower is labeled as pion; it should be a pion + gamma or pi0 like the other event", and shower_detach_track_stem delivered "pi+ 162 aggregate -> pi+ 88 -> mu- 58 -> four gammas", Enu 950.4 -> 1073.6.  TODAY: no pi+ anywhere; the head is "e- 227 MeV" with gamma 65 / 8 / 5 and a mu- 59 as its children, plus a separate mu- 441; Enu 858.5.  detach_track_stem does NOT fire on this event now (it is alive elsewhere -- 69 of the 98-manifest events fire it), so this is a structure change from a later round, not a dead knob.  Whether "e- + 3 gammas + mu-" is better or worse than "pi+ -> mu- -> 4 gammas" is a physics call I did not make.
+1	315167	HEALTHY by outcome, by a different route.  Owner 2026-08-18: "the long proton is separated out, but it is also missing from the final particle flow???", fixed by pf_orphan_confident_track + kine_count_orphan_tracks emitting the 150.7cm proton as a PF root (595 MeV).  TODAY the proton is there as a root, 613 MeV, Enu 1705.1 -- but the orphan machinery does not produce it: the log reads "pr65 pf-orphan-audit: 0 unclaimed segment(s)", i.e. the segment is now reached by the ordinary track BFS.  The knob has fired 0 times across the 98-manifest arms; that is dormancy without loss, unlike 137238.

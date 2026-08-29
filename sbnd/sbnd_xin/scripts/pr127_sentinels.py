@@ -33,6 +33,15 @@ Usage:
 Exit code: 0 = every applicable sentinel PASSed, 1 = at least one FAILed.
 A sentinel whose event is not present in the given arms is reported SKIP and
 does not fail the run.
+
+RE-BASELINE WARNING: the energy thresholds below are absolute MeV, so a round
+that changes the ENERGY SCALE rather than the structure will move them all.
+The queued `kine_shower_fudge_factor` 0.80 -> 0.84 flip (doc pr/126) is
+exactly that: ~5% on every EM energy.  52693's `pf_node_lt e- 175` sits at
+158 today (166 after), and 69314's shower count is exposed from the other
+side because K5's own gate is `kine < 10 MeV` -- a 5% bump pushes borderline
+crumbs over the cap and the count rises.  When that flip lands, re-measure
+and re-baseline these numbers; a FAIL in that round is churn, not regression.
 """
 import argparse
 import glob
