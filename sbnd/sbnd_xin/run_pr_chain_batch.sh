@@ -1681,6 +1681,10 @@ fi
 [ -n "${SBND_KINE_NEAR_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_near_kink_deg=${SBND_KINE_NEAR_KINK}")
 [ -n "${SBND_KINE_CONN4_NEAR:-}" ] && CATH_TLA+=(--tla-code "kine_count_conn4_near=$([ "${SBND_KINE_CONN4_NEAR}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_KINE_CONN4_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "kine_conn4_near_gap_cm=${SBND_KINE_CONN4_NEAR_GAP}")
+# doc pr/129: pointing test on the guard-freed kine pool.  EMPTY = no TLA = the
+# job default 0 = no test = byte-identical.
+[ -n "${SBND_KINE_GF_IMPACT:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_impact=${SBND_KINE_GF_IMPACT}")
+[ -n "${SBND_KINE_GF_MISS_DEG:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_miss_deg=${SBND_KINE_GF_MISS_DEG}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
