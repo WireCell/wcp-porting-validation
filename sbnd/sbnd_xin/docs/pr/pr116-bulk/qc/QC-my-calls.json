@@ -1,0 +1,22 @@
+{
+ "protocol": "Judged from the captured images only, before reading any agent label. One to two frames per event (the leading shower's az-055 frame, plus a second azimuth where the first was ambiguous). This is a LIGHTER pass than the agents' 3-9 frames: it can catch a gross mis-call, and it cannot adjudicate an under-clustering finding that rests on the acceptance plot. Events where my pass cannot decide are marked not_adjudicated rather than forced into a verdict.",
+ "frames_per_event": "1-2 (agents used 3-9)",
+ "calls": [
+  {"event": "evt54453",  "verdict": null, "confidence": null, "not_adjudicated": true,
+   "reason": "57050's members run contiguously from the start through a sparse trail into a dense blob; I see no over-clustering. Whether charge is MISSING is the question here and it lives on the acceptance plot, which I did not open. Cannot adjudicate."},
+  {"event": "evt282979", "verdict": "over-clustered", "confidence": "likely",
+   "reason": "a dense ~20 cm core on the vertex, then EMPTY space, then a second group of yellow-haloed members far up-left with their own charge. Two disjoint bodies in one shower."},
+  {"event": "evt318769", "verdict": "over-clustered", "confidence": "likely",
+   "reason": "members split between two locations ~500 px apart; cmp_div says angle 0.0-173.1 deg, i.e. members behind the start. Vertex star joined to the charge by a bare polyline with no blob."},
+  {"event": "evt277298", "verdict": "not an EM shower", "confidence": "likely",
+   "reason": "17030 is a ~50 cm straight line with charge hugging it to ~1 cm the whole way. The diffuse blob next to it is a DIFFERENT shower."},
+  {"event": "evt292524", "verdict": "over-clustered", "confidence": "likely",
+   "reason": "79054's 17 members are a chain of small separated clumps strung along the 198 cm pdg-13 muon's charge sleeve out to 96.7 cm."},
+  {"event": "evt58755",  "verdict": "over-clustered", "confidence": "unclear",
+   "reason": "7 members totalling 25.5 cm of skeleton scattered over 62.4 cm as disconnected clumps in separate little clouds. Counter-reading: a real shower can be patchy, so unclear."},
+  {"event": "evt409140", "verdict": "correct", "confidence": "likely",
+   "reason": "shower starts at the vertex, members run down the spine of one contiguous fan of charge, no separate grey polylines in the fan."},
+  {"event": "evt487853", "verdict": "correct", "confidence": "unclear",
+   "reason": "two arms from one apex inside a single diffuse blob (az-055). But at az+085 the vertex star sits ON the member polyline and the object reads as one narrow line; 64.1 deg angle span unresolved between the two views."}
+ ]
+}

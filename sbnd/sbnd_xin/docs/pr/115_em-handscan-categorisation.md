@@ -11,6 +11,13 @@ plus **good events** and **events with an incorrect ν vertex**.
 document and its classifier only *read* what is already on disk, and the labels
 are opened read-only (CLAUDE.md M13). **No A/B gate is owed.**
 
+**§17 (added 2026-08-28) extends this document with a second, disjoint hand
+scan — 141 beam events, tag `emscan-0828-agent5` — and uses it as an
+out-of-sample test of the EM-clustering knobs turned on for SBND production in
+pr/117 and pr/118. Its headline: on 141 events the three flips leave 125
+membership-identical, the over-clustering charge is untouched, and the one large
+regression is isolated to `shower_pass4_best_owner`.**
+
 ## Repro
 
 ```bash
@@ -1054,3 +1061,326 @@ identified π⁰. (d) pr/91 P2. The new split pass is no longer on the list.
 
 **No code changed in this round — no C++, no jsonnet, no config. No A/B gate is
 owed.**
+
+---
+
+## 17. Round 4 — a second hand scan (141 beam events), and what the production flips do to it
+
+**Scope.** §§1–16 rest on one hand scan: 97 events, tag `emscan-0827`, sample
+`em114-manifest.tsv`. This section adds a **second, disjoint** scan — **141 beam
+events**, tag `emscan-0828-agent5`, sample `em114c-manifest.tsv` — and then uses
+it for the thing a second sample is worth: measuring the EM-clustering knobs that
+were turned on for SBND production in pr/117 and pr/118 on events **they were not
+tuned on**.
+
+The 141 were scanned by the model, not by the owner (method, self-checks and
+QC: doc [pr/116](116_agent-handscan-pilot.md)); the owner reviewed a 30-event
+confirm set on a dedicated display. **Every label in this section is a model
+label** — see §17.5 before treating any of it as ground truth.
+
+**No C++ and no jsonnet is changed in this round.** The four reconstruction arms
+below are produced with the *installed production binary* and, where a knob is
+moved, the runner's existing `SBND_SHOWER_*` env→TLA path — no file in the
+toolkit tree was edited. Three byte-identity gates are reported instead of one,
+because the arms have to be trusted before their differences mean anything.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# the scan itself
+python3 docs/pr/pr116-bulk/scripts/rollup.py            # verdicts, marks, pi0
+
+# the four arms (toolkit HEAD 1c7dcc2b, local/lib built 2026-08-28 16:42)
+PR_EXTRA_STAGES=pr_display PR_JOBS=32 \
+  ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-em114c-prodnow-mcp1k data $(mcp1k events)
+#   ...-prodnowdbg-*   same, WCT_SHOWER_{ABSORB,CONTENT}_DEBUG=1  (sidecars)
+#   ...-knobsoff-*     same, SBND_SHOWER_{PASS4_BEST_OWNER,MERGE_RELAX,MERGE_RELAX_CONTINUITY}=0
+#   ...-onlyp4-*       same, PASS4_BEST_OWNER=1 and the other two 0, on the 16 changed events
+
+# gates
+python3 scripts/pr85_hash_gate.py work-pr118r1-flipchk-mcp1k work-pr120r1-off0-mcp1k
+python3 scripts/pr85_hash_gate.py work-em114c-prodnow-mcp1k   work-em114c-prodnowdbg-mcp1k
+python3 scripts/pr85_hash_gate.py work-mcp1k-prod0825         work-em114c-knobsoff-mcp1k
+
+# scoring
+./em_display/prep_pr121.py --tag 114cnow work-em114c-prodnowdbg-mcp1k work-em114c-prodnowdbg-mcp2k
+./em_display/em117_score.py --tag emscan-0828-agent5 \
+    --manifest em114c-manifest.tsv --prepdir emprep-c --tsv docs/pr/pr116-141-score-prod0825.tsv
+./em_display/em117_score.py --tag emscan-0828-agent5 \
+    --manifest em114c-114cnow-manifest.tsv --prepdir emprep-114cnow \
+    --tsv docs/pr/pr116-141-score-prodnow.tsv
+./em_display/em117_score.py --diffstat emprep-c emprep-114cnow
+python3 docs/pr/pr116-bulk/scripts/score_by_verdict.py \
+    docs/pr/pr116-141-score-prod0825.tsv docs/pr/pr116-141-score-prodnow.tsv
+python3 docs/pr/pr116-bulk/scripts/owned_census.py \
+    'work-em114c-knobsoff-*' 'work-em114c-prodnowdbg-*'
+```
+
+### 17.1 What was scanned, and why "out of sample" is the point
+
+| | §1 scan | this scan |
+|---|---|---|
+| tag | `emscan-0827` | `emscan-0828-agent5` |
+| manifest | `em114-manifest.tsv` (98) | `em114c-manifest.tsv` (141) |
+| events | 97 scanned | **141 scanned, 0 skipped** |
+| samples | nuecc48, ncpi0, mcp1k, mcp2k | **mcp1k (52), mcp2k (89)** — beam only |
+| selection | pr/113 ladder | every beam event with an EM shower ≥ 100 MeV |
+| scanner | owner | model (pr/116), 30 reviewed by owner |
+
+**The two event lists do not intersect at all** — checked directly, and it also
+holds against the 98-event list every pr/117–120 arm runs on:
+
+```
+mcp1k: arm 14  scan 52  overlap 0
+mcp2k: arm 17  scan 89  overlap 0
+```
+
+That is what makes §17.6 a genuine out-of-sample test rather than a re-read of
+the events the knobs were fitted to.
+
+### 17.2 The result
+
+| verdict | n | | | nuecc | numucc_em | other_em |
+|---|---|---|---|---|---|---|
+| `correct` | **71** | | | 20 | 39 | 12 |
+| `over-clustered` | **24** | | | 5 | 16 | 3 |
+| `under-clustered` | **22** | | | 8 | 10 | 4 |
+| `not an EM shower` | 12 | | | 5 | 6 | 1 |
+| `vertex-bad (undecidable)` | 10 | | | 2 | 6 | 2 |
+| `both` | 2 | | | 0 | 2 | 0 |
+| | 141 | | | 40 | 79 | 22 |
+
+Confidence, set on every event (§12 records that the radio went unused on 96 of
+97 last time): `likely` 111, `unclear` 25, `certain` 5.
+
+**48 of 141 events (34 %) carry a clustering complaint**; 22 carry no clustering
+judgement at all (10 vertex-bad + 12 PID). Marks: **59 IN and 83 OUT across 53
+events and 55 showers**; 29 events carry at least one OUT. 24 events carry a
+hand-built γγ pairing.
+
+### 17.3 Where this sample contradicts §3
+
+§3 concluded: *"34 of the 37 good events are νe CC, and **every over-clustered
+event is NCπ⁰**. Single-shower νe CC is the case the clustering handles; two
+overlapping gammas is where it breaks."*
+
+On the beam sample that second sentence does not survive. There is no NCπ⁰
+sample here at all, and over-clustering is nonetheless the **largest**
+actionable bucket — 24 events against 22 under-clustered, and **16 of the 24
+are νµCC with EM activity**. The mechanism §3 named (two overlapping gammas)
+cannot be the one operating here. The charge weights say the same thing more
+sharply: over the 57 marked shower rows, charge the reco **wrongly holds** is
+**5.8e7** against **2.2e7 missing** — over-clustering is not merely more common
+in beam events, it is 2.6× the charge problem.
+
+§16.6 already promoted `pass4_angle` over-reach to first place on the strength
+of the 97. This sample raises the priority rather than lowering it, and moves
+its centre of gravity from NCπ⁰ to νµCC.
+
+### 17.4 Two things the §2 taxonomy cannot express
+
+Both were found by the scan and are left for the owner, not decided here.
+
+1. **"The shower start / axis is wrong"** — 6 events (evt167612, evt173819,
+   evt174771, evt321767, evt347824, evt396037). `vertex-bad (undecidable)`
+   means the *neutrino* vertex and does not cover a shower whose own seed or
+   direction is wrong; `EM_VERDICTS` is append-only and is the owner's list.
+2. **`correct` carrying marks** — 6 events (evt168432, evt386442, evt400504,
+   evt52044, evt71872, evt74326). `on_save` stores **one** verdict, for the
+   shower selected at save time, while `marks_by_shower` holds many: the
+   leading shower is fine and a different one is not. No bucket in
+   `em114_categorize.py` shows this, so these read as "good" in any roll-up
+   that goes by verdict alone.
+
+### 17.5 What the scan does not settle
+
+- **It is not ground truth.** No MC truth-matching is involved; it is one
+  scanner's reading, and this time the scanner is a model. The QC
+  (`docs/pr/pr116-bulk/qc/`, sample drawn with seed 20260828 and written to
+  disk before any verdict was read) found **0 cases where a call contradicts
+  the images** and **2 genuine judgement splits**, both of which the agent's own
+  note already names as the alternative reading.
+- **Both splits turn on one question**, which is a gate decision and not 141
+  judgements: how far past its own body may a shower reach before far
+  `pass4_angle` stubs count as over-reach.
+- **`correct` is a fast pass**, the same caveat as §9.
+- **8.5 % of the sample (the 12 PID verdicts) has no trustworthy bucket**, and
+  the note-regex rule that `em114_categorize.py` uses to bucket by free text
+  was measured against ten notes and **contradicted its own verdict on 5 of
+  10** — which is why `em114_categorize.py` gained a default-OFF
+  `--use-verdict` flag rather than being trusted as it stood.
+
+### 17.6 The measurement — current production against the reconstruction that was scanned
+
+The scan judged `work-{mcp1k,mcp2k}-prod0825` (dumps 2026-08-25 05:10). Since
+then three EM-clustering knobs were turned on for SBND production:
+
+| knob | commit | doc |
+|---|---|---|
+| `shower_pass4_best_owner` | `c559d84c` | pr/117 |
+| `shower_merge_relax` | `c559d84c` | pr/117 |
+| `shower_merge_relax_continuity` | `5c2516a3` | pr/118 |
+
+**Three gates, because the arms have to be trusted first.**
+
+| # | gate | arms | result |
+|---|---|---|---|
+| 1 | the installed binary still *is* production (it carries an uncommitted pr/120 probe) | `pr118r1-flipchk-{mcp1k,mcp2k}` vs `pr120r1-off0-*` | **PASS** — 62/62 archives byte-identical |
+| 2 | the probe env changes no physics, so sidecars may be built from it | `em114c-prodnow-*` vs `em114c-prodnowdbg-*` | **PASS** — 282/282 archives byte-identical |
+| 3 | **nothing but these three knobs changed** since the scan epoch | `{mcp1k,mcp2k}-prod0825` vs `em114c-knobsoff-*` | **PASS** — 282/282 archives byte-identical |
+
+Gate 3 is the one that makes the rest attributable: the *current* binary with
+the three knobs forced back off reproduces the scanned reconstruction
+**byte-for-byte on all 141 events**. Every difference below is those three
+knobs and nothing else.
+
+**Binary provenance, recorded because it is not clean.** `local/lib` is shared,
+and a concurrent pr/120 session rebuilt `libWireCellClus.so` at **17:01:38**,
+inside the `prodnowdbg` arm's window (17:00:45 → 17:02:36); the `knobsoff`,
+`onlyp4` and `nop4` arms ran entirely after it, `prodnow` entirely before. That
+would normally void the comparison (M1). It does not here, and the gates are
+why: **gate 2 spans the rebuild** — `prodnow` (old binary throughout) against
+`prodnowdbg` (straddling) is byte-identical on all 282 archives — and **gate 3
+is entirely post-rebuild**, so the *new* binary with the knobs off still
+reproduces `prod0825` exactly. The pr/120 work in flight is default-OFF knobs
+plus probes, consistent with that. `md5sum` of the five WireCell libraries was
+taken before the first arm and after the last; the mismatch above is the
+evidence for this paragraph, not an omission from it.
+
+**How much moved at all.** `em117_score.py --diffstat emprep-c emprep-114cnow`:
+
+```
+events compared: 141   changed: 16   unchanged: 125   segments moved: 44
+```
+
+**125 of 141 events (89 %) are membership-identical.** In 12 of the 16 changed
+events the shower count drops by one, which is the merge knobs doing what they
+were turned on to do.
+
+**Did it move toward the scan?** 57 marked shower rows over 55 events, scored
+identically on both arms (`em117_score.py`, charge-weighted, sidecar
+membership, cross-run shower matching):
+
+| verdict bucket | n | median q-F1 base → new | Σ q_miss base → new | Σ q_extra base → new |
+|---|---|---|---|---|
+| under-clustered | 23 | 0.927 → 0.927 | 1.58e7 → **2.00e7** | 0 → 1.05e6 |
+| over-clustered | 20 | 0.815 → 0.815 | 6.7e5 → 5.1e5 | **4.80e7 → 4.80e7** |
+| both | 2 | 0.671 → 0.669 | 3.40e6 → 3.40e6 | 6.7e5 → 7.1e5 |
+| correct | 9 | 0.956 → 0.956 | 1.99e6 → 1.99e6 | 3.17e6 → 3.17e6 |
+| vertex-bad | 3 | 0.766 → 0.766 | 0 → 0 | 5.88e6 → 5.88e6 |
+| **ALL** | **57** | **0.879 → 0.873** | **2.18e7 → 2.59e7** | **5.77e7 → 5.88e7** |
+
+**51 of the 57 shower rows are unchanged.** Six moved: +0.132 (evt350121),
++0.017 (evt98844), +0.013 (evt293149), −0.003 (evt318769), −0.109 (evt181050),
+**−0.727 (evt348471)**.
+
+**The honest summary: on 141 events these three flips are close to a no-op, and
+the net is slightly negative.** Two results deserve to be stated plainly rather
+than averaged:
+
+1. **The over-clustering charge is untouched.** Σ q_extra on the 20
+   over-clustered showers is `4.80e7` before and `4.80e7` after. The largest
+   measured defect in this sample is exactly the one the flips do not address.
+2. **Σ q_miss got worse, by 19 %** — and all of it is one event (§17.7).
+
+**Recognition census over all 141 events** (`owned_census.py`; this is the
+failure a mark-based score cannot see, because a segment that stops belonging
+to *any* shower is not "wrongly held" by one). It counts an event as changed
+only when the shower count, the owned-segment count or the leading-shower
+energy moves, so **14**, against `--diffstat`'s **16** events with any
+membership movement at all; the knob-isolation arms below run on all 16:
+
+| arm | events changed | leading-shower MeV lost | gained | segments owned by some shower |
+|---|---|---|---|---|
+| `merge_relax` + `..._continuity` only | 9 of 16 | **0.0** | **+87.2** | 669 → 669 (**0**) |
+| `pass4_best_owner` only | 5 of 16 | **−320.1** | +10.0 | 669 → **657 (−12)** |
+| all three (= production) | 14 of 141 | −320.1 | +97.2 | 3767 → **3755 (−12)** |
+
+The two effects are additive — no interaction term. **The two merge knobs are
+clean: nine events changed, not one loses charge, no segment is dropped, +87.2
+MeV recovered into leading showers.** Everything negative in this round comes
+from `shower_pass4_best_owner`.
+
+### 17.7 evt348471 — the one large regression, isolated
+
+| arm | showers | segments owned | leading EM shower |
+|---|---|---|---|
+| `prod0825` (what the scanner saw) | 9 | **27 / 29** | 60026, **352.6 MeV** |
+| current binary, three knobs OFF | 9 | 27 / 29 | 60026, 352.6 MeV |
+| `pass4_best_owner` alone | 8 | **15 / 29** | 37017, **92.0 MeV** |
+| current SBND production | 8 | 15 / 29 | 37017, 92.0 MeV |
+
+A 352.6 MeV shower keeps 7 of its 15 members; **12 of the event's 29 segments
+end up owned by no shower at all**, and 260.6 MeV leaves the leading EM object.
+The scan's verdict on this event is `under-clustered` — the scanner marked two
+*more* segments IN (38018 at 100.1 cm / 7.7°, 63050 at 44.3 cm / 8.5°), i.e. it
+was already judged too small. The charge-weighted F1 of that shower goes
+**0.932 → 0.205**.
+
+The mechanism is visible in the probe stream. With the knob off the event has no
+splice; with it on, one extra `pass4` line fires and then:
+
+```
+SHOWER_ABSORB SPLICE site=examine_shower_1_assoc into_start_seg=12052 from_start_seg=63050 from_nseg=7
+```
+
+Re-arbitrating pass-4 ownership lets `examine_shower_1_assoc` splice the
+7-segment shower 63050 into the shower rooted at segment 12052 (cluster 12,
+present in this event) — and that receiving object does not survive as a shower
+in the dump, so its members and the pieces of 60026 that followed them are
+orphaned. `merge_relax` and `merge_relax_continuity` are separately confirmed
+no-ops here: run alone, each leaves 9 showers / 27 owned / 352.6 MeV.
+
+Every `merge_relax` decision on this event is logged `verdict=gap_fail`, so this
+is not a merge-gate question at all.
+
+**This is reported, not fixed.** Whether `shower_pass4_best_owner` should be
+turned back off, guarded, or left alone is the owner's call: it was flipped on
+pre-authorization after passing validation on the 98-event set, and the two
+samples disagree. The measurement that would settle it — the same census over
+the 98 events the knob *was* tuned on, to see whether it also drops segments
+there — is one arm and is not run in this round.
+
+### 17.8 What this does to §16.6's order of work
+
+- **(a) `pass4_angle` over-reach stays first**, and is now the better-supported
+  item of the two: 24 over-clustered events, `4.80e7` of wrongly-held charge,
+  and **nothing shipped so far moves it at all**. §3's "over-clustering is an
+  NCπ⁰ problem" does not hold on beam events — 16 of the 24 are νµCC.
+- **New item, ahead of (b): `shower_pass4_best_owner` needs a segment-orphaning
+  guard or a re-validation.** It is the only source of loss measured here.
+- **(b)–(d) unchanged.** The π⁰ reporting defect and pr/91 P2 are untouched by
+  this round.
+- The **over-reach line** (how far past its own body a shower may reach) is
+  worth settling as a *definition* before more scanning: §17.5's two QC splits
+  and part of a third turn on it, so it is one gate decision, not 141
+  judgements.
+
+### 17.9 π⁰ — carried, not analysed
+
+Recorded so the next phase starts from data rather than from scratch: **24 of
+the 141 events carry a hand-built γγ pairing**, and 18 notes explicitly dispute
+or annotate the reco's own pairing. §11 and §16.3's finding — that
+`kine_pio_mass` is the energy-ranked pair and not the identified π⁰ — has not
+been re-measured on this sample. **No π⁰ conclusion is drawn here.**
+
+### 17.10 Files
+
+| file | |
+|---|---|
+| `sbnd_xin/em_labels/emscan-0828-agent5/` | 141 labels (M13: a record, never rewritten) |
+| `sbnd_xin/em_display/em114c-manifest.tsv` | the 141-event sample |
+| `sbnd_xin/em_display/prep_pr121.py` | sidecars/manifest for an em114c arm (fork of `prep_pr117.py`) |
+| `sbnd_xin/em_display/emprep-114cnow/`, `em114c-114cnow-manifest.tsv` | the production arm's own scoring inputs |
+| `sbnd_xin/docs/pr/pr116-141-score-prod0825.tsv` | 57 shower rows, scan-epoch reconstruction |
+| `sbnd_xin/docs/pr/pr116-141-score-prodnow.tsv` | 57 shower rows, current production |
+| `sbnd_xin/docs/pr/pr116-bulk/` | brief, shards, ledgers, QC, owner decisions, buckets-141 |
+| `sbnd_xin/docs/pr/pr116-bulk/scripts/score_by_verdict.py` | verdict-grouped delta, q_miss and q_extra split |
+| `sbnd_xin/docs/pr/pr116-bulk/scripts/owned_census.py` | the recognition census (all 141, not just marked) |
+| `sbnd_xin/work-em114c-{prodnow,prodnowdbg,knobsoff,onlyp4,nop4}-*` | the five arms |
+
+**No C++, no jsonnet, no config file changed in this round; knob movement is via
+the runner's existing env→TLA path. The three byte-identity gates above are the
+gate evidence.**

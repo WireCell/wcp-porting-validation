@@ -1,0 +1,116 @@
+[
+ {
+  "event": "evt170808",
+  "verdict_shower": 60025,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] numucc_em. Vertex is good: at el+60 the star is a clean two-prong V -- a long straight track running one way (14004, pdg 13, 37.7 cm) and a second prong the other (14028, pdg 2212, 22.4 cm) -- and the same kink is visible at az-055. shw 60025 (298.4 MeV, 10 seg, 67.5 cm, conn 2) starts ~18 cm off the star and is a single forward cone: members run 0-45 cm at 0.2-10.4 deg, and its acceptance plot has NO non-member circle anywhere in the window, so there is nothing contiguous left unclaimed. Every unowned segment in the event is at >=65 deg from its axis (14028 at 112 deg, 14004 at 176 deg, the rest sub-4 MeV stubs at 65-154 deg), so I see no under-clustering; the member set is one apex, one direction, so no over-clustering. Caveat I did not test: the detached start plus the reco calling 60026 (15.6 cm, 2.9 deg, absorbed pass4_prox) pdg 211 and 60024 pdg 2212 are PID statements inside the shower body -- for a 300 MeV EM object a MIP-like stem PID is expected and I make no PID claim. Only 1 shower is in scope; the other 8 are 3.6 MeV and below and I did not look at them. Single gamma with no partner anywhere in the reco, so the absence of a pi0 group is a missing second photon, not a mis-pairing.",
+  "event_flags": []
+ },
+ {
+  "event": "evt282979",
+  "verdict_shower": 14003,
+  "verdict": "over-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] nuecc. shw 14003 (309.6 MeV, 13 seg, conn 1) is TWO disconnected bodies called one shower. Near the vertex: 14003/14002/14004 (cluster 14) at 0-13.5 cm and 0-0.4 deg -- a narrow, straight, MIP-like line, not a cone, on both az-055 and az+085. Then the member set is EMPTY from 14 to 95 cm -- the acceptance plot shows a bare band there and both 3-D views show no charge at all in between, no point cloud and no grey segments -- and it resumes as a compact clump of 10 segments at 96.5-117.7 cm and 14.0-21.5 deg, all absorbed by pass3_cone (direct), drawn from clusters 34/38/39/40/41/44/45/46 and including 44032 (9.3 cm, pdg 2212), 46036 and 44031 (pdg 2212) and four pdg 13 stubs. A 310 MeV EM shower cannot have 80 cm of vacuum in its middle, so that far clump is a separate object the cone gate reached across empty space. All ten far members marked OUT. The near body is left as the shower. shw 42022 (25.7 MeV, 8.2 cm) sits 16.8 cm from the shower start at 137 deg, i.e. behind it, and is correctly not absorbed. Not looked at individually: 19009 (73.7 MeV but only 3.1 cm, pdg 2212, 181 cm away) and 18008 (57.8 MeV, 1.5 cm, pdg 2212, 139 cm away) -- both are short heavy-ionising stubs whose energy comes from the proton conversion, not EM showers, and 19 further showers skipped by the scope rule, all at 16.7 MeV and below. Vertex looks acceptable: the star sits at the near end of the vertex body on both azimuths, no rival convergence.",
+  "event_flags": [],
+  "marks": {
+   "14003": {
+    "41018": "out",
+    "46036": "out",
+    "45034": "out",
+    "45035": "out",
+    "40017": "out",
+    "44031": "out",
+    "39016": "out",
+    "44032": "out",
+    "34011": "out",
+    "38015": "out"
+   }
+  }
+ },
+ {
+  "event": "evt286681",
+  "verdict_shower": 3012,
+  "verdict": "over-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] other_em, and a messy one: the whole event is a long dense column of charge with several near-parallel grey tracks running through it. shw 3012 (173.6 MeV, pdg 11, conn 1) has only TWO members and they cannot be one cone: 3012 (25.2 cm, the narrow straight line running off the X) and 3008 (25.8 cm) at dist 46.5 cm and angle 97.6 deg -- essentially perpendicular to the axis -- pulled in by pass3_cluster_map. Both azimuths show them as two separate objects at opposite ends of the column with the middle unclaimed. 3008 marked OUT. What I could NOT settle, and it may matter more than the verdict: cluster 3 is one big vertex complex of long prongs -- 3005 (28.5 cm pdg 2212) and 3009 (50.6 cm pdg 211) both touch 3012's start at dist 0 and are unowned, and 3004 (65 cm pdg 13), 3006 (73 cm pdg 2212), 3010/3011 (45.4/7.4 cm pdg 2212) sit 23-47 cm out -- so a second reading is that the segmentation of this whole region is arbitrary and 'over-clustered' understates it. I make no PID claim on 3012 itself, though its body is a straight narrow line rather than a cone. Vertex judged first and left alone: at el+60 the star is where a long thin track ends on the activity complex, which is a plausible convergence. Not judged individually: shw 72040 (181.1 MeV but pdg 13, 109.2 cm long -- a track-PID object whose 10 extra members are a cluster-73 spray at 12.7-44.4 deg, which would need its own look) and shw 68030 (20.8 MeV, 5.7 cm); 17 further showers skipped by the scope rule, all at 15.0 MeV and below. pi0: the reco accepted no group, but the display prices 3012+68030 at 107.1 MeV (axis) / 86.6 MeV (vertex), both inside the code's accept window. I do NOT store that pairing -- 3012's own membership is what I just disputed, so its energy is not the one that pairing should be priced with. Flagging it only as something the owner may want to re-price after the OUT mark.",
+  "event_flags": [],
+  "marks": {
+   "3012": {
+    "3008": "out"
+   }
+  }
+ },
+ {
+  "event": "evt292027",
+  "verdict_shower": 56038,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] numucc_em with a reco pi0. Vertex is good: the star sits at the base of the 294 cm muon (12005, pdg 13, 667 MeV) and at the start of both gamma candidates. shw 56038 (259.1 MeV, 10 seg, 68.3 cm, pio_id 0) is a clean single-apex chain -- members run 0 to 44.8 cm at 0.0-5.2 deg, and on the az+085 view the point cloud is continuous the whole way from the X to the far fork with no unclaimed blob touching it. Its acceptance plot carries NO non-member circle anywhere in the window. The one thing I would have the owner check: 36014 (1.2 cm) at 66.1 cm / 6.7 deg and 32010 (0.9 cm) at 84.7 cm / 11.6 deg are on-axis continuations left unowned, but they sit past the plotted acceptance window so I have no corroboration and did not mark them. shw 59042 (65.5 MeV, 4 seg, 9.3 cm) is the second gamma: it is 6.2 cm from the vertex and reads 172.4 deg against the muon, i.e. nearly back-to-back with it, and its three extra members are pdg 13 stubs -- short and close-in enough that 'converted photon' vs 'vertex fragment' is not something I can separate; that caveat belongs on the pi0, not on 56038. pi0: the reco's own group 0 (59042+56038) is confirmed and stored. Unusually, both conventions close here -- axis 154.1 MeV, vertex 154.7 MeV -- against a stored 154.7, so the ~20 MeV excess over 135 is not a convention artefact. Looked at 2 EM showers of 11; 12005 is the muon (pdg 13) and I judged nothing about it, and the 8 skipped by the scope rule are all below 20 MeV.",
+  "event_flags": [],
+  "pio": {
+   "g1": 56038,
+   "g2": 59042,
+   "store": true
+  }
+ },
+ {
+  "event": "evt321767",
+  "verdict_shower": 45019,
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "note": "[agent-bulk] numucc_em. Vertex judged first and it is FINE: at el+60 the star is a clear multi-prong fan -- the 248 cm muon (15006) one way, and the 45019/46032/47033 prongs off the same point. shw 45019 (228.2 MeV, 5 seg, 60.2 cm, conn 3) is the leading pdg-11 object and I cannot settle it. What is certain from the numbers and visible on the acceptance plot: EVERY member except the seed sits at 44-58 deg from the shower axis, above all three pass-1 dashed steps (15/20/30 deg), and 45031 (4.9 cm) is at 106.1 deg, i.e. behind the start; they were pulled in by in_other_clusters_A (walk_add), not by the cone. Two non-members, 48034 (0.9 cm) at 11.4 cm/58.5 deg and 41012 (1.6 cm) at 23.3 cm/68.7 deg, sit interleaved with the members at the same angles. Reading (a), which I lean to slightly and is why the verdict says over-clustered: the member set spans two directions -- at az+085 the skeleton goes up from the X, turns, and comes back down -- so at least one arm (45031 at 106 deg is the concrete candidate) does not belong. Reading (b), which I cannot rule out and may be the truer statement: the membership is fine and what is wrong is the SHOWER START and AXIS -- at az-055 the X sits in the MIDDLE of one continuous ~39 cm curving body and the orange axis arrow points roughly perpendicular to it, which by itself manufactures every one of those 44-106 deg numbers. The verdict vocabulary has no 'start/axis wrong' entry and vertex-bad is about the nu vertex, which is good here, so this is recorded as the closest available string. NO segment marks: as in the pilot's evt280159 I could not name which pieces to remove with confidence. Also unowned and contiguous with the body: 45030 (pdg 211, 15.5 cm, same cluster 45) at 13.8 cm/125.1 deg. Not judged: 46032 (309.3 MeV but pdg 2212, one 53.7 cm segment -- a range-converted proton track, higher kine_best than the EM object) and 47033 (96.8 MeV, pdg 2212, only 7.4 cm -- also a range-converted proton stub); 15006 is the muon. 15 further showers skipped by the scope rule, all under 20 MeV. No pi0 group and only one EM shower in scope, so nothing to pair.",
+  "event_flags": []
+ },
+ {
+  "event": "evt350121",
+  "verdict_shower": 2011,
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] numucc_em. NOTE ON THE FRAMES: drag_check.segments_redrew came back FALSE on this capture (cloud_redrew true, d_az 0.7500 = expected). It is a false negative of the probe, not stale frames: the probe reads seg3_src.data.xs[0][0], and that point IS the nu vertex (state.json segments xs[0][0]/ys[0][0] = 36.73/-72.93 = main_vertex u/v exactly), so during the vertex-centred sweep it sat ON the rotation centre and an azimuth rotation cannot move it -- seg_u went 9.88e-7 -> 1.03e-6, i.e. zero to zero. The same source reads u = 36.73 for that point under the later shower-framed camera, so seg3_src does reproject. Judgements below are made off frames I confirmed move. shw 2011 (244.3 MeV, 4 seg, 46.0 cm, conn 3) is UNDER-CLUSTERED and the missing piece is named: shw 2013 (64.8 MeV, one 17.8 cm segment, same cluster 2) sits at dist 10.4 cm and angle 2.5 deg from 2011's start -- the IDENTICAL distance and angle as accepted member 2014, so on the acceptance plot the two markers coincide -- and the reco threw it out with conn3_unreachable (walk_exclude). Both azimuths show why that is wrong: at az+085 the 2011 skeleton and the 2013 skeleton run parallel, 1-2 cm apart, up the middle of ONE continuous diffuse charge cloud from a common lower end; at az-055 the same two skeletons overlap in the same cloud. Two skeletons, one shower. Pricing them as a pi0 pair gives 16.7 MeV (axis) / 5.8 MeV (vertex) at 7.6 / 2.7 deg -- collinear, which no pi0 can be, and which is itself the proof they are one object. 2013 marked IN. Vertex is good: at both azimuths the star is the clean apex of a two-track V and the shower start sits ~4 cm off the muon (2048, 187.1 cm, pdg 13, correctly unowned) at 91.8 deg. Left alone deliberately: 2008 (pdg 2212, 32.1 cm) at 167 deg behind the start, and 62046 (50.1 MeV, 14.6 cm) at 142 deg behind it -- both outside the cone. Small on-axis stubs I noticed but did not mark: 17020 (0.6 cm) at 30.7 cm/12.6 deg -- the only non-member circle inside the acceptance window -- and 22025 (0.9 cm) at 49.2 cm/2.1 deg, 27030 (1.5 cm) at 53.1 cm/7.5 deg beyond it. Looked at 2 of 23 showers properly; 29040 (43.3 MeV) and 28031 (30.2 MeV) are 72-85 cm away in the opposite hemisphere and I only checked they are not near 2011, and the 18 skipped by the scope rule are all under 20 MeV.",
+  "event_flags": [],
+  "marks": {
+   "2011": {
+    "2013": "in"
+   }
+  }
+ },
+ {
+  "event": "evt399118",
+  "verdict_shower": 15009,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] numucc_em with a reco pi0. drag_check both true on this capture. shw 15009 (130.5 MeV, 10 seg, conn 2, pio_id 0) is a compact single-apex object: its cluster-15 body runs 0-21.8 cm at 0.0-14.3 deg on both azimuths, and its acceptance plot carries NO non-member circle anywhere in the window out to 120 cm and 18 deg, so there is nothing contiguous left unclaimed -- the only unowned thing inside 40 cm is 56026, a 0.2 cm stub at 34.6 cm/35.8 deg, and everything else in the event is at >=98 deg. The one thing I would not defend hard: three of the ten members are sub-centimetre pass4_angle stubs far down the axis -- 51021 (0.3 cm) at 37.6 cm/4.9 deg, 52022 (0.3 cm) at 59.1 cm/8.6 deg, 53023 (0.4 cm) at 92.7 cm/4.8 deg. For a 130 MeV shower with a 22 cm body, reaching 93 cm is a stretch, but they are on-axis, individually spaced along it rather than a clump, and carry no meaningful charge, so I did not mark them; this is NOT the evt282979 pattern (there the members jumped an empty 14-95 cm band into a dense off-axis clump). Vertex: the star is where the 153.7 cm muon (9000) and the 108.8 cm pdg-2212 track (16017) meet, both correctly unowned. pi0: the reco's group 0 (15009 + 60031) is confirmed and stored -- the pi0 panel shows the two gammas leaving the vertex in near-opposite directions and the vertex convention gives 141.9 MeV (axis convention 157.3), so the vertex-convention answer is within 7 MeV of 135. Not judged individually: 16016 (78.3 MeV but pdg 2212 and only 3.7 cm) and 61033 (50.5 MeV, 1.0 cm, pdg 2212) are range-converted proton stubs, not EM showers; shw 60031 (55.5 MeV, 2 seg) I only checked for the pairing. 9 further showers skipped by the scope rule, all under 20 MeV.",
+  "event_flags": [],
+  "pio": {
+   "g1": 15009,
+   "g2": 60031,
+   "store": true
+  }
+ },
+ {
+  "event": "evt486687",
+  "verdict_shower": 103067,
+  "verdict": "correct",
+  "confidence": "unclear",
+  "note": "[agent-bulk] numucc_em. drag_check both true. shw 103067 (244.8 MeV, 14 seg, 62.8 cm, conn 2) passes both tests the rubric can apply, but I am recording it unclear because the thing I cannot settle is not a membership question. What passes: the acceptance plot has NO non-member circle anywhere in the window (0-110 cm, 0-24 deg), so nothing contiguous is left unclaimed and it is not under-clustered; and the member set is one direction with a single apex -- 0 to 85.6 cm at 1.9-18.6 deg, monotone -- so it is not the evt282979 two-body pattern. What I cannot settle: THIRTEEN of the fourteen members are pass4_angle (direct) adds from eight different clusters (72/101/100/91/88/86/87/85) and most carry TRACK PID -- 101054 (12.2 cm pdg 13), 101060 (8.8 cm pdg 13), 101063 (5.5 cm pdg 211), 86027 (pdg 2212), plus four more pdg 13 -- strung along the axis at 2-4 deg from 25 to 86 cm. Read one way that chain is the shower's own core; read the other way it is a straight minimum-ionising stem the cone gate swallowed, which is the rubric's own over-clustering clause. What tips me to 'correct' rather than 'over-clustered' is width: at az+085 the chain's point cloud is visibly ~3x wider transversely than the 297 cm muon's cloud running parallel to it a short distance away, which is shower-like, and the chain forks. I did not mark anything -- I could not name which segments to remove. Two projections (az-055 and el+60) superpose this shower on the 297 cm muon 20069 (pdg 13, correctly unowned, closest point 9.1 cm from the shower start at 102.4 deg); az+085 separates them cleanly, so they are genuinely distinct objects and the superposition is projection only. Also worth the owner's eye: the reco accepted NO pi0 group here, yet the display prices 103067+89041 at 126.7 MeV (axis) / 162.2 MeV (vertex) with BOTH inside the code's accept window. I do not store that pairing, because gamma1's own membership is what I just called unclear. Not judged: shw 89041 (53.7 MeV, 3 seg) beyond the pairing, and shw 93045 (32.2 MeV) whose two members sit 39.1 cm apart at 13.2 deg with a blank site field -- that one may deserve its own look. 18 further showers skipped by the scope rule, all under 20 MeV.",
+  "event_flags": []
+ },
+ {
+  "event": "evt51546",
+  "verdict_shower": 67024,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] mcp2k numucc_em. drag_check both true. Vertex is good: at el+60 the star is the lower end of the 75.8 cm muon (16000, pdg 13, correctly unowned) and the shower begins right there. shw 67024 (181.7 MeV, 10 seg, conn 2) is a clean converted-photon topology -- at az+085 it is a Lambda opening from a single apex at the X into two arms, exactly what a gamma conversion looks like, and both arms plus the diffuse cloud between them are entirely inside the yellow member set. All ten members are cluster 67, added by from_vertices (walk_add), spanning 0-17.9 cm at 0.6-31.8 deg -- a wide compact cone, not a chain. The acceptance plot carries ONE non-member circle, 53002 (0.4 cm, 2.0 MeV) at 25.6 cm / 34.6 deg, outside the 25 deg step and negligible, and nothing else unclaimed sits inside the cone. The shower start is 7.7 cm from the muon at 168.4 deg, i.e. the muon is behind it -- a photon converting 8 cm off the vertex, which is textbook. Correctly left unowned: the cluster-66 hook near the vertex (66016, pdg 13, 15.0 cm and 66014, 8.3 cm) at 96-102 deg from the shower axis, and 54003 (16.8 MeV, 2.5 cm) at 45.2 cm / 21.9 deg, well beyond the 18 cm member spread. One EM shower only in scope; the other 7 are 16.8 MeV and below and I did not look at them. No second photon anywhere in the reco, so the absence of a pi0 group here is a missing gamma, not a mis-pairing -- the same finding as the pilot's evt284200.",
+  "event_flags": []
+ },
+ {
+  "event": "evt64409",
+  "verdict_shower": 8022,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] nuecc. shw 8022 (801.3 MeV, 32 seg, 164.3 cm): single apex at the nu vertex, one narrow stem opening into a cone; the yellow member set covers the whole visible body on both azimuths (az-055 and az+085) and out to the far on-axis stubs. Nothing contiguous and unclaimed inside the cone: the only non-member on the acceptance plot near the pass-1 step is 36043 (2.4 MeV, 0.6 cm) at 127 cm / 12.9 deg, negligible. 8017 (pdg 2212, 13.1 cm, cluster 8, closest point on the shower start) is a separate prong on the far side of the star and is correctly left unowned; that is a PID-flavoured statement and I did not test it. shw 60090 (103.8 MeV, single 17.9 cm segment) is a detached compact EM blob at 46 cm / 85 deg from 8022's axis, fully claimed, with every other segment in the event at >=93 deg from its axis, so nothing to add. No reco pi0 group, and pairing 8022+60090 prices at 383.7 MeV (axis convention) / kine_pio 392.0 MeV, nowhere near 135 -- the absence of a pi0 group looks right, not like a pairing failure. Looked at 2 of 15 showers; the 13 skipped by the scope rule are 18.7 MeV (13039) and below, twelve of them under 4 MeV. Verdict is about clustering only.",
+  "event_flags": []
+ }
+]

@@ -1,0 +1,6 @@
+sample	run	subrun	event	origin	n_seg	n_shower	n_em	em_max	n_pio_groups	n_pio_showers	lossy_showers	pio_flag	kine_pio_mass	has_main	has_probe	bee_round	bee_url	dump	scan_note
+mcp1k	18259	1	175896	nuecc	19	9	9	253.9	0	0	0	0	-1.0	1	1	em114c/em114c-mcp1k		work-mcp1k-prod0825/pr_evt175896/calib-pr-evt175896.json	
+mcp1k	18255	1	284200	other_em	27	12	11	183.5	0	0	0	0	-1.0	1	1	em114c/em114c-mcp1k		work-mcp1k-prod0825/pr_evt284200/calib-pr-evt284200.json	
+mcp1k	18255	1	284791	numucc_em	21	10	9	132.9	0	0	0	1	35.9	1	1	em114c/em114c-mcp1k		work-mcp1k-prod0825/pr_evt284791/calib-pr-evt284791.json	
+mcp1k	18255	1	400504	numucc_em	12	3	2	153.5	1	2	0	1	145.9	1	1	em114c/em114c-mcp1k		work-mcp1k-prod0825/pr_evt400504/calib-pr-evt400504.json	
+mcp2k	18255	1	280159	numucc_em	63	35	31	446.3	1	2	0	1	134.0	1	1	em114c/em114c-mcp2k		work-mcp2k-prod0825/pr_evt280159/calib-pr-evt280159.json	

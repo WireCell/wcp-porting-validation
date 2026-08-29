@@ -1,0 +1,27 @@
+evt56243	correct	likely	7	ok
+evt67394	over-clustered	likely	6	ok
+evt277298	not an EM shower	likely	6	ok
+evt283713	correct	likely	5	ok
+evt287654	correct	likely	5	ok
+evt293149	under-clustered	likely	5	ok
+evt348471	under-clustered	likely	5	ok
+evt386948	correct	unclear	5	ok
+evt407918	correct	likely	5	ok
+evt487853	correct	likely	5	ok
+evt52605	correct	unclear	7	ok (re-recorded: confidence likely -> unclear)
+evt56972	correct	likely	3	ok
+evt71642	correct	likely	5	ok
+evt75954	correct	likely	3	ok
+evt95151	correct	likely	3	ok
+evt100222	over-clustered	likely	5	ok (re-recorded: member_span number corrected in note)
+evt170761	over-clustered	unclear	4	ok
+evt173819	not an EM shower	likely	3	ok
+evt179611	not an EM shower	likely	3	ok
+evt282271	under-clustered	unclear	4	ok (re-recorded: reconciliation test added to note)
+evt291072	under-clustered	likely	5	ok (image count corrected 4->5)
+evt318769	both	likely	4	ok (image count corrected 5->4)
+evt390634	not an EM shower	unclear	4	ok
+evt395597	both	unclear	3	ok (image count corrected 4->3)
+evt397401	not an EM shower	likely	2	ok (image count corrected 3->2)
+evt406125	over-clustered	likely	2	ok (image count corrected 3->2)
+evt475778	correct	likely	3	ok

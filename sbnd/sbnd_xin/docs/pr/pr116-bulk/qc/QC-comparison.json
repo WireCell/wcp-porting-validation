@@ -1,0 +1,66 @@
+[
+ [
+  "evt54453",
+  "-",
+  "-",
+  "under-clustered",
+  "likely",
+  "not adjudicated by my pass"
+ ],
+ [
+  "evt282979",
+  "over-clustered",
+  "likely",
+  "over-clustered",
+  "likely",
+  "AGREE"
+ ],
+ [
+  "evt318769",
+  "over-clustered",
+  "likely",
+  "both",
+  "likely",
+  "DISAGREE"
+ ],
+ [
+  "evt277298",
+  "not an EM shower",
+  "likely",
+  "not an EM shower",
+  "likely",
+  "AGREE"
+ ],
+ [
+  "evt292524",
+  "over-clustered",
+  "likely",
+  "correct",
+  "likely",
+  "DISAGREE"
+ ],
+ [
+  "evt58755",
+  "over-clustered",
+  "unclear",
+  "correct",
+  "unclear",
+  "DISAGREE"
+ ],
+ [
+  "evt409140",
+  "correct",
+  "likely",
+  "correct",
+  "likely",
+  "AGREE"
+ ],
+ [
+  "evt487853",
+  "correct",
+  "unclear",
+  "correct",
+  "likely",
+  "AGREE"
+ ]
+]

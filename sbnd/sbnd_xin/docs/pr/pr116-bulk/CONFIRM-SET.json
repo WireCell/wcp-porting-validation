@@ -1,0 +1,243 @@
+[
+ {
+  "event": "evt52044",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 1 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt54341",
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "why": [
+   "BLIND COMPARISON POINT -- you scanned this independently on 5018 (tag emscan-0828-beam141); the agents were barred from reading that label"
+  ]
+ },
+ {
+  "event": "evt54453",
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "why": [
+   "QC: my lighter pass could not adjudicate this one"
+  ]
+ },
+ {
+  "event": "evt55740",
+  "verdict": "vertex-bad (undecidable)",
+  "confidence": "certain",
+  "why": [
+   "the scan's strongest claim (confidence 'certain') -- most worth trying to falsify"
+  ]
+ },
+ {
+  "event": "evt58755",
+  "verdict": "correct",
+  "confidence": "unclear",
+  "why": [
+   "QC split: I read over-clustered, the agent read correct; both recorded 'unclear'"
+  ]
+ },
+ {
+  "event": "evt71872",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 1 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt74326",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 6 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt91917",
+  "verdict": "under-clustered",
+  "confidence": "unclear",
+  "why": [
+   "the weaker of the two gate-inversion pairs -- included so you can see why I down-weighted it (tier 2 vs tier 1, 12.7 cm farther)"
+  ]
+ },
+ {
+  "event": "evt98844",
+  "verdict": "over-clustered",
+  "confidence": "likely",
+  "why": [
+   "every alternative pairing priced: NO credible pi0 exists, against a reco group storing 118.3 MeV. Also the cleanest same-tier gate inversion (accepted 16.28 deg / rejected 6.29 deg, both tier 1)"
+  ]
+ },
+ {
+  "event": "evt167612",
+  "verdict": "vertex-bad (undecidable)",
+  "confidence": "likely",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt168432",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 2 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt171572",
+  "verdict": "over-clustered",
+  "confidence": "certain",
+  "why": [
+   "the scan's strongest claim (confidence 'certain') -- most worth trying to falsify"
+  ]
+ },
+ {
+  "event": "evt171729",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "ACCEPTED reco pi0 whose gamma1 starts exactly on the vertex, so the vertex convention has no chord and only the axis mass exists"
+  ]
+ },
+ {
+  "event": "evt173819",
+  "verdict": "not an EM shower",
+  "confidence": "likely",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt174771",
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt179048",
+  "verdict": "vertex-bad (undecidable)",
+  "confidence": "likely",
+  "why": [
+   "verdict is rubric-dependent (OWNER-DECISIONS.md item 2): recorded 'vertex-bad', but the 249 cm collinear member span is measured from the shower start, which correction 14 says should make it 'over-clustered'. Left as recorded."
+  ]
+ },
+ {
+  "event": "evt280159",
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "why": [
+   "pilot: I dispute the reco pi0 pairing (gamma1's closest member is 0.0 cm from the vertex, in the muon's cluster)"
+  ]
+ },
+ {
+  "event": "evt283515",
+  "verdict": "over-clustered",
+  "confidence": "certain",
+  "why": [
+   "the scan's strongest claim (confidence 'certain') -- most worth trying to falsify"
+  ]
+ },
+ {
+  "event": "evt292524",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "QC split: I read over-clustered, the agent read correct -- and its note already names my reading as the alternative"
+  ]
+ },
+ {
+  "event": "evt318769",
+  "verdict": "both",
+  "confidence": "likely",
+  "why": [
+   "QC: my over-clustered is a subset of the agent's 'both' -- compatible, included so you can check the under-clustered half I never evaluated"
+  ]
+ },
+ {
+  "event": "evt321767",
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt347824",
+  "verdict": "over-clustered",
+  "confidence": "likely",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt348471",
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "why": [
+   "reco pi0 pairs a shower with its own fragment: gammas 6.1 deg apart, ~9.6 MeV where a pi0 needs ~105 deg"
+  ]
+ },
+ {
+  "event": "evt386442",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 1 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt393505",
+  "verdict": "over-clustered",
+  "confidence": "certain",
+  "why": [
+   "the scan's strongest claim (confidence 'certain') -- most worth trying to falsify",
+   "a 303 cm through-going MIP: member touches grey neighbours at gap 0.0 cm / 1.5 deg and 0.0 cm / 0.7 deg, all one cluster"
+  ]
+ },
+ {
+  "event": "evt396037",
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "why": [
+   "'start/axis wrong' -- EM_VERDICTS has no string for it; needs your decision"
+  ]
+ },
+ {
+  "event": "evt400504",
+  "verdict": "correct",
+  "confidence": "likely",
+  "why": [
+   "verdict 'correct' but carries 1 IN/OUT mark(s): the leading shower is fine and another one is not, and no bucket shows this"
+  ]
+ },
+ {
+  "event": "evt403309",
+  "verdict": "correct",
+  "confidence": "certain",
+  "why": [
+   "the scan's strongest claim (confidence 'certain') -- most worth trying to falsify"
+  ]
+ },
+ {
+  "event": "evt489327",
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "why": [
+   "same pattern on another accepted group: three different masses for one pairing"
+  ]
+ },
+ {
+  "event": "evt499577",
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "why": [
+   "'an L-shape scores as a perfect cone': members kink 60-70 deg at 20 cm while the angle column reads 2.3 deg, because it measures the segment START position"
+  ]
+ }
+]

@@ -64,8 +64,8 @@ P_NONE = "-"
 MANUAL_REJECT_CM = 15.0
 
 
-def load_manifest():
-    with open(MANIFEST) as fh:
+def load_manifest(path=None):
+    with open(path or MANIFEST) as fh:
         return {"evt" + r["event"]: r for r in csv.DictReader(fh, delimiter="\t")}
 
 
@@ -172,7 +172,50 @@ def summarise(lbl, rec, man):
     )
 
 
-def classify(s):
+def _pio_axis(s, why):
+    """The pi0 axis, lifted verbatim out of `classify` so the --use-verdict
+    early return can reach it.  Same statements, same order, same `why` text."""
+    vtx_note = bool(RE_VERTEX.search(s["note"].lower()))
+    pio = P_NONE
+    if s["has_pio"]:
+        if "no_vertex_ncpi0" in s["flags"]:
+            pio = P_NOVTX
+            why.append("scanner set the no_vertex_ncpi0 flag")
+        elif s["vertex_how"] == "backproject":
+            pio = P_NOVTX
+            why.append("pi0 vertex from back-projecting the two gamma rays")
+        elif (s["vertex_how"] == "manual" and s["vertex_dist"] is not None
+              and s["vertex_dist"] > MANUAL_REJECT_CM):
+            pio = P_NOVTX
+            why.append("pi0 vertex placed by hand %.0f cm off the main vertex"
+                       % s["vertex_dist"])
+        elif vtx_note:
+            pio = P_NOVTX
+            why.append("note rejects the vertex")
+        else:
+            pio = P_KNOWN
+            why.append("pi0 anchored on the reco main vertex"
+                       + ("" if s["vertex_how"] != "manual" else
+                          ", re-placed by hand only %.1f cm away -- a "
+                          "confirmation" % (s["vertex_dist"] or 0.0)))
+    return pio
+
+
+# The display's own verdict radio -> bucket.  Used ONLY under --use-verdict
+# (doc pr/116): the pr/115 scan set it on 1 of 97 records, so the default path
+# must stay the note+mark inference below or that table changes under us.  The
+# two PID verdicts are deliberately absent -- they are statements about particle
+# id, not about clustering, so they fall through to the inference.
+VERDICT_BUCKET = {
+    "correct": B_GOOD,
+    "over-clustered": B_OVER,
+    "under-clustered": B_UNDER,
+    "both": B_BOTH,
+    "vertex-bad (undecidable)": B_VTXBAD,
+}
+
+
+def classify(s, use_verdict=False):
     """Return (bucket, pi0 axis, [reason, ...]).
 
     PRECEDENCE, deliberate and in this order:
@@ -196,6 +239,15 @@ def classify(s):
         return B_UNSCANNED, P_NONE, ["no label file in this scan tag"]
 
     note, low = s["note"], s["note"].lower()
+    if use_verdict and s.get("verdict") in VERDICT_BUCKET:
+        # The pi0 axis is still computed from the record, never from the radio:
+        # there is no pi0 verdict (pr/114 README), the gamma slots are it.
+        b = VERDICT_BUCKET[s["verdict"]]
+        why.append("scanner set the verdict radio to %r%s"
+                   % (s["verdict"],
+                      "" if not s.get("confidence")
+                      else " (%s)" % s["confidence"]))
+        return b, _pio_axis(s, why), why
     over_note = bool(RE_OVER.search(low))
     under_note = bool(RE_UNDER.search(low))
     vtx_note = bool(RE_VERTEX.search(low))
@@ -204,28 +256,7 @@ def classify(s):
     real_out = s["out_mem"] + s["out_other"]
 
     # ---- pi0 axis, computed independently of the bucket ------------------
-    pio = P_NONE
-    if s["has_pio"]:
-        if "no_vertex_ncpi0" in s["flags"]:
-            pio = P_NOVTX
-            why.append("scanner set the no_vertex_ncpi0 flag")
-        elif s["vertex_how"] == "backproject":
-            pio = P_NOVTX
-            why.append("pi0 vertex from back-projecting the two gamma rays")
-        elif (s["vertex_how"] == "manual" and s["vertex_dist"] is not None
-              and s["vertex_dist"] > MANUAL_REJECT_CM):
-            pio = P_NOVTX
-            why.append("pi0 vertex placed by hand %.0f cm off the main vertex"
-                       % s["vertex_dist"])
-        elif vtx_note:
-            pio = P_NOVTX
-            why.append("note rejects the vertex")
-        else:
-            pio = P_KNOWN
-            why.append("pi0 anchored on the reco main vertex"
-                       + ("" if s["vertex_how"] != "manual" else
-                          ", re-placed by hand only %.1f cm away -- a "
-                          "confirmation" % (s["vertex_dist"] or 0.0)))
+    pio = _pio_axis(s, why)
 
     # ---- bucket ----------------------------------------------------------
     # A NAMED DIRECTION OUTRANKS a vertex complaint or a give-up.  evt281567
@@ -346,13 +377,22 @@ def main():
     ap.add_argument("--tag", default="emscan-0827")
     ap.add_argument("--tsv", default=None)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--manifest", default=None,
+                    help="sample manifest TSV (default: em114-manifest.tsv, "
+                         "the pr/115 sample)")
+    ap.add_argument("--use-verdict", action="store_true",
+                    help="let the display's verdict radio decide the bucket "
+                         "when it is set, instead of inferring from the note "
+                         "and marks.  OFF by default: the pr/115 scan set the "
+                         "radio on 1 of 97 records, so turning this on would "
+                         "change that table.")
     a = ap.parse_args()
 
-    man, labs = load_manifest(), load_labels(a.tag)
+    man, labs = load_manifest(a.manifest), load_labels(a.tag)
     rows = []
     for lbl in sorted(man, key=lambda k: int(k[3:])):
         s = summarise(lbl, labs.get(lbl), man[lbl])
-        s["bucket"], s["pi0"], s["why"] = classify(s)
+        s["bucket"], s["pi0"], s["why"] = classify(s, a.use_verdict)
         s["tags"] = tags(s)
         s["gain_ratio"] = ratio(s)
         rows.append(s)

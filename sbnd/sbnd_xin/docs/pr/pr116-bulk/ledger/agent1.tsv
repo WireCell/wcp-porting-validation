@@ -1,0 +1,28 @@
+evt54341	under-clustered	likely	5	ok
+evt65053	correct	likely	4	ok
+evt172266	not an EM shower	likely	6	ok (DRAG_CHECK false negative, diagnosed in note)
+evt283515	over-clustered	certain	5	ok
+evt287007	under-clustered	likely	4	ok
+evt292643	over-clustered	unclear	6	ok
+evt347085	under-clustered	likely	4	ok
+evt386442	correct	likely	4	ok
+evt401450	correct	likely	4	ok
+evt486907	correct	likely	4	ok
+evt52044	correct	likely	8	ok
+evt55740	vertex-bad (undecidable)	certain	4	ok (re-captured --vtx-span 60, half_span 286.9 cm)
+evt69254	correct	likely	5	ok
+evt74326	correct	likely	6	ok
+evt94392	over-clustered	likely	4	ok
+evt100135	under-clustered	unclear	4	ok (re-captured --vtx-span 60, half_span 400 cm)
+evt170098	correct	likely	4	ok
+evt173495	under-clustered	likely	4	ok (re-captured --vtx-span 60, half_span 356.7 cm)
+evt179369	over-clustered	likely	4	ok (re-captured --vtx-span 60, half_span 400 cm)
+evt281325	under-clustered	likely	4	ok
+evt289508	correct	likely	5	ok
+evt318703	correct	likely	6	ok (start/axis wrong noted; vertex judged off vtxz-*)
+evt350354	over-clustered	likely	5	ok (2 OUT marks; start/axis wrong noted)
+evt395123	correct	likely	4	ok
+evt396816	correct	likely	5	ok (vertex judged off vtxz-*)
+evt403309	correct	certain	3	ok
+evt412242	under-clustered	likely	5	ok (2 IN marks)
+evt500083	correct	likely	3	ok
