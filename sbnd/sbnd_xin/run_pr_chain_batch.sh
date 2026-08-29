@@ -1621,12 +1621,14 @@ fi
 #      SBND_LONG_MUON_ANGLE_RELAX_DEG=<deg> SBND_LONG_MUON_STUB_BRIDGE_LEN=<cm>
 #      SBND_MCS_MUON_SOURCE=<pf_muon|long_muon|longest_segment|long_muon_else_pf>
 #      SBND_MCS_RANGE_COMPARATOR_CHAIN=<0|1>
+#      SBND_MCS_BRIDGED_MEMBERS=<0|1>          (doc 84 round 3)
 [ -n "${SBND_LONG_MUON_RANGE_FALLBACK:-}" ] && CATH_TLA+=(--tla-code "long_muon_range_empty_chain_fallback=$([ "${SBND_LONG_MUON_RANGE_FALLBACK}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_LONG_MUON_ANGLE_RELAX:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_long=$([ "${SBND_LONG_MUON_ANGLE_RELAX}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_LONG_MUON_ANGLE_RELAX_DEG:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_deg=${SBND_LONG_MUON_ANGLE_RELAX_DEG}")
 [ -n "${SBND_LONG_MUON_STUB_BRIDGE_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_stub_bridge_len=${SBND_LONG_MUON_STUB_BRIDGE_LEN}")
 [ -n "${SBND_MCS_MUON_SOURCE:-}" ] && CATH_TLA+=(--tla-str "mcs_muon_source=${SBND_MCS_MUON_SOURCE}")
 [ -n "${SBND_MCS_RANGE_COMPARATOR_CHAIN:-}" ] && CATH_TLA+=(--tla-code "mcs_range_comparator_chain=$([ "${SBND_MCS_RANGE_COMPARATOR_CHAIN}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_MCS_BRIDGED_MEMBERS:-}" ] && CATH_TLA+=(--tla-code "mcs_bridged_members=$([ "${SBND_MCS_BRIDGED_MEMBERS}" = 0 ] && echo false || echo true)")
 # doc 84 round 2: members-geometry + cathode-bridge (value knobs in cm/deg)
 [ -n "${SBND_LONG_MUON_MEMBERS_GEOMETRY:-}" ] && CATH_TLA+=(--tla-code "long_muon_members_geometry=$([ "${SBND_LONG_MUON_MEMBERS_GEOMETRY}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE}" = 0 ] && echo false || echo true)")

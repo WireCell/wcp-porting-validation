@@ -1122,3 +1122,118 @@ configs); 42280 returned to byte-identical, the other four are pass4
 movers.  Protocol addition agreed by both sessions: check
 `pgrep -f run_pr_chain_batch` before editing shared jsonnet, and apply
 cross-file jsonnet changes callee-first.
+
+## R3.0 Repro (round 3)
+
+```
+# knob code: toolkit f392b0f3 (DEFAULT OFF), flip commit 49c004bd
+# compiled-config proofs (lib-free):
+wcsonnet --tla-str reality=data --tla-code "pipeline_names=[...15-stage PR list...]" \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet          # OFF: byte-identical vs HEAD
+  ... --tla-code mcs_bridged_members=true                      # ON: /data mcs_bridged_members = true
+# OFF gate (98-evt four-sample manifest, peer pr/123-r2 knobs pinned to pre-flip):
+/home/xqian/tmp/d84r3_arms.sh off1 SBND_PF_ORPHAN_GUARD_FREED=0 SBND_KINE_COUNT_GUARD_FREED=0
+scripts/pr85_hash_gate.py work-d84r3-off1-<s> work-d84r2-prod98-<s>
+# ON smoke + determinism pair (3 movers):
+/home/xqian/tmp/d84r3/movers_arm.sh bron1 SBND_MCS_BRIDGED_MEMBERS=1 SBND_PF_ORPHAN_GUARD_FREED=0 SBND_KINE_COUNT_GUARD_FREED=0
+/home/xqian/tmp/d84r3/movers_arm.sh bron2 ...   # identical env, second run
+# MCS scale harvest (read-only):
+scripts/d84r3_mcs_scale.py --arms work-d84r2-prod98-<4>:.. --arms work-d84r2-on3-<2>:.. \
+  --arms work-mcp1k-mcs80on:mcp1k --out docs/84_longmu/r3_mcs_scale
+```
+
+## R3.1 The knob: `mcs_bridged_members` (owner-chosen design)
+
+Round 2's cathode bridge adds the far half of a cathode-split muon to the
+SHOWER only; `segments_in_long_muon` deliberately keeps its legacy content, so
+MCS kept fitting the near chain.  The owner chose "give MCS the bridged member
+set" over extending the chain: `long_muon_cathode_bridge_pass` now reports the
+segments it absorbs through a nullptr-safe out-param — covering BOTH branches:
+the merged partner's muon-typed members (captured before `add_shower` folds
+them in; 53793 is this branch) and the retyped bare BFS chain (77978/177536) —
+and the MCS driver appends that set to `muon_segments` when
+`mcs_bridged_members` is on (dedup by graph index, deterministic index-order
+iteration).  Taggers, nusel, the chain comparator, and the PF tree keep their
+legacy inputs; the knob moves ONLY the five `kine_mcs_*` T_kine scalars and
+two log sentinels (`mcs: bridged members added ...` + changed `mcs:` main line).
+
+Two code paths engage that never did before, both verified in smoke: the
+endpoint block falls into its most-separated-pair fallback (four degree-1
+vertices on a disconnected member set), and the Dijkstra path in
+`trim_trajectory` hops the cathode gap (no absolute distance cutoff;
+`bad_path=false` on all movers; the SBND `mcs_cathode_xcut=5` band excision
+masks the seam angles — `cathode_drop` rose on every mover as designed).
+
+## R3.2 Gate ledger (round 3)
+
+| check | result |
+|---|---|
+| compiled config, knob absent | byte-identical vs HEAD (cmp) |
+| compiled config, knob on | `/data mcs_bridged_members = true` in TCN node |
+| `wcdoctest-clus` | 2488/2488 pass (incl. new default pin) |
+| freshness | libWireCellClus.so 21:30 > edits 21:26 (union lib with peer pr/123) |
+| OFF gate `work-d84r3-off1-*` vs `work-d84r2-prod98-*` | PASS 196/196 archives; nusel per-event 98/98 identical |
+| ON vs baseline (`bron1` vs `on3`, 3 movers) | mabc+pctree PASS 6/6; nusel identical; calib identical modulo `*_ms` timing fields |
+| determinism (`bron1` vs `bron2`) | PASS 6/6 archives; `mcs:`/`kine_mcs` log lines identical |
+
+The OFF-gate arms pinned `SBND_PF_ORPHAN_GUARD_FREED=0
+SBND_KINE_COUNT_GUARD_FREED=0` because prod98 predates the peer pr/123
+round-2 production flip that landed tonight (a44cf0b8); its two movers
+(171572/393505) are outside the 98-manifest, so the pins are belt-and-braces.
+
+## R3.3 ON smoke — the three bridge movers
+
+`work-d84r3-bron1-mcp2k`, quoting the main sentinel before (on3) -> after:
+
+| evt | branch | nseg | len [cm] | ke_MCS [MeV] | amb | ke_range_toolkit |
+|---|---|---|---|---|---|---|
+| 53793 | shower merge | 2 -> 4 | 154.1 -> 395.0 | 1328.9 -> 914.3 | 0.804 -> 0.015 | 367.0 -> 911.9 |
+| 77978 | bare chain | 1 -> 2 | 140.1 -> 163.6 | 542.4 -> 607.2 | 0.593 -> 0.524 | 336.7 -> 387.4 |
+| 177536 | bare chain | 1 -> 2 | 292.4 -> 390.4 | 674.3 -> 914.2 | 0.037 -> 0.013 | 673.4 -> 901.2 |
+
+53793 is the poster child: the half-track fit was garbage (amb 0.80, ke_MCS
+1329 vs range 367 on the same half); the full-track fit lands at 914 MeV,
+in 0.3% agreement with its own 912 MeV range KE, amb 0.015.  177536 likewise
+converges to its range value.  77978's absorbed piece is short (23.5 cm) and
+the fit stays moderately ambiguous — no harm, modest gain.
+New sentinel quoted: `mcs: bridged members added nseg_bridged=2 len_bridged=240.9cm` (53793).
+
+## R3.4 SBND production flip (owner pre-authorization via AskUserQuestion, 2026-08-28)
+
+The owner pre-authorized the flip tonight (conditional on OFF-gate PASS +
+clean mover smoke; both held).  `wct-pr-perevt.jsonnet` now ships
+`mcs_bridged_members = true` (commit 49c004bd); the value knob has no
+companions.  Flip-equivalence: `work-d84r3-flipchk-mcp2k` (no env, knob from
+jsonnet) vs `work-d84r3-bron1-mcp2k` (env-seeded) -- PASS 6/6 archives, nusel + mcs sentinel lines identical.  With this flip
+the full doc-84 knob family is SBND production ON.  The current SBND
+production point after tonight = doc 84 rounds 1-3 + pr/123 rounds 1-2
+(incl. the peer's no-knob pseudo-neutron PF rendering correction for freed
+muons, MultiAlgBlobClustering only).
+
+## R3.5 MCS absolute-scale study, part 1 (existing arms, read-only)
+
+Inputs: the 4 prod98 arms + 2 on3 arms (current production config, 45 usable
+sentinels) and `work-mcp1k-mcs80on` (1000-evt pf_muon-era arm, 278 usable) —
+327 sentinel rows, 326 distinct events.  Outputs:
+`docs/84_longmu/r3_mcs_scale/{d84r3-mcs-scale.tsv,png,summary.txt}`.
+
+The headline is that **fit ambiguity, not the MCS scale, is the story**:
+
+| population | n | ke_MCS/ke_range median | IQR |
+|---|---|---|---|
+| amb < 0.2 (all arms) | 70 | **0.945** | 0.911-0.983 |
+| amb < 0.2, len >= 200 cm | 33 | 0.965 | 0.929-1.001 |
+| amb >= 0.2 | 253 | 1.419 | 1.046-2.326 |
+
+When the MCS fit is unambiguous the scale agrees with CSDA range to ~5%
+(and to ~3.5% for long tracks) with a tight IQR — no evidence the MCS scale
+itself needs work.  High-ambiguity fits (78% of rows; short and/or contained
+muons, where range is the better estimator anyway) inflate MCS badly (median
+1.42, q75 2.3): any quantitative use of `kine_mcs_energy` should cut on
+`kine_mcs_ambiguity` (0.2 is a natural knee in this sample).  Length trend in
+current production: med ratio 1.80 (40-100 cm) -> 1.50 (100-200) -> 1.20
+(200+).  The null-chain comparator rate is 95% in this harvest (dominated by
+the pf_muon-era arm which predates the comparator; 76-81% in round-2-era
+arms) — nseg_chain=0 simply means no examine_direction chain existed at the
+MCS call site; the P1 fallback operates in PRShower, not on this set.
+Part 2 (census arms, full statistics) is R3.7.
