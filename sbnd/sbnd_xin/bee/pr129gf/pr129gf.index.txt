@@ -27,6 +27,40 @@
 # objects across all 239 events of both manifests, 710.66 MeV.  All three are
 # in this set.  There is nothing else to find.
 #
+# OWNER VERDICT 2026-08-29, after scanning all three:
+#   "1. 171572, 784.9 MeV should be the right energy.  2. 393505 should be the
+#    lower energy.  3. is OK."
+# So:
+#   idx 0  171572  KEEP the 304.75 MeV -- BASE (784.9) is right.  It is REAL.
+#   idx 1  393505  DROP the 268.70 MeV -- NOKINE (566.1) is right.  Confirms the
+#                  earlier over-clustering ruling on cluster 15.
+#   idx 2  94392   either arm acceptable (Enu identical, 1142.5 both ways).
+#
+# CONSEQUENCE: a blanket flip of kine_count_guard_freed is now RULED OUT -- it
+# would cost 171572 the 410.4 MeV the owner just called correct.  The pool needs
+# a DISCRIMINATOR that keeps 171572 and 94392 while dropping 393505.
+#
+# The whole decision set, for whoever builds it:
+#   event   ke_mev  len_cm  cluster_extent_cm  d_vtx_cm  verdict
+#   171572  304.75   125.1              125.3      16.1  KEEP (owner)
+#   94392   137.21    46.8               73.4      16.2  keep/either (owner)
+#   393505  268.70   108.5              296.7      68.4  DROP (owner)
+# Within THIS pool extent and d_vtx both separate cleanly (125.3/73.4 vs 296.7;
+# 16.1/16.2 vs 68.4).  But n=3, so any threshold is fitted to three points, and
+# the doc pr/129 negative result stands GLOBALLY: neither quantity separates the
+# owner's approvals from his rejections across pools (rejected 399118 is 102.6 /
+# 4.3, smaller and closer than approved 55740 at 131.3 / 48.1).  A threshold
+# invented here must therefore be scoped to this pool and justified by the fact
+# that the guard-freed pool is the ONLY pool with no geometric admission test at
+# all -- its predicate is the kPass4GuardFreed flag and nothing else.
+#
+# BETTER IDEA ALREADY IN FLIGHT, not mine: an uncommitted 97-line probe in
+# clus/src/NeutrinoKinematics.cxx (env WCT_KINE_GUARDFREED_PROBE, byte-neutral,
+# mtime 2026-08-29 14:56, no commit contains it) asks whether the ALREADY-
+# APPROVED pr/128 continuation test separates these three with NO new threshold.
+# That avoids fitting a constant to n=3 entirely.  Do not duplicate it; see the
+# report to the owner.
+#
 # bee_idx	event	status
 0	171572	THE ONLY OPEN QUESTION IN THE ROUND.  304.75 MeV, 125.1 cm mu-, counted into Enu today ONLY by the guard-freed pool.  NOKINE: Enu 784.9 -> 374.5 (-410.4 = 304.7 + muon rest mass); the track still shows in the PR tree.  Geometry says it is NOT like the object you rejected: its cluster 10 is a SINGLE 125.1 cm segment, extent 125.3 cm, closest approach to the nu vertex 16.1 cm -- compare the approved 55740 (extent 131.3, 48.1 cm out) and 392901 (106.5, 34.2 cm out).  The rejected 393505 was a 3-segment chain of extent 296.7 cm passing no closer than 68.4 cm.  So my read is that 171572 is REAL and should keep its 410 MeV -- but it rides on the same pool as the object you rejected, so I am not flipping anything until you say.  IF YOU AGREE IT IS REAL: a blanket flip of kine_count_guard_freed is wrong and we need a discriminator (and see the note below -- geometry does not provide one).  IF YOU READ IT AS OVER-CLUSTERING TOO: flip the knob, no new code, done.
 1	393505	CALIBRATION REFERENCE -- you already rejected this one.  268.70 MeV of the cosmic cluster 15 (3 segments chaining end-to-end into 296.7 cm, never closer than 68.4 cm to the vertex).  NOKINE: Enu 940.4 -> 566.1 (-374.4).  Still in the PR tree.  This is the fire the ruling authorises.
