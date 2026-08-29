@@ -42,7 +42,7 @@
 # 1095.7 MeV (493.2 + 481.0 + 121.5); Enu delta is +1421.2 MeV.
 #
 # bee_idx	event	status
-0	393505	BIGGEST, AND PRODUCTION IS CURRENTLY INCONSISTENT HERE -- please read this one first.  PROBE adds mu- 174 MeV (63.4 cm, kink 41.0, gap 0.00, 68.9 cm from the nu vertex) and mu- 318 MeV (131.4 cm, kink 58.8, gap 28.74, 77.1 cm out).  Enu 940.4 -> 1645.0 (+704.5 = 493.2 track + 2 muon rest masses).  THE POINT: all three of these objects -- the two added AND the 268 MeV mu- already in the BASE tree -- are segments of the SAME cluster 15.  Production today counts 268 MeV of cluster 15 (via the pr/123 guard-freed pool) while excluding 493 MeV of it.  So whichever way you rule, today's answer is wrong on this event: if cluster 15 is a real daughter we are losing 493 MeV; if it is a cosmic we are already counting 268 MeV that we should not be.  CAUTION, and it is why I am not proposing a knob: the kink profile (41.0, 58.8 deg) sits in the same band as 72786's confirmed cosmics (43.5, 89.5, 93.7, 108.3 deg), and cluster 15 reaches 77 cm off the vertex.
+0	393505	NOT A LOSS -- IT LOOKS LIKE AN OVER-COUNT ALREADY IN PRODUCTION.  Please read this one, but read it as the opposite of a rescue.  PROBE would add mu- 174 MeV (63.4 cm, kink 41.0, gap 0.00, 68.9 cm from the nu vertex) and mu- 318 MeV (131.4 cm, kink 58.8, gap 28.74, 77.1 cm out); Enu 940.4 -> 1645.0.  DO NOT SHIP THAT.  The two rejected segments and the 268 MeV mu- ALREADY in the BASE tree are all cluster 15, and their geometry (from the mc.json coordinates in these very zips) settles what cluster 15 is: 15005 -> 15004 -> 15013 chain END TO END at 0.0 cm and 0.0 cm, spanning a single continuous object of TOTAL EXTENT 295.0 cm that passes no closer than 68.9 cm to the nu vertex.  For scale, 72786's two confirmed cosmics had extents of 148.4 and 101.6 cm -- this is twice the larger one.  A 295 cm through-going chain that never approaches the vertex is a cosmic muon.  CONSEQUENCE: production today counts 268.7 MeV of it into the neutrino candidate via the pr/123 guard-freed pool ("kine_count_guard_freed: COUNT seg idx=13 cluster=15 ke_mev=268.70").  That is the "do not count far-away activity" half of the owner's rule being violated by a knob that is already ON, and it is a pre-existing defect this probe found by accident -- it is NOT caused by pr/128.  My read: decline the 493 MeV, and open a separate look at whether pf_orphan_guard_freed / kine_count_guard_freed need an extent or vertex-distance bound.
 1	399118	THE STRONGEST CASE FOR "REAL".  PROBE adds proton 481.0 MeV (108.8 cm, kink 47.3 deg) sitting 4.9 cm FROM THE NU VERTEX.  Enu 803.2 -> 1292.9 (+489.6).  The baseline candidate is already mu- 366 + pi0 149 + three small protons, so a 481 MeV proton at the vertex is the CC-candidate proton one would expect.  It is rejected only because the shipped predicate demands a straight CONTINUATION, and a primary emitted AT the vertex has no reason to be collinear with anything.  If you read this as a daughter, the fix is a vertex-proximity arm (small d_mainvtx, no kink term), never a looser global kink -- that re-admits 72786.
 2	318769	WEAKEST CASE.  PROBE adds mu- 121.5 MeV (39.8 cm, kink 42.0, gap 0.00) but it sits 114.3 cm from the nu vertex -- further out than anything shipped in pr/128, including 392901's 102.9 cm which you accepted.  Enu 826.6 -> 1053.8 (+227.1).  Same event as pr/128 idx 3 (the 44 MeV e- rescue that shipped), and it is also in the pr/124 worst-q_miss rows, so this may be part of that residual.
 #
@@ -50,11 +50,16 @@
 # docs/pr/pr128-pfnear-census.tsv, class A, d_mainvtx_cm):
 #   - At any cut from 5 to 20 cm it admits EXACTLY ONE object across both
 #     manifests: 399118's proton at 4.9 cm.
-#   - Nearest other candidate is 171572 at 20.4 cm -- but that one is guard-freed
-#     (same mechanism as 393505's 268 MeV track), so the double-emission guard
-#     already excludes it.  MUST BE RE-VERIFIED ON A POST-GUARD TAPE ARM before
-#     any arm is built; the census TSV predates the guard.
+#   - Nearest other candidate is 171572 at 20.4 cm.  SETTLED, not assumed:
+#     a post-guard probe arm on 171572 with the terms wide open (kink 180, gap
+#     30) emits ZERO PFNEAR tape lines -- the double-emission guard's continue
+#     precedes the tape -- and the segment is instead counted by
+#     "kine_count_guard_freed: COUNT seg idx=8 cluster=10 ke_mev=304.75
+#     len_cm=125.1".  It is guard-excluded and cannot be double counted.
+#     (work-pr129probe-171572, rc=0.)
 #   - Nearest geometrically-admissible object is 72786's cosmic at 35.3 cm.
-#   The honest margin is therefore 4.9 -> 20.4 cm against a guard-excluded
-#   neighbour, and 4.9 -> 35.3 cm against a live one.  Not the "30 cm" first
-#   quoted, which used the cosmic and skipped the nearer candidate.
+#   So the usable margin is 4.9 -> 35.3 cm, with no live candidate in between.
+#   NOTE the 393505 finding above cuts the other way for the guard-freed pool
+#   itself: 171572's 304.75 MeV is counted by the same mechanism that counts
+#   393505's cosmic 268.70 MeV, and 171572's own segment is 125.1 cm long.
+#   Whether that pool needs an extent/vertex bound is now the open question.
