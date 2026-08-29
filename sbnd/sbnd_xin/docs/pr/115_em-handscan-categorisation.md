@@ -16,7 +16,8 @@ scan — 141 beam events, tag `emscan-0828-agent5` — and uses it as an
 out-of-sample test of the EM-clustering knobs turned on for SBND production in
 pr/117 and pr/118. Its headline: on 141 events the three flips leave 125
 membership-identical, the over-clustering charge is untouched, and the one large
-regression is isolated to `shower_pass4_best_owner`.**
+regression is isolated to `shower_pass4_best_owner`.** Before/after Bee sets for the four
+movers are in §17.8.
 
 ## Repro
 
@@ -1117,6 +1118,12 @@ python3 docs/pr/pr116-bulk/scripts/score_by_verdict.py \
     docs/pr/pr116-141-score-prod0825.tsv docs/pr/pr116-141-score-prodnow.tsv
 python3 docs/pr/pr116-bulk/scripts/owned_census.py \
     'work-em114c-knobsoff-*' 'work-em114c-prodnowdbg-*'
+
+# the before/after bee sets of sec 17.8 (swap knobsoff -> prodnow for AFTER)
+python3 scripts/bee/make_pr_bee.py -q work-mcp1k-grp0825 -q work-mcp2k-grp0825 \
+    -p work-em114c-knobsoff-mcp1k -p work-em114c-knobsoff-mcp2k \
+    -o bee/pr121r1/pr121r1-before.zip 348471 181050 292524 318769
+BROWSER=echo ./upload-to-bee.sh bee/pr121r1/pr121r1-before.zip
 ```
 
 ### 17.1 What was scanned, and why "out of sample" is the point
@@ -1299,10 +1306,21 @@ membership movement at all; the knob-isolation arms below run on all 16:
 | `pass4_best_owner` only | 5 of 16 | **−320.1** | +10.0 | 669 → **657 (−12)** |
 | all three (= production) | 14 of 141 | −320.1 | +97.2 | 3767 → **3755 (−12)** |
 
-The two effects are additive — no interaction term. **The two merge knobs are
-clean: nine events changed, not one loses charge, no segment is dropped, +87.2
-MeV recovered into leading showers.** Everything negative in this round comes
-from `shower_pass4_best_owner`.
+The two effects are additive — no interaction term. **In energy terms the two
+merge knobs are clean: nine events changed, not one loses charge, no segment is
+dropped, +87.2 MeV recovered into leading showers.**
+
+**One correction to that**, found while building the Bee sets of §17.8, which
+compared the arms per event by member-content hash instead of by number. Energy
+is not the only axis. On **evt318769** the change is owned entirely by the merge
+knobs, not by `pass4_best_owner`: there the `onlyp4` arm reproduces the
+knobs-off arm byte-for-byte and the `nop4` arm reproduces production
+byte-for-byte — the reverse of every other mover. What they do is absorb a
+209-point group (`113062`) whole into the marked shower `19003`, which *raises*
+its leading energy by 2.2 MeV and costs 0.003 of charge-weighted F1 in purity
+(q_extra 3.59e5 → 3.97e5). So, precisely: the merge knobs drop no charge and
+orphan nothing, and they own the round's one marginal purity regression; **all
+320.1 MeV of loss is `shower_pass4_best_owner`.**
 
 ### 17.7 evt348471 — the one large regression, isolated
 
@@ -1312,6 +1330,11 @@ from `shower_pass4_best_owner`.
 | current binary, three knobs OFF | 9 | 27 / 29 | 60026, 352.6 MeV |
 | `pass4_best_owner` alone | 8 | **15 / 29** | 37017, **92.0 MeV** |
 | current SBND production | 8 | 15 / 29 | 37017, 92.0 MeV |
+
+The isolation is byte-level, not merely numerical: on this event and on the two
+in the second table below, the `onlyp4` arm's `mabc-pr.zip` is content-identical
+to production's and the `nop4` arm's is content-identical to the knobs-off arm's
+(member-content hash per M2, not `md5sum` of the zip).
 
 A 352.6 MeV shower keeps 7 of its 15 members; **12 of the event's 29 segments
 end up owned by no shower at all**, and 260.6 MeV leaves the leading EM object.
@@ -1361,7 +1384,45 @@ samples disagree. The measurement that would settle it — the same census over
 the 98 events the knob *was* tuned on, to see whether it also drops segments
 there — is one arm and is not run in this round.
 
-### 17.8 What this does to §16.6's order of work
+### 17.8 Bee — the four movers, before and after
+
+Every event whose hand-marked score moved, plus the two whose leading-shower
+energy moved without carrying a mark. Same `bee_idx` order in both sets.
+
+* **BEFORE** — <https://www.phy.bnl.gov/twister/bee/set/be286726-aa80-49bc-ae7f-afc714b3791c/event/list/>
+* **AFTER** — <https://www.phy.bnl.gov/twister/bee/set/c8e0a59d-5151-4dc4-86e3-a6c41d891071/event/list/>
+
+BEFORE is `work-em114c-knobsoff-mcp{1,2}k`, the current binary with all three
+knobs off. Its `mabc-pr.zip` is content-identical to the `prod0825` arm that was
+hand-scanned, re-checked per event on these four, so **BEFORE is the
+reconstruction §17's verdicts were written against**, not a stand-in for it.
+AFTER is `work-em114c-prodnow-mcp{1,2}k` — SBND production as of 2026-08-28.
+
+**Open the `shower_track-global` layer.** Bee colours it by `real_cluster_id`,
+which in the PR dump is the root segment of the *owning shower* — so shower
+membership is the colour, and these changes are visible as a recolour rather
+than as a number to be trusted. `track_fit-global` and `vertices-global` are
+**byte-identical between the two sets on all four events**: no trajectory and no
+graph vertex moves. These knobs change only which segments are grouped into
+which shower, which is what makes the revert-or-guard decision tractable.
+
+| bee_idx | event | sample | what to look at |
+|---|---|---|---|
+| 0 | 348471 | mcp1k | **the regression.** BEFORE the 352.6 MeV shower is ONE group, `real_cluster_id` 60026, spanning PR clusters 35/36/37/60/61/62 = 1192 points. AFTER it shatters: cluster 60 alone splits into eight groups (60024 60025 60026 60028 60029 60031 60032 60033), 35/36/62 break off as 35015/36016/62049, and 37017 takes 31/37/39/63. The scan's verdict on it was `under-clustered`. |
+| 1 | 181050 | mcp2k | ownership hand-off, no orphaning: 190 points move from group 15006 to 68031; 16 → 16 groups, every segment still owned. |
+| 2 | 292524 | mcp2k | ownership hand-off, no orphaning: 92 points move from 79054 to 9018; 11 → 11 groups. No hand mark, so it is absent from the score table; it is one of §17.5's two QC splits. |
+| 3 | 318769 | mcp2k | marginal, and **not** `pass4` (§17.6): group 113062, 209 points, absorbed whole into 19003; 43 → 42 groups. Here only because it is the one other hand-marked shower whose score moved down, and by 0.003. |
+
+The shatter on `bee_idx` 0 is the same fact as "12 of 29 segments owned by no
+shower", seen from the display side instead of the dump: a shower that was one
+coloured object becomes a dozen, and the pieces are grouped with nothing.
+
+Per-event detail, the segment ids and the build command are in
+`sbnd_xin/bee/pr121r1/pr121r1.index.txt`. The zips are not committed (`*.zip` is
+gitignored in that tree); the `.url` files are, so the sets stay findable after
+the links scroll out of this document.
+
+### 17.9 What this does to §16.6's order of work
 
 - **(a) `pass4_angle` over-reach stays first**, and is now the better-supported
   item of the two: 24 over-clustered events, `4.80e7` of wrongly-held charge,
@@ -1378,7 +1439,7 @@ there — is one arm and is not run in this round.
   and part of a third turn on it, so it is one gate decision, not 141
   judgements.
 
-### 17.9 π⁰ — carried, not analysed
+### 17.10 π⁰ — carried, not analysed
 
 Recorded so the next phase starts from data rather than from scratch: **24 of
 the 141 events carry a hand-built γγ pairing**, and 18 notes explicitly dispute
@@ -1386,7 +1447,7 @@ or annotate the reco's own pairing. §11 and §16.3's finding — that
 `kine_pio_mass` is the energy-ranked pair and not the identified π⁰ — has not
 been re-measured on this sample. **No π⁰ conclusion is drawn here.**
 
-### 17.10 Files
+### 17.11 Files
 
 | file | |
 |---|---|
@@ -1400,6 +1461,7 @@ been re-measured on this sample. **No π⁰ conclusion is drawn here.**
 | `sbnd_xin/docs/pr/pr116-bulk/scripts/score_by_verdict.py` | verdict-grouped delta, q_miss and q_extra split |
 | `sbnd_xin/docs/pr/pr116-bulk/scripts/owned_census.py` | the recognition census (all 141, not just marked) |
 | `sbnd_xin/work-em114c-{prodnow,prodnowdbg,knobsoff,onlyp4,nop4}-*` | the five arms |
+| `sbnd_xin/bee/pr121r1/` | the before/after Bee sets for the four movers (§17.8) |
 
 **No C++, no jsonnet, no config file changed in this round; knob movement is via
 the runner's existing env→TLA path. The three byte-identity gates above are the

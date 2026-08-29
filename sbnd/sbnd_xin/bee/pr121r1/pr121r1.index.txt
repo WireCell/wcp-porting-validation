@@ -1,0 +1,61 @@
+# doc pr/115 sec 17 -- the movers of the 141-event out-of-sample round, before/after
+#   BEFORE https://www.phy.bnl.gov/twister/bee/set/be286726-aa80-49bc-ae7f-afc714b3791c/event/list/
+#   AFTER  https://www.phy.bnl.gov/twister/bee/set/c8e0a59d-5151-4dc4-86e3-a6c41d891071/event/list/
+#
+# BEFORE = work-em114c-knobsoff-mcp{1,2}k : current binary, all three SBND
+#   production knobs forced OFF.  Its mabc-pr.zip is CONTENT-IDENTICAL to the
+#   work-em114c-mcp{1,2}k (prod0825) arm that was hand-scanned, on all four
+#   events (gate 3 of sec 17.2: 282/282 archives, re-checked per event here),
+#   so BEFORE *is* the reconstruction the scan judged.
+# AFTER  = work-em114c-prodnow-mcp{1,2}k : same binary, shower_pass4_best_owner
+#   + shower_merge_relax + shower_merge_relax_continuity all ON (SBND production
+#   as of 2026-08-28).
+#
+# WHAT TO OPEN.  The layer that carries the answer is `shower_track-global`:
+#   Bee colours it by real_cluster_id, which in the PR dump is the *root segment
+#   of the owning shower* -- i.e. one colour per shower-membership group.  The
+#   defect is therefore literally a colour change.  track_fit-global and
+#   vertices-global are BYTE-IDENTICAL between the two sets on all four events:
+#   no trajectory and no graph vertex moves.  What these knobs change is purely
+#   which segments are grouped into which shower.  The `mc` jsTree shows the
+#   same regrouping as a particle-flow hierarchy.
+#
+# bee_idx  event   sample  what to look at
+0	348471	mcp1k	THE REGRESSION.  Scan verdict: under-clustered (already judged
+	too small).  BEFORE the 352.6 MeV shower is ONE group, real_cluster_id
+	60026, spanning PR clusters 35/36/37/60/61/62 = 1192 points.  AFTER it
+	SHATTERS: cluster 60 alone splits into 8 groups (60024 60025 60026 60028
+	60029 60031 60032 60033), 35/36/62 break off as 35015/36016/62049, and
+	37017 takes 31/37/39/63.  Leading shower 352.6 -> 92.0 MeV; segments
+	owned by SOME shower 27/29 -> 15/29 (the whole -12 of the round).
+	Probe stream, knob ON: one extra pass4 line, then
+	  SHOWER_ABSORB SPLICE site=examine_shower_1_assoc
+	    into_start_seg=12052 from_start_seg=63050 from_nseg=7
+	Hand-mark score qF1 0.932 -> 0.205, q_miss 7.9e5 -> 5.4e6.
+	ATTRIBUTION: shower_pass4_best_owner ALONE (onlyp4 arm reproduces AFTER
+	byte-for-byte; nop4 arm reproduces BEFORE byte-for-byte).
+1	181050	mcp2k	OWNERSHIP HAND-OFF, no orphaning.  190 points move from group
+	15006 to 68031; group count 16 -> 16, every segment still owned.
+	Leading shower 253.4 -> 204.9 MeV.  qF1 0.925 -> 0.816.
+	ATTRIBUTION: shower_pass4_best_owner alone.
+	The question for the owner is which of the two showers should hold
+	those 190 points -- this is re-arbitration doing what it is named for.
+2	292524	mcp2k	OWNERSHIP HAND-OFF, no orphaning.  92 points move from group
+	79054 to 9018; 11 -> 11 groups, all segments owned.  Leading shower
+	329.8 -> 318.8 MeV.  No hand-marked shower on this event, so it does
+	not appear in the score table; it is one of the two QC over-reach
+	splits of sec 17.  ATTRIBUTION: shower_pass4_best_owner alone.
+3	318769	mcp2k	MARGINAL, and NOT pass4.  Group 113062 (209 points) is
+	absorbed whole into the marked shower 19003; group count 43 -> 42;
+	leading shower energy actually RISES +2.2 MeV.  It is here only because
+	it is the one other hand-marked shower whose score moved down, and by
+	0.003: qF1 0.529 -> 0.526, q_extra 3.59e5 -> 3.97e5 (a purity nudge).
+	ATTRIBUTION: the two merge knobs (onlyp4 == BEFORE here; nop4 == AFTER).
+#
+# NOT in these sets: the five other events that GAINED (350121 +64.8, 293149
+# +14.8, 283713 +6.8, 280159 +5.4, 172266 +3.1 MeV) and the five that
+# changed shower count with zero energy delta (175896 401450 412242 499423 98844).
+# Built with:
+#   python3 scripts/bee/make_pr_bee.py -q work-mcp1k-grp0825 -q work-mcp2k-grp0825 \
+#     -p work-em114c-<knobsoff|prodnow>-mcp1k -p work-em114c-<knobsoff|prodnow>-mcp2k \
+#     -o bee/pr121r1/pr121r1-<before|after>.zip 348471 181050 292524 318769
