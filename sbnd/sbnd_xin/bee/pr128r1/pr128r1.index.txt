@@ -1,13 +1,18 @@
 # doc pr/128 -- PF/kine completeness A/B (4 knobs, SBND PRODUCTION ON 2026-08-29,
 # toolkit 1ed308de + e6fb0ebd + b0e91449 + the cfg flip).
-# A/B index -- OFF <uuid pending> / ON <uuid pending>
-#   NOT YET UPLOADED.  Upload is outward-facing (CLAUDE.md sec 5.6) and waits on
-#   the owner's word; the UUIDs go in the line above at that point.
-#   CONTENT-VERIFIED (the standing complaint that a link did not match the events
-#   being discussed): for all 7 indices on BOTH sides, md5 of the package's
-#   data/<i>/<i>-mc.json equals md5 of the source arm's pr_evt<ev>/mabc-pr.zip
-#   data/0/0-mc.json -- 14/14 match, including idx 5 (396222), the only row that
-#   resolves through the 98-set root instead of the 141-set root.  Idx 6's mc
+# A/B index -- OFF c02de6fd-ecd5-4792-89cf-0a677409f41d / ON 70d0b85f-b387-44cb-9e60-04110aa45e7b
+#   OFF https://www.phy.bnl.gov/twister/bee/set/c02de6fd-ecd5-4792-89cf-0a677409f41d/event/list/
+#   ON  https://www.phy.bnl.gov/twister/bee/set/70d0b85f-b387-44cb-9e60-04110aa45e7b/event/list/
+#   Uploaded 2026-08-29 on the owner's request ("Give me the bee links for these
+#   two events?", meaning idx 1 = 105074 and idx 2 = 392901).
+#   CONTENT-VERIFIED TWICE (the standing complaint that a link did not match the
+#   events being discussed).  (a) package vs source arm: for all 7 indices on
+#   BOTH sides, md5 of data/<i>/<i>-mc.json equals md5 of the source arm's
+#   pr_evt<ev>/mabc-pr.zip data/0/0-mc.json -- 14/14, including idx 5 (396222),
+#   the only row that resolves through the 98-set root instead of the 141-set
+#   root.  (b) LIVE REMOTE vs package: GET set/<uuid>/event/<i>/mc/ on both
+#   uploaded sets, normalised-JSON md5 against the local zip -- 14/14 match, so
+#   the indices above address the events named above ON THE SERVER.  Idx 6's mc
 #   layer is byte-identical between OFF and ON, so the package itself carries the
 #   "72786 unchanged" control claim.
 #   OFF = work-pr125r1-flipS{141,98}-mcp2k  = the production point before this round.
