@@ -2,8 +2,15 @@
 #   "all three should be reject, overclustering, so not counting in the enr
 #    eneryg, OK tobe in PR, I guess."
 #
-# BUILT, NOT UPLOADED -- awaiting the owner's word (CLAUDE.md 5.6).
-# UUIDs to be filled in on upload.
+# A/B index -- BASE   aff1fc6a-e7d9-47ec-886d-a618856f23c3
+#              NOKINE 4fa187d6-fcba-4fa4-a3aa-0095e1b9c68b
+#   BASE   https://www.phy.bnl.gov/twister/bee/set/aff1fc6a-e7d9-47ec-886d-a618856f23c3/event/list/
+#   NOKINE https://www.phy.bnl.gov/twister/bee/set/4fa187d6-fcba-4fa4-a3aa-0095e1b9c68b/event/list/
+#   Uploaded 2026-08-29 on the owner's word ("Yes please").
+#   CONTENT-VERIFIED TWICE: (a) package vs source arm 6/6; (b) LIVE REMOTE --
+#   GET set/<uuid>/event/<i>/mc/ on both sets, normalised-JSON md5 vs the local
+#   zip, 6/6 match (http 200).  So the indices below address these events ON
+#   THE SERVER.
 #
 # The ruling separates PF display from Enu accounting, and the codebase already
 # has that split as two knobs.  So this arm needs NO NEW CODE:
