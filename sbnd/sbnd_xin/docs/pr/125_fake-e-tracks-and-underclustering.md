@@ -113,7 +113,101 @@ above. Build/commit windows serialized with the doc-84 round-4 session
 (shared seats: TaggerCheckNeutrino.{h,cxx}, doctest, wct-pr-perevt.jsonnet,
 run_pr_chain_batch.sh).
 
-## 3. Measurements
+## 3. Measurements (all offline, from pr/124 arms — no new arms)
 
-(to be filled — §3.1 dQ/dx scan, §3.2 anatomy, §3.3 merge collateral
-pre-scan, §3.4 prune-exemption pre-scan)
+### 3.1 Front 1: dQ/dx does NOT separate 415278 → plain flip at len=15
+
+`scripts/pr125_p3guard_dqdx.py` → `docs/pr/pr125-p3guard-dqdx.tsv`.
+982 track-pdg pass3_cone absorbs across both manifests; **15** in the
+guard's len>15 decline set. Sorted by median dQ/dx (MIP units, dump muon
+tail):
+
+| class | evt/seg | pdg | len | mdqdx |
+|---|---|---|---|---|
+| COST | 415278/23022 | 211 | 36.4 | 0.475 |
+| COST | 415278/23047 | 13 | 56.3 | 0.606 |
+| FIX | 94392/45029 | 13 | 29.8 | 0.815 |
+| FIX | 52693/29008 | 13 | 34.3 | 0.906 |
+| FIX | 94392/45030 | 13 | 46.9 | 1.080 |
+| COST | 415278/24072 | 13 | 22.1 | **1.178** |
+| FIX | 173819/38038 | 2212 | 37.8 | 2.549 |
+| FIX | 77328/36012 | 2212 | 16.5 | 2.776 |
+
+415278's segs (0.475–1.178) bracket the FIX muons (0.815–1.080): 24072 sits
+ABOVE every FIX muon. The protons separate trivially; the µ-vs-µ split does
+not exist in dQ/dx. **Per the owner's pre-decision ("Flip anyway"), the
+guard flips plain at len=15 — no dQ/dx qualifier knob (K1 dead).** Other
+decline-set exposure: 396222 (3 segs), 137238 (2), 176502, 175896 (the
+pr/124 measured no-op), i.e. 7 events total fire.
+
+### 3.2 37112 anatomy: the three numbers that settle it
+
+OFF (dbgv2-ncpi0): γ shw 67048 (pdg 11, 549.3 MeV, conn 2, sv 84104) and
+proton-typed shw 9008 (pdg 2212, 206.3 MeV kine_charge — the owner's "469"
+is the Bee display value — 15 seg, conn 2, **same sv 84104**, non-main;
+main vertex is 84097). Cloud gaps: 9008-stem↔γ **1.28 cm**; the pr/124
+tier-2 pruned 12-seg comp ↔ its own kept stem **28.8 cm** (why the prune
+fired, correctly by its own metric) but ↔ γ **3.81 cm**. The whole complex
+is one connected EM object; the prune measured isolation only within its
+own shower.
+
+**Pass-order dividend**: `merge_shower_fragments` (:5959) runs BEFORE the
+tier-2 prune (:6482). Merging 9008 into 67048 first ⇒ the prune's
+union-find then sees the comp contiguous with the merged body and keeps it.
+One knob (K3) delivers "one shower, everything"; the separate prune
+exemption (K2) is unnecessary and was dropped.
+
+### 3.3 K3 gate: shared non-main vertex + gap<6 fires on 37112 alone
+
+`scripts/pr125_merge_anatomy.py pairs` → `docs/pr/pr125-pairs.tsv`
+(2460 pairs, 362 with gap<6, 43 track-typed frags at gap<6). Track-typed
+frags at gap<6 are dominated by main-vertex conn-1 pairs (a genuine
+primary track next to a primary shower — e.g. 396222's 318 cm π at 1.92 cm
+from a 2.9 GeV shower, 388's 776 MeV π: must never merge). The
+`shared start vertex && vertex != main && gap < 6 cm && track-typed`
+conjunction fires **only on 37112** across both manifests; next candidates
+sit at 17.4+ cm (287830) and 29.8+ (287654), and 54332's owner-adjudicated
+satellites at 56+. Knob: `shower_samevtx_track_absorb` (+gap 6 cm, +frag
+len cap 50 cm; 9008 is 33.4).
+
+### 3.4 69314 anatomy + K5 gate: vertex-connected satellite absorb
+
+69314 (νe CC) carries **38 pdg-11 PF entries, 28 below 5 MeV**: the main
+68.9 MeV electron (shw 3014) plus ~24 crumb showers (0.06–4.5 MeV, conn
+2/3), scattered at 17–35 cm cloud gaps — beyond every merge gate; radius
+is the wrong metric (a 30–40 cm ball has π⁰/OUT collateral:
+`pr125-satellites.tsv`, 2 OUT-marks + 5 π⁰-paired at R≤40).
+
+The owner's word is "connected", and connectivity is measurable: satellites
+whose START VERTEX is a vertex OF the big shower's own member chain
+(69314: 40029/44033/45034 attach at 3014's start vertex 3001, etc.).
+Manifest-wide (vertex-connected variant, E<10 MeV, host EM E>20):
+1474 satellites across 211/239 events — **31 IN-marked (q_miss
+recoveries), 1 OUT-marked, 5 π⁰-paired**; the single OUT (168432) and none
+of 69314's are conn-4, so restricting to **conn 2/3** leaves
+**31 IN / 0 OUT**. The 5 π⁰-paired (junk low-mass pairings, e.g. 7 MeV
+partner to a 3.5 GeV shower) cannot be exempted at absorb time (π⁰
+pairing runs later); they are watched explicitly in validation (§4).
+Knob: `shower_satellite_absorb` (satellite E<10 MeV, |pdg|=11, conn 2/3;
+host EM, E>20 MeV, satellite's start vertex in host's vertex set).
+
+## 4. Implementation + validation
+
+Knobs (all DEFAULT OFF, wct-knob 7 seats each): `shower_samevtx_track_absorb`
+/ `shower_samevtx_absorb_gap` (6 cm) / `shower_samevtx_absorb_max_len`
+(50 cm); `shower_satellite_absorb` / `shower_satellite_absorb_max_mev` (10)
+/ `shower_satellite_absorb_host_mev` (20). Two dedicated passes in
+`NeutrinoShowerClustering.cxx` after the dedup pass and before
+detach/ghost/prunes/π⁰ finders; probe lines `SHOWER_MERGE
+tag=samevtx_absorb|satellite_absorb` under pr91_merge_dbg. Compiled-config
+proofs: off ⇒ byte-identical to HEAD (a8cbfa4a, incl. the doc-84 r4 flip);
+on ⇒ all three keys emitted. wcdoctest-clus 2518/2518.
+
+Peer coordination: doc-84 r4 flip (a8cbfa4a) landed mid-round; my gate arms
+pin its three flipped params back to legacy
+(`SBND_LONG_MUON_CATHODE_BRIDGE_LEVER=5 _TRACK_PARTNER=0 _SHORT_GAP=0`) so
+the pr/124 flipA baselines stay valid; the final production-candidate arm
+runs unpinned (both rounds' flips together).
+
+(§4.1 gates, §4.2 scores/movers, §4.3 targeted outcomes, §5 Bee + flips —
+to be filled.)

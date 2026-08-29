@@ -400,6 +400,27 @@ _val=${SBND_SHOWER_PASS4_PRUNE:-}
 [ -n "${SBND_SHOWER_PASS4_PRUNE_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap=${SBND_SHOWER_PASS4_PRUNE_GAP}")
 [ -n "${SBND_SHOWER_PASS4_TRACK_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_track_guard_len=${SBND_SHOWER_PASS4_TRACK_GUARD_LEN}")
 
+# doc pr/124 front A -- gap-band tier-2 prune.  gap2 in cm (EMPTY = cfg
+# default 0 = off); ang in deg / mdqdx in MIP (EMPTY = cfg defaults 40/2.5).
+[ -n "${SBND_SHOWER_PASS4_PRUNE_GAP2:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap2=${SBND_SHOWER_PASS4_PRUNE_GAP2}")
+[ -n "${SBND_SHOWER_PASS4_PRUNE2_ANG:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune2_ang=${SBND_SHOWER_PASS4_PRUNE2_ANG}")
+[ -n "${SBND_SHOWER_PASS4_PRUNE2_MDQDX:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune2_mdqdx=${SBND_SHOWER_PASS4_PRUNE2_MDQDX}")
+# doc pr/124 front C -- pass3_cone track-pdg decline; len in cm (EMPTY = cfg
+# default 0 = off).
+[ -n "${SBND_SHOWER_PASS3_CONE_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass3_cone_guard_len=${SBND_SHOWER_PASS3_CONE_GUARD_LEN}")
+
+# doc pr/125 -- same-vertex track-frag absorb (37112) + vertex-connected
+# satellite absorb (69314).  Bools tri-state (unset = cfg default, 1 = on,
+# 0 = off); gap/len in cm, kine caps in MeV (EMPTY = cfg defaults 6/50/10/20).
+_val=${SBND_SHOWER_SAMEVTX_TRACK_ABSORB:-}
+[ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_samevtx_track_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_gap=${SBND_SHOWER_SAMEVTX_ABSORB_GAP}")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_max_len=${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN}")
+_val=${SBND_SHOWER_SATELLITE_ABSORB:-}
+[ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
+[ -n "${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV:-}" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb_max_mev=${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV}")
+[ -n "${SBND_SHOWER_SATELLITE_ABSORB_HOST_MEV:-}" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb_host_mev=${SBND_SHOWER_SATELLITE_ABSORB_HOST_MEV}")
+
 # doc pr/123 round 2 -- guard-freed track pickup (PF root node + kine count).
 # Bool tri-states (unset = cfg default, 1 = on, 0 = off).
 _val=${SBND_PF_ORPHAN_GUARD_FREED:-}
