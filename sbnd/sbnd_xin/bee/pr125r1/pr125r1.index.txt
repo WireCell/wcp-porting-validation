@@ -1,0 +1,19 @@
+# doc pr/125 production pair (shower_pass3_cone_guard_len=15 + shower_samevtx_track_absorb, SBND ON 2026-08-29, toolkit 8b371920)
+# A/B index -- OFF 7f4ffdb1-36b4-4ac5-a761-853e408a2a97 / ON cdf0749a-c74a-4d0d-9083-8f9554679daf
+#   (UUIDs verified against the local zips by per-event mc-layer md5 BEFORE this file was
+#    written.  OFF = dbg98d/dbg141d = pre-flip production; ON = flipchk98/flipchk141 = the
+#    flipped production point.  Hash attribution: exactly idx 0-6 differ, idx 7-9 are
+#    verified no-ops; only mabc-pr.zip moves, pctree identical everywhere.)
+# 0 movers (vtx105); nusel byte-identical both manifests; owned 98 net +0, 141 net -1
+# (94392's 46.8cm mu ends unclaimed -> pseudo-n in the PF tree, doc pr/124 sec C).
+# bee_idx	event	status
+0	94392	RESCUED: 305.6 MeV fake e- -> 45.5 MeV e- + released 29.8cm mu (98.4 MeV); label `over-clustered`
+1	52693	RESCUED: 183.0 -> 153.0 MeV e- + released 34.3cm mu (108.9 MeV); label `vertex-bad` (one through-track split)
+2	77328	fix-direction: 180.6 -> 38.3 MeV e- + re-rooted 16.5cm proton (153.8 MeV); scanner: "proton mis-PIDed as a 180 MeV EM shower is a live reading"
+3	173819	fix-direction: 301.9 -> 10.5 MeV e- + re-rooted 37.8cm proton (250.2 MeV); label `not an EM shower` (3x MIP stopping-proton profile)
+4	37112	RESCUED (owner: "one shower, everything"): gamma 549.3 + proton stem + pruned comp -> ONE pdg-11 shower 783.0 MeV / 35 seg; the bogus gamma-proton pi0 group (mass 281.2) dissolves (kine falls back to 18.6+183.9 @ 69.2)
+5	415278	ADJUDICATED COST (owner accepted 2026-08-29 "Flip anyway"): 3 declined tracks reshuffle between its two labeled showers, qF1 0.959->0.957 / 0.976->0.974 at the new production point
+6	396222	mover: 3 guard declines (pi 24.0 / p 17.0 / mu 36.0 cm); kine pio_flag 1->2, pio mass 799->260 (junk-band either way)
+7	137238	no-op verified: 2 decline-set muons re-absorbed identically (byte-identical archives)
+8	175896	no-op verified (doc pr/124 sec C measured residual)
+9	176502	no-op verified (doc pr/124 sec C measured residual)

@@ -416,6 +416,7 @@ _val=${SBND_SHOWER_SAMEVTX_TRACK_ABSORB:-}
 [ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_samevtx_track_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
 [ -n "${SBND_SHOWER_SAMEVTX_ABSORB_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_gap=${SBND_SHOWER_SAMEVTX_ABSORB_GAP}")
 [ -n "${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_max_len=${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN}")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_min_len=${SBND_SHOWER_SAMEVTX_ABSORB_MIN_LEN}")
 _val=${SBND_SHOWER_SATELLITE_ABSORB:-}
 [ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
 [ -n "${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV:-}" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb_max_mev=${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV}")

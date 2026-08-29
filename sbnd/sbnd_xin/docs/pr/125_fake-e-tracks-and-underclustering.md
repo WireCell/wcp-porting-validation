@@ -209,5 +209,111 @@ pin its three flipped params back to legacy
 the pr/124 flipA baselines stay valid; the final production-candidate arm
 runs unpinned (both rounds' flips together).
 
-(§4.1 gates, §4.2 scores/movers, §4.3 targeted outcomes, §5 Bee + flips —
-to be filled.)
+### 4.1 Implementation iterations (three measured corrections)
+
+1. **Vertex identity**: VertexPtr comparison misses conn-3 satellites (same
+   graph vertex, different object — 5/7 missed in 69314); a
+   find_vertices(start_seg) retry missed ALL (the attach vertex is not an
+   endpoint of the satellite's own segment). Final: match by the dump
+   display id `cluster_id*1000 + graph_index` (PrDisplayDump convention =
+   what the offline scans joined on). Toolkit `67a55f1f`/`ea031faf`.
+2. **Pass placement** (measured twice): before the pass4 prunes, the tier-2
+   union-find re-detached 5/7 absorbed satellites; before
+   `shower_hadronic_tag`, the tagger re-evaluated the ENLARGED showers and
+   flipped 22 showers >15 MeV to pdg 211 — **including 69314's own primary
+   electron**. Final order: prunes → hadronic tag → samevtx absorb →
+   satellite absorb → `recompute_shower_kine_charge_final` → π⁰ finders.
+   Post-fix: 0 pdg flips >15 MeV. Toolkit `dc4ab6f8`.
+3. **samevtx min_len floor 5 cm** (knobbed): without it the pass absorbed 8
+   sub-1-cm track-typed crumbs (satellite-class, and their absorb re-voted
+   host PIDs). With it the fire set is exactly the measured gate: 2 fires,
+   both 37112.
+
+### 4.2 Round-d validation (final binary, both manifests)
+
+- **OFF gates**: dbg98d/dbg141d vs work-pr124r1-flipA{98,141}: **PASS
+  478/478 archives byte-identical** (28+34+38+96+104+178). Same result for
+  rounds b and c on their binaries. Peer pins (doc-84 r4 legacy:
+  `LEVER=5 TRACK_PARTNER=0 SHORT_GAP=0`) verified equivalent: the unpinned
+  dbgP arms are byte-identical to the pinned ones 478/478 — **the doc-84 r4
+  flip has zero footprint on these manifests**.
+- **Fires**: samevtx 2 (both 37112: proton stem gap 0.00 + prune-re-seeded
+  comp 50031 gap 3.81); satellite 1105 across 208/239 events.
+- **Movers** (vtx105): 0 on all four sample pairs, 0 ADVERSE. **Owned**:
+  net +0 both manifests. **Nusel**: byte-identical both manifests (K5 on!).
+- **π⁰-watch** (peer pr/126 coordination): no genuine π⁰ harmed; moved
+  pairings were junk (37112 281.2→69.2 — the OFF "π⁰" paired the γ with
+  the PROTON shower, the substance of the owner's old "no pi0???" note;
+  396222 pio_flag 1→2, 799→260 — guard-driven; 69314 9.1→19.1). 30504 /
+  176502 / 256587 / 259542 essentially unchanged.
+
+### 4.3 Owner-event outcomes (round-d ON dumps)
+
+- 37112: shw 67048 = **one shower, 797.3 MeV, 39 segs**, pdg 11 (9008 and
+  50031 gone); 84070 keeps pdg 11.
+- 69314: 25→**18 showers**; 3014 68.9→74.7 MeV (9 segs) **pdg 11**; all 7
+  vertex-connected crumbs absorbed; PF electron entries 38→**30** (sub-5-MeV
+  28→21). (Requires K5 — see §5.)
+- The four fake electrons: fixed by the guard exactly as measured in doc
+  pr/124 §C (see §1.1 table).
+
+## 5. Ship + the K5 decision
+
+**FLIPPED ON** (toolkit `8b371920`, owner-directed):
+`shower_pass3_cone_guard_len=15` (resolves pr/124 §C.3 as option 1 — owner:
+"Flip anyway" after the dQ/dx non-separator measurement, §3.1) and
+`shower_samevtx_track_absorb=true` (37112).
+
+**HELD OFF — owner decision**: `shower_satellite_absorb` (the 69314 fix).
+It is physics-clean on every hard check (0 movers, owned +0, nusel
+identical, 0 pdg flips, no genuine π⁰ touched) but absorbs unlabeled crumb
+charge into marked showers everywhere, which the em117 metric books as
+impurity:
+
+| metric | OFF | ON (K5) |
+|---|---|---|
+| 141-set med qF1 | 0.949 | 0.910 |
+| 141-set Σ q_extra | 2.41e7 | 3.12e7 |
+| 141-set Σ q_miss | 2.45e7 | 2.36e7 |
+| 98-set med qF1 | 0.907 | 0.901 |
+| 98-set Σ q_extra | 7.49e6 | 1.48e7 |
+
+An E-cap refinement does not remove the cost (cap 3 MeV keeps 74% of fires
+and 44% of absorbed energy). The labels are silent on crumbs (31 IN / 0 OUT
+among the labeled ones — scan-time marks never adjudicated satellites).
+Owner options: (1) flip as-is (E<10) accepting the metric shift as a
+metric limitation; (2) flip capped (max_mev=3 — 69314 still fully fixed,
+~half the charge cost); (3) keep OFF, 69314 stays a cascade.
+Decision Bee pair: §5.1.
+
+### 5.1 Bee record (all UUIDs content-verified against the local zips
+### by per-event mc-layer md5 before recording — pr/124 defect closed)
+
+- **Production pair** (10 events, flip content): OFF
+  `7f4ffdb1-36b4-4ac5-a761-853e408a2a97` / ON
+  `cdf0749a-c74a-4d0d-9083-8f9554679daf` — annotated
+  `bee/pr125r1/pr125r1.index.txt`. Hash attribution: exactly idx 0–6
+  differ; idx 7–9 verified no-ops; only mabc-pr.zip moves.
+- **K5 decision pair** (13 events): OFF
+  `b169a068-fab5-4a27-ac4f-6cf1bbbd0eb5` / ON
+  `defaa224-b1ba-4fb3-8449-62b85637375f` —
+  `bee/pr125r1K5/pr125r1K5.index.txt`. idx 0 = 69314 (the rescue), idx
+  1–4 UP movers (IN-recoveries), idx 5–9 DOWN movers (the metric-cost
+  class), idx 10–12 π⁰-watch.
+
+### 5.2 Flip validation + new baselines
+
+- flipchk (post-flip cfg, no envs) vs dbg-d: divergent events exactly
+  {94392, 52693, 77328, 173819} (141-mcp2k), {396222, 415278} (98-mcp2k),
+  {37112} (98-ncpi0); 137238/175896/176502 byte-identical (no-ops); ALL
+  other archives identical. 0 movers; nusel identical; owned 98 +0 /
+  141 −1 (94392's pseudo-n muon, pr/124 §C).
+- 37112 at the production point (K3, no K5): one shower **783.0 MeV /
+  35 segs** (797.3 with K5's five crumbs).
+- Peer coordination: doc-84 r4 flip footprint on these manifests = ZERO
+  (dbgP ≡ pinned baselines 478/478); doc pr/126 π⁰-census refresh expected
+  on ≤7/76 groups, peer notified with the exact event list.
+- **Production baselines going forward**: `work-pr125r1-flipchk98-*` /
+  `work-pr125r1-flipchk141-*` (content = flipA except the 7 events above).
+  Toolkit: knobs `9b67d246`+`67a55f1f`+`ea031faf`+`dc4ab6f8`, flip
+  `8b371920`.
