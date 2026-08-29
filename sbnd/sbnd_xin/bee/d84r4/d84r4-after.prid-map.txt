@@ -1,0 +1,17 @@
+# PR cluster_id remap for bee/d84r4/d84r4-after.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+172794	0	20	2	flash-matched	2:2585
+172794	0	47	19	flash-matched	19:15
+172794	0	49	19	flash-matched	19:888
+347890	1	4	10	flash-matched	10:1523
+347890	1	7	2	flash-matched	2:8
+347890	1	8	6	flash-matched	6:420
+347890	1	9	7	flash-matched	7:13
+347890	1	10	8	flash-matched	8:6
+347890	1	16	10	flash-matched	10:18
+347890	1	17	6	flash-matched	6:13
+347890	1	18	6	flash-matched	6:7
+67026	2	17	8	flash-matched	8:2661
+67026	2	22	13	flash-matched	13:144
+67026	2	34	8	flash-matched	8:11
+67026	2	35	14	flash-matched	14:597
