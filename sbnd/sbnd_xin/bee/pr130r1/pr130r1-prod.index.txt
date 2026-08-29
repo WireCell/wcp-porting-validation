@@ -1,0 +1,16 @@
+# doc pr/130 -- kine_count_guard_freed decision read.  SINGLE ARM (production
+# point, pr/128 flips ON), not an A/B: the question is what these three objects
+# ARE, not what a knob did to them.  PROD 14f974de-7bf2-44de-b425-ec4586936884
+# https://www.phy.bnl.gov/twister/bee/set/14f974de-7bf2-44de-b425-ec4586936884/event/list/
+# Content-verified live-vs-package 9/9 (mc + shower_track-global + vertices-global).
+#
+# All three are the complete kine_count_guard_freed population (3 fires in 239
+# events, 710.66 MeV).  Each is a guard-freed track this pool counts into
+# kine_reco_Enu on the flag alone -- no distance, length or continuation test.
+# Look at the segment named below and judge: candidate's energy, or
+# over-clustering?
+#
+# bee_idx	event	status
+0	171572	DECISION -- YOUR CALL.  The 125.1 cm / 304.75 MeV pdg-13 muon (seg 10008, cluster 10; main cluster is 83).  It touches counted content end-to-end at 0.00 cm, but what it touches is a 3.0 cm / 5.93 MeV electron crumb, and it leaves at a 38.43 deg kink.  Closest approach to the nu vertex 20.36 cm.  This is the event pr/123 r2 built this pool to rescue; the pr/128 continuation test at 30 deg rejects it.  Both candidate fixes drop it.
+1	94392	CONTRAST -- the one that looks real.  46.8 cm / 137.21 MeV pdg-13 (cluster 45, main cluster 5), continuing a 29.8 cm / 98.44 MeV counted shower-start muon at a 13.32 deg kink.  Cluster 45 holds exactly these two segments, 29.8 + 46.8 cm: one physical 76 cm muon broken in the middle.  Every candidate rule keeps this one.
+2	393505	CALIBRATION -- already ruled.  108.5 cm / 268.70 MeV (cluster 15, main cluster 21), continuing a 4.2 cm / 8.11 MeV crumb and doubling back on it at 137.34 deg; 74.37 cm from the nu vertex.  Cluster 15 = 4.2 + 63.4 + 131.4 + 6.1 + 108.5 cm, the ~295 cm object you ruled over-clustering on 2026-08-29 ("all three should be reject").  Shown so idx 0 can be judged against a known reject and a known keep.

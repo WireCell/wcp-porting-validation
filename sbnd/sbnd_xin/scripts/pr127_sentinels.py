@@ -107,6 +107,74 @@ SENTINELS = [
      # The legit maximum mu- here is 238.8 MeV; the four cosmics are 268.9,
      # 281.7 and 344.0 MeV, so 250 sits between the two populations.
      [("log_absent", "pr128 pf-orphan-near-cross-cluster"), ("pf_node_lt", "mu-", 250.0)]),
+
+    # ---- doc pr/130: the doc-84 long-muon / MCS family.  Every one of these
+    # is a shipped, SBND-PRODUCTION-ON fix whose target event is in NO standard
+    # manifest (em114 / em114c), so before this round the whole family was
+    # invisible to every gate we run -- the exact exposure doc pr/127 was
+    # written about.  These events only execute if the arm list includes
+    # work-sent<TAG>-mcp{1,2}k from scripts/pr130_sentinel_arm.sh; otherwise
+    # they report SKIP, which reads like a pass.
+    # Post-fix values measured 2026-08-29 in work-sent130-*; pre-fix values are
+    # doc 84's own, and each threshold sits between the two.
+    (497311, "doc 84 r1", "long-muon range fallback: the 332.8 cm unbroken muon gets a range KE",
+     # pre-fix 508.5, post-fix 766.3 -- and note this is the SHOWER kine_best,
+     # not the PF node (which reads 473 MeV here; they are different quantities).
+     [("shower_max_ge", 13, 700.0),
+      ("log_contains", "long_muon_range_empty_chain_fallback: recomputed kinematics")]),
+    (66366, "doc 84 r1", "OUTCOME ONLY -- the 300.6 cm chain / 692.2 MeV result",
+     # CAVEAT, measured doc pr/130: this entry does NOT guard
+     # long_muon_stub_bridge_len.  Re-run with the knob at its legacy 6.0
+     # (compiled-config proof: 7.5 in prod vs 6 in work-sent130neg2-*, and
+     # members_geometry / cathode_bridge / range_fallback all off as well) the
+     # event STILL reads nseg_chain=4 L_cm=300.6 range=692.2 -- identical.  So
+     # doc 84 r1's P3 rescue is now produced by another route on its own target
+     # event, and no event currently guards that knob.  Kept as an outcome
+     # sentinel (it still catches a regression of the RESULT from any cause);
+     # see doc pr/130 Part 2 "the masked knob".
+     [("pf_node_ge", "mu-", 650.0), ("log_contains", "nseg_chain=4 L_cm=300.6")]),
+    (313847, "doc 84 r2", "long_muon_members_geometry: out-of-chain muon members join the range",
+     # pre-fix 547.5, post-fix 602.2.
+     [("pf_node_ge", "mu-", 575.0)]),
+    (281595, "doc 84 r2", "members_geometry: the 221 cm continuation beats the 13.9 cm stub",
+     # pre-fix 750.1, post-fix 808.5.
+     [("pf_node_ge", "mu-", 780.0)]),
+    (53793, "doc 84 r2", "long_muon_cathode_bridge: two half-showers become one muon",
+     # pre-fix two halves 367 + 528, post-fix 912.9 -- 700 is above the larger half.
+     [("pf_node_ge", "mu-", 700.0), ("log_contains", "long_muon_cathode_bridge:")]),
+    (177536, "doc 84 r2.1", "cathode bridge + BFS main-vertex guard + start re-seat",
+     # pre-fix 679, post-fix 907.0.  The proton line guards round 2.1 itself:
+     # before the guard the bridge BFS walked THROUGH the main vertex and ate
+     # the proton prong.
+     [("pf_node_ge", "mu-", 800.0), ("pf_node_ge", "proton", 100.0)]),
+    (77978, "doc 84 r2.1", "same, the owner's scan event (proton prong must survive)",
+     # pre-fix 337.5, post-fix 388.2.
+     [("pf_node_ge", "mu-", 365.0), ("pf_node_ge", "proton", 100.0)]),
+    (172794, "doc 84 r4", "long_muon_cathode_bridge_lever 5 -> 15 cm",
+     # The accept line is the primary assertion -- it is binary and exact.
+     # post-fix chain 298.7 cm / range 687.8 MeV.
+     [("log_contains", "long_muon_cathode_bridge: absorb bare chain into sid=1"),
+      ("pf_node_ge", "mu-", 600.0)]),
+    (347890, "doc 84 r4", "long_muon_cathode_bridge_track_partner (far half mis-PID'd 211)",
+     # pre-fix 429.0 (measured in the knobs-off control), post-fix 488.7.
+     # The first draft used 400 here and the negative control PASSED it at
+     # 429 -- only the log line caught the dead knob.  460 sits between.
+     [("log_contains", "long_muon_cathode_bridge: merge shower sid=5"),
+      ("pf_node_ge", "mu-", 460.0)]),
+    (67026, "doc 84 r4", "long_muon_cathode_bridge_short_gap 8 cm (gap-angle waived, gap>0)",
+     # post-fix chain 325.2 cm / range 748.6 MeV.
+     [("log_contains", "long_muon_cathode_bridge: absorb bare chain into sid=0"),
+      ("pf_node_ge", "mu-", 650.0)]),
+
+    # ---- doc pr/130: pr/124's headline win had no sentinel either.  It is in
+    # em114c, so unlike the doc-84 family it does execute under the standard
+    # 141 arms -- it was simply never registered.
+    (406125, "pr/124 A", "shower_pass4_prune_gap2=25 gap-band tier-2 prune (qF1 0.097 -> 1.000)",
+     # The metric that moved is an EM label score with no calib scalar, so the
+     # assertion is that the prune still SHEDS -- the re-seed line is emitted
+     # only when a band component is actually taken out.
+     [("log_contains", "pr124 pass4_prune2:"),
+      ("log_contains", "band component(s) re-seeded")]),
 ]
 
 
