@@ -108,6 +108,28 @@ SENTINELS = [
      # 281.7 and 344.0 MeV, so 250 sits between the two populations.
      [("log_absent", "pr128 pf-orphan-near-cross-cluster"), ("pf_node_lt", "mu-", 250.0)]),
 
+    # ---- doc pr/129: the pointing test on the guard-freed kine pool.
+    # kine_guard_freed_impact = 20 cm / miss 30 deg, SBND PRODUCTION ON
+    # 2026-08-29.  The owner ruled on the pool's ENTIRE population (3 objects,
+    # 710.66 MeV, all 239 events of both manifests), so these three assertions
+    # cover the whole knob -- there is nothing else it can touch.
+    (393505, "pr/129", "cosmic cluster 15 no longer counted into Enu",
+     # The DROP.  268.70 MeV of a 295.0 cm end-to-end chain that never comes
+     # within 68.9 cm of the nu vertex; impact 68.67 cm, miss 67.4 deg.
+     # Enu 940.4 -> 566.1.  The muon must STAY in the PF tree (owner: "OK to
+     # be in PR"), so this is deliberately an Enu assertion, not a pf_absent.
+     [("enu_between", 560.0, 572.0), ("pf_contains", "mu-  268")]),
+    (171572, "pr/129", "real daughter KEPT by the pointing test",
+     # The KEEP, and the negative control for the DROP above: impact 4.16 cm,
+     # miss 11.8 deg.  Owner: "784.9 MeV should be the right energy."  A
+     # future tightening that loses this fires here.
+     [("enu_between", 779.0, 791.0), ("pf_contains", "mu-  304")]),
+    (94392, "pr/129", "guard-freed/continuation hand-off costs nothing",
+     # With the guard-freed pool bounded, the identical segment is counted by
+     # pr/128's kine_count_near_cross_cluster instead, so Enu must NOT move.
+     # Owner: "is OK".  Guards the mutual exclusivity of the two pools.
+     [("enu_between", 1136.0, 1149.0)]),
+
     # ---- doc pr/130: the doc-84 long-muon / MCS family.  Every one of these
     # is a shipped, SBND-PRODUCTION-ON fix whose target event is in NO standard
     # manifest (em114 / em114c), so before this round the whole family was

@@ -1,6 +1,6 @@
 # doc pr/129 — the pointing test: does this track aim back at the neutrino vertex?
 
-**Status: IMPLEMENTED, DEFAULT OFF — validation in progress.**
+**Status: SHIPPED — `kine_guard_freed_impact = 20` / `miss_deg = 30` SBND PRODUCTION ON 2026-08-29** (owner flip: *"this is good, can flip on as default, also push then"*).
 Toolkit: `clus/inc/WireCellClus/PRSegmentFunctions.h`, `clus/src/PRSegmentFunctions.cxx`,
 `clus/src/NeutrinoKinematics.cxx`, `clus/inc/WireCellClus/{NeutrinoPatternBase,TaggerCheckNeutrino}.h`,
 `clus/src/TaggerCheckNeutrino.cxx`, `clus/test/doctest_clus_knob_defaults.cxx`,
@@ -168,11 +168,39 @@ the PR tree, which is exactly "OK to be in PR".
 - [x] Knob ON reproduces **all three owner verdicts exactly**
       (`work-pr129pt-on-mcp2k`): 171572 784.9 (kept), 393505 940.4 → **566.1**
       (dropped), 94392 1142.5 (unchanged).
-- [ ] Dual-manifest OFF gate (`work-pr129r1-off-*` vs `work-pr128r1-on141-*`),
-      `pr85_hash_gate.py`, counts to be quoted.
-- [ ] Dual-manifest ON run: blast radius expected to be **exactly 393505**,
-      since the pool's entire population is three objects and two of them pass.
-- [ ] Movers / nusel / sentinels.
+- [x] **Dual-manifest OFF gate: 478/478 archives byte-identical, 0 unpaired.**
+      `work-pr129r1-off-*` vs `work-pr128r1-{on141,on98}-*`, per sample:
+      mcp1k 104 + mcp2k 178 (141-manifest), mcp1k 28 + mcp2k 34 + ncpi0 38 +
+      nuecc48 96 (98-manifest). Since this binary *also* contains the peer's
+      doc pr/130 probe (`e6307935`), the PASS proves **both** changes inert
+      when off.
+- [x] **Blast radius on the 141 manifest: exactly one event.** Per-event Enu
+      diff over 141 events — 393505 940.4 → 566.1 (−374.4), removing exactly
+      one pdg-13 at 268.7 MeV, nothing added anywhere, nothing else moved.
+- [x] **The PR tree is unchanged.** ON-vs-OFF archive gates PASS
+      (mcp1k 104/104, mcp2k 178/178) and `mabc-pr.zip` is among the compared
+      archives, so the muon still *appears* while no longer being *counted* —
+      the owner's "OK to be in PR" verified rather than assumed. (The archive
+      gate cannot see `kine_reco_Enu`, which lives in the calib dump; that is
+      why the separate per-event Enu pass above exists — doc pr/128 §7.)
+- [x] **Flip-equivalence PASS**: `work-pr129r1-flipchk-mcp2k` (post-flip
+      config, no env) vs `work-pr129pt-on-mcp2k` (env-driven operating point)
+      — 6/6 archives byte-identical and Enu equal on all three events.
+- [x] **Sentinels**: three new pr/129 entries all PASS (393505 Enu in
+      [560,572] *and* `mu-  268` still present in PF; 171572 Enu in [779,791];
+      94392 Enu in [1136,1149]).
+- [x] **98-manifest Enu pass: 98 events compared, 0 movers.** Combined with the
+      141-manifest result, the knob's total footprint across all 239 events of
+      both manifests is **one event**.
+- [x] Full sentinel suite on the flipped arms: **17 PASS, 0 FAIL, 11 SKIP**
+      (rc=0). The 11 SKIPs are events outside these manifests, as before.
+
+**Two premature reads, logged so they are not mistaken for regressions.** The
+first `nuecc48` gate crashed parsing a half-written archive while 7 wire-cell
+jobs were still running, and a sentinel run reported `69314 showers=None` for
+the same reason; both passed cleanly once the arm finished. **Wait for the
+arm's `rc=` line before gating** — a partial arm fails loudly here, but the
+inverse (a gate that silently compares nothing) is the pr/127 trap.
 
 ## 7. Open
 
