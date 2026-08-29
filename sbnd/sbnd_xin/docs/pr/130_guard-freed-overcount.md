@@ -306,3 +306,101 @@ a threshold picked from the post-fix value alone is not a sentinel.
   For `kine_count_guard_freed` specifically, Part 1 shows firing is not the
   property we want guarded — that entry needs a negative companion once the
   171572 ruling lands.
+
+---
+
+# Part 3 — 292643: the drift has a named cause (doc pr/130 item 5b)
+
+## Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr127_pf_history.py 292643          # 53 arms, mtime order, changes marked
+PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_STEM_BACKFILL_BACK_GUARD=0 \
+  ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-pr130-292643-guardoff data 292643
+```
+
+## Finding
+
+doc pr/127 §5.3 recorded 292643 as **"drifted — owner look wanted"** with no
+cause.  `pr127_pf_history.py` brackets the drift to a **63-minute window** on
+2026-08-28:
+
+| arm | time | PF tree | Enu |
+|---|---|---|---|
+| `work-em114c-knobsoff-mcp1k` | 08-28 **17:07** | `mu- 441 \| pi+ 91 \| pi+ 65 \| pi0 150 \| g 154 \| g 65 \| g 8 \| g 5` | **1092.4** |
+| `work-pr121r1-base141-mcp1k` | 08-28 **18:10** | `e- 216 \| g 65 \| g 8 \| g 5 \| mu- 59 \| mu- 441` | **857.5** |
+
+Exactly one thing landed in that window — toolkit `59b3fb53` + `06dfa09f`,
+**08-28 17:27, doc pr/120 round 1: `stem_backfill_back_guard` SBND PRODUCTION
+ON.**
+
+**Confirmed by a one-event A/B**, not by the timeline alone:
+
+| | PF tree | Enu |
+|---|---|---|
+| approved (`work-mcp1k-prod0825`, 08-25) | `mu- 441 \| pi+ 91 \| pi+ 65 \| pi0 150 \| g 154 \| g 65 \| g 8 \| g 5` | 1092.4 |
+| production today (guard **ON**) | `e- 227 \| g 65 \| g 8 \| g 5 \| mu- 59 \| mu- 441` | 858.5 |
+| **guard OFF** (this run) | `mu- 441 \| pi+ 91 \| pi+ 65 \| pi0 150 \| g 154 \| g 65 \| g 8 \| g 5` | **1092.4** |
+
+Turning the knob off restores the approved shape **exactly**.  The cost of the
+guard on this event is **233.9 MeV, both pi+ (91 and 65), and an entire pi0
+(150 MeV + its 154 MeV gamma)** — replaced by a spurious `e- 227` head and a
+`mu- 59`.
+
+Compiled-config proof (key-suppression idiom — absent key = off): the
+production arm carries `"stem_backfill_back_guard" : true`; the guard-off arm
+omits the key entirely.
+
+## Why no gate caught it
+
+`stem_backfill_back_guard` was flipped ON for an owner-approved win on 47212
+(0.??? -> 1.000, doc pr/120).  292643 **is** in em114c, and the drift **is**
+visible in `work-pr121r1-base141-mcp1k` — but that arm was a *base* arm taken
+at the new production point, so the changed value silently became the new
+baseline and every later comparison agreed with it.  Same shape as doc pr/127's
+ten-day silence: the flip moved the baseline and nothing diffed across it.
+
+This is the "tuned-to-one-event exposure class" Part 2's registry exists for,
+and it is the second confirmed instance in two rounds.
+
+## Open — for the owner
+
+1. Is the pr/120 win on 47212 worth a pi0 and 234 MeV on 292643?  That is a
+   physics trade, not a threshold.
+2. **Blast radius MEASURED** (`work-pr130r1-gd141off-*` vs `work-pr128r1-on141-*`,
+   member-content hashes): **6 movers in 141 events**, 135 unchanged.  And the
+   trade is *two-sided* — turning the guard off is a net **-292.1 MeV**:
+
+   | event | Enu guard ON (prod) | Enu guard OFF | delta | PF head |
+   |---|---|---|---|---|
+   | 179369 | 1713.1 | 1337.1 | **-376.0** | gamma 10 -> e- 38 |
+   | 283515 |  866.9 |  739.1 | **-127.8** | proton 188 -> neutron 5 |
+   | 67394  | 1207.3 | 1151.0 |  -56.3 | mu- 94 -> e- 43 |
+   | 286655 |  554.4 |  505.5 |  -48.9 | proton 103 -> e- 304 |
+   | 347824 | 1652.7 | 1735.6 |  +82.9 | pi+ 55 -> pi+ 55 |
+   | 292643 |  858.5 | 1092.4 | **+234.0** | e- 227 -> mu- 441 |
+
+   **So the guard is not a regression to revert.**  292643 is a real casualty,
+   but on four of the six movers the guard *adds* energy, and it is net positive
+   overall.  The owner question is therefore narrow: is 292643's pi0 worth more
+   than the other five rows?
+
+   **Caveat that must travel with this table**: these are Enu *deltas*, not
+   accuracy.  Nothing here says which direction is closer to truth — a truth-level
+   comparison would, and none was run.
+
+   Cross-link worth noting: **179369 and 283515 are both in the 141-set q_miss
+   top-10** (ranks 9 and 4), and 179369 is the parked "backward cluster" item.
+   The pr/120 guard is entangled with the under-clustering residual, so any
+   q_miss round has to hold this knob fixed or it will mis-attribute.
+3. **Bee A/B uploaded for the owner's read** (`bee/pr130r2/`, index
+   `pr130r2.index.txt`, same 6 events same order in both sets):
+   guard **ON** (= production) `2a259e9f-7d28-45f9-b3bc-a43e26b3f5f0`,
+   guard **OFF** `1747be7e-1fbb-432b-a026-d26d254fa63d`.
+   Content-verified live-vs-package 24/24, and orientation cross-checked
+   semantically on idx 0 (ON carries `e- 227` and no pi+; OFF carries `pi+ 91`
+   and no `e- 227`) — doc pr/124's pair was once recorded swapped AND inverted.
+4. Whichever way it goes, `stem_backfill_back_guard` needs a registry entry
+   with **both** an assertion for the 47212 win and one for whatever 292643
+   settles at — a single-sided sentinel is what let this sit unattributed.
