@@ -1050,3 +1050,75 @@ jsonnet) were recorded before editing and excluded from this round's commits
 by tag-selective staging; its 20:24:36 jsonnet flip mid-arm is handled in
 R2.3.  New runner env→TLA seats: `SBND_LONG_MUON_MEMBERS_GEOMETRY`,
 `SBND_LONG_MUON_CATHODE_BRIDGE[_GAP|_ANGLE]`.
+
+## R2.8 Owner scan verdict + the 77978 fix (round 2.1)
+
+Owner scan of the round-2 pair (before `ea9b4914`, after `05e53da9`):
+**"Other than this event [77978], the rest looks good"** — flip authorized.
+The 77978 finding: the nu vertex marker appeared degraded in the AFTER set.
+
+Diagnosis (the reconstructed vertex did NOT move — `main_vertex`, all
+vertex fits and `kine_nu_*` bit-identical; the change was PF-tree
+structure): 77978's nu vertex legitimately sits on the FAR side of the
+cathode, at the junction of a 9.8 cm proton prong and the muon's far half.
+The bridge's bare-chain BFS walked THROUGH that vertex and absorbed the
+proton prong into the muon, and the shower start was never re-seated, so
+Bee drew a dangling nu vertex with the muon starting mid-track across the
+seam.  177536 has the same topology (24 cm proton + 98.1 cm muon half at
+the vertex) and the same latent defect.
+
+Fix (knob-internal, no new keys; binary 20:47):
+- the BFS never traverses through the main vertex — prongs at the
+  interaction point stay their own PF particles;
+- when the absorbed chain touches the main vertex, the shower is re-seated
+  there (`set_start_vertex(main_vertex, 1)` + `set_start_segment`), so
+  kinematics `start_point`/`init_dir` and the PF tree connect nu → mu.
+
+Measured effect of the fix (on3 vs on2, everything else pinned): exactly
+77978 + 177536 move, `mabc-pr.zip` only.
+
+- 77978: absorb `nseg=1 len=23.5cm ... reseat=1`; muon 164.0 cm, best
+  409.4 → **388.2 MeV** (proton padding gone); PF tree now
+  `nu → mu- 388 (vertex → 51.2) + proton 113` — vertex connected.
+- 177536 (same latent topology, fixed before anyone saw it): absorb
+  `nseg=1 len=98.1cm ... reseat=1`; 392.9 cm, best 963.9 → **907.0 MeV**;
+  PF `nu → mu- 907 (vertex → −188.7) + proton 191`.
+- 53793 (shower-merge branch, no re-seat needed): byte-identical to on2.
+
+Fix-round gates: knob-off `work-d84r2-off2-*` vs `work-d84r1-flipchk98-*`
+**PASS 196/196** + per-event nusel 98/98 (pass4 pinned OFF to isolate);
+on3-vs-on2 mcp1k 16/16 byte-identical, mcp2k differs only on the two fixed
+events; determinism pair det3/det4 (53793 + 177536, ASLR off) PASS 4/4;
+doctests 2484/2484; freshness lib 20:47 > edits.
+
+Bee: AFTER-FIXED set `6ec0f59c-ef08-4c5b-bc44-ba7fa5d48960` (d84r2-on3.zip)
+supersedes `05e53da9` for the two fixed events; other 29 events identical.
+
+## R2.9 SBND production flip (owner-directed)
+
+`long_muon_members_geometry = true`, `long_muon_cathode_bridge = true`
+(value knobs stay at C++ defaults 0.0/6.0/20.0/25.0 cm-deg).  Compiled-
+config proof: exactly the two keys appear in the TCN node; nothing else
+moves.  Flip-equivalence (`work-d84r2-flip3-*` config-flipped no-env vs
+`work-d84r2-on3-*` env arm, 31 evts, pass4 pinned in both): **PASS 62/62**.
+
+Production baseline: `work-d84r2-prod98-*` (98-manifest, NO env — both this
+round's flip AND pr/123's pass4 flip live) vs `work-d84r1-flipchk98-*`:
+divergence is EXACTLY the 27 pass4 mover events the pr/123 session
+predicted (mcp1k 0, mcp2k 7, ncpi0 6, nuecc48 14), all `mabc-pr.zip` only;
+per-event `nusel` **98/98 identical**; zero movers attributable to this
+round's knobs (latent on the manifest, as the census predicted — every
+census mover is a case-list event).  **`work-d84r2-prod98-*` supersedes
+`work-d84r1-flipchk98-*` as the SBND production baseline** (adopted by the
+pr/123 session for pr/124+).
+
+Incident, recorded for the shared-tree protocol: 5 nuecc48 events (388,
+38856, 42280, 389538, 400474) initially died with a hard jsonnet error
+("no parameter pf_orphan_guard_freed") — the concurrent session's round-2
+jsonnet threading landed callee-last while this arm was compiling per-event
+configs.  Re-run in place once the file was consistent (new keys
+suppressed-at-false ⇒ compiled config unchanged; verified in the rerun
+configs); 42280 returned to byte-identical, the other four are pass4
+movers.  Protocol addition agreed by both sessions: check
+`pgrep -f run_pr_chain_batch` before editing shared jsonnet, and apply
+cross-file jsonnet changes callee-first.

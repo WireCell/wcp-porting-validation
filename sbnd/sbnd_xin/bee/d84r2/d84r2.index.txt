@@ -1,3 +1,6 @@
+# ROUND 2.1 (post owner scan): AFTER-FIXED = 6ec0f59c-ef08-4c5b-bc44-ba7fa5d48960 (d84r2-on3.zip, bridge fix: BFS main-vertex guard + start re-seat)
+#   changes vs 05e53da9: idx 11 (77978) mu- 409->388 MeV, proton 113 MeV prong restored, nu vertex connected;
+#   idx 6 (177536) mu- 963.9->907.0 MeV, proton 191 MeV prong restored, nu vertex connected; all other 29 events byte-identical.
 # doc 84 round 2 A/B index -- BEFORE = round-1 ON2 set ea9b4914-6152-4cc4-9da7-df104939e6e0 (current SBND production state, flip-equiv PASS 62/62); AFTER = 05e53da9-db17-4f1c-af19-63a47817700c (d84r2-on.zip, uploaded 2026-08-28 owner-authorized)
 # after = production + long_muon_members_geometry + long_muon_cathode_bridge (both C++-default OFF, held for this scan); pr/123 pass4 pinned OFF for attribution
 # bee_idx	event	status
