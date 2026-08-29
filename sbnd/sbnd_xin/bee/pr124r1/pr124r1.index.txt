@@ -1,4 +1,8 @@
-# doc pr/124 front A (gap-band tier-2 prune) A/B index -- OFF 06885a0f-97c6-4075-9632-c1842431449a / ON 9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697
+# doc pr/124 front A (gap-band tier-2 prune) A/B index -- OFF 18da8fb1-3d7a-4e16-9d13-f245e0d09a12 / ON 911c0ae5-cf28-4f8f-bb43-bc1a02c3631c
+#   (CORRECTED 2026-08-29: the four pr/124 set UUIDs were recorded pair-swapped AND
+#    off/on-inverted; mapping re-derived from live mc-layer content hashes vs the
+#    local zips -- owner-reported link/event mismatch.  Original line:)
+# # doc pr/124 front A (gap-band tier-2 prune) A/B index -- OFF 06885a0f-97c6-4075-9632-c1842431449a / ON 9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697
 # OFF = current SBND production (work-pr124r1-dbg{v2,141v2}-* arms, byte-identical to
 #   work-d84r3-cens-* / prod98); ON = shower_pass4_prune_gap2=25 (ang>40deg OR mdqdx>2.5 MIP
 #   qualifier pair, work-pr124r1-flipA* arms = the flipped production point).  27 events:

@@ -305,15 +305,22 @@ flip commit; lib `local/lib/libWireCellClus.so` mtime 22:27 2026-08-28
 
 ### D.2 Bee record
 
+**CORRECTED 2026-08-29** (owner-reported link/event mismatch; the four set
+UUIDs were originally recorded pair-swapped AND off/on-inverted; true
+mapping re-derived from live mc-layer content hashes vs the local zips —
+doc pr/125):
+
 - Front A (production pair, 27 events): OFF
-  `06885a0f-97c6-4075-9632-c1842431449a` / ON
-  `9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697` — annotated
+  `18da8fb1-3d7a-4e16-9d13-f245e0d09a12` / ON
+  `911c0ae5-cf28-4f8f-bb43-bc1a02c3631c` — annotated
   `bee/pr124r1/pr124r1.index.txt`.
 - Front C (decision aid, 6 events, NOT production): OFF
-  `911c0ae5-cf28-4f8f-bb43-bc1a02c3631c` / ON
-  `18da8fb1-3d7a-4e16-9d13-f245e0d09a12` —
+  `9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697` / ON
+  `06885a0f-97c6-4075-9632-c1842431449a` —
   `bee/pr124r1C/pr124r1C.index.txt`; idx 0/1 the gain side, idx 2 the
   cost side of §C.3.
+- (Original, WRONG record: A OFF 06885a0f / ON 9e3d82d2; C OFF 911c0ae5 /
+  ON 18da8fb1.)
 
 Production baselines going forward: 141-set `work-pr124r1-flipA141-*`,
 98-set `work-pr124r1-flipA98-*` (mcp samples content-identical to
