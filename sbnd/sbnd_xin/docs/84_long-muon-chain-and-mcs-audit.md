@@ -711,8 +711,8 @@ python3 scripts/pr85_hash_gate.py work-d84r1-on98-<s> work-d84r1-flipchk98-<s>  
 | # | config key | site | C++ default | SBND 2026-08-28 |
 |---|---|---|---|---|
 | P1 | `long_muon_range_empty_chain_fallback` | `PRShower.cxx` `calculate_kinematics_long_muon` + TCN post-reconcile recompute pass | false | **PRODUCTION ON** |
-| P2 | `long_muon_angle_relax_long` / `long_muon_angle_relax_deg` | `NeutrinoVertexFinder.cxx` `find_cont_muon_segment` (6th param, formation walk only) | false / 16.0 | **HOLD OFF** (hand-scan pending; see R1.5) |
-| P3 | `long_muon_stub_bridge_len` | stub-bridge `< 6 cm` precondition as a member | 6.0 cm | **HOLD OFF** (key omitted = 6.0) |
+| P2 | `long_muon_angle_relax_long` / `long_muon_angle_relax_deg` | `NeutrinoVertexFinder.cxx` `find_cont_muon_segment` (6th param, formation walk only) | false / 16.0 | **PRODUCTION ON** (owner-directed post Bee scan; measured latent — see R1.9) |
+| P3 | `long_muon_stub_bridge_len` | stub-bridge `< 6 cm` precondition as a member | 6.0 cm | **PRODUCTION ON at 7.5 cm** (owner-directed post Bee scan; one mover, 66366 — see R1.9) |
 | P4 | `mcs_muon_source = "long_muon_else_pf"` | `MuonMCSDriver.cxx` new arm: chain when one exists, else the pf muon | `"pf_muon"` | **PRODUCTION ON** |
 | P5 | `mcs_range_comparator_chain` | second log-only `mcs: chain comparator` INFO sentinel | false | **PRODUCTION ON** |
 | — | `mcs_enable` | existing doc-80 gate | false | **PRODUCTION ON** (books the five `kine_mcs_*` T_kine branches) |
@@ -845,6 +845,32 @@ Index: `bee/d84r1/d84r1.index.txt`.  URLs:
 - OFF: https://www.phy.bnl.gov/twister/bee/set/361f9e58-3883-4dcd-aba1-cd6ab57928d9/event/list/
 - ON:  https://www.phy.bnl.gov/twister/bee/set/c1bbb7c6-2d1a-48b4-8e03-7fa075ee497b/event/list/
 - ON2: https://www.phy.bnl.gov/twister/bee/set/ea9b4914-6152-4cc4-9da7-df104939e6e0/event/list/
+
+## R1.9 P2/P3 flip (owner-directed, post Bee scan)
+
+After scanning the Bee sets the owner directed the P2/P3 flip
+(2026-08-28, same day).  Evidence backing it:
+
+- **Mover census, 129 distinct events** (98-manifest + 31-evt case list):
+  exactly **one** physics mover, `mcp2k` 66366 — the P3 rescue of R1.5.
+  `work-d84r1-on2_98-*` (P2 16° + P3 7.5 on top of the shipped point) vs
+  `work-d84r1-flipchk98-*`: **PASS 196/196 byte-identical** — both knobs are
+  latent on the standard gate manifest.  On the 31-evt case list, on-vs-on2
+  differs only on 66366 (`mabc-pr.zip` + calib; every other calib delta is
+  the `vertex_scoreboard/dual_chain/off_ms` wall-clock field, not physics).
+- **P2 is ON but measured latent everywhere probed** — the formation-time
+  census (R1.5) still owns the follow-up; flipping it now means any future
+  formation-time geometry that satisfies 10–16° + MIP + junction-veto will
+  be taken without another cfg round.
+- Compiled-config proof: post-flip config differs from R1.2's Step B by
+  exactly two keys (`long_muon_angle_relax_long: true`,
+  `long_muon_stub_bridge_len: 7.5`); `long_muon_angle_relax_deg` stays
+  omitted (C++ 16.0).
+- Flip equivalence on the 31-evt set: `work-d84r1-flip2-*` (post-flip cfg,
+  no env) vs `work-d84r1-beeon2B-*` (env TLAs): **PASS 62/62** (16+46 archives) byte-identical, the 66366 mover included.
+- Baseline note: because P2/P3 are latent on the 98-manifest,
+  `work-d84r1-flipchk98-*` **remains** the valid production baseline for
+  gate purposes; the 66366-class movers live only in case-list territory.
 
 ## R1.7 T_kine schema note
 
