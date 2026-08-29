@@ -13,7 +13,7 @@
 3	173819	fix-direction: 301.9 -> 10.5 MeV e- + re-rooted 37.8cm proton (250.2 MeV); label `not an EM shower` (3x MIP stopping-proton profile)
 4	37112	RESCUED (owner: "one shower, everything"): gamma 549.3 + proton stem + pruned comp -> ONE pdg-11 shower 783.0 MeV / 35 seg; the bogus gamma-proton pi0 group (mass 281.2) dissolves (kine falls back to 18.6+183.9 @ 69.2)
 5	415278	ADJUDICATED COST (owner accepted 2026-08-29 "Flip anyway"): 3 declined tracks reshuffle between its two labeled showers, qF1 0.959->0.957 / 0.976->0.974 at the new production point
-6	396222	mover: 3 guard declines (pi 24.0 / p 17.0 / mu 36.0 cm); kine pio_flag 1->2, pio mass 799->260 (junk-band either way)
+6	396222	mover, PRIORITY ROW: 3 guard declines wake id_pi0_without_vertex (Path 2) -- its FIRST acceptance on SBND (dormant 0/76 pre-flip, peer pr/126 audit).  Path 2 MUTATES the nu vertex (NSC:5675-5676 prototype hack): mv moves 1.4 cm, kine_reco_Enu 4613->3797, pio_flag 1->2 mass 799->260.  Unlabeled in vtx105 (movers gate blind here).  nusel selection unchanged.
 7	137238	no-op verified: 2 decline-set muons re-absorbed identically (byte-identical archives)
 8	175896	no-op verified (doc pr/124 sec C measured residual)
 9	176502	no-op verified (doc pr/124 sec C measured residual)

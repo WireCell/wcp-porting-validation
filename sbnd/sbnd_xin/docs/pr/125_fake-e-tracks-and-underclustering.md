@@ -317,3 +317,20 @@ Decision Bee pair: §5.1.
   `work-pr125r1-flipchk141-*` (content = flipA except the 7 events above).
   Toolkit: knobs `9b67d246`+`67a55f1f`+`ea031faf`+`dc4ab6f8`, flip
   `8b371920`.
+
+### 5.3 Post-ship finding: the guard wakes π⁰ Path 2 in 396222 (vertex mutation)
+
+At the flipped production point, `id_pi0_without_vertex` (Path 2) accepts a
+group in **396222** — its first acceptance anywhere on SBND (peer doc
+pr/126 measured it dormant, 0/76 over 239 events, at the pr/124 point).
+Path 2 mutates the neutrino vertex (`NeutrinoShowerClustering.cxx:5675-5676`,
+the prototype's own "hack"): 396222's main vertex moves **1.4 cm**
+((121.70,−164.44,312.59)→(122.09,−164.42,311.27)) and `kine_reco_Enu`
+4613→3797 MeV. The vtx105 movers gate is blind here (396222 unlabeled in
+that epoch); nusel selection is unchanged. Cause chain: the guard's three
+track declines re-shape the shower set → the Path-1 pairing fails where it
+previously succeeded → Path 2 fires. Flagged to the owner (production Bee
+pair idx 6 is now a priority row) and to the pr/126 session (Path-2
+mutation risk is no longer theoretical). If the owner rules the 396222
+outcome adverse, the candidate mitigations are a Path-2 disable knob or a
+396222-class qualifier on the guard — neither taken unilaterally.
