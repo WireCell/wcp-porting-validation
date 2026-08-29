@@ -243,6 +243,11 @@ shower topology. 54332 therefore moves to the **recognition thread** (§6).
   Both live in `separate_track_shower`/`update_particle_type` territory,
   not in absorption geometry. evt235435 (whole-event shower never
   assembled, note-only, conn-3) is the third member.
+  **→ Measured in doc [pr/122](122_recognition-round.md)** (all three die or
+  defer: seed features interleave with real stems across both manifests and
+  long-seed flags are inherited un-revalidated; 166870's µ⁻ is the pr/40 r9
+  sfv_straight_guard by design, n=1 bad fire of 17, routed to the π⁰ thread;
+  235435 is fragmentation, i.e. the merge thread).
 - **evt76346 / pass3_cone**: measured clean in every reco frame (§3a) —
   confirms the wrong-owner class needs relocated-start/cascade context
   (doc 118 §7, doc 119 §7); no admission guard can see it.

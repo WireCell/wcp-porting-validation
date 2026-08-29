@@ -1,0 +1,17 @@
+arm	event	n_counts_track	n_mem_lines	nseg	shower_id	start_seg	vote_fired	vote_skips
+work-pr121r1-dbg141-mcp2k	55740	2	2	2	15	17000	0	1
+work-pr121r1-dbgA-nuecc48	122660	0	0	3	7	54071		0
+work-pr121r1-dbgA-mcp1k	166870	0	0	4	2	85045		0
+work-pr121r1-dbg141-mcp2k	170098	0	0	9	3	70030		0
+work-pr121r1-dbg141-mcp2k	174771	0	0	8	6	22024		0
+work-pr121r1-dbg141-mcp2k	179369	0	0	2	44	101054		0
+work-pr121r1-dbg141-mcp2k	179369	1	2	2	62	12000	0	1
+work-pr121r1-dbgA-ncpi0	259542	0	0	2	3	126091		0
+work-pr121r1-dbg141-mcp2k	282271	0	0	10	2	51038		0
+work-pr121r1-dbg141-mcp1k	283713	0	0	11	1	23011		0
+work-pr121r1-dbg141-mcp1k	286681	0	0	11	3	72040		0
+work-pr121r1-dbg141-mcp1k	287830	0	0	5	1	42052		0
+work-pr121r1-dbg141-mcp1k	348691	0	0	2	5	51080		0
+work-pr121r1-dbg141-mcp2k	350354	1	2	2	23	18009	0	1
+work-pr121r1-dbg141-mcp2k	392901	0	0	6	1	127030		0
+work-pr121r1-dbg141-mcp1k	393212	0	0	2	0	84048		0

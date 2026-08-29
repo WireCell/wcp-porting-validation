@@ -1,0 +1,286 @@
+arm	event	label_tag	len_cm	long_muon	med_dqdx_mip	pdg	pdg11	seed_node_labeled	seg	seg_mark	site	straight	topo	traj	verdict
+work-pr121r1-dbgA-nuecc48	388	emscan-0827	23.05	0	1.087	11	1		23028		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	388	emscan-0827	23.68	0	1.316	11	1		23032		in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	10550	emscan-0827	3.75	0	3.892	11	1		7016		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	10550	emscan-0827	18.71	0	1.419	11	1		7036		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-ncpi0	21073	emscan-0827	10.91	0	0.89	11	1		11008		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	3.89	0	0.291	11	1		11008		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	6.98	0	0.503	13	0		11021		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	6.06	0	0.885	11	1		11065		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	2.13	0	0.781	11	1		11066		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	42.89	0	1.131	11	1		11068		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	30504	emscan-0827	8.75	0	0.695	11	1		11069		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	37112	emscan-0827	4.07	0	4.206	11	1		84070		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-ncpi0	37112	emscan-0827	16.33	0	1.792	11	1		84074		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-nuecc48	38856	emscan-0827	14.8	0	0.587	11	1		12035		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	38856	emscan-0827	10.72	0	1.181	11	1		12088		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-nuecc48	38856	emscan-0827	29.14	0	0.49	11	1		12089		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	38856	emscan-0827	24.73	0	1.185	11	1		12090		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-nuecc48	38856	emscan-0827	0.96	0	1.001	11	1		12082		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	42280	emscan-0827	33.93	0	2.288	11	1		8021		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	46363	emscan-0827	38.07	0	1.287	11	1		19079		in_main_cluster	1	1	0	None
+work-pr121r1-dbg141-mcp2k	52044	emscan-0828-agent5	3.73	0	1.084	11	1		18004		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	52605	emscan-0828-agent5	3.2	0	0.656	11	1		51023		in_main_cluster	0	0	0	correct
+work-pr121r1-dbgA-nuecc48	52672	emscan-0827	5.0	0	1.085	11	1		82082		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	52693	emscan-0828-agent5	0.39	0	1.527	11	1	18034	18034	TARGET	in_main_cluster	0	0	0	vertex-bad (undecidable)
+work-pr121r1-dbgA-nuecc48	54095	emscan-0827	4.73	0	0.71	11	1		17041		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	54095	emscan-0827	5.07	0	0.659	11	1		17034		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	54095	emscan-0827	5.96	0	3.585	11	1		17035		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-mcp2k	54332	emscan-0827	32.28	0	1.668	11	1	16014	16014	OUT	in_main_cluster	1	1	0	None
+work-pr121r1-dbg141-mcp1k	54341	emscan-0828-agent5	8.68	0	1.19	11	1		18008		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	54453	emscan-0828-agent5	3.62	0	1.038	11	1		22019		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	56972	emscan-0828-agent5	21.48	0	0.821	11	1		17024		in_main_cluster	0	0	1	correct
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	10.4	0	0.574	11	1		22028		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	7.36	0	1.114	11	1		22033		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	23.01	0	1.851	11	1		22046		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	25.26	0	0.762	11	1		22116		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	23.91	0	0.953	11	1		22118		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	56982	emscan-0827	24.66	0	0.726	11	1		22119		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	58006	emscan-0828-agent5	13.42	0	0.797	11	1		8040		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	58006	emscan-0828-agent5	10.34	0	0.646	11	1		8041		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	64409	emscan-0828-agent5	14.31	0	2.678	11	1		8022		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	69232	emscan-0828-agent5	8.01	0	1.296	11	1		20019		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	69232	emscan-0828-agent5	27.49	0	0.869	11	1	20021	20021	OUT	in_main_cluster	1	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	69232	emscan-0828-agent5	26.64	0	0.31	11	1		20022		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	69254	emscan-0828-agent5	6.17	0	1.02	11	1		4021		in_main_cluster	0	0	1	correct
+work-pr121r1-dbgA-nuecc48	69314	emscan-0827	7.04	0	2.081	11	1		3014		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	69314	emscan-0827	6.32	0	1.222	11	1		3001		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	71642	emscan-0828-agent5	0.9	0	1.674	11	1		10116		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	71872	emscan-0828-agent5	10.28	0	1.793	11	1	13012	13012	TARGET	in_main_cluster	0	1	0	correct
+work-pr121r1-dbg141-mcp2k	74123	emscan-0828-agent5	5.09	0	1.65	11	1		17029		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	74326	emscan-0828-agent5	23.98	0	1.487	11	1		10020		in_main_cluster	0	1	0	correct
+work-pr121r1-dbgA-nuecc48	74544	emscan-0827	14.59	0	1.82	11	1		12085		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp2k	75954	emscan-0828-agent5	18.14	0	1.284	11	1		21048		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	75954	emscan-0828-agent5	16.54	0	1.672	11	1		21063		in_main_cluster	0	1	0	correct
+work-pr121r1-dbgA-mcp2k	76346	emscan-0827	6.29	0	0.75	11	1		14058	TARGET	in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	76346	emscan-0827	10.05	0	0.325	11	1	40030	14013	TARGET	in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	76346	emscan-0827	8.1	0	1.529	11	1	40030	14019	TARGET	in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	76350	emscan-0827	15.75	0	0.758	11	1		12098		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	76350	emscan-0827	14.4	0	0.321	11	1		12027		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	77328	emscan-0828-agent5	11.55	0	2.131	11	1		16016		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	77328	emscan-0828-agent5	44.42	1	1.015	13	0		16017		in_main_cluster	1	0	0	correct
+work-pr121r1-dbgA-nuecc48	81597	emscan-0827	21.23	0	1.291	11	1		19009		in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	90055	emscan-0827	11.24	0	3.152	11	1		11033		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	90055	emscan-0827	1.54	0	0.4	11	1		11149		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp2k	91917	emscan-0828-agent5	5.44	0	0.977	11	1		17005		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	94224	emscan-0828-agent5	6.94	0	0.657	11	1		17026		in_main_cluster	0	1	0	not an EM shower
+work-pr121r1-dbg141-mcp2k	94392	emscan-0828-agent5	11.32	0	0.709	11	1	5019	5019	TARGET	in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	96383	emscan-0828-agent5	19.26	0	1.021	11	1		14005		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	96383	emscan-0828-agent5	19.75	0	1.003	11	1		14007		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	98844	emscan-0828-agent5	22.43	0	0.943	11	1		6013		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	98844	emscan-0828-agent5	12.81	0	0.414	11	1		6015		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbgA-mcp2k	99838	emscan-0827	13.67	1	1.008	13	0		14004		in_main_cluster	1	0	0	None
+work-pr121r1-dbg141-mcp2k	100135	emscan-0828-agent5	7.14	0	0.71	11	1		14024	TARGET	in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	100135	emscan-0828-agent5	2.81	0	1.223	11	1	14025	14025	TARGET	in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	100222	emscan-0828-agent5	36.4	0	1.026	11	1	113236	113236	TARGET	in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbgA-nuecc48	111412	emscan-0827	6.67	0	1.008	11	1		18012		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	111412	emscan-0827	5.0	0	0.99	11	1		18013		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	111412	emscan-0827	13.9	0	0.711	11	1		18060		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	111412	emscan-0827	19.18	0	1.81	11	1		18061		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-nuecc48	116962	emscan-0827	31.93	0	1.232	11	1		21070		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-nuecc48	116962	emscan-0827	39.13	0	0.89	11	1		21072		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	116962	emscan-0827	38.93	0	1.09	11	1		21073		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	122660	emscan-0827	35.39	0	2.168	11	1	9110	9110	TARGET	in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	122660	emscan-0827	14.64	0	0.921	11	1		9111		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	122660	emscan-0827	4.94	0	1.1	11	1		9018		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	131357	emscan-0827	15.34	0	1.123	11	1		12014		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-nuecc48	137238	emscan-0827	14.35	0	1.013	11	1		143057		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	137238	emscan-0827	4.61	0	0.699	11	1		143055		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	137238	emscan-0827	6.83	0	3.382	11	1		143056		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	138009	emscan-0827	3.16	0	2.891	11	1		12010		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	138009	emscan-0827	20.94	0	0.754	11	1		12016		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	163543	emscan-0827	21.46	0	1.672	11	1		14123		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	163543	emscan-0827	27.36	0	1.066	11	1		14126		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	163543	emscan-0827	18.66	0	1.161	11	1		14127		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	163543	emscan-0827	31.25	0	0.962	11	1		14129		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	163543	emscan-0827	33.16	0	0.884	11	1		14131		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	165157	emscan-0827	15.27	0	0.931	11	1		62049		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp1k	166870	emscan-0827	20.18	0	1.914	2212	0		10074		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-mcp1k	166870	emscan-0827	8.29	0	0.605	11	1		10013		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp1k	168432	emscan-0828-agent5	12.75	0	1.116	11	1	19032	19032	TARGET	in_main_cluster	0	0	1	correct
+work-pr121r1-dbgA-nuecc48	168596	emscan-0827	28.5	0	3.2	11	1	14153	14153	TARGET	in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	168596	emscan-0827	19.71	0	1.12	11	1	14153	14058	TARGET	in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-mcp1k	169356	emscan-0827	3.49	0	0.857	11	1		16009		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-mcp1k	169626	emscan-0827	28.75	0	1.194	11	1		22034		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	170761	emscan-0828-agent5	7.96	0	2.669	11	1		8023		in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	170761	emscan-0828-agent5	37.4	0	1.106	11	1		8026		in_main_cluster	1	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	170761	emscan-0828-agent5	5.69	0	0.669	11	1		8049		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	171143	emscan-0828-agent5	56.06	0	1.383	11	1		8032		in_main_cluster	1	1	0	not an EM shower
+work-pr121r1-dbg141-mcp2k	171729	emscan-0828-agent5	15.41	0	1.116	11	1		9005		in_main_cluster	0	0	1	correct
+work-pr121r1-dbgA-nuecc48	172230	emscan-0827	5.83	0	2.904	11	1		5028		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	172230	emscan-0827	2.29	0	1.033	11	1		5119		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp1k	172266	emscan-0828-agent5	4.07	0	0.828	11	1		16005		in_main_cluster	0	0	0	not an EM shower
+work-pr121r1-dbgA-mcp1k	172942	emscan-0827	33.49	0	1.808	11	1		4002		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp2k	173495	emscan-0828-agent5	7.08	0	1.09	11	1		22009		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	173819	emscan-0828-agent5	4.36	0	2.021	11	1		14028		in_main_cluster	0	0	1	not an EM shower
+work-pr121r1-dbgA-nuecc48	174637	emscan-0827	8.94	0	2.349	11	1		9018		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	174637	emscan-0827	3.07	0	0.683	11	1		9020		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	174637	emscan-0827	2.72	0	1.034	11	1		9043		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp1k	174752	emscan-0827	3.77	0	0.864	11	1		48010		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	174771	emscan-0828-agent5	9.34	0	1.052	11	1		15011		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp1k	175896	emscan-0828-agent5	11.54	0	1.554	11	1	17044	17044	TARGET	in_main_cluster	0	1	0	vertex-bad (undecidable)
+work-pr121r1-dbg141-mcp1k	175896	emscan-0828-agent5	2.29	0	1.025	11	1		17001		in_main_cluster	0	0	1	vertex-bad (undecidable)
+work-pr121r1-dbg141-mcp1k	175896	emscan-0828-agent5	2.09	0	1.052	11	1		17003		in_main_cluster	0	0	0	vertex-bad (undecidable)
+work-pr121r1-dbgA-mcp2k	176502	emscan-0827	19.91	0	1.472	11	1		109119		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-mcp2k	176502	emscan-0827	30.66	0	1.213	11	1		109298		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-mcp2k	176502	emscan-0827	13.15	0	1.235	11	1		109299		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	176533	emscan-0828-agent5	11.12	0	1.122	11	1		11032		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	176533	emscan-0828-agent5	18.52	0	1.462	11	1		11035		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	179048	emscan-0828-agent5	3.77	0	1.117	11	1	17012	17007	TARGET	in_main_cluster	0	0	1	vertex-bad (undecidable)
+work-pr121r1-dbg141-mcp2k	179048	emscan-0828-agent5	8.24	0	1.101	11	1	17012	17003	OUT	in_main_cluster	0	0	1	vertex-bad (undecidable)
+work-pr121r1-dbg141-mcp2k	179369	emscan-0828-agent5	4.0	0	1.276	11	1		17003		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	179369	emscan-0828-agent5	52.9	1	1.083	13	0		12006		in_main_cluster	1	0	0	over-clustered
+work-pr121r1-dbgA-ncpi0	180801	emscan-0827	25.47	0	1.147	11	1		15082		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-ncpi0	180801	emscan-0827	22.03	0	0.637	11	1		15083		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	180801	emscan-0827	4.3	0	1.063	11	1		15015		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	181050	emscan-0828-agent5	2.3	0	0.787	11	1	15006	15001	TARGET	in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbgA-nuecc48	196649	emscan-0827	38.92	0	1.986	11	1		11113		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	214469	emscan-0827	34.45	0	1.257	11	1		16078		in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	219295	emscan-0827	33.26	0	1.894	11	1		15128		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	234638	emscan-0827	25.68	0	1.154	11	1		10041		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	234638	emscan-0827	2.85	0	1.096	11	1		10018		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	235435	emscan-0827	3.29	0	1.155	11	1		2051		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	235435	emscan-0827	6.82	0	0.869	13	0		2024		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	239794	emscan-0827	12.92	0	7.98	11	1		2070		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	246579	emscan-0827	21.94	0	2.247	11	1		19047		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	256587	emscan-0827	32.83	0	1.156	11	1		11301		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-ncpi0	259542	emscan-0827	2.27	0	0.857	11	1		128135		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	267597	emscan-0827	15.68	0	2.198	11	1		5121		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	268067	emscan-0827	3.2	0	0.439	11	1		15079		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	268067	emscan-0827	22.62	0	1.189	11	1		15080		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	268784	emscan-0827	2.81	0	0.905	11	1		13003		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	268784	emscan-0827	12.06	0	2.675	11	1		13027		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	269774	emscan-0827	23.87	0	2.381	11	1		87134		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	271851	emscan-0827	22.46	0	1.039	11	1		23010		in_main_cluster	1	0	0	None
+work-pr121r1-dbg141-mcp2k	275011	emscan-0828-agent5	22.16	0	0.782	11	1		11037		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	275011	emscan-0828-agent5	14.94	0	1.092	11	1		11038		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	277298	emscan-0828-agent5	22.6	0	1.647	11	1		17026		in_main_cluster	0	0	1	not an EM shower
+work-pr121r1-dbg141-mcp1k	277298	emscan-0828-agent5	9.93	0	0.897	11	1		17028		in_main_cluster	0	0	1	not an EM shower
+work-pr121r1-dbg141-mcp1k	277298	emscan-0828-agent5	49.26	0	1.339	11	1		17030		in_main_cluster	1	1	0	not an EM shower
+work-pr121r1-dbgA-mcp1k	278794	emscan-0827	22.58	1	1.016	13	0		7002		in_main_cluster	1	0	0	None
+work-pr121r1-dbg141-mcp2k	280159	emscan-0828-agent5	16.42	0	0.885	11	1		12119		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp1k	280972	emscan-0828-agent5	8.85	0	1.127	11	1		7028		in_main_cluster	0	1	0	correct
+work-pr121r1-dbgA-mcp2k	281165	emscan-0827	12.63	1	1.155	13	0		16006		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-mcp2k	281567	emscan-0827	9.01	0	1.962	11	1		95129		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-mcp2k	281567	emscan-0827	21.2	0	0.987	11	1		95225		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	281567	emscan-0827	27.33	0	1.127	11	1		95227		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	282271	emscan-0828-agent5	30.97	0	1.356	11	1	6063	6063	TARGET	in_main_cluster	0	1	0	under-clustered
+work-pr121r1-dbg141-mcp2k	282271	emscan-0828-agent5	2.99	0	1.066	11	1		6004	TARGET	in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbgA-mcp2k	282909		1.36	0	0.433	11	1		4079		in_main_cluster	0	0	0	
+work-pr121r1-dbgA-mcp2k	282909		4.85	0	1.055	11	1		4082		in_main_cluster	0	0	1	
+work-pr121r1-dbgA-mcp2k	282909		19.18	0	1.094	11	1		4084		in_main_cluster	1	0	0	
+work-pr121r1-dbgA-mcp2k	282909		2.14	0	0.421	11	1		4078		in_main_cluster	0	0	0	
+work-pr121r1-dbg141-mcp1k	282979	emscan-0828-agent5	15.97	0	0.955	11	1	14003	14003	TARGET	in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp1k	282979	emscan-0828-agent5	10.68	0	0.378	11	1		14050		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp1k	282979	emscan-0828-agent5	2.99	0	0.574	11	1		14051		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp1k	283713	emscan-0828-agent5	246.45	1	1.073	13	0		17007		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	284206	emscan-0828-agent5	21.26	0	1.09	11	1	10051	10051	TARGET	in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	284206	emscan-0828-agent5	23.45	0	1.009	11	1		10052	TARGET	in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	284206	emscan-0828-agent5	29.13	0	1.205	11	1		10054	TARGET	in_main_cluster	0	1	0	under-clustered
+work-pr121r1-dbg141-mcp2k	284206	emscan-0828-agent5	24.79	0	0.54	11	1		10056	TARGET	in_main_cluster	1	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	284206	emscan-0828-agent5	2.1	0	1.029	11	1		10001		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbgA-ncpi0	285567	emscan-0827	14.28	0	1.523	11	1		8107		in_main_cluster	0	1	0	None
+work-pr121r1-dbgA-ncpi0	285567	emscan-0827	8.55	0	0.811	11	1		8016		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp1k	286681	emscan-0828-agent5	25.18	0	1.963	11	1	3012	3012	TARGET	in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbg141-mcp1k	287654	emscan-0828-agent5	4.97	0	1.362	11	1		12003		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	287794	emscan-0828-agent5	9.22	0	2.202	11	1		5026		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	287830	emscan-0828-agent5	6.2	0	1.397	11	1		16028		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	289508	emscan-0828-agent5	10.7	0	1.45	11	1		17012		in_main_cluster	1	1	0	correct
+work-pr121r1-dbg141-mcp2k	291072	emscan-0828-agent5	12.02	0	1.294	11	1	21023	21023	TARGET	in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp1k	292005	emscan-0828-agent5	77.01	1	1.043	13	0		18005		in_main_cluster	1	0	0	not an EM shower
+work-pr121r1-dbg141-mcp1k	292005	emscan-0828-agent5	2.79	0	0.926	11	1		18024		in_main_cluster	0	0	0	not an EM shower
+work-pr121r1-dbg141-mcp1k	292027	emscan-0828-agent5	157.3	1	1.037	13	0		12005		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	292524	emscan-0828-agent5	31.03	1	1.032	13	0		9018		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	292524	emscan-0828-agent5	5.4	0	0.636	11	1		9016		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	293149	emscan-0828-agent5	4.3	0	1.144	11	1		4002		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	293536	emscan-0828-agent5	15.08	0	1.737	11	1		15027		in_main_cluster	0	0	1	not an EM shower
+work-pr121r1-dbg141-mcp2k	294174	emscan-0828-agent5	39.46	1	1.005	13	0		16028		in_main_cluster	1	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	294174	emscan-0828-agent5	7.43	0	1.266	11	1		16004		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp1k	313781	emscan-0828-agent5	4.14	0	0.581	11	1		9011		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp1k	313781	emscan-0828-agent5	9.74	0	1.015	11	1		9012		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp1k	317939	emscan-0828-agent5	21.44	0	1.063	11	1		26001		in_main_cluster	1	0	1	correct
+work-pr121r1-dbg141-mcp1k	317939	emscan-0828-agent5	10.55	0	1.295	11	1		26003		in_main_cluster	0	1	0	correct
+work-pr121r1-dbg141-mcp2k	318703	emscan-0828-agent5	175.7	1	1.055	13	0		17023		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	318703	emscan-0828-agent5	11.12	0	0.635	11	1		17067		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	318769	emscan-0828-agent5	6.2	0	1.24	11	1		31026		in_main_cluster	0	1	0	both
+work-pr121r1-dbg141-mcp2k	321169	emscan-0828-agent5	4.57	0	0.448	11	1		16054		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	321169	emscan-0828-agent5	15.16	0	0.895	11	1		16055		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	321169	emscan-0828-agent5	20.29	0	0.929	11	1		16059		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	321169	emscan-0828-agent5	12.56	0	0.626	11	1		16060		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	321767	emscan-0828-agent5	36.07	1	1.099	13	0		15006		in_main_cluster	1	0	0	over-clustered
+work-pr121r1-dbgA-nuecc48	342199	emscan-0827	16.29	0	1.486	11	1		20032		in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-mcp1k	347129	emscan-0827	10.36	0	0.53	11	1		53021		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	347824	emscan-0828-agent5	23.22	0	2.883	11	1		24113		in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	347824	emscan-0828-agent5	19.65	0	0.763	11	1		24114		in_main_cluster	0	1	0	over-clustered
+work-pr121r1-dbg141-mcp2k	347824	emscan-0828-agent5	9.31	0	0.524	11	1		24115		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp1k	348691	emscan-0828-agent5	1.61	0	0.728	11	1		9014		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp1k	348691	emscan-0828-agent5	2.73	0	0.338	11	1		9100		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp1k	348691	emscan-0828-agent5	13.56	0	0.423	11	1		9011		in_main_cluster	1	0	1	correct
+work-pr121r1-dbgA-nuecc48	350186	emscan-0827	41.91	0	2.276	11	1		6044		in_main_cluster	1	0	1	None
+work-pr121r1-dbg141-mcp2k	350354	emscan-0828-agent5	23.31	0	0.662	11	1	18092	18092	TARGET	in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	350354	emscan-0828-agent5	6.7	0	0.734	11	1		18093		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbgA-nuecc48	360535	emscan-0827	34.19	0	2.52	11	1		7060		in_main_cluster	1	0	0	None
+work-pr121r1-dbg141-mcp1k	386442	emscan-0828-agent5	21.95	0	1.257	11	1	16008	16008	TARGET	in_main_cluster	0	1	0	correct
+work-pr121r1-dbg141-mcp1k	386948	emscan-0828-agent5	6.19	0	0.936	11	1		92079		in_main_cluster	0	0	0	correct
+work-pr121r1-dbgA-nuecc48	389538	emscan-0827	6.14	0	1.07	11	1		11007		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp1k	390182	emscan-0828-agent5	17.44	0	2.731	2212	0		4033		in_main_cluster	1	0	1	correct
+work-pr121r1-dbg141-mcp1k	390182	emscan-0828-agent5	27.27	0	1.746	11	1		4008		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	390634	emscan-0828-agent5	2.58	0	0.296	11	1		1011		in_main_cluster	0	0	1	not an EM shower
+work-pr121r1-dbg141-mcp2k	392901	emscan-0828-agent5	20.18	1	0.972	13	0		15011		in_main_cluster	0	0	0	not an EM shower
+work-pr121r1-dbg141-mcp2k	394167	emscan-0828-agent5	20.84	0	1.035	11	1		11009		in_main_cluster	1	0	0	correct
+work-pr121r1-dbgA-mcp1k	394532	emscan-0827	0.34	0	1.511	11	1		39021		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp1k	394532	emscan-0827	8.15	0	0.909	11	1		39034		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	395123	emscan-0828-agent5	22.86	0	0.992	11	1		21011		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	395597	emscan-0828-agent5	142.94	1	1.147	13	0		20001		in_main_cluster	1	0	0	both
+work-pr121r1-dbg141-mcp2k	395597	emscan-0828-agent5	113.39	1	1.079	13	0		20002		in_main_cluster	1	0	0	both
+work-pr121r1-dbg141-mcp2k	395597	emscan-0828-agent5	21.12	0	2.005	11	1	20004	20004	TARGET	in_main_cluster	0	1	0	both
+work-pr121r1-dbgA-mcp2k	396222	emscan-0827	33.8	0	1.135	11	1		9059		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	396323	emscan-0828-agent5	47.66	1	0.89	13	0		10009		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	397401	emscan-0828-agent5	23.78	1	1.006	13	0		16012		in_main_cluster	1	0	0	not an EM shower
+work-pr121r1-dbg141-mcp2k	397401	emscan-0828-agent5	35.46	0	1.546	11	1		16014		in_main_cluster	0	1	0	not an EM shower
+work-pr121r1-dbg141-mcp2k	397630	emscan-0828-agent5	2.76	0	1.087	11	1		15045		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbg141-mcp2k	397630	emscan-0828-agent5	2.54	0	0.772	11	1		15006		in_main_cluster	0	0	1	under-clustered
+work-pr121r1-dbgA-ncpi0	399860	emscan-0827	24.36	0	2.195	11	1		17062		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-ncpi0	399860	emscan-0827	15.77	0	1.028	13	0		17065		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	400474	emscan-0827	29.13	0	1.545	11	1		18126		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp1k	401450	emscan-0828-agent5	19.91	0	2.332	11	1		23018		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	401450	emscan-0828-agent5	2.96	0	1.007	11	1		23020		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp2k	403309	emscan-0828-agent5	35.77	0	1.082	11	1		11000		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	406125	emscan-0828-agent5	17.13	0	1.33	11	1		8059		in_main_cluster	0	0	0	over-clustered
+work-pr121r1-dbg141-mcp1k	407918	emscan-0828-agent5	3.27	0	0.457	11	1		11009		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp2k	408304	emscan-0828-agent5	5.43	0	2.569	11	1		9033		in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	408304	emscan-0828-agent5	2.6	0	0.826	11	1	9039	9008	TARGET	in_main_cluster	0	0	0	under-clustered
+work-pr121r1-dbg141-mcp2k	408678	emscan-0828-agent5	46.01	0	1.073	11	1		14003		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp2k	409140	emscan-0828-agent5	10.8	0	1.35	11	1	13006	13006	TARGET	in_main_cluster	0	1	0	correct
+work-pr121r1-dbgA-mcp2k	409888	emscan-0827	4.91	0	1.003	211	0		13011		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	409888	emscan-0827	0.79	0	0.376	11	1		13008		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	415278	emscan-0827	32.72	0	0.987	11	1	23012	23012	TARGET	in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-mcp2k	415278	emscan-0827	5.47	0	1.065	11	1		23014		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-mcp2k	415278	emscan-0827	12.03	0	1.574	11	1	23037	23037	TARGET	in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	422851	emscan-0827	17.6	0	1.321	11	1		1023		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-nuecc48	433451	emscan-0827	7.47	0	6.004	11	1		4039		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	433451	emscan-0827	2.98	0	0.873	11	1		4041		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	437699	emscan-0827	11.27	0	1.308	11	1		11023		in_main_cluster	1	0	1	None
+work-pr121r1-dbgA-nuecc48	437699	emscan-0827	2.73	0	1.103	11	1		11025		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	444187	emscan-0827	58.6	0	1.204	11	1	19079	19079	TARGET	in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	444187	emscan-0827	46.67	0	1.532	11	1		19081		in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	444187	emscan-0827	52.45	0	1.091	11	1		19082	TARGET	in_main_cluster	1	1	0	None
+work-pr121r1-dbgA-nuecc48	447477	emscan-0827	6.5	0	2.116	11	1		11006		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-nuecc48	447477	emscan-0827	41.03	0	2.506	11	1		11019		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-mcp2k	475096	emscan-0827	16.95	0	1.592	11	1		26025		in_main_cluster	1	0	0	None
+work-pr121r1-dbgA-mcp2k	475096	emscan-0827	10.23	0	1.059	11	1		26036		in_main_cluster	0	0	0	None
+work-pr121r1-dbg141-mcp2k	475778	emscan-0828-agent5	19.57	0	1.248	11	1		4000		in_main_cluster	1	0	0	correct
+work-pr121r1-dbg141-mcp1k	486247	emscan-0828-agent5	2.37	0	0.999	11	1		7001		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	486247	emscan-0828-agent5	3.11	0	1.116	11	1		7003		in_main_cluster	0	0	1	correct
+work-pr121r1-dbg141-mcp1k	486687	emscan-0828-agent5	2.35	0	1.933	11	1		20068		in_main_cluster	0	0	0	correct
+work-pr121r1-dbg141-mcp1k	489327	emscan-0828-agent5	22.55	0	1.292	11	1	19005	19005	OUT	in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbgA-nuecc48	489330	emscan-0827	6.65	0	6.171	11	1		4019		in_main_cluster	0	0	0	None
+work-pr121r1-dbgA-nuecc48	489330	emscan-0827	6.85	0	1.045	11	1		4020		in_main_cluster	0	0	1	None
+work-pr121r1-dbg141-mcp2k	499423	emscan-0828-agent5	29.54	0	1.094	11	1	11045	11045	TARGET	in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	499577	emscan-0828-agent5	17.53	0	1.236	11	1	13009	13009	TARGET	in_main_cluster	1	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	499577	emscan-0828-agent5	21.8	0	1.062	11	1		13030		in_main_cluster	0	0	1	over-clustered
+work-pr121r1-dbg141-mcp2k	499577	emscan-0828-agent5	105.02	1	1.03	13	0		13031		in_main_cluster	1	0	0	over-clustered
+work-pr121r1-dbg141-mcp2k	500083	emscan-0828-agent5	13.46	0	1.57	11	1		3002		in_main_cluster	1	1	0	correct
+work-pr121r1-dbg141-mcp2k	500083	emscan-0828-agent5	5.58	0	0.698	11	1		3008		in_main_cluster	0	0	0	correct
+work-pr121r1-dbgA-ncpi0	506746	emscan-0827	8.81	0	1.154	11	1		21067		in_main_cluster	0	0	1	None
+work-pr121r1-dbgA-ncpi0	506746	emscan-0827	8.28	0	0.919	11	1		21149		in_main_cluster	0	0	1	None

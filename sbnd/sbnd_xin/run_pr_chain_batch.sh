@@ -384,6 +384,12 @@ for _pr120 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr120 _env _key _val
+# doc pr/121 round 1 -- examine_shower_1 dedup re-home (348471 orphaning).
+# Bool tri-state (unset = cfg default, 1 = force on, 0 = force off).
+_val=${SBND_SHOWER_EX1_DEDUP_REHOME:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=false")
+unset _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
 for _d74 in \
@@ -1589,6 +1595,19 @@ fi
 [ -n "${SBND_DUAL_CHAIN_TRANSFER_MAX:-}" ] && CATH_TLA+=(--tla-code "dual_chain_transfer_max=${SBND_DUAL_CHAIN_TRANSFER_MAX}")
 [ -n "${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP:-}" ] && CATH_TLA+=(--tla-code "dual_chain_allow_cluster_swap=${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP}")
 [ -n "${SBND_DUAL_CHAIN_VTX_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dual_chain_vtx_weight=${SBND_DUAL_CHAIN_VTX_WEIGHT}")
+
+# doc 84 round 1: long-muon chain + MCS knobs.  EMPTY = no TLA = job defaults
+# (P1/P5 flip with the doc 84 round 1 production commit; P2/P3 HOLD OFF).
+# Env: SBND_LONG_MUON_RANGE_FALLBACK=<0|1> SBND_LONG_MUON_ANGLE_RELAX=<0|1>
+#      SBND_LONG_MUON_ANGLE_RELAX_DEG=<deg> SBND_LONG_MUON_STUB_BRIDGE_LEN=<cm>
+#      SBND_MCS_MUON_SOURCE=<pf_muon|long_muon|longest_segment|long_muon_else_pf>
+#      SBND_MCS_RANGE_COMPARATOR_CHAIN=<0|1>
+[ -n "${SBND_LONG_MUON_RANGE_FALLBACK:-}" ] && CATH_TLA+=(--tla-code "long_muon_range_empty_chain_fallback=$([ "${SBND_LONG_MUON_RANGE_FALLBACK}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_ANGLE_RELAX:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_long=$([ "${SBND_LONG_MUON_ANGLE_RELAX}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_ANGLE_RELAX_DEG:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_deg=${SBND_LONG_MUON_ANGLE_RELAX_DEG}")
+[ -n "${SBND_LONG_MUON_STUB_BRIDGE_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_stub_bridge_len=${SBND_LONG_MUON_STUB_BRIDGE_LEN}")
+[ -n "${SBND_MCS_MUON_SOURCE:-}" ] && CATH_TLA+=(--tla-str "mcs_muon_source=${SBND_MCS_MUON_SOURCE}")
+[ -n "${SBND_MCS_RANGE_COMPARATOR_CHAIN:-}" ] && CATH_TLA+=(--tla-code "mcs_range_comparator_chain=$([ "${SBND_MCS_RANGE_COMPARATOR_CHAIN}" = 0 ] && echo false || echo true)")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

@@ -1,0 +1,14 @@
+# doc pr/121 round 1 A/B index -- OFF 5e51037e-72e9-44ca-b42e-f3049f2e21c0 / ON cfe993ce-3da4-4a57-8f3b-790af0a9536d
+# OFF = current SBND production (work-pr121r1-off141-mcp1k); ON = shower_ex1_dedup_rehome (work-pr121r1-on141-mcp1k)
+# 1 event: the knob's complete firing set over BOTH manifests (98-set 196/196 + 141-set: only this event diverges;
+#   nusel identical, main vertex identical, owned segments net +12, 0 events lose energy)
+# Open shower_track-global: colour = shower membership.  BEFORE (=doc 115 sec 17.7): the 352.6 MeV shower's
+#   12 EM segments render UNOWNED (shower_id=-1, the examine_shower_1 dedup erased their 13-member shower)
+#   and the leading EM object is the 92.0 MeV remnant 37017.  AFTER: one 427.8 MeV shower 60026 holds both
+#   sides (ex-60026 members + the 63050 side the scanner marked IN); only the benign proton stem 12052/12054
+#   stays unowned (detach_track_stem, same as the pre-pass4 reconstruction).
+# bee_idx	event	status
+0	348471	RESCUED: qF1 0.205 -> 0.895 vs emscan-0828-agent5 marks (scan-epoch shower was 0.932 and verdict
+	was already "under-clustered" with 63050 marked IN -- the fix lands ABOVE restore by merging the 63050
+	side; the 0.895-vs-0.932 delta is the 63050-side companion segs 31011/39019/63051 the marks never
+	enumerated, plus the still-unmerged IN-mark 38018, pre-existing under-clustering untouched by this knob)

@@ -1432,6 +1432,10 @@ the links scroll out of this document.
   guard.** It is the only source of loss measured here, and the sharp half of it
   is narrow: one event, one splice, 12 orphaned segments. The two ownership
   transfers are a separate and much softer question.
+  **→ Resolved in doc [pr/121](121_ex1-dedup-orphaning.md)**: the orphaning is
+  not the splice but the examine_shower_1 accept-branch dedup erasing a
+  13-member shower un-re-homed; `shower_ex1_dedup_rehome` SBND PRODUCTION ON
+  2026-08-28 (348471 qF1 0.205→0.895, only firing event in 239).
 - **(b)–(d) unchanged.** The π⁰ reporting defect and pr/91 P2 are untouched by
   this round.
 - The **over-reach line** (how far past its own body a shower may reach) is
