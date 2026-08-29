@@ -1,6 +1,6 @@
 # doc pr/128 — PF/kine completeness: reconstructed objects that reach no output
 
-**Status: OPEN (measurement complete, implementation in progress).**
+**Status: SHIPPED — 4 knobs SBND PRODUCTION ON 2026-08-29** (toolkit `1ed308de`, `e6fb0ebd`, `b0e91449` + the cfg flip).
 
 Owner, 2026-08-29, opening this round:
 
@@ -227,6 +227,80 @@ terms separate the 137238 class from the 72786 class. Class B is unaffected —
 its material is the main cluster's own, at gap 0.07 cm, and its recovery is
 exact.
 
+## 3.2 The census: does the continuation geometry separate the two classes?
+
+`WCT_PFNEAR_DEBUG=1` prints one line per candidate **from the code path the
+knob uses**, so the census and the knob cannot use different definitions
+(the pr/127 `WCT_SCCC_DEBUG` pattern). The tape arms
+`work-pr128r1-dbg{98,141}-*` also serve as the knob-off gate, which proves
+the tape is byte-neutral: **478/478 archives byte-identical**, 0 missing
+(98-set 196, 141-set 282).
+
+Class A: 13 candidates in 8 events reach the geometry test. Sorted by kink —
+
+| event | seg | pdg | len | KE | gap | cand_end | ref_end | **kink** | d(ν vtx) |
+|---|---|---|---|---|---|---|---|---|---|
+| 392901 | 127032 | 13 | 38.5 | 118.5 | 0.00 | 0.00 | 0.00 | **4.8** | 102.9 |
+| 55740 | 22014 | 13 | 123.1 | 300.6 | 0.00 | 0.00 | 0.00 | **13.0** | 61.8 |
+| 94392 | 45030 | 13 | 46.8 | 137.2 | 0.00 | 0.00 | 0.00 | **13.3** | 44.5 |
+| 171572 | 10008 | 13 | 125.1 | 304.8 | 0.00 | 0.00 | 0.00 | 38.4 | 20.4 |
+| 393505 | 15004 | 13 | 63.4 | 174.8 | 0.00 | 0.00 | 0.00 | 41.0 | 68.9 |
+| 318769 | 19001 | 13 | 39.8 | 121.5 | 0.00 | 0.00 | 0.00 | 42.0 | 114.3 |
+| **72786** | 9006 | 13 | 114.3 | 281.7 | 8.44 | **47.07** | 0.00 | 43.5 | 35.3 |
+| 399118 | 16017 | 2212 | 108.8 | 481.0 | 0.00 | 0.00 | 0.00 | 47.3 | 4.9 |
+| 393505 | 15005 | 13 | 131.4 | 318.4 | 28.74 | 0.00 | 0.00 | 58.8 | 77.1 |
+| **72786** | 9008 | 211 | 64.7 | 187.5 | 0.00 | 0.00 | 0.00 | 89.5 | 38.3 |
+| **72786** | 9004 | 13 | 143.5 | 344.0 | 2.37 | **52.20** | 0.00 | 93.7 | 46.6 |
+| **72786** | 45038 | 13 | 108.3 | 268.9 | 0.00 | 0.00 | 0.00 | 108.3 | 78.4 |
+| 393505 | 15013 | 13 | 108.5 | 268.7 | 0.00 | 0.00 | 0.00 | 137.3 | 74.4 |
+
+Operating points:
+
+| (end_tol, kink, gap) | candidates | events | Σ KE | worst single event |
+|---|---|---|---|---|
+| proximity only | 11 | 8 | 2707.5 | 72786 **+800.5 MeV** |
+| 20 cm / 45° / 5 cm | 6 | 6 | 1157.3 | 171572 +304.8 |
+| **10 cm / 30° / 5 cm (default)** | **3** | **3** | **556.3** | 55740 +300.6 |
+| 5 cm / 20° / 5 cm | 3 | 3 | 556.3 | 55740 +300.6 |
+| 5 cm / 10° / 5 cm | 1 | 1 | 118.5 | 392901 +118.5 |
+
+**The separation is real.** All four 72786 cosmics are rejected at the
+default — two on `cand_end` (47.1 and 52.2 cm: the displayed track brushes
+the candidate's *middle*, the signature of a crossing) and two on kink (89.5°
+and 108.3°). What survives is 3 candidates in 3 events, every one of them
+end-to-end at gap 0.00 with a kink under 14°: 392901 (118.5 MeV), 55740
+(300.6 MeV), 94392 (137.2 MeV). There is a 25° margin between the last
+accepted candidate (13.3°) and the first rejected one (38.4°), so the
+operating point is not perched on an edge.
+
+Two candidates rejected at the default deserve a note rather than a knob
+change: **171572** (kink 38.4°) is already emitted by `pf_orphan_guard_freed`
+— see the double-emission guard below — and **399118**'s 108.8 cm proton sits
+4.9 cm from the ν vertex but kinks 47.3° away from what it touches, so it is
+not a continuation of it.
+
+**Double-emission guard (found here, not by a test).** `pf_orphan_guard_freed`
+emits its nodes *without* inserting into `used_segs`, so its segments were
+still visible to this pool — 171572's 125.1 cm muon is in the census at gap
+0.00. At a laxer operating point the knob would have drawn it twice. The PF
+pool now skips `kPass4GuardFreed` segments while that knob is on. The kine
+side was already safe: `kine_count_guard_freed` inserts into `used_segments`
+and runs first.
+
+Class B at the 20 cm default: **6 showers in 4 events, 484.1 MeV.**
+
+| event | node | pdg | KE | length | gap to main cluster |
+|---|---|---|---|---|---|
+| 105074 | 23005 | 13 | 215.1 | 82.9 cm | 0.07 cm |
+| 105074 | 23004 | 13 | 162.0 | 58.2 cm | 0.08 cm |
+| 318769 | 113062 | 11 | 44.0 | 5.9 cm | 2.59 cm |
+| 179048 | 17003 | 11 | 34.2 | 9.9 cm | 0.04 cm |
+| 396222 | 90166 | 13 | 26.3 | 8.4 cm | 13.74 cm |
+| 396222 | 79155 | 11 | 2.5 | 0.7 cm | 10.13 cm |
+
+The next shower out is at 20–50 cm; the 490 far ones (≥50 cm, 2814 MeV) stay
+skipped, as the owner requires.
+
 ## 4. Known-divergence check (M15)
 
 The `same_cluster` filter in the orphan pools carries
@@ -312,12 +386,105 @@ assertions**.
 
 ## 7. Validation
 
-*(pending — knob-off byte-identical gate on both manifests, per-event
-ΔEnu decomposition, movers, nusel, Bee A/B)*
+**Knob off — byte-identical.** `pr85_hash_gate.py`, arms
+`work-pr128r1-dbg{98,141}-*` (which also carry the `WCT_PFNEAR_DEBUG` tape, so
+this simultaneously proves the tape is byte-neutral) vs the production arms
+`work-pr125r1-flipS{98,141}-*`:
+
+| manifest | sample | compared archives | result |
+|---|---|---|---|
+| 98 | mcp1k / mcp2k / ncpi0 / nuecc48 | 28 / 34 / 38 / 96 | PASS |
+| 141 | mcp1k / mcp2k | 104 / 178 | PASS |
+
+**478 / 478 archives byte-identical, 0 missing.** (Compared-archive counts are
+quoted deliberately — a pr/127 gate printed PASS while comparing zero.)
+Compiled config identical on 75/75 events with the arm path normalised, new
+keys absent; `doctest_clus_knob_defaults` 235/235.
+
+**Knob on — footprint.** `work-pr128r1-on{98,141}-*` vs production: of the same
+478 archives, exactly **six differ**, in six events — 55740, 105074, 179048,
+318769, 392901, 396222. `pctree-pr` identical everywhere.
+
+**Knob on — energy accounting** (the owner's metric; note the archive gate
+cannot see this, since `kine_reco_Enu` lives in the calib dump, not in an
+archive). All 239 events compared:
+
+| event | class | Enu off → on | Δ | added particles | removed |
+|---|---|---|---|---|---|
+| 55740 | A | 488.5 → 894.7 | **+406.2** | mu- 300.6 (+105.7 rest mass) | none |
+| 105074 | B | 1188.7 → 1565.8 | **+377.1** | mu- 215.1, mu- 162.0 | none |
+| 392901 | A | 2003.9 → 2228.1 | **+224.2** | mu- 118.5 (+105.7 rest mass) | none |
+| 318769 | B | 782.7 → 826.6 | +43.9 | e- 43.9 | none |
+| 179048 | B | 1221.7 → 1255.9 | +34.2 | e- 34.2 | none |
+| 396222 | B | 3802.2 → 3831.0 | +28.8 | mu- 26.3, e- 2.5 | none |
+
+**+1114.4 MeV over 6 of 239 events, and nothing is removed anywhere** — the
+per-event multiset diff of the kine particle list is the double-count test,
+and it is clean on all six. The `+105.7` on the two class-A events is the muon
+rest-mass term every counted muon receives.
+
+**Double count actually caught.** 94392's 46.8 cm muon passed the class-A
+geometry (kink 13.3°) but is *not* in the footprint: it is already emitted by
+`pf_orphan_guard_freed` and already counted by `kine_count_guard_freed`.
+Without the §3.2 guard the knob would have drawn and counted it twice. This is
+the one place the owner's "do not double count" instruction changed the code.
+
+**Physics checks.**
+
+- Vertex movers (`pr90_movers.py --tags vtx105`), all six sample arms:
+  **0 movers > 0.05 cm, 0 ADVERSE**, 159 labelled vertices compared.
+- `nusel-evt*.tsv`: **239/239 byte-identical**.
+- Main vertex identical on all six moved events.
+- Reported, not tuned: `numu_score` moves on four of the six —
+  105074 −4.01 → −3.55, 179048 2.857 → 2.805, 318769 0.156 → 0.120,
+  55740 0.259 → **1.099**. The 55740 rise is the expected direction (a
+  300 MeV muon joined the candidate). No `nue_score` field changed. As in
+  pr/127 §3.2, a byte-identical `nusel` table does not by itself prove a νe
+  cut is unaffected — it does not carry `nue_score`.
+- **Sentinel suite** (`pr127_sentinels.py`) on the ON arms: **10 PASS, 0 FAIL,
+  4 SKIP** — no previously shipped fix regressed.
+
+**Flip + flip-equivalence.** Four knobs set in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`; compiled-config proof
+post-flip shows all four keys true with no env. `work-pr128r1-flipchk-mcp2k`
+(post-flip config, **no** env, 6-event subset) vs `work-pr128r1-on141-mcp2k`:
+**PASS, 12/12 archives byte-identical** (12 compared, 83 unpaired = events
+outside the subset).
+
+**Owner package.** `bee/pr128r1/` — 7 events, the six fires plus 72786 as the
+cosmic control. Built and annotated; **not uploaded** (outward-facing,
+CLAUDE.md §5.6).
 
 ## 8. Sentinels
 
-Every knob here carries a distance or length threshold tuned to measured
-geometry, i.e. exactly the exposure class doc pr/127 §5.1 built the sentinel
-registry for. New entries go into `scripts/pr127_sentinels.py` in the same
-commit as the flip.
+Every knob here carries a distance or angle threshold tuned to measured
+geometry — exactly the exposure class doc pr/127 §5.1 built the registry for.
+Three entries added to `scripts/pr127_sentinels.py` in the flip commit:
+
+| event | asserts |
+|---|---|
+| 105074 | a `mu-` ≥ 180 MeV in PF **and** a `pr128 pf-conn4-near: KEEP` line |
+| 55740 | a `mu-` ≥ 250 MeV in PF **and** a `pr128 pf-orphan-near-cross-cluster` line |
+| **72786** | **`log_absent`** that line, **and** no `mu-` ≥ 250 MeV |
+
+The third is the one that matters most: it is a *negative* sentinel guarding
+the cosmic rejection. The event's legitimate maximum `mu-` is 238.8 MeV while
+its four cosmic candidates are 268.9 / 281.7 / 344.0 MeV, so the 250 MeV line
+sits between the two populations. Any future loosening of the continuation
+terms that re-admits them fires it. A new assertion kind, `log_absent`, was
+added to the registry for this.
+
+## 9. Open / deferred
+
+- The class-A operating point admits a continuation of a **displayed track**,
+  not necessarily of the ν vertex: 392901's muon sits 102.9 cm from the vertex.
+  That is the judgement call in this round and it is idx 2 of the Bee set.
+- 399118's 108.8 cm proton sits 4.9 cm from the ν vertex but kinks 47.3° from
+  what it touches, so it is rejected as a non-continuation. If the owner reads
+  it as a real daughter, the predicate needs a vertex-proximity arm, not a
+  looser kink (which would re-admit 72786's cosmics).
+- The `same_cluster` gate still hides the **audit line** as well as the pools,
+  so the general cross-cluster population remains uncounted by design. Only the
+  continuation class is now visible.
+- 318769 appears both here and in the pr/124 worst-`q_miss` rows; whether this
+  fire explains part of that residual is not measured.

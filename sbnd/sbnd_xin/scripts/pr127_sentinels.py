@@ -20,6 +20,7 @@ structural loss a dead fix causes):
   pf_node_lt   <name> <MeV>  EVERY PF node of that name is < MeV
   pf_contains  <text>        PF node text contains this substring
   pf_absent    <text>        ... does not
+  log_absent   <text>        the per-event run log does NOT contain <text>
   shower_max_ge <|pdg|> <MeV>  max kine_best over calib showers of that |pdg|
   enu_between  <lo> <hi>     kine_reco_Enu in [lo, hi] MeV
   nshowers     <lo> <hi>     len(calib showers) in [lo, hi]
@@ -85,6 +86,27 @@ SENTINELS = [
      [("pf_node_lt", "proton", 600.0), ("shower_max_ge", 11, 300.0)]),
     (315167, "pr/93 r4", "orphan confident track: the 150.7cm proton is counted + shown",
      [("pf_node_ge", "proton", 500.0)]),   # not in the standard manifests -> SKIP
+    # ---- doc pr/128 (PF/kine completeness).  Both knobs carry a distance or
+    # angle threshold tuned to measured geometry, the exposure class this
+    # registry exists for -- and pr/128's own census found a pr/123 knob had
+    # started overlapping a new pool, so overlap is watched here too.
+    (105074, "pr/128 class B", "conn4_near: the two main-cluster pdg-13 showers are shown + counted",
+     # pre-fix: both invisible (pr/74 conn3_unreachable stamped them conn-4 at
+     # anchor_dis 119 cm); post-fix mu- 215 + mu- 162, Enu 1188.7 -> 1565.8.
+     [("pf_node_ge", "mu-", 180.0), ("log_contains", "pr128 pf-conn4-near: KEEP")]),
+    (55740, "pr/128 class A", "near cross-cluster track: the 123.1cm muon joins PF + kine",
+     # pre-fix: absent from both (cross-cluster, score 100, so neither the pr/93
+     # confident-track class nor the pr/123 flag class reaches it).
+     # post-fix mu- 300 MeV under a pseudo-neutron; Enu 488.5 -> 894.7.
+     [("pf_node_ge", "mu-", 250.0), ("log_contains", "pr128 pf-orphan-near-cross-cluster")]),
+    (72786, "pr/128 class A", "CONTROL: the continuation terms keep the cosmics OUT",
+     # This event's four candidates come from two large off-vertex clusters
+     # (148 and 102 cm extent, 35 and 77 cm off the vertex).  On proximity
+     # alone they were admitted and put +1151 MeV on a 701 MeV candidate.  A
+     # future loosening that re-admits them fires this line.
+     # The legit maximum mu- here is 238.8 MeV; the four cosmics are 268.9,
+     # 281.7 and 344.0 MeV, so 250 sits between the two populations.
+     [("log_absent", "pr128 pf-orphan-near-cross-cluster"), ("pf_node_lt", "mu-", 250.0)]),
 ]
 
 
@@ -161,11 +183,12 @@ def check(arm, event, assertion):
         n = len(j["showers"]) if j else None
         ok = n is not None and assertion[1] <= n <= assertion[2]
         return ok, "showers=%s want [%d, %d]" % (n, assertion[1], assertion[2])
-    if kind == "log_contains":
+    if kind in ("log_contains", "log_absent"):
         pat = os.path.join(arm, "pr_evt%d" % event, "*.log")
         hit = any(assertion[1] in open(f, errors="replace").read()
                   for f in glob.glob(pat))
-        return hit, "log_contains '%s'" % assertion[1]
+        ok = hit if kind == "log_contains" else not hit
+        return ok, "%s '%s'" % (kind, assertion[1])
     return False, "unknown assertion %s" % kind
 
 
