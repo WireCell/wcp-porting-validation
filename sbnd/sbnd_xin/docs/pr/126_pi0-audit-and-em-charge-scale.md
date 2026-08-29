@@ -46,6 +46,10 @@ python3 scripts/pr126_pi0_peak.py --tsv docs/pr/pr126-pi0-peak.tsv
 python3 scripts/pr126_pi0_peak.py --compare     # every estimator side by side
 python3 scripts/pr126_pi0_peak.py --validate    # the truth-known toy bias study
 
+# sec 4g -- the figure (annotations are read from the peak TSV, never recomputed)
+python3 scripts/pr126_pi0_plot.py --selftest
+python3 scripts/pr126_pi0_plot.py --png docs/pr/126_pi0-mass.png
+
 # sec 4f / sec 5 -- identification census
 python3 scripts/pr126_pi0_census.py --tsv docs/pr/pr126-pi0-census.tsv
 # ... and the same census re-pointed at the pr/125 production point (sec 4f):
@@ -417,6 +421,9 @@ The **convention choice itself** is the dominant systematic, and it is not small
 | vertex chord (primary) | 19 | 137.7 | 0.816 |
 | shower axis | 21 | **142.6** | **0.845** |
 
+All of this is drawn — distributions, fit, conventions and the scale each cell
+implies — in the figure in §4g.
+
 ## 4b. E2 — untruncated offline enumeration: **measured-dead**
 
 Pre-registered: every EM-shower pair in all 239 events, the code's own
@@ -622,6 +629,45 @@ Window sensitivity of the chosen fit is ±3 MeV over [95,190] … [110,175].
 
 The sanity gate is doing real work: it throws out one cell rather than letting a
 tail-dragged fit into the table.
+
+### The plot
+
+![π⁰ invariant mass and the implied EM charge scale](126_pi0-mass.png)
+
+`scripts/pr126_pi0_plot.py --png docs/pr/126_pi0-mass.png`. Every annotated
+number is **read from `docs/pr/pr126-pi0-peak.tsv`**, never recomputed for the
+figure; `--selftest` re-derives all six cells through `pr126_pi0_peak.py`'s own
+estimator and fails on any disagreement beyond 1e-6, so the picture cannot
+drift from the table above it.
+
+How to read it — and what the drawing deliberately does **not** hide:
+
+* **(a)** is the primary cell. The red curve is the truncated-Gaussian ML drawn
+  **only over its own window [100,185]** and normalised to the **n_in = 15**
+  points the fit actually saw, not to all 19. Extending it across the tail, or
+  normalising to n, would draw the model over data the fit explicitly excludes.
+  All 19 are histogrammed and the excluded region is shaded, because that low
+  tail *is* the argument for the peak.
+* The **rug** under each histogram is the individual π⁰. At n = 19 the 10 MeV
+  bin width dominates the eye — which is precisely why the fit is unbinned.
+* The four excluded points are **67.2, 83.4, 97.9 and 207.3 MeV**: three low,
+  one high. The single high one is the only failure mode that can *raise* a
+  mass — a wrong pairing. Everything else is charge loss, and charge loss only
+  goes one way.
+* **(b)** is where the skew is blatant: mean 127.3, median 137.3, peak 140.6 on
+  the same 45 events.
+* **(c)** puts the two direction conventions side by side. The 7.3 MeV between
+  their peaks is the systematic §4c names, and it is **larger than the primary
+  cell's own statistical error** — which is why the honest range is 0.83–0.88
+  and not one digit.
+* **(d)** is the same six cells in fudge-factor units against the 0.80 in force
+  and the ≳0.84 recommended. Open markers are the shower-axis systematic, not
+  second measurements; the greyed row is the cell the sanity gate rejected,
+  drawn rather than dropped.
+
+The figure shows the **floor, not the answer**: the toys below put both
+estimators several MeV low against a tail this heavy, so the true peak — and
+the true correction — sit at or above what is drawn.
 
 ### The toys say both estimators are still biased LOW
 
@@ -976,6 +1022,8 @@ assumed:
 | `em_display/em114c-125flipchk141-manifest.tsv`, `em117-125flipchk98-manifest.tsv` | the pr/125 flipchk arms, for the refresh |
 | `scripts/pr126_pi0_peak.py` | §4g peak fit, estimator comparison, window scan, toy bias validation |
 | `docs/pr/pr126-pi0-peak.tsv` | the §4g table |
+| `scripts/pr126_pi0_plot.py` | the §4g figure; `--selftest` asserts every annotation against the peak TSV |
+| `docs/pr/126_pi0-mass.png` | the π⁰ mass distributions, the fit, the convention systematic and the implied scale |
 | `docs/pr/pr126-pi0-rescan.tsv` | §4h: the 109 scanned-but-unpaired events where a π⁰ pairing was possible |
 | `docs/pr/pr126-pi0-pairs.tsv` | the 830 E2 candidate pairs |
 | `em_display/pr126-pi0-manifest.tsv` | re-runnable manifest of the π⁰ subset |
