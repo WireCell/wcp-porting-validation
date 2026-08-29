@@ -48,6 +48,11 @@ python3 scripts/pr126_pi0_peak.py --validate    # the truth-known toy bias study
 
 # sec 4f / sec 5 -- identification census
 python3 scripts/pr126_pi0_census.py --tsv docs/pr/pr126-pi0-census.tsv
+# ... and the same census re-pointed at the pr/125 production point (sec 4f):
+python3 scripts/pr126_pi0_census.py \
+    --manifest141 em114c-125flipchk141-manifest.tsv \
+    --manifest98  em117-125flipchk98-manifest.tsv \
+    --tsv docs/pr/pr126-pi0-census-125.tsv
 ```
 
 Arms read (all pre-existing, none written): the **probe-armed knob-on** arms
@@ -534,6 +539,31 @@ the groups that change — not by this table alone.
 Which finder accepted the groups that *were* found (audit counters, §2.6):
 **76 by `id_pi0_with_vertex`, 0 by `id_pi0_without_vertex`.**
 
+### Refreshed at the pr/125 production point (toolkit `8b371920`)
+
+Re-run against `work-pr125r1-flipchk{98,141}-*` (`--manifest141/--manifest98`;
+the labels never move, M13). **Sections A and B above are byte-identical** —
+52 % exact, 72 % sharing a γ, same blocker breakdown — because none of the 50
+hand-paired π⁰ is in the flip's divergence set. That was predicted in the
+production-point note of §6 and is now measured, not assumed. Only the global
+counts move:
+
+| | pr/124 | pr/125 flip |
+|---|---|---|
+| events with ≥1 accepted π⁰ group | 69 (29 %) | **68 (28 %)** |
+| accepted groups | 76 | **75** |
+| accepted by `id_pi0_with_vertex` | 76 | **74** |
+| accepted by `id_pi0_without_vertex` | 0 | **1** |
+| `kine_pio_flag` = 1 / 2 / 0 | 164 / 2 / 73 | **163 / 3 / 73** |
+| `kine_pio_*` filled with NO accepted π⁰ | 97 | **98** |
+| `kine_pio_*` names a pair no group accepted | 26 | **25** |
+
+Path 1 lost two groups and Path 2 gained one — the single Path-2 acceptance
+being evt 396222 and its 1.4 cm vertex mutation (§2.6). Every conclusion in
+§2.5, §4f and §4g is unchanged; §2.5's headline is now "filled on 166 of 239
+events while only 68 have a π⁰", and the without-vertex path is **no longer
+dormant** — one acceptance rather than zero.
+
 The single largest cause is **not** a π⁰ cut. It is upstream PID: a photon typed
 211/2212 is a *track*, never enters `map_vertex_to_shower` as a shower, and can
 therefore never be paired. That places the dominant π⁰ inefficiency squarely in
@@ -920,9 +950,12 @@ assumed:
   re-selection table can each move by up to those 7 groups / 4 events. Re-run
   `pr126_pi0_census.py` against the post-flip arms to refresh them; §4's
   conclusions do not depend on them.
-  The flip has since landed (toolkit `8b371920`) and its divergence set is
-  confirmed as exactly {94392, 52693, 77328, 173819, 396222, 415278, 37112};
-  the §2.6 update records the one substantive π⁰ consequence.
+  The flip has since landed (toolkit `8b371920`), its divergence set is
+  confirmed as exactly {94392, 52693, 77328, 173819, 396222, 415278, 37112},
+  and **the census has been refreshed against it** — see the table in §4f. The
+  prediction held: sections A and B are byte-identical and only the global
+  counts move (76 → 75 groups). The §2.6 update records the one substantive
+  π⁰ consequence.
 * Worth a look when that flip lands: **37112 is the owner's *"no pi0???"* scan
   note** (§3) and it currently *does* carry one accepted π⁰ group, at
   `kine_pio_mass` 281 MeV. `shower_samevtx_track_absorb` fires on exactly two
@@ -938,7 +971,9 @@ assumed:
 | `scripts/pr126_pi0_census.py` | §4f identification census, the §2.5 global counts, and the §2.6 finder-type audit-counter pass |
 | `docs/pr/pr126-pi0-events.tsv` | 50 rows: hand pair, energies, both conventions, reco groups, completeness |
 | `docs/pr/pr126-pi0-mass.tsv` | per-event masses on all three energy hypotheses |
-| `docs/pr/pr126-pi0-census.tsv` | per-event match class and blocker |
+| `docs/pr/pr126-pi0-census.tsv` | per-event match class and blocker (pr/124 point) |
+| `docs/pr/pr126-pi0-census-125.tsv` | the same at the pr/125 production point |
+| `em_display/em114c-125flipchk141-manifest.tsv`, `em117-125flipchk98-manifest.tsv` | the pr/125 flipchk arms, for the refresh |
 | `scripts/pr126_pi0_peak.py` | §4g peak fit, estimator comparison, window scan, toy bias validation |
 | `docs/pr/pr126-pi0-peak.tsv` | the §4g table |
 | `docs/pr/pr126-pi0-rescan.tsv` | §4i: the 109 scanned-but-unpaired events where a π⁰ pairing was possible |

@@ -54,7 +54,24 @@ def classify(ev, rec, dump):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tsv")
+    ap.add_argument("--manifest141", help="override the 141-set manifest (e.g. a later production point)")
+    ap.add_argument("--manifest98", help="override the 98-set manifest")
     a = ap.parse_args()
+    # Repointing the census at a NEW production point: the arms and the manifest
+    # change, the labels never do (M13).  SETS is (set, tag, m_scan, p_scan,
+    # m_cur, p_cur, buckets); only m_cur moves.  The prep sidecar is not read by
+    # this script -- groups come from showers[].pio_id and kine from the dump --
+    # so a manifest alone is enough to re-point it.
+    if a.manifest98 or a.manifest141:
+        newsets = []
+        for t in SEL.SETS:
+            t = list(t)
+            if t[0] == "98" and a.manifest98:
+                t[4] = a.manifest98
+            if t[0] == "141" and a.manifest141:
+                t[4] = a.manifest141
+            newsets.append(tuple(t))
+        SEL.SETS = newsets
 
     rows = []
     match = Counter()
