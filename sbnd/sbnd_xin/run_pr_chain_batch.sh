@@ -1634,6 +1634,13 @@ fi
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_GAP}")
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE}")
+# doc 84 round 4 -- the three admission misses (G1 lever / G2 track partner /
+# G3 short-gap waiver).  EMPTY = cfg default = C++ legacy.
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_LEVER:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_lever=${SBND_LONG_MUON_CATHODE_BRIDGE_LEVER}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_track_partner=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_len=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
