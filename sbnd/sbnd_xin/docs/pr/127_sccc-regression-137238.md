@@ -400,18 +400,44 @@ Named residual classes carried forward (each already measured):
 7. PID as the top π⁰ blocker (pr/126 §2) — and this round's junk 3.25 MeV
    pairing (§3.2) says the finder also wants a minimum-partner-energy floor.
 
-Structural blind spots this round exposed (measurement first, no knob yet):
+Structural blind spots this round exposed — **now measured**, offline over
+the same 239 events (`scripts/pr127_blindspot_census.py`,
+`docs/pr/pr127-blindspot-census.tsv`; no new runs, no C++). The census
+compares every segment/shower in the calib dump against the ids the PF tree
+actually emits, and scores each miss by its distance to the displayed
+candidate — a cosmic the candidate never touched is *correctly* absent, so
+only the small-gap tail is a defect.
 
-8. **Cross-cluster invisibility**: every PF orphan pool *and* the
-   `pr65 pf-orphan-audit` log line is `same_cluster`-gated
+8. **Cross-cluster invisibility** (the 137238 class, generalized). Every PF
+   orphan pool *and* the `pr65 pf-orphan-audit` line is `same_cluster`-gated
    (MultiAlgBlobClustering.cxx:1852, :2331, :2398), so an object in another
-   cluster that is not nv-bridged is neither displayed nor **counted**. The
-   cheap next step is to widen the AUDIT LOG only (byte-neutral, no
-   emission) and count how many events hide a cross-cluster track — turning
-   an unknown into a number before anyone proposes a fix.
+   cluster that is not nv-bridged is neither displayed nor **counted**.
+   Measured: **29 track segments in 18 / 239 events** are missing from the
+   PF tree; **21 of them lie within 10 cm of something the tree does show**,
+   19 of those are ≥ 10 cm long, and 8 are ≥ 50 cm. Many sit at
+   **gap = 0.00 cm** — touching a displayed object. Worst offenders:
+
+   | event | missing | length | gap to displayed |
+   |---|---|---|---|
+   | 72786 | µ, µ, µ, π | 143.5 / 114.3 / 108.3 / 64.7 cm | 2.4 / 8.4 / 0.0 / 0.0 cm |
+   | 55740 | µ | 123.1 cm | 0.00 cm |
+   | 399118 | p | 108.8 cm | 0.00 cm |
+   | 393505 | µ, µ | 131.4 / 63.4 cm | 28.7 / 0.00 cm |
+   | 318769 | µ, p | 39.8 / 21.1 cm | 0.00 cm |
+
+   Control (same test *inside* the main cluster, where the orphan machinery
+   already applies): **1 object, 5–10 cm, in 1 event** — so this is
+   specifically the cross-cluster gate, not general PF-tree leakage.
+   Cross-link worth noting: 318769 is also one of the worst label-metric
+   rows (qF1 0.560, q_miss 2.7e6) — for some events the under-clustering
+   residual and the cross-cluster blindness may be the same defect.
+
 9. **conn-4 showers are dropped from PF and kine** (`conn4_skip_segs`).
-   137238's own 51.1 MeV Michel-like shower 7009 is one of them. Same
-   treatment: count them first.
+   Measured: **514 showers in 179 / 239 events, 3514 MeV total**. Mostly
+   crumbs (493 below 5 cm), but **27 events drop more than 20 MeV**, with
+   single drops of 215.1 / 193.4 / 163.1 / 162.0 / 132.0 MeV (105074 ×2,
+   287007, 176533, 410008). Because the drop is from kine as well as PF,
+   that energy is missing from `kine_reco_Enu`.
 
 Measured **dead**, do not reopen: P2 / charge-continuity merge (pr/118),
 the expel predicate (pr/119), recognition-by-features (pr/122, pr/124
