@@ -1507,7 +1507,9 @@ Per-knob arms over the same 10 events, `<arm>` vs `sent1`:
 | `all` | exactly those three | — |
 
 **392901 stays unbridged in every arm** — the EM exclusion survives, as it
-must.  The four round-2 successes are untouched.
+must.  (The claim that the round-2 successes are untouched is *not* supported
+by this arm — `popb_arm.sh` runs the ten *unclaimed* pairs and contains none
+of them.  It is gated separately in R4.6a.)
 
 Effects (`sent1` → `all`), all `bad_path=false`:
 
@@ -1611,3 +1613,58 @@ knob values from production's own sentinel, never from the probe.
   already selected) while gaining 567 MeV in the range kinematics.  The MCS
   muon-selection order and the bridge now disagree about which half is "the"
   muon; harmless here, worth a look if a future case has both halves long.
+
+## R4.6a Fire-set gate — the events the bridge ALREADY bridges
+
+The gates in R4.6 structurally cannot see the population most exposed to these
+knobs: the events where the pass *already* fires.  All three knobs can perturb
+one while every other gate stays green.  `lever` recomputes `into` for **every**
+collected end, so it moves both angle tests wherever the pass runs — and not
+monotonically (493659 degrades a_gap 25.2→26.3, a_tan 41.9→58.5 as the lever
+grows), so an already-firing event could silently *stop*.  `track_partner` and
+`short_gap` both enlarge the pool feeding a best-gap **minimiser**
+(`if (gap >= best_gap) continue; … best = &pe`), so a newly-admitted closer
+partner could displace the incumbent — the event still fires, to a different
+partner.
+
+Only 1 of round 3's 10 production fire events (321767) is in any gate manifest,
+so the other 9 were ungated.  Arms `work-d84r4-fire{off,on}-*` over all ten
+(53793, 77978, 168448, 177536, 281214, 287555, 321767, 391766, 398181, 478880);
+`fireoff` pins the five params to their C++ legacy values, `fireon` runs the
+shipped flip:
+
+| check | result |
+|---|---|
+| archives | **PASS 20/20** byte-identical (8 mcp1k + 12 mcp2k) |
+| `nusel` | **10/10** identical |
+| bridge line, event by event | **all 10 unchanged** — same branch, same partner, same nseg/len/gap/reseat |
+
+e.g. 53793 `merge shower sid=0 (mu_len=154.1cm) <- sid=2 (mu_len=240.9cm)
+gap=13.9cm`, 177536 `absorb bare chain … len=98.1cm gap=9.4cm reseat=1`,
+77978 `… len=23.5cm gap=6.5cm reseat=1` — identical on both sides.
+
+`nusel` on the three movers themselves (`sent1` vs `flipchk`) is also
+**3/3 identical**, which is the first direct test of the rounds-2-to-4 scope
+claim ("the bridge is shower-only, so nusel stays put") on events where the
+bridge actually fires *and* the kinematics move — 67026's shower id changes
+35011 → 17001 and its energy 181.7 → 748.6 MeV with nusel untouched.
+
+Provenance note: the fire-set pair ran after a concurrent session's install
+(`libWireCellClus.so` 06:37:02, their pr/125 knobs default-OFF).  Both sides of
+the pair used that same library, so the comparison still isolates the round-4
+knobs; every other gate in R4.5/R4.6 completed on the 06:03:56 build.
+
+## R4.9 Bee A/B for the three rescues (uploaded, owner-authorized)
+
+`bee/d84r4/d84r4-{before,after}.zip`, index `bee/d84r4/d84r4.index.txt`.
+BEFORE = `work-d84r4-sent1-*` (knobs off, byte-identical to pre-flip
+production); AFTER = `work-d84r4-flipchk-*` (the shipped jsonnet flip).
+
+- BEFORE: https://www.phy.bnl.gov/twister/bee/set/d6163f8a-f66f-42a2-bbbf-f5c8c9ad28a6/event/list/
+- AFTER:  https://www.phy.bnl.gov/twister/bee/set/da1834c6-9b05-4b9e-b17b-f99a8edc4132/event/list/
+
+| idx | event | guard | what to look for |
+|---|---|---|---|
+| 0 | 172794 | G1 lever | the muon → neutron → muon chain collapses to one muon; +68.6 cm |
+| 1 | 347890 | G2 track_partner | the pi+ stub becomes part of the muon (retyped 13), carrier gone |
+| 2 | 67026 | G3 short_gap | the root-attached neutron → muon subtree joins the long muon; 181.7 → 748.6 MeV |
