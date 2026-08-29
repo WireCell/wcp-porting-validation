@@ -347,3 +347,10 @@ validated knob (peer recommendation, concurred). Also: 396222 has no
 scanner π⁰ verdict (pr/126 §4i rescan list, as do 415278/176502/37112),
 so its Enu shift is a movement, not yet a regression — π⁰-pairing
 questions added to the Bee rows.
+
+**§5.3 π⁰-census cost (pr/126 refresh vs flipchk, wcp cc878ba4)**: the flip
+costs exactly one accepted π⁰ group across 239 events (76→75: Path 1 −2 —
+the mechanism by which 396222 fell through — Path 2 +1); kine_pio_flag
+164/2/73 → 163/3/73. The pr/126 hand-scan identification numbers (52%
+exact-pair, 72% shared-γ, blocker breakdown) are EXACTLY unchanged — none
+of the 50 hand-paired π⁰ is in the divergence set, as predicted pre-flip.
