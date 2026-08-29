@@ -1,0 +1,679 @@
+# Doc 84 — long-muon chain construction and the MCS delta-ray question: audit + case list
+
+Owner ask (2026-08-28): *"audit the long muon formation and construction in the
+toolkit. 1. Against the prototype code 2. based on the existing events 1000 and
+2000 numu events, there are some of them contained long muons, which may not be
+recognized, but treated as several particles. Note, the motivation for long
+muons is that a long muon with clearly delta ray, so the vertex can be
+3-segement vertex, which broke one muon to several. … If we broke a long muon to
+several segments, then we cannot get the range correctly. In addition, I also
+want you to audit the MCS calculation for the long muon. In this case, we need
+to exclude the delta ray which can bias the calculation of the MCS. I am not
+ready to modify the code yet, but for this round, you can audit, identify the
+cases from the existing events, and make suggestions on how to improve and plan
+the validation step."*
+
+**Status. AUDIT + MEASUREMENT ONLY. No C++, no jsonnet and no existing arm is
+touched by this doc.** Every proposal in §6 is a *shape* for the owner to
+filter; none is implemented.
+
+**Headline.** The owner's mechanism is real and now counted. On 1366 beam events
+with a PR dump, the toolkit builds **242 muon-typed pseudo-showers**; **62** of
+them carry one of the two defects, and **22** carry the literal signature the
+owner described — a muon whose chain runs through an internal junction with a
+non-muon arm hanging off it. But the two halves of the ask land differently:
+
+- **Chain construction is a faithful 1:1 port** (§1; already certified by
+  doc pr/113 §1.3/§2.5, re-verified here). What breaks the muon is not a port
+  bug — it is the **10° collinearity cut inside `find_cont_muon_segment`**, and
+  an offline replay that **reproduces the shipped chain length exactly** on the
+  reference cases shows the muon being dropped at **10.99°** (evt 313847) and
+  **14.62°** (evt 66366). §4.
+- **The range is not merely "wrong when broken" — it is often literally zero.**
+  `kine_range == 0` on **28 / 242 (11.6%)** muon pseudo-showers, because
+  `calculate_kinematics_long_muon` is dispatched on the shower's *pdg*, but
+  sums length over `segments_in_long_muon` *membership*. When the two disagree
+  the range energy is 0 no matter how much muon is there: **26 of those 28
+  showers hold ≥2 muon-typed segments, 12 hold more than 45 cm and the worst
+  holds 332.8 cm.** §3.2.
+- **Delta rays already bias the shipped dQ/dx energy**, exactly as the owner
+  feared, but in the *charge* estimator rather than in MCS: **128 / 242 (52.9%)**
+  pseudo-showers contain a non-muon member whose charge feeds `kine_dQdx`, and
+  the induced shift has a heavy tail — median 0.9% of the energy, **p90 20%,
+  max 100%**. §3.3. **Removing it is not a free win** (§6, P6): on the clean
+  population it moves the median 2% the wrong way, so it fixes the tail and
+  needs the mode-2 ratio window re-derived.
+- **For MCS the delta-ray premise is already satisfied by the shipped default**
+  (`point_source = "muon_segments"`), with three named residual holes. The live
+  MCS problem is different: in the doc-80 production arm **every one of the 290
+  MCS evaluations used `muon_source = pf_muon` with `nseg = 1`** — a single
+  segment — and in **37 / 287** of those the selected segment is short of the PR
+  muon by ≥20%. §5.
+
+**These are SBND *data*** (MCP2025C reco1, `reality=data`, no `simb::MCTruth`;
+doc 83, doc pr/113 §6.1). "numu events" means beam-data numu candidates. Every
+number below is a reconstruction verdict; purity is unknown and unknowable on
+these arms. The one truth handle in the tree is named in §7.
+
+---
+
+## Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+
+# the whole census (pure read of existing arms; no WCT job is run)
+python3 scripts/d84_longmu_census.py \
+    --calib-arms work-mcp1k-prod0825:mcp1k work-mcp2k-prod0825:mcp2k \
+    --mcs-arm    work-mcp1k-mcs80on \
+    --out docs/84_longmu --out-exist-ok
+echo rc=$?          # exit-code discipline: never judged through a pipe (M14)
+```
+
+Writes `docs/84_longmu/{summary.txt, d84-longmu-showers.tsv, d84-gate-replay.tsv,
+d84-broken-muons.tsv, d84-mcs-sentinel.tsv, d84-mcs-vs-pr-muon.tsv,
+d84_longmu_overview.png}`. Runtime ~4 min single-threaded.
+
+### Anchors, and a warning about line numbers
+
+| what | anchor |
+|---|---|
+| toolkit | **`06dfa09f`** (`apply-pointcloud`), 2026-08-28 |
+| wcp-porting-img | **`e16624d`** (`main`) |
+| the census arms `work-mcp{1k,2k}-prod0825` | produced 2026-08-25 at toolkit **`2aba11dc`**, wcp `b04a94e` (doc 81, "Binary:" line) — current production at the shipped operating point |
+| the MCS arm `work-mcp1k-mcs80on` | `SBND_MCS=1 ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80on data`, all 1000 events rc=0 (doc 80 §18) |
+| prototype | `prototype_base/` → `/home/xqian/work/scratch_wcgpu1/prototype-dev`, `wire-cell/pid/` |
+
+**Every toolkit line number in this doc is `git show 06dfa09f:<file>`, not the
+working tree.** At the time of writing the tree carried uncommitted probe edits
+from an unrelated in-flight round (doc pr/122: `WCT_SHOWER_PID_DEBUG` in
+`PRShower.cxx` / `NeutrinoShowerClustering.cxx`, plus `wct-pr-perevt.jsonnet`,
+`TaggerCheckNeutrino.{h,cxx}`, `NeutrinoPatternBase.h`,
+`doctest_clus_knob_defaults.cxx`), and the set *grew during this session*.
+Working-tree lines are already shifted by up to 47 (`calculate_kinematics_long_muon`
+is HEAD `PRShower.cxx:1737`, worktree `:1784`). Re-derive before quoting.
+
+---
+
+## 0. Scope, and what this doc does NOT repeat
+
+`sbnd_xin/docs/pr/113_em-shower-pi0-long-muon-coverage-audit.md` §1.3 and §2.5
+already did the **coverage/parity** audit of long-muon construction against the
+prototype and found the port complete, with one candidate divergence (F2, the
+dropped `cal_4mom()` guard). That verdict was **re-verified here** by reading
+both sides again (§1); it is not re-derived, and F2 is not re-litigated.
+
+This doc is about the **consumers** — what the chain's length and membership are
+used *for*, and where that produces a wrong number. Four things are in scope:
+
+1. §1 the construction site and its structural limits (short);
+2. §3 the energy consumer, `calculate_kinematics_long_muon`;
+3. §4 an offline replay of `find_cont_muon_segment` that names which gate breaks
+   each muon;
+4. §5 the MCS driver.
+
+Not in scope: `cal_kine_charge` internals; the tagger bodies (docs 74/75, pr/36)
+except their use of the long-muon sets; the upstream `Mcs::MuonMCS` numerics
+(doc 80/83 own those).
+
+---
+
+## 1. Construction vs the prototype: a faithful port, with faithful limits
+
+Toolkit `NeutrinoVertexFinder.cxx:1860-1919` (inside
+`PatternAlgorithms::examine_direction`, `:1466`) is 1:1 with prototype
+`NeutrinoID_track_shower.h:2137-2190`:
+
+| step | toolkit | prototype |
+|---|---|---|
+| fill-once-per-cluster guard | `:1861-1867` | `:2137-2142` |
+| seed cut, `median dQ/dx / m_mip_dqdx_median > 1.3 → skip` | `:1877-1878` | `:2145` |
+| chain walk `find_cont_muon_segment` | `:1888-1893` | `:2157-2162` |
+| accept gate `total > 45 cm && max > 35 cm && size > 1` | `:1902` | `:2169` |
+| retype every member to pdg 13, clear both shower flags | `:1905-1913` | `:2171-2183` |
+| insert into `segments_in_long_muon` / `vertices_in_long_muon` | `:1912`, `:1915` | `:2183`, `:2186` |
+| purge non-main-cluster members at the end | `:5605-5632` | `NeutrinoID.cxx:393-409` |
+
+`find_cont_muon_segment` (toolkit `:1339-1464`, prototype `:2304-2369`) is
+likewise 1:1: 15 cm-lever direction, `angle < 10°` (or `< 15°` when the incoming
+segment is `< 6 cm`), a 50 cm-lever re-test for candidates `> 50 cm`, candidate
+`dQ/dx ratio < 1.3`, winner by `length·cos(angle)`. The toolkit adds two things
+and nothing else: a zero-magnitude direction guard (`:1377`, the prototype has
+none) and the SBND-ON `flag_stub_bridge` (`:1415-1432`, doc pr/46). Iteration is
+`sorted_out_edges` rather than the prototype's pointer-ordered map — more
+deterministic, not a behaviour change.
+
+### 1.1 Four structural limits a parity check cannot see
+
+All four are present in the prototype too, so **none is a port defect (M15-clean)**
+— and all four are load-bearing for the owner's question:
+
+- **L1 — the chain is only ever seeded at the main vertex.** `examine_direction`
+  is called only as `examine_direction(graph, main_vertex, main_vertex, …)`
+  (`:3964`, `:5362`, `TaggerCheckNeutrino.cxx:2521`; prototype
+  `NeutrinoID_track_shower.h:1381`, `NeutrinoID.cxx:225`). A muon whose first
+  piece *at the main vertex* fails the `1.3×MIP` seed cut yields no chain at
+  all, however long. Measured: **1419** main-vertex seeds rejected here.
+- **L2 — an unbroken muon can never be in the set.** `acc_segments.size() > 1`.
+  Measured: **936** main-vertex seeds rejected on this alone, of which **532 are
+  longer than 45 cm by themselves** (median 143 cm, max 498 cm). Those counts
+  are over *seeds*, not over muons — many are cosmic arms at the main vertex —
+  but they bound the population the `long_muon` MCS arm can never see (§5.3).
+- **L3 — an evenly-broken muon is rejected outright.** `max_length > 35 cm`
+  kills e.g. 3 × 30 cm = 90 cm. Measured: only **4** seeds fail on this alone —
+  a real but rare mechanism.
+- **L4 — the chain labels, it never re-joins.** Members stay separate
+  `PR::Segment`s. Only a consumer that iterates the *set* sees the full length;
+  a consumer holding one segment sees a fragment. That is the whole of §5.
+
+The walk is also greedy (best `length·cos(angle)`, no backtracking) and upstream
+carries no visited set; the replay in §4 adds a 64-step guard and reports `loop`
+separately (it never fired).
+
+---
+
+## 2. The measurement, and what is on disk
+
+`calib-pr-evt<ID>.json` (written only under `PR_EXTRA_STAGES=pr_display`, which
+prod0825 used, `PrDisplayDump.cxx`) carries everything needed to reconstruct the
+PR graph offline: `segments[]` with `id = cluster_id*1000 + graph_index`,
+`start/end_vertex_id`, `length` (fitted arc length, cm), `particle_id` (pdg),
+`flag_shower`, `shower_id`, and per-fit `points[].{x,y,z,dQ,dx,rr}`;
+`vertices[]` with `fit`, `degree`, `is_main`; `showers[]` with `kine_range`,
+`kine_dQdx`, `kine_charge`, `kine_best`, `total_length`. The membership join is
+`segments[].shower_id == showers[].id` (`PrDisplayDump.cxx:490` vs `:577`).
+
+**Two denominators, both reported** (pr/113 §6.2 precedent, they are not
+interchangeable):
+
+| pool | mcp1k | mcp2k | total |
+|---|---|---|---|
+| events in the arm | 1000 | 2000 | 3000 |
+| events with `calib-pr-evt*.json` (TaggerCheckNeutrino evaluated a main cluster) | **461** | **905** | **1366** |
+| muon-typed pseudo-showers found | 88 | 154 | **242** |
+
+### 2.1 One real closure test, one weak one, and the precondition that matters
+
+All three are printed by the script:
+
+```
+CLOSURE max |dqdx_all/kine_dQdx - 1| = 4.44e-16 over 242 showers
+(weak)  max |range(L_chain) - kine_range| = 9.00e-04 MeV
+PRECONDITION start-segment pdg == 13: 241 / 242
+  L_chain MEANINGLESS (wrong range table): mcp2k evt 294174 shower 16028 start_pdg=11 kine_range=0.0001
+```
+
+- The first re-integrates `cal_kine_dQdx` offline — the SBND
+  `PowerBoxRecombination` operating point (`clus.jsonnet` `sbnd_power_recomb`,
+  `use_power_recomb=true`; `Gen::PowerBoxRecombination::dE`,
+  `gen/src/RecombinationModels.cxx:160-176`) over the *same member set* — and
+  reproduces the shipped `kine_dQdx` to machine precision. So "what happens if
+  the delta rays are excluded" (§3.3) is a real subtraction, not a model guess.
+- The second inverts the shipped SBND `muon_range_function` (a 1067-point
+  `LinterpFunction`, range cm → KE MeV, `particle_dataset.jsonnet:136`) on
+  `kine_range` and re-forwards it. **On its own this shows only that the
+  interpolation is monotone and invertible — it is not independent evidence
+  the way the dQ/dx closure is.** What makes `L_chain` trustworthy is a
+  separate precondition, checked explicitly: `cal_kine_range` is called
+  (`PRShower.cxx:1781`) with `particle_type = abs(m_start_segment->
+  particle_info()->pdg())` — the **start segment's** pdg, *not* the shower type
+  this census filters on (`PrDisplayDump.cxx:579`) — so the muon table is the
+  right one only if the start segment is itself pdg 13.
+
+  Checked over all 242: `showers[].id` is `pf_node_id(shower->start_segment())`
+  (`PrDisplayDump.cxx:577`), so the start segment is `segments[id]`.
+  **241 / 242 have a pdg-13 start segment.** The single exception is
+  `mcp2k` evt 294174 shower 16028, whose start segment is **pdg 11** — its
+  `kine_range = 0.0001 MeV` came from the *electron* table and its `L_chain`
+  (and therefore `L_unchained_cm`) is meaningless. That row is classified
+  `deltaray_charge` on charge fraction, not on chain length, so the case list
+  is unaffected; it is flagged here and in §4.3 rather than silently kept.
+  (That a muon-typed shower can carry a non-muon start segment is the subject
+  of the in-flight doc pr/122; one case in 242 here.)
+
+---
+
+## 3. The energy consumer
+
+### 3.1 Where the numbers come from
+
+`NeutrinoEnergyReco.cxx:331` dispatches every shower with `|pdg| == 13` to
+`Shower::calculate_kinematics_long_muon` (`PRShower.cxx:1737`), which:
+
+- accumulates `total_length` **only over `segments_in_long_muon` members**
+  (`:1765-1771`, guarded by `bool in_muons`), then
+  `data.kenergy_range = cal_kine_range(total_length, 13, …)` (`:1781`);
+- accumulates `vec_dQ`/`vec_dx` over **every segment in the pseudo-shower**
+  (`:1773-1777` — *outside* the `if (in_muons)` block), then
+  `data.kenergy_dQdx = cal_kine_dQdx(...)` (`:1782`);
+- sets `data.kenergy_best = data.kenergy_dQdx` (`:1785`), which doc pr/101 K4's
+  `kine_long_muon_mode` (SBND = **2**, `wct-pr-perevt.jsonnet:1779`) may replace
+  with range when `kenergy_range > 0`, `end_degree == 1`, and
+  `kine_dQdx/kine_range ∈ [1-0.3, 1+0.5] = [0.7, 1.5]` (`:1815-1826`).
+
+The prototype is **identical**, including the length/charge asymmetry, and
+carries the original author's own TODO in-code:
+
+```cpp
+   kenergy_range = start_segment->cal_kine_range(L);
+   kenergy_dQdx  = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
+   // long muon ... // should be improve in the future using range ...
+   kenergy_best  = kenergy_dQdx;
+```
+`prototype_base/wire-cell/pid/src/WCShower.cxx:288-303`. **M15-clean: not a
+divergence, a carried limitation.**
+
+### 3.2 The range is zero on one muon shower in nine
+
+| outcome for `kine_best` | count / 242 |
+|---|---|
+| resolved to `kine_range` | 184 (76.0%) |
+| resolved to `kine_dQdx` | 30 (12.4%) |
+| resolved to `kine_charge` (a later SBND-ON override) | 28 (11.6%) |
+
+and the reason mode 2 did **not** take range:
+
+| why | count / 242 |
+|---|---|
+| `kine_range == 0` — the chain contributed **no length at all** | **28 (11.6%)** |
+| `kine_dQdx/kine_range` outside `[0.7, 1.5]` | 9 (3.7%) |
+| `end_degree != 1`, or a later override won | 21 (8.7%) |
+
+**The `kine_range == 0` class is a dispatch/membership mismatch, and it is the
+single largest clean defect this doc found.** `NeutrinoEnergyReco.cxx:331`
+routes a shower into `calculate_kinematics_long_muon` on `|pdg| == 13` — the
+shower's own particle type — but the function measures length over
+`segments_in_long_muon` *membership*. When a muon-typed shower carries no chain
+member, `total_length = 0` and `cal_kine_range(0, …) = 0`, however much muon
+track the shower actually holds:
+
+| composition of the 28 `kine_range == 0` showers | count |
+|---|---|
+| carry ≥2 muon-typed member segments | **26 / 28** |
+| carry > 45 cm of muon-typed length | 12 / 28 |
+| carry > 100 cm | 8 / 28 |
+| largest | **332.8 cm** |
+
+Worked example, `mcp2k` evt 497311 shower 15000: one muon-typed segment of
+**332.8 cm**, `kine_range = 0`, `kine_dQdx = 722.9 MeV`, shipped
+`kine_best = kine_charge = 508.5 MeV`. A 333 cm muon's range energy is ≈760 MeV.
+(This particular event is also an instance of L2 — a single segment can never be
+a "long muon" — but L2 explains only **2 of the 28**; the other 26 have multiple
+muon-typed members and simply have no chain.)
+
+### 3.3 Delta-ray charge in the dQ/dx integral — the tail, not the median
+
+| metric over the 242 muon pseudo-showers | count |
+|---|---|
+| ≥1 **non-muon** member segment | **128 (52.9%)** |
+| non-muon member *length* > 5% of the muon length | 55 (22.7%) |
+| non-muon member *charge* > 5% of the total | **45 (18.6%)** |
+
+The energy this adds (offline subtraction, closure-verified §2.1):
+
+```
+dQ/dx delta-ray shift:  median 5.0 MeV   p90 42.5 MeV   max 404.8 MeV
+as a fraction of kine_dQdx: median 0.009   p90 0.204   max 1.000
+```
+
+Two illustrations from the case list:
+
+- **`mcp2k` evt 99232 shower 17013** (hand-verified, §4.2): a 236.6 cm + 10.3 cm
+  muon chain, complete, plus an absorbed **40.0 cm proton** (median dQ/dx =
+  2.21×MIP) and a 16.8 cm electron. 26.6% of the charge is non-muon.
+  `kine_range = 570.5 MeV`, `kine_dQdx = 795.9 MeV`, and `kine_best` takes
+  **dQdx** because the ratio 1.395 sits *inside* the `[0.7, 1.5]` window. Excluding
+  the two non-muon members gives 570.5 MeV — agreeing with range to the printed
+  precision (one case; see the population result below before reading anything
+  general into it).
+- **`mcp2k` evt 294174 shower 16028**: `dQ_frac_oth = 1.000` — a 1.8 cm muon
+  segment and **8** non-muon members totalling 157.6 cm. The entire
+  `kine_dQdx = 404.8 MeV` is daughter charge.
+
+**And the honest population result, which changes the recommendation.**
+Restricting the chain's dQ/dx to chain members does **not** globally improve
+agreement with range:
+
+| population (`kine_range > 50 MeV`) | n | `dQdx_all/range` median | `dQdx_chain/range` median | outside `[0.7,1.5]` |
+|---|---|---|---|---|
+| all | 203 | 0.982 | 0.961 | 18 → 20 |
+| contaminated (`dQ_frac_oth > 0.05`) | 25 | 1.078 | **0.912** | 3 → 5 |
+| clean (`dQ_frac_oth ≤ 0.05`) | 178 | 0.979 | 0.967 | 15 → 15 |
+
+`docs/84_longmu/d84_longmu_overview.png` shows all three: the non-muon charge
+fraction, the unchained muon length, and the `kine_dQdx` vs `kine_range` scatter
+with the mode-2 `[0.7, 1.5]` fallback window drawn.
+
+So the delta-ray contamination is a **heavy-tail** effect, not a median bias, and
+the naive fix pulls the median ~2% low and by the shipped ratio-window metric is
+a wash. §6 P6 is written accordingly: it is a tail fix that requires the mode-2
+window to be re-derived, not a drop-in improvement.
+
+---
+
+## 4. Gate replay — which cut breaks the muon
+
+`scripts/d84_longmu_census.py` re-implements `find_cont_muon_segment` and the
+accept gate directly from the calib JSON (`segment_cal_dir_3vector`,
+`PRSegmentFunctions.cxx:2363-2390`, is a mean-of-nearby-fit-points minus the
+vertex, normalised; `segment_median_dQ_dx`, `:1608`, is a median of
+`dQ/(dx+1e-9)`; both reproduce trivially), then walks from every main-vertex
+seed with `flag_stub_bridge` ON and OFF.
+
+> **Caveat, stated because it bounds every number in this section.** The calib
+> JSON is the **final** PR state; `examine_direction` ran earlier, on a graph
+> that may since have changed. This is *not* a bit-exact re-execution.
+> Measured agreement: on the 105 events where both a shipped chain length and an
+> accepted replay chain exist, **86 / 105 (82%)** agree within 5%. The 18% is the
+> epoch gap. On the reference cases below the agreement is exact.
+
+### 4.1 Where the seeds die
+
+| gate (stub_bridge ON) | seeds |
+|---|---|
+| `median dQ/dx > 1.3×MIP` on the seed (L1) | 1419 |
+| `acc_segments.size() > 1` (L2) | 936 |
+| **accepted** | **103** |
+| `max_length > 35 cm` (L3) | 4 |
+
+and where an accepted or attempted walk *stopped*:
+
+| stop reason | ON | OFF |
+|---|---|---|
+| seed rejected before the walk | 1419 | 1419 |
+| genuine dead end (degree-1 vertex) | 811 | 811 |
+| **angle test** | **116** | 117 |
+| angle **and** dQ/dx | 86 | 86 |
+| dQ/dx only | 30 | 29 |
+
+**`long_muon_stub_bridge` (SBND ON) changes exactly one walk in 1366 events on
+the final graph.** That is not evidence the knob is dead — pr/46 measured it at
+`examine_direction` time, where short stubs are far more common — but on the
+final graph its `sg_length < 6 cm` precondition almost never holds. It is
+therefore *not* a meaningful delta-ray-into-the-chain vector here (§5).
+
+### 4.2 The angle cut is what breaks the muon, and it breaks it by a hair
+
+Of the 202 walks stopped by the angle test, the distribution of the rejected
+candidate's angle:
+
+| angle of the best rejected continuation | walks | of which the candidate is > 20 cm |
+|---|---|---|
+| 10–12° | 6 | 5 |
+| 12–15° | 9 | 8 |
+| 15–20° | 11 | 6 |
+| 20–30° | 31 | 7 |
+| > 30° | 145 | 20 |
+
+**25 candidates longer than 50 cm were rejected on angle alone; their angles have
+median 15.6° and minimum 10.4°** — i.e. a population of long, MIP-like, nearly
+collinear continuations sitting just outside a 10° cut.
+
+Two hand-verified reference cases (raw calib JSON read by hand, then compared
+with the automated verdict):
+
+**`mcp2k` evt 66366, shower 22006 — the owner's picture exactly.**
+
+```
+seg 22009  pdg=13  L=174.43 cm  medianQ/MIP=1.13  v(22007,22000) deg(2,1)
+seg 22006  pdg=13  L= 91.68 cm  medianQ/MIP=1.15  v(22005,22001) deg(3,2)
+seg 22005  pdg=13  L= 27.67 cm  medianQ/MIP=1.11  v(22003,22005) deg(2,3)
+seg 22007  pdg=11  L=  6.85 cm  medianQ/MIP=0.86  v(22005,22006) deg(3,1)   <- the delta ray
+seg 22008  pdg=13  L=  6.81 cm  medianQ/MIP=1.04  v(22007,22003) deg(2,2)   <- the stub
+```
+One muon of **300.6 cm** in four MIP pieces (all four well under the 1.3 seed
+cut), with a 6.85 cm electron hanging off the degree-3 vertex 22005 — the
+3-segment vertex. Replay: seed 22006 → accepted, 3 segments, **126.2 cm**,
+which is **exactly the shipped `L_chain = 126.2 cm`**. The walk stopped with
+`stop=angle, candidate 174.4 cm, angle 14.62°, ratio 1.129, stop vertex degree 2`.
+Shipped result: `kine_range = 307.0 MeV` (for 126 cm) instead of ≈680 MeV;
+ratio 2.14 is outside the window so `kine_best` falls to `kine_dQdx = 656.0 MeV`.
+Note the stub that carries the direction into the break is **6.81 cm** — 0.81 cm
+*above* `long_muon_stub_bridge`'s `< 6 cm` precondition.
+
+**`mcp1k` evt 313847, shower 19014 — one degree of arc.**
+
+```
+seg 19001  pdg=13  L=162.40 cm  medianQ/MIP=1.09  v(19000,19002) deg(1,2)
+seg 19022  pdg=13  L= 78.28 cm  medianQ/MIP=1.12  v(19002,19008) deg(2,3)
+seg 19014  pdg=13  L= 20.27 cm  medianQ/MIP=1.11  v(19008,19006) deg(3,3)
+seg 19015  pdg=11  L=  6.85 cm  medianQ/MIP=1.21  v(19008,19009) deg(3,1)   <- the delta ray
+```
+260.9 cm of muon in three pieces; delta ray at the degree-3 vertex 19008.
+Replay: accepted, 2 segments, **98.54 cm** = the shipped `L_chain` exactly.
+Stop: `angle, candidate 162.4 cm, **angle 10.99°**, ratio 1.092, degree 2`.
+**The 162 cm continuation missed the 10° cut by 0.99°.** Shipped
+`kine_range = 248.3 MeV` for a 261 cm muon (true range energy ≈ 575 MeV);
+`kine_best = kine_dQdx = 547.5 MeV`.
+
+**`mcp2k` evt 99232, shower 17013 —** the contamination case quoted in §3.3;
+chain complete, defect is entirely in the dQ/dx integral.
+
+### 4.3 The delivered case list
+
+`docs/84_longmu/d84-broken-muons.tsv`, **62 rows**, one per muon pseudo-shower
+that shows either defect, sorted worst-first:
+
+| class | rows |
+|---|---|
+| `deltaray_charge` — chain complete, >5% of the charge from non-muon members | 35 |
+| `broken_chain` — >20 cm of muon-typed length outside the chain, or `kine_range==0` with >45 cm of muon | 17 |
+| `both` | 10 |
+| of these, with an internal junction carrying a non-muon arm (`n_deg3_internal > 0`) | **22** |
+| of these, with an MCS sentinel in `work-mcp1k-mcs80on` | 19 |
+
+Columns: `arm run subrun evt shower defect n_mu n_oth L_mu_cm L_chain_cm
+L_unchained_cm n_deg3_internal min_arm_cm dQ_frac_oth dqdx_shift_MeV kine_range
+kine_dQdx kine_charge kine_best best_is fallback_why mcs_*`. `L_chain_cm` is the
+inverted-`kine_range` chain length (§2.1), `L_unchained_cm = L_mu − L_chain`.
+
+Worst broken chains: evt 497311 (332.8 cm, chain 0), 177536 (294.8, 0),
+74784 (291.3, chain 29.9), 53793 (240.9, 0), 281595 (351.0, chain 130.0),
+178885 (195.0, 0), 66366 (300.6, chain 126.2), 313847 (260.9, chain 98.5).
+Worst contamination: 294174 (100% of charge), 286681 (73%), 54629 (28%),
+99232 (27%), 288327 (25%).
+
+> **Three honesty notes on the table.** (i) `L_unchained` is clamped at 0; in a
+> few rows `L_chain > L_mu` (e.g. evt 101828: 128.9 vs 110.6 cm), meaning the
+> chain contains a member whose *final* pdg is no longer 13 — the epoch gap
+> again. (ii) `n_deg3_internal` counts junctions shared by ≥2 muon-typed members
+> that also carry a non-chain arm; it is a proxy for the owner's 3-segment
+> vertex, not a truth label. (iii) **`mcp2k` evt 294174's `L_chain_cm` /
+> `L_unchained_cm` are meaningless** — its start segment is pdg 11 so
+> `cal_kine_range` used the electron table (§2.1). The row is kept because its
+> defect is charge contamination (`dQ_frac_oth = 1.000`), which does not depend
+> on the range inversion.
+
+---
+
+## 5. MCS
+
+**Operating point first: `mcs_enable = false` in SBND production**
+(`wct-pr-perevt.jsonnet:1196`). Nothing in this section affects the shipping
+chain; it is about the doc-80 arms and about what to enable.
+
+### 5.1 The delta-ray premise is already satisfied — with three named holes
+
+With the shipped default `point_source = "muon_segments"`
+(`MuonMCSDriver.cxx:228-230`) the cloud handed to `Mcs::MuonMCS::run` is *only*
+the selected muon segments' `fits()` points. **A delta ray that is its own
+`PR::Segment` never enters.** The residual holes, in order of how live they are:
+
+1. **A chain member admitted only by `long_muon_stub_bridge`'s 45° relaxation**
+   (`NeutrinoVertexFinder.cxx:1415-1432`, SBND ON). Its explicit veto already
+   excludes shower-flagged and pdg-±11 arms (`:1422-1425`), and §4.1 measures it
+   changing **one** walk in 1366 events on the final graph. **Effectively not a
+   vector.**
+2. **Delta-ray charge merged inside a muon segment's own fit trajectory.** Not
+   separable at this layer at all — the fit points *are* the trajectory. This is
+   the only genuinely open channel, and it is a track-fitting question, not an
+   MCS one.
+3. **`point_source = "whole_event"`** (`:210-227`) harvests every segment and
+   every vertex in the graph. Documented validation-only (doc 80 §7.3); it must
+   never be a production setting, and this doc records why.
+
+The upstream header says extra activity "is tolerated — stage 1 trims it"
+(`mcs/inc/WireCellMcs/MuonMCS.h:215-217`). **Tolerated is weaker than excluded**,
+and the shipped default does not rely on it. Say so rather than leaning on trim.
+
+### 5.2 The live MCS problem is L4, not delta rays
+
+In `work-mcp1k-mcs80on` — 1000 events, the doc-80 round-4 production arm — the
+log sentinel fires on **289 events / 290 evaluations**, and:
+
+```
+muon_source: {'pf_muon': 290}
+nseg (segments handed to MCS): {'1': 290}
+```
+
+**Every single MCS evaluation used one segment.** `muon_source = "pf_muon"`
+(`MuonMCSDriver.cxx:80-97`) ranks `|pdg| == 13` segments by kinetic energy and
+pushes exactly one. Three consequences:
+
+- the MCS trajectory is that fragment's points;
+- `muon_min_length_cm = 40` is applied to the fragment, so a muon that is long
+  only in total can be skipped entirely;
+- the logged comparator `ke_range_toolkit = cal_kine_range(total_length_cm, 13, …)`
+  (`:270`) is the **fragment's** range energy.
+
+Measured **within the same arm** (no cross-arm join — the arms are different
+binaries and segment the same track differently), against `T_kine`'s
+`kine_energy_particle` for the muon, i.e. what the PR chain itself assigned:
+
+```
+PR muon KE / ke_range_toolkit(selected segment):  median 1.000   p90 1.328
+the selected segment is short of the PR muon by >= 20%:  37 / 287
+ke_MCS / ke_range_toolkit:  median 1.123 ;  > 1.5 in 101 / 287
+```
+
+So in the median event the pf muon *is* the whole muon (consistent with L2: most
+muons are single segments). But in **37 / 287 (12.9%)** the MCS comparator is
+computed on a fragment carrying ≥20% less energy than the PR muon — and those
+events land in the high-side `ke_MCS/ke_range` tail that doc 83 investigated.
+
+> **Relation to doc 83.** Doc 83 §2 step 4b tested "is there an adjacent
+> fragment" and correctly found it non-discriminating (67% of outliers, 73% of
+> all contained muons). The measurement here is a different one — *how much
+> muon-typed energy sits outside the segment MCS was given* — and it is not a
+> refutation of doc 83's conclusion, which was about the statistical mechanism.
+> It is a second, additive contribution worth separating before the tail is
+> re-attributed. **An earlier cross-arm version of this number (a "median 74%
+> length coverage") is retracted:** joining `work-mcp1k-prod0825` to
+> `work-mcp1k-mcs80on` by event number is invalid, and the within-arm number
+> above (median 1.000) is the one to quote.
+
+### 5.3 Two further findings in the driver
+
+- **`muon_source = "long_muon"` (`:98-111`) is the complement of `pf_muon`, not
+  a superset.** It takes the whole chain — but by L2 the chain requires ≥2
+  segments, so this arm **silently skips every unbroken muon** (532 of the
+  main-vertex seeds here would be >45 cm on their own). **There is no hybrid
+  arm.** That is why the default is `pf_muon`, and why neither arm is right.
+- **The endpoint logic (`:147-200`) assumes exactly two degree-1 extremes.** A
+  chain with a mid-chain branch falls into the most-separated-pair fallback
+  (`:174-193`). Of the 62 case-list rows, **22** have at least one internal
+  junction with an extra arm, so the fallback is not a corner case for the
+  `long_muon` arm.
+- **Closed, not a concern:** `segments_in_long_muon` cannot mix clusters by the
+  time MCS runs — `determine_overall_main_vertex` purges non-main-cluster
+  members at `NeutrinoVertexFinder.cxx:5605-5632`, matching prototype
+  `NeutrinoID.cxx:393-409`, and `mcs_fill_kine` is called after that
+  (`TaggerCheckNeutrino.cxx:2834`).
+
+### 5.4 The prototype has no MCS
+
+A full sweep of `prototype_base/` finds **no scattering-angle momentum
+estimator** — no Highland formula, no `theta_rms`/`sigma_theta`, no MCS fitter.
+The only `wire-cell/mcs/` there is truth-level *simulation*
+(`WCPMCSSim/MCSSim.h`, `Eloss.h::get_mcs_angle`), never called from any
+`NeutrinoID_*` / `ProtoSegment` reconstruction file. The prototype's estimators
+are range (`ProtoSegment::cal_kine_range`, `ProtoSegment.cxx:1380`) and dQ/dx
+only. **So "audit MCS against the prototype" has no referent**: the MCS audit is
+against the ubreco/MicroBooNE upstream and doc 80/83, and is recorded as such.
+
+---
+
+## 6. Improvement proposals — shapes only, nothing shipped
+
+Each is a default-OFF knob with a hit counter, so a rate can be measured before
+any flip (pr/32 F3 / pr/113 precedent: ship the counter, read it, *then* decide).
+Ordered by how well the measurement supports them.
+
+| # | knob | site (HEAD `06dfa09f`) | what, and what the measurement says |
+|---|---|---|---|
+| **P1** | `long_muon_range_empty_chain_fallback` | `PRShower.cxx:1765-1781` | When the chain contributes **zero** length, fall back to the muon-typed member length of the pseudo-shower (or, if there is none, the start segment's own length) instead of leaving `kenergy_range = 0`. **Directly addresses the 28/242 `kine_range == 0`** — the largest and least ambiguous defect found, and one whose cause (dispatch on pdg, measure on membership, §3.2) is unambiguous. Strictly widens where mode 2 can take range; changes nothing when the chain is non-empty. Ship the counter first: 26 of the 28 have ≥2 muon members, so the fallback is a *sum*, not a single segment. |
+| **P2** | `long_muon_angle_relax_long` | `NeutrinoVertexFinder.cxx:1401-1402` | Raise the continuation angle cut for a **long** (> 50 cm) MIP candidate from 10° to ~16°, keeping 10° elsewhere. **25 such candidates were rejected on angle, median 15.6°, min 10.4°**; evt 313847 misses by 0.99°, evt 66366 by 4.62°. Cheapest fix for the owner's exact mechanism. Must ship with the junction veto `long_muon_stub_bridge` already uses (`:1418-1430`) so a hadronic vertex is not bridged. |
+| **P3** | `long_muon_stub_bridge_len` | `NeutrinoVertexFinder.cxx:1416` | Make the stub-bridge precondition `sg_length < 6 cm` a configurable length. evt 66366's stub is **6.81 cm** — the shipped knob misses it by 0.81 cm. A one-number generalisation of an already-approved mechanism. |
+| **P4** | `mcs_muon_source = "long_muon_else_pf"` | `MuonMCSDriver.cxx:80-127` | The missing hybrid arm: the chain when one exists, else the pf muon segment. Without it neither shipped arm covers both populations (§5.3). Prerequisite for enabling MCS on broken muons at all. |
+| **P5** | `mcs_range_comparator_chain` | `MuonMCSDriver.cxx:264-276` | Make the logged `ke_range_toolkit` comparator use the long-muon chain rather than the single selected segment. **Log-only, no output bytes move** — the cheapest way to test §5.2's 37/287 against doc 83's tail. Would be the natural first MCS step. |
+| **P6** | `kine_long_muon_dqdx_chain_only` | `PRShower.cxx:1773-1777` | Restrict `vec_dQ`/`vec_dx` to chain members so delta-ray charge stops feeding the muon's dQ/dx energy. **Deliberately ranked last.** §3.3 measures it as a tail fix that moves the clean-population median 2% low and, by the shipped `[0.7, 1.5]` metric, is a net wash (18 → 20 outside). It should not ship without re-deriving `kine_long_muon_ratio_{lo,hi}`, and probably wants an `if contaminated` guard rather than an unconditional restriction. |
+| **P7** | `mcs_exclude_shower_members` | `MuonMCSDriver.cxx:228-230` | Drop shower-flagged / pdg ±11 chain members from the harvested cloud. **Listed for completeness and NOT recommended now**: §5.1 measures the only route by which such a member enters (the stub bridge) at one walk in 1366 events. |
+
+Not proposed, deliberately: relaxing L2 (`acc_segments.size() > 1`) at the
+construction site. It would put every long single-segment muon into
+`segments_in_long_muon`, which is read by the numu and cosmic taggers
+(`NeutrinoTaggerNuMu.cxx:122-144`, `NeutrinoTaggerCosmic.cxx:588-604`) and by
+shower clustering — a large blast radius for a problem P1 fixes locally at the
+consumer.
+
+---
+
+## 7. Validation plan for whichever of §6 the owner picks
+
+Every item is a *separate* implementation round under `/wct-knob` + `/ab-verify`.
+
+**Gate 1 — knob OFF is byte-identical.** `scripts/pr85_hash_gate.py` against the
+current production arms on all four samples (`nuecc48`, `ncpi0`, `mcp1k`,
+`mcp2k`; 6134 archives + `pr94_root_gate.py` 3067 ROOT files, the prod0825
+counts), labels reported. Compiled-config proof that the key appears only when
+on (`wcsonnet … | grep <key>`). M1 freshness proof (`local/lib/libWireCellClus.so`
+mtime newer than the last source edit) *before* the A/B. `./build/clus/wcdoctest-clus`
+green, and the knob pinned in `doctest_clus_knob_defaults.cxx`.
+
+**Gate 2 — the ON effect is the intended one.** The knob's hit counter is
+non-zero, and the movers are drawn from `docs/84_longmu/d84-broken-muons.tsv`.
+For P2/P3 specifically, the diff of `d84-gate-replay.tsv` before/after must show
+the recovered continuations and nothing else.
+
+**Gate 3 — the physics metric, reco-internal** (these arms are data, §0):
+re-run this census on the ON arm and require, on the case list:
+
+- P1: `kine_range == 0` count falls from 28/242, and no shower that previously
+  had a non-zero `kine_range` changes it;
+- P2/P3: `L_unchained_cm` falls; `kine_dQdx/kine_range` concentrates *into*
+  `[0.7, 1.5]` (currently 18/203 outside) rather than out of it;
+- P5: `ke_MCS/ke_range_toolkit` (currently median 1.123, >1.5 in 101/287) moves
+  toward 1 on the 37 fragment events specifically, with the other 250 unmoved.
+  Doc 83's `80_mcs/mcs_vs_range_scatter.png` is the baseline plot.
+
+A metric that moves the *median* of the clean population is a red flag, not a
+win — that is the P6 lesson (§3.3).
+
+**Gate 4 — the one truth handle.** For the delta-ray question specifically,
+reco-internal cross-checks can only say two estimators agree, never that either
+is right. **`work-mcsim-stmon`** (52 events, MC with truth dQ/dx *and* delta
+rays; docs 44/46) is the only place in the tree where "did excluding the delta
+rays move the estimate the right way" can be answered against truth. It is small
+and is not a numu sample, so it validates the **mechanism**, not the rate. If
+the owner wants a rate, a numu MC sample with truth has to be produced — that is
+a request, not something this round can substitute for.
+
+**Gate 5 — owner hand-scan.** The 22 rows with `n_deg3_internal > 0` are the
+scan set; `pr_display` (docs pr/26, pr/27) renders each from its own
+`calib-pr-evt<ID>.json`. A Bee before/after package only on request
+(`/bee-review`; upload is owner-gated, CLAUDE.md §5.6).
+
+---
+
+## 8. What is NOT claimed
+
+- No statement about efficiency or purity. These are data; there is no truth.
+- The §4 replay is on the **final** graph and agrees with the shipped chain on
+  86/105 events (§4 caveat). Per-gate counts are therefore indicative for the
+  population and exact only on the cases hand-verified in §4.2.
+- `n_deg3_internal` is a proxy for "3-segment vertex", not a label.
+- The MCS numbers cover **`mcp1k` only** — `work-mcp2k-mcs80{off,offb,ref}` exist
+  but there is **no `work-mcp2k-mcs80on`**, so the MCS join is 289 events while
+  the topology census is 1366.
+- Doc pr/113's F1/F2 candidates are neither re-derived nor closed here.
+- Nothing about `Mcs::MuonMCS`'s own numerics; docs 80 and 83 own those.
