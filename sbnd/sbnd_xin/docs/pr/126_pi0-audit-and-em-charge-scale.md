@@ -5,7 +5,7 @@ Round 2 folds in two owner corrections: **align the EM scale to the PEAK of the
 π⁰ mass distribution, not its mean/median** (§4g — this *changes* round 1's
 recommendation from "no flip" to "flip to ≈0.84"), and **say what the other
 charge scaling factors do for tracks, and when charge scaling is used at all
-given the dQ/dx→dE/dx path** (§4h). Round 1's median-based §4c is kept, marked
+given the dQ/dx→dE/dx path** (§4i). Round 1's median-based §4c is kept, marked
 superseded, rather than rewritten away.
 
 **SCOPE DECLARATION: NO C++ AND NO JSONNET IS CHANGED BY THIS ROUND.**
@@ -33,7 +33,7 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 python3 scripts/pr126_pi0_select.py --selftest
 python3 scripts/pr126_pi0_select.py --tsv docs/pr/pr126-pi0-events.tsv \
                                     --manifest em_display/pr126-pi0-manifest.tsv
-python3 scripts/pr126_pi0_select.py --rescan docs/pr/pr126-pi0-rescan.tsv   # sec 4i
+python3 scripts/pr126_pi0_select.py --rescan docs/pr/pr126-pi0-rescan.tsv   # sec 4h
 
 # sec 4 -- the mass distribution and the scale fit (E1), then E2
 python3 scripts/pr126_pi0_mass.py --selftest
@@ -457,7 +457,7 @@ That is precisely what a π⁰-mass calibration determines.
 > it sits *inside* the low tail and is biased low by a measurable amount
 > (§4g). Read §4g for the recommendation that stands.
 > Track and proton scales are not touched either way: the π⁰ constrains EM only
-> (§4h).
+> (§4i).
 
 **Significance, stated plainly: the correction is NOT resolved at 68 %.** The
 primary CI is [132.8, 146.5] MeV and it **contains 134.9768**; mapped through the
@@ -674,7 +674,7 @@ convention, sample and the prototype's own constant.
 
 ---
 
-## 4i. Why the primary sample is only n=19 — and where the rest of it is
+## 4h. Why the primary sample is only n=19 — and where the rest of it is
 
 The hand scans are large; the calibration cell is not. The gap is worth spelling
 out, because most of it is **my gating, and one of those gates was too tight**.
@@ -739,7 +739,7 @@ missing step rather than more events.
 
 ---
 
-## 4h. The other charge scaling factors: where they apply, and where dQ/dx→dE/dx takes over
+## 4i. The other charge scaling factors: where they apply, and where dQ/dx→dE/dx takes over
 
 Owner question: *"what are the other charge scaling factor for tracks? Note for
 track I know there are dQ/dx to dE/dx conversion, when the charge scaling is
@@ -836,7 +836,7 @@ Nothing below is implemented. Each item names the measurement behind it, the
 shape of the knob, and what it would cost. **No knob is added or flipped in this
 round** (CLAUDE.md §5.1).
 
-**0. Pair the π⁰ that were already scanned.** §4i: of 238 scanned events only
+**0. Pair the π⁰ that were already scanned.** §4h: of 238 scanned events only
 50 carry a stored π⁰ pairing, yet **109 of the 188 unpaired ones have ≥2 EM
 showers above the code's own 15 MeV / 3 cm cuts** — a pairing was possible and
 simply was not asked for, because both scans were clustering scans. The list is
@@ -976,7 +976,7 @@ assumed:
 | `em_display/em114c-125flipchk141-manifest.tsv`, `em117-125flipchk98-manifest.tsv` | the pr/125 flipchk arms, for the refresh |
 | `scripts/pr126_pi0_peak.py` | §4g peak fit, estimator comparison, window scan, toy bias validation |
 | `docs/pr/pr126-pi0-peak.tsv` | the §4g table |
-| `docs/pr/pr126-pi0-rescan.tsv` | §4i: the 109 scanned-but-unpaired events where a π⁰ pairing was possible |
+| `docs/pr/pr126-pi0-rescan.tsv` | §4h: the 109 scanned-but-unpaired events where a π⁰ pairing was possible |
 | `docs/pr/pr126-pi0-pairs.tsv` | the 830 E2 candidate pairs |
 | `em_display/pr126-pi0-manifest.tsv` | re-runnable manifest of the π⁰ subset |
 
