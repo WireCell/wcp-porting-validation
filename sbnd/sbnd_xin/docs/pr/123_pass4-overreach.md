@@ -377,6 +377,19 @@ SBND PRODUCTION ON 2026-08-28 (owner: "it should not be lost in the PF
 tree"; upload authorized "once validated"). Bee pair (`bee/pr123r2/`):
 OFF `caad3e29-e997-433f-bdd7-37c7e89c8fc9` / ON
 `e1da72ac-2d54-4895-8460-083d509c15d9`, 2 events (owner-directed upload).
+
+**Round 2.1 — owner correction on the r2 pair**: the freed track is not
+connected to the vertex directly, so it must not hang at root — "contained
+in a neutron, and then muon". ON-behavior corrected in place (the pf/F2
+precedent, no new knob; toolkit `b08353f4`): the emission now builds a
+pseudo-NEUTRON carrier (`append_pseudo_shower` convention, pdg 2112, main
+vertex → track near end) with the track as its single leaf — ν → n → µ.
+Validation (`work-pr123r1-r21flip141-*`, binary 21:30): mcp1k 104/104
+byte-identical, divergence exactly 171572 + 393505 (mabc only), mc.json
+verified ν → neutron(304.8/268.7 MeV) → µ⁻. Corrected AFTER set:
+`43ba1e1c-38f6-4ece-959c-bf883e0b83e8` (BEFORE unchanged: `caad3e29`).
+The 141-set production baseline advances to `work-pr123r1-r21flip141-*`
+(mcp1k content-identical to `r2flip141`).
 `work-pr123r1-r2off141`+`r2flip141` succeed `flip141` as the 141-set
 production baseline; the 98-set baseline is doc-84's `work-d84r2-prod98-*`
 (+ this flip = `r2flip98`).
