@@ -264,7 +264,22 @@ runs unpinned (both rounds' flips together).
 "Flip anyway" after the dQ/dx non-separator measurement, §3.1) and
 `shower_samevtx_track_absorb=true` (37112).
 
-**HELD OFF — owner decision**: `shower_satellite_absorb` (the 69314 fix).
+**FLIPPED ON 2026-08-29 (owner verdict, toolkit `d74c5524`)**:
+`shower_satellite_absorb` — after scanning the K5 decision pair the owner
+answered *"item 3, flip on is fine"*, i.e. option (1) below at the scanned
+operating point (`max_mev=10 / host_mev=20`, **not** the cap-3 variant).
+Flip validation (compiled-config proof, per-event flip-equivalence
+decomposition over 478 archives, knob-off control, 0 movers, nusel 239/239)
+is recorded in doc pr/127 §4; production arms are now
+`work-pr125r1-flipK5{98,141}-*`. The metric table below is the accepted
+cost, unchanged by the flip.
+
+The same message closed the production-pair scan — *"For item 2, things are
+good"* — with one exception, 137238, which turned out to be an unrelated
+regression of the pr/93 r4 fix for that event: doc pr/127.
+
+**(Superseded) HELD OFF — owner decision**: `shower_satellite_absorb` (the
+69314 fix).
 It is physics-clean on every hard check (0 movers, owned +0, nusel
 identical, 0 pdg flips, no genuine π⁰ touched) but absorbs unlabeled crumb
 charge into marked showers everywhere, which the em117 metric books as

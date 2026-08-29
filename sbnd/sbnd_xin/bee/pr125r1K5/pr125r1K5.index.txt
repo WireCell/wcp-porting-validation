@@ -1,4 +1,8 @@
-# doc pr/125 K5 decision pair (shower_satellite_absorb, DEFAULT OFF -- owner decision pending, doc sec 5)
+# doc pr/125 K5 decision pair (shower_satellite_absorb, doc sec 5)
+# OWNER VERDICT 2026-08-29 after scanning this pair: "item 3, flip on is fine" =>
+#   SBND PRODUCTION ON at the operating point scanned here (max_mev 10 / host_mev 20,
+#   NOT the cap-3 variant), toolkit d74c5524.  Flip validation: doc pr/127 sec 4.
+#   The ON column below is therefore the current production point for these 13 events.
 # A/B index -- OFF b169a068-fab5-4a27-ac4f-6cf1bbbd0eb5 / ON defaa224-b1ba-4fb3-8449-62b85637375f
 #   (UUIDs verified against the local zips by per-event mc-layer md5 BEFORE this file was
 #    written -- the pr/124 recording defect does not recur.  OFF = dbg98d/dbg141d = current
