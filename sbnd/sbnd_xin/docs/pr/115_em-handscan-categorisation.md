@@ -1075,8 +1075,9 @@ tuned on**.
 
 The 141 were scanned by the model, not by the owner (method, self-checks and
 QC: doc [pr/116](116_agent-handscan-pilot.md)); the owner reviewed a 30-event
-confirm set on a dedicated display. **Every label in this section is a model
-label** — see §17.5 before treating any of it as ground truth.
+confirm set on a dedicated display; **that review recorded no label changes**,
+so **every label in this section is a model label** — see §17.5 before treating
+any of it as ground truth.
 
 **No C++ and no jsonnet is changed in this round.** The four reconstruction arms
 below are produced with the *installed production binary* and, where a knob is
@@ -1336,6 +1337,23 @@ no-ops here: run alone, each leaves 9 showers / 27 owned / 352.6 MeV.
 Every `merge_relax` decision on this event is logged `verdict=gap_fail`, so this
 is not a merge-gate question at all.
 
+**The −320.1 MeV is two mechanisms, not one.** Only evt348471 orphans anything.
+On the other two loss events the ABSORB `ADD`/`SPLICE` decisions are *identical*
+with the knob on and off, the shower count and the owned-segment count do not
+move, and the charge simply changes hands between existing showers:
+
+| event | leading shower | receiving shower |
+|---|---|---|
+| evt181050 | 15006 253.4 → **204.9** (−48.5) | 68031 26.9 → **75.4** (+48.5) |
+| evt292524 | 79054 329.8 → **305.3** (−24.5) | 9018 307.1 → **318.8** (+11.7) |
+
+That is `shower_pass4_best_owner` doing exactly what it is named for —
+re-arbitrating which shower owns a contested segment. Whether it arbitrated
+*correctly* on these two is a scan question, not a defect: evt292524 is one of
+§17.5's two QC splits, so it is already an event two readers disagree about.
+**evt348471 is the different case** — no arbitration outcome is supposed to
+leave 12 segments owned by nothing, and that one is a defect on its face.
+
 **This is reported, not fixed.** Whether `shower_pass4_best_owner` should be
 turned back off, guarded, or left alone is the owner's call: it was flipped on
 pre-authorization after passing validation on the 98-event set, and the two
@@ -1350,7 +1368,9 @@ there — is one arm and is not run in this round.
   and **nothing shipped so far moves it at all**. §3's "over-clustering is an
   NCπ⁰ problem" does not hold on beam events — 16 of the 24 are νµCC.
 - **New item, ahead of (b): `shower_pass4_best_owner` needs a segment-orphaning
-  guard or a re-validation.** It is the only source of loss measured here.
+  guard.** It is the only source of loss measured here, and the sharp half of it
+  is narrow: one event, one splice, 12 orphaned segments. The two ownership
+  transfers are a separate and much softer question.
 - **(b)–(d) unchanged.** The π⁰ reporting defect and pr/91 P2 are untouched by
   this round.
 - The **over-reach line** (how far past its own body a shower may reach) is
