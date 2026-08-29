@@ -1,0 +1,7 @@
+# doc pr/120 round 1 A/B index -- OFF 6d6714c1-d2d5-4e8e-996a-69b8a4016455 / ON 3b8c1b82-1ef0-430a-823b-148ebc13f07f
+# OFF = pr/118 production (work-pr118r1-flipchk-mcp2k); ON = stem_backfill_back_guard (work-pr120r1-on2-mcp2k)
+# 2 events: the round's complete mover set (96/98 events byte-identical, nusel 98/98 identical, 0 vertex movers)
+# OWNER-REVIEWED 2026-08-28: "The scan looks OK" (both events approved)
+# bee_idx	event	status
+0	47212	RESCUED: backward stem 2103 (3.8cm pi+, 150.2deg to shower axis) no longer glued into the 124cm EM shower; qF1 0.965 -> 1.000, q_extra 5.5e5 -> 0; 2103 stays a plain PF track
+1	281567	mover: backward stem 95128 (7.0cm pi+, 150.4deg) released from shower 9025 (q_moved 1.9e5) -- the scan note's own complaint ("95128 has an overclustering issue of an EM shower isolated with a main cluster segment"); unlabeled event, owner-approved ("The scan looks OK")

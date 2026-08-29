@@ -270,6 +270,13 @@ Open ledger otherwise unchanged from doc 118 §7 (54332's uncharged-connector
 stub, 122660's long fragments, CC formulation, residual under-clustering on
 the pr/118 movers).
 
+**Follow-on**: doc pr/120 executed the admission-time arm of route 3 — the
+backward-stem guard (`stem_backfill_back_guard`, SBND ON) rescues 47212 and
+releases 281567's scan-noted stem; its census also showed the pass3_cone
+"backward" label angles were scanner-start-override artifacts (the
+wrong-owner class stays cascade-context territory) and moved 54332 to the
+recognition thread (kShowerTopology mis-flag on a straight track).
+
 ## 8. Files
 
 - toolkit (`apply-pointcloud`): `clus/src/NeutrinoShowerClustering.cxx` —

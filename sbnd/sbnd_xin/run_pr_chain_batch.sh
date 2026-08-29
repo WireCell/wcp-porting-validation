@@ -371,6 +371,19 @@ for _pr118 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr118 _env _key _val
+# doc pr/120 round 1 -- backward-stem + em-straight-track admission guards.
+# Bools tri-state (unset = cfg default, 1 = force on, 0 = force off);
+# numerics pass-through (EMPTY = no TLA = C++ default 110deg/20cm).
+[ -n "${SBND_STEM_BACKFILL_BACK_ANG:-}" ]          && CATH_TLA+=(--tla-code "stem_backfill_back_ang=${SBND_STEM_BACKFILL_BACK_ANG}")
+[ -n "${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN:-}" ]    && CATH_TLA+=(--tla-code "shower_ex1_walk_em_track_len=${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN}")
+for _pr120 in \
+    "SBND_STEM_BACKFILL_BACK_GUARD:stem_backfill_back_guard" \
+    "SBND_SHOWER_EX1_WALK_EM_TRACK_GUARD:shower_ex1_walk_em_track_guard" ; do
+    _env=${_pr120%%:*}; _key=${_pr120#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr120 _env _key _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
 for _d74 in \
