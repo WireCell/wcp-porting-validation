@@ -1,0 +1,60 @@
+# doc pr/129 (probe) -- the class-A objects pr/128's shipped continuation
+# predicate REJECTS.  Owner read requested 2026-08-29 ("yes please give me the
+# bee link").
+#
+# A/B index -- BASE 1ea73ac5-d158-4227-b463-e3d6b8764ace
+#              PROBE bbdf8327-9b75-4811-b4ff-931e79690d37
+#   BASE  https://www.phy.bnl.gov/twister/bee/set/1ea73ac5-d158-4227-b463-e3d6b8764ace/event/list/
+#   PROBE https://www.phy.bnl.gov/twister/bee/set/bbdf8327-9b75-4811-b4ff-931e79690d37/event/list/
+#
+# THIS IS NOT AN A/B OF A CANDIDATE PRODUCTION POINT.  These objects are
+# REJECTIONS, so a real OFF/ON pair would be identical and show nothing.  PROBE
+# force-admits them by opening the two terms that reject them -- kink 30->180
+# deg, gap 5->30 cm -- so you can see what would be added.  A 180 deg kink also
+# re-admits two of 72786's cosmics; that is why the probe runs on these three
+# events only and is not a proposal.
+#
+# BASE = work-pr128r1-on141-{mcp2k,mcp1k} = production today (post pr/128 flip).
+# PROBE = scripts/pr129_probe_arms.sh (same binary, two terms opened).
+# Repro:
+#   ./scripts/pr129_probe_arms.sh
+#   python3 scripts/bee/make_pr_bee.py -q work-mcp2k-grp0825 -q work-mcp1k-grp0825 \
+#     -p work-pr128r1-on141-mcp2k -p work-pr128r1-on141-mcp1k \
+#     -o bee/pr129probe/pr129probe-base.zip 393505 399118 318769
+#   (same event order, -p the probe arms, -o ...-probe.zip)
+#
+# CONTENT-VERIFIED TWICE, as standing practice since the link/event mismatch:
+#   (a) package vs source arm: md5 of data/<i>/<i>-mc.json == the source arm's
+#       pr_evt<ev>/mabc-pr.zip data/0/0-mc.json -- 6/6 on both sides.
+#   (b) LIVE REMOTE vs package: GET set/<uuid>/event/<i>/mc/ on both uploaded
+#       sets, normalised-JSON md5 vs the local zip -- 6/6 match (http 200).
+#   Only the mc (PF tree) layer differs between BASE and PROBE; the spatial
+#   layers are identical.  That is the SAME shape as the pr/128 package you
+#   approved (checked against bee/pr128r1 idx 1), not a defect here.
+#
+# CORRECTION vs what was first reported to the owner.  The rejected-energy
+# figure was quoted as 1364 MeV over these three events.  That was too high: it
+# counted 393505's 268.7 MeV track, which the pr/123 guard-freed pool ALREADY
+# emits and ALREADY counts ("kine_count_guard_freed: COUNT seg idx=13 cluster=15
+# pdg=13 ke_mev=268.70"), and which is in the BASE tree below.  The census TSV
+# it was scored from predates the double-emission guard, so a pure-geometry
+# filter over it overstates.  True missing KE over these three events is
+# 1095.7 MeV (493.2 + 481.0 + 121.5); Enu delta is +1421.2 MeV.
+#
+# bee_idx	event	status
+0	393505	BIGGEST, AND PRODUCTION IS CURRENTLY INCONSISTENT HERE -- please read this one first.  PROBE adds mu- 174 MeV (63.4 cm, kink 41.0, gap 0.00, 68.9 cm from the nu vertex) and mu- 318 MeV (131.4 cm, kink 58.8, gap 28.74, 77.1 cm out).  Enu 940.4 -> 1645.0 (+704.5 = 493.2 track + 2 muon rest masses).  THE POINT: all three of these objects -- the two added AND the 268 MeV mu- already in the BASE tree -- are segments of the SAME cluster 15.  Production today counts 268 MeV of cluster 15 (via the pr/123 guard-freed pool) while excluding 493 MeV of it.  So whichever way you rule, today's answer is wrong on this event: if cluster 15 is a real daughter we are losing 493 MeV; if it is a cosmic we are already counting 268 MeV that we should not be.  CAUTION, and it is why I am not proposing a knob: the kink profile (41.0, 58.8 deg) sits in the same band as 72786's confirmed cosmics (43.5, 89.5, 93.7, 108.3 deg), and cluster 15 reaches 77 cm off the vertex.
+1	399118	THE STRONGEST CASE FOR "REAL".  PROBE adds proton 481.0 MeV (108.8 cm, kink 47.3 deg) sitting 4.9 cm FROM THE NU VERTEX.  Enu 803.2 -> 1292.9 (+489.6).  The baseline candidate is already mu- 366 + pi0 149 + three small protons, so a 481 MeV proton at the vertex is the CC-candidate proton one would expect.  It is rejected only because the shipped predicate demands a straight CONTINUATION, and a primary emitted AT the vertex has no reason to be collinear with anything.  If you read this as a daughter, the fix is a vertex-proximity arm (small d_mainvtx, no kink term), never a looser global kink -- that re-admits 72786.
+2	318769	WEAKEST CASE.  PROBE adds mu- 121.5 MeV (39.8 cm, kink 42.0, gap 0.00) but it sits 114.3 cm from the nu vertex -- further out than anything shipped in pr/128, including 392901's 102.9 cm which you accepted.  Enu 826.6 -> 1053.8 (+227.1).  Same event as pr/128 idx 3 (the 44 MeV e- rescue that shipped), and it is also in the pr/124 worst-q_miss rows, so this may be part of that residual.
+#
+# What a vertex-proximity arm would cost, if idx 1 is real (scored on
+# docs/pr/pr128-pfnear-census.tsv, class A, d_mainvtx_cm):
+#   - At any cut from 5 to 20 cm it admits EXACTLY ONE object across both
+#     manifests: 399118's proton at 4.9 cm.
+#   - Nearest other candidate is 171572 at 20.4 cm -- but that one is guard-freed
+#     (same mechanism as 393505's 268 MeV track), so the double-emission guard
+#     already excludes it.  MUST BE RE-VERIFIED ON A POST-GUARD TAPE ARM before
+#     any arm is built; the census TSV predates the guard.
+#   - Nearest geometrically-admissible object is 72786's cosmic at 35.3 cm.
+#   The honest margin is therefore 4.9 -> 20.4 cm against a guard-excluded
+#   neighbour, and 4.9 -> 35.3 cm against a live one.  Not the "30 cm" first
+#   quoted, which used the cosmic and skipped the nearer candidate.
