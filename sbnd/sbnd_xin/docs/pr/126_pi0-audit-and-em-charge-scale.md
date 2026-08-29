@@ -602,6 +602,28 @@ become a real one if the pre-gates were ever loosened.
 * E2 failing is a statement about an inclusive enumeration on this sample, not a
   claim that no offline π⁰ selection can work.
 
+**Production point.** Every number here is pinned to the named pr/124 arms
+(§Repro), so the doc stays reproducible whatever lands next. For a reader after
+the pr/125 cfg flip (`shower_pass3_cone_guard_len=15` +
+`shower_samevtx_track_absorb=true`), the overlap was measured rather than
+assumed:
+
+* **None of the 50 hand-paired π⁰ is among the events that flip moves**
+  (94392, 52693, 77328, 173819, 415278, 396222, 137238, 37112, and the no-ops
+  175896/176502). §3 and §4a–§4d — the sample, the mass distribution, the fit,
+  the CI and the recommendation — are therefore **unaffected**.
+* Ten of those events *are* inside the 239-event census, and four carry accepted
+  π⁰ groups today: 37112 (1 group), 176502 (3), 396222 (1), 415278 (2) = **7 of
+  the 76**. So §2.5's `kine_pio_*` split, §4f's section C/D counts and §4e's
+  re-selection table can each move by up to those 7 groups / 4 events. Re-run
+  `pr126_pi0_census.py` against the post-flip arms to refresh them; §4's
+  conclusions do not depend on them.
+* Worth a look when that flip lands: **37112 is the owner's *"no pi0???"* scan
+  note** (§3) and it currently *does* carry one accepted π⁰ group, at
+  `kine_pio_mass` 281 MeV. `shower_samevtx_track_absorb` fires on exactly two
+  fragments in that event, so the flip is landing directly on an event with a
+  standing owner π⁰ complaint.
+
 # 7. Files
 
 | file | what |
