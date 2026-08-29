@@ -1,0 +1,20 @@
+# doc 84 round 3 -- 10 Pop-B cathode-split pairs the production bridge did NOT
+# take (long_muon_cathode_bridge_pass; cfg xcut=6cm, gap<=20cm, angle<=25deg
+# both gap-vector and partner-tangent).  Read-only census probe
+# (d84r2_census.py) numbers only -- not a re-derivation of the C++ guard, so
+# treat "PASSES" below as "the probe didn't flag a violation," not proof the
+# production code would have fired.
+#
+# https://www.phy.bnl.gov/twister/bee/set/8d6d0e58-29ff-49e8-bec3-72265ae80c9b/event/list/
+#
+# bee_idx  event    sample  verdict
+0	172794	mcp1k	angle guard: angle_gap 40.5 / angle_tan 38.1 (both > 25deg) -- steep kink, probably a correct reject
+1	289559	mcp1k	angle guard: 3 candidate partners, all fail angle (34-171deg) -- correct reject
+2	347890	mcp2k	MIXED: best-gap row (gap 14.3, angle_gap 15.4, angle_tan 6.2) PASSES probe admission but did not fire; partner is a shower with ke=64.9 MeV (not muon-typed) -- plausibly the type guard, unverified
+3	392901	mcp2k	KNOWN EXCLUSION: partner shower ke=106 MeV, PASSES geometric admission (gap 17.8, angle_gap 19.7, angle_tan 14.0) but is an EM shower (pdg 11), correctly excluded by the muon-typed-partner guard
+4	407798	mcp2k	UNRESOLVED: bare partner, gap~0, angle sentinel -1.0 (degenerate -- census probe leaves it undefined; production cb_angle_deg() returns 181deg i.e. FAIL for an exactly-degenerate vector, so this is likely a probe-vs-production computation mismatch, not re-derived here) -- worth a first look
+5	410680	mcp2k	angle guard: both candidate partners fail angle (28-160deg) -- correct reject
+6	493659	mcp2k	angle guard: borderline -- angle_gap 25.2 (just over the 25.0 cutoff), angle_tan 41.9 -- worth a look, may be a near-miss
+7	67026	mcp2k	angle guard: angle_gap 74.7 (angle_tan 5.7 alone would pass) -- correct reject
+8	92159	mcp2k	MIXED: best row (gap 9.7, angle_gap 4.3, angle_tan 11.0) PASSES probe admission but did not fire; partner is a shower with ke=14.7 MeV (not muon-typed) -- plausibly the type guard, unverified
+9	98470	mcp2k	angle guard: 6 candidate partner rows, all fail angle heavily (26-172deg) -- correct reject

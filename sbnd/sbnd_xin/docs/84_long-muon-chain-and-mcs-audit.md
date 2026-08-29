@@ -1306,3 +1306,46 @@ population; any quantitative use of `kine_mcs_energy` should cut on
 arbiter is the truth-level numu sample (owner item): reco-vs-truth for the
 amb<0.2 population directly tests whether the ~5% low bias is real scale or
 range-table convention.
+
+## R3.8 Bee package for the 10 unclaimed Pop-B pairs (owner hand-scan)
+
+```
+python3 scripts/bee/make_pr_bee.py \
+  -q work-mcp1k-grp0825 -q work-mcp2k-grp0825 \
+  -p work-d84r3-cens-mcp1k -p work-d84r3-cens-mcp2k \
+  -o bee/d84r3/d84r3-popb-unclaimed.zip \
+  172794 289559 347890 392901 407798 410680 493659 67026 92159 98470
+./upload-to-bee.sh bee/d84r3/d84r3-popb-unclaimed.zip
+```
+
+All 10 events built cleanly (no `NO-BRIDGE`, no unevaluated refusal).  Index:
+`bee/d84r3/d84r3-popb-unclaimed.index.txt`. URL:
+https://www.phy.bnl.gov/twister/bee/set/8d6d0e58-29ff-49e8-bec3-72265ae80c9b/event/list/
+
+Re-checking the census probe's own numbers (`long_muon_cathode_bridge`'s
+admission is `xcut<=6cm` end-to-plane, `gap<=20cm`, `angle<=25deg` on both
+the gap-vector and the partner-tangent angle) against the 22 candidate rows
+for these 10 events splits them into two groups worth scanning differently:
+
+- **7 events are angle-guard rejects by a wide margin** (172794, 289559,
+  410680, 67026, 98470, plus one row each of 347890/92159): angle_gap or
+  angle_tan sits 30-170 deg past the 25 deg cutoff. These read as genuine
+  kinks/unrelated tracks, not missed muons — scan to confirm, not expecting
+  surprises. **493659 is the one near-miss in this group**: angle_gap=25.2
+  deg, 0.2 deg over the cutoff — worth a specific look.
+- **3 events pass the probe's own admission numbers but the production pass
+  did not fire on them**: 347890 and 92159 pair with a shower partner that
+  carries nonzero `ke` (64.9 / 14.7 MeV) — plausibly the muon-typed-partner
+  guard correctly excluding an EM shower, same as the already-known 392901
+  exclusion, but not verified against the C++ typing here. **407798 is
+  unresolved**: its gap is ~0 and the census probe's angle field is a
+  degenerate sentinel (-1.0) it doesn't compute, whereas the production
+  `cb_angle_deg()` returns 181 deg (i.e. fails) for an exactly-degenerate
+  vector — so this may be a probe-vs-production numerical mismatch rather
+  than a real guard rejection. Flagging for the owner's read; not
+  re-derived from the C++ here.
+
+No code changes proposed from this pass — the ask was links + a scan, not a
+fix. If the hand-scan finds a genuine miss, the natural next step is
+tightening/loosening the specific guard field the miss violates, as its own
+round with a fresh A/B.
