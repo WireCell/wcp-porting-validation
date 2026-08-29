@@ -1349,3 +1349,265 @@ No code changes proposed from this pass — the ask was links + a scan, not a
 fix. If the hand-scan finds a genuine miss, the natural next step is
 tightening/loosening the specific guard field the miss violates, as its own
 round with a fresh A/B.
+
+# Round 4 — the three cathode-bridge admission misses the owner named
+
+## R4.0 Repro
+
+```
+# knob-off sentinel arm (byte-identical; reads production's own reject reasons)
+/home/xqian/tmp/d84r4/popb_arm.sh sent1
+# per-knob and combined ON arms over the same 10 events
+/home/xqian/tmp/d84r4/popb_arm.sh lev15 SBND_LONG_MUON_CATHODE_BRIDGE_LEVER=15
+/home/xqian/tmp/d84r4/popb_arm.sh trk   SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER=1
+/home/xqian/tmp/d84r4/popb_arm.sh sg    SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP=8
+/home/xqian/tmp/d84r4/popb_arm.sh all   SBND_LONG_MUON_CATHODE_BRIDGE_LEVER=15 \
+      SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER=1 SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP=8
+# 98-event four-sample gate arms
+/home/xqian/tmp/d84r4/arms98.sh off1
+python3 scripts/pr85_hash_gate.py work-pr124r1-flipA98-<s> work-d84r4-off1-<s>
+```
+
+Toolkit baseline `81c178d1` (doc 84 r1-3 + pr/123 r1-2 + pr/124 front A).
+Arms pin `SBND_SHOWER_PASS3_CONE_GUARD_LEN=0`, the peer's pr/124 front C knob,
+to its value at that HEAD so a concurrent flip cannot leak into the comparison.
+
+## R4.1 The owner's verdict on the round-3 Bee set
+
+The owner scanned all 10 unclaimed Pop-B pairs (set `8d6d0e58`, R3.8) and
+returned **three genuine misses; the other seven are correct rejects**:
+
+| owner's words | event |
+|---|---|
+| "muon → neutron → muon, should be a long muon going through the cathode (gap)" | **172794** (mcp1k) |
+| "pion → neutron → muon, should be a long muon going through the cathode (gap)" | **347890** (mcp2k) |
+| "the muon was broken by the cathode; the second half was id'ed as neutron → muon and attached to the ROOT, it should be part of the long muon" | **67026** (mcp2k) |
+
+The owner wrote "18255" for the second — that is the SBND **run** number, not
+an event id.  Identified as **347890**: it is the only event in the set whose
+PF tree is a *cathode-crossing* `pi+ → neutron → mu-` (`pi+ 64 MeV, 19.0 cm,
+x −11.6→+2.5` → carrier `x −4.2→+5.0` → `mu- 429 MeV, 177.7 cm,
+x +5.0→+106.9`; ≈209 cm end to end), with two independent numeric matches
+against the census index (carrier length 14.3 cm = the census gap; pi+ 64 MeV
+= partner_ke 64.9).  392901 also carries a literal pi→n→mu chain, but both its
+segments sit on the *same* side, 7 cm off the cathode, with a 24 cm muon — its
+actual cathode-crossing chain is `e-`-parented, the known EM exclusion.
+
+**The "neutron" is a display artifact, not a particle.**
+`append_pseudo_shower` (`clus/src/MultiAlgBlobClustering.cxx:2039-2067`)
+renders any *gap-connected* daughter behind a pseudo-γ (EM) or pseudo-neutron
+(non-EM) carrier; no PR-graph segment is ever typed 2112 (every
+`ParticleInfo` construction in `clus/src/` emits only {0, 11, 13, 211, 2212}).
+Every carrier in this set inherits its child's energy exactly (172794 533/533,
+347890 429/429, 67026 181/181), which is what a *split of one track* looks
+like.  So the neutron is the **symptom** the owner sees in Bee — "the graph
+could not walk there" — and the cause is an admission guard.  Each of the
+three fails a different one.
+
+## R4.2 Root causes, from production's own arithmetic
+
+Round 4 adds the missing diagnostic first: the pass logged *accepted* bridges
+only and was silent on rejects, so a non-firing bridge could not be explained
+without re-deriving the geometry outside the toolkit.  The new
+`long_muon_cathode_bridge: reject <guard> ...` DEBUG line prints one row per
+candidate that reaches the matching loop.  Knob-off arm `work-d84r4-sent1-*`:
+
+| evt | partner | len | gap | a_gap | a_tan | verdict |
+|---|---|---|---|---|---|---|
+| 172794 | bare | 68.6 | 13.6 | 45.9 | 44.3 | **G1** — both angles fail together |
+| 67026 | bare | 257.9 | 5.6 | **73.8** | **7.7** | **G3** — collinear, gap vector meaningless |
+| 493659 | bare | 71.7 | 4.1 | 25.1 | 26.9 | correct reject (owner: good); the 0.1° near-miss on a_gap is not the binding cut — a_tan 26.9 fails too |
+| 407798 | bare | 38.8 | **0.0** | **181.0** | 7.3 | correct reject: partner shares a vertex with the muon inside one cluster; `cb_angle_deg` returns 181 for the zero-length gap vector |
+| 289559 | bare | 5.4–12.9 | 0.0–12.4 | 76–181 | 34–103 | correct reject (3 candidates, all wide) |
+
+Only 5 of the 10 produce a reject row at all.  **347890, 392901, 77978, 92159
+and 98470 produce none** — they die *upstream of geometry* at the partner-type
+guard (E5, `TaggerCheckNeutrino.cxx`
+`if (osh && std::abs(osh->get_particle_type()) != 13) continue;`), and 410680's
+far half is below the hardcoded 5 cm `min_len`.  That silence is itself the
+diagnosis for 347890.
+
+- **G1 / 172794 — the 5 cm direction lever.** Both angle tests are measured
+  against one reference, `cont = -me.into`, from
+  `segment_cal_dir_3vector(seg, p, lever)` with `lever` hardcoded 5 cm.  That
+  is a *centroid* direction — it averages every fit point within `lever` of the
+  end — evaluated exactly where cathode charge loss is worst.  Both angles fail
+  *together* (45.9 / 44.3) because the reference is bent, while the gap vector
+  and the partner direction agree with **each other** to ~8°.  Production's
+  own lever sweep: 5 cm → 45.9/44.3 reject; 10 cm → 29.2/26.1 still reject;
+  **15 cm → bridges**; 20 cm → bridges.
+- **G2 / 347890 — the partner-shower type guard.** Geometry passes cleanly
+  (gap 14.3, a_gap 15.4, a_tan 6.2 — better than three of the four round-2
+  successes) but is never evaluated: the facing segment 8008 is pdg 11 and its
+  **owning shower 8007 is pdg 211** (pi+, 27.1 cm, 64.9 MeV) — a mis-PID'd
+  short muon stub, not an EM shower.
+- **G3 / 67026 — the gap-vector angle is uninformative at short gaps.** a_tan
+  is 7.7° between the near half and a 257.9 cm muon-typed bare partner, but the
+  5.6 cm gap vector is 73.8° off: the halves are parallel and laterally offset
+  ~4.9 cm.  A gap vector's angular precision goes as ~atan(σ_endpoint/gap), so
+  at 5.6 cm it carries no information.
+
+**The owning-shower pdg is the clean discriminator for G2** — it separates the
+one event the owner wants from every EM case he called good:
+
+| evt | facing seg pdg | owning shower pdg | owner |
+|---|---|---|---|
+| 347890 | 11 | **211** | should bridge |
+| 392901 / 77978 / 92159 / 98470 | 11 | 11 | correct reject |
+
+**Correction to R3.8**: 407798 was flagged there as "unresolved, possibly a
+probe-vs-production angle-sentinel mismatch".  It is resolved and is a
+**correct reject** — gap is exactly 0.0 because the partner shares a vertex
+with the muon in the same cluster (a normal graph junction), and the 181.0
+sentinel is production working as designed, not an artifact.  R3.8's
+speculation was wrong.
+
+## R4.3 What shipped (knob table) — all default-legacy
+
+| config key | C++ default | SBND | what it does |
+|---|---|---|---|
+| `long_muon_cathode_bridge_lever` | `5.0` cm | **15.0** | end-direction lever; 5.0 == the round-2 hardcode, so the default is byte-identical (G1) |
+| `long_muon_cathode_bridge_track_partner` | `false` | **true** | E5 also admits a \|211\|-typed partner SHOWER; EM (11/22) stays excluded (G2) |
+| `long_muon_cathode_bridge_short_gap` | `0.0` cm (off) | **8.0** | below this gap the gap-vector angle test is waived (G3) |
+| `long_muon_cathode_bridge_short_gap_angle` | `10.0` deg | (default) | partner-direction cap required when the waiver applies |
+| `long_muon_cathode_bridge_short_gap_len` | `50.0` cm | (default) | min partner length required when the waiver applies |
+
+Two implementation points that the code reading forced, both load-bearing:
+
+1. **The waiver never applies to a degenerate gap.** `gap > 0` is a hard
+   precondition, independent of the a_tan and length gates, because the 181.0
+   return for a zero-length gap vector is the *only* thing rejecting 407798.
+   Without it, waiving the gap-angle test at `gap <= 8` would resurrect a
+   same-cluster graph junction the owner explicitly called good.
+2. **A `track_partner`-admitted partner cannot win the keeper contest.** The
+   merge branch ranks keeper by
+   `(start_vertex==main_vertex ? 0:1, −muon_member_length, shower_id)`.  In
+   347890 the pi+ shower *is* the root-attached one, so it wins the first key —
+   the 182.9 cm muon shower would have been dropped into a 211-typed keeper,
+   relabelling a muon as a pion and diverting it out of
+   `calculate_kinematics_long_muon`.  When the partner is admitted only by
+   `track_partner`, the muon shower is pinned as keeper and the absorbed
+   members are retyped to 13, mirroring what the bare-chain branch already
+   does.  Verified below: 347890's merged shower comes out pdg 13.
+
+Scope is unchanged from rounds 2-3: the bridge adds the far half to the
+**shower**, not to `segments_in_long_muon`, so tagger features and `nusel`
+keep their legacy inputs.  With `mcs_bridged_members` (round 3, SBND ON) the
+newly bridged halves do reach the MCS fit.
+
+## R4.4 ON smoke — each knob rescues exactly its own event
+
+Per-knob arms over the same 10 events, `<arm>` vs `sent1`:
+
+| arm | events that fire | what fires |
+|---|---|---|
+| `lev15` | 172794 only | `absorb bare chain into sid=1 nseg=1 len=68.6cm gap=13.6cm reseat=1` |
+| `trk` | 347890 only | `merge shower sid=5 (mu_len=182.9cm) <- sid=0 (mu_len=27.1cm) gap=14.3cm` |
+| `sg` | 67026 only | `absorb bare chain into sid=0 nseg=1 len=257.9cm gap=5.6cm reseat=1` |
+| `all` | exactly those three | — |
+
+**392901 stays unbridged in every arm** — the EM exclusion survives, as it
+must.  The four round-2 successes are untouched.
+
+Effects (`sent1` → `all`), all `bad_path=false`:
+
+| evt | MCS len | ke_MCS | amb | ke_range_toolkit |
+|---|---|---|---|---|
+| 172794 | 230.1 → **298.7** cm | 483.9 → **661.0** | 2.6e-5 → 7.1e-8 | 533.1 → **687.8** |
+| 347890 | 182.9 → **210.0** cm | 365.9 → **432.4** | 1.7e-3 → 3.3e-4 | 429.4 → **488.7** |
+| 67026 | unchanged (see below) | 1241.9 | 0.5996 | 595.3 |
+
+New sentinels: `bridged members added nseg_bridged=1 len_bridged=68.6cm`
+(172794), `nseg_bridged=5 len_bridged=27.1cm` (347890).  Both fits get
+*less* ambiguous, and both move toward their own range KE.
+
+**347890's PF label is correct after the merge**: the pi+ shower 8007
+disappears from the shower list and all five of its members are retyped 13
+inside muon shower 4000, whose `kine_best` goes 429.4 → 488.7 MeV.  No pion
+relabelling of the muon.
+
+**67026's `mcs:` line is unchanged, and that is expected, not a miss.** MCS
+selects via `long_muon_else_pf`; the chain is empty (`nseg_chain=0`) so it
+falls back to the PF muon, which was *already* segment 17001 — the 257.9 cm
+far half — both before and after.  What the bridge fixes is the **shower**:
+
+| | muon shower | members | L_members | kine_range = kine_best |
+|---|---|---|---|---|
+| before | 35011 | 2 | 67.2 cm | **181.7 MeV** |
+| after | 17001 (re-seated) | 3 | **325.1 cm** | **748.6 MeV** |
+
+i.e. the reconstructed muon energy goes 181.7 → 748.6 MeV — the largest single
+rescue of the three.  `bridged_out` adds nothing to MCS here only because the
+segment it would add is the one MCS had already picked.
+
+## R4.5 Gate ledger
+
+| gate | arms | result |
+|---|---|---|
+| knob-off byte-identical | `work-pr124r1-flipA98-<s>` vs `work-d84r4-off1-<s>` (98 evts, 4 samples) | **PASS 196/196** archives (28+34+38+96); per-event `nusel-evt*.tsv` **98/98** identical |
+| doctests | `build/clus/wcdoctest-clus` | 2506/2506 (235 cases, incl. five new default pins) |
+| compiled config, knobs off | full-pipeline `wcsonnet` (reality=data + PR pipeline_names), HEAD `81c178d1` jsonnet vs edited | **byte-identical** (`cmp`) |
+| compiled config, knobs on | same + 3 TLAs | exactly `long_muon_cathode_bridge_{lever,track_partner,short_gap}` appear in the TCN node; nothing else moves |
+| freshness | `local/lib/libWireCellClus.so` 06:03:56 > last source edit 06:02:33 | OK (M1) |
+
+Baseline choice: gated against `work-pr124r1-flipA98-*`, **not** the round-3
+`work-d84r3-cens-*` — the peer's pr/124 front-A flip (`shower_pass4_prune_gap2=25`)
+moved 27 events off the round-3 census between rounds.  Arms pin
+`SBND_SHOWER_PASS3_CONE_GUARD_LEN=0` (the peer's pr/124 front C, OFF at
+`81c178d1`) so a concurrent flip on their side cannot leak in.
+
+## R4.6 Over-reach — ON moves nothing outside the three movers
+
+**None of 172794 / 347890 / 67026 is in either gate manifest**, so the ON arms
+over those manifests are a *pure* over-reach test: with all three knobs on,
+nothing should move at all.
+
+| gate | arms | result |
+|---|---|---|
+| ON vs OFF, 98-evt 4-sample | `work-d84r4-off1-<s>` vs `work-d84r4-on1-<s>` | **PASS 196/196** archives (28+34+38+96) |
+| ON vs production, 141-evt | `work-pr124r1-flipA141-<s>` vs `work-d84r4-on141-<s>` | **PASS 282/282** archives (104+178); `nusel` **141/141** identical |
+| determinism | `work-d84r4-all-<s>` vs `work-d84r4-all2-<s>` (identical env) | **PASS 20/20**; bridge + `mcs:` sentinel lines identical on all three movers |
+| flip equivalence | `work-d84r4-all-<s>` (env) vs `work-d84r4-flipchk-<s>` (jsonnet only) | **PASS 20/20**; all three fire from the jsonnet alone |
+
+239 gate events, zero movers.  Inside the 10 scanned Pop-B events, each knob
+fires on exactly its own target and **392901 stays unbridged in every arm**.
+
+**Scope limit, stated honestly:** the owner chose the manifest+scanned-set
+validation scope over a 3000-event re-run this round.  So the population bound
+on new fires is the *read-only probe* number — over the 1366 round-3 census
+events with calib json, the shipped values admit exactly the three owner
+events and nothing else — plus 239 production events showing zero movement.
+That is not the same as a production census re-run, and a future round that
+re-runs the full 3000 should confirm the fire count goes 10 → 13.
+
+## R4.7 SBND production flip (owner pre-authorization, 2026-08-29)
+
+Asked before implementation and pre-authorized conditional on OFF-gate PASS +
+clean ON smoke + no fourth mover; all three held.  `wct-pr-perevt.jsonnet` now
+ships `long_muon_cathode_bridge_lever = 15`,
+`long_muon_cathode_bridge_track_partner = true`,
+`long_muon_cathode_bridge_short_gap = 8` (commit `a8cbfa4a`; knobs
+`8ac21ecc`).  `_short_gap_angle` / `_short_gap_len` stay at the C++ defaults.
+
+Runner env seats (`SBND_LONG_MUON_CATHODE_BRIDGE_{LEVER,TRACK_PARTNER,SHORT_GAP,SHORT_GAP_ANGLE,SHORT_GAP_LEN}`)
+landed in wcp `2a38aa90` — a concurrent session's `git commit` swept them out
+of the shared index; the seats are correct and left in place rather than
+churning the runner mid-round.
+
+**Probe-vs-production note worth keeping.** The read-only census probe uses an
+arc-length tangent; production uses `segment_cal_dir_3vector`, a centroid
+direction. They agree on *which* guard fires for every event here, but not on
+the threshold: the probe said a 10 cm lever would rescue 172794, production
+needed 15 cm (10 cm still gives 29.2/26.1, both just over the 25° cap).  Pick
+knob values from production's own sentinel, never from the probe.
+
+## R4.8 Open, not closed
+
+- The 3000-event fire count is unmeasured at the new settings (see R4.6).
+- 410680's far half is below the hardcoded 5 cm `min_len` in `collect_ends`,
+  so it never reaches geometry.  The owner called it good, so no action — but
+  `min_len` remains the one bridge constant with no knob.
+- 67026 gains nothing in MCS (`bridged_out` adds only the segment MCS had
+  already selected) while gaining 567 MeV in the range kinematics.  The MCS
+  muon-selection order and the bridge now disagree about which half is "the"
+  muon; harmless here, worth a look if a future case has both halves long.
