@@ -1033,8 +1033,11 @@ fill-once guard).
 ## R2.6 Bee package (held for owner)
 
 `bee/d84r2/d84r2-on.zip` (31 events, round-1 index order) is built from the
-on2 arm and annotated in `bee/d84r2/d84r2.index.txt`; **not uploaded** —
-outward-facing, owner call.  BEFORE for the scan is the already-uploaded
+on2 arm and annotated in `bee/d84r2/d84r2.index.txt`; uploaded
+2026-08-28 (owner-authorized):
+**AFTER = `05e53da9-db17-4f1c-af19-63a47817700c`**
+(https://www.phy.bnl.gov/twister/bee/set/05e53da9-db17-4f1c-af19-63a47817700c/event/list/).
+BEFORE for the scan is the already-uploaded
 round-1 ON2 set `ea9b4914-6152-4cc4-9da7-df104939e6e0` (byte-equivalent to
 current production, flip-equivalence PASS 62/62).  Both knobs are SBND OFF
 until that scan.

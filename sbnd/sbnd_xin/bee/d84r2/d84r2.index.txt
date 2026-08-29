@@ -1,4 +1,4 @@
-# doc 84 round 2 A/B index -- BEFORE = round-1 ON2 set ea9b4914-6152-4cc4-9da7-df104939e6e0 (current SBND production state, flip-equiv PASS 62/62); AFTER = d84r2-on.zip (NOT YET UPLOADED -- owner call)
+# doc 84 round 2 A/B index -- BEFORE = round-1 ON2 set ea9b4914-6152-4cc4-9da7-df104939e6e0 (current SBND production state, flip-equiv PASS 62/62); AFTER = 05e53da9-db17-4f1c-af19-63a47817700c (d84r2-on.zip, uploaded 2026-08-28 owner-authorized)
 # after = production + long_muon_members_geometry + long_muon_cathode_bridge (both C++-default OFF, held for this scan); pr/123 pass4 pinned OFF for attribution
 # bee_idx	event	status
 0	66366	unchanged (round-1 P3 rescue stands: chain 300.6cm, best range 692.2 MeV)
