@@ -33,6 +33,7 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 python3 scripts/pr126_pi0_select.py --selftest
 python3 scripts/pr126_pi0_select.py --tsv docs/pr/pr126-pi0-events.tsv \
                                     --manifest em_display/pr126-pi0-manifest.tsv
+python3 scripts/pr126_pi0_select.py --rescan docs/pr/pr126-pi0-rescan.tsv   # sec 4i
 
 # sec 4 -- the mass distribution and the scale fit (E1), then E2
 python3 scripts/pr126_pi0_mass.py --selftest
@@ -243,6 +244,19 @@ real the moment its pre-gates were loosened.
 (Distinct and not to be confused: `kine_pio_flag == 2` on 2 of 239 events. That
 is the *BDT-feature* selection of §2.5, which runs whether or not any pair was
 accepted, not an acceptance by Path 2.)
+
+> **Update — the vertex mutation stopped being theoretical (pr/125, toolkit
+> `8b371920`).** At the flipped production point Path 2 accepts **exactly one**
+> group across the same 239 events: evt **396222** (`pi0=with:0,without:1`;
+> every other event still `without:0`). Its main vertex duly **moves 1.4 cm**
+> — (121.70, −164.44, 312.59) → (122.09, −164.42, 311.27) — and
+> `kine_reco_Enu` goes **4613 → 3797 MeV**. Cause chain, traced by the pr/125
+> session: that round's track declines reshape the shower set, Path-1 pairing
+> fails where it used to succeed, and Path 2 fires into the gap. Recorded in
+> doc pr/125 §5.3 and flagged to the owner as a Bee row. Read together with the
+> counts above, the lesson is that Path 2's dormancy is a *property of the
+> current shower set*, not a safety margin: anything that thins the main-vertex
+> shower population can wake it, and when it wakes it moves the neutrino vertex.
 
 ### 2.7 Tie-break and ordering — parity confirmed
 
@@ -630,6 +644,71 @@ convention, sample and the prototype's own constant.
 
 ---
 
+## 4i. Why the primary sample is only n=19 — and where the rest of it is
+
+The hand scans are large; the calibration cell is not. The gap is worth spelling
+out, because most of it is **my gating, and one of those gates was too tight**.
+
+| stage | n |
+|---|---|
+| events scanned across the two hand scans | **238** (97 + 141) |
+| … carrying a stored π⁰ **pairing** (`label["pio"]`) | **50** |
+| … **and** truth `origin == ncpi0` (the pre-registered primary gate) | **22** |
+| … **and** a vertex-chord mass exists (285567, 506746 have no π⁰ vertex) | 20 |
+| … **and** `min(E₁,E₂) > 15 MeV` (76346's 5 MeV γ) | **19** |
+
+Every other label tag on disk was checked (`em3dbrowsertest`, `tmprecnew/old`,
+`tmpr11smoke`, `emscan-0828-beam141`, `selftest114`): they hold 7 more π⁰
+blocks, **all duplicates of events already in the 50**. Nothing was missed.
+
+### The ncπ⁰-only gate cost more than it bought
+
+I gated the primary on `origin == ncpi0` because only that subsample is
+*guaranteed* to contain a true π⁰. That was over-conservative:
+
+* the 141-set contains **zero** truth-ncπ⁰ by construction, so the gate discards
+  all 24 of its pairings at a stroke;
+* numuCC events genuinely produce π⁰s — "not an ncπ⁰ sample" is not "no π⁰";
+* the two subsamples were checked for consistency **before** any peak was fitted
+  (§4a: vertex-convention medians 137.7 ncπ⁰ vs 135.7 non-ncπ⁰, well inside their
+  CIs), so pooling was already licensed by a pre-registered check rather than
+  rescued after the fact;
+* and the pooled cell is simply better: **n = 45, peak 140.6, CI68 [136.3, 144.3]
+  → fudge 0.833 [0.808, 0.855]**, a central value consistent with the ncπ⁰-only
+  0.829, a **tighter** interval, and one that **excludes** no-correction.
+
+So the §4g recommendation does not rest on 19 events. It rests on five cells
+spanning n = 19 to 49 whose central values run 0.829 – 0.877; the n = 19 cell is
+the most conservative of them, and is quoted as primary only because that is
+what was pre-registered.
+
+### Where the missing statistics actually is
+
+The dominant cut is not any of my gates — it is **238 → 50**. Both scans were EM
+shower **clustering** scans; a π⁰ pairing was stored only when the scanner chose
+to make one. That is unasked data, not absent data. Measured
+(`pr126_pi0_select.py --rescan`, → `docs/pr/pr126-pi0-rescan.tsv`):
+
+> Of the **188** scanned-but-unpaired events, **109 have ≥ 2 EM showers above the
+> code's own 15 MeV threshold and 3 cm length cut** — i.e. a pairing was
+> physically possible. **18** of those are truth ncπ⁰.
+
+A targeted π⁰-pairing pass over those 109 — the display already stores exactly
+the block §3 consumes, and the TSV is ordered by second-γ energy so the
+best-measured candidates come first — would take the sample from 50 toward ~150
+and the ncπ⁰ subsample from 22 toward ~40. At n ≈ 45 the interval is already
+±0.024 in the fudge factor; at n ≈ 150 it would be roughly halved, which is what
+separates 0.83 from 0.88.
+
+The head of that list is instructive on its own: **415278** (9 EM showers, 1380
+and 1144 MeV), **176502** (3450 + 715), **142421** — the owner's own
+*"a major shower not tagged as shower"* — and **37112**, the *"no pi0???"*
+specimen of §5. Several of the events the owner flagged by hand are in the
+unpaired 109, which is the cleanest evidence that the pairing pass is the
+missing step rather than more events.
+
+---
+
 ## 4h. The other charge scaling factors: where they apply, and where dQ/dx→dE/dx takes over
 
 Owner question: *"what are the other charge scaling factor for tracks? Note for
@@ -727,12 +806,14 @@ Nothing below is implemented. Each item names the measurement behind it, the
 shape of the knob, and what it would cost. **No knob is added or flipped in this
 round** (CLAUDE.md §5.1).
 
-**0. Scan more π⁰ before flipping anything.** §4c: the calibration's CI contains
-135. 46 of the 98-set are truth-ncπ⁰ and only 22 were paired; the 141-set has
-zero ncπ⁰. A targeted π⁰-pairing scan over the unpaired ncπ⁰ events — the
-`em_display` viewer already stores exactly the block §3 consumes, and
-`em_display/pr126-pi0-manifest.tsv` is the seed — would roughly double n and is
-the cheapest path to a resolved number. *Cost: scan time only.*
+**0. Pair the π⁰ that were already scanned.** §4i: of 238 scanned events only
+50 carry a stored π⁰ pairing, yet **109 of the 188 unpaired ones have ≥2 EM
+showers above the code's own 15 MeV / 3 cm cuts** — a pairing was possible and
+simply was not asked for, because both scans were clustering scans. The list is
+`docs/pr/pr126-pi0-rescan.tsv`, ordered by second-γ energy, and several of the
+owner's own flagged events (415278, 176502, 142421, 37112) are on it. This is
+the cheapest path to separating 0.83 from 0.88 in §4g, and it needs no new
+production. *Cost: scan time only.*
 
 **1. Fix the γ-typed-as-track PID, not the π⁰ cuts.** §4f: 8 of the 24 misses.
 Concretely: 169626, 285567, 506746, 54341, 52044 have a γ at pdg 211; 47212 has
@@ -839,6 +920,9 @@ assumed:
   re-selection table can each move by up to those 7 groups / 4 events. Re-run
   `pr126_pi0_census.py` against the post-flip arms to refresh them; §4's
   conclusions do not depend on them.
+  The flip has since landed (toolkit `8b371920`) and its divergence set is
+  confirmed as exactly {94392, 52693, 77328, 173819, 396222, 415278, 37112};
+  the §2.6 update records the one substantive π⁰ consequence.
 * Worth a look when that flip lands: **37112 is the owner's *"no pi0???"* scan
   note** (§3) and it currently *does* carry one accepted π⁰ group, at
   `kine_pio_mass` 281 MeV. `shower_samevtx_track_absorb` fires on exactly two
@@ -857,6 +941,7 @@ assumed:
 | `docs/pr/pr126-pi0-census.tsv` | per-event match class and blocker |
 | `scripts/pr126_pi0_peak.py` | §4g peak fit, estimator comparison, window scan, toy bias validation |
 | `docs/pr/pr126-pi0-peak.tsv` | the §4g table |
+| `docs/pr/pr126-pi0-rescan.tsv` | §4i: the 109 scanned-but-unpaired events where a π⁰ pairing was possible |
 | `docs/pr/pr126-pi0-pairs.tsv` | the 830 E2 candidate pairs |
 | `em_display/pr126-pi0-manifest.tsv` | re-runnable manifest of the π⁰ subset |
 

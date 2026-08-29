@@ -279,6 +279,48 @@ def write_manifest(rows, path):
     print("wrote %s" % path)
 
 
+def rescan_candidates():
+    """Scanned events that carry NO stored pi0 pairing but where one was
+    physically possible: >= 2 EM showers over the code's own 15 MeV threshold
+    and over the 3 cm length cut.
+
+    This is the answer to "why is the calibration sample only n=19": the two
+    scans were EM-shower-CLUSTERING scans, so a pi0 pairing was stored only
+    when the scanner chose to pair one -- 50 of 238 events.  The rest is not
+    absent data, it is unasked data.
+    """
+    paired, origin = set(), {}
+    rows = []
+    for (setname, tag, m_scan, p_scan, m_cur, p_cur, buck) in SETS:
+        labels = load_labels(tag)
+        for ev, rec in labels.items():
+            origin[ev] = rec.get("origin")
+            g = (rec.get("pio") or {}).get("gammas") or {}
+            if all(k in g and (g[k].get("energy") or 0) > 0 for k in ("1", "2")):
+                paired.add(ev)
+    for (setname, tag, m_scan, p_scan, m_cur, p_cur, buck) in SETS:
+        man = load_manifest(m_cur)
+        for ev, mrow in sorted(man.items()):
+            if ev not in origin or ev in paired:
+                continue
+            dump = load_json(mrow["dump"])
+            if not dump:
+                continue
+            em = [s for s in (dump.get("showers") or ())
+                  if abs(int(s.get("particle_id") or 0)) == 11
+                  and (s.get("kine_charge") or 0) > 15.0
+                  and (s.get("total_length") or 0) >= 3.0]
+            if len(em) < 2:
+                continue
+            e = sorted((s.get("kine_charge") or 0) for s in em)
+            rows.append(dict(setname=setname, sample=mrow["sample"], run=mrow["run"],
+                             subrun=mrow["subrun"], event=ev, origin=origin.get(ev),
+                             n_em=len(em), e_max=round(e[-1], 1), e_2nd=round(e[-2], 1),
+                             dump=mrow["dump"]))
+    rows.sort(key=lambda r: -r["e_2nd"])
+    return rows
+
+
 def selftest():
     ok = True
     per_tag = {}
@@ -330,9 +372,28 @@ def main():
     ap.add_argument("--scan-time", action="store_true",
                     help="read the prod0825 scan-time arms instead of the current onA arms")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--rescan", metavar="OUT.tsv", nargs="?", const="-",
+                    help="emit the scanned-but-unpaired events where a pi0 pairing "
+                         "was possible (doc pr/126 sec 4i)")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
+    if a.rescan:
+        rows = rescan_candidates()
+        nc = sum(1 for r in rows if r["origin"] == "ncpi0")
+        print("scanned-but-unpaired with >=2 EM showers >15 MeV: %d  (ncpi0: %d)" % (len(rows), nc))
+        if a.rescan != "-":
+            p = a.rescan if os.path.isabs(a.rescan) else os.path.join(SX, a.rescan)
+            with open(p, "w", newline="") as fh:
+                w = csv.DictWriter(fh, delimiter="\t", fieldnames=list(rows[0].keys()))
+                w.writeheader()
+                for r in rows:
+                    w.writerow(r)
+            print("wrote %s" % p)
+        else:
+            for r in rows[:30]:
+                print("  ", r["event"], r["origin"], "nEM=%d" % r["n_em"], r["e_max"], r["e_2nd"])
+        return 0
     rows = build_rows(current=not a.scan_time)
     if a.tsv:
         write_tsv(rows, a.tsv)
