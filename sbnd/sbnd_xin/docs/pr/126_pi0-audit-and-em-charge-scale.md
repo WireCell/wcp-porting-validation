@@ -1,6 +1,12 @@
 # doc pr/126 — π⁰ reconstruction audit (toolkit vs WCP prototype) and the EM charge-scale calibration from the 98+141 hand scans
 
-**Status: round 1 complete (2026-08-29). Audit + measurement only.**
+**Status: round 2 (2026-08-29). Audit + measurement only.**
+Round 2 folds in two owner corrections: **align the EM scale to the PEAK of the
+π⁰ mass distribution, not its mean/median** (§4g — this *changes* round 1's
+recommendation from "no flip" to "flip to ≈0.84"), and **say what the other
+charge scaling factors do for tracks, and when charge scaling is used at all
+given the dQ/dx→dE/dx path** (§4h). Round 1's median-based §4c is kept, marked
+superseded, rather than rewritten away.
 
 **SCOPE DECLARATION: NO C++ AND NO JSONNET IS CHANGED BY THIS ROUND.**
 There is therefore no build, no freshness proof, no A/B gate and no arm re-run
@@ -32,6 +38,12 @@ python3 scripts/pr126_pi0_select.py --tsv docs/pr/pr126-pi0-events.tsv \
 python3 scripts/pr126_pi0_mass.py --selftest
 python3 scripts/pr126_pi0_mass.py --tsv docs/pr/pr126-pi0-mass.tsv
 python3 scripts/pr126_pi0_mass.py --e2 --e2-tsv docs/pr/pr126-pi0-pairs.tsv
+
+# sec 4g -- the PEAK estimator (owner correction), its validation and the scan
+python3 scripts/pr126_pi0_peak.py --selftest
+python3 scripts/pr126_pi0_peak.py --tsv docs/pr/pr126-pi0-peak.tsv
+python3 scripts/pr126_pi0_peak.py --compare     # every estimator side by side
+python3 scripts/pr126_pi0_peak.py --validate    # the truth-known toy bias study
 
 # sec 4f / sec 5 -- identification census
 python3 scripts/pr126_pi0_census.py --tsv docs/pr/pr126-pi0-census.tsv
@@ -417,16 +429,16 @@ the term that carries the doc-55 fit's **deliberately excluded, degenerate
 normalization `C`** is the fudge factor, which has never left its uBooNE 0.80.
 That is precisely what a π⁰-mass calibration determines.
 
-> **RECOMMENDATION: do NOT flip this round.**
-> The measurement is
-> `kine_shower_fudge_factor = 0.816`, CI68 **[0.787, 0.868]**,
-> against the 0.80 in force (the value is `0.80 × m̂ / 134.9768`, m̂ = 137.7 MeV,
-> k = 0.980).
-> **That interval contains 0.80.** Its lower half corresponds to m̂ < 134.9768,
-> i.e. to no correction at all or a correction of the opposite sign. If the
-> owner chooses to move anyway, **0.82** is the point estimate; but the data as
-> they stand do not demand a move.
-> Track and proton scales are not touched either way: the π⁰ constrains EM only.
+> **ROUND 1 (median estimator) — SUPERSEDED by §4g. Kept for the record.**
+> The median-based measurement was
+> `kine_shower_fudge_factor = 0.816`, CI68 [0.787, 0.868], an interval that
+> contains the 0.80 in force, and round 1 therefore recommended no flip.
+> **The owner's correction — align to the peak, not the mean/median — changes
+> that conclusion.** The median is not a neutral choice on this distribution:
+> it sits *inside* the low tail and is biased low by a measurable amount
+> (§4g). Read §4g for the recommendation that stands.
+> Track and proton scales are not touched either way: the π⁰ constrains EM only
+> (§4h).
 
 **Significance, stated plainly: the correction is NOT resolved at 68 %.** The
 primary CI is [132.8, 146.5] MeV and it **contains 134.9768**; mapped through the
@@ -444,8 +456,9 @@ between 135.7 and 142.6 MeV. The EM scale is **high by 0–6 %, best estimate
 extra `*0.95` (⇒ fudge 0.842), which is an independent and much older reading of
 the same sign.
 
-**Verdict: measured, direction confirmed, magnitude not resolved — no flip
-recommended.** What would resolve it is more hand-paired π⁰: the truth-ncπ⁰
+**Round-1 verdict (superseded): measured, direction confirmed, magnitude not
+resolved.** §4g revisits this with the peak and reaches a different answer.
+What would still most improve it is more hand-paired π⁰: the truth-ncπ⁰
 statistics on disk is only 19 events, and of the 46 truth-ncπ⁰ events in the
 98-set only 22 were paired, so **scanning the remaining ncπ⁰ events for π⁰ pairs
 is the single highest-value next step** (§5, item 0). A doubling of n would
@@ -513,6 +526,199 @@ therefore never be paired. That places the dominant π⁰ inefficiency squarely 
 the same "root-is-wrong / score-100 sentinel" territory pr/122 and pr/124 §B
 measured dead from the seeder side.
 
+## 4g. The PEAK, not the median — and it changes the recommendation
+
+Owner correction: *"we should align with the peak instead of mean of the pi0
+mass distribution. This may need a fit, with low statistics."* That is right,
+and it is not a cosmetic change of estimator.
+
+**Why the peak is the correct quantity.** The ways `m = √(4E₁E₂sin²(θ/2))` goes
+wrong are **one-sided**: a shower that lost members lost charge, so m falls.
+Nothing in the reconstruction makes a true π⁰'s mass rise except a wrong
+pairing. The distribution is therefore a peak with a low tail, and the mean and
+the median both sit *inside* that tail. On the all-origins sample this is
+blatant — mean 127.3 against median 137.3, a 10 MeV skew. **The mode is the
+scale; the tail is reconstruction loss and must not be averaged in.**
+
+### The estimator, and why this one
+
+Four criteria, all fixed before the real-data peak was quoted, with the full
+comparison published (`--compare`) so nothing is hidden:
+
+1. it must be a **fit**, as asked — which rules out the nonparametric mode
+   finders as *primary*;
+2. its window must be fixed by something **external to the sample**: `[100,185]`
+   MeV is the union of the finders' own acceptance edges (§2.4);
+3. it must be **stable at n ≈ 20**, verified on truth-known toys;
+4. on a low-tailed sample the fitted peak must come out **≥ the median**.
+
+⇒ **unbinned truncated-Gaussian maximum likelihood on [100,185]**, μ bounded to
+the window and σ to [3,60] MeV, bootstrapped as a whole procedure (1500
+resamples, fixed seed). The truncation term is not optional — dropping it biases
+μ into the tail. The bounds are not cosmetic either: the unbounded Nelder-Mead
+version runs away on roughly 1 resample in 30 at n = 19 (toy sd 2070 MeV), and
+the bootstrap then under-reports its own error.
+
+Rejected as primary, and why — all published rather than dropped:
+half-sample mode returns **159.0** with a 28 MeV CI at n = 19 (it locks onto the
+dense 157–159 cluster: unusable at this N); the KDE mode is bandwidth-dominated,
+137.6 → 143.9 → 140.2 as the Silverman factor goes ×0.5 → ×1 → ×2.
+Window sensitivity of the chosen fit is ±3 MeV over [95,190] … [110,175].
+
+### The measurement
+
+| sample | n | median | **PEAK** | CI68 | ⇒ `kine_shower_fudge_factor` | excludes 0.80? |
+|---|---|---|---|---|---|---|
+| **PRIMARY** ncπ⁰, min(E)>15, vertex chord | 19 | 137.7 | **139.8** | [135.0, 144.0] | **0.829** [0.800, 0.853] | borderline — lower edge *is* 0.800 |
+| ncπ⁰, shower axis | 21 | 142.6 | 148.0 | [140.1, 165.8] | 0.877 | **yes** |
+| all origins, vertex chord | 45 | 137.3 | 140.6 | [136.3, 144.3] | 0.833 | **yes** |
+| all origins, shower axis | 49 | 142.6 | 147.9 | [142.1, 154.5] | 0.877 | **yes** |
+| ncπ⁰, scan-time + scanner marks, vtx | 19 | 139.2 | 140.8 | [136.5, 144.5] | 0.834 | **yes** |
+| ncπ⁰, scan-time as reconstructed, vtx | 19 | 138.1 | 137.9 | — | — | **REJECTED** by criterion 4 (peak 0.2 below median) |
+
+The sanity gate is doing real work: it throws out one cell rather than letting a
+tail-dragged fit into the table.
+
+### The toys say both estimators are still biased LOW
+
+`--validate`, 600 trials per row at n = 19, Gaussian core σ = 18 plus an
+exponential (τ = 30) low tail:
+
+| tail fraction | median bias | fit bias | fit − median |
+|---|---|---|---|
+| 0 % | −0.0 | −0.0 | 0.0 |
+| 10 % | −2.2 | −1.9 | +0.3 |
+| 15 % | −3.2 | −2.4 | +0.8 |
+| 20 % | −4.4 | −3.4 | +1.0 |
+| 30 % | −6.5 | −5.1 | +1.4 |
+| 40 % | −8.5 | −6.9 | +1.6 |
+
+Two things follow, and they are the most important sentences in §4:
+
+* **The fit is the better estimator but is not unbiased**: its bias is ~75–80 %
+  of the median's, never zero against a tail. So **the fitted peak is a FLOOR on
+  the true peak, and 0.829 is a FLOOR on the true correction.**
+* **The observed `fit − median` gap is a tail-strength meter.** On the primary
+  sample it is **+2.1 MeV**, larger than the toy's 40 %-tail value of +1.6. The
+  real low tail is therefore heavy, which puts both estimators several MeV low.
+
+### Recommendation
+
+> **RECOMMENDATION (supersedes §4c): flip `kine_shower_fudge_factor` from 0.80
+> to ≈ 0.84 — i.e. lower every EM energy by ≈ 5 %.** Owner decision required
+> (§5.1); this doc does not touch any config.
+>
+> * Primary peak gives **0.829**, and the toys say that is a **floor**.
+> * Four of the five surviving cells exclude "no correction"; the primary's own
+>   CI reaches exactly to 0.800.
+> * The prototype's independent, much older empirical correction —
+>   `cal_pi0_mass.cxx:28,:54` multiplying the mass by `×0.95` — is **0.842**.
+> * The shower-axis convention gives 0.877, so the honest spread is **0.83–0.88**
+>   and the data cannot separate those. 0.84 is the value all three lines
+>   (vertex-convention floor, prototype, lower edge of the axis convention)
+>   are consistent with.
+>
+> **Do not flip it alone.** §4e shows the scale and the finders' `+10 MeV`
+> offset are one degree of freedom split across two constants; at k ≈ 0.95 the
+> (100,160) window loses accepted groups it should not. The offset must be
+> revisited in the same round (§5 item 2), with a Bee adjudication of the groups
+> that move.
+
+What changed from round 1 is not the data — it is that the median was the wrong
+functional of it. Direction and magnitude now agree across estimator,
+convention, sample and the prototype's own constant.
+
+---
+
+## 4h. The other charge scaling factors: where they apply, and where dQ/dx→dE/dx takes over
+
+Owner question: *"what are the other charge scaling factor for tracks? Note for
+track I know there are dQ/dx to dE/dx conversion, when the charge scaling is
+used?"* Answered from the code and then measured.
+
+### Two independent "recombination" notions, never to be conflated
+
+| | scalar charge scaling | pointwise dQ/dx → dE/dx |
+|---|---|---|
+| constants | `KineChargeOptions::{recom,fudge}_factor` etc. | `IRecombinationModel` (SBND: `sbnd_power_recomb`, `use_power_recomb=true`, doc pr/10 §7) |
+| applied | once, to the **plane-weighted summed 2D charge** of a whole object — `NeutrinoEnergyReco.cxx:188` | **per fitted point**, `recomb_model->dE(dQ,dx)` inside `cal_kine_dQdx` — `PRSegmentFunctions.cxx:2512` |
+| physics | an *average* survival fraction over a class's dE/dx profile | the *dE/dx-dependent* inversion, point by point |
+| tuned by | this doc (EM branch only) | doc pr/10 §3 + doc 55 |
+
+They are separate code paths with separate constants. **Nothing recommended in
+§4c can move a muon's or a proton's energy.**
+
+### Which estimator actually sets a particle's energy
+
+* **A track segment.** `segment_cal_4mom` (`PRSegmentFunctions.cxx:2836-2853`)
+  writes `particle_info()->kinetic_energy()`, and it chooses
+  `length < 4 cm → dQ/dx`, else `kShowerTrajectory → dQ/dx`, else **range**.
+  **Charge never enters a segment's energy at all.**
+* **A shower object.** `PRShower.cxx:1611`/`:1830`: a non-shower object gets
+  `kenergy_best = (seg_length < 4 cm) ? dQdx : range`; a **shower-flagged**
+  object with `start_connection_type != 1` gets `kenergy_best = 0`; and a
+  multi-track object (`nsegments != nconnected_segs`, where range is meaningless)
+  also gets `kenergy_range = 0, kenergy_best = 0`. Then `PRShower.h:155`:
+  `get_kine_best()` returns `kenergy_best` **if non-zero, else
+  `kenergy_charge`**.
+
+That fallback is the **only door the charge scaling walks through** — and the
+factor pair it then uses is chosen by `get_flag_shower()`
+(`NeutrinoEnergyReco.cxx:203-209`), so the track factors are reached only by the
+multi-track branch of a *non*-shower object.
+
+### Measured over the 239 events
+
+T_kine particles, by the estimator that produced the stored energy:
+
+| estimator | n | share | Σ E |
+|---|---|---|---|
+| charge | 2639 | **75.6 %** | 147.7 GeV |
+| dQ/dx | 459 | 13.1 % | 15.9 GeV |
+| range | 393 | 11.3 % | 68.7 GeV |
+
+and split by particle type:
+
+| \|pdg\| | charge | range | dQ/dx |
+|---|---|---|---|
+| 11 (e/γ) | **2633** | 73 | 47 |
+| 13 (µ) | **0** | 149 | 53 |
+| 211 (π±) | 5 | 50 | 67 |
+| 2212 (p) | 1 | 121 | 290 |
+
+Same question asked of the dump's `showers[]` objects, where the fallback
+actually lives: 3074 are charge-valued, and **3066 of them (99.7 %) are
+electron-typed**, carrying 150.0 GeV. The eight non-EM charge-valued objects
+carry **150 MeV in total — 0.1 %** of the charge-derived energy (7 pions at
+20 MeV, 1 proton at 130 MeV). Zero muons.
+
+### The answer
+
+* **The scalar charge scaling is, in practice, an EM-only path.** It sets 76 % of
+  all reconstructed particle energies and essentially 100 % of the EM energy.
+* **`kine_recom_factor = 0.87` and `kine_fudge_factor = 0.95` (track) and
+  `kine_proton_recom_factor = 0.51` are reachable but nearly inert**: 8 objects
+  out of ~3700, 150 MeV out of 150 GeV. Tracks and protons are valued by range
+  or by the pointwise recombination model, never by the summed charge.
+* Therefore the π⁰ calibration constrains, and should move, **only**
+  `kine_shower_fudge_factor` — which is what §4c recommends. There is no
+  "track equivalent" of this calibration to do, because there is no track
+  quantity for the π⁰ to constrain.
+* **A refinement to the pr/10 §6 record.** That round adopted a three-class
+  transfer (0.7→0.87 track, 0.5→0.58 shower, 0.35→0.51 proton) and measured
+  "Enu −12…−14 % on nuecc48". By this census that effect ran almost entirely
+  through the shower factor alone: 0.50→0.58 scales every EM energy by
+  0.50/0.58 = **−13.8 %**, which accounts for the whole observed shift. The
+  track and proton transfers are correct to have made, and very nearly inert.
+
+**Caveat, stated rather than hidden.** `kine_energy_info` is not a record of the
+decision — `NeutrinoKinematics.cxx:207-215` *infers* it by comparing `kine_best`
+against `kine_charge`, then `kine_range`, then `kine_dQdx` at a 0.1 % tolerance,
+so charge wins a coincidental tie. The conclusion does not rest on it: the
+"0 muons from charge" row cannot be a tie artifact, and `segment_cal_4mom` shows
+from the source that a segment never uses charge, so the 6-8 non-EM "charge"
+rows are most likely exactly such ties.
+
 ---
 
 # 5. Improvements and tunes — proposals only, ranked
@@ -533,6 +739,21 @@ Concretely: 169626, 285567, 506746, 54341, 52044 have a γ at pdg 211; 47212 has
 **both** γ at 2212. The π⁰ finder cannot see them at all. This is the highest-
 efficiency item and it belongs to the recognition thread, not to π⁰ code.
 *Shape: none here — a pointer for the next recognition round.*
+
+> **Worked specimen — evt 37112, the owner's own *"no pi0???"*.** Traced jointly
+> with the pr/125 session. At the pr/124 production point the accepted group
+> pairs γ 84074 (183.9 MeV) with the **proton-typed** shower 9008 (129.9 MeV) at
+> group mass 159.5, and `kine_pio_mass` reports a third pairing at 281.2 MeV.
+> So the owner's note is not "the finder found nothing" — it is *"the finder
+> found the wrong thing, twice"*, and both failures are this doc's items 1
+> and 5. After pr/125's `shower_samevtx_track_absorb`, 9008 is absorbed into the
+> 797 MeV γ, the bogus group dissolves, and no shower group is accepted at all.
+> The physically plausible pairing — 67048 (797 MeV) with 84074 (184 MeV) — is
+> **still not selected**. That last step is squarely a π⁰-finder question and is
+> the single best test case for items 2 and 3: at those energies the pair's mass
+> depends entirely on the opening angle, and 67048 is a `conn_type == 2`
+> (disconnected) object, so it must pass the 30° vertex-association cut of
+> `id_pi0_with_vertex:5081` before it can even be paired.
 
 **2. Decide the scale and the `+10 MeV` offset together.** §4e. The offset is a
 uBooNE-era stand-in for the calibration this doc performs; keeping both
@@ -634,6 +855,8 @@ assumed:
 | `docs/pr/pr126-pi0-events.tsv` | 50 rows: hand pair, energies, both conventions, reco groups, completeness |
 | `docs/pr/pr126-pi0-mass.tsv` | per-event masses on all three energy hypotheses |
 | `docs/pr/pr126-pi0-census.tsv` | per-event match class and blocker |
+| `scripts/pr126_pi0_peak.py` | §4g peak fit, estimator comparison, window scan, toy bias validation |
+| `docs/pr/pr126-pi0-peak.tsv` | the §4g table |
 | `docs/pr/pr126-pi0-pairs.tsv` | the 830 E2 candidate pairs |
 | `em_display/pr126-pi0-manifest.tsv` | re-runnable manifest of the π⁰ subset |
 
