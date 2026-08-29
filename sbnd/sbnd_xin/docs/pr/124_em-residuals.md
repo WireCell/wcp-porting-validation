@@ -203,6 +203,32 @@ seeder-side re-validation (re-running the topology classifier on seed-time
 geometry) — separate the fake-seed class from real stems with zero collateral?
 pr/122 measured the *classifier-side* features interleaved; the new angle is
 seed-time staleness (flag written on early geometry, segment since regrown).
+The fake-root ground truth is the labels' own signal: a `marks_by_shower`
+entry keyed by the seed segment with the seed itself marked `out` (the
+54332-16014 shape).
+
+### B.2 Preliminary census (pre-flip dbg arms, work-pr123r1-dbg{A2,141v2}-*)
+
+285 accepted in_main_cluster seeds across both manifests; 3 FAKE_ROOT vs 10
+GOOD_ROOT (13 MARKED_OTHER ambiguous, rest unlabeled):
+
+| fake root | disjunct | len cm | mdqdx MIP | straight |
+|---|---|---|---|---|
+| 54332 seg 16014 | topo+pdg11 | 32.3 | 1.67 | 1 |
+| 489327 seg 19005 | traj+pdg11 | 22.6 | 1.29 | 0 |
+| 69232 seg 20021 | **pdg11 only** | 27.5 | 0.87 | 1 |
+
+GOOD_ROOT: len med 24.9 (p90 35.4), mdqdx med 1.33 (p10 0.99). **The three
+fakes fire on three different disjuncts and interleave with good roots on
+every seed-time feature** — killing the inherited kShowerTopology flag alone
+would fix only 54332; 69232's fake needs no flag at all (it seeds on its
+pdg-11 assignment, a straight 27 cm MIP-flat "electron"). The measured
+statement: the defect is upstream in the PID write (the pr/122 + sentinel-
+audit thread), not in the seeder — a seeder-side guard is measured dead at
+this statistics level (pr/118-P2/pr/119 precedent). Final numbers from the
+post-flip dbg arms may move this; the conclusion stands unless FAKE_ROOT
+count grows a separating tail. 171143/277298 notes confirm "PID verdict,
+clustering is fine" — same class.
 
 ### B.1 The score-100 sentinel audit (housekeeping, read-only)
 
@@ -262,7 +288,24 @@ the final body (detached = already covered by the prune); feature table
 gate as in front A: zero-collateral separator → default-OFF guard knob;
 otherwise the census ships as measurement.
 
-*(results to follow)*
+### C.1 Preliminary census (pre-flip dbg arms — knobs-OFF binary; the tier-1
+prune has since fixed part of this)
+
+2186 pass3 absorbs over 239 events. Labeled: pass3_cone 22 OUT / 24 IN,
+pass3_cluster_map 4 OUT / 0 IN, pass3_proximity 0/0. In the (pre-flip) final
+dumps all 22 cone OUT stayed kept — but 12 of them are 282979 (0.541→1.000
+after the pr/123 flip: they were far-satellite, dist 96-118 cm, and the
+tier-1 prune reclaims them). The suggestive pre-flip pattern: OUT cone
+absorbs cluster at LARGE dist (13/22 above 60 cm) with small site angles,
+while the IN absorbs 76346's live at 55-83 cm too — and the contiguous OUT
+share (94392's 16/44 cm muons at ~10 deg, 175896's protons at 33 cm) sits
+well inside the IN range on geometry alone; their distinguishing feature is
+pdg/track-likeness, i.e. the same track-prong logic as the pass4 guard, at a
+site the pass4 guard does not cover (pass3_cone runs earlier; the existing
+`shower_cone_absorb_guard` covers only confidently-PID'd straight-long
+non-electrons). **The definitive OUT/IN table must come from post-flip dbg
+arms** (what tier-1 already reclaims must not be double-counted); rerun in
+Phase 3 before any knob design.
 
 ## Plan of record (tonight)
 
