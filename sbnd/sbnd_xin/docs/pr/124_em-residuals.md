@@ -100,7 +100,84 @@ param); anything short of that ships as a measurement section only (the
 pr/118-P2 / pr/119 precedent), or as a morning decision table if the trade-off
 is a genuine owner call.
 
-*(results to follow)*
+### A.1 Measurement (offline scan, both manifests)
+
+`scripts/pr124_gapband_scan.py --seg-join` over `work-pr123r1-r21flip141-*` +
+`work-d84r2-prod98-*` (dedup on overlap). Marks are joined at SEGMENT level to
+each seg's *current* owner shower: a mark recorded for the owner keeps its
+verdict; IN-for-another-shower while owned here counts OUT (the seg belongs
+elsewhere); OUT-of-elsewhere only is uninformative (unlabeled). The plain
+shower-key join (pr/123 style) is retained as the default mode; the seg-join
+matters because the pr/123 flip restructured several labeled showers.
+
+Detached components by class per G (BAD = only OUT marks, COL = holds IN
+marks, UNL = unlabeled only):
+
+```
+  G_cm   BAD   COL   MIX   UNL
+    25    15     3     0     7
+    30     6     2     0     3
+    35     1     2     0     1
+    40     0     1     0     0
+```
+
+The 25-40 band (detached at G=25, still attached at the production G=40)
+holds 24 components: 15 BAD, 2 COL, 7 UNL — full rows in
+`docs/pr/pr124-gapband-components.tsv`. The 142421 38-member component
+(33 inferred-OUT: they are IN-marks of the *other* pi0 photon) is the pi0
+collinear split — owner-gated thread, excluded from the knob stats below and
+handled in its own round if opened.
+
+**Owner's worst-row reclassification (the key finding).** Of the five rows
+named in the directive, only ONE is actually gap-band-detached on current
+production:
+
+| event | scan verdict on r21flip141 |
+|---|---|
+| 406125 | band component (4 marks, gap 33.7, **q_frac 0.949**, mdqdx **2.86 MIP**, ang 4.8°) — heavily-ionizing on-axis blob, caught by the dQ/dx qualifier |
+| 94392  | NOT band: both OUT muons (29.8 + 46.8 cm, pdg 13) are **contiguous** members — under the 50 cm pass4 track guard; member-level residual |
+| 175896 | NOT band: OUT protons (5.6 + 17.6 cm, pdg 2212) contiguous — same class |
+| 286655 | stale label join: labeled shower 79023 now empty (post-flip restructuring); OUT marks live under shower 19006 — needs re-adjudication |
+| 283515 | stale label join: labeled shower 23009 empty; 13 OUT marks under 24014 — needs re-adjudication |
+
+### A.2 Qualifier cut search (core band, pi0 excluded: 14 BAD, 2 COL, 7 UNL)
+
+The two COL components: 469665-15003 (13 segs, 78 cm, q_frac 0.551, ang 7.4°
+— genuine on-axis EM continuation) and 168596-85107 (single 0.3 cm stub,
+q_frac 0.003). Charge-weighted results (BAD charge total 5.19e6):
+
+```
+  cut                       BAD caught (charge)   COL hit          UNL hit
+  ang_body>30                5/14 (33%)           0                4
+  mdqdx>2.0                  1/14 (50%)           0                0
+  ang>30 or mdqdx>2.0        6/14 (83%)           0                4
+  ang>40 or mdqdx>2.0        6/14 (83%)           0                1
+  len_sum<20                14/14 (100%)          1 (qf 0.003)     6
+  nmem<=4 & (trk|ang>30)    13/14 (98%)           1 (qf 0.003)     6
+```
+
+**Zero-collateral separator: `ang_body > 40 deg OR mdqdx > 2.0 MIP`** — 6/14
+BAD components, 83% of BAD charge, zero IN-collateral on both label sets; the
+single UNL hit is 54332's shw-16014 component at 88.7° (the front-B fake
+shower — pruning it is neutral-to-good). Margins: BAD-side minimum ang 40.3°
+(415278) against a COL maximum of 16.7°; mdqdx catch at 2.86 against COL max
+1.33 / UNL max 1.91. The aggressive cuts (len_sum, nmem) reach 98-100% but
+all hit the 0.3%-charge COL stub, which is shape-identical to a BAD stub
+(409634) — member-count zero collateral is impossible beyond the angle+dQ/dx
+pair; that pair is the knob.
+
+### A.3 Knob (implemented default OFF, tier-2 prune)
+
+- `shower_pass4_prune_gap2` (double cm, **0 = off**): re-split the tier-1
+  KEPT body at this gap; a sub-component not holding the start segment is a
+  tier-2 candidate. Operating point from A.2: 25.
+- `shower_pass4_prune2_ang` (deg, default 40): prune candidate if the angle
+  at the shower start vertex between the candidate's charge centroid and the
+  core component's charge centroid exceeds this.
+- `shower_pass4_prune2_mdqdx` (MIP, default 2.0): ... OR its median point
+  dQ/dx exceeds this many MIP.
+- Disposition identical to tier 1: `Shower::detach_member_set` + re-seed as
+  own shower (conn 3/4). Validation + flip decision follow the standing bar.
 
 ## B. Front B — recognition / fake showers + the score-100 sentinel audit
 
@@ -137,7 +214,29 @@ load-bearing (the gate SHOULD skip rule-assigned PIDs) vs accidental (the
 sentinel class was simply forgotten). Audit only — no code change in this
 round without owner sign-off per site.
 
-*(table to follow)*
+Sentinel vocabulary found: `100` = rule-assigned PID (default-constructed and
+every explicit rule write, e.g. NeutrinoPatternBase.cxx:412/439/470/645,
+NeutrinoVertexFinder.cxx:3748/3782); `200` = "score really bad, forced to
+shower" (PRSegmentFunctions.cxx:3046). All comparison gates in `clus/`:
+
+| site | gate | verdict |
+|---|---|---|
+| PRSegmentFunctions.cxx:1700 `segment_bragg_spares_electron_reclass` (pr/40 r10) | `score < 1.0` | **accidental** — a rule-assigned >20 cm track is NOT spared from e- reclassification; same defect shape as the pr/123 lost muon |
+| PRSegmentFunctions.cxx:1708 `segment_confident_nonelectron_pid` (pr/93 Cause B) | `score < 1.0` | **accidental** — the pr/123 lost-muon root cause; worked around for the guard-freed set only via `kPass4GuardFreed` |
+| PRSegmentFunctions.cxx `segment_orphan_confident_track` (pr/93 r4) | inherits the above | **accidental** (inherited) |
+| PRSegmentFunctions.cxx:3043 | `1.0 < score < 100` before force-to-shower | load-bearing — deliberately protects rule-assigned PIDs from the "really bad score" demotion |
+| NeutrinoShowerClustering.cxx:3849 | `pdg==2212 && score < 0.3` force-to-e- | load-bearing — a rule-assigned proton correctly keeps its label |
+| NeutrinoVertexFinder.cxx:1792 | `score <= 100` before muon reclass | load-bearing (prototype-matched) — blocks the score-200 forced-shower class; note the asymmetry: score-100 rule-assigned e- IS eligible |
+| NeutrinoVertexFinder.cxx:3736-3737 (knob-gated safety net) | `2212 && score<0.09` / `13 && score<0.06` | intended-as-written but shares the pattern: a rule-assigned track is never "confident", so it takes the pdg-11 escape |
+| NeutrinoTrackShowerSep.cxx:1806 | `score != 100` in score averaging | load-bearing — deliberate sentinel-aware mean |
+
+**Pattern statement for the owner:** the three pr/40/93-era "confident PID"
+helpers are the accidental class — every rule-assigned (score-100) PID is
+invisible to them, so protections keyed on "confident non-electron" silently
+skip exactly the tracks the rules were most sure about. A candidate future
+knob would treat `score == 100 && pdg != 0 && |pdg| != 11` as confident in
+those three helpers; that is a behavior change with wide reach (owner
+decision, not taken tonight).
 
 ## C. Front C — pass3 absorbers (largest untouched)
 
