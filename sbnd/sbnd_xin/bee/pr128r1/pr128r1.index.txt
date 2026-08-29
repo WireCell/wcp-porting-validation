@@ -25,6 +25,14 @@
 #   0 ADVERSE); nusel per-event TSVs 239/239 byte-identical; main vertex
 #   identical on all six.  Sentinel suite 10 PASS / 0 FAIL / 4 SKIP.
 #
+# OWNER VERDICT 2026-08-29, after scanning idx 1 and idx 2: "These looks OK".
+#   Both judgement calls accepted, and both are precedents (doc pr/128 sec 9):
+#   idx 1 -- main-cluster material 119 cm from any reachable vertex IS the
+#            candidate's energy (membership is a sufficient admission rule);
+#   idx 2 -- a continuation of a DISPLAYED TRACK counts, not only a
+#            continuation of the nu vertex (102.9 cm out, accepted).
+#   idx 6 unchanged, so the far-away half of the metric is confirmed held.
+#
 # The round's question, in the owner's words: "we do not want to lose energies
 # (or double count energies) for the neutrino candidate ... we do not want to
 # count energy for overclustering activitys, far away".  Idx 6 is the CONTROL

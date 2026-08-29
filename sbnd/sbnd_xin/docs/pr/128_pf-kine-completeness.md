@@ -521,15 +521,47 @@ sits between the two populations. Any future loosening of the continuation
 terms that re-admits them fires it. A new assertion kind, `log_absent`, was
 added to the registry for this.
 
-## 9. Open / deferred
+## 9. Owner verdict, and what is left open
 
-- The class-A operating point admits a continuation of a **displayed track**,
-  not necessarily of the ν vertex: 392901's muon sits 102.9 cm from the vertex.
-  That is the judgement call in this round and it is idx 2 of the Bee set.
-- 399118's 108.8 cm proton sits 4.9 cm from the ν vertex but kinks 47.3° from
-  what it touches, so it is rejected as a non-continuation. If the owner reads
-  it as a real daughter, the predicate needs a vertex-proximity arm, not a
-  looser kink (which would re-admit 72786's cosmics).
+**Owner scanned the Bee pair 2026-08-29 (OFF `c02de6fd`, ON `70d0b85f`,
+idx 1 = 105074, idx 2 = 392901) and returned: "These looks OK".** Both
+judgement calls put to him are therefore adjudicated, and both are precedents
+for future completeness rounds:
+
+- **idx 1 / 105074 — main-cluster membership is a sufficient admission rule.**
+  Material in the candidate's own cluster, 119 cm from the nearest vertex the
+  main vertex can reach, IS the candidate's energy. `conn3_unreachable` was
+  right to build the shower; the conn-4 stamp that then hid it was the bug.
+  377 MeV, 34% of this round's recovery, accepted.
+- **idx 2 / 392901 — a continuation of a DISPLAYED TRACK counts, not only a
+  continuation of the ν vertex.** The 38.5 cm muon sits 102.9 cm out from the
+  vertex, joins end-to-end with a 4.8° kink, and is accepted. The predicate
+  does not need the candidate's daughters to originate at the vertex.
+- idx 6 / 72786 stays unchanged, so the far-away half of the owner's metric is
+  confirmed held.
+
+Still open:
+
+- **399118's 108.8 cm / 481.0 MeV proton — the strongest single remaining
+  loss, and the natural next front.** It sits 4.9 cm from the ν vertex but
+  kinks 47.3° from what it touches, so the shipped continuation predicate
+  rejects it. A primary emitted AT the vertex has no reason to be collinear
+  with anything, so the right fix is a **vertex-proximity arm** (small
+  `d_mainvtx`, no kink requirement), never a looser global kink — that would
+  re-admit 72786's cosmics. Scoring that arm on this round's own census tape
+  (`docs/pr/pr128-pfnear-census.tsv`, class A, `d_mainvtx_cm` column) shows it
+  is clean: **exactly one candidate at any cut from 5 to 20 cm — 399118's
+  proton at 4.9 cm — while the nearest cosmic (72786's) sits at 35.3 cm.** A
+  30 cm margin, wider than the 25° kink margin this round shipped on. Blocked
+  only on an owner read of 399118 itself: is that proton a daughter?
+- The class-A population that reaches the geometry test at all is **13
+  candidates in 8 of 239 events**. Every completeness claim so far is
+  anecdotal because the `same_cluster` gate hides the audit line as well as
+  the pools, so there is **no denominator**: we cannot say what fraction of
+  near-candidate reconstructed charge is missing from `kine_reco_Enu`, only
+  that these 13 objects existed. Measuring that denominator (debug-gated,
+  no knob, no predicate filter) is the prerequisite for deciding whether more
+  completeness rounds are worth running.
 - The `same_cluster` gate still hides the **audit line** as well as the pools,
   so the general cross-cluster population remains uncounted by design. Only the
   continuation class is now visible.
