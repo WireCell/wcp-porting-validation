@@ -1237,3 +1237,72 @@ the pf_muon-era arm which predates the comparator; 76-81% in round-2-era
 arms) — nseg_chain=0 simply means no examine_direction chain existed at the
 MCS call site; the P1 fallback operates in PRShower, not on this set.
 Part 2 (census arms, full statistics) is R3.7.
+
+## R3.6 Wider-statistics census — full mcp1k + mcp2k (3000 events)
+
+```
+# arms (full CURRENT production config, zero env pins; group mode 16, PR_JOBS=20):
+PR_EXTRA_STAGES=pr_display PR_GROUP_SIZE=16 PR_JOBS=20 \
+  ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-d84r3-cens-mcp1k data     # 1000 evts, rc=0, 0 failed
+  ./run_pr_chain_batch.sh work-mcp2k-grp0825 work-d84r3-cens-mcp2k data     # 2000 evts, rc=0, 0 failed
+scripts/d84r2_census.py --arms work-d84r3-cens-mcp1k:mcp1k work-d84r3-cens-mcp2k:mcp2k \
+  --toolkit ~/toolkit-dev/toolkit --out docs/84_longmu/r3_census
+```
+
+Production point = doc 84 rounds 1-3 + pr/123 rounds 1-2 (incl. tonight's
+pseudo-neutron PF correction).  Both samples completed with **zero failed
+events** (no gojsonnet rc=139 this run).  Calib json exists for 461+905 =
+1366 events (the PrDisplayDump writes only when a beam-matched candidate
+exists; counts identical to prod0825 — deterministic), 296 muon showers.
+
+- **Pop A (chain-vs-membership truncation): 0 rows** at >10 cm.  The
+  round-2 `long_muon_members_geometry` knob closed this population entirely
+  at 10x the round-2 census statistics (was 6/54 showers pre-knob).
+- **Pop B (cathode-split candidates): 22 pairs / 11 events** (0.8% of
+  candidate events).  The production bridge FIRED in 10 events
+  (53793, 77978, 168448, 177536, 281214, 287555, 321767, 391766, 398181,
+  478880 — 7 bare-chain, 3 shower-merge; fire rate 0.33% of all events),
+  8 of which reached the MCS fit (`mcs: bridged members added`).
+  The probe and the pass overlap only on 77978: bare-partner fires are
+  invisible to the calib-based probe by construction (the partner is not a
+  shower member pre-bridge), while the 10 probe pairs the pass did NOT take
+  (172794, 289559 mcp1k; 347890, 392901 [known EM-partner exclusion],
+  407798, 410680, 493659, 67026, 92159, 98470 mcp2k) failed the production
+  guards (angle/gap/length/type) — hand-scan candidates for a future round,
+  no action proposed here.
+- **nusel sanity vs prod0825**: row counts identical (11428 / 22634);
+  tag-triple distributions differ on only 8 clusters of 34k (a few
+  stm/fc/stmfit -1 verdicts now resolving), owned by the four intervening
+  production rounds.
+
+## R3.7 MCS absolute-scale study, part 2 — full statistics (census arms)
+
+```
+scripts/d84r3_mcs_scale.py --arms work-d84r3-cens-mcp1k:mcp1k \
+  --arms work-d84r3-cens-mcp2k:mcp2k --out docs/84_longmu/r3_mcs_scale_full
+```
+
+843 sentinel rows / 837 distinct events (28% of events reach the MCS fit);
+null-chain comparator rate 81.5% (matches the round-2-era bracket; the P1
+fallback operates in PRShower, not on `segments_in_long_muon`).  The part-1
+conclusion holds with 3x the statistics and pure production config:
+
+| population | n | ke_MCS/ke_range median | IQR |
+|---|---|---|---|
+| amb < 0.2 | 196 | **0.943** | 0.914-0.980 |
+| amb < 0.2, len >= 200 cm | 113 | 0.960 | 0.935-0.987 |
+| amb < 0.2, len 100-200 cm | 72 | 0.926 | 0.890-0.963 |
+| amb < 0.2, len < 100 cm | 11 | 0.902 | 0.866-0.930 |
+| amb >= 0.2 (76.5% of fits) | 639 | 1.321 | 1.049-2.106 |
+| bridged (mcs_bridged_members) | 7 | 1.059 | 1.003-1.141 |
+
+**Conclusion: the MCS scale does not need work.**  Unambiguous fits sit at
+0.94-0.96 of CSDA range with a ~7% IQR — a small (<6%), mildly
+length-dependent low bias, tightest for the long tracks where MCS is the
+estimator of record.  The inflation lives entirely in the high-ambiguity
+population; any quantitative use of `kine_mcs_energy` should cut on
+`kine_mcs_ambiguity < ~0.2`.  The 7 production bridged fits land at median
+1.06 — the full-track fits agree with their own range KE.  Next natural
+arbiter is the truth-level numu sample (owner item): reco-vs-truth for the
+amb<0.2 population directly tests whether the ~5% low bias is real scale or
+range-table convention.
