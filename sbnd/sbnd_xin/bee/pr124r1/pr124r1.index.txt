@@ -1,0 +1,36 @@
+# doc pr/124 front A (gap-band tier-2 prune) A/B index -- OFF 06885a0f-97c6-4075-9632-c1842431449a / ON 9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697
+# OFF = current SBND production (work-pr124r1-dbg{v2,141v2}-* arms, byte-identical to
+#   work-d84r3-cens-* / prod98); ON = shower_pass4_prune_gap2=25 (ang>40deg OR mdqdx>2.5 MIP
+#   qualifier pair, work-pr124r1-flipA* arms = the flipped production point).  27 events:
+#   8 owner-priority/adjudication first, then 3 mdqdx-blob catches, then the backward-class
+#   (134-179deg opposite-side components), then remaining movers.
+# 141-set marked showers: med qF1 0.935->0.949, sum q_extra 2.69e7->2.41e7, sum q_miss
+#   UNCHANGED except idx 6.  0 vertices moved (vtx105 epoch), nusel identical, owned 3761->3761.
+# bee_idx	event	status
+0	406125	RESCUED: qF1 0.097 -> 1.000; the q_frac-0.949 heavy blob (15.5cm proton + 3 muon stubs, med 3.26x MIP, gap 33.7) re-seeds; all 4 OUT marks leave
+1	76346	RESCUED: event 0.596 -> 0.817; shw 14059 0.625 -> 0.765 (3-seg comp at 55.5deg) + shw 40030 0.523 -> 0.947
+2	54332	RESCUED (partial): shw 16014 0.528 -> 0.728; its 4-seg far half (88.7deg, 33cm) re-seeds; the fake root itself is the front-B/PID thread (owner: nu vertex wrong)
+3	168432	RESCUED: 0.924 -> 0.946; 1.3cm OUT stub at 59.0deg pruned, q_extra -> 0
+4	415278	mover: shw 105182 sheds a 1.6cm OUT comp at 40.3deg (threshold-marginal row; the pass3 knob's events for this evt live in the pr124r1C pair)
+5	386442	RESCUED: 0.997 -> 1.000; 0.4cm OUT stub at 178.7deg
+6	423981	ADJUDICATION: 1.000 -> 0.992; 2-seg UNMARKED comp at 3.56x MIP, gap 42 -- same blob shape as idx 0's catch; scanner left it unmarked (implicit hold).  Verdict decides whether the mdqdx prong stands as-is
+7	181050	ADJUDICATION: under-clustering-class event; 44.7deg single-seg prune (mip 1.68)
+8	176502	fix-direction (unlabeled): 4.46x-MIP blob pruned at 18.8deg
+9	281567	fix-direction (unlabeled): 3.38x-MIP blob at 20.5deg
+10	56982	fix-direction (unlabeled): 2-seg comp at 161.2deg, 2.30x MIP
+11	396222	backward class: 3 comps at 159-169deg re-seed (7-seg + 2 singles)
+12	37112	backward class: 12-seg comp at 168.7deg
+13	350186	backward class: 3-seg at 167.4deg
+14	389538	backward class: single at 134.4deg
+15	499423	backward class: two comps 167.0/157.9deg (pr/123 1.000 row; all marks stay in the kept body)
+16	174771	backward class: 2-seg at 170.6deg
+17	408304	backward class: single at 162.5deg
+18	408678	backward class: single at 123.3deg
+19	58006	backward class: 3-seg at 147.5deg
+20	52044	mover: single at 54.1deg (mip 0.99)
+21	69314	backward class: single at 161.9deg
+22	180801	backward class: single at 165.1deg
+23	71372	backward class: single at 170.6deg
+24	175896	mover: unlabeled shw 17043 sheds a 6-seg comp at 157.5deg (the labeled shower's contiguous OUT protons are pass3/front-C territory, untouched here)
+25	386948	mover: single at 77.7deg (mip 2.45)
+26	486907	backward class: three comps from one shower (149-169deg)

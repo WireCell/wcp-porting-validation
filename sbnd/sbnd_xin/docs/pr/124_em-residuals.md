@@ -1,6 +1,11 @@
 # doc pr/124 — EM residuals round: gap band, recognition, pass3_cone
 
-**Status: IN PROGRESS (opened 2026-08-28 night, owner directive).**
+**Status: front A VALIDATED, SBND PRODUCTION ON (gap-band tier-2 prune,
+flipped 2026-08-28 night per the standing authorization; owner Bee verdict
+pending — adjudication rows flagged in §D). Front C implemented DEFAULT
+OFF, NOT flipped — 415278 collateral makes it an owner trade-off (§C.3).
+Front B: measured-dead for a seeder-side knob; sentinel audit delivered
+(§B.1).**
 
 Follow-on to doc pr/123 (pass4 over-reach round, closed VALIDATED/ON). The
 owner picked three fronts from the post-pr/123 residual assessment for tonight,
@@ -179,6 +184,141 @@ pair; that pair is the knob.
 - Disposition identical to tier 1: `Shower::detach_member_set` + re-seed as
   own shower (conn 3/4). Validation + flip decision follow the standing bar.
 
+### A.4 Validation (toolkit `a9545660`, knobs; final binary lib 22:27)
+
+Implementation notes: the angle apex is `find_vertices(start_seg).first`
+(the dump's `start_vertex_id`) — the first build used the SHOWER start
+vertex, which compresses conn-3/4 angles (168432 read 23.9° instead of
+59.0°); after the fix the C++ reproduces the offline scan angles EXACTLY
+(168432 59.0, 386442 178.7, 76346 55.5/43.4, 54332 88.7, 415278 40.3,
+406125 4.8). The mdqdx threshold is 2.5 in `m_mip_dqdx_median` (43000)
+units = the scan's plateau-normalized 2.0.
+
+- **OFF gates (final binary, probes on, no env)**: 98-set 196/196 archives
+  byte-identical (mcp1k/mcp2k vs `work-d84r3-cens-*` 28+34, ncpi0/nuecc48 vs
+  `work-d84r2-prod98-*` 38+96); 141-set 282/282 vs `work-d84r3-cens-*`
+  (104+178). Arms `work-pr124r1-dbgv2-*`, `work-pr124r1-dbg141v2-*`.
+  (The hash gate covers mabc-pr.zip + pctree; the d84r3-cens baseline's
+  mcs_bridged_members T_kine delta is outside gate scope.)
+- **Compiled-config proofs**: off-compile byte-identical to git HEAD (cmp
+  rc=0); on-compile emits `shower_pass4_prune_gap2` /
+  `shower_pass3_cone_guard_len`.
+- **ON, 141-set** (`work-pr124r1-onA141v2-*` vs dbg141v2): 13/141 events
+  change, mabc-pr.zip only. Marked showers: med qF1 0.935→0.949, Σ q_extra
+  2.69e7→2.41e7, **Σ q_miss UNCHANGED** (2.454e7). Row deltas: **406125
+  0.097→1.000**, 168432 0.924→0.946, 386442 0.997→1.000; zero negative
+  labeled rows. 0 vertex movers (tags=vtx105); nusel byte-identical; owned
+  segments 3761→3761 (re-seed ⇒ zero orphans); leading-shower energy −41.7
+  MeV over 4 events (the pruned over-reach).
+- **ON, 98-set** (`work-pr124r1-onA98-*` vs dbgv2): 54332 0.528→0.728,
+  76346-14059 0.625→0.765, 76346-40030 0.523→0.947 (event 0.596→0.817);
+  bucket sums: over-clustered q_extra 8.80e6→5.91e6, both-bucket
+  4.71e6→1.15e6. **One adjudication row: 423981-12095 1.000→0.992**
+  (q_miss +1.67e5 = a 2-seg unmarked component at mdqdx 3.56 MIP, gap 42 —
+  the same heavily-ionizing-blob shape as 406125's catch; scanner left it
+  unmarked, scorer counts unmarked members as target. Bee row.)
+- **Unlabeled exposure**: 33 fires total across 239 events; beyond the
+  labeled catches the dominant class is backward/opposite-side components
+  at 134–179° (396222 ×3, 37112 12-seg, 350186, 174771, 408304, 408678,
+  499423 ×2, 58006, 69314, 180801, 71372, 52044, 181050, 486687-42.6°) —
+  detached ≥25 cm AND >40° off the body axis, i.e. the 179369 backward
+  class, over-reach by the owner's own line. Plus two more mdqdx-blob
+  catches: 176502 (4.46 MIP), 281567 (3.38). All packaged for Bee.
+
+## C.2 Front C validation (same commit/binary/gates)
+
+- **ON, 141-set** (`work-pr124r1-onC141-*`): 4/141 events change (52693,
+  77328, 94392, 173819; mcp1k byte-identical — 175896's and 176502's
+  declined tracks are re-absorbed identically by a later site: measured
+  RESIDUAL of this guard). Rows: **94392 0.221→1.000**, **52693
+  0.766→1.000**; Σ q_extra 2.69e7→2.09e7; q_miss unchanged; 0 movers;
+  nusel identical; owned 3761→3760 — the −1 is 94392's 46.8 cm muon,
+  which flows through the pr/123 guard-freed machinery: `kine_count_
+  guard_freed: COUNT ... ke_mev=137.21` + `pf-orphan-guard-freed: EMIT
+  pseudo-n` (ν→n→µ in the PF tree). 77328/173819/52693's declined tracks
+  re-root as their own objects (no orphans).
+- **ON, 98-set mcp** (`work-pr124r1-onC98-mcp{1,2}k`): 2 events change
+  (396222: 3 declines; 415278: 3 declines incl. a 56.3 cm muon); mcp1k
+  byte-identical. ncpi0/nuecc48 of this arm-set were contaminated by the
+  cfg flip landing mid-set (an own-goal of the shared-jsonnet protocol —
+  my own arm was still compiling configs; noted for the memory record).
+
+### C.3 Front C — NOT flipped: the 415278 trade-off (morning decision)
+
+The clean C-only mcp2k score exposes real collateral on 415278: the three
+declined tracks (π 36.4, µ 56.3, µ 22.1 cm) reshuffle between the event's
+TWO labeled showers — 23037 loses IN charge (q_miss 1.26e6→4.39e6, qF1
+0.976→0.910) and 23012 gains it as extra (q_extra 0→3.13e6, 0.959→0.884).
+No length threshold separates: the same decline set produces 94392
+0.221→1.000 and 52693 0.766→1.000. Ledger for the owner:
+
+| side | events |
+|---|---|
+| GAIN | 94392 0.221→**1.000** (both muons out; freed 46.8 cm µ lands as pseudo-n 137.2 MeV in the PF tree); 52693 0.766→**1.000**; 77328/173819 tracks re-rooted (unlabeled, fix-direction) |
+| COST | 415278: 0.959→0.884 and 0.976→0.910 (cross-shower reshuffle) |
+| NO-OP | 175896, 176502 (declined seg re-absorbed identically by a later site — the guard alone cannot fix them) |
+
+Owner options: (1) flip at len 15 accepting 415278 as adjudicated cost;
+(2) keep OFF, fold the pass3 residual into a future round that also blocks
+the re-absorbing site; (3) flip with a higher len (40+: keeps 94392's
+46.8 µ + 52693 + 415278's 56.3 µ still declined — but 415278's 36.4 π
+kept, outcome mixed and unmeasured). The knob ships DEFAULT OFF either
+way; no config change until the owner picks.
+
+## D. Flip + flipchk (front A only: SBND PRODUCTION ON)
+
+cfg commit flips `shower_pass4_prune_gap2 = 25` (ang/mdqdx stay at C++
+defaults 40/2.5); `shower_pass3_cone_guard_len` stays 0 (§C.3).
+Flip-equivalence by decomposition: `work-pr124r1-flipA141-*` /
+`flipA98-*` hash-checked per event against onA (A-events) and dbg
+(untouched events). (The earlier both-knobs `flipchk141/flipchk98` arms
+decomposed cleanly — dbg/onA/onC with NONE only on the A∩C events
+396222/415278, which the 2-event probe arm `onAC2evt` reproduced
+byte-identically as the exact union — retained as the §C.3 evidence, not
+production.) A scoring-method note: flipchk arms run probes=0, and
+cross-run scoring from probe-less sidecars wobbles (the pr/120 lesson) —
+all quoted scores come from the probe-armed on-arms.
+
+Bee A/B: `bee/pr124r1/` — BEFORE = dbgv2/dbg141v2 (production), AFTER =
+flipA. Adjudication rows for the owner: 423981 (−0.008), the
+backward-class fires, 181050 (under-clustering-class event, 44.7°
+single-seg prune).
+
+### D.1 Gate ledger
+
+| # | gate | result |
+|---|---|---|
+| 1 | compiled config, knobs off vs git HEAD | cmp rc=0 byte-identical (twice: after A knobs, after C knob) |
+| 2 | compiled config, knobs on | both keys emitted |
+| 3 | doctest (final binary, lib 22:27) | wcdoctest-clus 2494/2494, knob-default pins included |
+| 4 | OFF gate 98-set (dbgv2, probes on) | 196/196 archives byte-identical (mcp vs d84r3-cens 28+34; ncpi0/nuecc48 vs prod98 38+96) |
+| 5 | OFF gate 141-set (dbg141v2) | 282/282 vs d84r3-cens (104+178) |
+| 6 | onA 141-set | 13 events, mabc only; scores §A.4; 0 movers (vtx105); nusel identical; owned +0 |
+| 7 | onA 98-set | scores §A.4; adjudication row 423981 |
+| 8 | onC 141/98 | §C.2/§C.3; NOT flipped |
+| 9 | flip-equivalence (A-only flip) | every flipA sample decomposes to exactly {onA on A-events, dbg on the rest}, NONE=0: 141 mcp1k 47+5, mcp2k 81+8; 98 mcp1k 14+0, mcp2k 11+6, ncpi0 15+4, nuecc48 44+4 |
+| 10 | A∩C combined check (§C.3 evidence) | both-knob flipchk decomposed with NONE={396222,415278} only; 2-event probe arm `onAC2evt` byte-identical to it and fires the exact union |
+
+Binary provenance: toolkit `a9545660` (clus knobs, DEFAULT OFF) + the cfg
+flip commit; lib `local/lib/libWireCellClus.so` mtime 22:27 2026-08-28
+(freshness proven before arms).
+
+### D.2 Bee record
+
+- Front A (production pair, 27 events): OFF
+  `06885a0f-97c6-4075-9632-c1842431449a` / ON
+  `9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697` — annotated
+  `bee/pr124r1/pr124r1.index.txt`.
+- Front C (decision aid, 6 events, NOT production): OFF
+  `911c0ae5-cf28-4f8f-bb43-bc1a02c3631c` / ON
+  `18da8fb1-3d7a-4e16-9d13-f245e0d09a12` —
+  `bee/pr124r1C/pr124r1C.index.txt`; idx 0/1 the gain side, idx 2 the
+  cost side of §C.3.
+
+Production baselines going forward: 141-set `work-pr124r1-flipA141-*`,
+98-set `work-pr124r1-flipA98-*` (mcp samples content-identical to
+`work-d84r3-cens-*` except the 27 A-events).
+
 ## B. Front B — recognition / fake showers + the score-100 sentinel audit
 
 Cases where the shower ROOT is wrong, so no membership knob helps: 489327,
@@ -229,6 +369,13 @@ this statistics level (pr/118-P2/pr/119 precedent). Final numbers from the
 post-flip dbg arms may move this; the conclusion stands unless FAKE_ROOT
 count grows a separating tail. 171143/277298 notes confirm "PID verdict,
 clustering is fine" — same class.
+
+**Final census (final-binary dbgv2 arms, all four samples,
+`docs/pr/pr124-seed-census.tsv`): identical picture** — the same 3
+FAKE_ROOT on 3 different disjuncts, GOOD_ROOT len med 24.9/p90 35.4 and
+mdqdx med 1.33 interleaving them. Front B closes as measured-dead for a
+seeder-side knob; the actionable thread is the PID-write/sentinel audit
+(§B.1), which needs owner sign-off per site.
 
 ### B.1 The score-100 sentinel audit (housekeeping, read-only)
 
