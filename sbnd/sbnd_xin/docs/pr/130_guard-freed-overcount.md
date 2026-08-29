@@ -500,3 +500,95 @@ is fitted noise, not a discriminator.  Not proposed.
 and now pr/130 Part 4.  Local admission-time geometry keeps failing to encode
 the owner's judgement.  That is an argument for spending the next effort on
 option 1 and, if it also fails, on option 3 — not on further threshold work.
+
+---
+
+# Part 5 — vertex-relative geometry: one feature separates, on one event
+
+## Repro
+
+```bash
+# toolkit: P120_STEM census extended with dvtx_start / dvtx_stem / toward / vang
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+export PR_EXTRA_STAGES=pr_display PR_JOBS=4 WCT_SHOWER_ABSORB_DEBUG=1
+./run_pr_chain_batch.sh work-mcp1k-grp0825 work-pr130-vtx-mcp1k data 292643 283515 67394 286655
+./run_pr_chain_batch.sh work-mcp2k-grp0825 work-pr130-vtx-mcp2k data 47212 281567 179369 347824
+grep -h P120_STEM work-pr130-vtx-*/pr_evt*/stdout.log
+```
+
+Byte-neutrality: extended census sits inside the existing `pr93_absorb_dbg()`
+gate; **8/8 mabc-pr.zip SAME** vs the production arms.
+
+## Measurement (complete 8-candidate firing set)
+
+| evt | verdict | ang15 | dvtx_start | dvtx_stem | toward | vang |
+|---|---|---|---|---|---|---|
+| **292643** | **ABSORB wanted** | 172.84 | **46.84** | **22.64** | +24.20 | **14.83** |
+| **179369** | **ABSORB wanted** | 161.94 | **88.11** | 0.00 | +88.11 | n/a |
+| 283515 | decline ok | 148.37 | 44.34 | 0.00 | +44.34 | n/a |
+| 67394  | decline ok | 174.35 | 43.46 | 0.00 | +43.46 | n/a |
+| 286655 | decline ok | 154.24 | 27.88 | 0.00 | +27.88 | n/a |
+| 286655 | decline ok | 144.06 | 26.66 | 0.00 | +26.66 | n/a |
+| 347824 | decline ok | 167.93 | 11.54 | 0.00 | +11.54 | n/a |
+| 281567 | decline ok (pr/120) | 150.42 |  8.91 | 0.00 |  +8.91 | n/a |
+| 47212  | decline ok (pr/120) | 150.17 |  5.01 | 0.00 |  +5.01 | n/a |
+
+### The designed features mostly collapsed
+
+**`dvtx_stem` is 0.00 for 7 of 8** — the stem candidate sits *on the neutrino
+vertex* in almost every case.  So "does the stem lie between the vertex and the
+shower" is trivially true for the whole population, `toward` degenerates into
+`dvtx_start`, and `vang` is undefined (zero-length vector at the vertex).  The
+hypothesis as designed — parent stem *between* vertex and shower vs prong *at*
+the vertex — **does not describe this population**: nearly every candidate is a
+vertex prong.
+
+### The one feature that does separate — and why I will not ship it
+
+`dvtx_start` separates the complete labelled set: ABSORB-wanted
+[46.84, 88.11] vs decline-ok [5.01 … 44.34], **margin 2.50 cm**.
+
+It is not shippable on this evidence:
+
+- **The separation rests on a single event.** For the 7 vertex-prong candidates
+  `dvtx_start` is numerically identical to `dist_cm`, which Part 4 already
+  measured as NOT separable.  The only row that moves is **292643, 16.87 ->
+  46.84**, because it is the one stem that is not a vertex prong.  Remove that
+  one event and the feature is Part 4's `dist_cm` again.
+- **The margin is 2.50 cm on a ~45 cm scale — 5.6%.**  Compare what this
+  campaign has actually shipped: doc pr/128's continuation kink had **25 deg**
+  between last-accepted and first-rejected; Part 1's guard-freed kink had
+  **99 deg**.  5.6% with 2 positives is fitted noise by the same standard that
+  rejected Part 4's length band.
+
+There *is* a coherent physical story available (a shower starting far from the
+vertex is detached, so a backward stem is plausibly its parent; a
+vertex-attached shower's backward stem is a sibling prong).  The story is worth
+remembering, but a story plus one event is not a discriminator.
+
+## Verdict: the local-geometry family is exhausted
+
+Ten features have now been measured against the complete labelled set —
+pdg, len_cm, dQ/dx ratio, ang15, ang60, dist_cm (Part 4) and dvtx_start,
+dvtx_stem, toward, vang (here).  **None separates on evidence that meets this
+campaign's own bar.**
+
+**Recommendation: stop threshold work on admission-time features.**  Two
+options remain, and they are qualitatively different from everything tried:
+
+1. **Widen the labelled set before trusting `dvtx_start`.**  The guard fires
+   only 8 times in 239 events, but the P120_STEM census tapes *every* chain
+   candidate including accepted absorbs.  A 239-event re-run with the extended
+   census would show whether the 44 -> 47 cm boundary is a real gap in the
+   candidate population or an accident of nine points.  Cheap and decisive
+   about whether Part 5 is worth revisiting; it does not by itself produce a fix.
+2. **A downstream coherence test** (Part 4 option 3): judge the enlarged shower
+   after the absorb, not the geometry before it.  This is the only remaining
+   family that could encode what the owner is actually judging — and the
+   pr/119 / pr/128 / pr/129 / pr/130-p4 / pr/130-p5 sequence is now five
+   consecutive measurements pointing that way.
+
+Until one of those lands, the guard should stay as shipped: right on 6 of 8
+including both founding targets, with its two known errors (-234.0 MeV lost on
+292643, +376.0 MeV spurious on 179369) documented here.
