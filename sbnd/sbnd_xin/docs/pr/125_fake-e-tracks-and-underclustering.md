@@ -334,3 +334,16 @@ pair idx 6 is now a priority row) and to the pr/126 session (Path-2
 mutation risk is no longer theoretical). If the owner rules the 396222
 outcome adverse, the candidate mitigations are a Path-2 disable knob or a
 396222-class qualifier on the guard — neither taken unilaterally.
+
+**§5.3 addendum (pr/126 cross-audit)**: Path-2 dormancy was structural, not
+a safety margin — the path is gated on the main-vertex shower population
+(`map_vertex_segments[main_vertex].size() > 2 → return` + Path-1 blanket
+suppression at :5361), so anything thinning that population can wake it;
+the guard's declines were merely first. The vertex-mutating lines are
+inherited verbatim from the prototype (NeutrinoID_shower_clustering.h:
+696-698) and have zero SBND validation. If mitigation is wanted, a Path-2
+disable knob isolates the untested code; a guard qualifier would perturb a
+validated knob (peer recommendation, concurred). Also: 396222 has no
+scanner π⁰ verdict (pr/126 §4i rescan list, as do 415278/176502/37112),
+so its Enu shift is a movement, not yet a regression — π⁰-pairing
+questions added to the Bee rows.
