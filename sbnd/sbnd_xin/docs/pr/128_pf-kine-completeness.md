@@ -184,6 +184,49 @@ straight-long, **no score term**. Written as a new function
 (fork-by-duplication, M10 / §2 Code) — `segment_confident_nonelectron_pid`
 has live consumers and must stay byte-for-byte.
 
+## 3.1 Proximity alone is NOT a usable predicate — the round's main finding
+
+The first implementation admitted a cross-cluster track on *proximity to the
+emitted candidate* alone (gap ≤ 5 cm, length > 30 cm, non-electron,
+straight-long). Smoke-tested on the two class representatives:
+
+| event | Enu before | Enu after | Δ | verdict |
+|---|---|---|---|---|
+| 105074 (class B) | 1188.7 | 1565.8 | **+377.1** | clean — exactly the two kept showers (162.0 + 215.1), `add_energy` unchanged at 105.7, no other particle touched |
+| 72786 (class A) | 701.6 | **1852.9** | **+1151.3** | **WRONG — this is the failure mode the owner named** |
+
+72786 gained a 143.5 cm muon (344.0 MeV), a 108.3 cm muon (268.9 MeV) and a
+64.7 cm pion (187.5 MeV), plus 350.8 MeV of rest-mass/binding terms. Looking
+at the event's cluster anatomy explains it:
+
+| cluster | segments | total length | extent | closest approach to the ν vertex |
+|---|---|---|---|---|
+| **17 (main)** | 2 | **100.5 cm** | 90.5 cm | 0.0 cm |
+| 9 | 6 | 342.7 cm | **148.4 cm** | **35.3 cm** |
+| 45 | 2 | 112.8 cm | **101.6 cm** | **77.2 cm** |
+
+The neutrino candidate is 100 cm of track. Clusters 9 and 45 are large
+independent structures sitting 35 and 77 cm off the vertex — **cosmics**.
+They read gap 0.00 cm only because they brush the *far end* of the
+candidate's own 94 cm muon. Admitting them counts over-clustered activity as
+neutrino energy and would have more than doubled Enu on this event.
+
+**Fix: require a continuation, not a touch.** The discriminator is the one
+doc pr/127's sccc fix already uses for exactly this question — a continuation
+joins **end to end** and runs **straight on**. `segment_continuation_geometry`
+(`PRSegmentFunctions.cxx`) returns, per candidate against its nearest
+reference segment: `gap`, `cand_end_dis` (path distance from the touch point
+to the candidate's own nearer end), `ref_end_dis` (the same on the reference),
+and `angle_deg` (kink from collinear, 0 = perfectly straight continuation).
+A cosmic crossing a displayed track touches its *middle*, so `ref_end_dis` is
+large; a cosmic running alongside fails the kink. Knob defaults: end
+tolerance 10 cm, kink 30°.
+
+This is why class A ships only if the census below shows the continuation
+terms separate the 137238 class from the 72786 class. Class B is unaffected —
+its material is the main cluster's own, at gap 0.07 cm, and its recovery is
+exact.
+
 ## 4. Known-divergence check (M15)
 
 The `same_cluster` filter in the orphan pools carries
@@ -229,7 +272,43 @@ per fired event rather than asserting it.
 
 ## 6. Implementation
 
-*(in progress)*
+| seat | file |
+|---|---|
+| predicate | `PRSegmentFunctions.{h,cxx}` — `segment_near_candidate_track` |
+| PF class A | `MultiAlgBlobClustering.cxx`, new pool after the pr/123 guard-freed pool |
+| PF class B | `MultiAlgBlobClustering.cxx` — `conn4_keep_showers`, consulted at the `conn4_skip_segs` build, the parentage loop and the shower skip |
+| kine class A | `NeutrinoKinematics.cxx`, new pass after `kine_count_guard_freed` |
+| kine class B | `NeutrinoKinematics.cxx` — `conn4_keep_showers`, consulted at the `vtx_type > 3` skip |
+| config | `TaggerCheckNeutrino.{h,cxx}` (read + `default_configuration` echo + `pattern_algos` push), `NeutrinoPatternBase.h` |
+| jsonnet | `sbnd/clus.jsonnet` (builder args + key-suppressed injection), `sbnd/wct-pr-perevt.jsonnet` (top-level args + pass-through + kine injection) |
+| runner | `run_pr_chain_batch.sh` — `SBND_PF_ORPHAN_NEAR_*`, `SBND_PF_CONN4_NEAR*`, `SBND_KINE_NEAR_*`, `SBND_KINE_CONN4_NEAR*` |
+| tests | `doctest_clus_knob_defaults.cxx` — both kine knobs pinned OFF |
+
+Three details worth recording:
+
+1. **The reference set is defined once, in C++.** "Touches the candidate"
+   means: within *gap* of `used_segs \ conn4_skip_segs` on the PF side, and of
+   the counted showers' segments ∪ `used_segments` on the kine side. Raw
+   `used_segs` would have let a candidate qualify by touching an *invisible*
+   conn-4 cosmic — the exact failure the round is about. The
+   `WCT_PFNEAR_DEBUG` tape is emitted from that same code path, so the census
+   and the knob cannot use different definitions.
+2. **conn-4 keeps are decided with the producers' own metric.**
+   `Facade::Cluster::get_closest_dis` against the main cluster — the same call
+   `:3733`, `:3858`, `:6435` and `:6645` use to assign conn-4 in the first
+   place, so "gap" means one thing across the round.
+3. **Displaced objects render as `nu → n → track`**, the pr/123 convention the
+   owner set on 2026-08-28 — a track not connected to the neutrino vertex
+   must not hang at root.
+
+Determinism: both new pools collect into a `std::vector` and sort by display
+id (PF) or graph edge index (kine) before emitting; no pointer-keyed container
+is iterated. `seg_display_id` was hoisted above its first use in
+`fill_bee_pf_tree` (pure move of a capture-less lambda).
+
+Build: `wcbuild` rc=0; freshness proof `libWireCellClus.so` 11:58:59 vs last
+source edit 11:57:40; `./build/clus/wcdoctest-clus` **235/235 passed, 2524
+assertions**.
 
 ## 7. Validation
 

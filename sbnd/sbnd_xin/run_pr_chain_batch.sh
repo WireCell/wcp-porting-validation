@@ -1663,6 +1663,24 @@ fi
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP}")
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE}")
 [ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_len=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN}")
+
+# doc pr/128 -- PF/kine completeness.  EMPTY env = no TLA = the job default
+# false = byte-identical.  PF knobs move only the picture; the KINE twins move
+# kine_reco_Enu and are approved separately.
+[ -n "${SBND_PF_ORPHAN_NEAR_CROSS_CLUSTER:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_cross_cluster=$([ "${SBND_PF_ORPHAN_NEAR_CROSS_CLUSTER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PF_ORPHAN_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_gap_cm=${SBND_PF_ORPHAN_NEAR_GAP}")
+[ -n "${SBND_PF_ORPHAN_NEAR_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_min_len_cm=${SBND_PF_ORPHAN_NEAR_MIN_LEN}")
+[ -n "${SBND_PF_ORPHAN_NEAR_END_TOL:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_end_tol_cm=${SBND_PF_ORPHAN_NEAR_END_TOL}")
+[ -n "${SBND_PF_ORPHAN_NEAR_KINK:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_kink_deg=${SBND_PF_ORPHAN_NEAR_KINK}")
+[ -n "${SBND_PF_CONN4_NEAR:-}" ] && CATH_TLA+=(--tla-code "pf_conn4_near_candidate=$([ "${SBND_PF_CONN4_NEAR}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PF_CONN4_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "pf_conn4_near_gap_cm=${SBND_PF_CONN4_NEAR_GAP}")
+[ -n "${SBND_KINE_NEAR_CROSS_CLUSTER:-}" ] && CATH_TLA+=(--tla-code "kine_count_near_cross_cluster=$([ "${SBND_KINE_NEAR_CROSS_CLUSTER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_KINE_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "kine_near_gap_cm=${SBND_KINE_NEAR_GAP}")
+[ -n "${SBND_KINE_NEAR_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "kine_near_min_len_cm=${SBND_KINE_NEAR_MIN_LEN}")
+[ -n "${SBND_KINE_NEAR_END_TOL:-}" ] && CATH_TLA+=(--tla-code "kine_near_end_tol_cm=${SBND_KINE_NEAR_END_TOL}")
+[ -n "${SBND_KINE_NEAR_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_near_kink_deg=${SBND_KINE_NEAR_KINK}")
+[ -n "${SBND_KINE_CONN4_NEAR:-}" ] && CATH_TLA+=(--tla-code "kine_count_conn4_near=$([ "${SBND_KINE_CONN4_NEAR}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_KINE_CONN4_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "kine_conn4_near_gap_cm=${SBND_KINE_CONN4_NEAR_GAP}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
