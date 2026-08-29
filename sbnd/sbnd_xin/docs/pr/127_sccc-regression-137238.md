@@ -1,8 +1,10 @@
 # doc pr/127 — 137238's cross-cluster muon: a shipped fix that fell out of tier
 
-**Status: IN PROGRESS** (opened 2026-08-29). Follow-on to doc pr/125 (owner
-verdicts on the pr/125 production Bee pair) and doc pr/93 round 4 (the
-original fix for this same event).
+**Status: SHIPPED** 2026-08-29 — toolkit `d74c5524` (K5 flip) + `49754bf8`
+(`sccc_max_gap` 6→10), wcp `27a8bfdf`, both pushed. Production point is now
+`work-pr125r1-flipS{98,141}-*`. Follow-on to doc pr/125 (owner verdicts on
+its production Bee pair) and doc pr/93 round 4 (the original fix for this
+same event).
 
 Owner directive (2026-08-29, scanning the pr/125 production Bee pair
 `7f4ffdb1` / `cdf0749a`):
