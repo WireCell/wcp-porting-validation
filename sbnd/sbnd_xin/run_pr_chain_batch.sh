@@ -389,6 +389,16 @@ unset _pr120 _env _key _val
 _val=${SBND_SHOWER_EX1_DEDUP_REHOME:-}
 [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=true")
 [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=false")
+
+# doc pr/123 round 1 -- pass4_angle over-reach (owner line 2026-08-28).
+# Prune: bool tri-state (unset = cfg default, 1 = on, 0 = off); gap in cm
+# (EMPTY = cfg default 40).  Track guard: length in cm (EMPTY = cfg default
+# 0 = off).
+_val=${SBND_SHOWER_PASS4_PRUNE:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=false")
+[ -n "${SBND_SHOWER_PASS4_PRUNE_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap=${SBND_SHOWER_PASS4_PRUNE_GAP}")
+[ -n "${SBND_SHOWER_PASS4_TRACK_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_track_guard_len=${SBND_SHOWER_PASS4_TRACK_GUARD_LEN}")
 unset _val
 # doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
 # above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
@@ -1608,6 +1618,11 @@ fi
 [ -n "${SBND_LONG_MUON_STUB_BRIDGE_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_stub_bridge_len=${SBND_LONG_MUON_STUB_BRIDGE_LEN}")
 [ -n "${SBND_MCS_MUON_SOURCE:-}" ] && CATH_TLA+=(--tla-str "mcs_muon_source=${SBND_MCS_MUON_SOURCE}")
 [ -n "${SBND_MCS_RANGE_COMPARATOR_CHAIN:-}" ] && CATH_TLA+=(--tla-code "mcs_range_comparator_chain=$([ "${SBND_MCS_RANGE_COMPARATOR_CHAIN}" = 0 ] && echo false || echo true)")
+# doc 84 round 2: members-geometry + cathode-bridge (value knobs in cm/deg)
+[ -n "${SBND_LONG_MUON_MEMBERS_GEOMETRY:-}" ] && CATH_TLA+=(--tla-code "long_muon_members_geometry=$([ "${SBND_LONG_MUON_MEMBERS_GEOMETRY}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_GAP}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

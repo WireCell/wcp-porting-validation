@@ -890,3 +890,160 @@ OFF-gates make that sound).  Runner env→TLA seats for the six new keys are in
 `run_pr_chain_batch.sh` (`SBND_LONG_MUON_RANGE_FALLBACK`,
 `SBND_LONG_MUON_ANGLE_RELAX[_DEG]`, `SBND_LONG_MUON_STUB_BRIDGE_LEN`,
 `SBND_MCS_MUON_SOURCE`, `SBND_MCS_RANGE_COMPARATOR_CHAIN`).
+
+# Round 2 (2026-08-28) -- members geometry, cathode bridge, formation-time census
+
+## R2.0 Repro
+
+```
+# census (read-only, current-production arms; outputs docs/84_longmu/r2_census/)
+python3 scripts/d84r2_census.py \
+  --arms work-d84r1-flipchk98-mcp1k:mcp1k work-d84r1-flipchk98-mcp2k:mcp2k \
+         work-d84r1-flipchk98-ncpi0:ncpi0 work-d84r1-flipchk98-nuecc48:nuecc48 \
+         work-d84r1-flip2-mcp1k:mcp1k work-d84r1-flip2-mcp2k:mcp2k \
+  --out docs/84_longmu/r2_census
+# OFF gate (98-evt manifest, four samples), then per sample:
+#   d84r2_arms.sh off1        (no env; production post-flip config)
+python3 scripts/pr85_hash_gate.py work-d84r1-flipchk98-<s> work-d84r2-off1-<s>
+# ON smoke (31-evt case list):
+#   bee2_arms.sh on1 SBND_LONG_MUON_MEMBERS_GEOMETRY=1 SBND_LONG_MUON_CATHODE_BRIDGE=1
+```
+
+## R2.1 Census over the current production state (read-only)
+
+`scripts/d84r2_census.py` over `work-d84r1-flipchk98-*` (98-evt manifest) +
+`work-d84r1-flip2-*` (31-evt case list): 129 distinct events, 54 muon showers
+with `flag_kinematics`.  Outputs in `docs/84_longmu/r2_census/`.
+
+**Pop A — chain-vs-membership truncation** (`d84r2-members-gap.tsv`,
+L_members − L_chain > 10 cm, L_chain from inverting the shipped muon
+range→KE table on `kine_range`): **6/54 muon showers**, all in the case-list
+events:
+
+| evt | L_chain | L_members | arrow at | kine_range | kine_best |
+|---|---|---|---|---|---|
+| mcp1k 313847 | 98.5 | 260.9 | 90 cm (38%) | 248.3 | 547.5 (dqdx) |
+| mcp1k 281595 | 130.0 | 351.0 | 124 cm | 315.1 | 750.1 (dqdx) |
+| mcp2k 74784  | 29.9  | 291.3 | 29 cm  | 98.9  | 717.8 (dqdx) |
+| mcp1k 278684 | 167.3 | 187.8 | 165 cm | 395.3 | 395.3 |
+| mcp2k 393538 | 292.5 | 331.7 | 279 cm | 673.7 | 673.7 |
+| mcp2k 499577 | 294.7 | 324.4 | 285 cm | 678.6 | 678.6 |
+
+**Pop B — cathode-split muons** (`d84r2-cathode-pairs.tsv`; both facing ends
+within 6 cm of x=0, far ends on opposite drift sides, gap < 25 cm): the three
+scan events plus one new candidate.  Two census-corrections to the round-1
+narrative, baked into the knob design:
+
+- the halves do **not** share a PR `cluster_id` (53793: clus 37 vs 12) —
+  imaging-level stitching does not survive into the PR graph, so the guards
+  are purely geometric (no same-cluster requirement);
+- near ends can jitter onto ONE side (77978's far half itself crosses x=0,
+  near end at +2.17 beside the muon end at +4.77) — the opposite-side test
+  is on the far ends.
+
+| evt | muon end x | partner | partner x | gap | ∠gap | ∠tan |
+|---|---|---|---|---|---|---|
+| mcp2k 53793  | +4.71 | shower 528 MeV (240.5 cm, μ) | −4.53 | 13.9 | 14.5/11.8 | 6.5 |
+| mcp2k 177536 | −2.50 | bare 98.1 cm | +3.29 | 9.4 | 6.0 | 9.0 |
+| mcp2k 77978  | +4.77 | bare 23.5 cm (+9.8 cm Bragg stub typed 2212 beyond) | +2.17 | 6.5 | 12.6 | 14.9 |
+| mcp2k 392901 | +2.10 | shower 106 MeV (**EM, pdg 11**) | −4.01 | 17.8 | 19.7 | 14.0 |
+
+392901's partner is an EM shower — the one candidate the muon-typed-partner
+guard excludes by design (absorbing EM showers across the seam is the failure
+mode to avoid, not the target).
+
+## R2.2 What shipped (knob table)
+
+| config key | C++ default | SBND this round | what it does |
+|---|---|---|---|
+| `long_muon_members_geometry` | `false` | OFF (hold for scan) | `calculate_kinematics_long_muon`: muon-typed members outside the chain ADD to the range length and their vertices join the endpoint/end_degree search (round-1 P1's accumulators, partial-truncation form) |
+| `long_muon_cathode_bridge` | `false` | OFF (hold for scan) | TCN post-reconcile pass: a \|13\| shower with a member end at the cathode absorbs its facing far half — `add_shower` merge for a muon-typed shower partner, BFS absorb + retype-to-13 for a bare segment chain — then `update_shower_maps` + kinematics recompute |
+| `long_muon_cathode_bridge_x` | `0.0` cm | (default) | cathode plane |
+| `long_muon_cathode_bridge_xcut` | `6.0` cm | (default) | end admission window (census ends at ±4.8) |
+| `long_muon_cathode_bridge_gap` | `20.0` cm | (default) | max 3D gap (census 6.5–13.9) |
+| `long_muon_cathode_bridge_angle` | `25.0` deg | (default) | continuation angle cap, gap vector AND partner tangent (census ≤ 19.7) |
+
+Scope limits, deliberate: the bridge adds the far half to the SHOWER only —
+`segments_in_long_muon` (tagger features, MCS chain) keeps its legacy
+content, so `nusel` stays put and the change is confined to kine/PF output.
+The two knobs compose: the bridged far half is outside the chain, so its
+length reaches `kine_range` through `members_geometry`.  Ship/flip them
+together.
+
+## R2.3 Gate ledger
+
+| gate | arms | result |
+|---|---|---|
+| knob-off byte-identical | `work-d84r1-flipchk98-*` vs `work-d84r2-off1-*` (98 evts, 4 samples) | **PASS 196/196** (28+34+38+96); per-event `nusel-evt*.tsv` **98/98** identical (the flipchk98-nuecc48 arm-level table holds only rerun evt 256587 — round-1 operator-stop artifact, not a diff) |
+| doctests | `build/clus/wcdoctest-clus` | 2484/2484 (incl. six new default pins) |
+| compiled config, knobs off | full-pipeline `wcsonnet` (reality=data + PR pipeline_names), HEAD vs edited jsonnet | byte-identical |
+| compiled config, knobs on | same + 4 TLAs | exactly `long_muon_members_geometry`, `long_muon_cathode_bridge`, `_gap`, `_angle` appear in the TCN node; nothing else moves |
+| ON smoke | `work-d84r2-on2-*` (31-evt case list, both knobs ON, pr/123 pass4 pinned OFF) vs `work-d84r1-flip2-*` | exactly **9 mover events**, all \|13\| showers; divergence confined to `mabc-pr.zip` on those 9; `pctree` 31/31 and `nusel` 31/31 byte-identical |
+| determinism | `work-d84r2-det1/det2` (53793 merge + 177536 bare absorb, ASLR off) | PASS 4/4 byte-identical |
+
+Freshness: `local/lib/libWireCellClus.so` 20:14 > last source edit 20:10.
+Attribution note: a first ON arm (`on1`) overlapped the concurrent session's
+pr/123 `shower_pass4_*` SBND flip (jsonnet mtime 20:24:36, mid-arm) and
+picked up two of THEIR movers (55740, 75554); `on2` pins
+`SBND_SHOWER_PASS4_PRUNE=0 SBND_SHOWER_PASS4_TRACK_GUARD_LEN=0` and is the
+arm quoted everywhere here.  The OFF arm compiled all 196 configs before
+that flip (verified: zero carry pass4 keys).
+
+## R2.4 ON smoke — all five scan events land, nothing else moves
+
+The 9 movers (on2 vs flip2), quoted from `kine_long_muon:` / bridge lines:
+
+**members_geometry (6):**
+- 313847: L 98.5→260.9 cm, range 248.3→602.2, best 547.5 (dqdx) → **602.2 (range)**; end_degree 2→1 — the Bee arrow lands at the true end (owner finding #1).
+- 281595: L 130.0→351.0 cm, best 750.1 → **808.5 (range)** (owner finding #2).
+- 74784: L 29.9→291.3 cm, range 98.9→670.8, best 717.8 (dqdx) → **670.8 (range)** — census discovery, worst truncation of all.
+- 278684: 167.3→187.8 cm, 395.3→439.9.  393538: 292.5→331.7 cm, 673.7→757.9.  499577: 294.7→324.4 cm, 678.6→746.9.
+
+**cathode_bridge (3):**
+- 53793 (shower partner): `merge shower sid=0 (mu_len=154.1cm) <- sid=2 (mu_len=240.9cm) gap=13.9cm ends x=(4.7,-4.5)cm` — single 395.0 cm muon, best 367.0 → **912.9 MeV** (dqdx/range ratio 1.00); the 527.8 MeV far-half shower absorbed (owner finding #3).
+- 177536 (bare far half): `absorb bare chain into sid=1 nseg=2 len=122.1cm gap=9.4cm` — L 294.8→416.9 cm, best 679.0 → **963.9 (range)** (owner finding #4).
+- 77978 (bare far half + Bragg stub): `absorb bare chain into sid=0 nseg=2 len=33.4cm gap=6.5cm` — the 23.5 cm muon piece AND the 9.8 cm stub typed 2212 (Bragg rise) beyond it, retyped 13; best 337.5 → **409.4 (range)** (owner finding #5).
+
+Regression checks: 497311 keeps its round-1 P1 rescue (fallback=1, 766.3),
+66366 keeps its P3 chain (300.6 cm, 692.2), 392901 unchanged BY DESIGN (its
+census partner is a 106 MeV EM shower — excluded by the muon-typed-partner
+guard; flagged in the Bee index for owner opinion).
+
+## R2.5 P2 formation-time census — the audit question, closed
+
+The round-1 probe (`long_muon_angle_relax: cand`) is knob-gated and P2 is
+production-ON, so the flipchk98 + flip2 debug logs already carry the census:
+**105 distinct formation-time candidates in 24 events**
+(`r2_census/d84r2-formation-cands.tsv`).  Angle distribution: median 60.4°,
+p25 35.3° — the rejected population is genuinely non-collinear; only 20
+candidates sit below 30°, and only 4 pass the ratio+length preconditions
+(`considered=1`).
+
+The sharpest finding closes 281595: its 220.8 cm continuation IS present at
+formation time at 15.6° / ratio 1.019 / considered=1 — inside the 16° cap —
+but the P2 block's own junction veto kills it: the third arm at vertex
+20003 is the 13.9 cm stub (> 10 cm, track-like), which reads as "genuine
+hadronic vertex".  P2-as-designed can never fire where a >10 cm competing
+arm exists, which is exactly the greedy-stub topology it was meant to heal.
+`members_geometry` recovers these events without touching the walk, so no
+P2 re-tuning is proposed; the veto interplay is recorded for any future
+walk-level fix (re-examine after refinement is still blocked by the
+fill-once guard).
+
+## R2.6 Bee package (held for owner)
+
+`bee/d84r2/d84r2-on.zip` (31 events, round-1 index order) is built from the
+on2 arm and annotated in `bee/d84r2/d84r2.index.txt`; **not uploaded** —
+outward-facing, owner call.  BEFORE for the scan is the already-uploaded
+round-1 ON2 set `ea9b4914-6152-4cc4-9da7-df104939e6e0` (byte-equivalent to
+current production, flip-equivalence PASS 62/62).  Both knobs are SBND OFF
+until that scan.
+
+## R2.7 Coordination note
+
+Concurrent with the pr/123 session in the same tree.  Its uncommitted
+pass4 hunks (TCN.{h,cxx}, NPB.h, NSC.cxx, PRShower.{h,cxx}, doctest,
+jsonnet) were recorded before editing and excluded from this round's commits
+by tag-selective staging; its 20:24:36 jsonnet flip mid-arm is handled in
+R2.3.  New runner env→TLA seats: `SBND_LONG_MUON_MEMBERS_GEOMETRY`,
+`SBND_LONG_MUON_CATHODE_BRIDGE[_GAP|_ANGLE]`.
