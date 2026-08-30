@@ -151,3 +151,58 @@ python3 scripts/pr133_rank_sim.py --manifest98 em117-133k2021p98-manifest.tsv --
 PR_JOBS=12 bash scripts/pr133_arms.sh 98 k3v29 0 SBND_PI0_ATTACH_MIN_MEV=29  # + 141
 python3 scripts/pr132_pi0_census.py --manifest98 em117-133k3v2998-manifest.tsv --manifest141 em114c-133k3v29141-manifest.tsv --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr133-census-k3v29.tsv
 ```
+
+## 8. Owner decisions + the production flip (2026-08-30)
+
+Owner: *"K3 28-29 is good, K20 is good, K21, give me the bee links to scan,
+K16 looks OK."*  Flipped in `wct-pr-perevt.jsonnet` (toolkit `84574c98`):
+`pi0_attached_partner_min_mev=29`, `pi0_admit_muon_showers=true`,
+`shower_em_collinear_deg=10` + `_dis_cm=120`.
+**Flip-equivalence: `flipenv` (env on pre-flip cfg) vs `flipchk` (post-flip
+cfg, no env) PASS 4/4, 478/478 archives.**  New production point: census
+**32 exact / 15 partial / 1 none / 18 no-group** (54332 partial->exact),
+fakes 2->1, ledger 90.2% (54332 g1 + 54341 g1 UNDER->OK; 99838/165157/
+347824 OK->OVER = the accepted K16 trade), movers 0x4.
+TSVs: `pr133-census-flipenv.tsv`, `pr133-gamma-ledger-flipenv.tsv`.
+
+## 9. K21 owner scan verdicts + the visual diagnosis
+
+K21 Bee: OFF `2a64eeb4-0b31-426e-bade-41391f178407` / ON
+`0b1e395e-69fb-4b7d-8ca6-eacb6c49c1f5` (`bee/pr133k21/`).  Owner: the three
+refusals (406125/506746/486687) are *"clearly good"*; **both fires land the
+vertex wrong** — *"the vertex are quite far away from the current ones"*;
+116962 is *"clearly a two shower event"*; told to look visually.
+
+Plots: `docs/pr/pr133-vtx-76346.png`, `pr133-vtx-116962.png` (Bee point
+cloud, off/k21/truth vertices marked).
+
+**76346 — mechanism PROVEN (end-flip + partner floor).**  Shower 14059's
+reco START = the old wrong vertex (-106.5,-10.2,362.3) and its END =
+(-109.9,-35.4,345.8) = EXACTLY the owner's truth click: the gamma is seated
+INVERTED, so the bp ray extends behind the wrong end (+z, away from truth).
+And the true gamma2 is 40030 at **5.0 MeV** — below the 20 MeV candidate
+floor — so the proposer paired the wrong partner (41031, 29.6 MeV).
+Numerical check: back-projecting the END-FLIPPED gamma1 ray against the
+5-MeV gamma2 ray lands at (-113.7,-59.0,330.9) — **0.5 cm from the owner's
+hand back-projected vertex** (-114.0,-59.3,331.3), miss 1.0 cm, both t
+negative.  The fix is end-agnostic rays + a lower NC partner floor.
+
+**116962 — an EM-clustering defect FIRST.**  The owner's "two showers" are
+reconstructed as SIX: the right gamma = 21072 (232 MeV) + 21070 (112) +
+21073 (78), all seated at the same wrong vertex (-69.7,-79.1,155.9); the
+left gamma = 22025 (112) + 58035 (92) + 67056 (55).  Endpoint-axis
+back-projection of 21072 x 22025 gives miss 18.8 cm and mass 267-311 in
+every orientation — no clean crossing exists until the fragments are merged
+per gamma.  The two-shower event must first BE two showers.
+
+### 9.1 Round-queue (next round, owner design input wanted)
+
+1. **K21 v2 — end-agnostic back-projection**: try both orientations of each
+   candidate gamma axis (the 76346 end-flip), require the crossing behind
+   the chosen conversion end, prefer the orientation pair with the smaller
+   miss; drop the partner floor to ~5 MeV ONLY inside the NC signature gate
+   (the v4 gate + window carry the safety).  Specimen 76346 = 0.5 cm.
+2. **NC gamma fragment merge before pairing** (116962): inside the v4 gate,
+   merge same-side shower fragments (the six->two problem) before rays are
+   drawn — in-scope EM clustering, but design input wanted on the merge
+   criterion (shared seat vertex? axis co-pointing?).
