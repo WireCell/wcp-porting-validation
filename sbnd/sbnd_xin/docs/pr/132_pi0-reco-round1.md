@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1-9 CLOSED (2026-08-30). Round 9 (sec 16): K19 back-projection NC vertex proposer built (runs BEFORE path 1, NC signature gate, P2-style acceptance), DEFAULT OFF, measured dead — it rescues 116962 and 76346 at pair level but the full arm costs 7 ADVERSE vertices (5 dead-on clicks, incl owner-good 506746) for +1 exact, and the guard that suppresses the damage suppresses the rescues too: the pi0 observables are FLAT across the NC vertex ambiguity; the separator must be non-pi0 information (owner item). Round 8 (sec 15): the NC pi0 vertex front measured dead at the finder level — gate attribution on the 6 owner-flagged wrong-vertex specimens, then the full P2 knob family (K14+K4+K5+K13) opened: ZERO NC rescues (ordering lock: P1 consumes the gammas first; ray-crossing geometry corrupted by the vertex defect itself), and the only new acceptances are the rounds-1-4 ADVERSE vertex-draggers (122660/281567/171143, non-NC = scope violations). All knobs stay OFF; round-9 recommendation = gamma-ray back-projection NC vertex proposer BEFORE path 1 (owner design decision). Owner Bee scan on the 13 K18 fires recorded in sec 14.6. Round 7 (sec 14): K18 acceptance-aware merge DEFAULT OFF, measured dead in v1 (crumb-host mass fabrication; 169626 exact->none via without-vertex displacement) and v2 (subordination-guarded: 13 fires = 7 true-pair fusions + pollutions; ledger 90.9->87.1% OK, 0 healed). The mass constraint does NOT break the fragment/partner degeneracy: the below-window population is ANGLE-compressed (103798: charges 0.96/1.02, mass 74), not charge-starved. Production stands at 31 exact / 90.9% OK. Original: rounds 1-6 CLOSED (2026-08-30). Round 6 (sec 13): the start ledger (5 gammas 9-51 cm deep, 2 over-extended), K17 back-extension DEFAULT OFF, measured dead in v1 (swallowed partner gammas, 31->21 exact) and v2 (continuation-guarded, still net -5); the K12/K16/K17 synthesis: the fragment class is locally degenerate with partner gammas -- geometry alone cannot separate them. Production stands at 31 exact. Original: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
+**Status: rounds 1-10 CLOSED (2026-08-30) — the in-scope campaign is COMPLETE. Round 10 (sec 17): the opening-angle census (WCT_PI0_ANGLE_DEBUG + pr132_angle_census.py) measured the centroid-ray substitution dead offline (2 BELOW->IN gains vs 5 IN->OUT losses on the 66 hand pairs; no knob spent) and corrected the round-7 diagnosis: the below-window set is heterogeneous (2 fixable, 105946 shares the bias, the rest are charge-driven). Production = 31 exact / 2 fakes / 90.9% OK; remaining items are owner-level (non-pi0 NC discriminator, K16@120, upstream imaging). Round 9 (sec 16): K19 back-projection NC vertex proposer built (runs BEFORE path 1, NC signature gate, P2-style acceptance), DEFAULT OFF, measured dead — it rescues 116962 and 76346 at pair level but the full arm costs 7 ADVERSE vertices (5 dead-on clicks, incl owner-good 506746) for +1 exact, and the guard that suppresses the damage suppresses the rescues too: the pi0 observables are FLAT across the NC vertex ambiguity; the separator must be non-pi0 information (owner item). Round 8 (sec 15): the NC pi0 vertex front measured dead at the finder level — gate attribution on the 6 owner-flagged wrong-vertex specimens, then the full P2 knob family (K14+K4+K5+K13) opened: ZERO NC rescues (ordering lock: P1 consumes the gammas first; ray-crossing geometry corrupted by the vertex defect itself), and the only new acceptances are the rounds-1-4 ADVERSE vertex-draggers (122660/281567/171143, non-NC = scope violations). All knobs stay OFF; round-9 recommendation = gamma-ray back-projection NC vertex proposer BEFORE path 1 (owner design decision). Owner Bee scan on the 13 K18 fires recorded in sec 14.6. Round 7 (sec 14): K18 acceptance-aware merge DEFAULT OFF, measured dead in v1 (crumb-host mass fabrication; 169626 exact->none via without-vertex displacement) and v2 (subordination-guarded: 13 fires = 7 true-pair fusions + pollutions; ledger 90.9->87.1% OK, 0 healed). The mass constraint does NOT break the fragment/partner degeneracy: the below-window population is ANGLE-compressed (103798: charges 0.96/1.02, mass 74), not charge-starved. Production stands at 31 exact / 90.9% OK. Original: rounds 1-6 CLOSED (2026-08-30). Round 6 (sec 13): the start ledger (5 gammas 9-51 cm deep, 2 over-extended), K17 back-extension DEFAULT OFF, measured dead in v1 (swallowed partner gammas, 31->21 exact) and v2 (continuation-guarded, still net -5); the K12/K16/K17 synthesis: the fragment class is locally degenerate with partner gammas -- geometry alone cannot separate them. Production stands at 31 exact. Original: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -1391,7 +1391,14 @@ boundary cases (347824 m_cur=100.0, 406125 m_cur=44.6) stay ADVERSE under
 any window guard.  **K19 stays DEFAULT OFF** — +1 exact does not buy 7
 ADVERSE vertices, five of them dead-on clicks.
 
-## 16.4 Round-10 queue
+## 16.4 Bee A/B (owner-requested, round 9)
+
+* OFF (r9off, production point): `https://www.phy.bnl.gov/twister/bee/set/82e77f9d-fc18-49aa-a219-81dd9a6c05fb/event/list/`
+* ON (r9bp, K19@8cm): `https://www.phy.bnl.gov/twister/bee/set/803e2f62-4b43-4d9f-b15b-62ab672d812c/event/list/`
+* Annotated index: `bee/pr132r9/pr132r9.index.txt` (13 fires; the 2 NC
+  rescues first, then the census win, then the 5 ADVERSE-at-zero).
+
+## 16.5 Round-10 queue
 
 1. The NC re-vertexer needs a non-pi0 discriminator (vertex-activity dQ/dx,
    track stubs, imaging-level point selection) — an owner-level design
@@ -1410,4 +1417,69 @@ python3 scripts/pr132_pi0_census.py --manifest98 em117-132r9bp98-manifest.tsv --
     --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r9bp.tsv
 python3 scripts/pr132_gamma_ledger.py ... --tsv docs/pr/pr132-gamma-ledger-r9bp.tsv   # zero diffs
 for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr90_movers.py work-pr132-r9off-$s work-pr132-r9bp-$s --tags vtx105; done  # 7 ADVERSE
+```
+
+# 17. Round 10 — Front A: the opening-angle census, the centroid ray measured dead (2026-08-30)
+
+Owner order: *"...then proceed to round-10 improvements"*.  Executes sec
+16.5 item 2 (the last unmeasured in-scope lever): does recomputing the
+pair rays from vertex -> charge-centroid (instead of vertex -> start-point)
+decompress the below-window population that round 7 diagnosed?
+
+## 17.1 The tape and the census
+
+`WCT_PI0_ANGLE_DEBUG` (byte-neutral, stderr): for every recorded path-1
+pair, the legacy mass/angle next to the centroid-ray variant
+(vertex -> associate-cloud centroid, both members).  Scored offline by
+`scripts/pr132_angle_census.py` against the hand labels (label opening
+angle = angle between the two per-gamma label axes).  Full manifests
+(r10ang arms), 66 hand pairs:
+
+| class | n | meaning |
+|---|---|---|
+| IN->IN | 29 | start ray already matches the label angle; centroid harmless |
+| no-pair-on-tape | 14 | a gamma never associates (the no-group population) |
+| other | 11 | m_start far above window (over-merge / fusion masses) |
+| BELOW->BELOW | 5 | below-window on BOTH rays |
+| **IN->OUT** | **5** | centroid ray pushes a good pair OUT (314838: 26.3 -> 3.8 deg!) |
+| **BELOW->IN** | **2** | the gains (64591: 47.4 -> 77.5 deg vs label 90.0; 168432) |
+
+## 17.2 The verdict — and what the below-window population actually is
+
+The centroid-ray substitution is **measured dead**: 2 gains vs 5 in-window
+losses on the hand set (overlapping showers put both centroids on one ray
+from the vertex — 314838 collapses to 3.8 deg; lateral clouds blow 392901
+up from 56 to 99 deg).  No knob is implemented — the tape census settles
+the trade offline before an arm is spent.
+
+The deeper result corrects round 7's diagnosis: the below-window
+population is HETEROGENEOUS —
+
+* genuinely angle-compressed AND centroid-fixable: ~2 (64591, 168432);
+* angle-compressed but NOT centroid-fixable: 105946 (a_start 17.8 vs label
+  72.7; a_cent 19.1 — the charge centroid carries the SAME downstream bias
+  as the start, they are the same corrupted charge);
+* angle CORRECT, below-window from CHARGE: 280972 (17.1 vs label 17.1),
+  281485 (93.0 vs 81.7), 54341 (53.6 vs 64.1) — the rounds-5/6 UNDER
+  classes, unreachable by any ray construction.
+
+## 17.3 Campaign state after round 10
+
+Every in-scope lever is now measured: K12/K16/K17 (geometry merges), K18
+(acceptance-aware merge), the P2 gate family, K19 (back-projection
+re-vertexer), and the centroid ray — all dead, each with its mechanism
+identified.  Production stands at **31 exact / 2 fakes / 90.9% ledger-OK**
+(fudge 0.84 + K7/K8 + K3=28 + sccc/K5 sentinels).  What remains is
+owner-level: (1) the non-pi0 NC vertex discriminator (sec 16.3); (2) the
+K16@120 call (round 5); (3) upstream imaging for the UNDER-nosibs /
+deep-start charge (the ledger's standing items).
+
+Repro (round 10):
+```
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r10ang 1 WCT_PI0_ANGLE_DEBUG=1  && ...141...
+bash scripts/pr132_r2_manifests.sh r10ang
+python3 scripts/pr132_angle_census.py --manifest98 em117-132r10ang98-manifest.tsv \
+    --manifest141 em114c-132r10ang141-manifest.tsv --overlay-tag pi0scan-0829-agent \
+    --tsv docs/pr/pr132-angle-census-r10ang.tsv
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r10off 0  && ...141...   # gate vs r9off: PASS 4/4 expected
 ```
