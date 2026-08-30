@@ -1,0 +1,8 @@
+# doc pr/133 K21 A/B index -- OFF 2a64eeb4-0b31-426e-bade-41391f178407 / ON 0b1e395e-69fb-4b7d-8ca6-eacb6c49c1f5
+# OFF = work-pr133-off (production point) ; ON = work-pr133-k21 (SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15)
+# bee_idx	event	status
+0	116962	RESCUED(pair): NC signature fires, pair m=125.8 (gamma1 21072 232 MeV replaces 21070 111.6), vertex back-projected shift 12 cm
+1	76346	RESCUED(pair): true pair m=129.6, vertex shifted 4.3 cm (click distance 30.3->33.7 -- the flat-mass ambiguity; judge by eye)
+2	406125	unchanged: v4 REFUSES the p+mu track vertex (the r9 false positive killed)
+3	506746	unchanged: v4 refuses (r9 ADVERSE dead-on click killed)
+4	486687	unchanged: v4 refuses (r9 ADVERSE killed)
