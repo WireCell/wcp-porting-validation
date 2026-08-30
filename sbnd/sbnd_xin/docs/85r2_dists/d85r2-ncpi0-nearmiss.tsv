@@ -1,0 +1,7 @@
+# NO ncpi0 event passes cosmict_flag == 1 or nue_score > 7.0 (0 of 19); this is instead the 5 whose nue BDT filled at all -- the nearest misses
+bee_idx	sample	run	subrun	event	nu_evaluated	numu_score	nue_score	cosmict_flag	kine_reco_Enu_MeV	kine_energy_excluded_MeV	event_label
+0	ncpi0	18255	1	399860	1	0.398171	6.5814023	0.0	1343.107	0.0	nu-candidate
+1	ncpi0	18255	1	56982	1	1.1343111	-0.16142167	0.0	1183.552	138.49495	nu-candidate
+2	ncpi0	18259	1	37112	1	0.30225757	-0.9002349	0.0	1260.897	1.4111032	nu-candidate
+3	ncpi0	18255	1	180801	1	1.356455	-1.4411039	0.0	1329.4382	13.389215	nu-candidate
+4	ncpi0	18261	1	285567	1	0.9938243	-6.6939797	0.0	1820.7974	181.743	nu-candidate

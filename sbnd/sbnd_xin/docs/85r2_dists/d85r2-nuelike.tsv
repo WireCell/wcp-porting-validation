@@ -1,0 +1,12 @@
+# nu-candidate mcp1k+mcp2k, HIGHEST nue_score; rank order; pool 1256.  Unlike round 1 these are now ORDERED: the clamp used to flatten every strong candidate onto 4.300936
+bee_idx	sample	run	subrun	event	nu_evaluated	numu_score	nue_score	cosmict_flag	kine_reco_Enu_MeV	kine_energy_excluded_MeV	event_label
+0	mcp2k	18259	1	176533	1	-0.5145304	14.222196	0.0	656.09576	143.03232	nu-candidate
+1	mcp2k	18255	1	291072	1	-0.27610043	12.644109	0.0	798.55646	0.0	nu-candidate
+2	mcp2k	18255	1	75954	1	-0.6075758	9.097998	0.0	797.907	3.2299109	nu-candidate
+3	mcp1k	18255	1	64409	1	-0.06338695	6.7798657	0.0	1032.3461	5.7303762	nu-candidate
+4	mcp2k	18255	1	394167	1	-0.69703966	6.193053	0.0	459.17038	8.520875	nu-candidate
+5	mcp2k	18259	1	176502	1	-1.6429858	4.9441676	0.0	4738.3965	274.49817	nu-candidate
+6	mcp1k	18255	1	386442	1	-1.4704399	4.15565	0.0	254.62132	2.8007529	nu-candidate
+7	mcp2k	18259	1	100222	1	0.7643355	1.0370674	0.0	2710.559	358.9744	nu-candidate
+8	mcp2k	18255	1	396222	1	-0.6195535	0.50869673	0.0	4392.226	160.75247	nu-candidate
+9	mcp2k	18255	1	282271	1	0.9813427	0.063624665	0.0	868.1022	123.13441	nu-candidate

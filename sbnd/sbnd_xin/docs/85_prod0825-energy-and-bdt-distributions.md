@@ -1,12 +1,19 @@
-# 85 — Reconstructed energy and BDT scores of the four SBND production samples, the MicroBooNE working points, and six Bee hand-scan sets
+# 85 — Reconstructed energy and BDT scores of the four SBND production samples; the MicroBooNE working points; removing the score clamp and adding an excluded-energy variable (round 2)
 
 Three figures over the **whole** `prod0825` PR product (3067 events, four
 samples), the MicroBooNE νμ/νe BDT working points applied to them (§7 — the νe
 one does **not** transfer, and why), and six Bee sets.
 
-**Nothing is tuned here and no code changed.** This is a read-out of an existing
-production arm: `pr_scores_table.py` over `work-<sample>-prod0825`, then
-matplotlib. No knob moved, no A/B was run, no arm was regenerated.
+**Two rounds, and they have different natures — read the scope line of each.**
+
+| round | sections | arm | code |
+|---|---|---|---|
+| **1** (2026-08-30, morning) | §1–§8 | `prod0825` | **none changed.** A read-out: `pr_scores_table.py` over `work-<sample>-prod0825`, then matplotlib. No knob moved, no A/B, no arm regenerated. |
+| **2** (2026-08-30, §9) | §9 | `prod0830` | **two production changes**, owner-requested: the BDT score clamp §7.1 identified is removed, and T_kine gains an excluded-energy census. Not byte-identical, deliberately unknobbed, and the arm is re-produced. |
+
+§9 supersedes §3, §5 and §7 wherever they quote a νe number or a Bee link;
+the round-1 text is kept because those sets were hand-scanned as they stand
+and a superseded measurement is still a record of what was measured.
 
 ## Repro block
 
@@ -377,9 +384,15 @@ exactly 4.300936 are precisely the ones whose true score is *somewhere above*
 information destroyed before it reaches `T_tagger`: not the existence of a
 signal region, but all ordering inside it.
 
-This is **reported, not fixed**: removing the clamp changes production output
-unconditionally (escalation rules 1 and 4). Until it is decided, this document
-uses the only reachable stand-in,
+This was **reported, not fixed** at the time: removing the clamp changes
+production output unconditionally (escalation rules 1 and 4). **The owner then
+decided to remove it — see §9.** Everything below this line is the
+*clamped* read-out and is superseded there; it is kept because the Bee sets of
+§7.3–§7.5 were built from it. Two corrections §9 makes to the text above: the
+prototype range is **±16.25562**, computed, not the "≈ ±15" inferred here; and
+the toolkit's own `float`-vs-`double` split is a second, older divergence
+independent of the clamp. Until it was decided, this document used the only
+reachable stand-in,
 
 > **NUE_SEL** = `nue_score >= 4.30` — the clamp ceiling, a **strict superset**
 > of the MicroBooNE selection
@@ -488,9 +501,400 @@ The set below is those three nearest misses, not a passing selection:
   to reach production as of 2026-08-30.
 * **Not a MicroBooNE-equivalent selection** — §7.1. The νμ working point
   transfers; the νe one is unreachable under the toolkit's score clamp, and
-  every νe number here uses a strictly looser stand-in.
+  every νe number *in round 1* uses a strictly looser stand-in. **§9 removes
+  the clamp and applies the real cut**; this bullet describes §1–§7 only.
 * **Not a gate.** No A/B, no hash comparison, no claim of byte-identicality is
   made or needed: the arms were read, not produced.
+
+## 9. Round 2 — the clamp removed, an excluded-energy variable added, the arm re-produced
+
+Round 1 ended by *reporting* the score clamp of §7.1 and not fixing it, on
+escalation rules 1 and 4. The owner then asked for two production-quality
+changes and a re-production:
+
+> 1. remove the clamp of v, so that this would be consistent with the prototype
+> 2. … for the parts not included in the Enu, it would be useful to have another
+>    variable Excluded_Energy or something to calculate those and store in the TKine
+
+Both are in, both are **unconditional** — no default-OFF knob, because a knob
+that kept the clamp would defeat the request — and the four samples are
+re-produced as `prod0830`.
+
+### Repro (round 2)
+
+```bash
+# toolkit: four commits, then build + install + the M1 freshness proof
+#   59f75bb8  root: remove the BDT score clamp
+#   546f52a8  clus: add the excluded-energy census to T_kine
+#   bd99f443  clus: fix the census counting leftover showers twice  (§9.1.1)
+#   23129773  root: correct the quoted ceiling to 16.25562
+wcbuild                                     # rc=0; see §9.1.2 on the retries
+./build/root/wcdoctest-root                 # 4030/4030
+./build/clus/wcdoctest-clus                 # 2579/2579
+
+cd wcp-porting-img/sbnd/sbnd_xin
+# Pin the binary: a concurrent session shares local/lib, and a wcbuild of
+# theirs mid-run would build half this arm with different bytes (§9.3).
+cp -a /nfs/data/1/xqian/toolkit-dev/local/lib/. /home/xqian/tmp/prod0830-libsnap/
+export LD_LIBRARY_PATH=/home/xqian/tmp/prod0830-libsnap:$LD_LIBRARY_PATH
+
+# stage B only, from the SAME Q/L input prod0825 read (M11), fresh tag (M13)
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  PR_GROUP_SIZE=16 PR_JOBS=16 PR_EXTRA_STAGES=pr_display \
+      ./run_pr_chain_batch.sh work-$s-grp0825 work-$s-prod0830 data
+  python3 pr_scores_table.py --root work-$s-prod0830 --sample $s \
+      --out products/prod0830/$s-scores-prod0830.tsv
+done
+
+python3 scripts/analysis/d85r2_prod0830.py        # -> docs/85r2_dists/
+scripts/bee/build_d85r2_bee.sh                    # -> bee/d85r2/ (LOCAL only)
+```
+
+### 9.1 What changed
+
+**(1) The log-odds transform** (`toolkit 59f75bb8`). Both scorers clamped the
+forest output `v` to ±0.9999 before `score = log10((1+v)/(1−v))`. Gone. The
+νe scorer additionally carried `v` in a `float`; that narrowing predates the
+clamp, caps |score| near 7.5 on its own, and is also gone — `eval_xgb()`
+already returns a `double`, and the prototype declares `double val1` at both
+sites (`NeutrinoID_nue_bdts.h:300`, `NeutrinoID_numu_bdts.h:94`).
+
+The **one** guard kept is the degenerate one the transform actually needs, and
+it is the reason this is not simply a deletion. `TmvaGradForest::evaluate`
+returns `tanh(sum)`, which rounds to **exactly** 1.0 in `double` once
+`sum > ~18.4` — `log10(2/0) = +inf` — and returns the **−999** sentinel when
+any input variable is NaN, which makes the ratio negative and the log `NaN`.
+Either lands non-finite in a `T_tagger` float branch and in every downstream
+cut. `bdt_log_odds_score` (`TmvaGradForest.h/.cxx`) pulls `|v| ≥ 1` and
+non-finite `v` to the neighbouring double: a **1.1e-16** move, versus the
+clamp's move of 1e-4, and it logs every hit. So the hazard the clamp was added
+for stays closed while the live distribution is untouched.
+
+Resulting range: **±16.25562** (`log10(2 / 2⁻⁵³)`). This *replaces* §7.1's
+"≈ ±15", which was inferred from the `-15` sentinel rather than computed —
+the sentinel does sit below the floor, but the floor is −16.25562, not −15.
+
+**(2) `T_kine` gains five branches** (`toolkit 546f52a8`), filled at the end of
+`fill_kine_tree`:
+
+| branch | meaning |
+|---|---|
+| `kine_energy_excluded` | MeV; `_main + _other` |
+| `kine_energy_excluded_main` | MeV; the part in the **same cluster** as the main vertex |
+| `kine_energy_excluded_other` | MeV; the part in a **different** cluster |
+| `kine_n_excluded` | segments behind the sums |
+| `kine_energy_flagged` | MeV; the rows `kine_energy_included` flags `!= 1` |
+
+**"Excluded" is defined against what the sum actually consumed**, not against a
+flag: a PR-graph segment whose kinetic energy entered *neither* a
+`push_segment_kine` row *nor*, as a member, a `push_shower_kine` row.
+Membership is recorded inside those two helpers rather than reused from
+`used_segments`, which is pre-seeded with every shower's members including
+showers the walk never counts — reusing it would have understated the answer.
+
+**`kine_energy_flagged` is deliberately not part of that sum**, and this is the
+one thing worth reading twice. `kine_energy_included` is named as though it
+gates the energy sum. It does not, in either codebase: `kine_reco_Enu` sums
+`kine_energy_particle` **unconditionally** (`NeutrinoKinematics.cxx`, "Total
+reconstructed neutrino energy"; prototype `NeutrinoID_kine.h:249-256`). Rows
+flagged `!= 1` are *inside* `kine_reco_Enu`. The variable is reported beside
+the excluded sum so the two can never be mistaken for each other.
+
+The block is read-only with respect to the reconstruction: it runs after the
+Enu sum, appends to no `kine_*` vector, writes only the new scalars, and
+compares clusters by **id**, never by pointer order. The `T_kine` *schema*
+does change — unlike the `nu_per_bundle` and `mcs_output` blocks these
+branches are unknobbed, because an arm that carries them must be readable as
+one.
+
+**Three scope limits, stated rather than discovered later.**
+
+1. **It is a segment-level sum.** For an *uncounted shower* it adds up the
+   member segments' fitted kinetic energies, not the shower's charge-based
+   `kine_best` — which is the quantity `kine_reco_Enu` would have used had the
+   shower been admitted. The two differ. Read `kine_energy_excluded` as "KE
+   carried by graph segments the sum never consumed", not as "the Enu this
+   candidate would have had".
+2. **Segments with no fitted particle contribute zero**, so the variable is a
+   floor on unconsumed *reconstructed* energy and says nothing about charge
+   with no track fit at all.
+3. **The PR graph is not the neutrino.** It spans the clusters the tagger
+   associated with the candidate, and on data that includes over-clustered
+   cosmic activity. `kine_energy_excluded` is therefore an **upper bound** on
+   "energy this neutrino lost", not an estimate of it; `_main` (same cluster
+   as the vertex) is the part most defensibly the candidate's own. A
+   distance- or direction-gated variant is the obvious next refinement if the
+   owner wants the narrower quantity — deliberately not invented here.
+
+### 9.1.1 The census's own bug, and why the first `prod0830` was thrown away
+
+**Symptom.** The first prod0830 attempt reached nueCC48 and NCπ⁰ before this
+was caught. Its excluded energies looked like a physics result and were not
+one: NCπ⁰ median excluded **550.7 MeV, 32 % of the candidate's reconstructed
+energy**, over a median of 44 segments. That number is wrong and appears
+nowhere else in this document.
+
+**Root cause.** `546f52a8` recorded "what the Enu sum consumed" *inside* the
+two push helpers. There is a third site: the **leftover shower pass**
+("Remaining showers not yet attached to the traversal above") is a full inline
+duplicate of `push_shower_kine` and never calls it. Every shower admitted
+there was summed into `kine_reco_Enu` **and then counted again as excluded** —
+precisely the thing the variable is defined not to contain.
+
+**Why it hid.** Nothing about the output looks wrong. The excluded energy is
+supposed to be a number nobody has seen before, so "larger than expected" is
+not a signal, and NCπ⁰ being shower-rich makes a large value *plausible*. The
+only reason it did not ship is that the census log line carries counters that
+have to be consistent with each other: on SBND ncpi0 114446 it printed
+`n_counted=1` against a **five-row** kine tree.
+
+**Fix** (`bd99f443`). Not a third recording site — "remember to record at
+every push site" is the invariant that just failed. The shower half of the
+counted set is **derived once**, at the census, from `used_showers`: all three
+push sites insert into it immediately after pushing their row (`:301`, `:369`,
+`:583`), and a shower's `kine_best` covers all of its members, so the
+derivation is exact and does not depend on which site ran.
+`push_shower_kine` now records nothing. The log line gains `n_kine_rows` and
+`n_used_showers`, the two counters that make the inconsistency obvious.
+
+**Verification.** The two events that exposed it, re-run:
+
+| event | excluded before → after | `n_excluded` | counters after |
+|---|---|---|---|
+| ncpi0 114446 | 12.0 → **5.0** MeV | 6 → 2 | `n_counted=5, n_kine_rows=5, n_used_showers=4` |
+| ncpi0 105946 | 540.3 → **149.5** MeV | 51 → 8 | `n_counted=44, n_kine_rows=18, n_used_showers=17` |
+
+3.6× on 105946. The partial arm is parked as `void-prod0830partial-<s>` and
+the campaign was re-run from scratch. `kine_reco_Enu` is unaffected in both
+attempts — the census never touches it.
+
+### 9.1.2 Two build-mechanics notes, for the next person
+
+Both cost time and neither is a code defect:
+
+* `wcdoctest-root` failed to link with `undefined reference to
+  bdt_log_odds_score` even though `build/root/libWireCellRoot.so` **had** the
+  symbol. The test links the **installed** lib, so the first build after
+  adding a symbol needs `./wcb install --targets=WireCellRoot` before the test
+  target can link — the ordinary `wcbuild` cycle deadlocks on itself once.
+* The same shape recurred as `undefined reference to nue_tagger` from
+  `local/lib/libWireCellClus.so`. Not M3's "file too short" and not fixed by
+  re-running: the installed lib was 5 MB **smaller** than the freshly built
+  one and 17 s older, i.e. an install that raced its own build. `./wcb
+  install` on its own fixed it. Diagnose this by comparing `nm -C` on
+  `build/<pkg>/lib*.so` against `local/lib/lib*.so`, not by reading the error.
+
+### 9.2 Why the clamp was there — the owner's question, answered
+
+It was a **bug fix, and an over-broad one**. It arrived in `9834d25f`
+(2026-04-12, "root: fix 21 bugs …"), whose changelog line is *"BDT scorers:
+log-odds division by zero"*, from the audit at
+`root/docs/examination/bdt-scorers-examination.md` **Bug 1**:
+
+> The log-odds transformation … produces `+inf` when `val1 == 1.0` … **The
+> prototype code (using `TMath::Log10`) would have the same issue, so this may
+> be a known limitation, but a clamp like `val1 = std::clamp(val1, -0.9999,
+> 0.9999)` would be safer.**
+
+So the divergence from the prototype was deliberate and knowing — the audit
+says as much in the same sentence — and the hazard it names is real (§9.1
+shows both `v == 1` and the `-999` sentinel are reachable). What went wrong is
+the **magnitude**: the singularity is at `|v| = 1`, and the guard was placed at
+`0.9999`, twelve orders of magnitude short of it in the quantity that matters
+(`1 − v`). That does not guard a distribution, it truncates one. The suggested
+value was taken from the audit verbatim, with no measurement of where the live
+scores actually sat.
+
+Two consequences, both invisible until §7.1 measured them: MicroBooNE's
+`nue_score > 7.0` selected **zero events by construction**, and every
+strongly-signal-like event was flattened onto a single value with its ordering
+destroyed. The float narrowing in the νe scorer is older still and was never
+flagged at all.
+
+### 9.3 The arm
+
+`work-<sample>-prod0830`, the same 3067 events, **stage B only** from the same
+`work-<sample>-grp0825` Q/L input `prod0825` read — so the two arms cannot
+differ through their input (M11), and no imaging or Q/L was regenerated.
+
+`prod0830` also inherits every SBND config flip shipped between 08-25 and
+08-30 (the 0.84 shower fudge of §4, the pi0 round-3 trio). **A
+prod0825-vs-prod0830 diff is therefore not a clamp measurement**, and none is
+used as one. The clamp is isolated exactly and without a second arm instead:
+clamping `v` at ±0.9999 is, because the transform is monotone, *the same map*
+as clipping the **score** at ±4.30103. So the clamped counterfactual is
+`clip(score, ±4.30103)` computed from prod0830's own rows — that is the right
+panel of the figure in §9.4, and every clamp claim below rests on it. (Exact
+for `numu_score`; for `nue_score` it reproduces the old value to ~1e-5 rather
+than exactly, because the old code also rounded `v` to `float` before
+clamping.)
+
+**A concurrent session shares this tree**, and that needed two guards rather
+than one assurance. It was mid-round on the pr/132 K16/K17 shower knobs
+throughout, and committed K17 (`a58e78e4`) while this arm was running.
+
+*Config.* Its knobs are `null`-defaulted and key-suppressed, so the compiled
+config is unaffected — checked directly, on a per-event compiled JSON of this
+arm, after its last edit to `wct-pr-perevt.jsonnet`:
+`shower_em_backext_perp_cm` **absent**, `shower_em_backext_len_cm` **absent**,
+`shower_em_collinear_{deg,dis_cm,host_mev}` **absent**; the shipped production
+flips all present at their production values —
+`kine_shower_fudge_factor = 0.84`, `pi0_readmit_retyped = true`,
+`pi0_admit_type3 = true`, `pi0_attached_partner_min_mev = 28`,
+`stem_backfill_back_dvtx = 45`, `shower_pass4_prune_gap2 = 25`.
+
+*Binary.* A config proof does not cover this. `wire-cell` loads plugins from
+the shared `local/lib`, one `dlopen` per group job at job start, so **a
+`wcbuild` of theirs part-way through would have built half this arm with
+different bytes and left nothing in the output to say so** — a silent
+two-binary arm, which is worse than a failure. `local/lib` was therefore
+snapshotted to a private directory and `LD_LIBRARY_PATH` pointed at it, so
+every group job of this arm loads the same file. Verified in the running
+process, not assumed: `/proc/<pid>/maps` of a live group job shows
+`/home/xqian/tmp/prod0830-libsnap/libWireCellClus.so`, and the snapshot's md5
+is re-checked when the campaign ends. The pinned binary is toolkit
+`bd99f443` (`23129773` on top of it is comment- and test-only).
+
+### 9.4 The population, and the score plane with the clamp gone
+
+3067 events, **rc=0 on every one**, four samples, one binary. Population is
+§1's — `nu_evaluated == 1` minus the §1.1 degenerate class, whose test is
+imported from `d85_dists.py` so the two rounds cannot drift apart.
+
+| | ncpi0 | nuecc48 | mcp1k | mcp2k | all |
+|---|---:|---:|---:|---:|---:|
+| events | 19 | 48 | 1000 | 2000 | 3067 |
+| PR-evaluated | 19 | 48 | 461 | 905 | 1433 |
+| − degenerate (§1.1) | 0 | 0 | 16 | 33 | 49 |
+| **scored** | **19** | **48** | **445** | **872** | **1384** |
+| median E<sub>ν</sub> [MeV] | 1329 | 1504 | 572 | 534 | — |
+
+Evaluated counts move against §1 (18→19, 47→48, 447→461, 879→905) — that is
+the config flips of §9.3, not the clamp, which cannot change whether an event
+evaluates. The degenerate class is **identically 16 + 33 = 49**, the same
+events as round 1: a reconstruction failure the flips did not touch.
+
+![nue vs numu BDT, unclamped](85r2_dists/d85r2_bdt.png)
+
+The left panel is the arm as produced; the right is the **same rows** clipped
+at ±4.30103, i.e. exactly what the clamp reported (§9.3). Read them as
+before-and-after with no other difference, because there is none.
+
+| | count |
+|---|---:|
+| events above the old +4.30103 νe ceiling | **41** |
+| …passing MicroBooNE's `nue_score > 7.0` | **34** |
+| events above the old +4.30103 νμ ceiling | **110** |
+| `nue_score` exactly −15 (`br_filled != 1`) | 1242 of 1384 |
+| `nue_score` in (−16.26, −14.9) and **not** the sentinel | **0** |
+
+Two things worth saying plainly.
+
+**The νe working point now separates the samples the way a working point
+should.** 31 of 48 νeCC-selected events pass `nue_score > 7.0`; 0 of 19 NCπ⁰
+do; 3 of 1317 νμ-sample events do. Under the clamp all four numbers were 0.
+This is not an efficiency measurement — there is no truth here (§8) — but a
+cut that selected nothing now selects 65 % of the νe-selected sample and
+0.2 % of the νμ beam sample, and that ordering is the thing the clamp
+destroyed.
+
+**The −15 sentinel is now inside the physical range and that is a latent
+hazard, measured rather than assumed.** With |score| reaching 16.26, a real
+background-like score can fall below −15 and be indistinguishable from "the
+νe BDT never ran". In these 1384 events it does not happen once — every row
+below −14.9 is exactly −15. So the collision is real in principle and empty
+in practice on this arm. Code that means "not filled" should nevertheless
+test equality with −15, not `< -14.9`; round 1's `d85_dists.py` used the
+latter and `d85r2_prod0830.py:unfilled()` no longer does.
+
+### 9.5 The excluded-energy census — the kine-side denominator pr/131 could not build
+
+![excluded energy](85r2_dists/d85r2_excluded.png)
+
+| sample | median excluded | median excluded / (excluded + E<sub>ν</sub>) |
+|---|---:|---:|
+| ncpi0 | 23.8 MeV | **3.2 %** |
+| nuecc48 | 3.7 MeV | **0.27 %** |
+| mcp1k | 2.1 MeV | **0.40 %** |
+| mcp2k | 2.2 MeV | **0.44 %** |
+
+**This is the measurement doc pr/131 named and could not make.** That round
+put a denominator under the *PF* tree — 0.77 % of near-candidate
+reconstructed charge reaches no PF output — and listed under *What is NOT
+established*: "**No kine-side denominator.** See §5. Everything here is the
+PF tree", because "the 0.77 % is 'reaches no PF output', not 'missing from
+Enu'". The five new branches are that kine-side number, per candidate, on
+every event. It lands at **0.3–3.2 %**, the same order as the PF-side 0.77 %
+while gating differently — which is the corroboration to want, not an
+identity to expect.
+
+The distribution is steeply falling with a long tail: the median event is
+missing single-MeV crumbs, and the tail is where the variable earns its
+keep. The NCπ⁰ sample is an order of magnitude higher than the others
+(3.2 % against 0.3–0.4 %), consistent with π⁰-rich topologies scattering EM
+material the walk does not reach — but see scope limit 3 of §9.1 before
+reading that as lost neutrino energy.
+
+`kine_energy_flagged` — the rows `kine_energy_included` marks `!= 1` — is
+nonzero on essentially every event and is **inside** `kine_reco_Enu`. It is
+in the tables so that nobody re-derives the wrong quantity from the flag.
+
+### 9.6 Reconstructed energy, and the νμ sample under both working points
+
+![reconstructed Enu](85r2_dists/d85r2_enu.png)
+
+Same construction as §2 on the new arm; the ~3–4 % downward shift §4 predicted
+from the 0.84 fudge flip is now *in* the numbers rather than a correction to
+apply (mcp1k 575→572, mcp2k 530→534 MeV medians, both within the flip's own
+scatter).
+
+![numu sample under the working points](85r2_dists/d85r2_numusample_cuts.png)
+
+The 3000-event νμ data sample, cosmics excluded (`cosmict_flag == 0`):
+
+| selection | mcp1k | mcp2k | total | median E<sub>ν</sub> |
+|---|---:|---:|---:|---:|
+| all, cosmics excluded | 370 | 745 | **1115** | 591 MeV |
+| `numu_score > 0.9` | 249 | 472 | **721** | 703 MeV |
+| `nue_score > 7.0` (uB point) | 0 | 3 | **3** | 798 MeV |
+| `nue_score > 4.30103` (old ceiling) | 1 | 5 | **6** | 798 MeV |
+
+Round 1 could only report the third row through the ceiling stand-in, as
+"6 events at the ceiling, bracketing an unknown". It is now 3, exactly.
+
+### 9.7 Six Bee sets, rebuilt on the new arm
+
+Same six categories as §5 and §7, recomputed — the membership changes because
+the scores do. Built by `scripts/bee/build_d85r2_bee.sh`; **the upload is a
+separate owner authorisation** and the links go in below once given.
+
+| set | definition | n |
+|---|---|---:|
+| `cosmiclike` | cosmic-tagged νμ-sample, **lowest** `numu_score`; rank order, no threshold; pool 56 of 1317 | 10 |
+| `nuelike` | νμ-sample `nu-candidate`, **highest** `nue_score`; pool 1256. Unlike round 1 these are genuinely **ordered** — 14.2, 12.6, 9.1, 6.8, 6.2, 4.9 … where the clamp put the top of this list all on 4.300936 | 10 |
+| `neither` | `nu-candidate` with `nue_score` **exactly** −15, lowest `numu_score`; pool 1170 | 10 |
+| `nuecc-failnue` | nueCC48 events **not** passing `nue_score > 7.0` — 17 of 48, and now the real cut, where round 1 could only use the ceiling superset | 17 |
+| `ncpi0-numupass` | NCπ⁰ passing `numu_score > 0.9` — 7 of 19 | 7 |
+| `ncpi0-nearmiss` | **no** NCπ⁰ event passes `cosmict_flag == 1` **or** `nue_score > 7.0` (0 of 19, as in round 1 §7.5); these are the 5 whose νe BDT filled at all | 5 |
+
+The 17 νeCC failures split into two mechanisms, which is worth a scanner's
+time: **4** (69314, 137238, 235435, 389538) have `nue_score` = −15 — the νe
+BDT never ran on them at all — while the other 13 were scored and lost, six
+of them between 3.9 and 5.8, i.e. near-misses rather than rejections.
+
+### 9.8 What round 2 does not claim
+
+* **Not efficiency or purity.** §8 still applies in full: no truth, no
+  selection beyond `nu_evaluated == 1` and the degenerate cut, cosmics still
+  in the plotted population.
+* **Not a clamp-vs-flips decomposition of anything but the score.** The clamp
+  is isolated exactly (§9.3) *for the score*; every other prod0825→prod0830
+  difference is the config flips and is not attributed here.
+* **Not a byte-identical gate.** This round changes production output on
+  purpose. The claim is the opposite of byte-identicality, and the
+  before-arm is `products/prod0825/` on disk plus the clipped counterfactual.
+* **`kine_energy_excluded` is not "energy the neutrino lost"** — the three
+  scope limits of §9.1 are load-bearing, especially the third.
 
 ## Artifacts
 
@@ -506,5 +910,26 @@ The set below is those three nearest misses, not a passing selection:
 | §7 Bee zips + sidecars | `bee/d85b/d85b-*.{zip,index.txt,prid-map.txt,url}` |
 | plotting + picking scripts | `scripts/analysis/d85_dists.py` (§2/§3/§5), `scripts/analysis/d85b_cuts.py` (§7) |
 
-All six Bee sets uploaded 2026-08-30 with owner authorisation and verified
-reachable (HTTP 200 on `event/list/` and `event/0/`).
+All six round-1 Bee sets uploaded 2026-08-30 with owner authorisation and
+verified reachable (HTTP 200 on `event/list/` and `event/0/`).
+
+### Round 2 (§9)
+
+| what | path |
+|---|---|
+| toolkit commits | `59f75bb8` (clamp), `546f52a8` (census), `bd99f443` (census fix), `23129773` (ceiling constant) |
+| the arm | `work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0830`, 3067 events, rc=0 on all |
+| score tables (now 34 columns) | `products/prod0830/<sample>-scores-prod0830.tsv` |
+| figures | `docs/85r2_dists/d85r2_{enu,bdt,excluded,numusample_cuts}.png` |
+| summary + census | `docs/85r2_dists/d85r2-summary-prod0830.tsv`, `d85r2-numusample-census.tsv` |
+| Bee pick lists + scores | `docs/85r2_dists/d85r2-<set>.{txt,tsv}` |
+| Bee zips + index sidecars | `bee/d85r2/d85r2-<set>.{zip,index.txt,prid-map.txt}` |
+| scripts | `scripts/analysis/d85r2_prod0830.py`, `scripts/bee/build_d85r2_bee.sh` |
+| the discarded first attempt | `void-prod0830partial-<sample>` (§9.1.1) — delete when the round is closed |
+
+**The binary pin was not precautionary theatre.** `local/lib/libWireCellClus.so`
+md5 was `4e7087cb…` when the campaign started and `ffa455c0…` when it
+finished — the concurrent session rebuilt part-way through, exactly the
+scenario §9.3 describes. The private snapshot is byte-unchanged across the
+run, so all 3067 events came from one binary. Without the pin this arm would
+have been silently built by two.

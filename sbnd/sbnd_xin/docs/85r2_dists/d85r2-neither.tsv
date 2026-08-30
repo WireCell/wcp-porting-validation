@@ -1,0 +1,12 @@
+# nu-candidate with nue_score exactly -15 (br_filled != 1), LOWEST numu_score; pool 1170
+bee_idx	sample	run	subrun	event	nu_evaluated	numu_score	nue_score	cosmict_flag	kine_reco_Enu_MeV	kine_energy_excluded_MeV	event_label
+0	mcp2k	18255	1	99563	1	-5.0983915	-15.0	1.0	1346.1298	0.0	nu-candidate
+1	mcp2k	18259	1	180698	1	-5.0782146	-15.0	1.0	731.974	6.950486	nu-candidate
+2	mcp2k	18259	1	160031	1	-4.5289993	-15.0	1.0	946.2934	0.0	nu-candidate
+3	mcp1k	18255	1	391766	1	-4.2123666	-15.0	1.0	824.2219	105.022835	nu-candidate
+4	mcp2k	18255	1	99284	1	-4.123255	-15.0	0.0	13.039181	2.0134885	nu-candidate
+5	mcp1k	18255	1	62613	1	-4.122855	-15.0	1.0	805.4133	2.5201247	nu-candidate
+6	mcp2k	18255	1	93234	1	-3.890761	-15.0	0.0	28.33919	0.0	nu-candidate
+7	mcp2k	18255	1	70766	1	-3.8054698	-15.0	1.0	672.5662	535.89264	nu-candidate
+8	mcp2k	18259	1	173450	1	-3.7998245	-15.0	1.0	788.1439	1.7406572	nu-candidate
+9	mcp2k	18255	1	321235	1	-3.661974	-15.0	1.0	464.22998	764.97327	nu-candidate
