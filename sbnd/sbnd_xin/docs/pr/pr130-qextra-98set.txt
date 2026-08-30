@@ -69,6 +69,13 @@ OUT mark on a scanned shower, reconstruction still holds it)
   141-set: 1 of 22 segments REACHABLE by a shipped guard at their own seat
         evt 100222 seg 14003 110.3 cm -> pr130 shower_pass4_prox_guard_len
 
+--- Q3b the MIRROR: is any affirmative q_miss segment held by a
+        SIBLING shower in the same event (a re-home, not a drop)? ---
+  98-set: 8 of 138 affirmative q_miss segments (1.256e+06 of 3.429e+07, 3.7%)
+        evt 269774: 7 segs / 1.207e+06
+        evt 105946: 1 segs / 4.877e+04
+  141-set: 0 of 35 affirmative q_miss segments (0.000e+00 of 1.345e+07, 0.0%)
+
 --- Q2b which guards/prunes were ALREADY ON in the arm that produced
         these 22 segments (compiled config, not the jsonnet) ---
   /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-ncpi0/pr_evt314838/.wct-cfg-evt314838.json

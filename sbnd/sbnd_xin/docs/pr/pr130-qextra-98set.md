@@ -223,6 +223,33 @@ The 141-set control at zero says this is a property of *this* pool, not of the
 scorer. The fix shape for 269774 is a **re-home** — the pr/121 ex1-dedup
 shape — not a decline.
 
+### the mirror, on the q_miss side
+
+The same asymmetry could exist the other way: an affirmative **q_miss**
+segment that a *sibling* shower holds is also a re-home, not a drop. Measured
+on both sets:
+
+| | affirmative q_miss segments held by a sibling shower | charge | share |
+|---|---|---|---|
+| **98-set** | **8 of 138** | 1.256e6 | **3.7%** of 3.429e7 |
+| 141-set | **0 of 35** | 0 | 0% |
+
+Seven of the eight are **evt 269774** (1.207e6) — the same swap seen from the
+other side of the ledger. The eighth is one 4.877e4 segment in evt 105946.
+
+So the whole double-count phenomenon in the 98-set is **one event**, and it
+inflates *both* halves of that set's split. Correcting both:
+
+| 98-set affirmative split | q_miss | q_extra |
+|---|---|---|
+| as published in Part 1 | 3.429e7 (82.9%) | 7.056e6 (17.1%) |
+| with sibling re-homes removed | 3.303e7 (**84.8%**) | 5.907e6 (**15.2%**) |
+
+The direction of Part 1's 98-set claim is unchanged — under-clustering still
+dominates that set by a wide margin, and the correction moves it *further* that
+way. What changes is the size of the over-clustering target: two events, not
+three.
+
 ## 5. Two of three showers are rooted on a condemned segment
 
 | | events whose reco shower root is itself condemned |
@@ -249,10 +276,11 @@ dump, so the consequence is readable with no truth file:
 | 142421 | **42.4 MeV** | 583.7 MeV = shower 108104 (**the over-clustered shower**) + 9.4 MeV = shower 53029 | the real second gamma (2.794e6 of charge) is inside the 583.7 MeV shower; the partner is a 9 MeV fragment |
 | 269774 | **1445.8 MeV** | 1150.3 MeV = shower 87134 + 916.7 MeV = shower 13237 (**the over-clustered shower**) at 88.4° | shower 97197, the one the scanner says wants 13237's charge, is **not in the pairing at all** |
 
-314838's 130.6 MeV is close to the pi0 mass **for the wrong reason** — it
-pairs a blob containing both gammas with a piece of one of them. A mass near
-135 is not evidence the event reconstructed correctly, and a pi0 selection
-would accept it.
+314838's 130.6 MeV sits close to the pi0 mass while the **pairing** is
+demonstrably not two gammas: it pairs a blob the scanner says contains both
+with a piece the scanner assigned to that same blob. Whether the mass is
+coincidental was not checked against truth — the point is that a pi0 selection
+would accept this event on a number that its own membership does not support.
 
 This is a second named pi0 blocker alongside pr/126's finding that PID is the
 top one: **the two gammas merging into one shower**. pr/126 measured the mass
@@ -278,12 +306,19 @@ Measured, in order:
    in the measuring arm, and the two flipped on 2026-08-29 leave all three
    events byte-identical.
 6. **16.3% of the pool is double-counted** (evt 269774, five segments also
-   explicit-IN for sibling shower 97197); 141-set control **0%**. The
-   genuinely-extra affirmative charge is 5.907e6 over two events.
+   explicit-IN for sibling shower 97197); 141-set control **0 of 22**. The
+   mirror on the q_miss side is 8 of 138 (3.7%), seven of them the same
+   event; 141-set control **0 of 35**. So the whole effect is **one event**,
+   it inflates both halves, and correcting both moves the 98-set split from
+   82.9/17.1 to **84.8/15.2**. Genuinely-extra affirmative charge: 5.907e6
+   over **two** events.
 7. **2 of 3 showers are rooted on a condemned segment** — a seeding failure
    no admission-time predicate can reach.
-8. The cost is the pi0: masses of 130.6 (right number, wrong pairing), 42.4
-   and 1445.8 MeV.
+8. The cost is the pi0: reconstructed masses of 130.6, 42.4 and 1445.8 MeV.
+   In every case the pairing is built from a shower the scanner says holds a
+   whole second gamma; 314838's 130.6 is near the pi0 mass but its partner is
+   a fragment the scanner assigned to the merged shower, and whether that mass
+   is coincidental was **not** checked against truth.
 
 **No knob is proposed and none should be inferred.** The campaign has five
 consecutive rounds (pr/119, pr/128, pr/129, pr/130 Parts 1–3 and Part 5) that
@@ -312,9 +347,13 @@ not track admission.**
   condemned is consistent with mis-seeding and with a correct seed that grew
   the wrong way and was later re-rooted; separating those needs the seeding
   census, which does not exist.
-- **The corrected 5.907e6 does not propagate** to Part 1's cross-set split
-  (82.9 / 17.1). Whether the 141-set's q_miss side carries a symmetric
-  double-count was not checked — only its q_extra side was, and that is 0.
+- **Whether the 141-set's q_miss side carries a symmetric double-count** is
+  now measured, not assumed: **0 of 35** (§4). Both of that set's sides are
+  clean, so its 43.7 / 56.3 split needs no correction.
+- **The corrected 98-set split (84.8 / 15.2) is not a cross-set statement.**
+  Part 1's marking-habit confound still stands: the 98-set scan was IN-heavy
+  (11% OUT marks) and the 141-set scan OUT-heavy (58%), so the two splits
+  still cannot be compared as physics.
 
 Related: [`pr130-qextra-refresh.md`](pr130-qextra-refresh.md) Parts 1–5,
 [`pr130-qmiss-refresh.md`](pr130-qmiss-refresh.md),

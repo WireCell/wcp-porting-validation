@@ -180,6 +180,54 @@ def strip_timers(d):
     return d
 
 
+def mirror_qmiss(tag, manf, labtag, tsv, prepdir, s117):
+    """The mirror of Q3.  Q3 asked whether an affirmative q_extra segment is
+    also some sibling shower's `miss`.  The same asymmetry could exist on the
+    other side -- an affirmative q_miss segment that a SIBLING shower holds,
+    which is again a re-home rather than a drop.  Left as an open item by the
+    first cut of this doc; measured here so the corrected pool numbers have no
+    loose end.  -> (n, q, n_total, q_total)"""
+    cwd = os.getcwd()
+    os.chdir(EMD)
+    try:
+        man = s117.load_manifest(manf)
+        labs = s117.load_labels(labtag)
+        ins_by, _ = marks(labs)
+        srows = list(csv.DictReader(open(os.path.join(SX, tsv)), delimiter="\t"))
+        extra_by = {}
+        for r in srows:
+            extra_by[(int(r["event"]), int(r["shower"]))] = \
+                {int(x) for x in (r["extra"] or "").split(",") if x.strip()}
+        n = nt = 0
+        q = qt = 0.0
+        per = collections.defaultdict(lambda: [0, 0.0])
+        for r in srows:
+            ev = int(r["event"])
+            if ev in ADJUDICATED:
+                continue
+            shw = int(r["shower"])
+            dump = s117.load_dump(man[ev]["dump"])
+            if dump is None:
+                continue
+            _, seginfo, _ = s117.digest_dump(dump, s117.load_prep(ev, prepdir))
+            ins = ins_by.get((ev, shw), set())
+            for sg in [int(x) for x in (r["miss"] or "").split(",") if x.strip()]:
+                if sg not in ins:
+                    continue                       # weak miss, not affirmative
+                nt += 1
+                qt += seginfo.get(sg, {}).get("charge", 0.0)
+                held = [b for (e2, b), ex in extra_by.items()
+                        if e2 == ev and b != shw and sg in ex]
+                if held:
+                    n += 1
+                    q += seginfo.get(sg, {}).get("charge", 0.0)
+                    per[ev][0] += 1
+                    per[ev][1] += seginfo.get(sg, {}).get("charge", 0.0)
+        return n, q, nt, qt, dict(per)
+    finally:
+        os.chdir(cwd)
+
+
 def marks(labs):
     ins, outs = {}, {}
     for ev, rec in labs.items():
@@ -353,6 +401,15 @@ def main():
             print("        evt %d seg %d %.1f cm -> %s" % h)
         for h in len_only:
             print("        (length-only, pdg-11 exempt) evt %d seg %d %.1f cm at %s" % h)
+
+    print("\n--- Q3b the MIRROR: is any affirmative q_miss segment held by a")
+    print("        SIBLING shower in the same event (a re-home, not a drop)? ---")
+    for tag, manf, labtag, tsv, prepdir, _ in SETS:
+        n, q, nt, qt, per = mirror_qmiss(tag, manf, labtag, tsv, prepdir, s117)
+        print("  %s-set: %d of %d affirmative q_miss segments (%.3e of %.3e, %.1f%%)"
+              % (tag, n, nt, q, qt, 100 * q / qt if qt else 0))
+        for ev, (cnt, cq) in sorted(per.items(), key=lambda kv: -kv[1][1]):
+            print("        evt %d: %d segs / %.3e" % (ev, cnt, cq))
 
     print("\n--- Q2b which guards/prunes were ALREADY ON in the arm that produced")
     print("        these 22 segments (compiled config, not the jsonnet) ---")
