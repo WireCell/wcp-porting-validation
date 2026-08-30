@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt163543",
+ "confidence": "medium",
+ "eventNo": 163543,
+ "main_vertex": {
+  "x": -72.93893340200746,
+  "y": -97.40248527697739,
+  "z": 261.92353889451635
+ },
+ "note": "3 attached conn1 EM showers all starting AT the nu vertex in a nuecc event (primary-electron splitting / attached prongs); no detached gamma with a conversion gap, pairing any two would be the attached-fake mode",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:36:39.864632Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

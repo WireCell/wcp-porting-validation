@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt386948",
+ "confidence": "medium",
+ "eventNo": 386948,
+ "main_vertex": {
+  "x": -53.230915922119856,
+  "y": 150.7656110461071,
+  "z": 332.93164360276285
+ },
+ "note": "nueCC; primary electron 92076 excluded; 453-MeV candidate 91060 interpenetrates the electron cloud (scan note: hardest event, clouds interpenetrate) so gamma-vs-electron-fragment cannot be decided; remaining detached showers lack a partner",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:38:46.462310Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

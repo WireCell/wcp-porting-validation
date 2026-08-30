@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt284206",
+ "confidence": "medium",
+ "eventNo": 284206,
+ "main_vertex": {
+  "x": -166.09001094787007,
+  "y": -102.73475497732318,
+  "z": 393.00963237966033
+ },
+ "note": "nuecc: all four EM candidates are attached at the main vertex with near-collinear axes (1-24 deg) -- the fragmented primary electron; no detached gamma anywhere",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:45.853680Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

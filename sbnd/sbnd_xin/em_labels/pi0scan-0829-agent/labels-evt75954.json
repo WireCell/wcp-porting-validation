@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt75954",
+ "confidence": "medium",
+ "eventNo": 75954,
+ "main_vertex": {
+  "x": 183.59663476930865,
+  "y": -188.04867718020006,
+  "z": 119.75233455211227
+ },
+ "note": "nuecc; 21048 is the scanner-confirmed textbook primary electron, 21063 starts on the same vertex point (no conversion gap - scanner: neither can be a conversion); only detached EM is 22 MeV 64059 with no partner",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:37:45.908991Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

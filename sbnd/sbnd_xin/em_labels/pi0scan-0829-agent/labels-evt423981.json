@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt423981",
+ "confidence": "medium",
+ "eventNo": 423981,
+ "main_vertex": {
+  "x": 49.47762205177604,
+  "y": 140.54966952362355,
+  "z": 176.19501612319246
+ },
+ "note": "nuecc; 687 MeV attached primary electron 12095; 12037 is near-collinear (13.5 deg axis) 45 cm downstream = electron fragment not a gamma; remaining EM is 14 MeV 178 cm away; no gamma pair",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:39:03.704431Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

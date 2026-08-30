@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt283515",
+ "confidence": "medium",
+ "eventNo": 283515,
+ "main_vertex": {
+  "x": -97.07114921979932,
+  "y": 176.94300769217483,
+  "z": 87.32807766553853
+ },
+ "note": "other_em: the only pair 24014+66036 is two near-parallel showers (chord 19 deg, axis 21 deg) with starts 20cm apart and bp collinearity failing -- side-by-side split of one EM system, not a diverging gamma pair",
+ "origin": "other_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:39:20.751422Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

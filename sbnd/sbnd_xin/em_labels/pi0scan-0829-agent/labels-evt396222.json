@@ -1,0 +1,105 @@
+{
+ "arm": "work-pr131-denom98-mcp2k/pr_evt396222",
+ "confidence": "low",
+ "eventNo": 396222,
+ "main_vertex": {
+  "x": 125.88412397253401,
+  "y": -164.22221145948592,
+  "z": 298.71053995092694
+ },
+ "note": "ncpi0, owner: very busy; the two leading detached EM showers back-project cleanly (gap 0.9 cm) to the pre-mutation nu vertex; LOW confidence because 9059 (2857 MeV, 686 cm) is plainly over-merged so its energy is unreliable for calibration",
+ "origin": "ncpi0",
+ "pio": {
+  "backproject": null,
+  "candidates": [],
+  "gammas": {
+   "1": {
+    "axis": [
+     -0.28889202608228115,
+     -0.014924005042076399,
+     0.9572453558725572
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 2857.430718004182,
+    "energy_as_reconstructed": 2857.430718004182,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     121.69513469375188,
+     -164.43861236873062,
+     312.59077952449013
+    ],
+    "shower": 9059,
+    "start": [
+     121.69513469375188,
+     -164.43861236873062,
+     312.59077952449013
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     -0.4439416455469562,
+     -0.23344552745780545,
+     0.8651121320724889
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 162.69149284938945,
+    "energy_as_reconstructed": 162.69149284938945,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     101.84918597934562,
+     -176.8609193471469,
+     345.5475886037954
+    ],
+    "shower": 128276,
+    "start": [
+     101.84918597934562,
+     -176.8609193471469,
+     345.5475886037954
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 193.185934727994,
+  "mass_vertex_convention": 443.8666568348182,
+  "reco_groups": {
+   "0": {
+    "mass": 140.2067321298029,
+    "showers": [
+     9059,
+     130313
+    ]
+   }
+  },
+  "reco_kine": {
+   "kine_pio_angle": 37.99185562133789,
+   "kine_pio_energy_1": 2857.4306640625,
+   "kine_pio_energy_2": 162.69149780273438,
+   "kine_pio_flag": 2,
+   "kine_pio_mass": 256.0479431152344,
+   "kine_pio_vtx_dis": 0.8749843835830688
+  },
+  "theta_axis_convention": 16.288886425845657,
+  "theta_vertex_convention": 37.99185432763795,
+  "vertex": [
+   122.23585298077576,
+   -164.7322812243962,
+   311.96870232616885
+  ],
+  "vertex_how": "backproject"
+ },
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:13.027331Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}
