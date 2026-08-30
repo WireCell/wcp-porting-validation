@@ -592,3 +592,39 @@ options remain, and they are qualitatively different from everything tried:
 Until one of those lands, the guard should stay as shipped: right on 6 of 8
 including both founding targets, with its two known errors (-234.0 MeV lost on
 292643, +376.0 MeV spurious on 179369) documented here.
+
+---
+
+## Part 6 — where the campaign should go next (measured, 2026-08-29)
+
+Part 5 ended with two options and a recommendation to stop admission-time
+threshold work. A third option now exists, and it is better founded than
+either, so it supersedes them as the recommendation.
+
+Item 1 (`pr130-qmiss-refresh.md`, run in a peer session) refreshed the q_miss
+ranking at the true production point and returned **GO** on concentration
+while overturning the premise: the "75% of charge error is q_miss" figure is
+**98-set only**; on the 141-set q_miss is 48.4% and q_extra is the larger
+half. The 43% figure carried in earlier pr/130 notes is stale — 48.4% is
+current.
+
+Item 1b (`pr130-qextra-refresh.md`) took that finding apart. Held to the
+**same affirmative standard on both sides** — only charge a scanner
+explicitly marked — the 141-set splits **q_miss 43.7% / q_extra 56.3%**
+(1.345e7 vs 1.731e7). The split *widens* under the stricter standard. The
+whole affirmative q_extra pool is **22 segments in 10 events, top-4 = 74%**,
+and **18 of the 22 sit in a cluster other than the shower's own**.
+
+Why that beats Part 5's options 1 and 2 for this knob's own problem: the back
+guard's difficulty has been a labelled set of **8** candidates with no
+separator across ten measured features. The q_extra pool is the same
+absorber's *outcomes*, already adjudicated, and one of its ten events
+(**286655**) is one of those very 8 candidates. It replaces threshold-fitting
+on eight points with a truth-anchored target list — and its top item is a
+110 cm pdg-13 track absorbed into an EM shower, the same failure the pr/128
+metric's third term names.
+
+Options 1 and 2 from Part 5 are not withdrawn; they are now second and third.
+The two knowingly-wrong events this doc leaves in production (292643 −234.0
+MeV, 179369 +376.0 MeV spurious) are unchanged by any of this and still need
+the Part 4 fix.

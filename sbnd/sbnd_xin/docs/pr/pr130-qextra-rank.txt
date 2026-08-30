@@ -1,0 +1,43 @@
+==============================================================================
+141-set, kept pool (4 adjudicated events removed)
+==============================================================================
+  BOTH SIDES HELD TO THE SAME AFFIRMATIVE STANDARD
+    q_miss  affirmative (explicit IN  mark, reco dropped it) : 1.345e+07   35 segs
+    q_miss  weak        (scan-time member, reco dropped it)  : 4.554e+06   22 segs
+    q_extra affirmative (explicit OUT mark, reco still holds): 1.731e+07   22 segs
+    q_extra weak        (never judged, absent at scan time)  : 7.827e+06  151 segs
+    --> affirmative-only split:  q_miss 43.7%   q_extra 56.3%
+
+  AFFIRMATIVE q_extra: 10 events, top-10 holds 100.0%
+     event   shower  shw_cl      q_aff  nseg  condemned segment(cluster, len, pdg)
+    100222   113236     113  5.973e+06     1  14003(cl14,110cm,pdg13)
+    175896    17044      17  3.531e+06     2  66037(cl66,6cm,pdg2212)  66041(cl66,18cm,pdg11)
+    489327    19005      19  1.804e+06     1  19005(cl19,23cm,pdg11)
+    499577    13009      13  1.456e+06     1  95059(cl95,7cm,pdg2212)
+    286655    79023      79  1.356e+06     4  67016(cl67,1cm,pdg13)  69018(cl69,0cm,pdg2212)  81062(cl81,1cm,pdg13)  82063(cl82,21cm,pdg11)
+     69232    20021      20  1.166e+06     1  20021(cl20,27cm,pdg11)
+    350354    18092      18  1.140e+06     2  18008(cl18,5cm,pdg11)  18015(cl18,17cm,pdg11)
+    278420    61027      61  6.303e+05     7  67033(cl67,0cm,pdg2212)  68034(cl68,0cm,pdg13)  69035(cl69,0cm,pdg13)  70036(cl70,0cm,pdg2212)  73039(cl73,1cm,pdg11)  75041(cl75,5cm,pdg11)  78044(cl78,0cm,pdg13)
+     72786    16017      16  1.855e+05     2  9009(cl9,2cm,pdg13)  31033(cl31,1cm,pdg2212)
+    400504    62014      62  7.242e+04     1  21003(cl21,1cm,pdg13)
+
+  condemned segment sits in the SHOWER'S OWN cluster: 4      in a DIFFERENT cluster: 18
+
+==============================================================================
+98-set, kept pool (4 adjudicated events removed)
+==============================================================================
+  BOTH SIDES HELD TO THE SAME AFFIRMATIVE STANDARD
+    q_miss  affirmative (explicit IN  mark, reco dropped it) : 3.429e+07  138 segs
+    q_miss  weak        (scan-time member, reco dropped it)  : 7.570e+06    7 segs
+    q_extra affirmative (explicit OUT mark, reco still holds): 7.056e+06   22 segs
+    q_extra weak        (never judged, absent at scan time)  : 7.543e+06   63 segs
+    --> affirmative-only split:  q_miss 82.9%   q_extra 17.1%
+
+  AFFIRMATIVE q_extra: 3 events, top-10 holds 100.0%
+     event   shower  shw_cl      q_aff  nseg  condemned segment(cluster, len, pdg)
+    314838   110088     110  3.112e+06     7  110083(cl110,2cm,pdg11)  110084(cl110,3cm,pdg11)  110085(cl110,5cm,pdg11)  110088(cl110,8cm,pdg11)  110089(cl110,11cm,pdg11)  111091(cl111,8cm,pdg11)  111092(cl111,4cm,pdg11)
+    142421     7010       7  2.794e+06    10  48024(cl48,0cm,pdg13)  50026(cl50,1cm,pdg13)  56032(cl56,0cm,pdg13)  79055(cl79,0cm,pdg13)  107100(cl107,7cm,pdg11)  107101(cl107,6cm,pdg13)  108104(cl108,12cm,pdg11)  108105(cl108,9cm,pdg11)  108106(cl108,7cm,pdg11)  108107(cl108,4cm,pdg11)
+    269774    13237      13  1.149e+06     5  67079(cl67,2cm,pdg2212)  68080(cl68,1cm,pdg13)  96189(cl96,5cm,pdg13)  96190(cl96,3cm,pdg11)  100213(cl100,1cm,pdg2212)
+
+  condemned segment sits in the SHOWER'S OWN cluster: 5      in a DIFFERENT cluster: 17
+
