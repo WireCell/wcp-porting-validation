@@ -1697,6 +1697,12 @@ fi
 [ -n "${SBND_PI0_ATTACH_MIN_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_attached_partner_min_mev=${SBND_PI0_ATTACH_MIN_MEV}")
 [ -n "${SBND_PI0_NV_ALLOW_TYPE2:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_allow_type2=$([ "${SBND_PI0_NV_ALLOW_TYPE2}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_PI0_NV_MAX_PRONGS:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_prongs=${SBND_PI0_NV_MAX_PRONGS}")
+# doc pr/132 round 2: the rescue family + path-2 quality gate.  EMPTY = no TLA = job default.
+[ -n "${SBND_PI0_READMIT_RETYPED:-}" ] && CATH_TLA+=(--tla-code "pi0_readmit_retyped=$([ "${SBND_PI0_READMIT_RETYPED}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_ADMIT_TYPE3:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_type3=$([ "${SBND_PI0_ADMIT_TYPE3}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_CRUMB_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_crumb_assoc_mev=${SBND_PI0_CRUMB_MEV}")
+[ -n "${SBND_PI0_NV_VTX_SHIFT:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_vtx_shift_cm=${SBND_PI0_NV_VTX_SHIFT}")
+[ -n "${SBND_PI0_NV_MASS_WIN:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_mass_window_mev=${SBND_PI0_NV_MASS_WIN}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

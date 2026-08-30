@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: round 1 CLOSED (2026-08-29). Fudge 0.84 SBND PRODUCTION ON; K1-K5 DEFAULT OFF, measured; K3 recommended for the next flip.**
+**Status: rounds 1+2 CLOSED (2026-08-30). Fudge 0.84 + K3=20 SBND PRODUCTION ON; K1/K2/K4/K5 + round-2 K7-K11 DEFAULT OFF, measured; K7+K8 (track-gamma rescue) recommended for the next flip (sec 9). Round 1 = secs 1-8; round 2 = sec 9.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -25,6 +25,22 @@ adjudication.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+Round 2 (sec 9):
+```
+# arms (each dir holds BOTH manifests' events; census/gates are manifest-driven)
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r2off 0    && PR_JOBS=12 bash scripts/pr132_arms.sh 141 r2off 0
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r2resc 1 SBND_PI0_READMIT_RETYPED=1 SBND_PI0_ADMIT_TYPE3=1 SBND_PI0_CRUMB_MEV=30  && ...141...
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r2o5 1 SBND_PI0_MASS_OFFSET=5  && ...141...
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r2p2 1 SBND_PI0_NV_ALLOW_TYPE2=1 SBND_PI0_NV_MAX_PRONGS=5 SBND_PI0_NV_MASS_WIN=30  && ...141...
+# gate (K3-flip equivalence + round-2 code neutrality, one proof)
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr85_hash_gate.py work-pr132-onguard98-$s work-pr132-r2off-$s; done   # + onguard141-{mcp1k,mcp2k}; rc=0 x6
+# manifests + census + movers
+bash scripts/pr132_r2_manifests.sh r2off   # (r2resc r2o5 r2p2)
+python3 scripts/pr132_pi0_census.py --manifest98 em117-132r2off98-manifest.tsv --manifest141 em114c-132r2off141-manifest.tsv \
+    --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r2off.tsv   # (--offset 5 on r2o5)
+python3 scripts/pr90_movers.py work-pr132-r2off-$s work-pr132-r2resc-$s --tags vtx105   # 0 movers x4; same vs r2p2
+```
 
 # sec 2 -- baseline re-point at the pr/131 production point (toolkit 95346dc5)
 python3 scripts/pr126_pi0_census.py \
@@ -329,3 +345,208 @@ model, and they are reported separately (labelsrc column) so they can never
 silently inflate the base-50 numbers. The T_KINE pio_kine block remains
 mass-window-free; its values move with the EM scale (that is the calibration)
 and with any future pool-enlarging knob (documented, mass-blind).
+
+# 9. Round 2 — K3 flip, the track-rescue family, the path-2 quality gate (2026-08-30)
+
+**Owner brief** (2026-08-30): *"Let's proceed to 1"* (= the round-1
+recommendation: flip K3 at 20 + the offset-5+K3 joint arm); on the
+γ-typed-as-track class: *"I assume those track-like are isolated clusters. In
+this case, I think the code can look at them, and update them to an EM shower
+in the pi0 reconstruction code"*; *"Perform path-2 acceptance-quality gate
+design"*; ideas wanted on second-γ fragmentation/over-merge.
+
+## 9.1 What the data said about the γ-typed-as-track class
+
+The owner's isolated-cluster reading is confirmed and sharpened: joining the
+hand labels to the dumps shows every labeled "track" γ is ALREADY a WCShower
+record in the shower maps — pdg 211/2212, mostly conn_type 2 (detached,
+isolated cluster), some ct 1/3.  The finder excludes them by TYPE, not by
+absence.  Three distinct exclusion mechanisms (probe evidence, round-1 dbg
+arms):
+
+| event | labeled γ (pdg, ct, E MeV) | exclusion mechanism |
+|---|---|---|
+| 285567 | 8107 (211, ct1, 102) | pr/99 A5 `m_hadronic_retyped_shower_ids` veto |
+| 506746 | 21056 (211, ct1, 78) | A5 veto |
+| 52044 | 18004 (211, ct1, 104) | A5 veto |
+| 169626 | 22034 (211, ct1, 108) | A5 veto in path-2 good_showers — its true pair (m=145.8) FORMED in path 2 and died only on `good=0` |
+| 47212 | 70038 (2212, ct3, 65) | conn_type 3 is in NO path-1 pool |
+| 71872 | 64044 (211, ct2, 23) | in the pool, but the 23 MeV crumb's PCA direction fails association at 73° |
+
+## 9.2 The round-2 knob family (all DEFAULT OFF)
+
+| knob | default (legacy) | what ON does |
+|---|---|---|
+| K7 `pi0_readmit_retyped` | false | readmit A5-retyped showers into all four pi0 pool sites; accepted pair members still track-typed are re-stamped EM (`pi0_restamp_shower_em`: segment pdg→11 + 4-mom, shower type→11, `set_kine_best(0)` restores the EM best-energy fall-through, id erased from the A5 set) |
+| K8 `pi0_admit_type3` | false | with-vertex disconnected pool also admits conn_type==3 |
+| K9 `pi0_crumb_assoc_mev` | 0 = off | below this energy a disconnected shower skips the association-angle test (PCA direction of a crumb is noise) |
+| K10 `pi0_nv_max_vtx_shift_cm` | 0 = off | path-2 selection skips pairs whose decay point is farther than this from the current main vertex |
+| K11 `pi0_nv_mass_window_mev` | 60 = legacy | path-2 acceptance half-window |m−135+offset| |
+
+The re-stamp is the owner's "update them to an EM shower", executed at
+acceptance time so only pairing-confirmed objects are re-typed; the mass
+window + greedy selection + the K3 guard carry the fake control.
+
+## 9.3 Smoke evidence (arms `work-pr132-r2smkresc-*`, `r2smkp2*`)
+
+K7+K8+K9=30 on the specimen events converts four to their HAND pairs with
+re-stamp: 47212 accept 70038+109100 m=132.8 (K8), 285567 accept 121096+8107
+m=139.0 (K7; the flipped K3 vetoed 25 crumb pairings against 8107 on the
+way), 506746 accept 21056+69124 m=147.2 (K7), 169626 path-2 accept
+22034+53069 m=138.9 (K7 good_showers).  52044 re-stamps its γ (18004) but
+pairs it with the wrong partner (58029, m=116.1; the true partner 24035 fails
+association at 126°) — a partial.  71872 does not convert (K9 admits the
+23 MeV crumb everywhere but no in-window pair forms; 323 winrejects of crumb
+combinatorics, all held by the window).  54341 unchanged (its failure is
+under-counted charge, m=68.7 — the fragmentation thread).
+
+## 9.4 The path-2 acceptance-quality gate: shift does NOT discriminate, mass does
+
+The round-1 design sketch proposed a vertex-shift cap.  Measured (probe now
+prints the decay-point shift), K4+K5 smoke:
+
+| acceptance | m (MeV) | shift (cm) | verdict |
+|---|---|---|---|
+| 122660 (ADVERSE r1) | 85.2 | 23.0 | fake — radiated fragments |
+| 171143 (ADVERSE r1) | 75.5 | 5.8 | fake |
+| 396222 (legacy fire) | 133.5 | 14.5 | good |
+| 169626 (K7 smoke) | 138.9 | 59.6 | true pair |
+
+A shift cap separates NOTHING (the good ones sit at 14.5 and 59.6 cm, one
+fake at 5.8).  The pi0 MASS does: fakes 75–85, good 133–139.  So the gate
+shipped as K11 (path-2 window 60 → 30 ⇒ acceptance band (95,155) at legacy
+offset): kills both fakes, keeps both good pairs.  K10 (the shift cap) is
+implemented, measured non-discriminating, and stays a documented OFF knob.
+
+## 9.5 The K3 flip and the round-2 OFF gate — one proof, both claims
+
+`wct-pr-perevt.jsonnet` `pi0_attached_partner_min_mev = 0` -> `20` (owner:
+"Let's proceed to 1").  Gate: `work-pr132-r2off-*` (round-2 binary, post-flip
+production config, NO env) hash-identical to `work-pr132-onguard{98,141}-*`
+(round-1 binary, env fudge=0.84 + K3=20) on every archive of all 239 events
+-- **PASS 6/6, 478 archives** (`pr85_hash_gate.py` rc=0 x6, logs
+`/home/xqian/tmp/pr132r2-gate-*.log`).  One gate proves both: the K3 flip
+equals the round-1-validated operating point, and the K7-K11 code is
+byte-neutral at defaults.  Compiled-config proof (per-event, pr/129 lesson):
+`work-pr132-r2smkp2b-nuecc48/pr_evt122660/.wct-cfg-evt122660.json` carries
+`kine_shower_fudge_factor 0.84` + `pi0_attached_partner_min_mev 20` and no
+round-2 key when suppressed.
+
+## 9.6 The rescue arm (`r2resc` = K7+K8+K9=30) — census 26 -> 31 exact
+
+`pr132_pi0_census.py --fudge 0.84 --overlay-tag pi0scan-0829-agent`,
+manifests `em117-132r2{off,resc}98` / `em114c-132r2{off,resc}141`:
+
+| class | r2off (new production) | r2resc | movers |
+|---|---|---|---|
+| exact | 26 | **31** | +47212 (K8, m=132.8), +169626 (K7 path-2, m=138.9), +285567 (K7, m=139.0), +506746 (K7, m=147.2), +392901 overlay (K8, m=129.1) |
+| partial | 13 | 16 | +52044 (K7, γ re-stamped, wrong partner), +347824 (K7, m=138.3), +486907 overlay (K9, 18.3 MeV crumb) |
+| none | 2 | 1 | 47212 upgraded out |
+| no-group | 25 | 18 | |
+| nueCC fakes (E) | 5 | 8 | +116962 (partner 27.0), +282909 (23.8), +282979 (24.5) — all inside a K3=25-30 veto |
+| accepted groups (239 evts) | 64 | 91 | rescan coverage 26 -> 37 of 109 |
+
+Zero class downgrades.  Vertex movers off->resc: **0 movers > 0.05 cm on all
+4 samples** (`pr90_movers.py --tags vtx105`).  169626 (unlabeled in vtx105)
+moved 59.6 cm BY the path-2 acceptance -- onto the scanner's own
+back-projected decay vertex: hand `vertex [3.748, 208.544, 414.675]
+(vertex_how=backproject)` vs new main vertex `(3.75, 208.54, 414.68)` --
+sub-mm agreement with hand truth.  The pdg=211 blocker column drops 6 -> 2,
+pdg=2212 2 -> 0.
+
+## 9.7 The offset-5 + K3 joint arm (`r2o5`) — the trade, sharpened, for the owner
+
+Windows (105,165)/(70,190) at fudge 0.84, K3=20 in-config.  Census 26 -> 28
+exact, fakes unchanged at 5 (K3 holds the floor — the offset-0 fake
+admission of round 1 does not recur).  Movers: **+56243, +103798 exact** (the
+round-1 high-mass stragglers, as predicted), +168432 partial, +486907
+overlay exact; **−283713** (exact -> no-group; scaled mass 96 vs the new 105
+floor — the round-1-named floor casualty) and −506114 (partial -> no-group).
+292524, round 1's by-1-MeV casualty at offset 0, SURVIVES at offset 5.  Net
++2 exact / −1 partial with zero fake cost: a real trade, better than offset
+0 on every axis, still the owner's call (Bee specimens: 283713, 506114 lost;
+56243, 103798 gained).
+
+## 9.8 The path-2 revival with the gate (`r2p2` = K4+K5+K11=30) — safe now, but empty here
+
+Census identical to r2off on the hand pi0 (26 exact, 5 fakes).  Vertex
+movers off->p2: **0 on every labeled event, 0 ADVERSE** — K11 blocks both
+round-1 ADVERSE acceptances (122660 m=85.2 acc=0, 171143 m=75.5 acc=0) while
+keeping the legacy fire (396222 m=133.5).  Path-2 acceptances 1 -> 2: the
+one NEW acceptance is 116962 (55030 E=31 + 21072 E=232, m=124.8, shift
+12.0 cm) — a nueCC event whose pairing-pass verdict was "collinear fragments
+of the primary electron" and whose scan label carries note "incorrect
+vertex" with the label vertex = the scan-time reco position (0.01 cm from
+the off arm), so the move is not adjudicable from labels.  Verdict: the
+GATE works (that was this round's design goal); the REVIVAL (K4/K5) buys
+nothing on these 239 events and admits one unresolved acceptance — K4/K5
+stay OFF; a path-2 partner floor (K3 analog; 116962's partner is 31 MeV)
+is the round-3 refinement if NC-pi0 revival is still wanted on a sample
+where it can show gains (the current manifests hold no reachable NC pi0
+with a mis-seated vertex).
+
+## 9.9 Second-γ fragmentation / over-merge: population + round-3 design
+
+Population, measured from the round-1 no-pair adjudications + probe classes:
+of the 25 pairing-pass no-pair events with notes, **15 are
+fragmentation-shaped** (collinear splits of one EM system: 100222, 116962,
+163543, 175896, 180801, 283515, 284206, 386948, 410008, 423981, 444187,
+463565, 54453, 71642, 98844), 2 are hard over-merge (176502, 281567; owner
+scan notes), 6 primary-electron-only, 1 other.  On the hand-pi0 side, 54341's
+miss is under-counted second-γ charge (pair mass 68.7 at the right topology),
+and 37112's is the mirror image (over-merged charge, pair mass ~307).
+
+The two directions are asymmetric and want different fixes:
+
+1. **Fragmentation (second γ split into collinear pieces).**  Round-3
+   candidate knob `pi0_collinear_merge_deg`: at pairing time, before the mass
+   computation, greedily absorb into each disconnected candidate any OTHER
+   disconnected shower whose start lies within a cone around the candidate's
+   vertex ray (axis angle < knob AND same side), summing kine_charge and
+   keeping the leading fragment's direction.  A virtual merge only -- shower
+   objects untouched unless the pair is ACCEPTED (then absorb, following the
+   K7 re-stamp precedent).  This directly targets the 54341 class and the
+   E-sum deficit the peak fit sees (most overlay pairs sit above the fit
+   window).  It must NOT fire on primary-electron fragments: keep the K3
+   guard + require the merged system detached (ct!=1) or partner above the
+   K3 floor.
+2. **Over-merge (both γ in one shower).**  A pi0-side split is NOT
+   recommended: the round-1 K2 evidence (37112: association widened, pair
+   formed, mass ~307 -- charge is simply merged) shows the defect lives
+   upstream in shower building (the pr/123-125 over-clustering threads).
+   Proposal: a byte-neutral probe first (two-axis substructure test on
+   accepted single showers > 300 MeV: PCA split of the associate-points
+   cloud, report the two-cluster mass), to measure how many over-merged
+   events are even recoverable before any knob is designed.
+3. **The crumb ceiling.**  K9 shows admission alone is not enough when the
+   crumb's charge is a fraction of the true γ (71872: in-pool at every
+   vertex, no in-window pair).  Fragment SUMMING (idea 1) and crumb
+   admission (K9) compose: the merged crumb system carries the full γ
+   energy and lands in the window.
+
+## 9.10 Round-2 recommendations and the round-3 queue
+
+Shipped this round: the K3=20 production flip (owner order), knobs K7-K11
+DEFAULT OFF + measured, the re-stamp helper, this section.
+Toolkit commits: 651ba9a0 (K7-K11 + re-stamp + probe fields, DEFAULT OFF),
+c477210c (K3=20 SBND PRODUCTION ON).
+
+| item | recommendation |
+|---|---|
+| K7+K8 (readmit-retyped + ct3) | **flip next round**: +5 exact +2 partial on the hand pi0, zero downgrades, zero vertex movers; the only regenerated fake is 116962 (K7-readmitted electron fragment + 27.0 MeV partner) — a K3 bump to 28-30 covers it |
+| K3 threshold | bump 20 -> 28-30 WITH the rescue flip (covers 116962 at 27.0; round-1 note: 30 touches 76346's partial group) — one joint owner Bee look: 116962, 76346, 54095, 268784, 176502 |
+| K9 crumb assoc (30 MeV) | keep OFF: its ledger is 1 overlay partial (486907) vs 2 regenerated fakes (282909 partner 23.8, 282979 partner 24.5, both crumb-admitted at 59-64 deg) + combinatoric noise (71872: 323 window rejects, no gain); revisit only WITH the round-3 fragment-summing — they compose |
+| K1 offset 5 | +2/−1 exact, no fake cost; owner adjudicates (Bee: 283713, 506114 vs 56243, 103798) |
+| K10 shift cap | measured non-discriminating; keep OFF, keep documented |
+| K11 p2 window 30 | the working acceptance-quality gate; as a solo flip it is a no-op on current production data (legacy P2 fires once, in-window) — flip it WITH any future path-2 work |
+| K4/K5 | stay OFF (sec 9.8) |
+| fragmentation | round-3 front: virtual collinear merge at pairing time (sec 9.9 design); population 15/25 no-pair notes + 54341/71872 |
+| over-merge | upstream thread; byte-neutral substructure probe first (sec 9.9) |
+| census sentinel | run `pr132_pi0_census.py --fudge 0.84` vs the r2off manifests each round (baseline: 26 exact / 5 fakes / 64 groups) |
+
+**What is NOT claimed.** Overlay gains are agreement with the round-1 model
+pairing pass, reported separately (labelsrc).  T_KINE `pio_kine` remains
+mass-window-free; the rescue knobs enlarge its candidate pool (flag=0 events
+84 -> 12 on r2resc), a documented mass-blind drift.  The r2 arms hold BOTH
+manifests' events in one dir per sample (`work-pr132-r2<tag>-<sample>`);
+census/gates are manifest-driven so the merge is inert.
