@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1+2+3 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 (track-gamma rescue) + K3=28 SBND PRODUCTION ON; K1/K2/K4/K5/K9/K10/K11 + round-3 K12 DEFAULT OFF, measured; over-merge adjudicated UPSTREAM by the substructure probe. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10.**
+**Status: rounds 1+2+3 CLOSED + owner-scanned (2026-08-30). Fudge 0.84 + K7+K8 (track-gamma rescue) + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10 (owner verdict); K2/K4/K5/K9/K10/K11 + round-3 K12 DEFAULT OFF, measured; over-merge adjudicated UPSTREAM. Round-4 fronts from the owner scan: NC vertex-in-shower, rescued-gamma start re-seat, upstream clustering (sec 10.9). Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -727,6 +727,55 @@ manifests: **31 exact / 2 fakes / 82 groups / 32-of-109 rescan coverage**
 
 Set contents verified post-upload against the event lists (all 13 + all 5
 present).
+
+## 10.8 Owner scan verdicts on the Bee package (2026-08-30)
+
+Owner reviewed both sets, verbatim summary per index:
+
+| idx | event | owner verdict | reading |
+|---|---|---|---|
+| 0 | 76346 | "NC pi0, the nu vertex is not correct (inside an EM shower), so there is no good answer" | the K3=30 question is UNANSWERABLE for this event — reclassified from fake-adjudication to the NC vertex-in-shower class (sec 10.9 front 1).  **K3 stays 28.** |
+| 1 | 176502 | "super busy events, OK either way, many other issues" | no action |
+| 2 | 116962 | "Also NC pi0, the nu vertex is not correct (inside one arm of EM shower), no good answer" | NOT a nueCC fake after all — same NC vertex-in-shower class as 76346.  The K3=28 kill is neutral (neither arm reconstructs the true pi0); the real fix is the vertex re-seat. |
+| 3 | 54095 | "good" | fake kill confirmed |
+| 4 | 268784 | "there is a separate gamma cluster, split to two sub gamma clusters attached to different places. This gamma cluster is pointing to the nu vertex." | kill fine; the REAL gamma is split + mis-attached — an upstream under-clustering/attachment defect, recognizable by the pr/129 pointing test (sec 10.9 front 3) |
+| 5 | 169626 | "good safe, but the gamma starting point is not at the beginning of the shower after rescue?" | CONFIRMED quantitatively: rescued gamma-1 (sh 53069, 511.5 MeV) reco start (-6.54, 150.10, 445.05) vs the scan label's em_start_correction (-3.36, 161.44, 438.62) — **13.4 cm deep into the shower**, inherited from the track-era structure (the scan label needed the same hand correction pre-rescue).  Direction is derived from this start (15-cm cone), so the bias propagates into axis and mass.  Sec 10.9 front 2. |
+| 6-9 | 47212, 285567, 506746 | "good" | rescues confirmed |
+| — | 392901 | "overclustering, no need to worry" | noted |
+| 10-12 | partials | "partial improvement is OK" | confirmed |
+| pkg 2 | offset | "the offset 10 should be fine" | **K1 CLOSED: production stays offset 10.**  The round-1/2 adjudication item is retired. |
+
+Owner's global remark: *"The issue is many of the pi0 pair is still not
+exactly right, but there should be pi0 events in them."* — pairs exist in
+the residual population; memberships/vertices are the defect, not existence.
+
+## 10.9 Round-4 queue, revised by the owner scan
+
+The owner's verdicts overturn one round-2 conclusion and set the fronts:
+
+1. **NC pi0 vertex-in-shower (NEW TOP FRONT).**  76346 and 116962 are NC
+   pi0 with the nu vertex mis-seated INSIDE an EM shower (one arm) — the
+   current manifests DO hold reachable NC pi0 with a wrong vertex,
+   overturning sec 9.8's "no reachable NC pi0" reading.  Design: a
+   recognizer (main vertex inside a shower body / on one gamma arm) +
+   path-2 revival under the proven K11=30 mass gate + a partner floor
+   (K3-analog for path 2); 169626 is the existence proof that the gated
+   vertex update lands correctly (sub-mm).
+2. **Rescued-gamma start-point re-seat.**  169626 measures 13.4 cm of
+   start bias on a K7-rescued shower.  Byte-neutral probe first (each
+   rescued/pi0-accepted shower: distance from its start point to the cloud
+   point nearest the decay vertex), then a default-OFF knob to re-derive
+   start + 15-cm direction at restamp time.
+3. **Upstream clustering, scored by the census** (unchanged from 10.6, now
+   with 268784 as the named specimen: gamma split into sub-clusters
+   attached to different places, pointing at the nu vertex — the pr/129
+   DIRECTION discriminator is the recognizer).  392901 noted, no action.
+4. **Closed by owner verdict**: K1 offset (stays 10, production untouched);
+   K3 stays 28 (the 30 question has no answerable specimen); over-merge
+   (upstream, sec 10.4); K12 v1 (sec 10.3).
+5. **Sentinel + truth growth**: census vs the r3flip manifests each round
+   (31 exact / 2 fakes / 82 groups); pairing pass rows 41-109 when round 4
+   needs statistics.
 
 **What is NOT claimed.**  Same round-2 caveats: overlay gains are agreement
 with the model pairing pass (labelsrc-separated); T_KINE stays
