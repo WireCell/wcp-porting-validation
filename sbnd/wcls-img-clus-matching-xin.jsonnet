@@ -206,8 +206,14 @@ local matching_joint = qlm.matching_joint(
 // issue-18 data campaigns stay exactly reproducible -- they were run preflip.
 //
 //   physics.producers.sig2img.wcls_main.params.pr_operating_point: "preflip"
+// 'bare' is the REGENERATION baseline, not a physics configuration: pr() with
+// structural arguments only and no operating point.  gen-pr-operating-point.py
+// diffs Xin's compiled config against it to decide which knobs to emit.  It
+// exists as a mode so re-syncing is a scripted step instead of hand-stubbing
+// the generated file, which is easy to forget to undo.
 local pr_operating_point =
-    if std.extVar('pr_operating_point') == 'preflip' then 'preflip' else 'sync';
+    local v = std.extVar('pr_operating_point');
+    if v == 'preflip' then 'preflip' else if v == 'bare' then 'bare' else 'sync';
 
 local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=false,
                                         bee_sink=bee_shared, premerged=true,
@@ -270,7 +276,12 @@ local pr_pipeline_names =
 local pr_sync = import 'pr-operating-point.jsonnet';
 
 local pr_node =
-    if pr_operating_point == 'sync' then
+    if pr_operating_point == 'bare' then
+        clus_maker.pr(tools.anodes, dump=false, bee_sink=bee_shared,
+                      pipeline_names=pr_pipeline_names,
+                      particle_dataset=pds.particle_dataset, extra_uses=pds.all,
+                      beam_window=beam_window)
+    else if pr_operating_point == 'sync' then
         pr_sync(clus_maker, tools.anodes, dump=false, bee_sink=bee_shared,
                 pipeline_names=pr_pipeline_names,
                 particle_dataset=pds.particle_dataset, extra_uses=pds.all,
