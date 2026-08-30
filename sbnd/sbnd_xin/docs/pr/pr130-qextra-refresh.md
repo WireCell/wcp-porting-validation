@@ -499,3 +499,49 @@ older production arm, so anything visible is caused by the guards.
 
 idx 0 = 72786 (the ruling), idx 1 = 55740 (mechanism change, no output
 change). Annotated index: `bee/pr130r3/pr130r3.index.txt`.
+
+---
+
+# Part 5 — SBND PRODUCTION ON (owner flip 2026-08-29)
+
+Owner ruling on `bee/pr130r3`: *"I think these two are OK, you can turn the
+knob on for SBND."* Both guard seats flipped.
+
+```
+shower_pass4_prox_guard_len     = 50   // pr/123's own value at pass4_angle
+shower_pass3_backfill_guard_len = 15   // pr/124's own value at pass3_cone
+```
+
+Neither threshold is a refit — each is the sibling seat's shipped value, which
+is the round's whole argument. **If pr/123's 50 or pr/124's 15 is ever
+changed, these must be changed with it or the seats drift apart.** Noted in
+the jsonnet comments and in the registry.
+
+- **Compiled-config proof of the flip**: with no env overrides,
+  `.wct-cfg-evt{100222,72786}.json` carry both keys at 50 / 15 in the
+  `TaggerCheckNeutrino` data block.
+- **The flipped default reproduces the TLA-driven arm exactly**: PASS 4/4
+  archives byte-identical, `work-pr130-flipchk-mcp2k` vs
+  `work-pr130r1-gs1on141-mcp2k`. So `work-pr130r1-gs1on{,141}-*` are valid
+  labels for the new production point.
+- Blast radius as measured in Part 4: **10 of 239 events**.
+
+## Sentinels — two re-baselined, two added
+
+**Registry at the new production point: 31 PASS, 0 FAIL, 0 SKIP.**
+Negative control on the knobs-off arms: 100222, 175896 and 72786 all **FAIL**,
+so none of the three can pass vacuously.
+
+| event | change | why |
+|---|---|---|
+| **72786** | `pf_node_lt mu- 250` → `log_contains 'pr130 pass4_prox_guard: decline seg=9004'` | The old assertion now describes the *wrong* state. The owner ruled a guard-freed cosmic may be a PF track, consistent with pr/129 on 393505 ("OK to be in PR"). What must still hold is that the cosmics stay **out of the shower** — if a future change re-absorbs them the guard stops declining and the line vanishes. `log_absent 'pr128 pf-orphan-near-cross-cluster'` kept unchanged. |
+| **55740** | re-scoped to **outcome-only** (`pf_node_ge mu- 250`) | Its `pr128 pf-orphan-near-cross-cluster` line is no longer emitted while PF stays byte-identical. Same shape as 66366: the knob is masked on its own target event, so the log assertion would fail for something that is not a regression. **pr/128 class A now has no event guarding its knob being alive** — a standing exposure, recorded not papered over. |
+| **100222** | NEW | `pf_node_ge mu- 250` + `pf_node_lt e- 2400` + the decline line. Pre-flip e- 2523 with the 110 cm track inside and no standalone muon; post-flip e- 2203, mu- 271. |
+| **175896** | NEW | `pf_node_ge proton 100` + `pf_node_lt e- 200` + the decline line. Pre-flip e- 256 with seg 66041 re-adopted and force-relabelled pdg 11 (no proton node at all); post-flip e- 114, proton 159. |
+
+## Standing exposures after this round
+
+1. `pr/128 class A` — no event guards its knob being alive (55740 masked).
+2. `long_muon_stub_bridge_len` — same, since pr/130 Part 2 (66366 masked).
+3. `stem_backfill_back_guard`'s second side — still waiting on the 292643 /
+   179369 fix, which is item B and is not started.

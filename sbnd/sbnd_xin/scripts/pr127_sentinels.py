@@ -98,15 +98,36 @@ SENTINELS = [
      # pre-fix: absent from both (cross-cluster, score 100, so neither the pr/93
      # confident-track class nor the pr/123 flag class reaches it).
      # post-fix mu- 300 MeV under a pseudo-neutron; Enu 488.5 -> 894.7.
-     [("pf_node_ge", "mu-", 250.0), ("log_contains", "pr128 pf-orphan-near-cross-cluster")]),
+     # RE-SCOPED to OUTCOME-ONLY, doc pr/130: with the pr/130 guard seats ON,
+     # `pr128 pf-orphan-near-cross-cluster` is no longer emitted here while the
+     # PF output stays BYTE-IDENTICAL (mu- = [111, 300] both ways; 55740 is not
+     # among the 10 events the flip changes) -- the 123.1 cm muon now joins PF
+     # by a different route.  Same shape as 66366: the knob is masked on its
+     # own target event, so the log assertion would fail for a reason that is
+     # not a regression.  The outcome assertion still catches a regression of
+     # the RESULT from any cause.  pr/128 class A therefore has no event that
+     # guards its knob being alive -- see doc pr/130 Part 4.
+     [("pf_node_ge", "mu-", 250.0)]),
     (72786, "pr/128 class A", "CONTROL: the continuation terms keep the cosmics OUT",
      # This event's four candidates come from two large off-vertex clusters
      # (148 and 102 cm extent, 35 and 77 cm off the vertex).  On proximity
      # alone they were admitted and put +1151 MeV on a 701 MeV candidate.  A
      # future loosening that re-admits them fires this line.
-     # The legit maximum mu- here is 238.8 MeV; the four cosmics are 268.9,
-     # 281.7 and 344.0 MeV, so 250 sits between the two populations.
-     [("log_absent", "pr128 pf-orphan-near-cross-cluster"), ("pf_node_lt", "mu-", 250.0)]),
+     # RE-BASELINED doc pr/130 (owner flip 2026-08-29, bee/pr130r3 idx 0).
+     # The original second assertion was `pf_node_lt mu- 250` -- the legit
+     # maximum mu- here is 238.8 and the four cosmics are 268.9 / 281.7 /
+     # 344.0, so 250 separated them.  With shower_pass4_prox_guard_len ON the
+     # guard now pulls those four (segs 9004 143.5cm, 9006 114.3cm, 45038
+     # 108.3cm, 9008 64.7cm) OUT of the shower and they render as standalone
+     # PF mu- 344/281/268.  Owner ruled that correct ("these two are OK"),
+     # consistent with the pr/129 ruling on 393505 ("OK to be in PR"): a
+     # guard-freed cosmic may be a PF track as long as it is not inside the
+     # candidate.  So `pf_node_lt mu- 250` now asserts the OLD, wrong state
+     # and is retired.  What still has to hold is that the cosmics are kept
+     # out of the shower -- if a future change re-absorbs them the guard stops
+     # declining and the log line below vanishes.
+     [("log_absent", "pr128 pf-orphan-near-cross-cluster"),
+      ("log_contains", "pr130 pass4_prox_guard: decline seg=9004")]),
 
     # ---- doc pr/129: the pointing test on the guard-freed kine pool.
     # kine_guard_freed_impact = 20 cm / miss 30 deg, SBND PRODUCTION ON
@@ -202,6 +223,23 @@ SENTINELS = [
      # post-fix chain 325.2 cm / range 748.6 MeV.
      [("log_contains", "long_muon_cathode_bridge: absorb bare chain into sid=0"),
       ("pf_node_ge", "mu-", 650.0)]),
+
+    # ---- doc pr/130 item 1b: the two guard seats, SBND PRODUCTION ON
+    # 2026-08-29 (owner flip on bee/pr130r3).  Both thresholds are the SIBLING
+    # seat's own shipped value, not a refit, so a future change to pr/123's 50
+    # or pr/124's 15 should be mirrored here or these will drift apart.
+    (100222, "pr/130 prox", "shower_pass4_prox_guard_len: the 110cm muon leaves the EM shower",
+     # pre-flip: e- 2523 with seg 14003 (110.3 cm pdg-13) inside it and no
+     # standalone muon.  post-flip: e- 2203, mu- 271 appears.  This one
+     # segment is 34.5% of the labelled over-clustering charge on the 141-set.
+     [("pf_node_ge", "mu-", 250.0), ("pf_node_lt", "e-", 2400.0),
+      ("log_contains", "pr130 pass4_prox_guard: decline seg=14003")]),
+    (175896, "pr/130 backfill", "shower_pass3_backfill_guard_len: the declined proton is not re-adopted",
+     # pre-flip: e- 256 with seg 66041 re-adopted by the pass3 sibling backfill
+     # after pr/124's guard had declined it, and force-relabelled pdg 11 (no
+     # proton node at all).  post-flip: e- 114, proton 159 appears.
+     [("pf_node_ge", "proton", 100.0), ("pf_node_lt", "e-", 200.0),
+      ("log_contains", "pr130 pass3_backfill_guard: decline seg=66041")]),
 
     # ---- doc pr/130: pr/124's headline win had no sentinel either.  It is in
     # em114c, so unlike the doc-84 family it does execute under the standard
