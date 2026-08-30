@@ -149,3 +149,45 @@ byte-identical either way. On flip, register a sentinel per event (179369:
 `pf_absent pi0 138`-shaped; 292643: the suppress-decline log line) and close
 `stem_backfill_back_guard`'s standing "second side unasserted" exposure from
 Part 7 — the whole 8-candidate population becomes adjudicated *and* correct.
+
+---
+
+## SHIPPED — `stem_backfill_back_dvtx = 45` SBND PRODUCTION ON (2026-08-29)
+
+Owner: *"For B, flip on for SBND production."*
+
+- **Compiled-config proof** with no env overrides: `stem_backfill_back_dvtx =
+  45` in the `TaggerCheckNeutrino` data block of
+  `.wct-cfg-evt{179369,292643}.json`.
+- **Flip equivalence**: the flipped default reproduces the TLA-driven ON arm
+  **byte-identically** — PASS 2/2 archives on each of
+  `work-pr130-bflipchk-mcp2k` vs `work-pr130r1-bon141-mcp2k` and
+  `work-pr130-bflipchk-mcp1k` vs `work-pr130r1-bon141-mcp1k`. So
+  `work-pr130r1-bon{,141}-*` are the labels for the new production point.
+- Blast radius unchanged from the ON measurement: **2 of 239 events.**
+
+### Sentinels — the knob's whole population is now guarded
+
+**Registry at the new production point: 33 PASS, 0 FAIL, 0 SKIP.** Negative
+control on `work-pr130r1-boff*`: **both new entries FAIL**, so neither can pass
+vacuously.
+
+| event | assertions | measured |
+|---|---|---|
+| **292643** | `pf_node_ge pi0 100`, `pf_node_lt e- 200`, the suppress-decline line for seg 18008 | pre-flip: mu- 59 + 441, **no pi0 and no pi+ at all**, e- max 227, 10 nodes. post-flip: mu- 441, pi0 150, pi+ 91 + 65, e- max 154, 13 nodes. |
+| **179369** | `pf_absent pi0`, the suppress-decline line for seg 17002 | pre-flip: pi0 138 + pi+ 56 fabricated by the decline, 43 nodes. post-flip: **no pi0 and no pi+ anywhere**, 39 nodes. `pf_absent` is exact here, not a threshold. |
+
+Both are binary assertions, not thresholds on a drifting energy — they survive
+the `kine_shower_fudge_factor` re-baseline warning at the top of the registry.
+
+### The Part 7 exposure is closed
+
+The registry's "DELIBERATELY UNASSERTED" block held 292643 and 179369 back
+because a sentinel written for either would have pinned a state the owner had
+just condemned. That block is now resolved:
+**`stem_backfill_back_guard`'s entire 8-candidate population is adjudicated
+*and* correct** — 47212 and 281567 guard the declines, 292643 and 179369 guard
+the escapes. Nothing about this knob is unasserted any more.
+
+Two standing exposures remain from Part 7, both unrelated to this knob:
+`pr/128 class A` (55740 masked) and `long_muon_stub_bridge_len` (66366 masked).

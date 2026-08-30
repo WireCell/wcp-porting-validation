@@ -224,6 +224,26 @@ SENTINELS = [
      [("log_contains", "long_muon_cathode_bridge: absorb bare chain into sid=0"),
       ("pf_node_ge", "mu-", 650.0)]),
 
+    # ---- doc pr/130 item B: stem_backfill_back_dvtx = 45 cm, SBND PRODUCTION
+    # ON 2026-08-29 (owner: "For B, flip on for SBND production").  These two
+    # events were the guard's only errors and were DELIBERATELY UNASSERTED
+    # until this fix shipped -- see the note below the registry, now updated.
+    # The flip changes exactly these 2 of 239 events, and on both the PF tree
+    # it produces is IDENTICAL to the guard-OFF shape the owner reviewed in
+    # bee/pr130r2 and preferred.  Both assertions are binary, not thresholds
+    # on a drifting energy.
+    (292643, "pr/130 B", "back-guard dvtx escape: the declined stem is absorbed",
+     # pre-flip: mu- 59 + mu- 441, no pi0 and no pi+ at all, e- max 227, 10 nodes.
+     # post-flip: mu- 441, pi0 150, pi+ 91 + pi+ 65, e- max 154, 13 nodes.
+     [("pf_node_ge", "pi0", 100.0), ("pf_node_lt", "e-", 200.0),
+      ("log_contains", "pr130 stem_backfill_back_dvtx: suppress decline seg=18008")]),
+    (179369, "pr/130 B", "back-guard dvtx escape: the spurious pi0 is gone",
+     # pre-flip: pi0 138 + pi+ 56 fabricated by the decline (+376.0 MeV the
+     # owner ruled against), 43 nodes.  post-flip: NO pi0 and NO pi+ anywhere
+     # in the tree, 39 nodes -- so pf_absent is exact here, not a threshold.
+     [("pf_absent", "pi0"),
+      ("log_contains", "pr130 stem_backfill_back_dvtx: suppress decline seg=17002")]),
+
     # ---- doc pr/130 item 1b: the two guard seats, SBND PRODUCTION ON
     # 2026-08-29 (owner flip on bee/pr130r3).  Both thresholds are the SIBLING
     # seat's own shipped value, not a refit, so a future change to pr/123's 50
@@ -255,15 +275,13 @@ SENTINELS = [
 # ---------------------------------------------------------------------------
 # DELIBERATELY UNASSERTED -- do not "complete" these without reading why.
 #
-# 292643 / stem_backfill_back_guard, second side.  The guard fires on 8
-# candidates in 239 events; the owner ruled 6 of 8 correct (doc pr/130 Part 4)
-# and ruled the guard WRONG on 292643 (declines an absorb that should happen;
-# -234.0 MeV) and on 179369 (allows a spurious pi0; +376.0 MeV).  A sentinel
-# written for either today would pin a production state the owner has just
-# condemned, and would then have to be rewritten by the fix that is supposed
-# to land.  47212 above is the surviving founding target and is asserted;
-# 292643 and 179369 stay unasserted until the Part 4 fix ships, at which point
-# they become the natural two-sided pair.
+# RESOLVED 2026-08-29.  292643 and 179369 were held unasserted because a
+# sentinel written for either would have pinned a production state the owner
+# had just condemned.  doc pr/130 item B shipped the fix
+# (stem_backfill_back_dvtx = 45, SBND ON) and both are now registered above,
+# so stem_backfill_back_guard's whole 8-candidate population is adjudicated
+# AND correct: 47212 + 281567 guard the declines, 292643 + 179369 guard the
+# escapes.  Nothing about this knob is unasserted any more.
 #
 # long_muon_stub_bridge_len has NO guarding event at all: its only target
 # (66366) still produces the identical result with the knob at its legacy 6.0,
