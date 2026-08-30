@@ -613,7 +613,13 @@ Item 1b (`pr130-qextra-refresh.md`) took that finding apart. Held to the
 explicitly marked — the 141-set splits **q_miss 43.7% / q_extra 56.3%**
 (1.345e7 vs 1.731e7). The split *widens* under the stricter standard. The
 whole affirmative q_extra pool is **22 segments in 10 events, top-4 = 74%**,
-and **18 of the 22 sit in a cluster other than the shower's own**.
+and **76% of it by charge (18 of 22 segments) reaches into a cluster other
+than the shower's own**; the other 24% is mis-rooting inside the shower's own
+cluster.  **Caveat that must travel with the split**: the two label sets were
+marked by different scans (`emscan-0827` 11% OUT marks, `emscan-0828-agent5`
+58%), so the cross-manifest comparison of the *share* is partly a statement
+about scanners.  The absolute pool — 22 condemned segments the reco still
+holds — is not affected by that.
 
 Why that beats Part 5's options 1 and 2 for this knob's own problem: the back
 guard's difficulty has been a labelled set of **8** candidates with no
@@ -623,6 +629,15 @@ absorber's *outcomes*, already adjudicated, and one of its ten events
 on eight points with a truth-anchored target list — and its top item is a
 110 cm pdg-13 track absorbed into an EM shower, the same failure the pr/128
 metric's third term names.
+
+And the mechanism is not a guess: the label store's `absorbed_by` field names
+the absorber for every condemned segment.  By charge, `pass4_proximity` 34.5%,
+`pass3_cone` 28.8%, own-root mis-rooting 17.2%, `pass4_angle` 13.0%.  Two
+leads come free with it — `pass4_angle` admitted 286655's four segments at
+**137-150 deg**, past the 110 deg this very guard declines on (so one event is
+being fixed by `stem_backfill_back_guard` and re-broken by `pass4_angle`), and
+admitted 278420's seven at **98-125 cm**.  A round can open on a fix
+hypothesis instead of a census.
 
 Options 1 and 2 from Part 5 are not withdrawn; they are now second and third.
 The two knowingly-wrong events this doc leaves in production (292643 −234.0

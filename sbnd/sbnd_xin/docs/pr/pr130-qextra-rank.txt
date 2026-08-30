@@ -1,3 +1,4 @@
+  MARKING HABIT of emscan-0828-agent5: 57 marked showers, IN=59 OUT=83 -> 58% of marks are OUT
 ==============================================================================
 141-set, kept pool (4 adjudicated events removed)
 ==============================================================================
@@ -8,21 +9,31 @@
     q_extra weak        (never judged, absent at scan time)  : 7.827e+06  151 segs
     --> affirmative-only split:  q_miss 43.7%   q_extra 56.3%
 
-  AFFIRMATIVE q_extra: 10 events, top-10 holds 100.0%
+  AFFIRMATIVE q_extra: 1.731e+07 over 10 events; top-4 holds 73.7%
      event   shower  shw_cl      q_aff  nseg  condemned segment(cluster, len, pdg)
-    100222   113236     113  5.973e+06     1  14003(cl14,110cm,pdg13)
-    175896    17044      17  3.531e+06     2  66037(cl66,6cm,pdg2212)  66041(cl66,18cm,pdg11)
-    489327    19005      19  1.804e+06     1  19005(cl19,23cm,pdg11)
-    499577    13009      13  1.456e+06     1  95059(cl95,7cm,pdg2212)
-    286655    79023      79  1.356e+06     4  67016(cl67,1cm,pdg13)  69018(cl69,0cm,pdg2212)  81062(cl81,1cm,pdg13)  82063(cl82,21cm,pdg11)
-     69232    20021      20  1.166e+06     1  20021(cl20,27cm,pdg11)
-    350354    18092      18  1.140e+06     2  18008(cl18,5cm,pdg11)  18015(cl18,17cm,pdg11)
-    278420    61027      61  6.303e+05     7  67033(cl67,0cm,pdg2212)  68034(cl68,0cm,pdg13)  69035(cl69,0cm,pdg13)  70036(cl70,0cm,pdg2212)  73039(cl73,1cm,pdg11)  75041(cl75,5cm,pdg11)  78044(cl78,0cm,pdg13)
-     72786    16017      16  1.855e+05     2  9009(cl9,2cm,pdg13)  31033(cl31,1cm,pdg2212)
-    400504    62014      62  7.242e+04     1  21003(cl21,1cm,pdg13)
+    100222   113236     113  5.973e+06     1  14003(cl14,110cm,pdg13,pass4_proximity (direct),d=38,a=4)
+    175896    17044      17  3.531e+06     2  66037(cl66,6cm,pdg2212,pass3_cone (direct),d=34,a=9)  66041(cl66,18cm,pdg11,pass3_cone (direct),d=33,a=12)
+    489327    19005      19  1.804e+06     1  19005(cl19,23cm,pdg11,own-root,d=14,a=172)
+    499577    13009      13  1.456e+06     1  95059(cl95,7cm,pdg2212,pass3_cone (direct),d=30,a=22)
+    286655    79023      79  1.356e+06     4  67016(cl67,1cm,pdg13,pass4_angle (direct),d=68,a=137)  69018(cl69,0cm,pdg2212,pass4_angle (direct),d=81,a=150)  81062(cl81,1cm,pdg13,pass4_angle (direct),d=86,a=144)  82063(cl82,21cm,pdg11,pass4_angle (direct),d=71,a=142)
+     69232    20021      20  1.166e+06     1  20021(cl20,27cm,pdg11,own-root,d=0,a=0)
+    350354    18092      18  1.140e+06     2  18008(cl18,5cm,pdg11,conn3_unreachable (walk_add),d=15,a=58)  18015(cl18,17cm,pdg11,pass3_cluster_map (direct),d=11,a=34)
+    278420    61027      61  6.303e+05     7  67033(cl67,0cm,pdg2212,pass4_angle (direct),d=98,a=7)  68034(cl68,0cm,pdg13,pass4_angle (direct),d=108,a=7)  69035(cl69,0cm,pdg13,pass4_angle (direct),d=110,a=3)  70036(cl70,0cm,pdg2212,pass4_angle (direct),d=112,a=3)  73039(cl73,1cm,pdg11,pass4_angle (direct),d=125,a=6)  75041(cl75,5cm,pdg11,pass4_angle (direct),d=102,a=11)  78044(cl78,0cm,pdg13,pass4_angle (direct),d=105,a=7)
+     72786    16017      16  1.855e+05     2  9009(cl9,2cm,pdg13,pass4_angle (direct),d=45,a=12)  31033(cl31,1cm,pdg2212,pass4_angle (direct),d=76,a=21)
+    400504    62014      62  7.242e+04     1  21003(cl21,1cm,pdg13,pass4_angle (direct),d=28,a=27)
 
-  condemned segment sits in the SHOWER'S OWN cluster: 4      in a DIFFERENT cluster: 18
+  condemned segment sits in the SHOWER'S OWN cluster: 4 segs / 4.111e+06 (24% of charge)
+  ... in a DIFFERENT cluster                        : 18 segs / 1.320e+07 (76% of charge)
 
+  WHICH ABSORBER PLACED IT (label store 'absorbed_by' -- measured, not inferred):
+    pass4_proximity (direct)           5.973e+06  (34.5% of charge,  1 segs)
+    pass3_cone (direct)                4.987e+06  (28.8% of charge,  3 segs)
+    (none - shower own root/extent)    2.970e+06  (17.2% of charge,  2 segs)
+    pass4_angle (direct)               2.244e+06  (13.0% of charge, 14 segs)
+    conn3_unreachable (walk_add)       6.351e+05  ( 3.7% of charge,  1 segs)
+    pass3_cluster_map (direct)         5.054e+05  ( 2.9% of charge,  1 segs)
+
+  MARKING HABIT of emscan-0827: 33 marked showers, IN=246 OUT=29 -> 11% of marks are OUT
 ==============================================================================
 98-set, kept pool (4 adjudicated events removed)
 ==============================================================================
@@ -33,11 +44,17 @@
     q_extra weak        (never judged, absent at scan time)  : 7.543e+06   63 segs
     --> affirmative-only split:  q_miss 82.9%   q_extra 17.1%
 
-  AFFIRMATIVE q_extra: 3 events, top-10 holds 100.0%
+  AFFIRMATIVE q_extra: 7.056e+06 over 3 events; top-4 holds 100.0%
      event   shower  shw_cl      q_aff  nseg  condemned segment(cluster, len, pdg)
-    314838   110088     110  3.112e+06     7  110083(cl110,2cm,pdg11)  110084(cl110,3cm,pdg11)  110085(cl110,5cm,pdg11)  110088(cl110,8cm,pdg11)  110089(cl110,11cm,pdg11)  111091(cl111,8cm,pdg11)  111092(cl111,4cm,pdg11)
-    142421     7010       7  2.794e+06    10  48024(cl48,0cm,pdg13)  50026(cl50,1cm,pdg13)  56032(cl56,0cm,pdg13)  79055(cl79,0cm,pdg13)  107100(cl107,7cm,pdg11)  107101(cl107,6cm,pdg13)  108104(cl108,12cm,pdg11)  108105(cl108,9cm,pdg11)  108106(cl108,7cm,pdg11)  108107(cl108,4cm,pdg11)
-    269774    13237      13  1.149e+06     5  67079(cl67,2cm,pdg2212)  68080(cl68,1cm,pdg13)  96189(cl96,5cm,pdg13)  96190(cl96,3cm,pdg11)  100213(cl100,1cm,pdg2212)
+    314838   110088     110  3.112e+06     7  110083(cl110,2cm,pdg11,from_vertices (walk_add),d=16,a=7)  110084(cl110,3cm,pdg11,from_vertices (walk_add),d=17,a=11)  110085(cl110,5cm,pdg11,from_vertices (walk_add),d=17,a=11)  110088(cl110,8cm,pdg11,own-root,d=0,a=0)  110089(cl110,11cm,pdg11,from_vertices (walk_add),d=6,a=6)  111091(cl111,8cm,pdg11,pass4_angle (direct),d=26,a=3)  111092(cl111,4cm,pdg11,pass4_angle (direct),d=33,a=4)
+    142421     7010       7  2.794e+06    10  48024(cl48,0cm,pdg13,pass4_angle (direct),d=56,a=23)  50026(cl50,1cm,pdg13,pass4_angle (direct),d=53,a=22)  56032(cl56,0cm,pdg13,pass4_angle (direct),d=14,a=29)  79055(cl79,0cm,pdg13,pass4_angle (direct),d=56,a=22)  107100(cl107,7cm,pdg11,pass4_angle (direct),d=43,a=20)  107101(cl107,6cm,pdg13,pass4_angle (direct),d=43,a=20)  108104(cl108,12cm,pdg11,own-root,d=8,a=137)  108105(cl108,9cm,pdg11,from_vertices (walk_add),d=4,a=79)  108106(cl108,7cm,pdg11,from_vertices (walk_add),d=4,a=79)  108107(cl108,4cm,pdg11,from_vertices (walk_add),d=4,a=79)
+    269774    13237      13  1.149e+06     5  67079(cl67,2cm,pdg2212,pass4_angle (direct),d=59,a=25)  68080(cl68,1cm,pdg13,pass4_angle (direct),d=65,a=27)  96189(cl96,5cm,pdg13,pass4_angle (direct),d=50,a=25)  96190(cl96,3cm,pdg11,pass4_angle (direct),d=55,a=25)  100213(cl100,1cm,pdg2212,pass4_angle (direct),d=49,a=24)
 
-  condemned segment sits in the SHOWER'S OWN cluster: 5      in a DIFFERENT cluster: 17
+  condemned segment sits in the SHOWER'S OWN cluster: 5 segs / 2.566e+06 (36% of charge)
+  ... in a DIFFERENT cluster                        : 17 segs / 4.489e+06 (64% of charge)
+
+  WHICH ABSORBER PLACED IT (label store 'absorbed_by' -- measured, not inferred):
+    from_vertices (walk_add)           3.166e+06  (44.9% of charge,  7 segs)
+    pass4_angle (direct)               2.629e+06  (37.3% of charge, 13 segs)
+    (none - shower own root/extent)    1.260e+06  (17.9% of charge,  2 segs)
 
