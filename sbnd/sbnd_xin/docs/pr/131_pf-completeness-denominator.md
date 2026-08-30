@@ -75,9 +75,13 @@ scale reference, never as the denominator of a bucket ratio.
 | **`hidden`** | **unclaimed, cross-cluster — named nowhere** | **33** | **1495.2** | **0.74%** |
 | | **TOTAL** | 9947 | 200807.5 | |
 
-(`conn4` totals differ by 0.04% between the summary lines and the per-segment
-rows: the per-event summary prints one decimal before being added. Not
-material.)
+**Which source each figure comes from.** The bucket table and the totals
+(200807.5, and the 197457.8 universe in §2) are summed from the per-event
+`PFDENOM_SUM` lines; the conn-4 split in §3 is summed from the per-segment
+`PFDENOM` rows, which is the only place the `xclus` flag lives. The two agree
+to 0.04% on conn-4 (3349.7 vs 3350.9 MeV) because the summary line prints one
+decimal per event before being added, so `200807.5 − 3350.9` does not land
+exactly on 197457.8. The gap is 1.2 MeV — 0.0006% — and moves no conclusion.
 
 ## 2. The number pr/128 asked for
 

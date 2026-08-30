@@ -21,6 +21,7 @@ Follow-on to `pr130-qmiss-refresh.md` (which answered go/no-go) and
 cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 scripts/pr130_qmiss_census.py > docs/pr/pr130-qmiss-census.txt   # + .tsv
 scripts/pr130_qmiss_f12.py    > docs/pr/pr130-qmiss-f12.txt
+scripts/pr130_qmiss_objects.py> docs/pr/pr130-qmiss-objects.txt   # needs the census tsv
 ```
 
 Both import `em_display/em117_score.py` rather than reimplementing it, so every
@@ -203,6 +204,36 @@ scan: **SPLIT is 36.3% main-cluster by charge, STOLEN only 5.6%.** The largest
 SPLIT rows — 284206 (2.271e6) and 314838 (2.117e6), which a raw ranking would
 put at the top of any scan set — are *both* main-cluster, i.e. already counted.
 
+## Part 5c — the unit is a whole object, not a segment
+
+The SPLIT root and the STOLEN segments held by it are usually **the same
+physical object**: on 463565 the labelled shower 13001 is missing segment
+115088 (SPLIT, the root of a 17-segment shower) *and* 115100, 115106, … — every
+other segment of that same shower. Grouping the pool by
+(event, labelled shower, holding object) collapses **174 segments into 73
+triples over 38 events**, and splits it cleanly:
+
+| | objects | charge | share | already main-cluster |
+|---|---|---|---|---|
+| **WHOLE** — the scan wants 100% of the object | 47 | 2.7657e7 | **58.2%** | 13.3% |
+| **PARTIAL** — it wants only part | 23 | 1.8113e7 | 38.1% | 25.8% |
+| NOHOLDER | 3 | 1.7297e6 | 3.6% | 51.9% |
+
+**58.2% of the pool is 47 binary calls, not 174 partition judgements.** That is
+what makes a hand scan tractable: for a WHOLE object the question is simply
+*should this reconstructed shower be part of that one*, with no sub-segment
+line to draw. The PARTIAL 38.1% is the harder half and should be scanned
+second.
+
+Ranked by outside-main-cluster charge the concentration is stark — 463565 alone
+carries 9.077e6 across four objects, all WHOLE, all wanted by the *same* shower
+13001: one shower shattered into five pieces. This also corrects the event
+ranking a second time: **314838 and 444187**, which the segment-level SPLIT
+ranking put second and fifth, drop out entirely once main-cluster charge is
+excluded by charge rather than all-or-nothing (their objects straddle the
+boundary — 314838's object 13010 has its root in main cluster 13 and a member
+in cluster 89).
+
 ## Part 6 — what to do with the round
 
 The peer's go/no-go stands as written: on **concentration** (top-10 holds 78.7%
@@ -222,27 +253,51 @@ REROOT (Part 1, a seeding failure by construction).
 If node-level attribution inside the candidate matters for some *other* reason
 (PID, pi0 pairing), that is a separate question and should be asked separately.
 
-**The one question the owner's eye can answer and no script can:** for the
-SPLIT class **outside the main cluster** — 54 segments, 1.235e7 — *should*
-those one-to-four-segment neighbours be one object with the labelled shower, or
-is the label store over-marking fragments a physicist would leave separate?
-That verdict decides whether the 58.7% is a real defect or a scanning
+**The one question the owner's eye can answer and no script can:** for each
+candidate object outside the main cluster (Part 5c) — *should this whole
+reconstructed shower be part of that one*, or is the label store over-marking
+neighbours a physicist would leave separate? 58.2% of the pool is a WHOLE
+object, so most of those are a single binary call with no sub-segment line to
+draw. That verdict decides whether the 58.7% is a real defect or a scanning
 convention, and everything downstream depends on which.
 
-Recommended scan set, ranked by **outside-main-cluster SPLIT charge** (not by
-raw q_miss, and not by raw SPLIT charge — both put main-cluster events on top):
+Recommended scan set, ranked by **outside-main-cluster charge** at the object
+level (Part 5c) — these ten events hold 2.913e7 of the 3.514e7 outside-main
+q_miss, **83%**:
 
-| event | set | charge | seg |
-|---|---|---|---|
-| 122660 | 98 | 1.788e6 | 2 |
-| 54332 | 98 | 1.475e6 | 7 |
-| 463565 | 98 | 1.025e6 | 2 |
-| 469665 | 98 | 7.605e5 | 2 |
-| 76346 | 98 | 7.173e5 | 5 |
-| 181050 | 141 | 5.718e5 | 2 |
+| bee_idx | event | sample | q_out | objects | WHOLE |
+|---|---|---|---|---|---|
+| 0 | 463565 | ncpi0 | 9.077e6 | 4 | 4 |
+| 1 | 122660 | nuecc48 | 6.868e6 | 3 | 2 |
+| 2 | 54332 | mcp2k | 3.648e6 | 7 | 5 |
+| 3 | 181050 | mcp2k | 1.768e6 | 2 | 1 |
+| 4 | 105946 | ncpi0 | 1.530e6 | 3 | 2 |
+| 5 | 21073 | ncpi0 | 1.423e6 | 1 | 0 |
+| 6 | 342199 | nuecc48 | 1.318e6 | 1 | 0 |
+| 7 | 76346 | mcp2k | 1.234e6 | 6 | 6 |
+| 8 | 469665 | nuecc48 | 1.178e6 | 3 | 1 |
+| 9 | 54453 | mcp2k | 1.087e6 | 2 | 0 |
 
-Five of six are 98-set, which is itself informative: this is where the 98-set's
-larger q_miss actually lives.
+## Part 7 — the Bee set
+
+Built and uploaded, **one set** (there is no merged arm to A/B against):
+
+> **https://www.phy.bnl.gov/twister/bee/set/8daa1825-f386-4ba2-9094-61577e075f9d/event/list/**
+
+Arms `work-pr130r1-bon{,141}-*` — SBND production at toolkit `95346dc5`, all
+three knobs flipped 2026-08-29. Annotated index with the per-object calls:
+`bee/pr130r4/pr130r4-qmiss.index.txt`.
+
+The scan works by colouring `shower_track-global` on `real_cluster_id`: Bee
+stamps every point with its reconstructed object's start-segment id, so the
+target shower and each candidate object each get their own colour and the
+question is answered by eye. Verified: **29 of the 32 objects (91.6% by charge)
+and every target shower are separately coloured**; the three that are not are
+marked `[no colour]` in the index.
+
+Content-verified twice — package-vs-live on `mc` and `shower_track-global`,
+**20/20 identical**, and the set page lists all ten events with the six expected
+layers.
 
 **Recommendation.** Run the scan on that question and that set, and hold any
 merge-side knob until it is answered — a knob designed before it would be tuned
@@ -265,3 +320,6 @@ addressable class, with the residue pointing at partition and seeding.
 - **2.1%** is not missing at all — it is double-counted with a sibling row.
 - Only **6.1%** of the fragment pool sits with a conn-4 (>80 cm) holder: this
   is a near-candidate partition problem, not a far-away one.
+- The pool is **73 objects over 38 events**, not 174 segments, and **58.2% of
+  it is a WHOLE object** — a binary merge call, not a partition judgement.
+- Bee set for the scan: `8daa1825-f386-4ba2-9094-61577e075f9d` (Part 7).
