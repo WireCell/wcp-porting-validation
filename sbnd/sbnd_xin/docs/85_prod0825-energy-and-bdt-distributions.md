@@ -1,7 +1,8 @@
-# 85 — Reconstructed energy and BDT scores of the four SBND production samples, and three Bee hand-scan sets
+# 85 — Reconstructed energy and BDT scores of the four SBND production samples, the MicroBooNE working points, and six Bee hand-scan sets
 
-Two figures over the **whole** `prod0825` PR product (3067 events, four samples)
-plus three 10-event Bee sets drawn from the ν<sub>μ</sub> samples.
+Three figures over the **whole** `prod0825` PR product (3067 events, four
+samples), the MicroBooNE νμ/νe BDT working points applied to them (§7 — the νe
+one does **not** transfer, and why), and six Bee sets.
 
 **Nothing is tuned here and no code changed.** This is a read-out of an existing
 production arm: `pr_scores_table.py` over `work-<sample>-prod0825`, then
@@ -32,7 +33,18 @@ for c in cosmiclike nuelike neither; do
   ./upload-to-bee.sh bee/d85/d85-$c.zip        # owner-authorised 2026-08-30
 done
 
-# 4. the fudge-flip caveat of sec 4, measured not assumed
+# 4. sec 7: the MicroBooNE working points, its figure and its three Bee sets
+python3 scripts/analysis/d85b_cuts.py         # -> docs/85_dists/d85b-*
+mkdir -p bee/d85b
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-grp0825 -p work-nuecc48-prod0825 \
+    --allow-unevaluated -o bee/d85b/d85b-nuecc-failnue.zip \
+    $(cat docs/85_dists/d85b-nuecc-failnue.txt)
+for c in ncpi0-numupass ncpi0-nearmiss; do
+  python3 scripts/bee/make_pr_bee.py -q work-ncpi0-grp0825 -p work-ncpi0-prod0825 \
+      -o bee/d85b/d85b-$c.zip $(cat docs/85_dists/d85b-$c.txt)
+done
+
+# 5. the fudge-flip caveat of sec 4, measured not assumed
 for a in off98 onfudge98; do for s in nuecc48 ncpi0 mcp1k mcp2k; do
   python3 pr_scores_table.py --root work-pr132-$a-$s --sample $s \
       --out /home/xqian/tmp/d85/$a-$s.tsv
@@ -145,7 +157,9 @@ Three features of this plot are real and would otherwise read as defects:
    panel's scale.
 2. **Both scores saturate at ±4.301.** Both are
    `log10((1+v)/(1-v))` of an xgboost output clamped to ±0.9999. The rows of
-   points sitting exactly on the dashed frame are that clamp.
+   points sitting exactly on the dashed frame are that clamp — and that clamp
+   is a toolkit addition the prototype does not have, which is a bigger deal
+   than a plotting artefact: see **§7.1**.
 3. **`cosmic_flag` is not usable as a discriminator here** and is deliberately
    absent from the figure: it is 1 for 1307 of the 1326 evaluated
    ν<sub>μ</sub>-sample events (it is the struct default, and nothing in the
@@ -299,7 +313,146 @@ Bee 4 and 7 carry `kine_reco_Enu` of **13** and **29 MeV** while still being
 accepted as neutrino candidates — the two cheapest checks in this set for
 whether the candidate is real at all.
 
-## 6. What this document is not
+## 7. The MicroBooNE BDT working points applied here
+
+### 7.1 The νe working point does not transfer — the toolkit clamps the score
+
+The two working points, as this repo records them
+(`toolkit/clus/docs/tagger/tagger_validation_plan.md:229`, "representative
+working points, e.g. nue_score > 7.0, numu_score > 0.9"), plus the cosmic
+verdict `cosmict_flag == 0` (the OR of the ten cosmic tests,
+`NeutrinoTaggerCosmic.cxx:1384`; **`cosmic_flag` is not this** — it is a BDT
+input equal to `!cosmict_flag_9`, and it reads 1 on 1307 of 1326 events, §3).
+
+Prototype and toolkit use the **same formula**,
+`score = log10((1+v)/(1−v))` on the raw BDT output `v`. They differ in one
+line: the toolkit **added a clamp** `v → [−0.9999, 0.9999]`
+(`root/docs/examination/bdt-scorers-examination.md` Bug 1, marked fixed;
+`UbooneNueBDTScorer.cxx:1986-1989`, `UbooneNumuBDTScorer.cxx:586-590`). The
+prototype has none, so its range is bounded only by float precision: **≈ ±15**
+— which is also why the "not filled" sentinel is `-15`, chosen to sit just
+below the physical floor.
+
+The clamp caps |score| at 4.301, and the two scorers disagree with each other
+by one type:
+
+| scorer | clamp variable | ceiling | seen in the data |
+|---|---|---:|---:|
+| `UbooneNueBDTScorer` | `float val1` | **4.3009362** | nue ceiling 4.300936 |
+| `UbooneNumuBDTScorer` | `double val1` | **4.3010083** | numu clamp 4.301008 |
+
+Primary evidence that the prototype really exceeds it, from this tree:
+`qlport/docs/perf-optimization.md:194` records uBooNE ev6786 at toolkit
+`nue_score +4.30` vs **prototype +10.7**.
+
+**Consequence.** `nue_score > 7.0` requires `v > 0.9999998`; the clamp erases
+everything above `v = 0.9999`. The cut therefore selects **0 events in all
+four samples, by construction** — and the 32 of 47 νeCC events sitting at
+exactly 4.300936 are precisely the ones whose true score lies somewhere in
+4.30 … ~15. That information is destroyed before it reaches `T_tagger`.
+
+This is **reported, not fixed**: removing the clamp changes production output
+unconditionally (escalation rules 1 and 4). Until it is decided, this document
+uses the only reachable stand-in,
+
+> **NUE_SEL** = `nue_score >= 4.30` — the clamp ceiling, a **strict superset**
+> of the MicroBooNE selection
+
+and reports `nue_score > 0.7` (the *other* number in that same validation-plan
+doc, §4.1.4 — the doc is internally inconsistent) beside it as a bracket. The
+νμ working point is unaffected: 0.9 ⇒ `v > 0.776`, far below the clamp.
+
+### 7.2 The νμ sample under each working point
+
+![numu sample under the BDT cuts](85_dists/d85b_numusample_cuts.png)
+
+The 3000-event νμ data sample (mcp1k + mcp2k), **cosmics excluded**
+(`cosmict_flag == 0`), same population as §1 otherwise.
+
+| selection | mcp1k | mcp2k | total | median E<sub>ν</sub> |
+|---|---:|---:|---:|---:|
+| all, cosmics excluded | 359 | 709 | **1068** | 587 MeV |
+| `numu_score > 0.9` | 240 | 451 | **691** | 703 MeV |
+| `nue_score >= 4.30` (ceiling) | 1 | 5 | **6** | 792 MeV |
+| `nue_score > 0.7` | 3 | 8 | **11** | 1077 MeV |
+| `nue_score > 7.0` (uB point) | 0 | 0 | **0** | — |
+
+195 of the 1263 plotted νμ-sample events are cosmic-flagged and drop out
+before any BDT cut. The νμ selection keeps 65 % of what is left and pushes the
+median up 587 → 703 MeV, as a CC selection should. The νe rows are the §7.1
+story in numbers: 6 events at the ceiling, 0 at the working point that is
+supposed to define the selection.
+
+### 7.3 νeCC events the νe selection does NOT keep — [Bee set 4e5c2cda](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/list/)
+
+**16 of 48** fail `nue_score >= 4.30`. (Under the literal MicroBooNE cut all
+48 fail — §7.1 — so this set is the meaningful reading of the question.)
+
+| Bee | run | event | numu | nue | E [MeV] | label | link |
+|---:|---:|---:|---:|---:|---:|---|---|
+| 0 | 18342 | 30504 | −0.989 | −1.388 | 1251 | nu-candidate | [event/0](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/0/) |
+| 1 | 18304 | 38856 | +0.597 | −0.367 | 1280 | nu-candidate | [event/1](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/1/) |
+| 2 | 18259 | 52672 | −0.509 | **−4.301** | 928 | nu-candidate | [event/2](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/2/) |
+| 3 | 18255 | 69314 | +3.960 | **−15** | 1499 | nu-candidate | [event/3](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/3/) |
+| 4 | 18259 | 111412 | +0.072 | +0.037 | 1019 | nu-candidate | [event/4](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/4/) |
+| 5 | 18259 | 116962 | +1.469 | **−4.301** | 773 | **cosmic-tagged** | [event/5](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/5/) |
+| 6 | 18255 | 122660 | −0.064 | +2.339 | 1334 | nu-candidate | [event/6](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/6/) |
+| 7 | 18264 | 137238 | +1.136 | −3.415 | 739 | nu-candidate | [event/7](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/7/) |
+| 8 | 18255 | 163543 | +0.332 | +1.402 | 1270 | nu-candidate | [event/8](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/8/) |
+| 9 | 18255 | 196649 | −1.117 | +4.242 | 1614 | nu-candidate | [event/9](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/9/) |
+| 10 | 18255 | 235435 | −0.210 | **−15** | 428 | nu-candidate | [event/10](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/10/) |
+| 11 | 18255 | 389538 | **+4.301** | **−15** | 986 | nu-candidate | [event/11](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/11/) |
+| 12 | 18355 | 400474 | −0.069 | +4.159 | 1799 | nu-candidate | [event/12](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/12/) |
+| 13 | 18255 | 423981 | +0.013 | +3.402 | 2133 | nu-candidate | [event/13](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/13/) |
+| 14 | 18255 | 447477 | — | — | — | nu-candidate (no PR evaluation) | [event/14](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/14/) |
+| 15 | 18255 | 469665 | −1.534 | +1.225 | 876 | nu-candidate | [event/15](https://www.phy.bnl.gov/twister/bee/set/4e5c2cda-0b88-46e6-90ab-0151771da5df/event/15/) |
+
+Three of these are worth a look first: **69314** and **389538** have the νe BDT
+*never filled* (`-15`) while the νμ BDT is strongly positive (+3.96, +4.30 at
+the clamp) — they were routed away from the νe path entirely; **116962** is a
+νeCC-sample event the chain labels `cosmic-tagged`; and **196649 / 400474**
+(+4.24, +4.16) miss the ceiling by less than 0.06, i.e. by the clamp's own
+rounding rather than by anything physical.
+
+### 7.4 NCπ⁰ events passing the νμ selection — [Bee set 0133c243](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/list/)
+
+**8 of 18** evaluated NCπ⁰ events pass `numu_score > 0.9`; all 8 are
+non-cosmic (`cosmict_flag = 0`).
+
+| Bee | run | event | numu | nue | E [MeV] | link |
+|---:|---:|---:|---:|---:|---:|---|
+| 0 | 18259 | 18625 | +2.409 | −15 | 1478 | [event/0](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/0/) |
+| 1 | 18345 | 21073 | +0.932 | −15 | 1019 | [event/1](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/1/) |
+| 2 | 18255 | 56982 | +1.112 | −1.285 | 1231 | [event/2](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/2/) |
+| 3 | 18255 | 71372 | +2.626 | −15 | 2597 | [event/3](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/3/) |
+| 4 | 18255 | 142421 | **+3.602** | −15 | 2768 | [event/4](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/4/) |
+| 5 | 18255 | 180801 | +1.356 | −3.210 | 1324 | [event/5](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/5/) |
+| 6 | 18261 | 285567 | +0.987 | −15 | 1935 | [event/6](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/6/) |
+| 7 | 18255 | 506746 | +1.112 | −15 | 1926 | [event/7](https://www.phy.bnl.gov/twister/bee/set/0133c243-b77e-45d1-b57c-55303db14b8a/event/7/) |
+
+Bee 4 (**142421**, `numu_score +3.60`, 2768 MeV) is the strongest νμ-like NCπ⁰
+event in the sample and the same event flagged in the earlier rescan as "a
+major shower not tagged as shower" — the two observations are likely the same
+defect seen from two sides.
+
+### 7.5 NCπ⁰ passing cosmic *or* the νe selection — **empty**, and the nearest misses — [Bee set b6e6fefd](https://www.phy.bnl.gov/twister/bee/set/b6e6fefd-df80-4c81-be3d-2da90318d74e/event/list/)
+
+**0 of 18.** No NCπ⁰ event is cosmic-tagged by either handle (`cosmict_flag`
+is 0 on all 18; the nusel `event_label` is `nu-candidate` on all 19), and none
+reaches `nue_score >= 4.30`. Only **three** have the νe BDT filled at all, and
+all three are negative — so on this sample the νe selection is not being fooled
+by π⁰s, with the §7.1 caveat that the ceiling proxy is looser than the real cut
+and the sample is 19 events.
+
+The set below is those three nearest misses, not a passing selection:
+
+| Bee | run | event | numu | nue | E [MeV] | link |
+|---:|---:|---:|---:|---:|---:|---|
+| 0 | 18255 | 56982 | +1.112 | −1.285 | 1231 | [event/0](https://www.phy.bnl.gov/twister/bee/set/b6e6fefd-df80-4c81-be3d-2da90318d74e/event/0/) |
+| 1 | 18259 | 37112 | +0.336 | −2.468 | 1539 | [event/1](https://www.phy.bnl.gov/twister/bee/set/b6e6fefd-df80-4c81-be3d-2da90318d74e/event/1/) |
+| 2 | 18255 | 180801 | +1.356 | −3.210 | 1324 | [event/2](https://www.phy.bnl.gov/twister/bee/set/b6e6fefd-df80-4c81-be3d-2da90318d74e/event/2/) |
+
+## 8. What this document is not
 
 * **Not efficiency or purity.** No truth is used, no selection cut is applied
   beyond `nu_evaluated == 1` and the §1.1 degenerate cut, and the plotted
@@ -307,6 +460,9 @@ whether the candidate is real at all.
   ν<sub>μ</sub> samples (56 across all four). Nothing here says how well the BDTs work.
 * **Not the current operating point** — §4. Add ~3–4 % downward to every energy
   to reach production as of 2026-08-30.
+* **Not a MicroBooNE-equivalent selection** — §7.1. The νμ working point
+  transfers; the νe one is unreachable under the toolkit's score clamp, and
+  every νe number here uses a strictly looser stand-in.
 * **Not a gate.** No A/B, no hash comparison, no claim of byte-identicality is
   made or needed: the arms were read, not produced.
 
@@ -319,7 +475,10 @@ whether the candidate is real at all.
 | summary numbers behind §2/§3 | `docs/85_dists/d85-summary-prod0825.tsv` |
 | Bee pick lists + their scores | `docs/85_dists/d85-{cosmiclike,nuelike,neither}.{txt,tsv}` |
 | Bee zips + index/UUID sidecars | `bee/d85/d85-*.{zip,index.txt,prid-map.txt,url}` |
-| plotting + picking script | `scripts/analysis/d85_dists.py` |
+| §7 figure + census | `docs/85_dists/d85b_numusample_cuts.png`, `docs/85_dists/d85b-numusample-census.tsv` |
+| §7 Bee pick lists | `docs/85_dists/d85b-{nuecc-failnue,ncpi0-numupass,ncpi0-nearmiss}.{txt,tsv}` |
+| §7 Bee zips + sidecars | `bee/d85b/d85b-*.{zip,index.txt,prid-map.txt,url}` |
+| plotting + picking scripts | `scripts/analysis/d85_dists.py` (§2/§3/§5), `scripts/analysis/d85b_cuts.py` (§7) |
 
-Bee sets uploaded 2026-08-30 with owner authorisation; all three verified
+All six Bee sets uploaded 2026-08-30 with owner authorisation and verified
 reachable (HTTP 200 on `event/list/` and `event/0/`).
