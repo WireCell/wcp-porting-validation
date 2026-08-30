@@ -448,6 +448,17 @@ segments no guard had refused (e.g. 396222 seg 9084, a 114 cm pi+). **The
 laundering census is not the blast radius** — stating this because Part 3's
 framing invited exactly that error.
 
+**One of the unpredicted movers closes an item from another round.** On 399118
+the seat declines `seg=16017 pdg=2212 len=108.8cm` — that is pr/128's named
+"largest single remaining loss", its 481.0 MeV proton. The decline stamps
+`kPass4GuardFreed`, so pr/123's guard-freed pool now emits it and **it is
+drawn**; it stays out of `kine_reco_Enu` because pr/129's pointing test SKIPs
+it at `miss_deg=151.6` (4.94 cm from the vertex, aimed away). So pr/128's
+proposed fix — a vertex-proximity arm with *no kink term* — is doubly dead: the
+owner already rejected 399118 as over-clustering, and such an arm would now
+re-admit precisely the object pr/129 was built to exclude. Traced by the pr/131
+session against `95346dc5`; verified here from this arm's own log.
+
 ## STOP — two sentinels fail on the ON arm
 
 `27 PASS, 2 FAIL, 0 SKIP`. Both FAILs PASS on the knob-off arms of the same
