@@ -488,3 +488,14 @@ appear as a PF track?* — because the answer decides whether this is a
 regression or a sentinel that needs rewriting. 55740 needs its own look
 regardless: a masked pr/128 knob is a standing exposure whether or not these
 knobs ever flip.
+
+## Bee A/B for the two sentinel FAILs (`bee/pr130r3/`)
+
+Both arms are the **same binary**, differing only in the two knobs — not an
+older production arm, so anything visible is caused by the guards.
+
+- OFF (`work-pr130r1-g1off141-mcp2k`): `a22bf7d4-bd8b-4600-b62b-9b52d441d467`
+- ON (`work-pr130r1-gs1on141-mcp2k`): `48ae2376-190b-4b9c-bcd0-8bfb9016a513`
+
+idx 0 = 72786 (the ruling), idx 1 = 55740 (mechanism change, no output
+change). Annotated index: `bee/pr130r3/pr130r3.index.txt`.
