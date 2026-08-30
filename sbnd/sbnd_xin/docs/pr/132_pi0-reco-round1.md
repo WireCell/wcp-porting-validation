@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1+2+3 CLOSED + owner-scanned (2026-08-30). Fudge 0.84 + K7+K8 (track-gamma rescue) + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10 (owner verdict); K2/K4/K5/K9/K10/K11 + round-3 K12 DEFAULT OFF, measured; over-merge adjudicated UPSTREAM. Round-4 fronts from the owner scan: NC vertex-in-shower, rescued-gamma start re-seat, upstream clustering (sec 10.9). Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10.**
+**Status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -782,3 +782,112 @@ with the model pairing pass (labelsrc-separated); T_KINE stays
 mass-window-free (the flip enlarges its candidate pool, a documented
 mass-blind drift); the r3 arms use the merged-dir convention (98/141
 disjoint, census/gates manifest-driven).
+
+# 11. Round 4 — the two owner fronts measured to their upstream roots (2026-08-30)
+
+Owner order: *"Can you start the round 4 following your recommendations?"* on
+the sec 10.9 queue.  Executed: the two byte-neutral probes (recognizer +
+start audit), knobs K13-K15 DEFAULT OFF, three arms, census sentinel.  **No
+production flip this round** — every measurement points upstream.
+
+## 11.1 What ships
+
+- **`WCT_PI0_NCVTX_DEBUG`** — two tapes in one env: `PI0_NCVTX` (the NC
+  vertex-in-shower recognizer: per >50 MeV shower, distance vertex→cloud,
+  vertex→start, and f_back = charge fraction behind the vertex along the
+  vertex→centroid axis) and `PI0_START` (per pi0-paired shower: the conn-2
+  start derivation audited against both the "fit" and "associate_points"
+  clouds).  Byte-neutral, stderr only.
+- **K13 `pi0_nv_partner_min_mev`** (0 = off): path-2 partner floor, the K3
+  analog — selection-loop only.
+- **K14 `pi0_nv_retry_paired`** (false): path-2 skips an already-pi0-paired
+  main-vertex shower instead of abandoning the pass (76346's blocker).
+- **K15 `pi0_reseat_start_assoc`** (false): accepted conn-2 starts re-seated
+  on the associate cloud when nearer the vertex than the fit-cloud answer.
+- Gates: `r4off` (round-4 binary, no env, production cfg) vs `r3flipchk` —
+  **PASS 4/4, 478/478 archives byte-identical**; `wcdoctest-clus` passes with
+  the three new default-lock rows; compiled-config proofs both directions
+  (r4p2 carries all keys, r4off none).
+
+## 11.2 Front 1 (NC vertex-in-shower) — measured dead at the finder level, three independent ways
+
+1. **The recognizer finds no local signature.**  Full-population tape (239
+   events): the two owner-identified NC targets have f_back = 0.017 (76346
+   sh 14059) and ≤ 0.015 (116962, three attached EM prongs 111.6/232.2/78.3
+   MeV) — indistinguishable from the ≤ 0.02 noise floor of normal showers.
+   Upstream clustering has already partitioned the charge into showers that
+   all "start" at the wrong vertex; nothing local remains for a finder-level
+   recognizer to see.  (The tape did find two structural
+   vertex-inside-shower events — 499423, 98844 — and two f_back outliers —
+   390182 0.109, 350354 0.179 — logged for the upstream thread.)
+2. **The retry arm cannot rescue the targets** (`r4p2` = K14 + K4 + K5=5 +
+   K11=30 + K13=20).  76346: K14 works as designed (both paired showers
+   skipped, P2 proceeds), but the remaining pool's only pair is 12.8+75.0
+   MeV at m=32.8 — the true gamma charge is locked inside the path-1
+   acceptance at the bad vertex.  116962: K5 lifts GATE1 (3 prongs, all in
+   showers), the pool opens to 7 rays — and every candidate pair dies on the
+   25-degree ray-consistency test (a1 up to 180 deg): rays drawn FROM a
+   vertex inside one arm never cone-converge.  The defect precedes both
+   finders.
+3. **What the retry does admit is adverse.**  r4p2's one new real acceptance
+   is 281567 (m=139.3, dead-center in-window — the K11 gate cannot object),
+   which drags the main vertex 21.9 cm to a point 4.2 cm FARTHER from the
+   truth click: **1 ADVERSE mover** (the round's only one; census unchanged
+   at 31 exact).  Even fully gated, wrong-vertex path-2 acceptances get
+   through on mass alone.
+
+**Verdict: K13/K14 stay DEFAULT OFF** (K13 fired correctly as a defensive
+floor; K14's mechanism is proven but its 239-event ledger is 0 rescues / 1
+ADVERSE).  The NC vertex-in-shower class belongs to vertex seeding +
+shower building.
+
+## 11.3 Front 2 (start re-seat) — the fit-vs-assoc hypothesis measured near-null
+
+The start audit over all 164 pi0-shower rows: the gap between the fit-cloud
+and associate-cloud start answers has **median 0.6 cm, max 9.6 cm** (7 rows
+above 3 cm).  On 169626 itself the two clouds agree to 0.6/1.2 cm — the
+owner's 13.4 cm bias is charge the reconstructed shower DOES NOT CONTAIN
+(both clouds start equally far from the vertex), i.e. missing upstream
+charge, not a wrong cloud choice.  The `r4seat` arm (K15 on): 22 re-seats
+fire, census identical to r3flip, 0 movers, no hand-pi0 effect.  **K15
+stays DEFAULT OFF** — a correct small refinement with nothing measurable to
+buy at the finder level; the 169626-class start bias moves to the upstream
+ledger with the rest.
+
+## 11.4 Round-4 census sentinel
+
+r4p2 and r4seat both: 31 exact / 16 partial / 1 none / 18 no-group — zero
+per-event diffs vs the r3flip baseline TSV.  Movers: 0 everywhere except
+r4p2's single ADVERSE (281567, sec 11.2).  The sentinel holds.
+
+## 11.5 The round-5 front, now fully determined
+
+Four defect classes, four measurements, one address:
+
+| class | specimens | measured by | verdict |
+|---|---|---|---|
+| NC vertex-in-shower | 76346, 116962 (+499423, 98844 structural) | recognizer + retry arm + colreject geometry (sec 11.2) | upstream: vertex seeding |
+| start bias | 169626 (13.4 cm) | start audit (sec 11.3) | upstream: missing early-shower charge |
+| fragmentation | 54341 + 15/25 no-pair class | K12 arm (sec 10.3) | upstream: shower building |
+| over-merge | 37112, 176502, 281567 | substructure probe (sec 10.4) | upstream: shower building |
+
+**Round 5 = the upstream campaign**: vertex seeding for the NC class and
+shower building for the other three, in the pr/123-125 thread lineage, with
+`pr132_pi0_census.py --fudge 0.84` vs the r3flip manifests as the acceptance
+metric and sentinel (baseline 31 exact / 2 fakes / 82 groups) and the four
+probe tapes (PAIR / SUBSTRUCT / NCVTX / START) as the instruments.  The
+pairing pass rows 41-109 remain the cheap truth-set growth.  Nothing at the
+pi0-finder level remains unmeasured.
+
+Repro (round 4):
+```
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r4off 1 WCT_PI0_NCVTX_DEBUG=1  && ...141...
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r4p2 1 WCT_PI0_NCVTX_DEBUG=1 SBND_PI0_NV_RETRY_PAIRED=1 \
+    SBND_PI0_NV_ALLOW_TYPE2=1 SBND_PI0_NV_MAX_PRONGS=5 SBND_PI0_NV_MASS_WIN=30 SBND_PI0_NV_PARTNER_MEV=20  && ...141...
+PR_JOBS=10 bash scripts/pr132_arms.sh 98 r4seat 1 SBND_PI0_RESEAT_START=1  && ...141...
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr85_hash_gate.py work-pr132-r3flipchk-$s work-pr132-r4off-$s; done  # rc=0 x4
+bash scripts/pr132_r2_manifests.sh r4p2   # (r4seat)
+python3 scripts/pr132_pi0_census.py --manifest98 em117-132r4p298-manifest.tsv --manifest141 em114c-132r4p2141-manifest.tsv \
+    --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r4p2.tsv
+python3 scripts/pr90_movers.py work-pr132-r3flipchk-$s work-pr132-r4p2-$s --tags vtx105   # 1 ADVERSE (281567); r4seat 0 x4
+```

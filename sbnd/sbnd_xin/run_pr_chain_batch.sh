@@ -1705,6 +1705,10 @@ fi
 [ -n "${SBND_PI0_NV_MASS_WIN:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_mass_window_mev=${SBND_PI0_NV_MASS_WIN}")
 # doc pr/132 round 3: virtual collinear merge of detached fragments at pairing time.  EMPTY = no TLA = job default 0 = off.
 [ -n "${SBND_PI0_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "pi0_collinear_merge_deg=${SBND_PI0_COLLINEAR_DEG}")
+# doc pr/132 round 4: NC vertex-in-shower family + start re-seat.  EMPTY = no TLA = job default off.
+[ -n "${SBND_PI0_NV_PARTNER_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_partner_min_mev=${SBND_PI0_NV_PARTNER_MEV}")
+[ -n "${SBND_PI0_NV_RETRY_PAIRED:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_retry_paired=$([ "${SBND_PI0_NV_RETRY_PAIRED}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_RESEAT_START:-}" ] && CATH_TLA+=(--tla-code "pi0_reseat_start_assoc=$([ "${SBND_PI0_RESEAT_START}" = 0 ] && echo false || echo true)")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
