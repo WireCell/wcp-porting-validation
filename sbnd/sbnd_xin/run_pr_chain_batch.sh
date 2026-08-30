@@ -1709,6 +1709,10 @@ fi
 [ -n "${SBND_PI0_NV_PARTNER_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_partner_min_mev=${SBND_PI0_NV_PARTNER_MEV}")
 [ -n "${SBND_PI0_NV_RETRY_PAIRED:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_retry_paired=$([ "${SBND_PI0_NV_RETRY_PAIRED}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_PI0_RESEAT_START:-}" ] && CATH_TLA+=(--tla-code "pi0_reseat_start_assoc=$([ "${SBND_PI0_RESEAT_START}" = 0 ] && echo false || echo true)")
+# doc pr/132 round 5: build-time EM collinear-fragment merge.  EMPTY = no TLA = job default off.
+[ -n "${SBND_EM_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_deg=${SBND_EM_COLLINEAR_DEG}")
+[ -n "${SBND_EM_COLLINEAR_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_dis_cm=${SBND_EM_COLLINEAR_DIS}")
+[ -n "${SBND_EM_COLLINEAR_HOST:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_host_mev=${SBND_EM_COLLINEAR_HOST}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
+**Status: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -890,4 +890,101 @@ bash scripts/pr132_r2_manifests.sh r4p2   # (r4seat)
 python3 scripts/pr132_pi0_census.py --manifest98 em117-132r4p298-manifest.tsv --manifest141 em114c-132r4p2141-manifest.tsv \
     --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r4p2.tsv
 python3 scripts/pr90_movers.py work-pr132-r3flipchk-$s work-pr132-r4p2-$s --tags vtx105   # 1 ADVERSE (281567); r4seat 0 x4
+```
+
+# 12. Round 5 — the owner re-scope, the gamma charge ledger, and K16 (2026-08-30)
+
+Owner orders: *"Please proceed to the round 5, same requirements as before"*,
+then mid-round: *"the scope of the work should focus on the EM clustering as
+well as pi0 reconstruction. Unless it is NCpi0, one should not change the nu
+vertex identified."*
+
+## 12.1 Phase A (vertex seeding) — sized, then scoped out
+
+Before the re-scope arrived, the wrong-vertex population was measured
+(`scripts/pr132_vtx_census.py`, vtx105 truth clicks vs the r4off arms,
+`docs/pr/pr132-vtx-census-r4off.tsv`): of 159 labeled events, 113 CORRECT
+(71.1%), 8 NEAR, **38 WRONG — every one a RANKING failure** (a candidate
+vertex sits at ~0 cm from the truth click in all 38; zero generation
+failures; 30/38 flagged main_candidate; 24/38 cross-cluster).  Chain
+attribution: 33/38 have the DL and traditional chains AGREEING on the wrong
+answer (119/121 correct events also agree) — the defect is the shared
+cross-cluster selection (`compare_main_vertices_global`), not DL
+arbitration.  A recording arm with the existing `dl_vtx_harvest` knob
+(`r5harv`) preserves the global-scorer rows for future use.  **Per the
+owner's scope rule this front is CLOSED here** — no ranking knob; only the
+NC-pi0 path-2 vertex update (already gated by K11) remains sanctioned, and
+round 4 measured that IT is blocked by EM clustering, consistent with the
+owner's redirect.
+
+## 12.2 Phase B — the per-gamma charge ledger (`scripts/pr132_gamma_ledger.py`)
+
+For each hand-pi0 gamma: label energy vs the matched shower's kine_charge,
+plus the charge in collinear siblings (< 20 deg off the LABEL axis from the
+LABEL start).  On the r3flip production arm (132 gammas,
+`docs/pr/pr132-gamma-ledger-r3flip.tsv`): **90.9% OK**; UNDER+SIBS 5
+(54332 g1, 76346 g1, 105946 g1, 342199 g1+g2 — deficit recoverable by
+merging); UNDER-nosibs 4 (incl. both of 54341's); OVER 1; ABSENT 2.
+The absorb tape (`WCT_SHOWER_ABSORB_DEBUG` on the 4 UNDER+SIBS events)
+shows the fragments are built as their own showers and NO existing seat
+(pr/118 axis merge, pr/125 satellite absorb — fragments are 24-104 MeV,
+far above its 10 MeV cap) ever attempts a shower-to-shower merge across
+their 25-108 cm axial gaps.
+
+## 12.3 K16 `shower_em_collinear_deg/_dis_cm/_host_mev` — measured, both edges found
+
+Build-time EM collinear-fragment merge (new late seat before the final kine
+recompute and the finders; leading-first; fragment must be DETACHED — the
+primary-electron guard; a >10 cm fragment must also CONTINUE the host axis
+< 30 deg; vertices never touched).  DEFAULT OFF.  Gates: `r5off` vs `r4off`
+**PASS 4/4, 478/478 archives**; doctest green (3 new default-lock rows);
+compiled-config proofs both ways; movers **0 x4 on both arms** (the scope
+rule holds by construction and by measurement).
+
+| arm | census vs r3flip | gamma ledger | verdict |
+|---|---|---|---|
+| `r5cm` (10 deg, 60 cm) | identical (31 exact) | 2 harmless takes; NONE of the ledger targets absorbed | inert on target |
+| `r5cmw` (10 deg, 120 cm) | **+1 exact (54332 partial→exact), 0 downgrades, fakes 2** | FIXES 54332 g1 (0.73→1.04) and 54341 g1 (0.68→0.82, the K12 target's charge at last) — but **3 previously-OK gammas go OVER** (99838 g1 1.41, 165157 g2 1.51, 347824 g2 1.36) | a real trade; not flip-clean |
+
+**Why 60 cm was inert — the round's root-cause finding.**  Recomputing the
+geometry in the RECO frame: the unfired fragments sit at **36-159 deg off
+the reco host-start axis** (41031 at 158.8 = BEHIND the start; 105946's
+103.8 MeV fragment at 83.4 = lateral), while the ledger saw 2.6-8.5 deg in
+the LABEL frame.  The reco shower's start is deep/displaced relative to
+the true gamma origin (the 169626 defect again), so every axis ray drawn
+from it misses the upstream/lateral fragments.  A forward cone can only
+reach the downstream class (54332, 54341) — at long range, where it also
+over-absorbs.
+
+**Verdict: K16 stays DEFAULT OFF.**  The 120 cm point (+1 exact, zero
+census downgrades, zero movers) is offered for owner adjudication with its
+cost stated: 3 gammas gain 28-51% spurious charge (in-window today,
+mass-biasing by construction).
+
+## 12.4 Round-6 queue
+
+1. **The shower START is the root** (three independent signatures now: the
+   169626 13.4-cm bias, the round-4 fit-vs-assoc null, and 12.3's
+   upstream-fragment geometry).  Round 6 = EM shower start determination:
+   probe the true-vs-reco start offset population (labels' 
+   em_start_correction exists on many), then a start re-derivation that
+   considers upstream charge along the back-projected axis — this
+   simultaneously unlocks the K16 v2 pair-line geometry, the pi0 opening
+   angles, and the mass scale.
+2. K16 v2 with pair-line (not forward-cone) collinearity, only after (1).
+3. Owner call on K16 @ 120 cm as-is (+1 exact vs 3 polluted gammas).
+4. UNDER-nosibs (105946 g2, 52044 g2) and the OVER/ABSENT singletons stay
+   on the upstream-imaging ledger.
+5. Census + ledger sentinels each round (baselines: 31 exact / 2 fakes;
+   ledger 90.9% OK).
+
+Repro (round 5):
+```
+python3 scripts/pr132_vtx_census.py work-pr132-r4off-{mcp1k,mcp2k,ncpi0,nuecc48} --tsv docs/pr/pr132-vtx-census-r4off.tsv
+python3 scripts/pr132_gamma_ledger.py --manifest98 em117-132r3flip98-manifest.tsv --manifest141 em114c-132r3flip141-manifest.tsv \
+    --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-gamma-ledger-r3flip.tsv
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r5off 0  && ...141...   # gate vs r4off: PASS 4/4
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r5cm 1 SBND_EM_COLLINEAR_DEG=10  && ...141...
+PR_JOBS=10 bash scripts/pr132_arms.sh 98 r5cmw 1 SBND_EM_COLLINEAR_DEG=10 SBND_EM_COLLINEAR_DIS=120  && ...141...
+# census + ledger per arm (docs/pr/pr132-{census,gamma-ledger}-r5cm*.tsv); movers 0 x4 both arms
 ```
