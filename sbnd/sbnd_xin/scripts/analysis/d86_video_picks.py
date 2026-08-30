@@ -37,6 +37,7 @@ import json
 import os
 import re
 import sys
+import math
 import zipfile
 from collections import OrderedDict
 
@@ -302,6 +303,34 @@ def mu_crosses_cathode(r):
     return (min(x0, x1) < -CATH_MARGIN) and (max(x0, x1) > CATH_MARGIN)
 
 
+def pio_closure(r):
+    """(recomputed mass, recomputed/reported).
+
+    m = sqrt(4.E1.E2.sin^2(theta/2)) is how the finder builds `mass`
+    (NeutrinoShowerClustering.cxx:6034), but the E's and theta it STORES are
+    not the ones it used:
+
+      * `mass` uses `local_dirs[sh]`, which is the shower's own `get_init_dir()`
+        when the shower is attached to the candidate pi0 vertex (:5964, :5978)
+        and the vertex->start vector when it was associated by angle (:5997);
+      * `kine_pio_angle` is recomputed in the fill loop (:6078-6084) from a
+        DIFFERENT rule -- a fresh 15 cm direction fit when the conversion gap
+        is < 3 cm, the vertex->start vector otherwise.
+
+    The two rules pick the same source for most rows and a different one for
+    the rest, so the reported triple reproduces the reported mass 25 times out
+    of 35 in the pi0 pool and misses by up to 20% on the others.  A pick whose
+    triple does NOT close would put a mass on screen that nobody can re-derive
+    from the numbers printed beside it, so closure is a DISPLAY gate here --
+    not a physics quality claim.
+    """
+    e1, e2, a, m = r['g1'], r['g2'], r['pio_angle'], r['pio_mass']
+    if m <= 0 or e1 <= 0 or e2 <= 0:
+        return (0.0, float('nan'))
+    rec = math.sqrt(4.0 * e1 * e2) * math.sin(math.radians(a) / 2.0)
+    return (rec, rec / m)
+
+
 def frac_exc(r):
     return r['exc'] / r['Enu'] if r['Enu'] > 0 else float('nan')
 
@@ -338,12 +367,16 @@ def good_pi0(r):
             and r['pio_vtxdis'] < PI0_VTXDIS_MAX)
 
 
+def pi0_closes(r, tol=0.005):
+    return abs(pio_closure(r)[1] - 1.0) < tol
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     rows = build()
     print(f'rows (nu_evaluated, kine row) = {len(rows)}')
 
-    cols = ['sample', 'event', 'krow', 'nkrow', 'run', 'subrun', 'numu_score',
+    cols = ['sample', 'event', 'krow', 'nkrow', 'run', 'subrun', 'rc', 'numu_score',
             'nue_score', 'cosmic_flag', 'cosmict_flag', 'event_label',
             'n_inbeam_bundle', 'nu_x', 'nu_y', 'nu_z', 'nu_len', 'Enu', 'exc',
             'exc_main', 'exc_other', 'n_exc', 'flagged', 'pio_flag', 'pio_mass',
@@ -352,6 +385,7 @@ def main():
             'wall_s', 'maxrss']
     with open(os.path.join(OUT, 'd86-features.tsv'), 'w') as f:
         f.write('\t'.join(cols + ['exc_frac', 'cathode_cross', 'mu_cathode_cross',
+                                  'pio_mass_recomputed', 'pio_mass_closure',
                                   'x_min', 'x_max', 'trk_diag', 'trk_npts',
                                   'final_state']) + '\n')
         for r in rows:
@@ -359,6 +393,7 @@ def main():
             f.write('\t'.join(str(r.get(c, '')) for c in cols) + '\t'
                     + f"{frac_exc(r):.4f}\t{int(bool(g.get('cathode_cross')))}\t"
                     + f"{int(mu_crosses_cathode(r))}\t"
+                    + f"{pio_closure(r)[0]:.2f}\t{pio_closure(r)[1]:.4f}\t"
                     + f"{g.get('xmin', ''):}\t{g.get('xmax', ''):}\t"
                     + f"{g.get('diag', ''):}\t{g.get('npts', '')}\t"
                     + f"{r.get('fstate', '')}\n")
@@ -420,13 +455,18 @@ def main():
     ncp = [r for r in p if r['n_mu'] == 0
            and r['numu_score'] is not None and r['numu_score'] < NUMU_SEL]
     print(f'  ccpi0 pool = {len(ccp)}   ncpi0 pool (mu-free + BDT agrees) = {len(ncp)}')
-    picks['ccpi0'] = take(ccp, lambda r: (abs(r['pio_mass'] - 135.0), frac_exc(r)), 2)
+    print(f'  of those, triple closes: cc {sum(map(pi0_closes, ccp))}/{len(ccp)}'
+          f'  nc {sum(map(pi0_closes, ncp))}/{len(ncp)}')
+    picks['ccpi0'] = take(ccp, lambda r: (not pi0_closes(r),
+                                          abs(r['pio_mass'] - 135.0),
+                                          frac_exc(r)), 2)
     # Two NC pi0 picks with DIFFERENT claims, because no single event has both:
     #  (a) self-consistent -- no reconstructed muon AND the numu BDT agrees;
     #  (b) from the NC pi0 SIDEBAND sample itself, muon-free, whatever the BDT
     #      says.  The sideband's only muon-free good pi0 is numu-LIKE to the
     #      BDT, and that tension is reported rather than gated away.
-    picks['ncpi0'] = take(ncp, lambda r: abs(r['pio_mass'] - 135.0), 1)
+    picks['ncpi0'] = take(ncp, lambda r: (not pi0_closes(r),
+                                          abs(r['pio_mass'] - 135.0)), 2)
     side = [r for r in p if r['sample'] == 'ncpi0' and r['n_mu'] == 0]
     picks['ncpi0_sideband'] = take(side, lambda r: abs(r['pio_mass'] - 135.0), 1)
 
@@ -488,8 +528,16 @@ def main():
         ('nuecc',          [('nuecc48', 81597), ('nuecc48', 267597)]),
         ('numucc-cathode', [('mcp2k', 283591), ('mcp1k', 313979)]),
         ('numucc',         [('mcp2k', 290718), ('mcp2k', 94293)]),
-        ('ccpi0',          [('mcp1k', 400504), ('ncpi0', 285567)]),
-        ('ncpi0',          [('mcp2k', 57709), ('ncpi0', 180801)]),
+        # pi0 picks are the CLOSING ones (see pio_closure): 400504, the earlier
+        # CC pick, reports mass 138.9 from 64.4/146.2 MeV at 73.0 deg, which
+        # recomputes to 115.4 -- unusable on screen.  It is kept in doc 86
+        # sec 1.1 as the worked example instead.
+        ('ccpi0',          [('mcp2k', 99838), ('mcp2k', 242726)]),
+        # index 2 is the NC pi0 SIDEBAND sample's only muon-free pi0; it is
+        # last and caveated (triple closes to only 0.912, numu_score +1.36,
+        # and its second photon has no conversion gap at all).
+        ('ncpi0',          [('mcp2k', 57709), ('mcp2k', 176986),
+                            ('ncpi0', 180801)]),
         ('cosmiclike',     [('mcp2k', 180698), ('mcp2k', 99563)]),
         ('multinu',        [('mcp1k', 487303), ('mcp2k', 174661)]),
         ('fail-busy',      [('nuecc48', 389538), ('mcp2k', 67868)]),
@@ -507,9 +555,12 @@ def main():
     with open(os.path.join(OUT, 'd86-final.tsv'), 'w') as f:
         f.write('\t'.join(['set', 'bee_index', 'sample', 'run', 'subrun', 'event',
                            'krow', 'nkrow', 'numu_score', 'nue_score',
-                           'cosmict_flag', 'Enu_MeV', 'excluded_MeV', 'exc_frac',
-                           'n_excluded', 'pio_mass', 'pio_g1', 'pio_g2',
-                           'pio_angle', 'pio_vtx_dis', 'nu_x', 'nu_y', 'nu_z',
+                           'cosmic_flag', 'cosmict_flag', 'Enu_MeV',
+                           'excluded_MeV', 'exc_frac',
+                           'n_excluded', 'pio_mass', 'pio_mass_recomputed',
+                           'pio_mass_closure', 'pio_g1', 'pio_g2',
+                           'pio_angle', 'pio_gap_1', 'pio_gap_2',
+                           'pio_vtx_dis', 'nu_x', 'nu_y', 'nu_z',
                            'n_nu_nodes', 'mu_cathode_cross', 'final_state']) + '\n')
         for setname, keys in FINAL.items():
             os.makedirs(OUT, exist_ok=True)
@@ -521,9 +572,12 @@ def main():
                     f.write('\t'.join(str(x) for x in [
                         setname, i, r['sample'], r['run'], r['subrun'], r['event'],
                         r['krow'], r['nkrow'], r['numu_score'], r['nue_score'],
-                        r['cosmict_flag'], f"{r['Enu']:.1f}", f"{r['exc']:.1f}",
+                        r['cosmic_flag'], r['cosmict_flag'],
+                        f"{r['Enu']:.1f}", f"{r['exc']:.1f}",
                         f'{frac_exc(r):.4f}', r['n_exc'], f"{r['pio_mass']:.1f}",
+                        f"{pio_closure(r)[0]:.1f}", f"{pio_closure(r)[1]:.4f}",
                         f"{r['g1']:.1f}", f"{r['g2']:.1f}", f"{r['pio_angle']:.1f}",
+                        f"{r['gd1']:.1f}", f"{r['gd2']:.1f}",
                         f"{r['pio_vtxdis']:.2f}", r['nu_x'], r['nu_y'], r['nu_z'],
                         r['n_nu_nodes'], int(mu_crosses_cathode(r)),
                         r.get('fstate', '')]) + '\n')
