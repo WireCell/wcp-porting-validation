@@ -548,6 +548,9 @@ done
 
 python3 scripts/analysis/d85r2_prod0830.py        # -> docs/85r2_dists/
 scripts/bee/build_d85r2_bee.sh                    # -> bee/d85r2/ (LOCAL only)
+for c in cosmiclike nuelike neither nuecc-failnue ncpi0-numupass ncpi0-nearmiss; do
+  ./upload-to-bee.sh bee/d85r2/d85r2-$c.zip        # owner-authorised 2026-08-30
+done
 ```
 
 ### 9.1 What changed
@@ -865,17 +868,25 @@ Round 1 could only report the third row through the ceiling stand-in, as
 ### 9.7 Six Bee sets, rebuilt on the new arm
 
 Same six categories as §5 and §7, recomputed — the membership changes because
-the scores do. Built by `scripts/bee/build_d85r2_bee.sh`; **the upload is a
-separate owner authorisation** and the links go in below once given.
+the scores do. Built by `scripts/bee/build_d85r2_bee.sh`, uploaded
+2026-08-30 with owner authorisation, and verified: every set returns HTTP 200
+on `event/list/` **and** its page carries exactly as many events as its pick
+list (17/17, 7/7, 5/5, 10/10, 10/10, 10/10 — a status code alone is not a
+content check here, the viewer answers 200 for an out-of-range index too).
 
-| set | definition | n |
-|---|---|---:|
-| `cosmiclike` | cosmic-tagged νμ-sample, **lowest** `numu_score`; rank order, no threshold; pool 56 of 1317 | 10 |
-| `nuelike` | νμ-sample `nu-candidate`, **highest** `nue_score`; pool 1256. Unlike round 1 these are genuinely **ordered** — 14.2, 12.6, 9.1, 6.8, 6.2, 4.9 … where the clamp put the top of this list all on 4.300936 | 10 |
-| `neither` | `nu-candidate` with `nue_score` **exactly** −15, lowest `numu_score`; pool 1170 | 10 |
-| `nuecc-failnue` | nueCC48 events **not** passing `nue_score > 7.0` — 17 of 48, and now the real cut, where round 1 could only use the ceiling superset | 17 |
-| `ncpi0-numupass` | NCπ⁰ passing `numu_score > 0.9` — 7 of 19 | 7 |
-| `ncpi0-nearmiss` | **no** NCπ⁰ event passes `cosmict_flag == 1` **or** `nue_score > 7.0` (0 of 19, as in round 1 §7.5); these are the 5 whose νe BDT filled at all | 5 |
+| set | definition | n | Bee |
+|---|---|---:|---|
+| `cosmiclike` | cosmic-tagged νμ-sample, **lowest** `numu_score`; rank order, no threshold; pool 56 of 1317 | 10 | [44ce0684](https://www.phy.bnl.gov/twister/bee/set/44ce0684-d262-475a-a094-8dee290d2803/event/list/) |
+| `nuelike` | νμ-sample `nu-candidate`, **highest** `nue_score`; pool 1256. Unlike round 1 these are genuinely **ordered** — 14.2, 12.6, 9.1, 6.8, 6.2, 4.9 … where the clamp put the top of this list all on 4.300936 | 10 | [b09e47d1](https://www.phy.bnl.gov/twister/bee/set/b09e47d1-d57d-4a68-bf2d-b5e639e90291/event/list/) |
+| `neither` | `nu-candidate` with `nue_score` **exactly** −15, lowest `numu_score`; pool 1170 | 10 | [5e61d6d9](https://www.phy.bnl.gov/twister/bee/set/5e61d6d9-886c-46ca-91bf-5730975b0260/event/list/) |
+| `nuecc-failnue` | nueCC48 events **not** passing `nue_score > 7.0` — 17 of 48, and now the real cut, where round 1 could only use the ceiling superset | 17 | [24466c30](https://www.phy.bnl.gov/twister/bee/set/24466c30-2e55-4969-aa4e-df5b58f882ac/event/list/) |
+| `ncpi0-numupass` | NCπ⁰ passing `numu_score > 0.9` — 7 of 19 | 7 | [8db552a7](https://www.phy.bnl.gov/twister/bee/set/8db552a7-b54d-4c60-a507-c158e205b127/event/list/) |
+| `ncpi0-nearmiss` | **no** NCπ⁰ event passes `cosmict_flag == 1` **or** `nue_score > 7.0` (0 of 19, as in round 1 §7.5); these are the 5 whose νe BDT filled at all | 5 | [be38c66d](https://www.phy.bnl.gov/twister/bee/set/be38c66d-5e1c-4a06-9353-093d18f46cc9/event/list/) |
+
+Bee index order is the pick-list order, recorded per set in
+`docs/85r2_dists/d85r2-<set>.tsv` with the scores, so a link can be read back
+to a row later. The `nuelike` top three (mcp2k 176533 at 14.2, 291072 at
+12.6, 75954 at 9.1) are the events the clamp reported as identical.
 
 The 17 νeCC failures split into two mechanisms, which is worth a scanner's
 time: **4** (69314, 137238, 235435, 389538) have `nue_score` = −15 — the νe
@@ -924,6 +935,7 @@ verified reachable (HTTP 200 on `event/list/` and `event/0/`).
 | summary + census | `docs/85r2_dists/d85r2-summary-prod0830.tsv`, `d85r2-numusample-census.tsv` |
 | Bee pick lists + scores | `docs/85r2_dists/d85r2-<set>.{txt,tsv}` |
 | Bee zips + index sidecars | `bee/d85r2/d85r2-<set>.{zip,index.txt,prid-map.txt}` |
+| Bee sets (uploaded 2026-08-30, owner-authorised) | `44ce0684` `b09e47d1` `5e61d6d9` `24466c30` `8db552a7` `be38c66d` — §9.7 |
 | scripts | `scripts/analysis/d85r2_prod0830.py`, `scripts/bee/build_d85r2_bee.sh` |
 | the discarded first attempt | `void-prod0830partial-<sample>` (§9.1.1) — delete when the round is closed |
 
