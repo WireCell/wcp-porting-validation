@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1+2 CLOSED (2026-08-30). Fudge 0.84 + K3=20 SBND PRODUCTION ON; K1/K2/K4/K5 + round-2 K7-K11 DEFAULT OFF, measured; K7+K8 (track-gamma rescue) recommended for the next flip (sec 9). Round 1 = secs 1-8; round 2 = sec 9.**
+**Status: rounds 1+2+3 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 (track-gamma rescue) + K3=28 SBND PRODUCTION ON; K1/K2/K4/K5/K9/K10/K11 + round-3 K12 DEFAULT OFF, measured; over-merge adjudicated UPSTREAM by the substructure probe. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -40,6 +40,25 @@ bash scripts/pr132_r2_manifests.sh r2off   # (r2resc r2o5 r2p2)
 python3 scripts/pr132_pi0_census.py --manifest98 em117-132r2off98-manifest.tsv --manifest141 em114c-132r2off141-manifest.tsv \
     --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r2off.tsv   # (--offset 5 on r2o5)
 python3 scripts/pr90_movers.py work-pr132-r2off-$s work-pr132-r2resc-$s --tags vtx105   # 0 movers x4; same vs r2p2
+```
+
+Round 3 (sec 10):
+```
+# arms (merged-dir convention as round 2); binary = toolkit round-3 HEAD (K12 + substruct probe)
+PR_JOBS=16 bash scripts/pr132_arms.sh 98 r3off 0    && PR_JOBS=16 bash scripts/pr132_arms.sh 141 r3off 0
+PR_JOBS=16 bash scripts/pr132_arms.sh 98 r3flip 1 SBND_PI0_READMIT_RETYPED=1 SBND_PI0_ADMIT_TYPE3=1 SBND_PI0_ATTACH_MIN_MEV=28  && ...141...
+PR_JOBS=10 bash scripts/pr132_arms.sh 98 r3cm 1 SBND_PI0_READMIT_RETYPED=1 SBND_PI0_ADMIT_TYPE3=1 SBND_PI0_ATTACH_MIN_MEV=28 SBND_PI0_COLLINEAR_DEG=20  && ...141...
+PR_JOBS=6  bash scripts/pr132_arms.sh dbg98 r3sub 1 SBND_PI0_READMIT_RETYPED=1 SBND_PI0_ADMIT_TYPE3=1 SBND_PI0_ATTACH_MIN_MEV=28 WCT_PI0_SUBSTRUCT_DEBUG=1  && ...dbg141... (+ r3sub2 = evt 281567 alone)
+# OFF gate (K12 + substruct-probe byte-neutrality)
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr85_hash_gate.py work-pr132-r2off-$s work-pr132-r3off-$s; done  # rc=0 x4, 478 archives
+# census + movers (baseline = the r2off TSV)
+bash scripts/pr132_r2_manifests.sh r3flip   # (r3cm)
+python3 scripts/pr132_pi0_census.py --manifest98 em117-132r3flip98-manifest.tsv --manifest141 em114c-132r3flip141-manifest.tsv \
+    --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r3flip.tsv
+python3 scripts/pr90_movers.py work-pr132-r2off-$s work-pr132-r3flip-$s --tags vtx105   # 0 movers x4; same r3flip vs r3cm
+# flip-equivalence (post-flip cfg, NO env)
+PR_JOBS=20 bash scripts/pr132_arms.sh 98 r3flipchk 0 && bash scripts/pr132_arms.sh 141 r3flipchk 0
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr85_hash_gate.py work-pr132-r3flip-$s work-pr132-r3flipchk-$s; done
 ```
 
 # sec 2 -- baseline re-point at the pr/131 production point (toolkit 95346dc5)
@@ -550,3 +569,167 @@ mass-window-free; the rescue knobs enlarge its candidate pool (flag=0 events
 84 -> 12 on r2resc), a documented mass-blind drift.  The r2 arms hold BOTH
 manifests' events in one dir per sample (`work-pr132-r2<tag>-<sample>`);
 census/gates are manifest-driven so the merge is inert.
+
+# 10. Round 3 — the K7+K8+K3=28 production flip, K12 measured, over-merge adjudicated upstream (2026-08-30)
+
+Owner order, verbatim: *"Let's execute according to your recommendations '1.
+Flip K7+K8 (the track-γ rescue) together with a K3 bump to 28–30 …'"* — the
+full round-2 recommendation list (sec 9.10), with *"please continue use the
+metric to track improvements."*  Executed here: item 1 (the flip, measured
+then shipped), item 3 (the virtual collinear merge, implemented + measured),
+item 4 (the over-merge substructure probe, run and adjudicated), item 6 (the
+census sentinel, run on every arm).  Item 2 (offset-5) and the round-2 Bee
+looks remain owner-adjudication items; item 5 (path-2 revival) stays parked
+for a sample with reachable NC π⁰.
+
+## 10.1 What ships
+
+- **`pi0_readmit_retyped = true` + `pi0_admit_type3 = true` +
+  `pi0_attached_partner_min_mev = 28` SBND PRODUCTION ON**
+  (`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`).  28 is the safe end
+  of the owner's 28–30 range: it kills the K7-regenerated fake 116962
+  (partner 27.0 MeV) and the three round-2 fake-topology survivors
+  54095/76350/268784 (26.1/20.5/22.0 MeV) while keeping 76346's
+  partial-group partner (29.6) and 176502 (28.7).  30 would also kill those
+  two — that residual pair stays the owner Bee adjudication item.
+- **K12 `pi0_collinear_merge_deg` DEFAULT OFF** (C++ 0 = off), implemented
+  per the sec 9.9 design and **measured net-negative** (sec 10.3).
+- **`WCT_PI0_SUBSTRUCT_DEBUG`**, the over-merge substructure tape
+  (byte-neutral, stderr only): PCA two-axis split of every >300 MeV shower's
+  associate-points cloud, count-weighted split energies, implied two-gamma
+  mass (sec 10.4).
+
+## 10.2 The flip, measured (`r3flip` = K7+K8 via env + K3=28)
+
+Census vs the r2off baseline (26 exact / 13 partial / 2 none / 25 no-group;
+5 fakes; 64 groups; 26/109 rescan coverage), same 66-π⁰ denominator,
+`--fudge 0.84`:
+
+| metric | r2off | r3flip |
+|---|---|---|
+| exact | 26 (39.4%) | **31 (47.0%)** |
+| partial | 13 | **16** |
+| none / no-group | 2 / 25 | 1 / 18 |
+| downgrades | — | **0** |
+| nueCC-fake topologies (sec E) | 5 | **2** (76346 @29.6, 176502 @28.7) |
+| accepted groups | 64 | 82 |
+| rescan coverage | 26/109 | 32/109 |
+| vertex movers (vtx105, x4 samples) | — | **0, 0 ADVERSE** |
+
+Upgrades, all eight: 169626, 47212 (none→exact), 285567, 506746, 392901 →
+exact; 486907, 347824, 52044 → partial.  47212's γ2 is the K8 (conn-type-3
+pool) specimen; the rest are the K7 readmissions with accept-time EM
+re-stamp.  486907 — attributed to K9 in the round-2 r2resc arm — arrives
+without K9: the crumb knob stays OFF with nothing lost.  T_KINE drift
+(mass-blind, documented): kine_pio_flag 1/2/0 = 152/3/84 → 202/2/35.
+
+**Gates.**  OFF gate: `r3off` (round-3 binary, no env, pre-flip cfg) vs
+`r2off` — **PASS 4/4 dirs, 478/478 archives byte-identical** (132 mcp1k +
+212 mcp2k + 38 ncpi0 + 96 nuecc48; the merged dirs hold both manifests'
+events, so 4 gates cover all 239) — proving K12 + both probes byte-neutral
+off.  Flip-equivalence gate: `r3flipchk` (post-flip cfg, NO env) vs
+`r3flip` — result quoted in sec 10.5.  Freshness proof done;
+`wcdoctest-clus` 2556/2556 (incl. the K12 default-lock row).
+Compiled-config proofs: r3off per-event JSON has NO `pi0_collinear_merge_deg`
+key; r3cm per-event JSON carries `pi0_collinear_merge_deg: 20`,
+`pi0_readmit_retyped/admit_type3: true`, `pi0_attached_partner_min_mev: 28`.
+
+## 10.3 K12, the virtual collinear merge — implemented, measured, dead in v1 form
+
+Implementation (sec 9.9 idea 1, `id_pi0_with_vertex`): at each candidate
+vertex the detached (conn-type≠1) pool is greedily re-clustered leading-first;
+fragments within the vertex-ray cone are summed into the leading fragment for
+the pair-mass computation only; on ACCEPT the fragments are truly absorbed
+(`add_shower` + kinematics + `update_shower_maps`, the P2 precedent) and
+their stale pairings retired.  Attached showers neither host nor get
+absorbed (the primary-electron guard); the K3 floor still tests the leading
+fragment's own charge.
+
+Measurement (`r3cm` = r3flip env + 20°), census vs r3flip:
+
+| event | move | probe attribution |
+|---|---|---|
+| 284235 | exact → **no-group** | a 9.2° merge added a 14.9 MeV crumb to the true γ2 (84.6→99.4 MeV), pushing the pair to m=160.5 — 0.5 MeV past the window ceiling |
+| 399118 | exact → partial | a 9.5° merge of 61033 (22.6 MeV) into 16016; the accepted m=114.6 group no longer matches the label pair |
+| 269774 | partial → no-group | 11–13.5° merges reshuffle the pool |
+| 103798 | no-group → partial | gains need 13.6–18.8° merges |
+| 409634 | no-group → partial | gain needs the 17.2° merge |
+
+Net −2 exact, +1 partial — and the geometry is unfixable by tuning: **the
+kills fire at 9.2–13.5°, the gains need 17.2–18.8°** — every cone admitting
+the gains admits the kills.  Worse, the design's own motivating specimen
+54341 is NOT rescued: the merge fires (γ2 fragment system reaches 281 MeV)
+but the pair still win-rejects at m≈44 — the missing charge is not in
+detached siblings within any cone.  0 movers (r3flip vs r3cm, x4).
+**Verdict: K12 stays DEFAULT OFF.**  A v2 would have to be acceptance-aware
+(merge only where unmerged pairing produced NO in-window pair, protecting
+284235/399118) — but with both v1 gains landing only at partial and the
+target specimen unmoved, that refinement is queued behind better fronts
+(sec 10.6).
+
+## 10.4 The over-merge substructure probe: recovery at the π⁰ level is (almost) not there
+
+Tape over the dbg subsets + 281567 (r3sub/r3sub2 arms, flip operating
+point): 13 showers >300 MeV in 10 events.  Selected rows (ax = split axis,
+ev01 = eigenvalue ratio λ2/λ1, m = implied two-gamma mass in MeV):
+
+| event | shower E (MeV) | ev01 | best split m | reading |
+|---|---|---|---|---|
+| 37112 (the canonical over-merge, hand π⁰ miss) | 759.4 | 0.031 | 68.7 @10.5° | geometrically collinear — a split cannot reach the window |
+| 176502 (owner-scan over-merge) | 2391.2 | 0.134 | 204.1 / 356.1 | transverse structure exists but count-weighted split misses |
+| 281567 (owner-scan over-merge) | 623.2 | 0.187 | **114.3 @21.4°** | the only over-merge candidate near the window |
+| 415278 | 1239.5 | 0.382 | 210.8 | substructure real, masses wrong |
+| true single γs (169626, 47212, 506746, 342199, 359980, 142421) | 398–989 | 0.03–0.10 | 13–95 | probe correctly reports no π⁰-like substructure |
+
+**Verdict: of the three known over-merge events, at most one (281567) is
+even a candidate for π⁰-level recovery; the canonical 37112 is
+irrecoverable by geometric splitting.**  The sec 9.9 prediction holds: the
+defect lives upstream in shower building (the pr/123–125 over-clustering
+threads).  No splitting knob will be designed; the probe stays as the
+instrument for re-checking after any upstream fix.
+
+## 10.5 Flip-equivalence and ship
+
+`r3flipchk` (post-flip config, no env) hash-gated vs `r3flip` per sample:
+**PASS 4/4 — 478/478 archives byte-identical** (132 mcp1k + 212 mcp2k +
+38 ncpi0 + 96 nuecc48; logs `/home/xqian/tmp/pr132r3-gate-flipchk-*.log`).
+The production flip is exactly the validated operating point.  Sentinel baseline for round 4 moves to the r3flip
+manifests: **31 exact / 2 fakes / 82 groups / 32-of-109 rescan coverage**
+(TSV `docs/pr/pr132-census-r3flip.tsv`).
+
+## 10.6 Recommendations and the round-4 queue
+
+| item | recommendation |
+|---|---|
+| K7+K8+K3=28 | SHIPPED this round (sec 10.2) |
+| residual fake pair (76346 @29.6, 176502 @28.7) | K3 28→30 kills both; 30 also touches 76346's partial group — one owner Bee look settles it |
+| K1 offset 5 | unchanged trade (+56243 +103798 / −283713 −506114), owner Bee call |
+| K12 collinear merge | measured dead in v1 (sec 10.3); acceptance-aware v2 only if fragmentation stays the top blocker after the upstream threads |
+| over-merge | CLOSED at the π⁰ level (sec 10.4): upstream thread owns it; re-probe after any shower-building fix |
+| fragmentation (the 15/25 class) | the honest reading after 10.3+10.4: most of the miss population is upstream clustering shape, not pairing arithmetic — route to the pr/123–125 over/under-clustering threads with the π⁰ census as their new acceptance metric |
+| path-2 partner floor / NC revival | parked until a sample with reachable NC π⁰ (sec 9.8) |
+| census sentinel | every round: `pr132_pi0_census.py --fudge 0.84` vs the r3flip manifests, baseline 31 exact / 2 fakes / 82 groups |
+| pairing pass rows 41–109 | still the cheap truth-set growth if round 4 needs statistics |
+
+## 10.7 The owner Bee package (uploaded 2026-08-30, owner-requested)
+
+`bee/pr132r3/` — annotated indexes `pr132r3.index.txt` /
+`pr132r3-off5.index.txt` carry the per-event evidence.
+
+- Flip A/B (13 events; idx 0-1 = the K3 28→30 adjudication pair, 2-4 = the
+  K3=28 fake kills, 5-9 = the rescue exacts, 10-12 = the partial gains):
+  OFF <https://www.phy.bnl.gov/twister/bee/set/0b40fe6e-ea4e-42d1-b89c-ad84bc65b128/event/list/>
+  ON <https://www.phy.bnl.gov/twister/bee/set/109e5d8e-b900-43d2-8e4c-063714d61f83/event/list/>
+- Offset-5 adjudication (5 events; 283713/506114 lost, 292524 survives,
+  56243/103798 gained):
+  A(off10) <https://www.phy.bnl.gov/twister/bee/set/a6bcbcdd-eb9c-4362-b9dc-ce0a2d1bbbf3/event/list/>
+  B(off5) <https://www.phy.bnl.gov/twister/bee/set/bd9e48fb-238a-446e-bcee-44ccc65254d3/event/list/>
+
+Set contents verified post-upload against the event lists (all 13 + all 5
+present).
+
+**What is NOT claimed.**  Same round-2 caveats: overlay gains are agreement
+with the model pairing pass (labelsrc-separated); T_KINE stays
+mass-window-free (the flip enlarges its candidate pool, a documented
+mass-blind drift); the r3 arms use the merged-dir convention (98/141
+disjoint, census/gates manifest-driven).

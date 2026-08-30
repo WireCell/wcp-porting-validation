@@ -1,0 +1,11 @@
+# doc pr/132 round 3 offset-5 adjudication index -- A(off10) a6bcbcdd-eb9c-4362-b9dc-ce0a2d1bbbf3 / B(off5) bd9e48fb-238a-446e-bcee-44ccc65254d3
+# A list: https://www.phy.bnl.gov/twister/bee/set/a6bcbcdd-eb9c-4362-b9dc-ce0a2d1bbbf3/event/list/
+# B list: https://www.phy.bnl.gov/twister/bee/set/bd9e48fb-238a-446e-bcee-44ccc65254d3/event/list/
+# A = work-pr132-r2off-* (production offset 10, window (100,160))
+# B = work-pr132-r2o5-*  (K1 offset 5, window (105,165)) -- owner physics call, NOT shipped
+# bee_idx	event	status
+0	283713	LOST at offset 5: exact -> no-group; scaled mass 90 vs the new 105 floor (the round-1-named floor casualty)
+1	506114	LOST at offset 5: partial -> no-group; hand mass 158.9
+2	292524	SURVIVES at offset 5: exact both arms, hand mass 114.3 (round 1's by-1-MeV casualty at offset 0 -- offset 5 keeps it)
+3	56243	GAINED at offset 5: no-group -> exact; hand mass 165.9 enters the raised (105,165) window
+4	103798	GAINED at offset 5: no-group -> exact; scaled mass 71 -- rescued by the offset-5 pairing choice upstream of the window
