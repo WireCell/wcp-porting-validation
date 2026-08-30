@@ -1,5 +1,17 @@
 # pr/130 item 4 — owner rulings on the q_miss whole-object scan
 
+**STATUS: PARKED 2026-08-29 by the owner ("we will move on for now, may come
+back to this later"). Nothing is in flight; nothing is half-shipped.**
+
+One-paragraph state of play: the owner's hand scan approved **17 of 17** merges,
+so the under-clustering is a **real defect** and not a labelling convention.
+Three candidate fixes were then built and measured, and **all three are dead** —
+loosening the F12 walk guard (Part 3), walk ordering / `used_segments`
+contention (Part 9, 0 of 78), and cross-cluster threshold / arbitration /
+owned-skip (Part 10). What survives is one **structural** lead, stated in
+Part 11 with the exact next measurement. Two default-OFF probes are **shipped in
+the tree**, so resuming costs no rebuild of instruments.
+
 Bee set `8daa1825-f386-4ba2-9094-61577e075f9d`
 (`bee/pr130r4/pr130r4-qmiss.index.txt`). One row per adjudicated object.
 Mechanism, ranking and repro: `pr130-qmiss-mechanism.md`.
@@ -211,24 +223,27 @@ the out question explicitly.
 - **The larger prize is the vertex** (Result 2): 20.5% of this pool is
   unscannable, and no shower work can recover it.
 
-## Open — awaiting owner
+## Question sheet — final state
 
-| idx | event | objects | q_out | status |
-|---|---|---|---|---|
-| 1 | 122660 | 47050, 54071, 53070 | 6.868e6 | **next up** — the other decisive one |
-| 2 | 54332 | 7 objects → 16014, 122091 | 3.648e6 | open |
-| 3 | 181050 | 68031, 61021 | 1.768e6 | open |
-| 4 | 105946 | 53030, 54032, 39013 | 1.530e6 | open |
-| 5 | 21073 | 31023 (PARTIAL 0.64) | 1.423e6 | open |
-| 6 | 342199 | 25109 (PARTIAL 0.88) | 1.318e6 | open |
-| 7 | 76346 | 6 objects, all WHOLE | 1.234e6 | open |
-| 8 | 469665 | 66042, 62073, 68052 | 1.178e6 | open |
-| 9 | 54453 | 58051 (PARTIAL 0.17), 1 NOHOLDER | 1.087e6 | open |
+All 32 questions in `pr130-qmiss-questions.txt` are resolved one way or the
+other; none is still waiting on the owner.
 
-idx 1 matters most next: if 122660 also merges, two of two decisive events say
-the class is real and a merge-side round is justified. If it does not, the
-separator between idx 0 and idx 1 is the predicate, and finding it is the
-deliverable rather than a knob.
+| idx | event | outcome |
+|---|---|---|
+| 0 | 463565 | **MERGE all four** (verbal ruling, Q1–Q4) |
+| 1 | 122660 | **MERGE**, Q5–Q7 |
+| 3 | 181050 | **MERGE**, Q15–Q16 |
+| 4 | 105946 | **MERGE**, Q17–Q19 |
+| 5 | 21073 | **MERGE**, Q20 |
+| 6 | 342199 | **MERGE**, Q21 |
+| 8 | 469665 | **MERGE**, Q28–Q30 |
+| 2 | 54332 | **not scannable** — ν vertex wrong (Q8–Q14) |
+| 7 | 76346 | **not scannable** — ν vertex wrong (Q22–Q27) |
+| 9 | 54453 | **not scannable** — ν vertex wrong (Q31–Q32) |
+
+17 of 17 answerable = merge. The 15 unanswerable questions are the three
+wrong-vertex events; the owner has said explicitly **not** to chase the vertex
+for now.
 
 ## Part 8 — what is left to try, measured
 
@@ -439,3 +454,68 @@ enumeration itself, and it is the only lever this round has not falsified.
 
 **Both probes are default-off and shipped**, so the next round starts with the
 instrument already in the tree rather than rebuilding it.
+
+## Part 11 — picking this up later
+
+Everything below is what a future session needs and nothing it can re-derive
+cheaply.
+
+### What is settled and must not be re-litigated
+
+| claim | evidence |
+|---|---|
+| the under-clustering is real, not a labelling artifact | owner scan **17/17 merge**, tag `emscan-0829-pr130qmiss` |
+| no **geometric** merge predicate exists | approved merges span d_start **9.4–182.8 cm**, angle **9.4–156.6°** |
+| the F12 walk guard cannot be loosened | 69 distinct declines / **2.852e8** to get 4 wrong; two 16.5 cm pdg-13 declines with opposite verdicts |
+| walk **ordering** is not the mechanism | contention probe: **0 of 78**, 100% UNREACHED |
+| it is **cross-cluster acquisition** | 96.2% of the missing charge is in clusters the shower does not hold at all |
+| cross-cluster **thresholds** cannot reach it | the 21 evaluated rejections fail `angle_v2 > 30` at **37.9–124.5°** |
+| cross-cluster **arbitration** is not the gap | `shower_pass4_best_owner` has been SBND-ON since 2026-08-28; only 0.7% is an owned-skip |
+
+### The one live lead
+
+**Which showers `shower_clustering_with_nv_from_vertices` iterates as
+cross-cluster absorbers.** Four of the seven target showers — 122660/9110,
+181050/15006, 463565/13001, 469665/15003 — emit **no** `SHOWER_XCLUS` lines at
+all and carry **79% of the charge**; on 463565 the loop runs zero times over
+zero showers. They were never offered the chance, so no predicate, ordering rule
+or tie-break at any existing seat can reach them.
+
+**Next measurement**, and it is a read not a knob: instrument the enumeration
+itself — which showers reach that pass, and why those four do not. Only once
+that is known does a change have a defined shape. Note it will not be a local
+default-OFF guard like everything in pr/123→pr/130; expect a full 239-event gate.
+
+### The instruments, already in the tree
+
+| probe | env var | site |
+|---|---|---|
+| walk contention | `WCT_SHOWER_BLOCKED_DEBUG` | `PRShower.cxx` flood-fill, toolkit `0cccb5f5` |
+| cross-cluster REJECT / OWNED / RIVAL | `WCT_SHOWER_XCLUS_DEBUG` | `NeutrinoShowerClustering.cxx`, toolkit `deca3467` |
+
+Both default-OFF and byte-identical with the env unset (gate PASS vs
+`work-pr130r1-bon{,141}-*`, archives and calib dumps).
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_blocked_probe.sh gate    # byte-identity gate, env unset
+./scripts/pr130_blocked_probe.sh probe   # BLOCKED tape  -> work-pr130r1-blkon-*
+./scripts/pr130_blocked_probe.sh xclus   # XCLUS tape    -> work-pr130r1-xcon-*
+scripts/pr130_blocked_census.py > docs/pr/pr130-blocked-census.txt
+scripts/pr130_xclus_census.py   > docs/pr/pr130-xclus-census.txt
+```
+
+### Records not to overwrite (M13)
+
+`em_labels/emscan-0829-pr130qmiss/` (9 files — the owner's own scan, the only
+one authored by him rather than an agent), `bee/pr130r4/`, and the
+`work-pr130r1-{blkon,blkgate,xcon,xgate}-*` arms.
+
+### Two things still attached to any future merge-side change
+
+1. **The 463565 π⁰ warning** (top of this doc): the merge is licensed by
+   inseparability, not identity — the owner said there *should* be two showers.
+   Fixing the energy can cost the two-gamma separation. Gate on a π⁰ metric,
+   not only on q_extra.
+2. **The q_extra caveat**: this scan asked only what should be merged *in*, so
+   the 4.661e6 → 0 collapse is **not** evidence that nothing is over-clustered.
