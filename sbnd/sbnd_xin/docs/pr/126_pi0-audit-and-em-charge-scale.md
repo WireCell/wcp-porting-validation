@@ -1,6 +1,11 @@
 # doc pr/126 — π⁰ reconstruction audit (toolkit vs WCP prototype) and the EM charge-scale calibration from the 98+141 hand scans
 
 **Status: round 2 (2026-08-29). Audit + measurement only.**
+**Implemented by doc pr/132** (same day): `kine_shower_fudge_factor` 0.80→0.84
+SBND PRODUCTION ON, five default-OFF finder knobs, the WCT_PI0_PAIR_DEBUG
+probe, and the §4h item-0 pairing pass (16 new pairs). §4g's recommendation is
+now in force; see `132_pi0-reco-round1.md` for the flip evidence and the
+refreshed peak (134.1 MeV at 0.84).
 Round 2 folds in two owner corrections: **align the EM scale to the PEAK of the
 π⁰ mass distribution, not its mean/median** (§4g — this *changes* round 1's
 recommendation from "no flip" to "flip to ≈0.84"), and **say what the other

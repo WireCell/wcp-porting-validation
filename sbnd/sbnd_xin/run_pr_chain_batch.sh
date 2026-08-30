@@ -1688,6 +1688,15 @@ fi
 # job default 0 = no test = byte-identical.
 [ -n "${SBND_KINE_GF_IMPACT:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_impact=${SBND_KINE_GF_IMPACT}")
 [ -n "${SBND_KINE_GF_MISS_DEG:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_miss_deg=${SBND_KINE_GF_MISS_DEG}")
+# doc pr/132: the pi0 round.  EMPTY = no TLA = the job default = byte-identical.
+# _FUDGE overrides the EM charge scale (C++ default 0.8, jsonnet may flip it);
+# the five finder knobs default to the legacy hard-coded constants.
+[ -n "${SBND_KINE_SHOWER_FUDGE:-}" ] && CATH_TLA+=(--tla-code "kine_shower_fudge_factor=${SBND_KINE_SHOWER_FUDGE}")
+[ -n "${SBND_PI0_MASS_OFFSET:-}" ] && CATH_TLA+=(--tla-code "pi0_mass_offset=${SBND_PI0_MASS_OFFSET}")
+[ -n "${SBND_PI0_ASSOC_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_assoc_angle_deg=${SBND_PI0_ASSOC_ANGLE}")
+[ -n "${SBND_PI0_ATTACH_MIN_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_attached_partner_min_mev=${SBND_PI0_ATTACH_MIN_MEV}")
+[ -n "${SBND_PI0_NV_ALLOW_TYPE2:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_allow_type2=$([ "${SBND_PI0_NV_ALLOW_TYPE2}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_NV_MAX_PRONGS:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_prongs=${SBND_PI0_NV_MAX_PRONGS}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
