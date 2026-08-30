@@ -206,3 +206,47 @@ per gamma.  The two-shower event must first BE two showers.
    merge same-side shower fragments (the six->two problem) before rays are
    drawn — in-scope EM clustering, but design input wanted on the merge
    criterion (shared seat vertex? axis co-pointing?).
+
+## 10. K21 v2 — the end-agnostic back-projection round (owner: "go ahead") (toolkit `1e6009a3`)
+
+Development record (four builds, each smoke- or arm-measured):
+
+1. **v2.0** — end-agnostic rays (start- AND end-anchored 15 cm local dirs,
+   2x2 orientation combos), miss-first ranking, NO mass window, floor knob
+   `pi0_nc_floor_mev` (arm value 5).  Smoke: 76346 accepted the TRUE pair
+   14059(END-flipped) x 49048 at miss 0.6, vertex 1.3 cm from the owner's
+   hand vertex.  49048 (75 MeV, ct=3, 2.3 cm from the label gamma2 start)
+   is the current-era reco of the "5 MeV" label gamma2.
+2. **veto v1 (seat-pointer) — WRONG**: ct2/ct3 showers all seat at the main
+   vertex object, so the co-seat veto killed 14059 x 49048 and with it the
+   76346 rescue (full k21v2 arm: 76346 no fire).  Replaced by the
+   START-POINT veto (< 0.5 cm), which kills exactly the fragment self-pair
+   class (116962's 21072 x 21073, co-started at the wrong main).
+3. **k21v3 arm (no window)** — census/ledger flat but 8 fires with 2
+   ADVERSE: 21073 moved 2.97 cm OFF A DEAD-ON click; 282979 21.7 cm further
+   off.  dbg7 tape: every collateral fire has a grossly non-pi0 mass
+   (47.5/59.3/66.4/253.6/503.0) while both owner rescues sit at 121.5/125.8.
+4. **v2.1 = window restored as the sanity gate** (ranking stays miss-first
+   among in-window combos).  `k21v4` arm: fires EXACTLY {76346, 116962};
+   census 32 exact, ledger 90.2%, movers byte-flat, zero ADVERSE.
+   OFF gates off2/off3/off4 vs flipchk each PASS 4/4 (478/478).
+
+**76346 result** (`docs/pr/pr133-vtx-76346-v2.png`): vertex
+(-114.1,-60.2,330.4), **1.3 cm from the owner's hand back-projected vertex**,
+59.8 cm from the old wrong seat.  **116962**: fires with 21072 x 55030
+(m=125.8), vertex +12 cm — the true far vertex remains blocked by the
+six-fragment gamma clustering (sec 9); fragment merge = next front.
+
+Bee for owner scan: OFF `a375dcd4-6ea1-40db-b9a3-2d3e5581ff23` / ON
+`b4b84201-91f9-4f1c-ab11-e9e5d9107a71` (`bee/pr133k21v2/`): 76346, 116962,
+then unchanged-proofs 21073 (dead-on click preserved), 406125, 506746,
+486687.
+
+Repro:
+```
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 off4 0 && ...141...   # gate vs flipchk: PASS 4/4
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 k21v4 0 SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15 SBND_PI0_NC_FLOOR=5 && ...141...
+python3 scripts/pr132_pi0_census.py --manifest98 em117-133k21v498-manifest.tsv --manifest141 em114c-133k21v4141-manifest.tsv \
+    --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr133-census-k21v4.tsv
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr90_movers.py work-pr133-off4-$s work-pr133-k21v4-$s --tags vtx105; done
+```

@@ -1724,6 +1724,8 @@ fi
 [ -n "${SBND_PI0_ADMIT_MU:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_muon_showers=$([ "${SBND_PI0_ADMIT_MU}" = 0 ] && echo false || echo true)")
 # doc pr/133: K21 owner NC signature angle (deg) for the bp proposer.  EMPTY = no TLA = C++ default 0 (v3 gate).
 [ -n "${SBND_PI0_NC_SIG_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_sig_angle_deg=${SBND_PI0_NC_SIG_ANGLE}")
+# doc pr/133: K21 v2 signature-mode partner floor (MeV).  EMPTY = no TLA = C++ default 0 (legacy 20).
+[ -n "${SBND_PI0_NC_FLOOR:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_floor_mev=${SBND_PI0_NC_FLOOR}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
