@@ -288,3 +288,78 @@ The other 20 condemned segments (8.54e6, 49.3%) were **never declined** — no
 guard looked at them and said no. `pass4_angle` placed 14 of them
 (286655 at 137–150°, 278420 at 98–125 cm). Those still need the admission-side
 work, and sticky declines will not touch them.
+
+---
+
+# Part 3 — blast radius of the overruled-guard pattern (all 239 events)
+
+**Status: MEASURED, no new runs.** Part 2's finding needed sizing before a
+knob could be designed. The peer session's item-1 probe arms already carry the
+absorb census over both standard manifests, so this costs nothing.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_launder_scan.py > docs/pr/pr130-launder-scan.txt
+```
+
+Matching rule: a guard's decline line does not name the shower, but it is
+emitted inside a candidate block whose preceding `SHOWER_ABSORB` line carries
+`shower_start_seg=`, so the scan tracks that context and pairs
+`(segment, shower)`. A decline for shower A followed by an admit into shower B
+is a different phenomenon and is reported separately, not folded in.
+
+## Result — 10 occurrences over 6 of 239 events
+
+| event | seg | shower | declined by | admitted by |
+|---|---|---|---|---|
+| 100222 | 14003 | 113236 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 137238 | 145067 | 143056 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 175896 | 66041 | 17044 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 176502 | 20008 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 176502 | 20013 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 176502 | 109123 | 109119 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 176502 | 109141 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 396222 | 9080 | 9059 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 396222 | 9098 | 9059 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 415278 | 24072 | 23012 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+
+Plus **2** cases where the decline was for one shower and the admit into
+another (415278 segs 23022, 23047) — counted separately because "a different
+shower took it" is not obviously the same bug.
+
+**Exactly two declining guards and exactly two admitting sites, perfectly
+paired**: `cone_absorb_guard` is only ever overruled by `pass4_proximity`
+(4/4), `pass3_cone_guard` only ever by `pass3_cluster_map` (6/6). That is a
+much narrower fix than "make declines sticky everywhere" — two call sites
+need to consult two decisions.
+
+## Two events that need the owner before anything ships
+
+- **137238** is pr/93 r4's own sentinel event (`sccc demote+bridge`, doc
+  pr/127). A fix here changes an event the registry asserts on, so the
+  sentinel has to be re-measured in the same round, not after.
+- **415278** is the pr/124 declined trade-off — already adjudicated and
+  crossed off the q_miss pool. Changing it re-opens a settled item.
+
+Neither blocks the knob (default OFF), but both mean the ON arm's Bee A/B
+must put those two events in front of the owner explicitly.
+
+## Where this leaves the round
+
+Measured, in order:
+
+1. Over-clustering is the larger half of the 141-set's affirmative charge
+   error (56.3%), on a label set whose marking habit is stated (Part 1).
+2. The pool is 22 segments in 10 events, top-4 = 73.7% (Part 1).
+3. The label store's absorber attribution holds against a live run, 20/22
+   (Part 2).
+4. **Half the pool's charge (50.7%) is segments a guard already refused**
+   (Part 2).
+5. That pattern is 10 objects in 6 of 239 events, through exactly two
+   guard→site pairs (Part 3).
+
+Not done: the knob, its gate, and the Bee A/B. `shower_absorb_decline_sticky`
+now has a measured blast radius to be checked against, which is what was
+missing when Part 2 proposed it.

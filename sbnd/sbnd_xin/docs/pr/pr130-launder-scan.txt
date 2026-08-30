@@ -1,0 +1,20 @@
+scanned 239 event logs from work-pr130r1-probe98-*, work-pr130r1-probe141-*
+
+DECLINED THEN ADMITTED INTO THE SAME SHOWER: 10 (over 6 events)
+   evt 100222   seg 14003    shower 113236    [pr93 cone_absorb_guard] -> [pass4_proximity]
+   evt 137238   seg 145067   shower 143056    [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 175896   seg 66041    shower 17044     [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 176502   seg 20008    shower 109119    [pr93 cone_absorb_guard] -> [pass4_proximity]
+   evt 176502   seg 20013    shower 109119    [pr93 cone_absorb_guard] -> [pass4_proximity]
+   evt 176502   seg 109123   shower 109119    [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 176502   seg 109141   shower 109119    [pr93 cone_absorb_guard] -> [pass4_proximity]
+   evt 396222   seg 9080     shower 9059      [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 396222   seg 9098     shower 9059      [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 415278   seg 24072    shower 23012     [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+
+  by declining guard: {'pr93 cone_absorb_guard': 4, 'pr124 pass3_cone_guard': 6}
+  by admitting site : {'pass4_proximity': 4, 'pass3_cluster_map': 6}
+
+DECLINED FOR ONE SHOWER, ADMITTED INTO ANOTHER: 2  (counted separately)
+   evt 415278   seg 23022    shower 23037 -> 23012  [pr124 pass3_cone_guard] -> [pass3_cluster_map]
+   evt 415278   seg 23047    shower 23037 -> 23012  [pr124 pass3_cone_guard] -> [pass3_cluster_map]
