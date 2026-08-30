@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1-6 CLOSED (2026-08-30). Round 6 (sec 13): the start ledger (5 gammas 9-51 cm deep, 2 over-extended), K17 back-extension DEFAULT OFF, measured dead in v1 (swallowed partner gammas, 31->21 exact) and v2 (continuation-guarded, still net -5); the K12/K16/K17 synthesis: the fragment class is locally degenerate with partner gammas -- geometry alone cannot separate them. Production stands at 31 exact. Original: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
+**Status: rounds 1-7 CLOSED (2026-08-30). Round 7 (sec 14): K18 acceptance-aware merge DEFAULT OFF, measured dead in v1 (crumb-host mass fabrication; 169626 exact->none via without-vertex displacement) and v2 (subordination-guarded: 13 fires = 7 true-pair fusions + pollutions; ledger 90.9->87.1% OK, 0 healed). The mass constraint does NOT break the fragment/partner degeneracy: the below-window population is ANGLE-compressed (103798: charges 0.96/1.02, mass 74), not charge-starved. Production stands at 31 exact / 90.9% OK. Original: rounds 1-6 CLOSED (2026-08-30). Round 6 (sec 13): the start ledger (5 gammas 9-51 cm deep, 2 over-extended), K17 back-extension DEFAULT OFF, measured dead in v1 (swallowed partner gammas, 31->21 exact) and v2 (continuation-guarded, still net -5); the K12/K16/K17 synthesis: the fragment class is locally degenerate with partner gammas -- geometry alone cannot separate them. Production stands at 31 exact. Original: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -1077,4 +1077,128 @@ PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6be 1 SBND_EM_BACKEXT_PERP=8  && ...14
 PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6off2 0  && ...141...   # v2 gate vs r5off: PASS 4/4
 PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6be2 1 SBND_EM_BACKEXT_PERP=8  && ...141...
 # census + ledger per arm (docs/pr/pr132-{census,gamma-ledger}-r6be*.tsv); movers 0 x4
+```
+
+# 14. Round 7 — K18: the acceptance-aware merge, measured dead twice (2026-08-30)
+
+Owner order: *"Can you proceed to Round-7 improvement following your
+recommendation? Please provide me the bee links for me to judge"* — executes
+sec 13.4 item 1 (the acceptance-aware merge), with a Bee A/B package.
+
+Baseline note: two owner-ordered commits landed between rounds (`546f52a8`
+T_KINE excluded-energy census, `59f75bb8` BDT clamp removal).  Both write
+only calib-JSON / T_kine scalars, neither touches the gated archives
+(mabc-pr.zip, pctree), so r6off2 remains the gate baseline — verified by the
+PASS below.
+
+## 14.1 K18 `pi0_accept_merge_dis_cm` — the design
+
+The merge decision moves INTO the acceptance test (`id_pi0_with_vertex`
+selection loop): only after every remaining pair fell outside the window, a
+BELOW-window pair (a charge deficit only lowers mass, so absorbing charge can
+only raise it back) may absorb ONE nearby detached fragment (start-to-start
+reach = the knob, run at 120 cm = the K16 round-5 measurement), and only when
+the augmented analytic mass `m' = m*sqrt((kq_h+kq_f)/kq_h)` lands in
+(100,160).  Nothing in-window in P1's own map can be destroyed: the rescue
+runs only when no in-window candidate remains, and accepted pairs already
+left the map.  The K3 nueCC guard holds inside the rescue; the T_KINE
+`pio_kine` scan is untouched.  0 (default) = off = byte-identical.
+
+## 14.2 v1 postmortem — the crumb-host amplification, and the P2 displacement
+
+Smoke (dbg subsets, 24 events): 12 fires — 11 of them INVERTED: a 0.3-19.5
+MeV crumb "host" absorbing a 23-570 MeV shower.  The analytic boost
+`sqrt((kq_h+kq_f)/kq_h)` diverges for tiny hosts, so the optimizer's easiest
+path to the window is bolting a large shower onto a crumb pair.  Full-arm
+census (r7am): partial 16->25 but groups 82->135, and one DOWNGRADE —
+
+* **169626 exact -> none**: a 1.3 MeV host "absorbed" the 511 MeV gamma
+  (m 5.5 -> 111.1), P1 accepted, and `id_pi0_without_vertex` — which is
+  where the OFF arm's true pair (102.7+511.5, m=138.9) came from
+  (`f3_pi0=with:0,without:1`) — early-returned on the now-used showers.
+  The "nothing destroyed" invariant is P1-local; P2 runs later and can be
+  displaced.
+
+## 14.3 v2 — the subordination guard, and what the fires actually are
+
+v2 adds `kq_frag < kq_host` (a fragment never outweighs its host).  The
+boost then caps at sqrt(2), so only pairs already at m >= 71 MeV can reach
+the window — crumb fabrication is geometrically excluded, and 169626's exact
+is preserved (`without:1` again).
+
+Full v2 measurement (r7off2/r7am2, knob at 120 cm):
+
+| metric | r7off2 (baseline) | r7am2 (K18 on) |
+|---|---|---|
+| census exact / partial / none / no-group | 31 / 16 / 1 / 18 | 31 / 19 / 0 / 16 |
+| accepted groups (239 evts) | 82 | 94 |
+| nueCC-fake counter | 2 | 2 |
+| gamma ledger OK | 120/132 = 90.9% | 115/132 = **87.1%** |
+| movers (vtx105) | — | 0 x4 |
+
+13 fires on 239 events; **7 are FUSIONS** — the absorbed fragment is the
+host's own recorded pair partner, so the true gamma pair collapses into one
+shower and pairs with junk.  All three census "gains" are fusions:
+
+* **103798** (no-group->partial): host g1 128.3 absorbed g2 99.1.  The
+  labels are 133.0 / 97.6 — **the charges were already right** (0.96 /
+  1.02); the recorded true-pair mass was 74 MeV, i.e. the OPENING ANGLE is
+  ~2x too parallel (sin(theta/2) ratio 0.55).  Ledger: g1 OK->OVER 1.70,
+  g2 OK->ABSENT.
+* **281485** (none->partial): 91112 (65.5) absorbed the labeled g2 89095
+  (27.9).  The right rescue — 89095 absorbing 91112 — fails subordination:
+  the label's gamma is the SMALLER of the two.  Host/fragment identity is
+  degenerate even under the mass constraint.
+* **409634** (no-group->partial): labeled g2 (39.1 MeV) absorbed.
+
+Ledger damage: 5 gammas OK->{ABSENT,OVER} (incl. 396222 g2 4.20x), **0
+healed** — 54332's fire touched other showers and its g1 deficit (0.73)
+stands; 54341 cannot fire at all (its true pair needs +29-111 MeV on a 23.7
+MeV host — multi-fragment, and the crumbs available sum short).
+
+## 14.4 The round-7 synthesis: the mass constraint does not break the degeneracy
+
+Round 6 predicted the mass window would separate "own fragment" from
+"partner gamma" where geometry cannot.  Measured: it does not, for a
+structural reason.  The below-window true-pair population is largely
+ANGLE-compressed, not charge-starved (103798 is the clean specimen: charges
+right, mass half) — the same deep-start bias that corrupts the axes (secs
+12-13) compresses the pair opening angle.  A charge-side merge cannot fix an
+angle-side deficit; the window is then satisfiable only by fusing the
+(near-collinear, hence cheap-in-mass) true pair into one shower.  With
+fabrication vetoed (subordination) and fusion vetoed (a fragment that is the
+host's recorded partner), nothing real remains — every legitimate-looking
+fire IS one of the two pathologies.  K18 stays **DEFAULT OFF**; the
+production point (31 exact / 2 fakes / 90.9% OK) survives round 7 as the
+optimum.
+
+Round-8 candidate (owner call): the defect is now localized twice over — the
+deep reco start both corrupts the axis AND compresses the pair opening
+angle.  An angle-side probe (opening-angle census vs label axes on the
+below-window population) would size the one lever left inside the finder:
+recomputing pair rays from vertex->charge-centroid instead of
+vertex->start-point.  Items 2-4 of sec 13.4 remain open.
+
+## 14.5 Bee A/B (owner-requested)
+
+* OFF (r7off2, production point): `https://www.phy.bnl.gov/twister/bee/set/ddfbb934-52a4-4dab-884b-22214a41c364/event/list/`
+* ON (r7am2, K18@120): `https://www.phy.bnl.gov/twister/bee/set/7d9652b0-12c4-4041-abb3-e46730557980/event/list/`
+* Annotated index: `bee/pr132r7/pr132r7.index.txt` (13 fire events; the 3
+  census movers first, then the 396222 pollution, then the 9 unlabeled-class
+  fires for owner judgment).
+
+Repro (round 7):
+```
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r7off 0    && ...141...   # v1 gate vs r6off2: PASS 4/4 (132/212/38/96 archives)
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r7am 1 SBND_PI0_ACCEPT_MERGE=120  && ...141...
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r7off2 0   && ...141...   # v2 gate vs r6off2: PASS 4/4 (478 archives)
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r7am2 1 SBND_PI0_ACCEPT_MERGE=120 && ...141...
+bash scripts/pr132_r2_manifests.sh r7am2   # (r7off, r7am, r7off2 likewise)
+python3 scripts/pr132_pi0_census.py --manifest98 em117-132r7am298-manifest.tsv --manifest141 em114c-132r7am2141-manifest.tsv \
+    --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-census-r7am2.tsv
+python3 scripts/pr132_gamma_ledger.py --manifest98 em117-132r7am298-manifest.tsv --manifest141 em114c-132r7am2141-manifest.tsv \
+    --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr132-gamma-ledger-r7am2.tsv
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr90_movers.py work-pr132-r7off2-$s work-pr132-r7am2-$s --tags vtx105; done  # 0 x4
+python3 scripts/bee/make_pr_bee.py -q work-{mcp1k,mcp2k,ncpi0,nuecc48}-grp0825 -p work-pr132-r7off2-{...} \
+    -o bee/pr132r7/pr132r7-off.zip 103798 281485 409634 396222 172942 393212 401450 347824 54332 180801 259542 84229 235435   # (-on: r7am2)
 ```
