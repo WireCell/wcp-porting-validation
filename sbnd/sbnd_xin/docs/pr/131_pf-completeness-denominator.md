@@ -14,6 +14,16 @@ the top of its "Still open" list:
 **The answer is 0.77%, and it says stop running population-scale completeness
 rounds.** The detail says something more interesting than the headline.
 
+**Commit provenance note.** The "Which source each figure comes from" footnote
+in §1 was written after this doc's own commit (`444873db`) and, through an
+`amend` that landed on the wrong HEAD in a shared tree, that seven-line hunk is
+carried by `b10072b7` — a commit whose message describes a different session's
+q_miss whole-object scan. Verified by both sessions: `b10072b7` differs from its
+predecessor `b0d67e0f` in this file only (+7/-3), all ten files of that commit
+are blob-identical, and its message, author and author-date are unchanged.
+Recorded additively rather than fixed, because two later commits are built on
+top and rewriting a shared branch costs more than the smear.
+
 ## Repro
 
 ```bash
@@ -255,6 +265,38 @@ is a separate measurement and is not made here.
    a target list on disk (`pr131-denominator.txt`). Whether that tail is worth
    a round is an owner call, and it is a different question from the one
    pr/128 asked.
+
+## 6. Postscript — attribution has two consumers, and they disagree
+
+This census says the pipeline loses almost nothing (0.77% reaches no PF
+output). The companion q_miss work says it *mis-files* a great deal. Both are
+true, and together they are the sharper statement: **the remaining charge error
+is attribution, not reach.**
+
+The owner's 2026-08-29 ruling on **463565** shows attribution is not one
+problem but two. Verdict: MERGE all four objects into shower 13001, recovering
+336.4 MeV (719.9 → 1056.2) — *"There should be two EM shower, but the beginning
+part of the two showers are connected, so I assume it is difficult to separate
+them."* Two consequences that constrain any follow-on here:
+
+- **The separating feature is start proximity, not angle.** The four starts sit
+  in a 12 cm ball 63–72 cm from the ν vertex with directions **83–157° apart**;
+  an angle term would *reject* this merge. Every guard the pr/123 → pr/130
+  campaign shipped is a length/PID or angle test, so a merge predicate would be
+  a new family, not a loosened guard.
+- **The merge is licensed by inseparability, not identity.** The owner says
+  there *should* be two showers. Merging gets the energy right and destroys the
+  two-gamma separation a pi0 mass needs — the same tension
+  [`pr130-qextra-98set.md`](pr130-qextra-98set.md) §6 found on 314838. So
+  attribution has two consumers, **energy** and **pi0 pairing**, and on this
+  event they want opposite answers. Neither this doc nor the q_miss round
+  resolves that; it is stated so a later round does not optimise one and
+  silently lose the other.
+
+Measured by the companion session (`pr130-qmiss-scan-decisions.md`,
+`d0d49d88`); reproduced here because §5's "PF and kine are different gates"
+point generalises: the same charge can be right for one output and wrong for
+another.
 
 Related: [`128_pf-kine-completeness.md`](128_pf-kine-completeness.md),
 [`129_pointing-guard-freed.md`](129_pointing-guard-freed.md),
