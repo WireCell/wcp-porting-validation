@@ -1,0 +1,124 @@
+==============================================================================
+THE 98-SET's 22 CONDEMNED SEGMENTS  (affirmative q_extra: explicit
+OUT mark on a scanned shower, reconstruction still holds it)
+==============================================================================
+  22 segments / 7.056e+06 over 3 events
+  NOTE the denominator: emscan-0827 carries only 29 OUT marks in total,
+  so this pool is nearly the whole OUT population of an IN-heavy scan
+  (246 IN / 29 OUT = 11%), not a survey.  And with only 3 contributing
+  events, ANY 'top-N holds 100%' concentration figure is vacuous.
+
+--- the scanner's own words on each event (primary evidence) ---
+    314838  ncpi0    q=3.112e+06  note: Overclustering, The OUT segments should be a separate gamma cluster, then forma pi0 likely.
+            https://www.phy.bnl.gov/twister/bee/set/c57f7f06-d02d-4de7-8de9-402abfbbace5/event/12/
+    142421  ncpi0    q=2.794e+06  note: The OUT segments can form a separate gamma, and then they could be a pi0
+            https://www.phy.bnl.gov/twister/bee/set/c57f7f06-d02d-4de7-8de9-402abfbbace5/event/8/
+    269774  nuecc48  q=1.149e+06  note: (none)
+            https://www.phy.bnl.gov/twister/bee/set/33fa72d9-1990-4fc7-b7fd-3f2bee6bd32d/event/33/
+
+--- per-segment (label store vs LIVE census on the arms on disk) ---
+     event   shower      seg cluster len_cm    pdg     charge  d_cm   ang  label absorbed_by            live census                  tier
+    314838   110088   110089     110   10.9     11  1.122e+06     6     6  from_vertices (walk_add)     from_vertices (walk_add)     -
+    314838   110088   110088     110    7.6     11  7.992e+05     0     0  (own root/extent)            (not in census)              -
+    314838   110088   111091     111    8.3     11  3.729e+05    26     3  pass4_angle (direct)         pass4_angle (direct)         1
+    314838   110088   110084     110    3.5     11  2.725e+05    17    11  from_vertices (walk_add)     from_vertices (walk_add)     -
+    314838   110088   110085     110    5.0     11  2.173e+05    17    11  from_vertices (walk_add)     from_vertices (walk_add)     -
+    314838   110088   111092     111    3.8     11  1.730e+05    33     4  pass4_angle (direct)         pass4_angle (direct)         1
+    314838   110088   110083     110    2.1     11  1.553e+05    16     7  from_vertices (walk_add)     from_vertices (walk_add)     -
+    142421     7010   108105     108    9.3     11  5.770e+05     4    79  from_vertices (walk_add)     from_vertices (walk_add)     -
+    142421     7010   108104     108   11.5     11  4.609e+05     8   137  (own root/extent)            (not in census)              -
+    142421     7010   107101     107    6.1     13  4.529e+05    43    20  pass4_angle (direct)         pass4_angle (direct)         1
+    142421     7010   108106     108    6.8     11  4.248e+05     4    79  from_vertices (walk_add)     from_vertices (walk_add)     -
+    142421     7010   108107     108    4.0     11  3.972e+05     4    79  from_vertices (walk_add)     from_vertices (walk_add)     -
+    142421     7010   107100     107    7.2     11  3.572e+05    43    20  pass4_angle (direct)         pass4_angle (direct)         1
+    142421     7010    50026      50    0.7     13  4.266e+04    53    22  pass4_angle (direct)         pass4_angle (direct)         1
+    142421     7010    48024      48    0.2     13  3.433e+04    56    23  pass4_angle (direct)         pass4_angle (direct)         1
+    142421     7010    56032      56    0.2     13  3.204e+04    14    29  pass4_angle (direct)         pass4_angle (direct)         1
+    142421     7010    79055      79    0.2     13  1.530e+04    56    22  pass4_angle (direct)         pass4_angle (direct)         1
+    269774    13237    96190      96    3.3     11  3.526e+05    55    25  pass4_angle (direct)         pass4_angle (direct)         1
+    269774    13237    96189      96    5.1     13  3.336e+05    50    25  pass4_angle (direct)         pass4_angle (direct)         1
+    269774    13237    67079      67    1.9   2212  1.977e+05    59    25  pass4_angle (direct)         pass4_angle (direct)         1
+    269774    13237    68080      68    0.6     13  1.876e+05    65    27  pass4_angle (direct)         pass4_angle (direct)         1
+    269774    13237   100213     100    0.5   2212  7.740e+04    49    24  pass4_angle (direct)         pass4_angle (direct)         1
+  attribution agreement label-store vs live run: 22 / 22
+
+--- is the CONDEMNED segment the shower's own reconstructed root? ---
+  98-set: 2 of 3 contributing events have their reco shower ROOTED on a condemned segment: evt 142421 root 108104, evt 314838 root 110088
+  141-set: 2 of 10 contributing events have their reco shower ROOTED on a condemned segment: evt 69232 root 20021, evt 489327 root 19005
+
+--- Q1  what are they: length / pdg, both sets side by side ---
+  98-set: n=22  max_len=11.5 cm  median_len=3.8 cm  n(>10cm)=2 n(>15cm)=0 n(>50cm)=0
+        pdg by count {13: 7, 11: 13, 2212: 2} ; by charge {11: '5.68e+06', 13: '1.10e+06', 2212: '2.75e+05'}
+        largest single item: seg 110089, 10.9 cm, pdg 11, 1.122e+06 (15.9% of its pool)
+        track-pdg segments SHORTER than 2 cm (pdg is not meaningful there): 7
+  141-set: n=22  max_len=110.3 cm  median_len=1.5 cm  n(>10cm)=6 n(>15cm)=6 n(>50cm)=1
+        pdg by count {11: 8, 13: 8, 2212: 6} ; by charge {11: '8.34e+06', 13: '6.41e+06', 2212: '2.56e+06'}
+        largest single item: seg 14003, 110.3 cm, pdg 13, 5.973e+06 (34.5% of its pool)
+        track-pdg segments SHORTER than 2 cm (pdg is not meaningful there): 10
+
+--- Q2  reachability: can any SHIPPED length-gated guard see them? ---
+  pr123 shower_pass4_track_guard_len         seat pass4_angle      floor >50 cm  (pdg-11 exempt)
+  pr130 shower_pass4_prox_guard_len          seat pass4_proximity  floor >50 cm  (pdg-11 exempt)
+  pr130 shower_pass3_backfill_guard_len      seat pass3_cone       floor >15 cm  (pdg-11 exempt)
+  pr40r6 shower_absorb_track_guard           seat *walk_add*       floor >10 cm  (pdg-11 exempt)
+  A segment is REACHABLE only if it arrives at that seat, clears the
+  floor, AND is not exempt.  Length alone is not enough -- but length
+  alone is already enough to rule most of these out.
+  98-set: 0 of 22 segments REACHABLE by a shipped guard at their own seat
+        (length-only, pdg-11 exempt) evt 314838 seg 110089 10.9 cm at pr40r6 shower_absorb_track_guard
+  141-set: 1 of 22 segments REACHABLE by a shipped guard at their own seat
+        evt 100222 seg 14003 110.3 cm -> pr130 shower_pass4_prox_guard_len
+
+--- Q2b which guards/prunes were ALREADY ON in the arm that produced
+        these 22 segments (compiled config, not the jsonnet) ---
+  /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-ncpi0/pr_evt314838/.wct-cfg-evt314838.json
+    daughter_shower_angle_reclass_straight_guard True
+    examine_direction_dirsign_shower_in_guard  True
+    shower_absorb_track_guard                  True
+    shower_accept_pid_guard                    True
+    shower_cone_absorb_guard                   True
+    shower_connect_from_vertices_straight_guard True
+    shower_connect_main_vertex_straight_guard  True
+    shower_connect_start_seg_straight_guard    True
+    shower_in_cascade_guard                    True
+    shower_pass3_cone_guard_len                15
+    shower_pass4_prune_detached                True
+    shower_pass4_prune_gap2                    25
+    shower_pass4_track_guard_len               50
+    shower_reclass_case_b_dqdx_guard           True
+    shower_reclass_dqdx_guard                  True
+    shower_topo_dqdx_guard                     True
+    shower_topo_reexam_straight_guard          True
+    shower_traj_straight_guard                 True
+
+--- Q3  is the charge EXTRA, or does a sibling shower want it? ---
+  98-set: 5 of 22 segments (1.149e+06, 16.3% of the pool) are ALSO in another
+        scored shower's `miss` list in the SAME event -- of those, 5 (1.149e+06, 16.3%) carry an explicit IN mark there.
+        evt 269774 seg 96190 3.526e+05 : OUT of shower 13237, missing from 97197 (explicit IN)
+        evt 269774 seg 96189 3.336e+05 : OUT of shower 13237, missing from 97197 (explicit IN)
+        evt 269774 seg 67079 1.977e+05 : OUT of shower 13237, missing from 97197 (explicit IN)
+        evt 269774 seg 68080 1.876e+05 : OUT of shower 13237, missing from 97197 (explicit IN)
+        evt 269774 seg 100213 7.740e+04 : OUT of shower 13237, missing from 97197 (explicit IN)
+  141-set: 0 of 22 segments (0.000e+00, 0.0% of the pool) are ALSO in another
+        scored shower's `miss` list in the SAME event -- of those, 0 (0.000e+00, 0.0%) carry an explicit IN mark there.
+
+--- Q4  what the merge COSTS: the reconstructed pi0 in each event ---
+  evt 314838 (ncpi0): kine_pio_flag=1  mass=130.6 MeV  angle=26.3 deg
+        gamma    118.6 MeV = shower 13010    <- rooted on a segment the scanner marked IN for shower 110088
+        gamma    693.4 MeV = shower 110088   <- THE OVER-CLUSTERED SHOWER
+        reco Enu = 1112.0 MeV over 10 showers
+  evt 142421 (ncpi0): kine_pio_flag=1  mass=42.4 MeV  angle=33.3 deg
+        gamma      9.4 MeV = shower 53029    
+        gamma    583.7 MeV = shower 108104   <- THE OVER-CLUSTERED SHOWER
+        reco Enu = 2770.1 MeV over 18 showers
+  evt 269774 (nuecc48): kine_pio_flag=1  mass=1445.8 MeV  angle=88.4 deg
+        gamma   1150.3 MeV = shower 87134    
+        gamma    916.7 MeV = shower 13237    <- THE OVER-CLUSTERED SHOWER
+        reco Enu = 2482.4 MeV over 10 showers
+        the shower the scanner says wants that charge is 97197 -- NOT in the pi0 pairing
+
+--- Q5  do the SHIPPED (Part 4/5, SBND production ON) guard seats
+        change anything on these three events? ---
+  evt 314838 (ncpi0): IDENTICAL -- the shipped seats do not touch this event   [work-pr130r1-g1off-ncpi0 vs work-pr130r1-gs1on-ncpi0]
+  evt 142421 (ncpi0): IDENTICAL -- the shipped seats do not touch this event   [work-pr130r1-g1off-ncpi0 vs work-pr130r1-gs1on-ncpi0]
+  evt 269774 (nuecc48): IDENTICAL -- the shipped seats do not touch this event   [work-pr130r1-g1off-nuecc48 vs work-pr130r1-gs1on-nuecc48]

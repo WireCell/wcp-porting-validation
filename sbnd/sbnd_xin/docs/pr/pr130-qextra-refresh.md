@@ -545,3 +545,21 @@ so none of the three can pass vacuously.
 2. `long_muon_stub_bridge_len` — same, since pr/130 Part 2 (66366 masked).
 3. `stem_backfill_back_guard`'s second side — still waiting on the 292643 /
    179369 fix, which is item B and is not started.
+
+---
+
+# Part 6 — the 98-set's own 22, in a doc of their own
+
+Part 1 measured the affirmative q_extra pool on both manifests, analysed the
+141-set's 22 segments, and left the other 22 with one line ("the 98-set adds a
+further 22 segments / 7.056e6 on its own labels ... those 44 segments are the
+target list"). They are **not** one target list.
+
+Opened in [`pr130-qextra-98set.md`](pr130-qextra-98set.md). Headline: the
+98-set's pool is three events of **EM-to-EM mis-partition** (two carry the
+scanner's own note "should be a separate gamma ... then a pi0"), max segment
+length **11.5 cm** against guard floors of 15 and 50 cm, **0 of 22** reachable
+by any shipped guard — verified by diffing the Part-4 flip arms, which leave
+all three events identical — **16.3% double-counted** with a sibling shower's
+q_miss, and **2 of 3** showers rooted on a condemned segment. The two pools
+share one absorber out of eight. No knob proposed.
