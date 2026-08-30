@@ -1,0 +1,79 @@
+==============================================================================
+pr/131 -- THE pr/128 DENOMINATOR, over 239 events
+==============================================================================
+  fill_bee_pf_tree calls: 1 per event except 3 (18625, 179369, 286681), which evaluate
+  two candidates; both bundles accumulate into the same PF output, so
+  their sums ADD and per-segment rows are de-duplicated on seg id.
+
+CURRENCY: every number in the bucket family is segment KE (MeV).
+kine_reco_Enu is a DIFFERENT quantity (shower charge energy + pr/101
+mass rules + long-muon range) and is printed only as a scale
+reference -- never as the denominator of a bucket ratio.
+
+  bucket        nseg         KE MeV      %KE       len cm     %len
+  drawn         9323       191810.1   95.52%      62319.4   96.07%
+  conn4          570         3349.7    1.67%        674.9    1.04%
+  extra           17         4118.4    2.05%       1487.9    2.29%
+  audited          4           34.1    0.02%         21.5    0.03%
+  hidden          33         1495.2    0.74%        364.5    0.56%
+  TOTAL         9947       200807.5
+
+  conn-4 split on MAIN-CLUSTER membership (owner line, pr/128 / 105074:
+  main-cluster membership admits, vertex reachability is not required):
+    conn4_main         0            0.0    0.00% of all KE          0.0 cm
+    conn4_far        570         3350.9    1.67% of all KE        675.5 cm
+    -> conn4_main is INSIDE near-candidate charge by that line;
+       conn4_far is correctly skipped (conn-4 means >80 cm).
+
+--- THE HEADLINE ---
+  Of all reconstructed segment KE in the PR graph, the fraction that
+  reaches no PF output and no audit line at all (bucket `hidden`):
+      1495.2 MeV of 200807.5 MeV = 0.74%
+  Of the UNCLAIMED population only (audited + hidden), the hidden share:
+      1495.2 of 1529.3 MeV = 97.8%  (33 of 37 segments)
+
+  THE NUMBER doc pr/128 ASKED FOR -- of the near-candidate
+  reconstructed segment KE (drawn + extra + audited + hidden +
+  conn4_main; conn4_far excluded by the owner's own >80 cm line),
+  the share that reaches NO PF output:
+      1529.3 MeV of 197457.8 MeV = 0.77%
+      of which hidden (counted nowhere at all) 1495.2 MeV = 0.76%
+
+--- NEAR-CANDIDATE cut sweep (dmin = gap to what the tree draws) ---
+  cut cm         hidden within cut  in evts        audited within cut
+     0.5       18 seg     1238.1 MeV       14        0 seg        0.0 MeV
+     2.0       18 seg     1238.1 MeV       14        1 seg       15.9 MeV
+     5.0       22 seg     1332.6 MeV       16        3 seg       24.3 MeV
+    10.0       27 seg     1382.1 MeV       16        4 seg       34.1 MeV
+    20.0       31 seg     1464.8 MeV       17        4 seg       34.1 MeV
+    50.0       32 seg     1473.6 MeV       18        4 seg       34.1 MeV
+
+--- per-event: where the hidden charge is ---
+  19 of 239 events carry ANY hidden KE
+     event  hidden MeV  <=10cm MeV reco_Enu MeV    hid/Enu
+    318769       298.7       298.7        826.6     36.1%
+    259542       202.1       202.1       1874.7     10.8%
+    169626       140.3       140.3        782.6     17.9%
+     54341       130.0       130.0        711.7     18.3%
+     51546        79.2        79.2        526.3     15.0%
+     52044        78.7        66.0        702.7     11.2%
+     72786        70.1         0.0        701.6     10.0%
+    170098        68.0        68.0        834.5      8.1%
+    176502        65.8        65.8       4909.9      1.3%
+    100222        65.4        65.4       2872.7      2.3%
+     91917        63.1        63.1       1285.0      4.9%
+    174771        51.8        51.8       1752.4      3.0%
+    499423        48.7        48.7        452.0     10.8%
+    396222        41.9        41.9       4557.2      0.9%
+    506114        30.4        30.4       2306.2      1.3%
+    171572        21.4         0.0        784.9      2.7%
+    281567        15.6        15.6       2108.3      0.7%
+     54453        15.2        15.2        659.7      2.3%
+    393505         8.8         0.0        566.1      1.6%
+
+--- what the hidden population IS (all events) ---
+  pdg by count  : {11: 17, 13: 12, 2212: 2, 0: 1, 211: 1}
+  pdg by KE MeV : {13: 724.2, 11: 445.0, 2212: 317.5, 211: 8.4, 0: 0.0}
+  length cm: max 39.8  median 9.5  n(>10cm) 15  n(>50cm) 0
+  would ALSO be dropped by the display filters: dirsign==0 3, empty fits 0
+  carrying kPass4GuardFreed but NOT drawn: 0 (0.0 MeV)
