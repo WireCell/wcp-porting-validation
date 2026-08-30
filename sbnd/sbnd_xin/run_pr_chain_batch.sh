@@ -1728,6 +1728,10 @@ fi
 [ -n "${SBND_PI0_NC_FLOOR:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_floor_mev=${SBND_PI0_NC_FLOOR}")
 # doc pr/133: K21 v2.2 post-fire PF association cone (deg).  EMPTY = no TLA = C++ default 0 = off.
 [ -n "${SBND_PI0_NC_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_pf_assoc_deg=${SBND_PI0_NC_PF_ASSOC}")
+# doc pr/134: K22 NC merged-complex bp pairing (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PI0_NC_FRAG_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_frag_merge=true")
+# doc pr/134: K23 with-vertex post-accept PF satellite cone (deg).  EMPTY = no TLA = the job default off.
+[ -n "${SBND_PI0_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_pf_assoc_deg=${SBND_PI0_PF_ASSOC}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

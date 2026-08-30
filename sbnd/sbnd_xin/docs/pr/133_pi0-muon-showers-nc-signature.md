@@ -12,6 +12,10 @@ census/ledger/movers all flat) -- the closed interval is (28.7, 29.6), and
 30 would veto 76346's true NC pair.  K16@120 Bee package delivered (sec 1).
 Recommendations for owner: sec 7.**
 
+> Follow-on: doc pr/134 (`134_pi0-nc-fragment-merge-p1-pf.md`) — the
+> owner-flagged 116962 residual (NC merged-complex back-projection, K22)
+> and the P1 PF satellite absorb (K23).
+
 Follow-on to `docs/pr/132_pi0-reco-round1.md` (rounds 1-10 + the r9-verdict
 typing census).  Baselines: census 31 exact / 16 partial / 1 none / 18
 no-group (82 groups, nueCC-counter 2); gamma ledger 120/132 = 90.9% OK.
