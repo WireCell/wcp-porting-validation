@@ -1,0 +1,5 @@
+sample	n_eval	n_cosmic_tagged	n_enu	enu_blank	enu_min	enu_med	enu_max	n_enu_overflow	nue_filled	nue_unfilled	numu_med	numu_at_clamp
+ncpi0	18	0	18	0	126.4	1401.1	2768.2	0	3	15	0.565	0
+nuecc48	47	1	47	0	427.5	1578.2	3947.9	1	44	3	-0.448	1
+mcp1k	447	36	445	2	0.0	562.4	3583.1	1	20	425	1.688	31
+mcp2k	879	74	867	12	0.0	515.9	4654.2	3	71	796	1.419	70

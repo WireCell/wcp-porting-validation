@@ -1,0 +1,12 @@
+# nu-candidate, highest nue_score; pool = 1206 events of 1312 PR-evaluated mcp1k+mcp2k
+bee_idx	sample	run	subrun	event	numu_score	nue_score	kine_reco_Enu_MeV	event_label
+0	mcp1k	18255	1	64409	0.091	4.301	1076.6154	nu-candidate
+1	mcp2k	18255	1	75954	-0.587	4.301	753.089	nu-candidate
+2	mcp2k	18259	1	176502	-1.589	4.301	4600.3833	nu-candidate
+3	mcp2k	18259	1	176533	-0.515	4.301	687.5822	nu-candidate
+4	mcp2k	18255	1	291072	-0.276	4.301	830.12756	nu-candidate
+5	mcp2k	18255	1	394167	-0.738	4.301	481.92023	nu-candidate
+6	mcp1k	18255	1	386442	-1.371	4.055	267.24713	nu-candidate
+7	mcp2k	18255	1	281567	-0.453	1.604	1896.5483	nu-candidate
+8	mcp2k	18255	1	396222	-0.795	1.321	4654.1606	nu-candidate
+9	mcp2k	18259	1	47212	-0.480	0.852	1342.3474	nu-candidate
