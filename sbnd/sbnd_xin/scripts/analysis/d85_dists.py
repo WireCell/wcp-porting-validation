@@ -10,22 +10,23 @@ T_kine scalars of the PR job:
 Population ("the ones with PR"): nu_evaluated == 1, i.e. the PR log carries
 "TaggerCheckNeutrino: selected main cluster ...".  Only then are TaggerInfo /
 KineInfo filled for real; otherwise the ROOT row holds struct DEFAULTS and
-pr_scores_table.py blanks it (see its module docstring).
+pr_scores_table.py blanks it (see its module docstring).  MINUS the degenerate
+class -- see degenerate() below, 49 of 1312 in the numu samples.
 
 Two figures, both written to docs/85_dists/:
 
   d85_enu.png    kine_reco_Enu_MeV, four samples overlaid.  Left panel is
-                 area-normalised (the shapes -- 18 vs 879 events otherwise
+                 area-normalised (the shapes -- 18 vs 834 events otherwise
                  makes two samples invisible); right panel is raw counts on a
                  log y.  Last bin is an explicit OVERFLOW bin, not a clip.
 
-  d85_bdt.png    nue_score vs numu_score.  Split vertically because
+  d85_bdt.png    nue_score vs numu_score.  Split into two panels because
                  nue_score = -15 is NOT missing data: UbooneNueBDTScorer.cxx
                  sets it when br_filled != 1 ("background-like default,
                  matches prototype default_val = -15"), which is ~95 % of the
                  evaluated numu-sample events.  Top panel = the filled
-                 subset, where the real 2-D structure is; bottom strip = the
-                 -15 population at its true numu_score.  Both BDTs are
+                 subset, where the real 2-D structure is; bottom panel = the
+                 -15 population's numu_score, projected.  Both BDTs are
                  log-odds of a clamped xgboost output, so they saturate at
                  +-4.301 -- the pile-ups at the frame edges are the clamp,
                  not a defect.
@@ -59,23 +60,48 @@ NUE_UNFILLED = -15.0
 E_LO, E_HI, E_BW = 0.0, 3000.0, 200.0   # MeV; >E_HI goes into the overflow bin
 
 
+def degenerate(r):
+    """An evaluated row carrying NO reconstruction.
+
+    TaggerCheckNeutrino emits its "selected main cluster" line -- so
+    nu_evaluated is 1 -- even when the main it picked is an unmerge shard a
+    couple of cm long (pr_scores_table.py's own docstring: unmerge_bundle /
+    unmerge_assoc run BEFORE the tagger and mint PR-internal idents).  KineInfo
+    then never fills, and unlike the nu_evaluated==0 case NOTHING blanks the
+    row: it reads out as kine_reco_Enu = 0.0 exactly, vertex (0,0,0) exactly,
+    and -- because the BDT is fed a default feature vector -- the SAME
+    numu_score for every such event (-1.9416895 in prod0825).
+
+    Left in, these land in the first energy bin and in one spike of the score
+    plot, i.e. they read as a physics feature.  All three signatures coincide
+    exactly on 49 of the 1312 scored prod0825 numu-sample events and on 0 of
+    the 65 ncpi0/nuecc48 ones; the energy+vertex test is used here because it
+    does not hard-code the score value."""
+    return (r['kine_reco_Enu_MeV'] and float(r['kine_reco_Enu_MeV']) == 0.0
+            and r['nu_x_cm'] == '0.0' and r['nu_y_cm'] == '0.0' and r['nu_z_cm'] == '0.0')
+
+
 def load(prod, sample):
-    """Evaluated rows only, as floats.  Blank kine_reco_Enu_MeV is kept out of
-    the energy list but the event still counts as evaluated -- both numbers are
-    reported."""
+    """Evaluated rows only, as floats, minus the degenerate class above.  A row
+    with no T_tagger/T_kine values at all (no tracking-pr.root) still counts as
+    evaluated but contributes to neither figure -- both numbers are reported."""
     path = os.path.join('products', prod, f'{sample}-scores-{prod}.tsv')
     with open(path) as f:
         rows = [r for r in csv.DictReader(f, delimiter='\t')
                 if r['nu_evaluated'] == '1']
-    out = {'n_eval': len(rows), 'enu': [], 'numu': [], 'nue': [],
-           'n_cosmic_tagged': sum(1 for r in rows if r['event_label'] == 'cosmic-tagged')}
+    deg = [r for r in rows if degenerate(r)]
+    out = {'n_eval': len(rows), 'n_degenerate': len(deg), 'enu': [], 'numu': [], 'nue': [],
+           'n_cosmic_tagged': sum(1 for r in rows if r['event_label'] == 'cosmic-tagged'),
+           'n_deg_cosmic': sum(1 for r in deg if r['event_label'] == 'cosmic-tagged')}
     for r in rows:
+        if degenerate(r):
+            continue
         if r['kine_reco_Enu_MeV']:
             out['enu'].append(float(r['kine_reco_Enu_MeV']))
         if r['numu_score'] and r['nue_score']:
             out['numu'].append(float(r['numu_score']))
             out['nue'].append(float(r['nue_score']))
-    out['n_enu_blank'] = out['n_eval'] - len(out['enu'])
+    out['n_no_root'] = out['n_eval'] - len(deg) - len(out['numu'])
     return out
 
 
@@ -168,7 +194,7 @@ def fig_bdt(data, outdir):
     top.set_xticklabels([])
     top.set_title('SBND prod0825 -- $\\nu_e$ vs $\\nu_\\mu$ BDT score, PR-evaluated events\n'
                   'dashed frame = the $\\pm$4.301 log-odds clamp (rows of points ON it '
-                  'are saturated, not degenerate)', fontsize=10.5)
+                  'are saturated, not coincident)', fontsize=10.5)
     top.legend(fontsize=9, loc='lower left', framealpha=0.9)
 
     bot.set_yscale('log')
@@ -187,7 +213,8 @@ def fig_bdt(data, outdir):
 
 
 def summary(data, prod, outdir):
-    cols = ['sample', 'n_eval', 'n_cosmic_tagged', 'n_enu', 'enu_blank',
+    cols = ['sample', 'n_eval', 'n_cosmic_tagged', 'n_degenerate', 'n_deg_cosmic',
+            'n_no_root', 'n_enu',
             'enu_min', 'enu_med', 'enu_max', 'n_enu_overflow',
             'nue_filled', 'nue_unfilled', 'numu_med', 'numu_at_clamp']
     path = os.path.join(outdir, f'd85-summary-{prod}.tsv')
@@ -197,7 +224,8 @@ def summary(data, prod, outdir):
             d = data[key]
             e, m = d['enu'], d['numu']
             f.write('\t'.join(str(x) for x in [
-                key, d['n_eval'], d['n_cosmic_tagged'], len(e), d['n_enu_blank'],
+                key, d['n_eval'], d['n_cosmic_tagged'], d['n_degenerate'],
+                d['n_deg_cosmic'], d['n_no_root'], len(e),
                 f'{min(e):.1f}', f'{st.median(e):.1f}', f'{max(e):.1f}',
                 sum(1 for v in e if v >= E_HI),
                 sum(1 for v in d['nue'] if v > NUE_UNFILLED + 0.1),
@@ -222,7 +250,8 @@ def bee_picks(prod, outdir, n=10):
     for s in ('mcp1k', 'mcp2k'):
         path = os.path.join('products', prod, f'{s}-scores-{prod}.tsv')
         for r in csv.DictReader(open(path), delimiter='\t'):
-            if r['nu_evaluated'] == '1' and r['numu_score'] and r['nue_score']:
+            if (r['nu_evaluated'] == '1' and r['numu_score'] and r['nue_score']
+                    and not degenerate(r)):
                 r['_s'], r['_numu'], r['_nue'] = s, float(r['numu_score']), float(r['nue_score'])
                 rows.append(r)
     cand = [r for r in rows if r['event_label'] == 'nu-candidate']

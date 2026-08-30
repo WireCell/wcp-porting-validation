@@ -1,4 +1,4 @@
-# nu-candidate + nue BDT unfilled, lowest numu_score; pool = 1122 events of 1312 PR-evaluated mcp1k+mcp2k
+# nu-candidate + nue BDT unfilled, lowest numu_score; pool = 1120 events of 1263 PR-evaluated mcp1k+mcp2k
 bee_idx	sample	run	subrun	event	numu_score	nue_score	kine_reco_Enu_MeV	event_label
 0	mcp1k	18255	1	391766	-4.301	-15.000	837.4163	nu-candidate
 1	mcp2k	18255	1	99563	-4.301	-15.000	1348.4213	nu-candidate

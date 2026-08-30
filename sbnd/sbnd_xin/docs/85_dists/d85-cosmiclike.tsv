@@ -1,4 +1,4 @@
-# cosmic-tagged, lowest numu_score; pool = 102 events of 1312 PR-evaluated mcp1k+mcp2k
+# cosmic-tagged, lowest numu_score; pool = 55 events of 1263 PR-evaluated mcp1k+mcp2k
 bee_idx	sample	run	subrun	event	numu_score	nue_score	kine_reco_Enu_MeV	event_label
 0	mcp2k	18259	1	172262	-3.588	-15.000	346.82446	cosmic-tagged
 1	mcp1k	18255	1	401450	-3.575	0.982	1609.3029	cosmic-tagged

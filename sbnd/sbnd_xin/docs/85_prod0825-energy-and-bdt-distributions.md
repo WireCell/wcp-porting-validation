@@ -64,37 +64,69 @@ would manufacture a spike at the sentinel values.
 | events in sample | 19 | 48 | 1000 | 2000 |
 | **PR-evaluated** | **18** | **47** | **447** | **879** |
 | …of which `cosmic-tagged` | 0 | 1 | 36 | 74 |
-| with a `kine_reco_Enu` value | 18 | 47 | 445 | 867 |
+| − degenerate (§1.1) | 0 | 0 | 16 | 33 |
+| − no `tracking-pr.root` row at all | 0 | 0 | 2 | 12 |
+| **plotted** | **18** | **47** | **429** | **834** |
 
-Two honest caveats on that table:
+Three honest caveats on that table:
 
 * the evaluated population is **not** a neutrino-purity cut — 110 of the 1326
   evaluated ν<sub>μ</sub>-sample events carry the chain's own `cosmic-tagged`
-  event label. They are in the histograms.
-* 14 evaluated events have an empty `kine_reco_Enu` (2 mcp1k, 12 mcp2k); they
-  are counted as evaluated but excluded from the energy figure, hence
-  `N=445`/`N=867` in its legend.
+  event label, and they are in the histograms.
+* 14 evaluated events (2 mcp1k, 12 mcp2k) have no `T_tagger`/`T_kine` values at
+  all — not a blank energy field but a missing ROOT row; 8 of the 14 are
+  cosmic-tagged. Counted as evaluated, absent from both figures.
+* 49 more are degenerate — next section. They are what would otherwise make
+  the first energy bin and one spike of the score plot look like physics.
+
+### 1.1 The degenerate class: 49 evaluated events with no reconstruction
+
+`TaggerCheckNeutrino` emits its `selected main cluster …` line — so
+`nu_evaluated = 1` — even when the main it picked is an **unmerge shard a
+couple of cm long**. `unmerge_bundle`/`unmerge_assoc` run *before* the tagger
+and mint PR-internal cluster idents, so the tagger can select one of those
+(this is exactly the non-joinability `pr_scores_table.py`'s own docstring
+warns about). `KineInfo` then never fills — and, unlike the
+`nu_evaluated == 0` case, **nothing blanks the row**.
+
+Three signatures coincide *exactly* on these events:
+
+| signature | value |
+|---|---|
+| `kine_reco_Enu` | `0.0` exactly |
+| `nu_x/y/z_cm` | `(0, 0, 0)` exactly |
+| `numu_score` | `-1.9416895` — the *same* value for every one of them (the BDT on a default feature vector) |
+
+They number **16 mcp1k + 33 mcp2k = 49**, and **0 in ncpi0/nuecc48**. Median
+selected-main length is 1.5–1.8 cm (max 52 cm); 47 of the 49 are
+`cosmic-tagged`.
+
+**They are excluded from both figures**, by the energy+vertex test (not by
+hard-coding the score value) in `d85_dists.py:degenerate()`. Left in, all 49
+would sit in the 0–200 MeV bin — a quarter of the mcp1k first bin — and in a
+single 49-event spike at `numu_score = -1.94`. That is a reconstruction
+failure mode worth its own investigation; it is not an energy spectrum.
 
 ## 2. Reconstructed neutrino energy
 
 ![reconstructed Enu](85_dists/d85_enu.png)
 
 `kine_reco_Enu` (MeV) from `T_kine`, four samples overlaid. **Left** is
-area-normalised — this is the panel to read for shape, because 18 against 879
+area-normalised — this is the panel to read for shape, because 18 against 834
 events on a common count axis makes two of the four samples invisible.
 **Right** is raw counts on a log *y*. The bin at 3000–3200 MeV is an explicit
 **overflow** bin, not a clip: 1 nuecc48, 1 mcp1k and 3 mcp2k events live there
-(max 4654 MeV).
+(max 4654 MeV). The 49 degenerate events of §1.1 are out.
 
 | | ncpi0 | nuecc48 | mcp1k | mcp2k |
 |---|---:|---:|---:|---:|
-| N | 18 | 47 | 445 | 867 |
-| min / median / max [MeV] | 126 / **1401** / 2768 | 428 / **1578** / 3948 | 0 / **562** / 3583 | 0 / **516** / 4654 |
+| N | 18 | 47 | 429 | 834 |
+| min / median / max [MeV] | 126 / **1401** / 2768 | 428 / **1578** / 3948 | 11 / **575** / 3583 | 3 / **530** / 4654 |
 
-The two ν<sub>μ</sub>-beam samples land on top of each other (median 562 vs
-516 MeV) — expected, they are consecutive slices of the same MCP2025C data, and
+The two ν<sub>μ</sub>-beam samples land on top of each other (median 575 vs
+530 MeV) — expected, they are consecutive slices of the same MCP2025C data, and
 their agreement is the only internal consistency check this figure offers. The
-two hand-selected samples sit a factor ~2.7 higher and are much flatter. That
+two hand-selected samples sit a factor 2.5–3 higher and are much flatter. That
 is a **selection** statement, not a physics one: `ncpi0` and `nuecc48` were
 picked as π⁰/EM-rich events, and the ncpi0 curve is 18 events across 15 bins,
 so every structure in it is within its own Poisson noise.
@@ -122,15 +154,15 @@ Three features of this plot are real and would otherwise read as defects:
 
 | | ncpi0 | nuecc48 | mcp1k | mcp2k |
 |---|---:|---:|---:|---:|
-| evaluated with both scores | 18 | 47 | 445 | 867 |
+| plotted (both scores, non-degenerate) | 18 | 47 | 429 | 834 |
 | **nue BDT filled** (`> -15`) | **3** | **44** | **20** | **71** |
-| median `numu_score` | +0.57 | −0.45 | +1.69 | +1.42 |
+| median `numu_score` | +0.57 | −0.45 | +1.79 | +1.59 |
 | at the `numu_score` clamp | 0 | 1 | 31 | 70 |
 
 The separation the plot is for: the ν<sub>e</sub>CC sample fills the nue BDT
 **44/47** and piles up at `nue_score = +4.30`, while the same BDT fills for only
-**20/445** and **71/867** of the ν<sub>μ</sub>-sample events. Median
-`numu_score` runs the other way (+1.69/+1.42 for the ν<sub>μ</sub> samples,
+**20/429** and **71/834** of the ν<sub>μ</sub>-sample events. Median
+`numu_score` runs the other way (+1.79/+1.59 for the ν<sub>μ</sub> samples,
 −0.45 for ν<sub>e</sub>CC). NCπ⁰ fills the nue BDT 3/18 and all three land
 *negative* (−3.21 … −1.29) — on this sample of 18 the nue BDT is not being fooled
 by the π⁰.
@@ -153,7 +185,7 @@ on the pr/132 98-event arms (`work-pr132-off98-*` = 0.80 vs
 
 So the shift is a near-uniform few-percent compression, comparable across all
 four samples — it does **not** distort the sample-to-sample comparison in §2,
-and it is far below the ~2.7× median separation between the hand-selected and
+and it is far below the 2.5–3× median separation between the hand-selected and
 beam samples. Two things to keep straight:
 
 * the ceiling is the naive `0.80/0.84 = ×0.952` (−4.8 %); events land above it
@@ -166,17 +198,20 @@ beam samples. Two things to keep straight:
   draw from the 1000/2000, so treat them as an order of magnitude rather than
   the full-sample number.
 
-Re-running the 3067-event chain at 0.84 was not done: at ~77 s/event it is ~11 h
-at the standing job caps, which is not a reasonable cost for a distribution
-plot. If the owner wants the figures at the exact current operating point, that
+Re-running the 3067-event chain at 0.84 was not done: at order 1 min/event it
+is ~10 h at the standing job caps, which is not a reasonable cost for a
+distribution plot. (That rate is a spot check, not a measured mean — prod0825
+was pruned and only one of its per-event logs still carries its `Timer: Total`
+line, at 77 s.) If the owner wants the figures at the exact current operating point, that
 is the price and it should be a fresh tag (`prod0830`), never a write into
 `prod0825` (M13).
 
 ## 5. Three Bee hand-scan sets from the ν<sub>μ</sub> samples
 
-Drawn from the **1312** `mcp1k`+`mcp2k` events that are PR-evaluated and carry
-both scores. Event ids do not collide between mcp1k and mcp2k (checked: 0
-overlaps), so each category is one Bee set spanning both.
+Drawn from the **1263** `mcp1k`+`mcp2k` events that are PR-evaluated, carry both
+scores, and are not degenerate (§1.1) — the same population as the figures.
+Event ids do not collide between mcp1k and mcp2k (checked: 0 overlaps), so each
+category is one Bee set spanning both.
 
 **These are rank-order cuts, not thresholds.** There is no documented
 `numu_score` / `nue_score` operating point anywhere in these docs, so each
@@ -188,12 +223,15 @@ Charge cloud = `work-mcp{1k,2k}-grp0825` (Q/L), PR layers =
 
 ### 5.1 Cosmic-like — [Bee set 7b4ee14a](https://www.phy.bnl.gov/twister/bee/set/7b4ee14a-13c3-4a66-b1ff-abf0034c1df8/event/list/)
 
-Pool: the **102** evaluated events the chain itself labels `cosmic-tagged`
+Pool: the **55** plotted events the chain itself labels `cosmic-tagged`
 (in-beam bundle tagged TGM/STM/LM); picked the 10 lowest `numu_score`, i.e.
-where the tagger and the BDT agree. Note this is the *evaluated* cosmic
-population — a further 821 cosmic-tagged events never got a selected main
-cluster and so carry no scores; they would need `--allow-unevaluated` to reach
-Bee at all.
+where the tagger and the BDT agree. That 55 is what is left of the **931**
+cosmic-tagged events in the two samples: 931 → 110 evaluated (**821** never got
+a selected main cluster at all — no scores; they would need
+`--allow-unevaluated` to reach Bee) → 63 non-degenerate (**47** are the §1.1
+shard class, unsurprisingly concentrated here) → **55** with a ROOT row (8 lack
+one). So this set is the cosmic-like events the chain actually *scored*, not
+the cosmic population.
 
 | Bee | sample | run | event | numu | nue | E [MeV] | link |
 |---:|---|---:|---:|---:|---:|---:|---|
@@ -214,7 +252,7 @@ returned **+0.98** at 1609 MeV.
 
 ### 5.2 ν<sub>e</sub>CC-like inside the ν<sub>μ</sub> samples — [Bee set 7dfadf68](https://www.phy.bnl.gov/twister/bee/set/7dfadf68-bfe2-4d7c-8391-70a1d6b13912/event/list/)
 
-Pool: the **1206** `nu-candidate` events; picked the 10 highest `nue_score`.
+Pool: the **1204** `nu-candidate` events; picked the 10 highest `nue_score`.
 Six of the ten are *at* the +4.301 clamp, so their internal order is arbitrary —
 they are tied, not ranked.
 
@@ -238,7 +276,7 @@ backward-stem-guard event, already hand-scanned in that round.
 
 ### 5.3 ν<sub>μ</sub>-sample events that are neither — [Bee set f6c75e50](https://www.phy.bnl.gov/twister/bee/set/f6c75e50-8f04-4283-9ad5-ddac614add75/event/list/)
 
-Pool: the **1122** `nu-candidate` events whose nue BDT never filled
+Pool: the **1120** `nu-candidate` events whose nue BDT never filled
 (`nue_score = -15`); picked the 10 lowest `numu_score` — i.e. accepted as a
 neutrino candidate by the chain, then rejected by the ν<sub>μ</sub> BDT and never
 even offered to the ν<sub>e</sub> one. The first four are at the −4.301 clamp
@@ -264,8 +302,9 @@ whether the candidate is real at all.
 ## 6. What this document is not
 
 * **Not efficiency or purity.** No truth is used, no selection cut is applied
-  beyond `nu_evaluated == 1`, and the evaluated population still contains 110
-  chain-labelled cosmics in the two ν<sub>μ</sub> samples (111 across all four). Nothing here says how well the BDTs work.
+  beyond `nu_evaluated == 1` and the §1.1 degenerate cut, and the plotted
+  population still contains 55 chain-labelled cosmics in the two
+  ν<sub>μ</sub> samples (56 across all four). Nothing here says how well the BDTs work.
 * **Not the current operating point** — §4. Add ~3–4 % downward to every energy
   to reach production as of 2026-08-30.
 * **Not a gate.** No A/B, no hash comparison, no claim of byte-identicality is
