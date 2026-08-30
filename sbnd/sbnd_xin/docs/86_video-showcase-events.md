@@ -430,6 +430,20 @@ Note 169626 carries a **real** ν<sub>e</sub> score (−10.07), not the −15
 sentinel — the BDT ran and rejected it. That is a different failure mode from
 §5.3's 69314, and worth keeping distinct in the narration.
 
+**Status: DONE (this machine has the `prod0830` outputs).** Three local Bee
+zips built with the recipe above and re-verified the same way
+`verify_d86_bee.py` checks the original nine (run/subrun/event read back out
+of each member's `img-global` layer):
+
+| zip | bee index | run/sub/evt | layers |
+|---|---:|---|---|
+| `bee/d86r2/d86r2-video2.zip` | 0 | 18259/1/179054 | img-global, clustering-global, track_fit-global, shower_track-global, vertices-global, mc |
+| `bee/d86r2/d86r2-video3-fail.zip` | 0 | 18259/1/169626 | same |
+| `bee/d86r2/d86r2-video3-fail.zip` | 1 | 18255/1/142421 | same |
+
+All 3/3 OK, rc=0. **Not yet uploaded** — upload is the owner-authorised step
+(CLAUDE.md escalation rule 6), same as the original nine.
+
 ### 8.2 (N) The `kine_mcs_*` branches for the video events
 
 `wct-pr-perevt.jsonnet:1234` sets `mcs_enable = true` (SBND production, doc 84
@@ -450,6 +464,25 @@ leaving them as "the chain's estimate for an exiting track". `kine_mcs_energy`
 is an MCS KE, and `kine_mcs_range_energy` is MCS's own CSDA range KE over the
 **trimmed** path (doc 80 §8.3) — deliberately not `cal_kine_range`'s number, so
 the two must not be presented as the same quantity.
+
+**Status: DONE.** `mcs_output` is not its own knob — `cfg/pgrapher/experiment
+/sbnd/clus.jsonnet:2263` sets `mcs_output=mcs_enable`, and `mcs_enable=true`
+in this arm's `wct-pr-perevt.jsonnet:1234` — so the five branches are already
+booked in every `prod0830` `tracking-pr.root`; nothing needed re-running.
+`scripts/analysis/d86r2_video_round2.py` reads them for every §4 event's every
+`T_kine` row → `docs/86_video/d86r2-mcs.tsv` (28 rows). The two named events:
+
+| event | `kine_energy_particle` (muon, legacy) | `kine_mcs_energy` | ambiguity | trimmed len | `kine_mcs_range_energy` |
+|---|---:|---:|---:|---:|---:|
+| 290718 | 1138.7 MeV (range) | **1089.5 MeV** | 0.0019 | 495.2 cm | 1125.5 MeV |
+| 283591 | 621.3 MeV (range) | **613.3 MeV** | 0.0147 | 268.9 cm | 614.9 MeV |
+
+Both ambiguities are near 0 (unambiguous fit). The three numbers per muon
+(legacy range-based `kine_energy_particle`, MCS's own `kine_mcs_energy`, and
+MCS's own range estimate over its trimmed path) differ by 4–5 %, which is the
+worked example §8's `kine_mcs_range_energy` note above warns not to blur
+together on screen. MCS values exist for most of the other §4 events too
+(not just exiting muons) — full table in `d86r2-mcs.tsv`.
 
 ### 8.3 (N + Q) A "very busy showers and tracks" event to open video 3
 
@@ -472,20 +505,50 @@ the visual choice be made on the picture rather than on the table. Note
 `n_part` counts particle-flow objects, which is a proxy for busy, not a
 measurement of it — the picture is the arbiter.
 
+**Status: (N) DONE, (Q) still the owner's call.** Both candidates built as one
+local Bee set — `bee/d86r2/d86r2-video3-busy.zip`, index 0 = 18255/1/318769,
+index 1 = 18255/1/281781, both verified (layers + run/sub/evt) OK. Not
+uploaded pending owner authorisation. Which one opens video 3 is a visual
+judgment on the picture, as recommended above — not resolved here.
+
 ### 8.4 (Q) Open questions for the round-2 cut
 
 1. **Does video 3 keep 69314?** The direction reads as "replace 389538 with a
    busier event, then use 169626 and 142421" — silent on whether §5.3's
    never-merged EM shower stays. Default taken: keep it, since it is the only
    event where the −15 sentinel is the whole story.
-2. **Which candidate owns the BDT score in a two-candidate event?**
-   `d86-features.tsv` carries one `(numu_score, nue_score)` per *event* but two
-   T_kine rows for 179054. Video 2 would otherwise have to attach 0.81 to both
-   candidates, which is almost certainly wrong.
+2. **Which candidate owns the BDT score in a two-candidate event?** **Answered
+   — 0.81 belongs to candidate 1 only; it was never candidate 2's score to
+   begin with.** `T_tagger` carries `numu_score`/`nue_score` **per bundle**
+   (one row per `nu_index`); `pr_scores_table.py` (via `pr94_rows.primary_index()`)
+   collapses that to ONE row per event — "the longest selected main activity" —
+   for backward compatibility with the pre-pr/94 single-candidate schema, and
+   `d86-features.tsv` inherited that single value. Reading `T_tagger` directly
+   (`scripts/analysis/d86r2_video_round2.py` → `docs/86_video/d86r2-candidates.tsv`)
+   gives both candidates their **own** score:
+
+   | event | candidate | `nu_index` | selected len | `numu_score` | clears 0.9 WP? |
+   |---|---|---:|---:|---:|---|
+   | 179054 | 1 (primary) | 0 | 130.9 cm | **0.81** | no |
+   | 179054 | 2 | 1 | 110.5 cm | **4.24** | **yes** |
+   | 487303 (§3.7, for comparison) | 1 (primary) | 0 | 126.0 cm | 4.29 | yes |
+   | 487303 | 2 | 1 | 21.7 cm | −0.04 | no |
+   | 174661 (§3.7) | 1 (primary) | 0 | 135.2 cm | 3.53 | yes |
+   | 174661 | 2 | 1 | 130.1 cm | 2.91 | yes |
+
+   So for 179054 the picture inverts what the single scalar suggested: it is
+   candidate 2 (μ⁻ 263 + proton 173, the simpler final state) that is the
+   confident ν<sub>μ</sub>CC-like read, and candidate 1 (the busier proton +
+   π⁺ + μ⁻ + fragments state, 1070 MeV) that the BDT is unsure about. Do not
+   caption 0.81 next to both objects on screen.
 3. **Is a per-candidate flash still wanted anywhere in video 2?** The "two
    separate flash-matched bundles" line was the strongest evidence that the two
    179054 candidates are not one interaction split in half, and it is light
-   information. Dropping light entirely costs that argument.
+   information. Dropping light entirely costs that argument. **Data point, not
+   a resolution:** 179054's two candidates carry `gid 1` and `gid 1000005` in
+   the particle-flow tree — same pattern as 487303's `gid 1000005`/`gid 6`, so
+   the argument is available if wanted. Whether to spend a beat on it is still
+   the owner's call.
 
 ### 8.5 What is *not* needed — already verified locally
 
@@ -542,3 +605,105 @@ Two further questions on the same subject:
    confirming that `sum(kine_energy_particle[included]) + rest terms` closes to
    `kine_reco_Enu` on 81597 would let the card be built from the branches
    rather than from a subtraction.
+
+**Status: DONE — both answered, with code citations and a numeric check.**
+`scripts/analysis/d86r2_video_round2.py` re-emits the four vectors +
+`kine_reco_add_energy` for every §4 event's every `T_kine` row to
+`docs/86_video/d86r2-objects.tsv` (313 rows) and `docs/86_video/d86r2-mcs.tsv`
+(28 rows, one per (event, krow), also carrying `kine_reco_Enu`,
+`kine_reco_add_energy` and their sum).
+
+1. **Yes, baked in — there is no unstated 0.84 sitting between the two.**
+   `push_shower_kine()` (`NeutrinoKinematics.cxx:204-210`) stores
+   `shower->get_kine_best()/MeV` into `kine_energy_particle`.
+   `PRShower::get_kine_best()` (`PRShower.h:154-155`) falls back to
+   `kenergy_charge` whenever `kenergy_best == 0` (true for a plain EM shower —
+   nothing upstream sets `kenergy_best` for it). `kenergy_charge` is whatever
+   `PatternAlgorithms::cal_kine_charge()` returned, and that function
+   (`NeutrinoEnergyReco.cxx:188`) divides by `shower_fudge_factor` **before**
+   returning: `return overall / recom_factor / fudge_factor * kopts.w_value / 1e6`.
+   So a `kine_energy_info == 2` ("charge") row already has the fudge factor
+   applied at storage time. Confirmed on 81597: the 1362.9 MeV electron is
+   `kine_energy_info == 2`, i.e. it *is* `cal_kine_charge()`'s return value,
+   fudge and all.
+2. **Visible, but only as one event-level scalar — never split per object.**
+   `fill_kine_tree()` accumulates `ktree.kine_reco_add_energy` across every
+   pushed particle via `rest_term_rules(pdg, mass)` (0 for e⁻, the 8.6 MeV
+   `ave_binding_energy` for p/n, rest mass for μ/π/K —
+   `NeutrinoKinematics.cxx:96,102-107`), and at the end
+   (`NeutrinoKinematics.cxx:889-893`) `kine_reco_Enu = Σ kine_energy_particle
+   + kine_reco_add_energy`, **unconditional of `kine_energy_included`** — the
+   struct's own comment at `NeutrinoTaggerInfo.h:59-64` says so explicitly, so
+   the round-2 question's `[included]` above is not quite how the sum works;
+   this script's closure check therefore sums *every* row, not just the
+   included ones. Checked, not assumed: **28/28 (event, krow) rows close**
+   (`sum(kine_energy_particle) + kine_reco_add_energy == kine_reco_Enu` to
+   float precision). On 81597: `1362.865 + 139.332 = 1502.197`, `+8.600 =
+   1510.797` = the stored `kine_reco_Enu` exactly. `kine_reco_add_energy` is a
+   plain scalar `T_kine` branch (`NeutrinoTaggerInfo.h:33`) — the card can read
+   it directly ("148.2 MeV of rest mass + binding energy" for 179054's
+   candidate 1) but cannot break it down further into which object contributed
+   how much; that attribution does not exist in the output.
+
+---
+
+## 9. Round-2 delivery (2026-08-30, later same day)
+
+Everything in §8 tagged **(N)** is done; §8.4's three **(Q)** items are
+answered where the answer is a fact (Q2), supplied with new data where the
+answer is a creative call (Q3's flash gids), or left exactly as posed where it
+genuinely is one (Q1's default, §8.3's visual pick). No arm was re-run, no
+`clus`/`root` code was touched — this is the same "read what `prod0830`
+already produced" scope as §§1-8.
+
+**Machine note for whoever reads this next.** §8 was written on a machine
+that mirrors only the nine uploaded Bee sets read-only; this update was made
+on `wcgpu1.phy.bnl.gov`, which holds the full `work-<sample>-grp0825` /
+`work-<sample>-prod0830` trees §8 said were missing. If a future round hits
+the same "(N), needs a machine with the outputs" wall, that is the machine to
+use.
+
+### 9.1 What is still not done
+
+* **The five new Bee zips are local only, not uploaded.** Upload is the
+  owner-authorised step (CLAUDE.md escalation rule 6) — the same gate the
+  original nine went through (§ Repro block step 3). Awaiting authorisation.
+* **§8.3's visual pick (318769 vs 281781)** and **§8.4 Q1 (keep 69314?)** and
+  **Q3 (spend a video-2 beat on the per-candidate flash?)** are editorial
+  calls on the picture/cut, not reconstruction questions — not resolved here,
+  by design.
+* **How the five new events fold into video 2's/video 3's final Bee-set
+  membership** (replace vs. append vs. new standalone sets) is also an
+  editorial call the round-2 note did not specify beyond "replaces 487303" for
+  179054. The zips below are built standalone, one per §8 ask, so that
+  question stays open rather than pre-decided.
+
+### 9.2 Artifacts (round 2)
+
+| path | what |
+|---|---|
+| `scripts/analysis/d86r2_video_round2.py` | reads MCS + per-object kine branches + per-bundle `T_tagger` scores for every §4 event and the five new events |
+| `docs/86_video/d86r2-mcs.tsv` | `kine_mcs_*` + `kine_reco_add_energy` + the closure check, one row per (event, krow) |
+| `docs/86_video/d86r2-objects.tsv` | `kine_particle_type`/`kine_energy_particle`/`kine_energy_info`/`kine_energy_included`, one row per (event, krow, object) |
+| `docs/86_video/d86r2-candidates.tsv` | `T_tagger` per-bundle `numu_score`/`nue_score`, every row (not just `primary_index()`'s pick) |
+| `docs/86_video/d86r2-set-video2.txt`, `-video3-fail.txt`, `-video3-busy.txt` | the three new pick lists |
+| `bee/d86r2/d86r2-video2.zip` | 179054 (video 2, §8.1) |
+| `bee/d86r2/d86r2-video3-fail.zip` | 169626, 142421 (video 3 failures, §8.1) |
+| `bee/d86r2/d86r2-video3-busy.zip` | 318769, 281781 (video 3 busy-event candidates, §8.3) |
+
+Repro:
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+python3 scripts/analysis/d86r2_video_round2.py     # -> docs/86_video/d86r2-*.tsv
+python3 scripts/bee/make_pr_bee.py -q work-mcp2k-grp0825 -p work-mcp2k-prod0830 \
+    -o bee/d86r2/d86r2-video2.zip 179054
+python3 scripts/bee/make_pr_bee.py -q work-mcp1k-grp0825 -q work-ncpi0-grp0825 \
+    -p work-mcp1k-prod0830 -p work-ncpi0-prod0830 \
+    -o bee/d86r2/d86r2-video3-fail.zip 169626 142421
+python3 scripts/bee/make_pr_bee.py -q work-mcp2k-grp0825 -p work-mcp2k-prod0830 \
+    -o bee/d86r2/d86r2-video3-busy.zip 318769 281781
+# verify (adapt scripts/bee/verify_d86_bee.py's per-member run/sub/evt check;
+# all three zips read back 18259/1/179054, {18259/1/169626, 18255/1/142421},
+# {18255/1/318769, 18255/1/281781} respectively, 5/5 OK)
+```
