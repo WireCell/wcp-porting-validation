@@ -1720,6 +1720,10 @@ fi
 [ -n "${SBND_PI0_ACCEPT_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_accept_merge_dis_cm=${SBND_PI0_ACCEPT_MERGE}")
 # doc pr/132 round 9 (K19): back-projection NC vertex proposer miss cap, cm.  EMPTY = no TLA = the job default 0 (off).
 [ -n "${SBND_PI0_BP_VERTEX:-}" ] && CATH_TLA+=(--tla-code "pi0_bp_vertex_miss_cm=${SBND_PI0_BP_VERTEX}")
+# doc pr/133: K20 admit mu-typed shower-topology objects into the pi0 pools.  EMPTY = no TLA = C++ default false.
+[ -n "${SBND_PI0_ADMIT_MU:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_muon_showers=$([ "${SBND_PI0_ADMIT_MU}" = 0 ] && echo false || echo true)")
+# doc pr/133: K21 owner NC signature angle (deg) for the bp proposer.  EMPTY = no TLA = C++ default 0 (v3 gate).
+[ -n "${SBND_PI0_NC_SIG_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_sig_angle_deg=${SBND_PI0_NC_SIG_ANGLE}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
