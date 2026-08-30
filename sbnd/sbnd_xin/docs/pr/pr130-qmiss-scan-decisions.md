@@ -229,3 +229,78 @@ idx 1 matters most next: if 122660 also merges, two of two decisive events say
 the class is real and a merge-side round is justified. If it does not, the
 separator between idx 0 and idx 1 is the predicate, and finding it is the
 deliverable rather than a knob.
+
+## Part 8 — what is left to try, measured
+
+The scan says the merges are right (17/17) and Result 3 says no geometry
+selects them. So the next question is *mechanism*, not threshold. Two
+measurements, both off the existing sidecars:
+
+### The right shower is nearly always the bigger one
+
+For every missing segment held by some other reconstructed object, comparing
+the target shower with the holder (distinct (event, target, segment) triples;
+main-cluster charge excluded, as everywhere else in this round):
+
+| | segments | charge | share |
+|---|---|---|---|
+| target **more** energetic than the holder | **148** | 3.197e7 | **93.6%** |
+| target less energetic | 10 | 2.189e6 | 6.4% |
+
+Median energy ratio **7.8×**; 127 of 158 exceed 3×. Over 61 distinct
+(event, target, holder) triples. **Small showers are holding material that
+belongs to much larger ones** — e.g. 122660: a 73 MeV / 7-segment object holds
+charge belonging to a 960 MeV / 39-segment shower; 84229: 31.5 MeV holding from
+960.5 MeV.
+
+### The candidate mechanism is first-come-first-served
+
+`PRShower.cxx`'s flood-fill skips any segment already in `used_segments`
+(`used_segments.find(seg) == used_segments.end()`), and that skip is **silent** —
+no tape line. Whichever shower's walk arrives first claims the segment
+permanently; there is no comparison and no revisit.
+
+### …but the tape cannot yet distinguish that from unreachability
+
+Of 108 STOLEN segments, the target shower appears in the segment's own tape
+**once**. 91 segments name exactly one shower — the holder. That is consistent
+with "the holder got there first", **and equally consistent with "the target's
+walk never reaches that segment at all"**, because the `used_segments` skip
+emits nothing. The two hypotheses are **observationally identical in the current
+tape**, so the 93.6% is *not* evidence that reordering would fix anything. It is
+evidence that one measurement is worth making.
+
+### The measurement — a contention probe
+
+Tape, from inside the flood-fill, every segment a walk **reached and skipped
+because `used_segments` already held it**, with the holder's id. Env-gated,
+byte-neutral with the env unset, emitted from the code path it measures so
+census and mechanism cannot drift — the shape that worked for
+`WCT_PFNEAR_DEBUG` (pr/128) and the guard-freed tape (pr/130). It splits the
+pool cleanly:
+
+- the target's walk **did** reach the segment → genuine contention, the outcome
+  is order-dependent, and an ordering change is on the table;
+- it never reaches it even when free → a **reach** failure, and ordering is
+  irrelevant.
+
+**If it comes back contention, it also supplies the predicate Result 3 says we
+do not have** — *"merge when the dominant shower's walk was blocked by a
+smaller holder"* is a mechanism rule, not a distance, and it is the only
+candidate this round has produced that is not falsified.
+
+### Two constraints the owner should weigh before choosing this
+
+1. **An ordering change is not knobbable the way this campaign's knobs are.**
+   Every guard shipped in pr/123→pr/130 is a local admit/decline with an
+   absent-key default and a blast radius of a handful of events. Processing
+   order touches **every event with a shower**, so the whole reorder sits behind
+   one flag and the gate is the full 239-event manifest. This is a bigger piece
+   of work than anything in the campaign so far.
+2. **Determinism bites here specifically.** An energy-ordered walk needs a total
+   order with a stable tiebreak on cluster/segment ids — `kine_best` ties, and
+   float ordering over pointer-keyed containers is exactly M4 / §2-Determinism
+   territory. Get the tiebreak in before the first gate, not after.
+
+The 463565 π⁰ warning above is **not** retired by the scan and stays attached to
+any merge-side proposal: fixing the energy can cost the two-gamma separation.
