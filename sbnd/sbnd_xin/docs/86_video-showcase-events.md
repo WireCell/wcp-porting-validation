@@ -394,3 +394,112 @@ round as a satellite-absorption case.
 | `docs/86_video/d86-<category>.txt` | the wider *candidate pools* the ranking produced — NOT what was uploaded (e.g. `d86-nuecc.txt` has 3 entries, `d86-set-nuecc.txt` the 2 that shipped). Rebuild from `d86-set-*` only. |
 | `bee/d86/superseded-v1/` | the first ccpi0/ncpi0 build, before the §1.2 closure re-rank; kept so the earlier UUIDs stay explicable |
 | `bee/d86/*.zip` | the nine uploaded zips (kept for rebuild) |
+
+---
+
+## 8. Video round 2 — what the next build needs (2026-08-30)
+
+Three narrated Bee videos were built from these sets
+(`wire-cell-bee3/bee-video/make_sbnd_{pr_chain,topologies,failures}.mjs`, see
+`wire-cell-bee3/docs/sbnd-pattern-recognition-video.md`). Video 1, the
+ν<sub>e</sub>CC pattern-recognition walkthrough on 81597, is finished. Videos 2
+and 3 need re-cuts that this machine **cannot** build yet: the events the owner
+asked for are in the `prod0830` feature table but have **no Bee set**, and the
+grid work dirs (`work-*-grp0825` / `work-*-prod0830`) and `bee/d86/*.zip` do not
+exist here — only the nine uploaded sets, mirrored read-only from the server.
+
+Everything below is either **(N)** something needed from a machine with the
+`prod0830` outputs, or **(Q)** a question whose answer changes the narration.
+
+### 8.1 (N) Three Bee sets for events that already exist in `d86-features.tsv`
+
+Same recipe as §Repro step 2 — `make_pr_bee.py` with the sample's `-q/-p`
+roots, then upload and record the set UUID here. Layers needed:
+`img-global`, `clustering-global`, `track_fit-global`, `shower_track-global`,
+`vertices-global`, `mc`. **`op` is no longer needed** — the owner's round-2
+direction drops all light/flash content from videos 2 and 3, so charge–light
+matching appears only in video 1.
+
+| for | run/sub/evt | sample (`-q/-p` root) | `n_part` | E<sub>ν</sub> | excluded | `numu` / `nue` | reconstructed final state |
+|---|---|---|---:|---:|---:|---:|---|
+| video 2 — two ν candidates, **replaces 487303** | 18259/1/**179054** | `mcp2k` | 11 / 5 (2 rows) | 1070.3 + 563.1 | 131.4 (12.3 %) / 0.0 | 0.81 / −15 | `proton 496 + neutron 205 + mu- 205 + pi+ 185 + proton 131 + e- 23` ‖ `mu- 263 + proton 173 + neutron 4 + proton 4` |
+| video 3 — failure | 18259/1/**169626** | `mcp1k` | 6 | 638.2 | 142.2 (22.3 %) | −2.64 / **−10.07** | `gamma 511 + e- 511 + pi0 138 + gamma 102 + e- 102 + gamma 12` |
+| video 3 — failure | 18255/1/**142421** | `ncpi0` | 19 | 2707.1 | 422.2 (15.6 %) | **3.54** / −15 | `gamma 672 + e- 672 + gamma 555 + e- 555 + pi+ 502 + mu- 350` |
+
+Note 169626 carries a **real** ν<sub>e</sub> score (−10.07), not the −15
+sentinel — the BDT ran and rejected it. That is a different failure mode from
+§5.3's 69314, and worth keeping distinct in the narration.
+
+### 8.2 (N) The `kine_mcs_*` branches for the video events
+
+`wct-pr-perevt.jsonnet:1234` sets `mcs_enable = true` (SBND production, doc 84
+round 1, 2026-08-28), so `prod0830` should carry the five T_kine branches
+`kine_mcs_energy`, `kine_mcs_ambiguity`, `kine_mcs_tracklen`,
+`kine_mcs_range_energy`, `kine_mcs_segment_id`
+(`NeutrinoTaggerInfo.h:105-109`). `d86_video_picks.py` never read them, so
+they are **not** in `d86-features.tsv` and nothing here can quote them.
+
+Needed: those five values (per T_kine row) for at least the two ν<sub>μ</sub>CC
+events whose muons leave the detector — 18255/1/**290718** (μ 1138 MeV,
+476 cm fitted) and 18255/1/**283591** (μ 621 MeV, 264 cm fitted) — and
+ideally for every event in §4. Cheapest route is one more column block in
+`d86_video_picks.py` and a re-emit of `d86-features.tsv`.
+
+Why: the owner's direction is to quote MCS for the exiting muons instead of
+leaving them as "the chain's estimate for an exiting track". `kine_mcs_energy`
+is an MCS KE, and `kine_mcs_range_energy` is MCS's own CSDA range KE over the
+**trimmed** path (doc 80 §8.3) — deliberately not `cal_kine_range`'s number, so
+the two must not be presented as the same quantity.
+
+### 8.3 (N + Q) A "very busy showers and tracks" event to open video 3
+
+The owner ruled 389538 (§5.1) not busy enough. Ranking `d86-features.tsv` by
+`n_part` with ≥2 electron-type objects and ≥1 muon or ≥2 protons gives 498
+candidates; the head of that list, none of which has a Bee set:
+
+| run/sub/evt | sample | `n_part` (e / μ / p) | E<sub>ν</sub> | excluded | `numu` / `nue` |
+|---|---|---|---:|---:|---:|
+| 18255/1/**318769** | `mcp2k` | 36 (30 / 1 / 4) | 807 | 310 (**38.5 %**) | 0.10 / −15 |
+| 18255/1/**281781** | `mcp2k` | 34 (22 / 1 / 11) | 1007 | 5 (0.5 %) | 1.78 / −15 |
+| 18261/1/**285567** | `ncpi0` | 34 (25 / 1 / 4) | 1821 | 182 (10.0 %) | 0.99 / −6.69 |
+| 18259/1/**174771** | `mcp2k` | 31 (21 / 3 / 5) | 1802 | 394 (21.9 %) | 2.37 / −15 |
+| 18259/1/**168526** | `mcp1k` | 31 (24 / 2 / 1) | 2410 | 265 (11.0 %) | 3.72 / −15 |
+
+Recommendation: **318769** if the beat is meant to end on a failure (38.5 % of
+the energy never consumed), **281781** if it is meant to show the chain coping
+with a genuinely crowded event (11 protons, 0.5 % excluded). Two sets would let
+the visual choice be made on the picture rather than on the table. Note
+`n_part` counts particle-flow objects, which is a proxy for busy, not a
+measurement of it — the picture is the arbiter.
+
+### 8.4 (Q) Open questions for the round-2 cut
+
+1. **Does video 3 keep 69314?** The direction reads as "replace 389538 with a
+   busier event, then use 169626 and 142421" — silent on whether §5.3's
+   never-merged EM shower stays. Default taken: keep it, since it is the only
+   event where the −15 sentinel is the whole story.
+2. **Which candidate owns the BDT score in a two-candidate event?**
+   `d86-features.tsv` carries one `(numu_score, nue_score)` per *event* but two
+   T_kine rows for 179054. Video 2 would otherwise have to attach 0.81 to both
+   candidates, which is almost certainly wrong.
+3. **Is a per-candidate flash still wanted anywhere in video 2?** The "two
+   separate flash-matched bundles" line was the strongest evidence that the two
+   179054 candidates are not one interaction split in half, and it is light
+   information. Dropping light entirely costs that argument.
+
+### 8.5 What is *not* needed — already verified locally
+
+- **NC π⁰ 57709's proton (`13001`) dQ/dx.** The owner asked whether the
+  short prong is a proton and whether dQ/dx shows it. It does, textbook: 148
+  fitted points over 85 cm from the vertex, mean dQ/dx rising monotonically
+  3521 → 3974 → 4241 → 4460 → 4961 → 6021 → 7627 → **11711** in 11 cm bands.
+  That beat can be built with the set already mirrored.
+- **The cathode crosser's muon-vs-proton contrast** (14001 flat at 2348 mean
+  over 264 cm; 14002 rising 4356 → 8869 over 8 cm) and **290718's muon**
+  (8000, 831 points, 476 cm, flat at 2311) — both already used in video 2.
+- **Video 1's energy sum.** E<sub>ν</sub> is a sum, not a measurement
+  (`NeutrinoKinematics.cxx:96`, `NeutrinoPatternBase.h:112`): electron adds
+  nothing, a nucleon adds the 8.6 MeV average binding energy, μ/π/K add their
+  rest mass. For 81597 that is 1362.9 (e⁻, from `kine_energy_particle`) +
+  139.3 (proton KE) + 8.6 = **1510.8**, which is why the flow tree's rounded
+  `e- 1362` and `proton 139` do not visibly add up.
