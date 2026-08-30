@@ -363,3 +363,27 @@ Measured, in order:
 Not done: the knob, its gate, and the Bee A/B. `shower_absorb_decline_sticky`
 now has a measured blast radius to be checked against, which is what was
 missing when Part 2 proposed it.
+
+## Adjacency check — the pairing is not an artifact of the running context
+
+The scan pairs a decline with the most recent `shower_start_seg=` seen, which
+could in principle attach a decline to the wrong shower if candidate blocks
+interleave. Checked on all 10:
+
+- **9 of 10 EXACT**: the context line naming the shower also names the same
+  segment, 1–2 lines before the decline. No interleaving.
+- **1 WEAK** (176502 seg 109141): the decline sits inside an unbroken run of
+  `pass3_cluster_map` absorbs that all carry `shower_start_seg=109119`, and
+  the segment's own admit line names that shower explicitly
+  (`SHOWER_ABSORB DIRECT site=pass4_proximity shower_start_seg=109119
+  seg=109141`, log line 13747, vs the decline at 13592). Substantively
+  confirmed; only the two-line adjacency proof does not apply.
+
+The admit side is never inferred — every `SHOWER_ABSORB DIRECT` line carries
+its own `shower_start_seg=`.
+
+**Read the charge share with care.** The 50.7% figure is two segments, one of
+which (100222 seg 14003) is 34.5% of the pool by itself; drop it and the
+figure is 16.2%. The finding that carries weight is the **scan**: 10 objects
+over 6 of 239 events through exactly two guard→site pairs, which does not
+depend on any one event.
