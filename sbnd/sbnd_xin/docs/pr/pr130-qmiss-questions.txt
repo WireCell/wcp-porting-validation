@@ -1,0 +1,134 @@
+pr/130 item 4 -- q_miss merge questions
+Write YES (merge into the shower) or NO (correctly separate) after each ANSWER:
+
+  em_display  http://localhost:5017/em_display_viewer   tag emscan-0829-pr130qmiss
+  Bee         https://www.phy.bnl.gov/twister/bee/set/8daa1825-f386-4ba2-9094-61577e075f9d/event/list/
+
+d_start = distance between the two objects' START points.  angle = opening angle
+of their dir15 axes.  You ruled MERGE on 463565 at d_start 9-12 cm with the angles
+83-157 deg, i.e. proximity of the starts outweighed the directions.  NOTE that most
+of the other candidates are NOT close in that sense -- 122660's are ~90 cm away and
+54332's 80-134 cm -- so a different answer there is expected, and wherever the
+answer flips is the predicate this round is looking for.
+================================================================================================
+
+### idx 0   event 463565 (ncpi0)   9.077e+06 total   4 question(s)    [ANSWERED 2026-08-29: MERGE, all four]
+  Q1  merge object 115088  (17 seg, 216 MeV) into shower 13001   ?
+      WHOLE    q=4.430e+06   d_start  11.8 cm, angle 104.0 deg
+      ANSWER: ______
+  Q2  merge object 114086  (10 seg,  29 MeV) into shower 13001   ?
+      WHOLE    q=2.577e+06   d_start   9.4 cm, angle 144.4 deg
+      ANSWER: ______
+  Q3  merge object 109073  ( 5 seg,  77 MeV) into shower 13001   ?
+      WHOLE    q=1.798e+06   d_start   9.4 cm, angle 156.6 deg
+      ANSWER: ______
+  Q4  merge object 72064   ( 1 seg,  14 MeV) into shower 13001   ?
+      WHOLE    q=2.718e+05   d_start  46.1 cm, angle 140.6 deg
+      ANSWER: ______
+
+### idx 1   event 122660 (nuecc48)   6.868e+06 total   3 question(s)
+  Q5  merge object 47050   ( 7 seg,  73 MeV) into shower 9110    ?
+      WHOLE    q=3.432e+06   d_start  90.0 cm, angle  83.0 deg
+      ANSWER: ______
+  Q6  merge object 54071   ( 3 seg,  93 MeV) into shower 9110    ?
+      WHOLE    q=2.650e+06   d_start  89.8 cm, angle  42.8 deg
+      ANSWER: ______
+  Q7  merge object 53070   ( 3 seg,   6 MeV) into shower 9110    ?
+      PARTIAL  q=7.858e+05   d_start  88.2 cm, angle 118.3 deg   [PARTIAL: only 2 of 3 seg wanted]
+      ANSWER: ______
+
+### idx 2   event 54332 (mcp2k)   3.648e+06 total   7 question(s)
+  Q8  merge object 97060   (16 seg, 148 MeV) into shower 16014   ?
+      PARTIAL  q=2.069e+06   d_start  90.2 cm, angle  95.0 deg   [PARTIAL: only 9 of 16 seg wanted]
+      ANSWER: ______
+  Q9  merge object 123098  ( 2 seg,  59 MeV) into shower 122091  ?
+      WHOLE    q=8.429e+05   d_start  80.4 cm, angle   6.1 deg
+      ANSWER: ______
+  Q10 merge object 121084  ( 2 seg,  36 MeV) into shower 122091  ?
+      PARTIAL  q=2.261e+05   d_start 105.7 cm, angle  46.2 deg   [PARTIAL: only 1 of 2 seg wanted]
+      ANSWER: ______
+  Q11 merge object 76038   ( 1 seg,  17 MeV) into shower 122091  ?
+      WHOLE    q=1.948e+05   d_start 100.1 cm, angle  48.2 deg
+      ANSWER: ______
+  Q12 merge object 77039   ( 4 seg,   7 MeV) into shower 122091  ?
+      WHOLE    q=1.570e+05   d_start 107.9 cm, angle   7.8 deg
+      ANSWER: ______
+  Q13 merge object 81043   ( 1 seg,   6 MeV) into shower 122091  ?
+      WHOLE    q=1.228e+05   d_start 134.4 cm, angle   5.9 deg
+      ANSWER: ______
+  Q14 merge object 80042   ( 1 seg,   0 MeV) into shower 122091  ?
+      WHOLE    q=3.525e+04   d_start 126.7 cm, angle  86.3 deg
+      ANSWER: ______
+
+### idx 3   event 181050 (mcp2k)   1.768e+06 total   2 question(s)
+  Q15 merge object 68031   ( 7 seg,  77 MeV) into shower 15006   ?
+      PARTIAL  q=1.496e+06   d_start  41.8 cm, angle 123.8 deg   [PARTIAL: only 6 of 7 seg wanted]
+      ANSWER: ______
+  Q16 merge object 61021   ( 1 seg,  15 MeV) into shower 15006   ?
+      WHOLE    q=2.722e+05   d_start  46.9 cm, angle  57.6 deg
+      ANSWER: ______
+
+### idx 4   event 105946 (ncpi0)   1.530e+06 total   3 question(s)
+  Q17 merge object 53030   ( 6 seg, 109 MeV) into shower 55063   ?
+      PARTIAL  q=1.235e+06   d_start  34.9 cm, angle  30.3 deg   [PARTIAL: only 4 of 6 seg wanted]
+      ANSWER: ______
+  Q18 merge object 54032   ( 1 seg,  12 MeV) into shower 55063   ?
+      WHOLE    q=1.520e+05   d_start  24.0 cm, angle  67.1 deg
+      ANSWER: ______
+  Q19 merge object 39013   ( 1 seg,  12 MeV) into shower 56056   ?
+      WHOLE    q=1.428e+05   d_start  19.1 cm, angle   9.4 deg
+      ANSWER: ______
+
+### idx 5   event 21073 (ncpi0)   1.423e+06 total   1 question(s)
+  Q20 merge object 31023   (11 seg,  83 MeV) into shower 60081   ?
+      PARTIAL  q=1.423e+06   d_start  32.2 cm, angle  26.9 deg   [PARTIAL: only 7 of 11 seg wanted]
+      ANSWER: ______
+
+### idx 6   event 342199 (nuecc48)   1.318e+06 total   1 question(s)
+  Q21 merge object 25109   ( 8 seg,  60 MeV) into shower 74101   ?
+      PARTIAL  q=1.318e+06   d_start  16.0 cm, angle  96.0 deg   [PARTIAL: only 7 of 8 seg wanted]
+      ANSWER: ______
+
+### idx 7   event 76346 (mcp2k)   1.234e+06 total   6 question(s)
+  Q22 merge object 41031   ( 5 seg,  31 MeV) into shower 14059   ?
+      WHOLE    q=4.828e+05   d_start  12.5 cm, angle 149.0 deg
+      ANSWER: ______
+  Q23 merge object 42033   ( 2 seg,  13 MeV) into shower 14059   ?
+      WHOLE    q=4.023e+05   d_start   2.8 cm, angle  43.5 deg
+      ANSWER: ______
+  Q24 merge object 39029   ( 1 seg,   4 MeV) into shower 14059   ?
+      WHOLE    q=1.158e+05   d_start  13.1 cm, angle 125.5 deg
+      ANSWER: ______
+  Q25 merge object 14058   ( 3 seg,  36 MeV) into shower 14059   ?
+      WHOLE    q=8.443e+04   d_start   0.0 cm, angle  73.3 deg
+      ANSWER: ______
+  Q26 merge object 37027   ( 1 seg,   2 MeV) into shower 40030   ?
+      WHOLE    q=7.892e+04   target shower 40030 is not a separate node here
+      ANSWER: ______
+  Q27 merge object 38028   ( 1 seg,   3 MeV) into shower 40030   ?
+      WHOLE    q=6.954e+04   target shower 40030 is not a separate node here
+      ANSWER: ______
+
+### idx 8   event 469665 (nuecc48)   1.178e+06 total   3 question(s)
+  Q28 merge object 66042   ( 3 seg,  59 MeV) into shower 15003   ?
+      PARTIAL  q=6.970e+05   d_start 182.8 cm, angle  23.3 deg   [PARTIAL: only 2 of 3 seg wanted]
+      ANSWER: ______
+  Q29 merge object 62073   ( 2 seg,  20 MeV) into shower 15003   ?
+      WHOLE    q=4.128e+05   d_start  60.6 cm, angle  30.3 deg
+      ANSWER: ______
+  Q30 merge object 68052   ( 6 seg,  40 MeV) into shower 15003   ?
+      PARTIAL  q=6.799e+04   d_start  95.4 cm, angle  38.2 deg   [PARTIAL: only 3 of 6 seg wanted]
+      ANSWER: ______
+
+### idx 9   event 54453 (mcp2k)   1.087e+06 total   2 question(s)
+  Q31 merge object 58051   ( 6 seg,  39 MeV) into shower 57050   ?
+      PARTIAL  q=7.135e+05   d_start  29.7 cm, angle  78.4 deg   [PARTIAL: only 1 of 6 seg wanted]
+      ANSWER: ______
+  Q32 add the loose charge to shower 57050 ?
+      NOHOLDER q=3.735e+05   charge no reconstructed object holds at all
+      ANSWER: ______
+
+================================================================================================
+32 questions.  Q1-Q4 answered (MERGE).  Q5 and Q6 are the next decisive pair:
+if 122660 also merges at ~90 cm, start proximity is NOT the rule and the class is
+broadly real; if it does not, the rule is proximity and 463565 was the special case.
