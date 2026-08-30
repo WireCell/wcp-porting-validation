@@ -341,15 +341,41 @@ by one type:
 | `UbooneNueBDTScorer` | `float val1` | **4.3009362** | nue ceiling 4.300936 |
 | `UbooneNumuBDTScorer` | `double val1` | **4.3010083** | numu clamp 4.301008 |
 
-Primary evidence that the prototype really exceeds it, from this tree:
+Two independent pieces of evidence, and they are worth keeping distinct.
+
+**(a) The clamp is what bites, not a forest that saturates on its own.** If the
+xgboost forest simply topped out just under 0.9999, the approach to the ceiling
+would be empty and the pile-up would be its own natural endpoint. It is not:
+both scores climb *continuously* to the ceiling and then hit a delta function.
+
+| | distinct values in the approach | at the ceiling |
+|---|---|---:|
+| `nue_score` | 3.402, 4.055, 4.159, 4.242 | **38** at 4.300936 |
+| `numu_score` | 24 distinct values, 4.182 … 4.297 | **98** at 4.301008 |
+
+```bash
+awk -F'\t' 'NR>1 && $15==1 && $24!="" && $24+0>3.0 && $24+0<4.4 {print $24}' \
+    products/prod0825/*-scores-prod0825.tsv | sort -g | uniq -c   # $23 for numu
+```
+
+That is a live distribution being truncated.
+
+**(b) The prototype really does exceed 4.301.**
 `qlport/docs/perf-optimization.md:194` records uBooNE ev6786 at toolkit
-`nue_score +4.30` vs **prototype +10.7**.
+`nue_score +4.30` vs **prototype +10.7**. That is one event, quoted inside a
+perf-round note rather than a score-range study — it establishes *that* the
+prototype goes past the toolkit ceiling, which is the load-bearing claim. The
+**≈ ±15** figure is not measured here: it is inferred from the choice of `-15`
+as the "background-like default", a value only meaningful if it sits below the
+real floor.
 
 **Consequence.** `nue_score > 7.0` requires `v > 0.9999998`; the clamp erases
 everything above `v = 0.9999`. The cut therefore selects **0 events in all
 four samples, by construction** — and the 32 of 47 νeCC events sitting at
-exactly 4.300936 are precisely the ones whose true score lies somewhere in
-4.30 … ~15. That information is destroyed before it reaches `T_tagger`.
+exactly 4.300936 are precisely the ones whose true score is *somewhere above*
+4.30, with no way to tell which of them would clear 7.0. That is the
+information destroyed before it reaches `T_tagger`: not the existence of a
+signal region, but all ordering inside it.
 
 This is **reported, not fixed**: removing the clamp changes production output
 unconditionally (escalation rules 1 and 4). Until it is decided, this document
