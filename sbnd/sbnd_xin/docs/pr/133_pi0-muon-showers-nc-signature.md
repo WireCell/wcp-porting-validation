@@ -70,6 +70,51 @@ then the K19 mechanics unchanged (miss cap, back-projection t-range, 1-100
 cm shift, (100,160)+offset window, best |delta|).  0 (default) = v3 gate =
 r9 behavior byte-identical.
 
-## 4. Iteration 1 — measurements
+## 4. Iteration 1 — measurements (K20 and K21, separate arms)
 
-(filled below as arms land)
+Gates first: `work-pr133-off` vs `work-pr132-r10off` **PASS 4/4 (132+212+38+96
+= 478 archives byte-identical)**; wcdoctest-clus 2585 PASS; compiled-config
+proofs (keys present in the dbg1 ON configs, absent in the off configs).
+Toolkit commit `8432b7af` (pushed).
+
+### 4.1 K20 admission needed a v2 — the flag was self-defeating
+
+dbg2 tape: both target showers refuse `why=notflag` — `get_flag_shower()` is
+FALSE for the mistyped class (that is exactly why the typer called them 13).
+v2 admission = not-in-long-muon AND (flag OR the file's own shower-ish-muon
+idiom: `len < 40 cm && seg_dir_weak`).  dbg3: both admitted; 166870 gains an
+accepted in-window pair m=109.1 with both members re-stamped EM.
+
+### 4.2 Arm results vs the hand scan (98+141 manifests, 239 events each arm)
+
+| arm | census (exact/partial/none/no-group) | ledger | movers (vtx105) |
+|---|---|---|---|
+| `off`  | 31 / 16 / 1 / 18 | 120/132 = 90.9% OK | — |
+| `k20`  (`SBND_PI0_ADMIT_MU=1`) | 31 / 16 / 1 / 18 — one row moved: 166870 partial, blocker `g2:pdg=13` CLEARED | 90.9% | 0 x4 |
+| `k21`  (`SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15`) | identical, 0 rows moved | 90.9% | 1: 76346 moved 4.29 cm (30.27→33.73 to click) — the r9 flat-mass ambiguity, no other mover |
+
+K21 vs raw K19 (r9): the same two NC pair rescues fire (76346 true pair
+m=129.6; 116962 m=125.8, and it now picks γ1=21072 232 MeV over the off-arm's
+21070) — with ZERO of K19's 7 ADVERSE (v4 refuses 406125's p+mu vertex,
+506746, 486687; smoke-verified).  The r9 +1 exact (165157) does not fire
+under v4 — that event is not NC-signature.  76346's vertex still cannot be
+fixed from pi0 observables (the flat-mass finding, confirmed third time).
+
+### 4.3 Why the census headline cannot move from admission knobs anymore
+
+The 35 non-exact rows: ~16 have the LABEL pair mass outside (100,160) — and
+their RECO pair masses are far worse (54341: label 101, reco pair masses
+22-25 — the charge/angle deficit is upstream, owner-scoped out).  The
+54341/71872 "boundary" reading is an illusion: no offset knob reaches a reco
+mass of 22.  8 empty-why partials = wrong-partner/fragmentation (K12/K16/K18
+territory, measured).  K20 closed the LAST admission-class blocker (166870).
+
+### 4.4 The one new live defect: wrong-partner-by-RANKING (166870)
+
+With K20 the true pair (85045 x 87058, m=114.6, in-window) EXISTS in the
+recorded pair list and LOSES the greedy ranking to (10013 x 87058, m=123.8):
+the rank key is |m-125| minus a 6 MeV BONUS for ct2+ct2 pairs — fake scores
+1.2, truth 4.4.  Iteration 2 = a full-tape probe arm (`k2021p` = K20+K21+
+probes = also the combined production-candidate measurement) + an OFFLINE
+ranking-policy simulation over all recorded pairs before spending any knob
+(the round-10 tape-first method).
