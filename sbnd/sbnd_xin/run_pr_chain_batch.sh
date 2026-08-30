@@ -1718,6 +1718,8 @@ fi
 [ -n "${SBND_EM_BACKEXT_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_em_backext_len_cm=${SBND_EM_BACKEXT_LEN}")
 # doc pr/132 round 7 (K18): acceptance-aware fragment merge reach, cm.  EMPTY = no TLA = the job default 0 (off).
 [ -n "${SBND_PI0_ACCEPT_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_accept_merge_dis_cm=${SBND_PI0_ACCEPT_MERGE}")
+# doc pr/132 round 9 (K19): back-projection NC vertex proposer miss cap, cm.  EMPTY = no TLA = the job default 0 (off).
+[ -n "${SBND_PI0_BP_VERTEX:-}" ] && CATH_TLA+=(--tla-code "pi0_bp_vertex_miss_cm=${SBND_PI0_BP_VERTEX}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
