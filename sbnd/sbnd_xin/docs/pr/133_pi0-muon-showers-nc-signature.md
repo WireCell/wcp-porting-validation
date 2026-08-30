@@ -250,3 +250,104 @@ python3 scripts/pr132_pi0_census.py --manifest98 em117-133k21v498-manifest.tsv -
     --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr133-census-k21v4.tsv
 for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr90_movers.py work-pr133-off4-$s work-pr133-k21v4-$s --tags vtx105; done
 ```
+
+## 11. K21 v2.2 — the owner's Particle-Flow update (toolkit `1c344142`)
+
+Owner (on the v2.1 Bee): *"The result is quite good, but the Particle Flow
+should be updated ... once the vertex is changed, the electron connecting to
+the original vertex should be updated, or included in the EM shower ... The
+other low-energy gammas can be associated with the pi0 gammas ... idx 3,4,5
+are not NC pi0.  Note this feature should only work for NCpi0 events."*
+
+New knob `pi0_nc_pf_assoc_deg` (default 0 = off; runs only after an
+NC-signature fire): (1) objects CO-STARTED with a pair gamma (< 1 cm)
+absorb into it at any energy — the old wrong vertex is seated inside the
+shower, so its attached "electron" shares the exact start point; (2) < 35
+MeV satellites within the knob cone of a gamma ray from the NEW vertex
+absorb too.  Absorb = the K18 splice sequence; charges and the registered
+pio mass are refreshed post-absorb.
+
+`k21v5` (bp=8 angle=15 floor=5 pf=20): fires exactly {76346, 116962};
+census 32 exact byte-flat; **ledger 90.2 → 90.9%** (76346 g1 UNDER+SIBS →
+OK: 159.9 → 243.8 MeV vs label 246.7 = ratio 0.99); movers zero ADVERSE;
+off5 gate vs flipchk PASS 4/4 (478/478); doctest green.
+- 76346: electron 14058 + 5 satellites absorbed; the event is now 2 showers
+  + a proton; vertex 1.3 cm from the owner's hand vertex.
+- 116962: co-started 21070+21073 absorbed → right gamma 431 MeV; the LEFT
+  gamma is still 3 pieces (58035 119 / 22025 112 / 67056 55 MeV — too big
+  for the satellite cap, not co-started).  Vertex still +12 cm.
+
+Bee: OFF `a6864922-f952-499e-a452-2a65d40513b4` / ON
+`9c5cbb7e-5eba-4adb-9218-1ec9488ad134` (`bee/pr133k21v22/`).
+
+Repro:
+```
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 off5 0 && ...141...   # gate vs flipchk PASS 4/4
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 k21v5 0 SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15 SBND_PI0_NC_FLOOR=5 SBND_PI0_NC_PF_ASSOC=20 && ...141...
+# census/ledger/movers as sec 10; ledger mover: 76346 g1 UNDER+SIBS -> OK
+```
+
+## 12. The state of pi0 clustering — review + next-round options (owner request)
+
+### 12.1 Where things stand
+
+Campaign trajectory (doc pr/126 → here): exact 26 → **32** of 66 hand pi0
+(48.5%), sharing-a-gamma 71%; gamma ledger **90.9% OK** at the k21v5 point
+(90.2% production); nueCC-fake counter 2 → **1** (the survivor is the
+76346 misflag, which K21 itself clears); movers 0.  Production ON: fudge
+0.84, K7/K8, K3=29, K16@120, K20.  Measured-and-waiting: K21 v2.2 chain
+(bp 8 / angle 15 / floor 5 / pf 20), DEFAULT OFF, pending the owner's Bee
+verdict.
+
+### 12.2 The 34 residual misses, by measured cause
+
+| class | n | events (sample) | verdict |
+|---|---|---|---|
+| label mass outside (100,160) | 14 | 21073 219, 396222 444, 348691 298, 142421 260, 286655 243, 259542 177, 486907 172, 280159 76, 281485 67, 71178 26, 103798 74, 168432 62, 280972 84, 409634 83 | reco pair masses are far BELOW label (54341: label 101, reco 22-25) — angle compression + charge deficit; upstream of the finders |
+| wrong-partner / fragmentation (empty-why) | 16 | partial: 52044 105946 165157 166870 176986 269774 506114; no-group: 37112 56243 56982 64591 342199 347129 349549 359980 415278 | ranking measured dead (sec 5.1); fragments/satellites are the live part (see 12.4) |
+| mistyped gamma (211) | 2 | 54341, 71872 | window-blocked even if readmitted (masses ~96 scaled); dead until charges move |
+| label gamma absent | 2 | 76346 g2(old-era), 347824 g1 | era artifacts / genuinely missing |
+
+Ledger residuals (13 gammas): UNDER+SIBS 3 (105946 g1, 342199 g1+g2 — siblings EXIST, nothing merges them), UNDER-nosibs 3, OVER 4 (3 = the accepted K16 trade), ABSENT 2.
+
+### 12.3 Measured DEAD — do not re-run
+
+Geometry merges (K12 pairing-cone, K16-v1 forward-cone at 60, K17 back
+tube); acceptance-aware merge K18 (fusion mode); the P2 knob family for NC
+(K14/K4/K5/K13 — ordering lock); ALL ranking policies (sec 5.1, calibrated
+simulator); centroid rays for MASS (round 10); mass-window/offset tuning
+(K1 closed, K11 measured); ten admission-time features (pr/130); the
+wrong-vertex RANKING front (owner-scoped out, pr/132 sec 12.1).
+
+### 12.4 Ranked next-round options
+
+1. **Port the v2.2 PF association to the WITH-vertex finder** (front C).
+   After a P1 accept, absorb co-started objects + low-E satellites into the
+   pair gammas using the same cone-from-vertex machinery.  Concrete
+   specimens: 342199 (BOTH gammas UNDER+SIBS with exactly 1 sibling each —
+   heals to a likely exact), 105946 g1 (7 siblings, 142.9 MeV deficit),
+   52044.  Expected: +1-2 exact, +2-4 ledger OK.  Machinery exists as of
+   `1c344142`; measurable in one arm.
+2. **The NC left-complex fragment merge** (116962, the owner's open item).
+   Extend v2.2 rule (1) beyond co-started: fragments whose axes co-point
+   at the shared conversion region (or whose seats chain to the same
+   complex).  Needs a merge criterion decision; after merging, re-derive
+   the gamma2 ray and RE-back-project — this is what unlocks the far
+   vertex.  Iterative accept (merge -> re-ray -> re-cross) is the design
+   question for the owner.
+3. **Stub-prong NC signature variant** (180801, 259542): the v4 gate
+   refuses vertices carrying a short non-shower stub.  A variant allowing
+   <= 1 stub below ~N cm (still no long muon, still 2-gamma) + the v2.2
+   machinery.  2 specimens; r9 found them geometrically degenerate at the
+   OLD rays — the end-agnostic rays may change that; cheap to measure.
+4. **Pi0 mass peak refit at the new production point** (analysis only):
+   the 0.84 fudge was set at the pr/126 point; with K16@120 + K20 + K3=29
+   the charge scale of the paired population changed slightly (3 OVER
+   gammas).  Refit -> confirm or trim the fudge.  Feeds every mass window.
+5. **PARK: the outside-window class** (14 events).  Three start-fix
+   attempts measured dead; the deficit is upstream angle/charge.  Owner has
+   scoped upstream imaging out; this class needs new information (e.g. a
+   start re-derivation campaign) — not a finder knob.
+
+My recommendation: rounds in order 1 -> 2 (with the owner's merge-criterion
+input) -> 3, with 4 as a parallel analysis.
