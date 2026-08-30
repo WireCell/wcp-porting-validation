@@ -304,3 +304,80 @@ candidate this round has produced that is not falsified.
 
 The 463565 π⁰ warning above is **not** retired by the scan and stays attached to
 any merge-side proposal: fixing the energy can cost the two-gamma separation.
+
+## Part 9 — the contention probe answered: ordering is DEAD
+
+Probe shipped (`WCT_SHOWER_BLOCKED_DEBUG`, `PRShower.cxx`), gate PASS, measured.
+
+### Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_blocked_probe.sh gate    # env UNSET -> byte-identity gate
+./scripts/pr130_blocked_probe.sh probe   # env SET   -> the tape
+scripts/pr130_blocked_census.py > docs/pr/pr130-blocked-census.txt
+```
+
+### Validation before the result
+
+`wcbuild` rc=0; freshness proof lib **19:40:15** > src **19:39:53** (M1);
+`wcdoctest-clus` **235/235**. Byte-identity gate with the env unset, new binary
+vs production `work-pr130r1-bon{,141}-*`: **PASS, all archives byte-identical**
+on both arms, and the calib dumps compare SAME.
+
+And the probe is not silently mis-matching ids — the check that had to pass
+before the null result could be believed: **every target shower emits BLOCKED
+lines** (4–21 each) and ADD lines in its own event. The walks ran, the join
+works; they are simply never blocked on the segments they are missing.
+
+### The result
+
+| | segments | charge | share |
+|---|---|---|---|
+| **CONTENTION** — the target's walk reached it and was refused | **0** | 0 | **0.0%** |
+| **UNREACHED** — the target's walk never gets there at all | **78** | 2.196e7 | **100.0%** |
+
+**0 of 78, over 7 events and 2.196e7 of charge.** First-come-first-served on
+`used_segments` is **not** the mechanism, and a processing-order or revisit
+change would recover **nothing**. That is the whole value of the probe: it
+retired, for the cost of one gated build, the reorder that Part 8 flagged as
+needing a full 239-event gate.
+
+### What it is instead
+
+The walk is a flood-fill over graph connectivity, so it cannot acquire a
+cluster it is not connected to — and that is exactly the situation:
+
+| | segments | charge | share |
+|---|---|---|---|
+| missing segment's cluster **already held** by the shower | 1 | 8.272e5 | 3.8% |
+| **cluster entirely absent** from the shower | **77** | 2.113e7 | **96.2%** |
+
+So the whole of the owner-approved under-clustering is **cross-cluster
+acquisition**: the shower has to take on whole new clusters, which no walk
+change can do.
+
+### Where that leaves the energy asymmetry — it moves one level up
+
+Part 8's 93.6% (target more energetic than the holder, median 7.8×) is **not**
+"the small shower got there first". The cross-cluster absorbers — `pass4_angle`
+39 seg, `in_other_clusters_seg_cone` 28, `from_vertices` 20,
+`in_other_clusters_A` 13 — reached these clusters and **assigned them to the
+smaller shower**. It is still an assignment error; it just happens at those
+sites, not in the walk.
+
+**The next discrimination is the same question one level up**, and it needs the
+same kind of probe at those sites: *when a cross-cluster absorber gives a
+cluster to shower B, was shower A ever a candidate for it?*
+
+- **A was a candidate and lost** → a tie-break rule ("prefer the more energetic
+  shower") fixes 93.6% by charge, fires only where there is a genuine
+  competition, and is therefore naturally low-blast-radius. It is **not** a
+  geometric predicate, so Result 3 does not falsify it.
+- **A was never a candidate** → the candidate enumeration is too narrow, and the
+  fix is upstream of any predicate.
+
+Those absorbers currently tape admissions only, so the question is not
+answerable from anything on disk today.
+
+The 463565 π⁰ warning still stands against any merge-side change.
