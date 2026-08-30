@@ -19,6 +19,24 @@ Everything runs inside the apptainer; non-interactive shells need `.bashrc` firs
 - `setup-local-opt.sh` — legacy `opt` install; sbndcode cfg wins (use for sim and the OLD matching chain).
 - `setup-ap.sh` — AP matching/imaging env: setup-local-opt.sh + prepend toolkit cfg (so toolkit img/clus/qlmatching/simparams win, Xin's env) + sbnd_xin + wire-cell-data/sbnd/photodet. Use ONLY for the AP chain, not sim.
 
+### samweb / SAM queries
+
+`samweb` works **only inside SL7 with the ups environment set up**:
+```
+in-gpvm-sl7.sh bash -c '
+  source /nashome/y/yuhw/.bashrc
+  source .../sbnd/setup-local-opt.sh
+  setup sam_web_client
+  export SAM_EXPERIMENT=sbnd EXPERIMENT=sbnd
+  samweb describe-definition <def>'
+```
+- `setup sam_web_client` (gives v3_6) is required. A hand-prepended PATH to the
+  cvmfs v3_3 client fails, and so does running from the bare build node.
+- **Do NOT test reachability with `getent hosts samweb.fnal.gov`** — that fails
+  even where `samweb` itself works, so it reports a blocker that isn't there.
+  Run the real command. (Diagnosed the wrong way round 2026-08-21, which cost a
+  round trip asking the owner to run a query the agent could run itself.)
+
 ## Imaging+clustering+QL-matching chains
 
 - OLD (obsolete): `obsolete/wcls-img-clus-matching.{fcl,jsonnet}` — larwirecell `wclsQLMatching`, sbndcode `img.jsonnet`

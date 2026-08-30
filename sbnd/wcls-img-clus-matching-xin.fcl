@@ -86,6 +86,14 @@ physics :{
                 # T_kine, hence numu_score / nue_score / kine_reco_Enu; the Bee
                 # "mc" node keeps Enu and both scores regardless.
                 enable_tracking_root: "true"
+                # PR operating point.  "sync" (default) passes the ~151 knobs
+                # Xin's 2-step wct-pr-perevt.jsonnet sets, via the generated
+                # pr-operating-point.jsonnet, so this chain reconstructs at the
+                # SBND production operating point.  "preflip" reproduces the
+                # pre-2026-08-29 behaviour that issue-16 (MC) and issue-18 (data)
+                # were run with -- keep it to regenerate those campaigns.
+                # Gate: issues/17-.../scripts/compile-both.sh must exit 0.
+                pr_operating_point: "sync"
                 opflash0_input_label: "opflashtpc0:"
                 opflash1_input_label: "opflashtpc1:"
             }

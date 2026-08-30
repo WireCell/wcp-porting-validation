@@ -1,0 +1,5 @@
+# A/B arm: the pre-2026-08-29 PR operating point (ai-helper issue 17), i.e. what
+# issue-16 (MC) and issue-18 (data) were actually run with.  Use to reproduce
+# those campaigns, or to measure what synchronising the ~151 knobs changed.
+#include "wcls-img-clus-matching-xin.fcl"
+physics.producers.sig2img.wcls_main.params.pr_operating_point: "preflip"

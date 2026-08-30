@@ -197,10 +197,35 @@ local matching_joint = qlm.matching_joint(
 // merged across the cathode -> the taggers judge the wrong (merged) geometry
 // (e.g. nue evt 46363 cluster 19 spans both TPCs -> FC=false, vs the compact
 // post-split main -> FC=true in sbnd_xin's 2-step chain).
+// PR operating point.  'sync' (default) uses pr-operating-point.jsonnet, the
+// GENERATED wrapper that passes the same ~150 knobs Xin's 2-step entry point
+// sets, so the 1-step reconstructs with the SBND production operating point.
+// 'preflip' reproduces the pre-2026-08-29 behaviour, in which this chain called
+// clus_maker.pr() with 7 arguments and silently inherited clus.jsonnet's
+// conservative defaults (ai-helper issue 17).  Kept so the issue-16 MC and
+// issue-18 data campaigns stay exactly reproducible -- they were run preflip.
+//
+//   physics.producers.sig2img.wcls_main.params.pr_operating_point: "preflip"
+local pr_operating_point =
+    if std.extVar('pr_operating_point') == 'preflip' then 'preflip' else 'sync';
+
 local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=false,
                                         bee_sink=bee_shared, premerged=true,
                                         save_real_cluster_id=true,
-                                        save_assoc_cluster_id=true);
+                                        save_assoc_cluster_id=true,
+                                        // The two all-APA members of the SBND PR
+                                        // operating point.  They live on
+                                        // clus_all_apa(), not pr(), so the
+                                        // generated pr-operating-point.jsonnet
+                                        // cannot carry them; set here so the
+                                        // compiled-config gate reaches zero.
+                                        // Preflip parity: both are the
+                                        // clus.jsonnet defaults (false / null)
+                                        // when pr_operating_point='preflip'.
+                                        save_bundle_main_provenance=
+                                            pr_operating_point == 'sync',
+                                        bee_flash_pred_min=
+                                            if pr_operating_point == 'sync' then 0 else null);
 
 // ==== follow-up tail (moved out of clus.jsonnet into this entry config) ====
 //   clus_all_apa (MABC) -> pr_node (STM/TGM/FC taggers) -> labeler -> tail_dump
@@ -233,39 +258,57 @@ local pds = (import 'pgrapher/experiment/sbnd/particle_dataset.jsonnet')();
 local enable_tracking_root =
     if std.extVar('enable_tracking_root') == 'false' then false else true;
 
-local pr_node = clus_maker.pr(
-    tools.anodes, dump=false,
-    // Share the ONE Bee zip.  Without this the PR display layers
-    // (track_fit / shower_track / vertices -- the only place the fitted
-    // trajectory, per-particle shower/track colouring and reconstructed
-    // vertices appear) go to mabc-pr.zip, which the bulk harness deletes.
-    // Sharing renames this node's two colliding sets to clustering-pr /
-    // mc-pr; see clus.jsonnet.
-    bee_sink=bee_shared,
-    // FULL 15-stage SBND production PR chain, matching sbnd_xin's
-    // run_pr_chain_batch.sh PIPELINE string exactly (docs/5-pr-chain-in-1step).
-    // Ordering is load-bearing, not stylistic:
-    //   * protect_bundle + steiner_refresh sit AFTER the cosmic taggers (uboone
-    //     takes cosmic verdicts on UNSPLIT clusters, wire-cell-prod-stm.cxx:806)
-    //     and BEFORE tagger_check_neutrino (Protect_Over_Clustering exists only
-    //     in the nue executable, wire-cell-prod-nue.cxx:1322).  SBND production
-    //     default since 2026-08-02.
-    //   * steiner_refresh must immediately follow protect_bundle: it rebuilds
-    //     only the steiner products the split purged.
-    //   * nue_bdt_scorer after numu_bdt_scorer.
-    //   * tagger_output after tracking_visitor -- it reopens tracking-pr.root
-    //     in UPDATE mode.
-    // The last four need the WireCellRoot plugin (both fcls load it).
-    pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
-                    'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
-                    'protect_bundle', 'steiner_refresh', 'tagger_check_neutrino',
-                    'numu_bdt_scorer', 'nue_bdt_scorer']
-                   + (if enable_tracking_root then ['tracking_visitor', 'tagger_output'] else []),
-    particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window,
-    // Match the SBND production operating point (apc doc pr/24 sec 16): the
-    // 2-step wct-pr-perevt.jsonnet sets iso_endpoint=true; mirror it here so the
-    // 1-step uses the same endpoint finder for the FC/containment check.
-    iso_endpoint=true);
+
+
+local pr_pipeline_names =
+    ['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
+     'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
+     'protect_bundle', 'steiner_refresh', 'tagger_check_neutrino',
+     'numu_bdt_scorer', 'nue_bdt_scorer']
+    + (if enable_tracking_root then ['tracking_visitor', 'tagger_output'] else []);
+
+local pr_sync = import 'pr-operating-point.jsonnet';
+
+local pr_node =
+    if pr_operating_point == 'sync' then
+        pr_sync(clus_maker, tools.anodes, dump=false, bee_sink=bee_shared,
+                pipeline_names=pr_pipeline_names,
+                particle_dataset=pds.particle_dataset, extra_uses=pds.all,
+                beam_window=beam_window)
+    else
+        clus_maker.pr(
+        tools.anodes, dump=false,
+        // Share the ONE Bee zip.  Without this the PR display layers
+        // (track_fit / shower_track / vertices -- the only place the fitted
+        // trajectory, per-particle shower/track colouring and reconstructed
+        // vertices appear) go to mabc-pr.zip, which the bulk harness deletes.
+        // Sharing renames this node's two colliding sets to clustering-pr /
+        // mc-pr; see clus.jsonnet.
+        bee_sink=bee_shared,
+        // FULL 15-stage SBND production PR chain, matching sbnd_xin's
+        // run_pr_chain_batch.sh PIPELINE string exactly (docs/5-pr-chain-in-1step).
+        // Ordering is load-bearing, not stylistic:
+        //   * protect_bundle + steiner_refresh sit AFTER the cosmic taggers (uboone
+        //     takes cosmic verdicts on UNSPLIT clusters, wire-cell-prod-stm.cxx:806)
+        //     and BEFORE tagger_check_neutrino (Protect_Over_Clustering exists only
+        //     in the nue executable, wire-cell-prod-nue.cxx:1322).  SBND production
+        //     default since 2026-08-02.
+        //   * steiner_refresh must immediately follow protect_bundle: it rebuilds
+        //     only the steiner products the split purged.
+        //   * nue_bdt_scorer after numu_bdt_scorer.
+        //   * tagger_output after tracking_visitor -- it reopens tracking-pr.root
+        //     in UPDATE mode.
+        // The last four need the WireCellRoot plugin (both fcls load it).
+        pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
+                        'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
+                        'protect_bundle', 'steiner_refresh', 'tagger_check_neutrino',
+                        'numu_bdt_scorer', 'nue_bdt_scorer']
+                       + (if enable_tracking_root then ['tracking_visitor', 'tagger_output'] else []),
+        particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window,
+        // Match the SBND production operating point (apc doc pr/24 sec 16): the
+        // 2-step wct-pr-perevt.jsonnet sets iso_endpoint=true; mirror it here so the
+        // 1-step uses the same endpoint finder for the FC/containment check.
+        iso_endpoint=true);
 
 // wclsTensorSetLabeler (larwirecell "WireCellAIML" plugin).  Deps come from
 // clus_maker primitives; reads raw (non-t0-corrected) blob coords, so
