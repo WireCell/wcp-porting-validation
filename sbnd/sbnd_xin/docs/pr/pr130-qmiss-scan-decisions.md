@@ -7,6 +7,58 @@ Mechanism, ranking and repro: `pr130-qmiss-mechanism.md`.
 Fresh file for this round's decisions — no earlier decisions record is written
 into (M13).
 
+## Scanning it in em_display (preferred over Bee for this question)
+
+Bee shows the objects but not *why* each segment is out of the shower;
+em_display carries the probe sidecar, so it shows the absorb-tape reason per
+segment and lets marks be saved. Served on **5017** with a fresh scan tag:
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# one-off: 10-event manifest + a prepdir of symlinks to the two record dirs
+python3 - <<'EOF'
+import csv, os
+ORDER = [463565,122660,54332,181050,105946,21073,342199,76346,469665,54453]
+rows = {}
+for m in ('em117-pr130q98-manifest.tsv', 'em114c-pr130q141-manifest.tsv'):
+    for r in csv.DictReader(open('em_display/'+m), delimiter='\t'):
+        rows.setdefault(int(r['event']), r)
+cols = ['sample','run','subrun','event','dump']
+with open('em_display/em130q-scan10-manifest.tsv', 'w') as fh:   # plain write => LF
+    fh.write("\t".join(cols)+"\n")
+    for e in ORDER:
+        fh.write("\t".join(str(rows[e][c]) for c in cols)+"\n")
+os.makedirs('em_display/emprep-pr130scan10', exist_ok=True)
+for e in ORDER:
+    for src in ('emprep-pr130q98', 'emprep-pr130q141'):
+        p = 'em_display/%s/emprep-evt%d.json' % (src, e)
+        if os.path.exists(p):
+            l = 'em_display/emprep-pr130scan10/emprep-evt%d.json' % e
+            if not os.path.lexists(l): os.symlink(os.path.abspath(p), l)
+            break
+EOF
+./em_display/serve_em_display.sh 5017 --scan-tag emscan-0829-pr130qmiss \
+    --manifest $PWD/em_display/em130q-scan10-manifest.tsv \
+    --prepdir  $PWD/em_display/emprep-pr130scan10
+```
+
+From a laptop (the keepalives are not optional — doc pr/88):
+
+```bash
+ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6 \
+    -L 5017:localhost:5017 <user>@wcgpu1.phy.bnl.gov
+# http://localhost:5017/em_display_viewer
+```
+
+**Write the manifest with a plain `write`, not `csv.DictWriter`.** DictWriter
+defaults to CRLF, every `dump` path then ends in `\r`, and the viewer degrades
+each row to "no probe" *silently* rather than failing — the exact trap the
+em_display README warns about. Caught here by `test -f` on all ten paths before
+handing the port over; the check is worth repeating on any new manifest.
+
+Scan tag `emscan-0829-pr130qmiss` is **new** — no existing label dir is written
+into (M13).
+
 ## Repro for the geometry quoted below
 
 ```bash
