@@ -4,13 +4,20 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
+ls -1 | wc -l                    # 228 top-level entries after the 2026-08-29 round;
+                                 # 74 after the 2026-08-03 TIDY round
                                  #   (216 before it) -- see that section below
 # COUNT work* DIRS THROUGH THE REAL PATH, NOT THE SYMLINK -- see the 2026-08-13
 # section's "defect 4": toolkit/sbnd_xin is a symlink, and neither find nor du
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 121 after the 2026-08-29 round -- 120 KEEP plus
+                                 #   work-pr130-flipchk-mcp2k, which the PEER created
+                                 #   after the plan ran.  That is the design, not a
+                                 #   miss: the driver iterates the tier list, so an arm
+                                 #   born after the plan is invisible to it.  552
+                                 #   before it, 432 removed, 81 GiB -- see that section;
                                  # 26 after the 2026-08-25b round retired the
                                  #   stage-A reference side (work-img-* for the
                                  #   4 data samples + work-*-ql0819) and the
@@ -48,6 +55,11 @@ find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
                                  #   it; 23 after 2026-08-02, 254 / 155 GiB
                                  #   before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+                                 # 75G after the 2026-08-29 round (152G before it);
+                                 #   the floor is now ~21G of non-work* (archive/ 15G
+                                 #   incl. this round's 1.5G record layer, input_files*
+                                 #   6.9G, bee/ 2.2G) + ~54G of KEEP, of which
+                                 #   work-mcp2k-grp0825 alone is 16G;
                                  # 72G after the 2026-08-23 prod0823 campaign
                                  #   (+15G of PR product for 3067 events);
                                  # 57G after the 2026-08-23 minimal-state round
@@ -63,6 +75,18 @@ du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
                                  #   follow-up, 158G before it; 20G after
                                  #   2026-08-13, 74G before it; 23G after
                                  #   2026-08-11, 103G before it)
+
+# the 2026-08-29 round: eleven closed doc families, the pi0 epoch stays.
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise.
+python3 scripts/retire/verify_group_dupes_20260829.py   # 188/188, 1231656 members
+python3 scripts/retire/plan_20260829.py                 # 120-name KEEP + 14 asserts
+RETIRE_JOBS=12 python3 scripts/retire/archive_records_20260829.py  # integrity PASS 432/432
+./scripts/retire/retire_20260829.sh A                   # dry run of the removal list
+RETIRE_REPLAN=1 python3 scripts/retire/plan_20260829.py # re-stamp planned_at (interlock 6)
+CONFIRM=yes ./scripts/retire/retire_20260829.sh A       # the deletion
+cat scripts/retire/state-20260829/removed.tsv           # what was ACTUALLY removed
+# verify AFTER, not only before: survivors must equal KEEP exactly, and every
+# live manifest must still resolve on disk (the pi0 one is 50/50).
 
 # the 2026-08-23 minimal-state retirement (see that section below):
 # EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise,
@@ -203,6 +227,137 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-29 — eleven closed doc families; the pi0 epoch stays, 152G → 75G
+
+**432 arms, 81 GiB removed.** `work*` dirs 552 → 120. Record layer 10.73 GiB raw
+→ **1.43 GiB gz** in `archive/records/em-pr-era-20260829/`. Owner scope, given
+directly: *"the sbnd_xin directory now grow to 152 G, we should plan for a clean
+up round again before going to the next step. We can keep the latest PR
+results. … our next major move is to improve the pi0 reconstruction. We need to
+use the hand scan results for pi0 to do this. … we also do not want to delete
+the files related to the other running session."* Asked about the one
+discretionary block — the doc-84 long-muon/MCS product layer — the owner chose
+**"Release all three"** (`work-d84r3-cens-{mcp1k,mcp2k}` 14.2 G +
+`work-mcp1k-mcs80on` 3.0 G).
+
+Released: **pr/117, pr/118, pr/119, pr/120, pr/121, pr/123, pr/124, pr/125,
+pr/127, pr/128** (all SHIPPED), **doc 84 rounds 1-4** + **doc 80's MCS arms**,
+and **doc 114's** display arms. Kept: the doc 81 production pair, the vtx105
+label epoch, the two SIM samples, **the pi0 epoch** and **the whole open pr/130
+prefix**.
+
+### Three things this round found rather than assumed
+
+**1. `em_labels/` — the pi0 hand-scan record — was completely unprotected.**
+249 label JSONs (2.0 MB): the 141-set, the 98-set and the pi0 pairings, i.e. the
+literal input to the owner's stated next move. `git ls-files` returned **zero**
+for it — the repo `.gitignore` has `*.json` at line 2, and
+`overclustering_labels/`'s 230 files are tracked only because an earlier round
+ran `git add -f` (M9). Nobody had done that for `em_labels`, and there was no
+`archive/records/labels/` copy either. So the labels were one `rm -rf` from
+unrecoverable while every arm around them was being carefully preserved. Both
+halves are closed now and **ASSERT 6b** checks them on every future round. No
+byte of `em_labels` is retired by this round.
+
+**2. `HEAVY` had a hole, and the 08-25 census that "proved" it did not is a
+lesson worth keeping.** That round justified reusing `HEAVY` unchanged with a
+census of its 66 arms: *"ZERO unclassified file above 5 MiB, so nothing heavy
+can slip into the record tar."* That was **true of its removal set and false of
+this one** — none of its arms was group-mode and doc 84 round 3's census arms
+are. This round's census found **242** unclassified files above 5 MiB, all
+`.groups/g<N>.tar.gz`: 188 files, **4.96 GiB** of group *input* archives
+(bundles of Q/L pctrees fed to a group-mode run). Left unclassified they would
+have tripled the record layer to 16.06 GiB for nothing. **The durable lesson:
+a census is evidence about the set it ran on, never a property of the tool.**
+Dropped only after proof, not argument — `verify_group_dupes_20260829.py`
+checked all 188 member by member against the surviving `grp0825` Q/L roots:
+**1231656/1231656 byte-identical** (`state-20260829/group-dupes.tsv`).
+
+**3. Two kept arms record no provenance at all.**
+`work-{ncpi0,nuecc48}-prod0825` have neither the `group provenance: ql_root=`
+line (their `.groups/g*-build.log` predate it; `mcp1k`'s and `mcp2k`'s have it)
+nor a surviving `g*.tar.gz` for the byte-identity fallback. Pre-existing, not
+caused by this round. ASSERT 8 reports them **UNVERIFIED** rather than FAIL —
+but only because the round-level fact is *checked*: the removal set contains
+**0 Q/L roots and 0 imaging roots**, so no kept arm's input can be deleted,
+verified or not. With any root in the removal set, unverifiable stays a hard
+FAIL.
+
+### The pi0 carve-out — the load-bearing part
+
+`work-pr124r1` (39 arms) and `work-pr125r1` (84 arms) were the two fattest sweep
+candidates and the pi0 inputs sit **inside** them. Ten arms out of 123 were
+carved out and named individually in KEEP:
+
+| manifest | arms kept | rows |
+|---|---|---|
+| `em_display/pr126-pi0-manifest.tsv` | `work-pr124r1-onA98-*`, `-onA141v2-*` | 50 hand-paired π⁰ |
+| `em_display/em117-125flipchk98-manifest.tsv` | `work-pr125r1-flipchk98-*` | 98 |
+| `em_display/em114c-125flipchk141-manifest.tsv` | `work-pr125r1-flipchk141-*` | 141 |
+
+The tempting alternative — sweep both families, re-run a fresh arm at current
+HEAD — was **considered and rejected**: today's HEAD is a different operating
+point, so doc pr/126's `kine_shower_fudge_factor` 0.80 → **0.84** PEAK fit would
+stop being re-checkable the moment those dumps went. A fresh arm is *additive*
+work for the pi0 round, never a substitute for the dumps the fit was made on.
+Verified **after** deletion, not just before: all 12 live manifests resolve
+on disk, π⁰ **50/50**.
+
+### The concurrent writer — interlock 2 refined, interlock 6 added
+
+First round ever to run against a tree with **another session writing to it**
+(doc pr/130, a live 239-event knob-off gate). Every prior round's interlock 2
+refused on *any* live sbnd_xin `wire-cell` process (M5). Here that would not
+have made the round safer — it would have made it impossible, and the
+predictable next step is `ALLOW_LIVE_JOBS=yes`, which disarms the interlock
+completely. So:
+
+- **interlock 2 is narrowed, not bypassed**: it refuses only if a live process
+  names a dir in the **removal** set (the shape interlock 1 always used for
+  Bokeh viewers). `ALLOW_LIVE_JOBS` is no longer honoured — there is nothing
+  left for it to unlock that would be safe.
+- **interlock 6 is new**: plan-time evidence expires, so the live-process and
+  mtime checks are **re-derived immediately before the first `rm`**. The mtime
+  half is the stronger one — a writer can exit between the two checks, but the
+  mtime it left cannot un-happen.
+- **A late-created arm cannot be swept by construction**: the loop iterates the
+  *tier list*, not the directory. `work-pr130r1-gs1on-*` and
+  `work-pr130r1-g1off141-*` were created between this round's first census and
+  its plan, and were never at risk.
+
+The peer session was asked directly and answered with a grep-verified
+dependency list, encoded as **ASSERT 13** (31 arms) rather than trusted as
+prose. Four of its names were in the planned sweep and moved to KEEP:
+`work-em114c-prodnow-{mcp1k,mcp2k}`, `work-pr117r1-onK1-mcp1k`,
+`work-pr125r1-flipK5*` (the sentinel registry's negative control) and
+`work-pr128r1-on{98,141}-*` (the gate label doc pr/130 item 1 cites).
+**Its fifth name, `work-pr127r1-flipS{98,141}-*`, does not exist on disk** —
+`scripts/pr127_sentinels.py:30`'s docstring reference was already stale before
+today. Recorded, not silently repaired; the peer owns that file.
+
+### Stated costs
+
+- **30 closed-round `em_display/*manifest*.tsv` stop resolving** — pr/117
+  K-arms, pr/118 dbg, pr/119 dbgA, pr/120 on2/dbgon, pr/123 on1/dbgA2, pr/124
+  dbgv2/onC/flipchk98, pr/125 dbg/onM, and `em114c-114cnow`. Every verdict is a
+  table in its own doc. The 12 that survive are exactly the ones the pi0 round
+  and the peer's scorers read.
+- **doc 84's whole long-muon/MCS product layer** (23 G + 3.8 G). Deferred item 1
+  (MCS absolute scale vs truth) is unaffected in practice — it needs a
+  truth-level numu sample that does not exist here.
+- **pr/121's family goes entirely** (34 arms, 6.0 G): zero script literals, zero
+  surviving manifests, 305 doc mentions — all narrative.
+- 12 script literals ACKed in `ACK_BROKEN_REFS` (pr/118-120 census defaults).
+
+### FLAG for the next round, not acted on here
+
+`work-<s>-prod0825` is now **six flips behind production** — pr/123 pass4,
+pr/124 gap-band, pr/125 pass3+samevtx, pr/127 K5+sccc, pr/128 PF-kine and
+pr/129 pointing all landed after it. It is kept because it is the named
+production baseline and `grp0825` is the campaign input for any re-run. A fresh
+full-coverage campaign at today's HEAD would supersede it — that is a decision
+for the next round, and the precedent for making it is the 08-23 round.
 
 ## RETIREMENT ROUND 2026-08-25b — the stage-A reference side and the pre-flip PR baseline, 144G → 108G
 

@@ -380,3 +380,84 @@ work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deter
 # work-vfmcp1k-vf37a work-vfnuecc48-vf37a work-vfr1qlmc-vf37a work-vfr2mc-vf37a	A/A' floor arm A, setarch -R	doc pr/37 sec.2.5
 # work-vfmcp1k-vf37b work-vfnuecc48-vf37b work-vfr1qlmc-vf37b work-vfr2mc-vf37b	A/A' floor arm B, setarch -R (matched layout)	doc pr/37 sec.2.5
 # work-vfmcp1k-vf37c work-vfnuecc48-vf37c work-vfr1qlmc-vf37c work-vfr2mc-vf37c	cross-layout arm C, ASLR ON	doc pr/37 sec.2.5
+
+# =========================================================================
+# --- the 2026-08-29 round: the pi0 epoch, the hand-scan display defaults,
+#     the sentinel controls, and the open pr/130 gate  --------------------
+# =========================================================================
+#
+# WHY THIS BLOCK EXISTS.  The 08-29 round sweeps eleven CLOSED doc families
+# (pr/117-pr/128, doc 84 r1-r4, doc 114's em114*) -- 442 arms, 83 G.  Almost
+# every arm in them is an A/B leg whose verdict is already text in its doc.
+# The names below are the exceptions, and each is an exception for a DIFFERENT
+# reason.  A glob over the retiring family prefixes would sweep all of them,
+# so they are spelled out: plan_20260829.py ASSERT 7 refuses the round if any
+# line here is missing from KEEP.
+#
+# 1. THE pi0 EPOCH.  The owner's stated next major move is pi0 reconstruction
+# driven by the hand-scan results.  doc pr/126 fit the EM charge scale
+# (kine_shower_fudge_factor 0.80 -> 0.84, PEAK estimator) off 50 hand-paired
+# pi0, and em_display/pr126-pi0-manifest.tsv keys those 50 to calib-pr dumps
+# inside work-pr124r1-onA{98,141v2}-*.  doc pr/126 sec 4f re-ran the same
+# census at the pr/125 production point out of work-pr125r1-flipchk{98,141}-*.
+# The hand-scan LABELS are safe either way -- em_labels/ is 2 MB and outside
+# work-* -- but the dumps they are keyed to are not, and a label with no dump
+# cannot be re-fit.  Deleting these would make the 0.84 recommendation
+# text-only BEFORE the round that acts on it.  Verified this round: all three
+# manifests resolve 50/50, 98/98 and 141/141 (ASSERT 11).
+work-pr124r1-onA98-mcp1k work-pr124r1-onA98-mcp2k work-pr124r1-onA98-ncpi0 work-pr124r1-onA98-nuecc48	dump source for 50 hand-paired pi0 (em_display/pr126-pi0-manifest.tsv) and the 98-set EM census; the EM-scale fit cannot be re-checked without them	docs/pr/126 sec 3-4, owner 2026-08-29
+work-pr124r1-onA141v2-mcp1k work-pr124r1-onA141v2-mcp2k	the 141-set half of the same pi0 manifest	docs/pr/126 sec 3
+work-pr125r1-flipchk98-mcp1k work-pr125r1-flipchk98-mcp2k work-pr125r1-flipchk98-ncpi0 work-pr125r1-flipchk98-nuecc48	doc pr/126 sec 4f re-runs the identification census at the pr/125 production point out of these	docs/pr/126 sec 4f
+work-pr125r1-flipchk141-mcp1k work-pr125r1-flipchk141-mcp2k	the 141-set half of the sec 4f census	docs/pr/126 sec 4f
+#
+# 2. HAND-SCAN DISPLAY DEFAULTS.  These are hardcoded DEFAULT arm names inside
+# the scan tooling, not citations: em_display/prep_pr117.py:17,28 and
+# em_display/prep_pr121.py:15.  Sweep them and the next scoring round breaks
+# only when someone runs the scorer without explicit arm args -- a silent trap,
+# which is exactly the failure ASSERT 10 was invented for (vtx_rules/
+# baselines.py, scripts/analysis/pr57/oc56_truth.py, both found weeks late).
+# The peer session confirmed these by grepping its own tools, not from memory.
+# work-pr117r1-onK1-{mcp2k,ncpi0,nuecc48} are NOT script defaults; they are
+# added so em_display/em117-117onK1-manifest.tsv resolves 98/98 rather than
+# 25/98, which keeps the 98-set display baseline whole for 558 MB.
+work-em114c-prodnow-mcp1k work-em114c-prodnow-mcp2k	hardcoded default arms in em_display/prep_pr121.py:15 (141-set display)	peer session 2026-08-29, verified by grep
+work-pr117r1-onK1-mcp1k	hardcoded default arm in em_display/prep_pr117.py:17,28 (98-set display)	peer session 2026-08-29, verified by grep
+work-pr117r1-onK1-mcp2k work-pr117r1-onK1-ncpi0 work-pr117r1-onK1-nuecc48	the other three samples of the same 98-set display baseline; keeps em117-117onK1-manifest.tsv whole (98/98) for 558 MB	docs/pr/117, 08-29 round
+#
+# 3. THE SENTINEL REGISTRY'S NEGATIVE CONTROL.  scripts/pr127_sentinels.py:31
+# names work-pr125r1-flipK5* as the canonical arm on which a sentinel is
+# EXPECTED to fail (the 137238 FAIL).  A registry of passing sentinels with no
+# worked failing case cannot be trusted to fail when it should -- doc pr/127
+# exists because a shipped fix died silently for ten days.
+# NOTE, found while checking this: the same docstring at line 30 also names
+# work-pr127r1-flipS{98,141}-* as its primary usage example, and those arms do
+# NOT exist on disk and were not created by this round's sweep -- the reference
+# was already stale before today.  Recorded here, not silently fixed; the peer
+# session owns that file.
+work-pr125r1-flipK598-mcp1k work-pr125r1-flipK598-mcp2k work-pr125r1-flipK598-ncpi0 work-pr125r1-flipK598-nuecc48	the sentinel registry's negative control (expect the 137238 FAIL); scripts/pr127_sentinels.py:31	docs/pr/127, peer session 2026-08-29
+work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the same negative control	docs/pr/127
+#
+# 4. THE GATE LABEL THE OPEN ROUND CITES.  doc pr/130's item-1 work reports its
+# probe arms as "gated SAME against work-pr128r1-on*".  CLAUDE.md's "report
+# gates by label" convention exists so a PASS can be re-checked later; deleting
+# the reference side while the citing round is still OPEN would defeat it.
+# Releasable once doc pr/130 closes -- but not by inference, by a decision.
+work-pr128r1-on98-mcp1k work-pr128r1-on98-mcp2k work-pr128r1-on98-ncpi0 work-pr128r1-on98-nuecc48 work-pr128r1-on141-mcp1k work-pr128r1-on141-mcp2k	the gate reference doc pr/130 item 1 cites by label; doc pr/128 SHIPPED but the citing round is OPEN	docs/pr/130, peer session 2026-08-29
+#
+# 5. THE OPEN pr/130 ROUND (peer session).  A concurrently-running session owns
+# a live 239-event knob-off gate for two new default-OFF knobs
+# (shower_pass4_prox_guard_len, shower_pass3_backfill_guard_len).  It asked
+# directly: "please leave the whole work-pr130* prefix alone until I say the
+# gate is reported."  work-pr129* is its current-production baseline and
+# work-sent130* is the sentinel suite guarding today's three flips.
+# RELEASE CONDITION, stated so a future round does not have to guess: these go
+# when doc pr/130 is reported and closed, in the same pass that releases the
+# pr128r1-on gate label above.  This round protected the whole prefix rather
+# than an enumerated subset precisely because the peer was still CREATING arms
+# while the plan ran -- work-pr130r1-gs1on-* and work-pr130r1-g1off141-*
+# appeared between the first census and the plan.
+work-pr129gf-nokine-mcp2k work-pr129probe-171572 work-pr129probe-mcp1k work-pr129probe-mcp2k work-pr129pt-meas-mcp2k work-pr129pt-on-mcp2k work-pr129r1-flipchk-mcp2k work-pr129r1-off-mcp1k work-pr129r1-off-mcp2k work-pr129r1-off-ncpi0 work-pr129r1-off-nuecc48 work-pr129r1-on141-mcp1k work-pr129r1-on141-mcp2k work-pr129r1-on98-mcp1k work-pr129r1-on98-mcp2k work-pr129r1-on98-ncpi0 work-pr129r1-on98-nuecc48	doc pr/129 SHIPPED today; its on98/on141 arms are the open round's production baseline	docs/pr/129, peer session 2026-08-29
+work-pr130-292643-guardoff work-pr130-47212-guardoff work-pr130-gs1-mcp1k work-pr130-gs1-mcp2k work-pr130-gs1-nuecc48 work-pr130-neutral-mcp2k work-pr130-probe-mcp2k work-pr130-probe2-mcp2k work-pr130-qx1-mcp1k work-pr130-qx1-mcp2k work-pr130-vtx-mcp1k work-pr130-vtx-mcp2k	doc pr/130 OPEN -- probe, guard-off and census arms of the live round	docs/pr/130, peer session 2026-08-29
+work-pr130r1-g1off-mcp1k work-pr130r1-g1off-mcp2k work-pr130r1-g1off-ncpi0 work-pr130r1-g1off-nuecc48 work-pr130r1-g1off141-mcp1k work-pr130r1-g1off141-mcp2k work-pr130r1-gd141off-mcp1k work-pr130r1-gd141off-mcp2k work-pr130r1-gs1on-mcp1k work-pr130r1-gs1on-mcp2k work-pr130r1-gs1on-ncpi0	doc pr/130's LIVE 239-event knob-off gate, being written while this round ran	docs/pr/130, peer session 2026-08-29
+work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0 work-pr130r1-probe98-nuecc48 work-pr130r1-probe141-mcp1k work-pr130r1-probe141-mcp2k	dump source for BOTH pr130q manifests and the census source for pr130_launder_scan.py; the 239-event blast-radius result is not reproducible without them	docs/pr/130, peer session 2026-08-29
+work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130
