@@ -1,6 +1,6 @@
 # doc pr/132 — π⁰ reconstruction round 1: the EM scale flip to 0.84, five finder knobs, and the pairing pass
 
-**Status: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
+**Status: rounds 1-6 CLOSED (2026-08-30). Round 6 (sec 13): the start ledger (5 gammas 9-51 cm deep, 2 over-extended), K17 back-extension DEFAULT OFF, measured dead in v1 (swallowed partner gammas, 31->21 exact) and v2 (continuation-guarded, still net -5); the K12/K16/K17 synthesis: the fragment class is locally degenerate with partner gammas -- geometry alone cannot separate them. Production stands at 31 exact. Original: rounds 1-5 CLOSED (2026-08-30). Round 5 (sec 12): owner re-scope to EM clustering + pi0 (nu vertex untouchable outside NC pi0); the wrong-vertex census documented then scoped out; the per-gamma charge ledger built; K16 build-time EM collinear merge DEFAULT OFF, measured (+1 exact at 120 cm vs 3 over-absorptions); root cause of the residual = the deep/displaced reco shower start. Original status: rounds 1-4 CLOSED (2026-08-30). Fudge 0.84 + K7+K8 + K3=28 SBND PRODUCTION ON; K1 CLOSED at offset 10; K2/K4/K5/K9-K12 + round-4 K13-K15 DEFAULT OFF, measured. Round 4 verdict: every remaining defect class (NC vertex-in-shower, start bias, fragmentation, over-merge) is measured to live UPSTREAM of the pi0 finders — the finder-level campaign is complete; round 5 = vertex seeding + shower building, scored by this census. Round 1 = secs 1-8; round 2 = sec 9; round 3 = sec 10; round 4 = sec 11.**
 Follow-on to the pr/126 audit; implements its owner-decided items. Owner brief,
 verbatim: *"1. adjust the EM charge scaling factor to 0.84, so that the pi0
 mass is aligned to 135 MeV. 2. improve the pi0 reconstruction for both the
@@ -987,4 +987,94 @@ PR_JOBS=12 bash scripts/pr132_arms.sh 98 r5off 0  && ...141...   # gate vs r4off
 PR_JOBS=12 bash scripts/pr132_arms.sh 98 r5cm 1 SBND_EM_COLLINEAR_DEG=10  && ...141...
 PR_JOBS=10 bash scripts/pr132_arms.sh 98 r5cmw 1 SBND_EM_COLLINEAR_DEG=10 SBND_EM_COLLINEAR_DIS=120  && ...141...
 # census + ledger per arm (docs/pr/pr132-{census,gamma-ledger}-r5cm*.tsv); movers 0 x4 both arms
+```
+
+# 13. Round 6 — start determination: the ledger, K17, and the three-geometry synthesis (2026-08-30)
+
+Owner order: *"Yes, please proceed to round 6"* on the sec 12.4 queue
+(EM shower start determination).
+
+## 13.1 The start ledger (offline, scanner truth)
+
+Of 132 hand gammas, 9 carry an explicit `em_start_correction` (the scanner
+corrected only where the reco start was visibly wrong; the other 123 used
+the reco start as-is).  Decomposed along the label axis (+ = reco start
+DOWNSTREAM of truth):
+
+| event | gamma | E (MeV) | offset | along axis |
+|---|---|---|---|---|
+| 169626 | g1 | 537 | 51.4 | **+51.4** |
+| 76346 | g1 | 247 | 30.3 | **+30.2** |
+| 105946 | g1 | 604 | 12.7 | +11.9 |
+| 347129 | g2 | 65 | 11.8 | +11.7 |
+| 342199 | g2 | 127 | 9.5 | +9.3 |
+| 489327 | g1 | 237 | 34.4 | −34.1 (over-extended; the ledger OVER gamma) |
+| 347824 | g1 | 528 | 11.5 | −11.1 (over-extended) |
+| 76346 | g2 | 5 | 67.5 | −17.3 (crumb) |
+
+The deep-start class (5 gammas, +9 to +51 cm) is the K17 target; the
+over-extended class (2) is its mirror and must not be worsened.
+
+## 13.2 K17 `shower_em_backext_perp_cm/_len_cm` — v1 and v2, both measured dead
+
+Design: back-project from each EM host's start along −axis; absorb detached
+EM fragments inside the tube (perp < knob, upstream reach ≤ len); re-seat a
+conn-2/3 host's start to the upstream-most absorbed point.  DEFAULT OFF;
+gates PASS 4/4 vs r5off for BOTH binaries (v1 and v2, 478 archives each);
+doctest green (2 new rows); compiled-config proofs both ways; movers 0 x4
+(vertices untouched, the owner scope rule).
+
+**v1 (`r6be`, perp 8 / len 40): catastrophic.**  Census 31 → 21 exact.  The
+tube passes through the pi0 decay-vertex CONVERGENCE region — where the
+partner gamma also starts — and swallowed true gamma-2s wholesale (the
+ledger signature: gamma-1 OVER + gamma-2 ABSENT in a dozen events; 105946
+g2 r=8.66, 314838 g2 r=6.56, 284235 g2 r=2.58, ...).
+
+**v2 (`r6be2`, + the K16 continuation guard: a >10 cm fragment must be
+< 30 deg parallel to the host axis): still net-negative.**  Census 26 exact
+(−5 vs baseline: 292027, 499577, 57709, 284235 lost; 169626 exact→partial)
+against +2 partial-level gains (281485, 415278).  The guard saves the LONG
+partner gammas; the residual kills are SHORT (< 10 cm, direction-exempt)
+partner gammas and crumbs near the convergence point — and lowering the
+exemption would equally veto the true upstream fragments, which are short
+for the same reason.
+
+## 13.3 The synthesis: three geometries, one degeneracy
+
+| seat | geometry | rounds | outcome |
+|---|---|---|---|
+| K12 (pairing-time) | vertex-ray cone | 3 | kills at 9-13 deg, gains need 17-19 — inseparable |
+| K16 (build-time) | forward axis cone | 5 | inert at 60 cm; +1 exact at 120 cm vs 3 over-absorptions |
+| K17 (build-time) | backward axis tube | 6 | partner-gamma swallowing; v2 still −5 exact |
+
+**Near a pi0 decay vertex, "my own upstream/collinear fragment" and "the
+partner gamma (or its crumbs)" are locally DEGENERATE in charge geometry** —
+every axis-based merge that reaches the fragments also reaches the partner.
+The separating information is the true gamma ray (label frame), which the
+reco start bias itself corrupts — the circularity is the finding.  The
+production point (fudge 0.84 + K7+K8 + K3=28, census 31 exact / 2 fakes,
+ledger 90.9% OK) stands as this campaign's clustering-level optimum.
+
+## 13.4 Round-7 queue
+
+1. **Acceptance-aware merge** — the one untried lever that BREAKS the
+   degeneracy: evaluate merge candidates INSIDE the pi0 finder using the
+   mass constraint itself (accept a fragment merge only when it CREATES an
+   in-window pair without destroying an existing acceptance).  This is the
+   K12-v2 design of sec 10.3, now justified three times over; it uses
+   physics (the 135 MeV constraint) where geometry is degenerate.
+2. Owner Bee call on K16 @ 120 cm (+1 exact vs 3 polluted gammas) remains
+   open from round 5.
+3. The over-extended-start mirror class (489327, 347824) and UNDER-nosibs
+   stay on the upstream-imaging ledger.
+4. Sentinels: census 31 exact / 2 fakes; ledger 90.9% OK.
+
+Repro (round 6):
+```
+# start ledger: the 9 em_start_correction gammas (offline, sec 13.1 table)
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6off 0   && ...141...   # v1 gate vs r5off: PASS 4/4
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6be 1 SBND_EM_BACKEXT_PERP=8  && ...141...
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6off2 0  && ...141...   # v2 gate vs r5off: PASS 4/4
+PR_JOBS=12 bash scripts/pr132_arms.sh 98 r6be2 1 SBND_EM_BACKEXT_PERP=8  && ...141...
+# census + ledger per arm (docs/pr/pr132-{census,gamma-ledger}-r6be*.tsv); movers 0 x4
 ```

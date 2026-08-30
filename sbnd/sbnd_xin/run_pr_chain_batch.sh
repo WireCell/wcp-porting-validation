@@ -1713,6 +1713,9 @@ fi
 [ -n "${SBND_EM_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_deg=${SBND_EM_COLLINEAR_DEG}")
 [ -n "${SBND_EM_COLLINEAR_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_dis_cm=${SBND_EM_COLLINEAR_DIS}")
 [ -n "${SBND_EM_COLLINEAR_HOST:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_host_mev=${SBND_EM_COLLINEAR_HOST}")
+# doc pr/132 round 6: EM shower start back-extension.  EMPTY = no TLA = job default off.
+[ -n "${SBND_EM_BACKEXT_PERP:-}" ] && CATH_TLA+=(--tla-code "shower_em_backext_perp_cm=${SBND_EM_BACKEXT_PERP}")
+[ -n "${SBND_EM_BACKEXT_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_em_backext_len_cm=${SBND_EM_BACKEXT_LEN}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
