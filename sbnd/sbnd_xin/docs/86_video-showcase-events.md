@@ -503,3 +503,42 @@ measurement of it — the picture is the arbiter.
   rest mass. For 81597 that is 1362.9 (e⁻, from `kine_energy_particle`) +
   139.3 (proton KE) + 8.6 = **1510.8**, which is why the flow tree's rounded
   `e- 1362` and `proton 139` do not visibly add up.
+
+### 8.6 (N) Neutrino-energy reconstruction — the per-object breakdown
+
+Video 1 now ends on E<sub>ν</sub> explained as a sum rather than quoted as a
+number, which is as far as `d86-features.tsv` allows: it carries only `Enu`,
+`e_e` (the largest electron-type KE) and `e_mu` (the largest muon). For the
+1e1p event 81597 that is enough — the proton's KE is what the sum leaves,
+139.33, and it round-trips to the flow tree's printed `proton 139`. For every
+other event in §4 it is not: with 5, 11 or 19 objects there is no way to
+decompose E<sub>ν</sub> from the table at all.
+
+Needed, per `(sample, event, T_kine row)`, for the §4 events — the four
+**parallel** vectors plus the scalars (`NeutrinoTaggerInfo.h:36-39`):
+
+| branch | what |
+|---|---|
+| `kine_particle_type` | PDG code per object |
+| `kine_energy_particle` | kinetic energy [MeV] per object, full precision |
+| `kine_energy_info` | **0 = dQ/dx, 1 = range, 2 = charge** — how that object's KE was measured |
+| `kine_energy_included` | 1 = this row entered the E<sub>ν</sub> sum |
+| `kine_reco_Enu`, `kine_energy_excluded`, `kine_energy_excluded_main/_other`, `kine_n_excluded` | already in the table, repeated here so a re-emit is one block |
+
+`kine_energy_info` is the interesting one and is not in the table at all. It
+turns the energy card from arithmetic into a statement about *method* — "the
+electron's energy is calorimetric, from charge; the proton's is from its
+range; the exiting muon's is neither, which is why §8.2's MCS number matters".
+That is the single most useful addition to video 1's closing beats.
+
+Two further questions on the same subject:
+
+1. **Is `kine_shower_fudge_factor = 0.84` (§1, build `d9814518`) already inside
+   `kine_energy_particle` for EM objects, or applied downstream?** The card
+   would be wrong to call 1362.9 MeV "the charge, converted" if a 0.84 scaling
+   sits between the two unstated.
+2. **Is the 8.6 MeV binding term visible anywhere in the branches, or only in
+   the difference?** The video derives it from `NeutrinoKinematics.cxx:96`;
+   confirming that `sum(kine_energy_particle[included]) + rest terms` closes to
+   `kine_reco_Enu` on 81597 would let the card be built from the branches
+   rather than from a subtraction.
