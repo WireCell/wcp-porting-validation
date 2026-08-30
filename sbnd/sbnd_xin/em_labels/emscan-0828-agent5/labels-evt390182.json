@@ -1,0 +1,96 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -181.4,
+   -54.5,
+   495.42
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2106,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 2106,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 27300,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.03000784807854301,
+   -0.996260556207628,
+   0.08102118981206613
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.03000784807854301,
+    -0.996260556207628,
+    0.08102118981206613
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 130.39616411067107,
+   "kine_charge": 130.39616411067107,
+   "kine_charge_other_hypothesis": 78.43378292371193,
+   "kine_dQdx": 90.05933442865883,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    4008,
+    38022
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -185.2506167631298,
+   -45.17405523116476,
+   491.92233259915537
+  ],
+  "reco_start_vertex_id": 4005,
+  "shower": 4008,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -185.2506167631298,
+   -45.17405523116476,
+   491.92233259915537
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt390182",
+ "eventNo": 390182,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -186.66385680007312,
+  "y": -49.906732285544436,
+  "z": 487.72000000000025
+ },
+ "note": "[agent-bulk] shw 4008 (130.4 MeV, 2 seg, other_em): correct AS A CLUSTERING STATEMENT, but read the PID flag below -- this is the event in my shard I would most like a person to look at. Membership is one 27.3 cm segment plus a 0.2 cm crumb (38022 at 17.3 cm / 31.9 deg, pass3_cone), starting 6.5 cm from the nu vertex. Nothing meaningful is missing: the acceptance plot has two blue circles, 4032 at 3.5 cm / 29.4 deg (tier 1, just under the 30 deg step, so genuinely inside the pass-1 window) and 39023 at 38.6 cm / 25.7 deg, and the first of those is an 18.0 cm pdg 2212 PROTON prong of the vertex. Leaving it out is right, and marking it IN would be a PID claim, not a geometry one -- the pr/116 evt175896 lesson. The other unclaimed neighbours are the same story: 4001 (122.2 cm, pdg 13, walk_exclude, the muon) at 156.5 deg, 4035 (11.1 cm) at 132.3 deg, 4033 / 4027 (17.4 and 15.9 cm, pdg 2212) at 43-47 deg, 4034 (2.8 cm, pdg 211) at 47.1 deg, 4031 (4.7 cm) sharing the start point. All grey, all correctly grey: the vertex is a clean five-prong hadronic star and the reconstruction has not absorbed any of it. It is also not over-clustered -- two segments, one apex. PID FLAG, stated because it is the interesting thing here and NOT recorded as a verdict: at az+085 and el+65 this 130.4 MeV pdg-11 object is a straight narrow line, roughly 1 cm of transverse charge cloud over 27 cm, with one visible kink at az-055 and no lateral shower development at all. That is track-like, not shower-like, for an object the reconstruction is charging at 130 MeV under the shower recombination hypothesis (about 78 MeV under the track hypothesis, i.e. ~2.9 MeV/cm over 27 cm). I did NOT record 'not an EM shower' because my width is eyeballed off projections at an estimated scale, which does not meet the brief's bar of unambiguous -- but if a person agrees the object is a track, then the single EM shower this other_em event is built on is spurious. No pi0 group and no candidate: there is no second EM object above 20 MeV in the event. Showers NOT looked at: the 6 the scope rule skipped, all below 20 MeV. Clustering statement; PID flagged but not claimed.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt390182/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:01:35+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt390182/calib-pr-evt390182.json",
+ "subRunNo": 1
+}

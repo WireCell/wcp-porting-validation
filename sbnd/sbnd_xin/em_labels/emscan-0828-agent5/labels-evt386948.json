@@ -1,0 +1,114 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 58.85,
+  "az_deg": -55.0,
+  "centre": [
+   -26.86,
+   139.59,
+   375.33
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5965,
+  "cloud_cluster_ids": [
+   16,
+   23
+  ],
+  "cloud_kept": 5965,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 45304,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.7414026910215363,
+   -0.17309401558262588,
+   0.6483521508528416
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7414026910215363,
+    -0.17309401558262588,
+    0.6483521508528416
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 19,
+   "kine_best": 544.9143297945527,
+   "kine_charge": 544.9143297945527,
+   "kine_charge_other_hypothesis": 327.76801792153555,
+   "kine_dQdx": 383.9585191816902,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    65021,
+    80042,
+    80043,
+    80044,
+    86045,
+    87047,
+    87051,
+    88052,
+    90055,
+    90056,
+    92076,
+    93066,
+    93068,
+    93069,
+    93070,
+    93071,
+    93072,
+    93073,
+    94074
+   ],
+   "membership_source": "probe",
+   "num_segments": 19,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -53.230915922119856,
+   150.7656110461071,
+   332.93164360276285
+  ],
+  "reco_start_vertex_id": 92091,
+  "shower": 92076,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -53.230915922119856,
+   150.7656110461071,
+   332.93164360276285
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt386948",
+ "eventNo": 386948,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 92,
+  "x": -53.230915922119856,
+  "y": 150.7656110461071,
+  "z": 332.93164360276285
+ },
+ "note": "[agent-bulk] The hardest event in my shard: TWO EM showers of 544.9 and 433.0 MeV whose point clouds interpenetrate. shw 92076 (544.9 MeV, 19 seg, len 126.3) starts ON the nu vertex (the pi0 block reports its start as the main vertex itself) and its members run out to 95.6 cm at 0-22 deg as a connected chain of elongated clumps - in the az +85 frame that chain is one continuous object from the X to the far end. FIRST QUESTION, and I did resolve it: is 91060 (433.0 MeV) a piece of 92076? Its start sits at 54.6 cm / 10.7 deg, i.e. inside 92076's pass-1 box and surrounded by accepted members on the acceptance plot, which is the same signature that made me call under-clustered on evt348471. But it is NOT the same case: the two AXES are 77.1 deg apart (display's axis convention), 91060's body diverges steadily from 92076's axis (21 deg at 57 cm to 39 deg at 92 cm), and the el +60 vertex frame shows two clearly separate elongated blobs with a gap. Two showers at 77 deg giving m = 605.5 MeV is not a pi0 either. So the reco's split between them is right, and 92076 is not missing 91060. WHY I STILL SAY UNCLEAR - the second reading I could not close: 69025 (46.9 cm / 16.6 deg) and 89053 (40.8 cm / 19.9 deg) are tier 1 inside 92076's cone with metrics 8.4 and 8.6, inside 92076's own accepted metric range, yet they are owned by shw 76035 (31.6 MeV) - and 76035 is itself an incoherent object: all three of its non-seed members (69025, 89053, 67023) sit at 153-161 deg BEHIND its own start. If 76035 is spurious then 92076 is under-clustered by ~15 MeV and 76035 is over-clustered. I did not mark them, because at this energy scale (15 MeV out of 545) I could not separate that reading from the reading that 76035 is a real small shower the display draws badly, and because the two big clouds overlap so heavily in every projection that I could not check the 92076/91060 boundary segment by segment. pi0: no reco group, and none is warranted - the only pair worth pricing is 92076+91060 at 605.5 MeV. Not looked at: the other 12 showers, all at or below 18.6 MeV, and I did not judge 91060 or 79039 (55.6 MeV) on their own completeness.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt386948/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:55:47+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt386948/calib-pr-evt386948.json",
+ "subRunNo": 1
+}

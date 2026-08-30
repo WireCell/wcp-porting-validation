@@ -387,3 +387,104 @@ which (100222 seg 14003) is 34.5% of the pool by itself; drop it and the
 figure is 16.2%. The finding that carries weight is the **scan**: 10 objects
 over 6 of 239 events through exactly two guard→site pairs, which does not
 depend on any one event.
+
+---
+
+# Part 4 — the two guard seats: built, gated, and STOPPED at the ON arm
+
+**Status: knobs SHIPPED DEFAULT OFF (toolkit `82e7b21a`). NOT proposed for a
+flip — the ON arm fails two sentinels, and the failures are not
+threshold-tunable.** Reporting rather than iterating, per CLAUDE.md §5.5/§5.7.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_arms.sh 98  g1off 0 ; ./scripts/pr130_arms.sh 141 g1off141 0
+./scripts/pr130_arms.sh 98  gs1on 0    SBND_SHOWER_PASS4_PROX_GUARD_LEN=50 SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN=15
+./scripts/pr130_arms.sh 141 gs1on141 0 SBND_SHOWER_PASS4_PROX_GUARD_LEN=50 SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN=15
+python3 scripts/pr85_hash_gate.py work-pr130r1-g1off-mcp2k work-pr129r1-on98-mcp2k    # and the other five pairs
+python3 scripts/pr127_sentinels.py --arms 'work-pr130r1-gs1on-*' 'work-pr130r1-gs1on141-*' work-sent130-mcp{1,2}k
+```
+
+## What shipped
+
+Two knobs, both C++ default 0 = off, key-suppressed in the sbnd jsonnet:
+`shower_pass4_prox_guard_len` and `shower_pass3_backfill_guard_len`. Each
+reuses its **sibling seat's own predicate and threshold** (pr/123's 50 cm at
+`pass4_angle`, pr/124's 15 cm at `pass3_cone`) rather than a newly fitted
+one — the finding is that the same predicate should apply at every seat.
+
+## Validation that passed
+
+- **Knob-off gate: PASS 478/478 archives byte-identical** over all 239 events
+  of both manifests, vs current production `work-pr129r1-on{98,141}-*`.
+  Labels `work-pr130r1-g1off-{mcp1k,mcp2k,ncpi0,nuecc48}` and
+  `work-pr130r1-g1off141-{mcp1k,mcp2k}`.
+- **Compiled-config proof**: both keys absent with the knobs off; present as
+  50 / 15 in the ON arm's `TaggerCheckNeutrino` data block.
+- `./build/clus/wcdoctest-clus`: 235 passed, 0 failed (incl. two new pins).
+- Freshness proof before the gate: lib 17:26:03 > sources 17:25:05.
+
+## The intended fix works
+
+**100222** — the target. The 110 cm pdg-13 track leaves the EM shower and
+becomes its own object: `e-/gamma 2523 -> 2203 MeV` (−320), a standalone
+`mu- 271 MeV` appears, nshowers 13 -> 14. **175896** — `e- 256 -> 114 MeV`, a
+`proton 159 MeV` appears. **137238**, pr/93 r4's own sentinel event, is
+**PF-identical** — the risk flagged in Part 3 did not materialise.
+
+## The ON blast radius is 10 events, not the census's 6
+
+| | events |
+|---|---|
+| predicted by the census and confirmed | 100222, 175896, 176502, 396222, 415278 |
+| predicted, **no change** | 137238 |
+| **not predicted** | 393505, 399118, 71642, 71872, 72786 |
+
+The census listed only segments that an *earlier guard had already declined*.
+The knobs are general track guards at their seats, so they also decline
+segments no guard had refused (e.g. 396222 seg 9084, a 114 cm pi+). **The
+laundering census is not the blast radius** — stating this because Part 3's
+framing invited exactly that error.
+
+## STOP — two sentinels fail on the ON arm
+
+`27 PASS, 2 FAIL, 0 SKIP`. Both FAILs PASS on the knob-off arms of the same
+binary, so both are caused by these knobs.
+
+**72786 — pr/128's cosmic CONTROL.** `pf_node_lt mu- 250` fails: seen 344,
+281, 268, 238. The guard fires correctly on four segments — 9004 (143.5 cm
+mu), 9006 (114.3 cm mu), 9008 (64.7 cm pi), 45038 (108.3 cm mu) — which are
+pr/128's four documented cosmics. It pulls them **out of the shower**, which
+is the right call; they then render as standalone PF `mu-` nodes, which is
+what the sentinel forbids. `log_absent 'pr128 pf-orphan-near-cross-cluster'`
+still passes, so pr/128's path is not re-admitting them.
+
+This is an **owner question, not a threshold**: pr/129's precedent on 393505
+was "OK to be in PR" — a cosmic may legitimately appear as a PF track while
+being kept out of Enu. If that reading holds here, pr/128's `pf_node_lt`
+assertion is the wrong proxy and needs rewriting; if it does not, the knob
+genuinely regresses 72786. I am not the one to decide which.
+
+**55740 — a shipped pr/128 fix goes silent.** `log_contains 'pr128
+pf-orphan-near-cross-cluster'` fails: the line is emitted once with the knobs
+off and not at all with them on. The PF output is **byte-identical** (55740
+is not in the 10 changed events) — the 123.1 cm muon still joins PF, by a
+different route. A shipped fix stopped firing on its own target event with no
+observable output change. That is precisely the pr/127 failure mode this
+registry exists to catch, and it is the third instance in this round after
+66366 and the pr/129 KEEP-side entries.
+
+## Where this leaves the knobs
+
+Default OFF, gated byte-identical, committed, documented. **Not proposed for a
+flip.** Tuning 50 / 15 to make the sentinels pass would be exactly the
+parameter-fitting §5.7 forbids, and would also abandon the round's own
+argument that the sibling's threshold is the right one.
+
+What it needs next is an owner reading of 72786 — *may a guard-freed cosmic
+appear as a PF track?* — because the answer decides whether this is a
+regression or a sentinel that needs rewriting. 55740 needs its own look
+regardless: a masked pr/128 knob is a standing exposure whether or not these
+knobs ever flip.

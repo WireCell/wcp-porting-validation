@@ -1,0 +1,226 @@
+{
+ "arm": "work-nuecc48-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/33fa72d9-1990-4fc7-b7fd-3f2bee6bd32d/event/41/",
+ "camera": {
+  "R": 187.36,
+  "az_deg": 7622.65,
+  "centre": [
+   -4.85,
+   136.99,
+   205.42
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6769,
+  "cloud_cluster_ids": [
+   12,
+   19
+  ],
+  "cloud_kept": 6769,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25717,
+  "el_deg": -1.87
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.31906669190864184,
+   -0.4851013967890009,
+   0.814170179353086
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "12095": {
+    "12029": "in",
+    "12038": "in",
+    "12040": "in",
+    "12046": "in",
+    "12049": "in"
+   }
+  },
+  "marks_detail": {
+   "12095": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.31906669190864184,
+     -0.4851013967890009,
+     0.814170179353086
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "12029": {
+      "absorbed_by": "conn3_unreachable (walk_add)",
+      "angle": 2.41393094614786,
+      "cluster_id": 12,
+      "dist": 49.92857262580243,
+      "ellip": 1.7321660553849851,
+      "kind": "in",
+      "length": 5.0779075396787,
+      "owner": 12038,
+      "pdg": 11,
+      "tier": 1
+     },
+     "12038": {
+      "absorbed_by": null,
+      "angle": 0.4169095641978171,
+      "cluster_id": 12,
+      "dist": 29.387602002087792,
+      "ellip": 0.5415699137903212,
+      "kind": "in",
+      "length": 16.320027431083695,
+      "owner": 12038,
+      "pdg": 11,
+      "tier": 1
+     },
+     "12040": {
+      "absorbed_by": "conn3_unreachable (walk_add)",
+      "angle": 0.8243378825015312,
+      "cluster_id": 12,
+      "dist": 42.39615537246017,
+      "ellip": 1.1380452717599536,
+      "kind": "in",
+      "length": 14.492236991851744,
+      "owner": 12038,
+      "pdg": 11,
+      "tier": 1
+     },
+     "12046": {
+      "absorbed_by": "conn3_unreachable (walk_add)",
+      "angle": 0.8243378825015312,
+      "cluster_id": 12,
+      "dist": 42.39615537246017,
+      "ellip": 1.1380452717599536,
+      "kind": "in",
+      "length": 8.748033032808545,
+      "owner": 12038,
+      "pdg": 11,
+      "tier": 1
+     },
+     "12049": {
+      "absorbed_by": "conn3_unreachable (walk_add)",
+      "angle": 6.861811911591583,
+      "cluster_id": 12,
+      "dist": 13.944644580769292,
+      "ellip": 0.2308257307110992,
+      "kind": "in",
+      "length": 20.33428057239414,
+      "owner": 12038,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 31.77240131619794,
+     "angle_min": 0.0,
+     "dist_max": 128.34414802287867,
+     "dist_min": 0.0,
+     "n": 18
+    },
+    "members": [
+     12095,
+     45052,
+     47054,
+     49056,
+     50057,
+     52059,
+     53060,
+     54061,
+     56063,
+     63070,
+     64071,
+     67074,
+     73080,
+     74085,
+     74087,
+     74088,
+     74089,
+     96090
+    ],
+    "start": [
+     49.47762205177604,
+     140.54966952362355,
+     176.19501612319246
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.31906669190864184,
+    -0.4851013967890009,
+    0.814170179353086
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 18,
+   "kine_best": 358.41394689012884,
+   "kine_charge": 358.41394689012884,
+   "kine_charge_other_hypothesis": 215.58733647526552,
+   "kine_dQdx": 258.33848736890735,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    12095,
+    45052,
+    47054,
+    49056,
+    50057,
+    52059,
+    53060,
+    54061,
+    56063,
+    63070,
+    64071,
+    67074,
+    73080,
+    74085,
+    74087,
+    74088,
+    74089,
+    96090
+   ],
+   "membership_source": "probe",
+   "num_segments": 18,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   49.47762205177604,
+   140.54966952362355,
+   176.19501612319246
+  ],
+  "reco_start_vertex_id": 12012,
+  "shower": 12095,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   49.47762205177604,
+   140.54966952362355,
+   176.19501612319246
+  ],
+  "verdict": null
+ },
+ "event": "evt423981",
+ "eventNo": 423981,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": 49.47762205177604,
+  "y": 140.54966952362355,
+  "z": 176.19501612319246
+ },
+ "note": null,
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-nuecc48/pr_evt423981/stdout.log",
+ "runNo": 18255,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-28T15:49:30+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prod0825/pr_evt423981/calib-pr-evt423981.json",
+ "subRunNo": 1
+}

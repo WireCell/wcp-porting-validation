@@ -1,0 +1,141 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 103.58,
+  "az_deg": -55.0,
+  "centre": [
+   -150.45,
+   29.42,
+   445.57
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 12821,
+  "cloud_cluster_ids": [
+   3
+  ],
+  "cloud_kept": 12821,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 27768,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.0529958929774352,
+   -0.4549647415987362,
+   -0.8889311105082999
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "3012": {
+    "3008": "out"
+   }
+  },
+  "marks_detail": {
+   "3012": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     0.0529958929774352,
+     -0.4549647415987362,
+     -0.8889311105082999
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "3008": {
+      "absorbed_by": "pass3_cluster_map (direct)",
+      "angle": 97.55240884435099,
+      "cluster_id": 3,
+      "dist": 46.45184266813399,
+      "ellip": 84.84325380221355,
+      "kind": "out",
+      "length": 25.765771812058837,
+      "owner": 3012,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 97.55240884435099,
+     "angle_min": 0.0,
+     "dist_max": 46.45184266813399,
+     "dist_min": 0.0,
+     "n": 2
+    },
+    "members": [
+     3008,
+     3012
+    ],
+    "start": [
+     -135.6542272975063,
+     18.428614332714425,
+     415.8235203408757
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.0529958929774352,
+    -0.4549647415987362,
+    -0.8889311105082999
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 173.5647239325666,
+   "kine_charge": 173.5647239325666,
+   "kine_charge_other_hypothesis": 104.399833944401,
+   "kine_dQdx": 132.3621760636813,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    3008,
+    3012
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -135.6542272975063,
+   18.428614332714425,
+   415.8235203408757
+  ],
+  "reco_start_vertex_id": 3002,
+  "shower": 3012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -135.6542272975063,
+   18.428614332714425,
+   415.8235203408757
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt286681",
+ "eventNo": 286681,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 3,
+  "x": -136.64981211538458,
+  "y": 31.928871855480093,
+  "z": 460.7060344979221
+ },
+ "note": "[agent-bulk] other_em, and a messy one: the whole event is a long dense column of charge with several near-parallel grey tracks running through it. shw 3012 (173.6 MeV, pdg 11, conn 1) has only TWO members and they cannot be one cone: 3012 (25.2 cm, the narrow straight line running off the X) and 3008 (25.8 cm) at dist 46.5 cm and angle 97.6 deg -- essentially perpendicular to the axis -- pulled in by pass3_cluster_map. Both azimuths show them as two separate objects at opposite ends of the column with the middle unclaimed. 3008 marked OUT. What I could NOT settle, and it may matter more than the verdict: cluster 3 is one big vertex complex of long prongs -- 3005 (28.5 cm pdg 2212) and 3009 (50.6 cm pdg 211) both touch 3012's start at dist 0 and are unowned, and 3004 (65 cm pdg 13), 3006 (73 cm pdg 2212), 3010/3011 (45.4/7.4 cm pdg 2212) sit 23-47 cm out -- so a second reading is that the segmentation of this whole region is arbitrary and 'over-clustered' understates it. I make no PID claim on 3012 itself, though its body is a straight narrow line rather than a cone. Vertex judged first and left alone: at el+60 the star is where a long thin track ends on the activity complex, which is a plausible convergence. Not judged individually: shw 72040 (181.1 MeV but pdg 13, 109.2 cm long -- a track-PID object whose 10 extra members are a cluster-73 spray at 12.7-44.4 deg, which would need its own look) and shw 68030 (20.8 MeV, 5.7 cm); 17 further showers skipped by the scope rule, all at 15.0 MeV and below. pi0: the reco accepted no group, but the display prices 3012+68030 at 107.1 MeV (axis) / 86.6 MeV (vertex), both inside the code's accept window. I do NOT store that pairing -- 3012's own membership is what I just disputed, so its energy is not the one that pairing should be priced with. Flagging it only as something the owner may want to re-price after the OUT mark.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt286681/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:12:33+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt286681/calib-pr-evt286681.json",
+ "subRunNo": 1
+}

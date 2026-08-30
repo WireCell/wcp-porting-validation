@@ -1,0 +1,122 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 63.96,
+  "az_deg": -55.0,
+  "centre": [
+   118.27,
+   -63.49,
+   54.85
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1822,
+  "cloud_cluster_ids": [
+   11,
+   14,
+   15,
+   16,
+   18,
+   19,
+   20
+  ],
+  "cloud_kept": 1822,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 11704,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.951519603869456,
+   -0.04097931067084842,
+   0.3048460915758236
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.951519603869456,
+    -0.04097931067084842,
+    0.3048460915758236
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 22,
+   "kine_best": 468.3676140188524,
+   "kine_charge": 468.3676140188524,
+   "kine_charge_other_hypothesis": 281.7248806128436,
+   "kine_dQdx": 303.58316461729225,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    11001,
+    11003,
+    11006,
+    11007,
+    11008,
+    11009,
+    11011,
+    11012,
+    11014,
+    31022,
+    32023,
+    33024,
+    34025,
+    37028,
+    38029,
+    39030,
+    42031,
+    43032,
+    45034,
+    46039,
+    46040,
+    46041
+   ],
+   "membership_source": "probe",
+   "num_segments": 22,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   169.25970405832732,
+   -59.47659413796197,
+   33.00946990677009
+  ],
+  "reco_start_vertex_id": 11001,
+  "shower": 11009,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   169.25970405832732,
+   -59.47659413796197,
+   33.00946990677009
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt394167",
+ "eventNo": 394167,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 169.25970405832732,
+  "y": -59.47659413796197,
+  "z": 33.00946990677009
+ },
+ "note": "[agent-bulk] nuecc, and the cleanest event in my shard. Verdict shower 11009 (468.4 MeV, pdg 11, 22 seg, 124.5 cm) is the ONLY shower in scope -- it is trivially the highest-kine_charge pdg-11 object and there is no higher-energy non-EM object to pass over. Vertex judged from the automatic close-in vtxz-* frames (r95 360.6 cm, so the vtx-* set is +-400 cm and unusable): in both vtxz-az-055-el+20 and vtxz-az+065-el+20 the star sits exactly at the tip of a single narrow MIP-like stem that broadens into a shower ~40 cm downstream -- one prong, no second prong, no ambiguity. That is the textbook nue CC picture and the shower start X sits on the star, which is correct for an electron (not a photon gap). CORRECT: the yellow member set covers the whole visible point cloud from the stem tip through the shower body, single apex, and the acceptance plot shows only orange squares -- there is not a single non-member candidate inside the plotted range. Non-members do exist but are irrelevant: 35026 at 24.1 cm / 40.3 deg (0.4 cm) and 36027 at 38.8 cm / 61.4 deg (0.3 cm), both sub-cm stubs at wide angle and off the top of the acceptance plot; everything else in the event is 222-388 cm away. There is NO grey/unowned charge anywhere in this event -- every segment has an owner -- so the strong under-clustering case cannot arise here. Membership triple-check: nseg 22 = owner-grouped count 22 = cmp_div's 22. 'Correct' here is a fast pass in the pilot's sense: nothing jumped out at four cameras and the candidate table, not a segment-by-segment verification. The one thing I would flag for a second eye is the reach -- 11009 claims pieces out to 104.7 cm (46039/46040/46041, 37028, 38029, 39030) at 3-11 deg, i.e. tier-2 pass3_cone pickups ~7 radiation lengths downstream, and it also absorbed 45034 and 38029 (pdg 2212) and four pdg-13 stubs. Individually they are sub-cm and on axis, and for a 468 MeV shower a tail at 100 cm is physical, so I did not call it over-clustered; if the owner disagrees the movers are exactly those six. NO pi0: no reco group, and kine_pio_* (mass 74.7 from 468.4 + 11.8 at 57.8 deg) is the BDT scan over all candidate pairs, not a pairing -- the 11.8 MeV partner is far below the 20 MeV scope and I did not look at it. 10 of the 11 showers are below the scope threshold and were never drawn. This verdict is about clustering and is silent on PID. Images looked at: 4.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt394167/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:38:07+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt394167/calib-pr-evt394167.json",
+ "subRunNo": 1
+}

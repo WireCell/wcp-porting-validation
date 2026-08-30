@@ -1,0 +1,96 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -120.21,
+   118.58,
+   227.67
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 11648,
+  "cloud_cluster_ids": [
+   22,
+   29
+  ],
+  "cloud_kept": 11648,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 63603,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.01199649153926213,
+   0.9707161070519605,
+   -0.23992983078524258
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.01199649153926213,
+    0.9707161070519605,
+    -0.23992983078524258
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 1,
+   "kine_best": 106.52267108844363,
+   "kine_charge": 106.52267108844363,
+   "kine_charge_other_hypothesis": 64.07378712086836,
+   "kine_dQdx": 48.757992786202635,
+   "kine_hypothesis": "shower",
+   "kine_range": 108.70145608360859,
+   "members": [
+    22004
+   ],
+   "membership_source": "probe",
+   "num_segments": 1,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -120.2230754098639,
+   101.16976714248565,
+   229.95850508966254
+  ],
+  "reco_start_vertex_id": 22003,
+  "shower": 22004,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -120.2230754098639,
+   101.16976714248565,
+   229.95850508966254
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt398191",
+ "eventNo": 398191,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": -119.7057085035386,
+  "y": 140.88225560891541,
+  "z": 251.25689524740406
+ },
+ "note": "[agent-bulk] PID verdict, recorded as UNCLEAR -- this event carries NO clustering judgement (correction 6), and no clustering judgement is available: shw 22004 has exactly one segment, so it can be neither over- nor under-clustered at segment level. 22004 (106.5 MeV, pdg 11) is the only in-scope shower and the highest-kine_charge pdg-11 object (correction 17); no higher-energy non-EM object was passed over among showers, though the event's dominant object is the grey 404.8 cm pdg-13 muon 22002. Reading (a), the one I recorded: 22004 is a track. It is a single 38.6 cm segment, chord 35.1 cm, transverse RMS 0.54 cm over its 65 skeleton points (2*RMS/L = 0.03) -- dead straight and ~1 cm wide, with no lateral development anywhere along it in the az-055 or az+085 shower frames. It is one segment of cluster 22, whose other three members are all left grey and all tagged as tracks: 22002 (404.8 cm, pdg 13), 22001 (50.4 cm, pdg 211) and 22003 (12.9 cm, pdg 2212), all three touching the nu vertex at distV 0.0. 22004 starts 25.8 cm out and sits 8.9 cm off 22001 at 22.9deg between their end-to-end directions, i.e. it reads as a further piece of the same track complex. Reading (b), which I could NOT exclude and which is why this is unclear: the vertex sits inside a large, lattice-textured point cloud, and if that cloud is real charge then 22004 could be the skeleton core of a genuine shower whose lateral charge simply has no segments drawn through it -- in which case the object is an EM shower and the event is badly under-clustered. What stopped me calling the cloud missing shower charge: it is a THIN SHEET, not a 3-D blob -- in shw22004-az+085-el+20 the whole cloud collapses to a band ~4.5 cm across while in az-055 it is 50+ cm wide, and its texture is a regular diagonal hatch. That is what imaging ambiguity looks like, not a shower, so I did not treat it as unclaimed charge; but I cannot prove that from these frames and an owner who knows the imaging should settle it. Density deliberately NOT used as evidence (correction 18): the 2.8 MeV/cm the naive ratio gives is untrustworthy here precisely because blob charge may be coming from the surrounding cloud rather than from the 38.6 cm line. Vertex judged off the vtxz-* close-in sweep at 60 cm half-span (correction 20; r95 = 355.3 cm and event_half_span_cm is saturated at 400.0 -- correction 19 -- so the vtx-* sweep at 400 cm is useless here): the star sits at the downstream end of the 404.8 cm muon with 22001 and 22003 also on it, which is a normal numu CC vertex; not vertex-bad. Showers NOT looked at: the 5 skipped by the scope rule (66009 13.1, 63006 3.5, 29005 2.5, 64007 1.5, 65008 0.7 MeV); 66009 is a 36.4 cm object of its own at 76.7 cm / 111.8deg, not connected to 22004. No reco pi0 group (all pio_id = -1) and no pi0 frames; none proposed. No gate-pair angle inversion (nothing was accepted at all beyond the seed).",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt398191/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:42:39+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt398191/calib-pr-evt398191.json",
+ "subRunNo": 1
+}

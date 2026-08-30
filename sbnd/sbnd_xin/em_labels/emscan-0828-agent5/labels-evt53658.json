@@ -1,0 +1,96 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -135.9,
+   -95.05,
+   52.83
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1173,
+  "cloud_cluster_ids": [
+   15,
+   22
+  ],
+  "cloud_kept": 1173,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 27812,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.7677524397508357,
+   0.3099000733369259,
+   -0.5608191649742433
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.7677524397508357,
+    0.3099000733369259,
+    -0.5608191649742433
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 1,
+   "kine_best": 129.59914200010627,
+   "kine_charge": 129.59914200010627,
+   "kine_charge_other_hypothesis": 77.95437112788349,
+   "kine_dQdx": 122.91558298107374,
+   "kine_hypothesis": "shower",
+   "kine_range": 63.059460669206786,
+   "members": [
+    15003
+   ],
+   "membership_source": "probe",
+   "num_segments": 1,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -129.4823133406966,
+   -97.62152005041504,
+   57.39808553230703
+  ],
+  "reco_start_vertex_id": 15002,
+  "shower": 15003,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -129.4823133406966,
+   -97.62152005041504,
+   57.39808553230703
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt53658",
+ "eventNo": 53658,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -85.18427634392688,
+  "y": -95.10759480155392,
+  "z": 1.0535493925299864
+ },
+ "note": "[agent-bulk] Vertex judged from the event's own +-102 cm sweep (event_half_span_cm 102.4, no --vtx-span re-capture needed) plus ov-xz. The blue star sits at (-85.2,-95.1,1.05) and in ov-xz it lies EXACTLY on the red z=0 TPC upstream boundary line. The only convergence of charge in the event is the three-prong junction at (-126.1,-99.4,60.8), 60 cm away: seg 15002 (pdg 211, 72 cm) runs from the boundary star up to that junction, seg 15001 (pdg 2212, 16.8 cm) continues past it, and shower 15003's stem branches off it. That reads as a particle entering the upstream face and stopping, with the vertex finder pinning the vertex at the entry point, not at an interaction. Alternative reading I cannot exclude: a real nu interaction 1 cm inside the upstream face with one forward prong that re-interacts at z=61 -- physical, but a priori improbable, hence verdict vertex-bad and not a clustering call. CLUSTERING, for the record and NOT the verdict: shower 15003 (129.6 MeV, 1 segment, 16.8 cm) covers its whole visible prong; the only unowned contiguous charge is 15001 (5.2 cm, 171.3 deg) and 15002 (3.6 cm, 164.1 deg), both behind the start on the far side of the junction, and the only in-cone non-member is 41007 (2.2 MeV, 18.3 cm, 27.7 deg, its own shower) -- nothing substantial is missing and nothing extra is swallowed. SEPARATE FLAG, not a recorded PID verdict: 15003 is straight and narrow in both azimuths (az-055 and az+085) with no widening, and carries 129.6 MeV over 16.8 cm = 7.7 MeV/cm charge-equivalent against 2.4-4.8 MeV/cm for the pilot's three accepted showers; it reads more like a stopping proton than an EM shower, but 130 MeV is only ~1 X0 of development so a genuine shower can look like a stub and I will not call PID on it. Showers NOT looked at: 22004, 40006, 39005, 54010, 41007, 43009, 42008 -- all 7 skipped by the scope rule, all under 20 MeV (max 15.1), and all either >100 cm away or at 103-142 deg from the 15003 axis. drag_check live: probe_radius_px 185, seg_u 147.70 -> 11.02, cloud_redrew true, probe_degenerate false.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt53658/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:27:30+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt53658/calib-pr-evt53658.json",
+ "subRunNo": 1
+}

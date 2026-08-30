@@ -1,0 +1,100 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 37.19,
+  "az_deg": -55.0,
+  "centre": [
+   -98.62,
+   -134.15,
+   95.85
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1644,
+  "cloud_cluster_ids": [
+   8
+  ],
+  "cloud_kept": 1644,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 33602,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.6461030616581573,
+   0.46907482340197487,
+   0.6020960419786543
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.6461030616581573,
+    0.46907482340197487,
+    0.6020960419786543
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 262.1323711256488,
+   "kine_charge": 262.1323711256488,
+   "kine_charge_other_hypothesis": 157.6736066921196,
+   "kine_dQdx": 197.98673281685043,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    8009,
+    8010,
+    8032,
+    51015,
+    56020,
+    70030
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -112.56625032403898,
+   -154.9363923306166,
+   75.36643876580706
+  ],
+  "reco_start_vertex_id": 8002,
+  "shower": 8032,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -112.56625032403898,
+   -154.9363923306166,
+   75.36643876580706
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt171143",
+ "eventNo": 171143,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -112.56625032403898,
+  "y": -154.9363923306166,
+  "z": 75.36643876580706
+ },
+ "note": "[agent-bulk] THIS IS A PID VERDICT AND THE EVENT THEREFORE CARRIES NO CLUSTERING JUDGEMENT on shw 8032 -- do not read it downstream as 'nothing wrong with the clustering here'; the member set of 8032 is in fact fine, it is the object that is not a shower. shw 8032 (262.1 MeV, 6 seg, pdg 11, mcp2k numucc_em, half-span 70.9 cm so the native framing was enough). The vertex is good: a clean two-prong V, the unowned 59.7 cm pdg-13 segment 8001 leaving one way and 8032 the other, both starting on the star, plus the unowned 3.6 cm pdg-211 stub 8031 at the vertex. WHY NOT AN EM SHOWER: 8032 is a SINGLE 56.1 cm segment of 95 fitted points that stays a thin uniform-width MIP for its whole length in both the az-055 and az+085 views -- no widening, no fan, no sub-showers -- and then makes a hard ~90 deg kink at 52 cm where 8009 (5.0 cm) and 8010 (4.3 cm) branch off, with two more pdg-2212/13 stubs (51015, 56020) at 48-50 cm. A 262 MeV electron in liquid argon has X0 = 14 cm and must start widening within one or two radiation lengths; it does not run 52 cm at MIP width and it does not turn 90 degrees. A pion that scatters hadronically at the end of its range does exactly this, and the little cluster of proton-tagged stubs at the kink is what that looks like. The display's own arithmetic agrees: the same charge read as a TRACK gives 157.7 MeV, which is right for ~56 cm of minimum-ionising track (2.1 MeV/cm gives ~120 MeV plus the end deposit), whereas 262 MeV read as a shower is not consistent with the shape. Confidence likely and not certain because I have no dQ/dx profile along the track -- that is the measurement that would settle it, and it is the one thing the display does not give me. What the clustering does look like, stated for completeness but NOT the verdict: the member set covers the object and nothing is missing -- the acceptance plot carries five member squares and no unclaimed circle anywhere in 0-68 cm / 0-26 deg -- so if the owner overrules the PID call, the clustering reading of 8032 would be correct. Second shower, checked lightly and NOT the verdict: 69027 (90.6 MeV, 7 seg, 21.4 cm) is a genuinely shower-like detached blob 36-47 cm from the vertex with a diffuse cloud, assembled from cluster 69 plus four pass4_angle fragments out to 53 cm; I saw nothing wrong with it but did not scan it segment by segment. No pi0: the reco made no group, and pairing 8032 with 69027 is meaningless because 8032 is not a photon -- note the vertex convention correctly returns no mass at all (8032 starts ON the vertex, so there is no chord), while the axis convention still prints 77.2 MeV and calls it in-window, which is a good example of that convention accepting a pair the geometry forbids. Nothing stored. Showers NOT looked at: the 2 the scope rule skipped, 49013 (5.8 MeV) and 50014 (3.2 MeV).",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt171143/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:54:56+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt171143/calib-pr-evt171143.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,99 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -195.88,
+   102.56,
+   93.73
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 889,
+  "cloud_cluster_ids": [
+   11,
+   15
+  ],
+  "cloud_kept": 889,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 18837,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.26197747090621143,
+   0.621946514899479,
+   -0.7379365401861986
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.26197747090621143,
+    0.621946514899479,
+    -0.7379365401861986
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 105.552062003721,
+   "kine_charge": 107.63513442582754,
+   "kine_charge_other_hypothesis": 64.74293800049779,
+   "kine_dQdx": 73.91553498891852,
+   "kine_hypothesis": "shower",
+   "kine_range": 105.552062003721,
+   "members": [
+    11006,
+    11007,
+    11009,
+    11037
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -191.06413808828614,
+   94.56230665599766,
+   101.39671355395046
+  ],
+  "reco_start_vertex_id": 11000,
+  "shower": 11037,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -191.06413808828614,
+   94.56230665599766,
+   101.39671355395046
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt275011",
+ "eventNo": 275011,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -191.06413808828614,
+  "y": 94.56230665599766,
+  "z": 101.39671355395046
+ },
+ "note": "[agent-bulk] mcp2k NUECC, compact: everything in the event sits within 40 cm of the star (r95 gives a half-span of only 48.7 cm, so the default vertex sweep is legible and no --vtx-span re-capture was needed). 22 segments, 14 showers, 4 in scope (11037, 11038, 56030, 58032); the ten skipped (57031, 40012, 45017, 44016, 39011, 42014, 41013, 15010, 61035, 46018) are all under 20 MeV, and several of them are part of the ambiguity below, so read this as a claim about 11037 and not about the event. drag_check both true, probe 334.9 px off centroid, not degenerate. VERTEX is good: two prongs leave the star and only two -- 11037 (22.2 cm, pdg 11, the electron candidate) and 11038 (14.9 cm, pdg 211) -- and at el+60 they still converge cleanly on it. For a nuecc event an EM object starting AT the vertex is exactly what is expected, so unlike the numucc events in my shard the zero-conversion-length start is not a red flag here. LEADING SHOWER 11037 (105.6 MeV, 4 seg, 37.1 cm, conn 1): its four members (11037 seed, 11007 at 16.4 cm / 9.1 deg, 11006 at 19.4 cm / 7.9 deg, 11009 at 22.2 cm / 4.5 deg) are contiguous, one apex, one direction, with a diffuse branching cloud around them that looks properly electromagnetic from both az-055 and az+085. By the brief's definition of under-clustering -- charge contiguous with the member set, small angle to the axis, within or just beyond the member spread -- nothing qualifies, so I record correct. WHY THE CONFIDENCE IS UNCLEAR, and this is the substance of the entry. There is about 77 MeV of other EM-labelled charge sitting 7 to 15 cm from this electron's start, and I could not decide whether it belongs to it: 56030 (45.8 MeV, with 56029) at 14.0-14.6 cm, 58032 (21.3 MeV) at 6.8 cm, 57031 (with 60034 and 59033) at 7.0 cm. If they belong, the electron is roughly 180 MeV rather than 106 and the event is badly under-clustered; if they do not, this is ordinary hadronic activity at a nuecc vertex that happens to carry a pdg-11 label. THE TWO READINGS AND WHY THEY DO NOT SEPARATE: against inclusion, all of them sit at 93-118 deg to 11037's axis, which is nearly transverse, and none of them appears anywhere in the pass-1 acceptance window because that plot's angle axis stops near 15 deg here. For inclusion, 7-15 cm is inside one Moliere radius in liquid argon (~9.5 cm), which is exactly where a 100 MeV shower's wide-angle charge lives, and it is right at the shower start where the lateral spread is largest. The display shows angle to the axis but not transverse profile, and I cannot separate 'Moliere-radius shower charge' from 'hadronic vertex blob' by eye. THE ONE THING THE ACCEPTANCE PLOT DOES SHOW: exactly one non-member circle, 47019 (3.9 cm, cluster 47) at 38.4 cm / 7.1 deg, on-axis and well inside the 12.5 deg step, currently owned by 11038 (the pdg-211 shower) via pass3_cone. I ran the correction-11 reconciliation before treating it as a genuine non-member: 11037's owner-grouped count is 4 and its cmp_div says 4, and 11038's owner-grouped count is 3 and its nseg is 3, so 47019 really is exclusively 11038's and this is not a dual-membership artifact. I did NOT mark it in, because it fails the other half of the brief's rule: 11037's members stop at 22.2 cm and 47019 is at 38.4 cm with an empty 15 cm gap in between, so it is neither contiguous nor 'just beyond' the member spread. It is on-axis for the electron and it was accepted into a pion by a cone cut, which is the kind of thing worth a second opinion. PI0: no reco pi0 group, and I would not propose one -- the display auto-slotted 11037 + 56030, but 11037 starts on the vertex so the vertex convention has no chord (kine_div prints theta '-'), and the axis convention's 69.6 deg -> 80.1 MeV pairs the electron with a blob 14 cm away, which is not a photon pair. For a nuecc event the absence of a pi0 group is the right answer.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt275011/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:50:34+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt275011/calib-pr-evt275011.json",
+ "subRunNo": 1
+}

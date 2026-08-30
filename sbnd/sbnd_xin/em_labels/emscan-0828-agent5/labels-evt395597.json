@@ -1,0 +1,155 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 42.75,
+  "az_deg": -55.0,
+  "centre": [
+   27.99,
+   38.71,
+   83.31
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4305,
+  "cloud_cluster_ids": [
+   20,
+   29
+  ],
+  "cloud_kept": 4305,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 37219,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.22504613918828525,
+   0.8181677415822992,
+   0.5291084783582352
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "20004": {
+    "20006": "in",
+    "85013": "out"
+   }
+  },
+  "marks_detail": {
+   "20004": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.22504613918828525,
+     0.8181677415822992,
+     0.5291084783582352
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "20006": {
+      "absorbed_by": "in_main_cluster (walk_exclude)",
+      "angle": 4.75614161159847,
+      "cluster_id": 20,
+      "dist": 17.645648829439345,
+      "ellip": 0.27889291843828307,
+      "kind": "in",
+      "length": 16.863440520750466,
+      "owner": null,
+      "pdg": 13,
+      "tier": 1
+     },
+     "85013": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 24.965482857100106,
+      "cluster_id": 85,
+      "dist": 73.73708280685433,
+      "ellip": 41.53692888953461,
+      "kind": "out",
+      "length": 0.7362016966313657,
+      "owner": 20004,
+      "pdg": 2212,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 24.965482857100106,
+     "angle_min": 0.0,
+     "dist_max": 73.73708280685433,
+     "dist_min": 0.0,
+     "n": 2
+    },
+    "members": [
+     20004,
+     85013
+    ],
+    "start": [
+     48.43377022778465,
+     9.026642807746759,
+     74.19273281552904
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.22504613918828525,
+    0.8181677415822992,
+    0.5291084783582352
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 245.80998367564106,
+   "kine_charge": 245.80998367564106,
+   "kine_charge_other_hypothesis": 147.85562927858112,
+   "kine_dQdx": 143.9784076436524,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    20004,
+    85013
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   48.43377022778465,
+   9.026642807746759,
+   74.19273281552904
+  ],
+  "reco_start_vertex_id": 20002,
+  "shower": 20004,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   48.43377022778465,
+   9.026642807746759,
+   74.19273281552904
+  ],
+  "verdict": "both"
+ },
+ "event": "evt395597",
+ "eventNo": 395597,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 48.43377022778465,
+  "y": 9.026642807746759,
+  "z": 74.19273281552904
+ },
+ "note": "[agent-bulk] numucc_em, 6 showers, 10 segments. Verdict shower 20004 (pdg 11, kine_charge 245.8 MeV, 2 seg, len 21.9). CORRECTION 17 MATTERS HERE: 20004 is only the SECOND entry of the kine_charge-ordered list, and it is the first with pdg==11. I passed over 20001 (pdg 13, kine_charge 251.3 / kine_best 342.9 MeV, a single 142.9 cm segment) which is the highest-energy object in the event, and 20002 (pdg 13, kine_charge 185.5 / kine_best 279.8 MeV, a single 113.4 cm segment). Both are long single-segment muon-like tracks, not EM showers, and I make no claim about either. VERTEX IS GOOD, and proven rather than eyeballed: computing from the segment polylines in state.json, THREE segments have a point at exactly 0.0 cm from the main vertex -- 20001 (142.9 cm), 20002 (113.4 cm) and 20004 (21.1 cm) itself. Judged from vtxz-az-055-el+20 (correction 20: vtxz-* written automatically, event_half_span 154.4 cm, r95 123.6 cm), which shows a clean three-prong star: blue 20001 up, green 20002 down-right, orange 20004 up-right. BOTH, and the two halves are not equally solid. OVER-CLUSTERED half (ROBUST -- it survives either PID reading below): 20004's second and only other member is 85013, a 0.74 cm pdg 2212 fragment at 73.7 cm / 25.0 deg, admitted by pass3_cone (direct). Its cmp_div reads distance 0.0-73.7 cm, angle 0.0-25.0 deg for just two segments, i.e. the member set is the shower body plus one speck three quarters of a metre away with nothing in between. On shw20004-az-055-el+20 that speck is a second, completely detached yellow halo sitting up beside the BLUE muon's charge, not on the orange body. On shw20004-acc.png it is the orange square sitting exactly on the corner where the 25 deg line meets the 80 cm line -- accepted at the extreme edge of the gate. UNDER-CLUSTERED half (CONDITIONAL): 20006 (pdg 13, 16.9 cm) sits at 17.6 cm / 4.76 deg from the shower start with metric 0.279, tier 1, and is the blue circle on the acceptance plot at (17.6, 4.8), DEEP INSIDE the innermost dashed box (5 deg out past 80 cm), yet it is excluded by in_main_cluster (walk_exclude). In the picture the grey 20006 continues almost exactly where the orange 20004 stops. So on one shower the gate rejected a candidate inside its innermost box and accepted one on the outermost corner. THE TWO READINGS I CANNOT SEPARATE, hence unclear: (a) 20004 really is an EM shower, and then 20006 is its own continuation and belongs -- both halves stand; (b) 20004 is NOT an EM shower at all but the first 21 cm of a third long track from the vertex -- the chain 20004 (21.1 cm) then 20006 (16.9 cm, 4.76 deg) then 20009 (101.2 cm, pdg 13, 30.7 cm out at 27.7 deg) reads in the picture as one roughly collinear track about 140 cm long, and an EM shower does not have a 100 cm straight tail. Under (b) the under-clustered half falls, the PID is what is wrong, and only the over-clustered half survives. Two things push toward (b): 20004 starts at 0.0 cm from the nu vertex, which a converted photon cannot do; and its blob point cloud is visibly fatter than the blue 20001 and green 20002 muon clouds in the same frame, i.e. it is more heavily ionising than a MIP, which suits a short hadron better than a 246 MeV electron. What pushes toward (a) is that a nue-like primary electron WOULD start on the vertex, and the event is only labelled numucc_em. I did NOT compute MeV/cm from kine_charge/length (correction 18); the ionisation remark above is a comparison of point-cloud density between three tracks in one frame, not a number. Correction 7, the marks differ in strength: 85013 OUT is the strong mark and is true under both readings; 20006 IN is the WEAK mark, conditional on reading (a), and is the one I would let the owner reverse. 20008 and 20009 are deliberately left unmarked at 31.7 and 27.7 deg. Showers not looked at: the 3 skipped by the scope rule (84012, 83011, 29010), all single-segment 2-point fragments. PI0: no reco group, all pio_id -1, kine_div says no pi0 group in this event and no pio-*.png was written; there is no second EM object, so I propose no pairing. drag_check both true, probe_radius 97.6 px, probe_degenerate false.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt395597/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:40:27+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt395597/calib-pr-evt395597.json",
+ "subRunNo": 1
+}

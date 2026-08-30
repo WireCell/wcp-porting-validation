@@ -1,0 +1,123 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 70.4,
+  "az_deg": -55.0,
+  "centre": [
+   -169.73,
+   54.69,
+   194.16
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6021,
+  "cloud_cluster_ids": [
+   26,
+   30,
+   31
+  ],
+  "cloud_kept": 6021,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 41432,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.5521049099002686,
+   -0.496094266866908,
+   0.6701273362919927
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.5521049099002686,
+    -0.496094266866908,
+    0.6701273362919927
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 27,
+   "kine_best": 417.86800329668773,
+   "kine_charge": 417.86800329668773,
+   "kine_charge_other_hypothesis": 251.34917491530095,
+   "kine_dQdx": 302.35220976404497,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    30012,
+    30016,
+    30017,
+    30020,
+    30021,
+    30022,
+    30023,
+    30051,
+    94029,
+    95030,
+    96031,
+    97032,
+    98033,
+    99034,
+    100035,
+    101036,
+    102037,
+    103038,
+    104039,
+    105040,
+    106041,
+    107042,
+    108044,
+    108045,
+    109046,
+    111048,
+    112049
+   ],
+   "membership_source": "probe",
+   "num_segments": 27,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -138.9175635037387,
+   79.3470155204923,
+   147.8143873177029
+  ],
+  "reco_start_vertex_id": 26001,
+  "shower": 30022,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -138.9175635037387,
+   79.3470155204923,
+   147.8143873177029
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt317939",
+ "eventNo": 317939,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 26,
+  "x": -130.86892351021794,
+  "y": 83.92274739172053,
+  "z": 140.12058367268205
+ },
+ "note": "[agent-bulk] Leading EM shower 30022 (417.9 MeV, 27 seg): correct. It is detached 12 cm from the vertex, and its 27 members form one cone in one direction -- the angular spread falls with distance exactly as a shower's should (up to 27.7 deg out at 30-40 cm, then <=13.6 deg beyond 80 cm), with the body continuous from the X to about 83 cm. The decisive check is its acceptance plot: 27 orange squares and ZERO blue circles, i.e. there is not a single non-member anywhere in this shower's angle/distance neighbourhood, so nothing is left grey inside the cone and it cannot be under-clustered. Two azimuths (az-055, az+085) show one apex at the X, no kink and no second direction. The one thing I would flag rather than call: the tail. After a continuous body to 83.5 cm there are two isolated fragments at 102.0 cm (112049, 0.8 cm) and 121.7 cm (111048, 0.6 cm pdg 2212), both tier 2 pass4_angle, each behind a ~19 cm gap. On a 418 MeV shower (83 cm is ~6 X0) I read them as tail, not as over-clustering, but they are the same construction that made me record evt280972 as unclear, and they are worth an owner's eye if that tail behaviour is what the round is about. Not marked. Vertex judged first and cleared: cluster 26 gives four prongs all starting on the star -- the 152.9 cm muon 26000 and the 10.2 cm pion 26002 (both correctly left unowned), the 21.4 cm pion 26001 and the 10.5 cm 26003 -- and they converge on it in both the vertex camera and the +-70 cm shower frame. NOT EM, for the record: shower 26001 (61.6 MeV) is reco pdg 211, i.e. the pion track, and it has absorbed three sub-centimetre pdg 13 stubs at 24.8/35.4/42.3 cm along its own extension by pass3_cone; shower 26003 (33.5 MeV) is a single 10.5 cm segment sitting on the vertex in the muon's own cluster. Neither is an EM shower in my reading, but both are inside the 20 MeV scope rule; I make no PID verdict on them because the verdict slot belongs to 30022. Scope: 3 of 6 showers in scope (30022, 26001, 26003); skipped were 78025 (18.5 MeV, pdg 2212, 2.4 cm -- just under the cut), 110047 (6.7 MeV) and 31024 (2.6 MeV), and I did not look at them. Pi0: no reco pi0 group. The capture's automatic slots priced 30022+26003 at 256.1 MeV on the axis convention (theta 139.2 deg) and the kine_pio_ BDT feature says 253.1 MeV at 129.7 deg; that is a back-to-back pair, and 26003 sits on the vertex so it is not a converted photon. 30022 is the only detached photon-like object in the event and has no partner. No pairing proposed.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt317939/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:59:54+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt317939/calib-pr-evt317939.json",
+ "subRunNo": 1
+}

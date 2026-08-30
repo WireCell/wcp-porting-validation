@@ -1,0 +1,338 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 42.74,
+  "az_deg": -55.0,
+  "centre": [
+   117.59,
+   -28.4,
+   153.06
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2021,
+  "cloud_cluster_ids": [
+   9
+  ],
+  "cloud_kept": 2021,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 20701,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.659928731545282,
+   0.04599503280467116,
+   0.7499190131196385
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.659928731545282,
+    0.04599503280467116,
+    0.7499190131196385
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 120.09788212859583,
+   "kine_charge": 120.09788212859583,
+   "kine_charge_other_hypothesis": 72.23932759614787,
+   "kine_dQdx": 91.98854080177311,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    37010,
+    38011,
+    45018,
+    69032,
+    69034,
+    69035,
+    70039
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   130.6389701609499,
+   -28.574942252502222,
+   118.25984328576742
+  ],
+  "reco_start_vertex_id": 9002,
+  "shower": 69032,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   130.6389701609499,
+   -28.574942252502222,
+   118.25984328576742
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt56243",
+ "eventNo": 56243,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 135.6205740000524,
+  "y": -27.55549509701088,
+  "z": 109.46570172829414
+ },
+ "note": "[agent-bulk] shw 69032 (120.1 MeV, 7 seg, start 10.1 cm from the nu vertex): one trail along the orange axis with a single apex at the X, no second direction and no straight MIP stem swallowed. Nothing contiguous is missing: on the acceptance plot the only non-member inside the cone, 44017 (6.2 MeV), sits at 79.9 cm / 39.4 deg, outside the pass-1 box on BOTH axes. shw 71044 (112.2 MeV, start 40.0 cm out, all 7 members within 14 deg over 75 cm) is likewise complete - every non-member within 50 cm of it is at 85-174 deg. This is a clustering statement, silent on PID: 71044 is collimated enough to read as track-like and I did not test that. pi0: the reconstruction accepted NO pi0 group, yet 69032 + 71044 are two detached EM objects of 120/112 MeV; the display's axis convention gives m = 138.9 MeV, inside the accept window, while the vertex convention gives 165.9 MeV - the pr/114 6.1 inconsistency - so this is stored as a CANDIDATE, not a settled pairing. Not looked at: the other 16 showers, all at or below 6.2 MeV (scope rule min_kine_best 20 MeV).",
+ "origin": "numucc_em",
+ "pio": {
+  "backproject": null,
+  "backproject_geometry": "handscan",
+  "candidates": [
+   {
+    "backproject": null,
+    "backproject_geometry": "handscan",
+    "gammas": {
+     "1": {
+      "axis": [
+       -0.659928731545282,
+       0.04599503280467116,
+       0.7499190131196385
+      ],
+      "axis_source": "probe",
+      "dir_point": null,
+      "em_start_correction": null,
+      "energy": 120.09788212859583,
+      "energy_as_reconstructed": 120.09788212859583,
+      "energy_hypothesis": "as_reconstructed",
+      "energy_includes_marks": true,
+      "energy_includes_orphans": true,
+      "energy_marks_delta": 0.0,
+      "energy_marks_detail": [],
+      "energy_marks_unknown": [],
+      "energy_orphan_delta": 0,
+      "energy_orphan_detail": [],
+      "energy_other_hypothesis": 72.23932759614787,
+      "energy_without_marks": 120.09788212859583,
+      "flag_shower": true,
+      "kine_hypothesis": "shower",
+      "members": [
+       37010,
+       38011,
+       45018,
+       69032,
+       69034,
+       69035,
+       70039
+      ],
+      "particle_id": 11,
+      "reco_start": [
+       130.6389701609499,
+       -28.574942252502222,
+       118.25984328576742
+      ],
+      "shower": 69032,
+      "start": [
+       130.6389701609499,
+       -28.574942252502222,
+       118.25984328576742
+      ],
+      "start_override": null,
+      "start_source": "reco"
+     },
+     "2": {
+      "axis": [
+       -0.7800011700026325,
+       0.5260007890017753,
+       -0.33900050850114416
+      ],
+      "axis_source": "probe",
+      "dir_point": null,
+      "em_start_correction": null,
+      "energy": 112.2280298118749,
+      "energy_as_reconstructed": 112.2280298118749,
+      "energy_hypothesis": "as_reconstructed",
+      "energy_includes_marks": true,
+      "energy_includes_orphans": true,
+      "energy_marks_delta": 0.0,
+      "energy_marks_detail": [],
+      "energy_marks_unknown": [],
+      "energy_orphan_delta": 0,
+      "energy_orphan_detail": [],
+      "energy_other_hypothesis": 67.50558184172928,
+      "energy_without_marks": 112.2280298118749,
+      "flag_shower": true,
+      "kine_hypothesis": "shower",
+      "members": [
+       40013,
+       41014,
+       42015,
+       43016,
+       54027,
+       71043,
+       71044
+      ],
+      "particle_id": 11,
+      "reco_start": [
+       107.36980681813392,
+       -3.127327741881357,
+       95.31047398803896
+      ],
+      "shower": 71044,
+      "start": [
+       107.36980681813392,
+       -3.127327741881357,
+       95.31047398803896
+      ],
+      "start_override": null,
+      "start_source": "reco"
+     }
+    },
+    "mass_axis_convention": 138.85857185327333,
+    "mass_vertex_convention": 165.92634680166552,
+    "stored_utc": "2026-08-28T20:34:48+00:00",
+    "theta_axis_convention": 73.45814586289848,
+    "theta_vertex_convention": 91.22193277495491,
+    "vertex": [
+     135.6205740000524,
+     -27.55549509701088,
+     109.46570172829414
+    ],
+    "vertex_how": "main_vertex"
+   }
+  ],
+  "gammas": {
+   "1": {
+    "axis": [
+     -0.659928731545282,
+     0.04599503280467116,
+     0.7499190131196385
+    ],
+    "axis_source": "probe",
+    "dir_point": null,
+    "em_start_correction": null,
+    "energy": 120.09788212859583,
+    "energy_as_reconstructed": 120.09788212859583,
+    "energy_hypothesis": "as_reconstructed",
+    "energy_includes_marks": true,
+    "energy_includes_orphans": true,
+    "energy_marks_delta": 0.0,
+    "energy_marks_detail": [],
+    "energy_marks_unknown": [],
+    "energy_orphan_delta": 0,
+    "energy_orphan_detail": [],
+    "energy_other_hypothesis": 72.23932759614787,
+    "energy_without_marks": 120.09788212859583,
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "members": [
+     37010,
+     38011,
+     45018,
+     69032,
+     69034,
+     69035,
+     70039
+    ],
+    "particle_id": 11,
+    "reco_start": [
+     130.6389701609499,
+     -28.574942252502222,
+     118.25984328576742
+    ],
+    "shower": 69032,
+    "start": [
+     130.6389701609499,
+     -28.574942252502222,
+     118.25984328576742
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     -0.7800011700026325,
+     0.5260007890017753,
+     -0.33900050850114416
+    ],
+    "axis_source": "probe",
+    "dir_point": null,
+    "em_start_correction": null,
+    "energy": 112.2280298118749,
+    "energy_as_reconstructed": 112.2280298118749,
+    "energy_hypothesis": "as_reconstructed",
+    "energy_includes_marks": true,
+    "energy_includes_orphans": true,
+    "energy_marks_delta": 0.0,
+    "energy_marks_detail": [],
+    "energy_marks_unknown": [],
+    "energy_orphan_delta": 0,
+    "energy_orphan_detail": [],
+    "energy_other_hypothesis": 67.50558184172928,
+    "energy_without_marks": 112.2280298118749,
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "members": [
+     40013,
+     41014,
+     42015,
+     43016,
+     54027,
+     71043,
+     71044
+    ],
+    "particle_id": 11,
+    "reco_start": [
+     107.36980681813392,
+     -3.127327741881357,
+     95.31047398803896
+    ],
+    "shower": 71044,
+    "start": [
+     107.36980681813392,
+     -3.127327741881357,
+     95.31047398803896
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 138.85857185327333,
+  "mass_vertex_convention": 165.92634680166552,
+  "reco_groups": {},
+  "reco_kine": {
+   "kine_pio_angle": 91.22193145751953,
+   "kine_pio_dis_1": 10.158374786376953,
+   "kine_pio_dis_2": 39.940101623535156,
+   "kine_pio_energy_1": 120.09788513183594,
+   "kine_pio_energy_2": 112.22802734375,
+   "kine_pio_flag": 1,
+   "kine_pio_mass": 165.9263458251953,
+   "kine_pio_phi_1": -168.43453979492188,
+   "kine_pio_phi_2": 139.1503448486328,
+   "kine_pio_theta_1": 30.036853790283203,
+   "kine_pio_theta_2": 110.75737762451172,
+   "kine_pio_vtx_dis": 0.0
+  },
+  "theta_axis_convention": 73.45814586289848,
+  "theta_vertex_convention": 91.22193277495491,
+  "vertex": [
+   135.6205740000524,
+   -27.55549509701088,
+   109.46570172829414
+  ],
+  "vertex_how": "main_vertex"
+ },
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt56243/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:34:55+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt56243/calib-pr-evt56243.json",
+ "subRunNo": 1
+}

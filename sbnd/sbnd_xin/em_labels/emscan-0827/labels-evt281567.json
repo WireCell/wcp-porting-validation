@@ -1,0 +1,141 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/1cbf04ba-9800-4c99-bd94-d4ed266ad245/event/10/",
+ "camera": {
+  "R": 67.13,
+  "az_deg": 1481.08,
+  "centre": [
+   -48.89,
+   -104.75,
+   132.51
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 8551,
+  "cloud_cluster_ids": [
+   9,
+   14,
+   15,
+   16,
+   17
+  ],
+  "cloud_kept": 8551,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 31874,
+  "el_deg": -17.68
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.797160644056297,
+   0.11802378418901259,
+   0.5921193240669106
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.797160644056297,
+    0.11802378418901259,
+    0.5921193240669106
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 35,
+   "kine_best": 678.819636541792,
+   "kine_charge": 678.819636541792,
+   "kine_charge_other_hypothesis": 408.3125633334088,
+   "kine_dQdx": 591.3228357194196,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    9016,
+    9021,
+    9022,
+    9023,
+    9024,
+    9025,
+    9027,
+    9031,
+    9036,
+    9220,
+    53064,
+    54065,
+    55066,
+    59070,
+    65076,
+    66077,
+    67078,
+    69080,
+    71082,
+    74085,
+    78089,
+    95128,
+    96139,
+    97140,
+    98155,
+    98156,
+    98158,
+    98160,
+    98161,
+    98162,
+    98163,
+    102211,
+    104213,
+    105214,
+    106215
+   ],
+   "membership_source": "probe",
+   "num_segments": 35,
+   "particle_id": 11,
+   "pio_id": 1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -72.6786143983667,
+   -104.86257802219538,
+   85.59194190266707
+  ],
+  "reco_start_vertex_id": 95157,
+  "shower": 95128,
+  "start_override_by_shower": {
+   "99193": [
+    -70.51231384277344,
+    -103.52420806884766,
+    75.16472625732422
+   ]
+  },
+  "start_override_vertex_id_by_shower": {
+   "99193": "99181"
+  },
+  "start_used": [
+   -72.6786143983667,
+   -104.86257802219538,
+   85.59194190266707
+  ],
+  "verdict": null
+ },
+ "event": "evt281567",
+ "eventNo": 281567,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 95,
+  "x": -72.6786143983667,
+  "y": -104.86257802219538,
+  "z": 85.59194190266707
+ },
+ "note": "nu vertex is wrong ... , 95128 has an overclustering issue of a EM shower isolated with a main cluster segment",
+ "origin": "ncpi0",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-mcp2k/pr_evt281567/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T14:35:22+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt281567/calib-pr-evt281567.json",
+ "subRunNo": 1
+}

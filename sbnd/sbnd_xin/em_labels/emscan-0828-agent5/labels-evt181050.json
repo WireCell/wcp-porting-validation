@@ -1,0 +1,209 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 49.33,
+  "az_deg": -55.0,
+  "centre": [
+   -79.3,
+   162.49,
+   487.78
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1574,
+  "cloud_cluster_ids": [
+   15,
+   21
+  ],
+  "cloud_kept": 1574,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23693,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.9148399170205568,
+   -0.38993176791040124,
+   0.10498162982203109
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "15006": {
+    "61021": "in",
+    "68031": "in",
+    "68032": "in",
+    "68034": "in"
+   }
+  },
+  "marks_detail": {
+   "15006": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.9148399170205568,
+     -0.38993176791040124,
+     0.10498162982203109
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "61021": {
+      "absorbed_by": null,
+      "angle": 9.488922896817048,
+      "cluster_id": 61,
+      "dist": 46.91211471824698,
+      "ellip": 3.73054276707194,
+      "kind": "in",
+      "length": 4.075837205497457,
+      "owner": 61021,
+      "pdg": 11,
+      "tier": 1
+     },
+     "68031": {
+      "absorbed_by": null,
+      "angle": 7.7611601439422975,
+      "cluster_id": 68,
+      "dist": 40.6150024719416,
+      "ellip": 2.2155099853995543,
+      "kind": "in",
+      "length": 5.422022949483968,
+      "owner": 68031,
+      "pdg": 11,
+      "tier": 1
+     },
+     "68032": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 7.14590234182027,
+      "cluster_id": 68,
+      "dist": 39.05523964039052,
+      "ellip": 1.8827036213288237,
+      "kind": "in",
+      "length": 6.329489336850829,
+      "owner": 68031,
+      "pdg": 11,
+      "tier": 1
+     },
+     "68034": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 7.14590234182027,
+      "cluster_id": 68,
+      "dist": 39.05523964039052,
+      "ellip": 1.8827036213288237,
+      "kind": "in",
+      "length": 5.620433603998768,
+      "owner": 68031,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 17.944966220126048,
+     "angle_min": 0.0,
+     "dist_max": 85.26487611682239,
+     "dist_min": 0.0,
+     "n": 16
+    },
+    "members": [
+     15001,
+     15003,
+     15005,
+     15006,
+     50010,
+     51011,
+     52012,
+     53013,
+     54014,
+     56016,
+     58018,
+     64025,
+     65026,
+     67027,
+     69038,
+     69039
+    ],
+    "start": [
+     -41.36320939523007,
+     182.25198066914464,
+     487.24680390026214
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.9148399170205568,
+    -0.38993176791040124,
+    0.10498162982203109
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 16,
+   "kine_best": 253.43624863934352,
+   "kine_charge": 253.43624863934352,
+   "kine_charge_other_hypothesis": 152.44285632441716,
+   "kine_dQdx": 201.72303972776305,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    15001,
+    15003,
+    15005,
+    15006,
+    50010,
+    51011,
+    52012,
+    53013,
+    54014,
+    56016,
+    58018,
+    64025,
+    65026,
+    67027,
+    69038,
+    69039
+   ],
+   "membership_source": "probe",
+   "num_segments": 16,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -41.36320939523007,
+   182.25198066914464,
+   487.24680390026214
+  ],
+  "reco_start_vertex_id": 15001,
+  "shower": 15006,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -41.36320939523007,
+   182.25198066914464,
+   487.24680390026214
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt181050",
+ "eventNo": 181050,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -41.36320939523007,
+  "y": 182.25198066914464,
+  "z": 487.24680390026214
+ },
+ "note": "[agent-bulk] shw 15006 (253.4 MeV, 16 seg, pdg 11, mcp2k nuecc): under-clustered. Vertex is good and judged from the native framing (119.4 cm half-span, under the re-frame threshold): the star sits at the tip of a single narrow stem that widens downstream into a fan -- the textbook nuecc electron -- and the only thing at the vertex besides it is 15050, a 2.0 cm pdg-211 stub, correctly left unowned. WHAT IS MISSING: four segments sit INSIDE this shower's own pass-1 acceptance box, at small angle and mid-distance, and are not members. On the acceptance plot they are the blue circles at (38.5 cm, 7.2 deg), (40.5 cm, 7.8 deg), (46.5 cm, 9.5 deg) and (36.5 cm, 10.6 deg) -- all comfortably under the 12.5 deg step, i.e. deeper inside the gate than a dozen accepted members. They are 68031 + 68032 + 68034 (shower 68031, 26.9 MeV, 17.4 cm of track over three segments, tier 1, metric 1.88-2.22) and 61021 (15.3 MeV, 4.1 cm, tier 1, metric 3.73). Together that is ~42 MeV, about 17 pct of the shower, left outside while 15006 reaches out to 85 cm to absorb sub-centimetre stubs (50010 at 85.3 cm, 64025 at 77.9 cm, 51011 at 78.5 cm, all 0.3-1.0 cm) by pass4_angle. Visually, shower 68031 is the GREEN polyline lying inside the yellow member body in shw15006-az-055-el+20, not across a gap from it. I APPLIED CORRECTION 11's RECONCILIATION TEST before calling this, because these segments are owned by neighbours rather than grey: counting the candidates whose owner is 15006 gives exactly 16, which equals the shower's own nseg of 16, so 68031's and 61021's segments are genuinely NOT double-members of 15006 and the missing-charge reading is not an artefact of first-owner-wins. Marks: 68031/68032/68034 IN (the strong case -- 17 cm of contiguous in-cone track, three segments of one small shower), and 61021 IN as well but it is THE WEAKER OF THE TWO and the one I would let the owner reverse: it is a single 4.1 cm segment, its red polyline sits a little off the edge of the member body rather than inside it, and at 46.9 cm it is beyond where the fan is still dense. I did NOT mark 57017 (0.4 cm, 1.3 MeV, the circle at 36.5 cm / 10.6 deg) -- same geometry but negligible charge. The two circles at ~58 cm / 23.5 deg are 70051/70052 (shower 70052, 53.4 MeV) and sit ABOVE the 12.5 deg band, so I left them alone; if the owner wants a maximal reading they are the next candidates, but I did not make that claim. Confidence likely, not certain, because I cannot rule out that 68031 is a genuinely separate low-energy photon that happens to lie along this electron's axis. No reco pi0 group, and I did not price a pairing: 15006 starts on the vertex so it is the electron, not a converted photon, and there is no second EM object above 27 MeV. Clustering statement, silent on PID. Showers NOT looked at: 70052 (53.4 MeV) and 68031 (26.9 MeV) were in scope and I looked at them only in relation to 15006; the 12 the scope rule skipped top out at 15.3 MeV (61021, which is the segment I marked) and the rest are under 6 MeV.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt181050/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:03:25+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt181050/calib-pr-evt181050.json",
+ "subRunNo": 1
+}

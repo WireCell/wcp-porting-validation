@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   5.93,
+   -38.11,
+   373.56
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 947,
+  "cloud_cluster_ids": [
+   7,
+   16,
+   17,
+   18
+  ],
+  "cloud_kept": 947,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 5463,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.013991824167463288,
+   -0.7575573370669408,
+   -0.6526186558109662
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.013991824167463288,
+    -0.7575573370669408,
+    -0.6526186558109662
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 118.64189197282901,
+   "kine_charge": 118.64189197282901,
+   "kine_charge_other_hypothesis": 71.36354404380694,
+   "kine_dQdx": 105.60264260154888,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    18013,
+    18014,
+    35017,
+    36018
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   6.889880382295284,
+   -22.683198635448267,
+   385.7732998226385
+  ],
+  "reco_start_vertex_id": 7001,
+  "shower": 18014,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   6.889880382295284,
+   -22.683198635448267,
+   385.7732998226385
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt486247",
+ "eventNo": 486247,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 7,
+  "x": -3.078991463247383,
+  "y": -20.157797433899294,
+  "z": 385.1770125085965
+ },
+ "note": "[agent-bulk] Leading and only EM shower 18014 (118.6 MeV, 4 seg): correct. Simple event -- a 46.2 cm pdg 13 track (segment 7002, correctly left unowned) leaving the vertex, and this shower detached 10.3 cm from the star on the other side of it. Its four members (18014 9.1 cm, 18013 4.7 cm, 36018 2.1 cm, 35017 1.4 cm) all lie within 9.1 deg of one axis over 0-38.2 cm, and on both shower azimuths (az-055, az+085) the yellow set covers the whole compact blob with one apex at the X and the axis pointing away from the vertex, which is what a converted photon looks like. Nothing is missing: EVERY non-member in the event is at 43 deg or more from its axis (nearest in angle is 16004 at 43.4 deg and 222 cm away), so there is no contiguous unclaimed charge inside the cone -- the same argument as pilot evt284791, and it does not depend on any width measurement. The two outermost members, 36018 (2.1 cm pdg 13 at 21.1 cm) and 35017 (1.4 cm at 38.2 cm), are isolated stubs on the axis rather than part of a continuous body -- the trailing-fragment pattern again, but only two of them and both inside 9.1 deg, so I do not call it. Vertex judged first and cleared with a caveat: only ONE object touches the star, the 46.2 cm track, so the vertex here is simply that track's end point; nothing contradicts it, but there is also nothing to corroborate it, and if the track's direction is the wrong way round the vertex would be at its far end instead. I did not call vertex-bad because there is no visible convergence that disagrees with the star. Scope: 1 of 7 showers in scope (18014); the six skipped are 7003 (8.7 MeV), 7001 (6.3), 26015 (2.3), 16004 (2.0), 27016 (1.1), 17005 (0.5) -- all under 9 MeV, and I did not look at them. Note 7001 and 7003 (2.4 and 3.1 cm, both pdg 11) sit at 45.8 cm from the vertex at the far end of the muon track and read as its end-point fragments. Pi0: no reco pi0 group, no gamma slots auto-assigned, and with a single EM object above 20 MeV there is no second photon to pair -- another 'partner absent' case rather than a mis-pairing.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt486247/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:08:45+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt486247/calib-pr-evt486247.json",
+ "subRunNo": 1
+}

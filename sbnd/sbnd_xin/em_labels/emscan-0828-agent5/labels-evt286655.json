@@ -1,0 +1,212 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 54.4,
+  "az_deg": -55.0,
+  "centre": [
+   -39.58,
+   46.15,
+   44.51
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2328,
+  "cloud_cluster_ids": [
+   19,
+   30
+  ],
+  "cloud_kept": 2328,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 57324,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.290909541196845,
+   -0.14495492602591933,
+   -0.9457059311759979
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "79023": {
+    "67016": "out",
+    "69018": "out",
+    "79023": "out",
+    "81062": "out",
+    "82063": "out"
+   }
+  },
+  "marks_detail": {
+   "79023": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.290909541196845,
+     -0.14495492602591933,
+     -0.9457059311759979
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "67016": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 137.1398156265595,
+      "cluster_id": 67,
+      "dist": 67.59473036444908,
+      "ellip": 86.09609700745386,
+      "kind": "out",
+      "length": 1.4645301688827292,
+      "owner": 79023,
+      "pdg": 13,
+      "tier": null
+     },
+     "69018": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 150.26769197154147,
+      "cluster_id": 69,
+      "dist": 81.2925600787787,
+      "ellip": 68.13253608418677,
+      "kind": "out",
+      "length": 0.40354851072804265,
+      "owner": 79023,
+      "pdg": 2212,
+      "tier": null
+     },
+     "79023": {
+      "absorbed_by": "stem_backfill (direct)",
+      "angle": 0.0,
+      "cluster_id": 79,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "out",
+      "length": 8.316480385141787,
+      "owner": 79023,
+      "pdg": 11,
+      "tier": 1
+     },
+     "81062": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 144.25044574666433,
+      "cluster_id": 81,
+      "dist": 85.85612429107657,
+      "ellip": 103.67899023085681,
+      "kind": "out",
+      "length": 0.6622720867657382,
+      "owner": 79023,
+      "pdg": 13,
+      "tier": null
+     },
+     "82063": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 141.8642738555472,
+      "cluster_id": 82,
+      "dist": 71.22744519597411,
+      "ellip": 79.34829032793225,
+      "kind": "out",
+      "length": 20.570322133494667,
+      "owner": 79023,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 150.26769197154147,
+     "angle_min": 0.0,
+     "dist_max": 85.85612429107657,
+     "dist_min": 0.0,
+     "n": 11
+    },
+    "members": [
+     19004,
+     19006,
+     19007,
+     19008,
+     19009,
+     67016,
+     69018,
+     73022,
+     79023,
+     81062,
+     82063
+    ],
+    "start": [
+     -43.03035383081263,
+     65.3640328145349,
+     8.663831650096508
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.290909541196845,
+    -0.14495492602591933,
+    -0.9457059311759979
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 11,
+   "kine_best": 295.03813890574855,
+   "kine_charge": 295.03813890574855,
+   "kine_charge_other_hypothesis": 177.46654971774353,
+   "kine_dQdx": 274.73625336863574,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    19004,
+    19006,
+    19007,
+    19008,
+    19009,
+    67016,
+    69018,
+    73022,
+    79023,
+    81062,
+    82063
+   ],
+   "membership_source": "probe",
+   "num_segments": 11,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -43.03035383081263,
+   65.3640328145349,
+   8.663831650096508
+  ],
+  "reco_start_vertex_id": 79034,
+  "shower": 79023,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -43.03035383081263,
+   65.3640328145349,
+   8.663831650096508
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt286655",
+ "eventNo": 286655,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 79,
+  "x": -43.03035383081263,
+  "y": 65.3640328145349,
+  "z": 8.663831650096508
+ },
+ "note": "[agent-bulk] Shower 79023 (295.0 MeV, 11 seg) is over-clustered, and its axis is pointing backwards. THE NUMBER THAT SAYS IT: its own cmp_div reads 'already in shower 79023 : 11 segment(s) -- distance 0.0-85.9 cm, angle 0.0-150.3 deg'. Ten of its eleven members sit at 128-150 deg to its own axis. Its acceptance plot has exactly ONE orange square in the whole pass-1 gate box -- the seed at (0.3 cm, 0.2 deg); every other member is off the top of the plot, brought in by from_vertices (walk_add) and pass4_angle, not by the cone. WHAT THE PICTURE SHOWS: the event is a vertex with a 7.7 cm stem and three detached blobs. On vtx-az-055 and vtx-az+065 the stem (segment 79023, site stem_backfill) leaves the star on the OPPOSITE side from every blob, and the orange axis arrow on shw79023-az-055 points away from the shower's entire body. The blobs are (i) 80055's compact shower at 26.7-43.0 cm, (ii) the cluster-19 group at 27.9-51.9 cm, (iii) the 82063 group at 67.6-86.4 cm. Measured 3-D separations: stem to cluster-19 27.9 cm, cluster-19 to 82063 24.1 cm, stem to 80055 24.7 cm -- three real gaps, not projection. Shower 79023 merges (i-not) the stem + group (ii) + group (iii), i.e. three apexes and ~150 deg of direction spread in one shower. MARKS: the seed stem 79023 marked OUT (it is on the far side of the vertex from the whole body, 131-146 deg from every member, and it is what sets the reversed axis); the far group 82063 + 81062 + 69018 + 67016 marked OUT (a separate narrow 20.6 cm streak behind a 24.1 cm gap). What should survive as the shower is the cluster-19 group. Shower 80055 (198.9 MeV) by contrast looks correct: 10 members over 0-49.3 cm within 22.7 deg, compact and contiguous, start on the vertex side of its blob, detached 26.7 cm from the star -- photon-like and I found nothing to add or remove. Vertex judged first and NOT called bad: only a 7.7 cm stub touches the star, but all three blobs sit 26-30 cm from it in different directions, which is what a common origin looks like; I would rather report the shower defect than blame the vertex. Scope: 2 of 9 showers in scope (79023, 80055); the other seven (68017 2.6, 30010 2.5, 64013 1.5, 71020 1.4, 63012 1.0, 65014 0.7, 62011 0.4 MeV) are all under 3 MeV, skipped by the 20 MeV rule, not examined. Pi0: no reco pi0 group. The capture's automatic slots priced 79023+80055 at 407.0 MeV on the axis convention, but that number is meaningless here because 79023's axis is reversed, and the vertex convention returns no chord because 79023 starts on the vertex. The pairing that would be worth pricing is 80055 (detached 26.7 cm) against the cluster-19 blob (detached 27.9 cm) -- two detached EM blobs on opposite sides of the star -- but the display prices whole showers, not sub-pieces of one, so I could not compute it and I propose no stored pairing.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt286655/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:53:22+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt286655/calib-pr-evt286655.json",
+ "subRunNo": 1
+}

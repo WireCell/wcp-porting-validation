@@ -1,0 +1,162 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 67.27,
+  "az_deg": -55.0,
+  "centre": [
+   73.69,
+   165.91,
+   442.34
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2719,
+  "cloud_cluster_ids": [
+   19,
+   21
+  ],
+  "cloud_kept": 2719,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 26942,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.4060056841193668,
+   -0.32000448009408217,
+   0.8560119842516698
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "19012": {
+    "19012": "out"
+   }
+  },
+  "marks_detail": {
+   "19012": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.4060056841193668,
+     -0.32000448009408217,
+     0.8560119842516698
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "19012": {
+      "absorbed_by": "stem_backfill (direct)",
+      "angle": 0.0,
+      "cluster_id": 19,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "out",
+      "length": 6.244141461545904,
+      "owner": 19012,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 49.934416248165206,
+     "angle_min": 0.0,
+     "dist_max": 114.09582941056645,
+     "dist_min": 0.0,
+     "n": 12
+    },
+    "members": [
+     19012,
+     46020,
+     48022,
+     49023,
+     50024,
+     51025,
+     54028,
+     57032,
+     57033,
+     58035,
+     59037,
+     60038
+    ],
+    "start": [
+     55.45588963747522,
+     174.53613671365292,
+     387.4314782220244
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.4060056841193668,
+    -0.32000448009408217,
+    0.8560119842516698
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 12,
+   "kine_best": 215.27362852475926,
+   "kine_charge": 215.27362852475926,
+   "kine_charge_other_hypothesis": 129.48789685699808,
+   "kine_dQdx": 238.38147986113643,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    19012,
+    46020,
+    48022,
+    49023,
+    50024,
+    51025,
+    54028,
+    57032,
+    57033,
+    58035,
+    59037,
+    60038
+   ],
+   "membership_source": "probe",
+   "num_segments": 12,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   55.45588963747522,
+   174.53613671365292,
+   387.4314782220244
+  ],
+  "reco_start_vertex_id": 19004,
+  "shower": 19012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   55.45588963747522,
+   174.53613671365292,
+   387.4314782220244
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt67394",
+ "eventNo": 67394,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": 55.45588963747522,
+  "y": 174.53613671365292,
+  "z": 387.4314782220244
+ },
+ "note": "[agent-bulk] shw 19012 (215.3 MeV, 12 seg) is over-clustered: the yellow set spans two directions with a 43 cm gap between them. Its seed 19012 is a short stem sitting INSIDE the vertex fan of cluster 19 (site stem_backfill; 19005/19007/19011/19013 all read dist 0.0 / angle 0.0 against it and are unowned), and it fixes both the shower start and the axis. Every other member is the detached body 43.5-114.1 cm out, and every one of them is at 38.2-49.9 deg to that axis - i.e. the axis the stem defines does not pass through the shower body. The acceptance plot makes it an inversion: all 11 non-seed members sit OUTSIDE the dashed pass-1 box (accepted by pass4_angle), while the segments that are inside the box - 44018 at 32.6 cm / 12.3 deg, 55029 at 17.6 / 20.4, 43017 at 29.0 / 21.9, all tier 1, and 41015 (10.0 MeV) at 57.8 / 26.7 - are unowned and lie along the stem direction, i.e. they are the stem's own prong, not the body's. Marked 19012 OUT: my claim is that the stem belongs to a different vertex prong and the shower should start at 58035. Two azimuths (az -55 and az +85) and the elevation frame all show the same 45 deg separation, so it is not a projection effect. I do NOT also call this under-clustered: the in-cone unclaimed stubs are in-cone only with respect to an axis I am saying is wrong. Vertex is fine - the star sits where the left hook and the up-right prong bundle converge in all three vertex frames. No pi0: 19012 is the only shower at or above 20 MeV. Not looked at: the other 10 showers, all at or below 10.0 MeV (scope rule min_kine_best 20 MeV).",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt67394/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:40:26+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt67394/calib-pr-evt67394.json",
+ "subRunNo": 1
+}

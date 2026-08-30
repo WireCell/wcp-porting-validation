@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -138.59,
+   41.15,
+   293.6
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1193,
+  "cloud_cluster_ids": [
+   6
+  ],
+  "cloud_kept": 1193,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 43110,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.6359694741978402,
+   -0.6599683222807776,
+   -0.3999808013822894
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.6359694741978402,
+    -0.6599683222807776,
+    -0.3999808013822894
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 113.70170594952903,
+   "kine_charge": 113.70170594952903,
+   "kine_charge_other_hypothesis": 68.39200357866409,
+   "kine_dQdx": 75.70993630617237,
+   "kine_hypothesis": "shower",
+   "kine_range": 51.90318588501252,
+   "members": [
+    139013,
+    139014,
+    139020,
+    139021
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -139.98248459512405,
+   42.663091230656114,
+   294.371898740503
+  ],
+  "reco_start_vertex_id": 6001,
+  "shower": 139020,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -139.98248459512405,
+   42.663091230656114,
+   294.371898740503
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt65053",
+ "eventNo": 65053,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": -143.80084282530441,
+  "y": 45.59596684089743,
+  "z": 300.0809714384162
+ },
+ "note": "[agent-bulk] Sparse event: one 115.8 cm muon (6000, pdg 13) ending on the blue star, and one compact EM object 7.5 cm off it. shw 139020 (113.7 MeV, 4 seg, 14.0 cm) reads as correct: on shw139020-az-055-el+20 and -az+085-el+20 the yellow set covers the whole little forked blob (its own cluster 139, members 139020/139021/139013/139014, all site from_vertices) and there is nothing contiguous left grey around it. The nearest non-member is the muon itself at 7.5 cm / 152.9 deg - i.e. on the far side of the shower start, correctly excluded; every other candidate is at 61-160 deg (141019 at 15.6 cm / 61 deg, 140016 at 24.3 cm / 160 deg, 26003 at 23.5 cm / 147 deg). No non-member anywhere inside the cone, so no under-clustering. Not over-clustered either: the two wide-angle members 139013 (103 deg) and 139014 (44 deg) are both under 5.1 cm from the start and read as the opening of the conversion, one apex on both azimuths. Vertex is fine on vtx-az-055-el+20 and -el+60: the star is at the muon endpoint with the EM blob just downstream, and nothing else in the event competes for it. Scope: 1 shower of 6 examined; 5 skipped by the <20 MeV rule and not looked at. This is a fast pass on clustering, silent on PID - I did NOT test whether a 113.7 MeV blob 7.5 cm off a muon endpoint is EM at all rather than a Michel or hadronic clump. The vtx-* sweep is half-span 132 cm here so it was used for topology only.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt65053/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:38:41+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt65053/calib-pr-evt65053.json",
+ "subRunNo": 1
+}

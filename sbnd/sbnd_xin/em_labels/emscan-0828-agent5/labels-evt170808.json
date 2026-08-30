@@ -1,0 +1,105 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   186.86,
+   21.4,
+   420.39
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2138,
+  "cloud_cluster_ids": [
+   14,
+   19
+  ],
+  "cloud_kept": 2138,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 51129,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.1630027710706625,
+   -0.5690096732466684,
+   0.8060137023494108
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.1630027710706625,
+    -0.5690096732466684,
+    0.8060137023494108
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 10,
+   "kine_best": 298.3807933466734,
+   "kine_charge": 298.3807933466734,
+   "kine_charge_other_hypothesis": 179.4771689303299,
+   "kine_dQdx": 177.6644834987907,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    39007,
+    58015,
+    58017,
+    58018,
+    59020,
+    59021,
+    60024,
+    60025,
+    60026,
+    60027
+   ],
+   "membership_source": "probe",
+   "num_segments": 10,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   180.94824018472158,
+   33.947195405972465,
+   400.9571344943797
+  ],
+  "reco_start_vertex_id": 14003,
+  "shower": 60025,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   180.94824018472158,
+   33.947195405972465,
+   400.9571344943797
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt170808",
+ "eventNo": 170808,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 177.3697134576209,
+  "y": 45.24330623725401,
+  "z": 386.71686377908514
+ },
+ "note": "[agent-bulk] numucc_em. Vertex is good: at el+60 the star is a clean two-prong V -- a long straight track running one way (14004, pdg 13, 37.7 cm) and a second prong the other (14028, pdg 2212, 22.4 cm) -- and the same kink is visible at az-055. shw 60025 (298.4 MeV, 10 seg, 67.5 cm, conn 2) starts ~18 cm off the star and is a single forward cone: members run 0-45 cm at 0.2-10.4 deg, and its acceptance plot has NO non-member circle anywhere in the window, so there is nothing contiguous left unclaimed. Every unowned segment in the event is at >=65 deg from its axis (14028 at 112 deg, 14004 at 176 deg, the rest sub-4 MeV stubs at 65-154 deg), so I see no under-clustering; the member set is one apex, one direction, so no over-clustering. Caveat I did not test: the detached start plus the reco calling 60026 (15.6 cm, 2.9 deg, absorbed pass4_prox) pdg 211 and 60024 pdg 2212 are PID statements inside the shower body -- for a 300 MeV EM object a MIP-like stem PID is expected and I make no PID claim. Only 1 shower is in scope; the other 8 are 3.6 MeV and below and I did not look at them. Single gamma with no partner anywhere in the reco, so the absence of a pi0 group is a missing second photon, not a mis-pairing.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt170808/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:39:58+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt170808/calib-pr-evt170808.json",
+ "subRunNo": 1
+}

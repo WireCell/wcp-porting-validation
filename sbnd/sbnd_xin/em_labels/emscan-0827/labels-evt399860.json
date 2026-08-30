@@ -1,0 +1,44 @@
+{
+ "arm": "work-ncpi0-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/c57f7f06-d02d-4de7-8de9-402abfbbace5/event/14/",
+ "camera": {
+  "R": 91.3,
+  "az_deg": 4658.24,
+  "centre": [
+   -32.35,
+   -96.67,
+   431.39
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6886,
+  "cloud_cluster_ids": [
+   17,
+   26
+  ],
+  "cloud_kept": 6886,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 24230,
+  "el_deg": -46.29
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt399860",
+ "eventNo": 399860,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -32.13763008797339,
+  "y": -84.64111677520373,
+  "z": 407.50032348190587
+ },
+ "note": "very good",
+ "origin": "ncpi0",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-ncpi0/pr_evt399860/stdout.log",
+ "runNo": 18259,
+ "sample": "ncpi0",
+ "saved_utc": "2026-08-28T15:25:48+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-prod0825/pr_evt399860/calib-pr-evt399860.json",
+ "subRunNo": 1
+}

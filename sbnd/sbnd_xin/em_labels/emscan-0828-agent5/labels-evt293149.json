@@ -1,0 +1,174 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 60.07,
+  "az_deg": -55.0,
+  "centre": [
+   -160.21,
+   18.08,
+   429.49
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1596,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 1596,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 12174,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.2501019373134164,
+   -0.9543889927879969,
+   0.1630664631283475
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "4001": {
+    "33012": "in",
+    "38017": "in"
+   }
+  },
+  "marks_detail": {
+   "4001": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.2501019373134164,
+     -0.9543889927879969,
+     0.1630664631283475
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "33012": {
+      "absorbed_by": null,
+      "angle": 17.603702910098338,
+      "cluster_id": 33,
+      "dist": 42.24404974121845,
+      "ellip": 7.542311124733183,
+      "kind": "in",
+      "length": 2.334990719828968,
+      "owner": 33012,
+      "pdg": 11,
+      "tier": 1
+     },
+     "38017": {
+      "absorbed_by": null,
+      "angle": 13.581206409358282,
+      "cluster_id": 38,
+      "dist": 46.139028908591165,
+      "ellip": 5.952611101050142,
+      "kind": "in",
+      "length": 2.0485354291530644,
+      "owner": 38017,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 32.11545198735021,
+     "angle_min": 0.0,
+     "dist_max": 96.84800174874518,
+     "dist_min": 0.0,
+     "n": 12
+    },
+    "members": [
+     4001,
+     27006,
+     29008,
+     30009,
+     31010,
+     52023,
+     52024,
+     52025,
+     52026,
+     52028,
+     52030,
+     52031
+    ],
+    "start": [
+     -129.1977425831859,
+     51.5202324606885,
+     404.01583055676053
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.2501019373134164,
+    -0.9543889927879969,
+    0.1630664631283475
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 12,
+   "kine_best": 269.42720063246657,
+   "kine_charge": 269.42720063246657,
+   "kine_charge_other_hypothesis": 162.06147406464157,
+   "kine_dQdx": 188.32534911993176,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    4001,
+    27006,
+    29008,
+    30009,
+    31010,
+    52023,
+    52024,
+    52025,
+    52026,
+    52028,
+    52030,
+    52031
+   ],
+   "membership_source": "probe",
+   "num_segments": 12,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -129.1977425831859,
+   51.5202324606885,
+   404.01583055676053
+  ],
+  "reco_start_vertex_id": 4002,
+  "shower": 4001,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -129.1977425831859,
+   51.5202324606885,
+   404.01583055676053
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt293149",
+ "eventNo": 293149,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -129.1977425831859,
+  "y": 51.5202324606885,
+  "z": 404.01583055676053
+ },
+ "note": "[agent-bulk] shw 4001 (269.4 MeV, 12 seg, len 80.0, the only shower in this event at or above 20 MeV) is under-clustered on its own cone. Its body is the cluster-52 group at 46.9-50.0 cm and 4.1-17.5 deg. Sitting in that same shell, unowned and tier 1, are 38017 (13.4 MeV, 2 seg) at 46.1 cm / 13.6 deg with metric 6.0, and 33012 (5.9 MeV) at 42.2 cm / 17.6 deg with metric 7.5 - both bracketed in angle AND in metric by accepted members (metrics 2.1-9.3), and both INSIDE the dashed pass-1 box on the acceptance plot while the shower's own far members sit outside it. In the picture they are the grey blobs immediately alongside the yellow body: left of it in the az +85 frame and above it in the az -55 frame. Marked 38017 and 33012 IN. Two more I did NOT mark but that point the same way: 32011 (54.4 cm / 23.2 deg, tier 1) is already owned by 38017 and would follow it, and 4002 (14.7 MeV) reads dist 0.0 / angle 0.0 against 4001 - a second shower sitting on the same start, which is a split rather than a cone-radius miss and which I am not confident enough to fold in. What I did NOT verify: the four far members 27006/29008/30009/31010 (86.7-96.8 cm at 26.8-32.1 deg, all pdg 13, all taken by pass4_angle and all outside the pass-1 box) - they are isolated stubs 40 cm past the body and I did not test whether they belong; following the pilot's evt284791 rule I did not call the shower over-clustered on them, so this verdict is a statement about what is MISSING only. Vertex: the star sits at the tip of the seed stem with the body 47 cm downstream; nothing else converges there, which is consistent with a nuecc electron but means I could not cross-check the vertex against a second prong. Not looked at: the other 12 showers, all at or below 14.7 MeV (scope rule min_kine_best 20 MeV).",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt293149/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:50:09+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt293149/calib-pr-evt293149.json",
+ "subRunNo": 1
+}

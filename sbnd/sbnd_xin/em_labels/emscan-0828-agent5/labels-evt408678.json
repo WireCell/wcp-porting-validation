@@ -1,0 +1,103 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 37.68,
+  "az_deg": -55.0,
+  "centre": [
+   -183.28,
+   -25.21,
+   463.47
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2038,
+  "cloud_cluster_ids": [
+   14,
+   23,
+   24
+  ],
+  "cloud_kept": 2038,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 18384,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.3859141436534933,
+   -0.49289034409630106,
+   0.7798265079008414
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.3859141436534933,
+    -0.49289034409630106,
+    0.7798265079008414
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 312.28911879570325,
+   "kine_charge": 312.28911879570325,
+   "kine_charge_other_hypothesis": 187.8430789748591,
+   "kine_dQdx": 203.53610842362494,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    14001,
+    14003,
+    14006,
+    14007,
+    14008,
+    37012,
+    52027
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -170.7618536672225,
+   -14.295776987135662,
+   435.22505800522174
+  ],
+  "reco_start_vertex_id": 14003,
+  "shower": 14003,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -170.7618536672225,
+   -14.295776987135662,
+   435.22505800522174
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt408678",
+ "eventNo": 408678,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -170.7618536672225,
+  "y": -14.295776987135662,
+  "z": 435.22505800522174
+ },
+ "note": "[agent-bulk] shw 14003 (312.3 MeV, pdg 11, 7 segments) is the highest-kine_charge pdg-11 shower (correction 17) and the highest-energy object in the event; no non-EM object was passed over. It is the textbook nuecc electron: it starts ON the nu vertex (closest member point distV 0.0), runs ~40 cm as a narrow MIP stem, then opens into a branching fan out to 61.6 cm -- visible as stem-then-fan in BOTH shower azimuths (az-055 and az+085), so the cone is 3-D and not a projection artifact, and the member skeleton gives extent 42.5 cm with transverse RMS 5.06 cm (2*RMS/L = 0.24) after dropping the far 0.2 cm fragment. Members 14001/14003/14006/14007/14008 are all cluster 14 and mutually touching (gaps 0.0-8.3 cm). Nothing contiguous is missing: the ONLY substantial grey/unowned segment in the event is 14004 (19.6 cm, pdg 13) and it leaves the vertex at 89.8deg to the shower seed's direction -- the second prong of a clean two-prong vertex, correctly left unowned. Every other non-member is the seed of its own sub-20 MeV shower (correction 16) and none is contiguous: the nearest, 42017 (11.3 MeV, 2.2 cm) at 40.5 cm / 72.4deg, is 22.8 cm from the closest member; 57032 (21.6 MeV, 0.8 cm) at 59.8 cm / 35.8deg is 37.2 cm away. Weak over-clustering item I did NOT record and would let the owner reverse: 52027 (0.2 cm, pdg 13) is a member at 61.6 cm from the vertex with a 33.1 cm gap to the nearest other member -- a 2-point fragment carrying essentially no charge, taken far out on axis. Showers NOT looked at individually: the 24 the scope rule skipped, all <= 11.3 MeV (42017 11.3, 24010 10.6, 45020 4.3, 48023 2.9, then 20 more under 2.9 down to 0.0). Vertex judged off the vtx-* sweep at 99.3 cm half-span (r95 = 79.4 cm, below the 150 cm trigger, so no vtxz-* frames): in vtx-az+065-el+20 the star sits exactly at the fork of the electron stem and 14004; not vertex-bad. PI0: there is NO reco pi0 group (both pio_id = -1), so the pio-*.png frames are the capture's auto-slotted top two, NOT a reconstruction pairing (correction 3). That auto pair 14003+57032 prices at 132.3 MeV on the axis convention -- inside the code's accept window -- and I explicitly do NOT propose it: 14003 starts on the nu vertex so it cannot be a converted photon, the asymmetry is 0.87, and the vertex convention returns no chord. The separate kine_pio_* BDT block (mass 99.0, E2 11.3 MeV) does not even close with itself (70.2 vs 99.0) and is not a pairing either. GATE observation, same family as the one on evt396037 in this shard: no same-distance angle inversion here, but 14007 was accepted at 35.8 cm / 35.7deg -- well ABOVE the 25deg pass-1 line on the acceptance plot -- by site in_main_cluster, i.e. on cluster membership, while 57032 at essentially the same angle (35.8deg) but 59.8 cm out was rejected. Twice in this shard the accept/reject boundary is set by which cluster a segment is in rather than by the dist/angle gate.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt408678/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:45:31+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt408678/calib-pr-evt408678.json",
+ "subRunNo": 1
+}

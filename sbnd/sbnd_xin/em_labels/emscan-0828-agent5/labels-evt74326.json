@@ -1,0 +1,213 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   48.84,
+   110.97,
+   397.31
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5913,
+  "cloud_cluster_ids": [
+   10
+  ],
+  "cloud_kept": 5913,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 34471,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.43972525754423875,
+   -0.10093693411810935,
+   -0.892442397697739
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "80061": {
+    "36029": "out",
+    "37030": "out",
+    "50047": "out",
+    "50050": "out",
+    "51055": "out",
+    "51056": "out"
+   }
+  },
+  "marks_detail": {
+   "80061": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.6671137525930525,
+     0.6471103417206971,
+     0.3690629305949571
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "36029": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 16.154031951178926,
+      "cluster_id": 36,
+      "dist": 67.12275669393492,
+      "ellip": 16.548068328071704,
+      "kind": "out",
+      "length": 1.655196302990132,
+      "owner": 80061,
+      "pdg": 13,
+      "tier": 1
+     },
+     "37030": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 17.578879580595128,
+      "cluster_id": 37,
+      "dist": 62.78976056242454,
+      "ellip": 16.6241638311128,
+      "kind": "out",
+      "length": 0.2815247214347507,
+      "owner": 80061,
+      "pdg": 2212,
+      "tier": 1
+     },
+     "50047": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 9.84167652066323,
+      "cluster_id": 50,
+      "dist": 65.49842976733844,
+      "ellip": 7.616421170202584,
+      "kind": "out",
+      "length": 1.75778837360782,
+      "owner": 80061,
+      "pdg": 11,
+      "tier": 1
+     },
+     "50050": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 11.910303098849479,
+      "cluster_id": 50,
+      "dist": 64.68192467342087,
+      "ellip": 9.631372292247958,
+      "kind": "out",
+      "length": 3.929616333452988,
+      "owner": 80061,
+      "pdg": 11,
+      "tier": 1
+     },
+     "51055": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 20.65825631829779,
+      "cluster_id": 51,
+      "dist": 65.09257754072605,
+      "ellip": 23.412771044813667,
+      "kind": "out",
+      "length": 6.99291499182811,
+      "owner": 80061,
+      "pdg": 13,
+      "tier": 1
+     },
+     "51056": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 22.311392681980735,
+      "cluster_id": 51,
+      "dist": 70.98175871776661,
+      "ellip": 31.74191143174758,
+      "kind": "out",
+      "length": 4.889586544199012,
+      "owner": 80061,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 22.311392681980735,
+     "angle_min": 0.0,
+     "dist_max": 70.98175871776661,
+     "dist_min": 0.0,
+     "n": 8
+    },
+    "members": [
+     36029,
+     37030,
+     50047,
+     50050,
+     51055,
+     51056,
+     80061,
+     80062
+    ],
+    "start": [
+     53.29275740019284,
+     132.49761371134545,
+     402.6847172809134
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.43972525754423875,
+    -0.10093693411810935,
+    -0.892442397697739
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 193.45321807007625,
+   "kine_charge": 193.45321807007625,
+   "kine_charge_other_hypothesis": 116.36283793688798,
+   "kine_dQdx": 109.20067279636534,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    10020,
+    48041,
+    52057
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   55.47384123961268,
+   114.94485307886843,
+   421.15554049481716
+  ],
+  "reco_start_vertex_id": 10012,
+  "shower": 10020,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   55.47384123961268,
+   114.94485307886843,
+   421.15554049481716
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt74326",
+ "eventNo": 74326,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 65.2494240967669,
+  "y": 106.78769218582866,
+  "z": 391.94968626605976
+ },
+ "note": "[agent-bulk] Verdict is on the LEADING EM shower 10020 (193.5 MeV, 3 seg, pdg 11) and it is correct; the interesting finding on this event is on the SECOND shower 80061 and lives in the marks below. event_half_span_cm 123.5, so the r95 vertex sweep is fine and I did not re-capture with --vtx-span. VERTEX IS GOOD: on vtx-az-055-el+20 and vtx-az+065-el+20 the star is a clean five-prong fan and all five prongs touch it at 0.00 cm - 10015 (pdg 2212, 64.6 cm), 10026 (pdg 13, 114.6 cm), 10066 (pdg 211, 33.0 cm), 10017 (pdg 211, 24.3 cm), 10027 (pdg 211, 14.8 cm) - and every one of them is correctly left UNOWNED. SHOWER 10020: on shw10020-acc there are three member squares and exactly ONE non-member circle inside 65 cm, 10027 at (20.6 cm, 24.9 deg) - and 10027 is one of those vertex pions, a 14.8 cm track, so excluding it is right, not a miss. No grey EM-like charge inside 10020's cone. Its body is a single 24 cm segment plus two sub-1 cm specks at 19.2 cm / 19.3 deg and 49.3 cm / 14.1 deg: sparse, but sparse is not under-clustered (pilot section 2.3). SECOND SHOWER 80061 (113.8 MeV, 8 seg) IS OVER-CLUSTERED, and shw80061-acc makes it unmistakable: ONE member square at 0.5 cm and then SIX member squares bunched at 62-72 cm from the shower start at 10-23 deg, with NOTHING between 1 and 62 cm - a 55 cm empty gap inside one shower. The near part is the cluster-80 core (80061 4.6 cm + 80062 3.0 cm) sitting 30 cm from the vertex; the far part is a six-segment clump from clusters 36/37/50/51 about 95 cm from the vertex, every one of them pulled in by pass4_angle (direct), the late angle-only pass. A shower is contiguous; this member set spans two apexes. I marked the six far pieces OUT of 80061: 37030, 50050, 51055, 50047, 36029, 51056. All six are the same strength - they are one clump on the far side of one gap, so the owner reverses them together or not at all. THE SPLIT I AM NOT SURE OF, and it is the honest weakness of those marks: I chose to keep the cluster-80 core as 80061 and eject the far clump because pass4_angle is the mechanism that bridged the gap, but the far clump is the bigger object (about 20 cm of segments against the core's 7.6 cm) and the opposite split - the far clump is the real photon and the core is the intruder - fits the picture just as well. Reconciliation check (correction 11): nseg 8 and exactly eight segments carry owner 80061, so no segment here is silently shared with another shower. PI0: the reconstruction stored NO pi0 group. The display's auto-slotted pair 10020 + 80061 prices at 121.9 MeV on the vertex convention (theta 48.5 deg, inside the code's accept window) and 220.2 MeV on the axis convention, Epi0 307.3 MeV, asym 0.26 - so on the vertex convention this looks like a missed pi0 with two detached gammas. I deliberately did NOT store that pairing: gamma2's energy comes from a member set I have just called over-clustered, so pricing a pi0 off it would build on the thing I am disputing. If the owner ejects the far clump the pairing must be re-priced. NOT LOOKED AT: 10 of the 12 shower nodes were out of scope, all at 12.8 MeV or below (42035, 49042, 38031, 44037, 43036, 41034, 40033, 47040, 39032, 45038); one of them, 47040, carries the table flag 'conn 4: dropped by the PF tree'.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt74326/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:39:06+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt74326/calib-pr-evt74326.json",
+ "subRunNo": 1
+}

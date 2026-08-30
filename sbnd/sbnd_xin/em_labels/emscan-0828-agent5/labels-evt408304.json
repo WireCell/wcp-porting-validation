@@ -1,0 +1,169 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   103.81,
+   -102.77,
+   185.74
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1093,
+  "cloud_cluster_ids": [
+   9,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22
+  ],
+  "cloud_kept": 1093,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 8405,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.20795903610443375,
+   0.976807587855922,
+   0.050989955967914044
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "9039": {
+    "9038": "in"
+   }
+  },
+  "marks_detail": {
+   "9039": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.20795903610443375,
+     0.976807587855922,
+     0.050989955967914044
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "9038": {
+      "absorbed_by": null,
+      "angle": 0.0,
+      "cluster_id": 9,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "in",
+      "length": 15.257072465865772,
+      "owner": null,
+      "pdg": 211,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 12.906871087494507,
+     "angle_min": 0.0,
+     "dist_max": 36.00743940805642,
+     "dist_min": 0.0,
+     "n": 12
+    },
+    "members": [
+     9007,
+     9008,
+     9039,
+     9040,
+     35021,
+     38024,
+     50025,
+     51026,
+     52028,
+     52029,
+     52030,
+     53031
+    ],
+    "start": [
+     99.26694253960105,
+     -121.92868884075867,
+     185.52681961860682
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.20795903610443375,
+    0.976807587855922,
+    0.050989955967914044
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 12,
+   "kine_best": 166.45068590881084,
+   "kine_charge": 166.45068590881084,
+   "kine_charge_other_hypothesis": 100.12071332860803,
+   "kine_dQdx": 128.06323129608174,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    9007,
+    9008,
+    9039,
+    9040,
+    35021,
+    38024,
+    50025,
+    51026,
+    52028,
+    52029,
+    52030,
+    53031
+   ],
+   "membership_source": "probe",
+   "num_segments": 12,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   99.26694253960105,
+   -121.92868884075867,
+   185.52681961860682
+  ],
+  "reco_start_vertex_id": 9051,
+  "shower": 9039,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   99.26694253960105,
+   -121.92868884075867,
+   185.52681961860682
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt408304",
+ "eventNo": 408304,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 99.26694253960105,
+  "y": -121.92868884075867,
+  "z": 185.52681961860682
+ },
+ "note": "[agent-bulk] verdict shower 9039 (pdg 11, kine_charge 166.5 MeV, 12 seg, 45.5 cm) -- the highest-kine_charge pdg-11 object; nothing in the event outranks it. It IS a real EM shower: 88 member points spanning 0-39.1 cm from the vertex at 0.0-12.9 deg, and the transverse RMS grows along it quarter by quarter, 0.54 -> 2.16 -> 2.17 -> 2.26 cm (max radius 4.5 cm) -- a narrow stem opening into a cone, which is what an electron should look like. THE FINDING (this is the strong grey-charge case, not the owned-by-a-neighbour one): segment 9038 is UNOWNED -- owner '-' in the segments source, the only unowned segment in the event -- and it is 15.3 cm long with 26 fitted points running from the main vertex out to 14.5 cm, inside 9039's own cone (its direction is 11.1 deg from 9039's axis, its midpoint sits at 8.9 deg, and 9039's accepted members span 0-12.9 deg). It is contiguous with the shower along its ENTIRE length: point by point, the distance from each of its 26 points to the nearest 9039 member point is 0.00, 0.30, 0.60 ... rising to a maximum of 2.01 cm at 10.4 cm out and falling back to 0.66 cm at its far end. So this is not a separate prong that happens to leave the same vertex -- it never gets more than 2 cm away. The shower already absorbs seven track-PID'd segments (9007 pdg 211, 9040 / 50025 / 52030 / 53031 / 38024 pdg 13, 52029 pdg 211) at 5-12 deg, so leaving 9038 out because it carries pdg 211 would be inconsistent with the reco's own behaviour on this shower. 9038 is marked IN on 9039; it is the only mark and it is the strong kind (26 points, 15.3 cm, touching). WHAT WOULD OVERTURN IT: if 9038 and 9039's seed are two skeletons threaded through ONE charge column (an imaging artifact rather than two particles), then its blobs may already be inside the shower's charge and merging would double-count rather than recover energy. I cannot separate that from a genuine second track at this zoom -- they overlap in every projection I have -- so the claim I am making is exactly the brief's under-clustering definition (unowned charge, contiguous, inside the cone) and no more. Vertex judged off the automatic vtxz-* 60 cm frames (r95 345.1 cm, and note event_half_span_cm is saturated at 400.0 per correction 19 so the vtx-* set is useless here): the star sits at the head of the shower with the small 9033 stub on the other side; 9039 and 9033 are 174.9 deg apart, i.e. back-to-back through the vertex, which is the evt175896 shape from the pilot -- but here the back side is only 50.5 MeV in 6.1 cm against a 39 cm widening cone on the front side, so I read it as an electron plus small backward vertex activity rather than one line split in two, and I did not call vertex-bad. In any case the finding above is measured from the shower start and is vertex-independent (correction 14). OTHER SHOWERS: 9033 (pdg 11, 50.5 MeV, 2 seg) not separately judged beyond the back-to-back note; its far member 34020 sits at 38.5 cm / 162.3 deg from 9039, i.e. well behind, so it is not a candidate for 9039. Membership bookkeeping: nseg 12 = owner-grouped 12 = cmp_div 12, and the owner groups sum to 29 = the shard's n_seg. pi0: kine_div says 'no pi0 group in this event'; the auto-slotted [9039, 9033] pair is the correction-3 artifact and at 173.1 deg apart it is not a pi0 topology; nothing stored. NOT LOOKED AT: the 14 out-of-scope showers, all <= 7.8 MeV, 9 of them flagged 'conn 4: dropped by the PF tree' and several 150-435 cm from the shower. This verdict is about clustering and is silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt408304/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:54:24+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt408304/calib-pr-evt408304.json",
+ "subRunNo": 1
+}

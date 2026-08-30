@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -8.27,
+   194.09,
+   62.85
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 601,
+  "cloud_cluster_ids": [
+   3
+  ],
+  "cloud_kept": 601,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 36894,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.19999590012607069,
+   0.49598983231265525,
+   0.8449826780326486
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.19999590012607069,
+    0.49598983231265525,
+    0.8449826780326486
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 100.00741743307813,
+   "kine_charge": 100.00741743307813,
+   "kine_charge_other_hypothesis": 60.15483755373121,
+   "kine_dQdx": 72.57522718834085,
+   "kine_hypothesis": "shower",
+   "kine_range": 94.60566092900365,
+   "members": [
+    3005,
+    3006,
+    3007,
+    3008
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -10.000899694028659,
+   188.74591285101377,
+   53.07700942469212
+  ],
+  "reco_start_vertex_id": 84010,
+  "shower": 3007,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -10.000899694028659,
+   188.74591285101377,
+   53.07700942469212
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt59085",
+ "eventNo": 59085,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 84,
+  "x": -10.665896004564493,
+  "y": 185.80504262803333,
+  "z": 49.16419074936807
+ },
+ "note": "[agent-bulk] shw 3007 (100.0 MeV, 4 seg, cluster 3): correct. Yellow member set covers the whole visible cone from the X out to the far end on all three vertex cameras (az-055/az+065 el+20, az-055 el+60); one apex, no kink, no second direction, and no straight MIP stem swallowed. Nothing contiguous is left grey inside the cone: the only three non-members in the event are 28009 (pdg 13, 3.0 cm, 22.3 cm away at 96.4 deg to the axis), 29010 (pdg 11, 0.06 cm, 5.4 cm at 120.0 deg) and 84011 (pdg 2212, 0.7 cm, 4.5 cm at 171.8 deg) -- all sideways or behind the shower start, i.e. there is nothing in this event to add. Vertex judged first and cleared: the blue star carries the 84011 proton stub and sits on the backward extension of 3007's axis (171.8 deg), and the shower start is 4.9 cm out along that axis, which reads as a conversion gap rather than a misplaced vertex. Uncovered point cloud at the shower front is the spreading EM front, not an unclaimed segment, so it is not counted as under-clustering. Scope: 2 of 3 showers in scope (min kine_best 20 MeV); shower 29010 skipped at 1.1 MeV and not examined. No pi0: this event has no reco pi0 group and only one EM object above 20 MeV, so there is no second gamma to pair -- the same 'no partner in the reconstruction' case as pilot evt284200. Statement is about clustering only, silent on PID.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt59085/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:35:40+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt59085/calib-pr-evt59085.json",
+ "subRunNo": 1
+}

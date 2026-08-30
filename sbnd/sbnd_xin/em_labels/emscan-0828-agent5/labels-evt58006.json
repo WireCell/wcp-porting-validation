@@ -1,0 +1,104 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 41.05,
+  "az_deg": -55.0,
+  "centre": [
+   117.5,
+   -34.71,
+   90.08
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1380,
+  "cloud_cluster_ids": [
+   8,
+   14,
+   15,
+   16
+  ],
+  "cloud_kept": 1380,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 15513,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.7191657868229966,
+   -0.23705464739506285,
+   -0.6531505685610804
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.7191657868229966,
+    -0.23705464739506285,
+    -0.6531505685610804
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 162.1652802386558,
+   "kine_charge": 162.1652802386558,
+   "kine_charge_other_hypothesis": 97.54302570746216,
+   "kine_dQdx": 96.83184334938991,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    31016,
+    39024,
+    41026,
+    45030,
+    58034,
+    58035,
+    58036
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   140.9257752338527,
+   -26.581153414612317,
+   115.75965380893538
+  ],
+  "reco_start_vertex_id": 8003,
+  "shower": 58035,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   140.9257752338527,
+   -26.581153414612317,
+   115.75965380893538
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt58006",
+ "eventNo": 58006,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": 160.75889390902995,
+  "y": -19.757425097124404,
+  "z": 143.00313387003277
+ },
+ "note": "[agent-bulk] Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm was 400.0, r95 323.6 -- correction 5), shots-vtx/evt58006. The star (160.8,-19.8,143.0) sits at a clean apex: a long grey unowned track (8039, pdg 13 -- the muon, correctly left unowned) runs off it one way, shower 8040's stem and shower 8041 the other. Vertex looks right. Leading EM shower 58035 (162.2 MeV, 7 segments) is detached, closest member point 34.4 cm from the star, and its body is a compact ~25 cm three-branch fan (58035/58034/58036, all cluster 58, at 0.0/5.7/5.6 cm and 0.0/3.0/18.9 deg) -- one apex, shower-like in both azimuths (az-055 and az+085). UNDER-CLUSTERING RULED OUT: every non-member within 40 cm is at 57-174 deg from the axis (nearest in angle is 28013 at 14.6 cm / 59.0 deg, 0.8 MeV); the acceptance plot shows NO non-member circle anywhere in the 0-30 deg band out to 75 cm. Nothing to add. STUB-TRAIL PATTERN, described not verdicted: the member list is body (0-11.6 cm: 58035, 58034, 58036, plus the 2-point stub 31016 at 11.6 cm / 22.2 deg) then a ~36 cm EMPTY gap then three more pass4_angle absorptions strung along the axis -- 41026 (47.3 cm, 19.5 deg, 7 pts, 3.2 cm), 39024 (53.2 cm, 25.6 deg, 6 pts, 3.2 cm, pdg 13) and 45030 (61.1 cm, 2.4 deg, 5 pts, 2.3 cm). Contrary to the pattern as described to me, these far stubs are NOT at larger angle than the mid-range members: 2.4-25.6 deg against 18.9-22.2 deg for the body, and the farthest one (45030 at 61 cm) is the most on-axis object in the whole member list. All four absorbed by pass4_angle; 39024 at 25.6 deg is the only member above the 25 deg pass-1 dashed line. 61 cm is 4.4 X0 for a 162 MeV shower so a late tail is not impossible, but 36 cm of nothing in between is not how a shower develops, and if these three are wrong the event is mildly over-clustered. I could not settle it; the energy at stake is small (three fragments of 2-3 cm against a 25 cm body). Verdict rests on the non-members, as in pilot 2.3. OTHER SHOWERS: 8040 (kine_charge 80.4, kine_best 37.1 converted as a TRACK, reco pdg 211) has its start ON the \u03bd vertex and is a straight stem that then absorbs 38023, 57032 (pdg 13) and 40025 (pdg 13) by pass3_cone -- the same vertex-blob-on-a-track-stem shape as pilot evt280159 shower 12119, but here the reco already calls it a pion and prices it as a track, so I am not calling it over-clustered. 8041 (15.4 MeV charge, 1 segment) also sits at the vertex. NOT looked at: the 17 showers the scope rule skipped -- all 6.4 MeV and below. No pi0: kine_div says no reco group, showers[].pio_id is -1 for all three in-scope showers, and the pio-*.png is the capture's auto pair (58035+8041), not the reconstruction's -- I do not propose a pairing, since 8041 is a 15 MeV object sitting on the vertex at 173.9 deg from 58035, not a detached second gamma. drag_check live: probe_radius_px 288, seg_u -300.16 -> -219.26, cloud_redrew true.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt58006/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:33:02+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt58006/calib-pr-evt58006.json",
+ "subRunNo": 1
+}

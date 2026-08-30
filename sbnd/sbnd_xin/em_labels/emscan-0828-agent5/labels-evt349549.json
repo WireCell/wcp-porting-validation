@@ -1,0 +1,122 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 64.67,
+  "az_deg": -55.0,
+  "centre": [
+   27.41,
+   -19.22,
+   245.5
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3990,
+  "cloud_cluster_ids": [
+   12,
+   18,
+   19
+  ],
+  "cloud_kept": 3990,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 10389,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.0789806521100593,
+   0.27993142520021014,
+   0.9567656211307182
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.0789806521100593,
+    0.27993142520021014,
+    0.9567656211307182
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 26,
+   "kine_best": 436.6642119288829,
+   "kine_charge": 436.6642119288829,
+   "kine_charge_other_hypothesis": 262.6551650700048,
+   "kine_dQdx": 319.7828241763037,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    19026,
+    19027,
+    19028,
+    19030,
+    19031,
+    19032,
+    52048,
+    54050,
+    55051,
+    57053,
+    58055,
+    58056,
+    58057,
+    58058,
+    58059,
+    59060,
+    60073,
+    60074,
+    61075,
+    63077,
+    65079,
+    66080,
+    68082,
+    69083,
+    71085,
+    72086
+   ],
+   "membership_source": "probe",
+   "num_segments": 26,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   13.592871102789662,
+   -41.30326848237026,
+   202.16659746708078
+  ],
+  "reco_start_vertex_id": 12006,
+  "shower": 19032,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   13.592871102789662,
+   -41.30326848237026,
+   202.16659746708078
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt349549",
+ "eventNo": 349549,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": 1.1541086919679153,
+  "y": -79.16249606633367,
+  "z": 110.48005134188315
+ },
+ "note": "[agent-bulk] Leading EM shower 19032 (436.7 MeV, 26 seg): correct. On shw19032-az+085 it is a textbook shower -- one apex at the X, a Y-shaped fan opening along one direction, dense cloud, and the yellow member set covers all of it; az-055 shows the same body with no second apex and no kink. Its acceptance plot has 26 member squares and only two blue circles, 56052 (0.8 cm, 29.4 cm out, 23.3 deg) and 62076 (0.3 cm, 72.6 cm, 9.3 deg), each a sub-centimetre object with its own shower id and negligible charge -- so essentially nothing contiguous is left unclaimed inside the cone. The one soft spot, same construction as evt317939 and evt280972: the two outermost members, 65079 (0.8 cm at 83.2 cm, 23.1 deg) and 66080 (1.4 cm at 105.7 cm, 21.3 deg), are tier '-' (outside every pass-1 tier, taken by pass4_angle) and sit at LARGER angle than the members at 60-64 cm, so the cone widens again in the tail instead of narrowing. On 1-2 cm of segment out of a 436 MeV shower I do not call that over-clustering. Not marked. WORTH THE OWNER'S EYE -- the pi0 number: this is the only event in my shard where the display's own pairing lands in the accept window. The automatic slots price 19032+12092 at 175.7 MeV on the axis convention, flagged '[in the code's accept window]', while the kine_pio_ BDT feature says 219.0 MeV and does not close with its own formula (161.1). I do not believe the pair. Gamma2 (shower 12092, 228.8 MeV) starts ON the vertex and on shw12092-az-055 it is a straight narrow 39.4 cm track, one of three straight prongs leaving the star in cluster 12 alongside the 39.9 cm pdg 2212 segment 12088 and the 58.3 cm pdg 13 segment 12091 (both correctly left unowned). A vertex-attached straight track is not a converted photon, so the mass that falls in the window is, in my reading, an accident. 12092 also carries a long thin tail: its 11 members total only 54.8 cm of segment but span 0-148.1 cm, the far ones being 0.2-2.7 cm stubs at 82/97/99/106/120/148 cm taken by pass4_angle at 6-21 deg -- that reads as over-clustering of a track, but the verdict slot belongs to 19032 so it is recorded here in prose, unmarked. Vertex judged first and cleared: three prongs converge on the star in both the vertex camera and the +-94 cm frame. Note for the record that 19032's nearest member is 100 cm from the vertex, which is a long way for a converted photon (about 5 conversion lengths); the vertex is nevertheless well defined by its own three prongs, so I did not call vertex-bad. Scope: 2 of 13 showers in scope (19032, 12092); the other eleven (56052 3.7 MeV down to 64078 0.9 MeV) are all under 4 MeV, skipped by the 20 MeV rule, not examined. No reco pi0 group; no pairing stored.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt349549/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:03:30+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt349549/calib-pr-evt349549.json",
+ "subRunNo": 1
+}

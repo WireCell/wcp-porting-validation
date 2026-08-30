@@ -1,0 +1,325 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/9724913f-bfed-43d8-91f5-0bca431ca7b9/event/3/",
+ "camera": {
+  "R": 268.24,
+  "az_deg": 237.49,
+  "centre": [
+   -44.86,
+   18.62,
+   94.8
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 8812,
+  "cloud_cluster_ids": [
+   18,
+   23,
+   24,
+   25,
+   26
+  ],
+  "cloud_kept": 8812,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 70135,
+  "el_deg": -88.85
+ },
+ "confidence": "certain",
+ "em": {
+  "axis_used": [
+   0.062006573045132636,
+   0.9300985956769896,
+   -0.36203837810222605
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "23009": {
+    "24011": "out",
+    "24013": "out",
+    "24014": "out",
+    "24015": "out",
+    "60020": "out",
+    "67037": "out",
+    "68038": "out",
+    "69039": "out",
+    "70040": "out",
+    "73043": "out",
+    "76052": "out",
+    "76054": "out",
+    "76055": "out"
+   }
+  },
+  "marks_detail": {
+   "23009": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     0.062006573045132636,
+     0.9300985956769896,
+     -0.36203837810222605
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "24011": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 90.59841832618714,
+      "cluster_id": 24,
+      "dist": 58.64416226761882,
+      "ellip": 137.55073941823,
+      "kind": "out",
+      "length": 2.634452176654624,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "24013": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 73.56870524679307,
+      "cluster_id": 24,
+      "dist": 46.87180303287955,
+      "ellip": 80.95708443573663,
+      "kind": "out",
+      "length": 22.846375662150784,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "24014": {
+      "absorbed_by": null,
+      "angle": 69.90496426260866,
+      "cluster_id": 24,
+      "dist": 44.33766927450887,
+      "ellip": 69.49585825425062,
+      "kind": "out",
+      "length": 3.961392878871256,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "24015": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 73.56870524679307,
+      "cluster_id": 24,
+      "dist": 46.87180303287955,
+      "ellip": 80.95708443573663,
+      "kind": "out",
+      "length": 17.801570583664866,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "60020": {
+      "absorbed_by": "pass4_proximity (direct)",
+      "angle": 77.20927471221667,
+      "cluster_id": 60,
+      "dist": 45.73777220968599,
+      "ellip": 79.64047008688091,
+      "kind": "out",
+      "length": 1.0555735119287046,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "67037": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 85.78627059681901,
+      "cluster_id": 67,
+      "dist": 64.97263939332213,
+      "ellip": 167.96035392299834,
+      "kind": "out",
+      "length": 2.8300675612214174,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "68038": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 93.06858669764277,
+      "cluster_id": 68,
+      "dist": 72.38010072326888,
+      "ellip": 208.96403986072139,
+      "kind": "out",
+      "length": 0.22685533809071085,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "69039": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 101.99433873782822,
+      "cluster_id": 69,
+      "dist": 79.11767661569912,
+      "ellip": 239.73986064435067,
+      "kind": "out",
+      "length": 0.34125865299004515,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "70040": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 98.672297258282,
+      "cluster_id": 70,
+      "dist": 73.79374151579178,
+      "ellip": 212.94577526980166,
+      "kind": "out",
+      "length": 5.236129630349541,
+      "owner": 23009,
+      "pdg": 11,
+      "tier": null
+     },
+     "73043": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 100.1841737422786,
+      "cluster_id": 73,
+      "dist": 96.06125406237702,
+      "ellip": 357.7514567450254,
+      "kind": "out",
+      "length": 0.4719213543168334,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "76052": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 84.43907715454479,
+      "cluster_id": 76,
+      "dist": 60.434923950247835,
+      "ellip": 144.74474389480454,
+      "kind": "out",
+      "length": 9.18311540554585,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "76054": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 86.84681355298025,
+      "cluster_id": 76,
+      "dist": 69.0377548425271,
+      "ellip": 190.08064538674225,
+      "kind": "out",
+      "length": 4.243888160002976,
+      "owner": 23009,
+      "pdg": 13,
+      "tier": null
+     },
+     "76055": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 85.9421830761715,
+      "cluster_id": 76,
+      "dist": 72.32138004135088,
+      "ellip": 208.18402233120122,
+      "kind": "out",
+      "length": 2.732472321776037,
+      "owner": 23009,
+      "pdg": 211,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 101.99433873782822,
+     "angle_min": 0.0,
+     "dist_max": 96.06125406237702,
+     "dist_min": 0.0,
+     "n": 14
+    },
+    "members": [
+     23009,
+     24011,
+     24013,
+     24014,
+     24015,
+     60020,
+     67037,
+     68038,
+     69039,
+     70040,
+     73043,
+     76052,
+     76054,
+     76055
+    ],
+    "start": [
+     -97.07114921979932,
+     176.94300769217483,
+     87.32807766553853
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.062006573045132636,
+    0.9300985956769896,
+    -0.36203837810222605
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": false,
+   "join_complete": true,
+   "joined": 14,
+   "kine_best": 246.96328666816697,
+   "kine_charge": 390.00134010670894,
+   "kine_charge_other_hypothesis": 648.3772279274035,
+   "kine_dQdx": 246.96328666816697,
+   "kine_hypothesis": "track",
+   "kine_range": 0.0,
+   "members": [
+    23009,
+    24011,
+    24013,
+    24014,
+    24015,
+    60020,
+    67037,
+    68038,
+    69039,
+    70040,
+    73043,
+    76052,
+    76054,
+    76055
+   ],
+   "membership_source": "probe",
+   "num_segments": 14,
+   "particle_id": 211,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -97.07114921979932,
+   176.94300769217483,
+   87.32807766553853
+  ],
+  "reco_start_vertex_id": 23002,
+  "shower": 23009,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -97.07114921979932,
+   176.94300769217483,
+   87.32807766553853
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt283515",
+ "eventNo": 283515,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 23,
+  "x": -97.07114921979932,
+  "y": 176.94300769217483,
+  "z": 87.32807766553853
+ },
+ "note": "[agent-bulk] shw 23009 (247.0 MeV, 14 seg, 100.0 cm, reco pdg 211) is over-clustered, and shw23009-az+085-el+20 makes it plain: the yellow member set is TWO spatially disjoint groups with a completely empty gap between them. Group A is the seed alone - 23009, a 26.5 cm pdg-211 stem found by stem_backfill, sitting on the nu vertex inside the orange cluster-23 cloud together with the unowned protons 23002 (23.4 cm) and 23006 (5.5 cm). Group B is thirteen segments 44-96 cm away at 64-102 deg from the shower axis: 24014, 60020, 24013 (22.9 cm), 24015 (17.8 cm), 24011, 76052 (9.2 cm), 67037, 76054, 76055, 68038, 70040 (5.2 cm), 69039, 73043 - i.e. every member except the seed. The axis arrow points one way and the entire body of the shower is off at right angles to it, across charge-free space; this is visible on both azimuths (az-055 and az+085, 140 deg apart), so it is not a projection artifact. All thirteen marked OUT. Group B is a detached EM region ~50-95 cm off the vertex and it plausibly IS a real shower - but it is not this stem's shower, and the reco has stitched a vertex pion stem onto it. Also examined: shw 66036 (103.2 MeV, 6 seg, 19.5 cm, pdg 11 - this is the manifest's em_max, the nominal EM shower of the event), which lives inside group B and reads CORRECT: its acceptance plot has no non-member circle anywhere in range, its members run 0-21.5 cm at 0-16 deg along its own axis with only two small wide-angle absorptions (65025 0.12 cm at 37 deg, 72042 0.56 cm at 35 deg), and the nearest non-members are at 72-151 deg. I put the verdict on 23009 rather than on 66036 because 23009 is the highest-energy in-scope shower and is where the clustering failure is; 66036's finding is stated here instead. Vertex: the star sits where the cluster-23 stem meets the incoming grey track and I see no reason to doubt it. Scope: 2 showers of 10 examined; 8 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 98 cm here and was used for topology only. Verdict is about clustering; I make no PID claim on either object beyond quoting the reco's own pdg.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt283515/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T23:20:12+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt283515/calib-pr-evt283515.json",
+ "subRunNo": 1
+}

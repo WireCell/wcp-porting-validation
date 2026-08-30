@@ -1,0 +1,220 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 90.63,
+  "az_deg": -55.0,
+  "centre": [
+   118.19,
+   111.23,
+   415.01
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 7133,
+  "cloud_cluster_ids": [
+   18,
+   22,
+   23
+  ],
+  "cloud_kept": 7133,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 43975,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.07100848602114959,
+   0.9961190433389436,
+   -0.05200621511408139
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "18092": {
+    "18008": "out",
+    "18015": "out"
+   }
+  },
+  "marks_detail": {
+   "18092": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.07100848602114959,
+     0.9961190433389436,
+     -0.05200621511408139
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "18008": {
+      "absorbed_by": "conn3_unreachable (walk_add)",
+      "angle": 58.09860348494071,
+      "cluster_id": 18,
+      "dist": 14.72111714118228,
+      "ellip": 6.2854477350901075,
+      "kind": "out",
+      "length": 5.396795898341099,
+      "owner": 18092,
+      "pdg": 11,
+      "tier": null
+     },
+     "18015": {
+      "absorbed_by": "pass3_cluster_map (direct)",
+      "angle": 33.542601266798535,
+      "cluster_id": 18,
+      "dist": 10.863817660764791,
+      "ellip": 1.4926237482034954,
+      "kind": "out",
+      "length": 17.32648098040069,
+      "owner": 18092,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 126.30345851770527,
+     "angle_min": 0.0,
+     "dist_max": 136.99769888589705,
+     "dist_min": 0.0,
+     "n": 34
+    },
+    "members": [
+     18001,
+     18008,
+     18010,
+     18011,
+     18015,
+     18092,
+     49026,
+     50027,
+     58035,
+     59036,
+     61038,
+     62039,
+     65042,
+     69046,
+     70047,
+     71048,
+     72049,
+     73050,
+     75052,
+     76053,
+     77054,
+     78055,
+     87056,
+     88057,
+     89060,
+     89061,
+     89062,
+     91065,
+     91066,
+     92070,
+     92076,
+     92077,
+     93078,
+     94079
+    ],
+    "start": [
+     119.44503417488276,
+     135.19629496817237,
+     361.0754850442856
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.07100848602114959,
+    0.9961190433389436,
+    -0.05200621511408139
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": false,
+   "joined": 33,
+   "kine_best": 603.9888737596551,
+   "kine_charge": 603.9888737596551,
+   "kine_charge_other_hypothesis": 363.30157820129637,
+   "kine_dQdx": 434.4997465531308,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    18001,
+    18008,
+    18010,
+    18011,
+    18015,
+    18092,
+    49026,
+    50027,
+    58035,
+    59036,
+    61038,
+    62039,
+    65042,
+    69046,
+    70047,
+    71048,
+    72049,
+    73050,
+    75052,
+    76053,
+    77054,
+    78055,
+    87056,
+    88057,
+    89060,
+    89061,
+    89062,
+    91065,
+    91066,
+    92070,
+    92076,
+    92077,
+    93078,
+    94079
+   ],
+   "membership_source": "probe",
+   "num_segments": 34,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   119.44503417488276,
+   135.19629496817237,
+   361.0754850442856
+  ],
+  "reco_start_vertex_id": 18127,
+  "shower": 18092,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   119.44503417488276,
+   135.19629496817237,
+   361.0754850442856
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt350354",
+ "eventNo": 350354,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": 119.44503417488276,
+  "y": 135.19629496817237,
+  "z": 361.0754850442856
+ },
+ "note": "[agent-bulk] nuecc, 24 showers, 2 in scope. Verdict shower 18092 (pdg 11, kine_charge 604.0, 34 seg) -- the first pdg-11 entry of in_scope and also the highest-charge object. The other in-scope object 18009 (pdg 13, kine_charge 74.2, 64.8 cm) is discussed below; the 22 skipped showers are all sub-20 MeV and I did not look at them. Vertex judged off the vtx-* sweep at 137.9 cm half-span (r95 110.3, under the 150 cm trigger so no vtxz-* frames were written). OVER-CLUSTERED: 18092's member set contains a backward branch that its own cone does not reach. Taking the shower's own axis as vertex -> centroid of the other 32 members, direction (-0.043,-0.426,0.904), those 32 members lie at 0.3-47.3 deg from it (only the seed 18092 at the vertex reaches 47, everything else is under 16 deg) and run out to 137 cm -- a tight, coherent cone. Against that same axis 18015 sits at 129-179 deg and 18008 at 176-179 deg, i.e. directly BEHIND the shower start. They are also detached from the shower's own body: nearest member point 10.9 cm away for 18015 and 14.7 cm for 18008, while both touch the 64.8 cm pdg-13 track 18009 (gap 0.25 cm and 0.00 cm -- 18008's endpoint IS 18009's endpoint at (120.0,142.4,348.2)). Neither entered through the cone: the acceptance plot shows them at 13 cm/33.5 deg and 15 cm/58 deg, both above the 30 deg pass-1 box, absorbed by pass3_cluster_map (direct) and conn3_unreachable (walk_add). MARKS, and they differ in strength (correction 7): 18015 OUT is the strong one -- 17.3 cm, 30 fitted points, owned only by 18092, and the one that carries the charge. 18008 OUT is the weak one and the one I would let the owner reverse: it is 5.4 cm and it is ALSO one of 18009's two members (18009 nseg 2, owner-grouped 1, cmp_div 2), so it is a shared segment in correction-11's sense, not something 18092 took from a neighbour. NOT under-clustered: every unowned segment near the shower is a 0.1-1.2 cm two-point stub, the closest sitting 5.4 cm off the member set, and the nearest substantial ones are 8.5-9.4 cm out. Membership triple-checked for 18092: nseg 34 == owner-grouped 34 == cmp_div 34 (0.0-137.0 cm, 0.0-126.3 deg -- that 126 deg is measured against the RECO axis, which is wrong; see next). START/AXIS WRONG on 18092 as well: the reco axis points roughly opposite to the shower's own body, which is why almost every genuine member is tabulated at 106-126 deg and was let in by pass3_cone rather than by any pass-1 step. THE SECOND FINDING I COULD NOT SETTLE, and the reason this is 'likely' not 'certain': 18009 is a 64.8 cm pdg-13 skeleton running at only 10 deg to the shower body, passing within 1.8 cm of the vertex and lying INSIDE the same dense charge blob as 18092's own skeleton -- two parallel skeletons in one blob. Either it is a genuine second particle, or it is the electron's own MIP stem split off from its shower, in which case 18092 is also under-clustered and the verdict would be 'both'. I could not separate those two readings from the three viewpoints I looked at, so I recorded only the finding I could measure. Verdict is about clustering and silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt350354/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:38:35+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt350354/calib-pr-evt350354.json",
+ "subRunNo": 1
+}

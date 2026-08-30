@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -20.42,
+   -136.73,
+   112.09
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1778,
+  "cloud_cluster_ids": [
+   17,
+   21
+  ],
+  "cloud_kept": 1778,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 41553,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.6730528367216054,
+   0.5830457708895928,
+   0.455035721706286
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.6730528367216054,
+    0.5830457708895928,
+    0.455035721706286
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 101.43880535082323,
+   "kine_charge": 101.43880535082323,
+   "kine_charge_other_hypothesis": 61.01582276741249,
+   "kine_dQdx": 67.02788985129564,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    21003,
+    21011,
+    53005
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -11.85707210612853,
+   -142.88917784702426,
+   108.44032528896723
+  ],
+  "reco_start_vertex_id": 21001,
+  "shower": 21011,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -11.85707210612853,
+   -142.88917784702426,
+   108.44032528896723
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt395123",
+ "eventNo": 395123,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": -11.85707210612853,
+  "y": -142.88917784702426,
+  "z": 108.44032528896723
+ },
+ "note": "[agent-bulk] nuecc, small event (r95 28.4 cm, 8 segments, 6 showers). Only ONE shower in scope: 21011 (pdg 11, kine_charge 101.4, 3 seg) -- the 5 skipped showers are all sub-20 MeV and every one of them is a 0.2-0.8 cm two-point stub, which I confirmed from the segment table rather than looking at them individually. Vertex judged off the vtx-* sweep at 35.5 cm half-span (no vtxz-* frames: the event is far under the 150 cm trigger). It is good -- the star sits at the single apex where the shower's only stem begins and there is no other prong anywhere in the event. CORRECT: the member set is one contiguous chain from the vertex, seed 21011 running 22.9 cm out to dvtx 20.6, then an 8.1 cm branch 21003 and a 1.1 cm stub 53005 attached at its far end (both tier 1, 16.5/19.1 cm at 17.2/18.4 deg, in_main_cluster walk_add and pass3_cone). Membership triple-checked: nseg 3 == owner-grouped 3 == cmp_div 3 (0.0-19.1 cm, 0.0-18.4 deg). Nothing is missing: the four non-members anywhere near it are 57009 (0.6 cm, gap 4.6 cm, 34.1 deg), 56008 (0.8 cm pdg 2212, gap 10.4 cm, 128.9 deg), 55007 (0.2 cm, gap 16.6 cm, 55.5 deg) and 54006 (0.6 cm, gap 34.7 cm, 28.4 deg) -- all two-point stubs, all off-axis, none contiguous. The one shape feature worth naming: 21003 doubles back at 131 deg to the seed's own direction, so in projection the object reads as a lambda with its apex at the FAR end rather than at the vertex. I checked it from az-055/el+20 and az+085/el+20 and it is a short branch hanging off the far end of one stem, not a symmetric V of two prongs meeting away from the vertex, so I did not read it as a second apex. No pi0: no reco group and no second EM object in the event. 4 frames looked at, which is the right cost for a three-segment single-shower event. Verdict is about clustering and silent on PID -- I note only that 101 MeV in a thin ~20 cm object is not obviously shower-like, and I did NOT compute a density from kine_charge/length.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt395123/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:40:27+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt395123/calib-pr-evt395123.json",
+ "subRunNo": 1
+}

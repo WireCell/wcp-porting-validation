@@ -1,0 +1,45 @@
+{
+ "arm": "work-nuecc48-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/33fa72d9-1990-4fc7-b7fd-3f2bee6bd32d/event/22/",
+ "camera": {
+  "R": 249.29,
+  "az_deg": 6761.07,
+  "centre": [
+   -83.93,
+   3.2,
+   256.19
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 10830,
+  "cloud_cluster_ids": [
+   11,
+   16,
+   17
+  ],
+  "cloud_kept": 10830,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 35934,
+  "el_deg": 50.29
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt196649",
+ "eventNo": 196649,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -53.717606228167696,
+  "y": -21.49349622464641,
+  "z": 193.68174562538206
+ },
+ "note": "good",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-nuecc48/pr_evt196649/stdout.log",
+ "runNo": 18264,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-28T15:42:17+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prod0825/pr_evt196649/calib-pr-evt196649.json",
+ "subRunNo": 1
+}

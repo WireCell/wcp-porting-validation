@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -84.18,
+   -107.71,
+   302.58
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2103,
+  "cloud_cluster_ids": [
+   1
+  ],
+  "cloud_kept": 2103,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 39942,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.5839541613974248,
+   -0.7739392481534364,
+   -0.24498076976433064
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.5839541613974248,
+    -0.7739392481534364,
+    -0.24498076976433064
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 135.84595072525724,
+   "kine_charge": 135.84595072525724,
+   "kine_charge_other_hypothesis": 81.71185006030512,
+   "kine_dQdx": 164.70085980781758,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    1011,
+    1012,
+    1016,
+    28029
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -87.15343389364953,
+   -105.07230683986135,
+   302.3698749343563
+  ],
+  "reco_start_vertex_id": 1003,
+  "shower": 1011,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -87.15343389364953,
+   -105.07230683986135,
+   302.3698749343563
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt390634",
+ "eventNo": 390634,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 1,
+  "x": -162.43232780577256,
+  "y": -170.57695978760998,
+  "z": 220.35639255702458
+ },
+ "note": "[agent-bulk] numucc_em, 21 showers, 27 segments. Verdict shower 1011 (pdg 11, kine_charge 135.8 MeV, 4 seg, len 22.6) -- correction 17: it is the only pdg==11 shower in scope and the highest kine_charge object; nothing higher was passed over. CORRECTION 6, READ THIS FIRST: this is a PID verdict and the event therefore carries NO clustering judgement. On clustering grounds alone I found nothing wrong -- the member set is one connected object, the only non-members within 20 cm are 29030 (1.6 MeV, 28.3 deg), 27028 (1.3 MeV, 55.0 deg) and 32033 (1.8 MeV, 61.2 deg), all sub-2 MeV single-segment showers well off the axis, and the 134.0 cm muon 1017 sits at dist 0.0 / angle 0.0 / tier 1 / metric 0 and is correctly NOT owned, so the shower did not swallow the muon stem. Membership triple-check agrees at 4 (nseg 4, owner-grouped candidates with owner==1011 are 1011/1012/1016/28029 = 4, cmp_div says 4 segment(s) plotted). VERTEX IS GOOD and I did not need to guess it: computing distances from the segment polylines in state.json, two segments start at exactly 0.0 cm from the main vertex -- 1017 (pdg 13, 134.0 cm) and 1015 (pdg 211, 28.2 cm) -- so the star sits on a real two-prong nu vertex. Judged from vtxz-az-055-el+20 (correction 20: vtxz-* were written automatically, event_half_span 165.0 cm, r95 132.0 cm) plus that arithmetic. Note the vtxz 60 cm frames show ONLY the vertex; shower 1011 is 129-137 cm away and is not in them. WHY THIS IS A PID VERDICT: 1011 is not shaped like an EM shower. Its two substantial members both radiate from the shower start and the angle between them is 164.5 deg, computed in 3-D from the member polylines (1012, 12.6 cm, direction (-1.9,-8.6,-7.2) from the start; 1016, 7.1 cm, direction (+0.7,+3.9,+5.6)). That is a straight ~19 cm line passing THROUGH its own start, not a cone opening from it, and shw1011-az+085-el+20 shows exactly that: a narrow straight streak with no cone, no branching and no widening, sitting on the endpoint of the 134 cm muon that arrives from the other side and passes within 1.9 cm of the start. START/AXIS WRONG (correction 9, phrase written verbatim so this can be grepped): the reco's start is in the MIDDLE of the object, and the orange axis arrow points along neither arm; there is no verdict string for that, so it is recorded here in the note. TWO READINGS I CANNOT SEPARATE, which is why the confidence is unclear: (a) it is not EM at all -- the 134 cm muon (range implies about 250 MeV KE, so it stops) ends here, and a stopping-muon endpoint gives either nuclear-capture fragments or a decay, which would look like short heavily-ionising prongs in opposing directions, exactly the 164.5 deg two-armed narrow object seen; (b) it IS a real electron and only the start is misplaced -- a 135 MeV electron travels about one radiation length (14 cm in argon) as a narrow MIP stem before showering, and this object is only about 19 cm long, so a genuine electron could legitimately look this narrow. What breaks the tie for (a) is that the charge extends on BOTH sides of the start (11.4 cm one way, 6.9 cm the other) and an electron leaves its origin in one direction only; what keeps (b) alive is that this is the same ambiguity the pilot recorded as unresolved on evt175896, and 135.8 MeV is too much for a Michel electron (53 MeV endpoint), which argues against the simplest version of (a). I did NOT compute MeV/cm from kine_charge/length (correction 18) and no PID conclusion here rests on a density number. Showers not looked at: the 20 skipped by the scope rule, all single-segment and 10.4 MeV or less. PI0: no reco group, pio_id -1, kine_div says no pi0 group in this event; the kine_pio_* line (mass 46.1, E2 10.4) is a BDT feature and not a pairing, and no pio-*.png was written. I propose no pairing. drag_check both true, probe_radius 123.3 px, probe_degenerate false.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt390634/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:36:52+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt390634/calib-pr-evt390634.json",
+ "subRunNo": 1
+}

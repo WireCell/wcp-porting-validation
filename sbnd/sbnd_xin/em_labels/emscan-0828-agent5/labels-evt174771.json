@@ -1,0 +1,149 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   136.91,
+   74.23,
+   207.0
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 9163,
+  "cloud_cluster_ids": [
+   15,
+   21,
+   22,
+   23,
+   24
+  ],
+  "cloud_kept": 9163,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 41554,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.09605664209069253,
+   0.4622725900614578,
+   -0.8815198091864596
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "85085": {
+    "85058": "in"
+   }
+  },
+  "marks_detail": {
+   "85085": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.09605664209069253,
+     0.4622725900614578,
+     -0.8815198091864596
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "85058": {
+      "absorbed_by": null,
+      "angle": 27.249050571460735,
+      "cluster_id": 85,
+      "dist": 8.506878477510083,
+      "ellip": 0.6425738827248507,
+      "kind": "in",
+      "length": 14.012878661074826,
+      "owner": null,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 62.415545833923325,
+     "angle_min": 0.0,
+     "dist_max": 6.085951486762466,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     85061,
+     85062,
+     85084,
+     85085
+    ],
+    "start": [
+     139.56494228500577,
+     70.86705302243124,
+     209.74906198878762
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.09605664209069253,
+    0.4622725900614578,
+    -0.8815198091864596
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 101.65020990758437,
+   "kine_charge": 101.65020990758437,
+   "kine_charge_other_hypothesis": 61.142983403058274,
+   "kine_dQdx": 77.642746298217,
+   "kine_hypothesis": "shower",
+   "kine_range": 109.01733645837567,
+   "members": [
+    85061,
+    85062,
+    85084,
+    85085
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   139.56494228500577,
+   70.86705302243124,
+   209.74906198878762
+  ],
+  "reco_start_vertex_id": 15004,
+  "shower": 85085,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   139.56494228500577,
+   70.86705302243124,
+   209.74906198878762
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt174771",
+ "eventNo": 174771,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 142.54303641959083,
+  "y": 47.558077969402405,
+  "z": 221.21607755820077
+ },
+ "note": "[agent-bulk] shw 85085 (101.7 MeV, 4 seg, pdg 11, mcp2k other_em): under-clustered, and it is the clean grey-charge case rather than the ambiguous owned-by-a-neighbour one. Vertex judged from the --vtx-span 60 close-in sweep (the native framing is 320.6 cm half-span because of the long tracks and is useless for this): the star is a genuine multi-prong convergence and I have no complaint about it. 85085 is a detached blob 24-39 cm from the vertex. THE MISSING PIECE: 85058, 14.0 cm long, 24 fitted points, pdg 11, in CLUSTER 85 -- the same cluster as every one of the shower's four members -- sitting 8.5 cm from the shower start at 27.2 deg with metric 0.64, and its owner field is '-', i.e. NO shower claims it. It is grey, so correction 11's first-owner-wins trap does not apply here. In both the az-055 and az+085 shower frames it runs along the lower edge of the very same point cloud the members sit in, contiguous with them, not across a gap. On the acceptance plot it is the circle at (8.5 cm, 27.3 deg), just above the 25 deg dashed step. Four of cluster 85's five segments are members and this is the fifth. Marked IN. A SECOND FINDING ON THE SAME SHOWER, and it probably explains the first: START/AXIS WRONG. The orange axis arrow points down and to the right, away from the member body, and the acceptance plot proves it numerically -- two of the three plotted members sit at 40.7 and 62.5 deg FROM THEIR OWN SHOWER'S AXIS (85062 and 85061, both pulled in by from_vertices walk_add rather than by the cone). An axis that its own members miss by 40-62 degrees is not measuring this object, and the pass-1 angle gate is being applied around it, which is a plausible mechanism for rejecting 85058 at a nominal 27 deg while accepting members at 62. I record under-clustered because that is the closest available verdict string; the phrase start/axis wrong is written here so these events can be grepped and counted (correction 9). Confidence likely rather than certain because 85058's 14 cm could in principle be a separate short track laid across the blob rather than shower charge, and I cannot separate those from shape alone at this size. Two more circles on the acc plot, NOT marked and much weaker: 75048 (0.4 cm) at 22.7 cm / 40.8 deg and 74047 (0.3 cm) at 34.9 cm / 35.7 deg, both owned by 91075 and both sub-centimetre -- if the owner reverses anything here, reverse those, not 85058. Showers NOT looked at in any detail: this is a 35-shower, 62-segment event and the scope rule reached 8 -- 15018 (222.6 MeV but pdg 2212), 23030 (97.7), 89069 (97.4, pdg 2212), 22024 (92.4, pdg 13), 87065 (59.7), 88068 (35.9), 15011 (25.9). I judged only 85085, the leading pdg-11 object; the other 27 showers are all under 11 MeV. This verdict is a claim about ONE shower, not about the event. No reco pi0 group; I did not price a pairing because the two leading objects by charge are proton- and muon-tagged and the pdg-11 showers are spread over four candidates with no obvious pair. Clustering statement, silent on PID.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt174771/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:00:24+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt174771/calib-pr-evt174771.json",
+ "subRunNo": 1
+}

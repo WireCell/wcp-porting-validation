@@ -1,0 +1,108 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   191.13,
+   -192.91,
+   143.18
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2464,
+  "cloud_cluster_ids": [
+   21,
+   27
+  ],
+  "cloud_kept": 2464,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 64215,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.2760644685809995,
+   -0.334078016326282,
+   0.9012104572155091
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.2760644685809995,
+    -0.334078016326282,
+    0.9012104572155091
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 13,
+   "kine_best": 521.9055614158999,
+   "kine_charge": 521.9055614158999,
+   "kine_charge_other_hypothesis": 313.9281572426466,
+   "kine_dQdx": 490.79533843991095,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    21001,
+    21025,
+    21026,
+    21029,
+    21031,
+    21035,
+    21044,
+    21046,
+    21047,
+    21048,
+    21062,
+    59052,
+    62055
+   ],
+   "membership_source": "probe",
+   "num_segments": 13,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   183.59663476930865,
+   -188.04867718020006,
+   119.75233455211227
+  ],
+  "reco_start_vertex_id": 21005,
+  "shower": 21048,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   183.59663476930865,
+   -188.04867718020006,
+   119.75233455211227
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt75954",
+ "eventNo": 75954,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": 183.59663476930865,
+  "y": -188.04867718020006,
+  "z": 119.75233455211227
+ },
+ "note": "[agent-bulk] nuecc. Vertex judged from the native r95 framing (event_half_span_cm 79.0, no re-capture needed): on vtx-az+065-el+20 the blue star sits exactly on the kink where the big shower leaves and a single orange track runs off the other way - a clean two-prong vertex, and the shower start X sits on it. Not a vertex failure. shw 21048 (521.9 MeV, 13 seg, pdg 11, len 99.8) is the most textbook electron in my shard: one apex at the X, a straight narrow MIP stem for the first ~15 cm, then a wide multi-branch fan, and the same shape holds on both az-055 and az+085 so it is not a projection artefact. All 13 members lie inside 48.7 cm and 15.4 deg; the yellow set covers the whole visible fan with no gap. Nothing contiguous is missing: the only unowned segments inside 30 deg are 63056 (0.8 cm, 57.3 cm / 26.6 deg) and 61054 (0.6 cm, 85.8 cm / 29.9 deg), both negligible. The two real neighbours are correctly left out - cluster 64 (shower 64059, 22.3 MeV, 17.4 cm over three segments) at 48-53 cm / 33.5-39.5 deg, and 65061 (pdg 2212, 7.9 cm, kine_best 100.9 MeV) at 62.2 cm / 46.8 deg - both far outside the cone for a shower whose members stop at 15 deg. Second object worth naming: shw 21063 (kine_charge 171.8 MeV, 3 seg, 31.1 cm) reads dist 0.0 / angle 0.0 against 21048, i.e. it starts on the SAME vertex point, and runs out at 110.9-123.3 deg from 21048's axis - the long thin orange prong on the other side of the star. The reconstruction kept them as two separate showers and I think that is right (backwards of the axis is not the same cone), but a 171.8 MeV vertex-attached pdg-11 object with a 31 cm straight body is a track/PID question I am not resolving here. pi0: showers[].pio_id is -1 for every shower and the reconstruction accepted NO group. The capture's auto-slotted top-two pair (21048 + 21063) is the placeholder, not a reco pairing, and pricing it gives theta 113.9 deg -> m = 502.0 MeV, plus both gammas share the vertex as their start so neither can be a conversion; I store no candidate. Clustering statement, silent on PID. Not looked at: the 6 showers the scope rule skipped (58051, 27049, 57050, 61054, 63056, 60053), all under 20 MeV min_kine_best; of the 4 in scope I opened frames for 21048 only and read 21063, 65061 and 64059 off the candidate table.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt75954/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:35:03+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt75954/calib-pr-evt75954.json",
+ "subRunNo": 1
+}

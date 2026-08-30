@@ -1,0 +1,102 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 189.17,
+  "az_deg": -55.0,
+  "centre": [
+   -69.24,
+   63.63,
+   198.67
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 916,
+  "cloud_cluster_ids": [
+   11,
+   18
+  ],
+  "cloud_kept": 916,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 33184,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.29600873238640996,
+   0.04700138656135564,
+   0.954028144245389
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.29600873238640996,
+    0.04700138656135564,
+    0.954028144245389
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 135.49424088905647,
+   "kine_charge": 135.49424088905647,
+   "kine_charge_other_hypothesis": 81.50029527161293,
+   "kine_dQdx": 107.68758539687714,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    11003,
+    11004,
+    11005,
+    51019,
+    51020,
+    51023,
+    52021
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -164.18981324966728,
+   64.58394149839889,
+   292.36968395926567
+  ],
+  "reco_start_vertex_id": 51025,
+  "shower": 51023,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -164.18981324966728,
+   64.58394149839889,
+   292.36968395926567
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt52605",
+ "eventNo": 52605,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 51,
+  "x": -164.18981324966728,
+  "y": 64.58394149839889,
+  "z": 292.36968395926567
+ },
+ "note": "[agent-bulk] nuecc. Vertex judged from the native r95 framing (event_half_span_cm 58.0, no --vtx-span re-capture needed): the blue star sits at the base of the charge where the EM stem and the two short track prongs meet, on all three sweep frames (az-055/az+065/el+60). Not a vertex failure. shw 51023 (135.5 MeV, 7 seg, pdg 11, len 44.7, starts on the vertex): all seven members lie inside 26.3 cm and 27.3 deg of the axis, one apex at the X, no straight MIP stem inside the yellow set. Nothing contiguous is missing: the only unowned (grey) charge touching the shower start is 51026 (pdg 13, 5.8 cm) and 51027 (pdg 211, 3.7 cm), the two hadronic prongs on the far side of the vertex, and they are correctly left out of an EM shower; every other non-member within 40 cm is at 87 deg (43009, pdg 2212) or 153 deg (44010). CONFIDENCE unclear, and this is why: I looked and the evidence does not separate two readings. 11004 and 11005 (cluster 11, 9.2 and 10.6 cm) sit at 27.3 deg / 20-26 cm, i.e. ABOVE the widest dashed pass-1 step on the acceptance plot, taken by pass3_cone, and on the az+085 and el+65 frames cluster 11 reads as a piece detached from the vertex blob by a ~10 cm gap. I read it as brem spray - 27 deg at 25 cm is 12 cm transverse, about one Moliere radius for a 135 MeV shower - but the competing reading is that the vertex blob is the electron and cluster 11 is a separate conversion, which would make this over-clustered. shw 45011 (22.0 MeV, 1 seg, 4.6 cm) is a lone stub 42 cm out at 41.6 deg; too small to judge shape and I make no claim on it. pi0: showers[].pio_id is -1 for both, i.e. the reconstruction accepted NO pi0 group, and the auto-slotted top-two pair in pio-*.png is the capture's own placeholder, not a reco pairing; priced anyway it gives m = 41.7 MeV on the axis convention against a 157.5 MeV pair energy, nowhere near 135, so I store no candidate. This is a clustering statement and is silent on PID. Not looked at: the 5 showers the scope rule skipped (43009, 44010, 18006, 42008, 41007), all under the 20 MeV min_kine_best. [label corrected during this same run: first saved as confidence likely, re-saved as unclear because the note itself names two readings I cannot separate - correction 10.]",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt52605/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:38:50+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt52605/calib-pr-evt52605.json",
+ "subRunNo": 1
+}

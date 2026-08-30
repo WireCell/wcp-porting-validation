@@ -1,0 +1,214 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 61.4,
+  "az_deg": -55.0,
+  "centre": [
+   159.64,
+   119.8,
+   270.82
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1065,
+  "cloud_cluster_ids": [
+   8,
+   12,
+   13
+  ],
+  "cloud_kept": 1065,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23690,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.354000354000531,
+   -0.4990004990007485,
+   0.7910007910011865
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "42039": {
+    "28017": "in",
+    "29018": "in",
+    "30019": "in",
+    "32021": "in",
+    "33022": "in",
+    "43040": "in"
+   }
+  },
+  "marks_detail": {
+   "42039": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.354000354000531,
+     -0.4990004990007485,
+     0.7910007910011865
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "28017": {
+      "absorbed_by": null,
+      "angle": 18.24082977566817,
+      "cluster_id": 28,
+      "dist": 46.09454180575734,
+      "ellip": 9.524678701187826,
+      "kind": "in",
+      "length": 0.4914380071499164,
+      "owner": 28017,
+      "pdg": 11,
+      "tier": 1
+     },
+     "29018": {
+      "absorbed_by": null,
+      "angle": 21.95543956514898,
+      "cluster_id": 29,
+      "dist": 55.07398756790229,
+      "ellip": 18.59087521109595,
+      "kind": "in",
+      "length": 0.3105662044276639,
+      "owner": 29018,
+      "pdg": 11,
+      "tier": 1
+     },
+     "30019": {
+      "absorbed_by": null,
+      "angle": 14.75796452323219,
+      "cluster_id": 30,
+      "dist": 18.188810628396876,
+      "ellip": 1.0520709465529823,
+      "kind": "in",
+      "length": 3.6516733887274286,
+      "owner": 30019,
+      "pdg": 11,
+      "tier": 1
+     },
+     "32021": {
+      "absorbed_by": null,
+      "angle": 14.057328643044757,
+      "cluster_id": 32,
+      "dist": 22.301068584087474,
+      "ellip": 1.4661514737752952,
+      "kind": "in",
+      "length": 0.6237491033898142,
+      "owner": 32021,
+      "pdg": 11,
+      "tier": 1
+     },
+     "33022": {
+      "absorbed_by": null,
+      "angle": 10.699750159855624,
+      "cluster_id": 33,
+      "dist": 31.242223923840292,
+      "ellip": 1.9348531090893855,
+      "kind": "in",
+      "length": 0.6767179889365678,
+      "owner": 33022,
+      "pdg": 11,
+      "tier": 1
+     },
+     "43040": {
+      "absorbed_by": null,
+      "angle": 7.690857861567919,
+      "cluster_id": 43,
+      "dist": 23.344431778856677,
+      "ellip": 0.7249114480302037,
+      "kind": "in",
+      "length": 3.1598470789997375,
+      "owner": 43040,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 22.996095469320252,
+     "angle_min": 0.0,
+     "dist_max": 95.52644836844911,
+     "dist_min": 0.0,
+     "n": 5
+    },
+    "members": [
+     8004,
+     27016,
+     41034,
+     41036,
+     42039
+    ],
+    "start": [
+     130.72629972133382,
+     149.59087062992168,
+     237.25432283775905
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.354000354000531,
+    -0.4990004990007485,
+    0.7910007910011865
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 126.75970182415537,
+   "kine_charge": 126.75970182415537,
+   "kine_charge_other_hypothesis": 76.2464371874619,
+   "kine_dQdx": 99.22557580354734,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    8004,
+    27016,
+    41034,
+    41036,
+    42039
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   130.72629972133382,
+   149.59087062992168,
+   237.25432283775905
+  ],
+  "reco_start_vertex_id": 42048,
+  "shower": 42039,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   130.72629972133382,
+   149.59087062992168,
+   237.25432283775905
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt281325",
+ "eventNo": 281325,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 42,
+  "x": 130.72629972133382,
+  "y": 149.59087062992168,
+  "z": 237.25432283775905
+ },
+ "note": "[agent-bulk] nuecc. shw 42039 (126.8 MeV, 5 seg, pdg 11, len 33.2) is UNDER-CLUSTERED, and shw42039-acc is as clean a picture of it as this scan has produced. The shower's five member squares sit at (0.4 cm, 0.3 deg), (38.6, 5.7) and then three at 94-96 cm; meanwhile SIX non-member circles sit INSIDE the dashed pass-1 box (25 deg out to 80 cm) and were not taken: 30019 at 18.2 cm / 14.8 deg, 32021 at 22.3 / 14.1, 43040 at 23.3 / 7.7, 33022 at 31.2 / 10.7, 28017 at 46.1 / 18.2 and 29018 at 55.1 / 22.0 - every one tier 1. The reconstruction skipped all six and then reached PAST the box, to 94-96 cm, to take 41034, 41036 and 27016 by pass4_angle. On shw42039-az-055-el+20 and vtx-az-055-el+20 the event is one chain of separated EM fragments running along a single axis from the vertex out to about a metre; the charge is continuous along that chain, it is the ownership that is holey. Marked all six IN. STRENGTH ORDER, as correction 7 asks: the four strong ones are 30019, 32021, 43040 and 33022 - inside 35 cm and within 15 deg, right in the hole between the seed and the member at 38.6 cm. The two I would let the owner drop are 28017 and 29018: both are sub-0.5 cm specks at 18-22 deg, and they contribute almost nothing; I marked them only because my argument is that the chain is continuous, and dropping them would leave my own reading with a hole in it. Not marked at all, weaker still: 22011 (2.4 cm, 14.2 MeV) at 11.0 cm / 27.0 deg - just OUTSIDE the 25 deg step, so the reconstruction is within its own rule there. I explicitly did NOT call this 'both'. The 94-96 cm members are beyond the pass-1 box and were bridged by pass4_angle, which is the same mechanism I called over-clustering on evt74326 - but the difference is decisive: on evt74326 the 1-62 cm gap contained NO candidate at all, whereas here the intervening range is full of candidates (18, 22, 23, 31, 46, 55 cm). The charge is contiguous, so the far members are plausibly the same cascade and the fault is the hole, not the reach. Reconciliation check (correction 11): nseg 5 and exactly five segments carry owner 42039, so all six marked pieces are genuine non-members; each is its own 2.2-8.5 MeV single-segment orphan node, not a competing shower. VERTEX IS FINE: 42039 starts exactly on the main vertex, which on a nuecc event is the expected electron signature and not a pathology. event_half_span_cm 134.6, no --vtx-span re-capture needed. Two segments touch the star at 0.00 cm - the seed 42039 (6.4 cm) and 42038 (pdg 13, 9.2 cm), the latter correctly left UNOWNED - and the fragment chain leaves from that point. NOT LOOKED AT: 17 of the 19 shower nodes were out of scope at 14.2 MeV and below; several of them are the orphans marked above. The other in-scope object, 40024 (51.4 MeV, 2 seg), I did not judge as an object, but note that it sits at 99-103 cm / 4-5.6 deg from 42039 - i.e. in the SAME far blob as 42039's own 94-96 cm members, so the two showers are interleaved out there and a reasonable alternative reading is that the whole 94-103 cm region is one object split in two. NO PI0: none stored, and I propose none - the auto-slotted 42039 + 40024 prices at 64.3 MeV on the axis convention with no vertex-convention chord, and pairing two objects that lie along one axis 4 deg apart is a merge candidate, not a pi0.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt281325/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:03:22+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt281325/calib-pr-evt281325.json",
+ "subRunNo": 1
+}

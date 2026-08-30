@@ -1,0 +1,166 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 215.69,
+  "az_deg": -55.0,
+  "centre": [
+   59.45,
+   -76.43,
+   35.1
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2829,
+  "cloud_cluster_ids": [
+   18,
+   29
+  ],
+  "cloud_kept": 2829,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 26044,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7320845606504147,
+   0.6690772828895184,
+   0.12801478656182116
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "18034": {
+    "29008": "out"
+   }
+  },
+  "marks_detail": {
+   "18034": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.7320845606504147,
+     0.6690772828895184,
+     0.12801478656182116
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "29008": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 7.32980364776871,
+      "cluster_id": 29,
+      "dist": 113.71103736553545,
+      "ellip": 16.368325208638197,
+      "kind": "out",
+      "length": 34.2559045445853,
+      "owner": 18034,
+      "pdg": 13,
+      "tier": 2
+     }
+    },
+    "member_span": {
+     "angle_max": 24.09885362249687,
+     "angle_min": 0.0,
+     "dist_max": 121.33314320305857,
+     "dist_min": 0.0,
+     "n": 14
+    },
+    "members": [
+     18001,
+     18007,
+     18034,
+     29008,
+     50015,
+     50016,
+     51017,
+     52018,
+     53019,
+     54020,
+     55021,
+     56031,
+     57032,
+     58033
+    ],
+    "start": [
+     89.6408908404128,
+     -50.803611778948095,
+     34.74323072133146
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.7320845606504147,
+    0.6690772828895184,
+    0.12801478656182116
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 14,
+   "kine_best": 182.97758029718335,
+   "kine_charge": 182.97758029718335,
+   "kine_charge_other_hypothesis": 110.06170243439601,
+   "kine_dQdx": 197.67158733419066,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    18001,
+    18007,
+    18034,
+    29008,
+    50015,
+    50016,
+    51017,
+    52018,
+    53019,
+    54020,
+    55021,
+    56031,
+    57032,
+    58033
+   ],
+   "membership_source": "probe",
+   "num_segments": 14,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   89.6408908404128,
+   -50.803611778948095,
+   34.74323072133146
+  ],
+  "reco_start_vertex_id": 18040,
+  "shower": 18034,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   89.6408908404128,
+   -50.803611778948095,
+   34.74323072133146
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt52693",
+ "eventNo": 52693,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": 89.6408908404128,
+  "y": -50.803611778948095,
+  "z": 34.74323072133146
+ },
+ "note": "[agent-bulk] CORRECTED VERDICT -- I first recorded this event as over-clustered (likely) and then re-recorded it as vertex-bad after measuring the geometry; the earlier label is superseded, and the reason is worth reading because it is the trap. The star is NOT at a convergence: it sits in the middle of ONE straight through-going track ~375 cm long. Take the direction of the 232.4 cm grey pdg-13 segment 18036 near the vertex as an axis (it is unowned and it runs the +0 to +227 cm side). Ten of shower 18034's fourteen members lie on the SAME line on the other side: 18001, 29008, 51017, 52018, 53019, 56031, 57032 and the seed all sit 0.5-1.2 cm perpendicular of that axis, spread from s = 0 to s = -148 cm, and 29008 (34.3 cm, 58 fitted points, pdg 13) is antiparallel to the muon direction to 179.5 deg at 0.7-0.8 cm perpendicular. The muon's own scatter about its axis is 0.85 cm, so the far side is as straight as the near side: no kink at the star, no apex, one line. It is visible in ov-xz.png as a single horizontal streak crossing the whole event with the star in the middle of it, and it is what the az+065 vertex frame shows once you stop reading the star as a junction. Only 4 of the 14 members are genuinely off the line -- 50015/50016 (5.6 cm perp at s = -18 to -21) and 54020/55021 (20.5 cm perp at s = -104 to -120) -- which is the size and placement of delta rays or small EM blobs along a track, not of a 183 MeV shower. So the reconstruction has split one through-going track into a 232 cm muon on one side and a 183 MeV pdg-11 shower on the other, and no clustering judgement about 18034 is meaningful until the vertex is settled: this is a vertex result, not a clustering result. The reading I cannot exclude, and why this is likely and not certain: I have no dQ/dx across the star, so I cannot prove the two sides are one particle rather than two collinear ones; but 179.5 deg with sub-cm alignment over 148 cm is not something two independent particles do. This is the pilot's evt175896 pattern (a straight line through the vertex called two objects), sharper because here one side is already reconstructed as a 232 cm muon. Judged from the --vtx-span 60 close-in sweep as well as the native 262 cm framing; the close-in sweep is what first made it look like a clean muon-in/shower-out vertex, so the close framing alone was not enough on this event -- the whole-event ov-xz view and the axis measurement are what settled it. The OUT mark on 29008 stands and is stronger under this reading than under the old one: it is the backward continuation of the track. Showers NOT looked at: the 5 the scope rule skipped (46010 4.9 MeV, 48012 4.4, 49013 1.8, 45009 1.0, 47011 0.8), all under the 20 MeV threshold. No pi0 group and no second EM shower above 20 MeV.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt52693/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:37:06+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt52693/calib-pr-evt52693.json",
+ "subRunNo": 1
+}

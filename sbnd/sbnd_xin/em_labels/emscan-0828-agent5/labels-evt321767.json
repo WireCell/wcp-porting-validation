@@ -1,0 +1,100 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/9724913f-bfed-43d8-91f5-0bca431ca7b9/event/4/",
+ "camera": {
+  "R": 260.56,
+  "az_deg": 301.45,
+  "centre": [
+   39.72,
+   55.66,
+   248.69
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5426,
+  "cloud_cluster_ids": [
+   15,
+   21
+  ],
+  "cloud_kept": 5426,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23563,
+  "el_deg": 21.86
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.03599377361570014,
+   0.7548694188848225,
+   -0.6548867143967666
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.03599377361570014,
+    0.7548694188848225,
+    -0.6548867143967666
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 228.1969087199163,
+   "kine_charge": 228.1969087199163,
+   "kine_charge_other_hypothesis": 137.26129847814516,
+   "kine_dQdx": 145.03545400243578,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    39010,
+    45019,
+    45025,
+    45029,
+    45031
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -13.249721872431707,
+   110.04569641521161,
+   219.8410825791081
+  ],
+  "reco_start_vertex_id": 15001,
+  "shower": 45019,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -13.249721872431707,
+   110.04569641521161,
+   219.8410825791081
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt321767",
+ "eventNo": 321767,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 4.998923372475032,
+  "y": 104.74143856713313,
+  "z": 224.54985677303029
+ },
+ "note": "[agent-bulk] numucc_em. Vertex judged first and it is FINE: at el+60 the star is a clear multi-prong fan -- the 248 cm muon (15006) one way, and the 45019/46032/47033 prongs off the same point. shw 45019 (228.2 MeV, 5 seg, 60.2 cm, conn 3) is the leading pdg-11 object and I cannot settle it. What is certain from the numbers and visible on the acceptance plot: EVERY member except the seed sits at 44-58 deg from the shower axis, above all three pass-1 dashed steps (15/20/30 deg), and 45031 (4.9 cm) is at 106.1 deg, i.e. behind the start; they were pulled in by in_other_clusters_A (walk_add), not by the cone. Two non-members, 48034 (0.9 cm) at 11.4 cm/58.5 deg and 41012 (1.6 cm) at 23.3 cm/68.7 deg, sit interleaved with the members at the same angles. Reading (a), which I lean to slightly and is why the verdict says over-clustered: the member set spans two directions -- at az+085 the skeleton goes up from the X, turns, and comes back down -- so at least one arm (45031 at 106 deg is the concrete candidate) does not belong. Reading (b), which I cannot rule out and may be the truer statement: the membership is fine and what is wrong is the SHOWER START and AXIS -- at az-055 the X sits in the MIDDLE of one continuous ~39 cm curving body and the orange axis arrow points roughly perpendicular to it, which by itself manufactures every one of those 44-106 deg numbers. The verdict vocabulary has no 'start/axis wrong' entry and vertex-bad is about the nu vertex, which is good here, so this is recorded as the closest available string. NO segment marks: as in the pilot's evt280159 I could not name which pieces to remove with confidence. Also unowned and contiguous with the body: 45030 (pdg 211, 15.5 cm, same cluster 45) at 13.8 cm/125.1 deg. Not judged: 46032 (309.3 MeV but pdg 2212, one 53.7 cm segment -- a range-converted proton track, higher kine_best than the EM object) and 47033 (96.8 MeV, pdg 2212, only 7.4 cm -- also a range-converted proton stub); 15006 is the muon. 15 further showers skipped by the scope rule, all under 20 MeV. No pi0 group and only one EM shower in scope, so nothing to pair.\n\nIncorrect vertex",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt321767/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T23:25:42+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt321767/calib-pr-evt321767.json",
+ "subRunNo": 1
+}

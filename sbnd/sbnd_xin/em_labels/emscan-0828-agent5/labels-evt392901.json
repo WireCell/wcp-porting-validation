@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 290.28,
+  "az_deg": -55.0,
+  "centre": [
+   15.32,
+   7.18,
+   210.98
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 16372,
+  "cloud_cluster_ids": [
+   15,
+   23,
+   24
+  ],
+  "cloud_kept": 16372,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 74024,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.056021908850378443,
+   0.9693791013574412,
+   0.2390935038435794
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.056021908850378443,
+    0.9693791013574412,
+    0.2390935038435794
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 1,
+   "kine_best": 196.61283874854408,
+   "kine_charge": 196.61283874854408,
+   "kine_charge_other_hypothesis": 118.26336165325961,
+   "kine_dQdx": 90.5905427157177,
+   "kine_hypothesis": "shower",
+   "kine_range": 208.1089670980596,
+   "members": [
+    15008
+   ],
+   "membership_source": "probe",
+   "num_segments": 1,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -6.780784627999817,
+   50.08335804727891,
+   238.71686318081
+  ],
+  "reco_start_vertex_id": 15004,
+  "shower": 15008,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -6.780784627999817,
+   50.08335804727891,
+   238.71686318081
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt392901",
+ "eventNo": 392901,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -7.46891206896427,
+  "y": 37.11712563313834,
+  "z": 271.0618122431861
+ },
+ "note": "[agent-bulk] REVISED IN SESSION (correction 10): the verdict and confidence are unchanged, but the first version of this note rested the call on a PCA transverse RMS, which pilot 1.2 warns is the scatter of the fitted SKELETON points, not the width of the charge -- it says that failure mode bit twice. The evidence below is re-ordered so the picture and the radiation-length argument carry it and the PCA is only corroboration. PID VERDICT -- and per correction 6 this event carries NO clustering judgement: I am not saying the clustering of 15008 is right or wrong, only that the object it collected is not an EM shower. Verdict shower 15008 (reco pdg 11, kine_charge 196.6 MeV, ONE segment, 85.9 cm, 144 fitted points), the highest-kine_charge pdg-11 object; passed over 15011 (pdg 13, 216.1 cm, kine_charge 307.9 / kine_best 445.0) and the pdg-13 objects 127030, 23017, 125023. WHY NOT AN EM SHOWER, strongest first. (1) THE DRAWN CHARGE. At two orthogonal azimuths (shw15008-az-055-el+20 and shw15008-az+085-el+20) the blue point cloud around this object is a thin uniform band from end to end, the same visual width as the muon 15011 and the other tracks in the same frames, with no cone, no branching and no fan anywhere along it. That is the judgement, made from the picture. (2) RADIATION LENGTHS. The object is 79 cm long, i.e. ~5.7 radiation lengths in liquid argon, and a 197 MeV electromagnetic shower must reach its maximum inside the first ~1-2 X0 and be visibly opening toward a ~10 cm Moliere radius long before the far end. Nothing about it changes over its whole length -- there is no stage at which it looks different from its start. (3) IT DOES NOT COME FROM THE VERTEX. Its closest member point is 34.9 cm from the star, and the angle between the (vertex -> start) chord and its own (start -> end) direction is 77.4 deg, so it is not a photon radiated from the neutrino vertex either. (4) CORROBORATION ONLY, with the caveat stated: a PCA over its 144 skeleton points gives length 79.4 cm, transverse RMS 1.49 cm, max radius 3.2 cm, largest along-axis gap 0.6 cm, and a flat quarter-by-quarter profile (1.81 / 1.48 / 1.04 / 1.52 cm). Those numbers describe the skeleton's wiggle, not the blob width, so on their own they could not distinguish a narrow track from a shower whose charge is wider than its skeleton -- they are quoted because the FLATNESS of the profile is still meaningful (a shower's skeleton branches as it develops; this one does not) and because they agree with (1). I did NOT price this with kine_charge / skeleton length, which is the shortcut correction 18 forbids. Vertex judged off the automatic vtxz-* 60 cm frames (r95 254 cm): the star sits on the junction of the 15011 muon and the long unowned grey track in a very dense multi-track region; plausible, and not needed, since the call above is measured from the object's own points and is vertex-independent (correction 14). THE SECOND EM CANDIDATE, deliberately NOT resolved: 15010 (pdg 11, kine_charge 106.1 MeV, 2 seg) PCAs to 35.4 cm with transverse RMS 1.31 cm and appears as a narrow hairpin with a short parallel stub (15014, 8.0 cm) beside it. But 35.4 cm is only ~2.5 radiation lengths and 106 MeV is ~3 critical energies, so the young-shower caveat applies -- a shower that young can genuinely look narrow, which is exactly why I declined a PID verdict on evt397630's 19010 (128.7 MeV over 2.2 X0). 15008 at 5.7 X0 is a different case and that difference is the whole argument. So: 15010 is not separately resolved, and I make NO claim that this 'other_em' event contains no EM shower -- only that its leading pdg-11 object is not one. UNOWNED CHARGE: three segments are grey (15005, pdg 211, 183.3 cm; 15007, pdg 211, 38.5 cm; 127032, pdg 13, 38.5 cm), all track-like and all at 98-156 deg from 15008's axis, so none is an under-clustering candidate for it. Membership bookkeeping is self-consistent: nseg 1 = owner-grouped 1 = cmp_div 1, and the owner groups sum to 22 = the shard's n_seg. pi0: kine_div says 'no pi0 group in this event'; the auto-slotted [15008, 15010] pair is the correction-3 artifact and I did not store it. NOT LOOKED AT: the 4 out-of-scope showers, all <= 14.1 MeV.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt392901/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T23:01:47+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt392901/calib-pr-evt392901.json",
+ "subRunNo": 1
+}

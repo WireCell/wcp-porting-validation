@@ -1,0 +1,100 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/cf0a22d0-7e8b-4d62-a4af-90b953ef974d/event/3/",
+ "camera": {
+  "R": 108.89,
+  "az_deg": 274.29,
+  "centre": [
+   -140.62,
+   112.6,
+   221.99
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2103,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 2103,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 32843,
+  "el_deg": 29.59
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.115997622073121,
+   0.0919981140579925,
+   -0.9889797261234194
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.115997622073121,
+    0.0919981140579925,
+    -0.9889797261234194
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 368.81315423370825,
+   "kine_charge": 368.81315423370825,
+   "kine_charge_other_hypothesis": 221.842498787193,
+   "kine_dQdx": 275.1293430965068,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    4002,
+    4003,
+    68014,
+    68015,
+    70017,
+    73031
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -143.33275104740383,
+   137.95368616078125,
+   272.84318118192573
+  ],
+  "reco_start_vertex_id": 4000,
+  "shower": 4002,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -143.33275104740383,
+   137.95368616078125,
+   272.84318118192573
+  ],
+  "verdict": null
+ },
+ "event": "evt172942",
+ "eventNo": 172942,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -143.33275104740383,
+  "y": 137.95368616078125,
+  "z": 272.84318118192573
+ },
+ "note": "wrong nu vertex give up",
+ "origin": "ncpi0",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-mcp1k/pr_evt172942/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T11:00:54+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt172942/calib-pr-evt172942.json",
+ "subRunNo": 1
+}

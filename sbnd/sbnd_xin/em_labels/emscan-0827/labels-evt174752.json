@@ -1,0 +1,44 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 284.57,
+  "az_deg": 274.29,
+  "centre": [
+   -45.97,
+   -12.58,
+   250.49
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 236,
+  "cloud_cluster_ids": [
+   14,
+   17
+  ],
+  "cloud_kept": 236,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 27939,
+  "el_deg": 29.59
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt174752",
+ "eventNo": 174752,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 48,
+  "x": -59.42362250673381,
+  "y": -193.69590372559074,
+  "z": 406.74555410177743
+ },
+ "note": "wrong nu vertex, give up",
+ "origin": "owner",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114b-mcp1k/pr_evt174752/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T11:01:10+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt174752/calib-pr-evt174752.json",
+ "subRunNo": 1
+}
