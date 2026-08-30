@@ -381,3 +381,61 @@ Those absorbers currently tape admissions only, so the question is not
 answerable from anything on disk today.
 
 The 463565 π⁰ warning still stands against any merge-side change.
+
+## Part 10 — the cross-cluster probe: the site never runs for the shower that needed it
+
+Second probe shipped (`WCT_SHOWER_XCLUS_DEBUG`, `NeutrinoShowerClustering.cxx`):
+the pass-4 direct-cone **rejections** (both the cheap `angle_v2 > 30` filter and
+the acceptance disjunction), the **owned-segment skip** at two sites, and every
+**rival's arbitration metric**. Gate PASS with the env unset; `wcdoctest-clus`
+235/235; freshness lib 19:52:43 > src 19:52:06.
+
+### Result
+
+| | segments | charge | share |
+|---|---|---|---|
+| **ABSENT** — the pair never entered the loop | **56** | 1.734e7 | **79.0%** |
+| **REJECTED** — the target evaluated it, the cone refused | 21 | 4.477e6 | 20.4% |
+| **OWNED** — skipped because another shower held it | 1 | 1.428e5 | 0.7% |
+
+And the split is **per shower, not per segment**:
+
+| target shower | XCLUS lines it emitted | its segments |
+|---|---|---|
+| 122660 / 9110 | **NONE** | 11 ABSENT |
+| 181050 / 15006 | **NONE** | 8 ABSENT |
+| 463565 / 13001 | **NONE** (event total 0 over 0 showers) | 26 ABSENT |
+| 469665 / 15003 | **NONE** | 11 ABSENT |
+| 21073 / 60081 | 28 | 11 REJECTED |
+| 105946 / 55063+56056 | 80 | 7 REJECTED, 1 OWNED |
+| 342199 / 25109 | 38 | 3 REJECTED |
+
+**Four of seven target showers never enter the cross-cluster loop at all**, and
+they carry 79% of the charge. On **463565** — the largest event and the one the
+owner ruled on first — the loop emits **zero lines over zero showers**: the
+cross-cluster absorber never executes in that event.
+
+### The other 20% is not a near miss either
+
+All 21 REJECTED fail the cheap `angle_v2 > 30` filter, and they fail it wide:
+angle_v2 spans **37.9° – 124.5°** against a 30° gate, with only 3 of 21 inside
+45°. Catching the bulk would mean opening the gate past 65°, which admits
+everything. That is Result 3's "no geometric bound" arriving a third time, now
+with the exact quantity and the exact margin.
+
+### Three hypotheses tested, three dead
+
+| round | hypothesis | verdict |
+|---|---|---|
+| Part 3 | loosen the F12 walk-add guard | dead — 69 declines / 2.852e8 to get 4 wrong, interleaved |
+| Part 9 | walk ordering / `used_segments` contention | dead — **0 of 78** |
+| Part 10 | cross-cluster threshold, arbitration, or owned-skip | dead — 0.7% OWNED, and the rejections miss by 2× the gate |
+
+What is left is **structural and upstream of every predicate**: which showers
+`shower_clustering_with_nv_from_vertices` iterates as absorbers in the first
+place. Four of the seven showers the owner says should have grown were never
+offered the chance. That is not a knob at an existing seat — it is the
+enumeration itself, and it is the only lever this round has not falsified.
+
+**Both probes are default-off and shipped**, so the next round starts with the
+instrument already in the tree rather than rebuilding it.

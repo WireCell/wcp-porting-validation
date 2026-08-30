@@ -18,7 +18,20 @@ MODE=${1:-probe}
 cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 export PR_EXTRA_STAGES=pr_display PR_JOBS=${PR_JOBS:-6}
 export WCT_SHOWER_ABSORB_DEBUG=1
-if [ "$MODE" = probe ]; then
+if [ "$MODE" = xclus ]; then
+    # doc pr/130 part 10: the cross-cluster rejection tape
+    export WCT_SHOWER_XCLUS_DEBUG=1
+    TAG=xcon
+    declare -A EV
+    EV[nuecc48]="122660 342199 469665"
+    EV[ncpi0]="463565 105946 21073"
+    EV[mcp2k]="181050"
+elif [ "$MODE" = xgate ]; then
+    TAG=xgate
+    declare -A EV
+    EV[nuecc48]="122660"
+    EV[mcp2k]="181050"
+elif [ "$MODE" = probe ]; then
     export WCT_SHOWER_BLOCKED_DEBUG=1
     TAG=blkon
     declare -A EV
