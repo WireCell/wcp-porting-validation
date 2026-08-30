@@ -130,6 +130,87 @@ third origin.
    the only feature that separates is the 9–12 cm start separation. A merge
    predicate would therefore be a genuinely new family, not a loosened guard.
 
+## The scan is in — 2026-08-29, tag `emscan-0829-pr130qmiss`
+
+Nine events saved plus the verbal 463565 ruling. Scored with the scan's own
+labels against the same dumps and sidecars the census used:
+
+```bash
+cd em_display
+./em117_score.py --tag emscan-0829-pr130qmiss \
+    --manifest $PWD/em130q-scan10-manifest.tsv --prepdir $PWD/emprep-pr130scan10 \
+    --cross-run --tsv ../docs/pr/pr130-qmiss-scanned-score.tsv
+```
+
+### Result 1 — every answerable question is YES
+
+**17 of 17.** Not one candidate object was ruled correctly separate. The
+SPLIT/WHOLE class is a **real defect**, and the alternative Part 6 posed —
+"the label store is over-marking neighbours a physicist would leave separate" —
+is **dead**.
+
+### Result 2 — three of ten events have a WRONG ν VERTEX
+
+| event | note | q_out at stake |
+|---|---|---|
+| 54332 | *"vertex wrong"* | 3.648e6 |
+| 54453 | *"wrong vertex"* | 1.087e6 |
+| 76346 | *"wront vertex"* | 1.234e6 |
+
+**5.969e6 — 20.5% of the scan pool — is not a shower-clustering question at
+all.** With the vertex wrong the shower assembly cannot be judged, so these 15
+questions (Q8–Q14, Q22–Q27, Q31–Q32) have no answer and never will until the
+vertex is fixed. Read with Part 1's 17% REROOT and Part 5c's mis-seeding, this
+is the third instrument pointing at the same layer: **the binding constraint on
+these events is vertex and seeding, not shower admission.**
+
+### Result 3 — no geometric bound exists, again
+
+Every approved merge whose candidate roots its own reconstructed object:
+
+| span | approved range |
+|---|---|
+| start separation | **9.4 – 182.8 cm** |
+| dir15 opening angle | **9.4 – 156.6°** |
+
+All 17 approved across that entire range. The start-proximity hypothesis this
+doc raised from 463565 alone (9–12 cm) is **falsified**: 122660 merges at
+88–90 cm, 469665 at 60–183 cm. This is the same negative shape as pr/128's
+proximity finding and pr/129's extent/distance finding — *"over-clustering is
+not a distance"*, and now neither is under-clustering. **Do not propose a
+geometric merge bound.**
+
+### Result 4 — the census under-counted, and q_extra needs a caveat
+
+| | old labels | this scan | delta |
+|---|---|---|---|
+| q_miss over the 6 scanned | 1.335e7 | **1.522e7** | **+1.871e6 (+14%)** |
+| q_extra over the same 6 | 4.661e6 | **0** | −4.661e6 |
+
+Same dumps, same sidecars — **the entire difference is labelling.** The owner
+marked segments the census never flagged (53068 on 122660; 32006/38012 on
+105946; 57017 on 181050; 28020/29021/47040/52045 on 21073; 26040 on 342199;
+66047/68053/68059 on 469665), so the true under-clustering is *larger* than
+this round measured.
+
+**The q_extra collapse must NOT be read as "the guards removed it".** The task
+given was *"I marked in the clusters that should be merged"* — marking segments
+**out** was not asked for, so zero `out` marks is consistent with the framing
+and is **not** evidence that nothing on these events is over-clustered. The
+earlier 4.661e6 came from agent-authored labels (`emscan-0827`,
+`emscan-0828-agent5`); whether it was real over-clustering or agent
+over-marking is **not decided by this scan** and would need a scan that asks
+the out question explicitly.
+
+### What this leaves
+
+- A merge-side knob is **justified** (17/17) but has **no geometric predicate**
+  (Result 3), so it cannot be built the way every guard in this campaign was.
+- Any such knob still carries the 463565 pi0 warning below: it fixes energy and
+  can cost the two-gamma separation.
+- **The larger prize is the vertex** (Result 2): 20.5% of this pool is
+  unscannable, and no shower work can recover it.
+
 ## Open — awaiting owner
 
 | idx | event | objects | q_out | status |
