@@ -399,6 +399,8 @@ _val=${SBND_SHOWER_PASS4_PRUNE:-}
 [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=false")
 [ -n "${SBND_SHOWER_PASS4_PRUNE_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap=${SBND_SHOWER_PASS4_PRUNE_GAP}")
 [ -n "${SBND_SHOWER_PASS4_TRACK_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_track_guard_len=${SBND_SHOWER_PASS4_TRACK_GUARD_LEN}")
+[ -n "${SBND_SHOWER_PASS4_PROX_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prox_guard_len=${SBND_SHOWER_PASS4_PROX_GUARD_LEN}")          # doc pr/130 item 1b
+[ -n "${SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass3_backfill_guard_len=${SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN}")  # doc pr/130 item 1b
 
 # doc pr/124 front A -- gap-band tier-2 prune.  gap2 in cm (EMPTY = cfg
 # default 0 = off); ang in deg / mdqdx in MIP (EMPTY = cfg defaults 40/2.5).
