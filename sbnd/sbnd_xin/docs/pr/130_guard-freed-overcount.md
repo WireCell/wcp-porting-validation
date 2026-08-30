@@ -643,3 +643,78 @@ Options 1 and 2 from Part 5 are not withdrawn; they are now second and third.
 The two knowingly-wrong events this doc leaves in production (292643 −234.0
 MeV, 179369 +376.0 MeV spurious) are unchanged by any of this and still need
 the Part 4 fix.
+
+---
+
+## Part 7 — sentinel items 2 and 3, closed (2026-08-29)
+
+### Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr127_sentinels.py --arms 'work-pr129r1-on98-*' 'work-pr129r1-on141-*' \
+                                    work-sent130-mcp1k work-sent130-mcp2k   # 29 PASS / 0 FAIL / 0 SKIP
+./scripts/pr130_sentinel_neg34.sh                                            # the two new negative arms
+./scripts/pr127_sentinels.py --arms work-sent130neg3-mcp2k                   # pr/129 knob off
+./scripts/pr127_sentinels.py --arms work-sent130neg4-mcp2k                   # pr/124 prune off
+```
+
+### Item 2 — the pr/120 back guard now has a sentinel, one-sided on purpose
+
+`stem_backfill_back_guard` shipped 2026-08-28 with no sentinel. Registered on
+**47212**, its surviving founding target, with **both sides measured at
+today's baseline** rather than read off pr/120's doc — the 347890 lesson was
+that a threshold taken from a stale table passes the negative control on a
+dead knob.
+
+| | guard ON (production, `work-pr129r1-on98-mcp2k`) | guard OFF (`work-pr130-47212-guardoff`) |
+|---|---|---|
+| PF nodes | 19 | 18 |
+| `pi+` | **53 MeV — exactly one** | **none at all** |
+| max `gamma` | **614 MeV** | **688 MeV** |
+| `pi0` | 119 MeV | 150 MeV |
+
+Assertions `[("pf_contains", "pi+"), ("pf_node_lt", "gamma", 650.0)]`. Both
+are structural, not energy-scale bets: with the guard off the shower eats seg
+2103, so the standalone `pi+` track disappears and the shower grows by 74 MeV.
+The ON tree contains exactly one `pi+`, so `pf_contains` cannot pass
+trivially. Verified **both directions**: PASS on production (rc=0), FAIL on
+the guard-off arm (rc=1).
+
+**292643 is deliberately left unasserted**, and a block in the registry says
+so. Writing its entry now would pin a production state the owner condemned in
+Part 4 (the guard declines an absorb that should happen, −234.0 MeV) and it
+would have to be rewritten by the fix that is supposed to land. Same for
+179369. They become the natural two-sided pair once the Part 4 fix ships.
+
+### Item 3 — every sentinel that can fail has now been shown to fail
+
+**Full registry at the current production point: 29 PASS, 0 FAIL, 0 SKIP.**
+
+The earlier negative arms (`work-sent130neg{,2}-*`) predate pr/129 and
+disabled only the doc-84 knobs, so pr/129's three entries and pr/124's 406125
+had never been shown capable of failing. Two new arms, split so a FAIL is
+attributable to one knob:
+
+| arm | knob off | result |
+|---|---|---|
+| `work-sent130neg3-mcp2k` | `SBND_KINE_GF_IMPACT=0` | **393505 pr/129 FAIL**; 171572 + 94392 pr/129 PASS; **pr/123's own 393505 + 171572 entries PASS** |
+| `work-sent130neg4-mcp2k` | `SBND_SHOWER_PASS4_PRUNE_GAP2=0` | **406125 FAIL** |
+
+Two things worth stating plainly rather than reading off the counts:
+
+1. **pr/123's entries on the same two events still PASS in neg3.** That is the
+   specificity check — disabling pr/129's knob does not disturb pr/123's
+   assertions, so the two rounds' sentinels are independent as intended.
+2. **171572 and 94392 PASS with pr/129's knob off, and that is correct, not a
+   second masked knob.** Both are *KEEP*-side entries: they assert that a
+   future **tightening** does not lose a real daughter (171572) or move an
+   unrelated Enu (94392). A knob that dies cannot break them by construction.
+   Only **393505**, the DROP, guards pr/129 being alive. Recording this
+   because the 66366 finding earlier in this doc looks identical from the
+   counts and is a genuinely different problem — 66366's knob is masked by
+   another route; these two are one-directional by design.
+
+Standing exposure after this round: `long_muon_stub_bridge_len` still has no
+guarding event (Part 2), and `stem_backfill_back_guard`'s second side waits on
+the Part 4 fix.

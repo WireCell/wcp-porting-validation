@@ -1,0 +1,29 @@
+event    seg      label said    live admit site        declined earlier by
+69232    20021    own-root      (none seen)            -
+72786    9009     pass4_angle   pass4_angle            -
+72786    31033    pass4_angle   pass4_angle            -
+100222   14003    pass4_proximi pass4_proximity        pr93 cone_absorb_guard
+175896   66037    pass3_cone    pass3_cone             -
+175896   66041    pass3_cone    pass3_cluster_map      SHOWER_ABSORB PASS3_CONE_GUARD seg=66041,pr1
+278420   67033    pass4_angle   pass4_angle            -
+278420   68034    pass4_angle   pass4_angle            -
+278420   69035    pass4_angle   pass4_angle            -
+278420   70036    pass4_angle   pass4_angle            -
+278420   73039    pass4_angle   pass4_angle            -
+278420   75041    pass4_angle   pass4_angle            -
+278420   78044    pass4_angle   pass4_angle            -
+286655   67016    pass4_angle   pass4_angle            -
+286655   69018    pass4_angle   pass4_angle            -
+286655   81062    pass4_angle   pass4_angle            -
+286655   82063    pass4_angle   pass4_angle            -
+350354   18008    conn3_unreach pass3_cluster_map      -
+350354   18015    pass3_cluster pass3_cluster_map      -
+400504   21003    pass4_angle   pass4_angle            -
+489327   19005    own-root      (none seen)            -
+499577   95059    pass3_cone    pass3_cone             -
+
+label-vs-live attribution: 20 agree, 2 disagree
+
+DECLINED BY A GUARD, THEN ADMITTED ANYWAY: 2 segments, 8.770e+06 charge (50.7% of the affirmative pool)
+   evt 100222   seg 14003    5.973e+06  declined by [pr93 cone_absorb_guard] -> admitted by [pass4_proximity]
+   evt 175896   seg 66041    2.797e+06  declined by [SHOWER_ABSORB PASS3_CONE_GUARD seg=66041,pr124 pass3_cone_guard] -> admitted by [pass3_cluster_map]

@@ -198,3 +198,93 @@ wrong absorber.
 
 Related: [`pr130-qmiss-refresh.md`](pr130-qmiss-refresh.md),
 [`130_guard-freed-overcount.md`](130_guard-freed-overcount.md) Part 4-6.
+
+---
+
+# Part 2 — the census run: guards are being overruled
+
+**Status: MEASURED at today's production point.** The doc above listed
+"`absorbed_by` is the label store's record, not a re-run" as not established.
+It is now established, and the re-run found the mechanism.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_qextra_census.sh qx1      # 10 events, byte-neutral stderr census
+./scripts/pr130_qextra_attrib.py          # label attribution vs the live run
+```
+
+Arms `work-pr130-qx1-mcp{1,2}k` (fresh labels, M13). Probes are
+`WCT_SHOWER_{ABSORB,CONTENT,PID,TOPO}_DEBUG` — stderr only.
+
+## Attribution holds: 20 of 22
+
+The label store's `absorbed_by` agrees with the live census on **20 of the 22**
+condemned segments. The two that moved both moved for a legible reason — a
+guard shipped *after* the scan was made, so the segment now arrives by a
+different route:
+
+| event | seg | label said | live says |
+|---|---|---|---|
+| 175896 | 66041 | `pass3_cone` | `pass3_cluster_map` |
+| 350354 | 18008 | `conn3_unreachable` | `pass3_cluster_map` |
+
+## The finding — a guard declines it, another site admits it anyway
+
+**Two of the 22 segments were explicitly DECLINED by a guard and then absorbed
+into the very same shower by a different site. Those two segments carry
+8.770e6 of charge — 50.7% of the entire affirmative q_extra pool.**
+
+**evt 100222, seg 14003** — the 110 cm pdg-13 muon, 5.973e6, the single
+largest item in the pool (34.5%):
+
+```
+SHOWER_ABSORB P120_P3CONE seg=14003 pdg=13 len_cm=110.32 shower_start_seg=113236
+                          site_ang=4.35 dist_cm=38.41 ang15=4.35 ang60=2.41
+pr93 cone_absorb_guard: decline absorb           seg=14003 pdg=13 len=110.3cm
+pr93 cone_absorb_guard: decline sibling backfill seg=14003 pdg=13 len=110.3cm
+SHOWER_ABSORB DIRECT site=pass4_proximity shower_start_seg=113236 seg=14003 pdg=13
+```
+
+pr/93's `cone_absorb_guard` refuses this segment **twice** — once for the
+absorb, once for the sibling backfill — and `pass4_proximity` then puts it
+into shower 113236 regardless. Same segment, same shower, later pass.
+
+**evt 175896, seg 66041** — 18 cm e-, 2.797e6 (16.2%): declined by pr/124's
+`pass3_cone_guard`, then admitted by `pass3_cluster_map`.
+
+## Why this matters more than a threshold
+
+Every round from pr/119 through pr/130 Part 5 asked *"can a geometric
+predicate tell an admissible candidate from an inadmissible one?"* and came
+back measured-dead. This says the question was aimed one step too early:
+**on the two largest items in the over-clustering pool the guards already
+make the right call and are then overruled.** No new predicate is needed for
+those; the existing decision needs to survive to the end of the pass chain.
+
+It also explains a pattern this campaign kept re-encountering — pr/123's
+"chain-laundering" finding, and the pr/130 Part 4 observation that 286655 is
+both a `stem_backfill_back_guard` firing event and a `pass4_angle` over-cluster.
+Those are the same phenomenon seen from different sides.
+
+## Proposed fix — sticky declines, DEFAULT OFF
+
+When a guard declines segment S for shower H, record `(S, H)` and have the
+later direct-absorb sites honour it. Knob `shower_absorb_decline_sticky`,
+default `false`; key-suppressed in jsonnet so the compiled config is
+byte-identical when off (§2). Expected blast radius from the census: the two
+events above, plus whatever else the 239-event census turns up — measure
+before claiming.
+
+**Not yet done, and required before any claim:** the 239-event census to size
+the true blast radius, the knob itself, the byte-identical knob-off gate on
+both manifests, and a Bee A/B for the owner. This section is a measurement and
+a design, not a shipped fix.
+
+## What this does not cover
+
+The other 20 condemned segments (8.54e6, 49.3%) were **never declined** — no
+guard looked at them and said no. `pass4_angle` placed 14 of them
+(286655 at 137–150°, 278420 at 98–125 cm). Those still need the admission-side
+work, and sticky declines will not touch them.

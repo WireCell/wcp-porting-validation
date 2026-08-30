@@ -130,6 +130,21 @@ SENTINELS = [
      # Owner: "is OK".  Guards the mutual exclusivity of the two pools.
      [("enu_between", 1136.0, 1149.0)]),
 
+    # ---- doc pr/130: pr/120's backward-stem guard, which had no sentinel.
+    # stem_backfill_back_guard SBND PRODUCTION ON 2026-08-28.  Registered
+    # ONE-SIDED on purpose -- see the note below the registry.
+    (47212, "pr/120", "stem_backfill_back_guard: the backward stem stays OUT of the shower",
+     # Both sides measured at TODAY's baseline (2026-08-29), not read off
+     # pr/120's doc -- the 347890 lesson was that a threshold taken from a
+     # stale table passes the negative control on a dead knob.
+     #   guard ON  (work-pr129r1-on98-mcp2k, production): seg 2103 renders as
+     #             its own `pi+ 53 MeV` track; big EM shower `gamma 614`; 19 nodes.
+     #   guard OFF (work-pr130-47212-guardoff, one-event arm): NO pi+ node at
+     #             all -- the shower ate it; `gamma 688`, pi0 119 -> 150; 18 nodes.
+     # Exactly one pi+ exists in the ON tree, so pf_contains cannot pass
+     # trivially.  650 sits between the two gamma values.
+     [("pf_contains", "pi+"), ("pf_node_lt", "gamma", 650.0)]),
+
     # ---- doc pr/130: the doc-84 long-muon / MCS family.  Every one of these
     # is a shipped, SBND-PRODUCTION-ON fix whose target event is in NO standard
     # manifest (em114 / em114c), so before this round the whole family was
@@ -198,6 +213,24 @@ SENTINELS = [
      [("log_contains", "pr124 pass4_prune2:"),
       ("log_contains", "band component(s) re-seeded")]),
 ]
+
+# ---------------------------------------------------------------------------
+# DELIBERATELY UNASSERTED -- do not "complete" these without reading why.
+#
+# 292643 / stem_backfill_back_guard, second side.  The guard fires on 8
+# candidates in 239 events; the owner ruled 6 of 8 correct (doc pr/130 Part 4)
+# and ruled the guard WRONG on 292643 (declines an absorb that should happen;
+# -234.0 MeV) and on 179369 (allows a spurious pi0; +376.0 MeV).  A sentinel
+# written for either today would pin a production state the owner has just
+# condemned, and would then have to be rewritten by the fix that is supposed
+# to land.  47212 above is the surviving founding target and is asserted;
+# 292643 and 179369 stay unasserted until the Part 4 fix ships, at which point
+# they become the natural two-sided pair.
+#
+# long_muon_stub_bridge_len has NO guarding event at all: its only target
+# (66366) still produces the identical result with the knob at its legacy 6.0,
+# so the knob is masked by another route.  See doc pr/130 Part 2.
+# ---------------------------------------------------------------------------
 
 
 def pf_texts(arm, event):
