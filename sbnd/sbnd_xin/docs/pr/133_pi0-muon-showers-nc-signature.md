@@ -1,14 +1,16 @@
 # doc pr/133 — pi0 round 2: mu-typed gamma readmission (K20) + the owner NC signature (K21) + the K16@120 Bee call
 
-**Status: OPEN (2026-08-30). Owner orders: "Can you proceed for the next
-ronund 1. K20, for K16, please provide me a bee link to examine for 3. The
-key for NC pi0 without vertex is that a) we are inside an EM shower b),
-there is at least another major object looks like SM shower, and the
-direction is not aligned in this case, we can go into the NCpi0 reco case.
-We can sasume the 2 gamma (1 pi0) case. We do not want to touch the earlier
-part (e.g. upstream imaging)." Then: "You should continue on this with
-another 3 iterations follow your own judgement and recommendations. Note,
-the key is the metric in comparing with the hand scan results."**
+**Status: iterations 1-3 CLOSED (2026-08-30, autonomous per owner nap order).
+K20 (mu-typed gamma readmission) + K21 (owner NC signature) built, gated
+(478/478), measured: K20 clears the last admission blocker (166870 true pair
+m=109.1 accepted, zero collateral); K21 keeps both NC rescues with ZERO of
+K19's 7 ADVERSE.  Ranking front measured DEAD by tape simulation (208/208
+calibration; mainfirst trades 166870 for 397630 whose true pair lives at a
+non-main vertex).  K3 28->29 measured: removes the last real nueCC-fake
+accept (176502) with ZERO other change in 239 events (fake counter 2->1,
+census/ledger/movers all flat) -- the closed interval is (28.7, 29.6), and
+30 would veto 76346's true NC pair.  K16@120 Bee package delivered (sec 1).
+Recommendations for owner: sec 7.**
 
 Follow-on to `docs/pr/132_pi0-reco-round1.md` (rounds 1-10 + the r9-verdict
 typing census).  Baselines: census 31 exact / 16 partial / 1 none / 18
@@ -118,3 +120,34 @@ the rank key is |m-125| minus a 6 MeV BONUS for ct2+ct2 pairs — fake scores
 probes = also the combined production-candidate measurement) + an OFFLINE
 ranking-policy simulation over all recorded pairs before spending any knob
 (the round-10 tape-first method).
+
+## 6. Iteration 3 — K3 28→29 measured (`k3v29`)
+
+`work-pr133-k3v29` (98+141, 239 events rc=0, `SBND_PI0_ATTACH_MIN_MEV=29`,
+compiled-config proof in the per-event config): census **0 rows moved**
+(31/16/1/18 identical), ledger **90.9% flat**, movers **0 x4**, fake counter
+**2 -> 1** — exactly the tape prediction: the only change in the entire
+sample is 176502's fake group (attached 149.6 MeV + 28.7 MeV partner, no
+hand label) disappearing.  76346's true NC pair (partner 29.6 MeV) survives.
+
+## 7. Recommendations (owner decisions)
+
+| item | recommendation | evidence |
+|---|---|---|
+| **K3 28→29** (production value change) | FLIP — my top recommendation | closed population: kills the last real fake, zero other change in 239 events; interval (28.7, 29.6); 30 would kill 76346's true pair |
+| **K20 `pi0_admit_muon_showers`** | FLIP-clean by measurement | 166870 true pair accepted + restamped EM; zero collateral (census/ledger/movers flat elsewhere); the mistyped-mu class is 3/132 hand gammas |
+| **K21 `pi0_nc_sig_angle_deg=15` (+bp 8)** | owner call | does exactly what the signature specifies: both NC pair rescues, none of K19's 7 ADVERSE; but the proposed vertex is eye-validated only — the census cannot see it, and 76346's click distance worsens 30.3→33.7 (flat-mass, third confirmation); also cleans the 76346 fake-counter misflag |
+| **K16@120** | owner call (sec 1 Bee links) | +1 exact (54332) vs 3 gammas +28-51% spurious charge |
+
+Residual census misses (35 events) are measured upstream (label-mass-outside-
+window with reco masses far below label: charge/angle deficits) or locally
+degenerate (ranking/fragmentation) — consistent with rounds 5-10; no further
+in-scope finder knob is expected to move the headline.
+
+Repro (iterations 2-3):
+```
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 k2021p 1 SBND_PI0_ADMIT_MU=1 SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15  # + 141
+python3 scripts/pr133_rank_sim.py --manifest98 em117-133k2021p98-manifest.tsv --manifest141 em114c-133k2021p141-manifest.tsv --overlay-tag pi0scan-0829-agent
+PR_JOBS=12 bash scripts/pr133_arms.sh 98 k3v29 0 SBND_PI0_ATTACH_MIN_MEV=29  # + 141
+python3 scripts/pr132_pi0_census.py --manifest98 em117-133k3v2998-manifest.tsv --manifest141 em114c-133k3v29141-manifest.tsv --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr133-census-k3v29.tsv
+```
