@@ -1,0 +1,240 @@
+{
+ "arm": "work-pr130r1-probe98-nuecc48",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": 275.97,
+  "centre": [
+   -48.93,
+   1.77,
+   113.78
+  ],
+  "cloud": null,
+  "cloud_candidate": null,
+  "cloud_cluster_ids": null,
+  "cloud_kept": null,
+  "cloud_scope": "all-clusters",
+  "cloud_total": null,
+  "el_deg": -14.08
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.14261877004860637,
+   -0.3233133149704357,
+   -0.9354829698036466
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "python@start_override",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "74101": {
+    "25035": "in",
+    "25037": "in",
+    "25038": "in",
+    "25108": "in",
+    "25109": "in",
+    "26040": "in",
+    "72098": "in",
+    "73099": "in"
+   }
+  },
+  "marks_detail": {
+   "74101": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.14261877004860637,
+     -0.3233133149704357,
+     -0.9354829698036466
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "python@start_override",
+    "marked": {
+     "25035": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 17.54257872204396,
+      "cluster_id": 25,
+      "dist": 31.627386148135653,
+      "ellip": 4.203470592134194,
+      "kind": "in",
+      "length": 8.059456781686682,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "25037": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 16.720246093316,
+      "cluster_id": 25,
+      "dist": 24.267609854484114,
+      "ellip": 2.2874097048526796,
+      "kind": "in",
+      "length": 3.7200116027352883,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "25038": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 14.714054083106667,
+      "cluster_id": 25,
+      "dist": 24.854237109696815,
+      "ellip": 1.9552620660812365,
+      "kind": "in",
+      "length": 8.100655915948142,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "25108": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 10.721799152586705,
+      "cluster_id": 25,
+      "dist": 24.451941398842486,
+      "ellip": 1.1885065720696715,
+      "kind": "in",
+      "length": 4.799999999999999,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "25109": {
+      "absorbed_by": null,
+      "angle": 6.069638384363444,
+      "cluster_id": 25,
+      "dist": 24.771263708010512,
+      "ellip": 0.6536392227348818,
+      "kind": "in",
+      "length": 2.6568718959121105,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "26040": {
+      "absorbed_by": null,
+      "angle": 43.739099665716736,
+      "cluster_id": 26,
+      "dist": 80.51313967664959,
+      "ellip": 126.05776506008273,
+      "kind": "in",
+      "length": 0.9165154202750909,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": null
+     },
+     "72098": {
+      "absorbed_by": null,
+      "angle": 3.173998447152848,
+      "cluster_id": 72,
+      "dist": 39.77417386404846,
+      "ellip": 1.1797024802887899,
+      "kind": "in",
+      "length": 0.9303375920612911,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     },
+     "73099": {
+      "absorbed_by": null,
+      "angle": 2.0220598102517053,
+      "cluster_id": 73,
+      "dist": 41.560203925020375,
+      "ellip": 1.164203302778636,
+      "kind": "in",
+      "length": 0.30677627885798875,
+      "owner": 25109,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 160.04520079818766,
+     "angle_min": 9.625623931512287,
+     "dist_max": 9.532636368323725,
+     "dist_min": 1.406625057998634e-06,
+     "n": 3
+    },
+    "members": [
+     74101,
+     74106,
+     74107
+    ],
+    "start": [
+     -50.88602828979492,
+     3.679400682449341,
+     117.8479232788086
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.5089628470681965,
+    0.5329610952600172,
+    0.6759506574029487
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 67.38746958561866,
+   "kine_charge": 67.38746958561866,
+   "kine_charge_other_hypothesis": 40.533816292101456,
+   "kine_dQdx": 56.07692422112849,
+   "kine_hypothesis": "shower",
+   "kine_range": 47.164646049719394,
+   "members": [
+    74101,
+    74106,
+    74107
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -47.96644623399577,
+   -0.36621711564523807,
+   109.72510520982021
+  ],
+  "reco_start_vertex_id": 107,
+  "shower": 74101,
+  "start_override_by_shower": {
+   "74101": [
+    -50.88602828979492,
+    3.679400682449341,
+    117.8479232788086
+   ]
+  },
+  "start_override_vertex_id_by_shower": {
+   "74101": "74103"
+  },
+  "start_used": [
+   -50.88602828979492,
+   3.679400682449341,
+   117.8479232788086
+  ],
+  "verdict": null
+ },
+ "event": "evt342199",
+ "eventNo": 342199,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": -52.30560350237393,
+  "y": 5.007337335559286,
+  "z": 174.98341893535408
+ },
+ "note": null,
+ "origin": null,
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-nuecc48/pr_evt342199/stdout.log",
+ "runNo": 18269,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T02:26:24+00:00",
+ "scan_tag": "emscan-0829-pr130qmiss",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-nuecc48/pr_evt342199/calib-pr-evt342199.json",
+ "subRunNo": 1
+}
