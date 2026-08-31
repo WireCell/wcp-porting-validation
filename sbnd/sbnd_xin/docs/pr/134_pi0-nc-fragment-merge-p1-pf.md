@@ -251,3 +251,193 @@ K22 rescue, 1=76346 unchanged-proof, 2=105946 the K23 heal, 3=47212 +
    (label g2 = 24035, 38.8 MeV, loses to 58029).  3. Stub-prong NC
    signature variant (180801/259542).  4. Mass peak refit at the new
    production point.  5. PARK: outside-window (upstream).
+## 9. Round 2 — the owner verdicts on the v1 Bee (2026-08-30)
+
+Owner: *"116962 is still not exactly right, the vertex should be much
+upstream of both, and one shower seem overcluster part of the shower that
+should belong to one of the gammas. cluster = 58035 --> should be part of
+cluster = 21072; evt 105946, the pi0 should be at the neutrino vertex, not
+the end of the proton; evt 47212, both neutral pions should be from
+neutrino vertex, I think if there is a direction ambiguities, I think the
+preferance should give to neutrino vertex."*
+
+Diagnosis (one root cause spans all three): a reco shower's INTERNAL
+direction is deficit-biased — measured 50-75 deg off the true flight line
+on 105946's 55063 (the missing charge IS the downstream tail).  That bias
+(a) made K22 v1 read 58035 as the LEFT gamma's stem (its own local dir is
+a fragment artifact), and (b) steers the P1 30-deg vertex association to
+wrong nearby vertices: 55063 fails the test at main but passes at a
+proton-end vertex 48 cm away (105946); 47212's two pions seat at a
+3.8 cm pion-stub end 3.5 cm from main, where pio1's pair m=132.8 beat the
+SAME pair at main m=133.7 by 0.9 MeV.
+
+## 10. K22 v2 — the owner grouping (58035 -> 21072) and the far vertex
+
+Three rules, derived and sim-verified offline before any C++ (specimens +
+all six collateral events):
+
+1. **Host-collinear promotion**: a partner candidate joins the HOST
+   complex when its own PCA axis is within 25 deg of the host-complex PCA
+   axis AND its centroid sits within 15 deg of the host back-ray from the
+   seat.  116962's 58035: 16.7/1.0 deg -> promoted (and absorbed into
+   21072 on accept, per the owner's line); 67056 refused by the ray test
+   (60.7 deg); 22025 by the axis test (37.3 deg).
+2. **Partner PCA rays**: the multi-fragment partner gamma's direction only
+   emerges from its merged cloud — the two PCA-axis rays (anchored at the
+   extremal fit points) of the >= 35 MeV partners join the ray pool
+   (sub-35 satellites would twist the axis; 282979's would-be m=56 PCA
+   fire self-closes because BOTH its partners are sub-35).
+3. **Merge-mode window floor at m > 65** (delta > -60; upper edge and the
+   fragment-mode window untouched): the correctly-grouped 116962 pair is
+   the under-collection class (m=79 at merged charges); every measured
+   collateral crossing sits <= 56.2 or >= 166.
+
+dbg7 smoke: 116962 fires 21072 x 22025 at **(-78.3,-85.2,73.0), 83.5 cm
+upstream of the wrong seat**, event = two showers 595.0 + 167.3 MeV
+(58035+21070+21073 folded into 21072; 67056 into 22025; 55030 via PF);
+76346 same pair/vertex (60.2 cm, m=133.2, now via the partner PCA ray);
+21073 byte-identical; 499423 still guard-refused.
+
+## 11. K24 `pi0_prefer_main_vertex` (bool, DEFAULT OFF) — the nu-vertex preference
+
+Two coupled changes, both only when the knob is on:
+
+- **Relaxed admission at main**: disconnected showers enter the MAIN
+  vertex pool without the 30-deg internal-dir test (the conversion
+  displacement start-minus-vertex IS the gamma direction, and it is the
+  ray the recorded mass uses).  Non-main vertices keep the legacy test.
+- **Main-first ranking**: among in-window recorded pairs, a main-vertex
+  pair beats any non-main pair; the legacy |m-125|-with-bonus key decides
+  within each class.
+
+dbg7/8 smoke: 105946 accepts the OWNER pairing 56056 x 55063 AT MAIN
+(m=144.8; v1 had 53030 x 55063 at the proton end); 47212 accepts BOTH
+pions at main (70038 x 109100 m=133.7, 59027 x 105072 m=143.4).
+
+**The measured trade — 397630** (the pr/133 rank-sim prediction, now
+real): its TRUE pair 19010 x 33038 (hand label) reconstructs at a vertex
+77.3 cm from main (m=117.1) and main-first replaces it with 19010 x 15047
+at main (m=114.2).  The far-vertex structure is IDENTICAL to 105946's
+(a long charged hadron connects main to the pair vertex: 78.7 cm pion vs
+48.8 cm proton) — no local discriminator separates a real secondary-
+interaction pi0 from a fake track-end seat.  The owner's rule is applied
+as stated; 397630 is packaged for his adjudication (a track-length bound
+could keep it, at one-specimen-each overfit risk).
+
+
+## 11.1 The v4 arm postmortem — two K24 defects, the tier + ambiguity fix (v5)
+
+The first full k24 arm (v4 binary) measured 31/18/1/16 vs the 32/15/1/18
+baseline: the three owner fixes landed (105946 partial->exact, 166870
+partial->exact, 47212 both pions at main) and the predicted 397630 trade
+materialized — but two NEW exact->partial regressions appeared (54332,
+506746) and the relaxed admission seeded **+19 pi0 groups event-wide (84
+-> 103 across 239 events, 14 of them in events with no group at all)** —
+unlabeled, unadjudicated spread.
+
+Probe attribution (WCT_PI0_PAIR_DEBUG on 54332; group diff on 506746):
+
+- **506746** — a relax-admitted fake partner (76139, 43.7 MeV) displaced
+  the true pair (69124 x 21056) that had ALREADY won at main under the
+  legacy tests.  Fix 1 (**three-tier ranking**): tier 2 = at main with
+  both members legacy-admitted, tier 1 = at main riding the relaxation,
+  tier 0 = non-main; higher tier wins outright, the legacy
+  |delta|-with-bonus key decides within a tier.  A relaxed pair can no
+  longer displace a legacy winner at main.  506746 healed (smoke v4).
+- **54332's fake partners** (120071, 128111) fail the 30-deg test at
+  EVERY candidate vertex (angles 50-176 deg) — pure relax artifacts with
+  no direction ambiguity to resolve.  Fix 2 (**the ambiguity
+  constraint**): the relaxed admission at main is reserved for showers
+  that legacy-admit at >= 1 OTHER candidate vertex — the owner's own
+  wording ("if there is a direction ambiguity, the preference should give
+  to neutrino vertex"); 105946's 55063 qualifies (it admits at the
+  proton-end vertex), 120071/128111 do not.  This also guts the +19-group
+  pollution at its source.
+- **54332 itself remains a trade** (the second member of 397630's class):
+  its true pair (27025 x 122091) is recorded at main at m=94.6 — BELOW
+  the window — and in-window only at non-main vertices (m=111.6); the
+  ambiguous showers 16017/122091 still form an in-window fake at main
+  (m=109.8) that main-first prefers.  A real pi0 whose in-window
+  reconstruction lives at a secondary vertex is locally indistinguishable
+  from 105946 (where main is correct); both 54332 and 397630 go to the
+  owner with the round-2 Bee.
+
+The v5-v8 smoke iterations closed the loop (one binary rebuild each,
+all specimens re-run every time):
+
+- **396222's v4 "fire" was not a fire**: its 14.5 cm main-vertex move
+  (17.5 -> 3.1 cm from the click) came from relax-created pi0 groups
+  changing the nue BDT features and flipping the neutrino CANDIDATE
+  CLUSTER selection -- a pollution side effect, not the NC bp path (the
+  constrained event is byte-equal to baseline; the v4 shower ids live in
+  a different cluster namespace).  The constraint gives it up; 396222
+  returns to production behavior (no regression vs production).
+- **The ambiguity definition needs own-start** (v6 lesson): 105946's
+  55063 seats at its own conversion vertex 48 cm away -- that IS its
+  ambiguity; requiring an angle pass at another vertex kills the owner
+  fix.  Own-start counts.
+- **The legacy-anchor rule** (v7 -> v8): with own-start ambiguity
+  restored, 54332's artifacts re-enter -- and the discriminator is NOT
+  attachment (56056, the owner pair's anchor, is ct2 but passes the
+  30-deg test at main at 18.5 deg).  Final rule: a relax-only member may
+  pair at main only with a partner that is LEGACY-admitted there; two
+  relax-only members cannot fabricate a pair between themselves (54332's
+  120071 x 122091 and 16017 x 122091 both die; the true pair wins at its
+  true vertex).
+
+**v8 smoke — all specimens simultaneously correct**: 54332 exact
+(27025 x 122091), 506746 exact (69124 x 21056), 105946 owner pair
+(56056 x 55063 at main), 47212 both pions at main, 116962 owner grouping
+at the 83.5 cm upstream vertex, 76346/166870 preserved, pollution dead
+(321767/401450/415278 group-free, 396222 baseline).  Remaining trades:
+397630 (its fake partner rides a legacy-anchored pair -- the documented
+secondary-vertex ambiguity, owner adjudication) and the half-right 71872
+no-group -> partial gain.
+
+## 12. Round-2 final arms (off9/k24b, binary v8) — the round's numbers
+
+Repro:
+```
+# v8 binary (toolkit hash in the commit line); driver /home/xqian/tmp/pr134_r3_arms.sh:
+PR_JOBS=32 bash scripts/pr134_arms.sh 98  off9 0   && ...141...    # knobs off
+PR_JOBS=32 bash scripts/pr134_arms.sh 98  k24b 0 SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15 \
+  SBND_PI0_NC_FLOOR=5 SBND_PI0_NC_PF_ASSOC=20 SBND_PI0_NC_FRAG_MERGE=1 SBND_PI0_PREFER_MAIN=1 && ...141...
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr85_hash_gate.py work-pr133-flipchk-$s work-pr134-off9-$s; done
+bash scripts/pr134_manifests.sh k24b
+python3 scripts/pr132_pi0_census.py --manifest98 em117-134k24b98-manifest.tsv --manifest141 em114c-134k24b141-manifest.tsv \
+  --fudge 0.84 --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr134-census-k24b.tsv
+python3 scripts/pr132_gamma_ledger.py --manifest98 em117-134k24b98-manifest.tsv --manifest141 em114c-134k24b141-manifest.tsv \
+  --overlay-tag pi0scan-0829-agent --tsv docs/pr/pr134-gamma-ledger-k24b.tsv
+for s in mcp1k mcp2k ncpi0 nuecc48; do python3 scripts/pr90_movers.py work-pr134-off9-$s work-pr134-k24b-$s --tags vtx105; done
+```
+
+- **OFF gate: PASS 478/478** (off9 vs work-pr133-flipchk, per sample
+  132/212/38/96) — the v8 binary with knobs off is byte-identical to
+  production.  wcdoctest-clus 2595/2595 (incl. the K22/K23/K24
+  default-lock rows).
+- **Main-vertex fires: exactly {76346 60.2 cm, 116962 83.5 cm}** of 239 —
+  the v4 396222 candidate-selection side effect is gone.
+- **Census 32/15/1/18 -> 33/15/1/17 — exact reaches 50.0%** (33 of 66).
+  The complete mover list: 105946 partial->exact (owner pair at main),
+  166870 partial->exact (main-first ranking), 71872 no-group->partial
+  (legacy-anchored relaxed pair m=101.1), 397630 exact->partial (the
+  main-preference trade, sec 11.1).  54332/506746/415278 byte-clean.
+- **Gamma ledger 120/132 = 90.9%** (flat); nueCC-fake counter 0.
+- **Movers (vtx105, x4): ADVERSE 0**; 1 mover = 76346 toward.  In the
+  mcp2k epoch additionally 396222 confirmed reverted (no move).
+- **Group spread: 84 -> 87 pi0 groups** across 239 events (was +19 in
+  v4): 166870 loses its fake second group; 71872 gains its census pair;
+  174771/281567/71372 gain one legacy-anchored group each (unlabeled, in
+  the Bee for eyes).
+
+## 13. Bee package (round 2, uploaded 2026-08-31)
+
+OFF `473bf8e6-3d34-407a-9fc9-017462c4c2ee` / ON
+`e0908476-322d-49c9-ba3f-c68626b45a1e`; 12 events, annotated index at
+`bee/pr134k24/pr134k24.index.txt` (3 owner symptoms, 2 adjudication
+movers incl. 397630, 4 held guards, 3 unlabeled new-group events).
+
+**Recommendation**: flip the full chain (bp=8, sig=15, floor=5, pf=20,
+frag_merge, prefer_main; K23 stays OFF) on the owner's Bee verdict, with
+397630 explicitly adjudicated (accepting it as the price of the
+main-preference rule, or scoping a track-length bound in a later round).

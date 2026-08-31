@@ -1,0 +1,17 @@
+# doc pr/134 round 2 A/B index -- OFF 473bf8e6-3d34-407a-9fc9-017462c4c2ee / ON e0908476-322d-49c9-ba3f-c68626b45a1e
+# OFF = work-pr134-off9-* (v8 binary, knobs off; hash-gated PASS 478/478 vs work-pr133-flipchk-*)
+# ON  = work-pr134-k24b-* (NC chain bp=8/sig=15/floor=5/pf=20 + K22 v2 frag_merge + K24 v8 prefer_main; K23 excluded)
+# 12 events: 3 owner symptoms first, 2 adjudication movers, 4 held guards, 3 unlabeled new-group events
+# bee_idx	event	status
+0	116962	RESCUED: owner grouping 58035->21072; vertex (-78.3,-85.2,73.0) = 83.5 cm upstream of the r1 seat; two showers 595.0+167.3 MeV; pair 21072x22025 m=79.1
+1	105946	RESCUED: pi0 at the nu vertex, owner pair 56056x55063 m=144.8 (was 53030x55063 at the proton end 48 cm away)
+2	47212	RESCUED: BOTH pi0s at main (70038x109100 m=133.7; 59027x105072 m=143.4; were seated at a pion-stub end 3.5 cm off)
+3	397630	ADJUDICATE (the main-preference trade): true pair 19010x33038 at a vertex 77.3 cm from main (m=117.1) replaced by 19010x15047 at main (m=114.2); far-vertex structure identical to 105946 (78.7 cm pion vs 48.8 cm proton) -- no local discriminator
+4	71872	mover: no-group -> partial; new pair 79074x13008 m=101.1 at main (legacy-anchored relaxed admission; label g2 is the 23 MeV 211-typed crumb)
+5	54332	unchanged: true pair 27025x122091 kept (the v4 fake 122091x120071 vetoed by the legacy-anchor rule)
+6	506746	unchanged: true pair 69124x21056 kept (the v4 fake 69124x76139 out-ranked by the tier rule)
+7	76346	RESCUED (round 1): NC bp vertex 60.2 cm upstream, pair 14059x49048 m=133.2 via the partner PCA ray
+8	21073	unchanged: dead-on-click sentinel, byte-identical
+9	174771	new group: 1->2 pi0 groups (unlabeled event; legacy-anchored relaxed pair at main)
+10	281567	new group: 3->4 pi0 groups (unlabeled; the r9 "very busy" event)
+11	71372	new group: 1->2 pi0 groups (unlabeled)

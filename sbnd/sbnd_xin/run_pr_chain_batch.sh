@@ -1732,6 +1732,8 @@ fi
 [ -n "${SBND_PI0_NC_FRAG_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_frag_merge=true")
 # doc pr/134: K23 with-vertex post-accept PF satellite cone (deg).  EMPTY = no TLA = the job default off.
 [ -n "${SBND_PI0_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_pf_assoc_deg=${SBND_PI0_PF_ASSOC}")
+# doc pr/134: K24 P1 nu-vertex preference (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PI0_PREFER_MAIN:-}" ] && CATH_TLA+=(--tla-code "pi0_prefer_main_vertex=true")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
