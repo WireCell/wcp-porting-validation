@@ -43,7 +43,7 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **P1.0** | **the shared knob-off gate** | all four at their shipped defaults | **PASS ×2** | `work-pr139r2-off-*` vs `work-pr138r3-flipchk-*`, **and** vs `work-pr139r1-off-*` | **478 / 478 byte-identical** on both, `missing/unpaired 0`, rc=0 ×4 ×2 |
 | **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **SUPERSEDED BY P1.6** (ships inside it) | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
 | **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **MEASURED WRONG AT 12 — do not flip** (§6) | `work-pr139r1-onb12-*` | exact 35 → 36 and all four π⁰s recovered, **but the owner's scan says it suppresses 9 of the 19 cuts he confirms**, including 281485 whose cut he calls correct |
-| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **DONE — PASSES all four pre-registered bars; AWAITING OWNER FLIP** (§8, §10) | `work-pr140r1-on-*` vs `work-pr139r1-onemst-*` | exact **36**, q_extra **6.9 %**, **0 ADVERSE**, tape reproduces the prediction on **39 of 39**; **5** confirmed cuts suppressed (2 deferred + 3 rejected) vs **11** for the withdrawn `b ≤ 12` |
+| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **PASSES all four pre-registered bars; OWNER'S CALL, and it is a TRADE** (§8, §10, §14.2) | `work-pr140r1-on-*` vs `work-pr139r1-onemst-*` | **For:** exact **36**, q_extra **6.9 %**, **0 ADVERSE**, tape reproduces the prediction on **39 of 39**; **5** confirmed cuts suppressed (2 deferred + 3 rejected) vs **11** for the withdrawn `b ≤ 12`. **Against:** the §8.4 bars were fixed *before* item 2's instrument existed, and that instrument (§11.4) prices the arm at **−1 confirmed cut** (294174/71067) and **−0.052** median part `q_f1`. `skip_shared` **alone** is the defensible alternative: 2 suppressions instead of 5, at one census `exact` |
 | **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **SBND PRODUCTION ON** (owner flip 2026-08-31) | `work-pr139r1-onemst-*`; flip-equivalence `work-pr139r3-flipchk-*` **478 / 478** | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), 51 peels / **0 backwards**, every instrument unchanged, 0 ADVERSE |
 | **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **CLOSED — do not flip** (§12) | `work-pr140r1-onrh15-*` (15 cm, flipped config) | 11/51 re-homed; census **35**, 0 ADVERSE; the merged target moves on **exactly the same 3 rows** as the single one — it buys sensitivity to *cuts*, not *merges*, so P1.4 was never blocked on the instrument |
 | **P1.5** | the combination P1.1 + P1.2 + P1.3 | three knobs | **DONE** | `work-pr139r2-oncomb-*` | exact **36**, q_miss 14.5 %, q_extra 7.6 %, q_f1 **0.932**, μ-typed daughters **1**, 0 ADVERSE |
@@ -854,14 +854,21 @@ parked with a second measured reason rather than a hunch.
 
 ---
 
-## 10. Item 1 — RESULT: the pre-registered operating point holds  *(arm `work-pr140r1-on-*`)*
+## 10. Item 1 — RESULT: the pre-registered operating point holds, at a price §8.4 could not see  *(arm `work-pr140r1-on-*`)*
 
 `shower_split_skip_shared=1` + `shower_split_max_impact=30`, single arm on the
 flipped production config, 239 events × 4 samples. Baseline
 `work-pr139r1-onemst-*` (= the production config; proven byte-identical to the
 post-flip arm `work-pr139r3-flipchk-*` by a 478/478 gate).
 
-### 10.1 All four §8.4 criteria pass
+### 10.1 All four §8.4 criteria pass — but note what they could not measure
+
+**§8.4's four bars were fixed before item 2's instrument existed.** They are
+honoured below exactly as written, and they are *not the whole verdict*: §11.4
+later prices this same arm at **one lost confirmed cut** (294174/71067) and
+**−0.052** median part `q_f1`. Read §10 and §11.4 together, and §14.2 for the
+trade the owner is actually being asked to make. This is the same audit §13.3
+applies to item 4, turned on item 1.
 
 | # | criterion | bar | measured | |
 |---|---|---|---|---|
@@ -1059,6 +1066,13 @@ and `max_seeds` is hardcoded 4 upstream, so 3 is the one cheap arm.
 | iii | merged-target parts with no distinct reco object | must fall below 6 | **6 → 5** | **PASS** |
 | iv | no regression | census exact ≥ 35, 0 ADVERSE | census **34**, 0 ADVERSE | **FAIL** on the census |
 
+**The `max_parts = 2` reference is validated, not assumed.** `work-pr140r1-onrh15`
+is used as the baseline tape on the argument that the re-home acts on an orphan
+daughter *after* the peel and so cannot perturb the `SHOWER_SPLIT part` lines.
+That argument is checked rather than trusted: it reproduces §6.1's `oncomb`
+numbers to three decimals — SPLIT2 median **1.000**, mean **0.981**, **12 of 15**
+exact, k ≥ 3 mean **0.800**.
+
 ### 13.2 The blast radius is three objects, and two of them get worse
 
 `max_parts = 3` changes only **3** of the 19 confirmed cuts. That is the whole
@@ -1097,7 +1111,10 @@ went.
 
 ### 13.4 The verdict
 
-**Do not raise `max_parts`.** It stays 2. The k ≥ 3 question is **not** answered
+**Do not raise `max_parts` to 3.** It stays 2. **4 was not tested** — the 3-arm's
+direction (one gain, two regressions, one of them on a SPLIT2) argues against
+spending an arm on it, but that is an argument, not a measurement. The k ≥ 3
+question is **not** answered
 by the cap and is now correctly posed for the first time: *the kernel cannot
 place a third boundary*, which is a seeding/valley question (doc pr/138 §B3's
 `max_seeds`, and §B7's no-valley class), not a cap question. It goes back on the
