@@ -1,24 +1,25 @@
 # doc pr/138 — the shower splitter: MASTER PLAN (scan → implement → optimise)
 
-**Status: PLAN, 2026-08-31. No code, no arm, no knob. This file is the spine for
-the whole splitter campaign; the measurements it rests on are doc pr/137 §10–§15.
-Owner: *"we will devote some session time to do the scan... we can then move back
-to the implementation and optimization"* and *"we need to improve the scanning
-tool a bit."***
+**Status: PHASE A CLOSED 2026-08-31 — the owner hand-scanned all 172 curated
+objects. Still no code, no arm, no knob. §1b folds the scan in; §2 is the revised
+Phase B, and it is the next session's work.** The measurements this file rests on
+are doc pr/137 §10–§15 plus §1b below.
 
 ## 0. Where we are, in five lines
 
 - The **architecture** is the owner's: cluster generously, then split (pr/137 §1.1).
-- The **kernel** works: segment-level ray 2-means, 0.825 median purity recovering a
-  known partition (pr/137 §13a).
-- The **trigger** is the hard part, and the borrow that made it work is ATLAS's
-  *local-maxima-with-a-valley* (pr/137 §10, §13).
-- Current best estimate: **~48 % efficiency at ~80 % purity**, and a measured
-  **ceiling of roughly half the over-clustering** (pr/137 §15).
-- Everything rests on **22 objects labelled by one scanner (the agent)**. The
-  owner scan is the calibration that turns those into measurements.
+- The **trigger is solved**: `valley_best` (ATLAS's local-maxima-**with-a-valley**,
+  pr/137 §10) reaches **0.79 efficiency at 0.77 purity** against 172 owner labels,
+  against pr/137 §4's 27–36 % ceiling. The threshold is not retuned (§A5.4).
+- The **kernel is solved for two-way splits and broken for three** — SPLIT2 median
+  boundary agreement **1.000**, SPLIT3 mean 0.620, SPLIT4+ 0.377 (§A5.6). That is
+  Phase B's real work.
+- **Over-clustering is 4.7 % of EM objects** (S1 random control), and the shipped
+  rule would wrongly cut **1.2 %** of them (§A5.2).
+- pr/137's arm-difference proxy is **retired**: it was wrong in both directions
+  (§A5.2), which is what produced the old 27–36 % null.
 
-## 1. Phase A — the scan (this is the next session)
+## 1. Phase A — the scan  *(CLOSED 2026-08-31; results in §1b)*
 
 ### A0. Prerequisites — DONE 2026-08-31
 
@@ -538,45 +539,255 @@ agent-vs-owner agreement, since agreeing that a muon is one object is a real, if
 easy, agreement; they are excluded only from the false-split and merge-count
 denominators.
 
-## 2. Phase B — implementation
+## 1b. PHASE A RESULT — the owner's 172-object scan, folded in (2026-08-31)
 
-Only after A4. Ordered so nothing is fitted before it is calibrated.
+**Status: Phase A is CLOSED.** All 172 curated objects carry an owner hand label,
+170 of them at high confidence. Reproduce every number below with
 
-### B1. Stage 1 — `WCT_SHOWER_SPLIT_DEBUG`, byte-neutral probe
+```bash
+python3 scripts/pr138_scan_analysis.py --kernel     # -> docs/pr/pr138-scan-analysis.tsv
+```
+
+### A5.1 What the labels say
+
+| | KEEP | SPLIT2 | SPLIT3 | SPLIT4+ | TRIM |
+|---|---|---|---|---|---|
+| all 172 | 121 | 34 | 8 | 2 | 7 |
+| the 164 EM objects (§A1.6) | 115 | 33 | 8 | 2 | 6 |
+| **S1** random control, n=85 | 77 | 3 | 1 | 0 | 4 |
+| **S2** known merges, n=29 | 15 | 9 | 3 | 2 | 0 |
+| **S3** feature-enriched, n=39 | 19 | 15 | 3 | 0 | 2 |
+
+**43 of 164 EM objects (26%) are splittable**, but that is a *stratified* set. The
+population number is S1's, below.
+
+### A5.2 The three §A4 numbers
+
+**1 — agent-vs-owner agreement**, the noise floor, on the 26-object overlap:
+**exact verdict 0.692, SPLIT-vs-not 0.846**. Four disagreements, three of them
+agent-splits-owner-keeps. The gate said "if agreement is below ~0.8 the agent
+labels cannot carry the statistics" — 0.846 clears it, and it no longer matters,
+because §A1.9 means the **owner's own labels carry the statistics** and the agent
+scan is now a check on the agent.
+
+**2 — the false-split budget**, from **S1 only** (the feature-independent stratum
+drawn before any feature was consulted; the pooled `S1 + S1+S2` row in the script
+is stratum-contaminated by construction and must never be quoted as a prevalence):
+
+| | |
+|---|---|
+| population prevalence of over-clustering | **4 / 85 = 4.7 %** |
+| the shipped rule fires on | 3 / 85 = 3.5 % of all objects |
+| of those, really splittable | 2 / 3 |
+| **wrongly cut, per EM object** | **1 / 85 = 1.2 %** (≲ 4 % at 95 % CL — n=85 with 4 positives is thin, and this is the number to re-measure first on any larger sample) |
+
+**3 — the arm-difference proxy against truth.** This is the retrospective that
+explains pr/137 §4:
+
+| proxy | KEEP | SPLIT | TRIM | n |
+|---|---|---|---|---|
+| MERGED | 19 | **21** | 0 | 40 |
+| SINGLE | 96 | **22** | 6 | 124 |
+
+**Only 52.5 % of proxy-MERGED is really splittable, and proxy-SINGLE hides 22 real
+splits (17.7 %).** So the proxy was wrong in *both* directions, and pr/137 §4's
+27–36 % purity ceiling was a property of the labels, not of the features. That
+null is now retired.
+
+### A5.3 The bake-off, against real labels
+
+Fit = even event id (n=87, 24 splits); holdout = odd (n=77, 19 splits).
+Ranked on **fit only**:
+
+| feature | AUC | purity @ 50 % eff | cut |
+|---|---|---|---|
+| **`valley_best`** | **0.930** (printed 0.070; low = split) | **0.857** | `valley_best ≤ 0.52` |
+| `angle_best` | 0.841 | 0.571 | `≥ 24.1°` |
+| `w_pull` | 0.825 | 0.600 | `≥ 3.42` |
+| `sep_scaled` | 0.771 | 0.480 | `≥ 6.53` |
+| `m_pi0` | 0.753 | 0.545 | `≥ 48.4 MeV` |
+| `valley` (pr/137 §4's version) | 0.748 | 0.857 | `≤ 0.81` |
+| `n_seed` | 0.712 | 0.419 | `≥ 4` |
+| … | | | |
+| `vgap_min`, `r_ratio`, `n_2mip`, `q_ratio` | 0.50–0.55 | — | **dead** |
+
+**The ATLAS borrow is the whole result.** `valley_best` — minimise the charge
+valley over *all* seed pairs carrying ≥ 3 % of the charge — is the single feature,
+and the owner's three stated factors come in behind it in his own order:
+direction (`angle_best`), size (`w_pull`), distance (`sep_scaled`).
+
+**A caveat that must travel with this table.** The fit-half 2-feature scan returns
+**six rules at purity 1.000** on 24 positives; that is overfitting, and the second
+cut of the best one (`w_pull ≤ 4.85`) is an *upper* bound on a feature the single-
+feature ranking says discriminates *upward* — i.e. noise. **None of those pairs is
+carried into Phase B.**
+
+### A5.4 The shipped proposal, scored as a trigger — the bar
+
+The rule already in `split_model.propose()` — a second angular maximum **and**
+`valley_best ≤ 0.95` — against the owner labels:
+
+| | efficiency | purity |
+|---|---|---|
+| all 164 | **0.791** | **0.773** |
+| fit half | 0.917 | 0.917 |
+| holdout half | 0.632 | 0.600 |
+
+The fit/holdout gap is **not** overfitting — this rule was never fitted; it is
+sampling variance across 24 vs 19 positives, and it is the honest width of the
+uncertainty on 0.79/0.77.
+
+A fit-only threshold scan says **0.95 is already the knee** (0.90 → 0.875/0.913,
+0.95 → 0.917/0.917, 0.99 → 0.917/0.815). **So the threshold is not retuned.**
+`valley_best ≤ 0.95` with `n_seed ≥ 2` is pre-registered as-is for Phase B, and
+the holdout is spent.
+
+**Against pr/137 §4's 27–36 %, this is 0.773.** The trigger is no longer the
+blocker.
+
+### A5.5 Were the labels anchored by the pre-fill?
+
+They could have been: the tool pre-fills the columns and prints the proposal in
+words, which is exactly the trap [`blind the scan sheet`] warns about. Measured
+rather than assumed:
+
+- the owner **overrode the pre-fill on 34 of 164** objects, **in both directions**
+  — 19 overrides ended SPLIT, 15 ended KEEP/TRIM;
+- the proposal fired and the owner said KEEP/TRIM anyway on **9 of 42** fires;
+- the proposal was silent and the owner split anyway **10** times;
+- on the 26-object overlap the **blind** agent agrees with the proposal **0.826**
+  of the time and the pre-filled owner **0.783** — the anchored scanner agrees
+  *less*.
+
+There is no anchoring signature. The labels are usable.
+
+### A5.6 THE KERNEL — solved for k=2, unsolved for k≥3
+
+Charge-weighted agreement between the proposal's boundary and the owner's, best
+label matching, over the 43 owner-SPLIT objects:
+
+| verdict | n | median | mean | ≥ 0.90 | < 0.60 |
+|---|---|---|---|---|---|
+| **SPLIT2** | 33 | **1.000** | **0.927** | 25 | 2 |
+| SPLIT3 | 8 | 0.671 | 0.620 | 2 | 4 |
+| SPLIT4+ | 2 | 0.467 | 0.377 | 0 | 2 |
+
+**Every one of the six worst boundaries is a ≥3-way split.** The two-way kernel is
+done — median agreement is *exactly* 1.000. The k≥3 case fails because `propose()`
+hard-wires k=2, which is precisely the "the seed count **is** the multiplicity
+decision" shape §10 borrowed from ATLAS/CMS/GARLIC and §15 did not implement.
+**10 of 43 splits (23 %) are out of reach for that one reason.**
+
+### A5.7 The two error lists, and what the owner wrote on them
+
+**The 9 real splits the shipped rule misses.** Seven of nine have
+`valley_best = 1.0` — *no charge dip at all* — with `n_seed` 3–4 and small
+`angle_best` (6.6–35.5°). That is the owner's factor 4 exactly: *"the two gammas
+may be connected directly, so a split would be nice but more difficult."* There is
+no valley to find because the lobes overlap. **This is the trigger's honest blind
+spot, and it is a different problem from the one `valley_best` solves.**
+
+**The 10 false fires.** Two carry the owner's own diagnosis, and they name a
+systematic:
+
+> evt318769 node31026 — *"incorrect neutrino vertex, actually both groups should be one"*
+> evt278420 node61027 — *"this is a single EM shower pointing not to the nu vertex, but the end point of a track."*
+> (and evt281781 node89069, a SPLIT3: *"incorrect vertex"*)
+
+**Every feature in the trigger is measured from the reference vertex**, so a
+mis-placed vertex manufactures a fake angular bimodality. §A1.4's evt396222 — where
+the π⁰ chain re-seats the main vertex 14.5 cm off the charge — is the same
+mechanism from a different cause. At least 2 of 10 false fires have a named,
+fixable origin.
+
+**A third class the splitter cannot fix at all: UNDER-clustering.** Five comments
+say the piece belongs *somewhere else*:
+
+> evt122660 node9110 — *"The few clusters at the end of this major cluster should be part of the main cluster. Right now, the main cluster did not include them."*
+> evt122660 node53070 — *"This should be part of the EM shower"*
+> evt122660 node54071 — *"keep, but this should be part of the earlier EM shower cluster"*
+> evt292524 node9018 (TRIM) — *"These Trimmed part should belong to another EM shower."*
+> evt98844 node6013 (SPLIT2) — *"the small part would belong to another cluster."*
+
+Read together these are a **requirement, not a complaint**: a cut that leaves the
+detached piece as an orphan has not finished the job. **A split must re-home its
+daughter**, and the owner says where, twice, for TRIM as well as SPLIT.
+
+**Two objects the owner excused**, both worth honouring:
+evt389538 node19021 — *"This entire group is a separate neutrino event, so it is OK
+to keep"* (pile-up, not over-clustering); and evt396222 node9059 — the only **low**
+confidence label in 172 — *"a very busy event with many different EM showers…
+multiple tracks misclustered as EM shower. I am not sure if this event is really
+useful for our purpose."* That is the same object §A1.4 found carrying a 2879 MeV
+π⁰ leg, reached independently.
+
+## 2. Phase B — implementation (REVISED by the Phase A result, 2026-08-31)
+
+**The staging is inverted from the original plan, because the data inverted it.**
+pr/137 assumed the kernel was fine and the trigger was the blocker. §A5 says the
+opposite is now true: the trigger reaches **0.79 efficiency at 0.77 purity** and
+needs no retuning, while the kernel is **exact for two-way splits and broken for
+three-way**. Phase B is ordered accordingly, and each stage names the number it
+must not make worse.
+
+**This is the next session's work. Nothing below is started.**
+
+### B0. What Phase A already settled — do not re-open
+
+| | settled | evidence |
+|---|---|---|
+| the trigger feature | `valley_best` | AUC 0.930, purity@50 % 0.857 (§A5.3) |
+| the threshold | `valley_best ≤ 0.95`, `n_seed ≥ 2` | fit-only scan: 0.95 is the knee (§A5.4); **holdout spent, do not re-tune** |
+| the 2-way boundary | done | median agreement **1.000**, mean 0.927 (§A5.6) |
+| the label set | 172 owner labels, unanchored | §A5.5 |
+| the old proxy | retired | 52.5 % / 17.7 % wrong both ways (§A5.2) |
+
+### B1. Stage 1 — `WCT_SHOWER_SPLIT_DEBUG`, byte-neutral probe  *(unchanged)*
 
 **Insertion point: the LAST pass in the chain**, after every merging pass — not
-`:8213` as pr/137 §6 originally said. pr/137 §15.7 corrects this; the passes in
-between are `shower_dedup_start_seg` (`:8234`), `shower_pass4_prune_detached`
-(`:8591`), `shower_pass4_prune_gap2` (`:8745`), `samevtx_absorb` (`:9270`) and
-`satellite_absorb` (`:9386`) — **all SBND PRODUCTION ON**. Splitting last is not a
-compromise; it is the owner's architecture stated correctly: *merge them together,
-then separate cleanly*. It also means the end-of-chain dump — which every number
-in pr/137 §12–§15 is computed from — **is** the population the splitter sees.
+`:8213` as pr/137 §6 originally said (§15.7 corrects it). The passes in between —
+`shower_dedup_start_seg` (`:8234`), `shower_pass4_prune_detached` (`:8591`),
+`shower_pass4_prune_gap2` (`:8745`), `samevtx_absorb` (`:9270`),
+`satellite_absorb` (`:9386`) — are all SBND PRODUCTION ON. Splitting last is the
+owner's architecture stated correctly: *merge them together, then separate
+cleanly*. It also means the end-of-chain dump every §A5 number is computed from
+**is** the population the splitter will see.
 
-Emits per candidate: seed list, `valley_best`, `d2_best`, `frac_best`,
-`angle_best`, the part membership, and the `w_pull` against the §12 null. `getenv`
-idiom exactly as `WCT_SHOWER_XCLUS_DEBUG` (toolkit `deca3467`). Proven with the
-standard **478/478** hash gate.
+Emits per candidate: the seed list, `valley_best`, `angle_best`, `w_pull`,
+`sep_scaled`, the part membership, and the reference vertex used. `getenv` idiom
+exactly as `WCT_SHOWER_XCLUS_DEBUG` (toolkit `deca3467`). **Gate: 478/478
+byte-identical**, and the probe's own fire list must reproduce §A5.4's 42 fires on
+the 164 scanned objects — a probe that does not is wired to the wrong population.
 
-### B2. Stage 2 — the accept test, fitted to Phase A labels
+### B2. Stage 2 — the accept test, PRE-REGISTERED, not fitted
 
-Pre-registered feature set: `valley_best` plus **one** of `d2_best` /
-`q_ratio` / `gap_scaled`. A 50/50 event-hash holdout, opened **once**. With ~170
-labels the holdout half holds only ~15–25 positives, so a 2-feature cut is the
-honest ceiling — **not** a fitted classifier, and no ML dependency is permitted
-anyway (toolkit CLAUDE.md).
+`valley_best ≤ 0.95 AND n_seed ≥ 2`, transcribed from §A5.4. **No second feature**
+— the fit-half 2-feature scan returned six rules at purity 1.000 on 24 positives,
+which is noise, and its best pair cuts `w_pull` in the direction opposite to its
+own single-feature ranking (§A5.3). Knobs `shower_split_min_valley` (default 0.95)
+and `shower_split_min_seeds` (default 2) exist so the operating point is *movable*,
+not so it is searched again.
 
-### B3. Stage 3 — the kernel, with k from the seeds
+Success criterion, stated before the work: on the 164 scanned objects the C++
+trigger must reproduce the offline fire list **object for object**. A disagreement
+is a porting bug, not a new measurement.
 
-pr/137 §14.2: on the two largest fired objects the fixed-k=2 kernel returns a
-degenerate partition (balance 0.003) while θ-φ shows three lobes. **k comes from
-the seed count**, k = 3 reachable only on a residual test (§1.2b).
+### B3. Stage 3 — the kernel, with **k from the seed count**  ← THE OPEN PROBLEM
 
-Knobs, all DEFAULT OFF, key-suppressed in jsonnet so the compiled config is
-byte-identical when off:
-`shower_split_rays`, `shower_split_min_mev`, `shower_split_min_valley`,
-`shower_split_min_d2`, `shower_split_min_frac`, `shower_split_max_parts`,
-`shower_split_ref`.
+This is where the round's remaining value is. §A5.6: SPLIT2 median agreement
+1.000, SPLIT3 mean 0.620, SPLIT4+ mean 0.377, and **all six worst boundaries are
+≥3-way**. `propose()` hard-wires k=2; 10 of 43 splits (23 %) are unreachable for
+that one reason.
+
+- take **k = the number of surviving angular maxima**, not 2 — the ATLAS/CMS/
+  GARLIC shape §10 borrowed and §15 did not implement;
+- assign each **segment** to its nearest surviving seed (the action space is
+  segments — `Shower::detach_member_set`, `PRShower.cxx:640-700`);
+- **re-check on the 10 objects the owner called SPLIT3/SPLIT4+**: the target is
+  their mean agreement, 0.620 → ≥ 0.85, with SPLIT2's 0.927 **not regressing**.
+  Both halves of that are a gate, not an aspiration.
+- `shower_split_max_parts` (default 2) is what turns it on, so k≥3 ships behind
+  its own knob and the 2-way result can be validated first.
 
 **Write recipe** (fork `pass4_prune_detached`, `:8591-8726`): `detach_member_set`
 → `make_shared<Shower>(graph)` → `set_start_vertex` / `set_start_segment` /
@@ -589,12 +800,56 @@ keeping it is structurally the "kept" one and a 3-way split is two peel calls.
 cross-shower 2D dedup): E(A)+E(B) ≥ E(parent) in the overlap. Any π⁰-mass or
 `q_extra` claim must name its regime.
 
-### B4. The one-γ veto
+### B4. Stage 4 — RE-HOME the daughter  ← NEW, and it is the owner's requirement
+
+Five of the owner's 24 comments say the detached piece belongs somewhere
+specific — *"should be part of the earlier EM shower cluster"*, *"the small part
+would belong to another cluster"*, *"These Trimmed part should belong to another
+EM shower"* (§A5.7). **A cut that leaves an orphan has not finished the job**, and
+this is also the difference between SPLIT and TRIM as the owner uses them: TRIM
+means *cut it off and give it away*, SPLIT means *cut it and both halves stand*.
+
+- after a peel, offer the daughter to the nearest EM shower under the existing
+  absorb predicates (`samevtx_absorb` `:9270`, `satellite_absorb` `:9386` are the
+  house idioms — **fork, do not extract**, M10);
+- the metric is the owner's own: `q_extra` must fall without `q_miss` rising,
+  measured on the pr/136 arms;
+- knob `shower_split_rehome`, DEFAULT OFF, so B3 can be validated without it.
+
+### B5. Stage 5 — the vertex-quality veto  ← NEW, from the false-fire list
+
+Every trigger feature is measured from the reference vertex, so a mis-placed
+vertex manufactures a fake bimodality. Named by the owner on 2 of the 10 false
+fires — *"incorrect neutrino vertex, actually both groups should be one"* — and by
+§A1.4's evt396222, where the π⁰ chain re-seats the main vertex 14.5 cm off every
+piece of charge.
+
+**Measure before trusting**: add the vertex-to-nearest-charge distance, the π⁰
+`pio_id`, and `fit_distance` to the stage-1 tape, then ask whether any of them
+separates the 10 false fires from the 34 true fires. `vgap_min` as computed
+offline does **not** (AUC 0.499, §A5.3), so this is a hypothesis with a named test
+and a real chance of being measured dead — say so if it is.
+
+### B6. The one-γ veto  *(kept, still unmeasured)*
 
 pr/137 §14.2's named false-positive class: 389538 is ONE photon whose e⁺e⁻ pair is
-resolved — two arms meeting at a **shared origin** at 3–4 MIP. So one 2-MIP stub at
-a shared origin is a **veto**, not a trigger. Add the shared-origin dE/dx and
+resolved — two arms meeting at a **shared origin** at 3–4 MIP. One 2-MIP stub at a
+shared origin is a **veto**, not a trigger. Add the shared-origin dE/dx and
 common-point test to the stage-1 tape so it is measured before it is trusted.
+(The owner's *"this entire group is a separate neutrino event"* on 389538
+node19021 is a *different* object in the same event — pile-up, not pair
+resolution. Do not conflate them.)
+
+### B7. Explicitly NOT in Phase B
+
+- **The small-angle / no-valley class.** Seven of the nine misses have
+  `valley_best = 1.0` — no charge dip exists, because the two γs overlap (§A5.7,
+  the owner's factor 4). `valley_best` cannot find them and no threshold move
+  will; this needs a different observable (a transverse-profile fit, or the
+  two-stub dE/dx of §B6 used as a *trigger* rather than a veto). **Scoped out, with
+  the reason, rather than papered over by loosening the cut** — loosening to 0.99
+  costs 10 points of purity for zero efficiency (§A5.4).
+- **Anything fitted to the holdout.** It has been opened once (§A5.4).
 
 ## 3. Phase C — optimisation and composition
 
@@ -644,6 +899,13 @@ would see.** Nothing in Phase B needs to run before Phase A.
 
 **Phase A is not blocked by anything except the upload authorisation.**
 
+**Epilogue, 2026-08-31.** It went the way the order predicted, and one thing it
+could not have predicted: the noise floor came back at 0.846 SPLIT-vs-not, but the
+owner then scanned all 172 himself, so the floor stopped mattering (§A1.9). What
+did matter is the part that could only be learned by measuring — **the proxy every
+pr/137 number rested on is wrong in both directions** (§A5.2). Implementing first
+would have fitted a threshold to it. The order paid for itself.
+
 ## Repro
 
 ```bash
@@ -652,6 +914,9 @@ scripts/pr137_null_model.py         # the w_single(r) null
 scripts/pr137_seed_split.py         # kernel + multiplicity trigger
 scripts/pr137_trigger_bakeoff.py    # all features, two positive classes
 scripts/pr137_curate.py --sheets    # the curated set + BLIND contact sheets
+
+# PHASE A RESULT -- every number in section 1b
+python3 scripts/pr138_scan_analysis.py --kernel   # -> docs/pr/pr138-scan-analysis.tsv
 
 # the scan tool, and its selftest (28 checks)
 split_display/serve_split_display.sh 5022 --scan-tag splitscan-0901-owner --owner-only
