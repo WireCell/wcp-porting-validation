@@ -20,10 +20,10 @@ SX = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 D = os.path.join(SX, "docs", "pr")
 
 
-def load(tag):
+def load(tag, pfx="pr140"):
     rows = []
     for s in ("98", "141"):
-        p = os.path.join(D, "pr140-perpart-%s-%s.tsv" % (tag, s))
+        p = os.path.join(D, "%s-perpart-%s-%s.tsv" % (pfx, tag, s))
         if not os.path.exists(p):
             sys.exit("missing %s -- run scripts/pr140_score.sh %s first" % (p, tag))
         for r in csv.DictReader(open(p), delimiter="\t"):
@@ -132,14 +132,16 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--arm", required=True)
     ap.add_argument("--base")
+    ap.add_argument("--prefix", default="pr140",
+                    help="TSV name prefix; round 2 writes pr140r2-* (sec 16)")
     ap.add_argument("--tsv")
     a = ap.parse_args()
 
-    A = summarise(a.arm, load(a.arm))
+    A = summarise(a.arm, load(a.arm, a.prefix))
     print("=== MERGED (per-part) completeness target -- arm %s ===" % a.arm)
     show(A)
     if a.base:
-        B = summarise(a.base, load(a.base))
+        B = summarise(a.base, load(a.base, a.prefix))
         print("\n=== baseline %s ===" % a.base)
         show(B)
         print("\n=== delta (%s - %s) ===" % (a.arm, a.base))

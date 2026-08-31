@@ -1323,3 +1323,106 @@ The sharing counts in §15.2 come from the **pr136** sidecars — a different ar
 membership has moved. That is why the new binary **prints `nshared` on every
 refusal**: `scripts/pr140_shed_verify.py` holds the arm to the prediction using
 the arm's own report, not the pr136 estimate.
+
+---
+
+## 16. The knob-off gate, and the round-2 arms
+
+Two C++ knobs were added this session — `shower_split_shed_shared` (§15) and
+`shower_split_max_seeds` (§17). Both **DEFAULT OFF / DEFAULT 4**, so the shipped
+path must be untouched, and it is:
+
+```
+gate mcp1k   rc=0 :: events in A: 66   compared archives: 132  missing/unpaired: 0  PASS
+gate mcp2k   rc=0 :: events in A:106   compared archives: 212  missing/unpaired: 0  PASS
+gate ncpi0   rc=0 :: events in A: 19   compared archives:  38  missing/unpaired: 0  PASS
+gate nuecc48 rc=0 :: events in A: 48   compared archives:  96  missing/unpaired: 0  PASS
+```
+
+**478 / 478 byte-identical**, `work-pr140r2-off-*` (new binary, all knobs at
+their defaults) against `work-pr139r3-flipchk-*` (the shipped production config
+on the previous binary). doctest **2631** assertions with both new defaults
+pinned. Binary pinned at `/home/xqian/tmp/pin-pr140r2`, md5 `5d176a30…`.
+
+**The sidecar defect of §15.1 is fixed at source**: every round-2 arm runs with
+`WCT_SHOWER_CONTENT_DEBUG=1` and `prep_em_scan.py` now writes **239 sidecars,
+0 warnings** (it wrote 0 for every pr/138 and pr/139 arm). Output names also now
+carry the arm round — a round-2 re-run of tag `on` was about to overwrite
+round 1's tracked TSVs and manifests and make §10–§13 unreproducible.
+
+---
+
+## 17. Item 2 — RESULT: the third boundary is a SEEDING problem, and the cap is hardcoded
+
+§13.4 reposed the k ≥ 3 question as the kernel's seeding rather than
+`shower_split_max_parts`. That is now measured rather than asserted.
+
+### 17.1 The seed cap binds on three quarters of everything the splitter does
+
+`pr138_angular_maxima()` takes `max_seeds = 4` as a **hardcoded default
+argument** (`NeutrinoShowerClustering.cxx:5494`), never a knob. On the tape:
+
+| population | n | `n_seed == 4` | distribution |
+|---|---|---|---|
+| all candidates | 393 | 178 (**45 %**) | 1:66, 2:81, 3:68, **4:178** |
+| **fired** candidates | 51 | 39 (**76 %**) | 2:4, 3:8, **4:39** |
+
+**And on all four objects the owner cut into k ≥ 3 — whose owner `k` values are
+3, 3, 5 and 7 — `n_seed` sits at exactly 4.**
+
+A four-seed finder **cannot express k = 7**, or k = 5. So the k ≥ 3 population is
+capped *upstream* of `shower_split_max_parts`, and §13's arm — which moved only
+that knob — could only ever redistribute seeds the kernel already had. **§13's
+result is correct and its interpretation was incomplete**: raising the cap made
+the third cut in the wrong place *because the third seed was the best of four,
+not because a third boundary is unfindable.*
+
+### 17.2 `valley_best` does not separate, again
+
+The same join kills the obvious alternative. Over the owner's confirmed cuts the
+C++ boundary-matches **exactly** (agreement 1.000), `valley_best` spans
+**0.012 → 0.940**; over the five false fires it spans **0.000 → 0.638**. The
+distributions are on top of each other. This is the third independent time
+(§7, doc pr/138 §B7) that the valley has failed as a discriminator, and it is
+now settled rather than suspected.
+
+### 17.3 What ships: `shower_split_max_seeds`, DEFAULT 4
+
+The cap becomes a knob so the question can be asked at all — default 4, key
+suppressed at 4, so the shipped kernel is byte-identical (§16's gate covers it).
+
+**Not answered this session, deliberately.** Doc pr/138 §B3 warned that
+`max_seeds` cannot move without moving the *trigger*, and it is right: more seeds
+mean more candidate pairs, hence more acceptances, hence a different fire set.
+Grading that needs labels on the seed-capped population, and **there are four**.
+That is §19, and it is why §19 exists.
+
+---
+
+## 18. Item 4 — RESULT: the last false fire is not separable
+
+At the P1.6 operating point 15 objects fire: **14 owner-confirmed cuts and one
+false fire, 278420/61027.** The only question a single object can support is
+whether it is an *outlier* — strictly outside the range of all 14 — on any
+quantity the tape carries. Nothing is fitted; doc pr/138 §A5.4 spent a holdout
+on exactly that mistake.
+
+| feature | 278420 | confirmed-cut range | verdict |
+|---|---|---|---|
+| `vchi2` | **9.339** | 1.586 – 8.105 | outside, margin **1.234** |
+| `b` | 26.78 | 0.31 – **26.35** | outside, margin **0.43 cm** |
+| `q_bal` | 0.9345 | 0.035 – **0.9301** | outside, margin **0.0044** |
+| `q_small_frac` | 0.4831 | 0.034 – **0.4819** | outside, margin **0.0012** |
+| `nseg`, `npts`, `Q`, `n_seed`, `valley`, `angle`, `nacc`, `vgap`, `q_small`, `fwd_min`, `rvtx_max`, `conn_max` | | | **inside** |
+
+**Three of the four margins are under 1 %** — that is not a separator, that is
+the definition of "the most extreme one". And `b`'s margin of **0.43 cm is
+smaller than the 0.5 cm offline-vs-C++ agreement spread** (§8.3): tightening the
+bound to catch it is not even resolvable by the instrument that would set it.
+
+The fourth, `vchi2` = the **main vertex fit's** reduced χ², is the only real gap
+— and it is a property of the **event**, not the object, so a cut on it would
+veto every candidate in that event. Recorded as an observation, not a lead.
+
+**Verdict: 278420/61027 is not distinguishable by more of the same information.**
+The honest next move is more labels, not another feature — which is §19.

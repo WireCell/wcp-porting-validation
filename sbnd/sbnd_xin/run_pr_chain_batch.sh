@@ -1765,6 +1765,8 @@ fi
 # refusing it.  EMPTY = no TLA = the job default false.  Inert unless
 # SBND_SHOWER_SPLIT_SKIP_SHARED is also set.
 [ -n "${SBND_SHOWER_SPLIT_SHED_SHARED:-}" ] && CATH_TLA+=(--tla-code "shower_split_shed_shared=true")
+# doc pr/139 sec 17: angular-maxima cap.  EMPTY = no TLA = the job default 4.
+[ -n "${SBND_SHOWER_SPLIT_SEEDS:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_seeds=${SBND_SHOWER_SPLIT_SEEDS}")
 # P1.2 the impact-parameter veto, in CM.  EMPTY = no TLA = 0 = no bound.  The
 # arm value is 12 (doc pr/139 sec 2.1: every census gain below 11 cm, every loss
 # above 13 -- a bound chosen AFTER seeing 8 movers, and priced accordingly).

@@ -14,7 +14,7 @@
 set -u
 cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 TAG=$1
-export LD_LIBRARY_PATH=/home/xqian/tmp/pin-pr139b:${LD_LIBRARY_PATH:-}
+export LD_LIBRARY_PATH=${PR140_PIN:-/home/xqian/tmp/pin-pr139b}:${LD_LIBRARY_PATH:-}
 for s in mcp1k mcp2k ncpi0 nuecc48; do
   EVTS=$(tr '\n' ' ' < /home/xqian/tmp/pr139-manifest-$s.lst)
   PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
