@@ -40,8 +40,10 @@ for line in open(args.set):
     if not args.all and d.get('owner_scan') != '1':
         continue
     rows.append((int(d['event']), int(d['node']), float(d['Q']), d.get('stratum', ''),
-                 d.get('proxy_cls', '')))
-rows.sort(key=lambda t: -t[2])          # the viewer's own order, so indices match
+                 d.get('proxy_cls', ''), d.get('owner_scan') == '1'))
+# the viewer's own order, so the printed idx matches the `object` dropdown:
+# owner-50 first, then the rest by descending charge.
+rows.sort(key=lambda t: (0 if t[5] else 1, -t[2]))
 
 NAMES = {11: 'e', -11: 'e', 13: 'mu', -13: 'mu', 211: 'pi', -211: 'pi', 2212: 'p'}
 ng_c, pid_c, tracks, singles = collections.Counter(), collections.Counter(), [], []
@@ -49,7 +51,7 @@ ng_c, pid_c, tracks, singles = collections.Counter(), collections.Counter(), [],
 print("doc pr/138 -- census over %d objects from %s\n" % (len(rows), args.set))
 print("%-4s %-9s %-9s %-4s %-8s %-6s %-9s %s"
       % ('idx', 'event', 'node', 'ng', 'stratum', 'pid', 'len(cm)', 'proposal'))
-for i, (ev, nd, Q, st, px) in enumerate(rows):
+for i, (ev, nd, Q, st, px, own) in enumerate(rows):
     r = SM.load_object(ev, nd, arm=args.arm)
     if r is None:
         ng_c['missing'] += 1

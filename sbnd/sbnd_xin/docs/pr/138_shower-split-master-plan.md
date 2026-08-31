@@ -467,7 +467,37 @@ mirror-image trap (the same `const` declared twice by double-concatenation). Bot
 arms mutation-tested: the pre-fix blob reports `missing: ['_cols']`, a
 double-concatenated blob reports `dups: ['_tree','_cols','_walkAll']`. 39 checks.
 
+### A1.9 The scan opens to the full 172 — 2026-08-31
+
+Owner, after finishing the calibration 50 in one sitting: *"Actually the scan is
+not too bad, I guess that I can scan the rest of events as well."* The server now
+runs **without `--owner-only`**, so all **172** curated objects load.
+
+- **Order: the owner-50 first, then the remaining 122 by descending charge.** The
+  50 are what §A4's agent-vs-owner agreement is computed on, so they must stay
+  identifiable and must not be shuffled in among the rest. Labels are keyed by
+  `(event, node)` and never by index, so the re-order cannot disturb anything
+  already saved — verified: all 50 still read ✓ after the change.
+- Every calibration object carries a **`*`** in the dropdown.
+- **`next unsaved ▸`** added. At 50 objects `next >` was enough; at 172 hunting
+  the ticks by eye is exactly the busywork a scan tool should absorb. It wraps
+  once and reports when the set is complete.
+
+**This changes what Phase A can claim, for the better.** §A4 was written for
+~50 owner labels carrying a noise floor and ~190 agent labels carrying the
+statistics, with the gate *"if agreement is below ~0.8 the agent labels cannot
+carry the statistics."* If the owner labels all 172, the **owner's own labels
+carry the statistics** and the agent scan (26 labels in
+`em_labels/splitscan-0901-agent/` so far) becomes a cross-check rather than the
+denominator. The agreement number is still computed — it is now a check on the
+*agent*, not a licence for it — and the (1 − *A*) floor stops gating the trigger
+claim. The three numbers of §A4 are then measured on **164** objects (172 less
+the 8 track-typed of §A1.6), not on 42.
+
 ### A2. The owner scan itself
+
+> **Superseded in scope by §A1.9**: the owner finished these 50 and opened the
+> scan to all 172. The 50 remain the calibration overlap described here.
 
 **50 objects, `owner_scan=1` in `docs/pr/pr137-curated-set.tsv`**, spread
 25 S1 / 15 S2 / 10 S3. Only **11 of the 50 fire** the trigger — deliberately.

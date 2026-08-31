@@ -96,11 +96,18 @@ def worklist():
             if hdr is None:
                 hdr = f; continue
             d = dict(zip(hdr, f))
-            if args.owner_only and d.get('owner_scan') != '1':
+            own = d.get('owner_scan') == '1'
+            if args.owner_only and not own:
                 continue
             rows.append((int(d['event']), int(d['node']), float(d['Q']),
-                         d.get('stratum', ''), d.get('proxy_cls', '')))
-    rows.sort(key=lambda t: -t[2])
+                         d.get('stratum', ''), d.get('proxy_cls', ''), own))
+    # OWNER-50 FIRST, then the rest by descending charge.  Owner: "the scan is not
+    # too bad, I guess that I can scan the rest of events as well" -- so the full
+    # 172 load, but the calibration overlap must not get shuffled in among them:
+    # it is the set §A4's agent-vs-owner agreement is computed on, and anything
+    # already scanned should stay where it was found.  Labels are keyed by
+    # (event, node), never by index, so re-ordering cannot disturb them.
+    rows.sort(key=lambda t: (0 if t[5] else 1, -t[2]))
     return rows
 
 
@@ -519,7 +526,7 @@ def _load(i):
         return
     i = max(0, min(i, len(WORK) - 1))
     STATE['i'] = i
-    ev, nd, Q, strat, proxy = WORK[i]
+    ev, nd, Q, strat, proxy, own = WORK[i]
     status.text = "loading evt%d node%d  (%d of %d)" % (ev, nd, i + 1, len(WORK))
     row = SM.load_object(ev, nd)
     if row is None:
@@ -711,10 +718,13 @@ def jump_options():
     """the `object` dropdown, with a tick on everything already saved."""
     idx = STATE.get('saved') or {}
     out = []
-    for k, (e, n, q, st, px) in enumerate(WORK):
+    for k, (e, n, q, st, px, own) in enumerate(WORK):
         r = idx.get((e, n))
         mark = ('\u2713 %-6s' % r.get('verdict', '?')) if r else '\u00b7 %-8s' % '--'
-        out.append(("%d" % k, "%s  evt%d node%d  %s  Q=%.2g" % (mark, e, n, st, q)))
+        # a star marks the 50-object calibration overlap, so the owner can still
+        # tell it apart once the other 122 are in the same list
+        out.append(("%d" % k, "%s %s evt%d node%d  %s  Q=%.2g"
+                    % (mark, '*' if own else ' ', e, n, st, q)))
     return out
 
 
@@ -859,10 +869,32 @@ def del_group():
 btn_addg.on_click(add_group)
 btn_delg.on_click(del_group)
 
-jump = Select(title='object', width=300,
-              options=[("%d" % i, "evt%d node%d  %s  Q=%.2g" % (e, n, st, q))
-                       for i, (e, n, q, st, px) in enumerate(WORK)],
-              value='0')
+jump = Select(title='object', width=290, options=[], value='0')
+btn_nextun = Button(label='next unsaved \u25b8', width=130)
+
+
+def next_unsaved():
+    """Jump to the next object with no label in THIS tag, wrapping once.
+
+    At 50 objects "next >" was enough; at 172 it is not, and hunting the ticks in
+    the dropdown by eye is exactly the busywork a scan tool should absorb."""
+    if not WORK:
+        return
+    idx = label_index()
+    STATE['saved'] = idx
+    n = len(WORK)
+    for k in range(1, n + 1):
+        j = (STATE['i'] + k) % n
+        if (WORK[j][0], WORK[j][1]) not in idx:
+            load(j)
+            return
+    status.text = ("every object in this set is already saved in tag %s "
+                   "(%d of %d)" % (args.scan_tag, len(idx), n))
+
+
+btn_nextun.on_click(next_unsaved)
+
+
 def on_jump(attr, old, new):
     # `_load` writes jump.value back; without this the echo would re-enter and
     # run the whole loader a second time on every navigation.
@@ -875,7 +907,7 @@ jump.on_change('value', on_jump)
 colour_sel.on_change('value', lambda a, o, n: refresh())
 
 left = column(info, bee,
-              brow(btn_prev, btn_next, jump, btn_save),
+              brow(btn_prev, btn_next, btn_nextun, jump, btn_save),
               brow(verdict_btn), brow(conf_btn), note_box,
               brow(btn_reset, btn_addg, btn_delg, centre_sel, colour_sel),
               tree, status,
