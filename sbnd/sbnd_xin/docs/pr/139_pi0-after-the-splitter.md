@@ -2,9 +2,9 @@
 
 **Status: LIVING.** **`shower_split_em_start` is SBND PRODUCTION ON as of
 2026-08-31** (owner flip; flip-equivalence gate `work-pr139r3-flipchk-*` vs
-`work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner is scanning the
-20 objects of §4 under tag `splitscan-0902-pi0` — see
-`docs/pr/pr139-scan-brief.md`. This file is the tracker for a multi-session round. §1 is the
+`work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner's scan is **DONE** (2026-09-01,
+39 objects, tag `splitscan-0902-pi0`) and **it overturned this round's own
+recommendation** — see **§6**, and **§3ter** for the next session's order. This file is the tracker for a multi-session round. §1 is the
 driver: it carries one row per item, its knob, its state and — once it exists —
 its gate label and result. Prose below explains rows; **the table is what the
 next session reads first.**
@@ -38,15 +38,16 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 |---|---|---|---|---|---|
 | **P1.0** | **the shared knob-off gate** | all four at their shipped defaults | **PASS ×2** | `work-pr139r2-off-*` vs `work-pr138r3-flipchk-*`, **and** vs `work-pr139r1-off-*` | **478 / 478 byte-identical** on both, `missing/unpaired 0`, rc=0 ×4 ×2 |
 | **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **DONE — works, modest** | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
-| **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **DONE — the result of the round** | `work-pr139r1-onb12-*` | exact **35 → 36**, **all four broken π⁰s recovered and nothing else moved**, q_f1 0.922→**0.932**, 0 ADVERSE; **price: 29 of 51 fires stopped** |
+| **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **MEASURED WRONG AT 12 — do not flip** (§6) | `work-pr139r1-onb12-*` | exact 35 → 36 and all four π⁰s recovered, **but the owner's scan says it suppresses 9 of the 19 cuts he confirms**, including 281485 whose cut he calls correct |
+| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **PROPOSED, NEXT SESSION'S FIRST ARM** | — | predicted exact **36**; on the fresh labels eff **0.737** / pur **0.933**, **3** confirmed cuts suppressed instead of 9 |
 | **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **SBND PRODUCTION ON** (owner flip 2026-08-31) | `work-pr139r1-onemst-*`; flip-equivalence `work-pr139r3-flipchk-*` **478 / 478** | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), 51 peels / **0 backwards**, every instrument unchanged, 0 ADVERSE |
 | **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **DONE — inert at 4 cm, alive at 15** | `work-pr139r1-onrehome-*` (4 cm), `work-pr139r2-onrh15-*` (15 cm) | 6/51 → **12/51** re-homed; census **35** either way; **cannot be graded until P3.2** |
 | **P1.5** | the combination P1.1 + P1.2 + P1.3 | three knobs | **DONE** | `work-pr139r2-oncomb-*` | exact **36**, q_miss 14.5 %, q_extra 7.6 %, q_f1 **0.932**, μ-typed daughters **1**, 0 ADVERSE |
-| **P2** | owner scan, split display port 5022 | — (tag `splitscan-0902-pi0`) | **RUNNING — display up 2026-08-31, owner scanning** | `docs/pr/pr139-scan-brief.md` | — |
+| **P2** | owner scan, split display port 5022 | — (tag `splitscan-0902-pi0`) | **DONE 2026-09-01 — 39 objects** | `em_labels/splitscan-0902-pi0/`, `docs/pr/pr139-scan-verdicts.tsv` | 20 KEEP / 19 SPLIT; trigger **eff 1.000** / pur 0.792; boundary SPLIT2 median **1.000**; **it overturned P1.2** (§6) |
 | **P3.1** | π⁰ re-seat BEFORE the splitter | `pi0_reseat_before_split` | NOT STARTED | — | — |
 | **P3.1b** | scope dial `max_vgap` (comparison arm only) | `shower_split_max_vgap` | NOT STARTED | — | superseded by P1.2 unless P1.2 fails |
 | **P3.1c** | a pointing test **not** measured from the vertex | — | NOT STARTED | — | the one unexplored feature family |
-| **P3.2** | joint label set (re-mark the ~15 touched showers) | — | BLOCKED ON P2 | — | binding constraint on measuring P3.3/P3.4 |
+| **P3.2** | joint label set (re-mark the touched showers) | — | **PART DELIVERED** — 19 objects now carry a per-part segment assignment, 20 are KEEP | `em_labels/splitscan-0902-pi0/` | still to do: **merge** these into the completeness target so `em117_score` reads per-part |
 | **P3.3** | re-home, **re-sized** after P1.3/P1.4 land | `shower_split_rehome` (same knob) | BLOCKED ON P1 | — | — |
 | **P3.4** | split-aware π⁰ pairing | `pi0_split_aware_pairing` | NOT STARTED | — | **no longer the fix for 281485** — see §2 |
 | **C1** | k ≥ 3 splitting | — | **MEASURED SHORT** | doc 138 §B3 | 0.635 → 0.756 vs target 0.85 |
@@ -448,14 +449,38 @@ reverses that artefact along with everything else. **So P1.2 should be judged on
 the census — +1 exact and four recovered π⁰s — and not on `q_miss`.** The same
 caveat is why P1.4 cannot be graded at all before §5.2.
 
-### Recommendation
+### Recommendation  *(SUPERSEDED IN PART by §6 — the row for P1.2 is withdrawn)*
 
-| | recommendation | why |
+**Read §6 first.** The owner's 2026-09-01 scan tested `b ≤ 12` on fresh labels
+and it fails: it suppresses **9 of the 19 cuts he confirms**. The table below is
+left as written so the reversal is visible rather than tidied away; §6.5 says
+line by line what survived.
+
+| | recommendation (2026-08-31) | why |
 |---|---|---|
 | **P1.3** `shower_split_em_start` | **FLIPPED 2026-08-31** — *"flip shower_split_em_start now as you said."* | a defect in shipped code, with a measured 40 % energy error behind it; every instrument unchanged to the digit, so there is nothing to trade. Flip-equivalence gate **478 / 478**, compiled-config proof from the arm's own `.wct-cfg`. |
-| **P1.2** `shower_split_max_impact = 12` | **take to the scan first** | it does what was asked — all four π⁰s back, no gain lost — but the bound was chosen after seeing 8 movers and it silences **more than half** the splitter's fires. Four of the twenty objects in the §4 scan are exactly the events it turns on. One owner call settles it. |
-| **P1.1** `shower_split_skip_shared` | **flip with P1.2, or alone if P1.2 waits** | it removes a real pathology (a 0 MeV duplicate object) for +0.2 pt of `q_extra`. Partly redundant *at this operating point* — P1.2 already vetoes both affected events — so it matters most if P1.2 does not go on. |
+| **P1.2** `shower_split_max_impact = 12` | ~~take to the scan first~~ → **WITHDRAWN by §6** | it did what was asked on the census, but the bound was chosen after seeing 8 movers and the scan it was sent to came back against it: **9 of 19 confirmed cuts suppressed**, including 281485's, which the owner calls a correct cut. The successor is `skip_shared` + `b ≤ 30` (§6.3). |
+| **P1.1** `shower_split_skip_shared` | ~~flip with P1.2~~ → **PROMOTED by §6** | not "partly redundant": it is **the** fix for two of the four broken π⁰s (165157 and 281485), it refuses a peel in exactly the three shared-membership events, and it costs no correct cut outside them. It now leads the next arm. |
 | **P1.4** `shower_split_rehome` | **hold for §5.2** | it satisfies the owner's requirement at 15 cm (12 of 51, including evt176502's 603 MeV orphan and evt281485's 0 MeV one, the latter at gap 0.00 cm — straight back to the shower it was duplicating). But `q_miss`/`q_extra` **cannot grade a re-home** until the ~15 touched showers are re-marked per part. Flipping it now would be a guess wearing a number. |
+
+## 3ter. Where the round stands, and the next session's order
+
+**Shipped and production ON:** `shower_split_em_start` (P1.3), toolkit
+`f5e17798`, flip-equivalence gate 478 / 478.
+
+**Nothing else is flipped**, and after §6 nothing else should be flipped without
+the arm below.
+
+| # | next session, in order | why it is next |
+|---|---|---|
+| **1** | **one arm: `skip_shared` + `max_impact = 30`** (`work-pr140r1-on-*`) | §6.3: the only operating point the fresh labels support. **Pre-registered:** census exact **≥ 36**, `q_extra` **≤ 7.2 %**, 0 ADVERSE, and — the criterion §3bis lacked — **no more than 3 of the 19 owner-confirmed cuts suppressed**, checkable offline from `pr139-scan-verdicts.tsv` before the arm is even scored. |
+| **2** | **merge the 2026-09-01 per-part boundaries into the completeness target** | §6 delivered 19 objects with a per-part segment assignment and 20 KEEP. Until `em117_score` reads them, `q_miss`/`q_extra` still cannot grade a splitter *or* a re-home — which is the whole reason P1.4 is parked. |
+| **3** | **P1.4 re-home, re-priced at 15 cm against the merged target** | It already reaches the right hosts (evt281485's 0 MeV daughter → its co-owner at gap 0.00 cm). It has never had a metric that could see it. Item 2 gives it one. |
+| **4** | **the k ≥ 3 cap** | §6.1: the k ≥ 3 boundary mean of 0.800 is **`max_parts = 2` refusing to make the third cut**, not the kernel getting it wrong — the owner calls 396222 k=7 and 415278/23037 k=5. Raising the cap is now a *measurable* question rather than the blind one doc pr/138 §B3 parked. |
+| **5** | **the remaining false fire** 278420/61027 (`b` 26.78) | one object; only worth a feature hunt if items 1–3 leave it isolated. |
+
+**Not next, and now with a reason:** a wider `b` sweep. §6.3 prices the whole
+dial; the answer is 30 and searching it again would be fitting to 39 labels.
 
 ## 4. Phase 2 — the owner's scan  *(port 5022, tag `splitscan-0902-pi0`)*
 
@@ -545,7 +570,97 @@ recreates the over-clustered γ the splitter removed, so the census gain and the
 
 ---
 
-## 6. What is closed, and the measurement that closed it
+## 6. The owner's scan — and what it overturns  *(2026-09-01, tag `splitscan-0902-pi0`, 39 objects)*
+
+**The headline is that this round's own recommendation was wrong, and the scan is
+what showed it.** §2.1 said, before the scan, that `b ≤ 12` "was chosen after
+seeing 8 movers" and "must not be reported as a discovery". It now has an
+independent test and **it fails it.**
+
+Verdicts: **20 KEEP, 15 SPLIT2, 2 SPLIT3, 2 SPLIT4+** — 19 confirmed cuts.
+
+### 6.1 The trigger does not miss. The kernel's boundary is right.
+
+| | on the 2026-09-01 labels | doc pr/138's older set |
+|---|---|---|
+| trigger **efficiency** | **1.000** (19 / 19) | 0.767 |
+| trigger **purity** | 0.792 (5 false of 24) | 0.805 |
+| boundary, **SPLIT2** | median **1.000**, mean **0.981**, **12 of 15 exact** | median 1.000, mean 0.974 |
+| boundary, k ≥ 3 | mean 0.800 — **capped by `max_parts = 2`**, not a kernel failure | 0.756 |
+
+**On these 39 objects the trigger never misses a cut the owner wants.** Every
+error is a false fire, and there are five:
+
+| event | node | `b` (cm) |
+|---|---|---|
+| 174771 | 87065 | 102.10 |
+| 393505 | 63025 | 62.82 |
+| **54332** | **122091** | **39.72** |
+| 278420 | 61027 | 26.78 |
+| **165157** | **9000** | **13.05** |
+
+### 6.2 Group A — and 281485 is the one that reverses the plan
+
+| event | node | **owner** | `b` | the 12 cm veto | verdict on the veto |
+|---|---|---|---|---|---|
+| 54332 | 122091 | **KEEP** | 39.72 | vetoes | **right** |
+| 165157 | 9000 | **KEEP** | 13.05 | vetoes | **right** |
+| **281485** | **89095** | **SPLIT2** | 23.67 | vetoes | **WRONG — it suppresses a cut the owner confirms** |
+| **396222** | **9059** | **SPLIT4+ (k=7)** | 22.15 | vetoes | **WRONG** (though the owner discounts the event: *"very busy events hard to get it right"*) |
+| 314838 | 110088 | **SPLIT2** | 8.32 | keeps | right — and this settles §4's ask C: **the split scan leads** |
+
+**So the veto recovered 281485's π⁰ for the wrong reason.** The cut is correct;
+what was broken was the *peel*, and **P1.1 is the principled fix.** Measured:
+`skip_shared` refuses a peel in exactly three events — **165157, 281485, 350354**
+— and on its own it takes 165157 `no-group → partial` and 281485 `none →
+partial`, i.e. **it recovers both of the events P1.2 was credited with, without
+touching a single correct cut elsewhere.**
+
+### 6.3 The price of the bound, priced properly at last
+
+| `b ≤` | fires | right | wrong | eff | pur | **confirmed cuts suppressed** |
+|---|---|---|---|---|---|---|
+| 10 | 9 | 9 | 0 | 0.474 | 1.000 | **10 of 19** |
+| **12** (what §3bis proposed) | 10 | 10 | 0 | 0.526 | 1.000 | **9 of 19** |
+| 20 | 14 | 13 | 1 | 0.684 | 0.929 | 6 of 19 |
+| 25 | 16 | 15 | 1 | 0.789 | 0.938 | 4 of 19 |
+| **30** | 18 | 16 | 2 | 0.842 | 0.889 | **3 of 19** |
+| none (today) | 24 | 19 | 5 | **1.000** | 0.792 | 0 |
+
+**Only 54332 actually needs a bound** — 165157 is handled by P1.1, and 174771 /
+393505 sit at 102 and 63 cm where any sane bound catches them. With **P1.1 on**:
+
+| `b ≤` | fires | right | wrong | eff | pur | false fires left |
+|---|---|---|---|---|---|---|
+| 12 | 9 | 9 | 0 | 0.474 | 1.000 | — |
+| 25 | 13 | 13 | 0 | 0.684 | 1.000 | — |
+| **30** | 15 | 14 | 1 | **0.737** | **0.933** | 278420/61027 |
+| none | 21 | 17 | 4 | 0.895 | 0.810 | 4 incl. 54332 |
+
+**`skip_shared` + `b ≤ 30` is the operating point the labels support**: it
+suppresses **3** confirmed cuts (294174 ×2 and 415278/83139, all at `b` 48–209 cm)
+instead of nine, and leaves one false fire standing. That is the next arm.
+
+### 6.4 The scan is stable against the previous one
+
+36 of the 39 were also labelled in a `splitscan-0901-*` tag. **Four** changed at
+the KEEP/SPLIT level, and **three of those four are the retired `TRIM` class
+collapsing to `KEEP`** (179611/10001, 292524/9018, 499577/13009) — a vocabulary
+change, not a reversal. **One real reversal**: 396037/69026 `KEEP → SPLIT2`. One
+`k` change: 174771/91075 `SPLIT3 → SPLIT2`. The owner is self-consistent, so the
+new labels can be trusted as the arbiter above.
+
+### 6.5 What §3bis got right, and what it got wrong
+
+| claim | status |
+|---|---|
+| the trigger's kernel and boundary are sound | **confirmed on an independent 39** — eff 1.000, SPLIT2 median 1.000 |
+| P1.1 fixes a real pathology | **confirmed and promoted** — it is the fix for two of the four, not a modest extra |
+| P1.3's μ-typing fix | **unaffected** — already flipped, and nothing here touches it |
+| **`b ≤ 12` is the result of the round** | **WRONG.** It buys +1 exact by suppressing 9 of 19 confirmed cuts. Withdrawn. |
+| "judge P1.2 on the census, not on q_miss" | right, and **not sufficient** — the census is 66 events and could not see the 9 suppressed cuts, which live outside it. The hand scan could. |
+
+## 7. What is closed, and the measurement that closed it
 
 See §1 rows C1–C4. In words:
 
@@ -584,6 +699,9 @@ python3 scripts/pr139_tape_check.py work-pr139r2-oncomb  # C++ b vs offline b: 3
 grep -h "SHOWER_SPLIT peel" work-pr139r1-onemst-*/pr_evt*/stdout.log \
   | grep -oP 'fwd=\K-?[\d.]+' | awk '{n++; if($1<0) b++} END{print n" peels, "b+0" backwards"}'
 python3 scripts/pr139_arm_effect.py onb12 onshared onemst onrehome
+
+# sec 6 -- the owner's 2026-09-01 scan, scored (the measurement that overturned P1.2)
+python3 scripts/pr139_scan_analysis.py         # -> docs/pr/pr139-scan-verdicts.tsv
 
 # the baseline everything is measured against: work-pr138r2-c90on-*
 #   q_miss 16.7 %, q_extra 6.7 %, census 35/66, 19/49 impossible, median q_f1 0.918

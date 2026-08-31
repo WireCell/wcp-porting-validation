@@ -1,0 +1,40 @@
+{
+ "event": "evt165157",
+ "scan_tag": "splitscan-0902-pi0",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "9000": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "9000": 0,
+    "45018": 0,
+    "46019": 0,
+    "51024": 0,
+    "53026": 0,
+    "58027": 0,
+    "60030": 0,
+    "60031": 0
+   },
+   "parts": {
+    "0": [
+     9000,
+     45018,
+     46019,
+     51024,
+     53026,
+     58027,
+     60030,
+     60031
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.638 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 8,
+   "Q": 3129210.7,
+   "saved": "2026-08-31T15:12:58"
+  }
+ }
+}
