@@ -847,3 +847,136 @@ move is invisible by construction. So:
 **(i) failing is a real and publishable result**: it would mean the per-part
 target is *still* not the instrument that grades a re-home, and item 3 stays
 parked with a second measured reason rather than a hunch.
+
+---
+
+## 10. Item 1 — RESULT: the pre-registered operating point holds  *(arm `work-pr140r1-on-*`)*
+
+`shower_split_skip_shared=1` + `shower_split_max_impact=30`, single arm on the
+flipped production config, 239 events × 4 samples. Baseline
+`work-pr139r1-onemst-*` (= the production config; proven byte-identical to the
+post-flip arm `work-pr139r3-flipchk-*` by a 478/478 gate).
+
+### 10.1 All four §8.4 criteria pass
+
+| # | criterion | bar | measured | |
+|---|---|---|---|---|
+| 1 | π⁰ census **exact** | ≥ 36 | **36** (baseline 35) | **PASS** |
+| 2 | `q_extra` | ≤ 7.2 % | **6.9 %** (baseline 6.7 %) | **PASS** |
+| 3 | ADVERSE vertex movers | 0 | **0 / 0 / 0 / 0** on mcp1k, mcp2k, ncpi0, nuecc48 | **PASS** |
+| 4 | the tape reproduces §8.2 | exactly | **39 of 39 objects did precisely what was pre-registered** | **PASS** |
+
+Criterion 4 in full, from `scripts/pr140_tape_verify.py` against the arm's own
+`WCT_SHOWER_SPLIT_DEBUG` tape (393 candidates, 51 fired, 16 vetoed, 3 shared
+refusals):
+
+| | predicted (committed `2e996db6`) | measured |
+|---|---|---|
+| fires | 15 | **15** |
+| trigger efficiency | 0.737 | **0.737** |
+| trigger purity | 0.933 | **0.933** |
+| confirmed cuts suppressed, total | 5 | **5** |
+| — deferred by `skip_shared` | 281485/89095, 350354/18092 | **exactly those two** |
+| — rejected by the `b` bound | 294174/16004, 294174/71067, 415278/83139 | **exactly those three** |
+
+The offline `b` predicted the shipped C++ on every one of the 39. §8.3's margin
+argument (nothing within 3 cm of the bound, versus a 0.5 cm offline-vs-C++
+spread) is confirmed rather than merely asserted.
+
+### 10.2 What it buys against the withdrawn `b ≤ 12`
+
+| | baseline (production) | **`skip_shared` + `b ≤ 30`** | the withdrawn `b ≤ 12` combo |
+|---|---|---|---|
+| π⁰ census **exact** | 35 | **36** | 36 |
+| `partial` / `none` / `no-group` | 16 / 3 / 12 | **17 / 2 / 11** | 18 / 1 / 11 |
+| `q_miss` | 16.7 % | **16.4 %** | 14.5 % |
+| `q_extra` | 6.7 % | **6.9 %** | 7.6 % |
+| **confirmed cuts suppressed** | 0 | **5** | **11** (9 by the bound + 2 by `skip_shared`) |
+
+**Same census headline as the withdrawn point, at less than half the cost in
+cuts the owner confirms.** That is the whole result of item 1.
+
+---
+
+## 11. Item 2 — the merged (per-part) completeness target, and what it caught immediately
+
+`em_display/em140_score.py` (a fork of `em117_score.py`, which stays byte-
+untouched and keeps producing the number every doc from pr/117 quotes) takes
+`--split-tag` and merges the owner's per-part boundaries into the target.
+
+### 11.1 The two design decisions that carry the result
+
+1. **Matching is injective.** Each reconstructed shower may be claimed by at
+   most one part. Without this, one un-split reco object wins part 0 *and*
+   part 1 and **a failure to split scores high on both** — the metric would be
+   inverted relative to the bug it exists to fix. An unmatched part scores
+   `q_comp = 0`.
+2. **The denominator is preserved.** Target segments the split label never
+   mentions — measured: **50 of 318** over the 12 overlapping SPLIT showers,
+   and they are mostly `in` marks, because the split display shows *reco*
+   membership and so never showed a segment the reco does not hold — become a
+   residual part `*` that competes on the same injective rule. **Verified:
+   `sum q_target` is 4.837e+08 under both metrics, to four figures.**
+
+A third correction was forced by the first run: a part whose intersection with
+the completeness target is **empty** is *not* a failed cut — it means the
+completeness scan had already marked that part out of this shower. Counting
+those (6 of 29 part rows) as misses doubled the apparent failure count. They are
+now reported as their own class.
+
+**Fork-fidelity gate**: with no `--split-tag`, `em140_score.py` reproduces
+`em117_score.py` byte-for-byte on both label sets against a real arm
+(`emprep-139onemst`, 41 and 69 lines of output, `diff` rc=0). The first attempt
+at this gate ran on the *default* paths and compared **zero events** — the em114
+scan-time arm was retired in the 2026-08-31 cleanup — so it was re-run on an arm
+that has data. A gate over an empty set is not a gate.
+
+### 11.2 The metric change alone, measured on the baseline
+
+Same arm, two metrics. **This is why the baseline is scored both ways**: a
+metric change and a reco change must never land in the same number.
+
+| on `work-pr139r1-onemst` | single target (em117) | **merged target (em140)** |
+|---|---|---|
+| `sum q_target` | 4.837e+08 | 4.837e+08 |
+| `q_miss` | 16.7 % | **11.2 %** |
+| `q_extra` | 6.7 % | **8.6 %** |
+| median row `q_f1` | 0.922 | 0.921 |
+| **parts with no reco match** | *not expressible* | **6** |
+
+`q_miss` falls 5.5 pt and `q_extra` rises 1.9 pt **with no reconstruction
+change at all** — that is the single-target metric mis-booking a correct split
+as under-clustering, quantified for the first time.
+
+### 11.3 The number only this metric can produce
+
+**Parts with no reco match = a cut the owner confirmed that the reco did not
+make.** On the production baseline there are **6**, carrying 8.3e6 of charge:
+
+| event | shower | part | q_target | why |
+|---|---|---|---|---|
+| 269774 | 13237 | 1 | 1.06e+06 | |
+| 415278 | 23012 | 2 | 1.94e+06 | owner k=3, `max_parts` = 2 |
+| 415278 | 23037 | 2, 3, 4 | 1.00e+06, 2.03e+06, 3.51e+05 | owner k=5, `max_parts` = 2 |
+| 463565 | 13001 | 2 | 1.93e+06 | owner k=3, `max_parts` = 2 |
+
+**Five of the six are the `max_parts = 2` cap** — so item 2 does not merely
+unblock item 3, it hands item 4 a direct measurement of the thing §6.1 could
+only infer.
+
+### 11.4 It priced item 1 in a way the census could not
+
+Item 1's arm passes all four §8.4 criteria. Under the merged target it also
+shows a cost that neither the census nor `q_extra` could name:
+
+```
+delta (work-pr140r1-on  -  baseline)
+  q_miss +0.05 pt   q_extra +0.43 pt   median part q_f1 -0.052
+  parts with no reco match: 6 -> 7  (+1)
+    CUTS NOW MISSED: 294174/71067 part 1
+```
+
+**294174/71067** is one of the three cuts the `b ≤ 30` bound rejects (`b` 75.20),
+and it is the one of the three that also carries completeness labels. §8 said
+three cuts would be rejected; the merged target now shows what one of them costs
+in charge attribution. That is the instrument working on its first use.
