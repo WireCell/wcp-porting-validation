@@ -1457,3 +1457,52 @@ genuinely missing and should always have been on** — the pr136 arms show the t
 sources *can* differ by 1.4 pt of median `q_f1` — **but on the population doc
 pr/139 actually measures, it makes no difference.** The defect is fixed, the
 numbers stand, and this is now known rather than assumed.
+
+---
+
+## 19. Item 3 — the wider per-part label set, delivered **scan-ready**
+
+The labels are the owner's; they cannot be produced by this session. What can be
+produced, and is: the set, the loadability proof, and the brief
+(`docs/pr/pr140-scan-brief.md`). **This item is scan-ready, not done**, and it is
+stated that way rather than left looking finished.
+
+### 19.1 Three measurements, one wall
+
+| section | what it could not resolve | the limiting sample |
+|---|---|---|
+| §13.3 | three instruments, three answers on the `max_parts = 3` arm | the tie-breaker is boundary agreement: **19 confirmed cuts, 29 hand parts** |
+| §17 | whether raising `max_seeds` helps | **4** labelled objects are seed-capped at k ≥ 3 |
+| §18 | whether the last false fire is separable | **1** negative against 14 positives |
+
+Not a physics wall. Roughly thirty more per-part verdicts about double the
+resolving power of all three at once.
+
+### 19.2 The set — `docs/pr/pr140-scan-set.tsv`, 32 objects
+
+Stratified over the pr/137 curated set (known loadable by
+`split_model.load_object`) **minus** the 39 already labelled in
+`splitscan-0902-pi0`, leaving a pool of 136:
+
+| stratum | n | available | decides |
+|---|---|---|---|
+| **S3-unjudged-fire** | 8 | 13 | trigger purity — the splitter peels these today and nobody has judged them |
+| **S1-seed-capped** | 8 | 57 | §17's `max_seeds` arm; these are the objects it will change |
+| **S2-bound-region** | 8 | 30 | the `b ≤ 30` bound, on a sample **not chosen by** the census |
+| **S4-control** | 8 | 112 | seeded-random (20260901), chosen **independently of every feature the other strata select on** |
+
+S4 is not decoration. Without it the whole set is selected by the hypotheses it
+is meant to test, which is the trap `feedback_blind_the_scan_sheet` records.
+
+**All 32 were verified to load** through `split_model.load_object` before the
+brief was written. The pr/139 scan served the owner **181** objects instead of 23
+because that check was skipped; it is now a step, not a hope.
+
+```
+python3 scripts/pr140_scanset.py           # -> docs/pr/pr140-scan-set.tsv
+./split_display/serve_split_display.sh 5022 \
+    --scan-tag splitscan-0903-wide --set docs/pr/pr140-scan-set.tsv
+```
+
+The tag is fresh (M13). Nothing will be flipped on these labels without showing
+the owner the arm first.
