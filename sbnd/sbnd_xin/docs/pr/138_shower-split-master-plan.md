@@ -1,5 +1,15 @@
 # doc pr/138 — the shower splitter: MASTER PLAN (scan → implement → optimise)
 
+> **SUPERSEDED IN PART, 2026-08-31.** §3 recommended *not* flipping the splitter
+> alone and identified `onV1c90 + splitter` as the pairing worth scanning. The
+> owner then flipped **that pairing to SBND production** — *"lets use 'onV1c90 +
+> splitter' as the new baseline for SBND production"* — so
+> `shower_pass4_prefilter_v1_escape`, `..._max_v2 = 90` and `shower_split` are
+> now **ON** in `wct-pr-perevt.jsonnet` (flip-equivalence gate PASS 478/478,
+> `work-pr138r3-flipchk-*`). **Read §3's recommendation as executed, not
+> pending.** The next round is `139_pi0-after-the-splitter.md`.
+
+
 **Status: PHASE A CLOSED, PHASE B SHIPPED, and the FLIP QUESTION ANSWERED — all
 2026-08-31.** The owner hand-scanned all 172 curated objects (§1b); the splitter
 is in the toolkit behind `shower_split`, **DEFAULT OFF**, gate-clean (§2); and
