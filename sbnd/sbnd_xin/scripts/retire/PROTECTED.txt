@@ -169,7 +169,6 @@ work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 cam
 # state-20260825b/hashes/stagea-<s>.tsv.  A future round that releases a grp0825
 # arm is deleting the product itself, not one copy of two.
 work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A, 48/19/1000/2000 evts, per-event layout	docs/81_group-mode-production.md
-work-nuecc48-prod0825 work-ncpi0-prod0825 work-mcp1k-prod0825 work-mcp2k-prod0825	doc 81 stage B PR at the current operating point; ASSERT 8 reads its group build log	docs/81_group-mode-production.md
 
 # --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
 # prod0823 above covers every sample at least as widely and is byte-identical
@@ -208,6 +207,48 @@ work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx1
 work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 17 MB, self-contained	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+#
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-nuecc48-prod0825 work-ncpi0-prod0825 work-mcp1k-prod0825 work-mcp2k-prod0825  |  doc 81 stage B PR at the current operating point; ASSERT 8 reads its group build log  |  docs/81_group-mode-production.md
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr124r1-onA98-mcp1k work-pr124r1-onA98-mcp2k work-pr124r1-onA98-ncpi0 work-pr124r1-onA98-nuecc48  |  dump source for 50 hand-paired pi0 (em_display/pr126-pi0-manifest.tsv) and the 98-set EM census; the EM-scale fit cannot be re-checked without them  |  docs/pr/126 sec 3-4, owner 2026-08-29
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr124r1-onA141v2-mcp1k work-pr124r1-onA141v2-mcp2k  |  the 141-set half of the same pi0 manifest  |  docs/pr/126 sec 3
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr125r1-flipchk98-mcp1k work-pr125r1-flipchk98-mcp2k work-pr125r1-flipchk98-ncpi0 work-pr125r1-flipchk98-nuecc48  |  doc pr/126 sec 4f re-runs the identification census at the pr/125 production point out of these  |  docs/pr/126 sec 4f
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr125r1-flipchk141-mcp1k work-pr125r1-flipchk141-mcp2k  |  the 141-set half of the sec 4f census  |  docs/pr/126 sec 4f
+
 #
 # RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
 # CLOSED, which is the release condition block 5 stated for itself -- "these
@@ -435,10 +476,6 @@ work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deter
 # cannot be re-fit.  Deleting these would make the 0.84 recommendation
 # text-only BEFORE the round that acts on it.  Verified this round: all three
 # manifests resolve 50/50, 98/98 and 141/141 (ASSERT 11).
-work-pr124r1-onA98-mcp1k work-pr124r1-onA98-mcp2k work-pr124r1-onA98-ncpi0 work-pr124r1-onA98-nuecc48	dump source for 50 hand-paired pi0 (em_display/pr126-pi0-manifest.tsv) and the 98-set EM census; the EM-scale fit cannot be re-checked without them	docs/pr/126 sec 3-4, owner 2026-08-29
-work-pr124r1-onA141v2-mcp1k work-pr124r1-onA141v2-mcp2k	the 141-set half of the same pi0 manifest	docs/pr/126 sec 3
-work-pr125r1-flipchk98-mcp1k work-pr125r1-flipchk98-mcp2k work-pr125r1-flipchk98-ncpi0 work-pr125r1-flipchk98-nuecc48	doc pr/126 sec 4f re-runs the identification census at the pr/125 production point out of these	docs/pr/126 sec 4f
-work-pr125r1-flipchk141-mcp1k work-pr125r1-flipchk141-mcp2k	the 141-set half of the sec 4f census	docs/pr/126 sec 4f
 #
 # 2. HAND-SCAN DISPLAY DEFAULTS.  These are hardcoded DEFAULT arm names inside
 # the scan tooling, not citations: em_display/prep_pr117.py:17,28 and

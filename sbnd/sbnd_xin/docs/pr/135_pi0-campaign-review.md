@@ -411,3 +411,58 @@ Floor after both: sbnd_xin ~88 G, of which ~65 G is campaign input +
 latest production + hand-scan dump source + the record layer.  Reaching
 "say 50 G" from there means releasing one of those four, which is an owner
 decision about what stops being reproducible, not a housekeeping call.
+
+### 11.2 The second pass — releasing the scan-time dumps (owner-approved)
+
+Owner: *"Do we need 0825prod?"* then *"let's follow your suggestion to
+release things to 73 G"*.
+
+**The question was answered from the CONSUMERS, not from the assert.**  The
+first pass kept `work-*-prod0825` because ASSERT 11 saw the base hand-scan
+manifests resolving into it.  Tracing what actually reads them:
+
+| script | reads the SCAN-TIME manifest? |
+|---|---|
+| `pr132_pi0_census.py`, `pr132_gamma_ledger.py`, `pr135_pi0_peak_prod.py` | **no** — `m_cur` only |
+| `pr126_pi0_census.py`, `pr126_pi0_mass.py`, `pr132_angle_census.py` | **no** — `m_cur` only |
+
+Every one unpacks `m_scan` from `SEL.SETS` and never loads it.  The scan-time
+dumps are not an input to any current or next-round measurement: they are the
+reconstruction the human was LOOKING AT while labelling, and what that
+reconstruction recorded per gamma (shower id, energy, axis, start, mass,
+vertex) already lives in the 298 label JSONs -- git-tracked and archived.
+
+**Given up, stated plainly**: `pr126-pi0-mass.tsv` is no longer rebuildable,
+and "what did the scanner see for event N" is answerable only from the label
+JSON.  Acceptable because the fit those dumps supported has been superseded
+TWICE (0.80 -> 0.84 -> 0.86) and the 0.86 measurement used the fixed-pairing
+estimator on the CURRENT arm, which never touches scan-time energies.
+
+**Released this pass (24 arms, 14.4 G)**: `work-*-prod0825` (4, 9.6 G),
+`work-pr124r1-onA*` (6, the 50-pi0 manifest dump source),
+`work-pr125r1-flipchk*` (6, the doc pr/126 sec 4f census), and the two ends
+of the pi0 A/B -- `work-pr133-flipchk-*` and `work-pr134-flip2-*` (8) --
+superseded as production by `work-pr134-f086-*` at 0.86.  The sentinel
+negative control `work-pr125r1-flipK5*` is NOT released: it is a live
+registry input.  Plus `void-prod0830partial-*` (3.3 G), removed by the owner
+from the sec 11.1 one-liner.
+
+**The silent-skip trap this pass closes.**  `SEL.load_json()` returns None
+for a missing dump and every caller `continue`s on None -- so a manifest
+pointing at a released arm would have produced a ZERO-ROW census that looks
+like a clean run.  `scripts/pr126_pi0_select.py:load_manifest()` now RAISES
+when a manifest's dump arm is gone, naming the arm and pointing at
+`archive/records/`.  Checked once per manifest, on the arm directory.
+
+Six manifests leave `LIVE_MANIFESTS` and become historical records (the TSVs
+stay, git-tracked): `em114-manifest.tsv`, `em114c-manifest.tsv`,
+`em114c-manifest-agent5.tsv`, `em116confirm-manifest.tsv`,
+`pr126-pi0-manifest.tsv`, and the two `125flipchk` manifests.  Their
+PROTECTED.txt lines moved to RETIRED with the reason.  ASSERT 9's campaign
+map now checks prod0830 in prod0825's place.
+
+**Interlock note, worth keeping**: ASSERT 12 refused the first run of this
+pass because four removal-set arms had been written 44 minutes earlier
+(inside the 60-minute freshness window) -- correctly, since a name computed
+before a write is not evidence about the tree after it.  Nothing was running;
+the round simply waited for the window to clear rather than lowering it.

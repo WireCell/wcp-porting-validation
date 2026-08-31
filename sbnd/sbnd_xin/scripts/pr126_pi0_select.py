@@ -71,6 +71,21 @@ def load_manifest(name):
     with open(os.path.join(SX, "em_display", name)) as fh:
         for r in csv.DictReader(fh, delimiter="\t"):
             out[int(r["event"])] = r
+    # 2026-08-31 (doc pr/135 sec 11.2): a manifest whose dump ARM was released
+    # by a retire round must fail LOUDLY here.  load_json() below returns None
+    # for a missing dump and every caller `continue`s on None, so a released
+    # arm would otherwise turn into a silent zero-row census -- a wrong number
+    # that looks like a clean run.  Checked once per manifest, on the arm
+    # directory, not per row.
+    arms = {(r.get("dump") or "").split("/")[0]
+            for r in out.values() if (r.get("dump") or "").count("/")}
+    gone = sorted(a for a in arms if a and not os.path.isdir(os.path.join(SX, a)))
+    if gone:
+        raise FileNotFoundError(
+            "manifest %s points at released arm(s) %s -- its dumps were retired "
+            "(see scripts/retire/state-*/removed.tsv and the record layer under "
+            "archive/records/).  Re-point the manifest at a surviving arm or use "
+            "the current-production manifest instead." % (name, gone))
     return out
 
 
