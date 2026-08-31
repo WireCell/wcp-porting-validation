@@ -139,13 +139,17 @@ hi_box = TextInput(value='', visible=False)         # highlight channel
 moved_box = TextInput(value='', visible=False)      # drop channel
 cam_box = TextInput(value='', visible=False)
 
-bee = Div(text='', width=780, height=34)
-tree = Div(text='', width=780, height=640)
-info = Div(text='', width=780)
-status = PreText(text='', width=780, height=54)
+# One width for the whole left column, taken from the tree's own CSS so the
+# Bokeh box and the HTML box cannot drift (that drift is what let the columns
+# paint over the 3-D view at 6 groups).
+LEFT_W = TJ.TREE_W
+bee = Div(text='', width=LEFT_W, height=34)
+tree = Div(text='', width=LEFT_W, height=660)
+info = Div(text='', width=LEFT_W)
+status = PreText(text='', width=LEFT_W, height=54)
 
 verdict_btn = RadioButtonGroup(labels=['KEEP', 'SPLIT2', 'SPLIT3', 'SPLIT4+',
-                                       'TRIM', 'UNSURE'], active=0, width=560)
+                                       'TRIM', 'UNSURE'], active=0, width=LEFT_W - 240)
 conf_btn = RadioButtonGroup(labels=['high', 'medium', 'low'], active=0, width=260)
 note_box = TextInput(title='note (optional)', width=520)
 centre_sel = Select(title='rotate about', width=180, value='nu vertex',
@@ -570,7 +574,8 @@ def _load(i):
     # mode costs no server round trip and cannot race the drop recolour.
     pts.data = dict(x=xs, y=ys, z=zs, u=[0.0] * n, v=[0.0] * n, seg=sg, bundle=bd,
                     tx=[float(t) for t in tx], ty=[float(t) for t in ty],
-                    color=['#999999'] * n, alpha=[0.85] * n, size=[4.0] * n,
+                    color=['#999999'] * n,
+                    alpha=[TJ.PT_ALPHA] * n, size=[TJ.PT_SIZE] * n,
                     hl=[0.0] * n,
                     bcolor=[SM.BUNDLE_COLORS[b % len(SM.BUNDLE_COLORS)] for b in bd],
                     qcolor=SM.charge_colors(qq))

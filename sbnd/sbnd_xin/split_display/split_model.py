@@ -33,7 +33,11 @@ import pr137_lib as L
 import pr137_features as F
 
 JUNK = -1                                # the TRIM group
-GROUP_COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
+# Owner: "the group can be a lot."  MAX_NGROUPS is len(GROUP_COLORS), so the
+# palette IS the cap -- extended 6 -> 10.  The first six are unchanged on
+# purpose: a label already saved keeps the colour it was scanned under.
+GROUP_COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b",
+                "#17becf", "#e377c2", "#bcbd22", "#000075"]
 JUNK_COLOR   = "#999999"
 
 

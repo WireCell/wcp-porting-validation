@@ -39,6 +39,7 @@ const _walkAll = (sel) => {
     return out;
 };
 const _tree = () => { const a = _walkAll('#split-tree'); return a.length ? a[0] : null; };
+const _cols = () => { const t = _tree(); return t ? t.querySelector('.cols') : null; };
 """
 
 # DELEGATION, not per-node binding.  Two earlier builds bound listeners to each
@@ -51,7 +52,13 @@ const _tree = () => { const a = _walkAll('#split-tree'); return a.length ? a[0] 
 # but `event.target` is RETARGETED to the shadow host, which is why the path is
 # read instead of the target.  `draggable="true"` is emitted by Python into the
 # HTML, so no DOM write is needed to make a card draggable.
-JS_SETUP = r"""
+# JS_FIND is PREPENDED, not assumed.  The drag auto-scroll below calls _cols(),
+# which lives in JS_FIND -- and JS_SETUP was previously self-contained, so
+# omitting this would have thrown ReferenceError on the first dragover with no
+# other symptom than "drag stopped working".  selftest_split_display.py now
+# lints every assembled blob for exactly that (helper used but not defined, and
+# the mirror-image trap: the same `const` declared twice by double-concatenation).
+JS_SETUP = JS_FIND + r"""
 if (!window.__pr138_bound) {
     window.__pr138_bound = true;
     const src = (ev) => {
@@ -80,6 +87,16 @@ if (!window.__pr138_bound) {
         const n = src(ev); if (n) n.classList.remove('dragging');
     }, true);
     document.addEventListener('dragover', (ev) => {
+        // AUTO-SCROLL.  With the columns at a fixed width the row scrolls, so a
+        // drop target can be off-screen -- and a drag that cannot reach its
+        // target is worse than narrow columns.  Nudge the row whenever the
+        // pointer is within 60 px of either edge.
+        const row = _cols();
+        if (row != null) {
+            const r = row.getBoundingClientRect();
+            if (ev.clientX > r.right - 60) row.scrollLeft += 24;
+            else if (ev.clientX < r.left + 60) row.scrollLeft -= 24;
+        }
         const z = zone(ev); if (!z) { return; }
         ev.preventDefault(); z.classList.add('over');
     }, true);
@@ -142,8 +159,24 @@ for (let i = 0; i < n; i++) {
 cloud.change.emit();
 """
 
+# THE POINT STYLE, in one place.  Owner: "the transparency of the point can be
+# less, and thicker in the 3D view, so that things can be viewed clearer."  These
+# five numbers are the only copy -- split_viewer imports PT_ALPHA/PT_SIZE for the
+# initial cloud and the highlight below formats itself from the same constants,
+# because the previous build had the base values written twice (Python 0.85/4.0,
+# JS 0.85/4.0) and nothing kept them in step.
+PT_ALPHA     = 1.00    # was 0.85 -- opaque; overlapping points no longer wash out
+PT_SIZE      = 6.0     # was 4.0
+PT_HL_SIZE   = 10.0    # the tapped segment, was 7.0
+PT_DIM_ALPHA = 0.18    # everything else while one is picked, was 0.12
+PT_DIM_SIZE  = 3.0     # was 2.5
+
+PT_ALPHA_FMT, PT_SIZE_FMT = repr(PT_ALPHA), repr(PT_SIZE)
+PT_HL_SIZE_FMT = repr(PT_HL_SIZE)
+PT_DIM_ALPHA_FMT, PT_DIM_SIZE_FMT = repr(PT_DIM_ALPHA), repr(PT_DIM_SIZE)
+
 # Highlight one segment set: boost size and alpha, dim the rest.  Purely local.
-JS_HIGHLIGHT = JS_FIND + r"""
+JS_HIGHLIGHT = JS_FIND + ("""
 const d = cloud.data;
 const raw = (hi.value || '').split('|')[0];
 let sel = [];
@@ -154,8 +187,8 @@ const on = S.size > 0;
 for (let i = 0; i < n; i++) {
     const m = S.has(d.seg[i]);
     d.hl[i] = (on && m) ? 1.0 : 0.0;
-    d.alpha[i] = on ? (m ? 1.0 : 0.12) : 0.85;
-    d.size[i]  = on ? (m ? 7.0 : 2.5)  : 4.0;
+    d.alpha[i] = on ? (m ? %(a)s : %(da)s) : %(a)s;
+    d.size[i]  = on ? (m ? %(hs)s : %(ds)s)  : %(s)s;
 }
 cloud.change.emit();
 // mirror the selection into the tree
@@ -167,7 +200,8 @@ if (el != null) {
         node.classList.toggle('picked', hit);
     });
 }
-"""
+""" % dict(a=PT_ALPHA_FMT, da=PT_DIM_ALPHA_FMT, hs=PT_HL_SIZE_FMT,
+           ds=PT_DIM_SIZE_FMT, s=PT_SIZE_FMT))
 
 # Tap in the 3-D view -> select that segment (and scroll its card into view).
 JS_TAP = JS_FIND + r"""
@@ -183,15 +217,45 @@ requestAnimationFrame(() => {
 });
 """
 
-CSS = """
+# TREE_W is the ONE place the tree's width is decided.  split_viewer passes the
+# same number to the Div, so the HTML box and the box Bokeh reserves in the
+# layout cannot drift apart -- and drifting apart is exactly the bug the owner
+# hit: at 6 groups the columns grew the tree's content to 838 px while Bokeh had
+# reserved 780 and had already placed the 3-D canvas at x=790, so the columns
+# painted over the 3-D view.
+TREE_W = 800
+# how wide one drop column stays, however many there are.  FIXED, not flexible:
+# `flex: 1 1 0` divided the 780 px among the columns and at 6 groups they were
+# 115 px wide -- too narrow to read a segment row.  Now the columns keep a
+# readable width and the ROW scrolls, which is what "the group can be a lot"
+# actually needs.
+COL_W = 186
+
+CSS = ("""
 <style>
-#split-tree { font-family: system-ui, sans-serif; font-size: 10.5px; }
+/* box-sizing is load-bearing.  Each .col carries 1 px of border and 4 px of
+   padding a side; under the default content-box those 10 px are added ON TOP of
+   the flex basis, which is how seven columns overflowed an 800 px box. */
+#split-tree, #split-tree * { box-sizing: border-box; }
+#split-tree { font-family: system-ui, sans-serif; font-size: 10.5px;
+              width: %dpx; max-width: %dpx; overflow: hidden; }
 #split-tree .colhdr { font-size: 11px; }
-#split-tree .cols { display: flex; gap: 5px; align-items: stretch; flex-wrap: nowrap; }
-#split-tree .col  { flex: 1 1 0; min-width: 0; border: 1px solid #ccc;
+/* the row scrolls; it never grows past the Div and never reaches the 3-D view */
+#split-tree .cols { display: flex; gap: 5px; align-items: stretch;
+                    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+                    padding-bottom: 4px; }
+#split-tree .col  { flex: 0 0 %dpx; width: %dpx; min-width: %dpx;
+                    border: 1px solid #ccc;
                     border-radius: 5px; padding: 4px; background: #fafafa;
-                    max-height: 600px; overflow-y: auto; overflow-x: hidden; }
+                    max-height: 600px; overflow-y: auto; overflow-x: hidden; }""" %
+       (TREE_W, TREE_W, COL_W, COL_W, COL_W) + """
 #split-tree .col.over { background: #e8f0ff; border-color: #4a80d0; }
+/* the horizontal scrollbar is the only cue that more columns exist, so it is
+   forced visible rather than left to the browser's overlay behaviour */
+#split-tree .cols { scrollbar-width: thin; scrollbar-color: #b0b0b0 #ececec; }
+#split-tree .cols::-webkit-scrollbar { height: 11px; }
+#split-tree .cols::-webkit-scrollbar-track { background: #ececec; border-radius: 6px; }
+#split-tree .cols::-webkit-scrollbar-thumb { background: #b0b0b0; border-radius: 6px; }
 #split-tree .colhdr { font-weight: 600; padding: 2px 4px; margin-bottom: 4px;
                       border-radius: 3px; color: #fff; }
 #split-tree .bundle { border: 1px solid #bbb; border-radius: 4px; margin: 3px 0;
@@ -206,6 +270,6 @@ CSS = """
 #split-tree .seg.dragging { opacity: 0.45; }
 #split-tree .muted { color: #888; }
 </style>
-"""
+""")
 
 JS_RECOLOR = JS_SETUP + JS_RECOLOR_BODY

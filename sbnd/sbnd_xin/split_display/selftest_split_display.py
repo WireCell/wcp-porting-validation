@@ -124,5 +124,34 @@ else:
     check("a collapsed 2-seed proposal says so",
           not (ng == 1 and why.startswith("2 groups")), "ng=%d reason=%r" % (ng, why))
 
-print("\n%d checks, %d FAILED" % (28, len(FAIL)))
+# 9. the JS blobs actually handed to CustomJS -- every `_helper()` they call must
+#    be declared in the SAME blob, and no `const` may be declared twice.  This is
+#    the trap that a naive "is the name present in either file" check waves
+#    through: JS_SETUP gained a _cols() call while JS_FIND was not prepended.
+import re                                                       # noqa: E402
+import split_tree_js as TJ                                      # noqa: E402
+BLOBS = {                     # exactly what split_viewer passes as `code=`
+    'JS_RECOLOR':          TJ.JS_RECOLOR,
+    'JS_SETUP+BODY':       TJ.JS_SETUP + TJ.JS_RECOLOR_BODY,
+    'JS_HIGHLIGHT':        TJ.JS_HIGHLIGHT,
+    'JS_TAP':              TJ.JS_TAP,
+}
+for nm, blob in BLOBS.items():
+    used = set(re.findall(r'\b(_[A-Za-z][A-Za-z0-9]*)\s*\(', blob))
+    decl = set(re.findall(r'const\s+(_[A-Za-z][A-Za-z0-9]*)\s*=', blob))
+    missing = sorted(u for u in used if u not in decl)
+    check("%s: every _helper() it calls is declared in it" % nm, not missing,
+          "undeclared: %s" % missing)
+    dups = [c for c in decl
+            if len(re.findall(r'const\s+%s\s*=' % re.escape(c), blob)) > 1]
+    check("%s: no const declared twice" % nm, not dups, "duplicated: %s" % dups)
+
+# 10. the tree width is single-sourced (the overlap bug was two copies drifting)
+check("the tree CSS pins the width split_viewer reserves",
+      ("width: %dpx" % TJ.TREE_W) in TJ.CSS and TJ.COL_W > 100)
+check("the point style is single-sourced and opaque",
+      TJ.PT_ALPHA == 1.0 and TJ.PT_SIZE > 4.0
+      and ("%s" % TJ.PT_SIZE) in TJ.JS_HIGHLIGHT)
+
+print("\n%d checks, %d FAILED" % (39, len(FAIL)))
 sys.exit(1 if FAIL else 0)

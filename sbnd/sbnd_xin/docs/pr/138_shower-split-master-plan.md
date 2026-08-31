@@ -424,6 +424,49 @@ column, so a click cannot silently reassign segments already placed. The verdict
 gains `SPLIT4+`, and the saved label records `n_parts` and `n_groups` so the exact
 count survives the bucket.
 
+### A1.8 Layout and point style at many groups — FIXED 2026-08-31
+
+Owner: *"The group can be a lot, can you move the 3D display to the right side of
+the window, so that they do not overlap"* and *"the transparency of the point can
+be less, and thicker in the 3D view, so that things can be viewed clearer."*
+
+**The overlap was measured, not guessed.** At 6 groups the tree Div's *content*
+grew to **838 px** while Bokeh had reserved 780 and had already placed the 3-D
+canvas at **x = 790** — so the columns painted over the 3-D view. Two causes,
+both fixed:
+
+- **no `box-sizing: border-box`.** Each `.col` carries 1 px border + 4 px padding
+  a side; under the default content-box those 10 px are added *on top of* the
+  flex basis, so seven columns could not fit the box they were given.
+- **`flex: 1 1 0` divided the width** instead of scrolling: at 6 groups the
+  columns were 115 px, too narrow to read a segment row.
+
+Now the columns are a fixed readable **186 px** and the **row scrolls**, with the
+tree clipped at `TREE_W = 800` — a single constant that `split_tree_js` writes
+into the CSS and `split_viewer` reserves in the layout, so the two can no longer
+drift. Measured after: tree right edge **805**, first canvas **810**, at 3 groups
+and at 10 (`scrollWidth` 2096 clipped to 800). The scrollbar is forced visible
+(it is the only cue that more columns exist), and `dragover` auto-scrolls the row
+within 60 px of either edge — verified by dropping a bundle into **Group 7**, a
+column that starts off-screen.
+
+**More groups, since that was the premise.** `MAX_NGROUPS` is `len(GROUP_COLORS)`,
+so the palette *was* the cap: extended **6 → 10**, first six unchanged so a label
+already saved keeps the colour it was scanned under.
+
+**Point style**, now single-sourced in `split_tree_js` (it had been written twice,
+in Python and in JS, with nothing keeping them in step): alpha **0.85 → 1.00**,
+size **4.0 → 6.0**, highlight 7.0 → 10.0, dimmed 0.12/2.5 → 0.18/3.0.
+
+**A trap caught by a new test, not by the browser.** The auto-scroll calls
+`_cols()`, which lives in `JS_FIND` — and `JS_SETUP` did not include `JS_FIND`,
+so the first `dragover` would have thrown `ReferenceError` with no symptom beyond
+"drag stopped working". `selftest_split_display.py` now lints every blob actually
+passed to `CustomJS` for a helper used but not declared, **and** for the
+mirror-image trap (the same `const` declared twice by double-concatenation). Both
+arms mutation-tested: the pre-fix blob reports `missing: ['_cols']`, a
+double-concatenated blob reports `dups: ['_tree','_cols','_walkAll']`. 39 checks.
+
 ### A2. The owner scan itself
 
 **50 objects, `owner_scan=1` in `docs/pr/pr137-curated-set.tsv`**, spread
