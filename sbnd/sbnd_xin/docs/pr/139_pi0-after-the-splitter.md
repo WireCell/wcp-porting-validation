@@ -1262,9 +1262,11 @@ Priced on `work-pr136-onV1c90-*`, the last arms that **do** carry sidecars
 | `q_miss` | 2.007e+07 | 2.019e+07 |
 | `q_extra` | 2.673e+07 | 2.609e+07 |
 
-**The join is systematically optimistic** — about 1.4 pt of median `q_f1` and
-2.5 % of `q_extra`. Small, but shared membership is precisely the phenomenon
-items 1 and 2 are about, so §16 re-runs every arm with the probe on and restates.
+**On that arm the join is systematically optimistic** — about 1.4 pt of median
+`q_f1` and 2.5 % of `q_extra`. Shared membership is precisely the phenomenon
+items 1 and 2 are about, so §16 re-runs every arm with the probe on and
+restates. **§16.1 is the result of that restatement, and it is that nothing
+moved** — read it before treating anything in §10–§13 as provisional.
 **Unaffected**: the π⁰ census and the boundary-agreement numbers of §13 read the
 dumps and the debug tape, not the sidecar, so nothing in §6, §10.2's census row
 or §13 moves.
@@ -1426,3 +1428,32 @@ veto every candidate in that event. Recorded as an observation, not a lead.
 
 **Verdict: 278420/61027 is not distinguishable by more of the same information.**
 The honest next move is more labels, not another feature — which is §19.
+
+### 16.1 The correction pass: the §15.1 defect changed **nothing**
+
+The probe is now on and the sidecars exist (239, 0 warnings), so §15.1's defect
+can be priced on **this** population instead of the pr136 one. Same arm
+(`work-pr140r2-off-*`), scored with the sidecars that were missing and without:
+
+| baseline, both metrics | with sidecars | with the dump join (what §10–§13 used) |
+|---|---|---|
+| `q_miss` single-target | 16.7 % | 16.7 % |
+| `q_extra` single-target | 6.7 % | 6.7 % |
+| median shower `q_f1` | 0.922 | 0.922 |
+| `q_miss` merged per-part | **11.1 %** | 11.2 % |
+| `q_extra` merged per-part | **8.8 %** | 8.6 % |
+| hand parts with no distinct reco object | **6** | 6 |
+| lossiness (members the join drops) | **0, measured** | 0, vacuous |
+
+**Nothing in §10–§13 is provisional.** The reported lossiness is now genuinely
+zero rather than vacuously zero: on these 239 events at the production config
+the two membership sources agree exactly, and the only residual is a 0.4 % shift
+in `sum q_target` because the sidecar carries its own per-member `dQ` instead of
+re-summing `points[].dQ`. That is well inside the precision anything was quoted
+to.
+
+So the honest statement is narrower than §15.1's first draft: **the probe was
+genuinely missing and should always have been on** — the pr136 arms show the two
+sources *can* differ by 1.4 pt of median `q_f1` — **but on the population doc
+pr/139 actually measures, it makes no difference.** The defect is fixed, the
+numbers stand, and this is now known rather than assumed.
