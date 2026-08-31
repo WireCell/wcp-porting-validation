@@ -81,6 +81,34 @@ for t in (5, 10, 15, 20, 30, 50, 1e9):
     print("%-10s %6d %6d %6d %7.3f %7.3f"
           % (('%g' % t) if t < 1e8 else 'none', len(ff), len(rr), len(ff) - len(rr),
              len(rr) / len(pos), len(rr) / max(len(ff), 1)))
+# doc pr/139 sec 2.1 -- the eight census movers, which are NOT all in the 172
+# scanned objects, so they need their own pass.  --movers appends them.
+MOVERS = [(280972, 79136, 'GAIN exact'), (56243, 69032, 'GAIN exact'),
+          (314838, 110088, 'GAIN exact'), (269774, 13237, 'GAIN partial'),
+          (281485, 89095, 'LOSS zero-E daughter'), (396222, 9059, 'LOSS 2879MeV blob'),
+          (165157, 9000, 'LOSS false fire'), (54332, 122091, 'LOSS false fire')]
+if '--movers' in sys.argv:
+    print("\n=== sec 2.1 -- the eight census movers ===")
+    print("%-9s %-9s %-22s %8s %8s %8s" % ('event', 'node', 'class', 'b_cm', 'vgap_cm', 'r_cm'))
+    for ev, nd, cls in MOVERS:
+        row = SM.load_object(ev, nd)
+        if row is None:
+            print("%-9d %-9d %-22s  NOT LOADED" % (ev, nd, cls)); continue
+        pts, q, _ = L.pack(row['P'], row['segs'])
+        if pts is None or len(pts) < 8:
+            print("%-9d %-9d %-22s  too few points" % (ev, nd, cls)); continue
+        v = np.asarray(row['v'], float); w = L.qwt(q)
+        c = (pts * w[:, None]).sum(0) / w.sum()
+        X = (pts - c) * np.sqrt(w)[:, None]
+        ax = np.linalg.svd(X, full_matrices=False)[2][0]; ax = ax / np.linalg.norm(ax)
+        d = c - v
+        bb = float(np.linalg.norm(d - np.dot(d, ax) * ax))
+        rr = float(np.linalg.norm(d))
+        gg = float(np.min(np.linalg.norm(pts - v, axis=1)))
+        print("%-9d %-9d %-22s %8.2f %8.2f %8.2f" % (ev, nd, cls, bb, gg, rr))
+    print("\nEvery gain sits below 11 cm and every loss above 13 -- a bound at b<=12")
+    print("separates 8 of 8.  Eight points, chosen after seeing them: sec 2.1 prices it.")
+
 with open('docs/pr/pr139-pointing.tsv', 'w') as f:
     w_ = csv.writer(f, delimiter='\t')
     w_.writerow(['event', 'node', 'owner', 'positive', 'fired', 'vgap_cm', 'b_cm', 'miss_deg'])

@@ -1755,6 +1755,23 @@ fi
 # the Phase A knee, whose holdout is spent.  Present so the operating point is
 # MOVABLE under review, not so it is searched again.
 [ -n "${SBND_SHOWER_SPLIT_VALLEY:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_valley=${SBND_SHOWER_SPLIT_VALLEY}")
+# doc pr/139 phase 1: four independent follow-ups to the shipped splitter.  Each
+# is EMPTY = no TLA = the job default = the shipped behaviour = byte-identical,
+# and each is measured ALONE before any combination (doc pr/139 sec 1).
+# P1.1 refuse a peel of segments another shower also owns (evt281485's 0.00 MeV
+# daughter, evt165157's colliding seed).
+[ -n "${SBND_SHOWER_SPLIT_SKIP_SHARED:-}" ] && CATH_TLA+=(--tla-code "shower_split_skip_shared=true")
+# P1.2 the impact-parameter veto, in CM.  EMPTY = no TLA = 0 = no bound.  The
+# arm value is 12 (doc pr/139 sec 2.1: every census gain below 11 cm, every loss
+# above 13 -- a bound chosen AFTER seeing 8 movers, and priced accordingly).
+[ -n "${SBND_SHOWER_SPLIT_MAX_IMPACT:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_impact=${SBND_SHOWER_SPLIT_MAX_IMPACT}")
+# P1.3 seed the daughter on its nearest EM-typed member.  Fixes the 11-of-50
+# mu-typed daughters, whose kine_charge is LOW BY A FACTOR 1.657.
+[ -n "${SBND_SHOWER_SPLIT_EM_START:-}" ] && CATH_TLA+=(--tla-code "shower_split_em_start=true")
+# P1.4 re-home an orphan daughter into the nearest larger EM shower that is NOT
+# its parent.  _GAP is in CM; EMPTY = no TLA = 4 (the bundle scale).
+[ -n "${SBND_SHOWER_SPLIT_REHOME:-}" ] && CATH_TLA+=(--tla-code "shower_split_rehome=true")
+[ -n "${SBND_SHOWER_SPLIT_REHOME_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_split_rehome_gap=${SBND_SHOWER_SPLIT_REHOME_GAP}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
