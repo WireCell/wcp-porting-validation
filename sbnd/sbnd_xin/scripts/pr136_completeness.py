@@ -14,11 +14,11 @@ segments the arm actually gave that shower, giving `q_comp` (completeness),
 `q_pur` (purity) and their harmonic mean `q_f1`.  Under-clustering is
 `q_miss`, over-clustering is `q_extra`, both in raw charge.
 
-OPERATING POINT.  The inputs are scored on the pr130r1-probe arms, the
-newest arms that carry an `emprep-*` membership sidecar.  That is BEFORE
-the NC chain, K24 and the 0.86 EM scale.  The absolute numbers therefore
-describe the pr/130 point, not today's production; refreshing them needs
-one byte-neutral probe arm at f086 (doc pr/136 sec 6, proposal 0).  The
+OPERATING POINT.  Pass --src98/--src141 to choose it, and READ THE BANNER:
+the defaults are the pr130r1-probe arms (before the NC chain, K24 and the
+0.86 EM scale), while `pr136-completeness-f086-*.tsv` are the f086
+PRODUCTION point minted by proposal 0's probe arm (scripts/pr136_arms.sh).
+Match --closure to the same arm or the join is a cross-arm join.  The
 sidecar matters: the dump's `segments[].shower_id` is single-valued, so a
 segment held by two showers is credited to one and the lossy join invents
 misses that are not there.
@@ -42,7 +42,8 @@ SD = os.path.dirname(os.path.abspath(__file__))
 SX = os.path.dirname(SD)
 D = os.path.join(SX, "docs", "pr")
 
-SRC = [("98", "pr136-completeness-98.tsv"), ("141", "pr136-completeness-141.tsv")]
+DEFAULT_SRC98 = "pr136-completeness-98.tsv"
+DEFAULT_SRC141 = "pr136-completeness-141.tsv"
 
 
 def num(r, k):
@@ -55,11 +56,16 @@ def num(r, k):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tsv")
+    # doc pr/136 proposal 0: the f086 probe arm mints a SECOND pair of
+    # em117_score outputs.  Defaults reproduce the pr130-arm run exactly,
+    # so an argument-free call is byte-identical to before these existed.
+    ap.add_argument("--src98", default=DEFAULT_SRC98)
+    ap.add_argument("--src141", default=DEFAULT_SRC141)
     ap.add_argument("--closure", default=os.path.join(D, "pr136-mass-closure.tsv"))
     a = ap.parse_args()
 
     rows = []
-    for setlab, name in SRC:
+    for setlab, name in (("98", a.src98), ("141", a.src141)):
         p = os.path.join(D, name)
         if not os.path.exists(p):
             raise SystemExit("missing %s -- run the em117_score commands in the docstring first" % p)
@@ -73,7 +79,11 @@ def main():
     qe = sum(num(r, "q_extra") for r in rows)
     f1 = [num(r, "q_f1") for r in rows if num(r, "q_f1") == num(r, "q_f1")]
 
-    print("EM SHOWER CHARGE ATTRIBUTION vs THE HAND SCAN  (pr130r1-probe arms)")
+    # Never hard-code the arm in the banner: this script now runs on two
+    # operating points and a stale label is how a cross-arm join hides.
+    print("EM SHOWER CHARGE ATTRIBUTION vs THE HAND SCAN")
+    print("  inputs: %s + %s" % (a.src98, a.src141))
+    print("  pi0 join: %s" % os.path.basename(a.closure))
     print("  hand-marked showers %d over %d events (98-set + 141-set)" % (len(rows), len(ev)))
     print("  sum q_target %.4g" % qt)
     print("  q_miss  (UNDER: charge the scanner says belongs, the shower does not hold) %.4g = %.1f%%"

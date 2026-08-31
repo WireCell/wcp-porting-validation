@@ -1,0 +1,193 @@
+set	sample	event	shower	matched	sites	had_cone_seat	conn	seg	seg_cluster	seg_is_main	q	verdict	cur_owner	detail
+98	ncpi0	21073	60081	60081	from_vertices	1	2	31023	31	0	84077.5	REJECT	31023	site=pass4_angle_early angle_v2=52.2 dis=35.0
+98	ncpi0	21073	60081	60081	from_vertices	1	2	31024	31	0	108099.5	REJECT	31023	site=pass4_angle_early angle_v2=52.2 dis=35.0
+98	ncpi0	21073	60081	60081	from_vertices	1	2	33026	33	0	180253.3	REJECT	31023	site=pass4_angle_early angle_v2=51.0 dis=43.7
+98	ncpi0	21073	60081	60081	from_vertices	1	2	34027	34	0	38659.3	REJECT	31023	site=pass4_angle_early angle_v2=47.1 dis=42.8
+98	ncpi0	21073	60081	60081	from_vertices	1	2	57049	57	0	661575.6	REJECT	31023	site=pass4_angle_early angle_v2=52.0 dis=46.4
+98	ncpi0	21073	60081	60081	from_vertices	1	2	64108	64	0	119333.5	REJECT	31023	site=pass4_angle_early angle_v2=53.5 dis=82.2
+98	ncpi0	21073	60081	60081	from_vertices	1	2	64109	64	0	231387.9	REJECT	31023	site=pass4_angle_early angle_v2=52.3 dis=79.5
+98	mcp2k	54332	16014	16017	-	0	3	97060	97	0	89825.8	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	97062	97	0	250921.4	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	97063	97	0	215744.5	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	97064	97	0	125384.2	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	98066	98	0	707833.7	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	98067	98	0	301466.6	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	98068	98	0	209141.4	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	99069	99	0	95828.4	NO_SEAT	97060	
+98	mcp2k	54332	16014	16017	-	0	3	129113	129	0	72877.7	NO_SEAT	97060	
+98	mcp2k	54332	122091	122091	from_vertices	1	2	80042	80	0	35251.5	REJECT	80042	site=pass4_angle_cone angle_v2=8.6 dis=164.1
+98	mcp2k	54332	122091	122091	from_vertices	1	2	81043	81	0	122806.0	REJECT	81043	site=pass4_angle_cone angle_v2=9.2 dis=171.5
+98	mcp2k	54332	122091	122091	from_vertices	1	2	123098	123	0	723323.8	ABSENT	123098	
+98	mcp2k	54332	122091	122091	from_vertices	1	2	123099	123	0	119609.7	ABSENT	123098	
+98	ncpi0	84229	69134	69134	from_vertices	1	2	9058	9	1	738035.1	REJECT	9058	site=pass4_angle_early angle_v2=50.5 dis=20.2
+98	ncpi0	105946	55063	55063	from_vertices	1	2	35009	35	0	45144.4	REJECT	53030	site=pass4_angle_early angle_v2=40.8 dis=82.9
+98	ncpi0	105946	55063	55063	from_vertices	1	2	53029	53	0	722260.8	REJECT	53030	site=pass4_angle_early angle_v2=51.6 dis=71.8
+98	ncpi0	105946	55063	55063	from_vertices	1	2	53030	53	0	257026.1	REJECT	53030	site=pass4_angle_early angle_v2=64.3 dis=69.1
+98	ncpi0	105946	55063	55063	from_vertices	1	2	53031	53	0	210598.0	REJECT	53030	site=pass4_angle_early angle_v2=64.0 dis=76.1
+98	ncpi0	105946	55063	55063	from_vertices	1	2	54032	54	0	152006.2	REJECT	54032	site=pass4_angle_early angle_v2=52.4 dis=64.6
+98	ncpi0	105946	56056	56056	from_vertices	1	2	39013	39	0	142836.3	OWNED	39013	owner=40064 site=pass4_angle
+98	ncpi0	105946	56056	56056	from_vertices	1	2	50025	50	0	48769.9	REJECT	55063	site=pass4_angle_early angle_v2=137.3 dis=69.2
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	30032	30	0	220058.1	NO_SEAT	54071	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	36038	36	0	202007.9	NO_SEAT	47050	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	39041	39	0	84103.1	NO_SEAT	47050	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	47049	47	0	1456027.0	NO_SEAT	47050	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	47050	47	0	513138.1	NO_SEAT	47050	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	53069	53	0	414478.8	NO_SEAT	53070	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	53070	53	0	371275.5	NO_SEAT	53070	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	54071	54	0	1275237.1	NO_SEAT	54071	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	55073	55	0	1155005.4	NO_SEAT	54071	
+98	nuecc48	122660	9110	9110	in_main_cluster	0	1	60104	60	0	390676.0	NO_SEAT	47050	
+98	ncpi0	142421	7010	108104	from_vertices	1	2	7010	7	1	5914487.0	REJECT	7010	site=pass4_angle_early angle_v2=39.6 dis=14.6
+98	mcp1k	169626	53069	53069	in_other_clusters_A	1	2	39039	39	0	194891.6	ABSENT	39039	
+98	mcp1k	169626	53069	53069	in_other_clusters_A	1	2	42042	42	0	249983.6	OWNED	42042	owner=42042 site=in_other_clusters
+98	mcp1k	169626	53069	53069	in_other_clusters_A	1	2	43043	43	0	14591.5	OWNED	42042	owner=42042 site=in_other_clusters
+98	mcp1k	169626	53069	53069	in_other_clusters_A	1	2	53070	53	0	1690299.7	SAME_CLUSTER	-1	
+98	mcp2k	173093	12007	12007	from_vertices	1	2	53024	53	0	75258.6	REJECT	61040	site=pass4_angle_cone angle_v2=21.0 dis=136.2
+98	mcp2k	173093	12007	12007	from_vertices	1	2	58029	58	0	297621.3	REJECT	61040	site=pass4_angle_cone angle_v2=15.0 dis=141.9
+98	mcp2k	173093	12007	12007	from_vertices	1	2	61040	61	0	384382.0	REJECT	61040	site=pass4_angle_cone angle_v2=22.0 dis=121.8
+98	nuecc48	269774	97197	97197	from_vertices	1	2	19040	19	0	192404.4	REJECT	13237	site=pass4_angle_cone angle_v2=6.7 dis=140.1
+98	nuecc48	269774	97197	97197	from_vertices	1	2	67079	67	0	197738.8	OWNED	13237	owner=13237 site=pass4_angle
+98	nuecc48	269774	97197	97197	from_vertices	1	2	68080	68	0	187611.5	OWNED	13237	owner=13237 site=pass4_angle
+98	nuecc48	269774	97197	97197	from_vertices	1	2	96189	96	0	333564.5	OWNED	13237	owner=13237 site=pass4_angle
+98	nuecc48	269774	97197	97197	from_vertices	1	2	96190	96	0	352639.8	OWNED	13237	owner=13237 site=pass4_angle
+98	nuecc48	269774	97197	97197	from_vertices	1	2	100213	100	0	77399.9	OWNED	13237	owner=13237 site=pass4_angle
+98	nuecc48	269774	97197	97197	from_vertices	1	2	108232	108	0	25719.9	REJECT	13237	site=pass4_angle_cone angle_v2=5.1 dis=128.9
+98	nuecc48	269774	97197	97197	from_vertices	1	2	109233	109	0	32408.5	REJECT	13237	site=pass4_angle_cone angle_v2=5.4 dis=139.4
+98	mcp1k	281485	88090	88090	in_other_clusters_A	1	3	62041	62	0	50191.5	ABSENT	90104	
+98	mcp1k	281485	88090	88090	in_other_clusters_A	1	3	90104	90	0	333688.0	OWNED	90104	owner=90104 site=in_other_clusters
+98	mcp1k	281485	88090	88090	in_other_clusters_A	1	3	90105	90	0	187541.4	OWNED	90104	owner=90104 site=in_other_clusters
+98	mcp1k	284235	74027	74027	from_vertices	1	2	38019	38	0	239700.3	REJECT	38019	site=pass4_angle_early angle_v2=33.8 dis=65.7
+98	ncpi0	314838	110088	110088	from_vertices	1	2	13010	13	1	2036454.9	REJECT	13010	site=pass4_angle_early angle_v2=60.6 dis=17.4
+98	ncpi0	314838	110088	110088	from_vertices	1	2	83027	83	0	28159.0	REJECT	87031	site=pass4_angle_cone angle_v2=25.2 dis=104.1
+98	ncpi0	314838	110088	110088	from_vertices	1	2	85029	85	0	53932.5	REJECT	87031	site=pass4_angle_cone angle_v2=27.5 dis=110.9
+98	ncpi0	314838	110088	110088	from_vertices	1	2	87031	87	0	80451.0	REJECT	87031	site=pass4_angle_early angle_v2=42.1 dis=100.9
+98	ncpi0	314838	110088	110088	from_vertices	1	2	89033	89	0	38662.9	REJECT	13010	site=pass4_angle_early angle_v2=36.7 dis=55.9
+98	ncpi0	314838	110088	110088	from_vertices	1	2	91035	91	0	63967.1	REJECT	87031	site=pass4_angle_cone angle_v2=29.7 dis=102.0
+98	ncpi0	314838	110088	110088	from_vertices	1	2	94038	94	0	20778.3	REJECT	87031	site=pass4_angle_cone angle_v2=21.4 dis=112.3
+98	ncpi0	314838	110088	110088	from_vertices	1	2	95039	95	0	58570.4	REJECT	87031	site=pass4_angle_cone angle_v2=23.9 dis=105.2
+98	ncpi0	314838	110088	110088	from_vertices	1	2	109070	109	0	210963.5	REJECT	87031	site=pass4_angle_cone angle_v2=28.2 dis=111.7
+98	ncpi0	314838	110088	110088	from_vertices	1	2	109071	109	0	46369.6	REJECT	87031	site=pass4_angle_cone angle_v2=28.1 dis=116.5
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	25035	25	0	513236.9	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	25037	25	0	269966.7	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	25038	25	0	385375.5	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	25108	25	0	37390.3	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	25109	25	0	15127.2	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	72098	72	0	65084.0	NO_SEAT	25109	
+98	nuecc48	342199	74101	74101	in_other_clusters_B	0	3	73099	73	0	32167.4	NO_SEAT	25109	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	36002	36	0	22995.3	ABSENT	36002	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	37003	37	0	16386.3	ABSENT	37003	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	38004	38	0	16203.5	ABSENT	38004	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	39005	39	0	56405.4	ABSENT	39005	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	40032	40	0	30632.9	OWNED	40032	owner=40032 site=in_other_clusters
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	40033	40	0	75833.5	OWNED	40032	owner=40032 site=in_other_clusters
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	41007	41	0	35630.1	OWNED	40032	owner=40032 site=in_other_clusters
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	42008	42	0	25569.3	ABSENT	42008	
+98	mcp1k	347129	11000	11000	in_other_clusters_A	1	3	43009	43	0	40956.3	ABSENT	43009	
+98	mcp1k	409634	69032	27015	from_vertices	1	2	69032	69	0	487324.4	REJECT	69032	site=pass4_angle_early angle_v2=169.7 dis=7.4
+98	mcp1k	409634	69032	27015	from_vertices	1	2	69033	69	0	157933.4	REJECT	69032	site=pass4_angle_early angle_v2=169.7 dis=7.4
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	102168	102	0	134496.3	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	103169	103	0	75388.1	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	104175	104	0	228738.1	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	104176	104	0	406933.1	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	105181	105	0	148707.1	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	105182	105	0	391986.3	NO_SEAT	83139	
+98	mcp2k	415278	23012	23012	in_main_cluster	0	1	110187	110	0	133623.7	NO_SEAT	83139	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	23047	23	0	2168026.9	SAME_CLUSTER	23047	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	56092	56	0	1736846.1	NO_SEAT	-1	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	75131	75	0	37277.9	NO_SEAT	99156	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	76132	76	0	89390.4	NO_SEAT	99156	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	77133	77	0	37261.5	NO_SEAT	96152	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	80136	80	0	174228.8	NO_SEAT	99156	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	96152	96	0	222052.6	NO_SEAT	96152	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	99156	99	0	376500.5	NO_SEAT	99156	
+98	mcp2k	415278	23037	23037	in_main_cluster	0	1	99157	99	0	320396.3	NO_SEAT	99156	
+98	nuecc48	423981	12095	12095	examine_shower_1_tmp	0	1	63070	63	0	31887.0	NO_SEAT	64071	
+98	nuecc48	423981	12095	12095	examine_shower_1_tmp	0	1	64071	64	0	135278.7	NO_SEAT	64071	
+98	nuecc48	444187	19079	19079	in_main_cluster	0	1	19039	19	1	171359.4	SAME_CLUSTER	19082	
+98	nuecc48	444187	19079	19079	in_main_cluster	0	1	19067	19	1	1134734.5	SAME_CLUSTER	19082	
+98	nuecc48	444187	19079	19079	in_main_cluster	0	1	19082	19	1	1245871.7	SAME_CLUSTER	19082	
+98	nuecc48	444187	19079	19079	in_main_cluster	0	1	61074	61	0	56132.8	NO_SEAT	19082	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	48040	48	0	27705.9	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	49041	49	0	39063.0	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	50042	50	0	38894.2	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	51043	51	0	26750.3	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	59051	59	0	125008.9	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	72064	72	0	271839.7	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	73065	73	0	74181.2	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	75067	75	0	199048.5	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	109073	109	0	558621.1	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	109074	109	0	408865.9	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	110075	110	0	183178.5	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	111079	111	0	515923.3	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	112080	112	0	124114.0	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	113081	113	0	42806.4	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	114084	114	0	151690.8	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	114086	114	0	292455.5	NO_SEAT	114086	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115088	115	0	732470.2	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115090	115	0	171384.6	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115092	115	0	73442.3	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115094	115	0	31916.8	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115099	115	0	353856.3	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115100	115	0	944192.4	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115101	115	0	185032.3	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115102	115	0	225739.0	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115103	115	0	417500.1	NO_SEAT	115088	
+98	ncpi0	463565	13001	13001	in_other_clusters_B	0	3	115106	115	0	519785.0	NO_SEAT	115088	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	32007	32	0	23124.8	NO_SEAT	68052	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	35010	35	0	26919.5	NO_SEAT	68052	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	37012	37	0	17942.1	NO_SEAT	68052	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	62073	62	0	391486.5	NO_SEAT	62073	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	62074	62	0	21307.4	NO_SEAT	62073	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	66042	66	0	369011.3	NO_SEAT	66042	
+98	nuecc48	469665	15003	15003	connecting_to_main_vertex|examine_showers_retarget	0	1	66048	66	0	327944.4	NO_SEAT	66042	
+141	mcp2k	52044	24035	58029	from_vertices	1	2	24007	24	0	478187.2	OWNED	24035	owner=24035 site=pass4_angle
+141	mcp2k	52044	24035	58029	from_vertices	1	2	24009	24	0	832966.8	REJECT	-1	site=pass4_angle_early angle_v2=162.5 dis=25.6
+141	mcp2k	52044	24035	58029	from_vertices	1	2	24034	24	0	63346.3	ABSENT	24035	
+141	mcp2k	52044	24035	58029	from_vertices	1	2	24035	24	0	257806.3	ABSENT	24035	
+141	mcp1k	54341	96031	96031	from_vertices	1	2	77019	77	0	14258.1	REJECT	77019	site=pass4_angle_early angle_v2=42.8 dis=36.3
+141	mcp1k	54341	96031	96031	from_vertices	1	2	96033	96	0	810652.2	SAME_CLUSTER	-1	
+141	mcp1k	54341	101041	101041	from_vertices	1	2	34015	34	0	869057.4	ABSENT	-1	
+141	mcp2k	54453	57050	57050	from_vertices	1	2	23026	23	0	713511.1	REJECT	58051	site=pass4_angle_early angle_v2=61.5 dis=76.6
+141	mcp2k	54453	57050	57050	from_vertices	1	2	23028	23	0	373496.6	REJECT	-1	site=pass4_angle_early angle_v2=88.9 dis=75.9
+141	mcp2k	91917	87053	87053	from_vertices	1	2	66021	66	0	171811.1	REJECT	66021	site=pass4_angle_cone angle_v2=17.4 dis=94.8
+141	mcp2k	98844	70063	70063	from_vertices	1	2	66043	66	0	119906.2	OWNED	6013	owner=66043 site=pass4_angle
+141	mcp2k	98844	70063	70063	from_vertices	1	2	69062	69	0	392500.4	OWNED	69062	owner=69062 site=pass4_angle
+141	mcp2k	100135	14025	14025	in_main_cluster	0	1	14024	14	1	279728.6	SAME_CLUSTER	14024	
+141	mcp2k	100222	113236	113236	in_main_cluster	0	1	14006	14	1	483542.8	MAIN_CLUSTER_SKIP	14006	
+141	mcp1k	168432	49028	49028	from_vertices	1	2	50029	50	0	356007.6	REJECT	50029	site=pass4_angle_early angle_v2=32.9 dis=49.6
+141	mcp2k	174771	85085	85085	from_vertices	1	2	85058	85	0	458333.1	SAME_CLUSTER	-1	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	54014	54	0	58953.2	NO_SEAT	68031	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	58018	58	0	89284.8	NO_SEAT	68031	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	68031	68	0	299605.2	NO_SEAT	68031	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	68032	68	0	90657.3	NO_SEAT	68031	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	68034	68	0	130079.4	NO_SEAT	68031	
+141	mcp2k	181050	15006	15006	examine_showers_retarget	0	1	69039	69	0	827239.0	NO_SEAT	68031	
+141	mcp2k	281325	42039	42039	examine_showers_retarget	0	1	27016	27	0	28591.0	NO_SEAT	41034	
+141	mcp2k	281325	42039	42039	examine_showers_retarget	0	1	41034	41	0	277555.2	NO_SEAT	41034	
+141	mcp2k	281325	42039	42039	examine_showers_retarget	0	1	41036	41	0	327692.4	NO_SEAT	41034	
+141	mcp2k	282271	6063	6063	in_main_cluster	0	1	6004	6	1	166045.5	SAME_CLUSTER	6004	
+141	mcp2k	284206	10051	10051	in_main_cluster	0	1	10052	10	1	490984.3	SAME_CLUSTER	10052	
+141	mcp2k	284206	10051	10051	in_main_cluster	0	1	10054	10	1	1123908.5	SAME_CLUSTER	10054	
+141	mcp2k	284206	10051	10051	in_main_cluster	0	1	10056	10	1	655902.8	SAME_CLUSTER	10056	
+141	mcp2k	289246	63034	63034	from_vertices	1	2	77063	77	0	150209.3	REJECT	77063	site=pass4_angle_early angle_v2=59.5 dis=99.9
+141	mcp2k	289246	63034	63034	from_vertices	1	2	77064	77	0	366974.7	REJECT	77063	site=pass4_angle_early angle_v2=51.7 dis=101.4
+141	mcp1k	293149	4001	4001	examine_showers_retarget	0	1	27006	27	0	28444.5	NO_SEAT	31010	
+141	mcp1k	293149	4001	4001	examine_showers_retarget	0	1	29008	29	0	32822.2	NO_SEAT	31010	
+141	mcp1k	293149	4001	4001	examine_showers_retarget	0	1	30009	30	0	47970.5	NO_SEAT	31010	
+141	mcp1k	293149	4001	4001	examine_showers_retarget	0	1	31010	31	0	21885.8	NO_SEAT	31010	
+141	mcp2k	294174	71067	71067	from_vertices	1	2	64059	64	0	215058.6	REJECT	64065	site=pass4_angle_cone angle_v2=25.9 dis=131.5
+141	mcp2k	294174	71067	71067	from_vertices	1	2	64065	64	0	421372.1	REJECT	64065	site=pass4_angle_cone angle_v2=27.4 dis=128.5
+141	mcp2k	318769	19003	19003	in_other_clusters_A	1	3	19005	19	1	2732563.0	SAME_CLUSTER	-1	
+141	mcp2k	395597	20004	20004	in_main_cluster	0	1	20006	20	1	665248.2	SAME_CLUSTER	-1	
+141	mcp2k	396037	69026	69026	from_vertices	1	2	65017	65	0	191236.6	REJECT	65017	site=pass4_angle_early angle_v2=133.0 dis=17.9
+141	mcp2k	397630	33038	19010	from_vertices	1	2	25015	25	0	44149.2	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	32022	32	0	120508.7	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	33028	33	0	148414.5	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	33029	33	0	215510.8	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	33037	33	0	184309.9	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	33038	33	0	633601.4	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	33039	33	0	283427.5	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	34041	34	0	291888.4	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	397630	33038	19010	from_vertices	1	2	34042	34	0	92635.7	OWNED	33038	owner=33038 site=pass4_angle
+141	mcp2k	408304	9039	9039	connecting_to_main_vertex	0	1	9038	9	1	897852.0	SAME_CLUSTER	-1	
+141	mcp2k	412242	14007	14007	conn3_unreachable	0	3	50049	50	0	249523.3	NO_SEAT	64054	

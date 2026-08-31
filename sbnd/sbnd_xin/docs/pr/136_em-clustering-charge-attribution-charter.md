@@ -1,7 +1,9 @@
 # doc pr/136 — the EM-clustering / π⁰ charge-attribution campaign: what I propose to try, and why
 
-**Status: CHARTER, written 2026-08-30. Analysis only — no code, no arms, no
-knobs, no flips. Successor to the finder-level π⁰ campaign (pr/126 → 132 →
+**Status: CHARTER + ROUND 1 MEASUREMENT, 2026-08-30. §1–§9 are the charter
+(analysis only). §10 is round 1: one byte-neutral probe arm at the production
+point, and the census it made possible — which closed proposals #3 and #6 and
+replaced #1 with a smaller, sharper target. Still no knob, no flip. Successor to the finder-level π⁰ campaign (pr/126 → 132 →
 133 → 134, reviewed in pr/135), which is closed and shipped. Scoped by the
 owner: tune only what comes AFTER the neutrino vertex, and measure against
 the hand scan. toolkit `b5cc3a3f`, wcp `38088acd`.**
@@ -696,3 +698,257 @@ labelled vertex; no clustering change reaches it.
    decision, not a knob to try — raised here, not taken.
 4. **`pr126_pi0_select.py --selftest` is broken** and has been since the
    2026-08-31 retire round. Nothing is validating the label corpus.
+
+---
+
+## 10. Round 1 — proposal 0 executed, and what its tape says
+
+**Status: MEASUREMENT COMPLETE, 2026-08-30. Proposals #3 and #6 are closed by
+measurement; #1 is answered and replaced by a sharper, smaller target.**
+
+### Repro (round 1)
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# proposal 0 -- the byte-neutral probe arm at the f086 production point
+PR_JOBS=32 ./scripts/pr136_arms.sh 98  f086probe 1
+PR_JOBS=32 ./scripts/pr136_arms.sh 141 f086probe 1
+./scripts/pr136_manifests.sh f086probe
+# NOTE the explicit --out: prep_em_scan.py ALWAYS rewrites its --out manifest,
+# and the default is the tracked em114-manifest.tsv.  Without --out a
+# probe-parsing run silently truncates that scan record to its header (M13).
+python3 em_display/prep_em_scan.py --prepdir em_display/emprep-136f086 \
+    --out /home/xqian/tmp/pr136-parse-manifest.tsv --no-bee-index \
+    --parse-probes work-pr136-f086probe-{mcp1k,mcp2k,ncpi0,nuecc48}
+
+# #3 refresh -- completeness at the PRODUCTION point (no longer a cross-arm join)
+cd em_display
+./em117_score.py --tag emscan-0827        --manifest em117-136f086probe98-manifest.tsv \
+    --prepdir emprep-136f086 --tsv ../docs/pr/pr136-completeness-f086-98.tsv
+./em117_score.py --tag emscan-0828-agent5 --manifest em114c-136f086probe141-manifest.tsv \
+    --prepdir emprep-136f086 --tsv ../docs/pr/pr136-completeness-f086-141.tsv
+cd ..
+scripts/pr136_completeness.py --src98 pr136-completeness-f086-98.tsv \
+    --src141 pr136-completeness-f086-141.tsv --tsv docs/pr/pr136-completeness-f086arms.tsv
+
+# #1 -- WHY the missing charge is unreachable (the enumeration instrument)
+scripts/pr136_xclus_enum.py                     # -> docs/pr/pr136-xclus-enum.tsv
+# #3 -- the energy-ladder tier census
+scripts/pr136_tier_census.py                    # -> docs/pr/pr136-tier-census.tsv
+# #6 -- the mass peak on the contained subsample
+scripts/pr136_peak_contained.py                 # -> docs/pr/pr136-peak-contained.tsv
+```
+
+The arm is `work-pr136-f086probe-{mcp1k,mcp2k,ncpi0,nuecc48}`, **239 / 239
+events, every `rc=0`**, shipped production config (fudge 0.86, the pr/133+134
+chain), four getenv-gated stderr tapes and no `SBND_*` env — byte-neutral by
+construction, no knob touched.
+
+### 10.1 §5's completeness numbers, now at the production point
+
+| | pr130 arms (§5) | **f086 arms (this round)** |
+|---|---|---|
+| `q_miss` / q_target | 14.8 % | **14.0 %** |
+| `q_extra` / q_target | 8.9 % | **7.0 %** |
+| median per-shower `q_f1` | 0.907 | **0.918** |
+| worst `q_f1` | 0.322 | **0.524** |
+| pure UNDER / pure OVER / both / clean | 22 / 29 / 30 / 9 | **16 / 29 / 31 / 14** |
+
+The pr/133 + pr/134 chain and the 0.86 flip bought ~0.8 pt of completeness and
+~1.9 pt of purity on the hand-marked population, and moved six showers out of
+pure-UNDER into clean. **The §5 ↔ §3 synthesis is now single-arm** — the
+cross-arm caveat that §5 carried is retired.
+
+Worst rows at f086 (was 175896 0.322 on the pr130 arms; that shower is now
+1.000/0.513 = an over-clustering row, not an under-clustering one):
+284206 0.524, 52044 0.533, 318769 0.560, 142421 0.606, 278420 0.669,
+342199 0.670.
+
+### 10.2 The enumeration census — the load-bearing result of this round
+
+`pr136_xclus_enum.py` takes every segment the scanner says a hand-marked shower
+should hold and it does not (192 segments, 46 showers, 6.55e7 charge = the whole
+of `q_miss`), and asks **which mechanism made it unreachable**. Evidence first:
+if the `SHOWER_XCLUS` tape carries a line for the (shower, segment) pair, that
+line is the verdict; only when the tape is silent is the reason inferred, and
+each inference cites the source line that produced it.
+
+| verdict | n_seg | share of `q_miss` | what it means |
+|---|---|---|---|
+| `REJECT` | 47 | **27.5 %** | the shower evaluated it and the cone refused — a threshold |
+| `OWNED` | 25 | **8.0 %** | another shower already held it; dropped before any geometry |
+| `SAME_CLUSTER` | 15 | 22.4 % | in the shower's own cluster — the graph walk's job, no cone applies |
+| `MAIN_CLUSTER_SKIP` | 1 | 0.7 % | main-cluster segment the main-vertex walk claims |
+| **`NO_SEAT`** | **91** | **37.6 %** | **the shower never ran a cross-cluster candidate loop at all** |
+| `ABSENT` | 13 | 3.8 % | had a seat, no tape line either way — residual |
+
+**Only 35.5 % of the missing charge is reachable by changing a predicate at an
+existing cross-cluster seat.** That single number re-scopes the whole front:
+pr/123 → pr/130 spent eleven rounds tuning admission predicates, and the
+population they could ever have moved is about a third of the deficit.
+
+**`NO_SEAT` is structural, and the reason is now named.** Exactly two seats in
+the code enumerate cross-cluster candidates: pass 4 of
+`shower_clustering_with_nv_from_vertices` (`NeutrinoShowerClustering.cxx:2396`)
+and sub-pass A of `shower_clustering_in_other_clusters` (`:3868`). Sub-pass B
+(`:4093`) has **no candidate loop at all** — it creates a shower from a leftover
+cluster, completes the graph walk, and inserts. So a shower built anywhere else
+never evaluates one cross-cluster candidate:
+
+| the seat the shower was actually built at | n_seg | share of `q_miss` |
+|---|---|---|
+| `in_other_clusters_B` | 33 | 12.3 % |
+| `in_main_cluster` | 26 | **16.3 %** |
+| `examine_showers_retarget` | 13 | 3.5 % |
+| (no walk site recorded) | 9 | 3.2 % |
+| `connecting_to_main_vertex` + retarget | 7 | 1.8 % |
+| `examine_shower_1_tmp` | 2 | 0.3 % |
+| `conn3_unreachable` | 1 | 0.4 % |
+
+This confirms pr/130 item 4's live lead and generalises it from 4 showers to 13,
+with the mechanism named: **it is not that those showers lost an arbitration —
+they were never in one.** The four pr/130 specimens now have individual
+diagnoses: 122660/9110 (conn 1, `in_main_cluster`), 181050/15006 (conn 1,
+`examine_showers_retarget`), 469665/15003 (conn 1,
+`connecting_to_main_vertex`) and 463565/13001 (conn 3, `in_other_clusters_B`).
+All four already span 14–22 clusters, so the missing charge is not "this shower
+cannot cross a cluster boundary" — it is "this shower is never offered the
+direct-cone route that the owner's MERGE verdicts describe".
+
+**Split by the matched shower's connection type, the two halves separate cleanly:**
+
+| conn | share of `q_miss` | composition |
+|---|---|---|
+| 1 (at the ν vertex) | 36.2 % | `NO_SEAT` 60 %, `SAME_CLUSTER` 38 %, `MAIN_CLUSTER_SKIP` 2 % — **`REJECT` 0 %** |
+| 2 | 42.4 % | `REJECT` 65 %, `OWNED` 16 %, `SAME_CLUSTER` 11 %, `ABSENT` 8 % |
+| 3 | 21.4 % | `NO_SEAT` 74 %, `SAME_CLUSTER` 20 %, `OWNED` 5 % |
+
+**Not one MeV of missing charge on a conn-1 shower was ever refused by a
+predicate.** Conn-1 showers are the ones attached to the neutrino vertex — the
+π⁰ γs. Every threshold round this campaign could run touches conn-2 only.
+
+### 10.3 The sharpest single finding: a pre-filter that is stricter than the test it guards
+
+Pass 4 computes both angles and then applies a cheap early filter before the two
+expensive KD-tree calls:
+
+```c++
+// NeutrinoShowerClustering.cxx:2400-2404, :2434
+double angle_v1 = angle(dir_shower, pair_point - start_pt);   // from the shower start
+double angle_v2 = angle(dir_shower, pair_point - point);      // from the cluster anchor
+if (angle_v2 > 30) { ...continue; }                            // the PRE-FILTER
+...
+// :2450 -- the acceptance disjunction it guards
+if ((angle_v1 < 25   && (pair_dis < 80cm  || close_shower_dis < 25cm)) ||
+    (angle_v2 < 25   && (tmp_shower_dis < 40cm || close_shower_dis < 25cm)) ||
+    (angle_v1 < 12.5 && (pair_dis < 120cm || close_shower_dis < 40cm)) ||
+    (angle_v2 < 12.5 && (tmp_shower_dis < 80cm || close_shower_dis < 40cm)))
+```
+
+**Two of the four acceptance clauses do not mention `angle_v2` at all**, yet the
+pre-filter discards the candidate on `angle_v2` alone. Reading the tape's
+`angle_v1` column for the 29 early-rejected segments in the census:
+
+| event | shower | seg | q | share of `q_miss` | `angle_v1` | `angle_v2` | `pair_dis` |
+|---|---|---|---|---|---|---|---|
+| 142421 | 108104 | 7010 | 5.91e6 | **9.0 %** | **21.3°** | 39.6° | 14.6 cm |
+| 314838 | 110088 | 13010 | 2.04e6 | 3.1 % | **21.6°** | 60.6° | 17.4 cm |
+| 52044 | 58029 | 24009 | 8.33e5 | 1.3 % | 14.4° | 162.5° | 25.6 cm |
+| 84229 | 69134 | 9058 | 7.38e5 | 1.1 % | 9.9° | 50.5° | 20.2 cm |
+| 105946 | 55063 | 53029 | 7.22e5 | 1.1 % | 18.4° | 51.6° | 71.8 cm |
+| 409634 | 27015 | 69032 | 4.87e5 | 0.7 % | 9.3° | 169.7° | 7.4 cm |
+| 105946 | 55063 | 53030 | 2.57e5 | 0.4 % | 24.4° | 64.3° | 69.1 cm |
+| 409634 | 27015 | 69033 | 1.58e5 | 0.2 % | 9.3° | 169.7° | 7.4 cm |
+| 105946 | 55063 | 54032 | 1.52e5 | 0.2 % | 14.7° | 52.4° | 64.6 cm |
+| 54341 | 96031 | 77019 | 1.43e4 | 0.0 % | 8.9° | 42.8° | 36.3 cm |
+
+**10 segments carrying 17.3 % of all `q_miss` satisfy an acceptance clause on
+`angle_v1` and were killed by the `angle_v2` pre-filter before that clause was
+ever evaluated** — including the single largest missed segment in the census,
+which alone is 9 % of the deficit. The count is a **lower bound**: the early
+tape does not carry `close_shower_dis`, and clauses 1 and 3 also admit on
+`close_shower_dis < 25 / 40 cm`.
+
+**Prototype check (M15, mandatory before calling this a defect).**
+`prototype_base/wire-cell/pid/src/NeutrinoID_shower_clustering.h:1299` carries
+`if (angle1/3.1415926*180. > 30) continue;` with the identical acceptance
+disjunction below it (prototype `angle1` ≡ toolkit `angle_v2`, prototype `angle`
+≡ toolkit `angle_v1`). **The pre-filter is faithful to the prototype.** So this
+is *not* a porting defect and must not be "fixed" as one — it is a candidate
+*improvement* to an algorithm both codebases share, and it ships the same way
+everything else here ships: a default-OFF knob with a byte-identical gate.
+
+Two sub-classes, and they are not the same proposal:
+
+- **forward escapes** (`angle_v2` 30–90°): 7 segments, **15.0 % of `q_miss`**,
+  including both top segments. 142421, 314838, 84229, 105946 (×3), 54341.
+- **backward escapes** (`angle_v2` > 90°): 3 segments, 2.3 %. 52044, 409634 (×2).
+  These sit *behind* the shower relative to the cluster anchor — the same
+  geometry class as K17 back-extension, **which died twice** (pr/124: v1 31→21
+  exact; v2 26 exact, net −5). Keep them separate or the forward result inherits
+  a known death.
+
+Two of the four §4 hand-marked π⁰ rescues (409634, 54341) appear here, and
+142421 and 105946 are pr/130 MERGE-approved specimens.
+
+### 10.4 Proposal #3 (the energy-ladder feedback) is measured DEAD
+
+`examine_showers`' cone width really is keyed to the absorbing shower's own
+`kine_charge` (`:4999-5013`), and the fudge really does divide it — the
+mechanism is exactly as §5 described. It does not matter, because the population
+is nowhere near the edges:
+
+- 2051 EM showers over 239 events; **median distance to the nearest tier edge
+  97.8 MeV**; 84.4 % are more than 50 MeV from one; only **4.9 % are within
+  10 MeV** and 1.0 % within 2 MeV.
+- The direct test: the 0.84 → 0.86 flip is a 2.4 % energy step, and it moved
+  **20 of 2051 showers (0.98 %)** across a tier edge — all 20 downward, as
+  arithmetic requires. The largest is 137238/143056 at 354 MeV crossing 360.
+- 85.9 % of EM showers sit in tier 0 (below 100 MeV), where no ladder clause
+  fires at all.
+
+**Closed.** The self-reinforcement is real in the source and irrelevant in the
+data. It also retires the last live version of the "energy-ladder feedback"
+hypothesis that §5 flagged as untested.
+
+### 10.5 Proposal #6 (refit the scale on contained showers) — done, and 0.86 survives
+
+`pr136_peak_contained.py`, on the same 56 pairs, splitting by §6.1's containment:
+
+| cell | n | n_in | peak (MeV) [CI68] | implied fudge [CI68] |
+|---|---|---|---|---|
+| A all pairs (the blend the 0.86 fit saw) | 56 | 40 | 134.7 [130.5, 138.2] | 0.858 [0.831, 0.880] |
+| **B contained pairs (f₁,f₂ ≥ 0.95)** | **32** | **25** | **136.5 [132.8, 139.7]** | **0.869 [0.846, 0.890]** |
+| C ≥ 1 leaking γ | 24 | 15 | 127.7 [100.0, 138.3] | 0.814 |
+| D contained ∧ geometry-clean | 14 | 10 | 135.3 [128.2, 141.4] | 0.862 |
+
+Cell A reproduces `pr135-peak-f086-cells.tsv` cell A to 0.04 MeV — an
+independent check that the containment TSV's `m_prod` is the same estimator.
+
+**Reading: the leakage blend biases the scale by +1.8 MeV (+1.3 % in the fudge),
+which is inside its own CI68, and the fudge in force (0.86) sits inside the
+contained-only CI68 [0.846, 0.890].** So the 0.86 flip is calorimetrically
+correct, not a leakage artefact, and **the scale is not the front** — stop
+chasing it. What survives is the transportability caveat: a fudge fitted on the
+blend carries this sample's average leakage, so it is partly a
+detector-geometry constant and does not transport to another fiducial cut or
+another detector. If SBND ever changes the fiducial volume, refit on cell B.
+
+### 10.6 The ranking after round 1
+
+| | proposal | status after this round |
+|---|---|---|
+| **#1** | **pass-4 `angle_v1` escape from the `angle_v2` pre-filter (forward class)** | **NEW, and now the top of the list: 15.0 % of `q_miss`, 7 segments, prototype-checked, one bounded predicate, default-OFF-able.** Was invisible until the tape existed. |
+| #2 | 342199-class merge-before-accept | unchanged: +1 to +4 exact, hand-attested charge |
+| #3 | energy-ladder feedback | **CLOSED — measured dead (§10.4)** |
+| #4 | the over-clustered side | unchanged; `q_extra` is now 7.0 %, and it is the *cost* side of #1, so it gets measured either way |
+| #5 | fix the γ ledger | unchanged |
+| #6 | contained-subsample refit | **DONE (§10.5); 0.86 confirmed** |
+| — | **`NO_SEAT`: give conn-1 / `in_other_clusters_B` showers a cross-cluster route** | **NEW, and the largest single pool (37.6 %), but it is a new seat, not a predicate — expect a full 239-event gate and a large diff. Rank it after #1 because #1 is bounded and this is not.** |
+| — | old #1 (un-park pr/130's q_miss front as a *predicate* round) | **superseded**: the tape says predicates reach 35.5 % of the deficit and 0 % of the conn-1 half |
+
+**The measurement that would kill #1**, stated before it is written: the escape
+admits segments the cone was right to refuse, and `q_extra` rises by more than
+`q_miss` falls, or an accepted π⁰ pair is lost. Both are measurable on the same
+239-event manifest with `pr136_completeness.py` and `pr136_mass_closure.py`.
