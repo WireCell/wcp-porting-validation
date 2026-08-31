@@ -142,6 +142,36 @@ that finds its card with `composedPath()[0]`, because drag events are
 to the host. `draggable="true"` is emitted by Python into the HTML, so arming a
 card needs no DOM write at all.
 
+### A1.2 Bee links in the viewer — ADDED 2026-08-31
+
+Owner: *"we also need the bee link in them, so that we can understand the event
+more before doing the divide."* The split tool shows **one object**; Bee shows
+everything around it, which is what a boundary call often needs.
+
+`split_display/bee_links.py` resolves them from records that already exist. Every
+uploaded round leaves a `<name>.url` (the set URL) beside a `<name>.index.txt`
+(bee_idx → event), and **Bee addresses an event by its index in the set**:
+
+```
+https://www.phy.bnl.gov/twister/bee/set/<uuid>/event/<bee_idx>/
+```
+
+So the viewer scans `bee/*/` once at startup, joins each `.url` to its index, and
+prints every set that holds the current event as a deep link. **37 of the owner's
+41 events already resolve** to at least one uploaded set — no new upload was
+needed to make the feature useful.
+
+Two honest limits:
+
+- **The 4 remaining events have no uploaded set.** `bee/pr137r2/` covers all 41
+  and would also give a matched OFF/ON pair for every one, but it is built and
+  **held** — a set with no `.url` contributes nothing here by construction.
+- **The links are not fetch-verified.** This node has no outbound HTTPS (curl
+  exits 35), so the URL *scheme* is taken from the 329 `/event/list/` and ~50
+  `/event/<n>/` occurrences in the committed docs, and the indices from the very
+  index files the uploads were made with. Verified as far as it can be here, and
+  no further.
+
 **Still to do before the scan** (none of it blocks a first pass):
 the θ-φ ray-map panel (A1 item 2) and the `w_single(r)` overlay (item 3) are not
 in the viewer yet — they exist in `pr137_curate.py --sheets`, which is the

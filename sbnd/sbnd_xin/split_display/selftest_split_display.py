@@ -64,7 +64,20 @@ check("3 groups -> SPLIT3", derive({1: 0, 2: 1, 3: 2}) == 'SPLIT3')
 check("1 group + junk -> TRIM", derive({1: 0, 2: SM.JUNK}) == 'TRIM')
 check("junk alone does not become SPLIT2", derive({1: 0, 2: SM.JUNK}) != 'SPLIT2')
 
-# 6. the M13 guard: refuse to write into a foreign label dir
+# 6. Bee link resolution
+import bee_links as BL
+m = BL.scan()
+check("bee scan resolves some events", len(m) > 100, "resolved %d" % len(m))
+ev0 = sorted(m)[0]
+name, url, idx = m[ev0][0]
+check("a resolved link is a per-event deep link, not the set list",
+      '/event/%d/' % idx in url and '/set/' in url, url)
+check("an unresolvable event yields a note, not a broken link",
+      'no uploaded Bee set' in BL.links_html(m, -1))
+check("links_html emits anchors for a resolved event",
+      BL.links_html(m, ev0).count('<a ') >= 1)
+
+# 7. the M13 guard: refuse to write into a foreign label dir
 tmp = tempfile.mkdtemp(prefix='pr138sel-')
 try:
     foreign = os.path.join(tmp, 'emscan-pretend')
@@ -80,5 +93,5 @@ try:
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
-print("\n%d checks, %d FAILED" % (16, len(FAIL)))
+print("\n%d checks, %d FAILED" % (20, len(FAIL)))
 sys.exit(1 if FAIL else 0)

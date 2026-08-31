@@ -46,6 +46,7 @@ from bokeh.events import Pan, PanStart, PanEnd, DocumentReady
 import em3d
 import split_model as SM
 import split_tree_js as TJ
+import bee_links as BL
 
 GROUPS = [0, 1, 2, SM.JUNK]
 GROUP_NAME = {0: "Group 0", 1: "Group 1", 2: "Group 2", SM.JUNK: "JUNK (trim)"}
@@ -86,6 +87,15 @@ def worklist():
 
 WORK = worklist()
 
+# Scanned once: bee/*/<name>.url joined to <name>.index.txt gives event -> set+index,
+# and Bee addresses an event by its INDEX IN THE SET.  A set that was never
+# uploaded has no .url and contributes nothing, which is why bee/pr137r2 supplies
+# no links until its upload is authorised (CLAUDE.md sec 5.6).
+try:
+    BEE = BL.scan()
+except Exception:
+    BEE = None
+
 # ----------------------------------------------------------------- state
 STATE = dict(i=0, payload=None, group={}, bundles={}, row=None)
 
@@ -103,6 +113,7 @@ hi_box = TextInput(value='', visible=False)         # highlight channel
 moved_box = TextInput(value='', visible=False)      # drop channel
 cam_box = TextInput(value='', visible=False)
 
+bee = Div(text='', width=780, height=34)
 tree = Div(text='', width=780, height=640)
 info = Div(text='', width=780)
 status = PreText(text='', width=780, height=54)
@@ -331,6 +342,10 @@ def load(i):
                     az0=[0.6], el0=[0.35], xs0=[-R], xe0=[R], ys0=[-R], ye0=[R])
     fig.x_range.start, fig.x_range.end = -R, R
     fig.y_range.start, fig.y_range.end = -R, R
+    # Bee deep links for THIS event, from the sets already uploaded.  The owner
+    # asked for these so the whole event can be understood before the divide --
+    # the split tool shows one object, Bee shows everything around it.
+    bee.text = ("<b>Bee:</b> " + BL.links_html(BEE, ev)) if BEE is not None else ''
     hi_box.value = ''
     refresh()
     curdoc().add_next_tick_callback(lambda: _kick())
@@ -449,7 +464,7 @@ jump = Select(title='object', width=300,
               value='0')
 jump.on_change('value', lambda a, o, n: load(int(n)))
 
-left = column(info,
+left = column(info, bee,
               brow(btn_prev, btn_next, jump, btn_save),
               brow(verdict_btn), brow(conf_btn), note_box,
               brow(btn_reset),
