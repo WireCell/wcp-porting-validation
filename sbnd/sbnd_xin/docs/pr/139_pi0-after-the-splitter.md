@@ -980,3 +980,61 @@ delta (work-pr140r1-on  -  baseline)
 and it is the one of the three that also carries completeness labels. §8 said
 three cuts would be rejected; the merged target now shows what one of them costs
 in charge attribution. That is the instrument working on its first use.
+
+---
+
+## 12. Item 3 — RESULT: the re-home's blocker was never the metric  *(arm `work-pr140r1-onrh15-*`)*
+
+`shower_split_rehome=1`, `shower_split_rehome_gap=15`, re-run on the flipped
+production config because `em_start` changes which segment roots the daughter
+the re-home is hunting a host for. Tape: **51 peels, 11 re-homed, 40 left orphan**
+(pre-flip it was 12 of 51).
+
+### 12.1 Against the §9.2 bars
+
+| # | criterion | bar | measured | |
+|---|---|---|---|---|
+| i | the merged target sees something the single target does not | ≥ 1 row | **0 rows** | **FAIL** |
+| ii | worth flipping | parts-with-no-match falls **or** median part `q_f1` rises | **6 → 6**, median part `q_f1` **+0.000** | **FAIL** |
+| iii | no regression | census exact ≥ 35, 0 ADVERSE | **35**, **0 / 0 / 0 / 0** | PASS |
+
+### 12.2 Criterion (i) is the result, and it has a mechanism
+
+Row by row, over both label sets:
+
+```
+single-target rows that moved : 3
+merged-target rows that moved : 3
+  merged movers the single metric did not see : none
+  single movers the merged metric did not see : none
+```
+
+**Exactly the same three rows. Not one more.** §3ter's premise for this item —
+*"It has never had a metric that could see it. Item 2 gives it one."* — is
+**wrong, and now measurably so.**
+
+The mechanism is structural, and it is worth stating because it generalises:
+
+> The per-part target exists to make a **cut** visible. Both metrics match one
+> reconstructed object per target row, so **splitting** one hand shower into two
+> was invisible to the single target and is visible to the merged one. But a
+> re-home **merges** an orphan daughter into a host — it changes that host's
+> membership, and *both* metrics see a membership change on the host's row
+> identically. **The merged target buys sensitivity to cuts, not to merges.**
+
+So P1.4 was never blocked on the instrument. It is blocked on there being
+nothing much to gain: at 15 cm on the flipped config it moves `q_miss`
+**−0.28 pt** and `q_extra` **+0.21 pt** on three rows, leaves the census at 35
+and every part exactly where it was.
+
+### 12.3 The verdict
+
+**Do not flip the re-home.** It is not harmful (0 ADVERSE, census flat) and the
+μ-typing problem the owner raised it against — *"I do not like the orphan things
+to be identified as muon"* — was already solved by **P1.3**, which is production
+ON and took μ-typed daughters from **11 to 2**. The re-home was the second
+answer to a question the first answer had already closed.
+
+40 of 51 daughters still find no host at 15 cm. Widening further is a search,
+not a measurement, and §12.2 says the metric would not reward it. **This item is
+closed, not parked.**

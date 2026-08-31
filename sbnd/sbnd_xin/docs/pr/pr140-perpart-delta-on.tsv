@@ -3,4 +3,6 @@ q_miss_pct	11.21	11.25	0.04765
 q_extra_pct	8.625	9.059	0.4342
 med_part_f1	0.92	0.868	-0.052
 n_nomatch	6	7	1
+n_notmade	0	0	0
+n_sibling	6	7	1
 n_parts	23	23	0

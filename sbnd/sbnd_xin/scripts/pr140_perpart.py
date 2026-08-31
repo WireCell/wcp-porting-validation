@@ -52,6 +52,30 @@ def summarise(tag, rows):
     empty = [r for r in parts if num(r, "q_target") == 0]
     live = [r for r in parts if num(r, "q_target") > 0]
     nomatch = [r for r in live if r["matched"] == "-1" or num(r, "q_comp") == 0]
+    # An unmatched part splits into two very different findings, and conflating
+    # them overstates the failure:
+    #   ABSORBED  its segments sit inside a reco shower that ANOTHER part of the
+    #             same hand shower already claimed -- the reco UNDER-SPLIT: it
+    #             made fewer distinct objects than the owner asked for, and this
+    #             part's charge is inside one of the ones it did make.
+    #   DROPPED   nobody holds them at all -- the reco lost the charge outright.
+    # Both are failures to give the part its own object; they differ in where
+    # the charge went, which is what a fix has to act on.
+    sib = {}
+    for r in rows:
+        if r["part"] in ("-",):
+            continue
+        sib.setdefault((r["event"], r["shower"]), []).append(r)
+    def segset(s):
+        return set(x for x in (s or "").split(",") if x)
+    for r in nomatch:
+        mine = segset(r["miss"])
+        held = set()
+        for o2 in sib.get((r["event"], r["shower"]), ()):
+            if o2 is r or o2["matched"] == "-1":
+                continue
+            held |= segset(o2["extra"])
+        r["_why"] = ("absorbed" if mine and mine <= held else "dropped")
     pf1 = [num(r, "q_f1") for r in live if num(r, "q_f1") == num(r, "q_f1")]
     out = dict(tag=tag, n_rows=len(rows), q_target=qt,
                q_miss=qm, q_miss_pct=100 * qm / qt if qt else float("nan"),
@@ -60,8 +84,20 @@ def summarise(tag, rows):
                mean_f1=statistics.fmean(f1) if f1 else float("nan"),
                n_parts=len(live), n_empty=len(empty), n_resid=len(resid),
                n_nomatch=len(nomatch),
+               n_notmade=sum(1 for r in nomatch if r.get("_why") == "dropped"),
+               n_sibling=sum(1 for r in nomatch if r.get("_why") == "absorbed"),
                med_part_f1=statistics.median(pf1) if pf1 else float("nan"),
-               nomatch_rows=nomatch)
+               nomatch_rows=nomatch,
+               # owner k and reco k counted over the SAME rows: the non-empty,
+               # non-residual parts of this hand shower.  Mixing the empty parts
+               # into one side and not the other made this table incoherent.
+               kcmp=sorted({(r["event"], r["shower"],
+                            len([x for x in sib[(r["event"], r["shower"])]
+                                 if x["part"] != "*" and num(x, "q_target") > 0]),
+                            len({x["matched"] for x in sib[(r["event"], r["shower"])]
+                                 if x["part"] != "*" and num(x, "q_target") > 0
+                                 and x["matched"] != "-1"}))
+                           for r in live}))
     return out
 
 
@@ -79,11 +115,16 @@ def show(s):
     print("  parts already excluded by the scan        : %d   (empty target -- not a failed cut)"
           % s["n_empty"])
     print("  residual '*' rows                         : %d" % s["n_resid"])
-    print("  PARTS WITH NO RECO MATCH                  : %d   <- confirmed cuts the reco did not make"
-          % s["n_nomatch"])
+    print("  HAND PARTS WITH NO DISTINCT RECO OBJECT   : %d   (%d absorbed into a sibling's object, %d dropped)"
+          % (s["n_nomatch"], s["n_sibling"], s["n_notmade"]))
+    print("     per hand shower, owner parts vs reco objects:")
+    for kk in sorted(s["kcmp"], key=lambda x: (int(x[0]), int(x[1]))):
+        ev, sh, ok, rk = kk
+        print("       evt%-8s shower %-7s owner k=%d  reco objects=%d%s"
+              % (ev, sh, ok, rk, "   <- UNDER-SPLIT" if rk < ok else ""))
     for r in sorted(s["nomatch_rows"], key=lambda r: (int(r["event"]), int(r["shower"]), r["part"])):
-        print("      evt%-8s shower %-7s part %-3s  q_target %.4g"
-              % (r["event"], r["shower"], r["part"], num(r, "q_target")))
+        print("      evt%-8s shower %-7s part %-3s  q_target %-10.4g %s"
+              % (r["event"], r["shower"], r["part"], num(r, "q_target"), r.get("_why", "")))
 
 
 def main():
@@ -108,6 +149,8 @@ def main():
                  A["med_part_f1"] - B["med_part_f1"]))
         print("  parts with no reco match: %d -> %d  (%+d)"
               % (B["n_nomatch"], A["n_nomatch"], A["n_nomatch"] - B["n_nomatch"]))
+        print("     absorbed %d -> %d      dropped %d -> %d"
+              % (B["n_sibling"], A["n_sibling"], B["n_notmade"], A["n_notmade"]))
         bk = {(r["event"], r["shower"], r["part"]) for r in B["nomatch_rows"]}
         ak = {(r["event"], r["shower"], r["part"]) for r in A["nomatch_rows"]}
         if bk - ak:
@@ -118,7 +161,8 @@ def main():
             with open(a.tsv, "w", newline="") as fh:
                 w = csv.writer(fh, delimiter="\t", lineterminator="\n")
                 w.writerow(["metric", a.base, a.arm, "delta"])
-                for k in ("q_miss_pct", "q_extra_pct", "med_part_f1", "n_nomatch", "n_parts"):
+                for k in ("q_miss_pct", "q_extra_pct", "med_part_f1", "n_nomatch",
+                          "n_notmade", "n_sibling", "n_parts"):
                     w.writerow([k, "%.4g" % B[k], "%.4g" % A[k], "%.4g" % (A[k] - B[k])])
             print("\nwrote %s" % a.tsv)
     return 0
