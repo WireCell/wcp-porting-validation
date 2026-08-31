@@ -39,7 +39,8 @@ os.chdir(ROOT)
 import numpy as np
 from bokeh.plotting import figure, curdoc
 from bokeh.models import (ColumnDataSource, CustomJS, Div, TextInput, Button,
-                          Select, RadioButtonGroup, TapTool, HoverTool, PreText)
+                          Select, RadioButtonGroup, TapTool, HoverTool, PreText,
+                          Range1d, WheelZoomTool, ResetTool, SaveTool, BoxZoomTool)
 from bokeh.layouts import column, row as brow
 from bokeh.events import Pan, PanStart, PanEnd, DocumentReady
 
@@ -141,14 +142,28 @@ verdict_btn = RadioButtonGroup(labels=['KEEP', 'SPLIT2', 'SPLIT3', 'SPLIT4+',
                                        'TRIM', 'UNSURE'], active=0, width=560)
 conf_btn = RadioButtonGroup(labels=['high', 'medium', 'low'], active=0, width=260)
 note_box = TextInput(title='note (optional)', width=520)
+centre_sel = Select(title='rotate about', width=210, value='nu vertex',
+                    options=['nu vertex', 'object centroid', 'event centre'])
 
 
 # ----------------------------------------------------------------- 3-D view
-fig = figure(width=740, height=470, match_aspect=True,
-             tools='tap,box_zoom,reset,save', toolbar_location='right',
-             title='drag to rotate  |  shift-drag to pan  |  tap a point to pick its segment')
+# Range1d, NOT the DataRange1d default: an auto range re-fits itself whenever a
+# source changes, which silently undoes the user's zoom on every drop
+# (em_display_viewer.py:196 warns about the same thing).  Square figure + equal
+# spans is what keeps the projection isotropic -- do not let those drift apart.
+_wheel3 = WheelZoomTool()
+_tap3 = TapTool()
+fig = figure(width=620, height=620,
+             x_range=Range1d(-100, 100), y_range=Range1d(-100, 100),
+             tools=[_wheel3, _tap3, BoxZoomTool(), ResetTool(), SaveTool()],
+             toolbar_location='right', output_backend='webgl',
+             title='drag rotates | shift-drag pans | wheel zooms | tap picks a segment')
+fig.toolbar.active_scroll = _wheel3
+fig.toolbar.active_tap = _tap3
 fig.grid.visible = False
 fig.axis.visible = False
+# Explicitly None, not "auto": auto would make a drag tool active and a bare drag
+# would box-select instead of rotating.
 fig.toolbar.active_drag = None
 
 r_ctx = fig.scatter('u', 'v', source=ctx, size=2, color='#c8c8c8', alpha=0.30,
@@ -342,6 +357,12 @@ def refresh(recolor=True):
                     p['reason'],
                     ", ".join("%s=%d" % (group_name(g), n) for g, n in sorted(c.items())),
                     verdict_btn.labels[derive_verdict()]))
+    g = STATE.get('vgap')
+    if g == g and g is not None and g > 5.0:
+        info.text += ("<br><span style='color:#a33'>note: the nearest charge of "
+                      "this object is <b>%.1f cm</b> from the vertex star &mdash; "
+                      "an unusually large gap (median over the owner set is 0.0 cm), "
+                      "so the reference point is an extrapolation here.</span>" % g)
 
 
 def _update_wprof():
@@ -429,11 +450,20 @@ def load(i):
     # em3d.bounding_sphere takes a LIST of 3-tuples and guards with `if not pts`;
     # an ndarray there raises "truth value of an array is ambiguous".
     allp = list(zip(xs, ys, zs)) + list(zip(cx_, cy_, cz_)) + [tuple(float(t) for t in v)]
-    (cx, cy, cz), R = em3d.bounding_sphere(allp)
-    cam.data = dict(az=[0.6], el=[0.35], cx=[cx], cy=[cy], cz=[cz], R=[R],
+    (ecx, ecy, ecz), R = em3d.bounding_sphere(allp)
+    STATE['event_centre'] = (ecx, ecy, ecz)
+    # DEFAULT ORBIT POINT IS THE NU VERTEX, not the bounding-sphere centre: every
+    # angle the proposal is built from is measured from the vertex, so rotating
+    # about it is what makes the theta-phi structure read correctly by eye.
+    cam.data = dict(az=[0.6], el=[0.35],
+                    cx=[float(v[0])], cy=[float(v[1])], cz=[float(v[2])], R=[R],
                     az0=[0.6], el0=[0.35], xs0=[-R], xe0=[R], ys0=[-R], ye0=[R])
     fig.x_range.start, fig.x_range.end = -R, R
     fig.y_range.start, fig.y_range.end = -R, R
+    centre_sel.value = 'nu vertex'
+    # the vertex-to-charge gap, surfaced because it is occasionally the story
+    STATE['vgap'] = float(np.min(np.linalg.norm(
+        np.asarray(list(zip(xs, ys, zs))) - np.asarray(v)[None, :], axis=1))) if n else float('nan')
     # Bee deep links for THIS event, from the sets already uploaded.  The owner
     # asked for these so the whole event can be understood before the divide --
     # the split tool shows one object, Bee shows everything around it.
@@ -441,6 +471,53 @@ def load(i):
     hi_box.value = ''
     refresh()
     curdoc().add_next_tick_callback(lambda: _kick())
+
+
+def set_centre(p, keep_zoom=True):
+    """Orbit about `p`.
+
+    The projection is relative to (cx, cy, cz), so re-centring puts `p` at (0, 0)
+    in view space and the ranges have to be re-centred on zero too.  They keep
+    their CURRENT span, so the user's zoom survives a centre change -- that is
+    the whole reason this is not just a camera write.  R is deliberately left
+    alone: it is the zoom-independent scale the depth cue normalises by.
+    (Mirrors em_display_viewer.set_centre:4971.)"""
+    d = dict(cam.data)
+    d['cx'] = [float(p[0])]; d['cy'] = [float(p[1])]; d['cz'] = [float(p[2])]
+    if keep_zoom:
+        sx = fig.x_range.end - fig.x_range.start
+        sy = fig.y_range.end - fig.y_range.start
+    else:
+        sx = sy = 2.0 * d['R'][0]
+    fig.x_range.start, fig.x_range.end = -0.5 * sx, 0.5 * sx
+    fig.y_range.start, fig.y_range.end = -0.5 * sy, 0.5 * sy
+    d['xs0'] = [fig.x_range.start]; d['xe0'] = [fig.x_range.end]
+    d['ys0'] = [fig.y_range.start]; d['ye0'] = [fig.y_range.end]
+    cam.data = d
+
+
+def centre_point(which):
+    row = STATE['row']
+    if row is None:
+        return (0.0, 0.0, 0.0)
+    if which == 'object centroid':
+        pts, q, _ = L_pack(row)
+        return tuple(float(x) for x in SM.L.qw_centroid(pts, q)) if pts is not None \
+            else tuple(float(x) for x in row['v'])
+    if which == 'event centre':
+        return STATE.get('event_centre') or tuple(float(x) for x in row['v'])
+    return tuple(float(x) for x in row['v'])          # 'nu vertex', the default
+
+
+def L_pack(row):
+    return SM.L.pack(row['P'], row['segs'])
+
+
+def on_centre(attr, old, new):
+    set_centre(centre_point(new))
+
+
+centre_sel.on_change('value', on_centre)
 
 
 def _kick():
@@ -593,7 +670,7 @@ jump.on_change('value', lambda a, o, n: load(int(n)))
 left = column(info, bee,
               brow(btn_prev, btn_next, jump, btn_save),
               brow(verdict_btn), brow(conf_btn), note_box,
-              brow(btn_reset, btn_addg, btn_delg),
+              brow(btn_reset, btn_addg, btn_delg, centre_sel),
               tree, status,
               gmap_box, cmap_box, hi_box, moved_box, cam_box)
 right = column(fig, brow(tp, wp))

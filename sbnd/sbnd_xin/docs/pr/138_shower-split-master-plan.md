@@ -202,6 +202,43 @@ seen from it. One gap to record: doc pr/137 §1.2a wanted the reference to be a
 the viewer always uses the ν vertex. It matters for the NC chain, where K24
 re-seats a decay point away from the ν vertex.
 
+### A1.4 evt396222's vertex — checked, and it is a real outlier
+
+Owner: *"why the black star is not at one of the red segments? I thought for this
+event, the nu vertex is at the one shower? Or it was somehow changed by NCpi0
+chain?"* Checked all three readings:
+
+- **Not the π⁰ chain.** `dump['main_vertex']` and the `is_main` entry in
+  `vertices[]` agree to **0.00 cm**, so nothing re-seated it after it was written.
+- **The vertex IS attached to that shower** — the owner's expectation is right.
+  Main vertex `id 9038`, cluster 9, **degree 1**, and the one segment attached to
+  it is **seg 9059, the shower itself**. It is the shower's own start vertex.
+- **But it is fitted 14.5 cm upstream of any charge.** Its fit point carries
+  `dQ = 0.0`, its `fit_distance = 15.04`, and the nearest point of *any* of the
+  event's 180 segments is that same 14.5 cm. The shower's
+  `start_connection_type = 2` ("gap").
+
+**And it is the only one of the 41.** Census over the owner's events, main-vertex
+distance to the nearest charge in the event:
+
+| | |
+|---|---|
+| median | **0.00 cm** |
+| p90 | 0.00 cm |
+| > 5 cm | **1 / 41** |
+| max | **14.50 cm (evt396222)** |
+
+Every other main vertex sits *on* charge, with `fit_distance` 0.28–1.05 against
+396222's 15.04. So this is a genuine reconstruction anomaly, not a display
+artefact and not the NC chain — a degree-1 main vertex extrapolated into empty
+space. **Reported, not tuned** (CLAUDE.md §5.7).
+
+**Why it matters for the scan, and not only for this event:** the reference point
+is what every angle in the tool is measured from, so on 396222 the grouping
+proposal is built from an extrapolated point. The viewer now prints a red warning
+whenever the vertex-to-charge gap exceeds 5 cm, and the "rotate about" control
+lets the scanner orbit the object centroid instead.
+
 **Groups grow on demand.** Owner: *"for busy events, there may be many groups…
 3 can be the default though."* `+ group` / `- group`; three columns plus JUNK by
 default, up to the palette. `- group` only ever removes an **empty trailing**
