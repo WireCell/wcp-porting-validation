@@ -1,0 +1,4 @@
+# doc pr/138 -- the flip decision, both operating points
+pair	q_miss_off	q_miss_on	q_extra_off	q_extra_on	census_off	census_on	impossible_off	impossible_on
+poff:pon	15.12	19.42	6.94	5.43	32	32	19	22
+c90off:c90on	11.55	16.70	12.01	6.69	33	35	16	19

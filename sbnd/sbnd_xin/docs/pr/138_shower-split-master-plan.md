@@ -1,11 +1,13 @@
 # doc pr/138 — the shower splitter: MASTER PLAN (scan → implement → optimise)
 
-**Status: PHASE A CLOSED and PHASE B SHIPPED, both 2026-08-31.** The owner
-hand-scanned all 172 curated objects (§1b); the splitter is now in the toolkit
-behind `shower_split`, **DEFAULT OFF**, gate-clean, with its two-way boundary
-measured exact against those labels and its three-way boundary measured **short
-of its own pre-registered target** (§2). The measurements this file rests on are
-doc pr/137 §10–§15, §1b, and §2's arms.
+**Status: PHASE A CLOSED, PHASE B SHIPPED, and the FLIP QUESTION ANSWERED — all
+2026-08-31.** The owner hand-scanned all 172 curated objects (§1b); the splitter
+is in the toolkit behind `shower_split`, **DEFAULT OFF**, gate-clean (§2); and
+§3 measures what it does to physics at four operating points. **`onV1c90` +
+splitter gives the best π⁰ census the campaign has measured (35 of 66) with
+`q_extra` back at the production floor** — the splitter alone at production does
+not. §4 answers the owner's "when the situation is clean" question; §5 ranks
+what to do next. The knob is still `false`; a flip needs his word.
 
 ## 0. Where we are, in five lines
 
@@ -24,6 +26,12 @@ doc pr/137 §10–§15, §1b, and §2's arms.
   (§A5.2), which is what produced the old 27–36 % null.
 - The splitter is **in the toolkit, DEFAULT OFF**, byte-identical when off, and
   runs last among the shower passes and *before* the π⁰ finders (§B1).
+- **It pays off only in composition.** `onV1c90 + splitter`: `q_extra` 12.0 % →
+  **6.7 %** (production is 6.9 %), π⁰ exact **32 → 35** of 66, 0 ADVERSE movers.
+  The splitter alone at production moves no π⁰ and costs 3 impossible pairs (§3).
+- **On a vertex that sits on its charge the splitter makes zero mistakes**
+  (13 fires, 13 right); **all 8 false fires are bad-vertex objects**, and 2 of
+  them broke a good π⁰ (§4). That is the front worth the next round (§5.1).
 
 ## 1. Phase A — the scan  *(CLOSED 2026-08-31; results in §1b)*
 
@@ -1030,23 +1038,421 @@ Unchanged from the plan. The shared-origin dE/dx test is not on the tape yet.
   order; the seed sort breaks density ties by point index; no pointer-keyed
   container is iterated.
 
-## 3. Phase C — optimisation and composition
+## 3. Should `shower_split` be turned ON for SBND?  *(MEASURED 2026-08-31)*
 
-### C1. Compose with pr/136
+**Answer: not on its own — but `onV1c90 + splitter` is, and it is the best π⁰
+census the campaign has measured.** The owner asked *"does it improve the shower
+clustering and π⁰ reconstruction?"* Measured on his own instruments at **four**
+operating points, 239 events each:
 
-The splitter only earns its place if it lets the `onV1c90` escape ship. Arm:
-`onV1c90 + splitter`, judged on pr/136 §11.2's instruments:
+| arm | `q_miss` | `q_extra` | **π⁰ exact** | impossible pairs |
+|---|---|---|---|---|
+| production **today** (the baseline) | 15.1 % | 6.9 % | **32** / 66 | 19 / 56 |
+| production **+ splitter** | 19.4 % | 5.4 % | 32 / 66 | 22 / 56 |
+| `onV1c90` — the pr/136 escape, no splitter | 11.6 % | **12.0 %** | 33 / 66 | 16 / 47 |
+| **`onV1c90` + SPLITTER** | 16.7 % | **6.7 %** | **35** / 66 | 19 / 49 |
 
-- `q_extra` back to ≈ **7.0 %** (the OFF value) — the whole point;
-- `q_miss` stays near `onV1c90`'s **11.3 %** — the completeness gain survives;
-- π⁰ census exact **≥ 33**;
-- the owner finds no new merged γs in a rescan of the pr/137 §2 population.
+Read the last row against the first — that is the real decision:
+
+- **`q_extra` is back at the production floor**: 12.0 % → **6.7 %**, against
+  production's 6.9 %. **The splitter hands back every point of `q_extra` the
+  escape paid.** That is precisely what §C1 was written to test, and it passes.
+- **π⁰ exact 32 → 35 of 66 (48.5 % → 53.0 %)** — three more hand π⁰s
+  reconstructed than production, and two more than the escape alone.
+- `q_miss` reads 15.1 % → 16.7 %, but **94 % of that rise is a measurement
+  artefact** (§3.3): it is the completeness instrument penalising the splitter
+  for cutting objects the *later* hand scan says must be cut. The escape's own
+  completeness gain (15.1 % → 11.6 %) survives underneath it.
+- **0 vertex movers and 0 ADVERSE** at both operating points (159 compared
+  labels, `--tags vtx105`).
+
+**So: turning `shower_split` on ALONE is not worth it** — at production `q_extra`
+is already at its floor, the π⁰ census does not move, and three pairs cross into
+kinematically impossible. **Turning it on TOGETHER with the pr/136 escape is a
+real gain on both of the owner's stated goals**, and it is the pairing that
+should go to a Bee scan.
+
+**One thing must be fixed first either way** (§4): every false fire — including
+the two that broke good π⁰s — sits in the class the owner himself named, an
+object whose ν vertex is tens of cm off its charge.
+
+`shower_split` stays `false` in `wct-pr-perevt.jsonnet`. A flip needs an explicit
+owner request on record, and this one wants a scan first.
+
+### 3.1 One number cannot answer this, so there are two arms pairs
+
+| pair | config | what it asks |
+|---|---|---|
+| `poff` / `pon` | production | the **safety** gate. `q_extra` is already at its floor here (6.9 %), so a splitter can only take charge *out* of showers — this measures whether turning it on breaks anything |
+| `c90off` / `c90on` | + the pass-4 `angle_v1` escape (pr/136's `onV1c90`) | the **efficacy** test. The escape buys `q_miss` and *pays* `q_extra`; handing that `q_extra` back is the job §C1 designed the splitter for |
+
+Both pairs: 239 events, the standard manifest, dumps on, differing **only** by
+`SBND_SHOWER_SPLIT`, run against the pinned `pin-pr138off` library.
+
+### 3.2 The instruments, at the production point  *(the SAFETY gate)*
+
+| instrument | OFF | ON | Δ |
+|---|---|---|---|
+| `q_miss` (hand-scan attribution, 90 marked showers) | 15.1 % | 19.4 % | **+4.3 pt** |
+| `q_extra` | 6.9 % | 5.4 % | **−1.5 pt** |
+| median `q_f1` | 0.918 | 0.918 | 0 |
+| **π⁰ census exact** (of 66) | **32** | **32** | 0 — *but not the same 32* |
+| pairs sharing a γ | 74 % | 76 % | +2 |
+| **π⁰ pairs kinematically impossible** | **19 / 56** | **22 / 56** | **+3, worse** |
+| over-clustering class (m > 160) | 8 | 7 | −1, better |
+| vertex movers (`pr90_movers.py --tags vtx105`) | — | — | **0 movers, 0 ADVERSE** over 159 compared labels |
+
+### 3.3 The raw `+4.3 pt` of `q_miss` is mostly a measurement artefact, and I can name it
+
+**`pr136_completeness.py` cannot grade a splitter on its own.** Its target is
+`(members ∪ marked-in) − marked-out` from the **2026-08-27/28 attribution scan**,
+which called several of these objects *one shower*; the **2026-09-01 split scan**
+says they are three to five. So a **correct** cut is scored as a miss. Decomposed
+per object:
+
+| class | n | Δ`q_miss` | Δ`q_extra` |
+|---|---|---|---|
+| the split scan says **SPLIT** | 6 | **+4.01 pt** | −0.90 pt |
+| the split scan says **KEEP** | 4 | +0.29 pt | −0.41 pt |
+| fired, no split label | 4 | 0 | −0.15 pt |
+| no fire on this object | 1 | 0 | −0.04 pt |
+| **total** | | **+4.30** | **−1.50** |
+
+**93 % of the `q_miss` rise is the instrument penalising the splitter for obeying
+the later scan** — 91 % of it on just three objects (evt415278 nodes 23012 and
+23037, evt84229 node 69134). And the mirror image: **28 % of the `q_extra` gain
+sits on objects the split scan calls KEEP**, where the attribution scan agrees
+the charge did not belong (evt278420 node 61027: −1.69e6 `q_extra` for +1.5e5
+`q_miss`, on an object labelled KEEP).
+
+**The two hand scans disagree in both directions. Neither alone adjudicates a
+split.** Where they do agree — the KEEP class — the trade is `q_miss` **+0.29 pt**
+for `q_extra` **−0.41 pt**, which on the owner's "balance them" instruction is
+mildly favourable, not the 3:1 loss the raw row suggests.
+
+**A measurement caveat, proven not assumed.** The absolute `q_miss` here is 15.1 %
+against doc pr/136 §11.2's published **14.0 %**. That is the *sidecar*, not the
+arm: scoring pr/136's **own** `f086probe` dumps with **this** round's (probe-less)
+prepdir returns 15.1 % as well. `em117_score.py` prefers a sidecar built by
+`prep_em_scan.py --parse-probes`, which needs `WCT_SHOWER_CONTENT_DEBUG` on the
+arm; this round's arms did not run it. Reported lossiness of the fallback join is
+**0 members on all four scores**, and every arm here is scored the same way, so
+the OFF→ON deltas are like-for-like. **The absolutes are not comparable across
+arms built with different probe sets** — that is an operational rule worth
+keeping, not a one-off.
+
+### 3.4 The π⁰ answer — the census count hides two gains and two losses
+
+"32 → 32" is not "nothing happened". The **sets differ**:
+
+| event | OFF | ON | |
+|---|---|---|---|
+| **56243** | no-group | **exact** | **BETTER** — the splitter created the pairable γ. This is the mechanism working. |
+| **415278** | no-group | partial | BETTER |
+| **314838** | **exact** | partial | WORSE |
+| **165157** | partial | no-group | WORSE |
+
+and eight hand π⁰ pairs moved, three crossing from possible into
+**kinematically impossible**:
+
+| event | m OFF | m ON | R OFF | R ON | |
+|---|---|---|---|---|---|
+| 165157 | 152.1 | 107.8 | 1.132 | 0.824 | **crossed into impossible** |
+| 281165 | 140.6 | 121.7 | 1.107 | 0.928 | **crossed into impossible** |
+| 314838 | 121.4 | 76.7 | 1.274 | 0.570 | **crossed into impossible** |
+| 54332 | 109.0 | 91.1 | 0.938 | 0.725 | further from 135 |
+| 169356 | 131.2 | 128.5 | 0.974 | 0.955 | further from 135 |
+| 396222 | 412.9 | 614.4 | 6.775 | 5.751 | further from 135 (the busy event) |
+| 56243 | 160.6 | 156.7 | 1.193 | 1.163 | closer to 135 |
+| 91917 | 124.2 | 127.3 | 1.108 | 1.152 | closer to 135 |
+
+**Two of the three crossings are false fires** — evt165157 node 9000 and evt54332
+node 122091 are both owner-**KEEP** objects the trigger cut anyway, and cutting
+them halved a γ (165157: γ₂ 187.9 → 94.4 MeV, mass 152 → 108). That is the whole
+π⁰ cost, and it is not intrinsic to splitting: it is the false-fire rate.
+
+### 3.4b The efficacy point — `onV1c90` OFF → ON, where the splitter earns its place
+
+| instrument | OFF | ON | Δ |
+|---|---|---|---|
+| `q_miss` | 11.6 % | 16.7 % | +5.1 pt (**+4.85 of it the §3.3 artefact**) |
+| `q_extra` | **12.0 %** | **6.7 %** | **−5.3 pt** |
+| **π⁰ census exact** | 33 | **35** | **+2** |
+| pairs sharing a γ | 77 % | 77 % | 0 |
+| π⁰ pairs impossible | 16 / 47 | 19 / 49 | +3 |
+| over-clustering class | 4 | 3 | −1 |
+| vertex movers | — | — | **0 movers, 0 ADVERSE** |
+
+Genuine cost where both hand scans agree: `q_miss` **+0.30 pt** for `q_extra`
+**−0.42 pt**. The census set moves on eight events — **four better** (280972 and
+56243 no-group → **exact**, 314838 partial → **exact**, 269774 no-group →
+partial) against **four worse** (281485 and 396222 partial → none, 165157 partial
+→ no-group, 54332 exact → partial). Note **314838 goes the OTHER way here**: with
+the escape on it becomes exact *after* the split — the same object §3.5 shows
+three instruments disagreeing about.
+
+The three pairs that cross into impossible are **165157**, **281165** and — at
+production — **54332**, and 165157 and 54332 are false fires on owner-KEEP
+objects. Same two events at both operating points. **The π⁰ cost is the
+false-fire rate, not the splitting.**
+
+### 3.5 evt314838 — three owner instruments, three different answers
+
+The sharpest case in the round, and it is an **owner adjudication item**, not
+something to resolve by picking a side:
+
+| instrument | verdict on cutting evt314838 node110088 |
+|---|---|
+| the **split scan** (2026-09-01) | **SPLIT2, high confidence** — cut it |
+| the **attribution scan** (2026-08-27/28) | **cut it** — `q_f1` 0.721 → 0.863, purity 0.715 → **1.000**, `q_extra` 3.17e6 → **0** |
+| the **hand π⁰ label** | **do not** — the pair needs the 645 MeV γ that includes exactly that charge; after the cut R 1.274 → 0.570 and the census loses it |
+
+pr/136 already flagged 314838 as an owner-scan-vs-overlay contradiction; this is
+a third instrument joining the disagreement. It states the round's central
+tension in one event: **EM-clustering purity and π⁰ energy pull in opposite
+directions on an over-clustered shower**, and no amount of splitter tuning
+resolves that — it is a question about which label is right.
+
+## 4. "When the situation is reasonably clean" — the owner's gate, measured
+
+> *"There are cases where it is difficult to get it right. incorrect neutrino
+> vertex, very busy events etc. What we want is when the situation is reasonably
+> clean, we get decent results against the hand scan results."* — owner, 2026-08-31
+
+This reframes the residual: the hard classes are a **scope boundary to name**, not
+a purity number to tune against. So the splitter was stratified by conditions
+measured **from the arm, never from the label or the outcome**, with physical
+rather than scanned thresholds (`scripts/pr138_clean_strata.py`):
+
+| axis | bound | why |
+|---|---|---|
+| vertex sits **on** the charge | `vgap ≤ 5 cm` | every trigger feature is a ray *from* the ν vertex; a vertex in empty space manufactures a fake bimodality |
+| vertex not re-seated later | \|Δv\| < 1 cm | the π⁰ chain moves `main_vertex` **after** the splitter (§B1: 60.16 cm on evt76346) |
+| event not busy | `n_cand ≤ 3` | the owner's "very busy events", counted rather than eyeballed |
+
+### 4.1 The answer is yes, and it is sharp
+
+| stratum | n | real splits | fires | efficiency | **purity** |
+|---|---|---|---|---|---|
+| everything | 164 | 43 | 41 | 0.767 | 0.805 |
+| **vertex on charge** (`vgap ≤ 5`) | **65** | **17** | **13** | **0.765** | **1.000** |
+| vertex off charge (`vgap > 5`) | 99 | 26 | 28 | 0.769 | 0.714 |
+| event not busy | 131 | 31 | 30 | 0.774 | 0.800 |
+| busy | 33 | 12 | 11 | 0.750 | 0.818 |
+
+**All eight false fires are in the bad-vertex class. Zero in the good-vertex
+class.** Where the ν vertex sits on the charge the splitter catches 13 of 17 real
+splits and makes **no mistakes** — that is the owner's criterion met.
+(§4.2b is the caveat that must travel with this: `vgap ≤ 5 cm` selects
+*vertex-attached* objects, which is not the same as *"the vertex is right"*.)
+
+**Two honest bounds on that.** Thirteen fires with zero failures bounds the true
+failure rate at about **23 % at 95 % confidence** (rule of three), so "perfect" is
+thin, not established. And the clean stratum genuinely has fewer splits to find
+(11 of 51 vs 32 of 113 for the full three-axis CLEAN definition) — over-clustering
+concentrates in messy events, which is physically sensible and is why any gate
+costs efficiency.
+
+**The vertex axis carries the whole result.** The busy-event axis moves purity by
++0.018 and the re-seat axis by nothing; adding them to the definition only costs
+efficiency. Do not over-build the gate.
+
+### 4.2 A free test the definition could have failed
+
+The owner flagged specific objects in his own scan comments — *"incorrect
+neutrino vertex"*, *"a very busy event … I am not sure if this event is really
+useful for our purpose"*. Those comments were **never consulted** to build the
+definition above:
+
+| object | his words | a-priori stratum |
+|---|---|---|
+| evt318769 node31026 | "incorrect neutrino vertex, actually both groups should be one" | HARD (`vgap` 38.2 cm) |
+| evt281781 node89069 | "incorrect vertex" | HARD (`vgap` 14.6 cm) |
+| evt396222 node9059 | "very busy event … not sure if useful" (the only low-confidence label in 172) | HARD (`\|Δv\|` 14.50 cm) |
+
+**3 of 3.** The instrument agrees with the scanner on every object he called out.
+
+### 4.2b But `vgap` does not mean "the vertex is wrong", and I could not fix that
+
+**A photon converts a mean 9/7·X₀ ≈ 18 cm from its origin, so a large `vgap` is
+exactly what a real γ looks like.** The population tape says the median `vgap`
+over **all 400** production EM candidates is **9.6 cm**, and **44.5 %** exceed
+13 cm (charge-weighted 25 %). That number must *not* be read as "44.5 % of ν
+vertices are wrong" — it is a mixture of wrong vertices and honest conversion
+gaps, and that mixture is why `vgap` scored AUC 0.499 as a *trigger* feature
+(§A5.3) even though it stratifies the *fires* so cleanly.
+
+**The obvious separator was tested and is dead** (`scripts/pr138_vertex_gap.py`).
+The hypothesis: a real conversion gap is *empty*, a wrong vertex sits inside
+other activity, so the charge-free fraction of the vertex→object ray should be
+high for γs and low for bad vertices. Measured over the 41 fires:
+
+| feature | AUC (correct cut > false fire) | |
+|---|---|---|
+| `vgap` | 0.265 | false fires have the *larger* gap (§4.1) |
+| **`void_frac`** (ray empty of any charge) | **0.146** | **backwards** — false fires median 0.883, correct cuts 0.400 |
+| `occ_other` (ray empty of *other* objects' charge) | 0.536 | no separation |
+
+**The false fires have the CLEANEST gaps of all.** So the failure mode is not
+"the vertex is buried in junk" — it is the opposite, and it is worth stating
+plainly because it explains why the trigger fires there at all:
+
+> **Seen from the wrong origin, one shower genuinely looks like two
+> well-separated ones.** The object has two angularly distinct lobes with a real
+> charge dip between them; the dip is an artefact of the viewpoint, not of the
+> charge. No feature measured *from that same vertex* can tell the difference.
+
+That is a real limit, not a tuning gap, and it is why §5.1 proposes fixing the
+vertex rather than adding a feature.
+
+### 4.3 A veto is a dial, not a free filter — priced
+
+Every false fire has `vgap ≥ 13.4 cm — but so do 20 of the 33 correct cuts, which
+run out to 231.7 cm. `vgap` does **not** separate the two classes; it trades:
+
+| `vgap ≤` | fires | right | wrong | efficiency | purity |
+|---|---|---|---|---|---|
+| 5 cm | 13 | 13 | 0 | 0.302 | 1.000 |
+| 10 cm | 14 | 14 | 0 | 0.326 | 1.000 |
+| 13 cm | 16 | 16 | 0 | 0.372 | 1.000 |
+| 15 cm | 19 | 18 | 1 | 0.419 | 0.947 |
+| 30 cm | 27 | 25 | 2 | 0.581 | 0.926 |
+| **no veto** | 41 | 33 | 8 | **0.767** | **0.805** |
+
+A veto at 13 cm removes **all eight** false fires — including both that broke a
+π⁰ (165157 at 13.4 cm, 54332 at 39.6 cm) — and costs 17 of 33 correct cuts.
+**On the owner's "balance them" instruction that is his call, not the script's**,
+and §5.1 proposes a cheaper alternative than paying it.
+
+## 5. Where to improve next — ranked by what this round measured
+
+Each item names the number it must move and the evidence it rests on. Nothing
+here is a plan to tune a threshold; the thresholds are all measured out.
+
+### 5.1 **The ν vertex, not the splitter** ← the highest-value front
+
+**What the data says.** All 8 false fires have a ν vertex 13–96 cm from the
+candidate's own charge (§4.1). Two of them destroyed hand π⁰s (165157: γ₂ 187.9 →
+94.4 MeV, mass 152 → 108; 54332: γ₁ 185.9 → 129.8, mass 109 → 91) and those are
+2 of the 3 pairs that crossed into kinematically impossible at **both** operating
+points. On the vertex-attached stratum the splitter makes **zero** mistakes.
+
+**The population scale, and its caveat.** Over all 400 production EM candidates
+the median `vgap` is **9.6 cm** and **44.5 % exceed 13 cm**. But §4.2b: that
+mixes wrong vertices with honest photon conversion gaps (≈18 cm mean free path),
+**and this round could not separate the two.** `void_frac` was tested and came
+back at AUC 0.146 — *backwards*: the false fires have the emptiest gaps of all.
+
+**So the failure mode is sharper than "a bad vertex" and harder:** seen from the
+wrong origin a single shower really does present two angularly separated lobes
+with a real charge dip. Nothing measured *from that vertex* distinguishes it from
+a genuine two-γ object. The fix has to come from outside the splitter.
+
+**The proposal, in order of cost:**
+
+1. **Ask whether the π⁰ re-seat should run BEFORE the splitter.** §B1 measured
+   the main vertex moving **60.16 cm** (evt76346) and **14.50 cm** (evt396222)
+   *after* the splitter has already measured every feature from the old point —
+   5 of 172 objects. The π⁰ back-projection exists precisely because the ν vertex
+   was wrong; running it first would give the splitter the corrected point. One
+   ordering change, one gate, and it is testable on the arms that now exist.
+2. **A `shower_split_max_vgap` knob (DEFAULT 0 = off) as a SCOPE declaration** —
+   "the splitter does not act where its own reference point is untrustworthy" —
+   priced at §4.3's table for the owner to pick a point. It is a blunt dial, not
+   a discriminator, and §4.2b is why. Cheap, honest, and it buys the π⁰s back:
+   a bound at 13 cm removes both pairs that broke.
+3. **A vertex-quality instrument that does not read from the vertex.** The one
+   thing not tried: does the *candidate's own* direction point back at the ν
+   vertex within the pointing resolution? pr/129 built exactly that discriminator
+   for a different question and it worked there. This is the one lead left, and
+   it is a measurement, not a plan.
+
+### 5.2 **A joint label set — the instruments currently contradict each other**
+
+**What the data says.** §3.3: 93–94 % of the `q_miss` rise at both operating
+points is the completeness instrument scoring a *correct* cut as a miss, because
+its target comes from the 2026-08-27/28 attribution scan which called those
+objects one shower. And the mirror: 28 % of the `q_extra` gain sits on objects
+the split scan calls KEEP, where the attribution scan agrees the charge does not
+belong. §3.5's evt314838 has **three** owner instruments giving three answers.
+
+**This is now the binding constraint on measuring any further EM-clustering
+work**, because every candidate improvement will be graded by an instrument whose
+ground truth predates the question. The proposal:
+
+1. **Re-mark the ~15 hand-marked showers the splitter touches** in the split
+   tool, so `target` is defined per *part* rather than per merged object. That is
+   a small scan — 15 objects, not 90 — and it makes `pr136_completeness.py`
+   able to grade a splitter at all.
+2. **Adjudicate evt314838 explicitly** (§3.5). It is the cleanest statement of
+   the tension and one owner call settles which instrument leads.
+3. Record in the tooling that **`pr136_completeness.py`'s absolute `q_miss`
+   depends on which probe tapes the arm ran** (§3.3, proven by crossing pr/136's
+   own dumps with this round's prepdir: 14.0 % → 15.1 %). Deltas within a matched
+   pair are safe; absolutes across arms are not.
+
+### 5.3 **B4 — re-home the daughter**, now with a measured mechanism
+
+Still the owner's own written requirement from §A5.7 (*"should be part of the
+earlier EM shower cluster"*, five separate comments). This round adds the
+mechanism that makes it valuable rather than merely tidy: **charge peeled into an
+orphan is charge the π⁰ finder cannot use.** At the production point the splitter
+detaches 9.4e7 of charge and the π⁰ census does not move; at the escape point it
+detaches the same and the census gains 2. A daughter offered to the nearest EM
+shower under the existing absorb predicates keeps that charge available to
+pairing. Metric: `q_extra` must not rise and π⁰ exact must not fall; knob
+`shower_split_rehome`, DEFAULT OFF.
+
+### 5.4 **Split-aware π⁰ pairing** — the tension §3.5 names
+
+Splitting reduces a γ's energy, and the finder then pairs on the reduced value:
+6 of 8 moved pairs went further from 135 MeV. Two candidate directions, both
+measurable on the arms that now exist:
+
+- run the pairing over the **pre-split** shower set as well and keep whichever
+  pairing scores better — expensive but decisive;
+- let a split daughter and its sibling be considered as a **single candidate γ**
+  by the finder, which is what the π⁰ hand label for 314838 is effectively asking
+  for.
+
+### 5.5 The k≥3 kernel and the no-valley class — unchanged, and still the ceiling
+
+- **k≥3** missed its pre-registered target (0.635 → 0.756 against ≥0.85, §B3) and
+  is capped by `max_seeds = 4`, which cannot be raised without moving the trigger.
+  Two owner objects are 5-part.
+- **The no-valley class** (§B7): 7 of 9 missed splits have `valley_best = 1.0` —
+  no charge dip exists because the γs overlap. Needs a different observable
+  (transverse-profile fit, or the two-stub dE/dx of §B6 used as a *trigger*).
+
+Both are real and both are below §5.1–§5.3 in value, because a better kernel on a
+bad vertex is still a wrong cut, and an unmeasurable improvement is not one.
+
+### 5.6 What NOT to do
+
+- **Do not add another feature measured from the ν vertex** to fix the false
+  fires. §4.2b tested the best candidate and it came back backwards; the
+  information is not there.
+- **Do not retune `valley_best ≤ 0.95`.** Its holdout is spent (§A5.4), the fires
+  it produces are 80 % right overall and 100 % right on a good vertex, and the
+  misses are a different problem (§5.5).
+- **Do not chase the raw `+4.3 pt` of `q_miss`.** 93 % of it is §3.3's artefact.
+- **Do not flip `shower_split` alone at production.** §3: no π⁰ gain, +3
+  impossible pairs, and `q_extra` is already at its floor there.
+
+## 6. Phase C leftovers
 
 ### C2. Byte-identity and the standard bar
 
 Knob-off gate PASS on the standard 239-event manifest (478 archives), freshness
 proof before the A/B (M1), `./build/clus/wcdoctest-clus` green, compiled-config
 proof for every new jsonnet key.
+
+### C1. Compose with pr/136 — ANSWERED in §3
+
+The composition §C1 asked for is measured: `onV1c90 + splitter` returns `q_extra`
+to 6.7 % (the OFF value is 6.9 %), keeps the escape's completeness gain, and
+lifts the π⁰ census to 35 of 66. The remaining §C1 item — *"the owner finds no
+new merged γs in a rescan"* — is the Bee scan §3 recommends, not yet done.
 
 ### C3. Deferred, with reasons
 
@@ -1062,7 +1468,7 @@ proof for every new jsonnet key.
 - **181050** (doc pr/136 §11.9) — the last open item on `onV1c90d25`, independent
   of the splitter.
 
-## 4. Sequencing, and why this order
+## 7. Sequencing, and why this order
 
 The owner's proposed order — **scan session (with tool work) → implementation →
 optimisation** — is the right one, for a reason worth stating: *every number in
@@ -1108,6 +1514,22 @@ grep -n 'reconstructed pi0 decay point' ../../../toolkit/clus/src/NeutrinoShower
 
 # section A1.5 / A1.6 -- the two censuses quoted above
 python3 scripts/pr138_scanset_census.py
+
+# ============ THE FLIP QUESTION (section 3) and WHAT NEXT (sections 4-5) ============
+# four arms, 239 events each, dumps on, pinned binary; only SBND_SHOWER_SPLIT differs
+#   work-pr138r2-poff-<s>   / -pon-<s>     production config
+#   work-pr138r2-c90off-<s> / -c90on-<s>   + SBND_PASS4_V1_ESCAPE=1 SBND_PASS4_V1_MAXV2=90
+./scripts/pr138_flipcheck.sh                 # manifests -> prep -> em117_score x2 ->
+                                             # completeness, pi0 census, mass closure, movers
+python3 scripts/pr138_predict_delta.py --tape 'work-pr138r2-pon-*'   # PRE-REGISTERED signs
+python3 scripts/pr138_flip_analyze.py --png  # -> pr138-flip-decision.{tsv,png}
+python3 scripts/pr138_clean_strata.py --png  # -> pr138-clean-strata.{tsv,png}   section 4
+python3 scripts/pr138_vertex_gap.py          # -> pr138-vertex-gap.tsv           section 4.2b
+
+# section 3.3's baseline proof: the 15.1 % vs pr/136's 14.0 % is the PREPDIR, not the arm
+cd em_display && ./em117_score.py --tag emscan-0827 \
+    --manifest em117-136f086probe98-manifest.tsv --prepdir emprep-138poff \
+    --tsv /home/xqian/tmp/xtest-oldarm-newprep-98.tsv   # returns 15.1 %, not 14.0 %
 
 # ===================== PHASE B -- every number in section 2 =====================
 # B0 amendment + B3: thirteen acceptance x assignment variants, offline
