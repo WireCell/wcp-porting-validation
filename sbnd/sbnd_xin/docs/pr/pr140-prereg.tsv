@@ -1,0 +1,40 @@
+event	node	owner_verdict	confirmed_cut	b_cm	skip_shared_refuses	predicted	reason
+10550	7036	KEEP	0	2.53	0	no-fire	trigger does not fire today
+54332	122091	KEEP	0	39.72	0	SUPPRESSED	impact b=39.72 > 30 cm
+64409	8022	KEEP	0	1.75	0	no-fire	trigger does not fire today
+67394	58035	SPLIT2	1	13.12	0	fires	b=13.12 <= 30 cm, not shared
+76350	12098	KEEP	0	4.37	0	no-fire	trigger does not fire today
+84229	69134	SPLIT2	1	7.44	0	fires	b=7.44 <= 30 cm, not shared
+98844	6013	SPLIT2	1	7.34	0	fires	b=7.34 <= 30 cm, not shared
+99838	14004	KEEP	0	3.90	0	no-fire	trigger does not fire today
+122660	9110	KEEP	0	10.53	0	no-fire	trigger does not fire today
+122660	54071	KEEP	0	66.47	0	no-fire	trigger does not fire today
+165157	9000	KEEP	0	13.05	1	SUPPRESSED	skip_shared refuses the peel (shared membership)
+174771	87065	KEEP	0	102.10	0	SUPPRESSED	impact b=102.10 > 30 cm
+174771	91075	SPLIT2	1	10.39	0	fires	b=10.39 <= 30 cm, not shared
+175896	17044	SPLIT2	1	0.44	0	fires	b=0.44 <= 30 cm, not shared
+176502	109141	KEEP	0	6.21	0	no-fire	trigger does not fire today
+179611	10001	KEEP	0	2.03	0	no-fire	trigger does not fire today
+269774	13237	SPLIT2	1	1.67	0	fires	b=1.67 <= 30 cm, not shared
+278420	61027	KEEP	0	26.78	0	fires	b=26.78 <= 30 cm, not shared
+281325	42039	SPLIT2	1	0.31	0	fires	b=0.31 <= 30 cm, not shared
+281485	89095	SPLIT2	1	23.67	1	SUPPRESSED	skip_shared refuses the peel (shared membership)
+286681	72040	KEEP	0	20.29	0	no-fire	trigger does not fire today
+292524	9018	KEEP	0	2.18	0	no-fire	trigger does not fire today
+294174	16004	SPLIT2	1	209.39	0	SUPPRESSED	impact b=209.39 > 30 cm
+294174	71067	SPLIT2	1	75.20	0	SUPPRESSED	impact b=75.20 > 30 cm
+314838	110088	SPLIT2	1	8.32	0	fires	b=8.32 <= 30 cm, not shared
+317939	30022	KEEP	0	2.66	0	no-fire	trigger does not fire today
+350354	18092	SPLIT2	1	3.11	1	SUPPRESSED	skip_shared refuses the peel (shared membership)
+386948	16002	KEEP	0	47.89	0	no-fire	trigger does not fire today
+389538	19021	KEEP	0	152.52	0	no-fire	trigger does not fire today
+393505	63025	KEEP	0	62.82	0	SUPPRESSED	impact b=62.82 > 30 cm
+396037	69026	SPLIT2	1	16.71	0	fires	b=16.71 <= 30 cm, not shared
+396222	9059	SPLIT4+	1	22.15	0	fires	b=22.15 <= 30 cm, not shared
+406125	38021	SPLIT2	1	26.35	0	fires	b=26.35 <= 30 cm, not shared
+415278	23012	SPLIT3	1	15.42	0	fires	b=15.42 <= 30 cm, not shared
+415278	23037	SPLIT4+	1	6.69	0	fires	b=6.69 <= 30 cm, not shared
+415278	83139	SPLIT2	1	48.46	0	SUPPRESSED	impact b=48.46 > 30 cm
+463565	13001	SPLIT3	1	3.02	0	fires	b=3.02 <= 30 cm, not shared
+499577	13009	KEEP	0	23.64	0	no-fire	trigger does not fire today
+521075	18007	KEEP	0	1.44	0	no-fire	trigger does not fire today

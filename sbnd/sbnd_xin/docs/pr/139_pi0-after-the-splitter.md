@@ -712,3 +712,89 @@ python3 scripts/pr132_pi0_census.py --manifest98 em117-138c90on98-manifest.tsv \
 # phase 2 -- the owner's scan
 ./split_display/serve_split_display.sh 5022 --scan-tag splitscan-0902-pi0
 ```
+
+---
+
+## 8. Item 1 — the PRE-REGISTERED prediction  *(committed 2026-08-31, before the arm existed)*
+
+**Naming note:** the arms of this section are `work-pr140r1-*` because §3ter
+pre-named them that way. **There is no doc pr/140** — this file is the living
+tracker and items 1–4 are its own P-rows. A future session grepping for a
+doc 140 will not find one; look here.
+
+§6 recorded a round whose recommendation was chosen *after* seeing eight movers
+and was then killed by an independent scan. The structural fix is ordering:
+this section, and `docs/pr/pr140-prereg.tsv`, are committed **before** the arm's
+census exists, derived from the owner's 2026-09-01 labels alone.
+
+```
+python3 scripts/pr140_prereg.py     # -> docs/pr/pr140-prereg.tsv
+```
+
+### 8.1 The correction §3ter's criterion needed
+
+§3ter pre-registered "**no more than 3** of the 19 owner-confirmed cuts
+suppressed". Deriving it mechanically says that number is **5**, and §6.3's own
+efficiency column already said so — 0.737 × 19 = 14 cuts firing, i.e. **5 not
+firing.** The "3" was the *bound's marginal* price, counted with `skip_shared`
+already applied; it silently omitted the two cuts `skip_shared` itself refuses.
+Both numbers are real and they answer different questions, so both are
+pre-registered here rather than the flattering one being kept:
+
+| confirmed cuts that stop firing, vs today's production config | n | which |
+|---|---|---|
+| refused by **`skip_shared`** — the peel is *deferred*, not judged wrong | **2** | 281485/89095, 350354/18092 |
+| rejected by the **`b ≤ 30`** bound — the cut is *refused* | **3** | 294174/16004 (b 209), 294174/71067 (b 75), 415278/83139 (b 48) |
+| **total** | **5 of 19** | efficiency **0.737** |
+
+The two classes are not equivalent and the doc should not average them. A
+`skip_shared` refusal happens because the peel would duplicate segments two
+showers both own — the owner's cut is right, but *this* peel cannot make it
+cleanly. That is a deferral with a named successor (§8.4). A `b` rejection is
+the trigger being told the cut is wrong, and on 294174 ×2 and 415278/83139 the
+owner says it is not.
+
+### 8.2 The prediction, in full
+
+| | predicted |
+|---|---|
+| objects labelled | 39 (19 confirmed cuts, 20 KEEP) |
+| splitter fires | **15** — 14 right, 1 wrong |
+| trigger **efficiency** | **0.737** (14 / 19) |
+| trigger **purity** | **0.933** (14 / 15) |
+| confirmed cuts suppressed | **5** total = 2 deferred + 3 rejected |
+| false fires left standing | **278420/61027** only (`b` 26.78) |
+
+### 8.3 The margin check — is the offline `b` safe to predict the C++ `b`?
+
+`pr139_tape_check.py` measured offline-`b` vs C++-`b` agreeing to 0.5 cm on
+**383 of 390** objects. So a prediction is only safe where no decision sits
+within ~1 cm of the bound. Closest three:
+
+| object | `b` (cm) | margin from 30 |
+|---|---|---|
+| 278420/61027 | 26.78 | **3.22** |
+| 406125/38021 | 26.35 | 3.65 |
+| 281485/89095 | 23.67 | 6.33 |
+
+**No decision is inside 3 cm of the bound**, i.e. every one of them is 6× the
+measured offline-vs-C++ spread. The prediction is safe to hold the arm to.
+
+### 8.4 Pass / fail, fixed now
+
+The arm **passes** only if all four hold:
+
+1. π⁰ census **exact ≥ 36** (baseline `work-pr139r3-flipchk` = the production config);
+2. `q_extra` **≤ 7.2 %**;
+3. **0 ADVERSE** vertex movers;
+4. the tape reproduces §8.2 — **15 fires, exactly 5 confirmed cuts suppressed,
+   and the five named objects are the named ones.**
+
+If (4) holds but (1) fails, the operating point is refused and the reason is a
+π⁰ effect the labels cannot see — which is the same failure mode §6 caught, in
+the other direction, and it must be reported, not tuned around.
+
+**Named successor for the 2 deferred cuts:** a *co-ownership* peel — assign each
+shared segment to one part instead of refusing the whole peel. That would
+recover 281485's and 350354's cuts without re-creating the duplicate-charge
+pathology `skip_shared` exists to stop. Not in this round; it is a new item.
