@@ -1201,6 +1201,17 @@ assertions.
 | showers with `q_f1` < 0.80 | 18 | 18 | 20 | **17** |
 | π⁰ census exact | 32 / 66 | 30 ✗ | 33 ✓ | **31 ✗** |
 
+**Correction to an earlier draft of this section:** 122660 is a `onV1c90`
+recovery (+2.02e5 at zero `q_extra`), **not** a `onV1c90d25` one — the 25 cm
+brake does not fire on that event. `onV1c90d25`'s recoveries among the marked
+showers are 142421 (+5.91e6), 314838 (+2.49e6) and 84229 (+7.38e5).
+
+**And one adverse row this section had not surfaced:** on **181050** the
+recovery is **negative in both ON arms** — `q_miss` gets *worse* by 1.83e6, with
+29 segments changing owner. It is the only row in the reviewed set where the
+knob moves charge the wrong way against the hand marks, and it is included in
+the Bee package below.
+
 **Criterion 1: `onV1c90d25` PASSES, cleanly and in the original pre-registered
 form.** `q_miss` falls 1.51 pt; `q_extra` moves **−0.01 pt**, with the violation
 and unjudged terms each flat to two decimals. The 25 cm brake did exactly what
@@ -1272,3 +1283,39 @@ flipped and both are on the table.**
   only way to settle it is a hand scan of the 15 events `onV1c90d25` changes —
   a small enough diff to package as a Bee A/B pair, which is the natural next
   owner step.
+
+### 11.8 Owner review package — three-way Bee A/B (round 3)
+
+Built and uploaded 2026-08-31 at the owner's request ("bee links for me to judge
+onV1c90 overclustering as well as the lost pi0 in onV1c90d25").
+
+| set | URL | arm |
+|---|---|---|
+| **OFF** | `https://www.phy.bnl.gov/twister/bee/set/8207f8a2-b889-452f-933f-571dccbcf8d9/event/list/` | `work-pr136-off2-*` (gated 478/478) |
+| **c90** | `https://www.phy.bnl.gov/twister/bee/set/e5330080-e818-4684-aa2e-21a89e4f5a99/event/list/` | `work-pr136-onV1c90-*` |
+| **d25** | `https://www.phy.bnl.gov/twister/bee/set/a99a25b1-f7be-4e3c-9302-a1e5da332fec/event/list/` | `work-pr136-onV1c90d25-*` |
+
+Same 13 events in the same order in all three sets, so the owner flips between
+them at one bee index. Annotated index: `bee/pr136r3/pr136r3.index.txt`.
+
+**Content-verified before the links were reported** (the pr/133 rule): all three
+zips carry the 13 events in the intended order with all seven layers, and the
+per-event `shower_track-global` fingerprints show exactly the expected pattern —
+c90 differs from OFF on 12 of 13, d25 only on idx 6 / 7 / 8 / 10, and idx 12
+(463565, the negative control) is byte-identical across all three.
+
+| idx | event | why it is in the package |
+|---|---|---|
+| 0 | 269774 | c90 `q_extra` **+1.57e7 = 63 % of the entire rise**, +1.32e6 recovered; essentially all UNJUDGED, and it arrived through the chain — the escape admitted 8 segments (3.3e6) to shower 13237 while the +1.24e7 landed on 97197 |
+| 1 | 406125 | c90 +3.81e6 extra, **zero** recovered, and **mostly VIOLATION (2.60e6)** — the sharpest single "is this a genuine over-cluster?" test |
+| 2 | 318769 | c90 +2.96e6 extra **and** +2.73e6 recovered — the trade in one event |
+| 3 | 174771 | c90 +1.49e6 extra, +4.58e5 recovered |
+| 4 | 105946 | c90 net favourable: +7.02e5 extra against +1.28e6 recovered; pr/130 MERGE-approved specimen |
+| 5 | 98844 | c90 +4.89e5 extra, zero recovered — small pure cost |
+| 6 | **314838** | **the lost π⁰**: OFF 110088 (645) + 13010 (110) at 121.4 MeV → both ON arms 110088 (780) + a 4 MeV crumb at 106.6 MeV. The scan contradiction of §11.6 |
+| 7 | 142421 | the clean win, both arms: +5.91e6 (9 % of the whole deficit) at −6.2e4 |
+| 8 | 84229 | clean win, both arms: +7.38e5, zero extra |
+| 9 | 122660 | c90 +2.02e5 at zero extra; **d25 does not fire** — shows what the brake gives up |
+| 10 | 181050 | **ADVERSE in both arms**: `q_miss` worsens by 1.83e6, 29 segments re-owned |
+| 11 | 259542 | c90 loses a π⁰ (census partial → none); no marked EM shower, so invisible to `q_extra` |
+| 12 | 463565 | **negative control**: the event that parked the pr/130 front; byte-identical in all three sets |

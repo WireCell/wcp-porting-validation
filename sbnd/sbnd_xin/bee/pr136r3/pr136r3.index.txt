@@ -1,0 +1,41 @@
+# doc pr/136 round 3 -- THREE-WAY A/B: the pass-4 angle_v1 escape
+#   OFF  https://www.phy.bnl.gov/twister/bee/set/8207f8a2-b889-452f-933f-571dccbcf8d9/event/list/
+#        work-pr136-off2-*        knobs off (gated 478/478 byte-identical)
+#   c90  https://www.phy.bnl.gov/twister/bee/set/e5330080-e818-4684-aa2e-21a89e4f5a99/event/list/
+#        work-pr136-onV1c90-*     escape ON, angle_v2 ceiling 90 deg
+#   d25  https://www.phy.bnl.gov/twister/bee/set/a99a25b1-f7be-4e3c-9302-a1e5da332fec/event/list/
+#        work-pr136-onV1c90d25-*  ... plus a 25 cm pair_dis brake
+#
+# CONTENT-VERIFIED before these links were reported: all three zips carry the
+# 13 events in this order with all seven layers, and the per-event
+# shower_track-global fingerprints show exactly the expected differences --
+# c90 differs from OFF on 12 of 13, d25 only on idx 6/7/8/10, and idx 12
+# (463565, the negative control) is byte-identical in all three sets.
+# Same 13 events in the same order in all three sets: flip between them at the
+# same bee index.  Owner's two questions first (idx 0-5 = the q_extra rise that
+# c90 pays; idx 6 = the pi0 d25 loses), then the wins and the controls.
+#
+# Population numbers these 13 events sit inside (90 hand-marked showers):
+#   arm   q_miss  q_extra  of which VIOLATION / UNJUDGED   pi0 census exact
+#   OFF   14.0%     7.0%        3.2%   /   3.8%            32/66
+#   c90   11.3%    12.2%        3.8%   /   8.4%            33/66
+#   d25   12.5%     7.0%        3.2%   /   3.8%            31/66
+# VIOLATION = the segment carries your explicit "out" mark.  UNJUDGED = the scan
+# never ruled on it (it was not in the shower when you scanned, so em117_score's
+# target excludes it by construction).  THE WHOLE QUESTION IS WHETHER THE
+# UNJUDGED CHARGE IS REAL SHOWER OR NOT -- that is what idx 0-5 are for.
+#
+# bee_idx	event	status
+0	269774	c90 OVER-CLUSTER, the big one: q_extra +1.57e7, 63% of c90's ENTIRE rise, against +1.32e6 recovered.  Split says essentially ALL UNJUDGED (violation 0 on the worst shower).  Escape admitted only 8 segments (3.3e6) to shower 13237; the +1.24e7 landed on shower 97197, which the escape never touched -- it arrived through the CHAIN.  d25 does not fire here at all (unchanged vs OFF).  QUESTION: is 97197's extra charge real shower?
+1	406125	c90 OVER-CLUSTER, the clean test: q_extra +3.81e6 and ZERO recovered, and unlike idx 0 most of it (2.60e6) is charge you explicitly marked OUT.  If any row is a genuine over-cluster, this is it.  d25 unchanged vs OFF.
+2	318769	c90 AMBIGUOUS: +2.96e6 extra AND +2.73e6 recovered -- the trade in one event.  OFF holds q_miss 2.73e6 on this shower (q_f1 0.560, one of the worst in the sample).  d25 unchanged vs OFF.
+3	174771	c90 +1.49e6 extra, +4.58e5 recovered.  d25 unchanged vs OFF.
+4	105946	c90 NET FAVOURABLE: +7.02e5 extra against +1.28e6 recovered.  pr/130 MERGE-approved specimen.  d25 unchanged (the 25 cm brake excludes it: its escape candidates sit at 64-72 cm).
+5	98844	c90 +4.89e5 extra, ZERO recovered.  Small, pure cost.  d25 unchanged vs OFF.
+6	314838	THE LOST pi0, and it is REAL, not an id artefact.  OFF: pio0 = 110088 (645 MeV) + 13010 (110 MeV), mass 121.4.  c90 AND d25 both: 110088 grows to 780 MeV by absorbing segment 13010, the second gamma ceases to exist, and the finder pairs 110088 with a 4 MeV crumb -> mass 106.6, census exact -> partial.  THE TWO SCANS DISAGREE HERE: your EM scan (emscan-0827) marks seg 13010 IN for shower 110088; the pi0 overlay (pi0scan-0829-agent, agent-made, not yours) makes 13010 the second gamma.  QUESTION: which is right?
+7	142421	CLEAN WIN, both arms: +5.91e6 recovered (that ONE segment is 9% of the whole hand-scan deficit) at q_extra -6.2e4.  angle_v1 21.3 deg, pair_dis 14.6 cm -- squarely inside the acceptance clause the pre-filter was hiding.
+8	84229	CLEAN WIN, both arms: +7.38e5 recovered, ZERO extra.
+9	122660	c90 +2.02e5 recovered, ZERO extra.  d25 does NOT fire here -- shown so you can see what the 25 cm brake gives up.
+10	181050	ADVERSE, BOTH ARMS: q_miss gets WORSE by 1.83e6 (recovery is NEGATIVE).  29 segments change owner.  The one row in this package where the knob moves charge the wrong way on your marks.
+11	259542	c90 loses a pi0 (census partial -> none; both gammas absent-on-arm, 40 segments re-owned).  No hand-marked EM shower here, so it never enters q_extra -- visible only in the pi0 census.  d25 unchanged vs OFF.
+12	463565	NEGATIVE CONTROL: the event whose "there should be two showers here" warning parked the pr/130 front.  UNCHANGED in both arms (q_miss 6.74e6 and q_extra 1.64e6 identical to OFF).  If the escape were indiscriminate this is where it would show.
