@@ -1,0 +1,5 @@
+# verify_group_dupes_20260831.py: 0 .groups/g*.tar.gz in the
+# removal set (439 arms scanned) -- the group-input class is EMPTY
+# this round, so archive_records drops 0.00 GiB of it and there is
+# no duplication claim to measure.
+arm	tar	members	matched	verdict

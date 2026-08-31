@@ -268,3 +268,146 @@ measured with its mechanism written down.  The remaining 33 misses are
    ν-vertex preference rule; if it ever needs rescuing, the lever is a
    track-length bound on the far-vertex seat, at one-specimen-each overfit
    risk.
+
+## 10. The 0.86 EM-scale flip and the redone campaign (owner 2026-08-31)
+
+Owner: *"Let's update the parameter to 0.86 and redo the campaign."*
+`kine_shower_fudge_factor` 0.84 -> **0.86** in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` (compiled-config proof:
+0.86 emitted, the whole pi0 chain unchanged alongside it).  This is a
+PRODUCTION CONSTANT: not byte-identical by construction, every EM
+`kine_charge` scales a further x0.977 and EM energies/masses drop 2.3%.
+Arms `work-pr134-f086-*` (239 events x 4 samples, post-flip config, no env).
+
+**The scale check now closes** (`scripts/pr135_pi0_peak_prod.py`,
+`docs/pr/pr135-peak-f086.tsv`):
+
+| cell | peak (MeV) | CI68 | implied fudge |
+|---|---|---|---|
+| A all matched hand pairs (n=56) | **134.7** | [130.5, 138.2] | 0.858 |
+| B ledger-clean gammas only | **135.0** | [131.0, 138.7] | 0.860 |
+| D ncpi0 origin only | 133.2 | [124.3, 138.8] | 0.848 |
+
+The peak lands on 134.98 to within 0.3 MeV, and the fit is now
+**self-consistent**: the implied fudge (0.858) equals the value in force
+(0.86) inside a fraction of its CI, where at 0.84 it pointed away (0.861).
+The calibration has converged.  Sec 8's caveats stand unchanged -- the
+estimator's premise still fails on the low shoulder and the mode
+estimators still sit higher -- so this is "0.86 is a consistent operating
+point", not "0.86 is the measured truth to 1%.
+
+**The cost, measured, and it is real** (census `--fudge 0.86`):
+
+| metric | 0.84 | 0.86 |
+|---|---|---|
+| exact | **33** (50.0%) | **32** (48.5%) |
+| partial | 15 | 17 |
+| none / no-group | 1 / 17 | 1 / 16 |
+| sharing a gamma | 73% | 74% |
+| gamma ledger OK | 120/132 (90.9%) | 119/132 (90.2%) |
+| nueCC fakes | 0 | 0 |
+
+Four events move, in both directions -- a window-edge effect, as expected
+when every mass drops 2.3% against a fixed (100,160) acceptance window:
+**gained** 103798 (no-group -> exact) and 168432 (no-group -> partial);
+**lost** 54332 (exact -> partial) and 283713 (exact -> no-group).  Net
+-1 exact, +1 sharing-a-gamma.  The trade is the owner's call and is now on
+the record: the mass scale is right, the pairing census is one event worse.
+
+**Sentinel suite on the new production arm: 19 PASS / 3 FAIL**, and each
+FAIL is attributed by re-running the suite on the two kept baselines:
+
+| sentinel | f086 (0.86) | flip2 (0.84+chain) | flipchk (0.84 pre-chain) | attribution |
+|---|---|---|---|---|
+| 393505 pr/129 Enu | FAIL 559.9 vs [560,572] | PASS | PASS | **the 0.86 flip** -- misses the lower edge by 0.1 MeV, i.e. exactly the 2.3% scale shift; the window was calibrated at 0.84 and needs rebasing at 0.86 (a deliberate step, NOT a silent retune) |
+| 47212 pr/120 pi+ | FAIL | FAIL | PASS | **the pi0 chain** -- K24 moved both pi0s to the nu vertex (the owner's own verdict), which changes the mu->pi re-stamp this sentinel expects.  The sentinel's expectation is stale for an event the owner deliberately re-paired |
+| 137238 pr/93+127 sccc | FAIL | FAIL | FAIL | **neither** -- pre-existing; it also fails on the pr/125-era arm and PASSES on the full production arm work-*-prod0830, so it is an arm-lineage artifact of the 239-event campaign arms, not a code regression.  Flagged, not fixed here (out of scope, CLAUDE.md tie-breaker 3) |
+
+## 11. The 2026-08-31 retire round (owner-requested cleanup)
+
+Owner: *"we can retire the intermediate debug files work*, and leave the
+latest production, as well as the scan results that we will use as a
+metric to proceed ... we can go back to say 50 G etc."*
+
+Machinery: `scripts/retire/{plan,retire,archive_records,verify_group_dupes}_20260831.*`,
+forks of the 08-29 round; all 13 asserts and every interlock carried.
+**169 G -> 91 G**, 439 arms released, 87 kept, record layer archived first
+(11.52 GiB raw -> 1.54 GiB gz, integrity gate PASS 439/439).
+
+Released: the CLOSED pi0 campaign (pr132 204 arms, pr133 79, pr134 66 of
+78) and the closed pr128/pr129/pr130 rounds, whose PROTECTED.txt block
+stated its own release condition -- *"these go when doc pr/130 is reported
+and closed, in the same pass that releases the pr128r1-on gate label"* --
+both halves now true.  Those lines were MOVED to PROTECTED.txt's RETIRED
+section with the date and reason, per that file's own rule.
+
+**Three things the guards caught that a hand-rolled `rm -rf` would not:**
+
+1. **prod0825 is NOT superseded.**  The round opened intending to release
+   it (9.2 G; prod0830 covers all four samples and 08-29 left the call to
+   "next round").  ASSERT 11 refused: the BASE hand-scan display manifests
+   `em114-manifest.tsv` and `em114c-manifest-agent5.tsv` resolve their dump
+   paths into prod0825.  It is superseded as the production baseline, not
+   as the dump source the owner's metric was built on.  Kept.
+2. **The deletion driver was reading the WRONG tier list.**  Its filename
+   is built by interpolation (`tier${t}_20260829.txt`), which the fork's
+   literal rename missed, so the first dry run silently targeted the
+   PREVIOUS round's already-deleted list and reported `dirs=0`.  Caught by
+   the dry run's own arithmetic, fixed, re-run: 439 dirs / 80 GiB.
+3. **An empty proof class is a result, not a bypass.**  This round's
+   removal set holds zero `.groups/g*.tar.gz`, and the 08-29 interlock read
+   zero as evidence of a broken census and refused.  The fix was NOT to
+   relax it: `verify_group_dupes_20260831.py` now RECORDS the empty class
+   (written by the checking code, not by hand) and the interlock handles
+   that case explicitly while keeping the non-empty path at full strength.
+
+What is kept, and why it is ~91 G rather than 50 G: `work-*-grp0825`
+(26 G) is the Q/L campaign INPUT every future PR re-run reads;
+`work-*-prod0830` (14 G) is the latest production; `work-*-prod0825`
+(9.2 G) is the hand-scan dump source above; `archive/` (15.9 G) is the
+record layer of every past round; plus the vtx105 label epoch, the
+sentinel negative control, the display/probe layer, and the three kept
+pi0 points (`f086` = the new production, `flip2` + `pr133-flipchk` = the
+two ends of the A/B the owner scanned).  Going below that means releasing
+a campaign input, the production baseline, or the record layer -- an owner
+decision, offered here rather than taken.
+
+### 11.1 What is left, and what can still go (owner: *"more can be removed???"*)
+
+**87 work* dirs is not 87 dirs' worth of space.**  The top eight hold 51 G
+of the 75 G; the other 79 are 50-420 MB display/probe/metric arms.  The
+count is high because the hand-scan metric layer is many small quartets,
+not because intermediates survived.
+
+| block | size | can it go? |
+|---|---|---|
+| `work-*-grp0825` (4) | 26 G | **No** — the Q/L campaign INPUT every future PR re-run reads |
+| `archive/` | 15.9 G | Owner call — the record layer of every past round; movable off-tree, not deletable in place |
+| `work-*-prod0830` (4) | 14.6 G | **No** — the latest production the owner asked to keep |
+| `work-*-prod0825` (4) | 9.2 G | **No** — ASSERT 11: the base hand-scan manifests resolve into it.  Rebuilding them against prod0830 does NOT free it: the labels were scanned against prod0825 dumps, and a different operating point is not a substitute (the 08-29 doctrine) |
+| `work-vtx105-base-*` (4) | 4.2 G | **No** — the vertex-label epoch `pr90_movers --tags vtx105` scores every round against |
+| `input_files*`, `bee/` | 9.1 G | Mostly symlinks + the Bee zips; ~7 G is one real ROOT input file |
+| the 3 kept pi0 points (12 arms) | 3.2 G | `f086` is production; `flip2` + `pr133-flipchk` back sec 8/14's numbers and the A/B the owner scanned.  Releasable once those numbers are considered settled |
+| `void-prod0830partial-*` (3) | **3.3 G** | **YES — recommended.**  doc 85 §9.1.1 parks them as "the discarded first attempt ... delete when the round is closed"; the round shipped and the complete prod0830 arms (1000/2000/19/48) exist.  The retire round never saw them: its universe is `work*` |
+
+The two removals this session could not execute (the permission gate
+declines ad-hoc `rm -rf`; it allowed the vetted `retire_20260831.sh`):
+
+```bash
+# 1. the parked partial arms, 3.3 G  (doc 85 sec 9.1.1 pre-authorises this)
+rm -rf /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/void-prod0830partial-{mcp1k,ncpi0,nuecc48}
+
+# 2. ~/tmp: 35 G -> ~7 G.  Old session scratchpads and closed-round scratch.
+#    KEEPS this session's scratchpad, the round logs, and prod0830-libsnap
+#    (the pinned binary behind the prod0830 campaign).
+cd /home/xqian/tmp && rm -rf claude-25225/-nfs-data-1-xqian-toolkit-dev-toolkit \
+  claude-25225/item2 claude-25225/precomp-gate claude-25225/splitfix-t1 \
+  d82 d82r2 d82r3 emscan-bulk scan-mcp2k pr108_wcp pr111_wcp pr50 pr48 \
+  pr43-on48 pr43-off48 pr43_cleanhead_ref48b oc444187 geomab geomab_dlfull \
+  vtx100_closure pr89-c0 pr73f3a-bee nueapa_scan wt-flash-cmake
+```
+
+Floor after both: sbnd_xin ~88 G, of which ~65 G is campaign input +
+latest production + hand-scan dump source + the record layer.  Reaching
+"say 50 G" from there means releasing one of those four, which is an owner
+decision about what stops being reproducible, not a housekeeping call.

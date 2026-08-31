@@ -208,6 +208,36 @@ work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx1
 work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 17 MB, self-contained	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+#
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr128r1-on98-mcp1k work-pr128r1-on98-mcp2k work-pr128r1-on98-ncpi0 work-pr128r1-on98-nuecc48 work-pr128r1-on141-mcp1k work-pr128r1-on141-mcp2k  |  the gate reference doc pr/130 item 1 cites by label; doc pr/128 SHIPPED but the citing round is OPEN  |  docs/pr/130, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr129gf-nokine-mcp2k work-pr129probe-171572 work-pr129probe-mcp1k work-pr129probe-mcp2k work-pr129pt-meas-mcp2k work-pr129pt-on-mcp2k work-pr129r1-flipchk-mcp2k work-pr129r1-off-mcp1k work-pr129r1-off-mcp2k work-pr129r1-off-ncpi0 work-pr129r1-off-nuecc48 work-pr129r1-on141-mcp1k work-pr129r1-on141-mcp2k work-pr129r1-on98-mcp1k work-pr129r1-on98-mcp2k work-pr129r1-on98-ncpi0 work-pr129r1-on98-nuecc48  |  doc pr/129 SHIPPED today; its on98/on141 arms are the open round's production baseline  |  docs/pr/129, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr130-292643-guardoff work-pr130-47212-guardoff work-pr130-gs1-mcp1k work-pr130-gs1-mcp2k work-pr130-gs1-nuecc48 work-pr130-neutral-mcp2k work-pr130-probe-mcp2k work-pr130-probe2-mcp2k work-pr130-qx1-mcp1k work-pr130-qx1-mcp2k work-pr130-vtx-mcp1k work-pr130-vtx-mcp2k  |  doc pr/130 OPEN -- probe, guard-off and census arms of the live round  |  docs/pr/130, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr130r1-g1off-mcp1k work-pr130r1-g1off-mcp2k work-pr130r1-g1off-ncpi0 work-pr130r1-g1off-nuecc48 work-pr130r1-g1off141-mcp1k work-pr130r1-g1off141-mcp2k work-pr130r1-gd141off-mcp1k work-pr130r1-gd141off-mcp2k work-pr130r1-gs1on-mcp1k work-pr130r1-gs1on-mcp2k work-pr130r1-gs1on-ncpi0  |  doc pr/130's LIVE 239-event knob-off gate, being written while this round ran  |  docs/pr/130, peer session 2026-08-29
+
 
 # RELEASED 2026-08-25 by doc 81, after work-<s>-prod0825 passed its gates.
 # COST, stated rather than absorbed: doc pr/104's flip-equivalence evidence and
@@ -442,7 +472,6 @@ work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the sa
 # gates by label" convention exists so a PASS can be re-checked later; deleting
 # the reference side while the citing round is still OPEN would defeat it.
 # Releasable once doc pr/130 closes -- but not by inference, by a decision.
-work-pr128r1-on98-mcp1k work-pr128r1-on98-mcp2k work-pr128r1-on98-ncpi0 work-pr128r1-on98-nuecc48 work-pr128r1-on141-mcp1k work-pr128r1-on141-mcp2k	the gate reference doc pr/130 item 1 cites by label; doc pr/128 SHIPPED but the citing round is OPEN	docs/pr/130, peer session 2026-08-29
 #
 # 5. THE OPEN pr/130 ROUND (peer session).  A concurrently-running session owns
 # a live 239-event knob-off gate for two new default-OFF knobs
@@ -456,8 +485,5 @@ work-pr128r1-on98-mcp1k work-pr128r1-on98-mcp2k work-pr128r1-on98-ncpi0 work-pr1
 # than an enumerated subset precisely because the peer was still CREATING arms
 # while the plan ran -- work-pr130r1-gs1on-* and work-pr130r1-g1off141-*
 # appeared between the first census and the plan.
-work-pr129gf-nokine-mcp2k work-pr129probe-171572 work-pr129probe-mcp1k work-pr129probe-mcp2k work-pr129pt-meas-mcp2k work-pr129pt-on-mcp2k work-pr129r1-flipchk-mcp2k work-pr129r1-off-mcp1k work-pr129r1-off-mcp2k work-pr129r1-off-ncpi0 work-pr129r1-off-nuecc48 work-pr129r1-on141-mcp1k work-pr129r1-on141-mcp2k work-pr129r1-on98-mcp1k work-pr129r1-on98-mcp2k work-pr129r1-on98-ncpi0 work-pr129r1-on98-nuecc48	doc pr/129 SHIPPED today; its on98/on141 arms are the open round's production baseline	docs/pr/129, peer session 2026-08-29
-work-pr130-292643-guardoff work-pr130-47212-guardoff work-pr130-gs1-mcp1k work-pr130-gs1-mcp2k work-pr130-gs1-nuecc48 work-pr130-neutral-mcp2k work-pr130-probe-mcp2k work-pr130-probe2-mcp2k work-pr130-qx1-mcp1k work-pr130-qx1-mcp2k work-pr130-vtx-mcp1k work-pr130-vtx-mcp2k	doc pr/130 OPEN -- probe, guard-off and census arms of the live round	docs/pr/130, peer session 2026-08-29
-work-pr130r1-g1off-mcp1k work-pr130r1-g1off-mcp2k work-pr130r1-g1off-ncpi0 work-pr130r1-g1off-nuecc48 work-pr130r1-g1off141-mcp1k work-pr130r1-g1off141-mcp2k work-pr130r1-gd141off-mcp1k work-pr130r1-gd141off-mcp2k work-pr130r1-gs1on-mcp1k work-pr130r1-gs1on-mcp2k work-pr130r1-gs1on-ncpi0	doc pr/130's LIVE 239-event knob-off gate, being written while this round ran	docs/pr/130, peer session 2026-08-29
 work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0 work-pr130r1-probe98-nuecc48 work-pr130r1-probe141-mcp1k work-pr130r1-probe141-mcp2k	dump source for BOTH pr130q manifests and the census source for pr130_launder_scan.py; the 239-event blast-radius result is not reproducible without them	docs/pr/130, peer session 2026-08-29
 work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130
