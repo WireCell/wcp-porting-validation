@@ -299,8 +299,11 @@ nothing**.
 
 ### Stage 1 — `WCT_SHOWER_SPLIT_DEBUG`, a stderr probe (no knob, byte-neutral)
 
-Placed after `examine_showers` (the last pass that grows a shower) and before
-the second kinematics recompute. For every shower above a charge floor with ≥ 3
+Placed after the pass-4 prune family (`:8922`), **not** after `examine_showers` —
+see §15.7, which corrects this: `shower_dedup_start_seg`,
+`shower_pass4_prune_detached` and `shower_pass4_prune_gap2` are all SBND
+PRODUCTION ON and all run in between, and they are the trim operation the
+splitter should not compete with. For every shower above a charge floor with ≥ 3
 segments it runs the ray 2-means and prints one line:
 
 ```
@@ -803,7 +806,7 @@ have at the start of the point"*.
   real over-clustering it misses needs the S1 control stratum labelled, not just
   spot-checked — the 15 known merges that do *not* fire are the first thing to scan.
 - **Nothing is implemented.** No C++, no knob, no arm, no gate. The insert point
-  (`NeutrinoShowerClustering.cxx:8213`, after `examine_showers`), the write recipe
+  (after the prune family, `:8922` — **§15.7 corrects §10.1's `:8213`**), the write recipe
   (fork `pass4_prune_detached`, `:8591-8726`) and the kinematics-refresh obligation
   (there is **no** free recompute downstream — `calc_kine_2` runs at `:8202`, before)
   are recorded in §10.1 and §11 so the implementation round does not re-derive them.
@@ -943,3 +946,36 @@ Scan A reaches them: not the angular density (no dip), not spatial connectivity
    44 are real 2-way merges is exactly what TRIM-vs-SPLIT decides.
 3. The tooling changes the owner asked for come next; Scan A's finding is that the
    *label vocabulary* is the first thing to fix, ahead of the viewer.
+
+### 15.7 CORRECTION: the insertion point in §6 and §10.1 is wrong
+
+§6 and §10.1 place the splitter at `NeutrinoShowerClustering.cxx:8213`, right
+after `examine_showers`. **That is the wrong side of two production passes.**
+
+| line | pass | SBND production |
+|---|---|---|
+| 8207 | `examine_showers` | — |
+| 8234 | `shower_dedup_start_seg` | **ON** (`wct-pr-perevt.jsonnet:1638`) |
+| 8591 | `shower_pass4_prune_detached`, gap 40 cm | **ON** (`:1828`, doc pr/123 r1) |
+| 8745 | `shower_pass4_prune_gap2`, 25 cm | **ON** (`:1932`, doc pr/124 A) |
+
+The prune family is exactly the **trim** operation §15.4 found missing — pr/123
+took `q_extra` 4.86e7 → 2.69e7 (−45 %) and pr/124 a further → 2.41e7. A splitter
+at `:8213` would run *before* them, on a fatter object, competing with two shipped
+passes for the same charge.
+
+**Two consequences, and the second is the load-bearing one:**
+
+1. **Insert after `:8922`, not at `:8213`.** By then the object has already been
+   trimmed twice and the splitter's only question is the one it is good at —
+   *one object or two* — rather than *one object, two objects, or one object plus
+   junk*.
+2. **Every number in §12–§15 is measured on the end-of-chain dump, i.e.
+   POST-prune.** So the offline study is valid *only* for the post-prune insertion
+   point. Had we implemented at `:8213` as written, the whole round would have been
+   calibrated on the wrong object. This is why stage 1 has to be a probe at the
+   real insertion point before anything is fitted.
+
+Note the trim gap is real and is *not* closed by the prune family: the five §15.4
+objects carry their specks **after** prune and gap2 have run. That is a separate
+front, not the splitter's.
