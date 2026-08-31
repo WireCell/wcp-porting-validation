@@ -1003,7 +1003,11 @@ found. The 10 are the *seed*, not the bound.
 
 ## 11. Round 2 — `shower_pass4_prefilter_v1_escape`, the knob §10.3 asked for
 
-**Status: MEASURED, rounds 2 and 3. The proximity-braked variant
+**Status: OWNER-ADJUDICATED 2026-08-31 (§11.9). Neither ON variant is flipped;
+the campaign turns to a shower SPLITTER, chartered as doc pr/137. Rounds 2–3
+measured below.**
+
+**Earlier status line, kept for the record: MEASURED, rounds 2 and 3. The proximity-braked variant
 (`onV1c90d25`) recovers 1.5 pt of `q_miss` at zero measured cost on the
 hand-scan purity metric and costs exactly one π⁰ census row — on an event where
 the owner's own EM marks contradict the agent-produced π⁰ pairing. NOTHING IS
@@ -1319,3 +1323,70 @@ c90 differs from OFF on 12 of 13, d25 only on idx 6 / 7 / 8 / 10, and idx 12
 | 10 | 181050 | **ADVERSE in both arms**: `q_miss` worsens by 1.83e6, 29 segments re-owned |
 | 11 | 259542 | c90 loses a π⁰ (census partial → none); no marked EM shower, so invisible to `q_extra` |
 | 12 | 463565 | **negative control**: the event that parked the pr/130 front; byte-identical in all three sets |
+
+### 11.9 Owner verdict on the round-3 Bee package (2026-08-31)
+
+The owner scanned the three sets and ruled. Quoted:
+
+> *"1. the onV1c90 indeed lead to overclustering, there are multiple cases that
+> there are multiple gammas got merged into one. 2. Regarding the 314838, the
+> situation is the following: there is a pi0, and there are two gammas decay
+> from it. But the starting point is that the second half of the one gamma got
+> clustered with the other gamma leading to a mixed situation. So the final
+> merge got the two gamma together leading to the lost of pi0, but even with the
+> initial pi0, it was not exactly correct."*
+
+**Verdict 1 — `onV1c90`'s `q_extra` rise is REAL over-clustering. The UNJUDGED
+term is not benign.** §11.3's decomposition showed that only 0.55 of the 5.16 pt
+rise carried an explicit "out" mark and 4.61 pt was charge the scan had never
+ruled on, and §11.7 refused to call that benign without a scan. The scan has now
+been done and the answer is that **multiple γs are being merged into one**. So:
+
+- **`onV1c90` is NOT a flip candidate.** It buys +1 π⁰ census exact by destroying
+  γ separation elsewhere — the same trade the 463565 warning named.
+- **The `q_extra` metric was right and the "unjudged" caveat did not rescue it.**
+  Recording this so the decomposition is not reached for again as a defence: it
+  is a diagnostic that says *where* to scan, never a reason to discount a cost.
+- `onV1c90d25` is untouched by this verdict — it holds `q_extra` at the OFF value
+  (7.0 %, both sub-terms flat) precisely because the 25 cm brake stops the
+  runaway merges the owner scanned.
+
+**Verdict 2 — 314838 is an EM-vs-EM MIS-PARTITION, and both arms are wrong in
+different ways.** There is a real π⁰ with two real γs, but **the second half of
+one γ was already clustered onto the other γ before any knob ran**. So:
+
+- The OFF state was **not** a correct π⁰ — it was two mixed objects that happened
+  to land at 121.4 MeV.
+- The ON state merged those two mixed objects into one, losing the pair.
+- **The census "loss" of 314838 is therefore the loss of a partially-wrong
+  object, not of a correct one.** §11.6 framed this as "which scan governs";
+  the owner's answer is that *neither* description was right, and the defect is
+  upstream of the escape entirely.
+- This is the class doc pr/130 §6 named — **EM-vs-EM mis-partition + mis-seeding,
+  disjoint from every shipped guard**. It cannot be fixed by any admission
+  predicate, because the charge is already inside an EM object; it needs the
+  boundary between two EM objects to be redrawn.
+
+**Consequence for the campaign.** Both verdicts point the same way: the
+remaining error is not "which segments does a shower admit" but **"where does one
+shower end and the next begin"**. The owner's response:
+
+> *"I like the onV1c90 result, since I feel it did a better job in getting the
+> shower clustered. The main issue is the overclustering... what we should do is
+> to invent a new algorithm to do a split given the shower."*
+
+**Chartered as doc pr/137** — cluster generously, then split. Its feasibility
+probe is already run and its headline is uncomfortable: the split is the easy
+half, the trigger is the hard half. See `137_shower-split-design.md`.
+
+**Status of the three knobs after this verdict:**
+
+| knob | state | why |
+|---|---|---|
+| `shower_pass4_prefilter_v1_escape` | **DEFAULT OFF, not proposed for flip** | needed by both variants; harmless alone |
+| `shower_pass4_prefilter_v1_max_v2` | **DEFAULT OFF** | `onV1c90` (90 only) is ruled out by verdict 1 |
+| `shower_pass4_prefilter_v1_max_dis` | **DEFAULT OFF, the surviving candidate** | `onV1c90d25` = escape + 90 + 25: `q_miss` −1.5 pt at `q_extra` flat; its one census cost (314838) is now known to be a mis-partitioned object, and its one adverse charge row (181050) is still unscanned |
+
+**Still open before `onV1c90d25` could be proposed:** 181050, where `q_miss` gets
+*worse* by 1.83e6 in both arms (idx 10 of the round-3 package), has not been
+adjudicated.
