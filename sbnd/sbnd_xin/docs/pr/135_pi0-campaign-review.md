@@ -269,6 +269,17 @@ measured with its mechanism written down.  The remaining 33 misses are
    track-length bound on the far-vertex seat, at one-specimen-each overfit
    risk.
 
+**Chartered as doc pr/136** (2026-08-30), with two owner corrections to item 1:
+the metric is the **hand scan**, not MC truth (*"The metric can be with my hand
+scan results"*), and the scope is **post-vertex only** (*"we should not tune the
+neutrino vertex"*), which removes upstream imaging and renames the front from
+"upstream charge deficit" to **charge attribution**.  pr/136 §4 also corrects
+three numbers this doc carries: the γ ledger residual is **13 at 0.86, not 12**
+(new member 173093 g1); the outside-window 14 at 0.86 swaps
+{486907, 103798} → {283713, 397630}; and §2's "50–75° off the flight line" is a
+**single shower** (105946/55063), the population version being doc 132 §12.3's
+36–159° reco-frame measurement.
+
 ## 10. The 0.86 EM-scale flip and the redone campaign (owner 2026-08-31)
 
 Owner: *"Let's update the parameter to 0.86 and redo the campaign."*

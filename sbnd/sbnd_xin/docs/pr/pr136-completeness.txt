@@ -1,0 +1,45 @@
+EM SHOWER CHARGE ATTRIBUTION vs THE HAND SCAN  (pr130r1-probe arms)
+  hand-marked showers 90 over 80 events (98-set + 141-set)
+  sum q_target 4.83e+08
+  q_miss  (UNDER: charge the scanner says belongs, the shower does not hold) 7.139e+07 = 14.8%
+  q_extra (OVER : charge the shower holds, the scanner says it should not)   4.307e+07 = 8.9%
+  charge-weighted F1 per shower: median 0.907  mean 0.876  min 0.322
+     F1 < 0.90 : 41 of 88
+     F1 < 0.80 : 21 of 88
+     F1 < 0.50 :  1 of 88
+
+  SHAPE OF THE ERROR -- it is not one-sided:
+     pure UNDER 22 | pure OVER 29 | BOTH 30 | clean  9
+
+  WORST 12 SHOWERS BY CHARGE-WEIGHTED F1
+  set  event    matched      q_f1  q_comp   q_pur      q_miss     q_extra
+  141  175896   17044       0.322   1.000   0.192           0    3.61e+06
+  141  284206   10051       0.524   0.356   0.987    2.27e+06    1.64e+04
+  141  52044    58029       0.533   0.364   1.000    1.63e+06           0
+  141  318769   19003       0.560   0.389   1.000    2.73e+06           0
+  98   142421   108104      0.606   0.540   0.691    5.91e+06     3.1e+06
+  98   342199   74101       0.670   0.504   1.000    1.32e+06           0
+  141  54341    96031       0.673   0.507   1.000    8.25e+05           0
+  98   463565   13001       0.703   0.588   0.875    6.74e+06    1.36e+06
+  141  397630   19010       0.704   0.543   1.000    2.01e+06           0
+  98   54332    16017       0.723   0.573   0.982    2.07e+06    5.18e+04
+  141  69232    20021       0.729   1.000   0.573           0    1.22e+06
+  98   54332    122091      0.731   0.576   1.000    1.58e+06           0
+
+  INTERSECTION WITH THE pi0 RESIDUAL (join on event, pr136-mass-closure.tsv)
+  event       q_f1  q_comp   R_prod   m_prod  R_marks  note
+  342199     0.670   0.504    0.688     92.6    1.009  rescued by hand marks
+  54341      0.673   0.507    0.873     63.7      1.4  rescued by hand marks
+  397630     0.704   0.543      0.4     54.0      0.4  still impossible with marks
+  54332      0.723   0.573    0.938    109.0    1.124  rescued by hand marks
+  54332      0.731   0.576    0.938    109.0    1.124  rescued by hand marks
+  281485     0.753   0.604    0.513     62.5    0.513  still impossible with marks
+  499577     0.826   1.000    0.921    111.7    0.921  still impossible with marks
+  54341      0.829   0.714    0.873     63.7      1.4  rescued by hand marks
+  409634     0.867   0.765    0.749     77.4    1.109  rescued by hand marks
+  347129     0.886   0.795    0.976    122.0    0.976  still impossible with marks
+  168432     0.932   0.898    0.423     53.5    0.439  still impossible with marks
+  168432     1.000   1.000    0.423     53.5    0.439  still impossible with marks
+  --> 12 hand-marked showers sit in events whose hand pi0 pair is kinematically impossible
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr136-completeness-pr130arms.tsv (90 rows)

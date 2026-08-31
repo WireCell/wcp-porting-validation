@@ -1,0 +1,527 @@
+# doc pr/136 — the EM-clustering / π⁰ charge-attribution campaign: what I propose to try, and why
+
+**Status: CHARTER, written 2026-08-30. Analysis only — no code, no arms, no
+knobs, no flips. Successor to the finder-level π⁰ campaign (pr/126 → 132 →
+133 → 134, reviewed in pr/135), which is closed and shipped. Scoped by the
+owner: tune only what comes AFTER the neutrino vertex, and measure against
+the hand scan. toolkit `b5cc3a3f`, wcp `38088acd`.**
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# §3, §4 — the absolute π⁰ mass-closure metric on the 0.86 production arms
+scripts/pr136_mass_closure.py \
+  --manifest98  em117-134f08698-manifest.tsv \
+  --manifest141 em114c-134f086141-manifest.tsv \
+  --overlay-tag pi0scan-0829-agent --fudge 0.86 \
+  --tsv docs/pr/pr136-mass-closure.tsv          # -> pr136-mass-closure.txt
+
+# §5 — EM charge attribution vs the 90 hand-marked showers (pr130r1-probe arms)
+cd em_display
+./em117_score.py --tag emscan-0827        --manifest em117-pr130q98-manifest.tsv \
+    --prepdir emprep-pr130q98  --tsv ../docs/pr/pr136-completeness-98.tsv
+./em117_score.py --tag emscan-0828-agent5 --manifest em114c-pr130q141-manifest.tsv \
+    --prepdir emprep-pr130q141 --tsv ../docs/pr/pr136-completeness-141.tsv
+cd ..
+scripts/pr136_completeness.py --tsv docs/pr/pr136-completeness-pr130arms.tsv
+
+# §6 — the scope boundary: is the missing charge in the event at all?
+scripts/pr136_deficit_budget.py \
+  --manifest98  em117-134f08698-manifest.tsv \
+  --manifest141 em114c-134f086141-manifest.tsv \
+  --tsv docs/pr/pr136-deficit-budget.tsv
+```
+
+Prior art quoted rather than re-derived: `126_pi0-audit-and-em-charge-scale.md`,
+`132_pi0-reco-round1.md`, `133_pi0-muon-showers-nc-signature.md`,
+`134_pi0-nc-fragment-merge-p1-pf.md`, `135_pi0-campaign-review.md`,
+`pr130-qmiss-mechanism.md`, `pr130-qmiss-scan-decisions.md`.
+
+---
+
+## 1. Scope — what the owner's constraint does and does not remove
+
+Owner, 2026-08-30: *"we should not tune the neutrino vertex. So the part that
+we should tune is only after that step."* and *"The metric can be with my hand
+scan results."*
+
+**The precise edge, so nothing reads as a violation.** "Do not tune the
+neutrino vertex" means do not work on vertex **finding** —
+`determine_overall_main_vertex` (`clus/src/TaggerCheckNeutrino.cxx:2941`) and
+everything upstream of it, which includes imaging, track/shower separation and
+per-cluster vertex fitting. It does **not** make the vertex *object*
+untouchable: K24 (`m_pi0_prefer_main_vertex`), `m_pi0_bp_vertex_miss_cm` and
+`id_pi0_without_vertex`'s `main_vertex->fit().point` mutation all ship in SBND
+production today with owner approval, because they re-seat a **π⁰ decay point**
+after the ν vertex is fixed. That distinction is the boundary this campaign
+works inside.
+
+**What that leaves** is exactly the two halves the owner named. Everything
+from `TaggerCheckNeutrino.cxx:3081` (`examine_direction`) through
+`shower_clustering_with_nv` to the two π⁰ finders — twenty-three named stages,
+mapped in §5 — is in scope. Roughly 6 000 lines of `NeutrinoShowerClustering.cxx`.
+
+**Two corrections to pr/135 §9, which chartered this campaign differently.**
+
+1. **MC truth is out.** pr/135 §9 proposed MC truth as the calibration handle,
+   on the argument that hand labels carry pairings and not absolute energies.
+   The owner overruled it. That argument was also half wrong: the labels carry
+   the pairing, and **physics carries the mass**. §3 shows the pair supplies an
+   absolute metric with no truth information at all.
+2. **"Upstream charge deficit" was the wrong name.** pr/135 §4 blamed
+   "upstream imaging/shower-building". Imaging sits *before* the vertex, so the
+   owner's constraint cuts it out entirely. What remains is charge
+   **attribution** — which reconstructed object owns which reconstructed
+   charge — and that is a post-vertex question end to end. The campaign is
+   renamed accordingly.
+
+---
+
+## 2. Why the metric we have been quoting is blind
+
+The γ ledger (`scripts/pr132_gamma_ledger.py`) compares a production
+`kine_charge` against the hand label's `energy`. Both are **reconstructed**
+energies: the label's was copied from the scan-time reconstruction. A shower
+that lost its downstream tail in *both* scores OK. Measured on the 132 hand
+γs at the 0.86 production point:
+
+- `E_prod/E_lab` has **median 0.930**, which is exactly `0.80/0.86` — the EM
+  scale flip and nothing else. **66 % of γs sit within ±3 % of that value.**
+- Labels were frozen at `kine_shower_fudge_factor = 0.80`; the ledger never
+  received the correction its own sibling carries
+  (`pr132_pi0_census.py:100`, `scale = 0.80/a.fudge`). So at 0.86 the nominal
+  OK band `[0.80, 1.25]` is a **true-completeness band of `[0.86, 1.34]`**:
+  a shower losing 14 % of its charge is scored OK, and a *deficit* campaign is
+  reading a metric biased to hide exactly that.
+
+Three further defects, each independently disqualifying:
+
+- **Matching is by `showers[].id` with no membership cross-check** — and that
+  id is a *constituent segment id*, not a stable object handle. A re-split can
+  preserve the id while changing composition arbitrarily. Live example on the
+  f086 arm, event **347824**: one re-split object is reported as one **ABSENT**
+  (label g1 528.0 MeV, no shower with that id) plus one **OVER 1.32**. The
+  discriminators `num_segments` and `total_length` sit unread in the same record.
+- **The UNDER+SIBS sibling cone is drawn in the label frame** (20°, no pdg
+  filter). doc 132 §12.3 already measured that the same fragments sit at
+  **36–159° in the reco frame** while the label frame sees 2.6–8.5°. Event
+  259542 g2: `e_lab` 138.7 MeV against `e_sibs` **1014.9 MeV**.
+- **24 % of the denominator carries no scanner judgement.** 32 of the 132 γs
+  come from the `pi0scan-0829-agent` overlay, which has no `em` block, no
+  `members` and no marks; their `e_lab` is pure `energy_as_reconstructed` off a
+  0.80 arm. **31 of the 32 read exactly 0.93** — the scale ratio — and they are
+  counted in the "119/132 OK" headline.
+
+**Conclusion: "90.2 % γ ledger OK" is not a completeness statement**, and no
+ranking in this campaign should rest on it. Fixing the ledger is proposal #5.
+
+---
+
+## 3. The metric this campaign uses — π⁰ side: absolute mass closure
+
+Hand labels supply the pairing and the opening angle. **Physics supplies
+m_π⁰ = 134.9768 MeV.** That is an absolute anchor requiring neither MC truth
+nor label energies, so the residual it measures is a real reconstruction error.
+Per hand pair, at the production energies:
+
+```
+m_prod / m_π⁰  =  R · A
+   R = E_tot · sin(θ/2) / m_π⁰       ENERGY CLOSURE
+   A = 2·√(f(1−f)),  f = E1/E_tot    SHARING ASYMMETRY  (A ≤ 1)
+```
+
+Since `E1·E2 ≤ E_tot²/4`, the mass obeys `m ≤ E_tot·sin(θ/2)`. **R < 1 is
+kinematically impossible for a real π⁰**: no division of the measured energy
+reaches the π⁰ mass at the measured angle. R and A separate *"the pair is
+missing total charge"* from *"one γ is starved relative to the other"* — a
+distinction no ratio-against-a-label can make.
+
+**The angle is exact, not estimated.** `theta_vertex_convention` is the angle
+between the two vertex→conversion-point rays. Any point on a γ's line of
+flight gives the same direction from the decay vertex, so a start point
+reconstructed too deep does **not** bias θ. The convention fails only when the
+π⁰ did not decay at the labelled vertex, which biases θ *low* and therefore R
+low — flagged per event, never corrected.
+
+### The measurement (56 pairs with both γs matched, f086 production arm)
+
+| class | n | median R | median A | reading |
+|---|---|---|---|---|
+| m_prod < 100 MeV | 11 | **0.57** | 0.94 | near-symmetric sharing ⇒ a **pure total-energy deficit**, ~43 % of the π⁰ energy absent |
+| 100 ≤ m ≤ 160 | 37 | 1.14 | 0.87 | inside the acceptance window |
+| m_prod > 160 MeV | 8 | **1.98** | 0.78 | **over-clustering** — 396222 carries a 2658 MeV "γ" |
+
+- **19 of 56 pairs (34 %) have R < 1.**
+- Of the 27 pairs below 135 MeV, **19 are killed by total energy and only 8 by
+  asymmetry.** The residual is a two-sided *charge attribution* problem.
+- R distribution: q10 0.57 · q25 0.94 · median 1.13 · q75 1.35 · q90 1.80.
+
+The high tail is as large a defect as the low one and has never been worked:
+**median R = 1.98 on the 8 pairs above 160 MeV** means those "γ"s carry about
+twice the charge a π⁰ decay allows.
+
+---
+
+## 4. The residual, re-triaged — is the missing charge *there*?
+
+The hand labels already contain a per-segment missing-charge ledger nobody has
+used as a metric: `em.marks_by_shower` = `{shower_id: {segment_id: "in"|"out"}}`
+— the scanner's own verdict that reco left a segment out, or wrongly holds one.
+Corpus-wide: **80 of 214 EM-scanned events carry marks — 90 marked showers,
+305 segments marked IN, 117 marked OUT.**
+
+Adding that marked charge to the production energy (converted to the arm's
+scale by ×0.9302) asks the campaign's prior question directly.
+
+| event | R_prod | R with hand marks | m_prod → m_marks | verdict |
+|---|---|---|---|---|
+| **342199** | 0.69 | **1.01** | 92.6 → **127.0** | RESCUED |
+| **409634** | 0.75 | **1.11** | 77.4 → **148.8** | RESCUED |
+| **54341** | 0.87 | **1.40** | 63.7 → **131.2** | RESCUED |
+| **54332** | 0.94 | **1.12** | 109.0 → **122.4** | RESCUED |
+| 168432 | 0.42 | 0.44 | 53.5 → 56.5 | marks move it, still impossible |
+| the other 14 | 0.18–0.98 | unchanged | — | no marks at all |
+
+**4 of 19 impossible pairs are healed by charge the scanner explicitly says
+belongs to the γ.** Honouring every hand mark moves the in-window count 37 → 39
+of 56. And 342199 is the very specimen pr/135 §5-4 named for the
+merge-before-accept round — confirmed here by a completely independent route.
+
+**The other 15 gain nothing** (14 carry no marks at all). Their deficit is not
+mis-assigned charge the scanner saw, so they need a different explanation
+before any lever is proposed for them. §6 supplies it.
+
+### Corrections to the inherited numbers — carry these forward
+
+- **The γ ledger residual at 0.86 is 13, not 12.** Add **173093 g1, ratio 0.80,
+  38.7 MeV in 1 sibling** to UNDER+SIBS, making it 4. It sits at 0.82 (OK) on
+  every 0.84 arm and crosses only at 0.86. **It is named in no doc.**
+- **The outside-window 14 at 0.86** = doc 133 §12.2's list **− {486907,
+  103798} + {283713, 397630}**. 486907 crosses in at 0.86 (171.6 × 0.930 =
+  159.6); 103798 became exact.
+- **"50–75° off the flight line" is n = 1** (105946/55063, doc 134 §9, prose
+  only, no TSV). The defensible population version is doc 132 §12.3: unfired
+  fragments at **36–159° in the reco frame vs 2.6–8.5° in the label frame**.
+- **doc 135 §8.4's "θ_prod − θ_hand median +0.0°" is not reproducible** — no
+  script, no TSV, the identity of its 5 outliers lost. The surviving instrument
+  is `pr132-angle-census-r10ang.tsv` (66 pairs, `a_start` vs `a_label`), and it
+  disagrees in the cases that matter: 105946 records a_start **17.8°** against
+  a_label **72.7°**.
+- Doc arithmetic: pr/135 §4 says "13 ledger γs" but itemises 12; §9 says 33
+  misses where §4's table sums to 34.
+
+**Out of reach by the owner's own constraint**, and named so it is not
+re-attempted: **54332, 76346, 54453** are the three events his q_miss scan
+marked *"not scannable — ν vertex wrong"*. Their blocker is vertex finding.
+
+---
+
+## 5. The metric this campaign uses — EM side, and what it says
+
+`em_display/em117_score.py` already implements the right scorer against the
+hand marks and the ledger never used it: per marked shower,
+`target = (members | marked-in) − marked-out`, charge-weighted against what the
+arm actually gave that shower, yielding `q_comp`, `q_pur`, their harmonic mean
+`q_f1`, and the raw `q_miss` / `q_extra`. Cross-run matching is by
+charge-weighted overlap, so a re-rooted shower is not scored as a total miss —
+the failure mode that makes the γ ledger emit ABSENT.
+
+**Operating-point caveat, stated up front.** These numbers are scored on the
+`work-pr130r1-probe*` arms, the newest that carry an `emprep-*` membership
+sidecar — i.e. **before** the NC chain, K24 and the 0.86 scale. They describe
+the pr/130 point, not today's production. Refreshing them at f086 costs one
+byte-neutral probe arm and is this campaign's first recommended action
+(proposal 0). The sidecar is not optional: the dump's `segments[].shower_id` is
+single-valued, so a segment held by two showers is credited to one and the
+lossy join invents misses that are not there (8 and 10 members on these sets).
+
+### The measurement (90 hand-marked showers over 80 events)
+
+| quantity | value |
+|---|---|
+| sum `q_target` | 4.83e8 |
+| **`q_miss`** (UNDER — charge the scanner says belongs, the shower does not hold) | **7.14e7 = 14.8 %** |
+| **`q_extra`** (OVER — charge the shower holds, the scanner says it should not) | **4.31e7 = 8.9 %** |
+| charge-weighted F1 per shower | median **0.907**, mean 0.876, min 0.322 |
+| F1 < 0.90 / < 0.80 / < 0.50 | 41 / 21 / 1 of 88 |
+
+**The error is not one-sided:** pure UNDER **22** · pure OVER **29** · BOTH
+**30** · clean **9**. Over-clustering is at least as common as under-clustering,
+which is the second reason the "tail deficit" framing needed replacing.
+
+### The synthesis — the two halves name the same events
+
+Joining the EM score to the π⁰ mass closure (`pr136_completeness.py`), every
+pair the hand marks rescue is an EM-clustering failure by an independent metric,
+and the pairs the marks cannot rescue are **not**:
+
+| event | q_f1 | q_comp | R_prod | m_prod | R_marks | |
+|---|---|---|---|---|---|---|
+| **342199** | 0.670 | **0.504** | 0.688 | 92.6 | **1.009** | rescued |
+| **54341** | 0.673 | **0.507** | 0.873 | 63.7 | **1.400** | rescued |
+| **54332** | 0.723 | **0.573** | 0.938 | 109.0 | **1.124** | rescued |
+| **409634** | 0.867 | 0.765 | 0.749 | 77.4 | **1.109** | rescued |
+| 397630 | 0.704 | 0.543 | 0.400 | 54.0 | 0.400 | still impossible |
+| 281485 | 0.753 | 0.604 | 0.513 | 62.5 | 0.513 | still impossible |
+| **499577** | 0.826 | **1.000** | 0.921 | 111.7 | 0.921 | still impossible |
+| 347129 | 0.886 | 0.795 | 0.976 | 122.0 | 0.976 | still impossible |
+| **168432** | 0.932 / **1.000** | 0.898 / **1.000** | 0.423 | 53.5 | 0.439 | still impossible |
+
+**This is the sharpest result in the round.** 168432 and 499577 hold
+**everything the scanner says they should hold** — `q_comp = 1.000` — and their
+π⁰ mass still cannot reach 135 MeV. Completeness by the scanner's own standard
+does not imply kinematic closure. For those events the missing energy is not
+mis-attributed reconstructed charge, so **no post-vertex clustering change can
+reach them.**
+
+### Two verified mechanisms, both post-vertex, neither with a knob today
+
+1. **Direction is a membership centroid.** `shower_cal_dir_3vector`
+   (`clus/src/PRShowerFunctions.cxx:132`, default `dis_cut = 15 cm`) returns
+   `centroid(member fit points within dis_cut of p) − p`. A shower missing its
+   downstream tail has its centroid pulled upstream, so its direction rotates
+   and every angle cut downstream reads the rotated value. There are ~30
+   bare-literal radii in the chain (12 / 15 / 30 / 50 / 60 / 100 cm) and **no
+   `m_*` knob on any of them.**
+2. **The absorber's cone width is keyed to the shower's own energy.**
+   `clus/src/NeutrinoShowerClustering.cxx:5001-5010` admits a segment at 30° if
+   `Eshower > 800 MeV`, 25° above 360, 15° above 250, 10° above 150, with
+   `Eshower = kine_best ?: kine_charge` (`:4852`). **A shower already short of
+   charge falls into a narrower cone and absorbs less** — a self-reinforcing
+   deficit, and there is no knob on the ladder.
+   **Corollary worth the owner's attention:** `kine_shower_fudge_factor`
+   *divides* `kine_charge`, so the 0.84 → 0.86 flip lowered every `Eshower` by
+   2.3 % and can push showers across the 150 / 250 / 360 / 800 MeV tier edges.
+   **The EM energy-scale constant feeds back into clustering acceptance.**
+   pr/135 §10 attributed the four moved events to acceptance-window edges alone;
+   this is a second, untested channel, and it is testable for free by re-running
+   the 0.84 and 0.86 configs with a probe.
+3. The coupling that makes both bite: `kine_charge` is **not** a sum over
+   members — it is 2D charge integrated within **0.6 cm** of the shower's own
+   point cloud (`clus/src/NeutrinoEnergyReco.cxx:127-188`). Membership → energy
+   is mechanical. A segment not absorbed is charge not counted, always.
+
+(For the record, so it is not re-proposed: `kine_charge_dedup` and
+`kine_charge_rebuild` are **already ON in SBND production**,
+`wct-pr-perevt.jsonnet:1959-1960`. They refresh the *reported* energy after
+late growth; they do not change what the mid-pipeline gates saw.)
+
+---
+
+## 6. The scope boundary — how much of the residual is reachable at all
+
+Before proposing a lever, measure whether the charge exists. For each
+impossible pair, the deficit is `ΔE = E_tot·(1/R − 1)`; the budget it could be
+drawn from is **ORPHAN** (segments held by no shower) + **OTHER** (segments in
+other showers of the event — pr/130's SPLIT + STOLEN pool). Priced with an
+in-event dQ→MeV constant taken from the two labelled γ showers, which is an
+**upper bound**, since much of the OTHER budget is track-like charge an EM
+absorber must never take.
+
+| verdict | n | events |
+|---|---|---|
+| rescued by hand marks | 4 | 342199, 409634, 54341, 54332 |
+| enough reconstructed charge exists elsewhere | 10 | 281485, 280159, 280972, 176986, 499577, 283713, 242726, 169356, 347129, 392901 |
+| **NOT REACHABLE by any re-attribution** | **5** | **71178** (needs 8.4× its whole budget), **168432** (1.4×), **103798** (1.3×), **397630** (1.0×), **281639** (1.0×) |
+
+So of the 19 impossible pairs: **4 are demonstrably fixable inside scope, 5 are
+demonstrably outside it, and 10 are open** — and for most of those 10 the demand
+is ~1 % of a budget that is mostly track charge, so "reachable" there means
+"not excluded", not "a lever exists".
+
+**71178 deserves a label audit rather than a reco fix.** Its two γs total
+158 MeV at θ = 18°. A 158 MeV π⁰ must open at least 117°. Getting from 18° to
+117° is not a charge correction — either the pairing is wrong or the π⁰ decayed
+far from the labelled vertex. Three events in this class already have that
+diagnosis on the record from the owner's own scan (54332, 76346, 54453,
+"ν vertex wrong").
+
+**Realistic ceiling for the whole campaign, stated before any work starts:
++4 to +6 exact π⁰ out of 66**, plus whatever the EM-side `q_miss`/`q_extra`
+numbers buy in event-level energy that the π⁰ census does not see. Anyone
+expecting the π⁰ exact rate to move from 32/66 to 45/66 should read §6 first.
+
+---
+
+## 7. Ranked proposals
+
+Each carries the four fields that matter: **mechanism · specimens · the
+measurement that would kill it · ceiling.**
+
+### Proposal 0 (enabling, do first) — one byte-neutral probe arm at f086
+
+Everything in §5 is measured at the pr/130 operating point because that is the
+newest arm with a membership sidecar. One arm on the 239-event manifest at the
+current config with `WCT_SHOWER_ABSORB_DEBUG` + `WCT_SHOWER_XCLUS_DEBUG` +
+`WCT_SHOWER_CONTENT_DEBUG`, parsed by `prep_em_scan.py --parse-probes` into
+`emprep-136f086`, makes every number in this doc current and supplies the
+absorb/reject tape the rest of the ranking needs. Probes are stderr-only and
+byte-neutral by construction. **Nothing below can be ranked honestly without it.**
+
+### #1 — Un-park the pr/130 q_miss front, now gated on a π⁰ metric
+
+**Mechanism.** 74.1 % of the missing charge is in **other reconstructed
+objects** — SPLIT 32.4 % + STOLEN 38.9 % + UNTOUCHED 2.9 % — present in the
+event and mis-attributed, entirely post-vertex. Only 17.0 % is REROOT (the reco
+never built the object) and 6.7 % DECLINED by a shipped guard. This is the same
+pool §5 measures as `q_miss` = 14.8 % of target charge.
+
+**The owner already adjudicated it.** `em_labels/emscan-0829-pr130qmiss/` is
+his own scan, and the answer was **MERGE on 17 of 17** scannable questions.
+
+**The live lead is precise, and it is a read, not a knob.** Four of the seven
+target showers — 122660/9110, 181050/15006, 463565/13001, 469665/15003 —
+emit **no `SHOWER_XCLUS` lines at all** and carry **79 % of the charge**. They
+are never enumerated as cross-cluster absorbers by
+`shower_clustering_with_nv_from_vertices`, so no predicate, ordering rule or
+tie-break at any existing seat can reach them. The next step is to instrument
+the enumeration itself and find out why.
+
+**What changed since the park** (2026-08-29, *"we will move on for now, may
+come back to this later"*). The 463565 warning was that a merge front must be
+gated on a π⁰ metric and not on `q_extra` alone — because the owner said there
+*should* be two showers there, and fixing the energy can cost the two-γ
+separation. **That gate now exists**: the π⁰ census plus §3's mass closure,
+which is exactly the "did we keep two γs, and does their mass close" test that
+was missing. This is why the front is ranked #1 now and was not then.
+
+**Specimens.** 342199, 105946, 21073 are simultaneously MERGE-approved by the
+owner and π⁰ blockers. On the EM side the worst-F1 rows are 175896 (0.322),
+284206 (0.524), 52044 (0.533), 318769 (0.560), 142421 (0.606), 342199 (0.670).
+
+**Killed by**: instrumenting the enumeration and finding the four are excluded
+for a reason that cannot be changed post-vertex.
+
+**Ceiling**: 58.7 % of kept `q_miss` is recoverable under the pr/128 precedent;
+on the π⁰ side the 4 rescuable pairs of §4. Note this will **not** be a local
+default-OFF guard like everything in pr/123 → pr/130 — expect a full 239-event
+gate.
+
+### #2 — 342199-class merge-BEFORE-accept, with the K22-v2 merged-cloud machinery
+
+**Mechanism.** The label pair is window-rejected at *fragment* charges
+(56.7 × 64.2; healed 80.3 × 121.8 gives m ≈ 131), so the merge has to happen
+*before* acceptance. K12's domain, retried with machinery that did not exist
+when K12 died. §4 confirms it from the other side: hand marks alone take
+342199's mass 92.6 → 127.0 and its R 0.69 → 1.01, and §5 gives it `q_comp`
+0.504 — half the charge the scanner assigns is not held.
+
+**Specimens.** 342199 (both γs UNDER+SIBS with exactly one sibling each), plus
+409634, 54341, 54332 — the other three §4 rescues, all with low `q_comp`.
+
+**Killed by**: the fragments not being graph-reachable, or the merge costing an
+accepted pair elsewhere.
+
+**Ceiling: +1 to +4 exact.** Every specimen has hand-attested charge behind it,
+which no previous π⁰ proposal could say.
+
+### #3 — Break the energy-ladder feedback
+
+**Mechanism.** §5 item 2. A knob so `examine_showers`' tier is not evaluated on
+the shower's own possibly-deficient `kine_charge`, or so the ladder re-runs
+after late growth. The first measurement is free and comes out of proposal 0's
+tape: **how many showers sit within a few MeV of the 150 / 250 / 360 / 800 MeV
+tier edges, and how many segments were rejected only because of the tier they
+landed in.** The same tape answers whether the 0.84 → 0.86 flip moved anything
+across those edges — a question pr/135 §10 left open.
+
+**Killed by**: a census showing few showers sit near a tier edge, or that the
+segments rejected at the narrow tiers would not have been accepted anyway.
+
+**Ceiling**: unknown until the census runs — which is why it is #3 and not #1.
+
+### #4 — The over-clustered side, which has never been worked
+
+**Mechanism.** `q_extra`, not `q_miss`. §5 finds **29 pure-OVER and 30 both**
+against 22 pure-UNDER, i.e. the majority of hand-marked showers hold charge the
+scanner says they should not; §3 finds 8 pairs at median R = 1.98.
+
+**Specimens.** 396222 (a 2658 MeV "γ"), 506114, 21073, 259542, 348691, 142421,
+286655, 56243; the ledger's OVER 4 (99838, 165157, 347824, 489327); the
+over-extended-start mirror class (489327 at −34.1 cm, 347824 at −11.1 cm,
+doc 132 §13.1); and 175896, whose `q_pur` is **0.192**.
+
+**Killed by**: the over-charge turning out to be a labelling artefact rather
+than a reco merge — checkable directly, since `q_extra` is keyed to segments
+the scanner marked "out".
+
+**Note**: pr/130's `q_extra` scan collapsed 4.661e6 → 0, but it only asked what
+to merge *in*. This side is genuinely unmeasured.
+
+### #5 — Fix the metric itself, as the campaign's first engineering act
+
+New `scripts/pr136_gamma_ledger.py` (fork, do not edit the shipped one — M10):
+apply `scale = 0.80/fudge`; match on membership overlap rather than
+`showers[].id`; cross-check `num_segments` / `total_length`; draw the sibling
+cone in the reco frame; and report the 100 base γs that carry scanner
+judgement separately from the 32 overlay γs that do not. Also repair
+`pr126_pi0_select.py --selftest`, which is currently unrunnable because
+`build_rows` loads the released scan-time manifests at `:200` — so the guard
+that would catch a corrupted label set does not run.
+
+### #6 — Close the 15, one way or the other
+
+§6 has already excluded 5 of them. For the remaining 10, the question is
+whether the deficit is sub-segment charge (invisible to the labels by
+construction — see §8) or a label-audit problem like 71178. The dump's `proj[]`
+carries per-plane measured `charge` vs `charge_pred` per (wire, slice) with
+`cluster_id`, which is where charge that exists in the image but landed in no
+segment would show up. Read-only, offline, no re-run. **If the charge is not
+there, say so and stop** — that is a result, and it bounds the campaign.
+
+### Park with a reason
+
+- **The deep-start class.** K17 (`shower_em_backext_perp_cm`) died twice: v1
+  took the census 31 → **21** exact by swallowing true γ2s wholesale; v2 with a
+  30° continuation guard reached 26, net **−5**. Do not retry without a new
+  mechanism.
+- **A direction-radius sweep.** doc 132 §17.2 measured that the charge-centroid
+  ray carries the *same* bias as the start ray on 105946 (19.1° vs 17.8°
+  against a label 72.7°), so widening the radius toward the whole-shower
+  centroid is predicted dead **for the pairing angle**. It remains untested for
+  the *absorption* cone axis, which is a different consumer — but that is a
+  proposal-0 census question, not a knob.
+- **52044 is reclassified.** pr/135 §9-2 queued it as a "wrong partner" pairing
+  fix. It is pr/130's **REROOT** class — the reco never built the object
+  (`q_comp` 0.364, `q_pur` 1.000, and the opening angle is right to 1.7°:
+  a_start 112.2° vs a_label 110.5°). It belongs in #1, not in a pairing round.
+
+---
+
+## 8. Out of scope, and why
+
+- **Imaging and charge recovery** — upstream of the vertex; the owner's
+  constraint removes it.
+- **Vertex finding** — explicitly excluded. This also removes 54332, 76346 and
+  54453, which the owner's own q_miss scan called "not scannable — ν vertex
+  wrong".
+- **MC truth calibration** — overruled by the owner. §3 shows it is not needed:
+  m_π⁰ is the anchor.
+- **Sub-segment charge.** The binding limit of the hand-scan metric: every hand
+  judgement is keyed to an **existing reco segment id** — `members`,
+  `marks_by_shower`, `energy_marks_detail[].seg`, even
+  `energy_orphan_detail[].seg` (orphans are `shower_id < 0` segments, still
+  segments). There is no hand-drawn extent, hull or region anywhere in the
+  schema. **Charge that wire-cell never turned into a segment is invisible to
+  the labels by construction**, and proposal #6 is the only way to see it.
+- **The EM energy scale.** Closed self-consistently at 0.86 (pr/135 §10). If
+  this campaign lands charge, the scale moves — that is a *consequence* to
+  re-measure at the end, not a task.
+
+---
+
+## 9. Open owner decisions carried forward
+
+1. **397630** — still the one adjudicated cost of the ν-vertex preference rule
+   (pr/135 §9-4). §6 now adds that it is **not reachable** by re-attributing
+   reconstructed charge (needs 1.0× its entire budget), which weakens the
+   "rescue it with a track-length bound" option further.
+2. **The 393505 sentinel Enu window** is still calibrated at 0.84 and fails at
+   0.86 by 0.1 MeV (559.9 against [560, 572], pr/135 §10). It needs a
+   deliberate rebase, not a silent retune.
+3. **173093 g1** newly crosses the ledger's UNDER line at 0.86 (§4). It is
+   named in no doc and has never been scanned.
+4. **`pr126_pi0_select.py --selftest` is broken** and has been since the
+   2026-08-31 retire round. Nothing is validating the label corpus.
