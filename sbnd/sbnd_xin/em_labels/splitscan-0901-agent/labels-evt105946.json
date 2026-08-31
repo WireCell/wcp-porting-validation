@@ -1,0 +1,13 @@
+{
+ "event": "evt105946",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "55063": {
+   "verdict": "KEEP",
+   "confidence": "medium",
+   "comment": "Scan A. PROXY WRONG: one dense core at (0,0); the other maxima are isolated stragglers.  One shower plus satellites, not a 2-way merge",
+   "parts": null
+  }
+ }
+}

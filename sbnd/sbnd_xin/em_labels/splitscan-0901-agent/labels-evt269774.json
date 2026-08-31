@@ -1,0 +1,13 @@
+{
+ "event": "evt269774",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "13237": {
+   "verdict": "SPLIT2",
+   "confidence": "high",
+   "comment": "Scan A. Textbook 2-way: blobs at (-5,-3) and (+12,+6), side view separates at -20..-5 vs +5..+18 transverse. valley 1.0 -> valley_best 0.857, recovered by the fix",
+   "parts": null
+  }
+ }
+}

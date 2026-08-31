@@ -826,3 +826,120 @@ have at the start of the point"*.
    the common-point test.
 7. Independently: **adjudicate 181050** (doc pr/136 §11.9), still the last open item
    on `onV1c90d25`.
+
+## 15. Scan A — the efficiency read, and two defects it found
+
+**Status: COMPLETE, 2026-08-31.** Owner: *"Please go with Scan A."* The question
+was whether the 33 known merges the round-2 rule misses are reachable at all.
+**Answer: partly — one third of the misses were a statistic bug, one half are not
+merges at all, and a hard residual remains that no instrument tested here reaches.**
+
+### 15.1 The trigger's other half, which §13 did not report
+
+§13 led with purity and never stated efficiency. It is **11 of 44 = 25 %**, and
+the failure modes are not noise:
+
+| why the rule misses | n |
+|---|---|
+| **no valley — the density never dips between the two maxima** | 23 |
+| no second maximum at all | 7 |
+| valley too shallow | 3 |
+
+The 23 are *exactly* the owner's factor 4 (*"the two gammas may be connected
+directly"*). The misses include **314838** (the π⁰ loss) and **142421** (the best
+recovery), both reading `valley = 1.0`.
+
+### 15.2 Defect 1 — `valley` was testing the wrong pair
+
+The scan opened 314838 and 269774 and found **two obviously separated θ-φ blobs**
+in objects the statistic scored `valley = 1.0`. The cause is in my own code, not
+the data: `valley` was `V[0,1]`, the dip between the two **highest-density**
+maxima — and those are very often **both inside the same lobe**, so the arc
+between them never leaves dense charge. The genuine second blob was ranked third.
+
+ATLAS's rule is about *a* pair of maxima with a dip between them, not the top two
+by density. Fixed by minimising the valley over **all** seed pairs whose two sides
+each carry ≥ 3 % of the charge (`valley_best`, `pr137_features.py`):
+
+| object | `valley` | `valley_best` |
+|---|---|---|
+| 350354 | 1.000 | **0.084** |
+| 314838 | 1.000 | **0.782** |
+| 269774 | 1.000 | **0.857** |
+| 142421 / 105946 / 122660 | 1.000 | 1.000 (genuinely flat) |
+
+**It buys efficiency and sells purity — it moves along the curve, not off it:**
+
+| rule | efficiency | purity |
+|---|---|---|
+| `valley ≤ 0.90 & d2 ≥ 0.35 & frac ≥ 0.05` (round 2) | 27 % | 60 % |
+| `valley_best ≤ 0.90 & d2_best ≥ 0.35 & frac_best ≥ 0.05` | **32 %** | 52 % |
+| `valley_best ≤ 0.95 & d2_best ≥ 0.20 & frac_best ≥ 0.05` | **39 %** | 50 % |
+
+### 15.3 The spatial instrument is MEASURED DEAD
+
+If the missed class is "two parts with no angular dip", the obvious complement is
+Arbor-style topology: split where the object is *spatially* disconnected. Tested
+with single-linkage over segments (the house idiom,
+`NeutrinoShowerClustering.cxx:8607-8656`), second-component charge share at gaps
+2 / 4 / 8 cm:
+
+| rule | MERGED | SINGLE | enrichment | purity |
+|---|---|---|---|---|
+| components(4 cm), 2nd share ≥ 0.10 | 32/44 (73 %) | 157/345 (46 %) | **1.6×** | 17 % |
+| components(4 cm), 2nd share ≥ 0.20 | 21/44 (48 %) | 85/345 (25 %) | **1.9×** | 20 % |
+| components(2 cm), 2nd share ≥ 0.20 | 21/44 (48 %) | 90/345 (26 %) | 1.8× | 19 % |
+| **angular OR** components(4 cm) ≥ 0.20 | 25/44 (57 %) | 92/345 (27 %) | 2.1× | 21 % |
+
+**Half of all healthy showers are spatially fragmented at 2–4 cm**, so
+disconnection carries almost no information, and the union *dilutes* the angular
+rule (52 % → 21 %). Arbor's topology may still be useful as a *kernel*; **as a
+trigger it is dead**, and that is now measured rather than assumed.
+
+### 15.4 The MERGED class is contaminated too — in the opposite direction
+
+11 of the 33 missed merges were scanned blind. **Five are not merges at all:**
+
+| object | verdict | what it actually is |
+|---|---|---|
+| 463565/115088 | **KEEP** | one coherent body at 65–90 cm + two tiny detached specks |
+| 98844/70063 | **KEEP** | one strand, width **below** the single-shower null everywhere, + one speck |
+| 282909/75060 | **KEEP** | one core with a fan, width at or below null, a few specks |
+| 386948/91060 | **KEEP** | one real shower + three small detached fragments |
+| 105946/55063 | **KEEP** | one dense core; the other maxima are isolated stragglers |
+
+These are **shower + junk**, not two showers. They are over-clustered by *charge*
+and a splitter should not fire on them — a *trim* would be the right repair, and
+the splitter has no trim. §14.2 found the proxy's SINGLE class contaminated with
+real merges; **Scan A finds its MERGED class contaminated with non-merges.** Both
+corrections push the trigger's true performance the same way:
+
+| | proxy | corrected by the scan |
+|---|---|---|
+| efficiency | 32 % (14/44) | **~48 %** (14/29, after removing ~45 % of "merges" that are trims) |
+| purity | 52 % | **~80 %** (§14.2's rate on the SINGLE fires) |
+
+**Both numbers rest on 22 objects labelled by one scanner and are not
+certifications.** They are the reason the owner's 50 matter.
+
+### 15.5 The residual, named
+
+Three of the eleven are genuine misses and they share a shape — **the minor part
+raises no density peak**, because it is either small in charge (181050), tiny in
+angular extent (122660: the whole object subtends 5° × 11° at 90–115 cm), or
+connected to the main body by charge (142421). No instrument tested in round 2 or
+Scan A reaches them: not the angular density (no dip), not spatial connectivity
+(§15.3), not dE/dx (§13b), not the π⁰ mass (§13b).
+
+**So the honest ceiling for this design is roughly half the over-clustering, at
+~80 % purity** — worth having, and not a promise of more.
+
+### 15.6 What changes for the owner scan
+
+1. **Add a third verdict: TRIM.** KEEP / SPLIT2 / SPLIT3 cannot express "one
+   shower plus detached junk", which is ~45 % of what the proxy calls a merge.
+   Without it those objects get forced into KEEP or SPLIT and both are wrong.
+2. **The efficiency denominator is a scan output, not an input.** How many of the
+   44 are real 2-way merges is exactly what TRIM-vs-SPLIT decides.
+3. The tooling changes the owner asked for come next; Scan A's finding is that the
+   *label vocabulary* is the first thing to fix, ahead of the viewer.

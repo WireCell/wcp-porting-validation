@@ -113,6 +113,29 @@ def features(r, pop_by_ev, sigma_fn):
         f['seed_angle']=math.degrees(math.acos(max(-1,min(1,float(M['dirs'][0]@M['dirs'][1])))))
     else:
         f['d2_over_d1']=0.0; f['valley']=1.0; f['seed_frac']=0.0; f['seed_angle']=0.0
+    # ---- BEST-PAIR variants.  Scan A found the defect these fix: 'valley' above
+    # is V[0,1], the dip between the two HIGHEST-DENSITY maxima -- and those are
+    # very often both inside the SAME lobe, so the arc between them never leaves
+    # dense charge and valley comes back 1.0 even when the theta-phi map plainly
+    # shows two blobs (269774, 314838, 142421 all read valley=1.0 that way).
+    # ATLAS's rule is about a pair of maxima with a dip between them, not about
+    # the top two by density.  So: minimise the valley over ALL seed pairs whose
+    # two sides each carry a real charge share.
+    f['valley_best']=1.0; f['d2_best']=0.0; f['frac_best']=0.0; f['angle_best']=0.0
+    if k>=2:
+        V=M['valley']; fr=M['frac']; dn=M['dens']
+        best=None
+        for i_ in range(k):
+            for j_ in range(i_+1,k):
+                if min(fr[i_],fr[j_]) < 0.03: continue
+                if best is None or V[i_,j_] < best[0]:
+                    best=(float(V[i_,j_]), i_, j_)
+        if best is not None:
+            vb,i_,j_=best
+            f['valley_best']=vb
+            f['d2_best']=float(min(dn[i_],dn[j_])/max(max(dn[i_],dn[j_]),1e-12))
+            f['frac_best']=float(min(fr[i_],fr[j_]))
+            f['angle_best']=math.degrees(math.acos(max(-1,min(1,float(M['dirs'][i_]@M['dirs'][j_])))))
     U,rr = L.rays(pts,v)
     ax = D[0]-D[1]; n=np.linalg.norm(ax)
     if n>0:
@@ -183,7 +206,8 @@ def features(r, pop_by_ev, sigma_fn):
     return f
 
 FAMILY = {
- 'D':['n_seed','d2_over_d1','valley','seed_frac','seed_angle','bimodal_coef','valley_1d','dBIC','angle'],
+ 'D':['n_seed','d2_over_d1','valley','seed_frac','seed_angle','bimodal_coef','valley_1d','dBIC','angle',
+      'valley_best','d2_best','frac_best','angle_best'],
  'S':['w_pull','w_over_expected','sep_scaled','w_pull_min','dr_parts','w_ratio','r_ratio','q_ratio','w_at_r_ratio'],
  'C':['dedx0','dedx1','dedx_min','dedx_ratio','dedx15_min','dedx15_max','n_2mip','vgap_min','vgap_max','void_min'],
  'T':['gap_cm','gap_scaled','balance'],
