@@ -1547,8 +1547,15 @@ which §15.4 had explicitly refused to assume.
 
 Exactly **one** event differs, and it is 281485 — `partial` → `none`. Its π⁰
 masses are unchanged to five figures (67.22 / 60.61); what changed is the
-*matching*. §15.4's stated bar was census exact ≥ 36 and that is met, but the
-honest reading is that the shed traded a `partial` away.
+*matching*.
+
+**This is not a pass on the census — it is a gap in the pre-registration.**
+§15.4's census bar was written on `exact` **only**, so it could not see a
+regression in a *non-exact* class, which is precisely what happened. Calling it
+"met" would be the same error §10.1 corrects for item 1 (bars fixed before the
+per-part instrument existed) and §13.3 corrects for item 4 (a bar that counts
+objects cannot grade boundaries). The bar did not cover the outcome; the outcome
+governs.
 
 **The mechanism of the loss is the finding.** The four shed segments were held by
 89095 *and* by 91112. After the shed they are held by 91112 only — so the hand
