@@ -172,10 +172,42 @@ Two honest limits:
   index files the uploads were made with. Verified as far as it can be here, and
   no further.
 
-**Still to do before the scan** (none of it blocks a first pass):
-the θ-φ ray-map panel (A1 item 2) and the `w_single(r)` overlay (item 3) are not
-in the viewer yet — they exist in `pr137_curate.py --sheets`, which is the
-fallback for both.
+### A1.3 The two panels, event context, and growable groups — ADDED 2026-08-31
+
+**θ-φ ray map** (A1 item 2) and **width-vs-depth against `w_single(r)`**
+(item 3) are now panels under the 3-D view. The ray map shares the *same*
+ColumnDataSource as the 3-D cloud, so the drop recolour and the click highlight
+reach it for free — there is no second colour channel to keep in step. The width
+panel draws one curve per non-empty group plus the dashed null; doc pr/137 §15.4
+found every hand-labelled SPLIT sat 2–10× above that line and every KEEP at or
+below it.
+
+**Event context.** The display holds ONE object, and the owner asked the right
+question of it: *"why is the black star not on the displayed segments?"* The
+answer for evt396222 node9059 is physics, not a bug — the object's nearest point
+is **14.5 cm** from the ν vertex and its `start_connection_type = 2` ("gap"),
+i.e. a photon that converted 14.5 cm downstream, against a ~18 cm mean conversion
+length in LAr. Nothing else in that event is closer either: the nearest point of
+*any* of its 180 segments is the same 14.5 cm, which is what an NC-like topology
+with no visible activity at the vertex looks like. **The rest of the event is now
+drawn faint grey**, so the gap reads as a gap rather than as a missing object.
+(This shower is 123 of the event's 180 segments; the second-biggest, node 9084 at
+2.14e7, is a separate scan object of its own.)
+
+**The black star is the ν main vertex** — `main_vertex` from the calib dump, and
+the reference point every angle in the tool is measured from. The grouping
+proposal is *angular from the star*, so "two objects" means two directions as
+seen from it. One gap to record: doc pr/137 §1.2a wanted the reference to be a
+*parameter* (the π⁰ decay vertex when the shower has one, else the ν vertex), and
+the viewer always uses the ν vertex. It matters for the NC chain, where K24
+re-seats a decay point away from the ν vertex.
+
+**Groups grow on demand.** Owner: *"for busy events, there may be many groups…
+3 can be the default though."* `+ group` / `- group`; three columns plus JUNK by
+default, up to the palette. `- group` only ever removes an **empty trailing**
+column, so a click cannot silently reassign segments already placed. The verdict
+gains `SPLIT4+`, and the saved label records `n_parts` and `n_groups` so the exact
+count survives the bucket.
 
 ### A2. The owner scan itself
 

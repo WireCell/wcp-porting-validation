@@ -48,10 +48,22 @@ import split_model as SM
 import split_tree_js as TJ
 import bee_links as BL
 
-GROUPS = [0, 1, 2, SM.JUNK]
-GROUP_NAME = {0: "Group 0", 1: "Group 1", 2: "Group 2", SM.JUNK: "JUNK (trim)"}
-GROUP_COLOR = {0: SM.GROUP_COLORS[0], 1: SM.GROUP_COLORS[1],
-               2: SM.GROUP_COLORS[2], SM.JUNK: SM.JUNK_COLOR}
+DEFAULT_NGROUPS = 3          # owner: "3 can be the default though"
+MAX_NGROUPS = len(SM.GROUP_COLORS)
+
+
+def groups():
+    """the live group list: 0 .. n-1 then JUNK.  A busy event can need more than
+    three, so the count is state, not a constant."""
+    return list(range(STATE['ngroups'])) + [SM.JUNK]
+
+
+def group_name(g):
+    return "JUNK (trim)" if g == SM.JUNK else "Group %d" % g
+
+
+def group_color(g):
+    return SM.JUNK_COLOR if g == SM.JUNK else SM.GROUP_COLORS[g % len(SM.GROUP_COLORS)]
 
 
 # ----------------------------------------------------------------- args
@@ -97,7 +109,8 @@ except Exception:
     BEE = None
 
 # ----------------------------------------------------------------- state
-STATE = dict(i=0, payload=None, group={}, bundles={}, row=None)
+STATE = dict(i=0, payload=None, group={}, bundles={}, row=None,
+             ngroups=DEFAULT_NGROUPS)
 
 pts = ColumnDataSource(dict(x=[], y=[], z=[], u=[], v=[], seg=[], bundle=[],
                             color=[], alpha=[], size=[], hl=[]))
@@ -105,10 +118,16 @@ cam = ColumnDataSource(dict(az=[0.6], el=[0.35], cx=[0.0], cy=[0.0], cz=[0.0],
                             R=[100.0], az0=[0.6], el0=[0.35],
                             xs0=[0.0], xe0=[1.0], ys0=[0.0], ye0=[1.0]))
 vtx = ColumnDataSource(dict(x=[], y=[], z=[], u=[], v=[], al=[], sz=[]))
+# The rest of the event, drawn faint.  The owner asked why the vertex star sits
+# off the object: because the display holds ONE object and the event holds many
+# (evt396222: 123 of the event's 180 segments are this shower, and its 14.5 cm
+# vertex gap is a real photon conversion, start_connection_type=2).  Without the
+# surroundings that reads as a bug rather than as physics.
+ctx = ColumnDataSource(dict(x=[], y=[], z=[], u=[], v=[], al=[], sz=[]))
+wprof = ColumnDataSource(dict(xs=[], ys=[], color=[], width=[], dash=[]))
 
 gmap_box = TextInput(value='{}', visible=False)     # seg -> group, for the JS
-cmap_box = TextInput(value=json.dumps({str(k): v for k, v in GROUP_COLOR.items()}),
-                     visible=False)
+cmap_box = TextInput(value='{}', visible=False)
 hi_box = TextInput(value='', visible=False)         # highlight channel
 moved_box = TextInput(value='', visible=False)      # drop channel
 cam_box = TextInput(value='', visible=False)
@@ -118,20 +137,22 @@ tree = Div(text='', width=780, height=640)
 info = Div(text='', width=780)
 status = PreText(text='', width=780, height=54)
 
-verdict_btn = RadioButtonGroup(labels=['KEEP', 'SPLIT2', 'SPLIT3', 'TRIM', 'UNSURE'],
-                               active=0, width=520)
+verdict_btn = RadioButtonGroup(labels=['KEEP', 'SPLIT2', 'SPLIT3', 'SPLIT4+',
+                                       'TRIM', 'UNSURE'], active=0, width=560)
 conf_btn = RadioButtonGroup(labels=['high', 'medium', 'low'], active=0, width=260)
 note_box = TextInput(title='note (optional)', width=520)
 
 
 # ----------------------------------------------------------------- 3-D view
-fig = figure(width=720, height=760, match_aspect=True,
+fig = figure(width=740, height=470, match_aspect=True,
              tools='tap,box_zoom,reset,save', toolbar_location='right',
              title='drag to rotate  |  shift-drag to pan  |  tap a point to pick its segment')
 fig.grid.visible = False
 fig.axis.visible = False
 fig.toolbar.active_drag = None
 
+r_ctx = fig.scatter('u', 'v', source=ctx, size=2, color='#c8c8c8', alpha=0.30,
+                    line_color=None)
 r_pts = fig.scatter('u', 'v', source=pts, size='size', color='color',
                     alpha='alpha', line_color=None)
 r_vtx = fig.scatter('u', 'v', source=vtx, size=16, marker='star',
@@ -139,20 +160,39 @@ r_vtx = fig.scatter('u', 'v', source=vtx, size=16, marker='star',
 fig.add_tools(HoverTool(renderers=[r_pts], tooltips=[('segment', '@seg'),
                                                      ('bundle', '@bundle')]))
 
+# theta-phi ray map (owner factor 1).  It shares the SAME source as the 3-D view,
+# so the drop recolour and the click highlight reach it for free -- no second
+# colour channel to keep in step.
+tp = figure(width=360, height=330, match_aspect=True,
+            tools='pan,wheel_zoom,box_zoom,reset', toolbar_location=None,
+            title='theta-phi ray map from the vertex (deg)')
+tp.scatter('tx', 'ty', source=pts, size='size', color='color', alpha='alpha',
+           line_color=None)
+tp.grid.grid_line_alpha = 0.25
+
+# width vs depth against the in-situ single-shower null (owner factor 2).
+wp = figure(width=360, height=330, tools='pan,wheel_zoom,reset',
+            toolbar_location=None,
+            title='transverse RMS vs depth  (dashed = single-shower null)')
+wp.multi_line('xs', 'ys', source=wprof, line_color='color',
+              line_width='width', line_dash='dash')
+wp.xaxis.axis_label = 'depth along axis (cm)'
+wp.yaxis.axis_label = 'transverse RMS (cm)'
+
 
 def _cam_js(extra=''):
-    return CustomJS(args=dict(cam=cam, pts=[pts, vtx], lines=[], heads=[],
-                              ptalpha=[1.0, 1.0], ptsize=[4.0, 16.0],
-                              ptcue=[1.0, 0.0], xr=fig.x_range, yr=fig.y_range,
+    return CustomJS(args=dict(cam=cam, pts=[pts, vtx, ctx], lines=[], heads=[],
+                              ptalpha=[1.0, 1.0, 0.30], ptsize=[4.0, 16.0, 2.0],
+                              ptcue=[1.0, 0.0, 1.0], xr=fig.x_range, yr=fig.y_range,
                               p=fig, camtxt=cam_box),
                     code=em3d.JS_REDRAW + extra)
 
 
 fig.js_on_event(PanStart, CustomJS(args=dict(cam=cam, xr=fig.x_range, yr=fig.y_range),
                                    code=em3d.JS_PANSTART))
-fig.js_on_event(Pan, CustomJS(args=dict(cam=cam, pts=[pts, vtx], lines=[], heads=[],
-                                        ptalpha=[1.0, 1.0], ptsize=[4.0, 16.0],
-                                        ptcue=[1.0, 0.0], xr=fig.x_range,
+fig.js_on_event(Pan, CustomJS(args=dict(cam=cam, pts=[pts, vtx, ctx], lines=[], heads=[],
+                                        ptalpha=[1.0, 1.0, 0.30], ptsize=[4.0, 16.0, 2.0],
+                                        ptcue=[1.0, 0.0, 1.0], xr=fig.x_range,
                                         yr=fig.y_range, p=fig),
                               code=em3d.JS_ROTATE))
 fig.js_on_event(PanEnd, CustomJS(args=dict(cam=cam, camtxt=cam_box),
@@ -172,8 +212,8 @@ gmap_box.js_on_change('value', CustomJS(
 # is neither: bokehjs fires it once, after the document exists, unconditionally.
 curdoc().js_on_event(DocumentReady, CustomJS(
     args=dict(cloud=pts, gmap=gmap_box, cmap=cmap_box, moved=moved_box, hi=hi_box,
-              pts=[pts, vtx], cam=cam, lines=[], heads=[],
-              ptalpha=[1.0, 1.0], ptsize=[4.0, 16.0], ptcue=[1.0, 0.0],
+              pts=[pts, vtx, ctx], cam=cam, lines=[], heads=[],
+              ptalpha=[1.0, 1.0, 0.30], ptsize=[4.0, 16.0, 2.0], ptcue=[1.0, 0.0, 1.0],
               xr=fig.x_range, yr=fig.y_range, p=fig),
     code=TJ.JS_SETUP + TJ.JS_RECOLOR_BODY + em3d.JS_REDRAW))
 
@@ -206,13 +246,13 @@ def render_tree():
         bgrp[b] = c.most_common(1)[0][0] if c else 0
     Qtot = p['Q'] or 1.0
     html = [TJ.CSS, "<div id='split-tree'><div class='cols'>"]
-    for g in GROUPS:
+    for g in groups():
         bl = sorted([b for b in bmem if bgrp[b] == g],
                     key=lambda b: -sum(max(bysegs[s]['q'], 0.) for s in bmem[b]))
         qg = sum(max(bysegs[s]['q'], 0.) for b in bl for s in bmem[b])
         html.append("<div class='col' data-group='%d'>" % g)
         html.append("<div class='colhdr' style='background:%s'>%s &nbsp; %d bundle(s) "
-                    "&nbsp; %.0f%% q</div>" % (GROUP_COLOR[g], GROUP_NAME[g],
+                    "&nbsp; %.0f%% q</div>" % (group_color(g), group_name(g),
                                                len(bl), 100.0 * qg / Qtot))
         for b in bl:
             segs = sorted(bmem[b], key=lambda s: -max(bysegs[s]['q'], 0.))
@@ -254,18 +294,27 @@ def render_tree():
     tree.text = "".join(html)
 
 
+VERDICTS = ['KEEP', 'SPLIT2', 'SPLIT3', 'SPLIT4+', 'TRIM', 'UNSURE']
+
+
+def n_parts():
+    return len({g for g in STATE['group'].values() if g != SM.JUNK})
+
+
 def derive_verdict():
     """the verdict is READ OFF the columns, never typed."""
     grp = STATE['group']
     if not grp:
-        return 4
-    n = len({g for g in grp.values() if g != SM.JUNK})
+        return VERDICTS.index('UNSURE')
+    n = n_parts()
     junk = any(g == SM.JUNK for g in grp.values())
-    if n >= 3:
-        return 2
+    if n >= 4:
+        return VERDICTS.index('SPLIT4+')
+    if n == 3:
+        return VERDICTS.index('SPLIT3')
     if n == 2:
-        return 1
-    return 3 if junk else 0
+        return VERDICTS.index('SPLIT2')
+    return VERDICTS.index('TRIM') if junk else VERDICTS.index('KEEP')
 
 
 def refresh(recolor=True):
@@ -277,9 +326,11 @@ def refresh(recolor=True):
     # the recolour+setup callback is skipped -- which is exactly how the first
     # three builds shipped an unbound tree.  '_rev' is inert on the JS side: the
     # recolour looks up map[seg] with a numeric key and never sees it.
+    cmap_box.value = json.dumps({str(g): group_color(g) for g in groups()})
     payload = {str(k): v for k, v in STATE['group'].items()}
     payload['_rev'] = STATE['rev']
     gmap_box.value = json.dumps(payload)
+    _update_wprof()
     verdict_btn.active = derive_verdict()
     grp = STATE['group']
     c = collections.Counter(grp.values())
@@ -289,8 +340,31 @@ def refresh(recolor=True):
                  "<b>%s</b></span>"
                  % (p['event'], p['node'], p['Q'], p['nseg'], p['nbundle'],
                     p['reason'],
-                    ", ".join("%s=%d" % (GROUP_NAME[g], n) for g, n in sorted(c.items())),
+                    ", ".join("%s=%d" % (group_name(g), n) for g, n in sorted(c.items())),
                     verdict_btn.labels[derive_verdict()]))
+
+
+def _update_wprof():
+    """one transverse-RMS-vs-depth curve per non-empty group, plus the in-situ null.
+
+    doc pr/137 sec 12 fitted w_single(r) = 3.575 + 0.0283 r cm on 346 SINGLE
+    showers, and doc pr/137 sec 15.4 found the practical consequence: every
+    hand-labelled SPLIT sat 2-10x above this line and every KEEP at or below it.
+    It did not win the AUC ranking; it is the fastest thing to READ."""
+    row = STATE['row']
+    if row is None:
+        wprof.data = dict(xs=[], ys=[], color=[], width=[], dash=[])
+        return
+    curves, (lo, hi) = SM.group_width_profiles(row, STATE['group'])
+    xs, ys, col, wid, dash = [], [], [], [], []
+    for g, r, w in curves:
+        xs.append(list(r)); ys.append(list(w))
+        col.append(group_color(g)); wid.append(2.5); dash.append('solid')
+    if lo is not None and hi is not None and hi > lo:
+        nr = np.linspace(lo, hi, 12)
+        xs.append(list(nr)); ys.append([float(x) for x in SM.w_single(nr)])
+        col.append('#000000'); wid.append(1.5); dash.append('dashed')
+    wprof.data = dict(xs=xs, ys=ys, color=col, width=wid, dash=dash)
 
 
 def load(i):
@@ -308,6 +382,7 @@ def load(i):
     p = SM.object_payload(row, gap=args.gap)
     STATE['row'] = row
     STATE['payload'] = p
+    STATE['ngroups'] = DEFAULT_NGROUPS
     STATE['group'] = {s['seg']: s['group'] for s in p['segs']}
     # existing label wins over the proposal
     prev = read_label(ev, nd)
@@ -329,14 +404,31 @@ def load(i):
             xs.append(float(A[k, 0])); ys.append(float(A[k, 1])); zs.append(float(A[k, 2]))
             sg.append(int(s)); bd.append(int(seg2b.get(s, 0)))
     n = len(xs)
+    tx, ty = SM.theta_phi(np.asarray(list(zip(xs, ys, zs))) if n else np.zeros((0, 3)),
+                          np.asarray([1.0] * n), v)
     pts.data = dict(x=xs, y=ys, z=zs, u=[0.0] * n, v=[0.0] * n, seg=sg, bundle=bd,
+                    tx=[float(t) for t in tx], ty=[float(t) for t in ty],
                     color=['#999999'] * n, alpha=[0.85] * n, size=[4.0] * n,
                     hl=[0.0] * n)
+    # everything else in the event, faint: the answer to "why is the star not on
+    # the object".  evt396222 holds 180 segments; this shower is 123 of them, and
+    # its nearest point is 14.5 cm from the vertex because the photon converted
+    # there (start_connection_type=2, a gap).
+    mine = set(row['segs'])
+    cx_, cy_, cz_ = [], [], []
+    for s_, A in P.items():
+        if s_ in mine or A is None or not len(A):
+            continue
+        for k in range(len(A)):
+            cx_.append(float(A[k, 0])); cy_.append(float(A[k, 1])); cz_.append(float(A[k, 2]))
+    m = len(cx_)
+    ctx.data = dict(x=cx_, y=cy_, z=cz_, u=[0.0] * m, v=[0.0] * m,
+                    al=[0.30] * m, sz=[2.0] * m)
     vtx.data = dict(x=[float(v[0])], y=[float(v[1])], z=[float(v[2])],
                     u=[0.0], v=[0.0], al=[1.0], sz=[16.0])
     # em3d.bounding_sphere takes a LIST of 3-tuples and guards with `if not pts`;
     # an ndarray there raises "truth value of an array is ambiguous".
-    allp = list(zip(xs, ys, zs)) + [tuple(float(t) for t in v)]
+    allp = list(zip(xs, ys, zs)) + list(zip(cx_, cy_, cz_)) + [tuple(float(t) for t in v)]
     (cx, cy, cz), R = em3d.bounding_sphere(allp)
     cam.data = dict(az=[0.6], el=[0.35], cx=[cx], cy=[cy], cz=[cz], R=[R],
                     az0=[0.6], el0=[0.35], xs0=[-R], xe0=[R], ys0=[-R], ye0=[R])
@@ -410,6 +502,8 @@ def save_label():
         parts[str(g)].append(int(s))
     j['split_labels'][str(nd)] = dict(
         verdict=verdict_btn.labels[verdict_btn.active],
+        n_parts=n_parts(),        # SPLIT4+ is a bucket; keep the exact count
+        n_groups=STATE['ngroups'],
         confidence=conf_btn.labels[conf_btn.active],
         comment=note_box.value,
         groups={str(k): int(v) for k, v in grp.items()},
@@ -458,6 +552,38 @@ def do_reset():
 
 btn_reset.on_click(do_reset)
 
+btn_addg = Button(label='+ group', width=90)
+btn_delg = Button(label='- group', width=90)
+
+
+def add_group():
+    """Owner: 'for busy events, there may be many groups.'  Three is the default;
+    this grows the column list on demand, up to the palette."""
+    if STATE['ngroups'] >= MAX_NGROUPS:
+        status.text = "at the maximum of %d groups (palette size)" % MAX_NGROUPS
+        return
+    STATE['ngroups'] += 1
+    refresh()
+
+
+def del_group():
+    """Only ever removes an EMPTY trailing column, so a click cannot silently
+    reassign segments the scanner has already placed."""
+    if STATE['ngroups'] <= 1:
+        return
+    last = STATE['ngroups'] - 1
+    if any(g == last for g in STATE['group'].values()):
+        status.text = ("Group %d is not empty -- drag its bundles out first.\n"
+                       "Removing a populated column would silently reassign them."
+                       % last)
+        return
+    STATE['ngroups'] -= 1
+    refresh()
+
+
+btn_addg.on_click(add_group)
+btn_delg.on_click(del_group)
+
 jump = Select(title='object', width=300,
               options=[("%d" % i, "evt%d node%d  %s  Q=%.2g" % (e, n, st, q))
                        for i, (e, n, q, st, px) in enumerate(WORK)],
@@ -467,10 +593,11 @@ jump.on_change('value', lambda a, o, n: load(int(n)))
 left = column(info, bee,
               brow(btn_prev, btn_next, jump, btn_save),
               brow(verdict_btn), brow(conf_btn), note_box,
-              brow(btn_reset),
+              brow(btn_reset, btn_addg, btn_delg),
               tree, status,
               gmap_box, cmap_box, hi_box, moved_box, cam_box)
-curdoc().add_root(brow(left, fig))
+right = column(fig, brow(tp, wp))
+curdoc().add_root(brow(left, right))
 curdoc().title = 'split_display -- doc pr/138'
 if WORK:
     load(0)

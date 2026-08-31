@@ -165,6 +165,66 @@ def load_object(event, node, arm='onV1c90', on_tag='emprep-136onV1c90',
     return None
 
 
+def theta_phi(pts, q, v):
+    """(tx, ty) gnomonic-ish angular map about the object's own axis, in degrees.
+
+    Owner factor 1 made visible: place each member point at radius theta from the
+    object's charge-weighted axis and azimuth phi about it.  Two objects are two
+    blobs; one object is one blob.  This is the view the one-or-two call is
+    actually easiest on, and the 3-D view is slow for it because the separation
+    is ANGULAR, not spatial."""
+    import numpy as _np
+    if len(pts) == 0:
+        return _np.zeros(0), _np.zeros(0)
+    U, r = L.rays(pts, v)
+    c = L.qw_centroid(pts, q)
+    ax = c - v
+    n = _np.linalg.norm(ax)
+    if n <= 0:
+        return _np.zeros(len(pts)), _np.zeros(len(pts))
+    ax = ax / n
+    e1 = _np.cross(ax, [0.0, 0.0, 1.0])
+    if _np.linalg.norm(e1) < 1e-6:
+        e1 = _np.cross(ax, [0.0, 1.0, 0.0])
+    e1 = e1 / _np.linalg.norm(e1)
+    e2 = _np.cross(ax, e1)
+    th = _np.degrees(_np.arccos(_np.clip(U @ ax, -1.0, 1.0)))
+    ph = _np.arctan2(U @ e2, U @ e1)
+    return th * _np.cos(ph), th * _np.sin(ph)
+
+
+def w_single(r):
+    """the in-situ single-shower width null, doc pr/137 sec 12.
+
+    w_single(r) = 3.575 + 0.0283 r cm, fitted on 346 SINGLE showers.  Owner
+    factor 2 made quantitative -- and NOT a PDG number: the LAr Moliere radius is
+    quoted in the doc for scale only and is a threshold nowhere."""
+    import numpy as _np
+    return 3.575 + 0.0283 * _np.asarray(r, float)
+
+
+def group_width_profiles(row, grp):
+    """[(group, r[], w[])] -- one transverse-RMS-vs-depth curve per non-empty group,
+    plus the depth range, so the viewer can draw the null across it."""
+    import numpy as _np
+    out = []
+    lo, hi = None, None
+    for g in sorted(set(grp.values())):
+        segs = [s for s, gg in grp.items() if gg == g and s in row['P']]
+        if not segs:
+            continue
+        pts, q, _ = L.pack(row['P'], segs)
+        if pts is None or len(pts) < 8:
+            continue
+        r, w = L.width_profile(pts, q, row['v'])
+        if not len(r):
+            continue
+        out.append((g, r, w))
+        lo = r.min() if lo is None else min(lo, r.min())
+        hi = r.max() if hi is None else max(hi, r.max())
+    return out, (lo, hi)
+
+
 def object_payload(row, gap=4.0):
     """everything the viewer needs for one object, as plain python."""
     grp, bundles, reason = propose(row, gap=gap)
