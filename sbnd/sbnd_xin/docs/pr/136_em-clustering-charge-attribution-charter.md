@@ -34,7 +34,13 @@ cd em_display
 cd ..
 scripts/pr136_completeness.py --tsv docs/pr/pr136-completeness-pr130arms.tsv
 
-# §6 — the scope boundary: is the missing charge in the event at all?
+# §6.1 — irreducible shower leakage out of the active volume (owner's point)
+scripts/pr136_containment.py \
+  --manifest98  em117-134f08698-manifest.tsv \
+  --manifest141 em114c-134f086141-manifest.tsv \
+  --tsv docs/pr/pr136-containment.tsv
+
+# §6.2 — the charge budget: is the missing charge in the event at all?
 scripts/pr136_deficit_budget.py \
   --manifest98  em117-134f08698-manifest.tsv \
   --manifest141 em114c-134f086141-manifest.tsv \
@@ -340,6 +346,77 @@ late growth; they do not change what the mid-pipeline gates saw.)
 
 ## 6. The scope boundary — how much of the residual is reachable at all
 
+### 6.1 Irreducible leakage: energy that was never in the detector
+
+Owner, 2026-08-30: *"for pi0 it is possible part of the gamma from the pi0
+decay go out of the detector. Since we can only reconstruct what is in the
+detector, even if we have perfect clustering, we may still miss significant
+energy leading to lower pi0 mass reconstruction."*
+
+This is correct and it was missing from the triage above. §3's R < 1 test
+cannot distinguish a γ whose tail an absorber dropped from a γ whose tail
+left the TPC — both read as missing energy. **A campaign that does not
+separate them will spend a round chasing charge that was never recorded.**
+
+`scripts/pr136_containment.py` separates them. Each γ develops from its
+conversion point along its shower axis; `D` is the distance from that point to
+where the axis leaves the active volume (**x [−202,202], y [−200,200],
+z [0,500] cm, measured from the reconstructed point cloud, not assumed**), and
+the contained fraction is the PDG longitudinal profile
+`f = P(a, bD/X₀)` with LAr X₀ = 14.0 cm, E_c = 32.8 MeV, b = 0.5, and the true
+energy unfolded by two fixed-point iterations. Transverse leakage (Molière
+radius ≈ 9 cm), dead channels, and γs converting outside the volume are **not**
+modelled — each would make leakage larger, so every `f` here is an upper bound
+on containment.
+
+**Leakage is not a rare edge effect in SBND.** Over the 112 hand γs: median
+`f` = 0.997, but **29 γs (26 %) have f < 0.95 and 14 have f < 0.75**; the 10th
+percentile of available depth is only 58 cm ≈ 4 X₀. **24 of the 56 pairs
+(43 %) have at least one γ leaking.**
+
+| the 19 impossible pairs | n | events |
+|---|---|---|
+| **fully contained (both f ≥ 0.95) — the deficit is NOT leakage** | **11** | 342199, 409634, 54341, 54332, 103798, 176986, 281639, 499577, 283713, 347129, 392901 |
+| leakage alone explains R < 1 | 4 | 168432, 281485, 242726, 169356 |
+| leakage helps but does not close it | 4 | 71178, 397630, 280159, 280972 |
+
+**Every one of the four pairs the hand marks rescue is fully contained.** The
+two measurements were built independently and they agree on the target list —
+that is the strongest internal consistency check in this doc.
+
+**A leakage correction must NOT be applied to the mass.** Correcting every pair
+moves the median from 135.5 to **142.9 MeV** and *drops* the in-window count
+37 → 34. That is the signature of double counting: `kine_shower_fudge_factor`
+was fitted (0.80 → 0.84 → 0.86) so the *measured* peak sits at 135, so **it
+already absorbs the sample-average leakage**. Leakage explains the
+event-to-event **spread**, not the mean. This table is a classifier, never a
+correction.
+
+**But that has a consequence for the energy scale, and it is testable now:**
+
+| subsample | n | median m_prod | median R | in-window |
+|---|---|---|---|---|
+| all pairs | 56 | 135.5 | 1.13 | 37 (66 %) |
+| **both γs contained (f ≥ 0.95)** | **32** | **136.8** | 1.12 | 23 (72 %) |
+| at least one γ leaking | 24 | **128.1** | 1.24 | 14 (58 %) |
+
+The full-sample median sits at 135 partly by **cancellation**: contained pairs
+run +1.3 % high, leaking pairs 5 % low. So (a) the 0.86 fudge is already good
+to ~1 % on well-contained showers and this campaign should not chase the scale;
+and (b) **the mass-peak fit should be repeated on the contained subsample**,
+because a fudge fitted on the blend is a detector-geometry constant masquerading
+as a calorimetric one — it will not transport to a different fiducial cut or a
+different sample.
+
+**Caveat on the geometry, stated because it is large:** 32 of 56 pairs have a
+shower start→end axis more than 30° off the vertex→start ray. Some of that is
+the end point being a poor axis proxy for a wide shower, and some is doc 132
+§12.3's deficit-biased internal direction. For those pairs `D` is a rough
+number; the classification is robust at the extremes (`f` < 0.5 or `f` > 0.95)
+and soft in between.
+
+### 6.2 The charge budget: is the missing charge in the event at all?
+
 Before proposing a lever, measure whether the charge exists. For each
 impossible pair, the deficit is `ΔE = E_tot·(1/R − 1)`; the budget it could be
 drawn from is **ORPHAN** (segments held by no shower) + **OTHER** (segments in
@@ -369,6 +446,19 @@ demonstrably outside it, 3 are indeterminate, and 9 are open** — and for most 
 those 9 the demand is ~1 % of a budget that is mostly track charge, so
 "reachable" there means "not excluded", not "a lever exists".
 
+### 6.3 The two boundaries combined — the campaign's actual target list
+
+| | n | events |
+|---|---|---|
+| **TARGET — contained AND the charge exists in the event** | **9** | **342199, 409634, 54341, 54332** (hand-marked), 176986, 281639, 499577, 283713, 347129, 392901 (weak demand) |
+| irreducible: leaking out of the TPC | 4 | 168432, 281485, 242726, 169356 |
+| contained but the charge is not in the event either | 1 | 103798 |
+| geometry/label problem, not charge | 2 | 71178 (R 0.18 with both γs largely contained — a 158 MeV π⁰ must open ≥ 117°, it is labelled at 18°), 397630 |
+| leakage plus something else | 2 | 280159, 280972 |
+
+**The four hand-marked pairs are the only ones with a named, attested,
+in-detector lever.** That is the honest denominator for proposal #2.
+
 **71178 deserves a label audit rather than a reco fix.** Its two γs total
 158 MeV at θ = 18°. A 158 MeV π⁰ must open at least 117°. Getting from 18° to
 117° is not a charge correction — either the pairing is wrong or the π⁰ decayed
@@ -379,10 +469,12 @@ diagnosis on the record from the owner's own scan (54332, 76346, 54453,
 **Realistic ceiling for the whole campaign, stated before any work starts:
 +4 to +6 exact π⁰ out of 66**, plus whatever the EM-side `q_miss`/`q_extra`
 numbers buy in event-level energy that the π⁰ census does not see. And that is
-an upper bound on an upper bound: **a pair entering the (100,160) window is
-necessary but not sufficient for a census "exact"** — production still has to
-*prefer* that pairing over every rival at every candidate vertex. Anyone
-expecting the π⁰ exact rate to move from 32/66 to 45/66 should read §6 first.
+an upper bound on an upper bound in two independent ways: **a pair entering the
+(100,160) window is necessary but not sufficient for a census "exact"** —
+production still has to *prefer* that pairing over every rival at every
+candidate vertex — and **43 % of the sample has a γ leaking out of the TPC**,
+which no amount of clustering work recovers. Anyone expecting the π⁰ exact rate
+to move from 32/66 to 45/66 should read §6 first.
 
 ---
 
@@ -502,15 +594,37 @@ judgement separately from the 32 overlay γs that do not. Also repair
 `build_rows` loads the released scan-time manifests at `:200` — so the guard
 that would catch a corrupted label set does not run.
 
-### #6 — Close the 15, one way or the other
+### #6 — Refit the EM energy scale on the CONTAINED subsample (cheap, analysis only)
 
-§6 has already excluded 5 of them. For the remaining 10, the question is
-whether the deficit is sub-segment charge (invisible to the labels by
-construction — see §8) or a label-audit problem like 71178. The dump's `proj[]`
-carries per-plane measured `charge` vs `charge_pred` per (wire, slice) with
+**Mechanism.** §6.1 shows the full-sample peak sits at 135 partly by
+cancellation: contained pairs run +1.3 % high, leaking pairs 5 % low. A fudge
+fitted on that blend is a *detector-geometry* constant wearing the clothes of a
+calorimetric one, and it will not transport to a different fiducial cut, a
+different sample, or ICARUS. Re-running `pr135_pi0_peak_prod.py` on the 32 pairs
+with both γs at `f ≥ 0.95` gives the calorimetric number.
+
+**Specimens**: none needed — this is a whole-sample fit.
+**Killed by**: the contained-subsample peak agreeing with the blend inside its
+CI, which would say the cancellation is coincidental and the blend is safe.
+**Ceiling**: no census change; it de-risks every mass window in the chain and
+answers whether 0.86 is right *for the reason we think it is*. Do it before any
+future scale flip.
+
+### #7 — Close the residue, one way or the other
+
+§6 has now accounted for most of the 19: 4 rescuable, 4 irreducibly leaking, 3
+excluded on the charge budget, 2 geometry/label. For what is left the question
+is whether the deficit is sub-segment charge (invisible to the labels by
+construction — see §8) or a label-audit problem. The dump's `proj[]` carries
+per-plane measured `charge` vs `charge_pred` per (wire, slice) with
 `cluster_id`, which is where charge that exists in the image but landed in no
 segment would show up. Read-only, offline, no re-run. **If the charge is not
 there, say so and stop** — that is a result, and it bounds the campaign.
+
+**71178 is a label-audit item, not a reco item.** Its two γs total 158 MeV at a
+labelled opening angle of 18°, and both are largely contained. A 158 MeV π⁰ must
+open at least 117°. Either the pairing is wrong or the π⁰ decayed far from the
+labelled vertex; no clustering change reaches it.
 
 ### Park with a reason
 
@@ -547,9 +661,20 @@ there, say so and stop** — that is a result, and it bounds the campaign.
   segments). There is no hand-drawn extent, hull or region anywhere in the
   schema. **Charge that wire-cell never turned into a segment is invisible to
   the labels by construction**, and proposal #6 is the only way to see it.
-- **The EM energy scale.** Closed self-consistently at 0.86 (pr/135 §10). If
-  this campaign lands charge, the scale moves — that is a *consequence* to
-  re-measure at the end, not a task.
+- **Shower leakage out of the active volume** — the owner's point, quantified
+  in §6.1. 26 % of hand γs have a contained fraction below 0.95 and 43 % of
+  pairs have at least one leaking γ. This is a **physics floor, not a defect**:
+  we can only reconstruct charge that was deposited in the TPC. It is out of
+  scope in the strongest sense — no reconstruction change of any kind recovers
+  it — and the only responses available are (a) classify it, so the campaign
+  does not chase it, which §6.1 now does; (b) fit the energy scale on contained
+  showers only (proposal #6); and (c) if the analysis ever needs an unbiased π⁰
+  mass, apply a containment weight or a fiducial cut at *analysis* level, which
+  is a different decision from anything in this chain.
+- **The EM energy scale.** Closed self-consistently at 0.86 (pr/135 §10), and
+  §6.1 shows it is good to ~1 % on contained showers. If this campaign lands
+  charge, the scale moves — that is a *consequence* to re-measure at the end,
+  not a task.
 
 ---
 
@@ -564,5 +689,10 @@ there, say so and stop** — that is a result, and it bounds the campaign.
    deliberate rebase, not a silent retune.
 3. **173093 g1** newly crosses the ledger's UNDER line at 0.86 (§4). It is
    named in no doc and has never been scanned.
+5. **Should the π⁰ mass window (100,160) be containment-aware?** §6.1 finds
+   43 % of pairs have a leaking γ, and a fixed window applied to a population
+   whose mass is systematically pulled down by leakage rejects real π⁰ for a
+   detector reason. Widening it costs purity. This is an owner-level physics
+   decision, not a knob to try — raised here, not taken.
 4. **`pr126_pi0_select.py --selftest` is broken** and has been since the
    2026-08-31 retire round. Nothing is validating the label corpus.

@@ -1,0 +1,51 @@
+IRREDUCIBLE SHOWER LEAKAGE -- how much of the pi0 mass deficit left the detector?
+  active volume x[-202,202] y[-200,200] z[0,500] cm (measured from the point cloud)
+  LAr X0 14.0 cm, Ec 32.8 MeV, PDG gamma-profile b=0.5;  f = P(a, bD/X0)
+
+  contained fraction f over 112 gammas: median 0.997  q10 0.657  q25 0.947  min 0.188
+     f < 0.99 : 46 of 112 gammas
+     f < 0.95 : 29 of 112 gammas
+     f < 0.90 : 21 of 112 gammas
+     f < 0.75 : 14 of 112 gammas
+  available depth to the wall: median 205 cm = 14.7 X0 ; q10 58 cm
+
+  THE IMPOSSIBLE PAIRS, WITH LEAKAGE UNFOLDED
+  event    sample    R_prod     f1     f2   depth1   depth2    m_prod    m_leak  verdict
+  71178    mcp1k       0.18  0.848  1.000       69      390      23.9      26.0  leakage helps, not enough
+  397630   mcp2k       0.40  0.580  0.993       43      159      54.0      71.1  leakage helps, not enough
+  168432   mcp1k       0.42  0.188  0.657       28       48      53.5     152.2  LEAKAGE explains it
+  281485   mcp1k       0.51  0.357  0.222       23       11      62.5     222.0  LEAKAGE explains it
+  103798   mcp2k       0.54  0.965  0.984      117      133      72.0      73.9  fully contained -- NOT leakage
+  280159   mcp2k       0.57  1.000  0.457      303       36      73.6     108.9  leakage helps, not enough
+  342199   nuecc48     0.69  1.000  1.000      231      458      92.6      92.6  fully contained -- NOT leakage
+  409634   mcp1k       0.75  1.000  1.000      315      373      77.4      77.4  fully contained -- NOT leakage
+  280972   mcp1k       0.77  0.872  0.539      110       40      78.2     114.0  leakage helps, not enough
+  176986   mcp2k       0.80  0.997  0.995      200      173     105.9     106.3  fully contained -- NOT leakage
+  54341    mcp1k       0.87  1.000  1.000      403      243      63.7      63.7  fully contained -- NOT leakage
+  281639   mcp1k       0.90  1.000  1.000      321      416     120.8     120.8  fully contained -- NOT leakage
+  499577   mcp2k       0.92  1.000  0.974      240      103     111.7     113.2  fully contained -- NOT leakage
+  283713   mcp1k       0.94  1.000  1.000      312      262      88.2      88.2  fully contained -- NOT leakage
+  54332    mcp2k       0.94  0.994  1.000      180      323     109.0     109.3  fully contained -- NOT leakage
+  242726   mcp2k       0.96  0.842  0.999       70      207     125.1     136.4  LEAKAGE explains it
+  169356   mcp1k       0.97  0.612  1.000       41      372     131.2     167.7  LEAKAGE explains it
+  347129   mcp1k       0.98  1.000  1.000      260      325     122.0     122.0  fully contained -- NOT leakage
+  392901   mcp2k       0.98  0.985  1.000      152      286     126.1     127.1  fully contained -- NOT leakage
+
+  --> 4 of 19 impossible pairs are explained by shower leakage alone
+      11 are essentially fully contained (both f >= 0.95) -- their deficit is NOT leakage
+
+  WHOLE-SAMPLE EFFECT -- AND WHY IT MUST NOT BE APPLIED AS A CORRECTION (n=56)
+     median m_prod     135.5 MeV
+     median m_leakcorr 142.9 MeV   (m_pi0 = 135.0)
+     pairs inside (100,160): 37 -> 34
+     The corrected median lands ABOVE m_pi0 and the in-window count DROPS.
+     That is the signature of DOUBLE COUNTING: kine_shower_fudge_factor
+     was fitted (0.80 -> 0.84 -> 0.86) so the measured peak sits at 135,
+     so it ALREADY absorbs the sample-average leakage.  Leakage therefore
+     explains the event-to-event SPREAD, not the mean, and this table is a
+     CLASSIFIER (which pairs are irreducible), never a mass correction.
+
+     geometry cross-check: 32 of 56 pairs have a shower axis more than 30 deg
+     off the vertex->start ray -- their D is not trustworthy: 64591, 71372, 165157, 169356, 173093, 176986, 259542, 269774, 278794, 281165, 281485, 281639
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr136-containment.tsv (56 rows)
