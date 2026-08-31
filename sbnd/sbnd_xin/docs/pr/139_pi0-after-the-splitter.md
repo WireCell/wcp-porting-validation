@@ -1233,3 +1233,93 @@ python3 scripts/pr140_k3.py --arm work-pr140r1-onk3 --base work-pr140r1-onrh15
 to `local/lib/libWireCellClus.so` at the start *and* the end of the session. **No
 C++ or jsonnet was changed in §8–§14** — all four items ride existing default-OFF
 knobs, so P1.0's 478/478 knob-off gate still covers them.
+
+---
+
+# Session 3 — the four §14.3 next steps
+
+## 15. Item 1 — the co-ownership peel: the design died, a better one replaced it
+
+### 15.1 A defect in this doc's own instrument, found first
+
+Before any of §14.3 could be measured: **`WCT_SHOWER_CONTENT_DEBUG` was never set
+on any doc pr/138 or pr/139 arm.** `prep_em_scan.py --parse-probes` therefore
+wrote **zero** sidecars (`em_display/emprep-138*`, `emprep-139*`, `emprep-140*`
+are all empty directories), and `em117_score`/`em140_score` silently fell back to
+the **dump join** — `segments[].shower_id`, which is single-valued and so credits
+a segment held by two showers to exactly one of them.
+
+The scripts even print a lossiness line, and it read `loses 0 member(s)` — which
+is **vacuously** true when there is no sidecar to compare against. Another gate
+over an empty set, the same shape as §11.1's fork-fidelity slip.
+
+Priced on `work-pr136-onV1c90-*`, the last arms that **do** carry sidecars
+(239 events each), scoring the identical arm both ways:
+
+| 141-set, same arm | with sidecar | with the dump join |
+|---|---|---|
+| median `q_f1` | **0.904** | 0.918 |
+| `q_miss` | 2.007e+07 | 2.019e+07 |
+| `q_extra` | 2.673e+07 | 2.609e+07 |
+
+**The join is systematically optimistic** — about 1.4 pt of median `q_f1` and
+2.5 % of `q_extra`. Small, but shared membership is precisely the phenomenon
+items 1 and 2 are about, so §16 re-runs every arm with the probe on and restates.
+**Unaffected**: the π⁰ census and the boundary-agreement numbers of §13 read the
+dumps and the debug tape, not the sidecar, so nothing in §6, §10.2's census row
+or §13 moves.
+
+### 15.2 The design in §8.4 is dead, and the pr136 sidecars killed it before any C++
+
+§8.4 proposed: *"assign each shared segment to one part"* — i.e. drop the
+co-owned members and peel the remainder. The three components `skip_shared`
+refuses are the entire population, and they are:
+
+| event | node | owner | component | **co-owned** | exclusive charge left |
+|---|---|---|---|---|---|
+| **281485** | 89095 | **SPLIT2** | 4 seg | **4 of 4** (all held by 91112) | **0** |
+| 165157 | 9000 | **KEEP** | 7 seg | 2 of 7 | 0.749 |
+| 350354 | 18092 | **SPLIT2** | 12 seg | 1 of 12 | 0.590 |
+
+So the proposed design is **a no-op on 281485** — the one event it was written
+for, with nothing left to peel — and on 165157 it would peel a 0.749-charge
+remainder, **making a cut on an object the owner labels KEEP**. It buys one
+confirmed cut and pays a false fire. Withdrawn before implementation.
+
+### 15.3 What replaces it: the **shed**
+
+281485's structure is the tell. Its four members are held by shower **91112** as
+well, and P1.4's re-home tape independently found the same host at
+**gap 0.00 cm** (`dau=91111 parent=89095 host=91112`). The charge does not need
+a new home — **it already has one.**
+
+> **The shed**: when `skip_shared` refuses a component and **every** member of it
+> is also owned by another shower, detach the component from this parent and
+> build **no daughter**. The owner's cut is honoured; no duplicate object is
+> created; no charge moves anywhere it was not already.
+
+Knob `shower_split_shed_shared`, **DEFAULT OFF**, inert unless
+`shower_split_skip_shared` is also on. The partial-sharing case stays refused,
+for the measured reason in §15.2.
+
+### 15.4 Pre-registered, before the arm  *(committed with this section)*
+
+The `on` arm's tape carries **exactly three** shared-member refusals over all
+239 events, so the prediction is per-object and complete, not statistical:
+
+| object | owner | prediction |
+|---|---|---|
+| 281485/89095 part 1 | SPLIT2 | **SHED** |
+| 165157/9000 part 0 | **KEEP** | still refused |
+| 350354/18092 part 1 | SPLIT2 | still refused |
+| **`n_shed` over the manifest** | | **1** |
+
+**Failure conditions, fixed now:** 165157 sheds (it is a KEEP — shedding removes
+members the owner says belong); any other of the 39 scanned objects changes
+state; `n_shed` > 1; any shower created with `kine_charge` 0; census exact < 36;
+`q_extra` > 7.2 %; any ADVERSE mover.
+
+The sharing counts in §15.2 come from the **pr136** sidecars — a different arm,
+membership has moved. That is why the new binary **prints `nshared` on every
+refusal**: `scripts/pr140_shed_verify.py` holds the arm to the prediction using
+the arm's own report, not the pr136 estimate.
