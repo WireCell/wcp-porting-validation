@@ -4,7 +4,11 @@
 2026-08-31** (owner flip; flip-equivalence gate `work-pr139r3-flipchk-*` vs
 `work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner's scan is **DONE** (2026-09-01,
 39 objects, tag `splitscan-0902-pi0`) and **it overturned this round's own
-recommendation** — see **§6**, and **§3ter** for the next session's order. This file is the tracker for a multi-session round. §1 is the
+recommendation** — see **§6**. The four items §3ter ordered are all **now
+measured**: item 1 **passes its pre-registered prediction and awaits the owner's
+flip** (§8, §10), item 2 **shipped** (§11), items 3 and 4 are **closed as
+measured-dead, each with a mechanism** (§12, §13). **§14 is what to read next.**
+This file is the tracker for a multi-session round. §1 is the
 driver: it carries one row per item, its knob, its state and — once it exists —
 its gate label and result. Prose below explains rows; **the table is what the
 next session reads first.**
@@ -37,20 +41,20 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | # | item | knob (all DEFAULT OFF) | state | gate / arm label | result |
 |---|---|---|---|---|---|
 | **P1.0** | **the shared knob-off gate** | all four at their shipped defaults | **PASS ×2** | `work-pr139r2-off-*` vs `work-pr138r3-flipchk-*`, **and** vs `work-pr139r1-off-*` | **478 / 478 byte-identical** on both, `missing/unpaired 0`, rc=0 ×4 ×2 |
-| **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **DONE — works, modest** | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
+| **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **SUPERSEDED BY P1.6** (ships inside it) | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
 | **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **MEASURED WRONG AT 12 — do not flip** (§6) | `work-pr139r1-onb12-*` | exact 35 → 36 and all four π⁰s recovered, **but the owner's scan says it suppresses 9 of the 19 cuts he confirms**, including 281485 whose cut he calls correct |
-| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **PROPOSED, NEXT SESSION'S FIRST ARM** | — | predicted exact **36**; on the fresh labels eff **0.737** / pur **0.933**, **3** confirmed cuts suppressed instead of 9 |
+| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **DONE — PASSES all four pre-registered bars; AWAITING OWNER FLIP** (§8, §10) | `work-pr140r1-on-*` vs `work-pr139r1-onemst-*` | exact **36**, q_extra **6.9 %**, **0 ADVERSE**, tape reproduces the prediction on **39 of 39**; **5** confirmed cuts suppressed (2 deferred + 3 rejected) vs **11** for the withdrawn `b ≤ 12` |
 | **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **SBND PRODUCTION ON** (owner flip 2026-08-31) | `work-pr139r1-onemst-*`; flip-equivalence `work-pr139r3-flipchk-*` **478 / 478** | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), 51 peels / **0 backwards**, every instrument unchanged, 0 ADVERSE |
-| **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **DONE — inert at 4 cm, alive at 15** | `work-pr139r1-onrehome-*` (4 cm), `work-pr139r2-onrh15-*` (15 cm) | 6/51 → **12/51** re-homed; census **35** either way; **cannot be graded until P3.2** |
+| **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **CLOSED — do not flip** (§12) | `work-pr140r1-onrh15-*` (15 cm, flipped config) | 11/51 re-homed; census **35**, 0 ADVERSE; the merged target moves on **exactly the same 3 rows** as the single one — it buys sensitivity to *cuts*, not *merges*, so P1.4 was never blocked on the instrument |
 | **P1.5** | the combination P1.1 + P1.2 + P1.3 | three knobs | **DONE** | `work-pr139r2-oncomb-*` | exact **36**, q_miss 14.5 %, q_extra 7.6 %, q_f1 **0.932**, μ-typed daughters **1**, 0 ADVERSE |
 | **P2** | owner scan, split display port 5022 | — (tag `splitscan-0902-pi0`) | **DONE 2026-09-01 — 39 objects** | `em_labels/splitscan-0902-pi0/`, `docs/pr/pr139-scan-verdicts.tsv` | 20 KEEP / 19 SPLIT; trigger **eff 1.000** / pur 0.792; boundary SPLIT2 median **1.000**; **it overturned P1.2** (§6) |
 | **P3.1** | π⁰ re-seat BEFORE the splitter | `pi0_reseat_before_split` | NOT STARTED | — | — |
 | **P3.1b** | scope dial `max_vgap` (comparison arm only) | `shower_split_max_vgap` | NOT STARTED | — | superseded by P1.2 unless P1.2 fails |
 | **P3.1c** | a pointing test **not** measured from the vertex | — | NOT STARTED | — | the one unexplored feature family |
-| **P3.2** | joint label set (re-mark the touched showers) | — | **PART DELIVERED** — 19 objects now carry a per-part segment assignment, 20 are KEEP | `em_labels/splitscan-0902-pi0/` | still to do: **merge** these into the completeness target so `em117_score` reads per-part |
-| **P3.3** | re-home, **re-sized** after P1.3/P1.4 land | `shower_split_rehome` (same knob) | BLOCKED ON P1 | — | — |
+| **P3.2** | joint label set + the per-part completeness target | — | **DONE** (§11) | `em_display/em140_score.py`, `docs/pr/pr140-perpart-*.tsv` | injective matching, denominator preserved to 4 figures; metric change ALONE on one arm: `q_miss` 16.7→**11.2 %**, `q_extra` 6.7→**8.6 %**; new number: **hand parts with no distinct reco object = 6** on the baseline |
+| **P3.3** | re-home, **re-sized** after P1.3/P1.4 land | `shower_split_rehome` (same knob) | **CLOSED with P1.4** (§12.3) | — | widening past 15 cm is a search, and §12.2 says the metric would not reward it |
 | **P3.4** | split-aware π⁰ pairing | `pi0_split_aware_pairing` | NOT STARTED | — | **no longer the fix for 281485** — see §2 |
-| **C1** | k ≥ 3 splitting | — | **MEASURED SHORT** | doc 138 §B3 | 0.635 → 0.756 vs target 0.85 |
+| **C1** | k ≥ 3 splitting | `shower_split_max_parts` | **MEASURED DEAD at the cap** (§13) — reopened as a *kernel* question | `work-pr140r1-onk3-*` | lifting the cap to 3 moves 3 objects: 1 up, 2 down (one of them a SPLIT2); k≥3 mean 0.800 → **0.771**, census 35 → **34**. The cap was hiding that the kernel cannot place a third boundary, not causing it |
 | **C2** | any feature measured **from** the ν vertex | — | **MEASURED DEAD** | doc 138 §4.2b, §5 below | `void_frac` AUC 0.146 (backwards) |
 | **C3** | the no-valley / overlapping-γ class | — | **SCOPED OUT** | doc 138 §B7 | 7 of 9 misses have `valley_best = 1.000` |
 | **C4** | the upstream ν vertex finder | — | **OWNER, OUT OF SCOPE** | — | — |
@@ -1038,3 +1042,177 @@ answer to a question the first answer had already closed.
 40 of 51 daughters still find no host at 15 cm. Widening further is a search,
 not a measurement, and §12.2 says the metric would not reward it. **This item is
 closed, not parked.**
+
+---
+
+## 13. Item 4 — RESULT: raising the k cap is measured dead  *(arm `work-pr140r1-onk3-*`)*
+
+`shower_split_max_parts` 2 → 3. No C++: the knob has existed since doc pr/138,
+and `max_seeds` is hardcoded 4 upstream, so 3 is the one cheap arm.
+
+### 13.1 Against the §9.1 bars — three of four fail
+
+| # | criterion | bar | measured | |
+|---|---|---|---|---|
+| i | k ≥ 3 boundary agreement, mean | ≥ 0.85 | **0.800 → 0.771** — it went **down** | **FAIL** |
+| ii | SPLIT2 must not degrade | median 1.000, ≥ 12 of 15 exact | median 1.000 held, exact **12 → 11** | **FAIL** |
+| iii | merged-target parts with no distinct reco object | must fall below 6 | **6 → 5** | **PASS** |
+| iv | no regression | census exact ≥ 35, 0 ADVERSE | census **34**, 0 ADVERSE | **FAIL** on the census |
+
+### 13.2 The blast radius is three objects, and two of them get worse
+
+`max_parts = 3` changes only **3** of the 19 confirmed cuts. That is the whole
+effect:
+
+| event | node | owner k | k base → arm | agreement base → arm | |
+|---|---|---|---|---|---|
+| 415278 | 23037 | 5 | 2 → 3 | 0.801 → **0.872** | **UP** — the one real gain |
+| 396222 | 9059 | 7 | 2 → 3 | 0.572 → **0.385** | **DOWN** — the third cut lands in the wrong place |
+| 406125 | 38021 | **2** | 2 → **3** | 1.000 → **0.948** | **DOWN** — it cuts an object the owner wants left at two |
+
+**The cap was not what was holding k ≥ 3 back.** §6.1 read the k ≥ 3 mean of
+0.800 as `max_parts = 2` refusing the third cut. Lifting the cap lets the third
+cut be made and it is made in the wrong place on two objects of three, including
+one the owner labelled SPLIT2. The kernel does not know *where* a third boundary
+goes; the cap was hiding that, not causing it.
+
+### 13.3 Why criterion (ii) earned its keep — a genuine instrument conflict
+
+Three instruments, three answers, on the same arm:
+
+| instrument | says |
+|---|---|
+| **merged per-part target** (item 2) | **better**: parts with no distinct reco object 6 → 5, `q_extra` −0.98 pt, median part `q_f1` +0.030 |
+| **π⁰ census** | **worse**: exact 35 → **34** |
+| **boundary agreement** vs the owner's own per-part labels | **worse**: 2 of 3 changed objects moved down, and one is a SPLIT2 |
+
+**Without §9.1's criterion (ii), (iii)'s −1 would have read as a win.** The
+merged target is honest about what it measures — one more hand part received a
+distinct object — but "a distinct object exists" is not "the boundary is right",
+and only the owner's per-part labels can say the second thing. **A metric that
+counts objects cannot grade boundaries.** That is the general lesson, and it is
+the same shape as §6.5's: the census is 66 events and could not see the 9
+suppressed cuts; the per-part count is 29 parts and cannot see where a boundary
+went.
+
+### 13.4 The verdict
+
+**Do not raise `max_parts`.** It stays 2. The k ≥ 3 question is **not** answered
+by the cap and is now correctly posed for the first time: *the kernel cannot
+place a third boundary*, which is a seeding/valley question (doc pr/138 §B3's
+`max_seeds`, and §B7's no-valley class), not a cap question. It goes back on the
+list as a kernel problem, priced at one clean gain and two regressions per three
+objects touched.
+
+---
+
+## 14. Where this leaves the round, and what to do next
+
+### 14.1 State
+
+| | |
+|---|---|
+| **Production ON** | `onV1c90` + `shower_split` + `shower_split_em_start` (P1.3), toolkit `f5e17798` |
+| **Ready to flip, owner's call** | **P1.6** — `shower_split_skip_shared` + `shower_split_max_impact = 30` |
+| **Closed this session** | P1.4 / P3.3 the re-home (§12), item 4 the k cap (§13), P1.2 `b ≤ 12` (§6, withdrawn) |
+| **Delivered this session** | P3.2 — the per-part completeness target (§11) |
+| **No C++ or jsonnet changed** | all four items used existing default-OFF knobs; binary md5-identical to the pinned `pin-pr139b` throughout, so P1.0's 478/478 knob-off gate still covers this work |
+
+### 14.2 The one decision waiting on the owner
+
+**Flip `shower_split_skip_shared` + `shower_split_max_impact = 30`?**
+
+*For*: census exact 35 → **36**; every one of the 39 scanned objects behaved
+exactly as pre-registered; it reaches the same census as the withdrawn `b ≤ 12`
+while suppressing **5** confirmed cuts instead of **11**; 0 ADVERSE; `q_extra`
+6.7 → 6.9 %.
+
+*Against, stated plainly*: it still suppresses **5 of the 19 cuts the owner
+confirms**. Two of those are `skip_shared` deferring a peel it cannot make
+cleanly (281485, 350354) and have a named successor (§8.4, co-ownership peel).
+Three are the `b` bound rejecting cuts the owner says are right — 294174 ×2 and
+415278/83139, all at `b` 48–209 cm — and the merged target prices one of them
+(§11.4).
+
+**A defensible alternative is `skip_shared` alone**: it takes 165157 and 281485
+from `no-group`/`none` to `partial` on its own, suppresses **2** confirmed cuts
+instead of 5, and leaves 54332's false fire standing. That trades one census
+`exact` for three confirmed cuts. It is the owner's call which side of that trade
+he wants, and both arms exist.
+
+### 14.3 Recommended next steps, in order
+
+1. **The co-ownership peel** — the named successor from §8.4, and now the single
+   highest-value item. Instead of `skip_shared` refusing a peel whose segments
+   two showers both own, **assign each shared segment to one part**. That would
+   recover 281485's and 350354's cuts — 2 of the 5 suppressions — *without*
+   re-creating the duplicate-charge pathology, and it is the only item on this
+   list that removes a cost rather than trading one.
+2. **The third-boundary problem, posed correctly** (§13.4). Not the cap: the
+   kernel's seeding. 396222 (owner k=7) and 406125 (owner k=2, wrongly cut into
+   3) are the two counterexamples any candidate must satisfy, and both now have
+   hand boundaries to score against.
+3. **Widen the per-part label set.** Every conclusion above about boundaries
+   rests on **19** confirmed cuts and **29** hand parts, and §13.3 shows that is
+   already the binding constraint — the same shape of limit §6.5 found for the
+   census. The splitter fires 51 times per pass on 239 events; scanning ~30 more
+   of those objects per part would roughly double the resolving power of every
+   instrument in §13.3.
+4. **The remaining false fire** 278420/61027 (`b` 26.78) — one object, worth a
+   feature hunt only if items 1–3 leave it isolated.
+
+**Not next**: any further sweep of `b`. §6.3 priced the whole dial and §10
+confirmed the prediction to the object; searching it again is fitting to 39
+labels.
+
+---
+
+## Repro — §8 to §14
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# sec 8 -- the prediction, from the owner's labels ALONE, committed 2e996db6
+#          BEFORE any arm below was run
+python3 scripts/pr140_prereg.py                  # -> docs/pr/pr140-prereg.tsv
+
+# the three arms, each knob ALONE on the flipped production config
+./scripts/pr140_on_arms.sh                       # on / onrh15 / onk3
+for t in on onrh15 onk3; do ./scripts/pr140_score.sh $t; done
+
+# sec 10 -- criterion 4: did the shipped C++ do what was pre-registered?
+python3 scripts/pr140_tape_verify.py --arm work-pr140r1-on     # 39/39, rc=0
+
+# sec 11 -- the merged per-part target.  Fork-fidelity FIRST, on a real arm:
+( cd em_display
+  ./em117_score.py --tag emscan-0827 --manifest em117-139onemst98-manifest.tsv \
+      --prepdir emprep-139onemst > /tmp/a.txt
+  ./em140_score.py --tag emscan-0827 --manifest em117-139onemst98-manifest.tsv \
+      --prepdir emprep-139onemst > /tmp/b.txt
+  diff /tmp/a.txt /tmp/b.txt; echo "fork-fidelity rc=$?" )   # rc=0 over 41 lines
+# the baseline under BOTH metrics (sec 11.2), then each arm's delta
+( cd em_display
+  ./em140_score.py --split-tag splitscan-0902-pi0 --tag emscan-0827 \
+      --manifest em117-139onemst98-manifest.tsv --prepdir emprep-139onemst \
+      --tsv ../docs/pr/pr140-perpart-base-98.tsv
+  ./em140_score.py --split-tag splitscan-0902-pi0 --tag emscan-0828-agent5 \
+      --manifest em114c-139onemst141-manifest.tsv --prepdir emprep-139onemst \
+      --tsv ../docs/pr/pr140-perpart-base-141.tsv )
+for t in on onrh15 onk3; do
+  python3 scripts/pr140_perpart.py --arm $t --base base \
+      --tsv docs/pr/pr140-perpart-delta-$t.tsv
+done
+
+# sec 12 -- the re-home tape, and the row-level proof that the merged target
+#           sees exactly what the single target sees
+grep -h "SHOWER_SPLIT rehome" work-pr140r1-onrh15-*/pr_evt*/stdout.log \
+  | grep -oP 'verdict=\K\w+' | sort | uniq -c        # 40 orphan, 11 REHOME
+
+# sec 13 -- boundary agreement vs the owner's per-part labels, two arms
+python3 scripts/pr140_k3.py --arm work-pr140r1-onk3 --base work-pr140r1-onrh15
+```
+
+**Binary**: pinned `/home/xqian/tmp/pin-pr139b`, md5 `fbff08ec…` verified equal
+to `local/lib/libWireCellClus.so` at the start *and* the end of the session. **No
+C++ or jsonnet was changed in §8–§14** — all four items ride existing default-OFF
+knobs, so P1.0's 478/478 knob-off gate still covers them.
