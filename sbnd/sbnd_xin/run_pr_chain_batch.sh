@@ -1734,6 +1734,14 @@ fi
 [ -n "${SBND_PI0_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_pf_assoc_deg=${SBND_PI0_PF_ASSOC}")
 # doc pr/134: K24 P1 nu-vertex preference (bool).  EMPTY = no TLA = the job default false.
 [ -n "${SBND_PI0_PREFER_MAIN:-}" ] && CATH_TLA+=(--tla-code "pi0_prefer_main_vertex=true")
+# doc pr/136 round 2: let the pass-4 cross-cluster pre-filter consult angle_v1
+# before discarding on angle_v2 > 30 (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PASS4_V1_ESCAPE:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_escape=true")
+# doc pr/136 round 2: deg ceiling on angle_v2 for the escape above.  EMPTY = no
+# TLA = the job default 0 = no ceiling (inert unless the escape is on).
+[ -n "${SBND_PASS4_V1_MAXV2:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_v2=${SBND_PASS4_V1_MAXV2}")
+# doc pr/136 round 3: cm proximity bound on the escape.  EMPTY = no TLA = 0 = none.
+[ -n "${SBND_PASS4_V1_MAXDIS:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_dis=${SBND_PASS4_V1_MAXDIS}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main

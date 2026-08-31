@@ -123,6 +123,9 @@ def main():
     ap.add_argument("--arm", default="work-pr136-f086probe-*",
                     help="glob of arm roots holding the stdout.log probe tape")
     ap.add_argument("--tsv", default="docs/pr/pr136-xclus-enum.tsv")
+    ap.add_argument("--expanded-join", action="store_true",
+                    help="attribute a predecessor shower id's tape line to the "
+                         "final shower (see the note at the joinfix branch)")
     a = ap.parse_args()
 
     prep_dir = a.prepdir if os.path.isabs(a.prepdir) else os.path.join(ED, a.prepdir)
@@ -197,6 +200,14 @@ def main():
                     if not o and not j and any((k, sid) in own or (k, sid) in rej
                                                for k in keys if k != node):
                         joinfix += 1
+                        # --expanded-join: credit a PREDECESSOR id's evaluation to
+                        # the final shower.  Off by default because an id remap
+                        # must not silently attribute shower A's decision to B;
+                        # on, it bounds how much of NO_SEAT is really "a
+                        # predecessor looked and refused".
+                        if a.expanded_join:
+                            o = next((own[(k, sid)] for k in keys if (k, sid) in own), None)
+                            j = next((rej[(k, sid)] for k in keys if (k, sid) in rej), None)
                     if o:
                         v = "OWNED"
                     elif j:

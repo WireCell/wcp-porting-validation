@@ -742,8 +742,22 @@ scripts/pr136_peak_contained.py                 # -> docs/pr/pr136-peak-containe
 
 The arm is `work-pr136-f086probe-{mcp1k,mcp2k,ncpi0,nuecc48}`, **239 / 239
 events, every `rc=0`**, shipped production config (fudge 0.86, the pr/133+134
-chain), four getenv-gated stderr tapes and no `SBND_*` env — byte-neutral by
-construction, no knob touched.
+chain), four getenv-gated stderr tapes and no `SBND_*` env.
+
+**Byte-neutrality is gated, not asserted.** Four getenv tapes at once is more
+probe surface than any earlier round validated in one go, and every number in
+§10 rests on the arm being the production point. `work-pr134-f086-*` is the
+same config with the probes off, so it is the reference:
+
+```bash
+for s in mcp1k mcp2k ncpi0 nuecc48; do
+  python3 scripts/pr85_hash_gate.py work-pr134-f086-$s work-pr136-f086probe-$s; echo rc=$?
+done
+```
+
+**PASS, all four samples, rc=0: 132 + 212 + 38 + 96 = 478 / 478 archives
+byte-identical** (66 + 106 + 19 + 48 = 239 events, 0 unpaired). The probe arm
+*is* the f086 production point.
 
 ### 10.1 §5's completeness numbers, now at the production point
 
@@ -774,19 +788,30 @@ if the `SHOWER_XCLUS` tape carries a line for the (shower, segment) pair, that
 line is the verdict; only when the tape is silent is the reason inferred, and
 each inference cites the source line that produced it.
 
-| verdict | n_seg | share of `q_miss` | what it means |
-|---|---|---|---|
-| `REJECT` | 47 | **27.5 %** | the shower evaluated it and the cone refused — a threshold |
-| `OWNED` | 25 | **8.0 %** | another shower already held it; dropped before any geometry |
-| `SAME_CLUSTER` | 15 | 22.4 % | in the shower's own cluster — the graph walk's job, no cone applies |
-| `MAIN_CLUSTER_SKIP` | 1 | 0.7 % | main-cluster segment the main-vertex walk claims |
-| **`NO_SEAT`** | **91** | **37.6 %** | **the shower never ran a cross-cluster candidate loop at all** |
-| `ABSENT` | 13 | 3.8 % | had a seat, no tape line either way — residual |
+**The join has two defensible readings, so every number below is a bracket.**
+A tape line's `shower=` is the start segment *at pass time*; a shower that
+re-roots later (`examine_showers_retarget`) or absorbs another shower changes
+id. The **strict** join credits only the pair `(final shower, segment)`; the
+**expanded** join also credits a line emitted under a predecessor id whose start
+segment the final shower now owns. 26 of the 192 rows differ between them.
+Strict is the conservative reading of "this shower refused it"; expanded is the
+conservative reading of "some component of this object looked at it". Both are
+reported; neither is hidden.
 
-**Only 35.5 % of the missing charge is reachable by changing a predicate at an
-existing cross-cluster seat.** That single number re-scopes the whole front:
-pr/123 → pr/130 spent eleven rounds tuning admission predicates, and the
-population they could ever have moved is about a third of the deficit.
+| verdict | n_seg (strict → expanded) | share of `q_miss` | what it means |
+|---|---|---|---|
+| `REJECT` | 47 → 59 | **27.5 % → 32.0 %** | the shower evaluated it and the cone refused — a threshold |
+| `OWNED` | 25 → 39 | **8.0 % → 16.0 %** | another shower already held it; dropped before any geometry |
+| `SAME_CLUSTER` | 15 → 14 | 22.4 % → 19.9 % | in the shower's own cluster — the graph walk's job, no cone applies |
+| `MAIN_CLUSTER_SKIP` | 1 | 0.7 % | main-cluster segment the main-vertex walk claims |
+| **`NO_SEAT`** | **91 → 70** | **37.6 % → 29.3 %** | **the shower never ran a cross-cluster candidate loop at all** |
+| `ABSENT` | 13 → 9 | 3.8 % → 2.1 % | had a seat, no tape line either way — residual |
+
+**Between 35.5 % and 48.0 % of the missing charge is reachable by changing a
+predicate at an existing cross-cluster seat — so at least half is not.** That
+bracket re-scopes the whole front: pr/123 → pr/130 spent eleven rounds tuning
+admission predicates, and even on the optimistic reading the population they
+could ever have moved is under half the deficit.
 
 **`NO_SEAT` is structural, and the reason is now named.** Exactly two seats in
 the code enumerate cross-cluster candidates: pass 4 of
@@ -796,15 +821,15 @@ and sub-pass A of `shower_clustering_in_other_clusters` (`:3868`). Sub-pass B
 cluster, completes the graph walk, and inserts. So a shower built anywhere else
 never evaluates one cross-cluster candidate:
 
-| the seat the shower was actually built at | n_seg | share of `q_miss` |
+| the seat the shower was actually built at | n_seg (strict → exp.) | share of `q_miss` |
 |---|---|---|
-| `in_other_clusters_B` | 33 | 12.3 % |
-| `in_main_cluster` | 26 | **16.3 %** |
-| `examine_showers_retarget` | 13 | 3.5 % |
-| (no walk site recorded) | 9 | 3.2 % |
-| `connecting_to_main_vertex` + retarget | 7 | 1.8 % |
-| `examine_shower_1_tmp` | 2 | 0.3 % |
-| `conn3_unreachable` | 1 | 0.4 % |
+| `in_other_clusters_B` | 33 → 33 | 12.3 % (unchanged: sub-pass B emits no tape at all) |
+| `in_main_cluster` | 26 → 23 | 16.3 % → 12.2 % |
+| `examine_showers_retarget` | 13 → 3 | 3.5 % → 1.0 % |
+| (no walk site recorded) | 9 → 9 | 3.2 % |
+| `connecting_to_main_vertex` + retarget | 7 → 2 | 1.8 % → 0.6 % |
+| `examine_shower_1_tmp` | 2 → 0 | 0.3 % → 0 |
+| `conn3_unreachable` | 1 → 0 | 0.4 % → 0 |
 
 This confirms pr/130 item 4's live lead and generalises it from 4 showers to 13,
 with the mechanism named: **it is not that those showers lost an arbitration —
@@ -818,15 +843,19 @@ direct-cone route that the owner's MERGE verdicts describe".
 
 **Split by the matched shower's connection type, the two halves separate cleanly:**
 
-| conn | share of `q_miss` | composition |
-|---|---|---|
-| 1 (at the ν vertex) | 36.2 % | `NO_SEAT` 60 %, `SAME_CLUSTER` 38 %, `MAIN_CLUSTER_SKIP` 2 % — **`REJECT` 0 %** |
-| 2 | 42.4 % | `REJECT` 65 %, `OWNED` 16 %, `SAME_CLUSTER` 11 %, `ABSENT` 8 % |
-| 3 | 21.4 % | `NO_SEAT` 74 %, `SAME_CLUSTER` 20 %, `OWNED` 5 % |
+| conn | share of `q_miss` | composition, strict | composition, expanded |
+|---|---|---|---|
+| 1 (at the ν vertex) | 36.2 % | `NO_SEAT` 60 %, `SAME_CLUSTER` 38 %, **`REJECT` 0 %** | `NO_SEAT` 38 %, `SAME_CLUSTER` 38 %, `OWNED` 18 %, `REJECT` 4 % |
+| 2 | 42.4 % | `REJECT` 65 %, `OWNED` 16 %, `SAME_CLUSTER` 11 %, `ABSENT` 8 % | `REJECT` 72 %, `OWNED` 19 %, `SAME_CLUSTER` 5 % |
+| 3 | 21.4 % | `NO_SEAT` 74 %, `SAME_CLUSTER` 20 %, `OWNED` 5 % | `NO_SEAT` 72 %, `SAME_CLUSTER` 20 %, `OWNED` 7 % |
 
-**Not one MeV of missing charge on a conn-1 shower was ever refused by a
-predicate.** Conn-1 showers are the ones attached to the neutrino vertex — the
-π⁰ γs. Every threshold round this campaign could run touches conn-2 only.
+**On the strict join, not one MeV of missing charge on a conn-1 shower was ever
+refused by a predicate; on the expanded join 4 % was, and a further 18 % lost an
+ownership race.** Conn-1 showers are the ones attached to the neutrino vertex —
+the π⁰ γs. Either way the conn-1 half is dominated by charge no cone ever
+weighed (`NO_SEAT` 38–60 %) plus charge inside the shower's own cluster
+(`SAME_CLUSTER` 38 %, a graph-walk question), and the threshold rounds this
+campaign can run reach conn-2 almost exclusively.
 
 ### 10.3 The sharpest single finding: a pre-filter that is stricter than the test it guards
 
@@ -889,8 +918,12 @@ Two sub-classes, and they are not the same proposal:
   exact; v2 26 exact, net −5). Keep them separate or the forward result inherits
   a known death.
 
-Two of the four §4 hand-marked π⁰ rescues (409634, 54341) appear here, and
-142421 and 105946 are pr/130 MERGE-approved specimens.
+**Which π⁰ specimens each class actually reaches — stated precisely, because
+the two are easy to conflate.** Both of 409634's escape segments sit at
+`angle_v2` = 169.7°, i.e. **entirely in the backward class**, so a forward-only
+knob does *not* reach 409634. Forward-only reaches 54341 (a §4 hand-marked
+rescue), 142421 and 105946 (both pr/130 MERGE-approved specimens), 314838 and
+84229. 52044 and 409634 are backward-only.
 
 ### 10.4 Proposal #3 (the energy-ladder feedback) is measured DEAD
 
@@ -948,7 +981,194 @@ another detector. If SBND ever changes the fiducial volume, refit on cell B.
 | — | **`NO_SEAT`: give conn-1 / `in_other_clusters_B` showers a cross-cluster route** | **NEW, and the largest single pool (37.6 %), but it is a new seat, not a predicate — expect a full 239-event gate and a large diff. Rank it after #1 because #1 is bounded and this is not.** |
 | — | old #1 (un-park pr/130's q_miss front as a *predicate* round) | **superseded**: the tape says predicates reach 35.5 % of the deficit and 0 % of the conn-1 half |
 
-**The measurement that would kill #1**, stated before it is written: the escape
-admits segments the cone was right to refuse, and `q_extra` rises by more than
-`q_miss` falls, or an accepted π⁰ pair is lost. Both are measurable on the same
-239-event manifest with `pr136_completeness.py` and `pr136_mass_closure.py`.
+**The measurement that would kill #1, stated before it is written.** The
+hand-scan metric alone cannot see this knob's cost: `pr136_completeness.py`
+scores 46 marked showers, while the escape fires on every conn-2 shower in all
+239 events, so charge wrongly added to an *unmarked* shower is invisible to it.
+Three instruments, and any one of them failing kills the round:
+
+1. **`q_extra` must not rise by more than `q_miss` falls** on the 90 marked
+   showers (`pr136_completeness.py`, both sets).
+2. **The π⁰ census exact count must not drop from 32 / 66** — the population
+   instrument for "did we destroy a two-γ separation", which is exactly the
+   463565 warning that parked the pr/130 front.
+3. **The mass closure's R > 1 over-clustering class must not grow** beyond its
+   8 pairs at median R = 1.98 (`pr136_mass_closure.py`).
+
+And expect the diff to exceed the 10 measured segments: admitting a segment to
+shower A changes what B sees later in the same pass — the chain effect pr/123
+found. The 10 are the *seed*, not the bound.
+
+---
+
+## 11. Round 2 — `shower_pass4_prefilter_v1_escape`, the knob §10.3 asked for
+
+**Status: MEASURED. The knob works on its targets and FAILS the hand-scan
+trade; a proximity brake (round 3) is the response.** Three knobs, all DEFAULT
+OFF, one behaviour change between them:
+
+| knob | type | default | meaning |
+|---|---|---|---|
+| `shower_pass4_prefilter_v1_escape` | bool | `false` | let a pass-4 cross-cluster candidate past the `angle_v2 > 30` pre-filter when it still satisfies an `angle_v1` clause of the acceptance disjunction |
+| `shower_pass4_prefilter_v1_max_v2` | double (deg) | `0` | ceiling on `angle_v2` for that escape; `0` = none. Inert while the escape is off |
+| `shower_pass4_prefilter_v1_max_dis` | double (cm) | `0` | proximity bound on `pair_dis` for that escape; `0` = none. Added in round 3 (§11.4). Inert while the escape is off |
+
+The predicate, at `NeutrinoShowerClustering.cxx:2433`:
+
+```c++
+if (angle_v2 > 30) {
+    const bool p4_v1_escape =
+        m_shower_pass4_prefilter_v1_escape &&
+        (m_shower_pass4_prefilter_v1_max_v2 <= 0 ||
+         angle_v2 < m_shower_pass4_prefilter_v1_max_v2) &&
+        (m_shower_pass4_prefilter_v1_max_dis <= 0 ||
+         pair_dis < m_shower_pass4_prefilter_v1_max_dis) &&
+        ((angle_v1 < 25   && pair_dis < 80  * units::cm) ||
+         (angle_v1 < 12.5 && pair_dis < 120 * units::cm));
+    if (!p4_v1_escape) { ...legacy tape...; continue; }
+    ...ESCAPE tape...
+}
+```
+
+Only `angle_v1` and `pair_dis` appear, because they are the only quantities in
+hand at the filter — the `close_shower_dis` halves of clauses 1 and 3 need the
+KD-tree call the filter exists to avoid. So the escape is a *subset* of the
+disjunction it restores, never a widening of it, and the §10.3 ceiling of 10
+segments is a floor rather than a bound.
+
+### 11.1 The population, priced from the OFF tape before any arm was spent
+
+The f086 probe arm's tape carries **13 927** `pass4_angle_early` rejections over
+the 239 events. Applying the escape predicate offline:
+
+| escape variant | fires | events touched | of the 10 §10.3 seeds |
+|---|---|---|---|
+| unbounded | **810** | 123 of 239 | 10 |
+| `max_v2` 140 | 610 | 114 | 7 |
+| **`max_v2` 90 (forward only)** | **350** | 92 | **7** |
+| `max_v2` 70 | 275 | 82 | 7 |
+| `max_v2` 50 | 159 | 71 | 2 |
+
+**This is why the ceiling knob exists.** The escape's `angle_v2` distribution is
+nearly flat from 30° to 180°, and **57 % of its population sits above 90°** —
+behind the shower relative to the cluster anchor, the K17 back-extension
+geometry that died twice (pr/124: v1 31 → 21 exact, v2 26 exact / net −5). Those
+460 candidates carry only 3 of the 10 target segments. `max_v2 = 90` halves the
+blast radius and keeps 7 of 10.
+
+One more reason to expect a large diff: the escape's first sub-condition
+(`angle_v1 < 25 && pair_dis < 80 cm`) **implies** clause 1 of the disjunction, so
+a firing is an admission unless the associated-vertex guard (`:2455`) or the
+pr/123 track guard declines it. Firing ≈ admitting; 810 firings is 810 candidate
+admissions, against 10 measured targets. **80× collateral is the risk this round
+has to price, and it is priced by measurement, not by argument.**
+
+### 11.2 The three kill instruments and their OFF values
+
+All measured on `work-pr136-f086probe-*`, the gated production point:
+
+| instrument | OFF value | fails if |
+|---|---|---|
+| hand-scan attribution (`pr136_completeness.py`, 90 marked showers) | `q_miss` 14.0 %, `q_extra` 7.0 %, median `q_f1` 0.918 | `q_extra` rises by more than `q_miss` falls |
+| π⁰ census exact (`pr132_pi0_census.py --fudge 0.86`) | **32 / 66 = 48.5 %** | drops |
+| mass closure over-clustering class (`pr136_mass_closure.py`) | 8 pairs at median R = 1.98; 19 of 56 impossible; classes 11 / 37 / 8 | the R > 1 class grows |
+
+### 11.3 Round 2 result — the mechanism works, the knob as written does not
+
+**The default-OFF requirement is met.** `work-pr136-off1-*` (new binary, probes,
+no knob env) against `work-pr136-f086probe-*`:
+
+**PASS, rc=0 on all four samples: 132 + 212 + 38 + 96 = 478 / 478 archives
+byte-identical.** Every downstream metric reproduces the OFF point exactly
+(`q_miss` 14.0 %, `q_extra` 7.0 %, median `q_f1` 0.918, census 32 / 66, closure
+classes 11 / 37 / 8). **Compiled-config proof**, on the runner's own saved
+`.wct-cfg-evt<ID>.json`: the OFF arm's compiled JSON contains **zero** knob keys
+and, after normalising the arm name inside output paths, differs from the
+pre-change arm's by **zero lines**. `onV1`'s carries `..._escape: true` with
+`..._max_v2` correctly suppressed at 0; `onV1c90`'s carries both.
+
+**Two ON arms, 239 events each, every `rc=0`:**
+
+| | OFF | `onV1` (unbounded) | `onV1c90` (`max_v2` 90) |
+|---|---|---|---|
+| escape fired | — | 582 in 123 events | 302 in 92 events |
+| … admitted | — | 320 | 195 |
+| of the 10 §10.3 seeds | — | 10 fired, 8 admitted | 7 fired, **7 admitted** |
+| segments re-owned vs OFF | — | 775 over 102 events | 391 over 71 events |
+| `q_miss` | 14.0 % | **10.4 %** | **11.3 %** |
+| `q_extra` | 7.0 % | **12.1 %** | **12.2 %** |
+| median `q_f1` | 0.918 | 0.917 | 0.918 |
+| **π⁰ census exact** | **32 / 66** | **30 / 66** ✗ | **33 / 66** ✓ |
+| mass-closure R > 1 class | 8 of 56 | 4 of 44 | 4 of 47 |
+
+**Verdict against the three pre-registered criteria (§11.2):**
+
+1. **`q_extra` must not rise by more than `q_miss` falls — FAILED by both.**
+   `onV1c90` recovers 2.7 pt of `q_miss` and pays 5.2 pt of `q_extra`.
+2. π⁰ census exact — `onV1` **fails** (32 → 30); `onV1c90` **passes and improves**
+   (32 → **33**, and γ-sharing 74 % → 77 %).
+3. mass-closure over-clustering class — **this criterion turned out to be the
+   weakest of the three and should not be leaned on.** The closure matches γs by
+   `showers[].id`, which is the constituent-segment id §2 already flagged as
+   unstable; a membership change renames showers, and the matched-pair count
+   falls 56 → 47 (absent/zero 5 → 11). The R > 1 count dropping 8 → 4 is
+   therefore not evidence of improvement. Criteria 1 and 2 use charge-overlap
+   matching and acceptance respectively, and both are sound.
+
+**Rule 1 is a criterion I wrote down before the arm ran, and it failed. The
+knob as written is killed.** What survives is more interesting than a pass would
+have been.
+
+**The mechanism works exactly where §10.3 predicted, cleanly.** Per marked
+shower, `onV1c90` against OFF:
+
+| event / shower | `q_miss` recovered | `q_extra` paid |
+|---|---|---|
+| **142421 / 7010** (the largest missed segment in the census) | **+5.91e6** | **−6.2e4** |
+| 314838 / 110088 | +2.49e6 | +3.8e4 |
+| 84229 / 69134 | +7.38e5 | **0** |
+| 122660 / 9110 | +2.02e5 | **0** |
+
+Four clean recoveries, 9.3e6 of charge, essentially no collateral — and 142421
+seg 7010 alone was 9 % of the whole deficit.
+
+**The failure is concentrated, not diffuse, and it is mostly not the escape.**
+Of the 2.48e7 total `q_extra` rise: **269774 / 97197 alone is +1.24e7 = 50 %**,
+the top three showers are 79 %, the top five are 97 %. And 269774's escape only
+admitted **8 segments worth 3.3e6 to a different shower (13237)** — the +1.24e7
+landed on 97197, which the escape never touched. **That charge arrived through
+the chain**, i.e. through the downstream passes reacting to a changed shower
+graph, exactly the pr/123 effect §10.6 warned about.
+
+**A prediction that was wrong in the useful direction**, worth recording because
+it changes how the next offline estimate should be read: the OFF tape predicted
+465 firings on the 98 events finished in all three arms and the ON arm produced
+**317**. The offline estimate double-counts contested segments — in the OFF arm
+every shower that looks at a segment emits its own `REJECT` line, but once one
+shower absorbs it, `update_shower_maps` marks it owned and every later shower
+skips it at the OWNED gate before reaching the pre-filter. **The direct effect is
+self-limiting; only the chain effect multiplies.**
+
+### 11.4 The separator, and round 3
+
+The clean recoveries and the runaways separate on **proximity**, not on angle:
+
+| | `pair_dis` | `angle_v1` |
+|---|---|---|
+| clean recoveries (142421, 314838, 84229) | **14.6, 17.4, 20.2 cm** | 21.3°, 21.6°, 9.9° |
+| runaway events (269774, 406125, 174771, 318769) | **26 – 61 cm** | 12 – 24° |
+
+`angle_v1` does not separate them; `pair_dis` does, with a gap between 21 and
+26 cm. Swept offline on the OFF tape at `max_v2` = 90:
+
+| `max_dis` | fires | events | clean winners kept | fires inside the 4 runaway events |
+|---|---|---|---|---|
+| none | 350 | 92 | 3 | 21 |
+| 30 cm | 51 | 29 | 3 | 2 |
+| **25 cm** | **33** | **22** | **3** | **1** |
+| 20 cm | 22 | 16 | 2 | 0 |
+
+**25 cm keeps every clean winner, cuts the blast radius 10-fold (350 → 33
+fires, 92 → 22 events) and leaves one firing in the four runaway events.**
+20 cm loses 84229. Hence `shower_pass4_prefilter_v1_max_dis`, default 0, and
+round 3's arm `onV1c90d25`.
