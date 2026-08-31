@@ -59,6 +59,94 @@ Ranked by what actually slowed the agent scan down, most valuable first:
 records behind it. A `split_display` fork or an additive mode, never an in-place
 rewrite of the EM scan path.
 
+### A1.1 `split_display` — BUILT 2026-08-31
+
+`split_display/` (fork, not an edit — em_display keeps its records and its port).
+
+```bash
+./split_display/serve_split_display.sh 5022 \
+    --scan-tag splitscan-0901-owner --owner-only
+ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -L 5022:localhost:5022 wcgpu1
+#   http://localhost:5022/split_viewer
+```
+
+| file | what it is |
+|---|---|
+| `split_display/split_model.py` | payload + the pre-filled grouping proposal |
+| `split_display/split_tree_js.py` | the drag-and-drop tree, browser side |
+| `split_display/split_viewer.py` | the Bokeh app |
+| `split_display/serve_split_display.sh` | launcher, port 5022 |
+| `split_display/selftest_split_display.py` | 16 checks, Python side |
+
+**What it does**, against the owner's five requirements:
+
+1. **Drag between groups.** Four drop columns — Group 0 / 1 / 2 / JUNK — and the
+   3-D cloud recolours the moment something lands, with no server round trip for
+   the repaint.
+2. **Finer than the EM cluster.** Every segment is its own draggable row, so a
+   boundary that runs through a bundle can be drawn segment by segment.
+3. **Click to highlight.** Clicking a card or a row boosts it in the 3-D view and
+   dims everything else; tapping a point in the 3-D view highlights and scrolls to
+   the matching card. Both directions, one selection channel.
+4. **Two levels.** BUNDLE is the directory — a spatially connected set of segments
+   (single-linkage at 4 cm, the production idiom) — and SEGMENT is the file.
+   Dragging a bundle moves its whole segment list.
+5. **The em_display 3-D view**, imported rather than duplicated: `em3d`'s
+   orthographic trackball, drag to rotate, shift-drag to pan.
+
+**The verdict is read off the columns, never typed**: 1 non-empty group = KEEP,
+2 = SPLIT2, 3 = SPLIT3, anything in JUNK = TRIM. So a saved label cannot disagree
+with the grouping that produced it.
+
+**The proposal that pre-fills the groups** is the round-2 result: seeded angular
+maxima decide how many parts (`valley_best`, doc pr/137 §15.2) and each *bundle*
+is assigned to the nearer winning seed direction by its own charge-weighted ray.
+A bundle is never cut by the proposal — a machine cut through a connected bundle
+is harder to correct by hand than one that is too coarse. **JUNK is never
+pre-filled**, and that is a measurement, not caution: doc pr/137 §15.3 found half
+of all *healthy* showers are already fragmented at 2–4 cm, and a pre-flag on
+disconnection alone marked 53 of 256587's 128 segments as junk — 256587 being a
+textbook single shower.
+
+**M13 guard.** The tool writes a `.split_display_tag` marker into its label dir on
+first save, and **refuses** to write into any directory that holds labels without
+one. A mis-typed `--scan-tag` cannot overwrite `emscan-0827`.
+
+**Verified** (`/home/xqian/tmp/pr138-shot2.png`): headless-chromium render of
+evt396222 node9059 — 42 bundles, 165 draggables, 4 drop zones, 0 page errors; a
+synthesised HTML5 drag of a 22-segment bundle from Group 0 to Group 2 moved
+Group 0 from 21 bundles/36 % q to 20/15 %, Group 2 to 1 bundle/21 %, recoloured
+those points green in the 3-D view, and flipped the derived verdict SPLIT2 →
+SPLIT3.
+
+**Four browser traps this cost, recorded so the next viewer does not pay them
+again.** All four fail *silently* — no console error, just a tree that is not
+draggable:
+
+1. **Bokeh 3 renders every view inside an open shadow root**, so
+   `document.getElementById` finds nothing. Walk the roots
+   (em_display's `selftest_em3d_browser.py:136-150` documents the same trap).
+2. **`js_on_change` on a `visible=False` widget never reaches the client.** Two
+   builds armed the tree from a hidden `TextInput` and bound zero handlers.
+3. **A property set while the document is being BUILT is serialised as initial
+   state, not emitted as a change** — so a callback registered on it never fires
+   on first paint. `curdoc().js_on_event(DocumentReady, ...)` is the one channel
+   that is neither, and it is what arms the tree now.
+4. **`pts` means a list of sources to `em3d.JS_REDRAW` and a single source here.**
+   Concatenating the two read `pts[0].data` off a ColumnDataSource. Ours is
+   `cloud` now.
+
+Per-node listeners were replaced by **one delegated listener set on the document**
+that finds its card with `composedPath()[0]`, because drag events are
+`composed: true` and cross the shadow boundary while `event.target` is retargeted
+to the host. `draggable="true"` is emitted by Python into the HTML, so arming a
+card needs no DOM write at all.
+
+**Still to do before the scan** (none of it blocks a first pass):
+the θ-φ ray-map panel (A1 item 2) and the `w_single(r)` overlay (item 3) are not
+in the viewer yet — they exist in `pr137_curate.py --sheets`, which is the
+fallback for both.
+
 ### A2. The owner scan itself
 
 **50 objects, `owner_scan=1` in `docs/pr/pr137-curated-set.tsv`**, spread
