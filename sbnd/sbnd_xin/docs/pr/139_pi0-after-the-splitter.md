@@ -1464,6 +1464,29 @@ sources *can* differ by 1.4 pt of median `q_f1` — **but on the population doc
 pr/139 actually measures, it makes no difference.** The defect is fixed, the
 numbers stand, and this is now known rather than assumed.
 
+### 16.2 The correction pass, completed on all four re-run arms
+
+The baseline is not the only arm re-run with the probe on. Every §10–§13
+conclusion was re-measured on sidecar membership, and **every one reproduces**:
+
+| arm | quantity | §10–§13 (join) | round 2 (sidecars) |
+|---|---|---|---|
+| `on` (P1.6) | census exact | 36 | **36** |
+| | ADVERSE | 0 | **0** |
+| | merged target, cut lost | 294174/71067 | **294174/71067** |
+| `onrh15` (§12) | census exact | 35 | **35** |
+| | `q_miss` / `q_extra` | 16.4 % / 6.9 % | **16.4 % / 6.9 %** |
+| | hand parts with no distinct object | 6 → 6 | **6 → 6** |
+| `onk3` (§13) | census exact | 34 | **34** |
+| | `q_miss` / `q_extra` | 17.5 % / 6.1 % | **17.4 % / 6.1 %** |
+| | hand parts with no distinct object | 6 → 5 | **6 → 5** |
+| all | ADVERSE | 0 | **0** |
+
+Not one verdict in §10, §12 or §13 changes. The largest movement anywhere is
+0.1 pt of `q_miss` on `onk3`. **§15.1's defect is closed with a measured cost of
+zero**, and it is closed on the arms themselves rather than by extrapolating from
+§16.1's baseline.
+
 ---
 
 ## 19. Item 3 — the wider per-part label set, delivered **scan-ready**
