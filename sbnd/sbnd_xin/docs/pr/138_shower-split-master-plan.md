@@ -233,6 +233,37 @@ Every other main vertex sits *on* charge, with `fit_distance` 0.28–1.05 agains
 artefact and not the NC chain — a degree-1 main vertex extrapolated into empty
 space. **Reported, not tuned** (CLAUDE.md §5.7).
 
+**Which fit did it.** Traced as far as the code allows without instrumenting:
+
+- `Vertex::fit_distance()` is `m_fit.distance(m_wcpt.point)` (`PRVertex.h:113`) —
+  the fitted point against the **Steiner-lattice seed**. 15.04 cm here.
+- **It was not `MyFCN`.** `MyFCN::FitVertex` only fits when
+  `ntracks > 2 && n_large_angles > 1`, or `ntracks >= 2` with
+  `enforce_two_track_fit` (`MyFCN.cxx:500`), and `get_fittable_tracks` counts
+  segments with more than one point in the annulus (`:445`). This vertex has
+  **degree 1**, so the multi-track vertex fit cannot have run.
+- **By elimination it is the 3-plane trajectory fit**, `fit_point(...)` at
+  `TrackFitting.cxx:4476`, the only site that writes a vertex's fit point from a
+  fit (`NeutrinoVertexFinder.cxx:4808` merely *restores* saved fits). It refits
+  the vertex against the U/V/W projections and, for a degree-1 endpoint, is
+  weakly constrained.
+
+**And the fit itself says it went badly**: the vertex fit carries
+`reduced_chi2 = 6.54` and `dQ = 0.0`. The displacement is 14.50 cm from the first
+charge at **140.9°** to the local shower direction — **11.25 cm backwards along
+the axis but 9.15 cm perpendicular to it**. A pure slide along the
+under-constrained direction would be nearly parallel; 9 cm of perpendicular
+offset is a genuine mis-fit, not just an unconstrained coordinate.
+
+*Stated as inference, not proof:* the elimination above is read off the code, not
+from an instrumented run. Confirming it needs a probe on `fit_point`'s vertex
+branch, which no gate here requires.
+
+**A doc bug found on the way**: `PrDisplayDump.cxx:445` comments `fit_distance`
+as *"How far improve_vertex/MyFCN moved this vertex off its seed point"*. That
+attribution is incomplete — `fit_distance` measures fit-vs-seed whoever wrote the
+fit, and on this vertex MyFCN provably did not run.
+
 **Why it matters for the scan, and not only for this event:** the reference point
 is what every angle in the tool is measured from, so on 396222 the grouping
 proposal is built from an extrapolated point. The viewer now prints a red warning
