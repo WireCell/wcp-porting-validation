@@ -68,6 +68,25 @@ TAGS_MCP2K = ["vtxscan-mcp2k"]
 # was wrong on one, and the owner's pick wins.
 TAGS_MCP2K_AUTO = ["vtxscan-mcp2k-auto"]
 
+# doc pr/100 / pr/103: the labels carried onto the work-vtx100-base-* arms
+# (2026-08-20 epoch, post pr/98-99 flips).  Same events as TAGS_HARV3 (+ the
+# mcp2k core/auto/ragree scans), re-anchored -- kept out of TAGS for the same
+# duplicate-key reason as TAGS_HARV3.  Ask for it: load_labels(tags=vtx_io.TAGS_VTX100).
+TAGS_VTX100 = ["vtxscan-vtx100-nuecc48", "vtxscan-vtx100-ncpi0",
+               "vtxscan-vtx100-mcp1k", "vtxscan-vtx100-delta",
+               "vtxscan-vtx100-mcp2k"]
+
+# doc pr/105: the labels carried onto the work-vtx105-base-* arms (2026-08-21
+# epoch, post pr/103-104 flips = the SBND production operating point at
+# toolkit c550541f).  ALL SEVEN carried tags, including the mcp2k auto (299
+# ai-scanner) and ragree (40 human) scans that TAGS_VTX100 never registered
+# (pr90_movers --tags vtx100 therefore scores 600 of the 878 carried labels).
+# Ask for it: load_labels(tags=vtx_io.TAGS_VTX105).
+TAGS_VTX105 = ["vtxscan-vtx105-nuecc48", "vtxscan-vtx105-ncpi0",
+               "vtxscan-vtx105-mcp1k", "vtxscan-vtx105-delta",
+               "vtxscan-vtx105-mcp2k", "vtxscan-vtx105-mcp2k-auto",
+               "vtxscan-vtx105-mcp2k-ragree"]
+
 TOL = 1.0            # cm, the pr/78/79 headline tolerance
 TOL_LOOSE = 3.0      # cm, the column printed beside it
 

@@ -1,0 +1,109 @@
+# doc pr/129 (probe) -- the class-A objects pr/128's shipped continuation
+# predicate REJECTS.  Owner read requested 2026-08-29 ("yes please give me the
+# bee link").
+#
+# A/B index -- BASE 1ea73ac5-d158-4227-b463-e3d6b8764ace
+#              PROBE bbdf8327-9b75-4811-b4ff-931e79690d37
+#   BASE  https://www.phy.bnl.gov/twister/bee/set/1ea73ac5-d158-4227-b463-e3d6b8764ace/event/list/
+#   PROBE https://www.phy.bnl.gov/twister/bee/set/bbdf8327-9b75-4811-b4ff-931e79690d37/event/list/
+#
+# THIS IS NOT AN A/B OF A CANDIDATE PRODUCTION POINT.  These objects are
+# REJECTIONS, so a real OFF/ON pair would be identical and show nothing.  PROBE
+# force-admits them by opening the two terms that reject them -- kink 30->180
+# deg, gap 5->30 cm -- so you can see what would be added.  A 180 deg kink also
+# re-admits two of 72786's cosmics; that is why the probe runs on these three
+# events only and is not a proposal.
+#
+# BASE = work-pr128r1-on141-{mcp2k,mcp1k} = production today (post pr/128 flip).
+# PROBE = scripts/pr129_probe_arms.sh (same binary, two terms opened).
+# Repro:
+#   ./scripts/pr129_probe_arms.sh
+#   python3 scripts/bee/make_pr_bee.py -q work-mcp2k-grp0825 -q work-mcp1k-grp0825 \
+#     -p work-pr128r1-on141-mcp2k -p work-pr128r1-on141-mcp1k \
+#     -o bee/pr129probe/pr129probe-base.zip 393505 399118 318769
+#   (same event order, -p the probe arms, -o ...-probe.zip)
+#
+# CONTENT-VERIFIED TWICE, as standing practice since the link/event mismatch:
+#   (a) package vs source arm: md5 of data/<i>/<i>-mc.json == the source arm's
+#       pr_evt<ev>/mabc-pr.zip data/0/0-mc.json -- 6/6 on both sides.
+#   (b) LIVE REMOTE vs package: GET set/<uuid>/event/<i>/mc/ on both uploaded
+#       sets, normalised-JSON md5 vs the local zip -- 6/6 match (http 200).
+#   Only the mc (PF tree) layer differs between BASE and PROBE; the spatial
+#   layers are identical.  That is the SAME shape as the pr/128 package you
+#   approved (checked against bee/pr128r1 idx 1), not a defect here.
+#
+# CORRECTION vs what was first reported to the owner.  The rejected-energy
+# figure was quoted as 1364 MeV over these three events.  That was too high: it
+# counted 393505's 268.7 MeV track, which the pr/123 guard-freed pool ALREADY
+# emits and ALREADY counts ("kine_count_guard_freed: COUNT seg idx=13 cluster=15
+# pdg=13 ke_mev=268.70"), and which is in the BASE tree below.  The census TSV
+# it was scored from predates the double-emission guard, so a pure-geometry
+# filter over it overstates.  True missing KE over these three events is
+# 1095.7 MeV (493.2 + 481.0 + 121.5); Enu delta is +1421.2 MeV.
+#
+# OWNER VERDICT 2026-08-29, after scanning all three:
+#   "all three should be reject, overclustering, so not counting in the enr
+#    eneryg, OK tobe in PR, I guess."
+# So: ALL THREE REJECTED as over-clustering.  Note idx 1 (399118) is rejected
+# too -- the 481 MeV proton 4.9 cm from the vertex -- which kills the
+# vertex-proximity arm outright.  That idea is now MEASURED DEAD, not deferred.
+# The ruling also draws a line worth keeping: this class may appear in the PR /
+# PF display tree, but must NOT contribute to kine_reco_Enu.  PF and energy
+# accounting are separate concerns.  The codebase already splits them into
+# separate knobs (pf_orphan_* vs kine_count_*), so a kine-side-only fix is
+# available without touching any display path.
+#
+# CONSEQUENCE, owner-adjudicated: 393505's 268.70 MeV is the SAME cluster 15
+# the owner just rejected, and production counts it into Enu today via
+# kine_count_guard_freed (pr/123, SBND ON).  That is now a confirmed defect.
+#
+# THE BOUND CANNOT BE GEOMETRIC -- measured, and it is a negative result.
+# Extent and vertex distance of the parent cluster, against every object with a
+# known owner verdict (shower_track-global points from each arm's mabc-pr.zip):
+#   event  clus  what                    verdict    npts  extent_cm  d_vtx_cm
+#   55740  22    pr128 class-A shipped   APPROVED   1487      131.3      48.1
+#   392901 127   pr128 class-A shipped   APPROVED   1339      106.5      34.2
+#   105074 23    pr128 class-B shipped   APPROVED  14368      442.8       0.5
+#   94392  45    guard-freed COUNTED     unruled     729       73.4      16.2
+#   171572 10    guard-freed COUNTED     unruled    1341      125.3      16.1
+#   393505 15    guard-freed COUNTED     REJECTED   2781      296.7      68.4
+#   399118 16    probe, at the vertex    REJECTED   1711      102.6       4.3
+#   318769 19    probe                   REJECTED   1603       44.7     113.4
+#   72786  9     known cosmic            cosmic     5638      149.2      31.4
+#   72786  45    known cosmic            cosmic     1969      102.7      76.0
+# Neither column separates APPROVED from REJECTED.  399118 (rejected) is
+# SMALLER in extent than 55740 (approved) and CLOSER to the vertex than any
+# approved case; 318769 (rejected) has the smallest extent in the table.  So a
+# global extent or distance bound would either re-reject approved rescues or
+# re-admit rejected ones.  Do not propose one.  The same shape as pr/128's
+# proximity finding: the owner's "over-clustering" judgement is not a distance.
+#
+# STILL UNRULED: the other two objects kine_count_guard_freed counts across all
+# 239 events -- 94392 (137.21 MeV, 46.8 cm) and 171572 (304.75 MeV, 125.1 cm).
+# Both sit ~16 cm from the vertex.  They are the same pool as the adjudicated
+# 393505 but were not in this set, so they need their own read before any bound
+# is chosen.  Total counted by that pool across both manifests: 710.66 MeV in
+# 3 of 239 events -- the entire blast radius.
+#
+# bee_idx	event	status
+0	393505	NOT A LOSS -- IT LOOKS LIKE AN OVER-COUNT ALREADY IN PRODUCTION.  Please read this one, but read it as the opposite of a rescue.  PROBE would add mu- 174 MeV (63.4 cm, kink 41.0, gap 0.00, 68.9 cm from the nu vertex) and mu- 318 MeV (131.4 cm, kink 58.8, gap 28.74, 77.1 cm out); Enu 940.4 -> 1645.0.  DO NOT SHIP THAT.  The two rejected segments and the 268 MeV mu- ALREADY in the BASE tree are all cluster 15, and their geometry (from the mc.json coordinates in these very zips) settles what cluster 15 is: 15005 -> 15004 -> 15013 chain END TO END at 0.0 cm and 0.0 cm, spanning a single continuous object of TOTAL EXTENT 295.0 cm that passes no closer than 68.9 cm to the nu vertex.  For scale, 72786's two confirmed cosmics had extents of 148.4 and 101.6 cm -- this is twice the larger one.  A 295 cm through-going chain that never approaches the vertex is a cosmic muon.  CONSEQUENCE: production today counts 268.7 MeV of it into the neutrino candidate via the pr/123 guard-freed pool ("kine_count_guard_freed: COUNT seg idx=13 cluster=15 ke_mev=268.70").  That is the "do not count far-away activity" half of the owner's rule being violated by a knob that is already ON, and it is a pre-existing defect this probe found by accident -- it is NOT caused by pr/128.  My read: decline the 493 MeV, and open a separate look at whether pf_orphan_guard_freed / kine_count_guard_freed need an extent or vertex-distance bound.
+1	399118	THE STRONGEST CASE FOR "REAL".  PROBE adds proton 481.0 MeV (108.8 cm, kink 47.3 deg) sitting 4.9 cm FROM THE NU VERTEX.  Enu 803.2 -> 1292.9 (+489.6).  The baseline candidate is already mu- 366 + pi0 149 + three small protons, so a 481 MeV proton at the vertex is the CC-candidate proton one would expect.  It is rejected only because the shipped predicate demands a straight CONTINUATION, and a primary emitted AT the vertex has no reason to be collinear with anything.  If you read this as a daughter, the fix is a vertex-proximity arm (small d_mainvtx, no kink term), never a looser global kink -- that re-admits 72786.
+2	318769	WEAKEST CASE.  PROBE adds mu- 121.5 MeV (39.8 cm, kink 42.0, gap 0.00) but it sits 114.3 cm from the nu vertex -- further out than anything shipped in pr/128, including 392901's 102.9 cm which you accepted.  Enu 826.6 -> 1053.8 (+227.1).  Same event as pr/128 idx 3 (the 44 MeV e- rescue that shipped), and it is also in the pr/124 worst-q_miss rows, so this may be part of that residual.
+#
+# What a vertex-proximity arm would cost, if idx 1 is real (scored on
+# docs/pr/pr128-pfnear-census.tsv, class A, d_mainvtx_cm):
+#   - At any cut from 5 to 20 cm it admits EXACTLY ONE object across both
+#     manifests: 399118's proton at 4.9 cm.
+#   - Nearest other candidate is 171572 at 20.4 cm.  SETTLED, not assumed:
+#     a post-guard probe arm on 171572 with the terms wide open (kink 180, gap
+#     30) emits ZERO PFNEAR tape lines -- the double-emission guard's continue
+#     precedes the tape -- and the segment is instead counted by
+#     "kine_count_guard_freed: COUNT seg idx=8 cluster=10 ke_mev=304.75
+#     len_cm=125.1".  It is guard-excluded and cannot be double counted.
+#     (work-pr129probe-171572, rc=0.)
+#   - Nearest geometrically-admissible object is 72786's cosmic at 35.3 cm.
+#   So the usable margin is 4.9 -> 35.3 cm, with no live candidate in between.
+#   NOTE the 393505 finding above cuts the other way for the guard-freed pool
+#   itself: 171572's 304.75 MeV is counted by the same mechanism that counts
+#   393505's cosmic 268.70 MeV, and 171572's own segment is 125.1 cm long.
+#   Whether that pool needs an extent/vertex bound is now the open question.

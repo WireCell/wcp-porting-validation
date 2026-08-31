@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt294174",
+ "eventNo": 294174,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 122.7755302151018,
+  "y": -15.205713876159706,
+  "z": 159.91113696005462
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16002,
+   "x": 122.7755302151018,
+   "y": -15.205713876159706,
+   "z": 159.91113696005462
+  }
+ ],
+ "reco_sep_cm": 0.006296230044747254,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the zoom shows a sharp V apex with both prongs cool at 16002 and rising away (246 cm muon to a Bragg at 16000 that also carries a Michel, plus the shower chain toward 16017), at the lowest-z candidate 159.9 cm.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt294174/calib-pr-evt294174.json",
+ "subRunNo": 1
+}

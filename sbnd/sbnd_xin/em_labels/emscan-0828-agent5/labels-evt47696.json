@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 235.57,
+  "az_deg": -55.0,
+  "centre": [
+   125.76,
+   1.67,
+   408.3
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4211,
+  "cloud_cluster_ids": [
+   11,
+   16
+  ],
+  "cloud_kept": 4211,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 22871,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.5100976930632283,
+   -0.8111553511260355,
+   0.28605478473741813
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.5100976930632283,
+    -0.8111553511260355,
+    0.28605478473741813
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 103.90609588130644,
+   "kine_charge": 103.90609588130644,
+   "kine_charge_other_hypothesis": 62.49990729702644,
+   "kine_dQdx": 68.63253214366264,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    16000,
+    39005,
+    40006
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   143.75038161110257,
+   7.361812918322299,
+   402.05137474564134
+  ],
+  "reco_start_vertex_id": 16001,
+  "shower": 16000,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   143.75038161110257,
+   7.361812918322299,
+   402.05137474564134
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt47696",
+ "eventNo": 47696,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 143.75038161110257,
+  "y": 7.361812918322299,
+  "z": 402.05137474564134
+ },
+ "note": "[agent-bulk] The vertex sits in the middle of a long straight through-going track, so I record this as a vertex result and not as a clustering failure. On vtx-az+065-el+20 there is ONE thin, uniform, dead-straight charge track running corner to corner across the +-101 cm frame -- well over 200 cm long -- and the blue star sits ON it with charge continuing both ways past it; the only structure on the line is a couple of small dense knots that read as delta rays. On vtx-az-055-el+20 the same line shows about 54 cm of dense charge on each side of the star. Nothing converges at the star: no second prong, no stem, no V. Shower 16000 (103.9 MeV, the only shower in scope) is a 20.2 cm slice of that line starting at the star, and on shw16000-az+085-el+20 its yellow member set lies along the track, not across it. So my reading is that the star is a point on a cosmic-like through-going muon and that 16000 is a piece of it, i.e. NOT an EM shower. THE ALTERNATIVE READING, which I cannot rule out: the vertex is right, 16000 is a genuine 100 MeV electron leaving it, and the charge on the other side is a coincident track that happens to be collinear -- the display's cloud line says '2 of 13 clusters carry the reconstruction (ids 11, 16)', and cluster 11 contributes NO segments at all to this dump, so I cannot check whether the far half of the line is the same object as the near half. That is why the verdict is the undecidable bucket. WHAT I FOUND BEFORE I SAW THE WIDE FRAMES, recorded because it is checkable either way: on shower 16000's acceptance plot there are 3 member squares and 4 blue circles, and all four circles are INSIDE the pass-1 gate box -- 46008 (1.4 cm at 26.6 cm / 3.3 deg), 47009 (0.4 cm at 32.1 cm / 5.2 deg), 41007 (0.6 cm at 34.2 cm / 4.4 deg) and 36002 (0.4 cm pdg 2212 at 69.4 cm / 5.3 deg), every one tier 1 -- while the two non-seed members it DID take, 39005 (60.3 cm / 3.6 deg) and 40006 (66.7 cm / 5.3 deg), are farther away at the same angle. Read on its own that is a clean under-clustering signature. I deliberately did NOT record marks for it: under the through-going-track reading those fragments are pieces of the muon and growing the shower onto them would be the wrong correction, so the two readings disagree about what the fix is and I am not going to pick. Scope: 1 of 8 showers in scope (16000); the seven skipped are 46008 7.7 MeV, 41007 5.5, 38004 3.0, 36002 2.2, 47009 2.1, 35001 0.3, 37003 0.2 -- all under 8 MeV; note that four of them are exactly the fragments discussed above. Pi0: no reco pi0 group, no gamma slots assignable, nothing to pair.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt47696/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:17:46+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt47696/calib-pr-evt47696.json",
+ "subRunNo": 1
+}

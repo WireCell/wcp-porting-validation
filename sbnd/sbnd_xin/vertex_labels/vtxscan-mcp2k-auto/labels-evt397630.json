@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt397630",
+ "eventNo": 397630,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -178.14926144062775,
+  "y": -67.02904041993256,
+  "z": 336.9639688708616
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15002,
+   "x": -178.14926144062775,
+   "y": -67.02904041993256,
+   "z": 336.9639688708616
+  }
+ ],
+ "reco_sep_cm": 0.004149481867468294,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a clean 4-prong star: zoom shows four arrows in different directions and the 78 cm muon Bragg-rises to 116k at its far end 15000.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt397630/calib-pr-evt397630.json",
+ "subRunNo": 1
+}

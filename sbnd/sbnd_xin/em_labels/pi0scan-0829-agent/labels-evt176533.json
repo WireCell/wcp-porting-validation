@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt176533",
+ "confidence": "medium",
+ "eventNo": 176533,
+ "main_vertex": {
+  "x": -156.0599843378886,
+  "y": -127.39744061898064,
+  "z": 378.79868716667175
+ },
+ "note": "nuecc: only candidate pair is the 572 MeV attached primary electron + a 110 MeV attached prong -- pairing the primary electron is the fake mode this round suppresses; no detached gamma-gamma pair exists",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:40.796514Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

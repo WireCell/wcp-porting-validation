@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt397401",
+ "eventNo": 397401,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 8.06011319878352,
+  "y": -47.7359088083433,
+  "z": 224.9158053454224
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16005,
+   "x": 8.06011319878352,
+   "y": -47.7359088083433,
+   "z": 224.9158053454224
+  }
+ ],
+ "reco_sep_cm": 0.00586052814699937,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 plus rule 3: 2 of 3 prongs rise away at an 84 deg junction with a 1.7 cm 128165 e/cm stub, while 16007 is 169 deg collinear and the far end 16004/16003 carries the Michel of the 139 cm stopping muon.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt397401/calib-pr-evt397401.json",
+ "subRunNo": 1
+}

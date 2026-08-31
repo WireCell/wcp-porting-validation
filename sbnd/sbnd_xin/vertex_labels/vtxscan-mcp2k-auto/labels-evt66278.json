@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt66278",
+ "eventNo": 66278,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": 39.813374486611984,
+  "y": 54.0964059354185,
+  "z": 424.22844337152736
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": 39.813374486611984,
+   "y": 54.0964059354185,
+   "z": 424.22844337152736
+  }
+ ],
+ "reco_sep_cm": 0.00516986966105654,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-3 junction: p4 shows one prong rising monotonically to 360k at 13001 and the other peaking at 215k near 13000 and falling to 75k at the vertex, so all three prongs point away from 13002.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt66278/calib-pr-evt66278.json",
+ "subRunNo": 1
+}

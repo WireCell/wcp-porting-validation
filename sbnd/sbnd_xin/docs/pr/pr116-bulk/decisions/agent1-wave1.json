@@ -1,0 +1,127 @@
+[
+ {
+  "event": "evt54341",
+  "verdict_shower": 101041,
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] shw 101041 (242.5 MeV, 12 seg, pdg 11) is under-clustered: its member set has a hole in the middle of its own cone. On shw101041-az+085-el+20 the yellow set runs as one chain from the X along the orange axis, but the acceptance plot shows two NON-member circles at 65 cm / 3.9 deg and 68 cm / 4.2 deg sitting INSIDE the pass-1 box (5 deg, 80 cm), while 101041 does own a member out at 93 cm / 4.3 deg. The pieces there are 34015 (16.5 cm, tier 1, owner NONE - grey, contiguous unclaimed charge on the axis) plus 34014/34016, owned by neighbour shower 34014. Marked 34014, 34015, 34016 IN. This reads as one long EM cascade split into two showers, not two objects. Vertex is fine: at az-055 and az+065 and el+60 the blue star sits where three prongs converge (18001 pdg 2212 33 cm and 18003 pdg 13 23 cm run out at 179 deg from the shower axis, i.e. the opposite side, correctly unowned). NOT over-clustered: single apex at the X on both azimuths. pi0: this event has NO reco pairing (pio_grp=0, every shower pio_id=-1); the pio-*.png slots [101041, 34014] were filled by the capture tool, not by the reconstruction. Pricing my own 101041+34014 pair gives 41.2 MeV (axis convention) and 4.9 MeV (vertex convention, theta 2.6 deg) - both far below 135, and a 293 MeV pi0 would need a 75 deg opening angle. That kinematic collinearity is evidence FOR merging them, not for a pi0. Scope: 4 showers of 18 examined (101041, 34014, 18008 25.3 MeV, 96031 35.1 MeV pdg 211); 14 skipped by the <20 MeV rule and not looked at, so this is a claim about 4 showers, not about the event. The vtx-* sweep is half-span 140 cm on this event so it was used for topology only; membership was judged on the auto-framed shw* frames. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {
+   "101041": {
+    "34014": "in",
+    "34015": "in",
+    "34016": "in"
+   }
+  }
+ },
+ {
+  "event": "evt65053",
+  "verdict_shower": 139020,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] Sparse event: one 115.8 cm muon (6000, pdg 13) ending on the blue star, and one compact EM object 7.5 cm off it. shw 139020 (113.7 MeV, 4 seg, 14.0 cm) reads as correct: on shw139020-az-055-el+20 and -az+085-el+20 the yellow set covers the whole little forked blob (its own cluster 139, members 139020/139021/139013/139014, all site from_vertices) and there is nothing contiguous left grey around it. The nearest non-member is the muon itself at 7.5 cm / 152.9 deg - i.e. on the far side of the shower start, correctly excluded; every other candidate is at 61-160 deg (141019 at 15.6 cm / 61 deg, 140016 at 24.3 cm / 160 deg, 26003 at 23.5 cm / 147 deg). No non-member anywhere inside the cone, so no under-clustering. Not over-clustered either: the two wide-angle members 139013 (103 deg) and 139014 (44 deg) are both under 5.1 cm from the start and read as the opening of the conversion, one apex on both azimuths. Vertex is fine on vtx-az-055-el+20 and -el+60: the star is at the muon endpoint with the EM blob just downstream, and nothing else in the event competes for it. Scope: 1 shower of 6 examined; 5 skipped by the <20 MeV rule and not looked at. This is a fast pass on clustering, silent on PID - I did NOT test whether a 113.7 MeV blob 7.5 cm off a muon endpoint is EM at all rather than a Michel or hadronic clump. The vtx-* sweep is half-span 132 cm here so it was used for topology only.",
+  "event_flags": [],
+  "marks": {}
+ },
+ {
+  "event": "evt172266",
+  "verdict_shower": 40019,
+  "verdict": "not an EM shower",
+  "confidence": "likely",
+  "note": "[agent-bulk] DRAG_CHECK FALSE NEGATIVE on this event (segments_redrew=false): scanbot_capture samples seg3_src.data.xs[0][0], which here is the first point of segment 16004 sitting 0.000003 cm from the main vertex - i.e. the rotation centre of the sweep, so it cannot move in screen-u and the absolute 1e-6 threshold can never be met. Frames are NOT stale: cloud_redrew true (-197.7 -> -319.4), d_az 0.7500 rad exactly as expected, all six vtx-*.png distinct md5 and 74-195 kB, and on vtx-az-055-el+20 vs vtx-az+065-el+20 the muon polyline swings from up-left to up-right and stays embedded in its own point cloud, which is the direct proof the segment source reprojects. Judged on that basis. VERDICT: shw 40019 (129.2 MeV, 3 seg, 39.9 cm) is not an EM shower. On both shw40019-az-055-el+20 and -az+085-el+20 it is a single straight uniformly-narrow line with a tight point cloud and no transverse development, no branching, no widening anywhere along ~38 cm (about 2.7 radiation lengths in LAr) - a minimum-ionising track. Its three members are collinear: the 1.5 cm seed 40019 at the X, a 0.7 cm stub 41020 at 16.4 cm / 3.7 deg, and 49023, a 37.70 cm pdg-13 segment at 21.3 cm / 4.2 deg absorbed by pass4_angle, which is 94 percent of the member length. ov-iso.png shows the whole event is ONE continuous ~155 cm line: the unowned 113.74 cm muon 16007 from the star, then this object beyond its far end (16007 reads 15.4 cm / 176.5 deg from 40019, i.e. directly behind the shower start). So the clustering of the three pieces into one object is defensible; what is wrong is calling the result a 129 MeV EM shower. Every other candidate is at 155-177 deg, behind the start, so there is no under-clustering claim and no over-clustering claim to make. Vertex: the star is at the end of the only track in the event; with a single prong there is nothing to converge, so I do not call it vertex-bad, but note there is no independent confirmation of it either. Scope: 2 showers of 17 examined; 15 skipped by the <20 MeV rule. The other in-scope shower 21009 (21.5 MeV, 1 seg, 2.6 cm) is 427 cm away from 40019 - a different region of the detector, pulled into scope only by the energy cut - and I did not scan it. The vtx-* sweep is half-span 232 cm here (driven by that 4 m separation) so it was used for topology only. Confidence likely not certain: no dQ/dx available, and I did not establish whether the 15 cm gap between 16007 and this object is a detector gap or a real break.",
+  "event_flags": [],
+  "marks": {}
+ },
+ {
+  "event": "evt283515",
+  "verdict_shower": 23009,
+  "verdict": "over-clustered",
+  "confidence": "certain",
+  "note": "[agent-bulk] shw 23009 (247.0 MeV, 14 seg, 100.0 cm, reco pdg 211) is over-clustered, and shw23009-az+085-el+20 makes it plain: the yellow member set is TWO spatially disjoint groups with a completely empty gap between them. Group A is the seed alone - 23009, a 26.5 cm pdg-211 stem found by stem_backfill, sitting on the nu vertex inside the orange cluster-23 cloud together with the unowned protons 23002 (23.4 cm) and 23006 (5.5 cm). Group B is thirteen segments 44-96 cm away at 64-102 deg from the shower axis: 24014, 60020, 24013 (22.9 cm), 24015 (17.8 cm), 24011, 76052 (9.2 cm), 67037, 76054, 76055, 68038, 70040 (5.2 cm), 69039, 73043 - i.e. every member except the seed. The axis arrow points one way and the entire body of the shower is off at right angles to it, across charge-free space; this is visible on both azimuths (az-055 and az+085, 140 deg apart), so it is not a projection artifact. All thirteen marked OUT. Group B is a detached EM region ~50-95 cm off the vertex and it plausibly IS a real shower - but it is not this stem's shower, and the reco has stitched a vertex pion stem onto it. Also examined: shw 66036 (103.2 MeV, 6 seg, 19.5 cm, pdg 11 - this is the manifest's em_max, the nominal EM shower of the event), which lives inside group B and reads CORRECT: its acceptance plot has no non-member circle anywhere in range, its members run 0-21.5 cm at 0-16 deg along its own axis with only two small wide-angle absorptions (65025 0.12 cm at 37 deg, 72042 0.56 cm at 35 deg), and the nearest non-members are at 72-151 deg. I put the verdict on 23009 rather than on 66036 because 23009 is the highest-energy in-scope shower and is where the clustering failure is; 66036's finding is stated here instead. Vertex: the star sits where the cluster-23 stem meets the incoming grey track and I see no reason to doubt it. Scope: 2 showers of 10 examined; 8 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 98 cm here and was used for topology only. Verdict is about clustering; I make no PID claim on either object beyond quoting the reco's own pdg.",
+  "event_flags": [],
+  "marks": {
+   "23009": {
+    "24014": "out",
+    "60020": "out",
+    "24013": "out",
+    "24015": "out",
+    "24011": "out",
+    "76052": "out",
+    "67037": "out",
+    "76054": "out",
+    "76055": "out",
+    "68038": "out",
+    "70040": "out",
+    "69039": "out",
+    "73043": "out"
+   }
+  }
+ },
+ {
+  "event": "evt287007",
+  "verdict_shower": 22001,
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] shw 22001 (163.1 MeV, 3 seg, 54.0 cm) is mildly under-clustered. Its own shape is fine: on shw22001-az-055-el+20 and -az+085-el+20 it is one object from the X along the axis, narrow for the first two thirds and then visibly broadening with a Y-branch in the last third - that is shower development, one apex, and the members (the 37.0 cm seed 22001 plus 22003 and 22002, both in_other_cluster at 4.5 deg and 0.4 deg) cover it. What is missing is 58030: 2.74 cm, at 34.7 cm / 9.93 deg, tier 1, metric 2.16, owned by itself (its own sub-20 MeV shower). The acceptance plot puts it as the single blue circle at (34.7 cm, 9.95 deg) - BETWEEN the 5 deg and 12.5 deg dashed pass-1 steps, sitting immediately beside two orange members at the same distance (34.7 cm / 4.5 deg and 36 cm / 0.6 deg). In the images it is a small blob about 4-5 cm off the shower body at two thirds of the way out, inside the shower envelope. Marked IN. Small piece, so the energy effect is minor; the verdict is about the boundary being drawn wrong, not about a large missing chunk. Nothing else is close: every other candidate is 74-552 cm away at 90-161 deg. FLAG FOR THE OWNER, not part of the verdict: 22001 is detached ~100 cm from the vertex region and does NOT point back at it. The nu vertex sits at the end of the 40.1 cm muon 21008 (cluster 21, with 21010 pdg 2212 and 21012 pdg 211, all correctly unowned) among a scatter of sub-cm fragments, and cluster 21 reads 105-108 deg from 22001's axis - roughly perpendicular, where a photon converting at this shower start and travelling along its axis should put the vertex near 180 deg. I did not call vertex-bad because the star is at the only track end in the event and I see no better candidate for it, but the geometry does not support 22001 having come from there. Scope: 1 shower of 22 examined; 21 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 160 cm (driven by that 1 m detachment) and was used for topology only. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {
+   "22001": {
+    "58030": "in"
+   }
+  }
+ },
+ {
+  "event": "evt292643",
+  "verdict_shower": 25015,
+  "verdict": "over-clustered",
+  "confidence": "unclear",
+  "note": "[agent-bulk] shw 25015 (155.0 MeV, 10 seg, 47.1 cm, gamma1 of reco pi0 group 0) - I looked and could not separate two readings, so this is unclear and here they are. What the pictures show (shw25015-az-055-el+20 and -az+085-el+20, frame half-span 60 cm): a compact core of 4-5 members in the first ~25 cm from the X, then FOUR detached fragments strung out along the same axis at 46.6, 50.6, 75.7 and 99-100 cm with large empty gaps between them - 110033 (0.34 cm, 3.0 deg), 112035 (7.61 cm, 12.6 deg), 106027 (2.11 cm, 2.1 deg), 109031+109032 (2.23+6.80 cm, 10-11 deg), all absorbed by pass4_angle, the last two beyond the 80 cm tier-1 line. Reading (a) OVER-CLUSTERED: a 155 MeV EM cascade is essentially over by 5-6 radiation lengths (70-85 cm in LAr) and cannot plausibly be 100 cm long; those far stubs are separate objects and including them inflates E1 and hence the stored pi0 mass. The event also contains a 188.3 cm muon (18009, unowned) running roughly PARALLEL to this shower at 15-30 cm separation, so fragments 'along the shower axis' at 50-100 cm are equally well described as muon-associated deltas - 112035 is only 5.3 cm from that muon. Reading (b) CORRECT: the acceptance plot has NO non-member circle anywhere in range, so nothing is missing; the member set is one direction and one apex (all members 0-16 deg, monotone in distance, no second apex on either azimuth); and doc pr/116 section 2.3 records exactly this shape - a chain of stubs strung along the axis out to 88 cm - being called correct on evt284791 with the explicit caveat that far-stub membership was untested. I cannot break the tie from the display. CORRECTION I made on myself: I first read 106027 as sitting ON the muon in both azimuths and was going to mark it OUT; computing the 3-D min distance from state.json gives 16.9 cm, so that was a projection coincidence and the mark is withdrawn. No segment marks recorded - I have no piece I can name with confidence, which is the same reason pr/116 section 2.2 left evt280159 unmarked. Also examined: shw 105026 (65.0 MeV, 1 seg, 11.1 cm, gamma2), a short zigzag with a diffuse cloud ~30 cm off the vertex and 13 cm off the muon; single apex, and the only thing it might be missing is 104025 (2.31 cm at 14.4 cm / 25.9 deg, tier 1) which at 26 deg is too marginal for me to call. PI0: the reco pairing 25015+105026 looks topologically sound on pio-az-055-el+020 - both gamma starts are detached from the magenta vertex star and both axes point away from it. But the mass is entirely convention-dependent here and the reco took the largest angle: stored 150.6 MeV (theta 97.2 deg, inside the accept window), display axis convention 108.6 MeV (theta 65.5 deg), display vertex convention 56.4 MeV (theta 32.6 deg). The two gamma arrows in the picture look far closer to 40 deg than to 97 deg, but I will not claim an angle off a projection. This is the pr/114 section 6.1 inconsistency, not a new finding, but it is worth knowing that this event's accepted pi0 depends on it. Scope: 2 showers of 13 examined; 11 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 213 cm (the 188 cm muon) so it was used for topology only; the vertex itself looks fine - the star sits where the muon and a second grey track meet.",
+  "event_flags": [],
+  "marks": {}
+ },
+ {
+  "event": "evt347085",
+  "verdict_shower": 72066,
+  "verdict": "under-clustered",
+  "confidence": "likely",
+  "note": "[agent-bulk] The best-formed shower in my shard, and the verdict is a boundary nit, not a failure - please read the magnitude. shw 72066 (268.1 MeV, 15 seg, 56.2 cm, gamma1 of reco pi0 group 0) is textbook on shw72066-az+085-el+20: a narrow stem rising from the X (which sits 13.6 cm off the blue vertex star, where the 56.4 cm muon 4011 and the two pions 4012/4065 of cluster 4 end, all correctly unowned), then a wide broadening cone with a heavy point cloud, then a sparse fading tail - one apex, one direction, on both azimuths. The under-clustering: its acceptance plot shows the pass-1 steps as 30 deg out to 80 cm, 20 deg from 80 to 130 cm, 15 deg beyond, and TWO non-member circles sit INSIDE those boxes - 41027 (0.74 cm, pdg 11) at 84.5 cm / 18.8 deg and 31017 (0.33 cm, pdg 11) at 120.7 cm / 15.3 deg - while the shower does own members at 88.5, 89.5, 103.4 and 111.5 cm at 10-15 deg, i.e. exactly the same population. Both marked IN. That is 1.07 cm of polyline out in the tail; the energy effect is negligible and nothing large is missing. NOT marked: 42028 (1.43 cm, pdg 2212) at 139.3 cm / 11.6 deg, which also falls inside the tier-3 box - a proton 1.4 m out does not belong in this shower and leaving it out is right. Not over-clustered: I checked the same worry I raised on evt292643 (a 268 MeV shower reaching 111 cm) and here the picture answers it - the charge is continuous from the stem through the cone into the tail with no empty gap, so the far members are the tail of one object. Also examined: shw 68035 (41.7 MeV, 4 seg, 10.2 cm, gamma2), a compact core plus two sub-cm stubs at 29.4 and 40.7 cm along its own axis at 3.9 and 8.1 deg; nothing unclaimed in its cone (its nearest non-members 34020 and 36022 are at 53.7 and 36.6 deg), so it reads correct. PI0: this one is clean and worth contrasting with evt292643. The reco paired 72066 + 68035, stored mass 141.5 MeV, and for once the display's two conventions AGREE - axis convention theta 94.5 deg -> 155.2 MeV, vertex convention theta 94.0 deg -> 154.7 MeV, both inside the accept window. pio-az-055-el+020 shows why: both gamma starts are detached from the magenta vertex star and their arrows diverge widely (blue gamma1 to the left, red gamma2 up-right), so there is no small-angle ambiguity for the conventions to disagree about. Scope: 2 showers of 15 examined; 13 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 129 cm and was used for topology only. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {
+   "72066": {
+    "41027": "in",
+    "31017": "in"
+   }
+  }
+ },
+ {
+  "event": "evt386442",
+  "verdict_shower": 16008,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] Clean nuecc single-shower event. shw 16008 (236.3 MeV, 4 seg, 37.9 cm, conn 1) starts ON the vertex - its seed segment 16008 runs from 19.6 cm out down to (18.5,-39.2,92.6), which is the main vertex to 0.1 cm, so the X and the blue star coincide in both shower frames. On shw16008-az-055-el+20 and -az+085-el+20 it is one continuous object rising from the star, broadening steadily, its yellow halo covering the whole body and its point cloud, one apex, one direction. Nothing is missing: apart from its own members (16010 at 19.6 cm / 4.0 deg and 16001 at 27.4 cm / 9.0 deg, both in_main_cluster) every candidate within 70 cm is at 32-135 deg from the axis and none is bigger than 1.2 cm - there is no unclaimed charge in the cone. THE ONE THING I WOULD QUERY, and it is why the confidence is likely rather than certain: member 42016 is a 0.41 cm pdg-13 dot at 66.7 cm / 13.2 deg, absorbed by pass3_cone, and it sits about 30 cm BEYOND the end of the shower body with empty space in between - visible on both azimuths as a lone yellow-haloed dot far from everything else. Marked OUT. The charge is negligible so I do NOT call the event over-clustered on it; the verdict is about the shower body, which is right. Be aware this reproduces the roll-up tension pr/116 section 5 records: an OUT mark on a member is read by pr/115 rule 3 as a remove-this statement and would bucket this event under over-clustering, which is not what I mean here. Vertex: on vtx-az+065-el+20 the star sits at the base of the shower and the rest of the event is a scatter of sub-cm dots - there is no competing prong, so nothing contradicts the star, but equally nothing independently confirms it beyond the shower's own start. Scope: 1 shower of 19 examined; 18 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 84 cm and was used for topology only. No reco pi0 in this event (pio_grp=0, pio_id=-1, and the capture emitted no pi0 slots), and there is no second EM object anywhere to pair with. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {
+   "16008": {
+    "42016": "out"
+   }
+  }
+ },
+ {
+  "event": "evt401450",
+  "verdict_shower": 23018,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] The biggest object in my shard and it is well reconstructed. shw 23018 (1155.6 MeV, 42 seg, 286.4 cm, conn 1, nuecc) starts ON the vertex - the X and the blue star coincide on shw23018-az+085-el+20 - and both azimuths show the same thing: a narrow stem out of the star, then the shower blossoming into a wide branching cone with a dense point cloud, then a sparse tail of stubs out to ~137 cm. One apex, one direction, the yellow halo covering the whole branching structure including all the far stubs. Nothing is missing where it matters: the acceptance plot has steps at 25 deg to 80 cm, 12.5 deg from 80-130 cm and 5 deg beyond, and ALL FOUR non-member circles fall OUTSIDE those boxes - (23 cm, 26.5 deg) just above the 25 deg step, (84.5 cm, 22.5 deg) and (115 cm, 23.8 deg) above the 12.5 deg step, (137.5 cm, 7.5 deg) above the 5 deg step. The algorithm's own geometry rejected each of them and I agree with each rejection on the pictures. The one thing I considered and decided against calling under-clustering: at dist 0 / angle 0, in the shower's own cluster 23, sit 23019 (4.65 cm, pdg 13, owned by NOBODY) and 23020 (2.96 cm, its own sub-20 MeV shower) - grey pieces right at the shower start. For a nuecc that is vertex hadronic activity beside the electron, and keeping it out of the electron shower is what the reconstruction should do, so I read those exclusions as correct rather than as a hole. Also examined: shw 25060 (206.7 MeV, 4 seg, 32.8 cm), 98.8 cm from 23018 at 82 deg - a compact bent object inside its own dense cluster-25 point cloud, with nothing unclaimed in its cone (nearest non-members 89102 at 11.9 cm / 54.3 deg and 91104 at 46 cm / 45.8 deg); it reads fine. NOT examined: shw 86094 (41.8 MeV, 1 seg) and shw 93106 (15.8 cm, 386 cm away in a different region of the detector), plus the 21 showers skipped by the <20 MeV rule - so this is a claim about 2 showers of 25, not about the event. No reco pi0 (pio_grp=0, every pio_id=-1); the capture's pio slots [23018, 25060] were filled by the tool, not by the reconstruction. The vtx-* sweep is half-span 400 cm (that 386 cm outlier shower sets it) so it was useless for anything but gross topology and I judged entirely off the auto-framed shower frames. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {}
+ },
+ {
+  "event": "evt486907",
+  "verdict_shower": 22004,
+  "verdict": "correct",
+  "confidence": "likely",
+  "note": "[agent-bulk] The clustering is fine; the finding on this event is a MISSING PI0 PAIRING, so read the second half of this note. shw 22004 (454.3 MeV, 18 seg, 77.2 cm, conn 2) reads correct: on shw22004-az-055-el+20 and -az+085-el+20 it is a stem out of the X that fans into a spray of ~18 fragments, all in ONE direction (every member is at 0-19 deg to the axis) and monotone in distance out to 86 cm, which is about 6 radiation lengths and appropriate for 454 MeV. Its acceptance plot (steps 25 deg to 80 cm, then 12.5 deg) has NO non-member circle anywhere in range - nothing contiguous is left grey, so no under-clustering; and there is no second apex or second direction on either azimuth, so no over-clustering. The unowned 26.6 cm pdg-13 segment 95052 sits at 29.9 cm / 172 deg, i.e. behind the shower start, and is correctly left out. MISSING PI0: this event has NO reco pi0 group (pio_grp=0, every pio_id=-1), yet pio-az-055-el+020 shows a textbook two-photon topology - the magenta vertex star sits alone at the bottom with only sub-cm fragments on it, and 13-15 cm above it TWO detached EM showers start and diverge, blue gamma1 = 22004 (454.3 MeV) up-left and red gamma2 = 24002 (166.4 MeV, 7 seg, 31.7 cm) straight up. Both are detached, both point away from the star, neither is attached to it. Priced through the display's own formula the pair lands at 167.5 MeV on the axis convention (theta 35.5 deg) and 177.2 MeV on the vertex convention (theta 37.6 deg) - the two conventions AGREE for once, and the display flags both as inside the code's accept window. So a pair the display's own arithmetic would accept was never formed. Caveat I want on the record: 167-177 MeV is 25-30 percent above 135, and the display also reports that converting the same charge as tracks instead of showers gives 273.3 and 100.1 MeV, which would put the pair at about 107 MeV - so the energy convention alone swings this candidate from 107 to 177 MeV, bracketing 135. I am reporting a topological pi0 candidate the reconstruction did not pair, not a mass measurement. Also in scope: shw 23009 (218.3 MeV, 1 seg, 30.1 cm, reco pdg 2212) - a proton track, visible as the green 30 cm line inside its own orange cloud in both shower frames. It is in scope only because kine_best clears 20 MeV; I did not treat it as an EM shower and make no clustering claim on it. shw 24002 I checked numerically only (nothing unclaimed inside its cone: nearest non-members 94051 at 37.8 deg and 88045 at 29.1 deg) plus its appearance in the pi0 frame; I did not scan its own frames in detail. Scope: 3 showers of 15 in scope, 2 examined properly; 12 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 167 cm and was used for topology only. Verdict is about clustering and silent on PID.",
+  "event_flags": [],
+  "marks": {}
+ }
+]

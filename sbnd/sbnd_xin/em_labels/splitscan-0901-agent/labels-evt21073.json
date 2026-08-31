@@ -1,0 +1,13 @@
+{
+ "event": "evt21073",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "63100": {
+   "verdict": "SPLIT2",
+   "confidence": "high",
+   "comment": "two clean lobes at (+12,+10) and (-13,-9); side view separates at -25..-10 vs +5..+20 transverse.  TRIGGER CORRECT, KERNEL CORRECT",
+   "parts": null
+  }
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt478638",
+ "eventNo": 478638,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": 35.25812014434707,
+  "y": -166.64919024186003,
+  "z": 110.20601249364503
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 5001,
+   "x": 35.25812014434707,
+   "y": -166.64919024186003,
+   "z": 110.20601249364503
+  }
+ ],
+ "reco_sep_cm": 0.004482161582536411,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 49deg apex: the 165cm muon cools to 52k at 5001 and only reaches 2x MIP where it leaves the bottom face, and a 3.1cm 138k (3x MIP) proton stub hangs off the same point; the zoom shows nothing continues past 5001 and the muon runs forward in z from 110 to 249.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt478638/calib-pr-evt478638.json",
+ "subRunNo": 1
+}

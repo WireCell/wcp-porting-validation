@@ -1,0 +1,13 @@
+{
+ "event": "evt176502",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "109119": {
+   "verdict": "SPLIT3",
+   "confidence": "high",
+   "comment": "THREE lobes in theta-phi at (-10,+5), (+20,+5), (0,-30); w 9-27 vs null 4-7.5.  TRIGGER CORRECT, KERNEL FAILS: 2-means returns a small loop near the vertex",
+   "parts": null
+  }
+ }
+}

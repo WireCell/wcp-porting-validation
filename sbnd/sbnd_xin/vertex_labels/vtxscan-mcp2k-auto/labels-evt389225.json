@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt389225",
+ "eventNo": 389225,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": -58.15478475590336,
+  "y": -106.89668947048924,
+  "z": 384.0890835286283
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 9,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 9004,
+   "x": -58.15478475590336,
+   "y": -106.89668947048924,
+   "z": 384.0890835286283
+  }
+ ],
+ "reco_sep_cm": 0.005890111583961388,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 clean at a ~109 deg (non-collinear) deg-2 kink: the 32 cm proton rises monotonically along the proton template to 270k at 9005, and the 176 cm muon is 110k at 9003 versus 46k at 9004, so both attached segments cool toward 9004 and 9003 is a stopping end.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt389225/calib-pr-evt389225.json",
+ "subRunNo": 1
+}

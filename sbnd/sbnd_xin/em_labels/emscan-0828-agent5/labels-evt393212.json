@@ -1,0 +1,115 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 48.8,
+  "az_deg": -55.0,
+  "centre": [
+   78.16,
+   170.19,
+   254.61
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1572,
+  "cloud_cluster_ids": [
+   6
+  ],
+  "cloud_kept": 1572,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 44508,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7227561109618827,
+   -0.18893624477426813,
+   0.6647756760576101
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7227561109618827,
+    -0.18893624477426813,
+    0.6647756760576101
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 21,
+   "kine_best": 295.65071227004614,
+   "kine_charge": 295.65071227004614,
+   "kine_charge_other_hypothesis": 177.8350148992759,
+   "kine_dQdx": 188.99639592079754,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    6001,
+    6005,
+    6006,
+    6007,
+    6009,
+    6010,
+    6011,
+    6012,
+    6013,
+    34015,
+    36017,
+    37018,
+    38019,
+    39020,
+    40021,
+    41022,
+    55036,
+    56037,
+    57038,
+    82040,
+    82041
+   ],
+   "membership_source": "probe",
+   "num_segments": 21,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   51.24941974935871,
+   177.4890750448685,
+   222.6277046820954
+  ],
+  "reco_start_vertex_id": 83070,
+  "shower": 6009,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   51.24941974935871,
+   177.4890750448685,
+   222.6277046820954
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt393212",
+ "eventNo": 393212,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 83,
+  "x": 34.30555647471616,
+  "y": 181.35332494836285,
+  "z": 203.18203324534664
+ },
+ "note": "[agent-bulk] Leading EM shower 6009 (295.7 MeV, 21 seg): correct. On both shower azimuths (az-055, az+085) it is one cone with a single apex at the X, a cluster-6 body of about 49 cm of segment covering the dense cloud out to ~27 cm, then a trail of small on-axis fragments; no kink, no second apex, no straight MIP stem swallowed. Its acceptance plot is 21 member squares and a single blue circle -- 53034, a 0.6 cm object at 64.2 cm / 25.4 deg with its own shower id -- so there is essentially nothing left unclaimed anywhere in its cone and it cannot be under-clustered. It is detached 26 cm from the vertex, i.e. photon-like. Same soft spot as evt317939 and evt349549 and I am flagging it the same way rather than calling it: after the body the member list is ten sub-centimetre-to-2.6 cm stubs taken by pass4_angle out to 79.0 cm (56037, 57038, 40021 which has length 0.0, 38019, 41022, 39020), several of them pdg 13 or 2212, and on the pictures they are isolated dots well clear of the shower body. That trailing-fragment pattern is the single most repeated thing I saw across this shard; not marked. Vertex judged first and cleared: the star carries the 15.5 cm and 3.2 cm pdg 2212 segments 83050 and 83053, both correctly left unowned, and nothing else reaches it. AN 'other_em' RESULT, same as pilot evt284200: there is exactly ONE EM object in this event. Shower 84048 (69.0 MeV) is reco pdg 13, a straight 16.4 cm track detached 12.4 cm from the vertex plus a 1.4 cm pdg 2212 stub; shower 33014 (46.4 MeV) is a single 0.68 cm pdg 2212 fragment 100 cm out whose energy comes from the shower conversion of 22.7 MeV of charge and should not be read as an EM shower. So the reason this event has no pi0 is not a pairing failure -- there is no second photon in the reconstruction. Note the kine_pio_ BDT feature is junk here: it reports mass 46.8 MeV from E1 295.7 (6009) and E2 7.2 (shower 52033, a 1.6 cm fragment) at 60.7 deg, i.e. it paired the shower with a 7 MeV stub. No gamma slots were auto-assigned, no pairing proposed. Scope: 3 of 16 showers in scope (6009, 84048, 33014); the other 13 (50031 9.0 MeV down to 48029 0.2 MeV) are all under 10 MeV, skipped by the 20 MeV rule, and I did not look at them.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt393212/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:06:21+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt393212/calib-pr-evt393212.json",
+ "subRunNo": 1
+}

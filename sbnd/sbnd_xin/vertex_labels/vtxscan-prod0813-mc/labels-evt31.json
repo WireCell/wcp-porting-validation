@@ -1,0 +1,44 @@
+{
+ "arm": "work-r2mc-prod0813",
+ "confidence": null,
+ "dl_best_score": 3.851534930552579,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt31",
+ "eventNo": 31,
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 121.86796223646147,
+  "y": -158.4758607121346,
+  "z": 138.03579369444327
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 1,
+   "dis_to_main": 5.634223814265915,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": 0.705226853217209,
+   "trad_winner": false,
+   "vertex_id": 14000,
+   "x": 118.71574042005481,
+   "y": -156.47317796694387,
+   "z": 142.2544709079222
+  }
+ ],
+ "route": "dl-rerank-reject",
+ "runNo": 713,
+ "saved_utc": "2026-08-15T17:05:27+00:00",
+ "scan_tag": "vtxscan-prod0813-mc",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r2mc-prod0813/pr_evt31/calib-pr-evt31.json",
+ "subRunNo": 74
+}

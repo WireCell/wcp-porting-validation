@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt285350",
+ "eventNo": 285350,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": 121.05143588047895,
+  "y": 85.23141087042248,
+  "z": 318.8726924959391
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 18,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 18002,
+   "x": 121.05143588047895,
+   "y": 85.23141087042248,
+   "z": 318.8726924959391
+  }
+ ],
+ "reco_sep_cm": 0.0033618213041104123,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 in its cleanest form: both prongs rise away from 18002 (75 cm muon to a 185k Bragg at 18000, 15 cm proton to a 320k Bragg at 18003), the two prongs are 92 deg apart, and 18002 is the lowest-z candidate.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt285350/calib-pr-evt285350.json",
+ "subRunNo": 1
+}

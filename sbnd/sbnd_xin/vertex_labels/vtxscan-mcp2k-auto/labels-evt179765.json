@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt179765",
+ "eventNo": 179765,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": 148.6477566413889,
+  "y": 29.901452525177024,
+  "z": 419.8280232189028
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 4,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 4003,
+   "x": 148.6477566413889,
+   "y": 29.901452525177024,
+   "z": 419.8280232189028
+  }
+ ],
+ "reco_sep_cm": 0.0033241767032122656,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "P4 shows the 21.7 cm proton rising monotonically on the template from 85k at 4003 to 220k at 4004, so it is born at 4003; 4005 is only a break on the muon (4003-4005 is collinear with 4005-4002 to 2 deg) and a Michel sits on the far end at 4002.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt179765/calib-pr-evt179765.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,21 @@
+# doc pr/132 round 3 A/B index -- OFF 0b40fe6e-ea4e-42d1-b89c-ad84bc65b128 / ON 109e5d8e-b900-43d2-8e4c-063714d61f83
+# OFF list: https://www.phy.bnl.gov/twister/bee/set/0b40fe6e-ea4e-42d1-b89c-ad84bc65b128/event/list/
+# ON  list: https://www.phy.bnl.gov/twister/bee/set/109e5d8e-b900-43d2-8e4c-063714d61f83/event/list/
+# OFF = work-pr132-r2off-* (pre-flip production: fudge 0.84 + K3=20)
+# ON  = work-pr132-r3flip-* (shipped flip: K7 readmit-retyped + K8 admit-type3 + K3=28)
+# 13 events: idx 0-1 the K3 28->30 adjudication pair, idx 2-4 the K3=28 fake
+# kills (confirm), idx 5-9 the rescue exacts, idx 10-12 the partial gains.
+# bee_idx	event	status
+0	76346	ADJUDICATE K3=30: accepted group = attached sh 14059 (159.9 MeV) + partner sh 41031 (29.6 MeV); survives K3=28, dies at 30.  (The labeled hand pi0 in this event is a separate partial group, g2 absent on arm.)
+1	176502	ADJUDICATE K3=30: accepted group = attached sh 109299 (149.6 MeV) + partner sh 102065 (28.7 MeV); survives K3=28, dies at 30.  Also the owner-scan over-merge event: its 2391 MeV shower splits at m=204/356 (substruct probe) -- not recoverable here.
+2	116962	fake KILLED: the K7-readmitted electron fragment + 27.0 MeV partner pair is vetoed by K3=28 (was the rescue family's only regenerated fake in round 2); confirm no pi0 group at ON
+3	54095	fake KILLED: attached sh 17137 (2515.0 MeV e-) + partner sh 85115 (26.1 MeV) gone at ON (nueCC, the owner's fake mode)
+4	268784	fake KILLED: attached sh 13027 (1004.9 MeV e-) + partner sh 58081 (22.0 MeV) gone at ON (nueCC)
+5	169626	RESCUED no-group->exact: gamma was pdg=211 at OFF (A5 retype); path-2 acceptance m=138.9, main vertex moved 59.6 cm onto the scanner back-projected decay vertex (sub-mm to label [3.748, 208.544, 414.675])
+6	47212	RESCUED none->exact: both gammas were pdg=2212 at OFF; g2 enters via the K8 conn-type-3 pool; hand mass 132.8
+7	285567	RESCUED no-group->exact: g2 was pdg=211 at OFF, K7 readmits + re-stamps EM on accept
+8	506746	RESCUED no-group->exact: g2 was pdg=211 at OFF; the 988.7 MeV shower now carries inpi0=1
+9	392901	RESCUED no-group->exact (overlay label, model pairing pass): hand mass 135.5
+10	486907	no-group->partial (overlay label): pair forms; scaled hand mass 163 sits just outside the (100,160) window so exact stays out of reach without offset work
+11	347824	no-group->partial: g1 absent on arm; hand mass 114.0
+12	52044	no-group->partial: g1 was pdg=211 at OFF, readmitted

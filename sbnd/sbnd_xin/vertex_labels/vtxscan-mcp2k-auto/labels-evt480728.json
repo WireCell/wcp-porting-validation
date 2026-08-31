@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt480728",
+ "eventNo": 480728,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -129.03941736254092,
+  "y": -172.20414749196146,
+  "z": 19.68904681391355
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": -129.03941736254092,
+   "y": -172.20414749196146,
+   "z": 19.68904681391355
+  }
+ ],
+ "reco_sep_cm": 0.004295313689898434,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 107.5deg V: the 12.1cm proton sits at 3-5x MIP and Bragg-rises to 200k into 11001 so it stops there, its 230k first centimetre at 11002 being vertex overlap matched by a single 205k spike at the muon's end; the 29cm muon is flat MIP and leaves the bottom face.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt480728/calib-pr-evt480728.json",
+ "subRunNo": 1
+}

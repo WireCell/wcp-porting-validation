@@ -1,0 +1,104 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -12.87,
+   55.95,
+   162.81
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2764,
+  "cloud_cluster_ids": [
+   16,
+   20,
+   21,
+   22
+  ],
+  "cloud_kept": 2764,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 26025,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7630019075071532,
+   -0.19900049750186566,
+   0.6150015375057657
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7630019075071532,
+    -0.19900049750186566,
+    0.6150015375057657
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 163.98816678298954,
+   "kine_charge": 163.98816678298954,
+   "kine_charge_other_hypothesis": 98.63949881683583,
+   "kine_dQdx": 96.84494634022906,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    20035,
+    20036,
+    52059,
+    52060,
+    53069,
+    53070,
+    54071
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -24.32770375480971,
+   60.25647913839357,
+   150.96475884180322
+  ],
+  "reco_start_vertex_id": 16000,
+  "shower": 20036,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -24.32770375480971,
+   60.25647913839357,
+   150.96475884180322
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt287830",
+ "eventNo": 287830,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -47.0213163704505,
+  "y": 101.41202575841069,
+  "z": 16.155617757112694
+ },
+ "note": "[agent-bulk] shw 20036 (164.0 MeV, 7 seg, pio_id 0): correct. Its 7 member polylines sum to 36.2 cm over a 31.3 cm span -- solid, not strewn -- and read as one chain of clumps with a single apex at the reco start and the axis running along it. Acceptance plot: SEVEN orange squares, ZERO blue circles out to 40 cm; the nearest non-member of any kind is 63.2 cm away at 116.3 deg, i.e. behind. Nothing to add and no second apex. Vertex is clean and I checked it in both azimuths: three prongs converge on the star (one long track up-left plus two shorter ones), and both scope showers are far downstream of it -- 20036 starts 142.7 cm from the vertex and 21042 starts 78.0 cm. Those are long conversion distances for a pi0 from that vertex and I am flagging them rather than judging them. SECONDARY, UNRESOLVED, on shw 21042 (128.6 MeV, 5 seg): its 5 members are compact (36.0 cm of polyline in 26 cm) and it is a broad branching cloud with one apex, but its axis points straight at three segments owned by shower 42052 -- 58077 at 39.9 cm / 4.6 deg, 56073 at 40.5 cm / 9.1 deg, 57076 at 37.9 cm / 18.0 deg, all tier 1 and all inside the pass-1 window (two of them are the blue circles at the right edge of 21042's acc plot). Two readings I cannot separate: (a) 21042 is under-clustered by ~5 cm of polyline that continues along its own axis, or (b) 42052 is a small real track (its own 10.7 cm pdg-13 seed at 59.2 deg from 21042) and those pieces are its legitimate satellites. I recorded NO marks because of that: an IN mark would assert (a). PI0: the reconstruction accepted group 0 = 21042 + 20036 at 142.7 MeV, which is the only sensible pairing in this event and I do not dispute it. For the record the display prices the same pair at 151.2 MeV on the axis convention (theta 62.7 deg) and 56.0 MeV on the vertex convention (theta 22.2 deg) -- another factor-2.7 split of the kind pr/114 6.1 documents, driven here by both gammas converting far downstream and nearly along the same ray from the vertex. Segments 16029 (56.0 cm, pdg 211), 16026 (39.1 cm, pdg 13), 16087 (29.8 cm, pdg 211) and 16084 (22.8 cm, pdg 211) are grey/unowned vertex prongs, correctly not absorbed. Showers NOT looked at: the 12 the scope rule skipped, all below 20 MeV; shw 16028 (35.6 MeV) was in scope but sits 110 cm from 20036 at 128.8 deg and I judged it only from the candidate table, not from its own frames. Clustering statement, silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt287830/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:52:05+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt287830/calib-pr-evt287830.json",
+ "subRunNo": 1
+}

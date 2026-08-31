@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt399061",
+ "eventNo": 399061,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 77.14913098228615,
+  "y": -141.2982821928459,
+  "z": 66.63433000690675
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 9,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 9001,
+   "x": 77.14913098228615,
+   "y": -141.2982821928459,
+   "z": 66.63433000690675
+  }
+ ],
+ "reco_sep_cm": 0.00473867207329721,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 plus rule 3: the 78 cm muon Bragg-rises to 225k at 9000 with a Michel-like blob 6 cm off that end, so the cool interior end 9001 is the start.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt399061/calib-pr-evt399061.json",
+ "subRunNo": 1
+}

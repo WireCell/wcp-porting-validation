@@ -1,0 +1,105 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 71.2,
+  "az_deg": -55.0,
+  "centre": [
+   -149.4,
+   174.09,
+   218.17
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1219,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 1219,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 9367,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.8821971931114537,
+   0.027006036523820012,
+   0.47010508022945946
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.8821971931114537,
+    0.027006036523820012,
+    0.47010508022945946
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 11,
+   "kine_best": 132.9319595594187,
+   "kine_charge": 132.9319595594187,
+   "kine_charge_other_hypothesis": 79.95907341919921,
+   "kine_dQdx": 85.18651119358523,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    24003,
+    25004,
+    26005,
+    28007,
+    29008,
+    35014,
+    37016,
+    59018,
+    59020,
+    59021,
+    59022
+   ],
+   "membership_source": "probe",
+   "num_segments": 11,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -146.476378712403,
+   173.00875846344243,
+   216.48952654248905
+  ],
+  "reco_start_vertex_id": 4001,
+  "shower": 37016,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -146.476378712403,
+   173.00875846344243,
+   216.48952654248905
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt284791",
+ "eventNo": 284791,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -122.40597330950327,
+  "y": 178.18115973677752,
+  "z": 206.98601188725348
+ },
+ "note": "[agent] good - nothing is missing from shw 37016 (132.9 MeV, 11 seg). nu vertex right: the 36 cm pdg-13 segment 4000 leaves it and the shower is on the other side, detached, closest member 26.4 cm out. THE VERDICT RESTS ON THE NON-MEMBERS, not on the shape: every non-member within 40 cm lies at 103-173 deg from the axis, i.e. behind the start, and the six of them are 0.2-7.1 MeV vertex fragments on the muon side. There is nothing in the event to add. The shape number is NOT usable here and I am not resting on it: the 11 members are a chain strung along the axis from t = -38 to +24 cm, seven of them 2- or 3-point stubs, so the transverse RMS (8.2 cm, w/l 0.26) measures the scatter of stubs, not a shower width - restricted to the four members with >= 5 fitted points it is 3.4 cm, w/l 0.13. Note the shower table's own length (27.7 cm) and the extent over all member points (62.1 cm) are different definitions and disagree by 2x for the same reason. What I did NOT test: whether the far stubs out to 88 cm from the vertex genuinely belong to this shower. Only one photon in the event, so no pi0 pair; kine_pio_* pairs it with a 5.7 MeV stub for 35.9 MeV and that is a BDT feature, not a pairing.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt284791/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T18:54:18+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt284791/calib-pr-evt284791.json",
+ "subRunNo": 1
+}

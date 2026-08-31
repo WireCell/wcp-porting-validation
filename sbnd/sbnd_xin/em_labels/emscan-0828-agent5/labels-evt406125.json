@@ -1,0 +1,190 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 40.51,
+  "az_deg": -55.0,
+  "centre": [
+   16.84,
+   -10.33,
+   16.68
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2495,
+  "cloud_cluster_ids": [
+   8,
+   15,
+   16,
+   17,
+   18
+  ],
+  "cloud_kept": 2495,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 15546,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7270530768119816,
+   -0.6180451189405841,
+   -0.2990218293903473
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "38021": {
+    "18013": "out",
+    "68048": "out",
+    "69049": "out",
+    "73053": "out"
+   }
+  },
+  "marks_detail": {
+   "38021": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.7270530768119816,
+     -0.6180451189405841,
+     -0.2990218293903473
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "18013": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 8.118596340144402,
+      "cluster_id": 18,
+      "dist": 36.3186684269501,
+      "ellip": 1.8602336396363763,
+      "kind": "out",
+      "length": 15.506194239104456,
+      "owner": 38021,
+      "pdg": 2212,
+      "tier": 1
+     },
+     "68048": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 16.621655445855215,
+      "cluster_id": 68,
+      "dist": 66.38013782191311,
+      "ellip": 16.95048974825137,
+      "kind": "out",
+      "length": 0.27421936859341806,
+      "owner": 38021,
+      "pdg": 13,
+      "tier": 1
+     },
+     "69049": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 18.686676339393117,
+      "cluster_id": 69,
+      "dist": 47.32673129742827,
+      "ellip": 10.453019236919443,
+      "kind": "out",
+      "length": 0.391475724645545,
+      "owner": 38021,
+      "pdg": 13,
+      "tier": 1
+     },
+     "73053": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 16.093958883274663,
+      "cluster_id": 73,
+      "dist": 37.13498976796972,
+      "ellip": 5.034563366125813,
+      "kind": "out",
+      "length": 0.36561268180923856,
+      "owner": 38021,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 18.686676339393117,
+     "angle_min": 0.0,
+     "dist_max": 66.38013782191311,
+     "dist_min": 0.0,
+     "n": 5
+    },
+    "members": [
+     18013,
+     38021,
+     68048,
+     69049,
+     73053
+    ],
+    "start": [
+     -4.715233823085808,
+     14.96127288127506,
+     28.37585993389723
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.7270530768119816,
+    -0.6180451189405841,
+    -0.2990218293903473
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 136.2015994320749,
+   "kine_charge": 136.2015994320749,
+   "kine_charge_other_hypothesis": 81.92577409448116,
+   "kine_dQdx": 129.2678038642989,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    18013,
+    38021,
+    68048,
+    69049,
+    73053
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -4.715233823085808,
+   14.96127288127506,
+   28.37585993389723
+  ],
+  "reco_start_vertex_id": 8006,
+  "shower": 38021,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -4.715233823085808,
+   14.96127288127506,
+   28.37585993389723
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt406125",
+ "eventNo": 406125,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -7.987071183590025,
+  "y": 15.622401805720965,
+  "z": 28.14978515681659
+ },
+ "note": "[agent-bulk] numucc_em, 25 showers, 45 segments. Verdict shower 38021 (pdg 11, kine_charge 136.2 MeV, 5 seg, len 19.2). CORRECTION 17: 38021 is the SECOND entry of the kine_charge-ordered list and the first with pdg==11. I passed over 8059 (pdg 211, kine_charge 155.5 / kine_best 98.8 MeV, 12 segments, 33.4 cm), the highest-kine_charge object; it is the charged pion leaving the vertex and I make no claim about it. VERTEX IS GOOD, proven from the segment polylines: three segments have a point at exactly 0.0 cm from the main vertex -- 8003 (pdg 13, 87.8 cm muon), 8059 (pdg 211, 17.1 cm) and 8060 (pdg 2212, 14.5 cm) -- a clean muon + pion + proton three-prong. Judged from vtx-az-055-el+20 and the polyline arithmetic. NOTE THE FRAMING DIFFERS FROM MY OTHER EVENTS: event_half_span is 99.8 cm and r95 is 79.9 cm, both under the 150 cm threshold, so NO vtxz-* frames were written and the vertex here is judged off the ordinary vtx-* set, not off vtxz-*. OVER-CLUSTERED, and it is not a marginal call. 38021's own seed segment is 2.7 cm long and starts 3.3 cm from the nu vertex -- it is a speck sitting on the vertex, which per the pilot's evt280159 argument forecloses the converted-photon reading, and this is numucc_em so a primary electron is not the expected explanation either. Its other four members are all admitted by pass4_angle (direct) and all sit in a region 36-66 cm away with a completely empty gap in between: 18013 (pdg 2212, 15.5 cm, at 36.3 cm / 8.1 deg), 73053 (pdg 13, 0.37 cm, 37.1 cm / 16.1 deg), 69049 (pdg 13, 0.39 cm, 47.3 cm / 18.7 deg) and 68048 (pdg 13, 0.27 cm, 66.4 cm / 16.6 deg). cmp_div confirms the span: 5 segments over distance 0.0-66.4 cm at 0.0-18.7 deg, on 19.2 cm of total skeleton. On shw38021-az-055-el+20 this is unmistakable -- the yellow membership halo appears as a speck beside the blue vertex star and then, with nothing at all in between, as a long haloed vertical track plus three isolated specks about half a metre away. A 2.7 cm seed on the neutrino vertex does not own a 15.5 cm proton track 36 cm downstream. Membership triple-check per correction 16 agrees at 5 (nseg 5, owner-grouped candidates with owner==38021 are 38021/18013/73053/69049/68048 = 5, cmp_div says 5 segment(s) plotted), so this is a real member set and not the first-owner-wins artefact of correction 11. MARKS: all four non-seed members are marked OUT, which is the coherent statement -- strip them and 38021 is its 2.7 cm vertex seed alone. Correction 7 on relative strength: 18013 is by far the strongest mark, being 15.5 cm of pdg 2212 with 27 fitted points and carrying essentially all the far charge; 73053, 69049 and 68048 are sub-0.4 cm two-point specks, the same defect but negligible in charge, and are the ones I would let the owner reverse without changing the finding. NOT under-clustered: every non-member within 30 cm of the shower start sits at 88.7-131 deg from its axis (34017 at 88.7, 42025 at 106.8, 43026 at 118.3, 44027 at 124.6, 45028 at 130.6, 31014 at 100.3), i.e. sideways or behind, and the two vertex hadrons 8059/8060 read 3.35 cm / 144.4 deg while the 87.8 cm muon 8003 reads 3.18 cm / 167.0 deg -- all correctly left out. There is nothing on-axis and unclaimed to add, so this is over-clustered only, not both. PI0: no reco group, all three in-scope pio_id are -1, and kine_div says no pi0 group in this event. The pio-*.png frames carry the capture's AUTO-slotted top two (38021 + 74055), which per correction 3 is NOT the reconstruction's pairing. Priced anyway: E1 136.2 + E2 53.0, axis convention 52.5 MeV, vertex convention 33.3 MeV -- both far below 135 and the two disagree by 1.6x. Combined with 38021 being attached to the vertex, I propose NO pairing and store none. 74055 (53.0 MeV, 4 seg, detached 21.5 cm from the vertex, cmp_div 0.0-51.7 cm at 0.0-7.4 deg) is the more photon-like of the two but has no plausible partner. Showers NOT looked at: 22 of the 25. In-scope was only 8059, 38021, 74055; the 22 skipped are all below the 20 MeV floor. This verdict is a claim about shower 38021, not about the event, and it is a clustering claim -- silent on PID except where the note says otherwise. drag_check both true, probe_radius 255.3 px, probe_degenerate false.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt406125/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:48:55+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt406125/calib-pr-evt406125.json",
+ "subRunNo": 1
+}

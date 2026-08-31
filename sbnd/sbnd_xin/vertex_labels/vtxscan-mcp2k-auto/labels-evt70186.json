@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt70186",
+ "eventNo": 70186,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 39.57009013362289,
+  "y": -192.37389236781402,
+  "z": 6.635408113130164
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 39.57009013362289,
+   "y": -192.37389236781402,
+   "z": 6.635408113130164
+  }
+ ],
+ "reco_sep_cm": 0.006020305332368822,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 gives 2/2 rising away at a 110 degree junction: seg11001 (170cm) leaves at MIP and Braggs to 140k at 11000, seg11007 (54cm) leaves at 56k and rises to 128k at 11004 whose 6.7cm stub is the decay product.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt70186/calib-pr-evt70186.json",
+ "subRunNo": 1
+}

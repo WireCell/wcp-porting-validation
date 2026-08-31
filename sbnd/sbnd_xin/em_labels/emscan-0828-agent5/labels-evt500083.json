@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -81.19,
+   38.51,
+   86.49
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 664,
+  "cloud_cluster_ids": [
+   3
+  ],
+  "cloud_kept": 664,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 34931,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.305991279372805,
+   0.838976089522168,
+   0.4499871755482427
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.305991279372805,
+    0.838976089522168,
+    0.4499871755482427
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 166.1842078180931,
+   "kine_charge": 166.1842078180931,
+   "kine_charge_other_hypothesis": 99.960425755244,
+   "kine_dQdx": 163.71303576354856,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    3001,
+    3002,
+    30005
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -82.16174086970439,
+   22.21654136653839,
+   79.47137403983012
+  ],
+  "reco_start_vertex_id": 3001,
+  "shower": 3002,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -82.16174086970439,
+   22.21654136653839,
+   79.47137403983012
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt500083",
+ "eventNo": 500083,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 3,
+  "x": -82.16174086970439,
+  "y": 22.21654136653839,
+  "z": 79.47137403983012
+ },
+ "note": "[agent-bulk] nuecc, small event (r95 25.6 cm, 8 segments, 6 showers). Only ONE shower in scope: 3002 (pdg 11, kine_charge 166.2, 3 seg, 29.1 cm). Of the 5 skipped showers, four are 0.2-0.3 cm two-point stubs (29004 pdg 2212 at 12.5 cm/70.8 deg, 32007 at 19.5/25.7, 28003 at 24.1/105.1, 31006 at 52.9/96.2) and the fifth, 3008, is the substance of this entry. 3 frames looked at (az-055/el+20, az+085/el+20, az-055/el+65); the event is 26 cm across so the shower frames contain all of it including the vertex marker, and I did not open the vtx-* sweep separately -- the budget is a ceiling (correction 13). Vertex is good: 3002 and 3008 BOTH begin exactly on the star at (-82.2,22.2,79.5), so the star is the apex of the only two prongs in the event. CORRECT. The member set is a clean single cone: 3002 (13.5 cm) from the vertex out to 12.8 cm, then 3001 (15.1 cm, 1.6 deg to the axis) out to 25.6 cm, with the point cloud narrow at the start and broadening along it in all three views. Membership triple-checked: nseg 3 == owner-grouped 3 == cmp_div 3 (0.0-34.6 cm, 0.0-24.6 deg). THE ONE ITEM WORTH THE OWNER'S EYE, and the one I would let them reverse: 3008 -- 5.6 cm, 10 fitted points, kine_charge 29.9 MeV (18% of the shower's), reco pdg 11, in the SAME cluster 3 as the shower, touching the shower start at gap 0.00 cm, and left out as its own sub-20 MeV shower (kine_best 14.2, which is why the scope rule skipped it). This is exactly correction 16's case, so I settled it the prescribed way: the triple-check above says it is genuinely a non-member, not an ownership artefact. Two readings, and I chose between them rather than hiding behind unclear. (a) it is the second prong of the neutrino vertex -- correctly excluded; (b) it is the electron's own near-vertex charge broken off -- under-clustered by 30 MeV. I took (a): 3008 leaves the vertex at 30 deg to the shower's first leg, and 30 deg is not electron behaviour 0-5 cm from a shower start, where the electron is still a single narrow MIP stem (the picture confirms the stem is narrow there); a 30 MeV prong at that angle at the vertex reads as a second particle. It does lie inside the shower's near-vertex cloud in the el+65 projection, which is why I call this 'likely' and not 'certain'. ALSO NOT MARKED: 30005, a 0.5 cm two-point pdg-13 stub absorbed by pass3_cone at 34.6 cm / 24.6 deg, i.e. 9 cm past where the shower's own members stop -- a marginal over-absorption carrying negligible charge, named here rather than marked. No pi0: one EM cone in the event and no reco group. Verdict is about clustering and silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt500083/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:51:13+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt500083/calib-pr-evt500083.json",
+ "subRunNo": 1
+}

@@ -86,10 +86,230 @@ work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 cam
 # ONE T_tagger/T_kine ROW PER IN-BEAM FLASH BUNDLE.  Row 0 is NOT the event's
 # answer -- scripts/pr94_rows.py primary_index() is.  pr_scores_table.py
 # already applies it; anything else that hard-indexes [0] is wrong.
-work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
-work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
+# RELEASED 2026-08-25b (doc 81 sec 10), see the RETIRED section.  Superseded by
+# work-<s>-grp0825, which doc 81 sec 7 proved carries the SAME Q/L products
+# member-for-member (24536/24536 with the imaging half).  The reference side is
+# frozen in scripts/retire/state-20260825b/hashes/stagea-<s>.tsv before deletion,
+# so that PASS stays re-checkable.
+# work-nuecc48-ql0819 work-ncpi0-ql0819 work-mcp1k-ql0819 work-mcp2k-ql0819	prod0819 Q/L roots (48/19/1000/2000 evts), bare production at toolkit fd6a116d; input to the PR baseline below	doc pr/95
+# RELEASED 2026-08-23 (see RETIRED section): owner chose to DROP the prod0819 PR
+# arms and re-run production for all four samples at current HEAD instead.  The
+# four -ql0819 Q/L roots above are UNCHANGED and remain the campaign input.
+# work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	THE PR baseline: full 13-stage chain over 3067 evts, PR_EXTRA_STAGES=pr_display; each reads its matching -ql0819 root	doc pr/95
+
+# --- doc pr/102 missing-orphan-segment audit (added 2026-08-20) ------------
+# RELEASED 2026-08-23, owner: doc pr/102 r2 has shipped (len_admit=30 ON)
+# work-pr102-head-mcp1k work-pr102-dbg-mcp1k	pr/102 "after" epoch (fresh mcp1k at HEAD, pr_display + traj_cover_probe) and its reserved debug arm; also the round READS work-{mcp1k,mcp2k}-prod0819 above as before-epoch + relocated pr/96 calibration events	doc pr/102, docs/work-tags.md 2026-08-20
+# work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	pr/102 round-2 P1+P2 validation arms (census before/after + physics ledgers + exhibit smoke); owner scan pending	doc pr/102 round 2, docs/work-tags.md 2026-08-20
+
+# --- the current-production PR arms (added 2026-08-23) --------------------
+# doc pr/104 shipped SBND production ON 2026-08-21 (vertex_junction_snap +
+# vjs_override_kink_snap; toolkit a07222e2 + cfg flip c550541f).  Docs pr/105
+# and pr/106 then measured the selection stack and left production UNCHANGED,
+# and pr/107-111 are studies -- so pr/104 is still the production epoch on
+# disk.  -on4 is the env-forced product (48/19/1000 full, mcp2k 15-evt
+# subset); -flipchk is the post-flip BARE run (no env) that proves the
+# shipped jsonnet reproduces it, PASS 30/30 + 38/38 + 96/96 (doc pr/104 sec.6).
+# Keeping -flipchk is the lesson PROTECTED.txt records twice below
+# (work-pr87-postflip-*, work-cbr3-bare2evt): drop the bare-config arm and the
+# "shipped config == validated arm" claim becomes text-only the same day.
+#
+# THESE ARE SUPERSEDED THE MOMENT the 2026-08-23 re-run campaign lands with
+# full coverage for all four samples.  Release them in that follow-up pass,
+# not before -- until it exists they are the tree's ONLY PR product for the
+# three data samples.
+# --- prod0823: THE production PR baseline (added 2026-08-23, same day) -----
+# The re-run the owner authorised the prod0819 release against.  Full coverage
+# for all four data samples -- 48 / 19 / 1000 / 2000 = 3067 events, every one
+# rc=0 -- bare production (no SBND_* overrides), PR_EXTRA_STAGES=pr_display,
+# toolkit b5c9f43a, libWireCellClus.so md5 628444a7de4f9d224288b0ebf7c34e20,
+# each arm reading its matching -ql0819 Q/L root.  This is what mcp2k has not
+# had since the pr/104 flip: a 2000-event PR product at current production.
+#
+# PROVEN a same-epoch continuation of the pr/104 arms, not a new epoch:
+# pr85_hash_gate vs work-pr104-on4-* is PASS 96/96 (nueCC48), 38/38 (NCpi0),
+# 2000/2000 (mcp1k), 30/30 (the mcp2k 15-evt overlap), and vs the bare-config
+# work-pr104-flipchk-* another 96/96 + 38/38 -- 2164 archives byte-identical.
+# nusel-{table,events}.tsv identical on both small samples.  CONTROL, so the
+# PASS is not a stale-binary artefact (M1): tracking-pr.root DIFFERS on 10/10
+# nueCC48 events checked -- the three unknobbed pr/109 commits (a46b0ddb,
+# dd4d1373, 56683366) changed the T_proj_data ROOT dump and nothing else.
+# Consequence: any A/B a doc took against work-pr104-on4-* stays valid against
+# these arms.
+# RELEASED 2026-08-25b (doc 81 sec 10), owner: "I assume we can safely retire
+# ... and recover the disk".  prod0823 is explicitly PRE-flip (doc 81 sec 4) and
+# prod0825 is the production epoch on disk.  Its one remaining job -- serving as
+# the revert-proof reference -- was already exercised and the result is text in
+# doc 81 sec 4.
+#
+# COST, stated rather than absorbed: this was the LAST on-disk carrier of the
+# pr/104 production epoch, so every A/B docs pr/104 through pr/111 took against
+# that epoch is now TEXT-ONLY.  Knowingly the same shape as the pr94r3 and
+# work-pr87-postflip-* losses recorded below, taken deliberately.
+# What survives it: scripts/retire/state-20260825b/hashes/work-<s>-prod0823.tsv,
+# 9201 member-content rollups (3 products x 3067 events).  Read that as
+# INSURANCE, not gate preservation -- prod0825 sits at a different operating
+# point, so there was never a byte-identity claim between the two to keep
+# re-checkable.  What it buys is a future revert-reproduction: re-run at toolkit
+# b5c9f43a and diff against the frozen file.
+# work-nuecc48-prod0823 work-ncpi0-prod0823 work-mcp1k-prod0823 work-mcp2k-prod0823	THE production PR baseline, 3067 evts at toolkit b5c9f43a; reads the -ql0819 roots (ASSERT 8)	docs/work-tags.md 2026-08-23
+
+# doc 81 (2026-08-25): the group-mode re-baseline.  work-<s>-grp0825 is stage A
+# (imaging + Q/L, per-event layout) and work-<s>-prod0825 is stage B (PR) at the
+# CURRENT operating point -- dl_vtx_dual_chain/snapD2 (doc pr/112) and
+# fast_xgb_forest (doc 76 r1), both flipped ON AFTER prod0823 was produced.
+# Stage A is byte-identical to work-img-<s> + work-<s>-ql0819 on all 3067 events
+# (24536/24536 archives, scripts/multi/stagea_gate.py); stage B is byte-identical
+# to the pr112i-snapD2/flipchk arms.  These are the MCS and PR baseline.
+#
+# 2026-08-25b: BOTH reference sides named above are now retired, so grp0825 is
+# the sole carrier of stage A -- imaging AND Q/L -- for all four data samples.
+# Its protection is correspondingly harder: there is no longer a second copy of
+# these products anywhere in the tree, only the frozen member-content rollups in
+# state-20260825b/hashes/stagea-<s>.tsv.  A future round that releases a grp0825
+# arm is deleting the product itself, not one copy of two.
+work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A, 48/19/1000/2000 evts, per-event layout	docs/81_group-mode-production.md
+
+# --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
+# prod0823 above covers every sample at least as widely and is byte-identical
+# on every overlapping event, so these 8 arms (4.3 G) are redundant and are
+# the OBVIOUS release candidate for the next round.  NOT released here: that
+# is an owner call, and the round that created prod0823 should not also be the
+# round that destroys the thing it was gated against.
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-pr104-on4-nuecc48 ...
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-pr104-flipchk-nuecc48 ...
+
+# --- the current vertex-label epoch (added 2026-08-23) --------------------
+# 1756 of vertex_labels/vtxscan-vtx105-*'s `source` entries resolve into these
+# four arms -- the NEWEST label epoch (docs pr/105, pr/106).  The label JSON is
+# self-contained and survives regardless; these arms are what keeps the calib-pr
+# dumps behind them re-openable (pr85_panels2d.py, pr86_kink_census.py,
+# vtx_rules/carry_labels.py).  Every older epoch's dumps (harv3, prod0813,
+# vtx100) is already gone -- see the RETIRED section; this is the last one left.
+work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx105-base-mcp2k	calib-pr dumps behind the current vtxscan-vtx105-* label epoch (47/19/407/581 evts)	docs/pr/105, docs/pr/106, owner 2026-08-23
+
+# --- doc pr/111's live inputs (added 2026-08-23) --------------------------
+# The OPEN round.  Five scripts hardcode these two paths -- scripts/pr111_
+# {brittle,ensemble,dl_decomp,rival,rival_where}.py -- as the fit_exclusion
+# ON/OFF pair for the DL-vertex brittleness measurement.  Not a citation
+# inference: grep of scripts/ finds the absolute paths.
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-vtx106-harv-base-nuecc48 ...
+# RELEASED 2026-08-25 (doc 81), see the RETIRED section: work-vtx106-cne-on-nuecc48 ...
+
+# --- non-reproducible crash evidence (added 2026-08-23) -------------------
+# 2026-08-25b: MADE SELF-CONTAINED, and this is why the round's ASSERT 4 earns
+# its keep.  This arm's evt178410/ was a SYMLINK into work-img-mcp2k, and its
+# ql_evt178410/*.npz linked through it -- so retiring the imaging hubs would
+# have left five broken links inside the one arm this file calls
+# not-re-capturable, silently, with no error at delete time.  The link was
+# replaced by the real bytes it pointed at (cp -rL) BEFORE any deletion; the arm
+# grew 6.7 MB -> 17 MB and now depends on nothing outside itself.
+work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 17 MB, self-contained	doc pr/97
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+#
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-nuecc48-prod0825 work-ncpi0-prod0825 work-mcp1k-prod0825 work-mcp2k-prod0825  |  doc 81 stage B PR at the current operating point; ASSERT 8 reads its group build log  |  docs/81_group-mode-production.md
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr124r1-onA98-mcp1k work-pr124r1-onA98-mcp2k work-pr124r1-onA98-ncpi0 work-pr124r1-onA98-nuecc48  |  dump source for 50 hand-paired pi0 (em_display/pr126-pi0-manifest.tsv) and the 98-set EM census; the EM-scale fit cannot be re-checked without them  |  docs/pr/126 sec 3-4, owner 2026-08-29
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr124r1-onA141v2-mcp1k work-pr124r1-onA141v2-mcp2k  |  the 141-set half of the same pi0 manifest  |  docs/pr/126 sec 3
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr125r1-flipchk98-mcp1k work-pr125r1-flipchk98-mcp2k work-pr125r1-flipchk98-ncpi0 work-pr125r1-flipchk98-nuecc48  |  doc pr/126 sec 4f re-runs the identification census at the pr/125 production point out of these  |  docs/pr/126 sec 4f
+# RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
+# question "Do we need 0825prod?".  Traced through the CONSUMERS, not the
+# assert: every metric script (pr132_pi0_census, pr132_gamma_ledger,
+# pr135_pi0_peak_prod, pr126_pi0_census, pr126_pi0_mass, pr132_angle_census)
+# reads m_cur and NONE loads the scan-time manifest.  What the scan-time
+# reconstruction recorded per gamma survives in the 298 label JSONs.
+# GIVEN UP: pr126-pi0-mass.tsv is no longer rebuildable.
+# work-pr125r1-flipchk141-mcp1k work-pr125r1-flipchk141-mcp2k  |  the 141-set half of the sec 4f census  |  docs/pr/126 sec 4f
+
+#
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr128r1-on98-mcp1k work-pr128r1-on98-mcp2k work-pr128r1-on98-ncpi0 work-pr128r1-on98-nuecc48 work-pr128r1-on141-mcp1k work-pr128r1-on141-mcp2k  |  the gate reference doc pr/130 item 1 cites by label; doc pr/128 SHIPPED but the citing round is OPEN  |  docs/pr/130, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr129gf-nokine-mcp2k work-pr129probe-171572 work-pr129probe-mcp1k work-pr129probe-mcp2k work-pr129pt-meas-mcp2k work-pr129pt-on-mcp2k work-pr129r1-flipchk-mcp2k work-pr129r1-off-mcp1k work-pr129r1-off-mcp2k work-pr129r1-off-ncpi0 work-pr129r1-off-nuecc48 work-pr129r1-on141-mcp1k work-pr129r1-on141-mcp2k work-pr129r1-on98-mcp1k work-pr129r1-on98-mcp2k work-pr129r1-on98-ncpi0 work-pr129r1-on98-nuecc48  |  doc pr/129 SHIPPED today; its on98/on141 arms are the open round's production baseline  |  docs/pr/129, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr130-292643-guardoff work-pr130-47212-guardoff work-pr130-gs1-mcp1k work-pr130-gs1-mcp2k work-pr130-gs1-nuecc48 work-pr130-neutral-mcp2k work-pr130-probe-mcp2k work-pr130-probe2-mcp2k work-pr130-qx1-mcp1k work-pr130-qx1-mcp2k work-pr130-vtx-mcp1k work-pr130-vtx-mcp2k  |  doc pr/130 OPEN -- probe, guard-off and census arms of the live round  |  docs/pr/130, peer session 2026-08-29
+# RELEASED 2026-08-31 (doc pr/135 retire round): doc pr/130 is reported and
+# CLOSED, which is the release condition block 5 stated for itself -- "these
+# go when doc pr/130 is reported and closed, in the same pass that releases
+# the pr128r1-on gate label above".  Both halves done in this one pass.  The
+# six work-pr130r1-probe* arms are the stated EXCEPTION and stay active
+# above: their line claims non-reproducibility, not mere summarisation.
+# work-pr130r1-g1off-mcp1k work-pr130r1-g1off-mcp2k work-pr130r1-g1off-ncpi0 work-pr130r1-g1off-nuecc48 work-pr130r1-g1off141-mcp1k work-pr130r1-g1off141-mcp2k work-pr130r1-gd141off-mcp1k work-pr130r1-gd141off-mcp2k work-pr130r1-gs1on-mcp1k work-pr130r1-gs1on-mcp2k work-pr130r1-gs1on-ncpi0  |  doc pr/130's LIVE 239-event knob-off gate, being written while this round ran  |  docs/pr/130, peer session 2026-08-29
+
+
+# RELEASED 2026-08-25 by doc 81, after work-<s>-prod0825 passed its gates.
+# COST, stated rather than absorbed: doc pr/104's flip-equivalence evidence and
+# doc pr/111's fit_exclusion pair become TEXT-ONLY, and doc 81's own stage-B
+# PASS against work-pr112i-snapD2-* / -flipchk-* becomes text-only the same day.
+# The owner accepted that explicitly; prod0825 is the reference from here on.
+# work-pr104-on4-nuecc48 work-pr104-on4-ncpi0 work-pr104-on4-mcp1k work-pr104-on4-mcp2k	current-production PR product (junction snap ON), 48/19/1000/15 evts; each reads its matching -ql0819 root (ASSERT 8)	doc pr/104 sec.5
+# work-pr104-flipchk-nuecc48 work-pr104-flipchk-ncpi0 work-pr104-flipchk-mcp1k work-pr104-flipchk-mcp2k	the ONLY on-disk evidence the shipped post-flip jsonnet reproduces -on4 with no env	doc pr/104 sec.6
+# work-vtx106-harv-base-nuecc48 work-vtx106-harv-nofitx-nuecc48	fit_exclusion ON/OFF pair read by scripts/pr111_*.py (open round)	docs/pr/111
+# work-vtx106-cne-on-nuecc48 work-vtx106-cne-off-nuecc48	the pr/106 sec.10 dl_vtx_cloud_no_exclusion pair; listed in doc pr/111's own arm table (sec.2), which is why a script grep alone would have missed it	docs/pr/111 sec.2
+# 2026-08-23 -- the prod0819 PR arms and the whole pr/102 family, RELEASED.
+#
+# Owner, asked directly 2026-08-23 during the 203 G -> minimal round: "we can
+# drop this, and redo the production for the samples, so we keep the latest PR
+# production for all samples".  So the 08-19 baseline's PR layer goes and a
+# fresh full-coverage campaign at current HEAD replaces it.  The four -ql0819
+# Q/L roots are NOT released -- they are that campaign's input.
+#
+# COST, stated before running and accepted: doc pr/95's single-epoch baseline
+# is the reference docs pr/98-104 A/B'd against, and after this round those
+# comparisons are text-only.  mcp2k loses its only 2000-event PR product until
+# the re-run lands (work-pr104-on4-mcp2k covers 15 of 2000).  Also released
+# with it: work-pr96gate-{mcp2k,nuedisp} and work-pr96-{dbg1,dbg2,dbg3,fx1}
+# -mcp2k / work-pr96gate-disp -- the pr96gate pair was kept in 08-19 pass 1
+# solely to prove the mid-campaign relink was byte-equivalent ON THE PROD0819
+# ARMS (doc pr/95 sec.4b); with those arms gone the proof has no subject.
+#
+# work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod0819	the 08-19 single-epoch PR baseline; owner released 2026-08-23 in favour of a fresh full-coverage re-run at HEAD	doc pr/95, docs/work-tags.md 2026-08-23
+# work-pr96gate-mcp2k work-pr96gate-nuedisp	mixed-binary equivalence proof for the prod0819 arms; released with its subject	doc pr/95 sec.4b
+# work-pr102-head-mcp1k work-pr102-dbg-mcp1k work-pr102r2-offfull-mcp1k work-pr102r2-onfull-mcp1k work-pr102r2-on-nuecc48 work-pr102r2-on-ncpi0 work-pr102r2-onA-mcp1k work-pr102r2-onA-mcp2k	doc pr/102 audit + round-2 validation arms; the "owner scan pending" note dated 08-20 is discharged -- r2 shipped len_admit=30 ON and pr/103+pr/104 have flipped production twice since	docs/pr/102, docs/work-tags.md 2026-08-23
+#
 # 2026-08-19 (pass 2) -- the whole cbr3 family, the three DATA-sample valfast
 # cbr3on arms, and the 21 doc-pr/94 r3 flip-evidence arms.  SUPERSEDED by the
 # prod0819 baseline above, which is single-epoch where all of these were not.
@@ -231,3 +451,76 @@ work-nuecc48-prod0819 work-ncpi0-prod0819 work-mcp1k-prod0819 work-mcp2k-prod081
 # work-vfmcp1k-vf37a work-vfnuecc48-vf37a work-vfr1qlmc-vf37a work-vfr2mc-vf37a	A/A' floor arm A, setarch -R	doc pr/37 sec.2.5
 # work-vfmcp1k-vf37b work-vfnuecc48-vf37b work-vfr1qlmc-vf37b work-vfr2mc-vf37b	A/A' floor arm B, setarch -R (matched layout)	doc pr/37 sec.2.5
 # work-vfmcp1k-vf37c work-vfnuecc48-vf37c work-vfr1qlmc-vf37c work-vfr2mc-vf37c	cross-layout arm C, ASLR ON	doc pr/37 sec.2.5
+
+# =========================================================================
+# --- the 2026-08-29 round: the pi0 epoch, the hand-scan display defaults,
+#     the sentinel controls, and the open pr/130 gate  --------------------
+# =========================================================================
+#
+# WHY THIS BLOCK EXISTS.  The 08-29 round sweeps eleven CLOSED doc families
+# (pr/117-pr/128, doc 84 r1-r4, doc 114's em114*) -- 442 arms, 83 G.  Almost
+# every arm in them is an A/B leg whose verdict is already text in its doc.
+# The names below are the exceptions, and each is an exception for a DIFFERENT
+# reason.  A glob over the retiring family prefixes would sweep all of them,
+# so they are spelled out: plan_20260829.py ASSERT 7 refuses the round if any
+# line here is missing from KEEP.
+#
+# 1. THE pi0 EPOCH.  The owner's stated next major move is pi0 reconstruction
+# driven by the hand-scan results.  doc pr/126 fit the EM charge scale
+# (kine_shower_fudge_factor 0.80 -> 0.84, PEAK estimator) off 50 hand-paired
+# pi0, and em_display/pr126-pi0-manifest.tsv keys those 50 to calib-pr dumps
+# inside work-pr124r1-onA{98,141v2}-*.  doc pr/126 sec 4f re-ran the same
+# census at the pr/125 production point out of work-pr125r1-flipchk{98,141}-*.
+# The hand-scan LABELS are safe either way -- em_labels/ is 2 MB and outside
+# work-* -- but the dumps they are keyed to are not, and a label with no dump
+# cannot be re-fit.  Deleting these would make the 0.84 recommendation
+# text-only BEFORE the round that acts on it.  Verified this round: all three
+# manifests resolve 50/50, 98/98 and 141/141 (ASSERT 11).
+#
+# 2. HAND-SCAN DISPLAY DEFAULTS.  These are hardcoded DEFAULT arm names inside
+# the scan tooling, not citations: em_display/prep_pr117.py:17,28 and
+# em_display/prep_pr121.py:15.  Sweep them and the next scoring round breaks
+# only when someone runs the scorer without explicit arm args -- a silent trap,
+# which is exactly the failure ASSERT 10 was invented for (vtx_rules/
+# baselines.py, scripts/analysis/pr57/oc56_truth.py, both found weeks late).
+# The peer session confirmed these by grepping its own tools, not from memory.
+# work-pr117r1-onK1-{mcp2k,ncpi0,nuecc48} are NOT script defaults; they are
+# added so em_display/em117-117onK1-manifest.tsv resolves 98/98 rather than
+# 25/98, which keeps the 98-set display baseline whole for 558 MB.
+work-em114c-prodnow-mcp1k work-em114c-prodnow-mcp2k	hardcoded default arms in em_display/prep_pr121.py:15 (141-set display)	peer session 2026-08-29, verified by grep
+work-pr117r1-onK1-mcp1k	hardcoded default arm in em_display/prep_pr117.py:17,28 (98-set display)	peer session 2026-08-29, verified by grep
+work-pr117r1-onK1-mcp2k work-pr117r1-onK1-ncpi0 work-pr117r1-onK1-nuecc48	the other three samples of the same 98-set display baseline; keeps em117-117onK1-manifest.tsv whole (98/98) for 558 MB	docs/pr/117, 08-29 round
+#
+# 3. THE SENTINEL REGISTRY'S NEGATIVE CONTROL.  scripts/pr127_sentinels.py:31
+# names work-pr125r1-flipK5* as the canonical arm on which a sentinel is
+# EXPECTED to fail (the 137238 FAIL).  A registry of passing sentinels with no
+# worked failing case cannot be trusted to fail when it should -- doc pr/127
+# exists because a shipped fix died silently for ten days.
+# NOTE, found while checking this: the same docstring at line 30 also names
+# work-pr127r1-flipS{98,141}-* as its primary usage example, and those arms do
+# NOT exist on disk and were not created by this round's sweep -- the reference
+# was already stale before today.  Recorded here, not silently fixed; the peer
+# session owns that file.
+work-pr125r1-flipK598-mcp1k work-pr125r1-flipK598-mcp2k work-pr125r1-flipK598-ncpi0 work-pr125r1-flipK598-nuecc48	the sentinel registry's negative control (expect the 137238 FAIL); scripts/pr127_sentinels.py:31	docs/pr/127, peer session 2026-08-29
+work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the same negative control	docs/pr/127
+#
+# 4. THE GATE LABEL THE OPEN ROUND CITES.  doc pr/130's item-1 work reports its
+# probe arms as "gated SAME against work-pr128r1-on*".  CLAUDE.md's "report
+# gates by label" convention exists so a PASS can be re-checked later; deleting
+# the reference side while the citing round is still OPEN would defeat it.
+# Releasable once doc pr/130 closes -- but not by inference, by a decision.
+#
+# 5. THE OPEN pr/130 ROUND (peer session).  A concurrently-running session owns
+# a live 239-event knob-off gate for two new default-OFF knobs
+# (shower_pass4_prox_guard_len, shower_pass3_backfill_guard_len).  It asked
+# directly: "please leave the whole work-pr130* prefix alone until I say the
+# gate is reported."  work-pr129* is its current-production baseline and
+# work-sent130* is the sentinel suite guarding today's three flips.
+# RELEASE CONDITION, stated so a future round does not have to guess: these go
+# when doc pr/130 is reported and closed, in the same pass that releases the
+# pr128r1-on gate label above.  This round protected the whole prefix rather
+# than an enumerated subset precisely because the peer was still CREATING arms
+# while the plan ran -- work-pr130r1-gs1on-* and work-pr130r1-g1off141-*
+# appeared between the first census and the plan.
+work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0 work-pr130r1-probe98-nuecc48 work-pr130r1-probe141-mcp1k work-pr130r1-probe141-mcp2k	dump source for BOTH pr130q manifests and the census source for pr130_launder_scan.py; the 239-event blast-radius result is not reproducible without them	docs/pr/130, peer session 2026-08-29
+work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130

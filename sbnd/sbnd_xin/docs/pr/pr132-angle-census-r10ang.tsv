@@ -1,0 +1,67 @@
+setname	sample	event	labelsrc	klass	m_start	a_start	m_cent	a_cent	a_label
+98	ncpi0	21073	base	other	197.4	45.7	197.2	45.6	42.0
+98	ncpi0	37112	overlay	no-pair-on-tape					56.7
+98	mcp2k	47212	base	IN->IN	132.8	67.1	124.8	62.6	66.3
+98	mcp2k	54332	base	IN->IN	100.2	67.1	106.0	71.5	84.9
+98	ncpi0	56982	overlay	no-pair-on-tape					165.0
+98	mcp1k	64591	base	BELOW->IN	97.1	47.4	151.1	77.5	90.0
+98	ncpi0	71372	base	IN->IN	142.7	99.7	147.4	104.3	103.6
+98	mcp2k	76346	base	no-pair-on-tape					70.7
+98	mcp2k	99838	base	IN->IN	126.3	67.3	123.2	65.5	59.1
+98	ncpi0	105946	base	BELOW->BELOW/OUT	45.2	17.8	48.6	19.1	72.7
+98	ncpi0	142421	overlay	other	247.3	23.3	34.8	3.3	23.3
+98	mcp2k	165157	overlay	other	262.6	141.3	211.9	99.2	141.3
+98	mcp1k	166870	base	no-pair-on-tape					90.3
+98	mcp1k	169356	base	IN->IN	134.3	96.9	138.7	101.2	115.4
+98	mcp1k	169626	base	no-pair-on-tape					35.0
+98	mcp2k	173093	base	IN->IN	132.0	96.0	137.1	101.0	96.7
+98	mcp2k	176986	overlay	IN->IN	108.4	46.0	123.7	53.0	46.0
+98	ncpi0	259542	overlay	no-pair-on-tape					106.2
+98	nuecc48	269774	base	IN->IN	109.2	13.5	145.9	18.1	19.5
+98	mcp1k	278794	base	IN->IN	156.2	127.5	152.5	122.3	107.5
+98	mcp2k	281165	base	IN->IN	144.0	80.8	146.6	82.7	74.0
+98	mcp1k	281485	base	BELOW->BELOW/OUT	64.0	93.0	63.1	91.2	81.7
+98	mcp1k	281639	base	IN->IN	123.7	51.6	122.5	51.1	50.3
+98	mcp1k	284235	base	IN->IN	148.0	85.2	150.2	86.7	96.2
+98	ncpi0	285567	base	IN->IN	139.0	101.8	142.1	105.0	103.7
+98	ncpi0	314838	overlay	IN->OUT	124.3	26.3	18.2	3.8	26.3
+98	nuecc48	342199	base	no-pair-on-tape					75.3
+98	mcp1k	347129	base	no-pair-on-tape					85.7
+98	ncpi0	359980	base	other	179.9	34.6	174.8	33.6	34.4
+98	mcp2k	396222	overlay	other	753.8	71.0	268.8	23.9	16.3
+98	mcp1k	399052	base	IN->IN	151.5	43.0	149.5	42.4	43.6
+98	mcp1k	409634	base	BELOW->BELOW/OUT	79.3	59.6	54.2	39.7	28.3
+98	mcp2k	415278	overlay	no-pair-on-tape					50.5
+98	ncpi0	506114	base	no-pair-on-tape					60.6
+98	ncpi0	506746	base	IN->IN	147.2	31.4	152.0	32.5	29.0
+141	mcp2k	52044	base	IN->IN	101.9	112.2	101.3	111.2	110.5
+141	mcp1k	54341	base	BELOW->BELOW/OUT	67.1	53.6	64.4	51.3	64.1
+141	mcp1k	56243	base	other	164.4	91.2	153.9	84.0	73.5
+141	mcp2k	57709	base	IN->IN	147.9	68.2	152.4	70.5	76.3
+141	mcp1k	71178	base	no-pair-on-tape					131.8
+141	mcp2k	71872	base	no-pair-on-tape					100.6
+141	mcp2k	74123	base	IN->IN	141.1	98.1	157.8	115.3	124.6
+141	mcp2k	91917	base	IN->IN	127.1	81.5	132.7	85.9	89.9
+141	mcp2k	99782	base	IN->OUT	153.5	104.1	161.9	112.5	99.6
+141	mcp2k	103798	base	other	163.1	92.6	147.6	81.8	74.4
+141	mcp1k	168432	base	BELOW->IN	54.8	18.4	147.6	51.1	35.4
+141	mcp2k	171729	base	IN->IN	115.4	121.1	120.1	129.9	146.5
+141	mcp2k	242726	base	IN->IN	128.1	98.6	149.0	123.7	131.4
+141	mcp2k	280159	base	no-pair-on-tape					83.5
+141	mcp1k	280972	overlay	BELOW->BELOW/OUT	80.1	17.1	80.5	17.2	17.1
+141	mcp1k	283713	base	IN->IN	102.2	107.2	101.5	106.1	85.9
+141	mcp1k	285443	base	IN->IN	154.0	104.4	158.4	108.7	106.6
+141	mcp1k	286655	overlay	other	210.7	60.9	204.1	58.8	60.9
+141	mcp1k	292027	base	IN->IN	147.3	72.8	140.6	69.0	72.5
+141	mcp2k	292524	base	IN->IN	108.0	61.3	115.0	65.8	46.3
+141	mcp2k	347824	base	no-pair-on-tape					24.2
+141	mcp1k	348691	overlay	other	283.5	100.8	275.9	97.1	120.1
+141	mcp1k	349549	overlay	other	211.1	40.5	156.5	29.8	51.9
+141	mcp2k	392901	overlay	IN->OUT	129.1	56.0	209.0	98.9	56.0
+141	mcp2k	397630	overlay	IN->OUT	117.1	61.0	91.6	46.8	34.9
+141	mcp1k	399118	base	IN->IN	142.6	113.0	143.1	113.6	135.1
+141	mcp1k	400504	base	IN->IN	138.9	91.4	154.1	105.1	112.7
+141	mcp2k	403023	base	IN->OUT	154.5	90.3	160.6	94.9	97.8
+141	mcp1k	486907	overlay	other	163.4	37.6	159.0	36.5	37.6
+141	mcp1k	489327	base	IN->IN	120.6	58.5	125.5	61.1	73.1
+141	mcp2k	499577	base	IN->IN	114.4	133.3	116.7	138.9	153.0

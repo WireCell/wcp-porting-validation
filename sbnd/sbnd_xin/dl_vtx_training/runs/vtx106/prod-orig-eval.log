@@ -1,0 +1,44 @@
+events 1050 (carried 0, frozen 1050) skipped {'empty-cloud': 1, 'no-harvest-dump': 3}; harv-base/topo3 snapped-row mismatch 0
+live-pick resolution onto the pre-DL cloud: {'accept-id': 4964, 'final-id': 3165, 'unresolved': 55, 'pos<=3-unambiguous': 56, 'pos<=1.5': 176}
+
+d_target (click -> nearest pre-DL candidate), per sample [<=1 | 1-3 | 3-10 | >10]:
+  nuecc48    n=  47    39     8     0     0
+  ncpi0      n=  19    12     7     0     0
+  mcp1k      n= 405   339    55    11     0
+  mcp2k      n= 579   452   100    24     3
+  human      n= 751   616   105    27     3
+  ai-scanner n= 299   226    65     8     0
+  ALL        n=1050   842   170    35     3
+
+primary universe (d_target <= 3): 1012 ; secondary band: 35 ; candidate-missing: 3
+admission (target among snapped rows): top5 687/1012, top10 791/1012 ; reject-outcome coverage 997/1012
+
+### target-hit table, primary universe (n=1012)
+
+| method | ALL | nueCC48 | NCpi0 | mcp1k | mcp2k | IPW | human | AI |
+|---|---|---|---|---|---|---|---|---|
+| M1 DL alone (offline, legacy rule) | 561/1012 (55.4%) | 34/47 | 12/19 | 196/394 | 319/552 | 53.9% | 341/721 | 220/291 |
+| M1 DL alone (live dlonly arm) | 578/1012 (57.1%) | 34/47 | 12/19 | 203/394 | 329/552 | 55.8% | 353/721 | 225/291 |
+| M2 re-rank + topo (w=3) | 756/1012 (74.7%) | 35/47 | 14/19 | 295/394 | 412/552 | 76.7% | 497/721 | 259/291 |
+| M3 re-rank, no topo = PRODUCTION | 767/1012 (75.8%) | 35/47 | 14/19 | 300/394 | 418/552 | 77.6% | 506/721 | 261/291 |
+| production (live base arm) | 767/1012 (75.8%) | 35/47 | 14/19 | 300/394 | 418/552 | 77.6% | 506/721 | 261/291 |
+| min_accept 4 (live ma4) | 674/1012 (66.6%) | 35/47 | 14/19 | 252/394 | 373/552 | 67.6% | 434/721 | 240/291 |
+| top_k 10 (live topk10) | 767/1012 (75.8%) | 35/47 | 14/19 | 300/394 | 418/552 | 77.6% | 506/721 | 261/291 |
+| no DL, traditional (live trad) | 708/1012 (70.0%) | 27/47 | 8/19 | 288/394 | 385/552 | 71.3% | 473/721 | 235/291 |
+
+M3 classes: {'hit': 767, 'not-admitted': 58, 'reject-to-wrong': 139, 'wrong-accept': 34, 'veto-to-wrong': 11, 'uncovered': 3}
+
+### target-hit table, secondary band 3-10 cm (n=35)
+
+| method | ALL | nueCC48 | NCpi0 | mcp1k | mcp2k | IPW | human | AI |
+|---|---|---|---|---|---|---|---|---|
+| M1 DL alone (offline, legacy rule) | 12/35 (34.3%) | 0/0 | 0/0 | 6/11 | 6/24 | 38.4% | 9/27 | 3/8 |
+| M1 DL alone (live dlonly arm) | 13/35 (37.1%) | 0/0 | 0/0 | 7/11 | 6/24 | 40.9% | 10/27 | 3/8 |
+| M2 re-rank + topo (w=3) | 17/35 (48.6%) | 0/0 | 0/0 | 6/11 | 11/24 | 53.4% | 14/27 | 3/8 |
+| M3 re-rank, no topo = PRODUCTION | 18/35 (51.4%) | 0/0 | 0/0 | 7/11 | 11/24 | 54.8% | 14/27 | 4/8 |
+| production (live base arm) | 18/35 (51.4%) | 0/0 | 0/0 | 7/11 | 11/24 | 54.8% | 14/27 | 4/8 |
+| min_accept 4 (live ma4) | 16/35 (45.7%) | 0/0 | 0/0 | 6/11 | 10/24 | 42.6% | 13/27 | 3/8 |
+| top_k 10 (live topk10) | 18/35 (51.4%) | 0/0 | 0/0 | 7/11 | 11/24 | 54.8% | 14/27 | 4/8 |
+| no DL, traditional (live trad) | 15/35 (42.9%) | 0/0 | 0/0 | 6/11 | 9/24 | 46.6% | 11/27 | 4/8 |
+
+M3 classes: {'hit': 18, 'reject-to-wrong': 6, 'uncovered': 4, 'not-admitted': 4, 'wrong-accept': 3}

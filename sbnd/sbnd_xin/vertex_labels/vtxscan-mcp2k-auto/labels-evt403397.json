@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt403397",
+ "eventNo": 403397,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": -47.04226434575372,
+  "y": 45.21999118113331,
+  "z": 220.72502199733748
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 8,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 8002,
+   "x": -47.04226434575372,
+   "y": 45.21999118113331,
+   "z": 220.72502199733748
+  }
+ ],
+ "reco_sep_cm": 0.005468806997214611,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a ~98-degree kink: p4 shows the 92.5 cm muon Bragging to 155k at 8000 and the 19.4 cm proton rising monotonically along the proton template to 245k at 8004, both MIP-cool at 8002.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt403397/calib-pr-evt403397.json",
+ "subRunNo": 1
+}

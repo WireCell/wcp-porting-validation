@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt284206",
+ "eventNo": 284206,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -166.24733885491327,
+  "y": -102.8051727060589,
+  "z": 392.9598289570573
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 7,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10007,
+   "x": -166.24733885491327,
+   "y": -102.8051727060589,
+   "z": 392.9598289570573
+  }
+ ],
+ "reco_sep_cm": 0.005514863158294222,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rules 6+7: deg-7 apex of the only real structure, p5 cone RMS rises monotonically 0.2->4.0 cm away from 10007 (best far-near +2.0 cm of all apexes) and a 4.4 cm 4x-MIP proton stub hangs off the same point.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt284206/calib-pr-evt284206.json",
+ "subRunNo": 1
+}

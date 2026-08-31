@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-ncpi0/pr_evt180801",
+ "confidence": "medium",
+ "eventNo": 180801,
+ "main_vertex": {
+  "x": -33.87149884198972,
+  "y": -14.987666741353905,
+  "z": 445.33281894886306
+ },
+ "note": "ncpi0 but owner note 'incorrect nu vertex'; leading attached EM is a collinear split (15083+15082 at 0.5 deg axis); three detached gammas 81043/114078/112061 admit competing pairings (reco accepted two groups) with no topological discriminator under a mis-placed vertex",
+ "origin": "ncpi0",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "ncpi0",
+ "saved_utc": "2026-08-30T03:37:45.960664Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

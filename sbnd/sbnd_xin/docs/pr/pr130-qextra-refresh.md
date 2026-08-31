@@ -1,0 +1,576 @@
+# pr/130 item 1b — the other half of the charge error
+
+**Status: MEASURED. This is the recommended next round.** Scoring only: no
+knob, no C++, no config, nothing shipped, no arm launched.
+
+Companion to [`pr130-qmiss-refresh.md`](pr130-qmiss-refresh.md), which asked
+"is a q_miss hand-scan worth a scanner's time", answered **GO** on
+concentration, and found the premise fails out of sample — on the 141-set
+`q_extra` (2.514e7) is the larger half. This doc asks the question that
+finding raises and does not answer: **is the other half concentrated, and is
+it even a physics quantity?**
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+scripts/pr130_qextra_rank.py > docs/pr/pr130-qextra-rank.txt
+```
+
+Reads item 1's two score tables, `em_labels/` (read-only, M13) and the calib
+dumps. Nothing was written over; `pr130-qextra-rank.txt` is a fresh file.
+
+## The trap this doc exists to avoid
+
+`q_miss` and `q_extra` are **not symmetric** in `em117_score.py` (lines
+188-202):
+
+```python
+target = (members | ins) - outs   # members = shower membership AT SCAN TIME
+miss   = target - have            # reco dropped it
+extra  = have  - target           # reco holds it
+```
+
+`miss` is anchored on things the scanner actually saw. `extra` is a
+**complement**: a segment lands in it either because the scanner marked it
+`out` — an affirmative over-clustering complaint — or merely because it was
+not in that shower when the scanner looked. The second class includes every
+segment a **later, correct merge** added. Ranking on raw `q_extra` would
+score this campaign's own shipped merges as if they were errors.
+
+So the decomposition below is mandatory before any q_extra claim, and
+`q_miss` is held to the matching standard (a `miss` carrying an explicit `in`
+mark) so the comparison is like-for-like rather than strict on one side only.
+
+## The labels are two-sided — the concern does not void the pool
+
+`emscan-0828-agent5` (the 141-set scan) carries **83 explicit OUT marks
+against 59 IN marks**, on 30 of 57 marked showers. Scanners did affirmatively
+condemn over-clustering; OUT marks are ordinary, not rare.
+
+| 141-set, kept pool | charge | segments |
+|---|---|---|
+| q_miss **affirmative** (explicit IN, reco dropped it) | 1.345e7 | 35 |
+| q_miss weak (scan-time member, reco dropped it) | 4.554e6 | 22 |
+| **q_extra affirmative** (explicit OUT, reco still holds) | **1.731e7** | **22** |
+| q_extra weak (never judged, absent at scan time) | 7.827e6 | 151 |
+| **affirmative-only split** | **q_miss 43.7% / q_extra 56.3%** | |
+
+**The split gets sharper under the stricter standard, not softer** — q_miss
+falls from 48.4% to 43.7%. Over-clustering is the larger half of the 141-set
+charge error, and the decomposition strengthens rather than rescues that.
+
+The 98-set says the opposite, also more sharply: **q_miss 82.9% / q_extra
+17.1%** (3.429e7 vs 7.056e6). Both are true. The two manifests are disjoint
+and genuinely disagree about which failure dominates; the 141-set is the
+larger and out-of-sample one.
+
+Note the shape of the weak half: 151 segments for 7.827e6 — a long tail of
+small unjudged fragments, which is what an aging label set looks like. The
+affirmative half is 22 segments for 1.731e7.
+
+## The cross-set comparison is confounded — the two scans mark differently
+
+Before reading "43.7% vs 82.9%" as a statement about the reconstruction:
+
+| label tag | marked showers | IN marks | OUT marks | OUT share |
+|---|---|---|---|---|
+| `emscan-0827` (98-set) | 33 | 246 | 29 | **11%** |
+| `emscan-0828-agent5` (141-set) | 57 | 59 | 83 | **58%** |
+
+These are different marking habits, not a physics difference: the 98-set scan
+was IN-heavy (list what belongs), the 141-set scan was OUT-heavy (list what
+does not). So **the affirmative split partly measures which scan labelled
+which manifest**, and the claim has to be stated as a claim about a label
+set:
+
+> On the 141-set's labels, affirmative over-clustering (1.731e7) exceeds
+> affirmative under-clustering (1.345e7).
+
+It is **not** established that over-clustering exceeds under-clustering in
+the detector. That would need one scan protocol applied to both manifests.
+
+**What survives the confound intact** is the absolute pool, which needs no
+share at all: 22 segments carrying 1.731e7 of charge that a scanner
+explicitly condemned and the reconstruction still holds. The 98-set adds a
+further 22 segments / 7.056e6 on its own labels. Those 44 segments are the
+target list, and reasons 2-6 below do not depend on any percentage.
+
+## Concentration — the tightest target list this campaign has had
+
+**Ten events carry all the affirmative q_extra on the 141-set; the top four
+hold 73.7% of it in five segments.** (Not "top-10 = 100%" — with ten
+contributing events that is true by construction, the same empty statistic as
+the old "top-25 = 100%".)
+
+| event | shower | q_aff | nseg | condemned segment(s) | absorber |
+|---|---|---|---|---|---|
+| 100222 | 113236 (cl113) | 5.973e6 | 1 | 14003 (cl14, **110 cm, pdg 13**) d=38 a=4° | `pass4_proximity` |
+| 175896 | 17044 (cl17) | 3.531e6 | 2 | 66037 (6 cm, p), 66041 (18 cm, e) d≈34 a≈10° | `pass3_cone` |
+| 489327 | 19005 (cl19) | 1.804e6 | 1 | **19005** (23 cm, e) — the shower's own root, a=172° | own root |
+| 499577 | 13009 (cl13) | 1.456e6 | 1 | 95059 (cl95, 7 cm, p) d=30 a=22° | `pass3_cone` |
+| 286655 | 79023 (cl79) | 1.356e6 | 4 | four clusters, d=68–86, **a=137–150°** | `pass4_angle` |
+| 69232 | 20021 (cl20) | 1.166e6 | 1 | 20021 (27 cm, e) — own root | own root |
+| 350354 | 18092 (cl18) | 1.140e6 | 2 | 18008, 18015 (own cluster) | `conn3_unreachable`, `pass3_cluster_map` |
+| 278420 | 61027 (cl61) | 6.303e5 | 7 | seven clusters, **d=98–125 cm**, a=3–11° | `pass4_angle` |
+| 72786 | 16017 (cl16) | 1.855e5 | 2 | 9009, 31033 (1–2 cm) | `pass4_angle` |
+| 400504 | 62014 (cl62) | 7.242e4 | 1 | 21003 (1 cm) | `pass4_angle` |
+
+**Two failure modes, not one.** By charge, **76% (1.320e7, 18 segs)** is the
+shower reaching into a *foreign* cluster; **24% (4.111e6, 4 segs)** sits in
+the shower's own cluster — mis-rooting or over-extent, which is a different
+bug and must not be scoped away. Quoting only "18 of 22" hides that.
+
+The single largest item is one segment: a **110 cm pdg-13 track from cluster
+14 absorbed into a cluster-113 shower** (evt 100222), 5.973e6, 34.5% of the
+affirmative pool by itself.
+
+**Segment ids encode `cluster*1000 + index`** — verified against
+`seginfo["cluster"]` on every row. Id adjacency in the `extra` column
+therefore means *different clusters*, not "one cluster, sequential index". An
+earlier reading of these lists as within-cluster "contiguous chains" was
+wrong and is recorded here so it is not repeated.
+
+## The mechanism is on disk, not a guess
+
+`marks_detail[shower]["marked"][seg]["absorbed_by"]` records which absorber
+placed each condemned segment. Attribution by charge:
+
+| absorber | charge | share | segs |
+|---|---|---|---|
+| `pass4_proximity` (direct) | 5.973e6 | 34.5% | 1 |
+| `pass3_cone` (direct) | 4.987e6 | 28.8% | 3 |
+| *(none — shower's own root/extent)* | 2.970e6 | 17.2% | 2 |
+| `pass4_angle` (direct) | 2.244e6 | 13.0% | 14 |
+| `conn3_unreachable` (walk_add) | 6.351e5 | 3.7% | 1 |
+| `pass3_cluster_map` (direct) | 5.054e5 | 2.9% | 1 |
+
+Two leads fall straight out of the `dist`/`angle` columns:
+
+- **`pass4_angle` admits backward.** All four of 286655's segments come in at
+  **137–150°** — beyond the 110° that `stem_backfill_back_guard` (pr/120)
+  declines on. The backward test exists in one absorber and not in this one.
+  286655 is also one of the eight events that guard fires on, so the same
+  event is being fixed by one path and re-broken by another.
+- **`pass4_angle` tier 2 admits far.** All seven of 278420's segments arrive
+  at **98–125 cm** with angles of 3–11° — well-aligned but distant. That is
+  the parked "contiguous far chains" complaint and the owner's pr/128 "don't
+  count far-away over-clustering" term, now with an absorber name on it.
+
+Note the count/charge inversion: `pass4_angle` placed 14 of the 22 segments
+but only 13% of the charge, while `pass4_proximity` and `pass3_cone` placed 4
+segments and 63%. A round that optimises for segment count would work on the
+wrong absorber.
+
+## Why this is the round to run
+
+1. **The pool is pre-adjudicated.** All 22 segments carry a scanner OUT mark.
+   A q_miss round needs a fresh hand-scan before it can start; this one
+   starts from judgements already on disk.
+2. **It is disjoint from worked ground** — the top-10 q_extra and top-10
+   q_miss event lists share **zero** events on the 141-set.
+3. **Concentration**: 10 events, 22 segments, top-4 = 73.7%, and one segment
+   is 34.5%.
+4. **The mechanism is already named** (above), so the round opens on a fix
+   hypothesis rather than a census.
+5. **It is a different question from the last five rounds.** pr/119, pr/128,
+   pr/129 and both halves of pr/130 all asked "which candidate should the
+   absorber admit" and all came back measured-dead on admission-time
+   geometry. This asks what the absorber *did*, against truth, with the
+   answer key already written.
+6. Three targets connect to open items: **278420** (parked far-chain
+   complaint), **286655** (a `stem_backfill_back_guard` firing candidate),
+   **72786** (the pr/128 CONTROL sentinel — 1.855e5 of condemned cosmic
+   charge still inside its shower).
+
+## What is NOT established
+
+- **That over-clustering dominates the detector.** See the confound above.
+  The 141-set claim is about the 141-set's labels.
+- **The 98-set does not support a q_extra-first reading of the split**
+  (82.9 / 17.1 there), though it contributes 22 more condemned segments.
+  A round aimed at q_extra must gate on both manifests.
+- **`absorbed_by` is the label store's record, not a re-run.** It should be
+  reconfirmed against a live `pr93_absorb_dbg()` census before a knob is
+  designed on it.
+- **Attribution of the −6.01e6 q_extra drop** noted in the companion doc
+  (94392, 52693) still needs a knob-off arm.
+
+Related: [`pr130-qmiss-refresh.md`](pr130-qmiss-refresh.md),
+[`130_guard-freed-overcount.md`](130_guard-freed-overcount.md) Part 4-6.
+
+---
+
+# Part 2 — the census run: guards are being overruled
+
+**Status: MEASURED at today's production point.** The doc above listed
+"`absorbed_by` is the label store's record, not a re-run" as not established.
+It is now established, and the re-run found the mechanism.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_qextra_census.sh qx1      # 10 events, byte-neutral stderr census
+./scripts/pr130_qextra_attrib.py          # label attribution vs the live run
+```
+
+Arms `work-pr130-qx1-mcp{1,2}k` (fresh labels, M13). Probes are
+`WCT_SHOWER_{ABSORB,CONTENT,PID,TOPO}_DEBUG` — stderr only.
+
+## Attribution holds: 20 of 22
+
+The label store's `absorbed_by` agrees with the live census on **20 of the 22**
+condemned segments. The two that moved both moved for a legible reason — a
+guard shipped *after* the scan was made, so the segment now arrives by a
+different route:
+
+| event | seg | label said | live says |
+|---|---|---|---|
+| 175896 | 66041 | `pass3_cone` | `pass3_cluster_map` |
+| 350354 | 18008 | `conn3_unreachable` | `pass3_cluster_map` |
+
+## The finding — a guard declines it, another site admits it anyway
+
+**Two of the 22 segments were explicitly DECLINED by a guard and then absorbed
+into the very same shower by a different site. Those two segments carry
+8.770e6 of charge — 50.7% of the entire affirmative q_extra pool.**
+
+**evt 100222, seg 14003** — the 110 cm pdg-13 muon, 5.973e6, the single
+largest item in the pool (34.5%):
+
+```
+SHOWER_ABSORB P120_P3CONE seg=14003 pdg=13 len_cm=110.32 shower_start_seg=113236
+                          site_ang=4.35 dist_cm=38.41 ang15=4.35 ang60=2.41
+pr93 cone_absorb_guard: decline absorb           seg=14003 pdg=13 len=110.3cm
+pr93 cone_absorb_guard: decline sibling backfill seg=14003 pdg=13 len=110.3cm
+SHOWER_ABSORB DIRECT site=pass4_proximity shower_start_seg=113236 seg=14003 pdg=13
+```
+
+pr/93's `cone_absorb_guard` refuses this segment **twice** — once for the
+absorb, once for the sibling backfill — and `pass4_proximity` then puts it
+into shower 113236 regardless. Same segment, same shower, later pass.
+
+**evt 175896, seg 66041** — 18 cm e-, 2.797e6 (16.2%): declined by pr/124's
+`pass3_cone_guard`, then admitted by `pass3_cluster_map`.
+
+## Why this matters more than a threshold
+
+Every round from pr/119 through pr/130 Part 5 asked *"can a geometric
+predicate tell an admissible candidate from an inadmissible one?"* and came
+back measured-dead. This says the question was aimed one step too early:
+**on the two largest items in the over-clustering pool the guards already
+make the right call and are then overruled.** No new predicate is needed for
+those; the existing decision needs to survive to the end of the pass chain.
+
+It also explains a pattern this campaign kept re-encountering — pr/123's
+"chain-laundering" finding, and the pr/130 Part 4 observation that 286655 is
+both a `stem_backfill_back_guard` firing event and a `pass4_angle` over-cluster.
+Those are the same phenomenon seen from different sides.
+
+## Proposed fix — sticky declines, DEFAULT OFF
+
+When a guard declines segment S for shower H, record `(S, H)` and have the
+later direct-absorb sites honour it. Knob `shower_absorb_decline_sticky`,
+default `false`; key-suppressed in jsonnet so the compiled config is
+byte-identical when off (§2). Expected blast radius from the census: the two
+events above, plus whatever else the 239-event census turns up — measure
+before claiming.
+
+**Not yet done, and required before any claim:** the 239-event census to size
+the true blast radius, the knob itself, the byte-identical knob-off gate on
+both manifests, and a Bee A/B for the owner. This section is a measurement and
+a design, not a shipped fix.
+
+## What this does not cover
+
+The other 20 condemned segments (8.54e6, 49.3%) were **never declined** — no
+guard looked at them and said no. `pass4_angle` placed 14 of them
+(286655 at 137–150°, 278420 at 98–125 cm). Those still need the admission-side
+work, and sticky declines will not touch them.
+
+---
+
+# Part 3 — blast radius of the overruled-guard pattern (all 239 events)
+
+**Status: MEASURED, no new runs.** Part 2's finding needed sizing before a
+knob could be designed. The peer session's item-1 probe arms already carry the
+absorb census over both standard manifests, so this costs nothing.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_launder_scan.py > docs/pr/pr130-launder-scan.txt
+```
+
+Matching rule: a guard's decline line does not name the shower, but it is
+emitted inside a candidate block whose preceding `SHOWER_ABSORB` line carries
+`shower_start_seg=`, so the scan tracks that context and pairs
+`(segment, shower)`. A decline for shower A followed by an admit into shower B
+is a different phenomenon and is reported separately, not folded in.
+
+## Result — 10 occurrences over 6 of 239 events
+
+| event | seg | shower | declined by | admitted by |
+|---|---|---|---|---|
+| 100222 | 14003 | 113236 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 137238 | 145067 | 143056 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 175896 | 66041 | 17044 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 176502 | 20008 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 176502 | 20013 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 176502 | 109123 | 109119 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 176502 | 109141 | 109119 | `pr93 cone_absorb_guard` | `pass4_proximity` |
+| 396222 | 9080 | 9059 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 396222 | 9098 | 9059 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+| 415278 | 24072 | 23012 | `pr124 pass3_cone_guard` | `pass3_cluster_map` |
+
+Plus **2** cases where the decline was for one shower and the admit into
+another (415278 segs 23022, 23047) — counted separately because "a different
+shower took it" is not obviously the same bug.
+
+**Exactly two declining guards and exactly two admitting sites, perfectly
+paired**: `cone_absorb_guard` is only ever overruled by `pass4_proximity`
+(4/4), `pass3_cone_guard` only ever by `pass3_cluster_map` (6/6). That is a
+much narrower fix than "make declines sticky everywhere" — two call sites
+need to consult two decisions.
+
+## Two events that need the owner before anything ships
+
+- **137238** is pr/93 r4's own sentinel event (`sccc demote+bridge`, doc
+  pr/127). A fix here changes an event the registry asserts on, so the
+  sentinel has to be re-measured in the same round, not after.
+- **415278** is the pr/124 declined trade-off — already adjudicated and
+  crossed off the q_miss pool. Changing it re-opens a settled item.
+
+Neither blocks the knob (default OFF), but both mean the ON arm's Bee A/B
+must put those two events in front of the owner explicitly.
+
+## Where this leaves the round
+
+Measured, in order:
+
+1. Over-clustering is the larger half of the 141-set's affirmative charge
+   error (56.3%), on a label set whose marking habit is stated (Part 1).
+2. The pool is 22 segments in 10 events, top-4 = 73.7% (Part 1).
+3. The label store's absorber attribution holds against a live run, 20/22
+   (Part 2).
+4. **Half the pool's charge (50.7%) is segments a guard already refused**
+   (Part 2).
+5. That pattern is 10 objects in 6 of 239 events, through exactly two
+   guard→site pairs (Part 3).
+
+Not done: the knob, its gate, and the Bee A/B. `shower_absorb_decline_sticky`
+now has a measured blast radius to be checked against, which is what was
+missing when Part 2 proposed it.
+
+## Adjacency check — the pairing is not an artifact of the running context
+
+The scan pairs a decline with the most recent `shower_start_seg=` seen, which
+could in principle attach a decline to the wrong shower if candidate blocks
+interleave. Checked on all 10:
+
+- **9 of 10 EXACT**: the context line naming the shower also names the same
+  segment, 1–2 lines before the decline. No interleaving.
+- **1 WEAK** (176502 seg 109141): the decline sits inside an unbroken run of
+  `pass3_cluster_map` absorbs that all carry `shower_start_seg=109119`, and
+  the segment's own admit line names that shower explicitly
+  (`SHOWER_ABSORB DIRECT site=pass4_proximity shower_start_seg=109119
+  seg=109141`, log line 13747, vs the decline at 13592). Substantively
+  confirmed; only the two-line adjacency proof does not apply.
+
+The admit side is never inferred — every `SHOWER_ABSORB DIRECT` line carries
+its own `shower_start_seg=`.
+
+**Read the charge share with care.** The 50.7% figure is two segments, one of
+which (100222 seg 14003) is 34.5% of the pool by itself; drop it and the
+figure is 16.2%. The finding that carries weight is the **scan**: 10 objects
+over 6 of 239 events through exactly two guard→site pairs, which does not
+depend on any one event.
+
+---
+
+# Part 4 — the two guard seats: built, gated, and STOPPED at the ON arm
+
+**Status: knobs SHIPPED DEFAULT OFF (toolkit `82e7b21a`). NOT proposed for a
+flip — the ON arm fails two sentinels, and the failures are not
+threshold-tunable.** Reporting rather than iterating, per CLAUDE.md §5.5/§5.7.
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./scripts/pr130_arms.sh 98  g1off 0 ; ./scripts/pr130_arms.sh 141 g1off141 0
+./scripts/pr130_arms.sh 98  gs1on 0    SBND_SHOWER_PASS4_PROX_GUARD_LEN=50 SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN=15
+./scripts/pr130_arms.sh 141 gs1on141 0 SBND_SHOWER_PASS4_PROX_GUARD_LEN=50 SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN=15
+python3 scripts/pr85_hash_gate.py work-pr130r1-g1off-mcp2k work-pr129r1-on98-mcp2k    # and the other five pairs
+python3 scripts/pr127_sentinels.py --arms 'work-pr130r1-gs1on-*' 'work-pr130r1-gs1on141-*' work-sent130-mcp{1,2}k
+```
+
+## What shipped
+
+Two knobs, both C++ default 0 = off, key-suppressed in the sbnd jsonnet:
+`shower_pass4_prox_guard_len` and `shower_pass3_backfill_guard_len`. Each
+reuses its **sibling seat's own predicate and threshold** (pr/123's 50 cm at
+`pass4_angle`, pr/124's 15 cm at `pass3_cone`) rather than a newly fitted
+one — the finding is that the same predicate should apply at every seat.
+
+## Validation that passed
+
+- **Knob-off gate: PASS 478/478 archives byte-identical** over all 239 events
+  of both manifests, vs current production `work-pr129r1-on{98,141}-*`.
+  Labels `work-pr130r1-g1off-{mcp1k,mcp2k,ncpi0,nuecc48}` and
+  `work-pr130r1-g1off141-{mcp1k,mcp2k}`.
+- **Compiled-config proof**: both keys absent with the knobs off; present as
+  50 / 15 in the ON arm's `TaggerCheckNeutrino` data block.
+- `./build/clus/wcdoctest-clus`: 235 passed, 0 failed (incl. two new pins).
+- Freshness proof before the gate: lib 17:26:03 > sources 17:25:05.
+
+## The intended fix works
+
+**100222** — the target. The 110 cm pdg-13 track leaves the EM shower and
+becomes its own object: `e-/gamma 2523 -> 2203 MeV` (−320), a standalone
+`mu- 271 MeV` appears, nshowers 13 -> 14. **175896** — `e- 256 -> 114 MeV`, a
+`proton 159 MeV` appears. **137238**, pr/93 r4's own sentinel event, is
+**PF-identical** — the risk flagged in Part 3 did not materialise.
+
+## The ON blast radius is 10 events, not the census's 6
+
+| | events |
+|---|---|
+| predicted by the census and confirmed | 100222, 175896, 176502, 396222, 415278 |
+| predicted, **no change** | 137238 |
+| **not predicted** | 393505, 399118, 71642, 71872, 72786 |
+
+The census listed only segments that an *earlier guard had already declined*.
+The knobs are general track guards at their seats, so they also decline
+segments no guard had refused (e.g. 396222 seg 9084, a 114 cm pi+). **The
+laundering census is not the blast radius** — stating this because Part 3's
+framing invited exactly that error.
+
+**One of the unpredicted movers closes an item from another round.** On 399118
+the seat declines `seg=16017 pdg=2212 len=108.8cm` — that is pr/128's named
+"largest single remaining loss", its 481.0 MeV proton. The decline stamps
+`kPass4GuardFreed`, so pr/123's guard-freed pool now emits it and **it is
+drawn**; it stays out of `kine_reco_Enu` because pr/129's pointing test SKIPs
+it at `miss_deg=151.6` (4.94 cm from the vertex, aimed away). So pr/128's
+proposed fix — a vertex-proximity arm with *no kink term* — is doubly dead: the
+owner already rejected 399118 as over-clustering, and such an arm would now
+re-admit precisely the object pr/129 was built to exclude. Traced by the pr/131
+session against `95346dc5`; verified here from this arm's own log.
+
+## STOP — two sentinels fail on the ON arm
+
+`27 PASS, 2 FAIL, 0 SKIP`. Both FAILs PASS on the knob-off arms of the same
+binary, so both are caused by these knobs.
+
+**72786 — pr/128's cosmic CONTROL.** `pf_node_lt mu- 250` fails: seen 344,
+281, 268, 238. The guard fires correctly on four segments — 9004 (143.5 cm
+mu), 9006 (114.3 cm mu), 9008 (64.7 cm pi), 45038 (108.3 cm mu) — which are
+pr/128's four documented cosmics. It pulls them **out of the shower**, which
+is the right call; they then render as standalone PF `mu-` nodes, which is
+what the sentinel forbids. `log_absent 'pr128 pf-orphan-near-cross-cluster'`
+still passes, so pr/128's path is not re-admitting them.
+
+This is an **owner question, not a threshold**: pr/129's precedent on 393505
+was "OK to be in PR" — a cosmic may legitimately appear as a PF track while
+being kept out of Enu. If that reading holds here, pr/128's `pf_node_lt`
+assertion is the wrong proxy and needs rewriting; if it does not, the knob
+genuinely regresses 72786. I am not the one to decide which.
+
+**55740 — a shipped pr/128 fix goes silent.** `log_contains 'pr128
+pf-orphan-near-cross-cluster'` fails: the line is emitted once with the knobs
+off and not at all with them on. The PF output is **byte-identical** (55740
+is not in the 10 changed events) — the 123.1 cm muon still joins PF, by a
+different route. A shipped fix stopped firing on its own target event with no
+observable output change. That is precisely the pr/127 failure mode this
+registry exists to catch, and it is the third instance in this round after
+66366 and the pr/129 KEEP-side entries.
+
+## Where this leaves the knobs
+
+Default OFF, gated byte-identical, committed, documented. **Not proposed for a
+flip.** Tuning 50 / 15 to make the sentinels pass would be exactly the
+parameter-fitting §5.7 forbids, and would also abandon the round's own
+argument that the sibling's threshold is the right one.
+
+What it needs next is an owner reading of 72786 — *may a guard-freed cosmic
+appear as a PF track?* — because the answer decides whether this is a
+regression or a sentinel that needs rewriting. 55740 needs its own look
+regardless: a masked pr/128 knob is a standing exposure whether or not these
+knobs ever flip.
+
+## Bee A/B for the two sentinel FAILs (`bee/pr130r3/`)
+
+Both arms are the **same binary**, differing only in the two knobs — not an
+older production arm, so anything visible is caused by the guards.
+
+- OFF (`work-pr130r1-g1off141-mcp2k`): `a22bf7d4-bd8b-4600-b62b-9b52d441d467`
+- ON (`work-pr130r1-gs1on141-mcp2k`): `48ae2376-190b-4b9c-bcd0-8bfb9016a513`
+
+idx 0 = 72786 (the ruling), idx 1 = 55740 (mechanism change, no output
+change). Annotated index: `bee/pr130r3/pr130r3.index.txt`.
+
+---
+
+# Part 5 — SBND PRODUCTION ON (owner flip 2026-08-29)
+
+Owner ruling on `bee/pr130r3`: *"I think these two are OK, you can turn the
+knob on for SBND."* Both guard seats flipped.
+
+```
+shower_pass4_prox_guard_len     = 50   // pr/123's own value at pass4_angle
+shower_pass3_backfill_guard_len = 15   // pr/124's own value at pass3_cone
+```
+
+Neither threshold is a refit — each is the sibling seat's shipped value, which
+is the round's whole argument. **If pr/123's 50 or pr/124's 15 is ever
+changed, these must be changed with it or the seats drift apart.** Noted in
+the jsonnet comments and in the registry.
+
+- **Compiled-config proof of the flip**: with no env overrides,
+  `.wct-cfg-evt{100222,72786}.json` carry both keys at 50 / 15 in the
+  `TaggerCheckNeutrino` data block.
+- **The flipped default reproduces the TLA-driven arm exactly**: PASS 4/4
+  archives byte-identical, `work-pr130-flipchk-mcp2k` vs
+  `work-pr130r1-gs1on141-mcp2k`. So `work-pr130r1-gs1on{,141}-*` are valid
+  labels for the new production point.
+- Blast radius as measured in Part 4: **10 of 239 events**.
+
+## Sentinels — two re-baselined, two added
+
+**Registry at the new production point: 31 PASS, 0 FAIL, 0 SKIP.**
+Negative control on the knobs-off arms: 100222, 175896 and 72786 all **FAIL**,
+so none of the three can pass vacuously.
+
+| event | change | why |
+|---|---|---|
+| **72786** | `pf_node_lt mu- 250` → `log_contains 'pr130 pass4_prox_guard: decline seg=9004'` | The old assertion now describes the *wrong* state. The owner ruled a guard-freed cosmic may be a PF track, consistent with pr/129 on 393505 ("OK to be in PR"). What must still hold is that the cosmics stay **out of the shower** — if a future change re-absorbs them the guard stops declining and the line vanishes. `log_absent 'pr128 pf-orphan-near-cross-cluster'` kept unchanged. |
+| **55740** | re-scoped to **outcome-only** (`pf_node_ge mu- 250`) | Its `pr128 pf-orphan-near-cross-cluster` line is no longer emitted while PF stays byte-identical. Same shape as 66366: the knob is masked on its own target event, so the log assertion would fail for something that is not a regression. **pr/128 class A now has no event guarding its knob being alive** — a standing exposure, recorded not papered over. |
+| **100222** | NEW | `pf_node_ge mu- 250` + `pf_node_lt e- 2400` + the decline line. Pre-flip e- 2523 with the 110 cm track inside and no standalone muon; post-flip e- 2203, mu- 271. |
+| **175896** | NEW | `pf_node_ge proton 100` + `pf_node_lt e- 200` + the decline line. Pre-flip e- 256 with seg 66041 re-adopted and force-relabelled pdg 11 (no proton node at all); post-flip e- 114, proton 159. |
+
+## Standing exposures after this round
+
+1. `pr/128 class A` — no event guards its knob being alive (55740 masked).
+2. `long_muon_stub_bridge_len` — same, since pr/130 Part 2 (66366 masked).
+3. `stem_backfill_back_guard`'s second side — still waiting on the 292643 /
+   179369 fix, which is item B and is not started.
+
+---
+
+# Part 6 — the 98-set's own 22, in a doc of their own
+
+Part 1 measured the affirmative q_extra pool on both manifests, analysed the
+141-set's 22 segments, and left the other 22 with one line ("the 98-set adds a
+further 22 segments / 7.056e6 on its own labels ... those 44 segments are the
+target list"). They are **not** one target list.
+
+Opened in [`pr130-qextra-98set.md`](pr130-qextra-98set.md). Headline: the
+98-set's pool is three events of **EM-to-EM mis-partition** (two carry the
+scanner's own note "should be a separate gamma ... then a pi0"), max segment
+length **11.5 cm** against guard floors of 15 and 50 cm, **0 of 22** reachable
+by any shipped guard — verified by diffing the Part-4 flip arms, which leave
+all three events identical — **16.3% double-counted** with a sibling shower's
+q_miss, and **2 of 3** showers rooted on a condemned segment. The two pools
+share one absorber out of eight. No knob proposed.

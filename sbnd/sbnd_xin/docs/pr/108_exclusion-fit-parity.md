@@ -1,0 +1,469 @@
+# doc pr/108 — Is the exclusion fit's impact the same in the prototype and the toolkit? (2026-08-21)
+
+**Status:** audit + two dedicated tests done; **no production change**. Test A (toolkit self-test)
+PASSES exactly: the dQ/dx fit is bit-for-bit independent of the association pass (382 fits,
+45 552 points, max|ΔdQ| = 0). Test B (prototype vs toolkit, exclusion MATCHED on uBooNE 5384,
+four arms) shows the exclusion *mechanism* is the same but its *measured impact is not
+functionally identical*: in the prototype, exclusion ON raises the charge within 3 cm of a
+multi-prong junction on 9/11 junctions (+3…+15 %); in the toolkit the same switch gives +18…+33 %
+on two events and 0…−4 % on three. Absolute ON-vs-ON junction charge agrees to 0.85–1.02 on 6/11
+junctions, 0.72–0.75 on 6805 and 2.2× on 6806 (input-data treatment, §6). On SBND the toolkit's
+exclusion-ON trajectory carries **13 % less charge within 1 cm of the target vertex** than OFF,
+and pr/107's keep-all does not recover it (§5) — the opposite sign from what both implementations
+do on uBooNE. §9 traced the 6806 2.2× to an ill-conditioned dQ/dx system, and §10 (owner: repeat the
+exercise at a junction with no dead channel) confirms the fit itself is sound: at junctions where
+every plane constrains the fit it is 100–300× stiffer (κ ≈ 0.5–3), the two implementations agree on
+the junction charge to ~5 % and on the exclusion delta to ~2 pp. Owner to direct the next step (§7).
+
+Owner (2026-08-21): "double check between the prototype and toolkit implementations carefully …
+1. organization of the input data for the fit? 2. possible sharing of dQ/dx fit? … if the fitted
+track trajectory is the same, I assume the fitted dQ/dx would be the same with and without the
+exclusion … Most of my existing work was done with this exclude fit off, until recently … the
+main issue is really this exclude fit knob's impact. What we want is functionally identical."
+
+## 0. Repro block
+
+```bash
+# toolkit 74d63484 + this round's TrackFitting.cxx (Test A hook, env-gated, no knob); lib 15:1x > src
+cd toolkit && ./wcb build --notests -p && ./wcb install --notests -p
+# Test A: sbnd_xin/scripts/pr108_testA.sh  (OFF gate 1 event vs work-pr107-off, then 3 events with the check)
+WCT_DQDX_ASSOC_CHECK=1 SBND_FIT_EXCLUSION=true SBND_DQDX_FIT_KEEP_ALL_POINTS=true PR_JOBS=4 \
+  ./run_pr_chain_batch.sh work-nuecc48-ql0819 work-pr108-assoccheck-nuecc48 data 10550 46363 81597
+grep -h dqdx_assoc_check work-pr108-assoccheck-nuecc48/pr_evt*/wct_pr_evt*.log
+# Test B, WCT arms (qlport/uboone-mabc.jsonnet + run_one.sh gained fit_exclusion / dqdx_fit_keep_all_points TLAs):
+#   sbnd_xin/scripts/pr108_wct.sh -> qlport/scripts/sweep/pr108_wct_{off,on,onkeep}/<idx>_<ev>/track_com_5384_<ev>.root
+#   (idx 1 4 6 16 22 23 = events 6505 6528 6532 6650 6805 6806; setarch -R; DL off)
+# Test B, WCP arms (prototype_base/pid patched: WCP_FIT_EXCLUSION=0 forces exclusion OFF in do_multi_tracking;
+#   rebuilt with ./waf-tools/waf build --targets=WCPPID,wire-cell-prod-nue-port in prototype-dev env):
+#   sbnd_xin/scripts/run_wcp.sh on|off <evts> -> qlport/scripts/sweep/pr108_wcp_{on,off}/nue_5384_<sr>_<ev>.root
+# comparators:
+python3 sbnd_xin/scripts/pr108_fit_point_compare.py A.root B.root --kind-a wcp --kind-b wct --undo-u07   # per point
+python3 sbnd_xin/scripts/pr108_junction_charge.py --ref WCP-on.root --arm L=file[:kind] ... --undo-u07    # charge near junctions
+```
+
+## 1. Audit: what is the same (file:line on both sides)
+
+| item | toolkit | prototype | verdict |
+|---|---|---|---|
+| dQ/dx fit reads the association maps? | `TrackFitting.cxx:6245-7418` — zero uses of `m_3d_to_2d`/`m_2d_to_3d`/`associated_2d_points` | `PR3DCluster_multi_dQ_dx_fit.h` — zero uses of `map_3D_2D*_set` (not in the signature, `PR3DCluster.h:237`) | **same: never** |
+| 2-D measurements | whole per-cluster charge map (`m_cluster_charge_data`, 6267-6320), every cell a row | whole `map_2D_*_charge` (`:141-173`), every cell a row | same |
+| coupling window | `search_range=10` wires / 10·ticks (6784-6811) | `<= 10` channels & `<= 10` slices (`:371,390,411`) | same |
+| sharing between segments | one simultaneous system; vertex = one shared column; 10 Gaussian sub-samples per point | same (`:96-117`, `:239-312`, `:804-808`) | same |
+| regularisation | λ 0.0005·8/5 = 0.0008; close 0.15·5/3 = 0.25 / 0.45·5/3 = 0.75; dead 0.3/0.9; ×0.01 when `!flag_dQ_dx_fit_reg` | 0.0008; 0.25/0.75; 0.3/0.9; ×0.01 (`:757-797`) | same |
+| uncertainties | rel 0.075/0.05, add 0/300 | same (`:53-57`) | same |
+| end-point extension | `end_point_limit/2` = 0.3 cm (8521, never restored) | `end_point_limit` = 0.3 cm after round 2 (`:106`, `:188`) | same |
+| shared-wire error inflation | `update_dQ_dx_data`, `share_charge_err=8000`, synced to the per-cluster map (6254-6263) | `update_data_dQ_dx_fit` 8000 (`_dQ_dx_fit.h:1067-1073`) | same rule, **different "other cluster" set (C3)** |
+| exclusion `update_association` | interior points only, rounds 1-2, keep iff strictly nearer or < 0.3 cm; -1 sentinel → 1e9 (pr/98) | `multi_track_fitting.h:970-1096`, interior only, same rule | same |
+| vertex associations | never exclusion-filtered, always stored (3648-3707) | same (`:901-963`) | same |
+| pass between the last trajectory round and dQ/dx | third `form_map_graph(flag_exclusion)` (pr/28 T4) — drops zero-quantity points unless `dqdx_fit_keep_all_points` | none (`reset_fit_prop` = resize, `:175-188`) | same point set only with pr/107 ON |
+| DL input cloud | vertices (fit point, dQ) then segment interior fits, `dQ·0.1−1000`, no filter | `NeutrinoID_DL.h:16-33`, identical | same |
+
+So the owner's premise holds in both implementations: **the dQ/dx fit depends on the exclusion fit
+only through the trajectory point set and positions** — exactly in the prototype, and in the toolkit
+once pr/107 keeps every point. Test A proves the toolkit half numerically (§3).
+
+Candidate divergences (measured or recorded, not acted on):
+- **C1 — pr/98 §1's justification was wrong.** It states "the prototype's dQ/dx consumes the
+  round-2 exclusion-filtered associations" — it consumes none. That sentence is why the third pass
+  received `flag_exclusion`, and hence why the drop existed. Correction appended to pr/98 and to
+  `do_multi_tracking_review.md` §4.3; `porting_dictionary.md` entry added.
+- **C3 — "shared wire" set**: toolkit = a blob outside *all loaded* clusters (`update_dQ_dx_data`,
+  `track_blobs_set` over `m_clusters`); prototype = an mcell outside *this* cluster. Measured on
+  6805: channels with err = 8000 — WCP U/V/W 205/87/244 vs WCT 656/255/0 (§6).
+- **C4 — prototype end-vertex regulariser bug**: `connected_vec` pushes `indices.size()-2` (a size,
+  not an index) for the end vertex (`multi_dQ_dx_fit.h:723`); toolkit uses `fits[size-2].index`
+  (7211). Recorded in `porting_dictionary.md` as an intentional divergence (the toolkit is right).
+- **C5 — prototype U-plane /0.7 rescale** on uBooNE channel ranges (`:870-885`), not in the
+  toolkit; undone in the comparator (`--undo-u07`) for Test B.
+- **C6 — the uBooNE parity chain never matched exclusion**: `qlport/uboone-mabc.jsonnet` passed no
+  `fit_exclusion` while the stored prototype references ran with it ON (28/30 sites). Every
+  WCP-vs-WCT fit comparison before this doc compared exclusion-ON to exclusion-OFF. Fixed by the
+  two new TLAs (default off, compiled JSON byte-identical — `cmp` against the pre-change tree).
+
+## 2. Prototype exclusion switch (Test B infrastructure, owner-approved)
+
+`prototype_base/pid/src/PR3DCluster_multi_track_fitting.h`, top of `do_multi_tracking`: if
+`WCP_FIT_EXCLUSION=0` is in the environment, `flag_exclusion = false` (the two `break_segments`
+sites already pass `false`). Unset ⇒ behaviour unchanged. Rebuilt `libWCPPID.so` +
+`wire-cell-prod-nue-port` only (the full `waf build install` dies on an unrelated `paal` test compile
+error). Run from the build dir with `LD_LIBRARY_PATH` = `prototype_base/build/*` + `install/lib64`.
+**Check:** WCP-on re-run vs the stored references `prototype_base/nue_5384_*.root`: positions
+identical on 6/6 events (282/282, 164/164, 257/257, 246/246, 208/208, 67/67 points at |Δ| = 0);
+fitted dQ identical except 1–2 points per event on 3 events (max dq/q 1.65 / 4.81 / 6.58) — the
+prototype's own run-to-run dQ/dx jitter (BiCGSTAB), worth knowing before reading any sub-% number.
+
+## 3. Test A — toolkit self-test: dQ/dx is association-independent
+
+`WCT_DQDX_ASSOC_CHECK=1` (debug-only env, no config, no knob; unset ⇒ no code path): after each
+`dQ_dx_multi_fit`, snapshot every fitted dQ/dx, rebuild the associations with the **opposite**
+`flag_exclusion` on the same point set (keep-all forced), refit, compare, restore.
+nueCC48 10550 / 46363 / 81597 with `fit_exclusion` + keep-all ON: **382 fits, 45 552 segment
+points, max|ΔdQ| = 0, max|Δdx| = 0, max|Δpos| = 0 on every call** (`work-pr108-assoccheck-nuecc48`).
+OFF gate (env unset, 10550) vs `work-pr107-off`: PASS 2/2. The claim "same trajectory ⇒ same
+dQ/dx with and without exclusion" is exact in the toolkit.
+
+## 4. Test B — four arms on uBooNE 5384, per junction
+
+Events with two ≥3-prong junctions in the main cluster (from the reference `T_rec_charge`): 6505,
+6528, 6532, 6650, 6805, 6806. Arms: WCP-on (= stored reference), WCP-off (§2), WCT-on
+(`fit_exclusion=true`), WCT-off (today's qlport state), WCT-on+keep (`dqdx_fit_keep_all_points`).
+`T_rec_charge` q is the DL feature `dQ·0.1−1000` on both sides (`NeutrinoID.cxx:1883/1980`,
+`UbooneMagnifyTrackingVisitor.cxx:387/476`); the comparators invert it to raw dQ.
+
+**Trajectories.** Position-matched (nearest point, ≤0.5 cm): WCP-on vs WCT-on median |Δpos|
+0.13–0.26 cm with signed medians ≈ 0 — the two curves coincide to within the 0.6 cm sampling
+phase, on every event. Exclusion moves the interior of each prong by < 0.06 cm median on both
+sides; near junctions median 0.13–0.31 cm on both sides.
+
+**WCT-on vs WCT-on+keep**: identical on 5/6 events (0 points differ); 6528 adds 25 retained points
+with every existing point unchanged. On uBooNE the pr/107 drop is almost absent (SBND: 443/47 events).
+
+**Charge within 3 cm of each reference junction** (ΣdQ, raw, vertex row counted once; `pr108_junction_charge.py`, `--undo-u07`):
+
+| evt J | WCP on | WCP off | Δ(off→on) | WCT on | WCT off | Δ(off→on) | WCT-on / WCP-on |
+|---|---|---|---|---|---|---|---|
+| 6505 J0 | 953 k | 871 k | +9 % | 968 k | 937 k | +3 % | 1.02 |
+| 6505 J1 | 1118 k | 992 k | +13 % | 1057 k | 990 k | +7 % | 0.95 |
+| 6528 J0 | 791 k | 750 k | +5 % | 673 k | 554 k | **+21 %** | 0.85 |
+| 6528 J1 | 593 k | 604 k | −2 % | 576 k | 440 k | **+31 %** | 0.97 |
+| 6532 J0 | 941 k | 798 k | **+18 %** | 847 k | 882 k | −4 % | 0.90 |
+| 6532 J1 | 740 k | (vertex lost, 32 cm) | — | (no vertex within 3.8 cm, either arm) | — | — | — |
+| 6650 J0 | 951 k | 920 k | +3 % | 825 k | 840 k | −2 % | 0.87 |
+| 6650 J1 | 858 k | 795 k | +8 % | 802 k | 799 k | 0 | 0.93 |
+| 6805 J0 | 491 k | 437 k | +12 % | 353 k | 365 k | −3 % | **0.72** |
+| 6805 J1 | 433 k | 394 k | +10 % | 323 k | 334 k | −3 % | **0.75** |
+| 6806 J0 | 703 k | 791 k | −11 % | 1547 k | 1039 k | **+49 %** | **2.20** |
+| 6806 J1 | 604 k | 690 k | −12 % | 1406 k | 961 k | **+46 %** | **2.33** |
+
+Within 1 cm the picture is the same with more scatter (table in `108_junction-charge.txt`).
+
+Reading:
+1. **Same sign on most junctions, different magnitude.** Prototype: ON > OFF on 9/11 (+3…+18 %).
+   Toolkit: ON > OFF by +21…+49 % on 6528/6806, but −2…−4 % on 6532/6650/6805 where the prototype
+   gains +3…+18 %. The exclusion's *impact* is therefore not functionally identical at the
+   junction-charge level, even though the mechanism is line-for-line the same (§1).
+2. **Where the toolkit's OFF arm loses badly, its fit is pathological**: 6528 WCT-off has 26
+   negative fitted charges (segment 19009 at 1.6–7.3 cm from J0, dQ −1 000…−8 600) and the 6528
+   WCP-off has none (census: WCP-on/off 0/0, WCT-on/off 14/26 negative points, 8 each at dQ = 0).
+   So the toolkit's exclusion-OFF fit can fail at a junction where the prototype's does not — the
+   configuration the owner's historical work ran in.
+3. **Absolute ON parity** is 0.85–1.02 on 6/11 junctions, 0.72–0.75 on 6805 and 2.2× on 6806 —
+   an input/fit-organisation difference, not an exclusion one (§6).
+
+## 5. SBND — the same readout on the pr/106/107 arms (47 nueCC48 events, own pre-DL cloud)
+
+Cloud charge within R of the target vertex, summed over the 47 events (raw dQ, ×10⁶):
+
+| arm | R ≤ 1 cm | R ≤ 2 cm | R ≤ 3 cm |
+|---|---|---|---|
+| exclusion ON + drop (production) | 8.42 | 17.75 | 27.49 |
+| exclusion ON + keep-all (pr/107) | 8.44 | 17.67 | 27.45 |
+| exclusion OFF (global, pr/106 §9) | **9.70** | 18.97 | 28.55 |
+
+On SBND the exclusion-ON *trajectory* carries 13 % less charge within 1 cm of the vertex than the OFF
+one, and retaining the dropped points changes nothing (+0.2 %) — the pr/106 §9 "OFF gain" is a
+trajectory effect of the exclusion in the toolkit on SBND, with the **opposite sign** from what both
+implementations show on uBooNE (§4, ON > OFF). The prototype cannot run SBND, so the SBND-side
+parity has to be argued from the uBooNE test, and on uBooNE the toolkit's exclusion delta already
+does not track the prototype's event-for-event.
+
+## 6. Input-data organisation (secondary, recorded)
+
+`T_proj_data` totals (measured / predicted 2-D charge, channels with err = 8000):
+
+| evt | WCP-on | WCT-on |
+|---|---|---|
+| 6505 | n 6666; U 11.95/10.69 M (96 shared) V 11.13/10.45 (0) W 15.00/10.92 (0) | n 6466; U 12.40/11.09 (371) V 11.12/10.49 (0) W 15.18/10.88 (574) |
+| 6805 | n 6228; U 7.59/4.65 (205) V 7.41/5.81 (87) W 11.61/6.29 (244) | n 4949; U 8.56/5.61 (656) V 7.92/6.54 (255) W 10.87/6.60 (0) |
+| 6806 | n 1759; U 2.54/1.99 (0) V 7.06/2.04 (0) W 0.87/0.83 (0) | n 1186; U 2.53/2.71 (0) V 6.66/2.70 (18) W 0.84/0.81 (0) |
+
+The measured maps differ by 5–13 % in extent and content (different channel sets, C3's shared-wire
+set differs by hundreds of channels), so absolute dQ parity of 10–30 % (6805) is input-side; 6806's
+2.2× sits on a V-plane overlap region (7.06 M measured vs 2.0 M predicted on both sides) where the
+fits diverge. 6528 WCT `charge_pred` is ~0 on all planes — the toolkit's `T_proj_data` prediction
+dump is broken for that event (dump only; the fit itself is fine). Not pursued this round.
+
+## 7. Open / owner decision
+
+- The exclusion mechanism is the same; its measured impact is not. The leads, in order: (a) the
+  toolkit's exclusion-OFF fit producing negative charges at a junction where the prototype's does not
+  (6528) — i.e. the OFF path, the one most SBND work was validated in, is the more suspicious side;
+  (b) the SBND sign flip (§5); (c) C3 (shared-wire set) for absolute parity.
+- A larger uBooNE sample (all 17 events with a junction) would turn §4 into statistics; the 6-event
+  set is indicative.
+- Nothing flipped; `dqdx_fit_keep_all_points` stays OFF; the Test A hook is debug-only.
+
+Sidecars: `108_junction-charge.txt` (four arms, R = 1/2/3), `108_point-deltas.txt`, scripts
+`pr108_fit_point_compare.py`, `pr108_junction_charge.py`, `pr108_testA.sh`, `pr108_wct.sh`,
+`run_wcp.sh`; arms `qlport/scripts/sweep/pr108_{wct_off,wct_on,wct_onkeep,wcp_on,wcp_off}`,
+`sbnd_xin/work-pr108-{off1,assoccheck}-nuecc48`.
+
+## 8. Stage-by-stage dump (owner 2026-08-21: "track down where the ON-vs-OFF delta diverges")
+
+Both sides now carry a debug-only, env-gated dump of every trajectory round (`WCT_TRAJ_DUMP` /
+`WCP_TRAJ_DUMP`, same record layout; toolkit `TrackFitting::traj_dump_fits` + a per-point record in
+`form_map_graph`; prototype `wcp_traj_dump_fits` + a record in `form_map_multi_segments`): per
+interior point the association cell counts before exclusion, after `update_association`, after
+`examine_point_association`, the live-plane quantity, kept/dropped, `dis_cut`; and the fitted
+positions (+dQ, dx) after round 1, round 2 and the dQ/dx fit.  Arms re-run with the dump
+(`qlport/scripts/sweep/pr108e_{wct_off,wct_on,wcp_on,wcp_off}`; `scripts/pr108_stage_diff.py`; full
+output `108_stage-diff-all.txt`, summary `108_stage-summary.txt`).  The call compared on each side is
+the last `do_multi_tracking` whose final trajectory reaches the junction.
+
+Per junction, first association round (points within 3 cm; cells stripped by exclusion / cells
+associated, WCP-on vs WCT-on), then the final near-junction ΣdQ delta off→on on each side:
+
+| junction | map1 stripped / assoc (WCP / WCT) | map2 stripped / assoc | WCP off→on | WCT off→on | fit3 \|Δpos\| WCP-vs-WCT (ON / OFF) |
+|---|---|---|---|---|---|
+| 6505 J0 | 260/1258 vs 204/1283 (n 6/6) | 115/1114 vs 154/993 | +13 % | +7 % | 0.18 / 0.08 |
+| 6505 J1 | 474/1480 vs 509/1603 (7/7) | 286/1439 vs 423/1519 | +15 % | +12 % | 0.26 / 0.30 |
+| 6528 J0 | 386/1249 vs 464/1057 (7/6) | 229/1218 vs 299/1060 | +1 % | **+27 %** | 0.30 / 0.30 |
+| 6528 J1 | 374/1121 vs 351/753 (6/4) | 216/902 vs 279/782 | −4 % | **+34 %** | 0.29 / 0.31 |
+| 6532 J0 | 261/1127 vs 145/1017 (5/5) | 139/1018 vs 226/1025 | **+29 %** | −3 % | 0.18 / 0.17 |
+| 6650 J0 | 257/879 vs 468/1243 (6/8) | 158/968 vs 419/1303 | +4 % | −8 % | 0.26 / 0.31 |
+| 6650 J1 | 315/1058 vs 244/1087 (7/6) | 127/946 vs 239/1009 | +2 % | 0 | 0.24 / 0.11 |
+| 6805 J0 | 114/840 vs 48/818 (4/3) | 62/837 vs 48/560 | +12 % | −2 % | 0.19 / 0.11 |
+| 6805 J1 | 114/840 vs 48/552 (4/2) | 62/774 vs 48/565 | +15 % | −2 % | 0.19 / 0.13 |
+| 6806 J0 | 456/1413 vs 447/1236 (7/6) | 211/1042 vs 281/1058 | −13 % | **+74 %** | 0.19 / 0.31 |
+| 6806 J1 | 423/1094 vs 409/1048 (5/5) | 189/809 vs 258/829 | −14 % | **+73 %** | 0.19 / 0.37 |
+
+Where the divergence is and is not:
+- **Association stage — same.** With exclusion ON the two implementations associate the same number
+  of cells per point (within the 0.2 cm sampling phase), strip comparable numbers of cells
+  (6806: 456 vs 447; 6528 J1: 374 vs 351; 6505 J1: 474 vs 509), keep the same points, and compute the
+  same live-plane quantities (`<q>` within 0.05).  The toolkit strips more on the second round at most
+  junctions (its round-2 trajectory is re-sampled more finely: n 14–20 vs 13–17 points) — a
+  difference in `organize_segments_path_2nd` sampling, not in the exclusion rule.
+- **Trajectory positions — same to the sampling phase.** Final fitted positions agree at
+  0.08–0.37 cm median on every junction, ON and OFF alike; the ON→OFF displacement within each side
+  is also ≤ 0.3 cm.
+- **dQ/dx solution — where it diverges.** With trajectories this close, 6806's +74 % (WCT) vs −13 %
+  (WCP) and 6528's +30 % vs 0 come out of the charge *solution*, not the trajectory.  6806's
+  junction sits where the W plane is dead (`T_proj_data` W: 0 cells on WCT, 162 zero-charge cells on
+  WCP) and the V plane is heavily overlapped (measured 3.8 M vs predicted 1.3–1.8 M within ±6
+  channels): a two-plane, overlapped system is ill-conditioned, and there WCT-ON over-predicts U
+  (1458 k predicted vs 1195 k measured) while WCT-OFF (993 k) and WCP-ON (767 k) do not — every point
+  within 2 cm of J0 carries ~2× the charge in WCT-ON (seg 1 pt 1: 115 k vs 60 k OFF vs 52 k WCP).
+  The PR topology also differs: the prototype's final fit of that cluster has 11 segments / 64 points,
+  the toolkit's 4 / 50.
+- On SBND this is the same class of place (junction, shared cells, one plane weak) where the
+  ON trajectory loses 13 % of the charge within 1 cm (§5).
+
+So the exclusion *mechanism* is parity-exact through the association stage; what is not identical is
+how the dQ/dx solution (and the pattern recognition that decides how many prongs share the junction)
+responds to the exclusion-ON trajectory at ill-conditioned junctions.  That is the place to look next:
+the regulariser/`connected_vec`/dead-plane weights path of `dQ_dx_multi_fit` at a junction with a dead
+or overlapped plane (C4 is exactly there), and why the toolkit's PR keeps fewer segments at 6806.
+
+Answer to the owner's question "what did pr/107 change then?": it changed the *point set* given
+to the fit (443 junction points un-deleted), not the fit given a point set; the retained points took
+the neighbouring prong's overlap charge and moved the prongs' early dQ/dx, which the EM-shower
+clustering reads.  Consistent with Test A.
+
+## 9. The dQ/dx system itself (owner 2026-08-21: "you see the smoking gun, continue on this dQ/dx dump")
+
+Both sides now dump the assembled system after the solve (`WCT_DQDX_DUMP` / `WCP_DQDX_DUMP`, debug
+only): per 3-D position the coupled rows per plane, the response-column sums, the data pull
+b = Rᵀ·data per plane, the regulariser row, the connected list with overlaps, the solution, plus the
+full sparse A, b and the solver's iteration count/error (`scripts/pr108_dqdx_diff.py`; arms
+`qlport/scripts/sweep/pr108g_{wct_on,wct_off,wcp_on,wcp_off}`).  Same Eigen 3.4.0 on both sides.
+
+**6806 J0 (the 2.2× junction), matched position by position (43/46):**
+- The local terms agree: same coupled rows per plane (U 30–47, V 35–55), response sums within
+  10 %, data pulls b within 0.65–1.17, diagonals of A within 0.85–1.03 (two points 1.7), regulariser
+  entries within 10 %, identical dead-W flags, identical `local_dx`.
+- The solver is converged on both sides (BiCGSTAB 68–82 iterations, err ≈ 1e-16; a direct solve of
+  the dumped A,b reproduces each side's solution to 1e-6) — **the solve is not the difference**.
+- Swapping the systems: WCT-A with WCP-b → 764 k (≈ WCT's 747 k); WCP-A with WCT-b → 397 k
+  (≈ WCP's 416 k): the factor sits in A, not in the data.  Yet swapping only the diagonals sends
+  the near-junction charge to −308 k / +78 k.
+- Perturbation test: multiplying the entries of A by (1 + N(0, ε)) and re-solving, the charge
+  within 1.5 cm of J0 spans **[−0.70, +1.76]× at ε = 1 %** on WCP-ON and [−1.28, +1.86]× on WCT-ON
+  (same on the OFF arms).  On 6528 J0: ε = 1 % → ±10–25 %, 3 % → ±30–60 %.  cond(A) 1–3·10³.
+
+So at a junction with a dead plane and an overlapped second plane the simultaneous dQ/dx fit is an
+ill-conditioned system in **both** implementations: the overlapped V charge can be split among the
+four prongs and the vertex in many ways at nearly equal χ², the regulariser (λ = 8·10⁻⁴, dead-plane
+weights 0.3/0.9) does not pin the split, and a few-percent change of the couplings (a 0.2 cm
+re-sampling of the trajectory, one more or one fewer point) moves the junction charge by a factor of
+two.  The ON-vs-OFF delta (+74 % WCT, −13 % WCP) and the WCT-vs-WCP difference are both inside that
+band.  No port bug produces this; the two codes are functionally identical up to the sampling phase,
+and the instability is a property of the method at such junctions.
+
+**SBND (toolkit only, same dump):** 46363 (the pr/107 vertex fix): the system at the target vertex
+is well-conditioned (ε = 3 % → ±3 %) and the near-vertex charge is the same ON and OFF (119.5 k /
+119.5 k): that vertex changed by selection/topology, not charge.  360535 (one of the largest §5
+contributors, OFF 742 k vs ON 494 k within 3 cm at DL time): both systems are well-conditioned
+(±2 %) — the difference is which trajectory points lie within the radius (ON: 9 points from two
+prongs, OFF: 5), i.e. how the prongs are organised at the vertex, not the charge solution.
+
+**Where this leaves the owner's goal** (exclusion-ON pattern recognition *and* a DL-friendly vertex
+charge): the exclusion fit is not the defect to fix; the two implementations already agree.  The
+instability to address is the dQ/dx split at multi-prong junctions when a plane is dead or overlapped —
+candidate levers, all default-OFF knobs: (a) a stronger junction regulariser (raise the dead-plane /
+close-wire weights or λ when ≥3 prongs meet within the coupling window; C4 sits in this term),
+(b) a positivity/smoothness prior for the vertex column, (c) for the DL cloud specifically, a
+charge proxy that does not depend on the split (e.g. the summed 2-D charge within the window, which
+both sides agree on to 5–10 %).  The prototype's training data carry the same instability, so (c)
+would also have to be evaluated against the existing net.
+
+## 10. A junction with no dead channel (owner 2026-08-21: "pick another vertex where there is no dead channel involved and do the same exercise again — I want to confirm again the dQ/dx fit is not an issue")
+
+Repro (dumps ~10 s/event/arm; the analysis is offline):
+
+```bash
+# the four remaining test events, all four arms, same binaries as sec 9 (libWireCellClus.so and
+# prototype_base/build/pid/* both 16:36, the sec-9 dumps 16:38 -- one binary era, no rebuild between)
+bash scripts/pr108h_wct_dump.sh                # WCT off/on, idx 1 6 16 22 -> sweep/pr108h_wct_{off,on}
+bash scripts/pr108h_wcp_dump.sh on ; bash scripts/pr108h_wcp_dump.sh off   # ev 6505 6532 6650 6805
+python3 scripts/pr108_dqdx_cond.py --j 108.84 48.26 1029.27 \
+  --dump WCP-on=…/pr108h_wcp_on/dqdx_6505.dump --dump WCT-on=…/pr108h_wct_on/dqdx_1.dump \
+  --dump WCP-off=…/pr108h_wcp_off/dqdx_6505.dump --dump WCT-off=…/pr108h_wct_off/dqdx_1.dump
+python3 scripts/pr108h_kappa_loc.py        # kappa over all of A vs the near-J block only (table 1b)
+python3 scripts/pr108h_sbnd_census.py      # SBND: kappa at every junction of the main cluster (sec 10.2b)
+# full output for all 9 junctions x 4 arms + the SBND census: docs/pr/108_dqdx-conditioning.txt
+```
+
+**Instrument.** §9's perturbation was an ad-hoc script that was not kept; §10's
+`scripts/pr108_dqdx_cond.py` is the durable one and re-derives §9's cases in the same table (its
+numbers differ from §9's in detail — it keeps the perturbed A symmetric, as A = RᵀMR + F is, and
+discards draws whose perturbed A is no longer positive definite, which is what produced §9's
+heavy tails — the qualitative statement is unchanged). It adds a deterministic figure of merit
+with no Monte-Carlo tail to argue about:
+
+  **κ** = σ(Δs)/s per unit relative change of A's entries, from Δs = −yᵀ ΔA x with y = A⁻¹u,
+  u the near-junction selector. It is a *relative stiffness* measure — how much the junction charge
+  moves when the assembled couplings are jiggled — and is used only to rank junctions against each
+  other; because A = RᵀMR + F is quadratic in the couplings and its entries are correlated, κ is not
+  a calibrated map from a physical trajectory change to a charge error (§9's "a 0.2 cm re-sampling →
+  factor two" inherits that caveat and should be read the same way). κ is reported twice: over all of
+  A, and over the near-J block only (`kappa_loc`) — they agree to within 10 % at every uBooNE junction
+  (sidecar table 1), so the number is a property of the junction and not of how many positions the
+  cluster's system happens to hold. That also answers the obvious objection that the clean junctions
+  sit in bigger systems (n3d 109–243) than 6806 J0 (n3d 46): 6505 J0 and J1 share *the same* A and
+  give κ 0.5 vs 3.8–5.4, and 6805 J0 (n3d 58) vs 6806 J0 (n3d 46) is size-matched at κ 1.4 vs 93.
+
+**Selection, blind to the answer.** "No dead channel" is read off the dump's `reg` flags, which are
+in fact the *stronger* condition: `reg=1` marks a position whose fit loses that plane either because
+the channel is dead (`row.flag==0`, `TrackFitting.cxx:6814`) **or** because the projected wire/time
+carries no measured 2-D point at all (`:6877`). Of the 11 reference junctions of the six test events,
+**two are `reg=0` at every near-J position in all four arms — 6505 J0 and 6650 J0** — and three more
+are clean in the ON arms (6505 J1, 6532 J0, 6650 J1). All of them are reported below, together with
+the §9 cases, so nothing is selected on how tidy it looks. The clean junctions are *not* free of the
+second §9 ingredient: their prongs still overlap (12–20 connected pairs with overlap > 0.5, max 0.9–1.0).
+
+### 10.1 Conditioning — the clean junctions are stable, the dead one is not
+
+| junction | reg flags near J (WCP-on / WCT-on) | κ (4 arms) | ε = 1 % band p10–p90 | draws staying pos-def |
+|---|---|---|---|---|
+| **6505 J0** (clean) | 0/7, 0/7 | **0.5–0.7** | 0.99–1.01 | 199–200 / 200 |
+| **6650 J0** (clean) | 0/7, 0/9 | **1.7–2.8** | 0.97–1.04 | 200/200 |
+| 6650 J1 | 1/8, 0/5 | 0.9–1.8 | 0.98–1.03 | 200/200 |
+| 6505 J1 | 0/9, 0/9 | 3.8–5.4 | 0.94–1.09 | 199–200/200 |
+| 6532 J0 | 0/7, 1/7 | 3.0–6.6 | 0.79–1.08 | 94–194/200 |
+| 6805 J0 | 4/6, 3/5 (V, not all) | 1.2–1.6 | 0.98–1.02 | 200/200 |
+| 6528 J0 (§9) | 3/9, 0/8 | 7–19 | 0.87–1.83 | 43–195/200 |
+| 6528 J1 (§9) | 1/4, 0/4 | 2.4–22 | 0.80–1.56 | 43–195/200 |
+| **6806 J0** (§9, W dead at *every* near-J position) | 8/8, 10/10 | **90–183** | 0.26–4.76 | 57–120/200 |
+
+The dQ/dx system at a junction where every plane constrains the fit is **well conditioned**: a 1 %
+change of the couplings moves the junction charge by ~1 % (6505 J0) to ~3 % (6650 J0), and a random
+1 % perturbation keeps it inside ±1–4 % — 100 to 300× stiffer than 6806 J0, where the same 1 % spans
+0.26–4.8×. The direct (dense LU) solve reproduces the dumped BiCGSTAB solution to ≤3·10⁻⁷ at every
+junction and in every arm, so nothing here is a solver artefact.
+
+κ tracks the flags, not the overlaps: the clean junctions have the same prong overlaps as 6806 and
+are stable anyway. But the flags alone are not sufficient either — **6805 J0** has 3–4 of 5–6
+positions flagged and is still stiff (κ 1.4). What 6806 J0 has and the others do not is that *every*
+near-J position loses *the same* plane (`001` = W) while four prongs share the surviving wires: the
+overlapped charge can then slide between prongs at nearly equal χ². 6528 J0's WCT-off (4/10 flagged
+on V, κ 19) is the same pattern one notch weaker.
+
+### 10.2 Do the two implementations agree there? Yes.
+
+Path-length-normalised charge in the junction sphere (Σ dQ / Σ local_dx, R = 1.5 cm, 10³ e/cm) —
+this removes the point-density difference that makes a per-point median misleading when one arm puts
+9 points where the other puts 7:
+
+| junction | WCP-on | WCT-on | WCP-off | WCT-off | WCT/WCP on | WCT/WCP off | WCP on/off | WCT on/off |
+|---|---|---|---|---|---|---|---|---|
+| 6505 J0 (clean) | 106.2 | 100.6 | 92.5 | 89.3 | **0.948** | 0.965 | **+14.8 %** | **+12.7 %** |
+| 6505 J1 | 77.2 | 75.9 | 72.9 | 66.4 | **0.983** | 0.911 | +5.9 % | +14.3 % |
+| 6532 J0 | 104.1 | 104.0 | 76.9 | 107.0 | **0.999** | 1.392 | +35 % | −2.8 % |
+| 6650 J0 (clean) | 98.6 | 68.0 | 97.6 | 76.2 | 0.690 | 0.781 | +1.1 % | −10.7 % |
+| 6650 J1 | 82.2 | 112.9 | 91.9 | 111.1 | 1.374 | 1.210 | −10.6 % | +1.6 % |
+| **6650 J0+J1 pooled** (Σq/Σdx) | **90.0** | **83.0** | 94.7 | 87.6 | **0.922** | 0.925 | **−5.0 %** | **−5.2 %** |
+| 6805 J0 | 49.3 | 63.8 | 65.3 | 63.1 | 1.296 | 0.965 | −24.5 % | +1.2 % |
+| 6528 J0 (§9) | 68.2 | 76.2 | 68.9 | 45.8 | 1.117 | 0.665 | −1.0 % | +66 % |
+| 6806 J0 (§9) | 88.2 | 166.0 | 92.7 | 111.8 | **1.882** | 1.207 | −4.8 % | **+48 %** |
+
+At the clean junctions the two implementations agree on the fitted charge to **5 %** (6505 J0 0.948,
+6505 J1 0.983, 6532 J0 0.999), and the per-position matched (dQ/dx) medians agree to 2–4 %
+(0.968 / 0.965 / 0.976, spread 0.81–1.17 — sidecar table 3). 6650's two junction vertices are 4.4 cm
+apart and the arms split the charge between them differently (0.69 at J0, 1.37 at J1); pooling the
+two spheres properly (Σ dQ / Σ local_dx over both, 838.8 k/9.32 cm vs 747.1 k/9.00 cm) gives
+**0.922 ON and 0.925 OFF** — in the same 0.92–1.0 band as the other clean junctions. So the large
+per-vertex ratios there are a per-vertex assignment difference in how the prongs are organised, not
+a disagreement of that size about what the fit puts on the trajectory. (Only 6505 and 6650 can be
+pooled this way: 6528's and 6805's two vertices are 1.1 and 1.5 cm apart, so their R = 1.5 cm spheres
+overlap.) The only place where
+the two codes genuinely disagree on charge is 6806 J0 (1.88×), i.e. the one junction whose system is
+100× more sensitive than the rest.
+
+**And the exclusion knob's effect agrees in both codes there too**: 6505 J0 +14.8 % (WCP) vs +12.7 %
+(WCT); 6650 J0+J1 pooled −5.0 % vs −5.2 %; matched per-position ON/OFF medians 1.122 vs 1.075
+(6505 J0) and 0.981 vs 0.966 (6650 J0). The honest bound is: at clean junctions the two codes agree
+on the charge to ~5 % and on the *sign* of the exclusion delta, while the delta's *magnitude* can
+still differ by ~2× — 6505 J1 is reg-free with κ ≤ 5.4 and gives +5.9 % (WCP) vs +14.3 % (WCT) —
+because exclusion also moves the point set, which the fit then re-splits. The outright sign
+disagreements (6532 J0, 6528 J0) sit at junctions with κ ≥ 6 in at least one arm; 6650 J0/J1 and
+6805 J0 are per-vertex splits of a total that agrees.
+
+Cross-solve at 6505 J0 (A of one arm with b of the other, 239/243 positions matched): 519 k against
+nominals 493 k (WCP) and 479 k (WCT) — mixing the two systems moves the answer by 6–8 %, where the
+same operation at 6806 J0 reproduced whichever arm's **A** was used (§9). At 6650 the cross-solve is
+not interpretable (the arms carry different numbers of points in the sphere, so the b-substitution is
+not one-to-one) and is not quoted.
+
+### 10.2b SBND on the same instrument (§9's SBND paragraph re-derived, and extended)
+
+§9's SBND numbers came from the lost ad-hoc script and covered one vertex per event. Re-run with
+`pr108_dqdx_cond.py`'s κ over **every** junction vertex of the main cluster (junction = a
+`flag_vertex` point of the main cluster with ≥ 3 sub-clusters within 1.5 cm, read from the arm's own
+`T_rec_charge`), on the pr/108 §9 SBND dumps (`/home/xqian/tmp/pr108_sbnd_{on,off}_{46363,360535}.dump`):
+
+| event / arm | junctions | κ_loc median [min, max] | reg-free junctions | κ_loc median, reg-free | κ_loc median, flagged |
+|---|---|---|---|---|---|
+| 46363 ON | 13 | 5.6 [0.4, 42.3] | 7/13 | **2.9** [0.4, 5.7] | 22.8 |
+| 46363 OFF | 24 | 7.7 [0.5, 165.6] | 10/24 | **4.9** [0.5, 111.8] | 14.7 |
+| 360535 ON | 8 | 4.1 [0.4, 90.5] | 4/8 | **0.8** [0.4, 1.1] | 32.6 |
+| 360535 OFF | 16 | 3.1 [0.4, 40.2] | 6/16 | **1.1** [0.4, 3.2] | 6.5 |
+
+The same ordering holds on SBND: junctions where every plane constrains the fit are stiff (κ_loc
+median 0.8–4.9, the uBooNE clean band), junctions that lose a plane are 3–30× softer. Two things to
+carry forward that §9 did not say: (i) SBND main clusters are much larger systems (n3d 546–708 vs
+46–243 on uBooNE) with global cond(A) 1.7·10⁴–1.6·10⁵, and **roughly half** their junctions have at
+least one flagged position, so the soft class is common there, not exotic; (ii) the flags are the
+dominant but not the only driver — 46363 OFF has one reg-free junction at κ_loc 112. §9's two
+specific vertices remain as quoted (well conditioned, ON = OFF charge at 46363's target); the census
+says they are not representative of every junction in those events.
+
+### 10.3 What this settles
+
+- **The dQ/dx fit is not the issue.** Where every plane constrains the fit, it is well conditioned
+  (κ ≈ 0.5–5 on uBooNE and SBND alike), the prototype and the toolkit agree on the junction charge to ~5 % and on the
+  *exclusion delta* to ~2 percentage points, and the direct solve confirms the iterative solver at
+  every junction. This is the confirmation the owner asked for, on junctions chosen by the flag
+  criterion and not by their agreement.
+- The one divergence in the whole set (6806 J0, 1.9×) is confined to the configuration §9 identified:
+  every near-junction position blind on the same plane, with several prongs sharing the surviving
+  wires. §9's proposed levers stay as stated, but they are now known to apply to a **narrow** class of
+  junctions rather than to junctions generally — and lever (a) (a junction regulariser) should be
+  keyed on *"all near-J positions lose the same plane"*, which is what separates 6806 from 6805 J0,
+  not on the presence of a dead channel or on the prong count.
+- **On SBND the soft class is not rare** (§10.2b): about half the junctions of 46363/360535 have at
+  least one position that loses a plane, and those sit at κ_loc 6–33 while their reg-free neighbours
+  sit at 0.8–5. So "the fit is fine" is a statement about the *fit*, not a promise that every SBND
+  junction charge is well determined — which is the right frame for the DL-cloud lever (c).
+- Nothing here changes production: still no knob, no default change; the dumps are env-gated
+  (`WCT_DQDX_DUMP` needs `WCT_TRAJ_DUMP` set too — it supplies the call counter).

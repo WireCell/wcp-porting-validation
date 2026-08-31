@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt395298",
+ "eventNo": 395298,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 56,
+  "x": 107.34930093102496,
+  "y": -48.08285198973023,
+  "z": 173.5495927786954
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 56,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 56020,
+   "x": 107.34930093102496,
+   "y": -48.08285198973023,
+   "z": 173.5495927786954
+  }
+ ],
+ "reco_sep_cm": 0.002964518855419649,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 56020 has a 14.9cm proton leaving it with a textbook monotone template Bragg rise 80k->205k stopping at 56015, plus a 2.7cm 125k stub, and back-extrapolating the 182cm MIP track from 15001 by 5.7cm lands exactly on 56020 at about 97 degrees to the proton.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395298/calib-pr-evt395298.json",
+ "subRunNo": 1
+}

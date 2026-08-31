@@ -1,0 +1,6 @@
+sample	evt	shower_id	same_clus	shower_ke	mu_seg_id	mu_end_x	partner_kind	partner_key	partner_len	partner_ke	partner_x	mu_far_x	partner_far_x	gap_cm	angle_gap_deg	angle_tan_deg	gap2_cm
+mcp2k	177536	1	0	679.0	17006	-2.50	bare	77015	98.1	-1.0	3.29	-192.97	56.85	9.4	6.0	9.0	9.4
+mcp2k	392901	1	0	190.3	127030	2.10	shower	15010	8.0	106.1	-4.01	16.73	-5.41	17.8	19.7	14.0	17.8
+mcp2k	53793	0	0	367.0	37021	4.71	shower	12002	240.5	527.8	-4.53	35.37	-137.36	13.9	14.5	6.5	13.9
+mcp2k	53793	2	0	527.8	12002	-4.53	shower	37026	62.4	367.0	4.71	-137.36	35.37	13.9	11.8	6.5	13.9
+mcp2k	77978	0	0	337.5	15000	4.77	bare	53005	23.5	-1.0	2.17	51.22	-7.54	6.5	12.6	14.9	6.5

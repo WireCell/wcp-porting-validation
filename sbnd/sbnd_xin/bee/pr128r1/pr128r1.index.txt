@@ -1,0 +1,65 @@
+# doc pr/128 -- PF/kine completeness A/B (4 knobs, SBND PRODUCTION ON 2026-08-29,
+# toolkit 1ed308de + e6fb0ebd + b0e91449 + the cfg flip).
+# A/B index -- OFF c02de6fd-ecd5-4792-89cf-0a677409f41d / ON 70d0b85f-b387-44cb-9e60-04110aa45e7b
+#   OFF https://www.phy.bnl.gov/twister/bee/set/c02de6fd-ecd5-4792-89cf-0a677409f41d/event/list/
+#   ON  https://www.phy.bnl.gov/twister/bee/set/70d0b85f-b387-44cb-9e60-04110aa45e7b/event/list/
+#   Uploaded 2026-08-29 on the owner's request ("Give me the bee links for these
+#   two events?", meaning idx 1 = 105074 and idx 2 = 392901).
+#   CONTENT-VERIFIED TWICE (the standing complaint that a link did not match the
+#   events being discussed).  (a) package vs source arm: for all 7 indices on
+#   BOTH sides, md5 of data/<i>/<i>-mc.json equals md5 of the source arm's
+#   pr_evt<ev>/mabc-pr.zip data/0/0-mc.json -- 14/14, including idx 5 (396222),
+#   the only row that resolves through the 98-set root instead of the 141-set
+#   root.  (b) LIVE REMOTE vs package: GET set/<uuid>/event/<i>/mc/ on both
+#   uploaded sets, normalised-JSON md5 against the local zip -- 14/14 match, so
+#   the indices above address the events named above ON THE SERVER.  Idx 6's mc
+#   layer is byte-identical between OFF and ON, so the package itself carries the
+#   "72786 unchanged" control claim.
+#   OFF = work-pr125r1-flipS{141,98}-mcp2k  = the production point before this round.
+#   ON  = work-pr128r1-on{141,98}-mcp2k     = the same plus the four pr/128 knobs.
+# Footprint: 478 archives over both manifests, exactly SIX differ, and they are
+#   these six events.  kine_reco_Enu moves on the same six and nowhere else:
+#   +1114.4 MeV total, every megaelectronvolt of it recovery -- a multiset diff
+#   of each event's kine particle list shows NOTHING removed anywhere, so no
+#   charge is counted twice.  0 vertex movers (159 labelled vertices compared,
+#   0 ADVERSE); nusel per-event TSVs 239/239 byte-identical; main vertex
+#   identical on all six.  Sentinel suite 10 PASS / 0 FAIL / 4 SKIP.
+#
+# OWNER VERDICT 2026-08-29, after scanning idx 1 and idx 2: "These looks OK".
+#   Both judgement calls accepted, and both are precedents (doc pr/128 sec 9):
+#   idx 1 -- main-cluster material 119 cm from any reachable vertex IS the
+#            candidate's energy (membership is a sufficient admission rule);
+#   idx 2 -- a continuation of a DISPLAYED TRACK counts, not only a
+#            continuation of the nu vertex (102.9 cm out, accepted).
+#   idx 6 unchanged, so the far-away half of the metric is confirmed held.
+#
+# The round's question, in the owner's words: "we do not want to lose energies
+# (or double count energies) for the neutrino candidate ... we do not want to
+# count energy for overclustering activitys, far away".  Idx 6 is the CONTROL
+# for the second half of that sentence -- please look at it too.
+#
+# bee_idx	event	status
+0	55740	RESCUED (class A -- cross-cluster continuation).  A 123.1 cm muon in another cluster, touching the candidate at gap 0.00 cm and running on with a 13.0 deg kink, reached NEITHER output: every PF orphan pool and the pr/65 audit line is same_cluster-gated, and the segment carries particle_score 100 (the trajectory branch's sentinel stamp), so the pr/93 confident-track predicate rejects it and the pr/123 flag predicate does not apply.  ON: "mu- 300 MeV" under a pseudo-neutron carrier (the pr/123 displaced-object convention you set 2026-08-28).  kine_reco_Enu 488.5 -> 894.7 (+300.6 track + 105.7 muon rest mass).  numu_score 0.26 -> 1.10.
+1	105074	RESCUED (class B -- our own knob hid this), AND THE BIGGEST JUDGEMENT CALL IN THE ROUND.  Main cluster 23 holds two pdg-13 showers, 82.9 and 58.2 cm, 215.1 + 162.0 MeV.  pr/74 conn3_unreachable RESCUED them from graph-unreachability and then stamped them conn-4, which is the one label that means show nowhere and count nowhere -- so the rescue cancelled itself and 377 MeV of the candidate's OWN cluster vanished from PF and from Enu.  ON: both appear as mu- 215 / mu- 162; Enu 1188.7 -> 1565.8 (+377.1, exactly the two showers, add_energy unchanged).  READ THE ADMISSION RULE HONESTLY: the knob's gap test reports 0.07 / 0.08 cm, but that is tautological -- it measures distance to the main cluster and this material IS in the main cluster.  What actually admits them is main-cluster membership, and the number you want is the producer's: "conn3_unreachable: promote ... anchor_dis 119.5cm / 119.0cm", i.e. 119 cm from the nearest vertex the main vertex can reach.  This is 377 of the round's 1114 MeV, 34% of the whole recovery.  The question: is main-cluster material 119 cm from any reachable vertex the candidate's energy?  conn3_unreachable already said yes when it built the shower; conn-4 then said no to the outputs; this round makes them agree.
+2	392901	RESCUED (class A).  38.5 cm muon, gap 0.00 cm, kink 4.8 deg -- the straightest continuation in the census.  ON: "mu- 118 MeV"; Enu 2003.9 -> 2228.1.  Note it sits 102.9 cm from the neutrino vertex: it is a continuation of a DISPLAYED track, not of the vertex, which is the judgement I would most like you to check.
+3	318769	RESCUED (class B).  44.0 MeV e- shed by pr/123 pass4_prune and re-seeded at conn-4, 2.59 cm from the main cluster.  ON: "e- 43 MeV"; Enu 782.7 -> 826.6.  (This event also appears in the pr/124 worst-q_miss rows, so some of its residual may be this.)
+4	179048	RESCUED (class B).  34.2 MeV e-, same mechanism (pass4_prune re-seed, conn-4 because the shed component was 213.2 cm from its PARENT SHOWER's start vertex).  Also main-cluster, so the gap test is vacuous here too.  Enu 1221.7 -> 1255.9.
+5	396222	RESCUED (class B).  26.3 MeV mu- + a 2.5 MeV crumb, 13.7 / 10.1 cm out, from pass4_prune + pass4_prune2 re-seeds.  Enu 3802.2 -> 3831.0.  Smallest fire of the six.
+6	72786	CONTROL -- UNCHANGED, and that is the result.  On proximity alone this event gained a 143.5 cm muon, a 108.3 cm muon and a 64.7 cm pion: Enu 701.6 -> 1852.9, +1151 MeV on a 701 MeV candidate.  They are cosmics: the main cluster is 100.5 cm of track, while cluster 9 (342.7 cm, 148.4 cm extent) sits 35.3 cm off the vertex and cluster 45 (112.8 cm, 101.6 cm extent) sits 77.2 cm off; they read gap 0.00 cm only because they brush the FAR END of the candidate's own 94.1 cm muon.  The shipped predicate requires a CONTINUATION -- end-to-end touch and a straight kink, the discriminator doc pr/127's sccc fix uses -- and rejects all four: two on cand_end (47.1 and 52.2 cm: the touch is at the candidate's MIDDLE, the signature of a crossing) and two on kink (89.5 and 108.3 deg).  A sentinel now guards this event so no future loosening re-admits them silently.
+#
+# NOT in this set, worth knowing:
+#   - 94392 was a class-A candidate in the census (46.8 cm muon, kink 13.3 deg) and
+#     is NOT in the footprint: its segment is already emitted by pf_orphan_guard_freed
+#     and already counted by kine_count_guard_freed.  Without the double-emission
+#     guard added this round, the knob would have drawn and counted it TWICE.  That
+#     guard exists because of your "do not double count" line.
+#   - 171572 (kink 38.4 deg) is the same overlap and is rejected by the kink anyway.
+#   - The 490 conn-4 showers >= 50 cm from the candidate (2814 MeV) stay skipped.
+#   - Class-B recovery splits 411.3 MeV main-cluster (idx 1, 4 -- gap test vacuous,
+#     admission is cluster membership) + 72.8 MeV cross-cluster (idx 3, 5 -- gap
+#     test binding at 2.6 / 13.7 / 10.1 cm).
+#   - The EM label metric cannot have moved: the calib dump's showers[] array is
+#     identical on 239/239 events, so em117_score's inputs are untouched.
+#   - numu_score moved on four events, largest 55740 0.259 -> 1.099.  The
+#     byte-identical nusel table does NOT cover this -- it does not carry
+#     numu_score.  Reported, not tuned.

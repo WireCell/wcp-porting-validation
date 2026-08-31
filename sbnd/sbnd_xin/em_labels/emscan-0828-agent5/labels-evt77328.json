@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -48.34,
+   -155.61,
+   228.35
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 9792,
+  "cloud_cluster_ids": [
+   16,
+   19
+  ],
+  "cloud_kept": 9792,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25317,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.2140507360373739,
+   -0.9092155096166957,
+   0.3570846390903854
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.2140507360373739,
+    -0.9092155096166957,
+    0.3570846390903854
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 180.64870821028086,
+   "kine_charge": 180.64870821028086,
+   "kine_charge_other_hypothesis": 108.66087711896596,
+   "kine_dQdx": 183.26974206263344,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    16016,
+    36012
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -45.98202326429661,
+   -143.512419079165,
+   222.64063335318892
+  ],
+  "reco_start_vertex_id": 16007,
+  "shower": 16016,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -45.98202326429661,
+   -143.512419079165,
+   222.64063335318892
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt77328",
+ "eventNo": 77328,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -45.98202326429661,
+  "y": -143.512419079165,
+  "z": 222.64063335318892
+ },
+ "note": "[agent-bulk] shw 16016 (180.6 MeV, 2 seg, pdg 11, mcp2k numucc_em): correct as a clustering statement. Verdict shower chosen as the leading pdg-11 object: the scope rule also admits 16017, but that is the muon (pdg 13, 331.3 cm, kine_best 746 MeV, segments 16017 + 16004 + 16006 walked together by in_main_cluster) and I did not judge it as an EM shower. Vertex judged from the --vtx-span 60 close-in sweep, which this event needs badly -- the native framing is 353.9 cm half-span because of the 280 cm muon segment, and at that scale the vertex is a handful of pixels. Close in, the star is a clean two-prong junction: the muon leaves it one way, 16016 the other, and both start on it. 16016 is one continuous prong ~28 cm long: its own 11.6 cm piece from 0 to 10.7 cm and 36012 (16.5 cm) from 12.0 to 27.3 cm at 2.8 deg, joined by pass3_cone. Single apex, no internal gap, and the member polylines cover the whole of the pale point cloud around the prong in both the az-055 and el+65 views. Nothing is missing: the acceptance plot carries only the two member squares and NO unclaimed circle anywhere in 0-40 cm / 0-15 deg, and the only non-member within 80 cm at a small angle is 35011, a 0.3 cm 1.5 MeV stub at 50.2 cm / 39.9 deg. Nothing is extra: 36012 is contiguous and collinear with the seed. Two caveats stated rather than voted on. (1) SHAPE: 16016 is a straight narrow 28 cm prong, not a fanning cone, and its longer half 36012 is tagged pdg 2212, so a proton at the vertex mis-PIDed as a 180 MeV EM shower is a live reading. I did not record not an EM shower because the display shows me shape and charge-derived energy but no dQ/dx, and 180 MeV of EM-recombination charge in 28 cm is not by itself absurd for a contained low-energy shower. If the owner reads it as a proton, note that my correct verdict then means only that the member set covers the object -- it carries no PID claim. (2) 39013 (3.1 MeV, 0.6 cm, 2 points) is unclaimed at 54.5 cm / 6.3 deg from the muon and sits 0.6 cm off the muon's own axis, i.e. a delta ray on the muon, correctly not swallowed by either shower. No pi0 group in the reco and only one EM shower above 20 MeV, so no pairing was priced. Showers NOT looked at: the 3 the scope rule skipped -- 39013 (3.1 MeV), 35011 (1.5), 19010 (0.7).",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt77328/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:44:41+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt77328/calib-pr-evt77328.json",
+ "subRunNo": 1
+}

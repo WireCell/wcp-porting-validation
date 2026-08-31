@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt175896",
+ "confidence": "medium",
+ "eventNo": 175896,
+ "main_vertex": {
+  "x": -45.92430459267048,
+  "y": -182.37262504065092,
+  "z": 461.7512460179182
+ },
+ "note": "nuecc; the two mid-E EM showers are both vertex-attached (primary-electron territory, 53 deg apart); only detached EM 63019 has no detached partner (its near-collinear bp with attached 17043 reads as a downstream fragment, not a second gamma)",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:38:40.994163Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

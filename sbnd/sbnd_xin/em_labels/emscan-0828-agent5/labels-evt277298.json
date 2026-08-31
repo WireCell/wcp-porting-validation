@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -177.9,
+   -104.79,
+   100.42
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1350,
+  "cloud_cluster_ids": [
+   17,
+   23,
+   24
+  ],
+  "cloud_kept": 1350,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 41799,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.3899444368763357,
+   -0.2129696539863064,
+   0.8958723472851199
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.3899444368763357,
+    -0.2129696539863064,
+    0.8958723472851199
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 133.19439923803972,
+   "kine_charge": 194.612899096806,
+   "kine_charge_other_hypothesis": 117.06039043416905,
+   "kine_dQdx": 150.37857077745778,
+   "kine_hypothesis": "shower",
+   "kine_range": 133.19439923803972,
+   "members": [
+    17001,
+    17030
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -169.2536078833523,
+   -93.26116923024696,
+   81.82555696986158
+  ],
+  "reco_start_vertex_id": 17027,
+  "shower": 17030,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -169.2536078833523,
+   -93.26116923024696,
+   81.82555696986158
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt277298",
+ "eventNo": 277298,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -169.2536078833523,
+  "y": -93.26116923024696,
+  "z": 81.82555696986158
+ },
+ "note": "[agent-bulk] PID verdict, and the clustering is fine. shw 17030 (kine_charge 194.6, kine_best 133.2 MeV, 2 seg, len 50.2) is a straight, NARROW minimum-ionising track running ~40-50 cm from the nu vertex, with a tight point cloud (about +-1 cm) that stays tight over its whole length and only sprays out in a small blob at the far end. It is narrow in BOTH the az -55 and az +85 frames and in the elevation frame, so this is not a projection effect. A 133-195 MeV electron has X0 = 14 cm in LAr and cannot stay collimated for 50 cm; the same event contains a real EM shower for comparison - shw 17026 (100.7 MeV) is the same length scale but its cloud is ~7 cm wide with a proper cone. The display's own alternative reads the same way: 'as a track the same charge gives 117.1 MeV' for 17030. So this reads as a muon or pion, not an EM object. As CLUSTERING, 17030 is complete: its two segments cover the whole track and every non-member within 60 cm that is not sitting on the vertex is at 52-135 deg to its axis. shw 17026 also looks correct - its single 22.6 cm segment runs down the spine of the diffuse cloud and covers its full extent, with no unclaimed segment inside the cone. shw 17028 (46.9 MeV, 9.9 cm) is a third short prong out of the same vertex cluster, pointing the opposite way from 17026, so 17026/17028 are not one object split. Vertex is good: 17030, 17026, 17028 and the unowned 17024 (pdg 211) / 17027 (pdg 13) all converge on the star in all three vertex frames. pi0: the reconstruction accepted no group; the kine_pio_* scan pairs 17030+17026 at 28.0 deg for 67.7 MeV, but that pairing rests on 17030 being EM, which I dispute, so I store nothing. Not looked at: the other 7 showers, all at or below 3.4 MeV (scope rule min_kine_best 20 MeV).",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt277298/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:43:05+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt277298/calib-pr-evt277298.json",
+ "subRunNo": 1
+}

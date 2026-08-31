@@ -1,0 +1,27 @@
+evt64409	correct	likely	7	ok
+evt170808	correct	likely	5	ok
+evt282979	over-clustered	likely	5	ok
+evt286681	over-clustered	unclear	5	ok
+evt292027	correct	likely	5	ok
+evt321767	over-clustered	unclear	5	ok
+evt350121	under-clustered	likely	4	ok (drag_check segments_redrew false = degenerate probe at rotation centre, diagnosed)
+evt399118	correct	likely	4	ok
+evt486687	correct	unclear	4	ok
+evt51546	correct	likely	4	ok
+evt54453	under-clustered	likely	7	ok (vertex judged from --vtx-span 60 recapture; r95 296.8 cm)
+evt69232	over-clustered	likely	6	ok (vertex judged from --vtx-span 60 recapture; r95 264.0 cm)
+evt74123	correct	likely	6	ok (reco pi0 group 0 confirmed and stored)
+evt94224	not an EM shower	likely	5	ok (PID verdict; no clustering judgement on this event)
+evt99782	correct	likely	5	ok (reco pi0 group 0 confirmed and stored; both conventions agree to 3%)
+evt167612	vertex-bad (undecidable)	likely	5	ok (vertex judged from --vtx-span 60 recapture; r95 222.5 cm; note carries start/axis wrong)
+evt171729	correct	likely	5	ok (reco pi0 group 0 DISPUTED: gamma1 sits on the neutrino vertex; vertex judged from --vtx-span 60 recapture)
+evt179048	vertex-bad (undecidable)	likely	4	ok (through-going 311 cm straight track; shower members span 248 cm, 2 OUT marks carry the over-clustering)
+evt275011	correct	unclear	5	ok (nuecc; ~77 MeV of transverse EM fragments at 7-15 cm could not be attributed)
+evt289246	under-clustered	likely	4	ok (vertex judged from --vtx-span 60 recapture; 2 IN marks)
+evt294174	under-clustered	likely	6	ok (vertex judged from automatic vtxz-* 60cm frames; r95 328.0 cm; 2 IN marks on 71067 from 64065)
+evt347824	over-clustered	likely	6	ok (2nd vertex-pi0 instance: reco gamma1 24112 starts ON the nu vertex; alternatives priced with --pio-pairs; 24112+106049 stored as candidate; note carries start/axis wrong)
+evt394167	correct	likely	4	ok (nuecc single-shower event; vertex judged from automatic vtxz-* frames; no non-member candidates in acceptance range)
+evt396323	correct	likely	6	ok (EM object sits 158-174 cm from the nu vertex with nothing in between; 2 "?" marks on the 42-45 deg stubs)
+evt403023	correct	likely	5	ok (clean pi0: both gammas detached, both mass conventions agree to 6%; reco group 0 confirmed and stored; no vtxz frames, r95 79 cm)
+evt409140	correct	likely	5	ok (nuecc, opposite-prong vertex; 2 "?" marks on the 2-point stubs that carry the shower reach across a 27.5 cm empty gap)
+evt499577	over-clustered	unclear	6	ok (member set kinks ~60-70 deg at 20 cm in two azimuths while the acceptance angle column reads 2.3 deg; pi0 group 0 confirmed and stored; 1 OUT + 1 "?" mark)

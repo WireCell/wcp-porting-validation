@@ -1,0 +1,21 @@
+name	component	originating_doc	add_commit	remove_commit	verdict_class	one_line_why	was_doctest_pinned
+graph_endpoint_strict	clus (TaggerCheckNeutrino/PRGraph)	pr/30 P8	fd3a3fac	0e8b7334	ADVERSE	false positive as placed: refuses legitimate mid-repair connections, 22/48 events change, 5 nue lost vs 1 gained (pr/86:450)	no
+shower_connect_protected_pion_guard	clus (TaggerCheckNeutrino/NeutrinoShowerClustering) F13	pr/40 round 6	18936f16	0e8b7334	ADVERSE	measured dead as shaped -- motivating segment already pdg 2212 by candidate-selection time, never flipped (pr/40:1459)	yes
+dl_vtx_swap_guard	clus (TaggerCheckNeutrino/NeutrinoVertexFinder)	pr/51	3c6460e4	0e8b7334	ADVERSE	live A/B -36/1014 (6 fixed / 42 regressed), rider closed (pr/89 round 5; pr/100:113)	yes
+dl_vtx_topo_weight	clus (TaggerCheckNeutrino/NeutrinoVertexFinder) Arm C2	pr/89 C2	a681b3e1	0e8b7334	ADVERSE	live A/B -8/1014, the rule-1 outgoing-prong topology term	no
+dl_vtx_topo_center	clus (TaggerCheckNeutrino/NeutrinoVertexFinder) Arm C2	pr/89 C2	a681b3e1	0e8b7334	ADVERSE	same term as dl_vtx_topo_weight, same verdict	no
+other_seg_uncover_3d	clus (TaggerCheckNeutrino/NeutrinoOtherSegments) P2	pr/102 round 2	8c128dc0	0e8b7334	ADVERSE	23 ADVERSE movers on the owner mcp1k census, stays OFF	yes
+teb_second_max	clus (TaggerCheckNeutrino/NeutrinoPatternBase)	pr/90 round 2	ae5cd13f	0e8b7334	ADVERSE	negative on its own motivating events (172832/61681), superseded by teb_chain_topology (pr/90 sec 8.5, :714, :984)	yes
+pf_touch_cross_main	clus (MultiAlgBlobClustering) F1 rung 2	pr/84 round 2	a58ca54f	0e8b7334	INERT	zero movers on all 7 census candidates -- F1.0 probe failure (pr/84:607, :622)	yes
+pf_touch_cross_max	clus (MultiAlgBlobClustering) F1 rung 2	pr/84 round 2	a58ca54f	0e8b7334	INERT	read only under pf_touch_cross_main, same verdict	yes
+mvga_carry_max	clus (TaggerCheckNeutrino/NeutrinoGraphAudit) r3	pr/83 round 3	dcf33506	0e8b7334	INERT	not needed -- class A cleared 8/8 with it OFF (pr/83 r3 sec 8.5, :835, :854)	yes
+muon_chain_proton_veto	clus (TaggerCheckNeutrino)	pr/43	4aabef3e	225d7e7e	ROLLED_BACK	one of five pr/43 knobs; owner asked for full removal, not just default-OFF, to be revisited later rather than left dead-OFF	no
+shower_type_cache_refresh	clus (TaggerCheckNeutrino)	pr/43	4aabef3e	225d7e7e	ROLLED_BACK	see muon_chain_proton_veto	no
+shower_traj_dqdx_guard	clus (TaggerCheckNeutrino)	pr/43	4aabef3e	225d7e7e	ROLLED_BACK	see muon_chain_proton_veto	no
+shower_traj_chain_pion	clus (TaggerCheckNeutrino)	pr/43	4aabef3e	225d7e7e	ROLLED_BACK	see muon_chain_proton_veto	no
+kine_shower_vertex_barrier	clus (TaggerCheckNeutrino)	pr/43	4aabef3e	225d7e7e	ROLLED_BACK	see muon_chain_proton_veto	no
+pf_barrier_segment_vertices	clus (MultiAlgBlobClustering)	pr/38 round 1	43f1fe25	df40b2a4	SUPERSEDED	round-2 fixed the barrier IN PLACE under pf_shower_vertex_barrier instead; the round-1 knobs became dead wiring	no
+pf_orphan_track_roots	clus (MultiAlgBlobClustering)	pr/38 round 1	43f1fe25	df40b2a4	SUPERSEDED	see pf_barrier_segment_vertices	no
+dl_vtx_swap_min_len	clus (TaggerCheckNeutrino)	pr/24 round 4	75c703da	ff541919	WITHDRAWN	the DL main-cluster swap guard this fed was measured then withdrawn at owner's direction (SBND 18255-271851 still picked the wrong shower end)	no
+dl_vtx_swap_min_frac	clus (TaggerCheckNeutrino)	pr/24 round 4	75c703da	ff541919	WITHDRAWN	see dl_vtx_swap_min_len	no
+es3sg_vertex_fit	clus (TaggerCheckNeutrino)	pr/72 round 3	14528ce3	60bad894	REVERTED	two-track vertex fit, NEGATIVE result on 18255-196649, reverted whole-commit	no

@@ -1,0 +1,62 @@
+==============================================================================
+pr/130 item 4 -- F12 walk-add guard (PRShower.cxx:827) decline population
+==============================================================================
+
+--- set 98 ---
+  exclude records      27
+  distinct segments    25              charge 8.8352e+07
+  scanner wants         1 of them      charge 1.6903e+06  = 1.9%
+  pdg  : {2212: 11, 13: 15, 211: 1}
+  site : {'in_main_cluster': 3, 'examine_shower_1_tmp': 14, 'from_vertices': 7, 'connecting_to_main_vertex': 2, 'in_other_clusters_A': 1}
+
+--- set 141 ---
+  exclude records      44
+  distinct segments    44              charge 1.9684e+08
+  scanner wants         4 of them      charge 5.0775e+06  = 2.6%
+  pdg  : {13: 35, 2212: 5, 211: 4}
+  site : {'from_vertices': 13, 'examine_shower_1_tmp': 20, 'in_main_cluster': 4, 'conn3_unreachable': 2, 'in_other_clusters_A': 4, 'in_other_clusters_B': 1}
+
+==============================================================================
+SEPARABILITY -- every decline under 30 cm, ordered by length
+A threshold exists only if the WANT rows sit at one end.
+==============================================================================
+mark     set  event    seg               q    len   pdg site
+         141  100222   121233    1.267e+06   10.1    13 from_vertices
+         98   47212    109101    5.417e+05   10.1    13 from_vertices
+         98   64591    17001     1.698e+06   10.2  2212 examine_shower_1_tmp
+         141  499423   52033     4.824e+05   10.4    13 in_other_clusters_A
+         98   69314    3003      9.671e+05   10.7    13 examine_shower_1_tmp
+         98   169356   67032     5.310e+05   10.7    13 from_vertices
+         141  54453    22016     1.736e+06   11.7  2212 examine_shower_1_tmp
+         98   56982    22113     1.825e+06   11.9  2212 in_main_cluster
+         141  179048   17008     2.054e+05   12.0    13 examine_shower_1_tmp
+         98   506114   19021     1.260e+06   12.1   211 from_vertices
+         141  173819   14022     7.717e+05   13.0   211 examine_shower_1_tmp
+         98   54332    16021     1.179e+06   13.1  2212 examine_shower_1_tmp
+         98   137238   143053    1.529e+06   13.6    13 connecting_to_main_vertex
+         98   137238   143053    1.529e+06   13.6    13 examine_shower_1_tmp
+         98   423981   12009     7.460e+05   13.9    13 examine_shower_1_tmp
+         141  292643   18008     1.064e+06   14.0    13 examine_shower_1_tmp
+WANT     98   169626   53070     1.690e+06   14.1  2212 in_other_clusters_A
+         98   506746   21148     2.249e+06   14.1  2212 examine_shower_1_tmp
+         141  390634   1014      8.078e+05   14.6    13 examine_shower_1_tmp
+         141  51546    66016     8.590e+05   15.0    13 from_vertices
+         141  348691   9015      7.972e+05   15.1   211 examine_shower_1_tmp
+         141  321767   45030     8.799e+05   15.5   211 in_other_clusters_A
+         141  91917    87054     8.072e+05   15.5    13 from_vertices
+         141  170808   60026     1.035e+06   15.6   211 from_vertices
+WANT     141  54341    96033     8.107e+05   15.9    13 from_vertices
+         98   259542   17006     3.011e+06   16.0  2212 from_vertices
+         98   176502   146220    7.203e+05   16.5    13 from_vertices
+WANT     141  54341    34015     8.691e+05   16.5    13 from_vertices
+         141  52044    24009     8.330e+05   16.6    13 from_vertices
+WANT     141  395597   20006     6.652e+05   16.9    13 in_main_cluster
+         141  170098   70029     9.418e+05   17.4    13 from_vertices
+         98   142421   7009      2.831e+06   17.6  2212 examine_shower_1_tmp
+         141  53658    15001     2.810e+06   17.7  2212 examine_shower_1_tmp
+         141  350121   2013      1.160e+06   17.8    13 conn3_unreachable
+         141  392901   127033    1.442e+06   18.5    13 from_vertices
+         98   84229    9057      1.052e+06   19.7    13 from_vertices
+         98   142421   7011      3.087e+06   20.7  2212 examine_shower_1_tmp
+OWNER-NO 141  318769   19005     2.733e+06   21.1  2212 in_other_clusters_A
+         98   423981   12044     3.787e+06   26.9  2212 examine_shower_1_tmp

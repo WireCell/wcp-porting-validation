@@ -1,0 +1,147 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 38.75,
+  "az_deg": -55.0,
+  "centre": [
+   22.45,
+   -21.8,
+   121.2
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 855,
+  "cloud_cluster_ids": [
+   16,
+   21,
+   22
+  ],
+  "cloud_kept": 855,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 20307,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.11003356535693164,
+   0.6732053589565,
+   0.7312230570537911
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "16008": {
+    "42016": "out"
+   }
+  },
+  "marks_detail": {
+   "16008": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.11003356535693164,
+     0.6732053589565,
+     0.7312230570537911
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "42016": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 13.165556732623806,
+      "cluster_id": 42,
+      "dist": 66.73466474729983,
+      "ellip": 11.880477822162526,
+      "kind": "out",
+      "length": 0.41278470106686516,
+      "owner": 16008,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 13.165556732623806,
+     "angle_min": 0.0,
+     "dist_max": 66.73466474729983,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     16001,
+     16008,
+     16010,
+     42016
+    ],
+    "start": [
+     18.537070329503262,
+     -39.19524998993699,
+     92.63854664607597
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.11003356535693164,
+    0.6732053589565,
+    0.7312230570537911
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 236.28090252861813,
+   "kine_charge": 236.28090252861813,
+   "kine_charge_other_hypothesis": 142.12385114503348,
+   "kine_dQdx": 130.01372766202675,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    16001,
+    16008,
+    16010,
+    42016
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   18.537070329503262,
+   -39.19524998993699,
+   92.63854664607597
+  ],
+  "reco_start_vertex_id": 16001,
+  "shower": 16008,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   18.537070329503262,
+   -39.19524998993699,
+   92.63854664607597
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt386442",
+ "eventNo": 386442,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 18.537070329503262,
+  "y": -39.19524998993699,
+  "z": 92.63854664607597
+ },
+ "note": "[agent-bulk] Clean nuecc single-shower event. shw 16008 (236.3 MeV, 4 seg, 37.9 cm, conn 1) starts ON the vertex - its seed segment 16008 runs from 19.6 cm out down to (18.5,-39.2,92.6), which is the main vertex to 0.1 cm, so the X and the blue star coincide in both shower frames. On shw16008-az-055-el+20 and -az+085-el+20 it is one continuous object rising from the star, broadening steadily, its yellow halo covering the whole body and its point cloud, one apex, one direction. Nothing is missing: apart from its own members (16010 at 19.6 cm / 4.0 deg and 16001 at 27.4 cm / 9.0 deg, both in_main_cluster) every candidate within 70 cm is at 32-135 deg from the axis and none is bigger than 1.2 cm - there is no unclaimed charge in the cone. THE ONE THING I WOULD QUERY, and it is why the confidence is likely rather than certain: member 42016 is a 0.41 cm pdg-13 dot at 66.7 cm / 13.2 deg, absorbed by pass3_cone, and it sits about 30 cm BEYOND the end of the shower body with empty space in between - visible on both azimuths as a lone yellow-haloed dot far from everything else. Marked OUT. The charge is negligible so I do NOT call the event over-clustered on it; the verdict is about the shower body, which is right. Be aware this reproduces the roll-up tension pr/116 section 5 records: an OUT mark on a member is read by pr/115 rule 3 as a remove-this statement and would bucket this event under over-clustering, which is not what I mean here. Vertex: on vtx-az+065-el+20 the star sits at the base of the shower and the rest of the event is a scatter of sub-cm dots - there is no competing prong, so nothing contradicts the star, but equally nothing independently confirms it beyond the shower's own start. Scope: 1 shower of 19 examined; 18 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 84 cm and was used for topology only. No reco pi0 in this event (pio_grp=0, pio_id=-1, and the capture emitted no pi0 slots), and there is no second EM object anywhere to pair with. Verdict is about clustering and silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt386442/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:01:17+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt386442/calib-pr-evt386442.json",
+ "subRunNo": 1
+}

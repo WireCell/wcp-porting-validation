@@ -1,0 +1,102 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   190.08,
+   51.9,
+   94.94
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 973,
+  "cloud_cluster_ids": [
+   17,
+   22
+  ],
+  "cloud_kept": 973,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 44105,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.5829865914625927,
+   -0.19399553815393308,
+   0.7889818536260476
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.5829865914625927,
+    -0.19399553815393308,
+    0.7889818536260476
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 312.4656757754096,
+   "kine_charge": 312.4656757754096,
+   "kine_charge_other_hypothesis": 187.9492786619005,
+   "kine_dQdx": 183.21387443656448,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17001,
+    17005,
+    17007,
+    17014,
+    17024,
+    45018,
+    46019
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   178.88824074227082,
+   60.26018371004833,
+   78.66574300594313
+  ],
+  "reco_start_vertex_id": 17001,
+  "shower": 17024,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   178.88824074227082,
+   60.26018371004833,
+   78.66574300594313
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt56972",
+ "eventNo": 56972,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": 178.88824074227082,
+  "y": 60.26018371004833,
+  "z": 78.66574300594313
+ },
+ "note": "[agent-bulk] nuecc, and the cleanest topology I have seen in this shard. Vertex judged from the native r95 framing (event_half_span_cm 96.8, below the 150 cm re-capture threshold): the blue star sits exactly on the shower start X at the tip of the object with NOTHING on the far side of it, on both the el+60 vertex frame and the az+085 shower frame. Caveat worth stating: this event has no second prong, so the vertex is corroborated only by the shower itself. shw 17024 (312.5 MeV, 7 seg, pdg 11, len 71.3): one apex at the X, a straight narrow stem for the first ~20 cm (segment 17024, 21.5 cm) that then opens into a multi-branch fan - the textbook electron shape, and the stem is the electron's own MIP section, not a swallowed muon. The yellow set covers the whole visible cone on both azimuths; all 7 members are inside 39.0 cm and 12.4 deg of the axis. Nothing is missing: the event holds only 13 segments in total, and every one of the 6 non-members (41016, 42017, 48021, 49022, 47020, 22015) is a 0.2-0.4 cm stub sitting 64-273 cm from the vertex at 28-143 deg - no grey charge anywhere inside or just beyond the member spread. pi0: showers[].pio_id is -1 and the reconstruction accepted NO pi0 group; there is no second EM object in the event to pair with (the 6 skipped showers are all sub-cm stubs), so this is a genuinely single-photon/single-electron event, not a mis-pairing. Clustering statement only, silent on PID. Not looked at: the 6 showers the scope rule skipped (42017, 49022, 22015, 47020, 48021, 41016), all under the 20 MeV min_kine_best and all sub-cm.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt56972/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:29:38+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt56972/calib-pr-evt56972.json",
+ "subRunNo": 1
+}

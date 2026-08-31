@@ -1,0 +1,159 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -72.24,
+   -7.83,
+   395.95
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1584,
+  "cloud_cluster_ids": [
+   13,
+   17
+  ],
+  "cloud_kept": 1584,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 32168,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.058989795647953015,
+   -0.6788825634739001,
+   -0.7318733968525697
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "13006": {
+    "41011": "?",
+    "42012": "?"
+   }
+  },
+  "marks_detail": {
+   "13006": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     0.058989795647953015,
+     -0.6788825634739001,
+     -0.7318733968525697
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "41011": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 9.90679256594453,
+      "cluster_id": 41,
+      "dist": 39.83783356946317,
+      "ellip": 2.8416050578800878,
+      "kind": "?",
+      "length": 0.2680439857041546,
+      "owner": 13006,
+      "pdg": 13,
+      "tier": 1
+     },
+     "42012": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 21.662593269956353,
+      "cluster_id": 42,
+      "dist": 47.53169726157258,
+      "ellip": 13.53390840106979,
+      "kind": "?",
+      "length": 0.25277814425885553,
+      "owner": 13006,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 21.662593269956353,
+     "angle_min": 0.0,
+     "dist_max": 47.53169726157258,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     13004,
+     13006,
+     41011,
+     42012
+    ],
+    "start": [
+     -75.79960274881307,
+     3.7560990929318265,
+     418.1617081619612
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.058989795647953015,
+    -0.6788825634739001,
+    -0.7318733968525697
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 103.83053094807505,
+   "kine_charge": 103.83053094807505,
+   "kine_charge_other_hypothesis": 62.454454705609066,
+   "kine_dQdx": 78.03698637875725,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    13004,
+    13006,
+    41011,
+    42012
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -75.79960274881307,
+   3.7560990929318265,
+   418.1617081619612
+  ],
+  "reco_start_vertex_id": 13004,
+  "shower": 13006,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -75.79960274881307,
+   3.7560990929318265,
+   418.1617081619612
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt409140",
+ "eventNo": 409140,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": -75.79960274881307,
+  "y": 3.7560990929318265,
+  "z": 418.1617081619612
+ },
+ "note": "[agent-bulk] nuecc, 12 segments, 8 showers, only ONE in scope. Verdict shower 13006 (103.8 MeV, pdg 11, 4 seg, 15.9 cm) is the sole in-scope object, so it is trivially the highest-kine_charge pdg-11 shower and nothing was passed over. Vertex judged from the vtx-* sweep at 102.7 cm half-span; r95 is 82.1 cm so the close-in vtxz-* set never fired and was not needed (correction 20 does not apply). In vtx-az-055-el+20 and vtx-az+065-el+20 the star sits at the junction of exactly two prongs pointing in roughly OPPOSITE directions: a 65 cm heavily-ionising track (segment 13005, cluster 13, pdg 2212, UNOWNED/grey -- the event's only grey segment) going one way, and the EM object 13006 going the other. Vertex correctly placed. CORRECT for 13006, and the opposite-prong geometry is what makes it correct rather than under-clustered: 13005 is by far the biggest pile of charge in the event and it is grey, which is the classic missing-charge signature, but it is on the OTHER SIDE of the vertex from the shower, so it is not a candidate for membership and leaving it out is right. Membership triple-check: nseg 4 = owner-grouped count 4 = cmp_div's 4. Every non-member near the shower is off-cone: 40010 at 10.4 cm / 84.0 deg, 39009 at 11.4 cm / 129.3 deg, 38008 at 33.6 cm / 40.5 deg, 17007 at 81.8 cm / 78.4 deg -- all 2-point stubs, all off the top of the acceptance plot, which shows only the four orange member squares and no non-member circle. Nothing contiguous and in-cone is missing. The one thing worth the owner's eye is the shower's SHAPE, and I measured it from the member points rather than dividing kine_charge by length (correction 18): the real body is just 13006 + 13004, 28 points spanning 12.5 cm with transverse rms 0.76/0.15 cm -- a compact narrow blob at the vertex -- and the shower's advertised 47.5 cm reach comes entirely from two 0.3 cm, 2-point, pdg-13 stubs, 41011 at 39.8 cm / 9.9 deg and 42012 at 47.5 cm / 21.7 deg, absorbed by pass3_cone across a 27.5 cm gap in which I could find no charge at all (blank in shw13006-az-055-el+20, and no candidate is listed there). I have marked both '?': their charge is negligible so removing them changes no energy, but they are the only reason this object reads as 47 cm rather than 13 cm, and 42012 also sits above the 20.5 deg dashed step on the acceptance plot. I did NOT call over-clustering on them because a 2-point stub picked up on-axis by pass3_cone is the same thing I let stand on evt394167 in this shard, and consistency matters more than a 0.6 cm difference in reach. PID NOT JUDGED, and this is worth stating plainly: a 104 MeV object whose member points span 12.5 cm sits in the ambiguous zone, the reco calls it pdg 11 and the sample calls the event nuecc, and I have neither the granularity nor the calibration to overturn that -- my verdict is about clustering only. NO pi0: no reco group and no second EM object anywhere (the nearest other showers are 2-point stubs at 82, 126, 135 and 158 cm). 7 of the 8 showers are below the 20 MeV scope threshold and were never drawn. Images looked at: 5.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt409140/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:50:28+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt409140/calib-pr-evt409140.json",
+ "subRunNo": 1
+}

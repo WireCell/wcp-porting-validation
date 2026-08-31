@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt58325",
+ "eventNo": 58325,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": 84.79758754696647,
+  "y": -53.57459770810976,
+  "z": 93.2882812915033
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": 84.79758754696647,
+   "y": -53.57459770810976,
+   "z": 93.2882812915033
+  }
+ ],
+ "reco_sep_cm": 0.005469260315456618,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-2 kink: 79 cm muon rises 41k->118k away with the Bragg at 13000, plus a 4.8 cm proton stub flat at 184k (4.3x MIP) going the other way; zoom shows a dark-red stub off a cyan MIP track.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt58325/calib-pr-evt58325.json",
+ "subRunNo": 1
+}

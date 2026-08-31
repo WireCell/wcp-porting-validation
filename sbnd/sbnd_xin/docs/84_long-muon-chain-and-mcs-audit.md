@@ -1,0 +1,1701 @@
+# Doc 84 — long-muon chain construction and the MCS delta-ray question: audit + case list
+
+Owner ask (2026-08-28): *"audit the long muon formation and construction in the
+toolkit. 1. Against the prototype code 2. based on the existing events 1000 and
+2000 numu events, there are some of them contained long muons, which may not be
+recognized, but treated as several particles. Note, the motivation for long
+muons is that a long muon with clearly delta ray, so the vertex can be
+3-segement vertex, which broke one muon to several. … If we broke a long muon to
+several segments, then we cannot get the range correctly. In addition, I also
+want you to audit the MCS calculation for the long muon. In this case, we need
+to exclude the delta ray which can bias the calculation of the MCS. I am not
+ready to modify the code yet, but for this round, you can audit, identify the
+cases from the existing events, and make suggestions on how to improve and plan
+the validation step."*
+
+**Status. AUDIT + MEASUREMENT ONLY. No C++, no jsonnet and no existing arm is
+touched by this doc.** Every proposal in §6 is a *shape* for the owner to
+filter; none is implemented.
+
+**Headline.** The owner's mechanism is real and now counted. On 1366 beam events
+with a PR dump, the toolkit builds **242 muon-typed pseudo-showers**; **62** of
+them carry one of the two defects, and **22** carry the literal signature the
+owner described — a muon whose chain runs through an internal junction with a
+non-muon arm hanging off it. But the two halves of the ask land differently:
+
+- **Chain construction is a faithful 1:1 port** (§1; already certified by
+  doc pr/113 §1.3/§2.5, re-verified here). What breaks the muon is not a port
+  bug — it is the **10° collinearity cut inside `find_cont_muon_segment`**, and
+  an offline replay that **reproduces the shipped chain length exactly** on the
+  reference cases shows the muon being dropped at **10.99°** (evt 313847) and
+  **14.62°** (evt 66366). §4.
+- **The range is not merely "wrong when broken" — it is often literally zero.**
+  `kine_range == 0` on **28 / 242 (11.6%)** muon pseudo-showers, because
+  `calculate_kinematics_long_muon` is dispatched on the shower's *pdg*, but
+  sums length over `segments_in_long_muon` *membership*. When the two disagree
+  the range energy is 0 no matter how much muon is there: **26 of those 28
+  showers hold ≥2 muon-typed segments, 12 hold more than 45 cm and the worst
+  holds 332.8 cm.** §3.2.
+- **Delta rays already bias the shipped dQ/dx energy**, exactly as the owner
+  feared, but in the *charge* estimator rather than in MCS: **128 / 242 (52.9%)**
+  pseudo-showers contain a non-muon member whose charge feeds `kine_dQdx`, and
+  the induced shift has a heavy tail — median 0.9% of the energy, **p90 20%,
+  max 100%**. §3.3. **Removing it is not a free win** (§6, P6): on the clean
+  population it moves the median 2% the wrong way, so it fixes the tail and
+  needs the mode-2 ratio window re-derived.
+- **For MCS the delta-ray premise is already satisfied by the shipped default**
+  (`point_source = "muon_segments"`), with three named residual holes. The live
+  MCS problem is different: in the doc-80 production arm **every one of the 290
+  MCS evaluations used `muon_source = pf_muon` with `nseg = 1`** — a single
+  segment — and in **37 / 287** of those the selected segment is short of the PR
+  muon by ≥20%. §5.
+
+**These are SBND *data*** (MCP2025C reco1, `reality=data`, no `simb::MCTruth`;
+doc 83, doc pr/113 §6.1). "numu events" means beam-data numu candidates. Every
+number below is a reconstruction verdict; purity is unknown and unknowable on
+these arms. The one truth handle in the tree is named in §7.
+
+---
+
+## Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+
+# the whole census (pure read of existing arms; no WCT job is run)
+python3 scripts/d84_longmu_census.py \
+    --calib-arms work-mcp1k-prod0825:mcp1k work-mcp2k-prod0825:mcp2k \
+    --mcs-arm    work-mcp1k-mcs80on \
+    --out docs/84_longmu --out-exist-ok
+echo rc=$?          # exit-code discipline: never judged through a pipe (M14)
+```
+
+Writes `docs/84_longmu/{summary.txt, d84-longmu-showers.tsv, d84-gate-replay.tsv,
+d84-broken-muons.tsv, d84-mcs-sentinel.tsv, d84-mcs-vs-pr-muon.tsv,
+d84_longmu_overview.png}`. Runtime ~4 min single-threaded.
+
+### Anchors, and a warning about line numbers
+
+| what | anchor |
+|---|---|
+| toolkit | **`06dfa09f`** (`apply-pointcloud`), 2026-08-28 |
+| wcp-porting-img | **`e16624d`** (`main`) |
+| the census arms `work-mcp{1k,2k}-prod0825` | produced 2026-08-25 at toolkit **`2aba11dc`**, wcp `b04a94e` (doc 81, "Binary:" line) — current production at the shipped operating point |
+| the MCS arm `work-mcp1k-mcs80on` | `SBND_MCS=1 ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-mcp1k-mcs80on data`, all 1000 events rc=0 (doc 80 §18) |
+| prototype | `prototype_base/` → `/home/xqian/work/scratch_wcgpu1/prototype-dev`, `wire-cell/pid/` |
+
+**Every toolkit line number in this doc is `git show 06dfa09f:<file>`, not the
+working tree.** At the time of writing the tree carried uncommitted probe edits
+from an unrelated in-flight round (doc pr/122: `WCT_SHOWER_PID_DEBUG` in
+`PRShower.cxx` / `NeutrinoShowerClustering.cxx`, plus `wct-pr-perevt.jsonnet`,
+`TaggerCheckNeutrino.{h,cxx}`, `NeutrinoPatternBase.h`,
+`doctest_clus_knob_defaults.cxx`), and the set *grew during this session*.
+Working-tree lines are already shifted by up to 47 (`calculate_kinematics_long_muon`
+is HEAD `PRShower.cxx:1737`, worktree `:1784`). Re-derive before quoting.
+
+---
+
+## 0. Scope, and what this doc does NOT repeat
+
+`sbnd_xin/docs/pr/113_em-shower-pi0-long-muon-coverage-audit.md` §1.3 and §2.5
+already did the **coverage/parity** audit of long-muon construction against the
+prototype and found the port complete, with one candidate divergence (F2, the
+dropped `cal_4mom()` guard). That verdict was **re-verified here** by reading
+both sides again (§1); it is not re-derived, and F2 is not re-litigated.
+
+This doc is about the **consumers** — what the chain's length and membership are
+used *for*, and where that produces a wrong number. Four things are in scope:
+
+1. §1 the construction site and its structural limits (short);
+2. §3 the energy consumer, `calculate_kinematics_long_muon`;
+3. §4 an offline replay of `find_cont_muon_segment` that names which gate breaks
+   each muon;
+4. §5 the MCS driver.
+
+Not in scope: `cal_kine_charge` internals; the tagger bodies (docs 74/75, pr/36)
+except their use of the long-muon sets; the upstream `Mcs::MuonMCS` numerics
+(doc 80/83 own those).
+
+---
+
+## 1. Construction vs the prototype: a faithful port, with faithful limits
+
+Toolkit `NeutrinoVertexFinder.cxx:1860-1919` (inside
+`PatternAlgorithms::examine_direction`, `:1466`) is 1:1 with prototype
+`NeutrinoID_track_shower.h:2137-2190`:
+
+| step | toolkit | prototype |
+|---|---|---|
+| fill-once-per-cluster guard | `:1861-1867` | `:2137-2142` |
+| seed cut, `median dQ/dx / m_mip_dqdx_median > 1.3 → skip` | `:1877-1878` | `:2145` |
+| chain walk `find_cont_muon_segment` | `:1888-1893` | `:2157-2162` |
+| accept gate `total > 45 cm && max > 35 cm && size > 1` | `:1902` | `:2169` |
+| retype every member to pdg 13, clear both shower flags | `:1905-1913` | `:2171-2183` |
+| insert into `segments_in_long_muon` / `vertices_in_long_muon` | `:1912`, `:1915` | `:2183`, `:2186` |
+| purge non-main-cluster members at the end | `:5605-5632` | `NeutrinoID.cxx:393-409` |
+
+`find_cont_muon_segment` (toolkit `:1339-1464`, prototype `:2304-2369`) is
+likewise 1:1: 15 cm-lever direction, `angle < 10°` (or `< 15°` when the incoming
+segment is `< 6 cm`), a 50 cm-lever re-test for candidates `> 50 cm`, candidate
+`dQ/dx ratio < 1.3`, winner by `length·cos(angle)`. The toolkit adds two things
+and nothing else: a zero-magnitude direction guard (`:1377`, the prototype has
+none) and the SBND-ON `flag_stub_bridge` (`:1415-1432`, doc pr/46). Iteration is
+`sorted_out_edges` rather than the prototype's pointer-ordered map — more
+deterministic, not a behaviour change.
+
+### 1.1 Four structural limits a parity check cannot see
+
+All four are present in the prototype too, so **none is a port defect (M15-clean)**
+— and all four are load-bearing for the owner's question:
+
+- **L1 — the chain is only ever seeded at the main vertex.** `examine_direction`
+  is called only as `examine_direction(graph, main_vertex, main_vertex, …)`
+  (`:3964`, `:5362`, `TaggerCheckNeutrino.cxx:2521`; prototype
+  `NeutrinoID_track_shower.h:1381`, `NeutrinoID.cxx:225`). A muon whose first
+  piece *at the main vertex* fails the `1.3×MIP` seed cut yields no chain at
+  all, however long. Measured: **1419** main-vertex seeds rejected here.
+- **L2 — an unbroken muon can never be in the set.** `acc_segments.size() > 1`.
+  Measured: **936** main-vertex seeds rejected on this alone, of which **532 are
+  longer than 45 cm by themselves** (median 143 cm, max 498 cm). Those counts
+  are over *seeds*, not over muons — many are cosmic arms at the main vertex —
+  but they bound the population the `long_muon` MCS arm can never see (§5.3).
+- **L3 — an evenly-broken muon is rejected outright.** `max_length > 35 cm`
+  kills e.g. 3 × 30 cm = 90 cm. Measured: only **4** seeds fail on this alone —
+  a real but rare mechanism.
+- **L4 — the chain labels, it never re-joins.** Members stay separate
+  `PR::Segment`s. Only a consumer that iterates the *set* sees the full length;
+  a consumer holding one segment sees a fragment. That is the whole of §5.
+
+The walk is also greedy (best `length·cos(angle)`, no backtracking) and upstream
+carries no visited set; the replay in §4 adds a 64-step guard and reports `loop`
+separately (it never fired).
+
+---
+
+## 2. The measurement, and what is on disk
+
+`calib-pr-evt<ID>.json` (written only under `PR_EXTRA_STAGES=pr_display`, which
+prod0825 used, `PrDisplayDump.cxx`) carries everything needed to reconstruct the
+PR graph offline: `segments[]` with `id = cluster_id*1000 + graph_index`,
+`start/end_vertex_id`, `length` (fitted arc length, cm), `particle_id` (pdg),
+`flag_shower`, `shower_id`, and per-fit `points[].{x,y,z,dQ,dx,rr}`;
+`vertices[]` with `fit`, `degree`, `is_main`; `showers[]` with `kine_range`,
+`kine_dQdx`, `kine_charge`, `kine_best`, `total_length`. The membership join is
+`segments[].shower_id == showers[].id` (`PrDisplayDump.cxx:490` vs `:577`).
+
+**Two denominators, both reported** (pr/113 §6.2 precedent, they are not
+interchangeable):
+
+| pool | mcp1k | mcp2k | total |
+|---|---|---|---|
+| events in the arm | 1000 | 2000 | 3000 |
+| events with `calib-pr-evt*.json` (TaggerCheckNeutrino evaluated a main cluster) | **461** | **905** | **1366** |
+| muon-typed pseudo-showers found | 88 | 154 | **242** |
+
+### 2.1 One real closure test, one weak one, and the precondition that matters
+
+All three are printed by the script:
+
+```
+CLOSURE max |dqdx_all/kine_dQdx - 1| = 4.44e-16 over 242 showers
+(weak)  max |range(L_chain) - kine_range| = 9.00e-04 MeV
+PRECONDITION start-segment pdg == 13: 241 / 242
+  L_chain MEANINGLESS (wrong range table): mcp2k evt 294174 shower 16028 start_pdg=11 kine_range=0.0001
+```
+
+- The first re-integrates `cal_kine_dQdx` offline — the SBND
+  `PowerBoxRecombination` operating point (`clus.jsonnet` `sbnd_power_recomb`,
+  `use_power_recomb=true`; `Gen::PowerBoxRecombination::dE`,
+  `gen/src/RecombinationModels.cxx:160-176`) over the *same member set* — and
+  reproduces the shipped `kine_dQdx` to machine precision. So "what happens if
+  the delta rays are excluded" (§3.3) is a real subtraction, not a model guess.
+- The second inverts the shipped SBND `muon_range_function` (a 1067-point
+  `LinterpFunction`, range cm → KE MeV, `particle_dataset.jsonnet:136`) on
+  `kine_range` and re-forwards it. **On its own this shows only that the
+  interpolation is monotone and invertible — it is not independent evidence
+  the way the dQ/dx closure is.** What makes `L_chain` trustworthy is a
+  separate precondition, checked explicitly: `cal_kine_range` is called
+  (`PRShower.cxx:1781`) with `particle_type = abs(m_start_segment->
+  particle_info()->pdg())` — the **start segment's** pdg, *not* the shower type
+  this census filters on (`PrDisplayDump.cxx:579`) — so the muon table is the
+  right one only if the start segment is itself pdg 13.
+
+  Checked over all 242: `showers[].id` is `pf_node_id(shower->start_segment())`
+  (`PrDisplayDump.cxx:577`), so the start segment is `segments[id]`.
+  **241 / 242 have a pdg-13 start segment.** The single exception is
+  `mcp2k` evt 294174 shower 16028, whose start segment is **pdg 11** — its
+  `kine_range = 0.0001 MeV` came from the *electron* table and its `L_chain`
+  (and therefore `L_unchained_cm`) is meaningless. That row is classified
+  `deltaray_charge` on charge fraction, not on chain length, so the case list
+  is unaffected; it is flagged here and in §4.3 rather than silently kept.
+  (That a muon-typed shower can carry a non-muon start segment is the subject
+  of the in-flight doc pr/122; one case in 242 here.)
+
+---
+
+## 3. The energy consumer
+
+### 3.1 Where the numbers come from
+
+`NeutrinoEnergyReco.cxx:331` dispatches every shower with `|pdg| == 13` to
+`Shower::calculate_kinematics_long_muon` (`PRShower.cxx:1737`), which:
+
+- accumulates `total_length` **only over `segments_in_long_muon` members**
+  (`:1765-1771`, guarded by `bool in_muons`), then
+  `data.kenergy_range = cal_kine_range(total_length, 13, …)` (`:1781`);
+- accumulates `vec_dQ`/`vec_dx` over **every segment in the pseudo-shower**
+  (`:1773-1777` — *outside* the `if (in_muons)` block), then
+  `data.kenergy_dQdx = cal_kine_dQdx(...)` (`:1782`);
+- sets `data.kenergy_best = data.kenergy_dQdx` (`:1785`), which doc pr/101 K4's
+  `kine_long_muon_mode` (SBND = **2**, `wct-pr-perevt.jsonnet:1779`) may replace
+  with range when `kenergy_range > 0`, `end_degree == 1`, and
+  `kine_dQdx/kine_range ∈ [1-0.3, 1+0.5] = [0.7, 1.5]` (`:1815-1826`).
+
+The prototype is **identical**, including the length/charge asymmetry, and
+carries the original author's own TODO in-code:
+
+```cpp
+   kenergy_range = start_segment->cal_kine_range(L);
+   kenergy_dQdx  = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
+   // long muon ... // should be improve in the future using range ...
+   kenergy_best  = kenergy_dQdx;
+```
+`prototype_base/wire-cell/pid/src/WCShower.cxx:288-303`. **M15-clean: not a
+divergence, a carried limitation.**
+
+### 3.2 The range is zero on one muon shower in nine
+
+| outcome for `kine_best` | count / 242 |
+|---|---|
+| resolved to `kine_range` | 184 (76.0%) |
+| resolved to `kine_dQdx` | 30 (12.4%) |
+| resolved to `kine_charge` (a later SBND-ON override) | 28 (11.6%) |
+
+and the reason mode 2 did **not** take range:
+
+| why | count / 242 |
+|---|---|
+| `kine_range == 0` — the chain contributed **no length at all** | **28 (11.6%)** |
+| `kine_dQdx/kine_range` outside `[0.7, 1.5]` | 9 (3.7%) |
+| `end_degree != 1`, or a later override won | 21 (8.7%) |
+
+**The `kine_range == 0` class is a dispatch/membership mismatch, and it is the
+single largest clean defect this doc found.** `NeutrinoEnergyReco.cxx:331`
+routes a shower into `calculate_kinematics_long_muon` on `|pdg| == 13` — the
+shower's own particle type — but the function measures length over
+`segments_in_long_muon` *membership*. When a muon-typed shower carries no chain
+member, `total_length = 0` and `cal_kine_range(0, …) = 0`, however much muon
+track the shower actually holds:
+
+| composition of the 28 `kine_range == 0` showers | count |
+|---|---|
+| carry ≥2 muon-typed member segments | **26 / 28** |
+| carry > 45 cm of muon-typed length | 12 / 28 |
+| carry > 100 cm | 8 / 28 |
+| largest | **332.8 cm** |
+
+Worked example, `mcp2k` evt 497311 shower 15000: one muon-typed segment of
+**332.8 cm**, `kine_range = 0`, `kine_dQdx = 722.9 MeV`, shipped
+`kine_best = kine_charge = 508.5 MeV`. A 333 cm muon's range energy is ≈760 MeV.
+(This particular event is also an instance of L2 — a single segment can never be
+a "long muon" — but L2 explains only **2 of the 28**; the other 26 have multiple
+muon-typed members and simply have no chain.)
+
+### 3.3 Delta-ray charge in the dQ/dx integral — the tail, not the median
+
+| metric over the 242 muon pseudo-showers | count |
+|---|---|
+| ≥1 **non-muon** member segment | **128 (52.9%)** |
+| non-muon member *length* > 5% of the muon length | 55 (22.7%) |
+| non-muon member *charge* > 5% of the total | **45 (18.6%)** |
+
+The energy this adds (offline subtraction, closure-verified §2.1):
+
+```
+dQ/dx delta-ray shift:  median 5.0 MeV   p90 42.5 MeV   max 404.8 MeV
+as a fraction of kine_dQdx: median 0.009   p90 0.204   max 1.000
+```
+
+Two illustrations from the case list:
+
+- **`mcp2k` evt 99232 shower 17013** (hand-verified, §4.2): a 236.6 cm + 10.3 cm
+  muon chain, complete, plus an absorbed **40.0 cm proton** (median dQ/dx =
+  2.21×MIP) and a 16.8 cm electron. 26.6% of the charge is non-muon.
+  `kine_range = 570.5 MeV`, `kine_dQdx = 795.9 MeV`, and `kine_best` takes
+  **dQdx** because the ratio 1.395 sits *inside* the `[0.7, 1.5]` window. Excluding
+  the two non-muon members gives 570.5 MeV — agreeing with range to the printed
+  precision (one case; see the population result below before reading anything
+  general into it).
+- **`mcp2k` evt 294174 shower 16028**: `dQ_frac_oth = 1.000` — a 1.8 cm muon
+  segment and **8** non-muon members totalling 157.6 cm. The entire
+  `kine_dQdx = 404.8 MeV` is daughter charge.
+
+**And the honest population result, which changes the recommendation.**
+Restricting the chain's dQ/dx to chain members does **not** globally improve
+agreement with range:
+
+| population (`kine_range > 50 MeV`) | n | `dQdx_all/range` median | `dQdx_chain/range` median | outside `[0.7,1.5]` |
+|---|---|---|---|---|
+| all | 203 | 0.982 | 0.961 | 18 → 20 |
+| contaminated (`dQ_frac_oth > 0.05`) | 25 | 1.078 | **0.912** | 3 → 5 |
+| clean (`dQ_frac_oth ≤ 0.05`) | 178 | 0.979 | 0.967 | 15 → 15 |
+
+`docs/84_longmu/d84_longmu_overview.png` shows all three: the non-muon charge
+fraction, the unchained muon length, and the `kine_dQdx` vs `kine_range` scatter
+with the mode-2 `[0.7, 1.5]` fallback window drawn.
+
+So the delta-ray contamination is a **heavy-tail** effect, not a median bias, and
+the naive fix pulls the median ~2% low and by the shipped ratio-window metric is
+a wash. §6 P6 is written accordingly: it is a tail fix that requires the mode-2
+window to be re-derived, not a drop-in improvement.
+
+---
+
+## 4. Gate replay — which cut breaks the muon
+
+`scripts/d84_longmu_census.py` re-implements `find_cont_muon_segment` and the
+accept gate directly from the calib JSON (`segment_cal_dir_3vector`,
+`PRSegmentFunctions.cxx:2363-2390`, is a mean-of-nearby-fit-points minus the
+vertex, normalised; `segment_median_dQ_dx`, `:1608`, is a median of
+`dQ/(dx+1e-9)`; both reproduce trivially), then walks from every main-vertex
+seed with `flag_stub_bridge` ON and OFF.
+
+> **Caveat, stated because it bounds every number in this section.** The calib
+> JSON is the **final** PR state; `examine_direction` ran earlier, on a graph
+> that may since have changed. This is *not* a bit-exact re-execution.
+> Measured agreement: on the 105 events where both a shipped chain length and an
+> accepted replay chain exist, **86 / 105 (82%)** agree within 5%. The 18% is the
+> epoch gap. On the reference cases below the agreement is exact.
+
+### 4.1 Where the seeds die
+
+| gate (stub_bridge ON) | seeds |
+|---|---|
+| `median dQ/dx > 1.3×MIP` on the seed (L1) | 1419 |
+| `acc_segments.size() > 1` (L2) | 936 |
+| **accepted** | **103** |
+| `max_length > 35 cm` (L3) | 4 |
+
+and where an accepted or attempted walk *stopped*:
+
+| stop reason | ON | OFF |
+|---|---|---|
+| seed rejected before the walk | 1419 | 1419 |
+| genuine dead end (degree-1 vertex) | 811 | 811 |
+| **angle test** | **116** | 117 |
+| angle **and** dQ/dx | 86 | 86 |
+| dQ/dx only | 30 | 29 |
+
+**`long_muon_stub_bridge` (SBND ON) changes exactly one walk in 1366 events on
+the final graph.** That is not evidence the knob is dead — pr/46 measured it at
+`examine_direction` time, where short stubs are far more common — but on the
+final graph its `sg_length < 6 cm` precondition almost never holds. It is
+therefore *not* a meaningful delta-ray-into-the-chain vector here (§5).
+
+### 4.2 The angle cut is what breaks the muon, and it breaks it by a hair
+
+Of the 202 walks stopped by the angle test, the distribution of the rejected
+candidate's angle:
+
+| angle of the best rejected continuation | walks | of which the candidate is > 20 cm |
+|---|---|---|
+| 10–12° | 6 | 5 |
+| 12–15° | 9 | 8 |
+| 15–20° | 11 | 6 |
+| 20–30° | 31 | 7 |
+| > 30° | 145 | 20 |
+
+**25 candidates longer than 50 cm were rejected on angle alone; their angles have
+median 15.6° and minimum 10.4°** — i.e. a population of long, MIP-like, nearly
+collinear continuations sitting just outside a 10° cut.
+
+Two hand-verified reference cases (raw calib JSON read by hand, then compared
+with the automated verdict):
+
+**`mcp2k` evt 66366, shower 22006 — the owner's picture exactly.**
+
+```
+seg 22009  pdg=13  L=174.43 cm  medianQ/MIP=1.13  v(22007,22000) deg(2,1)
+seg 22006  pdg=13  L= 91.68 cm  medianQ/MIP=1.15  v(22005,22001) deg(3,2)
+seg 22005  pdg=13  L= 27.67 cm  medianQ/MIP=1.11  v(22003,22005) deg(2,3)
+seg 22007  pdg=11  L=  6.85 cm  medianQ/MIP=0.86  v(22005,22006) deg(3,1)   <- the delta ray
+seg 22008  pdg=13  L=  6.81 cm  medianQ/MIP=1.04  v(22007,22003) deg(2,2)   <- the stub
+```
+One muon of **300.6 cm** in four MIP pieces (all four well under the 1.3 seed
+cut), with a 6.85 cm electron hanging off the degree-3 vertex 22005 — the
+3-segment vertex. Replay: seed 22006 → accepted, 3 segments, **126.2 cm**,
+which is **exactly the shipped `L_chain = 126.2 cm`**. The walk stopped with
+`stop=angle, candidate 174.4 cm, angle 14.62°, ratio 1.129, stop vertex degree 2`.
+Shipped result: `kine_range = 307.0 MeV` (for 126 cm) instead of ≈680 MeV;
+ratio 2.14 is outside the window so `kine_best` falls to `kine_dQdx = 656.0 MeV`.
+Note the stub that carries the direction into the break is **6.81 cm** — 0.81 cm
+*above* `long_muon_stub_bridge`'s `< 6 cm` precondition.
+
+**`mcp1k` evt 313847, shower 19014 — one degree of arc.**
+
+```
+seg 19001  pdg=13  L=162.40 cm  medianQ/MIP=1.09  v(19000,19002) deg(1,2)
+seg 19022  pdg=13  L= 78.28 cm  medianQ/MIP=1.12  v(19002,19008) deg(2,3)
+seg 19014  pdg=13  L= 20.27 cm  medianQ/MIP=1.11  v(19008,19006) deg(3,3)
+seg 19015  pdg=11  L=  6.85 cm  medianQ/MIP=1.21  v(19008,19009) deg(3,1)   <- the delta ray
+```
+260.9 cm of muon in three pieces; delta ray at the degree-3 vertex 19008.
+Replay: accepted, 2 segments, **98.54 cm** = the shipped `L_chain` exactly.
+Stop: `angle, candidate 162.4 cm, **angle 10.99°**, ratio 1.092, degree 2`.
+**The 162 cm continuation missed the 10° cut by 0.99°.** Shipped
+`kine_range = 248.3 MeV` for a 261 cm muon (true range energy ≈ 575 MeV);
+`kine_best = kine_dQdx = 547.5 MeV`.
+
+**`mcp2k` evt 99232, shower 17013 —** the contamination case quoted in §3.3;
+chain complete, defect is entirely in the dQ/dx integral.
+
+### 4.3 The delivered case list
+
+`docs/84_longmu/d84-broken-muons.tsv`, **62 rows**, one per muon pseudo-shower
+that shows either defect, sorted worst-first:
+
+| class | rows |
+|---|---|
+| `deltaray_charge` — chain complete, >5% of the charge from non-muon members | 35 |
+| `broken_chain` — >20 cm of muon-typed length outside the chain, or `kine_range==0` with >45 cm of muon | 17 |
+| `both` | 10 |
+| of these, with an internal junction carrying a non-muon arm (`n_deg3_internal > 0`) | **22** |
+| of these, with an MCS sentinel in `work-mcp1k-mcs80on` | 19 |
+
+Columns: `arm run subrun evt shower defect n_mu n_oth L_mu_cm L_chain_cm
+L_unchained_cm n_deg3_internal min_arm_cm dQ_frac_oth dqdx_shift_MeV kine_range
+kine_dQdx kine_charge kine_best best_is fallback_why mcs_*`. `L_chain_cm` is the
+inverted-`kine_range` chain length (§2.1), `L_unchained_cm = L_mu − L_chain`.
+
+Worst broken chains: evt 497311 (332.8 cm, chain 0), 177536 (294.8, 0),
+74784 (291.3, chain 29.9), 53793 (240.9, 0), 281595 (351.0, chain 130.0),
+178885 (195.0, 0), 66366 (300.6, chain 126.2), 313847 (260.9, chain 98.5).
+Worst contamination: 294174 (100% of charge), 286681 (73%), 54629 (28%),
+99232 (27%), 288327 (25%).
+
+> **Three honesty notes on the table.** (i) `L_unchained` is clamped at 0; in a
+> few rows `L_chain > L_mu` (e.g. evt 101828: 128.9 vs 110.6 cm), meaning the
+> chain contains a member whose *final* pdg is no longer 13 — the epoch gap
+> again. (ii) `n_deg3_internal` counts junctions shared by ≥2 muon-typed members
+> that also carry a non-chain arm; it is a proxy for the owner's 3-segment
+> vertex, not a truth label. (iii) **`mcp2k` evt 294174's `L_chain_cm` /
+> `L_unchained_cm` are meaningless** — its start segment is pdg 11 so
+> `cal_kine_range` used the electron table (§2.1). The row is kept because its
+> defect is charge contamination (`dQ_frac_oth = 1.000`), which does not depend
+> on the range inversion.
+
+---
+
+## 5. MCS
+
+**Operating point first: `mcs_enable = false` in SBND production**
+(`wct-pr-perevt.jsonnet:1196`). Nothing in this section affects the shipping
+chain; it is about the doc-80 arms and about what to enable.
+
+### 5.1 The delta-ray premise is already satisfied — with three named holes
+
+With the shipped default `point_source = "muon_segments"`
+(`MuonMCSDriver.cxx:228-230`) the cloud handed to `Mcs::MuonMCS::run` is *only*
+the selected muon segments' `fits()` points. **A delta ray that is its own
+`PR::Segment` never enters.** The residual holes, in order of how live they are:
+
+1. **A chain member admitted only by `long_muon_stub_bridge`'s 45° relaxation**
+   (`NeutrinoVertexFinder.cxx:1415-1432`, SBND ON). Its explicit veto already
+   excludes shower-flagged and pdg-±11 arms (`:1422-1425`), and §4.1 measures it
+   changing **one** walk in 1366 events on the final graph. **Effectively not a
+   vector.**
+2. **Delta-ray charge merged inside a muon segment's own fit trajectory.** Not
+   separable at this layer at all — the fit points *are* the trajectory. This is
+   the only genuinely open channel, and it is a track-fitting question, not an
+   MCS one.
+3. **`point_source = "whole_event"`** (`:210-227`) harvests every segment and
+   every vertex in the graph. Documented validation-only (doc 80 §7.3); it must
+   never be a production setting, and this doc records why.
+
+The upstream header says extra activity "is tolerated — stage 1 trims it"
+(`mcs/inc/WireCellMcs/MuonMCS.h:215-217`). **Tolerated is weaker than excluded**,
+and the shipped default does not rely on it. Say so rather than leaning on trim.
+
+### 5.2 The live MCS problem is L4, not delta rays
+
+In `work-mcp1k-mcs80on` — 1000 events, the doc-80 round-4 production arm — the
+log sentinel fires on **289 events / 290 evaluations**, and:
+
+```
+muon_source: {'pf_muon': 290}
+nseg (segments handed to MCS): {'1': 290}
+```
+
+**Every single MCS evaluation used one segment.** `muon_source = "pf_muon"`
+(`MuonMCSDriver.cxx:80-97`) ranks `|pdg| == 13` segments by kinetic energy and
+pushes exactly one. Three consequences:
+
+- the MCS trajectory is that fragment's points;
+- `muon_min_length_cm = 40` is applied to the fragment, so a muon that is long
+  only in total can be skipped entirely;
+- the logged comparator `ke_range_toolkit = cal_kine_range(total_length_cm, 13, …)`
+  (`:270`) is the **fragment's** range energy.
+
+Measured **within the same arm** (no cross-arm join — the arms are different
+binaries and segment the same track differently), against `T_kine`'s
+`kine_energy_particle` for the muon, i.e. what the PR chain itself assigned:
+
+```
+PR muon KE / ke_range_toolkit(selected segment):  median 1.000   p90 1.328
+the selected segment is short of the PR muon by >= 20%:  37 / 287
+ke_MCS / ke_range_toolkit:  median 1.123 ;  > 1.5 in 101 / 287
+```
+
+So in the median event the pf muon *is* the whole muon (consistent with L2: most
+muons are single segments). But in **37 / 287 (12.9%)** the MCS comparator is
+computed on a fragment carrying ≥20% less energy than the PR muon — and those
+events land in the high-side `ke_MCS/ke_range` tail that doc 83 investigated.
+
+> **Relation to doc 83.** Doc 83 §2 step 4b tested "is there an adjacent
+> fragment" and correctly found it non-discriminating (67% of outliers, 73% of
+> all contained muons). The measurement here is a different one — *how much
+> muon-typed energy sits outside the segment MCS was given* — and it is not a
+> refutation of doc 83's conclusion, which was about the statistical mechanism.
+> It is a second, additive contribution worth separating before the tail is
+> re-attributed. **An earlier cross-arm version of this number (a "median 74%
+> length coverage") is retracted:** joining `work-mcp1k-prod0825` to
+> `work-mcp1k-mcs80on` by event number is invalid, and the within-arm number
+> above (median 1.000) is the one to quote.
+
+### 5.3 Two further findings in the driver
+
+- **`muon_source = "long_muon"` (`:98-111`) is the complement of `pf_muon`, not
+  a superset.** It takes the whole chain — but by L2 the chain requires ≥2
+  segments, so this arm **silently skips every unbroken muon** (532 of the
+  main-vertex seeds here would be >45 cm on their own). **There is no hybrid
+  arm.** That is why the default is `pf_muon`, and why neither arm is right.
+- **The endpoint logic (`:147-200`) assumes exactly two degree-1 extremes.** A
+  chain with a mid-chain branch falls into the most-separated-pair fallback
+  (`:174-193`). Of the 62 case-list rows, **22** have at least one internal
+  junction with an extra arm, so the fallback is not a corner case for the
+  `long_muon` arm.
+- **Closed, not a concern:** `segments_in_long_muon` cannot mix clusters by the
+  time MCS runs — `determine_overall_main_vertex` purges non-main-cluster
+  members at `NeutrinoVertexFinder.cxx:5605-5632`, matching prototype
+  `NeutrinoID.cxx:393-409`, and `mcs_fill_kine` is called after that
+  (`TaggerCheckNeutrino.cxx:2834`).
+
+### 5.4 The prototype has no MCS
+
+A full sweep of `prototype_base/` finds **no scattering-angle momentum
+estimator** — no Highland formula, no `theta_rms`/`sigma_theta`, no MCS fitter.
+The only `wire-cell/mcs/` there is truth-level *simulation*
+(`WCPMCSSim/MCSSim.h`, `Eloss.h::get_mcs_angle`), never called from any
+`NeutrinoID_*` / `ProtoSegment` reconstruction file. The prototype's estimators
+are range (`ProtoSegment::cal_kine_range`, `ProtoSegment.cxx:1380`) and dQ/dx
+only. **So "audit MCS against the prototype" has no referent**: the MCS audit is
+against the ubreco/MicroBooNE upstream and doc 80/83, and is recorded as such.
+
+---
+
+## 6. Improvement proposals — shapes only, nothing shipped
+
+Each is a default-OFF knob with a hit counter, so a rate can be measured before
+any flip (pr/32 F3 / pr/113 precedent: ship the counter, read it, *then* decide).
+Ordered by how well the measurement supports them.
+
+| # | knob | site (HEAD `06dfa09f`) | what, and what the measurement says |
+|---|---|---|---|
+| **P1** | `long_muon_range_empty_chain_fallback` | `PRShower.cxx:1765-1781` | When the chain contributes **zero** length, fall back to the muon-typed member length of the pseudo-shower (or, if there is none, the start segment's own length) instead of leaving `kenergy_range = 0`. **Directly addresses the 28/242 `kine_range == 0`** — the largest and least ambiguous defect found, and one whose cause (dispatch on pdg, measure on membership, §3.2) is unambiguous. Strictly widens where mode 2 can take range; changes nothing when the chain is non-empty. Ship the counter first: 26 of the 28 have ≥2 muon members, so the fallback is a *sum*, not a single segment. |
+| **P2** | `long_muon_angle_relax_long` | `NeutrinoVertexFinder.cxx:1401-1402` | Raise the continuation angle cut for a **long** (> 50 cm) MIP candidate from 10° to ~16°, keeping 10° elsewhere. **25 such candidates were rejected on angle, median 15.6°, min 10.4°**; evt 313847 misses by 0.99°, evt 66366 by 4.62°. Cheapest fix for the owner's exact mechanism. Must ship with the junction veto `long_muon_stub_bridge` already uses (`:1418-1430`) so a hadronic vertex is not bridged. |
+| **P3** | `long_muon_stub_bridge_len` | `NeutrinoVertexFinder.cxx:1416` | Make the stub-bridge precondition `sg_length < 6 cm` a configurable length. evt 66366's stub is **6.81 cm** — the shipped knob misses it by 0.81 cm. A one-number generalisation of an already-approved mechanism. |
+| **P4** | `mcs_muon_source = "long_muon_else_pf"` | `MuonMCSDriver.cxx:80-127` | The missing hybrid arm: the chain when one exists, else the pf muon segment. Without it neither shipped arm covers both populations (§5.3). Prerequisite for enabling MCS on broken muons at all. |
+| **P5** | `mcs_range_comparator_chain` | `MuonMCSDriver.cxx:264-276` | Make the logged `ke_range_toolkit` comparator use the long-muon chain rather than the single selected segment. **Log-only, no output bytes move** — the cheapest way to test §5.2's 37/287 against doc 83's tail. Would be the natural first MCS step. |
+| **P6** | `kine_long_muon_dqdx_chain_only` | `PRShower.cxx:1773-1777` | Restrict `vec_dQ`/`vec_dx` to chain members so delta-ray charge stops feeding the muon's dQ/dx energy. **Deliberately ranked last.** §3.3 measures it as a tail fix that moves the clean-population median 2% low and, by the shipped `[0.7, 1.5]` metric, is a net wash (18 → 20 outside). It should not ship without re-deriving `kine_long_muon_ratio_{lo,hi}`, and probably wants an `if contaminated` guard rather than an unconditional restriction. |
+| **P7** | `mcs_exclude_shower_members` | `MuonMCSDriver.cxx:228-230` | Drop shower-flagged / pdg ±11 chain members from the harvested cloud. **Listed for completeness and NOT recommended now**: §5.1 measures the only route by which such a member enters (the stub bridge) at one walk in 1366 events. |
+
+Not proposed, deliberately: relaxing L2 (`acc_segments.size() > 1`) at the
+construction site. It would put every long single-segment muon into
+`segments_in_long_muon`, which is read by the numu and cosmic taggers
+(`NeutrinoTaggerNuMu.cxx:122-144`, `NeutrinoTaggerCosmic.cxx:588-604`) and by
+shower clustering — a large blast radius for a problem P1 fixes locally at the
+consumer.
+
+---
+
+## 7. Validation plan for whichever of §6 the owner picks
+
+Every item is a *separate* implementation round under `/wct-knob` + `/ab-verify`.
+
+**Gate 1 — knob OFF is byte-identical.** `scripts/pr85_hash_gate.py` against the
+current production arms on all four samples (`nuecc48`, `ncpi0`, `mcp1k`,
+`mcp2k`; 6134 archives + `pr94_root_gate.py` 3067 ROOT files, the prod0825
+counts), labels reported. Compiled-config proof that the key appears only when
+on (`wcsonnet … | grep <key>`). M1 freshness proof (`local/lib/libWireCellClus.so`
+mtime newer than the last source edit) *before* the A/B. `./build/clus/wcdoctest-clus`
+green, and the knob pinned in `doctest_clus_knob_defaults.cxx`.
+
+**Gate 2 — the ON effect is the intended one.** The knob's hit counter is
+non-zero, and the movers are drawn from `docs/84_longmu/d84-broken-muons.tsv`.
+For P2/P3 specifically, the diff of `d84-gate-replay.tsv` before/after must show
+the recovered continuations and nothing else.
+
+**Gate 3 — the physics metric, reco-internal** (these arms are data, §0):
+re-run this census on the ON arm and require, on the case list:
+
+- P1: `kine_range == 0` count falls from 28/242, and no shower that previously
+  had a non-zero `kine_range` changes it;
+- P2/P3: `L_unchained_cm` falls; `kine_dQdx/kine_range` concentrates *into*
+  `[0.7, 1.5]` (currently 18/203 outside) rather than out of it;
+- P5: `ke_MCS/ke_range_toolkit` (currently median 1.123, >1.5 in 101/287) moves
+  toward 1 on the 37 fragment events specifically, with the other 250 unmoved.
+  Doc 83's `80_mcs/mcs_vs_range_scatter.png` is the baseline plot.
+
+A metric that moves the *median* of the clean population is a red flag, not a
+win — that is the P6 lesson (§3.3).
+
+**Gate 4 — the one truth handle.** For the delta-ray question specifically,
+reco-internal cross-checks can only say two estimators agree, never that either
+is right. **`work-mcsim-stmon`** (52 events, MC with truth dQ/dx *and* delta
+rays; docs 44/46) is the only place in the tree where "did excluding the delta
+rays move the estimate the right way" can be answered against truth. It is small
+and is not a numu sample, so it validates the **mechanism**, not the rate. If
+the owner wants a rate, a numu MC sample with truth has to be produced — that is
+a request, not something this round can substitute for.
+
+**Gate 5 — owner hand-scan.** The 22 rows with `n_deg3_internal > 0` are the
+scan set; `pr_display` (docs pr/26, pr/27) renders each from its own
+`calib-pr-evt<ID>.json`. A Bee before/after package only on request
+(`/bee-review`; upload is owner-gated, CLAUDE.md §5.6).
+
+---
+
+## 8. What is NOT claimed
+
+- No statement about efficiency or purity. These are data; there is no truth.
+- The §4 replay is on the **final** graph and agrees with the shipped chain on
+  86/105 events (§4 caveat). Per-gate counts are therefore indicative for the
+  population and exact only on the cases hand-verified in §4.2.
+- `n_deg3_internal` is a proxy for "3-segment vertex", not a label.
+- The MCS numbers cover **`mcp1k` only** — `work-mcp2k-mcs80{off,offb,ref}` exist
+  but there is **no `work-mcp2k-mcs80on`**, so the MCS join is 289 events while
+  the topology census is 1366.
+- Doc pr/113's F1/F2 candidates are neither re-derived nor closed here.
+- Nothing about `Mcs::MuonMCS`'s own numerics; docs 80 and 83 own those.
+
+---
+
+# Round 1 — implementation: MCS ON + P1 shipped, P2/P3 built and HELD, P4/P5 shipped
+
+**Status.** Owner-directed implementation round (2026-08-28): turn MCS ON for
+SBND production, act on P1 (kine_range==0), implement P2+P3 (held OFF for the
+owner hand-scan), P5, and the P4 hybrid MCS source (owner choice over pf_muon).
+All C++ knobs DEFAULT OFF; the SBND production flip is a separate cfg commit
+under owner pre-authorization.  Line numbers in this round refer to the doc-84
+round-1 toolkit commits (the audit sections above cite `06dfa09f`).
+
+## R1.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild > /home/xqian/tmp/build.log 2>&1; echo rc=$?     # then freshness proof
+./build/clus/wcdoctest-clus && ./build/mcs/wcdoctest-mcs
+
+# gate + smoke arms (98-evt manifest = the pr/117-121 gate family; 31-evt Bee set):
+/home/xqian/tmp/d84_arms.sh off1                          # OFF gate arm
+/home/xqian/tmp/d84r1/bee_arms.sh beeoff                  # Bee OFF (31 evts)
+/home/xqian/tmp/d84r1/bee_arms.sh beeonB SBND_MCS=1 SBND_MCS_MUON_SOURCE=long_muon_else_pf \
+    SBND_MCS_RANGE_COMPARATOR_CHAIN=1 SBND_LONG_MUON_RANGE_FALLBACK=1
+/home/xqian/tmp/d84r1/bee_arms.sh beeon2B <same> SBND_LONG_MUON_ANGLE_RELAX=1 SBND_LONG_MUON_STUB_BRIDGE_LEN=7.5
+python3 scripts/pr85_hash_gate.py work-pr120r1-flipchk-<s> work-d84r1-off1-<s>
+python3 scripts/pr85_hash_gate.py work-d84r1-on98-<s> work-d84r1-flipchk98-<s>   # flip equivalence
+```
+
+## R1.1 What shipped (knob table)
+
+| # | config key | site | C++ default | SBND 2026-08-28 |
+|---|---|---|---|---|
+| P1 | `long_muon_range_empty_chain_fallback` | `PRShower.cxx` `calculate_kinematics_long_muon` + TCN post-reconcile recompute pass | false | **PRODUCTION ON** |
+| P2 | `long_muon_angle_relax_long` / `long_muon_angle_relax_deg` | `NeutrinoVertexFinder.cxx` `find_cont_muon_segment` (6th param, formation walk only) | false / 16.0 | **PRODUCTION ON** (owner-directed post Bee scan; measured latent — see R1.9) |
+| P3 | `long_muon_stub_bridge_len` | stub-bridge `< 6 cm` precondition as a member | 6.0 cm | **PRODUCTION ON at 7.5 cm** (owner-directed post Bee scan; one mover, 66366 — see R1.9) |
+| P4 | `mcs_muon_source = "long_muon_else_pf"` | `MuonMCSDriver.cxx` new arm: chain when one exists, else the pf muon | `"pf_muon"` | **PRODUCTION ON** |
+| P5 | `mcs_range_comparator_chain` | second log-only `mcs: chain comparator` INFO sentinel | false | **PRODUCTION ON** |
+| — | `mcs_enable` | existing doc-80 gate | false | **PRODUCTION ON** (books the five `kine_mcs_*` T_kine branches) |
+
+**P1 is two coupled pieces under one key** (the audit's §3.2 attribution was
+incomplete — see R1.3): (a) the empty-chain fallback inside
+`calculate_kinematics_long_muon` (sum muon-typed members when
+`segments_in_long_muon` contributed nothing, and feed their vertices to the
+endpoint/end_degree logic); (b) a post-`reconcile_particle_flags` pass in
+TaggerCheckNeutrino that clears `flag_kinematics` on showers that are
+muon-typed with `kine_range == 0` and reruns `calculate_shower_kinematics`
+once — because the dominant mechanism is a shower (re)typed |13| AFTER its
+kinematics pass, which keeps the generic multi-track verdict
+`kenergy_range = 0 / kenergy_best = 0` forever (retyping never clears the
+flag).
+
+## R1.2 Gate ledger
+
+| gate | arms | result |
+|---|---|---|
+| knob-off byte-identical (final binary) | `work-pr120r1-flipchk-*` vs `work-d84r1-off1-*` (98 evts, 4 samples) | **PASS 196/196** (28+34+38+96); `nusel-evt*.tsv` **98/98** identical |
+| knob-off, first binary iteration | `work-pr120r1-flipchk-*` vs `work-d84r1-off0-*` | PASS 196/196 (superseded by off1 after the P1b recompute pass was added) |
+| doctests | `build/clus/wcdoctest-clus`, `build/mcs/wcdoctest-mcs` | 2466/2466, 5651/5651 (incl. new default pins) |
+| compiled config, knobs off (Step A) | `wcsonnet` full tagger pipeline, pre-edit vs post-TLA | byte-identical (`diff` empty) |
+| compiled config, production flip (Step B) | same | exactly 8 keys appear: `mcs_enable/muon_source/point_source/cathode_x/cathode_xcut/range_comparator_chain`, `long_muon_range_empty_chain_fallback`, `mcs_output`; P2/P3 keys absent |
+| flip equivalence | `work-d84r1-on98-*` (env TLAs, pre-flip cfg) vs `work-d84r1-flipchk98-*` (post-flip cfg, no env) | **PASS 196/196** (28+34+38+96) — one nuecc48 event (256587) rerun after an operator stop mid-arm, then gated |
+| ON-state divergence signature (31 Bee evts) | `beeoff` vs `beeonB` | calib-pr json 31/31 differ (kine_mcs scalars), `mabc-pr.zip` 19/31 (PF labels where kine_best moved), `nusel` **0/31**, `pctree` **0/31** |
+
+`work-d84r1-flipchk98-*` (98 evts × 4 samples, post-flip config, no env) is the
+**new SBND production baseline** for subsequent rounds, superseding
+`work-pr120r1-flipchk-*`.
+
+## R1.3 P1 measured effect — 20/20 range_zero rescued, nothing else moves
+
+The audit's §3.2 said the 28 `kine_range==0` showers were "dispatch (shower
+pdg) vs measurement (chain membership) mismatch."  Half right.  The knob-on
+runs show **none** of the dump-level range_zero population even reaches
+`calculate_kinematics_long_muon`: their kinematics ran the generic
+multi-track branch (`nsegments != nconnected_segs` ⇒ `kenergy_range = 0`,
+`kenergy_best = 0`) while the shower was NOT yet muon-typed, and the later
+muon-typing (reconcile / muon-slot competition / trunk re-rooting) never
+clears `flag_kinematics`.  Hence P1b (R1.1).  With both pieces on, over the
+31-event Bee set:
+
+- **20/20 `kine_range==0` muon showers rescued** (range now > 0; best moves to
+  range wherever mode 2's dead-end + ratio window admits it), e.g.
+  `mcp2k` 497311 shower 15000: 332.8 cm, best **508.5 → 766.3 MeV** (charge →
+  range) — the audit's worst case; `mcp2k` 177536: 294.8 cm, 511.8 → 679.0;
+  `mcp1k` 286191: 13.1 → 114.3.
+- **0/21 muon showers with nonzero range changed** — the pass touches only its
+  targets.
+- **nusel selection verdicts: 31/31 identical** — the change is energy
+  bookkeeping, not selection.
+- In-function fallback (P1a) alone fired on 2/31 events (chain-dispatch with
+  empty set); the recompute pass (P1b) accounts for the other 18.
+
+## R1.4 MCS ON operating point (P4+P5)
+
+Production sentinel now reads e.g. (`mcp2k` 66366):
+
+```
+mcs: source=long_muon_else_pf nseg=3 npoints=213 len=126.2cm seg_id=22006 cluster=22 ->
+  ke_MCS=869.3 MeV amb=0.7975 tracklen=125.6cm ke_range=304.3 MeV
+  ke_range_toolkit=307.0 MeV ke_dqdx_toolkit=267.6 MeV (nsegs14=9 bad_path=false cathode_drop=1/1)
+mcs: chain comparator nseg_chain=3 len_chain=126.2cm ke_range_chain=307.0 MeV seg_id=22006
+```
+
+- The hybrid arm uses the long-muon chain when `segments_in_long_muon` is
+  non-empty (verbatim copy of the `long_muon` arm), else falls back to the
+  pf muon (verbatim copy of the `pf_muon` arm).  `muon_min_length_cm` and both
+  toolkit comparators therefore see the chain sum whenever a chain exists —
+  the doc-83 nseg=1-always pathology is closed at the source.
+- P5's second sentinel is emitted only when `mcs_range_comparator_chain` (no
+  format change to the doc-80 line); under the hybrid source it is redundant
+  when the chain was selected and diagnostic when the pf fallback ran
+  (497311: `nseg=1 len=332.8cm` from pf, `nseg_chain=0` — an unbroken muon,
+  correctly single-segment).
+- Determinism (M4): two `setarch x86_64 -R` runs of `mcp2k` 66366 at the
+  post-flip point — `mabc-pr.zip` + `pctree` byte-identical
+  (`work-d84r1-det{1,2}-mcp2k`), `kine_mcs_*` sentinel values identical to
+  every printed digit.
+
+## R1.5 P2/P3 status — P3 delivers its case; P2 is NOT yet effective, held
+
+`beeon2B` (P2 16° + P3 7.5 cm on top of the production point):
+
+- **66366 (P3's case): full rescue.**  The 6.81 cm stub bridges; chain
+  **126.2 → 300.6 cm** (nseg 3 → 4), range 307.0 → 692.2 MeV, ratio
+  2.14 → 0.95, end_degree 2 → 1, so **best flips dqdx 656.0 → range 692.2**.
+  MCS follows the same chain: npoints 213 → 503, `ke_MCS` 869.3 → 881.0 with
+  ambiguity **0.80 → 0.35**.
+- **313847 (P2's case): RESIDUAL.**  The chain still stops at nseg=2
+  (98.5 cm) with the 162.4 cm continuation un-taken — even in a probe run at
+  `relax_deg=25`.  The audit replay (§4) says the candidate passes every
+  condition the knob codes (angle 10.99°, ratio 1.092, degree-2 junction), so
+  the C++ walk is being stopped by something the replay does not model.  A
+  knob-gated candidate probe (`long_muon_angle_relax: cand ...` DEBUG line)
+  is in the code for the follow-up; **P2 stays HOLD**.  Diagnosed this
+  round (`work-d84r1-p2diag-mcp1k`, probe log): at formation time the
+  junction's actual candidates are a 5.6 cm arm at **120.2°** and a 63.0 cm
+  arm at ratio **1.99** (correctly non-MIP) — **the 162.4 cm / 10.99°
+  continuation of the audit replay does not exist in the graph when the
+  chain forms; it is final-frame geometry** (same class as doc pr/120's
+  scanner-start-override artifact).  Consequence: the audit's §4.2
+  angle-rejection census (25 candidates, median 15.6°) is a final-frame
+  measurement and cannot be used to tune P2.  Follow-up shape: a
+  formation-time candidate census via this probe (env-gated arm over the
+  case list), and possibly a post-refinement re-examine pass instead of a
+  wider angle — the fill-once guard (§1, L4) prevents the chain from being
+  re-formed after track refinement improves the geometry.
+
+## R1.6 Bee packages for the owner scan
+
+Three sets over the 31-event case list (owner refs first: idx 0 = `mcp2k`
+66366, idx 1 = `mcp1k` 313847; then broken_chain/both by descending muon
+length, range_zero movers > 30 cm, 4 worst delta-ray dQdx shifts):
+
+| zip | arm | config |
+|---|---|---|
+| `bee/d84r1/d84r1-off.zip` | `work-d84r1-beeoff-*` | pre-flip production |
+| `bee/d84r1/d84r1-on.zip` | `work-d84r1-beeonB-*` | the shipped flip (MCS+P4+P5+P1) |
+| `bee/d84r1/d84r1-on2.zip` | `work-d84r1-beeon2B-*` | + P2 (16°) + P3 (7.5 cm) preview |
+
+Energy IS visible in the scan: the PF tree bakes `get_kine_best()` into every
+node label (`MultiAlgBlobClustering.cxx` `fill_bee_pf_tree`), so the P1
+rescues read directly as label changes (497311: `mu- 508 MeV` → `mu- 766 MeV`
+class).  MCS scalars are NOT in Bee (T_kine + sentinel only).
+Index: `bee/d84r1/d84r1.index.txt`.  URLs:
+
+- OFF: https://www.phy.bnl.gov/twister/bee/set/361f9e58-3883-4dcd-aba1-cd6ab57928d9/event/list/
+- ON:  https://www.phy.bnl.gov/twister/bee/set/c1bbb7c6-2d1a-48b4-8e03-7fa075ee497b/event/list/
+- ON2: https://www.phy.bnl.gov/twister/bee/set/ea9b4914-6152-4cc4-9da7-df104939e6e0/event/list/
+
+## R1.9 P2/P3 flip (owner-directed, post Bee scan)
+
+After scanning the Bee sets the owner directed the P2/P3 flip
+(2026-08-28, same day).  Evidence backing it:
+
+- **Mover census, 129 distinct events** (98-manifest + 31-evt case list):
+  exactly **one** physics mover, `mcp2k` 66366 — the P3 rescue of R1.5.
+  `work-d84r1-on2_98-*` (P2 16° + P3 7.5 on top of the shipped point) vs
+  `work-d84r1-flipchk98-*`: **PASS 196/196 byte-identical** — both knobs are
+  latent on the standard gate manifest.  On the 31-evt case list, on-vs-on2
+  differs only on 66366 (`mabc-pr.zip` + calib; every other calib delta is
+  the `vertex_scoreboard/dual_chain/off_ms` wall-clock field, not physics).
+- **P2 is ON but measured latent everywhere probed** — the formation-time
+  census (R1.5) still owns the follow-up; flipping it now means any future
+  formation-time geometry that satisfies 10–16° + MIP + junction-veto will
+  be taken without another cfg round.
+- Compiled-config proof: post-flip config differs from R1.2's Step B by
+  exactly two keys (`long_muon_angle_relax_long: true`,
+  `long_muon_stub_bridge_len: 7.5`); `long_muon_angle_relax_deg` stays
+  omitted (C++ 16.0).
+- Flip equivalence on the 31-evt set: `work-d84r1-flip2-*` (post-flip cfg,
+  no env) vs `work-d84r1-beeon2B-*` (env TLAs): **PASS 62/62** (16+46 archives) byte-identical, the 66366 mover included.
+- Baseline note: because P2/P3 are latent on the 98-manifest,
+  `work-d84r1-flipchk98-*` **remains** the valid production baseline for
+  gate purposes; the 66366-class movers live only in case-list territory.
+
+## R1.7 T_kine schema note
+
+`mcs_enable=true` derives `mcs_output=true` (`sbnd/clus.jsonnet`), so
+`tracking-pr.root` gains the five `kine_mcs_*` branches — an intended schema +
+output change, stated here once for downstream consumers.  `calib-pr-evt*.json`
+carries the same scalars via `dump_kine`, which is why every post-flip calib
+dump differs even on events with no P1 mover (R1.2 divergence row).
+
+## R1.8 Coordination note
+
+This round ran concurrently with the pr/121-123 EM-clustering session in the
+same working tree.  All toolkit commits here were staged hunk-selectively
+against a snapshot of that session's in-flight diff; the shared binary carried
+both sessions' default-OFF code through every gate above (both sides'
+OFF-gates make that sound).  Runner env→TLA seats for the six new keys are in
+`run_pr_chain_batch.sh` (`SBND_LONG_MUON_RANGE_FALLBACK`,
+`SBND_LONG_MUON_ANGLE_RELAX[_DEG]`, `SBND_LONG_MUON_STUB_BRIDGE_LEN`,
+`SBND_MCS_MUON_SOURCE`, `SBND_MCS_RANGE_COMPARATOR_CHAIN`).
+
+# Round 2 (2026-08-28) -- members geometry, cathode bridge, formation-time census
+
+## R2.0 Repro
+
+```
+# census (read-only, current-production arms; outputs docs/84_longmu/r2_census/)
+python3 scripts/d84r2_census.py \
+  --arms work-d84r1-flipchk98-mcp1k:mcp1k work-d84r1-flipchk98-mcp2k:mcp2k \
+         work-d84r1-flipchk98-ncpi0:ncpi0 work-d84r1-flipchk98-nuecc48:nuecc48 \
+         work-d84r1-flip2-mcp1k:mcp1k work-d84r1-flip2-mcp2k:mcp2k \
+  --out docs/84_longmu/r2_census
+# OFF gate (98-evt manifest, four samples), then per sample:
+#   d84r2_arms.sh off1        (no env; production post-flip config)
+python3 scripts/pr85_hash_gate.py work-d84r1-flipchk98-<s> work-d84r2-off1-<s>
+# ON smoke (31-evt case list):
+#   bee2_arms.sh on1 SBND_LONG_MUON_MEMBERS_GEOMETRY=1 SBND_LONG_MUON_CATHODE_BRIDGE=1
+```
+
+## R2.1 Census over the current production state (read-only)
+
+`scripts/d84r2_census.py` over `work-d84r1-flipchk98-*` (98-evt manifest) +
+`work-d84r1-flip2-*` (31-evt case list): 129 distinct events, 54 muon showers
+with `flag_kinematics`.  Outputs in `docs/84_longmu/r2_census/`.
+
+**Pop A — chain-vs-membership truncation** (`d84r2-members-gap.tsv`,
+L_members − L_chain > 10 cm, L_chain from inverting the shipped muon
+range→KE table on `kine_range`): **6/54 muon showers**, all in the case-list
+events:
+
+| evt | L_chain | L_members | arrow at | kine_range | kine_best |
+|---|---|---|---|---|---|
+| mcp1k 313847 | 98.5 | 260.9 | 90 cm (38%) | 248.3 | 547.5 (dqdx) |
+| mcp1k 281595 | 130.0 | 351.0 | 124 cm | 315.1 | 750.1 (dqdx) |
+| mcp2k 74784  | 29.9  | 291.3 | 29 cm  | 98.9  | 717.8 (dqdx) |
+| mcp1k 278684 | 167.3 | 187.8 | 165 cm | 395.3 | 395.3 |
+| mcp2k 393538 | 292.5 | 331.7 | 279 cm | 673.7 | 673.7 |
+| mcp2k 499577 | 294.7 | 324.4 | 285 cm | 678.6 | 678.6 |
+
+**Pop B — cathode-split muons** (`d84r2-cathode-pairs.tsv`; both facing ends
+within 6 cm of x=0, far ends on opposite drift sides, gap < 25 cm): the three
+scan events plus one new candidate.  Two census-corrections to the round-1
+narrative, baked into the knob design:
+
+- the halves do **not** share a PR `cluster_id` (53793: clus 37 vs 12) —
+  imaging-level stitching does not survive into the PR graph, so the guards
+  are purely geometric (no same-cluster requirement);
+- near ends can jitter onto ONE side (77978's far half itself crosses x=0,
+  near end at +2.17 beside the muon end at +4.77) — the opposite-side test
+  is on the far ends.
+
+| evt | muon end x | partner | partner x | gap | ∠gap | ∠tan |
+|---|---|---|---|---|---|---|
+| mcp2k 53793  | +4.71 | shower 528 MeV (240.5 cm, μ) | −4.53 | 13.9 | 14.5/11.8 | 6.5 |
+| mcp2k 177536 | −2.50 | bare 98.1 cm | +3.29 | 9.4 | 6.0 | 9.0 |
+| mcp2k 77978  | +4.77 | bare 23.5 cm (+9.8 cm Bragg stub typed 2212 beyond) | +2.17 | 6.5 | 12.6 | 14.9 |
+| mcp2k 392901 | +2.10 | shower 106 MeV (**EM, pdg 11**) | −4.01 | 17.8 | 19.7 | 14.0 |
+
+392901's partner is an EM shower — the one candidate the muon-typed-partner
+guard excludes by design (absorbing EM showers across the seam is the failure
+mode to avoid, not the target).
+
+## R2.2 What shipped (knob table)
+
+| config key | C++ default | SBND this round | what it does |
+|---|---|---|---|
+| `long_muon_members_geometry` | `false` | OFF (hold for scan) | `calculate_kinematics_long_muon`: muon-typed members outside the chain ADD to the range length and their vertices join the endpoint/end_degree search (round-1 P1's accumulators, partial-truncation form) |
+| `long_muon_cathode_bridge` | `false` | OFF (hold for scan) | TCN post-reconcile pass: a \|13\| shower with a member end at the cathode absorbs its facing far half — `add_shower` merge for a muon-typed shower partner, BFS absorb + retype-to-13 for a bare segment chain — then `update_shower_maps` + kinematics recompute |
+| `long_muon_cathode_bridge_x` | `0.0` cm | (default) | cathode plane |
+| `long_muon_cathode_bridge_xcut` | `6.0` cm | (default) | end admission window (census ends at ±4.8) |
+| `long_muon_cathode_bridge_gap` | `20.0` cm | (default) | max 3D gap (census 6.5–13.9) |
+| `long_muon_cathode_bridge_angle` | `25.0` deg | (default) | continuation angle cap, gap vector AND partner tangent (census ≤ 19.7) |
+
+Scope limits, deliberate: the bridge adds the far half to the SHOWER only —
+`segments_in_long_muon` (tagger features, MCS chain) keeps its legacy
+content, so `nusel` stays put and the change is confined to kine/PF output.
+The two knobs compose: the bridged far half is outside the chain, so its
+length reaches `kine_range` through `members_geometry`.  Ship/flip them
+together.
+
+## R2.3 Gate ledger
+
+| gate | arms | result |
+|---|---|---|
+| knob-off byte-identical | `work-d84r1-flipchk98-*` vs `work-d84r2-off1-*` (98 evts, 4 samples) | **PASS 196/196** (28+34+38+96); per-event `nusel-evt*.tsv` **98/98** identical (the flipchk98-nuecc48 arm-level table holds only rerun evt 256587 — round-1 operator-stop artifact, not a diff) |
+| doctests | `build/clus/wcdoctest-clus` | 2484/2484 (incl. six new default pins) |
+| compiled config, knobs off | full-pipeline `wcsonnet` (reality=data + PR pipeline_names), HEAD vs edited jsonnet | byte-identical |
+| compiled config, knobs on | same + 4 TLAs | exactly `long_muon_members_geometry`, `long_muon_cathode_bridge`, `_gap`, `_angle` appear in the TCN node; nothing else moves |
+| ON smoke | `work-d84r2-on2-*` (31-evt case list, both knobs ON, pr/123 pass4 pinned OFF) vs `work-d84r1-flip2-*` | exactly **9 mover events**, all \|13\| showers; divergence confined to `mabc-pr.zip` on those 9; `pctree` 31/31 and `nusel` 31/31 byte-identical |
+| determinism | `work-d84r2-det1/det2` (53793 merge + 177536 bare absorb, ASLR off) | PASS 4/4 byte-identical |
+
+Freshness: `local/lib/libWireCellClus.so` 20:14 > last source edit 20:10.
+Attribution note: a first ON arm (`on1`) overlapped the concurrent session's
+pr/123 `shower_pass4_*` SBND flip (jsonnet mtime 20:24:36, mid-arm) and
+picked up two of THEIR movers (55740, 75554); `on2` pins
+`SBND_SHOWER_PASS4_PRUNE=0 SBND_SHOWER_PASS4_TRACK_GUARD_LEN=0` and is the
+arm quoted everywhere here.  The OFF arm compiled all 196 configs before
+that flip (verified: zero carry pass4 keys).
+
+## R2.4 ON smoke — all five scan events land, nothing else moves
+
+The 9 movers (on2 vs flip2), quoted from `kine_long_muon:` / bridge lines:
+
+**members_geometry (6):**
+- 313847: L 98.5→260.9 cm, range 248.3→602.2, best 547.5 (dqdx) → **602.2 (range)**; end_degree 2→1 — the Bee arrow lands at the true end (owner finding #1).
+- 281595: L 130.0→351.0 cm, best 750.1 → **808.5 (range)** (owner finding #2).
+- 74784: L 29.9→291.3 cm, range 98.9→670.8, best 717.8 (dqdx) → **670.8 (range)** — census discovery, worst truncation of all.
+- 278684: 167.3→187.8 cm, 395.3→439.9.  393538: 292.5→331.7 cm, 673.7→757.9.  499577: 294.7→324.4 cm, 678.6→746.9.
+
+**cathode_bridge (3):**
+- 53793 (shower partner): `merge shower sid=0 (mu_len=154.1cm) <- sid=2 (mu_len=240.9cm) gap=13.9cm ends x=(4.7,-4.5)cm` — single 395.0 cm muon, best 367.0 → **912.9 MeV** (dqdx/range ratio 1.00); the 527.8 MeV far-half shower absorbed (owner finding #3).
+- 177536 (bare far half): `absorb bare chain into sid=1 nseg=2 len=122.1cm gap=9.4cm` — L 294.8→416.9 cm, best 679.0 → **963.9 (range)** (owner finding #4).
+- 77978 (bare far half + Bragg stub): `absorb bare chain into sid=0 nseg=2 len=33.4cm gap=6.5cm` — the 23.5 cm muon piece AND the 9.8 cm stub typed 2212 (Bragg rise) beyond it, retyped 13; best 337.5 → **409.4 (range)** (owner finding #5).
+
+Regression checks: 497311 keeps its round-1 P1 rescue (fallback=1, 766.3),
+66366 keeps its P3 chain (300.6 cm, 692.2), 392901 unchanged BY DESIGN (its
+census partner is a 106 MeV EM shower — excluded by the muon-typed-partner
+guard; flagged in the Bee index for owner opinion).
+
+## R2.5 P2 formation-time census — the audit question, closed
+
+The round-1 probe (`long_muon_angle_relax: cand`) is knob-gated and P2 is
+production-ON, so the flipchk98 + flip2 debug logs already carry the census:
+**105 distinct formation-time candidates in 24 events**
+(`r2_census/d84r2-formation-cands.tsv`).  Angle distribution: median 60.4°,
+p25 35.3° — the rejected population is genuinely non-collinear; only 20
+candidates sit below 30°, and only 4 pass the ratio+length preconditions
+(`considered=1`).
+
+The sharpest finding closes 281595: its 220.8 cm continuation IS present at
+formation time at 15.6° / ratio 1.019 / considered=1 — inside the 16° cap —
+but the P2 block's own junction veto kills it: the third arm at vertex
+20003 is the 13.9 cm stub (> 10 cm, track-like), which reads as "genuine
+hadronic vertex".  P2-as-designed can never fire where a >10 cm competing
+arm exists, which is exactly the greedy-stub topology it was meant to heal.
+`members_geometry` recovers these events without touching the walk, so no
+P2 re-tuning is proposed; the veto interplay is recorded for any future
+walk-level fix (re-examine after refinement is still blocked by the
+fill-once guard).
+
+## R2.6 Bee package (held for owner)
+
+`bee/d84r2/d84r2-on.zip` (31 events, round-1 index order) is built from the
+on2 arm and annotated in `bee/d84r2/d84r2.index.txt`; uploaded
+2026-08-28 (owner-authorized):
+**AFTER = `05e53da9-db17-4f1c-af19-63a47817700c`**
+(https://www.phy.bnl.gov/twister/bee/set/05e53da9-db17-4f1c-af19-63a47817700c/event/list/).
+BEFORE for the scan is the already-uploaded
+round-1 ON2 set `ea9b4914-6152-4cc4-9da7-df104939e6e0` (byte-equivalent to
+current production, flip-equivalence PASS 62/62).  Both knobs are SBND OFF
+until that scan.
+
+## R2.7 Coordination note
+
+Concurrent with the pr/123 session in the same tree.  Its uncommitted
+pass4 hunks (TCN.{h,cxx}, NPB.h, NSC.cxx, PRShower.{h,cxx}, doctest,
+jsonnet) were recorded before editing and excluded from this round's commits
+by tag-selective staging; its 20:24:36 jsonnet flip mid-arm is handled in
+R2.3.  New runner env→TLA seats: `SBND_LONG_MUON_MEMBERS_GEOMETRY`,
+`SBND_LONG_MUON_CATHODE_BRIDGE[_GAP|_ANGLE]`.
+
+## R2.8 Owner scan verdict + the 77978 fix (round 2.1)
+
+Owner scan of the round-2 pair (before `ea9b4914`, after `05e53da9`):
+**"Other than this event [77978], the rest looks good"** — flip authorized.
+The 77978 finding: the nu vertex marker appeared degraded in the AFTER set.
+
+Diagnosis (the reconstructed vertex did NOT move — `main_vertex`, all
+vertex fits and `kine_nu_*` bit-identical; the change was PF-tree
+structure): 77978's nu vertex legitimately sits on the FAR side of the
+cathode, at the junction of a 9.8 cm proton prong and the muon's far half.
+The bridge's bare-chain BFS walked THROUGH that vertex and absorbed the
+proton prong into the muon, and the shower start was never re-seated, so
+Bee drew a dangling nu vertex with the muon starting mid-track across the
+seam.  177536 has the same topology (24 cm proton + 98.1 cm muon half at
+the vertex) and the same latent defect.
+
+Fix (knob-internal, no new keys; binary 20:47):
+- the BFS never traverses through the main vertex — prongs at the
+  interaction point stay their own PF particles;
+- when the absorbed chain touches the main vertex, the shower is re-seated
+  there (`set_start_vertex(main_vertex, 1)` + `set_start_segment`), so
+  kinematics `start_point`/`init_dir` and the PF tree connect nu → mu.
+
+Measured effect of the fix (on3 vs on2, everything else pinned): exactly
+77978 + 177536 move, `mabc-pr.zip` only.
+
+- 77978: absorb `nseg=1 len=23.5cm ... reseat=1`; muon 164.0 cm, best
+  409.4 → **388.2 MeV** (proton padding gone); PF tree now
+  `nu → mu- 388 (vertex → 51.2) + proton 113` — vertex connected.
+- 177536 (same latent topology, fixed before anyone saw it): absorb
+  `nseg=1 len=98.1cm ... reseat=1`; 392.9 cm, best 963.9 → **907.0 MeV**;
+  PF `nu → mu- 907 (vertex → −188.7) + proton 191`.
+- 53793 (shower-merge branch, no re-seat needed): byte-identical to on2.
+
+Fix-round gates: knob-off `work-d84r2-off2-*` vs `work-d84r1-flipchk98-*`
+**PASS 196/196** + per-event nusel 98/98 (pass4 pinned OFF to isolate);
+on3-vs-on2 mcp1k 16/16 byte-identical, mcp2k differs only on the two fixed
+events; determinism pair det3/det4 (53793 + 177536, ASLR off) PASS 4/4;
+doctests 2484/2484; freshness lib 20:47 > edits.
+
+Bee: AFTER-FIXED set `6ec0f59c-ef08-4c5b-bc44-ba7fa5d48960` (d84r2-on3.zip)
+supersedes `05e53da9` for the two fixed events; other 29 events identical.
+
+## R2.9 SBND production flip (owner-directed)
+
+`long_muon_members_geometry = true`, `long_muon_cathode_bridge = true`
+(value knobs stay at C++ defaults 0.0/6.0/20.0/25.0 cm-deg).  Compiled-
+config proof: exactly the two keys appear in the TCN node; nothing else
+moves.  Flip-equivalence (`work-d84r2-flip3-*` config-flipped no-env vs
+`work-d84r2-on3-*` env arm, 31 evts, pass4 pinned in both): **PASS 62/62**.
+
+Production baseline: `work-d84r2-prod98-*` (98-manifest, NO env — both this
+round's flip AND pr/123's pass4 flip live) vs `work-d84r1-flipchk98-*`:
+divergence is EXACTLY the 27 pass4 mover events the pr/123 session
+predicted (mcp1k 0, mcp2k 7, ncpi0 6, nuecc48 14), all `mabc-pr.zip` only;
+per-event `nusel` **98/98 identical**; zero movers attributable to this
+round's knobs (latent on the manifest, as the census predicted — every
+census mover is a case-list event).  **`work-d84r2-prod98-*` supersedes
+`work-d84r1-flipchk98-*` as the SBND production baseline** (adopted by the
+pr/123 session for pr/124+).
+
+Incident, recorded for the shared-tree protocol: 5 nuecc48 events (388,
+38856, 42280, 389538, 400474) initially died with a hard jsonnet error
+("no parameter pf_orphan_guard_freed") — the concurrent session's round-2
+jsonnet threading landed callee-last while this arm was compiling per-event
+configs.  Re-run in place once the file was consistent (new keys
+suppressed-at-false ⇒ compiled config unchanged; verified in the rerun
+configs); 42280 returned to byte-identical, the other four are pass4
+movers.  Protocol addition agreed by both sessions: check
+`pgrep -f run_pr_chain_batch` before editing shared jsonnet, and apply
+cross-file jsonnet changes callee-first.
+
+## R3.0 Repro (round 3)
+
+```
+# knob code: toolkit f392b0f3 (DEFAULT OFF), flip commit 49c004bd
+# compiled-config proofs (lib-free):
+wcsonnet --tla-str reality=data --tla-code "pipeline_names=[...15-stage PR list...]" \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet          # OFF: byte-identical vs HEAD
+  ... --tla-code mcs_bridged_members=true                      # ON: /data mcs_bridged_members = true
+# OFF gate (98-evt four-sample manifest, peer pr/123-r2 knobs pinned to pre-flip):
+/home/xqian/tmp/d84r3_arms.sh off1 SBND_PF_ORPHAN_GUARD_FREED=0 SBND_KINE_COUNT_GUARD_FREED=0
+scripts/pr85_hash_gate.py work-d84r3-off1-<s> work-d84r2-prod98-<s>
+# ON smoke + determinism pair (3 movers):
+/home/xqian/tmp/d84r3/movers_arm.sh bron1 SBND_MCS_BRIDGED_MEMBERS=1 SBND_PF_ORPHAN_GUARD_FREED=0 SBND_KINE_COUNT_GUARD_FREED=0
+/home/xqian/tmp/d84r3/movers_arm.sh bron2 ...   # identical env, second run
+# MCS scale harvest (read-only):
+scripts/d84r3_mcs_scale.py --arms work-d84r2-prod98-<4>:.. --arms work-d84r2-on3-<2>:.. \
+  --arms work-mcp1k-mcs80on:mcp1k --out docs/84_longmu/r3_mcs_scale
+```
+
+## R3.1 The knob: `mcs_bridged_members` (owner-chosen design)
+
+Round 2's cathode bridge adds the far half of a cathode-split muon to the
+SHOWER only; `segments_in_long_muon` deliberately keeps its legacy content, so
+MCS kept fitting the near chain.  The owner chose "give MCS the bridged member
+set" over extending the chain: `long_muon_cathode_bridge_pass` now reports the
+segments it absorbs through a nullptr-safe out-param — covering BOTH branches:
+the merged partner's muon-typed members (captured before `add_shower` folds
+them in; 53793 is this branch) and the retyped bare BFS chain (77978/177536) —
+and the MCS driver appends that set to `muon_segments` when
+`mcs_bridged_members` is on (dedup by graph index, deterministic index-order
+iteration).  Taggers, nusel, the chain comparator, and the PF tree keep their
+legacy inputs; the knob moves ONLY the five `kine_mcs_*` T_kine scalars and
+two log sentinels (`mcs: bridged members added ...` + changed `mcs:` main line).
+
+Two code paths engage that never did before, both verified in smoke: the
+endpoint block falls into its most-separated-pair fallback (four degree-1
+vertices on a disconnected member set), and the Dijkstra path in
+`trim_trajectory` hops the cathode gap (no absolute distance cutoff;
+`bad_path=false` on all movers; the SBND `mcs_cathode_xcut=5` band excision
+masks the seam angles — `cathode_drop` rose on every mover as designed).
+
+## R3.2 Gate ledger (round 3)
+
+| check | result |
+|---|---|
+| compiled config, knob absent | byte-identical vs HEAD (cmp) |
+| compiled config, knob on | `/data mcs_bridged_members = true` in TCN node |
+| `wcdoctest-clus` | 2488/2488 pass (incl. new default pin) |
+| freshness | libWireCellClus.so 21:30 > edits 21:26 (union lib with peer pr/123) |
+| OFF gate `work-d84r3-off1-*` vs `work-d84r2-prod98-*` | PASS 196/196 archives; nusel per-event 98/98 identical |
+| ON vs baseline (`bron1` vs `on3`, 3 movers) | mabc+pctree PASS 6/6; nusel identical; calib identical modulo `*_ms` timing fields |
+| determinism (`bron1` vs `bron2`) | PASS 6/6 archives; `mcs:`/`kine_mcs` log lines identical |
+
+The OFF-gate arms pinned `SBND_PF_ORPHAN_GUARD_FREED=0
+SBND_KINE_COUNT_GUARD_FREED=0` because prod98 predates the peer pr/123
+round-2 production flip that landed tonight (a44cf0b8); its two movers
+(171572/393505) are outside the 98-manifest, so the pins are belt-and-braces.
+
+## R3.3 ON smoke — the three bridge movers
+
+`work-d84r3-bron1-mcp2k`, quoting the main sentinel before (on3) -> after:
+
+| evt | branch | nseg | len [cm] | ke_MCS [MeV] | amb | ke_range_toolkit |
+|---|---|---|---|---|---|---|
+| 53793 | shower merge | 2 -> 4 | 154.1 -> 395.0 | 1328.9 -> 914.3 | 0.804 -> 0.015 | 367.0 -> 911.9 |
+| 77978 | bare chain | 1 -> 2 | 140.1 -> 163.6 | 542.4 -> 607.2 | 0.593 -> 0.524 | 336.7 -> 387.4 |
+| 177536 | bare chain | 1 -> 2 | 292.4 -> 390.4 | 674.3 -> 914.2 | 0.037 -> 0.013 | 673.4 -> 901.2 |
+
+53793 is the poster child: the half-track fit was garbage (amb 0.80, ke_MCS
+1329 vs range 367 on the same half); the full-track fit lands at 914 MeV,
+in 0.3% agreement with its own 912 MeV range KE, amb 0.015.  177536 likewise
+converges to its range value.  77978's absorbed piece is short (23.5 cm) and
+the fit stays moderately ambiguous — no harm, modest gain.
+New sentinel quoted: `mcs: bridged members added nseg_bridged=2 len_bridged=240.9cm` (53793).
+
+## R3.4 SBND production flip (owner pre-authorization via AskUserQuestion, 2026-08-28)
+
+The owner pre-authorized the flip tonight (conditional on OFF-gate PASS +
+clean mover smoke; both held).  `wct-pr-perevt.jsonnet` now ships
+`mcs_bridged_members = true` (commit 49c004bd); the value knob has no
+companions.  Flip-equivalence: `work-d84r3-flipchk-mcp2k` (no env, knob from
+jsonnet) vs `work-d84r3-bron1-mcp2k` (env-seeded) -- PASS 6/6 archives, nusel + mcs sentinel lines identical.  With this flip
+the full doc-84 knob family is SBND production ON.  The current SBND
+production point after tonight = doc 84 rounds 1-3 + pr/123 rounds 1-2
+(incl. the peer's no-knob pseudo-neutron PF rendering correction for freed
+muons, MultiAlgBlobClustering only).
+
+## R3.5 MCS absolute-scale study, part 1 (existing arms, read-only)
+
+Inputs: the 4 prod98 arms + 2 on3 arms (current production config, 45 usable
+sentinels) and `work-mcp1k-mcs80on` (1000-evt pf_muon-era arm, 278 usable) —
+327 sentinel rows, 326 distinct events.  Outputs:
+`docs/84_longmu/r3_mcs_scale/{d84r3-mcs-scale.tsv,png,summary.txt}`.
+
+The headline is that **fit ambiguity, not the MCS scale, is the story**:
+
+| population | n | ke_MCS/ke_range median | IQR |
+|---|---|---|---|
+| amb < 0.2 (all arms) | 70 | **0.945** | 0.911-0.983 |
+| amb < 0.2, len >= 200 cm | 33 | 0.965 | 0.929-1.001 |
+| amb >= 0.2 | 253 | 1.419 | 1.046-2.326 |
+
+When the MCS fit is unambiguous the scale agrees with CSDA range to ~5%
+(and to ~3.5% for long tracks) with a tight IQR — no evidence the MCS scale
+itself needs work.  High-ambiguity fits (78% of rows; short and/or contained
+muons, where range is the better estimator anyway) inflate MCS badly (median
+1.42, q75 2.3): any quantitative use of `kine_mcs_energy` should cut on
+`kine_mcs_ambiguity` (0.2 is a natural knee in this sample).  Length trend in
+current production: med ratio 1.80 (40-100 cm) -> 1.50 (100-200) -> 1.20
+(200+).  The null-chain comparator rate is 95% in this harvest (dominated by
+the pf_muon-era arm which predates the comparator; 76-81% in round-2-era
+arms) — nseg_chain=0 simply means no examine_direction chain existed at the
+MCS call site; the P1 fallback operates in PRShower, not on this set.
+Part 2 (census arms, full statistics) is R3.7.
+
+## R3.6 Wider-statistics census — full mcp1k + mcp2k (3000 events)
+
+```
+# arms (full CURRENT production config, zero env pins; group mode 16, PR_JOBS=20):
+PR_EXTRA_STAGES=pr_display PR_GROUP_SIZE=16 PR_JOBS=20 \
+  ./run_pr_chain_batch.sh work-mcp1k-grp0825 work-d84r3-cens-mcp1k data     # 1000 evts, rc=0, 0 failed
+  ./run_pr_chain_batch.sh work-mcp2k-grp0825 work-d84r3-cens-mcp2k data     # 2000 evts, rc=0, 0 failed
+scripts/d84r2_census.py --arms work-d84r3-cens-mcp1k:mcp1k work-d84r3-cens-mcp2k:mcp2k \
+  --toolkit ~/toolkit-dev/toolkit --out docs/84_longmu/r3_census
+```
+
+Production point = doc 84 rounds 1-3 + pr/123 rounds 1-2 (incl. tonight's
+pseudo-neutron PF correction).  Both samples completed with **zero failed
+events** (no gojsonnet rc=139 this run).  Calib json exists for 461+905 =
+1366 events (the PrDisplayDump writes only when a beam-matched candidate
+exists; counts identical to prod0825 — deterministic), 296 muon showers.
+
+- **Pop A (chain-vs-membership truncation): 0 rows** at >10 cm.  The
+  round-2 `long_muon_members_geometry` knob closed this population entirely
+  at 10x the round-2 census statistics (was 6/54 showers pre-knob).
+- **Pop B (cathode-split candidates): 22 pairs / 11 events** (0.8% of
+  candidate events).  The production bridge FIRED in 10 events
+  (53793, 77978, 168448, 177536, 281214, 287555, 321767, 391766, 398181,
+  478880 — 7 bare-chain, 3 shower-merge; fire rate 0.33% of all events),
+  8 of which reached the MCS fit (`mcs: bridged members added`).
+  The probe and the pass overlap only on 77978: bare-partner fires are
+  invisible to the calib-based probe by construction (the partner is not a
+  shower member pre-bridge), while the 10 probe pairs the pass did NOT take
+  (172794, 289559 mcp1k; 347890, 392901 [known EM-partner exclusion],
+  407798, 410680, 493659, 67026, 92159, 98470 mcp2k) failed the production
+  guards (angle/gap/length/type) — hand-scan candidates for a future round,
+  no action proposed here.
+- **nusel sanity vs prod0825**: row counts identical (11428 / 22634);
+  tag-triple distributions differ on only 8 clusters of 34k (a few
+  stm/fc/stmfit -1 verdicts now resolving), owned by the four intervening
+  production rounds.
+
+## R3.7 MCS absolute-scale study, part 2 — full statistics (census arms)
+
+```
+scripts/d84r3_mcs_scale.py --arms work-d84r3-cens-mcp1k:mcp1k \
+  --arms work-d84r3-cens-mcp2k:mcp2k --out docs/84_longmu/r3_mcs_scale_full
+```
+
+843 sentinel rows / 837 distinct events (28% of events reach the MCS fit);
+null-chain comparator rate 81.5% (matches the round-2-era bracket; the P1
+fallback operates in PRShower, not on `segments_in_long_muon`).  The part-1
+conclusion holds with 3x the statistics and pure production config:
+
+| population | n | ke_MCS/ke_range median | IQR |
+|---|---|---|---|
+| amb < 0.2 | 196 | **0.943** | 0.914-0.980 |
+| amb < 0.2, len >= 200 cm | 113 | 0.960 | 0.935-0.987 |
+| amb < 0.2, len 100-200 cm | 72 | 0.926 | 0.890-0.963 |
+| amb < 0.2, len < 100 cm | 11 | 0.902 | 0.866-0.930 |
+| amb >= 0.2 (76.5% of fits) | 639 | 1.321 | 1.049-2.106 |
+| bridged (mcs_bridged_members) | 7 | 1.059 | 1.003-1.141 |
+
+**Conclusion: the MCS scale does not need work.**  Unambiguous fits sit at
+0.94-0.96 of CSDA range with a ~7% IQR — a small (<6%), mildly
+length-dependent low bias, tightest for the long tracks where MCS is the
+estimator of record.  The inflation lives entirely in the high-ambiguity
+population; any quantitative use of `kine_mcs_energy` should cut on
+`kine_mcs_ambiguity < ~0.2`.  The 7 production bridged fits land at median
+1.06 — the full-track fits agree with their own range KE.  Next natural
+arbiter is the truth-level numu sample (owner item): reco-vs-truth for the
+amb<0.2 population directly tests whether the ~5% low bias is real scale or
+range-table convention.
+
+## R3.8 Bee package for the 10 unclaimed Pop-B pairs (owner hand-scan)
+
+```
+python3 scripts/bee/make_pr_bee.py \
+  -q work-mcp1k-grp0825 -q work-mcp2k-grp0825 \
+  -p work-d84r3-cens-mcp1k -p work-d84r3-cens-mcp2k \
+  -o bee/d84r3/d84r3-popb-unclaimed.zip \
+  172794 289559 347890 392901 407798 410680 493659 67026 92159 98470
+./upload-to-bee.sh bee/d84r3/d84r3-popb-unclaimed.zip
+```
+
+All 10 events built cleanly (no `NO-BRIDGE`, no unevaluated refusal).  Index:
+`bee/d84r3/d84r3-popb-unclaimed.index.txt`. URL:
+https://www.phy.bnl.gov/twister/bee/set/8d6d0e58-29ff-49e8-bec3-72265ae80c9b/event/list/
+
+Re-checking the census probe's own numbers (`long_muon_cathode_bridge`'s
+admission is `xcut<=6cm` end-to-plane, `gap<=20cm`, `angle<=25deg` on both
+the gap-vector and the partner-tangent angle) against the 22 candidate rows
+for these 10 events splits them into two groups worth scanning differently:
+
+- **7 events are angle-guard rejects by a wide margin** (172794, 289559,
+  410680, 67026, 98470, plus one row each of 347890/92159): angle_gap or
+  angle_tan sits 30-170 deg past the 25 deg cutoff. These read as genuine
+  kinks/unrelated tracks, not missed muons — scan to confirm, not expecting
+  surprises. **493659 is the one near-miss in this group**: angle_gap=25.2
+  deg, 0.2 deg over the cutoff — worth a specific look.
+- **3 events pass the probe's own admission numbers but the production pass
+  did not fire on them**: 347890 and 92159 pair with a shower partner that
+  carries nonzero `ke` (64.9 / 14.7 MeV) — plausibly the muon-typed-partner
+  guard correctly excluding an EM shower, same as the already-known 392901
+  exclusion, but not verified against the C++ typing here. **407798 is
+  unresolved**: its gap is ~0 and the census probe's angle field is a
+  degenerate sentinel (-1.0) it doesn't compute, whereas the production
+  `cb_angle_deg()` returns 181 deg (i.e. fails) for an exactly-degenerate
+  vector — so this may be a probe-vs-production numerical mismatch rather
+  than a real guard rejection. Flagging for the owner's read; not
+  re-derived from the C++ here.
+
+No code changes proposed from this pass — the ask was links + a scan, not a
+fix. If the hand-scan finds a genuine miss, the natural next step is
+tightening/loosening the specific guard field the miss violates, as its own
+round with a fresh A/B.
+
+# Round 4 — the three cathode-bridge admission misses the owner named
+
+## R4.0 Repro
+
+```
+# knob-off sentinel arm (byte-identical; reads production's own reject reasons)
+/home/xqian/tmp/d84r4/popb_arm.sh sent1
+# per-knob and combined ON arms over the same 10 events
+/home/xqian/tmp/d84r4/popb_arm.sh lev15 SBND_LONG_MUON_CATHODE_BRIDGE_LEVER=15
+/home/xqian/tmp/d84r4/popb_arm.sh trk   SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER=1
+/home/xqian/tmp/d84r4/popb_arm.sh sg    SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP=8
+/home/xqian/tmp/d84r4/popb_arm.sh all   SBND_LONG_MUON_CATHODE_BRIDGE_LEVER=15 \
+      SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER=1 SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP=8
+# 98-event four-sample gate arms
+/home/xqian/tmp/d84r4/arms98.sh off1
+python3 scripts/pr85_hash_gate.py work-pr124r1-flipA98-<s> work-d84r4-off1-<s>
+```
+
+Toolkit baseline `81c178d1` (doc 84 r1-3 + pr/123 r1-2 + pr/124 front A).
+Arms pin `SBND_SHOWER_PASS3_CONE_GUARD_LEN=0`, the peer's pr/124 front C knob,
+to its value at that HEAD so a concurrent flip cannot leak into the comparison.
+
+## R4.1 The owner's verdict on the round-3 Bee set
+
+The owner scanned all 10 unclaimed Pop-B pairs (set `8d6d0e58`, R3.8) and
+returned **three genuine misses; the other seven are correct rejects**:
+
+| owner's words | event |
+|---|---|
+| "muon → neutron → muon, should be a long muon going through the cathode (gap)" | **172794** (mcp1k) |
+| "pion → neutron → muon, should be a long muon going through the cathode (gap)" | **347890** (mcp2k) |
+| "the muon was broken by the cathode; the second half was id'ed as neutron → muon and attached to the ROOT, it should be part of the long muon" | **67026** (mcp2k) |
+
+The owner wrote "18255" for the second — that is the SBND **run** number, not
+an event id.  Identified as **347890**: it is the only event in the set whose
+PF tree is a *cathode-crossing* `pi+ → neutron → mu-` (`pi+ 64 MeV, 19.0 cm,
+x −11.6→+2.5` → carrier `x −4.2→+5.0` → `mu- 429 MeV, 177.7 cm,
+x +5.0→+106.9`; ≈209 cm end to end), with two independent numeric matches
+against the census index (carrier length 14.3 cm = the census gap; pi+ 64 MeV
+= partner_ke 64.9).  392901 also carries a literal pi→n→mu chain, but both its
+segments sit on the *same* side, 7 cm off the cathode, with a 24 cm muon — its
+actual cathode-crossing chain is `e-`-parented, the known EM exclusion.
+
+**The "neutron" is a display artifact, not a particle.**
+`append_pseudo_shower` (`clus/src/MultiAlgBlobClustering.cxx:2039-2067`)
+renders any *gap-connected* daughter behind a pseudo-γ (EM) or pseudo-neutron
+(non-EM) carrier; no PR-graph segment is ever typed 2112 (every
+`ParticleInfo` construction in `clus/src/` emits only {0, 11, 13, 211, 2212}).
+Every carrier in this set inherits its child's energy exactly (172794 533/533,
+347890 429/429, 67026 181/181), which is what a *split of one track* looks
+like.  So the neutron is the **symptom** the owner sees in Bee — "the graph
+could not walk there" — and the cause is an admission guard.  Each of the
+three fails a different one.
+
+## R4.2 Root causes, from production's own arithmetic
+
+Round 4 adds the missing diagnostic first: the pass logged *accepted* bridges
+only and was silent on rejects, so a non-firing bridge could not be explained
+without re-deriving the geometry outside the toolkit.  The new
+`long_muon_cathode_bridge: reject <guard> ...` DEBUG line prints one row per
+candidate that reaches the matching loop.  Knob-off arm `work-d84r4-sent1-*`:
+
+| evt | partner | len | gap | a_gap | a_tan | verdict |
+|---|---|---|---|---|---|---|
+| 172794 | bare | 68.6 | 13.6 | 45.9 | 44.3 | **G1** — both angles fail together |
+| 67026 | bare | 257.9 | 5.6 | **73.8** | **7.7** | **G3** — collinear, gap vector meaningless |
+| 493659 | bare | 71.7 | 4.1 | 25.1 | 26.9 | correct reject (owner: good); the 0.1° near-miss on a_gap is not the binding cut — a_tan 26.9 fails too |
+| 407798 | bare | 38.8 | **0.0** | **181.0** | 7.3 | correct reject: partner shares a vertex with the muon inside one cluster; `cb_angle_deg` returns 181 for the zero-length gap vector |
+| 289559 | bare | 5.4–12.9 | 0.0–12.4 | 76–181 | 34–103 | correct reject (3 candidates, all wide) |
+
+Only 5 of the 10 produce a reject row at all.  **347890, 392901, 77978, 92159
+and 98470 produce none** — they die *upstream of geometry* at the partner-type
+guard (E5, `TaggerCheckNeutrino.cxx`
+`if (osh && std::abs(osh->get_particle_type()) != 13) continue;`), and 410680's
+far half is below the hardcoded 5 cm `min_len`.  That silence is itself the
+diagnosis for 347890.
+
+- **G1 / 172794 — the 5 cm direction lever.** Both angle tests are measured
+  against one reference, `cont = -me.into`, from
+  `segment_cal_dir_3vector(seg, p, lever)` with `lever` hardcoded 5 cm.  That
+  is a *centroid* direction — it averages every fit point within `lever` of the
+  end — evaluated exactly where cathode charge loss is worst.  Both angles fail
+  *together* (45.9 / 44.3) because the reference is bent, while the gap vector
+  and the partner direction agree with **each other** to ~8°.  Production's
+  own lever sweep: 5 cm → 45.9/44.3 reject; 10 cm → 29.2/26.1 still reject;
+  **15 cm → bridges**; 20 cm → bridges.
+- **G2 / 347890 — the partner-shower type guard.** Geometry passes cleanly
+  (gap 14.3, a_gap 15.4, a_tan 6.2 — better than three of the four round-2
+  successes) but is never evaluated: the facing segment 8008 is pdg 11 and its
+  **owning shower 8007 is pdg 211** (pi+, 27.1 cm, 64.9 MeV) — a mis-PID'd
+  short muon stub, not an EM shower.
+- **G3 / 67026 — the gap-vector angle is uninformative at short gaps.** a_tan
+  is 7.7° between the near half and a 257.9 cm muon-typed bare partner, but the
+  5.6 cm gap vector is 73.8° off: the halves are parallel and laterally offset
+  ~4.9 cm.  A gap vector's angular precision goes as ~atan(σ_endpoint/gap), so
+  at 5.6 cm it carries no information.
+
+**The owning-shower pdg is the clean discriminator for G2** — it separates the
+one event the owner wants from every EM case he called good:
+
+| evt | facing seg pdg | owning shower pdg | owner |
+|---|---|---|---|
+| 347890 | 11 | **211** | should bridge |
+| 392901 / 77978 / 92159 / 98470 | 11 | 11 | correct reject |
+
+**Correction to R3.8**: 407798 was flagged there as "unresolved, possibly a
+probe-vs-production angle-sentinel mismatch".  It is resolved and is a
+**correct reject** — gap is exactly 0.0 because the partner shares a vertex
+with the muon in the same cluster (a normal graph junction), and the 181.0
+sentinel is production working as designed, not an artifact.  R3.8's
+speculation was wrong.
+
+## R4.3 What shipped (knob table) — all default-legacy
+
+| config key | C++ default | SBND | what it does |
+|---|---|---|---|
+| `long_muon_cathode_bridge_lever` | `5.0` cm | **15.0** | end-direction lever; 5.0 == the round-2 hardcode, so the default is byte-identical (G1) |
+| `long_muon_cathode_bridge_track_partner` | `false` | **true** | E5 also admits a \|211\|-typed partner SHOWER; EM (11/22) stays excluded (G2) |
+| `long_muon_cathode_bridge_short_gap` | `0.0` cm (off) | **8.0** | below this gap the gap-vector angle test is waived (G3) |
+| `long_muon_cathode_bridge_short_gap_angle` | `10.0` deg | (default) | partner-direction cap required when the waiver applies |
+| `long_muon_cathode_bridge_short_gap_len` | `50.0` cm | (default) | min partner length required when the waiver applies |
+
+Two implementation points that the code reading forced, both load-bearing:
+
+1. **The waiver never applies to a degenerate gap.** `gap > 0` is a hard
+   precondition, independent of the a_tan and length gates, because the 181.0
+   return for a zero-length gap vector is the *only* thing rejecting 407798.
+   Without it, waiving the gap-angle test at `gap <= 8` would resurrect a
+   same-cluster graph junction the owner explicitly called good.
+2. **A `track_partner`-admitted partner cannot win the keeper contest.** The
+   merge branch ranks keeper by
+   `(start_vertex==main_vertex ? 0:1, −muon_member_length, shower_id)`.  In
+   347890 the pi+ shower *is* the root-attached one, so it wins the first key —
+   the 182.9 cm muon shower would have been dropped into a 211-typed keeper,
+   relabelling a muon as a pion and diverting it out of
+   `calculate_kinematics_long_muon`.  When the partner is admitted only by
+   `track_partner`, the muon shower is pinned as keeper and the absorbed
+   members are retyped to 13, mirroring what the bare-chain branch already
+   does.  Verified below: 347890's merged shower comes out pdg 13.
+
+Scope is unchanged from rounds 2-3: the bridge adds the far half to the
+**shower**, not to `segments_in_long_muon`, so tagger features and `nusel`
+keep their legacy inputs.  With `mcs_bridged_members` (round 3, SBND ON) the
+newly bridged halves do reach the MCS fit.
+
+## R4.4 ON smoke — each knob rescues exactly its own event
+
+Per-knob arms over the same 10 events, `<arm>` vs `sent1`:
+
+| arm | events that fire | what fires |
+|---|---|---|
+| `lev15` | 172794 only | `absorb bare chain into sid=1 nseg=1 len=68.6cm gap=13.6cm reseat=1` |
+| `trk` | 347890 only | `merge shower sid=5 (mu_len=182.9cm) <- sid=0 (mu_len=27.1cm) gap=14.3cm` |
+| `sg` | 67026 only | `absorb bare chain into sid=0 nseg=1 len=257.9cm gap=5.6cm reseat=1` |
+| `all` | exactly those three | — |
+
+**392901 stays unbridged in every arm** — the EM exclusion survives, as it
+must.  (The claim that the round-2 successes are untouched is *not* supported
+by this arm — `popb_arm.sh` runs the ten *unclaimed* pairs and contains none
+of them.  It is gated separately in R4.6a.)
+
+Effects (`sent1` → `all`), all `bad_path=false`:
+
+| evt | MCS len | ke_MCS | amb | ke_range_toolkit |
+|---|---|---|---|---|
+| 172794 | 230.1 → **298.7** cm | 483.9 → **661.0** | 2.6e-5 → 7.1e-8 | 533.1 → **687.8** |
+| 347890 | 182.9 → **210.0** cm | 365.9 → **432.4** | 1.7e-3 → 3.3e-4 | 429.4 → **488.7** |
+| 67026 | unchanged (see below) | 1241.9 | 0.5996 | 595.3 |
+
+New sentinels: `bridged members added nseg_bridged=1 len_bridged=68.6cm`
+(172794), `nseg_bridged=5 len_bridged=27.1cm` (347890).  Both fits get
+*less* ambiguous, and both move toward their own range KE.
+
+**347890's PF label is correct after the merge**: the pi+ shower 8007
+disappears from the shower list and all five of its members are retyped 13
+inside muon shower 4000, whose `kine_best` goes 429.4 → 488.7 MeV.  No pion
+relabelling of the muon.
+
+**67026's `mcs:` line is unchanged, and that is expected, not a miss.** MCS
+selects via `long_muon_else_pf`; the chain is empty (`nseg_chain=0`) so it
+falls back to the PF muon, which was *already* segment 17001 — the 257.9 cm
+far half — both before and after.  What the bridge fixes is the **shower**:
+
+| | muon shower | members | L_members | kine_range = kine_best |
+|---|---|---|---|---|
+| before | 35011 | 2 | 67.2 cm | **181.7 MeV** |
+| after | 17001 (re-seated) | 3 | **325.1 cm** | **748.6 MeV** |
+
+i.e. the reconstructed muon energy goes 181.7 → 748.6 MeV — the largest single
+rescue of the three.  `bridged_out` adds nothing to MCS here only because the
+segment it would add is the one MCS had already picked.
+
+## R4.5 Gate ledger
+
+| gate | arms | result |
+|---|---|---|
+| knob-off byte-identical | `work-pr124r1-flipA98-<s>` vs `work-d84r4-off1-<s>` (98 evts, 4 samples) | **PASS 196/196** archives (28+34+38+96); per-event `nusel-evt*.tsv` **98/98** identical |
+| doctests | `build/clus/wcdoctest-clus` | 2506/2506 (235 cases, incl. five new default pins) |
+| compiled config, knobs off | full-pipeline `wcsonnet` (reality=data + PR pipeline_names), HEAD `81c178d1` jsonnet vs edited | **byte-identical** (`cmp`) |
+| compiled config, knobs on | same + 3 TLAs | exactly `long_muon_cathode_bridge_{lever,track_partner,short_gap}` appear in the TCN node; nothing else moves |
+| freshness | `local/lib/libWireCellClus.so` 06:03:56 > last source edit 06:02:33 | OK (M1) |
+
+Baseline choice: gated against `work-pr124r1-flipA98-*`, **not** the round-3
+`work-d84r3-cens-*` — the peer's pr/124 front-A flip (`shower_pass4_prune_gap2=25`)
+moved 27 events off the round-3 census between rounds.  Arms pin
+`SBND_SHOWER_PASS3_CONE_GUARD_LEN=0` (the peer's pr/124 front C, OFF at
+`81c178d1`) so a concurrent flip on their side cannot leak in.
+
+## R4.6 Over-reach — ON moves nothing outside the three movers
+
+**None of 172794 / 347890 / 67026 is in either gate manifest**, so the ON arms
+over those manifests are a *pure* over-reach test: with all three knobs on,
+nothing should move at all.
+
+| gate | arms | result |
+|---|---|---|
+| ON vs OFF, 98-evt 4-sample | `work-d84r4-off1-<s>` vs `work-d84r4-on1-<s>` | **PASS 196/196** archives (28+34+38+96) |
+| ON vs production, 141-evt | `work-pr124r1-flipA141-<s>` vs `work-d84r4-on141-<s>` | **PASS 282/282** archives (104+178); `nusel` **141/141** identical |
+| determinism | `work-d84r4-all-<s>` vs `work-d84r4-all2-<s>` (identical env) | **PASS 20/20**; bridge + `mcs:` sentinel lines identical on all three movers |
+| flip equivalence | `work-d84r4-all-<s>` (env) vs `work-d84r4-flipchk-<s>` (jsonnet only) | **PASS 20/20**; all three fire from the jsonnet alone |
+
+239 gate events, zero movers.  Inside the 10 scanned Pop-B events, each knob
+fires on exactly its own target and **392901 stays unbridged in every arm**.
+
+**Scope limit, stated honestly:** the owner chose the manifest+scanned-set
+validation scope over a 3000-event re-run this round.  So the population bound
+on new fires is the *read-only probe* number — over the 1366 round-3 census
+events with calib json, the shipped values admit exactly the three owner
+events and nothing else — plus 239 production events showing zero movement.
+That is not the same as a production census re-run, and a future round that
+re-runs the full 3000 should confirm the fire count goes 10 → 13.
+
+## R4.7 SBND production flip (owner pre-authorization, 2026-08-29)
+
+Asked before implementation and pre-authorized conditional on OFF-gate PASS +
+clean ON smoke + no fourth mover; all three held.  `wct-pr-perevt.jsonnet` now
+ships `long_muon_cathode_bridge_lever = 15`,
+`long_muon_cathode_bridge_track_partner = true`,
+`long_muon_cathode_bridge_short_gap = 8` (commit `a8cbfa4a`; knobs
+`8ac21ecc`).  `_short_gap_angle` / `_short_gap_len` stay at the C++ defaults.
+
+Runner env seats (`SBND_LONG_MUON_CATHODE_BRIDGE_{LEVER,TRACK_PARTNER,SHORT_GAP,SHORT_GAP_ANGLE,SHORT_GAP_LEN}`)
+landed in wcp `2a38aa90` — a concurrent session's `git commit` swept them out
+of the shared index; the seats are correct and left in place rather than
+churning the runner mid-round.
+
+**Probe-vs-production note worth keeping.** The read-only census probe uses an
+arc-length tangent; production uses `segment_cal_dir_3vector`, a centroid
+direction. They agree on *which* guard fires for every event here, but not on
+the threshold: the probe said a 10 cm lever would rescue 172794, production
+needed 15 cm (10 cm still gives 29.2/26.1, both just over the 25° cap).  Pick
+knob values from production's own sentinel, never from the probe.
+
+## R4.8 Open, not closed
+
+- The 3000-event fire count is unmeasured at the new settings (see R4.6).
+- 410680's far half is below the hardcoded 5 cm `min_len` in `collect_ends`,
+  so it never reaches geometry.  The owner called it good, so no action — but
+  `min_len` remains the one bridge constant with no knob.
+- 67026 gains nothing in MCS (`bridged_out` adds only the segment MCS had
+  already selected) while gaining 567 MeV in the range kinematics.  The MCS
+  muon-selection order and the bridge now disagree about which half is "the"
+  muon; harmless here, worth a look if a future case has both halves long.
+
+## R4.6a Fire-set gate — the events the bridge ALREADY bridges
+
+The gates in R4.6 structurally cannot see the population most exposed to these
+knobs: the events where the pass *already* fires.  All three knobs can perturb
+one while every other gate stays green.  `lever` recomputes `into` for **every**
+collected end, so it moves both angle tests wherever the pass runs — and not
+monotonically (493659 degrades a_gap 25.2→26.3, a_tan 41.9→58.5 as the lever
+grows), so an already-firing event could silently *stop*.  `track_partner` and
+`short_gap` both enlarge the pool feeding a best-gap **minimiser**
+(`if (gap >= best_gap) continue; … best = &pe`), so a newly-admitted closer
+partner could displace the incumbent — the event still fires, to a different
+partner.
+
+Only 1 of round 3's 10 production fire events (321767) is in any gate manifest,
+so the other 9 were ungated.  Arms `work-d84r4-fire{off,on}-*` over all ten
+(53793, 77978, 168448, 177536, 281214, 287555, 321767, 391766, 398181, 478880);
+`fireoff` pins the five params to their C++ legacy values, `fireon` runs the
+shipped flip:
+
+| check | result |
+|---|---|
+| archives | **PASS 20/20** byte-identical (8 mcp1k + 12 mcp2k) |
+| `nusel` | **10/10** identical |
+| bridge line, event by event | **all 10 unchanged** — same branch, same partner, same nseg/len/gap/reseat |
+
+e.g. 53793 `merge shower sid=0 (mu_len=154.1cm) <- sid=2 (mu_len=240.9cm)
+gap=13.9cm`, 177536 `absorb bare chain … len=98.1cm gap=9.4cm reseat=1`,
+77978 `… len=23.5cm gap=6.5cm reseat=1` — identical on both sides.
+
+`nusel` on the three movers themselves (`sent1` vs `flipchk`) is also
+**3/3 identical**, which is the first direct test of the rounds-2-to-4 scope
+claim ("the bridge is shower-only, so nusel stays put") on events where the
+bridge actually fires *and* the kinematics move — 67026's shower id changes
+35011 → 17001 and its energy 181.7 → 748.6 MeV with nusel untouched.
+
+Provenance note: the fire-set pair ran after a concurrent session's install
+(`libWireCellClus.so` 06:37:02, their pr/125 knobs default-OFF).  Both sides of
+the pair used that same library, so the comparison still isolates the round-4
+knobs; every other gate in R4.5/R4.6 completed on the 06:03:56 build.
+
+## R4.9 Bee A/B for the three rescues (uploaded, owner-authorized)
+
+`bee/d84r4/d84r4-{before,after}.zip`, index `bee/d84r4/d84r4.index.txt`.
+BEFORE = `work-d84r4-sent1-*` (knobs off, byte-identical to pre-flip
+production); AFTER = `work-d84r4-flipchk-*` (the shipped jsonnet flip).
+
+- BEFORE: https://www.phy.bnl.gov/twister/bee/set/d6163f8a-f66f-42a2-bbbf-f5c8c9ad28a6/event/list/
+- AFTER:  https://www.phy.bnl.gov/twister/bee/set/da1834c6-9b05-4b9e-b17b-f99a8edc4132/event/list/
+
+| idx | event | guard | what to look for |
+|---|---|---|---|
+| 0 | 172794 | G1 lever | the muon → neutron → muon chain collapses to one muon; +68.6 cm |
+| 1 | 347890 | G2 track_partner | the pi+ stub becomes part of the muon (retyped 13), carrier gone |
+| 2 | 67026 | G3 short_gap | the root-attached neutron → muon subtree joins the long muon; 181.7 → 748.6 MeV |
+
+## R4.10 Owner verdict — round 4 CLOSED
+
+Owner scanned the Bee A/B pair (`d6163f8a` / `da1834c6`) 2026-08-29:
+**"They are good."**  All three rescues confirmed — 172794 (G1 lever),
+347890 (G2 track_partner), 67026 (G3 short_gap).  The SBND flip `a8cbfa4a`
+stands as validated production.
+
+**Doc 84 is closed through round 4.**  The whole long-muon family is SBND
+production ON: MCS (`mcs_enable`, `mcs_muon_source=long_muon_else_pf`,
+`mcs_range_comparator_chain`, `mcs_bridged_members`), the chain fixes
+(`long_muon_range_empty_chain_fallback`, `long_muon_angle_relax_long`,
+`long_muon_stub_bridge_len`, `long_muon_members_geometry`) and the cathode
+bridge with its round-4 admission params.
+
+Deferred, deliberately, with no work in flight:
+
+1. **MCS absolute scale vs truth** (owner item, standing since R3.7).  The
+   amb<0.2 population sits at 0.94-0.96 of CSDA range; reco-vs-truth on a
+   truth-level numu sample is the only way to say whether that ~5% is real
+   scale or range-table convention.  Needs MC truth not available here.
+2. **3000-event fire count at the round-4 settings.**  Unmeasured by choice
+   (owner picked the manifest+scanned-set scope).  Expect 10 → 13 whenever a
+   full census next runs; a different number means something is off.
+3. **`min_len` (5 cm) is the last bridge constant with no knob** — it is why
+   410680's far half never reaches geometry.  Owner called that event good, so
+   no action proposed.
+4. **MCS selection vs bridge disagreement** (67026): the bridge absorbed the
+   257.9 cm half into the shower while MCS's `pf_muon` fallback had already
+   selected that same segment, so `bridged_out` added nothing.  Harmless here;
+   worth revisiting only if a case appears with both halves long.

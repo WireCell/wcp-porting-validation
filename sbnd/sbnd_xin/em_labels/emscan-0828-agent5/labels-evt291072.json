@@ -1,0 +1,212 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 78.75,
+  "az_deg": -55.0,
+  "centre": [
+   110.34,
+   87.87,
+   449.3
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2412,
+  "cloud_cluster_ids": [
+   21
+  ],
+  "cloud_kept": 2412,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 71861,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.5479446603838107,
+   -0.5469447613685118,
+   0.6329360766842193
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "21023": {
+    "72069": "in",
+    "73070": "in"
+   }
+  },
+  "marks_detail": {
+   "21023": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.5479446603838107,
+     -0.5469447613685118,
+     0.6329360766842193
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "72069": {
+      "absorbed_by": null,
+      "angle": 14.792494671888479,
+      "cluster_id": 72,
+      "dist": 107.63270128836443,
+      "ellip": 36.97602922174246,
+      "kind": "in",
+      "length": 0.6710568459012831,
+      "owner": 72069,
+      "pdg": 11,
+      "tier": null
+     },
+     "73070": {
+      "absorbed_by": null,
+      "angle": 15.542229854483693,
+      "cluster_id": 73,
+      "dist": 87.05013647056491,
+      "ellip": 26.15819127485636,
+      "kind": "in",
+      "length": 0.9791849164761548,
+      "owner": 73070,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 25.79193958287513,
+     "angle_min": 0.0,
+     "dist_max": 125.94129882364466,
+     "dist_min": 0.0,
+     "n": 31
+    },
+    "members": [
+     21001,
+     21020,
+     21023,
+     21024,
+     21030,
+     21031,
+     21042,
+     21043,
+     21044,
+     21045,
+     54046,
+     55047,
+     57049,
+     58050,
+     59051,
+     60052,
+     61053,
+     63055,
+     64056,
+     66058,
+     68060,
+     71064,
+     71068,
+     74072,
+     74074,
+     74075,
+     75076,
+     153077,
+     154078,
+     155079,
+     156084
+    ],
+    "start": [
+     153.03840808084766,
+     118.00435473400617,
+     405.05864458089314
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.5479446603838107,
+    -0.5469447613685118,
+    0.6329360766842193
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 31,
+   "kine_best": 652.366244726841,
+   "kine_charge": 652.366244726841,
+   "kine_charge_other_hypothesis": 392.4007487078744,
+   "kine_dQdx": 466.0278402966649,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    21001,
+    21020,
+    21023,
+    21024,
+    21030,
+    21031,
+    21042,
+    21043,
+    21044,
+    21045,
+    54046,
+    55047,
+    57049,
+    58050,
+    59051,
+    60052,
+    61053,
+    63055,
+    64056,
+    66058,
+    68060,
+    71064,
+    71068,
+    74072,
+    74074,
+    74075,
+    75076,
+    153077,
+    154078,
+    155079,
+    156084
+   ],
+   "membership_source": "probe",
+   "num_segments": 31,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   153.03840808084766,
+   118.00435473400617,
+   405.05864458089314
+  ],
+  "reco_start_vertex_id": 21009,
+  "shower": 21023,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   153.03840808084766,
+   118.00435473400617,
+   405.05864458089314
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt291072",
+ "eventNo": 291072,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": 153.03840808084766,
+  "y": 118.00435473400617,
+  "z": 405.05864458089314
+ },
+ "note": "[agent-bulk] nuecc, clean single-cone topology. Verdict shower 21023 (pdg 11, kine_charge 652.4 MeV, 31 seg, len 122.5) -- correction 17: it is the only pdg-11 shower in scope and the highest kine_charge object in the event, so no non-EM object was passed over. Vertex judged from vtx-az-055-el+20 and vtx-az+065-el+20 (r95 84 cm, event_half_span 105 cm, so no vtxz-* frames were produced and none were needed): the blue star sits exactly on the apex where the shower stem and the short hadronic prong meet, in both azimuths. Vertex is good. 21016 (pdg 2212, 12.5 cm, dist 0.0 / angle 0.0) is that hadronic prong on the far side of the vertex and is correctly left unowned -- the shower did not swallow the proton. UNDER-CLUSTERED, and the strongest single piece of evidence is a metric inversion, not the plot geometry: 73070 (cluster 73, pdg 11, 5.8 MeV) sits at 15.5 deg / 87.0 cm with metric 26.16 and is rejected, while accepted member 54046 sits at 9.7 deg / 124.9 cm with metric 27.13 -- a candidate strictly better on the display's own metric, inside the same envelope, left out. 72069 (cluster 72, pdg 11, 8.5 MeV, 14.8 deg / 107.6 cm, metric 36.98) is the same case one step further out. Both are inside the member envelope in BOTH coordinates: 21023's own cmp_div gives its members as distance 0.0-125.9 cm at angle 0.0-25.8 deg. Corroborated on shw21023-acc.png, where 73070 and 72069 are the two blue circles at (87,15.6) and (108,14.8) sitting just above the 12.5 deg step of the 80-130 cm band, with an accepted orange square at (125,9.7) inside it -- but that corroboration is weaker than usual here because 21 of the 31 members entered via pass3_cone (direct), not pass-1. Correction 7, the two marks differ in strength: 73070 and 72069 are the strong pair and are marked IN; 65057 (9.0 MeV, 28.9 deg / 31.5 cm, metric 9.76) is the weak one and is DELIBERATELY LEFT UNMARKED -- its 28.9 deg is outside the 25.8 deg member spread, so it is the one I would let the owner reverse, even though an accepted member sits at 26.2 deg just below it. Magnitude, so the owner can downgrade this to correct without re-deriving it: the three fragments total 23.3 MeV against 652.4 MeV, about 3.6 percent. Membership triple-check per correction 16 was run and all three agree at 31 (nseg 31, owner-grouped candidate count owner==21023 is 31, cmp_div says 31 segment(s) plotted), so these fragments are genuinely non-members of 21023 and not the double-ownership trap of correction 11; each is the seed of its own 1-segment sub-20 MeV shower. Showers not looked at: the 8 skipped by the scope rule (65057, 72069, 73070, 62054, 56048, 69061, 67059, 70062), all single-segment and 2.5-9.0 MeV, i.e. under the 20 MeV floor -- three of them are exactly the fragments discussed above, which is the point. No pi0: pio_id -1 on the only shower and kine_div says no pi0 group in this event; there is no second EM object anywhere in the reconstruction, so this is a single-electron event and nothing is proposed. This verdict is about clustering and is silent on PID. drag_check both true, probe_radius 91.9 px, probe_degenerate false.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt291072/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:26:45+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt291072/calib-pr-evt291072.json",
+ "subRunNo": 1
+}

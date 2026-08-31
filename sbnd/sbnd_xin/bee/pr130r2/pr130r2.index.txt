@@ -1,0 +1,30 @@
+# doc pr/130 Part 3 -- stem_backfill_back_guard (doc pr/120 r1, SBND PRODUCTION
+# ON since 2026-08-28 17:27) A/B.
+#   guardON  (= today's production) 2a259e9f-7d28-45f9-b3bc-a43e26b3f5f0
+#     https://www.phy.bnl.gov/twister/bee/set/2a259e9f-7d28-45f9-b3bc-a43e26b3f5f0/event/list/
+#   guardOFF (= knob forced off)    1747be7e-1fbb-432b-a026-d26d254fa63d
+#     https://www.phy.bnl.gov/twister/bee/set/1747be7e-1fbb-432b-a026-d26d254fa63d/event/list/
+# Content-verified live-vs-package 24/24 (mc + shower_track-global, both sets),
+# and orientation cross-checked semantically on idx 0: the ON set carries
+# 'e-  227 MeV' and no pi+, the OFF set carries 'pi+  91 MeV' and no e- 227.
+# (doc pr/124's UUIDs were once recorded swapped AND inverted -- always verify.)
+#
+# THE QUESTION: 292643 lost its pi0 and both pi+ to this knob.  Is that worth
+# what the knob buys on the other five?  Turning it OFF is net -292.1 MeV over
+# the 141-set; it moves exactly these 6 events of 141 (135 byte-identical).
+#
+# CAVEAT: the deltas below are Enu differences, NOT accuracy.  Nothing in this
+# package says which side is closer to truth -- no truth comparison was run.
+# Judge the STRUCTURE (is that object really a pi0 / a proton / one muon?),
+# not the direction of Enu.
+#
+# ON = today's production.  OFF = the knob forced off, everything else equal.
+# Same event order in both sets.
+#
+# bee_idx	event	status
+0	292643	YOUR ORIGINAL EVENT -- guard COSTS here.  ON: head is e- 227, no pi+ at all, no pi0.  OFF: mu- 441 | pi+ 91 | pi+ 65 | pi0 150 (gamma 154 + gamma 65).  OFF is byte-for-byte the shape you approved on 2026-08-25 (work-mcp1k-prod0825).  Enu 858.5 -> 1092.4 (+234.0).
+1	179369	guard BUYS the most here, and it is the biggest single mover.  ON: pi0 138 (gamma 38 + gamma 216) + mu- 1039.  OFF: the pi0 and the 216 MeV gamma are GONE, the EM fragments into e- 38 / 36 / 35 / 22 / 10 / 5.  Enu 1713.1 -> 1337.1 (-376.0).  Also 141-set q_miss rank 9 and the parked "backward cluster" item.
+2	283515	ON: proton 188 | proton 81 | proton 202 | gamma 247 | gamma 116.  OFF: proton 202 becomes pi0 119 (gamma 83 + ...).  A proton-vs-pi0 call.  Enu 866.9 -> 739.1 (-127.8).  Also 141-set q_miss rank 4.
+3	347824	Both sides keep pi+ 55 and a pi0; the EM sizes move.  ON: pi0 104 with gamma 447.  OFF: pi0 114 with gamma 550 (+ gamma 137 promoted).  Enu 1652.7 -> 1735.6 (+82.9).
+4	67394	ON: head mu- 94, with pi+ 72 | mu- 45 | mu- 37 | proton 233 | proton 88 | gamma 187 | pi+ 66.  OFF: head becomes e- 43 and proton 88 is gone.  Enu 1207.3 -> 1151.0 (-56.3).
+5	286655	Smallest mover, cleanest structure question.  ON: proton 103 | gamma 201 | gamma 236.  OFF: proton 103 and gamma 236 are replaced by a single e- 304.  Enu 554.4 -> 505.5 (-48.9).

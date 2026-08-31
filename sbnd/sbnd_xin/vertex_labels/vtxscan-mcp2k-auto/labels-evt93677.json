@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt93677",
+ "eventNo": 93677,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 74.57064083157888,
+  "y": 32.09496094286224,
+  "z": 411.1312840866091
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16002,
+   "x": 74.57064083157888,
+   "y": 32.09496094286224,
+   "z": 411.1312840866091
+  }
+ ],
+ "reco_sep_cm": 0.005164348711560926,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Degree-4 junction: two protons and a pion stub all dark red and rising away (196k, 172k, 133k) plus a 55 cm muon leaving at exactly MIP and stopping at 116k -- every prong points away from 16002.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt93677/calib-pr-evt93677.json",
+ "subRunNo": 1
+}

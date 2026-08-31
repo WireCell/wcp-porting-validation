@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt292722",
+ "eventNo": 292722,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 7.900515905936774,
+  "y": 62.833648296581224,
+  "z": 51.324164552622584
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10004,
+   "x": 7.900515905936774,
+   "y": 62.833648296581224,
+   "z": 51.324164552622584
+  }
+ ],
+ "reco_sep_cm": 0.00556055082041761,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: zoom shows a 15.5 cm proton rising monotonically away from 10004 to 218625 at its stopping end 10005 and the 94.5 cm muon leaving cool, with a Michel-like shower on the muon's far end 10003 (rule 3).",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt292722/calib-pr-evt292722.json",
+ "subRunNo": 1
+}

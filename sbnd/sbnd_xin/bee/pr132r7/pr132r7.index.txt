@@ -1,0 +1,20 @@
+# doc pr/132 round 7 A/B index -- K18 acceptance-aware fragment merge (v2, subordination guard), 13 fire events
+# OFF (r7off2, production point) ddfbb934-52a4-4dab-884b-22214a41c364 / ON (r7am2, pi0_accept_merge_dis_cm=120) 7d9652b0-12c4-4041-abb3-e46730557980
+# Order: the 3 census movers first, then the gamma-pollution event, then the 9 remaining fire events (census class unchanged).
+# Every fire absorbs ONE detached fragment into a below-window pair member so the pair mass lands in (100,160).
+# "FUSION" = the absorbed fragment is the host's own recorded pair partner -- the true gamma pair collapses into one
+# shower and pairs with junk.  7 of 13 fires are fusions; the gamma ledger loses 5 OK gammas and heals none.
+# bee_idx	event	status
+0	103798	mover no-group->partial, but a FUSION: host g1 128.3 MeV absorbed g2 99.1 MeV (labels 133.0/97.6 -- charges were RIGHT, recorded pair mass 74 = angle deficit); ledger g1 OK->OVER 1.70, g2 OK->ABSENT
+1	281485	mover none->partial, FUSION: 91112 (65.5) absorbed the labeled g2 89095 (27.9), m2=106.5; ledger g2 OK->ABSENT
+2	409634	mover no-group->partial, FUSION: labeled g2 (39.1 MeV) absorbed, m2=115.7; ledger g2 OK->ABSENT
+3	396222	ADVERSE ledger: g2 OK->OVER 4.20 (162.7 -> 683.7 MeV) -- host 128276 absorbed 138339, m2=103.5; census class unchanged
+4	172942	new group m2=100.2 (host 71022 + frag 47004, not a recorded-pair fusion); unlabeled pairing -- judge
+5	393212	new group m2=100.5, FUSION of recorded pair (43024,44025); unlabeled -- judge
+6	401450	new group m2=115.9, FUSION of recorded pair (75083,77085); unlabeled -- judge
+7	347824	new group m2=121.6 (host 31010 + frag 117107); g1 was already ABSENT at baseline (over-extended start, doc sec 13.1) -- judge
+8	54332	new group m2=121.5 (host 76038 + frag 84046); the labeled g1 deficit (0.73, K16@120 target) is NOT healed -- fire touched other showers
+9	180801	new group m2=116.8 (host 15015 + frag 74036); unlabeled ncpi0 -- judge
+10	259542	new group m2=111.6 (host 128135 + frag 76048); unlabeled ncpi0 -- judge
+11	84229	new group m2=110.2, FUSION of recorded pair (62096,57091); ncpi0 -- judge
+12	235435	new group m2=116.2, FUSION of recorded pair (2051,42066); nuecc48 -- judge

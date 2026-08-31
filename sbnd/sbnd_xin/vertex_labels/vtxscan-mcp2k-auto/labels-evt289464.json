@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt289464",
+ "eventNo": 289464,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 72.06233156932615,
+  "y": -145.76916974145072,
+  "z": 139.8301971164688
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 72.06233156932615,
+   "y": -145.76916974145072,
+   "z": 139.8301971164688
+  }
+ ],
+ "reco_sep_cm": 0.0024828209125013815,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 as strong as it gets: deg-4 star with 3 of 4 prongs rising away -- 299 cm muon to 108797, 12.7 cm proton to 211277, 42.5 cm proton to 210791 -- confirmed by three green arrows in the zoom.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt289464/calib-pr-evt289464.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt55542",
+ "eventNo": 55542,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": -56.59975166495214,
+  "y": -61.69216078859076,
+  "z": 123.71471076428263
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 5004,
+   "x": -56.59975166495214,
+   "y": -61.69216078859076,
+   "z": 123.71471076428263
+  }
+ ],
+ "reco_sep_cm": 0.0051886392972070655,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule1: 5004 is where a 5cm proton starts (monotone Bragg rise 105k->250k to its stopping end 5001) and where a fully contained 261cm flat-MIP muon starts, the muon Bragging at its far end 5000; 5005 is only a fit break in the muon.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt55542/calib-pr-evt55542.json",
+ "subRunNo": 1
+}

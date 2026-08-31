@@ -1,0 +1,45 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/1cbf04ba-9800-4c99-bd94-d4ed266ad245/event/11/",
+ "camera": {
+  "R": 214.5,
+  "az_deg": 1535.77,
+  "centre": [
+   -49.55,
+   87.73,
+   205.2
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3470,
+  "cloud_cluster_ids": [
+   14,
+   20,
+   21
+  ],
+  "cloud_kept": 3470,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 53762,
+  "el_deg": -0.81
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt281781",
+ "eventNo": 281781,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 88,
+  "x": -102.23442978598669,
+  "y": 143.0016316383498,
+  "z": 223.91635456576387
+ },
+ "note": "not clear where the nu vertex is ... ",
+ "origin": "ncpi0",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-mcp2k/pr_evt281781/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T14:37:42+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt281781/calib-pr-evt281781.json",
+ "subRunNo": 1
+}

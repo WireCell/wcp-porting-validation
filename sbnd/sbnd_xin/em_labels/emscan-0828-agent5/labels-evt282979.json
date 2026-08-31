@@ -1,0 +1,283 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 70.13,
+  "az_deg": -55.0,
+  "centre": [
+   -32.26,
+   140.86,
+   445.14
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2077,
+  "cloud_cluster_ids": [
+   14,
+   18,
+   19,
+   20
+  ],
+  "cloud_kept": 2077,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 38231,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.012001128159072921,
+   -0.7580712620481063,
+   0.6520612966429621
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "14003": {
+    "34011": "out",
+    "38015": "out",
+    "39016": "out",
+    "40017": "out",
+    "41018": "out",
+    "44031": "out",
+    "44032": "out",
+    "45034": "out",
+    "45035": "out",
+    "46036": "out"
+   }
+  },
+  "marks_detail": {
+   "14003": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.012001128159072921,
+     -0.7580712620481063,
+     0.6520612966429621
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "34011": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 18.592948817890065,
+      "cluster_id": 34,
+      "dist": 112.40912587573534,
+      "ellip": 58.47712059826963,
+      "kind": "out",
+      "length": 0.5308398581104454,
+      "owner": 14003,
+      "pdg": 13,
+      "tier": 2
+     },
+     "38015": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 20.89472386193798,
+      "cluster_id": 38,
+      "dist": 117.6967664589464,
+      "ellip": 78.03856383015915,
+      "kind": "out",
+      "length": 0.8297771063617218,
+      "owner": 14003,
+      "pdg": 11,
+      "tier": null
+     },
+     "39016": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 16.60964657482645,
+      "cluster_id": 39,
+      "dist": 102.33838729911756,
+      "ellip": 40.241317882990344,
+      "kind": "out",
+      "length": 0.8655252884659799,
+      "owner": 14003,
+      "pdg": 13,
+      "tier": 2
+     },
+     "40017": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 14.039604614999336,
+      "cluster_id": 40,
+      "dist": 99.88123117865777,
+      "ellip": 29.35278749380203,
+      "kind": "out",
+      "length": 0.4721634309936518,
+      "owner": 14003,
+      "pdg": 13,
+      "tier": 2
+     },
+     "41018": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 15.658160899551126,
+      "cluster_id": 41,
+      "dist": 96.48764174079065,
+      "ellip": 32.521742871933576,
+      "kind": "out",
+      "length": 0.45874351354856147,
+      "owner": 14003,
+      "pdg": 13,
+      "tier": 2
+     },
+     "44031": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 21.506785582177958,
+      "cluster_id": 44,
+      "dist": 102.03653922264103,
+      "ellip": 61.60619193431076,
+      "kind": "out",
+      "length": 0.901248678460842,
+      "owner": 14003,
+      "pdg": 2212,
+      "tier": null
+     },
+     "44032": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 21.09819033204456,
+      "cluster_id": 44,
+      "dist": 102.54444566605522,
+      "ellip": 60.22226561832522,
+      "kind": "out",
+      "length": 9.31538800535397,
+      "owner": 14003,
+      "pdg": 2212,
+      "tier": null
+     },
+     "45034": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 15.17213035961371,
+      "cluster_id": 45,
+      "dist": 98.71324169138407,
+      "ellip": 32.37134092839614,
+      "kind": "out",
+      "length": 2.406471291039798,
+      "owner": 14003,
+      "pdg": 11,
+      "tier": 2
+     },
+     "45035": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 17.278974515360737,
+      "cluster_id": 45,
+      "dist": 99.28838582478305,
+      "ellip": 40.40674465116807,
+      "kind": "out",
+      "length": 10.610181963573929,
+      "owner": 14003,
+      "pdg": 11,
+      "tier": 2
+     },
+     "46036": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 16.584052880855864,
+      "cluster_id": 46,
+      "dist": 97.60845804951485,
+      "ellip": 36.51574902787743,
+      "kind": "out",
+      "length": 1.5578243222734627,
+      "owner": 14003,
+      "pdg": 2212,
+      "tier": 2
+     }
+    },
+    "member_span": {
+     "angle_max": 21.506785582177958,
+     "angle_min": 0.0,
+     "dist_max": 117.6967664589464,
+     "dist_min": 0.0,
+     "n": 13
+    },
+    "members": [
+     14002,
+     14003,
+     14004,
+     34011,
+     38015,
+     39016,
+     40017,
+     41018,
+     44031,
+     44032,
+     45034,
+     45035,
+     46036
+    ],
+    "start": [
+     -25.488783805282516,
+     172.46198059307972,
+     393.4282371598731
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.012001128159072921,
+    -0.7580712620481063,
+    0.6520612966429621
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 13,
+   "kine_best": 309.5796450700168,
+   "kine_charge": 309.5796450700168,
+   "kine_charge_other_hypothesis": 186.21332034286726,
+   "kine_dQdx": 279.06745187478293,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    14002,
+    14003,
+    14004,
+    34011,
+    38015,
+    39016,
+    40017,
+    41018,
+    44031,
+    44032,
+    45034,
+    45035,
+    46036
+   ],
+   "membership_source": "probe",
+   "num_segments": 13,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -25.488783805282516,
+   172.46198059307972,
+   393.4282371598731
+  ],
+  "reco_start_vertex_id": 14001,
+  "shower": 14003,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -25.488783805282516,
+   172.46198059307972,
+   393.4282371598731
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt282979",
+ "eventNo": 282979,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -25.488783805282516,
+  "y": 172.46198059307972,
+  "z": 393.4282371598731
+ },
+ "note": "[agent-bulk] nuecc. shw 14003 (309.6 MeV, 13 seg, conn 1) is TWO disconnected bodies called one shower. Near the vertex: 14003/14002/14004 (cluster 14) at 0-13.5 cm and 0-0.4 deg -- a narrow, straight, MIP-like line, not a cone, on both az-055 and az+085. Then the member set is EMPTY from 14 to 95 cm -- the acceptance plot shows a bare band there and both 3-D views show no charge at all in between, no point cloud and no grey segments -- and it resumes as a compact clump of 10 segments at 96.5-117.7 cm and 14.0-21.5 deg, all absorbed by pass3_cone (direct), drawn from clusters 34/38/39/40/41/44/45/46 and including 44032 (9.3 cm, pdg 2212), 46036 and 44031 (pdg 2212) and four pdg 13 stubs. A 310 MeV EM shower cannot have 80 cm of vacuum in its middle, so that far clump is a separate object the cone gate reached across empty space. All ten far members marked OUT. The near body is left as the shower. shw 42022 (25.7 MeV, 8.2 cm) sits 16.8 cm from the shower start at 137 deg, i.e. behind it, and is correctly not absorbed. Not looked at individually: 19009 (73.7 MeV but only 3.1 cm, pdg 2212, 181 cm away) and 18008 (57.8 MeV, 1.5 cm, pdg 2212, 139 cm away) -- both are short heavy-ionising stubs whose energy comes from the proton conversion, not EM showers, and 19 further showers skipped by the scope rule, all at 16.7 MeV and below. Vertex looks acceptable: the star sits at the near end of the vertex body on both azimuths, no rival convergence.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt282979/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:45:43+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt282979/calib-pr-evt282979.json",
+ "subRunNo": 1
+}

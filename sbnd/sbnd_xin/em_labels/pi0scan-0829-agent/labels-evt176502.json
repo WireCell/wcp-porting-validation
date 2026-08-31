@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-mcp2k/pr_evt176502",
+ "confidence": "medium",
+ "eventNo": 176502,
+ "main_vertex": {
+  "x": 127.73280379165234,
+  "y": -31.438055683969743,
+  "z": 118.8122419866606
+ },
+ "note": "owner scan note: significant EM shower overclustering, not easily label -- second gamma inseparable from the 2510 MeV attached trunk",
+ "origin": "ncpi0",
+ "pio": null,
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:46.245297Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

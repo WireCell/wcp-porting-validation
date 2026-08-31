@@ -1,0 +1,40 @@
+# doc pr/112 sec 11.6 -- nueCC48 + NCpi0, every event where the exclusion-ON or the
+# exclusion-OFF chain misses the pr/106 target (R0=0 or R1=0): 18 events, 5 arms,
+# SAME event list and SAME order in all five sets.  toolkit 077bc5b7.
+#
+#   nofitx  work-pr112i-nofitx-{nuecc48,ncpi0}  SBND_FIT_EXCLUSION=false, no dual chain
+#           https://www.phy.bnl.gov/twister/bee/set/9b192b5c-43ab-4c92-bfc7-30c501157fbe/event/list/
+#   off     work-pr112i-off-{nuecc48,ncpi0}     production, exclusion ON, dual chain OFF
+#           https://www.phy.bnl.gov/twister/bee/set/e1237f52-ce1e-43d5-ac0a-846bed5c9e83/event/list/
+#   snapD2  work-pr112i-snapD2-{nuecc48,ncpi0}  dual chain, snap transfer, D=2.0 cm
+#           https://www.phy.bnl.gov/twister/bee/set/3946ee1d-a7ed-4c55-9df5-e83ca42d3eed/event/list/
+#   snapD3  work-pr112i-snapD3-{nuecc48,ncpi0}  dual chain, snap transfer, D=3.0 cm
+#           https://www.phy.bnl.gov/twister/bee/set/c309ea38-556b-44fc-8518-ee4f065fd3a9/event/list/
+#   uniW0   work-pr112i-uniW0-{nuecc48,ncpi0}   dual chain, union of both nets' top-K (shipped point)
+#           https://www.phy.bnl.gov/twister/bee/set/301362ba-08e4-49dc-8bb8-92ef2daac3ac/event/list/
+#
+# Cells: <shipped main_vertex distance to the hand-scan click, cm>/<target-metric verdict>
+# [/xfer<d>] = the snap transfer fired at that distance.  HIT/miss is the pr/106 target
+# metric (candidate identity), NOT the distance -- see idx 11/17, where the shipped
+# vertex is 0.4-1.6 cm from the click and the metric still scores a miss because the
+# nearest candidate ROW to the shipped vertex is not the row nearest the click.
+#
+idx	evt	sample	nofitx(d_cm,hit)	off(d_cm,hit)	snapD2(d_cm,hit)	snapD3(d_cm,hit)	uniW0(d_cm,hit)	note
+0	84229	ncpi0	0.00/HIT	98.68/miss	0.13/HIT/xfer0.24	0.13/HIT/xfer0.24	0.13/HIT	OFF fixes
+1	46363	nuecc48	0.00/HIT	45.06/miss	0.00/HIT/xfer0.00	0.00/HIT/xfer0.00	0.00/HIT	OFF fixes
+2	111412	nuecc48	0.00/HIT	41.32/miss	41.32/miss	1.96/HIT/xfer2.07	41.32/miss	OFF fixes
+3	235435	nuecc48	0.00/HIT	30.92/miss	0.18/HIT/xfer0.00	0.18/HIT/xfer0.00	0.18/HIT	OFF fixes
+4	389538	nuecc48	0.00/HIT	213.46/miss	0.26/HIT/xfer0.30	0.26/HIT/xfer0.30	213.46/miss	OFF fixes
+5	469665	nuecc48	0.00/HIT	1.55/miss	1.55/miss	1.55/miss	1.55/miss	OFF fixes
+6	463565	ncpi0	30.16/miss	0.30/HIT	0.30/HIT	32.95/miss/xfer2.59	0.30/HIT	OFF breaks
+7	271851	nuecc48	31.93/miss	2.58/HIT	2.58/HIT	2.58/HIT	2.58/HIT	OFF breaks
+8	56982	ncpi0	33.32/miss	11.22/miss	34.44/miss/xfer0.08	34.44/miss/xfer0.08	11.22/miss	both bad
+9	180801	ncpi0	77.29/miss	78.96/miss	78.96/miss/xfer1.87	78.96/miss/xfer1.87	78.96/miss	both bad
+10	259542	ncpi0	136.67/miss	28.13/miss	136.37/miss/xfer0.22	136.37/miss/xfer0.22	28.13/miss	both bad
+11	359980	ncpi0	0.41/miss	27.08/miss	0.41/miss/xfer0.00	0.41/miss/xfer0.00	27.08/miss	both bad
+12	10550	nuecc48	47.23/miss	47.37/miss	47.37/miss	47.37/miss	47.37/miss	both bad
+13	30504	nuecc48	75.47/miss	74.75/miss	74.75/miss	74.75/miss/xfer2.18	74.75/miss	both bad
+14	38856	nuecc48	30.11/miss	22.88/miss	22.88/miss	31.18/miss/xfer2.05	27.46/miss	both bad
+15	52672	nuecc48	3.57/miss	30.98/miss	3.57/miss/xfer0.00	3.57/miss/xfer0.00	30.98/miss	both bad
+16	163543	nuecc48	32.61/miss	37.41/miss	32.78/miss/xfer0.22	32.78/miss/xfer0.22	37.41/miss	both bad
+17	360535	nuecc48	1.61/miss	1.43/miss	1.43/miss	1.43/miss	1.43/miss	both bad

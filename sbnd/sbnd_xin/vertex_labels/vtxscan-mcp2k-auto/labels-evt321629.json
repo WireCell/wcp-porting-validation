@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt321629",
+ "eventNo": 321629,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -130.0241464543424,
+  "y": 52.429374004199815,
+  "z": 209.98212505157204
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10003,
+   "x": -130.0241464543424,
+   "y": 52.429374004199815,
+   "z": 209.98212505157204
+  }
+ ],
+ "reco_sep_cm": 0.0047011486404122255,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 satisfied by all three prongs: the 173 cm muon leaves at MIP and Braggs at 10000, the 19.6 cm proton dips then rises to 230k at 10005, and the 8.9 cm stub rises to 185k at 10004, so every attached segment stops away from 10003.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt321629/calib-pr-evt321629.json",
+ "subRunNo": 1
+}

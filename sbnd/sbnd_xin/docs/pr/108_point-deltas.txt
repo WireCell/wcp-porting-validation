@@ -1,0 +1,36 @@
+    all            |dpos| cm: n=278 med=0.148 p90=0.239 max=0.485 [median signed dx=-0.072 dy=-0.021 dz=+0.090] ; dq/q at |dpos|<0.1: n=84 med=0.0118 p90=0.177 max=0.285 (signed med +0) ; unmatched 0
+    near-junction  |dpos| cm: n=44 med=0.152 p90=0.259 max=0.356 [median signed dx=-0.074 dy=-0.038 dz=+0.095] ; dq/q at |dpos|<0.1: n=14 med=0.109 p90=0.246 max=0.246 (signed med +0.109) ; unmatched 0
+    all            |dpos| cm: n=291 med=0.0574 p90=0.25 max=0.485 [median signed dx=-0.008 dy=-0.001 dz=+0.006] ; dq/q at |dpos|<0.1: n=188 med=0.00545 p90=0.0537 max=0.204 (signed med +0) ; unmatched 2
+    near-junction  |dpos| cm: n=61 med=0.164 p90=0.34 max=0.484 [median signed dx=-0.020 dy=+0.014 dz=+0.002] ; dq/q at |dpos|<0.1: n=16 med=0.0224 p90=0.0871 max=0.204 (signed med -0.00236) ; unmatched 1
+    all            |dpos| cm: n=276 med=0.174 p90=0.288 max=0.476 [median signed dx=+0.064 dy=+0.011 dz=-0.086] ; dq/q at |dpos|<0.1: n=61 med=0.0416 p90=0.146 max=0.42 (signed med +0.0181) ; unmatched 6
+    near-junction  |dpos| cm: n=41 med=0.2 p90=0.355 max=0.47 [median signed dx=+0.012 dy=-0.024 dz=-0.144] ; dq/q at |dpos|<0.1: n=5 med=0.0262 p90=0.114 max=0.146 (signed med +0.0262) ; unmatched 2
+    all            |dpos| cm: n=163 med=0.0324 p90=0.233 max=0.424 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=100 med=0 p90=0.0418 max=0.705 (signed med +0) ; unmatched 1
+    near-junction  |dpos| cm: n=22 med=0.125 p90=0.287 max=0.391 [median signed dx=+0.048 dy=-0.096 dz=+0.015] ; dq/q at |dpos|<0.1: n=2 med=0.0193 p90=0.0345 max=0.0383 (signed med +0.0193) ; unmatched 0
+    all            |dpos| cm: n=183 med=0.0359 p90=0.291 max=0.473 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=112 med=0 p90=0.0455 max=0.499 (signed med +0) ; unmatched 13
+    near-junction  |dpos| cm: n=22 med=0.311 p90=0.434 max=0.473 [median signed dx=+0.052 dy=+0.058 dz=+0.020] ; dq/q at |dpos|<0.1: n=0 (signed med +nan) ; unmatched 3
+    all            |dpos| cm: n=146 med=0.249 p90=0.399 max=0.453 [median signed dx=-0.020 dy=-0.019 dz=-0.004] ; dq/q at |dpos|<0.1: n=28 med=0.116 p90=0.198 max=0.237 (signed med -0.099) ; unmatched 18
+    near-junction  |dpos| cm: n=23 med=0.321 p90=0.399 max=0.43 [median signed dx=-0.042 dy=-0.064 dz=+0.105] ; dq/q at |dpos|<0.1: n=0 (signed med +nan) ; unmatched 0
+    all            |dpos| cm: n=235 med=0.117 p90=0.352 max=0.477 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=107 med=0 p90=0.198 max=1.15 (signed med +0) ; unmatched 14
+    near-junction  |dpos| cm: n=17 med=0.0225 p90=0.21 max=0.369 [median signed dx=+0.016 dy=+0.010 dz=+0.006] ; dq/q at |dpos|<0.1: n=14 med=0.0787 p90=1.15 max=1.15 (signed med +0.0787) ; unmatched 2
+    all            |dpos| cm: n=377 med=0.0534 p90=0.31 max=0.493 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=228 med=0 p90=0.0598 max=0.349 (signed med +0) ; unmatched 6
+    near-junction  |dpos| cm: n=74 med=0.195 p90=0.378 max=0.493 [median signed dx=+0.018 dy=+0.055 dz=-0.033] ; dq/q at |dpos|<0.1: n=22 med=0.0236 p90=0.0836 max=0.115 (signed med +0.00276) ; unmatched 3
+    all            |dpos| cm: n=163 med=0.226 p90=0.412 max=0.498 [median signed dx=+0.006 dy=+0.003 dz=-0.004] ; dq/q at |dpos|<0.1: n=37 med=0.0998 p90=0.399 max=2.71 (signed med -0.00193) ; unmatched 94
+    near-junction  |dpos| cm: n=19 med=0.175 p90=0.272 max=0.388 [median signed dx=+0.091 dy=+0.086 dz=-0.006] ; dq/q at |dpos|<0.1: n=5 med=0.209 p90=0.298 max=0.324 (signed med +0.209) ; unmatched 22
+    all            |dpos| cm: n=238 med=0.129 p90=0.327 max=0.455 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=102 med=0 p90=0.0768 max=1.33 (signed med +0) ; unmatched 7
+    near-junction  |dpos| cm: n=35 med=0.228 p90=0.275 max=0.316 [median signed dx=-0.042 dy=+0.073 dz=-0.057] ; dq/q at |dpos|<0.1: n=5 med=0.0107 p90=0.0135 max=0.0146 (signed med +0.000831) ; unmatched 0
+    all            |dpos| cm: n=280 med=0 p90=0.303 max=0.455 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=175 med=0 p90=0.0265 max=0.229 (signed med +0) ; unmatched 4
+    near-junction  |dpos| cm: n=61 med=0.28 p90=0.392 max=0.455 [median signed dx=+0.017 dy=+0.132 dz=+0.017] ; dq/q at |dpos|<0.1: n=4 med=0.0663 p90=0.0743 max=0.0743 (signed med -0.00797) ; unmatched 1
+    all            |dpos| cm: n=212 med=0.239 p90=0.377 max=0.496 [median signed dx=-0.016 dy=+0.019 dz=-0.018] ; dq/q at |dpos|<0.1: n=28 med=0.091 p90=0.257 max=0.429 (signed med -0.0646) ; unmatched 34
+    near-junction  |dpos| cm: n=33 med=0.243 p90=0.437 max=0.449 [median signed dx=-0.039 dy=+0.189 dz=-0.018] ; dq/q at |dpos|<0.1: n=2 med=0.0743 p90=0.134 max=0.148 (signed med +0.0743) ; unmatched 3
+    all            |dpos| cm: n=203 med=0.0759 p90=0.24 max=0.45 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=119 med=0.0129 p90=0.15 max=0.812 (signed med +0) ; unmatched 3
+    near-junction  |dpos| cm: n=0 [median signed dx=+nan dy=+nan dz=+nan] ; dq/q at |dpos|<0.1: n=0 (signed med +nan) ; unmatched 0
+    all            |dpos| cm: n=252 med=0.0209 p90=0.273 max=0.466 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=154 med=0 p90=0.0281 max=0.203 (signed med +0) ; unmatched 6
+    near-junction  |dpos| cm: n=36 med=0.269 p90=0.335 max=0.466 [median signed dx=-0.065 dy=-0.010 dz=-0.047] ; dq/q at |dpos|<0.1: n=6 med=0.0131 p90=0.0222 max=0.0304 (signed med +0.0124) ; unmatched 3
+    all            |dpos| cm: n=186 med=0.133 p90=0.354 max=0.485 [median signed dx=-0.011 dy=+0.005 dz=+0.004] ; dq/q at |dpos|<0.1: n=69 med=0.0768 p90=0.205 max=0.866 (signed med -0.0555) ; unmatched 22
+    near-junction  |dpos| cm: n=15 med=0.185 p90=0.257 max=0.257 [median signed dx=-0.011 dy=+0.003 dz=+0.120] ; dq/q at |dpos|<0.1: n=6 med=0.0452 p90=0.117 max=0.156 (signed med -0.0262) ; unmatched 1
+    all            |dpos| cm: n=67 med=0.03 p90=0.38 max=0.497 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=41 med=0.000375 p90=0.0358 max=0.227 (signed med +0) ; unmatched 0
+    near-junction  |dpos| cm: n=21 med=0.306 p90=0.467 max=0.497 [median signed dx=-0.005 dy=-0.051 dz=+0.087] ; dq/q at |dpos|<0.1: n=3 med=0.00874 p90=0.139 max=0.172 (signed med -0.00874) ; unmatched 0
+    all            |dpos| cm: n=80 med=0 p90=0.333 max=0.427 [median signed dx=+0.000 dy=+0.000 dz=+0.000] ; dq/q at |dpos|<0.1: n=59 med=0 p90=0.0166 max=0.244 (signed med +0) ; unmatched 5
+    near-junction  |dpos| cm: n=18 med=0.254 p90=0.343 max=0.425 [median signed dx=+0.085 dy=+0.058 dz=+0.035] ; dq/q at |dpos|<0.1: n=2 med=0.18 p90=0.231 max=0.244 (signed med +0.18) ; unmatched 5
+    all            |dpos| cm: n=66 med=0.264 p90=0.349 max=0.408 [median signed dx=+0.000 dy=+0.018 dz=-0.081] ; dq/q at |dpos|<0.1: n=9 med=0.158 p90=1.74 max=1.74 (signed med +0.0744) ; unmatched 1
+    near-junction  |dpos| cm: n=21 med=0.187 p90=0.292 max=0.393 [median signed dx=+0.006 dy=-0.004 dz=-0.122] ; dq/q at |dpos|<0.1: n=3 med=1.74 p90=1.74 max=1.74 (signed med +1.74) ; unmatched 0

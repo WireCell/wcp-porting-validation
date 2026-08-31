@@ -1,0 +1,14 @@
+evt	arm	em_excl	deg	n_trk_near	n_sh_near	n_stubs	n_passthru	n_shortcut	n_orphans	kink	kink_seg	numu	nue	detail
+237798	work-pr103-bare2-mcp2k	0	3	3	0	0	0	0	0	0.48	13001	4.301008224487305	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+242550	work-pr103-bare2-mcp2k	0	4	3	0	1	0	0	0	0.62	14020	3.9853179454803467	-15.0	{"stubs": [[14019, 1.9]], "passthru": [], "shortcut": [], "orphans": []}
+279955	work-pr103-bare2-mcp2k	0	1	1	0	0	0	0	0	0.48	16001	3.02604603767395	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+281165	work-pr103-bare2-mcp2k	0	2	2	0	0	0	0	0	0.61	16006	2.637845277786255	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+285680	work-pr103-bare2-mcp2k	0	3	3	0	0	0	0	0	0.3	37010	0.9562458992004395	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+317077	work-pr103-bare2-mcp2k	1	1	0	1	0	0	0	0	0.0	-1	-1.8222262859344482	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+405707	work-pr103-bare2-mcp2k	0	2	2	1	1	1	1	1	0.0	-1	1.4581844806671143	-4.300936222076416	{"stubs": [[17038, 2.09]], "passthru": [{"S": 17026, "S_len": 41.2, "J": 17012, "dJ": 2.09, "miss": 0.64, "arc": 1.8, "others": [[17020, 34.9, 0]]}], "shortcut": [{"seg": 17020, "len": 34.9, "sh": 0, "J": 17012, "dJ": 2.09, "Jdeg": 3, "link": [[17038, 2.09]]}], "orphans": [{"seg": 17020, "len": 34.9, "dmin": 1.82}]}
+475140	work-pr103-bare2-mcp2k	0	1	1	0	1	0	1	1	0.0	-1	1.2485532760620117	-15.0	{"stubs": [[10002, 1.22]], "passthru": [], "shortcut": [{"seg": 10001, "len": 145.2, "sh": 0, "J": 10002, "dJ": 1.22, "Jdeg": 2, "link": [[10002, 1.22]]}], "orphans": [{"seg": 10001, "len": 145.2, "dmin": 1.22}]}
+51546	work-pr103-bare2-mcp2k	0	1	1	0	0	0	0	0	2.07	16000	0.8249834775924683	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+54629	work-pr103-bare2-mcp2k	0	1	1	0	0	0	0	0	0.25	15005	-2.362574577331543	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+70084	work-pr103-bare2-mcp2k	0	2	2	0	0	0	0	0	6.71	20034	2.3370680809020996	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+91653	work-pr103-bare2-mcp2k	0	2	1	0	1	0	0	0	1.14	13003	0.4939940571784973	-15.0	{"stubs": [[13004, 1.81]], "passthru": [], "shortcut": [], "orphans": []}
+91697	work-pr103-bare2-mcp2k	0	3	3	0	0	0	0	0	2.98	2021	2.7506167888641357	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}

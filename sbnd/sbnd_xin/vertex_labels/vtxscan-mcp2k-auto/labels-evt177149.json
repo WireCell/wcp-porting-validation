@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt177149",
+ "eventNo": 177149,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -64.05030101819817,
+  "y": -111.04562962286293,
+  "z": 204.5984185804902
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 14002,
+   "x": -64.05030101819817,
+   "y": -111.04562962286293,
+   "z": 204.5984185804902
+  }
+ ],
+ "reco_sep_cm": 0.004657434480671937,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with two Bragg ends: the 18.3 cm and 7.7 cm proton segments each rise monotonically along the proton template to their far ends and meet at 14002 in a 44-degree V.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt177149/calib-pr-evt177149.json",
+ "subRunNo": 1
+}

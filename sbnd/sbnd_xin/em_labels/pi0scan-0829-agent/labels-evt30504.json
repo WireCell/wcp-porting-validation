@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt30504",
+ "confidence": "medium",
+ "eventNo": 30504,
+ "main_vertex": {
+  "x": 22.21023467784677,
+  "y": -41.86153418994628,
+  "z": 161.91504895995826
+ },
+ "note": "owner scan note: incorrect nu vertex; primary electron 11068 excluded; remaining EM all attached to the wrong vertex, no defensible gamma pair",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18342,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:39:01.718719Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

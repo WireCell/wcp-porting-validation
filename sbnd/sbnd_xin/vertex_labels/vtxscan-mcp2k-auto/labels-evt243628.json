@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt243628",
+ "eventNo": 243628,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -101.33747310412193,
+  "y": -66.0184311258229,
+  "z": 272.861412116526
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15003,
+   "x": -101.33747310412193,
+   "y": -66.0184311258229,
+   "z": 272.861412116526
+  }
+ ],
+ "reco_sep_cm": 0.003292513028863773,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a deg-3 junction: 92cm proton Bragg-stops at 15002, 11cm proton Bragg-stops at 15005, 82cm muon leaves and stops at 15001 via 15004, plus the 43cm proton of cluster 23 starts 10cm away -- all pointing away.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt243628/calib-pr-evt243628.json",
+ "subRunNo": 1
+}

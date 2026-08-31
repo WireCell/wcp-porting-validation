@@ -1,0 +1,105 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 52.48,
+  "az_deg": -55.0,
+  "centre": [
+   -79.52,
+   95.05,
+   197.78
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1558,
+  "cloud_cluster_ids": [
+   16,
+   25,
+   26,
+   27
+  ],
+  "cloud_kept": 1558,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 31679,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.046996381417940866,
+   -0.8429350964962585,
+   -0.5359587327663045
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.046996381417940866,
+    -0.8429350964962585,
+    -0.5359587327663045
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 8,
+   "kine_best": 142.0545609460827,
+   "kine_charge": 142.0545609460827,
+   "kine_charge_other_hypothesis": 85.44635244877155,
+   "kine_dQdx": 74.93823843985984,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    16055,
+    25022,
+    25024,
+    71047,
+    72048,
+    74050,
+    75051,
+    76052
+   ],
+   "membership_source": "probe",
+   "num_segments": 8,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -85.4561444274444,
+   128.64142026818564,
+   227.608952249997
+  ],
+  "reco_start_vertex_id": 16057,
+  "shower": 16055,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -85.4561444274444,
+   128.64142026818564,
+   227.608952249997
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt321169",
+ "eventNo": 321169,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -85.4561444274444,
+  "y": 128.64142026818564,
+  "z": 227.608952249997
+ },
+ "note": "[agent-bulk] verdict shower 16055 (pdg 11, kine_charge 142.1 MeV, 8 seg, 30.4 cm) -- the highest-kine_charge pdg-11 object; nothing in the event outranks it on either energy (16059 is pdg 211 at 83.3). Vertex judged off the automatic vtxz-* 60 cm frames at two azimuths (correction 20): r95 is 277 cm here so the vtx-* set is framed at +-346 cm and the vertex region is a few pixels in it. The star sits at the convergence of the 16055 prong going one way and the 16059 (orange) + 16060 (green) prongs going the other, with the 16054 stub between -- vertex is OK. Membership triple-check passes: nseg 8 = owner-grouped 8 = cmp_div 8, and the owner groups sum to 27 segments = the whole event, so there is NO unowned/grey segment anywhere in this event; every non-member of 16055 is either a member of another shower or the seed of its own sub-20 MeV shower (correction 16). Decomposing each member's (dist, angle) into along/transverse: the body is 0-20 cm along with transverse spread up to 16 cm (a compact, wide 142 MeV shower start), then a 45 cm void with no charge at all, then three 2-point stubs (74050 / 75051 / 76052, pdg 13, 0.3-0.4 cm each) at 65-72 cm along and 29-33 cm transverse. WHAT THE OWNER COULD REVERSE: on the acceptance plot those three sit INSIDE the pass-1 box (<=80 cm, <=30 deg) as tier-1 pass3_cone members, so the gate took them by design and their charge is negligible -- but a 45 cm void plus ~3 Moliere radii of transverse offset is not EM shower tail, and if the owner counts that this event reads over-clustered. THE ONE UNDER-REACH: 73049 (pdg 11, 2.7 MeV, 3 points, 1.0 cm) sits at 21.9 cm / 47.9 deg, only 3.6 cm from the nearest member point, and on the acceptance plot it is the lone blue circle sitting between accepted members at (18.0 cm, 46.2 deg) and (19.8 cm, 54.8 deg) -- the exclusion looks arbitrary. It is the seed of its own sub-20 MeV shower rather than grey charge, and at 1.9% of 142.1 MeV I did not upgrade the verdict; named so the owner can. I recorded NO marks in either direction, to keep the record consistent with the 'correct' radio (pilot 5). OTHER SHOWERS: 16059 (pdg 211, 83.3 MeV, 20.3 cm) and 16060 (pdg 11, 46.9 MeV, 2 seg) leave the vertex collinearly and 16001 (owned by 16059) sits at 18.7 cm / 14.7 deg inside 16060's cone -- these two may be one prong split into a pion and a 47 MeV shower, and 16060 also carries a lone member at 44.8 cm / 11.5 deg across a comparable void. That is a finding about 16059/16060 and I did not resolve it; it does not bear on 16055, which is on the far side of the vertex from both. pi0: kine_div says 'no pi0 group in this event'. The capture's auto-slotted pair [16055, 16060] is the correction-3 artifact, not a reco pairing, and the two are 162.9 deg apart i.e. back-to-back through the vertex -- not a pi0 topology, nothing stored. The kine_pio_* block (a BDT feature, not a pairing) names 26.0 + 142.1 at 157.4 deg and does not close (119.2 vs stored 66.2). NOT LOOKED AT: the 7 out-of-scope showers, all <= 17.3 MeV. This verdict is about clustering of 16055 and is silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt321169/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:35:04+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt321169/calib-pr-evt321169.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,50 @@
+pi0 MASS CLOSURE AGAINST m_pi0 = 134.9768 MeV  (fudge in force 0.86)
+  hand pi0 seen 66; both gammas matched 56; dropped 8 no-theta, 2 absent/zero
+  label marks converted to this arm by x0.9302 (= 0.80/0.86)
+
+A. THE DECOMPOSITION  m_prod/m_pi0 = R * A
+   class              n    med R    med A   reading
+   m_prod < 100      11     0.57     0.94   pure total-energy deficit if A~1
+   100 <= m <= 160   37     1.14     0.87   in the acceptance window
+   m_prod > 160       8     1.98     0.78   over-clustering / wrong object
+
+B. WHAT KILLS THE MASS
+   pairs with R < 1 (KINEMATICALLY IMPOSSIBLE): 19 of 56
+   of the 27 pairs below 135 MeV: 19 killed by ENERGY (R<1), 8 by ASYMMETRY (R>=1)
+   outside the (100,160) acceptance window: 19 of 56
+   R distribution: q10 0.57  q25 0.94  median 1.13  q75 1.35  q90 1.80
+
+C. THE DECISIVE TRIAGE -- is the missing charge present as hand-marked segments?
+   event    sample    R_prod  R_marks    m_prod   m_marks verdict
+   71178    mcp1k       0.18     0.18      23.9      23.9 no marks -- charge not seen by the scanner
+   397630   mcp2k       0.40     0.40      54.0      54.0 no marks -- charge not seen by the scanner
+   168432   mcp1k       0.42     0.44      53.5      56.5 marks move it, still impossible
+   281485   mcp1k       0.51     0.51      62.5      62.5 no marks -- charge not seen by the scanner
+   103798   mcp2k       0.54     0.54      72.0      72.0 no marks -- charge not seen by the scanner
+   280159   mcp2k       0.57     0.57      73.6      73.6 no marks -- charge not seen by the scanner
+   342199   nuecc48     0.69     1.01      92.6     127.0 RESCUED by hand marks
+   409634   mcp1k       0.75     1.11      77.4     148.8 RESCUED by hand marks
+   280972   mcp1k       0.77     0.77      78.2      78.2 no marks -- charge not seen by the scanner
+   176986   mcp2k       0.80     0.80     105.9     105.9 no marks -- charge not seen by the scanner
+   54341    mcp1k       0.87     1.40      63.7     131.2 RESCUED by hand marks
+   281639   mcp1k       0.90     0.90     120.8     120.8 no marks -- charge not seen by the scanner
+   499577   mcp2k       0.92     0.92     111.7     111.7 no marks -- charge not seen by the scanner
+   283713   mcp1k       0.94     0.94      88.2      88.2 no marks -- charge not seen by the scanner
+   54332    mcp2k       0.94     1.12     109.0     122.4 RESCUED by hand marks
+   242726   mcp2k       0.96     0.96     125.1     125.1 no marks -- charge not seen by the scanner
+   169356   mcp1k       0.97     0.97     131.2     131.2 no marks -- charge not seen by the scanner
+   347129   mcp1k       0.98     0.98     122.0     122.0 no marks -- charge not seen by the scanner
+   392901   mcp2k       0.98     0.98     126.1     126.1 no marks -- charge not seen by the scanner
+   --> 4 of 19 impossible pairs are RESCUED by charge the scanner says belongs to the gamma
+       15 gain nothing: their deficit is NOT mis-assigned charge the scanner saw
+       (of those, 14 carry no marks at all)
+
+D. WINDOW RECOVERY IF EVERY HAND MARK WERE HONOURED
+   pairs inside (100,160): 37 -> 39   (of 56)
+
+E. THE MARKS THEMSELVES (the hand-scan under/over-clustering ledger)
+   gammas with marked-IN charge  :  17   median   23.9 MeV   sum     749 MeV
+   gammas with marked-OUT charge :   4   median   42.0 MeV   sum     213 MeV
+   pairs carrying at least one mark: 16 of 56
+
+wrote /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr136-mass-closure.tsv (56 rows)

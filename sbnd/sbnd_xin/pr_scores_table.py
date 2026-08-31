@@ -63,7 +63,15 @@ COLUMNS = ['sample', 'run', 'subrun', 'event', 'rc', 'wall_s', 'core_s', 'timecm
            'n_inbeam_flash', 'nu_evaluated', 'n_cosmic_skipped', 'nu_sel_t0_us',
            'nu_sel_len_cm', 'nu_sel_n_assoc', 'nu_x_cm', 'nu_y_cm', 'nu_z_cm',
            'numu_score', 'nue_score', 'cosmic_flag', 'cosmict_flag', 'cosmict_10_score',
-           'cosmict_score', 'kine_reco_Enu_MeV']
+           'cosmict_score', 'kine_reco_Enu_MeV',
+           # doc 85 sec 9 (toolkit 2026-08-30): the energy kine_reco_Enu does
+           # NOT carry.  APPENDED, never inserted -- the merge path zips a row
+           # against this list, so an older table (which stops at
+           # kine_reco_Enu_MeV) still lines up column-for-column.  Blank on any
+           # arm produced before the T_kine branches existed.
+           'kine_energy_excluded_MeV', 'kine_energy_excluded_main_MeV',
+           'kine_energy_excluded_other_MeV', 'kine_n_excluded',
+           'kine_energy_flagged_MeV']
 
 RE_TIMER = re.compile(r'Timer: Total ([0-9.]+) wall-sec, ([0-9.]+) core-sec')
 RE_SELECTED = re.compile(
@@ -212,10 +220,15 @@ def read_tagger_root(root_path):
                     out[k] = arr[row]
     if 'T_kine' in f:
         ki = f['T_kine']
-        if 'kine_reco_Enu' in ki:
-            arr = ki['kine_reco_Enu'].array()
-            if len(arr) > row:
-                out['kine_reco_Enu'] = arr[row]
+        # doc 85 sec 9: the excluded-energy branches are absent from every arm
+        # produced before 2026-08-30, so each is probed independently and a
+        # missing one leaves its column blank rather than failing the row.
+        for k in ('kine_reco_Enu', 'kine_energy_excluded', 'kine_energy_excluded_main',
+                  'kine_energy_excluded_other', 'kine_n_excluded', 'kine_energy_flagged'):
+            if k in ki:
+                arr = ki[k].array()
+                if len(arr) > row:
+                    out[k] = arr[row]
     return out
 
 
@@ -266,6 +279,11 @@ def one_root(args):
             'cosmict_10_score': sc.get('cosmict_10_score', ''),
             'cosmict_score': sc.get('cosmict_score', ''),
             'kine_reco_Enu_MeV': sc.get('kine_reco_Enu', ''),
+            'kine_energy_excluded_MeV': sc.get('kine_energy_excluded', ''),
+            'kine_energy_excluded_main_MeV': sc.get('kine_energy_excluded_main', ''),
+            'kine_energy_excluded_other_MeV': sc.get('kine_energy_excluded_other', ''),
+            'kine_n_excluded': sc.get('kine_n_excluded', ''),
+            'kine_energy_flagged_MeV': sc.get('kine_energy_flagged', ''),
         }
         out.write('\t'.join(str(row[c]) for c in COLUMNS) + '\n')
     if args.out:

@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt38856",
+ "confidence": "medium",
+ "eventNo": 38856,
+ "main_vertex": {
+  "x": -58.81726688800526,
+  "y": -65.393469638342,
+  "z": 427.7352025325634
+ },
+ "note": "owner scan note: incorrect vertex; all four EM showers attached at that vertex, primary electron excluded, no defensible pairing",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18304,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:39:01.772444Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

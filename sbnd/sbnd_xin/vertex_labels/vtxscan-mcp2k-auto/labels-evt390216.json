@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt390216",
+ "eventNo": 390216,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": 70.51519318113529,
+  "y": 66.08467921488464,
+  "z": 281.38538644755107
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13003,
+   "x": 70.51519318113529,
+   "y": 66.08467921488464,
+   "z": 281.38538644755107
+  }
+ ],
+ "reco_sep_cm": 0.008141586192733351,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 60 deg deg-2 junction: the 204 cm muon leaves at 53k and the 38 cm pi+ leaves at 78k rising monotonically to a 165k Bragg at 13006, which then continues as a 9 cm mu and a 1.2 cm e -- a textbook pi-mu-e chain fixing 13006 as the far end.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt390216/calib-pr-evt390216.json",
+ "subRunNo": 1
+}

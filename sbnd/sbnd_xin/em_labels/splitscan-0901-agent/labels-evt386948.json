@@ -1,0 +1,13 @@
+{
+ "event": "evt386948",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "91060": {
+   "verdict": "KEEP",
+   "confidence": "medium",
+   "comment": "Scan A. PROXY WRONG: one real shower at 60-90 cm plus three small detached fragments.  Trim, not a 2-way split",
+   "parts": null
+  }
+ }
+}

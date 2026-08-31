@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt76998",
+ "eventNo": 76998,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -103.3898752538745,
+  "y": 90.1138281665425,
+  "z": 262.69555527808296
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17002,
+   "x": -103.3898752538745,
+   "y": 90.1138281665425,
+   "z": 262.69555527808296
+  }
+ ],
+ "reco_sep_cm": 0.005867365132038807,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Single fully-contained 201cm track with a textbook monotone Bragg decay 200k->55k over 8cm at the 17000 end, so it stops there; the 17003 split is only a 5 deg kink, and 17002 is the cool flat-MIP start at the lowest z (the 170k two-point spike there follows a dip to 10k and is an endpoint artifact).",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt76998/calib-pr-evt76998.json",
+ "subRunNo": 1
+}

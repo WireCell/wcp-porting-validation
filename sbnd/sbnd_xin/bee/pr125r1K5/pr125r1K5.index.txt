@@ -1,0 +1,27 @@
+# doc pr/125 K5 decision pair (shower_satellite_absorb, doc sec 5)
+# OWNER VERDICT 2026-08-29 after scanning this pair: "item 3, flip on is fine" =>
+#   SBND PRODUCTION ON at the operating point scanned here (max_mev 10 / host_mev 20,
+#   NOT the cap-3 variant), toolkit d74c5524.  Flip validation: doc pr/127 sec 4.
+#   The ON column below is therefore the current production point for these 13 events.
+# A/B index -- OFF b169a068-fab5-4a27-ac4f-6cf1bbbd0eb5 / ON defaa224-b1ba-4fb3-8449-62b85637375f
+#   (UUIDs verified against the local zips by per-event mc-layer md5 BEFORE this file was
+#    written -- the pr/124 recording defect does not recur.  OFF = dbg98d/dbg141d = current
+#    production for these 13 events (no guard/K3/samevtx fire in any of them); ON =
+#    onM98d/onM141d = production + shower_satellite_absorb.)
+# Physics checks all clean (0 movers, owned +0, nusel identical, 0 pdg flips >15 MeV, no
+# genuine pi0 touched); the open question is the metric cost: 141-set med qF1 0.949->0.910,
+# sum q_extra 2.41e7->3.12e7 (unlabeled crumb charge booked as impurity of marked showers).
+# bee_idx	event	status
+0	69314	RESCUED (pending this flip): 25->18 showers; the 7 vertex-connected crumbs fold into the primary e- (68.9->74.7 MeV, 9 seg, KEEPS pdg 11); PF electron entries 38->30 (sub-5-MeV 28->21)
+1	281325	UP mover: qF1 0.766->0.857 (IN-marked satellites recovered into the marked shower)
+2	293149	UP mover: 0.958->0.976
+3	64591	UP mover: 0.991->0.998
+4	166870	UP mover: 0.993->0.997
+5	168596	DOWN mover: 1.000->0.992 (unlabeled crumb charge into a marked shower -- the metric-cost class)
+6	412242	DOWN mover: 0.983->0.977
+7	100135	DOWN mover: 0.952->0.948
+8	269774	DOWN mover: 0.956->0.953
+9	84229	DOWN mover: 0.978->0.975
+10	30504	pi0-watch: pairing unchanged (mass 174.3, low-E partner not absorbed into the pairing)
+11	256587	pi0-watch: essentially unchanged (83.2->83.9)
+12	259542	pi0-watch: 164.9->186.6 (junk-band pairing either way)

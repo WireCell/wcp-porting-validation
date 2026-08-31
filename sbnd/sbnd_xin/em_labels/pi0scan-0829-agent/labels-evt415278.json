@@ -1,0 +1,97 @@
+{
+ "arm": "work-pr131-denom98-mcp2k/pr_evt415278",
+ "confidence": "medium",
+ "eventNo": 415278,
+ "main_vertex": {
+  "x": 65.4025896108066,
+  "y": 13.004496011160601,
+  "z": 158.14622452465636
+ },
+ "note": "ncpi0 truth, no primary electron; the two dominant EM showers (1302+1149 MeV) are both attached at the main vertex with distinct axes 50 deg apart -- ct1+ct1 topology is invisible to the finder by design; energies may carry over-merge",
+ "origin": "ncpi0",
+ "pio": {
+  "backproject": null,
+  "candidates": [],
+  "gammas": {
+   "1": {
+    "axis": [
+     0.13615549825034803,
+     0.3558192536561011,
+     0.92458333265521
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 1301.453847353762,
+    "energy_as_reconstructed": 1301.453847353762,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     65.4025896108066,
+     13.004496011160601,
+     158.14622452465636
+    ],
+    "shower": 23037,
+    "start": [
+     65.4025896108066,
+     13.004496011160601,
+     158.14622452465636
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     -0.4521259565462234,
+     -0.25771850540931923,
+     0.8539105874661288
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 1149.1437585179524,
+    "energy_as_reconstructed": 1149.1437585179524,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     65.4025896108066,
+     13.004496011160601,
+     158.14622452465636
+    ],
+    "shower": 23012,
+    "start": [
+     65.4025896108066,
+     13.004496011160601,
+     158.14622452465636
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 1043.0798482341313,
+  "mass_vertex_convention": null,
+  "reco_groups": {},
+  "reco_kine": {
+   "kine_pio_angle": 25.477502822875977,
+   "kine_pio_energy_1": 1301.453857421875,
+   "kine_pio_energy_2": 17.07778549194336,
+   "kine_pio_flag": 1,
+   "kine_pio_mass": 80.71601867675781,
+   "kine_pio_vtx_dis": 0.0
+  },
+  "theta_axis_convention": 50.48718004995773,
+  "theta_vertex_convention": null,
+  "vertex": [
+   65.4025896108066,
+   13.004496011160601,
+   158.14622452465636
+  ],
+  "vertex_how": "main_vertex"
+ },
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:46.142747Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

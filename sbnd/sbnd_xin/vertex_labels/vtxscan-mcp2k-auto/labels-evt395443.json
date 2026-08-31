@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt395443",
+ "eventNo": 395443,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": 124.44309453625488,
+  "y": 101.11599925326499,
+  "z": 444.30409691621037
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 5003,
+   "x": 124.44309453625488,
+   "y": 101.11599925326499,
+   "z": 444.30409691621037
+  }
+ ],
+ "reco_sep_cm": 0.0065089823709387476,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Clean V apex at 5003 with a 3.1cm 181k proton stub attached: one prong runs 49cm to a genuine proton Bragg (220k over the last 4cm) at 5001, the other runs 63cm at MIP to the z=499 downstream face; the hot ends at 5003 itself are the vertex blob, not a rise.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395443/calib-pr-evt395443.json",
+ "subRunNo": 1
+}

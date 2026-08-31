@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -118.39,
+   172.68,
+   390.58
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 528,
+  "cloud_cluster_ids": [
+   9,
+   19
+  ],
+  "cloud_kept": 528,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 22754,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.17199707607455988,
+   0.6029897492613931,
+   -0.778986757337687
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.17199707607455988,
+    0.6029897492613931,
+    -0.778986757337687
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 102.69216938849044,
+   "kine_charge": 102.69216938849044,
+   "kine_charge_other_hypothesis": 61.76972594796419,
+   "kine_dQdx": 65.34453744780463,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    9012,
+    50010
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -121.72031953864891,
+   156.5315046871686,
+   402.7052614567397
+  ],
+  "reco_start_vertex_id": 9000,
+  "shower": 9012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -121.72031953864891,
+   156.5315046871686,
+   402.7052614567397
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt313781",
+ "eventNo": 313781,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": -121.72031953864891,
+  "y": 156.5315046871686,
+  "z": 402.7052614567397
+ },
+ "note": "[agent-bulk] shw 9012 (102.7 MeV, 2 seg, nuecc): correct, and the two-piece membership is the physics, not a merge error. The reco start is EXACTLY the nu vertex, and what the pictures show at az-055, az+085 and el+60 is: a 9.7 cm narrow stem leaving the vertex, then about 20 cm of empty space with no charge at all, then a dense 10.3 cm blob (segment 50010, cluster 50) at 32.3 cm / 13.7 deg, taken by pass3_cone. That is the textbook 100 MeV electron in LAr -- MIP stem for less than one radiation length, a hard bremsstrahlung, the photon crossing roughly one conversion length (9/7 X0, about 18 cm in LAr, against the ~20 cm gap measured off the frames) invisibly, then pair-producing into the blob. The transverse offset implied by 13.7 deg at 32.3 cm is 7.6 cm, inside a Moliere radius. So the gap is an argument FOR the merge, not against it, and I looked for the alternative (a detached pi0 photon swallowed by pass3_cone) and could not make it fit a nuecc event whose shower starts on the vertex. Nothing is missing either: the acceptance plot has TWO orange squares and ZERO blue circles out to 42 cm, and every non-member is behind or sideways -- 41009 at 13.0 cm / 165.5 deg, 40008 at 19.5 cm / 116.7 deg, 39007 at 29.3 cm / 121.8 deg, 19006 at 122.7 cm. Segment 9011 (4.1 cm, its own sub-20 MeV shower, same cluster 9) shares the vertex point so the table reports it as dist 0 / angle 0, but in every frame it leaves the star in a clearly different direction from the stem -- the second prong of the interaction, correctly not absorbed. No pi0 group and no candidate: there is no second EM object above 20 MeV anywhere in this event, so this is a single-shower topology, not a pairing failure. Showers NOT looked at: the 5 the scope rule skipped (9011 and four others), all below 20 MeV. Clustering statement, silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt313781/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:54:44+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt313781/calib-pr-evt313781.json",
+ "subRunNo": 1
+}

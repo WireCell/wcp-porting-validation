@@ -1,0 +1,44 @@
+{
+ "arm": "work-nuecc48-prod0813",
+ "confidence": null,
+ "dl_best_score": 1004.4523634208006,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt81597",
+ "eventNo": 81597,
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": -179.6342070371748,
+  "y": 39.920056905524596,
+  "z": 358.2018223894787
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 19,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "dl_score": 0.9999997615814209,
+   "dl_winner": true,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": 1004.4523634208006,
+   "snap_dis": 0.23699080310189014,
+   "trad_score": -0.375,
+   "trad_winner": true,
+   "vertex_id": 19006,
+   "x": -179.6342070371748,
+   "y": 39.920056905524596,
+   "z": 358.2018223894787
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 18313,
+ "saved_utc": "2026-08-14T14:58:13+00:00",
+ "scan_tag": "vtxscan-prod0813",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prod0813/pr_evt81597/calib-pr-evt81597.json",
+ "subRunNo": 1
+}

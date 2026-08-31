@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt47058",
+ "eventNo": 47058,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 39.57723606457403,
+  "y": 119.27403063230638,
+  "z": 99.9879356183307
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 39.57723606457403,
+   "y": 119.27403063230638,
+   "z": 99.9879356183307
+  }
+ ],
+ "reco_sep_cm": 0.0053053753406056645,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:20Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Fully contained 179cm muon with a broad Bragg decay at 11000 and flat MIP out of 11002, which is the lower z and carries a sub-cm blob 4.9cm away.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt47058/calib-pr-evt47058.json",
+ "subRunNo": 1
+}

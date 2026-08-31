@@ -1,0 +1,165 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   183.33,
+   100.16,
+   184.86
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4921,
+  "cloud_cluster_ids": [
+   14,
+   24,
+   25,
+   26,
+   27,
+   28
+  ],
+  "cloud_kept": 4921,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 19525,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.015000037500140626,
+   0.7130017825066844,
+   0.7010017525065719
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "14007": {
+    "49048": "in",
+    "50049": "in"
+   }
+  },
+  "marks_detail": {
+   "14007": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.015000037500140626,
+     0.7130017825066844,
+     0.7010017525065719
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "49048": {
+      "absorbed_by": null,
+      "angle": 7.384868490597414,
+      "cluster_id": 49,
+      "dist": 25.72961194237096,
+      "ellip": 0.8444046967091675,
+      "kind": "in",
+      "length": 0.24133275185769118,
+      "owner": 49048,
+      "pdg": 11,
+      "tier": 1
+     },
+     "50049": {
+      "absorbed_by": null,
+      "angle": 15.043277402275878,
+      "cluster_id": 50,
+      "dist": 41.723362187941134,
+      "ellip": 5.705625663424719,
+      "kind": "in",
+      "length": 3.547544332730992,
+      "owner": 50049,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 11.518710788889022,
+     "angle_min": 0.0,
+     "dist_max": 33.87465750232121,
+     "dist_min": 0.0,
+     "n": 5
+    },
+    "members": [
+     14007,
+     14008,
+     14010,
+     14011,
+     14073
+    ],
+    "start": [
+     184.34673595869515,
+     87.0320905711846,
+     169.94047376149052
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.015000037500140626,
+    0.7130017825066844,
+    0.7010017525065719
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 616.1460947317979,
+   "kine_charge": 616.1460947317979,
+   "kine_charge_other_hypothesis": 370.6141923198785,
+   "kine_dQdx": 353.31862074948003,
+   "kine_hypothesis": "shower",
+   "kine_range": 245.69803500347032,
+   "members": [
+    14007,
+    14008,
+    14010,
+    14011,
+    14073
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   184.34673595869515,
+   87.0320905711846,
+   169.94047376149052
+  ],
+  "reco_start_vertex_id": 14002,
+  "shower": 14007,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   184.34673595869515,
+   87.0320905711846,
+   169.94047376149052
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt412242",
+ "eventNo": 412242,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": 185.55333850058943,
+  "y": 84.29427872698834,
+  "z": 167.7851313604326
+ },
+ "note": "[agent-bulk] numucc_em, 28 showers, 5 in scope (14007, 28036, 60050, 64054, 50049 -- all pdg 11). Verdict shower 14007 (kine_charge 616.1, 5 seg) -- the first pdg-11 entry of in_scope and the highest-charge object in the event; no non-EM object outranks it. The 23 skipped showers are sub-20 MeV, but many of them ARE the subject of this finding, so I read them off the segment table rather than treating them as unlooked-at. Vertex judged off the vtx-* sweep at 126.8 cm half-span (r95 101.4, under the 150 cm trigger, no vtxz-*). It is good: the star sits at the apex of a clean two-armed V -- the 88.8 cm pdg-13 track 14001 (unowned, correctly grey) on one arm and the shower on the other, and the shower start X sits 3.7 cm from it. UNDER-CLUSTERED. 14007's own skeleton stops at 41.6 cm from the vertex (members 14007, 14073, 14010, 14011, 14008; cmp_div 0.0-33.9 cm from the start, 0.0-11.5 deg). Beyond that, along the shower's OWN axis (vertex -> member centroid = (-0.034,0.723,0.690)), there is a train of about 25 segments at 7-25 deg running out to 102 cm, split among ~15 separate objects: 60050 (50.9 MeV), 28036 (58.4), 64054 (38.2), 50049 (35.5) and a dozen singleton sub-20 MeV showers (49048, 63053, 78068, 46045, 48047, 47046, 76066, 77067, 80070, 72062, 79069, 68058). For a 616 MeV EM shower that pattern reads as a shredded tail, not as fifteen particles. The corroboration the brief asks for is on the acceptance plot: 49048 is a CIRCLE at 25.8 cm / 7.4 deg, well inside the 15 deg pass-1 gate, and 50049 is a circle at 41.7 cm / 15.0 deg sitting exactly ON it -- two non-members inside or on the gate. MARKS, IN, and they differ in strength (correction 7): 50049 IN is the strong one -- 3.5 cm, 7 fitted points, the seed of its own 35.5 MeV shower, 5.5 cm from 14007's skeleton and on the gate line. 49048 IN is the weak one and the one I would let the owner reverse -- it sits deepest inside the cone (6.5 deg to the own-axis, 4.5 cm gap) but it is a 0.2 cm two-point stub carrying no charge, so it changes the energy by nothing. NOT MARKED but named: 60050 (4.4 cm / 9 points, 50.9 MeV, gap 6.1 cm) is as close as those two but sits at 24.4 deg to the own axis, outside the 15 deg gate, so a mark on it would over-claim; and 28036 (7.9 cm / 14 points, 58.4 MeV, 10.2 deg) is on-axis but 13.6 cm off the skeleton. Correction 11/16 caveat, stated because it is the main risk here: none of this charge is grey -- every piece is owned by a neighbouring shower or is the seed of its own sub-20 MeV shower, which is exactly the unsafe basis the corrections warn about. I ran the triple-check on 14007 and all three agree (nseg 5 == owner-grouped 5 == cmp_div 5), so the display is not lying about ownership and these really are non-members; my claim is the physics one, that the reconstruction should have merged them, not that the table is wrong. PI0: the reco has NO pi0 group (every pio_id is -1), so the [14007, 28036] pair in the pio-* frames is the capture's automatic top-two slotting (correction 3) and not the reconstruction's pairing. Priced, it fails: the display gives m = 62.9 MeV on the axis convention (theta 19.1 deg) and 29.5 MeV on the vertex convention (theta 8.9 deg), and for E1 616.1 / E2 58.4 the opening angle needed for 135 MeV is 41.7 deg. So 28036 cannot be the partner gamma of 14007, which removes the innocent explanation for a second EM object sitting 10 deg off the leading shower's axis and supports the under-clustering reading. Verdict is about clustering and silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt412242/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:48:53+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt412242/calib-pr-evt412242.json",
+ "subRunNo": 1
+}

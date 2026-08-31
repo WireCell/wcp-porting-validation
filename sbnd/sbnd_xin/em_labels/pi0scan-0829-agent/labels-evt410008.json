@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt410008",
+ "confidence": "medium",
+ "eventNo": 410008,
+ "main_vertex": {
+  "x": -167.3592986893177,
+  "y": -48.76680824120764,
+  "z": 455.43302908008
+ },
+ "note": "numucc_em: only two EM showers, both ~170cm from the nu vertex with starts 20cm apart and near-parallel chords (6.5 deg) -- reads as one over-split far EM system, and bp fails collinearity; no defensible gamma-gamma pairing",
+ "origin": "numucc_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:37:52.546578Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

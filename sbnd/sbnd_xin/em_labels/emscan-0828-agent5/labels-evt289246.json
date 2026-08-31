@@ -1,0 +1,198 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 37.97,
+  "az_deg": -55.0,
+  "centre": [
+   -117.31,
+   171.06,
+   477.92
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2557,
+  "cloud_cluster_ids": [
+   16,
+   21,
+   22
+  ],
+  "cloud_kept": 2557,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 31451,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.55922205524265,
+   0.8103217616217289,
+   -0.17506951639975624
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "63034": {
+    "77063": "in",
+    "77064": "in"
+   }
+  },
+  "marks_detail": {
+   "63034": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.55922205524265,
+     0.8103217616217289,
+     -0.17506951639975624
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "77063": {
+      "absorbed_by": null,
+      "angle": 53.01476545506308,
+      "cluster_id": 77,
+      "dist": 14.705418256491557,
+      "ellip": 5.568174445315712,
+      "kind": "in",
+      "length": 2.484260001507523,
+      "owner": 77063,
+      "pdg": 11,
+      "tier": null
+     },
+     "77064": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 46.702171689364384,
+      "cluster_id": 77,
+      "dist": 15.255856082838152,
+      "ellip": 4.9996484609076655,
+      "kind": "in",
+      "length": 8.001025024463228,
+      "owner": 77063,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 21.345473696118308,
+     "angle_min": 0.0,
+     "dist_max": 62.888932175317656,
+     "dist_min": 0.0,
+     "n": 23
+    },
+    "members": [
+     21004,
+     21006,
+     21012,
+     21013,
+     21015,
+     21016,
+     21017,
+     21019,
+     21020,
+     21021,
+     57027,
+     58028,
+     59029,
+     60030,
+     61031,
+     61032,
+     63034,
+     71042,
+     72043,
+     73044,
+     75046,
+     76057,
+     76058
+    ],
+    "start": [
+     -101.61515805885256,
+     142.31321666382587,
+     482.0676209741787
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.55922205524265,
+    0.8103217616217289,
+    -0.17506951639975624
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 23,
+   "kine_best": 264.04064365515086,
+   "kine_charge": 264.04064365515086,
+   "kine_charge_other_hypothesis": 158.82143979257197,
+   "kine_dQdx": 168.5673512357277,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    21004,
+    21006,
+    21012,
+    21013,
+    21015,
+    21016,
+    21017,
+    21019,
+    21020,
+    21021,
+    57027,
+    58028,
+    59029,
+    60030,
+    61031,
+    61032,
+    63034,
+    71042,
+    72043,
+    73044,
+    75046,
+    76057,
+    76058
+   ],
+   "membership_source": "probe",
+   "num_segments": 23,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -101.61515805885256,
+   142.31321666382587,
+   482.0676209741787
+  ],
+  "reco_start_vertex_id": 16000,
+  "shower": 63034,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -101.61515805885256,
+   142.31321666382587,
+   482.0676209741787
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt289246",
+ "eventNo": 289246,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -134.0921303966625,
+  "y": 22.424423481913408,
+  "z": 443.16800468627997
+ },
+ "note": "[agent-bulk] mcp2k numucc_em. 40 segments, 15 showers, 2 in scope (63034, 77063); the thirteen skipped are 1.6 cm and smaller and I did not look at them individually, though several are named below as non-members. drag_check both true, probe 206.2 px off centroid, not degenerate. r95 223.1 cm because of a 100 cm muon, so the default sweep was framed at +-223 cm; I judged the vertex from a --vtx-span 60 re-capture (shots-vtx/evt289246). VERTEX is good: at +-60 cm the star is a clean two-prong V and nothing else -- 16001 (100.7 cm, pdg 13, 169 points) one way and 16002 (15.9 cm, pdg 2212) the other, both correctly unowned. THE UNDER-CLUSTERING. Shower 63034 (264.0 MeV, 23 segments, conn 2) is a large, well-populated, clearly electromagnetic complex: its 23 members run 0 to 62.9 cm from its start at 0.0 to 21.3 deg, and its acceptance plot shows all 23 squares and NO non-member circle anywhere in the window out to 80 cm and 27 deg. What it is missing sits off the TOP of that plot: 77063 (2.5 cm) and 77064 (8.0 cm) -- one 38.2 MeV object, 10.5 cm of segment -- at 14.7 and 15.3 cm from 63034's start and 53.0 and 46.7 deg from its axis. I ran the correction-11 reconciliation before calling this: 63034's owner-grouped count is 23 and its cmp_div says 23, and 77063's owner-grouped count is 2 and its nseg is 2, so this is genuine non-membership and not the first-owner-wins artifact. THE ARGUMENT, and it is a transverse-radius argument rather than an angle one: at 15 cm and 50 deg the missing object is about 11.5 cm off the shower axis, and 63034 already accepts members at 20.9-21.3 deg at 25-30 cm, which is 9-11 cm off the same axis. So the shower's own accepted transverse reach is the same 11 cm; the piece is rejected only because it sits closer to the start, where the same transverse offset subtends a much larger angle. That is what a pure angular cone cut does near a shower start, and in liquid argon 11 cm is about 1.2 Moliere radii on a 264 MeV shower, i.e. exactly where the last ~10 percent of the energy lives. Adding it moves the shower from 264 to 302 MeV. THE WEAKNESS, and it is why this is likely rather than certain: 47-53 deg is a large angle to defend on a picture, and at az+085 the missing object reads as a compact blob beside the shower start rather than as an obvious part of the body. It is NOT a second photon: the display auto-slotted 63034 + 77063 and the vertex convention gives theta 1.1 deg -> 2.0 MeV and the axis convention theta 17.5 deg -> 30.6 MeV, i.e. the two objects lie in the same direction from the star (130 and 145 cm out) and cannot be a pi0 pair. That collinearity from the vertex is itself an argument that they are one object. A SEPARATE THING WORTH THE OWNER'S EYE, which I did not turn into the verdict: 63034 starts 130.2 cm from the neutrino vertex, 89.1 cm beyond the end of the 100.7 cm muon and at 43 deg to the muon direction. For a photon that is about five conversion lengths in liquid argon, a sub-percent proposition, so either this is a rare long conversion, or the 264 MeV shower does not belong to this neutrino interaction at all. The vertex itself is unambiguous (two prongs converge on it), so I did not record vertex-bad; but the association between that vertex and this shower is the weakest link in the event. PI0: no reco pi0 group, and none should be expected -- there is no second EM object in the event that is not part of 63034.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt289246/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:53:33+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt289246/calib-pr-evt289246.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,108 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 38.44,
+  "az_deg": -55.0,
+  "centre": [
+   -43.4,
+   -4.83,
+   163.32
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4826,
+  "cloud_cluster_ids": [
+   10,
+   16
+  ],
+  "cloud_kept": 4826,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 19687,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.6696421718631654,
+   -0.6846341607854751,
+   0.2878461873083457
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.6696421718631654,
+    -0.6846341607854751,
+    0.2878461873083457
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 13,
+   "kine_best": 205.15668234655666,
+   "kine_charge": 205.15668234655666,
+   "kine_charge_other_hypothesis": 123.40251569717697,
+   "kine_dQdx": 143.23969355417037,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    36023,
+    37024,
+    38025,
+    44031,
+    45032,
+    76070,
+    76071,
+    76072,
+    76073,
+    76074,
+    77075,
+    86110,
+    87111
+   ],
+   "membership_source": "probe",
+   "num_segments": 13,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -20.021896608436293,
+   16.63460420033423,
+   152.82967968851904
+  ],
+  "reco_start_vertex_id": 10008,
+  "shower": 76071,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -20.021896608436293,
+   16.63460420033423,
+   152.82967968851904
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt71642",
+ "eventNo": 71642,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 23.714786905573316,
+  "y": 53.50323061632772,
+  "z": 139.19949402602631
+ },
+ "note": "[agent-bulk] numucc_em, 35 showers. VERTEX: event_half_span_cm 173.6, so the native sweep frames it too wide; I judged the vertex off the --vtx-span 60 re-capture (shots-vtx/evt71642). At 60 cm the blue star sits exactly on the apex of a clean V made by two long unowned tracks - 10114 (pdg 211, 91.8 cm) and 10117 (pdg 13, 65.9 cm) - plus 10118 (pdg 211, 26.2 cm) and 10115 (pdg 2212, 9.4 cm). Not a vertex failure. VERDICT SHOWER 76071 (205.2 MeV, 13 seg, pdg 11, len 55.1): single apex at the X, contiguous, all 13 members inside 65.1 cm and 12.3 deg. Seen from az+085 it is a narrow band ~5 cm across; seen from az-055 the same object splits into two arms that rejoin - i.e. it is planar, which is what a converted-photon e+e- pair looks like, and it is detached from the vertex. Nothing of consequence is missing: the largest unowned segment anywhere inside 30 deg of its axis is 35022 at 0.7 cm (56.0 cm / 17.7 deg), and 43030, 42029, 39026, 34021 are all 0.3-0.5 cm. The weak half of the call, the part I would let the owner reverse: 76071 also absorbed SIX sub-cm hadron-tagged fragments by pass4_angle at 40-65 cm out - 45032, 86110, 38025, 44031, 87111 (all pdg 13) and 37024 (pdg 2212), 0.1-0.7 cm each. They are in the vertex region and only line up because the axis points back at the vertex. Charge is negligible so I did not call it over-clustered, but they are a real over-inclusion. SECOND FINDING, and the one I think is worth the owner's eye: shower 10116 (151.7 MeV, only 2 segments / 18.5 cm) has its start ON the neutrino vertex - it reads dist 0.0 / angle 0.0 against 10114, 10115, 10117 and 10118, all of cluster 10 - and on shw10116-az-055-el+20 its yellow member set is one STRAIGHT NARROW line running out of the vertex alongside the outgoing tracks, with no apex, no cone and no branching. A 151.7 MeV object attached to the vertex cannot be a converted photon; this is the evt280159 pattern from the pilot (a shower seeded on the vertex/track stem). I did not record it as the verdict because 76071 is the leading shower, and I did not mark segments on it because I cannot name with confidence which of the two are the offending ones. PI0: the reconstruction accepted group 0 = 76071 + 82096, stored mass 125.0 MeV. Both members are detached from the vertex, so the pairing is geometrically sane and I do not dispute it; I store no alternative candidate. Note the usual pr/114 6.1 inconsistency - the display prices the same pair at 79.7 MeV on the axis convention and 97.4 MeV on the vertex convention against the reco's stored 125.0, three different numbers for one pair. Clustering statement, silent on PID except where the note says otherwise for 10116. NOT LOOKED AT: 28 of the 35 showers, everything the scope rule skipped below 20 MeV min_kine_best; of the 7 in scope I looked closely at 76071 and 10116 only, and read 82096, 84105, 41028, 80091, 78077 off the candidate table without opening their frames. This verdict is a claim about 76071, not about the event.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt71642/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:33:13+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt71642/calib-pr-evt71642.json",
+ "subRunNo": 1
+}

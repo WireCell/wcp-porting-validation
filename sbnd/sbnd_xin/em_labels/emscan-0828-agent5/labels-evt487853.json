@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   10.73,
+   103.09,
+   156.53
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 766,
+  "cloud_cluster_ids": [
+   13,
+   17,
+   18
+  ],
+  "cloud_kept": 766,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 32737,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.27606792106390043,
+   0.6541609433905466,
+   -0.7041732479311082
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.27606792106390043,
+    0.6541609433905466,
+    -0.7041732479311082
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 145.12756477283608,
+   "kine_charge": 145.12756477283608,
+   "kine_charge_other_hypothesis": 87.29477580320969,
+   "kine_dQdx": 90.69761223363554,
+   "kine_hypothesis": "shower",
+   "kine_range": 120.94318268961688,
+   "members": [
+    13000,
+    13001
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   11.923834051509662,
+   99.41852465054195,
+   160.00542773401213
+  ],
+  "reco_start_vertex_id": 13002,
+  "shower": 13000,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   11.923834051509662,
+   99.41852465054195,
+   160.00542773401213
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt487853",
+ "eventNo": 487853,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 45,
+  "x": 10.091020903891621,
+  "y": 117.21241191950772,
+  "z": 157.819334897043
+ },
+ "note": "[agent-bulk] shw 13000 (145.1 MeV, 2 seg, len 44.4) is the only shower in this event at or above 20 MeV. It is a single cone: in the az +65 vertex frame its two segments fork out of the region just past the nu vertex star and open away from it, and the pale-yellow halo covers the whole diffuse blob in the az -55 and az +85 frames. The 64.1 deg between its two members is the cone opening as traced by a 2-segment skeleton, NOT two prongs - I checked that on the second azimuth before deciding, and it is why I do not call this over-clustered. Nothing substantial is unclaimed next to it: the only non-members below 40 deg at any distance are 47013 at 14.9 cm / 13.6 deg (kine_best 7.4 MeV, pdg 2212) and 32008 at 26.0 cm / 21.9 deg (2.1 MeV). 47013 is the one thing that could make this under-clustered - it is tier 1 with metric 0.6, BETTER than the shower's own accepted member (metric 1.5) - but it is a 7.4 MeV proton stub sitting off the cone on the vertex side, and leaving a proton out of an EM shower is the right behaviour, so I did not mark it. CAVEAT on my own method here: with only 2 segments, one of them 64 deg off the other, the fitted axis is poorly determined, so the angle-envelope argument I use elsewhere is weak on this event and the verdict rests on the picture - a single covered blob - rather than on the acceptance plot. Topology is other_em single-photon again: a grey unowned track runs to the nu vertex and 13000 is the only EM object; there is no second gamma anywhere, so the absence of a pi0 group is a missing gamma, not a pairing failure. event_flags left empty: a vertex is reconstructed and there is no pi0 to place, so this is not a no-vertex NCpi0. Not looked at: the other 11 showers, all at or below 7.4 MeV (scope rule min_kine_best 20 MeV).",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt487853/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:00:00+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt487853/calib-pr-evt487853.json",
+ "subRunNo": 1
+}

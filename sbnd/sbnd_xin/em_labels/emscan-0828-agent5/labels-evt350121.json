@@ -1,0 +1,145 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -42.91,
+   -40.42,
+   359.99
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4934,
+  "cloud_cluster_ids": [
+   2
+  ],
+  "cloud_kept": 4934,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 28466,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.05299591947129502,
+   -0.520959887632919,
+   0.8519344035762898
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "2011": {
+    "2013": "in"
+   }
+  },
+  "marks_detail": {
+   "2011": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.05299591947129502,
+     -0.520959887632919,
+     0.8519344035762898
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "2013": {
+      "absorbed_by": "conn3_unreachable (walk_exclude)",
+      "angle": 2.5380997178718565,
+      "cluster_id": 2,
+      "dist": 10.359256138350226,
+      "ellip": 0.07535776385967147,
+      "kind": "in",
+      "length": 17.811788875738795,
+      "owner": 2013,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 5.116794549184116,
+     "angle_min": 0.0,
+     "dist_max": 25.734869837044194,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     2011,
+     2014,
+     2015,
+     2016
+    ],
+    "start": [
+     -43.742359650292926,
+     -29.042255720535838,
+     344.92781732061906
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.05299591947129502,
+    -0.520959887632919,
+    0.8519344035762898
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 244.2518264249276,
+   "kine_charge": 244.2518264249276,
+   "kine_charge_other_hypothesis": 146.91839183454294,
+   "kine_dQdx": 162.2409335061263,
+   "kine_hypothesis": "shower",
+   "kine_range": 124.39668376517385,
+   "members": [
+    2011,
+    2014,
+    2015,
+    2016
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -43.742359650292926,
+   -29.042255720535838,
+   344.92781732061906
+  ],
+  "reco_start_vertex_id": 2007,
+  "shower": 2011,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -43.742359650292926,
+   -29.042255720535838,
+   344.92781732061906
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt350121",
+ "eventNo": 350121,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 2,
+  "x": -43.66598184081012,
+  "y": -23.54997919683315,
+  "z": 334.70134013983386
+ },
+ "note": "[agent-bulk] numucc_em. NOTE ON THE FRAMES: drag_check.segments_redrew came back FALSE on this capture (cloud_redrew true, d_az 0.7500 = expected). It is a false negative of the probe, not stale frames: the probe reads seg3_src.data.xs[0][0], and that point IS the nu vertex (state.json segments xs[0][0]/ys[0][0] = 36.73/-72.93 = main_vertex u/v exactly), so during the vertex-centred sweep it sat ON the rotation centre and an azimuth rotation cannot move it -- seg_u went 9.88e-7 -> 1.03e-6, i.e. zero to zero. The same source reads u = 36.73 for that point under the later shower-framed camera, so seg3_src does reproject. Judgements below are made off frames I confirmed move. shw 2011 (244.3 MeV, 4 seg, 46.0 cm, conn 3) is UNDER-CLUSTERED and the missing piece is named: shw 2013 (64.8 MeV, one 17.8 cm segment, same cluster 2) sits at dist 10.4 cm and angle 2.5 deg from 2011's start -- the IDENTICAL distance and angle as accepted member 2014, so on the acceptance plot the two markers coincide -- and the reco threw it out with conn3_unreachable (walk_exclude). Both azimuths show why that is wrong: at az+085 the 2011 skeleton and the 2013 skeleton run parallel, 1-2 cm apart, up the middle of ONE continuous diffuse charge cloud from a common lower end; at az-055 the same two skeletons overlap in the same cloud. Two skeletons, one shower. Pricing them as a pi0 pair gives 16.7 MeV (axis) / 5.8 MeV (vertex) at 7.6 / 2.7 deg -- collinear, which no pi0 can be, and which is itself the proof they are one object. 2013 marked IN. Vertex is good: at both azimuths the star is the clean apex of a two-track V and the shower start sits ~4 cm off the muon (2048, 187.1 cm, pdg 13, correctly unowned) at 91.8 deg. Left alone deliberately: 2008 (pdg 2212, 32.1 cm) at 167 deg behind the start, and 62046 (50.1 MeV, 14.6 cm) at 142 deg behind it -- both outside the cone. Small on-axis stubs I noticed but did not mark: 17020 (0.6 cm) at 30.7 cm/12.6 deg -- the only non-member circle inside the acceptance window -- and 22025 (0.9 cm) at 49.2 cm/2.1 deg, 27030 (1.5 cm) at 53.1 cm/7.5 deg beyond it. Looked at 2 of 23 showers properly; 29040 (43.3 MeV) and 28031 (30.2 MeV) are 72-85 cm away in the opposite hemisphere and I only checked they are not near 2011, and the 18 skipped by the scope rule are all under 20 MeV.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt350121/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:01:07+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt350121/calib-pr-evt350121.json",
+ "subRunNo": 1
+}

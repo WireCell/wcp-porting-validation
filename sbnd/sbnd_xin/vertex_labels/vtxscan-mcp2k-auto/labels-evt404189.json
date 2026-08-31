@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt404189",
+ "eventNo": 404189,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": -71.59247856511655,
+  "y": 63.148717324078305,
+  "z": 192.51776594697395
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 5002,
+   "x": -71.59247856511655,
+   "y": 63.148717324078305,
+   "z": 192.51776594697395
+  }
+ ],
+ "reco_sep_cm": 0.003574847616374113,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at a 103 deg V (collinear only in the X-Y projection, not in 3-D): the 51 cm proton starts at 75000 here and climbs the proton template to 330000 at 5001, and the 185 cm muon is flat MIP at the vertex before exiting the top wall.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt404189/calib-pr-evt404189.json",
+ "subRunNo": 1
+}

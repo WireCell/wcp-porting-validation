@@ -1,0 +1,286 @@
+ev	seg	pdg	traj	topo	pdg11	long_muon	len_cm	med_dqdx_mip	straight	verdict	note
+166870	10074	2212	1	0	0	0	20.18	1.914	1	UNL	85045 should be an EM shower, part of pi0 ...
+166870	10013	11	0	0	1	0	8.29	0.605	0	UNL	85045 should be an EM shower, part of pi0 ...
+169356	16009	11	0	0	1	0	3.49	0.857	0	UNL	
+169626	22034	11	1	0	1	0	28.75	1.194	0	UNL	
+172942	4002	11	0	0	1	0	33.49	1.808	0	UNL	wrong nu vertex give up
+174752	48010	11	1	0	1	0	3.77	0.864	0	NOLAB_EVT	wrong nu vertex, give up
+278794	7002	13	0	0	0	1	22.58	1.016	1	UNL	
+347129	53021	11	1	0	1	0	10.36	0.53	0	UNL	
+394532	39021	11	1	0	1	0	0.34	1.511	0	NOLAB_EVT	nu vertex likely wrong
+394532	39034	11	1	0	1	0	8.15	0.909	0	NOLAB_EVT	nu vertex likely wrong
+165157	62049	11	1	0	1	0	15.27	0.931	0	NOLAB_EVT	nu vertex not likely correct
+176502	109119	11	0	1	1	0	19.91	1.472	0	UNL	Significant EM shower overclustering, not sure if one can improve ... not easily
+176502	109298	11	0	0	1	0	30.66	1.213	1	UNL	Significant EM shower overclustering, not sure if one can improve ... not easily
+176502	109299	11	1	0	1	0	13.15	1.235	0	UNL	Significant EM shower overclustering, not sure if one can improve ... not easily
+281165	16006	13	0	0	0	1	12.63	1.155	1	UNL	
+281567	95129	11	0	0	1	0	9.01	1.962	0	UNL	nu vertex is wrong ... , 95128 has an overclustering issue of a EM shower isolat
+281567	95225	11	1	0	1	0	21.2	0.987	0	UNL	nu vertex is wrong ... , 95128 has an overclustering issue of a EM shower isolat
+281567	95227	11	1	0	1	0	27.33	1.127	0	UNL	nu vertex is wrong ... , 95128 has an overclustering issue of a EM shower isolat
+282909	4079	11	0	0	1	0	1.36	0.433	0	UNL	
+282909	4082	11	1	0	1	0	4.85	1.055	0	UNL	
+282909	4084	11	0	0	1	0	19.18	1.094	1	UNL	
+282909	4078	11	0	0	1	0	2.14	0.421	0	UNL	
+396222	9059	11	1	0	1	0	33.8	1.135	0	UNL	very busy events, difficult to scan
+409888	13011	211	1	0	0	0	4.91	1.003	0	UNL	
+409888	13008	11	1	0	1	0	0.79	0.376	0	UNL	
+415278	23012	11	1	0	1	0	32.72	0.987	0	GOOD_ROOT	
+415278	23014	11	0	0	1	0	5.47	1.065	0	UNL	
+415278	23037	11	0	0	1	0	12.03	1.574	1	GOOD_ROOT	
+475096	26025	11	0	0	1	0	16.95	1.592	1	NOLAB_EVT	 nu vertex is not ideal
+475096	26036	11	0	0	1	0	10.23	1.059	0	NOLAB_EVT	 nu vertex is not ideal
+54332	16014	11	0	1	1	0	32.28	1.668	1	FAKE_ROOT	overclustering a track ... 16014, also nu vertex is wrong ...
+76346	14058	11	1	0	1	0	6.29	0.75	0	UNL	
+76346	14013	11	1	0	1	0	10.05	0.325	0	UNL	
+76346	14019	11	1	0	1	0	8.1	1.529	0	UNL	
+76350	12098	11	1	0	1	0	15.75	0.758	0	NOLAB_EVT	wrong nu vertex, give up
+76350	12027	11	1	0	1	0	14.4	0.321	0	NOLAB_EVT	wrong nu vertex, give up
+99838	14004	13	0	0	0	1	13.67	1.008	1	UNL	
+180801	15082	11	0	1	1	0	25.47	1.147	0	NOLAB_EVT	incorrect nu vertex
+180801	15083	11	1	0	1	0	22.03	0.637	0	NOLAB_EVT	incorrect nu vertex
+180801	15015	11	1	0	1	0	4.3	1.063	0	NOLAB_EVT	incorrect nu vertex
+21073	11008	11	1	0	1	0	10.91	0.89	0	UNL	
+259542	128135	11	0	0	1	0	2.27	0.857	0	NOLAB_EVT	incorrect vertex
+285567	8107	11	0	1	1	0	14.28	1.523	0	UNL	
+285567	8016	11	1	0	1	0	8.55	0.811	0	UNL	
+37112	84070	11	0	0	1	0	4.07	4.206	0	UNL	
+37112	84074	11	1	0	1	0	16.33	1.792	1	UNL	
+399860	17062	11	1	0	1	0	24.36	2.195	1	NOLAB_EVT	very good
+399860	17065	13	1	0	0	0	15.77	1.028	0	NOLAB_EVT	very good
+506746	21067	11	1	0	1	0	8.81	1.154	0	UNL	
+506746	21149	11	1	0	1	0	8.28	0.919	0	UNL	
+56982	22028	11	1	0	1	0	10.4	0.574	0	NOLAB_EVT	incorrect nu vertex
+56982	22033	11	1	0	1	0	7.36	1.114	0	NOLAB_EVT	incorrect nu vertex
+56982	22046	11	0	0	1	0	23.01	1.851	0	NOLAB_EVT	incorrect nu vertex
+56982	22116	11	1	0	1	0	25.26	0.762	0	NOLAB_EVT	incorrect nu vertex
+56982	22118	11	1	0	1	0	23.91	0.953	0	NOLAB_EVT	incorrect nu vertex
+56982	22119	11	1	0	1	0	24.66	0.726	0	NOLAB_EVT	incorrect nu vertex
+10550	7016	11	0	0	1	0	3.75	3.892	0	NOLAB_EVT	OK
+10550	7036	11	0	1	1	0	18.71	1.419	0	NOLAB_EVT	OK
+111412	18012	11	1	0	1	0	6.67	1.008	0	NOLAB_EVT	incorrect vertex.
+111412	18013	11	1	0	1	0	5.0	0.99	0	NOLAB_EVT	incorrect vertex.
+111412	18060	11	1	0	1	0	13.9	0.711	0	NOLAB_EVT	incorrect vertex.
+111412	18061	11	0	1	1	0	19.18	1.81	0	NOLAB_EVT	incorrect vertex.
+116962	21070	11	0	1	1	0	31.93	1.232	0	NOLAB_EVT	incorrect vertex
+116962	21072	11	0	0	1	0	39.13	0.89	0	NOLAB_EVT	incorrect vertex
+116962	21073	11	1	0	1	0	38.93	1.09	0	NOLAB_EVT	incorrect vertex
+122660	9110	11	0	0	1	0	35.39	2.168	0	GOOD_ROOT	
+122660	9111	11	0	0	1	0	14.64	0.921	0	UNL	
+122660	9018	11	1	0	1	0	4.94	1.1	0	UNL	
+131357	12014	11	1	0	1	0	15.34	1.123	1	NOLAB_EVT	good
+137238	143057	11	1	0	1	0	14.35	1.013	0	UNL	OK
+137238	143055	11	0	0	1	0	4.61	0.699	0	UNL	OK
+137238	143056	11	1	0	1	0	6.83	3.382	0	UNL	OK
+138009	12010	11	0	0	1	0	3.16	2.891	0	NOLAB_EVT	good
+138009	12016	11	1	0	1	0	20.94	0.754	0	NOLAB_EVT	good
+163543	14123	11	1	0	1	0	21.46	1.672	0	NOLAB_EVT	incorrect nu vertex
+163543	14126	11	1	0	1	0	27.36	1.066	0	NOLAB_EVT	incorrect nu vertex
+163543	14127	11	1	0	1	0	18.66	1.161	0	NOLAB_EVT	incorrect nu vertex
+163543	14129	11	1	0	1	0	31.25	0.962	0	NOLAB_EVT	incorrect nu vertex
+163543	14131	11	1	0	1	0	33.16	0.884	0	NOLAB_EVT	incorrect nu vertex
+168596	14153	11	0	0	1	0	28.5	3.2	0	GOOD_ROOT	
+168596	14058	11	0	1	1	0	19.71	1.12	0	UNL	
+172230	5028	11	0	0	1	0	5.83	2.904	0	UNL	good
+172230	5119	11	0	0	1	0	2.29	1.033	0	UNL	good
+174637	9018	11	0	0	1	0	8.94	2.349	0	UNL	good
+174637	9020	11	1	0	1	0	3.07	0.683	0	UNL	good
+174637	9043	11	1	0	1	0	2.72	1.034	0	UNL	good
+196649	11113	11	0	0	1	0	38.92	1.986	1	NOLAB_EVT	good
+214469	16078	11	0	1	1	0	34.45	1.257	1	NOLAB_EVT	good
+219295	15128	11	0	0	1	0	33.26	1.894	1	UNL	good
+234638	10041	11	0	0	1	0	25.68	1.154	1	UNL	good
+234638	10018	11	0	0	1	0	2.85	1.096	0	UNL	good
+235435	2051	11	1	0	1	0	3.29	1.155	0	UNL	The entire segments are one EM shower from the main nu vertex, not clustered tog
+235435	2024	13	1	0	0	0	6.82	0.869	0	UNL	The entire segments are one EM shower from the main nu vertex, not clustered tog
+239794	2070	11	0	0	1	0	12.92	7.98	0	UNL	good
+246579	19047	11	0	0	1	0	21.94	2.247	1	UNL	good
+256587	11301	11	0	0	1	0	32.83	1.156	0	UNL	good
+267597	5121	11	0	0	1	0	15.68	2.198	0	UNL	good
+268067	15079	11	0	0	1	0	3.2	0.439	0	UNL	good
+268067	15080	11	0	0	1	0	22.62	1.189	1	UNL	good
+268784	13003	11	0	0	1	0	2.81	0.905	0	UNL	good
+268784	13027	11	0	0	1	0	12.06	2.675	0	UNL	good
+269774	87134	11	0	0	1	0	23.87	2.381	1	UNL	
+271851	23010	11	0	0	1	0	22.46	1.039	1	UNL	good
+30504	11008	11	1	0	1	0	3.89	0.291	0	NOLAB_EVT	incorrect nu vertex
+30504	11021	13	1	0	0	0	6.98	0.503	0	NOLAB_EVT	incorrect nu vertex
+30504	11065	11	0	0	1	0	6.06	0.885	0	NOLAB_EVT	incorrect nu vertex
+30504	11066	11	1	0	1	0	2.13	0.781	0	NOLAB_EVT	incorrect nu vertex
+30504	11068	11	0	0	1	0	42.89	1.131	1	NOLAB_EVT	incorrect nu vertex
+30504	11069	11	1	0	1	0	8.75	0.695	0	NOLAB_EVT	incorrect nu vertex
+342199	20032	11	0	1	1	0	16.29	1.486	1	UNL	
+350186	6044	11	1	0	1	0	41.91	2.276	1	UNL	good
+360535	7060	11	0	0	1	0	34.19	2.52	1	UNL	good
+388	23028	11	1	0	1	0	23.05	1.087	0	UNL	pretty good. 
+388	23032	11	0	1	1	0	23.68	1.316	1	UNL	pretty good. 
+38856	12035	11	1	0	1	0	14.8	0.587	0	NOLAB_EVT	incorrect vertex
+38856	12088	11	1	0	1	0	10.72	1.181	1	NOLAB_EVT	incorrect vertex
+38856	12089	11	1	0	1	0	29.14	0.49	0	NOLAB_EVT	incorrect vertex
+38856	12090	11	0	1	1	0	24.73	1.185	0	NOLAB_EVT	incorrect vertex
+38856	12082	11	0	0	1	0	0.96	1.001	0	NOLAB_EVT	incorrect vertex
+389538	11007	11	1	0	1	0	6.14	1.07	0	NOLAB_EVT	good
+400474	18126	11	0	0	1	0	29.13	1.545	0	UNL	good
+42280	8021	11	0	0	1	0	33.93	2.288	0	UNL	very good
+422851	1023	11	0	0	1	0	17.6	1.321	1	UNL	good
+433451	4039	11	0	0	1	0	7.47	6.004	0	UNL	good
+433451	4041	11	1	0	1	0	2.98	0.873	0	UNL	good
+437699	11023	11	1	0	1	0	11.27	1.308	1	UNL	good
+437699	11025	11	0	0	1	0	2.73	1.103	0	UNL	good
+444187	19079	11	0	1	1	0	58.6	1.204	1	GOOD_ROOT	
+444187	19081	11	0	1	1	0	46.67	1.532	1	UNL	
+444187	19082	11	0	1	1	0	52.45	1.091	1	UNL	
+447477	11006	11	1	0	1	0	6.5	2.116	0	UNL	good
+447477	11019	11	0	0	1	0	41.03	2.506	1	UNL	good
+46363	19079	11	0	1	1	0	38.07	1.287	1	UNL	very good
+489330	4019	11	0	0	1	0	6.65	6.171	0	UNL	good
+489330	4020	11	1	0	1	0	6.85	1.045	0	UNL	good
+52672	82082	11	1	0	1	0	5.0	1.085	0	UNL	incorrect vertex
+54095	17041	11	1	0	1	0	4.73	0.71	0	UNL	very good.
+54095	17034	11	1	0	1	0	5.07	0.659	0	UNL	very good.
+54095	17035	11	0	0	1	0	5.96	3.585	0	UNL	very good.
+69314	3014	11	1	0	1	0	7.04	2.081	0	UNL	OK
+69314	3001	11	1	0	1	0	6.32	1.222	0	UNL	OK
+74544	12085	11	0	0	1	0	14.59	1.82	0	UNL	good
+81597	19009	11	0	1	1	0	21.23	1.291	1	UNL	good
+90055	11033	11	0	0	1	0	11.24	3.152	1	UNL	good
+90055	11149	11	0	0	1	0	1.54	0.4	0	UNL	good
+168432	19032	11	1	0	1	0	12.75	1.116	0	MARKED_OTHER	[agent-bulk] Verdict is on the leading EM shower 22006 (259.1 MeV, 3 seg, cluste
+172266	16005	11	0	0	1	0	4.07	0.828	0	UNL	[agent-bulk] DRAG_CHECK FALSE NEGATIVE on this event (segments_redrew=false): sc
+175896	17044	11	0	1	1	0	11.54	1.554	0	MARKED_OTHER	[agent] the nu vertex is not clear and the shower question is not answerable fro
+175896	17001	11	1	0	1	0	2.29	1.025	0	UNL	[agent] the nu vertex is not clear and the shower question is not answerable fro
+175896	17003	11	0	0	1	0	2.09	1.052	0	UNL	[agent] the nu vertex is not clear and the shower question is not answerable fro
+277298	17026	11	1	0	1	0	22.6	1.647	0	UNL	[agent-bulk] PID verdict, and the clustering is fine. shw 17030 (kine_charge 194
+277298	17028	11	1	0	1	0	9.93	0.897	0	UNL	[agent-bulk] PID verdict, and the clustering is fine. shw 17030 (kine_charge 194
+277298	17030	11	0	1	1	0	49.26	1.339	1	UNL	[agent-bulk] PID verdict, and the clustering is fine. shw 17030 (kine_charge 194
+280972	7028	11	0	1	1	0	8.85	1.127	0	UNL	[agent-bulk] Verdict on the leading EM shower 7040 (949.6 MeV, 16 seg): leans co
+282979	14003	11	1	0	1	0	15.97	0.955	0	MARKED_OTHER	[agent-bulk] nuecc. shw 14003 (309.6 MeV, 13 seg, conn 1) is TWO disconnected bo
+282979	14050	11	1	0	1	0	10.68	0.378	0	UNL	[agent-bulk] nuecc. shw 14003 (309.6 MeV, 13 seg, conn 1) is TWO disconnected bo
+282979	14051	11	1	0	1	0	2.99	0.574	0	UNL	[agent-bulk] nuecc. shw 14003 (309.6 MeV, 13 seg, conn 1) is TWO disconnected bo
+283713	17007	13	0	0	0	1	246.45	1.073	1	UNL	[agent-bulk] shw 67051 (163.9 MeV, 9 seg, len 30.9, gamma1 of reco pi0 group 0) 
+286681	3012	11	0	0	1	0	25.18	1.963	0	MARKED_OTHER	[agent-bulk] other_em, and a messy one: the whole event is a long dense column o
+287654	12003	11	1	0	1	0	4.97	1.362	0	UNL	[agent-bulk] shw 88015 (152.9 MeV, 7 seg, len 38.0) is the cleanest object in my
+287830	16028	11	1	0	1	0	6.2	1.397	0	UNL	[agent-bulk] shw 20036 (164.0 MeV, 7 seg, pio_id 0): correct. Its 7 member polyl
+292005	18005	13	0	0	0	1	77.01	1.043	1	UNL	[agent-bulk] This event has no EM shower above 20 MeV; the entry that puts it in
+292005	18024	11	0	0	1	0	2.79	0.926	0	UNL	[agent-bulk] This event has no EM shower above 20 MeV; the entry that puts it in
+292027	12005	13	0	0	0	1	157.3	1.037	1	UNL	[agent-bulk] numucc_em with a reco pi0. Vertex is good: the star sits at the bas
+293149	4002	11	1	0	1	0	4.3	1.144	0	UNL	[agent-bulk] shw 4001 (269.4 MeV, 12 seg, len 80.0, the only shower in this even
+313781	9011	11	0	0	1	0	4.14	0.581	0	UNL	[agent-bulk] shw 9012 (102.7 MeV, 2 seg, nuecc): correct, and the two-piece memb
+313781	9012	11	0	0	1	0	9.74	1.015	0	UNL	[agent-bulk] shw 9012 (102.7 MeV, 2 seg, nuecc): correct, and the two-piece memb
+317939	26001	11	1	0	1	0	21.44	1.063	1	UNL	[agent-bulk] Leading EM shower 30022 (417.9 MeV, 27 seg): correct. It is detache
+317939	26003	11	0	1	1	0	10.55	1.295	0	UNL	[agent-bulk] Leading EM shower 30022 (417.9 MeV, 27 seg): correct. It is detache
+321767	15006	13	0	0	0	1	36.07	1.099	1	UNL	[agent-bulk] numucc_em. Vertex judged first and it is FINE: at el+60 the star is
+348691	9014	11	0	0	1	0	1.61	0.728	0	UNL	[agent-bulk] shw 49046 (319.7 MeV, 8 seg, 7 of them cluster 49): correct. Its 8 
+348691	9100	11	0	0	1	0	2.73	0.338	0	UNL	[agent-bulk] shw 49046 (319.7 MeV, 8 seg, 7 of them cluster 49): correct. Its 8 
+348691	9011	11	1	0	1	0	13.56	0.423	1	UNL	[agent-bulk] shw 49046 (319.7 MeV, 8 seg, 7 of them cluster 49): correct. Its 8 
+386442	16008	11	0	1	1	0	21.95	1.257	0	MARKED_OTHER	[agent-bulk] Clean nuecc single-shower event. shw 16008 (236.3 MeV, 4 seg, 37.9 
+386948	92079	11	0	0	1	0	6.19	0.936	0	UNL	[agent-bulk] The hardest event in my shard: TWO EM showers of 544.9 and 433.0 Me
+390182	4033	2212	1	0	0	0	17.44	2.731	1	UNL	[agent-bulk] shw 4008 (130.4 MeV, 2 seg, other_em): correct AS A CLUSTERING STAT
+390182	4008	11	1	0	1	0	27.27	1.746	0	UNL	[agent-bulk] shw 4008 (130.4 MeV, 2 seg, other_em): correct AS A CLUSTERING STAT
+401450	23018	11	1	0	1	0	19.91	2.332	0	UNL	[agent-bulk] The biggest object in my shard and it is well reconstructed. shw 23
+401450	23020	11	0	0	1	0	2.96	1.007	0	UNL	[agent-bulk] The biggest object in my shard and it is well reconstructed. shw 23
+407918	11009	11	1	0	1	0	3.27	0.457	0	UNL	[agent-bulk] shw 17010 (174.8 MeV, 5 seg, len 34.7) is complete: members run 0-6
+486247	7001	11	1	0	1	0	2.37	0.999	0	UNL	[agent-bulk] Leading and only EM shower 18014 (118.6 MeV, 4 seg): correct. Simpl
+486247	7003	11	1	0	1	0	3.11	1.116	0	UNL	[agent-bulk] Leading and only EM shower 18014 (118.6 MeV, 4 seg): correct. Simpl
+486687	20068	11	0	0	1	0	2.35	1.933	0	UNL	[agent-bulk] numucc_em. drag_check both true. shw 103067 (244.8 MeV, 14 seg, 62.
+489327	19005	11	1	0	1	0	22.55	1.292	0	FAKE_ROOT	[agent-bulk] REDO of the wave-1 skip, judged fresh. First, the skip itself was a
+54341	18008	11	1	0	1	0	8.68	1.19	0	UNL	[agent-bulk] shw 101041 (242.5 MeV, 12 seg, pdg 11) is under-clustered: its memb
+64409	8022	11	0	0	1	0	14.31	2.678	1	UNL	[agent-bulk] nuecc. shw 8022 (801.3 MeV, 32 seg, 164.3 cm): single apex at the n
+100135	14024	11	0	0	1	0	7.14	0.71	0	UNL	[agent-bulk] nuecc. shw 14025 (122.2 MeV, 6 seg, pdg 11, len 39.9) starts EXACTL
+100135	14025	11	0	0	1	0	2.81	1.223	0	GOOD_ROOT	[agent-bulk] nuecc. shw 14025 (122.2 MeV, 6 seg, pdg 11, len 39.9) starts EXACTL
+100222	113236	11	0	0	1	0	36.4	1.026	0	MARKED_OTHER	[agent-bulk] numucc_em, 111 segments, 21 showers. VERTEX: event_half_span_cm 206
+170761	8023	11	0	0	1	0	7.96	2.669	0	UNL	[agent-bulk] numucc_em. VERTEX: event_half_span_cm 356.7 - a 315.7 cm muon (8050
+170761	8026	11	0	0	1	0	37.4	1.106	1	UNL	[agent-bulk] numucc_em. VERTEX: event_half_span_cm 356.7 - a 315.7 cm muon (8050
+170761	8049	11	1	0	1	0	5.69	0.669	0	UNL	[agent-bulk] numucc_em. VERTEX: event_half_span_cm 356.7 - a 315.7 cm muon (8050
+171143	8032	11	0	1	1	0	56.06	1.383	1	UNL	[agent-bulk] THIS IS A PID VERDICT AND THE EVENT THEREFORE CARRIES NO CLUSTERING
+171729	9005	11	1	0	1	0	15.41	1.116	0	UNL	[agent-bulk] mcp2k numucc_em WITH an ACCEPTED reco pi0 group, and the pi0 is the
+173495	22009	11	1	0	1	0	7.08	1.09	0	UNL	[agent-bulk] other_em. shw 26021 (105.2 MeV, 4 seg, pdg 11, len 25.3) is UNDER-C
+173819	14028	11	1	0	1	0	4.36	2.021	0	UNL	[agent-bulk] numucc_em. THIS EVENT CARRIES NO CLUSTERING JUDGEMENT - the verdict
+174771	15011	11	1	0	1	0	9.34	1.052	0	UNL	[agent-bulk] shw 85085 (101.7 MeV, 4 seg, pdg 11, mcp2k other_em): under-cluster
+176533	11032	11	0	0	1	0	11.12	1.122	1	UNL	[agent-bulk] The nuecc of my shard, and the reconstruction handles it WELL. Vert
+176533	11035	11	0	0	1	0	18.52	1.462	1	UNL	[agent-bulk] The nuecc of my shard, and the reconstruction handles it WELL. Vert
+179048	17007	11	1	0	1	0	3.77	1.117	0	UNL	[agent-bulk] mcp2k numucc_em, sparse: 14 segments, 6 showers, ONE in scope (1701
+179048	17003	11	1	0	1	0	8.24	1.101	0	UNL	[agent-bulk] mcp2k numucc_em, sparse: 14 segments, 6 showers, ONE in scope (1701
+179369	17003	11	1	0	1	0	4.0	1.276	0	UNL	[agent-bulk] shw 17002 (272.4 MeV, 9 seg, pdg 11, len 58.3) is badly OVER-CLUSTE
+179369	12006	13	0	0	0	1	52.9	1.083	1	UNL	[agent-bulk] shw 17002 (272.4 MeV, 9 seg, pdg 11, len 58.3) is badly OVER-CLUSTE
+181050	15001	11	1	0	1	0	2.3	0.787	0	UNL	[agent-bulk] shw 15006 (253.4 MeV, 16 seg, pdg 11, mcp2k nuecc): under-clustered
+275011	11037	11	0	0	1	0	22.16	0.782	0	UNL	[agent-bulk] mcp2k NUECC, compact: everything in the event sits within 40 cm of 
+275011	11038	11	1	0	1	0	14.94	1.092	0	UNL	[agent-bulk] mcp2k NUECC, compact: everything in the event sits within 40 cm of 
+280159	12119	11	1	0	1	0	16.42	0.885	0	UNL	[agent] 35 showers, 5 scanned (kine_best >= 20 MeV or pio_id >= 0); the other 30
+282271	6063	11	0	1	1	0	30.97	1.356	0	GOOD_ROOT	[agent-bulk] nuecc, 38 showers - the busiest event in my shard. Vertex judged fr
+282271	6004	11	0	0	1	0	2.99	1.066	0	UNL	[agent-bulk] nuecc, 38 showers - the busiest event in my shard. Vertex judged fr
+284206	10051	11	1	0	1	0	21.26	1.09	0	GOOD_ROOT	[agent-bulk] shw 10051 (120.4 MeV kine_charge / 72.4 kine_best, 1 seg, pdg 11, m
+284206	10052	11	0	0	1	0	23.45	1.009	0	UNL	[agent-bulk] shw 10051 (120.4 MeV kine_charge / 72.4 kine_best, 1 seg, pdg 11, m
+284206	10054	11	0	1	1	0	29.13	1.205	0	UNL	[agent-bulk] shw 10051 (120.4 MeV kine_charge / 72.4 kine_best, 1 seg, pdg 11, m
+284206	10056	11	1	0	1	0	24.79	0.54	1	UNL	[agent-bulk] shw 10051 (120.4 MeV kine_charge / 72.4 kine_best, 1 seg, pdg 11, m
+284206	10001	11	1	0	1	0	2.1	1.029	0	UNL	[agent-bulk] shw 10051 (120.4 MeV kine_charge / 72.4 kine_best, 1 seg, pdg 11, m
+287794	5026	11	1	0	1	0	9.22	2.202	0	UNL	[agent-bulk] Small event, 8 segments; vertex judged from the event's own +-137.9
+289508	17012	11	0	1	1	0	10.7	1.45	1	UNL	[agent-bulk] numucc_em. Only ONE shower in scope: 17012 (pdg 11, kine_charge 396
+291072	21023	11	1	0	1	0	12.02	1.294	0	GOOD_ROOT	[agent-bulk] nuecc, clean single-cone topology. Verdict shower 21023 (pdg 11, ki
+292524	9018	13	0	0	0	1	31.03	1.032	1	UNL	[agent-bulk] verdict shower 79054 (pdg 11, kine_charge 329.8 MeV, 17 seg, 68.9 c
+292524	9016	11	1	0	1	0	5.4	0.636	0	UNL	[agent-bulk] verdict shower 79054 (pdg 11, kine_charge 329.8 MeV, 17 seg, 68.9 c
+293536	15027	11	1	0	1	0	15.08	1.737	0	UNL	[agent-bulk] PID verdict -- this event carries NO clustering judgement (correcti
+294174	16028	13	0	0	0	1	39.46	1.005	1	UNL	[agent-bulk] Verdict shower 71067 (123.1 MeV, pdg 11, 7 seg, 30.8 cm) = highest-
+294174	16004	11	1	0	1	0	7.43	1.266	0	UNL	[agent-bulk] Verdict shower 71067 (123.1 MeV, pdg 11, 7 seg, 30.8 cm) = highest-
+318703	17023	13	0	0	0	1	175.7	1.055	1	UNL	[agent-bulk] numucc_em, 33 showers. Verdict shower 17067 (pdg 11, kine_charge 25
+318703	17067	11	0	0	1	0	11.12	0.635	0	UNL	[agent-bulk] numucc_em, 33 showers. Verdict shower 17067 (pdg 11, kine_charge 25
+318769	31026	11	0	1	1	0	6.2	1.24	0	UNL	[agent-bulk] numucc_em, 40 showers, 68 segments. Verdict shower 19003 (pdg 11, k
+321169	16054	11	0	0	1	0	4.57	0.448	0	UNL	[agent-bulk] verdict shower 16055 (pdg 11, kine_charge 142.1 MeV, 8 seg, 30.4 cm
+321169	16055	11	1	0	1	0	15.16	0.895	0	UNL	[agent-bulk] verdict shower 16055 (pdg 11, kine_charge 142.1 MeV, 8 seg, 30.4 cm
+321169	16059	11	1	0	1	0	20.29	0.929	0	UNL	[agent-bulk] verdict shower 16055 (pdg 11, kine_charge 142.1 MeV, 8 seg, 30.4 cm
+321169	16060	11	1	0	1	0	12.56	0.626	0	UNL	[agent-bulk] verdict shower 16055 (pdg 11, kine_charge 142.1 MeV, 8 seg, 30.4 cm
+347824	24113	11	0	0	1	0	23.22	2.883	0	UNL	[agent-bulk] Verdict shower 24112 (546.3 MeV, pdg 11, 23 seg, 104.6 cm) = highes
+347824	24114	11	0	1	1	0	19.65	0.763	0	UNL	[agent-bulk] Verdict shower 24112 (546.3 MeV, pdg 11, 23 seg, 104.6 cm) = highes
+347824	24115	11	1	0	1	0	9.31	0.524	0	UNL	[agent-bulk] Verdict shower 24112 (546.3 MeV, pdg 11, 23 seg, 104.6 cm) = highes
+350354	18092	11	0	0	1	0	23.31	0.662	0	MARKED_OTHER	[agent-bulk] nuecc, 24 showers, 2 in scope. Verdict shower 18092 (pdg 11, kine_c
+350354	18093	11	1	0	1	0	6.7	0.734	0	UNL	[agent-bulk] nuecc, 24 showers, 2 in scope. Verdict shower 18092 (pdg 11, kine_c
+390634	1011	11	1	0	1	0	2.58	0.296	0	UNL	[agent-bulk] numucc_em, 21 showers, 27 segments. Verdict shower 1011 (pdg 11, ki
+392901	15011	13	0	0	0	1	20.18	0.972	0	UNL	[agent-bulk] REVISED IN SESSION (correction 10): the verdict and confidence are 
+394167	11009	11	0	0	1	0	20.84	1.035	1	UNL	[agent-bulk] nuecc, and the cleanest event in my shard. Verdict shower 11009 (46
+395123	21011	11	1	0	1	0	22.86	0.992	0	UNL	[agent-bulk] nuecc, small event (r95 28.4 cm, 8 segments, 6 showers). Only ONE s
+395597	20001	13	0	0	0	1	142.94	1.147	1	UNL	[agent-bulk] numucc_em, 6 showers, 10 segments. Verdict shower 20004 (pdg 11, ki
+395597	20002	13	0	0	0	1	113.39	1.079	1	UNL	[agent-bulk] numucc_em, 6 showers, 10 segments. Verdict shower 20004 (pdg 11, ki
+395597	20004	11	0	1	1	0	21.12	2.005	0	GOOD_ROOT	[agent-bulk] numucc_em, 6 showers, 10 segments. Verdict shower 20004 (pdg 11, ki
+396323	10009	13	0	0	0	1	47.66	0.89	1	UNL	[agent-bulk] Small event, 12 segments, 6 showers, 2 in scope. Verdict shower 180
+397401	16012	13	0	0	0	1	23.78	1.006	1	UNL	[agent-bulk] nuecc, 7 showers, 12 segments. Verdict shower 16014 (pdg 11, kine_c
+397401	16014	11	0	1	1	0	35.46	1.546	0	UNL	[agent-bulk] nuecc, 7 showers, 12 segments. Verdict shower 16014 (pdg 11, kine_c
+397630	15045	11	1	0	1	0	2.76	1.087	0	UNL	[agent-bulk] READ THIS FIRST: the verdict radio is stored on 19010 because corre
+397630	15006	11	1	0	1	0	2.54	0.772	0	UNL	[agent-bulk] READ THIS FIRST: the verdict radio is stored on 19010 because corre
+403309	11000	11	1	0	1	0	35.77	1.082	0	UNL	[agent-bulk] nuecc, and the whole event is THREE segments, so this judgement is 
+406125	8059	11	0	0	1	0	17.13	1.33	0	UNL	[agent-bulk] numucc_em, 25 showers, 45 segments. Verdict shower 38021 (pdg 11, k
+408304	9033	11	0	0	1	0	5.43	2.569	0	UNL	[agent-bulk] verdict shower 9039 (pdg 11, kine_charge 166.5 MeV, 12 seg, 45.5 cm
+408304	9008	11	0	0	1	0	2.6	0.826	0	UNL	[agent-bulk] verdict shower 9039 (pdg 11, kine_charge 166.5 MeV, 12 seg, 45.5 cm
+408678	14003	11	0	0	1	0	46.01	1.073	1	UNL	[agent-bulk] shw 14003 (312.3 MeV, pdg 11, 7 segments) is the highest-kine_charg
+409140	13006	11	0	1	1	0	10.8	1.35	0	MARKED_OTHER	[agent-bulk] nuecc, 12 segments, 8 showers, only ONE in scope. Verdict shower 13
+475778	4000	11	0	0	1	0	19.57	1.248	1	UNL	[agent-bulk] nuecc, 5 showers, 6 segments -- the smallest event in my shard and 
+499423	11045	11	1	0	1	0	29.54	1.094	0	MARKED_OTHER	[agent-bulk] Verdict shower is 11045 (154.6 MeV), the highest-kine_charge pdg-11
+499577	13009	11	1	0	1	0	17.53	1.236	1	MARKED_OTHER	[agent-bulk] Busy multi-prong numucc vertex. Verdict shower 13009 (299.8 MeV, pd
+499577	13030	11	1	0	1	0	21.8	1.062	0	UNL	[agent-bulk] Busy multi-prong numucc vertex. Verdict shower 13009 (299.8 MeV, pd
+499577	13031	13	0	0	0	1	105.02	1.03	1	UNL	[agent-bulk] Busy multi-prong numucc vertex. Verdict shower 13009 (299.8 MeV, pd
+500083	3002	11	0	1	1	0	13.46	1.57	1	UNL	[agent-bulk] nuecc, small event (r95 25.6 cm, 8 segments, 6 showers). Only ONE s
+500083	3008	11	0	0	1	0	5.58	0.698	0	UNL	[agent-bulk] nuecc, small event (r95 25.6 cm, 8 segments, 6 showers). Only ONE s
+52044	18004	11	0	0	1	0	3.73	1.084	0	UNL	[agent-bulk] LEADING shower 18004 (103.5 MeV, 5 seg, pdg 11, len 16.8): clusteri
+52605	51023	11	0	0	1	0	3.2	0.656	0	UNL	[agent-bulk] nuecc. Vertex judged from the native r95 framing (event_half_span_c
+52693	18034	11	0	0	1	0	0.39	1.527	0	MARKED_OTHER	[agent-bulk] CORRECTED VERDICT -- I first recorded this event as over-clustered 
+54453	22019	11	1	0	1	0	3.62	1.038	0	UNL	[agent-bulk] mcp2k numucc_em, 32 showers, scope rule reaches 5 (57050, 24030, 37
+56972	17024	11	1	0	1	0	21.48	0.821	0	UNL	[agent-bulk] nuecc, and the cleanest topology I have seen in this shard. Vertex 
+58006	8040	11	1	0	1	0	13.42	0.797	0	UNL	[agent-bulk] Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm w
+58006	8041	11	1	0	1	0	10.34	0.646	0	UNL	[agent-bulk] Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm w
+69232	20019	11	1	0	1	0	8.01	1.296	0	UNL	[agent-bulk] mcp2k numucc_em, sparse: 12 segments, 6 showers, only 2 in scope (2
+69232	20021	11	0	0	1	0	27.49	0.869	1	FAKE_ROOT	[agent-bulk] mcp2k numucc_em, sparse: 12 segments, 6 showers, only 2 in scope (2
+69232	20022	11	1	0	1	0	26.64	0.31	0	UNL	[agent-bulk] mcp2k numucc_em, sparse: 12 segments, 6 showers, only 2 in scope (2
+69254	4021	11	1	0	1	0	6.17	1.02	0	UNL	[agent-bulk] Small clean event: ONE shower in scope, 4021 (129.7 MeV, 4 seg, pdg
+71642	10116	11	0	0	1	0	0.9	1.674	0	UNL	[agent-bulk] numucc_em, 35 showers. VERTEX: event_half_span_cm 173.6, so the nat
+71872	13012	11	0	1	1	0	10.28	1.793	0	MARKED_OTHER	[agent-bulk] READ THE MARK, NOT ONLY THE RADIO on this event: the verdict radio 
+74123	17029	11	0	0	1	0	5.09	1.65	0	UNL	[agent-bulk] mcp2k numucc_em WITH a reco pi0 group. 23 segments, 9 showers, 2 in
+74326	10020	11	0	1	1	0	23.98	1.487	0	UNL	[agent-bulk] Verdict is on the LEADING EM shower 10020 (193.5 MeV, 3 seg, pdg 11
+75954	21048	11	0	0	1	0	18.14	1.284	1	UNL	[agent-bulk] nuecc. Vertex judged from the native r95 framing (event_half_span_c
+75954	21063	11	0	1	1	0	16.54	1.672	0	UNL	[agent-bulk] nuecc. Vertex judged from the native r95 framing (event_half_span_c
+77328	16016	11	1	0	1	0	11.55	2.131	0	UNL	[agent-bulk] shw 16016 (180.6 MeV, 2 seg, pdg 11, mcp2k numucc_em): correct as a
+77328	16017	13	0	0	0	1	44.42	1.015	1	UNL	[agent-bulk] shw 16016 (180.6 MeV, 2 seg, pdg 11, mcp2k numucc_em): correct as a
+91917	17005	11	1	0	1	0	5.44	0.977	0	UNL	[agent-bulk] Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm 3
+94224	17026	11	0	1	1	0	6.94	0.657	0	UNL	[agent-bulk] mcp2k NUECC. THIS IS A PID VERDICT AND THE EVENT CARRIES NO CLUSTER
+94392	5019	11	1	0	1	0	11.32	0.709	0	MARKED_OTHER	[agent-bulk] shw 5019 (305.6 MeV, 5 seg, pdg 11, len 103.5) is OVER-CLUSTERED: i
+96383	14005	11	1	0	1	0	19.26	1.021	0	UNL	[agent-bulk] shw 14007 (144.2 MeV, 5 seg, pdg 11, mcp2k nuecc): correct by the r
+96383	14007	11	1	0	1	0	19.75	1.003	0	UNL	[agent-bulk] shw 14007 (144.2 MeV, 5 seg, pdg 11, mcp2k nuecc): correct by the r
+98844	6013	11	1	0	1	0	22.43	0.943	0	UNL	[agent-bulk] Vertex judged from the event's own +-111.6 cm sweep (event_half_spa
+98844	6015	11	1	0	1	0	12.81	0.414	0	UNL	[agent-bulk] Vertex judged from the event's own +-111.6 cm sweep (event_half_spa

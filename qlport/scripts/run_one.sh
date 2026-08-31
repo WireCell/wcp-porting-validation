@@ -60,6 +60,8 @@ python3 "$ABTEST/timecmd.py" meta.txt \
     -A "initial_runNo=$RUN" -A "initial_subRunNo=$SR" -A "initial_eventNo=$EV" \
     -A "dl_weights=${DL_WEIGHTS:-}" \
     -A "dir_weak_use_score=${DIR_WEAK:-true}" \
+    -A "fit_exclusion=${QL_FIT_EXCLUSION:-false}" \
+    -A "dqdx_fit_keep_all_points=${QL_DQDX_KEEP_ALL:-false}" \
     -A "infiles=$FILE" "$QLPORT/uboone-mabc.jsonnet" \
     > stdout.log 2>&1 || true
 

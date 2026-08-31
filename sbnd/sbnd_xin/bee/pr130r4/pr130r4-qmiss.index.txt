@@ -1,0 +1,70 @@
+# doc pr/130 item 4 -- q_miss whole-object scan, 10 events
+# SET  8daa1825-f386-4ba2-9094-61577e075f9d
+#      https://www.phy.bnl.gov/twister/bee/set/8daa1825-f386-4ba2-9094-61577e075f9d/event/list/
+# arms work-pr130r1-bon{,141}-* = SBND production at toolkit 95346dc5 (the three
+#      knobs flipped 2026-08-29: shower_pass4_prox_guard_len=50,
+#      shower_pass3_backfill_guard_len=15, stem_backfill_back_dvtx=45)
+#
+# ONE set, not an A/B -- there is no merged arm to compare against.  The call to
+# make on each indented row is: SHOULD THIS OBJECT BE PART OF THIS SHOWER?
+#
+# HOW TO SEE IT: colour the shower_track-global layer by real_cluster_id.  Bee
+# stamps every point with its reconstructed OBJECT's start-segment id, so both
+# the target shower and each candidate object below get their own colour and the
+# question is answered by eye.  29 of the 32 objects (91.6% by charge) and every
+# target shower are separately coloured; the three that are not are marked
+# 'no colour' and have to be found from their member segment ids.
+#
+# WHOLE    the hand scan wants 100% of that object -> one binary yes/no
+# PARTIAL  it wants only part -> the harder partition question; frac given
+# NOHOLDER the scan wants charge that no reconstructed shower holds at all
+# q_out    wanted charge EXCLUDING what is already in the main cluster (pr/128
+#          105074 precedent: main-cluster membership already makes it the
+#          candidate's energy, so that part is re-attribution, not loss)
+#
+# Order is by q_out.  These 10 events hold 2.913e7 of the 3.514e7 outside-main
+# q_miss = 83%.  Census, ranking and repro: docs/pr/pr130-qmiss-mechanism.md
+#
+# bee_idx	event	sample	q_out	call
+0	463565	ncpi0	9.077e+06	4 object(s) to judge, 4 WHOLE  -> shower(s) 13001
+			4.430e+06	WHOLE    object 115088  (17 seg) -> shower 13001    frac 1.00  segs 49041,50042,51043,59051,72064,73065,75067,115088,115090,115092,115094,115099,115100,115101,115102,115103,115106
+			2.577e+06	WHOLE    object 114086  (10 seg) -> shower 13001    frac 1.00  segs 48040,72064,109073,109074,110075,111079,112080,113081,114084,114086
+			1.798e+06	WHOLE    object 109073  (5 seg) -> shower 13001    frac 1.00  [no colour]  segs 72064,109073,109074,111079,113081
+			2.718e+05	WHOLE    object 72064   (1 seg) -> shower 13001    frac 1.00  [no colour]  segs 72064
+1	122660	nuecc48	6.868e+06	3 object(s) to judge, 2 WHOLE  -> shower(s) 9110
+			3.432e+06	WHOLE    object 47050   (7 seg) -> shower 9110     frac 1.00  segs 36038,39041,47049,47050,53069,53070,60104
+			2.650e+06	WHOLE    object 54071   (3 seg) -> shower 9110     frac 1.00  segs 30032,54071,55073
+			7.858e+05	PARTIAL  object 53070   (3 seg) -> shower 9110     frac 0.67  segs 53069,53070
+2	54332	mcp2k	3.648e+06	7 object(s) to judge, 5 WHOLE  -> shower(s) 16014,122091
+			2.069e+06	PARTIAL  object 97060   (16 seg) -> shower 16014    frac 0.56  segs 97060,97062,97063,97064,98066,98067,98068,99069,129113
+			8.429e+05	WHOLE    object 123098  (2 seg) -> shower 122091   frac 1.00  segs 123098,123099
+			2.261e+05	PARTIAL  object 121084  (2 seg) -> shower 122091   frac 0.50  segs 121084
+			1.948e+05	WHOLE    object 76038   (1 seg) -> shower 122091   frac 1.00  segs 76038
+			1.570e+05	WHOLE    object 77039   (4 seg) -> shower 122091   frac 1.00  segs 77039,78040,79041,92054
+			1.228e+05	WHOLE    object 81043   (1 seg) -> shower 122091   frac 1.00  segs 81043
+			3.525e+04	WHOLE    object 80042   (1 seg) -> shower 122091   frac 1.00  segs 80042
+3	181050	mcp2k	1.768e+06	2 object(s) to judge, 1 WHOLE  -> shower(s) 15006
+			1.496e+06	PARTIAL  object 68031   (7 seg) -> shower 15006    frac 0.86  segs 54014,58018,68031,68032,68034,69039
+			2.722e+05	WHOLE    object 61021   (1 seg) -> shower 15006    frac 1.00  segs 61021
+4	105946	ncpi0	1.530e+06	3 object(s) to judge, 2 WHOLE  -> shower(s) 55063,56056
+			1.235e+06	PARTIAL  object 53030   (6 seg) -> shower 55063    frac 0.67  segs 35009,53029,53030,53031
+			1.520e+05	WHOLE    object 54032   (1 seg) -> shower 55063    frac 1.00  segs 54032
+			1.428e+05	WHOLE    object 39013   (1 seg) -> shower 56056    frac 1.00  segs 39013
+5	21073	ncpi0	1.423e+06	1 object(s) to judge, 0 WHOLE  -> shower(s) 60081
+			1.423e+06	PARTIAL  object 31023   (11 seg) -> shower 60081    frac 0.64  segs 31023,31024,33026,34027,57049,64108,64109
+6	342199	nuecc48	1.318e+06	1 object(s) to judge, 0 WHOLE  -> shower(s) 74101
+			1.318e+06	PARTIAL  object 25109   (8 seg) -> shower 74101    frac 0.88  segs 25035,25037,25038,25108,25109,72098,73099
+7	76346	mcp2k	1.234e+06	6 object(s) to judge, 6 WHOLE  -> shower(s) 14059,40030
+			4.828e+05	WHOLE    object 41031   (5 seg) -> shower 14059    frac 1.00  segs 34024,35025,36026,41031,41032
+			4.023e+05	WHOLE    object 42033   (2 seg) -> shower 14059    frac 1.00  segs 32022,42033
+			1.158e+05	WHOLE    object 39029   (1 seg) -> shower 14059    frac 1.00  segs 39029
+			8.443e+04	WHOLE    object 14058   (3 seg) -> shower 14059    frac 1.00  segs 14058,33023,40030
+			7.892e+04	WHOLE    object 37027   (1 seg) -> shower 40030    frac 1.00  segs 37027
+			6.954e+04	WHOLE    object 38028   (1 seg) -> shower 40030    frac 1.00  segs 38028
+8	469665	nuecc48	1.178e+06	3 object(s) to judge, 1 WHOLE  -> shower(s) 15003
+			6.970e+05	PARTIAL  object 66042   (3 seg) -> shower 15003    frac 0.67  segs 66042,66048
+			4.128e+05	WHOLE    object 62073   (2 seg) -> shower 15003    frac 1.00  segs 62073,62074
+			6.799e+04	PARTIAL  object 68052   (6 seg) -> shower 15003    frac 0.50  segs 32007,35010,37012
+9	54453	mcp2k	1.087e+06	2 object(s) to judge, 0 WHOLE  -> shower(s) 57050
+			7.135e+05	PARTIAL  object 58051   (6 seg) -> shower 57050    frac 0.17  segs 23026
+			3.735e+05	NOHOLDER no object holds it -> shower 57050    [no colour]  segs 23028

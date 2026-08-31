@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt98947",
+ "eventNo": 98947,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 187.95546712112076,
+  "y": 145.4759721421294,
+  "z": 335.2473198488019
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 20,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 20005,
+   "x": 187.95546712112076,
+   "y": 145.4759721421294,
+   "z": 335.2473198488019
+  }
+ ],
+ "reco_sep_cm": 0.006629769257242345,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:23Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "82 deg junction at the lowest z: a 48 cm proton starting at 2x MIP and following the proton template up to 310k at 20000, and a flat MIP muon exiting the x=200 face, both prongs forward in z",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt98947/calib-pr-evt98947.json",
+ "subRunNo": 1
+}

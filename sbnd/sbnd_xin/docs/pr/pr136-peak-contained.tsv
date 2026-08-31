@@ -1,0 +1,6 @@
+cell	n	n_in	median	median_in	peak	peak_lo	peak_hi	implied_fudge	implied_lo	implied_hi	sanity	note
+A all pairs (the blend)	56	40	135.5	139.95	134.66874518003235	130.49079923970646	138.16117688717273	0.8580372393983842	0.8314176017370953	0.8802891468976043	peak<median	the sample the 0.86 fit saw: contained + leaking together
+B CONTAINED pairs (f1,f2>=0.95)	32	25	136.75	139.3	136.4511271613279	132.8021755639706	139.7225843529391	0.8693936243765001	0.84614445582511	0.8902376004137572	peak<median	the calorimetric estimator: leakage removed by selection, not by correction
+C >=1 leaking gamma	24	15	128.14999999999998	142.4	127.71068107769483	100.0	138.32561470381754	0.8137041752865496	0.6371465318484362	0.8813368567434039	peak<median	NOT a scale estimator -- it measures how much energy left the box
+D contained AND geometry-clean	14	10	134.05	138.8	135.32805339031137	128.20457345179904	141.43575459354685	0.8622379987943689	0.8168509934192185	0.901153005186449	peak<median	B minus the axis-vs-vertex-ray >30 deg rows (the depth is least trustworthy there)
+E BOTH gammas leaking	5	2	78.2	127.65	nan	100.0	136.86010408797512	nan	0.6371465318484362	0.8719994066806933	peak<median	the far tail; n is small, quoted for shape only

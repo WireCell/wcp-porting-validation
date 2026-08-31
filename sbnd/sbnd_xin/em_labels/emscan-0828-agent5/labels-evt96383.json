@@ -1,0 +1,102 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 32.33,
+  "az_deg": -55.0,
+  "centre": [
+   -95.48,
+   49.4,
+   41.55
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2109,
+  "cloud_cluster_ids": [
+   14,
+   19,
+   20,
+   21
+  ],
+  "cloud_kept": 2109,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 18548,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.18606541349128447,
+   -0.42614981799616763,
+   -0.8853112416117568
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.18606541349128447,
+    -0.42614981799616763,
+    -0.8853112416117568
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 144.23285480914942,
+   "kine_charge": 144.23285480914942,
+   "kine_charge_other_hypothesis": 86.75660439648087,
+   "kine_dQdx": 81.84770715238089,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    14007,
+    14008,
+    14010,
+    37015,
+    43021
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -97.02049104581474,
+   53.9115541183714,
+   68.19074965887458
+  ],
+  "reco_start_vertex_id": 14003,
+  "shower": 14007,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -97.02049104581474,
+   53.9115541183714,
+   68.19074965887458
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt96383",
+ "eventNo": 96383,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -96.46289061796585,
+  "y": 53.699814026105514,
+  "z": 68.78548680143493
+ },
+ "note": "[agent-bulk] shw 14007 (144.2 MeV, 5 seg, pdg 11, mcp2k nuecc): correct by the rubric, but UNCLEAR, and the reason is a knife-edge on the pass-1 angle cut that is the most reportable thing on this event. Vertex is good, judged from the native framing (99.7 cm half-span): the star is a clean three-prong junction -- 14001 (24.9 cm, pdg 2212) going one way and correctly left UNOWNED, 14007 going another, 14005 (63.4 MeV) a third, all three starting on it. 14007 is a proper shower: a broad continuous point cloud fanning from the X over ~24 cm, members covering it, single apex, no gap. THE DOUBT: on the acceptance plot the three cluster-48 segments 48038, 48040, 48041 sit as blue circles at 42.3, 43.2 and 43.8 cm and 25.4-26.3 deg -- just ABOVE the 25 deg dashed step -- while the member square 43021 sits at 39.0 cm / 24.9 deg, just BELOW it. So a 41.0 MeV three-segment object (28 pct of the shower energy) is rejected by 0.4-1.3 degrees at the same distance where a 0.1 cm stub was accepted by pass3_cone, and 37015 (0.4 cm, at 54.9 cm / 19.7 deg, metric 15.08) was accepted with a metric identical to 48038's 15.08. The reconstruction's own acceptance is therefore taking a 0.1 cm stub and leaving a 41 MeV cluster at effectively the same place. WHY I STILL RECORDED correct: the brief's under-clustering test asks for charge CONTIGUOUS with the member set, and cluster 48 is not -- in both the az-055 and az+085 shower frames it is a separate blob with its own point cloud, ~18 cm past the far end of 14007's body across visible empty space, and 26 deg is wide for bremsstrahlung off a 144 MeV shower. It is also not grey: it is shower 48040's own 3 segments, so correction 11's caveat applies and I did not treat 'owned by a neighbour' as evidence. TWO READINGS I could not separate, which is what unclear means here: (a) cluster 48 is the detached tail of this electron shower and the 25 deg cut lost it -- under-clustered; (b) cluster 48 is a separate small EM object correctly kept apart. NO IN MARK, deliberately: marking it would settle a question I did not settle. FALSE PI0 WARNING for whoever reads the pi0 block on this event: pairing 14007 with 14005 prices out at m = 140.2 MeV on the axis convention and the display labels it 'in the code's accept window', which is very close to 135 and tempting -- but their reco starts are (-97.0, 53.9, 68.2) and (-96.5, 53.7, 68.8), 0.9 cm apart and both ON the neutrino vertex, so neither can be a converted photon and this is a coincidence, not a pi0. The vertex convention correctly returns no mass (no chord from a gamma sitting on the vertex). The reco made no pi0 group and I did not store this pairing. Second shower, not the verdict: 14005 (63.4 MeV) is a 94-deg prong also off the vertex; in a nuecc event only one of 14007/14005 can be the electron, so one of them is a hadronic or photon prong carrying a pdg-11 label -- a PID question I am not deciding. Clustering statement, silent on PID. Showers NOT looked at: 47031 is in scope (74.9 MeV, 1 seg, 4.7 cm, pdg 2212, detached at 73-77 cm) and I only glanced at it; the 9 the scope rule skipped are 36014 (6.7 MeV) and 8 more all under 3.8 MeV.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt96383/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:48:34+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt96383/calib-pr-evt96383.json",
+ "subRunNo": 1
+}

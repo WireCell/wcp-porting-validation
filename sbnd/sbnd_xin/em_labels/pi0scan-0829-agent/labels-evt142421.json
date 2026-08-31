@@ -1,0 +1,97 @@
+{
+ "arm": "work-pr131-denom98-ncpi0/pr_evt142421",
+ "confidence": "high",
+ "eventNo": 142421,
+ "main_vertex": {
+  "x": 118.32010137645564,
+  "y": -69.73504696993815,
+  "z": 208.7187921243874
+ },
+ "note": "ncpi0; exactly two large detached EM showers (706+584 MeV, gaps 14.6/7.2 cm), both back-project to the main vertex (bp gap 0.3); owner scan note itself says the OUT segments could form a separate gamma and then a pi0",
+ "origin": "ncpi0",
+ "pio": {
+  "backproject": null,
+  "candidates": [],
+  "gammas": {
+   "1": {
+    "axis": [
+     -0.6014728882616007,
+     -0.11084692818483956,
+     0.7911658000686285
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 706.4527990323667,
+    "energy_as_reconstructed": 706.4527990323667,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     109.54507819841858,
+     -71.35221772363158,
+     220.26128783577002
+    ],
+    "shower": 7010,
+    "start": [
+     109.54507819841858,
+     -71.35221772363158,
+     220.26128783577002
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     -0.5326578909038099,
+     -0.4952543449485919,
+     0.6862934540467701
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 583.6597457598319,
+    "energy_as_reconstructed": 583.6597457598319,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     114.48409497625009,
+     -73.30168677645419,
+     213.66122539553552
+    ],
+    "shower": 108104,
+    "start": [
+     114.48409497625009,
+     -73.30168677645419,
+     213.66122539553552
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 259.64741891345534,
+  "mass_vertex_convention": 259.64741891345534,
+  "reco_groups": {},
+  "reco_kine": {
+   "kine_pio_angle": 33.25132369995117,
+   "kine_pio_energy_1": 9.4215087890625,
+   "kine_pio_energy_2": 583.6597290039062,
+   "kine_pio_flag": 1,
+   "kine_pio_mass": 42.434059143066406,
+   "kine_pio_vtx_dis": 0.0
+  },
+  "theta_axis_convention": 23.32863070649808,
+  "theta_vertex_convention": 23.32863070649808,
+  "vertex": [
+   118.32010137645564,
+   -69.73504696993815,
+   208.7187921243874
+  ],
+  "vertex_how": "main_vertex"
+ },
+ "runNo": 18255,
+ "sample": "ncpi0",
+ "saved_utc": "2026-08-30T03:38:46.414110Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

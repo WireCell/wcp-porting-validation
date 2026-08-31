@@ -1,0 +1,44 @@
+{
+ "arm": "work-r1qlmc-prod0813",
+ "confidence": null,
+ "dl_best_score": 6.913196309701075,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt14",
+ "eventNo": 14,
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -67.61236459564819,
+  "y": -21.401175592168773,
+  "z": 498.11255035093734
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 4,
+   "degree": 2,
+   "dis_to_main": 108.76677860567635,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": null,
+   "trad_winner": false,
+   "vertex_id": 4002,
+   "x": -39.51390287172781,
+   "y": 71.70741957408458,
+   "z": 449.4147261369918
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 32,
+ "saved_utc": "2026-08-15T17:04:11+00:00",
+ "scan_tag": "vtxscan-prod0813-mc",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r1qlmc-prod0813/pr_evt14/calib-pr-evt14.json",
+ "subRunNo": 10
+}

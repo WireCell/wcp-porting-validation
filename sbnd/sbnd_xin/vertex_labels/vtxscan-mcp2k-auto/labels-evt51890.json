@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt51890",
+ "eventNo": 51890,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 56.96197292897009,
+  "y": 128.8864210229608,
+  "z": 33.70942809574178
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 15003,
+   "x": 56.96197292897009,
+   "y": 128.8864210229608,
+   "z": 33.70942809574178
+  }
+ ],
+ "reco_sep_cm": 0.004126572409227139,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with both prongs measured: 24.3cm proton rises monotonically 100k->250k to its stop at 15004 and the 297cm muon runs forward in +z to its Bragg at 15002; 15003 is also the lowest-z candidate at z=33.7.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt51890/calib-pr-evt51890.json",
+ "subRunNo": 1
+}

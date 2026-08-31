@@ -1,0 +1,44 @@
+{
+ "arm": "work-nuecc48-harv3",
+ "confidence": null,
+ "dl_best_score": 1004.3789958765317,
+ "dl_min_accept_score": 10.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt423981",
+ "eventNo": 423981,
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": 50.26260384202113,
+  "y": 141.40711498295357,
+  "z": 176.0225650029931
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 12,
+   "degree": 4,
+   "dis_to_main": 0.0,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": null,
+   "trad_winner": false,
+   "vertex_id": 12099,
+   "x": 50.26260384202113,
+   "y": 141.40711498295357,
+   "z": 176.0225650029931
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T16:34:29+00:00",
+ "scan_tag": "vtxscan-harv3-delta",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-harv3/pr_evt423981/calib-pr-evt423981.json",
+ "subRunNo": 1
+}

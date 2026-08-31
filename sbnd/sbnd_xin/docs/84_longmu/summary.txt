@@ -1,0 +1,54 @@
+events with calib JSON: 1366
+muon-typed pseudo-showers: 242
+  best=charge                     28 / 242  (11.6%)
+  best=dQdx                       30 / 242  (12.4%)
+  best=range                     184 / 242  (76.0%)
+  has_nonmu_member               128 / 242  (52.9%)
+  nonmu_charge_gt_5pct            45 / 242  (18.6%)
+  nonmu_len_gt_5pct               55 / 242  (22.7%)
+  range_zero                      28 / 242  (11.6%)
+  unchained_gt_20cm               27 / 242  (11.2%)
+  unchained_gt_50cm               16 / 242  (6.6%)
+  why=end_degree_or_override      21 / 242  (8.7%)
+  why=range_zero                  28 / 242  (11.6%)
+  why=ratio_outside                9 / 242  (3.7%)
+  dQ/dx delta-ray shift [MeV]: median 5.0  p90 42.5  max 404.8
+  as a fraction of kine_dQdx: median 0.009  p90 0.204  max 1.000
+  CLOSURE max |dqdx_all/kine_dQdx - 1| = 4.44e-16 over 242 showers
+  (weak) max |range(L_chain) - kine_range| = 9.00e-04 MeV
+  PRECONDITION start-segment pdg == 13: 241 / 242
+    L_chain MEANINGLESS (wrong range table): mcp2k evt 294174 shower 16028 start_pdg=11 kine_range=0.0001
+
+gate outcome of the main-vertex seeds (stub_bridge ON):
+  seed_dqdx      1419
+  size1           936
+  accepted        103
+  maxlen            4
+walk stop reason (stub_bridge ON):
+  seed_dqdx      1419
+  dead_end        811
+  angle           116
+  both             86
+  dqdx             30
+walk stop reason (stub_bridge OFF):
+  seed_dqdx      1419
+  dead_end        811
+  angle           117
+  both             86
+  dqdx             29
+
+MCS sentinel events: 289 (arm work-mcp1k-mcs80on)
+  muon_source: {'pf_muon': 290}
+  nseg (segments handed to MCS): {'1': 290}
+
+case list d84-broken-muons.tsv: 62 rows
+  deltaray_charge    35
+  broken_chain       17
+  both               10
+  with an MCS sentinel: 19
+  internal junction with a non-muon arm (n_deg3_internal > 0): 22
+
+Part 4b, within the MCS arm (287 events):
+  PR muon KE / ke_range_toolkit(selected segment): median 1.000  p90 1.328
+  the selected segment is short of the PR muon by >= 20%: 37 / 287
+  ke_MCS / ke_range_toolkit: median 1.123 ; > 1.5 in 101 / 287

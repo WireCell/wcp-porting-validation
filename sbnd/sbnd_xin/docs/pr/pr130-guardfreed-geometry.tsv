@@ -1,0 +1,4 @@
+event	idx	cluster	main_cluster	pdg	score	ke_mev	len_cm	extent_cm	d_mainvtx_cm	gap_cm	cand_end_cm	ref_end_cm	kink_deg	ref_cluster	ref_idx	ref_len_cm	ref_pdg	ref_ke_mev	ref_is_shower_start	ref_in_used	n_ref
+94392	30	45	5	13	0.092	137.21	46.8	44.4	44.49	0.00	0.00	0.00	13.32	45	29	29.8	13	98.44	1	1	16
+171572	8	10	83	13	100.000	304.75	125.1	120.0	20.36	0.00	0.00	0.00	38.43	10	4	3.0	11	5.93	0	1	15
+393505	13	15	21	13	100.000	268.70	108.5	103.8	74.37	0.00	0.00	0.00	137.34	15	3	4.2	11	8.11	0	1	13

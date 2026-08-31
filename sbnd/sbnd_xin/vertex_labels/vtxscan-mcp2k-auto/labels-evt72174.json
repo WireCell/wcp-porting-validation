@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt72174",
+ "eventNo": 72174,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": 45.299667794635354,
+  "y": 33.36408597312551,
+  "z": 274.30830616348993
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 5,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 5002,
+   "x": 45.299667794635354,
+   "y": 33.36408597312551,
+   "z": 274.30830616348993
+  }
+ ],
+ "reco_sep_cm": 0.004435608065368123,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the 4.8 cm proton rises to a 250k Bragg at 5001 while the 169 cm muon leaves 5002 as MIP and Braggs 175k at its far end 5000; the intervening vertex 5003 is a straight 4.7 degree split, not a junction.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt72174/calib-pr-evt72174.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt50182",
+ "eventNo": 50182,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -19.15156570932457,
+  "y": -113.08632212382906,
+  "z": 306.0076097141991
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10002,
+   "x": -19.15156570932457,
+   "y": -113.08632212382906,
+   "z": 306.0076097141991
+  }
+ ],
+ "reco_sep_cm": 0.004657433309008635,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:21Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 2 of 2 rise away, the 118.7 cm muon Bragging at 10000 and the 7.9 cm proton rising monotonically from 130k to 325k at 10001, the two prongs leaving 10002 at 110 deg at the lowest-z point.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt50182/calib-pr-evt50182.json",
+ "subRunNo": 1
+}

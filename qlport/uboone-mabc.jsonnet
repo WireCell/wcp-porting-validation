@@ -1168,7 +1168,10 @@ local ub = {
                            numu_weights_dir="",
                            nue_weights_dir="",
                            // C++ default false. Key omitted when off => byte-identical gate3 config.
-                           dir_weak_use_score=false) ::
+                           dir_weak_use_score=false,
+                           // doc sbnd_xin/docs/pr/108 (exclusion-fit parity study): both C++
+                           // default false; keys omitted when off => byte-identical.
+                           fit_exclusion=false, dqdx_fit_keep_all_points=false) ::
         local cm = clus.clustering_methods(detector_volumes=detector_volumes,
                                            pc_transforms=pctransforms,
                                            fiducial=$.uboone_mc_fid);
@@ -1252,7 +1255,15 @@ local ub = {
             cm.steiner(retiler=improve_cluster_2, perf=perf),
             cm.fiducialutils(),
             // //cm.tagger_check_stm(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset)),
-            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper), dir_weak_use_score=dir_weak_use_score),
+            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper), dir_weak_use_score=dir_weak_use_score,
+                                     // doc 77 round 2 (toolkit): the pattern-recognition knobs now
+                                     // reach TaggerCheckNeutrino through one `knobs` object instead
+                                     // of one named parameter each.  Key present = knob on; key
+                                     // absent = the C++ default, exactly as before.
+                                     knobs={
+                                         [if fit_exclusion then 'fit_exclusion']: true,
+                                         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
+                                     }),
         ] + (if numu_weights_dir != "" then [numu_bdt_scorer] else [])
           + (if nue_weights_dir  != "" then [nue_bdt_scorer]  else [])
           + (if tracking_output != "" then [tracking_visitor, tagger_output_visitor] else []);
@@ -1427,14 +1438,15 @@ local ingraph_dead(infiles, datapath=pointtree_datapath) = pg.pipeline([
     ub.multiplex_blob_views(infiles, 'dead', ["uv","vw","wu"]),
     ub.UbooneClusterSource(infiles, datapath=datapath, sampler=ub.bs_dead, kind='dead', optical=false)
 ]);
-local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false) =
+local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false, fit_exclusion=false, dqdx_fit_keep_all_points=false) =
     local tracking_output = "track_com_%d_%d.root" % [runNo, eventNo];
     pg.pipeline([
         ub.MultiAlgBlobClustering(beezip, datapath=datapath, index=index, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, trackfitting_config="uboone_track_fitting.json", tracking_output=tracking_output,
                                   dl_weights=dl_weights,  // '' disables the DL vertex (geometric fallback)
                                   numu_weights_dir="uboone/weights",
                                   nue_weights_dir="uboone/weights",
-                                  dir_weak_use_score=dir_weak_use_score),
+                                  dir_weak_use_score=dir_weak_use_score,
+                                  fit_exclusion=fit_exclusion, dqdx_fit_keep_all_points=dqdx_fit_keep_all_points),
         ub.ClusterFlashDump(datapath=datapath)
     ]);
 //local outgraph(beezip,  datapath=pointtree_datapath) = pg.pipeline([
@@ -1444,18 +1456,18 @@ local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1
 
 
 local graphs = {
-    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
+    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false, fit_exclusion=false, dqdx_fit_keep_all_points=false)
         pg.pipeline([ingraph_live(infiles, datapath),
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score)]),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score, fit_exclusion, dqdx_fit_keep_all_points)]),
 
-    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
+    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false, fit_exclusion=false, dqdx_fit_keep_all_points=false)
         pg.pipeline([ingraph_dead(infiles, datapath),
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score)]),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score, fit_exclusion, dqdx_fit_keep_all_points)]),
 
-    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
+    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false, fit_exclusion=false, dqdx_fit_keep_all_points=false)
         local live = ingraph_live(infiles, datapath);
         local dead = ingraph_dead(infiles, datapath);
-        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score);
+        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score, fit_exclusion, dqdx_fit_keep_all_points);
         local fanin = ub.TensorSetFanin();
         pg.intern(innodes=[live,dead], outnodes=[out], centernodes=[fanin],
                   edges=[
@@ -1493,7 +1505,11 @@ function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtre
          // 2026-07-30: DEFAULT ON for uBooNE too.  Anything other than the
          // string "true" disables (legacy raw-flag reads, matches gate3;
          // knob-ON reference sweep is scripts/sweep/dirweakon_ub).
-         dir_weak_use_score="true")
+         dir_weak_use_score="true",
+         // doc sbnd_xin/docs/pr/108: exclusion fit + dQ/dx keep-all for the
+         // WCP-vs-WCT parity arms.  String TLAs; only "true" enables.  Defaults
+         // off => compiled JSON byte-identical.
+         fit_exclusion="false", dqdx_fit_keep_all_points="false")
 
     // Parse the integer values from strings
     local index = std.parseInt(initial_index);
@@ -1502,7 +1518,7 @@ function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtre
     local eventNo = std.parseInt(initial_eventNo);
 
     // Use these parameters in the main graph
-    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score == "true"),
+    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score == "true", fit_exclusion == "true", dqdx_fit_keep_all_points == "true"),
             "Pgrapher", extra_plugins)
 
 //function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath)

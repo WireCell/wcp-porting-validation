@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 33.43,
+  "az_deg": -55.0,
+  "centre": [
+   0.17,
+   181.12,
+   115.0
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 930,
+  "cloud_cluster_ids": [
+   15
+  ],
+  "cloud_kept": 930,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 40891,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.21807874064062321,
+   0.6552365831174689,
+   0.7232611444182137
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.21807874064062321,
+    0.6552365831174689,
+    0.7232611444182137
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 152.81838909726895,
+   "kine_charge": 152.81838909726895,
+   "kine_charge_other_hypothesis": 91.92083554722946,
+   "kine_dQdx": 109.76362844687306,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    15001,
+    60024,
+    82025
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -8.109591452356877,
+   162.92293813792546,
+   93.89801581861917
+  ],
+  "reco_start_vertex_id": 15002,
+  "shower": 15001,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -8.109591452356877,
+   162.92293813792546,
+   93.89801581861917
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt293536",
+ "eventNo": 293536,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -8.109591452356877,
+  "y": 162.92293813792546,
+  "z": 93.89801581861917
+ },
+ "note": "[agent-bulk] PID verdict -- this event carries NO clustering judgement (correction 6). Verdict shower is 15001, the highest-kine_charge pdg-11 shower (152.8 MeV); the only other in-scope shower is 15027 (66.5 MeV, pdg 11). No higher-energy non-EM object was passed over: 15001 is the leading object in the event. Why not-EM: 15001's 3 members (15001 seed 26.3 cm pdg 11, 60024 3.0 cm pdg 11, 82025 20.1 cm pdg 13) are collinear at 0.0-6.3deg spanning 0-58.0 cm from the nu vertex, and the member skeleton has transverse RMS 0.64 cm (2*RMS/L = 0.02). The blue point cloud hugs the polylines to ~1 cm full width in all three shower projections (az-055/+085/-055el+65), i.e. no lateral development over ~4 radiation lengths, and the far 20.1 cm member is reco pdg 13. Density is MIP-like, ~2.6 MeV/cm over the 58 cm point extent (extent taken from segments.xs3/ys3/zs3, not kine_charge/length -- correction 18); the display's own track hypothesis for the same charge gives 91.9 MeV. The genuinely shower-like object here is 15027: 66.5 MeV in 15.1 cm, a wide fuzzy ~6 cm blob sitting on the vertex at ~88deg to 15001. Competing reading I rejected: an unusually collimated 150 MeV electron -- 58 cm at 0.64 cm RMS does not support it. Clustering side, for the record only: 15001's yellow set is self-consistent (one apex at the vertex, one direction, gaps 5.1 and 6.1 cm bridged by 60024); the only grey/unowned charge nearby is 15016, a 4.1 cm pdg 2212 stub at the vertex at 0.0 cm/0.0deg, correctly left unowned; every other non-member is a 0.3-1.1 cm stub at 18-80deg and is the seed of its own sub-20 MeV shower (54018, 55019, 56020, 57021, 58022, 59023 -- the 6 skipped by the scope rule, all < 7.1 MeV, not looked at individually). Vertex judged off the vtx-* sweep at 68.8 cm half-span; event scale r95 = 55.0 cm so no vtxz-* frames were produced and none were needed -- the star sits where the 15001 chain, 15027 and the 15016 proton stub converge. No reco pi0 group in this event (all pio_id = -1), so the pio-*.png frames are the capture's auto-slotted top-two, NOT a reconstruction pairing (correction 3); the auto pair 15001+15027 prices at 139.5 MeV on the axis convention but both objects start on the vertex so the vertex convention has no chord, and I do not propose it as a pi0 -- 15001 is not EM. No gate-pair angle inversion found on this event.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt293536/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:29:55+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt293536/calib-pr-evt293536.json",
+ "subRunNo": 1
+}

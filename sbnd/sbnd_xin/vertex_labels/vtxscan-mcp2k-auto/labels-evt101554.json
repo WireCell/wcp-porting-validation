@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt101554",
+ "eventNo": 101554,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": -19.563549372981626,
+  "y": 35.59152809475657,
+  "z": 130.53164391499723
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": -19.563549372981626,
+   "y": 35.59152809475657,
+   "z": 130.53164391499723
+  }
+ ],
+ "reco_sep_cm": 0.004199473617713562,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 clean: the only deg-2 junction with 2/2 prongs rising away - a 244 cm muon with a sharp Bragg spike at its far end 13000 and a 46 cm shower-like segment rising toward 13003; zoom shows a wide-angle V (~120 deg), not a collinear kink.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt101554/calib-pr-evt101554.json",
+ "subRunNo": 1
+}

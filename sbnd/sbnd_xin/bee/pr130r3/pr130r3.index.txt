@@ -1,0 +1,11 @@
+# doc pr/130 item 1b round 3 A/B index -- the two sentinel FAILs on the guard-seat ON arm
+# OFF set a22bf7d4-bd8b-4600-b62b-9b52d441d467  /  ON set 48ae2376-190b-4b9c-bcd0-8bfb9016a513
+# OFF = work-pr130r1-g1off141-mcp2k  (knobs off, SAME BINARY as ON -- not an older production arm)
+# ON  = work-pr130r1-gs1on141-mcp2k  (shower_pass4_prox_guard_len=50, shower_pass3_backfill_guard_len=15)
+#
+# Both events PASS every sentinel with the knobs off, so anything you see is
+# caused by the two new guards.
+#
+# bee_idx	event	status
+0	72786	OWNER RULING NEEDED. The guard pulls 4 cosmics OUT of the shower and they reappear as standalone PF mu-. OFF mu- = [238]; ON mu- = [238, 344, 281, 268]. Declined segs 9004 (143.5cm mu), 9006 (114.3cm mu), 45038 (108.3cm mu), 9008 (64.7cm pi+). nshowers 11 -> 11. pr/128's CONTROL sentinel asserts pf_node_lt mu- 250 and therefore FAILS. Its log_absent 'pr128 pf-orphan-near-cross-cluster' still passes, so pr/128 is NOT re-admitting them -- they are visible only because the guard freed them. QUESTION: may a guard-freed cosmic appear as a PF track (your pr/129 ruling on 393505 was "OK to be in PR"), or is this a regression?
+1	55740	MECHANISM CHANGE, NO OUTPUT CHANGE. PF tree byte-identical (mu- = [111, 300] both sides), archive byte-identical, nshowers 14 -> 14 -- 55740 is not among the 10 events the ON arm changes. But pr/128's own fix line 'pr128 pf-orphan-near-cross-cluster' is emitted once with the knobs OFF and not at all with them ON: the 123.1cm muon now joins PF by a different route. Nothing to see in the display; carried so the pair is complete and the finding is on the record. This is the pr/127 exposure -- a shipped fix going silent with no observable change -- third instance this round after 66366 and the pr/129 KEEP-side entries.

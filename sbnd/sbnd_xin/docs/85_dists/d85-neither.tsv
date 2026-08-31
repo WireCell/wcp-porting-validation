@@ -1,0 +1,12 @@
+# nu-candidate + nue BDT unfilled, lowest numu_score; pool = 1120 events of 1263 PR-evaluated mcp1k+mcp2k
+bee_idx	sample	run	subrun	event	numu_score	nue_score	kine_reco_Enu_MeV	event_label
+0	mcp1k	18255	1	391766	-4.301	-15.000	837.4163	nu-candidate
+1	mcp2k	18255	1	99563	-4.301	-15.000	1348.4213	nu-candidate
+2	mcp2k	18259	1	160031	-4.301	-15.000	946.701	nu-candidate
+3	mcp2k	18259	1	180698	-4.301	-15.000	732.3911	nu-candidate
+4	mcp2k	18255	1	99284	-4.123	-15.000	13.216165	nu-candidate
+5	mcp1k	18255	1	62613	-4.123	-15.000	804.8635	nu-candidate
+6	mcp2k	18255	1	70766	-3.928	-15.000	659.849	nu-candidate
+7	mcp2k	18255	1	93234	-3.924	-15.000	29.04213	nu-candidate
+8	mcp2k	18259	1	173450	-3.800	-15.000	788.1439	nu-candidate
+9	mcp2k	18255	1	321235	-3.662	-15.000	464.5235	nu-candidate

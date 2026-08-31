@@ -1,0 +1,44 @@
+{
+ "arm": "work-mcp2k-harv3",
+ "confidence": null,
+ "dl_best_score": 8.120154141956013,
+ "dl_min_accept_score": 10.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt406631",
+ "eventNo": 406631,
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": -166.50304782777246,
+  "y": -15.085255888061813,
+  "z": 294.5206833181386
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 18,
+   "degree": 1,
+   "dis_to_main": 205.50977010674296,
+   "dl_score": null,
+   "dl_winner": false,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": null,
+   "snap_dis": null,
+   "trad_score": -0.125,
+   "trad_winner": false,
+   "vertex_id": 18001,
+   "x": -71.6836654914277,
+   "y": -192.4337975729446,
+   "z": 252.19994248192666
+  }
+ ],
+ "route": "dl-rerank-reject",
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T19:28:34+00:00",
+ "scan_tag": "vtxscan-mcp2k",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt406631/calib-pr-evt406631.json",
+ "subRunNo": 1
+}

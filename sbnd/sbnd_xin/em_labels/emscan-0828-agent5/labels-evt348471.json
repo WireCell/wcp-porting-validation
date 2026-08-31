@@ -1,0 +1,171 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/9724913f-bfed-43d8-91f5-0bca431ca7b9/event/5/",
+ "camera": {
+  "R": 49.2,
+  "az_deg": 583.78,
+  "centre": [
+   -183.07,
+   18.12,
+   282.03
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3572,
+  "cloud_cluster_ids": [
+   12,
+   18,
+   19
+  ],
+  "cloud_kept": 3572,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 29263,
+  "el_deg": -7.82
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.1870248759628646,
+   0.09101210541508384,
+   0.9781300999555165
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "60026": {
+    "38018": "in",
+    "63050": "in"
+   }
+  },
+  "marks_detail": {
+   "60026": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.4399496286511141,
+     -0.22297447088454192,
+     0.869900402105612
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "38018": {
+      "absorbed_by": null,
+      "angle": 7.740522363498956,
+      "cluster_id": 38,
+      "dist": 100.12158318646634,
+      "ellip": 13.425445721470165,
+      "kind": "in",
+      "length": 6.013788651392045,
+      "owner": 38018,
+      "pdg": 11,
+      "tier": 2
+     },
+     "63050": {
+      "absorbed_by": null,
+      "angle": 8.48208442229306,
+      "cluster_id": 63,
+      "dist": 44.276640671188176,
+      "ellip": 2.9046657113663468,
+      "kind": "in",
+      "length": 6.2517769325849475,
+      "owner": 63050,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 27.04640861003265,
+     "angle_min": 0.0,
+     "dist_max": 46.740906350309245,
+     "dist_min": 0.0,
+     "n": 15
+    },
+    "members": [
+     35015,
+     36016,
+     37017,
+     60024,
+     60025,
+     60026,
+     60028,
+     60029,
+     60031,
+     60032,
+     60033,
+     61041,
+     62047,
+     62048,
+     62049
+    ],
+    "start": [
+     -167.40928970816566,
+     27.982548592078103,
+     202.78872396289373
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.1870248759628646,
+    0.09101210541508384,
+    0.9781300999555165
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 75.17447406130385,
+   "kine_charge": 75.17447406130385,
+   "kine_charge_other_hypothesis": 45.217728758679016,
+   "kine_dQdx": 54.84844797068558,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    31011,
+    39019,
+    63050,
+    63051
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -181.78899353697082,
+   14.12553676452086,
+   242.30616631601546
+  ],
+  "reco_start_vertex_id": 12000,
+  "shower": 63050,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -181.78899353697082,
+   14.12553676452086,
+   242.30616631601546
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt348471",
+ "eventNo": 348471,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": -159.72227345690754,
+  "y": 39.931604346021956,
+  "z": 157.11214535459538
+ },
+ "note": "[agent-bulk] shw 60026 (352.6 MeV, 15 seg, len 65.3, gamma1 of reco pi0 group 0) is under-clustered, and the consequence is that the reco's pi0 group looks spurious. THE MARK: 63050 (75.2 MeV, 4 seg) sits at 44.3 cm / 8.5 deg from 60026 with metric 2.9, tier 1 - strictly better on distance, angle AND metric than 60026's own accepted member 35015 (46.7 cm / 18.0 deg, metric 9.6). On the acceptance plot it is the single blue circle, and it lies INSIDE the cloud of accepted orange squares, not outside it. In the az -55 shower frame it is the compact orange fork lying straight ahead of the yellow member set along the axis arrow (I measure ~4 deg off the arrow in that projection). Marked 63050 IN. THE PI0 CLAIM: everything downstream of 60026 lines up on one axis - 63050 at 44.3 cm / 8.5 deg, its member 39019 at 70.8 / 5.8, then 38018 at 100.1 / 7.7 (tier 2), 33013 at 113.8 / 9.6 (tier 2), 18006 at 130.3 / 11.7. Both pi0 frames show it directly: in az +35 the whole thing is ONE narrow vertical column rising out of the magenta vertex star - shower core, then a chain of blobs, then the red gamma2 diamond at the top - and in az -55 the blue and red diamonds are 6.1 deg apart as seen from the vertex, matching the display's vertex-convention theta of 6.6 deg. A 6.6 deg opening with E1 352.6 and E2 20.2 gives m = 9.6 MeV; the axis convention gives 50.9 MeV; the reco stored 118.5 MeV for group 0. None of these is a pi0, and a real 135 MeV pi0 at these energies needs ~105 deg. So group 0 = 60026 + 38018 reads as a shower paired with its own downstream fragment, not as two photons. I marked 38018 IN as well, but it is the WEAKER of the two marks - tier 2 at 100 cm, past the pass-1 box, and I did not verify 3-D contiguity across the gap; 63050 is the one I would defend. Not looked at: the other 6 showers, all at or below 16.6 MeV (scope rule min_kine_best 20 MeV); shw 63050's own completeness I did not judge separately since my claim is that it is not a separate shower.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt348471/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T23:26:41+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt348471/calib-pr-evt348471.json",
+ "subRunNo": 1
+}

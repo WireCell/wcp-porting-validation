@@ -1,0 +1,111 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -33.13,
+   -33.69,
+   247.04
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 22325,
+  "cloud_cluster_ids": [
+   11,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23
+  ],
+  "cloud_kept": 22325,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 35026,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.8650302765895301,
+   -0.49901746591696594,
+   -0.05200182009555557
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.8650302765895301,
+    -0.49901746591696594,
+    -0.05200182009555557
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 10,
+   "kine_best": 252.0903089103767,
+   "kine_charge": 252.0903089103767,
+   "kine_charge_other_hypothesis": 151.63326851751984,
+   "kine_dQdx": 195.678202271497,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17018,
+    17019,
+    17027,
+    17031,
+    17032,
+    17067,
+    17069,
+    17070,
+    46045,
+    62062
+   ],
+   "membership_source": "probe",
+   "num_segments": 10,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -50.190670756486135,
+   -33.0028506699407,
+   252.37171665908082
+  ],
+  "reco_start_vertex_id": 17008,
+  "shower": 17067,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -50.190670756486135,
+   -33.0028506699407,
+   252.37171665908082
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt318703",
+ "eventNo": 318703,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -50.190670756486135,
+  "y": -33.0028506699407,
+  "z": 252.37171665908082
+ },
+ "note": "[agent-bulk] numucc_em, 33 showers. Verdict shower 17067 (pdg 11, kine_charge 252.1, 10 seg) -- the first pdg-11 entry of in_scope. I PASSED OVER the higher-charge in-scope object 17023 (pdg 13, kine_charge 455.2, kine_best 635.7, 276 cm over 2 segments): it is the muon, drawn blue, running from the vertex to the far wall, and it is not an EM shower. The other 31 showers are all sub-20 MeV and I did not look at them. Vertex judged off the vtxz-* frames (60 cm half-span, auto-fired: r95 251.9 cm, so the vtx-* set at 314.8 cm half-span is useless here). It is good: three prongs converge on the star -- the muon 17023, the 30 cm pdg-13 track 17028, and 17067's stem -- and the shower start X sits on it. CLUSTERING: nothing is missing and nothing foreign is swallowed. Membership triple-checked and all three agree: nseg 10 == owner-grouped 10 == cmp_div 10 segments plotted (0.0-34.2 cm, 0.0-45.7 deg). Every non-member near the shower is off-axis: 61060 85.5deg, 55054 141.2, 45044 49.4, 53052 78.5, 60059 71.9, then 54053/56055/57056/58057/52051 at 75-90 deg, 48047 29.3, 47046 49.5, 63063 38.9. The one on-axis-looking grey object, 17028 (pdg 13, unowned, candidate row d=8.1 cm / ang 2.5 deg, site 'in_main_cluster (walk_excl...)'), is NOT under-clustering: that row reports where the segment STARTS, and the segment itself is a 30.1 cm straight track leaving the stem at the 8 cm branch point and running perpendicular to the shower axis (-43.1,-36.9,252.2) -> (-43.8,-65.7,252.1), i.e. pure -y. It is the third vertex prong and is correctly left grey. START/AXIS WRONG is the finding worth the owner's eye here, and it is about the axis, not the clustering: the reco axis is dir15, fixed by the first 15 cm of the chain, and the object then bends ~37 deg over its next 18 cm, so its own far members 17019/17031 land at 33.4 cm / 45.7 deg -- visible on the acceptance plot as an accepted orange square sitting far above the 25 deg pass-1 step, admitted only by cluster connectivity (in_main_cluster walk_add), not by any cone. The alternative reading I could not fully exclude, and the one I would let the owner reverse: that 17067 fuses a diffuse ~15 cm vertex blob with a separate straight 23 cm piece (17018, straightness 0.98) plus its terminal blob, i.e. over-clustered. I rejected it because all three viewpoints (az-055/el+20, az+085/el+20, az-055/el+65) show continuous point cloud through the bend with no gap, the bend is gradual (40 deg then 34 deg across two short segments, not one elbow), and a 16 deg off-axis satellite 62062 is absorbed at 34 cm, which is shower-like rather than track-like. No pi0: the event has no reco pi0 group and no second EM object; the kine_pio_* block names E1 0.1 MeV, which is noise, and is not a pairing -- I offer no pi0 judgement. Verdict is about clustering and silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt318703/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:32:23+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt318703/calib-pr-evt318703.json",
+ "subRunNo": 1
+}

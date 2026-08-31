@@ -1,0 +1,12 @@
+# cosmic-tagged mcp1k+mcp2k, LOWEST numu_score; rank order, no threshold; pool 56 of 1317 scored
+bee_idx	sample	run	subrun	event	nu_evaluated	numu_score	nue_score	cosmict_flag	kine_reco_Enu_MeV	kine_energy_excluded_MeV	event_label
+0	mcp2k	18259	1	172262	1	-3.631674	-15.0	1.0	346.48157	0.0	cosmic-tagged
+1	mcp2k	18259	1	172012	1	-3.358506	-15.0	1.0	461.67392	3.7171755	cosmic-tagged
+2	mcp1k	18255	1	401450	1	-3.3089762	1.4457192	0.0	1537.5359	196.47963	cosmic-tagged
+3	mcp2k	18255	1	319275	1	-3.1547704	-15.0	1.0	541.8517	3.850473	cosmic-tagged
+4	mcp2k	18255	1	75113	1	-2.850458	-15.0	0.0	199.82497	0.0	cosmic-tagged
+5	mcp2k	18255	1	91609	1	-2.6531394	-15.0	0.0	47.4796	0.5526149	cosmic-tagged
+6	mcp2k	18255	1	73038	1	-2.5030892	-15.0	0.0	47.722088	0.8885835	cosmic-tagged
+7	mcp2k	18255	1	414442	1	-2.4414046	-15.0	1.0	425.98303	46.842186	cosmic-tagged
+8	mcp2k	18255	1	287332	1	-2.210783	-15.0	1.0	284.33954	15.821392	cosmic-tagged
+9	mcp1k	18255	1	288327	1	-1.9320762	-15.0	1.0	464.8376	14.372709	cosmic-tagged

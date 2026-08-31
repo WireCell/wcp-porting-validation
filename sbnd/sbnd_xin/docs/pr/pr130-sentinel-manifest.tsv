@@ -1,0 +1,21 @@
+# doc pr/130 -- the SENTINEL MANIFEST: target events of shipped, SBND-ON fixes
+# that live in NO standard manifest (em114 / em114c) and are therefore invisible
+# to every gate we run.  pr127_sentinels.py reports SKIP for these unless an arm
+# holds them; scripts/pr130_sentinel_arm.sh produces that arm.
+#
+# Coverage sweep 2026-08-29: all nine doc-84 long-muon/MCS targets plus 315167
+# were in no manifest and (except 315167) had no registry entry either.
+#
+# sample	event	ql_root	doc	what shipped
+mcp1k	313847	work-mcp1k-grp0825	doc 84 r2	long_muon_members_geometry (547.5 -> 602.2 MeV)
+mcp1k	281595	work-mcp1k-grp0825	doc 84 r2	long_muon_members_geometry (750.1 -> 808.5 MeV)
+mcp1k	172794	work-mcp1k-grp0825	doc 84 r4	long_muon_cathode_bridge_lever 5->15 cm
+mcp1k	315167	work-mcp1k-grp0825	pr/93 r4	orphan confident track (150.7 cm proton counted + shown)
+mcp2k	497311	work-mcp2k-grp0825	doc 84 r1	long-muon range fallback (mu- 508 -> 766 MeV)
+mcp2k	66366	work-mcp2k-grp0825	doc 84 r1	long_muon_stub_bridge_len 7.5 cm (chain 126 -> 301 cm)
+mcp2k	53793	work-mcp2k-grp0825	doc 84 r2	long_muon_cathode_bridge (367+528 -> 912.9 MeV)
+mcp2k	177536	work-mcp2k-grp0825	doc 84 r2.1	cathode bridge + BFS guard/re-seat (679 -> 907.0 MeV)
+mcp2k	77978	work-mcp2k-grp0825	doc 84 r2.1	cathode bridge + BFS guard/re-seat (337.5 -> 388.2 MeV)
+mcp2k	347890	work-mcp2k-grp0825	doc 84 r4	long_muon_cathode_bridge_track_partner
+mcp2k	67026	work-mcp2k-grp0825	doc 84 r4	long_muon_cathode_bridge_short_gap 8 cm
+mcp2k	406125	work-mcp2k-grp0825	pr/124 A	shower_pass4_prune_gap2=25 (qF1 0.097 -> 1.000)

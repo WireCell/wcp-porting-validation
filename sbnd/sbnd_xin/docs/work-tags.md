@@ -4,13 +4,33 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
+ls -1 | wc -l                    # 228 top-level entries after the 2026-08-29 round;
+                                 # 74 after the 2026-08-03 TIDY round
                                  #   (216 before it) -- see that section below
 # COUNT work* DIRS THROUGH THE REAL PATH, NOT THE SYMLINK -- see the 2026-08-13
 # section's "defect 4": toolkit/sbnd_xin is a symlink, and neither find nor du
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 121 after the 2026-08-29 round -- 120 KEEP plus
+                                 #   work-pr130-flipchk-mcp2k, which the PEER created
+                                 #   after the plan ran.  That is the design, not a
+                                 #   miss: the driver iterates the tier list, so an arm
+                                 #   born after the plan is invisible to it.  552
+                                 #   before it, 432 removed, 81 GiB -- see that section;
+                                 # 26 after the 2026-08-25b round retired the
+                                 #   stage-A reference side (work-img-* for the
+                                 #   4 data samples + work-*-ql0819) and the
+                                 #   pre-flip work-*-prod0823; 38 before it,
+                                 #   12 removed, 39 GiB (~36 G net) -- see that
+                                 #   section below and doc 81 sec 11;
+                                 # 42 after the 2026-08-23 prod0823 campaign
+                                 #   added its four PR arms (72G);
+                                 # 38 after the 2026-08-23 minimal-state round
+                                 #   (418 before it, regrown from 08-20's 36 in
+                                 #   three days by docs pr/98-111); 380 removed,
+                                 #   148 GiB, all 10 asserts PASS -- see that
+                                 #   section below;
                                  # 36 after the 2026-08-20 pr/97 crash-sweep round
                                  #   (520 before it: the 484 work-pr97* arms from
                                  #   doc pr/97's gojsonnet-crash investigation,
@@ -35,6 +55,18 @@ find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
                                  #   it; 23 after 2026-08-02, 254 / 155 GiB
                                  #   before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+                                 # 75G after the 2026-08-29 round (152G before it);
+                                 #   the floor is now ~21G of non-work* (archive/ 15G
+                                 #   incl. this round's 1.5G record layer, input_files*
+                                 #   6.9G, bee/ 2.2G) + ~54G of KEEP, of which
+                                 #   work-mcp2k-grp0825 alone is 16G;
+                                 # 72G after the 2026-08-23 prod0823 campaign
+                                 #   (+15G of PR product for 3067 events);
+                                 # 57G after the 2026-08-23 minimal-state round
+                                 #   (203G before it); the floor is ~18G of
+                                 #   non-work* (archive/ 11G incl. this round's
+                                 #   2.7G record layer, input_files* 6.9G, bee/
+                                 #   1.8G) + 38G of KEEP;
                                  # 54G after PASS 2 (71G before it, i.e. the
                                  #   campaign's own +17G came back out);
                                  # 54G after the 2026-08-19 PASS 1 (149G before
@@ -43,6 +75,27 @@ du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
                                  #   follow-up, 158G before it; 20G after
                                  #   2026-08-13, 74G before it; 23G after
                                  #   2026-08-11, 103G before it)
+
+# the 2026-08-29 round: eleven closed doc families, the pi0 epoch stays.
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise.
+python3 scripts/retire/verify_group_dupes_20260829.py   # 188/188, 1231656 members
+python3 scripts/retire/plan_20260829.py                 # 120-name KEEP + 14 asserts
+RETIRE_JOBS=12 python3 scripts/retire/archive_records_20260829.py  # integrity PASS 432/432
+./scripts/retire/retire_20260829.sh A                   # dry run of the removal list
+RETIRE_REPLAN=1 python3 scripts/retire/plan_20260829.py # re-stamp planned_at (interlock 6)
+CONFIRM=yes ./scripts/retire/retire_20260829.sh A       # the deletion
+cat scripts/retire/state-20260829/removed.tsv           # what was ACTUALLY removed
+# verify AFTER, not only before: survivors must equal KEEP exactly, and every
+# live manifest must still resolve on disk (the pi0 one is 50/50).
+
+# the 2026-08-23 minimal-state retirement (see that section below):
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise,
+# which is the point of it.
+python3 scripts/retire/plan_20260823.py             # 38-name KEEP + 10 asserts (10 is new)
+RETIRE_JOBS=16 python3 scripts/retire/archive_records_20260823.py  # integrity PASS 380/380
+./scripts/retire/retire_20260823.sh A               # dry run of the removal list
+CONFIRM=yes ./scripts/retire/retire_20260823.sh A   # the deletion
+cat scripts/retire/state-20260823/removed.tsv       # what was ACTUALLY removed
 
 # the 2026-08-20 pr/97 crash-sweep retirement (see that section below):
 python3 scripts/retire/archive_records_20260820_pr97.py  # integrity PASS 484/484
@@ -174,6 +227,436 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-29 — eleven closed doc families; the pi0 epoch stays, 152G → 75G
+
+**432 arms, 81 GiB removed.** `work*` dirs 552 → 120. Record layer 10.73 GiB raw
+→ **1.43 GiB gz** in `archive/records/em-pr-era-20260829/`. Owner scope, given
+directly: *"the sbnd_xin directory now grow to 152 G, we should plan for a clean
+up round again before going to the next step. We can keep the latest PR
+results. … our next major move is to improve the pi0 reconstruction. We need to
+use the hand scan results for pi0 to do this. … we also do not want to delete
+the files related to the other running session."* Asked about the one
+discretionary block — the doc-84 long-muon/MCS product layer — the owner chose
+**"Release all three"** (`work-d84r3-cens-{mcp1k,mcp2k}` 14.2 G +
+`work-mcp1k-mcs80on` 3.0 G).
+
+Released: **pr/117, pr/118, pr/119, pr/120, pr/121, pr/123, pr/124, pr/125,
+pr/127, pr/128** (all SHIPPED), **doc 84 rounds 1-4** + **doc 80's MCS arms**,
+and **doc 114's** display arms. Kept: the doc 81 production pair, the vtx105
+label epoch, the two SIM samples, **the pi0 epoch** and **the whole open pr/130
+prefix**.
+
+### Three things this round found rather than assumed
+
+**1. `em_labels/` — the pi0 hand-scan record — was completely unprotected.**
+249 label JSONs (2.0 MB): the 141-set, the 98-set and the pi0 pairings, i.e. the
+literal input to the owner's stated next move. `git ls-files` returned **zero**
+for it — the repo `.gitignore` has `*.json` at line 2, and
+`overclustering_labels/`'s 230 files are tracked only because an earlier round
+ran `git add -f` (M9). Nobody had done that for `em_labels`, and there was no
+`archive/records/labels/` copy either. So the labels were one `rm -rf` from
+unrecoverable while every arm around them was being carefully preserved. Both
+halves are closed now and **ASSERT 6b** checks them on every future round. No
+byte of `em_labels` is retired by this round.
+
+**2. `HEAVY` had a hole, and the 08-25 census that "proved" it did not is a
+lesson worth keeping.** That round justified reusing `HEAVY` unchanged with a
+census of its 66 arms: *"ZERO unclassified file above 5 MiB, so nothing heavy
+can slip into the record tar."* That was **true of its removal set and false of
+this one** — none of its arms was group-mode and doc 84 round 3's census arms
+are. This round's census found **242** unclassified files above 5 MiB, all
+`.groups/g<N>.tar.gz`: 188 files, **4.96 GiB** of group *input* archives
+(bundles of Q/L pctrees fed to a group-mode run). Left unclassified they would
+have tripled the record layer to 16.06 GiB for nothing. **The durable lesson:
+a census is evidence about the set it ran on, never a property of the tool.**
+Dropped only after proof, not argument — `verify_group_dupes_20260829.py`
+checked all 188 member by member against the surviving `grp0825` Q/L roots:
+**1231656/1231656 byte-identical** (`state-20260829/group-dupes.tsv`).
+
+**3. Two kept arms record no provenance at all.**
+`work-{ncpi0,nuecc48}-prod0825` have neither the `group provenance: ql_root=`
+line (their `.groups/g*-build.log` predate it; `mcp1k`'s and `mcp2k`'s have it)
+nor a surviving `g*.tar.gz` for the byte-identity fallback. Pre-existing, not
+caused by this round. ASSERT 8 reports them **UNVERIFIED** rather than FAIL —
+but only because the round-level fact is *checked*: the removal set contains
+**0 Q/L roots and 0 imaging roots**, so no kept arm's input can be deleted,
+verified or not. With any root in the removal set, unverifiable stays a hard
+FAIL.
+
+### The pi0 carve-out — the load-bearing part
+
+`work-pr124r1` (39 arms) and `work-pr125r1` (84 arms) were the two fattest sweep
+candidates and the pi0 inputs sit **inside** them. Ten arms out of 123 were
+carved out and named individually in KEEP:
+
+| manifest | arms kept | rows |
+|---|---|---|
+| `em_display/pr126-pi0-manifest.tsv` | `work-pr124r1-onA98-*`, `-onA141v2-*` | 50 hand-paired π⁰ |
+| `em_display/em117-125flipchk98-manifest.tsv` | `work-pr125r1-flipchk98-*` | 98 |
+| `em_display/em114c-125flipchk141-manifest.tsv` | `work-pr125r1-flipchk141-*` | 141 |
+
+The tempting alternative — sweep both families, re-run a fresh arm at current
+HEAD — was **considered and rejected**: today's HEAD is a different operating
+point, so doc pr/126's `kine_shower_fudge_factor` 0.80 → **0.84** PEAK fit would
+stop being re-checkable the moment those dumps went. A fresh arm is *additive*
+work for the pi0 round, never a substitute for the dumps the fit was made on.
+Verified **after** deletion, not just before: all 12 live manifests resolve
+on disk, π⁰ **50/50**.
+
+### The concurrent writer — interlock 2 refined, interlock 6 added
+
+First round ever to run against a tree with **another session writing to it**
+(doc pr/130, a live 239-event knob-off gate). Every prior round's interlock 2
+refused on *any* live sbnd_xin `wire-cell` process (M5). Here that would not
+have made the round safer — it would have made it impossible, and the
+predictable next step is `ALLOW_LIVE_JOBS=yes`, which disarms the interlock
+completely. So:
+
+- **interlock 2 is narrowed, not bypassed**: it refuses only if a live process
+  names a dir in the **removal** set (the shape interlock 1 always used for
+  Bokeh viewers). `ALLOW_LIVE_JOBS` is no longer honoured — there is nothing
+  left for it to unlock that would be safe.
+- **interlock 6 is new**: plan-time evidence expires, so the live-process and
+  mtime checks are **re-derived immediately before the first `rm`**. The mtime
+  half is the stronger one — a writer can exit between the two checks, but the
+  mtime it left cannot un-happen.
+- **A late-created arm cannot be swept by construction**: the loop iterates the
+  *tier list*, not the directory. `work-pr130r1-gs1on-*` and
+  `work-pr130r1-g1off141-*` were created between this round's first census and
+  its plan, and were never at risk.
+
+The peer session was asked directly and answered with a grep-verified
+dependency list, encoded as **ASSERT 13** (31 arms) rather than trusted as
+prose. Four of its names were in the planned sweep and moved to KEEP:
+`work-em114c-prodnow-{mcp1k,mcp2k}`, `work-pr117r1-onK1-mcp1k`,
+`work-pr125r1-flipK5*` (the sentinel registry's negative control) and
+`work-pr128r1-on{98,141}-*` (the gate label doc pr/130 item 1 cites).
+**Its fifth name, `work-pr127r1-flipS{98,141}-*`, does not exist on disk** —
+`scripts/pr127_sentinels.py:30`'s docstring reference was already stale before
+today. Recorded, not silently repaired; the peer owns that file.
+
+### Stated costs
+
+- **30 closed-round `em_display/*manifest*.tsv` stop resolving** — pr/117
+  K-arms, pr/118 dbg, pr/119 dbgA, pr/120 on2/dbgon, pr/123 on1/dbgA2, pr/124
+  dbgv2/onC/flipchk98, pr/125 dbg/onM, and `em114c-114cnow`. Every verdict is a
+  table in its own doc. The 12 that survive are exactly the ones the pi0 round
+  and the peer's scorers read.
+- **doc 84's whole long-muon/MCS product layer** (23 G + 3.8 G). Deferred item 1
+  (MCS absolute scale vs truth) is unaffected in practice — it needs a
+  truth-level numu sample that does not exist here.
+- **pr/121's family goes entirely** (34 arms, 6.0 G): zero script literals, zero
+  surviving manifests, 305 doc mentions — all narrative.
+- 12 script literals ACKed in `ACK_BROKEN_REFS` (pr/118-120 census defaults).
+
+### FLAG for the next round, not acted on here
+
+`work-<s>-prod0825` is now **six flips behind production** — pr/123 pass4,
+pr/124 gap-band, pr/125 pass3+samevtx, pr/127 K5+sccc, pr/128 PF-kine and
+pr/129 pointing all landed after it. It is kept because it is the named
+production baseline and `grp0825` is the campaign input for any re-run. A fresh
+full-coverage campaign at today's HEAD would supersede it — that is a decision
+for the next round, and the precedent for making it is the 08-23 round.
+
+## RETIREMENT ROUND 2026-08-25b — the stage-A reference side and the pre-flip PR baseline, 144G → 108G
+
+**12 arms, 39 GiB removed, ~36 G net.** `work*` dirs 38 → 26. Full write-up:
+`docs/81_group-mode-production.md` §11. Owner scope, given directly: *"I assume
+we can safely retire [`work-img-{4 samples}`, `work-*-ql0819`,
+`work-*-prod0823`], and recover the disk"*.
+
+| released | why | frozen as |
+|---|---|---|
+| `work-img-{nuecc48,ncpi0,mcp1k,mcp2k}` | doc 81 §7: byte-identical to the imaging half of `work-<s>-grp0825` (24536/24536) | `state-20260825b/hashes/stagea-<s>.tsv` |
+| `work-{nuecc48,ncpi0,mcp1k,mcp2k}-ql0819` | the Q/L half of that same gate | same file |
+| `work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0823` | PRE-flip (doc 81 §4), superseded by `prod0825` | `state-20260825b/hashes/work-<s>-prod0823.tsv` |
+
+**NOT released:** `work-img-{r1qlmc,r2mc}`. No `grp0825` arm exists for either
+sim sample, so these are the only copy, not duplicates.
+
+### The substitution rule — read this before re-running any older repro block
+
+Every repro block in docs 71/74/76/77/78/79, pr/102 and pr/108, and the five
+closed-round arm scripts (`pr107_arms.sh`, `pr108_testA.sh`,
+`pr109_sbnd_arms.sh`, `pr112_arms.sh`, `pr112_dual_arms.sh`), still name the
+retired arms. They were deliberately **not** repointed: a script that records
+how a finished round was run should keep naming the arm that round actually
+read. To re-run one:
+
+* `work-<s>-ql0819` → **`work-<s>-grp0825`** (its `ql_evt<N>/` carries every
+  product `ql0819`'s did except `calib-evt*.json` and `wct_ql_evt*.log`)
+* `work-img-<s>` → **`work-<s>-grp0825`** (its `evt<N>/` layer, same layout)
+
+The two *live* tools were repointed instead, and a new ASSERT 12 + interlock 5
+verify it: `scripts/multi/repro_ql_nondet.sh` (doc 82's reproducer — its
+command #10 passed `REF=work-mcp2k-ql0819` explicitly, which would have been
+`exit 1`) and `scripts/multi/ql_legacy_gate.sh`.
+
+### What the round proved before it deleted anything
+
+`verify_frozen_stagea_20260825b.py` reproduces doc 81 §7's gate from the frozen
+manifest against the surviving `grp0825` arms — **24536/24536**, run once before
+the deletion and again after it, with both reference arms gone. `prod0823`'s
+9201 rollups are frozen the same way, but that one is **insurance, not gate
+preservation**: `prod0825` is at a different operating point, so no byte-identity
+claim existed between them.
+
+### Costs, stated rather than absorbed
+
+* **docs pr/104–pr/111's A/B references against the pr/104 production epoch are
+  now text-only** — `prod0823` was that epoch's last on-disk carrier.
+* `work-{nuecc48,ncpi0}-ql0819`'s `ql_evt*/calib-evt*.json` (146 + 53 MB) are
+  gone; `grp0825` does not carry them. Precedent: `thin_hubs_20260811.py`
+  dropped mcp1k's and mcp2k's for the same reason in the 08-11 round.
+* **NOT a cost, checked rather than assumed:** `sp-frames.tar.bz2` (2067 files)
+  is preserved verbatim in `archive/records/stagea-refside-20260825b/` —
+  `archive_records`' `HEAVY` list has no pattern matching it, so it lands in the
+  record tar. That is also most of the 2.9 G archive, hence ~36 G net vs 39 GiB
+  gross.
+
+### Two catches worth carrying forward
+
+* **`work-probe178410a` was about to be silently broken.** Its `evt178410/` was
+  a symlink into `work-img-mcp2k` with four npz linking through it. ASSERT 4
+  caught it; the link was replaced with the real bytes (`cp -rL`) before any
+  deletion. 6.7 MB → 17 MB, now self-contained. It is PROTECTED precisely
+  because a non-deterministic crash cannot be re-captured on demand.
+* **A shared freeze tool would have failed silently.**
+  `hash_manifest_20260825.py` matches `pr_evt(\d+)$`; stage-A arms are
+  `evt<N>`/`ql_evt<N>`, so it would have written a header-only `.tsv` that
+  passes `[ -s ]`. Hence a second tool, and hence interlock 4 / ASSERT 11 check
+  **row counts** summing to 24536, never existence.
+
+### `grp0825` is now load-bearing alone
+
+`work-<s>-grp0825` is the **sole** on-disk carrier of stage A — imaging and Q/L
+— for all four data samples. No second copy exists anywhere in the tree; there
+is only the frozen manifest. A future round releasing a `grp0825` arm deletes
+the product itself, not one copy of two. `PROTECTED.txt` says so at that entry.
+
+## CAMPAIGN 2026-08-23 — `prod0823`, the full-coverage PR re-run the retirement round was gated on
+
+**STATUS: COMPLETE.**  3067 events across all four data samples, **every one
+`rc=0`**, bare production (no `SBND_*` overrides), `PR_EXTRA_STAGES=pr_display`,
+toolkit `b5c9f43a`, `libWireCellClus.so` md5
+`628444a7de4f9d224288b0ebf7c34e20`, `./build/clus/wcdoctest-clus` 228/228 /
+2381 assertions.  Each arm reads its own sample's `-ql0819` Q/L root; **Q/L and
+imaging are NOT regenerated** (M11 — `ql0819` IS the latest production Q/L).
+
+```bash
+cd sbnd_xin
+# provenance BEFORE anything ran (M1): tree clean at b5c9f43a, and the lib
+# (Aug 22 16:43) is NEWER than the newest source (TrackFitting.cxx, 16:42),
+# so nothing needed rebuilding and no shared binary was touched.
+for s in nuecc48 ncpi0 mcp1k mcp2k; do
+  PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+      ./run_pr_chain_batch.sh work-$s-ql0819 work-$s-prod0823 data
+done
+```
+
+| sample | pr_evt | rc=0 | wall |
+|---|---|---|---|
+| nueCC48 | 48 | 48 | 2 min 24 s |
+| NC π⁰ | 19 | 19 | 28 s |
+| mcp1k | 1000 | 1000 | 22 min |
+| mcp2k | 2000 | 2000 | 3 min + 20 min (see the interruption below) |
+
+### It is a same-epoch continuation of the pr/104 arms, not a new epoch
+
+Production last moved at the pr/104 flip (toolkit a07222e2 + c550541f), but
+**three unknobbed commits landed after those arms were produced** — `a46b0ddb`,
+`dd4d1373`, `56683366`, the doc pr/109 `T_proj_data` fix — so "a fresh run at
+HEAD reproduces the pr/104 arms" was an open question, not an assumption.
+Measured, `scripts/pr85_hash_gate.py`:
+
+| gate | result |
+|---|---|
+| `work-pr104-on4-nuecc48` vs `work-nuecc48-prod0823` | **PASS 96/96** |
+| `work-pr104-on4-ncpi0` vs `work-ncpi0-prod0823` | **PASS 38/38** |
+| `work-pr104-on4-mcp1k` vs `work-mcp1k-prod0823` | **PASS 2000/2000** |
+| `work-pr104-on4-mcp2k` vs `work-mcp2k-prod0823` (15-evt overlap) | **PASS 30/30** |
+| `work-pr104-flipchk-{nuecc48,ncpi0}` vs `prod0823` | **PASS 96/96 + 38/38** |
+| `nusel-{table,events}.tsv`, both small samples | identical |
+
+**2164 archives byte-identical.**  So every A/B a doc took against
+`work-pr104-on4-*` remains valid against these arms.
+
+**The control that makes the PASS mean something (M1).**  A byte-identical
+result is also exactly what a stale binary produces.  `tracking-pr.root`
+**DIFFERS on 10/10** nueCC48 events checked — the pr/109 commits *are* in the
+running binary, and their effect is confined to the `T_proj_data` ROOT dump.
+Had that come back identical too, the gate would have been vacuous.
+
+### The interruption, and what it says about this box
+
+The first mcp2k attempt was **SIGKILLed at 01:10:55**, 3 min in — 136 events
+started, 104 finished `rc=0`, 32 truncated (zero-byte `mabc-pr.zip`, deleted
+before the resume).  Diagnosis, corrected once:
+
+* It is **not** an OOM or a run failure: every completed event across all four
+  samples exited `rc=0`, and memory was 25 G used of 251 with no swap.
+* The first read was "a peer session cleared the box" — a concurrent session's
+  `work-pr112-*` arms were created at 01:10, seconds before the kill.  **That
+  is wrong.**  Those four `pr112` mcp1k arms *also* stopped writing at 01:10,
+  at 195/437/439/443 of 1000 events.  Everything on the machine died within
+  the same few seconds — a box-wide kill, not one session evicting another.
+* **A `pr_evt<ID>/` directory is not evidence the event ran.**  The peer's arms
+  look complete by directory count and are ~44 % populated.  Count `rc.txt`
+  with `rc=0`, never `ls -d pr_evt*` — this round's own coverage table above
+  is built that way.
+
+The resume ran only the 1896 missing ids (`comm -23` of the `ql_evt` list
+against the completed `rc=0` list) into the same arm — same binary, same
+config, so the arm stays single-epoch.
+
+### Cost of a harness bug, recorded so it is not repeated
+
+The resume was supposed to start as soon as the box freed.  Its watcher used
+`n=$(pgrep -c -f 'wire-cell ' || echo 0)`; `pgrep -c` prints `0` **and** exits
+non-zero when nothing matches, so `n` became the two-line string `"0\n0"`,
+`[ "$n" -eq 0 ]` errored every minute, the idle streak never advanced, and the
+watcher sat until its 8-hour timeout.  The box was free from **01:28**; mcp2k
+actually restarted at **09:20**.  ~8 h lost, no data affected.  *Use
+`pgrep -f … | wc -l`, and make a watcher log the value it is testing.*
+
+### What this changes for the next round
+
+`work-pr104-{on4,flipchk}-*` (8 arms, 4.3 G) are now **redundant** — prod0823
+covers every sample at least as widely and is byte-identical on every
+overlapping event.  They are the obvious release candidate, deliberately NOT
+taken here: the round that creates a baseline should not also destroy the
+arms it was gated against.  `PROTECTED.txt` carries them with that note.
+
+## RETIREMENT ROUND 2026-08-23 — back to a minimal state at the latest production, 203G → 57G
+
+**STATUS: EXECUTED.** `python3 scripts/retire/plan_20260823.py` — universe
+**418**, KEEP **38** / remove **380**, all **10** asserts PASS (9 carried + a
+new ASSERT 10, see below).  `RETIRE_JOBS=16 python3
+scripts/retire/archive_records_20260823.py` — integrity **PASS 380/380**,
+16254.8 MiB raw → 2.7 G gz.  `CONFIRM=yes scripts/retire/retire_20260823.sh A`
+— 380 dirs / 148 GiB removed, refused=0, **broken symlinks 0 before and
+after**, no git-tracked file deleted, survivor census 38 == `len(KEEP)`,
+manifest 380 rows.  `work-*` **418 → 38**, `sbnd_xin` **203G → 57G**,
+`/nfs/data/1` free 824G → 970G.  wcp HEAD `feb839c`, toolkit HEAD `b5c9f43a`.
+
+Labels: `scripts/retire/state-20260823/{plan.json,removed.tsv}`,
+`scripts/retire/tierA_20260823.txt`,
+`archive/records/prod0823-minimal-20260823/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`.
+
+### Why this round exists
+
+Owner, 2026-08-23: *"the sbnd_xin directory now goes to 203 G … what we want
+is to go back to a minimal state with the latest production available
+(QLMatching, and PR)."*  Since 08-20's 36 survivors / 54 G, docs pr/98–104
+(four production flips) and pr/105–111 (vertex-strategy, dQ/dx, exclusion and
+DL-vertex studies) regrew the tree to 418 `work-*` dirs / 188 G, plus 15 G
+outside `work-*`.
+
+### The one gap the owner's reading exposes, and the answer
+
+"Latest production PR" is `work-pr104-on4-*` — doc pr/104 shipped SBND
+production ON 2026-08-21 (`vertex_junction_snap` + `vjs_override_kink_snap`,
+toolkit a07222e2 + cfg flip c550541f), and pr/105–106 then left production
+UNCHANGED while pr/107–111 are studies.  But the pr/104 round validated mcp2k
+on a **15-event subset**, so at the production epoch mcp2k has no
+full-coverage PR product; only the released `work-mcp2k-prod0819` (2000 evts,
+08-19, pre-flip) had one.  Coverage as it stood:
+
+| arm family | nueCC48 | NCpi0 | mcp1k | mcp2k |
+|---|---|---|---|---|
+| `work-*-ql0819` (Q/L) | 48 | 19 | 1000 | 2000 |
+| `work-pr104-on4-*` | 48 | 19 | 1000 | **15** |
+| `work-pr104-flipchk-*` | 48 | 19 | 26 | 15 |
+| `work-*-prod0819` (released) | 48 | 19 | 1000 | 2000 |
+| `work-vtx105-base-*` | 47 | 19 | 407 | 581 |
+
+Owner, asked directly before anything ran: *"we can drop this, and redo the
+production for the samples, so we keep the latest PR production for all
+samples."*  So the four `prod0819` **PR** arms are released and a fresh
+full-coverage PR re-run at current HEAD replaces them — **the four `-ql0819`
+Q/L roots are NOT released**, they are that re-run's input.  That makes this a
+sweep *before* a campaign again, the 08-19 pass-1 shape, so ASSERT 9 (KEEP
+closed FORWARD over the campaign input set) applies and is re-pointed at this
+round's arms.
+
+### KEEP — 38 names, 38.42 GiB, in seven groups
+
+| group | n | what |
+|---|---|---|
+| campaign INPUT | 8 | six `work-img-*` hubs (19.2 G) + the two **SIM** `cb0805` Q/L hubs |
+| latest production Q/L | 4 | `work-{nuecc48,ncpi0,mcp1k,mcp2k}-ql0819`, 48/19/1000/2000 |
+| latest production PR | 8 | `work-pr104-on4-*` (the product) + `work-pr104-flipchk-*` (the shipped-cfg proof) |
+| current vertex-label epoch | 4 | `work-vtx105-base-*` — 1756 `vertex_labels/vtxscan-vtx105-*` `source` entries resolve here |
+| doc pr/111 live inputs | 4 | `work-vtx106-harv-{base,nofitx}-nuecc48` + `work-vtx106-cne-{on,off}-nuecc48` |
+| the two SIM samples | 6 | `work-{r1qlmc,r2mc}-{prod0813,vfcbr3on}` + `work-vf{r1qlmc,r2mc}-cbr3on` |
+| git-tracked / not reproducible | 4 | `work-tfix388-r9`, `work-stmcamp-d66new`, `work-nuecc48-prsmoke2`, `work-probe178410a` |
+
+`work-pr104-flipchk-*` is kept for the reason `PROTECTED.txt` records twice
+(`work-pr87-postflip-*`, `work-cbr3-bare2evt`): it is the only on-disk evidence
+that the shipped post-flip jsonnet reproduces `-on4` with no env, and dropping
+the bare-config arm turns that claim into text the same day.  **Both pr/104
+families are superseded the moment the re-run lands with full coverage** —
+release them in that follow-up pass, not before.
+
+### ASSERT 10 (new) — every script literal into the removal set is acknowledged
+
+Two prior rounds discovered *after* the fact that a script hardcoded an arm
+they had just deleted (`vtx_rules/baselines.py:deployed_dump_path()`,
+`scripts/analysis/pr57/oc56_truth.py:DEFAULT_ARMS`).  The standing safety net
+is a citation check over `docs/`, which cannot see a path literal in a `.py`.
+ASSERT 10 greps `scripts/`, `vtx_rules/`, `dl_vtx_training/` and the top-level
+`*.py`/`*.sh` (1128 files) for every `work-*` literal and **refuses** if a
+removal-set name is not in `ACK_BROKEN_REFS`.  It is not there to save the arm
+— it is to make every broken reference a cost written down before the round,
+never a surprise weeks later.  This round: **24 names acknowledged**, the
+heaviest being `work-vtx100-base-mcp2k` (114 refs) and `-mcp1k` (50).
+
+### What the citation-and-script checks did NOT catch, and what did
+
+`work-vtx106-cne-{on,off}-nuecc48` are in **doc pr/111's own arm table**
+(§2) — the OPEN round — but no script hardcodes them, so ASSERT 10 was blind
+to them and the first plan listed them for removal.  They were caught by
+reading the open doc's arm table by hand.  This is the 08-19 pass-2 lesson in
+a new costume: *a dated rule protects yesterday*.  **Do this next round: read
+the newest `docs/pr/*.md`'s arm table before trusting any automated check.**
+(The `ncpi0` legs of the same pair are NOT in that table and were released.)
+
+### Known cost, stated rather than silently absorbed
+
+* **doc pr/95's single-epoch baseline is gone.**  Every pr/98–104 A/B that
+  cites `work-*-prod0819` is text-only from here.  mcp2k has **no**
+  2000-event PR product until the re-run lands.
+* **`work-pr96gate-{mcp2k,nuedisp}`** — the mixed-binary equivalence proof for
+  the mid-campaign relink (doc pr/95 §4b) — released with its subject.
+* **The three DATA `cb0805` Q/L hubs are gone.**
+  `scripts/analysis/pr48/backtoback_census.py`'s 445-dump census and
+  `scripts/runners/run_pr_geom_arm_dl.sh`'s pctree pin stop resolving; doc
+  pr/48's numbers survive as text.
+* **The whole pr/102 family (45 dirs, 21.7 G)** including the eight arms
+  `PROTECTED.txt` still marked "owner scan pending" on 08-20 — discharged:
+  r2 shipped `len_admit=30` ON and production has flipped twice since.
+* **The `vtx100` label epoch's dumps are gone** (the `vtx105` epoch is kept in
+  its place, one epoch deep — same precedent as the 08-16 `prod0813` and 08-17
+  `harv3` drops).  `vertex_labels/` JSON is self-contained and survives.
+* **Every pr/98, pr/99, pr/101, pr/103, pr/107, pr/108, pr/109 arm** — all
+  those rounds are closed and their gates are text in their docs.
+
+### What was NOT touched
+
+`dl_vtx_training` (67 M, still 0 `*.pth` — no `thin_dlruns` needed),
+`vertex_labels/`, `overclustering_labels/`, `archive/` (the record layer,
+M13), `input_files*/` (ASSERT 1's SP sources), `bee/` (backs uploaded doc
+links).  Those are ~15 G and are the floor below which this tree does not go;
+this round's own 2.7 G record layer takes `archive/` to 11 G.
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260823/plan.json` (KEEP + KEEP_WHY + PR_PROVENANCE +
+ACK_BROKEN_REFS + the full script-reference map),
+`scripts/retire/state-20260823/removed.tsv` (380 rows, each with its archive
+tarball name, size and pre-removal mtime),
+`scripts/retire/tierA_20260823.txt`.
 
 ## RETIREMENT ROUND 2026-08-20 — the doc pr/97 gojsonnet-crash sweep, 484 arms, ~1.5 GiB
 
@@ -2295,3 +2778,122 @@ nueCC48**, round-3 identity 96/96, KEEP), `work-pr98-floff-nuecc48`
 (SBND_FIT_EXCLUSION=false == pre-flip prod0819, 96/96).  fit_exclusion is SBND
 PRODUCTION ON as of toolkit flip commit (doc pr/98 §10); `work-nuecc48-prod0819`
 remains the pre-flip reference.
+
+## doc pr/99 (2026-08-20) — owner scan triage, log-only probe arms
+
+| arm | what | keep? |
+|---|---|---|
+| `work-pr99-probe-mcp2k` | evts 279955+70084, all diag env probes, hash PASS 4/4 vs work-pr96-prodflip-mcp2k | releasable after doc |
+| `work-pr99-probe-mcp1k` | evts 395148+315167, same probes, hash PASS 4/4 vs work-scan-prodflip-mcp1k | releasable after doc |
+| `work-pr99-probe-ncpi0` | evt 285567, same probes, hash PASS 2/2 vs work-scan-prodflip-ncpi0 | releasable after doc |
+| `work-pr99-t70084` | evt 70084 at trace level + WCT_SHOWER_CREATE_DEBUG (the op1-post 0.87-overlap decline evidence) | releasable after doc |
+
+The `*-prodflip-*` arms this round reads (pr96-prodflip-mcp2k,
+scan-prodflip-{mcp1k,ncpi0}) belong to the concurrent session's round — not
+tagged here, never written to.
+
+## doc pr/99 round 2 (2026-08-20)
+- work-pr99r2-base-{ncpi0,mcp1k,mcp2k} -- pre-edit baselines at f4b4d0ec (19+35+15 evts), proven ≡ prodflip arms; **KEEP: standing numu50/ncpi0 comparison baselines**
+- work-pr99r2-off-{nuecc48,ncpi0,mcp1k,mcp2k} / -off2-* / -off3-* -- knob-off gate arms (3 binary iterations, all gates PASS); off/off2 releasable now, off3 releasable after next round
+- work-pr99r2-on-{...} / -on2-* -- campaign iterations 1-2 (veto-radius adverse / pre-span-guard); releasable now
+- work-pr99r2-on3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL knob-on arms (production operating point); **KEEP until owner scan done**
+- work-pr99r2-smoke-*, -smoke2-*, -smoket-*, -probe285567 -- single-event smokes/probes; releasable after doc
+- work-pr99r2-flip-*, -floff-* -- flip proofs (13 evts x2); releasable after doc
+- work-pr99r3-off-{nuecc48,ncpi0,mcp1k,mcp2k} -- round-3 knob-off gate arms (234 archives PASS vs on3); releasable after next round
+- work-pr99r3-on-* -- first knob-on pass (no display, stem 3.0, superseded by onf); releasable now
+- work-pr99r3-ond-{ncpi0,nuecc48} -- PARTIAL arms aborted at the stem 3.0->2.8 correction; releasable now
+- work-pr99r3-onf-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL round-3 knob-on arms (production operating point + pr_display); **KEEP until owner scan done**
+- work-pr99r3-dduponly-ncpi0 -- 4-evt dedup-only attribution probe (pi0-pair losses); keep with doc
+- work-pr99r3-flip-*, -floff-* -- flip proofs (8 evts x2); releasable after doc
+
+## doc pr/101 Enu accounting round (2026-08-20)
+- work-pr101-off-{nuecc48,ncpi0,mcp1k,mcp2k} / -all-* -- first binary (pre K2-gate/K3-scope refinement); releasable now
+- work-pr101-off2-* / -all2-* / -b-* -- second binary (before the K2 leftover mu/pi rule); gate PASS 234; releasable now
+- work-pr101-off3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL-binary knob-off gate arms vs work-pr99r3-onf-*; releasable after next round
+- work-pr101-all3-{nuecc48,ncpi0,mcp1k,mcp2k} -- FINAL all-five-knobs arms (K1-K5, long-muon mode 2); **KEEP until owner scan done**
+- work-pr101-flip-*, -floff-* -- flip proofs (8 evts x2, 16/16 PASS both ways); releasable after doc
+- work-pr101-{a,b2,c,d}-* -- single-knob attribution arms (a=K1 track_ctx, b2=K2+K5 mass rules+guard, c=K3 hadronic dQ/dx, d=K4 long-muon mode 2); releasable after doc
+
+## doc pr/102 missing-orphan-segment audit (2026-08-20)
+- work-pr102-head-mcp1k -- fresh full 1000-evt mcp1k PR arm at HEAD (post pr/98+99+101 flips), PR_EXTRA_STAGES=pr_display + SBND_TRAJ_COVER_PROBE=1 (log-only); the round's "after" epoch; **KEEP until doc pr/102 closes**
+- work-pr102-dbg-mcp1k -- reserved for targeted probe reruns (WCT_PR96_REMSEG_DEBUG etc.) of pr/102 exhibits; may stay unused
+- This round READS work-{mcp1k,mcp2k}-prod0819 as its "before" epoch and as the relocated pr/96 6-event calibration source (cbr3 arms retired) -- do not release them while pr/102 is open.
+
+## doc pr/102 round 2 -- P1+P2 knobs (2026-08-20)
+- work-pr102r2-base-{nuecc48,ncpi0,mcp1k,mcp2k} -- pre-edit baselines at toolkit 2979bd26 (48/19/35/15 evts, numu50 manifest for the mc samples); Gate-1 reference; releasable after next round
+- work-pr102r2-off-{nuecc48,ncpi0,mcp1k,mcp2k} -- knob-off gate arms, new binary; Gate 1 PASS 234/234 vs base; releasable after next round
+- work-pr102r2-onA-{mcp1k,mcp2k} -- Stage A exhibit smoke (12+2 evts, min_nnf=4 len_admit=30 uncover_3d=3.0); keep with doc
+- work-pr102r2-offfull-mcp1k / -onfull-mcp1k -- full 1000-evt census before/after at the operating point; **KEEP until owner scan done**
+- work-pr102r2-on-{nuecc48,ncpi0} -- knob-on physics-ledger arms; **KEEP until owner scan done**
+
+## doc 75 -- tagger-family FV + main-flag audit, two knobs (2026-08-20)
+- work-d75r1-bare-{nuecc48,ncpi0,mc50,enriched} -- pre-edit baselines (peer pr/102r2 WIP binary, no doc-75 source edits); Gate reference; releasable after next round
+- work-d75r1-off1-{nuecc48,ncpi0,mc50,enriched} -- knob-off gate arms, new binary; PASS 286/286 archives + 143/143 events vs bare; releasable after next round
+- work-d75r1-onfv-{nuecc48,ncpi0,mc50} -- `nue_sp_consistent_fv` ON census arms; SBND PRODUCTION ON, owner flip 2026-08-20; **KEEP**
+- work-d75r1-onflag-{nuecc48,mc50,enriched} -- `nu_selected_as_main_snapshot_all` ON census arms (round 2: the flip-equivalence check found this fires on 16/143 standard-sample events, not just the enriched manifest); SBND PRODUCTION ON; **KEEP**
+- work-d75r1-flipchk-ncpi0 -- post-flip config, no env; flip-equivalence PASS (same 8/19 archives as onflag-ncpi0 alone); **KEEP**
+- enriched manifest = union of promoted-main (21) + multi-candidate (8) events read from the peer's `work-pr102-head-mcp1k` (read-only; unique ids listed in doc 75 §Repro)
+- work-pr102r2-beq-mcp1k -- DEAD (wrong event list, 0-archive gate); work-pr102r2-beq2-mcp1k -- peer-binary equivalence proof (6/6 archives vs off arm)
+- work-pr102r2-off2-{nuecc48,ncpi0,mcp1k,mcp2k} -- knob-off gate arms on the SHIPPING binary (post UAF fix); Gate 1 PASS 234/234 vs base; releasable after next round
+- work-pr102r2-{offfullp,onfullp,onfull2p}-mcp1k -- patch arms for the peer build-race / cfg-collision failures; members of the merged arms below
+- work-pr102r2-{offmerged,onmerged}-mcp1k -- SYMLINK-MERGED 1000-evt census arms (offfull+offfullp / onfull2+onfull2p); derived, keep while pr/102 r2 open
+- work-pr102r2-onfull-mcp1k / -on-{nuecc48,ncpi0} -- pre-UAF-fix ON arms, superseded by onfull2/on2; releasable now
+- work-pr102r2-dbgp1/dbgp2/dbgp2b-mcp1k -- 399998 crash factorization (P1-only ok / P2-only rc=135 / P2-only after fix ok); keep with doc
+- work-pr102r2-{kA,kB,kC}-mcp1k -- single-knob attribution on the 28 ADVERSE events (kA=min_nnf 1 ADVERSE, kB=len_admit ZERO movers, kC=uncover_3d 23 ADVERSE); keep with doc
+- work-pr102r2-p1full-mcp1k / -p1-{nuecc48,ncpi0} -- P1-only (min_nnf=4 len_admit=30) full validation arms; **KEEP until owner scan done**
+- work-pr102r2-{nnf4,nnf8,len30,n8l30}-nuecc48 -- P1 disjunct sweep (nue ledger: -4/+1, -1/+1, 0/0, -1/+1); keep with doc
+- work-pr102r2-l30full-mcp1k / -l30-ncpi0 -- len_admit=30-only operating-point arms (the flip candidate); **KEEP until owner scan done**
+
+## doc pr/103 -- near-vertex busy-vertex revisit: mvga op0 pass-through + interposed fallback (2026-08-20/21)
+- work-pr103-bare-mcp1k -- full 1000-evt HEAD b4670d9b baseline, pr_display; 204 events FAILED (plugin-load race with a concurrent wcbuild, rc=1) -- read through work-pr103-baremerged-mcp1k only; **KEEP until pr/103 closes**
+- work-pr103-bare2-{mcp1k(204),nuecc48,ncpi0,mcp2k(15)} -- legacy-binary (stash-restored HEAD) baselines; Gate-1 reference; **KEEP**
+- work-pr103-baremerged-mcp1k -- SYMLINK-MERGED bare(796 rc=0)+bare2(204); derived; keep while pr/103 open
+- work-pr103-off-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-off gate arms, new binary; Gate 1 PASS 2000/2000 + 96/96 + 38/38 + 30/30; releasable after next round
+- work-pr103-off2-{nuecc48,ncpi0} -- final-binary knob-off re-gate; releasable after next round
+- work-pr103-on-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-on arms (mvga_passthru=4 + mvga_interposed_fallback); the round's census/mover/Bee "after"; **KEEP until owner scan done**
+- work-pr103-tr-{mcp1k(283713),mcp2k(405707)}, work-pr103-tr2-mcp1k (6 shortcut evts) -- trace-level diagnosis arms; keep with doc
+- work-pr103-on{A,B,C,D}-mcp2k -- FAILED/partial op0 iterations on 405707 (nearest-wcpt test; op1 re-deleting the connector); dead, releasable now
+- work-pr103-onE-{mcp2k,mcp1k} -- Stage A smoke (fallback WITHOUT the degree-2 restriction); keep with doc (sec 4.2 table)
+- work-pr103-on2-{mcp1k,nuecc48,ncpi0,mcp2k} -- knob-on ROUND 2 on the shipping binary (passthru=4 + fallback + fallback_min_angle=45): the round's adjudicated "after"; **KEEP until owner scan done**
+- work-pr103-off3-{nuecc48,ncpi0} -- shipping-binary knob-off re-gate; releasable after next round
+- work-pr103-flipchk-{mcp1k(14),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence PASS 28/28+96/96+38/38+30/30 vs on2; **KEEP**
+- work-pr103-floff-{nuecc48,ncpi0} -- post-flip forced-off == legacy bare, PASS 96/96+38/38; releasable after next round
+
+## doc pr/104 -- junction snap (2026-08-21)
+- work-pr104-bare-{mcp1k(1000),nuecc48,ncpi0,mcp2k(15)} -- HEAD 5b6b289c binary + post-pr/103-flip config baselines, pr_display; **KEEP until pr/104 closes** (mcp1k nusel-table merged by hand: runner edited mid-batch)
+- work-pr104-off-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #1 knob-off gate, PASS 2000/96/38/30; releasable after next round
+- work-pr104-on-mcp2k -- binary #1 ON, KILLED mid-run (partial, do not read); releasable
+- work-pr104-smoke{,2,3,4,5,6,7}-{mcp2k,mcp1k,nuecc48} -- trace-level probe arms on the exhibit events per binary iteration (doc sec 3.0/3.0.1); releasable after next round
+- work-pr104-off2-mcp2k -- binary #2 partial (batch killed); releasable
+- work-pr104-off3-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #5 knob-off gate, PASS 2000/96/38/30; releasable after next round
+- work-pr104-on3-{mcp1k,nuecc48,ncpi0,mcp2k} -- binary #5 ON (before min_move + ambiguity veto): the round-3 ledger with the 2 adverse cases (281837, 400474); keep with doc (sec 3.1, Bee round3 set)
+- work-pr104-off4-{mcp1k,nuecc48,ncpi0,mcp2k} -- FINAL-binary knob-off gate, PASS 2000/2000 + 96/96 + 38/38 + 30/30; releasable after next round
+- work-pr104-on4-{mcp1k,nuecc48,ncpi0,mcp2k} -- FINAL-binary knob-on (vertex_junction_snap + vjs_override_kink_snap): the round's adjudicated arm, Bee "after" set e87695c6; **KEEP**
+- work-pr104-flipchk-{mcp1k(28),nuecc48,ncpi0,mcp2k} -- post-flip config no env; flip-equivalence vs on4; **KEEP**
+- work-pr104-floff-{nuecc48,ncpi0} -- post-flip forced-off == bare; releasable after next round
+
+## doc pr/105 -- neutrino-vertex strategy comparison + re-rank re-optimization (2026-08-21)
+- work-vtx105-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- SBND production (toolkit c550541f) over the 1054-label universe ONLY, pr_display; the carry target of vtxscan-vtx105-*; **KEEP**
+- work-vtx105-{nofitx,dlonly,ma4,topo3,topk10,trad,pre103}-<sample> -- selection-strategy / attribution arms, same universe (doc sec 2 table rows); keep with doc until a later vertex round supersedes them
+- work-vtx100-{base,topo}-<sample> -- pr/100 epoch reference rows (doc pr/105 sec 1); **KEEP** (previously untagged here)
+
+## doc pr/106 -- target-anchored re-optimization of the DL vertex selection (2026-08-21)
+- work-vtx106-harv-base-{nuecc48(47),ncpi0(19),mcp1k(407),mcp2k(581)} -- production config + dl_vtx_harvest over the 1054-label universe: the pre-DL candidate cloud (hv_cloud) every pr/106 target is defined on; hash-gate PASS vs work-vtx105-base-*; **KEEP**
+- work-vtx106-harv-topo3-<sample> -- same + dl_vtx_topo_weight=3: the rows source (only a topo arm emits s_topo/topo_frac/votes); row set asserted identical to harv-base; **KEEP** with the doc
+- work-vtx106-ma20-<sample> -- live validation arm, SBND_DL_VTX_MIN_ACCEPT=20 (doc sec 6); keep until the owner decision on the flip is recorded
+- work-vtx106-harv-nofitx-<sample> / work-vtx106-nofitx-trad-<sample> -- fit_exclusion=false harvest (own pre-DL cloud) + no-DL fallback arms (doc sec 9: the OFF gain is real, heat-map channel); **KEEP** with the doc
+- work-vtx106-cne-{off,on}-{nuecc48,ncpi0} -- dl_vtx_cloud_no_exclusion OFF gate (PASS vs vtx105 base) and ON trial with harvest (doc sec 10); keep until the owner decision
+## doc pr/107 -- dqdx_fit_keep_all_points (2026-08-21)
+- work-pr107-off-{nuecc48,ncpi0} -- new binary, no env: OFF gate PASS 94/94, 38/38 vs work-vtx106-cne-off-*; keep until the owner decision
+- work-pr107-on-{nuecc48,ncpi0} -- SBND_DQDX_FIT_KEEP_ALL_POINTS=true + harvest (doc sec 3-6); keep until the owner decision
+## doc pr/108 -- exclusion-fit parity, prototype vs toolkit (2026-08-21)
+- work-pr108-off1-nuecc48 (10550) -- Test A OFF gate vs work-pr107-off: PASS 2/2; disposable
+- work-pr108-assoccheck-nuecc48 (10550 46363 81597) -- WCT_DQDX_ASSOC_CHECK=1: 382 fits max|dQ|=0; keep the logs with the doc
+- qlport/scripts/sweep/pr108_{wct_off,wct_on,wct_onkeep,wcp_on,wcp_off} -- uBooNE 5384 six-event four-arm set (WCP arms from the patched prototype build); **KEEP** with the doc
+
+## doc 81 -- group-mode re-baseline of the four production samples (2026-08-25)
+- work-{nuecc48,ncpi0,mcp1k,mcp2k}-grp0825 -- stage A run in GROUP mode from reco1: `evt<ID>/` imaging + `ql_evt<ID>/` Q/L per event, 3067 events; member-content gate PASS 24536/24536 vs work-img-* and work-*-ql0819; **KEEP** (the input the MCS and PR rounds consume)
+- work-{nuecc48,ncpi0,mcp1k,mcp2k}-prod0825 -- stage B, `PR_GROUP_SIZE=16 PR_JOBS=8 PR_EXTRA_STAGES=pr_display`; pr85 6134/6134 archives + pr94 3067/3067 ROOT files byte-identical vs work-pr112i-snapD2-*; **KEEP** (current production at the shipped operating point)
+- work-*-prod0823 -- **PRE-flip** (before `fast_xgb_forest` and the pr/112 dual chain / snapD2 went ON); NOT current production, kept as the prior epoch's reference; see doc 81 sec 4
+- released this round: the 54-arm pr/112 + pr/112i option scan, work-pr104-on4-*, work-pr104-flipchk-*, and the four work-vtx106-*-nuecc48 pr/111 arms -- 66 dirs, 72 GiB removed 2026-08-25, records in archive/records/prod0825-groupmode-20260825 (1.4 G, integrity 66/66); plus 20 G of g<K>/ group scratch pruned from the four grp0825 roots. sbnd_xin 236 G -> 144 G, 104 work* dirs -> 38, broken symlinks 0
+- `scripts/retire/state-20260825/hashes/*.tsv` -- the frozen reference side of doc 81 sec 8.1 (9402 rollups: pr85 archive rollups + a pr94 per-branch rollup of every tracking-pr.root) for the six retiring arms the gate is taken against, since work-pr112i-snapD2-* was the ONLY per-event arm at the current operating point; **KEEP** (git-tracked, 888K)

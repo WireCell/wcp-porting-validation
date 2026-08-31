@@ -1,0 +1,33 @@
+doc pr/135 -- estimator spread on the production fixed-pairing pi0 mass
+arm work-pr134-flip2-* (post-flip config); fudge in force 0.84; n=56, n_in=40
+repro: python3 scripts/pr135_pi0_peak_prod.py --manifest98 em117-134flip298-manifest.tsv \
+         --manifest141 em114c-134flip2141-manifest.tsv --overlay-tag pi0scan-0829-agent --fudge 0.84
+
+estimator                             peak              CI68 implied fudge
+truncated-Gaussian ML (pr/126 primary)   138.3     [134.5,141.7] 0.861
+KDE mode (in-window)                 149.1     [146.0,151.3] 0.928
+half-sample mode (in-window)         153.8     [143.1,153.9] 0.957
+median (in-window)                   143.3                   0.892
+median (all)                         138.7                   0.863
+
+pr/126 criterion 4 (peak >= median in-window): 138.3 vs 143.3 -> FAIL
+=> the truncated-Gaussian premise (one-sided LOW tail) does not hold on this sample;
+   the in-window mode sits at 145-155 while the ML fit is pulled to 138 by the low shoulder.
+
+in-window shape, 5 MeV bins:
+  100-105 # 1
+  105-110 ### 3
+  110-115 ### 3
+  120-125 ### 3
+  125-130 ### 3
+  130-135 ### 3
+  135-140 ## 2
+  140-145 ### 3
+  145-150 ###### 6
+  150-155 ####### 7
+  155-160 ## 2
+  160-165 ## 2
+  165-170 ## 2
+
+per-pair m_prod / m_lab (label masses are scan-time reco at fudge 0.80):
+  median 0.953  mean 0.961  quartiles 0.952/0.953/0.983  (pure 0.80->0.84 change = 0.952)

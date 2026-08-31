@@ -1,0 +1,66 @@
+[6505] 2 reference junctions; arms: WCP-on(282 pts, sum q 1.22e+07), WCP-off(278 pts, sum q 1.18e+07), WCT-on(292 pts, sum q 1.27e+07), WCT-off(293 pts, sum q 1.25e+07)
+  J0 at (108.84,48.26,1029.27)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  4 q=   263019 | R2: n= 10 q=   633830 | R3: n= 15 q=   953093
+     WCP-off      nearest vtx 0.16 cm    R1: n=  5 q=   252338 | R2: n= 11 q=   603180 | R3: n= 15 q=   870685
+     WCT-on       nearest vtx 0.18 cm    R1: n=  4 q=   279624 | R2: n= 10 q=   668141 | R3: n= 14 q=   967505
+     WCT-off      nearest vtx 0.29 cm    R1: n=  5 q=   267245 | R2: n= 11 q=   648086 | R3: n= 15 q=   936854
+  J1 at (160.34,71.59,966.52)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  5 q=   297255 | R2: n= 13 q=   673760 | R3: n= 21 q=  1118140
+     WCP-off      nearest vtx 0.08 cm    R1: n=  6 q=   298926 | R2: n= 13 q=   623876 | R3: n= 20 q=   992031
+     WCT-on       nearest vtx 0.36 cm    R1: n=  7 q=   388744 | R2: n= 13 q=   627165 | R3: n= 21 q=  1056644
+     WCT-off      nearest vtx 0.33 cm    R1: n=  7 q=   279996 | R2: n= 13 q=   551926 | R3: n= 21 q=   990443
+[6528] 2 reference junctions; arms: WCP-on(164 pts, sum q 7.07e+06), WCP-off(164 pts, sum q 7.14e+06), WCT-on(186 pts, sum q 7.64e+06), WCT-off(196 pts, sum q 7.29e+06)
+  J0 at (223.85,42.05,23.05)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  5 q=   240785 | R2: n= 12 q=   557360 | R3: n= 18 q=   790816
+     WCP-off      nearest vtx 0.12 cm    R1: n=  5 q=   258594 | R2: n= 12 q=   567777 | R3: n= 17 q=   750062
+     WCT-on       nearest vtx 0.52 cm    R1: n=  5 q=   275827 | R2: n= 11 q=   522936 | R3: n= 16 q=   673148
+     WCT-off      nearest vtx 0.39 cm    R1: n=  6 q=   202891 | R2: n= 13 q=   376585 | R3: n= 20 q=   553737
+  J1 at (223.43,42.63,22.22)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  2 q=   165163 | R2: n=  7 q=   379897 | R3: n= 13 q=   593205
+     WCP-off      nearest vtx 0.12 cm    R1: n=  3 q=   253285 | R2: n=  8 q=   417605 | R3: n= 13 q=   603613
+     WCT-on       nearest vtx 0.58 cm    R1: n=  3 q=   207999 | R2: n=  7 q=   388358 | R3: n= 13 q=   576093
+     WCT-off      nearest vtx 0.91 cm    R1: n=  1 q=    56586 | R2: n=  8 q=   258869 | R3: n= 15 q=   440246
+[6532] 2 reference junctions; arms: WCP-on(257 pts, sum q 1.15e+07), WCP-off(249 pts, sum q 1.1e+07), WCT-on(388 pts, sum q 1.4e+07), WCT-off(383 pts, sum q 1.4e+07)
+  J0 at (151.19,-105.94,890.20)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  4 q=   309610 | R2: n= 10 q=   633042 | R3: n= 16 q=   940899
+     WCP-off      nearest vtx 0.02 cm    R1: n=  4 q=   190142 | R2: n= 10 q=   506299 | R3: n= 16 q=   797947
+     WCT-on       nearest vtx 0.18 cm    R1: n=  4 q=   298743 | R2: n= 10 q=   607320 | R3: n= 15 q=   847395
+     WCT-off      nearest vtx 0.17 cm    R1: n=  4 q=   292361 | R2: n= 10 q=   620848 | R3: n= 15 q=   881928
+  J1 at (150.14,-97.76,921.49)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  5 q=   196732 | R2: n= 13 q=   518518 | R3: n= 18 q=   740079
+     WCP-off      nearest vtx 31.93 cm   R1: n=  3 q=   134500 | R2: n=  8 q=   308242 | R3: n= 13 q=   518505
+     WCT-on       nearest vtx 3.78 cm    R1: n=  0 q=        0 | R2: n=  0 q=        0 | R3: n=  1 q=    70325
+     WCT-off      nearest vtx 3.82 cm    R1: n=  0 q=        0 | R2: n=  0 q=        0 | R3: n=  0 q=        0
+[6650] 2 reference junctions; arms: WCP-on(246 pts, sum q 1.04e+07), WCP-off(245 pts, sum q 1.03e+07), WCT-on(289 pts, sum q 1.11e+07), WCT-off(284 pts, sum q 1.13e+07)
+  J0 at (185.21,-8.40,453.37)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  4 q=   308147 | R2: n=  9 q=   603441 | R3: n= 15 q=   950572
+     WCP-off      nearest vtx 0.23 cm    R1: n=  5 q=   319100 | R2: n=  9 q=   577561 | R3: n= 15 q=   920089
+     WCT-on       nearest vtx 0.45 cm    R1: n=  6 q=   293805 | R2: n= 11 q=   488148 | R3: n= 19 q=   825385
+     WCT-off      nearest vtx 0.22 cm    R1: n=  5 q=   301659 | R2: n= 12 q=   580938 | R3: n= 18 q=   839684
+  J1 at (186.29,-11.95,457.66)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  4 q=   191473 | R2: n= 10 q=   503214 | R3: n= 16 q=   857743
+     WCP-off      nearest vtx 0.44 cm    R1: n=  3 q=   222126 | R2: n=  9 q=   526681 | R3: n= 14 q=   795238
+     WCT-on       nearest vtx 2.76 cm    R1: n=  3 q=   207089 | R2: n=  7 q=   467956 | R3: n= 14 q=   802207
+     WCT-off      nearest vtx 2.61 cm    R1: n=  4 q=   274142 | R2: n=  6 q=   411342 | R3: n= 13 q=   799296
+[6805] 2 reference junctions; arms: WCP-on(208 pts, sum q 7.45e+06), WCP-off(206 pts, sum q 7.4e+06), WCT-on(268 pts, sum q 8.98e+06), WCT-off(258 pts, sum q 8.66e+06)
+  J0 at (47.93,69.44,430.40)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  4 q=   128367 | R2: n=  9 q=   330165 | R3: n= 13 q=   490970
+     WCP-off      nearest vtx 0.04 cm    R1: n=  3 q=   110391 | R2: n=  7 q=   281921 | R3: n= 11 q=   436694
+     WCT-on       nearest vtx 0.76 cm    R1: n=  4 q=   106321 | R2: n=  8 q=   272300 | R3: n= 10 q=   352679
+     WCT-off      nearest vtx 0.72 cm    R1: n=  4 q=    96222 | R2: n=  8 q=   261007 | R3: n= 11 q=   365409
+  J1 at (47.98,67.99,430.62)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  2 q=    68527 | R2: n=  8 q=   273144 | R3: n= 12 q=   432879
+     WCP-off      nearest vtx 1.50 cm    R1: n=  0 q=        0 | R2: n=  6 q=   222822 | R3: n= 11 q=   394101
+     WCT-on       nearest vtx 0.75 cm    R1: n=  1 q=        0 | R2: n=  7 q=   216062 | R3: n= 10 q=   323085
+     WCT-off      nearest vtx 0.75 cm    R1: n=  1 q=        0 | R2: n=  7 q=   204763 | R3: n= 11 q=   334375
+[6806] 2 reference junctions; arms: WCP-on(67 pts, sum q 2.41e+06), WCP-off(67 pts, sum q 2.59e+06), WCT-on(84 pts, sum q 4.52e+06), WCT-off(85 pts, sum q 3.35e+06)
+  J0 at (172.58,-96.35,732.97)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  5 q=   279328 | R2: n= 12 q=   586684 | R3: n= 16 q=   703366
+     WCP-off      nearest vtx 0.39 cm    R1: n=  6 q=   351959 | R2: n= 12 q=   666905 | R3: n= 16 q=   790732
+     WCT-on       nearest vtx 0.19 cm    R1: n=  6 q=   720285 | R2: n= 13 q=  1403705 | R3: n= 16 q=  1547371
+     WCT-off      nearest vtx 0.37 cm    R1: n=  5 q=   262780 | R2: n= 14 q=   931115 | R3: n= 17 q=  1039052
+  J1 at (173.74,-95.89,732.09)
+     WCP-on       nearest vtx 0.00 cm    R1: n=  2 q=    92163 | R2: n=  7 q=   375250 | R3: n= 13 q=   604158
+     WCP-off      nearest vtx 0.47 cm    R1: n=  2 q=   105597 | R2: n=  7 q=   404841 | R3: n= 13 q=   690115
+     WCT-on       nearest vtx 0.05 cm    R1: n=  2 q=   226360 | R2: n=  8 q=   990902 | R3: n= 13 q=  1405857
+     WCT-off      nearest vtx 0.13 cm    R1: n=  3 q=   225500 | R2: n=  9 q=   656385 | R3: n= 15 q=   960810

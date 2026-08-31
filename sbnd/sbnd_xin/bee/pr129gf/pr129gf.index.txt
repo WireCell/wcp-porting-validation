@@ -1,0 +1,81 @@
+# doc pr/129 (guard-freed) -- implementing the owner's 2026-08-29 ruling:
+#   "all three should be reject, overclustering, so not counting in the enr
+#    eneryg, OK tobe in PR, I guess."
+#
+# A/B index -- BASE   aff1fc6a-e7d9-47ec-886d-a618856f23c3
+#              NOKINE 4fa187d6-fcba-4fa4-a3aa-0095e1b9c68b
+#   BASE   https://www.phy.bnl.gov/twister/bee/set/aff1fc6a-e7d9-47ec-886d-a618856f23c3/event/list/
+#   NOKINE https://www.phy.bnl.gov/twister/bee/set/4fa187d6-fcba-4fa4-a3aa-0095e1b9c68b/event/list/
+#   Uploaded 2026-08-29 on the owner's word ("Yes please").
+#   CONTENT-VERIFIED TWICE: (a) package vs source arm 6/6; (b) LIVE REMOTE --
+#   GET set/<uuid>/event/<i>/mc/ on both sets, normalised-JSON md5 vs the local
+#   zip, 6/6 match (http 200).  So the indices below address these events ON
+#   THE SERVER.
+#
+# The ruling separates PF display from Enu accounting, and the codebase already
+# has that split as two knobs.  So this arm needs NO NEW CODE:
+#   SBND_PF_ORPHAN_GUARD_FREED=1   PR tree keeps showing the object (unchanged)
+#   SBND_KINE_COUNT_GUARD_FREED=0  it stops entering kine_reco_Enu
+# Verified: all three objects are STILL IN THE PR TREE in the NOKINE arm
+# (171572 "mu- 304 MeV", 393505 "mu- 268 MeV", 94392 "mu- 137 MeV").
+#
+# BASE   = work-pr128r1-on141-mcp2k   = production today.
+# NOKINE = work-pr129gf-nokine-mcp2k  = scripts/pr129_guardfreed_arm.sh
+# Content-verified package-vs-source 6/6.
+#
+# POPULATION IS THE WHOLE STORY: kine_count_guard_freed counts exactly THREE
+# objects across all 239 events of both manifests, 710.66 MeV.  All three are
+# in this set.  There is nothing else to find.
+#
+# OWNER VERDICT 2026-08-29, after scanning all three:
+#   "1. 171572, 784.9 MeV should be the right energy.  2. 393505 should be the
+#    lower energy.  3. is OK."
+# So:
+#   idx 0  171572  KEEP the 304.75 MeV -- BASE (784.9) is right.  It is REAL.
+#   idx 1  393505  DROP the 268.70 MeV -- NOKINE (566.1) is right.  Confirms the
+#                  earlier over-clustering ruling on cluster 15.
+#   idx 2  94392   either arm acceptable (Enu identical, 1142.5 both ways).
+#
+# CONSEQUENCE: a blanket flip of kine_count_guard_freed is now RULED OUT -- it
+# would cost 171572 the 410.4 MeV the owner just called correct.  The pool needs
+# a DISCRIMINATOR that keeps 171572 and 94392 while dropping 393505.
+#
+# The whole decision set, for whoever builds it:
+#   event   ke_mev  len_cm  cluster_extent_cm  d_vtx_cm  verdict
+#   171572  304.75   125.1              125.3      16.1  KEEP (owner)
+#   94392   137.21    46.8               73.4      16.2  keep/either (owner)
+#   393505  268.70   108.5              296.7      68.4  DROP (owner)
+# Within THIS pool extent and d_vtx both separate cleanly (125.3/73.4 vs 296.7;
+# 16.1/16.2 vs 68.4).  But n=3, so any threshold is fitted to three points, and
+# the doc pr/129 negative result stands GLOBALLY: neither quantity separates the
+# owner's approvals from his rejections across pools (rejected 399118 is 102.6 /
+# 4.3, smaller and closer than approved 55740 at 131.3 / 48.1).  A threshold
+# invented here must therefore be scoped to this pool and justified by the fact
+# that the guard-freed pool is the ONLY pool with no geometric admission test at
+# all -- its predicate is the kPass4GuardFreed flag and nothing else.
+#
+# BETTER IDEA ALREADY IN FLIGHT, not mine: an uncommitted 97-line probe in
+# clus/src/NeutrinoKinematics.cxx (env WCT_KINE_GUARDFREED_PROBE, byte-neutral,
+# mtime 2026-08-29 14:56, no commit contains it) asks whether the ALREADY-
+# APPROVED pr/128 continuation test separates these three with NO new threshold.
+# That avoids fitting a constant to n=3 entirely.  Do not duplicate it; see the
+# report to the owner.
+#
+# bee_idx	event	status
+0	171572	THE ONLY OPEN QUESTION IN THE ROUND.  304.75 MeV, 125.1 cm mu-, counted into Enu today ONLY by the guard-freed pool.  NOKINE: Enu 784.9 -> 374.5 (-410.4 = 304.7 + muon rest mass); the track still shows in the PR tree.  Geometry says it is NOT like the object you rejected: its cluster 10 is a SINGLE 125.1 cm segment, extent 125.3 cm, closest approach to the nu vertex 16.1 cm -- compare the approved 55740 (extent 131.3, 48.1 cm out) and 392901 (106.5, 34.2 cm out).  The rejected 393505 was a 3-segment chain of extent 296.7 cm passing no closer than 68.4 cm.  So my read is that 171572 is REAL and should keep its 410 MeV -- but it rides on the same pool as the object you rejected, so I am not flipping anything until you say.  IF YOU AGREE IT IS REAL: a blanket flip of kine_count_guard_freed is wrong and we need a discriminator (and see the note below -- geometry does not provide one).  IF YOU READ IT AS OVER-CLUSTERING TOO: flip the knob, no new code, done.
+1	393505	CALIBRATION REFERENCE -- you already rejected this one.  268.70 MeV of the cosmic cluster 15 (3 segments chaining end-to-end into 296.7 cm, never closer than 68.4 cm to the vertex).  NOKINE: Enu 940.4 -> 566.1 (-374.4).  Still in the PR tree.  This is the fire the ruling authorises.
+2	94392	CONTROL -- COSTS NOTHING, and it is the reassuring result.  137.21 MeV, 46.8 cm.  NOKINE: Enu 1142.5 -> 1142.5, UNCHANGED.  With the guard-freed pool off, the IDENTICAL segment is counted instead by pr/128's continuation pool ("kine_count_near_cross_cluster: COUNT seg idx=30 cluster=45 ke_mev=137.21 gap_cm=0.00", kink 13.3 deg).  The two pools are mutually exclusive by construction, so this object is counted exactly once either way and the legitimate continuation class is caught by the predicate you already approved.  Turning the guard-freed pool off does NOT cost this event anything.
+#
+# WHY NO GEOMETRIC BOUND IS PROPOSED (negative result, measured):
+# extent / nu-vertex distance of the parent cluster, against every object with
+# a known verdict --
+#   55740  APPROVED  131.3 / 48.1      393505 REJECTED  296.7 / 68.4
+#   392901 APPROVED  106.5 / 34.2      399118 REJECTED  102.6 /  4.3
+#   105074 APPROVED  442.8 /  0.5      318769 REJECTED   44.7 / 113.4
+# Neither column separates them: the rejected 399118 is smaller in extent than
+# the approved 55740 and closer to the vertex than anything approved, and the
+# rejected 318769 has the smallest extent in the table.  The segment-to-cluster
+# extent RATIO fails the same way (approved 392901 2.77 vs rejected 393505
+# 2.73).  Same shape as pr/128's proximity finding: "over-clustering" is a
+# judgement, not a distance.  If idx 0 is real, the discriminator has to come
+# from somewhere other than geometry.

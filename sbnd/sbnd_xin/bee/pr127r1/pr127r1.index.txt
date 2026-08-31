@@ -1,0 +1,25 @@
+# doc pr/127 -- 137238 A/B (sccc_max_gap 6 -> 10, SBND PRODUCTION ON 2026-08-29, toolkit 49754bf8)
+# A/B index -- OFF 46035541-d805-4a8e-ae76-f3b654bb221d / ON 57ffc1f5-5bc8-4a05-bfd2-850484cbcce1
+#   (Both UUIDs content-verified BEFORE this file was written: the remote
+#    set/<uuid>/event/0/mc/ md5 equals the local zip's data/0/0-mc.json md5, and the
+#    OFF set's PF tree reads "e- 92 MeV" with nothing under it while the ON set reads
+#    "mu- 60 -> 0 0 MeV (bridge) -> ...".  OFF = work-pr125r1-flipK598-nuecc48 =
+#    CURRENT production, i.e. today's pr/125 point WITH the K5 satellite absorb flipped
+#    on.  NOTE the pr/125 pair you scanned showed this node as "e- 89 MeV"; the 89 -> 92
+#    MeV difference is the K5 flip (it folded ~3 MeV of crumbs in), NOT this change.
+#    ON = work-pr125r1-flipS98-nuecc48 = the same plus sccc_max_gap 10.)
+# Footprint: 478 archives over both manifests, exactly ONE differs -- this event's
+# mabc-pr.zip.  pctree-pr identical everywhere.  0 vertex movers; nusel 239/239
+# byte-identical; the label metric cannot move (137238 carries no EM marks).
+# bee_idx	event	status
+0	137238	RESCUED (owner 2026-08-29: "the electron 89 MeV should connect to some thing, which is missing from the PF tree").  Root cause was a REGRESSION, not a new defect: the pr/93 r4 fix for this same event (straight_cont_cross_cluster, owner-approved 2026-08-18) stopped firing when the Q/L era moved cb0805 -> grp0825 -- its 79.3cm muon body drifted from g=5.68cm K=17.0deg (which is why the base tier was cut at 6cm) to g=8.00cm K=14.0deg, into the notch between the base tier's gap and the aligned tier's kink.  OFF: "e- 92 MeV" at the vertex, the 79.3cm cluster-7 muon and its 19.4cm Michel-like tail absent from PF and from kine.  ON: "mu- 60 MeV" (stem, re-PIDed) -> zero-charge bridge -> "mu- 207 MeV" (76.6cm body) -> "mu- 66 MeV" (continuation), with the delta ray as e- 6/9/17 MeV leaves; kine_reco_Enu 706.4 -> 768.0 (add_energy 105.7 -> 211.3).  Matches the pr/93 r4 recorded result (mu- 60 -> mu- 211 -> mu- 65) to within the era's own drift.
+# WORTH A LOOK WHILE YOU ARE HERE (reported, not tuned -- doc pr/127 sec 3.2):
+#   - nue_score -4.30 -> -15.00.  -15.00 is the FLOOR, not a cliff: it is both the
+#     minimum and the median over all 239 events (125 events sit exactly there) and the
+#     manifest maximum is 4.30, so neither value would pass a nue selection; the Q/L
+#     selection table is byte-identical.  The event trades a fake vertex electron for a
+#     vertex muon -- the structure you adjudicated in pr/93 r4.
+#   - a JUNK pi0 pairing appears: Path 1 pairs the 379.6 MeV electron with a 1.29 MeV
+#     crumb 47.3cm away at 9.3 deg => kine_pio_mass 3.25 MeV.  The finder has no
+#     minimum-partner-energy floor (pr/126's own hand-scan required min(E) > 15 MeV).
+#     Pre-existing finder property, exposed by the structure change; handed to pr/126.

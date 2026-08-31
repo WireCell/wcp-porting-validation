@@ -1,0 +1,96 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -2.75,
+   -100.25,
+   47.48
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 652,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 652,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 21748,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.13797868393986976,
+   -0.7358863143459721,
+   0.6628975902328526
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.13797868393986976,
+    -0.7358863143459721,
+    0.6628975902328526
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 143.80713127482824,
+   "kine_charge": 143.80713127482824,
+   "kine_charge_other_hypothesis": 86.50053009012227,
+   "kine_dQdx": 97.66737337546505,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    4000,
+    47005
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -1.351808757883611,
+   -86.10082806664937,
+   32.7435573584941
+  ],
+  "reco_start_vertex_id": 4001,
+  "shower": 4000,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -1.351808757883611,
+   -86.10082806664937,
+   32.7435573584941
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt475778",
+ "eventNo": 475778,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -1.351808757883611,
+  "y": -86.10082806664937,
+  "z": 32.7435573584941
+ },
+ "note": "[agent-bulk] nuecc, 5 showers, 6 segments -- the smallest event in my shard and a clean single-electron topology. Verdict shower 4000 (pdg 11, kine_charge 143.8 MeV, 2 seg, len 34.4); correction 17: it is the only pdg==11 shower in scope and the highest kine_charge object in the event, so nothing was passed over. VERTEX IS GOOD: 4000's own seed is the only segment with a point at 0.0 cm from the main vertex, and on vtx-az+065-el+20 the star sits exactly on the lower end of that segment. This is a single-prong vertex -- no hadronic recoil is reconstructed -- which is unremarkable for a quasi-elastic nuecc with a sub-threshold proton, and is not a vertex defect. NOTE THE FRAMING: event_half_span is 99.6 cm and r95 is 79.7 cm, both under the 150 cm threshold, so no vtxz-* frames were written; the vertex is judged off the ordinary vtx-* set. CORRECT, and the argument is about the non-members, not the shape (pilot section 2.3): every non-member in the event is either far outside the cone or behind the start. 30003 (pdg 2212, 4.3 MeV) is at 79.4 cm / 35.2 deg, 29002 (pdg 2212, 3.2 MeV) at 89.8 cm / 41.9 deg, 28001 (1.1 MeV) at 93.0 cm / 45.0 deg, and 31004 (1.2 MeV) at 31.4 cm / 120.1 deg, i.e. behind the shower start. There is nothing contiguous, on-axis and unclaimed anywhere to add. shw4000-acc.png makes the same point with no ambiguity at all: in the 0-40 cm by 0-15 deg window there are TWO orange squares, at (0,0) and (27.7, 2.6), and NOT A SINGLE blue circle -- nothing was rejected anywhere near this cone, so there is no just-outside-the-step case to argue about. Nothing foreign was swallowed either: the second member 47005 (14.8 cm, pass3_cone direct) sits at 27.7 cm / 2.6 deg, squarely on the axis, and cmp_div gives the whole member set as distance 0.0-27.7 cm at angle 0.0-2.6 deg. Membership triple-check per correction 16 agrees at 2 (nseg 2, owner-grouped candidates with owner==4000 are 4000 and 47005 = 2, cmp_div says 2 segment(s) plotted) -- worth stating explicitly on a 5-shower/6-segment event, where correction 16's usual trap is that nearly every segment is its own sub-20 MeV shower; here all four of those (30003, 29002, 31004, 28001, 1.1-4.3 MeV) are genuinely non-members and correctly left out. AND UNLIKE TWO OTHER EVENTS IN MY SHARD THIS ONE LOOKS LIKE AN EM SHOWER: on shw4000-az-055-el+20 the blob point cloud is diffuse and visibly WIDENS from the vertex outwards -- narrow around the first member and clearly fanned out around the second -- which is what a developing shower does and what the straight MIP-width objects I flagged on evt397401 and evt390634 did not do. So I have no PID doubt here and this verdict is a clustering verdict with nothing else attached. What correct means here is the pilot's fast-pass sense: nothing jumped out at the frames and the tables listed above, not a segment-by-segment verification. There is one small gap in the point cloud between the two members which I looked at and do not think is a defect, since 47005 is already claimed. Showers not looked at: the 4 skipped by the scope rule, which are exactly the four non-members named above. PI0: no reco group, pio_id -1, kine_div says no pi0 group in this event and no pio-*.png was written; there is no second EM object anywhere, so this is a single-electron event and no pairing is proposed. drag_check both true, probe_radius 70.7 px, probe_degenerate false.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt475778/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:51:28+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt475778/calib-pr-evt475778.json",
+ "subRunNo": 1
+}

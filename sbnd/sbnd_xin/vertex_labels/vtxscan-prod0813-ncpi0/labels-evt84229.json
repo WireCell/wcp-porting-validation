@@ -1,0 +1,44 @@
+{
+ "arm": "work-ncpi0-prod0813",
+ "confidence": null,
+ "dl_best_score": 131.46362004761815,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt84229",
+ "eventNo": 84229,
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": 97.48825702328398,
+  "y": 122.85772865224935,
+  "z": 384.5363752836764
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 19,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "dl_score": 0.12898537516593933,
+   "dl_winner": true,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": 131.46362004761815,
+   "snap_dis": 0.1087755916059742,
+   "trad_score": 1.375,
+   "trad_winner": true,
+   "vertex_id": 19041,
+   "x": 97.48825702328398,
+   "y": 122.85772865224935,
+   "z": 384.5363752836764
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 18364,
+ "saved_utc": "2026-08-14T17:01:28+00:00",
+ "scan_tag": "vtxscan-prod0813-ncpi0",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-prod0813/pr_evt84229/calib-pr-evt84229.json",
+ "subRunNo": 1
+}

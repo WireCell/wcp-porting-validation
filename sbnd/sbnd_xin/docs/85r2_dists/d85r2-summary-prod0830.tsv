@@ -1,0 +1,6 @@
+sample	n_eval	n_degenerate	n_scored	med_Enu_MeV	n_nue_gt_clamp	n_nue_gt_ub	n_numu_gt_clamp	n_nue_unfilled	n_nue_below_-14.9_not_sentinel	med_excluded_MeV	med_excluded_frac
+ncpi0	19	0	19	1329.4	1	0	0	14	0	23.8	0.0316
+nuecc48	48	0	48	1503.9	34	31	1	4	0	3.7	0.0027
+mcp1k	461	16	445	571.9	1	0	32	424	0	2.1	0.0040
+mcp2k	905	33	872	534.0	5	3	77	800	0	2.2	0.0044
+ALL	-	-	1384	-	41	34	110	1242	0	-	-

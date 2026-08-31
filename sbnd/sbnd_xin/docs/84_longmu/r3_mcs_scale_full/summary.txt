@@ -1,0 +1,13 @@
+doc 84 round 3 MCS scale harvest
+
+arm work-d84r3-cens-mcp1k                    logs=1000 new_events=286 sentinels=287
+arm work-d84r3-cens-mcp2k                    logs=2000 new_events=551 sentinels=556
+
+total sentinel rows: 843 (distinct events: 837)
+null-chain comparator rate: 687/843 = 81.5%
+usable (ke>0, bad_path=false): 835   chain-selected: 156   pf-fallback: 679   bridged: 7
+
+ke_MCS/ke_range chain-selected n=156  median=1.246 q25=0.967 q75=1.954
+ke_MCS/ke_range pf-fallback    n=679  median=1.115 q25=0.961 q75=1.737
+ke_MCS/ke_range all            n=835  median=1.141 q25=0.962 q75=1.817
+ke_MCS/ke_range bridged        n=7    median=1.059 q25=1.003 q75=1.141

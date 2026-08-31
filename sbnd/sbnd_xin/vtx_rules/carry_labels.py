@@ -51,6 +51,19 @@ Repro:
   python3 vtx_rules/carry_labels.py --dry-run          # report only
   python3 vtx_rules/carry_labels.py --write            # write the fresh tags
   python3 vtx_rules/carry_labels.py --delta-list /home/xqian/tmp/pr82/delta.txt
+
+doc pr/100 addition: --arms lets a later epoch carry a DIFFERENT tag set onto a
+DIFFERENT arm set without editing this file.  Omitting it reproduces the pr/82
+ARMS dict above byte-for-byte -- this is the closure test, not a courtesy.
+`{sample}` in the arm or newtag half is resolved per-label from the label's own
+`arm` field (substring match against nuecc48/ncpi0/mcp1k/mcp2k), because
+vtxscan-harv3-delta is one tag spanning several samples' arms (pr/82 sec 4's
+"the one tag spanning two arms" already forced this same resolution on
+build_dataset.py's --harvest-roots):
+  python3 vtx_rules/carry_labels.py --write \
+      --arms vtxscan-harv3-nuecc48=work-vtx100-base-nuecc48:vtxscan-v100-nuecc48 \
+             vtxscan-harv3-delta=work-vtx100-base-{sample}:vtxscan-v100-delta \
+             vtxscan-mcp2k=work-vtx100-base-mcp2k:vtxscan-v100-mcp2k
 """
 import argparse
 import datetime
@@ -71,6 +84,41 @@ ARMS = {
     "vtxscan-prod0813-ncpi0": ("work-ncpi0-harv3",   "vtxscan-harv3-ncpi0"),
     "vtxscan-prod0813-mcp1k": ("work-mcp1k-harv3",   "vtxscan-harv3-mcp1k"),
 }
+
+SAMPLES = ("nuecc48", "ncpi0", "mcp1k", "mcp2k")
+
+
+def parse_arms_arg(pairs):
+    """['oldtag=newarm:newtag', ...] -> {oldtag: (newarm, newtag)}.
+
+    Replaces ARMS wholesale (never merges with it) -- a later epoch's tag set
+    is not a superset of pr/82's, and merging would let a stale default entry
+    silently ride along into a new carry.
+    """
+    out = {}
+    for p in pairs:
+        oldtag, rest = p.split("=", 1)
+        newarm, newtag = rest.split(":", 1)
+        out[oldtag] = (newarm, newtag)
+    return out
+
+
+def resolve_sample(template, lab):
+    """Fill a `{sample}` placeholder from the label's OWN `arm` field.
+
+    Only vtxscan-harv3-delta needs this: doc pr/82 sec 4 built it as one tag
+    spanning several samples' arms (nuecc48/mcp1k), the same fact that forced
+    build_dataset.py's --harvest-roots to key on `@arm`.  Templates without
+    `{sample}` pass through untouched -- every pr/82 default entry does.
+    """
+    if "{sample}" not in template:
+        return template
+    a = lab.get("arm") or ""
+    for s in SAMPLES:
+        if s in a:
+            return template.format(sample=s)
+    raise ValueError("cannot resolve {sample}: tag=%s evt=%s arm=%r matches none of %s"
+                      % (lab["tag"], lab["eventNo"], a, SAMPLES))
 
 
 def dump_path(arm, evt):
@@ -158,14 +206,22 @@ def main():
                          "worst first -- the input selfscan --dumps and the "
                          "pr_display viewer both want")
     ap.add_argument("--tsv", default=None, help="per-event result TSV")
+    ap.add_argument("--arms", nargs="+", default=None,
+                    help="oldtag=newarm:newtag ... ; REPLACES the pr/82 ARMS "
+                         "dict above (never merges).  Omit to reproduce the "
+                         "pr/82 carry exactly.  newarm/newtag may contain "
+                         "{sample}, resolved per-label from its own arm field.")
     args = ap.parse_args()
+
+    arms_map = parse_arms_arg(args.arms) if args.arms else ARMS
 
     now = datetime.datetime.now(datetime.timezone.utc).replace(
         microsecond=0).isoformat()
     carried, delta, missing = [], [], []
 
-    for lab in vtx_io.load_labels(tags=sorted(ARMS)):
-        arm, newtag = ARMS[lab["tag"]]
+    for lab in vtx_io.load_labels(tags=sorted(arms_map)):
+        arm_t, newtag_t = arms_map[lab["tag"]]
+        arm, newtag = resolve_sample(arm_t, lab), resolve_sample(newtag_t, lab)
         evt = lab["eventNo"]
         p = dump_path(arm, evt)
         if not os.path.isfile(p):
@@ -255,6 +311,12 @@ def main():
             "dl_score_scale": sb.get("dl_score_scale"),
             "event": "evt%d" % r["evt"],
             "eventNo": meta.get("eventNo", r["evt"]),
+            # doc pr/100: carried straight through, not re-derived -- the
+            # human/AI distinction describes who made the ORIGINAL pick, not
+            # this carry.  Without this the pr/88 ai-scanner tag's 299 labels
+            # silently read back as "human" (scn_vtx.io.load_label defaults
+            # a missing key to 'human'), erasing the split entirely.
+            "label_source": lab.get("label_source") or "human",
             "main_vertex": dump.get("main_vertex"),
             "not_a_candidate": lab.get("not_a_candidate", False),
             "picks": [pick],
@@ -291,7 +353,7 @@ def main():
         written += 1
 
     print("\nwrote %d carried labels into %s"
-          % (written, ", ".join(sorted(t for _, t in ARMS.values()))))
+          % (written, ", ".join(sorted({r["newtag"] for r in carried}))))
     print("scoreboard-row join: %s" % sorted(joins.items()))
     if joins.get("no-row"):
         print("  note: %d picks sit on a vertex the current reranker never "

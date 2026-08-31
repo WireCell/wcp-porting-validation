@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt75040",
+ "eventNo": 75040,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -76.99287999916922,
+  "y": -34.53230338190972,
+  "z": 155.3313084511276
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 17007,
+   "x": -76.99287999916922,
+   "y": -34.53230338190972,
+   "z": 155.3313084511276
+  }
+ ],
+ "reco_sep_cm": 0.003913056067836348,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: three prongs radiate from 17007 at wide angles, one a 6.2-cm proton-template Bragg rising to 285000 at its tip, while the 156-cm muon stops at the far end 17004 which also carries a Michel-like 8.6-cm electron.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt75040/calib-pr-evt75040.json",
+ "subRunNo": 1
+}

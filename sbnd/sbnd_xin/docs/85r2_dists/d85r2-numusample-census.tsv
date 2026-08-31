@@ -1,0 +1,5 @@
+selection	n_mcp1k	n_mcp2k	n_total	median_Enu_MeV
+all, cosmics excluded	370	745	1115	590.8
+numu_score > 0.9	249	472	721	703.3
+nue_score > 7.0 (uB point)	0	3	3	797.9
+nue_score > 4.30103 (old ceiling)	1	5	6	798.2

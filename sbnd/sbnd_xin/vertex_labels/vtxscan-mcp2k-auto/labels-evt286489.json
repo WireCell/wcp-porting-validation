@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt286489",
+ "eventNo": 286489,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": -173.64400182249105,
+  "y": -186.06039770961883,
+  "z": 135.5532750660322
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13002,
+   "x": -173.64400182249105,
+   "y": -186.06039770961883,
+   "z": 135.5532750660322
+  }
+ ],
+ "reco_sep_cm": 0.00518640662752843,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: the only deg-3 junction, with a 10 cm proton rising 90k->245k away to a Bragg at 13003, an 18 cm pi+ ending hot at 13000, and a 33 cm flat-MIP muon leaving through the x=-201 anode face.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt286489/calib-pr-evt286489.json",
+ "subRunNo": 1
+}

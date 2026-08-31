@@ -1,0 +1,16 @@
+# doc pr/102 round 2 A/B index -- OFF c94d6274-7628-4f82-b0a5-ce1021bc9c60 / ON a5710cfa-5f69-43f0-85b3-1d64f269bbdd
+# before = work-pr102r2-offmerged-mcp1k (knobs off), after = work-pr102r2-l30full-mcp1k
+# (other_seg_keep_isolated_len_admit=30, the shipped operating point).
+# before: https://www.phy.bnl.gov/twister/bee/set/c94d6274-7628-4f82-b0a5-ce1021bc9c60/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/a5710cfa-5f69-43f0-85b3-1d64f269bbdd/event/list/
+# bee_idx	event	status
+0	292384	RESCUED: 145.5 cm second track (23 terminals vs 25 floor) now fitted; nseg 11->12; scores unchanged
+1	387850	RESCUED: 67.1 cm track carrying 23.8% of cluster charge now fitted; nseg 3->4; numu -0.75->-1.18 (stays negative, cosmict=1 both)
+2	284794	mover: 71.4 cm second track ADMITTED (nnf=0, len disjunct); vertex unmoved (0.14 cm); numu 2.12->-1.28 -- HAND-CHECK: is the second track real activity or should its admission be vetoed here?
+3	279256	mover: 45.3 cm candidate admitted (nnf=19); numu 3.62->3.61, benign
+4	288859	mover: 43.9 cm candidate admitted (nnf=5); numu 4.13->3.36, same selection
+5	277298	RESIDUAL: 17.1 cm near-vertex candidate (nnf=8) still dropped -- needs min_nnf (validated at 8 but held OFF: one named nue loss 389538)
+6	490361	RESIDUAL: near-vertex hadronic fan (10.6% of charge, proton-owned) -- needs P2 (uncover_3d), held OFF (23 ADVERSE movers at 3.0 cm)
+7	278420	RESIDUAL: 20 cm isochronous near-vertex prong (11.5%) -- P2 family, held OFF
+8	410008	RESIDUAL: uncovered charge in A5-tagged hadronic shower -- P2 family, held OFF
+9	349549	unchanged (M4 exemplar): PR structure identical (50 seg/86 vtx/13 shower), nue -2.97->-1.60 is the known DL-vertex bit-instability, not the knob

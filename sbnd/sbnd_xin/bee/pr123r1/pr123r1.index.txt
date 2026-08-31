@@ -1,0 +1,34 @@
+# doc pr/123 round 1 A/B index -- OFF 24e81f0c-4ea4-471b-b2f5-6e724985e920 / ON 94d3b955-6617-4ed4-8263-c8351dc0370e
+# OFF = current SBND production point (work-pr123r1-off141b/off1 arms, byte-identical to
+#   work-d84r1-flipchk98-* and work-pr123r1-base141-*); ON = shower_pass4_prune_detached
+#   (G=40cm, detached components re-seed as own showers) + shower_pass4_track_guard_len=50
+#   (work-pr123r1-on141/on1 arms).  19 events: 13 rescued/improved first, then 348471
+#   (pr/121 follow-on), then 5 adjudication rows, then 1 residual reference.
+# Open shower_track-global: colour = shower membership.  vertices-global and
+#   track_fit-global are byte-identical between the sets on every event (0 vertices moved
+#   across all 239; nusel TSVs identical).  A pruned component appears as its own new
+#   colour, NOT as unowned points -- except the 3 track-guard muons (idx 0/1/4), which
+#   correctly return to plain track segments.
+# OWNER-REVIEWED 2026-08-28: ALL rows good; idx 13/14 OK (their nu vertices are wrong -- vertex-bad
+#   class, prunes stand).  One follow-up directed: idx 0 (171572) muon correctly leaves the shower but
+#   must not vanish from the PF tree -> doc pr/123 round 2 (orphan-scope fix).
+# bee_idx	event	status
+0	171572	RESCUED: qF1 0.096 -> 1.000; the 125.1cm pdg-13 muon (seg 10008, absorbed at 3.9deg on-axis) + its OUT-marked companion freed by the track guard; fake leading "shower" 412.4 -> 19.0 MeV
+1	393505	RESCUED: qF1 0.273 -> 1.000; 108.5cm muon freed (track guard); leading 325.3 -> 60.5 MeV
+2	282979	RESCUED: qF1 0.541 -> 1.000; ALL 10 OUT marks leave as re-seeded components (prune, gap 40); leading 309.6 -> 122.4 MeV, owned 37 -> 37 (nothing orphaned)
+3	74326	RESCUED: qF1 0.396 -> 1.000; the 6-seg far chain (94-100cm from start, snap-gap 58-67) re-seeds; all 6 were OUT marks
+4	105074	fix-direction (unlabeled): 82.9cm MIP-flat track freed by the track guard; leading 228.4 -> 123.8 MeV
+5	71872	RESCUED: qF1 0.592 -> 1.000 (prune)
+6	286681	RESCUED: qF1 0.887 -> 1.000 (prune; OUT mark 3008)
+7	179048	RESCUED: qF1 0.892 -> 1.000 (prune; OUT marks 17001/17003)
+8	499423	RESCUED: qF1 0.900 -> 1.000 (prune; OUT mark 40014)
+9	168432	RESCUED: qF1 0.956 -> 1.000 (prune; OUT mark 40008, one of the "correct-carrying-marks" events)
+10	395597	fix-direction: qF1 0.813 -> 0.865; OUT mark 85013 re-seeded; residual is pre-existing q_miss
+11	318769	fix-direction: qF1 0.526 -> 0.560; the QC-split event -- OUT marks 113062/125074 (the ~100cm 171-173deg pair) re-seed; residual under-half untouched
+12	348471	fix-direction (pr/121 follow-on): qF1 0.895 -> 0.912; sheds ONLY the unlabeled companion 31011 (>40cm gap); the pr/121-merged 63050 side stays; leading 427.8 -> 414.4 MeV
+13	54332	ADJUDICATE: shower 122091 (the event's real shower) loses far satellites 123098/123099 at 56.0cm gap: qF1 0.890 -> 0.731 vs the scan target -- but under the owner over-reach line (gap >> 40cm) these ARE over-reach; the scan predates the definition. Separately the fake 16014 shower sheds 4 components (census).
+14	281325	ADJUDICATE: qF1 0.916 -> 0.766; under-clustered-verdict event loses 3 target-marked segs (27016/41034/41036) as a re-seeded component -- same definition-vs-scan-target question as idx 13
+15	293149	ADJUDICATE: qF1 0.973 -> 0.958; under-clustered event, one small target component re-seeds (q_miss +1.3e5)
+16	415278	adjudicate (98-set, wrong-owner ledger event): 2-seg component 96152/77133 at 60.9cm re-seeds; qF1 -0.005; leading 1396.9 -> 1380.3 MeV
+17	76346	fix-direction (98-set, wrong-owner ledger event): detached component separates from a non-marked shower (census: showers 11 -> 12, owned 23 -> 23); marked-shower score unchanged
+18	278420	residual reference: the 7-stub 100-125cm chain is linked to the body at <40cm (first link 23.9cm) and survives G=40 -- the documented residual class, untouched this round

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt100420",
+ "eventNo": 100420,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -166.52033160733288,
+  "y": 189.3208401974785,
+  "z": 99.31815219841185
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 14,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 14003,
+   "x": -166.52033160733288,
+   "y": 189.3208401974785,
+   "z": 99.31815219841185
+  }
+ ],
+ "reco_sep_cm": 0.002056761030174415,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 perfect with no incoming leg: a 11.7 cm proton rises monotonically off 14003 to a 285k Bragg at 14001 and a 116 cm muon rises away to a 215k Bragg at 14000, the two prongs opening 110 degrees.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt100420/calib-pr-evt100420.json",
+ "subRunNo": 1
+}

@@ -144,7 +144,14 @@ TFJSON_TLA=()
 # the split clusters' steiner products are rebuilt -- the prototype-faithful
 # order (cosmic verdicts on unsplit clusters, wire-cell-prod-stm.cxx:806;
 # protect only in the nue executable, wire-cell-prod-nue.cxx:1322).
-PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
+# PR_PIPELINE: replace the whole stage list.  EMPTY BY DEFAULT => the string
+# below, so every existing invocation compiles and outputs exactly as before.
+# Its reason for existing (doc 76 round 2): stage A of the two-stage chain runs
+# only the cosmic-rejection half to produce the selection table, and the P0.1
+# probe that proved the chain cannot be SPLIT there needed to run each half on
+# its own.  Do not use it to ship a different production pipeline -- the
+# production list is the default below.
+PIPELINE="${PR_PIPELINE:-switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output}"
 
 # PR_EXTRA_STAGES: comma-separated cm_by_name stages APPENDED to the pipeline
 # above.  EMPTY BY DEFAULT => the pipeline string, and therefore every compiled
@@ -156,6 +163,14 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 # appends PrDisplayDump, which writes pr_evt<ID>/calib-pr-evt<ID>.json next to
 # the usual outputs.  That stage is read-only, so an arm run with it must hash
 # identically to one run without -- which is the doc's gate.
+# The beam window, in us, that this driver runs the job at.  ONE variable so
+# the per-event and the group path cannot drift: nusel_extract.py takes it
+# twice -- as --beam-window (labelling) and, in group mode, as --bw-gate (which
+# mains the taggers evaluated at all).  It must match the job's own
+# beam_window_us default in wct-pr-perevt.jsonnet; this driver passes no
+# beam-window TLA, so the default is what runs.
+PR_BEAM_WINDOW_US="0.2,2.2"
+
 if [ -n "${PR_EXTRA_STAGES:-}" ]; then
     PIPELINE="$PIPELINE,$PR_EXTRA_STAGES"
 fi
@@ -198,6 +213,16 @@ fi
 # script is byte-identical to before the knob existed.
 # Env: SBND_CATHODE_KINK_XCUT=<cm> SBND_CATHODE_X=<cm>.
 CATH_TLA=()
+# SBND_NO_DL=1: force the GEOMETRIC neutrino vertex by passing an empty
+# dl_weights, the same thing run_nusel_evt.sh always does.  UNSET BY DEFAULT so
+# this driver keeps running the DL (SCN) vertex, which is the production
+# default.  Its reason for existing is diagnosis, not production: the DL vertex
+# is a python/torch inference and CLAUDE.md M4 already records that it is not
+# bit-stable, so when a group run and a per-event run disagree this is the knob
+# that says whether the DL vertex is the reason.
+if [ "${SBND_NO_DL:-0}" = 1 ]; then
+    CATH_TLA+=(--tla-str "dl_weights=")
+fi
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
 # doc pr/94 Phase 2: per-bundle neutrino candidates.  One T_tagger/T_kine row
@@ -208,6 +233,13 @@ CATH_TLA=()
 # (one event-wide candidate, the pre-pr/94 behaviour).
 # Env: SBND_NU_PER_BUNDLE=<0|1>.
 [ -n "${SBND_NU_PER_BUNDLE:-}" ] && CATH_TLA+=(--tla-code "nu_per_bundle=$([ "${SBND_NU_PER_BUNDLE}" = 0 ] && echo false || echo true)")
+# doc 80: MCS muon momentum (kine_mcs_* T_kine branches + the computation,
+# both derived from ONE mcs_enable TLA).  EMPTY = no TLA = job default false
+# = byte-identical pre-MCS config AND schema.  Env: SBND_MCS=<0|1>.
+[ -n "${SBND_MCS:-}" ] && CATH_TLA+=(--tla-code "mcs_enable=$([ "${SBND_MCS}" = 0 ] && echo false || echo true)")
+# doc 80 sec 7.5: cathode excised half-band (cm); 0 = excision off (the
+# sign-check arm).  EMPTY = no TLA = the job default 5.
+[ -n "${SBND_MCS_CATHODE_XCUT:-}" ] && CATH_TLA+=(--tla-code "mcs_cathode_xcut=${SBND_MCS_CATHODE_XCUT}")
 # doc pr/94 Phase 5b round 2: the dot guard.  Length floor (cm) for a
 # per-bundle candidate, exempting the legacy event-wide winner.  EMPTY = no
 # TLA = the job default 15 cm.  Set to 0 to reproduce the pre-5b behavior (no
@@ -243,12 +275,203 @@ CATH_TLA=()
 # Env: SBND_VKS_RADIUS=<cm> SBND_MVGA_RADIUS=<cm>.
 [ -n "${SBND_VKS_RADIUS:-}" ]  && CATH_TLA+=(--tla-code "vks_radius=${SBND_VKS_RADIUS}")
 [ -n "${SBND_MVGA_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_radius=${SBND_MVGA_RADIUS}")
-# doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
-# composite.  EMPTY = no TLA = C++ default 0 = term never computed =
-# byte-identical.  The offline C1 replay selected weight 3.0, center 0.
-# Env: SBND_DL_VTX_TOPO_WEIGHT=<w> SBND_DL_VTX_TOPO_CENTER=<c>.
-[ -n "${SBND_DL_VTX_TOPO_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_weight=${SBND_DL_VTX_TOPO_WEIGHT}")
-[ -n "${SBND_DL_VTX_TOPO_CENTER:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_center=${SBND_DL_VTX_TOPO_CENTER}")
+# doc pr/99 round 2 -- op3.5 approach-collapse guards + op1-post charge
+# second-opinion + shower ghost-member drop.  Numeric knobs: unset/empty
+# omits the TLA (jsonnet default null => C++ default 0 = legacy =>
+# byte-identical).  Bool knobs: tri-state (unset = cfg default, 1 = force
+# on, 0 = force off).
+[ -n "${SBND_MVGA_AC_VETO_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_ac_veto_radius=${SBND_MVGA_AC_VETO_RADIUS}")
+[ -n "${SBND_MVGA_AC_CHORD_MAX:-}" ]   && CATH_TLA+=(--tla-code "mvga_ac_chord_max=${SBND_MVGA_AC_CHORD_MAX}")
+# doc pr/103: mvga op0 pass-through split radius (cm) + miss tolerance (cm).  EMPTY = no TLA = the job default (off).
+[ -n "${SBND_MVGA_PASSTHRU:-}" ]       && CATH_TLA+=(--tla-code "mvga_passthru=${SBND_MVGA_PASSTHRU}")
+[ -n "${SBND_MVGA_PASSTHRU_TOL:-}" ]   && CATH_TLA+=(--tla-code "mvga_passthru_tol=${SBND_MVGA_PASSTHRU_TOL}")
+[ -n "${SBND_MVGA_INTERPOSED_FALLBACK_MIN_ANGLE:-}" ] && CATH_TLA+=(--tla-code "mvga_interposed_fallback_min_angle=${SBND_MVGA_INTERPOSED_FALLBACK_MIN_ANGLE}")
+[ -n "${SBND_MVGA_DUP_STARVED_ASYM:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_asym=${SBND_MVGA_DUP_STARVED_ASYM}")
+[ -n "${SBND_MVGA_DUP_STARVED_MIP:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_mip=${SBND_MVGA_DUP_STARVED_MIP}")
+[ -n "${SBND_MVGA_DUP_STARVED_SPAN:-}" ] && CATH_TLA+=(--tla-code "mvga_dup_starved_span=${SBND_MVGA_DUP_STARVED_SPAN}")
+[ -n "${SBND_SHOWER_GHOST_OVERLAP_FRAC:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_overlap_frac=${SBND_SHOWER_GHOST_OVERLAP_FRAC}")
+[ -n "${SBND_SHOWER_GHOST_DQDX_RATIO:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_dqdx_ratio=${SBND_SHOWER_GHOST_DQDX_RATIO}")
+[ -n "${SBND_SHOWER_GHOST_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_ghost_min_len=${SBND_SHOWER_GHOST_MIN_LEN}")
+for _pr99 in \
+    "SBND_MVGA_AC_NO_CASCADE:mvga_ac_no_cascade" \
+    "SBND_MVGA_INTERPOSED_FALLBACK:mvga_interposed_fallback" \
+    "SBND_SHOWER_GHOST_MEMBER_DROP:shower_ghost_member_drop" ; do
+    _env=${_pr99%%:*}; _key=${_pr99#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr99 _env _key _val
+# doc pr/99 round 3 -- same convention: numerics pass through when set,
+# bool knobs tri-state (unset = cfg default, 1 = force on, 0 = force off).
+[ -n "${SBND_SHOWER_HADRONIC_MIN_LEN:-}" ]      && CATH_TLA+=(--tla-code "shower_hadronic_min_len=${SBND_SHOWER_HADRONIC_MIN_LEN}")
+[ -n "${SBND_SHOWER_HADRONIC_SCAN_LEN:-}" ]     && CATH_TLA+=(--tla-code "shower_hadronic_scan_len=${SBND_SHOWER_HADRONIC_SCAN_LEN}")
+[ -n "${SBND_SHOWER_HADRONIC_BIN:-}" ]          && CATH_TLA+=(--tla-code "shower_hadronic_bin=${SBND_SHOWER_HADRONIC_BIN}")
+[ -n "${SBND_SHOWER_HADRONIC_R_CYL:-}" ]        && CATH_TLA+=(--tla-code "shower_hadronic_r_cyl=${SBND_SHOWER_HADRONIC_R_CYL}")
+[ -n "${SBND_SHOWER_HADRONIC_R_CORE:-}" ]       && CATH_TLA+=(--tla-code "shower_hadronic_r_core=${SBND_SHOWER_HADRONIC_R_CORE}")
+[ -n "${SBND_SHOWER_HADRONIC_GROWTH_MAX:-}" ]   && CATH_TLA+=(--tla-code "shower_hadronic_growth_max=${SBND_SHOWER_HADRONIC_GROWTH_MAX}")
+[ -n "${SBND_SHOWER_HADRONIC_GROWTH_BRAGG:-}" ] && CATH_TLA+=(--tla-code "shower_hadronic_growth_bragg=${SBND_SHOWER_HADRONIC_GROWTH_BRAGG}")
+[ -n "${SBND_SHOWER_HADRONIC_BRAGG_RATIO:-}" ]  && CATH_TLA+=(--tla-code "shower_hadronic_bragg_ratio=${SBND_SHOWER_HADRONIC_BRAGG_RATIO}")
+[ -n "${SBND_SHOWER_HADRONIC_STEM_RATIO:-}" ]   && CATH_TLA+=(--tla-code "shower_hadronic_stem_ratio=${SBND_SHOWER_HADRONIC_STEM_RATIO}")
+for _pr99r3 in \
+    "SBND_KINE_CHARGE_DEDUP:kine_charge_dedup" \
+    "SBND_KINE_CHARGE_REBUILD:kine_charge_rebuild" \
+    "SBND_SHOWER_HADRONIC_TAG:shower_hadronic_tag" ; do
+    _env=${_pr99r3%%:*}; _key=${_pr99r3#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr99r3 _env _key _val
+# doc pr/101 Enu accounting round.  Bools tri-state as above; numerics
+# pass-through (EMPTY = no TLA = C++ default).
+for _pr101 in \
+    "SBND_KINE_CHARGE_TRACK_CTX:kine_charge_track_ctx" \
+    "SBND_KINE_MASS_RULES:kine_mass_rules" \
+    "SBND_KINE_HADRONIC_DQDX:kine_hadronic_dqdx" \
+    "SBND_KINE_MAINVTX_USED_GUARD:kine_mainvtx_used_guard" ; do
+    _env=${_pr101%%:*}; _key=${_pr101#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr101 _env _key _val
+# doc pr/117 round 1 -- EM clustering knobs (pass-4 best-owner arbitration,
+# late fragment consolidation, orphan flank absorb).  Bools tri-state
+# (unset = cfg default, 1 = force on, 0 = force off); numerics pass-through
+# in cm/deg (EMPTY = no TLA = C++ default 6cm/15deg/6cm/25cm =
+# byte-identical).
+[ -n "${SBND_SHOWER_MERGE_RELAX_DIS:-}" ]      && CATH_TLA+=(--tla-code "shower_merge_relax_dis=${SBND_SHOWER_MERGE_RELAX_DIS}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_ANGLE:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_angle=${SBND_SHOWER_MERGE_RELAX_ANGLE}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_MIN_LEN:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_min_len=${SBND_SHOWER_MERGE_RELAX_MIN_LEN}")
+[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_dis=${SBND_SHOWER_FLANK_ABSORB_MAX_DIS}")
+[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_len=${SBND_SHOWER_FLANK_ABSORB_MAX_LEN}")
+for _pr117 in \
+    "SBND_SHOWER_PASS4_BEST_OWNER:shower_pass4_best_owner" \
+    "SBND_SHOWER_MERGE_RELAX:shower_merge_relax" \
+    "SBND_SHOWER_FLANK_ABSORB:shower_flank_absorb" ; do
+    _env=${_pr117%%:*}; _key=${_pr117#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr117 _env _key _val
+# doc pr/118 round 1 -- pr/91 P2 body-distance admission + the two-tier
+# axis+charge merge path.  Bools tri-state (unset = cfg default, 1 = force
+# on, 0 = force off); numerics pass-through (EMPTY = no TLA = C++ default
+# 1.0/8cm/5000/7.5deg/120cm/1cm/30deg = byte-identical).
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_FRAC:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_frac=${SBND_SHOWER_MERGE_RELAX_CONT_FRAC}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_GAP:-}" ]     && CATH_TLA+=(--tla-code "shower_merge_relax_cont_gap=${SBND_SHOWER_MERGE_RELAX_CONT_GAP}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_QMED:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_qmed=${SBND_SHOWER_MERGE_RELAX_CONT_QMED}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_AXIS:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_axis=${SBND_SHOWER_MERGE_RELAX_CONT_AXIS}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_DMAX:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_dmax=${SBND_SHOWER_MERGE_RELAX_CONT_DMAX}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_gap=${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP}")
+[ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD:-}" ] && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_fold=${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD}")
+for _pr118 in \
+    "SBND_SHOWER_EX1_CONN3_BODY_DIS:shower_ex1_conn3_body_dis" \
+    "SBND_SHOWER_MERGE_RELAX_CONTINUITY:shower_merge_relax_continuity" ; do
+    _env=${_pr118%%:*}; _key=${_pr118#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr118 _env _key _val
+# doc pr/120 round 1 -- backward-stem + em-straight-track admission guards.
+# Bools tri-state (unset = cfg default, 1 = force on, 0 = force off);
+# numerics pass-through (EMPTY = no TLA = C++ default 110deg/20cm).
+[ -n "${SBND_STEM_BACKFILL_BACK_ANG:-}" ]          && CATH_TLA+=(--tla-code "stem_backfill_back_ang=${SBND_STEM_BACKFILL_BACK_ANG}")
+[ -n "${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN:-}" ]    && CATH_TLA+=(--tla-code "shower_ex1_walk_em_track_len=${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN}")
+for _pr120 in \
+    "SBND_STEM_BACKFILL_BACK_GUARD:stem_backfill_back_guard" \
+    "SBND_SHOWER_EX1_WALK_EM_TRACK_GUARD:shower_ex1_walk_em_track_guard" ; do
+    _env=${_pr120%%:*}; _key=${_pr120#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr120 _env _key _val
+# doc pr/121 round 1 -- examine_shower_1 dedup re-home (348471 orphaning).
+# Bool tri-state (unset = cfg default, 1 = force on, 0 = force off).
+_val=${SBND_SHOWER_EX1_DEDUP_REHOME:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_ex1_dedup_rehome=false")
+
+# doc pr/123 round 1 -- pass4_angle over-reach (owner line 2026-08-28).
+# Prune: bool tri-state (unset = cfg default, 1 = on, 0 = off); gap in cm
+# (EMPTY = cfg default 40).  Track guard: length in cm (EMPTY = cfg default
+# 0 = off).
+_val=${SBND_SHOWER_PASS4_PRUNE:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "shower_pass4_prune_detached=false")
+[ -n "${SBND_SHOWER_PASS4_PRUNE_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap=${SBND_SHOWER_PASS4_PRUNE_GAP}")
+[ -n "${SBND_SHOWER_PASS4_TRACK_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_track_guard_len=${SBND_SHOWER_PASS4_TRACK_GUARD_LEN}")
+[ -n "${SBND_SHOWER_PASS4_PROX_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prox_guard_len=${SBND_SHOWER_PASS4_PROX_GUARD_LEN}")          # doc pr/130 item 1b
+[ -n "${SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass3_backfill_guard_len=${SBND_SHOWER_PASS3_BACKFILL_GUARD_LEN}")  # doc pr/130 item 1b
+[ -n "${SBND_STEM_BACKFILL_BACK_DVTX:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_back_dvtx=${SBND_STEM_BACKFILL_BACK_DVTX}")                    # doc pr/130 item B
+
+# doc pr/124 front A -- gap-band tier-2 prune.  gap2 in cm (EMPTY = cfg
+# default 0 = off); ang in deg / mdqdx in MIP (EMPTY = cfg defaults 40/2.5).
+[ -n "${SBND_SHOWER_PASS4_PRUNE_GAP2:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune_gap2=${SBND_SHOWER_PASS4_PRUNE_GAP2}")
+[ -n "${SBND_SHOWER_PASS4_PRUNE2_ANG:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune2_ang=${SBND_SHOWER_PASS4_PRUNE2_ANG}")
+[ -n "${SBND_SHOWER_PASS4_PRUNE2_MDQDX:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prune2_mdqdx=${SBND_SHOWER_PASS4_PRUNE2_MDQDX}")
+# doc pr/124 front C -- pass3_cone track-pdg decline; len in cm (EMPTY = cfg
+# default 0 = off).
+[ -n "${SBND_SHOWER_PASS3_CONE_GUARD_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_pass3_cone_guard_len=${SBND_SHOWER_PASS3_CONE_GUARD_LEN}")
+
+# doc pr/125 -- same-vertex track-frag absorb (37112) + vertex-connected
+# satellite absorb (69314).  Bools tri-state (unset = cfg default, 1 = on,
+# 0 = off); gap/len in cm, kine caps in MeV (EMPTY = cfg defaults 6/50/10/20).
+_val=${SBND_SHOWER_SAMEVTX_TRACK_ABSORB:-}
+[ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_samevtx_track_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_gap=${SBND_SHOWER_SAMEVTX_ABSORB_GAP}")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_max_len=${SBND_SHOWER_SAMEVTX_ABSORB_MAX_LEN}")
+[ -n "${SBND_SHOWER_SAMEVTX_ABSORB_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_samevtx_absorb_min_len=${SBND_SHOWER_SAMEVTX_ABSORB_MIN_LEN}")
+_val=${SBND_SHOWER_SATELLITE_ABSORB:-}
+[ -n "$_val" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb=$([ "$_val" = 0 ] && echo false || echo true)")
+[ -n "${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV:-}" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb_max_mev=${SBND_SHOWER_SATELLITE_ABSORB_MAX_MEV}")
+[ -n "${SBND_SHOWER_SATELLITE_ABSORB_HOST_MEV:-}" ] && CATH_TLA+=(--tla-code "shower_satellite_absorb_host_mev=${SBND_SHOWER_SATELLITE_ABSORB_HOST_MEV}")
+
+# doc pr/123 round 2 -- guard-freed track pickup (PF root node + kine count).
+# Bool tri-states (unset = cfg default, 1 = on, 0 = off).
+_val=${SBND_PF_ORPHAN_GUARD_FREED:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "pf_orphan_guard_freed=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "pf_orphan_guard_freed=false")
+_val=${SBND_KINE_COUNT_GUARD_FREED:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "kine_count_guard_freed=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "kine_count_guard_freed=false")
+unset _val
+# doc 74 -- cosmic_tagger() consistent-FV knob (G1/G2).  Bool tri-state as
+# above: EMPTY = no TLA = the job default, 1 = force on, 0 = force off.
+for _d74 in \
+    "SBND_COSMIC_CONSISTENT_FV:cosmic_consistent_fv" ; do
+    _env=${_d74%%:*}; _key=${_d74#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d74 _env _key _val
+# doc 75 -- nue/single-photon consistent-FV knob + the flag-leak snapshot
+# guard.  Same tri-state idiom: EMPTY = no TLA = the job default, 1 = force
+# on, 0 = force off.
+for _d75 in \
+    "SBND_NUE_SP_CONSISTENT_FV:nue_sp_consistent_fv" \
+    "SBND_NU_SELECTED_AS_MAIN_SNAPSHOT_ALL:nu_selected_as_main_snapshot_all" ; do
+    _env=${_d75%%:*}; _key=${_d75#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d75 _env _key _val
+# docs/76 round 2 -- fast_xgb_forest: book the numu/nue XGB BDT combiners
+# with TmvaGradForest (compact exact re-evaluation of the same XML) instead of
+# TMVA::Reader.  **SBND PRODUCTION DEFAULT ON since 2026-08-23 (docs/76 sec
+# 6)** -- EMPTY inherits that.  Same tri-state idiom: EMPTY = no TLA = the job
+# default, 1 = force on, 0 = force off (= the pre-docs/76 TMVA::Reader path,
+# byte-identical outputs, ~3 s and ~0.3-0.8 GB more per event).
+for _d76 in \
+    "SBND_FAST_XGB_FOREST:fast_xgb_forest" ; do
+    _env=${_d76%%:*}; _key=${_d76#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _d76 _env _key _val
+[ -n "${SBND_KINE_LONG_MUON_MODE:-}" ]     && CATH_TLA+=(--tla-code "kine_long_muon_mode=${SBND_KINE_LONG_MUON_MODE}")
+[ -n "${SBND_KINE_LONG_MUON_RATIO_LO:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_lo=${SBND_KINE_LONG_MUON_RATIO_LO}")
+[ -n "${SBND_KINE_LONG_MUON_RATIO_HI:-}" ] && CATH_TLA+=(--tla-code "kine_long_muon_ratio_hi=${SBND_KINE_LONG_MUON_RATIO_HI}")
+# doc 77 round 1 (2026-08-24): dl_vtx_topo_weight/_center (pr/89 Arm C2)
+# removed -- live A/B -8/1014.  SBND_DL_VTX_TOPO_WEIGHT/_CENTER no longer wired.
 # doc pr/47 sec 8 (O1): wide-baseline cathode kink accept, degrees.  EMPTY =
 # no TLA = the job default (SBND ON at 25 deg since 2026-08-07).  0 = force
 # the C++ OFF path (legacy kink search, byte-identical); "null" also works
@@ -684,19 +907,17 @@ for _pr40r5 in \
 done
 unset _pr40r5 _env _key _val
 # doc pr/40 round 6: the boundary-level fixes round 5's G2 measurement
-# demanded.  Same tri-state contract.  All three default OFF pending gates.
+# demanded.  Same tri-state contract.  Both default OFF pending gates.
+# doc 77 round 1 (2026-08-24): F13 shower_connect_protected_pion_guard
+# removed -- measured dead, never flipped (pr/40:1459).
 #   F12 SBND_SHOWER_ABSORB_TRACK_GUARD           shower flood-fill no longer
 #                                                 absorbs a confident straight
 #                                                 non-electron track
-#   F13 SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD connecting_to_main_vertex no
-#                                                 longer force-sets a proton-
-#                                                 daughter pion to electron
 #   F14 SBND_MICHEL_STEM_MUON_RESCUE             Michel stopping-muon rescue
 #                                                 reaches a proton-called stem
 #                                                 at a multi-prong vertex
 for _pr40r6 in \
     "SBND_SHOWER_ABSORB_TRACK_GUARD:shower_absorb_track_guard" \
-    "SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD:shower_connect_protected_pion_guard" \
     "SBND_MICHEL_STEM_MUON_RESCUE:michel_stem_muon_rescue" ; do
     _env=${_pr40r6%%:*}; _key=${_pr40r6#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
@@ -766,7 +987,6 @@ unset _pr74 _env _key _val
 # contract is identical.
 for _pr84 in \
     "SBND_PF_DIRECT_WHEN_TOUCHING:pf_direct_when_touching" \
-    "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
     "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" \
     "SBND_SHOWER_DEDUP_START_SEG:shower_dedup_start_seg" \
     "SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX:shower_endpoint_skip_orphan_vtx" \
@@ -778,7 +998,6 @@ for _pr84 in \
 done
 unset _pr84 _env _key _val
 [ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
-[ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
 [ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
 # doc pr/40 round 9 -- the rounds-7+8 straight-track PID guard family + the
 # B2 cross-cluster bridge.  Tri-state bools (unset = cfg default, 1 = force
@@ -948,16 +1167,11 @@ unset _pr48 _env _key _val
 # 320865/172832/61681 -- unbroken kink, wrong nu vertex).
 # teb_turn_min_arm_frac: route R2's turn argmax only considers indices whose
 # PCA arms can each span this fraction of teb_turn_baseline (dimensionless).
-# teb_second_max: the entry gate tolerates extra >stub prongs when exactly
-# one segment exceeds this cap (cm).  Numeric TLAs, unset/empty omits
-# (jsonnet default null => C++ default 0 = legacy => byte-identical).
+# doc 77 round 1 (2026-08-24): teb_second_max removed -- negative on its
+# own motivating events (pr/90 sec 8.5).  SBND_TEB_SECOND_MAX no longer wired.
 #   SBND_TEB_TURN_MIN_ARM_FRAC
-#   SBND_TEB_SECOND_MAX
 if [ -n "${SBND_TEB_TURN_MIN_ARM_FRAC:-}" ]; then
     CATH_TLA+=(--tla-code "teb_turn_min_arm_frac=${SBND_TEB_TURN_MIN_ARM_FRAC}")
-fi
-if [ -n "${SBND_TEB_SECOND_MAX:-}" ]; then
-    CATH_TLA+=(--tla-code "teb_second_max=${SBND_TEB_SECOND_MAX}")
 fi
 # doc pr/90 round 4 (sec 9.5 D1/D3/D4): chain-topology gate admission
 # (boolean TLA true/false), route R3 local-turn threshold (deg) + activity
@@ -1002,6 +1216,26 @@ fi
 if [ -n "${SBND_VERTEX_KINK_SNAP:-}" ]; then
     CATH_TLA+=(--tla-code "vertex_kink_snap=${SBND_VERTEX_KINK_SNAP}")
 fi
+# doc pr/104: main-vertex junction snap (405707/65289/66712/282072/345633
+# class: main vertex 2-4 cm off the multi-prong junction).  Boolean TLA,
+# same contract as the kink snap; numerics are bare cm/deg/count values,
+# unset/empty omits the override (jsonnet default null => byte-identical).
+#   SBND_VERTEX_JUNCTION_SNAP  SBND_VJS_RADIUS  SBND_VJS_MIN_ARM
+#   SBND_VJS_MIN_PRONGS  SBND_VJS_COLLINEAR  SBND_VJS_FIT_MARGIN  SBND_VJS_FIT_RMS
+if [ -n "${SBND_VERTEX_JUNCTION_SNAP:-}" ]; then
+    CATH_TLA+=(--tla-code "vertex_junction_snap=${SBND_VERTEX_JUNCTION_SNAP}")
+fi
+[ -n "${SBND_VJS_RADIUS:-}" ]     && CATH_TLA+=(--tla-code "vjs_radius=${SBND_VJS_RADIUS}")
+[ -n "${SBND_VJS_MIN_ARM:-}" ]    && CATH_TLA+=(--tla-code "vjs_min_arm=${SBND_VJS_MIN_ARM}")
+[ -n "${SBND_VJS_MIN_PRONGS:-}" ] && CATH_TLA+=(--tla-code "vjs_min_prongs=${SBND_VJS_MIN_PRONGS}")
+[ -n "${SBND_VJS_COLLINEAR:-}" ]  && CATH_TLA+=(--tla-code "vjs_collinear=${SBND_VJS_COLLINEAR}")
+[ -n "${SBND_VJS_FIT_MARGIN:-}" ] && CATH_TLA+=(--tla-code "vjs_fit_margin=${SBND_VJS_FIT_MARGIN}")
+[ -n "${SBND_VJS_FIT_RMS:-}" ]    && CATH_TLA+=(--tla-code "vjs_fit_rms=${SBND_VJS_FIT_RMS}")
+#   SBND_VJS_OVERRIDE_KINK_SNAP (boolean TLA, same contract as the snap switch)
+if [ -n "${SBND_VJS_OVERRIDE_KINK_SNAP:-}" ]; then
+    CATH_TLA+=(--tla-code "vjs_override_kink_snap=${SBND_VJS_OVERRIDE_KINK_SNAP}")
+fi
+[ -n "${SBND_VJS_MIN_MOVE:-}" ]   && CATH_TLA+=(--tla-code "vjs_min_move=${SBND_VJS_MIN_MOVE}")
 # doc pr/51: main-vertex graph audit (near-vertex graph-shape repair --
 # duplicate-corridor merge / charge-less-bridge removal / micro-stub absorb
 # + re-seat / one refit).  Boolean TLA, same contract as the snap knob.
@@ -1105,10 +1339,11 @@ fi
 # unlimited); abandoned-main-cluster dup audit inside swap_main_cluster
 # (boolean, Mechanism C).  Numeric/boolean TLAs, unset/empty omits
 # (jsonnet defaults null/false => keys suppressed => byte-identical).
+# doc 77 round 1 (2026-08-24): mvga_carry_max removed -- not needed, class A
+# cleared 8/8 with it OFF (pr/83 r3 sec 8.5).
 #   SBND_MVGA_OP1_RADIUS
 #   SBND_MVGA_OP1_DUP_FRAC
 #   SBND_MVGA_OP1_POST
-#   SBND_MVGA_CARRY_MAX
 #   SBND_SWAP_ORPHAN_DUP_AUDIT
 if [ -n "${SBND_MVGA_OP1_RADIUS:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_op1_radius=${SBND_MVGA_OP1_RADIUS}")
@@ -1118,9 +1353,6 @@ if [ -n "${SBND_MVGA_OP1_DUP_FRAC:-}" ]; then
 fi
 if [ -n "${SBND_MVGA_OP1_POST:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_op1_post=${SBND_MVGA_OP1_POST}")
-fi
-if [ -n "${SBND_MVGA_CARRY_MAX:-}" ]; then
-    CATH_TLA+=(--tla-code "mvga_carry_max=${SBND_MVGA_CARRY_MAX}")
 fi
 if [ -n "${SBND_SWAP_ORPHAN_DUP_AUDIT:-}" ]; then
     CATH_TLA+=(--tla-code "swap_orphan_dup_audit=${SBND_SWAP_ORPHAN_DUP_AUDIT}")
@@ -1145,11 +1377,22 @@ fi
 if [ -n "${SBND_VKS_CARRY_PRONG:-}" ]; then
     CATH_TLA+=(--tla-code "vks_carry_prong=${SBND_VKS_CARRY_PRONG}")
 fi
-# doc pr/51 (18255-506746): DL rerank cross-cluster swap guard.  Boolean
-# TLA, same contract.
-#   SBND_DL_VTX_SWAP_GUARD
-if [ -n "${SBND_DL_VTX_SWAP_GUARD:-}" ]; then
-    CATH_TLA+=(--tla-code "dl_vtx_swap_guard=${SBND_DL_VTX_SWAP_GUARD}")
+# doc 77 round 1 (2026-08-24): dl_vtx_swap_guard removed -- live A/B
+# -36/1014 (pr/89 round 5).  SBND_DL_VTX_SWAP_GUARD no longer wired.
+# doc sbnd_xin/docs/pr/106 sec 10: exclusion-free charge cloud for the DL
+# vertex net (one extra non-exclusion refit per cluster, fits restored).
+# Boolean TLA, same contract.  EMPTY = no TLA = the job default false.
+#   SBND_DL_VTX_CLOUD_NO_EXCLUSION
+if [ -n "${SBND_DL_VTX_CLOUD_NO_EXCLUSION:-}" ]; then
+    CATH_TLA+=(--tla-code "dl_vtx_cloud_no_exclusion=${SBND_DL_VTX_CLOUD_NO_EXCLUSION}")
+fi
+# doc sbnd_xin/docs/pr/107: dQ/dx fit keeps every trajectory point (prototype
+# parity; the toolkit-only pre-dQ/dx form_map_graph pass no longer deletes the
+# junction-adjacent points fit_exclusion stripped).  Boolean TLA, same
+# contract.  EMPTY = no TLA = the job default false.
+#   SBND_DQDX_FIT_KEEP_ALL_POINTS
+if [ -n "${SBND_DQDX_FIT_KEEP_ALL_POINTS:-}" ]; then
+    CATH_TLA+=(--tla-code "dqdx_fit_keep_all_points=${SBND_DQDX_FIT_KEEP_ALL_POINTS}")
 fi
 # doc sbnd_xin/docs/pr/75: per-event vertex scoreboard (recording only, read
 # by PrDisplayDump for the neutrino-vertex hand scan).  Boolean TLA, same
@@ -1266,6 +1509,19 @@ fi
 if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
 fi
+# doc pr/102 P1: OR-disjuncts on the pr/54 keep -- min_nnf (integer
+# not-faked-terminal floor) admits a well-measured candidate below the
+# 25-terminal floor; len_admit (cm) admits any candidate at least that
+# long.  EMPTY = no TLA = the C++ defaults 0 = off, byte-identical.
+#   SBND_OSEG_MIN_NNF  SBND_OSEG_LEN_ADMIT (cm)
+if [ -n "${SBND_OSEG_MIN_NNF:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_nnf=${SBND_OSEG_MIN_NNF}")
+fi
+if [ -n "${SBND_OSEG_LEN_ADMIT:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_len_admit=${SBND_OSEG_LEN_ADMIT}")
+fi
+# doc 77 round 1 (2026-08-24): other_seg_uncover_3d (pr/102 P2) removed --
+# 23 ADVERSE movers, stays OFF.  SBND_OSEG_UNCOVER_3D no longer wired.
 # doc pr/67 round 3 (S2): size gate on the isochronous snap in
 # find_other_segments -- the machinery that ATTACHES a short isochronously
 # displaced branch to its parent.  Bare value in cm; unset means the C++
@@ -1343,42 +1599,18 @@ fi
 if [ -n "${SBND_PF_ORPHAN_AUDIT_ONLY:-}" ]; then
     CATH_TLA+=(--tla-code "pf_orphan_audit_only=${SBND_PF_ORPHAN_AUDIT_ONLY}")
 fi
-# doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
-# 56463, 57661) -- one segment absorbed and missing from both the flow tree
-# and the energy sum, and three muon/pion mis-selections at the
-# single-muon-per-cluster rule and the topology shower test.  Same
-# tri-state contract.  All default OFF pending gates.
-#   F1  SBND_MUON_CHAIN_PROTON_VETO         multi-hop generalization of the
-#                                            muon-candidate loop's 1-hop
-#                                            proton veto
-#       SBND_SHOWER_TYPE_CACHE_REFRESH      keep Shower's cached
-#                                            particle_type in lock-step with
-#                                            update_particle_type's own
-#                                            segment relabel
-#       SBND_SHOWER_TRAJ_DQDX_GUARD         trust a confident non-electron
-#                                            track-PID conclusion inside
-#                                            segment_determine_shower_
-#                                            direction_trajectory instead
-#                                            of discarding it
-#       SBND_SHOWER_TRAJ_CHAIN_PION         companion to the above: relabel
-#                                            a main-vertex proton's short
-#                                            muon-pdg continuation chain to
-#                                            pion except the deepest,
-#                                            confirmed-muon segment
-#       SBND_KINE_SHOWER_VERTEX_BARRIER     kine-tree parity with pr/38's
-#                                            pf_shower_vertex_barrier;
-#                                            MOVES kine_reco_Enu when on
-for _pr43 in \
-    "SBND_MUON_CHAIN_PROTON_VETO:muon_chain_proton_veto" \
-    "SBND_SHOWER_TYPE_CACHE_REFRESH:shower_type_cache_refresh" \
-    "SBND_SHOWER_TRAJ_DQDX_GUARD:shower_traj_dqdx_guard" \
-    "SBND_SHOWER_TRAJ_CHAIN_PION:shower_traj_chain_pion" \
-    "SBND_KINE_SHOWER_VERTEX_BARRIER:kine_shower_vertex_barrier" ; do
-    _env=${_pr43%%:*}; _key=${_pr43#*:}; _val=${!_env:-}
-    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
-    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
-done
-unset _pr43 _env _key _val
+# doc pr/43 round 1 (the F1 family: muon_chain_proton_veto,
+# shower_type_cache_refresh, shower_traj_dqdx_guard, shower_traj_chain_pion,
+# kine_shower_vertex_barrier) was ROLLED BACK on 2026-08-07 -- the owner asked
+# for the five knobs to be pulled from the code entirely rather than left
+# dead-OFF (toolkit 225d7e7e, revert of 4aabef3e).  The C++ and the cfg keys
+# went with it; this env->TLA block did not, and was left emitting --tla-code
+# for five top-level parameters that wct-pr-perevt.jsonnet no longer declares.
+# That is a HARD jsonnet error (wcsonnet aborts, rc=134), not a silent no-op,
+# so the vars were landmines rather than dead weight.  Removed 2026-08-22
+# (doc pr/109 sec 9.8).  An audit of all 305 TLA names this runner can emit
+# found these five and no others.  The three NARROWER round-2 knobs that
+# replaced them are live and are handled by the _pr43r2 block above.
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a
@@ -1390,6 +1622,126 @@ unset _pr43 _env _key _val
 # 2026-07-30).  Numeric values, passed as --tla-code.
 [ -n "${SBND_DL_VTX_MIN_ACCEPT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_min_accept_score=${SBND_DL_VTX_MIN_ACCEPT}")
 [ -n "${SBND_DL_VTX_TOP_K:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_top_k=${SBND_DL_VTX_TOP_K}")
+# doc pr/105: DL vertex WITHOUT the composite re-rank (legacy single-argmax
+# branch: top voxel snapped, dl_vtx_cut 2.5 cm gate, else the traditional
+# vertex).  EMPTY = no TLA = the job default true (production).  Strategy 3.1
+# of the vertex-selection comparison; pass false for the no-rerank arm.
+[ -n "${SBND_DL_VTX_RERANK:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_rerank=${SBND_DL_VTX_RERANK}")
+# doc pr/112 sec 11: the DUAL CHAIN -- a second, exclusion-free PR pass
+# suggests the neutrino vertex; production decides.  EMPTY = no TLA = the job
+# default (off, byte-identical).  SBND_DL_VTX_DUAL_CHAIN=true runs the pass;
+# SBND_DUAL_CHAIN_TRANSFER=true lets it move the vertex (unset = PROBE: the
+# agreement flag only).  MODE snap|voxels|union (string), TRANSFER_MAX in cm,
+# ALLOW_CLUSTER_SWAP true|false, VTX_WEIGHT number (union only).
+[ -n "${SBND_DL_VTX_DUAL_CHAIN:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_dual_chain=${SBND_DL_VTX_DUAL_CHAIN}")
+[ -n "${SBND_DUAL_CHAIN_MODE:-}" ] && CATH_TLA+=(--tla-str "dual_chain_mode=${SBND_DUAL_CHAIN_MODE}")
+[ -n "${SBND_DUAL_CHAIN_TRANSFER:-}" ] && CATH_TLA+=(--tla-code "dual_chain_transfer=${SBND_DUAL_CHAIN_TRANSFER}")
+[ -n "${SBND_DUAL_CHAIN_TRANSFER_MAX:-}" ] && CATH_TLA+=(--tla-code "dual_chain_transfer_max=${SBND_DUAL_CHAIN_TRANSFER_MAX}")
+[ -n "${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP:-}" ] && CATH_TLA+=(--tla-code "dual_chain_allow_cluster_swap=${SBND_DUAL_CHAIN_ALLOW_CLUSTER_SWAP}")
+[ -n "${SBND_DUAL_CHAIN_VTX_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dual_chain_vtx_weight=${SBND_DUAL_CHAIN_VTX_WEIGHT}")
+
+# doc 84 round 1: long-muon chain + MCS knobs.  EMPTY = no TLA = job defaults
+# (P1/P5 flip with the doc 84 round 1 production commit; P2/P3 HOLD OFF).
+# Env: SBND_LONG_MUON_RANGE_FALLBACK=<0|1> SBND_LONG_MUON_ANGLE_RELAX=<0|1>
+#      SBND_LONG_MUON_ANGLE_RELAX_DEG=<deg> SBND_LONG_MUON_STUB_BRIDGE_LEN=<cm>
+#      SBND_MCS_MUON_SOURCE=<pf_muon|long_muon|longest_segment|long_muon_else_pf>
+#      SBND_MCS_RANGE_COMPARATOR_CHAIN=<0|1>
+#      SBND_MCS_BRIDGED_MEMBERS=<0|1>          (doc 84 round 3)
+[ -n "${SBND_LONG_MUON_RANGE_FALLBACK:-}" ] && CATH_TLA+=(--tla-code "long_muon_range_empty_chain_fallback=$([ "${SBND_LONG_MUON_RANGE_FALLBACK}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_ANGLE_RELAX:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_long=$([ "${SBND_LONG_MUON_ANGLE_RELAX}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_ANGLE_RELAX_DEG:-}" ] && CATH_TLA+=(--tla-code "long_muon_angle_relax_deg=${SBND_LONG_MUON_ANGLE_RELAX_DEG}")
+[ -n "${SBND_LONG_MUON_STUB_BRIDGE_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_stub_bridge_len=${SBND_LONG_MUON_STUB_BRIDGE_LEN}")
+[ -n "${SBND_MCS_MUON_SOURCE:-}" ] && CATH_TLA+=(--tla-str "mcs_muon_source=${SBND_MCS_MUON_SOURCE}")
+[ -n "${SBND_MCS_RANGE_COMPARATOR_CHAIN:-}" ] && CATH_TLA+=(--tla-code "mcs_range_comparator_chain=$([ "${SBND_MCS_RANGE_COMPARATOR_CHAIN}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_MCS_BRIDGED_MEMBERS:-}" ] && CATH_TLA+=(--tla-code "mcs_bridged_members=$([ "${SBND_MCS_BRIDGED_MEMBERS}" = 0 ] && echo false || echo true)")
+# doc 84 round 2: members-geometry + cathode-bridge (value knobs in cm/deg)
+[ -n "${SBND_LONG_MUON_MEMBERS_GEOMETRY:-}" ] && CATH_TLA+=(--tla-code "long_muon_members_geometry=$([ "${SBND_LONG_MUON_MEMBERS_GEOMETRY}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_GAP}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_ANGLE}")
+# doc 84 round 4 -- the three admission misses (G1 lever / G2 track partner /
+# G3 short-gap waiver).  EMPTY = cfg default = C++ legacy.
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_LEVER:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_lever=${SBND_LONG_MUON_CATHODE_BRIDGE_LEVER}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_track_partner=$([ "${SBND_LONG_MUON_CATHODE_BRIDGE_TRACK_PARTNER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_angle=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_ANGLE}")
+[ -n "${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN:-}" ] && CATH_TLA+=(--tla-code "long_muon_cathode_bridge_short_gap_len=${SBND_LONG_MUON_CATHODE_BRIDGE_SHORT_GAP_LEN}")
+
+# doc pr/128 -- PF/kine completeness.  EMPTY env = no TLA = the job default
+# false = byte-identical.  PF knobs move only the picture; the KINE twins move
+# kine_reco_Enu and are approved separately.
+[ -n "${SBND_PF_ORPHAN_NEAR_CROSS_CLUSTER:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_cross_cluster=$([ "${SBND_PF_ORPHAN_NEAR_CROSS_CLUSTER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PF_ORPHAN_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_gap_cm=${SBND_PF_ORPHAN_NEAR_GAP}")
+[ -n "${SBND_PF_ORPHAN_NEAR_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_min_len_cm=${SBND_PF_ORPHAN_NEAR_MIN_LEN}")
+[ -n "${SBND_PF_ORPHAN_NEAR_END_TOL:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_end_tol_cm=${SBND_PF_ORPHAN_NEAR_END_TOL}")
+[ -n "${SBND_PF_ORPHAN_NEAR_KINK:-}" ] && CATH_TLA+=(--tla-code "pf_orphan_near_kink_deg=${SBND_PF_ORPHAN_NEAR_KINK}")
+[ -n "${SBND_PF_CONN4_NEAR:-}" ] && CATH_TLA+=(--tla-code "pf_conn4_near_candidate=$([ "${SBND_PF_CONN4_NEAR}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PF_CONN4_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "pf_conn4_near_gap_cm=${SBND_PF_CONN4_NEAR_GAP}")
+[ -n "${SBND_KINE_NEAR_CROSS_CLUSTER:-}" ] && CATH_TLA+=(--tla-code "kine_count_near_cross_cluster=$([ "${SBND_KINE_NEAR_CROSS_CLUSTER}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_KINE_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "kine_near_gap_cm=${SBND_KINE_NEAR_GAP}")
+[ -n "${SBND_KINE_NEAR_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "kine_near_min_len_cm=${SBND_KINE_NEAR_MIN_LEN}")
+[ -n "${SBND_KINE_NEAR_END_TOL:-}" ] && CATH_TLA+=(--tla-code "kine_near_end_tol_cm=${SBND_KINE_NEAR_END_TOL}")
+[ -n "${SBND_KINE_NEAR_KINK:-}" ] && CATH_TLA+=(--tla-code "kine_near_kink_deg=${SBND_KINE_NEAR_KINK}")
+[ -n "${SBND_KINE_CONN4_NEAR:-}" ] && CATH_TLA+=(--tla-code "kine_count_conn4_near=$([ "${SBND_KINE_CONN4_NEAR}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_KINE_CONN4_NEAR_GAP:-}" ] && CATH_TLA+=(--tla-code "kine_conn4_near_gap_cm=${SBND_KINE_CONN4_NEAR_GAP}")
+# doc pr/129: pointing test on the guard-freed kine pool.  EMPTY = no TLA = the
+# job default 0 = no test = byte-identical.
+[ -n "${SBND_KINE_GF_IMPACT:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_impact=${SBND_KINE_GF_IMPACT}")
+[ -n "${SBND_KINE_GF_MISS_DEG:-}" ] && CATH_TLA+=(--tla-code "kine_guard_freed_miss_deg=${SBND_KINE_GF_MISS_DEG}")
+# doc pr/132: the pi0 round.  EMPTY = no TLA = the job default = byte-identical.
+# _FUDGE overrides the EM charge scale (C++ default 0.8, jsonnet may flip it);
+# the five finder knobs default to the legacy hard-coded constants.
+[ -n "${SBND_KINE_SHOWER_FUDGE:-}" ] && CATH_TLA+=(--tla-code "kine_shower_fudge_factor=${SBND_KINE_SHOWER_FUDGE}")
+[ -n "${SBND_PI0_MASS_OFFSET:-}" ] && CATH_TLA+=(--tla-code "pi0_mass_offset=${SBND_PI0_MASS_OFFSET}")
+[ -n "${SBND_PI0_ASSOC_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_assoc_angle_deg=${SBND_PI0_ASSOC_ANGLE}")
+[ -n "${SBND_PI0_ATTACH_MIN_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_attached_partner_min_mev=${SBND_PI0_ATTACH_MIN_MEV}")
+[ -n "${SBND_PI0_NV_ALLOW_TYPE2:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_allow_type2=$([ "${SBND_PI0_NV_ALLOW_TYPE2}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_NV_MAX_PRONGS:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_prongs=${SBND_PI0_NV_MAX_PRONGS}")
+# doc pr/132 round 2: the rescue family + path-2 quality gate.  EMPTY = no TLA = job default.
+[ -n "${SBND_PI0_READMIT_RETYPED:-}" ] && CATH_TLA+=(--tla-code "pi0_readmit_retyped=$([ "${SBND_PI0_READMIT_RETYPED}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_ADMIT_TYPE3:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_type3=$([ "${SBND_PI0_ADMIT_TYPE3}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_CRUMB_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_crumb_assoc_mev=${SBND_PI0_CRUMB_MEV}")
+[ -n "${SBND_PI0_NV_VTX_SHIFT:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_vtx_shift_cm=${SBND_PI0_NV_VTX_SHIFT}")
+[ -n "${SBND_PI0_NV_MASS_WIN:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_mass_window_mev=${SBND_PI0_NV_MASS_WIN}")
+# doc pr/132 round 3: virtual collinear merge of detached fragments at pairing time.  EMPTY = no TLA = job default 0 = off.
+[ -n "${SBND_PI0_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "pi0_collinear_merge_deg=${SBND_PI0_COLLINEAR_DEG}")
+# doc pr/132 round 4: NC vertex-in-shower family + start re-seat.  EMPTY = no TLA = job default off.
+[ -n "${SBND_PI0_NV_PARTNER_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_partner_min_mev=${SBND_PI0_NV_PARTNER_MEV}")
+[ -n "${SBND_PI0_NV_RETRY_PAIRED:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_retry_paired=$([ "${SBND_PI0_NV_RETRY_PAIRED}" = 0 ] && echo false || echo true)")
+[ -n "${SBND_PI0_RESEAT_START:-}" ] && CATH_TLA+=(--tla-code "pi0_reseat_start_assoc=$([ "${SBND_PI0_RESEAT_START}" = 0 ] && echo false || echo true)")
+# doc pr/132 round 5: build-time EM collinear-fragment merge.  EMPTY = no TLA = job default off.
+[ -n "${SBND_EM_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_deg=${SBND_EM_COLLINEAR_DEG}")
+[ -n "${SBND_EM_COLLINEAR_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_dis_cm=${SBND_EM_COLLINEAR_DIS}")
+[ -n "${SBND_EM_COLLINEAR_HOST:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_host_mev=${SBND_EM_COLLINEAR_HOST}")
+# doc pr/132 round 6: EM shower start back-extension.  EMPTY = no TLA = job default off.
+[ -n "${SBND_EM_BACKEXT_PERP:-}" ] && CATH_TLA+=(--tla-code "shower_em_backext_perp_cm=${SBND_EM_BACKEXT_PERP}")
+[ -n "${SBND_EM_BACKEXT_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_em_backext_len_cm=${SBND_EM_BACKEXT_LEN}")
+# doc pr/132 round 7 (K18): acceptance-aware fragment merge reach, cm.  EMPTY = no TLA = the job default 0 (off).
+[ -n "${SBND_PI0_ACCEPT_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_accept_merge_dis_cm=${SBND_PI0_ACCEPT_MERGE}")
+# doc pr/132 round 9 (K19): back-projection NC vertex proposer miss cap, cm.  EMPTY = no TLA = the job default 0 (off).
+[ -n "${SBND_PI0_BP_VERTEX:-}" ] && CATH_TLA+=(--tla-code "pi0_bp_vertex_miss_cm=${SBND_PI0_BP_VERTEX}")
+# doc pr/133: K20 admit mu-typed shower-topology objects into the pi0 pools.  EMPTY = no TLA = C++ default false.
+[ -n "${SBND_PI0_ADMIT_MU:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_muon_showers=$([ "${SBND_PI0_ADMIT_MU}" = 0 ] && echo false || echo true)")
+# doc pr/133: K21 owner NC signature angle (deg) for the bp proposer.  EMPTY = no TLA = C++ default 0 (v3 gate).
+[ -n "${SBND_PI0_NC_SIG_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_sig_angle_deg=${SBND_PI0_NC_SIG_ANGLE}")
+# doc pr/133: K21 v2 signature-mode partner floor (MeV).  EMPTY = no TLA = C++ default 0 (legacy 20).
+[ -n "${SBND_PI0_NC_FLOOR:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_floor_mev=${SBND_PI0_NC_FLOOR}")
+# doc pr/133: K21 v2.2 post-fire PF association cone (deg).  EMPTY = no TLA = C++ default 0 = off.
+[ -n "${SBND_PI0_NC_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_pf_assoc_deg=${SBND_PI0_NC_PF_ASSOC}")
+# doc pr/134: K22 NC merged-complex bp pairing (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PI0_NC_FRAG_MERGE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_frag_merge=true")
+# doc pr/134: K23 with-vertex post-accept PF satellite cone (deg).  EMPTY = no TLA = the job default off.
+[ -n "${SBND_PI0_PF_ASSOC:-}" ] && CATH_TLA+=(--tla-code "pi0_pf_assoc_deg=${SBND_PI0_PF_ASSOC}")
+# doc pr/134: K24 P1 nu-vertex preference (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PI0_PREFER_MAIN:-}" ] && CATH_TLA+=(--tla-code "pi0_prefer_main_vertex=true")
+# doc pr/136 round 2: let the pass-4 cross-cluster pre-filter consult angle_v1
+# before discarding on angle_v2 > 30 (bool).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PASS4_V1_ESCAPE:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_escape=true")
+# doc pr/136 round 2: deg ceiling on angle_v2 for the escape above.  EMPTY = no
+# TLA = the job default 0 = no ceiling (inert unless the escape is on).
+[ -n "${SBND_PASS4_V1_MAXV2:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_v2=${SBND_PASS4_V1_MAXV2}")
+# doc pr/136 round 3: cm proximity bound on the escape.  EMPTY = no TLA = 0 = none.
+[ -n "${SBND_PASS4_V1_MAXDIS:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_dis=${SBND_PASS4_V1_MAXDIS}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
@@ -1522,7 +1874,7 @@ process_event() {
         --pctree "$PCT" --prbee "$PRDIR/mabc-pr.zip" --prlog "$LOG" \
         --prtree "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --qlbee "$QLDIR/mabc-all-apa.zip" \
-        --beam-window "0.2,2.2" \
+        --beam-window "$PR_BEAM_WINDOW_US" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \
         --out "$PRDIR/nusel-evt${EVT_ID}.tsv" 2>>"$PRDIR/stdout.log"
 
@@ -1530,9 +1882,197 @@ process_event() {
     [ "$rc" = 0 ]
 }
 
+# ---------------------------------------------------------------------------
+# doc 76 round 2: GROUP mode -- run several events through ONE wire-cell
+# process.  PR_GROUP_SIZE unset or 0 => the per-event path above, untouched and
+# byte-identical.  Set it and the events are chunked; each chunk is one process.
+#
+# What makes this safe: the PR job's TLAs are IDENTICAL to the per-event ones
+# except for four, so the operating point (all 300+ SBND_* knobs in CATH_TLA)
+# cannot drift between the two modes:
+#   input        one group archive instead of one event's pctree
+#   output_dir   the batch root; evt_subdir puts each event back in pr_evt<ID>/
+#   multi_event  event number from each tensor ident, not the constant `event`
+#   rse_map      per-event run/subrun, because a group can span many runs
+# Everything each event writes therefore lands on exactly the path the
+# per-event driver writes, which is what lets pr85_hash_gate.py /
+# pr94_root_gate.py / nusel_extract.py compare the two modes file for file.
+process_group() {
+    local GIDX=$1; shift
+    local -a EVTS=("$@")
+    local GDIR="$OUTROOT/.groups"
+    local GTAR="$GDIR/g${GIDX}.tar.gz"
+    local GRSE="$GDIR/g${GIDX}-rse.json"
+    local GLOG="$OUTROOT/wct_pr_g${GIDX}.log"
+    mkdir -p "$GDIR"
+
+    # RSE for the *job* TLAs: the first event's, with rse_map correcting the
+    # rest.  Same metadata source as process_event.
+    local RUN_NO=0 SUBRUN_NO=0 _md
+    _md=$(tar xzOf "$QLROOT/ql_evt${EVTS[0]}/opflash_apa0.tar.gz" \
+            "opflash_tensorset_${EVTS[0]}_metadata.json" 2>/dev/null) || _md=''
+    if [ -n "$_md" ]; then
+        local _rse
+        _rse=$(printf '%s' "$_md" | python3 -c \
+            'import json,sys; d=json.load(sys.stdin); print(int(d.get("run",0)), int(d.get("subrun",0)))' \
+            2>/dev/null) && [ -n "$_rse" ] && read -r RUN_NO SUBRUN_NO <<< "$_rse"
+    fi
+
+    # The sinks do not create directories -- the runner must.
+    local evt
+    for evt in "${EVTS[@]}"; do
+        rm -rf "$OUTROOT/pr_evt${evt}"; mkdir -p "$OUTROOT/pr_evt${evt}"
+    done
+
+    if [ -s "$QLROOT/pctree-ql.tar.gz" ] && [ "${#EVTS[@]}" -eq "$(wc -l < "$QLROOT/events.txt" 2>/dev/null || echo -1)" ]; then
+        # ql_root IS a stage-A group directory and we were asked for exactly its
+        # events: its pctree-ql.tar.gz already holds them, in the right order,
+        # so use it rather than take it apart and put it back together.
+        GTAR="$QLROOT/pctree-ql.tar.gz"
+        cp -f "$QLROOT/rse.json" "$GRSE" 2>/dev/null || echo '{}' > "$GRSE"
+        echo "[group $GIDX] using stage-A archive $GTAR"
+    elif ! python3 "$SX/scripts/multi/make_group_pctree.py" \
+            --ql-root "$QLROOT" --out "$GTAR" --rse-map "$GRSE" "${EVTS[@]}" \
+            > "$GDIR/g${GIDX}-build.log" 2>&1; then
+        echo "ERROR: [group $GIDX] could not build $GTAR (see $GDIR/g${GIDX}-build.log)" >&2
+        return 1
+    fi
+
+    echo "[group $GIDX] ${#EVTS[@]} events (${EVTS[0]}..${EVTS[-1]}) rse=($RUN_NO, $SUBRUN_NO) reality=$REALITY"
+
+    (
+        cd "$OUTROOT" || exit 1
+        export LD_PRELOAD="$PYLIB"
+        export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+        _TLA=(
+            --tla-str  "input=$GTAR"
+            --tla-code "anode_indices=[0,1]"
+            --tla-str  "output_dir=$OUTROOT"
+            --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVTS[0]}"
+            --tla-str  "reality=$REALITY"
+            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+            "${TFJSON_TLA[@]}"
+            "${CATH_TLA[@]}"
+            --tla-code "multi_event=true"
+            --tla-str  "evt_subdir=pr_evt%1%"
+            --tla-code "rse_map=$(cat "$GRSE")"
+            --tla-str  "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz"
+        )
+        _CFG=(-c "$JSONNET")
+        if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
+            _cfgjson="$GDIR/.wct-cfg-g${GIDX}.json"
+            rm -f "$_cfgjson"
+            if wcsonnet "${_TLA[@]}" -o "$_cfgjson" "$JSONNET"; then
+                _CFG=(-c "$_cfgjson")
+                _TLA=()
+            else
+                echo "[group $GIDX] WARN: wcsonnet failed -- in-process jsonnet" >&2
+            fi
+        fi
+        setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/g${GIDX}.time.meta" \
+        timeout --signal=TERM --kill-after=60 "${PR_GROUP_TIMEOUT:-${PR_TIMEOUT:-3600}}" \
+        wire-cell \
+            -l stderr -l "${GLOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
+            "${_TLA[@]}" \
+            "${_CFG[@]}"
+        echo "rc=$?" > "$GDIR/g${GIDX}.rc"
+    ) > "$OUTROOT/.batch_pr_g${GIDX}.stdout" 2>&1
+
+    local rc; rc=$(sed -n 's/^rc=//p' "$GDIR/g${GIDX}.rc" 2>/dev/null); rc=${rc:-1}
+    if [ "$rc" != 0 ]; then
+        echo "[group $GIDX] wire-cell rc=$rc -- see $GLOG" >&2
+        for evt in "${EVTS[@]}"; do echo "rc=$rc" > "$OUTROOT/pr_evt${evt}/rc.txt"; done
+        return 1
+    fi
+
+    # Per-event tables.  nusel_extract.py wants ONE event's log; the group log
+    # is sequential, so slice it on the MABC load line that opens each event.
+    # --bw-gate: the group log interleaves two logger sinks, so a per-event
+    # slice of it can lose the beam_window_only line.  Pass the gate the job
+    # actually ran with rather than let nusel_extract guess from a possibly
+    # incomplete log -- without it an out-of-window main reads 0 "evaluated,
+    # clean" instead of -1 "not evaluated" (seen on mcp1k 48367).
+    local _NOK=0; local -a _MISSING=()
+    for evt in "${EVTS[@]}"; do
+        local PRDIR="$OUTROOT/pr_evt${evt}"
+        local QLPCT="$QLROOT/ql_evt${evt}/pctree-evt${evt}.tar.gz"
+        local QLBEE="$QLROOT/ql_evt${evt}/mabc-all-apa.zip"
+        # doc 76 round 3.  RUN_NO/SUBRUN_NO are the JOB's TLAs -- the FIRST
+        # event's run -- and rse_map corrects the rest inside wire-cell, so the
+        # ROOT trees are right.  The table is written out here, though, and
+        # stamping every row with the job's run gave every event in a group the
+        # run of its group leader.  Silent on a single-run sample (mcp1k) and
+        # wrong on 198 of 547 nueCC48 rows, which span 12 runs.  Take each
+        # event's own pair from the same rse_map the job was given.
+        local E_RUN=$RUN_NO E_SUBRUN=$SUBRUN_NO _erse
+        _erse=$(python3 -c 'import json,sys
+try:
+    m = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(1)
+v = m.get(sys.argv[2])
+if not v: raise SystemExit(1)
+print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_erse" ] && read -r E_RUN E_SUBRUN <<< "$_erse"
+        # A stage-A group dir keeps one archive for the whole group instead of a
+        # tree per event; nusel_extract wants one event, so fall back to this
+        # job's own re-saved per-event tree and skip the Q/L Bee cross-check.
+        if [ ! -s "$QLPCT" ]; then
+            QLPCT="$PRDIR/pctree-pr-evt${evt}.tar.gz"
+            QLBEE=""
+        fi
+        # doc 82 round 2.  This used to be an unconditional `echo "rc=0"`.
+        # The GROUP's own rc is checked above, and a non-zero group correctly
+        # stamps every member -- but a group that exits 0 having produced
+        # nothing for ONE member still reported that member as rc=0, so any
+        # coverage count taken from rc.txt silently over-counted.  Take the
+        # per-event verdict from the per-event product wire-cell was told to
+        # write (save_tensors=.../pctree-pr-evt%1%.tar.gz, unconditional in
+        # the group path) instead of asserting success.
+        if [ -s "$PRDIR/pctree-pr-evt${evt}.tar.gz" ]; then
+            echo "rc=0" > "$PRDIR/rc.txt"
+            _NOK=$((_NOK+1))
+        else
+            echo "rc=1" > "$PRDIR/rc.txt"
+            _MISSING+=("$evt")
+            echo "[group $GIDX] event $evt: NO per-event product though the group exited 0" >&2
+        fi
+        python3 "$SX/scripts/multi/slice_group_log.py" "$GLOG" "$evt" \
+            > "$PRDIR/wct_pr_evt${evt}.log" 2>/dev/null
+        python3 "$SX/nusel_extract.py" \
+            --pctree "$QLPCT" \
+            --prbee "$PRDIR/mabc-pr.zip" --prlog "$PRDIR/wct_pr_evt${evt}.log" \
+            --prtree "$PRDIR/pctree-pr-evt${evt}.tar.gz" \
+            ${QLBEE:+--qlbee "$QLBEE"} \
+            --beam-window "$PR_BEAM_WINDOW_US" \
+            --bw-gate "$PR_BEAM_WINDOW_US" \
+            --run "$E_RUN" --subrun "$E_SUBRUN" \
+            --out "$PRDIR/nusel-evt${evt}.tsv" 2>>"$PRDIR/stdout.log"
+    done
+    if [ "$_NOK" -ne "${#EVTS[@]}" ]; then
+        echo "[group $GIDX] rc=0 from wire-cell but ${_NOK}/${#EVTS[@]} events have products; missing: ${_MISSING[*]}" >&2
+        return 1
+    fi
+    echo "[group $GIDX] rc=0  -> $OUTROOT (${_NOK}/${#EVTS[@]} events)"
+    return 0
+}
+
 batch_init
 BATCH_MAX=${PR_JOBS:-6}
-echo "ql_root=$QLROOT out_root=$OUTROOT reality=$REALITY events=${#EVENT_IDS[@]} jobs=$BATCH_MAX"
+GROUP_SIZE=${PR_GROUP_SIZE:-0}
+echo "ql_root=$QLROOT out_root=$OUTROOT reality=$REALITY events=${#EVENT_IDS[@]} jobs=$BATCH_MAX group_size=$GROUP_SIZE"
+if [ "$GROUP_SIZE" -gt 0 ]; then
+    _gi=0
+    _n=${#EVENT_IDS[@]}
+    for ((_i=0; _i<_n; _i+=GROUP_SIZE)); do
+        _chunk=("${EVENT_IDS[@]:_i:GROUP_SIZE}")
+        _blog="$OUTROOT/.batch_pr_g${_gi}.log"
+        batch_wait_slot
+        ( process_group "$_gi" "${_chunk[@]}" ) > "$_blog" 2>&1 &
+        BATCH_PIDS[$!]="g$_gi"
+        echo "  [start] group=$_gi n=${#_chunk[@]} log: $_blog"
+        _gi=$((_gi+1))
+    done
+else
 for evt in "${EVENT_IDS[@]}"; do
     _blog="$OUTROOT/.batch_pr_evt${evt}.log"
     batch_wait_slot
@@ -1540,6 +2080,7 @@ for evt in "${EVENT_IDS[@]}"; do
     BATCH_PIDS[$!]=$evt
     echo "  [start] evt=$evt  log: $_blog"
 done
+fi
 batch_drain
 batch_summary
 

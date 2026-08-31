@@ -1,0 +1,78 @@
+# retire_20260825.sh  tiers=A
+# started              2026-08-25T08:31:02-07:00
+# wcp-porting-img HEAD 68deee0
+# toolkit HEAD         2aba11dc
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  217G
+# df /nfs/data/1 pre   641G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-08-25T08:31:03-07:00	work-pr104-flipchk-mcp1k	A	114	work-pr104-flipchk-mcp1k.tar.gz	2026-08-21T08:47:55-07:00	0
+2026-08-25T08:31:03-07:00	work-pr104-flipchk-mcp2k	A	62	work-pr104-flipchk-mcp2k.tar.gz	2026-08-21T08:44:48-07:00	0
+2026-08-25T08:31:03-07:00	work-pr104-flipchk-ncpi0	A	102	work-pr104-flipchk-ncpi0.tar.gz	2026-08-21T08:45:15-07:00	0
+2026-08-25T08:31:04-07:00	work-pr104-flipchk-nuecc48	A	273	work-pr104-flipchk-nuecc48.tar.gz	2026-08-21T08:47:17-07:00	0
+2026-08-25T08:31:04-07:00	work-pr104-on4-mcp1k	A	3365	work-pr104-on4-mcp1k.tar.gz	2026-08-21T08:29:50-07:00	0
+2026-08-25T08:31:04-07:00	work-pr104-on4-mcp2k	A	62	work-pr104-on4-mcp2k.tar.gz	2026-08-21T08:16:49-07:00	0
+2026-08-25T08:31:04-07:00	work-pr104-on4-ncpi0	A	102	work-pr104-on4-ncpi0.tar.gz	2026-08-21T08:17:17-07:00	0
+2026-08-25T08:31:04-07:00	work-pr104-on4-nuecc48	A	273	work-pr104-on4-nuecc48.tar.gz	2026-08-21T08:19:20-07:00	0
+2026-08-25T08:31:04-07:00	work-pr112-cne-mcp1k	A	628	work-pr112-cne-mcp1k.tar.gz	2026-08-23T01:10:45-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112-harv-mcp1k	A	1416	work-pr112-harv-mcp1k.tar.gz	2026-08-23T01:10:53-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112-harv-nuecc48	A	276	work-pr112-harv-nuecc48.tar.gz	2026-08-23T00:48:05-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112-nofitx-mcp1k	A	1419	work-pr112-nofitx-mcp1k.tar.gz	2026-08-23T01:10:46-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112-trad-mcp1k	A	1435	work-pr112-trad-mcp1k.tar.gz	2026-08-23T01:10:43-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112-trad-nuecc48	A	274	work-pr112-trad-nuecc48.tar.gz	2026-08-23T00:48:01-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112i-fid-nuecc48	A	288	work-pr112i-fid-nuecc48.tar.gz	2026-08-23T12:57:07-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112i-flipchk-ncpi0	A	107	work-pr112i-flipchk-ncpi0.tar.gz	2026-08-23T16:54:48-07:00	0
+2026-08-25T08:31:05-07:00	work-pr112i-flipchk-nuecc48	A	288	work-pr112i-flipchk-nuecc48.tar.gz	2026-08-23T16:54:07-07:00	0
+2026-08-25T08:31:06-07:00	work-pr112i-nofitx-mcp1k	A	3377	work-pr112i-nofitx-mcp1k.tar.gz	2026-08-23T15:05:24-07:00	0
+2026-08-25T08:31:07-07:00	work-pr112i-nofitx-mcp2k	A	6688	work-pr112i-nofitx-mcp2k.tar.gz	2026-08-23T15:28:39-07:00	0
+2026-08-25T08:31:07-07:00	work-pr112i-nofitx-ncpi0	A	104	work-pr112i-nofitx-ncpi0.tar.gz	2026-08-23T14:53:32-07:00	0
+2026-08-25T08:31:07-07:00	work-pr112i-nofitx-nuecc48	A	277	work-pr112i-nofitx-nuecc48.tar.gz	2026-08-23T14:53:04-07:00	0
+2026-08-25T08:31:07-07:00	work-pr112i-off-mcp1k	A	3377	work-pr112i-off-mcp1k.tar.gz	2026-08-23T14:01:51-07:00	0
+2026-08-25T08:31:08-07:00	work-pr112i-off-mcp2k	A	6687	work-pr112i-off-mcp2k.tar.gz	2026-08-23T14:30:07-07:00	0
+2026-08-25T08:31:08-07:00	work-pr112i-off-ncpi0	A	103	work-pr112i-off-ncpi0.tar.gz	2026-08-23T12:49:07-07:00	0
+2026-08-25T08:31:08-07:00	work-pr112i-off-nuecc48	A	276	work-pr112i-off-nuecc48.tar.gz	2026-08-23T12:47:13-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-off-numu100	A	414	work-pr112i-off-numu100.tar.gz	2026-08-23T12:46:23-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-offma20-mcp1k	A	3224	work-pr112i-offma20-mcp1k.tar.gz	2026-08-23T16:49:08-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-probe-nuecc48	A	288	work-pr112i-probe-nuecc48.tar.gz	2026-08-23T12:50:29-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-probe-numu100	A	418	work-pr112i-probe-numu100.tar.gz	2026-08-23T12:48:18-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-probev-nuecc48	A	287	work-pr112i-probev-nuecc48.tar.gz	2026-08-23T12:53:25-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-snapD1-ncpi0	A	107	work-pr112i-snapD1-ncpi0.tar.gz	2026-08-23T13:02:43-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-snapD1-nuecc48	A	288	work-pr112i-snapD1-nuecc48.tar.gz	2026-08-23T13:05:37-07:00	0
+2026-08-25T08:31:09-07:00	work-pr112i-snapD1-numu100	A	418	work-pr112i-snapD1-numu100.tar.gz	2026-08-23T13:04:00-07:00	0
+2026-08-25T08:31:10-07:00	work-pr112i-snapD2-mcp1k	A	3402	work-pr112i-snapD2-mcp1k.tar.gz	2026-08-23T15:40:20-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-mcp2k	A	6735	work-pr112i-snapD2-mcp2k.tar.gz	2026-08-23T16:03:00-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-ncpi0	A	107	work-pr112i-snapD2-ncpi0.tar.gz	2026-08-23T13:03:47-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-noswap-ncpi0	A	107	work-pr112i-snapD2-noswap-ncpi0.tar.gz	2026-08-23T13:09:06-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-noswap-nuecc48	A	288	work-pr112i-snapD2-noswap-nuecc48.tar.gz	2026-08-23T13:28:49-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-noswap-numu100	A	418	work-pr112i-snapD2-noswap-numu100.tar.gz	2026-08-23T13:16:49-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-nuecc48	A	288	work-pr112i-snapD2-nuecc48.tar.gz	2026-08-23T13:07:06-07:00	0
+2026-08-25T08:31:11-07:00	work-pr112i-snapD2-numu100	A	418	work-pr112i-snapD2-numu100.tar.gz	2026-08-23T13:06:05-07:00	0
+2026-08-25T08:31:12-07:00	work-pr112i-snapD3-mcp1k	A	3402	work-pr112i-snapD3-mcp1k.tar.gz	2026-08-23T16:14:35-07:00	0
+2026-08-25T08:31:13-07:00	work-pr112i-snapD3-mcp2k	A	6735	work-pr112i-snapD3-mcp2k.tar.gz	2026-08-23T16:37:24-07:00	0
+2026-08-25T08:31:13-07:00	work-pr112i-snapD3-ncpi0	A	107	work-pr112i-snapD3-ncpi0.tar.gz	2026-08-23T13:04:32-07:00	0
+2026-08-25T08:31:13-07:00	work-pr112i-snapD3-nuecc48	A	288	work-pr112i-snapD3-nuecc48.tar.gz	2026-08-23T13:13:22-07:00	0
+2026-08-25T08:31:13-07:00	work-pr112i-snapD3-numu100	A	418	work-pr112i-snapD3-numu100.tar.gz	2026-08-23T13:08:19-07:00	0
+2026-08-25T08:31:14-07:00	work-pr112i-uniW0-mcp1k	A	3398	work-pr112i-uniW0-mcp1k.tar.gz	2026-08-23T14:30:28-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0-mcp2k	A	6727	work-pr112i-uniW0-mcp2k.tar.gz	2026-08-23T14:30:29-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0-ncpi0	A	106	work-pr112i-uniW0-ncpi0.tar.gz	2026-08-23T13:06:23-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0-nuecc48	A	287	work-pr112i-uniW0-nuecc48.tar.gz	2026-08-23T13:19:47-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0-numu100	A	417	work-pr112i-uniW0-numu100.tar.gz	2026-08-23T13:11:25-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0ma4-ncpi0	A	106	work-pr112i-uniW0ma4-ncpi0.tar.gz	2026-08-23T16:26:53-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW0ma4-nuecc48	A	287	work-pr112i-uniW0ma4-nuecc48.tar.gz	2026-08-23T16:25:37-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW1-ncpi0	A	107	work-pr112i-uniW1-ncpi0.tar.gz	2026-08-23T13:07:25-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW1-nuecc48	A	288	work-pr112i-uniW1-nuecc48.tar.gz	2026-08-23T13:22:48-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW1-numu100	A	419	work-pr112i-uniW1-numu100.tar.gz	2026-08-23T13:13:09-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW2-ncpi0	A	107	work-pr112i-uniW2-ncpi0.tar.gz	2026-08-23T13:08:14-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW2-nuecc48	A	288	work-pr112i-uniW2-nuecc48.tar.gz	2026-08-23T13:25:48-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-uniW2-numu100	A	419	work-pr112i-uniW2-numu100.tar.gz	2026-08-23T13:15:11-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-vox-ncpi0	A	107	work-pr112i-vox-ncpi0.tar.gz	2026-08-23T13:05:23-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-vox-nuecc48	A	287	work-pr112i-vox-nuecc48.tar.gz	2026-08-23T13:16:52-07:00	0
+2026-08-25T08:31:15-07:00	work-pr112i-vox-numu100	A	417	work-pr112i-vox-numu100.tar.gz	2026-08-23T13:10:43-07:00	0
+2026-08-25T08:31:15-07:00	work-vtx106-cne-off-nuecc48	A	267	work-vtx106-cne-off-nuecc48.tar.gz	2026-08-21T14:01:20-07:00	0
+2026-08-25T08:31:15-07:00	work-vtx106-cne-on-nuecc48	A	270	work-vtx106-cne-on-nuecc48.tar.gz	2026-08-21T14:03:58-07:00	0
+2026-08-25T08:31:15-07:00	work-vtx106-harv-base-nuecc48	A	270	work-vtx106-harv-base-nuecc48.tar.gz	2026-08-21T11:56:51-07:00	0
+2026-08-25T08:31:15-07:00	work-vtx106-harv-nofitx-nuecc48	A	271	work-vtx106-harv-nofitx-nuecc48.tar.gz	2026-08-21T13:14:35-07:00	0
+# finished             2026-08-25T08:31:18-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 144G
+# df /nfs/data/1 post  714G avail

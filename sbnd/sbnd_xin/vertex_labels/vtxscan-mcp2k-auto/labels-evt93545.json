@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt93545",
+ "eventNo": 93545,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 29.074102459603772,
+  "y": 84.1153118534689,
+  "z": 470.04112114327825
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": 29.074102459603772,
+   "y": 84.1153118534689,
+   "z": 470.04112114327825
+  }
+ ],
+ "reco_sep_cm": 0.006329759469998572,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Single 37 cm proton whose profile follows the stopping-proton template all the way to 209k at 11000, so rule 1 puts the vertex at the cool low-z end 11002; only two candidates exist and the shape is unambiguous.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt93545/calib-pr-evt93545.json",
+ "subRunNo": 1
+}

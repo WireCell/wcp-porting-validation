@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt98778",
+ "eventNo": 98778,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": 51.32287888887869,
+  "y": 114.81007795946655,
+  "z": 94.4753783843517
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 8,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 8002,
+   "x": 51.32287888887869,
+   "y": 114.81007795946655,
+   "z": 94.4753783843517
+  }
+ ],
+ "reco_sep_cm": 0.005445494472949422,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:23Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "92 deg junction at the cluster's lowest z between a hot 12.2 cm 2.8x-MIP proton and the free MIP end of a 430 cm muon that runs beam-forward to z=492; the 8003 break is 177 deg collinear, i.e. a delta-ray break, not a vertex",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt98778/calib-pr-evt98778.json",
+ "subRunNo": 1
+}

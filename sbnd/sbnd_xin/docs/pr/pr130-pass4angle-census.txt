@@ -1,0 +1,37 @@
+pass4_angle admissions at the current production point:
+  1590 total over 154 events;  14 scanner-condemned, 1576 not
+
+=== the condemned admissions ===
+     event      seg   len_cm angle_v1 angle_v2 pair_dis body_dis   tier
+     72786     9009      2.3      5.1      6.7     53.4     31.6      1
+     72786    31033      0.7      8.8     10.4     85.0     32.1      3
+    278420    67033      0.2      4.5      5.2    102.7     23.9      1
+    278420    68034      0.2     10.2     10.9    113.3     15.7      1
+    278420    69035      0.4     10.2     10.7    115.1      9.9      1
+    278420    70036      0.3      5.5      5.5    117.3     12.9      1
+    278420    73039      0.7      2.2      2.2    130.2     14.7      1
+    278420    75041      4.8      7.0      7.9    106.8      7.9      1
+    278420    78044      0.3      1.1      1.3    110.0      9.7      1
+    286655    67016      1.5     14.1     11.5     73.7     17.3      1
+    286655    69018      0.4      8.6     12.4     88.2     22.9      1
+    286655    81062      0.7      7.7      4.8     92.4     17.5      1
+    286655    82063     20.6      9.4      7.2     77.6      7.8      1
+    400504    21003      0.8     21.5     21.2     30.2     20.0      1
+
+=== does any taped feature separate them? (same bar as Part 4) ===
+  len_cm         interleaved: condemned [0.23, 20.57] vs legit [0.00, 37.70]  (1467/1576 legit inside)
+  med_dqdx_mip   interleaved: condemned [0.39, 2.87] vs legit [0.00, 5.84]  (1518/1576 legit inside)
+  pair_dis_cm    interleaved: condemned [30.22, 130.17] vs legit [9.11, 440.97]  (1361/1576 legit inside)
+  front_dis_cm   interleaved: condemned [27.64, 116.31] vs legit [0.06, 157.61]  (1116/1576 legit inside)
+  body_dis_cm    interleaved: condemned [7.80, 32.11] vs legit [0.00, 95.66]  (691/1576 legit inside)
+  snap_dis_cm    interleaved: condemned [17.27, 114.00] vs legit [0.06, 154.78]  (1003/1576 legit inside)
+  angle_v1       interleaved: condemned [1.05, 21.46] vs legit [0.19, 45.97]  (1399/1576 legit inside)
+  angle_v2       interleaved: condemned [1.34, 21.17] vs legit [0.12, 29.96]  (1252/1576 legit inside)
+  tier           interleaved: condemned [1.00, 3.00] vs legit [1.00, 4.00]  (1562/1576 legit inside)
+  cur_len_cm     interleaved: condemned [12.40, 60.20] vs legit [1.00, 538.60]  (751/1576 legit inside)
+  cur_nseg       interleaved: condemned [1.00, 16.00] vs legit [1.00, 92.00]  (1170/1576 legit inside)
+  divert         interleaved: condemned [0.00, 0.00] vs legit [0.00, 1.00]  (1547/1576 legit inside)
+
+=== tier occupancy ===
+  condemned  {1: 13, 3: 1}
+  legit      {1: 1393, 2: 71, 3: 98, 4: 14}

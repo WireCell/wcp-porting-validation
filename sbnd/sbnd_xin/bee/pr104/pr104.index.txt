@@ -1,0 +1,23 @@
+# doc pr/104 A/B index -- OFF 4db17705-9b64-4978-9e7f-86b8948f4461 / ON e87695c6-8920-4e14-9e69-4a81212242f3
+# before = work-pr104-bare-* (HEAD 5b6b289c binary + post-pr/103-flip config)
+# after  = work-pr104-on4-* (final binary: vertex_junction_snap + vjs_override_kink_snap, C++ defaults for the numerics
+#          -- the SBND production operating point flipped 2026-08-21)
+# before: https://www.phy.bnl.gov/twister/bee/set/4db17705-9b64-4978-9e7f-86b8948f4461/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/e87695c6-8920-4e14-9e69-4a81212242f3/event/list/
+# bee_idx	event	sample	status
+0	405707	mcp2k	OWNER "vertex biased by the short-cut" -- FIXED: main vertex re-pointed 1.6 cm from the kink-snap point onto the muon+proton junction (tier A); numu 4.30->3.99 still selected -- PLEASE LOOK
+1	65289	mcp1k	FIXED: DL vertex + owner's junction both 2-prong, joint fit picks the owner's (fit_d 0.28 vs 2.68 cm); click->main 2.38->0.00; Enu 917->1209 -- PLEASE LOOK
+2	66712	mcp1k	FIXED (tier B, fit 0.72 cm from J vs 1.97 from M; euclidean candidate): click->main 2.62->0.61; numu 2.75->3.55 -- PLEASE LOOK
+3	282072	mcp1k	FIXED: DL vertex was a 2.4 cm stub end; re-pointed onto the deg-3 junction; click->main 1.98->0.00; numu 3.47->4.30, Enu 841->1274
+4	423981	nuecc48	FIXED (owner 2026-08-21 "looks like a nueCC"): 4.1 cm onto the 5-prong junction; nue -1.5->+3.4 (now selected)
+5	172266	mcp1k	mover, unlabelled: tier A 3.3 cm onto a deg-4 junction; numu 0.79->1.00 -- PLEASE LOOK
+6	278046	mcp1k	mover, toward (14.9->14.2 cm, wrong-object event); tier A 2.5 cm; numu 0.57->-0.31 (was not selected)
+7	288287	mcp1k	mover, unlabelled: tier B 4.1 cm onto a deg-5 junction (fit 0.13 cm); numu 2.54->2.43 -- PLEASE LOOK
+8	285753	mcp1k	mover, unlabelled: tier A 4.3 cm (kink-snap product); numu -1.49->-1.30 (not selected either way)
+9	62459	mcp1k	mover, on (0.32 cm): tier B 3.1 cm at snap time, improve_vertex brings it back; numu 3.00->2.93
+10	61461	mcp1k	mover, unlabelled: tier A 2.0 cm (kink-snap product); numu 3.81->3.73
+11	38856	nuecc48	mover, toward (24.5->22.8 cm; vertex far off either way); nue -15->-0.37
+12	163543	nuecc48	mover flagged by the >1 cm rule: 33->37 cm from the click, nue never selected either way (wrong object)
+13	345633	mcp1k	RESIDUAL, unchanged: the junction's long arms are still shower-flagged when the snap runs
+14	281837	mcp1k	VETOED (identical before/after): 6-prong star split in two partial junctions, joint fit rms 2.87 cm -> declined (was ADVERSE in round 3)
+15	400474	nuecc48	VETOED (identical before/after): 0.84 cm candidate below vjs_min_move (was ADVERSE in round 3)

@@ -1,0 +1,49 @@
+evt	arm	em_excl	deg	n_trk_near	n_sh_near	n_stubs	n_passthru	n_shortcut	n_orphans	kink	kink_seg	numu	nue	detail
+10550	work-pr103-bare2-nuecc48	1	2	1	1	0	0	0	0	0.0	-1	-0.9689858555793762	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+111412	work-pr103-bare2-nuecc48	0	6	1	4	1	0	0	0	0.73	18026	0.07164805382490158	0.03738752380013466	{"stubs": [[18059, 2.38]], "passthru": [], "shortcut": [], "orphans": []}
+116962	work-pr103-bare2-nuecc48	0	6	3	2	1	0	0	0	1.12	21070	0.2662314176559448	-15.0	{"stubs": [[21069, 2.1]], "passthru": [], "shortcut": [], "orphans": []}
+122660	work-pr103-bare2-nuecc48	0	3	3	0	0	0	0	0	0.69	9008	-0.3860114812850952	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+131357	work-pr103-bare2-nuecc48	0	2	1	1	0	0	0	0	0.28	12010	-0.12164580076932907	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+137238	work-pr103-bare2-nuecc48	0	2	1	1	0	0	0	0	0.44	143052	1.1364765167236328	-3.4145219326019287	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+138009	work-pr103-bare2-nuecc48	1	2	1	1	0	0	0	0	0.46	12085	0.6985094547271729	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+163543	work-pr103-bare2-nuecc48	0	4	3	1	0	0	0	0	3.89	14128	-0.49286824464797974	-0.30610790848731995	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+168596	work-pr103-bare2-nuecc48	0	3	3	0	0	0	0	0	1.41	14154	-1.3801125288009644	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+172230	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.54	5027	-0.08450443297624588	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+174637	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.33	9041	0.6210421323776245	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+196649	work-pr103-bare2-nuecc48	0	1	1	0	0	0	0	0	1.92	11113	-1.1169434785842896	4.242424011230469	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+214469	work-pr103-bare2-nuecc48	0	2	1	1	0	0	0	0	0.21	16024	-0.2733740210533142	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+219295	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.41	15128	-0.2806386649608612	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+234638	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.4	10041	0.0072436463087797165	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+235435	work-pr103-bare2-nuecc48	0	4	3	1	0	0	0	0	0.37	2071	0.9756280779838562	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+239794	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.47	2069	-0.7624141573905945	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+246579	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.28	19047	-2.3804523944854736	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+256587	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.54	11301	-2.298902750015259	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+267597	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.4	5121	-1.0562808513641357	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+268067	work-pr103-bare2-nuecc48	0	6	5	0	1	0	0	0	0.53	15075	0.420145720243454	4.300936222076416	{"stubs": [[15081, 2.34]], "passthru": [], "shortcut": [], "orphans": []}
+268784	work-pr103-bare2-nuecc48	0	3	2	0	0	0	0	0	0.83	13001	-0.5968703627586365	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+269774	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.48	87134	-1.0213035345077515	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+271851	work-pr103-bare2-nuecc48	0	1	1	0	0	0	0	0	0.64	23010	-0.2696162760257721	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+30504	work-pr103-bare2-nuecc48	0	6	3	3	1	0	0	0	1.06	11068	-0.9888834953308105	-1.3878837823867798	{"stubs": [[11066, 2.13]], "passthru": [], "shortcut": [], "orphans": []}
+342199	work-pr103-bare2-nuecc48	0	2	1	1	0	0	0	0	0.26	20031	-1.1345173120498657	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+350186	work-pr103-bare2-nuecc48	1	1	0	1	0	0	0	0	0.0	-1	-1.0745177268981934	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+360535	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.67	7066	-0.7518936991691589	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+388	work-pr103-bare2-nuecc48	1	3	1	1	0	0	0	0	1.33	23028	-1.7465271949768066	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+38856	work-pr103-bare2-nuecc48	1	2	1	1	2	1	2	1	0.0	-1	-0.34421399235725403	-15.0	{"stubs": [[12082, 2.21], [12093, 2.45]], "passthru": [{"S": 12035, "S_len": 16.4, "J": 12009, "dJ": 2.45, "miss": 0.6, "arc": 3.0, "others": [[12013, 26.8, 0], [12087, 8.2, 0], [12092, 2.5, 0]]}], "shortcut": [{"seg": 12013, "len": 26.8, "sh": 0, "J": 12009, "dJ": 2.45, "Jdeg": 5, "link": [[12093, 2.45]]}, {"seg": 12087, "len": 8.2, "sh": 0, "J": 12009, "dJ": 2.45, "Jdeg": 5, "link": [[12093, 2.45]]}], "orphans": [{"seg": 12087, "len": 8.2, "dmin": 1.56}]}
+389538	work-pr103-bare2-nuecc48	0	2	1	1	0	0	0	0	0.34	19021	0.7780296802520752	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+400474	work-pr103-bare2-nuecc48	0	3	3	0	0	0	0	0	2.87	18126	-0.06853403896093369	4.159110069274902	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+42280	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.2	8021	-2.2403855323791504	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+422851	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.71	1023	-0.18830499053001404	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+423981	work-pr103-bare2-nuecc48	0	5	3	1	1	0	0	0	2.43	12096	1.4287879467010498	-1.5382236242294312	{"stubs": [[12092, 2.1]], "passthru": [], "shortcut": [], "orphans": []}
+433451	work-pr103-bare2-nuecc48	0	4	4	0	0	0	0	0	0.74	4237	-1.92859947681427	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+437699	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.49	11030	-1.0177826881408691	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+444187	work-pr103-bare2-nuecc48	0	4	1	3	0	0	0	0	0.14	19001	1.5660865306854248	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+447477	work-pr103-bare2-nuecc48	0	3	3	0	0	0	0	0	1.09	11019	0.2585368752479553	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+46363	work-pr103-bare2-nuecc48	0	6	2	5	2	0	5	1	4.64	19151	-1.0364142656326294	4.300936222076416	{"stubs": [[19056, 2.08], [19153, 2.47]], "passthru": [], "shortcut": [{"seg": 19058, "len": 9.1, "sh": 1, "J": 19034, "dJ": 1.99, "Jdeg": 4, "link": [[19056, 2.08]]}, {"seg": 19063, "len": 10.0, "sh": 1, "J": 19034, "dJ": 1.99, "Jdeg": 4, "link": [[19056, 2.08]]}, {"seg": 19078, "len": 11.4, "sh": 0, "J": 19034, "dJ": 1.99, "Jdeg": 4, "link": [[19056, 2.08]]}, {"seg": 19076, "len": 6.0, "sh": 0, "J": 19056, "dJ": 2.24, "Jdeg": 3, "link": [[19153, 2.47]]}, {"seg": 19077, "len": 10.1, "sh": 1, "J": 19056, "dJ": 2.24, "Jdeg": 3, "link": [[19153, 2.47]]}], "orphans": [{"seg": 19078, "len": 11.4, "dmin": 1.99}]}
+469665	work-pr103-bare2-nuecc48	0	2	1	0	1	0	0	0	1.37	15003	-1.53436279296875	1.2254568338394165	{"stubs": [[15071, 1.52]], "passthru": [], "shortcut": [], "orphans": []}
+489330	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.27	4018	-1.77117121219635	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+52672	work-pr103-bare2-nuecc48	0	1	0	0	0	0	0	0	0.0	-1	-1.4539412260055542	-4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+54095	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.64	17137	0.01492217369377613	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+69314	work-pr103-bare2-nuecc48	0	5	5	0	0	0	0	0	1.09	3016	3.960242509841919	-15.0	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+74544	work-pr103-bare2-nuecc48	0	2	2	0	0	0	0	0	0.64	12085	-0.20840366184711456	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+81597	work-pr103-bare2-nuecc48	1	2	1	1	0	0	0	0	0.39	19046	-0.7419695854187012	4.300936222076416	{"stubs": [], "passthru": [], "shortcut": [], "orphans": []}
+90055	work-pr103-bare2-nuecc48	0	3	2	0	1	0	0	0	0.34	11043	-1.141585350036621	4.300936222076416	{"stubs": [[11149, 1.54]], "passthru": [], "shortcut": [], "orphans": []}

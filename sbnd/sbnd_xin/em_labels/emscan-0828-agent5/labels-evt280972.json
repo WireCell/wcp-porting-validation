@@ -1,0 +1,110 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 72.63,
+  "az_deg": -55.0,
+  "centre": [
+   67.19,
+   -154.25,
+   140.99
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 15117,
+  "cloud_cluster_ids": [
+   7
+  ],
+  "cloud_kept": 15117,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 49150,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.18691151833914255,
+   0.27686893358258013,
+   0.9425538063840182
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.18691151833914255,
+    0.27686893358258013,
+    0.9425538063840182
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 16,
+   "kine_best": 949.5916072164162,
+   "kine_charge": 949.5916072164162,
+   "kine_charge_other_hypothesis": 571.1829216339346,
+   "kine_dQdx": 328.52440890604413,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    7028,
+    7029,
+    7040,
+    35052,
+    38055,
+    44061,
+    49066,
+    52069,
+    53070,
+    83154,
+    84155,
+    87159,
+    87163,
+    88168,
+    88169,
+    89170
+   ],
+   "membership_source": "probe",
+   "num_segments": 16,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   46.948966439593285,
+   -171.79643787510344,
+   83.78607222038026
+  ],
+  "reco_start_vertex_id": 7005,
+  "shower": 7040,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   46.948966439593285,
+   -171.79643787510344,
+   83.78607222038026
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt280972",
+ "eventNo": 280972,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 7,
+  "x": 46.948966439593285,
+  "y": -171.79643787510344,
+  "z": 83.78607222038026
+ },
+ "note": "[agent-bulk] Verdict on the leading EM shower 7040 (949.6 MeV, 16 seg): leans correct, but I could not settle it, hence unclear. Reading (a) correct: all 16 members lie within 11.2 deg of one axis, one apex at the vertex, the body is continuous 0-55 cm and the rest is the tail of a 950 MeV shower (55 cm is only ~4 X0). Reading (b) over-clustered: the member set has a 21.7 cm gap (76.3 -> 98.0 cm) and then six more stub segments out to 120 cm (88168/88169/44061/87159/49066/87163, 14.2 cm of segment length, all pass3_cone tier 2) that on shw7040-az-055 and az+085 are visibly detached blobs, not part of a continuous body. The images do not separate the two readings and the acceptance plot does not either. HARNESS LIMITATION on this event: the vertex sweep is unusable -- r95 is 424 cm because of a 483 cm through-going muon, so the six vtx-* frames were rendered at +-400 cm and resolve nothing near the star. Every judgement here rests on the shower-framed captures (7040 at +-73 cm, 79136 +-47, 75099 +-62, 72076 +-30). Vertex nevertheless reads sane in those frames: the 483 cm muon 7172 and the 71.6 cm pion 7039 (both correctly left unowned) both start on the star, and 7040/75099/79136/72076 fan out from it. OBSERVATION worth the owner's eye, measured not inferred: six segments -- 72173, 72083, 72084, 72086, 72087, 72082, about 37 cm of cluster-72 skeleton -- are members of BOTH shower 79136 (625.6 MeV, where they sit at 27-29 deg, no tier, added by from_vertices walk_add) AND shower 72076 (127.3 MeV, where they sit at 1.5-9.2 deg, tier 1). Their charge is therefore inside both energy figures. I do not know whether overlapping membership is by design in this reconstruction, so I make no verdict on it. Note the display's own 'in shower' column is first-owner-wins (owner_map), so it shows only 79136 for those six; the per-shower count in cmp_div is what reveals the overlap. Smaller item: 71074 (2.7 cm pdg 13 at 19.4 cm / 5.2 deg, tier 1) is a non-member sitting inside 72076's pass-1 acceptance box -- a small under-clustering of 72076, not marked. No marks recorded on this event. Scope: 4 of 14 showers in scope (7040 949.6, 79136 625.6, 75099 301.2, 72076 127.3 MeV); the other 10 (40057 4.9, 27044 4.7, 37054 3.5, 51068 2.5, 47064 2.5, 24041 2.0, 32049 1.7, 43060 1.2, 50067 0.6, 48065 0.6 MeV) are all under 5 MeV, were skipped by the 20 MeV rule, and I did not look at them. Pi0: no reco pi0 group. The capture's automatic slots priced 7040+79136 at 460.6 MeV (axis convention; the vertex convention returns no chord because 7040 starts on the vertex), and the kine_pio_ BDT feature says 453.9 MeV and does not close with its own formula (525.2). Both members of that pair are vertex-attached or near it (7040 at 0.0 cm, 79136 at 18.0 cm), so neither reads as a converted photon and I propose no pi0 pairing.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt280972/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:48:25+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt280972/calib-pr-evt280972.json",
+ "subRunNo": 1
+}

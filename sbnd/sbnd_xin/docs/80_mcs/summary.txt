@@ -1,0 +1,9 @@
+rows=469 ran=287 contained(A)=134 [non-cross 99 / cross 35; stm-tagged 0] exiting(B)=151
+PartA MCS  bias/res = -0.0119 / 0.1280
+PartA dQdx bias/res = -0.0095 / 0.0500
+PartA MCS  bias/res (100-250cm, N=72) = -0.0119 / 0.0977
+PartA dQdx bias/res (100-250cm, N=72) = -0.0047 / 0.0397
+PartA non-cross MCS bias/res = -0.0170 / 0.1387
+PartA crosser  MCS bias/res = 0.0372 / 0.1497
+PartB exiting: N=151  E_MCS<E_range(visible) violations=24 (15.9%)  median ratio=1.63
+PartC ambiguity quintile medians |resid|: 0.063 0.048 0.044 0.155 0.914

@@ -1,0 +1,147 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -48.24,
+   82.13,
+   211.91
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1216,
+  "cloud_cluster_ids": [
+   22,
+   25,
+   26
+  ],
+  "cloud_kept": 1216,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 76043,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.013003238209521463,
+   -0.8582137218284165,
+   -0.5131277847295778
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "26021": {
+    "97017": "in"
+   }
+  },
+  "marks_detail": {
+   "26021": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     0.013003238209521463,
+     -0.8582137218284165,
+     -0.5131277847295778
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "97017": {
+      "absorbed_by": null,
+      "angle": 9.830553283025955,
+      "cluster_id": 97,
+      "dist": 22.557060235958776,
+      "ellip": 0.902036739991654,
+      "kind": "in",
+      "length": 2.947070887675043,
+      "owner": 97017,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 3.6151355242896823,
+     "angle_min": 0.0,
+     "dist_max": 17.564827853607035,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     26012,
+     26013,
+     26020,
+     26021
+    ],
+    "start": [
+     -48.238039094853356,
+     90.1852282879083,
+     216.68318083029612
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.013003238209521463,
+    -0.8582137218284165,
+    -0.5131277847295778
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 105.23552112242602,
+   "kine_charge": 105.23552112242602,
+   "kine_charge_other_hypothesis": 63.299561577399125,
+   "kine_dQdx": 63.49359360249549,
+   "kine_hypothesis": "shower",
+   "kine_range": 80.84767800184696,
+   "members": [
+    26012,
+    26013,
+    26020,
+    26021
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -48.238039094853356,
+   90.1852282879083,
+   216.68318083029612
+  ],
+  "reco_start_vertex_id": 22000,
+  "shower": 26021,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -48.238039094853356,
+   90.1852282879083,
+   216.68318083029612
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt173495",
+ "eventNo": 173495,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": -1.1170549466355197,
+  "y": 199.05329995423853,
+  "z": 459.47020950015485
+ },
+ "note": "[agent-bulk] other_em. shw 26021 (105.2 MeV, 4 seg, pdg 11, len 25.3) is UNDER-CLUSTERED, and separately this event has an event-level oddity the owner should see. CLUSTERING: on shw26021-az-055-el+20 the yellow member set is a proper cone - the X at the top, the fan widening away from it down the orange axis - and it ends at 17.6 cm. About 5 cm past the last member, sitting ON the axis right at the tip of the axis arrow and drawn in its own purple, is 97017: 2.9 cm long, 13.5 MeV, at 22.6 cm / 9.8 deg, tier 1. On shw26021-acc it is the single non-member circle, at (22.6 cm, 9.8 deg) - BELOW the 12.5 deg pass-1 step, i.e. inside the angular window at that distance, and not taken. It is a one-segment node of its own, not a competing shower. Marked 97017 IN. Weaker and NOT marked, the one I would let the owner add or drop freely: 98018 (0.35 cm, 3.7 MeV, pdg 2212) at 29.0 cm / 25.3 deg, tier 1 - further out, wider, and proton-PID'd. Reconciliation check (correction 11): nseg 4 and exactly four segments carry owner 26021, so 97017 is genuinely a non-member. NOT over-clustered: one apex, one direction, members within 3.6 deg. THE EVENT-LEVEL ODDITY, which is bigger than the verdict: this shower is 270 cm from the main vertex. On ov-iso the event is two completely disconnected regions - the vertex region top-right, and a compact dense blob bottom-centre nearly three metres away - and the blob is 26021, the highest-energy EM object and the one this verdict is about. The reconstruction's neutrino candidate spans clusters 22, 25 and 26, and cluster 26 is the far one. A photon from that vertex cannot reach it: the conversion length in liquid argon is about 18 cm, so surviving 270 cm has probability of order 1e-7. So either the main vertex is in the wrong place or cluster 26 does not belong to this neutrino candidate at all. I did NOT record vertex-bad, because the star itself is locally sensible: judged from shots-vtx/evt173495/vtx-az-055-el+20 after re-capturing with --vtx-span 60 (event_half_span_cm was 356.7, correction 5), the 28.5 cm track 22001 (pdg 13, correctly UNOWNED) runs into the star from one side and the 8.5 cm EM object 96016 (28.5 MeV) leaves it on the other, and the 32.9 MeV shower 22009 sits at the far end of that track. Nothing about the star is misplaced; what is wrong is the association of a 2.7 m distant blob with it. That is a clustering question one level above this scan, so I state it rather than voting on it. NO PI0 and none proposed. The display's auto-slotted pair 26021 + 22009 prices at 89.0 MeV on the axis convention and 42.0 MeV on the vertex convention, but pairing two objects 2.5 m apart as one pi0 is not physical and I did not store it. NOT LOOKED AT: 4 of the 7 shower nodes were out of scope at 13.6 MeV and below (25010, 97017, 93015, 98018), except 97017 which is the subject of the mark above. Also not judged as objects: 22009 (32.9 MeV) and 96016 (28.5 MeV), which are in scope but not the verdict shower - both sit near the vertex and I saw nothing obviously wrong with either in the close-in vertex frames.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt173495/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:54:45+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt173495/calib-pr-evt173495.json",
+ "subRunNo": 1
+}

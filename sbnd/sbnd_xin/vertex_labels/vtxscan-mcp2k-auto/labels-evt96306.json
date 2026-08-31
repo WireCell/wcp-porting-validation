@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt96306",
+ "eventNo": 96306,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -67.81868791006139,
+  "y": 114.9236343023787,
+  "z": 69.83352194960888
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11002,
+   "x": -67.81868791006139,
+   "y": 114.9236343023787,
+   "z": 69.83352194960888
+  }
+ ],
+ "reco_sep_cm": 0.005228179686498864,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "The 268 cm muon is flat MIP at both ends so it does not stop anywhere, yet a hot 3.8 cm stub at 174674 hangs off this end - a track that begins mid-detector next to proton-grade charge is an interaction point, and it is the most upstream candidate at z=69.8.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt96306/calib-pr-evt96306.json",
+ "subRunNo": 1
+}

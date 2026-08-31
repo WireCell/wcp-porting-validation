@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt47784",
+ "eventNo": 47784,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": 56.07452256402236,
+  "y": -76.42714168539541,
+  "z": 113.82906048587407
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 17,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 17003,
+   "x": 56.07452256402236,
+   "y": -76.42714168539541,
+   "z": 113.82906048587407
+  }
+ ],
+ "reco_sep_cm": 0.005431964148261846,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 three-prong: a 33 cm proton falling from 300000 at 17001 and a 6.8 cm proton rising to 225000 at 17004 both start near 65000 at 17003, with a 218 cm MIP muon leaving for the bottom wall; the zoom is a clean cool-centred star at low z.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt47784/calib-pr-evt47784.json",
+ "subRunNo": 1
+}

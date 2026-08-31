@@ -1,0 +1,173 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/af196e84-df73-48be-8e4a-6216d3728f82/event/13/",
+ "camera": {
+  "R": 225.98,
+  "az_deg": 2741.93,
+  "centre": [
+   64.4,
+   13.55,
+   251.1
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3879,
+  "cloud_cluster_ids": [
+   19,
+   30,
+   31
+  ],
+  "cloud_kept": 3879,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 56487,
+  "el_deg": -32.07
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.7648978929464825,
+   0.26096516347585874,
+   -0.5889213842424551
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "19003": {
+    "113062": "out",
+    "125074": "out",
+    "19005": "in"
+   }
+  },
+  "marks_detail": {
+   "19003": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.7648978929464825,
+     0.26096516347585874,
+     -0.5889213842424551
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "113062": {
+      "absorbed_by": "in_other_clusters_seg_cone (direct)",
+      "angle": 173.14535442613388,
+      "cluster_id": 113,
+      "dist": 94.40035117684313,
+      "ellip": 10.567909567676047,
+      "kind": "out",
+      "length": 5.587931995205037,
+      "owner": 19003,
+      "pdg": 11,
+      "tier": null
+     },
+     "125074": {
+      "absorbed_by": "in_other_clusters_seg_cone (direct)",
+      "angle": 171.49232430048502,
+      "cluster_id": 125,
+      "dist": 105.70303285587565,
+      "ellip": 16.612133526354985,
+      "kind": "out",
+      "length": 0.3432439647248377,
+      "owner": 19003,
+      "pdg": 13,
+      "tier": null
+     },
+     "19005": {
+      "absorbed_by": "in_other_clusters_A (walk_exclude)",
+      "angle": 2.3328760307701493,
+      "cluster_id": 19,
+      "dist": 10.902776539909453,
+      "ellip": 0.08204928224358711,
+      "kind": "in",
+      "length": 21.07262292054936,
+      "owner": null,
+      "pdg": 2212,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 173.14535442613388,
+     "angle_min": 0.0,
+     "dist_max": 105.70303285587565,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     19003,
+     19004,
+     113062,
+     125074
+    ],
+    "start": [
+     90.88816828078572,
+     7.213970492488177,
+     205.54451433451726
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.7648978929464825,
+    0.26096516347585874,
+    -0.5889213842424551
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": false,
+   "joined": 3,
+   "kine_best": 256.2844030108178,
+   "kine_charge": 256.2844030108178,
+   "kine_charge_other_hypothesis": 154.15603188620622,
+   "kine_dQdx": 100.81622094303944,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    19003,
+    19004,
+    113062,
+    125074
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   90.88816828078572,
+   7.213970492488177,
+   205.54451433451726
+  ],
+  "reco_start_vertex_id": 80063,
+  "shower": 19003,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   90.88816828078572,
+   7.213970492488177,
+   205.54451433451726
+  ],
+  "verdict": "both"
+ },
+ "event": "evt318769",
+ "eventNo": 318769,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 31,
+  "x": 194.96190930376693,
+  "y": -13.604828736792083,
+  "z": 248.8060920334322
+ },
+ "note": "[agent-bulk] numucc_em, 40 showers, 68 segments. Verdict shower 19003 (pdg 11, kine_charge 256.3 MeV, 4 seg, len 22.3): correction 17 -- it is the FIRST pdg==11 entry of the kine_charge-ordered scope list. I passed over 31026, which is higher in kine_best terms than the other EM object and carries 226.5 MeV over 12 segments, because its reco pdg is 211 (a charged pion), not 11; its own cmp_div is clean (0.0-53.9 cm, 0.0-25.0 deg) and I make no claim about it. BOTH, and each half is a claim measured from the SHOWER START, so per correction 14 it stands independently of the vertex problem described below. OVER-CLUSTERED half (the stronger half): 19003's own cmp_div reads distance 0.0-105.7 cm, angle 0.0-173.1 deg. Two of its four members sit in the hemisphere OPPOSITE the axis, about a metre away -- 113062 (cluster 113, pdg 11, 5.6 cm) at 94.4 cm / 173.1 deg and 125074 (cluster 125, pdg 13, 0.34 cm) at 105.7 cm / 171.5 deg, both admitted by in_other_clusters_seg_cone (direct). Visible on shw19003-az-055-el+20: the yellow halo appears in two disconnected places, a short stub at the X and two fragments about 100 cm up-right, with the orange axis arrow pointing the other way. A 22 cm shower body cannot own charge 100 cm behind its own start. UNDER-CLUSTERED half: 19005 (cluster 19, 21.1 cm, site in_other_clusters_A walk_exclude) sits at 10.9 cm / 2.3 deg from the shower start with metric 0.082, the smallest non-zero metric in the whole candidate table, and on shw19003-acc.png it is the blue circle at (10.9, 2.3) sitting DEEP INSIDE the innermost dashed pass-1 box (angle <= 5 deg out to 130 cm) and rejected anyway. 19001 (39.8 cm, 7.1 cm / 40.7 deg, metric 0.88, also walk_exclude) is the second arm. In the picture both are grey skeleton arms running through the same dense blob fan that the shower start sits on, forming one V-shaped object of which the reconstruction claims only the apex stub. Correction 7, the marks differ in strength: the two OUT marks (113062, 125074) are the strong ones and rest on the reco's own 3-D angles, not on a projection; the IN mark on 19005 is the WEAK one and is what I would let the owner reverse, because 19005 carries reco pdg 2212 and the walk_exclude may be a deliberate proton call rather than a geometric miss -- if it is a real proton the under-clustered half falls and this becomes plain over-clustered. 19001 is deliberately left unmarked at 40.7 deg. VERTEX, judged from vtxz-az-055-el+20 and vtxz-az+065-el+20 (correction 20: the vtxz-* set was written automatically, event_half_span 171.3 cm, r95 137.0 cm, and I judged the vertex from those, not from the vtx-* set): the blue star sits in EMPTY SPACE in both azimuths, roughly 30-40 cm from the nearest charge, and the only thing touching it is one bare grey polyline with no blob point cloud along it (consistent with 31008, pdg 13, 38.2 cm, unowned) running out to where the orange 31026 track actually begins -- the real convergence point of the tracks is that far end, not the star. I did NOT record vertex-bad because correction 14 applies: both defects above are measured from the shower start and survive whatever the vertex is doing. The owner should still treat the vertex as suspect, and it makes the vertex-convention pi0 mass below untrustworthy. PI0: no reco group -- pio_id is -1 on all three in-scope showers and kine_div says no pi0 group in this event. The pio-*.png frames carry the capture's AUTO-slotted top two (19003 + 143101), which per correction 3 is NOT the reconstruction's pairing. Priced anyway: E1 256.3 + E2 99.8, axis convention 300.3 MeV, vertex convention 184.0 MeV. The two conventions disagree by 1.6x, neither is near 135, and the vertex convention rests on a vertex I just called suspect, so I propose NO pairing and store none. Showers NOT looked at: 37 of the 40, everything the scope rule skipped. In-scope was only 19003, 31026, 143101; the 37 skipped are all under 8.4 MeV (largest 131080 at 8.37 MeV) and 34 of them are single-segment. This verdict is a claim about shower 19003, not about the event. Silent on PID except where the note says otherwise. drag_check both true, probe_radius 201.3 px, probe_degenerate false.\n\nincorrect vertex",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt318769/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T23:43:04+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt318769/calib-pr-evt318769.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt178388",
+ "eventNo": 178388,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": 33.037587632232714,
+  "y": 15.79385488727577,
+  "z": 206.81829193814278
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 6013,
+   "x": 33.037587632232714,
+   "y": 15.79385488727577,
+   "z": 206.81829193814278
+  }
+ ],
+ "reco_sep_cm": 0.004857689724716154,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:18Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 at the deg-2 junction: the 36 cm track's dQ/dx rises away and peaks near 6001, the 3.6 cm 212k e/cm proton stub stops at 6000 pointing +z, and the shower debris (33003/35007/37011/36009) lies off 6013 toward +x; the prong pair opens at 111 deg so the collinearity trap does not apply.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt178388/calib-pr-evt178388.json",
+ "subRunNo": 1
+}

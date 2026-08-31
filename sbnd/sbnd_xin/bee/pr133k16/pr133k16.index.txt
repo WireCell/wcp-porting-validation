@@ -1,0 +1,9 @@
+# doc pr/133 K16@120 A/B index -- OFF dabd9eb5-47ea-49f3-8568-a28c8d0f1e1e / ON 23579411-90ac-47aa-92c5-a9f6fd8a1b87
+# OFF = work-pr132-r5off (production point) ; ON = work-pr132-r5cmw (SBND_EM_COLLINEAR_DEG=10 SBND_EM_COLLINEAR_DIS=120)
+# owner call from doc pr/132 sec 12.3: +1 exact vs 3 polluted gammas
+# bee_idx	event	status
+0	54332	RESCUED: g1 charge 0.73->1.04 of label; census partial->exact (the +1)
+1	54341	fix-direction: g1 0.68->0.82 of label (the K12 target's charge at last); census class unchanged
+2	99838	ADVERSE: g1 OK->OVER 1.41 of label (+41% spurious charge, in-window, mass-biasing)
+3	165157	ADVERSE: g2 OK->OVER 1.51 of label
+4	347824	ADVERSE: g2 OK->OVER 1.36 of label

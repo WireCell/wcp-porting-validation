@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   98.91,
+   129.42,
+   371.55
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2550,
+  "cloud_cluster_ids": [
+   18,
+   24,
+   25
+  ],
+  "cloud_kept": 2550,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 16695,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.874125446002898,
+   0.4690673159901134,
+   0.1260180848928663
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.874125446002898,
+    0.4690673159901134,
+    0.1260180848928663
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 124.28019064745848,
+   "kine_charge": 124.28019064745848,
+   "kine_charge_other_hypothesis": 74.75500189320812,
+   "kine_dQdx": 149.0464291971025,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    46017,
+    51022
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   105.89641186803733,
+   122.39922448488615,
+   369.47921541237827
+  ],
+  "reco_start_vertex_id": 18003,
+  "shower": 46017,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   105.89641186803733,
+   122.39922448488615,
+   369.47921541237827
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt292005",
+ "eventNo": 292005,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 18,
+  "x": 129.35917370219119,
+  "y": 110.21529217111424,
+  "z": 345.90311135649455
+ },
+ "note": "[agent-bulk] This event has no EM shower above 20 MeV; the entry that puts it in the numucc_em bucket (em_max 124.3 MeV = shower 46017) is a proton. Verdict is on 46017, the leading pdg-11 shower: NOT an EM shower. It is two segments -- a 1.2 cm pdg 11 stub (the seed) and 51022, a 13.7 cm pdg 2212 track absorbed by pass4_angle at 9.5 cm / 12.0 deg. On shw46017-az-055-el+20 the member set is a single narrow straight line with a tight cloud, no cone, no branching, no widening; rotated to az+085 it is seen near end-on as a compact dense blob about 7 x 3 cm, which is what a stopping proton looks like, not a 124 MeV electron (which would be 30+ cm long and several cm wide). The reconstruction's own PID agrees for 92% of the length (pdg 2212 on 51022); only the 1.2 cm seed is pdg 11. This is a PID statement; on clustering alone the two segments are contiguous and I see nothing to add or remove. Two other in-scope entries are also not EM: 18005 (394.9 MeV, pdg 13) is the 171.9 cm muon -- three cluster-18 segments in a dead straight line within 1.5 deg, visible on both vertex cameras running from the star to the top of the frame, and it is in scope only because the scope rule is on kine_best and not on PID; 50021 (108.3 MeV, pdg 2212) is a lone 9.0 cm proton at 65-74 cm. Vertex judged first and cleared: on vtx-az-055 and vtx-az+065 the muon 18005 starts on the star and the 16.6 cm pdg 2212 segment 18007 (correctly left unowned) is the second prong on it. Scope: 3 of 17 showers in scope (18005, 46017, 50021); the other 14 (18024 7.1 MeV, then 24008 3.1 down to 43014 0.3 MeV) are all under 8 MeV, skipped by the 20 MeV rule, and I did not look at them. Pi0: no reco pi0 group, no gamma slots were assignable, and with no EM object in the event there is no pairing to propose.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt292005/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:56:21+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt292005/calib-pr-evt292005.json",
+ "subRunNo": 1
+}

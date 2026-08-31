@@ -1,0 +1,7 @@
+(a) in-situ bracket: N_completed=290 N_too_short=107 N_events_with_any_mcs_line=397 / N_events=1000
+    per-invocation ms: p0=0.0 p25=3.0 p50=6.0 p75=12.0 p90=25.0 p99=49.6 max=78.0  mean=10.02  sum=2907.0ms over 290 calls
+    PR-stage (MABC cumulative) median over ALL 1000 events = 727 ms/event; MCS amortized over ALL events = 2.91 ms/event = 0.400% of that
+    PR-stage median over the 289 events with >=1 completed MCS call = 4896 ms/event (these events do more -- BDT scoring etc -- hence bigger than the all-events median above); MCS cost as a fraction of THAT = 0.205%
+(b) micro-benchmark: 12 real clouds, 300 reps each; run() median 880-4990 us (worst at npoints=233); split at that size: trim=2057us form_segs=136us estimate_energy=2787us
+(c) noise floor (OFFB-REF, byte-identical output, N=35 events): core-sec delta median=-10.0ms (-0.14%) p90=285.0ms max|delta|=431.0ms
+(c) paired ON-OFFB core-sec delta (N=35 shared events): median=+27.0ms mean=-171.9ms sd=880.0ms  -- compare to the noise floor above, NOT to zero: this is expected to be indistinguishable from noise

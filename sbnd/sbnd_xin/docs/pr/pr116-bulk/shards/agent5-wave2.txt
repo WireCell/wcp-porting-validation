@@ -1,0 +1,10 @@
+evt54453	mcp2k	numucc_em	n_seg=47	n_shw=32	em_max=198.8	pio_grp=0
+evt69232	mcp2k	numucc_em	n_seg=12	n_shw=6	em_max=195.2	pio_grp=0
+evt74123	mcp2k	numucc_em	n_seg=23	n_shw=9	em_max=159.6	pio_grp=1
+evt94224	mcp2k	nuecc	n_seg=14	n_shw=7	em_max=199.9	pio_grp=0
+evt99782	mcp2k	numucc_em	n_seg=20	n_shw=8	em_max=156.6	pio_grp=1
+evt167612	mcp2k	other_em	n_seg=49	n_shw=31	em_max=200.4	pio_grp=0
+evt171729	mcp2k	numucc_em	n_seg=18	n_shw=10	em_max=117.2	pio_grp=1
+evt179048	mcp2k	numucc_em	n_seg=14	n_shw=6	em_max=137.9	pio_grp=0
+evt275011	mcp2k	nuecc	n_seg=22	n_shw=14	em_max=105.6	pio_grp=0
+evt289246	mcp2k	numucc_em	n_seg=40	n_shw=15	em_max=264.0	pio_grp=0

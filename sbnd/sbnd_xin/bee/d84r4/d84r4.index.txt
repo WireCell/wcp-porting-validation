@@ -1,0 +1,9 @@
+# doc 84 round 4 A/B -- the three cathode-bridge admission misses the owner
+# named from the round-3 Pop-B scan.  BEFORE = work-d84r4-sent1-* (knobs off,
+# byte-identical to production at toolkit 81c178d1); AFTER = work-d84r4-flipchk-*
+# (knobs from the jsonnet flip, toolkit a8cbfa4a).  NOT uploaded -- owner call.
+#
+# bee_idx  event   guard fixed   effect
+0	172794	G1 lever 5->15cm   bare far half 68.6cm absorbed; ke_MCS 483.9->661.0, range 533.1->687.8 MeV; amb 2.6e-5->7.1e-8
+1	347890	G2 track_partner   pi+-typed 27.1cm partner shower retyped 13 and merged; kine_best 429.4->488.7 MeV; muon shower stays pdg 13 (NOT relabelled pion)
+2	67026	G3 short_gap 8cm   bare far half 257.9cm absorbed; muon shower 67.2->325.1cm, kine 181.7->748.6 MeV (largest rescue); mcs: line unchanged by design (MCS had already selected that segment)

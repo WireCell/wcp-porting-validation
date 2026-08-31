@@ -1,0 +1,11 @@
+# doc pr/133 K21 v2.1 A/B index -- OFF a375dcd4-6ea1-40db-b9a3-2d3e5581ff23 / ON b4b84201-91f9-4f1c-ab11-e9e5d9107a71
+# OFF = work-pr133-off4 (production) ; ON = work-pr133-k21v4 (SBND_PI0_BP_VERTEX=8 SBND_PI0_NC_SIG_ANGLE=15 SBND_PI0_NC_FLOOR=5)
+# v2.1 = end-agnostic rays (both orientations per gamma), miss-first ranking, legacy (100,160) window as sanity gate,
+#        same-start-point fragment veto, signature-gated partner floor 5 MeV
+# bee_idx	event	status
+0	76346	RESCUED: vertex moved 59.8 cm to (-114.1,-60.2,330.4) = 1.3 cm from the owner's hand back-projected vertex; pair = 14059 (160 MeV, END-flipped) x 49048 (75 MeV, the true gamma2), m=121.5, miss 0.6 cm
+1	116962	fire: pair 21072 (232 MeV) x 55030 (31 MeV) m=125.8, vertex shifted 12 cm; the true far vertex needs the 6-fragment gamma clustering fixed first (owner-noted)
+2	21073	unchanged-proof: dead-on click preserved (the v2.0 no-window variant had moved it 3 cm -- the restored window kills that)
+3	406125	unchanged: v4 gate refuses the p+mu track vertex
+4	506746	unchanged: v4 gate refuses (r9 ADVERSE killed)
+5	486687	unchanged: v4 gate refuses (r9 ADVERSE killed)

@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 52.27,
+  "az_deg": -55.0,
+  "centre": [
+   -148.66,
+   160.73,
+   115.77
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 14679,
+  "cloud_cluster_ids": [
+   23,
+   28,
+   29
+  ],
+  "cloud_kept": 14679,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 54252,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.40424545150621927,
+   0.8615231033337989,
+   0.3071865188425973
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.40424545150621927,
+    0.8615231033337989,
+    0.3071865188425973
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 228.3910011910343,
+   "kine_charge": 228.3910011910343,
+   "kine_charge_other_hypothesis": 137.37804582919358,
+   "kine_dQdx": 195.0300344276133,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    23005,
+    72009
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -125.70518579405102,
+   121.64190489939965,
+   114.73643010569685
+  ],
+  "reco_start_vertex_id": 23004,
+  "shower": 72009,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -125.70518579405102,
+   121.64190489939965,
+   114.73643010569685
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt105074",
+ "eventNo": 105074,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 23,
+  "x": -133.25363118488409,
+  "y": 108.35525948342118,
+  "z": 1.27773010748458
+ },
+ "note": "[agent-bulk] SAME GEOMETRY AS evt53658 IN THIS SHARD, and here it is unambiguous. Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm reads 400.0 but that is the clip: r95 is 412.3, so the event is wider than the number admits) plus ov-xz. In ov-xz the star (-133.3,108.4,1.3) sits EXACTLY on the bottom red bounding-box line, i.e. the z=0 TPC upstream face, at the end of segment 23000 -- a 466.8 cm pdg-13 track running from (-106,171,438) down to the star. In the +-60 cm close-in view there is NOTHING at the star except that one track terminating on it: no hadronic prong, no second object, no charge off-axis. The only convergence in the event is a three-way junction 119 cm up the track at (-129,130,119), where 23004 (58.2 cm pdg 13) and 23005 (82.9 cm pdg 13) branch off. A 467 cm track entering the upstream face with the vertex pinned at its entry point is a through-going / entering particle, not a contained neutrino interaction, so the vertex is not usable as a shower reference and the rubric's first test fires. This retroactively STRENGTHENS my evt53658 call: same face, same single-track-on-the-star signature, but there the track was only 72 cm and I left the alternative (a real interaction 1 cm inside the face) open at confidence likely. Two of ten events in this shard have the vertex within ~1.3 cm of z=0 -- that is worth the owner's attention as a pattern, not as two separate events. NO CLUSTERING JUDGEMENT is carried by this verdict. SEPARATE FLAG, not a recorded PID verdict (correction 6): neither in-scope object is an EM shower. 72009 (228.4 MeV, table length 84.4 cm) is two segments -- a 1.4 cm 3-point seed plus 23005, an 82.9 cm pdg-13 segment -- and in the 3-D view at az-055 the yellow member set is one straight, narrow, uniform-width line running parallel to and alongside the big muon, with no cone and no widening anywhere along it; 228.4 MeV over 84.4 cm is 2.7 MeV/cm, i.e. MIP-like, consistent with a track. 23004 (kine_charge 99.6, kine_best 162.0, reco pdg 13, 58.2 cm, conn 4) is the other branch of the same junction and is likewise a track. So both in-scope EM showers here are pieces of one muon-like track complex. NOT looked at: 71008, 28006, 29007, all under 1.6 MeV. No pi0: kine_div says no reco group, both in-scope showers have pio_id -1, and no pio-*.png slots were filled (pio slots None). Only 3 images looked at, which is the right number for a 7-segment event (correction 13). drag_check live: probe_radius_px 236, seg_u 58.03 -> 66.68, cloud_u 14.94 -> 21.93, cloud_redrew true, probe_degenerate false.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt105074/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:00:30+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt105074/calib-pr-evt105074.json",
+ "subRunNo": 1
+}

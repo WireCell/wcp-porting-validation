@@ -1,0 +1,82 @@
+{
+ "purpose": "QC of the bulk agent scan: re-judge these events myself from the captured images BEFORE reading the agents' decisions, then compare.",
+ "seed": 20260828,
+ "rule": "sorted list of all 136 bulk events, random.Random(20260828).shuffle, first 8.  Written to disk BEFORE any bulk verdict was read, so the sample cannot be post-selected.  If fewer than 2 of the 8 carry the agents' verdict 'correct', extend down the SAME shuffled order, taking the next events whose verdict is 'correct', until 2 are included -- 'correct' is the fast-pass verdict and the one most likely to be wrong (pr/116 'what this does not settle').",
+ "reporting": "N agreed of M, with every disagreement named.  8 events do not support a percentage and none will be quoted.",
+ "sample": [
+  {
+   "event": "evt54453",
+   "agent": 5,
+   "wave": 2
+  },
+  {
+   "event": "evt282979",
+   "agent": 5,
+   "wave": 1
+  },
+  {
+   "event": "evt318769",
+   "agent": 2,
+   "wave": 3
+  },
+  {
+   "event": "evt277298",
+   "agent": 2,
+   "wave": 1
+  },
+  {
+   "event": "evt292524",
+   "agent": 3,
+   "wave": 3
+  },
+  {
+   "event": "evt58755",
+   "agent": 3,
+   "wave": 1
+  },
+  {
+   "event": "evt409140",
+   "agent": 5,
+   "wave": 3
+  },
+  {
+   "event": "evt487853",
+   "agent": 2,
+   "wave": 1
+  }
+ ],
+ "extension_order": [
+  "evt292643",
+  "evt69254",
+  "evt396323",
+  "evt407918",
+  "evt397401",
+  "evt349549",
+  "evt56243",
+  "evt54341",
+  "evt318703",
+  "evt100135",
+  "evt59085",
+  "evt287654",
+  "evt286681",
+  "evt396816",
+  "evt292027",
+  "evt96383",
+  "evt168432",
+  "evt499577",
+  "evt64409",
+  "evt278420",
+  "evt280972",
+  "evt317939",
+  "evt403023",
+  "evt181050",
+  "evt386948",
+  "evt390634",
+  "evt392901",
+  "evt51546",
+  "evt77328",
+  "evt100222",
+  "evt171572",
+  "evt52605"
+ ]
+}

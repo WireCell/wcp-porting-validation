@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt322269",
+ "eventNo": 322269,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 7,
+  "x": 86.43813174329867,
+  "y": -126.21289158743375,
+  "z": 250.94526091478787
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 7,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 7002,
+   "x": 86.43813174329867,
+   "y": -126.21289158743375,
+   "z": 250.94526091478787
+  }
+ ],
+ "reco_sep_cm": 0.005857524190035122,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Two hot ends (124k at 7000, 152k at 7001) both point away from 7002, which the 8 cm zoom shows as a clean 93 deg V of a forward-going 146 cm muon that Braggs at 7000 and a 5.7 cm proton stub; not the collinear case.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt322269/calib-pr-evt322269.json",
+ "subRunNo": 1
+}

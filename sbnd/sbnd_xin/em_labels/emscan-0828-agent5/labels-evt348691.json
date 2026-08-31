@@ -1,0 +1,104 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   48.51,
+   -173.94,
+   194.2
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 7549,
+  "cloud_cluster_ids": [
+   9,
+   14,
+   15
+  ],
+  "cloud_kept": 7549,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 16853,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.20807117251358132,
+   -0.8943059049381813,
+   0.3961355015162414
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.20807117251358132,
+    -0.8943059049381813,
+    0.3961355015162414
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 8,
+   "kine_best": 319.7242907337978,
+   "kine_charge": 319.7242907337978,
+   "kine_charge_other_hypothesis": 192.31536284739718,
+   "kine_dQdx": 189.88736231175255,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    31028,
+    49045,
+    49046,
+    49047,
+    49048,
+    49049,
+    49050,
+    49051
+   ],
+   "membership_source": "probe",
+   "num_segments": 8,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   57.41976749936883,
+   -153.68611185003616,
+   181.25700365613403
+  ],
+  "reco_start_vertex_id": 9003,
+  "shower": 49046,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   57.41976749936883,
+   -153.68611185003616,
+   181.25700365613403
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt348691",
+ "eventNo": 348691,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": 60.933653901488505,
+  "y": -148.35987846069008,
+  "z": 176.58572958230337
+ },
+ "note": "[agent-bulk] shw 49046 (319.7 MeV, 8 seg, 7 of them cluster 49): correct. Its 8 member polylines sum to 85.7 cm inside a 48.4 cm span -- the set overlaps and branches rather than being strung out -- and at az-055, az+085 and el+65 it is one continuous charge cloud with a single apex at the reco start, one internal fork, and the axis arrow lying along it. Acceptance plot: EIGHT orange squares, ZERO blue circles out to 63 cm. Sorted by angle, the only non-members inside 35 deg anywhere are 51080 at 34.5 cm / 34.2 deg and its partner 51081 at 51.6 cm / 32.7 deg (both belong to shower 51080) and 43040 at 80.7 cm / 35.0 deg -- all outside the pass-1 cone and all tier '-'. So nothing is missing and nothing distant was hoovered in. Caveat I will state rather than hide: this object is narrow, roughly 3-5 cm of transverse cloud over 48 cm, which is more track-like than a 320 MeV shower would usually look; that is a PID question and my verdict is about clustering only. The vertex is fine: the star sits where the 360 cm muon 9003 and the other prongs meet, 49046 starts about 7 cm off it, and 9003 (unowned, 160.3 deg from the shower) plus 9012 / 9015 / 9009 / 9010 (pion and proton prongs, 84-160 deg) are all correctly left grey. shw 52089 (157.7 MeV, 11 seg, pio_id 0): looks correct too -- a near hook at the reco start plus two detached arcs along its own axis at roughly 16 and 26 cm, and NOT ONE non-member within 35 deg of its axis in the whole event. shw 50073 (107.7 MeV, 10 seg, pio_id 0): judged from the candidate table only; its only small-angle non-members are 33030 (0.7 cm at 23.8 cm / 27.9 deg) and 37034 (0.7 cm at 88.5 cm / 9.8 deg), both negligible. PI0: the reconstruction accepted group 0 = 50073 + 52089 at 123.6 MeV, and here the two conventions actually bracket it sensibly -- 117.3 MeV on the axis convention (theta 53.5 deg) and 142.5 MeV on the vertex convention (theta 66.3 deg), both inside the accept window, and the pi0 frame shows both gammas opening away from the vertex. I do not dispute the pairing and stored no alternative. Worth the owner's eye anyway: the largest EM object in the event, 49046 at 319.7 MeV starting 7 cm off the vertex, is in NO pi0 group. Showers NOT looked at: 21 of the 26 were skipped by the scope rule (all below 20 MeV), and of the 5 in scope I opened frames only for 49046 and 52089 -- 50073, 51080 (103.5 MeV, reco pdg 13) and 9011 (49.1 MeV, 1 seg) were judged from candidate tables alone, so any statement about them is weaker than the two I looked at. Clustering statement, silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt348691/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:58:38+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt348691/calib-pr-evt348691.json",
+ "subRunNo": 1
+}

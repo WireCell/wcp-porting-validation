@@ -1,0 +1,164 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 78.0,
+  "az_deg": -55.0,
+  "centre": [
+   80.16,
+   -61.31,
+   240.84
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2005,
+  "cloud_cluster_ids": [
+   10,
+   20,
+   21
+  ],
+  "cloud_kept": 2005,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 47132,
+  "el_deg": 20.0
+ },
+ "confidence": "certain",
+ "em": {
+  "axis_used": [
+   0.9642623150293852,
+   0.16404462620831864,
+   0.2080565990934773
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "85025": {
+    "10005": "out",
+    "10008": "out"
+   }
+  },
+  "marks_detail": {
+   "85025": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.9642623150293852,
+     0.16404462620831864,
+     0.2080565990934773
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "10005": {
+      "absorbed_by": "pass4_proximity (direct)",
+      "angle": 9.763586565851643,
+      "cluster_id": 10,
+      "dist": 132.80749346820485,
+      "ellip": 30.996096646828324,
+      "kind": "out",
+      "length": 9.95329364203743,
+      "owner": 85025,
+      "pdg": 11,
+      "tier": null
+     },
+     "10008": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 3.1590761474164046,
+      "cluster_id": 10,
+      "dist": 14.82727743577876,
+      "ellip": 0.16369434705099153,
+      "kind": "out",
+      "length": 125.08741689831406,
+      "owner": 85025,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 18.939011663335652,
+     "angle_min": 0.0,
+     "dist_max": 132.80749346820485,
+     "dist_min": 0.0,
+     "n": 6
+    },
+    "members": [
+     10004,
+     10005,
+     10008,
+     76015,
+     84024,
+     85025
+    ],
+    "start": [
+     17.88530720414227,
+     -70.3820006951851,
+     215.55583690241346
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.9642623150293852,
+    0.16404462620831864,
+    0.2080565990934773
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 412.41100462522286,
+   "kine_charge": 412.41100462522286,
+   "kine_charge_other_hypothesis": 248.06676969938223,
+   "kine_dQdx": 307.298092088983,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    10004,
+    10005,
+    10008,
+    76015,
+    84024,
+    85025
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   17.88530720414227,
+   -70.3820006951851,
+   215.55583690241346
+  ],
+  "reco_start_vertex_id": 83027,
+  "shower": 85025,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   17.88530720414227,
+   -70.3820006951851,
+   215.55583690241346
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt171572",
+ "eventNo": 171572,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 83,
+  "x": 12.547408836736377,
+  "y": -71.12008914299531,
+  "z": 214.24886024251145
+ },
+ "note": "[agent-bulk] This is the rubric's literal over-clustering case -- the shower swallows a straight minimum-ionising stem, and the stem is 125 cm long. Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm 173.8 -- correction 5) and it is FINE: two pdg-2212 segments, 83021 (30.2 cm) and 83023 (9.0 cm), both have dvtx 0.0 and in the close-in view they converge on the star with the shower's line leaving the same point -- a hadronic vertex, no complaint. VERDICT on 85025 (412.4 MeV, 6 segments, table length 140.1 cm, the ONLY shower in scope): over-clustered, certain. In the 3-D view at az-055-el+20 AND again at az-055-el+65 the yellow member set is ONE long, thin, perfectly straight line of uniform width running about 140 cm from the X to a small hook at the far end -- no cone, no widening, no branching anywhere along it. An EM shower cannot be 140 cm long at constant width. The member list says the same thing: the seed 85025 is a 1.31 cm 3-point stub 5.5 cm from the vertex, and the 412.4 MeV comes from 10008 -- a 125.09 cm, 208-point, pdg-13 segment absorbed by pass4_angle at 14.8 cm / 3.2 deg -- plus 10005 (9.95 cm, at the muon's FAR end, dvtx 138.3, absorbed by pass4_proximity at 132.8 cm / 9.8 deg; that is the hook, most likely the decay electron). 412.4 MeV over 140.1 cm is 2.9 MeV/cm, MIP-like. MARKS: 10008 OUT and 10005 OUT of 85025. Per correction 7 these are not equal but both are strong: 10008 is the whole muon and carries essentially all the energy; 10005 is its far-end hook and only makes sense to keep if 10008 is kept. I did NOT mark the three small bridge members -- 84024 (pdg 2212, 0.46 cm, 8.1 cm / 2.9 deg), 10004 (2.96 cm, 12.3 cm / 2.8 deg) and 76015 (pdg 13, 0.37 cm, 20.8 cm / 18.9 deg) -- because with the muon removed what is left is a 1.3 cm seed and three specks and the object arguably should not be a shower at all; those three are the ones I would let the owner move either way. AN EQUALLY DEFENSIBLE ALTERNATIVE VERDICT would have been 'not an EM shower', since the whole object is a muon; I chose the clustering bucket because the rubric names this exact case under over-clustered and because a clustering verdict is the more actionable one. UNDER-CLUSTERING: none. Every non-member is at 31.8 deg or more from the axis except nothing -- the nearest in angle is 75014 at 29.7 cm / 34.5 deg (0.3 cm, 2 points), and the two vertex protons sit at 177.6 deg, i.e. directly behind the start. NOT looked at: the 9 showers the scope rule skipped; 85025 is the only one above 20 MeV in the whole event. No pi0: no reco group, pio slots None, and the kine_pio_* block names an 8.3 + 412.4 MeV pair that no reconstruction accepted (correction 3 / the block's own warning). drag_check live: probe_radius_px 134, seg_u -51.01 -> -66.65, cloud_u -18.09 -> 18.46, cloud_redrew true.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt171572/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:03:51+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt171572/calib-pr-evt171572.json",
+ "subRunNo": 1
+}

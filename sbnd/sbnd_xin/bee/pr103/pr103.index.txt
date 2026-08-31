@@ -1,0 +1,33 @@
+# doc pr/103 A/B index -- OFF 16ef8189-905a-453f-8018-f28bb10f49e1 / ON a1369848-8909-4e11-ada6-a2ec6a9c8d46
+# before = legacy-binary HEAD-config baselines (work-pr103-baremerged-mcp1k, work-pr103-bare2-{mcp2k,nuecc48,ncpi0})
+# after  = work-pr103-on2-* (mvga_passthru=4, mvga_interposed_fallback=true, mvga_interposed_fallback_min_angle=45
+#          -- the shipped SBND production operating point, flipped 2026-08-21)
+# before: https://www.phy.bnl.gov/twister/bee/set/16ef8189-905a-453f-8018-f28bb10f49e1/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/a1369848-8909-4e11-ada6-a2ec6a9c8d46/event/list/
+# bee_idx	event	sample	status
+0	405707	mcp2k	OWNER "track takes a shortcut" -- FIXED by op0 pass-through: muon split at the vertex, proton carried onto it (charge-verified), junction 2.1 cm away dissolved; main vertex degree 2->3 (muon 39 + proton 35 + third prong 22 cm); numu 1.46->4.30; main vertex unmoved (0.00 cm from click)
+1	283713	mcp1k	OWNER "long track deviates a little" -- UNCHANGED (no knob fires): clean 3-prong vertex at the click; the muon's first 2.5 cm sit 1.0-1.4 cm off its own line (pre-flip 0.3 cm by 2.2 cm) -- vertex-adjacent fit residual, parked (doc sec 1.2 / sec 9)
+2	284794	mcp1k	RESCUED (fallback 68 deg): 276.7 cm muon now starts AT the vertex instead of 1.6 cm away through a stub; numu -1.28 -> +3.30, Enu 198 -> 884 MeV  (the pr/102 hand-check event) -- PLEASE LOOK
+3	292533	mcp1k	RESCUED (fallback 128 deg): 0.8 cm stub between the 270 cm muon and the 66 cm proton dissolved, clean 2-track vertex; numu 2.47->4.30, cosmict 1->0 -- PLEASE LOOK
+4	316729	mcp1k	fix-direction (fallback 89 deg): 113 cm muon re-anchored on the vertex (0.9 cm stub gone); numu 1.78->3.96
+5	400856	mcp1k	fix-direction (fallback 122 deg): 88.5 cm track re-anchored (0.9 cm stub gone); numu 2.45->3.81
+6	287517	mcp1k	fix-direction (fallback 64 deg, 0.64 cm stub): 143.6 cm muon now on the vertex; main 0.64->0.32 cm from click; degree 2->3
+7	281837	mcp1k	mover (op0 pass-through): main vertex 3.53->2.87 cm toward the click; Enu 1049->1397, numu 1.14->0.76 -- HAND-CHECK
+8	316025	mcp1k	mover (op0 pass-through): owner scan-set event; numu 2.40->2.92; main 0.00->0.29 cm
+9	57883	mcp1k	mover (op0 pass-through): numu 1.94->2.35
+10	38856	nueCC48	mover (op0 pass-through): nue UNCHANGED; numu -0.34->+1.24, Enu 897->966 (pr/86 "3-track vertex" exemplar) -- HAND-CHECK
+11	235435	nueCC48	mover (fallback 47 deg): nue UNCHANGED; Enu 818->878, numu 0.98->0.69.  Round-1 (no angle floor) cut two prongs off this vertex (Enu 555) -- the reason for the 45 deg floor; with the floor the topology is intact
+12	138009	nueCC48	mover (fallback 126 deg): nue UNCHANGED; 45.6 cm shower trunk re-seated as 19 cm stem + 1.3 cm stub; numu 0.70->-0.45 -- HAND-CHECK
+13	285567	NCpi0	unchanged topology (3 fallback fires shuffle segment ids; degree 5 both arms); numu 1.16->0.99  (pr/99 owner event)
+14	180801	NCpi0	mover (fallback 108 deg): nue -15 -> -3.2 (still negative), numu 0.64->1.36, Enu 1200->1324 -- HAND-CHECK
+15	475140	mcp2k	mover (fallback 105 deg): numu 1.25->2.26
+16	281165	mcp2k	mover (fallback 123 deg): numu 2.64->3.29, Enu 862->985
+17	55595	mcp1k	fallback x2 (112/119 deg), no score change (pr/46 long-muon stub-bridge event)
+18	400636	mcp1k	fallback 124 deg, no score change
+19	315167	mcp1k	fallback 107 deg: Enu 1572->1426, numu 2.64->2.81 (pr/99 owner event)
+20	390182	mcp1k	fallback 108 deg: Enu 815->1312, numu 1.44->0.84 -- HAND-CHECK
+21	349945	mcp1k	fallback x2 (72/80 deg): numu 3.95->4.05, nue -4.3->-15 (numu event; pr/86 zigzag exemplar)
+22	313781	mcp1k	fallback 65 deg on a LOST vertex (main 40.9 cm from the click in both arms); noise
+23	59685	mcp1k	pr/85 exhibit, unchanged
+24	280972	mcp1k	pr/85 exhibit + owner scan-set event, unchanged
+25	278785	mcp1k	pr/85 exhibit, unchanged (its 2.2 cm stub pair still declined by the overlap/collinearity gates)

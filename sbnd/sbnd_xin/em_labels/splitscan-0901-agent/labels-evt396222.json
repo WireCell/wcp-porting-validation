@@ -1,0 +1,13 @@
+{
+ "event": "evt396222",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "9059": {
+   "verdict": "SPLIT3",
+   "confidence": "high",
+   "comment": "123 seg, w 14-40 cm vs null 4.5-7 -- massively over-wide.  TRIGGER CORRECT, KERNEL FAILS: the 2-means is degenerate (balance 0.003)",
+   "parts": null
+  }
+ }
+}

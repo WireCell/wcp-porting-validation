@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt348682",
+ "eventNo": 348682,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -88.40720148041125,
+  "y": -72.93647791737484,
+  "z": 94.53033991061906
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 1,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11001,
+   "x": -88.40720148041125,
+   "y": -72.93647791737484,
+   "z": 94.53033991061906
+  }
+ ],
+ "reco_sep_cm": 0.004511354246341077,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 read on shape: the 11000 end has a broad 15 cm monotone rise to 170k (a real Bragg) while the 11001 end has only a single-point 245k spike plus several sub-cm blobs within a few cm, and the 275 cm muon runs strongly beam-forward from 11001.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt348682/calib-pr-evt348682.json",
+ "subRunNo": 1
+}

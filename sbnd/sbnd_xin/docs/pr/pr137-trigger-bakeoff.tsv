@@ -1,0 +1,58 @@
+# doc pr/137 sec 13 -- trigger bake-off
+# class A = arm-difference proxy (MERGED 44 vs SINGLE 345), CONTAMINATED
+# class B = hand marks, strict node-id join (POS 10 vs NEG 49), REAL but small
+# purity@50%eff is the doc pr/137 sec 4 metric; its best across three families was 0.27-0.36
+family	feature	aucA	purA50	nA_pos	aucB	purB50	nB_pos
+D	n_seed	0.5479	0.1307	44	0.6153	0.2143	10
+D	d2_over_d1	0.6109	0.1705	44	0.6051	0.1923	10
+D	valley	0.3636	0.1286	44	0.3459	0.2222	10
+D	seed_frac	0.6538	0.22	44	0.6255	0.2174	10
+D	seed_angle	0.4945	0.1189	44	0.6235	0.25	10
+D	bimodal_coef	0.477	0.1189	44	0.5612	0.1786	10
+D	valley_1d	0.551	0.1272	44	0.4031	0.2222	10
+D	dBIC	0.5697	0.1364	35	0.6372	0.25	10
+D	angle	0.4537	0.1134	44	0.6612	0.2083	10
+S	w_pull	0.5805	0.1341	44	0.6245	0.25	10
+S	w_over_expected	0.5805	0.1341	44	0.6245	0.25	10
+S	sep_scaled	0.5085	0.1209	44	0.6449	0.2632	10
+S	w_pull_min	0.5111	0.1152	44	0.5143	0.1852	10
+S	dr_parts	0.4381	0.1317	44	0.6347	0.25	10
+S	w_ratio	0.4539	0.1579	35	nan	nan	0
+S	r_ratio	0.6048	0.1765	35	nan	nan	0
+S	q_ratio	0.4127	0.1731	35	nan	nan	0
+S	w_at_r_ratio	0.4367	0.1552	35	nan	nan	0
+C	dedx0	0.4746	0.1221	42	0.5156	0.2083	10
+C	dedx1	0.5385	0.1538	28	0.425	nan	4
+C	dedx_min	0.4256	0.1429	42	0.5596	0.1852	10
+C	dedx_ratio	0.5061	0.1728	28	0.4821	nan	4
+C	dedx15_min	0.4565	0.14	41	0.5845	0.25	9
+C	dedx15_max	0.5338	0.1176	41	0.4928	0.1852	9
+C	n_2mip	0.4932	0.1156	44	0.4673	0.1818	10
+C	vgap_min	0.6355	0.1549	44	0.3255	0.25	10
+C	vgap_max	0.5384	0.1183	44	0.3673	0.2083	10
+C	void_min	0.6186	0.1697	44	0.4378	0.25	10
+T	gap_cm	0.4646	0.1392	44	0.6184	0.25	10
+T	gap_scaled	0.46	0.1294	44	0.6163	0.25	10
+T	balance	0.6321	0.1833	44	0.498	0.1852	10
+X	m_pi0	0.5003	0.117	44	0.6061	0.2632	10
+family_best	D:seed_frac	0.6538	0.22				
+family_best	S:r_ratio	0.6048	0.1765				
+family_best	C:dedx_ratio	0.5061	0.1728				
+family_best	T:balance	0.6321	0.1833				
+family_best	X:m_pi0	0.5003	0.117				
+combo2	q_ratio>=0.93 & valley<=0.863	9	0.7778	merged=7 single=2
+combo2	gap_scaled<=2.51 & valley<=0.863	10	0.7000	merged=7 single=3
+combo2	d2_over_d1>=0.414 & valley<=0.863	19	0.5789	merged=11 single=8
+combo2	balance>=0.153 & valley<=0.863	16	0.5625	merged=9 single=7
+combo2	seed_frac>=0.193 & valley<=0.863	20	0.5500	merged=11 single=9
+combo2	r_ratio<=1.95 & valley<=0.863	18	0.5000	merged=9 single=9
+combo2	gap_scaled<=1.51 & w_pull>=3.06	12	0.5000	merged=6 single=6
+combo2	gap_scaled<=1.51 & w_over_expected>=2.07	12	0.5000	merged=6 single=6
+combo3	angle>=30.9 & r_ratio>=1.7 & valley<=1	10	0.6000	merged=6 single=4
+combo3	q_ratio<=0.348 & r_ratio>=1.7 & valley<=1	15	0.4667	merged=7 single=8
+combo3	gap_scaled<=1.51 & w_pull>=2.19 & valley<=1	15	0.4667	merged=7 single=8
+combo3	gap_scaled<=1.51 & w_over_expected>=1.77 & valley<=1	15	0.4667	merged=7 single=8
+combo3	seed_frac>=0.235 & w_pull>=2.19 & valley<=1	28	0.4643	merged=13 single=15
+combo3	seed_frac>=0.235 & w_over_expected>=1.77 & valley<=1	28	0.4643	merged=13 single=15
+combo3	balance>=0.186 & w_pull>=2.19 & valley<=1	25	0.4400	merged=11 single=14
+combo3	balance>=0.186 & w_over_expected>=1.77 & valley<=1	25	0.4400	merged=11 single=14

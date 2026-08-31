@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt170098",
+ "eventNo": 170098,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -51.61626271490313,
+  "y": 88.67018773249764,
+  "z": 345.569404442433
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 16,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 16002,
+   "x": -51.61626271490313,
+   "y": 88.67018773249764,
+   "z": 345.569404442433
+  }
+ ],
+ "reco_sep_cm": 0.0037890938496642234,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: 2 of 2 rise away (76cm mu to 124k, 24cm p to 188k) and it is the apex of the fragmented shower band running off in -x.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt170098/calib-pr-evt170098.json",
+ "subRunNo": 1
+}

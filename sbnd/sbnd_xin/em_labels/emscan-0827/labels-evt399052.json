@@ -1,0 +1,338 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/cf0a22d0-7e8b-4d62-a4af-90b953ef974d/event/8/",
+ "camera": {
+  "R": 77.49,
+  "az_deg": 200.82,
+  "centre": [
+   -119.13,
+   -68.52,
+   462.44
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3285,
+  "cloud_cluster_ids": [
+   15,
+   19
+  ],
+  "cloud_kept": 3285,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 18931,
+  "el_deg": -54.46
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   -0.5630613770353275,
+   -0.11701275508549437,
+   0.8180891765806357
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.5630613770353275,
+    -0.11701275508549437,
+    0.8180891765806357
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 117.679357668607,
+   "kine_charge": 117.679357668607,
+   "kine_charge_other_hypothesis": 70.78457604126739,
+   "kine_dQdx": 77.05942444386751,
+   "kine_hypothesis": "shower",
+   "kine_range": 92.89194071929168,
+   "members": [
+    64062,
+    64066,
+    64067
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -136.47737739748604,
+   -104.78591455504022,
+   477.9443277952743
+  ],
+  "reco_start_vertex_id": 19030,
+  "shower": 64067,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -136.47737739748604,
+   -104.78591455504022,
+   477.9443277952743
+  ],
+  "verdict": null
+ },
+ "event": "evt399052",
+ "eventNo": 399052,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": -114.16513531462422,
+  "y": -99.89603063510003,
+  "z": 446.27511761609475
+ },
+ "note": null,
+ "origin": "ncpi0",
+ "pio": {
+  "backproject": null,
+  "backproject_geometry": "handscan",
+  "candidates": [
+   {
+    "backproject": null,
+    "gammas": {
+     "1": {
+      "axis": [
+       -0.4868865686427202,
+       0.5988604817597318,
+       0.6358518637716017
+      ],
+      "axis_source": "probe",
+      "dir_point": null,
+      "em_start_correction": null,
+      "energy": 399.51141240970134,
+      "energy_as_reconstructed": 399.51141240970134,
+      "energy_hypothesis": "as_reconstructed",
+      "energy_other_hypothesis": 240.30761648703844,
+      "flag_shower": true,
+      "kine_hypothesis": "shower",
+      "members": [
+       15023,
+       15029,
+       15030,
+       15031,
+       15032,
+       15033,
+       15035,
+       15036,
+       15037,
+       15039,
+       15040,
+       15042,
+       15043,
+       15044,
+       57052,
+       59054,
+       66069
+      ],
+      "particle_id": 11,
+      "reco_start": [
+       -124.38555357136686,
+       -87.17692383036595,
+       460.6196538539304
+      ],
+      "shower": 15032,
+      "start": [
+       -124.38555357136686,
+       -87.17692383036595,
+       460.6196538539304
+      ],
+      "start_override": null,
+      "start_source": "reco"
+     },
+     "2": {
+      "axis": [
+       -0.5630613770353275,
+       -0.11701275508549437,
+       0.8180891765806357
+      ],
+      "axis_source": "probe",
+      "dir_point": null,
+      "em_start_correction": null,
+      "energy": 117.679357668607,
+      "energy_as_reconstructed": 117.679357668607,
+      "energy_hypothesis": "as_reconstructed",
+      "energy_other_hypothesis": 70.78457604126739,
+      "flag_shower": true,
+      "kine_hypothesis": "shower",
+      "members": [
+       64062,
+       64066,
+       64067
+      ],
+      "particle_id": 11,
+      "reco_start": [
+       -136.47737739748604,
+       -104.78591455504022,
+       477.9443277952743
+      ],
+      "shower": 64067,
+      "start": [
+       -136.47737739748604,
+       -104.78591455504022,
+       477.9443277952743
+      ],
+      "start_override": null,
+      "start_source": "reco"
+     }
+    },
+    "mass_axis_convention": 161.02102551580813,
+    "mass_vertex_convention": 159.03889679896517,
+    "stored_utc": "2026-08-28T01:33:40+00:00",
+    "theta_axis_convention": 43.59298956145467,
+    "theta_vertex_convention": 43.02944437087815,
+    "vertex": [
+     -114.16513531462422,
+     -99.89603063510003,
+     446.27511761609475
+    ],
+    "vertex_how": "main_vertex"
+   }
+  ],
+  "gammas": {
+   "1": {
+    "axis": [
+     -0.4868865686427202,
+     0.5988604817597318,
+     0.6358518637716017
+    ],
+    "axis_source": "probe",
+    "dir_point": null,
+    "em_start_correction": null,
+    "energy": 399.51141240970134,
+    "energy_as_reconstructed": 399.51141240970134,
+    "energy_hypothesis": "as_reconstructed",
+    "energy_includes_marks": false,
+    "energy_includes_orphans": false,
+    "energy_marks_delta": 0.0,
+    "energy_marks_detail": [],
+    "energy_marks_unknown": [],
+    "energy_orphan_delta": 0,
+    "energy_orphan_detail": [],
+    "energy_other_hypothesis": 240.30761648703844,
+    "energy_without_marks": 399.51141240970134,
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "members": [
+     15023,
+     15029,
+     15030,
+     15031,
+     15032,
+     15033,
+     15035,
+     15036,
+     15037,
+     15039,
+     15040,
+     15042,
+     15043,
+     15044,
+     57052,
+     59054,
+     66069
+    ],
+    "particle_id": 11,
+    "reco_start": [
+     -124.38555357136686,
+     -87.17692383036595,
+     460.6196538539304
+    ],
+    "shower": 15032,
+    "start": [
+     -124.38555357136686,
+     -87.17692383036595,
+     460.6196538539304
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     -0.5630613770353275,
+     -0.11701275508549437,
+     0.8180891765806357
+    ],
+    "axis_source": "probe",
+    "dir_point": null,
+    "em_start_correction": null,
+    "energy": 117.679357668607,
+    "energy_as_reconstructed": 117.679357668607,
+    "energy_hypothesis": "as_reconstructed",
+    "energy_includes_marks": false,
+    "energy_includes_orphans": false,
+    "energy_marks_delta": 0.0,
+    "energy_marks_detail": [],
+    "energy_marks_unknown": [],
+    "energy_orphan_delta": 0,
+    "energy_orphan_detail": [],
+    "energy_other_hypothesis": 70.78457604126739,
+    "energy_without_marks": 117.679357668607,
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "members": [
+     64062,
+     64066,
+     64067
+    ],
+    "particle_id": 11,
+    "reco_start": [
+     -136.47737739748604,
+     -104.78591455504022,
+     477.9443277952743
+    ],
+    "shower": 64067,
+    "start": [
+     -136.47737739748604,
+     -104.78591455504022,
+     477.9443277952743
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 161.02102551580813,
+  "mass_vertex_convention": 159.03889679896517,
+  "reco_groups": {
+   "0": {
+    "mass": 159.03889679896517,
+    "showers": [
+     15032,
+     64067
+    ]
+   }
+  },
+  "reco_kine": {
+   "kine_pio_angle": 43.02944564819336,
+   "kine_pio_dis_1": 21.725522994995117,
+   "kine_pio_dis_2": 39.04722595214844,
+   "kine_pio_energy_1": 399.51141357421875,
+   "kine_pio_energy_2": 117.67935943603516,
+   "kine_pio_flag": 1,
+   "kine_pio_mass": 159.0388946533203,
+   "kine_pio_phi_1": 128.7835693359375,
+   "kine_pio_phi_2": -167.63865661621094,
+   "kine_pio_theta_1": 48.680145263671875,
+   "kine_pio_theta_2": 35.80146408081055,
+   "kine_pio_vtx_dis": 0.0
+  },
+  "theta_axis_convention": 43.59298956145467,
+  "theta_vertex_convention": 43.02944437087815,
+  "vertex": [
+   -114.16513531462422,
+   -99.89603063510003,
+   446.27511761609475
+  ],
+  "vertex_how": "main_vertex"
+ },
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-mcp1k/pr_evt399052/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T14:20:43+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt399052/calib-pr-evt399052.json",
+ "subRunNo": 1
+}

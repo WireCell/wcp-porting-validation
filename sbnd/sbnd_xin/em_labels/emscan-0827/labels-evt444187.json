@@ -1,0 +1,183 @@
+{
+ "arm": "work-nuecc48-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/33fa72d9-1990-4fc7-b7fd-3f2bee6bd32d/event/44/",
+ "camera": {
+  "R": 30.88,
+  "az_deg": 7649.65,
+  "centre": [
+   21.05,
+   -16.9,
+   184.59
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3546,
+  "cloud_cluster_ids": [
+   19,
+   23
+  ],
+  "cloud_kept": 3546,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 56464,
+  "el_deg": -7.88
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   -0.6486258507950136,
+   -0.142917560344664,
+   0.7475687771874733
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "19079": {
+    "19039": "in",
+    "19067": "in",
+    "19082": "in",
+    "61074": "in"
+   }
+  },
+  "marks_detail": {
+   "19079": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.6486258507950136,
+     -0.142917560344664,
+     0.7475687771874733
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "19039": {
+      "absorbed_by": "in_main_cluster (walk_add)",
+      "angle": 3.7152647978384343,
+      "cluster_id": 19,
+      "dist": 50.17491673865077,
+      "ellip": 1.9896680128635638,
+      "kind": "in",
+      "length": 1.2236986639873522,
+      "owner": 19082,
+      "pdg": 11,
+      "tier": 1
+     },
+     "19067": {
+      "absorbed_by": "in_main_cluster (walk_add)",
+      "angle": 4.068065566571124,
+      "cluster_id": 19,
+      "dist": 50.98692871895794,
+      "ellip": 2.1399480814608975,
+      "kind": "in",
+      "length": 10.421250898218526,
+      "owner": 19082,
+      "pdg": 11,
+      "tier": 1
+     },
+     "19082": {
+      "absorbed_by": null,
+      "angle": 0.0,
+      "cluster_id": 19,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "in",
+      "length": 52.4482125697488,
+      "owner": 19082,
+      "pdg": 11,
+      "tier": 1
+     },
+     "61074": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 14.174935907266036,
+      "cluster_id": 61,
+      "dist": 39.743670038201316,
+      "ellip": 4.716931972417529,
+      "kind": "in",
+      "length": 1.105760019513799,
+      "owner": 19082,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 20.783033031595227,
+     "angle_min": 0.0,
+     "dist_max": 41.69839358810729,
+     "dist_min": 0.0,
+     "n": 3
+    },
+    "members": [
+     19079,
+     60073,
+     62075
+    ],
+    "start": [
+     39.74890391117853,
+     -12.141963889088457,
+     165.9182547002758
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.6486258507950136,
+    -0.142917560344664,
+    0.7475687771874733
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 373.96325237033665,
+   "kine_charge": 373.96325237033665,
+   "kine_charge_other_hypothesis": 224.94030217764612,
+   "kine_dQdx": 220.23738879190185,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    19079,
+    60073,
+    62075
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   39.74890391117853,
+   -12.141963889088457,
+   165.9182547002758
+  ],
+  "reco_start_vertex_id": 19002,
+  "shower": 19079,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   39.74890391117853,
+   -12.141963889088457,
+   165.9182547002758
+  ],
+  "verdict": null
+ },
+ "event": "evt444187",
+ "eventNo": 444187,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 19,
+  "x": 39.74890391117853,
+  "y": -12.141963889088457,
+  "z": 165.9182547002758
+ },
+ "note": null,
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-nuecc48/pr_evt444187/stdout.log",
+ "runNo": 18255,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-28T15:50:15+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prod0825/pr_evt444187/calib-pr-evt444187.json",
+ "subRunNo": 1
+}

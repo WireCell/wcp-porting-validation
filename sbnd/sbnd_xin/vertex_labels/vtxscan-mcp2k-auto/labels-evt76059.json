@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt76059",
+ "eventNo": 76059,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 9,
+  "x": -174.3558824607847,
+  "y": -185.36717005489737,
+  "z": 377.38495818191234
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 9,
+   "degree": 3,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 9003,
+   "x": -174.3558824607847,
+   "y": -185.36717005489737,
+   "z": 377.38495818191234
+  }
+ ],
+ "reco_sep_cm": 0.007038912298747545,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Clean deg-3 star: the 11.1cm proton rises monotonically along the proton template to 230k at 9005, a 4.7cm hot proton stub leaves to 9004, and the 21.9cm muon runs flat MIP away, with vertex activity at 9003 itself.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt76059/calib-pr-evt76059.json",
+ "subRunNo": 1
+}

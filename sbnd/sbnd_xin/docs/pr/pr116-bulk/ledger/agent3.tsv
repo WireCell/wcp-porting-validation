@@ -1,0 +1,29 @@
+evt58755	correct	unclear	7	ok
+evt71178	correct	likely	8	ok
+evt278420	over-clustered	likely	5	ok
+evt285443	correct	likely	4	ok
+evt287830	correct	likely	6	ok
+evt313781	correct	likely	4	ok
+evt348691	correct	likely	6	ok
+evt390182	correct	likely	4	ok
+evt410008	vertex-bad (undecidable)	unclear	5	ok
+evt489327	-	-	4	skipped:drag_check.segments_redrew=false (reproduced twice, identical values); no verdict recorded per BRIEF 1C
+evt52693	vertex-bad (undecidable)	likely	9	ok:verdict-corrected-in-session-from-over-clustered
+evt57709	correct	likely	7	ok
+evt71872	correct	likely	5	ok
+evt77328	correct	likely	6	ok
+evt96383	correct	unclear	5	ok
+evt103798	correct	likely	5	ok
+evt171143	not an EM shower	likely	4	ok
+evt174771	under-clustered	likely	4	ok
+evt181050	under-clustered	likely	4	ok
+evt284206	under-clustered	likely	3	ok
+evt489327	over-clustered	unclear	4	ok:redo-of-wave1-skip (supersedes the earlier "-" line for this event)
+evt292524	correct	likely	6	ok
+evt321169	correct	likely	5	ok
+evt392901	not an EM shower	likely	4	ok
+evt395870	correct	unclear	4	ok
+evt397630	under-clustered	unclear	5	ok
+evt408304	under-clustered	likely	3	ok
+evt493659	vertex-bad (undecidable)	likely	3	ok
+evt392901	not an EM shower	likely	4	ok:note-revised-in-session (verdict unchanged; PID reasoning re-based off the drawn point cloud + 5.7 X0 rather than the skeleton PCA, pilot 1.2 caveat)

@@ -242,7 +242,18 @@ RE_STM = re.compile(r'cluster (\d+) \S+ STM=' + VERDICT
 RE_SKIP = re.compile(r'cluster (\d+) already TGM')
 RE_FC = re.compile(r'cluster (\d+) \S+ FC=' + VERDICT + r'\b')
 # "cluster N no STM fit: <reason>" -- the pre-fit exits of check_stm_conditions.
-RE_STM_SKIP = re.compile(r'check_stm_conditions: cluster (\d+) no STM fit: (.+)')
+# doc 76 round 3.  The prefix used to be required verbatim as
+# 'check_stm_conditions: cluster N no STM fit: ...'.  WCT writes long spdlog
+# messages non-atomically, and a GROUP job writes far more of them through one
+# pair of sinks, so the prefix itself gets torn: NCpi0 285567 logged
+# 'aph: create_steiner_tree produced nnditions: cluster 8 no STM fit: single
+# exit point ...' -- another message's tail spliced over 'check_stm_co'.  The
+# reason text survived and stmfit_code() is already tear-tolerant, but the
+# regex threw the line away and the row read 'eval' instead of 'midkink'.
+# 'no STM fit:' is unique to the seven check_stm_conditions DEBUG lines
+# (TaggerCheckSTM.cxx:521,2950,2964,2976,3063,3075,3109), so anchoring on
+# 'cluster N no STM fit:' alone cannot match anything else.
+RE_STM_SKIP = re.compile(r'cluster (\d+) no STM fit: (.+)')
 
 
 # The PR job announces the doc-56 beam-window gate once per tagger, e.g.
@@ -539,6 +550,9 @@ def one_event(args):
     # were evaluated at all, so their verdict columns must read -1 (unknown),
     # not 0 (evaluated, clean).  None => ungated run, every main was evaluated.
     gate = parse_bwonly(args.prlog)
+    if args.bw_gate:
+        lo, hi = (float(x) for x in args.bw_gate.split(','))
+        gate = (lo, hi)
 
     def evaluated(c):
         return gate is None or gate[0] <= c['t0_us'] < gate[1]
@@ -700,6 +714,16 @@ def main():
     ap.add_argument('--prtree', help="post-PR pctree tarball (authoritative "
                                      "tagger verdicts from flag_TGM/STM/FC; "
                                      "needs run_nusel_evt.sh -save-pr-tree)")
+    ap.add_argument('--bw-gate', default=None,
+                    help='"low,high" us: the beam-window GATE the PR job applied, '
+                         'i.e. which mains it evaluated at all.  Normally read '
+                         'from --prlog.  Pass it explicitly when the log cannot '
+                         'be trusted to carry it -- a group job (doc 76 round 2) '
+                         'writes ONE log for many events and its two logger '
+                         'sinks interleave, so a per-event slice of it may lose '
+                         'the line.  Without the gate an out-of-window main '
+                         'reads as "evaluated, clean" (0) instead of "not '
+                         'evaluated" (-1).')
     ap.add_argument('--beam-window', default='0.2,2.2',
                     help='low,high in us on cluster_t0 (default 0.2,2.2)')
     ap.add_argument('--run', type=int, default=0)

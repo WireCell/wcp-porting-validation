@@ -1,0 +1,148 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 32.09,
+  "az_deg": -55.0,
+  "centre": [
+   8.21,
+   94.61,
+   269.54
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4100,
+  "cloud_cluster_ids": [
+   20,
+   29
+  ],
+  "cloud_kept": 4100,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 72140,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.2070819171005245,
+   0.3261290095399565,
+   -0.9223648674719015
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "20021": {
+    "20021": "out"
+   }
+  },
+  "marks_detail": {
+   "20021": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.2070819171005245,
+     0.3261290095399565,
+     -0.9223648674719015
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "20021": {
+      "absorbed_by": null,
+      "angle": 0.0,
+      "cluster_id": 20,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "out",
+      "length": 27.4894249224936,
+      "owner": 20021,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 21.474497780970417,
+     "angle_min": 0.0,
+     "dist_max": 53.78910525863229,
+     "dist_min": 0.0,
+     "n": 5
+    },
+    "members": [
+     20005,
+     20006,
+     20021,
+     58014,
+     62018
+    ],
+    "start": [
+     12.425058098399601,
+     87.9518336586589,
+     296.30807635811794
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.2070819171005245,
+    0.3261290095399565,
+    -0.9223648674719015
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 195.2187279304724,
+   "kine_charge": 195.2187279304724,
+   "kine_charge_other_hypothesis": 117.42479875517138,
+   "kine_dQdx": 148.76096244042597,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    20005,
+    20006,
+    20021,
+    58014,
+    62018
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   12.425058098399601,
+   87.9518336586589,
+   296.30807635811794
+  ],
+  "reco_start_vertex_id": 20008,
+  "shower": 20021,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   12.425058098399601,
+   87.9518336586589,
+   296.30807635811794
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt69232",
+ "eventNo": 69232,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": 12.425058098399601,
+  "y": 87.9518336586589,
+  "z": 296.30807635811794
+ },
+ "note": "[agent-bulk] mcp2k numucc_em, sparse: 12 segments, 6 showers, only 2 in scope (20021, 20019); the four skipped ones (60016, 29013, 61017, 59015) are 3.9 cm and shorter and I did not look at them. drag_check both true, probe 168.7 px off centroid, not degenerate. VERTEX: r95 264.0 cm because of a 230.8 cm muon, so the default sweep was framed at +-264 cm and unusable; I judged the vertex from a --vtx-span 60 re-capture (shots-vtx/evt69232). At +-60 cm the star sits at one END of segment 20011 (cluster 20, pdg 13, 230.8 cm, 386 points, correctly unowned) with three other prongs leaving the same point: 20022 (26.6 cm, pdg 211, unowned), 20021 (27.5 cm, the leading shower's seed) and 20019 (8.0 cm, the 22.7 MeV shower). Four prongs converging on the star, so the vertex is good and this is a clustering call. THE FINDING, and it is what the +-60 cm framing shows: the star sits at the point where a thin MIP line becomes a shower. Above the star the muon is a ~1 cm wide straight line; below it the charge cloud widens progressively into a blob at 30-45 cm. The reconstruction has drawn a 195.2 MeV EM shower over BOTH halves of that transition: its seed, segment 20021, starts at 0.0 cm from the \u03bd vertex and runs 27.5 cm as a very straight minimum-ionising line -- chord 26.5 cm, path 27.5 cm (wiggle 1.038), maximum transverse excursion from its own chord 0.80 cm, rms 0.21 cm. For comparison the event's own 231 cm muon has wiggle 1.025 and the unowned pdg-211 prong 20022 has wiggle 1.144 with a 2.02 cm excursion, i.e. 20021's seed is straighter per unit length than the pion the reconstruction correctly refused to absorb. That is a vertex-attached MIP stem, and the brief's over-clustering rule names swallowing one explicitly. The genuinely shower-like members are the two downstream ones -- 20006 (9.4 cm, wiggle 1.157) and 20005 (10.3 cm, wiggle 1.126), running 20.8 to 37 cm from the vertex -- plus two on-axis stubs 62018 (0.5 cm at 39.7 cm / 21.5 deg) and 58014 (1.2 cm at 53.8 cm / 17.6 deg), both pass3_cone. Strip the seed and what is left is a compact EM object detached by ~21 cm, which is a perfectly ordinary photon conversion length; keep the seed and you have a 195 MeV photon that converted at 0.0 cm from the vertex, which is not a plausible conversion. MARK: 20021 OUT of its own shower 20021. That is deliberate and it is the whole finding -- it is the seed, so this is not a fringe stub being trimmed, and I would expect the owner to read it as 'the shower start is wrong', which is the same thing said the other way. THE READING I CANNOT EXCLUDE, and why this is likely rather than certain: if the whole object (seed plus 20006 plus 20005 plus the blob) is one interacting charged pion rather than a stem plus a converted photon, then the correct verdict is 'not an EM shower' and not over-clustering. I cannot separate a 2-MIP e+e- pair from a single pion by eye, and dE/dx is not on this display. NOT UNDER-CLUSTERED: the acceptance plot carries only the five member squares and NO non-member circle anywhere out to 65 cm and 27 deg, and the only unowned charge near the shower is 20022, the pion, which belongs out. PI0: no reco pi0 group (both pio_id -1) and none is possible -- the display auto-slotted 20021 + 20019, but BOTH of those start at the main vertex, so the vertex convention has no chord at all (kine_div prints theta '-' and m '-') and only the axis convention prices, at theta 142.4 deg -> 199.1 MeV. Two gammas that both sit on the vertex are not a pi0; the absence of a group here is correct.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt69232/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:31:13+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt69232/calib-pr-evt69232.json",
+ "subRunNo": 1
+}

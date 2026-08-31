@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt74336",
+ "eventNo": 74336,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 68,
+  "x": -28.583750164372503,
+  "y": -69.07555373777691,
+  "z": 99.69177337353915
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 68,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 68029,
+   "x": -28.583750164372503,
+   "y": -69.07555373777691,
+   "z": 99.69177337353915
+  }
+ ],
+ "reco_sep_cm": 0.006080940246918423,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: two proton prongs both rise away - the 13 cm one climbs the proton template monotonically to 208127 at 68030 and the 30 cm one to 127893 - at 106 degrees, with the MIP muon chain (70/71/65/66 into cluster 22) leaving in -x.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt74336/calib-pr-evt74336.json",
+ "subRunNo": 1
+}

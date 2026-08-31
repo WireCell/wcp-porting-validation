@@ -1,0 +1,13 @@
+{
+ "event": "evt142421",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "108104": {
+   "verdict": "SPLIT2",
+   "confidence": "medium",
+   "comment": "Scan A. GENUINE MISS: main blob at (0,0) plus an arc sweeping to (-30,+65) that is CONNECTED to it -- no density dip on any seed pair (valley_best still 1.0).  The owner factor-4 class",
+   "parts": null
+  }
+ }
+}

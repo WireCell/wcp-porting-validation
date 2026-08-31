@@ -1,0 +1,102 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -89.53,
+   -88.42,
+   31.67
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 962,
+  "cloud_cluster_ids": [
+   18,
+   26
+  ],
+  "cloud_kept": 962,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 19536,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.6150212185980688,
+   -0.3450119031159898,
+   0.7090244617659036
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.6150212185980688,
+    -0.3450119031159898,
+    0.7090244617659036
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 169.9584455566775,
+   "kine_charge": 169.9584455566775,
+   "kine_charge_other_hypothesis": 102.23064394386618,
+   "kine_dQdx": 108.86277019671161,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    18001,
+    18007,
+    18011,
+    18012,
+    18014,
+    18035,
+    59032
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -83.64708170019648,
+   -75.47713561190099,
+   15.035184776199358
+  ],
+  "reco_start_vertex_id": 57035,
+  "shower": 18011,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -83.64708170019648,
+   -75.47713561190099,
+   15.035184776199358
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt396816",
+ "eventNo": 396816,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 57,
+  "x": -83.89513725162412,
+  "y": -60.62241205309599,
+  "z": 4.928514489852961
+ },
+ "note": "[agent-bulk] other_em, 15 showers, 2 in scope. Verdict shower 18011 (pdg 11, kine_charge 170.0, 7 seg) -- the first pdg-11 entry of in_scope. I PASSED OVER the other in-scope object 26015 (pdg 2212, kine_charge 107.7, 11.4 cm), which is not an EM shower and in any case sits 337 cm away in a completely separate blob at (201,57,140) -- it plays no part in this judgement. The 13 skipped showers are sub-20 MeV. Vertex judged off the vtxz-* frames (60 cm half-span, auto-fired: r95 340.2 cm, and note event_half_span_cm reads 400.0 because it saturates -- correction 19). Clean single-photon topology: the star sits ~18 cm from the shower with essentially nothing at it -- only 57036 (0.8 cm pdg 2212 exactly on the vertex), 46017 (0.2 cm at 4.1 cm) and 48019 (0.7 cm at 4.6 cm), a very low-energy recoil. There is no prong to check convergence against, so I do not call the vertex bad; I only note there is almost no charge there. CORRECT. The member set is a compact conversion blob -- six contiguous cluster-18 segments (all mutual gaps 0.00 cm) inside a 9.3 cm radius of their centroid (-87.7,-77.9,19.8) -- plus 59032, a 5.7 cm 11-point fragment 24.4 cm further out, absorbed by pass4_angle at 39.5 cm / 24.9 deg, which the acceptance plot puts just UNDER the 25 deg step. Membership triple-checked: nseg 7 == owner-grouped 7 == cmp_div 7 (0.0-39.5 cm, 0.0-37.2 deg). The alternative reading I considered and rejected: that 59032 is a separate object and 18011 is over-clustered. I rejected it because 59032 lies on the photon's line of flight -- the direction nu-vertex -> blob centroid and the direction blob centroid -> 59032 agree to 12.3 deg -- so it is where a late shower fragment belongs, not a coincidence. Not under-clustered: every unowned segment near the shower is a 0.2-1.8 cm two-point/four-point stub. The one item a stricter scanner could mark IN, and I deliberately did not: 45016, a 0.3 cm two-point stub 7.9 cm past 59032 at 50.0 cm / 25.9 deg -- the acceptance plot shows it as a circle sitting just OUTSIDE the 25 deg step, which is exactly the corroboration pattern the brief names, but at two points and 0.3 cm it carries no charge worth the mark and marking it would flip the event's bucket on nothing. No pi0: no reco group, and the only other EM object in the event is 337 cm away. Verdict is about clustering and silent on PID.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt396816/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:43:22+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt396816/calib-pr-evt396816.json",
+ "subRunNo": 1
+}

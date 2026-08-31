@@ -1,0 +1,44 @@
+{
+ "arm": "work-r1qlmc-prod0813",
+ "confidence": null,
+ "dl_best_score": 8.81531359181642,
+ "dl_min_accept_score": 4.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt5",
+ "eventNo": 5,
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": 9.264950159924505,
+  "y": -35.80672135156443,
+  "z": 333.39889983409245
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "dl_score": 0.004341065883636475,
+   "dl_winner": true,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "rerank_total": 8.81531359181642,
+   "snap_dis": 0.12876145910027562,
+   "trad_score": 0.875,
+   "trad_winner": true,
+   "vertex_id": 15001,
+   "x": 9.264950159924505,
+   "y": -35.80672135156443,
+   "z": 333.39889983409245
+  }
+ ],
+ "route": "dl-rerank-accept",
+ "runNo": 31,
+ "saved_utc": "2026-08-15T17:04:44+00:00",
+ "scan_tag": "vtxscan-prod0813-mc",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-r1qlmc-prod0813/pr_evt5/calib-pr-evt5.json",
+ "subRunNo": 88
+}

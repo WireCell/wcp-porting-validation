@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt169793",
+ "eventNo": 169793,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -177.56690718209987,
+  "y": 138.36429595376032,
+  "z": 318.83989776595297
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 11,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 11001,
+   "x": -177.56690718209987,
+   "y": 138.36429595376032,
+   "z": 318.83989776595297
+  }
+ ],
+ "reco_sep_cm": 0.005294449270168024,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:17Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1: a 9.4cm proton (72k->180k Bragg) and a 196cm muon both start here, 66 degrees apart; the muon's far end is its own Bragg stop.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt169793/calib-pr-evt169793.json",
+ "subRunNo": 1
+}

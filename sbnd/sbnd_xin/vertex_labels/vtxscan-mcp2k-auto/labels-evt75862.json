@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt75862",
+ "eventNo": 75862,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 78.86238313164674,
+  "y": 13.176994848784497,
+  "z": 256.82046116803986
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 10,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 10002,
+   "x": 78.86238313164674,
+   "y": 13.176994848784497,
+   "z": 256.82046116803986
+  }
+ ],
+ "reco_sep_cm": 0.003863020351319606,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with both prongs rising away: the 102cm muon has a monotone 150k Bragg decaying over 8cm at 10000 and the 27cm proton starts near 15k at 10002 and runs 80-120k to its stop, opening at 100 degrees.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt75862/calib-pr-evt75862.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt444187",
+ "confidence": "medium",
+ "eventNo": 444187,
+ "main_vertex": {
+  "x": 39.74890391117853,
+  "y": -12.141963889088457,
+  "z": 165.9182547002758
+ },
+ "note": "three collinear (theta 1-2 deg axis) attached fragments of the primary electron; no gamma pair exists",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18253,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:36:39.909406Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 33.82,
+  "az_deg": -55.0,
+  "centre": [
+   -173.9,
+   93.25,
+   112.07
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1876,
+  "cloud_cluster_ids": [
+   16,
+   20,
+   21,
+   22,
+   23
+  ],
+  "cloud_kept": 1876,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 9313,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.9227979293777772,
+   -0.22195139796518584,
+   0.3149310376533042
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.9227979293777772,
+    -0.22195139796518584,
+    0.3149310376533042
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 129.23100533962028,
+   "kine_charge": 129.23100533962028,
+   "kine_charge_other_hypothesis": 77.73293554262875,
+   "kine_dQdx": 105.04130852856329,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    40019,
+    41020,
+    49023
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -146.3772098726111,
+   96.56261458341271,
+   102.24887254561897
+  ],
+  "reco_start_vertex_id": 16000,
+  "shower": 40019,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -146.3772098726111,
+   96.56261458341271,
+   102.24887254561897
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt172266",
+ "eventNo": 172266,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -27.983868323215546,
+  "y": 131.86114286303012,
+  "z": 68.4615847074328
+ },
+ "note": "[agent-bulk] DRAG_CHECK FALSE NEGATIVE on this event (segments_redrew=false): scanbot_capture samples seg3_src.data.xs[0][0], which here is the first point of segment 16004 sitting 0.000003 cm from the main vertex - i.e. the rotation centre of the sweep, so it cannot move in screen-u and the absolute 1e-6 threshold can never be met. Frames are NOT stale: cloud_redrew true (-197.7 -> -319.4), d_az 0.7500 rad exactly as expected, all six vtx-*.png distinct md5 and 74-195 kB, and on vtx-az-055-el+20 vs vtx-az+065-el+20 the muon polyline swings from up-left to up-right and stays embedded in its own point cloud, which is the direct proof the segment source reprojects. Judged on that basis. VERDICT: shw 40019 (129.2 MeV, 3 seg, 39.9 cm) is not an EM shower. On both shw40019-az-055-el+20 and -az+085-el+20 it is a single straight uniformly-narrow line with a tight point cloud and no transverse development, no branching, no widening anywhere along ~38 cm (about 2.7 radiation lengths in LAr) - a minimum-ionising track. Its three members are collinear: the 1.5 cm seed 40019 at the X, a 0.7 cm stub 41020 at 16.4 cm / 3.7 deg, and 49023, a 37.70 cm pdg-13 segment at 21.3 cm / 4.2 deg absorbed by pass4_angle, which is 94 percent of the member length. ov-iso.png shows the whole event is ONE continuous ~155 cm line: the unowned 113.74 cm muon 16007 from the star, then this object beyond its far end (16007 reads 15.4 cm / 176.5 deg from 40019, i.e. directly behind the shower start). So the clustering of the three pieces into one object is defensible; what is wrong is calling the result a 129 MeV EM shower. Every other candidate is at 155-177 deg, behind the start, so there is no under-clustering claim and no over-clustering claim to make. Vertex: the star is at the end of the only track in the event; with a single prong there is nothing to converge, so I do not call it vertex-bad, but note there is no independent confirmation of it either. Scope: 2 showers of 17 examined; 15 skipped by the <20 MeV rule. The other in-scope shower 21009 (21.5 MeV, 1 seg, 2.6 cm) is 427 cm away from 40019 - a different region of the detector, pulled into scope only by the energy cut - and I did not scan it. The vtx-* sweep is half-span 232 cm here (driven by that 4 m separation) so it was used for topology only. Confidence likely not certain: no dQ/dx available, and I did not establish whether the 15 cm gap between 16007 and this object is a detector gap or a real break.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt172266/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:44:39+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt172266/calib-pr-evt172266.json",
+ "subRunNo": 1
+}

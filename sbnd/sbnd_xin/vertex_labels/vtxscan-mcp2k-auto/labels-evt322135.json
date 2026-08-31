@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt322135",
+ "eventNo": 322135,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -153.46079340605843,
+  "y": 135.8971322932053,
+  "z": 8.843795191442027
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 15,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "vertex_id": 15029,
+   "x": -153.46079340605843,
+   "y": 135.8971322932053,
+   "z": 8.843795191442027
+  }
+ ],
+ "reco_sep_cm": 0.004822521489391146,
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:14:19Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 with both prongs rising away at a 117 deg junction: the 13.8 cm proton climbs 155k->265k to its Bragg stop at 15003 and the 245 cm muon leaves at MIP and Braggs to 165k at 15000; 15029 is also the most upstream point at z=8.8 cm.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt322135/calib-pr-evt322135.json",
+ "subRunNo": 1
+}

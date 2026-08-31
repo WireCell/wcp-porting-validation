@@ -1,0 +1,37 @@
+# ROUND 2.1 (post owner scan): AFTER-FIXED = 6ec0f59c-ef08-4c5b-bc44-ba7fa5d48960 (d84r2-on3.zip, bridge fix: BFS main-vertex guard + start re-seat)
+#   changes vs 05e53da9: idx 11 (77978) mu- 409->388 MeV, proton 113 MeV prong restored, nu vertex connected;
+#   idx 6 (177536) mu- 963.9->907.0 MeV, proton 191 MeV prong restored, nu vertex connected; all other 29 events byte-identical.
+# doc 84 round 2 A/B index -- BEFORE = round-1 ON2 set ea9b4914-6152-4cc4-9da7-df104939e6e0 (current SBND production state, flip-equiv PASS 62/62); AFTER = 05e53da9-db17-4f1c-af19-63a47817700c (d84r2-on.zip, uploaded 2026-08-28 owner-authorized)
+# after = production + long_muon_members_geometry + long_muon_cathode_bridge (both C++-default OFF, held for this scan); pr/123 pass4 pinned OFF for attribution
+# bee_idx	event	status
+0	66366	unchanged (round-1 P3 rescue stands: chain 300.6cm, best range 692.2 MeV)
+1	313847	RESCUED (members_geometry): L 98.5->260.9cm, best 547.5 dqdx -> 602.2 range MeV; endpoint arrow now at the true muon end (end_degree 2->1)
+2	281595	RESCUED (members_geometry): L 130.0->351.0cm, best 750.1 dqdx -> 808.5 range MeV; formation-time note: the 220.8cm continuation IS seen at 15.6deg ratio 1.02 but P2's junction veto (the 13.9cm stub arm) blocks it -- members_geometry recovers it anyway
+3	497311	unchanged (round-1 P1 rescue stands: 332.8cm, best 766.3 MeV)
+4	393538	moved (members_geometry): L 292.5->331.7cm, best 673.7->757.9 MeV (dqdx; range 763.6, ratio 0.99)
+5	499577	moved (members_geometry): L 294.7->324.4cm, best 678.6->746.9 range MeV
+6	177536	RESCUED (cathode_bridge, bare far half): absorbed 2-seg 122.1cm bare chain across gap 9.4cm at x=(-2.5,+3.3); L 294.8->416.9cm, best 679.0->963.9 range MeV
+7	74784	moved (members_geometry): L 29.9->291.3cm chain-truncation healed; range 98.9->670.8; best 717.8 dqdx -> 670.8 range MeV (range now trusted, ratio 1.07)
+8	53793	RESCUED (cathode_bridge, shower partner): 367.0 + 527.8 MeV halves merged across gap 13.9cm at x=(+4.7,-4.5); single muon L 395.0cm, best 912.9 MeV (dqdx, ratio 1.00 vs range 911.9)
+9	178885	unchanged
+10	278684	moved (members_geometry): L 167.3->187.8cm, best 395.3->439.9 range MeV
+11	77978	RESCUED (cathode_bridge, bare far half): absorbed 23.5cm muon piece + 9.8cm Bragg stub (typed 2212, retyped 13) across gap 6.5cm at x=(+4.8,+2.2) -- far half itself crosses x=0; L 140.4->173.8cm, best 337.5->409.4 range MeV
+12	55278	unchanged
+13	75554	unchanged (the on1-arm restructuring here was pr/123 pass4, not this round -- pinned off in on2)
+14	74336	unchanged
+15	71222	unchanged
+16	392901	unchanged BY DESIGN: census cathode-pair candidate whose far half is a 106 MeV EM shower (pdg 11) -- the muon-typed-partner guard excludes it; flag for owner opinion
+17	159569	unchanged
+18	319475	unchanged
+19	395695	unchanged
+20	286681	unchanged
+21	286191	unchanged
+22	283713	unchanged
+23	61579	unchanged
+24	55220	unchanged
+25	282271	unchanged
+26	243628	unchanged
+27	294174	unchanged
+28	99232	unchanged
+29	55740	unchanged (on1 mover was pr/123 pass4)
+30	66872	unchanged

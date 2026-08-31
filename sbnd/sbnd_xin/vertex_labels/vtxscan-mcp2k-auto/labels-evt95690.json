@@ -1,0 +1,38 @@
+{
+ "agrees_with_reco": true,
+ "arm": "work-mcp2k-harv3",
+ "confidence": "certain",
+ "event": "evt95690",
+ "eventNo": 95690,
+ "label_gate": "doc pr/88 sec 7: blind 40-event calibration of this tier on this sample, 39/40 = 97.5% correct at 1.0 cm (bar 90%, 95% CI [86.8%, 99.9%])",
+ "label_source": "ai-scanner",
+ "main_vertex": {
+  "cluster_id": 13,
+  "x": 94.29141291026514,
+  "y": 25.99869098437742,
+  "z": 389.31211144288767
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 13,
+   "degree": 2,
+   "dis_to_main": 0.0,
+   "is_main": true,
+   "kind": "candidate",
+   "main_candidate": true,
+   "rank": 1,
+   "vertex_id": 13003,
+   "x": 94.29141291026514,
+   "y": 25.99869098437742,
+   "z": 389.31211144288767
+  }
+ ],
+ "reco_sep_cm": 0.0028579762744563226,
+ "runNo": 18259,
+ "saved_utc": "2026-08-16T21:14:22Z",
+ "scan_tag": "vtxscan-mcp2k-auto",
+ "scanner_why": "Rule 1 clean: deg-2 junction with 2 of 2 prongs rising away - proton stops hot at 13000 (209637) and muon Bragg at 13001, prongs 136 deg apart so not the collinear trap.",
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt95690/calib-pr-evt95690.json",
+ "subRunNo": 1
+}

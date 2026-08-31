@@ -1,0 +1,11 @@
+sample	run	subrun	event	dump
+ncpi0	18255	1	463565	work-pr130r1-probe98-ncpi0/pr_evt463565/calib-pr-evt463565.json
+nuecc48	18255	1	122660	work-pr130r1-probe98-nuecc48/pr_evt122660/calib-pr-evt122660.json
+mcp2k	18255	1	54332	work-pr130r1-probe98-mcp2k/pr_evt54332/calib-pr-evt54332.json
+mcp2k	18259	1	181050	work-pr130r1-probe141-mcp2k/pr_evt181050/calib-pr-evt181050.json
+ncpi0	18259	1	105946	work-pr130r1-probe98-ncpi0/pr_evt105946/calib-pr-evt105946.json
+ncpi0	18345	1	21073	work-pr130r1-probe98-ncpi0/pr_evt21073/calib-pr-evt21073.json
+nuecc48	18269	1	342199	work-pr130r1-probe98-nuecc48/pr_evt342199/calib-pr-evt342199.json
+mcp2k	18255	1	76346	work-pr130r1-probe98-mcp2k/pr_evt76346/calib-pr-evt76346.json
+nuecc48	18255	1	469665	work-pr130r1-probe98-nuecc48/pr_evt469665/calib-pr-evt469665.json
+mcp2k	18255	1	54453	work-pr130r1-probe141-mcp2k/pr_evt54453/calib-pr-evt54453.json

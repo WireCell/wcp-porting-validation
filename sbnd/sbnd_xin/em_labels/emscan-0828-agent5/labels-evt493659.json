@@ -1,0 +1,100 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 40.74,
+  "az_deg": -55.0,
+  "centre": [
+   -105.04,
+   -154.74,
+   467.75
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1438,
+  "cloud_cluster_ids": [
+   20,
+   29
+  ],
+  "cloud_kept": 1438,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 28390,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.9764898325073176,
+   -0.2141074017997602,
+   0.025012546939224323
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.9764898325073176,
+    -0.2141074017997602,
+    0.025012546939224323
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 104.56394689216833,
+   "kine_charge": 104.56394689216833,
+   "kine_charge_other_hypothesis": 62.895607153183974,
+   "kine_dQdx": 110.42869556906834,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    61004,
+    75005,
+    76006,
+    77007,
+    78008
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -72.6674320852105,
+   -145.68592447136965,
+   456.58206586467423
+  ],
+  "reco_start_vertex_id": 20001,
+  "shower": 75005,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -72.6674320852105,
+   -145.68592447136965,
+   456.58206586467423
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt493659",
+ "eventNo": 493659,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": -68.12206425226844,
+  "y": -144.65837093190282,
+  "z": 456.99116256001224
+ },
+ "note": "[agent-bulk] VERTEX RESULT -- per the rubric I judged the vertex first, it fires, and this event therefore carries NO clustering judgement. Verdict shower 75005 (pdg 11, kine_charge 104.6 MeV, 5 seg, 49.3 cm), the only pdg-11 object in scope; passed over 29001, which is pdg 13 and whose kine_best 112.3 exceeds 104.6 even though its kine_charge is only 65.0. Vertex judged off the vtx-* set at +-114 cm: r95 is 91.2 cm here, below the 150 cm trigger, so scanbot_capture2 correctly wrote no vtxz-* frames and the ordinary sweep is already close in. THE FINDING: the blue star sits in the MIDDLE of a single straight, narrow, ~140 cm line, with nothing else converging on it. On one side of the star, segment 20000 is UNOWNED (the only unowned segment in the event) -- pdg 13, 71.7 cm, 120 fitted points, its closest point 0.0 cm from the star and its far end at 70.2 cm. On the other side, 75005's own member chain runs from 4.7 cm out to 73.4 cm. Their directions agree to 5.8 deg, the candidate table records 20000 at 173.5 deg from 75005's axis (i.e. exactly back-to-back), and the minimum separation between the two point sets is 4.7 cm, which is simply the gap at the star. I checked this at two azimuths and one elevation (vtx-az-055-el+20, vtx-az+065-el+20, vtx-az-055-el+60) precisely because a projection can hide a kink: in all three it is one continuous narrow line through the star, and the ONLY kink anywhere in the event is at the far end of 20000, about 105 cm from the star, where 29001 (pdg 13, 35.8 cm) bends away. Nothing else is at the star -- the remaining three objects are single-point stubs of 0.12-1.35 MeV lying 115-133 cm away. A neutrino vertex with two exactly back-to-back collinear track halves and no recoil prong is not an interaction topology, so the reading I favour is that this is a through-going track with the vertex placed in its middle; that is the same shape as pilot 2.4 (evt175896), and 'undecidable' is what the bucket is for. WHAT THE OWNER SHOULD ASK NEXT: if the vertex is judged right after all, the next question on 75005 is PID, not clustering. Excluding its one 2-point outlier (61004 at 68.8 cm / 18.1 deg, i.e. 21 cm transverse), 75005's core is narrow and does not widen -- transverse RMS 1.30 / 1.04 / 1.27 cm in successive quarters, largest internal gap 6.9 cm -- and its dominant member 78008 is a pdg-13 segment of 36.8 cm carrying 63 of its 86 points. That reads as a MIP, not a 105 MeV shower. I did NOT record that as a PID verdict, because the rubric stops on the vertex and one saved radio cannot carry both. No marks recorded: marking 20000 IN on 75005 would assert the two halves are one shower, which is the opposite of what I believe (they are one TRACK, and the vertex is what is wrong). pi0: kine_div says 'no pi0 group in this event' and there is no second gamma candidate, so the capture wrote no pi0 frames; nothing stored. NOT LOOKED AT: the 3 out-of-scope showers, all <= 1.35 MeV.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt493659/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:58:08+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt493659/calib-pr-evt493659.json",
+ "subRunNo": 1
+}

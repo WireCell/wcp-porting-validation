@@ -1,0 +1,44 @@
+{
+ "arm": "work-mcp2k-harv3",
+ "confidence": null,
+ "dl_best_score": 8.284466225505795,
+ "dl_min_accept_score": 10.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt97260",
+ "eventNo": 97260,
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": 16.144601885156213,
+  "y": 32.86149769640781,
+  "z": 122.72484761313001
+ },
+ "not_a_candidate": false,
+ "picks": [
+  {
+   "cluster_id": 6,
+   "degree": 2,
+   "dis_to_main": 17.528032787386373,
+   "dl_score": 0.005477845668792725,
+   "dl_winner": true,
+   "is_main": false,
+   "kind": "candidate",
+   "main_candidate": false,
+   "rank": 1,
+   "rerank_total": 8.284466225505795,
+   "snap_dis": 8.445871398902145,
+   "trad_score": null,
+   "trad_winner": false,
+   "vertex_id": 6003,
+   "x": 11.73394197836917,
+   "y": 25.000195748907597,
+   "z": 107.69228481523749
+  }
+ ],
+ "route": "dl-rerank-reject",
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T21:28:25+00:00",
+ "scan_tag": "vtxscan-mcp2k",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt97260/calib-pr-evt97260.json",
+ "subRunNo": 1
+}

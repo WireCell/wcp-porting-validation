@@ -1,0 +1,96 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   10.9,
+   -181.54,
+   483.71
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 504,
+  "cloud_cluster_ids": [
+   11,
+   15
+  ],
+  "cloud_kept": 504,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 43250,
+  "el_deg": 20.0
+ },
+ "confidence": "certain",
+ "em": {
+  "axis_used": [
+   -0.17595355439165183,
+   0.035990499761928786,
+   0.9837403268260535
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.17595355439165183,
+    0.035990499761928786,
+    0.9837403268260535
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 1,
+   "kine_best": 102.86023838510629,
+   "kine_charge": 107.45943293684378,
+   "kine_charge_other_hypothesis": 64.63725289434214,
+   "kine_dQdx": 83.543072909176,
+   "kine_hypothesis": "shower",
+   "kine_range": 102.86023838510629,
+   "members": [
+    11000
+   ],
+   "membership_source": "probe",
+   "num_segments": 1,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   14.205665862891053,
+   -181.54576678051427,
+   467.44912476287243
+  ],
+  "reco_start_vertex_id": 11001,
+  "shower": 11000,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   14.205665862891053,
+   -181.54576678051427,
+   467.44912476287243
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt403309",
+ "eventNo": 403309,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 14.205665862891053,
+  "y": -181.54576678051427,
+  "z": 467.44912476287243
+ },
+ "note": "[agent-bulk] nuecc, and the whole event is THREE segments, so this judgement is complete rather than a fast pass. Verdict shower 11000 (pdg 11, kine_charge 107.5, ONE segment, 35.8 cm, 61 fitted points) -- the only pdg-11 entry of in_scope. The two skipped showers are the only other segments in the event and I accounted for both: 35002, a zero-length two-point pdg-2212 stub 16.9 cm from the vertex at 136.7 deg (behind the shower), and 15001, a 0.4 cm stub 446.9 cm away at 170.7 deg. Vertex judged off the vtx-* sweep at 40.1 cm half-span (r95 32.0, far under the 150 cm trigger, so no vtxz-*). The star sits at the base of the one object in the event; there is no second prong, so nothing can contradict it. CORRECT, and trivially checkable: nseg 1 == owner-grouped 1 == cmp_div 1, so nothing foreign can have been swallowed, and there is no contiguous unclaimed charge anywhere -- the nearest non-member is 16.9 cm away, behind the start, and carries no length. 3 frames looked at, which is the right cost here (correction 13); the shower frames cover the whole event at this scale. What I am NOT saying: the object is a single narrow straight ribbon of charge with uniform width, no cone, no branching and no terminal blob, which does not LOOK like a shower. That is a PID question the display cannot settle for me, so this verdict is about clustering and carries no PID claim -- I did not compute a density from kine_charge/length (correction 18), and I note only that a ~107 MeV electron is barely above the LAr critical energy and legitimately stays narrow over its first couple of radiation lengths, so 'thin' is not evidence against pdg 11 here. No pi0: one EM object in the event, no reco group.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt403309/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:44:54+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt403309/calib-pr-evt403309.json",
+ "subRunNo": 1
+}

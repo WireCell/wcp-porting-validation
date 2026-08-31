@@ -1,0 +1,4543 @@
+{
+ "A": [
+  "work-d74r1-bare-mc50",
+  "work-d74r1-bare-ncpi0",
+  "work-d74r1-bare-nuecc48",
+  "work-d74r1-flipchk-ncpi0",
+  "work-d74r1-off1-mc50",
+  "work-d74r1-off1-ncpi0",
+  "work-d74r1-off1-nuecc48",
+  "work-d74r1-on1-mc50",
+  "work-d74r1-on1-ncpi0",
+  "work-d74r1-on1-nuecc48",
+  "work-d75r1-bare-enriched",
+  "work-d75r1-bare-mc50",
+  "work-d75r1-bare-ncpi0",
+  "work-d75r1-bare-nuecc48",
+  "work-d75r1-flipchk-ncpi0",
+  "work-d75r1-off1-enriched",
+  "work-d75r1-off1-mc50",
+  "work-d75r1-off1-ncpi0",
+  "work-d75r1-off1-nuecc48",
+  "work-d75r1-onflag-enriched",
+  "work-d75r1-onflag-mc50",
+  "work-d75r1-onflag-ncpi0",
+  "work-d75r1-onflag-nuecc48",
+  "work-d75r1-onfv-mc50",
+  "work-d75r1-onfv-ncpi0",
+  "work-d75r1-onfv-nuecc48",
+  "work-mcp1k-cb0805",
+  "work-mcp1k-prod0819",
+  "work-mcp2k-prod0819",
+  "work-ncpi0-cb0805",
+  "work-ncpi0-prod0819",
+  "work-nuecc48-cb0805",
+  "work-nuecc48-prod0819",
+  "work-pr101-a-mcp1k",
+  "work-pr101-a-mcp2k",
+  "work-pr101-a-ncpi0",
+  "work-pr101-a-nuecc48",
+  "work-pr101-all-mcp1k",
+  "work-pr101-all-mcp2k",
+  "work-pr101-all-ncpi0",
+  "work-pr101-all-nuecc48",
+  "work-pr101-all2-mcp1k",
+  "work-pr101-all2-mcp2k",
+  "work-pr101-all2-ncpi0",
+  "work-pr101-all2-nuecc48",
+  "work-pr101-all3-mcp1k",
+  "work-pr101-all3-mcp2k",
+  "work-pr101-all3-ncpi0",
+  "work-pr101-all3-nuecc48",
+  "work-pr101-b-mcp1k",
+  "work-pr101-b-mcp2k",
+  "work-pr101-b-ncpi0",
+  "work-pr101-b-nuecc48",
+  "work-pr101-b2-mcp1k",
+  "work-pr101-b2-mcp2k",
+  "work-pr101-b2-ncpi0",
+  "work-pr101-b2-nuecc48",
+  "work-pr101-c-mcp1k",
+  "work-pr101-c-mcp2k",
+  "work-pr101-c-ncpi0",
+  "work-pr101-c-nuecc48",
+  "work-pr101-d-mcp1k",
+  "work-pr101-d-mcp2k",
+  "work-pr101-d-ncpi0",
+  "work-pr101-d-nuecc48",
+  "work-pr101-flip-mcp1k",
+  "work-pr101-flip-mcp2k",
+  "work-pr101-flip-ncpi0",
+  "work-pr101-flip-nuecc48",
+  "work-pr101-floff-mcp1k",
+  "work-pr101-floff-mcp2k",
+  "work-pr101-floff-ncpi0",
+  "work-pr101-floff-nuecc48",
+  "work-pr101-off-mcp1k",
+  "work-pr101-off-mcp2k",
+  "work-pr101-off-ncpi0",
+  "work-pr101-off-nuecc48",
+  "work-pr101-off2-mcp1k",
+  "work-pr101-off2-mcp2k",
+  "work-pr101-off2-ncpi0",
+  "work-pr101-off2-nuecc48",
+  "work-pr101-off3-mcp1k",
+  "work-pr101-off3-mcp2k",
+  "work-pr101-off3-ncpi0",
+  "work-pr101-off3-nuecc48",
+  "work-pr102-head-mcp1k",
+  "work-pr102r2-base-mcp1k",
+  "work-pr102r2-base-mcp2k",
+  "work-pr102r2-base-ncpi0",
+  "work-pr102r2-base-nuecc48",
+  "work-pr102r2-beq-mcp1k",
+  "work-pr102r2-beq2-mcp1k",
+  "work-pr102r2-dbgp1-mcp1k",
+  "work-pr102r2-dbgp2-mcp1k",
+  "work-pr102r2-dbgp2b-mcp1k",
+  "work-pr102r2-flip-mcp1k",
+  "work-pr102r2-flip-ncpi0",
+  "work-pr102r2-kA-mcp1k",
+  "work-pr102r2-kB-mcp1k",
+  "work-pr102r2-kC-mcp1k",
+  "work-pr102r2-l30-ncpi0",
+  "work-pr102r2-l30full-mcp1k",
+  "work-pr102r2-len30-nuecc48",
+  "work-pr102r2-n8l30-nuecc48",
+  "work-pr102r2-nnf4-nuecc48",
+  "work-pr102r2-nnf8-nuecc48",
+  "work-pr102r2-off-mcp1k",
+  "work-pr102r2-off-mcp2k",
+  "work-pr102r2-off-ncpi0",
+  "work-pr102r2-off-nuecc48",
+  "work-pr102r2-off2-mcp1k",
+  "work-pr102r2-off2-mcp2k",
+  "work-pr102r2-off2-ncpi0",
+  "work-pr102r2-off2-nuecc48",
+  "work-pr102r2-offfull-mcp1k",
+  "work-pr102r2-offfullp-mcp1k",
+  "work-pr102r2-offmerged-mcp1k",
+  "work-pr102r2-on-ncpi0",
+  "work-pr102r2-on-nuecc48",
+  "work-pr102r2-on2-ncpi0",
+  "work-pr102r2-on2-nuecc48",
+  "work-pr102r2-onA-mcp1k",
+  "work-pr102r2-onA-mcp2k",
+  "work-pr102r2-onfull-mcp1k",
+  "work-pr102r2-onfull2-mcp1k",
+  "work-pr102r2-onfull2p-mcp1k",
+  "work-pr102r2-onfullp-mcp1k",
+  "work-pr102r2-onmerged-mcp1k",
+  "work-pr102r2-p1-ncpi0",
+  "work-pr102r2-p1-nuecc48",
+  "work-pr102r2-p1full-mcp1k",
+  "work-pr103-bare-mcp1k",
+  "work-pr103-bare-mcp2k",
+  "work-pr103-bare-ncpi0",
+  "work-pr103-bare-nuecc48",
+  "work-pr103-bare2-mcp1k",
+  "work-pr103-bare2-mcp2k",
+  "work-pr103-bare2-ncpi0",
+  "work-pr103-bare2-nuecc48",
+  "work-pr103-baremerged-mcp1k",
+  "work-pr103-flipchk-mcp1k",
+  "work-pr103-flipchk-mcp2k",
+  "work-pr103-flipchk-ncpi0",
+  "work-pr103-flipchk-nuecc48",
+  "work-pr103-floff-ncpi0",
+  "work-pr103-floff-nuecc48",
+  "work-pr103-off-mcp1k",
+  "work-pr103-off-mcp2k",
+  "work-pr103-off-ncpi0",
+  "work-pr103-off-nuecc48",
+  "work-pr103-off2-ncpi0",
+  "work-pr103-off2-nuecc48",
+  "work-pr103-off3-ncpi0",
+  "work-pr103-off3-nuecc48",
+  "work-pr103-on-mcp1k",
+  "work-pr103-on-mcp2k",
+  "work-pr103-on-ncpi0",
+  "work-pr103-on-nuecc48",
+  "work-pr103-on2-mcp1k",
+  "work-pr103-on2-mcp2k",
+  "work-pr103-on2-ncpi0",
+  "work-pr103-on2-nuecc48",
+  "work-pr103-onA-mcp2k",
+  "work-pr103-onB-mcp2k",
+  "work-pr103-onC-mcp2k",
+  "work-pr103-onD-mcp2k",
+  "work-pr103-onE-mcp1k",
+  "work-pr103-onE-mcp2k",
+  "work-pr103-tr-mcp1k",
+  "work-pr103-tr-mcp2k",
+  "work-pr103-tr2-mcp1k",
+  "work-pr104-bare-mcp1k",
+  "work-pr104-bare-mcp2k",
+  "work-pr104-bare-ncpi0",
+  "work-pr104-bare-nuecc48",
+  "work-pr104-floff-ncpi0",
+  "work-pr104-floff-nuecc48",
+  "work-pr104-off-mcp1k",
+  "work-pr104-off-mcp2k",
+  "work-pr104-off-ncpi0",
+  "work-pr104-off-nuecc48",
+  "work-pr104-off2-mcp2k",
+  "work-pr104-off2-ncpi0",
+  "work-pr104-off2-nuecc48",
+  "work-pr104-off3-mcp1k",
+  "work-pr104-off3-mcp2k",
+  "work-pr104-off3-ncpi0",
+  "work-pr104-off3-nuecc48",
+  "work-pr104-off4-mcp1k",
+  "work-pr104-off4-mcp2k",
+  "work-pr104-off4-ncpi0",
+  "work-pr104-off4-nuecc48",
+  "work-pr104-on-mcp2k",
+  "work-pr104-on3-mcp1k",
+  "work-pr104-on3-mcp2k",
+  "work-pr104-on3-ncpi0",
+  "work-pr104-on3-nuecc48",
+  "work-pr104-smoke-mcp1k",
+  "work-pr104-smoke-mcp2k",
+  "work-pr104-smoke2-mcp1k",
+  "work-pr104-smoke2-mcp2k",
+  "work-pr104-smoke3-mcp1k",
+  "work-pr104-smoke3-mcp2k",
+  "work-pr104-smoke4-mcp1k",
+  "work-pr104-smoke5-mcp1k",
+  "work-pr104-smoke5-mcp2k",
+  "work-pr104-smoke6-mcp1k",
+  "work-pr104-smoke7-mcp1k",
+  "work-pr104-smoke7-mcp2k",
+  "work-pr104-smoke7-nuecc48",
+  "work-pr107-off-ncpi0",
+  "work-pr107-off-nuecc48",
+  "work-pr107-on-ncpi0",
+  "work-pr107-on-nuecc48",
+  "work-pr108-assoccheck-nuecc48",
+  "work-pr108-dqdump-off-nuecc48",
+  "work-pr108-dqdump-on-nuecc48",
+  "work-pr108-dqdump2-off-nuecc48",
+  "work-pr108-dqdump2-on-nuecc48",
+  "work-pr108-dqdump3-off-nuecc48",
+  "work-pr108-dqdump3-on-nuecc48",
+  "work-pr108-off1-nuecc48",
+  "work-pr109-dbgflag-on-nuecc48",
+  "work-pr109-off-nuecc48",
+  "work-pr109-on-nuecc48",
+  "work-pr109-on2-nuecc48",
+  "work-pr109b-off-nuecc48",
+  "work-pr109b-on-nuecc48",
+  "work-pr109c-off-nuecc48",
+  "work-pr109c-on-nuecc48",
+  "work-pr109e-off-nuecc48",
+  "work-pr109e-on-nuecc48",
+  "work-pr109f-dbgtraj-on-nuecc48",
+  "work-pr109f-off-fbcoff-nuecc48",
+  "work-pr109f-on-fbcoff-nuecc48",
+  "work-pr109g-gate-on-nuecc48",
+  "work-pr109h-dbgexcl-on-nuecc48",
+  "work-pr109h-gate-on-nuecc48",
+  "work-pr96-dbg1-mcp2k",
+  "work-pr96-dbg2-mcp2k",
+  "work-pr96-dbg3-mcp2k",
+  "work-pr96-fx1-mcp2k",
+  "work-pr96-prodflip-mcp2k",
+  "work-pr96gate-disp",
+  "work-pr96gate-mcp2k",
+  "work-pr96gate-nuedisp",
+  "work-pr98-flip-nuecc48",
+  "work-pr98-floff-nuecc48",
+  "work-pr98-fx-nuecc48",
+  "work-pr98-fx2-smoke",
+  "work-pr98-fx3-smoke",
+  "work-pr98-fx4-nuecc48",
+  "work-pr98-off-nuecc48",
+  "work-pr98-off2-nuecc48",
+  "work-pr98-off3-nuecc48",
+  "work-pr99-probe-mcp1k",
+  "work-pr99-probe-mcp2k",
+  "work-pr99-probe-ncpi0",
+  "work-pr99-t70084",
+  "work-pr99r2-base-mcp1k",
+  "work-pr99r2-base-mcp2k",
+  "work-pr99r2-base-ncpi0",
+  "work-pr99r2-flip-mcp1k",
+  "work-pr99r2-flip-mcp2k",
+  "work-pr99r2-flip-ncpi0",
+  "work-pr99r2-flip-nuecc48",
+  "work-pr99r2-floff-mcp1k",
+  "work-pr99r2-floff-mcp2k",
+  "work-pr99r2-floff-ncpi0",
+  "work-pr99r2-floff-nuecc48",
+  "work-pr99r2-off-mcp1k",
+  "work-pr99r2-off-mcp2k",
+  "work-pr99r2-off-ncpi0",
+  "work-pr99r2-off-nuecc48",
+  "work-pr99r2-off2-mcp1k",
+  "work-pr99r2-off2-mcp2k",
+  "work-pr99r2-off2-ncpi0",
+  "work-pr99r2-off2-nuecc48",
+  "work-pr99r2-off3-mcp1k",
+  "work-pr99r2-off3-mcp2k",
+  "work-pr99r2-off3-ncpi0",
+  "work-pr99r2-off3-nuecc48",
+  "work-pr99r2-on-mcp1k",
+  "work-pr99r2-on-mcp2k",
+  "work-pr99r2-on-ncpi0",
+  "work-pr99r2-on-nuecc48",
+  "work-pr99r2-on2-mcp1k",
+  "work-pr99r2-on2-mcp2k",
+  "work-pr99r2-on2-ncpi0",
+  "work-pr99r2-on2-nuecc48",
+  "work-pr99r2-on3-mcp1k",
+  "work-pr99r2-on3-mcp2k",
+  "work-pr99r2-on3-ncpi0",
+  "work-pr99r2-on3-nuecc48",
+  "work-pr99r2-probe285567",
+  "work-pr99r2-smoke-mcp1k",
+  "work-pr99r2-smoke-mcp2k",
+  "work-pr99r2-smoke-ncpi0",
+  "work-pr99r2-smoke2-mcp2k",
+  "work-pr99r2-smoket-mcp2k",
+  "work-pr99r3-dduponly-ncpi0",
+  "work-pr99r3-flip-mcp1k",
+  "work-pr99r3-flip-ncpi0",
+  "work-pr99r3-flip-nuecc48",
+  "work-pr99r3-floff-mcp1k",
+  "work-pr99r3-floff-ncpi0",
+  "work-pr99r3-floff-nuecc48",
+  "work-pr99r3-off-mcp1k",
+  "work-pr99r3-off-mcp2k",
+  "work-pr99r3-off-ncpi0",
+  "work-pr99r3-off-nuecc48",
+  "work-pr99r3-on-mcp1k",
+  "work-pr99r3-on-mcp2k",
+  "work-pr99r3-on-ncpi0",
+  "work-pr99r3-on-nuecc48",
+  "work-pr99r3-ond-ncpi0",
+  "work-pr99r3-ond-nuecc48",
+  "work-pr99r3-onf-mcp1k",
+  "work-pr99r3-onf-mcp2k",
+  "work-pr99r3-onf-ncpi0",
+  "work-pr99r3-onf-nuecc48",
+  "work-scan-prodflip-mcp1k",
+  "work-scan-prodflip-mcp2k",
+  "work-scan-prodflip-ncpi0",
+  "work-vtx100-base-mcp1k",
+  "work-vtx100-base-mcp2k",
+  "work-vtx100-base-ncpi0",
+  "work-vtx100-base-nuecc48",
+  "work-vtx100-topo-mcp1k",
+  "work-vtx100-topo-mcp2k",
+  "work-vtx100-topo-ncpi0",
+  "work-vtx100-topo-nuecc48",
+  "work-vtx105-dlonly-mcp1k",
+  "work-vtx105-dlonly-mcp2k",
+  "work-vtx105-dlonly-ncpi0",
+  "work-vtx105-dlonly-nuecc48",
+  "work-vtx105-ma4-mcp1k",
+  "work-vtx105-ma4-mcp2k",
+  "work-vtx105-ma4-ncpi0",
+  "work-vtx105-ma4-nuecc48",
+  "work-vtx105-nofitx-mcp1k",
+  "work-vtx105-nofitx-mcp2k",
+  "work-vtx105-nofitx-ncpi0",
+  "work-vtx105-nofitx-nuecc48",
+  "work-vtx105-pre103-mcp1k",
+  "work-vtx105-pre103-mcp2k",
+  "work-vtx105-pre103-ncpi0",
+  "work-vtx105-pre103-nuecc48",
+  "work-vtx105-topk10-mcp1k",
+  "work-vtx105-topk10-mcp2k",
+  "work-vtx105-topk10-ncpi0",
+  "work-vtx105-topk10-nuecc48",
+  "work-vtx105-topo3-mcp1k",
+  "work-vtx105-topo3-mcp2k",
+  "work-vtx105-topo3-ncpi0",
+  "work-vtx105-topo3-nuecc48",
+  "work-vtx105-trad-mcp1k",
+  "work-vtx105-trad-mcp2k",
+  "work-vtx105-trad-ncpi0",
+  "work-vtx105-trad-nuecc48",
+  "work-vtx106-cne-off-ncpi0",
+  "work-vtx106-cne-on-ncpi0",
+  "work-vtx106-harv-base-mcp1k",
+  "work-vtx106-harv-base-mcp2k",
+  "work-vtx106-harv-base-ncpi0",
+  "work-vtx106-harv-nofitx-mcp1k",
+  "work-vtx106-harv-nofitx-mcp2k",
+  "work-vtx106-harv-nofitx-ncpi0",
+  "work-vtx106-harv-topo3-mcp1k",
+  "work-vtx106-harv-topo3-mcp2k",
+  "work-vtx106-harv-topo3-ncpi0",
+  "work-vtx106-harv-topo3-nuecc48",
+  "work-vtx106-ma20-mcp1k",
+  "work-vtx106-ma20-mcp2k",
+  "work-vtx106-ma20-ncpi0",
+  "work-vtx106-ma20-nuecc48",
+  "work-vtx106-nofitx-trad-mcp1k",
+  "work-vtx106-nofitx-trad-mcp2k",
+  "work-vtx106-nofitx-trad-ncpi0",
+  "work-vtx106-nofitx-trad-nuecc48"
+ ],
+ "D": [],
+ "R": [
+  "work-d74r1-bare-mc50",
+  "work-d74r1-bare-ncpi0",
+  "work-d74r1-bare-nuecc48",
+  "work-d74r1-flipchk-ncpi0",
+  "work-d74r1-off1-mc50",
+  "work-d74r1-off1-ncpi0",
+  "work-d74r1-off1-nuecc48",
+  "work-d74r1-on1-mc50",
+  "work-d74r1-on1-ncpi0",
+  "work-d74r1-on1-nuecc48",
+  "work-d75r1-bare-enriched",
+  "work-d75r1-bare-mc50",
+  "work-d75r1-bare-ncpi0",
+  "work-d75r1-bare-nuecc48",
+  "work-d75r1-flipchk-ncpi0",
+  "work-d75r1-off1-enriched",
+  "work-d75r1-off1-mc50",
+  "work-d75r1-off1-ncpi0",
+  "work-d75r1-off1-nuecc48",
+  "work-d75r1-onflag-enriched",
+  "work-d75r1-onflag-mc50",
+  "work-d75r1-onflag-ncpi0",
+  "work-d75r1-onflag-nuecc48",
+  "work-d75r1-onfv-mc50",
+  "work-d75r1-onfv-ncpi0",
+  "work-d75r1-onfv-nuecc48",
+  "work-mcp1k-cb0805",
+  "work-mcp1k-prod0819",
+  "work-mcp2k-prod0819",
+  "work-ncpi0-cb0805",
+  "work-ncpi0-prod0819",
+  "work-nuecc48-cb0805",
+  "work-nuecc48-prod0819",
+  "work-pr101-a-mcp1k",
+  "work-pr101-a-mcp2k",
+  "work-pr101-a-ncpi0",
+  "work-pr101-a-nuecc48",
+  "work-pr101-all-mcp1k",
+  "work-pr101-all-mcp2k",
+  "work-pr101-all-ncpi0",
+  "work-pr101-all-nuecc48",
+  "work-pr101-all2-mcp1k",
+  "work-pr101-all2-mcp2k",
+  "work-pr101-all2-ncpi0",
+  "work-pr101-all2-nuecc48",
+  "work-pr101-all3-mcp1k",
+  "work-pr101-all3-mcp2k",
+  "work-pr101-all3-ncpi0",
+  "work-pr101-all3-nuecc48",
+  "work-pr101-b-mcp1k",
+  "work-pr101-b-mcp2k",
+  "work-pr101-b-ncpi0",
+  "work-pr101-b-nuecc48",
+  "work-pr101-b2-mcp1k",
+  "work-pr101-b2-mcp2k",
+  "work-pr101-b2-ncpi0",
+  "work-pr101-b2-nuecc48",
+  "work-pr101-c-mcp1k",
+  "work-pr101-c-mcp2k",
+  "work-pr101-c-ncpi0",
+  "work-pr101-c-nuecc48",
+  "work-pr101-d-mcp1k",
+  "work-pr101-d-mcp2k",
+  "work-pr101-d-ncpi0",
+  "work-pr101-d-nuecc48",
+  "work-pr101-flip-mcp1k",
+  "work-pr101-flip-mcp2k",
+  "work-pr101-flip-ncpi0",
+  "work-pr101-flip-nuecc48",
+  "work-pr101-floff-mcp1k",
+  "work-pr101-floff-mcp2k",
+  "work-pr101-floff-ncpi0",
+  "work-pr101-floff-nuecc48",
+  "work-pr101-off-mcp1k",
+  "work-pr101-off-mcp2k",
+  "work-pr101-off-ncpi0",
+  "work-pr101-off-nuecc48",
+  "work-pr101-off2-mcp1k",
+  "work-pr101-off2-mcp2k",
+  "work-pr101-off2-ncpi0",
+  "work-pr101-off2-nuecc48",
+  "work-pr101-off3-mcp1k",
+  "work-pr101-off3-mcp2k",
+  "work-pr101-off3-ncpi0",
+  "work-pr101-off3-nuecc48",
+  "work-pr102-head-mcp1k",
+  "work-pr102r2-base-mcp1k",
+  "work-pr102r2-base-mcp2k",
+  "work-pr102r2-base-ncpi0",
+  "work-pr102r2-base-nuecc48",
+  "work-pr102r2-beq-mcp1k",
+  "work-pr102r2-beq2-mcp1k",
+  "work-pr102r2-dbgp1-mcp1k",
+  "work-pr102r2-dbgp2-mcp1k",
+  "work-pr102r2-dbgp2b-mcp1k",
+  "work-pr102r2-flip-mcp1k",
+  "work-pr102r2-flip-ncpi0",
+  "work-pr102r2-kA-mcp1k",
+  "work-pr102r2-kB-mcp1k",
+  "work-pr102r2-kC-mcp1k",
+  "work-pr102r2-l30-ncpi0",
+  "work-pr102r2-l30full-mcp1k",
+  "work-pr102r2-len30-nuecc48",
+  "work-pr102r2-n8l30-nuecc48",
+  "work-pr102r2-nnf4-nuecc48",
+  "work-pr102r2-nnf8-nuecc48",
+  "work-pr102r2-off-mcp1k",
+  "work-pr102r2-off-mcp2k",
+  "work-pr102r2-off-ncpi0",
+  "work-pr102r2-off-nuecc48",
+  "work-pr102r2-off2-mcp1k",
+  "work-pr102r2-off2-mcp2k",
+  "work-pr102r2-off2-ncpi0",
+  "work-pr102r2-off2-nuecc48",
+  "work-pr102r2-offfull-mcp1k",
+  "work-pr102r2-offfullp-mcp1k",
+  "work-pr102r2-offmerged-mcp1k",
+  "work-pr102r2-on-ncpi0",
+  "work-pr102r2-on-nuecc48",
+  "work-pr102r2-on2-ncpi0",
+  "work-pr102r2-on2-nuecc48",
+  "work-pr102r2-onA-mcp1k",
+  "work-pr102r2-onA-mcp2k",
+  "work-pr102r2-onfull-mcp1k",
+  "work-pr102r2-onfull2-mcp1k",
+  "work-pr102r2-onfull2p-mcp1k",
+  "work-pr102r2-onfullp-mcp1k",
+  "work-pr102r2-onmerged-mcp1k",
+  "work-pr102r2-p1-ncpi0",
+  "work-pr102r2-p1-nuecc48",
+  "work-pr102r2-p1full-mcp1k",
+  "work-pr103-bare-mcp1k",
+  "work-pr103-bare-mcp2k",
+  "work-pr103-bare-ncpi0",
+  "work-pr103-bare-nuecc48",
+  "work-pr103-bare2-mcp1k",
+  "work-pr103-bare2-mcp2k",
+  "work-pr103-bare2-ncpi0",
+  "work-pr103-bare2-nuecc48",
+  "work-pr103-baremerged-mcp1k",
+  "work-pr103-flipchk-mcp1k",
+  "work-pr103-flipchk-mcp2k",
+  "work-pr103-flipchk-ncpi0",
+  "work-pr103-flipchk-nuecc48",
+  "work-pr103-floff-ncpi0",
+  "work-pr103-floff-nuecc48",
+  "work-pr103-off-mcp1k",
+  "work-pr103-off-mcp2k",
+  "work-pr103-off-ncpi0",
+  "work-pr103-off-nuecc48",
+  "work-pr103-off2-ncpi0",
+  "work-pr103-off2-nuecc48",
+  "work-pr103-off3-ncpi0",
+  "work-pr103-off3-nuecc48",
+  "work-pr103-on-mcp1k",
+  "work-pr103-on-mcp2k",
+  "work-pr103-on-ncpi0",
+  "work-pr103-on-nuecc48",
+  "work-pr103-on2-mcp1k",
+  "work-pr103-on2-mcp2k",
+  "work-pr103-on2-ncpi0",
+  "work-pr103-on2-nuecc48",
+  "work-pr103-onA-mcp2k",
+  "work-pr103-onB-mcp2k",
+  "work-pr103-onC-mcp2k",
+  "work-pr103-onD-mcp2k",
+  "work-pr103-onE-mcp1k",
+  "work-pr103-onE-mcp2k",
+  "work-pr103-tr-mcp1k",
+  "work-pr103-tr-mcp2k",
+  "work-pr103-tr2-mcp1k",
+  "work-pr104-bare-mcp1k",
+  "work-pr104-bare-mcp2k",
+  "work-pr104-bare-ncpi0",
+  "work-pr104-bare-nuecc48",
+  "work-pr104-floff-ncpi0",
+  "work-pr104-floff-nuecc48",
+  "work-pr104-off-mcp1k",
+  "work-pr104-off-mcp2k",
+  "work-pr104-off-ncpi0",
+  "work-pr104-off-nuecc48",
+  "work-pr104-off2-mcp2k",
+  "work-pr104-off2-ncpi0",
+  "work-pr104-off2-nuecc48",
+  "work-pr104-off3-mcp1k",
+  "work-pr104-off3-mcp2k",
+  "work-pr104-off3-ncpi0",
+  "work-pr104-off3-nuecc48",
+  "work-pr104-off4-mcp1k",
+  "work-pr104-off4-mcp2k",
+  "work-pr104-off4-ncpi0",
+  "work-pr104-off4-nuecc48",
+  "work-pr104-on-mcp2k",
+  "work-pr104-on3-mcp1k",
+  "work-pr104-on3-mcp2k",
+  "work-pr104-on3-ncpi0",
+  "work-pr104-on3-nuecc48",
+  "work-pr104-smoke-mcp1k",
+  "work-pr104-smoke-mcp2k",
+  "work-pr104-smoke2-mcp1k",
+  "work-pr104-smoke2-mcp2k",
+  "work-pr104-smoke3-mcp1k",
+  "work-pr104-smoke3-mcp2k",
+  "work-pr104-smoke4-mcp1k",
+  "work-pr104-smoke5-mcp1k",
+  "work-pr104-smoke5-mcp2k",
+  "work-pr104-smoke6-mcp1k",
+  "work-pr104-smoke7-mcp1k",
+  "work-pr104-smoke7-mcp2k",
+  "work-pr104-smoke7-nuecc48",
+  "work-pr107-off-ncpi0",
+  "work-pr107-off-nuecc48",
+  "work-pr107-on-ncpi0",
+  "work-pr107-on-nuecc48",
+  "work-pr108-assoccheck-nuecc48",
+  "work-pr108-dqdump-off-nuecc48",
+  "work-pr108-dqdump-on-nuecc48",
+  "work-pr108-dqdump2-off-nuecc48",
+  "work-pr108-dqdump2-on-nuecc48",
+  "work-pr108-dqdump3-off-nuecc48",
+  "work-pr108-dqdump3-on-nuecc48",
+  "work-pr108-off1-nuecc48",
+  "work-pr109-dbgflag-on-nuecc48",
+  "work-pr109-off-nuecc48",
+  "work-pr109-on-nuecc48",
+  "work-pr109-on2-nuecc48",
+  "work-pr109b-off-nuecc48",
+  "work-pr109b-on-nuecc48",
+  "work-pr109c-off-nuecc48",
+  "work-pr109c-on-nuecc48",
+  "work-pr109e-off-nuecc48",
+  "work-pr109e-on-nuecc48",
+  "work-pr109f-dbgtraj-on-nuecc48",
+  "work-pr109f-off-fbcoff-nuecc48",
+  "work-pr109f-on-fbcoff-nuecc48",
+  "work-pr109g-gate-on-nuecc48",
+  "work-pr109h-dbgexcl-on-nuecc48",
+  "work-pr109h-gate-on-nuecc48",
+  "work-pr96-dbg1-mcp2k",
+  "work-pr96-dbg2-mcp2k",
+  "work-pr96-dbg3-mcp2k",
+  "work-pr96-fx1-mcp2k",
+  "work-pr96-prodflip-mcp2k",
+  "work-pr96gate-disp",
+  "work-pr96gate-mcp2k",
+  "work-pr96gate-nuedisp",
+  "work-pr98-flip-nuecc48",
+  "work-pr98-floff-nuecc48",
+  "work-pr98-fx-nuecc48",
+  "work-pr98-fx2-smoke",
+  "work-pr98-fx3-smoke",
+  "work-pr98-fx4-nuecc48",
+  "work-pr98-off-nuecc48",
+  "work-pr98-off2-nuecc48",
+  "work-pr98-off3-nuecc48",
+  "work-pr99-probe-mcp1k",
+  "work-pr99-probe-mcp2k",
+  "work-pr99-probe-ncpi0",
+  "work-pr99-t70084",
+  "work-pr99r2-base-mcp1k",
+  "work-pr99r2-base-mcp2k",
+  "work-pr99r2-base-ncpi0",
+  "work-pr99r2-flip-mcp1k",
+  "work-pr99r2-flip-mcp2k",
+  "work-pr99r2-flip-ncpi0",
+  "work-pr99r2-flip-nuecc48",
+  "work-pr99r2-floff-mcp1k",
+  "work-pr99r2-floff-mcp2k",
+  "work-pr99r2-floff-ncpi0",
+  "work-pr99r2-floff-nuecc48",
+  "work-pr99r2-off-mcp1k",
+  "work-pr99r2-off-mcp2k",
+  "work-pr99r2-off-ncpi0",
+  "work-pr99r2-off-nuecc48",
+  "work-pr99r2-off2-mcp1k",
+  "work-pr99r2-off2-mcp2k",
+  "work-pr99r2-off2-ncpi0",
+  "work-pr99r2-off2-nuecc48",
+  "work-pr99r2-off3-mcp1k",
+  "work-pr99r2-off3-mcp2k",
+  "work-pr99r2-off3-ncpi0",
+  "work-pr99r2-off3-nuecc48",
+  "work-pr99r2-on-mcp1k",
+  "work-pr99r2-on-mcp2k",
+  "work-pr99r2-on-ncpi0",
+  "work-pr99r2-on-nuecc48",
+  "work-pr99r2-on2-mcp1k",
+  "work-pr99r2-on2-mcp2k",
+  "work-pr99r2-on2-ncpi0",
+  "work-pr99r2-on2-nuecc48",
+  "work-pr99r2-on3-mcp1k",
+  "work-pr99r2-on3-mcp2k",
+  "work-pr99r2-on3-ncpi0",
+  "work-pr99r2-on3-nuecc48",
+  "work-pr99r2-probe285567",
+  "work-pr99r2-smoke-mcp1k",
+  "work-pr99r2-smoke-mcp2k",
+  "work-pr99r2-smoke-ncpi0",
+  "work-pr99r2-smoke2-mcp2k",
+  "work-pr99r2-smoket-mcp2k",
+  "work-pr99r3-dduponly-ncpi0",
+  "work-pr99r3-flip-mcp1k",
+  "work-pr99r3-flip-ncpi0",
+  "work-pr99r3-flip-nuecc48",
+  "work-pr99r3-floff-mcp1k",
+  "work-pr99r3-floff-ncpi0",
+  "work-pr99r3-floff-nuecc48",
+  "work-pr99r3-off-mcp1k",
+  "work-pr99r3-off-mcp2k",
+  "work-pr99r3-off-ncpi0",
+  "work-pr99r3-off-nuecc48",
+  "work-pr99r3-on-mcp1k",
+  "work-pr99r3-on-mcp2k",
+  "work-pr99r3-on-ncpi0",
+  "work-pr99r3-on-nuecc48",
+  "work-pr99r3-ond-ncpi0",
+  "work-pr99r3-ond-nuecc48",
+  "work-pr99r3-onf-mcp1k",
+  "work-pr99r3-onf-mcp2k",
+  "work-pr99r3-onf-ncpi0",
+  "work-pr99r3-onf-nuecc48",
+  "work-scan-prodflip-mcp1k",
+  "work-scan-prodflip-mcp2k",
+  "work-scan-prodflip-ncpi0",
+  "work-vtx100-base-mcp1k",
+  "work-vtx100-base-mcp2k",
+  "work-vtx100-base-ncpi0",
+  "work-vtx100-base-nuecc48",
+  "work-vtx100-topo-mcp1k",
+  "work-vtx100-topo-mcp2k",
+  "work-vtx100-topo-ncpi0",
+  "work-vtx100-topo-nuecc48",
+  "work-vtx105-dlonly-mcp1k",
+  "work-vtx105-dlonly-mcp2k",
+  "work-vtx105-dlonly-ncpi0",
+  "work-vtx105-dlonly-nuecc48",
+  "work-vtx105-ma4-mcp1k",
+  "work-vtx105-ma4-mcp2k",
+  "work-vtx105-ma4-ncpi0",
+  "work-vtx105-ma4-nuecc48",
+  "work-vtx105-nofitx-mcp1k",
+  "work-vtx105-nofitx-mcp2k",
+  "work-vtx105-nofitx-ncpi0",
+  "work-vtx105-nofitx-nuecc48",
+  "work-vtx105-pre103-mcp1k",
+  "work-vtx105-pre103-mcp2k",
+  "work-vtx105-pre103-ncpi0",
+  "work-vtx105-pre103-nuecc48",
+  "work-vtx105-topk10-mcp1k",
+  "work-vtx105-topk10-mcp2k",
+  "work-vtx105-topk10-ncpi0",
+  "work-vtx105-topk10-nuecc48",
+  "work-vtx105-topo3-mcp1k",
+  "work-vtx105-topo3-mcp2k",
+  "work-vtx105-topo3-ncpi0",
+  "work-vtx105-topo3-nuecc48",
+  "work-vtx105-trad-mcp1k",
+  "work-vtx105-trad-mcp2k",
+  "work-vtx105-trad-ncpi0",
+  "work-vtx105-trad-nuecc48",
+  "work-vtx106-cne-off-ncpi0",
+  "work-vtx106-cne-on-ncpi0",
+  "work-vtx106-harv-base-mcp1k",
+  "work-vtx106-harv-base-mcp2k",
+  "work-vtx106-harv-base-ncpi0",
+  "work-vtx106-harv-nofitx-mcp1k",
+  "work-vtx106-harv-nofitx-mcp2k",
+  "work-vtx106-harv-nofitx-ncpi0",
+  "work-vtx106-harv-topo3-mcp1k",
+  "work-vtx106-harv-topo3-mcp2k",
+  "work-vtx106-harv-topo3-ncpi0",
+  "work-vtx106-harv-topo3-nuecc48",
+  "work-vtx106-ma20-mcp1k",
+  "work-vtx106-ma20-mcp2k",
+  "work-vtx106-ma20-ncpi0",
+  "work-vtx106-ma20-nuecc48",
+  "work-vtx106-nofitx-trad-mcp1k",
+  "work-vtx106-nofitx-trad-mcp2k",
+  "work-vtx106-nofitx-trad-ncpi0",
+  "work-vtx106-nofitx-trad-nuecc48"
+ ],
+ "ARCHIVE": [
+  "work-d74r1-bare-mc50",
+  "work-d74r1-bare-ncpi0",
+  "work-d74r1-bare-nuecc48",
+  "work-d74r1-flipchk-ncpi0",
+  "work-d74r1-off1-mc50",
+  "work-d74r1-off1-ncpi0",
+  "work-d74r1-off1-nuecc48",
+  "work-d74r1-on1-mc50",
+  "work-d74r1-on1-ncpi0",
+  "work-d74r1-on1-nuecc48",
+  "work-d75r1-bare-enriched",
+  "work-d75r1-bare-mc50",
+  "work-d75r1-bare-ncpi0",
+  "work-d75r1-bare-nuecc48",
+  "work-d75r1-flipchk-ncpi0",
+  "work-d75r1-off1-enriched",
+  "work-d75r1-off1-mc50",
+  "work-d75r1-off1-ncpi0",
+  "work-d75r1-off1-nuecc48",
+  "work-d75r1-onflag-enriched",
+  "work-d75r1-onflag-mc50",
+  "work-d75r1-onflag-ncpi0",
+  "work-d75r1-onflag-nuecc48",
+  "work-d75r1-onfv-mc50",
+  "work-d75r1-onfv-ncpi0",
+  "work-d75r1-onfv-nuecc48",
+  "work-mcp1k-cb0805",
+  "work-mcp1k-prod0819",
+  "work-mcp2k-prod0819",
+  "work-ncpi0-cb0805",
+  "work-ncpi0-prod0819",
+  "work-nuecc48-cb0805",
+  "work-nuecc48-prod0819",
+  "work-pr101-a-mcp1k",
+  "work-pr101-a-mcp2k",
+  "work-pr101-a-ncpi0",
+  "work-pr101-a-nuecc48",
+  "work-pr101-all-mcp1k",
+  "work-pr101-all-mcp2k",
+  "work-pr101-all-ncpi0",
+  "work-pr101-all-nuecc48",
+  "work-pr101-all2-mcp1k",
+  "work-pr101-all2-mcp2k",
+  "work-pr101-all2-ncpi0",
+  "work-pr101-all2-nuecc48",
+  "work-pr101-all3-mcp1k",
+  "work-pr101-all3-mcp2k",
+  "work-pr101-all3-ncpi0",
+  "work-pr101-all3-nuecc48",
+  "work-pr101-b-mcp1k",
+  "work-pr101-b-mcp2k",
+  "work-pr101-b-ncpi0",
+  "work-pr101-b-nuecc48",
+  "work-pr101-b2-mcp1k",
+  "work-pr101-b2-mcp2k",
+  "work-pr101-b2-ncpi0",
+  "work-pr101-b2-nuecc48",
+  "work-pr101-c-mcp1k",
+  "work-pr101-c-mcp2k",
+  "work-pr101-c-ncpi0",
+  "work-pr101-c-nuecc48",
+  "work-pr101-d-mcp1k",
+  "work-pr101-d-mcp2k",
+  "work-pr101-d-ncpi0",
+  "work-pr101-d-nuecc48",
+  "work-pr101-flip-mcp1k",
+  "work-pr101-flip-mcp2k",
+  "work-pr101-flip-ncpi0",
+  "work-pr101-flip-nuecc48",
+  "work-pr101-floff-mcp1k",
+  "work-pr101-floff-mcp2k",
+  "work-pr101-floff-ncpi0",
+  "work-pr101-floff-nuecc48",
+  "work-pr101-off-mcp1k",
+  "work-pr101-off-mcp2k",
+  "work-pr101-off-ncpi0",
+  "work-pr101-off-nuecc48",
+  "work-pr101-off2-mcp1k",
+  "work-pr101-off2-mcp2k",
+  "work-pr101-off2-ncpi0",
+  "work-pr101-off2-nuecc48",
+  "work-pr101-off3-mcp1k",
+  "work-pr101-off3-mcp2k",
+  "work-pr101-off3-ncpi0",
+  "work-pr101-off3-nuecc48",
+  "work-pr102-head-mcp1k",
+  "work-pr102r2-base-mcp1k",
+  "work-pr102r2-base-mcp2k",
+  "work-pr102r2-base-ncpi0",
+  "work-pr102r2-base-nuecc48",
+  "work-pr102r2-beq-mcp1k",
+  "work-pr102r2-beq2-mcp1k",
+  "work-pr102r2-dbgp1-mcp1k",
+  "work-pr102r2-dbgp2-mcp1k",
+  "work-pr102r2-dbgp2b-mcp1k",
+  "work-pr102r2-flip-mcp1k",
+  "work-pr102r2-flip-ncpi0",
+  "work-pr102r2-kA-mcp1k",
+  "work-pr102r2-kB-mcp1k",
+  "work-pr102r2-kC-mcp1k",
+  "work-pr102r2-l30-ncpi0",
+  "work-pr102r2-l30full-mcp1k",
+  "work-pr102r2-len30-nuecc48",
+  "work-pr102r2-n8l30-nuecc48",
+  "work-pr102r2-nnf4-nuecc48",
+  "work-pr102r2-nnf8-nuecc48",
+  "work-pr102r2-off-mcp1k",
+  "work-pr102r2-off-mcp2k",
+  "work-pr102r2-off-ncpi0",
+  "work-pr102r2-off-nuecc48",
+  "work-pr102r2-off2-mcp1k",
+  "work-pr102r2-off2-mcp2k",
+  "work-pr102r2-off2-ncpi0",
+  "work-pr102r2-off2-nuecc48",
+  "work-pr102r2-offfull-mcp1k",
+  "work-pr102r2-offfullp-mcp1k",
+  "work-pr102r2-offmerged-mcp1k",
+  "work-pr102r2-on-ncpi0",
+  "work-pr102r2-on-nuecc48",
+  "work-pr102r2-on2-ncpi0",
+  "work-pr102r2-on2-nuecc48",
+  "work-pr102r2-onA-mcp1k",
+  "work-pr102r2-onA-mcp2k",
+  "work-pr102r2-onfull-mcp1k",
+  "work-pr102r2-onfull2-mcp1k",
+  "work-pr102r2-onfull2p-mcp1k",
+  "work-pr102r2-onfullp-mcp1k",
+  "work-pr102r2-onmerged-mcp1k",
+  "work-pr102r2-p1-ncpi0",
+  "work-pr102r2-p1-nuecc48",
+  "work-pr102r2-p1full-mcp1k",
+  "work-pr103-bare-mcp1k",
+  "work-pr103-bare-mcp2k",
+  "work-pr103-bare-ncpi0",
+  "work-pr103-bare-nuecc48",
+  "work-pr103-bare2-mcp1k",
+  "work-pr103-bare2-mcp2k",
+  "work-pr103-bare2-ncpi0",
+  "work-pr103-bare2-nuecc48",
+  "work-pr103-baremerged-mcp1k",
+  "work-pr103-flipchk-mcp1k",
+  "work-pr103-flipchk-mcp2k",
+  "work-pr103-flipchk-ncpi0",
+  "work-pr103-flipchk-nuecc48",
+  "work-pr103-floff-ncpi0",
+  "work-pr103-floff-nuecc48",
+  "work-pr103-off-mcp1k",
+  "work-pr103-off-mcp2k",
+  "work-pr103-off-ncpi0",
+  "work-pr103-off-nuecc48",
+  "work-pr103-off2-ncpi0",
+  "work-pr103-off2-nuecc48",
+  "work-pr103-off3-ncpi0",
+  "work-pr103-off3-nuecc48",
+  "work-pr103-on-mcp1k",
+  "work-pr103-on-mcp2k",
+  "work-pr103-on-ncpi0",
+  "work-pr103-on-nuecc48",
+  "work-pr103-on2-mcp1k",
+  "work-pr103-on2-mcp2k",
+  "work-pr103-on2-ncpi0",
+  "work-pr103-on2-nuecc48",
+  "work-pr103-onA-mcp2k",
+  "work-pr103-onB-mcp2k",
+  "work-pr103-onC-mcp2k",
+  "work-pr103-onD-mcp2k",
+  "work-pr103-onE-mcp1k",
+  "work-pr103-onE-mcp2k",
+  "work-pr103-tr-mcp1k",
+  "work-pr103-tr-mcp2k",
+  "work-pr103-tr2-mcp1k",
+  "work-pr104-bare-mcp1k",
+  "work-pr104-bare-mcp2k",
+  "work-pr104-bare-ncpi0",
+  "work-pr104-bare-nuecc48",
+  "work-pr104-floff-ncpi0",
+  "work-pr104-floff-nuecc48",
+  "work-pr104-off-mcp1k",
+  "work-pr104-off-mcp2k",
+  "work-pr104-off-ncpi0",
+  "work-pr104-off-nuecc48",
+  "work-pr104-off2-mcp2k",
+  "work-pr104-off2-ncpi0",
+  "work-pr104-off2-nuecc48",
+  "work-pr104-off3-mcp1k",
+  "work-pr104-off3-mcp2k",
+  "work-pr104-off3-ncpi0",
+  "work-pr104-off3-nuecc48",
+  "work-pr104-off4-mcp1k",
+  "work-pr104-off4-mcp2k",
+  "work-pr104-off4-ncpi0",
+  "work-pr104-off4-nuecc48",
+  "work-pr104-on-mcp2k",
+  "work-pr104-on3-mcp1k",
+  "work-pr104-on3-mcp2k",
+  "work-pr104-on3-ncpi0",
+  "work-pr104-on3-nuecc48",
+  "work-pr104-smoke-mcp1k",
+  "work-pr104-smoke-mcp2k",
+  "work-pr104-smoke2-mcp1k",
+  "work-pr104-smoke2-mcp2k",
+  "work-pr104-smoke3-mcp1k",
+  "work-pr104-smoke3-mcp2k",
+  "work-pr104-smoke4-mcp1k",
+  "work-pr104-smoke5-mcp1k",
+  "work-pr104-smoke5-mcp2k",
+  "work-pr104-smoke6-mcp1k",
+  "work-pr104-smoke7-mcp1k",
+  "work-pr104-smoke7-mcp2k",
+  "work-pr104-smoke7-nuecc48",
+  "work-pr107-off-ncpi0",
+  "work-pr107-off-nuecc48",
+  "work-pr107-on-ncpi0",
+  "work-pr107-on-nuecc48",
+  "work-pr108-assoccheck-nuecc48",
+  "work-pr108-dqdump-off-nuecc48",
+  "work-pr108-dqdump-on-nuecc48",
+  "work-pr108-dqdump2-off-nuecc48",
+  "work-pr108-dqdump2-on-nuecc48",
+  "work-pr108-dqdump3-off-nuecc48",
+  "work-pr108-dqdump3-on-nuecc48",
+  "work-pr108-off1-nuecc48",
+  "work-pr109-dbgflag-on-nuecc48",
+  "work-pr109-off-nuecc48",
+  "work-pr109-on-nuecc48",
+  "work-pr109-on2-nuecc48",
+  "work-pr109b-off-nuecc48",
+  "work-pr109b-on-nuecc48",
+  "work-pr109c-off-nuecc48",
+  "work-pr109c-on-nuecc48",
+  "work-pr109e-off-nuecc48",
+  "work-pr109e-on-nuecc48",
+  "work-pr109f-dbgtraj-on-nuecc48",
+  "work-pr109f-off-fbcoff-nuecc48",
+  "work-pr109f-on-fbcoff-nuecc48",
+  "work-pr109g-gate-on-nuecc48",
+  "work-pr109h-dbgexcl-on-nuecc48",
+  "work-pr109h-gate-on-nuecc48",
+  "work-pr96-dbg1-mcp2k",
+  "work-pr96-dbg2-mcp2k",
+  "work-pr96-dbg3-mcp2k",
+  "work-pr96-fx1-mcp2k",
+  "work-pr96-prodflip-mcp2k",
+  "work-pr96gate-disp",
+  "work-pr96gate-mcp2k",
+  "work-pr96gate-nuedisp",
+  "work-pr98-flip-nuecc48",
+  "work-pr98-floff-nuecc48",
+  "work-pr98-fx-nuecc48",
+  "work-pr98-fx2-smoke",
+  "work-pr98-fx3-smoke",
+  "work-pr98-fx4-nuecc48",
+  "work-pr98-off-nuecc48",
+  "work-pr98-off2-nuecc48",
+  "work-pr98-off3-nuecc48",
+  "work-pr99-probe-mcp1k",
+  "work-pr99-probe-mcp2k",
+  "work-pr99-probe-ncpi0",
+  "work-pr99-t70084",
+  "work-pr99r2-base-mcp1k",
+  "work-pr99r2-base-mcp2k",
+  "work-pr99r2-base-ncpi0",
+  "work-pr99r2-flip-mcp1k",
+  "work-pr99r2-flip-mcp2k",
+  "work-pr99r2-flip-ncpi0",
+  "work-pr99r2-flip-nuecc48",
+  "work-pr99r2-floff-mcp1k",
+  "work-pr99r2-floff-mcp2k",
+  "work-pr99r2-floff-ncpi0",
+  "work-pr99r2-floff-nuecc48",
+  "work-pr99r2-off-mcp1k",
+  "work-pr99r2-off-mcp2k",
+  "work-pr99r2-off-ncpi0",
+  "work-pr99r2-off-nuecc48",
+  "work-pr99r2-off2-mcp1k",
+  "work-pr99r2-off2-mcp2k",
+  "work-pr99r2-off2-ncpi0",
+  "work-pr99r2-off2-nuecc48",
+  "work-pr99r2-off3-mcp1k",
+  "work-pr99r2-off3-mcp2k",
+  "work-pr99r2-off3-ncpi0",
+  "work-pr99r2-off3-nuecc48",
+  "work-pr99r2-on-mcp1k",
+  "work-pr99r2-on-mcp2k",
+  "work-pr99r2-on-ncpi0",
+  "work-pr99r2-on-nuecc48",
+  "work-pr99r2-on2-mcp1k",
+  "work-pr99r2-on2-mcp2k",
+  "work-pr99r2-on2-ncpi0",
+  "work-pr99r2-on2-nuecc48",
+  "work-pr99r2-on3-mcp1k",
+  "work-pr99r2-on3-mcp2k",
+  "work-pr99r2-on3-ncpi0",
+  "work-pr99r2-on3-nuecc48",
+  "work-pr99r2-probe285567",
+  "work-pr99r2-smoke-mcp1k",
+  "work-pr99r2-smoke-mcp2k",
+  "work-pr99r2-smoke-ncpi0",
+  "work-pr99r2-smoke2-mcp2k",
+  "work-pr99r2-smoket-mcp2k",
+  "work-pr99r3-dduponly-ncpi0",
+  "work-pr99r3-flip-mcp1k",
+  "work-pr99r3-flip-ncpi0",
+  "work-pr99r3-flip-nuecc48",
+  "work-pr99r3-floff-mcp1k",
+  "work-pr99r3-floff-ncpi0",
+  "work-pr99r3-floff-nuecc48",
+  "work-pr99r3-off-mcp1k",
+  "work-pr99r3-off-mcp2k",
+  "work-pr99r3-off-ncpi0",
+  "work-pr99r3-off-nuecc48",
+  "work-pr99r3-on-mcp1k",
+  "work-pr99r3-on-mcp2k",
+  "work-pr99r3-on-ncpi0",
+  "work-pr99r3-on-nuecc48",
+  "work-pr99r3-ond-ncpi0",
+  "work-pr99r3-ond-nuecc48",
+  "work-pr99r3-onf-mcp1k",
+  "work-pr99r3-onf-mcp2k",
+  "work-pr99r3-onf-ncpi0",
+  "work-pr99r3-onf-nuecc48",
+  "work-scan-prodflip-mcp1k",
+  "work-scan-prodflip-mcp2k",
+  "work-scan-prodflip-ncpi0",
+  "work-vtx100-base-mcp1k",
+  "work-vtx100-base-mcp2k",
+  "work-vtx100-base-ncpi0",
+  "work-vtx100-base-nuecc48",
+  "work-vtx100-topo-mcp1k",
+  "work-vtx100-topo-mcp2k",
+  "work-vtx100-topo-ncpi0",
+  "work-vtx100-topo-nuecc48",
+  "work-vtx105-dlonly-mcp1k",
+  "work-vtx105-dlonly-mcp2k",
+  "work-vtx105-dlonly-ncpi0",
+  "work-vtx105-dlonly-nuecc48",
+  "work-vtx105-ma4-mcp1k",
+  "work-vtx105-ma4-mcp2k",
+  "work-vtx105-ma4-ncpi0",
+  "work-vtx105-ma4-nuecc48",
+  "work-vtx105-nofitx-mcp1k",
+  "work-vtx105-nofitx-mcp2k",
+  "work-vtx105-nofitx-ncpi0",
+  "work-vtx105-nofitx-nuecc48",
+  "work-vtx105-pre103-mcp1k",
+  "work-vtx105-pre103-mcp2k",
+  "work-vtx105-pre103-ncpi0",
+  "work-vtx105-pre103-nuecc48",
+  "work-vtx105-topk10-mcp1k",
+  "work-vtx105-topk10-mcp2k",
+  "work-vtx105-topk10-ncpi0",
+  "work-vtx105-topk10-nuecc48",
+  "work-vtx105-topo3-mcp1k",
+  "work-vtx105-topo3-mcp2k",
+  "work-vtx105-topo3-ncpi0",
+  "work-vtx105-topo3-nuecc48",
+  "work-vtx105-trad-mcp1k",
+  "work-vtx105-trad-mcp2k",
+  "work-vtx105-trad-ncpi0",
+  "work-vtx105-trad-nuecc48",
+  "work-vtx106-cne-off-ncpi0",
+  "work-vtx106-cne-on-ncpi0",
+  "work-vtx106-harv-base-mcp1k",
+  "work-vtx106-harv-base-mcp2k",
+  "work-vtx106-harv-base-ncpi0",
+  "work-vtx106-harv-nofitx-mcp1k",
+  "work-vtx106-harv-nofitx-mcp2k",
+  "work-vtx106-harv-nofitx-ncpi0",
+  "work-vtx106-harv-topo3-mcp1k",
+  "work-vtx106-harv-topo3-mcp2k",
+  "work-vtx106-harv-topo3-ncpi0",
+  "work-vtx106-harv-topo3-nuecc48",
+  "work-vtx106-ma20-mcp1k",
+  "work-vtx106-ma20-mcp2k",
+  "work-vtx106-ma20-ncpi0",
+  "work-vtx106-ma20-nuecc48",
+  "work-vtx106-nofitx-trad-mcp1k",
+  "work-vtx106-nofitx-trad-mcp2k",
+  "work-vtx106-nofitx-trad-ncpi0",
+  "work-vtx106-nofitx-trad-nuecc48"
+ ],
+ "KEEP": [
+  "work-img-mcp1k",
+  "work-img-mcp2k",
+  "work-img-ncpi0",
+  "work-img-nuecc48",
+  "work-img-r1qlmc",
+  "work-img-r2mc",
+  "work-mcp1k-ql0819",
+  "work-mcp2k-ql0819",
+  "work-ncpi0-ql0819",
+  "work-nuecc48-prsmoke2",
+  "work-nuecc48-ql0819",
+  "work-pr104-flipchk-mcp1k",
+  "work-pr104-flipchk-mcp2k",
+  "work-pr104-flipchk-ncpi0",
+  "work-pr104-flipchk-nuecc48",
+  "work-pr104-on4-mcp1k",
+  "work-pr104-on4-mcp2k",
+  "work-pr104-on4-ncpi0",
+  "work-pr104-on4-nuecc48",
+  "work-probe178410a",
+  "work-r1qlmc-cb0805",
+  "work-r1qlmc-prod0813",
+  "work-r1qlmc-vfcbr3on",
+  "work-r2mc-cb0805",
+  "work-r2mc-prod0813",
+  "work-r2mc-vfcbr3on",
+  "work-stmcamp-d66new",
+  "work-tfix388-r9",
+  "work-vfr1qlmc-cbr3on",
+  "work-vfr2mc-cbr3on",
+  "work-vtx105-base-mcp1k",
+  "work-vtx105-base-mcp2k",
+  "work-vtx105-base-ncpi0",
+  "work-vtx105-base-nuecc48",
+  "work-vtx106-cne-off-nuecc48",
+  "work-vtx106-cne-on-nuecc48",
+  "work-vtx106-harv-base-nuecc48",
+  "work-vtx106-harv-nofitx-nuecc48"
+ ],
+ "KEEP_WHY": {
+  "work-img-nuecc48": "imaging hub, 48 evts; the re-run campaign and run_valfast.sh both pin it",
+  "work-img-ncpi0": "imaging hub, 19 evts",
+  "work-img-mcp1k": "imaging hub, 1000 evts; ql0819 evt<N> links resolve here",
+  "work-img-mcp2k": "imaging hub, 2000 evts; ql0819 evt<N> links resolve here",
+  "work-img-r1qlmc": "imaging hub; only copy of this sim sample",
+  "work-img-r2mc": "imaging hub; only copy of this sim sample",
+  "work-r1qlmc-cb0805": "SIM Q/L hub; ASSERT 8 input to work-r1qlmc-prod0813 (the data cb0805 hubs are RELEASED this round)",
+  "work-r2mc-cb0805": "SIM Q/L hub; ASSERT 8 input to work-r2mc-prod0813",
+  "work-nuecc48-ql0819": "latest production Q/L, 48 evts, bare at toolkit fd6a116d; INPUT to the 2026-08-23 PR re-run",
+  "work-ncpi0-ql0819": "latest production Q/L, 19 evts; INPUT to the re-run",
+  "work-mcp1k-ql0819": "latest production Q/L, 1000 evts; INPUT to the re-run",
+  "work-mcp2k-ql0819": "latest production Q/L, 2000 evts; INPUT to the re-run",
+  "work-pr104-on4-nuecc48": "current-production PR product (junction snap ON), 48 evts",
+  "work-pr104-on4-ncpi0": "current-production PR product, 19 evts",
+  "work-pr104-on4-mcp1k": "current-production PR product, 1000 evts",
+  "work-pr104-on4-mcp2k": "current-production PR product, 15-evt mcp2k subset -- the gap the re-run closes",
+  "work-pr104-flipchk-nuecc48": "post-flip BARE run (no env) == on4; the only on-disk shipped-config proof, 48 evts",
+  "work-pr104-flipchk-ncpi0": "post-flip BARE run == on4, 19 evts",
+  "work-pr104-flipchk-mcp1k": "post-flip BARE run == on4, 26-evt subset",
+  "work-pr104-flipchk-mcp2k": "post-flip BARE run == on4, 15-evt subset",
+  "work-vtx105-base-nuecc48": "calib-pr dumps behind the vtxscan-vtx105-* label epoch, 47 evts (owner kept)",
+  "work-vtx105-base-ncpi0": "calib-pr dumps behind the current label epoch, 19 evts",
+  "work-vtx105-base-mcp1k": "calib-pr dumps behind the current label epoch, 407 evts",
+  "work-vtx105-base-mcp2k": "calib-pr dumps behind the current label epoch, 581 evts",
+  "work-vtx106-harv-base-nuecc48": "fit_exclusion ON arm hardcoded by scripts/pr111_{brittle,ensemble,dl_decomp,rival,rival_where}.py",
+  "work-vtx106-harv-nofitx-nuecc48": "fit_exclusion OFF arm hardcoded by the same five pr/111 scripts",
+  "work-vtx106-cne-on-nuecc48": "the pr/106 sec.10 dl_vtx_cloud_no_exclusion pair, listed in doc pr/111's own arm table (open round)",
+  "work-vtx106-cne-off-nuecc48": "the OFF leg of that pair; the ncpi0 legs are NOT in the pr/111 table and are released",
+  "work-r1qlmc-prod0813": "only PR product for this sim sample; PROTECTED.txt",
+  "work-r2mc-prod0813": "only PR product for this sim sample; PROTECTED.txt",
+  "work-r1qlmc-vfcbr3on": "post-flip Q/L for r1qlmc; input to work-vfr1qlmc-cbr3on",
+  "work-r2mc-vfcbr3on": "post-flip Q/L for r2mc; input to work-vfr2mc-cbr3on",
+  "work-vfr1qlmc-cbr3on": "latest PR out-root for r1qlmc",
+  "work-vfr2mc-cbr3on": "latest PR out-root for r2mc",
+  "work-tfix388-r9": "doc pr/28 sec.15.9 -- NOT reproducible from any surviving input",
+  "work-stmcamp-d66new": "git-tracked nusel_labels/ hand-scan state (M13)",
+  "work-nuecc48-prsmoke2": "3 git-tracked runner scripts",
+  "work-probe178410a": "the ONLY proof mcp2k evt 178410 SIGSEGV is non-deterministic (rc=0/683 MB at -j 1 vs rc=139/2403 MB at -j 32); 6.7 MB"
+ },
+ "HUB": [],
+ "POSTBUILD": [],
+ "PROTECTED": [
+  "work-mcp1k-ql0819",
+  "work-mcp2k-ql0819",
+  "work-ncpi0-ql0819",
+  "work-nuecc48-ql0819",
+  "work-pr104-flipchk-mcp1k",
+  "work-pr104-flipchk-mcp2k",
+  "work-pr104-flipchk-ncpi0",
+  "work-pr104-flipchk-nuecc48",
+  "work-pr104-on4-mcp1k",
+  "work-pr104-on4-mcp2k",
+  "work-pr104-on4-ncpi0",
+  "work-pr104-on4-nuecc48",
+  "work-probe178410a",
+  "work-r1qlmc-prod0813",
+  "work-r1qlmc-vfcbr3on",
+  "work-r2mc-prod0813",
+  "work-r2mc-vfcbr3on",
+  "work-tfix388-r9",
+  "work-vfr1qlmc-cbr3on",
+  "work-vfr2mc-cbr3on",
+  "work-vtx105-base-mcp1k",
+  "work-vtx105-base-mcp2k",
+  "work-vtx105-base-ncpi0",
+  "work-vtx105-base-nuecc48",
+  "work-vtx106-cne-off-nuecc48",
+  "work-vtx106-cne-on-nuecc48",
+  "work-vtx106-harv-base-nuecc48",
+  "work-vtx106-harv-nofitx-nuecc48"
+ ],
+ "RELEASED": [],
+ "PR_PROVENANCE": {
+  "work-pr104-on4-nuecc48": "work-nuecc48-ql0819",
+  "work-pr104-on4-ncpi0": "work-ncpi0-ql0819",
+  "work-pr104-on4-mcp1k": "work-mcp1k-ql0819",
+  "work-pr104-on4-mcp2k": "work-mcp2k-ql0819",
+  "work-pr104-flipchk-nuecc48": "work-nuecc48-ql0819",
+  "work-pr104-flipchk-ncpi0": "work-ncpi0-ql0819",
+  "work-pr104-flipchk-mcp1k": "work-mcp1k-ql0819",
+  "work-pr104-flipchk-mcp2k": "work-mcp2k-ql0819",
+  "work-vtx105-base-nuecc48": "work-nuecc48-ql0819",
+  "work-vtx105-base-ncpi0": "work-ncpi0-ql0819",
+  "work-vtx105-base-mcp1k": "work-mcp1k-ql0819",
+  "work-vtx105-base-mcp2k": "work-mcp2k-ql0819",
+  "work-vtx106-harv-base-nuecc48": "work-nuecc48-ql0819",
+  "work-vtx106-harv-nofitx-nuecc48": "work-nuecc48-ql0819",
+  "work-vtx106-cne-on-nuecc48": "work-nuecc48-ql0819",
+  "work-vtx106-cne-off-nuecc48": "work-nuecc48-ql0819",
+  "work-vfr1qlmc-cbr3on": "work-r1qlmc-vfcbr3on",
+  "work-vfr2mc-cbr3on": "work-r2mc-vfcbr3on",
+  "work-r1qlmc-prod0813": "work-r1qlmc-cb0805",
+  "work-r2mc-prod0813": "work-r2mc-cb0805"
+ },
+ "ACK_BROKEN_REFS": {
+  "work-nuecc48-prod0819": "released; docs/pr/95 + pr/98-104 A/B references become text-only",
+  "work-ncpi0-prod0819": "released with the baseline",
+  "work-mcp1k-prod0819": "released with the baseline",
+  "work-mcp2k-prod0819": "released with the baseline; mcp2k has no 2000-evt PR product until the re-run lands",
+  "work-pr96gate-mcp2k": "mixed-binary equivalence proof for prod0819; subject released",
+  "work-pr96gate-nuedisp": "same proof, pr_display leg",
+  "work-pr96gate-disp": "ambiguous-ownership arm kept at 08-19; the pr/96 round is closed (doc pr/96)",
+  "work-pr96-dbg1-mcp2k": "doc pr/96 debug arm, round CLOSED (evts 70084 residual documented)",
+  "work-pr96-dbg2-mcp2k": "doc pr/96 debug arm, round CLOSED",
+  "work-pr96-dbg3-mcp2k": "doc pr/96 debug arm, round CLOSED",
+  "work-pr96-fx1-mcp2k": "doc pr/96 fix arm, round CLOSED",
+  "work-mcp1k-cb0805": "scripts/analysis/pr48/backtoback_census.py's 445-dump census stops being re-runnable; doc pr/48 numbers survive as text",
+  "work-nuecc48-cb0805": "scripts/runners/run_pr_geom_arm_dl.sh pctree pin stops resolving",
+  "work-ncpi0-cb0805": "superseded by work-ncpi0-ql0819",
+  "work-pr102-head-mcp1k": "doc pr/102 after-epoch arm; round shipped",
+  "work-pr102r2-offfull-mcp1k": "doc pr/102 r2 census/ledger arm; round shipped",
+  "work-pr102r2-onfull-mcp1k": "doc pr/102 r2 census/ledger arm; round shipped",
+  "work-pr102r2-on-nuecc48": "doc pr/102 r2 validation arm; round shipped",
+  "work-pr102r2-on-ncpi0": "doc pr/102 r2 validation arm; round shipped",
+  "work-pr102r2-onA-mcp1k": "doc pr/102 r2 validation arm; round shipped",
+  "work-pr102r2-onA-mcp2k": "doc pr/102 r2 validation arm; round shipped",
+  "work-pr99r2-on3-mcp1k": "doc pr/99 r2 arm; round SHIPPED and pushed",
+  "work-pr99r2-on3-mcp2k": "doc pr/99 r2 arm; round SHIPPED",
+  "work-pr99r2-on3-ncpi0": "doc pr/99 r2 arm; round SHIPPED",
+  "work-pr99r2-on3-nuecc48": "doc pr/99 r2 arm; round SHIPPED",
+  "work-vtx100-base-mcp1k": "doc pr/104 census + vtxscan-vtx100-* label epoch; superseded by the vtx105 epoch (KEEP)",
+  "work-vtx100-base-mcp2k": "doc pr/104 census source; superseded by vtx105",
+  "work-vtx100-base-ncpi0": "superseded by vtx105",
+  "work-vtx100-base-nuecc48": "superseded by vtx105",
+  "work-pr107-off-nuecc48": "doc pr/107 gate arm; round documented, push held by owner -- numbers are text in the doc",
+  "work-pr108-off1-nuecc48": "doc pr/108 Test A arm; round CLOSED (wcp 0e38ad0)",
+  "work-pr108-assoccheck-nuecc48": "doc pr/108 association-check arm; CLOSED",
+  "work-pr108-dqdump-on-nuecc48": "doc pr/108 dQ/dx dump arm; CLOSED, dumps quoted in the doc",
+  "work-pr108-dqdump-off-nuecc48": "doc pr/108 dQ/dx dump arm; CLOSED",
+  "work-pr108-dqdump2-on-nuecc48": "doc pr/108 dQ/dx dump arm; CLOSED",
+  "work-pr108-dqdump2-off-nuecc48": "doc pr/108 dQ/dx dump arm; CLOSED",
+  "work-pr109-on-nuecc48": "doc pr/109 arm; round CLOSED and PUSHED (tk a46b0ddb+b5c9f43a)",
+  "work-pr109-off-nuecc48": "doc pr/109 arm; CLOSED",
+  "work-pr109e-on-nuecc48": "doc pr/109 sec 8.3.1 arm; CLOSED, every number re-quoted in the doc",
+  "work-pr109e-off-nuecc48": "doc pr/109 sec 8.3.1 arm; CLOSED",
+  "work-pr109f-on-fbcoff-nuecc48": "doc pr/109 fit_blob_coverage leg; CLOSED",
+  "work-pr109f-off-fbcoff-nuecc48": "doc pr/109 fit_blob_coverage leg; CLOSED"
+ },
+ "script_refs": {
+  "work-pr109-on-nuecc48": [
+   "scripts/pr109_run_all.sh:26"
+  ],
+  "work-pr109-off-nuecc48": [
+   "scripts/pr109_run_all.sh:27"
+  ],
+  "work-pr108-off1-nuecc48": [
+   "scripts/pr108_testA.sh:4",
+   "scripts/pr108_testA.sh:5"
+  ],
+  "work-pr107-off-nuecc48": [
+   "scripts/pr108_testA.sh:5",
+   "scripts/pr109_sbnd_arms.sh:18"
+  ],
+  "work-pr108-assoccheck-nuecc48": [
+   "scripts/pr108_testA.sh:7",
+   "scripts/pr108_testA.sh:8"
+  ],
+  "work-pr109e-on-nuecc48": [
+   "scripts/pr109b_run_all.sh:31"
+  ],
+  "work-pr109e-off-nuecc48": [
+   "scripts/pr109b_run_all.sh:32"
+  ],
+  "work-pr108-dqdump-on-nuecc48": [
+   "scripts/pr108h_sbnd_census.py:6"
+  ],
+  "work-pr108-dqdump-off-nuecc48": [
+   "scripts/pr108h_sbnd_census.py:7"
+  ],
+  "work-pr108-dqdump2-on-nuecc48": [
+   "scripts/pr108h_sbnd_census.py:8"
+  ],
+  "work-pr108-dqdump2-off-nuecc48": [
+   "scripts/pr108h_sbnd_census.py:9"
+  ],
+  "work-pr109f-on-fbcoff-nuecc48": [
+   "scripts/pr109f_run_all.sh:20"
+  ],
+  "work-pr109f-off-fbcoff-nuecc48": [
+   "scripts/pr109f_run_all.sh:21"
+  ],
+  "work-nuecc48-cb0805": [
+   "scripts/runners/run_pr_geom_arm_dl.sh:24",
+   "scripts/runners/run_pr_geom_arm.sh:22",
+   "scripts/runners/geom_ab_batch.sh:14",
+   "scripts/analysis/pr67/pr67_wcover.py:48",
+   "scripts/analysis/pr66/oc66_layer_trace.py:7",
+   "scripts/analysis/pr66/oc66_layer_trace.py:40",
+   "scripts/analysis/pr53/split_exam_r7.py:21",
+   "scripts/analysis/pr53/split_exam.py:26",
+   "scripts/analysis/pr53/oc53_familyb_census.py:43",
+   "ab_pr89_live.sh:14",
+   "ab_pr89r5_swap.sh:11"
+  ],
+  "work-mcp1k-cb0805": [
+   "scripts/analysis/pr48/backtoback_census.py:2",
+   "scripts/analysis/pr48/backtoback_census.py:36",
+   "scripts/analysis/pr47/turn_bothdir.py:14",
+   "scripts/analysis/pr47/cathode_junction_census.py:8",
+   "scripts/analysis/pr47/cathode_junction_census.py:13",
+   "scripts/analysis/pr47/cathode_junction_census.py:54",
+   "scripts/analysis/pr47/cathode_junction_census.py:207",
+   "scripts/analysis/cathode/cbr_join_metric.py:37",
+   "scripts/analysis/cathode/cathode_halfmatch.py:64",
+   "scripts/analysis/cathode/beam_cathode_split.py:57",
+   "scripts/analysis/cathode/beam_cathode_split_plot.py:15",
+   "scripts/analysis/cathode/cathode_halfmatch_plot.py:18",
+   "run_full1k_nusel_2k.sh:43",
+   "ab_pr89_live.sh:14",
+   "run_ql_batch.sh:30",
+   "ab_pr89r5_swap.sh:11",
+   "run_full1k_nusel.sh:43"
+  ],
+  "work-ncpi0-cb0805": [
+   "scripts/analysis/pr54/oc54_probe.py:47",
+   "scripts/analysis/pr54/oc54_probe.py:47",
+   "scripts/analysis/pr53/plot_21073_vertex_context.py:21",
+   "scripts/analysis/pr53/plot_21073_gap.py:25",
+   "scripts/analysis/pr53/oc53_probe.py:34",
+   "scripts/analysis/pr53/oc53_probe.py:39",
+   "ab_pr89_live.sh:14",
+   "ab_pr89r5_swap.sh:11"
+  ],
+  "work-pr99r2-on3-nuecc48": [
+   "scripts/analysis/pr99/pr99_hadronic_calib.py:30"
+  ],
+  "work-pr99r2-on3-ncpi0": [
+   "scripts/analysis/pr99/pr99_hadronic_calib.py:30"
+  ],
+  "work-pr99r2-on3-mcp1k": [
+   "scripts/analysis/pr99/pr99_hadronic_calib.py:31"
+  ],
+  "work-pr99r2-on3-mcp2k": [
+   "scripts/analysis/pr99/pr99_hadronic_calib.py:31"
+  ],
+  "work-vtx100-base-nuecc48": [
+   "vtx_rules/carry_labels.py:64",
+   "dl_vtx_training/vtx_report.py:42",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:48",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:65",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:66",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:115",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:123",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:129",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:138",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:166"
+  ],
+  "work-vtx100-base-mcp2k": [
+   "vtx_rules/carry_labels.py:66",
+   "dl_vtx_training/vtx_report.py:43",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:2",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:3",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:4",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:5",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:7",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:8",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:10",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:11",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:12",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:13",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:14",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:15",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:16",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:18",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:19",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:20",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:21",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:22",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:24",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:25",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:26",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:28",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:29",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:30",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:31",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:32",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:33",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:34",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:35",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:38",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:39",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:40",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:41",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:42",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:43",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:44",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:49",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:51",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:52",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:53",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:54",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:55",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:56",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:59",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:60",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:62",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:63",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:64",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:69",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:70",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:71",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:72",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:74",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:76",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:81",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:82",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:83",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:84",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:85",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:87",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:88",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:89",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:90",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:91",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:94",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:95",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:97",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:98",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:100",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:101",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:103",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:105",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:107",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:108",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:111",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:112",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:113",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:117",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:118",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:120",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:121",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:122",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:124",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:125",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:127",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:128",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:131",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:132",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:133",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:134",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:135",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:136",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:141",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:142",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:143",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:144",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:146",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:149",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:150",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:151",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:152",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:153",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:154",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:155",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:156",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:159",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:161",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:162",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:163",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:165",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:167",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:169"
+  ],
+  "work-vtx100-base-ncpi0": [
+   "dl_vtx_training/vtx_report.py:42",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:57",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:139",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:145"
+  ],
+  "work-vtx100-base-mcp1k": [
+   "dl_vtx_training/vtx_report.py:43",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:1",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:6",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:9",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:17",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:23",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:27",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:36",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:37",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:45",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:46",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:47",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:50",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:58",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:61",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:67",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:68",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:73",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:75",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:77",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:78",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:79",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:80",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:86",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:92",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:93",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:96",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:99",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:102",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:104",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:106",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:109",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:110",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:114",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:116",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:119",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:126",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:130",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:137",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:140",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:147",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:148",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:157",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:158",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:160",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:164",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:168",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:170",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:171",
+   "dl_vtx_training/runs/vtx100-20260820/delta.txt:172"
+  ]
+ },
+ "per": {
+  "work-d74r1-bare-mc50": {
+   "tot": 170781906,
+   "keep": 18488838,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d74r1-bare-ncpi0": {
+   "tot": 105207551,
+   "keep": 11273555,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d74r1-bare-nuecc48": {
+   "tot": 282420009,
+   "keep": 32051988,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d74r1-flipchk-ncpi0": {
+   "tot": 105217028,
+   "keep": 11283957,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d74r1-off1-mc50": {
+   "tot": 170782560,
+   "keep": 18489088,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d74r1-off1-ncpi0": {
+   "tot": 105206773,
+   "keep": 11273335,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d74r1-off1-nuecc48": {
+   "tot": 282419403,
+   "keep": 32052026,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d74r1-on1-mc50": {
+   "tot": 170806464,
+   "keep": 18514361,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d74r1-on1-ncpi0": {
+   "tot": 105215293,
+   "keep": 11282833,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d74r1-on1-nuecc48": {
+   "tot": 282444458,
+   "keep": 32075502,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d75r1-bare-enriched": {
+   "tot": 131558789,
+   "keep": 12846257,
+   "nk": 185,
+   "nh": 104
+  },
+  "work-d75r1-bare-mc50": {
+   "tot": 170810227,
+   "keep": 18515536,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d75r1-bare-ncpi0": {
+   "tot": 105218025,
+   "keep": 11283453,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d75r1-bare-nuecc48": {
+   "tot": 282446819,
+   "keep": 32077436,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d75r1-flipchk-ncpi0": {
+   "tot": 105234098,
+   "keep": 11301295,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d75r1-off1-enriched": {
+   "tot": 131557923,
+   "keep": 12846097,
+   "nk": 185,
+   "nh": 104
+  },
+  "work-d75r1-off1-mc50": {
+   "tot": 170808397,
+   "keep": 18515115,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d75r1-off1-ncpi0": {
+   "tot": 105216440,
+   "keep": 11282815,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d75r1-off1-nuecc48": {
+   "tot": 282444825,
+   "keep": 32077040,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d75r1-onflag-enriched": {
+   "tot": 131561871,
+   "keep": 12849319,
+   "nk": 185,
+   "nh": 104
+  },
+  "work-d75r1-onflag-mc50": {
+   "tot": 170836412,
+   "keep": 18543683,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d75r1-onflag-ncpi0": {
+   "tot": 105233650,
+   "keep": 11300793,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d75r1-onflag-nuecc48": {
+   "tot": 282474745,
+   "keep": 32107369,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-d75r1-onfv-mc50": {
+   "tot": 170831819,
+   "keep": 18538537,
+   "nk": 353,
+   "nh": 172
+  },
+  "work-d75r1-onfv-ncpi0": {
+   "tot": 105226198,
+   "keep": 11292383,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-d75r1-onfv-nuecc48": {
+   "tot": 282466586,
+   "keep": 32098952,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-img-mcp1k": {
+   "tot": 5690603174,
+   "keep": 306326110,
+   "nk": 2001,
+   "nh": 4000
+  },
+  "work-img-mcp2k": {
+   "tot": 13627377996,
+   "keep": 2921615443,
+   "nk": 4000,
+   "nh": 8000
+  },
+  "work-img-ncpi0": {
+   "tot": 141521544,
+   "keep": 33102457,
+   "nk": 57,
+   "nh": 76
+  },
+  "work-img-nuecc48": {
+   "tot": 364048545,
+   "keep": 84673179,
+   "nk": 144,
+   "nh": 192
+  },
+  "work-img-r1qlmc": {
+   "tot": 69250475,
+   "keep": 15911944,
+   "nk": 28,
+   "nh": 40
+  },
+  "work-img-r2mc": {
+   "tot": 79978271,
+   "keep": 18364843,
+   "nk": 39,
+   "nh": 52
+  },
+  "work-mcp1k-cb0805": {
+   "tot": 3462757485,
+   "keep": 297318501,
+   "nk": 5002,
+   "nh": 6000
+  },
+  "work-mcp1k-prod0819": {
+   "tot": 1827384011,
+   "keep": 110895679,
+   "nk": 6004,
+   "nh": 1847
+  },
+  "work-mcp1k-ql0819": {
+   "tot": 3425332988,
+   "keep": 258725439,
+   "nk": 4001,
+   "nh": 6000
+  },
+  "work-mcp2k-prod0819": {
+   "tot": 3487385305,
+   "keep": 216836144,
+   "nk": 12004,
+   "nh": 3620
+  },
+  "work-mcp2k-ql0819": {
+   "tot": 6753470821,
+   "keep": 517018726,
+   "nk": 8001,
+   "nh": 12000
+  },
+  "work-ncpi0-cb0805": {
+   "tot": 72524440,
+   "keep": 5857155,
+   "nk": 59,
+   "nh": 114
+  },
+  "work-ncpi0-prod0819": {
+   "tot": 100113561,
+   "keep": 5908575,
+   "nk": 118,
+   "nh": 76
+  },
+  "work-ncpi0-ql0819": {
+   "tot": 186857089,
+   "keep": 7644622,
+   "nk": 98,
+   "nh": 171
+  },
+  "work-nuecc48-cb0805": {
+   "tot": 195550938,
+   "keep": 14598088,
+   "nk": 146,
+   "nh": 288
+  },
+  "work-nuecc48-prod0819": {
+   "tot": 269953931,
+   "keep": 19004174,
+   "nk": 292,
+   "nh": 192
+  },
+  "work-nuecc48-prsmoke2": {
+   "tot": 6225,
+   "keep": 6225,
+   "nk": 3,
+   "nh": 0
+  },
+  "work-nuecc48-ql0819": {
+   "tot": 494699758,
+   "keep": 8191597,
+   "nk": 145,
+   "nh": 432
+  },
+  "work-pr101-a-mcp1k": {
+   "tot": 176366243,
+   "keep": 20301496,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-a-mcp2k": {
+   "tot": 63966283,
+   "keep": 6406565,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-a-ncpi0": {
+   "tot": 105195605,
+   "keep": 11261809,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-a-nuecc48": {
+   "tot": 282392328,
+   "keep": 32024976,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-all-mcp1k": {
+   "tot": 176395781,
+   "keep": 20331053,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-all-mcp2k": {
+   "tot": 63975418,
+   "keep": 6416475,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-all-ncpi0": {
+   "tot": 105219014,
+   "keep": 11286545,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-all-nuecc48": {
+   "tot": 282437753,
+   "keep": 32069374,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-all2-mcp1k": {
+   "tot": 176387116,
+   "keep": 20321880,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-all2-mcp2k": {
+   "tot": 63974991,
+   "keep": 6414917,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-all2-ncpi0": {
+   "tot": 105205766,
+   "keep": 11273997,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-all2-nuecc48": {
+   "tot": 282419538,
+   "keep": 32052308,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-all3-mcp1k": {
+   "tot": 176387383,
+   "keep": 20321600,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-all3-mcp2k": {
+   "tot": 63975186,
+   "keep": 6415023,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-all3-ncpi0": {
+   "tot": 105207880,
+   "keep": 11273827,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-all3-nuecc48": {
+   "tot": 282419892,
+   "keep": 32051818,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-b-mcp1k": {
+   "tot": 176343432,
+   "keep": 20278420,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-b-mcp2k": {
+   "tot": 63960084,
+   "keep": 6399526,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-b-ncpi0": {
+   "tot": 105165979,
+   "keep": 11231032,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-b-nuecc48": {
+   "tot": 282370223,
+   "keep": 32002598,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-b2-mcp1k": {
+   "tot": 176343752,
+   "keep": 20278953,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-b2-mcp2k": {
+   "tot": 63959636,
+   "keep": 6400004,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-b2-ncpi0": {
+   "tot": 105165828,
+   "keep": 11231352,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-b2-nuecc48": {
+   "tot": 282372315,
+   "keep": 32003824,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-c-mcp1k": {
+   "tot": 176332519,
+   "keep": 20266516,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-c-mcp2k": {
+   "tot": 63955555,
+   "keep": 6395248,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-c-ncpi0": {
+   "tot": 105161750,
+   "keep": 11226446,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-c-nuecc48": {
+   "tot": 282358223,
+   "keep": 31989966,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-d-mcp1k": {
+   "tot": 176331456,
+   "keep": 20266383,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-d-mcp2k": {
+   "tot": 63955214,
+   "keep": 6395138,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-d-ncpi0": {
+   "tot": 105159270,
+   "keep": 11224142,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-d-nuecc48": {
+   "tot": 282354748,
+   "keep": 31986824,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-flip-mcp1k": {
+   "tot": 9121208,
+   "keep": 927538,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-flip-mcp2k": {
+   "tot": 8326056,
+   "keep": 987756,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-flip-ncpi0": {
+   "tot": 11488468,
+   "keep": 1159460,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-flip-nuecc48": {
+   "tot": 12143850,
+   "keep": 1555443,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-floff-mcp1k": {
+   "tot": 9118804,
+   "keep": 925138,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-floff-mcp2k": {
+   "tot": 8324022,
+   "keep": 985768,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-floff-ncpi0": {
+   "tot": 11482352,
+   "keep": 1153346,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-floff-nuecc48": {
+   "tot": 12140606,
+   "keep": 1552227,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr101-off-mcp1k": {
+   "tot": 176330520,
+   "keep": 20265446,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-off-mcp2k": {
+   "tot": 63954360,
+   "keep": 6394914,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-off-ncpi0": {
+   "tot": 105157768,
+   "keep": 11224150,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-off-nuecc48": {
+   "tot": 282355260,
+   "keep": 31986290,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-off2-mcp1k": {
+   "tot": 176331652,
+   "keep": 20266312,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-off2-mcp2k": {
+   "tot": 63955280,
+   "keep": 6395030,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-off2-ncpi0": {
+   "tot": 105156975,
+   "keep": 11224300,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-off2-nuecc48": {
+   "tot": 282354386,
+   "keep": 31986868,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr101-off3-mcp1k": {
+   "tot": 176331614,
+   "keep": 20266191,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr101-off3-mcp2k": {
+   "tot": 63955557,
+   "keep": 6395242,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr101-off3-ncpi0": {
+   "tot": 105159333,
+   "keep": 11224516,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr101-off3-nuecc48": {
+   "tot": 282353840,
+   "keep": 31986670,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102-head-mcp1k": {
+   "tot": 3483571340,
+   "keep": 386873538,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr102r2-base-mcp1k": {
+   "tot": 177951510,
+   "keep": 21886443,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr102r2-base-mcp2k": {
+   "tot": 64254521,
+   "keep": 6694965,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr102r2-base-ncpi0": {
+   "tot": 107745517,
+   "keep": 13812563,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-base-nuecc48": {
+   "tot": 291591161,
+   "keep": 41224070,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-beq-mcp1k": {
+   "tot": 10665839,
+   "keep": 1228405,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr102r2-beq2-mcp1k": {
+   "tot": 19495209,
+   "keep": 2550623,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr102r2-dbgp1-mcp1k": {
+   "tot": 3964492,
+   "keep": 369238,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr102r2-dbgp2-mcp1k": {
+   "tot": 353237,
+   "keep": 353237,
+   "nk": 7,
+   "nh": 2
+  },
+  "work-pr102r2-dbgp2b-mcp1k": {
+   "tot": 3967007,
+   "keep": 374478,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr102r2-flip-mcp1k": {
+   "tot": 47075785,
+   "keep": 7103238,
+   "nk": 59,
+   "nh": 32
+  },
+  "work-pr102r2-flip-ncpi0": {
+   "tot": 3807504,
+   "keep": 445035,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr102r2-kA-mcp1k": {
+   "tot": 121395569,
+   "keep": 12886434,
+   "nk": 199,
+   "nh": 112
+  },
+  "work-pr102r2-kB-mcp1k": {
+   "tot": 121419914,
+   "keep": 12922022,
+   "nk": 199,
+   "nh": 112
+  },
+  "work-pr102r2-kC-mcp1k": {
+   "tot": 123162208,
+   "keep": 14367274,
+   "nk": 199,
+   "nh": 112
+  },
+  "work-pr102r2-l30-ncpi0": {
+   "tot": 105233946,
+   "keep": 11301910,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-l30full-mcp1k": {
+   "tot": 3486892897,
+   "keep": 389821131,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr102r2-len30-nuecc48": {
+   "tot": 282481661,
+   "keep": 32111024,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-n8l30-nuecc48": {
+   "tot": 282815539,
+   "keep": 32342686,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-nnf4-nuecc48": {
+   "tot": 283358644,
+   "keep": 32626433,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-nnf8-nuecc48": {
+   "tot": 282810195,
+   "keep": 32339892,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-off-mcp1k": {
+   "tot": 177950218,
+   "keep": 21885701,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr102r2-off-mcp2k": {
+   "tot": 64254499,
+   "keep": 6694477,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr102r2-off-ncpi0": {
+   "tot": 107745054,
+   "keep": 13812285,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-off-nuecc48": {
+   "tot": 291590710,
+   "keep": 41223640,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-off2-mcp1k": {
+   "tot": 177951755,
+   "keep": 21886435,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr102r2-off2-mcp2k": {
+   "tot": 64254611,
+   "keep": 6694959,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr102r2-off2-ncpi0": {
+   "tot": 107745499,
+   "keep": 13812519,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-off2-nuecc48": {
+   "tot": 291590789,
+   "keep": 41223922,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-offfull-mcp1k": {
+   "tot": 3473185822,
+   "keep": 383239889,
+   "nk": 6985,
+   "nh": 3451
+  },
+  "work-pr102r2-offfullp-mcp1k": {
+   "tot": 7900436,
+   "keep": 1114095,
+   "nk": 24,
+   "nh": 10
+  },
+  "work-pr102r2-offmerged-mcp1k": {
+   "tot": 0,
+   "keep": 0,
+   "nk": 0,
+   "nh": 0
+  },
+  "work-pr102r2-on-ncpi0": {
+   "tot": 109511837,
+   "keep": 14910321,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-on-nuecc48": {
+   "tot": 303290590,
+   "keep": 50643425,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-on2-ncpi0": {
+   "tot": 109531880,
+   "keep": 14930651,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-on2-nuecc48": {
+   "tot": 303289368,
+   "keep": 50643773,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-onA-mcp1k": {
+   "tot": 61488334,
+   "keep": 9089788,
+   "nk": 87,
+   "nh": 48
+  },
+  "work-pr102r2-onA-mcp2k": {
+   "tot": 9988708,
+   "keep": 992113,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr102r2-onfull-mcp1k": {
+   "tot": 3476916006,
+   "keep": 394258738,
+   "nk": 6999,
+   "nh": 3448
+  },
+  "work-pr102r2-onfull2-mcp1k": {
+   "tot": 2993588156,
+   "keep": 338325162,
+   "nk": 6696,
+   "nh": 2981
+  },
+  "work-pr102r2-onfull2p-mcp1k": {
+   "tot": 595912542,
+   "keep": 63814370,
+   "nk": 1172,
+   "nh": 572
+  },
+  "work-pr102r2-onfullp-mcp1k": {
+   "tot": 16267882,
+   "keep": 3763245,
+   "nk": 30,
+   "nh": 13
+  },
+  "work-pr102r2-onmerged-mcp1k": {
+   "tot": 0,
+   "keep": 0,
+   "nk": 0,
+   "nh": 0
+  },
+  "work-pr102r2-p1-ncpi0": {
+   "tot": 108028781,
+   "keep": 14005984,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr102r2-p1-nuecc48": {
+   "tot": 292855161,
+   "keep": 42123775,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr102r2-p1full-mcp1k": {
+   "tot": 3487569944,
+   "keep": 390275070,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr103-bare-mcp1k": {
+   "tot": 2853553674,
+   "keep": 360937253,
+   "nk": 6799,
+   "nh": 2760
+  },
+  "work-pr103-bare-mcp2k": {
+   "tot": 63991969,
+   "keep": 6431980,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-bare-ncpi0": {
+   "tot": 105234070,
+   "keep": 11301120,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-bare-nuecc48": {
+   "tot": 282475922,
+   "keep": 32108338,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-bare2-mcp1k": {
+   "tot": 680176520,
+   "keep": 75738460,
+   "nk": 1431,
+   "nh": 701
+  },
+  "work-pr103-bare2-mcp2k": {
+   "tot": 63992399,
+   "keep": 6432446,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-bare2-ncpi0": {
+   "tot": 105234047,
+   "keep": 11301944,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-bare2-nuecc48": {
+   "tot": 282476620,
+   "keep": 32109020,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-baremerged-mcp1k": {
+   "tot": 133,
+   "keep": 133,
+   "nk": 1,
+   "nh": 0
+  },
+  "work-pr103-flipchk-mcp1k": {
+   "tot": 60147381,
+   "keep": 6050969,
+   "nk": 101,
+   "nh": 56
+  },
+  "work-pr103-flipchk-mcp2k": {
+   "tot": 63982663,
+   "keep": 6427954,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-flipchk-ncpi0": {
+   "tot": 105246787,
+   "keep": 11310314,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-flipchk-nuecc48": {
+   "tot": 282463431,
+   "keep": 32107004,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-floff-ncpi0": {
+   "tot": 105235603,
+   "keep": 11303291,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-floff-nuecc48": {
+   "tot": 282479851,
+   "keep": 32112156,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-off-mcp1k": {
+   "tot": 3479105385,
+   "keep": 382061361,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr103-off-mcp2k": {
+   "tot": 63989870,
+   "keep": 6431606,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-off-ncpi0": {
+   "tot": 105233701,
+   "keep": 11301068,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-off-nuecc48": {
+   "tot": 282476925,
+   "keep": 32107896,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-off2-ncpi0": {
+   "tot": 105236007,
+   "keep": 11301846,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-off2-nuecc48": {
+   "tot": 282478026,
+   "keep": 32108866,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-off3-ncpi0": {
+   "tot": 105236363,
+   "keep": 11301866,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-off3-nuecc48": {
+   "tot": 282477612,
+   "keep": 32108936,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-on-mcp1k": {
+   "tot": 3479116882,
+   "keep": 382101135,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr103-on-mcp2k": {
+   "tot": 63980507,
+   "keep": 6425930,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-on-ncpi0": {
+   "tot": 105245022,
+   "keep": 11307616,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-on-nuecc48": {
+   "tot": 282445660,
+   "keep": 32096329,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-on2-mcp1k": {
+   "tot": 3479213925,
+   "keep": 382180451,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr103-on2-mcp2k": {
+   "tot": 63980768,
+   "keep": 6427010,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr103-on2-ncpi0": {
+   "tot": 105245547,
+   "keep": 11308930,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr103-on2-nuecc48": {
+   "tot": 282457922,
+   "keep": 32103174,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr103-onA-mcp2k": {
+   "tot": 10650938,
+   "keep": 2899127,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-onB-mcp2k": {
+   "tot": 10651790,
+   "keep": 2899923,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-onC-mcp2k": {
+   "tot": 10652033,
+   "keep": 2900167,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-onD-mcp2k": {
+   "tot": 10572942,
+   "keep": 2824946,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-onE-mcp1k": {
+   "tot": 25562582,
+   "keep": 3627380,
+   "nk": 45,
+   "nh": 24
+  },
+  "work-pr103-onE-mcp2k": {
+   "tot": 10577172,
+   "keep": 2828868,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-tr-mcp1k": {
+   "tot": 10235551,
+   "keep": 2857247,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-tr-mcp2k": {
+   "tot": 10650636,
+   "keep": 2899041,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr103-tr2-mcp1k": {
+   "tot": 32145399,
+   "keep": 10216354,
+   "nk": 45,
+   "nh": 24
+  },
+  "work-pr104-bare-mcp1k": {
+   "tot": 3479255881,
+   "keep": 382207822,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-bare-mcp2k": {
+   "tot": 63982540,
+   "keep": 6427282,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-bare-ncpi0": {
+   "tot": 105247667,
+   "keep": 11309498,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-bare-nuecc48": {
+   "tot": 282457467,
+   "keep": 32103868,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-flipchk-mcp1k": {
+   "tot": 117047033,
+   "keep": 13586552,
+   "nk": 186,
+   "nh": 104
+  },
+  "work-pr104-flipchk-mcp2k": {
+   "tot": 63964816,
+   "keep": 6405818,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-flipchk-ncpi0": {
+   "tot": 105248980,
+   "keep": 11311550,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-flipchk-nuecc48": {
+   "tot": 282470424,
+   "keep": 32092077,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-floff-ncpi0": {
+   "tot": 105246998,
+   "keep": 11309788,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-floff-nuecc48": {
+   "tot": 282459030,
+   "keep": 32105054,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-off-mcp1k": {
+   "tot": 3479216814,
+   "keep": 382178322,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-off-mcp2k": {
+   "tot": 63980748,
+   "keep": 6427064,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-off-ncpi0": {
+   "tot": 105245717,
+   "keep": 11308874,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-off-nuecc48": {
+   "tot": 282457658,
+   "keep": 32102968,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-off2-mcp2k": {
+   "tot": 63982704,
+   "keep": 6427350,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-off2-ncpi0": {
+   "tot": 105247845,
+   "keep": 11309602,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-off2-nuecc48": {
+   "tot": 235467357,
+   "keep": 30206918,
+   "nk": 316,
+   "nh": 178
+  },
+  "work-pr104-off3-mcp1k": {
+   "tot": 3479246408,
+   "keep": 382207282,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-off3-mcp2k": {
+   "tot": 63982620,
+   "keep": 6427428,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-off3-ncpi0": {
+   "tot": 105247477,
+   "keep": 11309296,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-off3-nuecc48": {
+   "tot": 282457712,
+   "keep": 32104516,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-off4-mcp1k": {
+   "tot": 3479250447,
+   "keep": 382206400,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-off4-mcp2k": {
+   "tot": 63982658,
+   "keep": 6427514,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-off4-ncpi0": {
+   "tot": 105247442,
+   "keep": 11309326,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-off4-nuecc48": {
+   "tot": 282458111,
+   "keep": 32104496,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-on-mcp2k": {
+   "tot": 51600955,
+   "keep": 6131680,
+   "nk": 100,
+   "nh": 54
+  },
+  "work-pr104-on3-mcp1k": {
+   "tot": 3479275996,
+   "keep": 382246281,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-on3-mcp2k": {
+   "tot": 63962561,
+   "keep": 6404938,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-on3-ncpi0": {
+   "tot": 105247302,
+   "keep": 11310518,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-on3-nuecc48": {
+   "tot": 282471836,
+   "keep": 32090192,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-on4-mcp1k": {
+   "tot": 3479283206,
+   "keep": 382249170,
+   "nk": 7003,
+   "nh": 3461
+  },
+  "work-pr104-on4-mcp2k": {
+   "tot": 63962532,
+   "keep": 6404920,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr104-on4-ncpi0": {
+   "tot": 105247177,
+   "keep": 11310390,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr104-on4-nuecc48": {
+   "tot": 282466046,
+   "keep": 32089089,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr104-smoke-mcp1k": {
+   "tot": 24294350,
+   "keep": 8605969,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr104-smoke-mcp2k": {
+   "tot": 10577201,
+   "keep": 2829170,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke2-mcp1k": {
+   "tot": 24327177,
+   "keep": 8638633,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr104-smoke2-mcp2k": {
+   "tot": 10400319,
+   "keep": 2648048,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke3-mcp1k": {
+   "tot": 24309259,
+   "keep": 8620447,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr104-smoke3-mcp2k": {
+   "tot": 10400320,
+   "keep": 2648066,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke4-mcp1k": {
+   "tot": 9008943,
+   "keep": 3762211,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke5-mcp1k": {
+   "tot": 24310656,
+   "keep": 8621695,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr104-smoke5-mcp2k": {
+   "tot": 10400344,
+   "keep": 2648076,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke6-mcp1k": {
+   "tot": 14804987,
+   "keep": 4944770,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr104-smoke7-mcp1k": {
+   "tot": 30010585,
+   "keep": 10613113,
+   "nk": 38,
+   "nh": 20
+  },
+  "work-pr104-smoke7-mcp2k": {
+   "tot": 10400313,
+   "keep": 2648044,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr104-smoke7-nuecc48": {
+   "tot": 9710625,
+   "keep": 4558436,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr107-off-ncpi0": {
+   "tot": 105246832,
+   "keep": 11310332,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr107-off-nuecc48": {
+   "tot": 277009552,
+   "keep": 31605653,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-pr107-on-ncpi0": {
+   "tot": 106344909,
+   "keep": 11282511,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr107-on-nuecc48": {
+   "tot": 280091523,
+   "keep": 31954604,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-pr108-assoccheck-nuecc48": {
+   "tot": 12119716,
+   "keep": 2894304,
+   "nk": 24,
+   "nh": 9
+  },
+  "work-pr108-dqdump-off-nuecc48": {
+   "tot": 3889735,
+   "keep": 1116515,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-dqdump-on-nuecc48": {
+   "tot": 3792308,
+   "keep": 1039630,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-dqdump2-off-nuecc48": {
+   "tot": 4321303,
+   "keep": 684970,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-dqdump2-on-nuecc48": {
+   "tot": 4244887,
+   "keep": 617425,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-dqdump3-off-nuecc48": {
+   "tot": 4321250,
+   "keep": 684918,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-dqdump3-on-nuecc48": {
+   "tot": 4244881,
+   "keep": 617405,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr108-off1-nuecc48": {
+   "tot": 3773343,
+   "keep": 777926,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr109-dbgflag-on-nuecc48": {
+   "tot": 5970852,
+   "keep": 957735,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr109-off-nuecc48": {
+   "tot": 27516226,
+   "keep": 5239245,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109-on-nuecc48": {
+   "tot": 27373928,
+   "keep": 5138289,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109-on2-nuecc48": {
+   "tot": 27374368,
+   "keep": 5138273,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109b-off-nuecc48": {
+   "tot": 27709518,
+   "keep": 5239303,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109b-on-nuecc48": {
+   "tot": 27566995,
+   "keep": 5138415,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109c-off-nuecc48": {
+   "tot": 27689671,
+   "keep": 5239239,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109c-on-nuecc48": {
+   "tot": 27546988,
+   "keep": 5138355,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109e-off-nuecc48": {
+   "tot": 27689793,
+   "keep": 5239305,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109e-on-nuecc48": {
+   "tot": 27546955,
+   "keep": 5138359,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109f-dbgtraj-on-nuecc48": {
+   "tot": 3735898,
+   "keep": 954311,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr109f-off-fbcoff-nuecc48": {
+   "tot": 25569375,
+   "keep": 3142126,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109f-on-fbcoff-nuecc48": {
+   "tot": 25584485,
+   "keep": 3160362,
+   "nk": 45,
+   "nh": 18
+  },
+  "work-pr109g-gate-on-nuecc48": {
+   "tot": 3735827,
+   "keep": 954262,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr109h-dbgexcl-on-nuecc48": {
+   "tot": 3735896,
+   "keep": 954313,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr109h-gate-on-nuecc48": {
+   "tot": 3735810,
+   "keep": 954232,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr96-dbg1-mcp2k": {
+   "tot": 9375087,
+   "keep": 405210,
+   "nk": 15,
+   "nh": 8
+  },
+  "work-pr96-dbg2-mcp2k": {
+   "tot": 9375078,
+   "keep": 405264,
+   "nk": 15,
+   "nh": 8
+  },
+  "work-pr96-dbg3-mcp2k": {
+   "tot": 9437148,
+   "keep": 467296,
+   "nk": 15,
+   "nh": 8
+  },
+  "work-pr96-fx1-mcp2k": {
+   "tot": 9404425,
+   "keep": 420369,
+   "nk": 15,
+   "nh": 8
+  },
+  "work-pr96-prodflip-mcp2k": {
+   "tot": 9892920,
+   "keep": 908880,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr96gate-disp": {
+   "tot": 6956393,
+   "keep": 239813,
+   "nk": 21,
+   "nh": 9
+  },
+  "work-pr96gate-mcp2k": {
+   "tot": 34456025,
+   "keep": 1135051,
+   "nk": 75,
+   "nh": 36
+  },
+  "work-pr96gate-nuedisp": {
+   "tot": 19648942,
+   "keep": 1246652,
+   "nk": 21,
+   "nh": 12
+  },
+  "work-pr98-flip-nuecc48": {
+   "tot": 281792424,
+   "keep": 31418885,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr98-floff-nuecc48": {
+   "tot": 203536094,
+   "keep": 31554500,
+   "nk": 339,
+   "nh": 144
+  },
+  "work-pr98-fx-nuecc48": {
+   "tot": 282425755,
+   "keep": 32052733,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr98-fx2-smoke": {
+   "tot": 13621828,
+   "keep": 1553328,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr98-fx3-smoke": {
+   "tot": 11540068,
+   "keep": 1339602,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr98-fx4-nuecc48": {
+   "tot": 282425409,
+   "keep": 32052270,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr98-off-nuecc48": {
+   "tot": 282667142,
+   "keep": 31716717,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr98-off2-nuecc48": {
+   "tot": 203535289,
+   "keep": 31553998,
+   "nk": 339,
+   "nh": 144
+  },
+  "work-pr98-off3-nuecc48": {
+   "tot": 203535420,
+   "keep": 31554096,
+   "nk": 339,
+   "nh": 144
+  },
+  "work-pr99-probe-mcp1k": {
+   "tot": 8520079,
+   "keep": 1000038,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr99-probe-mcp2k": {
+   "tot": 10000663,
+   "keep": 1016720,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr99-probe-ncpi0": {
+   "tot": 7896541,
+   "keep": 927233,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99-t70084": {
+   "tot": 4784117,
+   "keep": 1573303,
+   "nk": 10,
+   "nh": 3
+  },
+  "work-pr99r2-base-mcp1k": {
+   "tot": 176019038,
+   "keep": 19939023,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-base-mcp2k": {
+   "tot": 63900409,
+   "keep": 6321917,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-base-ncpi0": {
+   "tot": 104870890,
+   "keep": 10943448,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-flip-mcp1k": {
+   "tot": 15915899,
+   "keep": 1725744,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr99r2-flip-mcp2k": {
+   "tot": 22479625,
+   "keep": 2115992,
+   "nk": 38,
+   "nh": 20
+  },
+  "work-pr99r2-flip-ncpi0": {
+   "tot": 7648399,
+   "keep": 680320,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-flip-nuecc48": {
+   "tot": 15108700,
+   "keep": 1757351,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr99r2-floff-mcp1k": {
+   "tot": 15927198,
+   "keep": 1723837,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr99r2-floff-mcp2k": {
+   "tot": 22491967,
+   "keep": 2112332,
+   "nk": 38,
+   "nh": 20
+  },
+  "work-pr99r2-floff-ncpi0": {
+   "tot": 7653613,
+   "keep": 684416,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-floff-nuecc48": {
+   "tot": 15112485,
+   "keep": 1765828,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr99r2-off-mcp1k": {
+   "tot": 176018380,
+   "keep": 19938737,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-off-mcp2k": {
+   "tot": 63900154,
+   "keep": 6321823,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-off-ncpi0": {
+   "tot": 104870771,
+   "keep": 10943220,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-off-nuecc48": {
+   "tot": 281791189,
+   "keep": 31420865,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-off2-mcp1k": {
+   "tot": 176019255,
+   "keep": 19938851,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-off2-mcp2k": {
+   "tot": 63900468,
+   "keep": 6321911,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-off2-ncpi0": {
+   "tot": 104870991,
+   "keep": 10943524,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-off2-nuecc48": {
+   "tot": 281793977,
+   "keep": 31420669,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-off3-mcp1k": {
+   "tot": 176018937,
+   "keep": 19938851,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-off3-mcp2k": {
+   "tot": 63900414,
+   "keep": 6321981,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-off3-ncpi0": {
+   "tot": 104871041,
+   "keep": 10943538,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-off3-nuecc48": {
+   "tot": 281795472,
+   "keep": 31421753,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-on-mcp1k": {
+   "tot": 176008102,
+   "keep": 19958917,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-on-mcp2k": {
+   "tot": 63893152,
+   "keep": 6338503,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-on-ncpi0": {
+   "tot": 104896622,
+   "keep": 10949355,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-on-nuecc48": {
+   "tot": 281613844,
+   "keep": 31508663,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-on2-mcp1k": {
+   "tot": 176014073,
+   "keep": 19949982,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-on2-mcp2k": {
+   "tot": 63894499,
+   "keep": 6338463,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-on2-ncpi0": {
+   "tot": 104882700,
+   "keep": 10943477,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-on2-nuecc48": {
+   "tot": 281826033,
+   "keep": 31456531,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-on3-mcp1k": {
+   "tot": 176015896,
+   "keep": 19948286,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r2-on3-mcp2k": {
+   "tot": 63891221,
+   "keep": 6328588,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r2-on3-ncpi0": {
+   "tot": 104882826,
+   "keep": 10943671,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r2-on3-nuecc48": {
+   "tot": 281809293,
+   "keep": 31443737,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-pr99r2-probe285567": {
+   "tot": 11658253,
+   "keep": 4690217,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-smoke-mcp1k": {
+   "tot": 8370876,
+   "keep": 864454,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr99r2-smoke-mcp2k": {
+   "tot": 4249632,
+   "keep": 497314,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-smoke-ncpi0": {
+   "tot": 7648671,
+   "keep": 680647,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-smoke2-mcp2k": {
+   "tot": 4239827,
+   "keep": 500013,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r2-smoket-mcp2k": {
+   "tot": 5283933,
+   "keep": 1531501,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-pr99r3-dduponly-ncpi0": {
+   "tot": 18659725,
+   "keep": 2436012,
+   "nk": 31,
+   "nh": 16
+  },
+  "work-pr99r3-flip-mcp1k": {
+   "tot": 8385395,
+   "keep": 882263,
+   "nk": 17,
+   "nh": 8
+  },
+  "work-pr99r3-flip-ncpi0": {
+   "tot": 15750367,
+   "keep": 1734510,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr99r3-flip-nuecc48": {
+   "tot": 18689787,
+   "keep": 2305836,
+   "nk": 24,
+   "nh": 12
+  },
+  "work-pr99r3-floff-mcp1k": {
+   "tot": 5952647,
+   "keep": 857960,
+   "nk": 17,
+   "nh": 6
+  },
+  "work-pr99r3-floff-ncpi0": {
+   "tot": 11781589,
+   "keep": 1682521,
+   "nk": 24,
+   "nh": 9
+  },
+  "work-pr99r3-floff-nuecc48": {
+   "tot": 13694759,
+   "keep": 2258013,
+   "nk": 24,
+   "nh": 9
+  },
+  "work-pr99r3-off-mcp1k": {
+   "tot": 132552588,
+   "keep": 19828142,
+   "nk": 248,
+   "nh": 105
+  },
+  "work-pr99r3-off-mcp2k": {
+   "tot": 52574922,
+   "keep": 6280318,
+   "nk": 108,
+   "nh": 45
+  },
+  "work-pr99r3-off-ncpi0": {
+   "tot": 74765219,
+   "keep": 10876913,
+   "nk": 136,
+   "nh": 57
+  },
+  "work-pr99r3-off-nuecc48": {
+   "tot": 203103803,
+   "keep": 31279136,
+   "nk": 339,
+   "nh": 144
+  },
+  "work-pr99r3-on-mcp1k": {
+   "tot": 132853149,
+   "keep": 20129502,
+   "nk": 248,
+   "nh": 105
+  },
+  "work-pr99r3-on-mcp2k": {
+   "tot": 52633798,
+   "keep": 6343056,
+   "nk": 108,
+   "nh": 45
+  },
+  "work-pr99r3-on-ncpi0": {
+   "tot": 75025701,
+   "keep": 11142812,
+   "nk": 136,
+   "nh": 57
+  },
+  "work-pr99r3-on-nuecc48": {
+   "tot": 203619439,
+   "keep": 31790363,
+   "nk": 339,
+   "nh": 144
+  },
+  "work-pr99r3-ond-ncpi0": {
+   "tot": 105144284,
+   "keep": 11209521,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r3-ond-nuecc48": {
+   "tot": 271569337,
+   "keep": 31402918,
+   "nk": 334,
+   "nh": 190
+  },
+  "work-pr99r3-onf-mcp1k": {
+   "tot": 176316924,
+   "keep": 20250806,
+   "nk": 248,
+   "nh": 139
+  },
+  "work-pr99r3-onf-mcp2k": {
+   "tot": 63952148,
+   "keep": 6391700,
+   "nk": 108,
+   "nh": 58
+  },
+  "work-pr99r3-onf-ncpi0": {
+   "tot": 105144660,
+   "keep": 11209684,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-pr99r3-onf-nuecc48": {
+   "tot": 282325433,
+   "keep": 31956470,
+   "nk": 339,
+   "nh": 192
+  },
+  "work-probe178410a": {
+   "tot": 6833457,
+   "keep": 297986,
+   "nk": 4,
+   "nh": 6
+  },
+  "work-r1qlmc-cb0805": {
+   "tot": 31316716,
+   "keep": 2617205,
+   "nk": 30,
+   "nh": 60
+  },
+  "work-r1qlmc-prod0813": {
+   "tot": 14806383,
+   "keep": 916405,
+   "nk": 63,
+   "nh": 16
+  },
+  "work-r1qlmc-vfcbr3on": {
+   "tot": 82665643,
+   "keep": 3603391,
+   "nk": 50,
+   "nh": 90
+  },
+  "work-r2mc-cb0805": {
+   "tot": 36496608,
+   "keep": 3572692,
+   "nk": 41,
+   "nh": 78
+  },
+  "work-r2mc-prod0813": {
+   "tot": 14710997,
+   "keep": 1244195,
+   "nk": 81,
+   "nh": 20
+  },
+  "work-r2mc-vfcbr3on": {
+   "tot": 94695813,
+   "keep": 4488722,
+   "nk": 67,
+   "nh": 117
+  },
+  "work-scan-prodflip-mcp1k": {
+   "tot": 35914304,
+   "keep": 3486208,
+   "nk": 45,
+   "nh": 24
+  },
+  "work-scan-prodflip-mcp2k": {
+   "tot": 8425684,
+   "keep": 673899,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-scan-prodflip-ncpi0": {
+   "tot": 7653464,
+   "keep": 684311,
+   "nk": 10,
+   "nh": 4
+  },
+  "work-stmcamp-d66new": {
+   "tot": 79368,
+   "keep": 79368,
+   "nk": 22,
+   "nh": 0
+  },
+  "work-tfix388-r9": {
+   "tot": 6459232,
+   "keep": 124283,
+   "nk": 9,
+   "nh": 4
+  },
+  "work-vfr1qlmc-cbr3on": {
+   "tot": 12028785,
+   "keep": 469410,
+   "nk": 28,
+   "nh": 12
+  },
+  "work-vfr2mc-cbr3on": {
+   "tot": 12392687,
+   "keep": 727632,
+   "nk": 40,
+   "nh": 18
+  },
+  "work-vtx100-base-mcp1k": {
+   "tot": 1703252670,
+   "keep": 170186660,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx100-base-mcp2k": {
+   "tot": 2393029758,
+   "keep": 247683531,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx100-base-ncpi0": {
+   "tot": 104882006,
+   "keep": 10943395,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx100-base-nuecc48": {
+   "tot": 276363161,
+   "keep": 30970310,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx100-topo-mcp1k": {
+   "tot": 1703308409,
+   "keep": 169914671,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx100-topo-mcp2k": {
+   "tot": 2393580180,
+   "keep": 247696833,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx100-topo-ncpi0": {
+   "tot": 104943477,
+   "keep": 10943927,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx100-topo-nuecc48": {
+   "tot": 276489357,
+   "keep": 30971995,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-base-mcp1k": {
+   "tot": 1708771389,
+   "keep": 175389156,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-base-mcp2k": {
+   "tot": 2398626002,
+   "keep": 253295254,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-base-ncpi0": {
+   "tot": 105248051,
+   "keep": 11311040,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-base-nuecc48": {
+   "tot": 277009992,
+   "keep": 31607605,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-dlonly-mcp1k": {
+   "tot": 1707785175,
+   "keep": 174883379,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-dlonly-mcp2k": {
+   "tot": 2397031049,
+   "keep": 252354044,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-dlonly-ncpi0": {
+   "tot": 105187137,
+   "keep": 11272438,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-dlonly-nuecc48": {
+   "tot": 276888874,
+   "keep": 31569552,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-ma4-mcp1k": {
+   "tot": 1708373924,
+   "keep": 175064600,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-ma4-mcp2k": {
+   "tot": 2398569711,
+   "keep": 253236237,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-ma4-ncpi0": {
+   "tot": 105234487,
+   "keep": 11274068,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-ma4-nuecc48": {
+   "tot": 276965647,
+   "keep": 31585665,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-nofitx-mcp1k": {
+   "tot": 1708490155,
+   "keep": 175265979,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-nofitx-mcp2k": {
+   "tot": 2398957814,
+   "keep": 253576044,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-nofitx-ncpi0": {
+   "tot": 105518561,
+   "keep": 11300543,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-nofitx-nuecc48": {
+   "tot": 277924814,
+   "keep": 31945732,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-pre103-mcp1k": {
+   "tot": 1708761775,
+   "keep": 175366332,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-pre103-mcp2k": {
+   "tot": 2398595945,
+   "keep": 253238194,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-pre103-ncpi0": {
+   "tot": 105236795,
+   "keep": 11304060,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-pre103-nuecc48": {
+   "tot": 277029452,
+   "keep": 31631694,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-topk10-mcp1k": {
+   "tot": 1709221046,
+   "keep": 175401978,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-topk10-mcp2k": {
+   "tot": 2399245113,
+   "keep": 253316499,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-topk10-ncpi0": {
+   "tot": 105274092,
+   "keep": 11311761,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-topk10-nuecc48": {
+   "tot": 277063753,
+   "keep": 31609768,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-topo3-mcp1k": {
+   "tot": 1708829782,
+   "keep": 175120273,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-topo3-mcp2k": {
+   "tot": 2399213316,
+   "keep": 253330433,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-topo3-ncpi0": {
+   "tot": 105301079,
+   "keep": 11307446,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-topo3-nuecc48": {
+   "tot": 277136246,
+   "keep": 31609500,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx105-trad-mcp1k": {
+   "tot": 1708541241,
+   "keep": 175660100,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx105-trad-mcp2k": {
+   "tot": 2397619546,
+   "keep": 253046236,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx105-trad-ncpi0": {
+   "tot": 105287869,
+   "keep": 11352486,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx105-trad-nuecc48": {
+   "tot": 277294942,
+   "keep": 31866615,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-cne-off-ncpi0": {
+   "tot": 105250276,
+   "keep": 11312146,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-cne-off-nuecc48": {
+   "tot": 277013162,
+   "keep": 31609559,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-cne-on-ncpi0": {
+   "tot": 106439429,
+   "keep": 11352879,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-cne-on-nuecc48": {
+   "tot": 280140916,
+   "keep": 31947356,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-harv-base-mcp1k": {
+   "tot": 1719285735,
+   "keep": 175503531,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx106-harv-base-mcp2k": {
+   "tot": 2415631548,
+   "keep": 253463842,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx106-harv-base-ncpi0": {
+   "tot": 106385392,
+   "keep": 11316740,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-harv-base-nuecc48": {
+   "tot": 279823486,
+   "keep": 31621151,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-harv-nofitx-mcp1k": {
+   "tot": 1719000420,
+   "keep": 175382388,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx106-harv-nofitx-mcp2k": {
+   "tot": 2415976759,
+   "keep": 253743690,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx106-harv-nofitx-ncpi0": {
+   "tot": 106682182,
+   "keep": 11306155,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-harv-nofitx-nuecc48": {
+   "tot": 280825159,
+   "keep": 31959452,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-harv-topo3-mcp1k": {
+   "tot": 1719352604,
+   "keep": 175241708,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx106-harv-topo3-mcp2k": {
+   "tot": 2416216131,
+   "keep": 253503511,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx106-harv-topo3-ncpi0": {
+   "tot": 106439152,
+   "keep": 11313242,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-harv-topo3-nuecc48": {
+   "tot": 279950036,
+   "keep": 31623958,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-ma20-mcp1k": {
+   "tot": 1708789440,
+   "keep": 175408533,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx106-ma20-mcp2k": {
+   "tot": 2398648649,
+   "keep": 253309163,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx106-ma20-ncpi0": {
+   "tot": 105266603,
+   "keep": 11320124,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-ma20-nuecc48": {
+   "tot": 276994724,
+   "keep": 31598506,
+   "nk": 332,
+   "nh": 188
+  },
+  "work-vtx106-nofitx-trad-mcp1k": {
+   "tot": 1708631770,
+   "keep": 175945007,
+   "nk": 2852,
+   "nh": 1627
+  },
+  "work-vtx106-nofitx-trad-mcp2k": {
+   "tot": 2397867087,
+   "keep": 253136781,
+   "nk": 4070,
+   "nh": 2322
+  },
+  "work-vtx106-nofitx-trad-ncpi0": {
+   "tot": 105623422,
+   "keep": 11414748,
+   "nk": 136,
+   "nh": 76
+  },
+  "work-vtx106-nofitx-trad-nuecc48": {
+   "tot": 277859620,
+   "keep": 31947748,
+   "nk": 332,
+   "nh": 188
+  }
+ },
+ "cites": {},
+ "group": {
+  "work-d74r1-bare-mc50": "other",
+  "work-d74r1-bare-ncpi0": "other",
+  "work-d74r1-bare-nuecc48": "other",
+  "work-d74r1-flipchk-ncpi0": "other",
+  "work-d74r1-off1-mc50": "other",
+  "work-d74r1-off1-ncpi0": "other",
+  "work-d74r1-off1-nuecc48": "other",
+  "work-d74r1-on1-mc50": "other",
+  "work-d74r1-on1-ncpi0": "other",
+  "work-d74r1-on1-nuecc48": "other",
+  "work-d75r1-bare-enriched": "other",
+  "work-d75r1-bare-mc50": "other",
+  "work-d75r1-bare-ncpi0": "other",
+  "work-d75r1-bare-nuecc48": "other",
+  "work-d75r1-flipchk-ncpi0": "other",
+  "work-d75r1-off1-enriched": "other",
+  "work-d75r1-off1-mc50": "other",
+  "work-d75r1-off1-ncpi0": "other",
+  "work-d75r1-off1-nuecc48": "other",
+  "work-d75r1-onflag-enriched": "other",
+  "work-d75r1-onflag-mc50": "other",
+  "work-d75r1-onflag-ncpi0": "other",
+  "work-d75r1-onflag-nuecc48": "other",
+  "work-d75r1-onfv-mc50": "other",
+  "work-d75r1-onfv-ncpi0": "other",
+  "work-d75r1-onfv-nuecc48": "other",
+  "work-img-mcp1k": "imaging-hubs",
+  "work-img-mcp2k": "imaging-hubs",
+  "work-img-ncpi0": "imaging-hubs",
+  "work-img-nuecc48": "imaging-hubs",
+  "work-img-r1qlmc": "imaging-hubs",
+  "work-img-r2mc": "imaging-hubs",
+  "work-mcp1k-cb0805": "ql-hubs",
+  "work-mcp1k-prod0819": "prod0819-baseline",
+  "work-mcp1k-ql0819": "prod0819-baseline",
+  "work-mcp2k-prod0819": "prod0819-baseline",
+  "work-mcp2k-ql0819": "prod0819-baseline",
+  "work-ncpi0-cb0805": "ql-hubs",
+  "work-ncpi0-prod0819": "prod0819-baseline",
+  "work-ncpi0-ql0819": "prod0819-baseline",
+  "work-nuecc48-cb0805": "ql-hubs",
+  "work-nuecc48-prod0819": "prod0819-baseline",
+  "work-nuecc48-prsmoke2": "nuecc48-arms",
+  "work-nuecc48-ql0819": "prod0819-baseline",
+  "work-pr101-a-mcp1k": "pr101-family",
+  "work-pr101-a-mcp2k": "pr101-family",
+  "work-pr101-a-ncpi0": "pr101-family",
+  "work-pr101-a-nuecc48": "pr101-family",
+  "work-pr101-all-mcp1k": "pr101-family",
+  "work-pr101-all-mcp2k": "pr101-family",
+  "work-pr101-all-ncpi0": "pr101-family",
+  "work-pr101-all-nuecc48": "pr101-family",
+  "work-pr101-all2-mcp1k": "pr101-family",
+  "work-pr101-all2-mcp2k": "pr101-family",
+  "work-pr101-all2-ncpi0": "pr101-family",
+  "work-pr101-all2-nuecc48": "pr101-family",
+  "work-pr101-all3-mcp1k": "pr101-family",
+  "work-pr101-all3-mcp2k": "pr101-family",
+  "work-pr101-all3-ncpi0": "pr101-family",
+  "work-pr101-all3-nuecc48": "pr101-family",
+  "work-pr101-b-mcp1k": "pr101-family",
+  "work-pr101-b-mcp2k": "pr101-family",
+  "work-pr101-b-ncpi0": "pr101-family",
+  "work-pr101-b-nuecc48": "pr101-family",
+  "work-pr101-b2-mcp1k": "pr101-family",
+  "work-pr101-b2-mcp2k": "pr101-family",
+  "work-pr101-b2-ncpi0": "pr101-family",
+  "work-pr101-b2-nuecc48": "pr101-family",
+  "work-pr101-c-mcp1k": "pr101-family",
+  "work-pr101-c-mcp2k": "pr101-family",
+  "work-pr101-c-ncpi0": "pr101-family",
+  "work-pr101-c-nuecc48": "pr101-family",
+  "work-pr101-d-mcp1k": "pr101-family",
+  "work-pr101-d-mcp2k": "pr101-family",
+  "work-pr101-d-ncpi0": "pr101-family",
+  "work-pr101-d-nuecc48": "pr101-family",
+  "work-pr101-flip-mcp1k": "pr101-family",
+  "work-pr101-flip-mcp2k": "pr101-family",
+  "work-pr101-flip-ncpi0": "pr101-family",
+  "work-pr101-flip-nuecc48": "pr101-family",
+  "work-pr101-floff-mcp1k": "pr101-family",
+  "work-pr101-floff-mcp2k": "pr101-family",
+  "work-pr101-floff-ncpi0": "pr101-family",
+  "work-pr101-floff-nuecc48": "pr101-family",
+  "work-pr101-off-mcp1k": "pr101-family",
+  "work-pr101-off-mcp2k": "pr101-family",
+  "work-pr101-off-ncpi0": "pr101-family",
+  "work-pr101-off-nuecc48": "pr101-family",
+  "work-pr101-off2-mcp1k": "pr101-family",
+  "work-pr101-off2-mcp2k": "pr101-family",
+  "work-pr101-off2-ncpi0": "pr101-family",
+  "work-pr101-off2-nuecc48": "pr101-family",
+  "work-pr101-off3-mcp1k": "pr101-family",
+  "work-pr101-off3-mcp2k": "pr101-family",
+  "work-pr101-off3-ncpi0": "pr101-family",
+  "work-pr101-off3-nuecc48": "pr101-family",
+  "work-pr102-head-mcp1k": "pr102-family",
+  "work-pr102r2-base-mcp1k": "pr102-family",
+  "work-pr102r2-base-mcp2k": "pr102-family",
+  "work-pr102r2-base-ncpi0": "pr102-family",
+  "work-pr102r2-base-nuecc48": "pr102-family",
+  "work-pr102r2-beq-mcp1k": "pr102-family",
+  "work-pr102r2-beq2-mcp1k": "pr102-family",
+  "work-pr102r2-dbgp1-mcp1k": "pr102-family",
+  "work-pr102r2-dbgp2-mcp1k": "pr102-family",
+  "work-pr102r2-dbgp2b-mcp1k": "pr102-family",
+  "work-pr102r2-flip-mcp1k": "pr102-family",
+  "work-pr102r2-flip-ncpi0": "pr102-family",
+  "work-pr102r2-kA-mcp1k": "pr102-family",
+  "work-pr102r2-kB-mcp1k": "pr102-family",
+  "work-pr102r2-kC-mcp1k": "pr102-family",
+  "work-pr102r2-l30-ncpi0": "pr102-family",
+  "work-pr102r2-l30full-mcp1k": "pr102-family",
+  "work-pr102r2-len30-nuecc48": "pr102-family",
+  "work-pr102r2-n8l30-nuecc48": "pr102-family",
+  "work-pr102r2-nnf4-nuecc48": "pr102-family",
+  "work-pr102r2-nnf8-nuecc48": "pr102-family",
+  "work-pr102r2-off-mcp1k": "pr102-family",
+  "work-pr102r2-off-mcp2k": "pr102-family",
+  "work-pr102r2-off-ncpi0": "pr102-family",
+  "work-pr102r2-off-nuecc48": "pr102-family",
+  "work-pr102r2-off2-mcp1k": "pr102-family",
+  "work-pr102r2-off2-mcp2k": "pr102-family",
+  "work-pr102r2-off2-ncpi0": "pr102-family",
+  "work-pr102r2-off2-nuecc48": "pr102-family",
+  "work-pr102r2-offfull-mcp1k": "pr102-family",
+  "work-pr102r2-offfullp-mcp1k": "pr102-family",
+  "work-pr102r2-offmerged-mcp1k": "pr102-family",
+  "work-pr102r2-on-ncpi0": "pr102-family",
+  "work-pr102r2-on-nuecc48": "pr102-family",
+  "work-pr102r2-on2-ncpi0": "pr102-family",
+  "work-pr102r2-on2-nuecc48": "pr102-family",
+  "work-pr102r2-onA-mcp1k": "pr102-family",
+  "work-pr102r2-onA-mcp2k": "pr102-family",
+  "work-pr102r2-onfull-mcp1k": "pr102-family",
+  "work-pr102r2-onfull2-mcp1k": "pr102-family",
+  "work-pr102r2-onfull2p-mcp1k": "pr102-family",
+  "work-pr102r2-onfullp-mcp1k": "pr102-family",
+  "work-pr102r2-onmerged-mcp1k": "pr102-family",
+  "work-pr102r2-p1-ncpi0": "pr102-family",
+  "work-pr102r2-p1-nuecc48": "pr102-family",
+  "work-pr102r2-p1full-mcp1k": "pr102-family",
+  "work-pr103-bare-mcp1k": "pr103-family",
+  "work-pr103-bare-mcp2k": "pr103-family",
+  "work-pr103-bare-ncpi0": "pr103-family",
+  "work-pr103-bare-nuecc48": "pr103-family",
+  "work-pr103-bare2-mcp1k": "pr103-family",
+  "work-pr103-bare2-mcp2k": "pr103-family",
+  "work-pr103-bare2-ncpi0": "pr103-family",
+  "work-pr103-bare2-nuecc48": "pr103-family",
+  "work-pr103-baremerged-mcp1k": "pr103-family",
+  "work-pr103-flipchk-mcp1k": "pr103-family",
+  "work-pr103-flipchk-mcp2k": "pr103-family",
+  "work-pr103-flipchk-ncpi0": "pr103-family",
+  "work-pr103-flipchk-nuecc48": "pr103-family",
+  "work-pr103-floff-ncpi0": "pr103-family",
+  "work-pr103-floff-nuecc48": "pr103-family",
+  "work-pr103-off-mcp1k": "pr103-family",
+  "work-pr103-off-mcp2k": "pr103-family",
+  "work-pr103-off-ncpi0": "pr103-family",
+  "work-pr103-off-nuecc48": "pr103-family",
+  "work-pr103-off2-ncpi0": "pr103-family",
+  "work-pr103-off2-nuecc48": "pr103-family",
+  "work-pr103-off3-ncpi0": "pr103-family",
+  "work-pr103-off3-nuecc48": "pr103-family",
+  "work-pr103-on-mcp1k": "pr103-family",
+  "work-pr103-on-mcp2k": "pr103-family",
+  "work-pr103-on-ncpi0": "pr103-family",
+  "work-pr103-on-nuecc48": "pr103-family",
+  "work-pr103-on2-mcp1k": "pr103-family",
+  "work-pr103-on2-mcp2k": "pr103-family",
+  "work-pr103-on2-ncpi0": "pr103-family",
+  "work-pr103-on2-nuecc48": "pr103-family",
+  "work-pr103-onA-mcp2k": "pr103-family",
+  "work-pr103-onB-mcp2k": "pr103-family",
+  "work-pr103-onC-mcp2k": "pr103-family",
+  "work-pr103-onD-mcp2k": "pr103-family",
+  "work-pr103-onE-mcp1k": "pr103-family",
+  "work-pr103-onE-mcp2k": "pr103-family",
+  "work-pr103-tr-mcp1k": "pr103-family",
+  "work-pr103-tr-mcp2k": "pr103-family",
+  "work-pr103-tr2-mcp1k": "pr103-family",
+  "work-pr104-bare-mcp1k": "pr104-family",
+  "work-pr104-bare-mcp2k": "pr104-family",
+  "work-pr104-bare-ncpi0": "pr104-family",
+  "work-pr104-bare-nuecc48": "pr104-family",
+  "work-pr104-flipchk-mcp1k": "pr104-family",
+  "work-pr104-flipchk-mcp2k": "pr104-family",
+  "work-pr104-flipchk-ncpi0": "pr104-family",
+  "work-pr104-flipchk-nuecc48": "pr104-family",
+  "work-pr104-floff-ncpi0": "pr104-family",
+  "work-pr104-floff-nuecc48": "pr104-family",
+  "work-pr104-off-mcp1k": "pr104-family",
+  "work-pr104-off-mcp2k": "pr104-family",
+  "work-pr104-off-ncpi0": "pr104-family",
+  "work-pr104-off-nuecc48": "pr104-family",
+  "work-pr104-off2-mcp2k": "pr104-family",
+  "work-pr104-off2-ncpi0": "pr104-family",
+  "work-pr104-off2-nuecc48": "pr104-family",
+  "work-pr104-off3-mcp1k": "pr104-family",
+  "work-pr104-off3-mcp2k": "pr104-family",
+  "work-pr104-off3-ncpi0": "pr104-family",
+  "work-pr104-off3-nuecc48": "pr104-family",
+  "work-pr104-off4-mcp1k": "pr104-family",
+  "work-pr104-off4-mcp2k": "pr104-family",
+  "work-pr104-off4-ncpi0": "pr104-family",
+  "work-pr104-off4-nuecc48": "pr104-family",
+  "work-pr104-on-mcp2k": "pr104-family",
+  "work-pr104-on3-mcp1k": "pr104-family",
+  "work-pr104-on3-mcp2k": "pr104-family",
+  "work-pr104-on3-ncpi0": "pr104-family",
+  "work-pr104-on3-nuecc48": "pr104-family",
+  "work-pr104-on4-mcp1k": "pr104-family",
+  "work-pr104-on4-mcp2k": "pr104-family",
+  "work-pr104-on4-ncpi0": "pr104-family",
+  "work-pr104-on4-nuecc48": "pr104-family",
+  "work-pr104-smoke-mcp1k": "pr104-family",
+  "work-pr104-smoke-mcp2k": "pr104-family",
+  "work-pr104-smoke2-mcp1k": "pr104-family",
+  "work-pr104-smoke2-mcp2k": "pr104-family",
+  "work-pr104-smoke3-mcp1k": "pr104-family",
+  "work-pr104-smoke3-mcp2k": "pr104-family",
+  "work-pr104-smoke4-mcp1k": "pr104-family",
+  "work-pr104-smoke5-mcp1k": "pr104-family",
+  "work-pr104-smoke5-mcp2k": "pr104-family",
+  "work-pr104-smoke6-mcp1k": "pr104-family",
+  "work-pr104-smoke7-mcp1k": "pr104-family",
+  "work-pr104-smoke7-mcp2k": "pr104-family",
+  "work-pr104-smoke7-nuecc48": "pr104-family",
+  "work-pr107-off-ncpi0": "pr107-family",
+  "work-pr107-off-nuecc48": "pr107-family",
+  "work-pr107-on-ncpi0": "pr107-family",
+  "work-pr107-on-nuecc48": "pr107-family",
+  "work-pr108-assoccheck-nuecc48": "pr108-family",
+  "work-pr108-dqdump-off-nuecc48": "pr108-family",
+  "work-pr108-dqdump-on-nuecc48": "pr108-family",
+  "work-pr108-dqdump2-off-nuecc48": "pr108-family",
+  "work-pr108-dqdump2-on-nuecc48": "pr108-family",
+  "work-pr108-dqdump3-off-nuecc48": "pr108-family",
+  "work-pr108-dqdump3-on-nuecc48": "pr108-family",
+  "work-pr108-off1-nuecc48": "pr108-family",
+  "work-pr109-dbgflag-on-nuecc48": "pr109-family",
+  "work-pr109-off-nuecc48": "pr109-family",
+  "work-pr109-on-nuecc48": "pr109-family",
+  "work-pr109-on2-nuecc48": "pr109-family",
+  "work-pr109b-off-nuecc48": "pr109-family",
+  "work-pr109b-on-nuecc48": "pr109-family",
+  "work-pr109c-off-nuecc48": "pr109-family",
+  "work-pr109c-on-nuecc48": "pr109-family",
+  "work-pr109e-off-nuecc48": "pr109-family",
+  "work-pr109e-on-nuecc48": "pr109-family",
+  "work-pr109f-dbgtraj-on-nuecc48": "pr109-family",
+  "work-pr109f-off-fbcoff-nuecc48": "pr109-family",
+  "work-pr109f-on-fbcoff-nuecc48": "pr109-family",
+  "work-pr109g-gate-on-nuecc48": "pr109-family",
+  "work-pr109h-dbgexcl-on-nuecc48": "pr109-family",
+  "work-pr109h-gate-on-nuecc48": "pr109-family",
+  "work-pr96-dbg1-mcp2k": "pr96-family",
+  "work-pr96-dbg2-mcp2k": "pr96-family",
+  "work-pr96-dbg3-mcp2k": "pr96-family",
+  "work-pr96-fx1-mcp2k": "pr96-family",
+  "work-pr96-prodflip-mcp2k": "pr96-family",
+  "work-pr96gate-disp": "pr96-family",
+  "work-pr96gate-mcp2k": "pr96-family",
+  "work-pr96gate-nuedisp": "pr96-family",
+  "work-pr98-flip-nuecc48": "pr98-family",
+  "work-pr98-floff-nuecc48": "pr98-family",
+  "work-pr98-fx-nuecc48": "pr98-family",
+  "work-pr98-fx2-smoke": "pr98-family",
+  "work-pr98-fx3-smoke": "pr98-family",
+  "work-pr98-fx4-nuecc48": "pr98-family",
+  "work-pr98-off-nuecc48": "pr98-family",
+  "work-pr98-off2-nuecc48": "pr98-family",
+  "work-pr98-off3-nuecc48": "pr98-family",
+  "work-pr99-probe-mcp1k": "pr99-family",
+  "work-pr99-probe-mcp2k": "pr99-family",
+  "work-pr99-probe-ncpi0": "pr99-family",
+  "work-pr99-t70084": "pr99-family",
+  "work-pr99r2-base-mcp1k": "pr99-family",
+  "work-pr99r2-base-mcp2k": "pr99-family",
+  "work-pr99r2-base-ncpi0": "pr99-family",
+  "work-pr99r2-flip-mcp1k": "pr99-family",
+  "work-pr99r2-flip-mcp2k": "pr99-family",
+  "work-pr99r2-flip-ncpi0": "pr99-family",
+  "work-pr99r2-flip-nuecc48": "pr99-family",
+  "work-pr99r2-floff-mcp1k": "pr99-family",
+  "work-pr99r2-floff-mcp2k": "pr99-family",
+  "work-pr99r2-floff-ncpi0": "pr99-family",
+  "work-pr99r2-floff-nuecc48": "pr99-family",
+  "work-pr99r2-off-mcp1k": "pr99-family",
+  "work-pr99r2-off-mcp2k": "pr99-family",
+  "work-pr99r2-off-ncpi0": "pr99-family",
+  "work-pr99r2-off-nuecc48": "pr99-family",
+  "work-pr99r2-off2-mcp1k": "pr99-family",
+  "work-pr99r2-off2-mcp2k": "pr99-family",
+  "work-pr99r2-off2-ncpi0": "pr99-family",
+  "work-pr99r2-off2-nuecc48": "pr99-family",
+  "work-pr99r2-off3-mcp1k": "pr99-family",
+  "work-pr99r2-off3-mcp2k": "pr99-family",
+  "work-pr99r2-off3-ncpi0": "pr99-family",
+  "work-pr99r2-off3-nuecc48": "pr99-family",
+  "work-pr99r2-on-mcp1k": "pr99-family",
+  "work-pr99r2-on-mcp2k": "pr99-family",
+  "work-pr99r2-on-ncpi0": "pr99-family",
+  "work-pr99r2-on-nuecc48": "pr99-family",
+  "work-pr99r2-on2-mcp1k": "pr99-family",
+  "work-pr99r2-on2-mcp2k": "pr99-family",
+  "work-pr99r2-on2-ncpi0": "pr99-family",
+  "work-pr99r2-on2-nuecc48": "pr99-family",
+  "work-pr99r2-on3-mcp1k": "pr99-family",
+  "work-pr99r2-on3-mcp2k": "pr99-family",
+  "work-pr99r2-on3-ncpi0": "pr99-family",
+  "work-pr99r2-on3-nuecc48": "pr99-family",
+  "work-pr99r2-probe285567": "pr99-family",
+  "work-pr99r2-smoke-mcp1k": "pr99-family",
+  "work-pr99r2-smoke-mcp2k": "pr99-family",
+  "work-pr99r2-smoke-ncpi0": "pr99-family",
+  "work-pr99r2-smoke2-mcp2k": "pr99-family",
+  "work-pr99r2-smoket-mcp2k": "pr99-family",
+  "work-pr99r3-dduponly-ncpi0": "pr99-family",
+  "work-pr99r3-flip-mcp1k": "pr99-family",
+  "work-pr99r3-flip-ncpi0": "pr99-family",
+  "work-pr99r3-flip-nuecc48": "pr99-family",
+  "work-pr99r3-floff-mcp1k": "pr99-family",
+  "work-pr99r3-floff-ncpi0": "pr99-family",
+  "work-pr99r3-floff-nuecc48": "pr99-family",
+  "work-pr99r3-off-mcp1k": "pr99-family",
+  "work-pr99r3-off-mcp2k": "pr99-family",
+  "work-pr99r3-off-ncpi0": "pr99-family",
+  "work-pr99r3-off-nuecc48": "pr99-family",
+  "work-pr99r3-on-mcp1k": "pr99-family",
+  "work-pr99r3-on-mcp2k": "pr99-family",
+  "work-pr99r3-on-ncpi0": "pr99-family",
+  "work-pr99r3-on-nuecc48": "pr99-family",
+  "work-pr99r3-ond-ncpi0": "pr99-family",
+  "work-pr99r3-ond-nuecc48": "pr99-family",
+  "work-pr99r3-onf-mcp1k": "pr99-family",
+  "work-pr99r3-onf-mcp2k": "pr99-family",
+  "work-pr99r3-onf-ncpi0": "pr99-family",
+  "work-pr99r3-onf-nuecc48": "pr99-family",
+  "work-probe178410a": "probe-arms",
+  "work-r1qlmc-cb0805": "ql-hubs",
+  "work-r1qlmc-prod0813": "prod0813-arms",
+  "work-r1qlmc-vfcbr3on": "vfcbr3-nusel-roots",
+  "work-r2mc-cb0805": "ql-hubs",
+  "work-r2mc-prod0813": "prod0813-arms",
+  "work-r2mc-vfcbr3on": "vfcbr3-nusel-roots",
+  "work-scan-prodflip-mcp1k": "scan-prodflip-arms",
+  "work-scan-prodflip-mcp2k": "scan-prodflip-arms",
+  "work-scan-prodflip-ncpi0": "scan-prodflip-arms",
+  "work-stmcamp-d66new": "other",
+  "work-tfix388-r9": "other",
+  "work-vfr1qlmc-cbr3on": "valfast-transient",
+  "work-vfr2mc-cbr3on": "valfast-transient",
+  "work-vtx100-base-mcp1k": "vtx100-family",
+  "work-vtx100-base-mcp2k": "vtx100-family",
+  "work-vtx100-base-ncpi0": "vtx100-family",
+  "work-vtx100-base-nuecc48": "vtx100-family",
+  "work-vtx100-topo-mcp1k": "vtx100-family",
+  "work-vtx100-topo-mcp2k": "vtx100-family",
+  "work-vtx100-topo-ncpi0": "vtx100-family",
+  "work-vtx100-topo-nuecc48": "vtx100-family",
+  "work-vtx105-base-mcp1k": "vtx105-family",
+  "work-vtx105-base-mcp2k": "vtx105-family",
+  "work-vtx105-base-ncpi0": "vtx105-family",
+  "work-vtx105-base-nuecc48": "vtx105-family",
+  "work-vtx105-dlonly-mcp1k": "vtx105-family",
+  "work-vtx105-dlonly-mcp2k": "vtx105-family",
+  "work-vtx105-dlonly-ncpi0": "vtx105-family",
+  "work-vtx105-dlonly-nuecc48": "vtx105-family",
+  "work-vtx105-ma4-mcp1k": "vtx105-family",
+  "work-vtx105-ma4-mcp2k": "vtx105-family",
+  "work-vtx105-ma4-ncpi0": "vtx105-family",
+  "work-vtx105-ma4-nuecc48": "vtx105-family",
+  "work-vtx105-nofitx-mcp1k": "vtx105-family",
+  "work-vtx105-nofitx-mcp2k": "vtx105-family",
+  "work-vtx105-nofitx-ncpi0": "vtx105-family",
+  "work-vtx105-nofitx-nuecc48": "vtx105-family",
+  "work-vtx105-pre103-mcp1k": "vtx105-family",
+  "work-vtx105-pre103-mcp2k": "vtx105-family",
+  "work-vtx105-pre103-ncpi0": "vtx105-family",
+  "work-vtx105-pre103-nuecc48": "vtx105-family",
+  "work-vtx105-topk10-mcp1k": "vtx105-family",
+  "work-vtx105-topk10-mcp2k": "vtx105-family",
+  "work-vtx105-topk10-ncpi0": "vtx105-family",
+  "work-vtx105-topk10-nuecc48": "vtx105-family",
+  "work-vtx105-topo3-mcp1k": "vtx105-family",
+  "work-vtx105-topo3-mcp2k": "vtx105-family",
+  "work-vtx105-topo3-ncpi0": "vtx105-family",
+  "work-vtx105-topo3-nuecc48": "vtx105-family",
+  "work-vtx105-trad-mcp1k": "vtx105-family",
+  "work-vtx105-trad-mcp2k": "vtx105-family",
+  "work-vtx105-trad-ncpi0": "vtx105-family",
+  "work-vtx105-trad-nuecc48": "vtx105-family",
+  "work-vtx106-cne-off-ncpi0": "vtx106-family",
+  "work-vtx106-cne-off-nuecc48": "vtx106-family",
+  "work-vtx106-cne-on-ncpi0": "vtx106-family",
+  "work-vtx106-cne-on-nuecc48": "vtx106-family",
+  "work-vtx106-harv-base-mcp1k": "vtx106-family",
+  "work-vtx106-harv-base-mcp2k": "vtx106-family",
+  "work-vtx106-harv-base-ncpi0": "vtx106-family",
+  "work-vtx106-harv-base-nuecc48": "vtx106-family",
+  "work-vtx106-harv-nofitx-mcp1k": "vtx106-family",
+  "work-vtx106-harv-nofitx-mcp2k": "vtx106-family",
+  "work-vtx106-harv-nofitx-ncpi0": "vtx106-family",
+  "work-vtx106-harv-nofitx-nuecc48": "vtx106-family",
+  "work-vtx106-harv-topo3-mcp1k": "vtx106-family",
+  "work-vtx106-harv-topo3-mcp2k": "vtx106-family",
+  "work-vtx106-harv-topo3-ncpi0": "vtx106-family",
+  "work-vtx106-harv-topo3-nuecc48": "vtx106-family",
+  "work-vtx106-ma20-mcp1k": "vtx106-family",
+  "work-vtx106-ma20-mcp2k": "vtx106-family",
+  "work-vtx106-ma20-ncpi0": "vtx106-family",
+  "work-vtx106-ma20-nuecc48": "vtx106-family",
+  "work-vtx106-nofitx-trad-mcp1k": "vtx106-family",
+  "work-vtx106-nofitx-trad-mcp2k": "vtx106-family",
+  "work-vtx106-nofitx-trad-ncpi0": "vtx106-family",
+  "work-vtx106-nofitx-trad-nuecc48": "vtx106-family"
+ }
+}

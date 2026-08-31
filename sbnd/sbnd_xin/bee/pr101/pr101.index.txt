@@ -1,0 +1,24 @@
+# doc pr/101 Enu accounting round A/B index -- OFF 776fa302-59e7-497c-abc9-a3ca3431f0af / ON 16d583d0-534f-4b69-a7f4-1abe7bf6158f
+# OFF = work-pr101-off3-* (= pr/99 r3 production, gate PASS 234), ON = work-pr101-all3-* (K1-K5 on, long-muon mode 2)
+# 20 events: 0-5 owner/design events, 6-11 top Enu movers, 12-14 long muons + adjudicated, 15-19 A5-pion-shower energy cases
+# bee_idx	event	status
+0	37112	FIXED (owner trigger): proton track owns 59.6 MeV + pion 22.4 MeV of shower charge; 2212-typed gamma 242.6 (charge) -> 496.8 (sum dE/dx); Enu 1307.7 -> 1538.6; pairing still reads charge (m 96.6, unpaired -- sec 7.1)
+1	168596	mover: r3 trigger; ownership vs main-vertex tracks, Enu 2444.9 -> 2402.2, nue kept
+2	315167	mover: A5 pion shower 405 -> 304 (sum dE/dx); Enu 1442 -> 1572 (orphan proton context), numu 2.23 -> 2.33
+3	395148	mover: A5 pion shower 232 -> 197; Enu 870 -> 979, numu 2.94 -> 3.06
+4	285567	ADJUDICATE: two A5 pion showers 156 -> 63, 165 -> 119; Enu 2077 -> 1936; numu 0.72 -> 1.16 (crosses 0.9)
+5	506746	ADJUDICATE: A5 pion shower 102 -> 57; Enu 1971 -> 1926; numu 0.52 -> 1.11 (crosses 0.9)
+6	84229	mover: five pdg-11 non-member fragments (counted as tracks) reclaim 176 MeV from the 991 MeV shower; Enu 1364 -> 1183, nue 1.91 -> 0.69
+7	163543	mover: three A5 pion showers 455/144/320 -> 291/68/136; Enu 1497 -> 1249 (largest nueCC48 move)
+8	271851	mover: Enu 1740 -> 1537 (ownership, nueCC48)
+9	286681	mover: Enu 2029 -> 1815 (ownership, numu)
+10	359980	mover: A5 pion shower 390 -> 247; Enu 1060 -> 916
+11	46363	mover: A5 pion showers 585 -> 398, 139 -> 47; Enu 2048 -> 1964, nue kept
+12	278684	LONG MUON: range chosen (L 167 cm, range 395 vs dQdx 448, dead-end); Enu 627 -> 574
+13	283713	LONG MUON: range chosen (L 498 cm, 1139 vs 1158)
+14	70084	mover: A5 pion shower 175 -> 103; Enu 682 -> 610, numu 1.58 -> 2.34
+15	56982	pi0 pair GAINED at m 101 (window edge; K1 moved a 40 MeV shower by +4)
+16	292643	pi0 pair GAINED (K1); A5 pion shower 163 -> 221 (dqdx/charge 1.35)
+17	388	mover: A5 pion shower 792 -> 599; Enu 2957 -> 2773
+18	116962	mover: A5 pion showers 379 -> 235, 219 -> 74; Enu 1081 -> 911
+19	314838	unchanged (+2.9): 3.9 cm conn-3 muon stub stays massless after the K2 gate

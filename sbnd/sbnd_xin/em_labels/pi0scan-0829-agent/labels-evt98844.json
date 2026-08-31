@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt98844",
+ "confidence": "medium",
+ "eventNo": 98844,
+ "main_vertex": {
+  "x": -150.04717416808003,
+  "y": 121.52827720353935,
+  "z": 235.8039328557491
+ },
+ "note": "numuCC-em; 70063 trunk is fragmented (67046/69062 collinear with it at 2-10 deg); the remaining big pair 6013+70063 sits at 111 deg axis angle, not a credible single-pi0 topology; no discriminator among mid-energy combinations",
+ "origin": "numucc_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:39:01.666273Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

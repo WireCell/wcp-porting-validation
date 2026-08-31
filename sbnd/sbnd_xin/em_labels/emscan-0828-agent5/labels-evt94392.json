@@ -1,0 +1,162 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 51.1,
+  "az_deg": -55.0,
+  "centre": [
+   -107.51,
+   -37.68,
+   249.89
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3710,
+  "cloud_cluster_ids": [
+   5,
+   12,
+   13
+  ],
+  "cloud_kept": 3710,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 24402,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.19205801027997993,
+   -0.9362828001149022,
+   0.29408882824121924
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "5019": {
+    "45029": "out",
+    "45030": "out"
+   }
+  },
+  "marks_detail": {
+   "5019": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.19205801027997993,
+     -0.9362828001149022,
+     0.29408882824121924
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "45029": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 10.58841532710773,
+      "cluster_id": 45,
+      "dist": 16.226580748260623,
+      "ellip": 0.514622996639861,
+      "kind": "out",
+      "length": 29.753764385775618,
+      "owner": 5019,
+      "pdg": 13,
+      "tier": 1
+     },
+     "45030": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 10.113795640909938,
+      "cluster_id": 45,
+      "dist": 44.488177915296895,
+      "ellip": 3.64012987193454,
+      "kind": "out",
+      "length": 46.845024841934055,
+      "owner": 5019,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 14.23806116496898,
+     "angle_min": 0.0,
+     "dist_max": 44.488177915296895,
+     "dist_min": 0.0,
+     "n": 5
+    },
+    "members": [
+     5011,
+     5012,
+     5019,
+     45029,
+     45030
+    ],
+    "start": [
+     -97.18077670245945,
+     5.060831499852197,
+     243.79143272055018
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.19205801027997993,
+    -0.9362828001149022,
+    0.29408882824121924
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 305.58311112856416,
+   "kine_charge": 305.58311112856416,
+   "kine_charge_other_hypothesis": 183.80939015251982,
+   "kine_dQdx": 215.01321865145155,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    5011,
+    5012,
+    5019,
+    45029,
+    45030
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -97.18077670245945,
+   5.060831499852197,
+   243.79143272055018
+  ],
+  "reco_start_vertex_id": 5002,
+  "shower": 5019,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -97.18077670245945,
+   5.060831499852197,
+   243.79143272055018
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt94392",
+ "eventNo": 94392,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": -97.18077670245945,
+  "y": 5.060831499852197,
+  "z": 243.79143272055018
+ },
+ "note": "[agent-bulk] shw 5019 (305.6 MeV, 5 seg, pdg 11, len 103.5) is OVER-CLUSTERED: it has swallowed a straight minimum-ionising stem. Its five members are the cluster-5 vertex piece 5019 (11.3 cm) + 5011 (10.5 cm) + 5012 (5.0 cm) at 5.3 cm / 14.2 deg - about 27 cm in total - and then TWO long cluster-45 segments, 45029 (29.8 cm, reco pdg 13) at 16.2 cm / 10.6 deg and 45030 (46.8 cm, reco pdg 13) at 44.5 cm / 10.1 deg, both pulled in by pass3_cone. That is 77 cm of a DIFFERENT cluster, both pieces PID'd as tracks, making up three quarters of the object's length. On shw5019-az-055-el+20 that 77 cm runs off to the left as one thin straight line whose point cloud stays roughly 3 cm wide from end to end; on shw5019-az+085-el+20 the same member set resolves into TWO separate narrow lines diverging by about 20 deg, not one cone. A 200+ MeV electromagnetic cascade cannot stay 3 cm wide for 77 cm - the yellow set spans two directions and one of them is a track. Marked 45029 and 45030 OUT. Both marks are the same strength: they are two halves of one continuous track and the owner reverses them together. Consequence worth stating: if they come out, 5019 is a ~27 cm vertex EM object and its 305.6 MeV is mostly track charge run through the shower hypothesis. VERTEX IS GOOD, judged from vtx-az-055-el+60 (event_half_span_cm 112.3, no --vtx-span re-capture needed): the star is a clean three-way junction and the two long unowned prongs 5001 (pdg 2212, 102.1 cm) and 5017 (pdg 13, 37.6 cm) both touch it at 0.00 cm and are correctly left grey. NOTHING IS MISSING from 5019: shw5019-acc shows four member squares (5011 and 5012 coincide) and NOT ONE non-member circle inside 58 cm; the nearest non-member, 5009 (11.0 cm), is at 154.6 deg, i.e. behind the start. So this is over-clustered only, not 'both'. THE READING I REJECTED: a converted photon does give two narrow prongs from a common origin at a small opening angle, and 20 deg is in that range - so 'correct, this is an early e+e- pair' is not absurd. I rejected it on width and length: the long prong keeps a constant ~3 cm cloud for 77 cm and never branches or fans, and 103.5 cm total is far beyond the visible extent of a 305 MeV cascade. Speculation the owner may want to test: the 77 cm cluster-45 track may be this numuCC event's actual muon, in which case the muon has been absorbed into the EM shower. NO PI0: the reconstruction stored none and I propose none - the only other shower nodes are nine fragments at 6.1 MeV and below (12020, 22025, 13021, 24027, 20023, 23026, 46031, 21024, 19022, three of them flagged 'conn 4: dropped by the PF tree'), all out of scope and not looked at as objects.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt94392/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:42:32+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt94392/calib-pr-evt94392.json",
+ "subRunNo": 1
+}

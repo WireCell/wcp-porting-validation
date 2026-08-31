@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt287830",
+ "confidence": "medium",
+ "eventNo": 287830,
+ "main_vertex": {
+  "x": -47.0213163704505,
+  "y": 101.41202575841069,
+  "z": 16.155617757112694
+ },
+ "note": "numucc_em; the two detached EM (78 and 143 cm out) fail the code's own 25-deg back-projection consistency gates and their bp vertex lands >100 cm from the nu vertex; no discriminator for a pi0 reading",
+ "origin": "numucc_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:39:54.374758Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

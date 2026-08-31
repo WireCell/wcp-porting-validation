@@ -1,0 +1,9 @@
+# ncpi0 events passing numu_score > 0.9; 7 of 19 evaluated
+bee_idx	sample	run	subrun	event	nu_evaluated	numu_score	nue_score	cosmict_flag	kine_reco_Enu_MeV	kine_energy_excluded_MeV	event_label
+0	ncpi0	18259	1	18625	1	2.3249195	-15.0	0.0	1444.3776	23.844864	nu-candidate
+1	ncpi0	18345	1	21073	1	0.93239653	-15.0	0.0	974.694	471.30966	nu-candidate
+2	ncpi0	18255	1	56982	1	1.1343111	-0.16142167	0.0	1183.552	138.49495	nu-candidate
+3	ncpi0	18255	1	71372	1	2.625735	-15.0	0.0	2497.3347	0.0	nu-candidate
+4	ncpi0	18255	1	142421	1	3.5446742	-15.0	0.0	2707.1465	422.23544	nu-candidate
+5	ncpi0	18255	1	180801	1	1.356455	-1.4411039	0.0	1329.4382	13.389215	nu-candidate
+6	ncpi0	18261	1	285567	1	0.9938243	-6.6939797	0.0	1820.7974	181.743	nu-candidate

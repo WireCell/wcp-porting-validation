@@ -1,0 +1,24 @@
+# retire_20260825.sh  tiers=A
+# started              2026-08-25T14:41:25-07:00
+# wcp-porting-img HEAD 3d05bf9
+# toolkit HEAD         95c10cd1
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  147G
+# df /nfs/data/1 pre   878G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-08-25T14:41:26-07:00	work-img-mcp1k	A	5468	work-img-mcp1k.tar.gz	2026-08-05T10:35:09-07:00	0
+2026-08-25T14:41:27-07:00	work-img-mcp2k	A	13078	work-img-mcp2k.tar.gz	2026-08-16T08:57:19-07:00	0
+2026-08-25T14:41:27-07:00	work-img-ncpi0	A	136	work-img-ncpi0.tar.gz	2026-08-05T10:25:46-07:00	0
+2026-08-25T14:41:27-07:00	work-img-nuecc48	A	350	work-img-nuecc48.tar.gz	2026-08-05T10:28:16-07:00	0
+2026-08-25T14:41:28-07:00	work-mcp1k-prod0823	A	3366	work-mcp1k-prod0823.tar.gz	2026-08-23T01:07:42-07:00	0
+2026-08-25T14:41:28-07:00	work-mcp1k-ql0819	A	3337	work-mcp1k-ql0819.tar.gz	2026-08-19T22:34:41-07:00	0
+2026-08-25T14:41:29-07:00	work-mcp2k-prod0823	A	6665	work-mcp2k-prod0823.tar.gz	2026-08-23T09:40:28-07:00	0
+2026-08-25T14:41:30-07:00	work-mcp2k-ql0819	A	6581	work-mcp2k-ql0819.tar.gz	2026-08-19T22:48:06-07:00	0
+2026-08-25T14:41:30-07:00	work-ncpi0-prod0823	A	102	work-ncpi0-prod0823.tar.gz	2026-08-23T00:45:33-07:00	0
+2026-08-25T14:41:30-07:00	work-ncpi0-ql0819	A	181	work-ncpi0-ql0819.tar.gz	2026-08-19T22:28:58-07:00	0
+2026-08-25T14:41:30-07:00	work-nuecc48-prod0823	A	273	work-nuecc48-prod0823.tar.gz	2026-08-23T00:45:05-07:00	0
+2026-08-25T14:41:30-07:00	work-nuecc48-ql0819	A	476	work-nuecc48-ql0819.tar.gz	2026-08-19T22:28:14-07:00	0
+# finished             2026-08-25T14:41:31-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 108G
+# df /nfs/data/1 post  917G avail

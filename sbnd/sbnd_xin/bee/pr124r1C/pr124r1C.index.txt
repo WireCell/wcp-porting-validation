@@ -1,0 +1,15 @@
+# doc pr/124 front C (pass3_cone track guard, DEFAULT OFF -- owner decision pending, doc sec C.3)
+# A/B index -- OFF 9e3d82d2-0e4b-4d6c-a121-11a5ccc1c697 / ON 06885a0f-97c6-4075-9632-c1842431449a
+#   (CORRECTED 2026-08-29: the four pr/124 set UUIDs were recorded pair-swapped
+#    AND off/on-inverted; mapping re-derived from live mc-layer content hashes
+#    vs the local zips -- owner-reported link/event mismatch.  Original line:)
+# # A/B index -- OFF 911c0ae5-cf28-4f8f-bb43-bc1a02c3631c / ON 18da8fb1-3d7a-4e16-9d13-f245e0d09a12
+# OFF = current SBND production; ON = shower_pass3_cone_guard_len=15 (env arms
+#   work-pr124r1-onC141-* / onC98-mcp2k).  NOT in production: idx 2 is the trade-off row.
+# bee_idx	event	status
+0	94392	RESCUED: qF1 0.221 -> 1.000; both OUT muons (29.8/46.8cm, ~10deg on-axis, dist 16/44cm) decline; the 46.8cm mu ends unclaimed and lands as pseudo-n 137.2 MeV in the PF tree (nu -> n -> mu, pr/123 machinery)
+1	52693	RESCUED: 0.766 -> 1.000; 34.3cm muon (3.8deg, 114cm) declines and re-roots as its own object
+2	415278	ADVERSE-candidate: 0.959 -> 0.884 AND 0.976 -> 0.910; the 3 declined tracks (pi 36.4 / mu 56.3 / mu 22.1 cm) reshuffle between the event's two labeled showers -- THE cost side of the owner decision
+3	396222	mover: 3 declines (pi 24.0 / p 17.0 / mu 36.0 cm)
+4	77328	fix-direction (unlabeled): 16.5cm proton re-roots
+5	173819	fix-direction (unlabeled): 37.8cm proton re-roots

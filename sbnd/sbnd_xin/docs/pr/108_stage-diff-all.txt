@@ -1,0 +1,810 @@
+
+################ ev 6505 J0 (108.84,48.26,1029.27)
+--- WCP-on vs WCT-on
+junction [ 108.84   48.26 1029.27]: WCP-on call 24 (excl=1, 24 calls) ; WCT-on call 29 (excl=1, 29 calls)
+ map1 near-J  WCP-on: n=6 kept=6 assoc U/V/W=413/430/415 after-excl=356/322/320 (stripped 260) after-examine=138/123/146 <q>=0.42/0.40/0.48
+              WCT-on: n=6 kept=6 assoc U/V/W=412/426/445 after-excl=376/338/365 (stripped 204) after-examine=145/125/165 <q>=0.40/0.38/0.47
+   matched 6/6: per-point assoc0 diff U/V/W median [-5.5 -4.5  0.5]  after-excl diff median [2.5 1.5 9. ]  kept A/B 6/6  dis_cut med A/B 1.09/1.10
+ map2 near-J  WCP-on: n=13 kept=13 assoc U/V/W=369/366/379 after-excl=344/315/340 (stripped 115) after-examine=191/170/206 <q>=0.57/0.59/0.65
+              WCT-on: n=14 kept=14 assoc U/V/W=332/327/334 after-excl=296/274/269 (stripped 154) after-examine=174/149/185 <q>=0.59/0.56/0.71
+   matched 13/13: per-point assoc0 diff U/V/W median [-3. -2. -1.]  after-excl diff median [-6. -3. -5.]  kept A/B 13/13  dis_cut med A/B 0.55/0.53
+ map3: missing on one side
+ fit1 near-J: n WCP-on=9 WCT-on=9 matched 9 |dpos| med/max 0.183/0.323 cm ; sum dQ 0 vs -9
+ fit2 near-J: n WCP-on=16 WCT-on=17 matched 16 |dpos| med/max 0.181/0.267 cm ; sum dQ 0 vs -17
+ fit3 near-J: n WCP-on=17 WCT-on=16 matched 17 |dpos| med/max 0.183/0.416 cm ; sum dQ 1135531 vs 1145473
+   WCP-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.022/0.206
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.181/0.322
+   WCT-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.067/0.222
+   WCT-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.207/0.256
+--- WCP-off vs WCT-off
+junction [ 108.84   48.26 1029.27]: WCP-off call 24 (excl=0, 24 calls) ; WCT-off call 27 (excl=0, 27 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=417/457/451 after-excl=417/457/451 (stripped 0) after-examine=156/179/206 <q>=0.41/0.40/0.48
+              WCT-off: n=6 kept=6 assoc U/V/W=386/424/421 after-excl=386/424/421 (stripped 0) after-examine=152/167/199 <q>=0.42/0.39/0.49
+   matched 5/6: per-point assoc0 diff U/V/W median [-6. -6. -4.]  after-excl diff median [-6. -6. -4.]  kept A/B 5/5  dis_cut med A/B 1.20/1.06
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=376/366/378 after-excl=376/366/378 (stripped 0) after-examine=216/211/252 <q>=0.56/0.57/0.67
+              WCT-off: n=15 kept=15 assoc U/V/W=351/351/362 after-excl=351/351/362 (stripped 0) after-examine=205/197/234 <q>=0.60/0.60/0.67
+   matched 14/14: per-point assoc0 diff U/V/W median [-5.5 -5.  -4.5]  after-excl diff median [-5.5 -5.  -4.5]  kept A/B 14/14  dis_cut med A/B 0.63/0.48
+ map3: missing on one side
+ fit1 near-J: n WCP-off=9 WCT-off=9 matched 9 |dpos| med/max 0.159/0.410 cm ; sum dQ 0 vs -9
+ fit2 near-J: n WCP-off=17 WCT-off=17 matched 17 |dpos| med/max 0.172/0.472 cm ; sum dQ 0 vs -17
+ fit3 near-J: n WCP-off=17 WCT-off=17 matched 17 |dpos| med/max 0.078/0.365 cm ; sum dQ 1006694 vs 1073090
+   WCP-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.104/0.229
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.200/0.283
+   WCT-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.000/0.186
+   WCT-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.104/0.296
+--- WCP-off vs WCP-on
+junction [ 108.84   48.26 1029.27]: WCP-off call 24 (excl=0, 24 calls) ; WCP-on call 24 (excl=1, 24 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=417/457/451 after-excl=417/457/451 (stripped 0) after-examine=156/179/206 <q>=0.41/0.40/0.48
+              WCP-on: n=6 kept=6 assoc U/V/W=413/430/415 after-excl=356/322/320 (stripped 260) after-examine=138/123/146 <q>=0.42/0.40/0.48
+   matched 6/6: per-point assoc0 diff U/V/W median [ 0. -2. -2.]  after-excl diff median [ -8.5 -22.5 -25.5]  kept A/B 6/6  dis_cut med A/B 1.20/1.09
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=376/366/378 after-excl=376/366/378 (stripped 0) after-examine=216/211/252 <q>=0.56/0.57/0.67
+              WCP-on: n=13 kept=13 assoc U/V/W=369/366/379 after-excl=344/315/340 (stripped 115) after-examine=191/170/206 <q>=0.57/0.59/0.65
+   matched 14/14: per-point assoc0 diff U/V/W median [1. 0. 0.]  after-excl diff median [-1.  -4.5 -5. ]  kept A/B 14/14  dis_cut med A/B 0.63/0.59
+ map3: missing on one side
+ fit1 near-J: n WCP-off=9 WCP-on=9 matched 9 |dpos| med/max 0.162/0.304 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=17 WCP-on=16 matched 17 |dpos| med/max 0.181/0.385 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=17 WCP-on=17 matched 17 |dpos| med/max 0.162/0.270 cm ; sum dQ 1006694 vs 1135531
+   WCP-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.104/0.229
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.200/0.283
+   WCP-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.022/0.206
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.181/0.322
+--- WCT-off vs WCT-on
+junction [ 108.84   48.26 1029.27]: WCT-off call 27 (excl=0, 27 calls) ; WCT-on call 29 (excl=1, 29 calls)
+ map1 near-J  WCT-off: n=6 kept=6 assoc U/V/W=386/424/421 after-excl=386/424/421 (stripped 0) after-examine=152/167/199 <q>=0.42/0.39/0.49
+              WCT-on: n=6 kept=6 assoc U/V/W=412/426/445 after-excl=376/338/365 (stripped 204) after-examine=145/125/165 <q>=0.40/0.38/0.47
+   matched 5/6: per-point assoc0 diff U/V/W median [2. 1. 1.]  after-excl diff median [ -2. -10.  -8.]  kept A/B 5/5  dis_cut med A/B 1.06/1.02
+ map2 near-J  WCT-off: n=15 kept=15 assoc U/V/W=351/351/362 after-excl=351/351/362 (stripped 0) after-examine=205/197/234 <q>=0.60/0.60/0.67
+              WCT-on: n=14 kept=14 assoc U/V/W=332/327/334 after-excl=296/274/269 (stripped 154) after-examine=174/149/185 <q>=0.59/0.56/0.71
+   matched 15/15: per-point assoc0 diff U/V/W median [3. 4. 3.]  after-excl diff median [ 0.  0. -2.]  kept A/B 15/15  dis_cut med A/B 0.46/0.58
+ map3 near-J  WCT-off: n=14 kept=14 assoc U/V/W=326/324/336 after-excl=326/324/336 (stripped 0) after-examine=204/202/242 <q>=0.64/0.63/0.73
+              WCT-on: n=13 kept=13 assoc U/V/W=323/317/336 after-excl=304/279/297 (stripped 96) after-examine=186/158/199 <q>=0.64/0.58/0.70
+   matched 14/14: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [ 0.  -2.  -1.5]  kept A/B 14/14  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=9 WCT-on=9 matched 9 |dpos| med/max 0.182/0.437 cm ; sum dQ -9 vs -9
+ fit2 near-J: n WCT-off=17 WCT-on=17 matched 17 |dpos| med/max 0.152/0.404 cm ; sum dQ -17 vs -17
+ fit3 near-J: n WCT-off=17 WCT-on=16 matched 17 |dpos| med/max 0.097/0.344 cm ; sum dQ 1073090 vs 1145473
+   WCT-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.000/0.186
+   WCT-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.104/0.296
+   WCT-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.067/0.222
+   WCT-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.207/0.256
+
+################ ev 6505 J1 (160.34,71.59,966.52)
+--- WCP-on vs WCT-on
+junction [160.34  71.59 966.52]: WCP-on call 24 (excl=1, 24 calls) ; WCT-on call 29 (excl=1, 29 calls)
+ map1 near-J  WCP-on: n=7 kept=7 assoc U/V/W=481/497/502 after-excl=354/314/338 (stripped 474) after-examine=172/172/178 <q>=0.52/0.59/0.56
+              WCT-on: n=7 kept=7 assoc U/V/W=533/535/535 after-excl=408/352/334 (stripped 509) after-examine=198/193/184 <q>=0.52/0.58/0.62
+   matched 6/7: per-point assoc0 diff U/V/W median [4. 5. 4.]  after-excl diff median [11.5  7.5  1. ]  kept A/B 6/6  dis_cut med A/B 1.08/1.12
+ map2 near-J  WCP-on: n=17 kept=17 assoc U/V/W=488/472/479 after-excl=425/388/340 (stripped 286) after-examine=279/273/251 <q>=0.66/0.72/0.76
+              WCT-on: n=20 kept=20 assoc U/V/W=507/496/516 after-excl=400/347/349 (stripped 423) after-examine=271/250/252 <q>=0.69/0.73/0.76
+   matched 15/17: per-point assoc0 diff U/V/W median [-3. -3.  0.]  after-excl diff median [-2. -3.  0.]  kept A/B 15/15  dis_cut med A/B 0.59/0.52
+ map3: missing on one side
+ fit1 near-J: n WCP-on=12 WCT-on=12 matched 8 |dpos| med/max 0.351/0.355 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-on=21 WCT-on=25 matched 18 |dpos| med/max 0.178/0.450 cm ; sum dQ 0 vs -25
+ fit3 near-J: n WCP-on=24 WCT-on=24 matched 22 |dpos| med/max 0.260/0.470 cm ; sum dQ 1440816 vs 1338143
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.066/0.402
+   WCP-on fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.152/0.307
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.034/0.286
+   WCT-on fit2->fit3 near-J: matched 25/25 |dpos| med/max 0.167/0.282
+--- WCP-off vs WCT-off
+junction [160.34  71.59 966.52]: WCP-off call 24 (excl=0, 24 calls) ; WCT-off call 27 (excl=0, 27 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=466/478/477 after-excl=466/478/477 (stripped 0) after-examine=225/265/259 <q>=0.49/0.55/0.54
+              WCT-off: n=8 kept=8 assoc U/V/W=588/595/591 after-excl=588/595/591 (stripped 0) after-examine=294/333/339 <q>=0.50/0.55/0.57
+   matched 6/6: per-point assoc0 diff U/V/W median [ 0.   0.  -0.5]  after-excl diff median [ 0.   0.  -0.5]  kept A/B 6/6  dis_cut med A/B 1.15/1.13
+ map2 near-J  WCP-off: n=17 kept=17 assoc U/V/W=469/469/466 after-excl=469/469/466 (stripped 0) after-examine=305/342/362 <q>=0.67/0.73/0.79
+              WCT-off: n=18 kept=18 assoc U/V/W=459/457/474 after-excl=459/457/474 (stripped 0) after-examine=312/317/383 <q>=0.69/0.71/0.82
+   matched 16/17: per-point assoc0 diff U/V/W median [0.  0.  2.5]  after-excl diff median [0.  0.  2.5]  kept A/B 16/16  dis_cut med A/B 0.56/0.55
+ map3: missing on one side
+ fit1 near-J: n WCP-off=11 WCT-off=12 matched 10 |dpos| med/max 0.333/0.391 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-off=21 WCT-off=24 matched 21 |dpos| med/max 0.293/0.386 cm ; sum dQ 0 vs -24
+ fit3 near-J: n WCP-off=23 WCT-off=24 matched 23 |dpos| med/max 0.297/0.350 cm ; sum dQ 1251026 vs 1191803
+   WCP-off fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.092/0.232
+   WCP-off fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.210/0.302
+   WCT-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.062/0.452
+   WCT-off fit2->fit3 near-J: matched 24/24 |dpos| med/max 0.166/0.329
+--- WCP-off vs WCP-on
+junction [160.34  71.59 966.52]: WCP-off call 24 (excl=0, 24 calls) ; WCP-on call 24 (excl=1, 24 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=466/478/477 after-excl=466/478/477 (stripped 0) after-examine=225/265/259 <q>=0.49/0.55/0.54
+              WCP-on: n=7 kept=7 assoc U/V/W=481/497/502 after-excl=354/314/338 (stripped 474) after-examine=172/172/178 <q>=0.52/0.59/0.56
+   matched 6/6: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-23.  -34.5 -28. ]  kept A/B 6/6  dis_cut med A/B 1.15/1.08
+ map2 near-J  WCP-off: n=17 kept=17 assoc U/V/W=469/469/466 after-excl=469/469/466 (stripped 0) after-examine=305/342/362 <q>=0.67/0.73/0.79
+              WCP-on: n=17 kept=17 assoc U/V/W=488/472/479 after-excl=425/388/340 (stripped 286) after-examine=279/273/251 <q>=0.66/0.72/0.76
+   matched 17/17: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [ 0. -6. -6.]  kept A/B 17/17  dis_cut med A/B 0.56/0.59
+ map3: missing on one side
+ fit1 near-J: n WCP-off=11 WCP-on=12 matched 11 |dpos| med/max 0.078/0.498 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=21 WCP-on=21 matched 21 |dpos| med/max 0.179/0.409 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=23 WCP-on=24 matched 23 |dpos| med/max 0.129/0.356 cm ; sum dQ 1251026 vs 1440816
+   WCP-off fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.092/0.232
+   WCP-off fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.210/0.302
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.066/0.402
+   WCP-on fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.152/0.307
+--- WCT-off vs WCT-on
+junction [160.34  71.59 966.52]: WCT-off call 27 (excl=0, 27 calls) ; WCT-on call 29 (excl=1, 29 calls)
+ map1 near-J  WCT-off: n=8 kept=8 assoc U/V/W=588/595/591 after-excl=588/595/591 (stripped 0) after-examine=294/333/339 <q>=0.50/0.55/0.57
+              WCT-on: n=7 kept=7 assoc U/V/W=533/535/535 after-excl=408/352/334 (stripped 509) after-examine=198/193/184 <q>=0.52/0.58/0.62
+   matched 7/8: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-17. -30. -27.]  kept A/B 7/7  dis_cut med A/B 1.12/1.09
+ map2 near-J  WCT-off: n=18 kept=18 assoc U/V/W=459/457/474 after-excl=459/457/474 (stripped 0) after-examine=312/317/383 <q>=0.69/0.71/0.82
+              WCT-on: n=20 kept=20 assoc U/V/W=507/496/516 after-excl=400/347/349 (stripped 423) after-examine=271/250/252 <q>=0.69/0.73/0.76
+   matched 17/18: per-point assoc0 diff U/V/W median [ 0.  2. -1.]  after-excl diff median [-3. -7. -7.]  kept A/B 17/17  dis_cut med A/B 0.55/0.52
+ map3 near-J  WCT-off: n=20 kept=20 assoc U/V/W=476/470/476 after-excl=476/470/476 (stripped 0) after-examine=335/347/392 <q>=0.71/0.74/0.83
+              WCT-on: n=20 kept=20 assoc U/V/W=488/484/491 after-excl=435/390/373 (stripped 265) after-examine=298/292/274 <q>=0.70/0.76/0.78
+   matched 20/20: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-1.5 -2.  -3.5]  kept A/B 20/20  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=12 WCT-on=12 matched 8 |dpos| med/max 0.229/0.250 cm ; sum dQ -12 vs -12
+ fit2 near-J: n WCT-off=24 WCT-on=25 matched 23 |dpos| med/max 0.154/0.441 cm ; sum dQ -24 vs -25
+ fit3 near-J: n WCT-off=24 WCT-on=24 matched 24 |dpos| med/max 0.198/0.484 cm ; sum dQ 1191803 vs 1338143
+   WCT-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.062/0.452
+   WCT-off fit2->fit3 near-J: matched 24/24 |dpos| med/max 0.166/0.329
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.034/0.286
+   WCT-on fit2->fit3 near-J: matched 25/25 |dpos| med/max 0.167/0.282
+
+################ ev 6528 J0 (223.85,42.05,23.05)
+--- WCP-on vs WCT-on
+junction [223.85  42.05  23.05]: WCP-on call 33 (excl=1, 33 calls) ; WCT-on call 34 (excl=1, 34 calls)
+ map1 near-J  WCP-on: n=7 kept=7 assoc U/V/W=417/414/418 after-excl=264/301/298 (stripped 386) after-examine=142/128/145 <q>=0.60/0.53/0.49
+              WCT-on: n=6 kept=6 assoc U/V/W=367/342/348 after-excl=196/190/207 (stripped 464) after-examine=103/76/95 <q>=0.54/0.56/0.56
+   matched 4/7: per-point assoc0 diff U/V/W median [8.  0.  1.5]  after-excl diff median [  1. -15. -21.]  kept A/B 4/4  dis_cut med A/B 1.07/1.15
+ map2 near-J  WCP-on: n=14 kept=14 assoc U/V/W=406/418/394 after-excl=315/353/321 (stripped 229) after-examine=209/196/210 <q>=0.69/0.61/0.64
+              WCT-on: n=16 kept=16 assoc U/V/W=345/367/348 after-excl=229/262/270 (stripped 299) after-examine=177/164/191 <q>=0.81/0.67/0.74
+   matched 14/14: per-point assoc0 diff U/V/W median [-5.  -5.5 -6.5]  after-excl diff median [-8.  -5.5 -6.5]  kept A/B 14/14  dis_cut med A/B 0.56/0.52
+ map3: missing on one side
+ fit1 near-J: n WCP-on=12 WCT-on=11 matched 4 |dpos| med/max 0.238/0.312 cm ; sum dQ 0 vs -11
+ fit2 near-J: n WCP-on=18 WCT-on=20 matched 13 |dpos| med/max 0.247/0.370 cm ; sum dQ 0 vs -20
+ fit3 near-J: n WCP-on=21 WCT-on=19 matched 19 |dpos| med/max 0.296/0.430 cm ; sum dQ 1014475 vs 917276
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.081/0.396
+   WCP-on fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.086/0.255
+   WCT-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.064/0.430
+   WCT-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.138/0.450
+--- WCP-off vs WCT-off
+junction [223.85  42.05  23.05]: WCP-off call 33 (excl=0, 33 calls) ; WCT-off call 29 (excl=0, 29 calls)
+ map1 near-J  WCP-off: n=7 kept=7 assoc U/V/W=436/426/429 after-excl=436/426/429 (stripped 0) after-examine=255/191/217 <q>=0.60/0.49/0.50
+              WCT-off: n=7 kept=7 assoc U/V/W=496/468/488 after-excl=496/468/488 (stripped 0) after-examine=293/174/230 <q>=0.61/0.42/0.47
+   matched 4/7: per-point assoc0 diff U/V/W median [14. -1. 15.]  after-excl diff median [14. -1. 15.]  kept A/B 4/4  dis_cut med A/B 1.09/1.20
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=370/368/371 after-excl=370/368/371 (stripped 0) after-examine=271/222/260 <q>=0.74/0.62/0.68
+              WCT-off: n=19 kept=19 assoc U/V/W=439/444/432 after-excl=439/444/432 (stripped 0) after-examine=335/241/301 <q>=0.75/0.52/0.65
+   matched 13/14: per-point assoc0 diff U/V/W median [3. 5. 2.]  after-excl diff median [3. 5. 2.]  kept A/B 13/13  dis_cut med A/B 0.58/0.54
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCT-off=9 matched 7 |dpos| med/max 0.355/0.383 cm ; sum dQ 0 vs -9
+ fit2 near-J: n WCP-off=19 WCT-off=21 matched 15 |dpos| med/max 0.321/0.416 cm ; sum dQ 0 vs -21
+ fit3 near-J: n WCP-off=20 WCT-off=23 matched 18 |dpos| med/max 0.303/0.400 cm ; sum dQ 999697 vs 723494
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.032/0.308
+   WCP-off fit2->fit3 near-J: matched 19/19 |dpos| med/max 0.153/0.345
+   WCT-off fit1->fit2 near-J: matched 8/9 |dpos| med/max 0.000/0.234
+   WCT-off fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.141/0.302
+--- WCP-off vs WCP-on
+junction [223.85  42.05  23.05]: WCP-off call 33 (excl=0, 33 calls) ; WCP-on call 33 (excl=1, 33 calls)
+ map1 near-J  WCP-off: n=7 kept=7 assoc U/V/W=436/426/429 after-excl=436/426/429 (stripped 0) after-examine=255/191/217 <q>=0.60/0.49/0.50
+              WCP-on: n=7 kept=7 assoc U/V/W=417/414/418 after-excl=264/301/298 (stripped 386) after-examine=142/128/145 <q>=0.60/0.53/0.49
+   matched 6/7: per-point assoc0 diff U/V/W median [0. 0. 1.]  after-excl diff median [-20.5 -20.5 -10. ]  kept A/B 6/6  dis_cut med A/B 1.07/1.03
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=370/368/371 after-excl=370/368/371 (stripped 0) after-examine=271/222/260 <q>=0.74/0.62/0.68
+              WCP-on: n=14 kept=14 assoc U/V/W=406/418/394 after-excl=315/353/321 (stripped 229) after-examine=209/196/210 <q>=0.69/0.61/0.64
+   matched 13/14: per-point assoc0 diff U/V/W median [7. 9. 8.]  after-excl diff median [-3.  0. -2.]  kept A/B 13/13  dis_cut med A/B 0.58/0.56
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCP-on=12 matched 9 |dpos| med/max 0.151/0.388 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=19 WCP-on=18 matched 19 |dpos| med/max 0.175/0.381 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=20 WCP-on=21 matched 20 |dpos| med/max 0.128/0.391 cm ; sum dQ 999697 vs 1014475
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.032/0.308
+   WCP-off fit2->fit3 near-J: matched 19/19 |dpos| med/max 0.153/0.345
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.081/0.396
+   WCP-on fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.086/0.255
+--- WCT-off vs WCT-on
+junction [223.85  42.05  23.05]: WCT-off call 29 (excl=0, 29 calls) ; WCT-on call 34 (excl=1, 34 calls)
+ map1 near-J  WCT-off: n=7 kept=7 assoc U/V/W=496/468/488 after-excl=496/468/488 (stripped 0) after-examine=293/174/230 <q>=0.61/0.42/0.47
+              WCT-on: n=6 kept=6 assoc U/V/W=367/342/348 after-excl=196/190/207 (stripped 464) after-examine=103/76/95 <q>=0.54/0.56/0.56
+   matched 3/7: per-point assoc0 diff U/V/W median [ 0.  0. -2.]  after-excl diff median [-24. -20. -27.]  kept A/B 3/3  dis_cut med A/B 1.11/1.13
+ map2 near-J  WCT-off: n=19 kept=19 assoc U/V/W=439/444/432 after-excl=439/444/432 (stripped 0) after-examine=335/241/301 <q>=0.75/0.52/0.65
+              WCT-on: n=16 kept=16 assoc U/V/W=345/367/348 after-excl=229/262/270 (stripped 299) after-examine=177/164/191 <q>=0.81/0.67/0.74
+   matched 14/19: per-point assoc0 diff U/V/W median [-3.  -3.  -1.5]  after-excl diff median [-11.   -4.5  -4.5]  kept A/B 14/14  dis_cut med A/B 0.52/0.52
+ map3 near-J  WCT-off: n=19 kept=19 assoc U/V/W=429/436/438 after-excl=429/436/438 (stripped 0) after-examine=330/233/308 <q>=0.76/0.53/0.68
+              WCT-on: n=14 kept=14 assoc U/V/W=327/335/337 after-excl=262/282/282 (stripped 173) after-examine=195/176/192 <q>=0.77/0.64/0.70
+   matched 15/19: per-point assoc0 diff U/V/W median [-3.  0. -2.]  after-excl diff median [-8. -3. -6.]  kept A/B 15/15  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=9 WCT-on=11 matched 2 |dpos| med/max 0.274/0.390 cm ; sum dQ -9 vs -11
+ fit2 near-J: n WCT-off=21 WCT-on=20 matched 16 |dpos| med/max 0.359/0.491 cm ; sum dQ -21 vs -20
+ fit3 near-J: n WCT-off=23 WCT-on=19 matched 20 |dpos| med/max 0.332/0.473 cm ; sum dQ 723494 vs 917276
+   WCT-off fit1->fit2 near-J: matched 8/9 |dpos| med/max 0.000/0.234
+   WCT-off fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.141/0.302
+   WCT-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.064/0.430
+   WCT-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.138/0.450
+
+################ ev 6528 J1 (223.43,42.63,22.22)
+--- WCP-on vs WCT-on
+junction [223.43  42.63  22.22]: WCP-on call 33 (excl=1, 33 calls) ; WCT-on call 34 (excl=1, 34 calls)
+ map1 near-J  WCP-on: n=6 kept=6 assoc U/V/W=379/376/366 after-excl=238/263/246 (stripped 374) after-examine=117/101/117 <q>=0.54/0.50/0.48
+              WCT-on: n=4 kept=4 assoc U/V/W=257/242/254 after-excl=146/117/139 (stripped 351) after-examine=81/51/67 <q>=0.60/0.60/0.61
+   matched 3/6: per-point assoc0 diff U/V/W median [2. 0. 3.]  after-excl diff median [  2.  -8. -12.]  kept A/B 3/3  dis_cut med A/B 1.03/1.18
+ map2 near-J  WCP-on: n=10 kept=10 assoc U/V/W=297/311/294 after-excl=219/246/221 (stripped 216) after-examine=151/130/152 <q>=0.72/0.60/0.67
+              WCT-on: n=12 kept=12 assoc U/V/W=251/271/260 after-excl=155/166/182 (stripped 279) after-examine=129/103/138 <q>=0.87/0.69/0.79
+   matched 10/10: per-point assoc0 diff U/V/W median [-9.  -8.  -8.5]  after-excl diff median [-9.5 -9.5 -8. ]  kept A/B 10/10  dis_cut med A/B 0.56/0.49
+ map3: missing on one side
+ fit1 near-J: n WCP-on=11 WCT-on=9 matched 3 |dpos| med/max 0.223/0.312 cm ; sum dQ 0 vs -9
+ fit2 near-J: n WCP-on=15 WCT-on=17 matched 11 |dpos| med/max 0.247/0.370 cm ; sum dQ 0 vs -17
+ fit3 near-J: n WCP-on=16 WCT-on=16 matched 16 |dpos| med/max 0.289/0.430 cm ; sum dQ 816864 vs 820222
+   WCP-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.117/0.396
+   WCP-on fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.079/0.255
+   WCT-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.000/0.369
+   WCT-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.122/0.291
+--- WCP-off vs WCT-off
+junction [223.43  42.63  22.22]: WCP-off call 33 (excl=0, 33 calls) ; WCT-off call 29 (excl=0, 29 calls)
+ map1 near-J  WCP-off: n=5 kept=5 assoc U/V/W=340/328/319 after-excl=340/328/319 (stripped 0) after-examine=201/149/171 <q>=0.61/0.50/0.54
+              WCT-off: n=4 kept=4 assoc U/V/W=310/286/308 after-excl=310/286/308 (stripped 0) after-examine=188/113/164 <q>=0.63/0.44/0.53
+   matched 2/5: per-point assoc0 diff U/V/W median [ 7. -7. 15.]  after-excl diff median [ 7. -7. 15.]  kept A/B 2/2  dis_cut med A/B 1.07/1.20
+ map2 near-J  WCP-off: n=11 kept=11 assoc U/V/W=290/294/291 after-excl=290/294/291 (stripped 0) after-examine=222/182/216 <q>=0.77/0.64/0.72
+              WCT-off: n=13 kept=13 assoc U/V/W=334/341/329 after-excl=334/341/329 (stripped 0) after-examine=273/186/251 <q>=0.83/0.52/0.74
+   matched 10/11: per-point assoc0 diff U/V/W median [3.5 5.5 5. ]  after-excl diff median [3.5 5.5 5. ]  kept A/B 10/10  dis_cut med A/B 0.57/0.56
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCT-off=8 matched 7 |dpos| med/max 0.355/0.383 cm ; sum dQ 0 vs -8
+ fit2 near-J: n WCP-off=17 WCT-off=15 matched 12 |dpos| med/max 0.352/0.416 cm ; sum dQ 0 vs -15
+ fit3 near-J: n WCP-off=16 WCT-off=18 matched 14 |dpos| med/max 0.309/0.400 cm ; sum dQ 853248 vs 610002
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.032/0.308
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.153/0.345
+   WCT-off fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.234
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.141/0.302
+--- WCP-off vs WCP-on
+junction [223.43  42.63  22.22]: WCP-off call 33 (excl=0, 33 calls) ; WCP-on call 33 (excl=1, 33 calls)
+ map1 near-J  WCP-off: n=5 kept=5 assoc U/V/W=340/328/319 after-excl=340/328/319 (stripped 0) after-examine=201/149/171 <q>=0.61/0.50/0.54
+              WCP-on: n=6 kept=6 assoc U/V/W=379/376/366 after-excl=238/263/246 (stripped 374) after-examine=117/101/117 <q>=0.54/0.50/0.48
+   matched 5/5: per-point assoc0 diff U/V/W median [0. 0. 2.]  after-excl diff median [-28. -28. -13.]  kept A/B 5/5  dis_cut med A/B 1.01/1.03
+ map2 near-J  WCP-off: n=11 kept=11 assoc U/V/W=290/294/291 after-excl=290/294/291 (stripped 0) after-examine=222/182/216 <q>=0.77/0.64/0.72
+              WCP-on: n=10 kept=10 assoc U/V/W=297/311/294 after-excl=219/246/221 (stripped 216) after-examine=151/130/152 <q>=0.72/0.60/0.67
+   matched 10/11: per-point assoc0 diff U/V/W median [ 8. 10.  9.]  after-excl diff median [-1.5 -1.  -1.5]  kept A/B 10/10  dis_cut med A/B 0.57/0.62
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCP-on=11 matched 9 |dpos| med/max 0.151/0.388 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=17 WCP-on=15 matched 16 |dpos| med/max 0.165/0.381 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=16 WCP-on=16 matched 16 |dpos| med/max 0.123/0.391 cm ; sum dQ 853248 vs 816864
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.032/0.308
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.153/0.345
+   WCP-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.117/0.396
+   WCP-on fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.079/0.255
+--- WCT-off vs WCT-on
+junction [223.43  42.63  22.22]: WCT-off call 29 (excl=0, 29 calls) ; WCT-on call 34 (excl=1, 34 calls)
+ map1 near-J  WCT-off: n=4 kept=4 assoc U/V/W=310/286/308 after-excl=310/286/308 (stripped 0) after-examine=188/113/164 <q>=0.63/0.44/0.53
+              WCT-on: n=4 kept=4 assoc U/V/W=257/242/254 after-excl=146/117/139 (stripped 351) after-examine=81/51/67 <q>=0.60/0.60/0.61
+   matched 2/4: per-point assoc0 diff U/V/W median [-8.  -8.5 -6.5]  after-excl diff median [-46.5 -31.  -41. ]  kept A/B 2/2  dis_cut med A/B 1.15/1.08
+ map2 near-J  WCT-off: n=13 kept=13 assoc U/V/W=334/341/329 after-excl=334/341/329 (stripped 0) after-examine=273/186/251 <q>=0.83/0.52/0.74
+              WCT-on: n=12 kept=12 assoc U/V/W=251/271/260 after-excl=155/166/182 (stripped 279) after-examine=129/103/138 <q>=0.87/0.69/0.79
+   matched 9/13: per-point assoc0 diff U/V/W median [-5. -3. -4.]  after-excl diff median [-14.  -8.  -7.]  kept A/B 9/9  dis_cut med A/B 0.54/0.48
+ map3 near-J  WCT-off: n=14 kept=14 assoc U/V/W=324/332/331 after-excl=324/332/331 (stripped 0) after-examine=268/180/258 <q>=0.82/0.54/0.77
+              WCT-on: n=11 kept=11 assoc U/V/W=264/272/271 after-excl=205/219/216 (stripped 167) after-examine=161/140/154 <q>=0.82/0.66/0.73
+   matched 12/14: per-point assoc0 diff U/V/W median [-2.5  0.  -1.5]  after-excl diff median [-8.  -2.5 -6.5]  kept A/B 12/12  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=8 WCT-on=9 matched 2 |dpos| med/max 0.274/0.390 cm ; sum dQ -8 vs -9
+ fit2 near-J: n WCT-off=15 WCT-on=17 matched 13 |dpos| med/max 0.359/0.491 cm ; sum dQ -15 vs -17
+ fit3 near-J: n WCT-off=18 WCT-on=16 matched 17 |dpos| med/max 0.340/0.473 cm ; sum dQ 610002 vs 820222
+   WCT-off fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.234
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.141/0.302
+   WCT-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.000/0.369
+   WCT-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.122/0.291
+
+################ ev 6532 J0 (151.19,-105.94,890.20)
+--- WCP-on vs WCT-on
+junction [ 151.19 -105.94  890.2 ]: WCP-on call 77 (excl=1, 77 calls) ; WCT-on call 66 (excl=1, 66 calls)
+ map1 near-J  WCP-on: n=5 kept=5 assoc U/V/W=383/361/383 after-excl=269/296/301 (stripped 261) after-examine=120/124/131 <q>=0.50/0.43/0.47
+              WCT-on: n=5 kept=5 assoc U/V/W=351/324/342 after-excl=273/294/305 (stripped 145) after-examine=125/123/147 <q>=0.55/0.48/0.54
+   matched 4/5: per-point assoc0 diff U/V/W median [ -7. -11. -12.]  after-excl diff median [-2.  -0.5  4.5]  kept A/B 4/4  dis_cut med A/B 1.13/1.15
+ map2 near-J  WCP-on: n=13 kept=13 assoc U/V/W=336/343/339 after-excl=271/316/292 (stripped 139) after-examine=177/195/204 <q>=0.71/0.64/0.72
+              WCT-on: n=13 kept=13 assoc U/V/W=337/338/350 after-excl=244/274/281 (stripped 226) after-examine=155/178/189 <q>=0.65/0.65/0.68
+   matched 12/13: per-point assoc0 diff U/V/W median [ 1.5 -1.   2. ]  after-excl diff median [-2.5 -4.  -3. ]  kept A/B 12/12  dis_cut med A/B 0.56/0.58
+ map3: missing on one side
+ fit1 near-J: n WCP-on=8 WCT-on=8 matched 6 |dpos| med/max 0.176/0.348 cm ; sum dQ 0 vs -8
+ fit2 near-J: n WCP-on=16 WCT-on=16 matched 15 |dpos| med/max 0.169/0.449 cm ; sum dQ 0 vs -16
+ fit3 near-J: n WCP-on=18 WCT-on=17 matched 17 |dpos| med/max 0.175/0.388 cm ; sum dQ 1165319 vs 1060794
+   WCP-on fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.074/0.368
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.052/0.249
+   WCT-on fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.076/0.335
+   WCT-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.163/0.375
+--- WCP-off vs WCT-off
+junction [ 151.19 -105.94  890.2 ]: WCP-off call 76 (excl=0, 76 calls) ; WCT-off call 67 (excl=0, 67 calls)
+ map1 near-J  WCP-off: n=5 kept=5 assoc U/V/W=385/363/393 after-excl=385/363/393 (stripped 0) after-examine=181/155/176 <q>=0.50/0.44/0.47
+              WCT-off: n=5 kept=5 assoc U/V/W=348/322/339 after-excl=348/322/339 (stripped 0) after-examine=168/141/169 <q>=0.53/0.49/0.54
+   matched 4/5: per-point assoc0 diff U/V/W median [ -8. -13. -15.]  after-excl diff median [ -8. -13. -15.]  kept A/B 4/4  dis_cut med A/B 1.13/1.15
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=343/330/341 after-excl=343/330/341 (stripped 0) after-examine=215/215/235 <q>=0.62/0.66/0.69
+              WCT-off: n=12 kept=12 assoc U/V/W=315/317/325 after-excl=315/317/325 (stripped 0) after-examine=192/197/213 <q>=0.61/0.63/0.66
+   matched 14/14: per-point assoc0 diff U/V/W median [3. 3. 4.]  after-excl diff median [3. 3. 4.]  kept A/B 14/14  dis_cut med A/B 0.52/0.60
+ map3: missing on one side
+ fit1 near-J: n WCP-off=8 WCT-off=8 matched 7 |dpos| med/max 0.185/0.480 cm ; sum dQ 0 vs -8
+ fit2 near-J: n WCP-off=17 WCT-off=15 matched 15 |dpos| med/max 0.233/0.435 cm ; sum dQ 0 vs -15
+ fit3 near-J: n WCP-off=18 WCT-off=17 matched 15 |dpos| med/max 0.174/0.426 cm ; sum dQ 902508 vs 1091282
+   WCP-off fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.063/0.413
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.087/0.222
+   WCT-off fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.106/0.380
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.074/0.276
+--- WCP-off vs WCP-on
+junction [ 151.19 -105.94  890.2 ]: WCP-off call 76 (excl=0, 76 calls) ; WCP-on call 77 (excl=1, 77 calls)
+ map1 near-J  WCP-off: n=5 kept=5 assoc U/V/W=385/363/393 after-excl=385/363/393 (stripped 0) after-examine=181/155/176 <q>=0.50/0.44/0.47
+              WCP-on: n=5 kept=5 assoc U/V/W=383/361/383 after-excl=269/296/301 (stripped 261) after-examine=120/124/131 <q>=0.50/0.43/0.47
+   matched 5/5: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-18. -15. -21.]  kept A/B 5/5  dis_cut med A/B 1.14/1.14
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=343/330/341 after-excl=343/330/341 (stripped 0) after-examine=215/215/235 <q>=0.62/0.66/0.69
+              WCP-on: n=13 kept=13 assoc U/V/W=336/343/339 after-excl=271/316/292 (stripped 139) after-examine=177/195/204 <q>=0.71/0.64/0.72
+   matched 11/14: per-point assoc0 diff U/V/W median [0. 1. 0.]  after-excl diff median [-5. -2. -4.]  kept A/B 11/11  dis_cut med A/B 0.52/0.56
+ map3: missing on one side
+ fit1 near-J: n WCP-off=8 WCP-on=8 matched 7 |dpos| med/max 0.054/0.113 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=17 WCP-on=16 matched 14 |dpos| med/max 0.063/0.456 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=18 WCP-on=18 matched 16 |dpos| med/max 0.026/0.369 cm ; sum dQ 902508 vs 1165319
+   WCP-off fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.063/0.413
+   WCP-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.087/0.222
+   WCP-on fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.074/0.368
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.052/0.249
+--- WCT-off vs WCT-on
+junction [ 151.19 -105.94  890.2 ]: WCT-off call 67 (excl=0, 67 calls) ; WCT-on call 66 (excl=1, 66 calls)
+ map1 near-J  WCT-off: n=5 kept=5 assoc U/V/W=348/322/339 after-excl=348/322/339 (stripped 0) after-examine=168/141/169 <q>=0.53/0.49/0.54
+              WCT-on: n=5 kept=5 assoc U/V/W=351/324/342 after-excl=273/294/305 (stripped 145) after-examine=125/123/147 <q>=0.55/0.48/0.54
+   matched 5/5: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-17.  -3.  -9.]  kept A/B 5/5  dis_cut med A/B 1.15/1.15
+ map2 near-J  WCT-off: n=12 kept=12 assoc U/V/W=315/317/325 after-excl=315/317/325 (stripped 0) after-examine=192/197/213 <q>=0.61/0.63/0.66
+              WCT-on: n=13 kept=13 assoc U/V/W=337/338/350 after-excl=244/274/281 (stripped 226) after-examine=155/178/189 <q>=0.65/0.65/0.68
+   matched 12/12: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-6. -2. -3.]  kept A/B 12/12  dis_cut med A/B 0.60/0.58
+ map3 near-J  WCT-off: n=14 kept=14 assoc U/V/W=344/349/356 after-excl=344/349/356 (stripped 0) after-examine=235/232/249 <q>=0.69/0.67/0.71
+              WCT-on: n=14 kept=14 assoc U/V/W=336/335/346 after-excl=249/311/311 (stripped 146) after-examine=173/211/220 <q>=0.75/0.69/0.72
+   matched 14/14: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-6.5 -2.5 -2.5]  kept A/B 14/14  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=8 WCT-on=8 matched 8 |dpos| med/max 0.053/0.213 cm ; sum dQ -8 vs -8
+ fit2 near-J: n WCT-off=15 WCT-on=16 matched 14 |dpos| med/max 0.106/0.383 cm ; sum dQ -15 vs -16
+ fit3 near-J: n WCT-off=17 WCT-on=17 matched 17 |dpos| med/max 0.087/0.366 cm ; sum dQ 1091282 vs 1060794
+   WCT-off fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.106/0.380
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.074/0.276
+   WCT-on fit1->fit2 near-J: matched 8/8 |dpos| med/max 0.076/0.335
+   WCT-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.163/0.375
+
+################ ev 6532 J1 (150.14,-97.76,921.49)
+--- WCP-on vs WCT-on
+junction [150.14 -97.76 921.49]: WCP-on call 77 (excl=1, 77 calls) ; WCT-on call 66 (excl=1, 66 calls)
+ map1 near-J  WCP-on: n=6 kept=6 assoc U/V/W=450/453/461 after-excl=270/218/311 (stripped 565) after-examine=152/51/240 <q>=0.58/0.16/0.78
+              WCT-on: n=0
+ map2 near-J  WCP-on: n=16 kept=16 assoc U/V/W=378/390/398 after-excl=287/291/338 (stripped 250) after-examine=197/58/297 <q>=0.73/0.16/0.88
+              WCT-on: n=0
+ map3: missing on one side
+ fit1 near-J: n WCP-on=11 WCT-on=0 matched 0 |dpos| med/max nan/nan cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-on=20 WCT-on=0 matched 0 |dpos| med/max nan/nan cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-on=21 WCT-on=1 matched 0 |dpos| med/max nan/nan cm ; sum dQ 934989 vs 70325
+   WCP-on fit1->fit2 near-J: matched 10/11 |dpos| med/max 0.000/0.298
+   WCP-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.102/0.368
+   WCT-on fit1->fit2 near-J: matched 0/0 |dpos| med/max nan/nan
+   WCT-on fit2->fit3 near-J: matched 0/0 |dpos| med/max nan/nan
+--- WCP-off vs WCT-off
+junction [150.14 -97.76 921.49]: WCP-off call 76 (excl=0, 76 calls) ; WCT-off call 6 (excl=0, 67 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=307/298/303 after-excl=307/298/303 (stripped 0) after-examine=222/73/257 <q>=0.64/0.17/0.86
+              WCT-off: n=0
+ map2 near-J  WCP-off: n=13 kept=13 assoc U/V/W=291/280/282 after-excl=291/280/282 (stripped 0) after-examine=225/44/230 <q>=0.66/0.11/0.83
+              WCT-off: n=0
+ map3: missing on one side
+ fit1 near-J: n WCP-off=7 WCT-off=0 matched 0 |dpos| med/max nan/nan cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=14 WCT-off=1 matched 0 |dpos| med/max nan/nan cm ; sum dQ 0 vs -1
+ fit3 near-J: n WCP-off=15 WCT-off=1 matched 0 |dpos| med/max nan/nan cm ; sum dQ 626266 vs 58151
+   WCP-off fit1->fit2 near-J: matched 6/7 |dpos| med/max 0.000/0.114
+   WCP-off fit2->fit3 near-J: matched 14/14 |dpos| med/max 0.170/0.303
+   WCT-off fit1->fit2 near-J: matched 0/0 |dpos| med/max nan/nan
+   WCT-off fit2->fit3 near-J: matched 1/1 |dpos| med/max 0.281/0.281
+--- WCP-off vs WCP-on
+junction [150.14 -97.76 921.49]: WCP-off call 76 (excl=0, 76 calls) ; WCP-on call 77 (excl=1, 77 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=307/298/303 after-excl=307/298/303 (stripped 0) after-examine=222/73/257 <q>=0.64/0.17/0.86
+              WCP-on: n=6 kept=6 assoc U/V/W=450/453/461 after-excl=270/218/311 (stripped 565) after-examine=152/51/240 <q>=0.58/0.16/0.78
+   matched 3/4: per-point assoc0 diff U/V/W median [-1. -1. -1.]  after-excl diff median [-42. -43. -30.]  kept A/B 3/3  dis_cut med A/B 1.20/1.20
+ map2 near-J  WCP-off: n=13 kept=13 assoc U/V/W=291/280/282 after-excl=291/280/282 (stripped 0) after-examine=225/44/230 <q>=0.66/0.11/0.83
+              WCP-on: n=16 kept=16 assoc U/V/W=378/390/398 after-excl=287/291/338 (stripped 250) after-examine=197/58/297 <q>=0.73/0.16/0.88
+   matched 12/13: per-point assoc0 diff U/V/W median [0.5 5.  5. ]  after-excl diff median [-3.5  0.5  1. ]  kept A/B 12/12  dis_cut med A/B 0.49/0.60
+ map3: missing on one side
+ fit1 near-J: n WCP-off=7 WCP-on=11 matched 6 |dpos| med/max 0.444/0.466 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=14 WCP-on=20 matched 13 |dpos| med/max 0.360/0.442 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=15 WCP-on=21 matched 14 |dpos| med/max 0.375/0.463 cm ; sum dQ 626266 vs 934989
+   WCP-off fit1->fit2 near-J: matched 6/7 |dpos| med/max 0.000/0.114
+   WCP-off fit2->fit3 near-J: matched 14/14 |dpos| med/max 0.170/0.303
+   WCP-on fit1->fit2 near-J: matched 10/11 |dpos| med/max 0.000/0.298
+   WCP-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.102/0.368
+--- WCT-off vs WCT-on
+junction [150.14 -97.76 921.49]: WCT-off call 6 (excl=0, 67 calls) ; WCT-on call 66 (excl=1, 66 calls)
+ map1 near-J  WCT-off: n=0
+              WCT-on: n=0
+ map2 near-J  WCT-off: n=0
+              WCT-on: n=0
+ map3 near-J  WCT-off: n=1 kept=1 assoc U/V/W=21/21/21 after-excl=21/21/21 (stripped 0) after-examine=1/1/21 <q>=0.00/0.00/1.00
+              WCT-on: n=1 kept=1 assoc U/V/W=61/61/61 after-excl=57/58/61 (stripped 7) after-examine=35/0/58 <q>=0.02/0.00/0.95
+   matched 1/1: per-point assoc0 diff U/V/W median [40. 40. 40.]  after-excl diff median [36. 37. 40.]  kept A/B 1/1  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=0 WCT-on=0 matched 0 |dpos| med/max nan/nan cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCT-off=1 WCT-on=0 matched 0 |dpos| med/max nan/nan cm ; sum dQ -1 vs 0
+ fit3 near-J: n WCT-off=1 WCT-on=1 matched 1 |dpos| med/max 0.219/0.219 cm ; sum dQ 58151 vs 70325
+   WCT-off fit1->fit2 near-J: matched 0/0 |dpos| med/max nan/nan
+   WCT-off fit2->fit3 near-J: matched 1/1 |dpos| med/max 0.281/0.281
+   WCT-on fit1->fit2 near-J: matched 0/0 |dpos| med/max nan/nan
+   WCT-on fit2->fit3 near-J: matched 0/0 |dpos| med/max nan/nan
+
+################ ev 6650 J0 (185.21,-8.40,453.37)
+--- WCP-on vs WCT-on
+junction [185.21  -8.4  453.37]: WCP-on call 73 (excl=1, 73 calls) ; WCT-on call 60 (excl=1, 60 calls)
+ map1 near-J  WCP-on: n=6 kept=6 assoc U/V/W=266/327/286 after-excl=220/180/222 (stripped 257) after-examine=130/107/144 <q>=0.64/0.66/0.68
+              WCT-on: n=8 kept=8 assoc U/V/W=369/443/431 after-excl=258/269/248 (stripped 468) after-examine=150/151/153 <q>=0.52/0.58/0.62
+   matched 6/6: per-point assoc0 diff U/V/W median [-3. -3.  4.]  after-excl diff median [-4.   2.  -3.5]  kept A/B 6/6  dis_cut med A/B 1.06/0.94
+ map2 near-J  WCP-on: n=14 kept=14 assoc U/V/W=315/330/323 after-excl=293/227/290 (stripped 158) after-examine=233/186/236 <q>=0.81/0.84/0.84
+              WCT-on: n=17 kept=17 assoc U/V/W=422/442/439 after-excl=291/318/275 (stripped 419) after-examine=216/229/217 <q>=0.76/0.72/0.82
+   matched 13/14: per-point assoc0 diff U/V/W median [3. 2. 2.]  after-excl diff median [ 0.  1. -3.]  kept A/B 13/13  dis_cut med A/B 0.55/0.62
+ map3: missing on one side
+ fit1 near-J: n WCP-on=9 WCT-on=12 matched 9 |dpos| med/max 0.318/0.449 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-on=16 WCT-on=21 matched 15 |dpos| med/max 0.259/0.449 cm ; sum dQ 0 vs -21
+ fit3 near-J: n WCP-on=17 WCT-on=22 matched 17 |dpos| med/max 0.260/0.449 cm ; sum dQ 1166184 vs 1066834
+   WCP-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.084/0.352
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.059/0.439
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.082/0.343
+   WCT-on fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.089/0.352
+--- WCP-off vs WCT-off
+junction [185.21  -8.4  453.37]: WCP-off call 76 (excl=0, 76 calls) ; WCT-off call 60 (excl=0, 60 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=281/327/321 after-excl=281/327/321 (stripped 0) after-examine=172/177/202 <q>=0.67/0.56/0.66
+              WCT-off: n=8 kept=8 assoc U/V/W=386/440/408 after-excl=386/440/408 (stripped 0) after-examine=235/249/270 <q>=0.62/0.57/0.67
+   matched 5/6: per-point assoc0 diff U/V/W median [12.  3.  3.]  after-excl diff median [12.  3.  3.]  kept A/B 5/5  dis_cut med A/B 0.99/1.02
+ map2 near-J  WCP-off: n=13 kept=13 assoc U/V/W=299/309/301 after-excl=299/309/301 (stripped 0) after-examine=233/221/248 <q>=0.79/0.73/0.83
+              WCT-off: n=16 kept=16 assoc U/V/W=428/442/438 after-excl=428/442/438 (stripped 0) after-examine=320/311/347 <q>=0.75/0.71/0.80
+   matched 13/13: per-point assoc0 diff U/V/W median [7. 5. 6.]  after-excl diff median [7. 5. 6.]  kept A/B 13/13  dis_cut med A/B 0.57/0.62
+ map3: missing on one side
+ fit1 near-J: n WCP-off=9 WCT-off=12 matched 8 |dpos| med/max 0.320/0.486 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-off=16 WCT-off=20 matched 16 |dpos| med/max 0.255/0.478 cm ; sum dQ 0 vs -20
+ fit3 near-J: n WCP-off=17 WCT-off=21 matched 17 |dpos| med/max 0.313/0.364 cm ; sum dQ 1117114 vs 1161491
+   WCP-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.084/0.295
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.099/0.437
+   WCT-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.085/0.486
+   WCT-off fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.091/0.376
+--- WCP-off vs WCP-on
+junction [185.21  -8.4  453.37]: WCP-off call 76 (excl=0, 76 calls) ; WCP-on call 73 (excl=1, 73 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=281/327/321 after-excl=281/327/321 (stripped 0) after-examine=172/177/202 <q>=0.67/0.56/0.66
+              WCP-on: n=6 kept=6 assoc U/V/W=266/327/286 after-excl=220/180/222 (stripped 257) after-examine=130/107/144 <q>=0.64/0.66/0.68
+   matched 5/6: per-point assoc0 diff U/V/W median [  0.   2. -12.]  after-excl diff median [-13. -24. -12.]  kept A/B 5/5  dis_cut med A/B 0.99/1.06
+ map2 near-J  WCP-off: n=13 kept=13 assoc U/V/W=299/309/301 after-excl=299/309/301 (stripped 0) after-examine=233/221/248 <q>=0.79/0.73/0.83
+              WCP-on: n=14 kept=14 assoc U/V/W=315/330/323 after-excl=293/227/290 (stripped 158) after-examine=233/186/236 <q>=0.81/0.84/0.84
+   matched 13/13: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-1. -5. -2.]  kept A/B 13/13  dis_cut med A/B 0.57/0.55
+ map3: missing on one side
+ fit1 near-J: n WCP-off=9 WCP-on=9 matched 9 |dpos| med/max 0.236/0.442 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=16 WCP-on=16 matched 16 |dpos| med/max 0.227/0.351 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=17 WCP-on=17 matched 17 |dpos| med/max 0.227/0.284 cm ; sum dQ 1117114 vs 1166184
+   WCP-off fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.084/0.295
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.099/0.437
+   WCP-on fit1->fit2 near-J: matched 9/9 |dpos| med/max 0.084/0.352
+   WCP-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.059/0.439
+--- WCT-off vs WCT-on
+junction [185.21  -8.4  453.37]: WCT-off call 60 (excl=0, 60 calls) ; WCT-on call 60 (excl=1, 60 calls)
+ map1 near-J  WCT-off: n=8 kept=8 assoc U/V/W=386/440/408 after-excl=386/440/408 (stripped 0) after-examine=235/249/270 <q>=0.62/0.57/0.67
+              WCT-on: n=8 kept=8 assoc U/V/W=369/443/431 after-excl=258/269/248 (stripped 468) after-examine=150/151/153 <q>=0.52/0.58/0.62
+   matched 7/8: per-point assoc0 diff U/V/W median [-3. -4. -1.]  after-excl diff median [-17. -21. -21.]  kept A/B 7/7  dis_cut med A/B 1.03/0.96
+ map2 near-J  WCT-off: n=16 kept=16 assoc U/V/W=428/442/438 after-excl=428/442/438 (stripped 0) after-examine=320/311/347 <q>=0.75/0.71/0.80
+              WCT-on: n=17 kept=17 assoc U/V/W=422/442/439 after-excl=291/318/275 (stripped 419) after-examine=216/229/217 <q>=0.76/0.72/0.82
+   matched 16/16: per-point assoc0 diff U/V/W median [-3.5 -4.  -4.5]  after-excl diff median [-12.   -9.5 -12. ]  kept A/B 16/16  dis_cut med A/B 0.62/0.60
+ map3 near-J  WCT-off: n=17 kept=17 assoc U/V/W=375/377/394 after-excl=375/377/394 (stripped 0) after-examine=301/279/330 <q>=0.81/0.74/0.84
+              WCT-on: n=18 kept=18 assoc U/V/W=421/427/426 after-excl=339/341/333 (stripped 261) after-examine=265/249/281 <q>=0.79/0.73/0.85
+   matched 17/17: per-point assoc0 diff U/V/W median [0. 1. 0.]  after-excl diff median [-3. -4. -3.]  kept A/B 17/17  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=12 WCT-on=12 matched 12 |dpos| med/max 0.249/0.448 cm ; sum dQ -12 vs -12
+ fit2 near-J: n WCT-off=20 WCT-on=21 matched 19 |dpos| med/max 0.292/0.439 cm ; sum dQ -20 vs -21
+ fit3 near-J: n WCT-off=21 WCT-on=22 matched 21 |dpos| med/max 0.302/0.455 cm ; sum dQ 1161491 vs 1066834
+   WCT-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.085/0.486
+   WCT-off fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.091/0.376
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.082/0.343
+   WCT-on fit2->fit3 near-J: matched 21/21 |dpos| med/max 0.089/0.352
+
+################ ev 6650 J1 (186.29,-11.95,457.66)
+--- WCP-on vs WCT-on
+junction [186.29 -11.95 457.66]: WCP-on call 73 (excl=1, 73 calls) ; WCT-on call 60 (excl=1, 60 calls)
+ map1 near-J  WCP-on: n=7 kept=7 assoc U/V/W=348/367/343 after-excl=268/201/274 (stripped 315) after-examine=141/120/157 <q>=0.55/0.62/0.59
+              WCT-on: n=6 kept=6 assoc U/V/W=359/357/371 after-excl=276/295/272 (stripped 244) after-examine=174/159/179 <q>=0.66/0.54/0.66
+   matched 3/7: per-point assoc0 diff U/V/W median [17.  7. 17.]  after-excl diff median [17. 22. 15.]  kept A/B 3/3  dis_cut med A/B 1.14/1.18
+ map2 near-J  WCP-on: n=15 kept=15 assoc U/V/W=322/314/310 after-excl=293/233/293 (stripped 127) after-examine=212/186/222 <q>=0.72/0.82/0.75
+              WCT-on: n=12 kept=12 assoc U/V/W=340/332/337 after-excl=263/296/211 (stripped 239) after-examine=213/207/177 <q>=0.80/0.70/0.82
+   matched 10/15: per-point assoc0 diff U/V/W median [7.  8.5 8. ]  after-excl diff median [ 7.5 10.   7. ]  kept A/B 10/10  dis_cut med A/B 0.57/0.66
+ map3: missing on one side
+ fit1 near-J: n WCP-on=10 WCT-on=7 matched 6 |dpos| med/max 0.331/0.394 cm ; sum dQ 0 vs -7
+ fit2 near-J: n WCP-on=17 WCT-on=13 matched 14 |dpos| med/max 0.279/0.430 cm ; sum dQ 0 vs -13
+ fit3 near-J: n WCP-on=18 WCT-on=14 matched 15 |dpos| med/max 0.239/0.457 cm ; sum dQ 970920 vs 802207
+   WCP-on fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.051/0.442
+   WCP-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.229/0.294
+   WCT-on fit1->fit2 near-J: matched 7/7 |dpos| med/max 0.271/0.376
+   WCT-on fit2->fit3 near-J: matched 13/13 |dpos| med/max 0.144/0.287
+--- WCP-off vs WCT-off
+junction [186.29 -11.95 457.66]: WCP-off call 76 (excl=0, 76 calls) ; WCT-off call 60 (excl=0, 60 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=307/325/289 after-excl=307/325/289 (stripped 0) after-examine=177/185/151 <q>=0.61/0.58/0.59
+              WCT-off: n=6 kept=6 assoc U/V/W=359/357/371 after-excl=359/357/371 (stripped 0) after-examine=224/195/243 <q>=0.66/0.55/0.67
+   matched 2/6: per-point assoc0 diff U/V/W median [12. 10. 17.]  after-excl diff median [12. 10. 17.]  kept A/B 2/2  dis_cut med A/B 1.11/1.15
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=350/334/338 after-excl=350/334/338 (stripped 0) after-examine=254/244/261 <q>=0.74/0.74/0.78
+              WCT-off: n=14 kept=14 assoc U/V/W=321/316/319 after-excl=321/316/319 (stripped 0) after-examine=259/226/261 <q>=0.81/0.71/0.81
+   matched 10/14: per-point assoc0 diff U/V/W median [1.5 3.5 1.5]  after-excl diff median [1.5 3.5 1.5]  kept A/B 10/10  dis_cut med A/B 0.57/0.59
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCT-off=6 matched 1 |dpos| med/max 0.351/0.351 cm ; sum dQ 0 vs -6
+ fit2 near-J: n WCP-off=16 WCT-off=15 matched 14 |dpos| med/max 0.226/0.459 cm ; sum dQ 0 vs -15
+ fit3 near-J: n WCP-off=16 WCT-off=13 matched 13 |dpos| med/max 0.114/0.221 cm ; sum dQ 952880 vs 799296
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.000/0.309
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.186/0.310
+   WCT-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.180/0.399
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.226/0.310
+--- WCP-off vs WCP-on
+junction [186.29 -11.95 457.66]: WCP-off call 76 (excl=0, 76 calls) ; WCP-on call 73 (excl=1, 73 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=307/325/289 after-excl=307/325/289 (stripped 0) after-examine=177/185/151 <q>=0.61/0.58/0.59
+              WCP-on: n=7 kept=7 assoc U/V/W=348/367/343 after-excl=268/201/274 (stripped 315) after-examine=141/120/157 <q>=0.55/0.62/0.59
+   matched 6/6: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [ -9.5 -21.5  -7. ]  kept A/B 6/6  dis_cut med A/B 1.18/1.15
+ map2 near-J  WCP-off: n=14 kept=14 assoc U/V/W=350/334/338 after-excl=350/334/338 (stripped 0) after-examine=254/244/261 <q>=0.74/0.74/0.78
+              WCP-on: n=15 kept=15 assoc U/V/W=322/314/310 after-excl=293/233/293 (stripped 127) after-examine=212/186/222 <q>=0.72/0.82/0.75
+   matched 14/14: per-point assoc0 diff U/V/W median [-2.   0.5  0. ]  after-excl diff median [-2.  -4.5 -3. ]  kept A/B 14/14  dis_cut med A/B 0.57/0.57
+ map3: missing on one side
+ fit1 near-J: n WCP-off=10 WCP-on=10 matched 10 |dpos| med/max 0.324/0.440 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=16 WCP-on=17 matched 16 |dpos| med/max 0.253/0.450 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=16 WCP-on=18 matched 16 |dpos| med/max 0.236/0.315 cm ; sum dQ 952880 vs 970920
+   WCP-off fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.000/0.309
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.186/0.310
+   WCP-on fit1->fit2 near-J: matched 10/10 |dpos| med/max 0.051/0.442
+   WCP-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.229/0.294
+--- WCT-off vs WCT-on
+junction [186.29 -11.95 457.66]: WCT-off call 60 (excl=0, 60 calls) ; WCT-on call 60 (excl=1, 60 calls)
+ map1 near-J  WCT-off: n=6 kept=6 assoc U/V/W=359/357/371 after-excl=359/357/371 (stripped 0) after-examine=224/195/243 <q>=0.66/0.55/0.67
+              WCT-on: n=6 kept=6 assoc U/V/W=359/357/371 after-excl=276/295/272 (stripped 244) after-examine=174/159/179 <q>=0.66/0.54/0.66
+   matched 6/6: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [ -9.5  -8.  -13.5]  kept A/B 6/6  dis_cut med A/B 1.19/1.19
+ map2 near-J  WCT-off: n=14 kept=14 assoc U/V/W=321/316/319 after-excl=321/316/319 (stripped 0) after-examine=259/226/261 <q>=0.81/0.71/0.81
+              WCT-on: n=12 kept=12 assoc U/V/W=340/332/337 after-excl=263/296/211 (stripped 239) after-examine=213/207/177 <q>=0.80/0.70/0.82
+   matched 14/14: per-point assoc0 diff U/V/W median [3.  2.5 1. ]  after-excl diff median [ 0.   0.5 -4. ]  kept A/B 14/14  dis_cut med A/B 0.56/0.66
+ map3 near-J  WCT-off: n=12 kept=12 assoc U/V/W=266/256/274 after-excl=266/256/274 (stripped 0) after-examine=215/191/230 <q>=0.81/0.75/0.85
+              WCT-on: n=13 kept=13 assoc U/V/W=291/284/297 after-excl=249/264/242 (stripped 117) after-examine=208/202/202 <q>=0.83/0.76/0.84
+   matched 12/12: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [ 0.  0. -2.]  kept A/B 12/12  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=6 WCT-on=7 matched 5 |dpos| med/max 0.060/0.250 cm ; sum dQ -6 vs -7
+ fit2 near-J: n WCT-off=15 WCT-on=13 matched 15 |dpos| med/max 0.200/0.432 cm ; sum dQ -15 vs -13
+ fit3 near-J: n WCT-off=13 WCT-on=14 matched 13 |dpos| med/max 0.134/0.267 cm ; sum dQ 799296 vs 802207
+   WCT-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.180/0.399
+   WCT-off fit2->fit3 near-J: matched 15/15 |dpos| med/max 0.226/0.310
+   WCT-on fit1->fit2 near-J: matched 7/7 |dpos| med/max 0.271/0.376
+   WCT-on fit2->fit3 near-J: matched 13/13 |dpos| med/max 0.144/0.287
+
+################ ev 6805 J0 (47.93,69.44,430.40)
+--- WCP-on vs WCT-on
+junction [ 47.93  69.44 430.4 ]: WCP-on call 68 (excl=1, 68 calls) ; WCT-on call 11 (excl=1, 50 calls)
+ map1 near-J  WCP-on: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=232/240/254 (stripped 114) after-examine=99/59/80 <q>=0.42/0.25/0.32
+              WCT-on: n=3 kept=3 assoc U/V/W=270/274/274 after-excl=252/259/259 (stripped 48) after-examine=86/63/76 <q>=0.34/0.25/0.30
+   matched 3/4: per-point assoc0 diff U/V/W median [22. 23. 23.]  after-excl diff median [28. 23. 19.]  kept A/B 3/3  dis_cut med A/B 0.99/1.20
+ map2 near-J  WCP-on: n=8 kept=8 assoc U/V/W=279/281/277 after-excl=250/262/263 (stripped 62) after-examine=131/87/113 <q>=0.53/0.35/0.45
+              WCT-on: n=8 kept=8 assoc U/V/W=184/189/187 after-excl=170/170/172 (stripped 48) after-examine=93/69/87 <q>=0.55/0.39/0.50
+   matched 8/8: per-point assoc0 diff U/V/W median [-10.   -9.5 -10. ]  after-excl diff median [ -7.  -10.5 -10. ]  kept A/B 8/8  dis_cut med A/B 0.67/0.54
+ map3: missing on one side
+ fit1 near-J: n WCP-on=8 WCT-on=5 matched 6 |dpos| med/max 0.416/0.455 cm ; sum dQ 0 vs -5
+ fit2 near-J: n WCP-on=11 WCT-on=10 matched 10 |dpos| med/max 0.257/0.426 cm ; sum dQ 0 vs -10
+ fit3 near-J: n WCP-on=14 WCT-on=10 matched 12 |dpos| med/max 0.185/0.396 cm ; sum dQ 521004 vs 385851
+   WCP-on fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.191
+   WCP-on fit2->fit3 near-J: matched 10/11 |dpos| med/max 0.171/0.344
+   WCT-on fit1->fit2 near-J: matched 5/5 |dpos| med/max 0.236/0.241
+   WCT-on fit2->fit3 near-J: matched 10/10 |dpos| med/max 0.100/0.209
+--- WCP-off vs WCT-off
+junction [ 47.93  69.44 430.4 ]: WCP-off call 65 (excl=0, 65 calls) ; WCT-off call 11 (excl=0, 54 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=280/281/279 (stripped 0) after-examine=109/65/88 <q>=0.39/0.24/0.32
+              WCT-off: n=3 kept=3 assoc U/V/W=270/274/274 after-excl=270/274/274 (stripped 0) after-examine=90/63/78 <q>=0.33/0.23/0.28
+   matched 3/4: per-point assoc0 diff U/V/W median [22. 23. 23.]  after-excl diff median [22. 23. 23.]  kept A/B 3/3  dis_cut med A/B 0.99/1.20
+ map2 near-J  WCP-off: n=10 kept=10 assoc U/V/W=240/242/239 after-excl=240/242/239 (stripped 0) after-examine=130/94/124 <q>=0.55/0.41/0.53
+              WCT-off: n=8 kept=8 assoc U/V/W=184/189/187 after-excl=184/189/187 (stripped 0) after-examine=99/79/97 <q>=0.55/0.40/0.52
+   matched 10/10: per-point assoc0 diff U/V/W median [0. 0. 1.]  after-excl diff median [0. 0. 1.]  kept A/B 10/10  dis_cut med A/B 0.52/0.54
+ map3: missing on one side
+ fit1 near-J: n WCP-off=6 WCT-off=5 matched 5 |dpos| med/max 0.435/0.446 cm ; sum dQ 0 vs -5
+ fit2 near-J: n WCP-off=12 WCT-off=9 matched 12 |dpos| med/max 0.242/0.427 cm ; sum dQ 0 vs -9
+ fit3 near-J: n WCP-off=12 WCT-off=11 matched 11 |dpos| med/max 0.113/0.267 cm ; sum dQ 464724 vs 395579
+   WCP-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.000/0.069
+   WCP-off fit2->fit3 near-J: matched 12/12 |dpos| med/max 0.066/0.266
+   WCT-off fit1->fit2 near-J: matched 5/5 |dpos| med/max 0.190/0.241
+   WCT-off fit2->fit3 near-J: matched 9/9 |dpos| med/max 0.105/0.209
+--- WCP-off vs WCP-on
+junction [ 47.93  69.44 430.4 ]: WCP-off call 65 (excl=0, 65 calls) ; WCP-on call 68 (excl=1, 68 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=280/281/279 (stripped 0) after-examine=109/65/88 <q>=0.39/0.24/0.32
+              WCP-on: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=232/240/254 (stripped 114) after-examine=99/59/80 <q>=0.42/0.25/0.32
+   matched 4/4: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-10.   -8.5  -5.5]  kept A/B 4/4  dis_cut med A/B 1.02/1.02
+ map2 near-J  WCP-off: n=10 kept=10 assoc U/V/W=240/242/239 after-excl=240/242/239 (stripped 0) after-examine=130/94/124 <q>=0.55/0.41/0.53
+              WCP-on: n=8 kept=8 assoc U/V/W=279/281/277 after-excl=250/262/263 (stripped 62) after-examine=131/87/113 <q>=0.53/0.35/0.45
+   matched 10/10: per-point assoc0 diff U/V/W median [14.  14.5 14. ]  after-excl diff median [11.5 12.  14. ]  kept A/B 10/10  dis_cut med A/B 0.52/0.68
+ map3: missing on one side
+ fit1 near-J: n WCP-off=6 WCP-on=8 matched 6 |dpos| med/max 0.039/0.428 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=12 WCP-on=11 matched 11 |dpos| med/max 0.210/0.466 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=12 WCP-on=14 matched 12 |dpos| med/max 0.054/0.209 cm ; sum dQ 464724 vs 521004
+   WCP-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.000/0.069
+   WCP-off fit2->fit3 near-J: matched 12/12 |dpos| med/max 0.066/0.266
+   WCP-on fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.191
+   WCP-on fit2->fit3 near-J: matched 10/11 |dpos| med/max 0.171/0.344
+--- WCT-off vs WCT-on
+junction [ 47.93  69.44 430.4 ]: WCT-off call 11 (excl=0, 54 calls) ; WCT-on call 11 (excl=1, 50 calls)
+ map1 near-J  WCT-off: n=3 kept=3 assoc U/V/W=270/274/274 after-excl=270/274/274 (stripped 0) after-examine=90/63/78 <q>=0.33/0.23/0.28
+              WCT-on: n=3 kept=3 assoc U/V/W=270/274/274 after-excl=252/259/259 (stripped 48) after-examine=86/63/76 <q>=0.34/0.25/0.30
+   matched 3/3: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [0. 0. 0.]  kept A/B 3/3  dis_cut med A/B 1.20/1.20
+ map2 near-J  WCT-off: n=8 kept=8 assoc U/V/W=184/189/187 after-excl=184/189/187 (stripped 0) after-examine=99/79/97 <q>=0.55/0.40/0.52
+              WCT-on: n=8 kept=8 assoc U/V/W=184/189/187 after-excl=170/170/172 (stripped 48) after-examine=93/69/87 <q>=0.55/0.39/0.50
+   matched 8/8: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [0. 0. 0.]  kept A/B 8/8  dis_cut med A/B 0.54/0.54
+ map3 near-J  WCT-off: n=9 kept=9 assoc U/V/W=194/195/196 after-excl=194/195/196 (stripped 0) after-examine=109/80/103 <q>=0.56/0.39/0.52
+              WCT-on: n=8 kept=8 assoc U/V/W=182/175/189 after-excl=179/168/181 (stripped 18) after-examine=106/71/94 <q>=0.59/0.42/0.52
+   matched 9/9: per-point assoc0 diff U/V/W median [0. 0. 3.]  after-excl diff median [0. 0. 1.]  kept A/B 9/9  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=5 WCT-on=5 matched 5 |dpos| med/max 0.000/0.008 cm ; sum dQ -5 vs -5
+ fit2 near-J: n WCT-off=9 WCT-on=10 matched 9 |dpos| med/max 0.003/0.260 cm ; sum dQ -9 vs -10
+ fit3 near-J: n WCT-off=11 WCT-on=10 matched 11 |dpos| med/max 0.073/0.495 cm ; sum dQ 395579 vs 385851
+   WCT-off fit1->fit2 near-J: matched 5/5 |dpos| med/max 0.190/0.241
+   WCT-off fit2->fit3 near-J: matched 9/9 |dpos| med/max 0.105/0.209
+   WCT-on fit1->fit2 near-J: matched 5/5 |dpos| med/max 0.236/0.241
+   WCT-on fit2->fit3 near-J: matched 10/10 |dpos| med/max 0.100/0.209
+
+################ ev 6805 J1 (47.98,67.99,430.62)
+--- WCP-on vs WCT-on
+junction [ 47.98  67.99 430.62]: WCP-on call 68 (excl=1, 68 calls) ; WCT-on call 11 (excl=1, 50 calls)
+ map1 near-J  WCP-on: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=232/240/254 (stripped 114) after-examine=99/59/80 <q>=0.42/0.25/0.32
+              WCT-on: n=2 kept=2 assoc U/V/W=184/184/184 after-excl=166/169/169 (stripped 48) after-examine=59/36/48 <q>=0.35/0.22/0.29
+   matched 2/4: per-point assoc0 diff U/V/W median [18.5 18.5 18.5]  after-excl diff median [23.5 19.5 16.5]  kept A/B 2/2  dis_cut med A/B 1.02/1.20
+ map2 near-J  WCP-on: n=7 kept=7 assoc U/V/W=258/260/256 after-excl=229/241/242 (stripped 62) after-examine=119/74/101 <q>=0.53/0.31/0.43
+              WCT-on: n=8 kept=8 assoc U/V/W=186/190/189 after-excl=172/171/174 (stripped 48) after-examine=94/60/85 <q>=0.55/0.34/0.49
+   matched 7/7: per-point assoc0 diff U/V/W median [-10. -10. -10.]  after-excl diff median [ -7. -11. -10.]  kept A/B 7/7  dis_cut med A/B 0.68/0.54
+ map3: missing on one side
+ fit1 near-J: n WCP-on=8 WCT-on=4 matched 5 |dpos| med/max 0.416/0.455 cm ; sum dQ 0 vs -4
+ fit2 near-J: n WCP-on=10 WCT-on=10 matched 9 |dpos| med/max 0.257/0.371 cm ; sum dQ 0 vs -10
+ fit3 near-J: n WCP-on=13 WCT-on=10 matched 12 |dpos| med/max 0.185/0.396 cm ; sum dQ 462913 vs 356258
+   WCP-on fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.191
+   WCP-on fit2->fit3 near-J: matched 9/10 |dpos| med/max 0.133/0.344
+   WCT-on fit1->fit2 near-J: matched 4/4 |dpos| med/max 0.236/0.241
+   WCT-on fit2->fit3 near-J: matched 10/10 |dpos| med/max 0.068/0.209
+--- WCP-off vs WCT-off
+junction [ 47.98  67.99 430.62]: WCP-off call 65 (excl=0, 65 calls) ; WCT-off call 11 (excl=0, 54 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=280/281/279 (stripped 0) after-examine=109/65/88 <q>=0.39/0.24/0.32
+              WCT-off: n=2 kept=2 assoc U/V/W=184/184/184 after-excl=184/184/184 (stripped 0) after-examine=63/36/50 <q>=0.34/0.20/0.27
+   matched 2/4: per-point assoc0 diff U/V/W median [18.5 18.5 18.5]  after-excl diff median [18.5 18.5 18.5]  kept A/B 2/2  dis_cut med A/B 1.02/1.20
+ map2 near-J  WCP-off: n=9 kept=9 assoc U/V/W=219/221/218 after-excl=219/221/218 (stripped 0) after-examine=118/81/112 <q>=0.55/0.38/0.52
+              WCT-off: n=8 kept=8 assoc U/V/W=186/190/189 after-excl=186/190/189 (stripped 0) after-examine=100/70/95 <q>=0.55/0.35/0.50
+   matched 9/9: per-point assoc0 diff U/V/W median [0. 1. 1.]  after-excl diff median [0. 1. 1.]  kept A/B 9/9  dis_cut med A/B 0.52/0.54
+ map3: missing on one side
+ fit1 near-J: n WCP-off=6 WCT-off=4 matched 4 |dpos| med/max 0.435/0.446 cm ; sum dQ 0 vs -4
+ fit2 near-J: n WCP-off=11 WCT-off=9 matched 11 |dpos| med/max 0.238/0.427 cm ; sum dQ 0 vs -9
+ fit3 near-J: n WCP-off=11 WCT-off=11 matched 10 |dpos| med/max 0.127/0.267 cm ; sum dQ 404164 vs 364545
+   WCP-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.000/0.069
+   WCP-off fit2->fit3 near-J: matched 11/11 |dpos| med/max 0.064/0.176
+   WCT-off fit1->fit2 near-J: matched 4/4 |dpos| med/max 0.190/0.241
+   WCT-off fit2->fit3 near-J: matched 9/9 |dpos| med/max 0.105/0.209
+--- WCP-off vs WCP-on
+junction [ 47.98  67.99 430.62]: WCP-off call 65 (excl=0, 65 calls) ; WCP-on call 68 (excl=1, 68 calls)
+ map1 near-J  WCP-off: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=280/281/279 (stripped 0) after-examine=109/65/88 <q>=0.39/0.24/0.32
+              WCP-on: n=4 kept=4 assoc U/V/W=280/281/279 after-excl=232/240/254 (stripped 114) after-examine=99/59/80 <q>=0.42/0.25/0.32
+   matched 4/4: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-10.   -8.5  -5.5]  kept A/B 4/4  dis_cut med A/B 1.02/1.02
+ map2 near-J  WCP-off: n=9 kept=9 assoc U/V/W=219/221/218 after-excl=219/221/218 (stripped 0) after-examine=118/81/112 <q>=0.55/0.38/0.52
+              WCP-on: n=7 kept=7 assoc U/V/W=258/260/256 after-excl=229/241/242 (stripped 62) after-examine=119/74/101 <q>=0.53/0.31/0.43
+   matched 9/9: per-point assoc0 diff U/V/W median [16. 16. 16.]  after-excl diff median [13. 12. 16.]  kept A/B 9/9  dis_cut med A/B 0.52/0.68
+ map3: missing on one side
+ fit1 near-J: n WCP-off=6 WCP-on=8 matched 6 |dpos| med/max 0.039/0.428 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=11 WCP-on=10 matched 10 |dpos| med/max 0.211/0.466 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=11 WCP-on=13 matched 11 |dpos| med/max 0.061/0.209 cm ; sum dQ 404164 vs 462913
+   WCP-off fit1->fit2 near-J: matched 6/6 |dpos| med/max 0.000/0.069
+   WCP-off fit2->fit3 near-J: matched 11/11 |dpos| med/max 0.064/0.176
+   WCP-on fit1->fit2 near-J: matched 7/8 |dpos| med/max 0.000/0.191
+   WCP-on fit2->fit3 near-J: matched 9/10 |dpos| med/max 0.133/0.344
+--- WCT-off vs WCT-on
+junction [ 47.98  67.99 430.62]: WCT-off call 11 (excl=0, 54 calls) ; WCT-on call 11 (excl=1, 50 calls)
+ map1 near-J  WCT-off: n=2 kept=2 assoc U/V/W=184/184/184 after-excl=184/184/184 (stripped 0) after-examine=63/36/50 <q>=0.34/0.20/0.27
+              WCT-on: n=2 kept=2 assoc U/V/W=184/184/184 after-excl=166/169/169 (stripped 48) after-examine=59/36/48 <q>=0.35/0.22/0.29
+   matched 2/2: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-9.  -7.5 -7.5]  kept A/B 2/2  dis_cut med A/B 1.20/1.20
+ map2 near-J  WCT-off: n=8 kept=8 assoc U/V/W=186/190/189 after-excl=186/190/189 (stripped 0) after-examine=100/70/95 <q>=0.55/0.35/0.50
+              WCT-on: n=8 kept=8 assoc U/V/W=186/190/189 after-excl=172/171/174 (stripped 48) after-examine=94/60/85 <q>=0.55/0.34/0.49
+   matched 8/8: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [0. 0. 0.]  kept A/B 8/8  dis_cut med A/B 0.54/0.54
+ map3 near-J  WCT-off: n=9 kept=9 assoc U/V/W=195/193/194 after-excl=195/193/194 (stripped 0) after-examine=106/70/98 <q>=0.54/0.35/0.50
+              WCT-on: n=8 kept=8 assoc U/V/W=185/178/192 after-excl=182/171/184 (stripped 18) after-examine=105/62/91 <q>=0.58/0.37/0.50
+   matched 9/9: per-point assoc0 diff U/V/W median [2. 3. 3.]  after-excl diff median [2. 1. 3.]  kept A/B 9/9  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=4 WCT-on=4 matched 4 |dpos| med/max 0.004/0.008 cm ; sum dQ -4 vs -4
+ fit2 near-J: n WCT-off=9 WCT-on=10 matched 9 |dpos| med/max 0.003/0.260 cm ; sum dQ -9 vs -10
+ fit3 near-J: n WCT-off=11 WCT-on=10 matched 11 |dpos| med/max 0.073/0.500 cm ; sum dQ 364545 vs 356258
+   WCT-off fit1->fit2 near-J: matched 4/4 |dpos| med/max 0.190/0.241
+   WCT-off fit2->fit3 near-J: matched 9/9 |dpos| med/max 0.105/0.209
+   WCT-on fit1->fit2 near-J: matched 4/4 |dpos| med/max 0.236/0.241
+   WCT-on fit2->fit3 near-J: matched 10/10 |dpos| med/max 0.068/0.209
+
+################ ev 6806 J0 (172.58,-96.35,732.97)
+--- WCP-on vs WCT-on
+junction [172.58 -96.35 732.97]: WCP-on call 24 (excl=1, 24 calls) ; WCT-on call 21 (excl=1, 21 calls)
+ map1 near-J  WCP-on: n=7 kept=7 assoc U/V/W=475/459/479 after-excl=314/272/371 (stripped 456) after-examine=149/157/0 <q>=0.48/0.60/0.00
+              WCT-on: n=6 kept=6 assoc U/V/W=410/406/420 after-excl=261/234/294 (stripped 447) after-examine=140/135/0 <q>=0.56/0.59/0.00
+   matched 5/7: per-point assoc0 diff U/V/W median [0. 8. 6.]  after-excl diff median [ -8.  -1. -12.]  kept A/B 5/5  dis_cut med A/B 1.20/1.05
+ map2 near-J  WCP-on: n=14 kept=14 assoc U/V/W=351/351/340 after-excl=283/250/298 (stripped 211) after-examine=201/193/0 <q>=0.73/0.77/0.00
+              WCT-on: n=12 kept=12 assoc U/V/W=371/343/344 after-excl=267/239/271 (stripped 281) after-examine=191/173/0 <q>=0.77/0.74/0.00
+   matched 13/14: per-point assoc0 diff U/V/W median [1. 1. 1.]  after-excl diff median [-1.  2.  0.]  kept A/B 13/13  dis_cut med A/B 0.57/0.56
+ map3: missing on one side
+ fit1 near-J: n WCP-on=14 WCT-on=12 matched 12 |dpos| med/max 0.187/0.372 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-on=20 WCT-on=18 matched 20 |dpos| med/max 0.187/0.418 cm ; sum dQ 0 vs -18
+ fit3 near-J: n WCP-on=19 WCT-on=19 matched 19 |dpos| med/max 0.187/0.393 cm ; sum dQ 973229 vs 2187488
+   WCP-on fit1->fit2 near-J: matched 14/14 |dpos| med/max 0.118/0.489
+   WCP-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.092/0.362
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.132/0.309
+   WCT-on fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.060/0.413
+--- WCP-off vs WCT-off
+junction [172.58 -96.35 732.97]: WCP-off call 24 (excl=0, 24 calls) ; WCT-off call 18 (excl=0, 18 calls)
+ map1 near-J  WCP-off: n=7 kept=7 assoc U/V/W=502/440/496 after-excl=502/440/496 (stripped 0) after-examine=244/264/0 <q>=0.49/0.59/0.00
+              WCT-off: n=7 kept=7 assoc U/V/W=473/454/460 after-excl=473/454/460 (stripped 0) after-examine=234/291/0 <q>=0.50/0.64/0.00
+   matched 2/7: per-point assoc0 diff U/V/W median [-20.5  -5.  -21. ]  after-excl diff median [-20.5  -5.  -21. ]  kept A/B 2/2  dis_cut med A/B 1.20/0.87
+ map2 near-J  WCP-off: n=12 kept=12 assoc U/V/W=375/372/380 after-excl=375/372/380 (stripped 0) after-examine=268/303/0 <q>=0.70/0.80/0.00
+              WCT-off: n=14 kept=14 assoc U/V/W=408/395/386 after-excl=408/395/386 (stripped 0) after-examine=309/298/0 <q>=0.74/0.73/0.00
+   matched 11/12: per-point assoc0 diff U/V/W median [-7. -8. -8.]  after-excl diff median [-7. -8. -8.]  kept A/B 11/11  dis_cut med A/B 0.62/0.52
+ map3: missing on one side
+ fit1 near-J: n WCP-off=13 WCT-off=13 matched 11 |dpos| med/max 0.302/0.456 cm ; sum dQ 0 vs -13
+ fit2 near-J: n WCP-off=18 WCT-off=20 matched 12 |dpos| med/max 0.256/0.403 cm ; sum dQ 0 vs -20
+ fit3 near-J: n WCP-off=19 WCT-off=20 matched 18 |dpos| med/max 0.306/0.487 cm ; sum dQ 1118165 vs 1260286
+   WCP-off fit1->fit2 near-J: matched 13/13 |dpos| med/max 0.133/0.403
+   WCP-off fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.090/0.411
+   WCT-off fit1->fit2 near-J: matched 12/13 |dpos| med/max 0.148/0.416
+   WCT-off fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.085/0.260
+--- WCP-off vs WCP-on
+junction [172.58 -96.35 732.97]: WCP-off call 24 (excl=0, 24 calls) ; WCP-on call 24 (excl=1, 24 calls)
+ map1 near-J  WCP-off: n=7 kept=7 assoc U/V/W=502/440/496 after-excl=502/440/496 (stripped 0) after-examine=244/264/0 <q>=0.49/0.59/0.00
+              WCP-on: n=7 kept=7 assoc U/V/W=475/459/479 after-excl=314/272/371 (stripped 456) after-examine=149/157/0 <q>=0.48/0.60/0.00
+   matched 5/7: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-27. -28. -25.]  kept A/B 5/5  dis_cut med A/B 1.20/1.20
+ map2 near-J  WCP-off: n=12 kept=12 assoc U/V/W=375/372/380 after-excl=375/372/380 (stripped 0) after-examine=268/303/0 <q>=0.70/0.80/0.00
+              WCP-on: n=14 kept=14 assoc U/V/W=351/351/340 after-excl=283/250/298 (stripped 211) after-examine=201/193/0 <q>=0.73/0.77/0.00
+   matched 11/12: per-point assoc0 diff U/V/W median [-2. -2. -5.]  after-excl diff median [-11.  -9.  -6.]  kept A/B 11/11  dis_cut med A/B 0.62/0.57
+ map3: missing on one side
+ fit1 near-J: n WCP-off=13 WCP-on=14 matched 12 |dpos| med/max 0.374/0.498 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=18 WCP-on=20 matched 17 |dpos| med/max 0.322/0.423 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=19 WCP-on=19 matched 19 |dpos| med/max 0.306/0.497 cm ; sum dQ 1118165 vs 973229
+   WCP-off fit1->fit2 near-J: matched 13/13 |dpos| med/max 0.133/0.403
+   WCP-off fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.090/0.411
+   WCP-on fit1->fit2 near-J: matched 14/14 |dpos| med/max 0.118/0.489
+   WCP-on fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.092/0.362
+--- WCT-off vs WCT-on
+junction [172.58 -96.35 732.97]: WCT-off call 18 (excl=0, 18 calls) ; WCT-on call 21 (excl=1, 21 calls)
+ map1 near-J  WCT-off: n=7 kept=7 assoc U/V/W=473/454/460 after-excl=473/454/460 (stripped 0) after-examine=234/291/0 <q>=0.50/0.64/0.00
+              WCT-on: n=6 kept=6 assoc U/V/W=410/406/420 after-excl=261/234/294 (stripped 447) after-examine=140/135/0 <q>=0.56/0.59/0.00
+   matched 4/7: per-point assoc0 diff U/V/W median [ 8.5 10.   9. ]  after-excl diff median [-10. -22.  -3.]  kept A/B 4/4  dis_cut med A/B 0.94/1.03
+ map2 near-J  WCT-off: n=14 kept=14 assoc U/V/W=408/395/386 after-excl=408/395/386 (stripped 0) after-examine=309/298/0 <q>=0.74/0.73/0.00
+              WCT-on: n=12 kept=12 assoc U/V/W=371/343/344 after-excl=267/239/271 (stripped 281) after-examine=191/173/0 <q>=0.77/0.74/0.00
+   matched 12/14: per-point assoc0 diff U/V/W median [5.  5.  1.5]  after-excl diff median [-7.5 -7.5 -4. ]  kept A/B 12/12  dis_cut med A/B 0.52/0.56
+ map3 near-J  WCT-off: n=14 kept=14 assoc U/V/W=345/326/331 after-excl=345/326/331 (stripped 0) after-examine=274/264/0 <q>=0.79/0.81/0.00
+              WCT-on: n=13 kept=13 assoc U/V/W=311/290/279 after-excl=240/229/236 (stripped 175) after-examine=183/179/0 <q>=0.75/0.77/0.00
+   matched 11/14: per-point assoc0 diff U/V/W median [0. 0. 0.]  after-excl diff median [-7. -5. -3.]  kept A/B 11/11  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=13 WCT-on=12 matched 12 |dpos| med/max 0.282/0.468 cm ; sum dQ -13 vs -12
+ fit2 near-J: n WCT-off=20 WCT-on=18 matched 15 |dpos| med/max 0.306/0.469 cm ; sum dQ -20 vs -18
+ fit3 near-J: n WCT-off=20 WCT-on=19 matched 16 |dpos| med/max 0.254/0.425 cm ; sum dQ 1260286 vs 2187488
+   WCT-off fit1->fit2 near-J: matched 12/13 |dpos| med/max 0.148/0.416
+   WCT-off fit2->fit3 near-J: matched 20/20 |dpos| med/max 0.085/0.260
+   WCT-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.132/0.309
+   WCT-on fit2->fit3 near-J: matched 18/18 |dpos| med/max 0.060/0.413
+
+################ ev 6806 J1 (173.74,-95.89,732.09)
+--- WCP-on vs WCT-on
+junction [173.74 -95.89 732.09]: WCP-on call 24 (excl=1, 24 calls) ; WCT-on call 21 (excl=1, 21 calls)
+ map1 near-J  WCP-on: n=5 kept=5 assoc U/V/W=368/354/372 after-excl=207/200/264 (stripped 423) after-examine=99/105/0 <q>=0.49/0.56/0.00
+              WCT-on: n=5 kept=5 assoc U/V/W=346/344/358 after-excl=198/202/239 (stripped 409) after-examine=108/114/0 <q>=0.57/0.58/0.00
+   matched 4/5: per-point assoc0 diff U/V/W median [-9.5 -5.5 -6. ]  after-excl diff median [ -8.5  -2.5 -12.5]  kept A/B 4/4  dis_cut med A/B 1.20/1.06
+ map2 near-J  WCP-on: n=11 kept=11 assoc U/V/W=271/271/267 after-excl=203/192/225 (stripped 189) after-examine=147/147/0 <q>=0.75/0.77/0.00
+              WCT-on: n=10 kept=10 assoc U/V/W=288/270/271 after-excl=184/186/201 (stripped 258) after-examine=145/133/0 <q>=0.81/0.74/0.00
+   matched 11/11: per-point assoc0 diff U/V/W median [1. 1. 1.]  after-excl diff median [-1.  0. -1.]  kept A/B 11/11  dis_cut med A/B 0.52/0.56
+ map3: missing on one side
+ fit1 near-J: n WCP-on=12 WCT-on=11 matched 11 |dpos| med/max 0.187/0.372 cm ; sum dQ 0 vs -11
+ fit2 near-J: n WCP-on=17 WCT-on=16 matched 17 |dpos| med/max 0.187/0.316 cm ; sum dQ 0 vs -16
+ fit3 near-J: n WCP-on=16 WCT-on=16 matched 16 |dpos| med/max 0.187/0.408 cm ; sum dQ 874022 vs 2045974
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.089/0.221
+   WCP-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.050/0.362
+   WCT-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.130/0.309
+   WCT-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.044/0.413
+--- WCP-off vs WCT-off
+junction [173.74 -95.89 732.09]: WCP-off call 24 (excl=0, 24 calls) ; WCT-off call 18 (excl=0, 18 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=410/352/408 after-excl=410/352/408 (stripped 0) after-examine=207/214/0 <q>=0.51/0.59/0.00
+              WCT-off: n=5 kept=5 assoc U/V/W=324/309/313 after-excl=324/309/313 (stripped 0) after-examine=170/200/0 <q>=0.52/0.64/0.00
+   matched 2/6: per-point assoc0 diff U/V/W median [-20.5  -5.  -21. ]  after-excl diff median [-20.5  -5.  -21. ]  kept A/B 2/2  dis_cut med A/B 1.20/0.87
+ map2 near-J  WCP-off: n=9 kept=9 assoc U/V/W=300/290/298 after-excl=300/290/298 (stripped 0) after-examine=217/238/0 <q>=0.71/0.81/0.00
+              WCT-off: n=11 kept=11 assoc U/V/W=348/341/332 after-excl=348/341/332 (stripped 0) after-examine=268/258/0 <q>=0.75/0.73/0.00
+   matched 8/9: per-point assoc0 diff U/V/W median [-10.   -5.5  -8. ]  after-excl diff median [-10.   -5.5  -8. ]  kept A/B 8/8  dis_cut med A/B 0.67/0.55
+ map3: missing on one side
+ fit1 near-J: n WCP-off=12 WCT-off=12 matched 10 |dpos| med/max 0.363/0.456 cm ; sum dQ 0 vs -12
+ fit2 near-J: n WCP-off=16 WCT-off=17 matched 10 |dpos| med/max 0.270/0.403 cm ; sum dQ 0 vs -17
+ fit3 near-J: n WCP-off=16 WCT-off=18 matched 15 |dpos| med/max 0.371/0.487 cm ; sum dQ 1017547 vs 1182043
+   WCP-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.095/0.403
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.062/0.411
+   WCT-off fit1->fit2 near-J: matched 11/12 |dpos| med/max 0.141/0.396
+   WCT-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.072/0.260
+--- WCP-off vs WCP-on
+junction [173.74 -95.89 732.09]: WCP-off call 24 (excl=0, 24 calls) ; WCP-on call 24 (excl=1, 24 calls)
+ map1 near-J  WCP-off: n=6 kept=6 assoc U/V/W=410/352/408 after-excl=410/352/408 (stripped 0) after-examine=207/214/0 <q>=0.51/0.59/0.00
+              WCP-on: n=5 kept=5 assoc U/V/W=368/354/372 after-excl=207/200/264 (stripped 423) after-examine=99/105/0 <q>=0.49/0.56/0.00
+   matched 4/6: per-point assoc0 diff U/V/W median [1.5 4.5 2.5]  after-excl diff median [-20.  -14.5 -19. ]  kept A/B 4/4  dis_cut med A/B 1.20/1.20
+ map2 near-J  WCP-off: n=9 kept=9 assoc U/V/W=300/290/298 after-excl=300/290/298 (stripped 0) after-examine=217/238/0 <q>=0.71/0.81/0.00
+              WCP-on: n=11 kept=11 assoc U/V/W=271/271/267 after-excl=203/192/225 (stripped 189) after-examine=147/147/0 <q>=0.75/0.77/0.00
+   matched 8/9: per-point assoc0 diff U/V/W median [-7. -4. -6.]  after-excl diff median [-13.5 -11.5 -10. ]  kept A/B 8/8  dis_cut med A/B 0.64/0.55
+ map3: missing on one side
+ fit1 near-J: n WCP-off=12 WCP-on=12 matched 11 |dpos| med/max 0.393/0.498 cm ; sum dQ 0 vs 0
+ fit2 near-J: n WCP-off=16 WCP-on=17 matched 15 |dpos| med/max 0.332/0.423 cm ; sum dQ 0 vs 0
+ fit3 near-J: n WCP-off=16 WCP-on=16 matched 16 |dpos| med/max 0.343/0.497 cm ; sum dQ 1017547 vs 874022
+   WCP-off fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.095/0.403
+   WCP-off fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.062/0.411
+   WCP-on fit1->fit2 near-J: matched 12/12 |dpos| med/max 0.089/0.221
+   WCP-on fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.050/0.362
+--- WCT-off vs WCT-on
+junction [173.74 -95.89 732.09]: WCT-off call 18 (excl=0, 18 calls) ; WCT-on call 21 (excl=1, 21 calls)
+ map1 near-J  WCT-off: n=5 kept=5 assoc U/V/W=324/309/313 after-excl=324/309/313 (stripped 0) after-examine=170/200/0 <q>=0.52/0.64/0.00
+              WCT-on: n=5 kept=5 assoc U/V/W=346/344/358 after-excl=198/202/239 (stripped 409) after-examine=108/114/0 <q>=0.57/0.58/0.00
+   matched 3/5: per-point assoc0 diff U/V/W median [17. 17. 17.]  after-excl diff median [-19. -12.   3.]  kept A/B 3/3  dis_cut med A/B 0.87/1.05
+ map2 near-J  WCT-off: n=11 kept=11 assoc U/V/W=348/341/332 after-excl=348/341/332 (stripped 0) after-examine=268/258/0 <q>=0.75/0.73/0.00
+              WCT-on: n=10 kept=10 assoc U/V/W=288/270/271 after-excl=184/186/201 (stripped 258) after-examine=145/133/0 <q>=0.81/0.74/0.00
+   matched 8/11: per-point assoc0 diff U/V/W median [-0.5 -3.5 -1.5]  after-excl diff median [-14.5 -10.  -10.5]  kept A/B 8/8  dis_cut med A/B 0.55/0.56
+ map3 near-J  WCT-off: n=12 kept=12 assoc U/V/W=303/284/289 after-excl=303/284/289 (stripped 0) after-examine=243/228/0 <q>=0.80/0.80/0.00
+              WCT-on: n=10 kept=10 assoc U/V/W=259/238/227 after-excl=188/183/184 (stripped 169) after-examine=148/144/0 <q>=0.79/0.79/0.00
+   matched 9/12: per-point assoc0 diff U/V/W median [ 0.  0. -4.]  after-excl diff median [-7. -7. -4.]  kept A/B 9/9  dis_cut med A/B 0.54/0.54
+ fit1 near-J: n WCT-off=12 WCT-on=11 matched 11 |dpos| med/max 0.282/0.468 cm ; sum dQ -12 vs -11
+ fit2 near-J: n WCT-off=17 WCT-on=16 matched 13 |dpos| med/max 0.333/0.469 cm ; sum dQ -17 vs -16
+ fit3 near-J: n WCT-off=18 WCT-on=16 matched 14 |dpos| med/max 0.313/0.425 cm ; sum dQ 1182043 vs 2045974
+   WCT-off fit1->fit2 near-J: matched 11/12 |dpos| med/max 0.141/0.396
+   WCT-off fit2->fit3 near-J: matched 17/17 |dpos| med/max 0.072/0.260
+   WCT-on fit1->fit2 near-J: matched 11/11 |dpos| med/max 0.130/0.309
+   WCT-on fit2->fit3 near-J: matched 16/16 |dpos| med/max 0.044/0.413

@@ -1,0 +1,171 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 216.08,
+  "az_deg": -55.0,
+  "centre": [
+   -68.45,
+   51.01,
+   102.78
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 9823,
+  "cloud_cluster_ids": [
+   9,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "cloud_kept": 9823,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 24422,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.4729841552961919,
+   -0.15699474076427514,
+   -0.8669709569594046
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "16017": {
+    "31033": "out",
+    "9009": "out"
+   }
+  },
+  "marks_detail": {
+   "16017": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.4729841552961919,
+     -0.15699474076427514,
+     -0.8669709569594046
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "31033": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 21.03230595606784,
+      "cluster_id": 31,
+      "dist": 76.3701018107361,
+      "ellip": 33.225397014733375,
+      "kind": "out",
+      "length": 0.710790513211441,
+      "owner": 16017,
+      "pdg": 2212,
+      "tier": 1
+     },
+     "9009": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 11.636121297829323,
+      "cluster_id": 9,
+      "dist": 44.599363436222504,
+      "ellip": 4.4293676051525885,
+      "kind": "out",
+      "length": 2.271561941226662,
+      "owner": 16017,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 21.03230595606784,
+     "angle_min": 0.0,
+     "dist_max": 76.3701018107361,
+     "dist_min": 0.0,
+     "n": 8
+    },
+    "members": [
+     9009,
+     16016,
+     16017,
+     16018,
+     16019,
+     31033,
+     33035,
+     47041
+    ],
+    "start": [
+     -147.05182669269863,
+     151.1688899232776,
+     104.49238031305951
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.4729841552961919,
+    -0.15699474076427514,
+    -0.8669709569594046
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 8,
+   "kine_best": 116.27012943625085,
+   "kine_charge": 116.27012943625085,
+   "kine_charge_other_hypothesis": 69.93691996165467,
+   "kine_dQdx": 95.02257010120965,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    9009,
+    16016,
+    16017,
+    16018,
+    16019,
+    31033,
+    33035,
+    47041
+   ],
+   "membership_source": "probe",
+   "num_segments": 8,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -147.05182669269863,
+   151.1688899232776,
+   104.49238031305951
+  ],
+  "reco_start_vertex_id": 17020,
+  "shower": 16017,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -147.05182669269863,
+   151.1688899232776,
+   104.49238031305951
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt72786",
+ "eventNo": 72786,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -152.5337372702205,
+  "y": 151.87346840724595,
+  "z": 111.46705751045275
+ },
+ "note": "[agent-bulk] Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm 182.6 -- correction 5), shots-vtx/evt72786. Vertex looks RIGHT: 17055 (pdg 13, 94 cm muon) and 17026 (pdg 2212, 6.4 cm proton) both start exactly on the star (-152.5,151.9,111.5), dvtx 0.0, and the two EM showers start 8.9 and 7.5 cm from it. No vertex complaint. VERDICT on 16017 (116.3 MeV, 8 segments): over-clustered, and specifically at the far end of a pass4_angle trail. Its core is clean -- four contiguous cluster-16 segments (16017, 16019, 16016, 16018) spanning ~27 cm at 0-18.2 deg, a compact single-apex EM object at the vertex. The other FOUR members are isolated specks from four DIFFERENT clusters strung along the axis: 47041 (cl 47, 4 pts, 23.7 cm, 15.8 deg), 33035 (cl 33, 2 pts, 28.9 cm, 9.7 deg, pdg 13), 9009 (cl 9, 5 pts, 44.6 cm, 11.6 deg, pdg 13) and 31033 (cl 31, 2 pts, 76.4 cm, 21.0 deg, pdg 2212) -- all four absorbed by pass4_angle (direct). Two of those are concretely wrong, and that is what the verdict rests on, NOT on the generic trail: (i) 9009 is the 2.3 cm TIP of segment 9008, a 64.7 cm pdg-211 track inside cluster 9, a ~320 cm track complex (9004 143 cm, 9006 114 cm, 9008 65 cm) that is otherwise entirely unowned -- the shower reached 45 cm out and took the endpoint of a different object; (ii) 31033 sits 76.4 cm from the shower start, i.e. 5.4 X0 for a 116 MeV shower that should be dead by 3-4 X0, and is a 2-point pdg-2212 speck. MARKS: 31033 and 9009 OUT of 16017. Per correction 7 these two are NOT equal in strength -- 31033 (76 cm, pdg 2212) is the one I am most sure of, 9009 is next because its provenance is traceable; I deliberately did NOT mark 47041 (23.7 cm) or 33035 (28.9 cm), which are plausible late-shower fragments and are the ones I would leave in. HONEST SCALE: the mis-attributed charge is small -- 13 skeleton points across the four specks against 47 in the core -- so the energy error is probably minor. The finding is about the MECHANISM (pass4_angle reaching 76 cm along the axis into a foreign cluster), not about a large energy shift. Alternative reading: all four are genuine late shower tail, in which case the event is correct; I judged against it because of 9009's traceable parentage. UNDER-CLUSTERING RULED OUT for 16017: no non-member sits inside 25 deg of the axis at any distance under 100 cm (nearest in angle is 51045, a 2-point stub at 30.9 cm / 29.0 deg). SECOND SHOWER 52050 (90.7 MeV, 5 segments) has the SAME shape and worse: its core is ONE 9.3 cm segment (52050) and all four other members are 2-6 point pass4_angle specks at 14.3, 26.9, 35.2 and 43.0 cm, three of them pdg 13 or 2212. No verdict is recorded for it (one verdict per event). CONTEXT the owner should know: a very large, low-density, UNOWNED point band roughly 40-60 cm wide runs diagonally across this whole event following the two long cluster-9 muons, and both showers' far specks sit inside it. It reads to me like dead-region / 2-plane ghost points rather than localized real charge, but I could NOT confirm that from the display, and if it is real charge then the grey-charge picture here is not trustworthy and this verdict should be re-examined. NOT looked at: the 12 showers the scope rule skipped. PI0: no reco group (all pio_id -1); the pio-*.png is the capture's auto pair, not the reconstruction's. I do not propose 16017+52050 as a pi0 -- both start 7-9 cm from the vertex rather than detached, and the display prices the pair at 175.9 MeV (axis) / 179.7 MeV (vertex), far above 135. drag_check live: probe_radius_px 189, seg_u 190.04 -> 66.79, cloud_redrew true. ACCEPTANCE PLOT (shw16017-acc, looked at after the first save; note amended and re-recorded per correction 10): the pass-1 dashed box on this event extends to 80 cm in distance and 25 deg in angle, and ALL seven plotted members -- 31033 at 76.4 cm / 21.0 deg included -- sit inside it and are tier 1. So this is NOT a gate misfiring; it is a statement that an 80 cm x 25 deg pass-1 box is too permissive for a 116 MeV shower. The same plot shows ZERO non-member circles anywhere in the 0-25 deg band out to ~95 cm, which is the positive evidence that nothing is missing. Second azimuth (shw16017-az+085) confirms the picture: the core is one compact object at the vertex, and member 9009 is visibly sitting ON the pair of long parallel cluster-9 tracks, ~45 cm down the axis. That view also shows the big unowned band is NARROW in this projection and wide in az-055, i.e. a planar sheet -- which is what a dead-region / 2-plane ghost looks like, though I still cannot confirm it from the display.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt72786/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:40:00+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt72786/calib-pr-evt72786.json",
+ "subRunNo": 1
+}

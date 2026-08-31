@@ -1,0 +1,107 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 37.11,
+  "az_deg": -55.0,
+  "centre": [
+   149.97,
+   -110.26,
+   486.97
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1551,
+  "cloud_cluster_ids": [
+   6,
+   11,
+   12
+  ],
+  "cloud_kept": 1551,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 16955,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.9139789787252312,
+   0.3089928932451821,
+   0.2629939512086825
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.9139789787252312,
+    0.3089928932451821,
+    0.2629939512086825
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 11,
+   "kine_best": 183.529940375236,
+   "kine_charge": 183.529940375236,
+   "kine_charge_other_hypothesis": 110.39394909788633,
+   "kine_dQdx": 120.27096325677823,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    6001,
+    6003,
+    6005,
+    6007,
+    6009,
+    6011,
+    6013,
+    6014,
+    18017,
+    25024,
+    30026
+   ],
+   "membership_source": "probe",
+   "num_segments": 11,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   178.60060955282376,
+   -120.84898889064648,
+   476.4780896897926
+  ],
+  "reco_start_vertex_id": 31040,
+  "shower": 6013,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   178.60060955282376,
+   -120.84898889064648,
+   476.4780896897926
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt284200",
+ "eventNo": 284200,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 31,
+  "x": 197.38088608976366,
+  "y": -126.27391573921473,
+  "z": 472.04864531182295
+ },
+ "note": "[agent] good. Clean single-photon topology: a hadronic V at the vertex (cluster 31 - segments 31028, 31029 pdg 2212, plus 31033/31035/31043 - all correctly left unowned) and shw 6013 (183.5 MeV, 11 seg) detached 20.0 cm from it, 62 cm long, width 6.0 cm, branching. Nothing to add: every non-member within 40 cm is at 47-172 deg from the axis, and the six candidates behind it at 152-172 deg are the proton system. 32039 (44.2 MeV, pdg 13, 11 cm, width 0.3 cm) is a track, correctly its own object. No second photon anywhere in the event, which is why this event has no pi0 group - the partner gamma is not in the reconstruction, not mis-paired.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt284200/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T18:44:34+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt284200/calib-pr-evt284200.json",
+ "subRunNo": 1
+}

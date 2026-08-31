@@ -1,0 +1,35 @@
+{
+ "arm": "work-mcp2k-harv3",
+ "confidence": null,
+ "dl_best_score": 7.313622022262353,
+ "dl_min_accept_score": 10.0,
+ "dl_score_scale": 1000.0,
+ "event": "evt317957",
+ "eventNo": 317957,
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 130.6783589584613,
+  "y": 173.64123048750764,
+  "z": 414.4069665460552
+ },
+ "not_a_candidate": true,
+ "picks": [
+  {
+   "cluster_id": -1,
+   "dis_to_main": 2.8964353315866815,
+   "kind": "manual",
+   "rank": 1,
+   "vertex_id": null,
+   "x": 129.0,
+   "y": 176.0,
+   "z": 414.5
+  }
+ ],
+ "route": "dl-rerank-reject",
+ "runNo": 18255,
+ "saved_utc": "2026-08-16T19:58:31+00:00",
+ "scan_tag": "vtxscan-mcp2k",
+ "scoreboard_present": true,
+ "source": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt317957/calib-pr-evt317957.json",
+ "subRunNo": 1
+}
