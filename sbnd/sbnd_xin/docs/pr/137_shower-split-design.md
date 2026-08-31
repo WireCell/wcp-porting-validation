@@ -628,6 +628,13 @@ k forced to 2 so the kernel is not scored on the trigger's failures):
 | point-level seeded, flat σ = 4 cm, sep 1.0 | 33 | 0.682 | 10 | 7 |
 | **§3's segment-level ray 2-means, recomputed on this population** | 33 | **0.825** | **15** | 7 |
 
+**The denominators differ and that matters, so here is the paired comparison.**
+The seeded rows exclude cases where no second maximum was found (1–10 per
+variant); the 2-means row does not. On the **29 objects both kernels score**:
+seeded median **0.734** (8 at ≥ 0.90) against 2-means **0.825** (13 at ≥ 0.90),
+and pairwise the 2-means is better on **12**, the seeded on **6**, tied on **11**.
+The conclusion survives the matched subset.
+
 **Point-level seeding is a worse KERNEL than §3's segment-level 2-means.** Recorded
 plainly: the reframe improves the *trigger*, not the *split*. **Design consequence:
 keep §3's 2-means as the kernel and use the seeded density only to decide whether
@@ -754,6 +761,16 @@ rather than argued:
 
 And **4/4 non-fired controls are correctly KEEP.**
 
+**The 80 % is not the join correction showing up twice.** §10.3(a) found that a
+lossy join mislabels 10 real merges as SINGLE, so the obvious worry is that the
+five rescued rows got their SINGLE label that way. Checked directly: all eight
+scanned objects have **exactly one OFF ancestor under the faithful join, zero
+shared segments, and a dominant ancestor holding 97–100 % of the charge.** They
+are genuine SINGLE. That makes the reading stronger, not weaker: **the OFF arm
+already held these as one object**, so they are over-clustered *at the current
+operating point*, which is precisely the owner's *"the overclustering, which we
+have at the start of the point"*.
+
 **Three findings that only the scan could produce:**
 
 1. **A new false-positive class, and it renames the dE/dx handle.** 389538/19021 is
@@ -775,7 +792,10 @@ And **4/4 non-fired controls are correctly KEEP.**
 
 ### 14.3 What this round did NOT establish
 
-- **The 80 % is 11 objects labelled by one scanner.** It is not a purity measurement;
+- **The 80 % is 11 objects labelled by one scanner, who knew what the trigger was
+  looking for.** The sheets were blind to the proxy class (§14.1), not to my own
+  prior. Quote it as "the proxy understates, by a lot, on a small blind sample",
+  never as a purity. It is not a purity measurement;
   it is a demonstration that the proxy understates. The owner's 50 are what turn it
   into one, and the **agent-vs-owner agreement on the overlap is the noise floor**
   no trigger may be claimed to beat.
