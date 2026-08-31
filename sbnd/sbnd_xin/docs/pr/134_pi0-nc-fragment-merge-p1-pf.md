@@ -441,3 +441,34 @@ movers incl. 397630, 4 held guards, 3 unlabeled new-group events).
 frag_merge, prefer_main; K23 stays OFF) on the owner's Bee verdict, with
 397630 explicitly adjudicated (accepting it as the price of the
 main-preference rule, or scoping a track-length bound in a later round).
+
+## 14. The production flip (owner 2026-08-31) and flip-equivalence
+
+Owner, verbatim: *"Things looks good, you can go ahead update the default
+the production chain."*  Flipped in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+
+| knob | was | now |
+|---|---|---|
+| `pi0_bp_vertex_miss_cm` | null (off) | **8** |
+| `pi0_nc_sig_angle_deg` | null | **15** |
+| `pi0_nc_floor_mev` | null | **5** |
+| `pi0_nc_pf_assoc_deg` | null | **20** |
+| `pi0_nc_frag_merge` | false | **true** |
+| `pi0_prefer_main_vertex` | false | **true** |
+| `pi0_pf_assoc_deg` (K23) | null | null — stays OFF (measured net −1) |
+
+- **Compiled-config proof** (`wcsonnet` with the PR pipeline): all six keys
+  emitted at the values above, `pi0_pf_assoc_deg` absent, and the standing
+  production keys unchanged (`kine_shower_fudge_factor` 0.84,
+  `pi0_admit_muon_showers` true, `shower_em_collinear_dis_cm` 120).
+- **Flip-equivalence gate: PASS 478/478** — `work-pr134-flip2-*`
+  (post-flip config, NO env) vs `work-pr134-k24b-*` (the env-driven
+  validated point), per sample 132/212/38/96 archives byte-identical.  The
+  config flip reproduces exactly what was measured and scanned.
+- **Census on the production arm**: 33 exact / 15 partial / 1 none / 17
+  no-group (exact 50.0%), nueCC-fake counter 0 — identical to k24b, as the
+  gate requires.
+
+Production π⁰ chain as of this commit: fudge 0.84 + K7/K8 + K3=29 +
+K16@120 + K20 + (bp 8, sig 15, floor 5, pf 20, frag_merge, prefer_main).
