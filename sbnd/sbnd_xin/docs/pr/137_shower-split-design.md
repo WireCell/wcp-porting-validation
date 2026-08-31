@@ -947,6 +947,11 @@ Scan A reaches them: not the angular density (no dip), not spatial connectivity
 3. The tooling changes the owner asked for come next; Scan A's finding is that the
    *label vocabulary* is the first thing to fix, ahead of the viewer.
 
+**Done 2026-08-31**: `TRIM` added to the vocabulary, `docs/pr/pr137-curated-set.tsv`
+regenerated on `valley_best` (§15.2's fix), and `bee/pr137r2/` rebuilt — 50
+objects across 41 events, 11 of which fire the corrected rule. The campaign
+sequencing now lives in **doc pr/138, the shower-splitter master plan**.
+
 ### 15.7 CORRECTION: the insertion point in §6 and §10.1 is wrong
 
 §6 and §10.1 place the splitter at `NeutrinoShowerClustering.cxx:8213`, right

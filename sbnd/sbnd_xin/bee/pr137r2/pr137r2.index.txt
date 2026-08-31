@@ -1,58 +1,75 @@
-# doc pr/137 round 2 -- owner calibration scan, 50 objects across 43 events
-# OFF <uuid> / ON <uuid>   (fill in after upload)
-# The task per row: is this ONE object or MORE?  If more, which segments go to which part.
-# Verdict vocabulary: KEEP / SPLIT2 / SPLIT3 / UNSURE, plus the boundary for a SPLIT.
-# stratum S1 = random control (unbiased false-split rate), S2 = known merge,
-#          S3 = enriched by the leading trigger (valley + d2/d1).
-# fires = does the round-2 leading rule d2_over_d1>=0.414 & valley<=0.863 fire?
-bee_idx	event	node	stratum	fires	Q	nseg	note
-0	10550	7036	S1	no	1.19e+07	46	valley=1 d2/d1=0.493 angle=33.77 w_pull=2.911
-1	47212	109100	S1	no	3.97e+06	17	valley=1 d2/d1=0.4984 angle=5.846 w_pull=-0.7963
-2	64409	8022	S1	no	1.15e+07	36	valley=1 d2/d1=0.1901 angle=163.7 w_pull=0.663
-3	65053	139020	S1	no	1.43e+06	4	valley=1 d2/d1=0 angle=18.47 w_pull=-1.477
-4	71872	13008	S1	no	1.6e+06	3	valley=1 d2/d1=0.1605 angle=35.93 w_pull=-0.179
-5	76350	12098	S1	no	1.41e+07	34	valley=1 d2/d1=0.4913 angle=76.38 w_pull=2.187
-5	76350	103093	S1+S2	YES	1.35e+06	8	valley=0.7915 d2/d1=0.9948 angle=48.51 w_pull=3.606
-6	84229	69134	S2	no	1.72e+07	54	valley=0.9298 d2/d1=0.5165 angle=17.67 w_pull=2.276
-7	91917	17005	S3	YES	1.01e+06	6	valley=9.149e-90 d2/d1=0.6836 angle=118.7 w_pull=36.77
-8	96383	14007	S1	no	1.93e+06	5	valley=1 d2/d1=0 angle=18.15 w_pull=-0.4047
-9	98844	6013	S3	no	6.14e+06	14	valley=0.9405 d2/d1=0.8006 angle=137.8 w_pull=4.205
-10	99838	14004	S1	no	2.67e+07	6	valley=1 d2/d1=0 angle=6.174 w_pull=-1.934
-11	116962	21070	S1	no	2.42e+06	5	valley=1 d2/d1=0.2734 angle=151.9 w_pull=-1.012
-12	122660	9110	S1	no	2.11e+07	40	valley=1 d2/d1=0.6494 angle=16.61 w_pull=2.139
-12	122660	54071	S2	no	4.62e+06	5	valley=1 d2/d1=0.7868 angle=7.195 w_pull=0.2641
-12	122660	53070	S1+S2	no	1.43e+06	3	valley=1 d2/d1=0 angle=3.711 w_pull=-1.286
-13	165157	9000	S2	YES	3.13e+06	8	valley=0.638 d2/d1=0.6331 angle=60.51 w_pull=4.918
-14	167612	100074	S1+S2	no	1.47e+06	6	valley=1 d2/d1=0 angle=1.916 w_pull=-1.645
-15	168432	22006	S1	no	3.68e+06	3	valley=1 d2/d1=0 angle=3.766 w_pull=-1.968
-16	170098	78064	S1	no	4.08e+06	23	valley=1 d2/d1=0.403 angle=32.46 w_pull=-0.03147
-17	171729	9005	S1	no	1.4e+06	6	valley=1 d2/d1=0.6032 angle=64.34 w_pull=0.8806
-18	176502	109141	S2	no	1.08e+07	6	valley=1 d2/d1=0.1331 angle=5.212 w_pull=-0.06439
-19	179611	10001	S1	no	5.19e+06	9	valley=0.9519 d2/d1=0.02915 angle=113.9 w_pull=0.105
-20	180801	112061	S2	no	1.07e+06	3	valley=1 d2/d1=0.3488 angle=11.83 w_pull=-0.7241
-21	259542	120068	S3	no	1.19e+06	7	valley=1 d2/d1=0.9663 angle=9.898 w_pull=0.741
-22	278420	18002	S2	no	3.07e+06	5	valley=1 d2/d1=0 angle=12.28 w_pull=-1.009
-23	281485	89095	S2	no	1.57e+06	8	valley=0.9403 d2/d1=0.9515 angle=23.12 w_pull=0.7468
-23	281485	91112	S1	no	1.18e+06	5	valley=1 d2/d1=0 angle=5.143 w_pull=-2.027
-24	281567	99193	S3	no	6e+06	27	valley=1 d2/d1=0.7325 angle=31.44 w_pull=4.492
-25	285443	49035	S1	no	3.86e+06	18	valley=1 d2/d1=0.4306 angle=17.76 w_pull=-0.08328
-26	285567	8107	S1	no	1.61e+06	4	valley=1 d2/d1=0 angle=21.13 w_pull=-1.199
-27	286681	72040	S1	no	8.44e+06	11	valley=1 d2/d1=0.9496 angle=20.44 w_pull=1.996
-27	286681	3012	S1	no	2.5e+06	5	valley=1 d2/d1=0.3474 angle=42.59 w_pull=1.709
-28	292524	9018	S1	no	1.09e+07	14	valley=1 d2/d1=0.367 angle=11.49 w_pull=-1.217
-29	293536	15027	S1	no	1.44e+06	4	valley=1 d2/d1=0.5903 angle=127.5 w_pull=1.408
-30	317939	30022	S1	no	6.92e+06	28	valley=1 d2/d1=0.6076 angle=21.37 w_pull=-0.7948
-31	318769	31026	S3	YES	3.78e+06	12	valley=0.3008 d2/d1=0.7959 angle=44.09 w_pull=7.868
-32	386948	16002	S1	no	6.52e+06	11	valley=1 d2/d1=0.5706 angle=11.75 w_pull=0.9416
-33	394532	8003	S3	no	2.19e+06	11	valley=1 d2/d1=0.9869 angle=26.01 w_pull=1.716
-34	396037	69026	S3	YES	2.22e+06	10	valley=0.7458 d2/d1=0.6554 angle=36.18 w_pull=3.388
-35	396222	9059	S2	YES	4.6e+07	123	valley=0.3126 d2/d1=0.871 angle=81.5 w_pull=9.211
-36	401450	93106	S3	no	2.8e+06	3	valley=1 d2/d1=0.7231 angle=6.039 w_pull=1.388
-37	410008	20001	S1	no	2.11e+06	3	valley=1 d2/d1=0.5193 angle=3.516 w_pull=-0.5537
-38	412242	64054	S2	no	2.09e+06	13	valley=1 d2/d1=0.3859 angle=14.1 w_pull=0.4772
-39	415278	23012	S3	YES	1.77e+07	39	valley=0.519 d2/d1=0.6704 angle=20.88 w_pull=2.912
-39	415278	23047	S1+S2	no	3.39e+06	4	valley=1 d2/d1=0 angle=1.974 w_pull=-1.697
-40	463565	115088	S2	no	4.43e+06	17	valley=1 d2/d1=0.2084 angle=11.13 w_pull=0.344
-40	463565	109073	S2	no	1.8e+06	5	valley=1 d2/d1=0 angle=5.989 w_pull=-0.6892
-41	499577	13009	S3	no	5.46e+06	9	valley=0.9665 d2/d1=0.9911 angle=123.3 w_pull=8.354
-42	521075	18007	S1	no	8.3e+06	16	valley=1 d2/d1=0.03884 angle=40.84 w_pull=-0.7441
+# doc pr/137 -- OWNER CALIBRATION SCAN, 50 objects across 41 events
+# Bee sets: OFF <uuid> / ON <uuid>   (filled in after upload)
+#
+# THE TASK, per row: how many objects is this, and where are the boundaries?
+#
+# VERDICT           meaning                                    what else to record
+#   KEEP            one object, leave it alone                 --
+#   SPLIT2          two objects                                which segments -> part0 / part1
+#   SPLIT3          three objects                              segments -> part0 / part1 / part2
+#   TRIM            ONE object plus detached junk              which segments are the junk
+#   UNSURE          too sparse/ambiguous to call               (preferred over a forced verdict)
+#
+# TRIM exists because Scan A (doc pr/137 sec 15.4) found that ~45 %% of what the
+# arm-difference proxy calls a 'merge' is one coherent shower plus a few detached
+# specks -- NOT two showers.  KEEP and SPLIT are both wrong for those, and the
+# splitter has no trim operation, so they are a separate front.  Do not force them.
+#
+# STRATA (do not skip S1 -- it is the unbiased false-split rate):
+#   S1  random control, drawn BEFORE any feature was consulted
+#   S2  known merge under the faithful OFF-ancestor join
+#   S3  enriched by the leading trigger
+# fires = does the round-2 trigger (valley_best<=0.95 & d2_best>=0.20 & frac_best>=0.05) fire?
+#         Only 7 of the 50 fire, deliberately: this is a CALIBRATION set, not a purity sample.
+#
+bee_idx	event	node	stratum	fires	Q	nseg	verdict	boundary	note
+0	10550	7036	S1	no	1.19e+07	46			valley_best=1 d2_best=0.3531 angle_best=18.16 w_pull=2.911
+1	47212	109100	S1	no	3.97e+06	17			valley_best=1 d2_best=0.4984 angle_best=8.688 w_pull=-0.7963
+2	64409	8022	S1	no	1.15e+07	36			valley_best=1 d2_best=0 angle_best=0 w_pull=0.663
+3	65053	139020	S1	no	1.43e+06	4			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.477
+4	71872	13008	S1	no	1.6e+06	3			valley_best=1 d2_best=0.1605 angle_best=35.65 w_pull=-0.179
+5	76350	12098	S1	no	1.41e+07	34			valley_best=1 d2_best=0.4913 angle_best=9.082 w_pull=2.187
+5	76350	103093	S1+S2	YES	1.35e+06	8			valley_best=0.7915 d2_best=0.9948 angle_best=41.9 w_pull=3.606
+6	84229	69134	S2	YES	1.72e+07	54			valley_best=0.9298 d2_best=0.5165 angle_best=16.78 w_pull=2.276
+7	96383	14007	S1	no	1.93e+06	5			valley_best=1 d2_best=0 angle_best=0 w_pull=-0.4047
+7	96383	14005	S3	no	1.41e+06	6			valley_best=0.3924 d2_best=0.236 angle_best=137.6 w_pull=12.23
+8	98844	6013	S3	YES	6.14e+06	14			valley_best=0.9405 d2_best=0.8006 angle_best=21.85 w_pull=4.205
+9	99838	14004	S1	no	2.67e+07	6			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.934
+10	116962	21070	S1	no	2.42e+06	5			valley_best=1 d2_best=0.2734 angle_best=44.79 w_pull=-1.012
+11	122660	9110	S1	no	2.11e+07	40			valley_best=1 d2_best=0.6494 angle_best=10.06 w_pull=2.139
+11	122660	54071	S2	no	4.62e+06	5			valley_best=1 d2_best=0.5789 angle_best=6.137 w_pull=0.2641
+11	122660	53070	S1+S2	no	1.43e+06	3			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.286
+12	165157	9000	S2	YES	3.13e+06	8			valley_best=0.638 d2_best=0.6331 angle_best=78.52 w_pull=4.918
+13	167612	100074	S1+S2	no	1.47e+06	6			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.645
+14	168432	22006	S1	no	3.68e+06	3			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.968
+15	170098	78064	S1	no	4.08e+06	23			valley_best=1 d2_best=0.403 angle_best=9.093 w_pull=-0.03147
+16	171729	9005	S1	no	1.4e+06	6			valley_best=1 d2_best=0.6032 angle_best=28.25 w_pull=0.8806
+17	176502	109141	S2	no	1.08e+07	6			valley_best=1 d2_best=0.1331 angle_best=13.63 w_pull=-0.06439
+18	179611	10001	S1	no	5.19e+06	9			valley_best=1 d2_best=0 angle_best=0 w_pull=0.105
+19	180801	112061	S2	no	1.07e+06	3			valley_best=1 d2_best=0.3488 angle_best=11.12 w_pull=-0.7241
+20	278420	61027	S3	YES	3.55e+06	23			valley_best=0.2067 d2_best=0.7799 angle_best=32.79 w_pull=5.122
+20	278420	18002	S2	no	3.07e+06	5			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.009
+21	281485	89095	S2	YES	1.57e+06	8			valley_best=0.9403 d2_best=0.9515 angle_best=22.34 w_pull=0.7468
+21	281485	91112	S1	no	1.18e+06	5			valley_best=1 d2_best=0 angle_best=0 w_pull=-2.027
+22	285443	49035	S1	no	3.86e+06	18			valley_best=1 d2_best=0.4243 angle_best=12.97 w_pull=-0.08328
+23	285567	8107	S1	no	1.61e+06	4			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.199
+24	286681	72040	S1	no	8.44e+06	11			valley_best=1 d2_best=0.578 angle_best=25.63 w_pull=1.996
+24	286681	3012	S1	no	2.5e+06	5			valley_best=1 d2_best=0 angle_best=0 w_pull=1.709
+25	287654	12003	S3	no	1.87e+06	7			valley_best=1 d2_best=0.6752 angle_best=8.598 w_pull=1.621
+26	292524	9018	S1	no	1.09e+07	14			valley_best=1 d2_best=0.198 angle_best=12.37 w_pull=-1.217
+27	293536	15027	S1	no	1.44e+06	4			valley_best=1 d2_best=0 angle_best=0 w_pull=1.408
+28	317939	30022	S1	no	6.92e+06	28			valley_best=1 d2_best=0.6076 angle_best=7.325 w_pull=-0.7948
+29	318769	31026	S3	YES	3.78e+06	12			valley_best=0.3008 d2_best=0.7959 angle_best=50.93 w_pull=7.868
+30	386948	16002	S1	no	6.52e+06	11			valley_best=1 d2_best=0.3689 angle_best=15.14 w_pull=0.9416
+31	389538	19021	S3	YES	1.71e+07	11			valley_best=0.09146 d2_best=0.9267 angle_best=15.66 w_pull=5.763
+32	396037	69026	S3	YES	2.22e+06	10			valley_best=0.7458 d2_best=0.6554 angle_best=32.9 w_pull=3.388
+33	396222	9059	S2	YES	4.6e+07	123			valley_best=0.3126 d2_best=0.871 angle_best=36.62 w_pull=9.211
+34	410008	20001	S1	no	2.11e+06	3			valley_best=1 d2_best=0.5193 angle_best=4.588 w_pull=-0.5537
+35	412242	64054	S2	no	2.09e+06	13			valley_best=1 d2_best=0.3859 angle_best=8.234 w_pull=0.4772
+36	415278	23012	S3	YES	1.77e+07	39			valley_best=0.519 d2_best=0.6704 angle_best=20.44 w_pull=2.912
+36	415278	23047	S1+S2	no	3.39e+06	4			valley_best=1 d2_best=0 angle_best=0 w_pull=-1.697
+37	463565	115088	S2	no	4.43e+06	17			valley_best=1 d2_best=0.1418 angle_best=10.77 w_pull=0.344
+37	463565	109073	S2	no	1.8e+06	5			valley_best=1 d2_best=0 angle_best=0 w_pull=-0.6892
+38	499577	13009	S3	no	5.46e+06	9			valley_best=0.9665 d2_best=0.9911 angle_best=18.76 w_pull=8.354
+39	506746	21067	S3	no	1.06e+06	3			valley_best=1 d2_best=0.6938 angle_best=20.46 w_pull=0.8566
+40	521075	18007	S1	no	8.3e+06	16			valley_best=1 d2_best=0 angle_best=0 w_pull=-0.7441

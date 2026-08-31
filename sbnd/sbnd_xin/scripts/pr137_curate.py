@@ -18,6 +18,18 @@ agent-vs-owner agreement is measured across the whole range, not just on easy
 objects.  The agent scans the rest.  If agreement is A, every agent-derived rate
 carries a floor of (1-A) and no trigger may be claimed to beat it.
 
+VERDICT VOCABULARY (doc pr/137 sec 15.6 -- TRIM was added after Scan A):
+  KEEP    one object.  Do not touch it.
+  SPLIT2  two objects.  Give the boundary: which segments go to part 0 / part 1.
+  SPLIT3  three objects.  Same, three parts.
+  TRIM    ONE object plus detached junk that does not belong to it.  Name the
+          junk segments.  This is NOT a split -- there is no second object, and
+          forcing it into KEEP or SPLIT is wrong either way.  Scan A found this
+          is ~45 % of what the arm-difference proxy calls a 'merge' (463565,
+          98844, 282909, 386948, 105946), and it survives the production prune
+          passes, so it is a real and separate front.
+  UNSURE  too sparse or ambiguous to call.  Preferred over a forced verdict.
+
     scripts/pr137_curate.py                 # -> docs/pr/pr137-curated-set.tsv
     scripts/pr137_curate.py --sheets        # + contact-sheet PNGs for the agent scan
 """
@@ -64,8 +76,10 @@ def main():
     S2={key(r) for r in pool if r['cls']=='MERGED'}
     # S3 -- enriched by the bake-off's leading trigger (valley low & d2/d1 high)
     def score(r):
+        # sec 15.2: valley_best, not valley -- the latter tests the two highest-
+        # DENSITY maxima, which are often both inside the same lobe.
         f=feat[key(r)]
-        return (1.0-min(f.get('valley',1.0),1.0)) + f.get('d2_over_d1',0.0)
+        return (1.0-min(f.get('valley_best',1.0),1.0)) + f.get('d2_best',0.0)
     rest=[r for r in pool if key(r) not in S1|S2]
     rest.sort(key=lambda r: -score(r))
     S3={key(r) for r in rest[:40]}
@@ -89,10 +103,14 @@ def main():
     print("owner calibration subset: %d objects"%len(own))
 
     cols=['event','node','stratum','owner_scan','proxy_cls','Q','nseg','npts',
+          'valley_best','d2_best','frac_best','angle_best',
           'valley','d2_over_d1','seed_frac','n_seed','angle','balance','gap_cm',
           'gap_scaled','w_pull','sep_scaled','vgap_min','dedx15_min','n_2mip',
           'r_ratio','q_ratio','m_pi0']
     lines=["# doc pr/137 sec 14 -- curated validation set for the shower-split trigger",
+           "# VERDICTS: KEEP | SPLIT2 | SPLIT3 | TRIM | UNSURE  (TRIM added by sec 15.6:",
+           "#   ONE object plus detached junk -- ~45 % of what the proxy calls a merge.",
+           "#   Not a split.  For SPLIT give the segment->part boundary; for TRIM name the junk.)",
            "# arms work-pr136-onV1c90-* ; sidecars emprep-136off2 / emprep-136onV1c90",
            "# RNG seed %d (fixed; the set is re-derivable)"%SEED,
            "# strata: S1 random control (feature-INDEPENDENT, drawn first) | S2 all known",
