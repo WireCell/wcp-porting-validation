@@ -18,6 +18,13 @@ scripts/pr136_mass_closure.py \
   --overlay-tag pi0scan-0829-agent --fudge 0.86 \
   --tsv docs/pr/pr136-mass-closure.tsv          # -> pr136-mass-closure.txt
 
+# §5 synthesis -- the SAME metric on the pr130 arm, so the join is single-arm
+scripts/pr136_mass_closure.py \
+  --manifest98  em117-pr130q98-manifest.tsv \
+  --manifest141 em114c-pr130q141-manifest.tsv \
+  --overlay-tag pi0scan-0829-agent --fudge 0.80 \
+  --tsv docs/pr/pr136-mass-closure-pr130arm.tsv
+
 # §5 — EM charge attribution vs the 90 hand-marked showers (pr130r1-probe arms)
 cd em_display
 ./em117_score.py --tag emscan-0827        --manifest em117-pr130q98-manifest.tsv \
@@ -269,12 +276,27 @@ and the pairs the marks cannot rescue are **not**:
 | 347129 | 0.886 | 0.795 | 0.976 | 122.0 | 0.976 | still impossible |
 | **168432** | 0.932 / **1.000** | 0.898 / **1.000** | 0.423 | 53.5 | 0.439 | still impossible |
 
-**This is the sharpest result in the round.** 168432 and 499577 hold
-**everything the scanner says they should hold** — `q_comp = 1.000` — and their
-π⁰ mass still cannot reach 135 MeV. Completeness by the scanner's own standard
-does not imply kinematic closure. For those events the missing energy is not
-mis-attributed reconstructed charge, so **no post-vertex clustering change can
-reach them.**
+**This is the sharpest result in the round, and it is verified on a single
+arm.** The table above joins `q_comp` (pr130 arm) to `R_prod` (f086 arm), so it
+was re-run with the mass closure computed on the **pr130 arm itself**
+(`pr136-mass-closure-pr130arm.tsv`; that arm's EM scale is 0.80, measured — see
+below). The conclusion survives unchanged: **168432 holds everything the scanner
+says it should — `q_comp = 1.000` on one of its two marked showers, 0.898 on the
+other — and its π⁰ mass reaches only 57.5 MeV, R = 0.455.** 499577 is the same
+shape but marginal (`q_comp` 1.000, R 0.991) and should not be leaned on.
+
+**Completeness by the scanner's own standard does not imply kinematic closure.**
+For 168432 the missing energy is not mis-attributed reconstructed charge, so no
+post-vertex clustering change can reach it — and, conversely, a perfect
+clustering score does not bound the physics error. Both metrics have to be
+quoted; neither substitutes for the other.
+
+**How much of the arm-to-arm difference is the EM scale alone.** Comparing the
+two mass-closure runs pair by pair, `R(0.86)/R(0.80)` has median **0.9303**
+against the 0.9302 predicted by pure rescaling, and **50 of 56 pairs sit within
+±5 % of it**. Only six changed composition — 54332, 165157, 54341, 99838, 47212,
+71872 — and every one of them is in the π⁰ chain's own mover set. 168432 and
+499577 are not among them.
 
 ### Two verified mechanisms, both post-vertex, neither with a knob today
 
@@ -296,8 +318,14 @@ reach them.**
    2.3 % and can push showers across the 150 / 250 / 360 / 800 MeV tier edges.
    **The EM energy-scale constant feeds back into clustering acceptance.**
    pr/135 §10 attributed the four moved events to acceptance-window edges alone;
-   this is a second, untested channel, and it is testable for free by re-running
-   the 0.84 and 0.86 configs with a probe.
+   this is a second, untested channel.
+   **It is not yet evidence.** The 0.80 → 0.86 comparison above shows the count
+   of kinematically impossible pairs rising 16 → 19, but that is exactly the
+   arithmetic of `R ∝ 1/fudge` (pairs between R = 1.00 and 1.075 fall below the
+   bound), and composition moved on only 6 pairs, all of which the π⁰ chain
+   itself touched. So the arm comparison neither supports nor refutes the
+   feedback hypothesis — it has to be tested on proposal 0's absorb tape,
+   by counting showers within a few MeV of a tier edge.
 3. The coupling that makes both bite: `kine_charge` is **not** a sum over
    members — it is 2D charge integrated within **0.6 cm** of the shower's own
    point cloud (`clus/src/NeutrinoEnergyReco.cxx:127-188`). Membership → energy
@@ -320,16 +348,26 @@ in-event dQ→MeV constant taken from the two labelled γ showers, which is an
 **upper bound**, since much of the OTHER budget is track-like charge an EM
 absorber must never take.
 
+**The error bar on `k`, and why it changes the answer.** §5 establishes that
+`kine_charge` is *not* a sum over member dQ — it is a 2D integration within
+0.6 cm of the shower's own cloud, with plane weights and a possible max-plane
+drop. So `k` is a ratio of two differently-computed quantities and its direction
+of error is not known a priori. The two γs of each pair give two independent
+estimates: their spread is **median 1.34×, worst 2.62×**. Every budget is
+therefore quoted as a range `[q·k_lo, q·k_hi]`, and a pair whose verdict flips
+inside that range is **indeterminate, not excluded**.
+
 | verdict | n | events |
 |---|---|---|
 | rescued by hand marks | 4 | 342199, 409634, 54341, 54332 |
-| enough reconstructed charge exists elsewhere | 10 | 281485, 280159, 280972, 176986, 499577, 283713, 242726, 169356, 347129, 392901 |
-| **NOT REACHABLE by any re-attribution** | **5** | **71178** (needs 8.4× its whole budget), **168432** (1.4×), **103798** (1.3×), **397630** (1.0×), **281639** (1.0×) |
+| REACHABLE — even the pessimistic `k` covers the deficit | 9 | 281485, 280159, 280972, 499577, 283713, 242726, 169356, 347129, 392901 |
+| INDETERMINATE — the `k` spread straddles the answer | 3 | 397630 (1.01×), 176986 (0.94×), 281639 (1.01×) |
+| **EXCLUDED — the deficit exceeds even the optimistic budget** | **3** | **71178** (needs 8.4× its whole budget), **168432** (1.4×), **103798** (1.3×) |
 
-So of the 19 impossible pairs: **4 are demonstrably fixable inside scope, 5 are
-demonstrably outside it, and 10 are open** — and for most of those 10 the demand
-is ~1 % of a budget that is mostly track charge, so "reachable" there means
-"not excluded", not "a lever exists".
+So of the 19 impossible pairs: **4 are demonstrably fixable inside scope, 3 are
+demonstrably outside it, 3 are indeterminate, and 9 are open** — and for most of
+those 9 the demand is ~1 % of a budget that is mostly track charge, so
+"reachable" there means "not excluded", not "a lever exists".
 
 **71178 deserves a label audit rather than a reco fix.** Its two γs total
 158 MeV at θ = 18°. A 158 MeV π⁰ must open at least 117°. Getting from 18° to
@@ -340,7 +378,10 @@ diagnosis on the record from the owner's own scan (54332, 76346, 54453,
 
 **Realistic ceiling for the whole campaign, stated before any work starts:
 +4 to +6 exact π⁰ out of 66**, plus whatever the EM-side `q_miss`/`q_extra`
-numbers buy in event-level energy that the π⁰ census does not see. Anyone
+numbers buy in event-level energy that the π⁰ census does not see. And that is
+an upper bound on an upper bound: **a pair entering the (100,160) window is
+necessary but not sufficient for a census "exact"** — production still has to
+*prefer* that pairing over every rival at every candidate vertex. Anyone
 expecting the π⁰ exact rate to move from 32/66 to 45/66 should read §6 first.
 
 ---

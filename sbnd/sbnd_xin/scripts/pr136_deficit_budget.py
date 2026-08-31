@@ -18,18 +18,31 @@ Three budgets are computed per event, all in MeV, all from the calib dump:
            to the wrong object.
   PAIR     what the two labelled gammas already hold.
 
-UNITS.  Segment charge is raw dQ; `kine_charge` is MeV after recombination,
-the W value and the EM fudge.  Rather than re-deriving that chain (which
-would import every constant the campaign has been flipping), each event
-calibrates ITSELF: k = sum(kine_charge of the two gamma showers) / sum(their
-segments' dQ), then every other dQ in that event is priced at k.  This is
-exact for EM-like charge and conservative for track-like charge, which
-carries a different recombination factor -- so an OTHER budget quoted here is
-an UPPER bound on what an EM absorber could gain.  Stated, not hidden.
+UNITS, AND THE ERROR BAR ON THEM.  Segment charge is raw dQ; `kine_charge` is
+MeV after recombination, the W value and the EM fudge.  Rather than re-deriving
+that chain (which would import every constant the campaign has been flipping),
+each event calibrates ITSELF: k = sum(kine_charge of the two gamma showers) /
+sum(their segments' dQ), then every other dQ in that event is priced at k.
 
-A pair whose dE exceeds ORPHAN + OTHER cannot be fixed by any re-attribution
-of reconstructed charge, and is therefore outside the owner's scope no matter
-which absorber is changed.  That is the number this script exists to produce.
+k is NOT a clean conversion: `kine_charge` is a 2D integration within 0.6 cm of
+the shower's own cloud with plane weights and a possible max-plane drop, so it
+is not a sum over member dQ and the direction of the error is not known a
+priori.  The two gammas of one pair therefore give two INDEPENDENT estimates of
+k; their spread (median 1.34x, worst 2.62x on this sample) is the honest error
+bar, and every budget is reported as the range [q*k_lo, q*k_hi].
+
+Verdicts follow from that range, not from a point estimate:
+  EXCLUDED       the deficit exceeds even the OPTIMISTIC budget -> no
+                 re-attribution of reconstructed charge can fix this pair,
+                 whatever absorber is changed.  The number this script exists
+                 to produce.
+  REACHABLE      even the PESSIMISTIC budget covers it.
+  INDETERMINATE  the spread straddles the answer -- report it as unknown
+                 rather than resolving it with a constant we cannot defend.
+
+Separately, the OTHER budget is an upper bound in a second way: much of it is
+track-like charge that carries a different recombination factor and that an EM
+absorber must never take.  Stated, not hidden.
 
 READ-ONLY.
 
@@ -103,61 +116,83 @@ def main():
             if not ids <= set(by):
                 continue
 
-            q_pair = q_other = q_orph = 0.0
+            per = {i: 0.0 for i in ids}
+            q_other = q_orph = 0.0
             for seg in (dump.get("segments") or []):
                 q = seg_dq(seg)
                 if q <= 0:
                     continue
                 sid = int(seg.get("shower_id", -1))
-                if sid in ids:
-                    q_pair += q
-                elif sid is None or sid < 0:
+                if sid in per:
+                    per[sid] += q
+                elif sid < 0:
                     q_orph += q
                 else:
                     q_other += q
+            q_pair = sum(per.values())
             e_pair = sum((by[i].get("kine_charge") or 0.0) for i in ids)
             if q_pair <= 0 or e_pair <= 0:
                 continue
             k = e_pair / q_pair                       # MeV per dQ, calibrated in-event
 
+            # HOW WELL DOES k TRAVEL?  kine_charge is a 2D integration within
+            # 0.6 cm of the shower's own cloud, NOT a sum over member dQ, so k
+            # is a ratio of two differently-computed quantities.  The two
+            # gammas of one pair give two independent estimates; their spread
+            # is the honest error bar on every budget below, and a verdict
+            # that flips between k_lo and k_hi is INDETERMINATE, not excluded.
+            ks = [((by[i].get("kine_charge") or 0.0) / per[i]) for i in ids if per[i] > 0]
+            k_lo, k_hi = (min(ks), max(ks)) if len(ks) == 2 else (k, k)
+
             R = float(c["R_prod"])
             e_tot = float(c["e1_prod"]) + float(c["e2_prod"])
             need = e_tot * (1.0 / R - 1.0)
-            orph = q_orph * k
-            other = q_other * k
+            q_avail = q_orph + q_other
+            orph, other = q_orph * k, q_other * k
             budget = orph + other
+            b_lo, b_hi = q_avail * k_lo, q_avail * k_hi
+            rescued = int(float(c["R_marks"]) >= 1.0)
+            if rescued:
+                verdict = "RESCUED"
+            elif b_hi < need:
+                verdict = "EXCLUDED"          # not even the optimistic k reaches it
+            elif b_lo >= need:
+                verdict = "REACHABLE"         # even the pessimistic k reaches it
+            else:
+                verdict = "INDETERMINATE"     # the k spread straddles the answer
             out.append(dict(event=ev, sample=mrow.get("sample", tag), setname=setname,
                             R_prod=round(R, 3), m_prod=c["m_prod"],
                             e_pair=round(e_pair, 1), need_mev=round(need, 1),
                             orphan_mev=round(orph, 1), other_shower_mev=round(other, 1),
                             budget_mev=round(budget, 1),
+                            budget_lo=round(b_lo, 1), budget_hi=round(b_hi, 1),
+                            k_ratio=round(k_hi / k_lo, 2) if k_lo > 0 else -1,
                             need_over_budget=round(need / budget, 3) if budget > 0 else -1,
-                            reachable=int(budget >= need),
-                            rescued_by_marks=int(float(c["R_marks"]) >= 1.0)))
+                            verdict=verdict, rescued_by_marks=rescued))
 
     out.sort(key=lambda r: r["R_prod"])
     print("SCOPE BOUNDARY -- can the impossible pairs be fixed by RE-ATTRIBUTING reconstructed charge?")
     print("  budget = ORPHAN (segments in no shower) + OTHER (segments in other showers of the event)")
     print("  priced with an in-event dQ->MeV constant from the two labelled gamma showers (upper bound)\n")
-    print("  %-8s %-8s %6s %8s %9s %9s %10s %8s %s"
-          % ("event", "sample", "R", "E_pair", "need", "orphan", "other_shw", "need/bud", "verdict"))
+    print("  %-8s %-8s %6s %8s %9s %9s %10s %7s %6s %s"
+          % ("event", "sample", "R", "E_pair", "need", "budget", "bud_range", "nd/bud", "k_hi/lo", "verdict"))
     for r in out:
-        v = ("RESCUED by hand marks" if r["rescued_by_marks"]
-             else ("charge EXISTS to fix it" if r["reachable"] else "NOT REACHABLE post-vertex"))
-        print("  %-8s %-8s %6.2f %8.1f %9.1f %9.1f %10.1f %8.2f %s"
+        print("  %-8s %-8s %6.2f %8.1f %9.1f %9.1f %4.0f-%-5.0f %7.2f %6.2f %s"
               % (r["event"], r["sample"], r["R_prod"], r["e_pair"], r["need_mev"],
-                 r["orphan_mev"], r["other_shower_mev"], r["need_over_budget"], v))
+                 r["budget_mev"], r["budget_lo"], r["budget_hi"],
+                 r["need_over_budget"], r["k_ratio"], r["verdict"]))
     nm = [r for r in out if not r["rescued_by_marks"]]
-    print("\n  of the %d impossible pairs the hand marks do NOT rescue:" % len(nm))
-    print("     %d have enough reconstructed charge elsewhere in the event to close the mass"
-          % sum(1 for r in nm if r["reachable"]))
-    print("     %d do NOT -- no re-attribution of reconstructed charge can fix them"
-          % sum(1 for r in nm if not r["reachable"]))
-    hard = [r for r in nm if not r["reachable"]]
+    kr = sorted(r["k_ratio"] for r in out if r["k_ratio"] > 0)
+    print("\n  k SPREAD (the two gammas' independent MeV-per-dQ estimates):"
+          "  median %.2fx, worst %.2fx" % (kr[len(kr) // 2], kr[-1]))
+    print("  of the %d impossible pairs the hand marks do NOT rescue:" % len(nm))
+    for v in ("REACHABLE", "INDETERMINATE", "EXCLUDED"):
+        rs = [r for r in nm if r["verdict"] == v]
+        print("     %-14s %2d   %s" % (v, len(rs), ", ".join(str(r["event"]) for r in rs)))
+    hard = [r for r in nm if r["verdict"] == "EXCLUDED"]
     if hard:
-        print("     the not-reachable set is %s"
-              % ", ".join("%s (needs %.1fx its whole budget)" % (r["event"], r["need_over_budget"])
-                          for r in hard))
+        print("\n  EXCLUDED means the deficit exceeds the OPTIMISTIC budget: %s"
+              % ", ".join("%s needs %.1fx" % (r["event"], r["need_over_budget"]) for r in hard))
     if a.tsv:
         p = a.tsv if os.path.isabs(a.tsv) else os.path.join(SX, a.tsv)
         with open(p, "w", newline="") as fh:

@@ -2,30 +2,33 @@ SCOPE BOUNDARY -- can the impossible pairs be fixed by RE-ATTRIBUTING reconstruc
   budget = ORPHAN (segments in no shower) + OTHER (segments in other showers of the event)
   priced with an in-event dQ->MeV constant from the two labelled gamma showers (upper bound)
 
-  event    sample        R   E_pair      need    orphan  other_shw need/bud verdict
-  71178    mcp1k      0.18    158.1     706.3      30.9       53.5     8.37 NOT REACHABLE post-vertex
-  397630   mcp2k      0.40    225.8     338.5     265.6       68.8     1.01 NOT REACHABLE post-vertex
-  168432   mcp1k      0.42    356.9     486.7     263.8       81.6     1.41 NOT REACHABLE post-vertex
-  281485   mcp1k      0.51     95.5      90.7       4.8      426.8     0.21 charge EXISTS to fix it
-  103798   mcp2k      0.54    222.1     190.8      87.8       64.0     1.26 NOT REACHABLE post-vertex
-  280159   mcp2k      0.57    203.5     156.0     506.4      487.7     0.16 charge EXISTS to fix it
-  342199   nuecc48    0.69    118.1      53.6     322.8      863.5     0.04 RESCUED by hand marks
-  409634   mcp1k      0.75    203.6      68.2      35.6      118.4     0.44 RESCUED by hand marks
-  280972   mcp1k      0.77    700.3     205.7    1855.1      877.2     0.07 charge EXISTS to fix it
-  176986   mcp2k      0.80    276.0      69.4      12.5       61.2     0.94 charge EXISTS to fix it
-  54341    mcp1k      0.87    298.3      43.4     402.2       53.3     0.10 RESCUED by hand marks
-  281639   mcp1k      0.90    277.4      32.5      23.7        8.4     1.01 NOT REACHABLE post-vertex
-  499577   mcp2k      0.92    135.5      11.6      73.7     1369.9     0.01 charge EXISTS to fix it
-  283713   mcp1k      0.94    177.7      12.2     455.4     1970.3     0.01 charge EXISTS to fix it
-  54332    mcp2k      0.94    246.3      16.3     634.9      676.2     0.01 RESCUED by hand marks
-  242726   mcp2k      0.96    171.1       6.9     912.5        9.1     0.01 charge EXISTS to fix it
-  169356   mcp1k      0.97    175.6       4.7     627.3      136.0     0.01 charge EXISTS to fix it
-  347129   mcp1k      0.98    193.2       4.8      22.1       22.3     0.11 charge EXISTS to fix it
-  392901   mcp2k      0.98    281.6       6.0    1354.1     1988.2     0.00 charge EXISTS to fix it
+  event    sample        R   E_pair      need    budget  bud_range  nd/bud k_hi/lo verdict
+  71178    mcp1k      0.18    158.1     706.3      84.4   71-95       8.37   1.34 EXCLUDED
+  397630   mcp2k      0.40    225.8     338.5     334.4  330-340      1.01   1.03 INDETERMINATE
+  168432   mcp1k      0.42    356.9     486.7     345.3  240-437      1.41   1.82 EXCLUDED
+  281485   mcp1k      0.51     95.5      90.7     431.6  258-589      0.21   2.28 REACHABLE
+  103798   mcp2k      0.54    222.1     190.8     151.8  140-171      1.26   1.22 EXCLUDED
+  280159   mcp2k      0.57    203.5     156.0     994.0  951-1080     0.16   1.14 REACHABLE
+  342199   nuecc48    0.69    118.1      53.6    1186.3  892-1895     0.04   2.13 RESCUED
+  409634   mcp1k      0.75    203.6      68.2     154.0  154-154      0.44   1.00 RESCUED
+  280972   mcp1k      0.77    700.3     205.7    2732.3 1329-3480     0.07   2.62 REACHABLE
+  176986   mcp2k      0.80    276.0      69.4      73.7   66-80       0.94   1.22 INDETERMINATE
+  54341    mcp1k      0.87    298.3      43.4     455.4  261-487      0.10   1.87 RESCUED
+  281639   mcp1k      0.90    277.4      32.5      32.1   30-34       1.01   1.13 INDETERMINATE
+  499577   mcp2k      0.92    135.5      11.6    1443.6 1299-2019     0.01   1.55 REACHABLE
+  283713   mcp1k      0.94    177.7      12.2    2425.8 1850-2558     0.01   1.38 REACHABLE
+  54332    mcp2k      0.94    246.3      16.3    1311.1 1121-1388     0.01   1.24 RESCUED
+  242726   mcp2k      0.96    171.1       6.9     921.6  815-998      0.01   1.22 REACHABLE
+  169356   mcp1k      0.97    175.6       4.7     763.3  672-868      0.01   1.29 REACHABLE
+  347129   mcp1k      0.98    193.2       4.8      44.4   34-52       0.11   1.52 REACHABLE
+  392901   mcp2k      0.98    281.6       6.0    3342.3 2400-4241     0.00   1.77 REACHABLE
 
+  k SPREAD (the two gammas' independent MeV-per-dQ estimates):  median 1.34x, worst 2.62x
   of the 15 impossible pairs the hand marks do NOT rescue:
-     10 have enough reconstructed charge elsewhere in the event to close the mass
-     5 do NOT -- no re-attribution of reconstructed charge can fix them
-     the not-reachable set is 71178 (needs 8.4x its whole budget), 397630 (needs 1.0x its whole budget), 168432 (needs 1.4x its whole budget), 103798 (needs 1.3x its whole budget), 281639 (needs 1.0x its whole budget)
+     REACHABLE       9   281485, 280159, 280972, 499577, 283713, 242726, 169356, 347129, 392901
+     INDETERMINATE   3   397630, 176986, 281639
+     EXCLUDED        3   71178, 168432, 103798
+
+  EXCLUDED means the deficit exceeds the OPTIMISTIC budget: 71178 needs 8.4x, 168432 needs 1.4x, 103798 needs 1.3x
 
 wrote /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr136-deficit-budget.tsv (19 rows)
