@@ -276,6 +276,11 @@ q_extra **6.7 %**, census exact **35 / 66**, median q_f1 **0.922** — identical
 the doc pr/138 baseline, so the prepdir/label epoch matches and every Δ below is
 the knob and nothing else.
 
+(*daughters* = objects in the arm's dump whose `shower_id` the pre-split world
+`work-pr138r2-c90off-*` does not have — so a re-homed daughter, being merged
+away, correctly stops counting. The re-home **tape** counts *decisions* (51),
+which is a different question from *survivors*.)
+
 | arm | knob | census **exact** | partial | none | no-group | q_miss | q_extra | med q_f1 | ADVERSE | daughters | μ-typed | kine=0 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `off` | — (baseline) | 35 | 16 | 3 | 12 | 16.7 % | 6.7 % | 0.922 | — | 50 | 11 | 1 |
@@ -283,7 +288,7 @@ the knob and nothing else.
 | `onb12` | **P1.2** @ 12 cm | **36** | 18 | **1** | **11** | **14.5 %** | 7.4 % | **0.932** | **0** | 22 | 4 | **0** |
 | `onemst` | **P1.3** | 35 | 16 | 3 | 12 | 16.7 % | 6.7 % | 0.922 | **0** | 50 | **2** | 1 |
 | `onrehome` | **P1.4** @ 4 cm | 35 | 16 | 3 | 12 | 16.7 % | 6.8 % | 0.922 | **0** | 44 | 9 | **0** |
-| `onrh15` | **P1.4** @ 15 cm | 35 | 16 | 3 | 12 | 16.4 % | 6.9 % | 0.922 | **0** | 39 | 8 | **0** |
+| `onrh15` | **P1.4** @ 15 cm | 35 | 16 | 3 | 12 | 16.4 % | 6.9 % | 0.922 | **0** | 38 | 9 | **0** |
 | `oncomb` | **P1.1+P1.2+P1.3** | **36** | 18 | **1** | **11** | **14.5 %** | 7.6 % | **0.932** | **0** | 21 | **1** | **0** |
 
 ### P1.2 — the veto is the result of this round
@@ -306,7 +311,7 @@ nothing else:**
 **The C++ impact parameter is the one the offline table priced — checked, not
 asserted** (`pr139_tape_check.py`, the doc pr/138 §B1 discipline applied to a new
 quantity). Over **390** taped candidates joined to an offline object, **383 agree
-to within 0.05 cm**. The **7** that do not are exactly the objects doc pr/138 §B1
+to within 0.5 cm**, median difference **0.000 cm**. The **7** that do not are exactly the objects doc pr/138 §B1
 already named: 76346 (the 60 cm vertex move), 169626 and 396222 — events where
 the π⁰ finders re-seat `main_vertex` *after* the splitter, so the dump vertex and
 the splitter-time vertex are genuinely different points. That is the known
@@ -338,8 +343,21 @@ ADVERSE.**
 ### P1.3 — the defect is fixed, and the census does not notice
 
 **μ-typed daughters 11 → 2**, EM 38 → **47**. The two survivors are the honestly
-muonic 3 MeV and 2 MeV fragments. Criterion (≤ 4/50) **MET**, and the forward
-property the nearest-the-vertex rule existed to protect is intact.
+muonic 3 MeV and 2 MeV fragments. Criterion (≤ 4/50) **MET**.
+
+**The forward property is measured, not asserted.** The nearest-the-vertex rule
+existed to keep `init_dir` pointing downstream for the π⁰ finders, and this knob
+changes exactly that tie-break, so the tape's `fwd=` field is re-read on the arm:
+
+| arm | peels | **backwards (`fwd < 0`)** | min `fwd` | mean `fwd` |
+|---|---|---|---|---|
+| shipped rule (`onrehome`, seed unchanged) | 51 | **0** | 0.219 | 0.940 |
+| `onemst` (EM-preferring seed) | 51 | **0** | 0.219 | **0.945** |
+
+Zero backwards peels, and the mean alignment is marginally *better* than the
+rule it replaces. Criterion **MET**. The census not moving would not have been
+evidence of this — a backwards `init_dir` on a daughter that never pairs costs
+nothing on the census and still poisons the finder on some later event.
 
 **The 1.657 energy bias is confirmed empirically, not just predicted:**
 
@@ -557,7 +575,10 @@ python3 scripts/pr139_daughter_fate.py         # -> docs/pr/pr139-daughter-fate.
 ./scripts/pr139_r2_arms.sh                     # off / oncomb / onrh15, on the fixed binary
 for t in off onb12 onshared onemst onrehome; do ./scripts/pr139_score.sh $t; done
 PR139_ARM=work-pr139r2 PR139_BASE=work-pr139r2-off ./scripts/pr139_score.sh oncomb
-python3 scripts/pr139_tape_check.py work-pr139r1-onb12   # C++ b vs offline b: 383/390 within 0.05 cm
+python3 scripts/pr139_tape_check.py work-pr139r2-oncomb  # C++ b vs offline b: 383/390 within 0.5 cm
+# P1.3's forward check -- the property the EM-preferring seed could have broken
+grep -h "SHOWER_SPLIT peel" work-pr139r1-onemst-*/pr_evt*/stdout.log \
+  | grep -oP 'fwd=\K-?[\d.]+' | awk '{n++; if($1<0) b++} END{print n" peels, "b+0" backwards"}'
 python3 scripts/pr139_arm_effect.py onb12 onshared onemst onrehome
 
 # the baseline everything is measured against: work-pr138r2-c90on-*

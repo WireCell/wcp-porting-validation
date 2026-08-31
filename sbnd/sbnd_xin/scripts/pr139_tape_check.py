@@ -20,7 +20,7 @@ import numpy as np
 import pr137_lib as L
 import split_model as SM
 
-arm = sys.argv[1] if len(sys.argv) > 1 else 'work-pr139r1-onb12'
+arm = sys.argv[1] if len(sys.argv) > 1 else 'work-pr139r2-oncomb'
 CAND = re.compile(r'SHOWER_SPLIT cand shower=(\d+) .*?fired=(\d) .*?b_cm=(-?[\d.]+) veto=(\d)')
 tape = []
 for lg in sorted(glob.glob(f'{arm}-*/pr_evt*/stdout.log')):
@@ -30,17 +30,12 @@ for lg in sorted(glob.glob(f'{arm}-*/pr_evt*/stdout.log')):
         if m:
             tape.append(dict(event=ev, node=int(m.group(1)), fired=int(m.group(2)),
                              b_cxx=float(m.group(3)), veto=int(m.group(4))))
-# The 2026-08-31 12:0x build printed b in INTERNAL units (mm), not cm -- the
-# veto comparison itself was always in matching units (the config value is
-# multiplied by units::cm at the wiring site), so only the TAPE was wrong and no
-# arm's decisions were affected.  Detect and correct it rather than silently
-# accepting a factor 10: the fixed build prints cm and this rescale is a no-op.
-if tape and np.median([t['b_cxx'] for t in tape]) > 200:
-    print("  NOTE: tape is in internal units (mm) -- rescaling to cm (print-only bug,")
-    print("        veto decisions unaffected; see doc pr/139 P1.2)")
-    for t in tape:
-        if t['b_cxx'] > 0:
-            t['b_cxx'] /= 10.0
+# NOTE the tape must come from a build dated 2026-08-31 12:35 or later.  The
+# first build of this round printed b in INTERNAL units (mm) rather than cm.
+# Only the TAPE was wrong -- the veto compares against a bound that is itself
+# multiplied by units::cm at the wiring site, so no arm's decisions were
+# affected -- but a tape from the earlier build will read 10x here.  Use
+# work-pr139r2-oncomb-*, which ran on the fixed binary with the probe on.
 print("tape rows %d  from %s-*" % (len(tape), arm))
 if not tape:
     sys.exit("no SHOWER_SPLIT cand lines -- was the arm run with WCT_SHOWER_SPLIT_DEBUG=1?")
