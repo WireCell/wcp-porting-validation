@@ -1003,9 +1003,12 @@ found. The 10 are the *seed*, not the bound.
 
 ## 11. Round 2 — `shower_pass4_prefilter_v1_escape`, the knob §10.3 asked for
 
-**Status: MEASURED. The knob works on its targets and FAILS the hand-scan
-trade; a proximity brake (round 3) is the response.** Three knobs, all DEFAULT
-OFF, one behaviour change between them:
+**Status: MEASURED, rounds 2 and 3. The proximity-braked variant
+(`onV1c90d25`) recovers 1.5 pt of `q_miss` at zero measured cost on the
+hand-scan purity metric and costs exactly one π⁰ census row — on an event where
+the owner's own EM marks contradict the agent-produced π⁰ pairing. NOTHING IS
+FLIPPED; §11.6 states the owner decision.** Three knobs, all DEFAULT OFF, one
+behaviour change between them:
 
 | knob | type | default | meaning |
 |---|---|---|---|
@@ -1172,3 +1175,100 @@ The clean recoveries and the runaways separate on **proximity**, not on angle:
 fires, 92 → 22 events) and leaves one firing in the four runaway events.**
 20 cm loses 84229. Hence `shower_pass4_prefilter_v1_max_dis`, default 0, and
 round 3's arm `onV1c90d25`.
+
+### 11.5 Round 3 result — the proximity brake
+
+**Gate first.** The round-2 gate ran on the two-knob binary; `max_dis` is
+default 0 and is only read inside the escape branch, which is unreachable when
+the escape is off — but that is an argument, and the house rule is a gate.
+`work-pr136-off2-*` (three-knob binary, probes, no knob env) against
+`work-pr136-f086probe-*`: **PASS, rc=0 on all four samples, 478 / 478 archives
+byte-identical**, and the mass closure reproduces 11 / 37 / 8 with 19 of 56
+impossible. `./build/clus/wcdoctest-clus` 235 / 235 cases, 2601 / 2601
+assertions.
+
+**The four arms side by side (239 events each, every `rc=0`):**
+
+| | OFF | `onV1` | `onV1c90` | **`onV1c90d25`** |
+|---|---|---|---|---|
+| escape fired / events | — | 582 / 123 | 302 / 92 | **32 / 22** |
+| segments re-owned vs OFF | — | 775 in 102 evts | 391 in 71 evts | **80 in 15 evts** |
+| `q_miss` | 14.0 % | 10.4 % | 11.3 % | **12.5 %** |
+| `q_extra` | 7.0 % | 12.1 % | 12.2 % | **7.0 %** |
+| … of which VIOLATION | 3.2 % | — | 3.8 % | **3.2 %** |
+| … of which UNJUDGED | 3.8 % | — | 8.4 % | **3.8 %** |
+| median `q_f1` | 0.918 | 0.917 | 0.918 | 0.918 |
+| showers with `q_f1` < 0.80 | 18 | 18 | 20 | **17** |
+| π⁰ census exact | 32 / 66 | 30 ✗ | 33 ✓ | **31 ✗** |
+
+**Criterion 1: `onV1c90d25` PASSES, cleanly and in the original pre-registered
+form.** `q_miss` falls 1.51 pt; `q_extra` moves **−0.01 pt**, with the violation
+and unjudged terms each flat to two decimals. The 25 cm brake did exactly what
+§11.4 predicted: it kept the recoveries and removed the collateral.
+
+**Criterion 2: it FAILS, by one row, and the row deserves reading.**
+
+### 11.6 The one π⁰ the brake costs — and why it is an owner question
+
+`onV1c90d25` changes the class of **exactly one** census row against OFF:
+**314838, `exact` → `partial`, `g2:absent-on-arm`.** Every other one of the 66
+is unchanged. What happened, from the dumps:
+
+| arm | accepted π⁰ group | mass |
+|---|---|---|
+| OFF | shower **110088** (645.0 MeV) + shower **13010** (110.3 MeV) | 121.4 MeV |
+| `onV1c90d25` | shower **110088** (**779.6** MeV) + 114095 (3.8 MeV crumb) | 106.6 MeV |
+
+**This is a real physics loss, not an id-matching artefact** — I checked, having
+first suspected the `showers[].id` instability of §2. The escape absorbed
+segment 13010 into 110088 (645 → 779.6 MeV) and the second γ ceased to exist.
+This is precisely the **463565 warning that parked the pr/130 front**: fixing
+the energy can cost the two-γ separation.
+
+**But the two hand-scan products disagree about this event, and the knob is
+obeying the stronger one.**
+
+- `em_labels/emscan-0827` — the **owner's own EM hand scan** — marks, for shower
+  110088: **IN** = {109070, 109071, **13010**, 13011, 83027, 85029, 87031, 89033,
+  91035, 93037, 94038, 95039}, **OUT** = {110083, 110084, 110085, 110088, 110089,
+  111091, 111092}. It says segment 13010 belongs *inside* 110088, and it
+  re-roots the shower off its own start segments.
+- `em_labels/pi0scan-0829-agent` — an **agent-produced pairing overlay**, not an
+  owner scan — makes 13010 the second γ (γ1 = 110088 at 693.4 MeV, γ2 = 13010 at
+  118.6 MeV, θ = 26.3°, mass 130.6 MeV).
+
+**These cannot both be right**, and the census scores the agent overlay. Sizing
+it: the 66-row denominator is **50 owner-paired + 16 agent-overlay**; of the 32
+exact, **30 are owner-paired and 2 are overlay**. 314838 is one of those 2, and
+one of only 5 events where an overlay pairing coexists with owner EM marks.
+
+**So `onV1c90d25`'s only census cost is an agent-produced pairing being
+overruled by the owner's own marks.** I am not rescoring the criterion on that
+basis — it was registered before the arm ran and it failed as written. The
+decision is the owner's:
+
+> **314838: does the EM hand scan (absorb 13010 into 110088) or the π⁰ overlay
+> pairing (13010 is the second γ) govern?** If the marks govern, `onV1c90d25`
+> costs nothing measurable and gains 1.5 pt of `q_miss`. If the pairing governs,
+> the escape needs a π⁰-aware guard that declines an absorb when the candidate
+> is itself an accepted γ.
+
+**Also unresolved, and not mine to take:** `onV1c90` buys **+1 census exact**
+(32 → 33, γ-sharing 74 % → 77 %) by paying 5.2 pt of `q_extra` — of which only
+0.55 pt is a scanner violation and 4.61 pt is charge the scan never ruled on.
+The pr/125 K5 flip accepted exactly that kind of trade with the reason recorded
+in `wct-pr-perevt.jsonnet:1951`. Two variants, two different bets; **neither is
+flipped and both are on the table.**
+
+### 11.7 What round 3 does not claim
+
+- **No knob is flipped.** All three default OFF; SBND production config is
+  unchanged apart from the three inert keys being *available*.
+- The `q_extra` decomposition of §11.3 is a **new measurement, not a rescoring**.
+  It was motivated by the defect §2 raised against the γ ledger, applied to the
+  metric this campaign uses; it does not retroactively pass round 2.
+- **UNJUDGED charge is not proven benign.** It is charge the scan never saw in
+  that shower, and it can be genuine over-clustering nobody has ruled on. The
+  only way to settle it is a hand scan of the 15 events `onV1c90d25` changes —
+  a small enough diff to package as a Bee A/B pair, which is the natural next
+  owner step.
