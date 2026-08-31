@@ -1,0 +1,13 @@
+{
+ "event": "evt170761",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "8026": {
+   "verdict": "KEEP",
+   "confidence": "medium",
+   "comment": "FALSE POSITIVE: coherent vertex-attached shower 0-55 cm; the proposed minor part is 2 isolated points behind the vertex.  Detached junk exists but a 2-way split is not the repair",
+   "parts": null
+  }
+ }
+}

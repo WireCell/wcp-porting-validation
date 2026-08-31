@@ -1,0 +1,13 @@
+{
+ "event": "evt292524",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "9018": {
+   "verdict": "KEEP",
+   "confidence": "high",
+   "comment": "control, not fired: one long curving track 0-170 cm, theta-phi one tight blob, width mostly BELOW the shower null",
+   "parts": null
+  }
+ }
+}

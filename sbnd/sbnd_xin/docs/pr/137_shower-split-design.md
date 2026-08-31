@@ -390,3 +390,419 @@ that pass 4 did not have*.
 4. Independently of the splitter: **adjudicate 181050**, the one row where
    `onV1c90d25` makes `q_miss` worse (doc pr/136 §11.9), since it is the last
    open item on the surviving pr/136 candidate.
+
+---
+
+# Round 2 — the TRIGGER: literature borrow, offline bake-off, curated label set
+
+**Status: MEASUREMENT COMPLETE, 2026-08-31. No code, no arm, no knob, no flip —
+everything below is a read against arms already on disk.
+Owner: *"For this round, let's explore the algorithm further and design the work
+plan."* §10 is the reframe the literature forces, §11 turns the owner's three
+factors into features, §12 the in-situ null model, §13 the bake-off, §14 the
+curated set and the agent scan. Two corrections to §4 are carried, and the
+headline is that the trigger roughly doubled: 27–36 % → 58 % against the proxy,
+and 80 % against fresh hand labels.**
+
+## Repro (round 2)
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+scripts/pr137_null_model.py                    # §12 -> docs/pr/pr137-null-model.tsv
+scripts/pr137_seed_split.py                    # §13a -> docs/pr/pr137-seed-split.tsv
+scripts/pr137_trigger_bakeoff.py               # §13b -> docs/pr/pr137-trigger-bakeoff.tsv
+scripts/pr137_curate.py --sheets               # §14 -> docs/pr/pr137-curated-set.tsv
+                                               #      + work/pr137_sheets/*.png (BLIND)
+```
+
+All four are READ-ONLY and share `scripts/pr137_lib.py` / `scripts/pr137_features.py`.
+They run off `work-pr136-{off2,onV1c90}-*` and the `emprep-136*` sidecars.
+Agent scan labels: `em_labels/splitscan-0901-agent/`.
+
+## 10. What the literature does, and why §4 was the wrong shape
+
+The owner asked whether this problem has a published solution. It does, and every
+production shower splitter has the **same shape — which is not the shape of §3–§4**:
+
+- **ATLAS topological cluster splitting** (arXiv:1603.02934): inside a topo-cluster,
+  cells are searched for local energy maxima above 500 MeV; those maxima **seed** a
+  re-clustering that splits the parent. A cell neighbouring two maxima is **shared**.
+  Splitting on the finely-segmented EMB1/EME1 strips is explicitly what improves
+  π⁰→γγ photon separation.
+- **CMS particle flow** (arXiv:1706.04965, arXiv:1401.8155): a seed is a cell above
+  threshold *and above all its neighbours*; clusters grow topologically from seeds;
+  overlapping deposits are shared **fractionally** through a Gaussian shower profile
+  in an expectation-maximisation Gaussian-mixture step.
+- **GARLIC** (arXiv:1203.0774, arXiv:0902.3042): seeds from hits in the *early*
+  layers → "cores" → clusters grown outward. Two-particle separation is optimised at
+  the **seeding** step.
+- **Hough-transform photon reconstruction in imaging calorimeters**
+  (arXiv:2508.20728, 2025): a photon is a "Hough axis" of ≥ 3 consecutive local
+  maxima that **points back at the interaction point**; overlaps are resolved by
+  sharing maxima and splitting energy with a two-exponential lateral profile.
+- **Arbor** (arXiv:1403.4784): oriented connectors between hits until the ensemble
+  is a *tree*; nearby showers separate because their branches separate.
+- **CALICE two-shower separation** (arXiv:1802.00672) benchmarks exactly these three
+  families (Pandora, GARLIC, Arbor) against each other.
+
+> **The seed count IS the multiplicity decision. There is no separate trigger.**
+
+§4 did the opposite: it ran a global 2-means that **always fires** and then hunted
+for an external veto. That is why its null distribution was broad — a forced
+2-means on a healthy shower still returns *some* angle, *some* balance, *some* gap.
+Seeding makes the null sharp, because a healthy shower has one core.
+
+Two further things the survey forces into the design:
+
+- **Fractional assignment is the literature's answer to owner factor 4** (two γs
+  connected). You do not draw a line through the overlap; you share it by profile.
+  **We cannot do this** — see §10.1.
+- **Deep learning is out.** Sparse-conv instance segmentation is the modern LArTPC
+  answer and toolkit `CLAUDE.md` forbids new external dependencies outright
+  (`clus` links only `WireCellAux`, `WCPQuickhull`, `WireCellMcs`). Recorded once so
+  it is not rediscovered.
+
+### 10.1 The hard constraint: the action space is SEGMENTS
+
+**Geometry and charge are per point; membership is per segment. There is no
+per-point shower assignment anywhere in the chain.**
+
+- dump `segments[].points[]` → `x, y, z, dQ, dx, rr` at ~0.6 cm spacing
+  (`PrDisplayDump.cxx:403-415,534`; `TrackFitting.cxx:8962` `low_dis_limit = 0.6 cm`)
+- sidecar `showers{}.members[]` → `{seg, dQ, …}` (`prep_em_scan.py:403-407`)
+- C++ agrees: `Shower::detach_member_set` takes a set of **segments**
+  (`PRShower.cxx:640-700`), and it **refuses a set containing the start segment**,
+  so the daughter that keeps the start segment is structurally the "kept" one and a
+  3-way split is two peel calls.
+
+Three consequences:
+
+1. **Seed at point level, assign at segment level.** §13a is built this way.
+2. **The literature's fractional assignment is unavailable.** Sharing a segment
+   means splitting a fitted trajectory, which is far outside this scope. The borrow
+   degrades to a hard assignment at segment boundaries. Mitigation: segments are
+   already cut at kinks and vertices.
+3. **The action space and the label space match exactly** — the hand marks
+   (`em.marks_by_shower` = `{shower: {segment: in|out}}`) are also per-segment.
+   **Verified, not assumed**: of the hand-marked positives, **0 require a
+   sub-segment cut** (`pr137_trigger_bakeoff.py`, first block). A hand scan can
+   never demand a cut the splitter cannot make.
+
+### 10.2 The prototype has no ancestor — but three reusable primitives
+
+`prototype_base` was searched. **There is no shower-splitting code anywhere**:
+shower-level operations are merge-only (`examine_merge_showers` fuses two showers
+whose 100 cm directions agree within 10°), and the `Separate_*` family is
+cluster-level cosmic/blob separation on PCA and connectivity, not shower-aware. So
+**M15 does not bite — we are inventing, not porting.** Three primitives are
+directly relevant:
+
+- **`ProtoSegment::is_shower_topology()`** (`ProtoSegment.cxx:319-450`) — per fit
+  point, a local frame (tangent, drift×tangent) and the **RMS of associated points
+  transverse to the trajectory**, with tuned LArTPC scales: "large spread" at
+  **0.4 cm**, decisions at **0.7 / 0.8 / 1.0 cm**. An in-tree cross-check on §12's
+  in-situ width fit.
+- **`find_peak_point_indices()`** (`PR3DCluster_steiner.h:733`) — a **graph-local
+  charge-maximum finder** (charge > 4000, sort descending, accept a peak only if no
+  accepted peak is within its `nlevel` neighbourhood). That is the ATLAS/CMS seeding
+  primitive, already written in this codebase's idiom — it just feeds Steiner
+  terminals instead of splitting. §13a's acceptance follows this rule.
+- **`WCP::WCShower::SC_proj_Hough()`** (`WCShower.cxx:84-142`) — dead legacy code
+  computing a **charge-weighted angular RMS about a Hough axis**. Off the NeutrinoID
+  path, so a reference not a reuse, but the prototype authors reached for the same
+  statistic the 2025 Hough paper uses.
+
+`clus` itself has **no** k-means, DBSCAN, density estimator, local-maximum finder,
+or Molière/profile/RMS code. It has Eigen (`NeutrinoShowerClustering.cxx:6`),
+boost::graph, and a hand-rolled PCA power iteration (`points_pca`, `:5894`). There
+is **no nonlinear minimiser** (`MyFCN` was ported off Minuit to Eigen solvers), so a
+two-shower Grindhammer–Peters profile fit would need a hand-rolled Gauss–Newton and
+is ranked last on implementation cost. **Every feature below is scored on
+implementation cost as well as power**: the offline bake-off may use numpy/scipy,
+the shipped C++ may not.
+
+### 10.3 Two defects in §4's own measurement, corrected
+
+**(a) The MERGED/SINGLE population was built on a lossy join.**
+`pr137_split_separation.py:69` builds the OFF owner map as
+`{s: n for n, ms in mo.items() for s in ms}` — **last-writer-wins**, so a segment
+held by two OFF showers loses one ancestor. **1.0 % of OFF segments (91 of 9454) are
+shared**, and the effect is not proportional:
+
+| join | MERGED | SINGLE |
+|---|---|---|
+| §4's, last-writer-wins | 34 | 356 |
+| faithful, accumulate all | **44** | **346** |
+
+**Ten real merges were labelled SINGLE**, which inflates §4's measured false-positive
+rate and deflates its purity. Every number in §12–§14 uses the faithful join.
+
+**(b) Gaps were approximations, not minima.** `[:200]` / `[:400]` truncation inside
+the O(N²) min-distance loops of `pr137_split_feasibility.py:73-74,101` and
+`pr137_split_separation.py:50-51`. The new library uses a cKDTree and reports exact
+minima. (`pr137_split_convgap.py` did not truncate.)
+
+*Not* a defect, checked and cleared: `main_vertex` carries `x/y/z` directly, so
+§4's `mv.get('x',0.)` did not silently fall back to the origin.
+
+## 11. The owner's three factors, made into features
+
+> *"1. direction metric in theta-phi space 2. distance matters, compared to the
+> nearby large EM shower, 3. size matter, compared to the nearby large EM shower"*
+
+| family | owner factor | features |
+|---|---|---|
+| **D** direction | 1 | `n_seed`, `d2_over_d1`, **`valley`**, `seed_frac`, `seed_angle`, `bimodal_coef`, `valley_1d`, `dBIC`, `angle` |
+| **S** size/distance | 2 + 3 | `w_ratio`, `r_ratio`, `q_ratio`, `w_at_r_ratio` (the owner's ratio form) and `w_pull`, `w_over_expected`, `sep_scaled`, `dr_parts` (the in-situ-null form) |
+| **C** conversion | 3, and the answer to 4 | `vgap_min/max`, `void_min`, `dedx0/1`, `dedx15_min/max`, `n_2mip`, `dedx_ratio` |
+| **T** topology | 4 | `gap_cm`, `gap_scaled`, `balance` |
+| **X** diagnostic only | — | `m_pi0` |
+
+Three design points:
+
+**`valley` is the ATLAS ingredient §4 did not have.** Two angular maxima are not
+enough — a bright patch inside *one* shower also makes a maximum. ATLAS's rule is
+local-maxima-**with-a-valley**: the charge density must *dip* between them.
+`valley` = minimum density along the great-circle arc between the two seeds,
+divided by the weaker peak. §13 shows this is the discriminator.
+
+**The owner's normalisation and mine are both built, and reported separately.**
+The owner said "compared to the nearby large EM shower" — a per-event ratio against
+the dominant object. That is implemented literally (`w_ratio`, `r_ratio`,
+`q_ratio`, `w_at_r_ratio`). But **the fallback fires on 37 % of the population**
+(§12): the candidate *is* the largest EM object and there is no distinct reference.
+For those rows the in-situ null (`w_pull`) is the only available normalisation, and
+the row is flagged. Without that flag the owner's stated normalisation would have
+silently become the agent's in exactly the events that matter most.
+
+**The π⁰ mass is demoted from trigger to diagnostic**, per the broad-scope decision
+(the gate fires on *any* over-clustering, not only 2-γ). §13 confirms the demotion
+with an independent number: `m_pi0` AUC = **0.500**, exactly chance.
+
+Also recorded: **energy does not conserve across a split.** `kine_charge` credits a
+2D charge cell to any shower within 0.6 cm with no cross-shower de-duplication
+(`NeutrinoEnergyReco.cxx:48-145`), so E(A)+E(B) ≥ E(parent) in the overlap. The
+dedup exists (`kine_charge_owned_scan`, `:397`) but is knob-gated and runs at
+`:9413`. Any π⁰-mass or `q_extra` claim about a split must name its regime.
+
+## 12. The in-situ null model — and owner factor 2 is confirmed
+
+`scripts/pr137_null_model.py`, on the 346 SINGLE objects (q > 1e6, ≥ 3 segments).
+Charge-weighted transverse RMS in depth bins along each object's own axis:
+
+| depth (cm) | n | p10 | median | p90 |
+|---|---|---|---|---|
+| 0–10 | 179 | 0.39 | **1.53** | 7.36 |
+| 20–30 | 182 | 1.00 | **2.84** | 9.42 |
+| 40–50 | 156 | 1.04 | **3.87** | 10.34 |
+| 60–70 | 123 | 1.82 | **5.98** | 17.96 |
+| 80–90 | 85 | 2.24 | **6.99** | 17.04 |
+| 100–110 | 49 | 3.27 | **8.11** | 18.29 |
+| 120–130 | 34 | 2.86 | **9.95** | 16.61 |
+
+**Linear fit: `w_single(r) = 3.575 + 0.0283·r` cm — the slope is positive, so the
+owner's factor 2 is confirmed quantitatively**, not merely assumed: a single EM
+shower's transverse RMS grows from ~1.5 cm at 5 cm to ~10 cm at 125 cm.
+
+That fit is what makes every other number scale-free. The seeding bandwidth is
+`σ_ang(r) = w_single(r)/r`, which **shrinks with depth** — so a compact,
+late-converting second γ (owner factor 3) is not smoothed away by the kernel that
+fits the near, wide one. **No PDG constant is used as a threshold**; LAr X₀ ≈ 14.0 cm,
+R_M ≈ 10.0 cm and the 18 cm conversion length are quoted for scale only.
+
+Whole-object SINGLE medians: transverse RMS **5.76 cm**, angular RMS **8.8°**, start
+dQ/dx **1.09 MIP** (normalised by the event's own `dqdx_ref` electron plateau).
+Owner-ratio medians: `w_ratio` 0.936, `r_ratio` 0.940, `q_ratio` 0.680 —
+all near 1, so deviation is the signal. **Fallback fires 127/346 = 37 %.**
+
+## 13. The bake-off
+
+### 13a. Seeding, and the valley — `scripts/pr137_seed_split.py`
+
+**Recovery** (does the kernel find the OFF partition on a known 2-way merge, with
+k forced to 2 so the kernel is not scored on the trigger's failures):
+
+| kernel | n | median purity | ≥ 0.90 | ≥ 0.99 |
+|---|---|---|---|---|
+| point-level seeded, profile σ, sep 1.6 | 29 | 0.734 | 8 | 3 |
+| point-level seeded, flat σ = 4 cm, sep 1.0 | 33 | 0.682 | 10 | 7 |
+| **§3's segment-level ray 2-means, recomputed on this population** | 33 | **0.825** | **15** | 7 |
+
+**Point-level seeding is a worse KERNEL than §3's segment-level 2-means.** Recorded
+plainly: the reframe improves the *trigger*, not the *split*. **Design consequence:
+keep §3's 2-means as the kernel and use the seeded density only to decide whether
+and into how many parts to cut.**
+
+**Multiplicity as the trigger** — acceptance = (2nd peak ≥ `dratio`·1st) ∧
+(valley ≤ `vmax`) ∧ (minor charge share ≥ `fmin`):
+
+| accept rule | MERGED | SINGLE | enrichment | purity |
+|---|---|---|---|---|
+| d2/d1 ≥ 0.20, no valley cut | 26/44 (59 %) | 139/346 (40 %) | 1.5× | 16 % |
+| d2/d1 ≥ 0.50, no valley cut | 15/44 (34 %) | 61/346 (18 %) | 1.9× | 20 % |
+| **d2/d1 ≥ 0.35, valley ≤ 0.90, frac ≥ 0.05** | **12/44 (27 %)** | **8/346 (2 %)** | **11.8×** | **60 %** |
+| d2/d1 ≥ 0.50, valley ≤ 0.80, frac ≥ 0.10 | 8/44 (18 %) | 8/346 (2 %) | 7.9× | 50 % |
+
+**The valley is the whole effect.** Without it the best purity is 20 %; with it,
+60 % at the same 27 % efficiency §4's best rule had at 36 %. §4's three families
+were measuring angle, balance and gap — none of them asks whether the charge
+actually *dips* between the two lobes.
+
+### 13b. All features, two positive classes — `scripts/pr137_trigger_bakeoff.py`
+
+- **class A (proxy)**: 44 MERGED vs 345 SINGLE, faithful join. Large, contaminated.
+- **class B (labels)**: the pr/136 §10.1 hand marks, **strict node-id join**:
+  **10 POS vs 49 NEG**. Real, at segment granularity — and small.
+
+**Class B cannot decide anything today, and that is a measurement.** With
+POS = 10, NEG = 49 the AUC standard error is 0.101, so the 2σ band is
+**0.5 ± 0.20**. *Every* class-B AUC lies inside it. The strict join census is worth
+publishing because it is much smaller than pr/136 §10.1's "29 pure-OVER + 31 BOTH"
+suggests: of **112 OUT marks only 29 are current members**, giving **11 showers with
+an actionable OUT and 10 splittable**. pr/136 §10.1's larger number comes from
+`em117_score`'s charge-overlap matching rather than a node-id join — the same
+strict-vs-expanded bracket pr/136's xclus census had to report. Part of the
+shortfall is a real and welcome effect: the labels were taken on earlier arms and
+the shipped pr/133+134 chain has since removed some marked-out charge
+(`q_extra` 8.9 % → 7.0 %).
+
+**No single feature is a trigger.** Best |AUC − 0.5| on class A is 0.154
+(`seed_frac` 0.654; `valley` 0.364, i.e. inverted). Single-feature purity at 50 %
+efficiency runs 11–22 %, all below §4's low-efficiency 27–36 %.
+
+**Two-feature combinations carry it, and `valley` is in six of the top eight:**
+
+| rule (≥ 6 merged fires) | merged | single | purity |
+|---|---|---|---|
+| `q_ratio ≥ 0.93 & valley ≤ 0.863` | 7 | 2 | **78 %** |
+| `gap_scaled ≤ 2.51 & valley ≤ 0.863` | 7 | 3 | 70 % |
+| **`d2_over_d1 ≥ 0.414 & valley ≤ 0.863`** | **11** | **8** | **58 %** |
+| `balance ≥ 0.153 & valley ≤ 0.863` | 9 | 7 | 56 % |
+| `seed_frac ≥ 0.193 & valley ≤ 0.863` | 11 | 9 | 55 % |
+| `gap_scaled ≤ 1.51 & w_pull ≥ 3.06` | 6 | 6 | 50 % |
+
+**The 3-feature scan does not beat the 2-feature one** (best 60 % on 6 fires). With
+44 positives that is the resolution limit: **stop adding features, get labels.**
+
+**Two negative results, stated because they were predictions:**
+
+- **dE/dx died on the proxy.** `n_2mip` AUC 0.493, `dedx15_min` 0.456 — the
+  "two 2-MIP conversion stubs" signature I expected to be the LArTPC edge is not
+  there. §14's scan explains why, and **the sign was backwards** — see §14.2.
+- **`m_pi0` AUC = 0.500 exactly**, an independent confirmation of §4b's death of the
+  π⁰-mass gate on a completely different code path.
+
+## 14. The curated set, and the agent scan
+
+### 14.1 The set — `scripts/pr137_curate.py`
+
+**172 objects**, stratified, seed 20260901, re-derivable:
+
+| stratum | n | selection |
+|---|---|---|
+| S1 random control | 100 | uniform over the q > 1e6, ≥ 3-seg population — **drawn before any feature was consulted** |
+| S2 known merges | 44 | every object with ≥ 2 OFF ancestors (faithful join) |
+| S3 enriched | 40 | top by `valley` + `d2_over_d1`, drawn last |
+
+(S1 ∩ S2 = 12.) An **owner calibration subset of 50** is marked `owner_scan=1`,
+spread 25 / 15 / 10 across the strata so agreement is measured across the whole
+range and not only on easy objects.
+
+Contact sheets: `work/pr137_sheets/*.png`, four panels each — θ-φ ray map with the
+angular maxima marked, width vs depth against the `w_single(r)` null, dE/dx vs
+depth in MIP units, and the proposed 2-way split in side view.
+
+**They are BLIND, and that is not decoration.** The proxy class is the very thing
+these labels exist to validate; printing it on the sheet would let it steer the
+judgement and the resulting agreement number would be circular. The blind sheet
+carries event, node, charge and segment count and nothing else. The θ-φ panel is
+drawn *raw*; only the side view shows the proposed partition, so the reader sees the
+charge before seeing a hypothesis about how to cut it.
+
+### 14.2 The agent scan — and §5's prediction is confirmed
+
+15 objects scanned blind (`em_labels/splitscan-0901-agent/`), chosen as the
+decisive set: the 8 objects that fire `d2_over_d1 ≥ 0.414 & valley ≤ 0.863` while
+the proxy calls them SINGLE, 3 that fire and the proxy calls MERGED, and 4
+non-fired random controls.
+
+| object | proxy | agent verdict | evidence |
+|---|---|---|---|
+| 91917/17005 | SINGLE | **SPLIT2** | two clumps ~200 cm apart; w 90–122 cm vs null 3–11 |
+| 318769/31026 | SINGLE | **SPLIT2** | two disjoint clumps, starts at 28–40 and 42–53 cm, both detached from the vertex |
+| 278420/61027 | SINGLE | **SPLIT2** | a compact line at 25–50 cm plus scattered charge at 70–140 cm; w 11–19 vs null 4.5–7 |
+| 415278/23012 | SINGLE | **SPLIT2** | two lobes; blue 25–90 cm, red 60–125 cm offset transversely |
+| 294174/71067 | SINGLE | **SPLIT2** | 74 pts over 110–210 cm in several disjoint clumps |
+| 389538/19021 | SINGLE | **KEEP** | false positive — see below |
+| 170761/8026 | SINGLE | **KEEP** | coherent vertex-attached shower; the minor part is 2 isolated points |
+| 396037/69026 | SINGLE | UNSURE | 48 pts, too sparse to call |
+| 396222/9059 | MERGED | **SPLIT3** | 123 seg, w 14–40 vs null 4.5–7. Trigger right, **kernel fails** (balance 0.003) |
+| 176502/109119 | MERGED | **SPLIT3** | three lobes in θ-φ. Trigger right, **kernel fails** |
+| 21073/63100 | MERGED | **SPLIT2** | two clean lobes. Trigger right, **kernel right** |
+| 256587, 292524, 76346, 392901 | SINGLE (not fired) | **KEEP** ×4 | one tight core each; width at or below the null |
+
+**Five of the eight "false" fires are real over-clusters.** doc pr/137 §5 argued the
+proxy purity is a *lower* bound because "SINGLE" is not truth; that is now measured
+rather than argued:
+
+| purity of `d2_over_d1 ≥ 0.414 & valley ≤ 0.863` | value |
+|---|---|
+| against the arm-difference proxy | 58 % (11/19) |
+| **against agent hand labels, on the 11 scanned** | **80 % (8 SPLIT / 2 KEEP, 1 UNSURE excluded)** |
+| extrapolated to all 19, if the 8 unscanned proxy-MERGED are genuine | 89 % |
+| §4's best, for comparison | 27–36 % |
+
+And **4/4 non-fired controls are correctly KEEP.**
+
+**Three findings that only the scan could produce:**
+
+1. **A new false-positive class, and it renames the dE/dx handle.** 389538/19021 is
+   a V of two arms meeting at a common point ~215 cm out, with dE/dx **3–4 MIP at
+   that shared origin** falling to ~1.5 — **one photon whose e⁺e⁻ pair is resolved**,
+   not two photons. §11's Family C looked for *two* 2-MIP stubs as evidence of two
+   γs; the more discriminating signature is **one 2-MIP stub at a shared origin as
+   evidence of ONE γ**, i.e. a *veto*, not a trigger. That is why `n_2mip` scored at
+   chance in §13b — the sign was backwards.
+2. **The kernel fails exactly where the trigger is most confident.** On the two
+   largest fired objects (396222, 176502) the 2-means returns a degenerate partition
+   (balance 0.003) while the θ-φ map plainly shows three lobes. **k must come from
+   the seed count, not be fixed at 2** — §1.2b's "k = 3 only on a residual test" is
+   confirmed as necessary, and it is needed on the biggest objects, not the rare ones.
+3. **Width-vs-depth is the most legible panel for a human.** Every SPLIT case sits
+   2–10× above `w_single(r)`; every KEEP control sits at or below it. It did not win
+   the AUC ranking, but it is what makes a verdict fast — worth keeping in the
+   owner's Bee package as an annotation.
+
+### 14.3 What this round did NOT establish
+
+- **The 80 % is 11 objects labelled by one scanner.** It is not a purity measurement;
+  it is a demonstration that the proxy understates. The owner's 50 are what turn it
+  into one, and the **agent-vs-owner agreement on the overlap is the noise floor**
+  no trigger may be claimed to beat.
+- **Efficiency is unmeasured.** The rule fires on 27 % of proxy-MERGED. How much
+  real over-clustering it misses needs the S1 control stratum labelled, not just
+  spot-checked — the 15 known merges that do *not* fire are the first thing to scan.
+- **Nothing is implemented.** No C++, no knob, no arm, no gate. The insert point
+  (`NeutrinoShowerClustering.cxx:8213`, after `examine_showers`), the write recipe
+  (fork `pass4_prune_detached`, `:8591-8726`) and the kinematics-refresh obligation
+  (there is **no** free recompute downstream — `calc_kine_2` runs at `:8202`, before)
+  are recorded in §10.1 and §11 so the implementation round does not re-derive them.
+
+### 14.4 Revised plan
+
+1. **Owner scans the 50** marked `owner_scan=1` in `docs/pr/pr137-curated-set.tsv`
+   (Bee package `bee/pr137r2/`, built and held). Verdict **SPLIT / KEEP plus the
+   boundary** — which segments go to which part.
+2. **Agent scans the remaining ~120** blind sheets, same schema.
+3. Report **agent-vs-owner agreement** on the 50 overlap *before* any trigger claim.
+4. **Refit the trigger on labels, not the proxy**, with the feature set
+   pre-registered (`valley` + one of `d2_over_d1` / `q_ratio` / `gap_scaled`) and a
+   50/50 event-hash holdout opened once. With ~170 labels the holdout half holds
+   only ~15–25 positives, so a pre-registered 2-feature rule is the honest ceiling —
+   not a fitted classifier.
+5. **Then** stage 1 of §6: `WCT_SHOWER_SPLIT_DEBUG`, byte-neutral, hash-gated —
+   now emitting `valley` and the seed list, which §4's design did not know to.
+6. Add the **one-γ veto** of §14.2-1 to the stage-1 tape: shared-origin dE/dx and
+   the common-point test.
+7. Independently: **adjudicate 181050** (doc pr/136 §11.9), still the last open item
+   on `onV1c90d25`.

@@ -1,0 +1,13 @@
+{
+ "event": "evt294174",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "71067": {
+   "verdict": "SPLIT2",
+   "confidence": "medium",
+   "comment": "sparse (74 pts / 14 seg) over 110-210 cm in several disjoint clumps; w 10-23 vs null 7-8; a fragment collection, not one shower",
+   "parts": null
+  }
+ }
+}

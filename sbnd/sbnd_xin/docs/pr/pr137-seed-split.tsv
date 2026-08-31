@@ -1,0 +1,23 @@
+# doc pr/137 sec 13a -- seeded splitter kernel
+# population: onV1c90 showers, q>1e6, >=3 segments, faithful OFF-ancestor join
+# SINGLE=346 MERGED=44
+block	variant	n	value	note
+recovery	seeded rays, profile sigma, sep1.6	29	0.7336	ge0.90=8 ge0.99=3 nofind=6
+recovery	seeded rays, profile sigma, sep1.0	32	0.6766	ge0.90=7 ge0.99=5 nofind=2
+recovery	seeded rays, profile sigma, sep2.5	25	0.7032	ge0.90=9 ge0.99=3 nofind=10
+recovery	seeded rays, flat sigma w=6cm, sep1.6	29	0.7179	ge0.90=8 ge0.99=3 nofind=6
+recovery	seeded rays, flat sigma w=4cm, sep1.0	33	0.6823	ge0.90=10 ge0.99=7 nofind=1
+recovery	[pr137 sec3 segment-level ray 2-means, recomputed]	33	0.8250	ge0.90=15 ge0.99=7
+multiplicity	d2/d1>=0.20 valley<=1.00 frac>=0.00	165	0.1576	merged=26/44 single=139/346 enrich=1.47
+multiplicity	d2/d1>=0.35 valley<=1.00 frac>=0.00	129	0.1938	merged=25/44 single=104/346 enrich=1.89
+multiplicity	d2/d1>=0.50 valley<=1.00 frac>=0.00	76	0.1974	merged=15/44 single=61/346 enrich=1.93
+multiplicity	d2/d1>=0.20 valley<=0.90 frac>=0.05	21	0.5714	merged=12/44 single=9/346 enrich=10.48
+multiplicity	d2/d1>=0.35 valley<=0.90 frac>=0.05	20	0.6000	merged=12/44 single=8/346 enrich=11.80
+multiplicity	d2/d1>=0.35 valley<=0.80 frac>=0.10	18	0.5556	merged=10/44 single=8/346 enrich=9.83
+multiplicity	d2/d1>=0.50 valley<=0.80 frac>=0.10	16	0.5000	merged=8/44 single=8/346 enrich=7.86
+multiplicity	d2/d1>=0.50 valley<=0.70 frac>=0.15	12	0.4167	merged=5/44 single=7/346 enrich=5.62
+multiplicity	d2/d1>=0.65 valley<=0.70 frac>=0.15	9	0.3333	merged=3/44 single=6/346 enrich=3.93
+multiplicity	d2/d1>=0.65 valley<=0.60 frac>=0.20	6	0.3333	merged=2/44 single=4/346 enrich=3.93
+multiplicity	d2/d1>=0.80 valley<=0.60 frac>=0.20	2	1.0000	merged=2/44 single=0/346 enrich=45454545.45
+multiplicity	d2/d1>=0.80 valley<=0.50 frac>=0.25	0	0.0000	merged=0/44 single=0/346 enrich=0.00
+multiplicity	[pr137 sec4 best geometric]		0.36	the number to beat

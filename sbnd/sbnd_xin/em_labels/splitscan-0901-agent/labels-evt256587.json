@@ -1,0 +1,13 @@
+{
+ "event": "evt256587",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "11301": {
+   "verdict": "KEEP",
+   "confidence": "high",
+   "comment": "control, not fired: 128 seg but a SINGLE tight core in theta-phi fanning from the vertex; w 5-9 vs null 4-7.7",
+   "parts": null
+  }
+ }
+}

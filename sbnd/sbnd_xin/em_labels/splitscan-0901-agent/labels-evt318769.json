@@ -1,0 +1,13 @@
+{
+ "event": "evt318769",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "31026": {
+   "verdict": "SPLIT2",
+   "confidence": "high",
+   "comment": "two disjoint clumps in theta-phi; parts start at 28-40 and 42-53 cm, ~10 cm apart transversely; both detached from the vertex; w 6-25 cm vs null 4.7-5.2",
+   "parts": null
+  }
+ }
+}

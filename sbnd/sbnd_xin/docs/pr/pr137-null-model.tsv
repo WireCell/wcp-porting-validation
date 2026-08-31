@@ -1,0 +1,33 @@
+# doc pr/137 sec 12 -- in-situ null model, calibrated on the SINGLE population
+# arms: work-pr136-onV1c90-* ; sidecars emprep-136off2 / emprep-136onV1c90
+# SINGLE=346 MERGED=44 ; LAr X0=14.0cm R_M=10.0cm quoted for SCALE ONLY
+block	key	n	p10	median	p90	mean
+w_single_vs_r	0-10cm	179	0.3914	1.53	7.356	2.703
+w_single_vs_r	10-20cm	203	0.8078	2.486	7.211	3.475
+w_single_vs_r	20-30cm	182	1.003	2.841	9.419	4.28
+w_single_vs_r	30-40cm	189	1.394	3.621	11.9	5.272
+w_single_vs_r	40-50cm	156	1.042	3.866	10.34	5.492
+w_single_vs_r	50-60cm	142	1.306	4.913	13.95	6.746
+w_single_vs_r	60-70cm	123	1.816	5.979	17.96	8.494
+w_single_vs_r	70-80cm	96	2.483	7.242	22.71	11.06
+w_single_vs_r	80-90cm	85	2.243	6.993	17.04	8.919
+w_single_vs_r	90-100cm	65	2.56	8.118	21.23	10.05
+w_single_vs_r	100-110cm	49	3.275	8.106	18.29	9.882
+w_single_vs_r	110-120cm	49	2.691	8.805	20.68	11.45
+w_single_vs_r	120-130cm	34	2.864	9.947	16.61	9.895
+w_single_vs_r	130-140cm	25	2.726	8.26	24.49	11.16
+w_single_vs_r	140-150cm	17	3.305	8.727	34.49	13.72
+w_single_vs_r	150-160cm	15	1.578	7.766	20.18	10.54
+w_single_vs_r	160-170cm	21	2.251	8.303	34.97	12.49
+w_single_vs_r	170-180cm	13	3.185	7.57	19.14	12.46
+w_single_vs_r	190-200cm	58	1.153	5.166	26.05	11.63
+w_single_fit	w0_cm	19		3.575		
+w_single_fit	slope_cm_per_cm	19		0.02834		
+w_single_fit	w_scale_cm	19		7.242		
+single_obj	transverse_rms_cm	346	2.306	5.756	12.35	7.096
+single_obj	angular_rms_deg	346	2.879	8.778	25.96	12
+single_obj	start_dQdx	323	2.988e+04	5.687e+04	1.124e+05	6.679e+04
+owner_ratio	w_ratio	219	0.2569	0.9361	3.089	1.599
+owner_ratio	r_ratio	219	0.2885	0.9404	3.197	1.427
+owner_ratio	q_ratio	219	0.1158	0.6797	2.752	1.1
+owner_ratio	fallback_frac	346		0.3671		
