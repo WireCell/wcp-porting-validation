@@ -21,6 +21,7 @@ scripts/pr137_split_feasibility.py   # §3  can a blind split recover a known pa
 scripts/pr137_split_separation.py    # §4a geometric trigger: merged vs single
 scripts/pr137_split_pi0gate.py       # §4b pi0-mass trigger
 scripts/pr137_split_convgap.py       # §4c two-conversion-gap trigger
+scripts/pr137_split_refpoint.py      # §1.2a which reference point the split should use
 ```
 
 All four are READ-ONLY and run off the round-3 arms
@@ -94,6 +95,46 @@ metrics the right way at once.
 free, and §5 says the honest purity is unknown until the owner scans. The
 architecture is sound; the open question is whether the second decision is
 easier to make than the first, and that is what stage 2 measures.
+
+### 1.2 The owner's design refinement, and the measurement that agrees with it
+
+Owner, same session:
+
+> *"the split can be a direction based from the targeted vertex, the majority
+> would be a 2-gamma split. Of course, we want a gate to separate the so-called
+> 1-gamma (no split) vs. 2-gamma. There may be small cases that there are
+> multiple gammas."*
+
+Three specifications, and tonight's probe independently confirms all three:
+
+**(a) Direction from the targeted vertex.** This was the winning criterion of §3
+before the specification arrived, and the reference point matters:
+
+| reference point for the ray clustering | median purity | ≥ 0.90 | ≥ 0.99 |
+|---|---|---|---|
+| **the ν main vertex** | **0.920** | **25/44 (57 %)** | **15** |
+| the object's charge centroid | 0.878 | 18/44 (41 %) | 12 |
+| the shower's own start point | 0.864 | 20/44 (45 %) | 13 |
+
+The ν vertex wins, and it should: two γs from a π⁰ share a decay point that sits
+at the ν vertex, so they separate in *direction from it*. The shower's own start
+is a poor reference precisely because it lies inside one of the two parts.
+(`scripts/pr137_split_refpoint.py`.) **Design consequence:** the reference point
+is a *parameter*, not a constant — the NC chain already re-seats a π⁰ decay
+point away from the ν vertex (K24, `id_pi0_backproject_vertex`), so the pass
+should take "the targeted vertex" from the shower's own π⁰ context when one
+exists and fall back to the main vertex otherwise. Stage 1's tape prints the
+statistic under both so the choice is measured, not assumed.
+
+**(b) k = 2 is the default, and the data says so.** Of the 49 merges §2 found,
+**44 are two-way and 5 are three-way — 90 % / 10 %**. So the pass runs k = 2
+first and only tries k = 3 when a residual test fires; it never searches k
+freely, which would find structure in every real shower.
+
+**(c) A 1-γ vs 2-γ gate is required.** The owner names it as a requirement, and
+§4 is the measurement of how hard it is. That agreement matters: the gate is not
+an implementation detail bolted on at the end, it is the deliverable. §6's
+staging exists so the gate is *fitted to owner verdicts* rather than guessed.
 
 **Why this is well-posed and the previous eleven rounds were not.** pr/123 →
 pr/136 all asked *"should this shower admit that segment?"* — an admission
@@ -294,6 +335,8 @@ than to the OFF partition. Knobs, all DEFAULT OFF:
 | `shower_split_min_balance` | double | `0` | minimum minor-part charge fraction |
 | `shower_split_min_gap` | double (cm) | `0` | minimum inter-part gap |
 | `shower_split_min_vgap` | double (cm) | `0` | minimum of the two parts' vertex gaps |
+| `shower_split_max_parts` | int | `2` | k; 3 only reachable when the k = 2 residual test fires (10 % of the population, §1.2b) |
+| `shower_split_ref` | string | `"pi0_then_main"` | reference point: the shower's π⁰ decay vertex when it has one, else the ν main vertex (§1.2a) |
 
 `false` ⇒ the pass is never called ⇒ byte-identical, gated on the standard
 239-event manifest.
