@@ -93,5 +93,36 @@ try:
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
-print("\n%d checks, %d FAILED" % (20, len(FAIL)))
+# ---------------------------------------------------------------------------
+# doc pr/138 sec A1.5-A1.7 -- the round the owner's three reports opened.
+
+# 6. the colour modes (owner: "the color of the group is gone now")
+cc = SM.charge_colors([-5.0, 0.0, 100.0, 1e5])
+check("charge_colors survives the dump's NEGATIVE dQ", len(cc) == 4 and all(cc))
+check("charge_colors spans the ramp", cc[0] == SM.CHARGE_RAMP[0] and cc[-1] == SM.CHARGE_RAMP[-1])
+check("the bundle palette is longer than the group palette",
+      len(SM.BUNDLE_COLORS) > len(SM.GROUP_COLORS))
+
+# 7. the pi0 vertex re-seat (owner: "how can the fit vertex be so much off?")
+part, mass = SM.pio_partner(396222, 9059)
+check("evt396222 node9059 has a pi0 partner", part is not None and mass is not None,
+      "got %s / %s" % (part, mass))
+check("the partner is shower 130313 at the pi0 mass",
+      part is not None and part['id'] == 130313 and 120.0 < mass < 150.0,
+      "partner=%s mass=%s" % (part.get('id') if part else None, mass))
+check("a non-pi0 object reports no partner", SM.pio_partner(99838, 14004) == (None, None))
+
+# 8. the proposal never claims two groups it did not make (evt389538 node19021)
+r389 = SM.load_object(389538, 19021)
+if r389 is None:
+    check("evt389538 node19021 loads", False)
+    check("a collapsed 2-seed proposal says so", False)
+else:
+    g389, _, why = SM.propose(r389)
+    ng = len({v for v in g389.values() if v != SM.JUNK})
+    check("evt389538 node19021 loads", True)
+    check("a collapsed 2-seed proposal says so",
+          not (ng == 1 and why.startswith("2 groups")), "ng=%d reason=%r" % (ng, why))
+
+print("\n%d checks, %d FAILED" % (28, len(FAIL)))
 sys.exit(1 if FAIL else 0)

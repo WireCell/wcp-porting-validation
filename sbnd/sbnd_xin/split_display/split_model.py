@@ -37,6 +37,39 @@ GROUP_COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"
 JUNK_COLOR   = "#999999"
 
 
+# Category20-ish, for the BUNDLE colour mode.  Deliberately a different and much
+# longer palette than GROUP_COLORS: a bundle colour must never be mistaken for a
+# group colour, and an object can carry 40+ bundles (evt396222 has 42).
+BUNDLE_COLORS = ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a",
+                 "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94",
+                 "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d",
+                 "#17becf", "#9edae5"]
+# viridis, 9 stops -- the CHARGE mode.  The split criterion IS a charge dip
+# between two maxima (doc pr/137 sec 10, ATLAS's local-maxima-with-a-valley), so
+# the scanner should be able to see the quantity the trigger reads.
+CHARGE_RAMP = ["#440154", "#472d7b", "#3b528b", "#2c728e", "#21918c",
+               "#28ae80", "#5ec962", "#addc30", "#fde725"]
+
+
+def charge_colors(q):
+    """per-point colour on a LOG charge ramp, robust to the dump's negative dQ.
+
+    dQ can be negative (noise-subtracted); those are clamped to the floor rather
+    than dropped, so every point keeps a colour and the array stays aligned with
+    the cloud."""
+    a = np.clip(np.asarray(q, float), 0.0, None)
+    pos = a[a > 0]
+    if not len(pos):
+        return [CHARGE_RAMP[0]] * len(a)
+    lo, hi = np.percentile(pos, 5.0), np.percentile(pos, 95.0)
+    if not (hi > lo):
+        lo, hi = pos.min(), max(pos.max(), pos.min() + 1.0)
+    t = (np.log10(np.maximum(a, lo)) - np.log10(lo)) / (np.log10(hi) - np.log10(lo))
+    idx = np.clip((t * (len(CHARGE_RAMP) - 1)).round().astype(int),
+                  0, len(CHARGE_RAMP) - 1)
+    return [CHARGE_RAMP[i] for i in idx]
+
+
 def connected_bundles(P, segs, ms, gap=4.0):
     """single-linkage over segments at `gap` cm -> list of segment lists,
     ordered by descending charge so bundle 0 is always the main body."""
@@ -115,8 +148,21 @@ def propose(row, sig=None, gap=4.0, flag_junk=False):
                         g = 0 if float(u @ d0) >= float(u @ d1) else 1
                         for s in b:
                             grp[s] = g
-                    reason = ("2 groups proposed: valley_best=%.3f <= 0.95 "
-                              "(seeded maxima, bundles assigned by ray)" % vb)
+                    # HONESTY CHECK.  The seeds can be well separated and the
+                    # per-bundle vote still send EVERY bundle to the same seed
+                    # (evt389538 node19021: valley_best=0.091 yet ng=1), because
+                    # a bundle is assigned by its own charge-weighted ray and a
+                    # minority lobe that is not its own connected component has
+                    # no bundle to carry it.  Saying "2 groups proposed" there is
+                    # a lie the scanner cannot see, so the reason reports what
+                    # actually happened.
+                    if len(set(grp.values())) >= 2:
+                        reason = ("2 groups proposed: valley_best=%.3f <= 0.95 "
+                                  "(seeded maxima, bundles assigned by ray)" % vb)
+                    else:
+                        reason = ("single group: valley_best=%.3f <= 0.95 but all "
+                                  "%d bundles fell to one seed (no bundle carries "
+                                  "the second lobe)" % (vb, len(bundles)))
         if reason.startswith("single") and k >= 2:
             reason = ("single group: %d angular maxima but valley_best=%.3f > 0.95 "
                       "(no charge dip between them)" % (k, vb))
@@ -163,6 +209,46 @@ def load_object(event, node, arm='onV1c90', on_tag='emprep-136onV1c90',
         if r['node'] == node:
             return r
     return None
+
+
+_DUMP_MEMO = {}
+
+
+def event_showers(event, arm='onV1c90'):
+    """{node: shower record} for the WHOLE event.
+
+    The viewer holds one object; this is how it can still say what that object
+    is (particle_id, length, kine) and who its pi0 partner is.  Memoised for one
+    event at a time -- the viewer is strictly single-object, and a calib dump is
+    ~1-4 MB so a re-read per navigation is free."""
+    k = (int(event), arm)
+    if k not in _DUMP_MEMO:
+        _DUMP_MEMO.clear()
+        d = L.dump(int(event), arm)
+        _DUMP_MEMO[k] = L.shower_recs(d) if d else {}
+    return _DUMP_MEMO[k]
+
+
+def pio_partner(event, node, arm='onV1c90'):
+    """(partner record, pio_mass) for the other shower sharing this pio_id.
+
+    doc pr/138 sec A1.4: when a pi0 is accepted, NeutrinoShowerClustering re-seats
+    the MAIN VERTEX at the reconstructed two-photon decay point
+    (`main_vertex->fit().point = vtx_point; ... dQ = 0`, :7886 and :6241).  That
+    is why evt396222's vertex star sits 14.5 cm off every piece of charge -- it
+    is the pi0 decay point, not a failed fit.  The viewer says so instead of
+    calling it an extrapolation."""
+    SR = event_showers(event, arm)
+    me = SR.get(int(node))
+    if not me:
+        return None, None
+    pid = me.get('pio_id', -1)
+    if pid is None or pid < 0:
+        return None, None
+    for n, r in sorted(SR.items()):
+        if n != int(node) and r.get('pio_id', -1) == pid:
+            return r, me.get('pio_mass')
+    return None, me.get('pio_mass')
 
 
 def theta_phi(pts, q, v):

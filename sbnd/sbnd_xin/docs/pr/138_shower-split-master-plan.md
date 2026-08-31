@@ -202,73 +202,206 @@ seen from it. One gap to record: doc pr/137 §1.2a wanted the reference to be a
 the viewer always uses the ν vertex. It matters for the NC chain, where K24
 re-seats a decay point away from the ν vertex.
 
-### A1.4 evt396222's vertex — checked, and it is a real outlier
+### A1.4 evt396222's vertex — CORRECTED 2026-08-31: it IS the π⁰ chain
+
+> **This section replaces an earlier, wrong answer** (committed in `421d5228` and
+> `8b790e60`). Those said "not the π⁰ chain" and "by elimination the 3-plane
+> trajectory fit `fit_point()` at `TrackFitting.cxx:4476`". Both are false. The
+> corrected trace is below; the retraction is spelled out under *Why it hid*.
 
 Owner: *"why the black star is not at one of the red segments? I thought for this
 event, the nu vertex is at the one shower? Or it was somehow changed by NCpi0
-chain?"* Checked all three readings:
+chain?"* — and, on the second pass, *"How can the fit vertex be so much off?"*
 
-- **Not the π⁰ chain.** `dump['main_vertex']` and the `is_main` entry in
-  `vertices[]` agree to **0.00 cm**, so nothing re-seated it after it was written.
-- **The vertex IS attached to that shower** — the owner's expectation is right.
-  Main vertex `id 9038`, cluster 9, **degree 1**, and the one segment attached to
-  it is **seg 9059, the shower itself**. It is the shower's own start vertex.
-- **But it is fitted 14.5 cm upstream of any charge.** Its fit point carries
-  `dQ = 0.0`, its `fit_distance = 15.04`, and the nearest point of *any* of the
-  event's 180 segments is that same 14.5 cm. The shower's
-  `start_connection_type = 2` ("gap").
+**Symptom.** evt396222's main vertex (`id 9038`, cluster 9, **degree 1**, the one
+attached segment being `seg 9059`, the shower itself) sits **14.50 cm** from the
+nearest point of any of the event's 180 segments, with `dQ = 0.0` and
+`fit_distance = 15.04`. It is the only one of the 41 owner events like that:
+median main-vertex-to-charge distance 0.00 cm, p90 0.00 cm, >5 cm in **1/41**,
+max 14.50 cm = evt396222; every other main vertex has `fit_distance` 0.28–1.05.
 
-**And it is the only one of the 41.** Census over the owner's events, main-vertex
-distance to the nearest charge in the event:
+**Root cause — the π⁰ decay-point re-seat, and it is deliberate.**
+`NeutrinoShowerClustering.cxx:7886`, in `id_pi0_without_vertex` (path 2):
+
+```cpp
+// Update main vertex position (hack) - set to reconstructed pi0 decay point
+main_vertex->fit().point = vtx_point;
+main_vertex->fit().dQ    = 0;
+```
+
+(the pr/133 K21 back-projection proposer at `:6241` carries the identical two
+lines, labelled *"The P2 acceptance, verbatim mechanics (vertex hack …)"*; it
+arrived in `42d728e9` as **K19, DEFAULT OFF and measured dead**, so the site that
+fired in a production arm is `:7886`.)
+
+The dump agrees, line for line:
 
 | | |
 |---|---|
-| median | **0.00 cm** |
-| p90 | 0.00 cm |
-| > 5 cm | **1 / 41** |
-| max | **14.50 cm (evt396222)** |
+| `showers[9059].pio_id` | **0** |
+| `showers[130313].pio_id` | **0** — the same π⁰ |
+| `pio_mass` | **135.75 MeV** |
+| shower 9059 | 2879.4 MeV, 123 seg, 723.7 cm, start 14.50 cm from the vertex, conn 2 |
+| shower 130313 | **35.0 MeV**, 4 seg, 6.9 cm, start 104.3 cm from the vertex, conn 2 |
+| implied opening angle | **24.7°** (θ_min for a 2914 MeV π⁰ is 5.3°, so allowed) |
 
-Every other main vertex sits *on* charge, with `fit_distance` 0.28–1.05 against
-396222's 15.04. So this is a genuine reconstruction anomaly, not a display
-artefact and not the NC chain — a degree-1 main vertex extrapolated into empty
-space. **Reported, not tuned** (CLAUDE.md §5.7).
+And the source comment 26 lines above the write names this very event:
+*"the round-1 ADVERSE path-2 acceptances are low-mass (122660 m=85.2, 171143
+m=75.5) while the good ones sit near 135 (**396222 m=133.5**, 169626 m=138.9); a
+decay-point shift cap does NOT separate them (shifts 23.0/5.8 vs **14.5**/59.6
+cm)."* **14.5 cm is our number.** The vertex was moved to the reconstructed γγ
+back-projection point — which, for a π⁰, is the *right* estimate of the ν vertex,
+since a π⁰ decays essentially at rest-frame zero range. The shower's own first
+charge is 14.5 cm downstream because that is where the photon converted
+(`start_connection_type = 2`, "gap"). **So the owner's instinct was right twice
+over: the vertex does belong to that shower, and the NC π⁰ chain did move it.**
 
-**Which fit did it.** Traced as far as the code allows without instrumenting:
+**Why it hid — and why the earlier answer was wrong.** Two independent traps.
 
-- `Vertex::fit_distance()` is `m_fit.distance(m_wcpt.point)` (`PRVertex.h:113`) —
-  the fitted point against the **Steiner-lattice seed**. 15.04 cm here.
-- **It was not `MyFCN`.** `MyFCN::FitVertex` only fits when
-  `ntracks > 2 && n_large_angles > 1`, or `ntracks >= 2` with
-  `enforce_two_track_fit` (`MyFCN.cxx:500`), and `get_fittable_tracks` counts
-  segments with more than one point in the annulus (`:445`). This vertex has
-  **degree 1**, so the multi-track vertex fit cannot have run.
-- **By elimination it is the 3-plane trajectory fit**, `fit_point(...)` at
-  `TrackFitting.cxx:4476`, the only site that writes a vertex's fit point from a
-  fit (`NeutrinoVertexFinder.cxx:4808` merely *restores* saved fits). It refits
-  the vertex against the U/V/W projections and, for a degree-1 endpoint, is
-  weakly constrained.
+1. *The test had no power.* `PrDisplayDump.cxx:445-460` writes **both**
+   `main_vertex` and the `is_main` entry of `vertices[]` from the same
+   `vertex->fit().point`. They agree by construction, whoever moved the point;
+   "they agree to 0.00 cm ⇒ nothing re-seated it" was never a valid inference.
+2. *The `Fit` struct is internally inconsistent after the hack* — and this is a
+   **real defect**, separate from the re-seat. The hack writes `point` and `dQ`
+   and nothing else, so the vertex's `pu / pv / pw / pt` and `reduced_chi2` still
+   describe the **old, on-charge** location. Measured on this vertex:
 
-**And the fit itself says it went badly**: the vertex fit carries
-`reduced_chi2 = 6.54` and `dQ = 0.0`. The displacement is 14.50 cm from the first
-charge at **140.9°** to the local shower direction — **11.25 cm backwards along
-the axis but 9.15 cm perpendicular to it**. A pure slide along the
-under-constrained direction would be nearly parallel; 9 cm of perpendicular
-offset is a genuine mis-fit, not just an unconstrained coordinate.
+   | | `pt` | `pu` | `pv` | `pw` |
+   |---|---|---|---|---|
+   | recorded in `vertices[].fit` | 1442.05 | 621.09 | 1571.11 | 1043.70 |
+   | what seg 9059's **point 0** projects to | 1442.1 | 621.1 | 1571.1 | 1043.7 |
+   | what the recorded **3-D point** projects to | 1388.5 | 598.6 | 1547.4 | 997.4 |
 
-*Stated as inference, not proof:* the elimination above is read off the code, not
-from an instrumented run. Confirming it needs a probe on `fit_point`'s vertex
-branch, which no gate here requires.
+   The stored projections are the shower's first point to every printed digit;
+   the stored 3-D point is 14.5 cm away. `reduced_chi2 = 6.54` is likewise seg
+   9059 point 0's chi2 — a **pre-move** number. Reading it as evidence of a bad
+   fit is exactly the mistake the earlier section made.
 
-**A doc bug found on the way**: `PrDisplayDump.cxx:445` comments `fit_distance`
-as *"How far improve_vertex/MyFCN moved this vertex off its seed point"*. That
-attribution is incomplete — `fit_distance` measures fit-vs-seed whoever wrote the
-fit, and on this vertex MyFCN provably did not run.
+   *Bounding the consequence, not speculating about it:* the only readers of a
+   **vertex's** fit projections found in `clus/` are
+   `NeutrinoVertexFinder.cxx:1310` (`row.hv_reduced_chi2`, which
+   `PrDisplayDump.cxx:811` only dumps) and the dump's own `fit_json`. No
+   production *decision* was found reading them. `fit().index` and `fit().paf`
+   are read by `TrackFitting.cxx:6543/7107`, but those passes run before the π⁰
+   acceptance. So the demonstrated damage is: it lies to the dump, it lies to
+   this scan tool, and it misled this investigation for a day.
 
-**Why it matters for the scan, and not only for this event:** the reference point
-is what every angle in the tool is measured from, so on 396222 the grouping
-proposal is built from an extrapolated point. The viewer now prints a red warning
-whenever the vertex-to-charge gap exceeds 5 cm, and the "rotate about" control
-lets the scanner orbit the object centroid instead.
+**Fix — none applied, and the reason.** Both halves would change production
+output: re-projecting the vertex after the re-seat changes `vertices[].fit`, and
+re-weighing the pairing changes reconstruction. Either needs a default-OFF knob
+and a gate (CLAUDE.md §1). What ships this round is the **display**: the viewer
+now names the cause instead of guessing at it (`split_model.pio_partner`,
+`split_viewer._vertex_note_html`).
+
+**The pairing itself — reported, not tuned (CLAUDE.md §5.7).** 2879.4 MeV against
+a 35.0 MeV, 4-segment, 6.9 cm crumb 104 cm away, at 24.7°, giving 135.75 MeV. An
+82:1 energy asymmetry is the classic combinatoric-fake signature, and shower 9059
+is 123 segments / 723.7 cm — plausibly the very over-clustering this round exists
+to split, which would mean the π⁰ mass rests on an inflated energy. Not acted on
+here; flagged for the owner.
+
+**Left alone**: `PrDisplayDump.cxx:445` still comments `fit_distance` as *"How
+far improve_vertex/MyFCN moved this vertex off its seed point."* On this vertex
+that attribution is wrong twice — MyFCN cannot have run (degree 1 fails
+`FitVertex`'s `ntracks` gate at `MyFCN.cxx:500`), and what actually moved it was
+the π⁰ hack. It is an unrelated production file and this round changes no C++, so
+it is recorded here rather than edited.
+
+**Why it matters for the scan.** The reference point is what every angle in the
+tool is measured from, so on 396222 the proposal is built from the π⁰ decay point
+rather than from the shower's own start. The viewer prints the explanation
+whenever the vertex-to-charge gap exceeds 5 cm, and "rotate about" lets the
+scanner orbit the object centroid instead.
+
+### A1.5 The colour modes — ADDED 2026-08-31
+
+Owner: *"There is a problem, the color of the group is gone now. No red vs.
+blue."* **Measured first.** It is not a rendering fault and not a regression from
+the wheel-zoom commit: a headless probe reads red 894 / blue 437 out of the live
+cloud on object 1, and a webgl-vs-canvas A/B shows per-point CSS colours repaint
+identically under both backends. The census is the answer —
+
+```
+groups proposed over the 50 owner objects:  {1: 39,  2: 11}
+```
+
+**39 of 50 objects get a single-group proposal**, so group colouring has nothing
+to say and the cloud is uniformly group-0 blue. The trigger is honest; the
+display had only one thing to show.
+
+So the display now has three: a `colour by` selector, `group` (default — the
+verdict is read off groups, so red-vs-blue stays the primary signal) /
+**`bundle`** (the unit the owner actually drags; the tree lists 42 of them on
+evt396222 and they were visually identical) / **`charge`** (a 9-stop viridis log
+ramp — the split criterion *is* a charge dip between two maxima, so the scanner
+should be able to see the quantity the trigger reads). The mode rides as a
+reserved `_mode` key inside the **existing** `cmap` payload rather than as a new
+widget callback: four earlier builds lost handlers to Bokeh 3 binding traps, so a
+proven channel gets reused, not duplicated. Both figure titles print the active
+mode, because the bundle palette necessarily reuses the group hues.
+
+One honest defect fixed alongside: `propose()` could report *"2 groups
+proposed: valley_best=0.091"* and still hand back one group (evt389538 node19021)
+— the per-bundle ray vote sends every bundle to one seed when no connected bundle
+carries the minority lobe. The reason string now says what actually happened.
+
+### A1.6 Eight of the 50 are track-typed — CURATION FINDING
+
+Owner, on evt99838: *"I only see the major track in it, not any of the EM shower.
+I want to confirm that you essentially want me to look at the part relevant for
+our algorithm, not judging the entire event, right?"* — **Yes**, and the object
+is exactly what they saw. Census of `particle_id` over the 50 owner objects:
+
+| pid | n |
+|---|---|
+| 11 (e) | 42 |
+| 13 (μ) | **5** |
+| 2212 (p) | **2** |
+| 211 (π) | **1** |
+
+| event | node | pid | length | kine_best |
+|---|---|---|---|---|
+| 99838 | 14004 | 13 | 473 cm | 1047 MeV |
+| 389538 | 19021 | 2212 | 182 cm | 837 MeV |
+| 292524 | 9018 | 13 | 202 cm | 436 MeV |
+| 176502 | 109141 | 2212 | 183 cm | 533 MeV |
+| 286681 | 72040 | 13 | 109 cm | 420 MeV |
+| 122660 | 54071 | 13 | 54 cm | 280 MeV |
+| 415278 | 23047 | 13 | 97 cm | 245 MeV |
+| 278420 | 18002 | 211 | 47 cm | 137 MeV |
+
+Cause: the pr/137 §14 population is *"`onV1c90` objects with q > 1e6 and ≥3
+segments"*, and the dump's `showers[]` container holds every reco particle, not
+only EM ones. **The curated set is NOT regenerated** — the owner is already
+scanning it and it is a record (M13). Instead the viewer now prints the reco
+identity on every object and badges a non-electron **TRACK-TYPED, not an EM
+shower**, so the scanner can dispose of one in a second (as the owner already
+did: evt99838 → KEEP, *"This is one good track, no need to split"*). The eight
+are excluded from the efficiency denominator in §A4 and named there.
+
+### A1.7 Navigation and saved state — FIXED 2026-08-31
+
+Owner: *"when I switch the event using the prev/next button, the object should
+change as well as the note should be updated. So far I see that those are not
+changing"* and *"please write on the screen, if I have saved my scan, so I know
+which event I scanned, which event I have not."* Both were real:
+
+- `load()` never wrote back to the `object` Select, so the dropdown kept showing
+  the previous object.
+- `load()` never re-seated `note (optional)` or the confidence buttons. **This
+  was a data-integrity bug, not only cosmetic**: a note typed on object *k* stayed
+  in the box and would have been written onto object *k+1*'s label, silently, in
+  a scientific record.
+- there was no saved/unsaved indicator anywhere.
+
+Now: `load()` is a re-entrancy-guarded wrapper (writing `jump.value` from inside
+the loader echoes through `jump.on_change`, so the flag makes the echo a no-op
+instead of a second full load); every per-object widget is re-seated on
+navigation; the `object` dropdown carries **✓ *verdict*** on everything already
+saved and **· --** on everything not; and a banner reads either
+**✓ SAVED *timestamp*, verdict, confidence** or **NOT YET SAVED**, with
+*scanned N of 50 in this tag*. Saving refreshes all three without a reload.
 
 **Groups grow on demand.** Owner: *"for busy events, there may be many groups…
 3 can be the default though."* `+ group` / `- group`; three columns plus JUNK by
@@ -308,6 +441,15 @@ The remaining ~120 blind sheets in `work/pr137_sheets/`, same vocabulary, into
 
 **Gate on Phase A:** if agreement is below ~0.8, the agent labels cannot carry the
 statistics — say so and ask for more owner scan rather than propagating them.
+
+**Denominator correction (§A1.6).** Eight of the 50 owner objects are
+track-typed — evt99838/14004, 389538/19021, 292524/9018, 176502/109141,
+286681/72040, 122660/54071, 415278/23047, 278420/18002 — so all three numbers are
+reported over **42**, with the 8 listed separately as `KEEP (not an EM object)`.
+They are still scanned (a KEEP is one click) and still count towards the
+agent-vs-owner agreement, since agreeing that a muon is one object is a real, if
+easy, agreement; they are excluded only from the false-split and merge-count
+denominators.
 
 ## 2. Phase B — implementation
 
@@ -423,4 +565,16 @@ scripts/pr137_null_model.py         # the w_single(r) null
 scripts/pr137_seed_split.py         # kernel + multiplicity trigger
 scripts/pr137_trigger_bakeoff.py    # all features, two positive classes
 scripts/pr137_curate.py --sheets    # the curated set + BLIND contact sheets
+
+# the scan tool, and its selftest (28 checks)
+split_display/serve_split_display.sh 5022 --scan-tag splitscan-0901-owner --owner-only
+split_display/selftest_split_display.py
+
+# section A1.4 -- the pi0 re-seat that moved evt396222's vertex 14.5 cm
+python3 -c "import sys;sys.path[:0]=['split_display','scripts'];import split_model as SM;\
+print(SM.pio_partner(396222, 9059))"
+grep -n 'reconstructed pi0 decay point' ../../../toolkit/clus/src/NeutrinoShowerClustering.cxx
+
+# section A1.5 / A1.6 -- the two censuses quoted above
+python3 scripts/pr138_scanset_census.py
 ```

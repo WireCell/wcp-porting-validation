@@ -108,15 +108,36 @@ window.__pr138_moved = moved;
 window.__pr138_hi = hi;
 """
 
-# Recolour the 3-D cloud from a group assignment, without a server round trip.
+# Recolour the 3-D cloud, without a server round trip.
+#
+# THREE MODES, ONE CHANNEL.  The owner reported "the color of the group is gone,
+# no red vs blue" -- measured, and it is not a rendering fault: 39 of the 50
+# curated objects get a SINGLE-group proposal (doc pr/138 sec A1.5), so the group
+# colouring has nothing to say and the cloud is uniformly group-0 blue.  The
+# answer is to give the eye a second and third thing to look at: `bundle` (the
+# unit the owner actually drags -- the tree lists 42 of them and they were
+# visually identical) and `charge` (the valley the split criterion is looking
+# for, which is a charge dip by construction).
+#
+# The mode arrives as a reserved "_mode" key inside the EXISTING cmap payload,
+# not as a new widget callback.  Four earlier builds lost handlers to Bokeh 3
+# binding traps; the rule now is that a working channel gets reused rather than
+# duplicated.  "_mode" cannot collide with a group key -- those are str(int).
 JS_RECOLOR_BODY = r"""
 const d = cloud.data;
 const map = JSON.parse(gmap.value || '{}');      // seg -> group
-const col = JSON.parse(cmap.value || '{}');      // group -> css colour
+const col = JSON.parse(cmap.value || '{}');      // group -> css colour, + _mode
+const mode = col['_mode'] || 'group';
 const n = d.seg.length;
 for (let i = 0; i < n; i++) {
-    const g = map[d.seg[i]];
-    d.color[i] = (g === undefined) ? '#999999' : (col[g] || '#999999');
+    if (mode === 'bundle' && d.bcolor !== undefined) {
+        d.color[i] = d.bcolor[i];
+    } else if (mode === 'charge' && d.qcolor !== undefined) {
+        d.color[i] = d.qcolor[i];
+    } else {
+        const g = map[d.seg[i]];
+        d.color[i] = (g === undefined) ? '#999999' : (col[g] || '#999999');
+    }
 }
 cloud.change.emit();
 """

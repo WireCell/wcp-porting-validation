@@ -67,6 +67,12 @@ def group_color(g):
     return SM.JUNK_COLOR if g == SM.JUNK else SM.GROUP_COLORS[g % len(SM.GROUP_COLORS)]
 
 
+# The three colour modes live in split_model so the selftest can reach them
+# without standing up a Bokeh document.
+BUNDLE_COLORS = SM.BUNDLE_COLORS
+charge_colors = SM.charge_colors
+
+
 # ----------------------------------------------------------------- args
 ap = argparse.ArgumentParser()
 ap.add_argument('--scan-tag', default='splitscan-0901-agent')
@@ -111,7 +117,7 @@ except Exception:
 
 # ----------------------------------------------------------------- state
 STATE = dict(i=0, payload=None, group={}, bundles={}, row=None,
-             ngroups=DEFAULT_NGROUPS)
+             ngroups=DEFAULT_NGROUPS, loading=False, saved={})
 
 pts = ColumnDataSource(dict(x=[], y=[], z=[], u=[], v=[], seg=[], bundle=[],
                             color=[], alpha=[], size=[], hl=[]))
@@ -142,8 +148,13 @@ verdict_btn = RadioButtonGroup(labels=['KEEP', 'SPLIT2', 'SPLIT3', 'SPLIT4+',
                                        'TRIM', 'UNSURE'], active=0, width=560)
 conf_btn = RadioButtonGroup(labels=['high', 'medium', 'low'], active=0, width=260)
 note_box = TextInput(title='note (optional)', width=520)
-centre_sel = Select(title='rotate about', width=210, value='nu vertex',
+centre_sel = Select(title='rotate about', width=180, value='nu vertex',
                     options=['nu vertex', 'object centroid', 'event centre'])
+# doc pr/138 sec A1.5.  39 of the 50 curated objects get a single-group proposal,
+# so `group` alone paints the cloud one flat colour and the owner reported the
+# colours "gone".  `bundle` shows the draggable units, `charge` shows the valley.
+colour_sel = Select(title='colour by', width=150, value='group',
+                    options=['group', 'bundle', 'charge'])
 
 
 # ----------------------------------------------------------------- 3-D view
@@ -341,7 +352,15 @@ def refresh(recolor=True):
     # the recolour+setup callback is skipped -- which is exactly how the first
     # three builds shipped an unbound tree.  '_rev' is inert on the JS side: the
     # recolour looks up map[seg] with a numeric key and never sees it.
-    cmap_box.value = json.dumps({str(g): group_color(g) for g in groups()})
+    cm = {str(g): group_color(g) for g in groups()}
+    cm['_mode'] = colour_sel.value          # read by JS_RECOLOR_BODY; not a group
+    cmap_box.value = json.dumps(cm)
+    # The bundle palette reuses the group hues (it has to -- 42 bundles need 20
+    # colours), so the mode has to be legible ON the canvas, not only in a
+    # dropdown three panels away.
+    fig.title.text = ("colour = %s  |  drag rotates | shift-drag pans | wheel "
+                      "zooms | tap picks a segment" % colour_sel.value)
+    tp.title.text = "theta-phi ray map from the vertex (deg) -- colour = %s" % colour_sel.value
     payload = {str(k): v for k, v in STATE['group'].items()}
     payload['_rev'] = STATE['rev']
     gmap_box.value = json.dumps(payload)
@@ -350,19 +369,97 @@ def refresh(recolor=True):
     grp = STATE['group']
     c = collections.Counter(grp.values())
     info.text = ("<b>evt %d &nbsp; node %d</b> &nbsp; Q=%.3g &nbsp; %d seg &nbsp; "
-                 "%d bundles<br><span style='color:#666'>proposal: %s</span><br>"
+                 "%d bundles<br>%s<br>%s"
+                 "<span style='color:#666'>proposal: %s</span><br>"
                  "<span style='color:#666'>groups: %s &nbsp;|&nbsp; derived verdict: "
                  "<b>%s</b></span>"
                  % (p['event'], p['node'], p['Q'], p['nseg'], p['nbundle'],
+                    _saved_html(p['event'], p['node']), _identity_html(),
                     p['reason'],
                     ", ".join("%s=%d" % (group_name(g), n) for g, n in sorted(c.items())),
                     verdict_btn.labels[derive_verdict()]))
+    info.text += _vertex_note_html()
+
+
+def _saved_html(ev, nd):
+    """Owner: "please write on the screen, if I have saved my scan".
+
+    Read from the label FILES, not from an in-memory flag -- a label written by
+    an earlier session (or by the other scan tag) must show as scanned too, and
+    the counter has to survive a server restart."""
+    idx = STATE.get('saved') or {}
+    r = idx.get((int(ev), int(nd)))
+    done, tot = len(idx), len(WORK)
+    prog = ("&nbsp;&nbsp;<span style='color:#666'>scanned <b>%d</b> of %d in this "
+            "tag (%s)</span>" % (done, tot, args.scan_tag))
+    if r:
+        return ("<span style='background:#dff0d8;color:#2d642d;padding:1px 5px;"
+                "border-radius:3px'>&#10003; SAVED %s &nbsp; verdict <b>%s</b>"
+                " &nbsp; conf %s</span>%s"
+                % (r.get('saved', '?'), r.get('verdict', '?'),
+                   r.get('confidence', '?'), prog))
+    return ("<span style='background:#fcf0d8;color:#8a5a00;padding:1px 5px;"
+            "border-radius:3px'>NOT YET SAVED</span>%s" % prog)
+
+
+def _identity_html():
+    """What this object IS, per the arm's own shower record.
+
+    Owner on evt99838: "I only see the major track in it, not any of the EM
+    shower."  Correct -- node 14004 is particle_id 13, 473 cm, 1046 MeV from
+    RANGE.  8 of the 50 curated objects are track-typed (5 mu, 2 p, 1 pi);
+    doc pr/138 sec A1.6.  The scan sheet never said so, which is why it read as a
+    display fault instead of a curation one."""
+    row = STATE.get('row')
+    rec = (row or {}).get('rec') or {}
+    if not rec:
+        return ''
+    pid = rec.get('particle_id')
+    names = {11: 'e', -11: 'e', 13: 'mu', -13: 'mu', 211: 'pi', -211: 'pi',
+             2212: 'p', 22: 'gamma'}
+    nm = names.get(pid, str(pid))
+    body = ("<span style='color:#666'>reco: <b>%s</b> (pid %s) &nbsp; %.0f cm "
+            "&nbsp; kine_best %.0f MeV &nbsp; conn %s</span>"
+            % (nm, pid, rec.get('total_length', float('nan')),
+               rec.get('kine_best', float('nan')),
+               rec.get('start_connection_type', '?')))
+    if pid is not None and abs(int(pid)) != 11:
+        body = ("<span style='background:#f2dede;color:#a33;padding:1px 5px;"
+                "border-radius:3px'>TRACK-TYPED, not an EM shower</span> &nbsp; "
+                + body)
+    return body + '<br>'
+
+
+def _vertex_note_html():
+    """Why the black star can sit off the charge.
+
+    doc pr/138 sec A1.4: when a pi0 is accepted the main vertex is RE-SEATED at
+    the reconstructed two-photon decay point (NeutrinoShowerClustering.cxx:7886
+    and :6241, `main_vertex->fit().point = vtx_point; ... dQ = 0`).  On evt396222
+    that is the whole 14.5 cm -- it is the pi0 decay point, not a failed fit, and
+    the earlier "extrapolation" wording in this box was wrong."""
     g = STATE.get('vgap')
-    if g == g and g is not None and g > 5.0:
-        info.text += ("<br><span style='color:#a33'>note: the nearest charge of "
-                      "this object is <b>%.1f cm</b> from the vertex star &mdash; "
-                      "an unusually large gap (median over the owner set is 0.0 cm), "
-                      "so the reference point is an extrapolation here.</span>" % g)
+    if not (g == g and g is not None and g > 5.0):
+        return ''
+    row = STATE.get('row') or {}
+    partner, mass = (None, None)
+    try:
+        partner, mass = SM.pio_partner(row.get('event'), row.get('node'))
+    except Exception:
+        pass
+    if mass is not None and mass > 0:
+        who = (" partner shower %d (%.0f MeV, %d seg)"
+               % (partner['id'], partner.get('kine_charge', float('nan')),
+                  partner.get('num_segments', 0))) if partner else " (partner not resolved)"
+        # a pi0 decay point is MEANT to sit off the charge
+        return ("<br><span style='color:#2d642d'>the vertex star is <b>%.1f cm</b> "
+                "from this object's nearest charge because a <b>pi0 was accepted</b> "
+                "and the main vertex was re-seated at the reconstructed decay point "
+                "(m=%.1f MeV,%s).  Expected, not a fit failure.</span>" % (g, mass, who))
+    return ("<br><span style='color:#a33'>the vertex star is <b>%.1f cm</b> from this "
+            "object's nearest charge and no pi0 is recorded &mdash; unusual (median "
+            "over the owner set is 0.0 cm), so treat every angle measured from it "
+            "with care.</span>" % g)
 
 
 def _update_wprof():
@@ -389,6 +486,22 @@ def _update_wprof():
 
 
 def load(i):
+    """Navigate to object `i`.
+
+    THE RE-ENTRANCY GUARD is why this is a wrapper.  Owner: "when I switch the
+    event using the prev, next button, the object should change as well as the
+    note" -- it did not, because `load` never wrote back to the `object` Select
+    or to the note box.  Writing `jump.value` from inside the loader re-enters
+    through jump.on_change, so the flag makes the echo a no-op instead of a
+    second full load."""
+    STATE['loading'] = True
+    try:
+        _load(i)
+    finally:
+        STATE['loading'] = False
+
+
+def _load(i):
     if not WORK:
         status.text = "worklist is empty"
         return
@@ -409,14 +522,30 @@ def load(i):
     prev = read_label(ev, nd)
     if prev and prev.get('groups'):
         STATE['group'] = {int(k): int(v) for k, v in prev['groups'].items()}
-        status.text = "evt%d node%d  (%d of %d)  -- existing label loaded" % (
-            ev, nd, i + 1, len(WORK))
+        STATE['ngroups'] = max(int(prev.get('n_groups', DEFAULT_NGROUPS)),
+                               DEFAULT_NGROUPS)
+        status.text = "evt%d node%d  (%d of %d)  -- SAVED label loaded (%s)" % (
+            ev, nd, i + 1, len(WORK), prev.get('saved', '?'))
     else:
-        status.text = "evt%d node%d  (%d of %d)  -- proposal" % (ev, nd, i + 1, len(WORK))
+        status.text = "evt%d node%d  (%d of %d)  -- proposal, not yet saved" % (
+            ev, nd, i + 1, len(WORK))
+    # EVERY per-object widget is re-seated here.  A note left over from the
+    # previous object would otherwise be saved onto this one -- silently, and
+    # onto a scientific record.
+    STATE['saved'] = label_index()
+    jump.options = jump_options()
+    jump.value = str(i)
+    note_box.value = (prev.get('comment') or '') if prev else ''
+    if prev and prev.get('confidence') in conf_btn.labels:
+        conf_btn.active = conf_btn.labels.index(prev['confidence'])
+    else:
+        conf_btn.active = 0
+    colour_sel.value = 'group'      # the verdict signal, restored on every load
     # 3-D cloud
     P, v = row['P'], row['v']
     xs, ys, zs, sg, bd = [], [], [], [], []
     seg2b = {s['seg']: s['bundle'] for s in p['segs']}
+    qq = []
     for s in sorted(row['segs']):
         A = P.get(s)
         if A is None or not len(A):
@@ -424,13 +553,19 @@ def load(i):
         for k in range(len(A)):
             xs.append(float(A[k, 0])); ys.append(float(A[k, 1])); zs.append(float(A[k, 2]))
             sg.append(int(s)); bd.append(int(seg2b.get(s, 0)))
+            qq.append(float(A[k, 3]))
     n = len(xs)
     tx, ty = SM.theta_phi(np.asarray(list(zip(xs, ys, zs))) if n else np.zeros((0, 3)),
                           np.asarray([1.0] * n), v)
+    # bcolor / qcolor are computed ONCE per object and never touched again: the
+    # colour-mode switch is a client-side read of an existing column, so changing
+    # mode costs no server round trip and cannot race the drop recolour.
     pts.data = dict(x=xs, y=ys, z=zs, u=[0.0] * n, v=[0.0] * n, seg=sg, bundle=bd,
                     tx=[float(t) for t in tx], ty=[float(t) for t in ty],
                     color=['#999999'] * n, alpha=[0.85] * n, size=[4.0] * n,
-                    hl=[0.0] * n)
+                    hl=[0.0] * n,
+                    bcolor=[SM.BUNDLE_COLORS[b % len(SM.BUNDLE_COLORS)] for b in bd],
+                    qcolor=SM.charge_colors(qq))
     # everything else in the event, faint: the answer to "why is the star not on
     # the object".  evt396222 holds 180 segments; this shower is 123 of them, and
     # its nearest point is 14.5 cm from the vertex because the photon converted
@@ -535,6 +670,41 @@ def label_path(ev, nd):
     return os.path.join(LABEL_DIR, 'labels-evt%d.json' % ev)
 
 
+def label_index():
+    """{(event, node): saved record} for THIS scan tag, read fresh from disk."""
+    idx = {}
+    if not os.path.isdir(LABEL_DIR):
+        return idx
+    for f in sorted(os.listdir(LABEL_DIR)):
+        if not f.endswith('.json'):
+            continue
+        try:
+            j = json.load(open(os.path.join(LABEL_DIR, f)))
+        except Exception:
+            continue
+        try:
+            ev = int(str(j.get('event', '')).replace('evt', ''))
+        except Exception:
+            continue
+        for nd, rec in (j.get('split_labels') or {}).items():
+            try:
+                idx[(ev, int(nd))] = rec
+            except Exception:
+                pass
+    return idx
+
+
+def jump_options():
+    """the `object` dropdown, with a tick on everything already saved."""
+    idx = STATE.get('saved') or {}
+    out = []
+    for k, (e, n, q, st, px) in enumerate(WORK):
+        r = idx.get((e, n))
+        mark = ('\u2713 %-6s' % r.get('verdict', '?')) if r else '\u00b7 %-8s' % '--'
+        out.append(("%d" % k, "%s  evt%d node%d  %s  Q=%.2g" % (mark, e, n, st, q)))
+    return out
+
+
 def read_label(ev, nd):
     p = label_path(ev, nd)
     if not os.path.exists(p):
@@ -589,7 +759,22 @@ def save_label():
         nseg=p['nseg'], Q=p['Q'],
         saved=datetime.datetime.now().isoformat(timespec='seconds'))
     json.dump(j, open(path, 'w'), indent=1)
-    status.text = "saved %s  (verdict %s)" % (path, verdict_btn.labels[verdict_btn.active])
+    # The saved state is part of the screen, not just of the disk: re-read the
+    # index, re-tick the dropdown, and repaint the banner so the scanner can see
+    # at a glance what is done and what is left.
+    STATE['saved'] = label_index()
+    keep = jump.value
+    STATE['loading'] = True
+    try:
+        jump.options = jump_options()
+        jump.value = keep
+    finally:
+        STATE['loading'] = False
+    refresh()
+    status.text = ("SAVED  %s\n  verdict %s / %s   |   scanned %d of %d in tag %s"
+                   % (path, verdict_btn.labels[verdict_btn.active],
+                      conf_btn.labels[conf_btn.active],
+                      len(STATE['saved']), len(WORK), args.scan_tag))
 
 
 # ----------------------------------------------------------------- callbacks
@@ -665,12 +850,21 @@ jump = Select(title='object', width=300,
               options=[("%d" % i, "evt%d node%d  %s  Q=%.2g" % (e, n, st, q))
                        for i, (e, n, q, st, px) in enumerate(WORK)],
               value='0')
-jump.on_change('value', lambda a, o, n: load(int(n)))
+def on_jump(attr, old, new):
+    # `_load` writes jump.value back; without this the echo would re-enter and
+    # run the whole loader a second time on every navigation.
+    if STATE.get('loading'):
+        return
+    load(int(new))
+
+
+jump.on_change('value', on_jump)
+colour_sel.on_change('value', lambda a, o, n: refresh())
 
 left = column(info, bee,
               brow(btn_prev, btn_next, jump, btn_save),
               brow(verdict_btn), brow(conf_btn), note_box,
-              brow(btn_reset, btn_addg, btn_delg, centre_sel),
+              brow(btn_reset, btn_addg, btn_delg, centre_sel, colour_sel),
               tree, status,
               gmap_box, cmap_box, hi_box, moved_box, cam_box)
 right = column(fig, brow(tp, wp))
