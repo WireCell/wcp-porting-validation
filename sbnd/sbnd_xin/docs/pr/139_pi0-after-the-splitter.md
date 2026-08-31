@@ -798,3 +798,52 @@ the other direction, and it must be reported, not tuned around.
 shared segment to one part instead of refusing the whole peel. That would
 recover 281485's and 350354's cuts without re-creating the duplicate-charge
 pathology `skip_shared` exists to stop. Not in this round; it is a new item.
+
+---
+
+## 9. Items 3 and 4 — PRE-REGISTERED, before their arms were scored
+
+Same discipline as §8: the arms `work-pr140r1-onrh15-*` and `work-pr140r1-onk3-*`
+were launched in the same batch as item 1's, and these criteria are committed
+before either is scored.
+
+### 9.1 Item 4 — the k ≥ 3 cap  (`shower_split_max_parts` 2 → 3)
+
+No C++ is needed: `max_parts` has been a knob since doc pr/138 (`C++ default 2`),
+and `max_seeds` is hardcoded 4 upstream of it, so 3 is the one cheap arm.
+
+§6.1 measured the k ≥ 3 boundary mean at **0.800** and read it as `max_parts = 2`
+refusing the third cut rather than the kernel erring. Raising the cap changes
+**every** object the splitter fires on, not only the four the owner called k ≥ 3,
+so the arm needs a second criterion or a trade reads as a win. Both are fixed now:
+
+| # | criterion | bar |
+|---|---|---|
+| **i** | k ≥ 3 boundary agreement, mean | **≥ 0.85** — doc pr/138 §B3's own bar, reused deliberately so the number compares to the one that parked this question |
+| **ii** | **SPLIT2 must not degrade** | median stays **1.000** and **≥ 12 of 15** stay exact (§6.1's measured values) |
+| **iii** | merged target (§8/item 2): parts with no reco match | must **fall** below the baseline's **6** |
+| **iv** | no regression elsewhere | census exact **≥ 35**, **0 ADVERSE** |
+
+If (i) passes and (ii) fails it is a trade, not a win, and it is reported as one.
+
+### 9.2 Item 3 — the re-home, re-priced at 15 cm against the merged target
+
+`work-pr139r2-onrh15-*` already measured the 15 cm gap **pre-flip**, with
+`em_start` OFF; `em_start` changes which segment roots the daughter the re-home
+is hunting a host for, so the arm is re-run on the flipped config.
+
+The honest framing: **item 3's first question is about the instrument, not the
+knob.** P1.4 has been parked since §3bis because no metric could see it —
+re-homing an orphan daughter into a host moves charge *between* reco objects,
+and the single-target metric matches one reco shower per hand shower, so the
+move is invisible by construction. So:
+
+| # | criterion | bar |
+|---|---|---|
+| **i** | *does the instrument see it at all* | the merged target must move on ≥ 1 row where the single-target metric does not |
+| **ii** | worth flipping | parts with no reco match **falls**, or median part `q_f1` **rises**, with **no** row going backwards |
+| **iii** | no regression | census exact **≥ 35**, **0 ADVERSE** |
+
+**(i) failing is a real and publishable result**: it would mean the per-part
+target is *still* not the instrument that grades a re-home, and item 3 stays
+parked with a second measured reason rather than a hunch.
