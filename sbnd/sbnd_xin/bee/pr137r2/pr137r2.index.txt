@@ -1,5 +1,9 @@
 # doc pr/137 -- OWNER CALIBRATION SCAN, 50 objects across 41 events
-# Bee sets: OFF <uuid> / ON <uuid>   (filled in after upload)
+# Bee sets, uploaded 2026-08-31, both content-verified at 41 events listed:
+#   ON  (onV1c90, the arm these objects come from):
+#     https://www.phy.bnl.gov/twister/bee/set/377bca6c-dcdc-4422-83ca-12eeff66a424/event/list/
+#   OFF (the current production point, for comparison):
+#     https://www.phy.bnl.gov/twister/bee/set/a3a54cbf-4a06-4aba-b069-4e34611b541a/event/list/
 #
 # THE TASK, per row: how many objects is this, and where are the boundaries?
 #
