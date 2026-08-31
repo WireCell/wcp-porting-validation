@@ -442,11 +442,19 @@ def _vertex_note_html():
     if not (g == g and g is not None and g > 5.0):
         return ''
     row = STATE.get('row') or {}
-    partner, mass = (None, None)
+    partner, mass, failed = None, None, False
     try:
         partner, mass = SM.pio_partner(row.get('event'), row.get('node'))
-    except Exception:
-        pass
+    except Exception as exc:
+        # NEVER fall through to "no pi0 is recorded" on a failed LOOKUP -- on the
+        # one event class this note exists for, that would render a confident
+        # wrong statement.  Say the lookup failed instead.
+        failed = str(exc) or exc.__class__.__name__
+    if failed:
+        return ("<br><span style='color:#a33'>the vertex star is <b>%.1f cm</b> "
+                "from this object's nearest charge, and the pi0 lookup FAILED "
+                "(%s) &mdash; the cause is unknown here, not absent.</span>"
+                % (g, failed[:120]))
     if mass is not None and mass > 0:
         who = (" partner shower %d (%.0f MeV, %d seg)"
                % (partner['id'], partner.get('kine_charge', float('nan')),

@@ -229,10 +229,24 @@ main_vertex->fit().point = vtx_point;
 main_vertex->fit().dQ    = 0;
 ```
 
-(the pr/133 K21 back-projection proposer at `:6241` carries the identical two
-lines, labelled *"The P2 acceptance, verbatim mechanics (vertex hack …)"*; it
-arrived in `42d728e9` as **K19, DEFAULT OFF and measured dead**, so the site that
-fired in a production arm is `:7886`.)
+**Which of the two sites.** `id_pi0_backproject_vertex` (the pr/133 K21
+back-projection proposer) carries the identical two lines at `:6241`, labelled
+*"The P2 acceptance, verbatim mechanics (vertex hack …)"*, so the attribution
+needs an argument rather than an assumption. Two independent ones, both pointing
+at `:7886`:
+
+- **396222 is not on the bp chain's firing list.** `pi0_bp_vertex_miss_cm = 8`
+  went SBND production ON in `30d4263e` with the measured note *"fires on **2 of
+  239** events (76346 60.2 cm, 116962 83.5 cm upstream)"* — 396222 is neither.
+- **396222 was already a path-2 acceptance in pr/132 round 1**, i.e. before the
+  `:6241` site existed at all (`id_pi0_backproject_vertex` arrives in `8432b7af`,
+  round-9/K19 groundwork in `42d728e9`, both 2026-08-30). The round-2 comment
+  quoted below is that round-1 record.
+
+*Not claimed:* the knob's state inside `work-pr136-onV1c90-*` specifically was
+not read back from that arm's config. Discriminating the two sites inside this
+arm would need `WCT_PI0_PAIR_DEBUG=1` on a rerun, which the two arguments above
+make unnecessary rather than impossible.
 
 The dump agrees, line for line:
 
