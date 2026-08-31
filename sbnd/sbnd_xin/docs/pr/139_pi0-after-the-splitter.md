@@ -4,8 +4,9 @@
 2026-08-31** (owner flip; flip-equivalence gate `work-pr139r3-flipchk-*` vs
 `work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner's scan is **DONE** (2026-09-01,
 39 objects, tag `splitscan-0902-pi0`) and **it overturned this round's own
-recommendation** — see **§6**. The four items §3ter ordered are all **now
-measured**: item 1 **passes its pre-registered prediction and awaits the owner's
+recommendation** — see **§6**. **Session 3 (§15–§21) answered all four §14.3
+next steps; §21 is the current state and §21.1 the next moves.** The four items
+§3ter ordered are all **now measured**: item 1 **passes its pre-registered prediction and awaits the owner's
 flip** (§8, §10), item 2 **shipped** (§11), items 3 and 4 are **closed as
 measured-dead, each with a mechanism** (§12, §13). **§14 is what to read next.**
 This file is the tracker for a multi-session round. §1 is the
@@ -54,10 +55,15 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **P3.2** | joint label set + the per-part completeness target | — | **DONE** (§11) | `em_display/em140_score.py`, `docs/pr/pr140-perpart-*.tsv` | injective matching, denominator preserved to 4 figures; metric change ALONE on one arm: `q_miss` 16.7→**11.2 %**, `q_extra` 6.7→**8.6 %**; new number: **hand parts with no distinct reco object = 6** on the baseline |
 | **P3.3** | re-home, **re-sized** after P1.3/P1.4 land | `shower_split_rehome` (same knob) | **CLOSED with P1.4** (§12.3) | — | widening past 15 cm is a search, and §12.2 says the metric would not reward it |
 | **P3.4** | split-aware π⁰ pairing | `pi0_split_aware_pairing` | NOT STARTED | — | **no longer the fix for 281485** — see §2 |
-| **C1** | k ≥ 3 splitting | `shower_split_max_parts` | **MEASURED DEAD at the cap** (§13) — reopened as a *kernel* question | `work-pr140r1-onk3-*` | lifting the cap to 3 moves 3 objects: 1 up, 2 down (one of them a SPLIT2); k≥3 mean 0.800 → **0.771**, census 35 → **34**. The cap was hiding that the kernel cannot place a third boundary, not causing it |
+| **C1** | k ≥ 3 splitting | `shower_split_max_parts`, **`shower_split_max_seeds`** (new, §17) | **CAUSE FOUND (§17): the hardcoded `max_seeds = 4`**, which binds on 76 % of fires and on all four k≥3 objects (owner k = 3,3,5,7). `max_parts` alone is measured dead (§13); the seed cap is now a knob and awaits labels (§19) | `work-pr140r1-onk3-*` | lifting the cap to 3 moves 3 objects: 1 up, 2 down (one of them a SPLIT2); k≥3 mean 0.800 → **0.771**, census 35 → **34**. The cap was hiding that the kernel cannot place a third boundary, not causing it |
 | **C2** | any feature measured **from** the ν vertex | — | **MEASURED DEAD** | doc 138 §4.2b, §5 below | `void_frac` AUC 0.146 (backwards) |
 | **C3** | the no-valley / overlapping-γ class | — | **SCOPED OUT** | doc 138 §B7 | 7 of 9 misses have `valley_best = 1.000` |
 | **C4** | the upstream ν vertex finder | — | **OWNER, OUT OF SCOPE** | — | — |
+
+| **S1** | **the shed** — an entirely co-owned refused component | `shower_split_shed_shared` (new) | **DONE — mechanism exact, census cost 1; OWNER'S CALL** (§20) | `work-pr140r2-coown-*` vs `work-pr140r2-on-*`; knob-off gate **478/478** | 1 shed (281485) exactly as pre-registered, both partial-sharing refusals stand, 0 ADVERSE, completeness unmoved — but the π⁰ census goes `partial`→`none` on that one event, because a correct cut divides a hand γ across two reco objects |
+| **S2** | **the seed cap as a knob** | `shower_split_max_seeds` (new, default 4) | §17, **not yet armed** | knob-off gate **478/478** | blocked on labels: only 4 scanned objects are seed-capped at k ≥ 3 |
+| **S3** | **the wider per-part label set** | — (tag `splitscan-0903-wide`) | **SCAN-READY** (§19) | `docs/pr/pr140-scan-set.tsv`, 32 objects, all verified loadable | unblocks §13.3, §17 and §18 at once |
+| **S4** | the last false fire 278420/61027 | — | **MEASURED NOT SEPARABLE** (§18) | `docs/pr/pr140-seeding.tsv` | 3 of its 4 outlier margins are under 1 %; `b`'s is 0.43 cm, below the instrument's own 0.5 cm precision |
 
 **Standing bar for every P-row**: knob-off byte-identical on the standard
 239-event manifest (478 archives, `missing/unpaired events: 0` quoted), freshness
@@ -1506,3 +1512,101 @@ python3 scripts/pr140_scanset.py           # -> docs/pr/pr140-scan-set.tsv
 
 The tag is fresh (M13). Nothing will be flipped on these labels without showing
 the owner the arm first.
+
+---
+
+## 20. Item 1 — RESULT: the shed does exactly what it was built to do, and the census does not like it
+
+Arm `work-pr140r2-coown-*` = `skip_shared` + `max_impact = 30` + **`shed_shared`**,
+a one-knob delta against `work-pr140r2-on-*`.
+
+### 20.1 The mechanism prediction holds exactly
+
+| object | owner | predicted (§15.4) | measured |
+|---|---|---|---|
+| 281485/89095 part 1 | SPLIT2 | **SHED** | **SHED**, nseg 4, q 7.54e+05 |
+| 165157/9000 part 0 | **KEEP** | refused | refused, **`nshared=2` of 7, `q_excl_frac=0.749`** |
+| 350354/18092 part 1 | SPLIT2 | refused | refused, **`nshared=1` of 12, `q_excl_frac=0.590`** |
+| `n_shed` over 239 events | | 1 | **1** |
+
+Nothing else on the tape changed state. **And the arm's own `nshared` numbers
+reproduce the pr136-sidecar estimate of §15.2 to three decimals** (0.749, 0.590)
+— the cross-arm estimate that drove the design turned out to be authoritative,
+which §15.4 had explicitly refused to assume.
+
+### 20.2 But the π⁰ census gets *worse* on the one event it touches
+
+| | `on` (P1.6) | **`coown`** (P1.6 + shed) |
+|---|---|---|
+| census **exact** | 36 | **36** |
+| `partial` | 17 | **16** |
+| `none` | 2 | **3** |
+| `q_miss` / `q_extra` | 16.4 % / 7.1 % | 16.4 % / 7.1 % |
+| merged per-part, all figures | — | **+0.00 pt, no row moved** |
+| ADVERSE | 0 | **0** |
+
+Exactly **one** event differs, and it is 281485 — `partial` → `none`. Its π⁰
+masses are unchanged to five figures (67.22 / 60.61); what changed is the
+*matching*. §15.4's stated bar was census exact ≥ 36 and that is met, but the
+honest reading is that the shed traded a `partial` away.
+
+**The mechanism of the loss is the finding.** The four shed segments were held by
+89095 *and* by 91112. After the shed they are held by 91112 only — so the hand
+γ's charge is now divided between two reconstructed objects, and the census
+matches **one reco shower per hand γ**. Cutting where the owner says to cut
+therefore reads as a lost match.
+
+### 20.3 So the instruments disagree, again, and this one is the owner's call
+
+| instrument | on the shed |
+|---|---|
+| the owner's own per-part scan | the cut is **correct** — 281485 is SPLIT2 |
+| the π⁰ census | **worse** — the only event it touches goes `partial` → `none` |
+| completeness, single **and** merged per-part | **blind** — 281485's completeness marks are on shower 88090, not 89095 |
+
+This is the fifth time this round that instruments have disagreed because each
+one's population is narrow (§6.5, §13.3, §17, §18, and now here). It is not
+noise and it is not resolvable by choosing a favourite.
+
+**Recommendation: do not flip `shower_split_shed_shared`, and do not delete it.**
+It is a correct implementation of a cut the owner confirmed, it is default OFF,
+its gate is clean (§16), and it costs one π⁰ `partial` on one event. Whether a
+confirmed cut is worth that is a physics judgement, not a metric one — and
+§5.7 of the operating manual says report a number that moves the wrong way
+rather than tune around it.
+
+---
+
+## 21. Where session 3 leaves the round
+
+| item (§14.3) | outcome |
+|---|---|
+| **1 — co-ownership peel** | design **killed by measurement before implementation**; replaced by the **shed**, which passes its mechanism pre-registration exactly and costs one π⁰ `partial`. **Owner's call** (§20.3) |
+| **2 — the third boundary** | **ANSWERED**: the hardcoded `max_seeds = 4` binds on 76 % of fires and on all four k ≥ 3 objects (owner k = 3,3,5,7). Now a knob, **not yet armed** — arming it needs §19's labels (§17) |
+| **3 — wider label set** | **SCAN-READY**: 32 objects, 4 strata, all verified loadable (§19) |
+| **4 — the last false fire** | **ANSWERED, negatively**: not separable; 3 of 4 outlier margins under 1 %, `b`'s below the instrument's own precision (§18) |
+| *(unplanned)* | a defect in this doc's own instrument found, fixed, **and priced at zero** (§15.1, §16.1) |
+
+**Shipped this session**: two DEFAULT-OFF knobs, `shower_split_shed_shared` and
+`shower_split_max_seeds`, knob-off gate **478/478**, doctest **2631**. Toolkit
+`08c39d71` + `5209068e`.
+
+### 21.1 Recommended next steps, in order
+
+1. **The owner scans the 32-object set** (§19). Everything else on this list is
+   waiting on it — §17's `max_seeds` arm cannot be graded, §13's `max_parts`
+   question cannot be re-asked, §18 cannot be re-asked with more than one
+   negative, and §20.3's trade cannot be generalised beyond one event.
+2. **Two owner decisions that need no new work**: flip **P1.6**
+   (`skip_shared` + `max_impact = 30`, §10 — or `skip_shared` alone, §14.2), and
+   whether the **shed**'s confirmed cut is worth one π⁰ `partial` (§20.3).
+3. **Then the `max_seeds` arm**, pre-registered on the enlarged label set with
+   SPLIT2 non-degradation as a bar — it is the only untested lead with a
+   measured cause behind it.
+4. **Then re-ask §18** on the enlarged set. If 278420/61027 is still inside the
+   confirmed range with 5–10 negatives instead of 1, the false-fire class is
+   closed as irreducible at this feature set and the splitter's purity ceiling
+   is a known number rather than an open question.
+
+**Not next**: any further `b` sweep (§6.3 priced the dial, §10 confirmed it to
+the object); `max_parts` on its own (§13, §17).
