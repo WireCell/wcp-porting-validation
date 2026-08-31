@@ -1,9 +1,11 @@
 # doc pr/138 — the shower splitter: MASTER PLAN (scan → implement → optimise)
 
-**Status: PHASE A CLOSED 2026-08-31 — the owner hand-scanned all 172 curated
-objects. Still no code, no arm, no knob. §1b folds the scan in; §2 is the revised
-Phase B, and it is the next session's work.** The measurements this file rests on
-are doc pr/137 §10–§15 plus §1b below.
+**Status: PHASE A CLOSED and PHASE B SHIPPED, both 2026-08-31.** The owner
+hand-scanned all 172 curated objects (§1b); the splitter is now in the toolkit
+behind `shower_split`, **DEFAULT OFF**, gate-clean, with its two-way boundary
+measured exact against those labels and its three-way boundary measured **short
+of its own pre-registered target** (§2). The measurements this file rests on are
+doc pr/137 §10–§15, §1b, and §2's arms.
 
 ## 0. Where we are, in five lines
 
@@ -11,13 +13,17 @@ are doc pr/137 §10–§15 plus §1b below.
 - The **trigger is solved**: `valley_best` (ATLAS's local-maxima-**with-a-valley**,
   pr/137 §10) reaches **0.79 efficiency at 0.77 purity** against 172 owner labels,
   against pr/137 §4's 27–36 % ceiling. The threshold is not retuned (§A5.4).
-- The **kernel is solved for two-way splits and broken for three** — SPLIT2 median
-  boundary agreement **1.000**, SPLIT3 mean 0.620, SPLIT4+ 0.377 (§A5.6). That is
-  Phase B's real work.
+- The **kernel is exact for two-way splits and short for three.** The shipped C++,
+  scored on its own arm against the hand labels: SPLIT2 median **1.000**, mean
+  **0.974**, 21 of 27 boundaries *exactly* right; k≥3 0.573 → **0.756** against a
+  pre-registered **≥ 0.85 — MISSED**, so k≥3 ships behind a non-default knob value
+  and is not production-eligible (§B3).
 - **Over-clustering is 4.7 % of EM objects** (S1 random control), and the shipped
   rule would wrongly cut **1.2 %** of them (§A5.2).
 - pr/137's arm-difference proxy is **retired**: it was wrong in both directions
   (§A5.2), which is what produced the old 27–36 % null.
+- The splitter is **in the toolkit, DEFAULT OFF**, byte-identical when off, and
+  runs last among the shower passes and *before* the π⁰ finders (§B1).
 
 ## 1. Phase A — the scan  *(CLOSED 2026-08-31; results in §1b)*
 
@@ -721,135 +727,297 @@ multiple tracks misclustered as EM shower. I am not sure if this event is really
 useful for our purpose."* That is the same object §A1.4 found carrying a 2879 MeV
 π⁰ leg, reached independently.
 
-## 2. Phase B — implementation (REVISED by the Phase A result, 2026-08-31)
+## 2. Phase B — implementation  *(EXECUTED 2026-08-31; this section is now the record)*
 
-**The staging is inverted from the original plan, because the data inverted it.**
-pr/137 assumed the kernel was fine and the trigger was the blocker. §A5 says the
-opposite is now true: the trigger reaches **0.79 efficiency at 0.77 purity** and
-needs no retuning, while the kernel is **exact for two-way splits and broken for
-three-way**. Phase B is ordered accordingly, and each stage names the number it
-must not make worse.
+**The staging was inverted from the original plan, because the data inverted it.**
+pr/137 assumed the kernel was fine and the trigger was the blocker. §A5 said the
+opposite. Phase B was ordered accordingly, and this is what it produced.
 
-**This is the next session's work. Nothing below is started.**
+| stage | state | the number it is judged on |
+|---|---|---|
+| **B1** `WCT_SHOWER_SPLIT_DEBUG` probe | **DONE** | accept decision agrees with the offline kernel on **172 / 172** scanned objects |
+| **B2** the accept test | **DONE, DEFAULT OFF** | C++ end-to-end **eff 0.767 / pur 0.805** on the 164 EM objects |
+| **B3** the kernel | **SHIPPED at `max_parts=2`; k≥3 measured SHORT** | SPLIT2 median **1.000**, mean **0.974**, 21 of 27 exact · k≥3 0.573 → **0.756**, **target 0.85 MISSED** |
+| **B4** re-home the daughter | **NOT STARTED**, by decision | — |
+| **B5** vertex-quality veto | **instrumented, not tested** | the tape now carries the four fields §B5 asks for |
+| **B6** the one-γ veto | **NOT STARTED** | — |
+| **B7** small-angle / no-valley | **scoped out, unchanged** | — |
 
-### B0. What Phase A already settled — do not re-open
+Toolkit: `clus/src/NeutrinoShowerClustering.cxx` (+576), `NeutrinoPatternBase.h`,
+`TaggerCheckNeutrino.{h,cxx}`, `clus/test/doctest_clus_knob_defaults.cxx`,
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`. wcp-porting-img:
+`run_pr_chain_batch.sh` env block, three scripts, three TSVs.
+
+### B0. What Phase A settled — and one thing it got wrong
 
 | | settled | evidence |
 |---|---|---|
 | the trigger feature | `valley_best` | AUC 0.930, purity@50 % 0.857 (§A5.3) |
-| the threshold | `valley_best ≤ 0.95`, `n_seed ≥ 2` | fit-only scan: 0.95 is the knee (§A5.4); **holdout spent, do not re-tune** |
-| the 2-way boundary | done | median agreement **1.000**, mean 0.927 (§A5.6) |
+| the threshold | `valley_best ≤ 0.95`, `n_seed ≥ 2` | fit-only scan: 0.95 is the knee (§A5.4); **holdout spent, not re-tuned** |
+| the 2-way boundary | done | §A5.6, and **better than it said** — see the amendment |
 | the label set | 172 owner labels, unanchored | §A5.5 |
 | the old proxy | retired | 52.5 % / 17.7 % wrong both ways (§A5.2) |
 
-### B1. Stage 1 — `WCT_SHOWER_SPLIT_DEBUG`, byte-neutral probe  *(unchanged)*
+**Amendment to §A5.6 — that table conflated two different failures.** It scored
+the proposal's boundary on *every* owner-SPLIT object, including objects where
+the accept test never fired: an object the trigger declined has no boundary, and
+scoring it as a boundary failure charges the kernel for the trigger's miss.
+Conditioned on the trigger having fired (`pr138_kernel_k.py`, n = 34 of 43):
 
-**Insertion point: the LAST pass in the chain**, after every merging pass — not
-`:8213` as pr/137 §6 originally said (§15.7 corrects it). The passes in between —
-`shower_dedup_start_seg` (`:8234`), `shower_pass4_prune_detached` (`:8591`),
-`shower_pass4_prune_gap2` (`:8745`), `samevtx_absorb` (`:9270`),
-`satellite_absorb` (`:9386`) — are all SBND PRODUCTION ON. Splitting last is the
-owner's architecture stated correctly: *merge them together, then separate
-cleanly*. It also means the end-of-chain dump every §A5 number is computed from
-**is** the population the splitter will see.
+| | §A5.6 as printed | conditioned on firing |
+|---|---|---|
+| SPLIT2 | n=33, median 1.000, mean 0.927 | **n=27, median 1.000, mean 0.982, 25 of 27 ≥ 0.90** |
+| k≥3 | n=10, mean 0.571 | n=7, mean 0.573 |
 
-Emits per candidate: the seed list, `valley_best`, `angle_best`, `w_pull`,
-`sep_scaled`, the part membership, and the reference vertex used. `getenv` idiom
-exactly as `WCT_SHOWER_XCLUS_DEBUG` (toolkit `deca3467`). **Gate: 478/478
-byte-identical**, and the probe's own fire list must reproduce §A5.4's 42 fires on
-the 164 scanned objects — a probe that does not is wired to the wrong population.
+So the two-way kernel is *better* than Phase A claimed, and the k≥3 deficit is
+unchanged — 3 of the 10 k≥3 objects were never triggered at all, and those belong
+to §B7's no-valley class, not to B3.
 
-### B2. Stage 2 — the accept test, PRE-REGISTERED, not fitted
+**And one thing Phase A could not see: 16 % of the owner's SPLIT boundaries cut
+through a spatially connected bundle.** 7 of 43 objects, carrying **24.7 % of the
+scanned split charge**, and 5 of the 7 are k≥3. A bundle-level assignment can
+never reproduce those, which is the real ceiling on B3 and the reason the k≥3
+kernel needs a finer unit than the k=2 one.
 
-`valley_best ≤ 0.95 AND n_seed ≥ 2`, transcribed from §A5.4. **No second feature**
-— the fit-half 2-feature scan returned six rules at purity 1.000 on 24 positives,
-which is noise, and its best pair cuts `w_pull` in the direction opposite to its
-own single-feature ranking (§A5.3). Knobs `shower_split_min_valley` (default 0.95)
-and `shower_split_min_seeds` (default 2) exist so the operating point is *movable*,
-not so it is searched again.
+### B1. `WCT_SHOWER_SPLIT_DEBUG` — the byte-neutral probe  *(DONE)*
 
-Success criterion, stated before the work: on the 164 scanned objects the C++
-trigger must reproduce the offline fire list **object for object**. A disagreement
-is a porting bug, not a new measurement.
+**Insertion point: after `em_start_backext`, before
+`recompute_shower_kine_charge_final`** — i.e. after every merging pass
+(`shower_dedup_start_seg` `:8234`, `shower_pass4_prune_detached` `:8591`,
+`shower_pass4_prune_gap2` `:8745`, `samevtx_absorb` `:9270`, `satellite_absorb`
+`:9386`, `em_collinear_merge`, `em_start_backext`, all SBND production ON) and
+**before the π⁰ finders**. Splitting last among the merges is the owner's
+architecture stated correctly — *merge them together, then separate cleanly*;
+splitting before the finders is the physics: a γ pair over-clustered into one
+shower can only be PAIRED into a π⁰ after it has been cut apart.
 
-### B3. Stage 3 — the kernel, with **k from the seed count**  ← THE OPEN PROBLEM
+The probe ports `pr137_lib.angular_maxima` + `split_model.propose` to C++ in
+full — the in-situ bandwidth `σ(r) = (3.575 + 0.0283·r)/r` clipped to [2°, 60°],
+the charge-weighted angular density, greedy seeding at `sep_scale 1.6` with
+`max_seeds 4`, the 25-sample great-circle valley, the charge fractions, the
+4 cm single-linkage bundles and the assignment. Every constant is commented with
+its Phase A provenance and the fact that moving it invalidates §A5.4's fire list.
 
-This is where the round's remaining value is. §A5.6: SPLIT2 median agreement
-1.000, SPLIT3 mean 0.620, SPLIT4+ mean 0.377, and **all six worst boundaries are
-≥3-way**. `propose()` hard-wires k=2; 10 of 43 splits (23 %) are unreachable for
-that one reason.
+**Fidelity, measured not asserted** (`pr138_probe_compare.py`, arm
+`work-pr138r1-dbg-{mcp1k,mcp2k,ncpi0,nuecc48}`, the 125 events holding the
+scanned objects):
 
-- take **k = the number of surviving angular maxima**, not 2 — the ATLAS/CMS/
-  GARLIC shape §10 borrowed and §15 did not implement;
-- assign each **segment** to its nearest surviving seed (the action space is
-  segments — `Shower::detach_member_set`, `PRShower.cxx:640-700`);
-- **re-check on the 10 objects the owner called SPLIT3/SPLIT4+**: the target is
-  their mean agreement, 0.620 → ≥ 0.85, with SPLIT2's 0.927 **not regressing**.
-  Both halves of that are a gate, not an aspiration.
-- `shower_split_max_parts` (default 2) is what turns it on, so k≥3 ships behind
-  its own knob and the 2-way result can be validated first.
+| | |
+|---|---|
+| scanned objects present on the tape | **172 / 172** |
+| member count identical to the dump | 170 / 172 |
+| point count identical to the dump | 170 / 172 |
+| `n_seed` identical to the offline kernel | 170 / 172 |
+| **accept decision identical** | **172 / 172** |
+| \|Δ`valley_best`\| | median **0**, max 0.101 |
 
-**Write recipe** (fork `pass4_prune_detached`, `:8591-8726`): `detach_member_set`
-→ `make_shared<Shower>(graph)` → `set_start_vertex` / `set_start_segment` /
-`add_segment` → `showers.insert` → `update_shower_maps` → **own the kinematics
-refresh** (there is no free recompute at the end of the chain).
-`detach_member_set` refuses a set containing the start segment, so the daughter
-keeping it is structurally the "kept" one and a 3-way split is two peel calls.
+(All four rows compare against the offline kernel run on the **calib dump's own
+main vertex**, which is the decisive frame. `pr138_probe_compare.py` also prints
+a second row computed at the vertex the *tape* reports; that one scores lower
+only because the tape prints the vertex to 0.01 cm, and it is a control, not the
+comparison.)
 
-**Energy does not conserve across a split** (`NeutrinoEnergyReco.cxx:48-145`, no
-cross-shower 2D dedup): E(A)+E(B) ≥ E(parent) in the overlap. Any π⁰-mass or
-`q_extra` claim must name its regime.
+**The two exceptions are one event and one named mechanism, and the comparison
+was built to catch exactly this.** The π⁰ back-projection re-seats the main
+vertex *after* the splitter runs (`:6241`, and path 2 at `:7886` — §A1.4), so on
+a π⁰ event the calib dump's `main_vertex` is not the point the probe measured
+from. The tape therefore prints the vertex it used. It moved on **5 of 172
+objects in 2 events**: evt76346 by **60.16 cm** (the pr/133 K21 back-projection —
+which also changed the membership there, 15 segments → 4 and 5 → 3) and
+evt396222 by **14.50 cm** (§A1.4's path-2 re-seat). Neither changes a verdict:
+both evt76346 objects are owner-KEEP and neither fires either way.
 
-### B4. Stage 4 — RE-HOME the daughter  ← NEW, and it is the owner's requirement
+Everything else — 167 objects — is bit-for-bit the same population, the same
+features and the same decision. **B1's stated criterion is met.**
 
-Five of the owner's 24 comments say the detached piece belongs somewhere
-specific — *"should be part of the earlier EM shower cluster"*, *"the small part
-would belong to another cluster"*, *"These Trimmed part should belong to another
-EM shower"* (§A5.7). **A cut that leaves an orphan has not finished the job**, and
-this is also the difference between SPLIT and TRIM as the owner uses them: TRIM
-means *cut it off and give it away*, SPLIT means *cut it and both halves stand*.
+### B2. The accept test  *(DONE, DEFAULT OFF)*
 
-- after a peel, offer the daughter to the nearest EM shower under the existing
-  absorb predicates (`samevtx_absorb` `:9270`, `satellite_absorb` `:9386` are the
-  house idioms — **fork, do not extract**, M10);
-- the metric is the owner's own: `q_extra` must fall without `q_miss` rising,
-  measured on the pr/136 arms;
-- knob `shower_split_rehome`, DEFAULT OFF, so B3 can be validated without it.
+Shipped as `shower_split` (false), `shower_split_max_valley` (0.95),
+`shower_split_min_frac` (0.03), plus the population floors
+`shower_split_min_charge` (1e6 raw `Fit::dQ`) and `shower_split_min_nseg` (3),
+which are Phase A's `q_floor`/`nseg_floor` transcribed.
 
-### B5. Stage 5 — the vertex-quality veto  ← NEW, from the false-fire list
+**One deliberate change from §B2's pre-registration.** §B2 wrote the rule as the
+*best pair* by minimum valley. The C++ instead accepts seeds greedily in density
+order — the brightest is always a seed, a later one joins iff it carries ≥ 3 % of
+the charge and a valley ≤ 0.95 separates it from one already accepted — so that
+**the trigger and the multiplicity decision are literally the same computation**,
+which is the ATLAS/CMS/GARLIC shape §10 borrowed.
 
-Every trigger feature is measured from the reference vertex, so a mis-placed
-vertex manufactures a fake bimodality. Named by the owner on 2 of the 10 false
-fires — *"incorrect neutrino vertex, actually both groups should be one"* — and by
-§A1.4's evt396222, where the π⁰ chain re-seats the main vertex 14.5 cm off every
-piece of charge.
+**Neither threshold moved**; the holdout stays spent. What changed is the
+quantifier, and the two rules were compared **offline on the 164 labelled
+objects** (`pr138_kernel_k.py`, `onV1c90` dumps — no C++ arm was ever run with
+the pair rule, so this comparison is offline and is not a measurement of two
+binaries):
 
-**Measure before trusting**: add the vertex-to-nearest-charge distance, the π⁰
-`pio_id`, and `fit_distance` to the stage-1 tape, then ask whether any of them
-separates the 10 false fires from the 34 true fires. `vgap_min` as computed
-offline does **not** (AUC 0.499, §A5.3), so this is a hypothesis with a named test
-and a real chance of being measured dead — say so if it is.
+| rule | fires | efficiency | purity |
+|---|---|---|---|
+| §A5.4's best-pair | 44 | 0.791 | 0.773 |
+| shipped greedy | 43 | 0.791 | **0.791** |
+
+They differ on **one object of 164** — evt281567 node99193, owner KEEP, which the
+greedy rule correctly declines. The number that certifies the shipped rule is not
+that comparison but the C++'s own end-to-end score below.
+
+**End-to-end, from the arm's own tape** (`pr138_smoke_split.py`), the C++ fires
+on **41 of the 164** scanned EM objects: **efficiency 0.767, purity 0.805**. The
+two fires it loses relative to the 43 above are the honesty check — the seeds
+separate but every bundle falls to one of them, so there is no partition to make
+and firing with one part is not a split. Against pr/137 §4's 27–36 % ceiling this
+is 0.805.
+
+Over the whole population the pass sees, **45 of 258 candidates fire (17.4 %)** —
+the scanned set is stratified and enriched, so the unbiased prevalence remains
+§A5.2's S1 number (4.7 %), not this one.
+
+### B3. The kernel, with k from the seed count  *(cap=2 SHIPPED; k≥3 MISSED its target)*
+
+`shower_split_max_parts` (default **2**) caps how many parts one candidate is cut
+into; `shower_split_snap` (0.80) governs only the k≥3 path.
+
+**The C++ was run at both settings and scored from its own tape** — this is the
+partition the shipped binary actually drew, not the offline kernel's prediction.
+Arms `work-pr138r1-on2-*` (`max_parts=2`, the default) and `work-pr138r1-on4-*`
+(`max_parts=4`), same 125 events, same 164 labelled EM objects.
+
+| C++ arm | trigger eff / pur | SPLIT2 (n=27) median / mean / exact | k≥3 (n) mean | all |
+|---|---|---|---|---|
+| **`max_parts=2`** *(default)* | 0.767 / 0.805 | **1.000** / **0.974** / **21** | 0.635 (6) | 0.913 |
+| `max_parts=4` | 0.791 / 0.810 | **1.000** / 0.953 / 16 | **0.756** (7) | 0.912 |
+
+And the same two configurations as the offline kernel predicted them
+(`pr138_kernel_k.py`, thirteen acceptance × assignment variants, conditioned on
+the trigger firing) — **a separate frame, quoted so the port can be checked**:
+
+| offline variant | SPLIT2 (n=27) | k≥3 (n=7) | all (34) |
+|---|---|---|---|
+| the Phase A kernel | 0.982 | 0.573 | 0.897 |
+| **`max_parts=2`** | **0.974** | 0.574 | 0.892 |
+| §B3's pre-registered rule (greedy k, bundle/centroid) | 0.966 | 0.701 | 0.911 |
+| **`max_parts=4`** | 0.953 | 0.772 | 0.916 |
+
+**The two frames agree**: 0.974 vs 0.974 on SPLIT2 at cap 2, 0.953 vs 0.953 at
+cap 4, and 0.756 vs 0.772 on the k≥3 class (7 objects; the C++ additionally
+requires the partition to be non-trivial before it counts as fired). That
+agreement — reached from a numpy prototype and a hand C++ port that share no
+code — is the strongest evidence the port is faithful.
+
+**Verdict on §B3's gate, stated as it was pre-registered: MISSED, on both arms.**
+The target was k≥3 mean ≥ 0.85 with SPLIT2's 0.927 not regressing. The C++ at
+`max_parts=4` reaches **0.756**, and it costs SPLIT2 real ground — mean 0.974 →
+0.953 and, more tellingly, **exact boundaries 21 → 16 of 27**. It is genuine
+movement, +19 % on the class §A5.6 called broken, and it is not the target, so
+k≥3 stays behind its own knob at a non-default value and is **not
+production-eligible**. Note also what `max_parts=4` buys on the *trigger* (0.767
+→ 0.791 efficiency at 0.810 purity): more seeds means more objects whose parts
+are non-trivial, which is a separate effect from the boundary quality and is not
+a reason to ship it.
+
+Three things are now known about *why*, and none of them is a tuning problem:
+
+1. **The unit, not the count.** Taking k from the seed count alone (the
+   pre-registered rule) buys 0.573 → 0.701. The rest comes from letting a
+   straddling bundle be cut at the segment level, which is exactly the 16 % /
+   24.7 %-of-charge finding in §B0. The k=2 path deliberately does *not* do this:
+   at two parts the bundle/centroid rule is essentially exact and a finer unit can
+   only add speckle, so the unit is chosen by k and that is not a free parameter.
+2. **`max_seeds = 4` is a hard ceiling.** Two of the owner's objects are 5-part
+   (evt396222 node9059, evt415278 node23037) and both sit at the bottom of the
+   table. Raising it would move `n_seed`, hence the trigger, hence §A5.4's fire
+   list — so it was not raised.
+3. **Three of the ten k≥3 objects never fire at all** and belong to §B7.
+
+**The write path** forks `pass4_prune_detached` (`:8591-8726`):
+`detach_member_set` → `make_shared<Shower>(graph)` → `set_start_vertex` /
+`set_start_segment` / `add_segment` → `showers.insert` → `update_shower_maps` →
+its own `calculate_shower_kinematics` (the only later recompute,
+`recompute_shower_kine_charge_final`, is knob-gated and no-ops in production).
+
+**One deliberate divergence from the fork source, and it is load-bearing.**
+`pass4_prune_detached` seeds a re-homed component at the member nearest the
+*kept body*. A split seeds the daughter at the member nearest the **reference
+vertex** instead, because the π⁰ finders run after this pass and read
+`get_start_point()` and `get_init_dir()` — a daughter seeded at its downstream
+end would point back at its sibling and poison exactly the π⁰ mass this round
+exists for. The tape carries the check: over all **116 peels across both ON
+arms**, cos(start ray, body ray) has **median 0.997, minimum 0.219, and zero
+backwards**.
+
+**Knob-ON smoke**: `on2` — 45 fires → **45 peels, 0 refusals**, conn 3 : 36 /
+4 : 9, daughter-to-start-vertex distance median 38.2 cm. `on4` — 47 fires →
+**71 peels, 0 refusals**, conn 3 : 56 / 4 : 15, median 39.6 cm. The forward check
+holds on all 116 peels across both arms.
+
+**Energy still does not conserve across a split**
+(`NeutrinoEnergyReco.cxx:48-145`, no cross-shower 2D dedup): E(A)+E(B) ≥
+E(parent) in the overlap. Any π⁰-mass or `q_extra` claim must name its regime.
+Nothing in this round makes such a claim.
+
+### B4. Re-home the daughter — NOT STARTED, and that is a decision
+
+§A5.7 is unchanged and still right: five of the owner's comments say the detached
+piece belongs somewhere specific, so a cut that leaves an orphan has not finished
+the job. It is left out of this commit on purpose — it is a *second* behaviour
+change with its own knob, its own `q_extra`/`q_miss` measurement on the pr/136
+arms, and its own owner review, and folding it in would make the gate above
+answer two questions at once.
+
+### B5. The vertex-quality veto — instrumented, not yet tested
+
+The tape now carries, per candidate, the four things §B5 asked for: the
+**reference vertex actually used**, the **vertex-to-nearest-member-charge
+distance** (`vgap_cm`), and the main vertex's own **`reduced_chi2`** and **`dQ`**
+(`vchi2`, `vdQ`), plus the `vfit` validity flag. `pio_id` is *not* on the tape and
+cannot be — the π⁰ finders run after this pass — so that join is made offline
+against the dump.
+
+Two things are already visible and both are honest warnings rather than results:
+offline `vgap_min` does **not** separate the false fires (AUC 0.499, §A5.3), and
+the vertex the splitter sees differs from the one the scan saw on 5 of 172
+objects, by up to 60 cm (§B1). The second is a *new* fact this round produced and
+it is the more interesting one: the owner's two "incorrect neutrino vertex" false
+fires may be measuring a vertex that a later pass then moves.
 
 ### B6. The one-γ veto  *(kept, still unmeasured)*
 
-pr/137 §14.2's named false-positive class: 389538 is ONE photon whose e⁺e⁻ pair is
-resolved — two arms meeting at a **shared origin** at 3–4 MIP. One 2-MIP stub at a
-shared origin is a **veto**, not a trigger. Add the shared-origin dE/dx and
-common-point test to the stage-1 tape so it is measured before it is trusted.
-(The owner's *"this entire group is a separate neutrino event"* on 389538
-node19021 is a *different* object in the same event — pile-up, not pair
-resolution. Do not conflate them.)
+Unchanged from the plan. The shared-origin dE/dx test is not on the tape yet.
 
-### B7. Explicitly NOT in Phase B
+### B7. Explicitly NOT in Phase B  *(unchanged, and now with one more reason)*
 
 - **The small-angle / no-valley class.** Seven of the nine misses have
   `valley_best = 1.0` — no charge dip exists, because the two γs overlap (§A5.7,
-  the owner's factor 4). `valley_best` cannot find them and no threshold move
-  will; this needs a different observable (a transverse-profile fit, or the
-  two-stub dE/dx of §B6 used as a *trigger* rather than a veto). **Scoped out, with
-  the reason, rather than papered over by loosening the cut** — loosening to 0.99
-  costs 10 points of purity for zero efficiency (§A5.4).
+  the owner's factor 4). Loosening to 0.99 costs 10 points of purity for zero
+  efficiency (§A5.4). §B0's amendment adds the second reason: three of these are
+  *also* the k≥3 objects that drag §A5.6's k≥3 mean down, so the class is a
+  bigger share of the residual than it looked.
 - **Anything fitted to the holdout.** It has been opened once (§A5.4).
+
+### B-gate. The bar, met
+
+- **Byte-identity — PASS, rc=0 on all four samples: 132 + 212 + 38 + 96 =
+  478 / 478 archives byte-identical, `missing/unpaired events: 0` on every one**
+  (that last line is what rules out a vacuous PASS: `pr85_hash_gate.py` compares
+  only events common to both arms, so a sample that silently lost an event would
+  still say PASS). Labels `work-pr138r1-bare-<s>` vs `work-pr138r1-off-<s>`,
+  `<s>` ∈ {mcp1k 66, mcp2k 106, ncpi0 19, nuecc48 48} = the standard 239-event
+  manifest, production config. **The OFF arm ran with
+  `WCT_SHOWER_SPLIT_DEBUG=1`** — the probe *executing* the whole kernel, seeding,
+  valley, bundles, assignment, and writing its tape — which is a strictly
+  stronger statement than the shipping configuration, where the env is unset and
+  the pass returns on its first line.
+- **Freshness (M1)**: `local/lib/libWireCellClus.so` 09:36:45 >
+  `NeutrinoShowerClustering.cxx` 09:28:04. Both arms ran against *pinned* library
+  snapshots (`/home/xqian/tmp/pin-pr138{bare,off}` via `LD_LIBRARY_PATH`), so a
+  peer's `wcbuild` mid-campaign cannot void the comparison.
+- **Unit tests**: `./build/clus/wcdoctest-clus` **235/235**, assertions
+  2601 → **2617** — the eight new knobs are pinned in
+  `doctest_clus_knob_defaults.cxx`, which is the file that makes "default OFF"
+  a test rather than a claim.
+- **Compiled-config proof**: the arms' own `.wct-cfg-evt*.json` — no
+  `shower_split*` key on the OFF arm, `shower_split: true` on the ON arm.
+- **Determinism**: candidates are walked in a `(cluster_id, segment id)` sorted
+  order; the seed sort breaks density ties by point index; no pointer-keyed
+  container is iterated.
 
 ## 3. Phase C — optimisation and composition
 
@@ -929,4 +1097,36 @@ grep -n 'reconstructed pi0 decay point' ../../../toolkit/clus/src/NeutrinoShower
 
 # section A1.5 / A1.6 -- the two censuses quoted above
 python3 scripts/pr138_scanset_census.py
+
+# ===================== PHASE B -- every number in section 2 =====================
+# B0 amendment + B3: thirteen acceptance x assignment variants, offline
+python3 scripts/pr138_kernel_k.py            # -> docs/pr/pr138-kernel-k.tsv
+python3 scripts/pr138_kernel_k.py --fitted   # the parameter scan, flagged NOT ELIGIBLE
+
+# the three arms.  Binaries are PINNED so a peer's wcbuild cannot void them:
+#   /home/xqian/tmp/pin-pr138bare  = HEAD before this change
+#   /home/xqian/tmp/pin-pr138off   = HEAD with it
+# GATE (production config, the standard 239-event manifest, four samples)
+LD_LIBRARY_PATH=/home/xqian/tmp/pin-pr138bare:$LD_LIBRARY_PATH \
+  PR_JOBS=32 ./run_pr_chain_batch.sh work-<s>-grp0825 work-pr138r1-bare-<s> data <239 evts>
+LD_LIBRARY_PATH=/home/xqian/tmp/pin-pr138off:$LD_LIBRARY_PATH WCT_SHOWER_SPLIT_DEBUG=1 \
+  PR_JOBS=32 ./run_pr_chain_batch.sh work-<s>-grp0825 work-pr138r1-off-<s>  data <239 evts>
+python3 scripts/pr85_hash_gate.py work-pr138r1-bare-<s> work-pr138r1-off-<s>; echo rc=$?
+
+# FIDELITY + ON (onV1c90 config, so the population is the scan's; 125 evts)
+export SBND_PASS4_V1_ESCAPE=1 SBND_PASS4_V1_MAXV2=90 WCT_SHOWER_SPLIT_DEBUG=1
+LD_LIBRARY_PATH=/home/xqian/tmp/pin-pr138off:$LD_LIBRARY_PATH \
+  PR_JOBS=32 ./run_pr_chain_batch.sh work-<s>-grp0825 work-pr138r1-dbg-<s> data <125 evts>
+SBND_SHOWER_SPLIT=1 ...                      work-pr138r1-on2-<s>   # max_parts 2 (default)
+SBND_SHOWER_SPLIT=1 SBND_SHOWER_SPLIT_PARTS=4 ... work-pr138r1-on4-<s>   # the k>=3 experiment
+
+# B1: does the C++ reproduce the offline kernel?  (the vertex-controlled join)
+python3 scripts/pr138_probe_compare.py       # -> docs/pr/pr138-probe-compare.tsv
+# B2 + B3: the boundary the C++ ACTUALLY drew, and the peel it performed
+python3 scripts/pr138_smoke_split.py --tape 'work-pr138r1-dbg-*' --on 'work-pr138r1-on2-*'
+python3 scripts/pr138_smoke_split.py --tape 'work-pr138r1-on4-*' \
+        --tsv docs/pr/pr138-smoke-split-on4.tsv
+# tests + freshness
+./build/clus/wcdoctest-clus; echo rc=$?
+ls -la ../../../local/lib/libWireCellClus.so ../../../toolkit/clus/src/NeutrinoShowerClustering.cxx
 ```

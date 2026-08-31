@@ -1742,6 +1742,19 @@ fi
 [ -n "${SBND_PASS4_V1_MAXV2:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_v2=${SBND_PASS4_V1_MAXV2}")
 # doc pr/136 round 3: cm proximity bound on the escape.  EMPTY = no TLA = 0 = none.
 [ -n "${SBND_PASS4_V1_MAXDIS:-}" ] && CATH_TLA+=(--tla-code "shower_pass4_prefilter_v1_max_dis=${SBND_PASS4_V1_MAXDIS}")
+# doc pr/138 Phase B: the EM shower SPLITTER (bool).  The last shower-structure
+# pass and the only one that cuts; runs before the pi0 finders.  EMPTY = no TLA
+# = the job default false = no pass = byte-identical.
+[ -n "${SBND_SHOWER_SPLIT:-}" ] && CATH_TLA+=(--tla-code "shower_split=true")
+# doc pr/138 B3: how many parts one candidate may be cut into.  EMPTY = no TLA =
+# the job default 2 = the kernel whose boundary Phase A measured exact.  >=3 is
+# the k>=3 experiment (doc sec B3's 0.85 target MISSED at 0.772) -- not
+# production-eligible; inert unless SBND_SHOWER_SPLIT is set.
+[ -n "${SBND_SHOWER_SPLIT_PARTS:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_parts=${SBND_SHOWER_SPLIT_PARTS}")
+# doc pr/138 B2: the trigger's charge-valley ceiling.  EMPTY = no TLA = 0.95 =
+# the Phase A knee, whose holdout is spent.  Present so the operating point is
+# MOVABLE under review, not so it is searched again.
+[ -n "${SBND_SHOWER_SPLIT_VALLEY:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_valley=${SBND_SHOWER_SPLIT_VALLEY}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
