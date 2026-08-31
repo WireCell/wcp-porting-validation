@@ -15,9 +15,9 @@ doc pr/137 §10–§15, §1b, and §2's arms.
   against pr/137 §4's 27–36 % ceiling. The threshold is not retuned (§A5.4).
 - The **kernel is exact for two-way splits and short for three.** The shipped C++,
   scored on its own arm against the hand labels: SPLIT2 median **1.000**, mean
-  **0.974**, 21 of 27 boundaries *exactly* right; k≥3 0.573 → **0.756** against a
-  pre-registered **≥ 0.85 — MISSED**, so k≥3 ships behind a non-default knob value
-  and is not production-eligible (§B3).
+  **0.974**, 21 of 27 boundaries *exactly* right; k≥3 reaches **0.756** (from
+  0.635 at the default cap) against a pre-registered **≥ 0.85 — MISSED**, so k≥3
+  ships behind a non-default knob value and is not production-eligible (§B3).
 - **Over-clustering is 4.7 % of EM objects** (S1 random control), and the shipped
   rule would wrongly cut **1.2 %** of them (§A5.2).
 - pr/137's arm-difference proxy is **retired**: it was wrong in both directions
@@ -737,7 +737,7 @@ opposite. Phase B was ordered accordingly, and this is what it produced.
 |---|---|---|
 | **B1** `WCT_SHOWER_SPLIT_DEBUG` probe | **DONE** | accept decision agrees with the offline kernel on **172 / 172** scanned objects |
 | **B2** the accept test | **DONE, DEFAULT OFF** | C++ end-to-end **eff 0.767 / pur 0.805** on the 164 EM objects |
-| **B3** the kernel | **SHIPPED at `max_parts=2`; k≥3 measured SHORT** | SPLIT2 median **1.000**, mean **0.974**, 21 of 27 exact · k≥3 0.573 → **0.756**, **target 0.85 MISSED** |
+| **B3** the kernel | **SHIPPED at `max_parts=2`; k≥3 measured SHORT** | SPLIT2 median **1.000**, mean **0.974**, 21 of 27 exact · k≥3 0.635 → **0.756**, **target 0.85 MISSED** |
 | **B4** re-home the daughter | **NOT STARTED**, by decision | — |
 | **B5** vertex-quality veto | **instrumented, not tested** | the tape now carries the four fields §B5 asks for |
 | **B6** the one-γ veto | **NOT STARTED** | — |
@@ -903,15 +903,26 @@ agreement — reached from a numpy prototype and a hand C++ port that share no
 code — is the strongest evidence the port is faithful.
 
 **Verdict on §B3's gate, stated as it was pre-registered: MISSED, on both arms.**
-The target was k≥3 mean ≥ 0.85 with SPLIT2's 0.927 not regressing. The C++ at
-`max_parts=4` reaches **0.756**, and it costs SPLIT2 real ground — mean 0.974 →
-0.953 and, more tellingly, **exact boundaries 21 → 16 of 27**. It is genuine
-movement, +19 % on the class §A5.6 called broken, and it is not the target, so
-k≥3 stays behind its own knob at a non-default value and is **not
-production-eligible**. Note also what `max_parts=4` buys on the *trigger* (0.767
-→ 0.791 efficiency at 0.810 purity): more seeds means more objects whose parts
-are non-trivial, which is a separate effect from the boundary quality and is not
-a reason to ship it.
+The target was k≥3 mean ≥ 0.85 with SPLIT2's boundary not regressing.
+
+Read **within one frame** — never across the two, since the C++ and the offline
+tables above count slightly different objects:
+
+| frame | k≥3 at cap 2 | k≥3 at cap 4 | SPLIT2 cost |
+|---|---|---|---|
+| the C++ arms | 0.635 (n=6) | **0.756** (n=7) | mean 0.974 → 0.953, **exact 21 → 16 of 27** |
+| offline, same 7 objects both columns | 0.574 | 0.772 | mean 0.974 → 0.953 |
+
+(The C++ cap-4 column carries one *more* k≥3 object than cap 2, because a seventh
+one only produces a non-trivial partition once more than two seeds are available;
+the offline frame holds the object set fixed, which is why its baseline is lower.)
+
+Either way the movement is real and neither reaches 0.85, so k≥3 stays behind its
+own knob at a non-default value and is **not production-eligible**.
+
+Note also what `max_parts=4` buys on the *trigger* (efficiency 0.767 → 0.791 at
+purity 0.810): more seeds means more objects whose partition is non-trivial,
+which is a separate effect from boundary quality and is not a reason to ship it.
 
 Three things are now known about *why*, and none of them is a tuning problem:
 
@@ -1101,7 +1112,6 @@ python3 scripts/pr138_scanset_census.py
 # ===================== PHASE B -- every number in section 2 =====================
 # B0 amendment + B3: thirteen acceptance x assignment variants, offline
 python3 scripts/pr138_kernel_k.py            # -> docs/pr/pr138-kernel-k.tsv
-python3 scripts/pr138_kernel_k.py --fitted   # the parameter scan, flagged NOT ELIGIBLE
 
 # the three arms.  Binaries are PINNED so a peer's wcbuild cannot void them:
 #   /home/xqian/tmp/pin-pr138bare  = HEAD before this change
