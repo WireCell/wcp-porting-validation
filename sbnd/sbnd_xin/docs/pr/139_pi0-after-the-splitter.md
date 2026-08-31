@@ -1,6 +1,10 @@
 # doc pr/139 — π⁰ reconstruction after the splitter: the round plan **and tracker**
 
-**Status: LIVING.** This file is the tracker for a multi-session round. §1 is the
+**Status: LIVING.** **`shower_split_em_start` is SBND PRODUCTION ON as of
+2026-08-31** (owner flip; flip-equivalence gate `work-pr139r3-flipchk-*` vs
+`work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner is scanning the
+20 objects of §4 under tag `splitscan-0902-pi0` — see
+`docs/pr/pr139-scan-brief.md`. This file is the tracker for a multi-session round. §1 is the
 driver: it carries one row per item, its knob, its state and — once it exists —
 its gate label and result. Prose below explains rows; **the table is what the
 next session reads first.**
@@ -35,10 +39,10 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **P1.0** | **the shared knob-off gate** | all four at their shipped defaults | **PASS ×2** | `work-pr139r2-off-*` vs `work-pr138r3-flipchk-*`, **and** vs `work-pr139r1-off-*` | **478 / 478 byte-identical** on both, `missing/unpaired 0`, rc=0 ×4 ×2 |
 | **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **DONE — works, modest** | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
 | **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **DONE — the result of the round** | `work-pr139r1-onb12-*` | exact **35 → 36**, **all four broken π⁰s recovered and nothing else moved**, q_f1 0.922→**0.932**, 0 ADVERSE; **price: 29 of 51 fires stopped** |
-| **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **DONE — defect fixed, census-neutral** | `work-pr139r1-onemst-*` | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), every instrument unchanged, 0 ADVERSE |
+| **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **SBND PRODUCTION ON** (owner flip 2026-08-31) | `work-pr139r1-onemst-*`; flip-equivalence `work-pr139r3-flipchk-*` **478 / 478** | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), 51 peels / **0 backwards**, every instrument unchanged, 0 ADVERSE |
 | **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **DONE — inert at 4 cm, alive at 15** | `work-pr139r1-onrehome-*` (4 cm), `work-pr139r2-onrh15-*` (15 cm) | 6/51 → **12/51** re-homed; census **35** either way; **cannot be graded until P3.2** |
 | **P1.5** | the combination P1.1 + P1.2 + P1.3 | three knobs | **DONE** | `work-pr139r2-oncomb-*` | exact **36**, q_miss 14.5 %, q_extra 7.6 %, q_f1 **0.932**, μ-typed daughters **1**, 0 ADVERSE |
-| **P2** | owner scan, split display port 5022 | — (tag `splitscan-0902-pi0`) | **WAITING ON OWNER** | — | — |
+| **P2** | owner scan, split display port 5022 | — (tag `splitscan-0902-pi0`) | **RUNNING — display up 2026-08-31, owner scanning** | `docs/pr/pr139-scan-brief.md` | — |
 | **P3.1** | π⁰ re-seat BEFORE the splitter | `pi0_reseat_before_split` | NOT STARTED | — | — |
 | **P3.1b** | scope dial `max_vgap` (comparison arm only) | `shower_split_max_vgap` | NOT STARTED | — | superseded by P1.2 unless P1.2 fails |
 | **P3.1c** | a pointing test **not** measured from the vertex | — | NOT STARTED | — | the one unexplored feature family |
@@ -448,7 +452,7 @@ caveat is why P1.4 cannot be graded at all before §5.2.
 
 | | recommendation | why |
 |---|---|---|
-| **P1.3** `shower_split_em_start` | **flip now** | a defect in shipped code, with a measured 40 % energy error behind it; every instrument is unchanged to the digit, so there is nothing to trade. The owner asked for this one directly. |
+| **P1.3** `shower_split_em_start` | **FLIPPED 2026-08-31** — *"flip shower_split_em_start now as you said."* | a defect in shipped code, with a measured 40 % energy error behind it; every instrument unchanged to the digit, so there is nothing to trade. Flip-equivalence gate **478 / 478**, compiled-config proof from the arm's own `.wct-cfg`. |
 | **P1.2** `shower_split_max_impact = 12` | **take to the scan first** | it does what was asked — all four π⁰s back, no gain lost — but the bound was chosen after seeing 8 movers and it silences **more than half** the splitter's fires. Four of the twenty objects in the §4 scan are exactly the events it turns on. One owner call settles it. |
 | **P1.1** `shower_split_skip_shared` | **flip with P1.2, or alone if P1.2 waits** | it removes a real pathology (a 0 MeV duplicate object) for +0.2 pt of `q_extra`. Partly redundant *at this operating point* — P1.2 already vetoes both affected events — so it matters most if P1.2 does not go on. |
 | **P1.4** `shower_split_rehome` | **hold for §5.2** | it satisfies the owner's requirement at 15 cm (12 of 51, including evt176502's 603 MeV orphan and evt281485's 0 MeV one, the latter at gap 0.00 cm — straight back to the shower it was duplicating). But `q_miss`/`q_extra` **cannot grade a re-home** until the ~15 touched showers are re-marked per part. Flipping it now would be a guess wearing a number. |
