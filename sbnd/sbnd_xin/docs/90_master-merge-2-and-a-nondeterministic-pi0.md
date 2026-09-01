@@ -197,3 +197,73 @@ pi0 events. It does **not** repair `repeat_check.sh` — that gate still hashes
 only Bee zips and would still miss this class of defect on either detector
 (§4). Fixing it remains the open item, now lower priority since the only known
 instance is one uBooNE event.
+
+
+## 7. Closing the gate gap — `repeat_check.sh` now sees the tagger
+
+§4 said `repeat_check.sh` could not detect this class of defect, and §6 left
+that as the open item. Done.
+
+**What was wrong.** The gate ran one event N times and counted distinct
+**Bee-zip** content hashes. The Bee zip is the *clustering* output. Event
+5384-136-6805 is bistable in the *tagger* output while its Bee zip is
+byte-identical every run, so the gate reported `DETERMINISTIC` throughout.
+
+**What it does now.** Two gates; a PASS requires both, and the exit code is 0
+only if both report 1 distinct hash.
+
+```
+$ ./repeat_check.sh 22 6 d90det6805 6        # the known-bistable event
+distinct hashes: 1 of 6 runs  DETERMINISTIC          <- Bee zip: the old gate's answer
+distinct tagger hashes: 2 of 6 runs  NONDETERMINISTIC
+rc=1
+
+$ ./repeat_check.sh 0 4 d90det6501 4         # a stable event
+distinct hashes: 1 of 4 runs  DETERMINISTIC
+distinct tagger hashes: 1 of 4 runs  DETERMINISTIC
+rc=0
+```
+
+The first block is the whole point: the old line still says DETERMINISTIC, and
+the new one catches what it missed.
+
+**New: `qlport/scripts/hash_root_trees.py`** — content hash of `T_kine`,
+`T_tagger`, `T_rec_charge`, mtime/UUID-insensitive. Output format mirrors
+`hash_archive.py` (`<sha256>  <path>`) so it composes the same way, and
+`--per-tree` localizes a difference (on 6805: `T_kine` and `T_rec_charge` move,
+`T_tagger` does **not** — the BDT scores are stable, only the kinematics move).
+
+**Two design traps, both found by the controls rather than by reasoning.**
+
+1. *Raw bytes are useless.* ROOT embeds a UUID and timestamps, so two
+   identical-content files never compare equal — the tarball trap (M2) again.
+   Branch **values** are what must be hashed.
+2. *Row order.* The first version flagged **all 35** events as differing. The
+   cause: `T_rec_charge` emits its per-point rows in a run-dependent **order** —
+   on event 6501 all 16 varying branches are identical once sorted, same 49
+   rows, permuted. A sequence-sensitive hash therefore fires on everything and
+   detects nothing. The content hash now sorts **whole rows** into a canonical
+   order (sorting each branch independently would break row correspondence and
+   let different tables collide). Row order is still reported, as
+   `[rows not in canonical order]`, so that separate instability stays visible
+   instead of being hidden by the fix.
+
+**Controls, because a gate that cannot fail proves nothing.** Against the
+`doc89ub-mergereb` / `doc89ub-basereb` pair, whose ground truth is the
+independent `wire-cell-uboone-tagger-compare` gate (34 identical, 1 DIFF):
+the new hash scores **34 identical, 1 differing, and the differing one is
+6805** — agreement with an instrument built on a different principle. Plus the
+positive/negative runs above.
+
+**A bug fixed in passing.** `repeat_check.sh` piped through `tee /dev/stderr`.
+Under `repeat_check.sh ... > log 2>&1`, `/dev/stderr` is `/proc/self/fd/2`,
+which `tee` **reopens at offset 0** — so the second such pipeline overwrites
+the first one's output. With one gate this was invisible; with two, gate 1's
+output vanished from the log entirely. Both pipelines now capture, print, then
+count. Worth remembering wherever `tee /dev/stderr` appears in a script whose
+output gets redirected to a file.
+
+**Still open.** The underlying defect is untouched (§4, CLAUDE.md §5.7): one
+uBooNE event has two near-degenerate pi0 solutions selected in a
+layout/timing-dependent way. The gate now makes it *visible* rather than
+fixing it. SBND is unaffected (§6), so this is a uBooNE-only item.
