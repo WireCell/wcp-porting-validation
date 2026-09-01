@@ -414,3 +414,126 @@ twice.
 **Item 1 is closed negative.** No C++ was written, no arm was spent, and the
 result is stronger than a null: it names the observable as the limit rather
 than the search. Cost: one script.
+
+---
+
+## 6. Item 4 — the two "cheap leftovers", and the one that turned into a mechanism
+
+§26.5 item 4 held two leads that were both under-powered: the EM-only
+(`pdg = 211`) splitter restriction at n = 2, and 278420/61027's separability at
+n = 1. §4 above added a third of exactly the same shape — K20's 40 cm bound at
+n = 1. `scripts/pr141_typeset.py` builds the targeted sample all three need, over
+the whole production population (`work-pr140r2-off-*`, **239 events**), and
+prices each stratum *before* anyone scans it.
+
+### 6.1 S-MU — and the 40 cm bound is not the binding constraint
+
+μ-typed (|pdg| = 13), `conn_type` 2 or 3 (so: the disconnected pool), ≥ 30 MeV,
+length in the 40–80 cm band that K20 refuses. For each, pair it with every EM
+shower in its event under the finder's own vertex-ray geometry and ask whether
+**any** pairing lands in (100, 160).
+
+| | |
+|---|---|
+| candidates in 239 events | **6** |
+| in-window under the finder's own energy (`kine_charge`) | **0 of 6** |
+| in-window under the **shower-hypothesis** energy | **4 of 6** — m = 133.6, 126.3, 123.5, 102.6 |
+
+**The energy hypothesis, not the length bound, is what blocks these.** A μ-typed
+object's stored `kine_charge` is the **track**-hypothesis energy — a different
+recombination and a different fudge — and the π⁰ finder prices pair masses with
+`get_kq()` = `get_kine_charge()` at `:7707`. On the one object where both
+numbers exist, 283713's `23011`, the dump says **168.4 MeV** and the scan
+label's shower hypothesis says **320.9 MeV**, a ratio of 1.906 (the viewer's own
+note quotes 1.66 for the same effect, so it is per-object; 1.906 is used here
+only to *screen*).
+
+That is why §4's reading needs amending. Raising K20's 40 cm bound to 80 cm
+would admit all six of these — and the finder would then compute their pair
+masses at the **track** energy and put **none** of them in the window. The knob
+would fire and change nothing. K20 already re-stamps accepted members EM
+(`PI0_PAIR restamp sh=… -> pdg 11` on the tape) — but that happens **after**
+acceptance, so it cannot rescue a pair that the window rejected on a
+track-priced mass.
+
+**The real question this raises**, stated for the owner rather than answered:
+should a μ-typed object admitted to the π⁰ pool be **priced under the shower
+hypothesis at pairing time**, the same way it is re-typed after? The measured
+prize is bounded and concrete: **4 candidate π⁰ in 239 events** that reach the
+window under the shower hypothesis and none under the track one. That is not a
+knob to flip — it changes how an existing quantity is computed, i.e. CLAUDE.md
+§5.1 — but it is the first lead of the round with a population, a mechanism and
+a number.
+
+The six objects are `docs/pr/pr141-typeset.tsv` (S-MU), scan-ready.
+
+### 6.2 S-PI — the EM-only restriction stays under-powered
+
+π-typed (|pdg| = 211), ≥ 3 segments, ≥ 100 MeV: the population an EM-only
+splitter restriction would exclude.
+
+| | |
+|---|---|
+| candidates in 239 events | **8** |
+| of which `conn_type == 1` (attached at the ν vertex) | 7 |
+| includes §18's standing false fire | yes — 278420 `18002`, 268.3 MeV, 47.3 cm, 5 seg |
+
+Eight objects across the whole population, seven of them attached at the vertex.
+§22.5's n = 2 becomes n = 8 as a *sample* — enough to scan, and it is the right
+sample — but it does not become evidence on its own. **The recommendation is
+unchanged: scan these 8 before restricting the splitter by type.** They are in
+`pr141-typeset.tsv` (S-PI), which also resolves item 4's second half: 278420's
+object is in the set, so its separability gets scanned alongside rather than as
+a special case.
+
+---
+
+## 7. Where this round leaves the campaign
+
+### 7.1 What was measured tonight
+
+| item | verdict |
+|---|---|
+| **1 — k = 3 recursion** | **dead, with a mechanism that closes the family**: on all 8 SPLIT3 objects the recursion never fires; the third core is invisible to this seed finding at *any* scope (§5) |
+| **2 — the 8 "missing γs"** | **not missing**: 8 of 9 absent γ slots have their charge on the arm, 5 with a named host shower. It is an over-merge / identity problem, not γ-finding efficiency (§3) |
+| **3 — the 7 badly-wrong masses** | **partitioned by mechanism**: 3 containment (measured, correcting them moves 2 into the window), 3 over-clustering, 2 re-paired by the owner into the window, 1 window-edge (§1, §2) |
+| **4 — the type leftovers** | the μ-typed lead **re-diagnosed**: the blocker is the track-hypothesis energy, not the 40 cm bound, with a 4-π⁰ prize; the `pdg = 211` lead is now an 8-object sample, still unscanned (§6) |
+
+### 7.2 The correction this round owes doc pr/139
+
+doc pr/139 §26.4 closed the campaign on *"the dominant remaining blockers are
+missing γs and γ energy, not γ clustering"*. **The first half is wrong and the
+second half is half right.**
+
+- "missing γs" — **1**, not 8. The rest is over-merging (§3).
+- "γ energy" — real, and now split into two very different things: a
+  **containment** loss that no clustering change can recover (§2.1), and an
+  **over-clustering** inflation that is a clustering defect (§2.2).
+
+So the residual π⁰ population is: **γ identity and over-merging** (the largest
+share), **detector containment** (irreducible), and **pairing/admission**
+(small, but with the round's only bounded prize). The campaign is not blocked on
+a different subsystem the way §26.4 concluded.
+
+### 7.3 What I recommend next, in order
+
+1. **Price μ-typed π⁰ candidates under the shower hypothesis at pairing time**
+   (§6.1). It is the only lead tonight with a mechanism, a population and a
+   number: 4 candidate π⁰ in 239 events, 0 of which the current pricing can
+   reach. It changes an existing computation, so it needs the owner's word
+   before any code — but it is a bounded, default-OFF-able change.
+2. **Scan the 14-object type set** (`pr141-typeset.tsv`, 6 S-MU + 8 S-PI). It
+   settles item 4's `pdg = 211` restriction, 278420's separability and the
+   μ-typed question in one pass, and every one of those has been stuck at
+   n ≤ 2 for three rounds.
+3. **The over-merge population from §3** — `87078` swallowing a whole γ,
+   `108104` at 1197.6 MeV over 202.8 cm. These are the objects the completeness
+   instrument should be pointed at next; they are *not* the objects the splitter
+   campaign was tuned on, which is why doc pr/139 §22's "configuration space
+   exhausted" does not settle them.
+4. **A containment correction to γ energy** (§2.1) is the only route to the
+   three boundary events, and it is a calorimetry change, not a clustering one.
+   Worth scoping, but it is a different subsystem and a different validation.
+
+**Not recommended**: any further work on the split kernel's seed search (§5.1
+closes it), and any threshold moved on tonight's n = 1 evidence.

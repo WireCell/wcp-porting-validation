@@ -1,0 +1,15 @@
+stratum	arm	event	shower	pdg	E	length	conn	nseg	partner	partner_E	theta	mass	inwindow	partner_h	theta_h	mass_h	inwindow_h
+S-MU	mcp1k	283713	23011	13	168.4	57.3	2	11					False	47021	86.6	123.5	True
+S-MU	mcp2k	280159	90098	13	73.5	40.3	3	1					False				False
+S-MU	mcp2k	294174	25030	13	59.8	78.2	3	1					False	71067	61.3	102.6	True
+S-MU	mcp2k	350354	18009	13	100.2	70.2	3	2					False	46023	99.5	126.3	True
+S-MU	mcp2k	392901	23017	13	83.7	42.4	2	1					False	15010	64.3	133.6	True
+S-MU	nuecc48	122660	54071	13	102.6	53.6	2	5					False				False
+S-PI	mcp1k	278420	18002	211	268.3	47.3	1	5									
+S-PI	mcp2k	170761	8023	211	125.2	8.8	1	4									
+S-PI	mcp2k	181050	15005	211	113.9	49.6	1	11									
+S-PI	mcp2k	396222	9084	211	180.6	318.0	3	25									
+S-PI	mcp2k	499577	13030	211	106.0	23.9	1	3									
+S-PI	mcp2k	69254	4021	211	119.6	10.9	1	3									
+S-PI	nuecc48	163543	14123	211	402.6	84.7	1	10									
+S-PI	nuecc48	388	23028	211	722.6	153.5	1	29									
