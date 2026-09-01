@@ -183,6 +183,46 @@ in exactly **one** arm on disk:
 So the corrected count is **five regressions with a surviving witness, one red
 everywhere**.
 
+### 7.3 Bee sets for the hand scan (owner request, 2026-09-01)
+
+Two sets, **same event order**, so Bee index *i* is the same event in both and
+they can be stepped through side by side:
+
+| | set |
+|---|---|
+| **production — the FAIL side** | https://www.phy.bnl.gov/twister/bee/set/38f1f41a-86c8-4deb-95c2-2842588b54fc/event/list/ |
+| **witness arms — the PASS side** | https://www.phy.bnl.gov/twister/bee/set/b614ff24-1894-4d30-8b2c-7255e902ee5c/event/list/ |
+
+| bee idx | event | production arm | witness arm |
+|---|---|---|---|
+| 0 | 47212 | `work-mcp2k-prod0901b` | `work-pr125r1-flipK598-mcp2k` |
+| 1 | 173819 | `work-mcp2k-prod0901b` | `work-pr134-f086-mcp2k` |
+| 2 | 406125 | `work-mcp2k-prod0901b` | `work-pr134-f086-mcp2k` |
+| 3 | 137238 | `work-nuecc48-prod0901b` | `work-pr130r1-probe98-nuecc48` |
+| 4 | 292643 | `work-mcp1k-prod0901b` | `work-pr134-f086-mcp1k` |
+| 5 | 393505 | `work-mcp2k-prod0901b` | `work-pr134-f086-mcp2k` — **no passing arm exists**, shown for context only |
+
+Built by `scripts/bee/make_pr_bee.py` from `bee/d91/`; the `mc` layer is the PF
+jsTree the sentinels assert on, so the failure is visible directly in the tree.
+
+**CONTENT-VERIFIED against the live server**, not just the local zips — all six
+events serve different PR layers between the two sets, and the differences are
+the ones the sentinels name:
+
+| event | production serves | witness serves |
+|---|---|---|
+| 47212 | **no `pi+` node** | `pi+ 53 MeV` |
+| 137238 | `mu-` 88 / 60 / 58 | `mu-` 88 / 60 / 58 **+ 207 + 66** |
+| 173819 | `e- 283 MeV` | `e-` max 18 MeV (shower re-rooted as proton) |
+| 292643 | **no `pi0` node** | `pi0 140 MeV` |
+
+**A correction to §7.1's table.** 47212 was reported as "`pi+` node back". It is
+the opposite: the sentinel is `pf_contains "pi+"`, the guard-ON state has a
+`pi+ 53 MeV` track (pr127_sentinels.py:161), and production now has **no `pi+`
+at all** — the shower ate the backward stem, which is the guard-OFF signature
+the fix was shipped to prevent. The witness arm reproduces the documented
+guard-ON value exactly, 53 MeV.
+
 ### 7.3 Why the next round is tractable
 
 406125 has a passing witness (`work-pr134-f086-mcp2k`) and a failing one
