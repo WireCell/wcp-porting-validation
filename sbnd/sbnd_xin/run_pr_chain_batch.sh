@@ -51,7 +51,7 @@ set -u; {   # doc pr/141 sec 19 -- brace + trailing exit: see the note at EOF
 SX=$(cd "$(dirname "$0")" && pwd -P)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 TK=$WCT_BASE/toolkit
-export WIRECELL_PATH=$TK/cfg:$WCT_BASE/wire-cell-data:$WCT_BASE/wire-cell-data/sbnd/photodet:${WIRECELL_PATH:-}
+export WIRECELL_PATH=${PR_CFG_TREE:-$TK/cfg}:$WCT_BASE/wire-cell-data:$WCT_BASE/wire-cell-data/sbnd/photodet:${WIRECELL_PATH:-}  # doc pr/142: PR_CFG_TREE swaps in an older cfg tree (an A/B reference); EMPTY = $TK/cfg = byte-identical.  Same line on purpose: no line number moves.
 export PYTHONPATH=$TK/pyutil/python:$WCT_BASE/local/python:$WCT_BASE/wire-cell-python:${PYTHONPATH:-}
 AB=$SX/../../abtest
 
@@ -1797,7 +1797,7 @@ fi
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
 # cluster's total track length.
-true
+{ if [ -n "${PR_EXTRA_TLA:-}" ]; then [ -r "$PR_EXTRA_TLA" ] || { echo "ERROR: PR_EXTRA_TLA unreadable: $PR_EXTRA_TLA" >&2; exit 1; }; _n=0; while IFS= read -r _tl || [ -n "$_tl" ]; do case "$_tl" in ''|\#*) continue ;; esac; CATH_TLA+=(--tla-code "$_tl"); _n=$((_n+1)); done < "$PR_EXTRA_TLA"; echo "PR_EXTRA_TLA: appended $_n override(s) from $PR_EXTRA_TLA" >&2; fi; true; }  # doc pr/142: the LAST TLA block, so a file entry wins over any SBND_* env. EMPTY = no-op = byte-identical. On line 1800 on purpose: no line number moves.
 true
 
 # The embedded interpreter needs libpython loaded RTLD_GLOBAL for the SCN

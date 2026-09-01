@@ -1,0 +1,54 @@
+kind	name	work-mcp1k-empre0901	work-mcp1k-prod0901
+step_ms	ClusteringProtectBundle:pr	0.5523	0.5151
+step_ms	ClusteringSwitchScope:pr	28.6606	28.2882
+step_ms	ClusteringUnmergeBundle:pr	23.2592	22.5787
+step_ms	ClusteringUnmergeBundle:prassoc	10.3580	10.3566
+step_ms	CreateSteinerGraph:pr	71.7006	69.9837
+step_ms	CreateSteinerGraph:prrefresh	2.3629	2.3779
+step_ms	MakeFiducialUtils:pr	0.1288	0.1300
+step_ms	PrDisplayDump:pr	0.0849	0.0828
+step_ms	SbndPrMagnifyTrackingVisitor:pr	54.0911	54.2902
+step_ms	TaggerCheckFC:pr	0.9831	1.0090
+step_ms	TaggerCheckNeutrino:pr	0.5439	0.5752
+step_ms	TaggerCheckSTM:pr	1.7881	1.8133
+step_ms	TaggerCheckTGM:pr	6.1194	6.0652
+step_ms	UbooneNueBDTScorer:pr	0.0497	0.0503
+step_ms	UbooneNumuBDTScorer:pr	0.2126	0.1577
+step_ms	UbooneTaggerOutputVisitor:pr	0.2475	0.2436
+step_ms	done	121.0841	118.4842
+step_ms	dump dead regions to bee	0.7225	0.6931
+step_ms	dump live clusters to bee	21.3000	21.2614
+step_ms	loaded dead	26.0355	25.2846
+step_ms	loaded live	77.6198	75.6456
+step_ms	pre clustering	0.0309	0.0305
+step_ms	start clustering	0.0227	0.0224
+comp_core_s	clus_pr (MultiAlgBlobClustering)	1.0350	1.0270
+comp_core_s	clus_pr (TensorFileSink)	0.1770	0.1790
+comp_core_s	pr_pctree (TensorFileSource)	0.3145	0.3140
+mem_gib	ClusteringProtectBundle:pr	0.3420	0.3410
+mem_gib	ClusteringSwitchScope:pr	0.3208	0.3206
+mem_gib	ClusteringUnmergeBundle:pr	0.3208	0.3206
+mem_gib	ClusteringUnmergeBundle:prassoc	0.3208	0.3206
+mem_gib	CreateSteinerGraph:pr	0.3382	0.3372
+mem_gib	CreateSteinerGraph:prrefresh	0.3425	0.3417
+mem_gib	MakeFiducialUtils:pr	0.3382	0.3372
+mem_gib	PrDisplayDump:pr	0.4193	0.4179
+mem_gib	SbndPrMagnifyTrackingVisitor:pr	0.4193	0.4179
+mem_gib	TaggerCheckFC:pr	0.3420	0.3410
+mem_gib	TaggerCheckNeutrino:pr	0.3968	0.3978
+mem_gib	TaggerCheckSTM:pr	0.3420	0.3410
+mem_gib	TaggerCheckTGM:pr	0.3387	0.3374
+mem_gib	UbooneNueBDTScorer:pr	0.4051	0.4038
+mem_gib	UbooneNumuBDTScorer:pr	0.3976	0.3980
+mem_gib	UbooneTaggerOutputVisitor:pr	0.4193	0.4179
+mem_gib	done	0.4448	0.4452
+mem_gib	dump dead regions to bee	0.3208	0.3206
+mem_gib	dump live clusters to bee	0.4207	0.4214
+mem_gib	loaded dead	0.3208	0.3202
+mem_gib	loaded live	0.3208	0.3202
+mem_gib	pre clustering	0.3208	0.3206
+mem_gib	start clustering	0.3208	0.3206
+mem_gib	starting MultiAlgBlobClustering	0.2777	0.2762
+event_wall_s	median	6.5525	6.2930
+event_core_s	median	1.5330	1.5520
+event_peak_rss_gib	median	0.4448	0.4452

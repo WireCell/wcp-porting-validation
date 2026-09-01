@@ -1,0 +1,11 @@
+sample	arm	rows	evaluated	degenerate	clean
+nuecc48	empre0901	48	48	0	48
+nuecc48	prod0901	48	48	0	48
+ncpi0	empre0901	19	19	0	19
+ncpi0	prod0901	19	19	0	19
+mcp1k	empre0901	1000	461	16	445
+mcp1k	prod0901	1000	461	16	445
+mcp2k	empre0901	2000	905	33	872
+mcp2k	prod0901	2000	905	33	872
+ALL	empre0901	3067	1433	49	1384
+ALL	prod0901	3067	1433	49	1384

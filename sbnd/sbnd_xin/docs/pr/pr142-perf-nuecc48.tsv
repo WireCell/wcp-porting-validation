@@ -1,0 +1,54 @@
+kind	name	work-nuecc48-empre0901	work-nuecc48-prod0901
+step_ms	ClusteringProtectBundle:pr	118.6024	120.9531
+step_ms	ClusteringSwitchScope:pr	30.5019	31.9360
+step_ms	ClusteringUnmergeBundle:pr	25.1510	27.4390
+step_ms	ClusteringUnmergeBundle:prassoc	14.7133	13.2810
+step_ms	CreateSteinerGraph:pr	581.7037	603.8026
+step_ms	CreateSteinerGraph:prrefresh	396.1479	383.3263
+step_ms	MakeFiducialUtils:pr	0.1844	0.1822
+step_ms	PrDisplayDump:pr	67.4607	70.2338
+step_ms	SbndPrMagnifyTrackingVisitor:pr	57.9331	59.4758
+step_ms	TaggerCheckFC:pr	6.9139	7.1550
+step_ms	TaggerCheckNeutrino:pr	10244.6572	10094.3748
+step_ms	TaggerCheckSTM:pr	11.2456	11.2845
+step_ms	TaggerCheckTGM:pr	86.9876	83.6811
+step_ms	UbooneNueBDTScorer:pr	1866.9884	1865.4811
+step_ms	UbooneNumuBDTScorer:pr	260.7851	260.5555
+step_ms	UbooneTaggerOutputVisitor:pr	28.6000	29.7732
+step_ms	done	143.0172	148.4690
+step_ms	dump dead regions to bee	0.6142	0.5590
+step_ms	dump live clusters to bee	23.9551	25.8183
+step_ms	loaded dead	28.0959	27.7636
+step_ms	loaded live	86.8411	85.7276
+step_ms	pre clustering	0.0276	0.0269
+step_ms	start clustering	0.0201	0.0200
+comp_core_s	clus_pr (MultiAlgBlobClustering)	15.3790	15.1845
+comp_core_s	clus_pr (TensorFileSink)	0.1665	0.1700
+comp_core_s	pr_pctree (TensorFileSource)	0.2980	0.2955
+mem_gib	ClusteringProtectBundle:pr	0.4095	0.4097
+mem_gib	ClusteringSwitchScope:pr	0.3395	0.3386
+mem_gib	ClusteringUnmergeBundle:pr	0.3395	0.3386
+mem_gib	ClusteringUnmergeBundle:prassoc	0.3395	0.3386
+mem_gib	CreateSteinerGraph:pr	0.4020	0.4022
+mem_gib	CreateSteinerGraph:prrefresh	0.4111	0.4109
+mem_gib	MakeFiducialUtils:pr	0.4020	0.4022
+mem_gib	PrDisplayDump:pr	1.0438	1.0412
+mem_gib	SbndPrMagnifyTrackingVisitor:pr	1.0263	1.0234
+mem_gib	TaggerCheckFC:pr	0.4095	0.4097
+mem_gib	TaggerCheckNeutrino:pr	0.8518	0.8495
+mem_gib	TaggerCheckSTM:pr	0.4095	0.4097
+mem_gib	TaggerCheckTGM:pr	0.4020	0.4022
+mem_gib	UbooneNueBDTScorer:pr	1.0112	1.0092
+mem_gib	UbooneNumuBDTScorer:pr	0.8664	0.8590
+mem_gib	UbooneTaggerOutputVisitor:pr	1.0411	1.0385
+mem_gib	done	1.0549	1.0467
+mem_gib	dump dead regions to bee	0.3395	0.3386
+mem_gib	dump live clusters to bee	1.0438	1.0412
+mem_gib	loaded dead	0.3395	0.3386
+mem_gib	loaded live	0.3395	0.3386
+mem_gib	pre clustering	0.3395	0.3386
+mem_gib	start clustering	0.3395	0.3386
+mem_gib	starting MultiAlgBlobClustering	0.2797	0.2789
+event_wall_s	median	17.0600	16.8305
+event_core_s	median	15.8470	15.6715
+event_peak_rss_gib	median	1.0549	1.0467
