@@ -19,3 +19,6 @@ pf_orphan_track_roots	clus (MultiAlgBlobClustering)	pr/38 round 1	43f1fe25	df40b
 dl_vtx_swap_min_len	clus (TaggerCheckNeutrino)	pr/24 round 4	75c703da	ff541919	WITHDRAWN	the DL main-cluster swap guard this fed was measured then withdrawn at owner's direction (SBND 18255-271851 still picked the wrong shower end)	no
 dl_vtx_swap_min_frac	clus (TaggerCheckNeutrino)	pr/24 round 4	75c703da	ff541919	WITHDRAWN	see dl_vtx_swap_min_len	no
 es3sg_vertex_fit	clus (TaggerCheckNeutrino)	pr/72 round 3	14528ce3	60bad894	REVERTED	two-track vertex fit, NEGATIVE result on 18255-196649, reverted whole-commit	no
+shower_flank_absorb	clus (TaggerCheckNeutrino)	pr/117	ff239030	6f30c079	INERT	shipped OFF, not selected: no targets in the marked set (doc pr/117 sec 6)	yes
+shower_ex1_conn3_body_dis	clus (TaggerCheckNeutrino)	pr/118	333cb1ed	6f30c079	INERT	shipped OFF, not selected: measured ZERO yield (doc pr/118 sec 4a -- 1 admit in 98 events, fails angles)	yes
+shower_ex1_walk_em_track_guard	clus (TaggerCheckNeutrino)	pr/120	59b3fb53	6f30c079	INERT	shipped OFF, not selected: measured ZERO yield (doc pr/120 sec 5 -- its one target, 54332 seg 16014, is SEEDED via a kShowerTopology mis-flag in the current chain, not walk-absorbed; recognition thread)	yes

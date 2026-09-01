@@ -775,6 +775,10 @@ PR job) was not consolidated — there is nothing there to consolidate. §5b2 an
 
 Status: **PLAN. Nothing executed, nothing deleted, no knob moved.** The work
 runs in the next session. Toolkit unchanged at `ddce7430`.
+**EXECUTED 2026-09-01 — see §12**, which carries the results and corrects four
+defects found in this section and in §4/§9 while executing it (§12.6).  In
+particular §11.3.1's recommendation for `shower_samevtx_track_absorb` is
+**overturned by measurement** — the knob was NOT deleted (§12.3).
 
 Owner asked whether a cleanup round like round 1 (§9) / round 2 (§10) is worth
 repeating after the EM/pi0 campaign (docs pr/117 → pr/142), and **answered §8
@@ -1022,3 +1026,380 @@ an invariant of this branch**, which is what every A/B gate here rests on.
 - `406125` itself (doc pr/142 §5.3): a shipped fix that no longer fires on its
   own event is a **sentinel** adjudication, not a cleanup item. It stays on the
   pr/142 §7.2 list.
+
+---
+
+## 12. Round 3 executed (2026-09-01) — §11.6's five items
+
+Status: **DONE.** Three kind-2 knobs retired (toolkit `6f30c079`); the fourth
+candidate, `shower_samevtx_track_absorb`, was **measured and kept** — §11.3.1's
+"delete it" reading is overturned (§12.3). Six kind-3 knobs adjudicated, no
+knob default moved, no flip, nothing under `work/`/`abtest/snap/` rewritten.
+
+Owner: *"Can you start to prepare the code for the production running?"* — with
+§11.6's five items named in order, and two scope decisions taken before any
+edit: retire **only** §11.2's three (newly-evidenced closed-negatives get
+documented, not deleted, on today's adjudication), and for the samevtx knob
+*name the successor first, delete only behind a full A/B*. That second decision
+is what stopped a deletion the evidence turned out not to support.
+
+### 12.0 Repro
+
+```bash
+T=/nfs/data/1/xqian/toolkit-dev/toolkit
+F=cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+W=<session scratchpad>/knob77r3   # arms, snapshots, manifests, worktree
+
+# knob-surface delta -- §11.0's OWN commands, so before/after are comparable
+git -C $T show ddce7430:$F | awk '/^function\(/,/^\)/' \
+  | grep -oE '^\s+[a-z_][a-z0-9_]*\s*=' | tr -d ' =' | sort -u | wc -l   # 501 -> 495
+git -C $T show ddce7430:clus/src/TaggerCheckNeutrino.cxx \
+  | grep -cE '^\s*pattern_algos\.m_[a-z0-9_]+\s*='                       # 387 -> 381
+git -C $T show ddce7430:clus/test/doctest_clus_knob_defaults.cxx | grep -c CHECK  # 513 -> 507
+
+# item 5: the OFF-arm census + the four-way classification (§12.5)
+cd $SX && scripts/cfg/fire_census.py work-mcp1k-empre0901 work-mcp2k-empre0901 \
+    work-ncpi0-empre0901 work-nuecc48-empre0901 --tsv docs/77-firecensus-empre0901.tsv
+scripts/cfg/census_ab.py docs/77-firecensus-prod0901.tsv \
+    docs/77-firecensus-empre0901.tsv --tsv docs/77-censusab-prod-vs-empre.tsv
+
+# item 4: which shipped-ON knobs the census cannot see (§12.4)
+scripts/cfg/tag_coverage.py --tsv docs/77-tagcoverage-prod0901.tsv   # 46 tagged / 269 not
+
+# item 3: the samevtx bisect, one event, leave-one-out from production (§12.3)
+#   ctl == prod0901 byte-identical; prefilter OFF => samevtx fires, SAME output;
+#   both OFF => the merge is LOST.  That is why the knob stays.
+for a in ctl t2-prefilter t2-prefilter-nosv; do
+  printf '%-22s samevtx=%s\n' $a \
+    "$(grep -c 'pr125 samevtx_absorb:' work-77r3-bis-$a-ncpi0/pr_evt37112/wct_pr_evt37112.log)"
+done
+
+# item 2 gates: compiled-config identity, then the 308-event byte-identity gate
+scripts/cfg/compile_consumers.sh $W/tk-base/cfg $W/cons-base   # 21 artifacts
+scripts/cfg/compile_consumers.sh $T/cfg           $W/cons-rm3
+scripts/cfg/cmp_consumers.sh $W/cons-base $W/cons-rm3          # 21/21 identical
+for s in mcp1k nuecc48 ncpi0; do
+  python3 scripts/pr85_hash_gate.py work-77r3-base-$s work-77r3-rm3-$s; echo "rc=$?"; done
+```
+
+### 12.1 Item 1 — the kind-3 knobs, adjudicated (six, not five)
+
+**First, an erratum in §11.4 itself.** §4's kind-3 row parks
+`dqdx_fit_keep_all_points`, `dl_vtx_cloud_no_exclusion`, `main_vertex_swap_apply`,
+`fit_blob_coverage_defer` and **`mvga_ac_veto_radius`**. §11.4 listed the first
+four plus **`teb_chain_topology`** — a silent substitution, made without comment
+when §11 was written. Adjudicating "the five" from §11.4 would have dropped a
+knob §4 committed to revisiting and picked up one §4 never parked, so the
+**union of six** is adjudicated here.
+
+§4's horizon was *"next full-1k census"* and doc pr/142 is that census, so the
+commitment is now discharged. §4 carries per-knob evidence for exactly one of
+the six, so each verdict below cites the originating doc or the cfg comment —
+which, per §3.2 Trap 1, is the record that does not go stale.
+
+| knob | prod | measured evidence | verdict |
+|---|---|---|---|
+| `dqdx_fit_keep_all_points` | OFF | vertex +1/47, but a **12/47 EM-shower reshuffle** with two large electron-energy losses (81597 Enu 1578→696, 196649 1614→365, nue 4.24→−2.32) — pr/107 §7 | **re-park**, horizon: the next EM-clustering round. The cost lands squarely on what the campaign just spent 25 docs improving. |
+| `dl_vtx_cloud_no_exclusion` | OFF | vertex 35→38/47 **but nue-selected 35→32**, churn 11/47 for net +1, +8 % PR wall — pr/112 §5.1 | **re-park**, horizon: any round that makes vertex accuracy an objective in its own right. Owner already ruled it out *as the answer to idea 2* (pr/112:243), which is not a verdict on the knob. |
+| `main_vertex_swap_apply` | OFF | **never measured ON** — pr/51 r3 shipped gates only (knob-off JSON identical, key correct when on); a latent-bug fix, not a tested change | **re-park**, horizon: needs a measured arm before any verdict is possible. Cheapest of the six to resolve. |
+| `fit_blob_coverage_defer` | OFF | fixes the 172230 partition-reshuffle class; costs 57441 cid 20 ghost 1.12→1.23 cm; pr/51:192 finds it fixes **nothing** in 268067/360535 | **re-park**, horizon: now answerable — pr/51:650 parked its open question on "if the owner flips mvga on", and mvga **is** production ON. |
+| `teb_chain_topology` | OFF | cfg:2344 *"STAY OFF: the D1+D3 live A/B was net NEGATIVE"* — **19 ADVERSE vs 6 toward** on harv3 labels, two cosmict flips (pr/90 §10.6) | **re-classify kind 2.** The measurement is closed-negative; only *"keep for a future vertex-anchored redesign"* (pr/90:1265) kept it out of kind 2. → §12.7 pool. |
+| `mvga_ac_veto_radius` | OFF | cfg:2592 *"stays OFF: 0.2 cm measured **ADVERSE**"* — kills the 349945 design case, re-confirming pr/86 Stage A's deliberate 1.0 cm relax | **re-classify kind 2.** §4 filed it kind 3 on the strength of pr/99:339's *"knob retained for future scans"*, which is an intent, not evidence. → §12.7 pool. |
+
+Two structural facts worth recording with the verdicts:
+
+- **`teb_chain_topology` is not independently flippable.** Its use site
+  (`NeutrinoPatternBase.cxx:3035`) also requires `m_teb_r3_turn > 0 &&
+  m_teb_r3_hot > 0`, and both are OFF. Flipping the knob alone is a no-op, so it
+  could never have been A/B'd on its own — the "deferred, needs a measurement"
+  filing was unreachable as written.
+- **None of the six has a `prNN <tag>:` line**, so none is visible to the fire
+  census. Worse, `dqdx_fit_keep_all_points`'s nearest emit
+  (`TrackFitting.cxx:9074`, *"pre-dQ/dx form_map_graph dropped N ... points"*)
+  is guarded by `n_fits_after != n_fits_before` — it fires when the knob is
+  **OFF** and goes silent when it is ON. A log-grep for "did it fire" returns
+  the answer backwards. This is item 4's motivating case (§12.4).
+
+### 12.2 Item 2 — three kind-2 knobs retired
+
+**Why this is not a behavior change.** All three are C++-defaulted `false`,
+key-suppressed in jsonnet when off (`[if k then …]`), and — verified across the
+whole `cfg/` tree, not assumed from §11.5 — set by **no compiled config of any
+detector**. They appear in exactly six files repo-wide, and in cfg only in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`. Their guarded branches
+were therefore unreachable in every arm ever run, and removal is
+compiled-config-identical for SBND **and uBooNE** — which §11.5 asserted and
+Gate 1b below measures. Held to the full byte-identity bar anyway.
+
+**Scope, and why the three do not share one recipe.** They have genuinely
+different shapes, and treating them alike is how a "mechanical" deletion goes
+wrong:
+
+| knob | shape | what came out |
+|---|---|---|
+| `shower_flank_absorb` (+`_max_dis`, `_max_len`) | a knob-exclusive **function** plus a whole `if` block | `flank_absorb_orphans` (83 lines) + its sole call + the declaration. The shared helpers `segment_confident_nonelectron_pid` (8 other callers) and `pr93_probe_absorb_direct` (9 other sites) **stay**. |
+| `shower_ex1_conn3_body_dis` | **one behavioural line** inside a measure-first probe | only `min_dis = body_dis;`. The guard `m_shower_ex1_conn3_body_dis \|\| pr91_merge_dbg()` collapses to `pr91_merge_dbg()`, and the probe region is **kept intact** — `scripts/pr118_probe_census.py:65,128` parses its `tag=ex_shower1_p2dis` output. Collapsing the region would have silently broken that census. |
+| `shower_ex1_walk_em_track_guard` (+`_len`) | a ternary argument that **cascades out of `clus/`'s knob files** | the 6th argument at the one call site; then `em_straight_min_len` is dead, so `PRShower.h`'s defaulted parameter and `PRShower.cxx`'s `guard_excludes` branch go too. The lambda collapses to the legacy unconditional `if (std::abs(pdg) == 11) return false;`, and the call site now matches the other **eight** verbatim. |
+
+**Files touched** — 8 in the toolkit (`clus/src/{NeutrinoShowerClustering,
+TaggerCheckNeutrino,PRShower}.cxx`, `clus/inc/WireCellClus/{NeutrinoPatternBase,
+TaggerCheckNeutrino,PRShower}.h`, `clus/test/doctest_clus_knob_defaults.cxx`,
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`) plus
+`sbnd_xin/run_pr_chain_batch.sh` in this repo (M9): the **6 env passthroughs**
+(`SBND_SHOWER_FLANK_ABSORB` +`_MAX_DIS`/`_MAX_LEN`,
+`SBND_SHOWER_EX1_CONN3_BODY_DIS`, `SBND_SHOWER_EX1_WALK_EM_TRACK_GUARD`
++`_LEN`) removed so a stale env var can no longer name a TLA that no longer
+exists. Net **62 insertions / 265 deletions**.
+
+Every rationale comment block these knobs sat in is **shared with a
+PRODUCTION-ON knob** (`shower_pass4_best_owner`, `shower_merge_relax`,
+`shower_merge_relax_continuity`, `stem_backfill_back_guard`), so each was
+edited down rather than deleted, and the surviving item numbering ("(1)/(2)/(3)")
+was renumbered so the prose still matches the members below it. Three
+retirement breadcrumbs point at the ledger from the code that remains.
+
+**Knob-surface delta**, measured with §11.0's own commands so it composes with
+§11.1's table:
+
+| measure | `ddce7430` | after | delta |
+|---|---:|---:|---:|
+| SBND PR job TLAs | 501 | 495 | **−6** |
+| `pattern_algos.m_X =` mirror lines | 387 | 381 | −6 |
+| `doctest_clus_knob_defaults.cxx` CHECKs | 513 | 507 | −6 |
+| `tcn_knobs` bag entries | 408 | 402 | −6 |
+
+Round 1 retired 10; this round retires 3, and the campaign's +124 stands at
+**+118 net**. The surface is still ~31 % larger than at the last cleanup — §12.7
+names where the next reduction can come from.
+
+### 12.3 Item 3 — `shower_samevtx_track_absorb`: measured, and **KEPT**
+
+§11.3.1 found this knob ON in SBND production and firing on **0 of 3067**
+events, named it *"ON but inert / superseded in place"*, and §11.6 item 3
+planned to delete it once the successor was named. **The measurement overturns
+that.** The knob is not superseded; it is *pre-empted*, and it still works.
+
+**Method.** Leave-one-out from the production config on NCπ⁰ event **37112**
+alone (the knob's own motivating event), one arm per candidate, reading the
+**outcome** from the calib dump — shower count and shower 67048's
+`kine_best`/`kine_dQdx` — rather than tag presence, since a knob can fire on the
+event without performing the merge. Candidates came from two directions that
+disagreed: the three tags that fire only in the production arm on 37112
+(`pr117 merge_relax`, `pr123 pass4_prune`, `pr125 satellite_absorb`), and four
+untagged knobs whose own documentation describes a track-into-shower fold.
+**The control arm reproduces `work-ncpi0-prod0901` byte-identically** (2/2
+archives), so every row below rests on a verified baseline.
+
+| arm (leave-one-out from production) | showers | 67048 `kine_best` | `kine_dQdx` | `samevtx` fires |
+|---|---:|---:|---:|---:|
+| control = production | 8 | 741.7 | 840.9 | 0 |
+| `shower_merge_relax` off | 9 | 595.1 | 442.6 | **1** |
+| `shower_pass4_prune_detached` off | 6 | 741.7 | 840.9 | 0 |
+| `shower_satellite_absorb` off | 12 | 730.1 | 832.6 | 0 |
+| `stem_backfill_back_dvtx` off | 8 | 741.7 | 840.9 | 0 |
+| `shower_pass3_backfill_guard_len` off | 8 | 741.7 | 840.9 | 0 |
+| `shower_pass4_prox_guard_len` off | 8 | 741.7 | 840.9 | 0 |
+| **`shower_pass4_prefilter_v1_escape` off** | **8** | **741.7** | **840.9** | **1** |
+
+The last row is the answer. With the pr/136 pass-4 prefilter escape turned off,
+`samevtx` fires and absorbs **2 track-typed fragments** — exactly the count
+pr/125 §4.2 recorded at ship time — and the arm is **byte-identical to
+production** (`pr85_hash_gate.py` PASS, 2/2 archives). Two independent knobs
+converge on the same object; in production the pass-4 escape simply gets there
+first (`NeutrinoShowerClustering.cxx` pass 4, well before the samevtx pass), so
+by the time samevtx runs its precondition — a *separate* track-typed fragment
+shower at a shared non-main vertex — no longer holds.
+
+**The decisive control**, and the reason the knob is not deleted:
+
+| arm | showers | 67048 `kine_best` | `kine_dQdx` | `samevtx` |
+|---|---:|---:|---:|---:|
+| production | 8 | 741.7 | 840.9 | 0 |
+| prefilter escape OFF | 8 | 741.7 | 840.9 | 1 |
+| prefilter escape OFF **+ samevtx OFF** | **12** | **522.1** | **390.9** | 0 |
+
+Turn both off and **the merge is lost**. So `shower_samevtx_track_absorb` is a
+live, load-bearing fallback sitting exactly one flip away from being the only
+thing holding 37112's merge together. Deleting it would have passed the gate
+today — it is inert, so the bytes would not move — and would have silently
+removed that cover. **Verdict: KEEP.**
+
+**What this corrects, generally.** §11.3.1 proposed a fifth taxonomy kind, *"ON
+but inert / superseded in place"*, and treated it as removable. The measurement
+splits that kind in two, and only one half is removable:
+
+- **superseded** — another knob does the job and this one no longer can. Removable.
+- **pre-empted** — another knob merely gets there *first*; this one still works
+  and still produces the identical result when reached. **Not** removable, and
+  indistinguishable from "superseded" by fire census alone.
+
+Zero fires therefore does not mean dead code. It can be a statement about **pass
+ordering among redundant paths**, and only a leave-one-out arm can tell the two
+apart. That is the general lesson from this item, and it is why §11.6 item 3's
+"name the successor first" guard was worth the arms it cost.
+
+*Not attributed, unchanged from §11.3.1:* `kine_best` 797.3 (pr/125 validation
+arm) → 741.7 (production). Composition is identical (`kine_dQdx` 840.9 both), so
+this is charge accounting — the 0.86 scale and doc 85 r2's excluded-energy
+census both landed in between — not a merge change.
+
+### 12.4 Item 4 — the instrument's blind spot, now a measured number
+
+§11.3 could only remark that the census covers *"35 tags against 315 ON job
+TLAs"*. Nothing regenerated that ratio and nothing said **which** knobs were
+invisible. `scripts/cfg/tag_coverage.py` (new) names them, output
+`docs/77-tagcoverage-prod0901.tsv`:
+
+| measure | value |
+|---|---:|
+| SBND PR job TLAs | 495 |
+| … carrying a value ("ON" by §11.1's mechanical split) | 315 |
+| instrumented tag literals in `clus/src` | 34 (33 distinct names) |
+| ON knobs with a matching tag | 46 |
+| **ON knobs with no tag — invisible to the fire census** | **269** |
+| coverage (lower bound) | **14.6 %** |
+
+The three retirements took 6 TLAs off the OFF side (186 → 180) and none off the
+ON side, so this round's own edits do not move the coverage figure.
+
+The matcher is a name-token heuristic, so the coverage figure is a **lower
+bound** and an entry on the untagged list is a lead to check, not a verdict —
+seven tags are named for the fix rather than the knob and match nothing. The
+script says so in its own output; that honesty is the point, since the whole
+value of the number is that it bounds what §11's conclusions could see.
+
+**The rule going forward:** every knob flipped ON ships a `prNN <tag>:` line.
+The pair is the standard round check — sentinel = *still right on its event*,
+fire census = *still fires at all* — and §12.3 adds the third question the pair
+still cannot answer alone: *if it does not fire, is it superseded or merely
+pre-empted?* Only a leave-one-out arm settles that.
+
+### 12.5 Item 5 — the OFF-arm census, and what a second arm buys
+
+`fire_census.py` re-run over the four campaign-OFF arms (`empre0901`, the same
+3067 events): **35 tags, 13 fire, 22 ZERO**, committed as
+`docs/77-firecensus-empre0901.tsv`. `scripts/cfg/census_ab.py` (new) classifies
+every tag against the production census — `docs/77-censusab-prod-vs-empre.tsv`:
+
+| class | n | meaning |
+|---|---:|---|
+| **CAMPAIGN** | 12 | fires in production, dark with the campaign off |
+| **PERTURBED** | 6 | pre-campaign knob whose firing the campaign *moved* |
+| **IDENTICAL** | 7 | pre-campaign, untouched |
+| **ZERO** | 10 | fires in neither — says nothing on its own |
+
+Two results §11 could not reach with one arm:
+
+- **The 12 CAMPAIGN tags go to exactly zero** with the campaign off
+  (`satellite_absorb` 372→0, `pass4_prune` 96→0, `pass4_prune2` 67→0,
+  `shower_split` 60→0, `pass4_prox_guard` 41→0, `merge_relax` 18→0,
+  `pass3_cone_guard` 10→0, `pass4_track_guard` and `pass3_backfill_guard` and
+  `stem_backfill_back_guard` 7→0, `stem_backfill_back_dvtx` 3→0,
+  `ex1_dedup_rehome` 1→0). That is an **independent empirical confirmation of
+  doc pr/142's restore file** — measured at the instrument rather than argued
+  from the config, and by a route pr/142's own Proofs A–C do not use.
+- **Six pre-campaign knobs were perturbed**, all in single digits:
+  `detach_track_stem` 625→621, `stem_backfill` 38→40, `conn3_unreachable` 25→28,
+  `pf_id_collision` 10→12, `cone_absorb_guard` 6→5, `accept_pid_guard` 2→3.
+  Seven others are bit-for-bit unchanged (`do_rough_path` 1383 both sides,
+  `shower_in_cascade_guard` 86, `absorb_unreachable_main` 75, `conn3_stitch` 17,
+  `case_b_dqdx_guard` 15, `michel_stem_michel_check` 9, `ghost_member` 1). Small
+  and local, exactly the blast radius pr/142 §8 predicted in advance.
+
+**A ZERO row still proves nothing by itself**, and this round is careful not to
+use it as if it did: `pr117 flank_absorb` reads ZERO in both arms, but it is OFF
+in both, so that zero is not evidence for its retirement. §12.2's justification
+is the compiled-config argument and the byte-identity gate, never the census.
+
+### 12.6 Errata found in this doc while executing it
+
+Four, all found by re-deriving rather than reading, and all fixed here rather
+than left for a future round to trip on. They are listed because §3.2 Trap 1 is
+about exactly this failure mode — prose goes stale, and a cleanup round that
+trusts prose deletes the wrong thing.
+
+1. **§11.4's kind-3 list ≠ §4's** — `teb_chain_topology` was silently
+   substituted for `mvga_ac_veto_radius`. Both are adjudicated in §12.1; the
+   union is six.
+2. **`other_seg_keep_isolated_min_nnf` is a stranded kind 2.** §4:284 files it
+   measured-negative/verdict-closed, round 1 never retired it, and it is in
+   none of the ledger's 20 rows. Its cfg comment (`:2849`) is more cautious
+   than §4 — *"STAYS OFF — validation FAILED at 4 … Owner hand-scan before any
+   flip"* — which reads as kind 3, not kind 2. **The cfg comment governs**
+   (Trap 1), so it is neither retired here nor treated as closed. → §12.7.
+3. **§9:533's "the 7 already deleted before this round"** contradicts its own
+   generated ledger, which carries **10** such rows (20 data rows total, of
+   which 10 have `remove_commit = 0e8b7334`). Per §6 the ledger is generated
+   and the prose is not: **10** is authoritative, "7" is stale.
+4. **The `WCT_*` env-probe count drifts** — 37 in §4 and §9, 39 → 51 in §11.1.
+   Any future census must not quote 37.
+
+### 12.7 The documented removal pool (not touched this round)
+
+Per the owner's scope decision, knobs whose closed-negative verdict was
+established *today* are documented rather than deleted — a deletion should rest
+on a verdict that predates the round doing the deleting. This is the
+ledger-ready pool for a later round:
+
+| knob | why it qualifies | caution |
+|---|---|---|
+| `teb_chain_topology` (+ riders `teb_r3_turn`, `teb_r3_hot`) | 19 ADVERSE vs 6 toward, 2 cosmict flips — pr/90 §10.6, cfg:2344 *"STAY OFF"* | pr/90:1265 keeps it *"for a future vertex-anchored redesign"*. That is an intent to re-use, and it is the owner's call whether it survives. `NeutrinoPatternBase.h:478` also cites it as `teb_second_max`'s superseder, so the ledger's existing row needs a note if it goes. |
+| `mvga_ac_veto_radius` | 0.2 cm measured **ADVERSE**, kills the 349945 design case — cfg:2592 | §4 filed it kind 3 on pr/99:339's *"retained for future scans"*. |
+| `other_seg_keep_isolated_min_nnf` | §4 filed it kind 2 (§12.6 item 2) | but its cfg comment asks for an **owner hand-scan before any flip** and records a named nue loss — treat as kind 3 until the owner says otherwise. |
+
+**Not** in the pool, and not assumed: the added-`false` knobs `pi0_nv_allow_type2`,
+`pi0_nv_retry_paired`, `pi0_reseat_start_assoc`, `pi0_mu_shower_hypothesis` and
+the three `shower_split_*`. Their cfg comments state a *default*, not a verdict
+(§11.2), and none has been read against its originating doc.
+
+The largest remaining mechanical win is unchanged and unaffected by any of
+this: **§5b2, the mirror block** (381 lines after this round), still §8
+decision #3 and still the owner's call under M10.
+
+### 12.8 Verification
+
+- **Compiled-config, Gate 1** — SBND PR job at the production operating point,
+  `ddce7430` cfg tree vs this round's: **byte-identical** (266,930 bytes each).
+- **Compiled-config, Gate 1b** — every live consumer via
+  `scripts/cfg/compile_consumers.sh` + `cmp_consumers.sh`: **21/21 identical, 0
+  differ**, including the uBooNE MABC job and the PDHD/PDVD + sim-check set.
+  This *measures* §11.5's claim that a kind-2 removal is compiled-config-
+  identical for uBooNE as well as SBND, rather than inheriting it.
+- **Unit tests** — `./build/clus/wcdoctest-clus`: **235/235 cases, 2627/2627
+  assertions, 0 failed** (after the 6 `CHECK` lines were dropped deliberately;
+  doc 70's rule — a removed default must appear in the diff).
+- **Freshness proof (M1)** — `local/lib/libWireCellClus.so` 2026-09-01 10:07:34
+  vs last source edit 10:02:15; base and post-edit snapshots differ by md5
+  (`430ffa3e…` → `ba7324ac…`), so the gate is not comparing a binary to itself.
+- **Binary pin** — each arm ran under `LD_LIBRARY_PATH=<snapshot>`; snapshots at
+  `$SX/knob77r3/lib-{base,rm3}`. Note this tree resolves `toolkit/build/<pkg>`
+  *before* `local/lib`, so the snapshot is prepended rather than relied on
+  through the prefix.
+- **Byte-identity gate**, §9's standard manifest shape — **308 events** = 241
+  mcp1k (first 241 sorted from `work-mcp1k-grp0825`) + 48 nueCC48 + 19 NCπ⁰,
+  `PR_JOBS=16`, manifest at `$SX/knob77r3/gate308-*.txt`. Arms
+  `work-77r3-base-{mcp1k,nuecc48,ncpi0}` vs `work-77r3-rm3-*`, both `rc=0` on
+  308/308 events:
+  | sample | events | `pr85_hash_gate.py` | `pr94_root_gate.py` | sorted `nusel-table.tsv` |
+  |---|---:|---|---|---|
+  | mcp1k | 241 | **PASS** 482 archives | **PASS** 241 identical | 0 lines |
+  | nueCC48 | 48 | **PASS** 96 archives | **PASS** 48 identical | 0 lines |
+  | NCpi0 | 19 | **PASS** 38 archives | **PASS** 19 identical | 0 lines |
+  | **total** | **308** | **616 byte-identical, 0 unpaired** | **308 identical, 0 differing** | **0** |
+- **Item 3's arms** — `work-77r3-bis-*-ncpi0`, nine leave-one-out single-event
+  arms plus the two-knob control; the control is byte-identical to
+  `work-ncpi0-prod0901` on 37112 (2/2 archives).
+- **Not run, and why** — no new full-3067 production arm: this round changes no
+  compiled config and no reachable code, and the 308-event gate plus the 21-way
+  compiled-config identity bound it more tightly than a re-run would.
+
+**Ledger** — three rows appended to `docs/77_knob-ledger.tsv`, **generated** by
+`scripts/cfg/ledger_line.py` (new) from the jsonnet plus `git log -S`, never
+hand-typed (§6, Trap 1). `verdict_class = INERT`, following round 1's own
+precedent of reserving `ADVERSE` for knobs that moved something the wrong way
+and using `INERT` for measured-zero-yield. The ledger now carries **23** rows.
+
+§7 **Phase 2 status: DONE** for the kind-2 population identified as of
+2026-09-01. §12.7's pool is the next tranche and is owner-gated. §7 Phase 4
+remains **CLOSED** (Reading A, §11.5); §5b2 and §8 decision #3 remain open.

@@ -334,27 +334,24 @@ for _pr101 in \
 done
 unset _pr101 _env _key _val
 # doc pr/117 round 1 -- EM clustering knobs (pass-4 best-owner arbitration,
-# late fragment consolidation, orphan flank absorb).  Bools tri-state
+# late fragment consolidation).  Bools tri-state
 # (unset = cfg default, 1 = force on, 0 = force off); numerics pass-through
-# in cm/deg (EMPTY = no TLA = C++ default 6cm/15deg/6cm/25cm =
+# in cm/deg (EMPTY = no TLA = C++ default 6cm/15deg/5cm =
 # byte-identical).
 [ -n "${SBND_SHOWER_MERGE_RELAX_DIS:-}" ]      && CATH_TLA+=(--tla-code "shower_merge_relax_dis=${SBND_SHOWER_MERGE_RELAX_DIS}")
 [ -n "${SBND_SHOWER_MERGE_RELAX_ANGLE:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_angle=${SBND_SHOWER_MERGE_RELAX_ANGLE}")
 [ -n "${SBND_SHOWER_MERGE_RELAX_MIN_LEN:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_min_len=${SBND_SHOWER_MERGE_RELAX_MIN_LEN}")
-[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_dis=${SBND_SHOWER_FLANK_ABSORB_MAX_DIS}")
-[ -n "${SBND_SHOWER_FLANK_ABSORB_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_flank_absorb_max_len=${SBND_SHOWER_FLANK_ABSORB_MAX_LEN}")
 for _pr117 in \
     "SBND_SHOWER_PASS4_BEST_OWNER:shower_pass4_best_owner" \
-    "SBND_SHOWER_MERGE_RELAX:shower_merge_relax" \
-    "SBND_SHOWER_FLANK_ABSORB:shower_flank_absorb" ; do
+    "SBND_SHOWER_MERGE_RELAX:shower_merge_relax" ; do
     _env=${_pr117%%:*}; _key=${_pr117#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr117 _env _key _val
-# doc pr/118 round 1 -- pr/91 P2 body-distance admission + the two-tier
-# axis+charge merge path.  Bools tri-state (unset = cfg default, 1 = force
-# on, 0 = force off); numerics pass-through (EMPTY = no TLA = C++ default
+# doc pr/118 round 1 -- the two-tier axis+charge merge path.  Bool
+# tri-state (unset = cfg default, 1 = force on, 0 = force off); numerics
+# pass-through (EMPTY = no TLA = C++ default
 # 1.0/8cm/5000/7.5deg/120cm/1cm/30deg = byte-identical).
 [ -n "${SBND_SHOWER_MERGE_RELAX_CONT_FRAC:-}" ]    && CATH_TLA+=(--tla-code "shower_merge_relax_cont_frac=${SBND_SHOWER_MERGE_RELAX_CONT_FRAC}")
 [ -n "${SBND_SHOWER_MERGE_RELAX_CONT_GAP:-}" ]     && CATH_TLA+=(--tla-code "shower_merge_relax_cont_gap=${SBND_SHOWER_MERGE_RELAX_CONT_GAP}")
@@ -364,21 +361,18 @@ unset _pr117 _env _key _val
 [ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP:-}" ]  && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_gap=${SBND_SHOWER_MERGE_RELAX_CONT_T1_GAP}")
 [ -n "${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD:-}" ] && CATH_TLA+=(--tla-code "shower_merge_relax_cont_t1_fold=${SBND_SHOWER_MERGE_RELAX_CONT_T1_FOLD}")
 for _pr118 in \
-    "SBND_SHOWER_EX1_CONN3_BODY_DIS:shower_ex1_conn3_body_dis" \
     "SBND_SHOWER_MERGE_RELAX_CONTINUITY:shower_merge_relax_continuity" ; do
     _env=${_pr118%%:*}; _key=${_pr118#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr118 _env _key _val
-# doc pr/120 round 1 -- backward-stem + em-straight-track admission guards.
+# doc pr/120 round 1 -- backward-stem admission guard.
 # Bools tri-state (unset = cfg default, 1 = force on, 0 = force off);
-# numerics pass-through (EMPTY = no TLA = C++ default 110deg/20cm).
+# numerics pass-through (EMPTY = no TLA = C++ default 110deg).
 [ -n "${SBND_STEM_BACKFILL_BACK_ANG:-}" ]          && CATH_TLA+=(--tla-code "stem_backfill_back_ang=${SBND_STEM_BACKFILL_BACK_ANG}")
-[ -n "${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN:-}" ]    && CATH_TLA+=(--tla-code "shower_ex1_walk_em_track_len=${SBND_SHOWER_EX1_WALK_EM_TRACK_LEN}")
 for _pr120 in \
-    "SBND_STEM_BACKFILL_BACK_GUARD:stem_backfill_back_guard" \
-    "SBND_SHOWER_EX1_WALK_EM_TRACK_GUARD:shower_ex1_walk_em_track_guard" ; do
+    "SBND_STEM_BACKFILL_BACK_GUARD:stem_backfill_back_guard" ; do
     _env=${_pr120%%:*}; _key=${_pr120#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
