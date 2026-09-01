@@ -1,0 +1,11 @@
+# doc pr/141 rec 2 -- pi-typed (|pdg|=211) split candidates,
+# >= 100 MeV, selected inside build_population on the pr/136
+# onV1c90 arm so split_display's node ids are correct.
+event	node	stratum	owner_scan	proxy_cls	Q	E	nseg	length	conn
+388	23028	S-PI	1	SINGLE	1.169e+07	722.6	29	153.5	1
+163543	14123	S-PI	1	SINGLE	5.958e+06	402.6	10	84.7	1
+278420	18002	S-PI	1	MERGED	3.068e+06	268.3	5	47.3	1
+396222	9084	S-PI	1	MERGED	2.142e+07	175.3	25	318.0	3
+406125	8059	S-PI	1	SINGLE	2.408e+06	144.7	12	33.4	1
+181050	15005	S-PI	1	MERGED	2.391e+06	113.9	11	49.6	1
+499577	13030	S-PI	1	SINGLE	1.566e+06	106.0	3	23.9	1
