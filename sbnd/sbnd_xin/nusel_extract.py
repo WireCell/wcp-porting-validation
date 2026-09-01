@@ -492,6 +492,40 @@ def parse_prbee(fname):
     return set(int(c) for c in d['cluster_id'])
 
 
+def parse_prroot_scope(fname):
+    """In-scope cluster ids from tracking-pr.root's T_cluster (doc 87).
+
+    The EXPLICIT source, where parse_prbee() is the implicit one.  The PR chain
+    computes the in-scope flag (switch_scope stamps set_scope_filter; every
+    tagger's require_in_scope reads it back) and used to discard it -- the Bee
+    clustering layer recorded it only by CONTAINING exactly the in-scope
+    clusters, which is why the Bee zip could not be turned off without losing
+    this table.  save_in_scope writes it into T_cluster instead.
+
+    Returns None (not an empty set) when the tree is absent, so the caller can
+    tell "knob off / legacy arm" from "no cluster is in scope" and fall back to
+    the Bee zip.  An empty set here is a real answer.
+    """
+    if not fname or not os.path.isfile(fname):
+        return None
+    try:
+        import uproot
+    except ImportError:
+        print('WARNING: uproot unavailable; cannot read T_cluster', file=sys.stderr)
+        return None
+    try:
+        f = uproot.open(fname)
+        if 'T_cluster' not in {k.split(';')[0] for k in f.keys()}:
+            return None
+        t = f['T_cluster']
+        cid = t['cluster_id'].array(library='np')
+        ins = t['in_scope'].array(library='np')
+    except Exception as e:
+        print(f'WARNING: cannot read T_cluster from {fname}: {e}', file=sys.stderr)
+        return None
+    return {int(c) for c, i in zip(cid, ins) if i}
+
+
 def write_table(fh, header, rows):
     """Write a column-ALIGNED table: each field space-padded to its column width.
 
@@ -539,7 +573,17 @@ def one_event(args):
     lo, hi = (float(v) for v in args.beam_window.split(','))
     event, clusters, flashes = parse_pctree(args.pctree)
     verdicts = parse_prlog(args.prlog)
-    in_scope = parse_prbee(args.prbee)
+    # doc 87: prefer the EXPLICIT in-scope set from tracking-pr.root's T_cluster;
+    # fall back to the Bee zip, which carries it only implicitly.  Preferring the
+    # ROOT file is what lets an arm run with mabc-pr.zip suppressed.  Verified
+    # equal on 308/308 events by scripts/pr87_inscope_gate.py, so the preference
+    # cannot change any existing arm's output.
+    in_scope = parse_prroot_scope(getattr(args, 'prroot', None))
+    if in_scope is None:
+        if not args.prbee:
+            sys.exit('ERROR: need --prbee, or --prroot on a tracking-pr.root '
+                     'written with save_in_scope=true')
+        in_scope = parse_prbee(args.prbee)
     qlgeom = parse_qlbee(args.qlbee) if args.qlbee else {}
     fgrp = group_flashes(flashes)
     pe_grp = {}
@@ -707,6 +751,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--pctree', help='post-QL pctree tarball (bundle structure)')
     ap.add_argument('--prbee', help="PR job's mabc-pr.zip (in-scope cluster set)")
+    ap.add_argument('--prroot', help="PR job's tracking-pr.root -- in-scope set "
+                    "from T_cluster (doc 87, needs save_in_scope).  Preferred over "
+                    "--prbee when present, so an arm can run with the Bee zip off.")
     ap.add_argument('--qlbee', help="QL job's mabc-all-apa.zip (per-merge-component "
                                     "geometry via real_cluster_id)")
     ap.add_argument('--prlog', help='PR-job log (tagger verdict FALLBACK + '
@@ -736,10 +783,10 @@ def main():
 
     if args.merge:
         merge(args)
-    elif args.pctree and args.prbee and args.prlog:
+    elif args.pctree and (args.prbee or args.prroot) and args.prlog:
         one_event(args)
     else:
-        ap.error('need --pctree + --prbee + --prlog, or --merge')
+        ap.error('need --pctree + (--prbee or --prroot) + --prlog, or --merge')
 
 
 if __name__ == '__main__':

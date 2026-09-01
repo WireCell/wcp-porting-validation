@@ -397,6 +397,11 @@ process_event() {
     # Optional persistent post-QL point-cloud tree (PR-job intermediate file).
     local SAVEPCT_TLA=()
     [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
+    # doc 87 -- QL Bee output knobs, same surface as run_chain_group.sh.
+    # Unset/empty => no TLA => byte-identical; only the literal 0 turns one off.
+    local -a QL_BEE_TLA=()
+    [ "${SBND_QL_PERFACE_BEE:-1}" = 0 ] && QL_BEE_TLA+=(--tla-code "perface_bee=false")
+    [ "${SBND_QL_ALLAPA_BEE:-1}" = 0 ] && QL_BEE_TLA+=(--tla-code "allapa_bee=false")
     # Cathode BUNDLE rescue (doc pr/14): joins a cathode crosser whose halves
     # sit in different flash bundles (flash-reco absorbing-window defect).
     # SBND production default is ON since pr/14 §7.4 validation (owner decision
@@ -530,7 +535,7 @@ process_event() {
         --tla-str  "reality=$REALITY"
         "${CALIB_TLA[@]}"
         "${CATHODE_TLA[@]}"
-        "${SAVEPCT_TLA[@]}"
+        "${SAVEPCT_TLA[@]}" "${QL_BEE_TLA[@]}"
         "${CRESCUE_TLA[@]}"
         "${VVETO_TLA[@]}"
         "${ISOGUARD_TLA[@]}"

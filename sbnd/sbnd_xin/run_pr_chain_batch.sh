@@ -175,6 +175,14 @@ if [ -n "${PR_EXTRA_STAGES:-}" ]; then
     PIPELINE="$PIPELINE,$PR_EXTRA_STAGES"
 fi
 
+# doc 87: SBND_PR_CALIB=0 drops the calib dump even when PR_EXTRA_STAGES asked
+# for it, so the three output knobs have one uniform surface.  PrDisplayDump is
+# opt-in already, so with the stage absent nothing is instantiated -- this is a
+# pipeline_names edit, not a component knob.
+if [ "${SBND_PR_CALIB:-1}" = 0 ]; then
+    PIPELINE=$(echo "$PIPELINE" | tr ',' '\n' | grep -vx 'pr_display' | paste -sd, -)
+fi
+
 # doc sbnd_xin/docs/pr/75: the neutrino-vertex hand scan needs the per-event
 # vertex scoreboard (compare_main_vertices scores, DL top-K voxels, the seven
 # rerank composite terms, the accept route) beside the pr_display dump.  That
@@ -190,6 +198,35 @@ fi
 case ",${PR_EXTRA_STAGES:-}," in
     *,pr_display,*) : "${SBND_VERTEX_SCOREBOARD:=true}" ;;
 esac
+
+# ---------------------------------------------------------------------------
+# doc 87 -- PRODUCTION OUTPUT KNOBS.  ALL DEFAULT TO TODAY'S BEHAVIOUR: unset or
+# empty => no TLA, no change, byte-identical.  Only the literal value 0 turns an
+# output off, so a typo'd value fails safe (keeps writing) rather than silently
+# discarding a product.
+#
+#   SBND_PR_BEE=0      no pr_evt<ID>/mabc-pr.zip            (~0.24 GB/1000 evt)
+#   SBND_PR_PCTREE=0   no pr_evt<ID>/pctree-pr-evt<ID>.tar.gz (~2.24 GB/1000)
+#   SBND_PR_CALIB=0    no calib-pr-evt<ID>.json even if PR_EXTRA_STAGES asks
+#   PR_MINIMAL_OUTPUT=1  the master switch -- see below
+#
+# PR_MINIMAL_OUTPUT does NOT suppress at source.  It lets the job write the Bee
+# zip and the pctree, runs the per-event nusel extraction that needs them, and
+# THEN deletes them.  Residual disk is the same as suppressing, the per-event
+# peak is one event's worth, and -- unlike suppression -- nusel-evt<ID>.tsv keeps
+# its AUTHORITATIVE pctree-derived flags instead of the tear-prone log fallback,
+# and the group-mode per-event verdict below keeps working unchanged.
+: "${PR_MINIMAL_OUTPUT:=}"
+case "$PR_MINIMAL_OUTPUT" in
+    1|true|yes) PR_MINIMAL_OUTPUT=1; : "${SBND_PR_CALIB:=0}" ;;
+    *)          PR_MINIMAL_OUTPUT=0 ;;
+esac
+
+# Suppressing the Bee zip at source costs the in-scope cluster set, which
+# nusel_extract.py needs -- unless save_in_scope has put it in T_cluster.  So
+# SBND_PR_BEE=0 defaults save_in_scope ON; an explicit SBND_PR_SAVE_IN_SCOPE
+# still wins, the same idiom PR_EXTRA_STAGES=pr_display uses for the scoreboard.
+if [ "${SBND_PR_BEE:-1}" = 0 ]; then : "${SBND_PR_SAVE_IN_SCOPE:=1}"; fi
 
 # doc sbnd_xin/docs/pr/79 sec 10: harvest requires the scoreboard, so a
 # truthy SBND_DL_VTX_HARVEST defaults the board on too (explicit
@@ -1778,6 +1815,10 @@ fi
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
 # cluster's total track length.
+# doc 87 output knobs -> TLAs.  Unset/empty => no TLA => byte-identical.
+[ "${SBND_PR_BEE:-1}" = 0 ] && CATH_TLA+=(--tla-code "pr_bee=false")
+[ -n "${SBND_PR_SAVE_IN_SCOPE:-}" ] && [ "${SBND_PR_SAVE_IN_SCOPE}" != 0 ] && \
+    CATH_TLA+=(--tla-code "save_in_scope=true")
 { if [ -n "${PR_EXTRA_TLA:-}" ]; then [ -r "$PR_EXTRA_TLA" ] || { echo "ERROR: PR_EXTRA_TLA unreadable: $PR_EXTRA_TLA" >&2; exit 1; }; _n=0; while IFS= read -r _tl || [ -n "$_tl" ]; do case "$_tl" in ''|\#*) continue ;; esac; CATH_TLA+=(--tla-code "$_tl"); _n=$((_n+1)); done < "$PR_EXTRA_TLA"; echo "PR_EXTRA_TLA: appended $_n override(s) from $PR_EXTRA_TLA" >&2; fi; true; }  # doc pr/142: the LAST TLA block, so a file entry wins over any SBND_* env. EMPTY = no-op = byte-identical. On line 1800 on purpose: no line number moves.
 true
 
@@ -1833,6 +1874,9 @@ process_event() {
         # `timeout` sits INSIDE timecmd.py so .time.meta is still written (rc=124).
         # The full TLA list, collected once so the jsonnet compiler and
         # wire-cell see exactly the same arguments (doc pr/97 sec.5).
+        # doc 87: keep the pctree unless SBND_PR_PCTREE=0.
+        PCTREE_TLA=(--tla-str "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz")
+        [ "${SBND_PR_PCTREE:-1}" = 0 ] && PCTREE_TLA=()
         _TLA=(
             --tla-str  "input=$PCT"
             --tla-code "anode_indices=[0,1]"
@@ -1846,7 +1890,10 @@ process_event() {
             --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
             "${TFJSON_TLA[@]}"
             "${CATH_TLA[@]}"
-            --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz"
+            `# doc 87: SBND_PR_PCTREE=0 => no save_tensors TLA => the job default`
+            `# '' => TensorFileSink dump_mode => nothing written.  The sink NODE`
+            `# stays in the graph; dropping it would break Pgrapher connectivity.`
+            "${PCTREE_TLA[@]}"
         )
         # doc pr/97 sec.5: compile in a SEPARATE short-lived wcsonnet process
         # so this long job never hosts gojsonnet's Go runtime.  In-process, that
@@ -1902,13 +1949,28 @@ process_event() {
     # Per-bundle label table -- same nusel_extract.py production call
     # (unmodified script; --prtree uses the save_tensors dump above, so labels
     # come from the authoritative flag_TGM/STM/FC, not the log fallback).
+    # doc 87: pass whichever in-scope sources exist.  --prroot (T_cluster, needs
+    # save_in_scope) is preferred inside nusel_extract.py and is what makes
+    # SBND_PR_BEE=0 survivable; --prbee stays for every arm written before doc 87.
+    # Proven interchangeable, byte-identical tsv on 308/308 events
+    # (scripts/pr87_nusel_source_gate.sh).
+    _NX=()
+    [ -f "$PRDIR/mabc-pr.zip" ] && _NX+=(--prbee "$PRDIR/mabc-pr.zip")
+    [ -f "$PRDIR/tracking-pr.root" ] && _NX+=(--prroot "$PRDIR/tracking-pr.root")
+    [ -f "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" ] && \
+        _NX+=(--prtree "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz")
+    [ -f "$QLDIR/mabc-all-apa.zip" ] && _NX+=(--qlbee "$QLDIR/mabc-all-apa.zip")
     python3 "$SX/nusel_extract.py" \
-        --pctree "$PCT" --prbee "$PRDIR/mabc-pr.zip" --prlog "$LOG" \
-        --prtree "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
-        --qlbee "$QLDIR/mabc-all-apa.zip" \
+        --pctree "$PCT" --prlog "$LOG" "${_NX[@]}" \
         --beam-window "$PR_BEAM_WINDOW_US" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \
         --out "$PRDIR/nusel-evt${EVT_ID}.tsv" 2>>"$PRDIR/stdout.log"
+
+    # doc 87 master switch: the products were needed to BUILD the table above,
+    # not to keep.  Delete after extraction, never before.
+    if [ "$PR_MINIMAL_OUTPUT" = 1 ]; then
+        rm -f "$PRDIR/mabc-pr.zip" "$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz"
+    fi
 
     echo "[evt $EVT_ID] rc=$rc  -> $PRDIR"
     [ "$rc" = 0 ]
@@ -1976,6 +2038,9 @@ process_group() {
         cd "$OUTROOT" || exit 1
         export LD_PRELOAD="$PYLIB"
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+        # doc 87: keep the pctree unless SBND_PR_PCTREE=0.
+        GPCTREE_TLA=(--tla-str "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz")
+        [ "${SBND_PR_PCTREE:-1}" = 0 ] && GPCTREE_TLA=()
         _TLA=(
             --tla-str  "input=$GTAR"
             --tla-code "anode_indices=[0,1]"
@@ -1988,7 +2053,8 @@ process_group() {
             --tla-code "multi_event=true"
             --tla-str  "evt_subdir=pr_evt%1%"
             --tla-code "rse_map=$(cat "$GRSE")"
-            --tla-str  "save_tensors=$OUTROOT/pr_evt%1%/pctree-pr-evt%1%.tar.gz"
+            `# doc 87: SBND_PR_PCTREE=0 => no save_tensors TLA (see per-event path)`
+            "${GPCTREE_TLA[@]}"
         )
         _CFG=(-c "$JSONNET")
         if [ "${SBND_PRECOMPILE_CFG:-1}" = 1 ]; then
@@ -2009,6 +2075,13 @@ process_group() {
             "${_CFG[@]}"
         echo "rc=$?" > "$GDIR/g${GIDX}.rc"
     ) > "$OUTROOT/.batch_pr_g${GIDX}.stdout" 2>&1
+    # doc 87: with SBND_PR_PCTREE=0 the TensorFileSink's outname falls back to the
+    # job default 'trash-pr.tar.gz'.  dump_mode makes it write nothing, but
+    # TensorFileSink::configure opens the stream regardless, so a near-empty file
+    # appears in the process CWD -- which in group mode is $OUTROOT, shared by
+    # every concurrent group.  The per-event path already removed its own copy;
+    # this is the group-path counterpart.
+    rm -f "$OUTROOT/trash-pr.tar.gz"
 
     local rc; rc=$(sed -n 's/^rc=//p' "$GDIR/g${GIDX}.rc" 2>/dev/null); rc=${rc:-1}
     if [ "$rc" != 0 ]; then
@@ -2058,9 +2131,17 @@ print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_
         # nothing for ONE member still reported that member as rc=0, so any
         # coverage count taken from rc.txt silently over-counted.  Take the
         # per-event verdict from the per-event product wire-cell was told to
-        # write (save_tensors=.../pctree-pr-evt%1%.tar.gz, unconditional in
-        # the group path) instead of asserting success.
-        if [ -s "$PRDIR/pctree-pr-evt${evt}.tar.gz" ]; then
+        # write instead of asserting success.
+        #
+        # doc 87: that product used to be the pctree, "unconditional in the group
+        # path" -- it no longer is (SBND_PR_PCTREE=0).  Ask for whichever product
+        # this run was actually configured to write, else every event would
+        # report rc=1 and the group would fail.  tracking-pr.root is the honest
+        # fallback: SbndPrMagnifyTrackingVisitor runs on every event and the
+        # runner has no knob to suppress it.
+        _VERDICT_FILE="$PRDIR/pctree-pr-evt${evt}.tar.gz"
+        [ "${SBND_PR_PCTREE:-1}" = 0 ] && _VERDICT_FILE="$PRDIR/tracking-pr.root"
+        if [ -s "$_VERDICT_FILE" ]; then
             echo "rc=0" > "$PRDIR/rc.txt"
             _NOK=$((_NOK+1))
         else
@@ -2070,15 +2151,22 @@ print(int(v[0]), int(v[1]))' "$GRSE" "$evt" 2>/dev/null)             && [ -n "$_
         fi
         python3 "$SX/scripts/multi/slice_group_log.py" "$GLOG" "$evt" \
             > "$PRDIR/wct_pr_evt${evt}.log" 2>/dev/null
+        # doc 87: same source handling as the per-event path.
+        _NX=()
+        [ -f "$PRDIR/mabc-pr.zip" ] && _NX+=(--prbee "$PRDIR/mabc-pr.zip")
+        [ -f "$PRDIR/tracking-pr.root" ] && _NX+=(--prroot "$PRDIR/tracking-pr.root")
+        [ -f "$PRDIR/pctree-pr-evt${evt}.tar.gz" ] && \
+            _NX+=(--prtree "$PRDIR/pctree-pr-evt${evt}.tar.gz")
         python3 "$SX/nusel_extract.py" \
-            --pctree "$QLPCT" \
-            --prbee "$PRDIR/mabc-pr.zip" --prlog "$PRDIR/wct_pr_evt${evt}.log" \
-            --prtree "$PRDIR/pctree-pr-evt${evt}.tar.gz" \
+            --pctree "$QLPCT" --prlog "$PRDIR/wct_pr_evt${evt}.log" "${_NX[@]}" \
             ${QLBEE:+--qlbee "$QLBEE"} \
             --beam-window "$PR_BEAM_WINDOW_US" \
             --bw-gate "$PR_BEAM_WINDOW_US" \
             --run "$E_RUN" --subrun "$E_SUBRUN" \
             --out "$PRDIR/nusel-evt${evt}.tsv" 2>>"$PRDIR/stdout.log"
+        if [ "$PR_MINIMAL_OUTPUT" = 1 ]; then
+            rm -f "$PRDIR/mabc-pr.zip" "$PRDIR/pctree-pr-evt${evt}.tar.gz"
+        fi
     done
     if [ "$_NOK" -ne "${#EVTS[@]}" ]; then
         echo "[group $GIDX] rc=0 from wire-cell but ${_NOK}/${#EVTS[@]} events have products; missing: ${_MISSING[*]}" >&2

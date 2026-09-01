@@ -271,6 +271,16 @@ print(v[0], v[1])' "$GDIR/rse.json")
     # <out>/ql_evt<ID>/ via the evt_subdir TLA -- the same names and the same
     # places a per-event job writes.  The sinks do not create directories, so
     # the runner must (same as run_pr_chain_batch.sh).
+    # doc 87 -- QL output knobs.  Unset/empty => no TLA => byte-identical; only
+    # the literal 0 turns an output off, so a typo fails safe.
+    #   SBND_QL_PERFACE_BEE=0  no ql_evt<ID>/mabc-apa{0,1}-face0.zip (~0.24 GB/1k).
+    #     Read by NOTHING in either repo -- the PR chain never opens them.
+    #   SBND_QL_ALLAPA_BEE=0   no ql_evt<ID>/mabc-all-apa.zip        (~0.47 GB/1k).
+    #     Read only by nusel_extract.py --qlbee, an optional cross-check that
+    #     group mode already skips (QLBEE="" in run_pr_chain_batch.sh).
+    local -a QL_BEE_TLA=()
+    [ "${SBND_QL_PERFACE_BEE:-1}" = 0 ] && QL_BEE_TLA+=(--tla-code "perface_bee=false")
+    [ "${SBND_QL_ALLAPA_BEE:-1}" = 0 ] && QL_BEE_TLA+=(--tla-code "allapa_bee=false")
     local QL_TLA=() QL_OUT="$GDIR" QL_TENSORS="$GDIR/pctree-ql.tar.gz"
     if [ "$LAYOUT" = perevt ]; then
         QL_OUT="$OUTROOT"
@@ -288,7 +298,8 @@ print(v[0], v[1])' "$GDIR/rse.json")
                    --tla-str  "reality=$REALITY"
                    --tla-code "multi_event=true"
                    --tla-code "rse_map=$(cat "$GDIR/rse.json")"
-                   --tla-str  "save_tensors=$QL_TENSORS")
+                   --tla-str  "save_tensors=$QL_TENSORS"
+                   "${QL_BEE_TLA[@]}")
     local -a _CFG=()
     precompile_cfg "g$K" "$SX/wct-clus-matching-perevt.jsonnet" "$GDIR/.wct-cfg-ql.json"
     setarch x86_64 -R python3 "$AB/timecmd.py" "$GDIR/.ql.time.meta" \
@@ -300,6 +311,25 @@ print(v[0], v[1])' "$GDIR/rse.json")
         python3 "$SX/scripts/multi/split_group_products.py" "$GDIR" "$OUTROOT" \
             > "$GDIR/split.log" 2>&1 \
             || { echo "[g$K] product split FAILED (see $GDIR/split.log)" >&2; return 1; }
+    fi
+
+    # doc 87: SBND_QL_KEEP_ICLUSTER=0 drops the imaging->Q/L handoff, the single
+    # largest class on disk (~4.80 GB/1000 evt).  The Q/L job above is its ONLY
+    # consumer -- the PR chain's compiled config contains no icluster/.npz
+    # reference at all, its only input key is the pctree -- so once Q/L has
+    # succeeded they are dead weight.  Deleted only AFTER that success: this runs
+    # past every `return 1` above, so a failed group keeps its inputs for the
+    # post-mortem.  Regenerating them means re-running imaging (M11: never borrow
+    # someone else's npz).
+    if [ "${SBND_QL_KEEP_ICLUSTER:-1}" = 0 ]; then
+        # ql_evt<ID>/icluster-*.npz are SYMLINKS into evt<ID>/, so the real
+        # files go first and the now-broken links (-xtype l) go after -- leaving
+        # dangling links behind would make a later run look like it has inputs.
+        local _n
+        _n=$(find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -type f 2>/dev/null | wc -l)
+        find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -type f -delete 2>/dev/null
+        find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -xtype l -delete 2>/dev/null
+        echo "[g$K] doc 87: removed $_n icluster npz + their symlinks (SBND_QL_KEEP_ICLUSTER=0)"
     fi
 
     echo "[g$K] ok -> $GDIR"
