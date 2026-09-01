@@ -1,0 +1,36 @@
+{
+ "event": "evt278420",
+ "scan_tag": "pisplit-0905-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "18002": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "18002": 0,
+    "71037": 1,
+    "79052": 1,
+    "79053": 1,
+    "79054": 1
+   },
+   "parts": {
+    "0": [
+     18002
+    ],
+    "1": [
+     71037,
+     79052,
+     79053,
+     79054
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 5,
+   "Q": 3067662.4,
+   "saved": "2026-08-31T20:24:23"
+  }
+ }
+}

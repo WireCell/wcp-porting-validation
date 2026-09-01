@@ -787,7 +787,7 @@ decision (M13), so it needs the owner's word, not a knob.
 | the 8 "missing γs" (§3) | at most **1** is missing; 3 over-merges, 2 renames, 3 unaccounted |
 | the 7 bad masses (§1, §2) | 3 containment (irreducible), 3 over-clustering, 2 re-paired by the owner, 1 window edge |
 | μ-typed admission (§9) | all three knobs negative; the gate is the **direction** test, and class purity is 3/6 |
-| the type set `pdg = 211` (§6.2) | 8 objects, still unscanned — the one item of §7.3 not closed tonight |
+| the type set `pdg = 211` (§6.2, §14) | **closed negative**: 4 of 7 are confirmed cuts, so the EM-only restriction would forfeit them; and the splitter fires on only 1 of the 4 |
 | label staleness (§10) | worth **+1 exact** on its own, and it explains 2 of the 9 "missing" γs |
 
 ### 12.2 What I would do next, in order
@@ -796,9 +796,9 @@ decision (M13), so it needs the owner's word, not a knob.
    costs nothing: +1 exact today, and it removes a class of false failure that
    has been inflating every census this campaign has run. Needs an owner
    decision on precedence — *newest scan wins* — not code.
-2. **Scan the 8 `pdg = 211` objects** (`pr141-typeset.tsv`, S-PI). It is
-   ready, it settles §22.5's EM-only splitter restriction and 278420's
-   separability together, and it is the last item of §7.3 still open.
+2. ~~Scan the 8 `pdg = 211` objects~~ — **done, §14.** The EM-only restriction
+   is refuted; the finding that replaced it is that the splitter under-fires on
+   π-typed objects (efficiency 0.250 vs 0.938 on EM).
 3. **`122660/54071`** (§9.5) — an owner-called electron shower typed `pdg = 13`
    whose energy enters `kine_reco_Enu` at the track price. Not a π⁰ question; a
    **PID-and-energy** question, and the first concrete specimen of one.
@@ -906,3 +906,155 @@ code nobody read.
 
 `pr90_movers.py` on both knob-on arms, all four samples: **ADVERSE 0**, movers
 > 0.05 cm: 0. No vertex moved.
+
+---
+
+## 14. Recommendation 2 — the EM-only restriction is REFUTED, and the real defect is the opposite one
+
+Owner scan, 2026-08-31, tag `pisplit-0905-owner`, **all seven at confidence
+`high`**:
+
+| event | node | E | length | nseg | **owner** | shipped kernel |
+|---|---|---|---|---|---|---|
+| 396222 | `9084` | 175.3 MeV | 318.0 cm | 25 | **SPLIT3** | **FIRES**, then collapses to k=1 |
+| 388 | `23028` | 722.6 MeV | 153.5 cm | 29 | **SPLIT2** | no fire |
+| 278420 | `18002` | 268.3 MeV | 47.3 cm | 5 | **SPLIT2** | no fire |
+| 181050 | `15005` | 113.9 MeV | 49.6 cm | 11 | **SPLIT2** | no fire |
+| 163543 | `14123` | 402.6 MeV | 84.7 cm | 10 | KEEP | no fire |
+| 406125 | `8059` | 144.7 MeV | 33.4 cm | 12 | KEEP | no fire |
+| 499577 | `13030` | 106.0 MeV | 23.9 cm | 3 | KEEP | no fire |
+
+### 14.1 The restriction dies on its own premise
+
+doc pr/139 §22.5 built the EM-only proposal on this row:
+
+> | not EM-typed | 8 | **1 confirmed cut** | 1 fire | purity **0.000** |
+>
+> "An EM-only restriction would remove that false fire and **cost no cut that
+> fires today**."
+
+Scanned properly, the π-typed population gives:
+
+| | §22.5 assumed | measured |
+|---|---|---|
+| confirmed cuts | **1** of 8 | **4** of 7 |
+| false fires (a KEEP that fires) | 1 | **0** |
+| purity on the population | 0.000 | **1.000** — the single fire is on a confirmed cut |
+
+**Every number that motivated the restriction is wrong, and in the direction
+that kills it.** Restricting the splitter to `|pdg| = 11` would forfeit **four
+owner-confirmed cuts** and remove **zero** false fires, because on this
+population there are none. §22.5's "purity 0.000" came from a mixed 8-object
+non-EM set in which the one fire and the one confirmed cut happened not to
+coincide; it does not survive contact with the π-typed population itself.
+
+> **Recommendation: do NOT restrict the splitter by particle type.** §7.3 item 2
+> is closed, negative, on n = 7 at high confidence.
+
+### 14.2 The defect that is actually there: the splitter *under*-fires on π-typed objects
+
+The same table read the other way:
+
+| | |
+|---|---|
+| efficiency on π-typed confirmed cuts | **1 of 4 = 0.250** |
+| efficiency on the EM population (doc pr/139 §22) | **0.938** |
+| purity on π-typed | **1.000** (0 false fires on 3 KEEPs) |
+
+**The splitter is not firing wrongly on π-typed objects — it is barely firing at
+all.** Three owner-confirmed cuts pass through untouched, including
+**388 `23028`, a 722.6 MeV object 153.5 cm long with 29 segments**, and
+**181050 `15005`**, whose owner boundary puts 9 of its 11 segments in the second
+part. That is a *missed-cut* population — the exact opposite of the risk §22.5
+was guarding against.
+
+And the one object that does fire, **396222 `9084`**, fires and then collapses:
+the accept passes but the bundle/centroid assignment puts every bundle in one
+part (`k_kernel = 1`), which is doc pr/138 §B3's known failure mode. Its owner
+verdict is **SPLIT3**, so it is also one of the k ≥ 3 cases §5 showed the seed
+search cannot reach.
+
+*(The agreement numbers on the three non-firing cuts — 0.202, 0.680, 0.187 —
+are not boundary quality. With `k = 1` they are just the charge fraction of the
+owner's larger part, i.e. the no-split baseline. Reported for completeness, not
+as a score.)*
+
+### 14.3 Why this population is invisible to the current trigger
+
+Three of the four confirmed cuts produce **no accepted seed pair at all**.
+Combined with §5 — where re-seeding each part also never fired on a SPLIT3 —
+the pattern across both sessions is consistent enough to state plainly:
+
+> **The seed-density trigger finds the cuts it was tuned on (EM, efficiency
+> 0.938) and is close to blind outside them (π-typed, 0.250).** Neither more
+> seeds (§5, doc pr/139 §22.1), nor a deeper search (§5), nor a type restriction
+> (§14.1) changes that. A gain here needs a *different observable* — and that is
+> now the third independent measurement pointing at the same conclusion.
+
+### 14.4 What this does NOT license
+
+It does not license widening the trigger. Purity on the EM population is 0.857
+and the campaign has twice rejected knobs that bought efficiency at its expense
+(doc pr/139 §22.3: 10 of 32 confirmed cuts for +1 π⁰). A wider trigger that
+reached these four would have to be shown not to cost EM purity, and the 71-object
+EM label set is the instrument for that — this 7-object set cannot answer it.
+
+---
+
+## 15. Final state, and what I recommend next
+
+### 15.1 Everything doc pr/141 measured
+
+| item | verdict |
+|---|---|
+| k = 3 recursion (§5) | **dead** — never fires on a SPLIT3; the third core is invisible to this seed search at any scope |
+| the 8 "missing γs" (§3, §13.1) | **at most 1 is missing** — 3 over-merges, 2 id renames, 3 unaccounted |
+| the 7 bad masses (§1, §2) | 3 **containment** (irreducible), 3 **over-clustering**, 2 re-paired by the owner, 1 window edge |
+| μ-typed π⁰ admission — M1/M2/M3 (§8, §9) | **all three negative**; the gate is `seg_dir_weak`, and class purity is 3/6 |
+| the `pdg = 211` restriction (§14) | **refuted** — it would forfeit 4 confirmed cuts and remove 0 false fires |
+| label staleness (§10, §13.1) | worth **+1 exact**, and it explains 2 of the 9 "missing" γs |
+
+**Nine knobs were priced across doc pr/139 §22 and doc pr/141. None is
+recommended ON.** The production configuration is unchanged (§11).
+
+### 15.2 The three things that are actually true now
+
+1. **The splitter's trigger is population-specific.** Efficiency 0.938 on the EM
+   objects it was tuned on, **0.250** on π-typed (§14.2), and 0/8 on the SPLIT3
+   class (§5). Three independent measurements, one conclusion: a gain needs a
+   different observable, not a different search over the same one.
+2. **The residual π⁰ population is not one problem.** It is γ **identity**
+   (over-merging), detector **containment** (irreducible), **label staleness**
+   in the campaign's own instrument, and a small **admission** share — in that
+   order. No single fix touches more than a few events.
+3. **The instrument is now a first-order term.** Two of nine "missing γs" were id
+   renames; one census row was scored against a superseded pairing; §22.5's
+   whole premise came from a mis-scored 8-object set. That is three separate
+   places where the measurement, not the reconstruction, was the failure.
+
+### 15.3 Recommended next steps, in order
+
+1. **Refresh the π⁰ label store** — the only measured gain left that costs
+   nothing: **+1 exact today** (§13.1), and it removes a class of false failure
+   that has been inflating every census this campaign ran. It needs an owner
+   decision on precedence (*newest scan wins*) and a two-overlay census, not
+   code. **This is the highest value-per-effort item on the list.**
+2. **Audit doc pr/139 §22.5's non-EM table** — its "1 confirmed cut / 1 fire /
+   purity 0.000" is now known wrong on the π-typed half, and the object it names
+   as the non-EM false fire (`318769/31026`) reads `pdg = 11` on both arms
+   (§`pr141-scan-brief-pi.md`). Anything else resting on that table should be
+   rechecked before it is used.
+3. **If the splitter is revisited at all, it is a TRIGGER problem on a new
+   observable** — not more seeds, not recursion, not a type gate. §14.4 sets the
+   bar: whatever reaches the four missed π-typed cuts must be shown not to cost
+   EM purity (0.857), and only the 71-object EM label set can show that.
+4. **`122660/54071`** (§9.5) — an owner-called electron shower typed `pdg = 13`,
+   170 MeV, whose energy enters `kine_reco_Enu` at the **track** price. Not a π⁰
+   question; a **PID-and-energy** one, and the first concrete specimen.
+5. **Fix the runner's dead failure check** (§13.3) — `_r: unbound variable`
+   kills the doc pr/97 safety net intermittently, so `rc=1` with `failed: 0` has
+   been meaningless for at least two rounds. Small, standalone, and it restores
+   a guard the campaign thinks it has.
+
+**Not recommended**: any further knob on the π⁰ admission path (three tonight,
+all off), and any threshold moved on n ≤ 2 evidence.
