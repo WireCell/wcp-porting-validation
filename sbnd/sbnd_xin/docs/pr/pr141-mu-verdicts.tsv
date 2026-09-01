@@ -1,0 +1,12 @@
+# doc pr/141 M1/M2 -- the owner's 2026-08-31 track-vs-shower verdicts on the six
+# mu-typed 40-80 cm pi0 candidates (the K20 "trackish" class).  Owner's words,
+# verbatim, in the `verdict_raw` column.
+# mass_shower = best in-window pi0 mass with an EM partner at the SHOWER price
+# (x1.657); blank = no EM partner in the event reaches (100,160).
+sample	event	object	length_cm	nseg	E_track	E_shower	verdict	verdict_raw	partner	mass_shower
+mcp1k	283713	23011	57.3	11	168.4	279.0	GAMMA	electron	47021	115.2
+mcp2k	350354	18009	70.2	2	100.2	166.0	GAMMA	electron	46023	117.8
+nuecc48	122660	54071	53.6	5	102.6	170.0	GAMMA	electron shower		
+mcp2k	392901	23017	42.4	1	83.7	138.7	TRACK	track	15010	124.6
+mcp2k	280159	90098	40.3	1	73.5	121.8	TRACK	likely muon track		
+mcp2k	294174	25030	78.2	1	59.8	99.1	TRACK	overclustered muon		

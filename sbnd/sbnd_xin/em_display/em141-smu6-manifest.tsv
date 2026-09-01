@@ -1,0 +1,7 @@
+sample	run	subrun	event	dump
+mcp1k	18255	1	283713	work-pr140r2-off-mcp1k/pr_evt283713/calib-pr-evt283713.json
+mcp2k	18255	1	280159	work-pr140r2-off-mcp2k/pr_evt280159/calib-pr-evt280159.json
+mcp2k	18255	1	294174	work-pr140r2-off-mcp2k/pr_evt294174/calib-pr-evt294174.json
+mcp2k	18255	1	350354	work-pr140r2-off-mcp2k/pr_evt350354/calib-pr-evt350354.json
+mcp2k	18255	1	392901	work-pr140r2-off-mcp2k/pr_evt392901/calib-pr-evt392901.json
+nuecc48	18255	1	122660	work-pr140r2-off-nuecc48/pr_evt122660/calib-pr-evt122660.json
