@@ -435,6 +435,8 @@ doc prose has (§3.2 Trap 1).
 - **Phase 4 — promote settled knobs (§5c)**, only if and when the owner
   chooses Reading B in §5c. Full A/B gate per family, same bar as any other
   behavior-affecting change (CLAUDE.md §4).
+  **CLOSED 2026-09-01: the owner chose Reading A (§8 #1, §11.5). Phase 4 will
+  not run. The sequence tops out at Phase 3.**
 - **Prerequisite that applies across every phase that touches production
   numbers** — regenerate the stale valfast/1000 population gate (§3.3,
   `pr/32:1560`); ten currently-shipped knobs' validation rests on it.
@@ -445,6 +447,8 @@ doc prose has (§3.2 Trap 1).
    baseline that may be deliberately re-baselined once? This is the one
    decision that gates the largest possible cleanup; the rest of this doc's
    recommendations (§4, §5a, §5b) do not depend on it.
+   **RESOLVED 2026-09-01 → Reading A: uBooNE stays frozen, no re-baselining.
+   §5c never happens. See §11.5 for the consequences.**
 2. Scope of Phase 0's census — worth running as its own round regardless of
    how #1 resolves?
 3. Whether §5b2 (the 290-line mirror-block removal) is in scope given M10, or
@@ -764,3 +768,246 @@ additionally need its `iso_endpoint` argument moved into the knob bag.
 (`wct-clus-matching-perevt.jsonnet`, 46 TLAs, zero physics-knob overlap with the
 PR job) was not consolidated — there is nothing there to consolidate. §5b2 and
 §5c remain open decisions (§8).
+
+---
+
+## 11. Round 3 — planned (2026-09-01), post EM/pi0 campaign
+
+Status: **PLAN. Nothing executed, nothing deleted, no knob moved.** The work
+runs in the next session. Toolkit unchanged at `ddce7430`.
+
+Owner asked whether a cleanup round like round 1 (§9) / round 2 (§10) is worth
+repeating after the EM/pi0 campaign (docs pr/117 → pr/142), and **answered §8
+decision #1 in the same breath**:
+
+> *"The uBooNE chain should be a frozen reference, I think, we do not want to
+> re-baseline it, since we may not have sufficient effort to do the
+> validation."*
+
+That is **§5c Reading A**, and it is now settled policy for this branch — see
+§11.5 for what it forecloses and what it leaves on the table.
+
+### 11.0 Repro
+
+```bash
+T=/nfs/data/1/xqian/toolkit-dev/toolkit
+F=cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# knob-surface growth across the campaign window (§11.1)
+for r in 8d93260d ddce7430; do git -C $T show $r:$F \
+  | awk '/^function\(/,/^\)/' | grep -oE '^\s+[a-z_][a-z0-9_]*\s*=' \
+  | tr -d ' =' | sort -u | wc -l; done                                   # 377 -> 501
+for r in 8d93260d ddce7430; do git -C $T show $r:clus/src/TaggerCheckNeutrino.cxx \
+  | grep -cE '^\s*pattern_algos\.m_[a-z0-9_]+\s*='; done                 # 285 -> 387
+for r in 8d93260d ddce7430; do git -C $T show $r:clus/test/doctest_clus_knob_defaults.cxx \
+  | grep -c CHECK; done                                                  # 400 -> 513
+for r in b5384c2c 8d93260d ddce7430; do git -C $T show $r:$F \
+  | sed -n '/local tcn_knobs = {/,/^    };/p' \
+  | grep -cE "^\s+(\[if .*then )?'?[a-z_][a-z0-9_]*'?\]?\s*:"; done      # 288 -> 292 -> 408
+
+# the fire census (§11.3) -- the generator, not a hand count
+cd $SX && scripts/cfg/fire_census.py work-mcp1k-prod0901 work-mcp2k-prod0901 \
+    work-ncpi0-prod0901 work-nuecc48-prod0901 --tsv docs/77-firecensus-prod0901.tsv
+
+# the one live case (§11.3.1), three arms, same event
+for a in work-pr125r1-flipK598-ncpi0 work-ncpi0-empre0901 work-ncpi0-prod0901; do
+  printf '%-34s samevtx=%s\n' $a "$(grep -c samevtx $a/pr_evt37112/wct_pr_evt37112.log)"; done
+```
+
+### 11.1 What the campaign cost the knob surface
+
+| measure | `8d93260d` (pre) | `ddce7430` (post) | delta |
+|---|---:|---:|---:|
+| SBND PR job TLAs | 377 | 501 | **+124** |
+| … shipped ON (`true` or a value) | — | 315 | — |
+| … shipped OFF (`false` or `null`) | — | 186 | — |
+| … of which `false` | 17 | 26 | +9 |
+| `pattern_algos.m_X =` mirror lines | 285 | 387 | **+102** |
+| `doctest_clus_knob_defaults.cxx` CHECKs | 400 | 513 | +113 |
+| `WCT_*` env probes | 39 | 51 | +12 |
+| `clus/` source lines | 125,781 | 133,770 | +7,989 |
+| knobs **removed** | — | — | **0** |
+
+Round 1 retired 10; the campaign added 124 and retired none, so the surface is
+~33 % larger than at the last cleanup. Four values were re-tuned rather than
+added: `kine_shower_fudge_factor` null→0.86, `mcs_enable` false→true,
+`mcs_muon_source` `'pf_muon'`→`'long_muon_else_pf'`, `sccc_max_gap` 6→10.
+
+**The cfg side needs no work.** Round 2's consolidation held and the campaign
+used it correctly: `tagger_check_neutrino` is still 44 named params, and the
+`tcn_knobs` bag absorbed the campaign cleanly (**292 → 408 entries**) with
+`shower_split`, `kine_shower_fudge_factor`, `shower_pass4_prune_gap2`,
+`shower_samevtx_track_absorb` all riding it under the key-suppression idiom.
+The flat TLA growth is the job-level signature §10 deliberately left untouched
+so no historical `-A` recipe would break. **The debt landed on the C++ side** —
+the piece §10 explicitly deferred under M10.
+
+### 11.2 The removal pool is not 124, and not the 56 that look OFF
+
+56 of the 124 added TLAs are `false` or `null`, but a `null` under an ON parent
+means *"use the C++ default"*, not *"feature off"* — the eight
+`shower_merge_relax_cont_*` nulls are the live tuning surface of
+`shower_merge_relax = true`. **The discriminator is the parent boolean**, not
+null-ness.
+
+Clean kind-2 candidates, each with the verdict already stated in the tree:
+
+| knob | verdict in cfg comment | dead sub-params to go with it |
+|---|---|---|
+| `shower_flank_absorb` | "no targets in the marked set" (pr/117 §6) | `_max_dis`, `_max_len` |
+| `shower_ex1_conn3_body_dis` | "measured ZERO yield — 1 admit in 98 events" (pr/118 §4a) | — |
+| `shower_ex1_walk_em_track_guard` | "measured ZERO yield" (pr/120 §5) | `_len` |
+
+The other added-`false` knobs (`pi0_nv_allow_type2`, `pi0_nv_retry_paired`,
+`pi0_reseat_start_assoc`, `pi0_mu_shower_hypothesis`, the three
+`shower_split_*`) carry only "C++ default false" — that states a *default*, not
+a verdict. Each needs its doc read before classification; none is assumed here.
+
+### 11.3 New instrument: the fire census
+
+`scripts/cfg/fire_census.py` (new), output `docs/77-firecensus-prod0901.tsv`.
+
+The sentinel suite (`scripts/pr127_sentinels.py`) asks *"does this fix still
+produce the right answer on ITS event?"*. It cannot ask *"does this fix still
+run anywhere?"* — and doc pr/142 §5.3 showed the two questions have different
+answers: `406125`'s pr/124 prune stopped firing on its own event while firing
+on 70 others. The fire census asks the second question, using the `prNN <tag>:`
+log convention, across all 3067 events of `prod0901`.
+
+**The instrumented set is taken from the toolkit source, never from the logs.**
+Inverting the log table would silently equate "no tag exists" with "knob is
+dead". Three buckets, and only the third is evidence:
+
+- **fires on N of 3067** — 25 tags, `pr55 do_rough_path` (45.1 %) down to
+  `pr121 ex1_dedup_rehome` at 1 event, which matches pr/121's recorded
+  "sole fire in 239".
+- **uninstrumented** — no tag exists. Coverage is **35 tags against 315 ON job
+  TLAs**, so silence for an untagged knob is a gap in the instrument, *not*
+  evidence.
+- **instrumented, ZERO fires** — 10 tags, and a zero is only a finding after
+  adjudication:
+  - 6 × `pr67 *` are gated by OFF diagnostics (`m_traj_cover_probe`,
+    `m_pr_find_other_rounds`) → expected; §4 kind-1 tooling, keep.
+  - `pr117 flank_absorb`, `pr139 shower_split` sit under knobs shipped OFF →
+    expected, and they are §11.2's removal candidates.
+  - `pr84 shower_dedup` → see §11.3.2, **not** a finding.
+  - `pr125 samevtx_absorb` → §11.3.1, the one live case.
+
+#### 11.3.1 `shower_samevtx_track_absorb` — ON, inert, superseded in place
+
+Flipped SBND PRODUCTION ON 2026-08-29 (doc pr/125; owner: *"one shower,
+everything"*). Its cfg comment records that it fires on exactly 2 fragments,
+both in NCpi0 event **37112**, which **is** in the production sample.
+
+| arm | knob | `samevtx` fires | showers | id 67048 `kine_best` / `kine_dQdx` |
+|---|---|---:|---:|---|
+| `work-pr125r1-flipK598-ncpi0` (validation) | ON | **1** | 8 | 797.3 / 840.9 |
+| `work-ncpi0-empre0901` (campaign OFF) | OFF | 0 | **13** | 511.3 / 356.8 |
+| `work-ncpi0-prod0901` (production) | ON | **0** | 8 | 741.7 / 840.9 |
+
+The campaign-off arm is the discriminator. With the campaign off the merge is
+genuinely absent (13 showers, 511.3 MeV), so the merge is a real campaign
+effect and the knob was **not** already redundant when it was flipped. In
+production the merged result is back with identical composition to the
+validation arm (`kine_dQdx` 840.9 both, same 8 shower ids) — **but this knob's
+code path never runs.** Another campaign knob now produces the same merge.
+
+This is the *benign* form of the `406125` pattern: redundant, not broken. §4's
+taxonomy has no bucket for it — all four kinds describe OFF knobs. It needs a
+fifth: **ON but inert / superseded in place**.
+
+*Not attributed, and it does not bear on the merge claim:* `kine_best` 797.3 →
+741.7 between the validation and production arms. Composition is identical
+(`kine_dQdx` unchanged), so this is charge accounting — the 0.86 scale and doc
+85 r2's excluded-energy census both landed in between — not a merge change.
+Isolating it was not attempted.
+
+#### 11.3.2 `shower_dedup_start_seg` — zero fires, but NOT the same class
+
+`pr84 shower_dedup:` also never fires and its knob is ON, but the emit site
+sits inside `if (group.size() < 2) continue;` — it fires only when two showers
+share a start segment. Zero fires is therefore a statement about the **input**
+(no duplicate start segments in 3067 events), not about the knob, and it has no
+recorded motivating event to check against. Listed for completeness; **not**
+part of the plan.
+
+### 11.4 The kind-3 knobs are now due
+
+§4 kind 3 parked five knobs as *"keep, but timestamp"*, with the explicit
+horizon *"next full-1k census"*:
+
+`dqdx_fit_keep_all_points`, `dl_vtx_cloud_no_exclusion`,
+`main_vertex_swap_apply`, `fit_blob_coverage_defer`, `teb_chain_topology`.
+
+**doc pr/142 is that census.** Each is now promote / reject / re-park with a
+fresh horizon. This is the cheapest item on the board: the commitment already
+exists, the trigger has fired, and no new instrument is needed.
+
+### 11.5 §8 decision #1 — RESOLVED: Reading A, uBooNE stays frozen
+
+The owner's answer (quoted above) settles the one decision that gated the
+largest possible cleanup. Consequences, stated plainly so no future round
+re-opens it by accident:
+
+**What it forecloses.** §5c never happens. Settled ON knobs are **not** promoted
+to unconditional code, because hard-coding an SBND-ON knob would move uBooNE's
+C++-default output for the first time since the porting reference was
+established (§2.5) — and the owner's stated reason is precisely that the
+validation effort for that is not available. The 513-CHECK defaults doctest
+keeps its full meaning indefinitely. **"Key absent ⇒ pre-knob behavior" remains
+an invariant of this branch**, which is what every A/B gate here rests on.
+
+**What it leaves.** The ceiling is §4 kind-2 removal + §5a/§5b:
+
+- §11.2's three closed-negative knobs — removable, and *cheaper* under Reading
+  A than under B: they are C++-defaulted false and set by no compiled config,
+  so removal is compiled-config-identical for SBND **and** uBooNE.
+- §11.3.1's ON-but-inert knob — note the asymmetry Reading A creates. An
+  ON-but-inert knob can now be retired **only by deleting the feature**, never
+  by hard-coding it ON (that is a §5c move and is now off the table). Deleting
+  is the provable direction anyway: the knob is measured inert on 3067 events,
+  so an OFF-gate PASS is the expected result rather than a hope.
+- **§5b2, the mirror block, is now the largest remaining mechanical win** and
+  is *unaffected* by Reading A — it is a representation change, byte-identical
+  by construction, and touches no default. It grew +102 lines in one campaign
+  (§11.1). It remains §8 decision #3 (M10: a mechanical refactor inside a
+  shared production file is the owner's call, not a default action), and §10
+  added a real complication: ~half its lines carry `* units::cm` conversions,
+  so removing it relocates a unit conversion inside that file.
+
+### 11.6 The plan for the next session, in order
+
+1. **Adjudicate the five kind-3 knobs (§11.4).** Read each one's originating
+   doc and the pr/142 population read-out; promote, reject, or re-park with a
+   dated horizon. Output: five ledger-ready verdicts. No code.
+2. **Retire the three kind-2 knobs (§11.2)** + their dead sub-params, by §9's
+   recipe: delete C++ + all plumbing layers + the `doctest_clus_knob_defaults`
+   CHECKs, then `wcdoctest-clus` green, `pr85_hash_gate.py` PASS on the
+   standard manifest, and a **generated** ledger line each (§6 Trap 1 — the
+   ledger is generated from jsonnet + `git log --follow`, never hand-typed).
+3. **Adjudicate `shower_samevtx_track_absorb` (§11.3.1).** Identify which knob
+   took the merge over — bisect the campaign flips on 37112 — *then* delete the
+   inert one behind a full A/B. Do not delete before the successor is named:
+   "inert on 3067 events" is a measurement on this sample, not a proof that the
+   path can never fire.
+4. **Extend the instrument (§11.3).** Every knob flipped ON from now on ships
+   with a `prNN <tag>:` line, so the fire census can see it; 35-of-315 coverage
+   is the real limit on this round's conclusions. Pair the two instruments in
+   the standard round checklist: sentinel = *still right on its event*, fire
+   census = *still fires at all*. Together they would have caught both `406125`
+   and §11.3.1 in the week they happened rather than at campaign close.
+5. **Re-run the fire census against the OFF arm too.** This round measured only
+   `prod0901`. `empre0901` exists and is free to scan; a tag that fires in both
+   arms is not campaign-attributable, which sharpens every future adjudication.
+
+### 11.7 Not in scope
+
+- Anything under §5c (Reading A, §11.5).
+- Any knob **default** change, any re-tune, any flip — §11 removes measured-dead
+  wiring and nothing else. CLAUDE.md §5.1 governs the rest.
+- The Q/L job (`wct-clus-matching-perevt.jsonnet`) — §10.7 already found
+  nothing there to consolidate.
+- `406125` itself (doc pr/142 §5.3): a shipped fix that no longer fires on its
+  own event is a **sentinel** adjudication, not a cleanup item. It stays on the
+  pr/142 §7.2 list.

@@ -649,6 +649,15 @@ here) and retire `prod0830` from that role. Then, in order:
 
 ---
 
+
+### 7.3 Follow-on round opened by this doc
+
+The knob-surface consequences of the campaign are worked in **doc 77 §11**
+(cleanup round 3, planned 2026-09-01): +124 TLAs added and none retired, the
+new `scripts/cfg/fire_census.py` instrument, and the one live case it found —
+`shower_samevtx_track_absorb` is ON in production and fires on 0 of these same
+3067 events. `406125` (§5.3) stays here as a sentinel item, not a cleanup item.
+
 ## 8. Artifacts
 
 | what | where |
