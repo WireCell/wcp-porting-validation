@@ -820,8 +820,8 @@ for a in work-pr125r1-flipK598-ncpi0 work-ncpi0-empre0901 work-ncpi0-prod0901; d
 | measure | `8d93260d` (pre) | `ddce7430` (post) | delta |
 |---|---:|---:|---:|
 | SBND PR job TLAs | 377 | 501 | **+124** |
-| … shipped ON (`true` or a value) | — | 315 | — |
-| … shipped OFF (`false` or `null`) | — | 186 | — |
+| … shipped ON (`true` or a value) † | — | 315 | — |
+| … shipped OFF (`false` or `null`) † | — | 186 | — |
 | … of which `false` | 17 | 26 | +9 |
 | `pattern_algos.m_X =` mirror lines | 285 | 387 | **+102** |
 | `doctest_clus_knob_defaults.cxx` CHECKs | 400 | 513 | +113 |
@@ -829,10 +829,21 @@ for a in work-pr125r1-flipK598-ncpi0 work-ncpi0-empre0901 work-ncpi0-prod0901; d
 | `clus/` source lines | 125,781 | 133,770 | +7,989 |
 | knobs **removed** | — | — | **0** |
 
+† **Mechanical split by literal value, not a feature count.** It reads every
+non-`false`/`null` TLA as ON, which sweeps in sub-parameters on both sides — a
+`null` tuning param under an ON parent lands in the OFF column, and a numeric
+sub-param of an ON feature lands in the ON column. See §11.2: null-ness is
+*not* the discriminator. Treat 315 as "TLAs carrying a value", never as
+"315 live features"; the same caveat applies to `fire_census.py`'s coverage
+line, which quotes this number.
+
 Round 1 retired 10; the campaign added 124 and retired none, so the surface is
 ~33 % larger than at the last cleanup. Four values were re-tuned rather than
 added: `kine_shower_fudge_factor` null→0.86, `mcs_enable` false→true,
 `mcs_muon_source` `'pf_muon'`→`'long_muon_else_pf'`, `sccc_max_gap` 6→10.
+(`mcs_enable` is the family *gate* — it appears in the bag only as the
+condition in `[if mcs_enable then 'mcs_muon_source']`, never as an entry of
+its own.)
 
 **The cfg side needs no work.** Round 2's consolidation held and the campaign
 used it correctly: `tagger_check_neutrino` is still 44 named params, and the
