@@ -47,6 +47,18 @@
 # Batch: out_root/nusel-table.tsv + nusel-events.tsv (merged, same shape as
 #   run_nusel_evt.sh all).  Read the SCORES with pr_scores_table.py.
 set -u
+# doc pr/141 sec 20: bash re-reads a RUNNING script from a saved byte offset, so
+# editing run_pr_chain_batch.sh while an arm is in flight makes the shell resume
+# mid-token and execute a fragment.  That is the true cause of the intermittent
+#   ./run_pr_chain_batch.sh: line NNNN: _r: unbound variable
+# that has silently killed the doc pr/97 failure check since at least doc pr/139
+# (sec 13.3 blamed the loop; the loop is correct).  Evidence: the script's mtime
+# 2026-08-31 19:54:22 falls 18 s BEFORE the failing arm log's last write, and the
+# reported line number tracks the edit (2145 -> 2149 -> 2151, a two-line shift).
+# Wrapping the whole body in one compound command forces bash to PARSE IT ALL
+# before executing anything, so a later edit cannot reach this run.  The closing
+# brace is unreachable (the body always exits) but is required to parse.
+{
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
@@ -2176,3 +2188,4 @@ if [ -n "$_bad" ]; then
     exit 1
 fi
 exit 0
+}

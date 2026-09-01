@@ -1,6 +1,10 @@
 # doc pr/141 — the final round: what is left after the splitter campaign
 
-**Status: OPEN (session 1, 2026-08-31).** doc pr/139 §26 closed the splitter
+**Status: CLOSED (sessions 1-2, 2026-08-31).** Session 2 (§16-§21) worked
+§15.3's five hand-off items and closes the campaign; the census reads **36 of 66
+exact** and production is unchanged.
+
+**Session 1** follows. doc pr/139 §26 closed the splitter
 sub-campaign and ranked what remains (§26.5). The owner asked for one last round
 against that list:
 
@@ -1058,3 +1062,392 @@ recommended ON.** The production configuration is unchanged (§11).
 
 **Not recommended**: any further knob on the π⁰ admission path (three tonight,
 all off), and any threshold moved on n ≤ 2 evidence.
+
+---
+
+# Session 2 — the five hand-off items (2026-08-31)
+
+The owner asked for §15.3's list to be worked end to end, closing the campaign:
+
+> *"can you proceed to 1. Refresh the π⁰ label store … 2. Audit §22.5's non-EM
+> table … 3. If the splitter is revisited, it's a trigger problem on a new
+> observable … 4. 122660/54071 … 5. Fix the runner's dead failure check. … After
+> this round, we are done for this campaign."*
+
+and, on the one decision §15.3 said was theirs: **"YEs, newst scan wins."**
+
+## Repro
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# item 1 -- the refreshed census, denominator held at 66
+python3 scripts/pr141_pi0_census2.py \
+    --manifest98 em117-140r2off98-manifest.tsv \
+    --manifest141 em114c-140r2off141-manifest.tsv --fudge 0.86 \
+    --chain pi0mass-0904-owner,pi0scan-0829-agent \
+    --tsv docs/pr/pr141-census-refresh.tsv
+
+# item 2 -- the sec 22.5 audit
+python3 scripts/pr141_em_audit.py --tsv docs/pr/pr141-em-audit.tsv
+
+# item 4 -- the mu-typed PID set (served to the owner on port 5022)
+python3 scripts/pr141_pidset.py --tsv docs/pr/pr141-pidset.tsv \
+    --manifest em_display/em141-pidmu18-manifest.tsv
+./em_display/serve_em_display.sh 5022 --scan-tag pidmu-0906-owner \
+    --manifest em_display/em141-pidmu18-manifest.tsv \
+    --prepdir em_display/emprep-140r2off
+```
+
+---
+
+## 16. Item 1 — the label store is refreshed, and the census says 36 of 66
+
+### 16.1 Why the naive rule would have been wrong
+
+"Newest scan wins" cannot be applied per *file*. `pi0mass-0904-owner` holds nine
+files, but `labels-evt397630.json` has **`pio: null`** — the seeding defect of
+§2.3, where three events kept their pairing only in the overlay and opened with
+empty γ slots. A file-level newest-wins would let that empty record beat
+`pi0scan-0829-agent`'s `19010+33038` and **delete a census row**, moving the
+denominator without anyone seeing it.
+
+`scripts/pr141_pi0_census2.py` (a fork of `pr132_pi0_census.py`, M10 — the
+production scorer stays byte-identical) therefore resolves **per field**: a tag
+wins an event only where it actually carries a populated `pio.gammas`.
+
+Two tags are **excluded from the chain although newer by mtime**:
+`pi0mu-0905-owner` (19:40) and `pisplit-0905-owner` (20:24) are object-*type* and
+SPLIT/KEEP scans; their `pio` blocks are agent seeds the viewer carries along,
+not pairing verdicts. Mtime alone would have promoted them over the owner's own
+rescan at 19:06. Provenance decides precedence, not the clock.
+
+### 16.2 The result — the denominator holds and exactly one row moves
+
+Chain `pi0mass-0904-owner → pi0scan-0829-agent → <base per set>`, on the shipped
+production arm `work-pr140r2-off-*`:
+
+| | shipped precedence | **refreshed** |
+|---|---|---|
+| hand π⁰ (denominator) | 66 | **66** |
+| **exact** | 35 (53.0 %) | **36 (54.5 %)** |
+| partial | 16 | 15 |
+| none | 3 | 3 |
+| no-group | 12 | 12 |
+
+Row-by-row diff of the two TSVs: **one class change, no regressions.**
+
+```
+set141  evt348691   partial -> exact    labelsrc overlay -> pi0mass-0904-owner
+```
+
+and `397630` keeps its pairing, sourced from `pi0scan-0829-agent` — the per-field
+rule doing exactly the job it was written for. The other 20 rows that change
+`labelsrc` are the overlay being named explicitly plus the eight events the owner
+rescanned whose pairing was unchanged; every one keeps its class.
+
+**So §13.1's "35 + 1, measured separately" is now a single census run: 36 of 66,
+denominator intact.** This is the only gain the campaign closes with, and it
+required no code in `clus` and no arm.
+
+---
+
+## 17. Item 2 — the §22.5 audit, and the correction is mine, not doc pr/139's
+
+### 17.1 The table reproduces exactly — from the tape
+
+`scripts/pr141_em_audit.py` rebuilds the table from the `SHOWER_SPLIT cand` tape
+on three arms. On all three, and joining **71 of 71** labelled objects with zero
+join misses:
+
+| candidate class | n | confirmed cuts | fires | purity | efficiency |
+|---|---|---|---|---|---|
+| EM-typed (\|pdg\| = 11) | 63 | 31 | 35 | **0.857** | 0.968 |
+| not EM-typed | 8 | 1 | 1 | **0.000** | 0.000 |
+
+**Identical to doc pr/139 §22.5.** The table was not mis-scored, and the 0.938 /
+0.857 numbers §15.3 flagged as "unverified" are verified.
+
+*But nothing in `scripts/` produces it and no committed TSV carries a `pdg`
+column* — it was computed ad hoc. That is the reportable process defect, and it
+is why re-deriving it took a script rather than a `grep`.
+
+### 17.2 The pdg SOURCE is the whole question, and I read the wrong one
+
+The tape prints `shower->get_particle_type()` **at the split site**
+(`NeutrinoShowerClustering.cxx:5919`). The dump's `particle_id` is written after
+the full chain. They are two different reads, and on the production arm they
+**disagree on 12 of 390 taped candidates**, always the same way — tape 13 / 211 /
+2212, dump 11:
+
+```
+166870/85045   tape 13    dump 11        282271/51038   tape 13    dump 11
+169626/22034   tape 211   dump 11        318769/31026   tape 211   dump 11
+174771/15018   tape 2212  dump 11        406125/8059    tape 211   dump 11
+174771/22024   tape 13    dump 11        ... 12 in total
+```
+
+Recomputing the same table with the dump's `particle_id` gives 64/31/36/0.833 and
+7/1/**0** — a different table, from the same labels and the same arm.
+
+**§14 said "the object §22.5 names as the non-EM false fire (`318769/31026`)
+reads `pdg = 11` on both arms."** That is true of the *dump* and false of the
+*tape*, and an EM-only restriction would be implemented inside the splitter,
+where the tape's value is the one in scope. **So `318769/31026` is a genuine
+non-EM false fire and the restriction would remove it.** That half of §14 is
+withdrawn.
+
+### 17.3 What survives is the finding, and it is stronger on 14 objects
+
+§14's *premise* still falls: "1 confirmed cut in 8" is an artefact of a label set
+built around EM showers. The π-typed sweep and §22.5's eight overlap in **exactly
+one object** (396222/9084), so the union is 14 labelled non-EM objects:
+
+| | §22.5's 8 | **union of 14** |
+|---|---|---|
+| confirmed cuts | 1 | **4** |
+| fires | 1 | 1 |
+| true positives | 0 | 0 |
+| purity | 0.000 | **0.000** |
+| efficiency | 0.000 | **0.000** |
+
+**The EM-only restriction is therefore priced, not refuted**: it removes **1**
+false fire (purity 0.833 → 0.857) and permanently forecloses **4** confirmed
+cuts that the splitter does not reach today. Four times the demand for one unit
+of noise. **Still not recommended — but for a different reason than §14 gave.**
+
+### 17.4 A second correction: §14.2's 0.250 was an offline-kernel number
+
+§14.2 reported splitter efficiency 0.250 on π-typed confirmed cuts, counting
+396222/9084 as a fire. The production tape says otherwise:
+
+```
+SHOWER_SPLIT cand shower=9084 pdg=211 nseg=25 ... nacc=2 nparts=1 fired=0
+```
+
+An accepted seed pair whose segment assignment **collapsed to one part** — so it
+does not fire. Measured against the shipped binary rather than the offline
+kernel, efficiency on non-EM confirmed cuts is **0 of 4 = 0.000**. The
+under-firing finding is not weakened by the correction; it is absolute.
+
+---
+
+## 18. Item 3 — the bar, and the misses are NOT where I said they were
+
+### 18.1 The acceptance bar, stated numerically
+
+Any replacement trigger must be measured on **all 78 labelled objects** (71 + the
+7 π-typed) and must:
+
+1. reach **≥ 1 of the 4** confirmed non-EM cuts (today: 0);
+2. hold EM efficiency at **≥ 0.968** (30 of 31 confirmed EM cuts fire today);
+3. hold EM purity at **≥ 0.857** (30 true of 35 fires);
+4. keep the seeded-random control stratum at **0 fires** (doc pr/139 §22.2).
+
+The 7-object π set cannot test 2–4 at all — only the 71-object EM set can — which
+is why §15.3 said the EM set is the instrument and this one is not.
+
+### 18.2 Where the trigger actually fails, on every labelled object
+
+Across all 78, the shipped trigger misses **5** confirmed cuts, and the tape says
+exactly where:
+
+| class | event | object | verdict | n_seed | valley_best | nacc | mechanism |
+|---|---|---|---|---|---|---|---|
+| nonEM | 388 | 23028 | SPLIT2 | 4 | 1.000 | 0 | no accepted seed **pair** |
+| nonEM | 181050 | 15005 | SPLIT2 | 3 | 1.000 | 0 | no accepted seed pair |
+| EM | 71372 | 19049 | SPLIT3 | 4 | 1.000 | 0 | no accepted seed pair |
+| nonEM | 278420 | 18002 | SPLIT2 | **1** | 1.000 | 0 | one core — genuinely invisible |
+| nonEM | 396222 | 9084 | SPLIT3 | 4 | 0.251 | 2 | **assignment** collapsed to 1 part |
+
+`valley_best = 1.000` with `angle_best = -1.00` is the sentinel for *no seed pair
+passed the charge-share floor* (`NeutrinoShowerClustering.cxx:5854-5861`: `vbest`
+is only updated for pairs with `min(frac_i, frac_j) >= m_shower_split_min_frac`,
+default **0.03**). So on **three of the five**, the seed search **already found
+3–4 maxima** and the pair was refused by the 3 % charge-share floor, not by the
+angular test and not by any absence of structure.
+
+**This corrects §14.3 and §15.3's framing.** "A gain needs a different
+observable, not a different search" is right only for 278420/18002. The other
+four split into **acceptance** (3 objects, refused at `min_frac`) and
+**assignment** (1 object, `nacc = 2 → nparts = 1`) — two named, located
+sub-problems inside the existing machinery.
+
+**This is not a recommendation to move `min_frac`.** n = 3, the per-seed
+fractions are not on the tape, and doc pr/139 §18's discipline (no threshold on a
+handful of objects) applies with full force. It is the measurement that tells the
+next person where to look, and what it would cost to look there: any loosening is
+priced against §18.1's bar on the 71-object set.
+
+---
+
+## 19. Item 5 — the doc pr/97 failure check was never broken; the *runner* was
+
+### 19.1 §13.3's diagnosis is wrong, and the evidence is in the timestamps
+
+§13.3 blamed the doc pr/97 loop for the intermittent
+
+```
+./run_pr_chain_batch.sh: line 2151: _r: unbound variable
+```
+
+**The loop is correct.** `_r=$(sed …); _r=${_r:-missing}` cannot raise an unbound
+reference under `set -u`; there is no `unset`, no trap, and bash here is 5.2.26.
+
+The real cause is that **bash re-reads a running script from a saved byte
+offset**, and this campaign edits `run_pr_chain_batch.sh` (the per-round env→TLA
+blocks) *while arms are in flight*. Three pieces of evidence, all consistent:
+
+- the script's mtime, **2026-08-31 19:54:22**, falls **18 s before** the last
+  write of the arm log that failed (`pr141-arm-onboth-nuecc48.log`, 19:54:40);
+- the reported line number **tracks the edits** — 2145 → 2149 → **2151** across
+  three arms, a two-line shift matching an insertion, not a fixed defect;
+- the failure lands on the *last* statement in the file, the one with the longest
+  exposure window.
+
+Reproduced directly (`/home/xqian/tmp/edittest.sh`, a 230 KB script edited one
+second into a three-second run):
+
+```
+./edittest.sh: line 3004: xxxxxxxxxxxxxxxxxxxx…: command not found
+```
+
+— bash resuming mid-token and executing a fragment of a comment line. With a
+different byte shift that fragment is a variable reference, and the message is
+`_r: unbound variable`.
+
+### 19.2 The fix, and it is verified by triggering it
+
+The whole body (everything after `set -u`) is wrapped in one compound command, so
+bash must **parse it all before executing anything** and a later edit cannot
+reach the run. The closing brace is unreachable — the body always exits — but is
+required to parse.
+
+| check | result |
+|---|---|
+| `bash -n run_pr_chain_batch.sh` | rc = 0 |
+| no-arg usage path, before vs after | **byte-identical output**, rc = 1 both |
+| brace-wrap under a mid-run edit (`edittest3.sh`) | tail ran correctly, **rc = 0** |
+| bare brace **without** a trailing `exit` | rc = 2 — bash resumes past the brace; the `exit` is load-bearing |
+
+And the doc pr/97 check itself, extracted and fed a synthetic `rc.txt` set (one
+`rc=0`, one `rc=250`, one file missing):
+
+```
+# evt=102 rc=250
+# evt=103 rc=missing
+SNIPPET rc=1
+```
+
+**It fires, it names the events, it exits 1.** It was always able to; it was
+simply never reached on the runs that tripped the offset.
+
+Because the wrap changes only *when bash parses*, and the guarded loop runs after
+the merge, the change can alter nothing but exit code and stderr — no arm output
+is affected and no gate is spent.
+
+---
+
+## 20. Item 4 — the μ-typed PID set, served with a pre-registered predictor
+
+`scripts/pr141_pidset.py` takes §9.5's single specimen to its whole population:
+**35 μ-typed (`|pdg| = 13`) objects above 50 MeV across the 239 events.** Six are
+already typed by hand (§9.5), leaving 29.
+
+A μ-typed object's `kine_charge` is priced under the **track** hypothesis, so a
+mis-typed EM object is low in `kine_reco_Enu` by the exact global constant
+`(0.87 × 0.95)/(0.58 × 0.86) = 1.657` — i.e. **0.657 × the stored energy is
+missing**. That is the ranking metric.
+
+### 20.1 The predictor, pre-registered before the set was served
+
+Two screens were tried on §9.5's six hand-typed objects:
+
+| screen | GAMMA (3) | TRACK (3) | |
+|---|---|---|---|
+| `kine_charge / kine_range` | 0.85, 1.55, 0.53 | 0.60, 0.29, 0.66 | **overlaps — rejected** |
+| **mean segment length `L/nseg`** | 10.7, 5.2, 35.1 cm | 40.3, 78.2, 42.4 cm | separates at ≈ 38 cm/seg |
+
+so the committed prediction is **`L/nseg < 40 cm ⇒ EM`**. A muon is one long
+segment; a shower branches. Plain length does **not** work — the highest-energy
+μ-typed objects are 300–500 cm cosmics carrying 3–6 kink segments — which is why
+the screen is the density and not the count.
+
+**The basis is n = 6 and it is weak in a specific way**: all three TRACKs are
+`nseg == 1`, so `L/nseg` reduces to plain length on that side and the 40 cm cut is
+effectively set by one object (280159/90098 at 40.3 cm). The density
+formulation's real claim — *a kinked muon still has long segments* — is untested,
+and this scan cannot test it either: only one served object (499577/13031,
+56.9 cm/seg) sits anywhere near the cut. That bounds what the result can conclude
+however the verdicts land.
+
+### 20.2 What was served
+
+**18 objects, blind**, ranked by energy at stake, tag `pidmu-0906-owner`, brief in
+`docs/pr/pr141-scan-brief-pid.md`. 14 are predicted-EM (1684 MeV of Enu at stake
+between them); **4 are predicted-TRACK controls and carry no information** —
+503/473/341/331 cm cosmics that nobody would call showers. The predictor must
+therefore be scored as **false-positive rate on the 14**, and the controls
+reported as confirming nothing.
+
+*Results pending the owner's scan; §21's totals do not include them.*
+
+---
+
+## 21. Campaign close
+
+### 21.1 The five items
+
+| item | verdict |
+|---|---|
+| 1 — refresh the π⁰ label store | **DONE, +1**. Census **36 of 66** on the shipped arm, denominator held at 66, one row moves, nothing regresses (§16) |
+| 2 — audit doc pr/139 §22.5 | **DONE**. The table reproduces exactly *from the tape*; the correction owed is **mine** (§17.2), and the restriction is now priced at 1 false fire removed against 4 confirmed cuts foreclosed (§17.3) |
+| 3 — the splitter trigger bar | **DONE**. Bar stated on 78 objects (§18.1); the misses are **acceptance (3) + assignment (1) + genuinely single-cored (1)**, not an absent observable (§18.2) |
+| 4 — `122660/54071` | **SCOPED and SERVED**. 35-object population, 1684 MeV at stake, blind 18-object set with a pre-registered predictor (§20). Verdicts pending |
+| 5 — the runner's dead failure check | **DONE**. The check was never broken; **mid-run edits** to the runner were. Fixed and verified by triggering both halves (§19) |
+
+### 21.2 What changed in production
+
+**Nothing.** No `clus` source changed this session; no knob moved; no arm was
+spent. The only executable change is `run_pr_chain_batch.sh`'s parse-before-run
+wrap, which cannot affect arm output (§19.2). The production configuration is
+still §11's.
+
+The one number that moves is the **instrument's**: the π⁰ census reads **36 of 66
+exact**, not 35, and it always did — the earlier figure was scored against a
+pairing the owner had superseded.
+
+### 21.3 The campaign's own error rate, since it is now measurable
+
+Across doc pr/139 §22–26 and doc pr/141, six published numbers turned out to be
+about the measurement rather than the reconstruction:
+
+1. two of nine "missing γs" were **id renames** (§3);
+2. one census row was scored against a **superseded pairing** (§16);
+3. §22.5's premise came from an **EM-enriched** label set (§17.3);
+4. §14's non-EM false-fire claim read the **wrong pdg source** (§17.2);
+5. §14.2's efficiency counted an **offline-kernel** accept as a fire (§17.4);
+6. §13.3 blamed a **correct loop** for a shell-level failure (§19.1).
+
+Four of the six are mine and were caught by re-deriving a published number from
+its primary source. **The method lesson of this campaign is that one: the tape,
+the arm and the committed script beat every reading of the code — including
+mine — and a table with no script behind it is a table nobody can check.**
+
+### 21.4 If the work resumes
+
+In order, and none of it is π⁰ clustering:
+
+1. **The μ-typed PID front** (§20) — the only open measurement, already served.
+   If mis-typing is common it is a `kine_reco_Enu` defect with a population and
+   an exact price, in a different subsystem from anything this campaign touched.
+2. **The splitter's `min_frac` refusal** (§18.2) — three confirmed cuts where the
+   seeds are already found. A measurement, against §18.1's bar, on the 71-object
+   set. Not a threshold to move on n = 3.
+3. **A committed producer for every published table.** §17.1 found one with no
+   script; there may be others.
+
+**Everything else this campaign priced is closed negative and should stay
+closed**: eleven knobs across doc pr/139 §22 and doc pr/141, the k = 3 recursion,
+the EM-only restriction, the seed-count trigger family, and the three μ-typed
+admission knobs.

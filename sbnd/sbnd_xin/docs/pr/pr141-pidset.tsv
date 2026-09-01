@@ -1,0 +1,38 @@
+# doc pr/141 sec 16 -- mu-typed PID set, arm work-pr140r2-off-*
+# predictor pre-registered: cm_per_seg < 40 => EM.  n=6 basis, sec 16.2
+sample	event	obj	kine_charge	kine_range	nseg	length	cm_per_seg	conn	predicted	run	subrun	already_typed	dump
+mcp1k	283713	17007	874.1	1139.3	4	503.0	125.8	1	TRACK	18255	1		work-pr140r2-off-mcp1k/pr_evt283713/calib-pr-evt283713.json
+mcp2k	99838	14004	795.3	1046.5	6	473.3	78.9	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt99838/calib-pr-evt99838.json
+mcp2k	499577	13031	554.5	746.9	6	341.5	56.9	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt499577/calib-pr-evt499577.json
+mcp2k	77328	16017	529.2	746.4	3	331.3	110.4	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt77328/calib-pr-evt77328.json
+mcp1k	292027	12005	467.1	667.0	3	294.4	98.1	1	TRACK	18255	1		work-pr140r2-off-mcp1k/pr_evt292027/calib-pr-evt292027.json
+mcp2k	318703	17023	455.2	635.7	3	279.0	93.0	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt318703/calib-pr-evt318703.json
+mcp1k	321767	15006	392.4	608.4	3	263.7	87.9	1	TRACK	18255	1		work-pr140r2-off-mcp1k/pr_evt321767/calib-pr-evt321767.json
+mcp2k	318769	65037	353.4	134.1	5	78.0	15.6	4	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt318769/calib-pr-evt318769.json
+mcp2k	294174	16028	327.2	3.8	9	159.4	17.7	1	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt294174/calib-pr-evt294174.json
+mcp2k	292524	9018	318.8	436.4	14	202.5	14.5	1	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt292524/calib-pr-evt292524.json
+mcp2k	55740	17000	317.6	418.6	2	178.0	89.0	3	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt55740/calib-pr-evt55740.json
+mcp2k	392901	15011	307.9	474.0	4	216.1	54.0	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt392901/calib-pr-evt392901.json
+mcp1k	292005	18005	275.4	394.9	3	171.9	57.3	1	TRACK	18255	1		work-pr140r2-off-mcp1k/pr_evt292005/calib-pr-evt292005.json
+mcp2k	397401	16012	275.1	334.1	5	159.7	31.9	1	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt397401/calib-pr-evt397401.json
+mcp2k	395597	20001	251.3	342.9	1	142.9	142.9	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt395597/calib-pr-evt395597.json
+mcp1k	278794	7002	241.9	307.6	2	126.4	63.2	1	TRACK	18255	1		work-pr140r2-off-mcp1k/pr_evt278794/calib-pr-evt278794.json
+mcp2k	281165	16006	236.0	301.7	4	129.9	32.5	1	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt281165/calib-pr-evt281165.json
+mcp1k	286681	72040	205.9	123.3	11	109.2	9.9	2	EM	18255	1		work-pr140r2-off-mcp1k/pr_evt286681/calib-pr-evt286681.json
+mcp2k	395597	20002	185.5	279.8	1	113.4	113.4	1	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt395597/calib-pr-evt395597.json
+mcp1k	283713	23011	168.4	108.6	11	57.3	5.2	2	EM	18255	1	GAMMA	work-pr140r2-off-mcp1k/pr_evt283713/calib-pr-evt283713.json
+mcp2k	392901	127030	160.3	190.3	6	82.3	13.7	2	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt392901/calib-pr-evt392901.json
+ncpi0	259542	81053	138.6	51.8	7	41.0	5.9	4	EM	18345	1		work-pr140r2-off-ncpi0/pr_evt259542/calib-pr-evt259542.json
+mcp2k	396323	10009	130.4	154.5	2	54.7	27.4	1	EM	18255	1		work-pr140r2-off-mcp2k/pr_evt396323/calib-pr-evt396323.json
+mcp2k	105074	23005	123.8	215.1	1	82.9	82.9	4	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt105074/calib-pr-evt105074.json
+mcp1k	282979	41018	122.4	19.7	10	27.9	2.8	4	EM	18255	1		work-pr140r2-off-mcp1k/pr_evt282979/calib-pr-evt282979.json
+nuecc48	122660	54071	102.6	121.1	5	53.6	10.7	2	EM	18255	1	GAMMA	work-pr140r2-off-nuecc48/pr_evt122660/calib-pr-evt122660.json
+mcp2k	350354	18009	100.2	188.0	2	70.2	35.1	3	EM	18255	1	GAMMA	work-pr140r2-off-mcp2k/pr_evt350354/calib-pr-evt350354.json
+mcp2k	105074	23004	99.6	162.0	1	58.2	58.2	4	TRACK	18255	1		work-pr140r2-off-mcp2k/pr_evt105074/calib-pr-evt105074.json
+mcp2k	176502	20005	85.1	73.5	3	19.5	6.5	4	EM	18259	1		work-pr140r2-off-mcp2k/pr_evt176502/calib-pr-evt176502.json
+mcp2k	392901	23017	83.7	127.4	1	42.4	42.4	2	TRACK	18255	1	TRACK	work-pr140r2-off-mcp2k/pr_evt392901/calib-pr-evt392901.json
+mcp1k	348691	51080	79.8	103.5	2	31.9	16.0	2	EM	18255	1		work-pr140r2-off-mcp1k/pr_evt348691/calib-pr-evt348691.json
+nuecc48	235435	2024	79.3	38.1	3	8.7	2.9	1	EM	18255	1		work-pr140r2-off-nuecc48/pr_evt235435/calib-pr-evt235435.json
+mcp2k	280159	90098	73.5	122.5	1	40.3	40.3	3	TRACK	18255	1	TRACK	work-pr140r2-off-mcp2k/pr_evt280159/calib-pr-evt280159.json
+mcp2k	294174	25030	59.8	205.1	1	78.2	78.2	3	TRACK	18255	1	TRACK	work-pr140r2-off-mcp2k/pr_evt294174/calib-pr-evt294174.json
+mcp2k	170098	70030	51.0	54.4	9	16.9	1.9	2	EM	18259	1		work-pr140r2-off-mcp2k/pr_evt170098/calib-pr-evt170098.json
