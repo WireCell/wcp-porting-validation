@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """doc pr/141 item 3 -- why the nine hand pi0 pairs reconstruct at the wrong mass.
 
+SUPERSEDED IN PART.  The geometry model below (which branch of `local_dirs` each
+gamma takes) was REFUTED by the finder's own tape on its first event: for 168432
+the model predicted the axis branch and m = 101.6, and
+`PI0_PAIR P1 pair sh1=22006 sh2=49028 ... m=53.5` says the ray branch.  The
+dump's `start_vertex_id` is not what `get_svc()` compares against `cand_vtx`.
+Use `scripts/pr141_pairtape.py` for the finder's mass; what remains useful here
+is the energy bookkeeping (label vs arm `kine_charge`), the "what would have to
+move" arithmetic and the alternative-partner search.
+
 READ-ONLY (CLAUDE.md M13).  Writes only its own --tsv.
 
 doc pr/139 sec 26.3 closed with nine events in the class "pair found, mass
@@ -27,9 +36,15 @@ adjudicate what is left.  Per event it prints:
   * the best alternative partner for each hand gamma among the event's EM
     showers, under the vertex convention.
 
-Energies: labels are scan-time (kine_shower_fudge_factor 0.80); the arm runs at
-0.86, so every label energy is multiplied by 0.80/0.86 and every mass with it
-(mass goes as sqrt(E1 E2), so mass scales by the same factor).
+Energies: the finder's mass uses `get_kq(shower)` = `Shower::get_kine_charge()`
+(NeutrinoShowerClustering.cxx:7368), i.e. the ARM's own charge for that shower
+-- which is the dump's `kine_charge`, NOT the scan-time label energy rescaled.
+The two differ by up to ~13 % on the same shower (evt 21073 g1: label-rescaled
+703 vs dump 635), and the class-A verdicts sit within 10 MeV of a window edge,
+so the dump value is the one the finder's mass is built from here.  The
+label-rescaled energy (0.80 -> 0.86) is still printed, as `E_lab`, because a
+large label/dump gap is itself a signal that the object moved between the scan
+arm and this one.
 
     python3 scripts/pr141_massfail.py --tsv docs/pr/pr141-massfail.tsv
 """
@@ -122,6 +137,7 @@ def main():
                 nmem=len(gg.get("members") or []),
                 pid_lab=gg.get("particle_id"),
                 e_dump=(d or {}).get("kine_best"),
+                e_kq=(d or {}).get("kine_charge"),
                 conn=(d or {}).get("start_connection_type"),
                 pid=(d or {}).get("particle_id"),
                 length=(d or {}).get("total_length"),
@@ -133,8 +149,10 @@ def main():
         # the label's own two conventions, rescaled to the arm
         th_ax = pio.get("theta_axis_convention")
         th_vx = pio.get("theta_vertex_convention")
-        m_ax = (pio.get("mass_axis_convention") or 0) * SCALE or None
-        m_vx = (pio.get("mass_vertex_convention") or 0) * SCALE or None
+        m_ax = pi0_mass(gs[0]["e_kq"], gs[1]["e_kq"], th_ax)
+        m_vx = pi0_mass(gs[0]["e_kq"], gs[1]["e_kq"], th_vx)
+        m_ax_lab = (pio.get("mass_axis_convention") or 0) * SCALE or None
+        m_vx_lab = (pio.get("mass_vertex_convention") or 0) * SCALE or None
 
         # the finder's own hybrid: init_dir when attached to the vertex
         # (conn_type 1), vertex->start ray when associated.
@@ -146,7 +164,8 @@ def main():
                 dirs.append(("ray", vsub(gg["start"], vtx)))
         branch = "%s/%s" % (dirs[0][0], dirs[1][0])
         th_hy = ang_deg(dirs[0][1], dirs[1][1])
-        m_hy = pi0_mass(gs[0]["e_arm"], gs[1]["e_arm"], th_hy)
+        # the finder's own energies: dump kine_charge, not the rescaled label
+        m_hy = pi0_mass(gs[0]["e_kq"], gs[1]["e_kq"], th_hy)
 
         # what would have to move.  mass ~ sqrt(E1 E2) sin(th/2).
         need_eprod = (135.0 / m_hy) ** 2 if m_hy else None
@@ -231,6 +250,9 @@ def main():
         rows.append(dict(
             hand_delta=hand_delta, compete=compete,
             event=ev, sample=sample, cls=cls, pio_tag=used_tag,
+            m_axis_lab=m_ax_lab, m_vtx_lab=m_vx_lab,
+            e1_kq=gs[0]["e_kq"], e2_kq=gs[1]["e_kq"],
+            e1_lab=gs[0]["e_arm"], e2_lab=gs[1]["e_arm"],
             g1=gs[0]["sid"], e1=gs[0]["e_arm"], conn1=gs[0]["conn"],
             len1=gs[0]["length"], nseg1=gs[0]["nseg"], pid1=gs[0]["pid"],
             g2=gs[1]["sid"], e2=gs[1]["e_arm"], conn2=gs[1]["conn"],
@@ -251,7 +273,8 @@ def main():
            "th_axis", "m_axis", "th_vtx", "m_vtx", "th_hybrid", "m_hybrid",
            "need_eprod", "need_theta", "theta_reachable", "in_window",
            "branch", "vertex_how", "svtx1", "svtx2", "main_vtx_id",
-           "hand_delta", "compete",
+           "hand_delta", "compete", "m_axis_lab", "m_vtx_lab",
+           "e1_kq", "e2_kq", "e1_lab", "e2_lab",
            "reco_pi0", "shares_gamma", "alt1", "alt2", "e1_dump", "e2_dump"]
 
     def fmt(v):
@@ -266,10 +289,12 @@ def main():
     for r in rows:
         print("=== evt %d (%s, %s)  pio from %s" % (
             r["event"], r["sample"], r["cls"], r["pio_tag"]))
-        print("    g1 %6d  E=%6.1f MeV  conn=%s  len=%5.1f cm  nseg=%s  pdg=%s"
-              % (r["g1"], r["e1"], r["conn1"], r["len1"] or 0, r["nseg1"], r["pid1"]))
-        print("    g2 %6d  E=%6.1f MeV  conn=%s  len=%5.1f cm  nseg=%s  pdg=%s"
-              % (r["g2"], r["e2"], r["conn2"], r["len2"] or 0, r["nseg2"], r["pid2"]))
+        print("    g1 %6d  E_kq=%6.1f (E_lab=%6.1f) MeV  conn=%s  len=%5.1f cm  nseg=%s  pdg=%s"
+              % (r["g1"], r["e1_kq"] or 0, r["e1_lab"], r["conn1"],
+                 r["len1"] or 0, r["nseg1"], r["pid1"]))
+        print("    g2 %6d  E_kq=%6.1f (E_lab=%6.1f) MeV  conn=%s  len=%5.1f cm  nseg=%s  pdg=%s"
+              % (r["g2"], r["e2_kq"] or 0, r["e2_lab"], r["conn2"],
+                 r["len2"] or 0, r["nseg2"], r["pid2"]))
         print("    theta  axis %6.1f deg -> m %6.1f | vertex %6.1f deg -> m %6.1f "
               "| FINDER(hybrid) %6.1f deg -> m %6.1f  %s"
               % (r["th_axis"] or 0, r["m_axis"] or 0, r["th_vtx"] or 0,

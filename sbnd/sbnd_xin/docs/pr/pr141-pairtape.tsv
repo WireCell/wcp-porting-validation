@@ -1,0 +1,10 @@
+event	g1	g2	n_pair_rows	m_finder	accepted	verdict
+168432	22006	49028	1	53.5	19032+49028 m=156.8	pair formed at m=53.5 -- OUTSIDE (100,160)
+280159	24015	95114	1	73.6	12119+24015 m=131.5	pair formed at m=73.6 -- OUTSIDE (100,160)
+71872	79074	64044	0		13008+79074 m=129.4	PAIR NEVER FORMED: g64044 rejected at assoc (angle 73.3/70.4/38.7, acc=0)
+21073	60081	63100	1	190.5	34027+60081 m=106.1; 11008+63100 m=102.0	pair formed at m=190.5 -- OUTSIDE (100,160)
+286655	19006	80055	2	205.4	none	pair formed at m=205.4 -- OUTSIDE (100,160)
+348691	49046	50073	1	276.9	50073+52089 m=141.8	pair formed at m=276.9 -- OUTSIDE (100,160)
+397630	19010	33038	2	114.4	15047+19010 m=111.5	pair formed at m=114.4, IN WINDOW, but lost: not accepted
+409634	21002	69032	1	77.4	none	pair formed at m=77.4 -- OUTSIDE (100,160)
+283713	67051	47021	2	99.9	none	pair formed at m=99.9 -- OUTSIDE (100,160)
