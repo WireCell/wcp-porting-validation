@@ -2,9 +2,10 @@
 
 **Status:** merge landed (toolkit `f439a109`); SBND PR chain gated
 **byte-identical on 308 events**.  Output knobs all **DEFAULT TO TODAY'S
-BEHAVIOUR**; the operating point is unchanged and `prod_cfg_gate.py` PASSes
-21/21 consumers untouched.  One knob, `save_in_scope`, is a *content* change and
-ships DEFAULT OFF pending an owner flip (§4.6).
+BEHAVIOUR** and are compiled-config-neutral.  One knob, `save_in_scope`, is a
+*content* change: C++ default stays `false`, and it is **SBND PRODUCTION ON**
+on the owner's ask (§4.6) — the one intended change to the operating point,
+pinned in `ref/prod-2026-09-01b/`.
 
 Owner ask, three parts:
 
@@ -76,7 +77,7 @@ so a typo (`SBND_PR_BEE=no`) fails **safe** — it keeps writing.
 
 | set this | and you stop writing | GB / 1000 evt |
 |---|---|---|
-| `PR_MINIMAL_OUTPUT=1` | `mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz` + calib | **2.76** |
+| `PR_MINIMAL_OUTPUT=1` | `mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz` (+ calib, if `pr_display` was on) | **2.48** |
 | `SBND_PR_BEE=0` | `pr_evt<ID>/mabc-pr.zip` | 0.24 |
 | `SBND_PR_PCTREE=0` | `pr_evt<ID>/pctree-pr-evt<ID>.tar.gz` | 2.24 |
 | `SBND_PR_CALIB=0` | `calib-pr-evt<ID>.json` (already opt-in) | 0.28 |
@@ -348,21 +349,42 @@ what makes `SBND_PR_BEE=0` survivable.
 | NCπ⁰ | 19 / 19 | `T_cluster` | PASS 38/38 byte-identical |
 | mcp1k | 241 / 241 | `T_cluster` | PASS 482/482 byte-identical |
 
-### 4.6 Shipping status — DEFAULT OFF, awaiting an owner flip
+### 4.6 Shipping status — C++ default OFF, SBND production ON
 
-`save_in_scope` **adds** a tree, so it is a content change: `tracking-pr.root`
-stops being byte-identical to every arm recorded before doc 87.  It therefore
-ships C++-default `false`, key-suppressed, and pinned by
-`root/test/doctest_sbnd_pr_tracking_defaults.cxx`.  Knob-off gates: **616/616
-archives byte-identical, 308/308 ROOT identical, `prod_cfg_gate.py` 21/21.**
+`save_in_scope` **adds** a tree, so it is a content change.  It ships C++-default
+`false`, key-suppressed, pinned by
+`root/test/doctest_sbnd_pr_tracking_defaults.cxx`; knob-off gates were **616/616
+archives byte-identical, 308/308 ROOT identical, `prod_cfg_gate.py` 21/21**.
 
-**It is not flipped.**  The owner asked for the information to be in the ROOT
-file, and the measurement says it can be — but flipping a default is a separate,
-owner-recorded step (CLAUDE.md §5.1), and it should land in its own commit
-quoting the request.  `SBND_PR_BEE=0` auto-enables it for the run that needs it,
-so nothing is blocked meanwhile.
+It is then **flipped ON for the SBND job**, on the owner's ask:
 
----
+> *"Can we fix this problem, I think we want the final rootfile for each event
+> to contain this information?"*
+
+The old reference recorded the flip before being superseded — exactly one key,
+which is what a tripwire is for:
+
+```
+DRIFT     : prod_prjob.json
+  ADDED   [24].data.save_in_scope = True
+```
+
+**Flip-equivalence** (the `pr-round` §5 pattern — post-flip config, no env,
+against the validated env-driven ON arm): NCπ⁰ 19 + nueCC 48,
+`pr85_hash_gate` PASS 38/38 and 96/96, `pr94_root_gate` **PASS** (so
+`tracking-pr.root` including `T_cluster` is byte-identical too), `nusel-table.tsv`
+0-line diff, and the acceptance test still **67/67**.
+
+New operating-point reference: **`ref/prod-2026-09-01b/`**.  `prod_cfg_gate.py`
+uses the newest `ref/prod-*`, so it is now the default; `ref/prod-2026-09-01`
+is left untouched as doc 77 round 4's record (M13).
+
+> **CONSEQUENCE — a ROOT gate across this epoch boundary will FAIL, correctly.**
+> `tracking-pr.root` now carries a tree no pre-doc-87 arm has, so
+> `pr94_root_gate.py <pre-doc-87 arm> <new arm>` fails on the tree list.  That is
+> expected, not a regression.  Use `scripts/pr87_root_tree_diff.py`, which
+> compares every **shared** tree NaN-aware and names extra trees separately.
+> Arms from this point on compare to each other normally.
 
 ## 5. The knobs, and what each one costs you
 
@@ -405,7 +427,7 @@ nothing measurable — but see §5.3.
 | you set | you lose |
 |---|---|
 | `PR_MINIMAL_OUTPUT=1` | the Bee event display, the calib dump, and any *later* re-analysis that wants the post-PR tree.  `nusel-evt<ID>.tsv`, `nusel-table.tsv` and `tracking-pr.root` are all intact. |
-| `SBND_PR_BEE=0` | the Bee display; **and the in-scope set unless `save_in_scope` is on** — the runner therefore defaults it on for you (an explicit `SBND_PR_SAVE_IN_SCOPE` still wins) |
+| `SBND_PR_BEE=0` | the Bee display.  The in-scope set survives in `T_cluster` (`save_in_scope` is production ON since §4.6); the runner also defaults it on per-run if it were ever off, and an explicit `SBND_PR_SAVE_IN_SCOPE` still wins |
 | `SBND_PR_PCTREE=0` | authoritative flags (nusel falls back to the log), any re-run of the PR chain from its own output, and `pr85_hash_gate.py` coverage of that product |
 | `SBND_PR_CALIB=0` | every `scripts/pr1[2-4]x_*.py` census — they read the calib JSON and nothing else does |
 | `SBND_QL_ALLAPA_BEE=0` | `nusel_extract.py --qlbee`, the optional per-merge-component geometry cross-check (group mode already runs without it) |
@@ -419,7 +441,33 @@ nothing measurable — but see §5.3.
 > but it has to be said out loud, because a future round that quietly adopts the
 > production line for a gate arm would get a vacuous PASS.
 
-### 5.4 Failure mode is safe by construction
+### 5.4 Two traps these knobs walked into, and how they are closed
+
+Both were found by review after the arms passed, and both would have shipped
+silently.
+
+- **`SBND_PR_CALIB=0` was not config-neutral.**  The `vertex_scoreboard`
+  auto-set keys off `PR_EXTRA_STAGES`, not the final pipeline, so
+  `PR_EXTRA_STAGES=pr_display SBND_PR_CALIB=0` stripped the dump stage but still
+  set `vertex_scoreboard=true` — a board computed with nothing to write it into,
+  and a TLA a default run does not carry.  Measured: that arm's compiled config
+  differed from the default; it now differs by **0 lines** (arm-path normalized)
+  while the positive control `PR_EXTRA_STAGES=pr_display` alone differs by 30.
+  The auto-set is now gated on `SBND_PR_CALIB` too, and — **ordering is
+  load-bearing** — `PR_MINIMAL_OUTPUT`'s `SBND_PR_CALIB:=0` had to move *above*
+  both the pipeline strip and the auto-set, or `PR_MINIMAL_OUTPUT=1
+  PR_EXTRA_STAGES=pr_display` would have written the calib dump it was told to
+  drop.
+
+- **`SBND_QL_KEEP_ICLUSTER=0` swept the whole batch root from inside a per-group
+  function.**  `run_group()` runs `SBND_MAX_JOBS` (default 4) concurrently, and
+  a `find "$OUTROOT" -maxdepth 2 -delete` reaches every *other* group's
+  `evt<ID>/` — deleting its products, possibly mid-`split_group_products.py`.
+  It is now scoped to the group's own `events.txt`.  Proven on a synthetic
+  two-group tree: group 0 removed exactly its own 3 files and left group 1's
+  entirely alone.
+
+### 5.5 Failure mode is safe by construction
 
 Every knob is read as `[ "${VAR:-1}" = 0 ]`.  Unset, empty, `no`, `false`, `off`
 all leave the output ON.  Only the literal `0` disables.  An unset knob appends
@@ -459,6 +507,9 @@ every exit code taken directly, never through a pipe (M14).
 | minimal | nueCC 48 | 0-line diff | 48/48 byte-identical | 0/48 | 0/48 | 0/48 |
 | suppress | NCπ⁰ 19 | 0-line diff | 19/19 byte-identical | 0/19 | 0/19 | 0/19 |
 | suppress | nueCC 48 | 0-line diff | 48/48 byte-identical | 0/48 | 0/48 | 0/48 |
+
+(The calib columns are `0/n` in the default arm too — those arms ran without
+`pr_display` at all, so they say nothing about `SBND_PR_CALIB`; §6.5 does.)
 
 Both leave exactly `nusel-evt<ID>.tsv`, `tracking-pr.root`, `rc.txt`,
 `stdout.log`, `wct_pr_evt<ID>.log` — and **no `trash-pr.tar.gz`** (§6.5).
@@ -514,7 +565,24 @@ from the very product the knob suppresses.
 > on `mabc-pr.zip` gives **19/19 identical**.  This is the concrete reason a
 > validation arm must never adopt the production line.
 
-### 6.5 Unit tests
+### 6.5 The calib knob, exercised where it actually matters
+
+Every arm in §6.1-6.2 ran *without* `pr_display`, so their `0/19` calib rows
+prove nothing about `SBND_PR_CALIB` — the strip had no `pr_display` to strip.
+Four single-event runs on NCπ⁰ 37112 settle it (compiled config compared with
+the arm's own output paths normalized away):
+
+| run | calib written | `vertex_scoreboard` TLA | cfg vs plain default |
+|---|---|---|---|
+| `PR_EXTRA_STAGES=pr_display` (positive control) | **yes** | `true` | 30 lines — as it must |
+| `+ SBND_PR_CALIB=0` | no | *absent* | **0 lines** |
+| plain default | no | *absent* | — |
+| `PR_MINIMAL_OUTPUT=1 PR_EXTRA_STAGES=pr_display` | no | *absent* | **0 lines** |
+
+The last row is the combination the ordering bug in §5.4 broke; it is the reason
+that fix is not cosmetic.
+
+### 6.6 Unit tests
 
 | binary | result |
 |---|---|
@@ -529,7 +597,7 @@ Two new default pins: `bee_zip` must stay non-empty
 (`doctest_clus_knob_defaults.cxx`) and `save_in_scope` must stay false
 (`doctest_sbnd_pr_tracking_defaults.cxx` — new).
 
-### 6.6 GOTCHA — the pctree knob leaves a file behind unless the runner sweeps it
+### 6.7 GOTCHA — the pctree knob leaves a file behind unless the runner sweeps it
 
 `save_tensors=''` puts `TensorFileSink` in `dump_mode`, which writes nothing —
 but `TensorFileSink::configure` opens the output stream **unconditionally** for a
@@ -550,6 +618,7 @@ it too.  Verified absent in every arm above.
 | `5d924ab9` | `util/test/doctest_response.cxx`, `gen/test/doctest_powerbox_recombination.cxx` — repair two upstream-broken tests (§1.2) |
 | `d84352c7` | `SbndPrMagnifyTrackingVisitor` + `T_cluster`, `save_in_scope` TLA, `root/test/doctest_sbnd_pr_tracking_defaults.cxx` (new) — **DEFAULT OFF** |
 | `b7c9aff4` | `MultiAlgBlobClustering` empty-`bee_zip` guard, `pr_bee` / `perface_bee` / `allapa_bee`, `bee_zip` default pinned — **all DEFAULT ON** |
+| (flip) | `wct-pr-perevt.jsonnet` `save_in_scope = true` — **SBND PRODUCTION ON**, with `ref/prod-2026-09-01b/` as the new pinned operating point |
 
 No other experiment's config is touched.  No pre-existing C++ default is changed.
 
@@ -567,17 +636,16 @@ gates —
 
 ## 8. Next
 
-1. **Flip `save_in_scope` ON** (§4.6).  It is measured, gated, and it is what the
-   owner asked for; it needs only an explicit word, and should land in its own
-   commit quoting it.  Until then `SBND_PR_BEE=0` turns it on per-run.
-2. **Correct the two `use_power_recomb=false` comments** (§1.5) — they now
+1. **Correct the two `use_power_recomb=false` comments** (§1.5) — they now
    promise a byte-identity that the merge removed.
-3. **Decide on uBooNE and the Box fix** (§1.5).  Nothing in this tree is exposed,
+2. **Decide on uBooNE and the Box fix** (§1.5).  Nothing in this tree is exposed,
    but the frozen reference's dQ/dx→dE/dx would move ~2× if anything ever ran it.
-4. Optional: widen `T_cluster` consumers.  `nusel_extract.py` reads only
+3. Optional: widen `T_cluster` consumers.  `nusel_extract.py` reads only
    `in_scope` today; the tree already carries the flags, flash and geometry that
    the rest of the nusel row is rebuilt from, so a later round could drop the
    `--pctree`/`--qlbee` dependencies too and make `tracking-pr.root` genuinely
    self-sufficient.
 
-**Doc 87 status: parts 1-3 DONE, gated, and byte-identical at every default.**
+**Doc 87 status: parts 1-3 DONE and gated.**  Every knob's default path is
+byte-identical; the single intended change to the operating point is
+`save_in_scope` (§4.6), pinned in `ref/prod-2026-09-01b/`.

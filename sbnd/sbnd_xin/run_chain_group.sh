@@ -322,13 +322,27 @@ print(v[0], v[1])' "$GDIR/rse.json")
     # post-mortem.  Regenerating them means re-running imaging (M11: never borrow
     # someone else's npz).
     if [ "${SBND_QL_KEEP_ICLUSTER:-1}" = 0 ]; then
+        # SCOPE: this group's OWN events only.  run_group() runs SBND_MAX_JOBS
+        # (default 4) at a time, so a sweep over $OUTROOT at maxdepth 2 would
+        # reach into a CONCURRENT group's evt<ID>/ -- deleting its products,
+        # possibly while its split_group_products.py is still writing them.
+        # events.txt is this group's list and is already read above.
         # ql_evt<ID>/icluster-*.npz are SYMLINKS into evt<ID>/, so the real
-        # files go first and the now-broken links (-xtype l) go after -- leaving
+        # files go first and the now-broken links (-xtype l) after -- leaving
         # dangling links behind would make a later run look like it has inputs.
-        local _n
-        _n=$(find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -type f 2>/dev/null | wc -l)
-        find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -type f -delete 2>/dev/null
-        find "$GDIR" "$OUTROOT" -maxdepth 2 -name 'icluster-apa*.npz' -xtype l -delete 2>/dev/null
+        local _n=0 _e _d
+        # the group dir's own copies first (one set for the whole group)
+        _n=$(find "$GDIR" -maxdepth 1 -name 'icluster-apa*.npz' -type f 2>/dev/null | wc -l)
+        find "$GDIR" -maxdepth 1 -name 'icluster-apa*.npz' -type f -delete 2>/dev/null
+        while read -r _e; do
+            [ -n "$_e" ] || continue
+            for _d in "$OUTROOT/evt$_e" "$OUTROOT/ql_evt$_e"; do
+                [ -d "$_d" ] || continue
+                _n=$((_n + $(find "$_d" -maxdepth 1 -name 'icluster-apa*.npz' -type f 2>/dev/null | wc -l)))
+                find "$_d" -maxdepth 1 -name 'icluster-apa*.npz' -type f -delete 2>/dev/null
+                find "$_d" -maxdepth 1 -name 'icluster-apa*.npz' -xtype l -delete 2>/dev/null
+            done
+        done < "$GDIR/events.txt"
         echo "[g$K] doc 87: removed $_n icluster npz + their symlinks (SBND_QL_KEEP_ICLUSTER=0)"
     fi
 

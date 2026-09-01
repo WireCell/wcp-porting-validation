@@ -175,6 +175,17 @@ if [ -n "${PR_EXTRA_STAGES:-}" ]; then
     PIPELINE="$PIPELINE,$PR_EXTRA_STAGES"
 fi
 
+# doc 87: normalize the master switch HERE, before anything reads SBND_PR_CALIB.
+# Ordering is load-bearing: the pipeline strip below and the scoreboard auto-set
+# further down both read it, so defaulting it later would leave
+# `PR_MINIMAL_OUTPUT=1 PR_EXTRA_STAGES=pr_display` writing the calib dump it was
+# asked to drop.
+: "${PR_MINIMAL_OUTPUT:=}"
+case "$PR_MINIMAL_OUTPUT" in
+    1|true|yes) PR_MINIMAL_OUTPUT=1; : "${SBND_PR_CALIB:=0}" ;;
+    *)          PR_MINIMAL_OUTPUT=0 ;;
+esac
+
 # doc 87: SBND_PR_CALIB=0 drops the calib dump even when PR_EXTRA_STAGES asked
 # for it, so the three output knobs have one uniform surface.  PrDisplayDump is
 # opt-in already, so with the stage absent nothing is instantiated -- this is a
@@ -195,8 +206,15 @@ fi
 # claim -- a pr_display arm hashes identically to a plain one -- intact.
 # SBND_VERTEX_SCOREBOARD set explicitly always wins, including =0/false to
 # reproduce a pre-pr/75 dump.
+# doc 87: gate this on SBND_PR_CALIB too.  The board is consumed ONLY by
+# PrDisplayDump, so with SBND_PR_CALIB=0 stripping that stage the auto-set would
+# compute a scoreboard nothing writes out AND leave a vertex_scoreboard TLA in
+# the compiled config that a plain default run does not have -- i.e. the knob
+# would not be config-neutral.  Measured: without this, arm B (pr_display +
+# SBND_PR_CALIB=0) carried "vertex_scoreboard" : true while the default arm
+# carried no such key.
 case ",${PR_EXTRA_STAGES:-}," in
-    *,pr_display,*) : "${SBND_VERTEX_SCOREBOARD:=true}" ;;
+    *,pr_display,*) [ "${SBND_PR_CALIB:-1}" = 0 ] || : "${SBND_VERTEX_SCOREBOARD:=true}" ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -216,11 +234,6 @@ esac
 # peak is one event's worth, and -- unlike suppression -- nusel-evt<ID>.tsv keeps
 # its AUTHORITATIVE pctree-derived flags instead of the tear-prone log fallback,
 # and the group-mode per-event verdict below keeps working unchanged.
-: "${PR_MINIMAL_OUTPUT:=}"
-case "$PR_MINIMAL_OUTPUT" in
-    1|true|yes) PR_MINIMAL_OUTPUT=1; : "${SBND_PR_CALIB:=0}" ;;
-    *)          PR_MINIMAL_OUTPUT=0 ;;
-esac
 
 # Suppressing the Bee zip at source costs the in-scope cluster set, which
 # nusel_extract.py needs -- unless save_in_scope has put it in T_cluster.  So
