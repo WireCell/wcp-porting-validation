@@ -46,8 +46,21 @@ work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protect
 # RELEASED 2026-08-19 (pass 2), see the RETIRED section: the four work-cbr3-*
 # arms are superseded by prod0819 end-to-end.  Line kept commented so the
 # parser stops protecting them; the provenance is at the bottom.
-work-r1qlmc-vfcbr3on work-r2mc-vfcbr3on	post-flip Q/L for the two SIM samples; NOT reprocessed by prod0819, so cbr3on is still their latest	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
-work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	latest PR out-root for each SIM sample; reads the -vfcbr3on Q/L root above	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
+# RELEASED 2026-09-01b (doc 91), owner: "Peer is done, we can remove or
+# retire them" + "go minimum".  THE WHOLE r1qlmc/r2mc SIM CHAIN goes together --
+# both imaging hubs, both cb0805 Q/L hubs, both prod0813 PR arms, both -vfcbr3on
+# Q/L roots and both vf*-cbr3on out-roots (10 dirs, 438 MB).  Released as a CHAIN
+# so closure is preserved in both directions rather than by exempting a link.
+# Grounds: neither sample is in the production four (nuecc48/ncpi0/mcp1k/mcp2k),
+# nothing has written or read them since 2026-08-17, and the ":5017/:5018 LIVE"
+# protection this file recorded had ALREADY lapsed -- the note two blocks above
+# says so in its own words.
+# COST, stated: the r1qlmc and r2mc samples leave the tree entirely.  There is no
+# PR product, no Q/L root and no imaging for either after this round; re-entering
+# them means imaging from reco1.  doc pr/76's campaign numbers become text-only.
+# work-r1qlmc-vfcbr3on work-r2mc-vfcbr3on	post-flip Q/L for the two SIM samples; NOT reprocessed by prod0819, so cbr3on is still their latest	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
+# part of the same chain -- see the block on the line above.
+# work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	latest PR out-root for each SIM sample; reads the -vfcbr3on Q/L root above	doc 73 sec.12.5, docs/work-tags.md 2026-08-19
 
 # --- the r1qlmc/r2mc prod0813 family (added 2026-08-13, still active) -----
 # 2026-08-19: THE VIEWER PIN IS RELEASED.  Owner, asked directly during the
@@ -66,7 +79,8 @@ work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	latest PR out-root for each SIM sample; 
 # viewer to check first.
 # No pr83/85/86/87 arm exists for either MC sample -- prod0813 remains their
 # latest and only PR product.  Also LIVE on the bokeh viewers, ports 5017/5018.
-work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 campaign; only surviving PR products for either MC sample; LIVE on bokeh :5017/:5018	doc pr/76
+# part of the same chain -- see the r1qlmc/r2mc block above.
+# work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 campaign; only surviving PR products for either MC sample; LIVE on bokeh :5017/:5018	doc pr/76
 
 # --- the prod0819 single-epoch baseline (added 2026-08-19) ----------------
 # doc pr/95.  The FIRST product in this tree where Q/L and PR come from ONE
@@ -237,14 +251,37 @@ work-nuecc48-prod0901b work-ncpi0-prod0901b work-mcp1k-prod0901b work-mcp2k-prod
 # RELEASE CONDITION, written down so it is a decision and not an inference:
 # these go when doc 87 has a settled successor round that re-establishes sec
 # 6.1 and sec 6.2 at production scale -- not merely when doc 87 is "closed".
-work-87scope-on-mcp1k work-87scope-on-ncpi0 work-87scope-on-nuecc48	doc 87 sec 4 save_in_scope acceptance (308/308)	doc 87
-work-87tc-off-mcp1k work-87tc-off-ncpi0 work-87tc-off-nuecc48	doc 87 sec 1.4 pre-merge baseline	doc 87
-work-87mrg-post-mcp1k work-87mrg-post-ncpi0 work-87mrg-post-nuecc48	doc 87 sec 1.4 post-merge gate arm	doc 87
-work-87knob-def-mcp1k work-87knob-def-ncpi0 work-87knob-def-nuecc48	doc 87 sec 6.1 knobs-at-defaults gate arm	doc 87
+# RELEASED 2026-09-01b (doc 91).  THE RELEASE CONDITION THIS FILE WROTE ON
+# 2026-09-01 IS MET FOR THESE TWELVE, and only for these twelve.  It read: "these
+# go when doc 87 has a settled successor round that re-establishes sec 6.1 and
+# sec 6.2 at production scale -- not merely when doc 87 is closed."
+# sec 6.1 and sec 1.4 ARE re-established, at 3067 events instead of 482, and not
+# by inference: doc 89's successor gate compared work-*-prod0901 (toolkit
+# ddce7430, which PREDATES the doc-87 knobs entirely) against work-*-prod0901b
+# (knobs present, at their defaults, post-merge) and found every shared product
+# identical on all 3067 events.  "Knobs at their defaults change nothing" and
+# "the merge changes nothing" are exactly what that measured.  The evidence
+# survives the arms: scripts/retire/state-20260901/successor-gate.tsv, one row
+# per event, which is what makes the claim re-checkable after the arms are gone.
+# sec 6.2 is NOT re-established -- prod0901b ran FULL output -- so
+# work-87knob-{min,sup}-* stay, and so do the group-mode and flip arms.  The
+# condition was applied section by section, not to the block.
+# work-87scope-on-mcp1k work-87scope-on-ncpi0 work-87scope-on-nuecc48	doc 87 sec 4 save_in_scope acceptance (308/308)	doc 87
+# same twelve-arm release -- see the block above.
+# work-87tc-off-mcp1k work-87tc-off-ncpi0 work-87tc-off-nuecc48	doc 87 sec 1.4 pre-merge baseline	doc 87
+# same twelve-arm release -- see the block above.
+# work-87mrg-post-mcp1k work-87mrg-post-ncpi0 work-87mrg-post-nuecc48	doc 87 sec 1.4 post-merge gate arm	doc 87
+# same twelve-arm release -- see the block above.
+# work-87knob-def-mcp1k work-87knob-def-ncpi0 work-87knob-def-nuecc48	doc 87 sec 6.1 knobs-at-defaults gate arm	doc 87
 work-87knob-min-ncpi0 work-87knob-min-nuecc48 work-87knob-sup-ncpi0 work-87knob-sup-nuecc48	the ONLY minimal-output arms in the tree; doc 87 sec 6.2	doc 87
 work-87flip-ncpi0 work-87flip-nuecc48	doc 87 sec 4.6 flip-equivalence	doc 87
 work-87grp-def-ncpi0 work-87grp-min-ncpi0 work-87grp-nopct-ncpi0	doc 87 sec 6.4 group-mode arms	doc 87
-work-87calA-ncpi0 work-87calB-ncpi0 work-87calC-ncpi0 work-87cal2A-ncpi0 work-87cal2B-ncpi0 work-87cal2C-ncpi0 work-87cal2D-ncpi0	doc 87 sec 6.5 SBND_PR_CALIB matrix, 21 MB total	doc 87
+# RELEASED 2026-09-01b (doc 91).  The SBND_PR_CALIB matrix: 7 arms, 1 ncpi0
+# event each, 21 MB -- the worst dir-count-per-byte in the tree, which is what
+# this round was called to fix.  Re-runnable end to end from work-ncpi0-grp0825
+# (kept) by re-running the sec 6.5 matrix; it is a knob sweep, not a measurement
+# that cannot be repeated.  doc 87 sec 6.5's table stays as the record.
+# work-87calA-ncpi0 work-87calB-ncpi0 work-87calC-ncpi0 work-87cal2A-ncpi0 work-87cal2B-ncpi0 work-87cal2C-ncpi0 work-87cal2D-ncpi0	doc 87 sec 6.5 SBND_PR_CALIB matrix, 21 MB total	doc 87
 
 # --- the bare work/ dir (added 2026-09-01) --------------------------------
 # NOT an arm.  It matches the planner's d.startswith('work') discovery and
@@ -534,9 +571,22 @@ work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
 # work-pr117r1-onK1-{mcp2k,ncpi0,nuecc48} are NOT script defaults; they are
 # added so em_display/em117-117onK1-manifest.tsv resolves 98/98 rather than
 # 25/98, which keeps the 98-set display baseline whole for 558 MB.
-work-em114c-prodnow-mcp1k work-em114c-prodnow-mcp2k	hardcoded default arms in em_display/prep_pr121.py:15 (141-set display)	peer session 2026-08-29, verified by grep
-work-pr117r1-onK1-mcp1k	hardcoded default arm in em_display/prep_pr117.py:17,28 (98-set display)	peer session 2026-08-29, verified by grep
-work-pr117r1-onK1-mcp2k work-pr117r1-onK1-ncpi0 work-pr117r1-onK1-nuecc48	the other three samples of the same 98-set display baseline; keeps em117-117onK1-manifest.tsv whole (98/98) for 558 MB	docs/pr/117, 08-29 round
+# RELEASED 2026-09-01b (doc 91).  THE STATED GROUND WAS WRONG, and this round
+# checked it instead of inheriting it.  "hardcoded default arms in
+# em_display/prep_pr121.py:15" -- that line is a docstring USAGE example, not an
+# argparse default; `grep -n "default=" em_display/prep_pr121.py` matches no arm
+# name at all.  The same mis-read protected work-pr117r1-onK1-mcp1k on the line
+# below.  Both fall under the record-script rule, so they are ACKed in
+# plan_20260901b.py rather than kept.
+# The 141-set and 98-set displays are superseded anyway: em114c-134f086141- and
+# em117-134f08698-manifest.tsv, backed by the kept work-pr134-f086-* arms, are
+# the same event sets at the 0.86 EM scale that doc pr/135 made production.
+# work-em114c-prodnow-mcp1k work-em114c-prodnow-mcp2k	hardcoded default arms in em_display/prep_pr121.py:15 (141-set display)	peer session 2026-08-29, verified by grep
+# same mis-read -- see the block above.
+# work-pr117r1-onK1-mcp1k	hardcoded default arm in em_display/prep_pr117.py:17,28 (98-set display)	peer session 2026-08-29, verified by grep
+# RELEASED 2026-09-01b (doc 91).  em117-117onK1-manifest.tsv is retired from
+# LIVE_MANIFESTS with them and prints in ASSERT 11's STATED COST list.
+# work-pr117r1-onK1-mcp2k work-pr117r1-onK1-ncpi0 work-pr117r1-onK1-nuecc48	the other three samples of the same 98-set display baseline; keeps em117-117onK1-manifest.tsv whole (98/98) for 558 MB	docs/pr/117, 08-29 round
 #
 # 3. THE SENTINEL REGISTRY'S NEGATIVE CONTROL.  scripts/pr127_sentinels.py:31
 # names work-pr125r1-flipK5* as the canonical arm on which a sentinel is
@@ -570,4 +620,12 @@ work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the sa
 # while the plan ran -- work-pr130r1-gs1on-* and work-pr130r1-g1off141-*
 # appeared between the first census and the plan.
 work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0 work-pr130r1-probe98-nuecc48 work-pr130r1-probe141-mcp1k work-pr130r1-probe141-mcp2k	dump source for BOTH pr130q manifests and the census source for pr130_launder_scan.py; the 239-event blast-radius result is not reproducible without them	docs/pr/130, peer session 2026-08-29
-work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130
+# RELEASED 2026-09-01b (doc 91), the POSITIVE half only.  MEASURED, not
+# assumed: work-*-prod0901b was checked to contain all 30 pr127_sentinels.py
+# events itself (the suite locates an event by scanning arm roots for pr_evt<N>/,
+# and 30/30 resolve), so the suite runs against production and no longer needs
+# its own arms.  work-sent130-{mcp1k,mcp2k} existed because production used to be
+# an event SUBSET; it is not any more.  Re-derived by ASSERT 15 on every run.
+# The NEGATIVE controls stay, on the line below, and are now held by a prefix.
+# work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130
+work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel registry's NEGATIVE controls -- the only on-disk proof the suite CAN fail; regenerable by scripts/pr130_sentinel_neg34.sh but not re-derivable after the fact	docs/pr/127, docs/pr/130, doc 91

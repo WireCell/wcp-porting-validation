@@ -10,6 +10,20 @@ ls -1 | wc -l                    # 228 top-level entries after the 2026-08-29 ro
 # COUNT work* DIRS THROUGH THE REAL PATH, NOT THE SYMLINK -- see the 2026-08-13
 # section's "defect 4": toolkit/sbnd_xin is a symlink, and neither find nor du
 # descends a symlink argument, so both silently report 0 from there.
+# the 2026-09-01b round (doc 91): COUNT-driven, not byte-driven -- 101 -> 52
+# work* dirs.  Owner: "do we need all of them? ... it is just difficult to look
+# at them" + "Peer is done" + "We want to keep the latest production though".
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise.
+./scripts/pr127_sentinels.py --arms 'work-*-prod0901b'    # 27 PASS, 6 FAIL -- doc 91 sec 7, OPEN
+python3 scripts/retire/sentinel_guard_20260901b.py \
+        scripts/retire/state-20260901b/plan.json "$PWD"   # per-arm; 5 regressions, 2 single-witness
+python3 scripts/retire/verify_group_dupes_20260901b.py
+python3 scripts/retire/plan_20260901b.py                  # 16 asserts, "OVERALL: PASS"
+RETIRE_JOBS=32 python3 scripts/retire/archive_records_20260901b.py   # integrity PASS 49/49
+./scripts/retire/retire_20260901b.sh A                    # DRY RUN -- check dirs=/bytes= vs the plan
+RETIRE_REPLAN=1 python3 scripts/retire/plan_20260901b.py  # re-stamp planned_at (interlock 6)
+CONFIRM=yes ./scripts/retire/retire_20260901b.sh A        # 49 dirs
+#
 # the 2026-09-01 round (doc 89): the CLOSED pr/136-142 campaigns + doc 77 r3/r4,
 # and production REBASED onto the pinned operating point.  150G -> 66G.
 # EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise.
@@ -242,6 +256,59 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-09-01b (doc 91) — count-driven: 101 → 52 work dirs, 74.4G → 65.8G
+
+Full write-up: `docs/91_work-dir-minimisation.md`. The metric was **directory
+count**, not bytes — the owner's complaint was legibility, not disk. 7.08 GiB
+freed is a side effect.
+
+**Released, 49 dirs.** doc 90's 9 peer arms (owner released them by name); 19
+doc-87 arms (12 gate arms whose §6.1/§1.4 claims the doc-89 successor gate
+re-established at 3067 events instead of 482, plus the 7-arm `SBND_PR_CALIB`
+matrix, 21 MB — the worst count-per-byte in the tree); the r1qlmc/r2mc sim
+chain in full, 10 dirs; `work-sent130-{mcp1k,mcp2k}`; `pr117r1-onK1-*` and
+`em114c-prodnow-*`, 6; and 4 that were not really arms.
+
+**Kept, 52.** Production `prod0901b` ×4 and its `grp0825` input ×4; the label
+backing (`vtx105-base` ×4 for 878 label files, `em114`/`em114c` ×6 for 251,
+`pr130r1-probe*` ×6); `pr134-f086` ×4 and `pr125r1-flipK5*` ×6 and
+`sent130neg*` ×6 — all three held by §7 below; doc 87's remaining 9; and 3
+record dirs.
+
+**Three protections did not survive checking** (doc 91 §2): the old citation
+census counted previous retire *planners* as consumers, so an arm was protected
+because it had been protected; it was name-exact, so it scored `docs=0` for all
+28 doc-87 arms, which cite themselves as templates; and two "hardcoded default
+arm" protections were docstring **usage lines**, not argparse defaults.
+
+**Two dirs were not arms.** `work-nuecc48-prsmoke2` held 3 tracked runner
+scripts (→ `scripts/legacy/`) and its one consumer already pointed at a
+subdirectory that no longer existed. `work-stmcamp-d66new` held the tree's ONLY
+nusel label store (→ `./nusel_labels/d66flip/`, 22 tracked files, `git mv`) and
+its comparison partner had been retired rounds earlier.
+
+**OPEN FINDING — the reason the sentinel arms were not collapsed to zero.**
+`./scripts/pr127_sentinels.py --arms 'work-*-prod0901b'` is **27 PASS, 6 FAIL**.
+Five are regressions with a surviving witness arm; 393505 is red everywhere
+(a 0.1 MeV Enu miss, i.e. drift). For 406125 the knob is still ON and the C++
+log line still exists — the fix simply no longer fires, which is the doc pr/127
+failure mode recurring. **137238 and 292643 have exactly ONE passing arm each**
+(`pr130r1-probe98-nuecc48` and `pr134-f086-mcp1k`), so those two arms are single
+points of failure for an open regression.
+
+**Methodological trap worth remembering:** `pr127_sentinels.py:find_arm()`
+evaluates each event in the FIRST arm (sorted glob order) that holds it. A
+combined run over all non-production arms reports all six FAIL; per-arm
+evaluation finds five passing somewhere. A guard built on the combined run
+would have released the witness arms.
+
+**New machinery.** `scripts/retire/sentinel_guard_20260901b.py`, one
+implementation shared by plan ASSERT 15+16 and driver interlock 8. Interlock 7
+degenerates this round (no production released), so interlock 8 was proven able
+to FAIL before being trusted: drop `pr134-f086-*` → refuses on 292643; drop
+`pr130r1-probe-*` → refuses on 137238. Also verified idempotent across the
+deletion boundary, so it cannot trip on a re-run of its own successful round.
 
 ## RETIREMENT ROUND 2026-09-01 (doc 89) — the closed campaigns released and production rebased, 150G → 66G
 

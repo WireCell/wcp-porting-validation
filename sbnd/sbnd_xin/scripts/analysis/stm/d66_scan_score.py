@@ -16,7 +16,7 @@ Every classification is printed with the comment that produced it.  Anything the
 rule cannot decide is reported UNCLEAR and counted separately rather than
 guessed.
 
-Usage: ./d66_scan_score.py [--tag d66flip] [--root work-stmcamp-d66new]
+Usage: ./d66_scan_score.py [--tag d66flip] [--root .]
 """
 import argparse
 import glob
@@ -57,7 +57,7 @@ def owner_verdict(comment):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--root', default='work-stmcamp-d66new')
+    ap.add_argument('--root', default='.')   # 2026-09-01: the d66 arm is retired; the label store now lives at ./nusel_labels/d66flip (doc 91)
     ap.add_argument('--tag', default='d66flip')
     a = ap.parse_args()
     root = a.root if os.path.isabs(a.root) else os.path.join(HERE, a.root)
