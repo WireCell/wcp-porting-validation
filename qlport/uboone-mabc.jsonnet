@@ -862,8 +862,16 @@ local ub = {
 
 
     // add recombination model for uBooNE case, pay attention to units ...
+    // doc 88: PracticalBoxRecombination, NOT BoxRecombination.  The numbers
+    // below are in practical units (Efield kV/cm, B (kV/cm)(g/cm^2)/MeV, rho
+    // g/cm^3) -- the WCP prototype's convention (cuts.h:394-395).  Upstream
+    // e6fb7ef3 made Gen::BoxRecombination consistently WCT-unit, which makes
+    // these same numbers wrong by units::cm/units::MeV = 10 in the quenching
+    // term (a MIP would read 1.37 MeV/cm instead of 2.10).  The Practical
+    // class carries the pre-e6fb7ef3 arithmetic verbatim, so uBooNE output
+    // stays BIT-identical to before that merge.
     uBooNE_box_recomb_model: {
-        "type": "BoxRecombination",
+        "type": "PracticalBoxRecombination",
         "name": "box_recomb", 
         "data": {
             "A": 1.0,
