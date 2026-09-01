@@ -68,6 +68,8 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **S3** | the wider per-part label set | — (tag `splitscan-0903-wide`) | **DONE 2026-09-03 — 32/32 labelled, all high confidence** (§22) | `em_labels/splitscan-0903-wide/`, `docs/pr/pr140-scan2-verdicts.tsv` | 19 KEEP / 9 SPLIT2 / 4 SPLIT3; control stratum **0 of 8** splits and **0** fires; S3 fires **8 of 8** confirmed; it settled the running condition (§23) |
 | **S4** | the last false fire 278420/61027 | — | **MEASURED NOT SEPARABLE** (§18) | `docs/pr/pr140-seeding.tsv` | 3 of its 4 outlier margins are under 1 %; `b`'s is 0.43 cm, below the instrument's own 0.5 cm precision |
 
+| **S5** | **the rest-mass term a split daughter injects into `kine_reco_Enu`** (owner's question) | — (diagnosis); candidate guard NOT implemented | **CONFIRMED SAFE 47/51, residual 3** (§24) | `scripts/pr140_mass_term.py` on `work-pr140r2-off-*` | 47 daughters typed 11 add **0**; two `nseg=1` daughters typed 13 add **105.66 MeV each** (11 % and 6 % of those events' Enu); one proton adds 8.6 MeV — 938 MeV had `kine_mass_rules` been off |
+
 **Standing bar for every P-row**: knob-off byte-identical on the standard
 239-event manifest (478 archives, `missing/unpaired events: 0` quoted), freshness
 proof (M1), `wcdoctest-clus` green with the new defaults pinned, compiled-config
@@ -1795,3 +1797,115 @@ purity the control stratum says is not the binding problem.
 
 **Not next**: any further `b` sweep (§22.3 settles the dial — its cost is high
 *and* not robustly measured); `max_seeds` (§22.1); `max_parts` alone (§13).
+
+---
+
+## 24. Owner's question — does the split perturb `kine_reco_Enu` through the rest-mass term?
+
+> *"For the split of EM shower, I want to make sure that we do not have large
+> perturbation to the neutrino energy reconstruction. This is mostly coming from
+> potential mass term of the particle. EM shower is essentially electron with
+> almost no mass contribution, but other particle will have mass contribution."*
+
+**The mechanism is real and the concern is correctly aimed.** Answer:
+**confirmed safe on 47 of 51 split daughters, with a named residual of 3.**
+
+```
+python3 scripts/pr140_mass_term.py                       # the shipped config
+python3 scripts/pr140_mass_term.py --pair work-pr138r2-c90off work-pr138r2-c90on
+```
+
+### 24.1 Where the mass term enters
+
+`NeutrinoKinematics.cxx:102-111`, `rest_term_rules` (doc pr/101 K2), gated by
+`kine_mass_rules` — **SBND PRODUCTION ON**, verified in the shipped arm's own
+compiled config:
+
+| particle | rest term added |
+|---|---|
+| \|pdg\| = 11 — e± | **0** |
+| \|pdg\| = 2212 / 2112 — nucleon | 8.6 MeV (binding energy) |
+| \|pdg\| = 13 / 211 / 321 — μ / π / K | **full rest mass** (105.66 / 139.57 / 493.68) |
+| anything else | full rest mass |
+
+**Every shower pushes exactly one such term** (`push_shower_kine`, :223-236) into
+`kine_reco_add_energy`, which is summed into `kine_reco_Enu` (:889-893). So a
+split creates one *more* object, and **the perturbation is exactly zero if and
+only if the daughter is typed 11.**
+
+### 24.2 Measured on the shipped configuration — 239 events, 51 peels
+
+| daughter PDG | n | rest term each | total |
+|---|---|---|---|
+| **11 (e±)** | **47** | **0** | **0** |
+| 13 (μ) | 2 | 105.66 MeV | 211.3 MeV |
+| 2212 (p) | 1 | 8.6 MeV | 8.6 MeV |
+| *(absorbed later, not a shower in the dump)* | 1 | — | — |
+| | **51** | | **219.9 MeV over 239 events = 0.92 MeV/event** |
+
+**92 % of split daughters add exactly nothing**, which is the answer to the
+question as asked. The residual is three objects.
+
+### 24.3 The residual, and why it is the worst kind of small
+
+| event | daughter | `nseg` | parent PDG | rest term | daughter's own `kine_best` | as a share of that event's `Enu` |
+|---|---|---|---|---|---|---|
+| **281165** | 49016 | **1** | **11** | **105.66 MeV** | **2.4 MeV** | **+11.0 %** of 963.5 MeV |
+| **71642** | 64051 | **1** | **11** | **105.66 MeV** | **4.8 MeV** | **+6.2 %** of 1696.9 MeV |
+| 71642 | 10013 | 2 | 11 | 8.6 MeV | 153.0 MeV | +0.5 % |
+
+**All three are 1–2 segment peels off an EM-typed parent.** The daughter is a
+fragment of an electron shower; it is typed from its single member by
+`shower_pdg_from_start_segment`, that member happens to carry a non-EM
+`particle_id`, and the whole daughter becomes a muon.
+
+**The rest term is then 44× and 22× the object's own energy** — a 2.4 MeV
+fragment injects 105.66 MeV into the neutrino energy. Sorted by daughter size:
+
+| resulting PDG | n | daughter `nseg` min / median / max |
+|---|---|---|
+| 11 | 47 | 1 / 5 / 50 |
+| **13** | **2** | **1 / 1 / 1** |
+| 2212 | 1 | 2 / 2 / 2 |
+
+**Every non-EM daughter is at the extreme small end.** That is a clean separator,
+not a coincidence.
+
+### 24.4 Two facts that limit the damage
+
+1. **`kine_mass_rules` is doing real protective work here.** The proton-typed
+   daughter adds **8.6 MeV** because the rule maps nucleons to the binding
+   energy. The legacy branch (`else if (pdg != 11) add mass`, :279-280) adds the
+   *full* mass for any non-electron — that same object would have injected
+   **938.27 MeV**. The rule has been production ON since 2026-08-20.
+2. **At population level the splitter barely moves the mass term at all.** Off →
+   on (`work-pr138r2-c90off` → `c90on`, a single-knob pair, though on the
+   *pre-*`em_start` binary): the mass term changes on **4 of 239 events**, net
+   **−131 MeV** — the splitter *removed* more rest-mass term than it added, and
+   the median ΔEnu over all 239 events is **0.000 MeV**.
+
+### 24.5 The fix, if the owner wants the residual gone
+
+This is the *same* defect P1.3 was built for and P1.3 cannot reach it: `em_start`
+prefers an EM-typed member as the daughter's start segment, but **with `nseg = 1`
+there is no choice to make.** Two candidate guards, both one-line and DEFAULT
+OFF:
+
+- **(a)** when the parent is EM-typed and the daughter has **no** EM-typed
+  member, keep the daughter typed 11 — it is a fragment of an electron shower by
+  construction; or
+- **(b)** refuse to peel a component that has no EM-typed member off an EM
+  parent — such a component is more likely a mis-typed stub than a second γ.
+
+Either takes the 219.9 MeV to **8.6 MeV** (a) or **0** (b), on 3 of 51 daughters.
+**(b) also removes a cut**, so (a) is the conservative one. **Not implemented —
+the owner asked to confirm, not to change.**
+
+### 24.6 The short answer
+
+**Yes — confirmed.** A split of an EM shower adds **zero** rest-mass term in
+47 of 51 cases, because the daughter inherits electron typing. The exception is a
+**1-segment fragment whose lone member is non-EM typed**: two such daughters
+inject 105.66 MeV each, worth **11 % and 6 % of those events' neutrino energy**.
+It is rare (2 of 239 events), it is diagnosable (`nseg = 1`, non-EM member, EM
+parent), and it is fixable behind a default-OFF knob.
