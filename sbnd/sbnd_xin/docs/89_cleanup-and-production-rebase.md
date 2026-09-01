@@ -1,7 +1,6 @@
 # doc 89 — sbnd_xin cleanup: production rebased onto the pinned operating point, and the campaign layer retired (2026-09-01)
 
-**Status: see §9 for the final numbers.** 151 G → **NN G**. 218 arms released,
-92 kept. Production re-run at `ref/prod-2026-09-01b` over all 3067 events and
+**Status: COMPLETE.** 150.1 GiB → **65.6 GiB**. 218 arms released, 98 kept. Production re-run at `ref/prod-2026-09-01b` over all 3067 events and
 gated against the arm it replaces. The archive record layer re-encoded
 gzip → zstd-19, verified member-for-member.
 
@@ -136,7 +135,7 @@ was uBooNE's, and it is the peer's intended change, not ours.
 
 ## 4. What was kept, what was released
 
-**92 arms kept (44.05 GiB), 218 released (86.13 GiB).** The removal set is
+**98 arms kept (50.44 GiB), 218 released (86.13 GiB).** The removal set is
 exactly the closed campaigns plus the two superseded production baselines;
 nothing was released on age or size.
 
@@ -232,6 +231,31 @@ copies, not tarballs, and is what ASSERT 2/6/6b compare against.
 top 1600 hold 96 %. Converting the ~2400 sub-MB files costs most of the wall
 time for under 5 % of the saving. They stay `.gz`; a mixed archive is fine
 because both extensions decode with no special flags.
+
+### Result
+
+| | |
+|---|---|
+| tarballs re-encoded | **1672 / 1672 OK, 0 failures** |
+| those tarballs | 12.87 GiB → **3.58 GiB** (3.6×, **9.29 GiB freed**) |
+| `archive/records` overall | **16500 MB → 6657 MB** |
+| file count | 2207 `.gz` + 1828 `.zst` = **4035**, the original count exactly |
+| ledger | `state-20260901/recompress.tsv`, 1672 rows, 0 FAIL |
+
+**The aggregate is 3.6×, not the 16× of the probe.** The probe file
+(`work-pr112i-off-mcp2k`, 106 events of near-identical logs) is the best case,
+not the typical one — a small tarball holding one event's logs gains only
+~1.5×. The honest headline for this step is the measured **9.29 GiB freed**;
+the 16× belongs only to the sentence describing that one file.
+
+The ledger carries 1672 rows while 1828 `.tar.zst` exist. The 156 difference is
+the killed first pass, whose completed conversions happened but were never
+recorded — the defect that made the ledger incremental (below). 1672 + 156 =
+1828, and 2207 + 1828 = 4035, so **every original tarball is accounted for**.
+
+Nothing in either repo reads these tarballs programmatically (the only
+reference is `pr126_pi0_select.py`'s error message, which names the directory),
+so the extension change is safe. It is recorded anyway.
 
 ### Two defects in this script, both caught by its own verification
 
@@ -338,3 +362,78 @@ Named plainly, because each is a thing that stops being re-derivable.
   CLOSED and carries its own gate labels.
 - **~2400 archive tarballs under 1 MB stay `.gz`** (§7) — the archive is now
   mixed-format. Both extensions decode with no special flags.
+
+## 10. Result
+
+| | before | after |
+|---|---|---|
+| `sbnd_xin` | 153 725 MB (**150.1 GiB**) | 67 143 MB (**65.6 GiB**) |
+| `work*` dirs | 306 | 101 |
+| `archive/` | 16 500 MB | 6 848 MB |
+| free on `/dev/nvme2n1p6` | 509 G | **596 G** |
+
+Where the 87 G went:
+
+| step | freed |
+|---|---|
+| retire round — 218 arms | **86.1 GiB** |
+| archive re-encode — 1866 tarballs (1672 + 194) | **10.6 GiB** |
+| new production arm `prod0901b` (added back) | −10.2 GiB |
+| record layer for the 218 released arms (added back) | −0.2 GiB |
+
+**Gates and labels, so any PASS here can be re-checked later**
+
+| gate | result | evidence |
+|---|---|---|
+| `prod_cfg_gate.py --cfg ~/tmp/prod0901b-cfgsnap` | **PASS 21/21** | vs `ref/prod-2026-09-01b` |
+| `wcdoctest-root` / `wcdoctest-clus` | 4035 / 2603 assertions, 0 failed | |
+| Phase 1 arms | **3067/3067** events, every `rc=0`, `T_cluster` in all four | verified by count, not by the runner's word |
+| successor gate | **PASS 3067/3067** | `state-20260901/successor-gate.tsv` |
+| group-dupes | **PASS 1259176/1259176 members, 193/193 archives** | `state-20260901/group-dupes.tsv` |
+| `plan_20260901.py` | **OVERALL: PASS**, 14 asserts | `state-20260901/plan.json` |
+| `archive_records_20260901.py` | **integrity PASS 218/218**, 10.57 GiB raw → 1.51 GiB | `campaign-close-20260901/` |
+| dry-run count check | planner 218/86.13 GiB **==** driver 218/86 GiB | the 08-31 catch, re-applied |
+| deletion post-checks | 0 broken symlinks, 0 git-deleted tracked files, manifest 218 rows | `state-20260901/removed.tsv` |
+| recompression | **1866/1866 OK, 0 failures** | `state-20260901/recompress.tsv` |
+
+`work*` is 101 rather than 98 because a peer session created three more
+`work-90pi0-r*` arms after the plan ran. That is the design: the driver iterates
+the tier list, so an arm born after the plan is invisible to it.
+
+## 11. Not done — needs the owner
+
+**`~/tmp` sweep, 18 688 MB.** `scripts/retire/sweep_tmp_20260901.sh` is written,
+vetted and its dry run is clean — all three interlocks pass now that the arms
+are gone. The permission gate declined the `CONFIRM=yes` execution, exactly as
+it declined the ad-hoc `rm -rf` in doc pr/135 §11.1. One command:
+
+```bash
+cd sbnd_xin && CONFIRM=yes ./scripts/retire/sweep_tmp_20260901.sh
+```
+
+It drops the ten `pin-pr13[89]*`/`pin-pr14[01]*` snapshots and
+`prod0830-libsnap` — binaries whose arms this round deleted, so they now
+reproduce nothing. **Interlock A refuses to run until those arms are actually
+gone**, which is why it could not be run earlier.
+
+The projected saving here was ~28 G; the measured figure is **18.7 G**, because
+four of doc 87's five library snapshots turned out to be *distinct* binaries
+(md5 on Clus/Root/Gen/Aux) backing arms this round keeps, not copies. Only
+`lib-knob` was an exact duplicate of `lib-flip`, and it is already gone. The
+smaller honest number is reported rather than the projection.
+
+## 12. Recommended next step
+
+**Re-point the fire census and the doc-77 knob ledger at `prod0901b`.**
+`scripts/cfg/fire_census.py:33-34` still names `work-mcp2k-prod0901` and
+`work-ncpi0-prod0901`, which no longer exist. Those two are *live defaults*, not
+round records, so unlike the doc 85/86 scripts in §9 they should be repointed —
+the distinction is the disposition rule in `ACK_BROKEN_REFS`. Doing it as its
+own small change keeps it out of this round's diff.
+
+After that, the natural next front is unchanged from doc pr/141: **PID, not
+clustering** — ≥29 % of μ-typed objects are EM showers and ~1045 MeV of Enu is
+missing. `prod0901b` is now the baseline any such round measures against, and it
+is the first production arm whose `tracking-pr.root` carries the in-scope set
+directly, so a PID census no longer has to go through the Bee zip to learn which
+clusters were evaluated.

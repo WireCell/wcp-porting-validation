@@ -206,6 +206,53 @@ work-vtx105-base-nuecc48 work-vtx105-base-ncpi0 work-vtx105-base-mcp1k work-vtx1
 # grew 6.7 MB -> 17 MB and now depends on nothing outside itself.
 work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deterministic (rc=0 / 683 MB at -j 1 vs rc=139 / 2403 MB at -j 32); a nondeterministic crash cannot be re-captured on demand; 17 MB, self-contained	doc pr/97
 
+# --- the production baseline at the PINNED operating point (added 2026-09-01) --
+# doc 89 Phase 1.  work-*-prod0901 was the production set until this round, but
+# it finished 05:00 and the save_in_scope flip (toolkit d52d818c, pinned in
+# ref/prod-2026-09-01b) landed 13:36 -- so its tracking-pr.root has no
+# T_cluster tree and it was one flip behind the operating point it was supposed
+# to represent.  These four arms ARE that operating point: full output (no
+# suppression knob set, PR_EXTRA_STAGES=pr_display), binary and cfg tree both
+# pinned, prod_cfg_gate.py PASS 21/21.
+#
+# They replaced prod0901 only after interlock 7's successor gate showed all
+# 3067 events reproducing on every SHARED product with T_cluster the only
+# added tree.  Do not release these without a successor that passes the same
+# gate; "a newer arm exists" is not the same claim.
+work-nuecc48-prod0901b work-ncpi0-prod0901b work-mcp1k-prod0901b work-mcp2k-prod0901b	the SBND production baseline at ref/prod-2026-09-01b (save_in_scope ON), 3067 evts, full output	doc 89
+
+# --- doc 87 acceptance evidence: REFUSED release 2026-09-01 ----------------
+# The doc-89 planner wanted to release the four three-sample gate arms
+# (work-87scope-on-*, work-87tc-off-*, work-87mrg-post-*, work-87knob-def-*,
+# 4.2 G) as "superseded".  Refused, for the same reason the 08-31 round refused
+# prod0825: doc 87 shipped the SAME DAY and these arms are the acceptance
+# evidence for a knob that moved the production operating point.  doc 89's
+# successor gate is a DIFFERENT comparison (prod0901 vs prod0901b) and does not
+# re-establish doc 87 sec 6.1's "knobs at their defaults change nothing" table.
+#
+# work-87knob-min-* and work-87knob-sup-* are additionally the ONLY
+# minimal-output arms in the tree; doc 87 sec 6.2's table rests on them and
+# nothing else can rebuild it.
+#
+# RELEASE CONDITION, written down so it is a decision and not an inference:
+# these go when doc 87 has a settled successor round that re-establishes sec
+# 6.1 and sec 6.2 at production scale -- not merely when doc 87 is "closed".
+work-87scope-on-mcp1k work-87scope-on-ncpi0 work-87scope-on-nuecc48	doc 87 sec 4 save_in_scope acceptance (308/308)	doc 87
+work-87tc-off-mcp1k work-87tc-off-ncpi0 work-87tc-off-nuecc48	doc 87 sec 1.4 pre-merge baseline	doc 87
+work-87mrg-post-mcp1k work-87mrg-post-ncpi0 work-87mrg-post-nuecc48	doc 87 sec 1.4 post-merge gate arm	doc 87
+work-87knob-def-mcp1k work-87knob-def-ncpi0 work-87knob-def-nuecc48	doc 87 sec 6.1 knobs-at-defaults gate arm	doc 87
+work-87knob-min-ncpi0 work-87knob-min-nuecc48 work-87knob-sup-ncpi0 work-87knob-sup-nuecc48	the ONLY minimal-output arms in the tree; doc 87 sec 6.2	doc 87
+work-87flip-ncpi0 work-87flip-nuecc48	doc 87 sec 4.6 flip-equivalence	doc 87
+work-87grp-def-ncpi0 work-87grp-min-ncpi0 work-87grp-nopct-ncpi0	doc 87 sec 6.4 group-mode arms	doc 87
+work-87calA-ncpi0 work-87calB-ncpi0 work-87calC-ncpi0 work-87cal2A-ncpi0 work-87cal2B-ncpi0 work-87cal2C-ncpi0 work-87cal2D-ncpi0	doc 87 sec 6.5 SBND_PR_CALIB matrix, 21 MB total	doc 87
+
+# --- the bare work/ dir (added 2026-09-01) --------------------------------
+# NOT an arm.  It matches the planner's d.startswith('work') discovery and
+# holds work/nusel_labels/ -- a hand-scan record (M13) -- plus
+# work/pr137_sheets/.  ASSERT 2 would have caught it via the label-archive
+# check, but a record directory should be named, not rescued by a safety net.
+work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
+
 # --- RETIRED (kept for provenance) ---------------------------------------
 #
 # RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct

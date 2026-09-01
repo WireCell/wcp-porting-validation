@@ -10,6 +10,21 @@ ls -1 | wc -l                    # 228 top-level entries after the 2026-08-29 ro
 # COUNT work* DIRS THROUGH THE REAL PATH, NOT THE SYMLINK -- see the 2026-08-13
 # section's "defect 4": toolkit/sbnd_xin is a symlink, and neither find nor du
 # descends a symlink argument, so both silently report 0 from there.
+# the 2026-09-01 round (doc 89): the CLOSED pr/136-142 campaigns + doc 77 r3/r4,
+# and production REBASED onto the pinned operating point.  150G -> 66G.
+# EDIT scripts/retire/PROTECTED.txt BY HAND FIRST -- ASSERT 7 trips otherwise.
+./scripts/doc89_prod0901b_arms.sh                       # Phase 1: 3067 evts at ref/prod-2026-09-01b
+python3 scripts/doc89_successor_gate.py --jobs 32       # Phase 2: 3067/3067 OK -- licenses the prod0901 release
+python3 scripts/retire/verify_group_dupes_20260901.py   # PASS 1259176/1259176 members, 193/193 archives
+python3 scripts/retire/plan_20260901.py                 # 14 asserts, "OVERALL: PASS"
+RETIRE_JOBS=32 python3 scripts/retire/archive_records_20260901.py
+./scripts/retire/retire_20260901.sh A                   # DRY RUN -- check dirs=/bytes= vs the plan
+RETIRE_REPLAN=1 python3 scripts/retire/plan_20260901.py # re-stamp planned_at (interlock 6)
+CONFIRM=yes ./scripts/retire/retire_20260901.sh A       # 218 dirs
+python3 scripts/retire/recompress_archive_20260901.py --apply --jobs 6 --min-mb 1.0
+CONFIRM=yes ./scripts/retire/sweep_tmp_20260901.sh      # after the round, never before
+# the 2026-08-31 and 08-31b rounds are recorded in docs/pr/135 sec 11 and 11.2,
+# NOT here: 169G -> 91G (439 arms) then 91G -> 73G (24 arms, prod0825 released).
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
                                  # 121 after the 2026-08-29 round -- 120 KEEP plus
@@ -227,6 +242,60 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-09-01 (doc 89) — the closed campaigns released and production rebased, 150G → 66G
+
+**218 arms, 86.13 GiB removed; 98 kept (50.44 GiB).**
+`work*` dirs 306 → 101. Full write-up:
+`docs/89_cleanup-and-production-rebase.md`.
+
+The owner's premise — *"we have been testing the results with minimal outputs"* —
+was **measured and does not hold**: every production arm is maximal-output
+(`pr142_arms.sh` sets `PR_EXTRA_STAGES=pr_display`, which *adds* the calib
+dump), and the only minimal-mode arms in the tree are doc 87's own 67-event
+`work-87knob-{min,sup}-*`. Nothing had been dropped, so there was nothing to
+save back. What *was* wrong: `prod0901` predated the `save_in_scope` flip by 8 h
+and so carried no `T_cluster` tree. The owner chose to re-run all 3067 events at
+`ref/prod-2026-09-01b` (`work-*-prod0901b`) and gate the new arm against the old
+before releasing it — the first end-to-end check, at full sample scale, of the
+five-link chain doc 77 r3 → doc 77 r4 → master merge → doc 87 knobs →
+`save_in_scope`, each previously gated only on 308 events.
+
+Released: the CLOSED pr/136, pr/138-142 campaigns (186 arms) and doc 77 r3/r4
+(20), plus `work-*-prod0830` (superseded twice), `work-*-empre0901` (doc pr/142
+COMPLETE, tables in `products/empre0901/`) and `work-*-prod0901` (on the
+successor gate and nothing else).
+
+**Refused, deliberately:** doc 87's 28 gate arms (4.9 G). Doc 87 shipped the
+same day and they are the acceptance evidence for a knob that moved the
+production operating point; the successor gate is a *different* comparison.
+Their release condition is now written into `PROTECTED.txt`. Same shape as the
+08-31 round's `prod0825` refusal.
+
+### Six things the guards caught
+1. The fork **dropped the `KEEP_PREFIX` loop** — `work-87*`, `work-sent130*` and
+   `work-pr134-f086-*` (40 arms, 4.9 G, incl. the sentinel negative controls)
+   silently entered the removal set. ASSERT 7 and ASSERT 11 both refused, and
+   the dry run showed 258 dirs where 218 was expected.
+2. `em_labels` had drifted **298 → 540**; ASSERT 6b refused. Repaired additively
+   (0 archive-only files, 0 content differences) and `git add -f`'d.
+3. Interlock 2 refused on a **substring**: `work-mcp2k-prod0901` ⊂
+   `…-prod0901b`. Safe direction; recorded so nobody "fixes" it carelessly.
+4. `verify_group_dupes` **could not name a production arm's sample** — it only
+   handled the `-<sample>` suffix form, not `work-<sample>-prod0830`. First
+   round with a group-mode production arm in the removal set. Once fixed:
+   **1259176/1259176 members across 193/193 archives** proven duplicates of a
+   surviving grp0825 root, which is what lets the `groupin` class be dropped.
+5. `zstd --long=31` wrote frames needing a 2 GB window to **decode** — caught by
+   the recompression's own verification, not by inspection.
+6. The bare `work/` dir matches `d.startswith('work')` and holds
+   `work/nusel_labels/` (M13). Now named in KEEP, not rescued by a safety net.
+
+### Archive record layer re-encoded
+`archive/records` 16500MB → 6848MB by re-encoding the
+record tarballs gzip → `zstd -19`, each verified member-for-member on
+`(name, size, sha256)` before its `.gz` was removed. Two already-compressed
+imaging bases and everything under 1 MB stay `.gz`.
 
 ## RETIREMENT ROUND 2026-08-29 — eleven closed doc families; the pi0 epoch stays, 152G → 75G
 
