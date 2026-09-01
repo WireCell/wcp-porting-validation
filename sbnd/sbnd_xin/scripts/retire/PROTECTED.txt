@@ -598,8 +598,48 @@ work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
 # NOT exist on disk and were not created by this round's sweep -- the reference
 # was already stale before today.  Recorded here, not silently fixed; the peer
 # session owns that file.
-work-pr125r1-flipK598-mcp1k work-pr125r1-flipK598-mcp2k work-pr125r1-flipK598-ncpi0 work-pr125r1-flipK598-nuecc48	the sentinel registry's negative control (expect the 137238 FAIL); scripts/pr127_sentinels.py:31	docs/pr/127, peer session 2026-08-29
-work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the same negative control	docs/pr/127
+# RELEASED 2026-09-01c (doc 91 sec 13), owner: "please go ahead" on the
+# re-baseline.  BOTH grounds these lines rested on are gone, and were checked
+# rather than assumed.
+#
+# work-sent130neg* were the negative-control layer at the 2026-08-29 operating
+# point -- before the 0.86 EM scale flip, doc 77 r3/r4's 17 retired TLAs and the
+# master merge.  doc 91 sec 12 re-baselined every threshold they bracketed, so
+# they now bracket numbers nobody uses.  Their replacement, work-91neg-*, was
+# measured at the pinned prod0901b point against the NEW thresholds and is
+# protected by name in plan_20260901c.py's KEEP_PREFIX.
+#
+# work-pr125r1-flipK5* were kept as "the worked FAILING sentinel case (137238)".
+# sec 12 re-baselined 137238 and the assertion DIRECTION flipped, so what these
+# arms demonstrate is no longer what the suite asserts.  Its control is now
+# work-91neg-scccgap-nuecc48.
+#
+# The release is guarded, not asserted: ASSERT 16's falsifiability check names
+# one control per re-baselined sentinel and RE-DERIVES its FAIL by running the
+# suite, so this cannot silently leave a threshold green and unfalsifiable.
+# Proven able to fire -- drop any one control and it refuses that sentinel.
+# work-pr125r1-flipK598-mcp1k work-pr125r1-flipK598-mcp2k work-pr125r1-flipK598-ncpi0 work-pr125r1-flipK598-nuecc48	the sentinel registry's negative control (expect the 137238 FAIL); scripts/pr127_sentinels.py:31	docs/pr/127, peer session 2026-08-29
+# RELEASED 2026-09-01c (doc 91 sec 13), owner: "please go ahead" on the
+# re-baseline.  BOTH grounds these lines rested on are gone, and were checked
+# rather than assumed.
+#
+# work-sent130neg* were the negative-control layer at the 2026-08-29 operating
+# point -- before the 0.86 EM scale flip, doc 77 r3/r4's 17 retired TLAs and the
+# master merge.  doc 91 sec 12 re-baselined every threshold they bracketed, so
+# they now bracket numbers nobody uses.  Their replacement, work-91neg-*, was
+# measured at the pinned prod0901b point against the NEW thresholds and is
+# protected by name in plan_20260901c.py's KEEP_PREFIX.
+#
+# work-pr125r1-flipK5* were kept as "the worked FAILING sentinel case (137238)".
+# sec 12 re-baselined 137238 and the assertion DIRECTION flipped, so what these
+# arms demonstrate is no longer what the suite asserts.  Its control is now
+# work-91neg-scccgap-nuecc48.
+#
+# The release is guarded, not asserted: ASSERT 16's falsifiability check names
+# one control per re-baselined sentinel and RE-DERIVES its FAIL by running the
+# suite, so this cannot silently leave a threshold green and unfalsifiable.
+# Proven able to fire -- drop any one control and it refuses that sentinel.
+# work-pr125r1-flipK5141-mcp1k work-pr125r1-flipK5141-mcp2k	141-set half of the same negative control	docs/pr/127
 #
 # 4. THE GATE LABEL THE OPEN ROUND CITES.  doc pr/130's item-1 work reports its
 # probe arms as "gated SAME against work-pr128r1-on*".  CLAUDE.md's "report
@@ -628,4 +668,24 @@ work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0
 # an event SUBSET; it is not any more.  Re-derived by ASSERT 15 on every run.
 # The NEGATIVE controls stay, on the line below, and are now held by a prefix.
 # work-sent130-mcp1k work-sent130-mcp2k work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel suite guarding today's pr/127-129 flips, incl. the negative controls scripts/pr127_sentinels.py:153-165 names	docs/pr/127, docs/pr/130
-work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel registry's NEGATIVE controls -- the only on-disk proof the suite CAN fail; regenerable by scripts/pr130_sentinel_neg34.sh but not re-derivable after the fact	docs/pr/127, docs/pr/130, doc 91
+# RELEASED 2026-09-01c (doc 91 sec 13), owner: "please go ahead" on the
+# re-baseline.  BOTH grounds these lines rested on are gone, and were checked
+# rather than assumed.
+#
+# work-sent130neg* were the negative-control layer at the 2026-08-29 operating
+# point -- before the 0.86 EM scale flip, doc 77 r3/r4's 17 retired TLAs and the
+# master merge.  doc 91 sec 12 re-baselined every threshold they bracketed, so
+# they now bracket numbers nobody uses.  Their replacement, work-91neg-*, was
+# measured at the pinned prod0901b point against the NEW thresholds and is
+# protected by name in plan_20260901c.py's KEEP_PREFIX.
+#
+# work-pr125r1-flipK5* were kept as "the worked FAILING sentinel case (137238)".
+# sec 12 re-baselined 137238 and the assertion DIRECTION flipped, so what these
+# arms demonstrate is no longer what the suite asserts.  Its control is now
+# work-91neg-scccgap-nuecc48.
+#
+# The release is guarded, not asserted: ASSERT 16's falsifiability check names
+# one control per re-baselined sentinel and RE-DERIVES its FAIL by running the
+# suite, so this cannot silently leave a threshold green and unfalsifiable.
+# Proven able to fire -- drop any one control and it refuses that sentinel.
+# work-sent130neg-mcp1k work-sent130neg-mcp2k work-sent130neg2-mcp1k work-sent130neg2-mcp2k work-sent130neg3-mcp2k work-sent130neg4-mcp2k	the sentinel registry's NEGATIVE controls -- the only on-disk proof the suite CAN fail; regenerable by scripts/pr130_sentinel_neg34.sh but not re-derivable after the fact	docs/pr/127, docs/pr/130, doc 91

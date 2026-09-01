@@ -1,6 +1,6 @@
 # doc 91 — the count-driven retire round, and the sentinel regression it found
 
-**Status: round executed, 101 → 52 work dirs. The sentinel finding in §7 is
+**Status: two rounds executed, 101 → 47 work dirs (65.8 GiB → 57.4 GiB). The sentinel finding in §7 is
 CLOSED by owner hand scan (§7.4), and the registry has been RE-BASELINED
 (§12): the suite is green on production (31 PASS / 0 FAIL) and provably red on
 every knob-OFF arm. Two sentinels could not be re-baselined and are flagged
@@ -523,3 +523,63 @@ inferred.
 The seven `work-91neg-*` arms replace `work-sent130neg*` as the negative-control
 layer, at the current operating point instead of 2026-08-29. The witness arms
 kept by §7.4 item 2 are now redundant for that purpose.
+
+
+## 13. Round C — releasing the superseded control layer
+
+The re-baseline made two families redundant, so a second retire round follows it
+directly. Machinery forked to `_20260901c`; 12 dirs / 1 GiB released, integrity
+gate **PASS 12/12**, `refused=0`, **47 survivors**.
+
+| released | why the ground is gone |
+|---|---|
+| `work-sent130neg*` (6) | the negative-control layer at the **2026-08-29** operating point. §12 re-baselined every threshold they bracketed, so they now bracket numbers nobody uses. Replaced by `work-91neg-*` at the pinned `prod0901b` point. |
+| `work-pr125r1-flipK5*` (6) | kept as "the worked FAILING sentinel case (137238)". §12 re-baselined 137238 and the assertion **direction flipped**, so what these arms demonstrate is no longer what the suite asserts. Its control is now `work-91neg-scccgap-nuecc48`. |
+
+**I over-promised in §7.4 item 2 and this corrects it.** That said ~36 dirs were
+available. The real figure is **47**: 10 of the 16 "witness" arms
+(`work-pr134-f086-*` ×4, `work-pr130r1-probe*` ×6) are pinned by **live display
+manifests** that ASSERT 11 enforces — `em117-134f08698`, `em114c-134f086141`,
+`em117-pr130q98`, `em114c-pr130q141`. Releasing them is a decision about the
+display baseline, which the sentinel re-baseline does not license.
+
+### 13.1 The new guard, and the weak formulation its own control caught
+
+After §12 the suite is green on production, so round B's regression check ("which
+failing sentinel would lose its last passing arm") has nothing left to protect
+and passes vacuously. The property that matters now is the mirror image: **each
+re-baselined sentinel must keep a surviving arm in which it FAILS.**
+
+The first formulation asked *"does some surviving non-production arm make this
+sentinel FAIL"*. Its negative control showed it stayed clean **even with every
+new control deleted** — because thresholds now track production, so any arm at an
+older operating point fails them too. That is drift detection, not knob
+detection: an arm failing because it predates the 0.86 EM flip is no evidence
+the threshold can still see a dead fix.
+
+The causal property — *this arm fails because the knob was off* — is not
+recoverable from the output after the fact; it is a fact about how the arm was
+produced. So the control is **named**, one per re-baselined sentinel, and the
+check re-derives its FAIL by running the suite. Proven able to fire:
+
+| corrupted KEEP | result |
+|---|---|
+| everything on disk | clean |
+| drop the 47212 control | **FIRES on 47212** |
+| drop the 137238 control | **FIRES on 137238** |
+| drop all four controls | **FIRES on all four** |
+
+That is the **second** time this session a guard's first formulation was too
+weak and its own negative control caught it (the first: §8, holding an event
+versus passing its sentinel). Both would have passed review by inspection.
+
+### 13.2 Result
+
+| | start of session | after round B | after round C |
+|---|---|---|---|
+| `work*` dirs | 101 | 52 (+7 new controls = 59) | **47** |
+| sbnd_xin | 65.8 GiB | 58.6 GiB | **57.4 GiB** |
+
+Post-deletion: 0 broken symlinks, 0 deleted tracked files, suite **31 PASS / 0
+FAIL** against production, falsifiability check clean — all re-derived *after*
+the deletion, not carried from plan time.

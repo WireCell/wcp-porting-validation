@@ -259,6 +259,24 @@ repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
 
+## RETIREMENT ROUND 2026-09-01c (doc 91 sec 13) — the superseded control layer, 59 → 47 work dirs
+
+Follows the sec-12 sentinel re-baseline directly. Released `work-sent130neg*` (6,
+the negative controls at the 2026-08-29 operating point, now bracketing
+thresholds nobody uses) and `work-pr125r1-flipK5*` (6, the "worked failing case"
+for 137238, whose assertion direction flipped in the re-baseline). 12 dirs /
+1 GiB, integrity 12/12, refused=0.
+
+NOT released, correcting an over-promise in sec 7.4: `work-pr134-f086-*` (4) and
+`work-pr130r1-probe*` (6) are pinned by LIVE display manifests ASSERT 11
+enforces. The "~36 dirs" estimate was wrong; 47 is the honest figure.
+
+New guard: each re-baselined sentinel must keep a NAMED surviving control in
+which it still FAILS. Its first formulation ("some arm makes it fail") stayed
+clean with every control deleted — old-operating-point arms fail the new
+thresholds too, which is drift detection, not knob detection. Second time this
+session a guard's first formulation was too weak and its own control caught it.
+
 ## RETIREMENT ROUND 2026-09-01b (doc 91) — count-driven: 101 → 52 work dirs, 65.8G → 58.6G
 
 Full write-up: `docs/91_work-dir-minimisation.md`. The metric was **directory
