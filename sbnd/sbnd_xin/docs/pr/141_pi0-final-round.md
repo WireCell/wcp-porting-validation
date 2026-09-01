@@ -126,7 +126,10 @@ direction ambiguity … the preference should give to neutrino vertex"*) ranks a
 in-window pair at main above any non-main pair **outright**, before the |Δ|
 comparison runs. On the legacy comparator the owner's pair would have won: its
 key is |114.4 − 125| − 6 = 4.6 (the 6 MeV bonus for two detached members,
-`:7770`) against 13.5 for the pair that was taken.
+`:7770`) against 13.5 for the pair that was taken. **That last sentence is
+INFERRED from reading the comparator, not measured** — the same move §1.1
+retracts. It is checkable in one event: `pi0_prefer_main_vertex` is a top-level
+jsonnet arg, so a single-event TLA override plus the same tape settles it.
 
 This is the rule working as specified, not a defect — but it is **the first
 measured case of K24 costing a π⁰**, and doc pr/134 shipped it on a census that
@@ -210,10 +213,16 @@ t_max = ln(E/E_c) − 0.5, E_c = 32.8 MeV, X₀ = 14.0 cm) and re-masses the pai
 This is a textbook average profile, not a fit to SBND — it is used only to ask
 whether the **order** of the missing energy matches the room available.
 
-| event | γ short of room | room | contained f | mass → corrected |
+Masses below are on **one scale throughout**: the pair mass the *arm* gives,
+`√(4·kine_charge₁·kine_charge₂·sin²(θ/2))` with the label's θ (a pure geometry
+number). The label's own mass is not usable for this table — it carries whatever
+energy scale and hypothesis the scan used, which differs between rows the owner
+re-saved and rows they did not.
+
+| event | γ short of room | room | contained f | ARM mass → corrected |
 |---|---|---|---|---|
-| **168432** | `22006` **1.4 X₀** (its furthest member point is *outside* the volume, wall −0.2 cm) and `49028` 3.5 X₀ | 19.0 / 49.2 cm | 0.21 / 0.72 | **61.6 → 159.4  IN WINDOW** |
-| **71872** | `79074` 3.1 X₀ | 43.5 cm | 0.58 / 0.93 | **101.1 → 138.4  IN WINDOW** |
+| **168432** | `22006` **1.4 X₀** (its furthest member point is *outside* the volume, wall −0.2 cm) and `49028` 3.5 X₀ | 19.0 / 49.2 cm | 0.21 / 0.72 | **53.5 → 138.4  IN WINDOW** |
+| **71872** | `79074` 3.1 X₀ | 43.5 cm | 0.58 / 0.93 | **107.3 → 146.8  IN WINDOW** |
 | 280159 | `95114` 3.6 X₀ (furthest point 2.6 cm from the wall) | 50.9 cm | 1.00 / 0.72 | 73.6 → 87.0, still out but moving the right way |
 | the other six | none under 5 X₀ | 135–492 cm | ≈ 1.00 | unmoved (≤ 6 MeV) |
 
@@ -265,15 +274,29 @@ name. `scripts/pr141_missing_gamma.py` separates them by **segment id** — the
 label stores the γ's member segments, the arm's `segments[]` carries the same
 ids, and the probe sidecar says which shower owns each one:
 
+**Proximity alone is not evidence**, and an early version of this script treated
+it as if it were. A host shower only accounts for the γ if it can *hold the
+charge*: the classifier requires the host's `kine_charge` to be at least half the
+γ's label energy, and separates a host of **comparable** energy and segment count
+(the same object under a new id — label staleness, no defect) from a
+substantially larger one (a genuine over-merge).
+
 | verdict | n of 9 γ slots | meaning |
 |---|---|---|
-| **MERGED** | **5** | every member segment is on the arm, owned by a *different* shower |
-| **MERGED-BY-PROXIMITY** | **3** | the label stored no member list; a shower starts within 15 cm of the γ's recorded start |
-| NO-LABEL-MEMBERS | 1 | 396222 g2 — no member list and nothing within 20 cm |
+| **MERGED** | **3** | every member segment on the arm, inside a substantially larger shower — a genuine over-merge |
+| **MERGED-BY-PROXIMITY** | 1 | 142421: no member list, but a 1197.6 MeV shower starts 8.5 cm from a 706.5 MeV γ |
+| **RENAMED** | **2** | 347824 (528.0 → 416.4 MeV, 23 segments both) and 506114 (44.8 → 53.2 MeV) — the same object, new id |
+| **UNACCOUNTED** | **2** | 259542 ×2: a **993.0 MeV** γ whose nearest start is a **50.8 MeV proton stub**, and a 138.7 MeV γ whose nearest is 42.9 MeV |
+| NO-CANDIDATE | 1 | 396222 g2 — nothing within 20 cm |
 
-**Eight of the nine absent γs have their charge on the arm.** Not one of them is
-a γ that failed to be reconstructed. The block is an **identity / merging**
-problem:
+**So "8 events where a γ is simply NOT RECONSTRUCTED" is wrong, but the
+replacement is not "8 over-merges" either.** Exactly **one** slot has no
+candidate at all; two are id renames with no defect behind them; **three** are
+genuine over-merges (and one of those, 76346, is a 5.0 MeV crumb absorbed by a
+238 MeV shower — real, but worth nothing); two are unaccounted for by any test
+this script can make offline. The defensible statement is narrower and still
+useful: **the census was reading id mismatches as missing particles, and the
+class it named "γ-finding efficiency" is at most one event.**
 
 | event | the γ | where its charge is now |
 |---|---|---|
@@ -294,13 +317,15 @@ stopping. **Tonight's two measurements reverse the first half of that.**
 
 | doc pr/139 §26.3 said | what it actually is |
 |---|---|
-| 8 — a γ is NOT RECONSTRUCTED | **1** (396222). The other 8 slots are **merged or renamed** — clustering. |
+| 8 — a γ is NOT RECONSTRUCTED | **1** (396222) has no candidate; 2 are id **renames** with no defect; **3** are genuine over-merges (one a 5 MeV crumb); 2 unaccounted. |
 | 9 — mass outside the window | 3 are **containment** (calorimetry, irreducible); 3 are **over-clustering** (clustering); 2 are **pairing** the owner has now revised; 1 is a window edge. |
 
-The residual π⁰ population is not dominated by γ-finding efficiency. It is
-dominated by **γ identity — over-merging and mis-assignment — plus a
-calorimetric containment loss that no clustering change can recover.** The
-campaign's own instrument had been reading an id mismatch as a missing particle.
+The residual π⁰ population is **not** dominated by γ-finding efficiency — that
+class is at most one event. What replaces it is mixed: some over-merging, a
+calorimetric containment loss no clustering change can recover, and a
+non-trivial share of **label staleness in the campaign's own instrument**, which
+had been reading id mismatches as missing particles. That last part is a finding
+about the metric, not about the reconstruction, and it is worth as much.
 
 **This does not re-open the splitter.** Every object named above is *bigger*
 than the γ the owner marked — `87078` swallowing `84070`, `108104` at 1197.6
@@ -437,7 +462,7 @@ shower in its event under the finder's own vertex-ray geometry and ask whether
 |---|---|
 | candidates in 239 events | **6** |
 | in-window under the finder's own energy (`kine_charge`) | **0 of 6** |
-| in-window under the **shower-hypothesis** energy | **4 of 6** — m = 133.6, 126.3, 123.5, 102.6 |
+| in-window under the **shower-hypothesis** energy | **3–4 of 6** — m = 133.6, 126.3, 123.5 at ×1.906, and 102.6 which falls out at ×1.66 |
 
 **The energy hypothesis, not the length bound, is what blocks these.** A μ-typed
 object's stored `kine_charge` is the **track**-hypothesis energy — a different
@@ -446,7 +471,9 @@ recombination and a different fudge — and the π⁰ finder prices pair masses 
 numbers exist, 283713's `23011`, the dump says **168.4 MeV** and the scan
 label's shower hypothesis says **320.9 MeV**, a ratio of 1.906 (the viewer's own
 note quotes 1.66 for the same effect, so it is per-object; 1.906 is used here
-only to *screen*).
+only to *screen*). **The ratio is not a global constant and the
+other-hypothesis energy is not on disk for the unscanned five**, so the count is
+quoted as a range: 4 of 6 at ×1.906, 3 of 6 at ×1.66.
 
 That is why §4's reading needs amending. Raising K20's 40 cm bound to 80 cm
 would admit all six of these — and the finder would then compute their pair
@@ -495,7 +522,7 @@ a special case.
 | item | verdict |
 |---|---|
 | **1 — k = 3 recursion** | **dead, with a mechanism that closes the family**: on all 8 SPLIT3 objects the recursion never fires; the third core is invisible to this seed finding at *any* scope (§5) |
-| **2 — the 8 "missing γs"** | **not missing**: 8 of 9 absent γ slots have their charge on the arm, 5 with a named host shower. It is an over-merge / identity problem, not γ-finding efficiency (§3) |
+| **2 — the 8 "missing γs"** | **not missing**: at most 1 of 9 absent γ slots has no candidate. 3 are genuine over-merges, 2 are id renames (label staleness), 3 unaccounted. Not γ-finding efficiency (§3) |
 | **3 — the 7 badly-wrong masses** | **partitioned by mechanism**: 3 containment (measured, correcting them moves 2 into the window), 3 over-clustering, 2 re-paired by the owner into the window, 1 window-edge (§1, §2) |
 | **4 — the type leftovers** | the μ-typed lead **re-diagnosed**: the blocker is the track-hypothesis energy, not the 40 cm bound, with a 4-π⁰ prize; the `pdg = 211` lead is now an 8-object sample, still unscanned (§6) |
 
@@ -505,32 +532,36 @@ doc pr/139 §26.4 closed the campaign on *"the dominant remaining blockers are
 missing γs and γ energy, not γ clustering"*. **The first half is wrong and the
 second half is half right.**
 
-- "missing γs" — **1**, not 8. The rest is over-merging (§3).
+- "missing γs" — at most **1**, not 8. The rest splits between genuine
+  over-merges (3), id renames that are artifacts of stale labels (2) and slots
+  no offline test can account for (2+1) (§3).
 - "γ energy" — real, and now split into two very different things: a
   **containment** loss that no clustering change can recover (§2.1), and an
   **over-clustering** inflation that is a clustering defect (§2.2).
 
-So the residual π⁰ population is: **γ identity and over-merging** (the largest
-share), **detector containment** (irreducible), and **pairing/admission**
-(small, but with the round's only bounded prize). The campaign is not blocked on
-a different subsystem the way §26.4 concluded.
+So the residual π⁰ population is a mix — **γ identity** (over-merges plus label
+staleness), **detector containment** (irreducible), and **pairing/admission**
+(small, but carrying the round's only bounded prize). No single class dominates,
+and in particular the campaign is **not** blocked on upstream γ-finding the way
+§26.4 concluded.
 
 ### 7.3 What I recommend next, in order
 
 1. **Price μ-typed π⁰ candidates under the shower hypothesis at pairing time**
    (§6.1). It is the only lead tonight with a mechanism, a population and a
-   number: 4 candidate π⁰ in 239 events, 0 of which the current pricing can
+   number: 3–4 candidate π⁰ in 239 events, **0** of which the current pricing can
    reach. It changes an existing computation, so it needs the owner's word
    before any code — but it is a bounded, default-OFF-able change.
 2. **Scan the 14-object type set** (`pr141-typeset.tsv`, 6 S-MU + 8 S-PI). It
    settles item 4's `pdg = 211` restriction, 278420's separability and the
    μ-typed question in one pass, and every one of those has been stuck at
    n ≤ 2 for three rounds.
-3. **The over-merge population from §3** — `87078` swallowing a whole γ,
-   `108104` at 1197.6 MeV over 202.8 cm. These are the objects the completeness
-   instrument should be pointed at next; they are *not* the objects the splitter
-   campaign was tuned on, which is why doc pr/139 §22's "configuration space
-   exhausted" does not settle them.
+3. **The three over-merges from §3** — `87078` swallowing a whole γ, `108104` at
+   1197.6 MeV over 202.8 cm. A small set, and *not* the objects the splitter
+   campaign was tuned on, so doc pr/139 §22's "configuration space exhausted"
+   does not settle them — but three objects is a lead, not a programme. Worth
+   pairing with a **label-refresh pass**: two of the nine slots were renames, so
+   some of what the census reports as failure is the label store aging out.
 4. **A containment correction to γ energy** (§2.1) is the only route to the
    three boundary events, and it is a calorimetry change, not a clustering one.
    Worth scoping, but it is a different subsystem and a different validation.

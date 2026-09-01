@@ -10,8 +10,12 @@ SHOWER ID is not a key of the arm's `showers[]`.  That is three different
 situations wearing one name, and which one it is decides whether there is
 anything to fix:
 
-  MERGED     the gamma's charge is on the arm, inside a DIFFERENT shower --
-             an id change, i.e. a clustering decision, not a missing gamma.
+  MERGED     the gamma's charge is on the arm, inside a DIFFERENT and
+             SUBSTANTIALLY LARGER shower -- a genuine over-merge.
+  RENAMED    same, but the host is comparable in size and segment count: the
+             same object under a new id, i.e. label staleness, not a defect.
+             (Distinguishing these two matters: an early version of this script
+             folded them together and the doc over-claimed the over-merge share.)
   UNSHOWERED the gamma's segments are on the arm but no shower owns them --
              a shower-formation failure.
   GONE       the charge itself is not on the arm.
@@ -115,14 +119,32 @@ def main():
                     d0 = math.dist((sp.get("x", 0), sp.get("y", 0), sp.get("z", 0)), st0)
                     if near is None or d0 < near[0]:
                         near = (d0, int(s2["id"]), s2)
+            E_lab = gg.get("energy") or 0.0
             n = len(mem) or 1
+            # Proximity alone is not evidence: a 993 MeV gamma whose nearest
+            # start is a 50.8 MeV proton stub is NOT accounted for.  Require the
+            # host to be able to hold the charge.
+            E_lab = gg.get("energy") or 0.0
             if not mem and near is not None:
-                verdict = ("MERGED-BY-PROXIMITY" if near[0] < 15.0
-                           else "NO-LABEL-MEMBERS")
+                E_host = (near[2].get("kine_charge") or 0.0)
+                if near[0] < 15.0 and E_host >= 0.5 * E_lab:
+                    verdict = "MERGED-BY-PROXIMITY"
+                elif near[0] < 15.0:
+                    verdict = "UNACCOUNTED (host %.1f MeV vs gamma %.1f)" % (E_host, E_lab)
+                else:
+                    verdict = "NO-CANDIDATE"
             elif not on:
                 verdict = "GONE"
             elif claimed and len(unclaimed) <= len(on) / 2:
-                verdict = "MERGED"
+                # size test: a host comparable in energy AND segment count is
+                # the same object renamed, not an absorption.
+                host = max(claimed, key=lambda o: len(claimed[o]))
+                t = shw.get(host) or {}
+                E_host = t.get("kine_charge") or 0.0
+                n_host = t.get("num_segments") or 0
+                same_size = (E_lab > 0 and 0.6 <= E_host / E_lab <= 1.6
+                             and abs(n_host - len(mem)) <= max(2, 0.25 * len(mem)))
+                verdict = "RENAMED" if same_size else "MERGED"
             elif unclaimed:
                 verdict = "UNSHOWERED"
             else:

@@ -43,6 +43,7 @@ WIN = (100.0, 160.0)
 # same effect, so this is a per-object quantity and 1.9 is used here only to
 # SCREEN, never to price anything.
 HYP = 1.906
+HYP_LO = 1.66      # the viewer's own quoted value for the same effect
 ARMS = ["work-pr140r2-off-mcp1k", "work-pr140r2-off-mcp2k",
         "work-pr140r2-off-ncpi0", "work-pr140r2-off-nuecc48"]
 
@@ -78,6 +79,7 @@ def main():
             em = [s for s in shw if abs(int(s.get("particle_id") or 0)) == 11
                   and (s.get("kine_charge") or 0) >= 20.0]
 
+            lo_ok = set()
             for s in shw:
                 pdg = abs(int(s.get("particle_id") or 0))
                 E = s.get("kine_charge") or 0.0
@@ -101,6 +103,9 @@ def main():
                         sf = math.sin(math.radians(th) / 2) ** 2
                         m = math.sqrt(4 * E * E2 * sf)
                         mh = math.sqrt(4 * E * HYP * E2 * sf)
+                        ml = math.sqrt(4 * E * HYP_LO * E2 * sf)
+                        if WIN[0] <= ml <= WIN[1]:
+                            lo_ok.add(int(s["id"]))
                         if WIN[0] <= m <= WIN[1] and (best is None or
                                                       abs(m - 135) < abs(best[2] - 135)):
                             best = (int(t["id"]), E2, m, th)
@@ -119,7 +124,8 @@ def main():
                                     partner_h=best_h[0] if best_h else "",
                                     mass_h="%.1f" % best_h[2] if best_h else "",
                                     theta_h="%.1f" % best_h[3] if best_h else "",
-                                    inwindow_h=bool(best_h)))
+                                    inwindow_h=bool(best_h),
+                                    inwindow_lo=int(s["id"]) in lo_ok))
 
                 if pdg == 211 and (s.get("num_segments") or 0) >= 3 and E >= 100.0:
                     spi.append(dict(stratum="S-PI", arm=arm.split("-")[-1], event=ev,
@@ -128,7 +134,7 @@ def main():
                                     nseg=s.get("num_segments"),
                                     partner="", partner_E="", mass="", theta="",
                                     inwindow="", partner_h="", mass_h="",
-                                    theta_h="", inwindow_h=""))
+                                    theta_h="", inwindow_h="", inwindow_lo=""))
 
     hit = [r for r in smu if r["inwindow"]]
     hit_h = [r for r in smu if r["inwindow_h"]]
@@ -138,8 +144,14 @@ def main():
     print("  candidates: %d" % len(smu))
     print("  of which an in-window pairing EXISTS with some EM shower: %d (%.0f%%)"
           % (len(hit), 100.0 * len(hit) / max(1, len(smu))))
-    print("  of which in-window under the SHOWER hypothesis (x%.3f): %d (%.0f%%)"
-          % (HYP, len(hit_h), 100.0 * len(hit_h) / max(1, len(smu))))
+    lo = [r for r in smu if r["inwindow_lo"]]
+    print("  of which in-window under the SHOWER hypothesis: %d at x%.3f, "
+          "%d at x%.2f  => the supportable claim is %d-%d of %d"
+          % (len(hit_h), HYP, len(lo), HYP_LO,
+             min(len(lo), len(hit_h)), max(len(lo), len(hit_h)), len(smu)))
+    print("  (the ratio is per-object -- 1.906 is measured on 283713's 23011, "
+          "1.66 is the viewer's quoted value; neither is a global constant, and "
+          "the other-hypothesis energy is not on disk for the unscanned five)")
     for r in sorted(hit_h, key=lambda r: abs(float(r["mass_h"]) - 135)):
         print("    SHOWER-HYP  %-8s evt %-7d sh %-7d E=%7s (x%.2f) len=%6s "
               "-> %s theta=%s  m=%s"
@@ -161,7 +173,8 @@ def main():
     if args.tsv:
         hdr = ["stratum", "arm", "event", "shower", "pdg", "E", "length",
                "conn", "nseg", "partner", "partner_E", "theta", "mass",
-               "inwindow", "partner_h", "theta_h", "mass_h", "inwindow_h"]
+               "inwindow", "partner_h", "theta_h", "mass_h", "inwindow_h",
+               "inwindow_lo"]
         with open(args.tsv, "w") as fh:
             fh.write("\t".join(hdr) + "\n")
             for r in smu + spi:

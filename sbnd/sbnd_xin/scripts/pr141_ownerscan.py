@@ -125,12 +125,25 @@ def main():
             if set(ids) != set(was) else "same pair"
         m_vtx = pio.get("mass_vertex_convention")
         m_ax = pio.get("mass_axis_convention")
+        # The label's mass is on whatever scale (and whatever energy
+        # hypothesis) the scan used -- scan-time fudge 0.80 for a row the owner
+        # did not re-save, the arm's 0.86 for one they did.  The containment
+        # correction below is computed from the ARM's kine_charge, so the
+        # baseline it corrects has to be the arm's too or the table mixes
+        # scales.  th_vtx is a pure geometry number and carries over.
+        th_vtx = pio.get("theta_vertex_convention")
+        kq = [((by.get(int(g[s]["shower"])) or {}).get("kine_charge") or 0.0)
+              for s in ("1", "2")]
+        m_arm = (math.sqrt(4 * kq[0] * kq[1] *
+                           math.sin(math.radians(th_vtx) / 2) ** 2)
+                 if th_vtx is not None and kq[0] > 0 and kq[1] > 0 else None)
         inwin = m_vtx is not None and WIN[0] <= m_vtx <= WIN[1]
 
         print("=== evt %d   %s" % (ev, changed))
-        print("    mass: vertex %.1f  axis %.1f   %s"
-              % (m_vtx or 0, m_ax or 0,
-                 "IN WINDOW (%.0f,%.0f)" % WIN if inwin else "outside"))
+        print("    mass: label %.1f (vertex conv, the scan's own energies) | "
+              "ARM %s (kine_charge, theta %.1f) %s"
+              % (m_vtx or 0, "%.1f" % m_arm if m_arm else "-", th_vtx or 0,
+                 "IN WINDOW (%.0f,%.0f)" % WIN if inwin else ""))
         cont = []
         for slot in ("1", "2"):
             gg = g[slot]
@@ -167,11 +180,11 @@ def main():
         fr = [contained_frac((by.get(c[0]) or {}).get("kine_charge"), c[1])
               for c in cont]
         m_corr = None
-        if m_vtx and all(f and f > 0.02 for f in fr):
-            m_corr = m_vtx / math.sqrt(fr[0] * fr[1])
+        if m_arm and all(f and f > 0.02 for f in fr):
+            m_corr = m_arm / math.sqrt(fr[0] * fr[1])
             print("    containment correction: f(g%d)=%.2f  f(g%d)=%.2f  "
-                  "=> mass %.1f -> %.1f  %s"
-                  % (cont[0][0], fr[0], cont[1][0], fr[1], m_vtx, m_corr,
+                  "=> ARM mass %.1f -> %.1f  %s"
+                  % (cont[0][0], fr[0], cont[1][0], fr[1], m_arm, m_corr,
                      "IN WINDOW" if WIN[0] <= m_corr <= WIN[1] else "still outside"))
         tight = [c for c in cont if c[1] < 5 * X0]
         if tight:
@@ -182,6 +195,7 @@ def main():
         print()
         rows.append(dict(event=ev, g1=ids[0], g2=ids[1], changed=changed,
                          m_vtx="%.1f" % (m_vtx or 0),
+                         m_arm=("%.1f" % m_arm) if m_arm else "",
                          m_axis="%.1f" % (m_ax or 0),
                          in_window=inwin,
                          room1="%.1f" % cont[0][1], room2="%.1f" % cont[1][1],
@@ -193,7 +207,7 @@ def main():
                          note=""))
 
     if args.tsv:
-        hdr = ["event", "g1", "g2", "changed", "m_vtx", "m_axis", "in_window",
+        hdr = ["event", "g1", "g2", "changed", "m_vtx", "m_arm", "m_axis", "in_window",
                "room1", "room2", "wallfar1", "wallfar2",
                "frac1", "frac2", "m_corr", "note"]
         with open(args.tsv, "w") as fh:
