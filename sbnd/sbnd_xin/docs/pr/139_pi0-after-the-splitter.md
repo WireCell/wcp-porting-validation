@@ -4,9 +4,12 @@
 2026-08-31** (owner flip; flip-equivalence gate `work-pr139r3-flipchk-*` vs
 `work-pr139r1-onemst-*` **478 / 478 byte-identical**). The owner's scan is **DONE** (2026-09-01,
 39 objects, tag `splitscan-0902-pi0`) and **it overturned this round's own
-recommendation** — see **§6**. **Session 3 (§15–§21) answered all four §14.3
-next steps; §21 is the current state and §21.1 the next moves.** The four items
-§3ter ordered are all **now measured**: item 1 **passes its pre-registered prediction and awaits the owner's
+recommendation** — see **§6**. **The round is now DECIDED: §23 is the
+recommended running condition — keep production exactly as shipped and flip
+nothing — on the strength of the owner's 2026-09-03 scan (§22), which doubled the
+label set to 71 objects and refuted §17's own hypothesis.** Session 3 (§15–§21)
+answered all four §14.3 next steps. The four items §3ter ordered are all **now
+measured**: item 1 **passes its pre-registered prediction and awaits the owner's
 flip** (§8, §10), item 2 **shipped** (§11), items 3 and 4 are **closed as
 measured-dead, each with a mechanism** (§12, §13). **§14 is what to read next.**
 This file is the tracker for a multi-session round. §1 is the
@@ -44,7 +47,7 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **P1.0** | **the shared knob-off gate** | all four at their shipped defaults | **PASS ×2** | `work-pr139r2-off-*` vs `work-pr138r3-flipchk-*`, **and** vs `work-pr139r1-off-*` | **478 / 478 byte-identical** on both, `missing/unpaired 0`, rc=0 ×4 ×2 |
 | **P1.1** | shared-membership peel guard | `shower_split_skip_shared` | **SUPERSEDED BY P1.6** (ships inside it) | `work-pr139r1-onshared-*` | 3 peels refused, the **`kine=0` daughter gone**, `none` 3→2, exact **35**, q_extra 6.7→6.9 %, 0 ADVERSE |
 | **P1.2** | impact-parameter veto @ 12 cm | `shower_split_max_impact` (cm, 0 = off) | **MEASURED WRONG AT 12 — do not flip** (§6) | `work-pr139r1-onb12-*` | exact 35 → 36 and all four π⁰s recovered, **but the owner's scan says it suppresses 9 of the 19 cuts he confirms**, including 281485 whose cut he calls correct |
-| **P1.6** | **`skip_shared` + `max_impact` = 30** — the operating point the scan supports | `shower_split_skip_shared` + `shower_split_max_impact` | **PASSES all four pre-registered bars; OWNER'S CALL, and it is a TRADE** (§8, §10, §14.2) | `work-pr140r1-on-*` vs `work-pr139r1-onemst-*` | **For:** exact **36**, q_extra **6.9 %**, **0 ADVERSE**, tape reproduces the prediction on **39 of 39**; **5** confirmed cuts suppressed (2 deferred + 3 rejected) vs **11** for the withdrawn `b ≤ 12`. **Against:** the §8.4 bars were fixed *before* item 2's instrument existed, and that instrument (§11.4) prices the arm at **−1 confirmed cut** (294174/71067) and **−0.052** median part `q_f1`. `skip_shared` **alone** is the defensible alternative: 2 suppressions instead of 5, at one census `exact` |
+| **P1.6** | `skip_shared` + `max_impact` = 30 | `shower_split_skip_shared` + `shower_split_max_impact` | **DO NOT FLIP** (§22.3, §23) — passes its own pre-registered bars, but on 71 labelled objects it costs **10 of 32** confirmed cuts for **+1** π⁰ `exact`, and two of the cuts it rejects sit 0.32/0.35 cm from the threshold | `work-pr140r1-on-*` vs `work-pr139r1-onemst-*` | **For:** exact **36**, q_extra **6.9 %**, **0 ADVERSE**, tape reproduces the prediction on **39 of 39**; **5** confirmed cuts suppressed (2 deferred + 3 rejected) vs **11** for the withdrawn `b ≤ 12`. **Against:** the §8.4 bars were fixed *before* item 2's instrument existed, and that instrument (§11.4) prices the arm at **−1 confirmed cut** (294174/71067) and **−0.052** median part `q_f1`. `skip_shared` **alone** is the defensible alternative: 2 suppressions instead of 5, at one census `exact` |
 | **P1.3** | daughter EM start segment (μ-typing) | `shower_split_em_start` | **SBND PRODUCTION ON** (owner flip 2026-08-31) | `work-pr139r1-onemst-*`; flip-equivalence `work-pr139r3-flipchk-*` **478 / 478** | μ-typed daughters **11 → 2**, **461 MeV** of EM energy restored (×1.657 confirmed), 51 peels / **0 backwards**, every instrument unchanged, 0 ADVERSE |
 | **P1.4** | re-home the orphan daughter | `shower_split_rehome`, `…_rehome_gap` | **CLOSED — do not flip** (§12) | `work-pr140r1-onrh15-*` (15 cm, flipped config) | 11/51 re-homed; census **35**, 0 ADVERSE; the merged target moves on **exactly the same 3 rows** as the single one — it buys sensitivity to *cuts*, not *merges*, so P1.4 was never blocked on the instrument |
 | **P1.5** | the combination P1.1 + P1.2 + P1.3 | three knobs | **DONE** | `work-pr139r2-oncomb-*` | exact **36**, q_miss 14.5 %, q_extra 7.6 %, q_f1 **0.932**, μ-typed daughters **1**, 0 ADVERSE |
@@ -61,8 +64,8 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 | **C4** | the upstream ν vertex finder | — | **OWNER, OUT OF SCOPE** | — | — |
 
 | **S1** | **the shed** — an entirely co-owned refused component | `shower_split_shed_shared` (new) | **DONE — mechanism exact, census cost 1; OWNER'S CALL** (§20) | `work-pr140r2-coown-*` vs `work-pr140r2-on-*`; knob-off gate **478/478** | 1 shed (281485) exactly as pre-registered, both partial-sharing refusals stand, 0 ADVERSE, completeness unmoved — but the π⁰ census goes `partial`→`none` on that one event, because a correct cut divides a hand γ across two reco objects |
-| **S2** | **the seed cap as a knob** | `shower_split_max_seeds` (new, default 4) | §17, **not yet armed** | knob-off gate **478/478** | blocked on labels: only 4 scanned objects are seed-capped at k ≥ 3 |
-| **S3** | **the wider per-part label set** | — (tag `splitscan-0903-wide`) | **SCAN-READY** (§19) | `docs/pr/pr140-scan-set.tsv`, 32 objects, all verified loadable | unblocks §13.3, §17 and §18 at once |
+| **S2** | the seed cap as a knob | `shower_split_max_seeds` (new, default 4) | **CLOSED — REFUTED, leave at 4** (§22.1) | `splitscan-0903-wide`, stratum S1 | the 8 objects chosen *because* they are seed-capped want k ≤ 3; **0 of 32 want k > 3**; k > 3 is 2 of 71 across both scans |
+| **S3** | the wider per-part label set | — (tag `splitscan-0903-wide`) | **DONE 2026-09-03 — 32/32 labelled, all high confidence** (§22) | `em_labels/splitscan-0903-wide/`, `docs/pr/pr140-scan2-verdicts.tsv` | 19 KEEP / 9 SPLIT2 / 4 SPLIT3; control stratum **0 of 8** splits and **0** fires; S3 fires **8 of 8** confirmed; it settled the running condition (§23) |
 | **S4** | the last false fire 278420/61027 | — | **MEASURED NOT SEPARABLE** (§18) | `docs/pr/pr140-seeding.tsv` | 3 of its 4 outlier margins are under 1 %; `b`'s is 0.43 cm, below the instrument's own 0.5 cm precision |
 
 **Standing bar for every P-row**: knob-off byte-identical on the standard
@@ -1640,3 +1643,155 @@ rather than tune around it.
 
 **Not next**: any further `b` sweep (§6.3 priced the dial, §10 confirmed it to
 the object); `max_parts` on its own (§13, §17).
+
+---
+
+## 22. The owner's 2026-09-03 scan — and it settles the running condition
+
+Tag `splitscan-0903-wide`, **32 objects, all 32 labelled, all high confidence**:
+19 KEEP, 9 SPLIT2, 4 SPLIT3. Blind — the viewer does not show the stratum while
+judging. `scripts/pr140_scan2_analysis.py` → `docs/pr/pr140-scan2-verdicts.tsv`.
+
+**A correction first**: the scan brief said 278420/61027 was in stratum S2. It was
+not — `pr140_scanset.py` excludes everything already labelled in
+`splitscan-0902-pi0`, and 278420 is in that set. §18's question is still open on
+one negative.
+
+### 22.1 §17 is REFUTED by the stratum built to test it
+
+| | |
+|---|---|
+| max `k` over all 32 fresh objects | **3** |
+| objects wanting `k` > 3 | **0** |
+| objects wanting `k` > 4 | **0** |
+| **S1-seed-capped** — chosen *because* `n_seed` sits at the hardcoded cap of 4 | owner `k` = **{1: 6, 3: 2}** |
+| for contrast, the 0902 set | `k` up to **7** (one at 7, one at 5) |
+
+§17 argued that `max_seeds = 4` could not express what the owner wanted, on the
+strength of two objects at k = 5 and k = 7. **Eight objects selected precisely
+because they are seed-capped want k ≤ 3.** Across all 71 labelled objects the k
+distribution is `{1: 39, 2: 24, 3: 6, 5: 1, 7: 1}` — **k > 3 is 2 of 71.**
+
+**Decision: do not arm `shower_split_max_seeds`.** It ships at its default of 4,
+byte-identical, and the question is closed by the measurement it asked for. This
+is the pre-registration working in the direction that costs me the hypothesis.
+
+### 22.2 The control stratum is the number that matters
+
+| stratum | n | split rate | splitter fires |
+|---|---|---|---|
+| **S4-control** (seeded-random, feature-blind) | 8 | **0.000** | **0** |
+| S3-unjudged-fire (the splitter peels these today) | 8 | **1.000** | 8 |
+| S1-seed-capped | 8 | 0.250 | — |
+| S2-bound-region | 8 | 0.375 | — |
+
+Two facts, and they point the same way:
+
+1. **On an unbiased random sample the splitter fires zero times and the owner
+   finds nothing to split.** The false fires are concentrated in samples chosen
+   near thresholds — they are not sprayed over the population.
+2. **Every object the splitter actually peels today, the owner confirms — 8 of
+   8.** Trigger purity on its own actions, measured blind, is 1.000.
+
+### 22.3 The operating points, re-priced on all 71 labelled objects
+
+| operating point | fires | efficiency | purity | **confirmed cuts suppressed** |
+|---|---|---|---|---|
+| **production, as shipped** | 36 | **0.938** (30/32) | 0.833 | **2** |
+| `skip_shared` only | 33 | 0.875 | 0.848 | 4 |
+| **P1.6** = `skip_shared` + `b ≤ 30` | 23 | 0.688 | **0.957** | **10** |
+| `skip_shared` + `b ≤ 40` | 28 | 0.781 | 0.893 | 7 |
+| `b ≤ 30` only | 26 | 0.750 | 0.923 | 8 |
+
+Against the π⁰ census on the same arms: production **exact 35**, P1.6 **exact 36**.
+
+**So P1.6 buys one π⁰ `exact` and costs eight further confirmed cuts** (2 → 10,
+i.e. nearly a third of everything the owner has confirmed). The 39-object set
+could not show this; 71 objects can.
+
+And the bound at 30 is a **knife edge**. Of the three confirmed cuts it rejects
+on the fresh set:
+
+| event | node | `b` | margin over the bound |
+|---|---|---|---|
+| 21073 | 63100 | 34.53 | +4.53 cm |
+| **284200** | 6013 | **30.32** | **+0.32 cm** |
+| **292643** | 25015 | **30.35** | **+0.35 cm** |
+
+Two of three sit **inside the 0.5 cm offline-vs-C++ agreement spread** (§8.3).
+The bound's cost is not merely high, it is **not robustly determined** — a
+re-fit of the same quantity could move those two either side of 30.
+
+### 22.4 Boundary agreement holds up
+
+| | 2026-09-03 (fresh) | 2026-09-01 |
+|---|---|---|
+| SPLIT2 | median **1.000**, mean 0.987, **8 of 9 exact** | median 1.000, mean 0.981, 12 of 15 |
+| k ≥ 3 | mean 0.739, 0 of 2 exact (kernel makes 2 where owner wants 3) | 0.800 |
+
+The kernel's *boundary* is right and its *count* is short on k = 3 — 6 of 32
+confirmed cuts across both scans want three parts, and §13 measured that simply
+raising `max_parts` places the third cut badly. That remains a kernel problem,
+now with **6** labelled examples instead of 4.
+
+### 22.5 A thin new lead, labelled thin
+
+Of the six false fires on the production config, **one is `pdg = 211`**
+(318769/31026, a π±-typed object — the splitter skips `|pdg| = 13` long muons but
+not pions):
+
+| candidate class | n | confirmed cuts | fires | purity |
+|---|---|---|---|---|
+| EM-typed (\|pdg\| = 11) | 63 | 31 | 35 | **0.857** |
+| not EM-typed | 8 | 1 | 1 | **0.000** |
+
+An EM-only restriction would remove that false fire and **cost no cut that fires
+today** (the one non-EM confirmed cut, 396222/9084, does not fire: `nacc=2` but
+`nparts=1`). Purity 0.833 → 0.857.
+
+**But this is n = 2 non-EM fires.** §18 refused to set a threshold on one
+negative and this is the same discipline: it is a **lead for a targeted sample**,
+not a knob to flip.
+
+---
+
+## 23. RECOMMENDED RUNNING CONDITION
+
+> **Keep production exactly as it is: `onV1c90` + `shower_split` +
+> `shower_split_em_start`. Flip nothing.**
+
+| knob | recommendation | why |
+|---|---|---|
+| `shower_split_max_impact` (P1.2 / P1.6) | **do not flip** | costs 10 of 32 confirmed cuts for +1 π⁰ `exact`; two of the cuts it rejects sit 0.32 / 0.35 cm from the threshold, inside instrument precision (§22.3) |
+| `shower_split_skip_shared` | **do not flip** | costs 4 of 32 confirmed cuts for +0.015 purity (§22.3) |
+| `shower_split_shed_shared` | **do not flip, do not delete** | mechanically correct, costs one π⁰ `partial` on its one event (§20) |
+| `shower_split_max_seeds` | **leave at 4** | refuted by its own designed test — 0 of 32 want k > 3 (§22.1) |
+| `shower_split_max_parts` | **leave at 2** | raising it places the third cut badly (§13); the k = 3 demand is real but the kernel is the blocker |
+
+The case for doing nothing is now positive rather than default: **the shipped
+splitter catches 30 of 32 confirmed cuts (0.938), fires zero times on a blind
+random control, and every object it actually peels is a cut the owner
+confirms.** Every knob on the table trades a large share of that efficiency for
+purity the control stratum says is not the binding problem.
+
+### 23.1 Next steps, in order
+
+1. **Close out the round.** The four §14.3 items are answered and the running
+   condition is settled. All five knobs stay OFF and gated; nothing is deleted.
+2. **The k = 3 kernel problem** is the one live lead with a real, measured demand
+   — 6 of 32 confirmed cuts want three parts and the kernel places the third
+   boundary badly (agreement 0.739). This is a *seeding/assignment* question, not
+   a cap question (§17, §22.1), and it now has 6 labelled examples to develop
+   against. **The concrete next experiment**: make the third cut only where the
+   two-part solution leaves a part that itself has an accepted seed pair — i.e.
+   recurse rather than ask for three seeds at once.
+3. **The EM-only restriction** (§22.5) needs a targeted sample of π±-typed
+   candidates — perhaps 15 objects — before it can be more than a lead. Cheap to
+   assemble from the tape; it is the only remaining purity idea that is not
+   "more of the same geometry" (§18).
+4. **278420/61027 stays open on one negative.** It was not in this set. If a
+   future scan covers it plus a handful of other surviving false fires, §18's
+   separability question can be re-asked properly.
+
+**Not next**: any further `b` sweep (§22.3 settles the dial — its cost is high
+*and* not robustly measured); `max_seeds` (§22.1); `max_parts` alone (§13).

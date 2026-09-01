@@ -1,0 +1,52 @@
+{
+ "event": "evt386948",
+ "scan_tag": "splitscan-0903-wide",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "91060": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "16003": 0,
+    "16006": 0,
+    "16008": 0,
+    "16009": 0,
+    "16010": 0,
+    "16012": 0,
+    "16013": 0,
+    "16014": 0,
+    "16016": 0,
+    "66022": 0,
+    "71027": 0,
+    "73029": 0,
+    "76035": 0,
+    "91060": 0
+   },
+   "parts": {
+    "0": [
+     16003,
+     16006,
+     16008,
+     16009,
+     16010,
+     16012,
+     16013,
+     16014,
+     16016,
+     66022,
+     71027,
+     73029,
+     76035,
+     91060
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 14,
+   "Q": 5306709.800000001,
+   "saved": "2026-08-31T18:03:15"
+  }
+ }
+}

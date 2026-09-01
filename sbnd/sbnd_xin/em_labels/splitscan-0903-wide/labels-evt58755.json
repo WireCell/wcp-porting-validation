@@ -1,0 +1,48 @@
+{
+ "event": "evt58755",
+ "scan_tag": "splitscan-0903-wide",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "30003": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "30003": 0,
+    "67010": 1,
+    "68011": 1,
+    "96018": 0,
+    "97019": 0,
+    "98020": 0,
+    "99021": 1,
+    "100022": 1,
+    "101024": 0,
+    "101026": 0,
+    "101029": 0
+   },
+   "parts": {
+    "0": [
+     30003,
+     96018,
+     97019,
+     98020,
+     101024,
+     101026,
+     101029
+    ],
+    "1": [
+     67010,
+     68011,
+     99021,
+     100022
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.880 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 11,
+   "Q": 2053343.1,
+   "saved": "2026-08-31T18:04:31"
+  }
+ }
+}
