@@ -1,0 +1,42 @@
+{
+ "event": "evt475096",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "19014": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "19014": 0,
+    "19015": 0,
+    "19017": 0,
+    "19018": 0,
+    "55031": 0,
+    "56032": 0,
+    "57033": 0,
+    "58034": 0,
+    "59035": 0
+   },
+   "parts": {
+    "0": [
+     19014,
+     19015,
+     19017,
+     19018,
+     55031,
+     56032,
+     57033,
+     58034,
+     59035
+    ]
+   },
+   "proposal": "single group: 3 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 9,
+   "Q": 2209773.6999999997,
+   "saved": "2026-08-31T08:50:18"
+  }
+ }
+}

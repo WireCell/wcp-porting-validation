@@ -1,0 +1,186 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 41.68,
+  "az_deg": -55.0,
+  "centre": [
+   -130.57,
+   151.1,
+   242.79
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4806,
+  "cloud_cluster_ids": [
+   6,
+   13,
+   14,
+   15,
+   16,
+   17
+  ],
+  "cloud_kept": 4806,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 19222,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.24508297463274742,
+   0.36712429261313595,
+   0.8973037887574468
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "70063": {
+    "63040": "in",
+    "66043": "in",
+    "69062": "in"
+   }
+  },
+  "marks_detail": {
+   "70063": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.6269388764391756,
+     -0.7289289328933956,
+     -0.27497319142069104
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "63040": {
+      "absorbed_by": null,
+      "angle": 6.293601533517904,
+      "cluster_id": 63,
+      "dist": 47.08022356338499,
+      "ellip": 2.4341681113527827,
+      "kind": "in",
+      "length": 2.728827320976454,
+      "owner": 63040,
+      "pdg": 11,
+      "tier": 1
+     },
+     "66043": {
+      "absorbed_by": null,
+      "angle": 2.8424899092597817,
+      "cluster_id": 66,
+      "dist": 25.41711153099705,
+      "ellip": 0.46632451075961817,
+      "kind": "in",
+      "length": 2.494835485617258,
+      "owner": 66043,
+      "pdg": 11,
+      "tier": 1
+     },
+     "69062": {
+      "absorbed_by": null,
+      "angle": 25.2798633051978,
+      "cluster_id": 69,
+      "dist": 32.590375845095664,
+      "ellip": 8.29053197335069,
+      "kind": "in",
+      "length": 6.2176770672389425,
+      "owner": 69062,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 21.245198725017058,
+     "angle_min": 0.0,
+     "dist_max": 44.854437200927066,
+     "dist_min": 0.0,
+     "n": 11
+    },
+    "members": [
+     60037,
+     67048,
+     67050,
+     67051,
+     67052,
+     67053,
+     67054,
+     67055,
+     67056,
+     67057,
+     70063
+    ],
+    "start": [
+     -170.42340720028514,
+     87.24279606148471,
+     226.418562237569
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.24508297463274742,
+    0.36712429261313595,
+    0.8973037887574468
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 349.79291012771887,
+   "kine_charge": 349.79291012771887,
+   "kine_charge_other_hypothesis": 210.40175045276325,
+   "kine_dQdx": 267.50979262785626,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    6013,
+    6017,
+    6019,
+    6020,
+    6021,
+    50027,
+    54031
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -150.04717416808003,
+   121.52827720353935,
+   235.8039328557491
+  ],
+  "reco_start_vertex_id": 6006,
+  "shower": 6013,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -150.04717416808003,
+   121.52827720353935,
+   235.8039328557491
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt98844",
+ "eventNo": 98844,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": -150.04717416808003,
+  "y": 121.52827720353935,
+  "z": 235.8039328557491
+ },
+ "note": "[agent-bulk] Vertex judged from the event's own +-111.6 cm sweep (event_half_span_cm 111.6, under the 150 cm trigger, so no --vtx-span re-capture). The star (-150.0,121.5,235.8) is at the end of the 63.8 cm pdg-13 muon 6009 with the cluster-6 complex around it; I have no strong vertex complaint, so this is a clustering verdict. VERDICT on 6013 (349.8 MeV, 7 seg, table length 140.1 cm, the leading shower): over-clustered. Three reasons. (1) Its start is at dist 0.0 from the nu vertex and its seed is in cluster 6, the SAME cluster as the muon 6009 which ends on that vertex -- a converted photon cannot start on the vertex; this is the pilot's evt280159 signature (a vertex blob seeded on the muon stem), here much larger. (2) Its yellow member set does not read as one cone from one apex: in BOTH azimuths (az-055 and az+085) the members trace a closed circuit around a largely empty quadrilateral, and the axis arrow points in a direction that matches almost none of the member bulk. The chain is 6013 -> 6017 -> 6019 -> 6020 with 6021 as a stub: 129 cm of skeleton path inside a spatial extent of only about 40x60x20 cm, and 6017 alone is 51.3 cm of polyline between two endpoints that are 12.8 cm apart. (3) The member set runs from the vertex all the way back to (-120,165,236), which is 15 cm from the muon's OTHER end (-115,168,250) and sits in the same region as the separate shower 6015 -- so cluster 6's far end is split between two showers while 6013 spans the whole cluster. It also swallows 50027 (pdg 13) and 54031 (pdg 2212). NO MARKS on 6013: like the pilot on evt280159 I could not name which segments to remove with confidence -- the member chain is contiguous and I cannot say where the real shower ends and the cluster-traversal begins. SECOND SHOWER 70063 (339.4 MeV, 11 seg) is the opposite and is the most photon-like object in the event: detached (closest member 41 cm from the vertex), all 11 members from_vertices walk_add at 0-28.6 cm and 2.8-21.2 deg, and in 3-D it starts narrow at its X and opens into a multi-branch fan with a dense point cloud. It IS mildly under-clustered: shw70063-acc shows four non-member circles inside or on the pass-1 box, and the shower's own choices are internally inconsistent -- it absorbed 60037 at 44.9 cm / 16.3 deg by pass4_angle but left 63040 at 47.1 cm / 6.3 deg (tier 1, 8.4 MeV) and 66043 at 25.4 cm / 2.8 deg (tier 1, 7.8 MeV), both at SMALLER angle. MARKS on 70063: 66043 IN (strongest -- 2.8 deg, 25 cm, tier 1), 63040 IN (47.1 cm, 6.3 deg, tier 1), 69062 IN (32.6 cm, 25.3 deg, weakest of the three on geometry alone but see the pi0 argument). Per correction 11 none of these three is truly grey: each heads its own trivial 8-17 MeV shower, so this is the weaker class of under-clustering evidence; I did not mark 58035 (46.0 cm, 12.8 deg) because it IS a member of 66043's shower and would come along with it. Total marked-in charge about 33 MeV on 339.4, i.e. 10%. PI0 -- THE MAIN FINDING, and I dispute the reconstruction's pairing. Reco group 0 is 6013 + 69062, stored mass 118.3 MeV, asymmetry 0.91. gamma1 is the vertex-attached blob above (start dist 0.0 from the vertex), so it cannot be a converted photon. gamma2 is a single 16.6 MeV segment sitting 6.2 cm from shower 70063's members. I priced the alternatives with --pio-pairs (shots-pio/evt98844): 70063+69062 gives theta 39.9 deg (axis) / 9.4 deg (VERTEX convention) -> m 51.2 / 12.3 MeV. A 9.4 deg opening angle from the vertex is not two photons; it is one photon and a fragment of itself, which is the quantitative reason 69062 is marked into 70063 rather than paired with anything. The other alternatives are all far off the pi0 mass: 70063+65042 = 247.7 / 234.4 MeV, 70063+6015 = 245.2 / 250.9 MeV, 70063+71064 = 60.7 (axis) / 179.5 (vertex). So there is NO credible pi0 pairing in this event among the in-scope showers, and I stored none. The reco's 118.3 MeV group 0 should be treated as a pairing of a vertex blob with a fragment of another shower. NOT looked at: the 20 showers the scope rule skipped, all 8.4 MeV and below -- except 66043, 63040 and 69062, which I examined through the candidate table and acceptance plot because they are the marks above. drag_check live: probe_radius_px 309, seg_u 259.41 -> 114.77, cloud_redrew true.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt98844/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:55:22+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt98844/calib-pr-evt98844.json",
+ "subRunNo": 1
+}

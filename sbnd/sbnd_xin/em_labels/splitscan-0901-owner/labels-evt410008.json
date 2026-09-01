@@ -1,0 +1,59 @@
+{
+ "event": "evt410008",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "20001": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "20001": 0,
+    "20002": 0,
+    "20003": 0
+   },
+   "parts": {
+    "0": [
+     20001,
+     20002,
+     20003
+    ]
+   },
+   "proposal": "single group: 2 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 3,
+   "Q": 2112571.6999999997,
+   "saved": "2026-08-31T08:07:13"
+  },
+  "98035": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "98028": 0,
+    "98029": 0,
+    "98034": 0,
+    "98035": 0,
+    "98037": 0,
+    "98038": 0
+   },
+   "parts": {
+    "0": [
+     98028,
+     98029,
+     98034,
+     98035,
+     98037,
+     98038
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 6,
+   "Q": 1981753.3,
+   "saved": "2026-08-31T08:51:40"
+  }
+ }
+}

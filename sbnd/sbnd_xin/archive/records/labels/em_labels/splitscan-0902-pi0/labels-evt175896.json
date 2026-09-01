@@ -1,0 +1,32 @@
+{
+ "event": "evt175896",
+ "scan_tag": "splitscan-0902-pi0",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "17044": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "17044": 0,
+    "64020": 1,
+    "66037": 0
+   },
+   "parts": {
+    "0": [
+     17044,
+     66037
+    ],
+    "1": [
+     64020
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.922 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 3,
+   "Q": 1674192.0,
+   "saved": "2026-08-31T15:17:00"
+  }
+ }
+}

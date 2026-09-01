@@ -1,0 +1,13 @@
+{
+ "event": "evt278420",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "61027": {
+   "verdict": "SPLIT2",
+   "confidence": "high",
+   "comment": "several disjoint clumps over 30-145 cm; blue is a compact track-like line at 25-50 cm, red is scattered charge at 70-140 cm; w 11-19 cm vs null 4.5-7",
+   "parts": null
+  }
+ }
+}

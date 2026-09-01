@@ -1,0 +1,13 @@
+{
+ "event": "evt122660",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "54071": {
+   "verdict": "SPLIT2",
+   "confidence": "medium",
+   "comment": "Scan A. GENUINE MISS: two arms, but the whole object subtends only ~5x11 deg at 90-115 cm.  Spatially disjoint (~3 cm gap), angularly unreachable",
+   "parts": null
+  }
+ }
+}

@@ -1,0 +1,102 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 81.97,
+  "az_deg": -55.0,
+  "centre": [
+   99.96,
+   -1.02,
+   461.45
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 976,
+  "cloud_cluster_ids": [
+   10,
+   16,
+   17,
+   18
+  ],
+  "cloud_kept": 976,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 53799,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7482978818472639,
+   -0.3321322149375557,
+   0.5742285884763763
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7482978818472639,
+    -0.3321322149375557,
+    0.5742285884763763
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 255.9690721366181,
+   "kine_charge": 255.9690721366181,
+   "kine_charge_other_hypothesis": 153.9663591799207,
+   "kine_dQdx": 212.15218855431982,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    10001,
+    42010,
+    69012,
+    70013,
+    71014
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   44.33091809325059,
+   21.15027352477273,
+   422.7856563673102
+  ],
+  "reco_start_vertex_id": 10002,
+  "shower": 10001,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   44.33091809325059,
+   21.15027352477273,
+   422.7856563673102
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt179611",
+ "eventNo": 179611,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": 44.33091809325059,
+  "y": 21.15027352477273,
+  "z": 422.7856563673102
+ },
+ "note": "[agent-bulk] nuecc. THIS EVENT CARRIES NO CLUSTERING JUDGEMENT - the verdict is a PID statement and is silent on whether the grouping is right (correction 6). VERTEX: event_half_span_cm 176.3, so I judged it off the --vtx-span 60 re-capture (shots-vtx/evt179611), not the native sweep. At 60 cm the blue star sits on a clean two-prong apex: a 35 cm grey track leaving one way (10002, pdg 2212, correctly unowned) and 10001 leaving the other. Not a vertex failure. shw 10001 (256.0 MeV, pdg 11, 5 segments, len 100.6) is not an EM shower. On BOTH az-055-el+20 and az+085-el+20 it is four COLLINEAR, MIP-narrow pieces strung along one straight line from the X out to 135 cm, separated by gaps, with zero transverse spread, no apex, no branching and no widening at either end - and the numbers say the same thing: every member sits within 2.8 DEG of the axis (71014 at 72.2 cm / 1.4 deg, 42010 at 83.1 / 1.7, 69012 at 104.9 / 2.1, 70013 at 134.5 / 2.8). A 256 MeV electron at 135 cm is nearly ten radiation lengths in and would be a broad shower; nothing here has ever spread. The reconstruction's own pid agrees in part: 69012, the 28.5 cm piece at 105 cm, is tagged pdg 13. The charge density fits a MIP too - 256 MeV over 100.6 cm of narrow track is about 2.5 MeV/cm. Topologically this is a proton + MIP two-prong vertex, not an electron. If it IS an EM shower then almost nothing is missing: the only unowned segment inside 30 deg of the axis is 72015, a 0.5 cm stub sitting at 61.6 cm / 1.0 deg dead on the line in one of the gaps, and everything else is at 81-130 deg. pi0: showers[].pio_id is -1, the reconstruction accepted NO group, and 10001 is the only shower above 20 MeV in the event, so there is no pairing to dispute and I store no candidate. Not looked at: the 12 showers the scope rule skipped, all under 20 MeV min_kine_best.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt179611/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:49:07+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt179611/calib-pr-evt179611.json",
+ "subRunNo": 1
+}

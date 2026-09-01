@@ -1,0 +1,147 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   188.29,
+   178.27,
+   397.11
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1622,
+  "cloud_cluster_ids": [
+   18,
+   19,
+   20,
+   21,
+   22
+  ],
+  "cloud_kept": 1622,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 14072,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.389116557866236,
+   0.888266075540405,
+   -0.24407311084668787
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "22001": {
+    "58030": "in"
+   }
+  },
+  "marks_detail": {
+   "22001": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.389116557866236,
+     0.888266075540405,
+     -0.24407311084668787
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "58030": {
+      "absorbed_by": null,
+      "angle": 9.930254653459537,
+      "cluster_id": 58,
+      "dist": 34.70479824557245,
+      "ellip": 2.1630993377604337,
+      "kind": "in",
+      "length": 2.7417414364628483,
+      "owner": 58030,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 4.4594372092857295,
+     "angle_min": 0.0,
+     "dist_max": 35.935002661035796,
+     "dist_min": 0.0,
+     "n": 3
+    },
+    "members": [
+     22001,
+     22002,
+     22003
+    ],
+    "start": [
+     179.40771651259635,
+     156.85540463936547,
+     403.22094794594943
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.389116557866236,
+    0.888266075540405,
+    -0.24407311084668787
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 163.12718420393935,
+   "kine_charge": 163.12718420393935,
+   "kine_charge_other_hypothesis": 98.12161455876053,
+   "kine_dQdx": 116.379277028608,
+   "kine_hypothesis": "shower",
+   "kine_range": 141.20565543828752,
+   "members": [
+    22001,
+    22002,
+    22003
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 4
+  },
+  "reco_start": [
+   179.40771651259635,
+   156.85540463936547,
+   403.22094794594943
+  ],
+  "reco_start_vertex_id": 21012,
+  "shower": 22001,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   179.40771651259635,
+   156.85540463936547,
+   403.22094794594943
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt287007",
+ "eventNo": 287007,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": 72.38572092273827,
+  "y": 169.1446381668842,
+  "z": 397.06214465299473
+ },
+ "note": "[agent-bulk] shw 22001 (163.1 MeV, 3 seg, 54.0 cm) is mildly under-clustered. Its own shape is fine: on shw22001-az-055-el+20 and -az+085-el+20 it is one object from the X along the axis, narrow for the first two thirds and then visibly broadening with a Y-branch in the last third - that is shower development, one apex, and the members (the 37.0 cm seed 22001 plus 22003 and 22002, both in_other_cluster at 4.5 deg and 0.4 deg) cover it. What is missing is 58030: 2.74 cm, at 34.7 cm / 9.93 deg, tier 1, metric 2.16, owned by itself (its own sub-20 MeV shower). The acceptance plot puts it as the single blue circle at (34.7 cm, 9.95 deg) - BETWEEN the 5 deg and 12.5 deg dashed pass-1 steps, sitting immediately beside two orange members at the same distance (34.7 cm / 4.5 deg and 36 cm / 0.6 deg). In the images it is a small blob about 4-5 cm off the shower body at two thirds of the way out, inside the shower envelope. Marked IN. Small piece, so the energy effect is minor; the verdict is about the boundary being drawn wrong, not about a large missing chunk. Nothing else is close: every other candidate is 74-552 cm away at 90-161 deg. FLAG FOR THE OWNER, not part of the verdict: 22001 is detached ~100 cm from the vertex region and does NOT point back at it. The nu vertex sits at the end of the 40.1 cm muon 21008 (cluster 21, with 21010 pdg 2212 and 21012 pdg 211, all correctly unowned) among a scatter of sub-cm fragments, and cluster 21 reads 105-108 deg from 22001's axis - roughly perpendicular, where a photon converting at this shower start and travelling along its axis should put the vertex near 180 deg. I did not call vertex-bad because the star is at the only track end in the event and I see no better candidate for it, but the geometry does not support 22001 having come from there. Scope: 1 shower of 22 examined; 21 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 160 cm (driven by that 1 m detachment) and was used for topology only. Verdict is about clustering and silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt287007/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:51:02+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt287007/calib-pr-evt287007.json",
+ "subRunNo": 1
+}

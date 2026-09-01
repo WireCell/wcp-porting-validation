@@ -1,0 +1,106 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -175.37,
+   20.32,
+   259.72
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3709,
+  "cloud_cluster_ids": [
+   14,
+   24,
+   25,
+   26,
+   27
+  ],
+  "cloud_kept": 3709,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 49682,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.285105223244649,
+   0.6812514281740562,
+   0.6742488437434858
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.285105223244649,
+    0.6812514281740562,
+    0.6742488437434858
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 8,
+   "kine_best": 200.42713927400786,
+   "kine_charge": 200.42713927400786,
+   "kine_charge_other_hypothesis": 120.55767775880173,
+   "kine_dQdx": 168.8437695004349,
+   "kine_hypothesis": "shower",
+   "kine_range": 176.17065966734688,
+   "members": [
+    27010,
+    27014,
+    27015,
+    27016,
+    27017,
+    27018,
+    27019,
+    27022
+   ],
+   "membership_source": "probe",
+   "num_segments": 8,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -172.95130501075536,
+   17.70847805877963,
+   256.07653021601186
+  ],
+  "reco_start_vertex_id": 26002,
+  "shower": 27016,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -172.95130501075536,
+   17.70847805877963,
+   256.07653021601186
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt167612",
+ "eventNo": 167612,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 26,
+  "x": -130.58788325304002,
+  "y": -56.257228681043955,
+  "z": 67.33988348378162
+ },
+ "note": "[agent-bulk] mcp2k other_em, the busy one: 49 segments, 31 showers, 7 in scope (27016, 100074, 80031, 101086, 88047, 91056, 95062). The other 24 are all under 20 MeV and I did not look at them individually; everything below is a claim about the leading shower and about the event's geometry, NOT about 31 showers. drag_check both true, probe 307.2 px off centroid, not degenerate. r95 222.5 cm so the default vertex sweep framed at +-278 cm was useless for the vertex; I judged the vertex from a --vtx-span 60 re-capture (shots-vtx/evt167612), at two azimuths. WHY THIS IS A VERTEX RESULT. The main vertex is 195-215 cm away from every piece of electromagnetic activity in the event. At +-60 cm the star sits on ONE object and nothing else: it is the kink between 26001 (55.4 cm, pdg 2212, 93 points) and 26002 (6.5 cm, pdg 13) -- a single track that bends, both halves correctly unowned -- and there is no other prong and no shower stem anywhere within 60 cm of it, at either azimuth. Everything the scan cares about is in a separate blob 190-215 cm away: 27016 (200.4 MeV), 100074 (91.8), 101086 (36.2), 88047 (34.9) and a dozen smaller showers. Between the two there is only a sprinkle of isolated 0.3 cm two-point specks out to 116 cm and then a 75 cm hole. A photon travelling 200 cm before converting is an e^-8 proposition on a 25 cm conversion length, and here it would have to happen twice. So the star is not the origin of this EM system. WHAT I CANNOT DECIDE, which is why this bucket says undecidable: either the main vertex is misplaced and the real neutrino vertex is inside the EM blob -- the reconstruction has 82 vertices in this event and at least eight of them sit within 9 cm of the leading shower's start -- or the main vertex is right and the whole EM blob is a separate object (a cosmic-induced shower, say) that the clustering wrongly pulled into the same neutrino candidate. The cloud banner says 5 of 27 clusters carry the reconstruction (ids 14, 24, 25, 26, 27), i.e. both the lone track (cluster 26) and the EM blob (cluster 27) are inside the candidate. I cannot separate those two readings from the display. SECOND, INDEPENDENT FINDING -- start/axis wrong. Shower 27016 (200.4 MeV, 8 seg, 70.7 cm) has a badly fitted axis and a badly placed start, and this would be my verdict if the vertex question were settled. Its own cmp_div says its members span 0.0 to 72.9 deg from its axis: 27018 at 45.1 deg, 27019 at 60.0, 27015 at 60.3, 27010 at 61.0, 27017 at 72.9. At az-055 the orange axis arrow points almost perpendicular to the direction the member set actually extends, and the X sits in the MIDDLE of the member chain rather than at either end -- the chain runs both left and right of it, out to a junction from which two arms leave. The same mid-chain start shows at az+085, 140 deg away. Whether the wide member spread is over-clustering (two arms of a junction being one shower) or an honest shower fan I could not settle, and the wrong axis makes the angle column unusable for deciding it, which is exactly why I am not recording an over-clustering verdict off it. NO UNDER-CLUSTERING that I can see: there is no grey unowned charge anywhere near 27016; the dozen small objects at 8-42 cm from it (96063, 92059, 90055, 97064, 89054, 91056, 88047, 100074's six segments, 101086, 95062, 94089) are every one of them owned by their own sub-showers, and they sit at 44-107 deg where the axis is not to be trusted anyway. I ran the correction-11 reconciliation on 27016 -- owner-grouped count 8, cmp_div says 8 -- so its membership is what the table says. PI0: no reco pi0 group. The display auto-slotted 27016 + 100074 and this is the clearest illustration in my shard of why the two conventions must not be merged: the axis convention gives theta 46.6 deg -> 107.2 MeV and calls it in the accept window, while the vertex convention gives theta 7.0 deg -> 16.5 MeV, a factor of 6.5, purely because the 200 cm lever arm from the misplaced star makes the two lines of sight nearly parallel. Neither number means anything until the vertex question above is answered. kine_pio_* separately reports 13.2 MeV from 27016 + a 16.2 MeV object; that is a BDT feature over all pairs and I did not read it as a pairing.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt167612/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:41:57+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt167612/calib-pr-evt167612.json",
+ "subRunNo": 1
+}

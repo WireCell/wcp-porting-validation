@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt64409",
+ "confidence": "medium",
+ "eventNo": 64409,
+ "main_vertex": {
+  "x": 77.54968490462653,
+  "y": 143.14334366348504,
+  "z": 305.65432284271753
+ },
+ "note": "nuecc: 807 MeV attached primary electron (excluded by rule); remaining detached EM are one 105 MeV gamma (46cm gap) and an 18.7 MeV crumb 292cm away -- their bp is formally ok but a 3m conversion distance for 19 MeV is implausible; no defensible pair",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:39:08.675437Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

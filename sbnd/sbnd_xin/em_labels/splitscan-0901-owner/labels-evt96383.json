@@ -1,0 +1,65 @@
+{
+ "event": "evt96383",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "14007": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "14007": 0,
+    "14008": 0,
+    "14010": 0,
+    "37015": 0,
+    "43021": 0
+   },
+   "parts": {
+    "0": [
+     14007,
+     14008,
+     14010,
+     37015,
+     43021
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 5,
+   "Q": 1932524.4999999998,
+   "saved": "2026-08-31T08:07:26"
+  },
+  "14005": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "14005": 0,
+    "40018": 0,
+    "42020": 1,
+    "44022": 0,
+    "45023": 1,
+    "46024": 0
+   },
+   "parts": {
+    "0": [
+     14005,
+     40018,
+     44022,
+     46024
+    ],
+    "1": [
+     42020,
+     45023
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.392 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 6,
+   "Q": 1412363.2999999998,
+   "saved": "2026-08-31T08:08:28"
+  }
+ }
+}

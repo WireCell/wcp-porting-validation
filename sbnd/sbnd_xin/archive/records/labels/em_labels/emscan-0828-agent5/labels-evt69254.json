@@ -1,0 +1,98 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 34.52,
+  "az_deg": -55.0,
+  "centre": [
+   -177.34,
+   67.37,
+   331.69
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 729,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 729,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 32098,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.20104081542871866,
+   0.48309807886602535,
+   -0.8521730086829267
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.20104081542871866,
+    0.48309807886602535,
+    -0.8521730086829267
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 129.70257384633467,
+   "kine_charge": 129.70257384633467,
+   "kine_charge_other_hypothesis": 78.0165857722314,
+   "kine_dQdx": 30.32696399202313,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    4021,
+    29012,
+    31014,
+    33016
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -172.85247037578375,
+   48.40731153784305,
+   354.47084704107675
+  ],
+  "reco_start_vertex_id": 4004,
+  "shower": 4021,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -172.85247037578375,
+   48.40731153784305,
+   354.47084704107675
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt69254",
+ "eventNo": 69254,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -172.85247037578375,
+  "y": 48.40731153784305,
+  "z": 354.47084704107675
+ },
+ "note": "[agent-bulk] Small clean event: ONE shower in scope, 4021 (129.7 MeV, 4 seg, pdg 11, len 11.3); the other five shower nodes are 0.3-2.9 MeV single-segment orphans below the 20 MeV cut (34017, 28011, 32015, 30013, 27010) and I did not scan them as objects. event_half_span_cm 58.9, so the r95 vertex sweep is already close in - no --vtx-span re-capture. VERTEX IS GOOD, judged from vtx-az-055-el+20 and vtx-az+065-el+20: three cluster-4 segments touch the main vertex at 0.00 cm - 4022 (pdg 13, 31.6 cm, the incoming/outgoing track), 4018 (pdg 211, 2.7 cm) and the shower seed 4021 - and both prongs 4022 and 4018 are correctly left UNOWNED while the EM fan hangs off the same point. CLUSTERING: on shw4021-az+085-el+20 the yellow member set is a clean chain straight down the orange axis - 4021 at the X, then 33016 (11.6 cm / 4.7 deg), 31014 (17.4 cm / 13.3 deg), then 29012 (59.9 cm / 10.5 deg). shw4021-acc shows four member squares and NOT ONE non-member circle in the plotted range; every non-member is beyond 23 deg. There is no grey (unowned) charge anywhere in this event - every fragment is claimed by some node - so the strong under-clustering case does not arise. THE ONE READING I WOULD LET THE OWNER REVERSE, and it is close: 34017 (4.4 cm) sits at 24.2 cm / 28.6 deg, i.e. on the same chain, between accepted members at 17.4 cm and 59.9 cm, and on shw4021-az+085-el+20 it looks like the next link, drawn in its own orange rather than grey. The 'it is owned by a neighbour' objection (correction 11) is WEAK here, because that neighbour is a 1-segment 2.9 MeV orphan node, not a competing shower. I still call 4021 correct because (i) 28.6 deg is outside the 25 deg pass-1 step while all four accepted members are within 13.4 deg, so the reconstruction's angle cut is being applied consistently, not capriciously - it also let in 29012 at 60 cm because that one is at 10.5 deg; (ii) 24 cm at 28.6 deg is 11.5 cm transverse, about 1.2 Moliere radii, i.e. marginal shower content; (iii) in the az-055 projection it does NOT sit on the axis, so the chain reading is one-projection-dependent; and (iv) it is 2.9 MeV out of 129.7. I did NOT mark it, deliberately - marking it would turn a 2% effect into a flat IN. Reconciliation check done (correction 11): 4021's nseg is 4 and exactly four segments carry owner 4021, so no segment is silently a member of two showers here. No pi0 in this event and none proposed: the only other EM objects are the sub-3 MeV orphans, so there is no second gamma to pair.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt69254/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:33:32+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt69254/calib-pr-evt69254.json",
+ "subRunNo": 1
+}

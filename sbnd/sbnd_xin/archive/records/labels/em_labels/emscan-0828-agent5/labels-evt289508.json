@@ -1,0 +1,109 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -135.63,
+   22.05,
+   491.92
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2843,
+  "cloud_cluster_ids": [
+   17,
+   22,
+   23,
+   24
+  ],
+  "cloud_kept": 2843,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23463,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.31514231889272637,
+   0.516233131900466,
+   0.7963596375828895
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.31514231889272637,
+    0.516233131900466,
+    0.7963596375828895
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 12,
+   "kine_best": 396.77925800297703,
+   "kine_charge": 396.77925800297703,
+   "kine_charge_other_hypothesis": 238.66421534013662,
+   "kine_dQdx": 327.3853767532691,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17011,
+    17012,
+    17015,
+    17016,
+    48026,
+    49028,
+    49033,
+    49034,
+    49035,
+    49036,
+    49037,
+    49038
+   ],
+   "membership_source": "probe",
+   "num_segments": 12,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -141.91820918295716,
+   13.176987716875583,
+   482.90880231601733
+  ],
+  "reco_start_vertex_id": 17008,
+  "shower": 17012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -141.91820918295716,
+   13.176987716875583,
+   482.90880231601733
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt289508",
+ "eventNo": 289508,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -141.91820918295716,
+  "y": 13.176987716875583,
+  "z": 482.90880231601733
+ },
+ "note": "[agent-bulk] numucc_em. Only ONE shower in scope: 17012 (pdg 11, kine_charge 396.8 MeV, 12 seg, cluster 17+48+49) -- the other 11 showers are all sub-20 MeV 2-point stubs and I did not look at them. Vertex is good: judged from the vtx-* sweep at 92.7 cm half-span (r95 74.2, no vtxz frames -- event under the 150 cm trigger). The blue star sits exactly where the 79.1 cm pdg-13 track 17013 ends and the EM cone begins; the shower start X coincides with it, and az-055 and az+085 both show a single apex there. 17013 (the muon) is grey/unowned -- correctly NOT swallowed, so no over-clustering of a MIP stem. Members cover the whole visible cone and the yellow set has one apex and one direction in both azimuths. Under-clustering checked on the non-members: every unowned segment other than 17013 is either a 0.1-0.5 cm delta stub lying along the muon at 109-172 deg from the axis (44022 12.5 cm/109.3, 45023, 42020, 53040, 47025, 43021, 50039, 46024 out to 82 cm), or 17014, a 5.3 cm pdg-211 stub leaving the vertex at ~85 deg to the shower axis. Nothing grey sits in the forward cone. Membership triple-checked: nseg 12 == the 12 segments with owner 17012 == the 12 candidate rows carrying owner 17012. Two pdg-2212 rows are inside the member set (49038, 3.6 cm, in the shower's own cluster 49; 48026, a 0.1 cm 2-point stub at 22.8 cm / 18.8 deg) -- both tiny and forward, I do not read them as over-clustering. No pi0: no second EM object anywhere in the event, so no pio judgement is offered. Verdict is about clustering only and silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt289508/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:25:04+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt289508/calib-pr-evt289508.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-mcp2k/pr_evt281567",
+ "confidence": "medium",
+ "eventNo": 281567,
+ "main_vertex": {
+  "x": -72.6786143983667,
+  "y": -104.86257802219538,
+  "z": 85.59194190266707
+ },
+ "note": "owner scan note: nu vertex is wrong + EM overclustering; four plausible gammas (9025/99193/93114/95225) with no topological discriminator against a wrong vertex",
+ "origin": "ncpi0",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:39:01.607916Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

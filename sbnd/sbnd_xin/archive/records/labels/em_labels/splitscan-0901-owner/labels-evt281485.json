@@ -1,0 +1,114 @@
+{
+ "event": "evt281485",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "89095": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "73052": 0,
+    "89095": 0,
+    "89096": 0,
+    "89099": 0,
+    "91107": 1,
+    "91109": 1,
+    "91111": 1,
+    "91113": 1
+   },
+   "parts": {
+    "0": [
+     73052,
+     89095,
+     89096,
+     89099
+    ],
+    "1": [
+     91107,
+     91109,
+     91111,
+     91113
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.940 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 8,
+   "Q": 1573153.9,
+   "saved": "2026-08-31T08:07:49"
+  },
+  "91112": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "91107": 0,
+    "91109": 0,
+    "91111": 0,
+    "91112": 0,
+    "91113": 0
+   },
+   "parts": {
+    "0": [
+     91107,
+     91109,
+     91111,
+     91112,
+     91113
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 5,
+   "Q": 1180704.4,
+   "saved": "2026-08-31T08:08:48"
+  },
+  "87078": {
+   "verdict": "SPLIT3",
+   "n_parts": 3,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "63042": 0,
+    "68047": 2,
+    "69048": 0,
+    "70049": 1,
+    "83060": 2,
+    "84070": 1,
+    "84072": 1,
+    "84073": 1,
+    "84074": 1,
+    "86076": 0,
+    "87078": 0,
+    "87079": 0
+   },
+   "parts": {
+    "0": [
+     63042,
+     69048,
+     86076,
+     87078,
+     87079
+    ],
+    "2": [
+     68047,
+     83060
+    ],
+    "1": [
+     70049,
+     84070,
+     84072,
+     84073,
+     84074
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 12,
+   "Q": 2819282.1,
+   "saved": "2026-08-31T08:44:41"
+  }
+ }
+}

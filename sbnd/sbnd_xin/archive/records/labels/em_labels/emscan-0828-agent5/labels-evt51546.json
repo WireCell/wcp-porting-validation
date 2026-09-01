@@ -1,0 +1,104 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -161.73,
+   180.67,
+   405.08
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2838,
+  "cloud_cluster_ids": [
+   16
+  ],
+  "cloud_kept": 2838,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 53734,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.2120557780053879,
+   0.35309287564104685,
+   -0.9112396875608887
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.2120557780053879,
+    0.35309287564104685,
+    -0.9112396875608887
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 10,
+   "kine_best": 181.69314167793974,
+   "kine_charge": 181.69314167793974,
+   "kine_charge_other_hypothesis": 109.28910777620437,
+   "kine_dQdx": 139.55012907252882,
+   "kine_hypothesis": "shower",
+   "kine_range": 167.9284151297868,
+   "members": [
+    67024,
+    67025,
+    67026,
+    67027,
+    67028,
+    67029,
+    67032,
+    67033,
+    67034,
+    67035
+   ],
+   "membership_source": "probe",
+   "num_segments": 10,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -160.33964979111104,
+   174.56064491488442,
+   413.4635580341969
+  ],
+  "reco_start_vertex_id": 16001,
+  "shower": 67024,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -160.33964979111104,
+   174.56064491488442,
+   413.4635580341969
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt51546",
+ "eventNo": 51546,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -158.41599142738173,
+  "y": 173.33006762478323,
+  "z": 420.86287550164013
+ },
+ "note": "[agent-bulk] mcp2k numucc_em. drag_check both true. Vertex is good: at el+60 the star is the lower end of the 75.8 cm muon (16000, pdg 13, correctly unowned) and the shower begins right there. shw 67024 (181.7 MeV, 10 seg, conn 2) is a clean converted-photon topology -- at az+085 it is a Lambda opening from a single apex at the X into two arms, exactly what a gamma conversion looks like, and both arms plus the diffuse cloud between them are entirely inside the yellow member set. All ten members are cluster 67, added by from_vertices (walk_add), spanning 0-17.9 cm at 0.6-31.8 deg -- a wide compact cone, not a chain. The acceptance plot carries ONE non-member circle, 53002 (0.4 cm, 2.0 MeV) at 25.6 cm / 34.6 deg, outside the 25 deg step and negligible, and nothing else unclaimed sits inside the cone. The shower start is 7.7 cm from the muon at 168.4 deg, i.e. the muon is behind it -- a photon converting 8 cm off the vertex, which is textbook. Correctly left unowned: the cluster-66 hook near the vertex (66016, pdg 13, 15.0 cm and 66014, 8.3 cm) at 96-102 deg from the shower axis, and 54003 (16.8 MeV, 2.5 cm) at 45.2 cm / 21.9 deg, well beyond the 18 cm member spread. One EM shower only in scope; the other 7 are 16.8 MeV and below and I did not look at them. No second photon anywhere in the reco, so the absence of a pi0 group here is a missing gamma, not a mis-pairing -- the same finding as the pilot's evt284200.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt51546/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:08:04+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt51546/calib-pr-evt51546.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,163 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -196.71,
+   -163.76,
+   481.28
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2157,
+  "cloud_cluster_ids": [
+   15,
+   19,
+   20
+  ],
+  "cloud_kept": 2157,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 8882,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.16008030041103566,
+   -0.5692855683367455,
+   0.8064045133205922
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "33038": {
+    "19010": "in",
+    "19011": "in"
+   }
+  },
+  "marks_detail": {
+   "33038": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.0010001025157620677,
+     -0.5050517704598442,
+     0.8630884711026644
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "19010": {
+      "absorbed_by": null,
+      "angle": 5.457535223592978,
+      "cluster_id": 19,
+      "dist": 105.7131966698426,
+      "ellip": 10.964823959638348,
+      "kind": "in",
+      "length": 32.20367671564685,
+      "owner": 19010,
+      "pdg": 11,
+      "tier": 2
+     },
+     "19011": {
+      "absorbed_by": "from_vertices (walk_add)",
+      "angle": 7.115738621256381,
+      "cluster_id": 19,
+      "dist": 135.0414379725594,
+      "ellip": 22.41593904748726,
+      "kind": "in",
+      "length": 3.7199006985937273,
+      "owner": 19010,
+      "pdg": 11,
+      "tier": 3
+     }
+    },
+    "member_span": {
+     "angle_max": 26.079456902243308,
+     "angle_min": 0.0,
+     "dist_max": 30.27381861100286,
+     "dist_min": 0.0,
+     "n": 9
+    },
+    "members": [
+     25015,
+     32022,
+     33028,
+     33029,
+     33037,
+     33038,
+     33039,
+     34041,
+     34042
+    ],
+    "start": [
+     -186.1038589182853,
+     -94.80687040373603,
+     382.10031050907855
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.16008030041103566,
+    -0.5692855683367455,
+    0.8064045133205922
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 2,
+   "kine_best": 128.72752566096867,
+   "kine_charge": 128.72752566096867,
+   "kine_charge_other_hypothesis": 77.43009062313907,
+   "kine_dQdx": 97.3550132473645,
+   "kine_hypothesis": "shower",
+   "kine_range": 103.18143256990521,
+   "members": [
+    19010,
+    19011
+   ],
+   "membership_source": "probe",
+   "num_segments": 2,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -194.38050675237707,
+   -153.00720527200065,
+   469.9609847155124
+  ],
+  "reco_start_vertex_id": 15002,
+  "shower": 19010,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -194.38050675237707,
+   -153.00720527200065,
+   469.9609847155124
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt397630",
+ "eventNo": 397630,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 15,
+  "x": -178.93622595980224,
+  "y": -66.48741018474715,
+  "z": 336.2221611504
+ },
+ "note": "[agent-bulk] READ THIS FIRST: the verdict radio is stored on 19010 because correction 17 fixes the verdict shower as the highest-kine_charge pdg-11 object (19010, 128.7 MeV, vs 33038 at 111.8), but the under-clustering claim is about the PAIR -- 19010 and 33038 look like two pieces of one forward EM object, and it is 33038 that is missing 19010, not the other way round. 19010 itself has nothing in front of it. THE FINDING: from the main vertex a single ray runs out and carries two reconstructed showers on it -- 33038 (111.8 MeV, 9 seg) with member points 54-90 cm from the vertex, then nothing at all, then 19010 (128.7 MeV, 2 seg) with member points 160-190.6 cm. The two vertex chords are 2.4 deg apart; measured from 33038's own start, 19010 sits at 105.7 cm / 5.5 deg with the code's own TIER 2 and 19011 at 135.0 cm / 7.1 deg TIER 3, and neither was absorbed. If they are one object the shower is ~240 MeV rather than 111.8. 33038 is unambiguously an EM shower in the picture: it opens out of its start into a branching cone with a wide point cloud, PCA 31.2 cm long, transverse RMS 2.31 cm, max radius 9.1 cm. THE COUNTER-READING, which is why this is 'unclear': there is 74 cm of ZERO charge between the two (minimum member-to-member distance 74.4 cm), so nothing grey or contiguous is being left behind -- the brief's strong under-clustering case does not apply, and the merge is only defensible as 'a hard bremsstrahlung photon from the first shower re-converted downstream', which is physically possible but is an inference, not something I can see. And 19010 is suspicious on its own terms: it is narrow and does not widen (PCA 30.9 cm, transverse RMS 0.91 cm, max radius 3.2 cm, flat quarter-by-quarter profile 1.25/0.75/0.62/0.67, largest internal gap 0.6 cm) and it hugs the TPC corner -- its points run x -199.0 to -194.4 (i.e. ~1 cm off the anode) and z 470.0 to 492.6, so it is leaving the active volume and I am only seeing ~31 cm of it. I did NOT record a PID verdict on it: at 128.7 MeV a young shower is only ~4 critical energies and can genuinely look narrow over 2.2 radiation lengths, unlike evt392901's 79 cm case. So the two readings are (a) one ~240 MeV EM object split by the gate = under-clustered, which is what I recorded, and (b) 33038 is a complete shower and 19010 is an unrelated MIP-like object exiting at the TPC corner, in which case both are correct as they stand. MARKS: 19010 and 19011 marked IN on shower 33038. Per correction 7 they differ in strength -- 19010 is the strong one (32.2 cm, 62 fitted points, tier 2 at 5.5 deg) and 19011 is the weak one (3.7 cm, 7 points, tier 3 at 135 cm) that I would let the owner reverse on its own. Vertex judged off the automatic vtxz-* 60 cm frames (r95 185.9 cm): the star sits on the junction of the 78.7 cm unowned track 15001 and the green pion 15047, with a small charge cloud around it -- plausible, and in any case the finding above is measured from 33038's start, so correction 14 applies. Membership bookkeeping is consistent: 19010 nseg 2 = owner-grouped 2 = cmp_div 2; 33038 nseg 9 = 9 = 9; owner groups sum to 25 = the shard's n_seg. pi0: kine_div says 'no pi0 group in this event'; the auto-slotted [19010, 33038] pair is the correction-3 artifact and its 'mass' of 5.0 (vertex) / 21.7 (axis) MeV is exactly the point -- at 2.4 deg apart these two cannot be a pi0's two gammas (a 240 MeV pi0 has a minimum opening angle near 68 deg), which is itself an argument that they are one object rather than two. Nothing stored. NOT LOOKED AT: the 9 out-of-scope showers, all <= 12.6 MeV; and 15047 (pdg 211, in scope) beyond noting it is the vertex pion.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt397630/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:50:07+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt397630/calib-pr-evt397630.json",
+ "subRunNo": 1
+}

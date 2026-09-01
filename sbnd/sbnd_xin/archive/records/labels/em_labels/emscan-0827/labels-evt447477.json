@@ -1,0 +1,133 @@
+{
+ "arm": "work-nuecc48-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/33fa72d9-1990-4fc7-b7fd-3f2bee6bd32d/event/45/",
+ "camera": {
+  "R": 68.75,
+  "az_deg": 7649.65,
+  "centre": [
+   109.95,
+   11.6,
+   420.15
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5830,
+  "cloud_cluster_ids": [
+   11,
+   18,
+   19
+  ],
+  "cloud_kept": 5830,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 24556,
+  "el_deg": -7.88
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   -0.09203009876424874,
+   0.59119335184425,
+   0.8012620555452526
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.09203009876424874,
+    0.59119335184425,
+    0.8012620555452526
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 37,
+   "kine_best": 869.0072092121629,
+   "kine_charge": 869.0072092121629,
+   "kine_charge_other_hypothesis": 522.7111032855116,
+   "kine_dQdx": 694.3898155963485,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    11008,
+    11010,
+    11012,
+    11014,
+    11019,
+    11020,
+    36023,
+    37024,
+    38025,
+    39026,
+    40027,
+    41028,
+    42029,
+    44031,
+    49036,
+    50037,
+    57044,
+    58045,
+    59046,
+    60047,
+    61048,
+    62049,
+    70055,
+    70087,
+    71063,
+    71065,
+    71066,
+    72067,
+    74069,
+    76072,
+    76074,
+    76075,
+    76077,
+    76078,
+    77081,
+    77082,
+    77084
+   ],
+   "membership_source": "probe",
+   "num_segments": 37,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   118.786948066228,
+   -29.478060352754547,
+   377.6250801799118
+  ],
+  "reco_start_vertex_id": 11001,
+  "shower": 11019,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   118.786948066228,
+   -29.478060352754547,
+   377.6250801799118
+  ],
+  "verdict": null
+ },
+ "event": "evt447477",
+ "eventNo": 447477,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": 118.786948066228,
+  "y": -29.478060352754547,
+  "z": 377.6250801799118
+ },
+ "note": "good",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-nuecc48/pr_evt447477/stdout.log",
+ "runNo": 18255,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-28T15:50:32+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prod0825/pr_evt447477/calib-pr-evt447477.json",
+ "subRunNo": 1
+}

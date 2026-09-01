@@ -1,0 +1,73 @@
+{
+ "event": "evt286681",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "72040": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "OK, ",
+   "groups": {
+    "39023": 0,
+    "72040": 0,
+    "73047": 0,
+    "73048": 0,
+    "73049": 0,
+    "73050": 0,
+    "73056": 0,
+    "73057": 0,
+    "73058": 0,
+    "73062": 0,
+    "73063": 0
+   },
+   "parts": {
+    "0": [
+     39023,
+     72040,
+     73047,
+     73048,
+     73049,
+     73050,
+     73056,
+     73057,
+     73058,
+     73062,
+     73063
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 11,
+   "Q": 8442860.5,
+   "saved": "2026-08-31T08:00:36"
+  },
+  "3012": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "3012": 0,
+    "29013": 0,
+    "33017": 0,
+    "36020": 0,
+    "37021": 0
+   },
+   "parts": {
+    "0": [
+     3012,
+     29013,
+     33017,
+     36020,
+     37021
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 5,
+   "Q": 2503902.6,
+   "saved": "2026-08-31T08:06:47"
+  }
+ }
+}

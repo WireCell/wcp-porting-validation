@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt54453",
+ "confidence": "medium",
+ "eventNo": 54453,
+ "main_vertex": {
+  "x": -94.64598362268084,
+  "y": -76.25554533119687,
+  "z": 204.52460866064013
+ },
+ "note": "numucc_em: four detached EM showers with no discriminating geometry -- the dominant pair 57050+24030 is near-collinear from the vertex (16 deg, fragment-like) and fails bp; the only bp-ok pairs (24030+65058, 58051+65058) compete with no way to choose; ambiguous, no pairing forced",
+ "origin": "numucc_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:38:33.556944Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

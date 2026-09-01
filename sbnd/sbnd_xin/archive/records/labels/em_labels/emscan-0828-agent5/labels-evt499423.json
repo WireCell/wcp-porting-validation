@@ -1,0 +1,147 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 35.78,
+  "az_deg": -55.0,
+  "centre": [
+   -132.28,
+   -11.99,
+   430.73
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1276,
+  "cloud_cluster_ids": [
+   11,
+   20,
+   21,
+   22,
+   23
+  ],
+  "cloud_kept": 1276,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 7012,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.7482001703219234,
+   0.5811554798890876,
+   0.3200856343623202
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "11045": {
+    "40014": "out"
+   }
+  },
+  "marks_detail": {
+   "11045": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.7482001703219234,
+     0.5811554798890876,
+     0.3200856343623202
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "40014": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 21.41177638617118,
+      "cluster_id": 40,
+      "dist": 62.06273101480737,
+      "ellip": 22.62033751351014,
+      "kind": "out",
+      "length": 1.614669381089935,
+      "owner": 11045,
+      "pdg": 2212,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 21.41177638617118,
+     "angle_min": 0.0,
+     "dist_max": 62.06273101480737,
+     "dist_min": 0.0,
+     "n": 3
+    },
+    "members": [
+     11045,
+     40014,
+     53035
+    ],
+    "start": [
+     -115.80975607422894,
+     -37.956850197859616,
+     426.58331558052896
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.7482001703219234,
+    0.5811554798890876,
+    0.3200856343623202
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 154.5868472558471,
+   "kine_charge": 154.5868472558471,
+   "kine_charge_other_hypothesis": 92.98456977795315,
+   "kine_dQdx": 142.98680501136073,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    11045,
+    40014,
+    53035
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -115.80975607422894,
+   -37.956850197859616,
+   426.58331558052896
+  ],
+  "reco_start_vertex_id": 11000,
+  "shower": 11045,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -115.80975607422894,
+   -37.956850197859616,
+   426.58331558052896
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt499423",
+ "eventNo": 499423,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -115.80975607422894,
+  "y": -37.956850197859616,
+  "z": 426.58331558052896
+ },
+ "note": "[agent-bulk] Verdict shower is 11045 (154.6 MeV), the highest-kine_charge pdg-11 shower (correction 17); all four in-scope showers are pdg 11 (11045 154.6, 57042 85.7, 50030 22.8, 51031 21.9) and no non-EM object was passed over. OVER-CLUSTERING: 11045 has 3 members -- 11045 (29.5 cm) and 53035 (3.5 cm), which touch (gap 2.0 cm) and form a compact body spanning 0.0-22.6 cm from the nu vertex, plus 40014, a 4-point 1.6 cm pdg-2212 fragment taken by pass3_cone at 62.1 cm / 21.4deg whose nearest member is 41.0 cm away (53.0 cm to 53035). It sits in its own isolated point-cloud blob, visible as a detached yellow-haloed stub in BOTH shower azimuths (az-055 and az+085), with 41 cm of nothing between it and the shower. Including it triples the shower's extent: member skeleton 22.4 cm extent / transverse RMS 1.87 cm (2*RMS/L = 0.17, a plausible compact 154 MeV shower) becomes 61.9 cm / 2.99 cm (w/l 0.10). MARK: 40014 OUT of 11045. Be clear about its weight (correction 7): this is a GEOMETRY statement, not an energy one -- 40014 is 1.6 cm of the shower's 34.7 cm skeleton and carries little charge, so it is the single easiest mark in my shard for the owner to reverse, and the competing reading (a late on-axis shower fragment 4+ radiation lengths downstream) is why the confidence is likely rather than certain. Compare evt408678 in this shard, where I let an analogous 33.1 cm gap stand as correct: there the gap was 0.8x the shower body, here it is 1.8x. Nothing is missing from 11045: the only grey/unowned segment near it is 52033 (10.4 cm, pdg 13) at 22.8 cm / 44.1deg -- contiguous at 4.2 cm but 42deg off the seed's direction and track-tagged, correctly left out; the acceptance plot shows no rejected circle at all inside its 80 cm / 25deg window. 57042 (85.7 MeV, 6.1 cm seed) starts 7.9 cm away at 68.2deg and runs 152.8deg opposite to 11045 -- a genuine second EM object, not missing charge. CORRECTION-11 FINDING, and it is the important part of this event. The triple check (correction 16) FIRES on shower 57042: nseg 9 and cmp_div 9, but only 6 segments carry owner==57042. Reconciling shower_table length (16.9907 cm) against the owned segments (11.4730 cm) leaves 5.5177 cm, matched EXACTLY by the trio 51031 + 47021 + 38012 (5.5177 cm) -- i.e. 57042 also contains the entire membership of shower 51031 (21.9 MeV, its own in-scope shower) plus 38012, which shower 52034 also holds. 11045, 50030 and 51031 all reconcile exactly, so 57042 is the only shared case here. CONSEQUENCE FOR THE GATE-PAIR HUNT: my dist/angle scan flags two apparent inversions on 57042 -- accepted 35009 at 49.9 cm / 24.0deg (site in_other_clusters_seg_cone) against rejected 51031 at 61.1 cm / 13.6deg, and against rejected 38012 at 62.8 cm / 22.7deg, both accepted-at-larger-angle within 15 cm. BOTH ARE FALSE. 51031 and 38012 are not rejected at all; they are members of 57042 that owner_map's first-owner-wins simply attributes elsewhere. This is a worked demonstration that an accept/reject flag taken from the display's owner column manufactures angle inversions, and any such pair has to be re-derived against the length reconciliation before it is believed. Showers NOT looked at: the 14 skipped by the scope rule (52034 12.8, 54036 11.0, 21006 7.1, 42016 5.2, 46020 4.7, 55037 4.7, 56038 3.2, 49023 2.4, 20005 2.2, 37011 1.9, 39013 1.3, 23008 1.0, 22007 0.5, 44018 0.1 MeV); I also did not open 50030 or 51031's own frames. Vertex judged off the vtx-* sweep at 118.2 cm half-span (r95 = 94.6 cm, below the 150 cm trigger, so no vtxz-* frames): 11045 starts on the star and 57042/54036 leave it the other way; not vertex-bad. No reco pi0 group (all pio_id = -1), so the pio-*.png frames are the capture's auto-slotted top two, NOT a pairing (correction 3); that auto pair 11045+57042 prices at 102.6 MeV on the axis convention with asym 0.29, and I do NOT propose it because 11045 starts on the nu vertex and so cannot be a converted photon. The kine_pio_* BDT block (mass 52.7, E1 11.0) does not close with itself (65.9 vs 52.7) and is not a pairing either.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt499423/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:52:14+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt499423/calib-pr-evt499423.json",
+ "subRunNo": 1
+}

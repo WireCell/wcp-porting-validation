@@ -1,0 +1,116 @@
+{
+ "event": "evt412242",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "64054": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "28027": 0,
+    "28030": 0,
+    "28032": 0,
+    "28036": 0,
+    "28037": 0,
+    "64054": 0,
+    "68058": 0,
+    "70060": 0,
+    "71061": 0,
+    "72062": 0,
+    "73063": 0,
+    "74064": 0,
+    "75065": 0
+   },
+   "parts": {
+    "0": [
+     28027,
+     28030,
+     28032,
+     28036,
+     28037,
+     64054,
+     68058,
+     70060,
+     71061,
+     72062,
+     73063,
+     74064,
+     75065
+    ]
+   },
+   "proposal": "single group: 3 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 13,
+   "Q": 2088394.7000000002,
+   "saved": "2026-08-31T08:07:17"
+  },
+  "14007": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "14007": 0,
+    "14008": 0,
+    "14010": 0,
+    "14011": 0,
+    "14073": 0,
+    "49048": 0,
+    "79069": 0
+   },
+   "parts": {
+    "0": [
+     14007,
+     14008,
+     14010,
+     14011,
+     14073,
+     49048,
+     79069
+    ]
+   },
+   "proposal": "single group: 2 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 7,
+   "Q": 8203747.3,
+   "saved": "2026-08-31T08:30:40"
+  },
+  "60050": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "14008": 0,
+    "28031": 0,
+    "39038": 0,
+    "44043": 0,
+    "60050": 0,
+    "66056": 0,
+    "67057": 0,
+    "69059": 0,
+    "81071": 0
+   },
+   "parts": {
+    "0": [
+     14008,
+     28031,
+     39038,
+     44043,
+     60050,
+     66056,
+     67057,
+     69059,
+     81071
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=0.969 > 0.95 (no charge dip between them)",
+   "nseg": 9,
+   "Q": 1188616.4000000001,
+   "saved": "2026-08-31T08:53:37"
+  }
+ }
+}

@@ -1,0 +1,99 @@
+{
+ "event": "evt278420",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "61027": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "this is a single EM shower pointing not to the nu vertex, but the end point of a track. ",
+   "groups": {
+    "25007": 0,
+    "25008": 0,
+    "25009": 0,
+    "60022": 0,
+    "61024": 0,
+    "61026": 0,
+    "61027": 0,
+    "62028": 0,
+    "63029": 0,
+    "64030": 0,
+    "65031": 0,
+    "66032": 0,
+    "67033": 0,
+    "68034": 0,
+    "69035": 0,
+    "70036": 0,
+    "72038": 0,
+    "73039": 0,
+    "74040": 0,
+    "75041": 0,
+    "76042": 0,
+    "77043": 0,
+    "78044": 0
+   },
+   "parts": {
+    "0": [
+     25007,
+     25008,
+     25009,
+     60022,
+     61024,
+     61026,
+     61027,
+     62028,
+     63029,
+     64030,
+     65031,
+     66032,
+     67033,
+     68034,
+     69035,
+     70036,
+     72038,
+     73039,
+     74040,
+     75041,
+     76042,
+     77043,
+     78044
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.207 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 23,
+   "Q": 3545574.9,
+   "saved": "2026-08-31T08:05:45"
+  },
+  "18002": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "18002": 0,
+    "71037": 1,
+    "79052": 1,
+    "79053": 1,
+    "79054": 1
+   },
+   "parts": {
+    "0": [
+     18002
+    ],
+    "1": [
+     71037,
+     79052,
+     79053,
+     79054
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 5,
+   "Q": 3067662.4,
+   "saved": "2026-08-31T08:06:41"
+  }
+ }
+}

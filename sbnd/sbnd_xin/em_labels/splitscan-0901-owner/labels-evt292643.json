@@ -1,0 +1,46 @@
+{
+ "event": "evt292643",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "25015": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "25015": 0,
+    "25017": 0,
+    "25018": 0,
+    "106027": 0,
+    "109031": 0,
+    "109032": 0,
+    "110033": 0,
+    "112035": 1,
+    "113036": 0,
+    "116039": 0
+   },
+   "parts": {
+    "0": [
+     25015,
+     25017,
+     25018,
+     106027,
+     109031,
+     109032,
+     110033,
+     113036,
+     116039
+    ],
+    "1": [
+     112035
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.298 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 10,
+   "Q": 3028575.7,
+   "saved": "2026-08-31T08:43:15"
+  }
+ }
+}

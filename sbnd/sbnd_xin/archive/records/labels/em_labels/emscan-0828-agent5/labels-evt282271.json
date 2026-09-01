@@ -1,0 +1,147 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 150.82,
+  "az_deg": -55.0,
+  "centre": [
+   35.32,
+   77.68,
+   65.01
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2536,
+  "cloud_cluster_ids": [
+   6,
+   20,
+   21,
+   22,
+   23
+  ],
+  "cloud_kept": 2536,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 8626,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.14994865137884875,
+   -0.9156864310868364,
+   0.3728723130954039
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "6063": {
+    "6004": "in"
+   }
+  },
+  "marks_detail": {
+   "6063": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.14994865137884875,
+     -0.9156864310868364,
+     0.3728723130954039
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "6004": {
+      "absorbed_by": null,
+      "angle": 19.10979763409945,
+      "cluster_id": 6,
+      "dist": 8.738205069630808,
+      "ellip": 0.3699541066014756,
+      "kind": "in",
+      "length": 2.9940253611301357,
+      "owner": 6004,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 24.062852990942574,
+     "angle_min": 0.0,
+     "dist_max": 58.18027101725655,
+     "dist_min": 0.0,
+     "n": 3
+    },
+    "members": [
+     6063,
+     34021,
+     40027
+    ],
+    "start": [
+     42.07283408950854,
+     44.924638585832625,
+     57.27753892771602
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.14994865137884875,
+    -0.9156864310868364,
+    0.3728723130954039
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 115.11624937683631,
+   "kine_charge": 115.11624937683631,
+   "kine_charge_other_hypothesis": 69.24285676802185,
+   "kine_dQdx": 100.32585272988433,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    6063,
+    34021,
+    40027
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   42.07283408950854,
+   44.924638585832625,
+   57.27753892771602
+  ],
+  "reco_start_vertex_id": 6002,
+  "shower": 6063,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   42.07283408950854,
+   44.924638585832625,
+   57.27753892771602
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt282271",
+ "eventNo": 282271,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 6,
+  "x": 42.07283408950854,
+  "y": 44.924638585832625,
+  "z": 57.27753892771602
+ },
+ "note": "[agent-bulk] nuecc, 38 showers - the busiest event in my shard. Vertex judged from the native r95 framing (event_half_span_cm 107.1, below the 150 cm re-capture threshold): the blue star sits at a junction where the long track bends and a second prong leaves, with 6001 (pdg 2212, 68.0 cm) and 6064 (pdg 13, 10.1 cm) both reading dist 0.0 / angle 0.0 and BOTH correctly left grey. It is the least clean vertex I looked at - on vtx-az-055-el+60 there is charge on both sides of the star along one line - but two prongs nearly back-to-back in projection explain that, so I am NOT calling it vertex-bad. shw 6063 (115.1 MeV, 3 segments, pdg 11, len 32.7, start ON the vertex): the member set is essentially one 31.0 cm body plus two sub-cm bits (34021 at 58.2 cm / 8.1 deg, 40027 at 20.7 cm / 24.1 deg). It does have real transverse spread on az+085 - the charge cloud is visibly wider than the polyline - so unlike evt173819 and evt179611 in this shard I am NOT questioning that it is EM. THE FINDING, and why the radio says under-clustered: on the acceptance plot 6004 (3.0 cm) sits at 8.7 cm / 19.1 deg, i.e. STRICTLY INSIDE the pass-1 box (25 deg out to 80 cm), closer AND at a smaller angle than the accepted member 40027 which sits at 24.1 deg right on the 25 deg line - yet 6004 was not taken. A non-member inside the box while a member sits at the edge of it is the cleanest single acceptance-plot signal I saw in ten events. WHY THE CONFIDENCE IS unclear. (1) MAGNITUDE: 6004 is 3.0 cm and below the 20 MeV scope threshold, against a 115.1 MeV / 32.7 cm shower, so even if I am right the effect is small and calling the event under-clustered arguably overstates it. (2) CORRECTION 11: 6004 is NOT grey - it is the seed of its own sub-20 MeV shower, so this rests on the 'owned by a neighbour' basis the corrections warn is unsafe. RECONCILIATION RUN, and it PASSES: the shower dict reports nseg = 3, the owner-grouped candidate rows for 6063 are exactly three (6063, 34021, 40027), and the shower's own cmp_div reads 'already in shower 6063 : 3 segment(s) plotted -- distance 0.0-58.2 cm, angle 0.0-24.1 deg'. Three ways of counting agree, so 6004 is NOT a hidden second-owner member of 6063 the way the evt280972 segments were - it is genuinely outside the member set, and the finding is not the correction-11 trap. I marked 6004 IN and it is the WEAK mark on this event - it is the one I would let the owner reverse. Nothing GREY is missing: apart from the two vertex hadrons at dist 0 and 6008 (pdg 2212, 3.3 cm) at 79.9 deg, every unowned segment is at 47-81 deg, well outside the cone. Second object: shw 23019 (99.6 MeV in a SINGLE 18.9 cm segment) sits 12.6 cm away at 70.8 deg - a separate prong, not part of 6063's cone, and 99.6 MeV in one 19 cm segment is a track/PID question I am not resolving. pi0: showers[].pio_id is -1 for all three in-scope showers, no group accepted; the capture auto-slots 6063 + 23019 for a placeholder m = 166.2 MeV at theta 101.8 deg, but both are vertex-attached so neither can be a conversion and I store no candidate. NOT LOOKED AT: 35 of the 38 showers - everything the scope rule skipped below 20 MeV min_kine_best - and of the 3 in scope I opened frames for 6063 only, reading 23019 and 51038 (66.7 MeV, pdg 13) off the candidate table. This verdict is a claim about 6063, not about the event. [mark read back from the saved label: marks_detail recomputes 6004 against 6063 as dist 8.74 cm, angle 19.11 deg, length 2.99 cm, tier 1, absorbed_by null, owner 6004 - confirming both the geometry quoted above and that no gate ever took it.]",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt282271/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:55:48+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt282271/calib-pr-evt282271.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,13 @@
+{
+ "event": "evt76346",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "14059": {
+   "verdict": "KEEP",
+   "confidence": "high",
+   "comment": "control, not fired: one compact core, width at or below null",
+   "parts": null
+  }
+ }
+}

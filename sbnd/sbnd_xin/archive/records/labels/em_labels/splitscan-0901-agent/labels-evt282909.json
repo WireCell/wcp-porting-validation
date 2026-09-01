@@ -1,0 +1,13 @@
+{
+ "event": "evt282909",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "75060": {
+   "verdict": "KEEP",
+   "confidence": "high",
+   "comment": "Scan A. PROXY WRONG: one core with a fan at 20-65 cm, width at or below null, a few isolated specks",
+   "parts": null
+  }
+ }
+}

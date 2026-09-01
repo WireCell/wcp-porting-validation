@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -5.25,
+   0.73,
+   478.78
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2207,
+  "cloud_cluster_ids": [
+   20,
+   35
+  ],
+  "cloud_kept": 2207,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25174,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.18907309087716673,
+   0.47518369400346133,
+   0.8593321961031016
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.18907309087716673,
+    0.47518369400346133,
+    0.8593321961031016
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": false,
+   "joined": 5,
+   "kine_best": 143.1885597867032,
+   "kine_charge": 143.1885597867032,
+   "kine_charge_other_hypothesis": 86.12845701455834,
+   "kine_dQdx": 85.21192081490715,
+   "kine_hypothesis": "shower",
+   "kine_range": 109.23069443477814,
+   "members": [
+    98028,
+    98029,
+    98034,
+    98035,
+    98037,
+    98038
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -6.635041719107337,
+   -1.597425955591517,
+   471.19175049024045
+  ],
+  "reco_start_vertex_id": 35007,
+  "shower": 98035,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -6.635041719107337,
+   -1.597425955591517,
+   471.19175049024045
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt410008",
+ "eventNo": 410008,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 35,
+  "x": -167.3592986893177,
+  "y": -48.76680824120764,
+  "z": 455.43302908008
+ },
+ "note": "[agent-bulk] VERTEX result, judged first per the rubric, so this is deliberately NOT a clustering verdict. The nu vertex star sits by itself at the end of one faint ~30 cm track with nothing else around it, while EVERY shower in the event -- all 20 of them, including 98035 at 143.2 MeV, 20001 at 113.8 MeV and 92020 at 70.6 MeV -- lives in one compact blob about 170 cm away. The numbers match the pictures exactly: 98035 starts 168.3 cm from the main vertex, 20001 starts 172.6 cm from it, and the two are only 19.9 cm apart from each other, which is why the display's vertex convention reports an opening angle of just 6.5 deg (mass 14.6 MeV) against 105.1 deg on the axis convention (mass 202.7 MeV, and note the div does NOT stamp either with 'in the code's accept window'). Both numbers are nonsense in the way you would expect if these two objects have nothing to do with that vertex. Meanwhile the blob has a convergence point of its own that looks like an interaction: a ~18 cm track (20001) comes in from one side and ends where the dense 30 cm shower 98035 begins, with 92020 (pdg 2212) and seventeen sub-20 MeV fragments packed around the same spot. Checked at az-055, az+065 and az+085 plus the reco-framed overview -- the same two-region picture every time. TWO READINGS I CANNOT SEPARATE, which is what this bucket is for: (a) the main vertex is misplaced and the real interaction is the blob 170 cm away, the lone 30 cm track at the star being an unrelated fragment; or (b) the vertex is right, this is a genuine low-energy numu CC whose ~30 cm muon is all there is, and the blob is separate activity (a cosmic-induced shower) that the event simply contains. Nothing in the display separates those without truth information. FOR THE RECORD, and not as the verdict: 98035's own membership looks clean -- 6 segments whose polylines sum to 38.8 cm inside a 15.2 cm span, and NOT ONE non-member anywhere in the event within 35 deg of its axis. Same for 20001 (3 segments, 27.8 cm of polyline in a 2.7 cm span, no small-angle non-members). So if the vertex question were settled the clustering would probably read correct. No pi0 group, and I stored no candidate: pricing a pair off a vertex I do not trust would be a fabricated number. Showers NOT looked at: 17 of the 20 were skipped by the scope rule (all below 20 MeV) and I opened frames only for 98035; 20001 and 92020 were read from candidate tables and from the overview.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt410008/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:04:47+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt410008/calib-pr-evt410008.json",
+ "subRunNo": 1
+}

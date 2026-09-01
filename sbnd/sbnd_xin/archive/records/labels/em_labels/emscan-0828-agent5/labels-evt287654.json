@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   32.34,
+   26.41,
+   486.57
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2052,
+  "cloud_cluster_ids": [
+   12
+  ],
+  "cloud_kept": 2052,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 43887,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7727353834390006,
+   -0.5158233607432398,
+   0.36987334006782696
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7727353834390006,
+    -0.5158233607432398,
+    0.36987334006782696
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 152.85266813967476,
+   "kine_charge": 152.85266813967476,
+   "kine_charge_other_hypothesis": 91.94145452010514,
+   "kine_dQdx": 111.35224045751723,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    88015,
+    88016,
+    89019,
+    89020,
+    89021,
+    89022,
+    91024
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   21.95671850730926,
+   37.8767678297288,
+   477.74343858265354
+  ],
+  "reco_start_vertex_id": 12002,
+  "shower": 88015,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   21.95671850730926,
+   37.8767678297288,
+   477.74343858265354
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt287654",
+ "eventNo": 287654,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 12,
+  "x": -4.674878965699498,
+  "y": 97.47784900100663,
+  "z": 497.5390478461103
+ },
+ "note": "[agent-bulk] shw 88015 (152.9 MeV, 7 seg, len 38.0) is the cleanest object in my shard. Members run 0-34.6 cm at 0-15.3 deg from a single X, and in the az +85 frame it reads as one branching cone - a stem out of the X, a fork, and a main body - with the same single apex in the az -55 frame. The decisive number: the candidate table has ZERO non-members below 40 deg to its axis at ANY distance, and the nearest non-members (30-39 cm) are all at 82-180 deg, i.e. behind the start on the vertex side. Nothing is missing and nothing foreign is swallowed. This is an other_em single-photon topology of the same shape as the pilot's evt284200: the nu vertex sits at the tip of one cluster-12 prong (12001 pdg 211 and 12006 pdg 2212 unowned at the start, then shw 12003, pdg 211, 136.1 MeV / 30.0 cm, running away from it), and 88015 is detached from that prong and pointing elsewhere. pi0: there is no second EM shower in the event - the only other showers are 38007 at 6.1 MeV and 39008 at 1.9 MeV - so the absence of a pi0 group here is a missing second gamma, not a pairing failure. event_flags left empty deliberately: this is NOT a no-vertex NCpi0 - there is a reconstructed vertex with a prong attached to it, and no pi0 to place. Not looked at: 38007 and 39008 (6.1 and 1.9 MeV, below the 20 MeV scope rule).",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt287654/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:47:28+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt287654/calib-pr-evt287654.json",
+ "subRunNo": 1
+}

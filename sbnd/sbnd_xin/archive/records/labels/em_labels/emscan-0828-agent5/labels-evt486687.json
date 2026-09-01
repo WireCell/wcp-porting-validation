@@ -1,0 +1,109 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 49.8,
+  "az_deg": -55.0,
+  "centre": [
+   -166.6,
+   122.48,
+   206.59
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5361,
+  "cloud_cluster_ids": [
+   20,
+   33
+  ],
+  "cloud_kept": 5361,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 55053,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.4760904657835649,
+   -0.39007412112518974,
+   0.7881497626837167
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.4760904657835649,
+    -0.39007412112518974,
+    0.7881497626837167
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 14,
+   "kine_best": 244.80144219607578,
+   "kine_charge": 244.80144219607578,
+   "kine_charge_other_hypothesis": 147.2489877871133,
+   "kine_dQdx": 151.47816959549922,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    72013,
+    85026,
+    86027,
+    87028,
+    88029,
+    91043,
+    100048,
+    101054,
+    101060,
+    101061,
+    101062,
+    101063,
+    101064,
+    103067
+   ],
+   "membership_source": "probe",
+   "num_segments": 14,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -148.0720871415245,
+   139.39537761959357,
+   171.28901377840268
+  ],
+  "reco_start_vertex_id": 20001,
+  "shower": 103067,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -148.0720871415245,
+   139.39537761959357,
+   171.28901377840268
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt486687",
+ "eventNo": 486687,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 20,
+  "x": -135.6304013230918,
+  "y": 149.9398462081595,
+  "z": 148.85190952021574
+ },
+ "note": "[agent-bulk] numucc_em. drag_check both true. shw 103067 (244.8 MeV, 14 seg, 62.8 cm, conn 2) passes both tests the rubric can apply, but I am recording it unclear because the thing I cannot settle is not a membership question. What passes: the acceptance plot has NO non-member circle anywhere in the window (0-110 cm, 0-24 deg), so nothing contiguous is left unclaimed and it is not under-clustered; and the member set is one direction with a single apex -- 0 to 85.6 cm at 1.9-18.6 deg, monotone -- so it is not the evt282979 two-body pattern. What I cannot settle: THIRTEEN of the fourteen members are pass4_angle (direct) adds from eight different clusters (72/101/100/91/88/86/87/85) and most carry TRACK PID -- 101054 (12.2 cm pdg 13), 101060 (8.8 cm pdg 13), 101063 (5.5 cm pdg 211), 86027 (pdg 2212), plus four more pdg 13 -- strung along the axis at 2-4 deg from 25 to 86 cm. Read one way that chain is the shower's own core; read the other way it is a straight minimum-ionising stem the cone gate swallowed, which is the rubric's own over-clustering clause. What tips me to 'correct' rather than 'over-clustered' is width: at az+085 the chain's point cloud is visibly ~3x wider transversely than the 297 cm muon's cloud running parallel to it a short distance away, which is shower-like, and the chain forks. I did not mark anything -- I could not name which segments to remove. Two projections (az-055 and el+60) superpose this shower on the 297 cm muon 20069 (pdg 13, correctly unowned, closest point 9.1 cm from the shower start at 102.4 deg); az+085 separates them cleanly, so they are genuinely distinct objects and the superposition is projection only. Also worth the owner's eye: the reco accepted NO pi0 group here, yet the display prices 103067+89041 at 126.7 MeV (axis) / 162.2 MeV (vertex) with BOTH inside the code's accept window. I do not store that pairing, because gamma1's own membership is what I just called unclear. Not judged: shw 89041 (53.7 MeV, 3 seg) beyond the pairing, and shw 93045 (32.2 MeV) whose two members sit 39.1 cm apart at 13.2 deg with a blank site field -- that one may deserve its own look. 18 further showers skipped by the scope rule, all under 20 MeV.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt486687/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:06:08+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt486687/calib-pr-evt486687.json",
+ "subRunNo": 1
+}

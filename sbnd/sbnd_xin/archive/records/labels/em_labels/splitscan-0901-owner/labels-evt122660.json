@@ -1,0 +1,185 @@
+{
+ "event": "evt122660",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "9110": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "The few clusters at the end of this major clusters should be part of the main cluster. Right now, the main cluster did not include them. ",
+   "groups": {
+    "9005": 0,
+    "9007": 0,
+    "9012": 0,
+    "9013": 0,
+    "9019": 0,
+    "9021": 0,
+    "9110": 0,
+    "25027": 0,
+    "26028": 0,
+    "31033": 0,
+    "36038": 0,
+    "41043": 0,
+    "42044": 0,
+    "43045": 0,
+    "44046": 0,
+    "46048": 0,
+    "50052": 0,
+    "52054": 0,
+    "52058": 0,
+    "52059": 0,
+    "52060": 0,
+    "52061": 0,
+    "57076": 0,
+    "57078": 0,
+    "57080": 0,
+    "57082": 0,
+    "57083": 0,
+    "57085": 0,
+    "57086": 0,
+    "57087": 0,
+    "57088": 0,
+    "58089": 0,
+    "59095": 0,
+    "59097": 0,
+    "59098": 0,
+    "59100": 0,
+    "59101": 0,
+    "59102": 0,
+    "59103": 0,
+    "64108": 0
+   },
+   "parts": {
+    "0": [
+     9005,
+     9007,
+     9012,
+     9013,
+     9019,
+     9021,
+     9110,
+     25027,
+     26028,
+     31033,
+     36038,
+     41043,
+     42044,
+     43045,
+     44046,
+     46048,
+     50052,
+     52054,
+     52058,
+     52059,
+     52060,
+     52061,
+     57076,
+     57078,
+     57080,
+     57082,
+     57083,
+     57085,
+     57086,
+     57087,
+     57088,
+     58089,
+     59095,
+     59097,
+     59098,
+     59100,
+     59101,
+     59102,
+     59103,
+     64108
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 40,
+   "Q": 21140438.099999998,
+   "saved": "2026-08-31T07:55:48"
+  },
+  "54071": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "keep, but this should be part of the earlier EM shower cluster",
+   "groups": {
+    "30032": 0,
+    "47049": 0,
+    "47050": 0,
+    "54071": 0,
+    "55073": 0
+   },
+   "parts": {
+    "0": [
+     30032,
+     47049,
+     47050,
+     54071,
+     55073
+    ]
+   },
+   "proposal": "single group: 3 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 5,
+   "Q": 4619465.7,
+   "saved": "2026-08-31T08:03:32"
+  },
+  "53070": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "This should be part of the EM shower",
+   "groups": {
+    "53068": 0,
+    "53069": 0,
+    "53070": 0
+   },
+   "parts": {
+    "0": [
+     53068,
+     53069,
+     53070
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 3,
+   "Q": 1426402.3,
+   "saved": "2026-08-31T08:08:20"
+  },
+  "9111": {
+   "verdict": "SPLIT2",
+   "n_parts": 2,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "9111": 0,
+    "29031": 0,
+    "32034": 1,
+    "34036": 0,
+    "37039": 1,
+    "38040": 1
+   },
+   "parts": {
+    "0": [
+     9111,
+     29031,
+     34036
+    ],
+    "1": [
+     32034,
+     37039,
+     38040
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.722 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 6,
+   "Q": 1993194.4,
+   "saved": "2026-08-31T08:51:26"
+  }
+ }
+}

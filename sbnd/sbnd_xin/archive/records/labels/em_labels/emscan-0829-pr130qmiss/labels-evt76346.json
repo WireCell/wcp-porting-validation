@@ -1,0 +1,96 @@
+{
+ "arm": "work-pr130r1-probe98-mcp2k",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": 264.9,
+  "centre": [
+   -107.23,
+   -22.8,
+   354.14
+  ],
+  "cloud": null,
+  "cloud_candidate": null,
+  "cloud_cluster_ids": null,
+  "cloud_kept": null,
+  "cloud_scope": "all-clusters",
+  "cloud_total": null,
+  "el_deg": -88.85
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.1089452143323227,
+   -0.9445250233398619,
+   -0.3098441875506425
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.1089452143323227,
+    -0.9445250233398619,
+    -0.3098441875506425
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 167.89877983526472,
+   "kine_charge": 167.89877983526472,
+   "kine_charge_other_hypothesis": 100.99174726933218,
+   "kine_dQdx": 102.27134349304863,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    14013,
+    14019,
+    14059,
+    48037
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -106.51600666944232,
+   -10.22187463105765,
+   362.2929602440467
+  ],
+  "reco_start_vertex_id": 14055,
+  "shower": 14059,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -106.51600666944232,
+   -10.22187463105765,
+   362.2929602440467
+  ],
+  "verdict": null
+ },
+ "event": "evt76346",
+ "eventNo": 76346,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -106.51600666944232,
+  "y": -10.22187463105765,
+  "z": 362.2929602440467
+ },
+ "note": "wront vertex",
+ "origin": null,
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-mcp2k/pr_evt76346/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T02:25:03+00:00",
+ "scan_tag": "emscan-0829-pr130qmiss",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe98-mcp2k/pr_evt76346/calib-pr-evt76346.json",
+ "subRunNo": 1
+}

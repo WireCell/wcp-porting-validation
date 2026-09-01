@@ -1,0 +1,247 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 92.66,
+  "az_deg": -55.0,
+  "centre": [
+   5.82,
+   117.05,
+   152.49
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6109,
+  "cloud_cluster_ids": [
+   17,
+   24
+  ],
+  "cloud_kept": 6109,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 40862,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.4859783744434952,
+   0.0419981311247465,
+   -0.8729611540929451
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "17002": {
+    "102030": "out",
+    "103031": "out",
+    "104038": "out",
+    "104040": "out",
+    "107043": "out",
+    "108044": "out",
+    "24005": "out",
+    "24006": "out"
+   }
+  },
+  "marks_detail": {
+   "17002": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.4859783744434952,
+     0.0419981311247465,
+     -0.8729611540929451
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "102030": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 125.00098809340065,
+      "cluster_id": 102,
+      "dist": 110.54883881303013,
+      "ellip": 330.522869160029,
+      "kind": "out",
+      "length": 0.4549746567748908,
+      "owner": 17002,
+      "pdg": 13,
+      "tier": null
+     },
+     "103031": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 123.00756728781377,
+      "cluster_id": 103,
+      "dist": 110.9142773105184,
+      "ellip": 348.3351087221799,
+      "kind": "out",
+      "length": 0.35734078894705146,
+      "owner": 17002,
+      "pdg": 2212,
+      "tier": null
+     },
+     "104038": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 125.15187926141778,
+      "cluster_id": 104,
+      "dist": 105.78424351427894,
+      "ellip": 301.55465874114736,
+      "kind": "out",
+      "length": 5.991648797237547,
+      "owner": 17002,
+      "pdg": 11,
+      "tier": null
+     },
+     "104040": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 124.07370600408245,
+      "cluster_id": 104,
+      "dist": 108.28142142698647,
+      "ellip": 324.0820886024888,
+      "kind": "out",
+      "length": 1.843765420988122,
+      "owner": 17002,
+      "pdg": 13,
+      "tier": null
+     },
+     "107043": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 123.55708138883641,
+      "cluster_id": 107,
+      "dist": 148.75360699885272,
+      "ellip": 618.8855074703108,
+      "kind": "out",
+      "length": 0.30886117763710996,
+      "owner": 17002,
+      "pdg": 13,
+      "tier": null
+     },
+     "108044": {
+      "absorbed_by": null,
+      "angle": 118.4529435706258,
+      "cluster_id": 108,
+      "dist": 88.114167838416,
+      "ellip": 241.170135622178,
+      "kind": "out",
+      "length": 4.570775479278509,
+      "owner": 17002,
+      "pdg": 11,
+      "tier": null
+     },
+     "24005": {
+      "absorbed_by": "pass4_proximity (direct)",
+      "angle": 119.44383293471046,
+      "cluster_id": 24,
+      "dist": 118.24212398396065,
+      "ellip": 426.22217267689524,
+      "kind": "out",
+      "length": 6.811452592337943,
+      "owner": 17002,
+      "pdg": 11,
+      "tier": null
+     },
+     "24006": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 120.43220410496983,
+      "cluster_id": 24,
+      "dist": 122.46778402663263,
+      "ellip": 448.419590966274,
+      "kind": "out",
+      "length": 26.696544046172853,
+      "owner": 17002,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 125.15187926141778,
+     "angle_min": 0.0,
+     "dist_max": 148.75360699885272,
+     "dist_min": 0.0,
+     "n": 9
+    },
+    "members": [
+     17002,
+     24005,
+     24006,
+     102030,
+     103031,
+     104038,
+     104040,
+     107043,
+     108044
+    ],
+    "start": [
+     6.11852436296061,
+     58.62412780732452,
+     106.32395349829854
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.4859783744434952,
+    0.0419981311247465,
+    -0.8729611540929451
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 9,
+   "kine_best": 272.3687263834197,
+   "kine_charge": 272.3687263834197,
+   "kine_charge_other_hypothesis": 163.83081286220735,
+   "kine_dQdx": 166.66637727973747,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17002,
+    24005,
+    24006,
+    102030,
+    103031,
+    104038,
+    104040,
+    107043,
+    108044
+   ],
+   "membership_source": "probe",
+   "num_segments": 9,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   6.11852436296061,
+   58.62412780732452,
+   106.32395349829854
+  ],
+  "reco_start_vertex_id": 17002,
+  "shower": 17002,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   6.11852436296061,
+   58.62412780732452,
+   106.32395349829854
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt179369",
+ "eventNo": 179369,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": 6.11852436296061,
+  "y": 58.62412780732452,
+  "z": 106.32395349829854
+ },
+ "note": "[agent-bulk] shw 17002 (272.4 MeV, 9 seg, pdg 11, len 58.3) is badly OVER-CLUSTERED, and the display's own comparison line says so before any picture does: its cmp_div reads '9 segment(s) plotted -- distance 0.0-148.8 cm, angle 0.0-125.2deg'. A member set spanning 149 cm and 125 degrees is not a cone. In detail: the seed 17002 (11.3 cm, cluster 17) sits ON the main vertex, and the OTHER EIGHT members are one clump 88-149 cm away at 118-125 deg from the axis - i.e. behind the start and more than a metre off - namely 108044 (4.6 cm, 88.1 cm), 104038 (6.0 cm, 105.8 cm), 104040 (1.8 cm, 108.3 cm), 102030 (0.45 cm, 110.5 cm), 103031 (0.36 cm, 110.9 cm), 24005 (6.8 cm, 118.2 cm), 24006 (26.7 cm, 122.5 cm) and 107043 (0.31 cm, 148.8 cm), from six different clusters (24, 102, 103, 104, 107, 108), every one of them added by pass4_angle or pass4_proximity. That clump is 52 cm of the object's 58.3 cm total length. shw17002-acc makes it visual: exactly ONE orange member square, at the origin - the other eight are off the top of the plot. On shw17002-az-055-el+20 those eight yellow pieces are strung along the 450.9 cm track that dominates the frame. Marked all eight OUT. They are one clump on one side of one 88 cm gap, so the owner reverses them together. WHICH HALF IS THE INTRUDER: I kept the seed and ejected the clump because the seed is the piece sitting on the reconstruction's own shower start (the main vertex) and the clump is what the late passes bolted on; but note that ejecting them leaves 17002 as an 11.3 cm object, so the 272.4 MeV energy is mostly clump charge and would have to be re-derived. I CONSIDERED 'both' AND DECIDED AGAINST IT, which is the one judgement here I would let the owner overturn: 91027 (4.9 cm, 22.4 MeV, its own single-segment node) sits at 21.8 cm / 22.7 deg, tier 1, and on shw17002-acc it is the one circle INSIDE the dashed pass-1 box (25 deg out to 80 cm) that was not accepted - textbook under-clustering evidence. I did not mark it because that 22.7 deg is measured against an axis fitted to the very member set I am ejecting; if the eight marks are applied the axis changes and the number has to be recomputed. Same for 17003 (4.0 cm, 13.3 MeV, cluster 17, touching the shower and the vertex at 0.00 cm) - the evt100135-style question, left unmarked here for the same reason. Reconciliation check (correction 11): nseg 9 and exactly nine segments carry owner 17002. VERTEX - not vertex-bad, but read the physics: event_half_span_cm was 400.0 (capped; r95 411.6) because segment 17001 is a 450.9 cm pdg-13 track, so per correction 5 I re-captured with --vtx-span 60 and judged from shots-vtx/evt179369/vtx-az-055-el+20 and vtx-az+065-el+20. In both the 450.9 cm track comes in and ENDS exactly at the star, and the 11.3 cm EM seed 17002 leaves from that same point with 17003 beside it. So the star IS at a genuine junction and I did not record vertex-bad. But a 4.5 m track that stops, with a short electromagnetic object at its endpoint, is the signature of a stopping cosmic muon and its Michel electron, not of a neutrino interaction - and 17001 is in cluster 17, one of only two clusters carrying this neutrino candidate. The owner may want to look at whether this event is a cosmic at all. NOT LOOKED AT: 27 of the 30 shower nodes were out of scope at 13.3 MeV and below; of the two other in-scope objects I did not judge 111047 (35.4 MeV, 1 seg) as an object, and 91027 (22.4 MeV) only as the candidate discussed above. No pi0 stored and none proposed - the auto-slotted 17002 + 111047 prices at 186.4 MeV on the axis convention with no vertex-convention chord, and gamma1 there is the object I have just called over-clustered.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt179369/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:59:59+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt179369/calib-pr-evt179369.json",
+ "subRunNo": 1
+}

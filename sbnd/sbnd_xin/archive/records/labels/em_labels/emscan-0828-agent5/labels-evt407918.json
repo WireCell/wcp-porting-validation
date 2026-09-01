@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 38.94,
+  "az_deg": -55.0,
+  "centre": [
+   -59.14,
+   -156.85,
+   213.46
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2793,
+  "cloud_cluster_ids": [
+   11,
+   17,
+   18
+  ],
+  "cloud_kept": 2793,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 31378,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.9066215644787611,
+   0.20491446606190297,
+   0.36884603891142537
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.9066215644787611,
+    0.20491446606190297,
+    0.36884603891142537
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 174.7520181135901,
+   "kine_charge": 174.7520181135901,
+   "kine_charge_other_hypothesis": 105.11399585779857,
+   "kine_dQdx": 96.62457312711047,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17010,
+    48018,
+    49019,
+    50020,
+    53023
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -89.1341002138241,
+   -168.880361007711,
+   203.34094933349593
+  ],
+  "reco_start_vertex_id": 11006,
+  "shower": 17010,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -89.1341002138241,
+   -168.880361007711,
+   203.34094933349593
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt407918",
+ "eventNo": 407918,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -102.57918650180743,
+  "y": -172.7336806235478,
+  "z": 198.8769348998173
+ },
+ "note": "[agent-bulk] shw 17010 (174.8 MeV, 5 seg, len 34.7) is complete: members run 0-64.6 cm at 0-22.6 deg from one X, every non-member within 60 cm is at 48-175 deg, and the only non-member below 40 deg at ANY distance is 47017 (3.3 MeV) at 85.0 cm / 24.5 deg. Nothing contiguous is missing and the set does not span two directions. Shape caveat, in the pilot's evt284791 sense: the seed is a NARROW ~20-25 cm chain (point cloud about +-0.8 cm in both az -55 and az +85) followed by four small detached blobs at 24.0, 43.7, 50.9 and 64.6 cm - sparse, and I did not test whether those far blobs belong. I make NO PID claim here; correct means nothing is missing. THE USEFUL NEGATIVE - why this event has no pi0 and should not have one: the display's pi0 probe pairs 17010 with 11009 (58.6 MeV) and the VERTEX convention gives theta 93.5 deg -> m = 147.3 MeV, which is inside the code's accept window and would look like a good pi0 on the numbers alone. It is not one. Reading the segment owners, 11009 sits at the far END of the ~90 cm track that leaves the nu vertex - segments 11004 (pdg 211) and 11008 (pdg 13), both unowned grey, running star -> blob in all three vertex frames. So 11009 is a decay product at the end of a charged track (Michel-like), not a converted photon, and the reconstruction was RIGHT to accept no pi0 group. This is a case where the mass number and the topology disagree and the topology wins. Not looked at: the other 10 showers, all at or below 4.0 MeV (scope rule min_kine_best 20 MeV); I did not judge 11009's own completeness.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt407918/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:58:02+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt407918/calib-pr-evt407918.json",
+ "subRunNo": 1
+}

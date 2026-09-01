@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-nuecc48/pr_evt116962",
+ "confidence": "medium",
+ "eventNo": 116962,
+ "main_vertex": {
+  "x": -69.71748108277475,
+  "y": -79.10433141650574,
+  "z": 155.9381004772385
+ },
+ "note": "nuecc: three attached showers are collinear fragments of the primary electron (axis 2.7/15.8 deg); detached EM pieces (118/96/58/33/28 MeV) read as radiated fragments of the e- shower -- no detached pair back-projects cleanly (all angle_gate), no defensible gamma-gamma pairing",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18259,
+ "sample": "nuecc48",
+ "saved_utc": "2026-08-30T03:37:19.768626Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

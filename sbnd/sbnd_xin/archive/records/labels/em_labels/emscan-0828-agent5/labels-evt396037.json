@@ -1,0 +1,150 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -174.66,
+   143.35,
+   460.18
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 637,
+  "cloud_cluster_ids": [
+   17,
+   22
+  ],
+  "cloud_kept": 637,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 27191,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.37184144342935865,
+   -0.16992754135212626,
+   -0.912610854438184
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "69026": {
+    "65017": "in"
+   }
+  },
+  "marks_detail": {
+   "69026": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.37184144342935865,
+     -0.16992754135212626,
+     -0.912610854438184
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "65017": {
+      "absorbed_by": null,
+      "angle": 132.99764603248875,
+      "cluster_id": 65,
+      "dist": 2.7636336761252935,
+      "ellip": 0.1656415667249876,
+      "kind": "in",
+      "length": 4.3201354310261415,
+      "owner": 65017,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 133.07968509812412,
+     "angle_min": 0.0,
+     "dist_max": 23.528253656834714,
+     "dist_min": 0.0,
+     "n": 6
+    },
+    "members": [
+     63015,
+     69019,
+     69021,
+     69023,
+     69026,
+     69027
+    ],
+    "start": [
+     -180.1308048296964,
+     146.4466328564481,
+     467.68020460554465
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.37184144342935865,
+    -0.16992754135212626,
+    -0.912610854438184
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 137.17532093008853,
+   "kine_charge": 137.17532093008853,
+   "kine_charge_other_hypothesis": 82.51147123614349,
+   "kine_dQdx": 148.49499721348758,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    63015,
+    69019,
+    69021,
+    69023,
+    69026,
+    69027
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -180.1308048296964,
+   146.4466328564481,
+   467.68020460554465
+  ],
+  "reco_start_vertex_id": 17002,
+  "shower": 69026,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -180.1308048296964,
+   146.4466328564481,
+   467.68020460554465
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt396037",
+ "eventNo": 396037,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -173.0316887883566,
+  "y": 141.70232662304852,
+  "z": 483.1686525700525
+ },
+ "note": "[agent-bulk] shw 69026 (137.2 MeV, pdg 11, 6 segments, 20.8 cm) is the only in-scope shower and the highest-kine_charge pdg-11 object (correction 17); no higher-energy non-EM object was passed over. The object is a compact branching blob detached 17.7 cm from the nu vertex, its 5 core members (69026, 69027, 69023, 69021, 69019) all touching (gaps 0.0-4.1 cm) and all lying in the radial shell 17.7-23.1 cm from the vertex. UNDER-CLUSTERING: 65017 (17.1 MeV, 4.3 cm, pdg 11) sits INSIDE that same blob and is left as its own shower -- distV 17.9-19.7 cm, i.e. the identical shell as 69026/69027/69023 (17.7-19.8), gap 2.2 cm to 69027 and 2.4 cm to 69023, and its end-to-end direction makes 68.2deg with the vertex->itself radial where the shower's own core members make 64-84deg. In shw69026-az+015-el+20 the orange 65017 and the yellow member beside it read as two parallel strands inside ONE light-blue point-cloud blob. MARK: 65017 IN of 69026. Membership triple-check (correction 16) passes -- nseg 6, owner-grouped count 6, cmp_div 6 -- so 65017 is genuinely not 69026's, i.e. this is a real split and not the correction-11 shared-segment trap; but it is a neighbour-owned segment, not grey charge, so it is the weaker of the two under-clustering flavours and I flag it as such. GATE PAIR, and this one is the point of the event -- it is NOT an angle inversion but a DEGENERACY: accepted 69023 at 3.0 cm / 133.1deg (site from_vertices (walk_add)) against rejected 65017 at 2.8 cm / 133.0deg -- same distance, same angle to 0.1deg, opposite outcome. The only difference between them is cluster membership: 69023 is cluster 69, the same cluster as the shower seed, so the vertex walk reached it; 65017 is cluster 65 and no geometric pass covers 133deg. So on this event the accept/reject boundary is set by cluster connectivity, not by the dist/angle gate at all. Weaker second reading I did NOT record: 63015 (2.1 cm, pdg 2212) is a member taken by pass4_angle at 23.5 cm / 18.2deg with a 15.0 cm gap to the nearest other member, i.e. a small detached forward fragment; that is the one over-clustering candidate here and the one to reverse if the owner reads it the other way -- I left it in because it is on-axis and the pilot's evt400504 treats an analogous detached on-axis piece as belonging. I did NOT write the shower's 0-133deg member spread up as start/axis wrong: the whole object is ~5 cm across, so angle-to-axis is meaningless at that scale and the 133deg is blob geometry, not a misplaced axis. Density deliberately NOT quoted (correction 18): the skeleton is 20.8 cm and the blob is not covered by it. Vertex judged off the vtx-* sweep at 78.3 cm half-span (r95 = 62.6 cm, below the 150 cm trigger, so no vtxz-* frames): the star sits at the start of the grey 23.0 cm pdg 2212 track 17001 (which points away from it, 12.6deg to the radial) and the shower stands off 17.7 cm -- a clean hadron-prong-plus-detached-photon topology, not vertex-bad. Showers NOT looked at: the 14 skipped by the scope rule (65017 17.1 -- marked IN above -- then 52004 3.0, 57009 2.4, 70024 1.6, 59011 1.5, 61013 1.4, 54006 1.0, 58010 0.9, 55007 0.9, 60012 0.3, 62014 0.3, 53005 0.3, 56008 0.2, 22003 0.1 MeV), all single-segment. No reco pi0 group (all pio_id = -1) and no pi0 frames were produced for this event; none proposed.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt396037/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:39:44+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt396037/calib-pr-evt396037.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,41 @@
+{
+ "arm": "work-pr130r1-probe141-mcp2k",
+ "bee_url": null,
+ "camera": {
+  "R": 203.0,
+  "az_deg": 294.56,
+  "centre": [
+   -77.21,
+   -108.23,
+   290.47
+  ],
+  "cloud": null,
+  "cloud_candidate": null,
+  "cloud_cluster_ids": null,
+  "cloud_kept": null,
+  "cloud_scope": "all-clusters",
+  "cloud_total": null,
+  "el_deg": -36.6
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt54453",
+ "eventNo": 54453,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": -94.64598362268084,
+  "y": -76.25554533119687,
+  "z": 204.52460866064013
+ },
+ "note": "wrong vertex",
+ "origin": null,
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe141-mcp2k/pr_evt54453/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T02:25:21+00:00",
+ "scan_tag": "emscan-0829-pr130qmiss",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-pr130r1-probe141-mcp2k/pr_evt54453/calib-pr-evt54453.json",
+ "subRunNo": 1
+}

@@ -1,0 +1,103 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/9724913f-bfed-43d8-91f5-0bca431ca7b9/event/1/",
+ "camera": {
+  "R": 274.62,
+  "az_deg": 10.64,
+  "centre": [
+   7.03,
+   3.07,
+   205.87
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6806,
+  "cloud_cluster_ids": [
+   21,
+   30,
+   31
+  ],
+  "cloud_kept": 6806,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 41534,
+  "el_deg": -15.35
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   -0.4938819763098079,
+   -0.5788616685898356,
+   -0.6488449445851525
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.4938819763098079,
+    -0.5788616685898356,
+    -0.6488449445851525
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 7,
+   "kine_best": 120.8140931370892,
+   "kine_charge": 120.8140931370892,
+   "kine_charge_other_hypothesis": 72.67013121027924,
+   "kine_dQdx": 69.48105389372087,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    30003,
+    96018,
+    98020,
+    100022,
+    101024,
+    101026,
+    101029
+   ],
+   "membership_source": "probe",
+   "num_segments": 7,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -18.615899060485486,
+   153.57239497673655,
+   185.64446437399175
+  ],
+  "reco_start_vertex_id": 30001,
+  "shower": 30003,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -18.615899060485486,
+   153.57239497673655,
+   185.64446437399175
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt58755",
+ "eventNo": 58755,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 30,
+  "x": -18.615899060485486,
+  "y": 153.57239497673655,
+  "z": 185.64446437399175
+ },
+ "note": "[agent-bulk] shw 30003 (120.8 MeV, 7 seg, pdg 11, nuecc): correct -- nothing contiguous is missing. Members run from the nu vertex (seed 30003, 6.5 cm) out to 62.4 cm, all within 23.5 deg of the axis and all inside the pass-1 acceptance window. The only unclaimed in-cone object is 97019 at 22.3 cm / 5.4 deg, tier 1, sitting inside the acceptance band on the acc plot -- but it is a 1.7 MeV single-point stub (0.15 cm), 1.4 pct of the shower, so no IN mark: a mark would overstate it. Shower 99021 (16.2 MeV, 2.6 cm) is at 33.4 cm / 35.2 deg, outside the cone and off the top of the acceptance plot, correctly left to itself. Segment 30004 (22.7 cm, pdg 13, dist 0 / angle 0) is grey/unowned at the vertex -- the second prong of the nuecc vertex, correctly not absorbed. Vertex looks good: the star is where 30004 and the shower seed converge. Residual doubt, stated: the member set has a ~26 cm internal gap between 22.7 and 48.8 cm, so an over-clustered reading (vertex stem plus a detached downstream group fused by pass4_angle / pass4_proximity) is not excluded; I did not resolve it, and 62 cm is a normal extent for a 120 MeV EM shower in LAr. Showers NOT looked at: the 10 the scope rule skipped (69016 18.1 MeV, 99021 16.2 MeV, and 8 more all under 3.1 MeV) -- all below the 20 MeV threshold. Clustering statement, silent on PID.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt58755/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T23:17:52+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt58755/calib-pr-evt58755.json",
+ "subRunNo": 1
+}

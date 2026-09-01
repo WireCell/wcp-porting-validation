@@ -1,0 +1,159 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 206.75,
+  "az_deg": -55.0,
+  "centre": [
+   35.95,
+   -77.12,
+   471.44
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1187,
+  "cloud_cluster_ids": [
+   17,
+   24,
+   25,
+   26
+  ],
+  "cloud_kept": 1187,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 34246,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.7460037300279753,
+   -0.3650018250136876,
+   -0.5570027850208877
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "17044": {
+    "66037": "out",
+    "66041": "out"
+   }
+  },
+  "marks_detail": {
+   "17044": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.7460037300279753,
+     -0.3650018250136876,
+     -0.5570027850208877
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "66037": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 9.081294502175568,
+      "cluster_id": 66,
+      "dist": 33.792244699533875,
+      "ellip": 1.8338188041016024,
+      "kind": "out",
+      "length": 5.5730010406703805,
+      "owner": 17044,
+      "pdg": 2212,
+      "tier": 1
+     },
+     "66041": {
+      "absorbed_by": "pass3_cone (direct)",
+      "angle": 11.505223830341746,
+      "cluster_id": 66,
+      "dist": 33.47663749691561,
+      "ellip": 2.4559410618257904,
+      "kind": "out",
+      "length": 17.579889620308553,
+      "owner": 17044,
+      "pdg": 2212,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 11.505223830341746,
+     "angle_min": 0.0,
+     "dist_max": 33.792244699533875,
+     "dist_min": 0.0,
+     "n": 3
+    },
+    "members": [
+     17044,
+     66037,
+     66041
+    ],
+    "start": [
+     -45.92430459267048,
+     -182.37262504065092,
+     461.7512460179182
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.7460037300279753,
+    -0.3650018250136876,
+    -0.5570027850208877
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 253.93538448856225,
+   "kine_charge": 253.93538448856225,
+   "kine_charge_other_hypothesis": 152.7430884141728,
+   "kine_dQdx": 222.04102809127238,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17044,
+    66037,
+    66041
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -45.92430459267048,
+   -182.37262504065092,
+   461.7512460179182
+  ],
+  "reco_start_vertex_id": 17038,
+  "shower": 17044,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -45.92430459267048,
+   -182.37262504065092,
+   461.7512460179182
+  ],
+  "verdict": "vertex-bad (undecidable)"
+ },
+ "event": "evt175896",
+ "eventNo": 175896,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -45.92430459267048,
+  "y": -182.37262504065092,
+  "z": 461.7512460179182
+ },
+ "note": "[agent] the nu vertex is not clear and the shower question is not answerable from it. Within 25 cm of the vertex the charge is ONE straight narrow line - 61 fitted points, transverse RMS 1.49 cm, singular values 6.9/1.1/0.7 - with points on BOTH sides (35 beyond -3 cm, 11 beyond +3 cm). The reco splits that one line into two showers of 253.9 and 217.8 MeV: 17044 and 17043 are both cluster 17, both conn 1, both with a member point AT 0.00 cm from the vertex, and each reads dist 0.0 / angle 0.0 against the other (site examine_showers_retarget_seed). Two readings and I cannot separate them: (a) the vertex is wrong and sits in the middle of a through-going track; (b) the vertex is right, 17043 is the electron with a narrow 15 cm MIP stem before it showers, and 17044 is spurious. The two OUT marks on 17044 are a PID statement, NOT a geometry one, and the distinction matters: 66037 and 66041 sit at 9.1 and 11.5 deg from 17044's own axis, tier 1, absorbed by pass3_cone - the gate accepted them legitimately. What makes them wrong is that they are 23 cm of pdg-2212 proton track inside a 254 MeV 'EM shower' 33 cm from its start. Not treated as a clustering result.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt175896/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T18:46:33+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt175896/calib-pr-evt175896.json",
+ "subRunNo": 1
+}

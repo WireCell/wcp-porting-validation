@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -192.87,
+   -196.44,
+   268.1
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 581,
+  "cloud_cluster_ids": [
+   6
+  ],
+  "cloud_kept": 581,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23389,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.21607218016427598,
+   -0.010003341674272036,
+   0.9763261474089507
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.21607218016427598,
+    -0.010003341674272036,
+    0.9763261474089507
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 104.08300272213727,
+   "kine_charge": 104.08300272213727,
+   "kine_charge_other_hypothesis": 62.60631742684949,
+   "kine_dQdx": 91.88123953201482,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    6001,
+    6002,
+    62017
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -189.730392698244,
+   -197.93457214230241,
+   249.8643106277785
+  ],
+  "reco_start_vertex_id": 61019,
+  "shower": 6002,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -189.730392698244,
+   -197.93457214230241,
+   249.8643106277785
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt95151",
+ "eventNo": 95151,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 61,
+  "x": -185.46149390959164,
+  "y": -193.54388806587218,
+  "z": 226.86329494326054
+ },
+ "note": "[agent-bulk] other_em, and it is the same clean topology as the pilot's evt284200. Vertex judged from the native r95 framing (event_half_span_cm 73.8, no re-capture needed): on vtx-az-055-el+20 the blue star sits on the apex of a small hadronic V - 61011 (pdg 2212, 9.2 cm) and 61012 (pdg 13, 11.7 cm), BOTH correctly left unowned/grey - and the EM object sits detached about 20 cm above it. Not a vertex failure. shw 6002 (104.1 MeV, 3 seg, pdg 11, len 27.7): the members cover everything visible - a 20.8 cm body from the X plus 6001 (1.4 cm) and, across a real gap, 62017 (5.6 cm) at 32.0 cm / 2.5 deg, dead on the axis. Nothing is missing: every non-member except one is at 87-158 deg (the two vertex hadrons at 149-158 deg, 27003 at 87 deg, 28004/29005/30006 behind), and the sole small-angle non-member 31007 is a 0.4 cm stub 111.7 cm away at 22.3 deg. TWO CAVEATS I want on the record. (1) SHAPE: on both az-055 and az+085 this object is a NARROW LINE - roughly 2-3 cm across over 21 cm, no transverse spread, no branching, no fan. 104 MeV is only about 1.5 radiation lengths so a photon conversion can legitimately still look like a narrow pair here, and it IS detached from the vertex by ~20 cm which is what a conversion gap looks like, so I did not record a PID verdict - but the object does not look like a developed shower and a track reading is not excluded. This verdict is about CLUSTERING and is silent on PID. (2) The weak inclusion I would let the owner reverse: 62017 is pdg 13 and is taken by pass4_angle across a visible gap at 32 cm; it is on-axis at 2.5 deg so I left it in, but it is the one member whose ownership is a judgement call. pi0: showers[].pio_id is -1, the reconstruction accepted NO pi0 group, and there is no second EM object in the event above 20 MeV to pair with - so, as in the pilot's other_em event, the absence of a pi0 here is not a mis-pairing, it is a missing second photon. Not looked at: the 5 showers the scope rule skipped (28004, 27003, 31007, 29005, 30006), all under 20 MeV min_kine_best and 0.3-1.4 cm.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt95151/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:36:39+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt95151/calib-pr-evt95151.json",
+ "subRunNo": 1
+}

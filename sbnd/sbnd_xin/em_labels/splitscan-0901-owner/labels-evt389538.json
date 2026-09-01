@@ -1,0 +1,46 @@
+{
+ "event": "evt389538",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "19021": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "This entire group is a separate neutrino events. so it is OK to keep. ",
+   "groups": {
+    "19010": 1,
+    "19021": 1,
+    "19022": 1,
+    "19027": 1,
+    "19031": 1,
+    "19033": 1,
+    "19034": 1,
+    "19036": 1,
+    "19037": 1,
+    "67075": 1,
+    "71079": 1
+   },
+   "parts": {
+    "1": [
+     19010,
+     19021,
+     19022,
+     19027,
+     19031,
+     19033,
+     19034,
+     19036,
+     19037,
+     67075,
+     71079
+    ]
+   },
+   "proposal": "single group: 4 angular maxima but valley_best=0.091 > 0.95 (no charge dip between them)",
+   "nseg": 11,
+   "Q": 17080594.7,
+   "saved": "2026-08-31T07:58:15"
+  }
+ }
+}

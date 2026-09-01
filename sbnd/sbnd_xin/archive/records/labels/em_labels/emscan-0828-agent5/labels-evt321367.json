@@ -1,0 +1,113 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 37.57,
+  "az_deg": -55.0,
+  "centre": [
+   -57.43,
+   99.2,
+   473.29
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2208,
+  "cloud_cluster_ids": [
+   3,
+   9,
+   10,
+   11,
+   12,
+   13
+  ],
+  "cloud_kept": 2208,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 14943,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.8757001240524768,
+   0.4218555392124945,
+   0.23491955382686305
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.8757001240524768,
+    0.4218555392124945,
+    0.23491955382686305
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 14,
+   "kine_best": 247.79559261318516,
+   "kine_charge": 247.79559261318516,
+   "kine_charge_other_hypothesis": 149.04998051920916,
+   "kine_dQdx": 158.53028778797838,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    12011,
+    12012,
+    12013,
+    12014,
+    47024,
+    47025,
+    50028,
+    51029,
+    52030,
+    53031,
+    54032,
+    55033,
+    56035,
+    56036
+   ],
+   "membership_source": "probe",
+   "num_segments": 14,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -28.32912996303839,
+   86.05175142648436,
+   466.41385673212096
+  ],
+  "reco_start_vertex_id": 3002,
+  "shower": 12012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -28.32912996303839,
+   86.05175142648436,
+   466.41385673212096
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt321367",
+ "eventNo": 321367,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 3,
+  "x": 15.147576853637696,
+  "y": 69.03753734429424,
+  "z": 457.45952311205957
+ },
+ "note": "[agent-bulk] shw 12012 (247.8 MeV, pdg 11, 14 segments) is the only in-scope shower and is the highest-kine_charge pdg-11 object in the event (correction 17); no higher-energy non-EM object was passed over. It is detached -- closest member point 47.5 cm from the nu vertex, members running 47.5-112.0 cm out -- and it opens as one cone from a single apex: 14 members at 0.0-64.2 cm / 0.0-15.7deg from the shower start, member skeleton extent 64.4 cm with transverse RMS 3.73 cm (2*RMS/L = 0.12), branching visibly in the az-055 shower frame. Nothing is missing: every non-member within 65 cm of the shower start sits BEHIND it at 107-179deg -- 3001 (pdg 13, 47.3 cm), 3005 (pdg 211, 25.9 cm) and 3004 (pdg 2212, 13.3 cm), the three grey/unowned tracks that fan out of the nu vertex itself and are correctly left unowned, plus 33020/32019/35022/31018 (0.1-1.9 cm, <= 10.3 MeV). The only forward on-axis non-members are 49027 (3.9 MeV, 1.0 cm) at 95.7 cm / 6.2deg and 48026 (0.7 MeV, 0.3 cm) at 102.6 cm / 10.3deg, both tier 2 and both 30+ cm beyond the member spread; each is the seed of its own sub-20 MeV shower rather than grey charge (correction 16), so I do not call them a missed piece -- if the owner disagrees these two are the ones to reverse, and they are worth ~4.6 MeV of 247.8. Acceptance plot corroborates: all 14 members inside 80 cm / 20deg, two of them (15.7deg at 28 cm, 14.8deg at 38 cm) above the 12.5deg pass-1 line and taken by pass4_angle; no rejected circle sits just outside a pass-1 step inside the plotted window (49027/48026 are off its 80 cm axis). Showers NOT looked at: the 12 the scope rule skipped (35022 10.3, 11008 4.5, 49027 3.9, 33020 2.2, 9006 2.0, 31018 1.4, 10007 1.1, 29016 0.9, 30017 0.8, 48026 0.7, 32019 0.3, 13015 0.1 MeV) -- all single-segment, all <= 10.3 MeV. Vertex judged off the vtx-* sweep at 131.0 cm half-span (r95 = 104.8 cm is below the 150 cm trigger so no vtxz-* frames were produced): the star sits at the convergence of the 3001/3004/3005 fan in both az-055 and az+065, and the shower's 47.5 cm standoff is a clean conversion gap, not a vertex error. No reco pi0 group (all pio_id = -1); the kine_pio_* block (mass 55.1 with E2 = 10.3 MeV) is the BDT feature scan, not a pairing, and there is no second EM object above 10.3 MeV to pair with, so no pi0 is proposed. No gate-pair angle inversion found on this event.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt321367/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:32:25+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt321367/calib-pr-evt321367.json",
+ "subRunNo": 1
+}

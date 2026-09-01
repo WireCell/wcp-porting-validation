@@ -1,0 +1,161 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -17.87,
+   14.9,
+   493.52
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2832,
+  "cloud_cluster_ids": [
+   10,
+   18,
+   19,
+   20
+  ],
+  "cloud_kept": 2832,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 15348,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.1180240203324552,
+   -0.9131858522333187,
+   -0.39007938923438584
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "18012": {
+    "37017": "?",
+    "38018": "?"
+   }
+  },
+  "marks_detail": {
+   "18012": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.1180240203324552,
+     -0.9131858522333187,
+     -0.39007938923438584
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "37017": {
+      "absorbed_by": null,
+      "angle": 42.57790790979715,
+      "cluster_id": 37,
+      "dist": 22.99703697554694,
+      "ellip": 9.863289143675981,
+      "kind": "?",
+      "length": 0.5822434838732691,
+      "owner": 37017,
+      "pdg": 11,
+      "tier": null
+     },
+     "38018": {
+      "absorbed_by": null,
+      "angle": 45.2543085287174,
+      "cluster_id": 38,
+      "dist": 24.272679133551097,
+      "ellip": 12.070337222852812,
+      "kind": "?",
+      "length": 0.7614824592428258,
+      "owner": 38018,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 24.663201045772535,
+     "angle_min": 0.0,
+     "dist_max": 25.42885538406241,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     18011,
+     18012,
+     18013,
+     18014
+    ],
+    "start": [
+     -14.536516259291783,
+     27.4242465722612,
+     499.7560262227483
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.1180240203324552,
+    -0.9131858522333187,
+    -0.39007938923438584
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 167.2035941052404,
+   "kine_charge": 167.2035941052404,
+   "kine_charge_other_hypothesis": 100.57359043924235,
+   "kine_dQdx": 119.1111626915652,
+   "kine_hypothesis": "shower",
+   "kine_range": 112.15900038348603,
+   "members": [
+    18011,
+    18012,
+    18013,
+    18014
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 3
+  },
+  "reco_start": [
+   -14.536516259291783,
+   27.4242465722612,
+   499.7560262227483
+  ],
+  "reco_start_vertex_id": 10002,
+  "shower": 18012,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -14.536516259291783,
+   27.4242465722612,
+   499.7560262227483
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt396323",
+ "eventNo": 396323,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 10,
+  "x": -60.22513322053724,
+  "y": 154.94218967874212,
+  "z": 418.00969205291506
+ },
+ "note": "[agent-bulk] Small event, 12 segments, 6 showers, 2 in scope. Verdict shower 18012 (167.2 MeV, pdg 11, 4 seg, 40.2 cm) is the highest-kine_charge pdg-11 object; the only other in-scope object is 10009 (pdg 13, kine_charge 130.4 / kine_best 105.2), lower on both, so nothing higher was passed over. Vertex judged from the automatic close-in vtxz-* frames (r95 172.1 cm, half_span 215.2, so vtxz fired) plus ov-iso: in vtxz-az-055-el+20 and vtxz-az+065-el+20 the star sits exactly at the kink between a grey (unowned) 31 cm proton arm (10001 + 10005, pdg 2212, correctly left unowned) and the orange 41 cm pdg-13 track 10009, at the tip of the vertex charge blob. Clean two-prong vertex, correctly placed -- not a vertex verdict. CORRECT for 18012, with two things the owner should know. First, the geometry: 18012 is FAR detached -- I measured every segment's distance to the main vertex from segments.xs3/ys3/zs3 and its four members sit 158.2-173.8 cm out, with absolutely nothing in between (the next nearest objects to the vertex after cluster 10, which ends at 47 cm, are 38018 at 157.0 cm and 37017 at 160.6 cm, i.e. 18012's own neighbourhood). So this is a 167 MeV EM object 1.6 m from a numucc vertex whose only other visible products are a 31 cm proton and a 41 cm track. Whether it belongs to this neutrino at all is not a clustering question and I am not answering it. Second, the clustering itself is clean: the four members are one contiguous chain (largest internal gap 0.60 cm measured on the member points), 27.3 cm end to end, single apex at the X, and the member set covers the visible point cloud in both shw18012-az-055-el+20 and shw18012-az+085-el+20 -- the two views look very different, the second showing a ~13 cm transverse band of charge that the skeleton does not trace, which is the pilot's skeleton-vs-blob caveat and the reason I did NOT compute any MeV/cm here (correction 18). Membership triple-check: nseg 4 = owner-grouped count 4 = cmp_div's 4. There is no grey/unowned charge anywhere near it -- the event's only unowned segments are the two vertex protons 158 cm away. The one open question is 37017 (23.0 cm, 42.6 deg, 0.6 cm, cluster 37) and 38018 (24.3 cm, 45.3 deg, 0.8 cm, cluster 38): both are 2-point stubs that are seeds of their own sub-20 MeV showers, both sit in 18012's neighbourhood (157-161 cm from the vertex), and at 23-24 cm out and 42-45 deg off axis they are ~16 cm transverse, i.e. ~1.6 Moliere radii -- outside any pass-1 band (they are off the top of the acceptance plot, which shows only the four orange member squares and no non-member circles at all) but not obviously foreign. I have marked BOTH '?' rather than IN: I looked at them and the evidence does not separate 'far tail of the same shower' from 'two independent few-MeV fragments', and their charge is small either way. That is the only reason this is 'likely' rather than 'certain'. NO pi0: no reco group, kine_div has no pairing, and the pio-*.png frames are the auto-slotted top pair (correction 3) -- nothing stored. Showers I did not open frames for: 10009 (I used its table numbers and saw it in the vertex frames as the orange arm) and the 4 sub-scope showers, which were never drawn. This verdict is about clustering and is silent on PID. Images looked at: 6.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt396323/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:43:31+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt396323/calib-pr-evt396323.json",
+ "subRunNo": 1
+}

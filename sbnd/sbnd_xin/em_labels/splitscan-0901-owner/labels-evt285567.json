@@ -1,0 +1,32 @@
+{
+ "event": "evt285567",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "8107": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "8107": 0,
+    "75059": 0,
+    "89073": 0,
+    "118081": 0
+   },
+   "parts": {
+    "0": [
+     8107,
+     75059,
+     89073,
+     118081
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 4,
+   "Q": 1605896.3,
+   "saved": "2026-08-31T08:07:41"
+  }
+ }
+}

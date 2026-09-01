@@ -1,0 +1,73 @@
+{
+ "event": "evt54332",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "122091": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "76038": 0,
+    "77039": 0,
+    "78040": 0,
+    "79041": 0,
+    "80042": 0,
+    "92054": 0,
+    "121084": 0,
+    "121085": 0,
+    "122089": 0,
+    "122090": 0,
+    "122091": 0,
+    "122092": 0,
+    "122093": 0
+   },
+   "parts": {
+    "0": [
+     76038,
+     77039,
+     78040,
+     79041,
+     80042,
+     92054,
+     121084,
+     121085,
+     122089,
+     122090,
+     122091,
+     122092,
+     122093
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.000 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 13,
+   "Q": 2892791.7,
+   "saved": "2026-08-31T08:43:34"
+  },
+  "27025": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "27025": 0,
+    "27027": 0,
+    "27028": 0
+   },
+   "parts": {
+    "0": [
+     27025,
+     27027,
+     27028
+    ]
+   },
+   "proposal": "single group: 2 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 3,
+   "Q": 1150929.0,
+   "saved": "2026-08-31T08:53:56"
+  }
+ }
+}

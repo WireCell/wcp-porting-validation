@@ -1,0 +1,162 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/af196e84-df73-48be-8e4a-6216d3728f82/event/1/",
+ "camera": {
+  "R": 203.0,
+  "az_deg": 724.07,
+  "centre": [
+   -97.88,
+   -69.35,
+   142.37
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3427,
+  "cloud_cluster_ids": [
+   14,
+   22,
+   23,
+   24,
+   25
+  ],
+  "cloud_kept": 3427,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 21931,
+  "el_deg": -19.07
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.6230629325344395,
+   0.13701383909665846,
+   -0.7700777817841387
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "57050": {
+    "23026": "in",
+    "23028": "in"
+   }
+  },
+  "marks_detail": {
+   "57050": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.6230629325344395,
+     0.13701383909665846,
+     -0.7700777817841387
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "23026": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 59.463325319494245,
+      "cluster_id": 23,
+      "dist": 9.400610324792742,
+      "ellip": 2.636575130325639,
+      "kind": "in",
+      "length": 13.01555440981447,
+      "owner": 58051,
+      "pdg": 11,
+      "tier": null
+     },
+     "23028": {
+      "absorbed_by": null,
+      "angle": 59.463325319494245,
+      "cluster_id": 23,
+      "dist": 9.400610324792742,
+      "ellip": 2.636575130325639,
+      "kind": "in",
+      "length": 6.30605779166037,
+      "owner": null,
+      "pdg": 11,
+      "tier": null
+     }
+    },
+    "member_span": {
+     "angle_max": 26.801494401560657,
+     "angle_min": 0.0,
+     "dist_max": 31.409297845179722,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     23025,
+     23027,
+     57050,
+     66059
+    ],
+    "start": [
+     -110.90118362268086,
+     -82.8407501314881,
+     162.47240743644915
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.6230629325344395,
+    0.13701383909665846,
+    -0.7700777817841387
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 198.78050924169827,
+   "kine_charge": 198.78050924169827,
+   "kine_charge_other_hypothesis": 119.56722360402905,
+   "kine_dQdx": 106.24010269570408,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    23025,
+    23027,
+    57050,
+    66059
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -110.90118362268086,
+   -82.8407501314881,
+   162.47240743644915
+  ],
+  "reco_start_vertex_id": 22095,
+  "shower": 57050,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -110.90118362268086,
+   -82.8407501314881,
+   162.47240743644915
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt54453",
+ "eventNo": 54453,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 22,
+  "x": -94.64598362268084,
+  "y": -76.25554533119687,
+  "z": 204.52460866064013
+ },
+ "note": "[agent-bulk] mcp2k numucc_em, 32 showers, scope rule reaches 5 (57050, 24030, 37038, 58051, 65058); the other 27 are all 10.2 MeV and below and I did not look at them. VERTEX: r95 was 296.8 cm so the default sweep framed the vertex at +-297 cm and was unusable; I judged the vertex from a --vtx-span 60 re-capture (shots-vtx/evt54453). At +-60 cm the star sits cleanly on the upstream end of one object: segment 22010 (cluster 22, pdg 13, 31.5 cm, 53 points) leaves the star with 0.0 cm closest approach and runs out to 30 cm, continued by 22016 (11.7 cm, pdg 2212) and 22018 (6.6 cm) to 39 cm. All of cluster 22 is correctly left unowned. Vertex is good, so this is a clustering call, not a vertex call. LEADING SHOWER 57050 (198.8 MeV, 4 seg, 33.8 cm, conn 2, pio_id -1): its start X is 45.6 cm from the star, i.e. a detached conversion beyond the muon stem, and its member set (57050 seed 11.5 cm, 23025 19.3 cm, 23027 2.7 cm, 66059 0.4 cm) is one connected object with a clear kink at the shower maximum, visible at az-055/el+65 as a junction from which several prongs radiate into a broad point cloud. UNDER-CLUSTERING, and the strong half of it is grey: 23028 (cluster 23, 6.3 cm, 12 points) is owned by NO shower at all, sits 9.4 cm from 57050's start, and is a sibling of 57050's own two largest members 23025 and 23027, which are also cluster 23. The weaker half, and the one I would let the owner reverse: 23026 (cluster 23, 13.0 cm, 23 points) is owned by 58051, a 31.5 MeV shower whose own seed segment is only 4.9 cm long -- a 13 cm segment hanging off a 5 cm seed, in the big shower's own cluster. I ran the correction-11 reconciliation test rather than reading the owner column: 57050's owner-grouped count is 4 and its cmp_div says 4 segments, and 58051's owner-grouped count is 2 and its cmp_div says 2, so 23026 is genuinely NOT a dual member of 57050 -- the neighbour really does hold it exclusively. THE CAVEAT that keeps this at likely and not certain: both marked segments read 59.5 deg to 57050's axis at 9.4 cm, which is a transverse offset of about 8 cm. That is inside one Moliere radius in LAr (~9.5 cm) and so physically belongs, but it is far outside the pass-1 acceptance window -- 57050's acceptance plot has NO non-member circle anywhere in it, because the plot's angle axis stops near 34 deg and these sit off the top of it. So the corroboration the brief asks for (a circle just outside a dashed step) is absent by construction here, and the case rests on the grey segment plus the cluster identity. NOT MARKED, but worth naming: 66059 (0.4 cm, pdg 13) is a member at 31.4 cm / 26.8 deg absorbed by pass4_angle, a long reach for negligible charge; and 65058 (23.1 MeV) is a scattered object whose four members run 0-46.4 cm and include three 0.2-0.4 cm stubs picked up by in_other_clusters_seg_cone at 45, 50 and 77 cm from the vertex -- I did not record a verdict on it. PI0: no reco pi0 group (all pio_id -1). The display auto-slotted 57050 + 24030 (106.6 MeV, detached 87.3 cm from the star), which is the only plausible pair in the event, and it does NOT price as a pi0 in either convention: vertex convention theta 34.9 deg -> m 87.3 MeV, axis convention theta 139.3 deg -> m 273.0 MeV. So this event is not the both-conventions-accept case; it is a photon pair that is either not a pi0 or has a badly measured opening angle. The kine_pio_* block reports mass 12.0 from 57050 + 58051 at 8.7 deg, which is a BDT feature over all candidate pairs and not a pairing -- I did not read it as one.\n\nlikely incorrect vertex",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt54453/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T23:36:33+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt54453/calib-pr-evt54453.json",
+ "subRunNo": 1
+}

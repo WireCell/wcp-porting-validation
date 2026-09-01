@@ -1,0 +1,115 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 50.01,
+  "az_deg": -55.0,
+  "centre": [
+   -35.17,
+   165.45,
+   369.15
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 6630,
+  "cloud_cluster_ids": [
+   16,
+   22,
+   23,
+   24
+  ],
+  "cloud_kept": 6630,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 37864,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.6847442957493919,
+   -0.008996640382108798,
+   0.7287278709508126
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.6847442957493919,
+    -0.008996640382108798,
+    0.7287278709508126
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 18,
+   "kine_best": 454.31998076635557,
+   "kine_charge": 454.31998076635557,
+   "kine_charge_other_hypothesis": 273.27517640081544,
+   "kine_dQdx": 276.5941311282667,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    22004,
+    22008,
+    70013,
+    73016,
+    74017,
+    77020,
+    80024,
+    80029,
+    80030,
+    81031,
+    83034,
+    83035,
+    84037,
+    84038,
+    85039,
+    86040,
+    87042,
+    87044
+   ],
+   "membership_source": "probe",
+   "num_segments": 18,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -6.754452697954235,
+   164.4040150479814,
+   336.2476010748251
+  ],
+  "reco_start_vertex_id": 95089,
+  "shower": 22004,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -6.754452697954235,
+   164.4040150479814,
+   336.2476010748251
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt486907",
+ "eventNo": 486907,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 95,
+  "x": 13.550965361363742,
+  "y": 161.00844377142562,
+  "z": 314.0026174354221
+ },
+ "note": "[agent-bulk] The clustering is fine; the finding on this event is a MISSING PI0 PAIRING, so read the second half of this note. shw 22004 (454.3 MeV, 18 seg, 77.2 cm, conn 2) reads correct: on shw22004-az-055-el+20 and -az+085-el+20 it is a stem out of the X that fans into a spray of ~18 fragments, all in ONE direction (every member is at 0-19 deg to the axis) and monotone in distance out to 86 cm, which is about 6 radiation lengths and appropriate for 454 MeV. Its acceptance plot (steps 25 deg to 80 cm, then 12.5 deg) has NO non-member circle anywhere in range - nothing contiguous is left grey, so no under-clustering; and there is no second apex or second direction on either azimuth, so no over-clustering. The unowned 26.6 cm pdg-13 segment 95052 sits at 29.9 cm / 172 deg, i.e. behind the shower start, and is correctly left out. MISSING PI0: this event has NO reco pi0 group (pio_grp=0, every pio_id=-1), yet pio-az-055-el+020 shows a textbook two-photon topology - the magenta vertex star sits alone at the bottom with only sub-cm fragments on it, and 13-15 cm above it TWO detached EM showers start and diverge, blue gamma1 = 22004 (454.3 MeV) up-left and red gamma2 = 24002 (166.4 MeV, 7 seg, 31.7 cm) straight up. Both are detached, both point away from the star, neither is attached to it. Priced through the display's own formula the pair lands at 167.5 MeV on the axis convention (theta 35.5 deg) and 177.2 MeV on the vertex convention (theta 37.6 deg) - the two conventions AGREE for once, and the display flags both as inside the code's accept window. So a pair the display's own arithmetic would accept was never formed. Caveat I want on the record: 167-177 MeV is 25-30 percent above 135, and the display also reports that converting the same charge as tracks instead of showers gives 273.3 and 100.1 MeV, which would put the pair at about 107 MeV - so the energy convention alone swings this candidate from 107 to 177 MeV, bracketing 135. I am reporting a topological pi0 candidate the reconstruction did not pair, not a mass measurement. Also in scope: shw 23009 (218.3 MeV, 1 seg, 30.1 cm, reco pdg 2212) - a proton track, visible as the green 30 cm line inside its own orange cloud in both shower frames. It is in scope only because kine_best clears 20 MeV; I did not treat it as an EM shower and make no clustering claim on it. shw 24002 I checked numerically only (nothing unclaimed inside its cone: nearest non-members 94051 at 37.8 deg and 88045 at 29.1 deg) plus its appearance in the pi0 frame; I did not scan its own frames in detail. Scope: 3 showers of 15 in scope, 2 examined properly; 12 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 167 cm and was used for topology only. Verdict is about clustering and silent on PID.",
+ "origin": "other_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt486907/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T21:07:58+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt486907/calib-pr-evt486907.json",
+ "subRunNo": 1
+}

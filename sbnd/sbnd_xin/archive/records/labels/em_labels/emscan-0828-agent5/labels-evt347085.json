@@ -1,0 +1,180 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 64.35,
+  "az_deg": -55.0,
+  "centre": [
+   -76.9,
+   103.74,
+   292.02
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2584,
+  "cloud_cluster_ids": [
+   4
+  ],
+  "cloud_kept": 2584,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 21240,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.08096106708784533,
+   -0.9505428987721098,
+   0.29985580402905676
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "72066": {
+    "31017": "in",
+    "41027": "in"
+   }
+  },
+  "marks_detail": {
+   "72066": {
+    "angle_offset_deg": 5.0,
+    "axis": [
+     -0.08096106708784533,
+     -0.9505428987721098,
+     0.29985580402905676
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "31017": {
+      "absorbed_by": null,
+      "angle": 15.306456936413982,
+      "cluster_id": 31,
+      "dist": 120.72397822123155,
+      "ellip": 49.099296591200456,
+      "kind": "in",
+      "length": 0.32862160677928454,
+      "owner": 31017,
+      "pdg": 11,
+      "tier": 2
+     },
+     "41027": {
+      "absorbed_by": null,
+      "angle": 18.786023793045196,
+      "cluster_id": 41,
+      "dist": 84.48564021823833,
+      "ellip": 33.608007478678154,
+      "kind": "in",
+      "length": 0.7411466480504639,
+      "owner": 41027,
+      "pdg": 11,
+      "tier": 2
+     }
+    },
+    "member_span": {
+     "angle_max": 49.53549343865342,
+     "angle_min": 0.0,
+     "dist_max": 111.47166072116565,
+     "dist_min": 0.0,
+     "n": 15
+    },
+    "members": [
+     32018,
+     40026,
+     43029,
+     44030,
+     45031,
+     46032,
+     67033,
+     69051,
+     69052,
+     70054,
+     70056,
+     70057,
+     72063,
+     72066,
+     73064
+    ],
+    "start": [
+     -73.93616603493508,
+     159.26557727279123,
+     285.753297489097
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.08096106708784533,
+    -0.9505428987721098,
+    0.29985580402905676
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 15,
+   "kine_best": 268.05263510291,
+   "kine_charge": 268.05263510291,
+   "kine_charge_other_hypothesis": 161.23466773107373,
+   "kine_dQdx": 151.2430926181396,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    32018,
+    40026,
+    43029,
+    44030,
+    45031,
+    46032,
+    67033,
+    69051,
+    69052,
+    70054,
+    70056,
+    70057,
+    72063,
+    72066,
+    73064
+   ],
+   "membership_source": "probe",
+   "num_segments": 15,
+   "particle_id": 11,
+   "pio_id": 0,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -73.93616603493508,
+   159.26557727279123,
+   285.753297489097
+  ],
+  "reco_start_vertex_id": 4083,
+  "shower": 72066,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -73.93616603493508,
+   159.26557727279123,
+   285.753297489097
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt347085",
+ "eventNo": 347085,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 4,
+  "x": -73.39800427890671,
+  "y": 172.8486829083219,
+  "z": 286.1913922845077
+ },
+ "note": "[agent-bulk] The best-formed shower in my shard, and the verdict is a boundary nit, not a failure - please read the magnitude. shw 72066 (268.1 MeV, 15 seg, 56.2 cm, gamma1 of reco pi0 group 0) is textbook on shw72066-az+085-el+20: a narrow stem rising from the X (which sits 13.6 cm off the blue vertex star, where the 56.4 cm muon 4011 and the two pions 4012/4065 of cluster 4 end, all correctly unowned), then a wide broadening cone with a heavy point cloud, then a sparse fading tail - one apex, one direction, on both azimuths. The under-clustering: its acceptance plot shows the pass-1 steps as 30 deg out to 80 cm, 20 deg from 80 to 130 cm, 15 deg beyond, and TWO non-member circles sit INSIDE those boxes - 41027 (0.74 cm, pdg 11) at 84.5 cm / 18.8 deg and 31017 (0.33 cm, pdg 11) at 120.7 cm / 15.3 deg - while the shower does own members at 88.5, 89.5, 103.4 and 111.5 cm at 10-15 deg, i.e. exactly the same population. Both marked IN. That is 1.07 cm of polyline out in the tail; the energy effect is negligible and nothing large is missing. NOT marked: 42028 (1.43 cm, pdg 2212) at 139.3 cm / 11.6 deg, which also falls inside the tier-3 box - a proton 1.4 m out does not belong in this shower and leaving it out is right. Not over-clustered: I checked the same worry I raised on evt292643 (a 268 MeV shower reaching 111 cm) and here the picture answers it - the charge is continuous from the stem through the cone into the tail with no empty gap, so the far members are the tail of one object. Also examined: shw 68035 (41.7 MeV, 4 seg, 10.2 cm, gamma2), a compact core plus two sub-cm stubs at 29.4 and 40.7 cm along its own axis at 3.9 and 8.1 deg; nothing unclaimed in its cone (its nearest non-members 34020 and 36022 are at 53.7 and 36.6 deg), so it reads correct. PI0: this one is clean and worth contrasting with evt292643. The reco paired 72066 + 68035, stored mass 141.5 MeV, and for once the display's two conventions AGREE - axis convention theta 94.5 deg -> 155.2 MeV, vertex convention theta 94.0 deg -> 154.7 MeV, both inside the accept window. pio-az-055-el+020 shows why: both gamma starts are detached from the magenta vertex star and their arrows diverge widely (blue gamma1 to the left, red gamma2 up-right), so there is no small-angle ambiguity for the conventions to disagree about. Scope: 2 showers of 15 examined; 13 skipped by the <20 MeV rule and not looked at. The vtx-* sweep is half-span 129 cm and was used for topology only. Verdict is about clustering and silent on PID.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt347085/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:58:26+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt347085/calib-pr-evt347085.json",
+ "subRunNo": 1
+}

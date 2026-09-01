@@ -1,0 +1,150 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   -154.57,
+   140.31,
+   116.67
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 12719,
+  "cloud_cluster_ids": [
+   14,
+   22
+  ],
+  "cloud_kept": 12719,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25142,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.8288462632759211,
+   -0.2989445509282273,
+   0.47291228290652676
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "14025": {
+    "14024": "in"
+   }
+  },
+  "marks_detail": {
+   "14025": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     0.8288462632759211,
+     -0.2989445509282273,
+     0.47291228290652676
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "14024": {
+      "absorbed_by": null,
+      "angle": 0.0,
+      "cluster_id": 14,
+      "dist": 0.0,
+      "ellip": 0.0,
+      "kind": "in",
+      "length": 7.140590526574412,
+      "owner": 14024,
+      "pdg": 11,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 56.324139103589445,
+     "angle_min": 0.0,
+     "dist_max": 16.748329729885405,
+     "dist_min": 0.0,
+     "n": 6
+    },
+    "members": [
+     14008,
+     14009,
+     14010,
+     14025,
+     14026,
+     42015
+    ],
+    "start": [
+     -161.15229155522712,
+     145.49089663411957,
+     112.3753543249048
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    0.8288462632759211,
+    -0.2989445509282273,
+    0.47291228290652676
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 122.20403129139342,
+   "kine_charge": 122.20403129139342,
+   "kine_charge_other_hypothesis": 73.50618423542463,
+   "kine_dQdx": 121.65640927300035,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    14008,
+    14009,
+    14010,
+    14025,
+    14026,
+    42015
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -161.15229155522712,
+   145.49089663411957,
+   112.3753543249048
+  ],
+  "reco_start_vertex_id": 14034,
+  "shower": 14025,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -161.15229155522712,
+   145.49089663411957,
+   112.3753543249048
+  ],
+  "verdict": "under-clustered"
+ },
+ "event": "evt100135",
+ "eventNo": 100135,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 14,
+  "x": -161.15229155522712,
+  "y": 145.49089663411957,
+  "z": 112.3753543249048
+ },
+ "note": "[agent-bulk] nuecc. shw 14025 (122.2 MeV, 6 seg, pdg 11, len 39.9) starts EXACTLY on the main vertex - on a nuecc event that is the expected electron signature, not a pathology, so I did not read it the way I read a vertex-attached gamma. event_half_span_cm was 400.0 (capped) because segment 14001 is 413.7 cm long, so per correction 5 I re-captured with --vtx-span 60 and judged the vertex from shots-vtx/evt100135/vtx-az-055-el+20 and vtx-az+065-el+20. VERTEX IS ACCEPTABLE: the star sits at the apex of the EM fan, which is what a nuecc vertex should look like. THE VERDICT IS GENUINELY CLOSE AND I RECORD IT AS unclear. The single question is 14024: 7.1 cm, cluster 14 (the SAME cluster as the shower), reco pdg 11, 10.9 MeV, conn 1, TOUCHING the shower (dist 0.00) and touching the main vertex (0.00 cm) - and it is its own separate shower node rather than a member of 14025. On shw14025-az-055-el+20 it is drawn green and reads as one more prong of the same fan leaving the same apex. READING A, under-clustered (what I recorded): it is contiguous, same cluster, same vertex, EM PID, and 14025 ALREADY accepts a sibling at essentially the same angle - its own cmp_div says its six members span 0.0-16.7 cm and 0.0-56.3 deg, and member 14026 sits at 77-83 deg from the vertex. Taking 14026 and leaving 14024 is the asymmetry that bothers me. Marked 14024 IN. READING B, correct: I measured 14024 myself against a PCA axis of the six members (the display reports it as dist 0 / angle 0 because it touches, so the table cannot answer this) and it spans r 0.0-6.7 cm at 82-116 deg from the vertex - i.e. part of its extent lies BEHIND the shower start, about 3 cm behind and 6 cm sideways, and nothing in a shower goes behind its start. So the reconstruction may be right at its own boundary. What breaks the tie for neither side: at r under 7 cm the angle-from-vertex measure is nearly meaningless - a 6 cm transverse offset at 6.7 cm radius is 60 deg by construction - which is exactly why I cannot separate the two readings. THE MARK IS THE ONE I WOULD MOST WILLINGLY LET THE OWNER REVERSE, and the stake is small either way: 10.9 MeV against 122.2. Reconciliation check (correction 11): nseg 6 and exactly six segments carry owner 14025, so 14024 is genuinely a non-member and not a shared segment. NOTHING ELSE IS MISSING: every other non-member within 50 cm is at 50-174 deg and sub-1 cm apart from 44017 (2.2 cm at 88 deg) and 46019 (4.7 cm at 147 deg, behind); there is no unowned charge on the axis beyond the members' 17.8 cm reach. NOT over-clustered: single apex on both azimuths. WORTH THE OWNER'S EYE SEPARATELY: segment 14001 is a 413.7 cm pdg-13 track in cluster 14 - one of only two clusters carrying this neutrino candidate - and it terminates about 5 cm from the main vertex. At 4 m it is far more likely a cosmic that got merged into the candidate cluster than anything from this interaction. The reconstruction does leave it UNOWNED (in_main_cluster walk_exclude), which is right, but its presence in the candidate cluster at all is a clustering question one level above this scan. NOT LOOKED AT: 10 of the 11 shower nodes were out of scope at 15.3 MeV and below (44017, 14024, 47020, 39012, 46019, 43016, 22011, 41014, 40013, 45018), except that 14024 is the subject of this verdict. No pi0 stored by the reconstruction and none proposed.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt100135/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:47:34+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt100135/calib-pr-evt100135.json",
+ "subRunNo": 1
+}

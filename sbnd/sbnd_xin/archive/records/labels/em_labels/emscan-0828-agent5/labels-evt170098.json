@@ -1,0 +1,114 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 46.71,
+  "az_deg": -55.0,
+  "centre": [
+   -109.52,
+   94.24,
+   344.74
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2546,
+  "cloud_cluster_ids": [
+   16,
+   20
+  ],
+  "cloud_kept": 2546,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 17625,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.9987393630349344,
+   0.03599060767693457,
+   0.0349908685747975
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.9987393630349344,
+    0.03599060767693457,
+    0.0349908685747975
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 19,
+   "kine_best": 269.66377306415956,
+   "kine_charge": 269.66377306415956,
+   "kine_charge_other_hypothesis": 162.20377327167495,
+   "kine_dQdx": 164.5545055346521,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    53008,
+    54009,
+    69025,
+    69026,
+    69027,
+    71032,
+    72033,
+    73034,
+    74035,
+    75040,
+    75041,
+    76052,
+    76053,
+    77054,
+    78060,
+    78062,
+    78064,
+    80066,
+    81067
+   ],
+   "membership_source": "probe",
+   "num_segments": 19,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   -69.46785101107226,
+   87.71270770839706,
+   346.42022231611804
+  ],
+  "reco_start_vertex_id": 16002,
+  "shower": 78064,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -69.46785101107226,
+   87.71270770839706,
+   346.42022231611804
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt170098",
+ "eventNo": 170098,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": -51.403966394822646,
+  "y": 89.27715655900333,
+  "z": 346.2565820128557
+ },
+ "note": "[agent-bulk] shw 78064 (269.7 MeV, 19 seg, pdg 11, len 71.0) is correct. event_half_span_cm 128.1, no --vtx-span re-capture needed; vertex judged from vtx-az-055-el+20 and vtx-az+065-el+20 at the r95 framing. VERTEX IS GOOD: a clean two-prong V, both prongs touching the star at 0.00 cm - 16001 (pdg 13, 76.0 cm) and 16004 (pdg 2212, 23.9 cm) - and both correctly left UNOWNED. They read 172.8 deg against the shower, i.e. the shower goes out the opposite side, which is the detached-photon topology. The shower's closest member is 18.1 cm from the star. CLUSTERING: shw78064-acc is the clearest evidence - nineteen member squares spread continuously from 0 to 79 cm at 0-18 deg, and NOT ONE non-member circle anywhere in the plotted window (0-100 cm, 0-23 deg). Every candidate inside this shower's own cone is already a member. On shw78064-az-055-el+20 the yellow set is one chain of fragments strung along the orange axis with no second apex and no direction change; sparse in places, but sparse is not under-clustered (pilot section 2.3). The nearest non-members are all wide: 55010 at 29.8 deg, 79065 at 31.2 deg, 60015 at 53.6 deg, and the two vertex prongs at 172.8 deg behind. So: nothing contiguous and unclaimed inside the cone, single apex - correct. Worth noting for the owner because it is unusual: those 19 members come from about twelve different clusters (69, 71, 72, 73, 74, 75, 76, 77, 78, 80, 81, 53, 54) and most were gathered by pass4_angle. That is a heavily fragmented shower reassembled almost entirely by the late angle pass, and it happens to look right here - but it is the same mechanism I criticised on evt74326, so the owner may want both in view. THE WEAK CASE I DID NOT MARK: 62017 (2.1 cm, 7.7 MeV) at 104.8 cm / 12.8 deg and 51006 (1.6 cm, 7.2 MeV, tier 2) at 109.9 cm / 10.0 deg are on-axis but beyond the members' 79 cm reach, each owned by its own sub-8 MeV node. For a 270 MeV cascade a tail at 105 cm is possible but not compelling, so I left them; they are the ones I would let the owner add. SECOND IN-SCOPE OBJECT, NOT JUDGED IN DEPTH: 70030 (44.2 MeV, 9 seg) carries reco pdg 13, i.e. the reconstruction itself calls it a track, and its cmp_div says its nine members span 0.0-89.6 cm from eight different clusters (61, 63, 64, 65, 66, 67, 70, 83) at 0-24.7 deg. A 90 cm track-PID'd node assembled by pass4_angle across eight clusters is worth someone's eye, but it is not an EM shower and I make no verdict on it. NOT LOOKED AT: 13 of the 15 shower nodes were out of scope at 19.7 MeV and below (82073, 62017, 51006, 79065, 60015, 56011, 52007, 68023, 55010, 59014, 57012, 58013, 20005). No pi0 stored and none proposed - the only other EM object above 10 MeV is 82073 at 19.7 MeV, and it sits 7.2 cm from the vertex at 170.8 deg from 78064, i.e. behind it, which is not a pi0 opening angle worth pricing.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt170098/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:50:22+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt170098/calib-pr-evt170098.json",
+ "subRunNo": 1
+}

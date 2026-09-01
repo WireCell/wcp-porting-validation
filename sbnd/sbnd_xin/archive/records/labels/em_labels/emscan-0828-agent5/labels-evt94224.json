@@ -1,0 +1,99 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 39.68,
+  "az_deg": -55.0,
+  "centre": [
+   3.39,
+   168.47,
+   422.63
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1673,
+  "cloud_cluster_ids": [
+   17,
+   23,
+   24
+  ],
+  "cloud_kept": 1673,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25760,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.20602338498136838,
+   0.9761107948631823,
+   0.06900783283356515
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.20602338498136838,
+    0.9761107948631823,
+    0.06900783283356515
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 199.94917678543618,
+   "kine_charge": 199.94917678543618,
+   "kine_charge_other_hypothesis": 120.2701815250744,
+   "kine_dQdx": 145.52057128281552,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    17013,
+    17015,
+    24019
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -10.25526948979493,
+   137.0433598480088,
+   418.52179705320975
+  ],
+  "reco_start_vertex_id": 17004,
+  "shower": 17013,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -10.25526948979493,
+   137.0433598480088,
+   418.52179705320975
+  ],
+  "verdict": "not an EM shower"
+ },
+ "event": "evt94224",
+ "eventNo": 94224,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 17,
+  "x": -10.25526948979493,
+  "y": 137.0433598480088,
+  "z": 418.52179705320975
+ },
+ "note": "[agent-bulk] mcp2k NUECC. THIS IS A PID VERDICT AND THE EVENT CARRIES NO CLUSTERING JUDGEMENT -- I am not saying the member set is right or wrong, I am saying the object the reconstruction called a 199.9 MeV electromagnetic shower is a minimum-ionising track. Please do not read this row downstream as 'nothing wrong here' on the clustering side. 14 segments, 7 showers, 2 in scope (17013, 55020); the five skipped (17026, 60031, 23018, 57022, 56021) are all under 20 MeV and I did not look at them individually. drag_check both true, probe 402.7 px off centroid, not degenerate. r95 81.3 cm so the default vertex sweep is legible and no --vtx-span re-capture was needed. VERTEX is good: five segments leave the star -- 17008 (13.7 cm, pdg 2212), 17028 (25.2 cm, pdg 2212), 17029 (10.1 cm, pdg 211), 17026 (6.9 cm, pdg 11, its own sub-20 MeV shower) and 17013 itself -- and at el+60 they still converge on it. THE FINDING. Shower 17013 (199.9 MeV, 3 seg, 72.3 cm, conn 1) is a single long, straight, NARROW line running from the vertex to 68.8 cm, and it looks like that from BOTH az-055 and az+085, which are ~140 deg apart -- a projection cannot hide a cone from both. It never widens, never branches, and the charge cloud hugs it as a thin band over the whole 72 cm. The numbers agree with the picture: its seed 17013 has chord 31.4 cm, path 32.5 cm (wiggle 1.034) and a maximum transverse excursion from its own chord of 0.38 cm; its far member 24019 has chord 28.5 cm, path 30.7 cm (wiggle 1.077), maxdev 0.95 cm. For scale, the two protons at the same vertex are LESS straight than that (17028 wiggle 1.192, maxdev 2.33 cm). A 200 MeV electron in liquid argon has a radiation length of about 14 cm and a critical energy near 32 MeV; it cannot stay a 1 cm wide straight line for 72 cm, its shower maximum would sit around 30-40 cm. The charge is also consistent with a MIP: the display's own track hypothesis gives 120.3 MeV over 72 cm, i.e. 1.7 MeV/cm, whereas the shower hypothesis it actually used implies 2.8 MeV/cm averaged over the whole length. A 72 cm range corresponds to a muon of roughly 180 MeV kinetic energy, which is what this looks like. WHAT I DID NOT DO. I did not judge whether 17013's three members are the right three. If someone later decides it IS an EM object, the member question is still open and this record does not answer it. Two things sit inside its cone unclaimed by it and would be the candidates in that case: 60031 + 60032 (2.4 and 0.6 cm, cluster 60, tier 1) at 21.8 cm / 18.9 deg, owned by a separate sub-20 MeV shower, and 55020 (2.2 cm, 20.4 MeV) at 11.8 cm / 46.0 deg. I ran the correction-11 reconciliation before writing that sentence -- 17013's owner-grouped count is 3 and its cmp_div says 3 -- so those are genuine non-members and not a dual-membership artifact. I did not mark them, because marking segments into an object I do not think is a shower would be incoherent. PI0: no reco pi0 group and none is possible from these two -- the display auto-slotted 17013 + 55020, but 17013 starts ON the main vertex so the vertex convention has no chord (kine_div prints theta '-'), and the axis convention's 174.6 deg -> 127.7 MeV is two nearly anti-parallel axes, one of which is the track above. Do not read that 127.7 MeV as a pi0 candidate; it is an artifact of pairing a track with a 20 MeV stub.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt94224/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:36:27+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt94224/calib-pr-evt94224.json",
+ "subRunNo": 1
+}

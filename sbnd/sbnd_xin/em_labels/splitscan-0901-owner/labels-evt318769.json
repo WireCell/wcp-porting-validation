@@ -1,0 +1,89 @@
+{
+ "event": "evt318769",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "31026": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "incorrect neutrino vertex, actually both groups should be one ",
+   "groups": {
+    "31023": 0,
+    "31026": 0,
+    "31030": 0,
+    "31031": 0,
+    "111057": 0,
+    "127076": 0,
+    "128077": 0,
+    "129078": 0,
+    "138087": 0,
+    "140089": 0,
+    "141090": 0,
+    "142091": 0
+   },
+   "parts": {
+    "0": [
+     31023,
+     31026,
+     31030,
+     31031,
+     111057,
+     127076,
+     128077,
+     129078,
+     138087,
+     140089,
+     141090,
+     142091
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.301 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 12,
+   "Q": 3779892.4999999995,
+   "saved": "2026-08-31T08:05:03"
+  },
+  "143101": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "119068": 0,
+    "120069": 0,
+    "122071": 0,
+    "123072": 0,
+    "124073": 0,
+    "125074": 0,
+    "135084": 0,
+    "136085": 0,
+    "139088": 0,
+    "143099": 0,
+    "143100": 0,
+    "143101": 0
+   },
+   "parts": {
+    "0": [
+     119068,
+     120069,
+     122071,
+     123072,
+     124073,
+     125074,
+     135084,
+     136085,
+     139088,
+     143099,
+     143100,
+     143101
+    ]
+   },
+   "proposal": "2 groups proposed: valley_best=0.298 <= 0.95 (seeded maxima, bundles assigned by ray)",
+   "nseg": 12,
+   "Q": 1687418.3,
+   "saved": "2026-08-31T08:52:48"
+  }
+ }
+}

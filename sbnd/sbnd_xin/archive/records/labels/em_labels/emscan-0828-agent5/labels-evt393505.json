@@ -1,0 +1,148 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 65.84,
+  "az_deg": -55.0,
+  "centre": [
+   164.58,
+   -90.9,
+   392.26
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 5471,
+  "cloud_cluster_ids": [
+   15,
+   19,
+   20,
+   21
+  ],
+  "cloud_kept": 5471,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 34573,
+  "el_deg": 20.0
+ },
+ "confidence": "certain",
+ "em": {
+  "axis_used": [
+   -0.25291137009445175,
+   -0.8836903208043294,
+   0.39386197556211067
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {
+   "63025": {
+    "15013": "out"
+   }
+  },
+  "marks_detail": {
+   "63025": {
+    "angle_offset_deg": 0.0,
+    "axis": [
+     -0.25291137009445175,
+     -0.8836903208043294,
+     0.39386197556211067
+    ],
+    "axis_branch": "dir15",
+    "axis_source": "probe",
+    "marked": {
+     "15013": {
+      "absorbed_by": "pass4_angle (direct)",
+      "angle": 10.539615519377996,
+      "cluster_id": 15,
+      "dist": 16.045286482256362,
+      "ellip": 0.5000756633196355,
+      "kind": "out",
+      "length": 108.45062245750557,
+      "owner": 63025,
+      "pdg": 13,
+      "tier": 1
+     }
+    },
+    "member_span": {
+     "angle_max": 10.539615519377996,
+     "angle_min": 0.0,
+     "dist_max": 16.045286482256362,
+     "dist_min": 0.0,
+     "n": 4
+    },
+    "members": [
+     15003,
+     15013,
+     63024,
+     63025
+    ],
+    "start": [
+     138.63546210889382,
+     -65.52268195776972,
+     352.74716684324875
+    ]
+   }
+  },
+  "reco": {
+   "axis": [
+    -0.25291137009445175,
+    -0.8836903208043294,
+    0.39386197556211067
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 4,
+   "kine_best": 325.27276608505247,
+   "kine_charge": 325.27276608505247,
+   "kine_charge_other_hypothesis": 195.65279163010678,
+   "kine_dQdx": 275.84918158450483,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    15003,
+    15013,
+    63024,
+    63025
+   ],
+   "membership_source": "probe",
+   "num_segments": 4,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   138.63546210889382,
+   -65.52268195776972,
+   352.74716684324875
+  ],
+  "reco_start_vertex_id": 21012,
+  "shower": 63025,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   138.63546210889382,
+   -65.52268195776972,
+   352.74716684324875
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt393505",
+ "eventNo": 393505,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 21,
+  "x": 160.14681931487945,
+  "y": -18.279855293253185,
+  "z": 326.14061817121603
+ },
+ "note": "[agent-bulk] shw 63025 (325.3 MeV, pdg 11) is the only in-scope shower and the highest-kine_charge pdg-11 object (correction 17); no higher-energy non-EM object was passed over. It has 4 members: 63025 (4.6 cm, pdg 11), 63024 (9.0 cm, pdg 11), 15003 (4.2 cm, pdg 11) and 15013 (108.5 cm, pdg 13) -- 108.5 of the shower's 126.2 cm of skeleton, 86%, is ONE straight track. 15013 is a piece of a through-going MIP: it touches the grey/unowned 15004 (63.4 cm, pdg 13) at gap 0.0 cm with only 1.5deg between their end-to-end directions, and 15004 touches the grey 15005 (131.4 cm, pdg 13) at gap 0.0 cm at 0.7deg -- 15013+15004+15005 are one 303 cm line, all in cluster 15, each with chord/pathlen 0.96-0.98 (103.8/108.5, 62.0/63.4, 129.3/131.4), i.e. straight, and each with the tight ~1 cm point spray of a MIP. You can see the join directly: in shw63025-az+085-el+20 the yellow halo stops mid-line and the identical grey line continues off the frame in the same direction; in az-055 the grey continuation runs in on the other side. The reconstruction gave the middle piece to the shower via pass4_angle at 16.0 cm / 10.5deg and left its own two neighbours grey. MARK: 15013 OUT of 63025 -- this is the strong mark, a 108.5 cm pdg-13 straight track, and the one the verdict rests on. A weaker second candidate I did NOT mark: 15003 (4.2 cm, pdg 11) came in on the same pass at the same 16.0 cm / 10.5deg and touches 15013 at gap 0.0, but at 41.4deg to it; it may be a genuine EM fragment at the junction, so I left it in -- that is the one to reverse either way. What survives the mark is 63025+63024, a compact 13.6 cm object sitting 12.0 cm from 15013 at 9.0deg; I make no claim about its energy split, only that the length is 13.6 cm of 126.2. Membership triple-check (correction 16) passes: nseg 4, owner-grouped count 4, cmp_div 4 segments -- 15013 is genuinely and solely 63025's, not a correction-11 shared segment. Vertex judged off the vtxz-* close-in sweep at 60 cm half-span (r95 = 158.1 cm, so vtxz-* fired automatically -- correction 20): the star sits at the endpoint of the grey 156.3 cm pdg-13 track 21017 with nothing else converging within 60 cm, which is a thin vertex, but the defect above is measured from the shower start and stands whatever the vertex is doing (correction 14), so this is recorded as a clustering verdict and not vertex-bad. Showers NOT looked at: the 9 skipped by the scope rule (19015 9.7, 72026 4.7, 61019 4.3, 62020 3.9, 20016 2.7, 76030 1.9, 75029 1.6, 60018 1.2, 73027 0.8 MeV), all single-segment. No reco pi0 group (all pio_id = -1); the kine_pio_* block (mass 61.6 with E1 = 9.7 MeV) is the BDT feature scan, not a pairing, and no pi0 is proposed. GATE PAIR, not an inversion but worth the owner's eye: the rejected 15004 sits at 14.9 cm / 26.1deg and the accepted 15013 at 16.0 cm / 10.5deg -- the gate did the geometrically sensible thing (accept the smaller angle at nearly the same distance) and got the physics exactly backwards, because 15004 and 15013 are the same track.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt393505/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:35:30+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt393505/calib-pr-evt393505.json",
+ "subRunNo": 1
+}

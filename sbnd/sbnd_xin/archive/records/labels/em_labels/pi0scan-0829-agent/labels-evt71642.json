@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp2k/pr_evt71642",
+ "confidence": "medium",
+ "eventNo": 71642,
+ "main_vertex": {
+  "x": 23.714786905573316,
+  "y": 53.50323061632772,
+  "z": 139.19949402602631
+ },
+ "note": "numucc_em; competing readings with no discriminator: reco pairs attached 404 MeV 10118 with near-vertex 84105 (bp gap 0.2) while the detached -x blob 76071/82096/80091/78077 carries internal collinearities (4 deg, 1 deg) that read as fragments of 1-2 showers; declining to pick",
+ "origin": "numucc_em",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-30T03:39:03.647376Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

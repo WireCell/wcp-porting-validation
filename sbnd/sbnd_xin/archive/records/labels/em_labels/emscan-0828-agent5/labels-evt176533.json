@@ -1,0 +1,132 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 54.92,
+  "az_deg": -55.0,
+  "centre": [
+   -123.19,
+   -95.45,
+   392.18
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 2337,
+  "cloud_cluster_ids": [
+   11,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "cloud_kept": 2337,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23723,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.7330755106665983,
+   0.6590678874887971,
+   0.16801730667392703
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.7330755106665983,
+    0.6590678874887971,
+    0.16801730667392703
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 30,
+   "kine_best": 562.3591857851336,
+   "kine_charge": 562.3591857851336,
+   "kine_charge_other_hypothesis": 338.2611643820353,
+   "kine_dQdx": 326.6557860277437,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    11012,
+    11016,
+    11017,
+    11028,
+    11029,
+    11030,
+    11032,
+    11034,
+    36051,
+    37052,
+    39054,
+    40055,
+    41056,
+    42057,
+    43058,
+    44059,
+    45060,
+    46061,
+    48063,
+    49064,
+    50065,
+    53068,
+    54069,
+    56071,
+    70074,
+    71076,
+    71077,
+    71078,
+    72079,
+    73080
+   ],
+   "membership_source": "probe",
+   "num_segments": 30,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -156.0599843378886,
+   -127.39744061898064,
+   378.79868716667175
+  ],
+  "reco_start_vertex_id": 11002,
+  "shower": 11032,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -156.0599843378886,
+   -127.39744061898064,
+   378.79868716667175
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt176533",
+ "eventNo": 176533,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 11,
+  "x": -156.0599843378886,
+  "y": -127.39744061898064,
+  "z": 378.79868716667175
+ },
+ "note": "[agent-bulk] The nuecc of my shard, and the reconstruction handles it WELL. Vertex judged from a --vtx-span 60 re-capture (event_half_span_cm 357.1 -- correction 5). Vertex is GOOD: at +-60 cm the star (-156.1,-127.4,378.8) sits at a clean two-prong V apex, not in the middle of a line -- 11032 leaves it one way and 11035 the other at about 119 deg (display quotes 112.4 deg between the axes). That distinction matters because the pilot's other nuecc, evt175896, was undecidable precisely because its two showers were COLLINEAR through the vertex; here they are not. NOTE ON A HEURISTIC I USED ELSEWHERE AND DELIBERATELY DID NOT USE HERE: on evt98844 and evt58006 I argued 'start at dist 0.0 from the vertex, therefore not a converted photon'. A nuecc PRIMARY ELECTRON starts at the vertex, so that argument is void on this event and I did not apply it, even though both 11032 and 11035 have dvtx 0.0. VERDICT on 11032 (562.4 MeV, 30 segments, 109.1 cm): correct. In the 3-D view at az-055-el+20 AND again at az+085-el+20 the member set is one cone from one apex with the right internal structure for a high-energy electron: a narrow MIP-like stem for the first ~35 cm out of the X, then a visible widening into a branching fan, then a diffuse cloud of small fragments out to ~90 cm. The axis arrow lies along that development in both views. 562 MeV is about 6-7 X0 of visible shower, so members out to 92 cm are appropriate, not excessive. The reconstruction has assembled 30 segments drawn from roughly 20 DIFFERENT clusters into that one object -- this is the case where the pass3_cone / pass4 machinery is doing exactly what it should, and it is worth recording as a positive alongside my over-clustering calls elsewhere in this shard. UNDER-CLUSTERING is negligible and I measured it: the acceptance plot shows only three non-member circles, at 64.3 cm / 31.9 deg (35050, 1.9 MeV, outside the 25 deg cone), 82.6 cm / 22.5 deg (55070, 1.3 MeV) and 83.3 cm / 15.8 deg (52067, 1.6 MeV). The last two are the by-now familiar 'just outside the 80 cm pass-1 box' pair, but here they total 2.9 MeV against 562.4, i.e. 0.5 percent, so I did NOT mark them -- naming them as a defect would misrepresent the scale. Note the shower did reach past 80 cm on its own at small angle (49064 at 84.6 cm / 1.8 deg and 50065 at 91.9 cm / 5.3 deg, both tier 2, pass3_cone), so the 80 cm box is not a hard stop here. OVER-CLUSTERING: the member list contains many pdg 13 and pdg 2212 labels (37052, 39054, 42057, 43058, 45060, 48063, 53068, 56071, 70074, 72079, 73080 ...), but every one of them is a 2-6 point speck inside a 562 MeV shower's fragment cloud, where a per-segment PID is meaningless; I do not read them as foreign objects. SECOND SHOWER 11035 (110.0 MeV, 3 seg) is the other prong: its own 18.5 cm segment out of the vertex plus two pdg-13 2-point specks, 30045 and 34049, absorbed by pass3_cone at 63 and 71 cm on its side of the event. I did not scrutinise it further and record no verdict for it. NOT looked at: the 19 showers the scope rule skipped, all under 4 MeV except that some are the fragments discussed above. No pi0: no reco group, all in-scope pio_id -1; the pio-*.png is the capture's auto pair (11032+11035) and both of those start ON the vertex with a 413.3 MeV axis-convention mass, so it is not a pi0 and I propose none. drag_check live: probe_radius_px 334, seg_u 350.16 -> 277.24, cloud_u 74.53 -> 101.68, cloud_redrew true.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt176533/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:08:46+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt176533/calib-pr-evt176533.json",
+ "subRunNo": 1
+}

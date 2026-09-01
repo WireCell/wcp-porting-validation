@@ -1,0 +1,13 @@
+{
+ "event": "evt389538",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "19021": {
+   "verdict": "KEEP",
+   "confidence": "medium",
+   "comment": "FALSE POSITIVE, and a nameable class: a V of two arms meeting at a common point ~215 cm out, dE/dx 3-4 MIP at that shared origin falling to 1.5 -- ONE photon whose e+e- pair is resolved, not two photons",
+   "parts": null
+  }
+ }
+}

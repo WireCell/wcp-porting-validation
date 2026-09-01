@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 34.81,
+  "az_deg": -55.0,
+  "centre": [
+   99.28,
+   46.78,
+   153.64
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4926,
+  "cloud_cluster_ids": [
+   8,
+   14,
+   15,
+   16,
+   17
+  ],
+  "cloud_kept": 4926,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 32008,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.36407628197244707,
+   -0.7071481630618682,
+   0.6061269969101728
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.36407628197244707,
+    -0.7071481630618682,
+    0.6061269969101728
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 205.98473068124832,
+   "kine_charge": 334.78233345455084,
+   "kine_charge_other_hypothesis": 201.37283215311334,
+   "kine_dQdx": 236.07904798438543,
+   "kine_hypothesis": "shower",
+   "kine_range": 205.98473068124832,
+   "members": [
+    8017,
+    8019,
+    8026
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   97.09900828909238,
+   58.56956629802757,
+   125.84770562155086
+  ],
+  "reco_start_vertex_id": 8004,
+  "shower": 8026,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   97.09900828909238,
+   58.56956629802757,
+   125.84770562155086
+  ],
+  "verdict": "over-clustered"
+ },
+ "event": "evt170761",
+ "eventNo": 170761,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": 97.09900828909238,
+  "y": 58.56956629802757,
+  "z": 125.84770562155086
+ },
+ "note": "[agent-bulk] numucc_em. VERTEX: event_half_span_cm 356.7 - a 315.7 cm muon (8050, pdg 13) blows the native sweep out to a useless scale, so I judged the vertex off the --vtx-span 60 re-capture (shots-vtx/evt170761). At 60 cm the blue star sits cleanly on the apex of a V: the 315.7 cm muon leaves one way (grey, correctly unowned - the reconstruction did NOT put it in a shower) and shower 8026 leaves the other, with the short 8023 (pdg 211) and a green stub also at the apex. Not a vertex failure; the vertex is the best-corroborated thing on this event. VERDICT SHOWER 8026 (206.0 MeV, kine_charge 334.8, 3 segments, pdg 11, len 84.9, start ON the vertex). CONFIDENCE unclear, and here are the two readings I could not separate. Reading A (over-clustered, which is why I set that radio): the member set spans two directions - on shw8026-az+085-el+20 the yellow set is a narrow line with a HARD KINK about 40 cm out, and on az-055-el+65 the two legs project as a hairpin, so this is a real 3-D bend and not one projection's artefact - and it includes 8019, a 9.4 cm segment sitting at 49.0 cm / 53.4 DEG off the axis, admitted by in_main_cluster (walk_add), i.e. by cluster connectivity rather than by any cone gate; 53 deg is outside pass-1's widest step (25 deg) by a factor of two. Reading B: 8026 is a single charged hadron (there IS a pdg 211 shower, 8023, on the same vertex) that hard-scattered at the kink, in which case grouping the two legs is correct and the real error is PID, not clustering. I cannot separate these from the frames: the object is MIP-narrow for essentially its whole 85 cm - the same width as the muon beside it - which argues for a track, but the far end does spray out on az-055-el+20, which argues for a shower. NO MARKS, deliberately: like the pilot's evt280159 I cannot name with confidence which pieces should come out, and 8019 is the only candidate I would even propose. Nothing is MISSING: every unowned segment inside 30 deg is a stub of 0.2-3.2 cm (43046, 30033, 32035, 42045, 31034), so under-clustering is not in play. pi0: showers[].pio_id is -1 and the reconstruction accepted NO group; the capture's auto-slot pairs 8026 + 8049 for a placeholder m = 128.0 MeV on the axis convention, but BOTH start at dist 0.0 from the main vertex so neither can be a converted photon and I store no candidate. Not looked at: the 15 showers the scope rule skipped, all under 20 MeV min_kine_best; of the 3 in scope I opened frames for 8026 only.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt170761/stdout.log",
+ "runNo": 18259,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T21:45:55+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt170761/calib-pr-evt170761.json",
+ "subRunNo": 1
+}

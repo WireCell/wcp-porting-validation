@@ -1,0 +1,131 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 88.95,
+  "az_deg": -55.0,
+  "centre": [
+   51.18,
+   124.38,
+   375.91
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 4921,
+  "cloud_cluster_ids": [
+   8,
+   10,
+   11,
+   12,
+   13,
+   14
+  ],
+  "cloud_kept": 4921,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 25180,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   -0.3460448157056387,
+   -0.2680347127430959,
+   0.8991164431195643
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    -0.3460448157056387,
+    -0.2680347127430959,
+    0.8991164431195643
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 32,
+   "kine_best": 801.3070707882797,
+   "kine_charge": 801.3070707882797,
+   "kine_charge_other_hypothesis": 481.9892155117473,
+   "kine_dQdx": 579.01939000761,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    8016,
+    8018,
+    8019,
+    8022,
+    8026,
+    8027,
+    8028,
+    8029,
+    8030,
+    8031,
+    8034,
+    35042,
+    37044,
+    38045,
+    39046,
+    42049,
+    43050,
+    44051,
+    45052,
+    48055,
+    49056,
+    50057,
+    51058,
+    54072,
+    54073,
+    54074,
+    55075,
+    56076,
+    58082,
+    58083,
+    59088,
+    59089
+   ],
+   "membership_source": "probe",
+   "num_segments": 32,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   77.54968490462653,
+   143.14334366348504,
+   305.65432284271753
+  ],
+  "reco_start_vertex_id": 8001,
+  "shower": 8022,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   77.54968490462653,
+   143.14334366348504,
+   305.65432284271753
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt64409",
+ "eventNo": 64409,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 8,
+  "x": 77.54968490462653,
+  "y": 143.14334366348504,
+  "z": 305.65432284271753
+ },
+ "note": "[agent-bulk] nuecc. shw 8022 (801.3 MeV, 32 seg, 164.3 cm): single apex at the nu vertex, one narrow stem opening into a cone; the yellow member set covers the whole visible body on both azimuths (az-055 and az+085) and out to the far on-axis stubs. Nothing contiguous and unclaimed inside the cone: the only non-member on the acceptance plot near the pass-1 step is 36043 (2.4 MeV, 0.6 cm) at 127 cm / 12.9 deg, negligible. 8017 (pdg 2212, 13.1 cm, cluster 8, closest point on the shower start) is a separate prong on the far side of the star and is correctly left unowned; that is a PID-flavoured statement and I did not test it. shw 60090 (103.8 MeV, single 17.9 cm segment) is a detached compact EM blob at 46 cm / 85 deg from 8022's axis, fully claimed, with every other segment in the event at >=93 deg from its axis, so nothing to add. No reco pi0 group, and pairing 8022+60090 prices at 383.7 MeV (axis convention) / kine_pio 392.0 MeV, nowhere near 135 -- the absence of a pi0 group looks right, not like a pairing failure. Looked at 2 of 15 showers; the 13 skipped by the scope rule are 18.7 MeV (13039) and below, twelve of them under 4 MeV. Verdict is about clustering only.",
+ "origin": "nuecc",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp1k/pr_evt64409/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T20:35:52+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt64409/calib-pr-evt64409.json",
+ "subRunNo": 1
+}

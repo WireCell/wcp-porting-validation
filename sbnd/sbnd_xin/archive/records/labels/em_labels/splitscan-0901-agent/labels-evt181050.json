@@ -1,0 +1,13 @@
+{
+ "event": "evt181050",
+ "scan_tag": "splitscan-0901-agent",
+ "source": "pr137_curate.py --sheets (BLIND: proxy class and features hidden)",
+ "split_labels": {
+  "15005": {
+   "verdict": "SPLIT2",
+   "confidence": "medium",
+   "comment": "Scan A. GENUINE MISS: compact red line at -10..-8 transverse well separated from the body at -2..+5; minor part too small in charge to raise a density peak",
+   "parts": null
+  }
+ }
+}

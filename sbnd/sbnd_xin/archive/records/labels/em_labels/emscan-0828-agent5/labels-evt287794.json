@@ -1,0 +1,97 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 46.86,
+  "az_deg": -55.0,
+  "centre": [
+   -163.7,
+   -189.07,
+   430.31
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 1898,
+  "cloud_cluster_ids": [
+   5
+  ],
+  "cloud_kept": 1898,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 45246,
+  "el_deg": 20.0
+ },
+ "confidence": "likely",
+ "em": {
+  "axis_used": [
+   0.11600342215143095,
+   -0.40701200703131374,
+   0.9060267281827279
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.11600342215143095,
+    -0.40701200703131374,
+    0.9060267281827279
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 3,
+   "kine_best": 112.42054774757474,
+   "kine_charge": 112.42054774757474,
+   "kine_charge_other_hypothesis": 67.62138210380436,
+   "kine_dQdx": 51.961782138304095,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    5026,
+    22019,
+    24021
+   ],
+   "membership_source": "probe",
+   "num_segments": 3,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -161.14231082864552,
+   -179.3882490691307,
+   393.89745363381155
+  ],
+  "reco_start_vertex_id": 5003,
+  "shower": 5026,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -161.14231082864552,
+   -179.3882490691307,
+   393.89745363381155
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt287794",
+ "eventNo": 287794,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 5,
+  "x": -161.14231082864552,
+  "y": -179.3882490691307,
+  "z": 393.89745363381155
+ },
+ "note": "[agent-bulk] Small event, 8 segments; vertex judged from the event's own +-137.9 cm sweep (event_half_span_cm 137.9, under the 150 cm trigger, so no --vtx-span re-capture) and from the two shower frames, in both of which the star and the shower X coincide at the apex of a clear V. Vertex is GOOD: four segments have dvtx 0.0, all cluster 5 -- 5025 (pdg 13, 125.2 cm muon), 5015 (pdg 211, 50.6 cm), 5006 (pdg 211, 2.7 cm stub) and the shower seed 5026 (pdg 11, 9.2 cm) -- a proper multi-prong numu CC vertex, and the three non-EM prongs are correctly left UNOWNED. VERDICT on 5026 (112.4 MeV, 3 segments) is correct. NOTHING IS MISSING: the only two non-members in the event are 23020 (3.0 MeV) at 29.0 cm / 87.6 deg and 25022 (1.4 MeV) at 68.1 cm / 40.8 deg, both well outside the cone; there is no grey charge contiguous with the member set inside the cone at any distance. A DENSITY READING I CHECKED AND THEN WITHDREW, worth recording because it nearly produced a wrong flag: 112.4 MeV over a 9.2 cm skeleton is 12 MeV/cm, which would be far above MIP and would have read as a proton. But in the 3-D view at az-055 the point spray above the X extends roughly three times further than the skeletonised segment (about 30 cm against 9 cm), so the charge is spread over the spray and the real density is about 3.7 MeV/cm -- shower-like. The lesson is that kine_charge is blob charge and the table's `length` is skeleton length, and dividing one by the other overstates density whenever the skeleton under-covers the blob. I flag it here because I used the same MeV/cm argument on evt53658 and evt105074 in this shard, and on those two it was supported by the 3-D picture (a straight uniform narrow line), whereas here it is not. STUB TRAIL, described not verdicted: the other two members are 22019 (pdg 13, 2 points, 41.3 cm / 15.0 deg) and 24021 (pdg 13, 2 points, 76.8 cm / 23.6 deg), both absorbed by pass3_cone. 76.8 cm is 5.5 X0 for a 112 MeV shower, which is not credible as shower tail, so I think 24021 at least does not belong -- but both are 2-point specks whose charge is negligible against 112.4 MeV, so removing them would not move the energy and I did not mark them or downgrade the verdict on their account. Note the ANGLE-MONOTONICITY point that recurs across my shard: this shower accepted at 23.6 deg / 77 cm while other showers in the same sample reject at 6 deg / 47 cm. VERTEX ATTACHMENT: 5026's start is at dist 0.0 from the vertex in a numucc_em event, so it cannot be a converted photon -- it is prompt EM activity at the vertex (or a photon that converted immediately). That is an observation, not a verdict, and unlike evt98844 nothing here rests on it. NOT looked at: 23020 (3.0 MeV) and 25022 (1.4 MeV), the only other showers. No pi0: no reco group, pio slots None, only one shower above 20 MeV in the event so no pairing is possible and I propose none. drag_check live: probe_radius_px 69.8, seg_u 49.83 -> 20.62, cloud_u -18.34 -> -12.44, cloud_redrew true, probe_degenerate false.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt287794/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:15:53+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt287794/calib-pr-evt287794.json",
+ "subRunNo": 1
+}

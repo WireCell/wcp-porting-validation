@@ -1,0 +1,71 @@
+{
+ "event": "evt99838",
+ "scan_tag": "splitscan-0901-owner",
+ "source": "split_display (doc pr/138 Phase A)",
+ "split_labels": {
+  "14004": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "This is one good track, no need to split",
+   "groups": {
+    "14004": 0,
+    "14005": 0,
+    "14006": 0,
+    "14007": 0,
+    "14008": 0,
+    "57036": 0
+   },
+   "parts": {
+    "0": [
+     14004,
+     14005,
+     14006,
+     14007,
+     14008,
+     57036
+    ]
+   },
+   "proposal": "single group (no second angular maximum)",
+   "nseg": 6,
+   "Q": 26698414.700000003,
+   "saved": "2026-08-31T07:02:15"
+  },
+  "58038": {
+   "verdict": "KEEP",
+   "n_parts": 1,
+   "n_groups": 3,
+   "confidence": "high",
+   "comment": "",
+   "groups": {
+    "42017": 0,
+    "44019": 0,
+    "46021": 0,
+    "49035": 0,
+    "58038": 0,
+    "58045": 0,
+    "58047": 0,
+    "59052": 0,
+    "59053": 0
+   },
+   "parts": {
+    "0": [
+     42017,
+     44019,
+     46021,
+     49035,
+     58038,
+     58045,
+     58047,
+     59052,
+     59053
+    ]
+   },
+   "proposal": "single group: 3 angular maxima but valley_best=1.000 > 0.95 (no charge dip between them)",
+   "nseg": 9,
+   "Q": 1729123.2000000002,
+   "saved": "2026-08-31T08:52:11"
+  }
+ }
+}

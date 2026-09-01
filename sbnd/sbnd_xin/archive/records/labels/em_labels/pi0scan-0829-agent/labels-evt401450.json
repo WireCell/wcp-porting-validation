@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt401450",
+ "confidence": "medium",
+ "eventNo": 401450,
+ "main_vertex": {
+  "x": -142.00245776020603,
+  "y": 95.25856920386197,
+  "z": 6.357239493496289
+ },
+ "note": "nueCC; primary electron 23018 excluded; detached candidates 25060/86094/77085 fail every back-projection consistency test (all angle_gate, gaps 10-93 cm), no credible common vertex",
+ "origin": "nuecc",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:39:01.925936Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

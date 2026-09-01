@@ -1,0 +1,97 @@
+{
+ "arm": "work-pr131-denom141-mcp1k/pr_evt286655",
+ "confidence": "low",
+ "eventNo": 286655,
+ "main_vertex": {
+  "x": -43.03035383081263,
+  "y": 65.3640328145349,
+  "z": 8.663831650096508
+ },
+ "note": "nueCC truth but both EM detached with ~27 cm conversion gaps and a consistent back-projected vertex 12 cm from main (bp gap 1.9); possible pi0, possible displaced-electron confusion (scan note: over-clustered, axis backwards)",
+ "origin": "nuecc",
+ "pio": {
+  "backproject": null,
+  "candidates": [],
+  "gammas": {
+   "1": {
+    "axis": [
+     -0.005374909966511665,
+     -0.4996463362973068,
+     0.8662128196739705
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 236.71792393084536,
+    "energy_as_reconstructed": 236.71792393084536,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     -45.29510427544105,
+     47.85684448318434,
+     30.241815009411216
+    ],
+    "shower": 19006,
+    "start": [
+     -45.29510427544105,
+     47.85684448318434,
+     30.241815009411216
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   },
+   "2": {
+    "axis": [
+     0.08261298955708735,
+     -0.9965006499258433,
+     -0.012710179141638071
+    ],
+    "axis_source": "shower_init_dir",
+    "energy": 201.32511229408092,
+    "energy_as_reconstructed": 201.32511229408092,
+    "energy_hypothesis": "as_reconstructed",
+    "flag_shower": true,
+    "kine_hypothesis": "shower",
+    "particle_id": 11,
+    "reco_start": [
+     -43.0663178621491,
+     39.83990246380593,
+     0.9740775676379233
+    ],
+    "shower": 80055,
+    "start": [
+     -43.0663178621491,
+     39.83990246380593,
+     0.9740775676379233
+    ],
+    "start_override": null,
+    "start_source": "reco"
+   }
+  },
+  "mass_axis_convention": 221.24496118073012,
+  "mass_vertex_convention": 243.46394629196482,
+  "reco_groups": {},
+  "reco_kine": {
+   "kine_pio_angle": 60.89286804199219,
+   "kine_pio_energy_1": 236.71792602539062,
+   "kine_pio_energy_2": 201.3251190185547,
+   "kine_pio_flag": 1,
+   "kine_pio_mass": 221.24496459960938,
+   "kine_pio_vtx_dis": 7.70596170425415
+  },
+  "theta_axis_convention": 60.89286798281949,
+  "theta_vertex_convention": 67.78304254013277,
+  "vertex": [
+   -43.03035383081263,
+   65.3640328145349,
+   8.663831650096508
+  ],
+  "vertex_how": "main_vertex"
+ },
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-30T03:39:01.966587Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

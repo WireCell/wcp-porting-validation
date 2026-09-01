@@ -1,0 +1,19 @@
+{
+ "arm": "work-pr131-denom98-ncpi0/pr_evt463565",
+ "confidence": "medium",
+ "eventNo": 463565,
+ "main_vertex": {
+  "x": 30.58735934844824,
+  "y": -142.66468525586157,
+  "z": 251.16334014180606
+ },
+ "note": "owner scan note: two closely-spaced gammas overclustered, not separable; dump showers are collinear fragments (13001+115088 at 6.5 deg), not a gamma pair",
+ "origin": "ncpi0",
+ "pio": null,
+ "runNo": 18255,
+ "sample": "ncpi0",
+ "saved_utc": "2026-08-30T03:39:01.867813Z",
+ "scan_tag": "pi0scan-0829-agent",
+ "source": "model pi0 pairing pass, doc pr/132 (pr/126 sec 4h item 0)",
+ "subRunNo": 1
+}

@@ -1,0 +1,101 @@
+{
+ "arm": "work-mcp2k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 30.0,
+  "az_deg": -55.0,
+  "centre": [
+   78.31,
+   -99.6,
+   250.71
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3840,
+  "cloud_cluster_ids": [
+   16,
+   24
+  ],
+  "cloud_kept": 3840,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 17924,
+  "el_deg": 20.0
+ },
+ "confidence": "unclear",
+ "em": {
+  "axis_used": [
+   0.36505950955048044,
+   0.3680599986700734,
+   0.855139399084002
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.36505950955048044,
+    0.3680599986700734,
+    0.855139399084002
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 6,
+   "kine_best": 153.98681319211764,
+   "kine_charge": 153.98681319211764,
+   "kine_charge_other_hypothesis": 92.62364703285273,
+   "kine_dQdx": 145.1229944502305,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    47012,
+    48013,
+    64032,
+    64033,
+    64042,
+    64043
+   ],
+   "membership_source": "probe",
+   "num_segments": 6,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 2
+  },
+  "reco_start": [
+   70.46498751613036,
+   -90.62020651632574,
+   238.83987712866474
+  ],
+  "reco_start_vertex_id": 16002,
+  "shower": 64033,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   70.46498751613036,
+   -90.62020651632574,
+   238.83987712866474
+  ],
+  "verdict": "correct"
+ },
+ "event": "evt395870",
+ "eventNo": 395870,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 16,
+  "x": 67.28682489312052,
+  "y": -90.026635662246,
+  "z": 233.88316730284419
+ },
+ "note": "[agent-bulk] verdict shower 64033 (pdg 11, kine_charge 154.0 MeV, 6 seg, 21.2 cm) -- the only pdg-11 object in scope; the other in-scope entry 53018 is pdg 2212 and flagged 'conn 4: dropped by the PF tree'. Vertex judged off the automatic vtxz-* 60 cm frames (r95 260.7 cm): at el+60 the event is a clean V of two long unowned grey tracks meeting exactly on the star -- 16001 (pdg 13, 284.1 cm, member points 0.0-277.8 cm from the vertex) and 16002 (pdg 2212, 41.9 cm, 0.0-39.8 cm). Vertex is good. Membership bookkeeping: nseg 6 = owner-grouped 6 = cmp_div 6, and the owner groups sum to 28 = the shard's n_seg, so the segment picture is complete. WHY 'unclear' -- TWO READINGS I COULD NOT SEPARATE: (a) 64033 is a correctly clustered compact EM shower: its four core segments (37 of its 42 fitted points) start 5.9 cm from the vertex and span 12.3 cm, its own point cloud is covered by the yellow member set at two azimuths, and nothing contiguous is left unclaimed in front of it. (b) 64033 is not an EM object at all: that same core hugs the unowned 41.9 cm proton 16002 along its whole length (minimum member-to-16002 distances 5.7 / 8.7 / 10.0 cm segment by segment, and 5.4-12.5 cm to the muon 16001), it is hook-shaped rather than conical, and 154 MeV inside a 12 cm core reads hadronic. I did NOT convert that into a PID flag, because the density argument here is exactly the kine_charge/skeleton-length shortcut correction 18 forbids and I have no independent width measurement of the blob charge -- the drawn point cloud around the member set is roughly 7 x 6 cm, which is compact but is a pixel estimate, not a measurement. Nothing was stolen from a neighbour under either reading: 16001 and 16002 are unowned by everything. THE MEMBERSHIP EDGE IS NOISY AND NON-MONOTONE, worth the owner's eye: on the acceptance plot the members include 47012 at (13.3 cm, 51.6 deg) and 48013 at (37.7 cm, 63.4 deg) -- both outside every pass-1 angle step (5 / 12.5 / 25 deg), taken by pass4_angle (direct) -- while the non-members 46011 at (18.0 cm, 34.1 deg) and 49014 at (31.2 cm, 52.1 deg) sit INSIDE the region those two were accepted from. So the gate accepted a 63 deg segment and rejected a 34 deg one on the same shower. Every one of the four is a 0.2-1.0 cm stub of 0.6-0.9 MeV, i.e. sub-1% of 154 MeV, which is why this does not move the verdict; 48013 in particular is 3 points sitting alone in empty space across a ~20 cm void and is the single thing I would mark OUT if I were marking. I recorded no marks, to keep the record consistent with the radio (pilot 5). pi0: kine_div says 'no pi0 group in this event' and the capture produced no pi0 frames (no second gamma candidate to slot); nothing stored. NOT LOOKED AT: the 19 out-of-scope showers, all <= 15.2 MeV and 16 of them flagged 'conn 4: dropped by the PF tree' -- this event's shower list is mostly PF-tree debris. This verdict is about clustering of 64033; reading (b) above is the only PID doubt and it is explicitly NOT recorded as a PID verdict.",
+ "origin": "numucc_em",
+ "pio": null,
+ "probe_sidecar": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114c-mcp2k/pr_evt395870/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp2k",
+ "saved_utc": "2026-08-28T22:44:33+00:00",
+ "scan_tag": "emscan-0828-agent5",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-prod0825/pr_evt395870/calib-pr-evt395870.json",
+ "subRunNo": 1
+}

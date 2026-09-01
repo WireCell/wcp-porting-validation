@@ -1,0 +1,101 @@
+{
+ "arm": "work-ncpi0-prod0825",
+ "bee_url": "https://www.phy.bnl.gov/twister/bee/set/c57f7f06-d02d-4de7-8de9-402abfbbace5/event/2/",
+ "camera": {
+  "R": 51.52,
+  "az_deg": 2473.2,
+  "centre": [
+   -158.65,
+   82.6,
+   43.62
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 3977,
+  "cloud_cluster_ids": [
+   9,
+   14,
+   15
+  ],
+  "cloud_kept": 3977,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 23083,
+  "el_deg": 86.89
+ },
+ "confidence": null,
+ "em": {
+  "axis_used": [
+   0.5418664463794229,
+   0.55986201101933,
+   0.6268455016234283
+  ],
+  "axis_used_branch": "dir15",
+  "axis_used_source": "probe",
+  "dir_point_by_shower": {},
+  "marks_by_shower": {},
+  "marks_detail": {},
+  "reco": {
+   "axis": [
+    0.5418664463794229,
+    0.55986201101933,
+    0.6268455016234283
+   ],
+   "axis_branch": "dir15",
+   "axis_source": "probe",
+   "flag_shower": true,
+   "join_complete": true,
+   "joined": 5,
+   "kine_best": 183.92386627115275,
+   "kine_charge": 183.92386627115275,
+   "kine_charge_other_hypothesis": 110.63089700520467,
+   "kine_dQdx": 114.29024992045781,
+   "kine_hypothesis": "shower",
+   "kine_range": 0.0,
+   "members": [
+    35016,
+    36017,
+    68051,
+    84074,
+    85072
+   ],
+   "membership_source": "probe",
+   "num_segments": 5,
+   "particle_id": 11,
+   "pio_id": -1,
+   "start_connection_type": 1
+  },
+  "reco_start": [
+   -165.9551171218891,
+   70.14816721209836,
+   8.2089324240822
+  ],
+  "reco_start_vertex_id": 84097,
+  "shower": 84074,
+  "start_override_by_shower": {},
+  "start_override_vertex_id_by_shower": {},
+  "start_used": [
+   -165.9551171218891,
+   70.14816721209836,
+   8.2089324240822
+  ],
+  "verdict": null
+ },
+ "event": "evt37112",
+ "eventNo": 37112,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 84,
+  "x": -165.9551171218891,
+  "y": 70.14816721209836,
+  "z": 8.2089324240822
+ },
+ "note": null,
+ "origin": "ncpi0",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114-ncpi0/pr_evt37112/stdout.log",
+ "runNo": 18259,
+ "sample": "ncpi0",
+ "saved_utc": "2026-08-28T14:53:25+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-ncpi0-prod0825/pr_evt37112/calib-pr-evt37112.json",
+ "subRunNo": 1
+}

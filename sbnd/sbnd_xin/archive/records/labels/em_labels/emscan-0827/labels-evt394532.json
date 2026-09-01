@@ -1,0 +1,43 @@
+{
+ "arm": "work-mcp1k-prod0825",
+ "bee_url": null,
+ "camera": {
+  "R": 64.38,
+  "az_deg": 140.49,
+  "centre": [
+   165.55,
+   -164.56,
+   50.78
+  ],
+  "cloud": "clustering-global",
+  "cloud_candidate": 672,
+  "cloud_cluster_ids": [
+   8
+  ],
+  "cloud_kept": 672,
+  "cloud_scope": "neutrino-candidate",
+  "cloud_total": 37353,
+  "el_deg": 11.0
+ },
+ "confidence": null,
+ "em": null,
+ "event": "evt394532",
+ "eventNo": 394532,
+ "event_flags": [],
+ "main_vertex": {
+  "cluster_id": 39,
+  "x": 200.2907156631468,
+  "y": -187.09833859305735,
+  "z": 22.832875037691526
+ },
+ "note": "nu vertex likely wrong",
+ "origin": "owner",
+ "pio": null,
+ "probe_sidecar": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-em114b-mcp1k/pr_evt394532/stdout.log",
+ "runNo": 18255,
+ "sample": "mcp1k",
+ "saved_utc": "2026-08-28T14:20:19+00:00",
+ "scan_tag": "emscan-0827",
+ "source": "/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-prod0825/pr_evt394532/calib-pr-evt394532.json",
+ "subRunNo": 1
+}
