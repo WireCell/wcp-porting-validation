@@ -175,3 +175,181 @@ closed. The tag is fresh and pre-seeded with a copy of each event's existing
 label (base wins over overlay, the same precedence `pr132_pi0_census.py` uses);
 originals untouched — M13.
 
+---
+
+## 2. Item 3, continued — the owner's scan, and the two mechanisms it names
+
+The owner scanned all nine on port 5022 (tag `pi0mass-0904-owner`, 2026-08-31
+18:48–19:06 local) and reported:
+
+> *"The pi0 generally are OK. There are cases where the gamma of pi0 is close to
+> the detector boundary, so we miss some energies. There are also other cases,
+> where there are likely overclustering leading to overestimation of energy thus
+> overestimating the pi0 mass."*
+
+Four events came back **re-paired**. Scored by `scripts/pr141_ownerscan.py`:
+
+| event | the owner's pairing now | m (vertex) | |
+|---|---|---|---|
+| 283713 | **`23011` + `47021`** (was `67051`+`47021`) | **123.5** | **IN WINDOW** |
+| 348691 | **`50073` + `52089`** (was `49046`+`50073`) | **141.8** | **IN WINDOW** |
+| 71872 | `79074` + `64044`, unchanged | **101.1** | **IN WINDOW** |
+| 409634 | `21002` + **`27015`** (was `69032`) | 96.5 | 3.5 MeV below the edge |
+| 21073 | `60081` + **`16019`** (was `63100`) | 182.6 | out (high) |
+| 168432, 280159, 286655 | unchanged | 61.6 / 73.6 / 226.1 | out |
+| 397630 | — | — | **lost to a seeding defect of mine, see §2.3** |
+
+### 2.1 The boundary claim, made quantitative — and it holds
+
+`pr141_ownerscan.py` measures, per γ, **how much room the shower had**: the
+distance from its start point *along its own axis* to the SBND active-volume
+wall (x, y ∈ ±200 cm, z ∈ 0…500 cm, taken from the point clouds themselves).
+It then corrects each γ's energy by the contained fraction of the PDG
+longitudinal profile (`dE/dt ∝ (bt)^{a−1}e^{−bt}`, b = 0.5,
+t_max = ln(E/E_c) − 0.5, E_c = 32.8 MeV, X₀ = 14.0 cm) and re-masses the pair.
+This is a textbook average profile, not a fit to SBND — it is used only to ask
+whether the **order** of the missing energy matches the room available.
+
+| event | γ short of room | room | contained f | mass → corrected |
+|---|---|---|---|---|
+| **168432** | `22006` **1.4 X₀** (its furthest member point is *outside* the volume, wall −0.2 cm) and `49028` 3.5 X₀ | 19.0 / 49.2 cm | 0.21 / 0.72 | **61.6 → 159.4  IN WINDOW** |
+| **71872** | `79074` 3.1 X₀ | 43.5 cm | 0.58 / 0.93 | **101.1 → 138.4  IN WINDOW** |
+| 280159 | `95114` 3.6 X₀ (furthest point 2.6 cm from the wall) | 50.9 cm | 1.00 / 0.72 | 73.6 → 87.0, still out but moving the right way |
+| the other six | none under 5 X₀ | 135–492 cm | ≈ 1.00 | unmoved (≤ 6 MeV) |
+
+**The correction is selective, which is what makes it evidence rather than a
+fudge**: it fires only on the three events whose geometry says it should, moves
+two of them into the window, and leaves the other six within 6 MeV of where they
+were. The owner's boundary mechanism is confirmed, and it is *not* a clustering
+defect — it is charge that never existed in the detector.
+
+### 2.2 The over-clustering claim — the same three objects the scan notes name
+
+The events whose mass is too **high** carry no containment excuse (135–492 cm of
+room, f ≈ 1.00) and every one of them has an oversized γ:
+
+| event | the object | |
+|---|---|---|
+| 21073 | `60081` — **634.5 MeV over 188.7 cm, 39 segments** | the largest object in the set |
+| 286655 | `79023` — the scan note: *"over-clustered, and its axis is pointing backwards … ten of its eleven members sit at 128–150° to its own axis"* | brought in by `walk_add` and `pass4_angle`, not the cone |
+| 280159 | `12119` — the scan note: *"OVERCLUSTERED / merged … it sits ON the vertex … reads as a vertex blob seeded on the muon stem, not a photon"* | 452.9 MeV, 118.5 cm, 33 seg |
+
+So the two mechanisms the owner named are both real, they act in **opposite
+directions on the mass**, and they partition the nine cleanly.
+
+### 2.3 A defect of mine, stated
+
+The fresh tag was seeded from each event's **base** label. For 286655, 348691
+and 397630 the base label has `pio: null` and the pairing lived in the overlay
+tag `pi0scan-0829-agent` — the same base-wins precedence
+`pr132_pi0_census.py` uses, applied to the wrong field. So those three opened
+with **empty γ slots**, contrary to what the brief promised. The owner
+re-created the pairing for two of them; **397630 was left unpaired and its scan
+is lost.** Its pre-scan reading stands from the tape (§1.2): in window at 114.4
+at candidate vertex 15000, outranked by K24. *Rule for the next seeded tag: seed
+from the record that holds the field being scanned, not from the record that
+wins in general.*
+
+---
+
+## 3. Item 2 — the eight "missing γ" events, and they are not missing
+
+doc pr/139 §26.3 named this the largest single block — *"a γ is simply NOT
+RECONSTRUCTED, 8 events, upstream γ-finding efficiency — nothing to do with
+splitting"* — and §26.5 item 2 asked for a scoping pass before more clustering
+work.
+
+**"Absent-on-arm" in `pr132_pi0_census.py` means only that the label's γ shower
+id is not a key of the arm's `showers[]`.** That is three situations wearing one
+name. `scripts/pr141_missing_gamma.py` separates them by **segment id** — the
+label stores the γ's member segments, the arm's `segments[]` carries the same
+ids, and the probe sidecar says which shower owns each one:
+
+| verdict | n of 9 γ slots | meaning |
+|---|---|---|
+| **MERGED** | **5** | every member segment is on the arm, owned by a *different* shower |
+| **MERGED-BY-PROXIMITY** | **3** | the label stored no member list; a shower starts within 15 cm of the γ's recorded start |
+| NO-LABEL-MEMBERS | 1 | 396222 g2 — no member list and nothing within 20 cm |
+
+**Eight of the nine absent γs have their charge on the arm.** Not one of them is
+a γ that failed to be reconstructed. The block is an **identity / merging**
+problem:
+
+| event | the γ | where its charge is now |
+|---|---|---|
+| 281485 | `84070`, 73.4 MeV, 5 seg | **all 5 segments inside `87078`** — 149.4 MeV, 53.0 cm, 12 seg. Absorbed into an object twice its size. |
+| 347824 | `24112`, 528.0 MeV, 23 seg | 22 of 23 inside `107060` — 416.4 MeV, 103.3 cm, 23 seg. Comparable size: a **rename**, not an absorption. |
+| 142421 | `7010`, 706.5 MeV | nearest start `108104` at 8.5 cm — **1197.6 MeV over 202.8 cm, 47 segments**. Absorbed into something 1.7× bigger. |
+| 506114 | `89100`, 44.8 MeV, 2 seg | both inside `82080` — 53.2 MeV, 4 seg. Rename-scale. |
+| 76346 | `40030`, 5.0 MeV, 1 seg | inside `14059` — 238.1 MeV, 67.2 cm. A crumb absorbed by a large shower. |
+| 71178 | `80039`, 63.1 MeV, 4 seg | 1 seg in a 0.2 MeV shower, 1 unowned, 2 not on the arm. **Fragmented.** |
+| 259542 | `17004` 993.0 MeV / `131129` 138.7 MeV | nearest starts 11.6 cm (a 50.8 MeV proton stub) and 5.4 cm (`131131`, 42.9 MeV). Charge present, ownership scattered. |
+| 396222 | `128276`, 162.7 MeV | nearest start 20.5 cm and 3.3 MeV. **The only slot with no candidate** — the one real "not reconstructed". |
+
+### 3.1 What this does to doc pr/139's closing conclusion
+
+doc pr/139 §26.4 closed the campaign on the sentence *"the dominant remaining
+blockers are missing γs and γ energy, not γ clustering"* and recommended
+stopping. **Tonight's two measurements reverse the first half of that.**
+
+| doc pr/139 §26.3 said | what it actually is |
+|---|---|
+| 8 — a γ is NOT RECONSTRUCTED | **1** (396222). The other 8 slots are **merged or renamed** — clustering. |
+| 9 — mass outside the window | 3 are **containment** (calorimetry, irreducible); 3 are **over-clustering** (clustering); 2 are **pairing** the owner has now revised; 1 is a window edge. |
+
+The residual π⁰ population is not dominated by γ-finding efficiency. It is
+dominated by **γ identity — over-merging and mis-assignment — plus a
+calorimetric containment loss that no clustering change can recover.** The
+campaign's own instrument had been reading an id mismatch as a missing particle.
+
+**This does not re-open the splitter.** Every object named above is *bigger*
+than the γ the owner marked — `87078` swallowing `84070`, `108104` at 1197.6
+MeV, `14059` at 238.1 MeV. That is the over-merge direction, which is the
+splitter's and the absorber-guard's territory, not the seed-count kernel's; and
+doc pr/139 §22 measured the splitter's own configuration space exhausted **on
+the objects the owner labelled**, which are a different set from these eight.
+
+---
+
+## 4. The one knob-level lead the scan produced: K20's 40 cm bound
+
+§1.3 read 283713 as *"a π⁰ lost by 0.1 MeV of window"* — the best pair in the
+event was `67051`+`47021` at m = 99.9 against a bound of 100.0. **The owner's
+scan supersedes that reading.** They re-paired it to `23011`+`47021`, m = 123.5,
+comfortably in window. So 283713 is not a window-edge case at all; the finder
+never had the owner's pair to consider.
+
+Why not is on the tape, in one line:
+
+```
+PI0_PAIR K20 mu-reject sh=23011 why=trackish len=57.3
+```
+
+`23011` is **typed pdg = 13** (168.4 MeV, 57.3 cm, 11 segments). A μ-typed
+object reaches the disconnected π⁰ pool only through K20
+(`pi0_admit_muon_showers`, **SBND production ON** since 2026-08-30,
+`NeutrinoShowerClustering.cxx`), whose rule is
+
+```cpp
+shower_ish = get_flag_shower() || (total_length < 40*units::cm && seg_dir_weak(ss))
+```
+
+`23011` carries no shower flag — that is *why* it was typed 13 — and it is
+**57.3 cm long**, so it fails the 40 cm arm and is refused as "trackish". Raising
+that bound to ~60 cm would admit it and give the finder a pair at 123.5.
+
+**This is a lead, not a flip.** It is *n* = 1, and this campaign has twice
+refused to move a threshold on one example (doc pr/139 §18 on one negative,
+§22.5 on two non-EM fires). The 40 cm number came from the file's own
+"shower-ish muon" idiom, not from a scan, so there is no measured basis for
+either 40 or 60. What makes it worth recording above the other leads is that it
+is **the only one tonight where a shipped, production-ON knob has a named
+threshold with a measured counterexample on the far side of it** — everything
+else needs new code or a new instrument.
+
+**Recommended next step for it**, in the discipline this campaign settled on:
+build a targeted sample of μ-typed objects in the 40–80 cm band that sit near a
+π⁰-plausible geometry, scan ~15 of them, and only then choose a bound. That is
+the same shape as §22.5's `pdg = 211` lead (item 4), and the two should be one
+sample: **both are questions about which particle *types* may enter the π⁰
+pool**, and both currently rest on n ≤ 2.
