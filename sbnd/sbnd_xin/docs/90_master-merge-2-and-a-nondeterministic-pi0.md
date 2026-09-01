@@ -132,4 +132,68 @@ itself multi-threaded, while the single-run repeats were consistent.
    N=8 on 6805 under both concurrent and serial execution to establish whether
    thread order is the discriminator.
 3. **Check SBND for the same defect** before trusting pi0 census numbers to the
-   last event — same instrument, same tagger code.
+   last event — same instrument, same tagger code. **Done: §6. SBND is clean.**
+
+## 6. Does SBND have the same instability? No — measured
+
+SBND runs the *same* pi0 code (`clus/src/NeutrinoKinematics.cxx:991` fills
+`kine_pio_*`; `root/src/UbooneTaggerOutputVisitor.cxx:1172-1181` writes the same
+branch names), so the concern was well founded. It does not reproduce.
+
+**Repeat axis** — 19 NC-pi0 events (`gate308-ncpi0.txt`), five arms, same
+binary and config:
+
+| comparison | archives | ROOT trees (incl. `T_kine` pi0 block) |
+|---|---|---|
+| r1 vs r2 | 38/38 byte-identical | 19/19 identical |
+| r1 vs r3 | 38/38 byte-identical | 19/19 identical |
+| r1 vs r4 (`PR_JOBS=4`) | — | 19/19 identical |
+| r1 vs r5 (`PR_JOBS=32`) | — | 19/19 identical |
+
+Concurrency was the leading suspect on uBooNE, so `PR_JOBS` was varied 4/16/32.
+No effect.
+
+**Layout axis** — the one that actually flipped uBooNE. A behaviour-neutral
+probe (`volatile double doc90_probe_pad[64]` plus an unused function in an
+anonymous namespace) was inserted into `NeutrinoKinematics.cxx`, the TU that
+computes the pi0 kinematics, and the tree rebuilt:
+
+| r1 vs r6probe | 38/38 archives byte-identical | 19/19 trees identical |
+|---|---|---|
+
+The probe was reverted afterwards (`git status` clean).
+
+**Cross-build, wide sample** — today's binary vs doc 87's `work-87mrg-post-*`
+arms, a genuinely different build generation:
+
+| sample | events | result |
+|---|---|---|
+| mcp1k | 241 | every shared tree identical, 0 differing |
+| nuecc48 | 48 | every shared tree identical, 0 differing |
+
+The only reported difference is `T_cluster`, present only in the new arms —
+that is doc 87's `save_in_scope` flip, expected and already characterized.
+
+**The test is not vacuous.** Across the 308 events examined, **140 carry a
+populated pi0 block** (`kine_pio_flag != 0`, `kine_pio_mass` spanning
+0.2–1304.4 MeV, median 17.5); 132 have no `T_kine` at all (no neutrino
+candidate) and 36 have `T_kine` with the pi0 flag clear. So the comparison
+covered 140 real pi0 reconstructions, not 308 sets of zeros.
+
+**Reading.** Zero differences in 140 pi0-carrying events gives a 95% Poisson
+upper bound of ~2% on any SBND bistability rate. uBooNE's defect presented at
+1 event in 35 (~3%), so had SBND carried the same rate roughly 4 events should
+have moved. None did.
+
+The most economical explanation is therefore that uBooNE **5384-136-6805** is a
+single pathological event — two near-degenerate pi0 solutions whose ordering is
+decided by something layout- or timing-dependent — rather than a systematic
+defect in the shared pi0 code. That is consistent with everything observed:
+every *other* uBooNE event was stable across all six arms too.
+
+**What this does and does not license.** It clears the pi0 census results of
+docs pr/126–pr/141: those were SBND, and SBND does not show the defect on 140
+pi0 events. It does **not** repair `repeat_check.sh` — that gate still hashes
+only Bee zips and would still miss this class of defect on either detector
+(§4). Fixing it remains the open item, now lower priority since the only known
+instance is one uBooNE event.
