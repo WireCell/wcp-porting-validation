@@ -8,7 +8,10 @@ consolidate, or reduce them as default?"
 
 **This doc answers with numbers, not impressions, and changes nothing.** No
 `.cxx`, `.h`, `.jsonnet`, default value, or doctest is touched. Every
-recommendation below is staged as a later, separately-gated round (§8). One
+recommendation below is staged as a later, separately-gated round (§8).
+*(That sentence describes §§1-8, the 2026-08-24 analysis. The rounds those
+recommendations became — §9, §10, §12, §13 — do change code, each behind its
+own byte-identity gate; §13 is the most recent.)* One
 question — whether the uBooNE chain may ever be re-baselined — is presented
 as open rather than decided (§5c, §9): it is the single decision that gates
 the largest possible cleanup, and it is the owner's, not this doc's.
@@ -1343,6 +1346,11 @@ trusts prose deletes the wrong thing.
 
 ### 12.7 The documented removal pool (not touched this round)
 
+> **EXECUTED 2026-09-01 in round 4 — the whole pool is gone; see §13.** The
+> owner overruled the "intent to re-use" caution below in one sentence: *"since
+> they are negative, just remove them from the operating point for now. We can
+> get them back from git history, if we really want."*
+
 Per the owner's scope decision, knobs whose closed-negative verdict was
 established *today* are documented rather than deleted — a deletion should rest
 on a verdict that predates the round doing the deleting. This is the
@@ -1357,7 +1365,9 @@ ledger-ready pool for a later round:
 **Not** in the pool, and not assumed: the added-`false` knobs `pi0_nv_allow_type2`,
 `pi0_nv_retry_paired`, `pi0_reseat_start_assoc`, `pi0_mu_shower_hypothesis` and
 the three `shower_split_*`. Their cfg comments state a *default*, not a verdict
-(§11.2), and none has been read against its originating doc.
+(§11.2), and none has been read against its originating doc. **Round 4 read all
+seven (§13.1, §13.2): the four π⁰ knobs went, the three `shower_split_*`
+stayed.**
 
 The largest remaining mechanical win is unchanged and unaffected by any of
 this: **§5b2, the mirror block** (381 lines after this round), still §8
@@ -1420,5 +1430,322 @@ precedent of reserving `ADVERSE` for knobs that moved something the wrong way
 and using `INERT` for measured-zero-yield. The ledger now carries **23** rows.
 
 §7 **Phase 2 status: DONE** for the kind-2 population identified as of
-2026-09-01. §12.7's pool is the next tranche and is owner-gated. §7 Phase 4
+2026-09-01. §12.7's pool is the next tranche and is owner-gated — **taken in
+round 4, §13**. §7 Phase 4
 remains **CLOSED** (Reading A, §11.5); §5b2 and §8 decision #3 remain open.
+
+---
+
+## 13. Round 4 executed (2026-09-01) — §12.7's pool, the π⁰ residue, and a lock on the operating point
+
+**Owner order, 2026-09-01**: *"Can you operate on 1. and 2. for §12.7 pool,
+since they are negative, just remove them from the operating point for now. We
+can get them back from git history, if we really want. These would be
+byte-identical-when-done."*
+
+Items **1** and **2** are the two this doc's §12 closing recommendation put to
+the owner — *lock the operating point*, and *classify the seven added-`false`
+knobs §11.2 left unclassified* — and the sentence about §12.7 answers the
+question §12.7 itself parked. All three are executed here.
+
+Read the owner's word precisely, because it is also the round's scope rule:
+**negative** is the licence to delete. It overrules an author's stated intent
+to re-use — §12.7 kept `teb_chain_topology` partly because pr/90:1265 wanted it
+"for a future vertex-anchored redesign", and git history answers that. It does
+**not** extend to a knob that is merely unflipped, unmeasurable, or awaiting an
+owner call; §13.2 is where that line falls.
+
+**11 TLAs removed**, all `false`/`null` in every compiled config, so the
+compiled JSON is byte-identical and the 308-event gate PASSes at 616 archives +
+308 ROOT files. Toolkit `7542532f`. One toolkit commit rather than
+one per group: the two groups touch disjoint code but the same five files, and
+splitting them would mean hand-partitioning hunks and asserting that an
+intermediate tree builds. §13.1's table and the eleven ledger rows carry the
+per-knob provenance instead.
+
+### 13.0 Repro
+
+```bash
+T=/nfs/data/1/xqian/toolkit-dev/toolkit
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+S=<session scratch>/knob77r4
+
+# ledger rows -- GENERATED, and BEFORE the deletion commit (the script reads
+# the knob out of the working tree); --remove is filled in afterwards
+cd $SX && scripts/cfg/ledger_line.py --verdict ADVERSE teb_chain_topology \
+    teb_r3_turn teb_r3_hot mvga_ac_veto_radius other_seg_keep_isolated_min_nnf \
+    pi0_nv_allow_type2 pi0_mu_shower_hypothesis
+         scripts/cfg/ledger_line.py --verdict INERT  pi0_nv_retry_paired \
+    pi0_reseat_start_assoc pi0_mu_shower_max_len pi0_mu_shower_hyp_min_len
+
+# knob surface, by §11.0's own commands (different regexes do not compose)
+F=cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+awk '/^function\(/,/^\)/' $T/$F | grep -oE '^\s+[a-z_][a-z0-9_]*\s*=' \
+  | tr -d ' =' | sort -u | wc -l                                        # 495 -> 484
+grep -cE '^\s*pattern_algos\.m_[a-z0-9_]+\s*=' $T/clus/src/TaggerCheckNeutrino.cxx   # 381 -> 370
+grep -c CHECK $T/clus/test/doctest_clus_knob_defaults.cxx                           # 507 -> 496
+
+# build -- and the trap that cost two failed builds, see §13.3
+cd $T && ./wcb install --notests -p --targets=WireCellClus && wcbuild
+./build/clus/wcdoctest-clus                                    # 234/234, 2599/2599
+
+# compiled-config proof: identical to the PRE-round tree, all 21 consumers
+cd $SX && scripts/cfg/compile_prjob_cfg.sh $T/cfg $S/cfg-rm11.json
+cmp $S/../knob77r3/cfg-rm3.json $S/cfg-rm11.json; echo rc=$?          # 0, 266930 B
+scripts/cfg/compile_consumers.sh $T/cfg $S/cons-rm11
+scripts/cfg/cmp_consumers.sh $S/../knob77r3/cons-rm3 $S/cons-rm11      # 21/21
+
+# item 1: the operating-point reference, and BOTH its controls
+scripts/cfg/prod_cfg_gate.py                                   # PASS  (rc 0)
+cp -a $T/cfg $S/cfg-flipped && sed -i 's/pi0_attached_partner_min_mev = 29/pi0_attached_partner_min_mev = 28/' \
+    $S/cfg-flipped/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
+scripts/cfg/prod_cfg_gate.py --cfg $S/cfg-flipped               # rc 1, NAMES the knob
+
+# the 308-event gate: last round's rm3 arms are this round's base.  The
+# manifests are COMMITTED as of this round (ref/prod-2026-09-01/gate308-*.txt)
+# -- two rounds defined "the standard 308" by files that lived only in a
+# session scratch dir, which is not a manifest anyone can re-run.
+LD_LIBRARY_PATH=$S/lib-rm11:$LD_LIBRARY_PATH PR_JOBS=16 \
+  ./run_pr_chain_batch.sh work-<s>-grp0825 work-77r4-rm11-<s> data $(cat ref/prod-2026-09-01/gate308-<s>.txt)
+python3 scripts/pr85_hash_gate.py work-77r3-rm3-<s> work-77r4-rm11-<s>; echo rc=$?
+python3 scripts/pr94_root_gate.py work-77r3-rm3-<s> work-77r4-rm11-<s>; echo rc=$?
+```
+
+### 13.1 The eleven, and the verdict each rests on
+
+Every verdict below **predates this round** — §12.7's own rule, that a deletion
+should not rest on the judgement of the round doing the deleting. The
+`one_line_why` column of each ledger row is generated from that source, not
+typed (§13.6).
+
+| knob | source | verdict it rests on | class |
+|---|---|---|---|
+| `teb_chain_topology` (D1) | pr/90 §10.6 | D1+D3 live A/B **net NEGATIVE**: 19 ADVERSE vs 6 toward on harv3 labels, two cosmict flips | ADVERSE |
+| `teb_r3_turn`, `teb_r3_hot` (D3) | pr/90 §10.6 | same arm; and D1 was their only entry point | ADVERSE |
+| `mvga_ac_veto_radius` | pr/99 r2, cfg:2592 | 0.2 cm measured **ADVERSE** — kills the 349945 design case, re-confirming pr/86 Stage A's deliberate 1.0 cm relax | ADVERSE |
+| `other_seg_keep_isolated_min_nnf` | pr/102 §8.3 | validation **FAILED** at 4 (nueCC48 nue ledger −4/+1); a named nue loss at 8 (389538 4.3 → −15) | ADVERSE |
+| `pi0_nv_allow_type2` (K4) | pr/132 §6.3, §9.8, §15.2 | "measured HARMFUL as configured"; re-opened in round 8 and still **ZERO NC rescues**, its only new acceptances the ADVERSE vertex-draggers | ADVERSE |
+| `pi0_nv_retry_paired` (K14) | pr/132 §11.2 | mechanism proven, ledger **0 rescues** — path 1 consumes the gammas first, an ordering lock the retry cannot reach | INERT |
+| `pi0_reseat_start_assoc` (K15) | pr/132 §11.3 | 22 re-seats fire, census **identical**, 0 movers, no hand-π⁰ effect | INERT |
+| `pi0_mu_shower_hypothesis` (M1) | pr/141 §9.1 | **REGRESSION**: census 35 → 34, breaking 166870 — K20's own justifying event | ADVERSE |
+| `pi0_mu_shower_max_len` (M2) | pr/141 §9.2 | **inert**: the compiled-config proof shows 80 arrived and the object is still refused; `seg_dir_weak`, not length, is the gate | INERT |
+| `pi0_mu_shower_hyp_min_len` (M3) | pr/141 §9.3 | **moot** while M2 admits nothing | INERT |
+
+Two of these are not simple booleans and are treated in §13.3.
+
+**Not touched, and it needs saying**: `pi0_nv_max_prongs` (K5) is quoted with K4
+in every pr/132 verdict line ("K4/K5 stay OFF"), yet it stays. K5 is the
+without-vertex GATE1 prong cap — a **tuning parameter of a live pool** whose
+`null` selects the legacy constant 2, not a feature gate. §11.2's discriminator
+applies: the parent is on, so the parameter is live surface, not debt.
+
+### 13.2 Item 2 — the seven §11.2 left unclassified: four go, three stay
+
+§11.2 flagged seven added-`false` knobs whose cfg comment states a *default*,
+not a verdict, and refused to classify them unread. Each has now been read
+against its originating doc. Four are in §13.1. The other three stay, and the
+reason is **not** "the doc says do not delete" — the owner has just overruled
+exactly that argument for `teb_chain_topology`. The reason is that none of the
+three is **negative**, which is the licence this round was given:
+
+| knob | doc verdict | why that is not "negative" |
+|---|---|---|
+| `shower_split_shed_shared` | pr/139 §20: *"mechanism exact, census cost 1; OWNER'S CALL"* | It **works**. The one π⁰ it costs (`partial` → `none`) is the price of a *correct* cut that divides a hand γ across two reco objects. That is an open owner adjudication, not a measured negative. |
+| `shower_split_skip_shared` | pr/139 §22.3: do not flip — 4 of 32 confirmed cuts for +0.015 purity | Negative **on its own merits**, but it is the enabler: the mirror line is `[if shower_split && shower_split_skip_shared && shower_split_shed_shared]`, and `shed_shared` is inert without it. Deleting it silently deletes the not-negative option above. That coupling, not the prose, is why it stays. |
+| `shower_split_rehome` (+ `_gap`) | pr/139 §12: CLOSED — do not flip | Closed because the **instrument cannot grade a re-home** (`q_miss`/`q_extra` buy sensitivity to cuts, not merges), with census 35 in both arms and 0 ADVERSE. Neutral-and-ungradeable. Deleting it would be deleting on absence of evidence. |
+
+If the owner wants these gone too, the same recipe applies and the pool is
+already named — but it should be an explicit call on an open adjudication, not
+this round's inference.
+
+### 13.3 The three that were not one-line deletions
+
+Eight of the eleven are a `get(config, …)`, a `default_configuration()` echo, a
+`pattern_algos` mirror, a member, a TLA, a mirror line and a `CHECK`. Three
+were not, and each carried a way to be subtly wrong.
+
+**`other_seg_keep_isolated_min_nnf` — one disjunct out of a LIVE predicate.**
+Its sibling `other_seg_keep_isolated_len_admit = 30` is PRODUCTION ON, in the
+same predicate. The removal drops the whole `min_nnf` disjunct line and the
+`nnf`/`min_nnf` parameters with it; the surviving `len_admit` disjunct is
+**textually unchanged**, character for character, not re-derived. The admit
+sentinel's `reason={}` ternary collapses to the literal `reason=len`, since
+`len` is now the only reason there is. `PRSegmentFunctions.h`'s declaration
+loses two parameters, so `doctest_other_seg_keep_isolated.cxx` loses one
+`TEST_CASE` (the nnf disjunct's) and eleven calls shed their `0, 0,` arguments
+— deliberately visible in the diff, per doc 70's rule.
+
+**`mvga_ac_veto_radius` — a ternary's dead arm.** `good_r` was
+`(m_mvga_ac_veto_radius > 0) ? m_mvga_ac_veto_radius : <R1 straighten rule>`;
+it collapses to the R1 rule, again textually as production evaluated it.
+
+**`teb_chain_topology` + `teb_r3_*` — a whole scan route.** D1 was the only
+entry point to **route R3**: the admission block set `admitted_chain`, and that
+flag was the only thing that ever called `segment_chain_turn_break_scan`. So
+the deletion is 49 lines of admission (back to the legacy
+`if (n_long != 1) return false;`), plus R3's 94-line implementation in
+`PRSegmentFunctions.cxx`, plus `TwoEndBreakOptions::r3_turn`/`r3_hot` and
+`TwoEndBreakResult::route3` in the shared header, plus the two fields R3
+contributed to the `break_two_end_dqdx:` debug line. §12.2's precedent governs:
+that round deleted `flank_absorb_orphans`, an 83-line knob-exclusive function,
+for the same reason. Checked before cutting: the two scripts that parse that
+log line (`scripts/analysis/pr48/{mover_census,teb_case_exam}.py`) match on
+`seg len [^\n]*found=true`, which spans the removed fields and still matches.
+
+**And the build trap, which cost two failed builds.** `wcbuild` compiles
+`libWireCellClus.so` into `build/`, but `wcdoctest-clus` links against
+`local/lib` — so a changed **signature** (here `other_seg_keep_isolated_ok`
+losing two parameters) fails to link with `undefined reference` to the symbol
+that the just-built `build/clus/libWireCellClus.so` visibly contains. This is
+M1 wearing a new face: it is not that the library is stale, it is that the
+*test* links the stale copy. Re-running does not help. The fix is one command
+first: `./wcb install --notests -p --targets=WireCellClus`, then `wcbuild`.
+Worth knowing, because the failure looks like a code error and is not.
+
+### 13.4 Item 1 — the operating point is now a committed reference
+
+The gap, measured in §12.4: **315 of the SBND PR job's TLAs carry a production
+value and no test guards one of them.** The knob-defaults doctest says so in
+its own header — *"A green run here does NOT mean production is on the legacy
+path"* — and the compiled-config proof compares two freshly compiled trees, so
+it catches a change made *during* a round and nothing between rounds. Nothing
+answered *is the operating point today still the one that was validated?*
+doc pr/127 is what that costs: a shipped fix died silently for ten days.
+
+New: `sbnd_xin/ref/prod-2026-09-01/`, following the `sbnd/ref-2025-11-11/`
+precedent, plus `scripts/cfg/prod_cfg_gate.py`.
+
+- `consumers.sha256` — 21 artifacts, one line each: **detects** drift.
+- `prod_prjob.json` — the SBND PR job in full, 266,930 B: lets a drift be
+  **named**. Detection alone would say "something moved"; the round after next
+  needs to know *which knob*.
+- `README.md` — what it pins, the toolkit commit, and the refresh procedure.
+
+**Both controls run, because a gate that cannot fail proves nothing** (doc
+pr/129's lesson, and doc 85 §"same-source dump fields"):
+
+| control | result |
+|---|---|
+| positive — the tree as shipped this round | `PASS -- the compiled operating point matches prod-2026-09-01`, rc 0, 21 artifacts |
+| negative — a **copy** of the cfg tree with `pi0_attached_partner_min_mev` 29 → 28 | rc 1, `DRIFT: prod_prjob.json`, and by name: `CHANGED [21].data.pi0_attached_partner_min_mev : 29 -> 28` |
+
+**Deliberately not wired into any build, runner or hook.** It is a tripwire the
+owner fires on purpose; a stale reference breaking someone's build is worse
+than no reference. When a flip is intended, `--refresh` adopts the current tree
+and the round doc records which knob moved and on whose word.
+
+### 13.5 What the gate says, and what it does not
+
+Every one of the eleven is OFF at the production operating point, so the
+308-event gate would have PASSed whichever OFF knobs were deleted. The PASS is
+real and worth its 1.7 core-hours: it is what would have caught a botched
+`other_seg` predicate or a mis-collapsed `good_r` ternary — the two edits in
+§13.3 that could silently have changed a live path. **It validates the
+collapse, not the decision.** §12.3 is the standing proof of that distinction:
+deleting `shower_samevtx_track_absorb` would have PASSed the same gate, and it
+would have been wrong. The decision rests on §13.1's verdict column, which is
+evidence from other rounds, and on §13.2's refusal to extend it.
+
+### 13.6 Verification
+
+- **Compiled-config, Gate 1** — SBND PR job at the production operating point,
+  `6f30c079` cfg tree vs this round's: **byte-identical**, 266,930 B each
+  (`cmp` rc 0). The removed keys were suppressed when off, so no compiled JSON
+  ever carried them.
+- **Compiled-config, Gate 1b** — every live consumer via
+  `compile_consumers.sh` + `cmp_consumers.sh`: **21/21 identical, 0 differ**,
+  uBooNE MABC and the PDHD/PDVD + sim-check set included. No other detector's
+  config sets any of the eleven (checked, not inherited: they appear in
+  exactly six files each, and in `cfg/` only in the SBND PR job).
+- **Unit tests** — `./build/clus/wcdoctest-clus`: **234/234 cases,
+  2599/2599 assertions, 0 failed**. Down from 235/2627: one `TEST_CASE` (the
+  nnf disjunct's, §13.3) and 28 assertions — 11 `CHECK_KNOB` × 2 plus the six
+  nnf `CHECK`s — dropped deliberately, so the removal shows in the diff.
+- **Freshness proof (M1)** — `local/lib/libWireCellClus.so` 2026-09-01
+  11:01:52 vs the newest source edit 11:00:53; base md5 `ba7324ac…` →
+  `8c083812…`, so the gate is not comparing a binary to itself.
+- **Binary pin** — the arm ran under `LD_LIBRARY_PATH=$S/lib-rm11:…`
+  (prepended: this tree resolves `toolkit/build/<pkg>` before `local/lib`).
+- **Base arm reused, not re-run.** `work-77r3-rm3-*` was produced by exactly
+  this round's starting binary, and `local/lib` still carried its md5
+  `ba7324ac…` unchanged at round start — so it is a valid base and half the
+  gate's compute was not spent again.
+- **Byte-identity gate**, §9's standard manifest — **308 events** = 241 mcp1k +
+  48 nueCC48 + 19 NCπ⁰, `PR_JOBS=16`, manifests now committed at
+  `ref/prod-2026-09-01/gate308-{mcp1k,nuecc48,ncpi0}.txt` (§12.8 recorded the
+  241-event derivation in prose only, and the files lived in a session scratch
+  dir — a manifest nobody else can read is not a manifest):
+
+  | sample | events | `pr85_hash_gate.py` | `pr94_root_gate.py` | sorted `nusel-table.tsv` |
+  |---|---:|---|---|---|
+  | mcp1k | 241 | **PASS** 482 archives | **PASS** 241 identical | 0 lines (2803 rows) |
+  | nueCC48 | 48 | **PASS** 96 archives | **PASS** 48 identical | 0 lines |
+  | NCpi0 | 19 | **PASS** 38 archives | **PASS** 19 identical | 0 lines |
+  | **total** | **308** | **616 byte-identical, 0 unpaired** | **308 identical, 0 differing** | **0** |
+
+- **The operating-point gate's own two controls**: §13.4's table.
+- **No script and no dump reads a removed key.** `sbnd_xin/scripts/`,
+  `qlport/scripts/` and `abtest/` mention none of the eleven; a production
+  calib dump (`work-ncpi0-prod0901/pr_evt37112/calib-pr-evt37112.json`) carries
+  0 occurrences of each, against a control key that is present. §9 had to
+  accept one such consequence knowingly; this round has none.
+- **Runner** — eight `SBND_*` env passthroughs removed from
+  `run_pr_chain_batch.sh` (`SBND_TEB_CHAIN_TOPOLOGY`, `SBND_TEB_R3_TURN`,
+  `SBND_TEB_R3_HOT`, `SBND_MVGA_AC_VETO_RADIUS`, `SBND_OSEG_MIN_NNF`,
+  `SBND_PI0_NV_ALLOW_TYPE2`, `SBND_PI0_NV_RETRY_PAIRED`,
+  `SBND_PI0_RESEAT_START`); their PRODUCTION-ON siblings
+  (`SBND_TEB_BRAGG_VETO_TURN`, `SBND_OSEG_LEN_ADMIT`) stay. `bash -n` rc 0.
+- **Not run, and why** — no new full-3067 arm: this round changes no compiled
+  config and no reachable code, and the 308-event gate plus the 21-way
+  compiled-config identity bound it more tightly than a re-run would.
+
+**Ledger** — eleven rows appended to `docs/77_knob-ledger.tsv`, **generated**
+by `scripts/cfg/ledger_line.py` before the deletion commit, never hand-typed
+(§6, Trap 1). The script gained a three-tier `one_line_why` resolver this
+round, because §11.2's finding has a consequence for the ledger too: a cfg
+comment reading only *"C++ default false"* states a default, not a verdict, so
+the generator now falls through to the knob's own stanza comment (filtered to
+sentences naming **this** knob — the `other_seg` and `teb` blocks each cover
+one knob that is going and one that is staying) and then to the originating
+doc, which refers to knobs by campaign label (`K4`, `M1`) as often as by name.
+`verdict_class` follows round 1's vocabulary: `ADVERSE` where something moved
+the wrong way, `INERT` where nothing moved. The ledger now carries **34** rows.
+One older row was amended rather than added to: round 1's `teb_second_max`
+recorded itself as *"superseded by `teb_chain_topology`"*, and that superseder
+is now gone too, so the row says so — a ledger that points at a knob no longer
+in the tree is worse than one hand-touched field.
+
+### 13.7 The surface after four rounds
+
+| measure | pre-campaign `8d93260d` | post-campaign `ddce7430` | round 3 `6f30c079` | round 4 |
+|---|---:|---:|---:|---:|
+| job TLAs | 377 | 501 | 495 | **484** |
+| `pattern_algos` mirror lines | 285 | 387 | 381 | **370** |
+| `doctest_clus_knob_defaults` CHECKs | 400 | 513 | 507 | **496** |
+| `tcn_knobs` bag entries | 288 | 408 | 402 | **391** |
+
+Every one of the 17 TLAs retired across rounds 3 and 4 came off the **OFF**
+side: ON is still **315**, OFF 186 → 180 → **169**. That is the shape a
+retirement round should have — the production operating point is untouched by
+construction, which is also why `tag_coverage.py` still reports **46 tagged /
+269 untagged, 14.6 %** of ON TLAs. §12.4's blind spot is unchanged and will
+stay unchanged until ON flips start shipping a `prNN <tag>:` line.
+
+**What is left, in the order I would take it.** (1) The three `shower_split_*`
+of §13.2, if the owner wants to settle those adjudications. (2) Nothing else
+mechanical: of the 484 TLAs, 315 are the operating point and 151 are `null`
+tuning parameters of live features.  The `false` feature-gate population is now
+**18**, and it decomposes into things that are meant to stay: **4** are §12.1's
+re-parked kind-3 set (`dqdx_fit_keep_all_points`, `dl_vtx_cloud_no_exclusion`,
+`main_vertex_swap_apply`, `fit_blob_coverage_defer`), **3** are §13.2's
+`shower_split_*`, **6** are diagnostics and probes (§4 kind 1) and **5** are
+mode or detector switches (§4 kind 4).  §12.7's documented pool is empty. (3) §5b2, the mirror block (370
+lines), remains §8 decision #3 and the owner's call under M10 — and it is a C++
+refactor that relocates `* units::cm` conversions inside a shared production
+file, not configuration consolidation, so it does not belong in a round like
+this one.
+
+§7 **Phase 2 status: DONE**, and §12.7's pool is now empty. §7 Phase 4 remains
+**CLOSED** (Reading A, §11.5); §5b2 and §8 decision #3 remain open. The one new
+standing instrument is §13.4's operating-point reference: refresh it on every
+intended flip, in the same commit as the flip.

@@ -280,7 +280,8 @@ fi
 # omits the TLA (jsonnet default null => C++ default 0 = legacy =>
 # byte-identical).  Bool knobs: tri-state (unset = cfg default, 1 = force
 # on, 0 = force off).
-[ -n "${SBND_MVGA_AC_VETO_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_ac_veto_radius=${SBND_MVGA_AC_VETO_RADIUS}")
+# doc 77 round 4 (2026-09-01): mvga_ac_veto_radius removed -- 0.2 cm measured
+# ADVERSE.  SBND_MVGA_AC_VETO_RADIUS no longer wired.
 [ -n "${SBND_MVGA_AC_CHORD_MAX:-}" ]   && CATH_TLA+=(--tla-code "mvga_ac_chord_max=${SBND_MVGA_AC_CHORD_MAX}")
 # doc pr/103: mvga op0 pass-through split radius (cm) + miss tolerance (cm).  EMPTY = no TLA = the job default (off).
 [ -n "${SBND_MVGA_PASSTHRU:-}" ]       && CATH_TLA+=(--tla-code "mvga_passthru=${SBND_MVGA_PASSTHRU}")
@@ -1167,24 +1168,12 @@ unset _pr48 _env _key _val
 if [ -n "${SBND_TEB_TURN_MIN_ARM_FRAC:-}" ]; then
     CATH_TLA+=(--tla-code "teb_turn_min_arm_frac=${SBND_TEB_TURN_MIN_ARM_FRAC}")
 fi
-# doc pr/90 round 4 (sec 9.5 D1/D3/D4): chain-topology gate admission
-# (boolean TLA true/false), route R3 local-turn threshold (deg) + activity
-# floor (x mip median), and the R2 bragg-veto turn (deg).  Unset/empty
-# omits (jsonnet default false/null => C++ default = legacy =>
-# byte-identical).
-#   SBND_TEB_CHAIN_TOPOLOGY (true/false)
-#   SBND_TEB_R3_TURN
-#   SBND_TEB_R3_HOT
+# doc pr/90 round 4 (sec 9.5 D4): the R2 bragg-veto turn (deg).  Unset/empty
+# omits (jsonnet default null => C++ default = legacy => byte-identical).
 #   SBND_TEB_BRAGG_VETO_TURN
-if [ -n "${SBND_TEB_CHAIN_TOPOLOGY:-}" ]; then
-    CATH_TLA+=(--tla-code "teb_chain_topology=${SBND_TEB_CHAIN_TOPOLOGY}")
-fi
-if [ -n "${SBND_TEB_R3_TURN:-}" ]; then
-    CATH_TLA+=(--tla-code "teb_r3_turn=${SBND_TEB_R3_TURN}")
-fi
-if [ -n "${SBND_TEB_R3_HOT:-}" ]; then
-    CATH_TLA+=(--tla-code "teb_r3_hot=${SBND_TEB_R3_HOT}")
-fi
+# doc 77 round 4 (2026-09-01): D1 (teb_chain_topology) and D3 (teb_r3_turn /
+# teb_r3_hot) removed -- net NEGATIVE, 19 ADVERSE vs 6 toward (pr/90 sec 10.6).
+# SBND_TEB_CHAIN_TOPOLOGY / SBND_TEB_R3_TURN / SBND_TEB_R3_HOT no longer wired.
 if [ -n "${SBND_TEB_BRAGG_VETO_TURN:-}" ]; then
     CATH_TLA+=(--tla-code "teb_bragg_veto_turn=${SBND_TEB_BRAGG_VETO_TURN}")
 fi
@@ -1503,14 +1492,12 @@ fi
 if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
 fi
-# doc pr/102 P1: OR-disjuncts on the pr/54 keep -- min_nnf (integer
-# not-faked-terminal floor) admits a well-measured candidate below the
-# 25-terminal floor; len_admit (cm) admits any candidate at least that
-# long.  EMPTY = no TLA = the C++ defaults 0 = off, byte-identical.
-#   SBND_OSEG_MIN_NNF  SBND_OSEG_LEN_ADMIT (cm)
-if [ -n "${SBND_OSEG_MIN_NNF:-}" ]; then
-    CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_nnf=${SBND_OSEG_MIN_NNF}")
-fi
+# doc pr/102 P1: the OR-disjunct on the pr/54 keep -- len_admit (cm) admits
+# any candidate at least that long.  EMPTY = no TLA = the C++ default 0 = off,
+# byte-identical.
+#   SBND_OSEG_LEN_ADMIT (cm)
+# doc 77 round 4 (2026-09-01): P1's min_nnf disjunct removed -- validation
+# FAILED at 4, named nue loss at 8.  SBND_OSEG_MIN_NNF no longer wired.
 if [ -n "${SBND_OSEG_LEN_ADMIT:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_len_admit=${SBND_OSEG_LEN_ADMIT}")
 fi
@@ -1689,7 +1676,6 @@ fi
 [ -n "${SBND_PI0_MASS_OFFSET:-}" ] && CATH_TLA+=(--tla-code "pi0_mass_offset=${SBND_PI0_MASS_OFFSET}")
 [ -n "${SBND_PI0_ASSOC_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_assoc_angle_deg=${SBND_PI0_ASSOC_ANGLE}")
 [ -n "${SBND_PI0_ATTACH_MIN_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_attached_partner_min_mev=${SBND_PI0_ATTACH_MIN_MEV}")
-[ -n "${SBND_PI0_NV_ALLOW_TYPE2:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_allow_type2=$([ "${SBND_PI0_NV_ALLOW_TYPE2}" = 0 ] && echo false || echo true)")
 [ -n "${SBND_PI0_NV_MAX_PRONGS:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_max_prongs=${SBND_PI0_NV_MAX_PRONGS}")
 # doc pr/132 round 2: the rescue family + path-2 quality gate.  EMPTY = no TLA = job default.
 [ -n "${SBND_PI0_READMIT_RETYPED:-}" ] && CATH_TLA+=(--tla-code "pi0_readmit_retyped=$([ "${SBND_PI0_READMIT_RETYPED}" = 0 ] && echo false || echo true)")
@@ -1699,10 +1685,11 @@ fi
 [ -n "${SBND_PI0_NV_MASS_WIN:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_mass_window_mev=${SBND_PI0_NV_MASS_WIN}")
 # doc pr/132 round 3: virtual collinear merge of detached fragments at pairing time.  EMPTY = no TLA = job default 0 = off.
 [ -n "${SBND_PI0_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "pi0_collinear_merge_deg=${SBND_PI0_COLLINEAR_DEG}")
-# doc pr/132 round 4: NC vertex-in-shower family + start re-seat.  EMPTY = no TLA = job default off.
+# doc pr/132 round 4: the NC vertex-in-shower partner floor.  EMPTY = no TLA = job default off.
+# doc 77 round 4 (2026-09-01): K4 (pi0_nv_allow_type2), K14 (pi0_nv_retry_paired)
+# and K15 (pi0_reseat_start_assoc) removed -- ZERO NC rescues over two rounds,
+# K15 moved nothing.  Their SBND_PI0_* envs are no longer wired.
 [ -n "${SBND_PI0_NV_PARTNER_MEV:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_partner_min_mev=${SBND_PI0_NV_PARTNER_MEV}")
-[ -n "${SBND_PI0_NV_RETRY_PAIRED:-}" ] && CATH_TLA+=(--tla-code "pi0_nv_retry_paired=$([ "${SBND_PI0_NV_RETRY_PAIRED}" = 0 ] && echo false || echo true)")
-[ -n "${SBND_PI0_RESEAT_START:-}" ] && CATH_TLA+=(--tla-code "pi0_reseat_start_assoc=$([ "${SBND_PI0_RESEAT_START}" = 0 ] && echo false || echo true)")
 # doc pr/132 round 5: build-time EM collinear-fragment merge.  EMPTY = no TLA = job default off.
 [ -n "${SBND_EM_COLLINEAR_DEG:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_deg=${SBND_EM_COLLINEAR_DEG}")
 [ -n "${SBND_EM_COLLINEAR_DIS:-}" ] && CATH_TLA+=(--tla-code "shower_em_collinear_dis_cm=${SBND_EM_COLLINEAR_DIS}")
