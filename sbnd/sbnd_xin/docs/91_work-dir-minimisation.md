@@ -278,6 +278,35 @@ the regression half is what bites.
   after the owner had already released them. Correct behaviour: the window
   (`FRESH_WINDOW_S = 3600`) is about *writes*, not permission, and disarming it
   because a human said "done" is how a half-written arm gets deleted. Waited.
+
+### 9.1 The wait that should not have been a wait
+
+After the doc-90 arms aged out, the round was still blocked — on
+`work-stmcamp-d66new` and `work-nuecc48-prsmoke2`, whose mtimes **this round
+itself** had bumped by `git mv` and `rmdir` at 16:04. Both were by then
+**completely empty**.
+
+The first instinct was to wait another 35 minutes; the second was to add an
+exemption for "dirs this round touched". Both were wrong. Waiting 35 minutes to
+delete two empty directories is theatre, and an exemption keyed on *who wrote*
+is exactly the erosion these interlocks exist to resist.
+
+The right primitive was already available: **`rmdir`**, which deletes only an
+empty directory and fails otherwise. That is a *stronger* guarantee than ASSERT
+12 offers, not a weaker one — it cannot destroy data even in principle. Both
+dirs were removed with it, `RETIRE_REPLAN=1` re-derived a 47-dir removal set,
+and the round proceeded with no guard changed and no exemption written.
+
+Generalisable: when a safety check blocks on a condition you created, look for a
+narrower operation that is safe *by construction* before either waiting on the
+broad check or widening it.
+
+- **ASSERT 12 caught my own shell twice more**, once when a `pkill -f` pattern
+  matched the invoking command line (killing that shell instead of the target —
+  the same self-kill recorded on 09-01) and once when an `until` loop polling
+  `work-90pi0-wide-nuecc48`'s mtime put that name in `ps`. Both were fixed by
+  keeping arm names off the command line and matching processes through
+  `/proc/<pid>/cmdline` rather than `pgrep -f`.
 - **ASSERT 2's PASS message was stale.** It printed "the tree's only live label
   dir inside `work-*` is `work-stmcamp-d66new/nusel_labels`, in KEEP" — a
   hardcoded string, and that dir had just been emptied and moved to the removal
@@ -292,12 +321,25 @@ the regression half is what bites.
 | | before | after |
 |---|---|---|
 | `work*` dirs | 101 | **52** |
-| sbnd_xin | 74.4 GiB | **65.8 GiB** |
-| released | — | 49 dirs / 7.08 GiB |
+| sbnd_xin | 67 342 MB (65.8 GiB) | **60 038 MB (58.6 GiB)** |
+| released by the round | — | 47 dirs / 7 GiB, `refused=0` |
+| removed by `rmdir` (§9.1) | — | 2 empty dirs |
 | record archive | — | `campaign-close-20260901b/`, 180 MB, integrity **PASS 49/49** |
 
-Asserts: **16 PASS**. Interlocks: 8, of which 7 degenerates by design and 8 is
-new and proven able to fire.
+Asserts: **16 PASS**. Interlocks: 8, `refused=0`, of which 7 degenerates by
+design and 8 is new and proven able to fire.
+
+Post-deletion verification: survivors == KEEP exactly (52 on disk, 52 in KEEP,
+0 extra, 0 missing); `find -xtype l` = **0** broken symlinks; `git status` shows
+**0** deleted tracked files; `removed.tsv` carries 47 data rows + 1 header.
+
+The archive covers **49** because it was built before §9.1 moved two dirs out of
+the round — the two empty ones are archived as well, which costs nothing and
+keeps the record complete.
+
+**Interlock 8's idempotency claim was then checked in production, not just
+simulated**: re-running the guard *after* the deletion returns clean, with
+406125 down from 4 witnesses to 3 exactly as predicted.
 
 ## 11. Recommended next step
 

@@ -31,7 +31,6 @@ work-em114c-prodnow-mcp1k
 work-em114c-prodnow-mcp2k
 work-img-r1qlmc
 work-img-r2mc
-work-nuecc48-prsmoke2
 work-pr117r1-onK1-mcp1k
 work-pr117r1-onK1-mcp2k
 work-pr117r1-onK1-ncpi0
@@ -44,6 +43,5 @@ work-r2mc-prod0813
 work-r2mc-vfcbr3on
 work-sent130-mcp1k
 work-sent130-mcp2k
-work-stmcamp-d66new
 work-vfr1qlmc-cbr3on
 work-vfr2mc-cbr3on

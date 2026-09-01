@@ -22,7 +22,9 @@ python3 scripts/retire/plan_20260901b.py                  # 16 asserts, "OVERALL
 RETIRE_JOBS=32 python3 scripts/retire/archive_records_20260901b.py   # integrity PASS 49/49
 ./scripts/retire/retire_20260901b.sh A                    # DRY RUN -- check dirs=/bytes= vs the plan
 RETIRE_REPLAN=1 python3 scripts/retire/plan_20260901b.py  # re-stamp planned_at (interlock 6)
-CONFIRM=yes ./scripts/retire/retire_20260901b.sh A        # 49 dirs
+CONFIRM=yes ./scripts/retire/retire_20260901b.sh A        # 47 dirs, refused=0
+#   (2 more were empty shells left by the git mv above and went by plain rmdir,
+#    which refuses a non-empty dir -- see doc 91 sec 9.1)
 #
 # the 2026-09-01 round (doc 89): the CLOSED pr/136-142 campaigns + doc 77 r3/r4,
 # and production REBASED onto the pinned operating point.  150G -> 66G.
@@ -257,7 +259,7 @@ repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
 
-## RETIREMENT ROUND 2026-09-01b (doc 91) — count-driven: 101 → 52 work dirs, 74.4G → 65.8G
+## RETIREMENT ROUND 2026-09-01b (doc 91) — count-driven: 101 → 52 work dirs, 65.8G → 58.6G
 
 Full write-up: `docs/91_work-dir-minimisation.md`. The metric was **directory
 count**, not bytes — the owner's complaint was legibility, not disk. 7.08 GiB
