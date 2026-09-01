@@ -290,7 +290,18 @@ subdirectory that no longer existed. `work-stmcamp-d66new` held the tree's ONLY
 nusel label store (→ `./nusel_labels/d66flip/`, 22 tracked files, `git mv`) and
 its comparison partner had been retired rounds earlier.
 
-**OPEN FINDING — the reason the sentinel arms were not collapsed to zero.**
+**OWNER VERDICT 2026-09-01, after scanning the production Bee set:** *"The scan
+of the 6 events are good for the production batch."* So the six FAILs are a
+STALE SENTINEL REGISTRY, not a physics regression — the operating point moved
+under the thresholds (0.86 EM scale, doc 77 r3/r4's 17 retired TLAs, the master
+merge), exactly the RE-BASELINE WARNING `pr127_sentinels.py`'s own header
+carries. **Top next action: re-baseline the suite against `work-*-prod0901b`**;
+until then it reports 6 FAIL on a good batch and will be ignored, which
+re-creates the doc pr/127 exposure. Once re-baselined, the 16 witness arms
+(`pr134-f086-*`, `pr130r1-probe*`, `pr125r1-flipK5*`) become releasable —
+52 → ~36. Retire interlock 8 by re-baselining, never by deleting the evidence.
+
+**The finding as measured, before the scan closed it.**
 `./scripts/pr127_sentinels.py --arms 'work-*-prod0901b'` is **27 PASS, 6 FAIL**.
 Five are regressions with a surviving witness arm; 393505 is red everywhere
 (a 0.1 MeV Enu miss, i.e. drift). For 406125 the knob is still ON and the C++

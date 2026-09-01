@@ -1,8 +1,9 @@
 # doc 91 — the count-driven retire round, and the sentinel regression it found
 
-**Status: round executed, 101 → 52 work dirs. One finding is OPEN and is the
-recommended next step (§7): three shipped, owner-approved fixes no longer fire
-in production.**
+**Status: round executed, 101 → 52 work dirs. The sentinel finding in §7 is
+CLOSED by owner hand scan (§7.4): the production reconstruction of all six
+events is good, so the six FAILs are a stale sentinel registry, not a physics
+regression. The registry now needs re-baselining — see §11.**
 
 ## Repro
 
@@ -132,7 +133,7 @@ The **negative** controls (`work-sent130neg*`, 6 arms) stay. They are the only
 on-disk proof the registry *can* fail — the one property a green suite cannot
 demonstrate about itself.
 
-## 7. OPEN FINDING — three shipped fixes no longer fire in production
+## 7. The sentinel finding — RED against production, then CLOSED by hand scan
 
 Run against `work-*-prod0901b` the sentinel suite is **27 PASS, 6 FAIL**.
 
@@ -152,8 +153,9 @@ For 406125 the knob is still `shower_pass4_prune_gap2 = 25` in
 `NeutrinoShowerClustering.cxx:9702`. It simply no longer fires. That is the doc
 pr/127 failure mode — a shipped fix dying silently — recurring.
 
-**Not diagnosed here** (CLAUDE.md §5.7: report, do not tune). It is the
-recommended next step.
+**Not diagnosed here** (CLAUDE.md §5.7: report, do not tune) — and §7.4 shows
+that was the right call, because the diagnosis the numbers invited would have
+been wrong.
 
 ### 7.2 A methodological correction, and it changed the answer
 
@@ -223,7 +225,50 @@ at all** — the shower ate the backward stem, which is the guard-OFF signature
 the fix was shipped to prevent. The witness arm reproduces the documented
 guard-ON value exactly, 53 MeV.
 
-### 7.3 Why the next round is tractable
+### 7.4 OWNER VERDICT — the production batch is GOOD on all six
+
+Owner, 2026-09-01, after scanning the production Bee set (§7.3): *"The scan of
+the 6 events are good for the production batch."*
+
+**This inverts the reading of §7.1.** The six FAILs are not five regressions plus
+a drift; they are a **stale sentinel registry**. Each threshold was set between
+a measured pre-fix and post-fix value at the 2026-08-29 baseline, and the
+operating point has moved since — the 0.86 EM scale flip (doc pr/135), doc 77
+r3/r4's 17 retired TLAs, and the master merge all landed after. The suite is
+measuring distance from an old operating point, not correctness.
+
+Note this is exactly the failure `pr127_sentinels.py`'s own header warns about
+in its RE-BASELINE WARNING, arriving for the reason it predicted.
+
+**Three consequences, in order of urgency.**
+
+1. **The suite is now a dead safety net and must be re-baselined.** A registry
+   that reports 6 FAIL on a good batch will be ignored, and an *ignored* guard
+   is as useless as a silently-green one — the same failure doc pr/127 was
+   written about, arriving from the other side. Until it is re-baselined it
+   cannot detect the next real regression. This is now the top item in §11.
+
+2. **Interlock 8's obligation is discharged.** The witness arms —
+   `work-pr134-f086-*` (4), `work-pr130r1-probe98-*` (4),
+   `work-pr130r1-probe141-*` (2), `work-pr125r1-flipK5*` (6) — were kept by
+   this round *specifically* so an open regression could be adjudicated. The
+   owner has now adjudicated it by hand scan, which is a stronger instrument
+   than the arms were going to provide. Once the registry is re-baselined
+   against production and interlock 8 goes quiet on its own terms, those 16
+   arms become releasable: **52 → ~36** is available in a follow-up round.
+   Not done here — the guard should be retired by re-baselining, never by
+   deleting the evidence it points at.
+
+3. **One question the hand scan does not settle.** 406125's assertion is
+   `log_contains 'pr124 pass4_prune2:'` — it checks a **mechanism**, not an
+   outcome. The knob is ON and the code path does not log, so the branch is no
+   longer taken on that event. A good output means the branch is no longer
+   *needed* there, not that it is still running. When re-baselining, decide
+   deliberately whether mechanism assertions stay: they catch a dead code path
+   that an outcome assertion cannot see, which is the whole reason pr/127 added
+   `log_contains` in the first place.
+
+### 7.5 Why the next round is tractable
 
 406125 has a passing witness (`work-pr134-f086-mcp2k`) and a failing one
 (`work-mcp2k-prod0901b`) both on disk, same event, knob ON in both. That is a
@@ -343,16 +388,25 @@ simulated**: re-running the guard *after* the deletion returns clean, with
 
 ## 11. Recommended next step
 
-**Diagnose the 406125 regression** (§7.3). It is the most tractable of the five:
-one event, knob ON, log line present in the source, a passing witness arm and a
-failing production arm both on disk. Whatever killed it is a firing-condition
-change between the pr/134 epoch and toolkit `d52d818c`, and the same mechanism
-plausibly explains 47212 and 173819.
+**Re-baseline `scripts/pr127_sentinels.py` against `work-*-prod0901b`** (§7.4).
+The owner's scan makes production the reference, so every threshold should be
+re-measured there, with the pre-fix side re-measured too so each one still sits
+*between* the two and fails when the fix dies rather than when a number drifts.
+Until that lands the suite reports 6 FAIL on a good batch and will be ignored,
+which is the doc pr/127 exposure re-created.
 
-Then re-baseline the suite: 393505's window is missed by 0.1 MeV, which is
-drift, and `pr127_sentinels.py`'s own header says an energy-scale change (0.80 →
-0.86, doc pr/135) moves every absolute-MeV threshold. Re-baselining *before*
-diagnosing would hide the other five; do it after.
+Two decisions to take deliberately while doing it, not by default:
+
+- **Keep or drop the mechanism assertions** (§7.4 item 3). `log_contains` is the
+  only thing that can see a dead code path; an outcome assertion cannot.
+- **Then release the 16 witness arms** (§7.4 item 2), which drops the tree to
+  ~36 `work*` dirs. Retire interlock 8 by re-baselining, never by deleting the
+  evidence it protects.
+
+Deferred, unchanged from doc 89 §11: the `~/tmp` sweep
+(`scripts/retire/sweep_tmp_20260901.sh`, 18.7 GiB) still needs an owner-run
+`CONFIRM=yes`. The bokeh viewer that pinned `~/tmp/pr138_glcolor` was stopped
+this round on the owner's instruction, so that directory is now releasable too.
 
 Deferred, unchanged from doc 89 §11: the `~/tmp` sweep
 (`scripts/retire/sweep_tmp_20260901.sh`, 18.7 GiB) still needs an owner-run
