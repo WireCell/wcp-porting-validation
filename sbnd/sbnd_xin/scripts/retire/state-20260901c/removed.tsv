@@ -1,0 +1,24 @@
+# retire_20260901c.sh  tiers=A
+# started              2026-09-01T16:43:02-07:00
+# wcp-porting-img HEAD 37b5791c
+# toolkit HEAD         53fd9d2d
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  59G
+# df filesystem pre   603G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK5141-mcp1k	A	243	work-pr125r1-flipK5141-mcp1k.tar.gz	2026-08-29T11:03:28-07:00	0
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK5141-mcp2k	A	424	work-pr125r1-flipK5141-mcp2k.tar.gz	2026-08-29T11:04:40-07:00	0
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK598-mcp1k	A	59	work-pr125r1-flipK598-mcp1k.tar.gz	2026-08-29T10:58:24-07:00	0
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK598-mcp2k	A	109	work-pr125r1-flipK598-mcp2k.tar.gz	2026-08-29T10:59:32-07:00	0
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK598-ncpi0	A	105	work-pr125r1-flipK598-ncpi0.tar.gz	2026-08-29T11:00:03-07:00	0
+2026-09-01T16:43:02-07:00	work-pr125r1-flipK598-nuecc48	A	284	work-pr125r1-flipK598-nuecc48.tar.gz	2026-08-29T11:02:41-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg-mcp1k	A	12	work-sent130neg-mcp1k.tar.gz	2026-08-29T16:03:35-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg-mcp2k	A	10	work-sent130neg-mcp2k.tar.gz	2026-08-29T16:03:21-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg2-mcp1k	A	7	work-sent130neg2-mcp1k.tar.gz	2026-08-29T16:06:23-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg2-mcp2k	A	30	work-sent130neg2-mcp2k.tar.gz	2026-08-29T16:06:15-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg3-mcp2k	A	15	work-sent130neg3-mcp2k.tar.gz	2026-08-29T17:12:15-07:00	0
+2026-09-01T16:43:02-07:00	work-sent130neg4-mcp2k	A	4	work-sent130neg4-mcp2k.tar.gz	2026-08-29T17:12:22-07:00	0
+# finished             2026-09-01T16:43:04-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 58G
+# df filesystem post  604G avail

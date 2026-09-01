@@ -1,0 +1,35 @@
+  evt 405707: PR cluster_id -> img-global space (7 ids, 2366 ambiguous q fingerprints)
+event 405707 -> bee index 0: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 65289: PR cluster_id -> img-global space (17 ids, 228 ambiguous q fingerprints)
+event 65289 -> bee index 1: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 66712: PR cluster_id -> img-global space (5 ids, 552 ambiguous q fingerprints)
+event 66712 -> bee index 2: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 282072: PR cluster_id -> img-global space (10 ids, 61 ambiguous q fingerprints)
+event 282072 -> bee index 3: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 423981: PR cluster_id -> img-global space (33 ids, 332 ambiguous q fingerprints)
+event 423981 -> bee index 4: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 172266: PR cluster_id -> img-global space (21 ids, 48 ambiguous q fingerprints)
+event 172266 -> bee index 5: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 278046: PR cluster_id -> img-global space (6 ids, 755 ambiguous q fingerprints)
+event 278046 -> bee index 6: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 288287: PR cluster_id -> img-global space (15 ids, 350 ambiguous q fingerprints)
+event 288287 -> bee index 7: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 285753: PR cluster_id -> img-global space (11 ids, 171 ambiguous q fingerprints)
+event 285753 -> bee index 8: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 62459: PR cluster_id -> img-global space (5 ids, 419 ambiguous q fingerprints)
+event 62459 -> bee index 9: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 61461: PR cluster_id -> img-global space (14 ids, 230 ambiguous q fingerprints)
+event 61461 -> bee index 10: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 38856: PR cluster_id -> img-global space (28 ids, 644 ambiguous q fingerprints)
+event 38856 -> bee index 11: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 163543: PR cluster_id -> img-global space (50 ids, 505 ambiguous q fingerprints)
+event 163543 -> bee index 12: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 345633: PR cluster_id -> img-global space (7 ids, 1047 ambiguous q fingerprints)
+event 345633 -> bee index 13: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 281837: PR cluster_id -> img-global space (19 ids, 299 ambiguous q fingerprints)
+event 281837 -> bee index 14: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 400474: PR cluster_id -> img-global space (54 ids, 557 ambiguous q fingerprints)
+event 400474 -> bee index 15: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+wrote bee/pr104/pr104-on.zip
+wrote bee/pr104/pr104-on.index.txt
+wrote bee/pr104/pr104-on.prid-map.txt

@@ -1,0 +1,11 @@
+# owner scan list, run with current production (toolkit f4b4d0ec, fit_exclusion default ON)
+# set https://www.phy.bnl.gov/twister/bee/set/3617888b-df0a-4c96-9ba6-7ffb6aede93c/event/list/
+# bee_idx	run-event	ql_root
+0	18261-285567	work-ncpi0-ql0819
+1	18255-280972	work-mcp1k-ql0819
+2	18255-395148	work-mcp1k-ql0819
+3	18255-315167	work-mcp1k-ql0819
+4	18255-65053	work-mcp1k-ql0819	(owner listed 65035; confirmed correct id is 65053)
+5	0-405707	work-mcp2k-ql0819
+6	18255-283713	work-mcp1k-ql0819
+7	0-316025	work-mcp1k-ql0819

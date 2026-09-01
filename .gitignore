@@ -36,3 +36,9 @@ rebase-scan
 work/
 work-*/
 workarea
+
+# doc 91: compiled MCS dumper binaries -- source is tracked alongside them
+sbnd/sbnd_xin/mcs_upstream/dumper/mcs_dump
+sbnd/sbnd_xin/mcs_upstream/dumper/mcs_probe
+# doc 91: an INDEPENDENT git checkout, not ours -- a gitlink here would clone as an empty dir
+sbnd/sbnd_xin/mcs_upstream/mcs_standalone/

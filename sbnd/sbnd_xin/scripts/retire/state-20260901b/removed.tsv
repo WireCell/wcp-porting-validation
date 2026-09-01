@@ -1,0 +1,59 @@
+# retire_20260901b.sh  tiers=A
+# started              2026-09-01T16:27:00-07:00
+# wcp-porting-img HEAD c2b90a69
+# toolkit HEAD         6100d8f0
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  66G
+# df filesystem pre   598G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-09-01T16:27:01-07:00	work-87cal2A-ncpi0	A	4	work-87cal2A-ncpi0.tar.gz	2026-09-01T13:26:30-07:00	0
+2026-09-01T16:27:01-07:00	work-87cal2B-ncpi0	A	3	work-87cal2B-ncpi0.tar.gz	2026-09-01T13:26:38-07:00	0
+2026-09-01T16:27:01-07:00	work-87cal2C-ncpi0	A	3	work-87cal2C-ncpi0.tar.gz	2026-09-01T13:26:46-07:00	0
+2026-09-01T16:27:01-07:00	work-87cal2D-ncpi0	A	1	work-87cal2D-ncpi0.tar.gz	2026-09-01T13:26:53-07:00	0
+2026-09-01T16:27:01-07:00	work-87calA-ncpi0	A	4	work-87calA-ncpi0.tar.gz	2026-09-01T13:25:11-07:00	0
+2026-09-01T16:27:01-07:00	work-87calB-ncpi0	A	3	work-87calB-ncpi0.tar.gz	2026-09-01T13:25:19-07:00	0
+2026-09-01T16:27:01-07:00	work-87calC-ncpi0	A	3	work-87calC-ncpi0.tar.gz	2026-09-01T13:25:26-07:00	0
+2026-09-01T16:27:01-07:00	work-87knob-def-mcp1k	A	751	work-87knob-def-mcp1k.tar.gz	2026-09-01T13:05:20-07:00	0
+2026-09-01T16:27:01-07:00	work-87knob-def-ncpi0	A	76	work-87knob-def-ncpi0.tar.gz	2026-09-01T13:02:51-07:00	0
+2026-09-01T16:27:01-07:00	work-87knob-def-nuecc48	A	209	work-87knob-def-nuecc48.tar.gz	2026-09-01T13:02:16-07:00	0
+2026-09-01T16:27:01-07:00	work-87mrg-post-mcp1k	A	751	work-87mrg-post-mcp1k.tar.gz	2026-09-01T12:22:45-07:00	0
+2026-09-01T16:27:01-07:00	work-87mrg-post-ncpi0	A	76	work-87mrg-post-ncpi0.tar.gz	2026-09-01T12:20:16-07:00	0
+2026-09-01T16:27:01-07:00	work-87mrg-post-nuecc48	A	209	work-87mrg-post-nuecc48.tar.gz	2026-09-01T12:19:40-07:00	0
+2026-09-01T16:27:02-07:00	work-87scope-on-mcp1k	A	752	work-87scope-on-mcp1k.tar.gz	2026-09-01T12:41:04-07:00	0
+2026-09-01T16:27:02-07:00	work-87scope-on-ncpi0	A	76	work-87scope-on-ncpi0.tar.gz	2026-09-01T12:28:52-07:00	0
+2026-09-01T16:27:02-07:00	work-87scope-on-nuecc48	A	210	work-87scope-on-nuecc48.tar.gz	2026-09-01T12:38:36-07:00	0
+2026-09-01T16:27:02-07:00	work-87tc-off-mcp1k	A	751	work-87tc-off-mcp1k.tar.gz	2026-09-01T12:35:46-07:00	0
+2026-09-01T16:27:02-07:00	work-87tc-off-ncpi0	A	76	work-87tc-off-ncpi0.tar.gz	2026-09-01T12:33:17-07:00	0
+2026-09-01T16:27:02-07:00	work-87tc-off-nuecc48	A	209	work-87tc-off-nuecc48.tar.gz	2026-09-01T12:32:43-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r1	A	76	work-90pi0-r1.tar.gz	2026-09-01T15:10:35-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r2	A	76	work-90pi0-r2.tar.gz	2026-09-01T15:11:23-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r3	A	76	work-90pi0-r3.tar.gz	2026-09-01T15:12:03-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r4	A	76	work-90pi0-r4.tar.gz	2026-09-01T15:15:09-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r5	A	76	work-90pi0-r5.tar.gz	2026-09-01T15:15:40-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-r6probe	A	76	work-90pi0-r6probe.tar.gz	2026-09-01T15:18:32-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-wide-mcp1k	A	753	work-90pi0-wide-mcp1k.tar.gz	2026-09-01T15:22:46-07:00	0
+2026-09-01T16:27:02-07:00	work-90pi0-wide-nuecc48	A	210	work-90pi0-wide-nuecc48.tar.gz	2026-09-01T15:25:30-07:00	0
+2026-09-01T16:27:02-07:00	work-90rep-A	A	1	work-90rep-A.tar.gz	2026-09-01T15:09:39-07:00	0
+2026-09-01T16:27:02-07:00	work-em114-probe3	A	14	work-em114-probe3.tar.gz	2026-08-27T03:47:20-07:00	0
+2026-09-01T16:27:02-07:00	work-em114c-prodnow-mcp1k	A	243	work-em114c-prodnow-mcp1k.tar.gz	2026-08-28T16:58:48-07:00	0
+2026-09-01T16:27:02-07:00	work-em114c-prodnow-mcp2k	A	424	work-em114c-prodnow-mcp2k.tar.gz	2026-08-28T16:59:53-07:00	0
+2026-09-01T16:27:02-07:00	work-img-r1qlmc	A	67	work-img-r1qlmc.tar.gz	2026-08-05T10:27:12-07:00	0
+2026-09-01T16:27:02-07:00	work-img-r2mc	A	77	work-img-r2mc.tar.gz	2026-08-05T10:28:58-07:00	0
+2026-09-01T16:27:02-07:00	work-pr117r1-onK1-mcp1k	A	59	work-pr117r1-onK1-mcp1k.tar.gz	2026-08-28T12:25:00-07:00	0
+2026-09-01T16:27:02-07:00	work-pr117r1-onK1-mcp2k	A	109	work-pr117r1-onK1-mcp2k.tar.gz	2026-08-28T12:26:10-07:00	0
+2026-09-01T16:27:02-07:00	work-pr117r1-onK1-ncpi0	A	106	work-pr117r1-onK1-ncpi0.tar.gz	2026-08-28T12:26:42-07:00	0
+2026-09-01T16:27:03-07:00	work-pr117r1-onK1-nuecc48	A	286	work-pr117r1-onK1-nuecc48.tar.gz	2026-08-28T12:29:24-07:00	0
+2026-09-01T16:27:03-07:00	work-r1qlmc-cb0805	A	31	work-r1qlmc-cb0805.tar.gz	2026-08-11T17:00:01-07:00	0
+2026-09-01T16:27:03-07:00	work-r1qlmc-prod0813	A	15	work-r1qlmc-prod0813.tar.gz	2026-08-13T20:31:49-07:00	0
+2026-09-01T16:27:03-07:00	work-r1qlmc-vfcbr3on	A	80	work-r1qlmc-vfcbr3on.tar.gz	2026-08-17T13:36:09-07:00	0
+2026-09-01T16:27:03-07:00	work-r2mc-cb0805	A	36	work-r2mc-cb0805.tar.gz	2026-08-11T17:00:02-07:00	0
+2026-09-01T16:27:03-07:00	work-r2mc-prod0813	A	15	work-r2mc-prod0813.tar.gz	2026-08-13T20:32:04-07:00	0
+2026-09-01T16:27:03-07:00	work-r2mc-vfcbr3on	A	92	work-r2mc-vfcbr3on.tar.gz	2026-08-17T13:36:56-07:00	0
+2026-09-01T16:27:03-07:00	work-sent130-mcp1k	A	23	work-sent130-mcp1k.tar.gz	2026-08-29T16:00:25-07:00	0
+2026-09-01T16:27:03-07:00	work-sent130-mcp2k	A	40	work-sent130-mcp2k.tar.gz	2026-08-29T16:00:39-07:00	0
+2026-09-01T16:27:03-07:00	work-vfr1qlmc-cbr3on	A	12	work-vfr1qlmc-cbr3on.tar.gz	2026-08-17T13:36:22-07:00	0
+2026-09-01T16:27:03-07:00	work-vfr2mc-cbr3on	A	13	work-vfr2mc-cbr3on.tar.gz	2026-08-17T13:37:08-07:00	0
+# finished             2026-09-01T16:27:04-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 59G
+# df filesystem post  605G avail

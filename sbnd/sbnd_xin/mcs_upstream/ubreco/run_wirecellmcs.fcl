@@ -1,0 +1,62 @@
+#include "time_memory_tracker_microboone.fcl"
+#include "services_microboone.fcl"
+#include "wirecellmcs.fcl"
+process_name: WireCellMCS
+
+
+services:
+{
+  TimeTracker:             @local::microboone_time_tracker
+  MemoryTracker:           @local::microboone_memory_tracker
+  FileCatalogMetadata:     @local::art_file_catalog_data
+  @table::microboone_services_reco
+}
+
+source:
+{
+  module_type: RootInput
+  fileNames:   ["dummy.root"]
+  maxEvents:   -1
+}
+
+physics:
+{
+  producers:
+  {
+    WireCellMCS: @local::wirecellmcs
+  }
+
+  reco: [ WireCellMCS ]
+  trigger_paths: [ reco ]
+
+  stream1: [ out1 ]
+  end_paths: [ stream1 ]
+}
+
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   dataTier: "reconstructed"
+   compressionLevel: 1
+   saveMemoryObjectThreshold: 0
+   fileName: "%ifb_%tc_WCMCS.root"
+ }
+}
+
+microboone_tfile_metadata:
+{
+  JSONFileName:          ["reco_stage_2_hist.root.json"]
+  GenerateTFileMetadata: [true]
+  dataTier:              ["root-tuple"]
+  fileFormat:            ["root"]
+}
+
+services.TFileService.fileName: "reco_stage_2_hist.root"
+services.BackTrackerService:  @local::microboone_backtrackerservice
+services.ParticleInventoryService: @local::standard_particleinventoryservice
+services.DetectorClocksService.InheritClockConfig: false
+services.DetectorClocksService.TriggerOffsetTPC: -400
+services.DetectorPropertiesService.NumberTimeSamples: 6400
+services.DetectorPropertiesService.ReadOutWindowSize: 6400
