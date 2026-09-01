@@ -1,9 +1,10 @@
 # doc 91 — the count-driven retire round, and the sentinel regression it found
 
 **Status: round executed, 101 → 52 work dirs. The sentinel finding in §7 is
-CLOSED by owner hand scan (§7.4): the production reconstruction of all six
-events is good, so the six FAILs are a stale sentinel registry, not a physics
-regression. The registry now needs re-baselining — see §11.**
+CLOSED by owner hand scan (§7.4), and the registry has been RE-BASELINED
+(§12): the suite is green on production (31 PASS / 0 FAIL) and provably red on
+every knob-OFF arm. Two sentinels could not be re-baselined and are flagged
+RETARGET NEEDED — an open owner call, §12.4.**
 
 ## Repro
 
@@ -412,3 +413,113 @@ Deferred, unchanged from doc 89 §11: the `~/tmp` sweep
 (`scripts/retire/sweep_tmp_20260901.sh`, 18.7 GiB) still needs an owner-run
 `CONFIRM=yes`. The bokeh viewer that pinned `~/tmp/pr138_glcolor` was stopped
 this round on the owner's instruction, so that directory is now releasable too.
+
+
+## 12. The sentinel re-baseline (owner: "please go ahead")
+
+### 12.1 Method — both sides, same operating point
+
+A threshold is a guard only if it sits **between** the fix-alive and the
+fix-dead value. Re-measuring only the alive side would produce a suite that is
+green and cannot fail — the dead safety net §7.4 warns about.
+
+The existing negative controls (`work-sent130neg*`) were run 2026-08-29, before
+the 0.86 EM scale flip, doc 77 r3/r4's 17 retired TLAs and the master merge —
+**exactly the drift that made the registry stale**. Reusing them would have
+rebuilt the same fault. So the fix-dead side was re-measured at the pinned
+`prod0901b` point, one arm per knob so a difference is attributable to one
+thing:
+
+```bash
+./scripts/doc91_rebaseline_negarms.sh      # 6 arms, 1 event each, PR_JOBS=4
+```
+
+`LD_LIBRARY_PATH` and `PR_CFG_TREE` are pinned to the snapshots `prod0901b`
+actually ran under, so the **only** difference between each arm and production
+is the one knob. Verified before measuring anything: all six knob-OFF arms
+produce a `tracking-pr.root` that differs from production, i.e. every knob
+took effect. A threshold bracketed between two identical values is worthless,
+so that check came first.
+
+### 12.2 What the measurement found — mostly not a threshold problem
+
+Only **one** of the six was the simple drift the framing predicted.
+
+| event | fix | production (alive) | knob OFF (dead) | verdict |
+|---|---|---|---|---|
+| 393505 | pr/129 pointing test | Enu **559.9** | Enu **1638.8** | drift — widen the window |
+| 47212 | pr/120 back-stem guard | `mu-` [53] | `mu-` [] | **type label changed**, structure fine |
+| 137238 | pr/93 r4 + pr/127 sccc | `mu-` [88, 60, 58] | `mu-` [**207**, 88, 58] | **direction flipped** |
+| 292643 | pr/130 B back-dvtx | `pi0` none | `pi0` [**159**] | **effect reversed** |
+| 173819 | pr/125 pass3_cone | `e-` [283, 18, 16] | `e-` [288, 16] | **no discriminator** |
+| 406125 | pr/124 prune gap2 | PF tree | **identical** PF tree | **no discriminator** |
+
+### 12.3 The four that were re-baselined
+
+- **393505** — the only true threshold move. `[560, 572]` missed production by
+  0.1 MeV. The knob is worth **1079 MeV** here, so `[540, 600]` absorbs ordinary
+  drift and still fails 1038 MeV clear of the fix-dead value.
+- **47212** — the old assertion looked for a `pi+` node. The stem is simply
+  **typed** differently now: guard ON gives `mu- 53`, guard OFF gives no `mu-`
+  at all. The structural property pr/120 shipped — the backward stem stays a
+  separate track instead of being eaten by the shower — still holds exactly.
+  Asserting the *type label* rather than the *structure* is what went stale.
+  → `pf_node_ge mu- 40`.
+- **137238** — the `mu- 207` body node now appears with `sccc_max_gap` at its
+  **pre-pr/127** value (6) and is **absent** from production (10). pr/127's own
+  6 → 10 flip removed the signature pr/93 r4 was asserted on. Recorded as a
+  reversal, not buried in a threshold edit. → `pf_node_lt mu- 150`.
+  (`SBND_SCCC_BRIDGE_BODY=0` was tried first and is not a discriminator here.)
+- **292643** — the `pi0` now appears with the escape **disabled** and is absent
+  from production, the opposite of 08-29. This makes the entry agree with its
+  own twin 179369, whose shipped assertion is already `pf_absent pi0` ("the
+  spurious pi0 is gone") — the two entries of one fix had been contradicting
+  each other. → `pf_absent pi0`. Its `log_contains` needed no change: it was
+  already True in production and False knob-off, a working discriminator.
+
+### 12.4 The two that could NOT be re-baselined — open owner call
+
+`173819` and `406125` guard shipped, SBND-ON fixes whose knobs still change
+`tracking-pr.root`, but whose **sentinel events no longer separate alive from
+dead**. 406125's PF trees are byte-for-byte identical with the knob on and off
+(14 nodes, zero symmetric difference); 173819's entire difference is 5 MeV on
+`e-` max plus one 18 MeV node, inside ordinary drift.
+
+**A threshold cannot be re-baselined onto a pair of equal values.** Doing so
+makes an assertion that is green and cannot fail. Leaving them in `SENTINELS` is
+the other failure — a permanently red suite gets ignored wholesale.
+
+So they are moved to a `RETARGET_NEEDED` list that the suite **prints on every
+run**, separately from PASS/FAIL, costing nothing until someone re-targets them.
+They are *not* retired: re-targeting means running the knob off across a sample
+and picking an event where the fix still fires. That is a search, not an edit,
+and it is an owner call — because the alternative reading is that these fixes no
+longer earn their knobs.
+
+This also answers §7.4 item 3 on mechanism assertions: 406125's two
+`log_contains` are exactly the assertions that revealed the fix is inert on that
+event, when the PF tree could not. Mechanism assertions stay.
+
+### 12.5 Validation — green on the good batch, red when each fix dies
+
+```
+./scripts/pr127_sentinels.py --arms 'work-*-prod0901b'   -> 31 PASS, 0 FAIL, 0 SKIP, rc=0
+```
+
+| negative control | rc | result |
+|---|---|---|
+| `work-91neg-backguard-mcp2k` | 1 | FAIL 47212 |
+| `work-91neg-scccgap-nuecc48` | 1 | FAIL 137238 |
+| `work-91neg-backdvtx-mcp1k` | 1 | FAIL 292643 |
+| `work-91neg-gfimpact-mcp2k` | 1 | FAIL 393505 |
+
+Each arm fails on **its own** event and no other, so every re-baselined
+threshold is demonstrably still capable of failing. That is what a re-baseline
+has to prove and it is the reason the fix-dead side was re-measured rather than
+inferred.
+
+### 12.6 Consequence for the tree
+
+The seven `work-91neg-*` arms replace `work-sent130neg*` as the negative-control
+layer, at the current operating point instead of 2026-08-29. The witness arms
+kept by §7.4 item 2 are now redundant for that purpose.

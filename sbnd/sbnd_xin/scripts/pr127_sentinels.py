@@ -61,9 +61,23 @@ SX = os.path.dirname(HERE)
 # fix dies, not when the number drifts a few MeV.
 SENTINELS = [
     (137238, "pr/93 r4 + pr/127", "sccc demote+bridge: the cross-cluster muon body joins PF",
-     # pre-fix: no mu- at all under the stem (the body is in cluster 7 and invisible);
-     # post-fix: mu- 207 (body) + mu- 66 (continuation).
-     [("pf_node_ge", "mu-", 150.0), ("log_contains", "sccc demote")]),
+     # RE-BASELINED 2026-09-01 (doc 91 sec 12) -- AND THE DIRECTION FLIPPED.
+     # The 08-29 baseline read: pre-fix no mu- at all under the stem, post-fix
+     # mu- 207 (body) + mu- 66 (continuation), so the assertion was
+     # pf_node_ge mu- 150.
+     # Re-measured at the pinned prod0901b point, both sides, same binary+cfg:
+     #   production (sccc_max_gap = 10, shipped by pr/127)   mu- [88, 60, 58]
+     #   work-91neg-scccgap-nuecc48 (SBND_SCCC_MAX_GAP=6)    mu- [207, 88, 58]
+     # The mu- 207 body node now appears with the knob at its PRE-pr/127 value
+     # and is ABSENT from production -- i.e. pr/127's own 6 -> 10 flip removed
+     # the signature that pr/93 r4 was asserted on.  The owner hand-scanned the
+     # production tree on 2026-09-01 and judged it GOOD, so production is the
+     # reference and the assertion is inverted to match it.
+     # RECORD THIS, do not read it as a threshold move: the shipped pr/93 r4
+     # signature is not what production emits any more.
+     # SBND_SCCC_BRIDGE_BODY=0 was tried first and is NOT a discriminator here
+     # (mu- identical to production); the gap knob is the live one.
+     [("pf_node_lt", "mu-", 150.0), ("log_contains", "sccc demote")]),
     (37112, "pr/125 K3", "samevtx track-frag absorb: gamma + proton stem = ONE shower",
      # pre-fix: gamma 549 + a separate 469 MeV proton-typed shower.
      [("shower_max_ge", 11, 700.0), ("pf_node_lt", "proton", 400.0)]),
@@ -76,8 +90,6 @@ SENTINELS = [
      [("pf_node_lt", "e-", 175.0)]),
     (77328, "pr/125 guard", "pass3_cone track guard: 180 MeV EM shower -> re-rooted proton",
      [("pf_node_lt", "e-", 130.0)]),
-    (173819, "pr/125 guard", "pass3_cone track guard: 301 MeV EM shower -> re-rooted proton",
-     [("pf_node_lt", "e-", 200.0)]),
     (171572, "pr/123 r2", "pf_orphan_guard_freed: the guard-freed muon returns as a PF root",
      [("log_contains", "pf-orphan-guard-freed"), ("pf_node_ge", "mu-", 250.0)]),
     (393505, "pr/123 r2", "pf_orphan_guard_freed: same, second firing event",
@@ -139,7 +151,15 @@ SENTINELS = [
      # within 68.9 cm of the nu vertex; impact 68.67 cm, miss 67.4 deg.
      # Enu 940.4 -> 566.1.  The muon must STAY in the PF tree (owner: "OK to
      # be in PR"), so this is deliberately an Enu assertion, not a pf_absent.
-     [("enu_between", 560.0, 572.0), ("pf_contains", "mu-  268")]),
+     # RE-BASELINED 2026-09-01 (doc 91 sec 12).  A genuine threshold move, and
+     # the only one of the six that was: production drifted to Enu 559.9, which
+     # missed the [560, 572] window by 0.1 MeV.  Re-measured both sides:
+     #   production (pointing test ON)                   Enu  559.9
+     #   work-91neg-gfimpact-mcp2k (SBND_KINE_GF_IMPACT=0) Enu 1638.8
+     # The knob is worth 1079 MeV here, so the window can absorb ordinary drift
+     # and still fail loudly when the fix dies.  [540, 600] leaves 40 MeV of
+     # headroom on each side and is 1038 MeV clear of the fix-dead value.
+     [("enu_between", 540.0, 600.0), ("pf_contains", "mu-  268")]),
     (171572, "pr/129", "real daughter KEPT by the pointing test",
      # The KEEP, and the negative control for the DROP above: impact 4.16 cm,
      # miss 11.8 deg.  Owner: "784.9 MeV should be the right energy."  A
@@ -164,7 +184,20 @@ SENTINELS = [
      #             all -- the shower ate it; `gamma 688`, pi0 119 -> 150; 18 nodes.
      # Exactly one pi+ exists in the ON tree, so pf_contains cannot pass
      # trivially.  650 sits between the two gamma values.
-     [("pf_contains", "pi+"), ("pf_node_lt", "gamma", 650.0)]),
+     # RE-BASELINED 2026-09-01 (doc 91 sec 12).  The old assertion looked for a
+     # `pi+` node and FAILED against production -- but the fix is fine; the
+     # backward stem is simply TYPED differently now.  Re-measured both sides at
+     # the pinned prod0901b point:
+     #   production (guard ON)                          mu- [53.0]
+     #   work-91neg-backguard-mcp2k (guard OFF)         mu- []       <- absorbed
+     # So the stem is still a separate track when the guard is on and is still
+     # eaten by the shower when it is off -- exactly the structural property
+     # pr/120 shipped.  Asserting the TYPE LABEL (pi+) rather than the structure
+     # is what went stale.  40 MeV sits well under the 53 seen and well over the
+     # nothing-at-all of the guard-off arm.
+     # pf_node_lt gamma 650 is KEPT as a sanity bound but is NOT a
+     # discriminator: 571 (on) vs 576 (off), both far below 650.
+     [("pf_node_ge", "mu-", 40.0), ("pf_node_lt", "gamma", 650.0)]),
 
     # ---- doc pr/130: the doc-84 long-muon / MCS family.  Every one of these
     # is a shipped, SBND-PRODUCTION-ON fix whose target event is in NO standard
@@ -235,7 +268,19 @@ SENTINELS = [
     (292643, "pr/130 B", "back-guard dvtx escape: the declined stem is absorbed",
      # pre-flip: mu- 59 + mu- 441, no pi0 and no pi+ at all, e- max 227, 10 nodes.
      # post-flip: mu- 441, pi0 150, pi+ 91 + pi+ 65, e- max 154, 13 nodes.
-     [("pf_node_ge", "pi0", 100.0), ("pf_node_lt", "e-", 200.0),
+     # RE-BASELINED 2026-09-01 (doc 91 sec 12) -- the pi0 side REVERSED.
+     # The 08-29 baseline recorded post-flip pi0 150 and asserted pi0 >= 100.
+     # Re-measured at the pinned prod0901b point:
+     #   production (back_dvtx = 45)                     pi0 [] -- none
+     #   work-91neg-backdvtx-mcp1k (SBND_..._BACK_DVTX=0) pi0 [159.0]
+     # The pi0 now appears with the escape DISABLED and is absent from
+     # production, the opposite of 08-29.  That matches this event's twin,
+     # 179369 below, whose shipped assertion is pf_absent pi0 ("the spurious
+     # pi0 is gone") -- so the two entries of the same fix now agree instead of
+     # contradicting.  Owner scanned production GOOD on 2026-09-01.
+     # The log assertion needs no change: it is True in production and False in
+     # the knob-off arm, i.e. it was already a working discriminator.
+     [("pf_absent", "pi0"), ("pf_node_lt", "e-", 200.0),
       ("log_contains", "pr130 stem_backfill_back_dvtx: suppress decline seg=18008")]),
     (179369, "pr/130 B", "back-guard dvtx escape: the spurious pi0 is gone",
      # pre-flip: pi0 138 + pi+ 56 fabricated by the decline (+376.0 MeV the
@@ -264,12 +309,47 @@ SENTINELS = [
     # ---- doc pr/130: pr/124's headline win had no sentinel either.  It is in
     # em114c, so unlike the doc-84 family it does execute under the standard
     # 141 arms -- it was simply never registered.
-    (406125, "pr/124 A", "shower_pass4_prune_gap2=25 gap-band tier-2 prune (qF1 0.097 -> 1.000)",
-     # The metric that moved is an EM label score with no calib scalar, so the
-     # assertion is that the prune still SHEDS -- the re-seed line is emitted
-     # only when a band component is actually taken out.
-     [("log_contains", "pr124 pass4_prune2:"),
-      ("log_contains", "band component(s) re-seeded")]),
+]
+
+# ---------------------------------------------------------------------------
+# RETARGET NEEDED -- moved out of SENTINELS 2026-09-01 (doc 91 sec 12).
+#
+# These two are NOT retired and NOT "known failures to ignore".  Each guards a
+# shipped, SBND-PRODUCTION-ON fix whose knob still changes tracking-pr.root, but
+# whose SENTINEL EVENT no longer separates fix-alive from fix-dead.  A threshold
+# cannot be re-baselined onto a pair of values that are equal: doing so would
+# produce an assertion that is green and cannot fail, which is the dead safety
+# net doc pr/127 exists to prevent.  Leaving them in SENTINELS is the other
+# failure -- a permanently red suite gets ignored wholesale.
+#
+# So they are reported on EVERY run, separately from PASS/FAIL, and cost the
+# suite nothing until someone re-targets them onto an event where the knob still
+# bites.  Measured at the pinned prod0901b point, both sides, same binary+cfg:
+#
+#   173819  pr/125 pass3_cone track guard
+#           production (guard_len = 15)                    e- [283, 18, 16]
+#           work-91neg-p3cone-mcp2k (GUARD_LEN=0)          e- [288, 16]
+#           The shipped effect was "301 MeV EM shower -> re-rooted proton".
+#           There is no proton on either side now and the whole difference is
+#           5 MeV plus one 18 MeV node -- inside ordinary drift, so no threshold
+#           can separate them honestly.
+#
+#   406125  pr/124 shower_pass4_prune_gap2 = 25
+#           production and work-91neg-prune2-mcp2k have IDENTICAL PF trees
+#           (14 nodes, zero symmetric difference).  The knob still changes
+#           tracking-pr.root, so the code path is live somewhere -- but it is
+#           completely inert on this event, and the two log_contains assertions
+#           fail on BOTH sides.
+#
+# TO RE-TARGET: run the knob off across a sample, diff PF trees per event, and
+# pick an event where the fix still fires.  That is a search, not a threshold
+# edit, and it is an owner call because the alternative reading is that the fix
+# no longer earns its knob.
+RETARGET_NEEDED = [
+    (173819, "pr/125 guard", "pass3_cone track guard",
+     "guard on/off differ by 5 MeV on e- max (283 vs 288); shipped proton re-root is gone from both"),
+    (406125, "pr/124 A", "shower_pass4_prune_gap2 gap-band tier-2 prune",
+     "PF trees IDENTICAL with the knob on and off; both log assertions fail on both sides"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -399,6 +479,14 @@ def main():
         npass += 1 if ok else 0
         nfail += 0 if ok else 1
     print("\n%d PASS, %d FAIL, %d SKIP" % (npass, nfail, nskip))
+    if RETARGET_NEEDED:
+        print("\n%d sentinel(s) RETARGET NEEDED -- a shipped fix whose event no "
+              "longer separates alive from dead (doc 91 sec 12):" % len(RETARGET_NEEDED))
+        for ev, doc, what, why in RETARGET_NEEDED:
+            print("    %-8d %-16s %s" % (ev, doc, what))
+            print("             %s" % why)
+        print("    These do NOT count as FAIL.  They are not retired either -- "
+              "re-targeting them is an open owner call.")
     return 1 if nfail else 0
 
 
