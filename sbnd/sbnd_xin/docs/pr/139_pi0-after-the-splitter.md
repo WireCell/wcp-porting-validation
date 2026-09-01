@@ -1909,3 +1909,125 @@ the owner asked to confirm, not to change.**
 inject 105.66 MeV each, worth **11 % and 6 % of those events' neutrino energy**.
 It is rare (2 of 239 events), it is diagnosable (`nseg = 1`, non-EM member, EM
 parent), and it is fixable behind a default-OFF knob.
+
+---
+
+## 25. §24 CORRECTED — the mass term the split adds is measured, not looked up
+
+**§24 was wrong, and in the safe direction.** It computed each split daughter's
+rest term from a **PDG lookup** against `rest_term_rules` and reported "219.9 MeV
+over 239 events, two daughters injecting 105.66 MeV each". That is the
+**potential** term. It never checked what is actually **booked** into
+`kine_reco_add_energy`. Measured, it is not.
+
+### 25.1 The decisive test: the same events with the splitter off
+
+`work-pr140r3-splitoff-*` — the shipped config with `shower_split=false` via a
+new `SBND_SHOWER_SPLIT_OFF` hook, **same pinned binary** (`pin-pr140r2`,
+md5 `5d176a30…`). Compiled-config proof: the `shower_split` key is *absent*
+(the jsonnet suppresses it when false, C++ default false) and the tape shows
+**0 peels**.
+
+| the two events §24 named | splitter OFF | ON | Δ |
+|---|---|---|---|
+| **evt281165** `kine_reco_add_energy` | 245.23 | 245.23 | **+0.00 MeV** |
+| evt281165 `kine_reco_Enu` | 965.44 | 963.52 | −1.92 MeV |
+| **evt71642** `kine_reco_add_energy` | 253.83 | 262.43 | **+8.60 MeV** |
+| evt71642 `kine_reco_Enu` | 1667.42 | 1696.86 | +29.44 MeV |
+
+The 2.4 MeV μ-typed daughter in evt281165 adds **exactly zero**. The +8.60 in
+evt71642 is the *proton*-typed daughter's binding energy, not a muon mass.
+
+**Why**: both daughters take the **leftover-shower** branch
+(`NeutrinoKinematics.cxx:555-570`), where with `kine_mass_rules` on, μ/π-typed
+objects stay **massless** by design — doc pr/101's P4 double-count guard, because
+such a piece is usually part of a muon whose mass is already counted on the
+attached track. Confirmed by `kine_energy_included = 3` on every one of them.
+
+### 25.2 The whole manifest, splitter off → on
+
+| | |
+|---|---|
+| **Σ Δ`kine_reco_add_energy`** | **−130.97 MeV** — the splitter **removes** more rest mass than it adds |
+| events where the mass term moves at all | **4 of 239** (−139.57, −8.60, +8.60, +8.60) |
+| **a muon rest mass added anywhere** | **never** |
+| Σ Δ`kine_reco_Enu` | −610.7 MeV = **−0.24 %** of the 2.542e+05 MeV total |
+| median Δ`Enu` per event | **0.0000 MeV** |
+| events with \|Δ`Enu`\| > 1 MeV | 21 of 239 |
+
+**Answer to the owner's question, corrected and final: no. The split does not
+perturb the neutrino energy through the mass term.** Net mass effect is
+**−0.05 %** of total reconstructed Enu, and the median event is unchanged.
+
+### 25.3 The 37 low-energy muon-typed objects — the owner's rule applied
+
+> *"in the case of no EM shower, muon is a reasonable choice if it is not a
+> proton."*
+
+34 of the 37 resolve to a shower object. Every one of them:
+
+| property | value |
+|---|---|
+| `flag_shower` | **False on all 34** |
+| fit points | **2 or 3 on all 34** |
+| length | **33 of 34 below 1.2 cm** (median 0.40 cm, min 0.03 cm) |
+| `kine_energy_included` | **3 on all 34** → the leftover branch → **massless** |
+| **EM-typed segments in the object's OWN cluster** | **0 for 32 of 34** |
+
+**So by the owner's own rule, muon is the reasonable choice for 32 of them** —
+they are isolated sub-cm MIP-like blobs in clusters that contain no EM segment
+at all, not fragments of an electron shower. Only two (54332 KE 0.70, 389538
+KE 4.78) have even a single EM-typed segment in the same cluster.
+
+**And none of them books anything**, so the 3.9 GeV figure §24's method would
+have implied is not merely uncertain, it is zero.
+
+### 25.4 Which also undercuts the fix — reported, not hidden
+
+The same test applied to the two split daughters:
+
+| | own cluster | segments in it | EM-typed segments in it |
+|---|---|---|---|
+| evt281165 daughter (0.67 cm) | 49 | **1** | **0** |
+| evt71642 daughter (0.41 cm) | 64 | **1** | **0** |
+
+They were peeled *from* an EM-typed parent (a 5-segment, 18.9 cm and 11.5 cm
+electron shower) but each sits alone in its own cluster with no EM segment.
+**By the owner's rule, muon is defensible for these two as well.**
+
+### 25.5 The knob is built anyway, DEFAULT OFF, and is NOT recommended
+
+`shower_split_em_type_max_len` — cm, **C++ default 0 = off**. When > 0, a peeled
+daughter that is shorter than it, holds no EM-typed member, and came from an
+EM-typed parent is typed **11** instead of inheriting the separator's default.
+
+The threshold has a measured knee rather than a chosen value:
+
+| segment length | n | `flag_shower` set |
+|---|---|---|
+| 0.0–0.8 cm | 3551 | **0.1 %** |
+| 0.8–1.2 cm | 680 | **0.6 %** |
+| 1.2–2.0 cm | 700 | 14.7 % |
+| 2.0–4.0 cm | 1461 | 46.7 % |
+
+**Below ~1.2 cm "track-like" is an absence of evidence, not evidence** — which is
+exactly the owner's track-vs-shower point, made quantitative. A *longer* daughter
+keeps whatever the separator says, which is the owner's "a track-like MIP muon is
+a decent candidate" half.
+
+Implementation note: the retype is applied **after** the splitter's own
+`calculate_shower_kinematics`, because `calculate_kinematics` copies the start
+segment's pdg verbatim into `data.particle_type` (`PRShower.cxx:1617`, `:1738` —
+the defect doc pr/122 named) and would overwrite an earlier write. It fixes the
+**reported** type, which is what the rest-mass term and the π⁰ finders read; it
+does not re-derive `kine_charge`, a 1–3 MeV difference on a sub-1.2 cm object.
+
+**Recommendation: do not flip it.** Two measurements argue against, both above —
+nothing is booked (§25.1–25.2), and the owner's own rule makes muon defensible
+for the objects it would retype (§25.4). It ships default OFF as insurance
+against the case that has not occurred on this manifest: a μ-typed daughter
+landing in the **BFS** phase rather than the leftover branch, where the full
+105.66 MeV *would* be booked.
+
+`./build/clus/wcdoctest-clus` **2633** assertions pass with the new default
+pinned.

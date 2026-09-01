@@ -1746,6 +1746,10 @@ fi
 # pass and the only one that cuts; runs before the pi0 finders.  EMPTY = no TLA
 # = the job default false = no pass = byte-identical.
 [ -n "${SBND_SHOWER_SPLIT:-}" ] && CATH_TLA+=(--tla-code "shower_split=true")
+# doc pr/139 sec 24: turn the splitter OFF explicitly.  shower_split is now
+# true by default in the job, so the only way to get a splitter-off arm is a
+# TLA that sets it false.  EMPTY = no TLA = the job default (ON).
+[ -n "${SBND_SHOWER_SPLIT_OFF:-}" ] && CATH_TLA+=(--tla-code "shower_split=false")
 # doc pr/138 B3: how many parts one candidate may be cut into.  EMPTY = no TLA =
 # the job default 2 = the kernel whose boundary Phase A measured exact.  >=3 is
 # the k>=3 experiment (doc sec B3's 0.85 target MISSED at 0.772) -- not
@@ -1767,6 +1771,9 @@ fi
 [ -n "${SBND_SHOWER_SPLIT_SHED_SHARED:-}" ] && CATH_TLA+=(--tla-code "shower_split_shed_shared=true")
 # doc pr/139 sec 17: angular-maxima cap.  EMPTY = no TLA = the job default 4.
 [ -n "${SBND_SHOWER_SPLIT_SEEDS:-}" ] && CATH_TLA+=(--tla-code "shower_split_max_seeds=${SBND_SHOWER_SPLIT_SEEDS}")
+# doc pr/139 sec 25: cm; below this a daughter with no EM member peeled off an
+# EM parent is typed 11.  EMPTY = no TLA = the job default 0 = off.
+[ -n "${SBND_SHOWER_SPLIT_EM_TYPE_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_split_em_type_max_len=${SBND_SHOWER_SPLIT_EM_TYPE_LEN}")
 # P1.2 the impact-parameter veto, in CM.  EMPTY = no TLA = 0 = no bound.  The
 # arm value is 12 (doc pr/139 sec 2.1: every census gain below 11 cm, every loss
 # above 13 -- a bound chosen AFTER seeing 8 movers, and priced accordingly).
