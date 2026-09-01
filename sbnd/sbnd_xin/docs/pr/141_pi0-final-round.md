@@ -1,8 +1,10 @@
 # doc pr/141 — the final round: what is left after the splitter campaign
 
-**Status: CLOSED (sessions 1-2, 2026-08-31).** Session 2 (§16-§21) worked
+**Status: CLOSED (sessions 1-2, 2026-08-31).** Session 2 (§16-§22) worked
 §15.3's five hand-off items and closes the campaign; the census reads **36 of 66
-exact** and production is unchanged.
+exact** and production is unchanged. The round's largest number is **not** a π⁰
+one: **≥ 29 % of μ-typed objects above 50 MeV are really EM showers**, ≈ 1045 MeV
+of `kine_reco_Enu` missing across 239 events (§22).
 
 **Session 1** follows. doc pr/139 §26 closed the splitter
 sub-campaign and ranked what remains (§26.5). The owner asked for one last round
@@ -886,6 +888,10 @@ read the exit code as a verdict.
 
 ### 13.3 A pre-existing runner bug that silently disables the failure check
 
+> **SUPERSEDED by §19.** The diagnosis below is wrong: the doc pr/97 loop is
+> correct and fires when reached. The real cause is bash resuming a
+> *concurrently edited* script at a stale byte offset. Fixed in §19.2.
+
 Three arms this round exited `rc=1` on one sample while the batch summary read
 `ok: N / failed: 0` and every output was present. The cause is one line:
 
@@ -914,6 +920,11 @@ code nobody read.
 ---
 
 ## 14. Recommendation 2 — the EM-only restriction is REFUTED, and the real defect is the opposite one
+
+> **PARTLY SUPERSEDED by §17.** §22.5's table audits clean; the pdg source, not
+> the scoring, is what differs (§17.2), so `318769/31026` *is* a genuine non-EM
+> false fire and the restriction is **priced, not refuted** (§17.3). The premise
+> falling — 4 confirmed cuts in 14, not 1 in 8 — survives.
 
 Owner scan, 2026-08-31, tag `pisplit-0905-owner`, **all seven at confidence
 `high`**:
@@ -957,6 +968,10 @@ coincide; it does not survive contact with the π-typed population itself.
 
 ### 14.2 The defect that is actually there: the splitter *under*-fires on π-typed objects
 
+> **CORRECTED by §17.4.** The 0.250 below counts an offline-kernel accept as a
+> fire; the production tape says `nacc=2 nparts=1 fired=0`. Efficiency on non-EM
+> confirmed cuts is **0 of 4**. The finding is strengthened, not weakened.
+
 The same table read the other way:
 
 | | |
@@ -985,6 +1000,11 @@ as a score.)*
 
 ### 14.3 Why this population is invisible to the current trigger
 
+> **SUPERSEDED by §18.2.** "Invisible" is true of exactly one of the five missed
+> cuts. On three the seed search **already finds 3–4 maxima** and the pair is
+> refused at the `min_frac = 0.03` charge-share floor; one more is an assignment
+> collapse.
+
 Three of the four confirmed cuts produce **no accepted seed pair at all**.
 Combined with §5 — where re-seeding each part also never fired on a SPLIT3 —
 the pattern across both sessions is consistent enough to state plainly:
@@ -1008,6 +1028,10 @@ EM label set is the instrument for that — this 7-object set cannot answer it.
 ## 15. Final state, and what I recommend next
 
 ### 15.1 Everything doc pr/141 measured
+
+> **Session 1 only.** §21.1 is the campaign's closing table. Two rows below moved:
+> label staleness is now a measured **+1 in a single census run** (§16), and the
+> `pdg = 211` restriction is **priced, not refuted** (§17.3).
 
 | item | verdict |
 |---|---|
@@ -1037,6 +1061,9 @@ recommended ON.** The production configuration is unchanged (§11).
    places where the measurement, not the reconstruction, was the failure.
 
 ### 15.3 Recommended next steps, in order
+
+> **All five worked in session 2; see §21.1.** Item 3's framing here — "a TRIGGER
+> problem on a new observable" — is corrected by §18.2.
 
 1. **Refresh the π⁰ label store** — the only measured gain left that costs
    nothing: **+1 exact today** (§13.1), and it removes a class of false failure
@@ -1097,6 +1124,10 @@ python3 scripts/pr141_pidset.py --tsv docs/pr/pr141-pidset.tsv \
 ./em_display/serve_em_display.sh 5022 --scan-tag pidmu-0906-owner \
     --manifest em_display/em141-pidmu18-manifest.tsv \
     --prepdir em_display/emprep-140r2off
+python3 scripts/pr141_pid_score.py --tsv docs/pr/pr141-pid-score.tsv
+
+# item 5 -- the doc pr/97 check, triggered on a synthetic rc.txt set
+#   (extract the loop, feed it rc=0 / rc=250 / a missing file; expect rc=1)
 ```
 
 ---
@@ -1390,7 +1421,7 @@ between them); **4 are predicted-TRACK controls and carry no information** —
 therefore be scored as **false-positive rate on the 14**, and the controls
 reported as confirming nothing.
 
-*Results pending the owner's scan; §21's totals do not include them.*
+**Results in §22** — the owner returned all 18 the same evening.
 
 ---
 
@@ -1403,7 +1434,7 @@ reported as confirming nothing.
 | 1 — refresh the π⁰ label store | **DONE, +1**. Census **36 of 66** on the shipped arm, denominator held at 66, one row moves, nothing regresses (§16) |
 | 2 — audit doc pr/139 §22.5 | **DONE**. The table reproduces exactly *from the tape*; the correction owed is **mine** (§17.2), and the restriction is now priced at 1 false fire removed against 4 confirmed cuts foreclosed (§17.3) |
 | 3 — the splitter trigger bar | **DONE**. Bar stated on 78 objects (§18.1); the misses are **acceptance (3) + assignment (1) + genuinely single-cored (1)**, not an absent observable (§18.2) |
-| 4 — `122660/54071` | **SCOPED and SERVED**. 35-object population, 1684 MeV at stake, blind 18-object set with a pre-registered predictor (§20). Verdicts pending |
+| 4 — `122660/54071` | **DONE, and it is the round's biggest number**. 7 of 18 μ-typed objects are EM; **≥ 10 of 24 hand-typed**, ≈ **1045 MeV** of Enu missing over 239 events. The pre-registered predictor is refuted at 0.500 and no offline feature separates (§20, §22) |
 | 5 — the runner's dead failure check | **DONE**. The check was never broken; **mid-run edits** to the runner were. Fixed and verified by triggering both halves (§19) |
 
 ### 21.2 What changed in production
@@ -1438,9 +1469,12 @@ mine — and a table with no script behind it is a table nobody can check.**
 
 In order, and none of it is π⁰ clustering:
 
-1. **The μ-typed PID front** (§20) — the only open measurement, already served.
-   If mis-typing is common it is a `kine_reco_Enu` defect with a population and
-   an exact price, in a different subsystem from anything this campaign touched.
+1. **The μ-typed PID front** (§22) — **measured, and it is the largest defect
+   this campaign found**: ≥ 29 % of μ-typed objects above 50 MeV are EM showers,
+   ≈ 1045 MeV of `kine_reco_Enu` missing across 239 events. No offline feature
+   separates them (§22.2), so the fix has to come from the PID stage and it
+   changes production output — a knob-and-gate round in a different subsystem,
+   with the 24 hand verdicts already in hand as its instrument.
 2. **The splitter's `min_frac` refusal** (§18.2) — three confirmed cuts where the
    seeds are already found. A measurement, against §18.1's bar, on the 71-object
    set. Not a threshold to move on n = 3.
@@ -1451,3 +1485,74 @@ In order, and none of it is π⁰ clustering:
 closed**: eleven knobs across doc pr/139 §22 and doc pr/141, the k = 3 recursion,
 the EM-only restriction, the seed-count trigger family, and the three μ-typed
 admission knobs.
+
+---
+
+## 22. Item 4 — RESULTS. The predictor is refuted; the defect it was hunting is real
+
+The owner returned all 18 verdicts the same evening, with `?` meaning *unclear,
+slightly favouring the answer given* (their own gloss, carried through as a weak
+flag). `scripts/pr141_pid_score.py` → `docs/pr/pr141-pid-score.tsv`.
+
+### 22.1 The pre-registered predictor fails, on exactly the half that could test it
+
+| | |
+|---|---|
+| predicted EM, owner says **EM** | **7** |
+| predicted EM, owner says **TRACK** | **7** |
+| **precision on the predicted-EM class** | **7/14 = 0.500** |
+| the 4 predicted-TRACK controls | 4 of 4 TRACK — *confirming nothing, as stated before the scan* |
+| what pooling them would have reported | 11/18 = 0.611 |
+
+**`L/nseg < 40 cm ⇒ EM` is a coin flip.** §20.1 named the weakness in advance —
+all three TRACKs in the n = 6 basis were `nseg == 1`, so the cut was really plain
+length and the density claim was never tested. It has now been tested and it is
+wrong. Reporting the controls separately was the difference between publishing
+0.500 and publishing 0.611.
+
+### 22.2 And no other offline feature separates either
+
+Post-hoc, on the 18 (so worth less than the pre-registered test, and stated as
+such):
+
+| feature | EM range | TRACK range | |
+|---|---|---|---|
+| `cm_per_seg` | 1.9 – 17.7 | 5.9 – 125.8 | overlaps |
+| `nseg` | 2 – 11 | 2 – 14 | overlaps |
+| `total_length` | 8.7 – 159.4 | 19.5 – 503.0 | overlaps |
+| `kine_charge` | 51.0 – 353.4 | 85.1 – 874.1 | overlaps |
+| `kine_charge / kine_range` | 0.77 – 86.11 | 0.71 – 2.68 | overlaps |
+| `start_connection_type` | 1 – 4 | 1 – 4 | overlaps |
+
+**Every one overlaps.** Whatever separates an EM shower from a track here is not
+in the dump's per-object scalars, which is the same shape of answer doc pr/136
+§10 got for admission features and doc pr/141 §9 got for π⁰ admission. It is a
+PID question and it needs the charge profile, not a summary column.
+
+### 22.3 The defect is real and it is the biggest single number this round
+
+| | objects | Enu missing |
+|---|---|---|
+| EM among the 18 scanned | **7** | **801 MeV** |
+| …at full confidence only | 6 | 586 MeV |
+| with §9.5's three | **10 of 24 hand-typed** | **≈ 1045 MeV** |
+
+24 of the 35 μ-typed objects above 50 MeV are now hand-typed, and **at least 10
+are EM showers** — so **≥ 29 % of that population is mis-typed**, over 239
+events, each one entering `kine_reco_Enu` low by `(r−1)/r = 39.7 %` of its true
+shower energy.
+
+For scale: this is one object per ~24 events carrying a few hundred MeV of
+neutrino energy that the reconstruction does not count. It is larger than
+anything the π⁰ campaign moved, and it is in a different subsystem.
+
+### 22.4 What this does and does not license
+
+- It **does** establish the population and the price. That was the question, and
+  it is answered on 24 hand verdicts rather than one specimen.
+- It does **not** name a fix. No offline feature separates (§22.2), so a
+  correction has to come from the PID stage itself, not from a post-hoc gate on
+  `showers[]` — and re-typing an object changes production output unconditionally
+  (CLAUDE.md §5.1), so it is a knob-and-gate round, not an edit.
+- It does **not** touch π⁰. None of the seven changes a π⁰ pairing; K20 already
+  admits the two that could (§4).
