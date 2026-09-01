@@ -1,6 +1,6 @@
 # doc 91 — the count-driven retire round, and the sentinel regression it found
 
-**Status: two rounds executed, 101 → 47 work dirs (65.8 GiB → 57.4 GiB). The sentinel finding in §7 is
+**Status: CLOSED. Two rounds executed, 101 → 47 work dirs (65.8 GiB → 57.4 GiB). The sentinel finding in §7 is
 CLOSED by owner hand scan (§7.4), and the registry has been RE-BASELINED
 (§12): the suite is green on production (31 PASS / 0 FAIL) and provably red on
 every knob-OFF arm. Two sentinels could not be re-baselined and are flagged
@@ -477,7 +477,7 @@ Only **one** of the six was the simple drift the framing predicted.
   each other. → `pf_absent pi0`. Its `log_contains` needed no change: it was
   already True in production and False knob-off, a working discriminator.
 
-### 12.4 The two that could NOT be re-baselined — open owner call
+### 12.4 The two that could NOT be re-baselined — RETIRED by owner decision
 
 `173819` and `406125` guard shipped, SBND-ON fixes whose knobs still change
 `tracking-pr.root`, but whose **sentinel events no longer separate alive from
@@ -489,12 +489,19 @@ dead**. 406125's PF trees are byte-for-byte identical with the knob on and off
 makes an assertion that is green and cannot fail. Leaving them in `SENTINELS` is
 the other failure — a permanently red suite gets ignored wholesale.
 
-So they are moved to a `RETARGET_NEEDED` list that the suite **prints on every
-run**, separately from PASS/FAIL, costing nothing until someone re-targets them.
-They are *not* retired: re-targeting means running the knob off across a sample
-and picking an event where the fix still fires. That is a search, not an edit,
-and it is an owner call — because the alternative reading is that these fixes no
-longer earn their knobs.
+Re-targeting them — running the knob off across a sample, diffing PF trees per
+event, and picking one where the fix still fires — was offered and **declined**:
+owner, *"We do not need to track these, we are good."* So they are **retired**,
+moved to a `RETIRED_SENTINELS` record in the file that nothing executes and the
+suite no longer prints. The measurement stays there so nobody re-derives it, and
+so does the warning not to revive them by moving numbers until they go green —
+that is what made this registry stale in the first place.
+
+**One consequence, recorded once and not argued:**
+`shower_pass3_cone_guard_len` and `shower_pass4_prune_gap2` are shipped SBND-ON
+knobs that now have **no sentinel**. If either dies the way pr/93 r4 did, nothing
+in the suite will see it. That is the owner's call; it is written down here and
+in the script so a later round meets it as a decision rather than a surprise.
 
 This also answers §7.4 item 3 on mechanism assertions: 406125's two
 `log_contains` are exactly the assertions that revealed the fix is inert on that
@@ -583,3 +590,16 @@ versus passing its sentinel). Both would have passed review by inspection.
 Post-deletion: 0 broken symlinks, 0 deleted tracked files, suite **31 PASS / 0
 FAIL** against production, falsifiability check clean — all re-derived *after*
 the deletion, not carried from plan time.
+
+
+## 14. Closed
+
+Suite: **31 PASS / 0 FAIL / 0 SKIP**, rc=0, against `work-*-prod0901b`, with a
+named negative control per re-baselined threshold and no un-actioned items
+printed. Tree: **47 `work*` dirs, 57.4 GiB**, from 101 and 65.8 GiB.
+
+Two arms are now unreferenced by anything: `work-91neg-p3cone-mcp2k` and
+`work-91neg-prune2-mcp2k` were built as the knob-off side for the two sentinels
+retired in §12.4. They are ~1 GB and 2 dirs; left in place rather than spun up a
+third retire round for them, and named here as the obvious first candidates
+whenever a next round runs.

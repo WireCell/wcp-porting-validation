@@ -312,19 +312,23 @@ SENTINELS = [
 ]
 
 # ---------------------------------------------------------------------------
-# RETARGET NEEDED -- moved out of SENTINELS 2026-09-01 (doc 91 sec 12).
+# RETIRED 2026-09-01 (doc 91 sec 12.4) -- owner: "We do not need to track
+# these, we are good."  Kept as a record, not as a check: nothing below runs.
 #
-# These two are NOT retired and NOT "known failures to ignore".  Each guards a
-# shipped, SBND-PRODUCTION-ON fix whose knob still changes tracking-pr.root, but
-# whose SENTINEL EVENT no longer separates fix-alive from fix-dead.  A threshold
-# cannot be re-baselined onto a pair of values that are equal: doing so would
-# produce an assertion that is green and cannot fail, which is the dead safety
-# net doc pr/127 exists to prevent.  Leaving them in SENTINELS is the other
-# failure -- a permanently red suite gets ignored wholesale.
+# Each guarded a shipped, SBND-PRODUCTION-ON fix whose knob still changes
+# tracking-pr.root, but whose SENTINEL EVENT no longer separates fix-alive from
+# fix-dead.  A threshold cannot be re-baselined onto a pair of equal values: it
+# would be green and unable to fail, the dead safety net doc pr/127 exists to
+# prevent.  Re-targeting each onto an event where its knob still bites was
+# offered and DECLINED by the owner, so they are retired rather than carried.
 #
-# So they are reported on EVERY run, separately from PASS/FAIL, and cost the
-# suite nothing until someone re-targets them onto an event where the knob still
-# bites.  Measured at the pinned prod0901b point, both sides, same binary+cfg:
+# CONSEQUENCE, stated once and not argued: shower_pass3_cone_guard_len and
+# shower_pass4_prune_gap2 are shipped SBND-ON knobs that now have NO sentinel.
+# If either dies the way pr/93 r4 did, nothing here will see it.  That is the
+# owner's call, recorded so a later round does not rediscover it as a surprise.
+#
+# The measurement is kept so nobody re-derives it.  Taken at the pinned
+# prod0901b point, both sides, same binary+cfg:
 #
 #   173819  pr/125 pass3_cone track guard
 #           production (guard_len = 15)                    e- [283, 18, 16]
@@ -341,13 +345,13 @@ SENTINELS = [
 #           completely inert on this event, and the two log_contains assertions
 #           fail on BOTH sides.
 #
-# TO RE-TARGET: run the knob off across a sample, diff PF trees per event, and
-# pick an event where the fix still fires.  That is a search, not a threshold
-# edit, and it is an owner call because the alternative reading is that the fix
-# no longer earns its knob.
-RETARGET_NEEDED = [
+# IF ANYONE REVIVES THESE: re-targeting means running the knob off across a
+# sample, diffing PF trees per event, and picking one where the fix still fires.
+# A search, not a threshold edit.  Do NOT simply move the numbers until they go
+# green -- that is what made this registry stale in the first place.
+RETIRED_SENTINELS = [
     (173819, "pr/125 guard", "pass3_cone track guard",
-     "guard on/off differ by 5 MeV on e- max (283 vs 288); shipped proton re-root is gone from both"),
+     "guard on/off differ by 5 MeV on e- max (283 vs 288); shipped proton re-root gone from both"),
     (406125, "pr/124 A", "shower_pass4_prune_gap2 gap-band tier-2 prune",
      "PF trees IDENTICAL with the knob on and off; both log assertions fail on both sides"),
 ]
@@ -479,14 +483,6 @@ def main():
         npass += 1 if ok else 0
         nfail += 0 if ok else 1
     print("\n%d PASS, %d FAIL, %d SKIP" % (npass, nfail, nskip))
-    if RETARGET_NEEDED:
-        print("\n%d sentinel(s) RETARGET NEEDED -- a shipped fix whose event no "
-              "longer separates alive from dead (doc 91 sec 12):" % len(RETARGET_NEEDED))
-        for ev, doc, what, why in RETARGET_NEEDED:
-            print("    %-8d %-16s %s" % (ev, doc, what))
-            print("             %s" % why)
-        print("    These do NOT count as FAIL.  They are not retired either -- "
-              "re-targeting them is an open owner call.")
     return 1 if nfail else 0
 
 
