@@ -1312,6 +1312,12 @@ use it as if it did: `pr117 flank_absorb` reads ZERO in both arms, but it is OFF
 in both, so that zero is not evidence for its retirement. §12.2's justification
 is the compiled-config argument and the byte-identity gate, never the census.
 
+**Both censuses are pinned to the pre-deletion binary `ddce7430`** — they
+measure `prod0901`/`empre0901`, which ran on it, and both TSVs were generated
+before §12.2's commit. Re-running `fire_census.py` at `6f30c079` or later
+returns **34** instrumented tags, not 35: `pr117 flank_absorb:` went out with
+the function it lived in. That is the retirement, not drift.
+
 ### 12.6 Errata found in this doc while executing it
 
 Four, all found by re-deriving rather than reading, and all fixed here rather
@@ -1390,6 +1396,19 @@ decision #3 and still the owner's call under M10.
 - **Item 3's arms** — `work-77r3-bis-*-ncpi0`, nine leave-one-out single-event
   arms plus the two-knob control; the control is byte-identical to
   `work-ncpi0-prod0901` on 37112 (2/2 archives).
+- **The kept probe was exercised, not just preserved.** §12.2 keeps the
+  `pr91_merge_dbg()` region alive for `scripts/pr118_probe_census.py`, but the
+  308-event gate runs it with the probe OFF and so proves nothing about it. One
+  event re-run at the new binary under `WCT_SHOWER_MERGE_DEBUG=1`
+  (`work-77r3-probechk-ncpi0`) emits **6** `tag=ex_shower1_p2dis` lines, and
+  `pr118_probe_census.py`'s own `parse_line()` reads all **14** fields off them
+  — `body_dis` included, the value the deleted line used to consume. A kept
+  probe that no gate covers is worth one event.
+- **No script reads a removed key.** The six deleted keys no longer appear in
+  `default_configuration()`; a grep of `sbnd_xin/scripts/` finds only a
+  docstring mention in `pr118_probe_census.py`, which parses the probe's
+  stderr, never a config JSON. (§9's analogous case survived only because its
+  readers used `.get(...)` with falsy defaults.)
 - **Not run, and why** — no new full-3067 production arm: this round changes no
   compiled config and no reachable code, and the 308-event gate plus the 21-way
   compiled-config identity bound it more tightly than a re-run would.
