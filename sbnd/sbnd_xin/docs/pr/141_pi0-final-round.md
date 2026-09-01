@@ -814,3 +814,95 @@ finder's own tape: the `local_dirs` branch (§1.1), the "energy hypothesis is th
 binding constraint" claim (§9.2), and the ×1.906 ratio (§8). `WCT_PI0_PAIR_DEBUG`
 costs one event, emits no bytes, and would have caught all three before they
 were written down. **Run the tape before modelling the code.**
+
+---
+
+## 13. Review corrections to §8–§12
+
+Three things a review pass caught after §8–§12 were pushed. None reverses a
+verdict; all three are recorded because two of them were stated more strongly
+than the evidence supported.
+
+### 13.1 The "35 → 36" label refresh, now measured by the census rather than by hand
+
+§10 derived the flip by comparing the owner's new pair against the dump's
+`pio_id` groups. That is not the census, and the census is what produces the 35.
+Re-run properly — `pr132_pi0_census.py … --overlay-tag pi0mass-0904-owner` on
+`work-pr141r1-off-*`:
+
+```
+348691   labelsrc=overlay   partial (m 297.6)  ->  exact (m 141.8)
+```
+
+**Confirmed, and by the census itself.** But the run also shows the denominator
+moving 66 → 52, because the script has a *single* `--overlay-tag` slot: naming
+the owner's rescan **displaces** `pi0scan-0829-agent`, and 14 events keep their
+pairing only there. So the two totals are not comparable head-to-head.
+
+On the **52 rows both censuses cover**, exactly one row changes and nothing
+regresses:
+
+| | exact (of the 52 shared rows) |
+|---|---|
+| baseline labels | 32 |
+| owner's rescan | **33** |
+
+So **35 → 36 of 66 stands**, as 35 + 1 with a measured +1 and zero collateral —
+not as a single census run. A genuinely refreshed census needs a *two-overlay,
+newest-wins* precedence the script does not have, which is one more reason the
+refresh is an owner decision about the record rather than a flag anyone flips.
+
+### 13.2 M3's off-path now has its own gate arm
+
+§8's table presented all three knobs under one gate result, but both gate arms
+ran on `pin-pr141b`, which carries M1 and M2 only. M3 landed afterwards in
+`pin-pr141c` and was covered by an *argument* (`mu_hyp` returns early when
+`!m_pi0_mu_shower_hypothesis`, so M3's line is unreachable with M1 off), not by
+a measurement.
+
+Arm `work-pr141r1-off3-*` on `pin-pr141c` (md5 `430ffa3e…`, all three knobs
+present and off) vs `work-pr140r4-off-*`:
+
+| sample | archives | missing/unpaired | |
+|---|---|---|---|
+| mcp1k | 132 | 0 | PASS byte-identical |
+| mcp2k | 212 | 0 | PASS |
+| ncpi0 | 38 | 0 | PASS |
+| nuecc48 | 96 | 0 | PASS |
+| **total** | **478** | **0** | **PASS** |
+
+**All three knobs are now gate-covered on the binary that carries all three**,
+and the round has three independent 478/478 knob-off gates (`pin-pr141`,
+`pin-pr141b`, `pin-pr141c`).
+
+A note on §13.3 while it is fresh: this arm exited **`rc=0` on all four
+samples**, where the earlier ones did not. So the runner bug is *intermittent* —
+a race, not a deterministic path — which is exactly what makes it dangerous to
+read the exit code as a verdict.
+
+### 13.3 A pre-existing runner bug that silently disables the failure check
+
+Three arms this round exited `rc=1` on one sample while the batch summary read
+`ok: N / failed: 0` and every output was present. The cause is one line:
+
+```
+./run_pr_chain_batch.sh: line 2151: _r: unbound variable
+```
+
+Under `set -u` the runner dies in its **final** loop — the doc pr/97 safety net
+that re-derives per-event failures from `rc.txt` and "fails loudly", added
+precisely because `batch_summary()` returns 0 as long as *any* event succeeded.
+It aborts after the merge, so outputs are complete (verified: 239/239 events,
+and the gates PASS 478/478), but **the check itself never runs**, and a real
+failure would surface only as a bare `rc=1` with no event list.
+
+**This is pre-existing, not from this round** — the same message appears in doc
+pr/139's round-2 logs (`pr140-arm-work-pr140r2-off-mcp2k.log`). Per CLAUDE.md it
+is reported, not fixed here. It is the doc pr/127 shape exactly: a safety net
+that has been dead for at least two rounds, and the only symptom was an exit
+code nobody read.
+
+### 13.4 Movers
+
+`pr90_movers.py` on both knob-on arms, all four samples: **ADVERSE 0**, movers
+> 0.05 cm: 0. No vertex moved.
