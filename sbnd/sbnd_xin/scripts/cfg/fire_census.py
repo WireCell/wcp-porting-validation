@@ -30,8 +30,11 @@ row whose knob is ON *and* whose motivating event is present in the sample is a
 finding -- that adjudication is per-knob and lives in the doc, not here.
 
 Usage:
-    scripts/cfg/fire_census.py work-mcp1k-prod0901 work-mcp2k-prod0901 \
-        work-ncpi0-prod0901 work-nuecc48-prod0901 [--tsv out.tsv]
+    scripts/cfg/fire_census.py work-mcp1k-prod0901b work-mcp2k-prod0901b \
+        work-ncpi0-prod0901b work-nuecc48-prod0901b [--tsv out.tsv]
+    (doc 89: repointed from work-*-prod0901, which that round released.  The
+     arms are positional, so this is a usage example rather than a default --
+     nothing was broken, but an example naming a deleted arm is a trap.)
 """
 import argparse, collections, os, re, subprocess, sys
 

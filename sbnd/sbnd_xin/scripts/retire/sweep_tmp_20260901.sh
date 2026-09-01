@@ -48,11 +48,19 @@ DROP="pin-pr138bare pin-pr138off pin-pr139 pin-pr139b pin-pr140r2 pin-pr140r3
 echo "== interlock A: the backed arms must already be retired =="
 bad=0
 for d in $DROP; do
+    # DEFECT FIXED 2026-09-01 (review): the glob was built as
+    # work-${d#pin-}, i.e. pin-pr138bare -> "work-pr138bare*", which matches
+    # NOTHING -- the arms are named work-pr138r1-bare-*.  Five of the eleven
+    # entries were therefore passing this interlock because the pattern was
+    # wrong, not because the arms were gone.  An interlock that cannot fail is
+    # not an interlock.  Normalise to the ROUND prefix instead, which is
+    # strictly broader and cannot miss: pin-pr138bare -> work-pr138*.
     case "$d" in
-        pin-pr*)  pat="work-${d#pin-}" ;;
+        pin-pr*)  rnd=$(echo "${d#pin-}" | grep -oE '^pr[0-9]+'); pat="work-$rnd" ;;
         prod0830-libsnap) pat="work-*-prod0830" ;;
         *) pat="" ;;
     esac
+    [ -z "${rnd:-}" ] && [ "${d#pin-}" != "$d" ] && { echo "  !! $d: cannot derive a round prefix -- refusing"; exit 2; }
     [ -z "$pat" ] && continue
     n=$(find "$SBND" -maxdepth 1 -type d -name "${pat}*" 2>/dev/null | wc -l)
     if [ "$n" -ne 0 ]; then

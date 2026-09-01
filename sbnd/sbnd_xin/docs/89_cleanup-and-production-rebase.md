@@ -128,6 +128,12 @@ snapshot. **Every SBND artifact — `prod_prjob.json`, `sbnd_pr/clus/img/ql/simc
 — was byte-identical to the reference in *both* gate runs**; the single drift
 was uBooNE's, and it is the peer's intended change, not ours.
 
+> **A git-blame oddity, recorded so it does not confuse anyone.** This very
+> document was swept into the peer's doc 90 commit `2e0f445b` at an intermediate
+> state, because they staged broadly while it was still untracked — the shared
+> index hazard again. Its final content is `f4561098`. `git log` on this file
+> therefore shows a *doc 90* commit as its origin.
+>
 > The `df -h /nfs/data/1` line every prior round's driver printed was reporting
 > the wrong filesystem: this tree lives on `/home/xqian` (`/dev/nvme2n1p6`), and
 > `/nfs/data/1/xqian/toolkit-dev` is a symlink to it. Fixed in
@@ -370,9 +376,14 @@ Named plainly, because each is a thing that stops being re-derivable.
 | `sbnd_xin` | 153 725 MB (**150.1 GiB**) | 67 143 MB (**65.6 GiB**) |
 | `work*` dirs | 306 | 101 |
 | `archive/` | 16 500 MB | 6 848 MB |
-| free on `/dev/nvme2n1p6` | 509 G | **596 G** |
+| free on `/dev/nvme2n1p6` | 509 G | 596 G |
 
-Where the 87 G went:
+The `df` row is **whole-filesystem and not attributable to this round** — two
+peer sessions (doc 88, doc 90) were writing the same disk throughout, adding at
+least the nine `work-90pi0-*` arms and the `qlport/scripts/sweep/doc89ub-*`
+trees. Only the `sbnd_xin` row and the per-step table below are this round's.
+
+Where the space went, attributably:
 
 | step | freed |
 |---|---|
@@ -424,12 +435,18 @@ smaller honest number is reported rather than the projection.
 
 ## 12. Recommended next step
 
-**Re-point the fire census and the doc-77 knob ledger at `prod0901b`.**
-`scripts/cfg/fire_census.py:33-34` still names `work-mcp2k-prod0901` and
-`work-ncpi0-prod0901`, which no longer exist. Those two are *live defaults*, not
-round records, so unlike the doc 85/86 scripts in §9 they should be repointed —
-the distinction is the disposition rule in `ACK_BROKEN_REFS`. Doing it as its
-own small change keeps it out of this round's diff.
+**First, check whether `ref/prod-2026-09-01b` is still the production
+reference.** It was pinned before doc 88 and doc 90 landed (toolkit
+`50df4094`), and `prod_cfg_gate.py` with no `--ref` uses the *newest*
+`ref/prod-*`. This round deliberately gated a **snapshot** of the cfg tree, not
+the live one, so nothing here depends on the answer — but the next round should
+re-run `prod_cfg_gate.py` against the live tree before trusting the reference.
+
+(`scripts/cfg/fire_census.py`'s usage example was repointed to `prod0901b` in
+this commit. Its arms are positional, so nothing was broken — but an example
+naming a deleted arm is a trap. The doc 85/86 scripts in §9 keep their
+`prod0830` names by the disposition rule: they *record* how a finished round was
+run.)
 
 After that, the natural next front is unchanged from doc pr/141: **PID, not
 clustering** — ≥29 % of μ-typed objects are EM showers and ~1045 MeV of Enu is
