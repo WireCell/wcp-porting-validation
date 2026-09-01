@@ -70,6 +70,8 @@ Prior art: `138_shower-split-master-plan.md` §3–§5, `136_…charter.md` §11
 
 | **S5** | **the rest-mass term a split daughter injects into `kine_reco_Enu`** (owner's question) | — (diagnosis); candidate guard NOT implemented | **CONFIRMED SAFE 47/51, residual 3** (§24) | `scripts/pr140_mass_term.py` on `work-pr140r2-off-*` | 47 daughters typed 11 add **0**; two `nseg=1` daughters typed 13 add **105.66 MeV each** (11 % and 6 % of those events' Enu); one proton adds 8.6 MeV — 938 MeV had `kine_mass_rules` been off |
 
+| **S6** | **track-vs-shower typing of a short daughter** (owner's rule) | `shower_split_em_type_max_len` (new, cm, default 0 = OFF) | **BUILT, GATED, NOT RECOMMENDED** (§25) | knob-off gate **478/478**, doctest 2633 | the mass term is measured at **−0.05 %** of total Enu and no muon mass is booked anywhere; 32 of 34 low-KE muon-typed objects sit in EM-free clusters, so the owner's rule defends muon for them |
+
 **Standing bar for every P-row**: knob-off byte-identical on the standard
 239-event manifest (478 archives, `missing/unpaired events: 0` quoted), freshness
 proof (M1), `wcdoctest-clus` green with the new defaults pinned, compiled-config
@@ -2029,5 +2031,109 @@ against the case that has not occurred on this manifest: a μ-typed daughter
 landing in the **BFS** phase rather than the leftover branch, where the full
 105.66 MeV *would* be booked.
 
-`./build/clus/wcdoctest-clus` **2633** assertions pass with the new default
-pinned.
+**Knob-off gate**: `work-pr140r4-off-*` (new binary, all knobs at their
+defaults) vs `work-pr139r3-flipchk-*` (the shipped production config on the
+previous binary):
+
+```
+gate mcp1k   rc=0 :: events in A: 66   compared archives: 132  missing/unpaired: 0  PASS
+gate mcp2k   rc=0 :: events in A:106   compared archives: 212  missing/unpaired: 0  PASS
+gate ncpi0   rc=0 :: events in A: 19   compared archives:  38  missing/unpaired: 0  PASS
+gate nuecc48 rc=0 :: events in A: 48   compared archives:  96  missing/unpaired: 0  PASS
+```
+
+**478 / 478 byte-identical.** `./build/clus/wcdoctest-clus` **2633** assertions
+pass with the new default pinned. Binary pinned at
+`/home/xqian/tmp/pin-pr140r4`, md5 `28e2b85a…`.
+
+---
+
+## 26. Campaign status — how far is this from done?
+
+### 26.1 The arc, on the metric the campaign is judged by
+
+π⁰ census, exact matches against the owner's 66 hand-scanned π⁰:
+
+| stage | exact / 66 | |
+|---|---|---|
+| doc pr/135 — the π⁰ chain shipped, pre-splitter | **32** (48.5 %) | the bulk of the campaign's gain |
+| `onV1c90` without the splitter (`pr138-census-c90off`) | 33 | |
+| **`onV1c90` + splitter — SHIPPED PRODUCTION** (`pr140r2-census-off`) | **35** (53.0 %) | **the splitter bought +2** |
+| the best any knob has reached since | 36 | and only at the cost of **10 of 32** confirmed cuts — rejected (§22.3) |
+
+**Three rounds of knob work since the splitter shipped have produced no net
+flip.** That is the headline for "how far".
+
+### 26.2 What is exhausted
+
+Measured dead, each with a mechanism and a gate, all shipped DEFAULT OFF:
+
+| | verdict |
+|---|---|
+| `shower_split_max_impact` (b ≤ 12, ≤ 30) | costs 10 of 32 confirmed cuts for +1 exact; threshold inside instrument precision (§22.3) |
+| `shower_split_skip_shared` | 4 cuts for +0.015 purity (§22.3) |
+| `shower_split_shed_shared` | mechanically exact, costs one π⁰ `partial` (§20) |
+| `shower_split_max_parts` = 3 | third cut lands wrong on 2 of 3 objects (§13) |
+| `shower_split_max_seeds` | refuted by its own designed stratum — 0 of 32 want k > 3 (§22.1) |
+| `shower_split_rehome` (4 cm, 15 cm) | closed; the metric buys sensitivity to cuts, not merges (§12) |
+| `shower_split_em_type_max_len` | nothing is booked; the owner's rule defends muon for the objects it would retype (§25) |
+| the rest-mass perturbation | **−0.05 %** of total Enu, median event unchanged (§25.2) |
+
+**The splitter's configuration space is exhausted.** Every dial is turned or
+priced. What remains needs a different kind of change, not another knob.
+
+### 26.3 What actually blocks the remaining 31 π⁰s
+
+This is the real answer to "how far from done", and it is not encouraging for
+more clustering work:
+
+| class | n | is it a splitter problem? |
+|---|---|---|
+| `partial` (one γ right, the other wrong) | 16 | partly |
+| `no-group` (the finder never formed a pair) | 12 | no |
+| `none` | 3 | no |
+
+Overlaying the diagnosed reason:
+
+| blocker | n of 31 | |
+|---|---|---|
+| **a γ is simply NOT RECONSTRUCTED** | **8** | upstream γ-finding efficiency — nothing to do with splitting |
+| **pair found, mass outside (100, 160) MeV** | **9** | energy scale / attribution |
+| γ typed as a hadron | 1 | PID |
+| no diagnosable reason recorded | 14 | |
+
+Of the 9 mass failures the reconstructed masses are **54, 57, 70, 78, 88, 94,
+203, 226, 277 MeV** — **only 2 are within 20 MeV of the window.** So even a
+perfect energy-scale correction recovers ~2 of 66. The other 7 are wrong by
+factors, not by a scale.
+
+**The dominant remaining blockers are missing γs and γ energy, not γ
+clustering.** The splitter was the right tool for the clustering share and it
+has been spent.
+
+### 26.4 So: how far from done
+
+| | |
+|---|---|
+| **the splitter sub-campaign** | **done.** Production settled (§23), every knob priced, three rounds with no net flip |
+| **the π⁰ census as a metric** | **35/66 with ~2 more reachable by energy scale.** Beyond that needs upstream γ reconstruction |
+| **the label instrument** | 71 objects, 32 confirmed cuts, 78 hand parts — now the binding constraint on any *further* splitter claim (§13.3, §17, §18) |
+
+**Recommendation: close doc pr/139 and the splitter campaign.** The remaining
+work is a different problem with a different tool.
+
+### 26.5 If work continues, in order
+
+1. **The k = 3 kernel** — the one live splitter lead with measured demand: 6 of
+   32 confirmed cuts want three parts and the kernel places the third boundary
+   badly (§22.4). Concrete experiment: **recurse** — cut a part only if that part
+   itself has an accepted seed pair, rather than asking for three seeds at once.
+   Bounded, and it has 6 labelled examples to develop against.
+2. **The 8 missing γs** — the largest single block, and it is a
+   γ-reconstruction-efficiency question, not a splitting one. Worth a scoping
+   pass before any more splitter work.
+3. **The 7 badly-wrong masses** — wrong by factors; likely wrong pairing or a
+   grossly over-clustered γ. A hand scan of those 7 would say which.
+4. **Small and cheap**: the EM-only (`pdg = 211`) restriction, n = 2 today, needs
+   ~15 targeted objects (§22.5); and 278420/61027's separability, still on one
+   negative (§18).
