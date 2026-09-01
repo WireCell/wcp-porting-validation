@@ -353,3 +353,64 @@ build a targeted sample of μ-typed objects in the 40–80 cm band that sit near
 the same shape as §22.5's `pdg = 211` lead (item 4), and the two should be one
 sample: **both are questions about which particle *types* may enter the π⁰
 pool**, and both currently rest on n ≤ 2.
+
+---
+
+## 5. Item 1 — the k = 3 recursion is measured dead, and it kills a family
+
+§26.5 item 1 proposed: *"cut a part only if that part itself has an accepted
+seed pair, rather than asking for three seeds at once."* The reasoning was that
+every k ≥ 3 variant doc pr/138 tried picks more seeds out of **one** angular
+density map built around the whole object, so a third core that is invisible in
+that map stays invisible however cleverly the seeds are chosen. Re-seeding each
+part on its own points is the one thing none of those variants did.
+
+`scripts/pr141_kernel_recurse.py` (fork of `pr138_kernel_k.py`, M10) tests it
+offline against every owner split label the campaign holds — the three owner
+tags pooled, later scans winning on conflict: **45 SPLIT objects, 10 of them
+k ≥ 3**. **No new parameter**: the recursion reuses the shipped trigger's own
+two numbers (valley ≤ 0.95, charge fraction ≥ 0.03) and the frozen seed-finding
+constants, and recursion depth is capped at 1. So a win would not have been a
+fit — and neither is the loss.
+
+| class | n | shipped kernel | recursion |
+|---|---|---|---|
+| SPLIT2 | 35 | med 1.000 mean 0.943 **exact 28/35** | med 1.000 mean 0.934 **exact 21/35** |
+| SPLIT3 | 8 | med 0.601 mean 0.618 exact 0/8 | med 0.601 mean 0.618 **exact 0/8 — identical** |
+| SPLIT4+ | 2 | med 0.465 | med 0.746 |
+| ALL | 45 | mean 0.864 exact 28/45 | mean 0.870 **exact 21/45** |
+
+**It costs seven exact SPLIT2 boundaries and buys nothing on SPLIT3.** Eight of
+the 35 SPLIT2 objects get over-cut (k 2 → 3), five of them dropping from a
+perfect 1.000. The single gain is one SPLIT4+ object — 396222/9059, k 2 → 4,
+agreement 0.079 → 0.641, still not exact, n = 1.
+
+### 5.1 The mechanism, and why it generalises
+
+The SPLIT3 column is not merely worse — it is **byte-identical to the shipped
+kernel**. On all eight SPLIT3 objects `k_rec == k_ship`: **the recursion never
+fired.** Re-seeded on its own points, with its own centroid and its own
+bandwidth, not one part of one of those objects produced an accepted seed pair.
+
+That is a stronger and more useful statement than doc pr/139 §13's *"raising
+`max_parts` places the third cut badly"*:
+
+> **The third core is not visible to this seed finding at any scope** — not in
+> the whole object's angular density, and not in the part's own. Changing which
+> seeds are picked, or where the map is built, cannot reach it.
+
+So the family is closed: `max_parts = 3` (§13), `max_seeds` (§22.1), the greedy
+and pair-then-grow variants (doc pr/138 K1–K7) and now recursion all fail for
+the same reason. A k ≥ 3 fix needs a **different observable**, not a different
+search over the same one.
+
+And four of the eight SPLIT3 objects have `k_ship = 1` — **the shipped trigger
+does not fire on them at all**. So a third of the k ≥ 3 shortfall is not a
+boundary problem in the first place; those objects are not being split even
+twice.
+
+### 5.2 Verdict
+
+**Item 1 is closed negative.** No C++ was written, no arm was spent, and the
+result is stronger than a null: it names the observable as the limit rather
+than the search. Cost: one script.
