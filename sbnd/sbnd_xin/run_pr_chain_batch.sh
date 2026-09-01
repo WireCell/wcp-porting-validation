@@ -1722,6 +1722,14 @@ fi
 [ -n "${SBND_PI0_BP_VERTEX:-}" ] && CATH_TLA+=(--tla-code "pi0_bp_vertex_miss_cm=${SBND_PI0_BP_VERTEX}")
 # doc pr/133: K20 admit mu-typed shower-topology objects into the pi0 pools.  EMPTY = no TLA = C++ default false.
 [ -n "${SBND_PI0_ADMIT_MU:-}" ] && CATH_TLA+=(--tla-code "pi0_admit_muon_showers=$([ "${SBND_PI0_ADMIT_MU}" = 0 ] && echo false || echo true)")
+# doc pr/141 M1: price mu-typed pi0 candidates under the SHOWER recom+fudge
+# (ratio 1.657 at the production factors).  EMPTY = no TLA = the job default false.
+[ -n "${SBND_PI0_MU_HYP:-}" ] && CATH_TLA+=(--tla-code "pi0_mu_shower_hypothesis=true")
+# doc pr/141 M2: K20's shower-ish length bound in cm (shipped literal 40).
+# EMPTY = no TLA = null = the C++ default 40 = byte-identical.
+[ -n "${SBND_PI0_MU_LEN:-}" ] && CATH_TLA+=(--tla-code "pi0_mu_shower_max_len=${SBND_PI0_MU_LEN}")
+# doc pr/141 M3: length floor (cm) for the M1 re-pricing.  EMPTY = no TLA = 0.
+[ -n "${SBND_PI0_MU_HYP_MIN:-}" ] && CATH_TLA+=(--tla-code "pi0_mu_shower_hyp_min_len=${SBND_PI0_MU_HYP_MIN}")
 # doc pr/133: K21 owner NC signature angle (deg) for the bp proposer.  EMPTY = no TLA = C++ default 0 (v3 gate).
 [ -n "${SBND_PI0_NC_SIG_ANGLE:-}" ] && CATH_TLA+=(--tla-code "pi0_nc_sig_angle_deg=${SBND_PI0_NC_SIG_ANGLE}")
 # doc pr/133: K21 v2 signature-mode partner floor (MeV).  EMPTY = no TLA = C++ default 0 (legacy 20).

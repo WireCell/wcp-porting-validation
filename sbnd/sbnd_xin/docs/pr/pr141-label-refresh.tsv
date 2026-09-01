@@ -1,0 +1,10 @@
+event	sample	old_pair	new_pair	changed	reco_pairs	reco_matches_old	reco_matches_new	verdict
+21073	ncpi0	60081+63100	16019+60081	True	11008+63100;34027+60081	False	False	no reco pair matches either
+71872	mcp2k	64044+79074	64044+79074	False	13008+79074	False	False	no reco pair matches either
+168432	mcp1k	22006+49028	22006+49028	False	19032+49028	False	False	no reco pair matches either
+280159	mcp2k	24015+95114	24015+95114	False	12119+24015	False	False	no reco pair matches either
+283713	mcp1k	47021+67051	23011+47021	True	none	False	False	no reco pair matches either
+286655	mcp1k	19006+80055	19006+80055	False	none	False	False	no reco pair matches either
+348691	mcp1k	49046+50073	50073+52089	True	50073+52089	False	True	FLIPS TO EXACT under the refreshed label
+397630	mcp2k	19010+33038		False	15047+19010	False	False	no reco pair matches either
+409634	mcp1k	21002+69032	21002+27015	True	none	False	False	no reco pair matches either

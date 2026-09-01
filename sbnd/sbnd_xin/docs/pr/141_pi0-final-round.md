@@ -568,3 +568,249 @@ and in particular the campaign is **not** blocked on upstream γ-finding the way
 
 **Not recommended**: any further work on the split kernel's seed search (§5.1
 closes it), and any threshold moved on tonight's n = 1 evidence.
+
+---
+
+# Session 2 — acting on §7.3's three recommendations
+
+Owner, 2026-08-31: *"can you continue Recommended next, in order: (1) price
+μ-typed π⁰ candidates under the shower hypothesis at pairing time … (2) scan the
+ready-made 14-object type set … (3) the three over-merges, paired with a
+label-refresh pass. for tonight"* — and, on the C++: *"Please proceed this one,
+if you need further rounds, please feel free to proceed."*
+
+## 8. Recommendation 1 — three knobs, all DEFAULT OFF, and what they measure
+
+| knob | what it does | default | state |
+|---|---|---|---|
+| `pi0_mu_shower_hypothesis` (**M1**) | inside `id_pi0_with_vertex`, price a μ-typed, no-shower-flag object under the **shower** recombination + fudge | `false` | **regression, do not flip** (§9.1) |
+| `pi0_mu_shower_max_len` (**M2**) | K20's "shower-ish muon" length bound, exposed as a knob | `40 cm` = the shipped literal | **inert, do not flip** (§9.2) |
+| `pi0_mu_shower_hyp_min_len` (**M3**) | length floor below which M1 leaves the track price alone | `0` = no floor | **moot** (§9.3) |
+
+**M1 is exact arithmetic, not an estimate.** `kine_charge_from_maps` ends in
+`overall / recom_factor / fudge_factor * w_value` (`NeutrinoEnergyReco.cxx:188`),
+and the collected charge is hypothesis-independent, so the same charge under the
+other hypothesis is a **global constant**:
+(0.87 × 0.95) / (0.58 × 0.86) = **1.657** at the SBND production factors.
+
+> **A correction to §6.1.** That section quoted the ratio as 1.906, "measured on
+> 283713's `23011`". It was not a ratio at all: `23011`'s label carries
+> `energy_marks_delta = 152.48` — **charge the owner had hand-added as `in`
+> marks**. The label's `energy_other_hypothesis` field, which *is* the
+> hypothesis change, reads 280.0 against `energy_as_reconstructed` 168.4, i.e.
+> **1.663** — the config value. §6.1's "3–4 of 6" is therefore **3 of 6**.
+
+**Verification, all four bars met:**
+- knob-off gate `work-pr140r4-off-*` vs `work-pr141r1-off-*`: **PASS 478/478
+  archives byte-identical, `missing/unpaired events: 0`** on all four samples;
+  repeated on the final M1+M2 binary (`work-pr141r1-off2-*`): **PASS 478/478**.
+- `./build/clus/wcdoctest-clus`: **2639 assertions, 0 failed** (2635 → 2637 →
+  2639 as M1, M2, M3 landed; each pins its default).
+- freshness proof before every arm: `local/lib/libWireCellClus.so` newer than the
+  last source edit; binaries pinned `/home/xqian/tmp/pin-pr141{,b,c}`
+  (md5 `0c2e53f1…`, `1f92dc70…`, `430ffa3e…`), arms run under
+  `LD_LIBRARY_PATH` on the pin.
+- **compiled-config proof, the real one**: a bare `wcsonnet` of the job emits no
+  `TaggerCheckNeutrino` knobs at all (the component's config node only appears
+  once the runner's TLA set selects the PR stages) — so grepping it would have
+  been vacuous, exactly as doc pr/129 warned. The proof used instead is the
+  runner's **own** compiled config, `.wct-cfg-evt283713.json`:
+  `"pi0_mu_shower_hypothesis" : true` and `"pi0_mu_shower_max_len" : 80`.
+
+## 9. Recommendation 1 — RESULTS. All three are negative, and the last one is the interesting one
+
+### 9.1 M1 alone is a regression, and it breaks the π⁰ K20 was shipped to rescue
+
+Arm `work-pr141r1-on-*` (M1 alone, flipped production config):
+
+| | exact | partial | no-group | none |
+|---|---|---|---|---|
+| off | **35** | 16 | 12 | 3 |
+| M1 on | **34** | 17 | 12 | 3 |
+
+Six archives differ, and **not one is in the six-object scan set**: 166870,
+348691, 393212 (mcp1k), 174771, 282271, 493659 (mcp2k). The census moves on
+exactly one: **166870, `exact` → `partial`**.
+
+The tape gives the mechanism in four lines. Off:
+
+```
+PI0_PAIR K20 mu-admit sh=85045 E=38.6
+PI0_PAIR P1 accept sh1=85045 sh2=87058 vtx=10060 m=116.9
+```
+
+On:
+
+```
+PI0_PAIR M1 mu-hyp sh=85045 E=38.6 -> 63.9 (x1.657)
+PI0_PAIR K20 mu-admit sh=85045 E=38.6
+PI0_PAIR P1 accept sh1=85045 sh2=10074 vtx=10060 m=138.8
+PI0_PAIR P1 accept sh1=10013 sh2=87058 vtx=10008 m=124.9
+```
+
+**Re-pricing moved the greedy partner choice.** With `85045` at 63.9 MeV a
+*different* partner (`10074`) lands nearer 135 than the true one, so the correct
+pair `85045`+`87058` is displaced and `87058` is consumed by a second pairing.
+The event this happens on is **166870 — the specimen doc pr/133 cites as K20's
+justification** (*"166870 true pair m=109.1 accepted"*).
+
+So M1's live population is not the one §6.1 reasoned about at all: it is the
+**short (< 40 cm) objects K20 already admits**, whose track pricing is part of
+the operating point that was validated when K20 shipped.
+
+### 9.2 M2 is inert — and the length bound was never the blocker either
+
+Arm `work-pr141r1-onboth-*` (M1 + M2 at 80 cm): census **34 / 17 / 12 / 3** —
+identical to M1 alone. **Neither 283713 nor 350354 gained a π⁰**, and the
+pre-registered "exactly three new acceptances" did not happen: there were
+**zero**.
+
+The tape says why, and the compiled-config proof is what makes it conclusive:
+
+```
+"pi0_mu_shower_max_len" : 80          <- the value DID arrive
+PI0_PAIR M1 mu-hyp sh=23011 E=161.7 -> 267.9 (x1.657)
+PI0_PAIR K20 mu-reject sh=23011 why=trackish len=57.3
+```
+
+`23011` is 57.3 cm, the bound is 80 cm, and it is **still refused**. K20's test is
+
+```cpp
+shower_ish = get_flag_shower() || (total_length < m_pi0_mu_shower_max_len && ss && seg_dir_weak(ss))
+```
+
+so with the length arm satisfied and no shower flag, the only remaining term is
+**`seg_dir_weak(ss)`** — and it is false. The object has a well-defined
+direction.
+
+> **The binding constraint is the reco's own direction evidence, not the length
+> bound and not the energy hypothesis.** §6.1's headline — *"the energy
+> hypothesis, not the length bound, is what blocks these"* — is **wrong**, and
+> it was wrong because it was derived from an offline screen rather than from
+> the admission code. It is the third time this round that reading the source
+> and reading the tape gave different answers, and the tape won every time.
+
+### 9.3 M3 is moot, and stays in as the record of a design that was not needed
+
+`pi0_mu_shower_hyp_min_len` was built to scope M1's re-pricing to what M2 newly
+admits, so the legacy < 40 cm population keeps the price it was validated at.
+The design is sound and it is the right fix for §9.1's regression — but M2
+admits **nothing**, so there is nothing for it to scope. It ships DEFAULT OFF,
+gate-covered, unmeasured.
+
+### 9.4 The pre-registration failed, and the failure is the useful part
+
+§`pr141-prereg-m1m2.md`, committed before the arm: *"exactly three new π⁰ …
+in 283713, 350354 and 392901 … no event outside these six should move."*
+
+**Measured: zero new π⁰, and six events outside the set moved.** Both halves
+wrong. The prediction was built on an offline model of *which objects K20
+admits* (length only) when the code requires length **and** direction weakness,
+and on the assumption that M1's population was the 40–80 cm band when it is the
+< 40 cm one.
+
+The bar the pre-registration set — *"recommend only if the arm produces exactly
+the three predicted acceptances"* — is not met, so **M1, M2 and M3 are all
+recommended OFF**, which is where they ship.
+
+### 9.5 What the owner's scan settles regardless
+
+Class purity is **3 of 6** (283713 `23011`, 350354 `18009`, 122660 `54071` are
+γs; 392901 `23017`, 280159 `90098`, 294174 `25030` are tracks). So even if the
+direction test were relaxed enough to admit this class, **half the admissions
+would be tracks** — and one of the three in-window candidates
+(392901 `23017`, m = 124.6) is one of them, i.e. it would have manufactured a
+**false π⁰**. A relaxation worth flipping would have to separate the 3 from the
+3, and nothing measured tonight does that.
+
+`122660/54071` is worth recording separately: an **owner-called electron shower
+typed `pdg = 13`**, 170 MeV under the shower hypothesis, with no in-window
+partner. It changes no π⁰, but its energy enters `kine_reco_Enu` at the **track**
+price. That is a real defect in a different subsystem, found and not fixed here.
+
+## 10. Recommendation 3 — the label-refresh pass, and it is worth one π⁰
+
+`scripts/pr141_label_refresh.py` asks, for each of the nine events the owner
+rescanned: does the reconstruction's own accepted π⁰ match the **old** hand pair
+or the **new** one?
+
+| event | old hand pair | owner's new pair | what the reco accepts | |
+|---|---|---|---|---|
+| **348691** | 49046+50073 | **50073+52089** | **50073+52089** | **FLIPS TO EXACT** |
+| 21073 | 60081+63100 | 16019+60081 | 11008+63100; 34027+60081 | no match |
+| 283713 | 47021+67051 | 23011+47021 | none | no match |
+| 409634 | 21002+69032 | 21002+27015 | none | no match |
+| 71872, 168432, 280159, 286655 | unchanged | unchanged | ≠ | no match |
+| 397630 | 19010+33038 | — (lost, §2.3) | 15047+19010 | — |
+
+**348691's reconstruction has been right all along.** The census called it
+`partial` against a hand pair the owner has now superseded; under the refreshed
+label the reco's `50073`+`52089` at 141.8 MeV **is** the answer.
+
+So the shipped census is **35/66, and 36/66 once one label is refreshed** — a
+free π⁰, with no code change. `pr132_pi0_census.py` resolves labels
+**base-wins**, which is right for an overlay that only *extends* the
+denominator and wrong for a rescan that *corrects* an earlier call. Changing
+that precedence edits the scientific record, so it is the owner's call
+(CLAUDE.md M13), not something this round does.
+
+Together with §3's two RENAMED γ slots, that is now **three** independent places
+where the instrument, not the reconstruction, is what fails.
+
+## 11. RECOMMENDED PRODUCTION CONFIGURATION
+
+> **Keep production exactly as it is. Flip nothing.**
+>
+> `onV1c90` + `shower_split` + `shower_split_em_start` + the shipped π⁰ chain
+> (`pi0_admit_muon_showers`, `pi0_prefer_main_vertex`, `pi0_mass_offset = 10`,
+> `kine_shower_fudge_factor = 0.86`) — unchanged from doc pr/139 §23.
+
+Every knob this round added is measured and stays OFF:
+
+| knob | verdict | evidence |
+|---|---|---|
+| `pi0_mu_shower_hypothesis` (M1) | **do not flip** | census 35 → 34; breaks 166870, K20's own justifying event, by moving the greedy partner choice (§9.1) |
+| `pi0_mu_shower_max_len` (M2) | **do not flip** | inert — compiled-config proof shows 80 arrived and the object is still refused; `seg_dir_weak`, not length, is the gate (§9.2) |
+| `pi0_mu_shower_hyp_min_len` (M3) | **do not flip** | moot while M2 admits nothing (§9.3) |
+
+**The one change that pays, and it is not code**: refresh 348691's π⁰ label to
+the owner's 2026-08-31 pairing. Census **35 → 36 of 66**. It is a records
+decision (M13), so it needs the owner's word, not a knob.
+
+## 12. Where the campaign stands after tonight
+
+### 12.1 The two sessions, in one table
+
+| question | answer |
+|---|---|
+| k = 3 recursion (§5) | dead — the recursion never fires; the third core is invisible to this seed finding at any scope |
+| the 8 "missing γs" (§3) | at most **1** is missing; 3 over-merges, 2 renames, 3 unaccounted |
+| the 7 bad masses (§1, §2) | 3 containment (irreducible), 3 over-clustering, 2 re-paired by the owner, 1 window edge |
+| μ-typed admission (§9) | all three knobs negative; the gate is the **direction** test, and class purity is 3/6 |
+| the type set `pdg = 211` (§6.2) | 8 objects, still unscanned — the one item of §7.3 not closed tonight |
+| label staleness (§10) | worth **+1 exact** on its own, and it explains 2 of the 9 "missing" γs |
+
+### 12.2 What I would do next, in order
+
+1. **Refresh the π⁰ label store** (§10). It is the only measured gain left that
+   costs nothing: +1 exact today, and it removes a class of false failure that
+   has been inflating every census this campaign has run. Needs an owner
+   decision on precedence — *newest scan wins* — not code.
+2. **Scan the 8 `pdg = 211` objects** (`pr141-typeset.tsv`, S-PI). It is
+   ready, it settles §22.5's EM-only splitter restriction and 278420's
+   separability together, and it is the last item of §7.3 still open.
+3. **`122660/54071`** (§9.5) — an owner-called electron shower typed `pdg = 13`
+   whose energy enters `kine_reco_Enu` at the track price. Not a π⁰ question; a
+   **PID-and-energy** question, and the first concrete specimen of one.
+4. **Stop adding knobs to the π⁰ admission path.** Tonight spent three on it and
+   all three are off. The measured blockers are now, in order: γ **identity**
+   (over-merging), detector **containment**, and **label staleness** — none of
+   which is reached by another admission threshold.
+
+### 12.3 The method lesson, stated once
+
+Three times tonight a conclusion read off the source was overturned by the
+finder's own tape: the `local_dirs` branch (§1.1), the "energy hypothesis is the
+binding constraint" claim (§9.2), and the ×1.906 ratio (§8). `WCT_PI0_PAIR_DEBUG`
+costs one event, emits no bytes, and would have caught all three before they
+were written down. **Run the tape before modelling the code.**
