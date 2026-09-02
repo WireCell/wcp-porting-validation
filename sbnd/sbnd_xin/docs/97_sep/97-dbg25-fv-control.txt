@@ -52,5 +52,9 @@ FIELD FLIPS (2):
   dbg25a        30  0/4             1/1 fc        0             1                 422.6    342.6
   dbg25a        30  0/4             1/1 label     TGM           nu-candidate      422.6    342.6
 
+IN-BEAM MAINS THAT CHANGED SIZE BUT KEPT EVERY VERDICT (1; grew by >1 cm: 0, shrank by >1 cm: 1):
+  sample     event  flash           len off   len on     d cm  pts off   pts on  label         
+  dbg25a        28  0/0               109.0    106.5     -2.5     1884     1884  nu-candidate  
+
 ONLY IN ON (a split freed a cluster onto its own flash) (1):
   dbg25a        30  flash 0/7          t=    -563.3us  main  10433 pts   411.6 cm  in_beam=0 not-tagged

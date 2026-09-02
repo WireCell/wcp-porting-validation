@@ -42,7 +42,7 @@ python3 scripts/d97_ql_gate.py d97idgd grp0825      # 367 events / 1468 products
 
 # B. the two knobs, byte-identity when off (sec 3)
 python3 scripts/cfg/prod_cfg_gate.py                # 21/21 vs ref/prod-2026-09-03
-./build/clus/wcdoctest-clus                         # 240 cases, 2693 assertions
+./build/clus/wcdoctest-clus -tc="clus sep fv inset*"   # the 3 new cases, 59 assertions
 
 # C. the MC control: the owner's two symptom events (sec 4)
 ./scripts/d97_dbg25_arm.sh both a b                 # sep_track_recarve OFF/ON
@@ -133,7 +133,7 @@ covers all 21 consumer artifacts, uboone and the eleven pdhd/pdvd jobs included.
 |---|---|
 | compiled config, both knobs off, vs `ref/prod-2026-09-03` | **PASS 21/21 artifacts** — run twice, before and after the C++ change |
 | compiled config, `sep_track_recarve=true` | `track_recarve: true` on exactly **2** `ClusteringSeparate` nodes (2 anodes × 1 face; the all-APA chain has no `Separate`) |
-| `./build/clus/wcdoctest-clus` | **240 cases / 2693 assertions pass** (237 before; the 3 new cases are the inset's) |
+| `./build/clus/wcdoctest-clus` | **all pass**; this change adds **3 cases / 59 assertions**, confirmed by `-tc="clus sep fv inset*"`. The suite total was 237 → 240 when the change landed and reads 248 / 2733 now, a peer's PDVD commits (`fb0579c5`, `784dc837`) having landed since — quote the delta, not the total. |
 | stage-A output, both knobs off, 367 events | byte-identical, see §2 |
 
 The new doctest carries the causal negative control the quality bar asks for:
@@ -331,6 +331,17 @@ The two are **not nested**: 53 events are changed by both, **50 by
 `sep_track_recarve` alone** and 1224 by `sep_fv_point` alone. Neither knob
 subsumes the other, and a **both-on arm has not been measured** — that is the
 one arm this round is missing.
+
+41.6% is the number to be suspicious of, so here is what it consists of. Of
+those 1277 events, **10** show any in-beam movement at all: 6 verdict flips
+(§5.2), 3 events where an in-beam bundle appears or disappears, and **1** whose
+in-beam main changes length by more than 1 cm. Of the 40 in-beam mains that
+change *at all*, **38 keep their length to within 0.05 cm** and move only their
+point count. So the 41.6% is overwhelmingly **re-partition at unchanged
+extent** — points moving between neighbouring clusters along the same track —
+not splitting or merging. `sep_track_recarve`'s 103 events are the opposite
+shape: 13 in-beam mains change size and 6 of them by more than 1 cm, because
+every one of its changes *is* a split.
 
 ### 5.2 Verdicts
 

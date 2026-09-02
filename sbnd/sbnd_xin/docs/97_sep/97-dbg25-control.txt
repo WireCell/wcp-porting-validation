@@ -1,6 +1,6 @@
 === doc 97 -- sep_track_recarve ON vs production (ref/prod-2026-09-03), dbg25 MC control ===
 ON = work-*-d97onpr   OFF = work-*-d97offpr   samples: dbg25a dbg25b
-events 25  bundles matched on flash 356  field flips 1  size-only changes 1
+events 25  bundles matched on flash 356  field flips 1 (in-beam 1)  size-only changes 1
 bundles only in ON 1   only in OFF 0   events missing from OFF 0
 
 in-beam population (the number a clustering knob moves first):
@@ -16,10 +16,14 @@ in-beam population (the number a clustering knob moves first):
   tgm                               13      12      -1
 
 FIELD FLIPS (1):
-  sample     event  flash         field     off           on              len off   len on
-  dbg25a        30  0/4           tgm       1             0                 422.6    342.6
-  dbg25a        30  0/4           fc        0             1                 422.6    342.6
-  dbg25a        30  0/4           label     TGM           nu-candidate      422.6    342.6
+  sample     event  flash          beam field     off           on              len off   len on
+  dbg25a        30  0/4             1/1 tgm       1             0                 422.6    342.6
+  dbg25a        30  0/4             1/1 fc        0             1                 422.6    342.6
+  dbg25a        30  0/4             1/1 label     TGM           nu-candidate      422.6    342.6
+
+IN-BEAM MAINS THAT CHANGED SIZE BUT KEPT EVERY VERDICT (1; grew by >1 cm: 0, shrank by >1 cm: 1):
+  sample     event  flash           len off   len on     d cm  pts off   pts on  label         
+  dbg25a        28  0/0               109.0    106.5     -2.5     1884     1884  nu-candidate  
 
 ONLY IN ON (a split freed a cluster onto its own flash) (1):
   dbg25a        30  flash 0/7          t=    -563.3us  main  10621 pts   411.6 cm  in_beam=0 not-tagged
