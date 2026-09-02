@@ -1,0 +1,13 @@
+# PR cluster_id remap for bee/d94r2/d94r2-on.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+4	0	18	14	flash-matched	14:1220
+4	0	19	6	flash-matched	6:15
+4	0	69	14	flash-matched	14:11
+4	0	70	14	flash-matched	14:8
+4	0	71	6	flash-matched	6:9
+164466	1	7	18	flash-matched	18:814
+164466	1	30	18	flash-matched	18:9
+95500	2	15	9	flash-matched	9:3757
+95500	2	18	11	flash-matched	11:12
+95500	2	34	9	flash-matched	9:8
+95500	2	35	9	flash-matched	9:15

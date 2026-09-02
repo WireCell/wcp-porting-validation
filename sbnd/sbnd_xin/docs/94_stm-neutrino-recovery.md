@@ -1,8 +1,12 @@
 # doc 94 — recovering neutrino events lost to the STM tagger
 
 **Round 1 CLOSED. `stm_vertex_hadron_guard` is SBND PRODUCTION as of
-2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.
-The 4th has an identified mechanism and is round 2 (§0.3).**
+2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.**
+
+**Round 2 CLOSED. `entry_rise_guard` recovers the 4th — 827-27-4 — so the
+owner-adjudicated score is 4 of 4. Shipped DEFAULT OFF: it releases 2 data
+bundles of 34,827 and I could not adjudicate either, so the flip is the
+owner's call (§12.10, Bee indices 1 and 2).**
 
 Predecessors: doc 63 (the STM improvement campaign, closed at 3 irreducible
 errors), doc 62 (`scan-d59k/stm-baseline.tsv`, the 72 bundles the owner
@@ -18,7 +22,8 @@ feedback sample).
 | **recovered** | **3 of 4** — 966-2-22, 304-6-28, 146-60-31 all flip STM → **nu-candidate** |
 | cost on the **3067** data events | 1 bundle flips of 34,827 — and the owner calls it a **neutrino**, so the measured cost is **zero** |
 | owner's 36 confirmed-correct STMs broken | **0** |
-| still not recovered | **827-27-4** — owner-adjudicated neutrino; mechanism now identified (§0.2), fix is round 2 |
+| ~~still not recovered~~ | **827-27-4 recovered in round 2** by `entry_rise_guard` (§12) — the owner-adjudicated score is now **4 of 4** |
+| round-2 cost on the **3067** data events | 2 bundles flip of 34,827; **neither adjudicated** — §12.7 gives the evidence for each, both are in the Bee pair |
 | ideas measured dead | travel direction (§4), `proton_muon_guard` re-tune (§5) |
 
 ## Repro
@@ -127,12 +132,14 @@ the body level over a ~10–20 cm scale), not on a bare ratio.
    branch. The entry-rise feature and the `ratio1` anomaly are one phenomenon,
    which is mild independent support for both.
 
-**Status: recorded, not implemented.** Round 2 (next session) builds the
-predicate, and it gets the same bar as `vertex_hadron_guard`: default OFF,
-key-suppressed jsonnet, `prod_cfg_gate.py` PASS, a causal negative control, the
-full 3067-event A/B, and the doc-62 owner baseline with the join validated
-before any score is quoted. 707-18-12 is the negative control it must not
-break, and 36-77-17 remains the standing one.
+**Status: IMPLEMENTED in round 2 — see §12.** The predicate is
+`entry_rise_guard`, and it keys on the contiguous elevated run *anchored at the
+boundary*, which is a sharper statement of "decays to the body level" than the
+ratio this section wrote down. It recovers 827-27-4 (shoulder 8.4 cm), leaves
+707-18-12 alone (0.0 cm — its 1.8 MIP spike is at 2-4 cm, not at the boundary)
+and leaves 36-77-17 alone (0.0 cm). The anode confound this section warned
+about did not arise: none of the events in play enters at the anode except
+304-6-28, which was already recovered in round 1.
 
 ### 0.4 The guard is flipped ON for SBND production
 
@@ -575,14 +582,382 @@ are the two not recovered. Index 1, the control, has them in both.
 1. ~~Is `64475:23` a neutrino or a cosmic?~~ **Answered (§0.1): a neutrino**,
    and the guard is **now SBND production** (§0.4, `ref/prod-2026-09-02`).
    Nothing outstanding.
-2. **Round 2: the entry-end rise (§0.3).** Build a predicate on the entry
-   charge *decaying* to the body level over ~10–20 cm, not on a bare ratio.
-   Target: 827-27-4 (2.49). Must not break 707-18-12 (1.26, owner-confirmed
-   STM) or 36-77-17 (0.96). Split the population study by entry face — the
-   anode is a confound.
+2. ~~Round 2: the entry-end rise (§0.3).~~ **Done — §12.** `entry_rise_guard`
+   recovers 827-27-4; 707-18-12 and 36-77-17 both measure 0.0 cm. What is
+   still open is the **owner's adjudication of the two data bundles it
+   releases** (§12.10), which is what gates the production flip.
 3. **Leave `descent_guard` OFF permanently** unless someone finds a stop
    definition that is not the fit's `pts[kink]`. §4 explains why nothing
    anchored there can work.
 4. ~~827-27-4 and 707-18-12 have no information to act on.~~ **Both superseded
    by §0**: 707-18-12 is a genuine STM, and 827-27-4 has a measured feature the
    tagger simply never looks at.
+
+---
+
+# Round 2 — the entry-end rise, implemented
+
+**Round 2 CLOSED. `entry_rise_guard` recovers 827-27-4, the one event round 1
+could not, and the owner-adjudicated score goes from 3 of 4 to 4 of 4.**
+Default OFF pending the owner's call on the two data bundles it releases
+(§12.7 — both hand-scanned, both look like neutrinos, and one of them is the
+strongest example of the owner's own signature in the whole 3067-event sample).
+
+## 12. `entry_rise_guard` — the predicate the owner described
+
+### 12.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# instrument + probe the 8 MC events (min_cm=1000 => pure measurement)
+PR_JOBS=8  ./scripts/doc94r2_arm.sh work-stmfb8-ql work-stmfb8-r2probe sim 1000.0
+python3 scripts/doc94r2_entry_census.py --arm work-stmfb8-r2probe
+
+# probe the feature over all 3067 data events, cut disabled
+PR_JOBS=24 ./scripts/doc94r2_probe_arms.sh            # -> work-*-r2probe
+python3 scripts/doc94r2_identity.py r2probe d94hadron
+python3 scripts/doc94r2_entry_census.py --arm work-ncpi0-r2probe \
+        --arm work-nuecc48-r2probe --arm work-mcp1k-r2probe \
+        --arm work-mcp2k-r2probe --baseline \
+        --out products/doc94r2/entry-census.tsv
+
+# the guard ON: 8 MC events, the causal negative control, then the population
+PR_JOBS=8  ./scripts/doc94r2_arm.sh work-stmfb8-ql work-stmfb8-r2on    sim 5.0
+PR_JOBS=8  ./scripts/doc94r2_arm.sh work-stmfb8-ql work-stmfb8-r2negctl sim 5.0 stm_entry_frac=5.0
+PR_JOBS=24 ./scripts/doc94r2_on_arms.sh r2entry 5.0    # -> work-*-r2entry
+python3 scripts/doc94r2_flip_report.py r2entry d94hadron
+```
+
+Binary pinned to `~/tmp/doc94c-libsnap` (a peer session shares `local/lib`).
+**The baseline is `work-*-d94hadron`, not `work-*-prod0901b`**:
+`vertex_hadron_guard` is production as of `ref/prod-2026-09-02`, so diffing
+against prod0901b would re-attribute round 1's three recoveries and one
+release to this guard.
+
+### 12.2 What the guard measures
+
+`entry_rise_reject()` in `clus/src/TaggerCheckSTM.cxx`, evaluated beside the
+doc-63 family and `descent_guard` and returning through the same `nullopt`
+path. On the muon segment `[0, kink_recorded]` of the accepted fit:
+
+| quantity | definition |
+|---|---|
+| `body` | median dQ/dx over `L ∈ [20 cm, L_stop − 25 cm]` — the muon level, with the entry shoulder and the Bragg region excluded. Fixed geometry, not knobs |
+| `thresh` | `guard_entry_frac × max(body, 1 MIP)`. Clamping the body at 1 MIP stops a charge-deficient reconstruction from lowering its own bar |
+| **`shoulder`** | length of the **contiguous** run **anchored at L = 0** over which the forward 5 cm running median stays ≥ `thresh`. **The feature.** |
+| `shoulder_nofirst` | the same run re-anchored at the *second* fit point — the L = 0 systematic, printed but never gating |
+| `excess` | MIP-equivalent extra track length inside the run: `∫ max(0, dQ/dx − body) dL / body`. Confined to the run, so unlike a windowed integral it does not rectify noise into a signal |
+
+Reject when `guard_entry_min_cm ≤ shoulder ≤ guard_entry_max_cm`.
+
+Two shape requirements carry the discrimination, and each is answerable to a
+labelled event — this is why the predicate is not the bare entry/body ratio
+§0.3 first wrote down:
+
+* **Anchoring at the boundary** is what rejects **707-18-12**, the one event
+  of the six the owner confirmed is a *genuine STM*. Its profile does carry a
+  1.8 MIP spike — but at 2–4 cm, on top of a 0.98 MIP first window, so its
+  anchored run is **0.0 cm**. A hot stretch that does not reach the boundary
+  is a delta ray on an entering muon, not a particle that left the detector.
+  Its bare ratio is 1.25, uncomfortably close to a 1.3 ratio cut; its
+  shoulder is unambiguously zero.
+* **A required decay** (`shoulder ≤ max_cm`) separates "hot at the entry, then
+  MIP" from "hot everywhere" — the failure mode §0.3 predicted. It is not
+  hypothetical: `350099:15` in the population sits at **48.8 cm** and is
+  declined for exactly that reason (§12.7).
+
+The 5 cm running median with ≥ 3 fit points is deliberate: one truncated `dx`
+on a single fit point can neither create a run nor break one.
+
+### 12.3 The six labelled events
+
+Probe arm `work-stmfb8-r2probe`, cut disabled, so these are measurements and
+not outcomes:
+
+| event | owner verdict | L_stop | body | ent | rise | **shoulder** | nofirst | excess |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| **827-27-4** | **neutrino (the target)** | 108.1 | 0.99 | 2.43 | 2.46 | **8.4** | 7.8 | 10.3 |
+| 304-6-28 | neutrino (round 1) | 111.9 | 1.52 | 3.25 | 2.13 | 19.4 | 18.8 | 13.9 |
+| **707-18-12** | **genuine STM** | 111.2 | 0.84 | 1.04 | 1.25 | **0.0** | 0.0 | 0.2 |
+| 966-2-22 | neutrino (round 1) | 94.5 | 0.85 | 0.93 | 1.10 | 0.0 | 0.0 | 0.1 |
+| 36-77-17 | control, not STM | 72.3 | 0.90 | 0.91 | 1.01 | 0.0 | 0.0 | 0.0 |
+| 146-60-31 | neutrino (round 1) | 56.9 | — | — | — | *declined* | | |
+
+`146-60-31` is **declined by `guard_entry_min_len_cm = 70`**: its muon reaches
+the kink after 56.9 cm, which leaves no room for the `[20, L_stop − 25]` body
+window. It was already recovered by `vertex_hadron_guard`, so nothing is lost —
+but the decline is the honest cost of the length gate and §12.6 measures it.
+
+### 12.4 Positive control — the target flips, nothing else does
+
+`work-stmfb8-r2on` vs `work-stmfb8-hadron` (the round-2 baseline):
+
+```
+events compared            : 8
+bundles identical          : 112
+bundles FLIPPED            : 1
+bundles only in OFF / ON   : 0 / 0
+  evt 4 main 18  len 114.4cm  stm:1->0 label:STM->nu-candidate
+```
+
+All six labelled verdicts with the guard on:
+
+| event | verdict | |
+|---|---|---|
+| 827-27-4 | **nu-candidate** | **recovered — this round** |
+| 966-2-22 | nu-candidate | recovered, round 1 |
+| 304-6-28 | nu-candidate | recovered, round 1 |
+| 146-60-31 | nu-candidate | recovered, round 1 |
+| 707-18-12 | **STM** | correct — the owner adjudicated it a genuine STM |
+| 36-77-17 | nu-candidate | control, unchanged |
+
+**The owner-adjudicated score is 4 of 4.**
+
+The guard also *fires* on 304-6-28 (19.4 cm) without changing its verdict: that
+bundle was already released by `vertex_hadron_guard`, and `entry_rise` runs
+first, so the release is simply re-attributed. The flip table shows it as
+unchanged, which is what it is.
+
+### 12.5 Causal negative control
+
+Not "turn the knob off" — that only tests the boolean. `guard_entry_frac` is
+raised to **5.0**, so `thresh` becomes 5 MIP and *no* elevated run can form,
+which corrupts exactly the feature the guard keys on while leaving the guard
+switched on, the cut at 5 cm and every other threshold in place:
+
+```
+work-stmfb8-r2negctl (stm_entry_frac=5.0)  vs  work-stmfb8-hadron
+  bundles FLIPPED : 0        entry_rise_guard fires : 0
+```
+
+The two arms differ in one number and the effect vanishes completely.
+
+### 12.6 The population — the go/no-go, all 3067 data events
+
+The probe (`stm_entry_min_cm=1000`, above the feature's range) is inert by
+construction and measured inert in fact: **3067 of 3067 events byte-identical**
+to `work-*-d94hadron` on every per-bundle field.
+
+Of the **246** STM-tagged bundles that reach the guard with a long enough muon:
+
+| shoulder | STM=1 bundles |
+|---|---:|
+| **exactly 0** | **235** |
+| (0, 2.5) | 6 |
+| [2.5, 5.0) | 2 |
+| [5.0, 7.5) | 1 |
+| [15, 20) | 1 |
+| [40, 60) | 1 |
+
+**The feature is bimodal, not a continuum** — 96% of the STM population sits at
+exactly zero, and the entire non-zero tail is 11 bundles in 3067 events. That
+is the go/no-go this round was required to answer before choosing a cut, and it
+answers it: the target at 8.4 cm is not being carved out of a smooth
+distribution. The whole tail, sorted:
+
+| shoulder | event:cid | stm | rise | nofirst | excess | L_stop | verdict |
+|---:|---|:---:|---:|---:|---:|---:|---|
+| 48.8 | 350099:15 | 1 | 1.82 | 47.8 | 26.2 | 143.8 | **declined** — above `max_cm`, no decay |
+| 18.5 | 164466:7 | 1 | 3.29 | 17.6 | 34.3 | 93.7 | **released** |
+| *8.4* | *827-27-4* | *1* | *2.46* | *7.8* | *10.3* | *108.1* | *the MC target, for scale* |
+| 5.5 | 95500:15 | 1 | 1.87 | 4.9 | 4.5 | 182.3 | **released** |
+| 5.0 | 352796:10 | 0 | 1.48 | 4.2 | 2.6 | 176.6 | not STM anyway |
+| 4.4 | 290316:10 | 1 | 1.78 | 3.6 | 3.2 | 244.4 | below the cut |
+| 2.6 | 174642:9 | 1 | 1.45 | 2.1 | 1.2 | 356.5 | below |
+| 2.1 | 289840:19 | 1 | 1.43 | 1.2 | 0.6 | 89.4 | below |
+| 1.8 | 397194:13 | 1 | 2.03 | 1.1 | 1.6 | 261.0 | below |
+| 1.3 | 95371:9 | 1 | 1.42 | 0.5 | 0.7 | 144.4 | below |
+| 1.0 | 282033:13 | 1 | 2.14 | 0.0 | 0.2 | 185.3 | below |
+| 0.8 | 176731:5 | 1 | 1.40 | 0.0 | 1.1 | 81.3 | below |
+| 0.8 | 355106:7 | 0 | 1.60 | 0.0 | 1.2 | 361.1 | not STM |
+| 0.6 | 284145:11 | 0 | 1.33 | 0.0 | 1.9 | 238.5 | not STM |
+| 0.5 | 56257:13 | 1 | 1.79 | 0.0 | 1.4 | 113.7 | below |
+
+**This table is the argument for the shape and against the ratio.** Four
+bundles carry a bare `rise` of 1.79–2.14 — as high as or higher than plenty of
+what a ratio cut would want to keep — and their anchored runs are 0.5–1.8 cm.
+`282033:13` at rise 2.14 has a **1.0 cm** shoulder that vanishes entirely when
+re-anchored one fit point in. The ratio and the shoulder are not the same
+measurement, and only the shoulder is quiet on this population.
+
+**The L = 0 systematic, measured.** `shoulder_nofirst` tracks `shoulder` to
+within ~1 cm everywhere it matters — 8.4 → 7.8 on the target, 18.5 → 17.6 and
+48.8 → 47.8 on the two large population values — so the boundary-most fit
+point is *not* what creates these runs. The one exception is the marginal
+release `95500:15`, whose 5.5 cm falls to **4.9 cm** (below the cut) when the
+first point is dropped. That is recorded as a property of that bundle in
+§12.7, not as a reason to change the predicate.
+
+**Coverage — stated, not buried.** The guard evaluates 246 of the **416**
+in-beam STM bundles that reach it; the rest are declined because their muon is
+too short for a body estimate. The split is clean: bundles *with* a probe have
+median main length 165.7 cm, bundles *without* 53.3 cm. This guard is a
+long-muon predicate and says nothing about short ones.
+
+### 12.7 What it releases in data — and the one it declines
+
+Two STM-tagged data bundles of 246, **0.81%**.
+
+Both arms of the scan were re-run with `save_stm_fit=true`
+(`scripts/doc94r2_scan_arms.sh`), so the profile and the fitted trajectory
+below are read out of the guard's own inputs, not inferred.
+
+#### `164466:7` — the cleanest example of the signature, and I cannot call it
+
+| | |
+|---|---|
+| flip | STM → **nu-candidate** |
+| feature | shoulder **18.5 cm** (17.6 without the first fit point), rise 3.29, excess **34.3 cm** of extra MIP track |
+| profile | a smooth monotone decay, 3.9 MIP at the boundary → 1.0 MIP by L ≈ 21 cm, then flat MIP all the way to the Bragg peak. Textbook |
+| boundary point | (78.3, 199.6, 388.1) cm — the **top y face** (active volume `y ≤ 199.3`) |
+| end of the run | (71.3, 196.2, 371.4) cm — **3.4 cm below the top face** |
+| geometry | a real kink there: the run travels 18.5 cm nearly *along* the top face (Δy = −3.4 cm), then the track dives (Δy = −48 cm over the remaining 75 cm) |
+
+By charge this is the strongest instance of the owner's signature in the whole
+sample — better than the target. By geometry it is the weakest: the putative
+vertex sits 3.4 cm under the face **cosmic muons enter through**, and a
+near-horizontal, heavily-ionizing 18 cm segment lying along the top face has an
+obvious competing explanation (a second cosmic that clustering merged, or a
+hard delta ray at the muon's entry). **Not adjudicated — owner call**
+(Bee index 1).
+
+#### `95500:15` — marginal, and the only fragile bundle in the sample
+
+| | |
+|---|---|
+| flip | STM → **nu-candidate** |
+| feature | shoulder **5.5 cm**, rise 1.87, excess 4.5 cm |
+| fragility | `shoulder_nofirst` = **4.9 cm** — *below the 5 cm cut*. This is the one bundle of 246 whose verdict depends on the boundary-most fit point |
+| profile | not a decay: 2.5 MIP at L = 2, 2.1 at 5, then further isolated spikes at 14–21 and 42 cm on a ~1 MIP body |
+| boundary point | (−19.9, 56.0, 2.5) cm — the **upstream z face**, the beam-entry side, the same face as the target |
+
+The face is right and the shape is not. **Not adjudicated — owner call**
+(Bee index 2).
+
+#### `350099:15` — the one `guard_entry_max_cm` declines
+
+Elevated for **48.8 cm** of a 143.8 cm muon, with the body never returning to
+MIP (1.5–2.0 MIP throughout). This is exactly the "hot everywhere, no decay"
+case §0.3 warned a bare ratio would misclassify, and the upper bound declines
+it. Boundary at (86.6, −193.7, 500.1) cm — the downstream-z / bottom-y corner.
+Unchanged in both arms; shipped in the Bee (index 3) so the owner can overrule
+the bound if they disagree.
+
+#### The controls
+
+`290316:10` (4.4 cm, the nearest bundle below the cut), `282033:13` (rise
+**2.14** — as high as the target's 2.46 — but shoulder 1.0 cm, and 0.0 cm when
+re-anchored one fit point in), `56257:13` (0.5 cm). All three stay STM in both
+arms. `282033:13` is the one to look at: it is the case that shows the ratio
+and the shoulder are not the same measurement.
+
+#### An observation, offered and not acted on
+
+Of the four boundary points in play, the two the owner has already adjudicated
+as neutrinos (**827-27-4** at z = 4.3 cm, and **146-60-31** at the bottom y
+face) and the marginal release **95500:15** (z = 2.5 cm) sit on faces a
+*downward* cosmic muon cannot have entered through; the one release I cannot
+defend, **164466:7**, sits on the top face, which is precisely where it can.
+
+That suggests the natural next refinement: the guard's premise — *at the
+boundary a cosmic stopping muon is at its lowest dQ/dx, because that is where
+it entered with maximum energy* — only bites when the boundary point is a face
+the muon could not have entered through. It is `descent_guard`'s logic (§4)
+applied to the **boundary** point instead of `pts[kink]`, which sidesteps
+exactly the defect that killed it: the boundary point is a real fiducial-face
+crossing that `cluster_fc_check` computed, not a fit endpoint that is often a
+clustering truncation.
+
+**It is not implemented and no number here depends on it.** It is motivated by
+n = 1, which is the shape of argument this campaign has repeatedly measured
+dead. If the owner calls `164466:7` a cosmic it becomes round 3 with a
+population measurement of its own; if they call it a neutrino it is wrong and
+should be dropped.
+
+### 12.8 The population A/B, measured
+
+`work-*-r2entry` (guard on at 5 cm) vs `work-*-d94hadron` (the production
+point), all 3067 SBND data events, per bundle, from `nusel-evt<ID>.tsv`:
+
+```
+events compared            : 3067
+bundles identical          : 34825
+bundles FLIPPED            : 2
+bundles only in OFF / ON   : 0 / 0
+  evt 164466 main 7   len 118.7cm  stm:1->0 label:STM->nu-candidate
+  evt 95500  main 15  len 177.9cm  stm:1->0 label:STM->nu-candidate
+```
+
+Both flips are in the intended direction and are exactly the two bundles the
+probe predicted. **No bundle gains a tag; nothing moves to TGM; no bundle
+appears in one arm only.** The guard fires three times in 3067 events; the
+third (`352796:10`, 5.0 cm) was already not STM in the baseline, so its
+rejection is redundant and changes nothing — which is also the check that a
+`nullopt` return is not perturbing which pass runs.
+
+### 12.9 Verification
+
+| gate | result |
+|---|---|
+| `prod_cfg_gate.py`, knob off | **PASS 21/21** vs `ref/prod-2026-09-02` — the production operating point does not move |
+| compiled-config proof, knob on | `entry_rise_guard`/`guard_entry_*` appear (5 keys); **no keys at all** when off |
+| `./build/clus/wcdoctest-clus` | 236 → **237 cases, all pass**; new case pins OFF, `max_cm > min_cm`, `frac > 1`, and `min_len_cm > 45` (the body window cannot be empty) |
+| freshness proof | `libWireCellClus.so` 04:43:43 newer than `TaggerCheckSTM.cxx` 04:42:10, before any arm |
+| binary pin | `~/tmp/doc94c-libsnap`, md5 `a9370b3b…` identical at the start and the end of the campaign |
+| probe arm inert, MC | 8 of 8 events identical to `work-stmfb8-hadron` |
+| probe arm inert, data | **3067 of 3067** events identical to `work-*-d94hadron`, every per-bundle field |
+| positive control | 827-27-4 flips STM → nu-candidate; 1 flip in 113 bundles |
+| causal negative control | `guard_entry_frac` 1.3 → 5.0 (the elevated run cannot form): **0 fires, 0 flips**, every verdict back to baseline |
+| population A/B | 34,825 identical, **2 flipped**, 0 one-arm-only |
+| owner baseline (doc 62) | **0 of 36 correct STMs break** — but see the caveat below |
+
+**The owner-baseline control is thin, and saying "0 of 36" without the caveat
+would overstate it.** Only **6** of the 36 correct-STM bundles are even
+evaluated by this guard; the other 30 are declined because their muon is
+shorter than 70 cm (24 of them have a main shorter than 70 cm outright). For
+those 30 the "0 break" is *guaranteed by the length gate*, not measured. The
+measurement that carries the weight is the population: **246 long-muon
+STM-tagged bundles, 244 untouched**, and the true STM `707-18-12` at shoulder
+0.0.
+
+### 12.10 Status and what the owner has to decide
+
+**Shipped default OFF.** `stm_entry_rise_guard=false` in
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`; C++ defaults
+`false / 1.3 / 5 / 30 / 70`, keys suppressed when off, so
+`ref/prod-2026-09-02` is untouched and every other detector is untouched.
+
+Round 1's guard was flipped on only after the owner adjudicated its single
+release a neutrino. The same question is open here, twice over, and the owner
+said he is happy to judge:
+
+1. **`164466:7` — cosmic or neutrino?** (Bee index 1.) The charge is the best
+   example of the signature in the sample; the geometry puts the vertex 3.4 cm
+   under the top face.
+2. **`95500:15` — cosmic or neutrino?** (Bee index 2.) Right face, wrong shape,
+   and it is the only bundle whose verdict moves if the boundary-most fit
+   point is dropped.
+3. **`350099:15` — should `guard_entry_max_cm` be raised?** (Bee index 3.)
+   Currently declined at 48.8 cm because the charge never comes back to a MIP
+   body.
+
+**Recommendation.** If both releases are neutrinos: flip
+`stm_entry_rise_guard=true` for SBND and pin a new `ref/prod-2026-09-03`; the
+trade is +1 owner-adjudicated neutrino recovered (827-27-4) and 2 more
+neutrino candidates for 34,827 bundles, i.e. the same shape of trade the owner
+accepted in round 1. If `164466:7` is a cosmic, do **not** raise `min_cm` to
+exclude it — that is a one-event fit; take the boundary-face refinement of
+§12.7 to a round 3 and measure it. If both releases are cosmics, the guard
+stays off and 827-27-4 is not recoverable by charge shape alone.
+
+### 12.11 Reported, not fixed
+
+The guard's DEBUG probe does not print the **boundary point's coordinates**,
+so the boundary-face question in §12.7 had to be answered by re-running the
+scan set with `save_stm_fit=true` and reading the trajectory back. Adding
+`entry=(x,y,z)` to that line — log-only, no verdict — would make the census
+self-contained. It was deliberately *not* added in this round: every number
+above comes from one pinned binary, and changing the log line would have meant
+re-running all four arms to use it.
+

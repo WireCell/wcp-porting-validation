@@ -1,0 +1,31 @@
+# doc 94 ROUND 2 -- entry_rise_guard A/B.  8 events, SAME ORDER in both sets,
+# so bee_idx lines up 1:1 between OFF and ON.
+#
+# OFF (production, ref/prod-2026-09-02: vertex_hadron_guard on, entry guard absent)
+#     <OFF_URL>
+# ON  (+ stm_entry_rise_guard=true, stm_entry_min_cm=5.0)
+#     <ON_URL>
+#
+# Both arms were run with save_stm_fit=true, so every event carries the
+# `stm_fit-global` layer: the fitted STM trajectory, coloured by charge.  That
+# is the layer to look at -- the guard reads the BOUNDARY end of it (the end
+# far from the Bragg peak), which no other predicate in TaggerCheckSTM does.
+#
+# WHY SOME EVENTS CARRY NO PR POINT LAYERS IN THE OFF SET: a cosmic-tagged
+# bundle makes TaggerCheckNeutrino refuse, so no PR graph is built and
+# track_fit / shower_track / vertices are empty.  That is the cost of the tag,
+# not a packaging gap -- see doc 94 sec 10.
+#
+# THE OWNER'S CALL: indices 1 and 2 are the only two data bundles of 34,827
+# that this guard releases.  I could not adjudicate either with confidence;
+# the evidence for each is in doc 94 sec 12.7.
+#
+# bee_idx	event	status
+0	4	RESCUED: 827-27-4 STM -> nu-candidate. The round-2 target, owner-adjudicated a neutrino. shoulder 8.4 cm, 2.43 MIP at the boundary decaying to a 0.99 MIP body, 10.3 cm of extra MIP track. Boundary on the UPSTREAM z face (z=4.3 cm).
+1	164466	RELEASE -- OWNER CALL: STM -> nu-candidate. shoulder 18.5 cm, 3.27 MIP -> 1.00 MIP body, excess 34.3 cm; the cleanest example of the signature in the whole 3067-event sample. BUT the boundary point is on the TOP y face (y=199.6 cm) and the kink sits 3.4 cm below it -- the top is where cosmic muons enter, so a merged second cosmic is a live alternative. Not adjudicated.
+2	95500	RELEASE -- OWNER CALL: STM -> nu-candidate. shoulder 5.5 cm (4.9 cm, i.e. BELOW the 5 cm cut, when the boundary-most fit point is dropped -- the only bundle in the sample that is fragile that way). Profile is spiky, not a smooth decay. Boundary on the UPSTREAM z face (z=2.5 cm). Not adjudicated.
+3	350099	DECLINED by guard_entry_max_cm=30: elevated for 48.8 cm of a 143.8 cm muon with no return to a MIP body -- "hot everywhere", not a decay. Unchanged in both arms. Shown so the owner can overrule the upper bound.
+4	290316	control: shoulder 4.4 cm, the nearest bundle BELOW the cut. Unchanged in both arms (STM).
+5	282033	control: rise 2.14 -- as high as the target's 2.46 -- but shoulder 1.0 cm, and 0.0 cm re-anchored one fit point in. The case that shows the ratio and the shoulder are different measurements. Unchanged (STM).
+6	56257	control: shoulder 0.5 cm on a rise of 1.79. Unchanged (STM).
+7	12	NEGATIVE CONTROL: 707-18-12, which the owner adjudicated a GENUINE STM. shoulder 0.0 cm (its 1.8 MIP spike sits at 2-4 cm, not at the boundary). Correctly STM in both arms -- the guard leaves it alone.
