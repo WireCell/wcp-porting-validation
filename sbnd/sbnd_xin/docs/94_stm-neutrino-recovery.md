@@ -3,11 +3,10 @@
 **Round 1 CLOSED. `stm_vertex_hadron_guard` is SBND PRODUCTION as of
 2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.**
 
-**Round 2 implemented `entry_rise_guard`; ROUND 3 (§13) fixed it with the
-owner's KINK and is the current state.** It releases **2** data bundles of
-34,827 and the owner has adjudicated **both as neutrinos**, so the measured
-cost is zero. Right on **10 of 11** hand-labelled bundles. Still DEFAULT OFF —
-§13.10 recommends the flip.
+**Round 3 CLOSED. `stm_entry_rise_guard` is SBND PRODUCTION as of 2026-09-02
+(owner authorized, §13.11; `ref/prod-2026-09-03`).** It releases **2** data
+bundles of 34,827 and the owner adjudicated **both as neutrinos**, so measured
+contamination is **zero**. Right on **10 of 11** hand-labelled bundles.
 
 **The target set is 5, not 4.** `707-18-12` was adjudicated a genuine STM on
 2026-09-02 and **re-adjudicated a neutrino the same day** — the owner was right
@@ -1267,10 +1266,10 @@ bundles only in OFF / ON   : 0 / 0
 
 ### 13.10 Status and recommendation
 
-**The guard still ships DEFAULT OFF**, unchanged from round 2 in that respect:
-`stm_entry_rise_guard=false`, C++ defaults `false / 1.3 / 5 / 60 / 70 / 22`,
-keys suppressed when off, `ref/prod-2026-09-02` untouched, every other detector
-untouched.
+**Written before the flip; §13.11 is what happened.** The guard shipped
+DEFAULT OFF with C++ defaults `false / 1.3 / 5 / 60 / 70 / 22`, which is where
+the C++ defaults remain — the flip is in the SBND jsonnet only, so no other
+detector moves.
 
 What changed is that the two round-2 questions are now answered, by the owner,
 and the code agrees with him on both:
@@ -1288,7 +1287,7 @@ adjudicating the releases — is met, and it is met in the strongest available
 form: every bundle the guard releases in 3067 data events is a bundle the owner
 has personally called a neutrino, and every bundle he called an STM is held.
 That is the same bar `vertex_hadron_guard` cleared in §0.4, on a labelled set
-three times the size.
+three times the size. **Accepted by the owner — §13.11.**
 
 Two things this round does **not** claim:
 
@@ -1305,6 +1304,104 @@ Two things this round does **not** claim:
   calls `164466:7` a **good neutrino**, so a top-face veto would have thrown
   away a real neutrino. Recorded as measured-wrong, not carried forward.
 
+
+### 13.11 The guard is flipped ON for SBND production
+
+Owner, 2026-09-02, after the contamination audit of §13.12:
+*"please turn on this knob for SBND production."*
+
+`stm_entry_rise_guard` now defaults **true** in
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`. The C++ defaults
+stay `false / 1.3 / 5 / 60 / 70 / 22`, so no other detector moves. New pinned
+operating point: **`ref/prod-2026-09-03/`** (`prod-2026-09-02` left
+byte-untouched).
+
+The drift is six keys on one component, and nothing else:
+
+```
+DRIFT     : bare_prjob.json, prod_prjob.json, sbnd_pr.json
+  ADDED   [17].data.entry_rise_guard       = True
+  ADDED   [17].data.guard_entry_frac       = 1.3
+  ADDED   [17].data.guard_entry_min_cm     = 5
+  ADDED   [17].data.guard_entry_max_cm     = 60
+  ADDED   [17].data.guard_entry_min_len_cm = 70
+  ADDED   [17].data.guard_entry_kink_deg   = 22
+```
+
+`[17]` is `TaggerCheckSTM:pr`. The other **18 of 21** artifacts — uboone, six
+pdhd, five pdvd, the four other SBND jobs, `prod.standalone`, `prod.wcls` — are
+byte-identical. `prod_cfg_gate.py` **PASSes against `prod-2026-09-03`**.
+
+**The production default is the validated configuration, checked not assumed:**
+the compiled `TaggerCheckSTM` data block of `work-mcp1k-r3entry` — the arm that
+produced the 3067-event A/B through `PR_EXTRA_TLA` — and of the new reference
+differ in **0 of 34 keys**.
+
+Not byte-identical, and a deliberate physics change; that is why it gets its
+own reference generation. A/B escape: a `PR_EXTRA_TLA` line
+`stm_entry_rise_guard=false`.
+
+Both SBND STM neutrino-recovery guards are now production:
+`vertex_hadron_guard` (§0.4, `prod-2026-09-02`) and `entry_rise_guard`
+(`prod-2026-09-03`). Between them they release **3 bundles in 3067 data
+events**, and the owner has adjudicated **all three as neutrinos**.
+
+### 13.12 The contamination audit the flip rests on
+
+The owner's question before authorizing: *"I want to confirm after flipping
+this knob, we do not have more contaminations in STM to neutrino samples."*
+
+Every bundle, every tag field (`in_beam / tgm / stm / fc / lm / label`),
+`work-*-r3entry` vs `work-*-d94hadron`, all 3067 events:
+
+```
+bundles compared                     : 34827
+bundles unchanged                    : 34825
+bundles that moved                   : 2
+  evt 350099 main 15  stm 1->0, label STM->nu-candidate
+  evt 164466 main 7   stm 1->0, label STM->nu-candidate
+bundles that GAINED a cosmic tag     : 0
+bundles present in only one arm      : 0
+STM-tagged bundles                   : 416 -> 414
+```
+
+| sample | events | STM off | STM on | flips |
+|---|---:|---:|---:|---:|
+| ncpi0 | 19 | 0 | 0 | 0 |
+| nuecc48 | 48 | 0 | 0 | 0 |
+| mcp1k | 1000 | 142 | 141 | 1 |
+| mcp2k | 2000 | 274 | 273 | 1 |
+| **total** | **3067** | **416** | **414** | **2** |
+
+Nothing moves in the other direction, nothing gains a cosmic tag, and the two
+that move are the two the owner adjudicated as neutrinos.
+
+**Independent corroboration on `164466:7`.** Once released it gets a full PR
+reconstruction and the PID is a textbook νμCC 1p: **proton 19.7 cm at 3.22 MIP
+plus muon 76.0 cm at 1.30 MIP** from one vertex, `numu_score = 2.06`. That is
+evidence for the owner's call which does not come from the scan.
+
+**The honest limits**, recorded with the flip rather than after it:
+
+1. **The 22° bar is exercised by 3 bundles, not a population.** Only 3 of the
+   246 evaluated bundles reach the kink test at all (13.8°, 28.3°, 34.7°), so
+   the bar sits in a gap containing no data. A future bundle at ~20–27° would
+   be decided by a threshold nothing has tested. The shoulder is the selective
+   cut; the kink only arbitrates the few that pass it.
+2. **Bounded, not zero.** Zero cosmic admissions observed gives a 90% CL upper
+   limit of 2.3 events, i.e. **< 0.075%** of events could gain a cosmic. The
+   binding constraint is now statistics, not the predicate: a larger data
+   sample would tighten it.
+3. **"Neutrino" here means the owner's hand scan** — for data there is no
+   truth — on one sample (runs 18255/18259). The 170 short-muon STM bundles
+   are never evaluated, so those are guaranteed untouched rather than merely
+   measured so.
+
+Unverified and flagged: downstream, `cosmict_flag = 1` fires on `350099` (and
+0 on `164466`). Doc 85 established that `cosmic_flag` is a BDT feature fill
+rather than a verdict, and the semantics of `cosmict_flag` were **not**
+established in this round — so this is recorded as something to check, not as
+a disagreement with the owner's call.
 
 ## 14. `707-18-12` — why this mechanism cannot reach it
 
