@@ -1,7 +1,8 @@
 # doc 94 — recovering neutrino events lost to the STM tagger
 
-**Round 1 CLOSED by owner adjudication (2026-09-02, §0). 3 of 4 recovered at
-zero measured cost. The 4th has an identified mechanism and is round 2.**
+**Round 1 CLOSED. `stm_vertex_hadron_guard` is SBND PRODUCTION as of
+2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.
+The 4th has an identified mechanism and is round 2 (§0.3).**
 
 Predecessors: doc 63 (the STM improvement campaign, closed at 3 irreducible
 errors), doc 62 (`scan-d59k/stm-baseline.tsv`, the 72 bundles the owner
@@ -132,6 +133,41 @@ key-suppressed jsonnet, `prod_cfg_gate.py` PASS, a causal negative control, the
 full 3067-event A/B, and the doc-62 owner baseline with the join validated
 before any score is quoted. 707-18-12 is the negative control it must not
 break, and 36-77-17 remains the standing one.
+
+### 0.4 The guard is flipped ON for SBND production
+
+Owner, 2026-09-02: *"By the way, we can turn this knob on for SBND default
+running with all these validation."*
+
+`stm_vertex_hadron_guard` now defaults **true** in
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`. The C++ default
+stays `false`, so no other detector moves. New pinned operating point:
+**`ref/prod-2026-09-02/`** (`prod-2026-09-01c` left byte-untouched).
+
+The drift is exactly three keys on one component, and nothing else:
+
+```
+DRIFT     : bare_prjob.json, prod_prjob.json, sbnd_pr.json
+  ADDED   [17].data.vertex_hadron_guard = True
+  ADDED   [17].data.guard_hadron_len_cm = 12
+  ADDED   [17].data.guard_hadron_mip    = 1.5
+```
+
+`[17]` is `TaggerCheckSTM:pr`. The other **18 of 21** artifacts — uboone, six
+pdhd, five pdvd, the four other sbnd jobs, `prod.standalone`, `prod.wcls` — are
+byte-identical. `prod_cfg_gate.py` **PASSes against `prod-2026-09-02`**.
+
+**The production default is the validated configuration, checked not assumed:**
+the compiled `TaggerCheckSTM` data block of `work-mcp1k-d94hadron` — the arm
+that produced the 3067-event A/B, which forced the knob on through
+`PR_EXTRA_TLA` — and of the new reference differ in **0 of 28 keys**.
+
+This is **not byte-identical** and is a deliberate physics change; that is why
+it gets its own reference generation. Reproduce the old behaviour for an A/B
+with a `PR_EXTRA_TLA` line `stm_vertex_hadron_guard=false`.
+
+`descent_guard` remains absent from the production config and must stay that
+way (§4).
 
 ## 1. The sample and the baseline
 
@@ -410,6 +446,8 @@ block C and returned false.
 | gate | result |
 |---|---|
 | `prod_cfg_gate.py`, both knobs off | **PASS 21/21** vs `ref/prod-2026-09-01c` (run twice: after each guard) |
+| `prod_cfg_gate.py`, after the production flip | **PASS 21/21** vs the new `ref/prod-2026-09-02`; the drift from `01c` is 3 keys on `[17]` and 18 of 21 artifacts unchanged |
+| production default == validated arm | `TaggerCheckSTM` data block differs in **0 of 28 keys** from `work-mcp1k-d94hadron` |
 | compiled-config proof | `descent_guard`/`vertex_hadron_guard` families appear when on, **no keys at all** when off |
 | `./build/clus/wcdoctest-clus` | 235 → 236 cases, **all pass**; new case `TaggerCheckSTM descent_guard is off and inert` (7 assertions) |
 | freshness proof | `libWireCellClus.so` newer than `TaggerCheckSTM.cxx` before every arm |
@@ -534,11 +572,9 @@ are the two not recovered. Index 1, the control, has them in both.
 
 ## 11. Recommended next step
 
-1. ~~Is `64475:23` a neutrino or a cosmic?~~ **Answered (§0.1): a neutrino.**
-   `stm_vertex_hadron_guard` therefore has **zero measured cost** and the
-   round-1 condition for flipping it ON for SBND is met. That flip is a
-   production default change and is *not* made in this document — it is the
-   owner's to authorize.
+1. ~~Is `64475:23` a neutrino or a cosmic?~~ **Answered (§0.1): a neutrino**,
+   and the guard is **now SBND production** (§0.4, `ref/prod-2026-09-02`).
+   Nothing outstanding.
 2. **Round 2: the entry-end rise (§0.3).** Build a predicate on the entry
    charge *decaying* to the body level over ~10–20 cm, not on a bare ratio.
    Target: 827-27-4 (2.49). Must not break 707-18-12 (1.26, owner-confirmed
