@@ -1,0 +1,4 @@
+# PR cluster_id remap for bee/stmfb8/stmfb8.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+17	1	20	3	flash-matched	3:1291
+17	1	24	11	flash-matched	11:18
