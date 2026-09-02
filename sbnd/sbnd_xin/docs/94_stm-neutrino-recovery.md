@@ -84,6 +84,13 @@ The control is the sharpest single fact in this table: 36-77-17 is saved by
 `detect_proton`, and 304-6-28 and 146-60-31 were saved by it too until
 `proton_muon_guard` overruled the call. See §5.
 
+**This corrects doc 93 §4**, which concluded that 36-77-17's `STM=0` came from
+the core fit-based condition. It did not: pass status is **5**, so `flag_pass`
+was TRUE — the eval accepted it as a stopping muon — and `detect_proton` is
+what saved it. Doc 93 §4 now carries a pointer here. The correction is
+load-bearing rather than cosmetic: the whole §5 argument depends on the
+control being saved by `detect_proton` at `ks1 = 0.047`.
+
 ## 3. The fix that works — `vertex_hadron_guard`
 
 `check_other_tracks` (`TaggerCheckSTM.cxx:2835`) is the last topological gate

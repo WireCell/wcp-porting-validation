@@ -138,6 +138,15 @@ out here.
 
 ## 4. 36-77-17 — where the STM verdict was actually made
 
+> **SUPERSEDED by doc 94 §2 (2026-09-01).**  This section concluded that
+> 36-77-17's `STM=0` came from the core fit-based condition.  The
+> `save_stm_fit` dump says otherwise: pass status is **5**, i.e.
+> `flag_pass` was TRUE -- the eval accepted it as a stopping muon -- and
+> `detect_proton` is what saved it, calling a proton end at ks1 = 0.047.
+> That is load-bearing: doc 94 §5 rests on the control being saved by
+> `detect_proton`, not by the eval.
+
+
 Only this event reaches `TaggerCheckNeutrino` (the other 7 are cosmic-tagged,
 so the neutrino tagger never runs — which is why their `tracking-pr.root` is
 13 KB and carries no calib dump).
