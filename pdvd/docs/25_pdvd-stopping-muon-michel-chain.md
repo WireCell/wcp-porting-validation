@@ -462,11 +462,29 @@ would mis-scale `add_sigma_L` by 6 % (§7b).
 The other two values remain live for other consumers and are **not** resolved
 by this decision:
 
-- **1.473 is the sim value**, and it reaches *imaging* through
-  `img.jsonnet:4` -> `simparams.jsonnet:13`. So the blobs the PR job reads
-  were placed in x with a drift speed 0.5 % different from the one the fit
-  uses to interpret them. That residual mismatch is a separate open item
-  (§12), not a blocker for this chain.
+- **1.473 is the sim value.** It reaches the imaging *job* through
+  `img.jsonnet:4` -> `simparams.jsonnet:13`, but **on data it is inert**, and
+  that is worth knowing rather than guessing: imaging assigns no x at all.
+  Blobs are written in (wire range, time slice) space, and the only place
+  `params.lar.drift_speed` appears in `img.jsonnet` is as an argument to
+  `img.dump(...)` (`:326,335,341,346,352,357`) whose body — a bare
+  `ClusterFileSink` with `outname` and `format` — **never reads it**
+  (`:299-311`). The x coordinate is created downstream, in the clustering
+  job, by `BlobSampler::time2drift`:
+
+      drift = (time + time_offset) * drift_speed;  x = xorig + xsign*drift
+
+  (`clus/src/BlobSampler.cxx:177`), using the sampler's own configured speed,
+  which PDVD sets per crate from the runner TLAs
+  (`protodunevd/clus.jsonnet:189-193,246-247`) — i.e. 1.48073. So on data
+  there is no blob-vs-fit drift-speed offset to correct.
+
+  **On MC the mismatch is real**, just relocated: the sim `Drifter`
+  (`cfg/pgrapher/common/sim/nodes.jsonnet:17-30`) drifts depos with
+  `params.lar.drift_speed` = 1.473 *and* DL = 4.0 / DT = 8.8 / lifetime =
+  1000 ms, so the tick<->x relation and the diffusion baked into simulated
+  waveforms are the sim numbers, while reco samples them back at 1.48073.
+  That is an MC-milestone item (§12), not a data-chain one.
 - **1.6 is the inherited base default** and nothing chooses it.
 
 Transport coefficients are equally split:
@@ -806,7 +824,11 @@ knowing when interpreting near-anode points.
 
 This is what makes `DL` and `DT` **first-class PDVD deliverables** rather than
 fit parameters — and recall from §7a that PDVD reco and PDVD sim currently
-disagree on both.
+disagree on both. That disagreement bites specifically when this measurement
+is repeated on MC: the diffusion actually present in simulated waveforms is
+whatever the sim `Drifter` applied (4.0 / 8.8), so an MC study measures the
+sim's input, not the detector's. On data the measurement is of the real
+thing.
 
 ---
 
@@ -946,12 +968,15 @@ both depend on M4, and M5 can proceed in parallel with M6.
 
 - ~~**Which drift speed?**~~ **CLOSED (owner, 2026-09-02):** use the
   production Q/L matching value, v = 1.48073 mm/us (§7a). M4 is unblocked.
-- **Imaging still runs at 1.473 mm/us** (`img.jsonnet:4` ->
-  `simparams.jsonnet:13`), a 0.5 % offset from the 1.48073 the matcher, the
-  grouping and the fit now share. So blob x positions and the fit's tick->x
-  mapping disagree slightly. Small, but it is a systematic on dQ/dx vs drift
-  and on §8, and it should be quantified before the calibration is called
-  final.
+- **Sim/reco drift-speed and diffusion mismatch, on MC only.** The sim
+  `Drifter` uses 1.473 mm/us with DL = 4.0 / DT = 8.8 / lifetime = 1000 ms
+  (`cfg/pgrapher/common/sim/nodes.jsonnet:17-30` fed by
+  `simparams.jsonnet:8-13`), while reco samples and fits at 1.48073. On MC
+  that is a 0.5 % x-scale error plus a diffusion model that does not match
+  what is in the waveforms — the same caveat SBND recorded for its own
+  track-fitting diffusion values. **Not** an issue on data, where imaging
+  assigns no x (§7a). Quantify before the MC milestone, not before the
+  data-first pass.
 - **PDVD sim vs reco transport mismatch** — `DL`, `DT` and lifetime all differ
   between `params.jsonnet` and `simparams.jsonnet`, and neither pair was
   measured for PDVD. Reported, not fixed.
