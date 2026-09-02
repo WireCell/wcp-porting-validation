@@ -1,0 +1,20 @@
+=== 272-2-30  in-beam main cid=5  20516 pts -> 2 direction group(s), 2258 unassigned
+  object 0:   9786 pts  far-pair  411.6 cm  dir [ 0.058 -0.971 -0.231]
+      end1 ( -129.5, -199.6,  149.6)  nearest face y-bot at   0.3 cm
+      end2 ( -154.5,  200.0,  245.2)  nearest face y-top at   0.0 cm
+  object 1:   8472 pts  far-pair  317.0 cm  dir [ 0.018 -0.173 -0.985]
+      end1 ( -139.2,   18.5,  165.3)  nearest face x-anode0 at  62.3 cm
+      end2 ( -142.9,   64.3,  478.9)  nearest face z-down at  22.1 cm
+  contact (-142.3,16.1,195.9)  closest approach 0.35 cm  opening angle 66.7 deg  (381 of 8472 object-1 points within 3 cm of object 0)
+    object 0 about the contact: arm-  190.7 cm / arm+  221.0 cm (4496 / 4961 pts either side)
+    object 1 about the contact: arm-  287.1 cm / arm+   29.8 cm (7862 / 342 pts either side)
+=== 105-23-21  in-beam main cid=15  4760 pts -> 2 direction group(s), 65 unassigned
+  object 0:   3864 pts  far-pair  329.7 cm  dir [0.281 0.103 0.954]
+      end1 (   22.0, -102.9,  185.4)  nearest face y-bot at  97.1 cm
+      end2 (  116.4,  -70.8,  499.6)  nearest face z-down at   1.4 cm
+  object 1:    831 pts  far-pair  236.6 cm  dir [-0.007  0.508  0.861]
+      end1 (   46.7, -196.9,   84.9)  nearest face y-bot at   3.0 cm
+      end2 (   45.7,  -77.6,  289.2)  nearest face y-bot at 122.4 cm
+  contact (45.4,-100.2,249.8)  closest approach 0.46 cm  opening angle 29.3 deg  (46 of 831 object-1 points within 3 cm of object 0)
+    object 0 about the contact: arm-   68.3 cm / arm+  261.4 cm (741 / 2971 pts either side)
+    object 1 about the contact: arm-  191.1 cm / arm+   45.5 cm (712 / 69 pts either side)

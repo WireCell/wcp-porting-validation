@@ -1,0 +1,147 @@
+##### evt30 cid=5 #####
+evt30 main cid=5
+  production :  20516 pts  far-pair   422.6 cm
+  trace      :  20516 pts  far-pair   422.6 cm   REPRODUCES
+
+scope   step                                    matched  ngrp  largest groups (id:npts)
+apa0    tr00_ClusteringPointed                20516/20516    16  12:20188  16:198  25:54  36:18  32:16
+apa0    tr01_ClusteringLiveDead               20516/20516    16  12:20188  16:198  25:54  36:18  32:16
+apa0    tr02_ClusteringExtend                 20516/20516    16  11:20188  15:198  23:54  34:18  30:16
+apa0    tr03_ClusteringRegular                20516/20516    15  101:20386  21:54  32:18  28:16  22:13
+apa0    tr04_ClusteringRegular                20516/20516    15  101:20386  21:54  32:18  28:16  22:13
+apa0    tr05_ClusteringParallelProlong        20516/20516    15  99:20386  21:54  32:18  28:16  22:13
+apa0    tr06_ClusteringClose                  20516/20516    12  88:20398  18:54  29:18  25:16  19:13
+apa0    tr07_ClusteringExtendLoop             20516/20516    11  84:20452  28:18  24:16  18:13  1:4
+apa0    tr08_ClusteringSeparate               20516/20516    11  83:20452  27:18  23:16  17:13  1:4
+apa0    tr09_ClusteringConnect1               20516/20516     9  79:20452  23:18  19:16  15:13  87:5
+apa0    tr10_ClusteringDeghost                20516/20516     6  66:20460  18:18  14:16  10:13  65:5
+apa0    tr11_ClusteringExamineXBoundary       20516/20516     6  55:20460  17:18  13:16  9:13  54:5
+apa0    tr12_ClusteringProtectOverclustering  20516/20516     7  69:20456  17:18  13:16  9:13  54:5
+apa0    tr13_ClusteringNeutrino               20516/20516     7  69:20456  17:18  13:16  9:13  54:5
+apa0    tr14_ClusteringIsolated               20516/20516     1  6:20516
+apa0    tr15_ClusteringExamineBundles         20516/20516     1  6:20516
+apa1    tr00_ClusteringPointed                    0/20516     0  
+apa1    tr01_ClusteringLiveDead                   0/20516     0  
+apa1    tr02_ClusteringExtend                     0/20516     0  
+apa1    tr03_ClusteringRegular                    0/20516     0  
+apa1    tr04_ClusteringRegular                    0/20516     0  
+apa1    tr05_ClusteringParallelProlong            0/20516     0  
+apa1    tr06_ClusteringClose                      0/20516     0  
+apa1    tr07_ClusteringExtendLoop                 0/20516     0  
+apa1    tr08_ClusteringSeparate                   0/20516     0  
+apa1    tr09_ClusteringConnect1                   0/20516     0  
+apa1    tr10_ClusteringDeghost                    0/20516     0  
+apa1    tr11_ClusteringExamineXBoundary           0/20516     0  
+apa1    tr12_ClusteringProtectOverclustering      0/20516     0  
+apa1    tr13_ClusteringNeutrino                   0/20516     0  
+apa1    tr14_ClusteringIsolated                   0/20516     0  
+apa1    tr15_ClusteringExamineBundles             0/20516     0  
+all-apa tr00_ClusteringSwitchScope            20516/20516     1  6:20516
+all-apa tr01_ClusteringExtend                 20516/20516     1  6:20516
+all-apa tr02_ClusteringRegular                20516/20516     1  6:20516
+all-apa tr03_ClusteringRegular                20516/20516     1  6:20516
+all-apa tr04_ClusteringParallelProlong        20516/20516     1  6:20516
+all-apa tr05_ClusteringClose                  20516/20516     1  6:20516
+all-apa tr06_ClusteringExtendLoop             20516/20516     1  6:20516
+all-apa tr07_ClusteringCathodeConnect         20516/20516     1  6:20516
+all-apa tr08_ClusteringCathodeBundleRescue    20516/20516     1  6:20516
+all-apa tr09_ClusteringExamineBundles         20516/20516     1  5:20516
+
+##### evt21 cid=15 #####
+evt21 main cid=15
+  production :   4760 pts  far-pair   439.1 cm
+  trace      :   4760 pts  far-pair   439.1 cm   REPRODUCES
+
+scope   step                                    matched  ngrp  largest groups (id:npts)
+apa0    tr00_ClusteringPointed                   11/4760     1  1:11
+apa0    tr01_ClusteringLiveDead                  11/4760     1  1:11
+apa0    tr02_ClusteringExtend                    11/4760     1  1:11
+apa0    tr03_ClusteringRegular                   11/4760     1  1:11
+apa0    tr04_ClusteringRegular                   11/4760     1  1:11
+apa0    tr05_ClusteringParallelProlong           11/4760     1  1:11
+apa0    tr06_ClusteringClose                     11/4760     1  1:11
+apa0    tr07_ClusteringExtendLoop                11/4760     1  1:11
+apa0    tr08_ClusteringSeparate                  11/4760     1  1:11
+apa0    tr09_ClusteringConnect1                  11/4760     1  1:11
+apa0    tr10_ClusteringDeghost                   11/4760     1  1:11
+apa0    tr11_ClusteringExamineXBoundary          11/4760     1  1:11
+apa0    tr12_ClusteringProtectOverclustering     11/4760     1  1:11
+apa0    tr13_ClusteringNeutrino                  11/4760     1  1:11
+apa0    tr14_ClusteringIsolated                  11/4760     1  1:11
+apa0    tr15_ClusteringExamineBundles            11/4760     1  1:11
+apa1    tr00_ClusteringPointed                 4749/4760     8  31:4526  27:159  4:19  6:14  16:12
+apa1    tr01_ClusteringLiveDead                4749/4760     8  31:4526  27:159  4:19  6:14  16:12
+apa1    tr02_ClusteringExtend                  4749/4760     8  31:4526  27:159  4:19  6:14  16:12
+apa1    tr03_ClusteringRegular                 4749/4760     7  33:4685  4:19  6:14  14:12  31:8
+apa1    tr04_ClusteringRegular                 4749/4760     7  33:4685  4:19  6:14  14:12  31:8
+apa1    tr05_ClusteringParallelProlong         4749/4760     7  33:4685  4:19  6:14  14:12  31:8
+apa1    tr06_ClusteringClose                   4749/4760     6  30:4690  4:19  6:14  13:12  28:8
+apa1    tr07_ClusteringExtendLoop              4749/4760     6  28:4690  4:19  6:14  12:12  26:8
+apa1    tr08_ClusteringSeparate                4749/4760     6  28:4690  4:19  6:14  12:12  26:8
+apa1    tr09_ClusteringConnect1                4749/4760     6  28:4690  4:19  6:14  12:12  26:8
+apa1    tr10_ClusteringDeghost                 4749/4760     6  22:4690  4:19  6:14  9:12  20:8
+apa1    tr11_ClusteringExamineXBoundary        4749/4760     6  17:4690  4:19  6:14  7:12  16:8
+apa1    tr12_ClusteringProtectOverclustering   4749/4760     6  17:4690  4:19  6:14  7:12  16:8
+apa1    tr13_ClusteringNeutrino                4749/4760     6  17:4690  4:19  6:14  7:12  16:8
+apa1    tr14_ClusteringIsolated                4749/4760     1  6:4749
+apa1    tr15_ClusteringExamineBundles          4749/4760     1  6:4749
+all-apa tr00_ClusteringSwitchScope             4760/4760     2  18:4749  1:11
+all-apa tr01_ClusteringExtend                  4760/4760     2  18:4749  1:11
+all-apa tr02_ClusteringRegular                 4760/4760     2  17:4749  1:11
+all-apa tr03_ClusteringRegular                 4760/4760     2  17:4749  1:11
+all-apa tr04_ClusteringParallelProlong         4760/4760     2  17:4749  1:11
+all-apa tr05_ClusteringClose                   4760/4760     2  17:4749  1:11
+all-apa tr06_ClusteringExtendLoop              4760/4760     2  17:4749  1:11
+all-apa tr07_ClusteringCathodeConnect          4760/4760     2  17:4749  1:11
+all-apa tr08_ClusteringCathodeBundleRescue     4760/4760     2  17:4749  1:11
+all-apa tr09_ClusteringExamineBundles          4760/4760     1  15:4760
+
+##### evt5 cid=18 #####
+evt5 main cid=18
+  production :   1405 pts  far-pair   178.8 cm
+  trace      :   1405 pts  far-pair   178.8 cm   REPRODUCES
+
+scope   step                                    matched  ngrp  largest groups (id:npts)
+apa0    tr00_ClusteringPointed                 1405/1405     9  20:982  23:283  19:47  22:34  32:15
+apa0    tr01_ClusteringLiveDead                1405/1405     9  20:982  23:283  19:47  22:34  32:15
+apa0    tr02_ClusteringExtend                  1405/1405     9  20:982  23:283  19:47  22:34  32:15
+apa0    tr03_ClusteringRegular                 1405/1405     9  17:982  20:283  16:47  19:34  29:15
+apa0    tr04_ClusteringRegular                 1405/1405     9  17:982  20:283  16:47  19:34  29:15
+apa0    tr05_ClusteringParallelProlong         1405/1405     9  17:982  20:283  16:47  19:34  29:15
+apa0    tr06_ClusteringClose                   1405/1405     9  9:982  12:283  8:47  11:34  21:15
+apa0    tr07_ClusteringExtendLoop              1405/1405     9  9:982  12:283  8:47  11:34  18:15
+apa0    tr08_ClusteringSeparate                1405/1405     9  9:982  12:283  8:47  11:34  18:15
+apa0    tr09_ClusteringConnect1                1405/1405     8  25:1029  8:283  7:34  14:15  15:15
+apa0    tr10_ClusteringDeghost                 1405/1405     8  23:1029  8:283  7:34  14:15  15:15
+apa0    tr11_ClusteringExamineXBoundary        1405/1405     8  25:1029  23:283  7:34  14:15  13:15
+apa0    tr12_ClusteringProtectOverclustering   1405/1405     9  27:982  22:283  26:47  7:34  13:15
+apa0    tr13_ClusteringNeutrino                1405/1405     9  27:982  22:283  26:47  7:34  13:15
+apa0    tr14_ClusteringIsolated                1405/1405     2  7:1086  8:319
+apa0    tr15_ClusteringExamineBundles          1405/1405     2  7:1086  8:319
+apa1    tr00_ClusteringPointed                   11/1405     1  40:11
+apa1    tr01_ClusteringLiveDead                  11/1405     1  40:11
+apa1    tr02_ClusteringExtend                    11/1405     1  40:11
+apa1    tr03_ClusteringRegular                   11/1405     1  38:11
+apa1    tr04_ClusteringRegular                   11/1405     1  38:11
+apa1    tr05_ClusteringParallelProlong           11/1405     1  38:11
+apa1    tr06_ClusteringClose                     11/1405     1  38:11
+apa1    tr07_ClusteringExtendLoop                11/1405     1  36:11
+apa1    tr08_ClusteringSeparate                  11/1405     1  36:11
+apa1    tr09_ClusteringConnect1                  11/1405     1  34:11
+apa1    tr10_ClusteringDeghost                   11/1405     1  34:11
+apa1    tr11_ClusteringExamineXBoundary          11/1405     1  51:11
+apa1    tr12_ClusteringProtectOverclustering     11/1405     1  50:11
+apa1    tr13_ClusteringNeutrino                  11/1405     1  50:11
+apa1    tr14_ClusteringIsolated                  11/1405     1  6:11
+apa1    tr15_ClusteringExamineBundles            11/1405     1  6:11
+all-apa tr00_ClusteringSwitchScope             1405/1405     2  7:1086  8:319
+all-apa tr01_ClusteringExtend                  1405/1405     2  7:1086  8:319
+all-apa tr02_ClusteringRegular                 1405/1405     2  7:1086  8:319
+all-apa tr03_ClusteringRegular                 1405/1405     2  7:1086  8:319
+all-apa tr04_ClusteringParallelProlong         1405/1405     2  7:1086  8:319
+all-apa tr05_ClusteringClose                   1405/1405     2  7:1086  8:319
+all-apa tr06_ClusteringExtendLoop              1405/1405     2  6:1086  7:319
+all-apa tr07_ClusteringCathodeConnect          1405/1405     2  6:1086  7:319
+all-apa tr08_ClusteringCathodeBundleRescue     1405/1405     2  6:1086  7:319
+all-apa tr09_ClusteringExamineBundles          1405/1405     1  18:1405   <== MERGE
+

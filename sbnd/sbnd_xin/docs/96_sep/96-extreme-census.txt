@@ -1,0 +1,54 @@
+idx RSE           cid  extreme_groups    TGM   STM
+  0 492-51-23      12               3   true     -
+  0 492-51-23      14              24  false   STM
+  1 827-27-4       18               3  false   STM
+  1 827-27-4       19               0  false   STM
+  2 304-6-28        5               3  false   STM
+  3 707-18-12       7               5  false   STM
+  4 146-60-31      12               5  false   STM
+  5 60-38-31        6               0  false   STM
+  5 60-38-31       16               3  false   STM
+  5 60-38-31       19              11  false   STM
+  6 445-18-34      19               2  false   STM
+  6 445-18-34      22               8  false   STM
+  7 541-46-22      15               2  false   STM
+  7 541-46-22      27               2   true     -
+  7 541-46-22      29               2  false   STM
+  8 272-2-30        5               5   true     -
+  9 105-23-2       14               2   true     -
+  9 105-23-2       17               4  false   STM
+ 10 105-23-5       18               2  false   STM
+ 10 105-23-5       22               3  false   STM
+ 11 105-23-21      15               3   true     -
+ 11 105-23-21      18               0  false   STM
+ 12 36-77-17       20               4  false   STM
+ 12 36-77-17       24               0  false   STM
+ 13 966-2-22        6               5  false   STM
+ 14 921-29-10       5               0   true     -
+ 15 921-29-41      24               2   true     -
+ 15 921-29-41      25               4  false   STM
+ 16 890-21-16      16               4   true     -
+ 16 890-21-16      20              16  false   STM
+ 16 890-21-16      21               6  false   STM
+ 17 890-21-39      20               4   true     -
+ 17 890-21-39      22               4  false   STM
+ 18 651-84-12      11               3  false   STM
+ 18 651-84-12      12              12  false   STM
+ 18 651-84-12      13               8  false   STM
+ 19 651-84-34      32               5  false   STM
+ 19 651-84-34      40               0   true     -
+ 19 651-84-34      41               8  false   STM
+ 19 651-84-34      42               4  false   STM
+ 20 993-78-14      12               2   true     -
+ 20 993-78-14      16               4  false   STM
+ 21 44-40-14       12               0  false   STM
+ 21 44-40-14       17               3   true     -
+ 21 44-40-14       19               6  false   STM
+ 22 411-27-8       22               0   true     -
+ 23 710-80-44       8               3  false   STM
+ 23 710-80-44      12              25  false   STM
+ 24 658-38-25      16              11   true     -
+
+mains evaluated: 49   histogram of extreme groups: {0: 8, 2: 8, 3: 9, 4: 8, 5: 5, 6: 2, 8: 3, 11: 2, 12: 1, 16: 1, 24: 1, 25: 1}
+TGM-tagged mains: 14;  of those with >=3 extreme groups: 7 (50%)
+   [('492-51-23', 12, 3), ('272-2-30', 5, 5), ('105-23-21', 15, 3), ('890-21-16', 16, 4), ('890-21-39', 20, 4), ('44-40-14', 17, 3), ('658-38-25', 16, 11)]

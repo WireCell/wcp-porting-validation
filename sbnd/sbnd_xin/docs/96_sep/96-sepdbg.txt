@@ -1,0 +1,53 @@
+##### evt30 #####
+SEPDBG dec2 ident=45 len=216.682 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=98.9001 ly=-59.4094 hz=147.6 lz=3.89974 hx=9.6447 lx=-29.1177
+SEPDBG gate ident=45 len=216.682 nblob=784 dec1=0 dec2=0 nindep=2 r1=0.00361471 r2=0.000508541 angbeam=41.4267
+SEPDBG dec2 ident=10 len=194.851 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=47.545 ly=-83.3984 hz=93.2997 lz=32.3997 hx=219.399 lx=88.1073
+SEPDBG gate ident=10 len=194.851 nblob=487 dec1=0 dec2=0 nindep=2 r1=0.00204512 r2=0.000241793 angbeam=16.606
+SEPDBG dec2 ident=9 len=137.806 nout=2 noutx=1 nsurf=2 nindep=2 nfar=0 outx=1 hy=-118.126 ly=-199.879 hz=371.4 lz=277.8 hx=233.779 lx=171.572
+SEPDBG gate ident=9 len=137.806 nblob=267 dec1=0 dec2=0 nindep=2 r1=8.88512e-05 r2=7.07293e-05 angbeam=42.2195
+SEPDBG dec2 ident=84 len=486.724 nout=1 noutx=0 nsurf=1 nindep=2 nfar=0 outx=0 hy=199.965 ly=-199.619 hz=479.55 lz=149.4 hx=-127.495 lx=-155.004
+SEPDBG gate ident=84 len=486.724 nblob=1247 dec1=0 dec2=0 nindep=4 r1=0.368611 r2=0.000258714 angbeam=51.7762
+SEPDBG dec2 ident=10 len=316.449 nout=1 noutx=1 nsurf=1 nindep=3 nfar=0 outx=1 hy=172.945 ly=-132.589 hz=88.1997 lz=57.5997 hx=-156.567 lx=-234.091
+SEPDBG gate ident=10 len=316.449 nblob=1159 dec1=1 dec2=1 nindep=3 r1=0.0186833 r2=0.000610749 angbeam=0.708145
+SEPDBG dec2 ident=-1 len=109.953 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=169.828 ly=93.2711 hz=88.1997 lz=59.85 hx=-156.567 lx=-233.779
+SEPDBG vveto lens=304.188/109.953 touch=0.433265 J=(-219.556,108.383,65.1749) behind=0.19325/0.16347 open=122.822 frag=0.00823271 keep
+SEPDBG dec2 ident=86 len=307.454 nout=0 noutx=0 nsurf=0 nindep=1 nfar=0 outx=0 hy=199.532 ly=-19.5722 hz=407.7 lz=192.9 hx=-6.8313 lx=-20.8983
+SEPDBG gate ident=86 len=307.454 nblob=579 dec1=0 dec2=0 nindep=3 r1=0.00253371 r2=2.04265e-05 angbeam=44.2056
+SEPDBG dec2 ident=83 len=277.434 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=199.879 ly=-31.7829 hz=301.5 lz=224.4 hx=-84.0435 lx=-215.648
+SEPDBG gate ident=83 len=277.434 nblob=527 dec1=0 dec2=0 nindep=2 r1=0.00017543 r2=8.5123e-05 angbeam=15.6681
+SEPDBG dec2 ident=85 len=211.073 nout=2 noutx=1 nsurf=2 nindep=2 nfar=0 outx=1 hy=-51.0091 ly=-199.879 hz=287.4 lz=142.65 hx=29.1177 lx=-9.0195
+SEPDBG gate ident=85 len=211.073 nblob=885 dec1=0 dec2=0 nindep=2 r1=0.00301489 r2=0.000758227 angbeam=43.4471
+
+##### evt21 #####
+SEPDBG gate ident=30 len=478.294 nblob=4099 dec1=0 dec2=0 nindep=0 r1=0.140409 r2=2.91826e-05 angbeam=36.3535
+SEPDBG dec2 ident=28 len=449.635 nout=0 noutx=0 nsurf=0 nindep=0 nfar=0 outx=0 hy=-69.3684 ly=-196.934 hz=499.65 lz=84.8997 hx=116.241 lx=21.5235
+SEPDBG gate ident=28 len=449.635 nblob=577 dec1=1 dec2=0 nindep=3 r1=0.0262956 r2=4.18669e-05 angbeam=72.7066
+SEPDBG dec2 ident=27 len=117.776 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=-37.5855 ly=-117.26 hz=221.4 lz=181.8 hx=44.3433 lx=-33.1815
+SEPDBG gate ident=27 len=117.776 nblob=276 dec1=0 dec2=0 nindep=2 r1=0.000154331 r2=0.000115901 angbeam=19.2073
+SEPDBG dec2 ident=11 len=109.723 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=148.696 ly=95.436 hz=195.9 lz=162.9 hx=233.779 lx=144.063
+SEPDBG gate ident=11 len=109.723 nblob=319 dec1=0 dec2=0 nindep=2 r1=0.000397389 r2=9.58213e-05 angbeam=17.0905
+SEPDBG dec2 ident=25 len=430.813 nout=1 noutx=0 nsurf=1 nindep=2 nfar=0 outx=0 hy=199.792 ly=-199.879 hz=141.15 lz=57.5997 hx=-7.7691 lx=-143.125
+SEPDBG gate ident=25 len=430.813 nblob=648 dec1=0 dec2=0 nindep=2 r1=0.000705286 r2=2.02395e-05 angbeam=11.1352
+SEPDBG dec2 ident=26 len=291.658 nout=3 noutx=3 nsurf=1 nindep=3 nfar=0 outx=1 hy=199.446 ly=-82.7921 hz=500.85 lz=431.4 hx=23.8035 lx=17.2389
+SEPDBG gate ident=26 len=291.658 nblob=1057 dec1=0 dec2=1 nindep=3 r1=0.0137916 r2=4.98926e-05 angbeam=12.0541
+SEPDBG dec2 ident=27 len=286.829 nout=1 noutx=0 nsurf=1 nindep=2 nfar=0 outx=0 hy=59.2362 ly=-199.965 hz=501 lz=379.05 hx=-109.364 lx=-122.493
+SEPDBG gate ident=27 len=286.829 nblob=735 dec1=0 dec2=0 nindep=3 r1=0.00535133 r2=3.03136e-05 angbeam=24.7998
+SEPDBG dec2 ident=11 len=128.444 nout=1 noutx=0 nsurf=1 nindep=1 nfar=0 outx=0 hy=-91.0191 ly=-199.879 hz=59.25 lz=2.99974 hx=-123.431 lx=-161.256
+SEPDBG gate ident=11 len=128.444 nblob=168 dec1=0 dec2=0 nindep=2 r1=0.000339091 r2=0.000233247 angbeam=25.1799
+SEPDBG dec2 ident=7 len=108.559 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=95.2628 ly=42.2621 hz=163.2 lz=130.8 hx=-144.063 lx=-233.466
+SEPDBG gate ident=7 len=108.559 nblob=331 dec1=0 dec2=0 nindep=2 r1=0.000131837 r2=8.01916e-05 angbeam=17.1232
+
+##### evt5 #####
+SEPDBG dec2 ident=24 len=178.63 nout=0 noutx=0 nsurf=0 nindep=1 nfar=0 outx=0 hy=199.965 ly=22.7762 hz=497.25 lz=478.5 hx=108.426 lx=101.862
+SEPDBG gate ident=24 len=178.63 nblob=386 dec1=0 dec2=0 nindep=3 r1=0.00857589 r2=0.000442744 angbeam=2.28105
+SEPDBG dec2 ident=8 len=114.487 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=169.048 ly=87.9014 hz=169.8 lz=151.8 hx=44.6559 lx=-33.4941
+SEPDBG gate ident=8 len=114.487 nblob=261 dec1=0 dec2=0 nindep=2 r1=0.000315871 r2=0.000144896 angbeam=9.48472
+SEPDBG dec2 ident=53 len=103.687 nout=1 noutx=1 nsurf=1 nindep=2 nfar=0 outx=1 hy=16.3677 ly=-107.387 hz=70.1997 lz=63.75 hx=231.278 lx=152.815
+SEPDBG gate ident=53 len=103.687 nblob=250 dec1=0 dec2=0 nindep=2 r1=0.000452573 r2=0.000151948 angbeam=0.86718
+SEPDBG dec2 ident=26 len=426.507 nout=1 noutx=0 nsurf=1 nindep=2 nfar=0 outx=0 hy=199.446 ly=-199.965 hz=350.4 lz=209.55 hx=-53.0961 lx=-95.6097
+SEPDBG gate ident=26 len=426.507 nblob=765 dec1=0 dec2=0 nindep=2 r1=0.000508743 r2=6.37243e-05 angbeam=19.2492
+SEPDBG dec2 ident=25 len=172.731 nout=1 noutx=1 nsurf=1 nindep=3 nfar=0 outx=1 hy=195.029 ly=48.6706 hz=69.2997 lz=62.6997 hx=-133.122 lx=-225.964
+SEPDBG gate ident=25 len=172.731 nblob=530 dec1=0 dec2=1 nindep=3 r1=0.000213873 r2=0.000176569 angbeam=0.523724
+SEPDBG dec2 ident=13 len=163.863 nout=2 noutx=1 nsurf=2 nindep=2 nfar=0 outx=1 hy=-65.0383 ly=-199.965 hz=496.5 lz=422.85 hx=33.4941 lx=-23.3991
+SEPDBG gate ident=13 len=163.863 nblob=226 dec1=0 dec2=0 nindep=2 r1=0.000153867 r2=5.24124e-05 angbeam=26.4905
+

@@ -1,0 +1,20 @@
+doc 96 sec 9 -- feasibility probe: does the in-beam main separate?
+Config-level A/B on each event's OWN production compiled config; the OFF arm
+reproduces production byte-identically (md5 of the clustering-global layer).
+
+=== 272-2-30  in-beam main cid=5: 20516 pts, far-pair 422.6 cm
+   production (paths only)       1 piece(s):  20438 pts / 423 cm
+   track_recarve                 2 piece(s):  10576 pts / 412 cm   |   9856 pts / 343 cm
+   FV inset 15 cm                2 piece(s):  10487 pts / 412 cm   |   9798 pts / 343 cm
+   far_point knobs               1 piece(s):  20438 pts / 423 cm
+   FV inset + far_point          2 piece(s):  10487 pts / 412 cm   |   9798 pts / 343 cm
+   PDHD/PDVD point (all four)    2 piece(s):  10495 pts / 412 cm   |   9808 pts / 343 cm
+
+=== 105-23-21  in-beam main cid=15: 4760 pts, far-pair 439.1 cm
+   production (paths only)       1 piece(s):  4752 pts / 439 cm
+   track_recarve                 1 piece(s):  4752 pts / 439 cm
+   FV inset 15 cm                1 piece(s):  4753 pts / 439 cm
+   far_point knobs               1 piece(s):  4752 pts / 439 cm
+   FV inset + far_point          2 piece(s):  3846 pts / 333 cm   |   908 pts / 477 cm, host cluster 28389 pts
+   PDHD/PDVD point (all four)    2 piece(s):  3846 pts / 333 cm   |   908 pts / 477 cm, host cluster 28389 pts
+

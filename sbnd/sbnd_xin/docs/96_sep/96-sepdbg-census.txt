@@ -1,0 +1,22 @@
+logs parsed: 25;  gate lines: 174 (clusters longer than 100 cm);  with a matching dec2 line: 173
+  in-time  (outx=0): 74
+  out-of-time (outx=1): 99
+
+IN-TIME clusters  (n=74)
+  dec2=1 :    0  (0.0%)
+  dec1=1 :    8  (10.8%)
+  nout   : {0: 45, 1: 29}
+  nsurf  : {0: 45, 1: 29}
+  first conjunct of dec2 satisfied: 0  (0.0%)
+
+OUT-OF-TIME clusters  (n=99)
+  dec2=1 :   11  (11.1%)
+  dec1=1 :    2  (2.0%)
+  nout   : {1: 72, 2: 23, 3: 3, 4: 1}
+  nsurf  : {1: 81, 2: 18}
+  first conjunct of dec2 satisfied: 98  (99.0%)
+
+IN-TIME clusters longer than 250 cm (the through-going-cosmic regime): 33
+  nout histogram: {0: 14, 1: 19}
+  nsurf histogram: {0: 14, 1: 19}
+  dec2=1: 0 / 33
