@@ -1,7 +1,7 @@
 # doc 94 — recovering neutrino events lost to the STM tagger
 
-**Round 1. Two candidate mechanisms measured dead, one shipped default-OFF and
-recommended for the owner's scan.**
+**Round 1 CLOSED by owner adjudication (2026-09-02, §0). 3 of 4 recovered at
+zero measured cost. The 4th has an identified mechanism and is round 2.**
 
 Predecessors: doc 63 (the STM improvement campaign, closed at 3 irreducible
 errors), doc 62 (`scan-d59k/stm-baseline.tsv`, the 72 bundles the owner
@@ -12,11 +12,12 @@ feedback sample).
 
 | | |
 |---|---|
-| symptom | 5 events our chain tags STM that the owner says are neutrino candidates |
-| **recovered** | **3 of 5** — 966-2-22, 304-6-28, 146-60-31 all flip STM → **nu-candidate** |
-| cost on the **3067** data events | **1 bundle flips, of 34,827** — measured A/B, zero collateral |
+| symptom | 5 events our chain tags STM that the owner said are neutrino candidates |
+| **after adjudication** | **707-18-12 is a genuine STM** — our tag was right. The target set is **4**, not 5 |
+| **recovered** | **3 of 4** — 966-2-22, 304-6-28, 146-60-31 all flip STM → **nu-candidate** |
+| cost on the **3067** data events | 1 bundle flips of 34,827 — and the owner calls it a **neutrino**, so the measured cost is **zero** |
 | owner's 36 confirmed-correct STMs broken | **0** |
-| not recovered | 827-27-4, 707-18-12 — mechanism identified, no predicate available at STM time |
+| still not recovered | **827-27-4** — owner-adjudicated neutrino; mechanism now identified (§0.2), fix is round 2 |
 | ideas measured dead | travel direction (§4), `proton_muon_guard` re-tune (§5) |
 
 ## Repro
@@ -42,6 +43,95 @@ PR_JOBS=24 ./scripts/doc94_hadron_arms.sh                 # -> work-*-d94hadron
 
 Binaries pinned: `~/tmp/doc94-libsnap` (probe arms), `~/tmp/doc94b-libsnap`
 (hadron arms). A peer session shares `local/lib`.
+
+## 0. Owner adjudication — 2026-09-02
+
+Three calls from the owner after scanning the round-1 package. All three change
+the arithmetic, and one of them opens round 2.
+
+### 0.1 `64475:23` is clearly a neutrino
+
+The single bundle `vertex_hadron_guard` releases in 3067 data events (§9) is a
+neutrino. **The guard therefore has no measured cost at all**: 3 recovered
+neutrino candidates, 1 released bundle, and that bundle is also a neutrino.
+The condition stated in round 1 for flipping it on for SBND is met.
+
+### 0.2 `707-18-12` is a genuine STM — a muon coming in
+
+Our tag on it was **correct**. It was never a recovery target, so the round's
+denominator is **4**, not 5, and the score is **3 of 4**. This also removes it
+from §6: there is no "second unrecoverable event", only one.
+
+It is now something more useful than a residual — it is a **negative control
+with an owner verdict**, and the only true-STM example in this 6-event set.
+
+### 0.3 `827-27-4` is a neutrino, and the tell is at the ENTRY end
+
+The owner's words: *"The telling feature is actually on the rise of dQ/dx near
+the exiting detector (or entry point). This is a signature of two particles,
+one particle going out of the detector. I understand that you have been testing
+the stopping point candidate."*
+
+That last sentence is the diagnosis of round 1's blind spot, and it is correct:
+**every predicate in the tagger looks at the STOP end.** `eval_stm_core`
+searches for the Bragg peak in a window that *ends* at the kink;
+`detect_proton` tests the last 20–35 cm; all five doc-63 guards read the stop
+region; and doc 94's own `vertex_hadron_guard` reads prongs. Nothing in
+`TaggerCheckSTM.cxx` reads the charge profile at the boundary point where the
+fit *starts*.
+
+**The physics.** At the boundary end a single muon is at its most energetic, so
+its dQ/dx there must be at its *lowest*, ≈ 1 MIP. Charge well above MIP at the
+boundary that then **decays to the body level** over the next 10–20 cm is two
+particles sharing that stretch, one of which leaves the detector.
+
+**Measured on the 6 events** (`scripts/doc94_entry_rise.py`, plot
+`products/doc94/scan/entry_rise.png`; dQ/dx from the `save_stm_fit` trajectory,
+entry = median over the first 3 cm from the boundary point, body = median over
+the middle of the track):
+
+| event | entry 0–3 cm | body | **entry/body** | decays to body by | owner verdict |
+|---|---|---|---|---|---|
+| **827-27-4** | 2.43 | 0.98 | **2.49** | ≈14 cm | **neutrino** |
+| 304-6-28 | 3.25 | 1.51 | 2.15 | *never* — body is hot throughout | neutrino (already recovered) |
+| 146-60-31 | 2.62 | 1.37 | 1.92 | ≈20 cm | neutrino (already recovered) |
+| **707-18-12** | 1.04 | 0.83 | **1.26** | flat from L = 0 | **genuine STM** |
+| 966-2-22 | 0.93 | 0.86 | 1.09 | flat from L = 0 | neutrino (recovered by the prong) |
+| 36-77-17 | 0.91 | 0.95 | 0.96 | flat from L = 0 | control, correctly not STM |
+
+The separation is clean where it matters: **827-27-4 at 2.49 against the true
+STM at 1.26**, with the control at 0.96. 827-27-4's profile is the textbook
+version of the owner's picture — 3.4–3.9 MIP at L = 0, decaying through 2.1
+(3 cm), 1.8 (5 cm), 1.25 (9 cm) to a flat 1.05 by L ≈ 14 cm. Two tracks
+overlapping for ~14 cm, then one leaves.
+
+**Refinement the plot forces, and round 2 must respect it.** The feature is not
+"the entry is hot" — it is "the entry is hot **and decays to the body level**".
+304-6-28 has entry/body 2.15 but its body sits at 1.5–2.0 MIP for the whole
+40 cm shown, so there is no decay; the ratio alone would call it for the wrong
+reason. A round-2 predicate should key on the **decay** (entry charge falling to
+the body level over a ~10–20 cm scale), not on a bare ratio.
+
+**Two more cautions for round 2**, recorded now so they are not rediscovered:
+
+1. **Anode confound.** 304-6-28 enters at the anode face (x = −201.4), where
+   drift and recombination effects on dQ/dx are largest. The two clean firing
+   cases do *not*: 827-27-4 enters the upstream z face and 146-60-31 the bottom
+   y face, so the feature is not an anode artifact — but a population study
+   must split by entry face.
+2. **`ratio1` is the same fact seen from elsewhere.** §6 records 827-27-4's
+   `ratio1 = 0.549`, i.e. measured charge ≈1.8× the muon template while the
+   *shape* matches. That is exactly what two overlapping particles produce, and
+   doc 55 already noted nothing gates on `ratio1` in the non-strong acceptance
+   branch. The entry-rise feature and the `ratio1` anomaly are one phenomenon,
+   which is mild independent support for both.
+
+**Status: recorded, not implemented.** Round 2 (next session) builds the
+predicate, and it gets the same bar as `vertex_hadron_guard`: default OFF,
+key-suppressed jsonnet, `prod_cfg_gate.py` PASS, a causal negative control, the
+full 3067-event A/B, and the doc-62 owner baseline with the join validated
+before any score is quoted. 707-18-12 is the negative control it must not
+break, and 36-77-17 remains the standing one.
 
 ## 1. The sample and the baseline
 
@@ -286,7 +376,12 @@ abandoned.
 The vertex-hadron guard separates the *same* two events with a margin of
 **13 cm and 0.7 MIP** instead of **0.001 in ks1**.
 
-## 6. Not recovered — 827-27-4 and 707-18-12
+## 6. Not recovered by round 1 — 827-27-4
+
+> Written before the owner's adjudication; §0.2 has since established that
+> **707-18-12 is a genuine STM**, so only 827-27-4 belongs in this section, and
+> §0.3 supplies the mechanism this section says is missing. Kept as the record
+> of what round 1 could and could not see.
 
 Neither carries a prong: `search_other_tracks` returned nothing, so
 `check_other_tracks` exits at `fitted_segments.size() <= 1` and no
@@ -300,6 +395,12 @@ time. The one anomaly is `ratio1 = 0.549`: the measured charge is ~1.8× the
 muon template in **normalization** while the **shape** matches, and doc 55
 already recorded that nothing gates on `ratio1` in the non-strong acceptance
 branch. That is n = 1 and is **not** a lead pursued in this round.
+
+**Update (§0.3):** that anomaly was the right thread and it was dropped one
+step too early. The owner localized it — the excess charge sits at the **entry**
+end and decays over ~14 cm, which is two particles overlapping with one
+exiting. Every predicate in this file reads the *stop* end, which is why
+nothing saw it.
 
 707-18-12 has body 0.85 MIP with a 4.32 MIP end peak; `detect_proton` ran to
 block C and returned false.
@@ -329,7 +430,7 @@ filled. This contradicts `ref/prod-2026-09-01c/README.md`, which advertises
 per-bundle flags in that tree. Consequence for this round: every flip table
 here is built from `nusel-evt<ID>.tsv`, never from `T_cluster`.
 
-## 9. Hand scan of the one release — `64475:23`
+## 9. Hand scan of the one release — `64475:23`  *(resolved: neutrino)*
 
 The guard releases exactly one bundle in 3067 data events. There is no truth
 for data, so it was scanned by eye. Images:
@@ -368,17 +469,19 @@ knows nothing about this guard, independently places the interaction vertex at
 **exactly the point the STM fit called the stop**, and puts a proton- and a
 pion-typed stub there.
 
-**My verdict: ambiguous, leaning neutrino-like — and this is the one thing in
-this round I am putting to the owner rather than deciding.** For it: a 20 cm
+> **RESOLVED 2026-09-02 (§0.1): the owner calls it clearly a neutrino.** The
+> guard's measured cost is therefore zero. The scan below is kept as the record
+> of what the evidence looked like before the call.
+
+**My verdict at the time: ambiguous, leaning neutrino-like — put to the owner
+rather than decided.** For it: a 20 cm
 prong at 2.38 MIP, an independent vertex on the same point, proton and pion
 stubs, `numu_score` +2.12. Against it: a 240 cm near-horizontal track entering
 the anode face is a very cosmic-like object, and a ragged end can be a stopping
 muon with delta rays rather than a hadronic vertex.
 
-If the owner calls it a cosmic, the measured price of `vertex_hadron_guard` is
-**one cosmic per 3067 events entering the selection at `numu_score` +2.12**,
-against three recovered neutrino candidates. If the owner calls it a neutrino,
-the guard has no measured cost at all.
+The owner called it a neutrino, so the second branch is the one that applies:
+**`vertex_hadron_guard` has no measured cost at all.**
 
 ## 10. Bee — the A/B pair
 
@@ -431,19 +534,19 @@ are the two not recovered. Index 1, the control, has them in both.
 
 ## 11. Recommended next step
 
-1. **One owner call decides this round: is `64475:23` (§9) a neutrino or a
-   cosmic?** It is the single bundle the guard releases in 3067 data events,
-   and my own scan says ambiguous-leaning-neutrino. If it is a neutrino, the
-   guard has no measured cost and should go ON for SBND. If it is a cosmic,
-   the trade is one cosmic per 3067 events entering the selection at
-   `numu_score` +2.12, against three recovered neutrino candidates — still a
-   good trade in my judgement, but the owner's to make. The Bee set in §10
-   carries the 5 symptom events plus the control with the fitted trajectory
-   drawn; `products/doc94/scan/` carries the images for `64475:23`.
-2. **Leave `descent_guard` OFF permanently** unless someone finds a stop
+1. ~~Is `64475:23` a neutrino or a cosmic?~~ **Answered (§0.1): a neutrino.**
+   `stm_vertex_hadron_guard` therefore has **zero measured cost** and the
+   round-1 condition for flipping it ON for SBND is met. That flip is a
+   production default change and is *not* made in this document — it is the
+   owner's to authorize.
+2. **Round 2: the entry-end rise (§0.3).** Build a predicate on the entry
+   charge *decaying* to the body level over ~10–20 cm, not on a bare ratio.
+   Target: 827-27-4 (2.49). Must not break 707-18-12 (1.26, owner-confirmed
+   STM) or 36-77-17 (0.96). Split the population study by entry face — the
+   anode is a confound.
+3. **Leave `descent_guard` OFF permanently** unless someone finds a stop
    definition that is not the fit's `pts[kink]`. §4 explains why nothing
    anchored there can work.
-3. For 827-27-4 and 707-18-12 the honest answer is that STM has no information
-   to act on. The next place to look is not the tagger but whether the
-   *neutrino* activity in those events is being clustered into the muon at all
-   — which is an upstream question, not an STM one.
+4. ~~827-27-4 and 707-18-12 have no information to act on.~~ **Both superseded
+   by §0**: 707-18-12 is a genuine STM, and 827-27-4 has a measured feature the
+   tagger simply never looks at.
