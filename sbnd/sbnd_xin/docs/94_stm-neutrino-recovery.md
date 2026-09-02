@@ -3,10 +3,10 @@
 **Round 1 CLOSED. `stm_vertex_hadron_guard` is SBND PRODUCTION as of
 2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.**
 
-**Round 2 CLOSED. `entry_rise_guard` recovers the 4th — 827-27-4 — so the
-owner-adjudicated score is 4 of 4. Shipped DEFAULT OFF: it releases 2 data
-bundles of 34,827 and I could not adjudicate either, so the flip is the
-owner's call (§12.10, Bee indices 1 and 2).**
+**Round 2 IMPLEMENTED, NOT CLOSED. `entry_rise_guard` recovers the 4th —
+827-27-4 — so the owner-adjudicated score is 4 of 4. It ships DEFAULT OFF and
+stays there until the owner adjudicates the 2 data bundles of 34,827 it
+releases; I could not call either (§12.10, Bee indices 1 and 2).**
 
 Predecessors: doc 63 (the STM improvement campaign, closed at 3 irreducible
 errors), doc 62 (`scan-d59k/stm-baseline.tsv`, the 72 bundles the owner
@@ -597,11 +597,11 @@ are the two not recovered. Index 1, the control, has them in both.
 
 # Round 2 — the entry-end rise, implemented
 
-**Round 2 CLOSED. `entry_rise_guard` recovers 827-27-4, the one event round 1
-could not, and the owner-adjudicated score goes from 3 of 4 to 4 of 4.**
-Default OFF pending the owner's call on the two data bundles it releases
-(§12.7 — both hand-scanned, both look like neutrinos, and one of them is the
-strongest example of the owner's own signature in the whole 3067-event sample).
+**Round 2 IMPLEMENTED and validated; NOT closed.** `entry_rise_guard` recovers
+827-27-4, the one event round 1 could not, and the owner-adjudicated score
+goes from 3 of 4 to 4 of 4. It stays **default OFF** until the owner
+adjudicates the two data bundles it releases (§12.7). Round 1 used "CLOSED" to
+mean *shipped to production*; this round has not earned that word.
 
 ## 12. `entry_rise_guard` — the predicate the owner described
 
@@ -686,7 +686,10 @@ not outcomes:
 
 `146-60-31` is **declined by `guard_entry_min_len_cm = 70`**: its muon reaches
 the kink after 56.9 cm, which leaves no room for the `[20, L_stop − 25]` body
-window. It was already recovered by `vertex_hadron_guard`, so nothing is lost —
+window. Checked, not asserted: `work-stmfb8-r2probe/pr_evt31` emits **no**
+`entry_rise:` probe line at all while its `stm_pass` record shows a status-0
+accept with `npts = 88` (so the `n < 8` gate cannot be the reason) and
+`kink = 88`, i.e. out of range, so the stop is the path end at 56.9 cm. It was already recovered by `vertex_hadron_guard`, so nothing is lost —
 but the decline is the honest cost of the length gate and §12.6 measures it.
 
 ### 12.4 Positive control — the target flips, nothing else does
@@ -788,6 +791,15 @@ point is *not* what creates these runs. The one exception is the marginal
 release `95500:15`, whose 5.5 cm falls to **4.9 cm** (below the cut) when the
 first point is dropped. That is recorded as a property of that bundle in
 §12.7, not as a reason to change the predicate.
+
+**`guard_entry_min_len_cm = 70` is a choice, not a measurement.** It was fixed
+before any population data existed, and the only thing that derives it is the
+body window: `[20 cm, L_stop − 25 cm]` needs `L_stop > 45` to be non-empty at
+all, and 70 leaves 25 cm of window. The data now says what it costs — 170 of
+416 STM bundles never evaluated, including one known-good target
+(146-60-31 at 56.9 cm). It is **not** changed in this round: every number here
+comes from one pinned binary, and lowering the floor is a round-3 question
+with a cost that can be measured rather than argued.
 
 **Coverage — stated, not buried.** The guard evaluates 246 of the **416**
 in-beam STM bundles that reach it; the rest are declined because their muon is
