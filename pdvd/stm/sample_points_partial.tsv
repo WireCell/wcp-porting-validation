@@ -1,0 +1,3 @@
+# per-point sample; dqdx in e/cm, rr/x/y/z/dx in cm
+# drift_cm = 339.91 - |x| (shield plane); drift_us = drift_cm / 0.148073
+particle	event	block	rr	dqdx	dx	x	y	z	drift_cm	drift_us

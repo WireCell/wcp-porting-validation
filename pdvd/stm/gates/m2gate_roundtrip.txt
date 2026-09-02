@@ -1,0 +1,7 @@
+# doc pdvd/25 M2 gate: run_pr_evt.sh -pipe switch_scope on the pctree of work/<evt>_m1on vs the Q/L job's mabc-all-apa.zip
+# member data/0/0-clustering-global.json: x,y,z,q arrays identical (same length, same order); cluster_id relabeled by a bijection (cluster_id_order 'tree' renumbering); subRunNo now taken from the sidecar
+# toolkit 0913743f+wip; 2026-09-02
+event npts xyzq_identical nclusters relabel_bijection
+039252_0 66210 True 99 True
+039253_0 90091 True 124 True
+039349_0 40382 True 70 True

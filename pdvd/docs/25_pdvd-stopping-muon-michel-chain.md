@@ -1,10 +1,10 @@
 # Applying Wire-Cell pattern recognition to ProtoDUNE-VD: stopping muons + Michel electrons
 
-**Scope declaration: this is a design round. No code and no config is changed
-by this document.** Every number below is either read out of the tree at the
-commit named in the Repro block, or derived here with the substitution shown.
-Nothing is measured on PDVD data yet; the milestones in §10 say which run
-produces which number.
+**Scope: §§1–12 are the design round (2026-09-02, no code changed); §13 is
+the execution round of the same day, which built the chain, ran it on the 120
+PDVD data events of record and measured what §§7–10 left open.** Where §13
+settles a number that §§7–12 called unmeasured, §13 governs and the earlier
+section carries a pointer.
 
 **Goal.** PDVD today ends at charge–light (Q/L) matching. We want it to
 *select stopping muons that decay to a Michel electron*, and to use those
@@ -495,12 +495,15 @@ Transport coefficients are equally split:
 | `DT` | 12.0 cm²/s (`common/params.jsonnet:25`) | **8.8** (`simparams.jsonnet:12`) | same |
 | lifetime | 8 ms (`common/params.jsonnet:27`) | 1000 ms (`simparams.jsonnet:8`) | reco inherited; sim effectively infinite |
 
-Neither pair was measured for PDVD. Note that SBND's own reco `DL`/`DT` do not
+**Resolved in §13.1:** `DL` = 4.12, `DT` = 7.82 cm²/s at the field implied by the
+settled velocity (E = 0.44 kV/cm), now in `pdvd_track_fitting.json`.
+Note that SBND's own reco `DL`/`DT` do not
 come from `params.jsonnet` at all — they come from the runtime-loaded
 `sbnd_track_fitting.json` (§7b), which is a separate knob that must be kept in
 step with the sim values by hand.
 
-**No E-field and no temperature value is configured anywhere in PDVD.**
+**No E-field and no temperature value is configured anywhere in PDVD** (as of
+the design round; §13.1 derives E = 0.44 kV/cm from the velocity).
 `protodunevd/funcs.jsonnet:136-190` carries a complete Walkowiak
 drift-velocity parameterisation that nothing calls; drift speed is a
 data-calibrated literal instead. The nominal field is 500 V/cm (GDML
@@ -550,8 +553,8 @@ pitches (U/V 7.65 mm, W 5.10 mm) and v = 1.568 mm/us:
 | `ind_sigma_u_T` | [(1/sqrt(pi))/Wire_ind] * pitch_U * 0.3 | 0.48359 | (0.564190/5.0) x 7.65 x 0.3 = **0.2590** |
 | `ind_sigma_v_T` | ... * pitch_V * 0.5 | 0.80599 | (0.564190/5.0) x 7.65 x 0.5 = **0.4316** |
 | `col_sigma_w_T` | [(1/sqrt(pi))/Wire_col] * pitch_W * 0.2 | 0.09403 | (0.564190/10.0) x 5.10 x 0.2 = **0.0575** |
-| `DL` | physical, not filter-derived | 4.0e-07 | **unmeasured** |
-| `DT` | physical, not filter-derived | 8.8e-07 | **unmeasured** |
+| `DL` | physical, not filter-derived | 4.0e-07 | **4.12e-07** (§13.1) |
+| `DT` | physical, not filter-derived | 8.8e-07 | **7.82e-07** (§13.1) |
 
 **The formula is validated, not assumed.** Substituting SBND's own filters
 (`Gaus_wide` 0.10 MHz, `Wire_ind` 1.05, `Wire_col` 3.60), pitch 3 mm and
@@ -629,9 +632,9 @@ energy_loss/docs/emit_jsonnet_dedx.py
 
 with `dQ/dx = ln(alpha + beta'*dE/dx) / (beta' * W_ion) * 0.85`, `alpha = 0.93`,
 `beta = 0.212`, `rho = 1.38 g/cm^3`, `W_ion = 23.6 eV`, `beta' = beta/(rho*E)`.
-PDVD's nominal field is also 500 V/cm, so **SBND's tables are a defensible
-starting point for PDVD** — that is an inheritance with a stated reason, not
-an accident. The undocumented `0.85` scale is deliberately retained on the
+PDVD's nominal field is also 500 V/cm, so SBND's tables looked like a defensible
+starting point — **superseded in §13.1: PDVD's own tables were generated at the
+velocity-implied 0.44 kV/cm** (`cfg/pgrapher/experiment/protodunevd/particle_dataset.jsonnet`). The undocumented `0.85` scale is deliberately retained on the
 SBND side pending a real charge calibration; PDVD should not silently inherit
 it once a PDVD charge calibration exists.
 
@@ -854,8 +857,10 @@ Track overlay is **SBND-only**:
 only the PR stage produces those. So "Magnify-tracking for PDVD" is downstream
 of §4 — it is not a viewer or config task that can be done first.
 
-**Fork only if needed.** Both SBND visitors already derive the global channel
-scheme from the configured anodes at visit time
+**Fork only if needed** — measured in §13.5: the fork IS needed (PDVD's two
+faces per CRP carry different channel sets, so the face-agnostic scheme
+collides). Both SBND visitors derive the global channel scheme from the
+configured anodes at visit time
 (`global = plane_base[p] + apa * nch[p] + wire`, with `nch[p]` taken from the
 anodes), and the PR-stage one uses the per-point `(apa, face)` recorded in
 `PR::Fit::paf`. That is more general than SBND needs. So **first test whether
@@ -994,6 +999,497 @@ both depend on M4, and M5 can proceed in parallel with M6.
 
 ---
 
+## 13. Execution round (2026-09-02) — the chain built, run and measured
+
+### Repro block
+
+```bash
+# toolkit (branch apply-pointcloud) + wcp-porting-img main at the commits named in the milestone log
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+
+# 13.1 physics inputs
+python3 stm/pdvd_transport.py --tsv stm/pdvd_transport.tsv        # E-field, DL, DT, sigma-vs-drift
+( cd ../../energy_loss/pion_travel && root -l -b -q 'convert_field.C(0.44, "stopping_ave_dQ_dx_pdvd.root", true)' \
+    && root -l -b -q 'convert_field.C(0.50, "stopping_ave_dQ_dx_pdvd050.root", true)' )
+python3 ../../energy_loss/docs/emit_jsonnet_dedx.py ../../energy_loss/pion_travel/stopping_ave_dQ_dx_pdvd.root
+python3 stm/make_pdvd_ref_dqdx.py                                   # stm/pdvd_ref_dqdx.json (self-gated)
+
+# 13.2 M1 gate (knob off vs on, 3 events) and 13.3 M2 round trip
+for t in m1gate m1on; do for re in "39252 0" "39253 0" "39349 0"; do ./scripts/stage_ql_tag.sh $re $t; done; done
+PDVD_LIGHT_SUFFIX=_keep ./run_clus_evt.sh -s m1gate -calib 39252 0            # knob OFF
+PDVD_LIGHT_SUFFIX=_keep ./run_clus_evt.sh -s m1on   -calib -save-pctree 39252 0   # knob ON
+python3 ../abtest/hash_archive.py work/039252_0_m1gate/mabc-all-apa.zip work/039252_0_m1on/mabc-all-apa.zip
+./run_pr_evt.sh -s m1on -pipe switch_scope 39252 0                            # M2: mabc-pr.zip clustering layer
+
+# 13.4-13.7 the campaign arms (120 events); pin the libraries first (feedback: a peer's wcbuild swaps local/lib mid-arm)
+mkdir -p /home/xqian/tmp/pinlib && cp -p ../../toolkit/build/*/libWireCell*.so /home/xqian/tmp/pinlib/ && export LD_LIBRARY_PATH=/home/xqian/tmp/pinlib:$LD_LIBRARY_PATH
+PDVD_MAX_JOBS=6 ./stm/run_campaign.sh stm1 all                      # full chain (-nu -stm-fit): stage -> clus(-save-pctree -calib) -> pr; 3-80 min/event at the 500 e floor
+PDVD_MAX_JOBS=12 STM_PR_MODE=-stm ./stm/run_campaign.sh stm2 all    # cosmic-tagger arm (-stm -stm-fit), ~1 min/event -- the population arm of 13.6
+./stm/run_analysis.sh stm2                                          # census, contrast census, STM sample + tiers, dQ/dx field check, Michel routes 3-4
+./stm/run_michel_subset.sh stm2 stm3 stm/michel_subset_events.txt 6 # full chain on the contrast >= 1.5 events (Michel routes 1-2 need -nu dumps)
+./stm/run_analysis.sh stm3
+# Magnify-tracking-PDVD, headless
+wire-cell-sbnd-magnify-tracking-convert -bwork/039252_0_m1on/tracking-stm.root -tT_rec_charge -ostm/magnify/track_com_298567_stm.root -f2
+( cd /nfs/data/1/xqian/toolkit-dev/Magnify-tracking-PDVD/scripts && xvfb-run -a -s "-screen 0 1920x1080x24" \
+    root -l -q loadClasses.C '/home/xqian/tmp/drive.C("<track_com>.root","<out>.png")' )   # drive.C: doc 43 recipe
+```
+
+### 13.1 Physics inputs (asks 1–3)
+
+**E-field and diffusion from the velocity.** The BNL LAr-properties page
+(`lar.bnl.gov/properties`) is a JavaScript application; its formulas were read
+out of `assets/trans.js` / `assets/index.js` and re-implemented in
+`stm/pdvd_transport.py` on top of the mobility fit already in
+`energy_loss/docs/deduce_efield.py`:
+
+    mu(E,T)   = (a0 + a1 E + a2 E^1.5 + a3 E^2.5) / (1 + (a1/a0) E + a4 E^2 + a5 E^3) (T/89 K)^-3/2
+    eps_L     = (b0 + b1 E + b2 E^2) / (1 + (b1/b0) E + b3 E^2) (T/87 K)     [2026 refit, what the site uses]
+    D_L = mu eps_L,   D_T = D_L / (1 + (E/mu) dmu/dE)
+
+with a = {551.6, 7158.3, 4440.43, 4.29, 43.63, 0.2053}, b = {0.0075, −13.376,
+−10.9568, 646.523}; the implementation reproduces the site's anchors (uB 1.099
+vs 1.101 mm/us @ 273 V/cm 89 K; PDSP 1.561 vs 1.560 @ 486.7 V/cm 87.7 K).
+
+| T | v [mm/us] | E [kV/cm] (BNL / LArSoft) | DL [cm²/s] | DT [cm²/s] |
+|---|---|---|---|---|
+| **87.68 K** (dunecore `protodunevd_detproperties`) | **1.48073** (settled, §7a) | **0.439 / 0.435** | **4.12** | **7.82** |
+| 87.3 K (site default) | 1.48073 | 0.434 / 0.429 | 4.13 | 7.81 |
+| 87.68 K | 1.568 (older calibration) | 0.491 / 0.489 | 4.12 | 8.17 |
+| 87.68 K | planned 0.495 → v | 1.575 / 1.577 | | |
+
+**Owner decision (2026-09-02): trust the data-calibrated velocity; T is the
+soft input; the dQ/dx-vs-residual-range comparison with data is the
+confirmation of the field.** Adopted: **E = 0.44 kV/cm, DL = 4.12, DT =
+7.82 cm²/s** (JSON: 4.12e-7 / 7.82e-7). The settled velocity sits ~11 % below
+the planned field; the older 1.568 calibration was at nominal — the data test is
+§13.6. SBND's revert to its sim pair (doc 66) was an MC-consistency decision;
+PDVD runs on data here, so the physical pair applies (an MC arm must use the
+sim pair 4.0/8.8, §12).
+
+**Smearing (ask 2).** `cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`
+is the SBND file with exactly the six detector keys replaced (the whole
+uBooNE→SBND porting surface, verified by diff): `add_sigma_L` 1.9639 mm
+(= 1/(2π·0.12 MHz) × 1.48073), `ind_sigma_u_T` 0.2590, `ind_sigma_v_T` 0.4316,
+`col_sigma_w_T` 0.0575 mm (PDVD `Gaus_wide_{b,t}` 0.12 MHz, `Wire_ind` (1/√π)·5.0,
+`Wire_col` (1/√π)·10.0, pitches 7.65/7.65/5.10 mm; only `Gaus_wide` is consumed
+by OmnibusSigProc — `Gaus_tight` is dead config in both detectors), `DL`/`DT`
+above. The uBooNE trailing 0.2/0.3/0.5 factors and every selection knob are
+inherited unchanged and say so in the file's comments. At the settled point the
+§8 table becomes: σ_L 1.97 → 2.40 mm (2.67 → 3.24 ticks) and σ_T,W 0.29 →
+1.89 mm (0.056 → 0.37 pitch) from the anode to the full drift
+(`stm/pdvd_transport.tsv`).
+
+**dQ/dx tables, MIP scale, recombination (ask 3).**
+`energy_loss/pion_travel/convert_field.C(0.44, …)` and `emit_jsonnet_dedx.py`
+produced `cfg/pgrapher/experiment/protodunevd/particle_dataset.jsonnet`
+(five `*DeDx` tables at 0.44 kV/cm; the five `*Range` tables copied from SBND
+unchanged, verified equal after compilation). A 0.50 kV/cm comparison set
+lives in `stopping_ave_dQ_dx_pdvd050.root` and in `stm/pdvd_ref_dqdx.json`
+(`*DeDx_E050`), which is self-gated against the compiled jsonnet before it is
+written. Consequences: muon plateau 53798 (0.44) vs 54658 e/cm (0.50), Bragg
+bin 158255 vs 168151, MIP 52481 vs 53266. Following SBND's rule (56000 =
+plateau × 1.0246), **`mip_dqdx` = 55000** and **`mip_dqdx_median` = 47000**
+(48000 scaled by the table ratio). The PR job's recombination model is
+`PracticalBoxRecombination{A 0.93, B 0.212, Efield 0.44, rho 1.38, Wi 23.6e-6}` —
+the tables' own parameter set (SBND's A 1.0/B 0.255 is a different set);
+`use_power_recomb=false` until M7 fits a PDVD power box.
+
+### 13.2 M1 — the pctree save (gate `stm/gates/m1gate_hashes.txt`)
+
+`protodunevd/clus.jsonnet` `clus_all_tpc(..., tensor_outname='')`: empty keeps
+the inert dump-mode sink (`trash-all-apa.tar.gz`); non-empty turns the same
+`TensorFileSink` into the real writer. Threaded as `pctree_outname` in
+`pdvd/wct-clustering.jsonnet` and `run_clus_evt.sh -save-pctree`, which also
+writes a **sidecar** `pctree-evt<ID>.tlas` with the drift speeds, per-crate
+trigger offsets, readout window and `opflash_input` the Q/L job used (the PR
+job must rebuild `DetectorVolumes` identically; the runner's light-offset
+arithmetic is not duplicated). Gate: compiled config byte-identical with the
+knob off on all three events; knob on vs off, **84 of 84** archive/dump
+content hashes identical (27 Bee zips + the calib dump per event; the calib
+dump compared without its `dual_chain.off_ms` timer). Two runner traps found
+and fixed on the way: `-s*` swallowed `-save-pctree` as a tag (case order), and
+a tagged work dir needs `PDVD_LIGHT_SUFFIX=_keep` to find its light archive.
+
+### 13.3 M2 — the round trip (gate `stm/gates/m2gate_roundtrip.txt`)
+
+`pdvd/wct-pr-perevt.jsonnet` (fork of the SBND job) over
+`cfg/pgrapher/experiment/protodunevd/pr.jsonnet` (fork of SBND's `pr()`
+builder, HEAD lines 847–2665; PDVD geometry objects come from the clustering
+module's new hidden exports `pc_transforms`, `live_sampler`, `scope_coords`,
+`t0cor_coords`) with `pipeline_names=['switch_scope']` reproduces the Q/L
+`clustering` Bee layer: x, y, z, q arrays identical in the same order on all
+three events (66210 / 90091 / 40382 points); only the cluster ids are relabeled
+(a bijection, `cluster_id_order: 'tree'`) and the subrun now comes from the
+sidecar. PDVD deltas in the builder, each stated inline: no unmerge stages, 16
+retiler samplers (both faces) with per-crate drift speed, `pdvd_pr_fv` = one
+`BoxFiducial` over both drift volumes, `nticks` as an argument (10000), Bee
+detector `protodunevd`, single-event RSE.
+
+### 13.4 M3 — running the tail on PDVD: what broke and what was missing
+
+Every item below was found on run 039252 event 0 (idx 0) and fixed as a
+**default-OFF knob or a crash-path-only change**; the SBND/uBooNE gate is in
+§13.8.
+
+1. **No main clusters.** `QLMatching` sets `flag_main_cluster` only on the main
+   of a MicroBooNE-style main+associated decomposition (`isolated`/`perblob`),
+   which PDVD's chain never builds: after Q/L every PDVD cluster carries
+   `cluster_t0`, `flash`, `matched_flash_gid` but `flag_main_cluster == 0`, and
+   the whole tail evaluated nothing ("0 in-window main(s)"). Fix: a NEW visitor
+   `ClusteringFlagMatchedMains` (`clus/src/clustering_flag_matched_mains.cxx`,
+   pipeline name `flag_mains`, right after `switch_scope`) flags every
+   flash-matched cluster (gid ≥ 0, real t0) as a main; the taggers then gather
+   the other clusters on the same flash as companions. Absent from every other
+   pipeline ⇒ no other detector changes. On the first event: 99 clusters, 59
+   matched, 59 flagged, all three cosmic taggers evaluate 59 mains.
+2. **Steiner path skeleton aborted** (`std::out_of_range`, `map::at`,
+   `DynamicPointCloud.cxx` `make_points_cluster_skeleton`): an interpolated
+   path point resolved through `contained_by()` to an (anode, face) whose blobs
+   are not in the cluster — routine on PDVD where tracks cross CRPs and faces;
+   the trap `connect_graph_relaxed.cxx` already keys around. Fix:
+   `Facade::resolve_wpid_params` (exact key → same (apa,face) under
+   `kAllLayers` → the destination point's key), used at the throw site;
+   doctest `doctest_wpid_params_fallback.cxx` documents the old throw and the
+   new contract. Identical result on any run that did not throw.
+3. **dQ/dx fit aborted twice** (`vector::at`, `TrackFitting::dQ_dx_fit` and
+   its multi-track twin): a trajectory whose LAST point lies in a different
+   (anode, face) than its predecessor was treated as a "first point of a run"
+   and read one past the end. Fix: `TrackFitting::dqdx_path_point_role()`
+   (first / last / middle / isolated), identical to the old branch order
+   wherever i+1 exists; doctest `doctest_dqdx_path_point_role.cxx`.
+4. **Empty retile aborted the steiner refresh** (`vector::at(0)` on a
+   zero-point cluster, run 039252 evt 4, idx 4): `ImproveCluster_2` retiled a
+   `protect_bundle` fragment into a cluster with no points and
+   `Cluster::get_two_boundary_wcps()` indexed point 0. Fixes: the primitive
+   returns a defined degenerate pair for an empty cluster
+   (`doctest_empty_cluster_boundary.cxx`), the retile hands the empty node
+   back with a WARN, and `CreateSteinerGraph` skips it like the existing
+   no-steiner-graph case. Crash path only.
+5. **Boundary stops accepted as STM.** With every guard off, 5 of 59 mains were
+   STM-tagged; none had a Bragg rise. Two ended 7 and 10 cm from the cathode
+   slab, one ran into **time slice 0** (the Magnify-tracking-PDVD render made
+   this visible) — a cosmic with its own flash t0 is truncated by the readout
+   window at an x that depends on t0, so no fiducial margin can express it.
+   Fixes: **`readout_edge_guard`** (new `TaggerCheckSTM` knob, C++ default
+   OFF; PDVD ON with 60 ticks of the 10000-tick window, using the fit's own
+   arrival tick; `doctest_stm_readout_edge_guard_defaults.cxx`) and the
+   existing **`cathode_guard` ON with `guard_cathode_cm` = 12** (the 6 cm
+   slab plus stitch slack; the C++/SBND 5 cm misses both). Turning on SBND's
+   whole production guard set instead changed nothing on this event (same five
+   accepted) — those guards answer SBND's questions, not PDVD's.
+6. **Instrumental dQ/dx rise at the CRP planes.** Over all fitted points the
+   median dQ/dx (away from any stop) is flat at 49–55 ke/cm from |x| = 5 to
+   305 cm and rises to 60 / 71 / 79 ke/cm in the last three 10 cm bins before
+   either anode plane (`docs/pics/pdvd_stm_dqdx_vs_x_298567_3evt.png`, three events; arrival-tick
+   dependence flat). It mimics a Bragg rise for every track exiting through a
+   CRP and misleads the end finder. Handling: **`tgm_fv_x_margin` = 30 cm** in
+   the PDVD job (a track end within 30 cm of a CRP is an exit for STM, TGM and
+   FC alike; the same inset also turns tracks that entered at the CRP plane,
+   formerly "fully contained" and skipped, into STM candidates), and the
+   sample collector zeroes points with |x| > 305 cm. The cause (field response
+   near the CRP, signal processing, or real) is an owner item (§13.9).
+7. **Magnify-tracking channel scheme collides on PDVD** (§13.5).
+9. **Two more crash paths surfaced only at the 500 e terminal floor** (the
+   denser skeletons reach the neutrino PR on many more clusters): 6 of the
+   first 56 arm events raised `RuntimeError` in `make_points_direct`
+   (a PR segment point in a volume outside the cluster's own plane set — the
+   §13.4 item 2 trap at three sibling sites, now resolved through
+   `resolve_wpid_key`, tested in `doctest_wpid_params_fallback.cxx`), and 9
+   segfaulted in `PatternAlgorithms::break_segments` on `fits().front()` of a
+   segment with no fit points (guarded like the adjacent `wcpts` check).
+   Both crash-path only; the arm's failed events were re-run with the fixed
+   binary (§13.6).
+10. **A third crash path, in the STM tagger itself** (tagger-only arm `stm2`,
+    3 of 120 events: 039252/8, 039349/50, 039349/77). `TrackFitting::
+    do_single_tracking` drops a round-2 fit whose output arrays disagree in
+    size (a 1-point path with no dQ) and relies on "the callers' own
+    `fits().size() > 1` filters" — `check_stm_conditions` has that filter for
+    the round-1 fit (`<= 3` points) but none for round 2, so `pts.front()`
+    dereferenced an empty vector inside the TGM containment test (gdb:
+    `BoundingBox::inside` ← `DetectorVolumes::contained_by` ← the `run_pass`
+    lambda). Guard: an empty round-2 fit abandons the pass with the new pass
+    status **8** (`persist_stm_fit` table); every pass with ≥ 1 fit point is
+    untouched. The three events were re-run with the fixed binary.
+8. **The Steiner terminal floor starves PDVD.** Over the first 18 events of
+   the arm, 41 STM-accepted passes and 140 recorded passes contained ONE
+   stop-end Bragg contrast ≥ 2, while the raw Bee charge along 688 long
+   clusters showed an end rise ≥ 2× on 110 of them (4–13× on a dozen) — the
+   stoppers exist, the fit never sees them. A 3 m track with a 4.7× raw end
+   rise (039252/0 cluster 84) left the STM tagger as "no steiner_pc": the
+   terminal finder (`find_peak_point_indices`) accepts a point only if all
+   three plane charges exceed the WCP constant **4000 e**, and on PDVD
+   (7.65 / 5.10 mm pitch, stepped sampling) the per-point W-plane charge has a
+   median of ~1400 e — only 12 % of points qualify, a fifth of the mains get
+   no terminals, the rest a starved skeleton (half of all mains then exit
+   after the round-1 fit). Fix: `terminal_charge_threshold` knob on
+   `CreateSteinerGraph` (C++ default 4000 = byte-identical;
+   `doctest_steiner_terminal_charge_defaults.cxx`), PDVD value from the
+   census on the three gate events (`-stm` mode, all else production):
+
+   | floor [e] | no-steiner exits (3 evts) | zero-terminal warnings | STM tags | Bragg-clean tracks |
+   |---|---|---|---|---|
+   | 4000 (prototype) | 12 / 18 / 9 | 92 / 141 / 53 | 4 / 8 / 4 | 0 |
+   | 2000 | 8 / 11 / 5 | 75 / 88 / 35 | 3 / 10 / 3 | 0 |
+   | 1000 | 6 / 7 / 4 | 49 / 69 / 32 | 5 / 6 / 3 | 0 |
+   | **500** | **5 / 6 / 3** | 43 / 63 / 31 | 8 / 7 / 3 | **1** |
+
+   PDVD runs at **500 e** (`steiner_terminal_charge`). It recovers the
+   skeletons but not the verdicts: the "fully contained" exits RISE (12 → 18,
+   27 → 37, 11 → 17) as clusters gain a skeleton, and 44 % of the mains still
+   exit after the round-1 fit. Why: `cluster_fc_check` tests the STEINER
+   skeleton's two boundary points, and a skeleton that does not reach the
+   track ends reads as contained — the 32 "fully contained" mains (≥ 50 pts)
+   of the three events end, in their raw points, at |x| > 300 (20 ends),
+   |y| > 320 (17), the z walls (19), the cathode (5) and the CRP z-gap (5);
+   only 15 of 64 ends are in the bulk. A quarter of them (8 of 32) also touch
+   the readout-window edge (tick < 60 or > 9940), the t0-dependent truncation
+   of §13.4 item 5. So the STM *efficiency* on PDVD is bounded by skeleton
+   reach, not by the Bragg physics — the first item of §13.9.
+
+After 1–9 the full chain (`switch_scope, flag_mains, steiner, fiducialutils,
+tagger_check_tgm, tagger_check_stm, tagger_check_fc, protect_bundle,
+steiner_refresh, tagger_check_neutrino, tracking_visitor, tagger_output,
+pr_display, stm_magnify`) completes on the three gate events: 111 / 184 / 112 s
+wall, 3.5 / 5.0 / 2.1 GB peak RSS; per event 59 / 86 / 46 mains evaluated, 15 /
+11 / 8 TGM, 4 / 9 / 3 STM (first event after the vetoes), 33 / 43 / 24
+per-bundle neutrino-PR candidates. Half of the evaluated mains exit the STM
+tagger after its round-1 fit through unnamed paths ("evaluated but no pass
+recorded"), a fifth are "fully contained", a fifth have no steiner point cloud
+— the census item the M3 firing census asked for.
+
+### 13.5 M6 — Magnify-tracking-PDVD
+
+The config-only test failed structurally: PDVD's two faces per CRP carry
+**different, partly overlapping channel sets** (`protodunevd-wires-larsoft-v6`:
+anode 0 face 0 U = channels 189–475, face 1 U = 0–285), so the SBND writers'
+face-agnostic `(plane, apa, wire)` coordinate collides. Forks by duplication
+`root/src/PdvdMagnifyTrackingVisitor.cxx` and `PdvdPrMagnifyTrackingVisitor.cxx`
+(SBND files untouched; `doctest_pdvd_tracking_defaults.cxx`) use the per-plane
+**rank of the physical channel id** over the whole detector, resolved per
+point from (apa, face): U [0, 3808), V [3808, 7616), W [7616, 12288), and
+`nticks` defaults to 10000. Verified on the first event: every projected
+channel and dead channel falls inside its plane's range, slices below 2500.
+The viewer `/home/xqian/toolkit-dev/Magnify-tracking-PDVD` (new local git repo,
+initial commit from Magnify-tracking-SBND 12de6c9) carries the matching
+constants, 2500 slices, and breaks projection polylines at the cathode AND at
+any > 40-channel jump (CRP / face boundaries). `wire-cell-sbnd-magnify-tracking-convert`
+is reused unchanged (it holds no geometry). Headless render of block 240
+(`docs/pics/magnify_pdvd_stm_298567.png`) — the ACLiC "redefinition" warnings
+come from ROOT's shared compile cache seeing the SBND copy first and are
+harmless.
+
+### 13.6 The 120-event arms — STM selection and the dQ/dx test (ask 5)
+
+**Why two arms.** The full chain (`-nu`: cosmic taggers + per-bundle neutrino
+PR + Michel finder) at the 500 e terminal floor costs 3–80 min per PDVD
+event on one core — the denser skeletons feed 24–43 bundles per event into
+the neutrino PR — and 15 of its first 56 events hit the crash paths of
+§13.4 item 9. So the population measurement is the **cosmic-tagger arm
+`stm2`** (`-stm -stm-fit`: switch_scope, flag_mains, steiner, fiducialutils,
+TGM, STM, FC, protect_bundle, steiner_refresh, pr_display, stm_magnify;
+~1 min per event), and the full chain runs only on the events that hold
+Bragg-clean STM tracks (§13.7). `stm1` (the full-chain arm, 49 events
+completed) is kept as the Michel preview set.
+
+**The arm.** 120 events (`stm/events.txt`, all `_keep` events of runs
+039252/039253/039349), `run_pr_evt.sh -s stm2 -stm -stm-fit`, pinned
+libraries (`pinlib5`, then `pinlib6` for the three re-runs of §13.4 item 10),
+mean 68 s wall and 3.7 GB peak RSS per event (the 29-min re-run of 039252/8 included). Census (`stm/census_stm2.tsv`):
+
+| | count |
+|---|---|
+| mains evaluated by the STM tagger | 7029 |
+| TGM-tagged | 1592 |
+| STM-tagged | 702 |
+| fully contained (FC) | 2555 |
+| STM = 1, TGM = 0, accepted pass (status 0) with a fitted pass on disk | 702 |
+
+**The tagger accepts tracks with no Bragg rise.** For each accepted pass,
+Bragg contrast = median dQ/dx (rr < 2 cm) / median dQ/dx (20–40 cm)
+(`stm/contrast_census.py`, `stm/contrast_census_stm2.tsv`):
+
+| contrast | passes |
+|---|---|
+| stop end inside the near-CRP band (\|x\| > 305 cm, undefined) | 61 |
+| < 0.8 | 150 |
+| 0.8–1.2 | 215 |
+| 1.2–1.5 | 70 |
+| 1.5–2.0 | 52 |
+| 2.0–3.0 | 34 |
+| ≥ 3.0 | 17 |
+
+Only 51 of 538 (9 %) show the ≥ 2× rise a stopping muon must have; the
+median contrast is 1.00 at the fitted stop and 0.95 at the other end, so it
+is not an rr-orientation flip — the STM verdict on PDVD is, for nine passes
+in ten, a track with a flat end. This is the same population §13.4 item 8
+saw on three events, now measured on 120: the tagger's dQ/dx evaluation
+(the KS tests against the MIP / Bragg hypotheses, with `mip_dqdx` 55000)
+passes flat ends, and §13.9 carries the fix (a contrast guard).
+
+**The dQ/dx test.** `collect_stm_sample.py` (tagger verdict, status 0,
+≥ 40 points, ≥ 6 rr bins, rr from ≤ 2 to ≥ 22 cm, contrast ≥ 2,
+median reduced χ² ≤ 2.5, shape residual ≤ 10 %, muon scale k in
+[0.85, 1.25]) keeps **5 muons**; the tiers below relax the χ² / shape cuts
+and the contrast to show how the verdict moves (`--min-contrast`,
+`--max-chi2`, `--max-shape-rms`; `stm/sample_index*.tsv`,
+`stm/dqdx_rr_field_check*.tsv`, `docs/pics/pdvd_stm_dqdx_rr*.png`).
+`plot_dqdx_rr.py` removes one free scale k per table and compares the
+binned-median ratio to the 0.44 kV/cm (config) and 0.50 kV/cm muon tables of
+`stm/pdvd_ref_dqdx.json` (3 % systematic floor per bin, 10 bins):
+
+| tier | tracks | k (0.44) | χ²/10 (0.44) | k (0.50) | χ²/10 (0.50) | per-track k median |
+|---|---|---|---|---|---|---|
+| strict (production cuts) | 5 | 1.014 | 6.9 | 0.987 | 9.1 | 0.988 |
+| contrast ≥ 2, shape ≤ 15 %, no χ² cut | 10 | 0.993 | 10.7 | 0.966 | 16.4 | 0.974 |
+| contrast ≥ 2, no χ² / shape cut | 14 | 0.972 | 15.6 | 0.944 | 22.8 | 0.979 |
+| contrast ≥ 1.5, no χ² / shape cut | 25 | 0.968 | 27.2 | 0.940 | 38.4 | 0.959 |
+
+![](pics/pdvd_stm_dqdx_rr.png)
+
+*Strict sample: 5 STM muons (blue) against the 0.44 kV/cm muon table (solid),
+the 0.50 table (dashed), the proton table and the flat 55 ke/cm MIP line;
+middle: data/table ratio per rr bin with one free scale removed; right:
+per-track scale k.*
+
+**Field verdict.** At every tier the 0.44 kV/cm table fits the *shape*
+better than 0.50 (Δχ² = 2.3, 5.7, 7.2, 11.2 for 10 bins), and its absolute
+scale k sits within 1–3 % of unity while the 0.50 table needs a 3–6 % scale
+down. Both statements point the same way — the Bragg bins (rr < 2 cm) read
+0.94 of the 0.44 table and 0.91 of the 0.50 table — and the data is
+consistent with the settled velocity's field (§13.1). The discrimination is
+modest: the two tables differ by 3 % at the plateau and 7 % at the Bragg
+peak, and the sample is 5–25 tracks; the 0.44 vs 0.50 question is settled at
+the "consistent, not proven" level until the STM sample grows (§13.9). The
+k ≈ 1 result is also the config-consistency check of the whole chain:
+electron-count calibration × recombination table × field agree at the
+percent level. Plateau dQ/dx vs drift distance shows no attenuation (slope
++1.1e-3 /cm on 5 tracks, +0.2e-3 on 14; a pure-lifetime reading gives
+τ < 0 — no lifetime correction is needed at this level, and the 30 cm
+near-CRP rise of §13.4 item 6 is excluded from every profile).
+
+### 13.7 Michel candidates (ask 6)
+
+Three routes were measured; none yields a Michel spectrum yet, and the
+negative controls say why.
+
+1. **The chain's own Michel block** (`michel_energy.py`, the cosmic-tagger
+   flags 6–8 + the highest-energy shower at the neutrino-PR main vertex; on
+   the 53 full-chain `stm1` dumps): 16 STM bundles with a fired flag 7, 7
+   with a shower energy — median 34.9 MeV, but two above the endpoint
+   (657 MeV, 285 cm long) because the *main vertex* of a cosmic bundle is the
+   entry end or a kink, not the stop (`stm/michel_candidates_stm1.tsv`).
+2. **Showers anchored on the STM stop** (`michel_stop_end.py`: the fitted
+   rr = 0 point of the accepted pass, showers starting ≤ 5 cm from it with
+   length ≤ 40 cm, energy = `kine_best`): 18 candidates on 255 stops, median
+   7 MeV, all short stubs (1–18 cm) and only one at a Bragg-confirmed stop
+   (`stm/michel_stop_end_stm1.tsv`, `docs/pics/pdvd_michel_stop_end_stm1.png`).
+   The shower finder does not build the Michel at a PDVD stop; `kine_charge`
+   is 0 for all of them (the charge-sum branch is not filled for small
+   showers), so `kine_best` is the range energy of a stub.
+3. **Raw charge at the stop, with its control** (`michel_stop_charge.py`,
+   the 120-event `stm2` arm: same-cluster Bee charge within 12 cm of the
+   stop and > 2.5 cm off the fitted path, prototype shower convention
+   E = Q / 0.5 / 0.8 × 23.6 eV, uBooNE-field placeholder): 642 stops away
+   from the CRP band, median 5.1 MeV at the stop against **8.7 MeV at the
+   entry end** of the same tracks; for the 51 Bragg-confirmed stops 10.2 vs
+   11.9 MeV. The control is not below the signal — the STM "stops" are not
+   stops (§13.6), and a Michel signal cannot be read from them.
+4. **Tagger-independent raw test** (`raw_stopper_michel.py`: every Bee
+   cluster ≥ 300 points and ≥ 100 cm, charge density in the last 5 cm of
+   each end vs the middle 40 %; clusters with ONE end ≥ 2× and the other
+   < 1.3×, both ends outside the CRP band): 127 of 3313 long clusters. The
+   off-axis charge within 12 cm of the rising end has a median of 5.7 MeV vs
+   2.6 MeV at the flat end; 39 % of the clusters carry > 5 MeV more at the
+   rising end than at the flat end, 20 % the reverse. That is a real but
+   weak stop-end excess. Its high tail gives the contamination away: 15 % of
+   the rising ends carry > 60 MeV off-axis (2 % of flat ends) — a rising
+   density made by a second track or shower joining the end, not a Bragg
+   peak (`stm/raw_stopper_michel_stm2.tsv`,
+   `docs/pics/pdvd_raw_stopper_michel_stm2.png`).
+
+![](pics/pdvd_raw_stopper_michel_stm2.png)
+
+The Michel readout therefore waits on a stopping-muon sample whose stops
+are stops: the contrast guard of §13.9, plus a Michel extractor that walks
+the cluster from the fitted stop rather than the neutrino-PR vertex (§5's
+fallback, now the measured path). The 20-event full-chain subset `stm3`
+(`stm/run_michel_subset.sh`, the events of the contrast ≥ 1.5 tier, bundle
+floor 50 cm) is the sample to build it on.
+
+### 13.8 Shared-component gates (`stm/gates/shared_gate_round{1..6}.txt`)
+
+Everything touched in `clus/` and `root/` had to keep SBND and uBooNE
+byte-identical. Method (`stm/gates/shared_gate.sh`): OLD = the same tree
+with the five modified clus files stashed, built and snapshotted; NEW = the
+working tree at four points (round 1: `resolve_wpid_params`,
+`dqdx_path_point_role`, `readout_edge_guard` OFF; round 2: + the empty-retile
+guards; round 3: + `terminal_charge_threshold`; round 4: + `resolve_wpid_key`
+and the `break_segments` empty-fit guard; round 5: + `resolve_wpid_key` at
+the three DynamicPointCloud member-lookup sites; round 6: + the STM
+empty-round-2-fit guard of §13.4 item 10, the final binary). Each arm ran
+under its own library snapshot (`LD_LIBRARY_PATH`), DL vertex off, ASLR off.
+
+| arm | SBND `work-{nuecc48,ncpi0}-doc25*` (48 + 19 events × Bee zip, calib JSON, nusel TSV) | uBooNE sweep `doc25*` (35 events) |
+|---|---|---|
+| round 1 (new vs old) | **201 / 201 identical** | Bee zips 35 / 35; tagger logs 34 / 35 |
+| round 2 (new2 vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+| round 3 (new3 vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+| round 4 (new4 = final vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+| round 5 (new5 vs old) | **201 / 201 identical** | 35 / 35; 35 / 35 |
+| round 6 (new6 = final vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+
+The single uBooNE tagger difference is event 5384-136-6805 in every round —
+the documented bistable event (`kine_pio_angle` 109.51 vs 14.81 with an
+identical Bee zip, independent of the binary). The new components
+(`ClusteringFlagMatchedMains`, `Pdvd*MagnifyTrackingVisitor`) are named only by
+the PDVD pipeline; every new knob has a defaults doctest
+(`./build/clus/wcdoctest-clus`, `./build/root/wcdoctest-root`: all green).
+
+### 13.9 Open items from the execution round
+
+- **The STM tagger needs a Bragg-contrast guard** (§13.6): nine accepted
+  passes in ten have a flat stop end (contrast median 1.00; 51 of 538 ≥ 2×).
+  Next round: a default-OFF `stm_bragg_contrast_guard` in `TaggerCheckSTM`
+  that rejects (or demotes to a new pass status) an accepted pass whose
+  rr < 2 cm / 20–40 cm dQ/dx ratio is below a threshold, gated on SBND and
+  uBooNE as usual, then the PDVD census again. Until it exists the
+  calibration sample is protected by the collector's own contrast cut, and
+  every Michel route that trusts the tagger's stop is blind (§13.7).
+- **The full chain is 30–80× slower than the tagger arm at the 500 e floor**
+  (§13.6): the denser skeletons feed 24–43 bundles per event into the
+  per-bundle neutrino PR, 3–80 min per event on one core, and the
+  `ProtectBundle`/connect stage alone took 29 min on 039252/8. Levers:
+  `nu_per_bundle_min_length` (50 cm used for `stm3`), skipping TGM-tagged
+  bundles, or running the neutrino PR only on STM-tagged bundles.
+- **Grow the dQ/dx sample** (§13.6): 5–25 tracks give a "consistent with
+  0.44 kV/cm" verdict, not a measurement of the field. The contrast guard
+  above plus the skeleton-reach fix below are the two levers; a 1000-event
+  tagger arm costs ~17 core-hours.
+- **STM efficiency is skeleton-bound** (§13.4 item 8): the containment gate
+  reads the Steiner skeleton's ends, which on PDVD often stop short of the
+  track ends (charge floor, per-point charge scale at 7.65/5.10 mm pitch,
+  readout-edge truncation). Next lever: make `cluster_fc_check` test the
+  cluster's own extreme points (or the raw-charge end rise of §13.4 item 8)
+  when the skeleton is shorter than the cluster — a default-OFF knob, then a
+  census. The size of the pool: over all 120 events, 3322 clusters longer
+  than 1 m have 6524 ends, of which 336 rise ≥ 2× (189 ≥ 3×) in the bulk —
+  away from the CRP planes, cathode and walls — i.e. **320 clusters (2.7 per
+  event) look like stoppers in the raw charge** while the tagger yields ~1
+  Bragg-clean track per three events.
+- **The near-CRP dQ/dx rise** (§13.4 item 6): +50 % over the last 30 cm before
+  either anode plane. Field response / SP / physics? Owner item; until known,
+  30 cm margins and the |x| > 305 cm exclusion stand.
+- **STM purity on PDVD**: the tagger accepts flat MIP tracks that end in the
+  bulk (no Bragg rise) — likely clustering breaks / dead regions; a hand scan
+  of the `stm1` STM set (blind, per §9.2) is the re-derivation §2.3 asked for.
+  The calibration sample is protected by the collector's Bragg-contrast cut
+  regardless.
+- **Unnamed post-round-1 STM exits** (half of the evaluated mains): name them
+  (log-only change) before tuning anything.
+- **`nu_per_bundle` cost**: every matched bundle gets its own neutrino PR
+  (33–43 per event, 2–5 GB); fine for 120 events, a lever for larger runs
+  (`nu_per_bundle_min_length`, or skip TGM-tagged bundles).
+
 ## Milestone log
 
 - **2026-09-02** — design round. No code changed. Owner decisions on record:
@@ -1004,3 +1500,14 @@ both depend on M4, and M5 can proceed in parallel with M6.
   matching value, 1.48073 mm/us**. §7a closed, §7b's `add_sigma_L` pinned at
   1.9639, §8 re-derived at t = 2286 us. The residual imaging-at-1.473 offset
   is carried to §12 as its own item.
+- **2026-09-02** — execution round (§13). Toolkit: `fb0579c5` (PR job
+  inputs, pctree knob, flag_mains, readout_edge_guard, Magnify writers,
+  crash-path fixes 1–5), `784dc837`, `54172df8` (items 6–9), `ee1a0d21`
+  (member-lookup fallback), `03f7645b` (STM empty-fit guard); six
+  shared-component gates, all byte-identical on SBND + uBooNE (§13.8).
+  wcp-porting-img: the PDVD PR runner, `wct-pr-perevt.jsonnet`, `stm/`
+  scripts and gates, this section. Energy_loss local commit `61d4c07`
+  (0.44 / 0.50 tables); Magnify-tracking-PDVD local repo `7184ec6`.
+  Measured: E-field 0.44 kV/cm consistent on 5–25 STM muons (§13.6); the
+  STM tagger accepts flat ends on PDVD (§13.6); no Michel spectrum yet, with
+  the negative controls that say why (§13.7).

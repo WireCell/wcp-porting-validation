@@ -303,6 +303,10 @@ function(
     // (img-side-bot / img-side-top) alongside img-global, for per-side video
     // frames.  false => bee_points_sets unchanged in clus.jsonnet => byte-identical.
     bee_img_per_side = false,
+    // Persist the post-Q/L point-cloud tree for the PR job (doc pdvd/25 M1).
+    // '' => the inert dump_mode sink in clus.jsonnet is unchanged => byte-identical.
+    // Runner: run_clus_evt.sh -save-pctree => work/<RUN6>_<EVT>/pctree-evt<ID>.tar.gz.
+    pctree_outname = '',
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -373,12 +377,14 @@ local clus_all_tpc = if do_qlmatch
                             cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
-                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side)
+                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side,
+                            tensor_outname=pctree_outname)
     else clus_maker.all_tpc(anodes, ngroups=ngroups,
                             cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
-                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side);
+                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side,
+                            tensor_outname=pctree_outname);
 
 // JOINT Q/L matching (shared-flash): both drift sides enter ONE QLMatching node and
 // each reads the SAME all-PD opflash archive.  Per side: opflash source ->

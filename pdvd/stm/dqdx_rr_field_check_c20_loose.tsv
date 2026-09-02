@@ -1,0 +1,24 @@
+# PDVD STM sample: binned-median data/table ratios (one free scale k per table removed); sys floor 3%/bin
+# muon 0.44 kV/cm (config): k=0.9717 chi2=15.59 ndf=10
+# muon 0.50 kV/cm: k=0.9436 chi2=22.84 ndf=10
+rr_cen	n	median_dqdx	ratio[muon 0.44 kV/cm (config)]	ratio[muon 0.50 kV/cm]
+0.5	29	140645.2	0.9146	0.8864
+1.5	23	106054.3	0.9622	0.9463
+2.5	22	83409.7	0.8654	0.8558
+4.0	42	81089.4	0.9468	0.9409
+6.0	43	79090.8	1.0223	1.0200
+8.5	65	70274.4	0.9877	0.9888
+12.5	114	64634.1	0.9901	0.9947
+17.5	104	65937.6	1.0804	1.0883
+25.0	210	58269.0	1.0150	1.0250
+35.0	213	58135.2	1.0615	1.0739
+50.0	378	55322.0	1.0399	1.0533
+# k_muon per track: n=14 median=0.9790 rms=0.0812
+# plateau (20<=rr<60) median dQ/dx vs drift distance [cm]:
+#   drift 60: 54409.2
+#   drift 140: 52331.3
+#   drift 180: 59079.2
+#   drift 220: 53914.3
+#   drift 260: 52411.5
+#   drift 300: 59713.5
+# ln(dQ/dx) vs drift slope = 2.187e-04 /cm  => tau_eff = -30884 us if pure attenuation (v=0.148073 cm/us)

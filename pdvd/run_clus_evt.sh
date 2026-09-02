@@ -9,6 +9,8 @@
 # dirs are INDEX-named) auto-falls back to the no-matching chain, so 'evt all' never
 # fails on a light-less event (e.g. run 039324, no raw light staged).
 #   -calib          also dump the hand-scan calib JSON (calib-evt<EVENTNO>.json)
+#   -save-pctree    persist the post-Q/L point-cloud tree for the PR job
+#                   (pctree-evt<EVENTNO>.tar.gz; doc pdvd/25 M1, input of run_pr_evt.sh)
 #   -op / -noop     optical "op" bee instance (default ON when matching)
 #   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
 #   PDVD_DRIFT_SPEED_BOT_MMUS / PDVD_DRIFT_SPEED_TOP_MMUS
@@ -66,12 +68,14 @@ SEL_TAG=""
 # matching auto-disables when the converted light is absent (see QLMATCH_EVT).
 QLMATCH=${PDVD_QLMATCH:-1}
 CALIB=0
+SAVE_PCTREE=${PDVD_SAVE_PCTREE:-0}
 OPDUMP=${PDVD_OPDUMP:-1}   # optical "op" bee instance; default ON, -noop to disable
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
+        -save-pctree|--save-pctree) SAVE_PCTREE=1; shift ;;   # before -s* (prefix clash)
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
@@ -772,6 +776,29 @@ PY
         # median 1.9 / p90 4.0.  See doc 11 section 6.
         QL_SATFLAG_ARG+=(-S "ql_chi2_sat_inflate=${PDVD_QL_CHI2_SAT_INFLATE:-0.5}")
     fi
+    # doc pdvd/25 M1: -save-pctree persists the post-Q/L point-cloud tree.  The TLA
+    # is only passed when requested, so the compiled config is byte-identical
+    # otherwise (the jsonnet default '' keeps the inert dump_mode sink).
+    local PCTREE_ARG=()
+    if [ "$SAVE_PCTREE" = 1 ]; then
+        PCTREE_ARG=(-A "pctree_outname=${WORKDIR}/pctree-evt${EVENT_NO}.tar.gz")
+        # Sidecar for run_pr_evt.sh: the geometry/time TLAs this job used, so the
+        # PR job rebuilds DetectorVolumes identically (switch_scope re-derives
+        # x_t0cor from cluster_t0 through them; doc pdvd/25 M2 round-trip gate).
+        {
+            echo "run=${RUN_STRIPPED}"
+            echo "subrun=${SUBRUN}"
+            echo "event=${EVENT_NO}"
+            echo "trigger_offset_bot_us=${TRIGGER_OFFSET_BOT_US:-0}"
+            echo "trigger_offset_top_us=${TRIGGER_OFFSET_TOP_US:-0}"
+            echo "readout_window_ticks=${READOUT_NTICKS:-10000}"
+            echo "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}"
+            echo "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}"
+            echo "stepped_center_fallback=${PDVD_STEPPED_CENTER_FALLBACK:-false}"
+            echo "opflash_input=${OPFLASH_TAR}"
+            echo "qlmatch=${QLMATCH_EVT}"
+        } > "${WORKDIR}/pctree-evt${EVENT_NO}.tlas"
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
@@ -792,6 +819,7 @@ PY
         -S "ql_flash_minpe=${QL_MINPE}" \
         -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}" \
         -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
+        "${PCTREE_ARG[@]}" \
         "${QL_CATHEXT1_ARG[@]}" \
         "${QL_ANODEMARGIN_ARG[@]}" \
         "${QL_ROBUSTGAP_ARG[@]}" \

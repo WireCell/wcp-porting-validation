@@ -1,0 +1,4 @@
+# PDVD stopping-track dQ/dx-vs-rr sample, tag m1on, tagger verdict required (STM=1, TGM=0, accepted pass)
+# points with |x| > 305.0 cm excluded (instrumental near-CRP dQ/dx rise)
+# cuts: npts>=40 nbin>=6 rrmin<=2.0 rrmax>=22.0 contrast>=2.0 chi2<=2.5 shape_rms<=0.1; refs /home/xqian/toolkit-dev/wcp-porting-img/pdvd/stm/pdvd_ref_dqdx.json (0.44 kV/cm)
+particle	event	evtno	block	cluster	status	npts	L_cm	contrast	chi2	k_muon	rms_muon	k_proton	rms_proton	mean_absx_cm	fc
