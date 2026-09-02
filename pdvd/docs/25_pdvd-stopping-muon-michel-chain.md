@@ -431,6 +431,23 @@ A dQ/dx calibration cannot start until one is chosen, because `dx` depends on
 it directly and every diffusion sigma in §8 scales with it. **This is a
 stop-and-decide item, not something to pick silently.**
 
+The four are not equally arbitrary — they have different consumers, and one of
+them is load-bearing for §7b:
+
+- **The grouping value is the one that propagates into the fit's geometry.**
+  `TrackFitting::BuildGeometry` reads `m_grouping->get_drift_speed()`
+  (`clus/src/TrackFitting.cxx:618`) and builds `slope_t` and the time-tick
+  width from it (`:653`). PDVD sets it **per crate** —
+  `drift_speed_bot` / `drift_speed_top` (`protodunevd/clus.jsonnet:115,135`),
+  defaulting to the 1.568 literal at `:44` but overridden by the runner to
+  1.48073 for both crates (`run_clus_evt.sh:793-794`). This is the value §7b
+  must match.
+- **1.473 is the sim value** and reaches imaging through
+  `img.jsonnet:4` -> `simparams.jsonnet:13`. It governs how the frames the fit
+  reads were *produced*, which is a separate question from how the fit
+  converts ticks to length.
+- **1.6 is the inherited base default** and nothing chooses it.
+
 Transport coefficients are equally split:
 
 | quantity | PDVD reco | PDVD sim | provenance |
@@ -508,9 +525,29 @@ derivation.
 
 Caveats to carry with that table: the trailing 0.2 / 0.3 / 0.5 factors are
 empirical uBooNE tunings on top of the filter width and must be re-checked
-against PDVD fit residuals; `add_sigma_L` moves with whichever drift speed
-§7a picks; and if PDVD's SP filters are ever retuned this file must be
-re-derived — note the dependency in any SP retune.
+against PDVD fit residuals; and if PDVD's SP filters are ever retuned this
+file must be re-derived — note the dependency in any SP retune.
+
+**Which drift speed goes into `add_sigma_L` is determined, not free.** The
+filter width is a *time* quantity, independent of drift speed; the `v` in the
+formula is purely the unit conversion into the length units `diff_sigma_L`
+uses, and the result is then divided by a time-tick width built from
+`m_grouping->get_drift_speed()` (`TrackFitting.cxx:618,653`). So `v` must be
+**the drift speed the PR job configures on the grouping**, or the filter term
+is mis-scaled against the tick axis it is divided by. SBND is the worked
+example: its grouping is configured at 1.563 (`sbnd/clus.jsonnet:22,143`) and
+its shipped `add_sigma_L` = 2.4876 is exactly 1/(2*pi*0.10)*1.563. (That this
+coincides with SBND's *sim* value is incidental; the operative fact is that it
+matches the grouping config.) For PDVD that gives **2.0796** if the PR job
+takes the `protodunevd/clus.jsonnet:44` default of 1.568, or **1.964** if it
+inherits the runner's 1.48073. Pick whichever the PR job actually configures.
+
+One structural hazard specific to VD: PDVD sets drift speed **per crate**
+(`drift_speed_bot` / `drift_speed_top`), while `pdvd_track_fitting.json` is a
+single global file. Today both runner defaults are 1.48073 so one
+`add_sigma_L` suffices — but if the two drift stacks are ever calibrated
+separately, `add_sigma_L` cannot follow the split and the file becomes wrong
+for one crate. Flag it if that divergence is ever proposed.
 
 Other reco-side rows PDVD must set rather than inherit:
 
@@ -644,7 +681,7 @@ PDVD's values are already calibrated
 
 One recorded caveat matters directly here: the library + official-efficiency
 model **over-predicts by ~10x as a single global normalisation**
-(`qlmatching.jsonnet:307-310`), attributed to a units/recombination/SPE-scale
+(`qlmatching.jsonnet:307-308`), attributed to a units/recombination/SPE-scale
 product. That global normalisation is degenerate with the charge scale a
 Michel energy calibration is trying to measure — so the two must not be tuned
 against each other without an external anchor.
