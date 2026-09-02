@@ -1,5 +1,6 @@
 # SBND Standalone Imaging, Clustering, and Bee (`sbnd_xin/`)
 
+> **Production running condition + validation checklist (for the LArSoft integration): [92_production-running-and-validation-guide.html](92_production-running-and-validation-guide.html)** (self-contained HTML, doc 92).
 > For per-script details see **[3_scripts.md](3_scripts.md)**.
 > For geometry / timing constants see **[2_geometry-and-timing.md](2_geometry-and-timing.md)**.
 > For the imaging algorithm deep-dive see **[4_imaging.md](4_imaging.md)**.
