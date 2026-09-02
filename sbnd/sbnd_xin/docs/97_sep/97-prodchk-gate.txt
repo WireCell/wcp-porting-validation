@@ -1,0 +1,22 @@
+=== doc 97 sec 9 -- does the FLIPPED PRODUCTION DEFAULT reproduce the validated arm? ===
+work-d97prodchk-* runs with NO -sep-fv-point flag: the knob comes from the config.
+Baseline work-<s>-d97fv is the arm sec 5 validated.
+Manifest: every one of the six in-beam verdict-flip events (105074, 162363, 392901,
+290654, 318703, 95911), the three appear/disappear events (278266, 51153, 280159),
+the full ncpi0 and nueCC48 sets, 20 gate308 mcp1k + 20 mcp2k events, and the whole
+20-event MC debug group carrying both symptom events.
+
+sample     events   same   diff  missing  products compared
+ncpi0          19     19      0        0  76
+nuecc48        48     48      0        0  192
+mcp1k          24     24      0        0  96
+mcp2k          28     28      0        0  112
+
+TOTAL events 119, identical 119, differing 0, missing products 0
+VERDICT: PASS
+
+sample     events   same   diff  missing  products compared
+dbg25a         20     20      0        0  80
+
+TOTAL events 20, identical 20, differing 0, missing products 0
+VERDICT: PASS

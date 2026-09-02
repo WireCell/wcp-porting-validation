@@ -1,8 +1,9 @@
 # Doc 97 — rescuing the two separation cases: `sep_track_recarve` and `sep_fv_point`
 
-**Status: two SBND knobs implemented, both default OFF, both proven
-byte-identical when off, both validated on the full 3134-event sample. Neither
-is flipped in production — the flip is the owner's call (CLAUDE.md §5.1).**
+**Status: two SBND knobs implemented and validated on the full 3134-event
+sample. `sep_fv_point` is SBND PRODUCTION as of `ref/prod-2026-09-04`
+(owner flip 2026-09-02, §9). `sep_track_recarve` stays default OFF and
+byte-identical when off.**
 
 The owner's instruction for this round: *"we do not need to worry about the STM
 case, but focus on whether we can rescue the two separation cases, at least one
@@ -27,9 +28,13 @@ them" is two.
 | bundles that gain a cosmic tag | **0** | +3 STM |
 | shipped-fix sentinels (31) | 29 PASS / **2 FAIL** | 30 PASS / **1 FAIL** |
 
-Both break a shipped, owner-approved fix, so **both are reported rather than
-recommended for an unconditional flip** (CLAUDE.md §5.7). §6 is a three-arm Bee
-set of the 22 events that decide it; §7 says what I would do and in what order.
+Both break a shipped, owner-approved fix, so both were **reported rather than
+flipped** when this doc was first written. The owner then scanned the three-arm
+Bee set of §6 and adjudicated `sep_fv_point`'s three apparently-adverse flips
+(idx 5, 6, 7) as **improvements**, which turns its ledger positive and its one
+sentinel failure into an expected consequence. `sep_fv_point` is production as
+of `ref/prod-2026-09-04`; `sep_track_recarve` is not. §9 records the flip and
+its verification; §7 is left as written, as the reasoning the owner ruled on.
 
 ## Repro block
 
@@ -69,12 +74,24 @@ python3 scripts/d97_sentinels.py --arms 'work-*-d97onpr'   # shipped-fix sentine
     94392 53793 256587 360535 54095 390182 316729 280159 101828 98470 \
     175871 289508 49742
 ./upload-to-bee.sh bee/d97/d97-{off,on,fv}.zip     # one at a time
+
+# G. the flip and its verification (sec 9) -- AFTER the owner's verdict
+python3 scripts/cfg/prod_cfg_gate.py --keep /home/xqian/tmp/d97/cfgflip   # drift
+git -C ../.. archive HEAD cfg | tar -x -C /home/xqian/tmp/d97/cfgbase     # pre-flip tree
+python3 scripts/cfg/prod_cfg_gate.py --cfg /home/xqian/tmp/d97/cfgbase/cfg \
+    --keep /home/xqian/tmp/d97/cfgoff                                     # must PASS
+python3 scripts/d97_flip_drift.py /home/xqian/tmp/d97/cfgoff /home/xqian/tmp/d97/cfgflip
+cp -a ref/prod-2026-09-03 ref/prod-2026-09-04                             # never --refresh in place
+python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-04 --refresh
+/home/xqian/tmp/d97/prodchk.sh                    # production default, NO flag
+python3 scripts/d97_ql_gate.py d97prodchk d97fv   # must be byte-identical
 ```
 
 Saved outputs under `docs/97_sep/`: `97-idgate.txt`, `97-idgate-final.txt`,
 `97-dbg25-control.txt`, `97-dbg25-fv-control.txt`, `97-fv-decomposition.txt`,
 `97-stagea-sets.txt`, `97-flip-3067.txt`, `97-physics-3067.txt`,
-`97-sentinels.txt`; Bee sidecars under `bee/d97/`.
+`97-sentinels.txt`, `97-flip-drift.txt`, `97-prodchk-gate.txt`; Bee sidecars
+under `bee/d97/`; the new operating point in `ref/prod-2026-09-04/`.
 
 Operating point `ref/prod-2026-09-03`, `reality=data` for the four validation
 samples and `sim` for the doc-95 MC debug set. Binary pinned to
@@ -94,6 +111,12 @@ its keys when off so the compiled configuration is byte-identical to
 |---|---|---|
 | `sep_track_recarve` | `ClusteringSeparate.track_recarve` — the post-separation k=2 3D-line self-split of a member holding two long crossing track arms | **existing**, already production on PDHD and PDVD |
 | `sep_fv_point` | `fv_inset_yz` 15 cm + `far_point_x_cut` 14 cm + `far_point_mid_dis` 60 cm + `dec1_guard_main_angle` 45° | `fv_inset_yz` is **new** (this round); the other three existed |
+
+(§9: `sep_fv_point`'s SBND default became **true** after the owner's
+2026-09-02 verdict. Everything in §1–§8 describes the knob as it was
+validated — default OFF — and the tables below are the proof that the OFF path
+was byte-identical, which is what made the flip a one-line change with a named
+drift.)
 
 `fv_inset_yz` is the only new C++ in the round. It exists because the PDHD/PDVD
 recipe for this blindness (`clus/docs/clustering-separate-fv.md`) insets
@@ -505,3 +528,77 @@ So my recommendation, in order:
   flash `1/1000002`. Any future flash-keyed A/B needs the size pairing this
   round's `d97_flip_report.py` does, or it will silently drop one bundle per
   collision.
+
+---
+
+## 9. The flip — `sep_fv_point` is SBND production
+
+**Owner, 2026-09-02, after scanning the §6 Bee sets:** *"These are good idx 5-7
+are all improvements. We can set this new running as default on for SBND
+production."*
+
+That verdict is what changes the arithmetic. idx 5 (mcp2k 105074,
+nu-candidate → STM), idx 6 (162363, TGM → STM) and idx 7 (392901,
+nu-candidate → TGM with the main growing 384.5 → 482.1 cm) were §5.2's entire
+cost. Adjudicated as improvements, `sep_fv_point`'s in-beam ledger reads **six
+verdict flips, all of them right**, and its one sentinel failure (§5.4) is a
+consequence of one of them rather than a regression — mcp2k 105074 is *supposed*
+to lose its candidate.
+
+### 9.1 What was flipped, and what was not
+
+`sep_fv_point` defaults **true** in `cfg/pgrapher/experiment/sbnd/clus.jsonnet`
+(both `clus_per_face` and `per_apa`) and in
+`wct-clus-matching-perevt.jsonnet`. Setting the default on `clus_per_face` is
+what carries it into the **LArSoft** entry point, which reaches
+`clus_per_face` through `per_volume()` and takes its defaults — the same
+mechanism `sep_vertex_veto` uses.
+
+**`sep_track_recarve` was NOT flipped.** The owner's sentence names the arm he
+scanned, which is the `sep_fv_point` arm, and three things say to stop there:
+`sep_fv_point` already rescues both symptom events on its own; the two knobs
+reach different events (§5.1 — 50 events only `sep_track_recarve` touches), so
+turning both on is a configuration **nobody has run**; and
+`sep_track_recarve`'s own two sentinel failures (mcp2k 94392, 53793 — Bee idx 9
+and 10) are still unadjudicated. It remains available, default OFF and
+byte-identical when off.
+
+### 9.2 The compiled drift, key by key
+
+`scripts/d97_flip_drift.py` walks every node of every artifact by
+`(type, name)`, never by array index:
+
+| artifact | drift |
+|---|---|
+| `sbnd_clus.json`, `sbnd_ql.json`, `prod.standalone`, `prod.wcls` | **8 keys each** — `fv_inset_yz = 150`, `far_point_x_cut = 140`, `far_point_mid_dis = 600`, `dec1_guard_main_angle = 45` on **both** `ClusteringSeparate` nodes |
+| `sbnd_pr.json`, `sbnd_img.json`, `prod_prjob.json`, `bare_prjob.json`, `uboone.json`, the six pdhd and five pdvd jobs, the sim checks | **identical** (17 of 21 artifacts) |
+
+The pre-flip tree, extracted with `git archive HEAD cfg`, still compiles to
+`prod-2026-09-03` exactly (21/21) — so the drift above is the flip and nothing
+else.
+
+### 9.3 Production default == the validated arm
+
+The arm that produced every number in §5 ran with `-sep-fv-point` on the command
+line. Production takes the knob from the configuration instead, and that has to
+be shown to be the same reconstruction, not assumed:
+
+| | |
+|---|---|
+| data (`work-d97prodchk-*`, **no flag**) vs `work-<s>-d97fv` | 119 events / 476 products **byte-identical** |
+| MC debug group, both symptom events | 20 events / 80 products **byte-identical** |
+| manifest coverage | all six in-beam flip events, all three appear/disappear events, the full ncpi0 and nueCC48 sets, 20 gate308 mcp1k + 20 mcp2k, and 272-2-30 / 105-23-21 |
+| new reference | `ref/prod-2026-09-04`, `prod_cfg_gate.py --ref ref/prod-2026-09-04` **PASS 21/21** |
+| `prod-2026-09-03` | left byte-untouched (M13); it is the escape point, reachable with `run_ql_evt.sh -no-sep-fv-point` |
+
+### 9.4 What this changes for the next round
+
+* The stage-A baseline moves. `work-<s>-d97fv` / `work-<s>-d97fvpr2` are the
+  production arms at `ref/prod-2026-09-04`; `work-<s>-r3entry` and the
+  `grp0825` root behind it are **two generations stale** now — once for the
+  epoch drift of §2.1 and once for this flip.
+* The sentinel suite needs re-baselining: `pr/128 class B` on mcp2k 105074
+  asserts a PF node that production deliberately no longer produces. Left as it
+  stands here so the change is visible in the record; the next round should
+  retire or re-anchor that sentinel and say so.
+* `sep_track_recarve` and the both-on arm are the open items (§7 steps 2–4).

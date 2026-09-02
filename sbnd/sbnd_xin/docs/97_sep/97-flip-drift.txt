@@ -1,0 +1,43 @@
+sbnd_clus.json: 8 key difference(s)
+    ADDED   ClusteringSeparate:apa0-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa0-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa0-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa0-0 .fv_inset_yz = 150
+    ADDED   ClusteringSeparate:apa1-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa1-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa1-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa1-0 .fv_inset_yz = 150
+sbnd_ql.json: 8 key difference(s)
+    ADDED   ClusteringSeparate:apa0-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa0-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa0-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa0-0 .fv_inset_yz = 150
+    ADDED   ClusteringSeparate:apa1-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa1-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa1-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa1-0 .fv_inset_yz = 150
+prod.standalone: 8 key difference(s)
+    ADDED   ClusteringSeparate:apa0-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa0-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa0-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa0-0 .fv_inset_yz = 150
+    ADDED   ClusteringSeparate:apa1-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa1-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa1-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa1-0 .fv_inset_yz = 150
+prod.wcls: 8 key difference(s)
+    ADDED   ClusteringSeparate:apa0-0 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa0-0 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa0-0 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa0-0 .fv_inset_yz = 150
+    ADDED   ClusteringSeparate:apa1-1 .dec1_guard_main_angle = 45
+    ADDED   ClusteringSeparate:apa1-1 .far_point_mid_dis = 600
+    ADDED   ClusteringSeparate:apa1-1 .far_point_x_cut = 140
+    ADDED   ClusteringSeparate:apa1-1 .fv_inset_yz = 150
+sbnd_pr.json: identical
+sbnd_img.json: identical
+prod_prjob.json: identical
+bare_prjob.json: identical
+uboone.json: identical
+
+TOTAL key differences across 9 artifacts: 32
