@@ -14,7 +14,7 @@ feedback sample).
 |---|---|
 | symptom | 5 events our chain tags STM that the owner says are neutrino candidates |
 | **recovered** | **3 of 5** — 966-2-22, 304-6-28, 146-60-31 all flip STM → **nu-candidate** |
-| cost on the **3067** data events | **1 STM bundle of 401** carries the firing signature |
+| cost on the **3067** data events | **1 bundle flips, of 34,827** — measured A/B, zero collateral |
 | owner's 36 confirmed-correct STMs broken | **0** |
 | not recovered | 827-27-4, 707-18-12 — mechanism identified, no predicate available at STM time |
 | ideas measured dead | travel direction (§4), `proton_muon_guard` re-tune (§5) |
@@ -156,6 +156,26 @@ straight (0.92–0.996, i.e. above the `straight>0.975` acceptance clause). The
 guard's marginal effect is confined to the *curved* ones, which is precisely
 the `:2909` blind spot it was written for. `64475:23` is the only STM=1 bundle
 among them, and at straightness 0.894 it is exactly that class.
+
+### The A/B, measured — `work-*-d94hadron` vs `work-*-prod0901b`
+
+Not predicted from the probe: the guard was actually run over all 3067 events
+and the per-bundle verdicts compared (`scripts/doc94_flip_report.py`, keyed on
+`(event, main_id)` from `nusel-evt<ID>.tsv`, reporting one-arm-only bundles
+separately rather than dropping them).
+
+```
+events compared            : 3067
+bundles identical          : 34826
+bundles FLIPPED            : 1
+bundles only in OFF / ON   : 0 / 0
+  evt 64475 main 23  len 340.4cm  stm:1->0 label:STM->nu-candidate
+```
+
+**One flip in 34,827 bundles**, in the direction intended, and it is the bundle
+the probe-arm census predicted. Nothing gained a tag; nothing moved onto TGM;
+no bundle appeared or vanished. The nueCC48 and NCπ0 arms are inside this
+comparison and contribute zero flips.
 
 ### Negative control — the owner's own 72 verdicts
 
@@ -302,7 +322,58 @@ filled. This contradicts `ref/prod-2026-09-01c/README.md`, which advertises
 per-bundle flags in that tree. Consequence for this round: every flip table
 here is built from `nusel-evt<ID>.tsv`, never from `T_cluster`.
 
-## 9. Bee
+## 9. Hand scan of the one release — `64475:23`
+
+The guard releases exactly one bundle in 3067 data events. There is no truth
+for data, so it was scanned by eye. Images:
+`products/doc94/scan/scan64475{,_zoom}.png`, rendered by
+`scripts/doc94_scan_plot.py`, which deliberately draws **the detector and not
+the verdict** — no tag, no guard result and no feature value appears on the
+image being judged.
+
+Re-run for the scan with full diagnostics: `work-d94scan-64475`. With the
+guard on, `cluster 23 → STM=0 TGM=0` and the event becomes a nu-candidate
+(a calib dump appears where there was none).
+
+**What the picture shows.** A 240 cm track from the **anode** face
+(x = −201, z = 270, y = −140) to (x = −125, z = 28, y = −152) — nearly
+horizontal, 3° below the horizontal over its whole length. Its last ~25–40 cm
+is *not* a single track coming to rest: the charge spreads into a compact blob
+with at least two directions, and the fitted dQ/dx is **ragged, not a smooth
+Bragg ramp** — flat at 0.95 MIP down to rr ≈ 28 cm, then spikes of 2.2, 3.2,
+2.7 and 4.1 MIP scattered through the last 25 cm. A genuine Bragg peak is
+monotone over the last ~10 cm.
+
+**What the reconstruction says once it is released**, from the calib dump the
+released event now produces:
+
+| | |
+|---|---|
+| `numu_score` | **+2.117** (positive = neutrino-like) |
+| `nue_score` | −15.000 (the not-filled sentinel) |
+| `match_isFC` | 0 |
+| reco Enu | 1092.0 MeV |
+| main vertex | (−123.3, −152.7, 27.8) cm on cluster 23 |
+| vertex segments | 24.9 cm typed µ, plus 2.0 cm typed **p** and 1.8 cm typed π |
+
+The corroboration worth noting: `TaggerCheckNeutrino`'s vertex finder, which
+knows nothing about this guard, independently places the interaction vertex at
+**exactly the point the STM fit called the stop**, and puts a proton- and a
+pion-typed stub there.
+
+**My verdict: ambiguous, leaning neutrino-like — and this is the one thing in
+this round I am putting to the owner rather than deciding.** For it: a 20 cm
+prong at 2.38 MIP, an independent vertex on the same point, proton and pion
+stubs, `numu_score` +2.12. Against it: a 240 cm near-horizontal track entering
+the anode face is a very cosmic-like object, and a ragged end can be a stopping
+muon with delta rays rather than a hadronic vertex.
+
+If the owner calls it a cosmic, the measured price of `vertex_hadron_guard` is
+**one cosmic per 3067 events entering the selection at `numu_score` +2.12**,
+against three recovered neutrino candidates. If the owner calls it a neutrino,
+the guard has no measured cost at all.
+
+## 10. Bee
 
 **Set (8 events, the colleague's order, `stm_fit-global` layer added):**
 https://www.phy.bnl.gov/twister/bee/set/abc72dc0-a4c4-40aa-8bc2-6f8bc5ba65fc/event/list/
@@ -315,13 +386,17 @@ trajectory with per-point dQ/dx, i.e. the evidence the verdict is made on.
 Present on the 6 events that reach the STM fit, absent on the 2 TGM events,
 which exit before it.
 
-## 10. Recommended next step
+## 11. Recommended next step
 
-1. **Owner scan of the Bee set** (`bee/d94/`, the 8 events with the new
-   `stm_fit-global` layer showing the fitted trajectory and its dQ/dx) plus the
-   single population fire `64475:23`. If the owner agrees `64475:23` is not a
-   stopping muon, flip `stm_vertex_hadron_guard` ON for SBND — it is the only
-   thing standing between this guard and production.
+1. **One owner call decides this round: is `64475:23` (§9) a neutrino or a
+   cosmic?** It is the single bundle the guard releases in 3067 data events,
+   and my own scan says ambiguous-leaning-neutrino. If it is a neutrino, the
+   guard has no measured cost and should go ON for SBND. If it is a cosmic,
+   the trade is one cosmic per 3067 events entering the selection at
+   `numu_score` +2.12, against three recovered neutrino candidates — still a
+   good trade in my judgement, but the owner's to make. The Bee set in §10
+   carries the 5 symptom events plus the control with the fitted trajectory
+   drawn; `products/doc94/scan/` carries the images for `64475:23`.
 2. **Leave `descent_guard` OFF permanently** unless someone finds a stop
    definition that is not the fit's `pts[kink]`. §4 explains why nothing
    anchored there can work.
