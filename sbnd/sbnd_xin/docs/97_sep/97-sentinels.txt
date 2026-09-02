@@ -1,0 +1,37 @@
+########## doc 97 -- shipped-fix sentinel suite ##########
+scripts/d97_sentinels.py -- a fork of pr127_sentinels.py whose only difference
+is that a missing PF tree is an ordinary FAIL instead of a crash (sec 6.3).
+One arm glob at a time: find_arm takes the FIRST match, so a combined glob
+silently reports only one arm.
+
+===== work-*-r3entry =====
+31 PASS, 0 FAIL, 0 SKIP
+
+===== work-*-d97off2pr =====
+31 PASS, 0 FAIL, 0 SKIP
+
+===== work-*-d97onpr =====
+FAIL 94392    pr/129             guard-freed/continuation hand-off costs nothing
+FAIL 53793    doc 84 r2          long_muon_cathode_bridge: two half-showers become one muon
+29 PASS, 2 FAIL, 0 SKIP
+    FAIL 94392    pr/129             guard-freed/continuation hand-off costs nothing
+            arm=work-mcp2k-d97onpr
+            [XX] Enu=822.2 want [1136, 1149]
+    PASS 47212    pr/120             stem_backfill_back_guard: the backward stem stays OUT of the shower
+            arm=work-mcp2k-d97onpr
+    --
+    FAIL 53793    doc 84 r2          long_muon_cathode_bridge: two half-showers become one muon
+            arm=work-mcp2k-d97onpr
+            [XX] pf_node_ge mu- 700 MeV (seen: 237, 32)
+            [ok] log_contains 'long_muon_cathode_bridge:'
+    PASS 177536   doc 84 r2.1        cathode bridge + BFS main-vertex guard + start re-seat
+
+===== work-*-d97fvpr2 =====
+FAIL 105074   pr/128 class B     conn4_near: the two main-cluster pdg-13 showers are shown + counted
+30 PASS, 1 FAIL, 0 SKIP
+    FAIL 105074   pr/128 class B     conn4_near: the two main-cluster pdg-13 showers are shown + counted
+            arm=work-mcp2k-d97fvpr2
+            [XX] pf_node_ge mu- 180 MeV (seen: none)
+            [XX] log_contains 'pr128 pf-conn4-near: KEEP'
+    PASS 55740    pr/128 class A     near cross-cluster track: the 123.1cm muon joins PF + kine
+

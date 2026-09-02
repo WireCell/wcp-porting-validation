@@ -73,6 +73,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             and reads "no-bundle" in the nusel table (evt286021, 1.158 us beam
             flash -> 141-pt cluster, 437 PE predicted).
             Env: SBND_QL_MAIN_FLAG=0.
+  -sep-fv-point  per-APA separate() at the PDHD/PDVD separation operating
+            point, scoped to that pass: 15 cm y/z FV inset + the far-point
+            and dec1-guard knobs (doc 97; OFF in the config)
+  -sep-recarve  per-APA separate() track_recarve: k=2 self-split of a member
+            holding two long crossing track arms whose ends are both inside
+            the volume (doc 97; OFF in the config, -no-sep-recarve asserts off)
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
@@ -222,6 +228,17 @@ PO_FAST="${SBND_PO_FAST:-}"
 # doc 79 round 2: ClusteringDeghost busy-cluster lazy walk (the 'ctpc_fast'
 # graph flavor).  Tri-state: empty inherits the jsonnet default.
 DG_FAST="${SBND_DG_FAST:-}"
+# doc 97: per-APA separate() track_recarve -- k=2 3D-line self-split of a member
+# holding two long crossing track arms whose ends are both inside the volume
+# (doc 96 sec 8.2, run 272-2-30).  OFF in the SBND config (sep_track_recarve
+# defaults false, key omitted => byte-identical); -sep-recarve / SBND_SEP_RECARVE=1
+# turns it on, -no-sep-recarve / =0 asserts off.
+SEP_RECARVE="${SBND_SEP_RECARVE:-}"
+# doc 97: the PDHD/PDVD SEPARATION operating point, scoped to that pass
+# (fv_inset_yz 15 cm + far_point_x_cut 14 cm + far_point_mid_dis 60 cm +
+# dec1_guard_main_angle 45 deg).  OFF in the SBND config; -sep-fv-point /
+# SBND_SEP_FV_POINT=1 turns it on, -no-sep-fv-point / =0 asserts off.
+SEP_FV_POINT="${SBND_SEP_FV_POINT:-}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -248,6 +265,10 @@ while [ $# -gt 0 ]; do
         -no-realign|--no-realign) REALIGN=0; shift ;;
         -main-flag|--main-flag) MAINFLAG=1; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
+        -sep-recarve|--sep-recarve) SEP_RECARVE=1; shift ;;
+        -sep-fv-point|--sep-fv-point) SEP_FV_POINT=1; shift ;;
+        -no-sep-fv-point|--no-sep-fv-point) SEP_FV_POINT=0; shift ;;
+        -no-sep-recarve|--no-sep-recarve) SEP_RECARVE=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
@@ -276,6 +297,8 @@ knob_bool save_assoc "$SAVE_ASSOC"
 knob_bool eb_fast    "$EB_FAST"
 knob_bool po_fast    "$PO_FAST"
 knob_bool dg_fast    "$DG_FAST"
+knob_bool sep_track_recarve "$SEP_RECARVE"
+knob_bool sep_fv_point      "$SEP_FV_POINT"
 # rcid_global / realign are C++-default-TRUE tri-states whose config default is
 # null (= inherit), so only the OFF case is expressible; 1 means "inherit", not
 # "emit true", and must stay silent to keep the compiled config unchanged.

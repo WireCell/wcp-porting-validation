@@ -1,0 +1,34 @@
+=== doc 97 -- which of sep_fv_point's four values does the work? ===
+Each arm patches the event's own compiled Q/L config from the byte-identical OFF arm
+(work-dbg25a-d97off); 'off' moves only output paths.  Cluster sizes are point counts
+in the final clustering-global layer, top 5 by size.
+
+evt21 off rc=0 recarve=0 | 14 clusters, top5 [27452, 9013, 8474, 4760, 4433]
+evt21 inset rc=0 recarve=0 | 14 clusters, top5 [27452, 9013, 8474, 4760, 4433]
+evt21 farpoint rc=0 recarve=0 | 14 clusters, top5 [27452, 9013, 8474, 4760, 4433]
+evt21 dec1 rc=0 recarve=0 | 14 clusters, top5 [27452, 9013, 8474, 4760, 4433]
+evt21 inset+far rc=0 recarve=0 | 14 clusters, top5 [28389, 9013, 8474, 4433, 3852]
+evt21 all4 rc=0 recarve=0 | 14 clusters, top5 [28389, 9013, 8474, 4433, 3852]
+evt30 off rc=0 recarve=0 | 23 clusters, top5 [20516, 17356, 10587, 8481, 2634]
+evt30 inset rc=0 recarve=0 | 24 clusters, top5 [17356, 10587, 10433, 9846, 8481]
+evt30 farpoint rc=0 recarve=0 | 23 clusters, top5 [20516, 17356, 10587, 8481, 2634]
+evt30 dec1 rc=0 recarve=0 | 24 clusters, top5 [17356, 10587, 10433, 9827, 8481]
+evt30 inset+far rc=0 recarve=0 | 24 clusters, top5 [17356, 10587, 10433, 9846, 8481]
+evt30 all4 rc=0 recarve=0 | 24 clusters, top5 [17356, 10587, 10433, 9827, 8481]
+
+Reading:
+  105-23-21 (evt21): the 4760-point main splits into 3852 + 908 ONLY under
+      fv_inset_yz AND the far_point pair together.  Neither alone moves it, and
+      dec1_guard_main_angle adds nothing.  This reproduces doc 96 sec 8.3's
+      "both together" result with the inset scoped to separation instead of
+      applied to the shared DetectorVolumes FV.
+  272-2-30 (evt30): the 20516-point main splits by TWO independent routes --
+      fv_inset_yz alone (10433 + 9846) and dec1_guard_main_angle alone
+      (10433 + 9827).  far_point alone does nothing.  The two routes disagree
+      by 19 points on the second arm; all4 takes dec1's partition.
+  So of the four values: fv_inset_yz is load-bearing for both events, the
+  far_point pair is required only by 105-23-21, and dec1_guard_main_angle is
+  required by neither -- it is carried for parity with the PDHD/PDVD operating
+  point and it slightly changes 272-2-30's partition.  A three-value variant
+  (drop dec1) would rescue both symptom events; it has NOT been validated on
+  the 3134-event sample, the four-value point has.

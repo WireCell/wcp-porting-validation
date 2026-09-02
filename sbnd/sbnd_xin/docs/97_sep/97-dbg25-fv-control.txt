@@ -1,0 +1,56 @@
+=== doc 97 -- sep_fv_point (separation-scoped) ON vs OFF, dbg25 MC control ===
+OFF arm = work-dbg25{a,b}-d97offpr (proven byte-identical to work-dbg25{a,b}-ql, 25/25 events)
+
+ON = work-*-d97fvpr3   OFF = work-*-d97offpr   samples: dbg25a dbg25b
+events 25  bundles matched on flash 356  field flips 2 (in-beam 2)  size-only changes 1
+bundles only in ON 1   only in OFF 0   events missing from OFF 0
+
+in-beam population (the number a clustering knob moves first):
+  quantity                         OFF      ON   delta
+  fc                                 1       2      +1
+  in_beam                           29      29      +0
+  label=STM                          6       6      +0
+  label=TGM                         13      11      -2
+  label=no-bundle                    1       1      +0
+  label=nu-candidate                 9      11      +2
+  lm                                 4       4      +0
+  stm                                6       6      +0
+  tgm                               13      11      -2
+
+FIELD FLIPS (2):
+  sample     event  flash          beam field     off           on              len off   len on
+  dbg25a        21  1/1000005       1/1 tgm       1             0                 439.1    333.0
+  dbg25a        21  1/1000005       1/1 label     TGM           nu-candidate      439.1    333.0
+  dbg25a        30  0/4             1/1 tgm       1             0                 422.6    342.6
+  dbg25a        30  0/4             1/1 fc        0             1                 422.6    342.6
+  dbg25a        30  0/4             1/1 label     TGM           nu-candidate      422.6    342.6
+
+ONLY IN ON (a split freed a cluster onto its own flash) (1):
+  dbg25a        30  flash 0/7          t=    -563.3us  main  10433 pts   411.6 cm  in_beam=0 not-tagged
+
+=== the config-patched pdhdlike probe (doc 96 sec 8, SHARED FV inset) for comparison ===
+ON = work-*-d97fvpr   OFF = work-*-d97offpr   samples: dbg25a
+events 20  bundles matched on flash 290  field flips 2 (in-beam 2)  size-only changes 2
+bundles only in ON 1   only in OFF 0   events missing from OFF 0
+
+in-beam population (the number a clustering knob moves first):
+  quantity                         OFF      ON   delta
+  fc                                 1       2      +1
+  in_beam                           21      21      +0
+  label=STM                          4       4      +0
+  label=TGM                         12      10      -2
+  label=nu-candidate                 5       7      +2
+  lm                                 1       1      +0
+  stm                                4       4      +0
+  tgm                               12      10      -2
+
+FIELD FLIPS (2):
+  sample     event  flash          beam field     off           on              len off   len on
+  dbg25a        21  1/1000005       1/1 tgm       1             0                 439.1    333.0
+  dbg25a        21  1/1000005       1/1 label     TGM           nu-candidate      439.1    333.0
+  dbg25a        30  0/4             1/1 tgm       1             0                 422.6    342.6
+  dbg25a        30  0/4             1/1 fc        0             1                 422.6    342.6
+  dbg25a        30  0/4             1/1 label     TGM           nu-candidate      422.6    342.6
+
+ONLY IN ON (a split freed a cluster onto its own flash) (1):
+  dbg25a        30  flash 0/7          t=    -563.3us  main  10433 pts   411.6 cm  in_beam=0 not-tagged

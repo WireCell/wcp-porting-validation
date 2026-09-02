@@ -1,0 +1,8 @@
+sample     events   same   diff  missing  products compared
+ncpi0          19     19      0        0  76
+nuecc48        48     48      0        0  192
+mcp1k         241    241      0        0  964
+mcp2k          59     59      0        0  236
+
+TOTAL events 367, identical 367, differing 0, missing products 0
+VERDICT: PASS

@@ -1,0 +1,95 @@
+########## doc 97 -- physics-level census vs the fresh knob-off baseline ##########
+===== A. sep_track_recarve =====
+ON = work-*-d97onpr   OFF = work-*-d97off2pr   samples: ncpi0 nuecc48 mcp1k mcp2k
+events with a calib dump on both sides: 1436   missing on one side: 0
+events where ANY compared physics quantity moved: 18
+
+  quantity        events moved
+  Enu                       18
+  add_energy                 9
+  excluded                   9
+  n_segments                13
+  n_showers                  7
+  n_vertices                13
+  pio_flag                   1
+  pio_mass                  10
+  shower_sum                13
+  vtx_x                     16
+  vtx_y                     16
+  vtx_z                     16
+
+PER-EVENT DETAIL (18):
+  sample     event    Enu off   Enu on     dEnu nsh off nsh on vtx move cm  fields
+  nuecc48   256587     3709.3   3436.5   -272.8      14      8        0.12  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  nuecc48   360535     2091.2   2161.5     70.3       1      1        0.95  Enu,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  nuecc48    54095     2788.9   2619.6   -169.3       7     10        0.70  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     287211      854.1    832.8    -21.3      10     15        0.18  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     316729      657.7    887.3    229.7      10     11        4.62  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     390182     1302.7   1012.8   -289.9       6      8        1.66  Enu,add_energy,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     398260      764.0    764.6      0.6       6      6        0.11  Enu,vtx_x,vtx_y,vtx_z
+  mcp1k     401780      531.6    664.2    132.6       2      2       42.92  Enu,add_energy,vtx_x,vtx_y,vtx_z
+  mcp1k      57661      779.8    782.2      2.5      10     11        0.00  Enu,excluded,pio_mass,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     290654      752.6    777.5     24.9       9      9        0.75  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k     323171      786.2    842.1     55.9       6      6        9.18  Enu,add_energy,vtx_x,vtx_y,vtx_z,n_segments,n_vertices
+  mcp2k     390370      852.9    853.0      0.1      10     10        0.13  Enu,vtx_x,vtx_y,vtx_z
+  mcp2k     395443      629.7    628.6     -1.1      10      9        0.00  Enu,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     407886      467.7    466.6     -1.0       6      6        0.34  Enu,excluded,vtx_x,vtx_y,vtx_z
+  mcp2k      53793     1444.1    664.9   -779.1       3      3        0.59  Enu,add_energy,excluded,pio_mass,pio_flag,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k      69006     1140.7   1158.4     17.7      16     16        0.92  Enu,pio_mass,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k      72759      210.1    457.2    247.1       2      2        2.51  Enu,excluded,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k      94392     1139.0    822.2   -316.7      10     10        4.54  Enu,add_energy,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+
+===== B. sep_fv_point =====
+ON = work-*-d97fvpr2   OFF = work-*-d97off2pr   samples: ncpi0 nuecc48 mcp1k mcp2k
+events with a calib dump on both sides: 1433   missing on one side: 2
+events where ANY compared physics quantity moved: 33
+
+  quantity        events moved
+  Enu                       30
+  add_energy                 9
+  excluded                  15
+  n_segments                20
+  n_showers                 18
+  n_vertices                22
+  pio_flag                   3
+  pio_mass                  18
+  shower_sum                30
+  vtx_x                     16
+  vtx_y                     17
+  vtx_z                     17
+
+PER-EVENT DETAIL (33):
+  sample     event    Enu off   Enu on     dEnu nsh off nsh on vtx move cm  fields
+  mcp1k     280752      171.4    175.9      4.5       7     11        0.00  Enu,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     280972     3453.1   3449.4     -3.6       6      6        0.00  Enu,pio_mass,n_segments,n_vertices,shower_sum
+  mcp1k     285253      300.8    300.8      0.0      11     12        0.00  excluded,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     291262      669.2    669.0     -0.2       4      4        0.00  Enu,shower_sum
+  mcp1k     313847     1097.6   1174.2     76.7      10     16        0.18  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     315849      314.2    314.5      0.3       3      3        0.00  Enu
+  mcp1k     348691     1878.3   1760.2   -118.1      19     21        0.00  Enu,pio_mass,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     350935     1003.8   1003.3     -0.5       7      7        0.00  Enu,excluded,shower_sum
+  mcp1k     387850      591.2    590.8     -0.4       3      3        0.00  Enu,shower_sum
+  mcp1k     401450     1504.6   1643.0    138.4      15     13        0.11  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k      51865      107.8    107.8      0.0       6      7        0.00  excluded,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k      62149      699.6    699.7      0.1       4      4        0.00  Enu
+  mcp1k      65999      269.9    264.9     -5.0       5      5        0.14  Enu,pio_mass,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k     101828      553.4   1575.8   1022.4      10     11        0.00  Enu,add_energy,excluded,pio_mass,pio_flag,n_showers,n_vertices,shower_sum
+  mcp2k     164475     1091.1   1171.9     80.8       4      3        0.15  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     172463      663.5    715.8     52.4       6      6        1.06  Enu,add_energy,pio_mass,pio_flag,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k     177536     1220.7   1222.4      1.7       3      3        0.00  Enu,shower_sum
+  mcp2k     180403      596.3    596.4      0.1       1      1        0.00  Enu,shower_sum
+  mcp2k     180698      731.8    731.8      0.1       9      9        0.07  Enu,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k     275539      433.8    417.4    -16.4      15     11        0.00  Enu,excluded,pio_mass,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     280159     1210.9   2239.0   1028.0      14     18       12.00  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     281165      963.5    962.4     -1.1      10     10        0.06  Enu,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k     283833     1390.1   1323.4    -66.7      14     15        0.00  Enu,add_energy,pio_mass,n_showers,n_vertices,shower_sum
+  mcp2k     290654      752.6    777.5     24.9       9      9        0.75  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k     318703     1013.4   1018.4      5.0      23     16        0.14  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     392901     2205.7    398.5  -1807.2      10      9      249.78  Enu,add_energy,excluded,pio_mass,pio_flag,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     395209     1348.3   1342.6     -5.7       1      3        2.27  Enu,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     398225      948.0    945.6     -2.4      16     17        0.33  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     480002        0.0      0.0      0.0       0      0         nan  n_segments,n_vertices
+  mcp2k     481014       35.5      0.0    -35.5       5      0         nan  Enu,excluded,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     499577     1594.0   1522.4    -71.6      11     15        2.29  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k      70472     1184.2   1194.8     10.6      14     15        0.07  Enu,pio_mass,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k      98470     1030.8    765.8   -265.0       5      5        0.67  Enu,add_energy,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum

@@ -1,0 +1,219 @@
+########## doc 97 sec 6 -- the full-sample regression census ##########
+Baseline: work-<s>-d97off2pr (fresh knob-off arm, this binary, this cfg).
+Samples: ncpi0 19 + nuecc48 48 + mcp1k 1000 + mcp2k 2000 = 3067 events.
+
+===== A. sep_track_recarve ON vs OFF =====
+ON = work-*-d97onpr   OFF = work-*-d97off2pr   samples: ncpi0 nuecc48 mcp1k mcp2k
+events 3067  bundles matched on flash 34826  field flips 1 (in-beam 1)  size-only changes 48
+bundles only in ON 11   only in OFF 4   events missing from OFF 0
+
+in-beam population (the number a clustering knob moves first):
+  quantity                         OFF      ON   delta
+  fc                               854     856      +2
+  in_beam                         2849    2851      +2
+  label=LM                          54      54      +0
+  label=STM                        414     414      +0
+  label=TGM                        509     508      -1
+  label=no-bundle                  273     273      +0
+  label=nu-candidate              1599    1602      +3
+  lm                               665     665      +0
+  stm                              414     414      +0
+  tgm                              509     508      -1
+
+FIELD FLIPS (1):
+  sample     event  flash          beam field     off           on              len off   len on
+  mcp2k     290654  0/6             1/1 tgm       1             0                 172.4    151.0
+  mcp2k     290654  0/6             1/1 label     TGM           nu-candidate      172.4    151.0
+
+IN-BEAM MAINS THAT CHANGED SIZE BUT KEPT EVERY VERDICT (13; grew by >1 cm: 2, shrank by >1 cm: 4):
+  sample     event  flash           len off   len on     d cm  pts off   pts on  label         
+  nuecc48   360535  0/0               122.9    144.9    +22.0    10830    11047  nu-candidate  
+  mcp2k     395695  1/1000000         110.2    119.0     +8.8     2816     2814  nu-candidate  
+  nuecc48   433451  0/0               236.9    236.9     +0.0    11796    11780  nu-candidate  
+  nuecc48    54095  1/1000000         168.5    168.5     +0.0    16882    16834  nu-candidate  
+  mcp1k     315167  1/1000000         179.9    179.9     +0.0     5608     5600  nu-candidate  
+  mcp1k      57661  1/1000005         124.0    124.0     +0.0     1747     1757  nu-candidate  
+  mcp2k     395443  1/1000002         115.4    115.4     +0.0     2121     2111  nu-candidate  
+  mcp2k      53793  0/3               424.8    424.8     +0.0     4585     4583  nu-candidate  
+  mcp2k     397005  0/6               134.6    134.5     -0.1     1085     1085  nu-candidate  
+  mcp2k     501711  1/1000003         157.2    150.6     -6.6     2841     2841  nu-candidate  
+  mcp1k     401780  0/0               150.2    111.8    -38.4     3006     2573  nu-candidate  
+  mcp2k      94392  0/1               191.5    153.1    -38.4     3710     2160  nu-candidate  
+  nuecc48   256587  0/0               218.3    157.3    -61.0    30323    29000  nu-candidate  
+
+ONLY IN ON (a split freed a cluster onto its own flash) (11):
+  mcp1k     401780  flash 0/0          t=       1.5us  main    433 pts    43.6 cm  in_beam=1 nu-candidate
+  mcp1k     412626  flash 1/1000003    t=    -485.3us  main   4446 pts   412.2 cm  in_beam=0 not-tagged
+  mcp1k     490581  flash 0/12         t=     504.7us  main    270 pts    33.1 cm  in_beam=0 not-tagged
+  mcp1k     490581  flash 0/9          t=     533.2us  main    895 pts    93.2 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 1/1000005    t=    -413.7us  main   1863 pts    66.9 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 1/1000009    t=     134.9us  main   2441 pts   139.9 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 1/1000011    t=    -190.7us  main   5272 pts   148.3 cm  in_beam=0 not-tagged
+  mcp2k     290654  flash 0/8          t=     406.3us  main   1995 pts   145.6 cm  in_beam=0 not-tagged
+  mcp2k     410566  flash 1/1000004    t=     134.2us  main   3586 pts   154.8 cm  in_beam=0 not-tagged
+  mcp2k      56180  flash 1/1000003    t=    1043.3us  main   3151 pts   139.5 cm  in_beam=0 not-tagged
+  mcp2k      94392  flash 0/1          t=       0.7us  main   1550 pts   143.9 cm  in_beam=1 nu-candidate
+
+ONLY IN OFF (a bundle disappeared) (4):
+  mcp1k     412626  flash 0/14         t=    -485.3us  main     12 pts     0.9 cm  in_beam=0 not-tagged
+  mcp1k     490581  flash 0/6          t=     496.2us  main   1165 pts   123.1 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 0/7          t=    -190.7us  main   4841 pts   148.3 cm  in_beam=0 not-tagged
+  mcp2k      56180  flash 0/6          t=    1043.4us  main      9 pts     0.9 cm  in_beam=0 not-tagged
+
+===== B. sep_fv_point ON vs OFF =====
+ON = work-*-d97fvpr2   OFF = work-*-d97off2pr   samples: ncpi0 nuecc48 mcp1k mcp2k
+events 3067  bundles matched on flash 34799  field flips 8 (in-beam 6)  size-only changes 577
+bundles only in ON 41   only in OFF 31   events missing from OFF 0
+
+in-beam population (the number a clustering knob moves first):
+  quantity                         OFF      ON   delta
+  fc                               854     854      +0
+  in_beam                         2849    2848      -1
+  label=LM                          54      54      +0
+  label=STM                        414     417      +3
+  label=TGM                        509     508      -1
+  label=no-bundle                  273     272      -1
+  label=nu-candidate              1599    1597      -2
+  lm                               665     664      -1
+  stm                              414     417      +3
+  tgm                              509     508      -1
+
+FIELD FLIPS (8):
+  sample     event  flash          beam field     off           on              len off   len on
+  nuecc48   444187  0/0             0/0 lm        2             0                 105.4    512.7
+  mcp1k     401450  0/10            0/0 lm        0             2                 192.0    192.0
+  mcp2k     105074  0/2             1/1 stm       0             1                 442.8    442.8
+  mcp2k     105074  0/2             1/1 label     nu-candidate  STM               442.8    442.8
+  mcp2k     162363  0/3             1/1 tgm       1             0                 404.6    221.4
+  mcp2k     162363  0/3             1/1 stm       0             1                 404.6    221.4
+  mcp2k     162363  0/3             1/1 label     TGM           STM               404.6    221.4
+  mcp2k     290654  0/6             1/1 tgm       1             0                 172.4    151.0
+  mcp2k     290654  0/6             1/1 label     TGM           nu-candidate      172.4    151.0
+  mcp2k     318703  0/1             1/1 tgm       1             0                 401.8    299.0
+  mcp2k     318703  0/1             1/1 label     TGM           nu-candidate      401.8    299.0
+  mcp2k     392901  0/6             1/1 tgm       0             1                 384.5    482.1
+  mcp2k     392901  0/6             1/1 label     nu-candidate  TGM               384.5    482.1
+  mcp2k      95911  1/1000010       1/1 tgm       -1            0                   0.0     15.0
+  mcp2k      95911  1/1000010       1/1 stm       -1            0                   0.0     15.0
+  mcp2k      95911  1/1000010       1/1 fc        -1            1                   0.0     15.0
+  mcp2k      95911  1/1000010       1/1 lm        -1            0                   0.0     15.0
+  mcp2k      95911  1/1000010       1/1 label     no-bundle     nu-candidate        0.0     15.0
+
+IN-BEAM MAINS THAT CHANGED SIZE BUT KEPT EVERY VERDICT (40; grew by >1 cm: 0, shrank by >1 cm: 1):
+  sample     event  flash           len off   len on     d cm  pts off   pts on  label         
+  mcp1k     169532  1/1000002         504.2    504.2     +0.0    10298    10295  TGM           
+  mcp1k     280752  0/5                99.8     99.8     +0.0      289      335  nu-candidate  
+  mcp1k     280972  0/2               493.7    493.7     +0.0    15117    15484  nu-candidate  
+  mcp1k     287013  0/2               402.6    402.6     +0.0     7299     7269  TGM           
+  mcp1k     291526  1/1000001         462.9    462.9     +0.0    15714    11026  TGM           
+  mcp1k     313847  0/1               515.0    515.0     +0.0    20874    20924  TGM           
+  mcp1k     318049  0/6               311.2    311.2     +0.0     5204     5202  TGM           
+  mcp1k     348691  1/1000000         440.6    440.6     +0.0     7549     7568  nu-candidate  
+  mcp1k     350935  0/2               124.8    124.8     +0.0     2669     2518  nu-candidate  
+  mcp1k     401450  0/0                99.0     99.0     +0.0    14724    14610  STM           
+  mcp1k      51865  1/1000012          87.4     87.4     +0.0      109      123  nu-candidate  
+  mcp1k      72586  0/3               301.6    301.6     +0.0     4044     4038  nu-candidate  
+  mcp2k     101828  1/1000006         362.5    362.5     +0.0     4212     4211  nu-candidate  
+  mcp2k     160163  0/2               226.4    226.4     +0.0     9615     9613  TGM           
+  mcp2k     164475  0/2               254.9    254.9     +0.0     3541     3139  nu-candidate  
+  mcp2k     171484  1/1000002         503.2    503.2     +0.0    14126    14128  TGM           
+  mcp2k     172262  1/1000005         237.3    237.3     +0.0     5803     5800  TGM           
+  mcp2k     178601  0/3               354.3    354.3     +0.0     4840     4836  TGM           
+  mcp2k     180403  0/2               122.0    122.0     +0.0     2403     2382  nu-candidate  
+  mcp2k     180698  0/1               254.1    254.1     +0.0     5817     5807  nu-candidate  
+  mcp2k     275187  1/1000004         508.8    508.8     +0.0    17666    17646  TGM           
+  mcp2k     275539  0/3               111.8    111.8     +0.0     1711     1618  nu-candidate  
+  mcp2k     280967  0/6               289.4    289.4     +0.0     3909     3899  TGM           
+  mcp2k     290476  1/1000004         359.9    359.9     +0.0     4468     3914  STM           
+  mcp2k     317341  1/1000007         348.7    348.7     +0.0     4402     4398  STM           
+  mcp2k     323301  0/5               401.8    401.8     +0.0    12963    12927  STM           
+  mcp2k     394605  1/1000005         135.7    135.7     +0.0     2441     2426  TGM           
+  mcp2k     396090  0/4               579.6    579.6     +0.0    10589    10587  TGM           
+  mcp2k     398225  0/0               275.7    275.7     +0.0    10273    10163  TGM           
+  mcp2k     402913  0/1               501.2    501.2     +0.0     9266     9256  TGM           
+  mcp2k     411142  1/1000001         392.4    392.4     +0.0     5642     5644  TGM           
+  mcp2k     480002  0/4               324.9    324.9     +0.0     6128     6147  TGM           
+  mcp2k     499577  1/1000006         354.4    354.4     +0.0     4969     4459  nu-candidate  
+  mcp2k      70472  0/4               401.4    401.4     +0.0    16758    16741  nu-candidate  
+  mcp2k      71681  0/3               502.5    502.5     +0.0    24425    24716  TGM           
+  mcp2k      72488  1/1000001         463.4    463.4     +0.0    20963    20961  TGM           
+  mcp2k      90597  0/2               413.7    413.7     +0.0    14323    14197  TGM           
+  mcp2k      98470  1/1000003         106.3    106.3     +0.0     2228     2157  nu-candidate  
+  mcp2k     280159  0/0               226.3    226.2     -0.1     4743     8603  nu-candidate  
+  mcp2k     104172  0/0               128.8    126.0     -2.8     8206     8167  TGM           
+
+ONLY IN ON (a split freed a cluster onto its own flash) (41):
+  mcp1k     176132  flash 1/1000021    t=    -867.2us  main     84 pts    26.5 cm  in_beam=0 not-tagged
+  mcp1k     278266  flash 0/0          t=    -279.9us  main      5 pts     2.1 cm  in_beam=0 not-tagged
+  mcp1k     278266  flash 0/6          t=    -621.8us  main   5066 pts   256.6 cm  in_beam=0 not-tagged
+  mcp1k     278266  flash 1/1000018    t=       0.9us  main     28 pts     1.1 cm  in_beam=1 TGM
+  mcp1k     290294  flash 1/1000003    t=     769.2us  main   2271 pts    57.6 cm  in_beam=0 not-tagged
+  mcp1k     291526  flash 1/1000007    t=    -594.9us  main   4641 pts   256.7 cm  in_beam=0 not-tagged
+  mcp1k     395060  flash 0/10         t=     453.8us  main  24963 pts   475.3 cm  in_beam=0 not-tagged
+  mcp1k     402506  flash 1/1000002    t=   -1076.5us  main   5798 pts   250.0 cm  in_beam=0 not-tagged
+  mcp1k     402506  flash 1/1000005    t=    -892.4us  main    700 pts    67.5 cm  in_beam=0 not-tagged
+  mcp1k     412626  flash 1/1000003    t=    -485.3us  main   4278 pts   412.2 cm  in_beam=0 not-tagged
+  mcp1k     486621  flash 0/1          t=     513.1us  main  12602 pts   403.3 cm  in_beam=0 not-tagged
+  mcp1k     490889  flash 0/8          t=    -291.6us  main   1388 pts    92.8 cm  in_beam=0 not-tagged
+  mcp2k     158293  flash 1/1000000    t=    -683.3us  main     28 pts     4.4 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 1/1000005    t=    -413.7us  main   1863 pts    66.9 cm  in_beam=0 not-tagged
+  mcp2k     161153  flash 1/1000009    t=     134.9us  main   1927 pts   139.9 cm  in_beam=0 not-tagged
+  mcp2k     162363  flash 0/1          t=     213.5us  main   2274 pts   251.1 cm  in_beam=0 not-tagged
+  mcp2k     162517  flash 0/0          t=    -828.3us  main  19979 pts   474.0 cm  in_beam=0 not-tagged
+  mcp2k     162517  flash 1/1000002    t=    -699.4us  main   4448 pts   444.2 cm  in_beam=0 not-tagged
+  mcp2k     170194  flash 1/1000010    t=    -585.2us  main    274 pts   254.7 cm  in_beam=0 not-tagged
+  mcp2k     275187  flash 0/12         t=     622.2us  main    949 pts    50.2 cm  in_beam=0 not-tagged
+  mcp2k     275187  flash 1/1000006    t=     703.5us  main   1731 pts   188.8 cm  in_beam=0 not-tagged
+  mcp2k     290654  flash 0/8          t=     406.3us  main   1950 pts   145.6 cm  in_beam=0 not-tagged
+  mcp2k     290762  flash 1/1000007    t=     544.7us  main    520 pts    53.9 cm  in_beam=0 not-tagged
+  mcp2k     293536  flash 0/3          t=     829.8us  main   1163 pts   139.6 cm  in_beam=0 not-tagged
+  mcp2k     317341  flash 1/1000004    t=   -1124.8us  main  34569 pts   593.3 cm  in_beam=0 not-tagged
+  mcp2k     318703  flash 0/3          t=     231.6us  main  10662 pts   401.8 cm  in_beam=0 not-tagged
+  mcp2k     318703  flash 0/5          t=     403.0us  main   7394 pts   200.1 cm  in_beam=0 not-tagged
+  mcp2k     388675  flash 0/4          t=   -1274.5us  main  16130 pts   250.3 cm  in_beam=0 not-tagged
+  mcp2k     394175  flash 1/1000008    t=     396.4us  main    465 pts    96.5 cm  in_beam=0 not-tagged
+  mcp2k     395209  flash 1/1000005    t=    -781.8us  main   1777 pts   224.4 cm  in_beam=0 not-tagged
+  mcp2k     413030  flash 0/0          t=    -169.7us  main    968 pts   188.5 cm  in_beam=0 not-tagged
+  mcp2k     480002  flash 1/1000000    t=    -519.1us  main     71 pts    33.6 cm  in_beam=0 not-tagged
+  mcp2k     480002  flash 1/1000012    t=    -638.3us  main    134 pts    84.5 cm  in_beam=0 not-tagged
+  mcp2k      51153  flash 1/1000003    t=       1.7us  main   1133 pts   132.8 cm  in_beam=1 STM
+  mcp2k      73412  flash 1/1000008    t=     432.5us  main    814 pts    81.8 cm  in_beam=0 not-tagged
+  mcp2k      77885  flash 0/9          t=     244.5us  main     19 pts     1.1 cm  in_beam=0 not-tagged
+  mcp2k      77885  flash 1/1000002    t=    -413.3us  main  38450 pts   529.3 cm  in_beam=0 not-tagged
+  mcp2k      79220  flash 0/6          t=     298.8us  main   1082 pts   110.0 cm  in_beam=0 not-tagged
+  mcp2k      98000  flash 0/2          t=    -672.4us  main  35058 pts   455.8 cm  in_beam=0 not-tagged
+  mcp2k      99284  flash 0/1          t=    -622.3us  main  33397 pts   294.4 cm  in_beam=0 not-tagged
+  mcp2k      99284  flash 0/5          t=    -514.7us  main  22659 pts   313.7 cm  in_beam=0 not-tagged
+
+ONLY IN OFF (a bundle disappeared) (31):
+  mcp1k     278266  flash 0/11         t=       0.8us  main    273 pts    35.6 cm  in_beam=1 nu-candidate
+  mcp1k     278266  flash 1/1000017    t=    -621.8us  main    222 pts    20.9 cm  in_beam=0 not-tagged
+  mcp1k     291526  flash 0/16         t=    -594.9us  main     53 pts     6.3 cm  in_beam=0 not-tagged
+  mcp1k     395060  flash 0/5          t=     422.0us  main  23462 pts   475.3 cm  in_beam=0 not-tagged
+  mcp1k     395060  flash 1/1000005    t=     453.8us  main   3224 pts   199.0 cm  in_beam=0 not-tagged
+  mcp1k     402506  flash 0/10         t=    -892.4us  main     44 pts    50.2 cm  in_beam=0 not-tagged
+  mcp1k     402506  flash 0/7          t=   -1076.5us  main      6 pts     0.7 cm  in_beam=0 not-tagged
+  mcp1k     412626  flash 0/14         t=    -485.3us  main     12 pts     0.9 cm  in_beam=0 not-tagged
+  mcp1k     486621  flash 1/1000009    t=     513.1us  main     13 pts     1.1 cm  in_beam=0 not-tagged
+  mcp2k     158293  flash 0/10         t=    -683.3us  main      7 pts     1.0 cm  in_beam=0 not-tagged
+  mcp2k     162363  flash 1/1000010    t=     213.5us  main     15 pts     1.6 cm  in_beam=0 not-tagged
+  mcp2k     162517  flash 0/3          t=    -699.4us  main  23883 pts   452.1 cm  in_beam=0 not-tagged
+  mcp2k     162517  flash 1/1000003    t=    -828.3us  main    554 pts    44.2 cm  in_beam=0 not-tagged
+  mcp2k     164475  flash 0/8          t=      20.1us  main     54 pts    42.4 cm  in_beam=0 not-tagged
+  mcp2k     180720  flash 1/1000005    t=    1359.9us  main    310 pts    22.4 cm  in_beam=0 not-tagged
+  mcp2k     275187  flash 1/1000008    t=     622.2us  main   2691 pts   189.0 cm  in_beam=0 not-tagged
+  mcp2k     280159  flash 0/0          t=       1.3us  main   3829 pts   165.0 cm  in_beam=1 nu-candidate
+  mcp2k     317341  flash 0/7          t=   -1124.8us  main      8 pts     1.0 cm  in_beam=0 not-tagged
+  mcp2k     318703  flash 1/1000014    t=     403.0us  main     12 pts     0.9 cm  in_beam=0 not-tagged
+  mcp2k     388675  flash 0/14         t=    -182.1us  main     16 pts     1.1 cm  in_beam=0 not-tagged
+  mcp2k     388675  flash 1/1000001    t=   -1274.5us  main   1092 pts   119.7 cm  in_beam=0 not-tagged
+  mcp2k     392901  flash 0/5          t=     139.7us  main  14115 pts   335.3 cm  in_beam=0 not-tagged
+  mcp2k     395209  flash 0/4          t=    -781.8us  main   1820 pts   224.4 cm  in_beam=0 not-tagged
+  mcp2k     413030  flash 1/1000008    t=    -169.7us  main    153 pts    16.1 cm  in_beam=0 not-tagged
+  mcp2k     500655  flash 0/9          t=    -797.3us  main      6 pts     0.7 cm  in_beam=0 not-tagged
+  mcp2k      51153  flash 0/15         t=       1.7us  main     12 pts     0.9 cm  in_beam=1 nu-candidate
+  mcp2k      77885  flash 0/3          t=    -413.3us  main   1545 pts    92.3 cm  in_beam=0 not-tagged
+  mcp2k      77885  flash 1/1000005    t=     244.5us  main  39215 pts   482.0 cm  in_beam=0 not-tagged
+  mcp2k      98000  flash 1/1000004    t=    -672.4us  main     15 pts     1.1 cm  in_beam=0 not-tagged
+  mcp2k      99284  flash 0/0          t=     -74.2us  main  49596 pts   442.6 cm  in_beam=0 not-tagged
+  mcp2k      99284  flash 1/1000001    t=    -514.7us  main   4434 pts   294.1 cm  in_beam=0 not-tagged

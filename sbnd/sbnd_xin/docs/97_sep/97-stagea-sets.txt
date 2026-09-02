@@ -1,0 +1,13 @@
+baseline: work-*-d97off2   universe: 3067 events
+  d97on        changes stage A on   103 events ( 3.36%)
+  d97fv        changes stage A on  1277 events (41.64%)
+  grp0825      changes stage A on     3 events ( 0.10%)
+
+  d97on vs d97fv: both 53, d97on only 50, d97fv only 1224
+  d97on vs grp0825: both 1, d97on only 102, grp0825 only 2
+  d97fv vs grp0825: both 3, d97fv only 1274, grp0825 only 0
+
+  events changed by grp0825:
+    mcp1k 390182
+    mcp2k 74190
+    mcp2k 99438

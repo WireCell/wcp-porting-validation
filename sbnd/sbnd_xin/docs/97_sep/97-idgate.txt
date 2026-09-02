@@ -1,0 +1,26 @@
+=== doc 97 sec 2 -- is work-<s>-grp0825 (2026-08-25) still reproducible today? ===
+Arm 1: PRE-CHANGE binary (~/tmp/doc94r3b-libsnap), production cfg.
+  work-d97idg-{ncpi0,mcp1k,mcp2k} + work-d97idgb-nuecc48
+
+sample     events   same   diff  missing  products compared
+ncpi0          19     19      0        0  76
+mcp1k         241    241      0        0  964
+mcp2k          59     59      0        0  236
+
+TOTAL events 319, identical 319, differing 0, missing products 0
+VERDICT: PASS
+
+sample     events   same   diff  missing  products compared
+nuecc48        48     48      0        0  192
+
+TOTAL events 48, identical 48, differing 0, missing products 0
+VERDICT: PASS
+
+NOTE: the first nuecc48 attempt (work-d97idg-nuecc48) FAILED 48/48 on
+mabc-all-apa.zip and pctree while the per-APA zips matched -- the runner had
+used input_files_reco1/extracted-2025fall-48evt, but work-nuecc48-grp0825 was
+built from extracted-2025fall-48evt-fsprod (docs/work-tags.md:227), a different
+FrameShiftInfo and therefore a different opflash.  Per-APA clustering reads only
+charge and was identical; everything downstream of flash matching moved.  The
+gate caught it on the first run.  work-d97idg-nuecc48 is a wrong-input arm and
+is not used anywhere.

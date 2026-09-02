@@ -1,0 +1,38 @@
+# doc 97 separation-rescue A/B index -- THREE arms, one event order.
+#   OFF (baseline, both knobs off) https://www.phy.bnl.gov/twister/bee/set/4514b121-ce67-4647-ba60-20424cdecfcf/event/list/
+#   ON  sep_track_recarve          https://www.phy.bnl.gov/twister/bee/set/ce2b4924-a466-4149-8af1-274ea28c3b3c/event/list/
+#   FV  sep_fv_point               https://www.phy.bnl.gov/twister/bee/set/8bc27e44-d4c7-48ed-b252-100b0585f2c5/event/list/
+#
+# 22 events, same order in all three sets (Bee addresses events by POSITION).
+# idx 0-1 the owner's two symptom events (doc-95 MC debug sample, reality=sim);
+# idx 2-7 verdict movers; idx 8-18 energy/size movers; idx 19-21 controls that
+# neither knob touches at all.  Built with --allow-unevaluated: "TaggerCheckNeutrino
+# selected nothing" is one of the states being judged, and dropping an event from
+# one arm would shift every later index.
+#
+# Arms: work-<s>-d97off2/-d97off2pr, -d97on/-d97onpr, -d97fv/-d97fvpr2
+#       (MC: work-dbg25a-d97off/-d97offpr, -d97on/-d97onpr, -d97fv/-d97fvpr3)
+#
+# bee_idx	event	status
+0	272-2-30	RESCUED by BOTH: TGM (main 20516 pts / 422.6 cm, no PF tree) -> nu-candidate (9887 pts / 342.6 cm, fc=1); the 411.6 cm through-going cosmic leaves the beam bundle and flash-matches alone at t=-563.3us.  THE OWNER'S CASE 1.
+1	105-23-21	RESCUED by sep_fv_point ONLY: TGM (4760 pts / 439.1 cm) -> nu-candidate (3852 pts / 333.0 cm).  sep_track_recarve does not fire.  908 of the points move into a different 28389-pt cluster -- doc 96 sec 8.3's reservation, worth a look.  THE OWNER'S CASE 2.
+2	290654	RESCUED by BOTH: TGM 172.4 cm -> nu-candidate 151.0 cm; Enu 752.6 -> 777.5 MeV.  The one in-beam verdict flip sep_track_recarve makes in 3067 events.
+3	318703	RESCUED by sep_fv_point: TGM 401.8 cm -> nu-candidate 299.0 cm; Enu 1013.4 -> 1018.4 MeV, showers 23 -> 16.
+4	95911	sep_fv_point: no-bundle -> nu-candidate (a 15.0 cm in-beam object appears).  Judge whether a 15 cm candidate is wanted.
+5	105074	ADVERSE (sep_fv_point): nu-candidate -> STM at unchanged 442.8 cm, and the PF tree disappears entirely.  Breaks sentinel pr/128 class B (the two main-cluster pdg-13 showers are gone).
+6	162363	sep_fv_point: TGM 404.6 cm -> STM 221.4 cm.  A cosmic re-tag, not a loss, but the main halves -- judge whether the split is right.
+7	392901	ADVERSE (sep_fv_point): nu-candidate 384.5 cm -> TGM 482.1 cm.  The main GREW, i.e. a merge, not a split; Enu 2205.7 -> 398.5 MeV and the main vertex moves 249.8 cm.  The single worst movement in the round.
+8	401780	mover (sep_track_recarve): the split frees a second in-beam bundle (433 pts / 43.6 cm, nu-candidate) while the original main goes 150.2 -> 111.8 cm; Enu 531.6 -> 664.2 MeV, vertex moves 42.9 cm.
+9	94392	ADVERSE (sep_track_recarve): main 191.5 -> 153.1 cm, a second in-beam nu-candidate (143.9 cm) appears; Enu 1139.0 -> 822.2 MeV.  Breaks sentinel pr/129 (guard-freed/continuation hand-off).
+10	53793	ADVERSE (sep_track_recarve): Enu 1444.1 -> 664.9 MeV; the 808 MeV cathode-bridged muon becomes 237 + 32 MeV.  Breaks sentinel doc 84 r2 (long_muon_cathode_bridge).  The recarve line: len 168.6 cm split into 1375 / 814 npoints, cross frac -0.066 / 0.165.
+11	256587	mover (sep_track_recarve, nueCC48): main 218.3 -> 157.3 cm (-1323 pts), Enu 3709.3 -> 3436.5 MeV, showers 14 -> 8.  Verdict unchanged (nu-candidate).
+12	360535	mover (sep_track_recarve, nueCC48): main GREW 122.9 -> 144.9 cm, Enu 2091.2 -> 2161.5 MeV.  The only in-beam main that grows under this knob by more than 10 cm.
+13	54095	mover (sep_track_recarve, nueCC48): Enu 2788.9 -> 2619.6 MeV, showers 7 -> 10; main length unchanged.
+14	390182	mover (sep_track_recarve): Enu 1302.7 -> 1012.8 MeV, showers 6 -> 8.  NOTE this event is also one of the three where the 2026-08-25 stored stage A no longer reproduces (doc 97 sec 2.1); the numbers here are against the fresh knob-off arm.
+15	316729	mover (sep_track_recarve): Enu 657.7 -> 887.3 MeV, vertex moves 4.6 cm.
+16	280159	mover (sep_fv_point): Enu 1210.9 -> 2239.0 MeV (+1028), showers 14 -> 18, vertex moves 12.0 cm.
+17	101828	mover (sep_fv_point): Enu 553.4 -> 1575.8 MeV (+1022), showers 10 -> 11, vertex unmoved.
+18	98470	mover (sep_fv_point): Enu 1030.8 -> 765.8 MeV (-265).
+19	175871	control: neither knob changes this event's stage-A output by a single byte.
+20	289508	control: neither knob changes this event's stage-A output by a single byte.
+21	49742	control: neither knob changes this event's stage-A output by a single byte.

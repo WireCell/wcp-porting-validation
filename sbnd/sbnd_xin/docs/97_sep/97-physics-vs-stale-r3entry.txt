@@ -1,0 +1,46 @@
+########## SUPERSEDED BASELINE -- kept as the evidence for doc 97 sec 2.1 ##########
+This compares sep_track_recarve against work-<s>-r3entry, which is built on the
+2026-08-25 stage-A root work-<s>-grp0825.  Three of the 3067 events no longer
+reproduce from that root under today's toolkit, so up to three events here are
+mis-attributed -- notably mcp2k 74190, which shows a clean nu-candidate -> TGM
+flip that VANISHES against the fresh knob-off baseline.  The load-bearing
+numbers are in 97-flip-3067.txt / 97-physics-3067.txt, which use work-<s>-d97off2pr.
+
+ON = work-*-d97onpr   OFF = work-*-r3entry   samples: ncpi0 nuecc48 mcp1k mcp2k
+events with a calib dump on both sides: 1436   missing on one side: 0
+events where ANY compared physics quantity moved: 18
+
+  quantity        events moved
+  Enu                       18
+  add_energy                 9
+  excluded                   9
+  n_segments                13
+  n_showers                  7
+  n_vertices                13
+  pio_flag                   1
+  pio_mass                  10
+  shower_sum                13
+  vtx_x                     16
+  vtx_y                     16
+  vtx_z                     16
+
+PER-EVENT DETAIL (18):
+  sample     event    Enu off   Enu on     dEnu nsh off nsh on vtx move cm  fields
+  nuecc48   256587     3709.3   3436.5   -272.8      14      8        0.12  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  nuecc48   360535     2091.2   2161.5     70.3       1      1        0.95  Enu,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  nuecc48    54095     2788.9   2619.6   -169.3       7     10        0.70  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     287211      854.1    832.8    -21.3      10     15        0.18  Enu,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     316729      657.7    887.3    229.7      10     11        4.62  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     390182     1302.7   1012.8   -289.9       6      8        1.66  Enu,add_energy,pio_mass,vtx_x,vtx_y,vtx_z,n_showers,n_segments,n_vertices,shower_sum
+  mcp1k     398260      764.0    764.6      0.6       6      6        0.11  Enu,vtx_x,vtx_y,vtx_z
+  mcp1k     401780      531.6    664.2    132.6       2      2       42.92  Enu,add_energy,vtx_x,vtx_y,vtx_z
+  mcp1k      57661      779.8    782.2      2.5      10     11        0.00  Enu,excluded,pio_mass,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     290654      752.6    777.5     24.9       9      9        0.75  Enu,add_energy,excluded,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k     323171      786.2    842.1     55.9       6      6        9.18  Enu,add_energy,vtx_x,vtx_y,vtx_z,n_segments,n_vertices
+  mcp2k     390370      852.9    853.0      0.1      10     10        0.13  Enu,vtx_x,vtx_y,vtx_z
+  mcp2k     395443      629.7    628.6     -1.1      10      9        0.00  Enu,n_showers,n_segments,n_vertices,shower_sum
+  mcp2k     407886      467.7    466.6     -1.0       6      6        0.34  Enu,excluded,vtx_x,vtx_y,vtx_z
+  mcp2k      53793     1444.1    664.9   -779.1       3      3        0.59  Enu,add_energy,excluded,pio_mass,pio_flag,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k      69006     1140.7   1158.4     17.7      16     16        0.92  Enu,pio_mass,vtx_x,vtx_y,vtx_z,shower_sum
+  mcp2k      72759      210.1    457.2    247.1       2      2        2.51  Enu,excluded,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
+  mcp2k      94392     1139.0    822.2   -316.7      10     10        4.54  Enu,add_energy,pio_mass,vtx_x,vtx_y,vtx_z,n_segments,n_vertices,shower_sum
