@@ -416,9 +416,12 @@ and equally applicable here (audit these if PDVD results look wrong):
 Every row carries a provenance: **inherited** (a default nobody chose for
 PDVD), **PDVD-measured**, or **unmeasured**.
 
-### 7a. LAr transport and field — the blocking item
+### 7a. LAr transport and field
 
-**Four different drift speeds are live in PDVD today:**
+Drift speed is **settled** (below). The transport coefficients under it are
+not, and remain the open half of this subsection.
+
+Four different drift speeds are live in PDVD today:
 
 | value | where | provenance |
 |---|---|---|
@@ -427,25 +430,43 @@ PDVD), **PDVD-measured**, or **unmeasured**.
 | **1.48073 mm/us** | `run_clus_evt.sh:793-794` (`PDVD_DRIFT_SPEED_BOT/TOP_MMUS` defaults) | PDVD-measured, later round (W-decon A↔C crosser, run 039252 evt 298651) |
 | 1.6 mm/us | `cfg/pgrapher/common/params.jsonnet:29` | inherited base default |
 
-A dQ/dx calibration cannot start until one is chosen, because `dx` depends on
-it directly and every diffusion sigma in §8 scales with it. **This is a
-stop-and-decide item, not something to pick silently.**
+**SETTLED (owner, 2026-09-02): use the production Q/L matching value,
+v = 1.48073 mm/us.** Everything downstream of the Q/L match — the trajectory
+fit, dQ/dx, and the diffusion study in §8 — takes this number.
 
-The four are not equally arbitrary — they have different consumers, and one of
-them is load-bearing for §7b:
+That choice is also the *self-consistent* one, which is worth showing rather
+than asserting. `run_clus_evt.sh:793-794` sets
+`PDVD_DRIFT_SPEED_BOT_MMUS` / `_TOP_MMUS` (both 1.48073), and
+`pdvd/wct-clustering.jsonnet:322-331,395-405` threads that single pair into
+**both** consumers:
 
-- **The grouping value is the one that propagates into the fit's geometry.**
-  `TrackFitting::BuildGeometry` reads `m_grouping->get_drift_speed()`
-  (`clus/src/TrackFitting.cxx:618`) and builds `slope_t` and the time-tick
-  width from it (`:653`). PDVD sets it **per crate** —
-  `drift_speed_bot` / `drift_speed_top` (`protodunevd/clus.jsonnet:115,135`),
-  defaulting to the 1.568 literal at `:44` but overridden by the runner to
-  1.48073 for both crates (`run_clus_evt.sh:793-794`). This is the value §7b
-  must match.
-- **1.473 is the sim value** and reaches imaging through
-  `img.jsonnet:4` -> `simparams.jsonnet:13`. It governs how the frames the fit
-  reads were *produced*, which is a separate question from how the fit
-  converts ticks to length.
+- **QLMatching** — as the scalar `drift_speed` when the two crates agree (they
+  do today), else as the per-input `drift_speeds` vector
+  (`protodunevd/qlmatching.jsonnet:843-850`; C++ default 1.563,
+  `match/inc/WireCellMatch/QLMatching.h:182`).
+- **The clustering grouping** — as `drift_speed_b` / `drift_speed_t`
+  (`protodunevd/clus.jsonnet:115,135`), overriding the 1.568 literal at `:44`.
+
+The grouping value is what `TrackFitting::BuildGeometry` reads
+(`m_grouping->get_drift_speed()`, `clus/src/TrackFitting.cxx:618`) to build
+`slope_t` and the time-tick width (`:653`). So the number the owner picked for
+Q/L is the same number the fit's geometry uses — the §7b consistency
+requirement is satisfied automatically, not by coincidence but because one TLA
+pair feeds both.
+
+**Implementation requirement:** `pdvd/wct-pr-perevt.jsonnet` must take the
+same TLAs and pass them the same way. A PR job that silently falls back to the
+1.568 jsonnet default would place every fitted point ~0.5 % off in drift x and
+would mis-scale `add_sigma_L` by 6 % (§7b).
+
+The other two values remain live for other consumers and are **not** resolved
+by this decision:
+
+- **1.473 is the sim value**, and it reaches *imaging* through
+  `img.jsonnet:4` -> `simparams.jsonnet:13`. So the blobs the PR job reads
+  were placed in x with a drift speed 0.5 % different from the one the fit
+  uses to interpret them. That residual mismatch is a separate open item
+  (§12), not a blocker for this chain.
 - **1.6 is the inherited base default** and nothing chooses it.
 
 Transport coefficients are equally split:
@@ -507,7 +528,7 @@ pitches (U/V 7.65 mm, W 5.10 mm) and v = 1.568 mm/us:
 
 | key | formula | SBND | **PDVD candidate** |
 |---|---|---|---|
-| `add_sigma_L` | [1/(2*pi*sigma_Gaus_wide)] * v_drift | 2.4876 | 1/(2*pi*0.12 MHz) = 1.32629 us; x 1.568 = **2.0796** |
+| `add_sigma_L` | [1/(2*pi*sigma_Gaus_wide)] * v_drift | 2.4876 | 1/(2*pi*0.12 MHz) = 1.32629 us; x **1.48073** = **1.9639** (see below; x 1.568 would give 2.0796) |
 | `ind_sigma_u_T` | [(1/sqrt(pi))/Wire_ind] * pitch_U * 0.3 | 0.48359 | (0.564190/5.0) x 7.65 x 0.3 = **0.2590** |
 | `ind_sigma_v_T` | ... * pitch_V * 0.5 | 0.80599 | (0.564190/5.0) x 7.65 x 0.5 = **0.4316** |
 | `col_sigma_w_T` | [(1/sqrt(pi))/Wire_col] * pitch_W * 0.2 | 0.09403 | (0.564190/10.0) x 5.10 x 0.2 = **0.0575** |
@@ -538,9 +559,15 @@ is mis-scaled against the tick axis it is divided by. SBND is the worked
 example: its grouping is configured at 1.563 (`sbnd/clus.jsonnet:22,143`) and
 its shipped `add_sigma_L` = 2.4876 is exactly 1/(2*pi*0.10)*1.563. (That this
 coincides with SBND's *sim* value is incidental; the operative fact is that it
-matches the grouping config.) For PDVD that gives **2.0796** if the PR job
-takes the `protodunevd/clus.jsonnet:44` default of 1.568, or **1.964** if it
-inherits the runner's 1.48073. Pick whichever the PR job actually configures.
+matches the grouping config.) For PDVD, §7a settles the grouping at the
+production Q/L value 1.48073, so
+
+    add_sigma_L = 1/(2*pi*0.12 MHz) x 1.48073 = 1.32629 us x 1.48073 = 1.9639
+
+The 2.0796 in the table above is what the `protodunevd/clus.jsonnet:44`
+default of 1.568 would give — keep it visible only as the **failure mode**: a
+PR job that does not inherit the runner's drift-speed TLAs gets a 6 %
+mis-scaled filter term.
 
 One structural hazard specific to VD: PDVD sets drift speed **per crate**
 (`drift_speed_bot` / `drift_speed_top`), while `pdvd_track_fitting.json` is a
@@ -729,36 +756,43 @@ So the observable is always diffusion added **in quadrature** with an
 instrumental term set by the SP filter. The design question is which view to
 use, and at PDVD the two behave oppositely.
 
-Substituting the PDVD geometry: drift distance 338.55 cm at v = 1.568 mm/us
-gives t = 338.55 / 0.1568 = **2159 us**.
+Substituting the PDVD geometry at the settled velocity (§7a): drift distance
+338.55 cm at v = 1.48073 mm/us gives t = 338.55 / 0.148073 = **2286 us**.
 
 | | diffusion sigma at full drift | instrumental sigma (†) | sampling |
 |---|---|---|---|
-| **longitudinal** | sqrt(2 x 4.0 x 2.159e-3) = **1.31 mm** (DL = 4.0) ; **1.76 mm** (DL = 7.2) | `add_sigma_L` ~ **2.08 mm** | 0.784 mm per 0.5 us tick |
-| **transverse (W)** | sqrt(2 x 8.8 x 2.159e-3) = **1.95 mm** (DT = 8.8) ; **2.28 mm** (DT = 12) | `col_sigma_w_T` ~ **0.058 mm** | 5.10 mm pitch |
+| **longitudinal** | sqrt(2 x 4.0 x 2.286e-3) = **1.35 mm** (DL = 4.0) ; **1.81 mm** (DL = 7.2) | `add_sigma_L` = **1.96 mm** | 0.740 mm per 0.5 us tick |
+| **transverse (W)** | sqrt(2 x 8.8 x 2.286e-3) = **2.01 mm** (DT = 8.8) ; **2.34 mm** (DT = 12) | `col_sigma_w_T` = **0.058 mm** | 5.10 mm pitch |
 
 (†) Both instrumental values are the §7b **derived candidates**, not measured
-PDVD numbers. The 34x transverse-dominance claim below inherits that caveat and
-must be re-checked once PDVD fit residuals exist.
+PDVD numbers (`add_sigma_L` does follow from the settled drift speed, but the
+0.2/0.3/0.5 trailing factors behind both are uBooNE tunings). The 35x
+transverse-dominance claim below inherits that caveat and must be re-checked
+once PDVD fit residuals exist.
 
 - **Longitudinal: well sampled, but instrument-dominated.** The observed width
-  runs from 2.08 mm at the anode to hypot(2.08, 1.31) = 2.46 mm at the cathode
-  (DL = 4.0), i.e. 2.65 -> 3.14 ticks — a swing of about **half a tick across
-  the full drift**. It is measurable on an ensemble, marginal per-event, and
-  it requires the filter width to be known to roughly 1%.
+  runs from 1.96 mm at the anode to hypot(1.96, 1.35) = 2.38 mm at the cathode
+  (DL = 4.0), i.e. 2.65 -> 3.22 ticks — a swing of about **half a tick across
+  the full drift**. (At DL = 7.2 it reaches 2.67 mm = 3.61 ticks, so the
+  measurement's own sensitivity to DL is comparable to its sensitivity to
+  drift distance — which is exactly why the two must be fitted together.) It
+  is measurable on an ensemble, marginal per-event, and it requires the filter
+  width to be known to roughly 1%.
 - **Transverse: diffusion-dominated, but under-sampled.** The instrumental
-  term is 34x smaller than the diffusion term, so the *relative* signal is
-  far larger — the observed width changes by a factor of ~34 across the drift
-  rather than 18%. But 1.95 mm is only **0.38 of the W pitch** (0.25 of the
+  term is 35x smaller than the diffusion term, so the *relative* signal is
+  far larger — the observed width changes by a factor of ~35 across the drift
+  rather than 21%. But 2.01 mm is only **0.39 of the W pitch** (0.26 of the
   7.65 mm U/V pitch), so the charge lands on one or two wires and the
   observable is adjacent-wire charge *sharing*, not a fitted per-hit width.
   VD's coarse CRP pitch is what costs here; SBND's 3 mm pitch would be kinder.
 
-**Sensitivity to §7a.** All of the above uses v = 1.568 mm/us. At the
-production runner value 1.48073 mm/us the drift time becomes 2286 us, every
-diffusion sigma rises ~3%, and `add_sigma_L` falls ~6% (it scales with v).
-Whichever drift speed §7a settles on must be stated wherever these numbers are
-quoted.
+**Drift-speed dependence.** All of the above uses the settled production
+value v = 1.48073 mm/us (§7a). For reference, had the 1.568 jsonnet default
+been used instead, the drift time would be 2159 us — every diffusion sigma
+~2.9% smaller and `add_sigma_L` ~5.9% larger. That is the scale of the error a
+PR job that fails to inherit the runner's TLAs would introduce, and it is
+comparable to the effect being measured, so the drift speed must be stated
+wherever these numbers are re-derived.
 
 **The calibration route.** Either way the natural calibrator is **Michels
 whose t0 is already fixed by the flash match**. They supply (drift distance,
@@ -868,8 +902,8 @@ configured and neither will be reproducible from the config alone.
 | **M6** | Magnify-tracking PDVD | config-only test first; fork the visitor only if the 16-volume geometry breaks it |
 | **M7** | calibration extraction | PDVD `PowerBoxRecombination` fitted on the STM sample; `DL`/`DT` from the flash-t0-anchored width-vs-drift fit (§8); Michel endpoint as the absolute-scale anchor |
 
-Sequencing note: M4 depends on §7a being settled, and M6 and M7 both depend on
-M4. M5 can proceed in parallel with M6.
+Sequencing note: §7a is settled (v = 1.48073), so M4 is unblocked; M6 and M7
+both depend on M4, and M5 can proceed in parallel with M6.
 
 ---
 
@@ -884,7 +918,11 @@ M4. M5 can proceed in parallel with M6.
    `pdvd_track_fitting.json` is read at runtime (§7b).
 4. **The STM guards are backwards for this analysis.** Every one of them
    exists to abstain from an STM call (§2.3).
-5. **Four live drift speeds** (§7a). State which one every number used.
+5. **Drift speed is settled at 1.48073 mm/us** — the production Q/L value
+   (§7a). The PR job must inherit the runner's `drift_speed_bot/top_mmus`
+   TLAs; falling back to the 1.568 jsonnet default mis-places every fitted
+   point by ~0.5 % in x and mis-scales `add_sigma_L` by 6 %. Note separately
+   that *imaging* still runs at the sim value 1.473.
 6. **`fiducialutils` must precede every tagger**, or they silently return
    false with no error.
 7. **`tagger_check_tgm` must precede `tagger_check_stm`**; STM skips
@@ -906,8 +944,14 @@ M4. M5 can proceed in parallel with M6.
 
 ## 12. Open items
 
-- **Which drift speed?** (§7a) Blocking for M4 and M7. Four values are live;
-  imaging and clustering currently disagree.
+- ~~**Which drift speed?**~~ **CLOSED (owner, 2026-09-02):** use the
+  production Q/L matching value, v = 1.48073 mm/us (§7a). M4 is unblocked.
+- **Imaging still runs at 1.473 mm/us** (`img.jsonnet:4` ->
+  `simparams.jsonnet:13`), a 0.5 % offset from the 1.48073 the matcher, the
+  grouping and the fit now share. So blob x positions and the fit's tick->x
+  mapping disagree slightly. Small, but it is a systematic on dQ/dx vs drift
+  and on §8, and it should be quantified before the calibration is called
+  final.
 - **PDVD sim vs reco transport mismatch** — `DL`, `DT` and lifetime all differ
   between `params.jsonnet` and `simparams.jsonnet`, and neither pair was
   measured for PDVD. Reported, not fixed.
@@ -931,3 +975,7 @@ M4. M5 can proceed in parallel with M6.
   data first (MC later); Michels for absolute energy scale / recombination
   *and* diffusion-based drift localisation of low-energy events; reuse the
   full SBND PR tail trimmed by config, retiring stages only on measurement.
+- **2026-09-02** — owner settles the drift speed: **use the production Q/L
+  matching value, 1.48073 mm/us**. §7a closed, §7b's `add_sigma_L` pinned at
+  1.9639, §8 re-derived at t = 2286 us. The residual imaging-at-1.473 offset
+  is carried to §12 as its own item.
