@@ -3,10 +3,17 @@
 **Round 1 CLOSED. `stm_vertex_hadron_guard` is SBND PRODUCTION as of
 2026-09-02 (owner authorized, §0.4). 3 of 4 recovered at zero measured cost.**
 
-**Round 2 IMPLEMENTED, NOT CLOSED. `entry_rise_guard` recovers the 4th —
-827-27-4 — so the owner-adjudicated score is 4 of 4. It ships DEFAULT OFF and
-stays there until the owner adjudicates the 2 data bundles of 34,827 it
-releases; I could not call either (§12.10, Bee indices 1 and 2).**
+**Round 2 implemented `entry_rise_guard`; ROUND 3 (§13) fixed it with the
+owner's KINK and is the current state.** It releases **2** data bundles of
+34,827 and the owner has adjudicated **both as neutrinos**, so the measured
+cost is zero. Right on **10 of 11** hand-labelled bundles. Still DEFAULT OFF —
+§13.10 recommends the flip.
+
+**The target set is 5, not 4.** `707-18-12` was adjudicated a genuine STM on
+2026-09-02 and **re-adjudicated a neutrino the same day** — the owner was right
+at the start of this campaign, all five events are neutrinos. Four are
+recovered; `707-18-12` is not, and §14 measures why no tuning of this mechanism
+can reach it.
 
 Predecessors: doc 63 (the STM improvement campaign, closed at 3 irreducible
 errors), doc 62 (`scan-d59k/stm-baseline.tsv`, the 72 bundles the owner
@@ -18,12 +25,15 @@ feedback sample).
 | | |
 |---|---|
 | symptom | 5 events our chain tags STM that the owner said are neutrino candidates |
-| **after adjudication** | **707-18-12 is a genuine STM** — our tag was right. The target set is **4**, not 5 |
-| **recovered** | **3 of 4** — 966-2-22, 304-6-28, 146-60-31 all flip STM → **nu-candidate** |
+| ~~after adjudication~~ | ~~707-18-12 is a genuine STM~~ — **re-adjudicated a NEUTRINO** the same day (§13.1). The target set is **5** |
+| **recovered** | **4 of 5** — 966-2-22, 304-6-28, 146-60-31 (round 1) and 827-27-4 (rounds 2–3) all flip STM → **nu-candidate**. `707-18-12` is not recovered (§14) |
 | cost on the **3067** data events | 1 bundle flips of 34,827 — and the owner calls it a **neutrino**, so the measured cost is **zero** |
 | owner's 36 confirmed-correct STMs broken | **0** |
-| ~~still not recovered~~ | **827-27-4 recovered in round 2** by `entry_rise_guard` (§12) — the owner-adjudicated score is now **4 of 4** |
-| round-2 cost on the **3067** data events | 2 bundles flip of 34,827; **neither adjudicated** — §12.7 gives the evidence for each, both are in the Bee pair |
+| ~~still not recovered~~ | **827-27-4 recovered** by `entry_rise_guard` (§12–13) |
+| still not recovered | **707-18-12** — no entry rise exists on it (entry 1.04 MIP on a 0.84 MIP body); its signature is a mid-track two-prong vertex at MIP charge, which is round 4 (§14) |
+| ~~round-2 cost~~ | round 2 released one of the owner's STMs and missed one of his neutrinos; **round 3 fixed both** (§13) |
+| round-3 cost on the **3067** data events | 2 bundles flip of 34,827, **both owner-adjudicated neutrinos** — measured cost **zero** |
+| hand-labelled bundles correct | **10 of 11** (round 2: 8) |
 | ideas measured dead | travel direction (§4), `proton_muon_guard` re-tune (§5) |
 
 ## Repro
@@ -63,6 +73,13 @@ neutrino candidates, 1 released bundle, and that bundle is also a neutrino.
 The condition stated in round 1 for flipping it on for SBND is met.
 
 ### 0.2 `707-18-12` is a genuine STM — a muon coming in
+
+> **SUPERSEDED, 2026-09-02, by the owner:** *"this event 707-18-12 is actually
+> a neutrino, not STM. I was wrong reading through the truth."* The section is
+> kept because rounds 1–2 were designed around it — it was the negative control
+> that justified anchoring the elevated run at the boundary — and §14 records
+> what changed and what the replacement justification is. **All five events the
+> owner flagged at the start of this campaign are neutrinos.**
 
 Our tag on it was **correct**. It was never a recovery target, so the round's
 denominator is **4**, not 5, and the score is **3 of 4**. This also removes it
@@ -586,10 +603,13 @@ are the two not recovered. Index 1, the control, has them in both.
    recovers 827-27-4; 707-18-12 and 36-77-17 both measure 0.0 cm. What is
    still open is the **owner's adjudication of the two data bundles it
    releases** (§12.10), which is what gates the production flip.
-3. **Leave `descent_guard` OFF permanently** unless someone finds a stop
+3. **Round 4: `707-18-12`.** A mid-track two-prong vertex at MIP charge —
+   §14.3 states the problem and why widening `vertex_kink_guard` is not the
+   answer (two of the owner's own STMs carry 27° and 42° mid-track turns).
+4. **Leave `descent_guard` OFF permanently** unless someone finds a stop
    definition that is not the fit's `pts[kink]`. §4 explains why nothing
    anchored there can work.
-4. ~~827-27-4 and 707-18-12 have no information to act on.~~ **Both superseded
+5. ~~827-27-4 and 707-18-12 have no information to act on.~~ **Both superseded
    by §0**: 707-18-12 is a genuine STM, and 827-27-4 has a measured feature the
    tagger simply never looks at.
 
@@ -1003,3 +1023,366 @@ self-contained. It was deliberately *not* added in this round: every number
 above comes from one pinned binary, and changing the log line would have meant
 re-running all four arms to use it.
 
+---
+
+# Round 3 — the owner's kink, and the two errors it fixes
+
+## 13. `guard_entry_kink_deg` — "along the track, there is a kink"
+
+### 13.1 What the owner's hand scan said
+
+The owner scanned the round-2 Bee pair (§12.11) and adjudicated all six data
+events, and later the same day **re-adjudicated `707-18-12`** after re-reading
+the truth: *"this event 707-18-12 is actually a neutrino, not STM. I was wrong
+reading through the truth."* Three verdicts moved:
+
+| Bee idx | event | round-2 verdict | **owner** | |
+|---|---|---|---|---|
+| 1 | `164466:7` | released | **good neutrino** | ✔ correct |
+| 2 | `95500:15` | released | **STM, not a neutrino** | ✘ **false release** |
+| 3 | `350099:15` | declined at `max_cm` | **neutrino** | ✘ **missed** |
+| 4 | `290316:10` | kept STM | STM | ✔ |
+| 5 | `282033:13` | kept STM | STM | ✔ |
+| 6 | `56257:13` | kept STM | STM | ✔ |
+| 7 | `707-18-12` (MC) | kept STM | **neutrino** | ✘ **missed** |
+
+**§0.2 is superseded.** The original doc-94 headline said the target set was 4
+rather than 5 because `707-18-12` was a genuine STM. It is 5 again: **all five
+events the owner flagged at the start of this campaign are neutrinos**, he was
+right the first time, and the doc-93 chain agreed with our tag for the wrong
+reason.
+
+And the mechanism, in the owner's words:
+
+> *"95500 looks like a STM, not a neutrino, the near entry point looks like
+> fluctuation of dQ/dx with delta ray. Note, another key to separate the other
+> events from this event is along the track, there is a kink (large angle
+> change). This event does not have a large angle change, which makes it more
+> STM like."*
+
+Two things follow, and both are corrections to round 2's physics rather than
+re-tunings of its numbers:
+
+1. **Charge alone cannot tell an exiting particle from a delta ray.** Round 2
+   assumed the anchored elevated run *was* the second particle. `95500:15`
+   shows it can be a fluctuation with a delta ray on a single straight muon.
+   What distinguishes them is that two particles meeting at a vertex make the
+   fitted path **turn**.
+2. **`guard_entry_max_cm = 30` was built on a false premise.** §0.3 argued that
+   an elevated run that "never decays" is not the signature. `350099:15` runs
+   elevated for 48.8 cm and the owner calls it a neutrino, so the premise is
+   wrong. The bound goes to 60 cm and the kink now carries what it was there
+   for.
+
+### 13.2 The kink, measured
+
+Largest direction change between two **5 cm chords** meeting at a fit point,
+scanned over the muon segment `[0, kink_recorded]` with the **last 15 cm
+before the stop excluded** (a muon scatters hard in its final centimetres, and
+range straggling is not a vertex). Window and exclusion are fixed geometry,
+not knobs; only the bar `guard_entry_kink_deg` is configurable.
+
+The window was chosen by scanning, on the owner's labelled set, for the
+largest margin between the firing neutrinos and the firing STM:
+
+| chord half-length | firing neutrinos, min | firing STM (95500) | margin |
+|---|---:|---:|---:|
+| **5 cm** | **30.1°** | **13.8°** | **16.2°** |
+| 8 cm | 24.0° | 16.4° | 7.6° |
+| 10 cm | 21.9° | 9.8° | 12.1° |
+| 12 cm | 22.3° | 9.9° | 12.4° |
+| 15 cm | 21.1° | 12.0° | 9.1° |
+
+5 cm wins on both counts: the widest margin, and the neutrino side is tightly
+clustered (30–37°) instead of spread. The stop-region exclusion moves exactly
+one number on the whole labelled set — 95500 from 17.3° to 13.8° — and no
+verdict; that is the check that it is removing end-of-range scattering and not
+quietly doing the separating.
+
+**The bar is 22°**, the midpoint of the 13.8 – 30.1 gap.
+
+### 13.3 The full labelled set — 12 bundles, 11 with an owner verdict
+
+`shoulder ≥ 5 cm` **AND** `shoulder ≤ 60 cm` **AND** `kink ≥ 22°`:
+
+| event | owner | L_stop | shoulder | kink | round 3 | round 2 |
+|---|---|---:|---:|---:|---|---|
+| **827-27-4** | neutrino | 108.1 | 8.4 | **33.2°** | release ✔ | release ✔ |
+| **164466:7** | neutrino | 93.7 | 18.5 | **37.1°** | release ✔ | release ✔ |
+| **350099:15** | neutrino | 143.8 | 48.8 | **30.1°** | **release ✔** | *missed* ✘ |
+| 304-6-28 | neutrino | 111.9 | 19.4 | 32.6° | release ✔ | release ✔ |
+| 146-60-31 | neutrino | 56.9 | 17.1 | 33.1° | *(declined: muon 56.9 cm)* | same |
+| 966-2-22 | neutrino | 94.5 | 0.0 | 50.6° | keep — not this guard's | same |
+| **707-18-12** | **neutrino** | 111.2 | **0.0** | 28.1° | **keep ✘ MISS** | same |
+| **95500:15** | **STM** | 182.3 | 5.5 | **13.8°** | **keep ✔** | *released* ✘ |
+| 290316:10 | STM | 244.4 | 4.4 | 24.2° | keep ✔ | keep ✔ |
+| 282033:13 | STM | 185.3 | 1.0 | 27.4° | keep ✔ | keep ✔ |
+| 56257:13 | STM | 113.7 | 0.5 | 41.0° | keep ✔ | keep ✔ |
+| 36-77-17 | control | 72.3 | 0.0 | 31.1° | keep ✔ | keep ✔ |
+
+**Round 3 is right on 10 of the 11 owner-adjudicated bundles; round 2 was
+right on 8.** The one error is `707-18-12` — a **miss**, not a false release:
+the guard leaves a neutrino tagged. That is the safer direction of error (it
+admits no cosmic background), but it is an error and §14 says why the mechanism
+cannot reach it.
+
+`966-2-22` and `146-60-31` are also neutrinos this guard does not release — the
+first has no shoulder, the second is below the muon-length floor — but both
+were recovered in round 1 by `vertex_hadron_guard`, so the **chain** is right
+on 11 of 12, missing only `707-18-12`.
+
+**Neither test works alone, and the table is the proof.** Two of the owner's
+four STMs clear the 22° bar on their own — `56257:13` at 41° and `282033:13`
+at 27° — as does the not-STM control `36-77-17` at 31°, so a kink-only
+predicate would release them. And the shoulder alone made both of round 2's
+errors. What separates is the conjunction: *extra charge anchored at the
+boundary **and** a path that turns*.
+
+### 13.4 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# the labelled-set measurement, offline from the round-2 scan arms' stm_fit
+python3 scripts/doc94r3_kink_scan.py            # window scan + the 12-bundle table
+
+# 8 MC events, then the population: probe (inert) and ON, concurrently
+PR_JOBS=8  ./scripts/doc94r3_arm.sh work-stmfb8-ql work-stmfb8-r3on sim 5.0
+PR_JOBS=14 ./scripts/doc94r3_arms.sh r3probe 1000.0     # -> work-*-r3probe
+PR_JOBS=14 ./scripts/doc94r3_arms.sh r3entry 5.0        # -> work-*-r3entry
+python3 scripts/doc94r2_identity.py r3probe d94hadron
+python3 scripts/doc94r3_entry_census.py --arm work-ncpi0-r3probe \
+        --arm work-nuecc48-r3probe --arm work-mcp1k-r3probe \
+        --arm work-mcp2k-r3probe --baseline \
+        --out products/doc94r2/entry-census-r3.tsv
+python3 scripts/doc94r2_flip_report.py r3entry d94hadron
+```
+
+Binary pinned to `~/tmp/doc94r3-libsnap` (round 2 used `doc94c-libsnap`).
+
+### 13.5 The same table, from the compiled guard
+
+The numbers above come from the offline re-implementation; these come from the
+guard's own DEBUG probe in the arm logs, which is what actually decides. The
+C++ scans **fit points** where the offline scan uses a 0.5 cm grid, so its
+angles run ~1–3° lower. The separation survives with room to spare:
+
+| event | owner | shoulder | **kink (compiled)** | at L |
+|---|---|---:|---:|---:|
+| 827-27-4 | neutrino | 8.4 | **32.2°** | 73.9 |
+| 164466:7 | neutrino | 18.5 | **34.7°** | 19.9 |
+| 350099:15 | neutrino | 48.8 | **28.3°** | 60.5 |
+| 304-6-28 | neutrino (r1) | 19.4 | 32.3° | 70.2 |
+| 146-60-31 | neutrino (r1) | *declined* — muon 56.9 cm | | |
+| 966-2-22 | neutrino (r1) | 0.0 | 47.2° | 66.0 |
+| **707-18-12** | **neutrino** | **0.0** | 32.0° | 66.8 |
+| **95500:15** | **STM** | 5.5 | **13.8°** | 37.7 |
+| 290316:10 | STM | 4.4 | 18.3° | 5.2 |
+| 282033:13 | STM | 1.0 | 24.6° | 143.4 |
+| 56257:13 | STM | 0.5 | 42.3° | 45.4 |
+| 36-77-17 | control | 0.0 | 29.9° | 49.3 |
+
+Lowest firing neutrino **28.3°**, the firing STM **13.8°**, bar at 22° — a
+14.5° margin measured by the code that ships.
+
+### 13.6 Why `guard_entry_max_cm` moved 30 → 60
+
+This is a **correction, not a re-tune**. §0.3 predicted that an elevated run
+which "never decays" would be a different animal, and §12.2 built `max_cm` to
+exclude it. `350099:15` is that case — elevated for 48.8 cm of a 143.8 cm muon,
+body 1.18 MIP, never returning to 1 MIP — and the owner adjudicated it a
+**neutrino**. The premise was wrong, so the bound goes.
+
+Two things make the move safe rather than a fit to one event:
+
+* **It is the kink, not the length, that was doing the work.** The failure mode
+  `max_cm` was protecting against — a track that is hot end to end for
+  reconstruction reasons — is a track with no vertex, so it has no turn. The
+  kink tests that directly instead of using length as a proxy for it.
+* **Nothing else in 3067 events lives in the widened band.** The round-2 probe
+  measured every evaluated bundle's shoulder: exactly one exceeds 30 cm, and it
+  is 350099 itself. Raising the bound to 60 therefore admits that bundle and
+  nothing else, and the shoulder histogram is empty above 60.
+
+### 13.7 The population, with the kink measured — all 3067 data events
+
+The round-3 probe (`stm_entry_min_cm=1000`) is inert by construction and
+measured inert in fact: **3067 of 3067 events byte-identical** to
+`work-*-d94hadron` on every per-bundle field, so every number below is a
+measurement and not an outcome.
+
+Of the **246** STM-tagged bundles the guard evaluates:
+
+| | STM=1 bundles |
+|---|---:|
+| shoulder inside `[5, 60]` cm | **3** |
+| ... and kink ≥ 22° — i.e. **released** | **2** |
+| held by the kink alone | **1** |
+
+| shoulder | event:cid | rise | kink | outcome |
+|---:|---|---:|---:|---|
+| 48.8 | `350099:15` | 1.82 | **28.3°** | **released** — owner: neutrino |
+| 18.5 | `164466:7` | 3.29 | **34.7°** | **released** — owner: neutrino |
+| 5.5 | `95500:15` | 1.87 | **13.8°** | **held by the kink** — owner: STM |
+
+Three bundles enter the shoulder window in 3067 events and the kink splits
+them exactly the way the owner did.
+
+**The kink is not rare, and that is the point.** Over the 246 evaluated STM
+bundles it runs 4.8° to 70.0° with a median of **19.5°**, and **104 of them
+(42.3%) clear the 22° bar**. A kink-only predicate would release 42% of the
+STM population. (The doc-62 correct STMs alone span 6.3° to 44.9°.) It is only after the shoulder has selected the handful of bundles
+with boundary-anchored charge that the turn carries information, and there it
+splits them cleanly.
+
+### 13.8 The A/B, measured
+
+`work-*-r3entry` (guard on, `min_cm=5`, `max_cm=60`, `kink≥22°`) vs
+`work-*-d94hadron` (production), all 3067 SBND data events, per bundle:
+
+```
+events compared            : 3067
+bundles identical          : 34825
+bundles FLIPPED            : 2
+bundles only in OFF / ON   : 0 / 0
+  evt 350099 main 15  len 139.9cm  stm:1->0 label:STM->nu-candidate
+  evt 164466 main 7   len 118.7cm  stm:1->0 label:STM->nu-candidate
+```
+
+### 13.9 Verification
+
+| gate | result |
+|---|---|
+| `prod_cfg_gate.py`, knob off | **PASS 21/21** vs `ref/prod-2026-09-02` |
+| compiled-config proof, knob on | 6 keys appear (`guard_entry_kink_deg` = 22 among them); none when off |
+| `./build/clus/wcdoctest-clus` | **237 cases, all pass**; 2634 assertions (round 2: 2629) |
+| freshness proof | `libWireCellClus.so` 06:16:51 newer than `TaggerCheckSTM.cxx` 06:15:42 |
+| binary pin | `~/tmp/doc94r3-libsnap`, md5 `8b4f44b4…` |
+| probe arm inert | 3067 of 3067 events identical to the production baseline |
+| positive control (MC) | 827-27-4 flips STM → nu-candidate; 1 flip in 113 bundles |
+| owner's labelled set | **10 of 11** adjudicated bundles correct (round 2: 8 of 11); the miss is 707-18-12, §14 |
+| rebuilt binary vs pinned | after the comment-only corrections of §14, the rebuilt library reproduces `work-stmfb8-r3on` on 8 of 8 events with byte-identical probe lines (`work-stmfb8-r3chk`) — so every arm above stands |
+| doc-62 baseline | 0 of the 6 evaluated correct STMs fire (30 of 36 are below the muon-length floor — the caveat of §12.9 still applies) |
+| population A/B | **34,825 identical, 2 flipped, 0 one-arm-only** — and both flips are bundles the owner adjudicated NEUTRINOS, so the measured cost is **zero** |
+
+### 13.10 Status and recommendation
+
+**The guard still ships DEFAULT OFF**, unchanged from round 2 in that respect:
+`stm_entry_rise_guard=false`, C++ defaults `false / 1.3 / 5 / 60 / 70 / 22`,
+keys suppressed when off, `ref/prod-2026-09-02` untouched, every other detector
+untouched.
+
+What changed is that the two round-2 questions are now answered, by the owner,
+and the code agrees with him on both:
+
+| | round 2 | round 3 |
+|---|---|---|
+| owner-adjudicated bundles correct | 8 of 11 | **10 of 11** |
+| owner-adjudicated neutrinos this guard releases | 2 of 4 | **3 of 4** |
+| owner-adjudicated STMs wrongly released | 1 | **0** |
+| neutrinos left tagged (misses) | 2 | **1** (`707-18-12`, §14) |
+
+**Recommendation: flip `stm_entry_rise_guard=true` for SBND and pin
+`ref/prod-2026-09-03`.** The condition round 2 set for the flip — the owner
+adjudicating the releases — is met, and it is met in the strongest available
+form: every bundle the guard releases in 3067 data events is a bundle the owner
+has personally called a neutrino, and every bundle he called an STM is held.
+That is the same bar `vertex_hadron_guard` cleared in §0.4, on a labelled set
+three times the size.
+
+Two things this round does **not** claim:
+
+* **The labelled set is 11 bundles**, and the guard is right on 10. The
+  population measurement is what says the guard is quiet (2 fires in
+  3067 events), not that it is correct.
+* **It does not recover `707-18-12`**, and §14 shows it cannot. Every claim in
+  this file that rested on `707-18-12` being an STM has been rewritten, in the
+  doc and in the C++ comments — including the round-2 justification for
+  anchoring the run at the boundary, which is now made on measured separation
+  instead (§14.2).
+* **The boundary-face refinement of §12.7 is dead as stated.** It was proposed
+  because `164466:7` sits on the top face and I could not defend it. The owner
+  calls `164466:7` a **good neutrino**, so a top-face veto would have thrown
+  away a real neutrino. Recorded as measured-wrong, not carried forward.
+
+
+## 14. `707-18-12` — why this mechanism cannot reach it
+
+The owner re-adjudicated `707-18-12` a **neutrino** on 2026-09-02 after
+re-reading the truth. It was, until that message, this round's principal
+negative control. Two things follow and both are recorded here rather than
+quietly patched.
+
+Repro: `python3 scripts/doc94r3_anchor_test.py`.
+
+### 14.1 The measurement: there is no entry rise to find
+
+| | |
+|---|---|
+| body | **0.84 MIP** |
+| entry, 0–3 cm | **1.04 MIP** |
+| first 5 cm running median | **1.00 MIP** |
+| threshold at `frac = 1.3` | 1.30 MIP (`1.3 × max(body, 1 MIP)`) |
+| **shoulder** | **0.0 cm** |
+
+The threshold is floored at 1 MIP precisely so a charge-deficient
+reconstruction cannot lower its own bar, and `707-18-12`'s first window sits
+*exactly* on that floor. For the guard to fire, `guard_entry_frac` would have
+to be **≤ 1.00** — a bar at or below MIP, which fires on every track in the
+detector. This is not a threshold that needs adjusting; **the feature is
+absent**.
+
+Relaxing the *anchor* does not help either. Allowing the run to begin anywhere
+within 1, 2, 3, 4, 5 or 8 cm of the boundary leaves `707-18-12` at 0.0 cm at
+every tolerance (and moves no other labelled bundle by a millimetre) — its one hot point (1.8 MIP at 2–4 cm) cannot sustain a 5 cm
+median at any starting offset.
+
+### 14.2 Dropping the anchor entirely is worse, and this is what now justifies it
+
+Round 2 justified anchoring with `707-18-12` — "a hot stretch that does not
+reach the boundary is a delta ray on an entering muon". That argument is void.
+The replacement is a measurement, not a story:
+
+| bundle | owner | anchored run | longest run **anywhere** |
+|---|---|---:|---:|
+| 827-27-4 | neutrino | **8.4** | 35.7 |
+| 164466:7 | neutrino | **18.5** | 18.5 |
+| 350099:15 | neutrino | **48.8** | 48.8 |
+| 707-18-12 | neutrino | 0.0 | 11.9 |
+| 95500:15 | STM | **5.5** | 13.5 |
+| 290316:10 | STM | 4.4 | 15.3 |
+| 282033:13 | STM | 1.0 | 12.4 |
+| 56257:13 | STM | 0.5 | 12.9 |
+
+Un-anchored, the four STMs land at 12.4–15.3 cm and `707-18-12` at 11.9 cm —
+**the same band**, so the feature separates nothing there. Un-anchoring would
+gain `707-18-12` and lose `282033:13` and `56257:13`, both of which clear the
+kink bar: one neutrino gained for two cosmics admitted. The anchor stays, and
+it stays for this measured reason rather than the void one.
+
+### 14.3 What `707-18-12` actually has, and why nothing in the file sees it
+
+Its signature is **a 32° turn at L = 66.8 cm — 44 cm *before* the stop — with
+MIP charge on both sides**. That is a different topology from this guard's:
+not two particles *sharing* a stretch near the boundary, but a vertex in the
+middle of the fitted path with one prong in and one prong out. Nothing
+overlaps, so there is no charge excess anywhere.
+
+`vertex_kink_guard` (doc 63 round 5b) is the closest existing predicate and it
+misses on all three of its conditions:
+
+| `vertex_kink_guard` requires | `707-18-12` has |
+|---|---|
+| the turn within `[L_stop − 12 cm, L_stop − 2 cm]` | the turn 44.4 cm before the stop |
+| turn ≥ `guard_vertex_turn` = **45°** | **32°** |
+| post-turn median > `guard_vertex_mip` = **2.2 MIP** | ~**0.9 MIP** |
+
+**This is round 4, not a re-tune.** And it is not a matter of widening
+`vertex_kink_guard`'s window: a mid-track large-angle turn at MIP charge is
+common on genuine stopping muons — `282033:13` (27° at L = 143) and
+`56257:13` (42° at L = 45) are both owner-adjudicated STMs — so a turn alone
+releases cosmics. The round-4 question is what second observable distinguishes
+a two-prong neutrino vertex from a scattered muon when *neither* side carries
+excess charge. Nothing in the present feature set answers it, which is exactly
+the situation doc 63 §9 called "no further round without a new information
+source".
