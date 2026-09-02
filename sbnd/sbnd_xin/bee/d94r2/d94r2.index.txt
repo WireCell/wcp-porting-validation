@@ -2,9 +2,9 @@
 # so bee_idx lines up 1:1 between OFF and ON.
 #
 # OFF (production, ref/prod-2026-09-02: vertex_hadron_guard on, entry guard absent)
-#     <OFF_URL>
+#     https://www.phy.bnl.gov/twister/bee/set/def734e6-1dd8-4307-b9b3-07ae59bc0524/event/list/
 # ON  (+ stm_entry_rise_guard=true, stm_entry_min_cm=5.0)
-#     <ON_URL>
+#     https://www.phy.bnl.gov/twister/bee/set/8264254e-1c52-4c3c-b231-ca5114892e3f/event/list/
 #
 # Both arms were run with save_stm_fit=true, so every event carries the
 # `stm_fit-global` layer: the fitted STM trajectory, coloured by charge.  That
@@ -14,7 +14,11 @@
 # WHY SOME EVENTS CARRY NO PR POINT LAYERS IN THE OFF SET: a cosmic-tagged
 # bundle makes TaggerCheckNeutrino refuse, so no PR graph is built and
 # track_fit / shower_track / vertices are empty.  That is the cost of the tag,
-# not a packaging gap -- see doc 94 sec 10.
+# not a packaging gap -- see doc 94 sec 10.  That is also the CONTENT PROOF
+# that these two sets are the right pair in the right order: in OFF all 8
+# events carry 4 layers and no PR reco; in ON exactly indices 0, 1 and 2 --
+# the target and the two releases -- gain track_fit / shower_track /
+# vertices / mc, and nothing else does.
 #
 # THE OWNER'S CALL: indices 1 and 2 are the only two data bundles of 34,827
 # that this guard releases.  I could not adjudicate either with confidence;

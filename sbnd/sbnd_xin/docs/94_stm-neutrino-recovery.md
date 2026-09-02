@@ -951,7 +951,37 @@ exclude it — that is a one-event fit; take the boundary-face refinement of
 §12.7 to a round 3 and measure it. If both releases are cosmics, the guard
 stays off and 827-27-4 is not recoverable by charge shape alone.
 
-### 12.11 Reported, not fixed
+### 12.11 The Bee A/B pair
+
+| | |
+|---|---|
+| OFF (production, `ref/prod-2026-09-02`) | https://www.phy.bnl.gov/twister/bee/set/def734e6-1dd8-4307-b9b3-07ae59bc0524/event/list/ |
+| ON (`stm_entry_rise_guard=true`, `min_cm=5.0`) | https://www.phy.bnl.gov/twister/bee/set/8264254e-1c52-4c3c-b231-ca5114892e3f/event/list/ |
+
+Same 8 events, same order, in both sets; annotated index
+`bee/d94r2/d94r2.index.txt`. Both arms carry the `stm_fit-global` layer (the
+fitted STM trajectory coloured by charge) — that is the layer to look at, and
+the guard reads the end of it *away* from the Bragg peak.
+
+| idx | event | what it is |
+|---|---|---|
+| 0 | 827-27-4 | **RESCUED** — the round-2 target |
+| 1 | 164466 | **RELEASE — owner call** |
+| 2 | 95500 | **RELEASE — owner call** |
+| 3 | 350099 | declined by `max_cm`; shown so the bound can be overruled |
+| 4 | 290316 | control, 4.4 cm — the nearest below the cut |
+| 5 | 282033 | control, rise 2.14 but shoulder 1.0 cm |
+| 6 | 56257 | control, 0.5 cm |
+| 7 | 707-18-12 | negative control — the owner-confirmed genuine STM |
+
+**The set contents were verified, not assumed.** In the OFF set all eight
+events carry four layers and no PR reconstruction (they are all cosmic-tagged);
+in the ON set exactly indices 0, 1 and 2 gain `track_fit` / `shower_track` /
+`vertices` / `mc`, and nothing else does. That is an independent check that
+these are the right two sets, in the right order, containing exactly the three
+intended flips.
+
+### 12.12 Reported, not fixed
 
 The guard's DEBUG probe does not print the **boundary point's coordinates**,
 so the boundary-face question in §12.7 had to be answered by re-running the
