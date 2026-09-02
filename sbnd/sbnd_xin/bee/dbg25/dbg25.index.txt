@@ -1,0 +1,37 @@
+# doc 95 -- the colleague's 25-event MC debug sample, our production chain
+# source : /nfs/data/1/yuhw/img-clus-matching-eval/prabhjot-100file-Aug5-debug-25evt/debug-25evt-reco1.root
+# order  : ART-FILE ORDER -- bee_idx == art entry number (0..24)
+# point  : ref/prod-2026-09-03 (SBND production; stm_entry_rise_guard ON), reality=sim
+# set    : https://www.phy.bnl.gov/twister/bee/set/e3d1d867-d34e-42a2-9709-1954fdfde54b/event/list/
+#
+# NOTE: the 25 entries are 25 distinct events across 20 runs, but only 20
+#       distinct BARE event ids -- ids 12,14,22,31,34 each occur twice, so the
+#       RSE, not the event id, is the identity here.  Verified in the zip:
+#       all 25 img-global layers hash differently.
+#
+# bee_idx	RSE	status
+0	492-51-23	TGM: main 152.4 cm, 4903 pts, flash 15102.2 PE
+1	827-27-4	nu-candidate: main 114.4 cm, 1293 pts, flash 6384.3 PE  [RELEASED by entry_rise_guard: 8.4 cm of 2.43 MIP anchored at the boundary -> 0.99 MIP body, path turns 32 deg at L=73.9 cm]  [doc 93: STM -> now nu-candidate]
+2	304-6-28	nu-candidate: main 109.0 cm, 1884 pts, flash 27833.7 PE  [RELEASED by entry_rise_guard: 19.4 cm of 3.25 MIP anchored at the boundary -> 1.52 MIP body, path turns 32 deg at L=70.2 cm]  [doc 93: STM -> now nu-candidate]
+3	707-18-12	STM: main 123.6 cm, 3523 pts, flash 15167.9 PE  [doc 93: STM]
+4	146-60-31	nu-candidate: main 100.9 cm, 1212 pts, flash 7392.6 PE  [RELEASED by vertex_hadron_guard: 14.8 cm prong at 1.65 MIP, straightness 0.861]  [doc 93: STM -> now nu-candidate]
+5	60-38-31	STM: main 186.4 cm, 2906 pts, flash 45579.1 PE; 2nd in-beam bundle: nu-candidate 0.7cm
+6	445-18-34	STM: main 151.1 cm, 2422 pts, flash 10502.7 PE
+7	541-46-22	TGM: main 160.7 cm, 3057 pts, flash 6671.8 PE; 2nd in-beam bundle: nu-candidate 47.5cm
+8	272-2-30	TGM: main 422.6 cm, 20516 pts, flash 29329.9 PE
+9	105-23-2	TGM: main 230.3 cm, 3407 pts, flash 7484.6 PE
+10	105-23-5	STM: main 117.0 cm, 1405 pts, flash 10352.0 PE
+11	105-23-21	TGM: main 439.1 cm, 4760 pts, flash 20353.0 PE
+12	36-77-17	nu-candidate: main 69.8 cm, 1360 pts, flash 5489.6 PE  [doc 93: nu-candidate]
+13	966-2-22	nu-candidate: main 89.7 cm, 1824 pts, flash 6946.7 PE  [RELEASED by vertex_hadron_guard: 14.9 cm prong at 2.47 MIP, straightness 0.971]  [doc 93: STM -> now nu-candidate]
+14	921-29-10	TGM: main 67.9 cm, 170 pts, flash 2319.9 PE  [doc 93: TGM]
+15	921-29-41	TGM: main 160.5 cm, 3327 pts, flash 7882.8 PE
+16	890-21-16	TGM: main 340.5 cm, 11153 pts, flash 32813.9 PE
+17	890-21-39	TGM: main 295.6 cm, 10938 pts, flash 9991.6 PE
+18	651-84-12	nu-candidate: main 141.7 cm, 3197 pts, flash 21647.5 PE
+19	651-84-34	STM: main 256.6 cm, 5806 pts, flash 11880.7 PE; 2nd in-beam bundle: no-bundle 0.0cm
+20	993-78-14	TGM: main 207.1 cm, 5316 pts, flash 7000.5 PE
+21	44-40-14	TGM: main 370.6 cm, 10628 pts, flash 11136.3 PE; 2nd in-beam bundle: nu-candidate 60.2cm
+22	411-27-8	TGM: main 53.9 cm, 33 pts, flash 18145.8 PE
+23	710-80-44	STM: main 234.7 cm, 4208 pts, flash 29370.5 PE
+24	658-38-25	TGM: main 128.1 cm, 2140 pts, flash 27867.9 PE  [doc 93: TGM]
