@@ -1,0 +1,6 @@
+# PDVD Michel candidates (doc pdvd/25 M5): STM-tagged bundles whose cosmic-tagger flags 6-8 fired; michel_E = kine_best (MeV) of the highest-energy shower at the main vertex
+event	evtno	nu_index	main_cluster	stm	tgm	fc	fired	f7	f8	f7_filled	f8_filled	isFC	michel_E	michel_id	michel_len	michel_pdg	n_showers	n_at_main	mvx	mvy	mvz	kine_Enu
+039349_10	19609	1	58	1	0	0	1	1.00	0.00	1.00	0.00	0.00		58051	1634.16	13	8	1	53.11	332.66	146.27	
+039349_26	19929	22	31	1	0	0	1	1.00	0.00	1.00	0.00	0.00	173.22	31015	162.58	13	2	2	148.66	-81.81	5.21	294.38
+039349_34	22897	7	25	1	0	0	1	1.00	0.00	1.00	0.00	0.00					1	0	-229.43	-294.98	215.44	898.74
+039349_48	23177	7	46	1	0	0	1	1.00	0.00	1.00	0.00	0.00	0.00	101016	4.14	11	2	1	106.95	263.66	152.98	970.56

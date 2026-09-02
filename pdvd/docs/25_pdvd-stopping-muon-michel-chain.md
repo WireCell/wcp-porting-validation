@@ -1210,6 +1210,17 @@ Every item below was found on run 039252 event 0 (idx 0) and fixed as a
     lambda). Guard: an empty round-2 fit abandons the pass with the new pass
     status **8** (`persist_stm_fit` table); every pass with ≥ 1 fit point is
     untouched. The three events were re-run with the fixed binary.
+11. **An infinite loop in the nu-e tagger** (full-chain subset `stm3`, 2 of
+    20 events: 039253/13, 039349/48 — 40+ min at 100 % CPU with a silent
+    log). `shower_to_wall` (`NeutrinoTaggerNuE.cxx`) walks a test point
+    backward from the shower vertex 1 cm at a time until it leaves the
+    fiducial volume; a shower with no points within 15 cm of its vertex
+    (a one-segment, muon-typed 0.7 MeV "shower") gives a zero direction
+    (gdb: `dir = (-0, -0, -0)`), the point never moves and the `while
+    (inside)` never ends. The sibling walk in `bad_reconstruction_2` already
+    skips a zero direction; `shower_to_wall` now does the same (the walk is
+    skipped, `dis` stays 0) and caps the walk at 1 km. Every shower with a
+    usable direction takes the same path as before (gate round 7).
 8. **The Steiner terminal floor starves PDVD.** Over the first 18 events of
    the arm, 41 STM-accepted passes and 140 recorded passes contained ONE
    stop-end Bragg contrast ≥ 2, while the raw Bee charge along 688 long
@@ -1377,12 +1388,16 @@ negative controls say why.
    the 53 full-chain `stm1` dumps): 16 STM bundles with a fired flag 7, 7
    with a shower energy — median 34.9 MeV, but two above the endpoint
    (657 MeV, 285 cm long) because the *main vertex* of a cosmic bundle is the
-   entry end or a kink, not the stop (`stm/michel_candidates_stm1.tsv`).
+   entry end or a kink, not the stop (`stm/michel_candidates_stm1.tsv`). On
+   the 20-event `stm3` subset (the best STM tracks, full chain at bundle
+   floor 50 cm, mean 267 s / max 805 s per event once item 11 was fixed):
+   4 fired bundles, 2 energies (0 and 173 MeV).
 2. **Showers anchored on the STM stop** (`michel_stop_end.py`: the fitted
    rr = 0 point of the accepted pass, showers starting ≤ 5 cm from it with
    length ≤ 40 cm, energy = `kine_best`): 18 candidates on 255 stops, median
    7 MeV, all short stubs (1–18 cm) and only one at a Bragg-confirmed stop
-   (`stm/michel_stop_end_stm1.tsv`, `docs/pics/pdvd_michel_stop_end_stm1.png`).
+   (`stm/michel_stop_end_stm1.tsv`, `docs/pics/pdvd_michel_stop_end_stm1.png`);
+   on `stm3` 4 stubs on 95 matched stops, none at a Bragg-confirmed stop.
    The shower finder does not build the Michel at a PDVD stop; `kine_charge`
    is 0 for all of them (the charge-sum branch is not filled for small
    showers), so `kine_best` is the range energy of a stub.
@@ -1416,7 +1431,7 @@ fallback, now the measured path). The 20-event full-chain subset `stm3`
 (`stm/run_michel_subset.sh`, the events of the contrast ≥ 1.5 tier, bundle
 floor 50 cm) is the sample to build it on.
 
-### 13.8 Shared-component gates (`stm/gates/shared_gate_round{1..6}.txt`)
+### 13.8 Shared-component gates (`stm/gates/shared_gate_round{1..7}.txt`)
 
 Everything touched in `clus/` and `root/` had to keep SBND and uBooNE
 byte-identical. Method (`stm/gates/shared_gate.sh`): OLD = the same tree
@@ -1426,7 +1441,8 @@ working tree at four points (round 1: `resolve_wpid_params`,
 guards; round 3: + `terminal_charge_threshold`; round 4: + `resolve_wpid_key`
 and the `break_segments` empty-fit guard; round 5: + `resolve_wpid_key` at
 the three DynamicPointCloud member-lookup sites; round 6: + the STM
-empty-round-2-fit guard of §13.4 item 10, the final binary). Each arm ran
+empty-round-2-fit guard of §13.4 item 10; round 7: + the `shower_to_wall`
+zero-direction guard of item 11, the final binary). Each arm ran
 under its own library snapshot (`LD_LIBRARY_PATH`), DL vertex off, ASLR off.
 
 | arm | SBND `work-{nuecc48,ncpi0}-doc25*` (48 + 19 events × Bee zip, calib JSON, nusel TSV) | uBooNE sweep `doc25*` (35 events) |
@@ -1436,7 +1452,8 @@ under its own library snapshot (`LD_LIBRARY_PATH`), DL vertex off, ASLR off.
 | round 3 (new3 vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
 | round 4 (new4 = final vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
 | round 5 (new5 vs old) | **201 / 201 identical** | 35 / 35; 35 / 35 |
-| round 6 (new6 = final vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+| round 6 (new6 vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
+| round 7 (new7 = final vs old) | **201 / 201 identical** | 35 / 35; 35 / 35 |
 
 The single uBooNE tagger difference is event 5384-136-6805 in every round —
 the documented bistable event (`kine_pio_angle` 109.51 vs 14.81 with an
@@ -1503,8 +1520,9 @@ the PDVD pipeline; every new knob has a defaults doctest
 - **2026-09-02** — execution round (§13). Toolkit: `fb0579c5` (PR job
   inputs, pctree knob, flag_mains, readout_edge_guard, Magnify writers,
   crash-path fixes 1–5), `784dc837`, `54172df8` (items 6–9), `ee1a0d21`
-  (member-lookup fallback), `03f7645b` (STM empty-fit guard); six
-  shared-component gates, all byte-identical on SBND + uBooNE (§13.8).
+  (member-lookup fallback), `03f7645b` (STM empty-fit guard), `e88f364d`
+  (nu-e shower_to_wall zero-direction guard); seven shared-component
+  gates, all byte-identical on SBND + uBooNE (§13.8).
   wcp-porting-img: the PDVD PR runner, `wct-pr-perevt.jsonnet`, `stm/`
   scripts and gates, this section. Energy_loss local commit `61d4c07`
   (0.44 / 0.50 tables); Magnify-tracking-PDVD local repo `7184ec6`.

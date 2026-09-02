@@ -1,0 +1,6 @@
+# Michel candidates anchored on the STM stop end, tag stm3: max_dist 5.0 cm, max_len 40.0 cm, min_contrast 0.0
+event	evtno	cluster	nu_index	contrast	mu_L_cm	stop_x	stop_y	stop_z	dist_cm	kine_best_MeV	kine_charge_MeV	kine_range_MeV	segQ_E_MeV	length_cm	pdg	shower_id	conn	f7	f7_filled
+039252_9	298693	76	12	1.04	253.71	203.61	-41.91	59.54	3.01	65.53	0.00	65.53	23.60	17.99	11	76005	1	0.00	0.00
+039349_15	19709	48	0	1.17	472.46	290.01	164.06	94.38	2.22	23.04	0.00	23.04	6.47	8.10	11	48017	1	0.00	0.00
+039349_17	19749	49	8	0.91	105.06	298.72	-124.68	35.26	1.88	0.00	0.00	96.54	16.48	32.76	11	49010	3	0.00	0.00
+039349_59	55826	27	7	0.57	107.71	-150.42	263.09	197.46	1.85	4.69	0.00	5.73	7.66	2.58	11	27022	1	0.00	0.00
