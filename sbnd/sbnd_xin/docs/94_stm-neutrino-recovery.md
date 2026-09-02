@@ -380,18 +380,54 @@ If the owner calls it a cosmic, the measured price of `vertex_hadron_guard` is
 against three recovered neutrino candidates. If the owner calls it a neutrino,
 the guard has no measured cost at all.
 
-## 10. Bee
+## 10. Bee — the A/B pair
 
-**Set (8 events, the colleague's order, `stm_fit-global` layer added):**
-https://www.phy.bnl.gov/twister/bee/set/abc72dc0-a4c4-40aa-8bc2-6f8bc5ba65fc/event/list/
+| arm | set |
+|---|---|
+| **OFF** (production, prod0901b) | https://www.phy.bnl.gov/twister/bee/set/fba260db-6834-46fa-aa95-2a759ce29269/event/list/ |
+| **ON** (`stm_vertex_hadron_guard`) | https://www.phy.bnl.gov/twister/bee/set/6bf6dbc6-57b9-4f6b-80e4-5dbe8ef412d8/event/list/ |
 
-Content-verified after upload: 8 rows, RSEs and order match
-`bee/d94/d94-stmfit.index.txt` and therefore line up 1:1 with the colleague's
-own set `9797078d-763a-4202-9af0-2d53127f1bd2`. What is new against
-`bee/stmfb8` (doc 93) is the **`stm_fit-global`** layer — the fitted STM
-trajectory with per-point dQ/dx, i.e. the evidence the verdict is made on.
-Present on the 6 events that reach the STM fit, absent on the 2 TGM events,
-which exit before it.
+9 events, same order in both, content-verified after upload. Indices 0–7 still
+line up 1:1 with the colleague's set `9797078d-…`; **index 8 is `64475`**, the
+one data bundle the guard releases. Annotated index:
+`bee/d94/d94.index.txt`. (The earlier 8-event OFF-only set `abc72dc0-…` is
+superseded by this pair and its sidecars have been removed.)
+
+Both sets carry **`stm_fit-global`** — the fitted STM trajectory with its
+per-point dQ/dx, i.e. the evidence the verdict is made on. Present wherever the
+STM fit ran; absent on the two TGM events, which exit before it.
+
+### Why most events carry no PR layers in the OFF set — and why that is the point
+
+An STM tag does not merely label a bundle, it **costs the entire PR
+reconstruction**. `TaggerCheckNeutrino` refuses a bundle whose main is
+cosmic-tagged:
+
+```
+[nu_per_bundle] gid 10 activity 6 (L 93.9 cm) cosmic-tagged (TGM=false STM=true lm_flag=0); not a candidate
+[nu_per_bundle] gid 10: no neutrino candidate among 1 evaluated activit(ies)
+no main cluster selected (15 mains, 1 in-window); skipping.
+```
+
+so no PR graph is built, and `MultiAlgBlobClustering` then leaves the point
+sets empty **by design**:
+
+```
+bee points set 'track_fit':    visitor TaggerCheckNeutrino:pr produced no PR graph; leaving the set empty (require_pr_graph)
+bee points set 'shower_track': ... (require_pr_graph)
+bee points set 'vertices':     ... (require_pr_graph)
+```
+
+and writes no calib dump either (which is why only 1433 of 3067 prod0901b
+events have one). So `track_fit-global`, `shower_track-global`,
+`vertices-global` and `mc` are missing on every cosmic-tagged event — that is
+not a packaging gap, it is the defect this round is about.
+
+**The A/B makes it visible**: compare indices 2, 3, 5 and 8 across the two
+sets. In OFF they carry `clustering-pr-global` + `stm_fit-global` and nothing
+else; in ON the four PR layers appear, because the event is now a
+nu-candidate. Indices 0 and 4 (827-27-4, 707-18-12) stay bare in both — they
+are the two not recovered. Index 1, the control, has them in both.
 
 ## 11. Recommended next step
 
