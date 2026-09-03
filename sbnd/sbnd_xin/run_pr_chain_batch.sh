@@ -44,8 +44,10 @@
 # Per-event output: out_root/pr_evt<ID>/{wct_pr_evt<ID>.log, stdout.log, rc.txt,
 #   .time.meta (timecmd.py), mabc-pr.zip, tracking-pr.root,
 #   pctree-pr-evt<ID>.tar.gz, nusel-evt<ID>.tsv}.
-# Batch: out_root/nusel-table.tsv + nusel-events.tsv (merged, same shape as
-#   run_nusel_evt.sh all).  Read the SCORES with pr_scores_table.py.
+# Arm: out_root/nusel-table.tsv + nusel-events.tsv -- merged over EVERY pr_evt*/
+#   in out_root, not just this invocation's events (doc 99; it used to be the
+#   batch, so a one-event re-run truncated the arm's tables).  Same shape as
+#   run_nusel_evt.sh all.  Read the SCORES with pr_scores_table.py.
 set -u; {   # doc pr/141 sec 19 -- brace + trailing exit: see the note at EOF
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
@@ -2218,16 +2220,28 @@ batch_drain
 batch_summary
 
 # Merge the per-event nusel tables (label/TGM/STM/FC/LM census).
+#
+# ARM-SCOPED, NOT BATCH-SCOPED (doc 99).  These two files name the ARM, so they
+# have to cover every event the arm holds -- not just this invocation's
+# EVENT_IDS.  Merging the batch silently clobbered the arm: re-running ONE event
+# of work-nuecc48-d97fvpr2 rewrote its nusel-events.tsv from 49 rows to 2 and
+# nusel-table.tsv from 547 to 10, while all 48 per-event tables stayed intact and
+# every published number stayed right -- so nothing failed and nothing warned.
+# Enumerating pr_evt*/ instead makes the merge idempotent and monotone: a partial
+# re-run can only refresh rows, never drop them.  Same ls/sed/sort -n idiom as
+# the EVENT_IDS discovery above, so the row order is unchanged for a full run.
 _tsvs=()
-for evt in "${EVENT_IDS[@]}"; do
-    _t="$OUTROOT/pr_evt${evt}/nusel-evt${evt}.tsv"
+while IFS= read -r _t; do
     [ -s "$_t" ] && _tsvs+=("$_t")
-done
+done < <(ls -d "$OUTROOT"/pr_evt*/ 2>/dev/null \
+             | sed -E 's#.*/pr_evt([0-9]+)/?$#\1#' | sort -n \
+             | while read -r _e; do echo "$OUTROOT/pr_evt$_e/nusel-evt$_e.tsv"; done)
 if [ "${#_tsvs[@]}" -gt 0 ]; then
     python3 "$SX/nusel_extract.py" --merge "${_tsvs[@]}" \
         --out "$OUTROOT/nusel-table.tsv" \
         --events-out "$OUTROOT/nusel-events.tsv"
-    echo "merged -> $OUTROOT/nusel-table.tsv + nusel-events.tsv"
+    echo "merged ${#_tsvs[@]} per-event tables in the arm (this batch: ${#EVENT_IDS[@]})" \
+         "-> $OUTROOT/nusel-table.tsv + nusel-events.tsv"
 fi
 
 echo "loadavg: $(cat /proc/loadavg)"
