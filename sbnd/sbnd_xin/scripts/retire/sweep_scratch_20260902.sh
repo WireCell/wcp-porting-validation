@@ -19,6 +19,21 @@
 # Interlock 2 additionally re-samples mtimes across a 15 s window and refuses if
 # any candidate moves -- the same causal liveness test doc 98's main round used,
 # for the same reason: age is not liveness, it is only a cheap prior.
+#
+# BUG FIXED 2026-09-02, AFTER IT FIRED ON THIS SESSION.  The first version read
+# each candidate's TOP-LEVEL DIRECTORY mtime.  A live session writes into
+# SUBdirectories (tasks/), which does not touch the parent's mtime, so a running
+# session can present an arbitrarily old top-level mtime.  The first run deleted
+# this very session's scratchpad, which the harness then recreated.
+#
+# That was the harmless instance.  The dangerous one was sitting right next to
+# it: peer scratchpad b48747db had a top-level mtime of 10:18 while its newest
+# file inside was 16:51 -- the live PDVD doc-25 session.  It survived only
+# because 10:18 happened to fall on the same calendar day.  The same sweep run
+# the next morning would have deleted a running peer's scratchpad.
+#
+# Both selection and interlock 2 now use the NEWEST mtime ANYWHERE IN THE TREE.
+# Never judge a directory's activity by the directory's own mtime.
 set -u
 SCRATCH=$HOME/tmp/claude-25225/-home-xqian-toolkit-dev-toolkit
 CONFIRM=${CONFIRM:-no}
@@ -31,7 +46,10 @@ CANDS=""
 for d in */; do
   d=${d%/}
   [ -d "$d" ] || continue
-  if [ "$(date -r "$d" +%Y-%m-%d)" != "$TODAY" ]; then CANDS="$CANDS $d"; fi
+  # newest mtime anywhere in the tree -- NOT the dir's own (see header)
+  if [ -z "$(find "$d" -newermt "$TODAY 00:00" -print -quit 2>/dev/null)" ]; then
+    CANDS="$CANDS $d"
+  fi
 done
 n=$(echo $CANDS | wc -w)
 [ "$n" -gt 0 ] || { echo "nothing older than today; nothing to do"; exit 0; }
@@ -39,13 +57,19 @@ n=$(echo $CANDS | wc -w)
 echo "== interlock 1: keep everything modified today (a live peer session owns one) =="
 for d in */; do
   d=${d%/}
-  [ "$(date -r "$d" +%Y-%m-%d)" = "$TODAY" ] && echo "  KEEP $(date -r "$d" '+%m-%d %H:%M')  $d"
+  newest=$(find "$d" -newermt "$TODAY 00:00" -print -quit 2>/dev/null)
+  if [ -n "$newest" ]; then
+    echo "  KEEP $d  (dir mtime $(date -r "$d" '+%m-%d %H:%M'), but active today inside)"
+  fi
 done
 
 echo "== interlock 2: no candidate may move over a 15s window =="
-before=$(for d in $CANDS; do echo "$d:$(date -r "$d" +%s)"; done)
+snap() { for d in $CANDS; do
+           echo "$d:$(find "$d" -printf '%T@\n' 2>/dev/null | sort -rn | head -1)"
+         done; }
+before=$(snap)
 sleep 15
-after=$(for d in $CANDS; do echo "$d:$(date -r "$d" +%s)"; done)
+after=$(snap)
 if [ "$before" != "$after" ]; then
   echo "REFUSE: a candidate scratchpad changed under us"; diff <(echo "$before") <(echo "$after"); exit 2
 fi
@@ -64,7 +88,9 @@ fi
 
 echo "== DELETING =="
 for d in $CANDS; do
-  if [ "$(date -r "$d" +%Y-%m-%d)" = "$TODAY" ]; then echo "REFUSE: $d touched today"; exit 2; fi
+  if [ -n "$(find "$d" -newermt "$TODAY 00:00" -print -quit 2>/dev/null)" ]; then
+    echo "REFUSE: $d has activity today somewhere inside"; exit 2
+  fi
   rm -rf -- "$d"
 done
 echo "  removed $n scratchpads"
