@@ -837,6 +837,31 @@ PY
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
         return 1
     fi
+    # doc pdvd/27: geometry provenance.  The imaging archives carry face ids
+    # from the wires file imaging was run with; this job samples them with ITS
+    # anodes.  v6 -> v7-uvwfit swapped the face idents of anodes 2,3,6,7, so a
+    # v7 job on v6 archives puts half the detector one face height off in y.
+    # Refuse the mix (PDVD_ALLOW_STALE_GEOMETRY=1 downgrades to a warning);
+    # old archives without a provenance file get a warning only.
+    local CLUS_WIRES IMG_WIRES
+    CLUS_WIRES=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["filename"] for n in c if n.get("type")=="WireSchemaFile"})[0])' "$CFG_JSON" 2>/dev/null)
+    IMG_WIRES=$(awk -F= '$1=="wires"{print $2}' "$CLUS_INPUT/img-provenance.txt" 2>/dev/null)
+    if [ -z "$IMG_WIRES" ]; then
+        echo "WARNING: $CLUS_INPUT has no img-provenance.txt: cannot prove the imaging archives were tiled with ${CLUS_WIRES:-?} (doc pdvd/27); re-image if the wires file changed since they were made" >&2
+    elif [ "$IMG_WIRES" != "$CLUS_WIRES" ]; then
+        if [ "${PDVD_ALLOW_STALE_GEOMETRY:-0}" = 1 ]; then
+            echo "WARNING: imaging wires=$IMG_WIRES but this clustering job compiles wires=$CLUS_WIRES (allowed by PDVD_ALLOW_STALE_GEOMETRY=1)" >&2
+        else
+            echo "ERROR: run=$RUN evt=$EVT: imaging archives in $CLUS_INPUT were tiled with wires=$IMG_WIRES but this job compiles wires=$CLUS_WIRES -- re-run run_img_evt.sh first, or set PDVD_ALLOW_STALE_GEOMETRY=1 (doc pdvd/27)" >&2
+            rm -f "$CFG_JSON"; return 3
+        fi
+    fi
+    if [ "$SAVE_PCTREE" = 1 ]; then
+        {
+            echo "wires=${CLUS_WIRES}"
+            echo "img_wires=${IMG_WIRES:-unknown}"
+        } >> "${WORKDIR}/pctree-evt${EVENT_NO}.tlas"
+    fi
     # Compile-only mode (compiled-config proofs): write CFG_JSON and stop before
     # running wire-cell.  Default unset => full run.
     if [ "${PDVD_CLUS_COMPILE_ONLY:-0}" = 1 ]; then

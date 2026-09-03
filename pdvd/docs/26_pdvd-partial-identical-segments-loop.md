@@ -19,6 +19,19 @@ the crash fix itself moves zero tagger verdicts and is byte-identical on
 §3 below is written as it now stands; the round-1 text it replaces is in the
 git history of this file.
 
+**Correction 2 (doc 27, same day).** The 039349/53 reading in §7.5 ("the void
+is real in the charge too") and the owner's §8 decision 2 built on it are
+WRONG: the input cluster is one continuous 200 cm track; the PR job had
+re-tiled it one face height off in y because the point tree was sampled with
+the v6 wires file and the PR job compiled the v7-uvwfit one (07:51 commit
+`228f1c39`; the two files order the faces of anodes 2, 3, 6, 7 oppositely).
+There is no over-clustering to separate. The same mismatch sits in every PDVD
+PR arm run after 07:51 on a pre-07:51 point tree (`d25r13*`, `d25r14*`), so
+the §7.1 attribution of the pre/post-07:51 verdict churn to the E-field
+operating point is at best partial. Details, guards and the self-consistent
+replacement arm: `27_pdvd-stale-geometry-face-swap.md`. The loop fix itself
+(§2, §4) is unaffected.
+
 **Scope.** One C++ change in `clus/src/NeutrinoStructureExaminer.cxx` (plus a
 declaration in `NeutrinoPatternBase.h`) and one new doctest. No config, no
 knob, no other experiment's files. Follows doc 25 §13.4 item 12, which shipped
@@ -421,7 +434,12 @@ What they show, and what changes the round-1 reading of "charge gap":
 - **039349/53, cluster 53**: steiner points and imaged charge both run from A
   (z 40, x 343) to z ≈ 87, then nothing for ~75 cm, then a small isolated piece
   at V (z ≈ 161–165, x ≈ 210). Three chords (`53002` 181 cm, `53004` 142 cm,
-  `53003` 112 cm) cross the void to V. Here the void is real in the charge too.
+  `53003` 112 cm) cross the void to V. ~~Here the void is real in the charge
+  too.~~ **Wrong — see doc 27.** The "charge near the fits" in this picture is
+  a coincidental cluster; the cluster's own points are 168 cm away in y (one
+  face height) and continuous from z 27 to 166. The steiner cloud was re-tiled
+  into the wrong face of anodes 6/7 because the point tree (v6 wires) and the
+  PR job (v7-uvwfit wires) disagreed on the face order.
 
 So the two events are different cases. On 14 the defect upstream is a steiner
 cloud that covers only part of a continuous track (the boundary is not a
@@ -459,8 +477,10 @@ The owner answered the three §7.5 questions the same day:
    campaign: doc 25 §13.4 item 8 (the Steiner terminal floor), doc pdvd/30's
    two-point fits, and the measurement in §7.5 (632 points above V, 0 within
    3 cm of the 111 cm V→A line, boundary not a readout-time cut).
-2. **039349/53 (isolated piece 75 cm away, chords across a charge void):** the
-   gap is real, so the two pieces should **not** be connected. The defect is
+2. **039349/53 (isolated piece 75 cm away, chords across a charge void)** —
+   *withdrawn by doc 27: the piece and the void were a stale-geometry artifact;
+   the input cluster is continuous and there is nothing to separate.* The
+   decision as taken: the gap is real, so the two pieces should **not** be connected. The defect is
    **over-clustering** — V's piece belongs to a different cluster (or its own),
    and the three chords `53002`/`53003`/`53004` only exist because the cluster
    boundary is wrong. The owner's framing: when clusters are passed along the

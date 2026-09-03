@@ -154,6 +154,26 @@ process_event() {
         echo "ERROR: wcsonnet failed to compile wct-pr-perevt.jsonnet" >&2
         return 1
     fi
+    # doc pdvd/27: geometry provenance guard.  The pctree's 3D points and face
+    # ids were sampled with the Q/L job's wires file; the PR retile re-samples
+    # the same blobs with THIS job's anodes.  v6 -> v7-uvwfit swapped the face
+    # idents of anodes 2,3,6,7, so a v6 pctree under a v7 PR job moved every
+    # retile on those anodes one face height in y (039349/53's "isolated piece"
+    # 75 cm from its own track).  Refuse the mix; PDVD_ALLOW_STALE_GEOMETRY=1
+    # downgrades to a warning; a pre-doc-27 sidecar (no wires= line) warns.
+    local PR_WIRES TLA_WIRES
+    PR_WIRES=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["filename"] for n in c if n.get("type")=="WireSchemaFile"})[0])' "$CFG_JSON" 2>/dev/null)
+    TLA_WIRES=$(awk -F= '$1=="wires"{print $2}' "$TLAS")
+    if [ -z "$TLA_WIRES" ]; then
+        echo "WARNING: $TLAS has no wires= line (pre-doc-27 sidecar): cannot prove the pctree was sampled with ${PR_WIRES:-?}; regenerate imaging + clustering if the wires file changed since (doc pdvd/27)" >&2
+    elif [ "$TLA_WIRES" != "$PR_WIRES" ]; then
+        if [ "${PDVD_ALLOW_STALE_GEOMETRY:-0}" = 1 ]; then
+            echo "WARNING: pctree wires=$TLA_WIRES but this PR job compiles wires=$PR_WIRES (allowed by PDVD_ALLOW_STALE_GEOMETRY=1)" >&2
+        else
+            echo "ERROR: run=$RUN evt=$EVT: pctree was sampled with wires=$TLA_WIRES but this PR job compiles wires=$PR_WIRES -- regenerate imaging + clustering (run_img_evt.sh, run_clus_evt.sh -save-pctree) before PR, or set PDVD_ALLOW_STALE_GEOMETRY=1 (doc pdvd/27)" >&2
+            rm -f "$CFG_JSON"; return 3
+        fi
+    fi
     if [ "${PDVD_PR_COMPILE_ONLY:-0}" = 1 ]; then
         echo "[compile-only] wrote $CFG_JSON"
         return 0

@@ -2277,3 +2277,13 @@ against an arm run with the knob off has to scrub them.
   the next round is proper separation after the chain's merges, following the
   SBND precedent (`separate()` operating point, `unmerge_*` stages). Order:
   over-clustering first, Steiner terminals after.
+- **2026-09-03** — doc 27: the 039349/53 "isolated piece" was NOT over-
+  clustering. The point trees of 09-02 (v6 wires) were fed to PR jobs compiled
+  after the 09-03 07:51 wires change (v7-uvwfit); the two files order the faces
+  of anodes 2, 3, 6, 7 oppositely, so every retile/STM fit/steiner cloud on
+  those anodes sat one face height (168 cm) off in y. Affects every PR arm run
+  after 07:51 on an older point tree (`d25r13*`, `d25r14*`): the §13 numbers
+  derived from them are to be re-derived from the self-consistent `d27fresh`
+  arm (imaging + clustering + PR on one wires file). Runner guards now refuse
+  the mix; a log-only WARN in the retiler names it. 039349/14's steiner hole
+  (anodes 4/5, unaffected) remains for the Steiner-terminals campaign.

@@ -201,6 +201,14 @@ process_event() {
                 echo "ERROR: wcsonnet failed for anode${ai}" >&2; return 1
             fi
         done
+        # doc pdvd/27: record the wires file these blobs are tiled with.  The
+        # face ids stored in clusters-apa-*.tar.gz are only meaningful under
+        # the same wires file (v6 -> v7-uvwfit swapped the faces of anodes
+        # 2,3,6,7); run_clus_evt.sh refuses to sample them under another one.
+        {
+            echo "wires=$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])); print(sorted({n["data"]["filename"] for n in c if n.get("type")=="WireSchemaFile"})[0])' "$WORKDIR/.wct-img-a${ANODE_INDICES[0]}.json" 2>/dev/null)"
+            echo "imaged=$(date -Is)"
+        } > "$WORKDIR/img-provenance.txt"
         for ai in "${ANODE_INDICES[@]}"; do
             CFG_JSON="$WORKDIR/.wct-img-a${ai}.json"
             ALOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}_a${ai}.log"
