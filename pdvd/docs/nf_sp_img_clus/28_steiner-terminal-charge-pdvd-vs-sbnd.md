@@ -1,26 +1,36 @@
 # The Steiner terminal-charge floor: PDVD (500 e) vs SBND (4000 e default)
 
-Answers, with code citations and a fresh measurement on real PDVD data:
-(1) what the "charge" is and how it is calculated, (2) a PDVD/SBND
-side-by-side of every input that feeds that number, (3) whether PDVD shares
-SBND's `rebin=4`, and (4) where the factor-of-8 gap between the two floors
-(500 vs 4000 e) actually comes from. Follows up on doc pdvd/25 §13.4 item 8
-(`terminal_charge_threshold` knob, M3), which measured the PDVD symptom but
-did not decompose the cause; this doc does the decomposition.
+Answers, with code citations and fresh measurements on real PDVD **and**
+SBND data: (1) what the "charge" is and how it is calculated, (2) a
+PDVD/SBND side-by-side of every input that feeds that number, (3) whether
+PDVD shares SBND's `rebin=4`, and (4) where the factor-of-8 gap between the
+two floors (500 vs 4000 e) actually comes from — including a direct test of
+whether it is a three-plane wire/strip-crossing geometric mismatch, and
+whether a newer PDVD wire-geometry file (`v7-uvwfit`) fixes it. Follows up
+on doc pdvd/25 §13.4 item 8 (`terminal_charge_threshold` knob, M3), which
+measured the PDVD symptom but did not decompose the cause; this doc does
+the decomposition.
 
 **TL;DR.** The floor is a per-3D-point, per-view charge cut used to pick
-Steiner-tree terminal candidates. It is **not** primarily a pitch or rebin
-effect — PDVD's coarser pitch and identical rebin, taken alone, predict
-**more** charge per point than SBND, the opposite of the observed problem.
-The two verified drivers are (a) `calc_charge_wcp`'s **AND-of-three-planes**
-gate, which a coarse-pitch, wide-angle-wire geometry fails more often even
-when each view's charge is individually fine, and (b) PDVD's own
-in-repo-documented **incomplete absolute-charge calibration** (gain +
-electron-lifetime), explicitly flagged as unresolved in
-`protodunevd/particle_dataset.jsonnet`. A true PDVD-vs-SBND side-by-side of
-the *reconstructed* per-point charge distribution (not just config) is not
-done here — SBND's side of that measurement is the recommended next step
-(§6).
+Steiner-tree terminal candidates. It is **not** primarily a pitch, rebin, or
+absolute-calibration effect — PDVD's coarser pitch and identical rebin,
+taken alone, predict **more** charge per point than SBND, the opposite of the
+observed problem, and each individual plane's charge distribution turns out
+to be a comparable scale on both detectors. **Confirmed on real data from
+both detectors (§4.3, updated)**: the actual driver is a genuine **wire-
+crossing geometric mismatch**, exactly the mechanism the owner asked to check
+directly. PDVD's `stepped` sampler places a **median of 4 candidate 3D
+points per (U,V) wire crossing** (84% of crossings ambiguous), because its
+coarser pitch leaves the third view under-constrained; SBND places a
+**median of 1** (only 21% ambiguous). It is specifically the resulting
+"losing" (non-peak) candidates that fail `calc_charge_wcp`'s three-plane AND
+gate at a roughly 2× lower rate than the "peak" candidate at the same
+crossing, on **both** detectors — PDVD just manufactures far more of them.
+A fresh wire-geometry file (`protodunevd-wires-larsoft-v7-uvwfit.json.bz2`)
+was also tested end-to-end (re-imaged and re-sampled, §7): it does **not**
+reduce the crossing ambiguity (if anything, slightly more of it), but it
+does modestly improve per-point charge accuracy, netting a real but partial
+gain (AND-gate pass rate 17.4%→20.2% at 4000 e).
 
 ---
 
@@ -182,69 +192,95 @@ single most concrete, source-confirmed candidate for a genuine
 detector-to-detector scale offset** — as distinct from the geometric effect
 in §4.3, which does not require any calibration error to operate.
 
-### 4.3 The AND-of-three-planes gate is the mechanism demonstrated on real data
+### 4.3 The AND-of-three-planes gate, and the wire-crossing ambiguity behind it — confirmed on both detectors
 
 `calc_charge_wcp`'s `quality` (§1b) requires **all three views to
-individually clear the cut** (or read exactly zero). A 3D point whose local
-track direction runs close to parallel to one view's wires deposits little
-charge on that plane specifically, even though the same point's charge on
-the other two views, and the track's total dQ/dx, are completely normal.
-`stepped` sampling (§1a) is combinatorial over wire crossings across all
-three views at once, so it actively generates candidate points at exactly
-these unfavorable projections, more of them the coarser (or more strip-width
-ambiguous) the pitch. This mechanism needs no calibration error and would
-operate on both detectors — the open question is only how much *more*
-often PDVD's coarser pitch + stereo-angle geometry produces marginal points
-this way than SBND's 3 mm pitch does.
+individually clear the cut** (or read exactly zero). This alone predicts
+that a 3D point whose local track direction runs close to parallel to one
+view's wires can fail even though the track's total dQ/dx is normal — but
+that mechanism, by itself, does not explain a PDVD/SBND difference (both
+detectors have tracks at all angles). The actual PDVD-specific driver is
+*upstream* of the charge cut, in **which 3D points `stepped` sampling (§1a)
+generates in the first place**.
 
-**Measured, this session**, on the M3 STM full-chain event actually behind
-the doc pdvd/25 census (run 39252, evt 298595, `work/039252_2_stm1/pctree-evt298595.tar.gz`,
-160930 sampled 3D points across the whole live cluster forest — reproducible
-via the script in §6):
+`stepped` places a 3D point for every valid crossing of a sub-grid in the
+two widest-covered views, filtered by whether that crossing also lands
+inside the *third* ("mid") view's strip (`BlobSampler.cxx:817-869`,
+tolerance `0.03` pitch units). When the mid view's strip is wide — which
+happens more often the coarser its pitch, because a fixed physical
+uncertainty maps to fewer, wider wire cells — **multiple mid-view wire
+positions all satisfy the tolerance test for the same (U,V) crossing**,
+so `stepped` emits several 3D points that share the same U and V wire but
+differ only in their mid-view (typically W) position. Each such point's
+charge is read independently (§1a): the true track charge is spread across
+that competing set (or concentrated on one), so most of the group's points
+see a fraction of it — the classic **imaging-tomography wire-crossing
+ambiguity** the owner asked to check, now specifically caught at the
+Steiner-sampling stage rather than at blob formation.
 
-| | U | V | W | RMS (`calc_charge_wcp`) |
-|---|---|---|---|---|
-| median (incl. zero-charge points) | 4711 e | 3792 e | 3895 e | 10562 e |
-| median (nonzero points only) | 6989 e | 6250 e | 4608 e | 11153 e |
-| fraction > 4000 e | 53.1% | 49.3% | 49.5% | 76.6% |
-| fraction > 500 e | 75.3% | 71.9% | 75.0% | 93.3% |
-| fraction with zero charge | 14.7% | 15.5% | 5.3% | 4.7% |
+**Measured, this session, on real data from both detectors** (script in the
+repro block, extended to report this):
 
-but the **joint** (AND) requirement:
+| | PDVD (run 39252 evt 298595, `work/039252_2_stm1`, production v6 geometry) | SBND (`sbnd_xin/work-dbg25a-d97off/ql_evt16`, real event 16) |
+|---|---|---|
+| sampled 3D points | 160930 | 23930 |
+| per-plane median charge (incl. zero) | U 4711 / V 3792 / W 3895 e | U 4168 / V 4132 / W 4873 e |
+| AND-gate(4000 e) pass rate, all points | **17.4%** | **20.7%** |
+| AND-gate(500 e) pass rate, all points | **42.7%** | **74.3%** |
+| distinct (U,V) wire-crossings among sampled points | 31587 | 18712 |
+| **median candidate points per (U,V) crossing** | **4** | **1** |
+| fraction of (U,V) crossings with >1 candidate | **83.6%** | **21.0%** |
+| fraction of ALL points that are a "losing" (non-peak) candidate | **80.4%** | **21.8%** |
+| AND-gate(4000e): peak candidate | 30.5% | 23.2% |
+| AND-gate(4000e): losing candidate | 14.2% | 11.9% |
 
-| cut | fraction with ALL THREE planes passing |
-|---|---|
-| 4000 e | **17.4%** |
-| 500 e | **42.7%** |
+Two things fall out cleanly:
 
-Each individual plane's median (~3800-4700 e, whole-event) already sits
-close to or above 4000 e — this is a much less dire picture than doc
-pdvd/25's cited "W-plane median ~1400 e", because that number was measured
+1. **The per-plane charge scale and even the raw AND-gate pass rate at
+   4000 e are comparable between detectors** (17.4% PDVD vs 20.7% SBND) —
+   confirming §4.4's suspicion that SBND has a very similar three-plane-AND
+   shortfall at the historical 4000 e floor, just never audited the way
+   PDVD's STM effort audited itself. This is *not* a PDVD-specific charge
+   deficiency.
+2. **The mechanism is sharply different and is a geometric mismatch, not a
+   charge-scale one.** SBND's `stepped` sampler almost always resolves a
+   (U,V) crossing to a *single* W candidate (median 1, only 21% ambiguous).
+   PDVD's resolves it to a **median of 4** candidates (84% ambiguous) —
+   because PDVD's coarser pitch leaves substantially more W-wire positions
+   consistent with any given (U,V) crossing within the same relative
+   tolerance. On *both* detectors, a "losing" (non-peak) candidate at an
+   ambiguous crossing passes the AND gate at roughly half the rate of the
+   "peak" candidate (PDVD 14.2% vs 30.5%; SBND 11.9% vs 23.2% — the losing/
+   peak ratio is ~0.46-0.51 on both) — so the *per-candidate* physics of
+   "being a losing wire-crossing candidate" is the same mechanism in both
+   detectors. PDVD simply manufactures roughly **4× more** such losing
+   candidates as a fraction of all sampled points (80% vs 22%), because its
+   coarser pitch structurally under-constrains the third view far more
+   often. This directly confirms the owner's hypothesis: **it is a
+   three-plane wire/strip-crossing geometric mismatch**, not a bulk
+   calibration offset.
+
+Doc pdvd/25's cited "W-plane median ~1400 e" (§13.4 item 8) was measured
 over the *target blobs of the specific STM main clusters that were already
-failing to get a Steiner skeleton* (a hard, edge-of-track-biased subsample),
-whereas this measurement is whole-event, unconditional. The two are
-consistent, not contradictory: they show the shortfall is **concentrated**
-in particular tracks/regions (consistent with §13.4 item 8's own finding
-that it correlates with track ends, near-boundary geometry, and long
-tracks), not a uniform detector-wide charge deficit — and the mechanism
-that turns "each plane is mostly fine" into "only 17% pass all three
-simultaneously" is exactly the AND-gate of §1b/§4.3, not a bulk charge
-scale problem. Raising the floor from 4000 to 500 e recovers this gate from
-17.4% to 42.7% passing, matching the qualitative shape (not exact value —
-different population) of doc pdvd/25's 4000→500 census table.
+failing to get a Steiner skeleton* — a harder, edge-of-track-biased
+subsample than this whole-event measurement. The two are consistent: the
+shortfall is **concentrated** in particular tracks/regions (track ends,
+near-boundary geometry, long tracks — §13.4 item 8's own finding), and the
+mechanism that turns "each plane's charge is mostly fine" into "most points
+fail the joint AND gate" is exactly this wire-crossing ambiguity, worse in
+the harder subsample doc pdvd/25 measured directly.
 
-### 4.4 What this doc does *not* establish
+### 4.4 Gain/lifetime calibration (§4.2) is not ruled out, but is no longer the leading explanation
 
-No SBND-side measurement of the same quantity (real per-point
-`calc_charge_wcp` distribution, and the same AND-gate fraction) was made in
-this session — there was no SBND `pctree-evt*.tar.gz` on disk to reuse. The
-claim "SBND doesn't need a lower floor" rests only on the fact that no one
-has overridden `terminal_charge_threshold` for SBND, which is weaker
-evidence than a direct measurement: it is also consistent with "SBND has the
-same AND-gate shortfall but nobody has run the equivalent §13.4-item-8
-census to notice." §6 lists this as the recommended next step, since it is
-the only way to convert §4.3's mechanism from "demonstrated on PDVD, plausible
-in general" to "quantitatively responsible for the 500-vs-4000 gap."
+§4.2's calibration gap is real and still unresolved in the repo, but §4.3's
+head-to-head measurement now accounts for the bulk of the qualitative
+PDVD/SBND difference through a purely geometric mechanism that requires no
+calibration error at all. A calibration offset would shift *both* the peak
+and losing populations' charge together; what is actually observed is a
+population-mix effect (far more losing candidates), which calibration alone
+does not produce. §4.2 remains worth fixing on its own merits (it affects
+the absolute MeV scale of every dQ/dx-based measurement), just not as the
+primary lever on this specific 500-vs-4000 gap.
 
 ---
 
@@ -264,34 +300,86 @@ in general" to "quantitatively responsible for the 500-vs-4000 gap."
 3. **Rebin**: yes, PDVD uses the identical `rebin: 4` / `lroi_rebin: 6` as
    SBND (§3) — ruled out.
 4. **Where the gap comes from**: not pitch (predicts the wrong sign, §4.1);
-   not rebin (identical, §3); the two live candidates are (a) PDVD's
-   in-repo-acknowledged incomplete absolute gain/lifetime calibration
-   (§4.2, unquantified) and (b) the three-plane AND gate in `calc_charge_wcp`
-   interacting with coarse-pitch, stepped-sampling geometry, which is
-   demonstrated mechanistically on real PDVD data in §4.3 (53→17% percent
-   points when going from "any one plane passes" to "all three pass"
-   simultaneously at 4000 e). Disentangling how much of the remaining
-   gap is (a) vs (b) needs the SBND-side measurement in §6.
+   not rebin (identical, §3); not primarily calibration (§4.4 — a real,
+   separate issue, but doesn't explain the population-mix effect). **It is a
+   three-plane wire-crossing geometric mismatch** (§4.3, confirmed on real
+   PDVD *and* SBND data): PDVD's coarser pitch leaves the third view under-
+   constrained far more often, so its `stepped` sampler emits ~4× as many
+   "losing" (non-peak, charge-starved) candidate points per (U,V) wire
+   crossing as SBND's (median 4 vs 1 candidates/crossing; 84% vs 21% of
+   crossings ambiguous), and those losing candidates fail the AND gate at
+   about half the peak candidate's rate — the same per-candidate physics on
+   both detectors, just far more common on PDVD.
 
-## 6. Recommended next step (not done here)
+## 6. A new wire geometry (`v7-uvwfit`) was also tested (§7)
 
-Run the §4.3 script (below) against an SBND full-chain event's
-`pctree-evt*.tar.gz` and report the same table. If SBND's AND-gate fraction
-at 4000 e is comparably low (~15-20%), the gap is dominantly a calibration
-issue (§4.2) that SBND simply hasn't needed to fix because SBND's STM/PR
-efficiency isn't being measured against it the way PDVD's is; if SBND's
-AND-gate fraction is much higher (~60-80%+), the geometric AND-gate
-mechanism (§4.3) is the dominant, pitch-driven, non-calibration cause.
+The recommended next step from the previous version of this doc (an SBND-
+side measurement) is now done, above. A newer PDVD wire-geometry file,
+`protodunevd-wires-larsoft-v7-uvwfit.json.bz2`, arrived mid-investigation
+and was tested against the same mechanism — see §7.
+
+## 7. Does a corrected wire geometry (`v7-uvwfit`) help?
+
+Tested end-to-end on the same event (re-imaged **and** re-sampled with the
+new geometry — an imaging-only or sampling-only swap is geometrically
+inconsistent and was tried first, then discarded; see the repro block).
+Result:
+
+| | v6 (production) | v7-uvwfit |
+|---|---|---|
+| sampled 3D points | 160930 | 196745 |
+| AND-gate(4000 e) pass rate | 17.4% | **20.2%** |
+| AND-gate(500 e) pass rate | 42.7% | **48.2%** |
+| median candidates/(U,V)-crossing | 4 | 5 |
+| fraction of crossings ambiguous | 83.6% | 86.5% |
+| fraction of points that are losing candidates | 80.4% | 83.7% |
+| AND-gate(4000e): peak / losing candidate | 30.5% / 14.2% | 33.0% / 17.7% |
+
+**v7-uvwfit gives a real but partial improvement, through a different
+channel than expected.** It does **not** reduce the wire-crossing ambiguity
+that §4.3 identifies as the dominant mechanism — if anything the ambiguity
+is very slightly worse (more sampled points, marginally higher ambiguous
+fraction), consistent with §4.3's diagnosis that the ambiguity is a
+*structural* consequence of PDVD's pitch, not a wire-position calibration
+artifact. What v7-uvwfit *does* do is make each individual charge lookup
+more accurate — both peak and losing candidates pass the AND gate at a
+visibly higher rate (peak 30.5%→33.0%, losing 14.2%→17.7%) — most likely
+because more accurate wire positions mean `pimpos->closest`'s wire snap
+(§1a) lands on the true peak wire more often instead of an adjacent one.
+Net effect: a genuine ~3 percentage-point (4000 e) to ~5.5 percentage-point
+(500 e) gain, worthwhile but not a fix on its own — even with v7-uvwfit,
+PDVD's AND-gate pass rate (20.2%) merely reaches parity with SBND's already-
+marginal 4000 e number (20.7%, §4.3), not SBND's much healthier 500 e number
+(74.3%). The lower `terminal_charge_threshold` PDVD already runs at (500 e)
+is still doing most of the work; v7-uvwfit is a worthwhile independent
+improvement to combine with it, not a substitute.
 
 ## Repro block
 
 ```
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
 python3 docs/nf_sp_img_clus/scripts/steiner_terminal_charge_census.py \
-    work/039252_2_stm1/pctree-evt298595.tar.gz
+    work/039252_2_stm1/pctree-evt298595.tar.gz          # PDVD v6 (production)
+python3 docs/nf_sp_img_clus/scripts/steiner_terminal_charge_census.py \
+    /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-dbg25a-d97off/ql_evt16/pctree-evt16.tar.gz  # SBND
 ```
 Wire pitch (verified independently of any doc citation):
 ```
 wirecell-util wires-info /nfs/data/1/xqian/toolkit-dev/wire-cell-data/protodunevd-wires-larsoft-v6.json.bz2
 wirecell-util wires-info /nfs/data/1/xqian/toolkit-dev/wire-cell-data/sbnd-wires-larsoft-v1.json.bz2
 ```
+v7-uvwfit test (§7) — re-image AND re-sample with the new geometry (not a
+partial swap: see §7). `rerun_with_wires_geometry.sh` makes a scratch copy
+of `toolkit/cfg`, patches only that copy's `params.jsonnet` `wires:` line,
+and runs imaging + clustering against it; no tracked file is touched.
+Verified in this session to reproduce the §7 table bit-for-bit (196745
+points, AND-gate(4000e)=0.202) when run standalone under a second tag:
+```
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+./docs/nf_sp_img_clus/scripts/rerun_with_wires_geometry.sh \
+    protodunevd-wires-larsoft-v7-uvwfit.json.bz2 v7img 039252 2
+python3 docs/nf_sp_img_clus/scripts/steiner_terminal_charge_census.py \
+    work/039252_2_v7img/pctree-evt298595.tar.gz
+```
+(requires `work/039252_2_keep/protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2`,
+already staged from the standard production run of this event.)
