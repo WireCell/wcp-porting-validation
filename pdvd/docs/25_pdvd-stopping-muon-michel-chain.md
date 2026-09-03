@@ -1249,6 +1249,47 @@ Every item below was found on run 039252 event 0 (idx 0) and fixed as a
     skips a zero direction; `shower_to_wall` now does the same (the walk is
     skipped, `dis` stays 0) and caps the walk at 1 km. Every shower with a
     usable direction takes the same path as before (gate round 7).
+12. **A fourth crash path, in `TrackFitting`'s wire-channel cache** (round-12
+    gate rerun, `d25r12eager`/`d25r12fast`, 039349/32). `TrackFitting::
+    fetch_channel_from_anode` (the cold-cache miss path behind
+    `get_channel_for_wire`) checked only the upper wire bound
+    (`wire >= wires.size()`), never the lower one; the hot-cache branch a few
+    lines up already gets this right (`wire >= 0 && wire < size`). A negative
+    wire is routine, not exotic: `form_point_association`'s fallback
+    projection (`TrackFitting.cxx:2760-2783`) walks `fb_wire_{u,v,w} + i`
+    outward in a diamond pattern with no floor at 0. `wires[wire]` with
+    `wire=-5` (the production value, apa=1 face=1 plane=2) casts to a huge
+    `size_t` — undefined behaviour: the gdb backtrace shows a segfault, but a
+    unit test (`doctest_get_channel_for_wire_bounds.cxx`) caught the same
+    code silently returning a plausible-looking wrong channel for one
+    negative index and segfaulting for another, i.e. it is not even
+    consistently a crash. Fix: `fetch_channel_from_anode` now matches the
+    hot-cache contract (`wire < 0 || wire >= size` → -1). Unknobbed, same
+    M13 precedent as item 2/3/4/9/10/11 above (undefined behaviour with an
+    unambiguous intended answer, gated by the existing 264-case
+    `wcdoctest-clus` suite plus the new test, not a documented divergence).
+    039349/32 now completes in both arms with a `mabc-pr.zip` and
+    `calib-pr-evt22857.json` it previously never produced.
+
+    **This fix is NOT a no-op, and it found a second, separate problem.**
+    Because the negative-wire lookup was undefined behaviour rather than a
+    deterministic wrong answer, some prior runs got lucky and took a cheap
+    path by accident. Two other events in the same manifest, 039349/14 and
+    039349/53 (14 s and 53 s before the fix, in the original round-12 pass),
+    ran 40+ minutes at 100 % CPU with a steadily-advancing but never-ending
+    `fit_blob_coverage` log and were killed rather than let finish. The
+    `while (!remaining_segments.empty())` segment-selection loop in
+    `find_other_segments` (`NeutrinoOtherSegments.cxx:531`) is well-founded
+    (strictly shrinks `remaining_segments` every iteration, so this is not an
+    infinite loop) but each iteration now calls `do_single_tracking` on a
+    correctly-computed, differently-shaped point association, and for these
+    two events that appears to generate many more candidate segments than
+    the accidentally-short-circuited path did. **Not investigated further in
+    this round** — it is a distinct cost problem in `find_other_segments`,
+    not a correctness question, and needs its own profiling pass. Tracked
+    here so it is not lost; do not re-run the full 120-event round-12 gate
+    against the fixed library without expecting 039349/14 and /53 to be slow
+    (possibly very slow — the ceiling was not established before the kill).
 8. **The Steiner terminal floor starves PDVD.** Over the first 18 events of
    the arm, 41 STM-accepted passes and 140 recorded passes contained ONE
    stop-end Bragg contrast ≥ 2, while the raw Bee charge along 688 long
@@ -2051,7 +2092,9 @@ against an arm run with the knob off has to scrub them.
   byte-identical to eager (mabc-pr.zip + calib-pr JSON, 238/238 hash pairs
   matched, 0 diffs; `stm/gates/r12_compare.txt` / `r12_census.tsv`). One
   pre-existing crash (039349/32, `TrackFitting::form_point_association`,
-  unrelated to this knob) reproduced identically in both arms. `wct-pr-
+  unrelated to this knob) reproduced identically in both arms — since fixed,
+  §13.4 item 12, which also flags a separate cost problem the fix exposed on
+  039349/14 and /53. `wct-pr-
   perevt.jsonnet`'s `protect_graph_name` default is now this flavor
   (PDVD-only change, no shared file touched); legacy escape
   `PDVD_PR_TLA="-S protect_graph_name='relaxed_strict_img_2d_rescue_long_wtrack'"`.
@@ -2172,3 +2215,17 @@ against an arm run with the knob off has to scrub them.
   `wct-pr-perevt.jsonnet`'s `protect_graph_name` default to the `_fast`
   flavor — PDVD-only, legacy escape recorded in the jsonnet comment. Toolkit
   `81aedb7f`..`f7102a84`.
+- **2026-09-03** — a fourth crash path, found by the round-12 gate rerun
+  (§13.4 item 12): `TrackFitting::fetch_channel_from_anode` never checked the
+  LOWER wire bound, so `form_point_association`'s fallback projection
+  (routine near any wire-plane edge) hit undefined behaviour on a negative
+  wire index — inconsistently a crash (039349/32) or a silently wrong
+  channel, never caught before because the hot-cache branch a few lines away
+  already had the right check. Fixed unknobbed (test-first,
+  `doctest_get_channel_for_wire_bounds.cxx`, `wcdoctest-clus` 264/264).
+  **Also surfaced a second, unfixed problem**: two other events, 039349/14
+  and /53, went from 14 s / 53 s to 40+ minutes (killed, not finished) once
+  the lookup stopped returning an accidentally-cheap wrong answer —
+  `find_other_segments`'s segment-selection loop is well-founded but now
+  legitimately explores far more candidates for these two events. Tracked in
+  item 12, not investigated further this round.
