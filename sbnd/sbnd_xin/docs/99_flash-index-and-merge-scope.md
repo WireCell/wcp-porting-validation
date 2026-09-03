@@ -348,26 +348,38 @@ counts, so it says out loud when the merge is wider than the batch:
 merged 48 per-event tables in the arm (this batch: 1) -> .../nusel-table.tsv + nusel-events.tsv
 ```
 
-## Repair of the damaged arm — **owed, not applied**
+## Repair of the damaged arm — **APPLIED 2026-09-02 20:22, on owner authorization**
 
-The damage is in an existing label, so under **CLAUDE.md §5.2** it is opt-in.
-`scripts/d99_repair_nuecc48_merge.sh` is written, dry-run clean, and applies only
-with `CONFIRM=yes`:
+The damage was in an existing label, so under **CLAUDE.md §5.2** the repair was
+opt-in: `scripts/d99_repair_nuecc48_merge.sh` writes nothing without
+`CONFIRM=yes`, and the owner ran it.
 
 ```
 interlock 1: 48 per-event tables, all non-empty  OK
 interlock 2: re-merge gives 49 event rows (want 49) and 547 table rows (want 547)
 interlock 3: every row of the current truncated files is reproduced verbatim  OK
+repaired: 49 event rows, 547 table rows
 ```
 
 Interlock 3 is the one that matters: it proves the regeneration reproduces what
-survived, so the repair restores rows rather than replacing them with something
-new. The truncated originals are preserved under
-`work-nuecc48-d97fvpr2/merge-truncated-20260902/`. To apply:
+survived, so the repair restored rows rather than replacing them with something
+new. The truncated originals are preserved verbatim under
+`work-nuecc48-d97fvpr2/merge-truncated-20260902/` (2 and 10 rows), with a README
+recording the repair.
 
-```bash
-CONFIRM=yes ./scripts/d99_repair_nuecc48_merge.sh
-```
+**Verified independently of the script**, and this is the check the defect
+originally broke — doc 92's T1, `wc -l nusel-events.tsv == N+1`, now passes on
+every production arm:
+
+| arm | events | `nusel-events.tsv` | want | | `nusel-table.tsv` |
+|---|---:|---:|---:|---|---:|
+| nuecc48 | 48 | 49 | 49 | **PASS** | 547 |
+| ncpi0 | 19 | 20 | 20 | **PASS** | 224 |
+| mcp1k | 1000 | 1001 | 1001 | **PASS** | 11432 |
+| mcp2k | 2000 | 2001 | 2001 | **PASS** | 22641 |
+
+No per-event file was touched, and no published number moves — the score tables
+and every doc-92 figure read the per-event files, which were always intact.
 
 ---
 
