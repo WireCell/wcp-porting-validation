@@ -63,6 +63,13 @@ function(
     trigger_offset_top_us = 0,
     time_offset    = 0,
     stepped_center_fallback = false,
+    // doc 31 round 3: resolve a sampled point's induction charge by channel
+    // IDENT when its wire is a wrapped strip's continuation.  PDVD wraps 1568
+    // U/V wires (11.3%); a plane's channels() omits their channels
+    // (AnodePlane.cxx:244-247) so the legacy operator[] lookup read channels[0]
+    // and left charge_val AND charge_unc at 0, which calc_charge_wcp reads as
+    // "no signal".  C++ default false; key omitted when off => byte-identical.
+    wrapped_channel_charge = false,
     // Readout window in ticks: clamps T_bad_ch time ranges in the Magnify /
     // PrDisplay writers (SBND 3427; PDVD 10000 = 5 ms at 0.5 us).
     readout_window_ticks = 10000,
@@ -3151,6 +3158,7 @@ function(
         subRunNo=subrun,
         eventNo=event,
         stepped_center_fallback=stepped_center_fallback,
+        wrapped_channel_charge=wrapped_channel_charge,
         time_offset=time_offset * wc.us,
         trigger_offset=trigger_offset_bot_us * wc.us,
         trigger_offset_top=trigger_offset_top_us * wc.us,

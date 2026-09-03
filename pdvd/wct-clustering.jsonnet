@@ -23,6 +23,10 @@ function(
     // Stepped-sampler fallback: blobs the stepped grid leaves point-less get
     // one point at the blob center.  Default off -> bit-identical output.
     stepped_center_fallback = false,
+    // doc 31 round 3: resolve induction charge by channel IDENT on a wrapped
+    // strip's continuation (PDVD 1568 U/V wires).  false => key omitted =>
+    // byte-identical.  See pdvd/docs/nf_sp_img_clus/31_*.md.
+    wrapped_channel_charge = false,
     // Event-T0 / readout-tick0 compensation for the live BlobSampler drift-x
     // conversion.  PDVD has no per-event T0, so default 0 (no preset T0).
     // -250us would place trigger-time activity at its true x; see
@@ -330,6 +334,7 @@ local drift_speed_top = if drift_speed_top_mmus == null then null
                         else drift_speed_top_mmus * wc.mm / wc.us;
 local clus = import 'pgrapher/experiment/protodunevd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback,
+                        wrapped_channel_charge=wrapped_channel_charge,
                         time_offset=time_offset, relax_containment_filter=relax_containment_filter,
                         trigger_offset=trigger_offset_bot, trigger_offset_top=trigger_offset_top,
                         drift_speed_b=drift_speed_bot, drift_speed_t=drift_speed_top);

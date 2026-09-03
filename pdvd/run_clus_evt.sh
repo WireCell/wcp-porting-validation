@@ -24,6 +24,8 @@
 #                                1.586 cathode-pinned convention; the toolkit
 #                                default stays the legacy 1.568).
 #                                Set to 'null' for the legacy value.
+#   PDVD_CLUS_TLA="-S key=val ..."   extra wcsonnet args (knob overrides),
+#                                the counterpart of PDVD_PR_TLA in run_pr_evt.sh
 #   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
 #                                (BOTH crates; diagnostics only)
 #   PDVD_QL_DIAG=1               offset-calibration diagnostic mode: containment off,
@@ -832,6 +834,7 @@ PY
         "${QL_SATFLAG_ARG[@]}" \
         "${CC_TIPTOUCH_ARG[@]}" \
         "${CC_DIST_ARG[@]}" \
+        ${PDVD_CLUS_TLA:-} \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

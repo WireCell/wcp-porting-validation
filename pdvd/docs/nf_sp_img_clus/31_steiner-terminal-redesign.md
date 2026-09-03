@@ -10,51 +10,65 @@ doc 27 as a stale-geometry face swap, not over-clustering.
 
 **Scope.** Round 1 examined the current algorithm, designed an alternative and
 reported a feasibility study, changing no code and no config. Round 2 ran the
-per-phase census round 1 asked for and added exactly one toolkit change: an
-**env-gated, log-only** terminal dump (`WCT_STEINER_PHASE_DUMP`, C++ default
-OFF). No production path moves, so no A/B gate is owed;
-`./build/clus/wcdoctest-clus` 270/270. **No fix is proposed or shipped here** —
-round 2 identifies a bug (§5.1) and round 3 fixes it.
+per-phase census and added one **env-gated, log-only** terminal dump
+(`WCT_STEINER_PHASE_DUMP`, C++ default OFF). Round 3 **fixes** the bug round 2
+found, behind a second default-OFF knob (`wrapped_channel_charge`), and measures
+what the fix does: it works, and it does **not** cure the symptom. Gates in
+§5.3; `./build/clus/wcdoctest-clus` 273/273.
 
 ---
 
-**TL;DR.** Round 2 (§4.1, §5.1) ran the per-phase census this doc's round 1
-called for, and it **overturned round 1's own conclusion**. The corrected
-picture:
+**TL;DR.** Round 2 overturned round 1's conclusion; round 3 fixed the bug round 2
+found and was overturned in turn on the question that mattered. Current picture:
 
 1. **The terminal finder IS the defect, and the filters are innocent** (§4.1).
    Measured per phase inside `create_steiner_tree` on the real event: the
-   cluster the Steiner stage actually runs on has **1275 points along the
-   starved 111 cm, with a largest gap of 0.7 cm** — dense, continuous coverage.
-   `find_steiner_terminals` (Phase 1) returns **1** terminal there, against 45
+   cluster the Steiner stage actually runs on has **1239 points along the
+   starved 111 cm, largest gap 2.4 cm** — dense, continuous coverage.
+   `find_steiner_terminals` (Phase 1) returns **1** terminal there, against 44
    on the control half. Phase 2 then removes 16 of 406 cluster-wide and
    **Phase 3 removes nothing at all** (on every one of the 50 calls in the
-   event). So the terminals below V are never created; they are not filtered
-   away. Round 1's §4 said the opposite and was wrong — see §4.2 for why the
-   inference failed.
-2. **The V-plane zero-charge defect is now root-caused** (§5.1), and it is a
-   real bug with a named line. `charge_val == 0` **⟺ the point's induction wire
-   is the second segment of a wrapped strip** — perfect separation, 100 % / 0 %,
-   on 916 points in both regions. Event-wide, `P(charge==0 | segment==1)` is
-   **1.000 for anodes 4-7** (top drift) and ~0 for anodes 0-3, i.e. it is a
-   deterministic per-(apa, face, plane) property, not noise. Both `charge_val`
-   **and** `charge_unc` come back exactly 0, which `calc_charge_wcp` reads as
-   "no signal, don't hold it against the point" — so it is silent by
-   construction. Site: `BlobSampler.cxx:343-357`.
+   event). The terminals below V are never created; they are not filtered away.
+   Round 1's §4 said the opposite — see §4.2 for why the inference failed.
+2. **The V-plane zero-charge defect is root-caused and fixed** (§5.1-§5.3), and
+   it was a real bug. `Gen::AnodePlane` builds `IWirePlane::channels()` by
+   skipping every wire with `segment() > 0` (`AnodePlane.cxx:244-247`), so a
+   plane does not list the channels of wrapped strips whose segment-0 half lives
+   in the sibling face. `BlobSampler` looked that list up with
+   `unordered_map::operator[]`, which **inserts 0 on a miss**, so those points
+   silently took `channels[0]`'s activity — usually absent, leaving
+   `charge_val` *and* `charge_unc` at exactly 0, which `calc_charge_wcp` reads
+   as "no signal, don't hold it against the point". **1568 PDVD wires (11.3 %)
+   and 6400 PDHD wires (28.8 %)**; SBND and uBooNE have no wrapped channels and
+   are structurally immune. Fixed by resolving the charge by channel **ident**,
+   as `add_ctpc` already does. Along the starved stretch, V-plane zeros go
+   **98.6 % → 4.4 %**, and 44 genuinely dead channels stop masquerading as
+   "no signal".
+3. **The fix does not bring the terminals back** (§5.3). Same event, one knob
+   apart: the largest steiner-free gap below V stays at **108.5 cm**, Phase 1
+   still returns **1** terminal there, and the tree is unchanged. Round 2's
+   recommendation — that fixing the charge might alone make the redesign
+   unnecessary for this event — is **refuted by measurement**. Correcting the
+   charge in fact made the candidacy gate *stricter* below V (58.3 % → 50.9 %),
+   because `(q > cut) || (q == 0)` had been letting the zeroed plane pass for
+   free.
 
-These are not two unrelated findings any more: (2) silently deletes an entire
-induction plane from every point along precisely the stretch where (1) fails to
-make terminals, and the terminal criterion is charge-based.
+(2) looked like the cause of (1) — it deletes an entire induction plane from
+every point along precisely the stretch where (1) fails to make terminals, and
+the criterion is charge-based. (3) is the test of that hypothesis, and it fails
+it. The two are real but independent.
 
 Everything reproduces on doc 27's fresh, fully self-consistent v7 arm, so none
 of it is an artifact of the v6/v7 mixing doc 27 found.
 
-The redesign (§6) still rests on doc 28's *population* evidence, and §7 measures
-its core idea — combine nearby wires over a fixed **physical** aperture instead
+The redesign (§6) no longer rests on doc 28's *population* evidence alone: §5.3
+supplies a mechanism measured on **this** event — the three-plane AND cannot
+tell "no charge" from "no readout", which is exactly what §6(b) and §6(c)
+propose to replace. §7 measures its core idea — combine nearby wires over a fixed **physical** aperture instead
 of reading one snapped wire — which removes essentially all of the
 peak-vs-losing candidate asymmetry doc 28 identified (losing/peak pass-rate
-ratio 0.77 → 0.92-1.00 on PDVD, 0.68 → 0.93-1.00 on SBND). But the first thing
-to fix is (2), because it is an outright bug feeding the criterion (1) blames.
+ratio 0.77 → 0.92-1.00 on PDVD, 0.68 → 0.93-1.00 on SBND). With (2) fixed and
+(3) measured, §6 is the main line again — see §8.
 
 ---
 
@@ -86,6 +100,52 @@ WCT_STEINER_PHASE_DUMP=1 wire-cell -l stderr -l "wct_pr_dump.log:trace" \
 # INDEX, not by `ident` (idents are local and repeat).
 python3 docs/nf_sp_img_clus/scripts/steiner_wrapped_channel_census.py \
     work/039349_14_d27fresh/pctree-evt19689.tar.gz
+
+# Sections 5.2 / 5.3 (round 3) -- the wrapped-segment fix.
+# The orphan census needs only the wires files (no event, no run):
+python3 docs/nf_sp_img_clus/scripts/steiner_orphan_channel_census.py
+
+# The two end-to-end arms.  THREE non-obvious prerequisites, each of which
+# fails loudly-but-late if you skip it:
+#   * PDVD_LIGHT_SUFFIX=_keep -- the light for this event is under
+#     work/039349_light19689_keep, not the bare name the runner defaults to;
+#     without it Q/L is skipped, there is no t0, and x_t0cor is garbage.
+#   * img-provenance.txt must be carried with the imaging tarballs, or doc 27's
+#     provenance guard refuses the inputs (rc=2, and the wire-cell log is never
+#     even created).
+#   * LD_LIBRARY_PATH pins a snapshot of local/lib: this is a shared tree and a
+#     peer's `wcbuild` mid-arm silently swaps the binary under you.
+# The knob must be set at CLUSTERING time: the PR stage's retile inherits its
+# charges from the input pctree rather than re-sampling, so flipping it in the
+# PR job alone is byte-identical (verified).
+mkdir -p /home/xqian/tmp/d31r3lib && cp -a ../../local/lib/. /home/xqian/tmp/d31r3lib/
+for arm in off on; do
+  W=work/039349_14_d31fix2$arm; mkdir -p $W
+  ln -f work/039349_14_d27fresh/clusters-apa-anode*-ms-*.tar.gz $W/
+  ln -f work/039349_14_d27fresh/img-provenance.txt $W/
+  [ $arm = on ] && K="-S wrapped_channel_charge=true" || K=""
+  env LD_LIBRARY_PATH=/home/xqian/tmp/d31r3lib PDVD_LIGHT_SUFFIX=_keep \
+      PDVD_CLUS_TLA="$K" PDVD_KEEP_CFG=1 \
+      ./run_clus_evt.sh -s d31fix2$arm -save-pctree -calib 39349 14
+  PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 PDVD_PR_TLA="$K" \
+      ./run_pr_evt.sh -s d31fix2$arm 39349 14
+  (cd $W && env LD_LIBRARY_PATH=/home/xqian/tmp/d31r3lib WCT_STEINER_PHASE_DUMP=1 \
+      wire-cell -l stderr -l "wct_pr_dump.log:trace" -L clus:trace \
+      -c .wct-pr_d31fix2$arm.json)
+done
+
+# The three round-3 measurements.
+python3 docs/nf_sp_img_clus/scripts/steiner_wrapped_channel_census.py \
+    work/039349_14_d31fix2on/pctree-evt19689.tar.gz      # zeros gone, W unmoved
+python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py \
+    work/039349_14_d31fix2on                             # candidacy, ctpc match
+python3 docs/nf_sp_img_clus/scripts/steiner_phase_census.py \
+    work/039349_14_d31fix2off/wct_pr_dump.log \
+    work/039349_14_d31fix2on/wct_pr_dump.log             # the per-phase census
+
+# Compiled-config gate (knob OFF must equal HEAD byte-for-byte).  Compile the
+# HEAD copies of clus.jsonnet / pr.jsonnet under a scratch WIRECELL_PATH and the
+# HEAD copy of wct-pr-perevt.jsonnet beside the live one, then `cmp`.
 
 # Section 7 -- aperture feasibility, PDVD and the SBND control.
 python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
@@ -386,10 +446,27 @@ bookkeeping bug rather than a charge effect:
 | W | 0 (never wrapped) | 50187 | 0.041 |
 
 and split by group, `P(charge==0 | segment==1)` is **1.000** for a4f0 V, a5f0 U,
-a6f1 V, a5f0 V, a7f1 V (and 0.980 for a4f0 U) but **0.000-0.16** for a0f0,
-a1f0, a2f1, a3f1 — i.e. **1.000 on anodes 4-7 (top drift) and ~0 on anodes 0-3**.
-Five of twelve groups are exactly deterministic. A charge fluctuation does not
-do that.
+a6f1 V, a5f0 V, a7f1 V (and 0.980 for a4f0 U). Five of twelve groups are exactly
+deterministic. A charge fluctuation does not do that.
+
+> **Round-3 correction.** An earlier version of this paragraph continued
+> "…but ~0 for anodes 0-3, i.e. 1.000 on anodes 4-7 (top drift) and ~0 on
+> anodes 0-3", and read that split as a property of the defect. **Withdrawn.**
+> §5.2's geometry census shows there is no such asymmetry to explain: *every*
+> anode 0-7 carries exactly 98 orphan U and 98 orphan V wires, in one of its two
+> faces. The anodes 0-3 rows come from an offline segment label that this doc
+> cannot vouch for — the label is read by indexing the wires file's raw
+> `planes[].wires[]` array with the point's persisted `wire_index`, and the
+> toolkit's `iplane->wires()` is that array after `WireSchema::load`'s
+> correction pass and `AnodePlane.cxx:257`'s re-sort. If those orders differ for
+> the bottom-drift anodes, the labels are wrong there and the rows mean nothing.
+> **Not established either way, and not needed:** the rows above are kept only
+> for anodes 4-7, where the mapping was verified independently (median distance
+> from each point to the wire its `wire_index` names: **0.00 mm** as-read,
+> 1446 mm under a swapped face — an exact match). Our track is on anode 4, in
+> that verified set. Anodes 0-3 gave no clean match under any of the 16
+> (apa, face) geometry groups; that is unexplained and is *not* claimed here as
+> a defect.
 
 **The site** is `BlobSampler.cxx:343-357`:
 
@@ -412,12 +489,9 @@ exactly 0. That is why it is invisible: `calc_charge_wcp` (§1.2) reads a zero
 plane as *"no signal, don't hold it against the point"*, the point keeps a
 healthy two-plane U/W RMS, and nothing warns.
 
-**Still to confirm** (needs one probe line, not an algorithm): whether the
-wrapped channel's ident is genuinely absent from `iplane->channels()` in the
-failing groups, or is present and the failure is elsewhere in the chain.
-`channel_attach` is computed and would answer it immediately, but it is not
-persisted into this scope. Either way `operator[]` here converts a lookup miss
-into a wrong-channel read with no diagnostic, which is worth fixing on its own.
+Round 2 left one question open — whether the ident is *genuinely* absent from
+`iplane->channels()`, or present with the failure elsewhere. **§5.2 answers it
+from the source: genuinely absent, by construction.**
 
 **Scale, and why it matters for §4.1.** Roughly 11 % of all sampled points in
 this event (≈ 5600 of 50187) lose an entire induction plane silently. Along the
@@ -440,6 +514,187 @@ decomposed and should not be read as a result: the event-wide counts were never
 split into "absent from the map" versus "present but different", and SBND is a
 single-anode dump where the (apa, face) attribution is trivial, so the two sides
 are not measured the same way.
+
+### 5.2 Round 3: the mechanism, read off the source
+
+`Gen::AnodePlane::configure` builds each plane's channel vector by walking that
+plane's wires and **skipping every wrapped continuation**
+(`gen/src/AnodePlane.cxx:244-247`):
+
+```cpp
+IChannel::vector plane_channels;
+for (auto w : wires) {
+    if (w->segment() > 0) {          // <-- here
+        continue;
+    }
+    const int chanid = w->channel();
+    SimpleChannel* sch = chwcollector(chanid);
+    sch->set_index(plane_channels.size());
+    plane_channels.push_back(IChannel::pointer(sch));
+}
+```
+
+That is a correct channel *list* — each channel appears once per anode, attached
+to the plane holding its segment-0 wire, which is what `set_index` numbers. It
+is **not** a wire→channel lookup table. `BlobSampler` used it as one.
+
+So the defect fires on exactly the wires that are **orphans in their own plane**:
+`segment > 0` **and** no segment-0 wire of the *same* plane carries the channel.
+A strip that wraps back inside one plane is not an orphan — its channel is listed
+via the segment-0 half and the lookup succeeds. Counting orphans straight from
+each detector's production wires file
+(`scripts/steiner_orphan_channel_census.py`, replicated as a doctest):
+
+| detector | wires file | wires | wrapped chans | **orphan wires** | planes hit |
+|---|---|---|---|---|---|
+| **PDVD** | `protodunevd-wires-larsoft-v7-uvwfit` | 13856 | 1568 | **1568 (11.3 %)** | 16 of 48 |
+| **PDHD** | `protodunehd-wires-larsoft-v1` | 22208 | 6400 | **6400 (28.8 %)** | 16 of 24 |
+| SBND | `sbnd-wires-geometry-v0206` | 11276 | 0 | **0** | 0 of 6 |
+| uBooNE | `microboone-celltree-wires-v2.1` | 8256 | 0 | **0** | 0 of 3 |
+
+Three things follow.
+
+1. **It is not a PDVD-only bug.** PDHD is affected 2.5× harder. PDHD's config
+   never mentions this knob, so its C++ default is the whole of its protection
+   (cf. `feedback_cpp_default_governs_only_silent_configs`). A PDHD flip is a
+   separate owner call with its own gate, not a side effect of this one.
+2. **SBND and uBooNE are structurally immune** — no multi-segment channel
+   anywhere, so the lookup never misses, the fallback map is never built, and no
+   setting of the knob can move them. That is the negative control, and it is
+   what makes the byte-identity argument for those two detectors airtight rather
+   than merely gate-tested.
+3. **PDVD's split is uniform, not per-drift-side:** every anode 0-7 contributes
+   98 orphan U + 98 orphan V wires in one of its faces (16 × 98 = 1568). This is
+   what overturns §5.1's per-anode reading.
+
+The failure is also worse than "charge becomes 0". `channels[0]` is a real
+channel; when it happens to be live in that slice the point silently inherits
+**another channel's charge**. On this event it was absent every time, so the
+symptom was uniformly zero — but the mechanism admits a wrong non-zero value,
+which no downstream sentinel could catch.
+
+### 5.3 Round 3: the fix, and what it did *not* do
+
+**The fix.** `BlobSampler` now resolves the charge by channel **ident** when —
+and only when — the plane's index map misses:
+
+```cpp
+auto chit = p_chi2i.find(channel_ident[ipt]);
+if (chit != p_chi2i.end()) { /* unchanged: index into channels[] */ }
+else if (cc.wrapped_channel_charge) {
+    channel_attach[ipt] = -1;                       // no index into THIS plane
+    const auto& abi = activity_by_ident(islice);    // built lazily, cached per slice
+    auto ait = abi.find(channel_ident[ipt]);
+    if (ait != abi.end()) { charge_val = ...; charge_unc = ...; }
+}
+else { /* legacy reproduced exactly, operator[] insertion included */ }
+```
+
+This is not a new idiom. `ISlice::map_t` is *already* hashed and compared by
+ident (`ISlice.h:36-48`), so an ident is a complete key, and
+`PointTreeBuilding::add_ctpc` walks the same activity map **forward**
+(`for (const auto& [ichan, charge] : activity)` → `ichan->wires()`,
+`PointTreeBuilding.cxx:294-306`) and therefore never needs the reverse map at
+all. That is precisely why the `ctpc_*` 2-D maps always carried the charge these
+points were missing — §5's original observation, now explained.
+
+Cost is zero where it cannot help: the ident map is built only after a miss, and
+a detector with no wrapped channels never misses.
+
+**Knob:** `wrapped_channel_charge`, `BlobSampler::CommonConfig`, **default
+false**, threaded to PDVD through `clus.jsonnet`'s `bs_live_face` with the
+key-suppression idiom. Applied to the **live** sampler (and hence the retile
+sampler, `bs_rt_face = bs_live_face`) only; the dead-blob sampler is left alone
+this round, deliberately — its charge feeds different logic and would need its
+own gate.
+
+**Gates.**
+
+| gate | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | **273/273** (3 new cases; 270 before) |
+| compiled PR config, knob OFF vs `HEAD` | **byte-identical**, 268489 B, md5 `e9b620c35d102d71ada99c5ef464ede3` |
+| compiled PR config, knob ON | differs **only** by the key, on exactly 16 nodes = 8 anodes × 2 faces |
+| PDVD 039349/14 end-to-end, knob OFF | `calib-pr` 7510870 B vs d27fresh's 7510869 — the one known timer byte |
+| freshness | source 13:37:08 → `local/lib` 13:37:34 → test binary 13:38:36 |
+
+The doctest pins the **default**, which is what protects PDHD; PDHD itself was
+reasoned about from its wires file, **not** gated on an event.
+
+**Verification that the fix works** — same event, same imaging inputs, one knob
+apart (`work/039349_14_d31fix2{off,on}`):
+
+| measurement, V plane along the starved stretch | knob OFF | knob ON |
+|---|---|---|
+| `charge_val == 0` | **711/721 (98.6 %)** | **32/721 (4.4 %)** |
+| matches the `ctpc_a4f0pV` map exactly at its own cell | 0/721 | **677/721** |
+| "stored 0 but the map has charge" | 677 (median 4979 e) | **0** |
+| `charge_unc == 0` (the silent state) | 0.986 | **0.000** |
+| `charge_unc > 1e10` (the honest dead sentinel) | 0.000 | **0.044** |
+
+Event-wide `P(charge==0 | segment==1)`: U **0.563 → 0.052**, V **0.582 →
+0.016**. **W is unchanged at 0.041 in both arms** — W is never wrapped, so it
+must not move, and it does not. That is the internal negative control.
+
+The `unc > 1e10` row is worth its own sentence: 44 of those points are on
+genuinely **dead** channels, and the bug had been reporting them as
+`val = unc = 0`, i.e. *"no signal"* rather than *"no readout"*. The fix restores
+a sentinel, not just a number.
+
+**And now the negative result, which is the point of this section.**
+
+| | knob OFF | knob ON |
+|---|---|---|
+| retiled cluster (P0) | 5705 pts, 1239 below V | 5723 pts, 1239 below V |
+| P1 `find_steiner_terminals` | 406 total, **1 below V**, 44 above | 407 total, **1 below V**, 44 above |
+| P2 / P3 | 390, **1 below V** | 390, **1 below V** |
+| steiner points reaching the tree, below V | 5 | 5 |
+| terminals below V | 1 | 1 |
+| **largest steiner-free gap below V** | **108.5 cm** | **108.5 cm** |
+| candidacy below V (`calc_charge_wcp` + 500 e) | 420/721 = **58.3 %** | 367/721 = **50.9 %** |
+| candidacy above V (control) | 109/195 = 55.9 % | 109/195 = **55.9 %** |
+
+**Fixing the charge did not bring the terminals back.** The gap is identical to
+the digit. Round 2's recommendation — "the honest possibility is that this alone
+restores the terminals and no redesign is needed for *this* event" — is
+**refuted by measurement.**
+
+Two things make this a result rather than a null:
+
+- **Phase 1 demonstrably saw the corrected charges.** Event-wide, terminals
+  entering phase 2 go 12131 → **12127**. A small number, but a non-zero one: the
+  stage's own output moved, so the correction reached it. (The earlier check
+  that flipping the knob in the PR job *alone* left the calib dump
+  byte-identical is consistent with this — the retile inherits its charges from
+  the input point cloud rather than re-sampling, so the fix has to be applied at
+  **clustering** time, which is where `pctree-evt*.tar.gz` is written.) An
+  11 %-of-points charge correction moved Phase 1 by 4 terminals in 12131 and
+  moved this track's tree by nothing at all.
+- **Correcting the charge made the gate *stricter*, not looser** — 58.3 % →
+  50.9 % below V, while the control half did not move at all. That is
+  `calc_charge_wcp`'s `flag_p = (q > cut) || (q == 0)` (§1.2) doing exactly what
+  it says: a zeroed plane *passes*. The bug had been buying those points a free
+  pass on V, and removing it costs them one.
+
+That second line is the one the redesign has been missing. §6(b) (a relative /
+SNR floor instead of an absolute one) and §6(c) (combine the planes with a
+consistency χ² instead of ANDing them) were argued in round 1 from doc 28's
+**population** statistics. They are now supported by a **mechanism measured on
+this event**: the three-plane AND treats "no charge" and "no readout" as the
+same thing, and neither the absolute floor nor the AND has any way to tell them
+apart. §6 is justified for this event on its own evidence.
+
+**One downstream change, direction unknown, flagged for the owner.** In the ON
+arm one cluster's STM verdict flips — 4 STM-tagged clusters become 3 (cluster 47
+drops out; ours is 34, unaffected). Because PDVD runs
+`nu_per_bundle_stm_only=true` (doc 25 §13.10), that removes one bundle's entire
+per-bundle PR, and the calib dump follows: segments 23 → 2, vertices 27 → 3,
+showers 4 → 0, `proj` 17 → 5. Tagger verdict count (82) and every warning line
+are identical between arms, so the chain ran the same way; one verdict moved.
+**Which verdict is right is not established here** — the OFF verdict was computed
+on mutilated charge and the ON verdict on real charge, and deciding between them
+needs a hand scan, not a count. It is recorded because it is the kind of change
+that must not arrive unannounced with a default flip.
 
 ---
 
@@ -586,34 +841,53 @@ Three honest qualifications:
 
 ---
 
-## 8. What this round did not do, and what round 2 is
+## 8. Scope of each round, and what round 4 is
 
-Round 2 added one toolkit change: an **env-gated, log-only** terminal dump in
-`create_steiner_tree` (`WCT_STEINER_PHASE_DUMP`, default OFF — `getenv` is null
-in production, the lambda returns immediately, no output changes).
-`./build/clus/wcdoctest-clus` 270/270. No config change; no A/B gate owed
-because nothing reachable in production moved.
+**Round 1** (doc + scripts, no code): the algorithm review, the four uBooNE
+couplings, the §6 redesign, §7's aperture feasibility. Its §4 conclusion was
+overturned by round 2 — see §4.2.
 
-Still not done: whether the §5.1 bug is what breaks §4.1's Phase 1 (leading
-candidate, not proven); §7's aperture is measured on the doc 28 ambiguity
-population only, not end-to-end through the tree.
+**Round 2** (`b74f60ed`): one toolkit change, an **env-gated, log-only** terminal
+dump in `create_steiner_tree` (`WCT_STEINER_PHASE_DUMP`, default OFF). No config
+change, no A/B gate owed. It produced §4.1's census, which named Phase 1.
 
-Round 3, in order:
+**Round 3** (this one): the wrapped-segment charge bug of §5 is **root-caused
+(§5.2), fixed behind a default-OFF knob, and gated (§5.3)** — and the fix is
+**measured not to cure the symptom**. Gates in §5.3's table. What round 3
+establishes, in order of how much it should change anyone's plans:
 
-1. **Fix the wrapped-segment charge lookup (§5.1).** It is an outright bug with
-   a named site, it silently zeroes ~11 % of this event's points and 98.6 % of
-   the starved stretch, and it feeds the very criterion §4.1 blames. Confirm the
-   `iplane->channels()` question with one probe on `channel_attach`, fix, and
-   re-run §4.1's census — the honest possibility is that this alone restores the
-   terminals and no redesign is needed for *this* event. Note the blast radius:
-   the fix is in `BlobSampler`, which every detector binds, so it needs the full
-   byte-identity treatment — though only a detector with wrapped channels can
-   move, which SBND and uBooNE do not have.
-2. **Re-measure Phase 1 with correct charges.** Only if terminals are still
-   missing does the §6 redesign become the answer for this event; §6 stands on
-   doc 28's population evidence regardless.
-3. **Then** the §6 redesign, gated on §6.1's gap metric across a manifest, with
-   SBND and uBooNE byte-identity gates because `calc_charge_wcp` and
-   `Steiner::Grapher` are shared. `steiner_terminal_wire_tol` /
-   `steiner_terminal_adjacent_slice` being off in SBND but on in PDVD (§3) is a
-   separate owner call this campaign should surface, not silently resolve.
+1. **The redesign is still needed, and now for a reason measured on this event.**
+   Correct charges leave the terminal-free gap at 108.5 cm, unchanged to the
+   digit. §6(b) and §6(c) no longer rest on doc 28's population evidence alone:
+   `calc_charge_wcp`'s `(q > cut) || (q == 0)` cannot distinguish "no charge"
+   from "no readout", which is why removing the zeros made the gate *stricter*
+   (58.3 % → 50.9 %) rather than looser.
+2. **A real bug is fixed, and it is not PDVD's alone.** PDHD carries 2.5× the
+   orphan fraction and is protected only by the C++ default.
+3. **A one-verdict downstream change exists** and needs a hand scan before any
+   default flip (§5.3, last paragraph).
+
+Still not done, and explicitly owed:
+
+- **Turning the knob on anywhere by default is an owner call**, not this round's.
+  It is a behaviour change on PDVD and PDHD; §5.3's evidence says it is *correct*
+  but says nothing about whether the tuning downstream of it still holds. The
+  minimum before a flip: the STM verdict on cluster 47 hand-scanned, and a
+  knob-ON pass over a manifest rather than one event.
+- **PDHD has no event-level gate here** — only its wires file was examined. One
+  knob-OFF PDHD event would close that, cheaply.
+- **The dead-blob sampler is untouched** (§5.3): same bug, different consumer,
+  its own gate.
+- **Anodes 0-3's `wire_index` ↔ v7 geometry mismatch** (§5.1 correction) is
+  unexplained. W matches on all eight anodes; U and V match only on 4-7. It may
+  well be my offline index mapping rather than a defect — it is recorded so it is
+  not rediscovered, and it is *not* claimed as a finding.
+- **§7's aperture is measured on the doc 28 ambiguity population only**, never
+  end-to-end through the tree.
+
+**Round 4** is §6, in the order round 1 set out, and it is now the main line
+again: gated on §6.1's gap metric across a manifest, with SBND and uBooNE
+byte-identity gates because `calc_charge_wcp` and `Steiner::Grapher` are shared.
+`steiner_terminal_wire_tol` / `steiner_terminal_adjacent_slice` being off in SBND
+but on in PDVD (§3) remains a separate owner call this campaign should surface,
+not silently resolve.
