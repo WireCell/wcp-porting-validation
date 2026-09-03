@@ -32,6 +32,7 @@ import argparse
 import csv
 import glob
 import os
+import re
 import sys
 
 import numpy as np
@@ -166,6 +167,110 @@ def read_perf(perf_pattern, col_pattern):
     return out
 
 
+# ------------------------------------------------- operating-point size (TLAs)
+def _strip_jsonnet_comments(t):
+    """Remove //, # and /* */ comments without touching string literals.
+
+    Needed before any paren matching: the entry points' comments contain
+    unbalanced parentheses, and matching on the raw text closes the signature
+    hundreds of lines early (it reported 39 of 501 TLAs).
+    """
+    out, i, n, instr = [], 0, len(t), None
+    while i < n:
+        c = t[i]
+        if instr:
+            out.append(c)
+            if c == "\\":
+                out.append(t[i + 1]); i += 2; continue
+            if c == instr:
+                instr = None
+            i += 1; continue
+        if c in "\"'":
+            instr = c; out.append(c); i += 1; continue
+        if c == "/" and i + 1 < n and t[i + 1] == "/":
+            while i < n and t[i] != "\n":
+                i += 1
+            continue
+        if c == "/" and i + 1 < n and t[i + 1] == "*":
+            j = t.find("*/", i + 2); i = (j + 2) if j >= 0 else n; continue
+        if c == "#":
+            while i < n and t[i] != "\n":
+                i += 1
+            continue
+        out.append(c); i += 1
+    return "".join(out)
+
+
+TRIVIAL_TLA = {"null", "''", '""', "{}", "[]", "false", "0"}
+
+
+def count_tlas(path):
+    """(total top-level args, args whose default is a non-trivial production value).
+
+    'Non-trivial' = not null / '' / {} / [] / false / 0, i.e. the arguments that
+    actually carry an operating point rather than a default-OFF switch.  The
+    rule is stated here because the count is quoted in the guide.
+    """
+    t = _strip_jsonnet_comments(open(path).read())
+    m = re.search(r"^function\(", t, re.M)
+    if not m:
+        return (0, 0)
+    i, d = m.start() + len("function"), 0
+    for k in range(i, len(t)):
+        if t[k] == "(":
+            d += 1
+        elif t[k] == ")":
+            d -= 1
+            if d == 0:
+                break
+    args, depth, cur = [], 0, ""
+    for ch in t[i + 1:k]:
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        if ch == "," and depth == 0:
+            args.append(cur); cur = ""
+        else:
+            cur += ch
+    args.append(cur)
+    args = [a.strip() for a in args if a.strip()]
+    nont = [a for a in args if "=" in a and a.split("=", 1)[1].strip() not in TRIVIAL_TLA]
+    return (len(args), len(nont))
+
+
+# ------------------------------------------------- stage-A per-event Q/L wall
+RE_STATUS = re.compile(r"rc=(\d+) evt=(\d+) wall=(\d+)s")
+
+
+def collect_qlarm(pattern):
+    """Per-event Q/L wall from a per-event stage-A arm's .status/<evt> records.
+
+    The group-mode .{img,ql}.time.meta records are per GROUP of 16; a per-event
+    stage-A arm (d97_ql_arm.sh) writes one .status line per event instead.  The
+    two are not comparable -- group mode amortises the ~5 s configure cost over
+    16 events -- so this is reported beside the group number, never instead of
+    it.  Integer seconds, and contention-contaminated by the arm's own
+    concurrency: it is a wall, not a core time, and there is no RSS record.
+    """
+    out = {}
+    for s in SAMPLES:
+        root = pattern.format(s=s)
+        w, bad = [], 0
+        for f in glob.glob(os.path.join(root, ".status", "*")):
+            m = RE_STATUS.search(open(f).read())
+            if not m:
+                continue
+            if m.group(1) != "0":
+                bad += 1
+            w.append(int(m.group(3)))
+        if w:
+            out[s] = {"n": len(w), "rc_nonzero": bad, "median_s": umedian(w),
+                      "p90_s": sorted(w)[int(0.9 * len(w))], "max_s": max(w),
+                      "sum_h": round(sum(w) / 3600.0, 2)}
+    return out
+
+
 # ---------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -177,6 +282,12 @@ def main():
     ap.add_argument("--perf", default="docs/pr/pr142-perf-{s}.tsv")
     ap.add_argument("--perf-col", default="work-{s}-prod0901")
     ap.add_argument("--pr-jobs", default="32", help="PR_JOBS the arm ran at (labels the wall axis)")
+    ap.add_argument("--cfg", default=None,
+                    help="SBND cfg dir holding wct-{pr,clus-matching}-perevt.jsonnet; "
+                         "counts the operating point's TLAs into the summary")
+    ap.add_argument("--qlarm", default=None,
+                    help="per-event stage-A arm pattern, e.g. 'work-{s}-d97fv'; "
+                         "reads .status/<evt> for the per-event Q/L wall")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     os.makedirs(a.tsvdir, exist_ok=True)
@@ -416,6 +527,21 @@ def main():
         ax.set_xticks(x); ax.set_xticklabels(["imaging\n(group/16)", "clustering+Q/L\n(group/16)", "PR\n(per event, core-s)"]) ; ax.set_ylabel(yl); ax.set_title(note, fontsize=8.5, color="#555")
     fig.suptitle(f"Per-event cost by stage, {a.tag} production (3067 events)", fontsize=10)
     fig.tight_layout(); fig.savefig(os.path.join(a.out, "d92_stage_summary.png")); plt.close(fig)
+
+    # ------------------------------------------------------------ operating-point size
+    if a.cfg:
+        for fn, key in (("wct-pr-perevt.jsonnet", "pr"), ("wct-clus-matching-perevt.jsonnet", "ql")):
+            fp = os.path.join(a.cfg, fn)
+            if os.path.exists(fp):
+                n_all, n_val = count_tlas(fp)
+                put("cfg", f"n_tla_{key}", n_all)
+                put("cfg", f"n_tla_{key}_with_value", n_val)
+
+    # ------------------------------------------------------------ per-event stage-A Q/L
+    if a.qlarm:
+        for s, d in collect_qlarm(a.qlarm).items():
+            for k, v in d.items():
+                put(s, f"qlarm_{k}", v)
 
     # ------------------------------------------------------------ summary tsv
     sp = os.path.join(a.tsvdir, "d92-summary.tsv")
