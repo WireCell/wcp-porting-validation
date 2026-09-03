@@ -1,4 +1,4 @@
-event	cluster	q_forward	n_forward	q_perp	n_perp
+event	cluster	q_forward	n_forward	q_perp	n_perp	n_fwd_same_cluster	n_fwd_other_cluster
 039252_0	32	986569	187	0	0
 039252_0	72	0	0	0	0
 039252_0	73	0	0	0	0

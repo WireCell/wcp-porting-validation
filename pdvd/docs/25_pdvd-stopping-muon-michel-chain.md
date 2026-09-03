@@ -1356,30 +1356,47 @@ stop-end number alone cannot separate from physics.
 | 6 | is the Bragg charge there in the IMAGING and lost by the fit? | **no**: charge/cm in a 2.5 cm tube, stop 1.68 — but the same estimator at the **entry** end gives **1.72** (ratio 0.97); tighten the tube to 0.8 cm and both collapse to 1.16 / 1.18 | the entry end is the causal negative control: the "rise" is nearest-point pile-up at any terminus |
 | 7 | so where does the track end? | a median **30 cm** from any active boundary; only 8 % within 5 cm | — |
 | 8 | is the muon still there past the fit end? | **48 %** have ≥ 10 imaging points in a 25 cm cylinder along the muon direction beyond it | **6 %** in the same cylinder rotated 90° |
+| 8b | whose charge is it? | of those, **96 % is the muon's OWN cluster** (95 % purely so; median 48 same-cluster vs 0 other-cluster points) | clustering split the muon in 4 % — so this is a *reach* problem inside a complete cluster, not a merge problem |
 
 Row 5 is the verdict: where the muon table demands 2.36× the plateau, the
 data reads 0.9×, and it stays flat out to 20 cm — this population has no
 stopping-muon profile at all, in the fit (rows 4, 5) or in the imaging
-charge (row 6). Rows 7 and 8 say why: these are MIP tracks whose
-**reconstruction** ends in the bulk, half of them with the muon's own charge
-still visible beyond the end. That is the skeleton-reach item of §13.9,
-whose independent raw-charge census already counts 320 clusters per 120
-events that look like stoppers while the tagger yields ~1 Bragg-clean track
-per three events.
+charge (row 6). Rows 7, 8 and 8b say why, and say it precisely: these are MIP
+tracks whose **fitted path** ends a median 30 cm inside the active volume
+while the muon's charge continues, and in 96 % of those cases the charge that
+continues is **in the same cluster the fit was run on**. Clustering is not
+losing the muon; the Steiner skeleton / `do_rough_path` reach inside a
+complete cluster is. That is the skeleton-reach item of §13.9, whose
+independent raw-charge census already counts 320 clusters per 120 events that
+look like stoppers while the tagger yields ~1 Bragg-clean track per three
+events.
 
-**The tagger is doing what it was built to do.** `eval_stm_core_impl` never
-tests for a Bragg rise of any size, and it never looks at the last 2 cm: it
-hunts a peak in the last `peak_range` cm, then asks whether the muon dE/dx
-table fits the 15–35 cm window ending at that peak better than a flat MIP
-line (`ks1 - ks2 < -0.02`, or the combined margin `< 0`). On this population
-it prefers muon over flat by a clear margin — median ks1 0.064 vs ks2 0.116,
-median ks1 − ks2 = −0.051, only 13 % on the marginal branch — because over
-35 cm the muon table rises just 13 % and a slightly sloped flat track beats
-a perfectly flat line. A relative criterion evaluated over 35 cm has nothing
-to say about the 2 cm that decide whether a muon stopped. So this is a
-**purity statement about the PDVD input**, not a defect in the tagger, and
-the same criterion on SBND's accepted passes gives a fitted contrast of 3.03
-(n = 5) — real Bragg peaks — against PDVD's 1.02.
+**The tagger is doing what it was built to do, and the mechanism is
+readable.** `eval_stm_core_impl` never tests for a Bragg rise of any size and
+never looks at the last 2 cm. It (a) hunts the maximum dQ/dx bin in the last
+`peak_range` cm (40 cm on the first eval calls), (b) sets the window to the
+15–35 cm *ending at that maximum*, and (c) asks whether the muon dE/dx table
+is a better fit to it than a flat MIP line. Two properties of that test do
+the work here:
+
+- `WireCell::kslike_compare` (`util/src/KSTest.cxx:215`) normalises **both**
+  vectors to unit sum and returns the largest gap between their cumulatives.
+  It is a pure *shape* statistic, scale-free — which is why the accepted
+  passes can sit at |ratio1 − 1| = 0.449 (the muon curve sums 45 % more than
+  the data) and still pass branch 1 on `ks1 - ks2 < -0.02` alone.
+- anchoring the window's end on the maximum bin is a **selection effect**:
+  every fluctuating flat track has a local maximum somewhere in the last
+  40 cm, and here it is worth 1.70× the plateau — that is exactly row 2. A
+  profile ending on a 1.7× bump is closer in shape to a reference that ends
+  2.36× up than to a flat line, so ks1 (0.064) beats ks2 (0.116) with median
+  margin −0.051, and only 13 % need the marginal branch.
+
+So the tagger's verdict is a statement about a self-selected local maximum a
+median 13.8 cm before the track's end, and the 2 cm that decide whether a
+muon stopped are never read. This is a **purity statement about the PDVD
+input**, not a defect in the tagger: the same code on SBND's accepted passes
+gives a fitted contrast of 3.03 (n = 5) — real Bragg peaks — against PDVD's
+1.02.
 
 **The dQ/dx test.** `collect_stm_sample.py` (tagger verdict, status 0,
 ≥ 40 points, ≥ 6 rr bins, rr from ≤ 2 to ≥ 22 cm, contrast ≥ 2,
@@ -1526,8 +1543,11 @@ the PDVD pipeline; every new knob has a defaults doctest
   imaging charge shows no rise either (stop 1.68 vs entry control 1.72), the
   end sits a median 30 cm from any boundary, and 48 % still have the muon's
   charge beyond it (6 % in the perpendicular control). Order of work:
-  1. **the skeleton-reach / premature-end item below** — the root cause, and
-     the only lever that also *grows* the calibration sample;
+  1. **the skeleton-reach / premature-end item below** — the root cause, the
+     only lever that also *grows* the calibration sample, and now localised:
+     row 8b says the charge past the fit end is the muon's OWN cluster in
+     96 % of cases, so the defect is the skeleton / `do_rough_path` reach
+     inside a complete cluster, not a clustering merge;
   2. turn on the **existing** guard family in the PDVD job before writing any
      new C++: `stm_accept_guards` is `false` there by the §2.3 "STM is the
      signal" choice, and its `guard_ratio2_max` = 2.0 cap alone would veto
@@ -1573,8 +1593,9 @@ the PDVD pipeline; every new knob has a defaults doctest
   "clustering breaks / dead regions" is now the leading reading rather than a
   guess. A blind hand scan of the `stm1` STM set (per §9.2) is still the
   re-derivation §2.3 asked for, and it is now a *targeted* one: scan the 48 %
-  reach-positive set against the 43 % reach-empty set (`stm/end_reach_stm2.tsv`)
-  and ask what ends the cluster. The calibration sample is protected by the
+  reach-positive set against the 43 % reach-empty set (`stm/end_reach_stm2.tsv`,
+  columns `n_fwd_same_cluster` / `n_fwd_other_cluster`) and ask what ends the
+  *skeleton* — the cluster itself carries on in 96 % of them. The calibration sample is protected by the
   collector's Bragg-contrast cut regardless.
 - **Unnamed post-round-1 STM exits** (half of the evaluated mains): name them
   (log-only change) before tuning anything.
@@ -1621,6 +1642,12 @@ the PDVD pipeline; every new knob has a defaults doctest
   table demands 2.36×, in the fit *and* in the imaging charge (stop 1.68 vs
   entry 1.72; 1.16 vs 1.18 in a tight tube), ends a median 30 cm from any
   boundary, and 48 % have the muon's charge still there past the fit end
-  (6 % perpendicular control). §13.9 re-ordered: skeleton reach first, the
+  (6 % perpendicular control) — **96 % of it in the muon's own cluster**, so
+  the defect is skeleton / `do_rough_path` reach inside a complete cluster,
+  not a clustering merge. Mechanism traced: `kslike_compare` is unit-sum
+  normalised (a pure shape statistic, hence |ratio1 − 1| = 0.449 costs
+  nothing) and the eval window's end is anchored on the maximum bin it finds
+  — a selection effect worth 1.70×, which beats a flat line against a
+  reference that ends 2.36× up. §13.9 re-ordered: skeleton reach first, the
   existing `stm_accept_guards` family second (its `guard_ratio2_max` cap
   alone vetoes 12 %), a new contrast guard third.
