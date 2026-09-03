@@ -182,7 +182,15 @@ work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protect
 # these products anywhere in the tree, only the frozen member-content rollups in
 # state-20260825b/hashes/stagea-<s>.tsv.  A future round that releases a grp0825
 # arm is deleting the product itself, not one copy of two.
-work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A, 48/19/1000/2000 evts, per-event layout	docs/81_group-mode-production.md
+# 2026-09-02 (doc 98): grp0825 IS NOW IMAGING-ONLY.  The round split the arm:
+# its evt<N> imaging is the substrate 10478 symlinks across the tree resolve
+# into and is untouchable; its ql_evt<N> half was TWO operating points stale
+# (doc 97 sec 2 measured today's knob-off run failing to reproduce it -- epoch
+# drift) and nothing anywhere symlinked to it, so it was retired in place after
+# rollup_grp0825_ql_20260902.py froze its 18402-member hash rollup into
+# state-20260902/grp0825-ql-rollup.tsv.  Do NOT read the line below as still
+# protecting Q/L products; the current Q/L is work-*-d97fv.
+work-nuecc48-grp0825 work-ncpi0-grp0825 work-mcp1k-grp0825 work-mcp2k-grp0825	doc 81 stage A IMAGING (evt<N>) only -- 48/19/1000/2000 evts; ql_evt<N> retired 2026-09-02	docs/81_group-mode-production.md, doc 98
 
 # --- the pr/104 arms: NOW SUPERSEDED, kept pending an owner decision -------
 # prod0823 above covers every sample at least as widely and is byte-identical
@@ -233,7 +241,12 @@ work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deter
 # 3067 events reproducing on every SHARED product with T_cluster the only
 # added tree.  Do not release these without a successor that passes the same
 # gate; "a newer arm exists" is not the same claim.
-work-nuecc48-prod0901b work-ncpi0-prod0901b work-mcp1k-prod0901b work-mcp2k-prod0901b	the SBND production baseline at ref/prod-2026-09-01b (save_in_scope ON), 3067 evts, full output	doc 89
+# RELEASED 2026-09-02 (doc 98).  This pin was created by doc 91's owner
+# instruction "We want to keep the latest production though" -- and prod0901b
+# is no longer the latest; work-*-d97fvpr2 is.  The same sentence that
+# protected it releases it.  Its 31/31 sentinel role is carried by
+# work-sent97-*, which was built and verified BEFORE this was deleted.
+# work-nuecc48-prod0901b work-ncpi0-prod0901b work-mcp1k-prod0901b work-mcp2k-prod0901b	the SBND production baseline at ref/prod-2026-09-01b	doc 89
 
 # --- doc 87 acceptance evidence: REFUSED release 2026-09-01 ----------------
 # The doc-89 planner wanted to release the four three-sample gate arms
@@ -289,6 +302,27 @@ work-87grp-def-ncpi0 work-87grp-min-ncpi0 work-87grp-nopct-ncpi0	doc 87 sec 6.4 
 # work/pr137_sheets/.  ASSERT 2 would have caught it via the label-archive
 # check, but a record directory should be named, not rescued by a safety net.
 work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
+
+# --- doc 98: the 2026-09-02 production retention set --------------------------
+# The owner's instruction was "we only need to save the latest production
+# results for Q/L matching as well as PR results".  After doc 97's flip that is
+# these eight dirs, and they are the reason every other full-sample arm went.
+work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRODUCTION stage A (Q/L) at ref/prod-2026-09-04, sep_fv_point ON, 3067 evts	doc 97, doc 98
+work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr2	LATEST PRODUCTION stage B (PR tail) on it, 3067 evts	doc 97, doc 98
+#
+# THE SENTINEL WITNESS.  Production (d97fvpr2) is 30 PASS / 1 FAIL: 105074
+# (pr/128 class B) asserts a PF node production deliberately no longer makes,
+# and re-anchoring it is an OPEN owner call.  The only 31/31 arms on disk were
+# work-*-d97off2pr and work-*-prod0901b and doc 98 released BOTH, so the 28
+# distinct sentinel events were copied out first.  Deleting this strands the
+# open sentinel with nothing to adjudicate against.  Rebuild, if it is ever
+# lost, is NOT possible from production -- production is the arm that fails.
+work-sent97-mcp1k work-sent97-mcp2k work-sent97-ncpi0 work-sent97-nuecc48	the 31/31 sentinel witness carved out of d97off2pr before it was retired; 165 MB	doc 98, scripts/retire/witness_sentinels_20260902.py
+#
+# A LIVE PEER ROUND OWNS work-*-doc25new* / work-*-doc25old (PDVD doc 25's SBND
+# regression-gate arms, gate round 7 in flight 2026-09-02).  Protected by
+# PREFIX for the life of that round -- the same treatment doc 91 gave doc 90's
+# arms.  Release when the PDVD doc 25 round closes, not before.
 
 # --- RETIRED (kept for provenance) ---------------------------------------
 #
