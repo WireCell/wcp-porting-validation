@@ -12,12 +12,27 @@
 # inset_scope_fv(); the OFF baseline for stage A is still work-<s>-grp0825 and
 # for stage B still work-<s>-r3entry.
 #
-# Usage: [D97_JOBS=12] [PR_JOBS=16] ./scripts/d97_fv_arms.sh [ql|pr|all] [sample ...]
+# CONCURRENCY -- corrected 2026-09-02, and what the SHIPPED arm actually ran at.
+# This script used to default D97_JOBS=12 / PR_JOBS=16, both ABOVE the CLAUDE.md
+# M5 cap (~6, imaging can take 8).  Nobody ever ran them: the arm that produced
+# production was launched from a shell that already had the variables set, and
+# `${VAR:-N}` keeps the caller's value, so the defaults here were dead text that
+# nevertheless MISDESCRIBED the arm.  Read off the runners' own first log lines
+# (`jobs=N`), the prod0902 arm ran at:
+#     ncpi0, nuecc48   D97_JOBS=6   PR_JOBS=6
+#     mcp1k, mcp2k     D97_JOBS=8   PR_JOBS=8
+# The defaults below are now the M5 cap, so a bare invocation is a legal run and
+# the script no longer claims a concurrency it never used.  Concurrency does not
+# change output -- each event is a separate deterministic process -- so this is a
+# correction to the RECORD, not a re-validation.  Caught while refreshing doc 92,
+# one step short of labelling a published figure's axis PR_JOBS=16.
+#
+# Usage: [D97_JOBS=8] [PR_JOBS=8] ./scripts/d97_fv_arms.sh [ql|pr|all] [sample ...]
 set -u
 cd -P "$(dirname "$0")/.." || exit 1
 BASE=$PWD
-export D97_JOBS=${D97_JOBS:-12}
-export PR_JOBS=${PR_JOBS:-16}
+export D97_JOBS=${D97_JOBS:-8}
+export PR_JOBS=${PR_JOBS:-8}
 export PR_EXTRA_STAGES=${PR_EXTRA_STAGES:-pr_display}
 export LIBSNAP=${LIBSNAP:-$HOME/tmp/d97b-libsnap}
 export LD_LIBRARY_PATH=$LIBSNAP:${LD_LIBRARY_PATH:-}

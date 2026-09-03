@@ -112,7 +112,12 @@ echo "=== doc 97 Q/L arm ==="
 echo "  sample=$SMP  root=$ROOT  src=$SRC  jobs=$J  events=${#evts[@]}"
 echo "  input=$INDIR"
 echo "  QL_EXTRA='${QL_EXTRA--save-pctree}'  libsnap=${LIBSNAP:-$HOME/tmp/doc94r3b-libsnap}"
-echo "  toolkit HEAD=$(git -C "$SX/../.." rev-parse --short HEAD 2>/dev/null)"
+# $SX/../.. is wcp-porting-img, NOT the toolkit -- this line said "toolkit HEAD"
+    # and printed the wcp commit for every arm ever run with it.  Chasing
+    # 0fce23d4 in the toolkit (it is a wcp doc-96 commit) is how it was found,
+    # while refreshing doc 92.  Both repos are printed now, each named correctly,
+    # and the pinned libsnap is what actually decides the physics anyway.
+    echo "  wcp HEAD=$(git -C "$SX/../.." rev-parse --short HEAD 2>/dev/null)  toolkit HEAD=$(git -C /nfs/data/1/xqian/toolkit-dev/toolkit rev-parse --short HEAD 2>/dev/null)"
 echo "  local/lib libWireCellClus.so mtime=$(stat -c %y /nfs/data/1/xqian/toolkit-dev/local/lib/libWireCellClus.so)"
 echo "  started $(date -Is)"
 t0=$(date +%s)

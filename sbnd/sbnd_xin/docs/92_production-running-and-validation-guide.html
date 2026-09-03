@@ -78,9 +78,10 @@ a{color:var(--new)}
 condition is, how minimal and debug outputs differ, how the multi-step and multi-event running works, what
 reference results exist, and a checklist to prove your integration reproduces them.</p>
 <p class="meta">Doc 92 · <code>wcp-porting-img/sbnd/sbnd_xin/docs/</code> · written 2026-09-01,
-<strong>refreshed 2026-09-02</strong> · production epoch <code>prod0902</code> (toolkit
-<code>apply-pointcloud</code> = <code>master</code> at <code>e88f364d</code>, operating point pinned in
-<code>ref/prod-2026-09-04/</code>) · every number on this page is reproduced by
+<strong>refreshed 2026-09-02</strong> · production epoch <code>prod0902</code> (operating point pinned in
+<code>ref/prod-2026-09-04/</code>; the numbers were produced by the binary pinned at
+<code>~/tmp/d97b-libsnap</code> and re-gated against the current tree, <code>apply-pointcloud</code> =
+<code>master</code> at <code>e88f364d</code> — <a href="#t2">T2</a>) · every number on this page is reproduced by
 <code>scripts/analysis/d92_prodguide_plots.py</code> from committed tables (<a href="#repro">§10</a>).</p>
 
 <div class="note">
@@ -421,7 +422,8 @@ are re-partitions of an already-tagged main. Everything is accounted for; nothin
 <tr><td class="mono">Trun</td><td>1</td><td><code>runNo, subRunNo, eventNo, dQdx_scale, dQdx_offset</code>. The only RSE in the file: T_tagger/T_kine have no RSE branch.</td></tr>
 <tr><td class="mono">T_tagger</td><td>1</td><td>1229 branches: <code>nu_x/y/z</code>, <code>numu_score</code>, <code>nue_score</code>, <code>cosmict_flag</code>, <code>cosmict_flag_1..10</code>, <code>cosmict_10_score</code>, <code>cosmic_flag</code> (a BDT <em>input</em>), <code>match_isFC</code>, the uBooNE sub-score families, per-candidate <code>act_*</code></td></tr>
 <tr><td class="mono">T_kine</td><td>1</td><td><code>kine_reco_Enu</code>, <code>kine_reco_add_energy</code>, per-particle <code>kine_energy_particle[]</code> / <code>kine_particle_type[]</code>, the pi0 block, <code>kine_energy_excluded{,_main,_other}</code>, <code>kine_n_excluded</code>, <code>kine_energy_flagged</code>, <code>kine_mcs_*</code></td></tr>
-<tr><td class="mono">T_cluster</td><td>1 per live cluster</td><td><span class="tag add">since prod0901b</span> <code>cluster_id, in_scope, is_main, is_associated, tgm, stm, fc, lm, beam_flash, flash_id, flash_time_us, flash_pe, npoints, length_cm, cluster_t0_us</code>. Acceptance: <code>set(cluster_id where in_scope)</code> equals the Bee clustering layer exactly, 308/308 events.</td></tr>
+<tr><td class="mono">T_cluster</td><td>1 per live cluster</td><td><span class="tag add">since prod0901b</span> <code>cluster_id, in_scope, is_main, is_associated, tgm, stm, fc, lm, beam_flash, flash_id, flash_time_us, flash_pe, npoints, length_cm, cluster_t0_us</code>. Acceptance: <code>set(cluster_id where in_scope)</code> equals the Bee clustering layer exactly, 308/308 events.
+<div class="bad"><strong><code>flash_id</code>, <code>flash_time_us</code> and <code>flash_pe</code> are unreliable on clusters without a valid flash — reported, not fixed here.</strong> <code>SbndPrMagnifyTrackingVisitor</code> writes them under <code>if (const auto flash = cl-&gt;get_flash())</code>, but <code>Facade::Flash::operator bool</code> returns <code>m_valid</code>, and that class's own header says: <em>"A 'true' does not guarantee all values are valid."</em> When the handle is truthy with unfilled members the three branches receive raw memory. Measured over the 308-event manifest: <strong>88 of 20 175 rows</strong> carry <code>flash_time_us == 0</code> and <code>flash_pe == 0</code> yet <code>flash_id != −1</code>, and <strong>48 cells on 15 events change value between two builds of the same source</strong> (a denormal ~1e-310 here, <code>0x5555</code> there) with nothing else in the file moving. Nothing physical is wrong — the affected clusters genuinely have no flash — but <strong>do not read these three branches unless the cluster has a flash, and do not put them in a bit-identity gate.</strong> The authoritative per-bundle flash information is <code>nusel-evt&lt;ID&gt;.tsv</code>, which was byte-identical on all 308. The same pattern is in <code>PdvdPrMagnifyTrackingVisitor</code>.</div></td></tr>
 <tr><td class="mono">T_rec_charge, T_proj, T_proj_data, T_bad_ch</td><td>many</td><td>fit points with dQ/dx (<code>reduced_chi2</code> legitimately NaN), projections, dead channels</td></tr>
 </tbody></table></div>
 
@@ -460,7 +462,7 @@ tables against. T4 checks that the shipped fixes still fire. Run from <code>wcp-
 <thead><tr><th>Check</th><th>How</th><th>Expected on the 3067 reference events</th></tr></thead>
 <tbody>
 <tr><td>Return codes</td><td class="mono">grep -L 'rc=0' work-*/pr_evt*/rc.txt | wc -l</td><td>0 (rc≠0 was 0 on all 3067)</td></tr>
-<tr><td>Event count</td><td class="mono">wc -l &lt;arm&gt;/nusel-events.tsv</td><td>N+1 (49 / 20 / 1001 / 2001)</td></tr>
+<tr><td>Event count</td><td class="mono">wc -l &lt;arm&gt;/nusel-events.tsv</td><td>N+1 (49 / 20 / 1001 / 2001). <strong>Known defect in the shipped <code>work-nuecc48-d97fvpr2</code>: it holds 2, not 49</strong> — a one-event re-run (evt 256587) re-merged over the full merge, because <code>run_pr_chain_batch.sh</code> merges the events of <em>its batch</em>, not of the arm. <code>nusel-table.tsv</code> is likewise 10 rows instead of 547. All 48 per-event <code>nusel-evt&lt;ID&gt;.tsv</code> are present and correct, so nothing is lost and no number on this page is affected (<code>pr_scores_table.py</code> reads the per-event files); but re-merge before diffing the merged table of that arm, and never re-run a subset into an arm you intend to keep.</td></tr>
 <tr><td>Trees present</td><td>uproot: keys of <code>tracking-pr.root</code></td><td><code>Trun, T_tagger, T_kine, T_cluster, T_rec_charge, T_proj, T_proj_data, T_bad_ch</code>; <code>T_tagger</code> and <code>T_kine</code> have exactly 1 entry (doc 5 G9: the writers are not multi-event safe on one filename)</td></tr>
 <tr><td>DL vertex alive</td><td class="mono">grep -l 'DL vertex failed' work-*/pr_evt*/wct_pr_evt*.log | wc -l</td><td>0 (the <code>dl_warn</code> column of the reference tables is 0 on all 3067)</td></tr>
 <tr><td>Concurrency sane</td><td class="mono">cut -d' ' -f1 /proc/loadavg</td><td>below ncores a few minutes in (M5); truncated outputs follow oversubscription</td></tr>
@@ -486,6 +488,33 @@ into it — but the Q/L half was <em>re-run</em> at <code>sep_fv_point</code>, s
 is the stage-A product a T2 gate must start from. Do not feed a PR gate from <code>grp0825</code>'s own Q/L: it is two
 operating points stale and was retired in place (doc 98), and re-running Q/L against the stored 2026-08-25 root
 mis-attributes up to three events (doc 97 §8).</li>
+<li><strong>The reference arms and the current tree are not the same binary — so that was gated, not assumed.</strong>
+<code>prod0902</code> was produced by <code>~/tmp/d97b-libsnap</code>, whose <code>libWireCellClus.so</code> is dated
+2026-09-02 10:59. Nine toolkit commits landed after it and five touch <code>clus/</code> sources SBND shares with
+ProtoDUNE-VD (<code>TaggerCheckSTM</code>, <code>DynamicPointCloud</code>, <code>Facade_Cluster</code>,
+<code>TrackFitting</code>, <code>CreateSteinerGraph</code>, <code>SteinerGrapher</code>,
+<code>NeutrinoTaggerNuE</code>, <code>NeutrinoPatternBase</code>, <code>improvecluster_2</code>,
+<code>clustering_flag_matched_mains</code>) — all PDVD crash-path fixes, all <em>expected</em> to be no-ops here.
+<code>prod_cfg_gate.py</code> 21/21 proves the <em>config</em> did not move and says nothing about the binary. So the
+whole 308-event manifest was re-run at <code>e88f364d</code>, <strong>both stages</strong> (the changed sources run in
+the Q/L job as well as the PR job) and with <strong>no <code>-sep-fv-point</code> flag</strong>, which re-tests the
+flip as a default at the same time. Driver <code>scripts/d92_epoch_gate.sh</code>; arms <code>work-*-d92gate</code> /
+<code>work-*-d92gatepr</code>.
+<div class="scroll"><table>
+<thead><tr><th>Layer</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>stage A, Q/L member content (<code>d97_ql_gate.py</code>)</td><td><strong>PASS</strong> 308/308 events, 1232 products</td></tr>
+<tr><td>stage B, archive member content (<code>pr85_hash_gate.py</code>)</td><td><strong>PASS</strong> 616/616 archives (38 + 96 + 482), 0 unpaired</td></tr>
+<tr><td>per-event <code>nusel-evt&lt;ID&gt;.tsv</code></td><td><strong>PASS</strong> 308/308 byte-identical</td></tr>
+<tr><td>ROOT trees: <code>Trun, T_tagger, T_kine, T_rec_charge, T_proj, T_proj_data, T_bad_ch</code></td><td><strong>PASS</strong>, every branch, every event</td></tr>
+<tr><td><code>T_cluster</code>, branches <code>flash_id / flash_time_us / flash_pe</code></td><td><span class="tag warn">48 cells</span> on 15 of 308 events, of 20 175 rows — <strong>uninitialised memory on both sides</strong>, see below</td></tr>
+<tr><td><code>T_cluster</code>, every other branch</td><td><strong>PASS</strong></td></tr>
+</tbody></table></div>
+<strong>The one divergence is not a reconstruction difference.</strong> Every differing value, on
+<em>both</em> sides, is uninitialised memory: denormal doubles around 1e-310 (pointer bit patterns reinterpreted as
+<code>double</code>) and integers like 21845 = <code>0x5555</code>. Every affected row is a cluster with no valid
+flash. No row where a real flash exists differs anywhere. Cause and consequence in <a href="#ref">§4.2</a>.
+Re-run this gate after any master merge — it is the only check that covers the binary rather than the config.</li>
 <li>Any difference is a finding to report with the first divergent event, not something to tune away.</li>
 </ul>
 
@@ -586,9 +615,9 @@ table and is not the same quantity.</figcaption></figure>
 <tbody>
 <tr><td>A imaging (group of 16, TBB threads)</td><td class="num">6.25 s median, 8.19 s max group</td><td class="num">5.34 h process wall</td><td class="num">0.94, 1.05 GiB</td><td><code>work-*-grp0825/g*/.img.time.meta</code> (copied to <code>docs/92_prodguide/d92-stageA-timing.tsv</code>)</td></tr>
 <tr><td>A clustering + Q/L (group of 16)</td><td class="num">4.38 s median, 7.56 s max group</td><td class="num">3.76 h</td><td class="num">0.57, 0.98 GiB</td><td>same, <code>.ql.time.meta</code></td></tr>
-<tr><td>A clustering + Q/L (<strong>per event</strong>, as the current epoch re-ran it)</td><td class="num">7 s median wall; 5 / 11 / 13 / 24 s for mcp2k / mcp1k / NCpi0 / nueCC</td><td class="num">6.93 process-h</td><td class="num">no RSS record</td><td><code>work-*-d97fv/.status/&lt;evt&gt;</code> (3067/3067 <code>rc=0</code>). <strong>Not comparable to the row above:</strong> group mode amortises the ~5 s configure cost over 16 events, and this is integer-second wall under <code>D97_JOBS=12</code>, not core time.</td></tr>
+<tr><td>A clustering + Q/L (<strong>per event</strong>, as the current epoch re-ran it)</td><td class="num">7 s median wall; 5 / 11 / 13 / 24 s for mcp2k / mcp1k / NCpi0 / nueCC</td><td class="num">6.93 process-h</td><td class="num">no RSS record</td><td><code>work-*-d97fv/.status/&lt;evt&gt;</code> (3067/3067 <code>rc=0</code>). <strong>Not comparable to the row above:</strong> group mode amortises the ~5 s configure cost over 16 events, and this is integer-second wall under <code>D97_JOBS=6</code> (NCpi0, nueCC) and <code>8</code> (the numu samples), not core time.</td></tr>
 <tr><td>B PR (per event, <code>OMP=1</code>)</td><td class="num">1.63 core-s median; 1.5–1.6 s numu, 12.1 s NCpi0, 15.5 s nueCC</td><td class="num">3.57 core-h</td><td class="num">0.47, 1.50 GiB (bimodal: 0.45 no BDT, 1.2 scored)</td><td><code>products/prod0902/*.tsv</code> (<code>core_s</code>, <code>maxrss_kb</code>)</td></tr>
-<tr><td>whole sample, as run</td><td colspan="3">stage A: imaging ≈ 68 min at <code>SBND_MAX_JOBS=8</code> plus the reco1 dump (doc 81, unchanged — the imaging half was not re-run), Q/L re-run 54 min at <code>D97_JOBS=12</code>; stage B 60 min at <code>PR_JOBS=6–8</code> (0.9 + 7.4 + 14.8 + 37.4 min for NCpi0 / nueCC / mcp1k / mcp2k). A peer session was running on the same box throughout (loadavg 26–36), so these are upper bounds on wall, not a throughput measurement. Disk ≈ 26 G (A) + 16 G (B) with full outputs.</td><td>doc 81 §10.4; <code>scripts/d97_fv_arms.sh</code> log timestamps</td></tr>
+<tr><td>whole sample, as run</td><td colspan="3">stage A: imaging ≈ 68 min at <code>SBND_MAX_JOBS=8</code> plus the reco1 dump (doc 81, unchanged — the imaging half was not re-run), Q/L re-run 54 min at <code>D97_JOBS=6–8</code>; stage B 60 min at <code>PR_JOBS=6–8</code> (0.9 + 7.4 + 14.8 + 37.4 min for NCpi0 / nueCC / mcp1k / mcp2k). A peer session was running on the same box throughout (loadavg 26–36), so these are upper bounds on wall, not a throughput measurement. Disk ≈ 26 G (A) + 16 G (B) with full outputs.</td><td>doc 81 §10.4; <code>scripts/d97_fv_arms.sh</code> log timestamps</td></tr>
 <tr><td>sizing rule</td><td colspan="3"><strong>≈ 1.5 GiB per concurrent job</strong> for every stage; it does not grow with event size (doc pr/11 §4). Doc 5 G7 measured the colleague-side 1-step LArSoft job at 2.35 GB peak RSS and 48.8 s/event mean (imaging 45%) on 10 MC events.</td><td></td></tr>
 </tbody></table></div>
 

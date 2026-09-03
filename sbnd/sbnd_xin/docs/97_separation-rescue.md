@@ -342,6 +342,24 @@ Baseline is `work-<s>-d97off2pr`, the fresh knob-off arm of §2.1 — **not**
 `r3entry`. Verdicts come from `nusel-evt<ID>.tsv` keyed on the flash;
 energies from the calib dumps; the sentinel suite is the shipped-fix tripwire.
 
+> **Every flip count below is relative to THAT baseline, and the baseline is
+> not what was shipped before.** Added 2026-09-02 while refreshing doc 92.
+> `d97off2pr` is a *fresh knob-off* arm built on a *fresh* stage A; the
+> previously shipped production was `prod0901b`, built on the stored
+> 2026-08-25 stage A and two operating points back. Measured against
+> `prod0901b` — which is what a colleague comparing releases will actually
+> do — the same change reads as **11 `event_label` changes over 3067 events**,
+> not six, because that comparison also folds in the two doc-94 STM guards,
+> the 0.1% stage-A epoch drift of §8, and the in-beam-slot swaps §5.1 counts
+> only as "an in-beam bundle appears or disappears". Two of the eleven
+> (`mcp2k 51153`, `mcp1k 278266`) are therefore absent from the six named
+> here: in each a *different bundle wins the in-beam slot*, which is not a
+> tagger verdict change and does not appear in a flash-keyed flip table.
+> Neither number is wrong. A flip count is only meaningful with its baseline
+> named, so name it whenever the number is quoted. Full attribution of all
+> eleven: `docs/92_production-running-and-validation-guide.html` §4.1, and
+> `docs/work-tags.md` under "doc 92 refresh".
+
 ### 5.1 Blast radius at the clustering stage
 
 | | events whose all-APA Q/L output changes | of 3067 |
