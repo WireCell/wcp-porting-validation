@@ -16,6 +16,14 @@ grep -n "cluster 86" $W/wct_pr_039252_2.log
 
 # calib dump (per-candidate main_vertex / kine)
 python3 -c "import json; d=json.load(open('$W/calib-pr-evt298595.json')); print(d['candidates'])"
+
+# Q1 fix verification: rerun PR under a fresh tag (pctree copied read-only,
+# M13 never overwrites _v450) with the fixed clus/src/MultiAlgBlobClustering.cxx
+# installed, then hash-compare mabc-pr.zip member-by-member against _v450.
+W2=/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_2_stmrcidfix
+cd /home/xqian/toolkit-dev/wcp-porting-img
+diff <(python3 abtest/hash_archive.py --members $W/mabc-pr.zip) \
+     <(python3 abtest/hash_archive.py --members $W2/mabc-pr.zip)
 ```
 
 Run 39252, event 298595, cluster 86 (production defaults, doc pdvd/29: E=450 V/cm,
@@ -57,9 +65,42 @@ the three (`stm_fit` / `steiner_pc` / everything-else) that hard-codes it.
 This is a **display-layer gap in the diagnostic `save_stm_fit` dump**, not a
 reconstruction defect — `save_stm_fit` is default OFF in production (doc
 pdvd/25 sec 7b) and exists to let a human inspect *why* TaggerCheckSTM tagged
-a cluster, so nothing downstream consumes `stm_fit`'s `real_cluster_id`. Not
-fixed here (read-only investigation); flagged for whoever next touches that
-function.
+a cluster, so nothing downstream consumes `stm_fit`'s `real_cluster_id`.
+
+### Fixed (toolkit `ab0762c6`)
+
+```cxx
+// before
+bpts.append(Point(fx[i], fy[i], fz[i]), fdQ[i]*dQdx_scale + dQdx_offset, clid, 0);
+// after
+bpts.append(Point(fx[i], fy[i], fz[i]), fdQ[i]*dQdx_scale + dQdx_offset, clid, clid);
+```
+
+`clid` matches the same backward-compatible fallback the general scoped-view
+branch already documents ("When absent ... the Bee real_cluster_id stays ==
+clid"), so `stm_fit` now follows the same convention instead of a value that
+reads in Bee as "genuinely cluster 0" and can collide with any cluster whose
+real id actually is 0.
+
+Verification (per CLAUDE.md §4's C++-change bar):
+
+* `./build/clus/wcdoctest-clus`: 264/264 test cases, 2887/2887 assertions
+  passed (rc=0).
+* Freshness proof: `local/lib/libWireCellClus.so` mtime postdates the source
+  edit (`wcbuild`, both build+install rc=0).
+* Reran the PR stage for this same event under a fresh tag
+  (`work/039252_2_stmrcidfix`, pctree copied read-only from `_v450`, M13) and
+  hash-compared `mabc-pr.zip` against the pre-fix `_v450` run with
+  `abtest/hash_archive.py --members`: **20 of 21 members byte-identical**;
+  the only member that differs is `data/0/0-stm_fit-global.json`, and the
+  only key that differs inside it is `real_cluster_id` (now `== cluster_id`
+  for every point, confirmed for the queried point: `cluster_id=86
+  real_cluster_id=86`). No other Bee layer, the calib dump, or either ROOT
+  file changed.
+* This is unconditionally safe for production: the branch's loop body only
+  ever executes when `save_stm_fit=true` and the cluster's `stm_fit` PC is
+  non-empty; with `save_stm_fit=false` (the production default) the change
+  is dead code, so every existing config stays byte-identical.
 
 ## Question 2: this point looks like an STM, but `track_fit_global` shows something else there, and its Michel trajectory doesn't match
 
@@ -140,6 +181,62 @@ from, and in a visually unrelated direction from, the junction/kink that
 what looks like "the Michel trajectory in track_fit_global is not consistent
 with the STM fit."
 
+### Follow-up: why is the long leg *missing*, not just sparse?
+
+The "41 points" figure hides that the shortfall is concentrated in exactly
+one place. Grouping `track_fit-global`'s 41 cluster-86 points by their
+(now-fixed, still segment-encoded) id and measuring each group's x-span:
+
+| segment | n points | x-span |
+|---|---|---|
+| 86002 | 2 | **59.9 cm** |
+| 86003 | 2 | 9.2 cm |
+| 86005 | 2 | 8.8 cm |
+| 86009 | 2 | 0.4 cm |
+| 86010 | 27 | 1.8 cm |
+| -1 (unassociated) | 6 | 60.6 cm |
+
+Segments 86003/86005/86009 are legitimately short (< 12 cm) — 2 points
+(their own endpoints) is the *correct*, by-design output for a short segment
+(see below). Segment 86010 is the densely-refit junction/vertex region.
+**Segment 86002 is the one genuine anomaly**: at 59.9 cm it is squarely the
+"toward-344" arm — the queried point's leg — and by construction it should
+not have only 2 points.
+
+The relevant code is `TrackFitting::organize_segments_path_3rd`
+(`clus/src/TrackFitting.cxx:1522-1671`), the final resampling pass in
+`do_multiple_tracking` (called with `step_size = low_dis_limit = 12.0 cm`,
+the same `low_dis_limit` in `pdvd_track_fitting.json`). For *any* segment
+whose two endpoints are farther apart than `step_size`, this function's own
+end-point handling (`clus/src/TrackFitting.cxx:1648-1659`, the
+`dis1 > step_size * 1.6` branch) unconditionally interpolates
+`round(dis1/step_size)` evenly-spaced points along the straight line between
+them — for a 59.9 cm segment at step_size=12 cm that is ~5 points, not 0.
+That interpolation clearly did not survive into the Bee-dumped `fits()` for
+segment 86002 (only its two vertex endpoints remain). Either this segment's
+final saved fit did not go through `organize_segments_path_3rd`'s resampler
+at all, or a later stage (the real per-point charge/2D-projection fit that
+follows resampling in `do_multiple_tracking`) pruned the interpolated points
+back out — most plausibly because it could not find valid 2D-projection
+charge support at those interpolated locations and gave up rather than
+falling back to the geometric points. **I did not trace this far enough to
+say which**; it is the next concrete step (a targeted DEBUG line in
+`do_multiple_tracking`'s per-point charge fit, or a rerun with the log level
+raised, would settle it directly).
+
+Put together with the evidence above: three independent things in this
+pipeline — TGM's chord-continuity check, NeutrinoID's Steiner `sgp` guard,
+and now this segment-level fit dropout — all single out the *same* ~60 cm
+connection (junction to the far "toward-344" end) as poorly supported,
+while `TaggerCheckSTM`'s own fitter, which has none of these continuity
+checks, fit straight through it at full density and tagged the cluster
+STM=1. That is a real, reproducible disagreement about this specific
+connection, not a vague "the algorithms differ" story — and it means "the
+long track is missing from track_fit_global" is accurate: not merely
+under-sampled, but reduced to a bare 2-point placeholder by whatever
+component runs after the resampler, even though the resampler's own code
+should have populated it.
+
 ### Is the STM leg real charge, or a fit artifact?
 
 The raw `clustering-global` points are not gapped in 3D along x (5 cm bins
@@ -161,29 +258,37 @@ outcome; they imply different follow-ups (see below).
 
 ## Status
 
-Investigation only — nothing changed. Byte-identical (no code or config
-touched).
+* **Question 1: FIXED**, toolkit `ab0762c6` — `stm_fit`'s Bee
+  `real_cluster_id` now matches `cluster_id`. Verified byte-identical
+  elsewhere (20/21 `mabc-pr.zip` members unchanged; the 21st differs only in
+  the one intended field). Unconditionally inert when `save_stm_fit=false`
+  (the production default), so no existing config's output changes.
+* **Question 2: open.** Investigation only, nothing changed there. The
+  disagreement between `TaggerCheckSTM`'s and `TaggerCheckNeutrino`'s reads
+  of cluster 86 is real and reproducible; which one (if either) is the
+  physically correct interpretation of this cluster is not settled here.
 
 ## Recommendation / next steps
 
-1. **Question 1** (display bug) is unambiguous and easy: thread the same
-   `"real_cluster_id"/"perblob"` lookup used by the general scoped-view
-   branch of `fill_bee_points_from_cluster` into the `stm_fit` branch, or at
-   minimum stamp `clid` instead of the literal `0` — `save_stm_fit` is a
-   diagnostic knob, so this is a UX fix, not a physics change, but worth
-   doing before anyone else hand-scans STM fits in Bee and is misled by it.
-2. **Question 2** is a genuine open question about whether cluster 86's
-   junction->344 arm is one real track or a merge artifact — that decides
-   whether the STM=1 tag or the neutrino-vertex placement is the more
-   trustworthy read of this cluster, and I don't think this investigation
-   settles it. Two concrete next steps that would: (a) dump and inspect the
-   Steiner graph's actual edge list / gap locations for cluster 86 (the
-   `sgp guard` log lines above have the endpoints and gap counts already;
-   the missing piece is *where along the path* the flagged edges sit), and
-   (b) look at the raw 2D wire signals (U/V/W ADC, not the 3D imaging
-   points) for the junction and the x=293-337 stretch for a second,
-   overlapping in-time activity that dual-view 3D imaging could be
-   mis-merging into one cluster (a known PDVD failure mode; see doc
-   pdvd/25's iso-overcluster investigations, docs 25-26 in this directory).
-3. Not recommending a fix without (2): per project policy, a physics number
-   that looks inconsistent is reported, not silently tuned to "look right."
+1. **Question 2** is now narrowed to one concrete, checkable claim: segment
+   86002 (the 59.9 cm "toward-344" leg, the one the queried point sits on)
+   should have received ~5 interpolated points from
+   `organize_segments_path_3rd` and instead has 2. The next step is
+   mechanical, not exploratory: add a DEBUG line (or raise the log level)
+   around `do_multiple_tracking`'s per-point charge/2D-projection fit for
+   this segment on this event, to see directly whether the interpolated
+   points were dropped there and why (no charge found at those locations,
+   an exception path, or something else). That would convert "the long
+   track is missing" from an observed symptom into a named cause.
+2. In parallel, whether that ~60 cm connection is one real track or a
+   mis-merge of two overlapping activities is still worth checking directly
+   against the raw 2D wire signals (U/V/W ADC, not the 3D imaging points)
+   for the junction and the x=293-337 stretch — a known PDVD failure mode
+   (see docs 25-26 in this directory). That determines whether the fix
+   belongs in the per-point charge fit (make it recover the real track) or
+   in `TaggerCheckSTM` (make it apply the same continuity check TGM and the
+   Steiner builder already have, so it would not have tagged STM=1 on an
+   ambiguous connection in the first place).
+3. Not recommending either fix yet: per project policy, a physics number
+   that looks inconsistent is reported, not silently tuned to "look right,"
+   until (1) identifies the actual mechanism.
