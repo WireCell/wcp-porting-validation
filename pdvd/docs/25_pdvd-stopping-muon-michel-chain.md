@@ -1284,17 +1284,22 @@ Every item below was found on run 039252 event 0 (idx 0) and fixed as a
     infinite loop) but each iteration now calls `do_single_tracking` on a
     correctly-computed, differently-shaped point association, and for these
     two events that appears to generate many more candidate segments than
-    the accidentally-short-circuited path did. **Resolved in doc 26** (the
-    next session): that reading was wrong in one respect — the cost was not
-    a bigger search but a genuinely non-terminating `while (flag_continue)`
-    in `examine_partial_identical_segments`, whose vertex split degenerates
-    into cloning the vertex in place when the closest steiner point to the
-    split location is the vertex itself (two near-duplicate segments leaving
-    a vertex into a charge gap). Fixed unknobbed with
-    `partial_identical_split_point()`; both events now finish, 118/118 other
-    events byte-identical, uBooNE 35/35 and SBND gates PASS. The upstream
-    STM/FC verdict changes from THIS fix (four STM 1→0 flips across the two
-    events) remain real and are listed in doc 26 §3.
+    the accidentally-short-circuited path did. **Resolved in doc 26**, and
+    that reading was wrong twice over. (a) The cost was not a bigger search
+    but a genuinely non-terminating `while (flag_continue)` in
+    `examine_partial_identical_segments`, whose vertex split degenerates into
+    cloning the vertex in place when the closest steiner point to the split
+    location is the vertex itself (two near-duplicate segments leaving a
+    vertex into a hole in the steiner cloud). Fixed unknobbed with
+    `partial_identical_split_point()`; both events now finish. (b) This fix
+    did not expose it: the first rerun after it was also the first rerun after
+    `228f1c39` (07:51, the E = 450 V/cm production defaults), and on that
+    config the pre-fix binary hangs on 14 and 53 too. Re-run on one config
+    (doc 26 §7.1), the wire-bound fix moves ZERO tagger verdicts and is
+    byte-identical on 117/120 events; the exceptions are 41 (the segfault
+    moved there with the new config; now completes) and 14/53 (hang either
+    way). So "NOT a no-op" above should read: **byte-identical wherever it
+    does not prevent a crash**; the verdict churn was the config change.
 8. **The Steiner terminal floor starves PDVD.** Over the first 18 events of
    the arm, 41 STM-accepted passes and 140 recorded passes contained ONE
    stop-end Bragg contrast ≥ 2, while the raw Bee charge along 688 long
@@ -2251,3 +2256,17 @@ against an arm run with the knob off has to scrub them.
   byte-identical (`stm/gates/r13_compare.txt`); uBooNE `doc25r13base` vs
   `doc25r13fix` 35/35 + tagger 35/35; SBND nuecc48 + ncpi0 `pr85_hash_gate`
   PASS. 039349/14 now 26 s, /53 27 s (13 s and 53 s before the crash fix).
+- **2026-09-03** — doc 26 round 2: (1) the crash-fix verdict census, redone on
+  one config, shows ZERO flips and byte-identity on 117/120 events — the hang
+  and all verdict churn attributed above to `3e1854a8` were `228f1c39`'s new
+  operating point (the pre-fix binary hangs on 14/53 too, and segfaults on 41
+  instead of 32); (2) a 1000-pass budget with WARN on the ten PatternAlgorithms
+  `while (flag_continue)` examiners (observed max 15 over 222 events); (3) the
+  split's merge test now also runs against the actual split point, so a
+  near-miss of the 0.3 cm merge tolerance merges instead of creating a
+  duplicate vertex (fired 3× on PDVD, all in discarded dual-chain OFF passes);
+  (4) pictures of the two duplicate pairs for the owner's call
+  (`docs/pics/doc26_*_duplicate_pair.png`) — on 14 the steiner cloud covers
+  only half of a continuous track, which is the upstream defect to chase.
+  Gates: PDVD 238/238, uBooNE 35/35 + tagger 34/35 with the known bistable
+  6805 shown bistable on both binaries, SBND 96/96 + 38/38.

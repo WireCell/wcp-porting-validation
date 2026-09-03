@@ -1,9 +1,20 @@
-# PDVD doc 26 — the non-terminating `examine_partial_identical_segments` loop that the wire-bound crash fix exposed
+# PDVD doc 26 — the non-terminating `examine_partial_identical_segments` loop behind the 039349/14, /53 hang
 
 **Status:** FIXED, unknobbed. NOT bit-identical on the two PDVD events that never
 terminated (they now finish); byte-identical everywhere the guard does not fire
-(gates in §5). Toolkit commit `441b6de4`; this document, the gate script and its
-results are the wcp-porting-img record.
+(gates in §5, §7.4). Toolkit commits `441b6de4` (round 1) and `87903977`
+(round 2, §7); this document, the gate scripts and their results are the
+wcp-porting-img record.
+
+**Correction (round 2, §7.1).** Round 1 attributed the hang to the
+`fetch_channel_from_anode` crash fix (toolkit `3e1854a8`) because the two
+events hung on the first arm run after it. That was a coincidence of timing:
+the pre-fix binary hangs on both events too once the PDVD production config
+of `228f1c39` (07:51, E = 450 V/cm defaults) is in place, and on that config
+the crash fix itself moves zero tagger verdicts and is byte-identical on
+117/120 events (the other three: 41 no longer crashes, 14/53 hang either way).
+§3 below is written as it now stands; the round-1 text it replaces is in the
+git history of this file.
 
 **Scope.** One C++ change in `clus/src/NeutrinoStructureExaminer.cxx` (plus a
 declaration in `NeutrinoPatternBase.h`) and one new doctest. No config, no
@@ -31,10 +42,11 @@ python3 stm/gates/r13_loop_gate.py            # -> stm/gates/r13_compare.txt, r1
 ## 1. Symptom
 
 Doc 25 §13.4 item 12 fixed a SIGSEGV in `TrackFitting::fetch_channel_from_anode`
-(negative wire index, PDVD 039349/32). Rerunning the 120-event `_keep` manifest
-with that fix, two unrelated events stopped finishing:
+(negative wire index, PDVD 039349/32). On the first 120-event `_keep` rerun
+after it — which, unnoticed at the time, was also the first rerun after the
+config commit `228f1c39` — two unrelated events stopped finishing:
 
-| event | before the crash fix | after the crash fix | log |
+| event | last pre-fix arm (07:14, old config) | first post-fix arm (08:02, new config) | log |
 |---|---|---|---|
 | 039349/14 | 13 s | killed at 2891 s | 44 MB, `do_rough_path` ×20652 (20652 on cluster 36), `do_multi_tracking` ×6935 |
 | 039349/53 | 53 s | killed at 2649 s | 306 MB, `do_rough_path` ×18671 on cluster 53, `do_multi_tracking` ×6271 |
@@ -112,23 +124,28 @@ same way. Both are closed by the fix.
 
 Three layers, each necessary:
 
-- **Before the crash fix the two events never reached this code.** The old
-  `fetch_channel_from_anode` returned an out-of-bounds read for negative wires
-  (cached, so stable run to run), and those garbage channels entered the STM
-  fits' 2D point associations near wire-plane edges. Fixing it changed the
-  cosmic-tagger verdicts upstream of the neutrino tagger. Event 14:
-  `TaggerCheckSTM` clusters 18 and 23 went STM=1 → STM=0, and FC flipped on
-  clusters 28, 29, 34, 49; event 53: clusters 14 and 19 STM=1 → 0, FC flipped on
-  29, 35, 36. Different bundles therefore became neutrino candidates
-  (`selected main cluster` 23/18/45 before vs 48/36 after on event 14), and
-  cluster 36 (event 14) / cluster 53 (event 53) entered `find_proto_vertex`
-  for the first time. The crash fix did not create the loop; it removed the
-  accident that kept these clusters away from it.
-- **The geometry is PDVD-specific.** The trigger is two near-duplicate
-  segments leaving a vertex into a region with no steiner points — a track
-  crossing a charge gap (CRP boundary, readout edge, dead region), which
-  `steiner_graph_gap` bridges with long edges. SBND and uBooNE steiner clouds
-  do not have 9 cm holes along tracks.
+- **Before 07:51 the two events never reached this code — and it was the
+  config, not the crash fix, that changed that.** The last pre-fix arm and the
+  first post-fix arm differ in two things: the crash fix and toolkit `228f1c39`
+  ("adopt E=450 V/cm production defaults": `pr.jsonnet`, `pdvd_track_fitting.json`,
+  `particle_dataset.jsonnet`, `params.jsonnet`, all read by the PR job). Between
+  those two arms 802 of 5434 STM verdicts, 646 FC and 437 TGM verdicts moved on
+  119 of 120 events, so different bundles became neutrino candidates
+  (`selected main cluster` 23/18/45 before vs 48/36 after on event 14) and
+  cluster 36 (event 14) / cluster 53 (event 53) entered `find_proto_vertex`.
+  Re-running both binaries on today's config (§7.1) separates the two: the
+  crash fix moves **zero** verdicts and is byte-identical on 117 events, and the
+  **pre-fix binary hangs on 14 and 53 as well** (13228 and 10666 rough paths at
+  the kill). The loop was always reachable; the new operating point reaches it.
+- **The geometry is PDVD-specific — and it is a hole in the steiner cloud, not
+  (on event 14) in the charge.** The trigger is two near-duplicate segments
+  leaving a vertex into a region with no steiner points, which
+  `steiner_graph_gap` bridges with long edges. §7.5 shows what that region is:
+  on 039349/14 the imaged charge is continuous along the whole track but the
+  steiner cloud (632 points) covers only the half above V — 0 steiner points
+  along the 111 cm from V to A; on 039349/53 charge and steiner cloud both stop
+  75 cm short of V. SBND and uBooNE steiner clouds do not have such holes along
+  tracks.
 - **The loop's own guard is unconditional.** `flag_continue` is raised whether
   or not the graph changed in a way that can converge; nothing in the function
   or its callers bounds the iteration count, and the per-iteration
@@ -198,7 +215,9 @@ matched; the single divergent member was `data/0/0-stm_fit-global.json`'s
 `real_cluster_id` array (all 0 vs real ids) — toolkit `ab0762c6` (08:30, doc
 pdvd/30) fixed that field between the 07:47 crash-fix build and this one. A
 three-binary rerun of 039349/13 confirmed it: 07:47 build ≠ tree-without-guard
-= tree-with-guard. Hence the clean pairing below.
+= tree-with-guard. Hence the clean pairing below. (Lesson, twice in one day:
+an arm is a baseline only for the commits and config it actually ran with —
+see §7.1 for the same trap on the config side.)
 
 ```
 events_B=120 same=234 diff=0 missing=0 absent_in_A=2 no_dump_both=2
@@ -244,7 +263,7 @@ PR stage, which that harness does not reach), and the 3067-event SBND
 production sample (the guard's DEBUG sentinel is the cheap census for it —
 `grep -c 'degenerate split skipped'` over any arm's logs).
 
-## 6. Left open
+## 6. Left open after round 1 (each taken up in §7)
 
 - **Ping-pong variant.** The guard covers the closest steiner point coinciding
   with the vertex being split. If it coincided with a *different* existing
@@ -266,3 +285,160 @@ production sample (the guard's DEBUG sentinel is the cheap census for it —
   garbage channel lookups near plane edges. They were disclosed in doc 25 §13.4
   item 12 as NOT bit-identical; a census of how many `_keep` bundles moved is
   still owed.
+
+## 7. Round 2 — the four open items
+
+### 7.1 Census of the crash fix's verdict flips (item 4 of §6)
+
+`stm/gates/r13_verdict_census.py` diffs every `TaggerCheck{STM,TGM,FC}`
+verdict line per (event, cluster) between two arms and marks flipped clusters
+that are in the doc 25 dQ/dx sample (`stm/sample_index.tsv`).
+
+The first pairing was contaminated and is kept as a warning: the last pre-fix
+arm (`d25r12fast`, 07:14) vs `d25r13fix` gave 802 of 5434 STM verdicts moved on
+119 of 120 events — far too many for an edge-wire effect. Toolkit `228f1c39`
+(07:51, "adopt E=450 V/cm production defaults": `pr.jsonnet`,
+`pdvd_track_fitting.json`, `particle_dataset.jsonnet`, `params.jsonnet`) sits
+between those two arms, and the PR job reads all four files. The census was
+therefore redone on today's config with two pinned binaries that differ only by
+the crash fix: `d25r14pre` (round-12 pre-fix snapshot, `/home/xqian/tmp/doc25r12/lib`)
+vs `d25r14cf` (`lib_fix`, crash fix only; 14 and 53 skipped — that binary hangs):
+
+```
+events compared: 118; verdict lines compared per tagger: {'FC': 6897, 'STM': 5763, 'TGM': 6944}
+flips: {} on 0 event(s)
+flipped clusters that are in the dQ/dx sample (stm/sample_index.tsv, 5 entries): 0
+```
+
+Zero flips. The companion hash gate (`r13_loop_gate.py d25r14pre d25r14cf`,
+`stm/gates/r14_compare_crashfix.txt`): 232/232 hash pairs identical on 117
+events; 039349/41 differs because the **pre-fix binary segfaults there** on
+today's config (`fetch_channel_from_anode`, the item-12 crash moved from event
+32 to event 41 with the new operating point) and its zip is empty; 14 and 53
+never finish on either binary (killed at 1543 s / 1249 s pre-fix, 13228 /
+10666 rough paths). So on PDVD the crash fix is byte-identical except where it
+prevents a crash — doc 25 §13.4 item 12's "NOT byte-identical" and the
+verdict-flip lists in round 1 of this document were the config change. The
+first, contaminated census is kept in the git history of
+`r13_verdict_census.tsv` (802 STM / 646 FC / 437 TGM flips); the committed
+file is the clean one.
+
+### 7.2 Pass budget for the `while (flag_continue)` examiners (item 2)
+
+`clus/inc/WireCellClus/ExaminerPassBudget.h`: `ExaminerPassCounter` at the ten
+PatternAlgorithms examiner loops (`examine_structure_2/3`, `examine_vertices`,
+`examine_partial_identical_segments`, `examine_structure_final_1/2/3`,
+`eliminate_short_vertex_activities`, `shower_clustering_with_nv_from_main_cluster`
+/`_from_vertices`). Past `kExaminerPassBudget = 1000` passes it logs a WARN and
+breaks; its destructor logs one DEBUG line per call (`examiner passes: <who>
+cluster <id> passes=<n>`), which is the census input. Not covered: the
+`while (flag_continue)` loops in `NeutrinoTaggerNuE.cxx` (`broken_muon_id`) and
+`PRShower.cxx`, which walk segment chains rather than re-run a graph pass, and
+`connect_graph_relaxed.cxx` (clustering, not PR).
+
+Observed maximum over the round-2 fix arms (120 PDVD + 67 SBND + 35 uBooNE
+events):
+
+```
+examiner                                       calls   max passes   where
+eliminate_short_vertex_activities              1419        4        pdvd 039253/5 cluster 97
+examine_partial_identical_segments             7342        9        pdvd 039252/3 cluster 62
+examine_structure_2                            2651        8        sbnd nuecc48 evt 46363 cluster 19
+examine_structure_3                            1419        9        pdvd 039349/46 cluster 64
+examine_structure_final_1                      7523        4        sbnd ncpi0 evt 433451 cluster 4
+examine_structure_final_2                      7523        3        pdvd 039253/6 cluster 270
+examine_structure_final_3                      7523        4        pdvd 039349/32 cluster 63
+examine_vertices                               8125       15        sbnd nuecc48 evt 256587 cluster 11
+shower_clustering_with_nv_from_main_cluster     527        2        pdvd 039252/2 cluster 118
+shower_clustering_with_nv_from_vertices         636        5        sbnd ncpi0 evt 389538 cluster 11
+```
+(222 logs; `stm/gates/r14_census_round2.tsv` has the PDVD rows.) Maximum 15;
+the budget of 1000 is 60× above it. The WARN never fired.
+
+The budget is therefore a no-op on every event that terminates today; a change
+to the constant is pinned by the doctest so it is a decision, not drift.
+
+### 7.3 The ping-pong variant (item 1)
+
+The prototype tests the existing vertices against `max_point`, but the new
+vertex is created at the steiner point closest to `max_point` — 8.7 cm away on
+039349/14. `examine_partial_identical_segments` now decides the merge target
+before branching: when no vertex sits within 0.3 cm of `max_point`, it also
+asks `closest_cluster_vertex()` (nearest wcpt of this cluster) about the split
+point itself; a vertex within 0.3 cm of it is the merge target (the prototype's
+merge block, unchanged, runs against it), and the split vertex itself there is
+the round-1 skip. On a dense cloud the split point is near `max_point`, no
+existing vertex is within 0.3 cm of it unless it was already within 0.3 cm of
+`max_point`, and the path is unchanged. DEBUG sentinel: `split point coincides
+with an existing vertex ... merging there`.
+
+Tests (`doctest_partial_identical_split_point.cxx`, appended): `closest_cluster_vertex`
+picks this cluster's nearest wcpt and ignores another cluster's nearer vertex;
+`ExaminerPassCounter` is silent for exactly `kExaminerPassBudget` passes and
+refuses the next. `wcdoctest-clus` 270/270, 3918 assertions.
+
+### 7.4 Gates (round 2)
+
+Libraries: `lib_base2` = tree at `441b6de4`+peers without the round-2 files;
+`lib_post2` = with them; built 10:28 / 10:30, no peer edits in between.
+
+| gate | result |
+|---|---|
+| PDVD 120 events, `d25r14base2` vs `d25r14fix2` (`stm/gates/r14_compare_round2.txt`) | **238/238 hash pairs identical**, 0 diffs; 14 and 53 finish in 29 s / 32 s on both (the round-1 guard is in both libraries) |
+| uBooNE `doc25r14base` vs `doc25r14fix`, 35 events | Bee zips **35/35** identical; tagger logs 34/35 — the one diff is 5384-136-6805, the bistable event documented in `repeat_check.sh` (`kine_pio_angle` 14.81 vs 109.51). `repeat_check.sh 22 4` under ASLR-on gives **2 distinct tagger states on BOTH libraries** (`rep14base2_*`, `rep14post2_*`, the same two hashes), so the diff is the known layout-dependent bistability, not this change |
+| SBND nueCC48 / NCpi0, `doc25r14base` vs `doc25r14fix` | **96/96 and 38/38** archives byte-identical |
+| sentinels over all three fix arms | pass-budget WARN: 0. `degenerate split skipped`: 3 (14 ×1, 53 ×2, as in round 1). `merging there instead`: **3**, all PDVD — 039252/15 cluster 107, 039349/52 cluster 24, 039349/53 cluster 50 — each with the steiner point 0.00 cm from an existing vertex and 0.31–0.37 cm from `max_point`, i.e. a near-miss of the prototype's 0.3 cm merge test. All three fall inside `dual_chain` OFF-pass windows (log timestamps), whose graph is discarded, and the outputs are byte-identical |
+
+The redirect therefore changed no output on 222 events while firing three
+times where it would have created a duplicate vertex; the WARN is armed and
+silent.
+
+### 7.5 The duplicate pair, looked at (item 3) — for the owner
+
+`stm/gates/r13_duplicate_pair_png.py` draws, for each event, the imaged charge
+near the fits (grey), the steiner cloud of the PR cluster (black), the
+candidate's PR segments from the calib dump, and the three points from the
+round-1 log (V = the vertex, A/B = the two far ends):
+
+- `docs/pics/doc26_039349_14_cluster36_duplicate_pair.png`
+- `docs/pics/doc26_039349_53_cluster53_duplicate_pair.png`
+
+What they show, and what changes the round-1 reading of "charge gap":
+
+- **039349/14, cluster 36** is one straight cosmic track from (z 5, x 392, y −83) cm
+  to A (z 151, x 197, y −168) cm. The imaged charge is continuous along it. The
+  **steiner cloud stops exactly at V** (x 273, z 87): 632 steiner points, all on
+  the upper half, none along the 111 cm from V to A (0 within 3 cm of the V→A
+  line; the 35 that are near the line all lie behind V). The vertex sits at the
+  edge of the steiner cloud, not at a kink or a gap in the charge. Of the three
+  segments at V, `36001` (116 cm) is a real fit that follows the charge to A;
+  `36007` (115 cm) is a straight chord from V to B, 5.8 mm from A — the
+  duplicate; `36008` (145 cm) is a straight chord from V to the far upper end
+  that ignores the bend the steiner points make at z ≈ 40.
+- **039349/53, cluster 53**: steiner points and imaged charge both run from A
+  (z 40, x 343) to z ≈ 87, then nothing for ~75 cm, then a small isolated piece
+  at V (z ≈ 161–165, x ≈ 210). Three chords (`53002` 181 cm, `53004` 142 cm,
+  `53003` 112 cm) cross the void to V. Here the void is real in the charge too.
+
+So the two events are different cases. On 14 the defect upstream is a steiner
+cloud that covers only part of a continuous track (the boundary is not a
+readout-time cut: x_V + t0·v and x_V − t0·v differ between the two clusters);
+this is the same territory as doc 25 §13.4 item 8 (the Steiner terminal floor)
+and doc pdvd/30's two-point fits, and it is what made both the loop and the
+duplicate. On 53 the question is why an isolated piece 75 cm away is in the
+same cluster and gets chords drawn to it.
+
+To judge:
+1. On 14: should the chord duplicate `36007` be dropped in favour of the fitted
+   `36001` (the obvious merge rule: when a split is degenerate, keep the segment
+   with more fit points on charge and remove the chord)? And is the missing
+   steiner coverage below V a bug to chase first — it would remove the
+   duplicate at the source?
+2. On 53: should chords across a void with no imaged charge exist at all, or is
+   the association of V's piece with this cluster the thing to fix?
+3. Whether either merge rule should be a knob (default OFF, SBND gate) or a
+   PDVD-only behaviour.
+
+The Bee zips are `work/039349_14_d25r13fix/mabc-pr.zip` and
+`work/039349_53_d25r13fix/mabc-pr.zip` (layers `track_fit`, `shower_track`,
+`vertices` carry cluster 36's / 53's PR; not uploaded — upload is yours).
