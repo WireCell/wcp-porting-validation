@@ -505,13 +505,37 @@ gate diff. Named here so the next round does not have to rediscover it.
   NOT working, however many points appear. Instrument:
   `scratchpad/leg_check.py` (see Repro).
 
-### Pre-existing, unrelated, not fixed here
+### Pre-existing and unrelated, found here — FIXED (toolkit `4776d637`)
 
-`examine_end_ps_vec` (`TrackFitting.cxx:2173`) reads `ps_list.back()` at the top
-of its `flag_end` block; the `flag_start` block above it can leave the list
-empty (it only re-inserts `temp_start` when that point has a valid face). The
-empty-input guard at :2105 does not cover this path. Not reached in this event
-and unrelated to this change — reported, not touched.
+`examine_end_ps_vec` read `ps_list.back()` at the top of its `flag_end` block.
+The `flag_start` block above it can legitimately leave the list **empty** on a
+non-empty input: it pops every point failing `is_good_point`, and its S1.7
+else-branch re-inserts `temp_start` only when that point has a valid face. The
+empty-**input** guard at the top of the function (doc pr/82 sec 12.7) does not
+cover that drained state.
+
+This is not undefined-but-harmless. The `std::list` sentinel garbage becomes
+`temp_end`, and the **symmetric** S1.7 else-branch `push_back()`s `temp_end`
+whenever `m_dv->contained_by()` reports a valid face for it — inventing an
+out-of-detector point, exactly what S1.7 exists to prevent. Where it did not,
+the function returned empty only by luck, which is why pr/82's evt 54629 stack
+showed the crash in the *caller* (`organize_ps_path`) rather than here.
+
+Fixed as `if (flag_end && !ps_list.empty())`, shipped **unconditionally** like
+its sibling guard in the same function: the behaviour replaced is undefined,
+not a legacy path to preserve. It can differ from the status quo only in the
+case where the sentinel read landed in a valid face — i.e. only where the old
+code invented a point. Flagged for the owner as a deliberate departure from the
+default-OFF-knob rule on those grounds.
+
+No reproducer: unlike the pr/82 cases, draining the list needs `m_dv`,
+`m_pcts` and `m_grouping` live, so a null segment and a default-constructed
+`TrackFitting` crash long before the drain. A real one needs geometry injected
+via `TrackFittingTestHarness` (the pr/98 friend seam used by
+`doctest_update_association.cxx`) plus a grouping whose `is_good_point()` is
+false everywhere. Recorded in the test file as owed rather than faked with a
+test that could not fail. Not reached in this event (0 drain-to-empty events
+measured) and independent of `traj_degenerate_wcpts_fallback`.
 
 ## Status
 
