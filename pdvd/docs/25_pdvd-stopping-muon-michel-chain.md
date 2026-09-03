@@ -1616,8 +1616,14 @@ the PDVD pipeline; every new knob has a defaults doctest
   in §13.11** by the mirror knob `stm_only_bundles`: on 039252/8 the stage
   goes 1726.8 s -> 146.2 ms and the event 1821 s -> 74 s; on 039252/16
   261.8 s -> 18.6 ms and 431 s -> 176 s. Both items are closed; what remains
-  is the 500 e imaging floor itself (next bullet but one) and the taggers,
-  which are now the whole PR-tail cost.
+  is the taggers, which are now the whole PR-tail cost, and behind them the
+  500 e **Steiner terminal-charge** floor (`steiner_terminal_charge`, §13.6 —
+  it is a PR-job knob, not an imaging one). Note the two cost terms did NOT
+  share a root cause: the floor drives the skeleton-reading stages
+  (`CreateSteinerGraph`, `TaggerCheckSTM`, `TaggerCheckNeutrino`);
+  `ClusteringProtectBundle` never reads the skeleton — it builds its graph from
+  `cluster.points()` — and its cost was set by the input pctree, which the PR
+  job cannot change.
 - **Grow the dQ/dx sample** (§13.6): 5–25 tracks give a "consistent with
   0.44 kV/cm" verdict, not a measurement of the field. The contrast guard
   above plus the skeleton-reach fix below are the two levers; a 1000-event
@@ -1800,8 +1806,9 @@ Choices deliberately left open, any of which can replace or join this one:
 - raise `nu_per_bundle_min_length` further (50 cm is already in use on `stm3`);
 - skip TGM-tagged bundles only — a weaker version of this knob;
   `nu_skip_cosmic` cannot express it, since it also refuses STM;
-- lift the 500 e imaging floor that produces the dense skeletons in the first
-  place (§13.6) — the root cause of both cost terms;
+- lift the 500 e `steiner_terminal_charge` floor that produces the dense
+  skeletons in the first place (§13.6) — the root cause of *this* cost term
+  (§13.11 shows it is not the root cause of the `ProtectBundle` one);
 - run the neutrino PR as a second pass over an explicit bundle list, which
   decouples the selection rule from the C++ entirely.
 
@@ -1943,8 +1950,8 @@ stage that arms `stm1`/`stm2`/`stm3` ran.
 
 With the stage gone, the PR tail's cost on 039252/16 is now
 `TaggerCheckSTM` 89.3 s, `TaggerCheckNeutrino` 39.5 s, `CreateSteinerGraph`
-32.5 s — the bottleneck has moved to the taggers, which is where §13.6's
-500 e imaging floor shows up.
+32.5 s — the bottleneck has moved to the skeleton-reading stages, which is
+where §13.6's 500 e `steiner_terminal_charge` floor shows up.
 
 #### What actually changes in the output
 
@@ -2043,8 +2050,16 @@ against an arm run with the knob off has to scrub them.
   five times. One kd query per seed is pure waste; it is production code
   shared with every other flavor, so removing it is a behavior-preserving
   perf change that needs its own gate, not a side edit here.
-- **Lift the 500 e imaging floor** (§13.6) — the root cause of the dense
-  skeletons behind both cost terms.
+- **Revisit the 500 e `steiner_terminal_charge` floor** (§13.6). Note what
+  it is and is not: it is the charge a 3D point must carry to be admitted as a
+  *Steiner terminal* (`SteinerGrapher.cxx:432`, C++ default 4000 = prototype),
+  a **PR-job** knob — the clustering job that writes the pctree never sees it.
+  So it drives `CreateSteinerGraph` and every skeleton-reading tagger, but it
+  is **not** what made `ClusteringProtectBundle` slow: that stage builds its
+  graph from `cluster.points()`, and cluster 84's 18876 blobs / 509 components
+  were already fixed in the input. Calling it "the root cause of both cost
+  terms" (§13.9, §13.10) was over-attribution; only the tagger term is
+  attributable to it.
 - **Narrow the PDVD beam window.** Rejected for now: §2.1's readout-wide
   window is what lets a stopping muon anywhere in the readout be found at
   all.
