@@ -34,6 +34,39 @@ mkdir -p "$W3" && cp $W/pctree-evt298595.tar.gz $W/pctree-evt298595.tlas "$W3"/
 cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
 WCT_DQDX_DROP_DEBUG=1 ./run_pr_evt.sh -s currptsprobe 39252 2
 grep "gi=2 cluster=86" "$W3/wct_pr_039252_2.log"
+
+# ---- round 2 (2026-09-03) -------------------------------------------------
+# Every arm below copies the pctree read-only into a FRESH tag first (M13).
+cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
+
+# M1: is the pre-dQ/dx drop the cause?  Turn on the existing SBND knob pr/107.
+WCT_DQDX_DROP_DEBUG=1 PDVD_PR_TLA="-S dqdx_fit_keep_all_points=true" \
+  ./run_pr_evt.sh -s keepall -stm-fit 39252 2
+grep -c "pre-dQ/dx form_map_graph dropped" work/039252_2_keepall/wct_pr_039252_2.log   # 0
+grep "organize_segments_path_3rd.*cluster=86" work/039252_2_keepall/wct_pr_039252_2.log | tail
+# ... fits_size=2 persists on the 128-wcpt arm => the drop is a MASK, not the cause.
+
+# M2: is examine_end_ps_vec draining the path?  (probe added in ed035408)
+python3 -c "import json;p='/home/xqian/toolkit-dev/toolkit/cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json';\
+d=json.load(open(p));d['traj_cover_probe']=1.0;json.dump(d,open('/tmp/tf_probe.json','w'),indent=2)"
+WCT_DQDX_DROP_DEBUG=1 PDVD_PR_TLA="-A trackfitting_config=/tmp/tf_probe.json" \
+  ./run_pr_evt.sh -s drainprobe -stm-fit 39252 2
+grep -c "DRAINED TO EMPTY" work/039252_2_drainprobe/wct_pr_039252_2.log                # 0
+
+# M3: WHICH form_map_graph stage collapses it?  (probe added this round)
+WCT_DQDX_DROP_DEBUG=1 ./run_pr_evt.sh -s stageprobe -stm-fit 39252 2
+grep -o "form_map_graph: WCT_DQDX_DROP_DEBUG stage=[0-9]*" \
+  work/039252_2_stageprobe/wct_pr_039252_2.log | sort | uniq -c        # 216/201/200
+grep "form_map_graph:.*cluster=86.*wcpts=128" work/039252_2_stageprobe/wct_pr_039252_2.log | head
+# ... stage=1 goes 81->76 (healthy) then 81->2 right after a do_rough_path graph edit.
+
+# the fix, OFF and ON (knob defaults off; compiled-config + identity proofs)
+wcsonnet ... -o cfg_off.json wct-pr-perevt.jsonnet ; grep -c traj_degenerate_wcpts_fallback cfg_off.json  # 0
+wcsonnet ... -S traj_degenerate_wcpts_fallback=true -o cfg_on.json ... ; grep -c ... cfg_on.json          # 1
+./run_pr_evt.sh -s fixoff2 -stm-fit 39252 2
+PDVD_PR_TLA="-S traj_degenerate_wcpts_fallback=true" ./run_pr_evt.sh -s fixon2 -stm-fit 39252 2
+# acceptance instrument (max_perp must leave 0.001cm; median-to-stm_fit must fall):
+python3 <scratch>/leg_check.py currptsprobe keepall fixoff2 fixon2
 ```
 
 Run 39252, event 298595, cluster 86 (production defaults, doc pdvd/29: E=450 V/cm,
@@ -293,143 +326,236 @@ underlying fact (this connection bends significantly, it is not a straight
 chord), which only `TaggerCheckSTM`'s fitter, having no straight-line
 assumption anywhere in its own path, was unaffected by.
 
-### The last open link, closed: why does `fits()` collapse to 2 in the first place?
+### Round 2 (2026-09-03): the round-1 chain was wrong in its first link — corrected here
 
-Traced backward from the collapse (toolkit `ed035408`): added an env-gated
-log of `curr_pts`'s size and *source* (`segment->fits()` vs. `segment->wcpts()`)
-right at the top of `organize_segments_path_3rd`, before `examine_end_ps_vec`
-runs. For segment 86002 across ~10 calls (this cluster gets re-evaluated once
-per flash-matched candidate-vertex trial -- 5 candidates per the earlier
-`dual_chain` log line):
+Round 1 (above) ended by asserting that `fits()` collapses to 2 because the
+**pre-dQ/dx** `form_map_graph` drops the zero-charge points, and recommended
+teaching `organize_segments_path_3rd` to distinguish a degenerate `fits()`.
+The recommendation survives. **The attribution did not.** Three measurements,
+each a fresh work tag, took it apart:
+
+**M1 — the pre-dQ/dx drop is a mask, not the cause.**
+`dqdx_fit_keep_all_points` (doc sbnd_xin/docs/pr/107) is an existing,
+default-OFF knob whose entire purpose is to stop exactly that drop
+("the prototype never drops a trajectory point between the last trajectory
+round and the dQ/dx fit"). Turned on for this event (`work/039252_2_keepall`):
+
+| | pre-dQ/dx points dropped | segment gi/128-wcpt arm `fits()` |
+|---|---|---|
+| production (knob off) | 390 of 430 in one call | 2, every round |
+| `dqdx_fit_keep_all_points=true` | **0** | **still 2, every round** |
+
+So the drop was never what created the 2-point state.
+
+**M2 — `examine_end_ps_vec` is not draining the path either.** Re-run with
+`traj_cover_probe=1` (`work/039252_2_drainprobe`), whose probe was extended in
+`ed035408` to fire on a total drain: **0 drain-to-empty events** in the whole
+event, on any cluster.
+
+**M3 — the collapse is at trajectory round 1, and it is exclusion contention.**
+A new env-gated probe at the single drop site inside `form_map_graph` itself
+(this round's toolkit commit; `WCT_DQDX_DROP_DEBUG=1`,
+`work/039252_2_stageprobe`) attributes every drop to the stage that performs
+it. For cluster 86's 128-wcpt arm:
 
 ```
-organize_segments_path_3rd: segment gi=2 cluster=86 pre-examine curr_pts=99 (from fits), fits_size=99, wcpts_size=128
-organize_segments_path_3rd: segment gi=2 cluster=86 pre-examine curr_pts=2 (from fits), fits_size=2, wcpts_size=128
+48.424  stage=1  gi=2  zero-quantity drop  81 -> 76   (healthy, bent path)
+48.428  organize_segments_path_3rd gi=2  curr_pts=99 (from fits)  wcpts=128
+48.435  pr55 do_rough_path ... sgp guard VETO detour=6.446
+48.440  pr55 do_rough_path ...                      <-- graph edit adds an overlapping segment
+48.443  stage=1  gi=2  zero-quantity drop  81 -> 2    <-- the initiating collapse
+48.449  stage=2  gi=2  zero-quantity drop 108 -> 2
+48.455  stage=3  gi=2  zero-quantity drop 108 -> 2
+48.476  stage=1  gi=4  zero-quantity drop  81 -> 2    <-- the duplicate, same 128 wcpts
 ```
 
-`wcpts_size=128` -- the segment's real, raw, assigned 3D imaging points --
-is present and **identical in every single call**, whether `fits()` shows 99
-or 2. The 128 real points, which trace the actual bent shape (the same one
-`TaggerCheckSTM` fit successfully), are never missing or reassigned. What
-changes is only `fits()`: sometimes 99 points survive from an earlier
-resample/charge-check round, sometimes it has already been reduced to just
-the two vertex endpoints by that same round's `form_map_graph` drop.
+The arm's charge association survives fine (81 → 76) until a mid-fit
+`do_rough_path` graph edit adds a second segment over the same charge. With
+`fit_exclusion` on, `update_association` strips every 2-D cell that is
+(near-)equidistant from two segments — with two segments occupying one arm that
+is *every interior cell* — so both copies lose all charge at once and collapse
+to their endpoints. Stage counts for the whole event: 216 stage-1, 201 stage-2,
+200 stage-3 drops, i.e. the loop runs through **all three** `form_map_graph`
+calls, which is why a knob guarding only the third one cannot break it.
 
-The code at `clus/src/TrackFitting.cxx:1546-1555` reads:
+### The loop, corrected
+
+1. Cluster 86's ~60 cm "toward-344" arm is a real, 128-point bent path
+   (`wcpts()`), present and unchanged in **every** observed call.
+2. A mid-fit graph edit adds an overlapping duplicate segment; `fit_exclusion`
+   contention zeroes both copies' interior charge; **stage-1** `form_map_graph`
+   drops `81 → 2`, leaving only the two endpoint vertices.
+3. `organize_segments_path_3rd`'s `if (!segment->fits().empty())` accepts those
+   2 points — the test distinguishes only *empty* from *non-empty*, never
+   *degenerate* from *meaningful* — and so **never** consults the 128 real
+   points sitting unused in the same object.
+4. It resamples the 2 points into a fresh ~108-point **straight chord**
+   (measured: `max_perp_dev = 0.000 cm` over all 108).
+5. Stages 1, 2 and 3 each correctly find no charge on ~106 of those 108 points
+   (the real path bends; NeutrinoID's own Steiner router independently reports
+   `detour = 6.446` between the same endpoints) and drop them back to 2.
+6. Self-perpetuating: nothing in the cycle re-reads `wcpts()`, so it cannot
+   escape even though the data needed to escape never left the object.
+
+The `else`-to-`wcpts()` branch that would have rescued step 3 fires **0 times
+out of 686** in this event — not because it is unreachable, but because by the
+time `_3rd` runs, `fits()` is never *empty*; it is exactly 2.
+
+### Why the existing SBND knob is not the fix
+
+Turning `dqdx_fit_keep_all_points` on does bring the leg back into
+`track_fit-global` — and draws it in the wrong place:
+
+| arm | points in the toward-344 box | max perp. deviation | median distance to `stm_fit` |
+|---|---|---|---|
+| production | 2 | — | — |
+| `dqdx_fit_keep_all_points=true` | 80 | **0.001 cm** (dead straight) | **3.45 cm** |
+| `stm_fit` (reference) | 64 | 1.158 cm (genuinely bent) | — |
+
+It unmasks the straight chord instead of correcting it, painting a 3.45 cm-wrong
+trajectory into production output. **Recommend against flipping it as a remedy
+for this symptom** — that is a separate, still-open owner decision on its own
+merits (pr/107 §7), and this event is not an argument for it.
+
+This also answers the standing question of whether the SBND PR-chain rounds
+already cover this. They cover the *mask* and nothing else: `dqdx_fit_keep_all_points`
+is `false` in both `sbnd/wct-pr-perevt.jsonnet` and PDVD's, and the 11 knobs whose
+values differ between the two detectors are all STM-tagger guards and
+cosmic-skip flags, none of which touch path organization. pr/107's own census
+measured the drop at 443 points over 47 nueCC48 events (~9/event, junction-local);
+here it is 390 of 430 in a single call — a regime its evaluation never saw.
+
+### The fix (toolkit `a8190d6e`, DEFAULT OFF)
+
+`traj_degenerate_wcpts_fallback` (C++ `TrackFitting::Parameters`, double
+sentinel 0 = legacy; jsonnet TLA in `pdvd/wct-pr-perevt.jsonnet` with the
+key-suppression idiom). When on, `organize_segments_path_3rd` prefers
+`segment->wcpts()` in exactly the degenerate state:
 
 ```cxx
-if (!segment->fits().empty()) {
-    for (const auto& fit : segment->fits()) curr_pts.push_back(fit.point);
-} else {
-    for (const auto& wcpt : segment->wcpts()) curr_pts.push_back(wcpt.point);
-}
+const bool use_wcpts =
+    segment->fits().empty() ||
+    (m_params.traj_degenerate_wcpts_fallback > 0 &&
+     segment->fits().size() <= 2 &&
+     segment->wcpts().size() > 2 * segment->fits().size());
 ```
 
-`fits().empty()` is false whenever there are 2 (or more) stale points --
-it does not distinguish "a real fitted path" from "collapsed to just the
-two vertex endpoints by the previous round's drop." So the branch always
-takes the (degenerate) `fits()` when the collapse has already happened,
-and **never falls back to the 128 real `wcpts()` sitting right there,
-unused, in the very same object**.
+The discriminator is deliberately **not** `fits().size() > 2`: a genuinely short
+segment legitimately has two fit points. It is the *mismatch* between a
+shapeless `fits()` and a much longer `wcpts()`. Verified against the three real
+states in this event's own log:
 
-That closes the loop completely. Root cause, traced end to end with data
-at every link:
+| segment | `fits()` | `wcpts()` | fires? | why |
+|---|---|---|---|---|
+| gi=9 | 2 | 2 | **no** | nothing to gain; a real 2-point segment |
+| gi=7 | 2 | 12 | yes | raw path carries shape the chord does not |
+| gi=13 | 2 | 128 | yes | the arm this doc is about |
 
-1. Segment 86002 is a real ~60 cm connection with 128 real, bent-path raw
-   points (confirmed: `TaggerCheckSTM` fit it cleanly on real charge; the
-   Steiner graph independently measured its true path detours 6.4x a
-   straight chord).
-2. At some round, its `fits()` collapses to exactly its 2 vertex
-   endpoints (from the charge-check drop discussed above -- itself
-   downstream of an earlier straight-line resample).
-3. `organize_segments_path_3rd` sees `fits()` non-empty (2 points) and
-   uses it as-is -- it has no test for "degenerate" vs. "real," so it
-   never reaches for the 128 real points in `wcpts()` that would break
-   the cycle.
-4. It resamples those 2 points into a fresh, dead-straight ~108-point
-   chord (confirmed: `max_perp_dev=0.000cm`).
-5. The next `form_map_graph` charge check correctly finds no charge on
-   106 of those 108 straight-line points (they are not on the real, bent
-   path) and drops them back to 2.
-6. Repeat. This is a **self-perpetuating fixed point**: nothing in this
-   cycle ever looks at `wcpts()` again once step 2 has happened once, so
-   it cannot self-correct, even though the data needed to correct it
-   never left the object.
+**Prototype parity.** The prototype needs no such test because its
+`ProtoSegment` constructor seeds `fit_pt_vec` — which is `get_point_vec()`, the
+same field toolkit calls `fits()` (`clus/docs/porting/porting_dictionary.md:218-219`)
+— from the **full** `path_wcps` (`ProtoSegment.cxx:39-46`), so its equivalent
+input is never degenerate by construction. The toolkit leaves `m_fits` empty at
+construction and relies on the organize passes to fill it. That divergence is
+**not** listed in the porting dictionary; it is recorded here and the knob
+restores the prototype's effective behaviour for the one state where the
+difference bites.
 
-**What this means for a fix**: not in the charge-drop check (doing its job
-correctly) and not in `TaggerCheckSTM` (fit the real geometry correctly).
-The gap is in `organize_segments_path_3rd`'s `!fits().empty()` test, which
-should distinguish a meaningfully-sized/shaped `fits()` from a degenerate
-2-point collapse, and in the latter case prefer `wcpts()` (or the graph's
-own already-computed Steiner rough-path, which independently agrees the
-real path is not straight) over re-interpolating the same doomed chord.
+**Scope: `organize_segments_path_3rd` only.** `organize_segments_path_2nd`
+(`TrackFitting.cxx:1716`) carries the identical `!fits().empty()` pattern and is
+deliberately left untouched: this round has no probe data on it, and its
+resampling is driven by `low_dis_limit`/`end_point_limit` rather than a bare
+step size. Fixing a site blind is how a knob-on run turns into an unexplained
+gate diff. Named here so the next round does not have to rediscover it.
 
-### Is the STM leg real charge, or a fit artifact? (resolved)
+### Verification
 
-Yes, it is real. The raw `clustering-global` points are not gapped in 3D
-along x (5 cm bins from x=280 to x=340 all carry 21-42 points, no >30 cm
-empty run) -- the physical charge is there, and `TaggerCheckSTM`'s fit,
-which stays on real charge for all 141 of its points, follows it correctly.
-What is *not* real is `organize_segments_path_3rd`'s fallback interpolation
-of that same span as a straight chord: `chord_has_charge` (TGM) and the
-Steiner `sgp` guard (NeutrinoID) both flagged, independently and ahead of
-time, that a straight chord across this connection is a poor approximation
-(`detour=6.446`) -- and the `max_perp_dev=0.000cm` measurement above
-confirms `track_fit_global`'s sparse rendering is exactly that: a straight
-chord, mostly discarded by the (correct) charge check, not a second read of
-the same real trajectory STM found.
+- `wcdoctest-clus` DOCTEST_RESULT (adds a `traj_degenerate_wcpts_fallback`
+  default + `set_parameter` round-trip case, and the config-key default check,
+  following the `dqdx_fit_keep_all_points` pattern).
+- **Compiled-config proof**: key count 0 with the knob off, 1 with it on; the
+  OFF compiled JSON `cmp`-identical to the one from the committed jsonnet.
+- **OFF-path identity, by construction**: with the parameter at its default 0
+  the second disjunct short-circuits and `use_wcpts` reduces to exactly the
+  legacy `segment->fits().empty()`, so the OFF path executes the same branch on
+  the same data.
+- **OFF-path empirical archive gate: BLOCKED, not run.** Both arms
+  (`work/039252_2_fixoff`, `work/039252_2_fixon`) exited **rc=139 (SIGSEGV)**
+  during teardown, after the physics and the tracking ROOT writer, leaving a
+  truncated `mabc-pr.zip` that `hash_archive.py` rejects. The fault is **not**
+  the knob: knob-OFF and knob-ON fail identically, and every earlier arm
+  (`_keepall`, `_drainprobe`, `_stageprobe`) ran rc=0. The binary was built
+  while a concurrent session in this shared working tree was running
+  `git stash push`/`pop` cycles over `clus/inc/WireCellClus/NeutrinoPatternBase.h`
+  and `clus/src/NeutrinoStructureExaminer.cxx` — stashing a **header** mid-build
+  yields mixed object files and exactly this class of teardown crash (see
+  memory `feedback_shared_tree_binary_pin`; pinning `LD_LIBRARY_PATH` protects
+  against a mid-run swap, but not against a binary that was already raced when
+  it was pinned). **Owed: re-run both arms on a clean build of a quiet tree and
+  hash-compare `_fixoff*` against `_stageprobe`.** The two crashed tags are kept
+  as the record (M13).
+- Freshness proof (M1) done at 09:29 (lib newer than every edited source); the
+  binary was pinned for both arms.
+- **Knob-on effect: measurement owed**, blocked by the same crash. The
+  acceptance criterion is **pre-registered here, before the run**, so it cannot
+  be fitted afterwards: in the toward-344 box the fallback must move
+  `max_perp` **off 0.001 cm toward the ~1.2 cm** the `stm_fit` reference shows,
+  and must pull the **3.45 cm** median distance to `stm_fit` down. The leg
+  coming back *straight* — i.e. present but still 0.001 cm — counts as the fix
+  NOT working, however many points appear. Instrument:
+  `scratchpad/leg_check.py` (see Repro).
+
+### Pre-existing, unrelated, not fixed here
+
+`examine_end_ps_vec` (`TrackFitting.cxx:2173`) reads `ps_list.back()` at the top
+of its `flag_end` block; the `flag_start` block above it can leave the list
+empty (it only re-inserts `temp_start` when that point has a valid face). The
+empty-input guard at :2105 does not cover this path. Not reached in this event
+and unrelated to this change — reported, not touched.
 
 ## Status
 
-* **Question 1: FIXED**, toolkit `ab0762c6` — `stm_fit`'s Bee
-  `real_cluster_id` now matches `cluster_id`. Verified byte-identical
-  elsewhere (20/21 `mabc-pr.zip` members unchanged; the 21st differs only in
-  the one intended field). Unconditionally inert when `save_stm_fit=false`
-  (the production default), so no existing config's output changes.
-* **Question 2: root cause fully traced.** Investigation only, nothing
-  behavior-changing done (three env-gated, always-inert-by-default DEBUG
-  instrumentation additions, `e3dee831`/`f622161e`/`ed035408`, all verified
-  byte-identical when their env var/knob is unset -- `abtest/hash_archive.py
-  --members` against the doc pdvd/29 `_v450` baseline). The `track_fit_global`
-  gap is a self-perpetuating fixed point in `organize_segments_path_3rd`:
-  once a segment's `fits()` has collapsed to its two vertex endpoints (by
-  the pre-dQ/dx charge-support check dropping a bad resample), the
-  function's `!fits().empty()` test treats those 2 stale points as good
-  enough to resample from again -- producing another dead-straight chord
-  (`max_perp_dev=0.000cm`) across a connection the pipeline's own Steiner
-  graph had already measured as detouring 6.4x that chord (`detour=6.446`)
-  -- which the charge check then drops right back to 2, forever, without
-  ever falling back to the segment's 128 real, unused, bent-path `wcpts()`.
-  The STM=1 tag itself is well-founded (`TaggerCheckSTM` fit the real
-  geometry, all on real charge); `track_fit_global`'s sparse rendering is
-  a resampling artifact, not competing evidence.
+- **Q1 — FIXED** (toolkit `ab0762c6`): the `stm_fit` Bee layer's hard-coded
+  `real_cluster_id = 0` now carries the cluster id.
+- **Q2 — root cause traced to its first link and fixed behind a default-OFF
+  knob.** The STM=1 tag is well-founded: `TaggerCheckSTM` fit the real geometry
+  on real charge. `track_fit_global`'s missing leg is a resampling artifact of
+  a fits()-collapse fixed point, entered at trajectory round 1 through
+  `fit_exclusion` contention with a duplicate segment, and sustained because
+  `organize_segments_path_3rd` cannot tell a degenerate `fits()` from a real one.
 
 ## Recommendation / next steps
 
-1. **Candidate fix**, now precisely targeted and well-motivated by data:
-   in `organize_segments_path_3rd` (`clus/src/TrackFitting.cxx:1546-1555`),
-   change `if (!segment->fits().empty())` to also require the fitted path
-   have real extent/count (e.g. `fits().size() > 2` or a minimum chord
-   length check), falling back to `segment->wcpts()` — or better, to the
-   graph's own already-computed Steiner rough-path, which independently
-   agrees the real connection is not straight — whenever `fits()` has
-   degenerated to just its two vertex endpoints. This targets the exact
-   mechanism traced above and would let a genuinely bent, real connection
-   escape the 2-point fixed point instead of being asked to resample the
-   same doomed chord forever.
-2. **Not implemented here**: this is a change to production PR-graph
-   fitting behavior for every PDVD (and, since `TrackFitting` is shared,
-   potentially SBND) event, not an opt-in diagnostic -- outside what a
-   debugging session should do unilaterally. It needs the usual bar
-   (§4): a default-off knob or an explicit owner decision that this is a
-   universal improvement, a byte-identical-when-off gate, a knob-on smoke
-   run showing the recovered trajectory, and ideally a check on whether
-   any *other* long/branchy cluster in the existing validation manifests
-   changes shape once escaped from this fixed point.
-3. Whether cluster 86's TWO arms (the one just traced, and the separate
-   low-z "Michel-like" arm toward the selected vertex) are one real
-   particle each or reflect an imaging mis-merge remains a separate, open
-   question worth checking against the raw 2D wire signals (a known PDVD
-   failure mode; see docs 25-26 in this directory) — but it is no longer
-   needed to explain *this* symptom, which is now fully accounted for by
-   the mechanism above.
+**These two are different layers of the same defect, and the distinction is the
+recommendation.** `traj_degenerate_wcpts_fallback` is the mitigation *at the
+site where the shape is destroyed* — it is what this round ships, default OFF.
+The duplicate segment is the *root* cause upstream of it and is the
+higher-leverage fix, but it is a graph-construction change, unscoped and
+unmeasured as of this round. Shipping the former does not preclude, and is not
+a substitute for, the latter.
+
+1. **Finish this round's owed measurements first** (see Verification): re-run
+   the OFF/ON arms on a clean build of a quiet tree, complete the OFF-path
+   archive gate, and judge the knob against the pre-registered acceptance
+   criterion. Until that is done the fix is *implemented and reasoned*, not
+   *validated*.
+2. **Owner decision on flipping `traj_degenerate_wcpts_fallback` for PDVD.**
+   Off by default and byte-identical when off. Flipping it is a production
+   behaviour change for every PDVD event and needs the §4 bar on a real
+   manifest, not this one event. `TrackFitting` is shared with SBND, so an
+   SBND gate is required before any flip there; this round deliberately did
+   not thread the knob into SBND's jsonnet (§2 "never edit another
+   experiment's configs as a side effect"), which leaves SBND at the C++
+   default and therefore unreachable and unchanged.
+3. **Do not flip `dqdx_fit_keep_all_points` for this symptom** — measured above
+   to restore the leg in the wrong place (3.45 cm off, dead straight). It is a
+   plausible-looking lever precisely because it does make the track reappear;
+   that is why this is stated as a negative result rather than left unsaid.
+4. **Next round: prevent the duplicate segment.** The exclusion contention that
+   starts the collapse exists only because a mid-fit `do_rough_path` edit put
+   two segments on one arm (`mvga: op1 dup-merge` also fires on this cluster,
+   removing a 69.53 cm segment in favour of a 46.21 cm survivor at overlap
+   0.99). Removing the duplicate would remove the need for the fallback here.
+5. `organize_segments_path_2nd` carries the same untested pattern (see Scope).
+6. Whether cluster 86's two arms are one real particle each or an imaging
+   mis-merge remains open, but is no longer needed to explain this symptom.

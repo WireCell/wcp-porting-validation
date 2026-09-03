@@ -2819,6 +2819,18 @@ function(
     // C++ default false => key omitted => byte-identical.  Validation:
     // --tla-code dqdx_fit_keep_all_points=true (or SBND_DQDX_FIT_KEEP_ALL_POINTS).
     dqdx_fit_keep_all_points = false,
+    // doc pdvd/30 round 2 (039252/2 evt 298595, cluster 86): organize_segments_path_3rd
+    // reads its input path from segment->fits() whenever that is merely non-empty, so a
+    // segment whose fits() has collapsed to its two endpoint vertices (measured here:
+    // trajectory-round-1 exclusion contention right after a do_rough_path graph edit adds
+    // an overlapping segment) is resampled as a STRAIGHT chord and the bent 128-point
+    // wcpts() path in the same object is never consulted again.  Rendered result: a 64 cm
+    // arm drawn with max perpendicular deviation 0.001 cm, a median 3.45 cm off the
+    // trajectory TaggerCheckSTM fits on the same charge.  true => fall back to wcpts()
+    // when fits() has <= 2 points and wcpts() has more than twice as many.
+    // C++ default false => key omitted => byte-identical.  Validation:
+    // --tla-code traj_degenerate_wcpts_fallback=true.
+    traj_degenerate_wcpts_fallback = false,
     // doc 77 round 1 (2026-08-24): dl_vtx_topo_weight/_center (pr/89 Arm C2
     // rule-1 outgoing-prong topology term) removed -- live A/B -8/1014.
     // See sbnd_xin/docs/77_knob-ledger.tsv.
@@ -3527,6 +3539,7 @@ function(
         [if dual_chain_allow_cluster_swap != null then 'dual_chain_allow_cluster_swap']: dual_chain_allow_cluster_swap,
         [if dual_chain_vtx_weight != null then 'dual_chain_vtx_weight']: dual_chain_vtx_weight,
         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
+        [if traj_degenerate_wcpts_fallback then 'traj_degenerate_wcpts_fallback']: true,
         [if main_vertex_swap_apply then 'main_vertex_swap_apply']: true,
         [if rough_path_probe then 'rough_path_probe']: true,
         [if steiner_gap_penalty != null then 'steiner_gap_penalty']: steiner_gap_penalty,
