@@ -64,15 +64,11 @@ python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
     /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-dbg25a-d97off/ql_evt16/pctree-evt16.tar.gz 4000
 ```
 
-Steiner coverage and the gap metric of §4 come from the calib dump's `steiner`
-section, which carries per-cluster `x/y/z` **and** `flag_terminal`:
-
-```python
-import json, glob, numpy as np
-d = json.load(open(glob.glob('work/039349_14_d27fresh/calib-pr-evt*.json')[0]))
-s = [x for x in d['steiner'] if x['cluster_id'] == 34][0]      # 36 on d25r13fix
-P = np.stack([s['x'], s['y'], s['z']], axis=1); ft = np.array(s['flag_terminal'])
-```
+The Steiner coverage and gap metric of §4 are section 6 of that same script.
+They come from the calib dump's `steiner` section, which carries per-cluster
+`x/y/z` **and** `flag_terminal`. The cluster is resolved by **ownership of the
+control region**, never by a hardcoded id — re-clustering renumbers it (36 on
+`d25r13fix`, 34 on `d27fresh`), and a hardcoded id would silently select nothing.
 
 Four traps that each produced a wrong number first; all four are commented in
 `steiner_terminal_attribution.py` and enforced by assertions where possible:
@@ -329,7 +325,11 @@ explanation — not verified here — is that `PointTreeBuilding::add_ctpc` drop
 rows whose uncertainty exceeds the dead threshold (`PointTreeBuilding.cxx:296-299`)
 while `BlobSampler` stores the value regardless, making the map a subset of what
 the sampler saw. Whatever it is, it is the opposite direction from the V finding
-and does not explain it. That SBND shows none of it is itself worth a look.
+and does not explain it. The apparent PDVD/SBND contrast here is **not**
+decomposed and should not be read as a result: the event-wide counts were never
+split into "absent from the map" versus "present but different", and SBND is a
+single-anode dump where the (apa, face) attribution is trivial, so the two sides
+are not measured the same way.
 
 ---
 

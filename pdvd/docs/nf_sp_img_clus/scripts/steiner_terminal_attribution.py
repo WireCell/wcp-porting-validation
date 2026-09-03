@@ -17,6 +17,9 @@ It answers, for a region selected geometrically along a named V->end line:
         disable_dead_mix_cell=false (the value production passes,
         CreateSteinerGraph.cxx:283)
   4. how many distinct BLOBS hold at least one candidate?
+  5. how many steiner points and TERMINALS actually reached the tree, and what
+     is the largest steiner-free gap along the line?  (from the calib dump's
+     `steiner` section, which carries per-cluster x/y/z AND flag_terminal)
 
 (4) is the load-bearing number.  find_steiner_terminals runs
 find_peak_point_indices once per blob (SteinerGrapher.cxx:605-622) and inserts
@@ -58,6 +61,7 @@ Usage:
   python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py \
       work/039349_14_d25r13fix
 """
+import glob
 import io
 import json
 import os
@@ -166,6 +170,38 @@ def identify_ctpc(dump, slice_of, wire_index, charge_val, probe):
     return best[1], best[2], best[0], len(probe)
 
 
+def steiner_coverage(workdir, cid):
+    """Steiner points, terminals and the largest steiner-free gap along each
+    region line, from the calib dump.  `cid` is resolved by REGION OWNERSHIP
+    (see main), never hardcoded: the cluster is renumbered by any re-clustering
+    -- it is 36 on the d25r13fix arm and 34 on d27fresh.
+    """
+    hits = glob.glob(os.path.join(workdir, "calib-pr-evt*.json"))
+    if not hits:
+        print("  (no calib-pr dump -- skipping steiner coverage)")
+        return
+    entries = [e for e in json.load(open(hits[0])).get("steiner", [])
+               if e.get("cluster_id") == cid]
+    if not entries:
+        print(f"  (no steiner entry for cluster {cid} in {os.path.basename(hits[0])})")
+        return
+    s = entries[0]
+    P = np.stack([np.array(s["x"]), np.array(s["y"]), np.array(s["z"])], axis=1)  # cm
+    term = np.array(s["flag_terminal"], dtype=bool)
+    print(f"  cluster {cid}: {len(P)} steiner points, {int(term.sum())} terminals (whole cluster)")
+    for name, end in (("BELOW V (V->A)", A_CM), ("ABOVE V (V->U)", U_CM)):
+        d = end - V_CM
+        L = np.linalg.norm(d)
+        u = d / L
+        t = (P - V_CM) @ u
+        perp = np.linalg.norm(P - (V_CM + t[:, None] * u), axis=1)
+        m = (perp < TOL_MM / 10.0) & (t > 0) & (t < L)
+        ts = np.sort(t[m])
+        gap = np.diff(np.concatenate([[0.0], ts, [L]])).max()
+        print(f"     {name:16s} len={L:5.1f}cm  steiner={int(m.sum()):4d} "
+              f"terminals={int(term[m].sum()):4d}  LARGEST steiner-free gap={gap:6.1f} cm")
+
+
 def main():
     workdir = sys.argv[1] if len(sys.argv) > 1 else "work/039349_14_d25r13fix"
     cut = float(sys.argv[2]) if len(sys.argv) > 2 else 500.0   # PDVD steiner_terminal_charge
@@ -196,6 +232,7 @@ def main():
 
     # ---- 1. cluster ownership, from the Bee layer, in Bee's own coordinates
     zpath = os.path.join(workdir, "mabc-pr.zip")
+    owner_cid = None
     if os.path.exists(zpath):
         bee = json.loads(zipfile.ZipFile(zpath).read("data/0/0-clustering-global.json"))
         B = np.stack([np.array(bee["y"]), np.array(bee["z"])], axis=1)   # cm
@@ -207,6 +244,10 @@ def main():
             top = Counter(rcid[m].tolist()).most_common(3)
             share = ", ".join(f"{k}: {v} ({100.0*v/n:.0f}%)" for k, v in top) if n else "-"
             print(f"  {name:34s} n={n:5d}  {share}")
+            # The ABOVE region is the covered half and is 100% pure, so it is
+            # the reliable place to resolve the cluster id for section 6.
+            if top and "ABOVE" in name:
+                owner_cid = int(top[0][0])
 
     # ---- 2/3/4. sampling, candidacy, blob occupancy
     print("\n## 2-4. Sampling, candidacy and blob occupancy (the load-bearing table)")
@@ -257,6 +298,13 @@ def main():
                   f"exact {exact:4d}/{len(idx)} | absent from map {missing:3d} | "
                   f"stored 0 BUT map has charge {zero_but_present:4d} (median {med} e) | "
                   f"unc==0 {np.mean(unc[p][idx] == 0):.3f} unc>1e10 {np.mean(unc[p][idx] > 1e10):.3f}")
+
+    # ---- 6. what actually reached the tree, and the coverage-gap metric
+    print("\n## 6. Steiner coverage that reached the tree (calib dump)")
+    if owner_cid is None:
+        print("  (no Bee layer -- cannot resolve the cluster id by ownership)")
+    else:
+        steiner_coverage(workdir, owner_cid)
 
 
 if __name__ == "__main__":
