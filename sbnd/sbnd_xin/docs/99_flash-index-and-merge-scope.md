@@ -873,9 +873,16 @@ the 308 events, and the byte-identical Bee zips say the same thing independently
 |---|---|
 | `nusel-evt<ID>.tsv` — the per-bundle tagger verdicts | **308/308 byte-identical** |
 | `calib-pr-evt<ID>.json` (timer field masked) | **177/177 identical**; 131 absent in *both* arms |
-| `mabc-pr.zip` | **byte-identical** |
+| `mabc-pr.zip` | **308/308 byte-identical** |
 | every ROOT branch — 1938 tree instances, **236 280 branch instances** | **3** differing pairs: `T_cluster:flash_id`, `:flash_time_us`, `:flash_pe` |
-| `pctree-pr-evt<ID>.tar.gz` | the same 16 optical datapaths, 0 added, 0 removed |
+| `pctree-pr-evt<ID>.tar.gz` | the same 16 optical datapaths, 0 added, 0 removed (308/308) |
+
+The archive row is worth stating as counts rather than a verdict, because
+"`mabc-pr.zip` is unchanged" is the claim doing the work: **616 PR archives
+compared (38 + 96 + 482), 308 differing, and every one of the 308 is a
+`pctree-pr-evt<ID>.tar.gz`** — not one `mabc-pr.zip` moved. `mabc-pr.zip` is not
+a ROOT file, so the 236 280-branch census does not cover it; it needed its own
+leg per sample, on all three samples.
 
 **The Q/L hand-scan calib dump cannot be affected at all**, and that is
 structural rather than measured: `dump_calib(runs)` is called at
@@ -993,3 +1000,18 @@ own `T_cluster` all along — which nobody has measured.
   exclude them; do not read the difference as a regression.
 - **`flashcov` remains unexercised** (§9): the write fix shifts it, no SBND input
   carries it, and the flip makes that branch reachable rather than dormant.
+- **No standing sentinel goes red.** Swept `scripts/{d97_sentinels.py,
+  pr127_sentinels.py,pr130_sentinel_arm.sh,pr130_sentinel_neg34.sh}` for
+  `pctree` / `flash_id` / `flash_time_us` / `flash_pe` / `hash_archive`: **zero
+  hits**. They read `mabc-pr.zip` and `tracking-pr.root`, and both are covered
+  above — the zip is byte-identical on all 308, and the ROOT file moves only in
+  the three flash columns, which no sentinel reads. This sweep is not optional
+  book-keeping: a shipped fix has already died silently in this tree because a
+  guard was left comparing against a stale baseline (doc pr/127).
+- **What a standing gate WILL now show, and must not be read as a regression.**
+  `d92_epoch_gate.sh` only *produces* arms; the comparison is done by hand
+  afterwards. A fresh arm compared against any pre-2026-09-03 baseline will show
+  (a) the three `T_cluster` flash columns and (b) **every stage-A and stage-B
+  pctree archive** differing — so a bare `d97_ql_gate.py` / `pr85_hash_gate.py`
+  leg against an old baseline FAILs by construction. Compare against a post-flip
+  baseline, or restrict the leg to the non-pctree products.
