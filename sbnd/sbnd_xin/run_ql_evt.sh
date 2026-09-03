@@ -318,6 +318,8 @@ if [ "$BEAMPREF" = 1 ]; then
     [ -n "$BEAMPREF_WEIGHT" ] && KNOB_TLA+=(--tla-code "beam_pref_weight=$BEAMPREF_WEIGHT")
     [ -n "$BEAMPREF_RESCUE" ] && KNOB_TLA+=(--tla-code "beam_pref_rescue=$BEAMPREF_RESCUE")
 fi
+{ if [ -n "${QL_EXTRA_TLA:-}" ]; then [ -r "$QL_EXTRA_TLA" ] || { echo "ERROR: QL_EXTRA_TLA unreadable: $QL_EXTRA_TLA" >&2; exit 1; }; _n=0; while IFS= read -r _tl || [ -n "$_tl" ]; do case "$_tl" in ''|\#*) continue ;; esac; KNOB_TLA+=(--tla-code "$_tl"); _n=$((_n+1)); done < "$QL_EXTRA_TLA"; echo "QL_EXTRA_TLA: appended $_n override(s) from $QL_EXTRA_TLA" >&2; fi; true; }  # doc 99: the counterpart of run_pr_chain_batch.sh's PR_EXTRA_TLA -- a file of raw jsonnet TLA lines appended verbatim, LAST in KNOB_TLA and KNOB_TLA is last in _TLA, so a file entry wins over every knob above. EMPTY/unset = no-op = byte-identical. One line on purpose (doc pr/141 sec 19): bash re-reads a running script at a byte offset, so a multi-line insert here would corrupt a live run.
+true
 
 case "$MODE" in
     mc)   REALITY=sim ;;

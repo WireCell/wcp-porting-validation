@@ -26,9 +26,17 @@ python3 scripts/analysis/d99_flash_index_census.py --arm 'work-{s}-d97fvpr2' --s
     --samples nuecc48,ncpi0,mcp1k,mcp2k --out /home/xqian/tmp/d99-census-prod-pr.tsv \
     --detail /home/xqian/tmp/d99-detail-prod-pr.tsv --jobs 8
 
-# the arms (14 min at 8/8 jobs) AND all six gate legs, one command.
+# the arms AND all six gate legs, one command.
 # Existing arms are skipped (M13), so re-running it just re-gates.
 ./scripts/d99_flash_gate.sh
+
+# ROUND 2 (sec 6-9): the read fix and the write fix.  Six arms, every leg.
+# Same skip-if-exists rule, so a re-run re-gates without re-running anything.
+./scripts/d99r2_flash_gate.sh
+
+# ... and the round-2 instrument on its own, against any PR arm.  It needs no
+# baseline: T_cluster carries cluster_t0_us and flash_time_us on the same row.
+python3 scripts/analysis/d99_tcluster_flash_check.py <armpr> --samples ncpi0,nuecc48,mcp1k
 
 # ... and as the post-master-merge gate, against any baseline:
 REFARM=d99fix NEWARM=<fresh-arm> ./scripts/d99_flash_gate.sh
@@ -45,6 +53,7 @@ below is checkable without a 20-minute re-run:
 | `docs/99_flash/d99-census-ql-prod3067.tsv` | 3067 — Q/L stage, production |
 | `docs/99_flash/d99-census-pr-prod3067.tsv` | 3067 — PR stage, production (what `T_cluster` holds) |
 | `docs/99_flash/d99-census-pr-gate308.tsv` | 308 — PR stage, the gate arm |
+| `docs/99_flash/d99r2-tcluster-gate308.tsv` | 308 — **round 2**, per event, all three arms side by side (off / read-on / write-on) |
 
 The per-cluster `--detail` files are not committed (85k rows); regenerate them
 with the commands above.
@@ -221,28 +230,56 @@ concluded it did not.)
 
 # 2. The residual this does NOT fix — SBND keeps only one APA's flash list
 
-Reported, not fixed. **CLAUDE.md §5.1**: correcting it changes archive content
-unconditionally, and the choice of remedy is the owner's.
+Reported, not fixed **in round 1**. Both sides of it are fixed in round 2 (§6,
+§7), each behind a knob that defaults OFF, because correcting the write side
+changes archive content unconditionally and flipping it is the owner's call
+(CLAUDE.md §5.1).
 
 ## What is wrong
 
-`cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` runs the pipeline **per APA**:
-`TensorFileSource → FlashTensorToOpticalPCs → QLMatching`. Each
-`FlashTensorToOpticalPCs` ends with
+> **Correction, 2026-09-02 (round 2).** The first version of this section named
+> the wrong site. It said each per-APA `FlashTensorToOpticalPCs` clobbers a
+> shared live root with `lpcs["flash"] = std::move(flash_ds)` and that the
+> **last** APA's list survives. That is not what happens: every
+> `FlashTensorToOpticalPCs` deserializes its **own** pctree from its own input
+> tensors (`as_pctree`), so there is nothing shared to clobber — and SBND
+> production runs `joint=true`
+> (`wct-clus-matching-perevt.jsonnet:91`), so there is no `PointTreeMerging`
+> either. The loss is at the **merge**, and the survivor is the **first**
+> input's list. The corrected mechanism is below; every measurement in this
+> section stands (it was taken from the archives, not from the reading), and the
+> worked example — APA0 correct, APA1 wrong — is in fact the evidence for
+> *first*, not last.
+
+SBND production runs one `FlashTensorToOpticalPCs` per APA, each on its own
+pctree, feeding **one joint `QLMatching`** node (one input port per APA), which
+matches each APA in its own isolated run and then merges the per-APA trees into
+a single output (`QLMatching.cxx:1109-1116`, reproducing the standalone
+`PointTreeMerging` it replaces).
+
+That merge is where the flash list is lost:
 
 ```cpp
-lpcs["flash"] = std::move(flash_ds);     // ASSIGN, not append
+// QLMatching.cxx merge_pct() -- primary target = runs.front() = input 0
+for (const auto& src_pc : src->value.local_pcs()) {
+    if (root_pcs_to_merge.find(name) == root_pcs_to_merge.end()
+        && !is_per_anode_root_pc(name)) {
+        continue;                 // <-- flash / light / flashlight DROPPED
+    }
+    ...
+}
 ```
 
-on the same live root node, and its `ident` is the row index *within that APA's*
-flash matrix (`fident.push_back((int) r)`). `QLMatching` stores that per-APA row
-id on the cluster (`QLMatching.cxx:3722`, `flash->get_flash_id()`).
+`root_pcs_to_merge` is `['opflash']` for SBND, so the merged root keeps **input
+0's** canonical `"flash"` PC and drops every other input's. Meanwhile the
+per-cluster `"flash"` scalar is the row index *within that input's* flash list
+(`QLMatching.cxx:3722`, `flash->get_flash_id()`, which is the flash PC row id —
+`fident.push_back((int) r)` in `FlashTensorToOpticalPCs`).
 
-So the archive ends up with **one** canonical `"flash"` PC — the last APA's —
-while cluster scalars written during an earlier APA's matching index a list that
-is no longer there. Depending on the number, `flash_at()` then either runs off
-the end (defect A, now returning the sentinel) or lands on a **different, real
-flash** of the surviving APA's list.
+So a cluster matched on any input but the first indexes a list that is no longer
+in the archive. Depending on the number, `flash_at()` then either runs off the
+end (defect A, now returning the sentinel) or lands on a **different, real
+flash** of the surviving input's list.
 
 **The matching itself is not affected.** Each APA matched against its own flash
 list while that list was live. What is broken is only the *read-back after the
@@ -276,19 +313,22 @@ clusters do not:
 | 8 | 4 | 1000004 (apa1) | −75242.9171 | 1513.0167 | **WRONG** |
 | 10 | 0 | 0 (apa0) | 212278.8006 | 212278.8006 | CORRECT |
 
-## Options, for the owner to choose between
+## Options, and what round 2 did with them
 
-1. **Fix the archive** — give `FlashTensorToOpticalPCs` a per-APA PC name, or
-   append with an APA column, and make the cluster scalar address the merged
-   list. Correct at the source and makes `get_flash()` mean what it says.
-   Changes Q/L archive bytes, so every downstream hash moves: a full
-   revalidation.
-2. **Fix the consumer** — have the `T_cluster` writers cross-check
-   `flash.time() == cluster_t0` and emit the sentinel when it fails. One
-   comparison, no archive change, but it silences the wrong rows rather than
-   correcting them, and it changes what a shipped diagnostic column means.
-3. **Leave it and document** — the columns are diagnostic only; `cluster_t0`,
-   already a `T_cluster` column, carries the right time today.
+1. **Fix the archive** — carry every input's optical PCs through the merge and
+   make the cluster scalar address the merged list. Correct at the source and
+   makes `get_flash()` mean what it says. Changes Q/L archive bytes, so every
+   downstream hash moves. **DONE in §7**, as `QLMatching.merge_flash_pcs`,
+   default OFF. (The round-1 sketch here proposed changing
+   `FlashTensorToOpticalPCs`; with the mechanism corrected above, that component
+   is not the defect site and is untouched.)
+2. **Fix the consumer** — round 1 sketched a `flash.time() == cluster_t0`
+   cross-check that emits the sentinel on failure. Rejected on the owner's ask
+   to fix the read: it silences the wrong rows rather than correcting them.
+   Round 2 does the *correcting* version instead — resolve by
+   `matched_flash_gid` against the merge-safe `"opflash"` PC. **DONE in §6**, as
+   `SbndPrMagnifyTrackingVisitor.flash_by_gid`, default OFF.
+3. **Leave it and document** — superseded.
 
 Nothing in SBND reconstruction reads `Cluster::get_flash()`: the only
 reconstruction consumer is `RetileCluster::mutate()`, and SBND's config
@@ -416,3 +456,237 @@ and every doc-92 figure read the per-event files, which were always intact.
   value taken from the data. It is consistent by construction today (the same
   component writes both PCs), so no guard was added rather than adding an
   untested branch.
+
+---
+
+# ROUND 2 — both sides of the §2 residual, each behind a default-OFF knob
+
+Owner, 2026-09-02: *"Can you follow your suggestion, fix the read first, and
+then fix the write? For the write, I assume that you can follow your suggest to
+fix the archive? Please validate, update the md file, commit and push."*
+
+| | |
+|---|---|
+| toolkit commits | `<read>` (read fix) and `<write>` (write fix), on `apply-pointcloud` |
+| wcp-porting-img | this doc + `scripts/d99r2_flash_gate.sh`, `scripts/analysis/d99_tcluster_flash_check.py`, the `QL_EXTRA_TLA` hatch in `run_ql_evt.sh` |
+| knobs | `SbndPrMagnifyTrackingVisitor.flash_by_gid` (read) and `QLMatching.merge_flash_pcs` (write), **both C++ default false** |
+| arms | `work-{ncpi0,nuecc48,mcp1k}-d99r2{off,wr}` (stage A) and `-d99r2{off,rd,wr,both}pr` (stage B), 308 events |
+| binary pin | `~/tmp/d99r2-libsnap` |
+| status | **Nothing is flipped.** Production is unchanged; §9 states what each flip would cost. |
+
+# 6. The READ fix — resolve by gid, not by row index
+
+## Root cause, restated
+
+QLMatching stamps two keys on every matched cluster, and only one of them
+survives the merge:
+
+| scalar | meaning | survives the merge? |
+|---|---|---|
+| `flash` | row index in **that input's** flash PC | **no** — the merge keeps only input 0's flash PC (§2) |
+| `matched_flash_gid` | `gid_side * 1000000 + index into that input's flash list` | **yes** — and the `opflash` PC carrying the same gid IS in `root_pcs_to_merge` |
+
+`Cluster::get_flash()` reads the first. The fix adds a reader for the second.
+
+## Fix
+
+- **`Grouping::flash_by_gid(int gid)`** (`clus/src/Facade_Grouping.cxx`) — finds
+  the rows of the merge-safe `"opflash"` PC (one row per (flash, channel):
+  `gid`/`time`/`ch`/`pe`) carrying that gid and builds a `Facade::Flash`.
+- **`Cluster::get_matched_flash()`** (`clus/src/Facade_Cluster.cxx`) — delegates
+  with the cluster's own `matched_flash_gid`.
+- **Knob `flash_by_gid`** on `SbndPrMagnifyTrackingVisitor`, C++ default
+  **false**; when on, `T_cluster`'s `flash_id`/`flash_time_us`/`flash_pe` come
+  from `get_matched_flash()`. Present on the PDVD fork too, but **no PDVD config
+  wires it** — see the precondition below.
+
+Three details that are decisions, not incidentals:
+
+1. **PE is summed in ascending CHANNEL order, not row order.** The canonical
+   flash PC's `value` is `FlashTensorToOpticalPCs`' `sum += pe` over channels
+   `0..nchan-1`. Summing the opflash rows in channel order reproduces it
+   **bit-exactly**; summing in row order does not (measured: 273/273 vs 27.5%
+   agreement, worst error 1.5e-10). A unit test pins this with values whose two
+   orders give genuinely different doubles, and asserts they differ before
+   testing anything — otherwise the case would prove nothing.
+2. **`ident()` becomes the GID.** So `T_cluster`'s `flash_id` changes *meaning*
+   under the knob: it is the globally-unique gid, joinable to the `opflash` PC,
+   not a per-input row id. §2 option 2 listed "changes what a shipped diagnostic
+   column means" as a cost of any consumer-side fix; this one pays it too, and
+   in exchange the column becomes unambiguous for the first time.
+3. **A gid naming two flashes is refused.** For SBND `gid_side` is the input's
+   **anode ident** (`opflash_phys_gid` false, `shared_flash` false), so gids are
+   unique across inputs by construction. Under `opflash_phys_gid` the gid side is
+   the flash's *physical drift side*, and two inputs holding different flash
+   lists can then emit the same gid. `flash_by_gid` detects exactly that (one
+   channel appearing twice under one gid) and returns an **invalid** Flash rather
+   than a silently doubled PE sum. **That is the precondition for enabling this
+   knob anywhere else**, and it is why the PDVD visitor carries the knob but no
+   PDVD config sets it: PDVD's gid encoding has not been checked.
+
+# 7. The WRITE fix — carry every input's flash PCs through the merge
+
+`QLMatching.merge_flash_pcs`, C++ default **false**. When true, the multi-input
+merge adds `flash`/`light`/`flashlight`/`flashcov` to the concatenated name set,
+and each non-primary input is re-based first (`QLMatching::shift_flash_indices()`)
+by the row counts already on the merged root:
+
+| shifted | by | why |
+|---|---|---|
+| `flash.ident` | flash rows | the schema is `ident(=row)`, and the row changes |
+| `flashlight.flash` | flash rows | positional join column |
+| `flashlight.light` | light rows | positional join column |
+| `flashcov.flash` | flash rows | positional (`channel` is a channel id — left alone) |
+| each cluster's `flash` scalar | flash rows | this is what `get_flash()` resolves; `-1` stays `-1` |
+
+`write_opflash_pc` runs per input **before** the merge, so `opflash` and its gids
+are untouched by the shift. That is deliberate: it leaves the two resolutions
+independent, which is what makes §8's cross-check meaningful.
+
+OFF is inert **by construction**, not by measurement: the name set handed to
+`merge_pct` is then literally `m_root_pcs_to_merge`, and `shift_flash_indices()`
+is never called. Single-input jobs never merge, so this is a no-op for uBooNE.
+
+`FlashTensorToOpticalPCs` is **not** touched. Round 1's §2 named it as the defect
+site; with the mechanism corrected (see the correction box in §2) it is innocent.
+
+# 8. Round 2 verification
+
+One command builds all six arms and runs every leg:
+`./scripts/d99r2_flash_gate.sh` (arms ~43 min at 8/8 jobs, legs ~10 min;
+existing labels are skipped, so a re-run just re-gates).
+
+## The instrument
+
+Not an A/B. `T_cluster` carries **`cluster_t0_us`** — written from the flash the
+cluster actually matched — and **`flash_time_us`** — written from whatever the
+reader resolved — on the same row, both as the same double over the same
+constant. So
+
+```
+flash_time_us == cluster_t0_us            (exact, on every matched row)
+```
+
+is a **within-file identity**: no baseline arm, no archive census, no
+cross-stage join. That last point is why it exists — round 1's causal check
+predicted moved rows from a Q/L-stage census and failed on 24 events purely
+because `T_cluster` is written from the *PR*-stage grouping
+(`feedback_diff_tool_cannot_prove_containment`). `d99_tcluster_flash_check.py`
+reads one file and asks it about itself.
+
+**Trap, and it cost a false FAIL on the first run.** "Matched" is *not* `t0 != 0`.
+`QLMatching.cxx:1351` pre-stamps **every** cluster with
+`(cluster_t0 = -1e12 ns, flash = -1, matched_flash_gid = -1)` and a cluster
+nothing matches keeps it — `-1e9` in the µs this tree stores. 19 of 20 175 rows
+are that sentinel; both fixes were right to resolve them to nothing. The tool
+now counts and prints them instead of putting them in the denominator.
+
+## Results, 308-event manifest, 20 156 matched rows
+
+| leg | claim | result |
+|---|---|---|
+| **A1** stage A, Q/L member content, `d99r2off` vs `d99fix` | both knobs off ⇒ nothing moves | **PASS** 308/308 events, 1232 products |
+| **A2** stage B archives, `d99r2offpr` vs `d99fixpr` | ditto | **PASS** 616/616 (38+96+482), 0 unpaired |
+| **A3** every ROOT branch, `--expect ""` | ditto, exhaustively | **PASS** 1938 tree instances, **236 280 branch instances, 0 differing pairs** |
+| **B1** `d99r2offpr` | the defect, restated on this manifest | 10 219 / 20 156 = **50.7% CORRECT**, 9 779 WRONG, 158 MISSING |
+| **B2** `d99r2rdpr` — READ on | every matched row resolves its own flash | **20 156 / 20 156 = 100.0%**, 0 WRONG, 0 MISSING |
+| **B3** containment of the read knob | only the three flash columns move | **PASS** — exactly `T_cluster:flash_id`, `:flash_time_us`, `:flash_pe`, on 308 events; nothing else of 236 280 |
+| **B4** stage B archives, read on vs off | the read knob touches no archive | **PASS** 616/616 byte-identical |
+| **C1** stage A archives, `d99r2wr` vs `d99r2off` | the write knob DOES change the archive | 308/308 differ — **by design, not a regression** (same member count; the merged flash/light/flashlight PCs grew) |
+| **C2** `d99r2wrpr` — WRITE on, read OFF | `get_flash()` itself is now right | **20 156 / 20 156 = 100.0%**, 0 WRONG, 0 MISSING |
+| **D** `d99r2wrpr` vs `d99r2bothpr` | the merged row index and the gid are independent resolutions and must agree | **PASS** 20 156 rows joined, 0 only in A, 0 only in B, **0 disagreeing** on `flash_time_us` or `flash_pe` |
+
+Leg **D** is the load-bearing one. `write_opflash_pc` runs before the merge, so
+the gid path never sees the shift the write fix applies; the two answers are
+arrived at by disjoint code. Agreeing on all 20 156 rows says both fixes are
+right, not that they compensate.
+
+**A single-event probe** (`work-ncpi0-d99r2smoke`, evt 18625) shows the write fix
+in the archive directly: the merged flash PC goes 13 → 27 rows
+(`merge_flash_pcs: input 1 shifted by flash+13 light+591 (10 clusters)`) and the
+archive-side census goes 8 CORRECT / 10 WRONG → **18 CORRECT / 0 WRONG**.
+
+## Unit tests
+
+`clus/test/doctest_flash_by_gid.cxx`, 6 cases / 48 assertions: the invalid
+inputs (no PC, gid < 0, absent gid); a gid carrying the `gid_side*1000000`
+offset of a non-primary input; the channel-order sum, with a `REQUIRE` that the
+two summation orders give different doubles *before* testing anything; a causal
+negative control that changes only the `gid` column and watches resolution stop
+while the flash stays reachable under its new key; the gid-collision refusal;
+and the end-to-end case where `get_flash()` returns the WRONG real flash on the
+very cluster `get_matched_flash()` gets right.
+
+Mutating exactly the fix — drop the channel-order sort, drop the collision
+guard, and make `get_matched_flash()` delegate to `get_flash()` — fails **3 of
+the 6 cases and 13 assertions**; the other 3 cases still pass, so the suite is
+specific to the fix and not to the code's shape.
+
+Knob defaults are pinned in two more suites:
+`root/test/doctest_sbnd_pr_tracking_defaults.cxx` (`flash_by_gid` false) and
+`match/test/doctest_qlmatching_config.cxx` (`merge_flash_pcs` false).
+
+Full suites: `wcdoctest-clus` **2863** assertions, `wcdoctest-match` **38**,
+`wcdoctest-root` **4051**, all green.
+
+## Compiled-config proof
+
+- **Off**: `scripts/cfg/prod_cfg_gate.py` — **PASS, 21/21 artifacts** identical to
+  `ref/prod-2026-09-04`. Both knobs use the key-suppression idiom, so neither
+  key exists in any compiled job.
+- **On**: each knob adds **exactly one key to exactly one node** —
+  `flash_by_gid: true` on `SbndPrMagnifyTrackingVisitor:pr` (42 nodes compared,
+  1 differing) and `merge_flash_pcs: true` on `QLMatching:matching_joint` (101
+  nodes compared, 1 differing).
+
+## Freshness / provenance
+
+`local/lib/libWireCell{Clus,Match,Root}.so` at 2026-09-02 20:46–20:47, newer
+than the last source edit (20:41); snapshot pinned to `~/tmp/d99r2-libsnap` and
+every arm run with `LD_LIBRARY_PATH` pointing at it, because a concurrent
+session shares this tree. That session's in-progress PDVD work
+(`ClusteringProtectBundle.stm_only_bundles`, `cfg/pgrapher/common/clus.jsonnet`,
+`cfg/pgrapher/experiment/protodunevd/pr.jsonnet`) **is** compiled into these
+libraries. Leg A1/A2/A3 covers it: with every knob off the arms are byte-identical
+to round 1's, built before those edits existed — so that work is inert on SBND,
+and it is **not** in either of this round's commits.
+
+# 9. Round 2 status flags
+
+- **Read knob OFF is byte-identical.** Proven, not argued: 236 280 branch
+  instances and 616 archives with **zero** differences against the round-1 arms.
+- **Read knob ON is NOT byte-identical**, by design: 3 columns × 308 events.
+  `flash_id` also changes *meaning* (it becomes the gid).
+- **Write knob OFF is byte-identical**, and inert by construction — the merge's
+  name set is then literally `root_pcs_to_merge` and no shift runs. Same gate
+  legs cover it.
+- **Write knob ON is NOT byte-identical and cannot be**: the archive gains the
+  non-primary inputs' flash/light/flashlight rows and every non-primary
+  cluster's `flash` scalar shifts. **Every downstream hash moves.** Flipping it
+  means re-validating the whole chain and re-cutting `ref/prod-<date>/`.
+- **Nothing is flipped.** Production still runs both paths off, and
+  `prod_cfg_gate.py` still passes against `prod-2026-09-04`.
+- **uBooNE is untouched** by both: single-input jobs never merge, and no uBooNE
+  config carries either key.
+- **PDVD carries the read knob in C++ and no config sets it.** The gid-uniqueness
+  precondition (§6 detail 3) has not been checked for PDVD's
+  `opflash_phys_gid` / `shared_flash` encodings. Check that before wiring it.
+
+## If the owner wants to flip
+
+The two knobs are independent and answer different questions.
+
+- **Read only** (`flash_by_gid=true` in `wct-pr-perevt.jsonnet`) — the cheap
+  one. Corrects the shipped diagnostic columns with **no archive change at all**
+  (leg B4: 616/616 byte-identical), so nothing downstream of the Q/L archive
+  needs revalidating. Cost: a fresh `T_cluster` stops being comparable to
+  pre-flip arms in three columns, and `flash_id` means the gid.
+- **Write too** (`merge_flash=true` in `wct-clus-matching-perevt.jsonnet`) — the
+  correct-at-the-source one, which makes `Cluster::get_flash()` mean what its
+  name says for every future consumer. Cost: every Q/L archive hash moves, so
+  it needs a full chain revalidation and a new `ref/prod-<date>/`. Worth doing
+  when a reconstruction consumer actually needs `get_flash()` — today none does
+  (`RetileCluster` is the only one and SBND instantiates `ImproveCluster_2`).
+
+Recommendation: **flip the read knob, hold the write knob** until a
+reconstruction consumer needs it or the next epoch re-cut is happening anyway.

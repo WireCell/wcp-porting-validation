@@ -3,12 +3,24 @@
 canonical "flash" point cloud.
 
 WHAT THIS MEASURES.  QLMatching writes each matched cluster a scalar "flash"
-holding the row id of the flash in the PER-APA flash tensor it matched against
+holding the row id of the flash in the PER-INPUT flash tensor it matched against
 (Opflash::get_flash_id()).  Facade::Grouping::flash_at() resolves that scalar as
-a ROW INDEX into the grouping-level canonical "flash" point cloud.  SBND runs one
-FlashTensorToOpticalPCs per APA and each ASSIGNS lpcs["flash"], so the archive
-keeps only the LAST APA's flash list.  Every cluster matched by an earlier APA
-therefore carries a scalar that indexes the wrong list.
+a ROW INDEX into the grouping-level canonical "flash" point cloud.
+
+CORRECTION 2026-09-02 (doc 99 round 2): this docstring used to blame
+FlashTensorToOpticalPCs for ASSIGNing lpcs["flash"] and said the LAST APA's list
+survives.  Both are wrong.  Each FlashTensorToOpticalPCs builds its OWN pctree
+from its own input tensors, so it clobbers nothing.  The list is lost at the
+MULTI-INPUT MERGE (QLMatching::operator(), or the PointTreeMerging it replaces),
+which concatenates only the names in root_pcs_to_merge (['opflash']) and DROPS
+every other root PC of the non-primary inputs -- so the survivor is the FIRST
+input's list, and every cluster matched on a later input carries a scalar that
+indexes a list that is no longer there.  The classification below is unaffected:
+it was computed from the archives, never from this reading.
+
+Round 2 ships QLMatching.merge_flash_pcs (default OFF), which carries every
+input's optical PCs through the merge and re-bases their row references; with it
+on, this census reads 100% CORRECT.
 
 Each matched cluster is put in one of three classes, using cluster_t0 -- which
 QLMatching sets to the time of the flash the cluster ACTUALLY matched, and which
