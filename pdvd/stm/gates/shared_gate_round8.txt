@@ -1,0 +1,10 @@
+doc pdvd/25 sec 13.8 round 8 -- nu_per_bundle_stm_only (TaggerCheckNeutrino, default OFF)
+date: 2026-09-02T20:09:34-07:00
+OLD = e88f364d + a concurrent session's unrelated Facade_* work (landed as dc0cc9af); NEW = same tree + the two TaggerCheckNeutrino files (committed as e2248fa3).
+  old8 clus md5 4032e87aae89 / new8 clus md5 0c14c50dfe30 (restore build reproduced the NEW md5; peer diff fingerprint ef33395e unchanged across both builds)
+SOURCE: work-{nuecc48,ncpi0}-d99fix -- grp0825's ql_evt*/ were deleted by the 2026-09-02 SBND retire round.
+arms: work-{nuecc48,ncpi0}-doc25r8{old,new} (48 + 19 events), qlport sweep/doc25r8{old,new} (35 events); DL vertex off.
+
+SBND  : 201 SAME / 0 DIFF / 0 MISSING  (mabc-pr.zip member hashes, calib-pr JSON minus the dual_chain timer, nusel-evt TSV)
+uBooNE: ZIPS: 35/35 content-identical
+        TAGGER: identical=35 diff=0 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/doc25r8new/ab_check_doc25r8old.log)

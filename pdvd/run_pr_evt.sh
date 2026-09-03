@@ -16,6 +16,11 @@
 #   -nu      (default) the full PDVD chain: switch_scope, flag_mains, steiner, fiducialutils,
 #            tagger_check_tgm, tagger_check_stm, tagger_check_fc, protect_bundle,
 #            steiner_refresh, tagger_check_neutrino, tracking_visitor, tagger_output, pr_display
+#            Since 2026-09-02 the -nu chain runs the per-bundle PR ONLY on
+#            STM-tagged bundles (nu_per_bundle_stm_only=true in
+#            wct-pr-perevt.jsonnet; doc 25 sec 13.10) -- the PDVD working mode.
+#            PDVD_PR_TLA="-S nu_per_bundle_stm_only=false" restores the
+#            every-bundle chain the stm1/stm2/stm3 arms ran.
 #   -stm     cosmic taggers only (stops after steiner_refresh) + pr_display
 #   -empty   pipeline_names=[] : the M2 round-trip identity gate
 #   -pipe    explicit comma-separated pipeline list

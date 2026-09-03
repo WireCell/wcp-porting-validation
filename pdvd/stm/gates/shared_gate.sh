@@ -13,6 +13,13 @@
 # Compare: SBND per event mabc-pr.zip member hashes, calib-pr JSON (minus the
 # vertex_scoreboard.dual_chain timer), nusel-evt TSV; uBooNE ab_check.sh.
 # Usage: ./shared_gate.sh [build|arms|compare|all]   (default all); logs in /home/xqian/tmp/doc25gate/
+# Env:   NEW_ARM/OLD_ARM  arm suffixes (default new/old), so a later round reuses
+#        the already-produced OLD arms instead of rebuilding them: rounds 1-7 all
+#        came back 201/201 identical against `old`, so `old` IS the pre-round
+#        reference for every later round.  NEW_LIB/OLD_LIB override the library
+#        snapshots.  Round 8 (doc 25 sec 13.10, nu_per_bundle_stm_only):
+#          NEW_ARM=new8 NEW_LIB=/home/xqian/tmp/doc25gate/lib_r8new ./shared_gate.sh arms
+#          NEW_ARM=new8 ./shared_gate.sh compare
 set -u
 TK=/home/xqian/toolkit-dev/toolkit
 SX=/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
@@ -20,6 +27,16 @@ QL=/home/xqian/toolkit-dev/wcp-porting-img/qlport
 G=/home/xqian/tmp/doc25gate; mkdir -p "$G"
 FILES="clus/src/DynamicPointCloud.cxx clus/inc/WireCellClus/DynamicPointCloud.h clus/src/TrackFitting.cxx clus/inc/WireCellClus/TrackFitting.h clus/src/TaggerCheckSTM.cxx"
 STEP=${1:-all}
+NEW_ARM=${NEW_ARM:-new}
+OLD_ARM=${OLD_ARM:-old}
+NEW_LIB=${NEW_LIB:-$G/libnew}
+OLD_LIB=${OLD_LIB:-$G/libold}
+# SBND Q/L source arms.  Round 8 had to move off grp0825: the 2026-09-02 retire
+# round deleted its ql_evt*/ directories (the evt*/ imaging dirs survive), so
+# run_pr_chain_batch.sh finds no events there.  d99fix holds the same 48 + 19
+# event ids with intact Q/L outputs.  Both arms of a round MUST come from the
+# same source -- a PR output is only comparable to one built from the same Q/L.
+QL_SUFFIX=${QL_SUFFIX:-grp0825}
 
 snap() {   # <dir>
     mkdir -p "$1"; rm -f "$1"/*.so
@@ -48,7 +65,7 @@ sbnd_arm() {   # <arm> <libdir>
         [ -e "$out" ] && { echo "SKIP $out exists"; continue; }
         printf "dl_weights=''\n" > $G/tla_nodl.txt   # M4: the DL/SCN vertex is not bit-stable; gates run DL-off
         LD_LIBRARY_PATH=$lib:${LD_LIBRARY_PATH:-} PR_JOBS=${PR_JOBS:-6} PR_EXTRA_STAGES=pr_display PR_EXTRA_TLA=$G/tla_nodl.txt \
-            ./run_pr_chain_batch.sh "work-$s-grp0825" "$out" data > "$G/sbnd_${s}_$arm.log" 2>&1
+            ./run_pr_chain_batch.sh "work-$s-$QL_SUFFIX" "$out" data > "$G/sbnd_${s}_$arm.log" 2>&1
         echo "sbnd $s $arm rc=$? pr_evt=$(find "$out" -maxdepth 1 -type d -name 'pr_evt*' | wc -l) calib=$(ls "$out"/pr_evt*/calib-pr-evt*.json 2>/dev/null | wc -l)"
     done
 }
@@ -59,14 +76,17 @@ ub_arm() {   # <arm> <libdir>
     echo "ub $1 rc=$? events=$(ls -d sweep/doc25$1/*_* 2>/dev/null | wc -l)"
 }
 do_arms() {
-    sbnd_arm old $G/libold; ub_arm old $G/libold
-    sbnd_arm new $G/libnew; ub_arm new $G/libnew
+    # An arm whose output dir already exists is skipped (see sbnd_arm/ub_arm),
+    # so re-running with only NEW_ARM changed produces just the new arm.
+    sbnd_arm $OLD_ARM $OLD_LIB; ub_arm $OLD_ARM $OLD_LIB
+    sbnd_arm $NEW_ARM $NEW_LIB; ub_arm $NEW_ARM $NEW_LIB
 }
 do_compare() {
     cd "$SX" || exit 1
-    python3 - "$G" <<'PY'
+    python3 - "$G" "$OLD_ARM" "$NEW_ARM" <<'PY'
 import sys, os, glob, json, hashlib, subprocess
-G = sys.argv[1]; H = "/home/xqian/toolkit-dev/wcp-porting-img/abtest/hash_archive.py"
+G = sys.argv[1]; OLD_ARM = sys.argv[2]; NEW_ARM = sys.argv[3]
+H = "/home/xqian/toolkit-dev/wcp-porting-img/abtest/hash_archive.py"
 def h_zip(p): return subprocess.check_output(["python3", H, p]).split()[0].decode()
 def h_json(p):
     d = json.load(open(p)); d.get("vertex_scoreboard", {}).pop("dual_chain", None)
@@ -75,7 +95,7 @@ def h_json(p):
     return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()
 tot = {"same": 0, "diff": 0, "missing": 0}; lines = []
 for s in ("nuecc48", "ncpi0"):
-    A = f"work-{s}-doc25old"; B = f"work-{s}-doc25new"
+    A = f"work-{s}-doc25{OLD_ARM}"; B = f"work-{s}-doc25{NEW_ARM}"
     evs = sorted(os.path.basename(p) for p in glob.glob(f"{A}/pr_evt*"))
     for ev in evs:
         for kind, pat, fn in (("bee", "mabc-pr.zip", h_zip), ("calib", "calib-pr-evt*.json", h_json), ("nusel", "nusel-evt*.tsv", lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest())):
@@ -83,10 +103,11 @@ for s in ("nuecc48", "ncpi0"):
             if not a or not b: tot["missing"] += 1; lines.append(f"MISSING {s} {ev} {kind}"); continue
             ha, hb = fn(a[0]), fn(b[0]); k = "same" if ha == hb else "diff"; tot[k] += 1
             lines.append(f"{k.upper()} {s} {ev} {kind} {ha[:16]} {hb[:16]}")
-with open(f"{G}/sbnd_compare.txt", "w") as fh: fh.write("\n".join(lines) + "\n")
-print("SBND gate:", tot, "->", f"{G}/sbnd_compare.txt")
+out = f"{G}/sbnd_compare_{NEW_ARM}.txt"
+with open(out, "w") as fh: fh.write("\n".join(lines) + "\n")
+print(f"SBND gate {NEW_ARM} vs {OLD_ARM}:", tot, "->", out)
 PY
-    cd "$QL/scripts" && ./ab_check.sh doc25new doc25old > "$G/ub_ab_check.txt" 2>&1; echo "uBooNE ab_check rc=$? -> $G/ub_ab_check.txt"; tail -3 "$G/ub_ab_check.txt"
+    cd "$QL/scripts" && ./ab_check.sh "doc25$NEW_ARM" "doc25$OLD_ARM" > "$G/ub_ab_check_$NEW_ARM.txt" 2>&1; echo "uBooNE ab_check rc=$? -> $G/ub_ab_check_$NEW_ARM.txt"; tail -4 "$G/ub_ab_check_$NEW_ARM.txt"
 }
 case "$STEP" in
     build) do_build ;; arms) do_arms ;; compare) do_compare ;;

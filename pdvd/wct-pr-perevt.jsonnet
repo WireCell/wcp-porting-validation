@@ -1328,6 +1328,25 @@ function(
     // display half was fixed, the bookkeeping half was declined -- doc sec
     // 9.9/9.13).  null => C++ default 0 = no floor.
     nu_per_bundle_min_length = 15,
+    // ---- pdvd doc 25 sec 13.10 -- the STM-only working mode ------------- //
+    // Run the per-bundle neutrino PR ONLY on bundles whose selected activity
+    // carries Flags::STM.  This is the PDVD campaign's current working mode
+    // (owner, 2026-09-02): the object being reconstructed IS the stopping
+    // muon (sec 2.3), so every other bundle in the event is fit, tagged and
+    // thrown away.  Measured on the stm3 arm: TaggerCheckNeutrino is 97.5 s
+    // of a 125 s pass on 039252/0 and 538 bundles reach the PR over 20
+    // events, 96 of them with an STM-tagged selection.
+    //
+    // It does NOT touch ClusteringProtectBundle, the other cost term (27 min
+    // of the 28.6 min tagger-only pass on 039252/8) -- see sec 13.10 for the
+    // separate lever there.
+    //
+    // C++ default false = every bundle (the pr/94 behavior), so the key is
+    // omitted when off => byte-identical pre-knob config.  Set false to
+    // reproduce the stm1/stm2/stm3 arms, which all predate this flip.
+    // Mutually exclusive with nu_skip_cosmic (its exact inverse; both on
+    // selects nothing and the C++ warns) -- PDVD keeps nu_skip_cosmic false.
+    nu_per_bundle_stm_only = true,
     // doc 80: MCS muon momentum.  This ONE flag derives both the
     // TaggerCheckNeutrino computation key (mcs_enable) and the
     // UbooneTaggerOutputVisitor T_kine branch key (mcs_output) inside pr(),
@@ -3093,6 +3112,7 @@ function(
         [if mcs_enable then 'mcs_cathode_xcut']: mcs_cathode_xcut,
         [if mcs_enable && mcs_range_comparator_chain then 'mcs_range_comparator_chain']: true,  // doc 84 r1 P5; C++ default false
         [if mcs_enable && mcs_bridged_members then 'mcs_bridged_members']: true,  // doc 84 r3; C++ default false
+        [if nu_per_bundle && nu_per_bundle_stm_only then 'nu_per_bundle_stm_only']: true,  // pdvd doc 25 sec 13.10; C++ default false. Key omitted when off => byte-identical pre-knob config.
         [if nu_skip_cosmic then 'nu_skip_cosmic']: true,
         [if nu_skip_cosmic_bundle then 'nu_skip_cosmic_bundle']: true,
         [if skip_cosmic_companions then 'skip_cosmic_companions']: true,

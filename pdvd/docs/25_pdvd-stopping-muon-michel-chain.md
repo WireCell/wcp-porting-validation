@@ -1034,6 +1034,17 @@ python3 stm/raw_bragg_profile.py --tag stm2 --out stm/raw_bragg_stm2.tsv        
 python3 stm/raw_bragg_profile.py --tag stm2 --veto 0.8 --out stm/raw_bragg_stm2_tight.tsv   # same, tight tube
 ./stm/run_michel_subset.sh stm2 stm3 stm/michel_subset_events.txt 6 # full chain on the contrast >= 1.5 events (Michel routes 1-2 need -nu dumps)
 ./stm/run_analysis.sh stm3
+# 13.10 where the wall clock goes, and the STM-only working mode
+python3 stm/pr_cost_census.py --tag stm3                            # per-stage totals + the per-bundle STM census
+for e in 16 4; do ./run_pr_evt.sh -s stm4 -stm-fit 039252 $e; done  # knob ON (the job default since 2026-09-02);
+                                                                    # the knob-OFF baseline is the stm3 arm above
+python3 stm/pr_cost_census.py --tag stm4
+./run_pr_evt.sh -s stm4 -stm-fit 039349 60                          # the zero-STM negative control (0 candidates, chain must survive)
+PDVD_PR_TLA="-S nu_per_bundle_stm_only=false" ./run_pr_evt.sh -s stm4off -stm-fit 039349 60
+# 13.8 round 8 shared-component gate (both arms from d99fix -- grp0825's ql_evt*/ were retired away)
+NEW_ARM=r8new NEW_LIB=/home/xqian/tmp/doc25gate/lib_r8new OLD_ARM=r8old OLD_LIB=/home/xqian/tmp/doc25gate/lib_r8old \
+    QL_SUFFIX=d99fix PR_JOBS=6 ./stm/gates/shared_gate.sh arms
+NEW_ARM=r8new OLD_ARM=r8old ./stm/gates/shared_gate.sh compare
 # Magnify-tracking-PDVD, headless
 wire-cell-sbnd-magnify-tracking-convert -bwork/039252_0_m1on/tracking-stm.root -tT_rec_charge -ostm/magnify/track_com_298567_stm.root -f2
 ( cd /nfs/data/1/xqian/toolkit-dev/Magnify-tracking-PDVD/scripts && xvfb-run -a -s "-screen 0 1920x1080x24" \
@@ -1528,7 +1539,27 @@ under its own library snapshot (`LD_LIBRARY_PATH`), DL vertex off, ASLR off.
 | round 6 (new6 vs old) | **201 / 201 identical** | 35 / 35; 34 / 35 |
 | round 7 (new7 = final vs old) | **201 / 201 identical** | 35 / 35; 35 / 35 |
 
-The single uBooNE tagger difference is event 5384-136-6805 in every round —
+**Round 8** (`nu_per_bundle_stm_only`, §13.10) could not reuse this table's
+source: the 2026-09-02 SBND retire round deleted `work-{nuecc48,ncpi0}-grp0825`'s
+`ql_evt*/` directories (the `evt*/` imaging dirs survive), so
+`run_pr_chain_batch.sh` finds no events there and rounds 1–7 are **no longer
+re-runnable as written**. Round 8 therefore built BOTH of its arms from
+`work-{nuecc48,ncpi0}-d99fix`, whose 48 + 19 Q/L outputs are intact — a PR
+output is only comparable to one built from the same Q/L. `shared_gate.sh`
+gained `NEW_ARM`/`OLD_ARM`/`NEW_LIB`/`OLD_LIB`/`QL_SUFFIX` so this is
+reproducible. The round-8 OLD binary is `e88f364d` plus a concurrent
+session's unrelated `Facade_*` work (landed while the gate ran, as
+`dc0cc9af`), rebuilt from the same tree with only the two
+`TaggerCheckNeutrino` files reverted, so the two arms differ **by this knob
+alone** (restored build md5 `0c14c50dfe30` = the NEW snapshot; the peer diff
+fingerprint `ef33395e` unchanged across both builds). The knob commit
+`e2248fa3` therefore sits on `dc0cc9af`, which is exactly the OLD arm.
+
+| arm | SBND `work-{nuecc48,ncpi0}-doc25r8{old,new}` (48 + 19 events) | uBooNE sweep `doc25r8{old,new}` (35 events) |
+|---|---|---|
+| round 8 (r8new vs r8old) | **201 / 201 identical** | Bee zips 35 / 35; tagger 35 / 35 |
+
+The single uBooNE tagger difference is event 5384-136-6805 in rounds 1–7 (round 8, whose two arms ran back to back off the same sweep pair, shows none) —
 the documented bistable event (`kine_pio_angle` 109.51 vs 14.81 with an
 identical Bee zip, independent of the binary). The new components
 (`ClusteringFlagMatchedMains`, `Pdvd*MagnifyTrackingVisitor`) are named only by
@@ -1567,9 +1598,12 @@ the PDVD pipeline; every new knob has a defaults doctest
 - **The full chain is 30–80× slower than the tagger arm at the 500 e floor**
   (§13.6): the denser skeletons feed 24–43 bundles per event into the
   per-bundle neutrino PR, 3–80 min per event on one core, and the
-  `ProtectBundle`/connect stage alone took 29 min on 039252/8. Levers:
-  `nu_per_bundle_min_length` (50 cm used for `stm3`), skipping TGM-tagged
-  bundles, or running the neutrino PR only on STM-tagged bundles.
+  `ProtectBundle`/connect stage alone took 29 min on 039252/8. **Addressed in
+  §13.10** — the owner's choice, the per-bundle PR now runs only on
+  STM-tagged bundles (`nu_per_bundle_stm_only`), which removes the larger of
+  the two cost terms (73 % of the `stm3` arm). `ProtectBundle` (14 % of the
+  arm, but 94.5 % of the pathological 039252/8) is **not** touched and stays
+  open there.
 - **Grow the dQ/dx sample** (§13.6): 5–25 tracks give a "consistent with
   0.44 kV/cm" verdict, not a measurement of the field. The contrast guard
   above plus the skeleton-reach fix below are the two levers; a 1000-event
@@ -1599,9 +1633,166 @@ the PDVD pipeline; every new knob has a defaults doctest
   collector's Bragg-contrast cut regardless.
 - **Unnamed post-round-1 STM exits** (half of the evaluated mains): name them
   (log-only change) before tuning anything.
+- **The doc-25 shared-gate source arm was retired out from under the gate**
+  (§13.8). `work-{nuecc48,ncpi0}-grp0825` lost its `ql_evt*/` directories in
+  the 2026-09-02 SBND retire round, so rounds 1–7 cannot be re-run as written
+  and round 8 had to move to `d99fix`. Not this campaign's action, but the
+  retention rule it breaks is ours: an arm that a published gate resolves into
+  is not superseded just because a newer arm exists. Either re-stage a Q/L
+  source for the doc-25 manifest or restate §13.8's rounds against `d99fix`.
 - **`nu_per_bundle` cost**: every matched bundle gets its own neutrino PR
-  (33–43 per event, 2–5 GB); fine for 120 events, a lever for larger runs
-  (`nu_per_bundle_min_length`, or skip TGM-tagged bundles).
+  (33–43 per event, 2–5 GB) — **settled for now in §13.10** by
+  `nu_per_bundle_stm_only`. The unused levers stay named there.
+
+### 13.10 What the full chain costs, and the STM-only working mode
+
+**Repro:** `python3 stm/pr_cost_census.py --tag stm3` (and `--tag stm4`).
+
+#### Where the wall clock goes
+
+The script sums every stage's `MABC timing:` line over an arm. On `stm3`
+(20 events, the full `-nu` chain, 5244 core-seconds):
+
+| MABC stage | sum | share |
+|---|---:|---:|
+| `TaggerCheckNeutrino:pr` | 3838 s | **73.2 %** |
+| `ClusteringProtectBundle:pr` | 727 s | 13.9 % |
+| `TaggerCheckSTM:pr` | 255 s | 4.9 % |
+| `CreateSteinerGraph:pr` | 230 s | 4.4 % |
+| `CreateSteinerGraph:prrefresh` | 79 s | 1.5 % |
+| everything else (TGM, dumps, writers, I/O) | 115 s | 2.2 % |
+
+Two terms carry the cost, and which one dominates depends on the event **and
+on the pipeline preset**:
+
+| event | preset | total | `TaggerCheckNeutrino` | `ClusteringProtectBundle` |
+|---|---|---:|---:|---:|
+| 039252/0 | `-nu` (`stm3`) | 125 s | 97.5 s (78 %) | 2.5 s (2 %) |
+| 039252/16 | `-nu` (`stm3`) | 795 s | 425.6 s (54 %) | 266.7 s (34 %) |
+| 039252/4 | `-nu` (`stm3`) | 795 s | 442.4 s (56 %) | 279.3 s (35 %) |
+| 039252/8 | `-stm` (`stm2`) | 1715 s | *not in the pipeline* | **1621 s (94.5 %)** |
+
+The last row corrects §13.9's framing: the "29 min on 039252/8" was the
+**tagger-only** arm, a pipeline `TaggerCheckNeutrino` never enters. That
+27.0 min is `ClusteringProtectBundle` alone, and it is the tagger arm's own
+worst case — it was never part of the `-nu` cost this round removes.
+
+#### The decision (owner, 2026-09-02): run the PR only on STM-tagged bundles
+
+On PDVD the STM tagger's verdict is the **signal**, not a veto (§2.3). The
+neutrino PR is run to give an STM-tagged track its fit, its dQ/dx and its
+Michel search; the neutrino candidate of every other bundle in the event is
+computed at full cost and thrown away. On `stm3`, **538 bundles reached the
+PR over 20 events** — already with `nu_per_bundle_min_length=50` — and only
+**96 of them (17.8 %) selected an activity the STM tagger had convicted**
+(132 STM-tagged mains exist in the same 20 events).
+
+This is one choice of several; the alternatives are named at the end of this
+section and none of them is closed by taking this one.
+
+#### The knob
+
+`nu_per_bundle_stm_only` — `TaggerCheckNeutrino`, **C++ default `false`** =
+every bundle (the pr/94 behavior), inert unless `nu_per_bundle`. Applied
+inside the per-bundle `pick()` lambda (`clus/src/TaggerCheckNeutrino.cxx:2035`),
+so the demoted-main fallback obeys it too. PDVD job default **ON** since this
+round (`wct-pr-perevt.jsonnet`, key-suppressed when off).
+
+Four properties worth stating because they surprise:
+
+1. **It is a selector, not only a filter.** In a bundle whose longest main is
+   untagged but which also holds a shorter STM-tagged main, the candidate
+   *changes identity* to the STM one. That is the intent — the STM track is
+   the object being reconstructed.
+2. **The legacy-winner exemption does not apply.** `nu_per_bundle_min_length`
+   exempts the activity the legacy event-wide selector would have picked, for
+   an additivity argument (doc pr/94 Phase 5b round 2). That argument is about
+   a *length floor*; carrying it here would silently re-admit one non-STM
+   candidate per event and make the census unexplainable.
+3. **It is the exact inverse of `nu_skip_cosmic`**, which *refuses*
+   TGM/STM/lm-convicted activities. Both on selects nothing; `configure()`
+   warns. PDVD keeps `nu_skip_cosmic=false` (§2.3).
+4. **An event with no STM tag now produces no candidate at all** and
+   `TaggerCheckNeutrino` returns at `:2110` — the same early return the chain
+   already takes when no in-window main exists. **Consequence for consumers:
+   `PrDisplayDump` then writes no `calib-pr-evt<ID>.json`.** Every analysis
+   script that globs `calib-pr-evt*.json` silently skips such an event. This
+   is not hypothetical: **1 of the 120 `stm2` events (039349/60) has zero
+   STM-tagged mains.**
+
+#### Measured (arm `stm4`: the two heaviest `stm3` events plus the zero-STM control)
+
+Stage-by-stage, knob off (`stm3`) → knob on (`stm4`). Everything upstream of
+`TaggerCheckNeutrino` is unchanged, which is what makes the attribution causal
+rather than a wall-clock coincidence:
+
+| stage | 039252/16 off → on | 039252/4 off → on |
+|---|---:|---:|
+| `CreateSteinerGraph:pr` | 29.5 → 29.7 s | 29.4 → 29.0 s |
+| `TaggerCheckSTM:pr` | 50.0 → 50.6 s | 20.3 → 20.6 s |
+| `ClusteringProtectBundle:pr` | 266.7 → 272.5 s | 279.3 → 264.9 s |
+| `CreateSteinerGraph:prrefresh` | 10.2 → 11.5 s | 12.0 → 12.0 s |
+| **`TaggerCheckNeutrino:pr`** | **425.6 → 31.5 s (13.5×)** | **442.4 → 75.1 s (5.9×)** |
+| MABC total | 794.6 → 403.2 s | 795.1 → 409.8 s |
+| per-bundle candidates | 40 → 6 | 33 → 5 |
+
+`stm4` ran at the job's `nu_per_bundle_min_length=15`, `stm3` at 50 (its
+`run_michel_subset.sh` default). The difference shows up in exactly one
+candidate: 039252/16's 31.8 cm STM main, which the 50 cm floor would also
+drop — reconciling 6 to the `stm3` census's `stmC` = 5. Every `stm4`
+candidate is STM-selected (11 / 11), which is the knob doing what it says.
+
+**The zero-STM negative control** (039349/60, the one `stm2` event with no
+STM-tagged main, run back to back under the same load):
+
+| | knob on | knob off |
+|---|---:|---:|
+| activities refused by the knob | 41 | 0 |
+| per-bundle candidates | **0** | 22 |
+| MABC total | 12.0 s | 94.0 s |
+| runner wall | 16 s | 97 s |
+| outputs written | `mabc-pr.zip`, `tracking-pr.root`, `tracking-stm.root` | + `calib-pr-evt55846.json` |
+
+The chain completes cleanly with nothing selected — the point of running this
+event rather than only the heavy ones — and the missing calib dump is the
+consumer-visible consequence of item 4 above.
+
+#### Gates
+
+| gate | result |
+|---|---|
+| compiled config, knob **off** vs pre-knob `wct-pr-perevt.jsonnet` | **byte-identical** (`diff` empty) |
+| compiled config, knob **on** | exactly one added key, `"nu_per_bundle_stm_only" : true` |
+| `./build/clus/wcdoctest-clus` | **256 / 256** test cases, 2806 assertions (new: `clus/test/doctest_nu_per_bundle_stm_only_defaults.cxx` pins the knob OFF beside `nu_skip_cosmic` and `nu_per_bundle`) |
+| freshness proof | `local/lib/libWireCellClus.so` 19:54:18 > `TaggerCheckNeutrino.cxx` 19:40:09; the gate's NEW snapshot md5 `0c14c50dfe30` reproduced by the rebuild |
+| shared-component round 8 (`stm/gates/shared_gate_round8.txt`) | SBND **201 / 201 identical**, uBooNE **35 / 35** zips and **35 / 35** taggers — see §13.8 |
+
+#### What this does NOT fix, and the levers left
+
+`ClusteringProtectBundle` is untouched, and with the neutrino term gone it is
+now **65 %** of what remains (`stm4`, 3 events). It is the next cost item, and
+it is not free work in this mode: PDVD sets
+`protect_open_convicted_bundles=true`, so an STM-tagged main *does* open its
+own bundle and its unconvicted companions are still split — that part is
+needed. What is not needed is splitting bundles no STM main is in. A gate on
+`ClusteringProtectBundle`'s `beam_gids` set (the mirror of this knob, one
+stage earlier) is the natural next round; it is a different component and a
+different gate.
+
+Choices deliberately left open, any of which can replace or join this one:
+
+- raise `nu_per_bundle_min_length` further (50 cm is already in use on `stm3`);
+- skip TGM-tagged bundles only — a weaker version of this knob;
+  `nu_skip_cosmic` cannot express it, since it also refuses STM;
+- lift the 500 e imaging floor that produces the dense skeletons in the first
+  place (§13.6) — the root cause of both cost terms;
+- run the neutrino PR as a second pass over an explicit bundle list, which
+  decouples the selection rule from the C++ entirely.
+
+**Arms `stm1`, `stm2` and `stm3` predate this flip** and ran with the knob
+off. Any comparison against them must pass
+`PDVD_PR_TLA="-S nu_per_bundle_stm_only=false"`.
+
 
 ## Milestone log
 
@@ -1651,3 +1842,21 @@ the PDVD pipeline; every new knob has a defaults doctest
   reference that ends 2.36× up. §13.9 re-ordered: skeleton reach first, the
   existing `stm_accept_guards` family second (its `guard_ratio2_max` cap
   alone vetoes 12 %), a new contrast guard third.
+- **2026-09-02** — cost round (§13.10). Owner: **run the per-bundle neutrino
+  PR only on the STM-tagged bundles** — the current PDVD working mode, and
+  explicitly one choice of several. New knob `nu_per_bundle_stm_only`
+  (`TaggerCheckNeutrino`, C++ default OFF, PDVD job ON); the compiled config
+  with it off is byte-identical to the pre-knob one. Measuring first changed
+  what the round claims: the doc's single "30–80× slower" item is **two** cost
+  terms in **two different pipelines**. `TaggerCheckNeutrino` is 73 % of the
+  `stm3` arm and is what the knob cuts (425.6 → 31.5 s and 442.4 → 75.1 s on
+  the two heavy events, 40 → 6 and 33 → 5 candidates, every upstream stage
+  unchanged). The "29 min on 039252/8" was `ClusteringProtectBundle` in the
+  **tagger-only** `-stm` arm, where the neutrino PR never runs — it is now
+  65 % of what remains and is the next round. Also recorded: an event with no
+  STM tag now yields no candidate and therefore **no `calib-pr-evt*.json`**
+  (1 of 120 `stm2` events; run as the zero-candidate negative control, chain
+  clean, 94.0 → 12.0 s). Shared-component round 8 had to move its source arm:
+  the same-day SBND retire round deleted `grp0825`'s `ql_evt*/` inputs, so
+  both arms were rebuilt from `d99fix` — **SBND 201/201 identical, uBooNE
+  35/35 and 35/35** (`stm/gates/shared_gate_round8.txt`). Toolkit `e2248fa3`.
