@@ -192,10 +192,16 @@ scratchpads), `d97b-libsnap` (the binary production ran under), `doc94c-libsnap`
 
 ## 7. Reported, not fixed here
 
-- The `pr/128` class B sentinel on mcp2k 105074 still asserts a PF node
-  production no longer produces. This round *preserves the ability* to
-  adjudicate it (`work-sent97-*`) but does not re-anchor it — that remains the
-  open owner call from doc 97 §9.4.
+- ~~The `pr/128` class B sentinel on mcp2k 105074~~ **CLOSED 2026-09-02**, owner:
+  *"feel free to retire"*. Retired into `RETIRED_SENTINELS` in
+  `scripts/pr127_sentinels.py`. It is a different retirement from doc 91's two:
+  those were inert-but-present, whereas 105074 has **no PF tree at all** in
+  production — `mabc-pr.zip` carries three members and no `data/0/0-mc.json`,
+  one bundle at 878 pts / 92.4 cm, flash −981.6 µs, `in_beam=0`, not-tagged. So
+  no threshold could have been re-baselined onto it; the subject vanished, not
+  the number. Production suite is now **30 PASS / 0 FAIL**. Consequence recorded
+  in the file: `pr128 pf-conn4-near` is a shipped SBND-ON path that now has no
+  sentinel.
 - `sweep_tmp_20260901.sh` never ran, yet all eleven of its DROP dirs are gone.
   Something removed them outside the retire machinery; the machinery's record
   of what was released is therefore incomplete for 2026-09-01. Noted, not

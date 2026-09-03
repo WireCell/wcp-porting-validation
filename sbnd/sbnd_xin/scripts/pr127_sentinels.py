@@ -102,10 +102,7 @@ SENTINELS = [
     # angle threshold tuned to measured geometry, the exposure class this
     # registry exists for -- and pr/128's own census found a pr/123 knob had
     # started overlapping a new pool, so overlap is watched here too.
-    (105074, "pr/128 class B", "conn4_near: the two main-cluster pdg-13 showers are shown + counted",
-     # pre-fix: both invisible (pr/74 conn3_unreachable stamped them conn-4 at
-     # anchor_dis 119 cm); post-fix mu- 215 + mu- 162, Enu 1188.7 -> 1565.8.
-     [("pf_node_ge", "mu-", 180.0), ("log_contains", "pr128 pf-conn4-near: KEEP")]),
+    # (105074, "pr/128 class B", ...) RETIRED 2026-09-02 -- see RETIRED_SENTINELS.
     (55740, "pr/128 class A", "near cross-cluster track: the 123.1cm muon joins PF + kine",
      # pre-fix: absent from both (cross-cluster, score 100, so neither the pr/93
      # confident-track class nor the pr/123 flag class reaches it).
@@ -349,7 +346,40 @@ SENTINELS = [
 # sample, diffing PF trees per event, and picking one where the fix still fires.
 # A search, not a threshold edit.  Do NOT simply move the numbers until they go
 # green -- that is what made this registry stale in the first place.
+# ---------------------------------------------------------------------------
+# RETIRED 2026-09-02 (doc 98) -- owner: "feel free to retire".
+#
+# 105074 is a DIFFERENT retirement from the two below and the difference
+# matters.  Those two were inert-but-present: the event still had a PF tree, the
+# knob simply no longer moved it.  105074 has NO PF TREE AT ALL in production.
+# Measured on work-mcp2k-d97fvpr2 (ref/prod-2026-09-04):
+#
+#   mabc-pr.zip carries THREE members -- 0-clustering-global.json and two
+#   channel-deadarea maps -- and no data/0/0-mc.json.  nusel says one bundle,
+#   878 pts / 92.4 cm, flash at -981.6 us, in_beam=0, not-tagged.
+#
+# So TaggerCheckNeutrino selects no candidate here any more and the event is not
+# even in-beam.  `pf_node_ge mu- 180` cannot be re-baselined onto that: there is
+# no PF output to assert against, at any threshold.  This is not a stale number,
+# it is a vanished subject.
+#
+# WHY PRODUCTION LOOKS LIKE THIS, and why it is not a regression: sep_fv_point
+# went SBND-ON on 2026-09-02 (doc 97) and 105074 is one of the events it moves.
+# The owner scanned that arm's flips and ruled them improvements, which is what
+# licensed the flip.  The sentinel was written against the pre-flip world.
+#
+# CONSEQUENCE, stated once and not argued: `pr128 pf-conn4-near` is a shipped
+# SBND-ON code path that now has NO sentinel.  pr/128 class A (55740) is a
+# different knob and does not cover it.  If conn4_near dies the way pr/93 r4
+# did, nothing here will see it.  Recorded so a later round does not rediscover
+# it as a surprise.
+#
+# Re-targeting it means finding an event where conn4_near still fires and the
+# guard still bites -- a search across the sample, not a threshold edit.
 RETIRED_SENTINELS = [
+    (105074, "pr/128 class B", "conn4_near: the two main-cluster pdg-13 showers",
+     "no PF tree in production at all (mabc-pr.zip has 3 members, no 0-mc.json); "
+     "event is not in-beam; nothing to assert against at any threshold"),
     (173819, "pr/125 guard", "pass3_cone track guard",
      "guard on/off differ by 5 MeV on e- max (283 vs 288); shipped proton re-root gone from both"),
     (406125, "pr/124 A", "shower_pass4_prune_gap2 gap-band tier-2 prune",

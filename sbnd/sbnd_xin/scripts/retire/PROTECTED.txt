@@ -310,9 +310,15 @@ work	bare work/ -- nusel_labels/ hand-scan record (M13) + pr137_sheets/	doc 89
 work-mcp1k-d97fv work-mcp2k-d97fv work-ncpi0-d97fv work-nuecc48-d97fv	LATEST PRODUCTION stage A (Q/L) at ref/prod-2026-09-04, sep_fv_point ON, 3067 evts	doc 97, doc 98
 work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr2	LATEST PRODUCTION stage B (PR tail) on it, 3067 evts	doc 97, doc 98
 #
-# THE SENTINEL WITNESS.  Production (d97fvpr2) is 30 PASS / 1 FAIL: 105074
-# (pr/128 class B) asserts a PF node production deliberately no longer makes,
-# and re-anchoring it is an OPEN owner call.  The only 31/31 arms on disk were
+# THE SENTINEL WITNESS.  ITS ORIGINAL REASON IS SPENT, and the honest restatement
+# is below.  It was built because production was 30 PASS / 1 FAIL and 105074
+# (pr/128 class B) was an OPEN owner call needing an arm to adjudicate against.
+# The owner retired that sentinel on 2026-09-02 ("feel free to retire") and the
+# production suite is now 30 PASS / 0 FAIL, so the witness is no longer
+# load-bearing for it.  KEPT ANYWAY, for a different and smaller reason: at 165
+# MB it is the last surviving PR arm from BEFORE the sep_fv_point flip, which is
+# what lets a future round tell "a shipped fix died" from "the epoch moved" --
+# the doc pr/127 failure mode.  Release it freely if that stops being worth 165 MB.  The only 31/31 arms on disk were
 # work-*-d97off2pr and work-*-prod0901b and doc 98 released BOTH, so the 28
 # distinct sentinel events were copied out first.  Deleting this strands the
 # open sentinel with nothing to adjudicate against.  Rebuild, if it is ever
