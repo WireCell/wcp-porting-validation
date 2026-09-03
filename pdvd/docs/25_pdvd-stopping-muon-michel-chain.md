@@ -1284,12 +1284,17 @@ Every item below was found on run 039252 event 0 (idx 0) and fixed as a
     infinite loop) but each iteration now calls `do_single_tracking` on a
     correctly-computed, differently-shaped point association, and for these
     two events that appears to generate many more candidate segments than
-    the accidentally-short-circuited path did. **Not investigated further in
-    this round** — it is a distinct cost problem in `find_other_segments`,
-    not a correctness question, and needs its own profiling pass. Tracked
-    here so it is not lost; do not re-run the full 120-event round-12 gate
-    against the fixed library without expecting 039349/14 and /53 to be slow
-    (possibly very slow — the ceiling was not established before the kill).
+    the accidentally-short-circuited path did. **Resolved in doc 26** (the
+    next session): that reading was wrong in one respect — the cost was not
+    a bigger search but a genuinely non-terminating `while (flag_continue)`
+    in `examine_partial_identical_segments`, whose vertex split degenerates
+    into cloning the vertex in place when the closest steiner point to the
+    split location is the vertex itself (two near-duplicate segments leaving
+    a vertex into a charge gap). Fixed unknobbed with
+    `partial_identical_split_point()`; both events now finish, 118/118 other
+    events byte-identical, uBooNE 35/35 and SBND gates PASS. The upstream
+    STM/FC verdict changes from THIS fix (four STM 1→0 flips across the two
+    events) remain real and are listed in doc 26 §3.
 8. **The Steiner terminal floor starves PDVD.** Over the first 18 events of
    the arm, 41 STM-accepted passes and 140 recorded passes contained ONE
    stop-end Bragg contrast ≥ 2, while the raw Bee charge along 688 long
@@ -2229,3 +2234,20 @@ against an arm run with the knob off has to scrub them.
   `find_other_segments`'s segment-selection loop is well-founded but now
   legitimately explores far more candidates for these two events. Tracked in
   item 12, not investigated further this round.
+- **2026-09-03** — the "cost problem" above was a non-terminating loop, now
+  fixed (doc 26, toolkit `441b6de4`). `examine_partial_identical_
+  segments` split a vertex at the steiner point closest to the overlap's far
+  end; on 039349/14 (cluster 36) and /53 (cluster 53) that point was the
+  vertex itself — two near-duplicate segments leaving a vertex into a charge
+  gap with no steiner support — so every pass cloned the vertex in place,
+  re-attached the same two segments, and raised `flag_continue` (one vertex
+  + one zero-length segment per 0.42 s iteration, ~6900 iterations before the
+  kill). The prototype has the same fixed point; uBooNE/SBND steiner clouds
+  are too dense to reach it. New helper `partial_identical_split_point()`
+  returns nullopt in that state and the vertex is skipped without raising
+  `flag_continue` (test-first, `doctest_partial_identical_split_point.cxx`;
+  `wcdoctest-clus` 267/267). Gates: PDVD 120-event `d25r12eager` vs
+  `d25r13fix` — guard fires only on 14 and 53, 118 other events
+  byte-identical (`stm/gates/r13_compare.txt`); uBooNE `doc25r13base` vs
+  `doc25r13fix` 35/35 + tagger 35/35; SBND nuecc48 + ncpi0 `pr85_hash_gate`
+  PASS. 039349/14 now 26 s, /53 27 s (13 s and 53 s before the crash fix).
