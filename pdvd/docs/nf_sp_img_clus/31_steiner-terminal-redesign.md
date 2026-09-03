@@ -18,16 +18,23 @@ owner's four questions and, in doing so, root-causes the symptom** — a third s
 of §5's `AnodePlane` rule, inside the Steiner stage's own retiler, which the
 round-3 fix structurally could not reach. Round 4 changes no behaviour: one
 doctest plus three fields on round 2's env-gated dump line.
-Gates in §5.3 and §8; `./build/clus/wcdoctest-clus` **274/274**.
+**Round 5 (§9) fixes that site behind a second default-OFF knob
+(`wrapped_channel_activity`) and closes the 108.5 cm gap to 1.8 cm.**
+Gates in §5.3, §8 and §9.2; `./build/clus/wcdoctest-clus` **276/276**.
 
 ---
 
-**TL;DR.** Round 2 overturned round 1's conclusion; round 3 fixed the bug round 2
-found and was overturned in turn on the question that mattered; **round 4 found
-why**. The one-line answer: `IWirePlane::channels()` is a channel *list*, three
-separate places in this codebase use it as a wire→channel *lookup table*, and
-each one fails silently on exactly the wrapped strips PDVD is full of. Current
-picture:
+**TL;DR — SOLVED.** `IWirePlane::channels()` is a channel *list*; three separate
+places in this codebase used it as a wire→channel *lookup table*, and each failed
+silently on exactly the wrapped strips PDVD is full of. Fixing two of them
+(rounds 3 and 5) takes the starved half of 039349/14 from **5 steiner points and
+1 terminal** to **666 and 198**, and the largest steiner-free gap from
+**108.5 cm to 1.8 cm**. Both fixes are needed and they repair different planes:
+the retile fix (round 5) recovers U, round 3's sampler fix recovers V (§9.3).
+
+Round 2 overturned round 1's conclusion; round 3 fixed a real bug and was
+overturned in turn on the question that mattered; round 4 found why; round 5
+fixed it. Current picture:
 
 0. **The terminal starvation is root-caused, and it is a bug, not a criterion**
    (§8.2). The Steiner stage runs on a **retiled** cluster, and the retiler
@@ -40,6 +47,7 @@ picture:
    cannot be candidates **at any threshold**. Above the vertex, 21.7 % carry two
    — and Phase 1 returns 44 terminals there against 1 below. Predicted before
    measuring, including that W (never wrapped) must not move; it did not.
+   **Fixed in round 5 (§9); the gap closes to 1.8 cm.**
 
 1. **The terminal finder IS the defect, and the filters are innocent** (§4.1).
    Measured per phase inside `create_steiner_tree` on the real event: the
@@ -219,6 +227,47 @@ diff <(python3 abtest/hash_archive.py --members pdvd/work/039252_2_d31r4off/mabc
      <(python3 abtest/hash_archive.py --members pdvd/work/039252_2_d31r4on/mabc-pr.zip)
 cd pdvd
 
+# ---- round 5 (section 9) --------------------------------------------------
+# The fix's premise, and the knob default:
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./build/clus/wcdoctest-clus -tc="pdvd doc31 round5*" -s
+
+# Compiled-config gate.  This round edits the SHARED cfg/pgrapher/common/
+# clus.jsonnet, so SBND and uBooNE must be proven untouched, not assumed:
+#   PDVD  HEAD vs knob-OFF : byte-identical, 278613 B; ON adds one key, one node
+#   SBND  HEAD vs new      : byte-identical, 253993 B
+#   uBooNE HEAD vs new     : byte-identical, 255717 B
+# (compile the HEAD copies of pr.jsonnet + common/clus.jsonnet under a scratch
+#  WIRECELL_PATH prefix, and the HEAD runner beside the live one, then cmp.)
+
+# The three arms.  PR-only: the retile lives in the PR stage and rebuilds its
+# activity from the ctpc clouds, which are correct independently of round 3's
+# knob -- so this is a clean single-knob change from production.
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+mkdir -p /home/xqian/tmp/d31r5lib && cp -a ../../local/lib/. /home/xqian/tmp/d31r5lib/
+for arm in off on both; do
+  W=work/039349_14_d31r5$arm; mkdir -p $W
+  ln -f work/039349_14_d31fix2off/pctree-evt19689.{tar.gz,tlas} $W/
+  case $arm in
+    off)  K="" ;;
+    on)   K="-S retile_wrapped_channel_activity=true" ;;
+    both) K="-S retile_wrapped_channel_activity=true -S wrapped_channel_charge=true" ;;
+  esac
+  PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 PDVD_PR_TLA="$K" \
+      ./run_pr_evt.sh -s d31r5$arm 39349 14
+  (cd $W && env LD_LIBRARY_PATH=/home/xqian/tmp/d31r5lib GOGC=off \
+      WCT_STEINER_PHASE_DUMP=1 wire-cell -l stderr \
+      -l "wct_pr_dump.log:trace" -L clus:trace -c .wct-pr_d31r5$arm.json)
+  python3 docs/nf_sp_img_clus/scripts/steiner_retile_charge_census.py \
+      $W/wct_pr_dump.log                      # per-plane charge, section 9.3
+  ln -f work/039349_14_d31fix2off/pctree-evt19689.tar.gz $W/
+  python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py $W
+                                              # steiner points / terminals / GAP
+done
+# OFF-path end-to-end gate: d31r5off's calib-pr must equal round 4's exactly.
+cmp work/039349_14_d31r4dump/calib-pr-evt19689.json \
+    work/039349_14_d31r5off/calib-pr-evt19689.json
+
 # Section 7 -- aperture feasibility, PDVD and the SBND control.
 python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
     work/039252_2_stm1/pctree-evt298595.tar.gz 500
@@ -388,7 +437,7 @@ change is unchanged in `ChargeStepped`.
   on top of that.
 
   > **Round-4 correction.** This paragraph used to end "SBND still runs both
-  > **off**", and §9 repeated it as an open owner call. **Both were wrong when
+  > **off**", and §10 repeated it as an open owner call. **Both were wrong when
   > written.** SBND has set `steiner_terminal_wire_tol = 1` and
   > `steiner_terminal_adjacent_slice = true` since `6ea51a3b` (2026-08-04,
   > *"…SBND ON (doc pr/29 D1/D12, SBND evt 388)"*),
@@ -913,7 +962,7 @@ the asymmetry this table exists to close.
 The localization row above is bounded by the 3 cm corridor that selects it, so it
 measures shape *inside* the corridor only. The real metric is distance to the
 **fitted** skeleton, which is a PR product; building that instrument is named in
-§9 as owed.
+§10 as owed.
 
 ---
 
@@ -1192,7 +1241,7 @@ difference is worth stating plainly so the two are not conflated.
 
 **Not established here:** how much of the *rest* of PDVD's Steiner output this
 moves. One track on one anode-face is measured. A fix and a manifest-scale
-re-measurement are round 5 (§9).
+re-measurement are round 5 (§9), which ran and closed the gap.
 
 ### 8.3 Does the fix affect event 298595? (question 2)
 
@@ -1350,7 +1399,139 @@ fail.
 
 ---
 
-## 9. Scope of each round, and what round 5 is
+## 9. Round 5: the retile mapping is fixed, and the 108.5 cm gap closes to 1.8 cm
+
+§8.5 recommended fixing the retile's wire→channel mapping first and
+re-measuring before touching §6. Done, and the result is unambiguous.
+
+### 9.1 The fix
+
+`ImproveCluster_1::make_iblobs_improved` (`improvecluster_1.cxx:840`) and its
+unreached twin in base `RetileCluster` (`retile_cluster.cxx:433`) now resolve a
+wire's channel by **ident**, through `IAnodePlane::channel()`, instead of
+indexing `IWirePlane::channels()` positionally:
+
+```cpp
+if (ianode) {                                     // knob ON
+    if (wire_idx < pwires.size()) {
+        ichan = ianode->channel(pwires[wire_idx]->channel());
+    }
+}
+else if (wire_idx < channels.size()) {            // legacy, reproduced exactly
+    ichan = channels[wire_idx];
+}
+if (!ichan) continue;
+```
+
+**Knob:** `wrapped_channel_activity`, on `RetileCluster` (so `ImproveCluster_1`
+and `_2` inherit it), **C++ default false**, threaded to PDVD through
+`cm.improve_cluster_2` with the key-suppression idiom and the runner TLA
+`retile_wrapped_channel_activity`.
+
+Its precondition is pinned by a doctest rather than assumed: `IAnodePlane`'s
+ident map is filled only from segment-0 wires, so the lookup resolves an orphan
+of one plane only because that channel's segment-0 wire lives in **another plane
+of the same anode**. Measured on all four production geometries — **0**
+channels break that assumption anywhere.
+
+### 9.2 Gates
+
+| gate | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | **276/276** (2 new cases; 274 before) |
+| compiled PDVD PR config, knob OFF vs `HEAD` | **byte-identical**, 278613 B |
+| compiled PDVD PR config, knob ON | differs by **exactly one key on one node** (the `ImproveCluster_2` retiler) |
+| compiled **SBND** PR config (shared `common/clus.jsonnet` was edited) | **byte-identical**, 253993 B, key absent |
+| compiled **uBooNE** config | **byte-identical**, 255717 B |
+| PDVD 039349/14 end-to-end, knob OFF vs round 4 | `calib-pr` **byte-identical**, 7510870 B |
+| freshness | source 16:01:20 → `local/lib` 16:01:51, md5 `26b6cdc3481ae7d67a6f058f04ad8e53` |
+
+The two shared-detector rows matter because this round edited
+`cfg/pgrapher/common/clus.jsonnet`, which SBND and uBooNE both import. They are
+byte-identical *and* structurally immune (the "round4" doctest pins zero
+`segment>0` wires on either geometry), which is the stronger of the two.
+
+### 9.3 The measurement, and the composition finding
+
+Three PR-only arms on the same production input point cloud
+(`work/039349_14_d31r5{off,on,both}`); the retile lives in the PR stage and
+rebuilds its activity from the ctpc clouds, which are correct independently of
+round 3's knob, so this is a clean single-knob change from production.
+
+The retiled cluster's own per-plane charge along the starved stretch — the
+quantity Phase 1's gate reads:
+
+| below V, retiled `P0` | n | U ≠ 0 | V ≠ 0 | W ≠ 0 | **≥2 planes** |
+|---|---|---|---|---|---|
+| production (both knobs off) | 1239 | 0.000 | 0.004 | 0.588 | **0.002** |
+| `retile_wrapped_channel_activity` only | 1102 | **0.495** | 0.009 | 0.676 | **0.378** |
+| **both knobs** | 1100 | **0.503** | **0.665** | 0.674 | **0.579** |
+
+**The two fixes are complementary, and the split is exactly what the geometry
+predicts.** On a4f0, U's 98 continuations sit at wire indices 0–97 and V's at
+189–286 (§8.2's table). The retile fix alone recovers **U**, because U's shifted
+wires are *segment-0* wires whose channels the plane does list — `BlobSampler`'s
+`p_chi2i` finds them. It cannot recover **V**, because V's continuations are
+*orphans*: the activity map now holds them, but the sampler's own lookup still
+misses, and round 3's `wrapped_channel_charge` is what repairs that. Hence
+V: 0.004 → 0.009 → **0.665**.
+
+This retroactively justifies round 3. §5.3 could only say the fix was correct
+but ineffective on this stage; it is in fact **necessary** here, and was merely
+blocked by a second defect downstream of it.
+
+**And the symptom that opened this campaign:**
+
+| below V (111.5 cm), from the calib dump's `steiner` section | OFF | retile fix | both |
+|---|---|---|---|
+| steiner points | 5 | **590** | **666** |
+| terminals | 1 | **174** | **198** |
+| **largest steiner-free gap** | **108.5 cm** | **3.0 cm** | **1.8 cm** |
+| control half above V, same gap | 65.6 cm | 59.5 cm | 59.5 cm |
+
+**The 108.5 cm gap is closed.** Doc 26 §7.5's observation — a continuous straight
+cosmic whose Steiner cloud covers only the half above the vertex — was a
+channel-indexing bug in the retiler, not a property of the terminal criterion.
+
+Two honest riders:
+
+- **The control half improves too** (65.6 → 59.5 cm, 258 → 330 steiner points),
+  because a4f0's U plane was mis-keyed there as well. So the "control" was never
+  clean for U; it was clean for V, which is why V's numbers above V barely move
+  (0.349 → 0.357). Everything V does below V is the signal.
+- **The retile itself changes**, as §8.4 said it would: `create_steiner_tree`
+  calls go 50 → 47 → 46 and the retiled cluster 5705 → 5132 → 5139 points,
+  because `ImproveCluster_2`'s internal terminal finding shapes which blobs the
+  retile creates. The comparison is therefore between two slightly different
+  retiled objects, not two labellings of one — which is why the gap metric,
+  computed on each arm's own geometry, is the right judge.
+
+### 9.4 What §6.1's new metrics now say
+
+This is the first time all three of the owner's properties can be read at once:
+
+| | production | retile fix | both | control half (both) |
+|---|---|---|---|---|
+| **not too few** — largest gap | 108.5 cm | 3.0 cm | **1.8 cm** | 59.5 cm |
+| **not too many** — one terminal per | 112 cm | 0.64 cm | **0.56 cm** | 2.5 cm |
+| **on the track** — median ⊥ distance | (n=1) 2.09 cm | 0.97 cm | — | 1.72 cm |
+
+Coverage and localization are both good: the restored terminals sit *closer* to
+the track axis (median 0.97 cm) than the control half's do (1.72 cm).
+
+**The density row is the one to look at, and it is a genuine question for the
+owner, not a defect I am reporting.** Below V the fix produces one terminal every
+**0.56 cm**, about 4.5× denser than the control half's 2.5 cm and 6.6× denser
+than pre-fix production's 3.7 cm there. That may be correct — this stretch really
+does have dense, continuous charge — or it may be the "smeared, hard to see the
+skeleton" regime the brief warns about. **§6.1's density metric existed for
+exactly one round before it had something to say.** Deciding it needs a Bee
+hand-scan of the restored skeleton, which is an owner call, and it is the natural
+first item of round 6.
+
+---
+
+## 10. Scope of each round, and what round 6 is
 
 **Round 1** (doc + scripts, no code): the algorithm review, the four uBooNE
 couplings, the §6 redesign, §7's aperture feasibility. Its §4 conclusion was
@@ -1438,9 +1619,34 @@ Still not done, and explicitly owed (carrying forward the round-3 list above):
   event-level gate, the dead-blob sampler untouched, the anodes 0-3 `wire_index`
   question unexplained, §7's aperture never taken end-to-end through the tree.
 
-**Round 5** is §8.5 in order: fix the retile mapping behind a default-OFF knob
-with the doctest above as its premise, re-measure the 108.5 cm gap, build §6.1's
-two missing metrics, and only then reopen §6. SBND and uBooNE need byte-identity
-gates on any of it because `calc_charge_wcp`, `Steiner::Grapher` and
-`ImproveCluster_1` are all shared — though for the retile mapping specifically
-they are also structurally immune, which is the stronger statement.
+**Round 5** (this one; §9): the retile mapping is fixed behind
+`wrapped_channel_activity` (default OFF), and **the 108.5 cm gap closes to
+1.8 cm** — 5 steiner points and 1 terminal below the vertex become 666 and 198.
+Gates in §9.2, including byte-identical compiled configs for SBND and uBooNE
+because this round edited the shared `cfg/pgrapher/common/clus.jsonnet`. The
+composition finding is §9.3: the retile fix recovers **U** and round 3's
+`wrapped_channel_charge` is what recovers **V**, so the two are complementary and
+round 3 was necessary after all, merely blocked by a second defect downstream.
+
+**Round 6**, in priority order:
+
+1. **The density question §9.4 raises** — one terminal per 0.56 cm below the
+   vertex against 2.5 cm on the control half. Owner call, and it needs a Bee
+   hand-scan of the restored skeleton, not another count. It is the first thing
+   this campaign has produced that the *"not too many"* half of the brief can
+   actually bite on.
+2. **Manifest-scale validation of both knobs**, and only then a default-flip
+   proposal. One event is not a flip argument, and the two downstream verdict
+   changes already recorded (cluster 47 on 039349/14, cluster 109 on 039252/2)
+   still need hand scans.
+3. **Then reopen §6, or close it.** The redesign's case on *this* event is now
+   gone — the criterion was never the problem here. What survives is doc 28's
+   population evidence and §7's aperture result, both measured on the input
+   point cloud and untouched by any of this. §6 should be re-argued on that
+   basis or retired; it should not be inherited.
+
+Still owed, unchanged: PDHD has no event-level gate for the round-3 fix (and
+runs no Steiner stage at all, so the round-5 one cannot reach it); the dead-blob
+sampler still carries the round-3 defect; PDVD still runs two terminal
+thresholds in one stage (§8.4); the anodes 0-3 `wire_index` question is
+unexplained; §7's aperture was never taken end-to-end through the tree.

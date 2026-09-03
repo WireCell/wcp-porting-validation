@@ -70,6 +70,16 @@ function(
     // and left charge_val AND charge_unc at 0, which calc_charge_wcp reads as
     // "no signal".  C++ default false; key omitted when off => byte-identical.
     wrapped_channel_charge = false,
+    // doc 31 round 5: the SAME AnodePlane rule at a third site, and this one is
+    // upstream of the Steiner terminal finder.  ImproveCluster_2 -- the retiler
+    // the Steiner stage runs -- indexes IWirePlane::channels() by WIRE index
+    // (improvecluster_1.cxx:840), so on the 16 PDVD planes carrying wrapped
+    // continuations it writes each slice's activity under the wrong channel and
+    // drops the top band.  Measured (doc 31 sec 8.2): along the starved stretch
+    // of 039349/14, 99.8% of retiled points hold fewer than the two non-zero
+    // planes calc_charge_wcp needs, so no threshold can make them terminals.
+    // C++ default false; key omitted when off => byte-identical.
+    retile_wrapped_channel_activity = false,
     // Readout window in ticks: clamps T_bad_ch time ranges in the Magnify /
     // PrDisplay writers (SBND 3427; PDVD 10000 = 5 ms at 0.5 us).
     readout_window_ticks = 10000,
@@ -3663,6 +3673,7 @@ function(
                              stm_readout_edge_guard=stm_readout_edge_guard,
                              stm_readout_edge_ticks=stm_readout_edge_ticks,
                              steiner_terminal_charge=steiner_terminal_charge,
+                             retile_wrapped_channel_activity=retile_wrapped_channel_activity,
                              stm_anode_dist_fix=stm_anode_dist_fix,
                              stm_second_track_guard=stm_second_track_guard,
                              stm_deficit_guard=stm_deficit_guard,
