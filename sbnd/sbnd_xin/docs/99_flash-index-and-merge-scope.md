@@ -30,6 +30,17 @@ python3 scripts/analysis/d99_flash_index_census.py --arm 'work-{s}-d97fvpr2' --s
 # Existing arms are skipped (M13), so re-running it just re-gates.
 ./scripts/d99_flash_gate.sh
 
+# ROUND 3 (sec 10): the FLIP gate -- production with both knobs on in the
+# jsonnet defaults and NO TLA hatch, byte-gated against round 2's arms.
+./scripts/d99r3_flip_gate.sh                 # ncpi0, ~3 min; SAMPLES=... to widen
+python3 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-05   # 21/21, exit 0
+# what the flip moves INSIDE an archive, by datapath (member names are tensor
+# indices and renumber, so a name diff answers nothing):
+python3 scripts/analysis/d99r3_pctree_datapath_diff.py \
+    work-ncpi0-d99r2off work-ncpi0-d99r2wr              # stage A
+python3 scripts/analysis/d99r3_pctree_datapath_diff.py \
+    work-ncpi0-d99r2offpr work-ncpi0-d99r2bothpr --stage pr
+
 # ROUND 2 (sec 6-9): the read fix and the write fix.  Six arms, every leg.
 # Same skip-if-exists rule, so a re-run re-gates without re-running anything.
 ./scripts/d99r2_flash_gate.sh
@@ -694,8 +705,10 @@ and it is **not** in either of this round's commits.
   non-primary inputs' flash/light/flashlight rows and every non-primary
   cluster's `flash` scalar shifts. **Every downstream hash moves.** Flipping it
   means re-validating the whole chain and re-cutting `ref/prod-<date>/`.
-- **Nothing is flipped.** Production still runs both paths off, and
-  `prod_cfg_gate.py` still passes against `prod-2026-09-04`.
+- **~~Nothing is flipped.~~ SUPERSEDED by §10 (2026-09-03): both knobs are now
+  ON in SBND production, `ref/prod-2026-09-05`.** The flags in this section
+  describe round 2, when production still ran both paths off; they are kept as
+  the record of what was true then. §10.6 carries the current flags.
 - **uBooNE is untouched** by both: single-input jobs never merge, and no uBooNE
   config carries either key.
 - **PDVD carries the read knob in C++ and no config sets it.** The gid-uniqueness
@@ -733,5 +746,250 @@ The two knobs are independent and answer different questions.
   when a reconstruction consumer actually needs `get_flash()` — today none does
   (`RetileCluster` is the only one and SBND instantiates `ImproveCluster_2`).
 
-Recommendation: **flip the read knob, hold the write knob** until a
-reconstruction consumer needs it or the next epoch re-cut is happening anyway.
+Recommendation as of round 2: **flip the read knob, hold the write knob** until
+a reconstruction consumer needs it or the next epoch re-cut is happening anyway.
+
+**OVERTAKEN BY MEASUREMENT, 2026-09-03.** The owner flipped both. The "hold the
+write knob" half rested on the cost line *"every Q/L archive hash moves, so it
+needs a full chain revalidation"* — true as stated, and round 3 measured what
+that revalidation actually finds: **nothing outside the optical point clouds**.
+Every Bee zip, every `nusel` verdict TSV, every `calib-pr` dump and all 236 280
+ROOT branch instances bar the three `T_cluster` flash columns are byte-identical
+across 308 events, and the matching scalars do not move. The write knob's cost
+was real but far smaller than "full chain revalidation" implies, and the
+comparison that would have shown that — today's production against
+production-as-flipped — is the one leg round 2 never ran. See §10.3.
+
+# 10. Round 3 — both knobs FLIPPED to SBND production (2026-09-03)
+
+Owner, 2026-09-03: *"Please flip both knobs on and perform the relevant
+validations. ... By the way since the write and read was bugs, do we really need
+a knob, shouldn't it be default on to avoid confusions?"*
+
+Both knobs are now **ON in SBND production config**. No C++ default changed —
+see §10.5 for why that is the answer to the second question rather than a dodge.
+
+## 10.1 What moved — four SBND files, nothing else
+
+| file | knob | was | now |
+|---|---|---|---|
+| `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` | `matching_joint(merge_flash=)` | false | **true** |
+| `cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` | TLA `merge_flash` | false | **true** |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | `pr(flash_by_gid=)` | false | **true** |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | TLA `flash_by_gid` | false | **true** |
+
+**Why the module defaults and not only the two TLAs.** The per-event jobs are
+not SBND's only callers. `wcp-porting-img/sbnd/wcls-img-clus-matching-xin.jsonnet`
+— the **LArSoft** chain — calls `qlm.matching_joint(...)` without passing
+`merge_flash`, and calls `clus_maker.pr(...)` without passing `flash_by_gid`
+(`pr-operating-point.jsonnet`, which syncs that chain's PR operating point to the
+TLA defaults, does not carry either key). A TLA-only flip would have fixed the
+standalone per-event chain and left LArSoft on the defect — silently, because
+both entry points would still compile and run. This is doc 97's recorded lesson
+(`prod.wcls` drifting "is the point, not a side effect") applied before rather
+than after the fact.
+
+`pdhd` and `pdvd` import their **own** `qlmatching.jsonnet` and
+`protodunevd/pr.jsonnet`, so none of these four lines reaches them.
+
+## 10.2 The compiled-config proof — the flip is exactly two keys
+
+Compiled the full 21-artifact consumer set before and after
+(`scripts/cfg/compile_consumers.sh`). The pre-flip set is **21/21 identical to
+`ref/prod-2026-09-04`**, so the drift below is attributable to this change and
+nothing else.
+
+```
+DRIFT : prod_prjob.json   ADDED  [24].data.flash_by_gid    = True   (node "pr")
+        sbnd_ql.json      ADDED  [72].data.merge_flash_pcs = True   (node "matching_joint")
+same  : the other 19 — every pdhd (6), every pdvd (5), uboone.json,
+        prod.wcls, prod.standalone, sbnd_{clus,img,pr,simcheck}.json, bare_prjob.json
+```
+
+One key per artifact, one artifact per knob, and **every** instance of each
+component carries it (one `SbndPrMagnifyTrackingVisitor` node, one `QLMatching`
+node). `prod.standalone` is unmoved because it compiles with
+`--ext-code joint=false`: two single-input `matching0`/`matching1` nodes, where
+the merge loop never executes, so the write knob is inert there by construction.
+
+**Equivalence, both directions, byte-identical JSON:**
+
+- **The flip *is* the arm that was gated.** Round 2's arms were produced by
+  overriding the knobs through the runner's TLA hatch on a tree whose defaults
+  were false. Compiling the **pre-flip** tree with `--tla-code flash_by_gid=true`
+  / `merge_flash=true` reproduces the **post-flip** tree's default compile
+  byte-for-byte, for both jobs. So flipped production is not *similar to* the
+  configuration that measured 20156/20156 — it is the same JSON.
+- **OFF is still recoverable.** Compiling the **post-flip** tree with explicit
+  `false` reproduces the **pre-flip** artifacts byte-for-byte, for both jobs. The
+  legacy path did not become unreachable; an A/B against it is still one TLA away.
+
+## 10.3 What the flip actually changes — measured, 308 events, not inferred
+
+Round 2 gated the knobs individually but never compared **today's production**
+against **production-as-flipped**. That comparison is what a flip needs, and it
+runs entirely on arms already on disk: `d99r2off{,pr}` (production) vs
+`d99r2wr` / `d99r2bothpr` (both knobs on).
+
+### Stage A (Q/L), per product, all 308 events
+
+| product | result |
+|---|---|
+| `mabc-all-apa.zip`, `mabc-apa0-face0.zip`, `mabc-apa1-face0.zip` | **308/308 byte-identical** |
+| `opflash_apa0.tar.gz`, `opflash_apa1.tar.gz` | **308/308 byte-identical** |
+| `pctree-evt<ID>.tar.gz` | 308/308 differ — see below |
+
+### Inside the archive that does move — by datapath, not by member name
+
+The pctree names its members by **tensor index**, and adding point clouds
+renumbers every tensor after the insertion point, so a member-name diff reports
+"everything moved" and answers nothing. Keying on each tensor's own `datapath`
+(`scripts/analysis/d99r3_pctree_datapath_diff.py`) gives the real answer, and it
+is the same on all 308 events:
+
+```
+ADDED   0 datapaths
+REMOVED 0 datapaths
+CHANGED 16 datapaths, every one of them optical:
+    flash/arrays/{ident,time,tmax,tmin,type,value}
+    light/arrays/{error,ident,time,value}
+    flashlight/arrays/{flash,light}
+    lpcmaps/arrays/{flash,flashlight,light}
+    cluster_scalar/arrays/flash            <- the re-based row index; the fix itself
+```
+
+**The `cluster_scalar` arrays that did NOT change are the licence for this
+flip:** `cluster_t0`, `matched_flash_gid`, `flag_main_cluster`,
+`flag_associated_cluster`, `lm_flag`, `ident`. Those six *are* the matching
+result. The merge at `QLMatching.cxx:1109` runs **before** matching at `:1351`,
+so if carrying every input's flash PCs had handed the matcher more candidate
+flashes, matching itself would have moved and this would be a reconstruction
+change needing owner adjudication under CLAUDE.md §5.5. It did not, on any of
+the 308 events, and the byte-identical Bee zips say the same thing independently.
+
+### Stage B (PR), all 308 events
+
+| product | result |
+|---|---|
+| `nusel-evt<ID>.tsv` — the per-bundle tagger verdicts | **308/308 byte-identical** |
+| `calib-pr-evt<ID>.json` (timer field masked) | **177/177 identical**; 131 absent in *both* arms |
+| `mabc-pr.zip` | **byte-identical** |
+| every ROOT branch — 1938 tree instances, **236 280 branch instances** | **3** differing pairs: `T_cluster:flash_id`, `:flash_time_us`, `:flash_pe` |
+| `pctree-pr-evt<ID>.tar.gz` | the same 16 optical datapaths, 0 added, 0 removed |
+
+**The Q/L hand-scan calib dump cannot be affected at all**, and that is
+structural rather than measured: `dump_calib(runs)` is called at
+`QLMatching.cxx:1089`, *before* the merge at `:1109`, and reads the per-APA
+`runs` — not the merged tree. `ql_scan/ql_scan_viewer.py` reads `flash_id` from
+that dump (and already resolves through `flash_by_gid[b["flash_gid"]]`), so the
+owner's Q/L viewer is untouched by either knob.
+
+### And the flip is the *correct* state
+
+| arm | matched rows | CORRECT |
+|---|---|---|
+| `d99r2offpr` — today's production | 20156 | 10219 = **50.7%** (9779 WRONG, 158 MISSING) |
+| `d99r2rdpr` — read on | 20156 | **20156 = 100.0%** |
+| `d99r2wrpr` — write on, read off | 20156 | **20156 = 100.0%** |
+| `d99r2wrpr` vs `d99r2bothpr` | 20156 joined | **0 disagreeing** |
+
+## 10.4 The flip gate — production reaches the flipped default with no hatch set
+
+The compiled-config proof cannot show that the **runner** reaches the flipped
+default when no TLA hatch is set, because the runner, not `wcsonnet`, assembles
+the command line. `scripts/d99r3_flip_gate.sh` runs one sample end to end with
+`QL_EXTRA_TLA`/`PR_EXTRA_TLA` **empty** and byte-gates the result against the
+round-2 arms. Binary pinned at `~/tmp/d99r2-libsnap` on purpose: a concurrent
+session landed two `clus` commits (`19830863`, `c27ec4b1`) after round 2's arms
+were produced, so an unpinned run would compare a config change against a moving
+binary.
+
+Result — `work-ncpi0-d99r3prod{,pr}`, 19 events, no TLA hatch set:
+
+| leg | result |
+|---|---|
+| stage A: production defaults == `d99r2wr` | **PASS** 19/19 events, 76 products, 0 differing |
+| stage B archives == `d99r2bothpr` | **PASS** 38/38 byte-identical |
+| every ROOT branch vs `d99r2bothpr`, `--expect ""` | **PASS** 152 tree instances, 24 985 branch instances, **0** differing pairs |
+| `T_cluster` self-check, `--require-correct` | **PASS** 1871/1871 = **100.0%** |
+| negative control: same 19 events pre-flip (`d99r2offpr`) | 895/1871 = **47.8%** — the instrument can fail; it just does not here |
+
+The `--expect ""` on leg 3 is load-bearing: the claim is that nothing moves at
+all, not that only the flash columns move. Reusing round 2's non-empty EXPECT
+would have silently permitted the very difference under test.
+
+## 10.5 "Since these were bugs, shouldn't the knob be default ON?"
+
+The instinct is right about the end state and wrong about the mechanism, for one
+concrete reason: **a C++ default governs only the configs that do not emit the
+key.** Now that SBND emits both keys, flipping the C++ defaults would change
+nothing about SBND. Its entire remaining effect is on the *other* binders:
+
+| knob | who else the C++ default governs |
+|---|---|
+| `merge_flash_pcs` | **pdhd** and **pdvd** — they import their own `qlmatching.jsonnet` and set no key. (uBooNE never reaches it: it does not use `QLMatching` at all.) |
+| `flash_by_gid` | **`PdvdPrMagnifyTrackingVisitor`**, the fork-by-duplication sibling, whose gid-uniqueness precondition has never been checked. |
+
+So "default ON to avoid confusion" would, in practice, ship an unvalidated
+archive change to PDHD and PDVD and silently enable a read path on a detector
+whose gid encoding (`opflash_phys_gid` / `shared_flash`, per-drift-side flash
+lists) may not satisfy the precondition the resolver requires. That is CLAUDE.md
+§5.1 — a change that cannot be made byte-identical-when-off for those detectors —
+and it buys SBND nothing.
+
+**What does remove the confusion is deleting the knob and the legacy path**, so
+there is exactly one behaviour and nothing to be confused between. That is this
+tree's own recorded precedent: *never hard-code a settled-ON knob — delete the
+feature instead.* Leaving a knob permanently pinned true is the worst of the
+three options, because the dead branch stays in the code and every reader has to
+work out which side runs.
+
+That deletion is a separate round, and it is gated on two things that do not
+exist yet:
+
+1. **PDVD's gid encoding checked** against the uniqueness precondition
+   (§6 detail 3), then its knob wired and gated — or a decision that PDVD keeps
+   the row-index read, in which case the two forks legitimately diverge and only
+   the SBND one loses its knob.
+2. **PDHD and PDVD gated for `merge_flash_pcs`**, the same way SBND was here:
+   their archives move, so each needs its own before/after and epoch re-cut.
+
+Until then the knob is also still doing real work: it is what makes the pre-flip
+archive recoverable byte-for-byte (§10.2), which is how every A/B in this tree is
+run. Delete it when nothing needs that comparison any more, not before.
+
+**Recommended next step** (owner's call, not started): schedule the PDVD
+precondition check as its own short round. It is the single blocker on both
+deletion items, it is a read-only investigation of PDVD's gid construction, and
+it also settles whether PDVD has been carrying the same wrong-flash defect in its
+own `T_cluster` all along — which nobody has measured.
+
+## 10.6 Round 3 status flags
+
+- **SBND production is now ON for both knobs**, `ref/prod-2026-09-05`,
+  21/21 artifacts pinned and re-verified.
+- **NOT byte-identical, by design and by owner decision.** Stage-A and stage-B
+  pctree archives move; every downstream hash of a *pctree* moves with them.
+  Everything else does not — see the §10.3 tables.
+- **No reconstruction changed.** Bee zips, `nusel` verdict TSVs, `calib-pr`
+  dumps and all 236 280 ROOT branch instances outside the three `T_cluster`
+  flash columns are byte-identical across 308 events. The matching scalars
+  (`cluster_t0`, `matched_flash_gid`, `flag_main_cluster`,
+  `flag_associated_cluster`, `lm_flag`) are unchanged, which is what licenses
+  that sentence rather than an inference from the knob's intent.
+- **`flash_id` has changed MEANING in production**, not just value: it is the
+  gid (`gid_side * 1000000 + index`), joinable to the `opflash` PC's `gid`
+  column, not a small per-input row id. Any script that assumed a small index
+  must be re-read. Checked: the Q/L hand-scan viewer
+  (`ql_scan/ql_scan_viewer.py`) reads `flash_id` from the **calib dump**, not
+  from `T_cluster`, and already resolves through `flash_gid` — it is unaffected.
+- **The C++ defaults stay false**, deliberately; §10.5 says why and what the
+  end state is. `doctest_qlmatching_config.cxx` and
+  `doctest_sbnd_pr_tracking_defaults.cxx` now say out loud that a green run
+  there does **not** mean production is on the legacy path.
+- **Pre-flip arms are still comparable.** Any arm recorded before 2026-09-03
+  differs from a fresh one in the three `T_cluster` flash columns and in the 16
+  optical datapaths. Pass them to `d99_root_branch_census.py --expect` or
+  exclude them; do not read the difference as a regression.
+- **`flashcov` remains unexercised** (§9): the write fix shifts it, no SBND input
+  carries it, and the flip makes that branch reachable rather than dormant.
