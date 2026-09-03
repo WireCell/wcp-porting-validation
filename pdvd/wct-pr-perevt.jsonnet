@@ -539,7 +539,35 @@ function(
     // min_gapped_planes=2 point; =relaxed_strict_img restores round 7;
     // =relaxed_strict restores round 6's predecessor; =relaxed restores
     // pre-round-6.
-    protect_graph_name          = 'relaxed_strict_img_2d_rescue_long_wtrack',   // null => 'relaxed'
+    //
+    // PDVD default since clus/docs/connect-graph-strict-perf-round1.md round
+    // 12 (doc pdvd/25 sec 13.11 addendum): the '_fast' sibling carries doc
+    // 78's busy-gated lazy Kruskal walk (busy_num_threshold=200), which
+    // defers the closest-pair MST verdict for a pair only once the cluster's
+    // component count exceeds 200 -- below that it is byte-identical to the
+    // eager walk by construction (the print-and-compare gate below only
+    // exercises clusters that actually crossed the threshold).  Round 12
+    // reran all 120 doc-25 `_keep` events under both flavors on the SAME
+    // pctree inputs (protect_stm_only_bundles/nu_per_bundle_stm_only stay at
+    // their PDVD defaults): 119/120 events completed (039349/32 SIGSEGVs
+    // identically in both arms, in TrackFitting::form_point_association
+    // downstream of TaggerCheckNeutrino's dual-chain-off pass -- unrelated
+    // to this knob, not fixed here); of 189 STM-bundle clusters censused via
+    // the 'connect_graph_relaxed_strict: ... ncomp=... lazy=' debug line,
+    // exactly 2 crossed ncomp>200 and actually took the lazy path (039252/8
+    // ncomp=509, 039253/5 ncomp=205; the rest of the tail tops out at 117) --
+    // both byte-identical (abtest/hash_archive.py member hashes) to the
+    // eager flavor's mabc-pr.zip and calib-pr-evt*.json (dual_chain timer
+    // excluded).  All 238 possible bee+calib hash pairs across the 119
+    // completed events matched; the 2 unpaired entries (039349/32, /60) were
+    // absent in BOTH arms identically, not a divergence.  Round 1's own
+    // controlled measurement on 039252/8 (cluster 84, ncomp=509) had this
+    // flavor take ClusteringProtectBundle 1710.99 s -> 797.65 s (2.15x, not
+    // 30x -- see the round-1 doc for why: the dir1/dir2 walks stay eager).
+    // Legacy escape:
+    // PDVD_PR_TLA="-S protect_graph_name='relaxed_strict_img_2d_rescue_long_wtrack'"
+    // restores the pre-round-12 eager production path.
+    protect_graph_name          = 'relaxed_strict_img_2d_rescue_long_wtrack_fast',   // null => 'relaxed'
     // C++ default true (doc pr/23 ordering): a TGM/STM/lm-convicted in-window
     // main does not open its bundle for splitting.  null => key omitted.
     protect_skip_convicted      = null,

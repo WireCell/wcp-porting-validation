@@ -2039,14 +2039,24 @@ against an arm run with the knob off has to scrub them.
 #### Levers left
 
 - **Port doc 78's busy-gated lazy walk into `connect_graph_relaxed_strict`** —
-  **DONE**, `clus/docs/connect-graph-strict-perf-round1.md` (gate round 10).
-  The gate fires exactly as predicted (`ncomp=509 > 200`) and the stage on
-  039252/8 goes 1710.99 s → 797.65 s with a byte-identical `mabc-pr.zip`. It
-  ships as a separate flavor, `relaxed_strict_img_2d_rescue_long_wtrack_fast`,
-  which **no job selects**: doc 78's Kruskal-vs-Prim tie caveat still stands,
-  and with `stm_only_bundles` on this stage is 146 ms anyway, so the 2.15 ×
-  only applies in the knob-off regime. Select it with
-  `PDVD_PR_TLA="-S protect_graph_name='relaxed_strict_img_2d_rescue_long_wtrack_fast'"`.
+  **DONE and FLIPPED ON**, `clus/docs/connect-graph-strict-perf-round1.md`
+  (gate round 10, flip round 12). The gate fires exactly as predicted
+  (`ncomp=509 > 200`) and the stage on 039252/8 goes 1710.99 s → 797.65 s
+  with a byte-identical `mabc-pr.zip`. It ships as a separate flavor,
+  `relaxed_strict_img_2d_rescue_long_wtrack_fast`. Round 12 answered doc 78's
+  Kruskal-vs-Prim tie caveat with a full census: reran all 120 `_keep` events
+  under both flavors (same pctree input either way), found 189 STM-bundle
+  clusters, and exactly 2 crossed `ncomp>200` and took the lazy path
+  (039252/8 ncomp=509, and a new witness, 039253/5 ncomp=205) — both
+  byte-identical to eager (mabc-pr.zip + calib-pr JSON, 238/238 hash pairs
+  matched, 0 diffs; `stm/gates/r12_compare.txt` / `r12_census.tsv`). One
+  pre-existing crash (039349/32, `TrackFitting::form_point_association`,
+  unrelated to this knob) reproduced identically in both arms. `wct-pr-
+  perevt.jsonnet`'s `protect_graph_name` default is now this flavor
+  (PDVD-only change, no shared file touched); legacy escape
+  `PDVD_PR_TLA="-S protect_graph_name='relaxed_strict_img_2d_rescue_long_wtrack'"`.
+  With `stm_only_bundles` on, this stage is 146 ms on 039252/8 regardless, so
+  the 2.15× only bites in the knob-off regime or on a future busy cluster.
   Only 44.3 % of pairs are skipped, not doc 78's 97 %, because the gate defers
   the closest-pair walk while `dir1`/`dir2` stay eager — that directional term
   is the remaining half.
@@ -2146,3 +2156,19 @@ against an arm run with the knob off has to scrub them.
   the same-day SBND retire round deleted `grp0825`'s `ql_evt*/` inputs, so
   both arms were rebuilt from `d99fix` — **SBND 201/201 identical, uBooNE
   35/35 and 35/35** (`stm/gates/shared_gate_round8.txt`). Toolkit `e2248fa3`.
+- **2026-09-02/03** — `ClusteringProtectBundle` cost round 2 (§13.11, full
+  detail in `clus/docs/connect-graph-strict-perf-round1.md`). New knob
+  `stm_only_bundles` (`ClusteringProtectBundle`, C++ default OFF, PDVD job
+  ON via `protect_stm_only_bundles`): only a bundle holding an STM-tagged
+  cluster is opened, 039252/8's stage 1726.8 s → 146.2 ms. Shared-component
+  gate round 9: SBND 201/201, uBooNE 35/35 zips + 34/35 tagger (documented
+  bistable event 6805, causal control confirms the binary is deterministic).
+  Then a new `_fast` graph flavor ported doc 78's busy-gated lazy Kruskal
+  walk into `connect_graph_relaxed_strict` (gate round 10: 1710.99 s →
+  797.65 s on cluster 84, byte-identical); shipped unselected pending a wider
+  witness set. Round 12 built that census on the full 120-event manifest,
+  found a second real witness (039253/5, ncomp=205), both byte-identical to
+  eager (`stm/gates/r12_compare.txt`, `r12_census.tsv`), and **flipped**
+  `wct-pr-perevt.jsonnet`'s `protect_graph_name` default to the `_fast`
+  flavor — PDVD-only, legacy escape recorded in the jsonnet comment. Toolkit
+  `81aedb7f`..`f7102a84`.
