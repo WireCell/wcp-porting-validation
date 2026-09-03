@@ -505,6 +505,15 @@ gate diff. Named here so the next round does not have to rediscover it.
   NOT working, however many points appear. Instrument:
   `scratchpad/leg_check.py` (see Repro).
 
+> **Both items above were settled in round 3 (below), on a clean binary.**
+> The **OFF-path archive gate PASSES**: `work/039252_2_fixoff3` (knob off, new
+> binary carrying both `traj_degenerate_wcpts_fallback` and the
+> `examine_end_ps_vec` guard) vs `work/039252_2_stageprobe` (pre-fix binary) —
+> `abtest/hash_archive.py --members` on `mabc-pr.zip`, **all 22 members
+> byte-identical**. That covers the `4776d637` guard as well.
+> The **pre-registered acceptance criterion FAILS**: the knob-on arm leaves the
+> box at 2 points. See round 3 for what actually causes the missing leg.
+
 ### Pre-existing and unrelated, found here — FIXED (toolkit `4776d637`)
 
 `examine_end_ps_vec` read `ps_list.back()` at the top of its `flag_end` block.
@@ -537,49 +546,122 @@ false everywhere. Recorded in the test file as owed rather than faked with a
 test that could not fail. Not reached in this event (0 drain-to-empty events
 measured) and independent of `traj_degenerate_wcpts_fallback`.
 
+### Round 3 (2026-09-03): the fallback was VALIDATED AND FOUND NOT TO FIX THIS SYMPTOM
+
+Round 2 shipped `traj_degenerate_wcpts_fallback` reasoned but unvalidated (the
+arms had segfaulted on a raced binary). Re-run on a sound binary, the knob-ON
+arm completes cleanly — and **does not restore the leg**. The pre-registered
+acceptance criterion (round 2, Verification) is the judge, and it fails.
+
+Bee set, all four arms of the *same* physical event side by side (flip between
+events 0-3): <https://www.phy.bnl.gov/twister/bee/set/966f429e-652c-405b-9a9d-dc520ce1f3ae/event/list/>
+
+| Bee evt | arm | pts in toward-344 box | max perp | median dist to `stm_fit` |
+|---|---|---|---|---|
+| 0 | production | 2 | — | 7.07 cm |
+| 1 | `dqdx_fit_keep_all_points=true` | 80 | 0.001 cm | 3.45 cm |
+| 2 | `traj_degenerate_wcpts_fallback=true` | **2** | — | 3.04 cm |
+| 3 | `fit_exclusion=false` | **71** | **1.197 cm** | **0.20 cm** |
+
+(`stm_fit` reference in the same box: 64 points, max perp 1.158 cm.)
+
+**The fallback works mechanically and is irrelevant to the outcome.** It fired
+93 times, and on the arm in question exactly as designed:
+
+```
+organize_segments_path_3rd: segment gi=2 cluster=86 curr_pts=128 (from wcpts), fits_size=2, wcpts_size=128
+```
+
+The path it hands the fitter is now genuinely bent — `n=187 chord=60.67cm
+max_perp_dev=5.158cm mean_perp_dev=2.559cm`, against production's dead-straight
+`max_perp_dev=0.000cm`. So the geometry defect round 2 diagnosed is real and the
+knob does correct it. **But `form_map_graph` then drops 187 → 2 anyway, at every
+stage.** The charge check finds no charge on the real, bent, Steiner path
+either.
+
+**Round 2's causal chain was therefore wrong about sufficiency.** "Straight
+chord ⇒ no charge ⇒ dropped" had the straightness as the cause; it is a
+*symptom*. The arm has zero U+V+W association quantity in the PR fitter's charge
+maps regardless of its shape.
+
+### What actually causes it: `fit_exclusion` contention (2x2, isolated)
+
+| `fit_exclusion` | fallback | pts in box | max perp | median dist to `stm_fit` |
+|---|---|---|---|---|
+| `true` (PDVD production) | off | 2 | — | 7.07 cm |
+| `true` | on | 2 | — | 3.04 cm |
+| `false` | off | **71** | 1.197 cm | **0.20 cm** |
+| `false` | on | **71** | 1.197 cm | **0.20 cm** |
+
+The bottom two rows are **identical** — `fit_exclusion=false` restores the leg
+by itself, and the fallback adds nothing either alone or in combination (it
+fires 0 times on this arm once exclusion is off, because `fits()` never
+collapses in the first place). With exclusion off, stage 1's drop stays at the
+healthy `81 → 76` on every pass and never collapses to 2.
+
+And the restored trajectory is not merely present, it is *correct*: max perp
+1.197 cm against the `stm_fit` reference's 1.158 cm, sitting a median **0.20 cm**
+from the trajectory `TaggerCheckSTM` fits on the same charge. The two
+independent fitters now agree to within 2 mm, which is the strongest evidence in
+this whole investigation that the STM=1 tag was right all along.
+
+Mechanism, consistent with round 2's stage-1 attribution: a mid-fit
+`do_rough_path` graph edit puts a **second** segment over the same charge, and
+`update_association` with exclusion on strips every 2-D cell that is
+(near-)equidistant from two segments — with two segments on one arm that is
+every interior cell, so both copies lose all charge at once. `mvga: op1
+dup-merge` does fire on this cluster (removing a 69.53 cm segment in favour of a
+46.21 cm survivor at overlap 0.99), but further `do_rough_path` calls re-add
+overlapping segments afterwards; the dedup and the re-adding are mis-ordered.
+
+**`fit_exclusion=false` is NOT the recommendation.** It is SBND production since
+pr/98, PDVD production here, and doc pr/106 §9 measured it as globally
+consequential. It is used here purely as the isolating instrument that proves
+where the charge goes. The fix belongs at the duplicate segment.
+
 ## Status
 
 - **Q1 — FIXED** (toolkit `ab0762c6`): the `stm_fit` Bee layer's hard-coded
   `real_cluster_id = 0` now carries the cluster id.
-- **Q2 — root cause traced to its first link and fixed behind a default-OFF
-  knob.** The STM=1 tag is well-founded: `TaggerCheckSTM` fit the real geometry
-  on real charge. `track_fit_global`'s missing leg is a resampling artifact of
-  a fits()-collapse fixed point, entered at trajectory round 1 through
-  `fit_exclusion` contention with a duplicate segment, and sustained because
-  `organize_segments_path_3rd` cannot tell a degenerate `fits()` from a real one.
+- **Q2 — root cause FOUND AND PROVEN, and it is not where rounds 1-2 put it.**
+  The STM=1 tag is well-founded: with `fit_exclusion` off, the PR fitter's own
+  trajectory lands a median **0.20 cm** from the one `TaggerCheckSTM` fits on the
+  same charge. `track_fit_global`'s missing leg is caused by **`fit_exclusion`
+  contention with a duplicate segment** placed over the same charge by a mid-fit
+  `do_rough_path` graph edit — not by the straight-chord resample, which is a
+  downstream symptom.
+- **The shipped knob `traj_degenerate_wcpts_fallback` (toolkit `a8190d6e`) does
+  NOT fix this symptom** and is superseded as an explanation. It is default OFF,
+  byte-identical when off, and it does correct a real defect (it puts genuinely
+  bent geometry back into the fitter, `max_perp_dev` 0.000 → 5.158 cm) — but the
+  charge check drops the arm either way, so on this event it changes nothing
+  observable. Kept as a latent robustness guard, explicitly not as the fix;
+  retiring it is a reasonable owner call (cf. doc 77's knob ledger).
+- **`examine_end_ps_vec` empty-list read — FIXED** (toolkit `4776d637`),
+  unrelated and found in passing.
 
 ## Recommendation / next steps
 
-**These two are different layers of the same defect, and the distinction is the
-recommendation.** `traj_degenerate_wcpts_fallback` is the mitigation *at the
-site where the shape is destroyed* — it is what this round ships, default OFF.
-The duplicate segment is the *root* cause upstream of it and is the
-higher-leverage fix, but it is a graph-construction change, unscoped and
-unmeasured as of this round. Shipping the former does not preclude, and is not
-a substitute for, the latter.
-
-1. **Finish this round's owed measurements first** (see Verification): re-run
-   the OFF/ON arms on a clean build of a quiet tree, complete the OFF-path
-   archive gate, and judge the knob against the pre-registered acceptance
-   criterion. Until that is done the fix is *implemented and reasoned*, not
-   *validated*.
-2. **Owner decision on flipping `traj_degenerate_wcpts_fallback` for PDVD.**
-   Off by default and byte-identical when off. Flipping it is a production
-   behaviour change for every PDVD event and needs the §4 bar on a real
-   manifest, not this one event. `TrackFitting` is shared with SBND, so an
-   SBND gate is required before any flip there; this round deliberately did
-   not thread the knob into SBND's jsonnet (§2 "never edit another
-   experiment's configs as a side effect"), which leaves SBND at the C++
-   default and therefore unreachable and unchanged.
-3. **Do not flip `dqdx_fit_keep_all_points` for this symptom** — measured above
-   to restore the leg in the wrong place (3.45 cm off, dead straight). It is a
-   plausible-looking lever precisely because it does make the track reappear;
-   that is why this is stated as a negative result rather than left unsaid.
-4. **Next round: prevent the duplicate segment.** The exclusion contention that
-   starts the collapse exists only because a mid-fit `do_rough_path` edit put
-   two segments on one arm (`mvga: op1 dup-merge` also fires on this cluster,
-   removing a 69.53 cm segment in favour of a 46.21 cm survivor at overlap
-   0.99). Removing the duplicate would remove the need for the fallback here.
-5. `organize_segments_path_2nd` carries the same untested pattern (see Scope).
+1. **Fix the duplicate segment; that is the whole defect.** The exclusion
+   contention exists only because two segments end up on one arm. `mvga: op1
+   dup-merge` already fires on this cluster (removing a 69.53 cm segment at
+   overlap 0.99) but later `do_rough_path` calls re-add overlapping segments —
+   the dedup and the re-adding are mis-ordered. Either re-run the dedup after
+   the last graph edit, or stop `do_rough_path` from adding a segment that
+   duplicates an existing one. This is the next round.
+2. **Do not flip `fit_exclusion` to false.** It is SBND production since pr/98
+   and PDVD production here, and pr/106 §9 measured it as globally
+   consequential. It is used in this doc purely as the isolating instrument
+   that proves where the charge goes.
+3. **Do not flip `dqdx_fit_keep_all_points` for this symptom** — it restores the
+   leg in the wrong place (dead straight, 3.45 cm off; Bee event 1). It is a
+   plausible-looking lever precisely because the track reappears, which is why
+   this is recorded as a measured negative rather than left unsaid.
+4. **Owner call on `traj_degenerate_wcpts_fallback`**: keep as a latent guard or
+   retire it. It is inert on this event; the degenerate-resample state it
+   targets is real but, here, always dominated by the charge drop. If kept, it
+   still needs an SBND gate before any flip, since `TrackFitting` is shared.
+5. `organize_segments_path_2nd` carries the same untested `!fits().empty()`
+   pattern (round 2, Scope) — untouched, and now lower priority given item 1.
 6. Whether cluster 86's two arms are one real particle each or an imaging
    mis-merge remains open, but is no longer needed to explain this symptom.
