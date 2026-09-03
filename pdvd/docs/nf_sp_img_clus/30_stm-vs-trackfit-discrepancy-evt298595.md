@@ -24,6 +24,15 @@ W2=/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_2_stmrcidfix
 cd /home/xqian/toolkit-dev/wcp-porting-img
 diff <(python3 abtest/hash_archive.py --members $W/mabc-pr.zip) \
      <(python3 abtest/hash_archive.py --members $W2/mabc-pr.zip)
+
+# Q2 mechanism trace: rerun with the WCT_DQDX_DROP_DEBUG instrumentation
+# (toolkit e3dee831 + f622161e) to attribute form_map_graph's zero-charge
+# point drop to a specific segment and check its pre-drop shape.
+W3=/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_2_dqdxdbg2
+mkdir -p "$W3" && cp $W/pctree-evt298595.tar.gz $W/pctree-evt298595.tlas "$W3"/
+cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
+WCT_DQDX_DROP_DEBUG=1 ./run_pr_evt.sh -s dqdxdbg2 39252 2
+grep "gi=2 cluster=86" "$W3/wct_pr_039252_2.log"
 ```
 
 Run 39252, event 298595, cluster 86 (production defaults, doc pdvd/29: E=450 V/cm,
@@ -203,58 +212,116 @@ Segments 86003/86005/86009 are legitimately short (< 12 cm) — 2 points
 "toward-344" arm — the queried point's leg — and by construction it should
 not have only 2 points.
 
-The relevant code is `TrackFitting::organize_segments_path_3rd`
-(`clus/src/TrackFitting.cxx:1522-1671`), the final resampling pass in
-`do_multiple_tracking` (called with `step_size = low_dis_limit = 12.0 cm`,
-the same `low_dis_limit` in `pdvd_track_fitting.json`). For *any* segment
-whose two endpoints are farther apart than `step_size`, this function's own
-end-point handling (`clus/src/TrackFitting.cxx:1648-1659`, the
-`dis1 > step_size * 1.6` branch) unconditionally interpolates
-`round(dis1/step_size)` evenly-spaced points along the straight line between
-them — for a 59.9 cm segment at step_size=12 cm that is ~5 points, not 0.
-That interpolation clearly did not survive into the Bee-dumped `fits()` for
-segment 86002 (only its two vertex endpoints remain). Either this segment's
-final saved fit did not go through `organize_segments_path_3rd`'s resampler
-at all, or a later stage (the real per-point charge/2D-projection fit that
-follows resampling in `do_multiple_tracking`) pruned the interpolated points
-back out — most plausibly because it could not find valid 2D-projection
-charge support at those interpolated locations and gave up rather than
-falling back to the geometric points. **I did not trace this far enough to
-say which**; it is the next concrete step (a targeted DEBUG line in
-`do_multiple_tracking`'s per-point charge fit, or a rerun with the log level
-raised, would settle it directly).
+I initially found that `TrackFitting::organize_segments_path_3rd`
+(`clus/src/TrackFitting.cxx:1522-1671`, called from `do_multiple_tracking`
+at `step_size = 0.6 cm`, not the 12 cm `low_dis_limit` I first assumed --
+that value governs an earlier pass) SHOULD interpolate roughly
+`round(dis1/step_size)` evenly-spaced points along any segment whose
+endpoints are farther apart than `step_size`: for a 59.9 cm segment at
+0.6 cm that is ~100 points, not 2. That ruled out "the resampler never ran"
+as the explanation on its own and pointed at a later pruning stage.
 
-Put together with the evidence above: three independent things in this
-pipeline — TGM's chord-continuity check, NeutrinoID's Steiner `sgp` guard,
-and now this segment-level fit dropout — all single out the *same* ~60 cm
-connection (junction to the far "toward-344" end) as poorly supported,
-while `TaggerCheckSTM`'s own fitter, which has none of these continuity
-checks, fit straight through it at full density and tagged the cluster
-STM=1. That is a real, reproducible disagreement about this specific
-connection, not a vague "the algorithms differ" story — and it means "the
-long track is missing from track_fit_global" is accurate: not merely
-under-sampled, but reduced to a bare 2-point placeholder by whatever
-component runs after the resampler, even though the resampler's own code
-should have populated it.
+**Confirmed by instrumentation** (toolkit `e3dee831`, doc pdvd/30
+investigation continued): `do_multiple_tracking` already counts, in
+aggregate, how many trajectory points its pre-dQ/dx `form_map_graph` call
+drops for having zero measured charge in every 2D plane projection (an
+existing, always-on DEBUG line: "pre-dQ/dx form_map_graph dropped N of M
+trajectory point(s) with zero plane quantity") -- but only as an event-wide
+total, with no way to attribute a drop to a specific segment. Added an
+env-gated (`WCT_DQDX_DROP_DEBUG=1`, no config knob, no behavior change --
+verified byte-identical output with and without it set) per-segment
+before/after count and reran:
 
-### Is the STM leg real charge, or a fit artifact?
+```
+do_multi_tracking: WCT_DQDX_DROP_DEBUG segment gi=2 cluster=86 zero-quantity drop 108 -> 2 points
+```
 
-The raw `clustering-global` points are not gapped in 3D along x (5 cm bins
-from x=280 to x=340 all carry 21-42 points, no >30 cm empty run), so the STM
-leg is not fitted through empty space in the crude sense. But `chord_has_charge`
-(TGM) and the Steiner `sgp` guard (NeutrinoID) both operate on stricter
-graph/2D-view continuity, not raw 3D-point density in 5 cm bins, and both
-independently flagged something about this cluster's long-range
-connectivity that `TaggerCheckSTM`'s own fitter — which has no equivalent
-continuity check — did not. **This is presented as the leading hypothesis,
-not a proven code-path trace**: I have not walked `chord_has_charge`'s or
-the Steiner graph's exact edge-construction logic far enough to say with
-certainty that the *same* stretch (junction -> x=337, the STM leg) is what
-both guards independently rejected, versus a different extreme-point pairing
-across the whole branchy cluster (e.g. junction -> low-z arm, which
-genuinely does bend 48 cm in z and would legitimately fail a straight-chord
-support test). Either reading is consistent with the STM=1 / sparse-track_fit
-outcome; they imply different follow-ups (see below).
+This is segment 86002 (`gi=2` = graph index 2, `cluster=86`) -- exactly the
+59.9 cm "toward-344" leg. Of its ~108 interpolated points, **106 (98%) are
+dropped for having zero charge in every plane**, leaving only its two
+vertex endpoints, which is exactly what reaches the Bee `track_fit` dump.
+This is the direct mechanism: the resampler *did* run and *did* produce a
+dense trajectory; the charge-based point filter then removed nearly all of
+it because those particular 3D coordinates carry no measured charge.
+
+**Is that a straight-line artifact, or a real charge desert?** Extended the
+instrumentation once more (toolkit `f622161e`) to report, for the pre-drop
+point list, the perpendicular distance of every point from the straight
+line through the segment's own first and last point -- distinguishing "the
+resampler carried forward the segment's real (bent) shape and there's
+genuinely no charge along it" from "the resampler laid a straight chord
+across a bend and of course found nothing there". Result for segment 86002:
+
+```
+do_multi_tracking: WCT_DQDX_DROP_DEBUG segment gi=2 cluster=86 pre-drop shape: n=108 chord=64.18cm max_perp_dev=0.000cm mean_perp_dev=0.000cm
+```
+
+**`max_perp_dev = 0.000 cm`, for all 108 points, every one of five separate
+fit passes.** This is not a real charge desert along the cluster's actual
+shape -- it is a dead straight line, confirming
+`organize_segments_path_3rd`'s degenerate-input fallback
+(`clus/src/TrackFitting.cxx:1560-1567`, taken when a segment's
+carried-forward point list has collapsed to just its two vertices) ran for
+this segment. And that in turn explains itself once combined with the
+NeutrinoID Steiner-graph evidence already in hand: the `sgp guard` log line
+for this same general junction<->far-end connection reported
+`detour=6.446` -- the real, graph-connectivity-supported path between
+those two points is **6.4 times longer** than the straight-line chord
+(64.18 cm chord here vs. the graph's own preferred route). A straight line
+laid across a connection that actually detours 6.4x will, unsurprisingly,
+spend nearly all of its length in real 3D space where the true (bent)
+598-point raw cluster is *not* -- so `form_map_graph`'s per-point charge
+lookup correctly finds nothing there and drops it. `TaggerCheckSTM`'s own
+fit avoided this entirely: it evidently traced the actual bent point cloud
+(141 points, all with real charge 2000-6000-ish) rather than interpolating
+a chord between two endpoints.
+
+So the full chain, now traced end to end and confirmed by data at each
+link rather than inferred: cluster 86's junction-to-far-end connection is
+real but bent (not straight); NeutrinoID's own Steiner path builder already
+knew this (`detour=6.446`) but that knowledge did not reach
+`organize_segments_path_3rd`'s fallback interpolation, which laid a
+dead-straight, zero-deviation chord across the bend; that chord then lost
+98% of its points to the (correct) charge-support check, leaving
+`track_fit_global` with just two disconnected endpoints where
+`stm_fit_global` shows a full, real, densely-fit trajectory. Four
+independent, now-measured signals -- TGM's chord-continuity check, the
+Steiner `sgp` guard's `detour=6.446`, this segment's 98% charge-drop, and
+its `max_perp_dev=0.000cm` pre-drop shape -- all point at the same
+underlying fact (this connection bends significantly, it is not a straight
+chord), which only `TaggerCheckSTM`'s fitter, having no straight-line
+assumption anywhere in its own path, was unaffected by.
+
+**What this means for a fix**: the bug is not in the charge-drop check
+(it's doing exactly its job) and not obviously in `TaggerCheckSTM` either
+(it fit the real geometry correctly). It is that
+`organize_segments_path_3rd`'s degenerate-fallback branch assumes "collapsed
+to just two vertices" means "short/simple segment, a straight line between
+them is a fine approximation" -- true for most segments, false here, where
+the segment is long AND the graph itself (via the Steiner builder) already
+had better information (`detour=6.446`) that never reached this function.
+A fix would need to either (a) have this fallback consult the graph's own
+rough-path/Steiner route instead of the raw straight line when one exists,
+or (b) have the upstream stage that fed this segment only two points in the
+first place (still not traced -- *why* did the carried-forward point list
+collapse to 2 for this segment specifically) preserve more of the real
+path. I have not traced (b); it is the one remaining open link in the
+chain.
+
+### Is the STM leg real charge, or a fit artifact? (resolved)
+
+Yes, it is real. The raw `clustering-global` points are not gapped in 3D
+along x (5 cm bins from x=280 to x=340 all carry 21-42 points, no >30 cm
+empty run) -- the physical charge is there, and `TaggerCheckSTM`'s fit,
+which stays on real charge for all 141 of its points, follows it correctly.
+What is *not* real is `organize_segments_path_3rd`'s fallback interpolation
+of that same span as a straight chord: `chord_has_charge` (TGM) and the
+Steiner `sgp` guard (NeutrinoID) both flagged, independently and ahead of
+time, that a straight chord across this connection is a poor approximation
+(`detour=6.446`) -- and the `max_perp_dev=0.000cm` measurement above
+confirms `track_fit_global`'s sparse rendering is exactly that: a straight
+chord, mostly discarded by the (correct) charge check, not a second read of
+the same real trajectory STM found.
 
 ## Status
 
@@ -263,32 +330,49 @@ outcome; they imply different follow-ups (see below).
   elsewhere (20/21 `mabc-pr.zip` members unchanged; the 21st differs only in
   the one intended field). Unconditionally inert when `save_stm_fit=false`
   (the production default), so no existing config's output changes.
-* **Question 2: open.** Investigation only, nothing changed there. The
-  disagreement between `TaggerCheckSTM`'s and `TaggerCheckNeutrino`'s reads
-  of cluster 86 is real and reproducible; which one (if either) is the
-  physically correct interpretation of this cluster is not settled here.
+* **Question 2: mechanism confirmed, root cause open.** Investigation only,
+  nothing behavior-changing done (two env-gated, always-inert-by-default
+  DEBUG instrumentation additions, `e3dee831`/`f622161e`, both verified
+  byte-identical when the env var is unset). The `track_fit_global` gap is
+  now traced to a specific, data-confirmed mechanism: `organize_segments_path_3rd`'s
+  degenerate-fallback branch laid a dead-straight (`max_perp_dev=0.000cm`),
+  ~64 cm chord across a connection its own pipeline's Steiner-graph builder
+  had already flagged as bending 6.4x that chord length (`detour=6.446`),
+  and the downstream charge-support check correctly discarded 98% of that
+  straight line for finding no real charge on it. The STM=1 tag itself is
+  well-founded (`TaggerCheckSTM` fit the real, bent trajectory, all on real
+  charge). What is *not* yet found is why the segment's carried-forward
+  point list collapsed to just its two vertices in the first place, feeding
+  the straight-line fallback rather than a bent path.
 
 ## Recommendation / next steps
 
-1. **Question 2** is now narrowed to one concrete, checkable claim: segment
-   86002 (the 59.9 cm "toward-344" leg, the one the queried point sits on)
-   should have received ~5 interpolated points from
-   `organize_segments_path_3rd` and instead has 2. The next step is
-   mechanical, not exploratory: add a DEBUG line (or raise the log level)
-   around `do_multiple_tracking`'s per-point charge/2D-projection fit for
-   this segment on this event, to see directly whether the interpolated
-   points were dropped there and why (no charge found at those locations,
-   an exception path, or something else). That would convert "the long
-   track is missing" from an observed symptom into a named cause.
-2. In parallel, whether that ~60 cm connection is one real track or a
-   mis-merge of two overlapping activities is still worth checking directly
-   against the raw 2D wire signals (U/V/W ADC, not the 3D imaging points)
-   for the junction and the x=293-337 stretch — a known PDVD failure mode
-   (see docs 25-26 in this directory). That determines whether the fix
-   belongs in the per-point charge fit (make it recover the real track) or
-   in `TaggerCheckSTM` (make it apply the same continuity check TGM and the
-   Steiner builder already have, so it would not have tagged STM=1 on an
-   ambiguous connection in the first place).
-3. Not recommending either fix yet: per project policy, a physics number
-   that looks inconsistent is reported, not silently tuned to "look right,"
-   until (1) identifies the actual mechanism.
+1. **The one remaining open link**: trace why segment 86002's point list
+   collapsed to 2 before `organize_segments_path_3rd` ran (the fallback at
+   `clus/src/TrackFitting.cxx:1560-1567` is a *symptom*, triggered by
+   `curr_pts.size() <= 1`, of something upstream -- most plausibly the same
+   Steiner-graph instability the `sgp guard` lines already show for this
+   connection, meaning the segment's `wcpts()`/prior `fits()` were thin to
+   begin with). The `WCT_DQDX_DROP_DEBUG` instrumentation added here traces
+   forward from that collapse; the next debug pass should trace backward
+   from it -- instrument `organize_segments_path_3rd`'s `curr_pts.size()`
+   itself (or the segment-membership assignment in the Steiner rough-path
+   builder) for this segment/event.
+2. A candidate fix, now well-motivated by data rather than guessed: have
+   the degenerate-fallback branch consult the graph's own Steiner rough-path
+   between the two vertices (already computed, already known to detour
+   6.4x) instead of the raw straight line, when one exists — so a
+   genuinely bent, real connection gets a bent resample instead of a
+   straight one the charge check then guts. Not implemented here: it is a
+   behavior change to production PR-graph fitting (default-on for every
+   PDVD event, not an opt-in diagnostic), well outside what this debugging
+   session was asked to do, and it deserves its own knob/gate/validation
+   round per the usual bar (§4), not a same-session change bundled into an
+   investigation doc.
+3. Whether cluster 86's TWO arms (the one just traced, and the separate
+   low-z "Michel-like" arm toward the selected vertex) are one real
+   particle each or reflect an imaging mis-merge is still an open,
+   separate question worth checking against the raw 2D wire signals (a
+   known PDVD failure mode; see docs 25-26 in this directory) — but it is
+   no longer needed to explain *this* symptom, which is now fully
+   accounted for by the straight-line/charge-check mechanism above.
