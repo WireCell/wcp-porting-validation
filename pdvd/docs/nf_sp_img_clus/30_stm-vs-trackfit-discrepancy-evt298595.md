@@ -26,12 +26,13 @@ diff <(python3 abtest/hash_archive.py --members $W/mabc-pr.zip) \
      <(python3 abtest/hash_archive.py --members $W2/mabc-pr.zip)
 
 # Q2 mechanism trace: rerun with the WCT_DQDX_DROP_DEBUG instrumentation
-# (toolkit e3dee831 + f622161e) to attribute form_map_graph's zero-charge
-# point drop to a specific segment and check its pre-drop shape.
-W3=/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_2_dqdxdbg2
+# (toolkit e3dee831 + f622161e + ed035408) to attribute form_map_graph's
+# zero-charge point drop to a specific segment, check its pre-drop shape,
+# and trace curr_pts's size/source at organize_segments_path_3rd's entry.
+W3=/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_2_currptsprobe
 mkdir -p "$W3" && cp $W/pctree-evt298595.tar.gz $W/pctree-evt298595.tlas "$W3"/
 cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
-WCT_DQDX_DROP_DEBUG=1 ./run_pr_evt.sh -s dqdxdbg2 39252 2
+WCT_DQDX_DROP_DEBUG=1 ./run_pr_evt.sh -s currptsprobe 39252 2
 grep "gi=2 cluster=86" "$W3/wct_pr_039252_2.log"
 ```
 
@@ -292,21 +293,76 @@ underlying fact (this connection bends significantly, it is not a straight
 chord), which only `TaggerCheckSTM`'s fitter, having no straight-line
 assumption anywhere in its own path, was unaffected by.
 
-**What this means for a fix**: the bug is not in the charge-drop check
-(it's doing exactly its job) and not obviously in `TaggerCheckSTM` either
-(it fit the real geometry correctly). It is that
-`organize_segments_path_3rd`'s degenerate-fallback branch assumes "collapsed
-to just two vertices" means "short/simple segment, a straight line between
-them is a fine approximation" -- true for most segments, false here, where
-the segment is long AND the graph itself (via the Steiner builder) already
-had better information (`detour=6.446`) that never reached this function.
-A fix would need to either (a) have this fallback consult the graph's own
-rough-path/Steiner route instead of the raw straight line when one exists,
-or (b) have the upstream stage that fed this segment only two points in the
-first place (still not traced -- *why* did the carried-forward point list
-collapse to 2 for this segment specifically) preserve more of the real
-path. I have not traced (b); it is the one remaining open link in the
-chain.
+### The last open link, closed: why does `fits()` collapse to 2 in the first place?
+
+Traced backward from the collapse (toolkit `ed035408`): added an env-gated
+log of `curr_pts`'s size and *source* (`segment->fits()` vs. `segment->wcpts()`)
+right at the top of `organize_segments_path_3rd`, before `examine_end_ps_vec`
+runs. For segment 86002 across ~10 calls (this cluster gets re-evaluated once
+per flash-matched candidate-vertex trial -- 5 candidates per the earlier
+`dual_chain` log line):
+
+```
+organize_segments_path_3rd: segment gi=2 cluster=86 pre-examine curr_pts=99 (from fits), fits_size=99, wcpts_size=128
+organize_segments_path_3rd: segment gi=2 cluster=86 pre-examine curr_pts=2 (from fits), fits_size=2, wcpts_size=128
+```
+
+`wcpts_size=128` -- the segment's real, raw, assigned 3D imaging points --
+is present and **identical in every single call**, whether `fits()` shows 99
+or 2. The 128 real points, which trace the actual bent shape (the same one
+`TaggerCheckSTM` fit successfully), are never missing or reassigned. What
+changes is only `fits()`: sometimes 99 points survive from an earlier
+resample/charge-check round, sometimes it has already been reduced to just
+the two vertex endpoints by that same round's `form_map_graph` drop.
+
+The code at `clus/src/TrackFitting.cxx:1546-1555` reads:
+
+```cxx
+if (!segment->fits().empty()) {
+    for (const auto& fit : segment->fits()) curr_pts.push_back(fit.point);
+} else {
+    for (const auto& wcpt : segment->wcpts()) curr_pts.push_back(wcpt.point);
+}
+```
+
+`fits().empty()` is false whenever there are 2 (or more) stale points --
+it does not distinguish "a real fitted path" from "collapsed to just the
+two vertex endpoints by the previous round's drop." So the branch always
+takes the (degenerate) `fits()` when the collapse has already happened,
+and **never falls back to the 128 real `wcpts()` sitting right there,
+unused, in the very same object**.
+
+That closes the loop completely. Root cause, traced end to end with data
+at every link:
+
+1. Segment 86002 is a real ~60 cm connection with 128 real, bent-path raw
+   points (confirmed: `TaggerCheckSTM` fit it cleanly on real charge; the
+   Steiner graph independently measured its true path detours 6.4x a
+   straight chord).
+2. At some round, its `fits()` collapses to exactly its 2 vertex
+   endpoints (from the charge-check drop discussed above -- itself
+   downstream of an earlier straight-line resample).
+3. `organize_segments_path_3rd` sees `fits()` non-empty (2 points) and
+   uses it as-is -- it has no test for "degenerate" vs. "real," so it
+   never reaches for the 128 real points in `wcpts()` that would break
+   the cycle.
+4. It resamples those 2 points into a fresh, dead-straight ~108-point
+   chord (confirmed: `max_perp_dev=0.000cm`).
+5. The next `form_map_graph` charge check correctly finds no charge on
+   106 of those 108 straight-line points (they are not on the real, bent
+   path) and drops them back to 2.
+6. Repeat. This is a **self-perpetuating fixed point**: nothing in this
+   cycle ever looks at `wcpts()` again once step 2 has happened once, so
+   it cannot self-correct, even though the data needed to correct it
+   never left the object.
+
+**What this means for a fix**: not in the charge-drop check (doing its job
+correctly) and not in `TaggerCheckSTM` (fit the real geometry correctly).
+The gap is in `organize_segments_path_3rd`'s `!fits().empty()` test, which
+should distinguish a meaningfully-sized/shaped `fits()` from a degenerate
+2-point collapse, and in the latter case prefer `wcpts()` (or the graph's
+own already-computed Steiner rough-path, which independently agrees the
+real path is not straight) over re-interpolating the same doomed chord.
 
 ### Is the STM leg real charge, or a fit artifact? (resolved)
 
@@ -330,49 +386,50 @@ the same real trajectory STM found.
   elsewhere (20/21 `mabc-pr.zip` members unchanged; the 21st differs only in
   the one intended field). Unconditionally inert when `save_stm_fit=false`
   (the production default), so no existing config's output changes.
-* **Question 2: mechanism confirmed, root cause open.** Investigation only,
-  nothing behavior-changing done (two env-gated, always-inert-by-default
-  DEBUG instrumentation additions, `e3dee831`/`f622161e`, both verified
-  byte-identical when the env var is unset). The `track_fit_global` gap is
-  now traced to a specific, data-confirmed mechanism: `organize_segments_path_3rd`'s
-  degenerate-fallback branch laid a dead-straight (`max_perp_dev=0.000cm`),
-  ~64 cm chord across a connection its own pipeline's Steiner-graph builder
-  had already flagged as bending 6.4x that chord length (`detour=6.446`),
-  and the downstream charge-support check correctly discarded 98% of that
-  straight line for finding no real charge on it. The STM=1 tag itself is
-  well-founded (`TaggerCheckSTM` fit the real, bent trajectory, all on real
-  charge). What is *not* yet found is why the segment's carried-forward
-  point list collapsed to just its two vertices in the first place, feeding
-  the straight-line fallback rather than a bent path.
+* **Question 2: root cause fully traced.** Investigation only, nothing
+  behavior-changing done (three env-gated, always-inert-by-default DEBUG
+  instrumentation additions, `e3dee831`/`f622161e`/`ed035408`, all verified
+  byte-identical when their env var/knob is unset -- `abtest/hash_archive.py
+  --members` against the doc pdvd/29 `_v450` baseline). The `track_fit_global`
+  gap is a self-perpetuating fixed point in `organize_segments_path_3rd`:
+  once a segment's `fits()` has collapsed to its two vertex endpoints (by
+  the pre-dQ/dx charge-support check dropping a bad resample), the
+  function's `!fits().empty()` test treats those 2 stale points as good
+  enough to resample from again -- producing another dead-straight chord
+  (`max_perp_dev=0.000cm`) across a connection the pipeline's own Steiner
+  graph had already measured as detouring 6.4x that chord (`detour=6.446`)
+  -- which the charge check then drops right back to 2, forever, without
+  ever falling back to the segment's 128 real, unused, bent-path `wcpts()`.
+  The STM=1 tag itself is well-founded (`TaggerCheckSTM` fit the real
+  geometry, all on real charge); `track_fit_global`'s sparse rendering is
+  a resampling artifact, not competing evidence.
 
 ## Recommendation / next steps
 
-1. **The one remaining open link**: trace why segment 86002's point list
-   collapsed to 2 before `organize_segments_path_3rd` ran (the fallback at
-   `clus/src/TrackFitting.cxx:1560-1567` is a *symptom*, triggered by
-   `curr_pts.size() <= 1`, of something upstream -- most plausibly the same
-   Steiner-graph instability the `sgp guard` lines already show for this
-   connection, meaning the segment's `wcpts()`/prior `fits()` were thin to
-   begin with). The `WCT_DQDX_DROP_DEBUG` instrumentation added here traces
-   forward from that collapse; the next debug pass should trace backward
-   from it -- instrument `organize_segments_path_3rd`'s `curr_pts.size()`
-   itself (or the segment-membership assignment in the Steiner rough-path
-   builder) for this segment/event.
-2. A candidate fix, now well-motivated by data rather than guessed: have
-   the degenerate-fallback branch consult the graph's own Steiner rough-path
-   between the two vertices (already computed, already known to detour
-   6.4x) instead of the raw straight line, when one exists — so a
-   genuinely bent, real connection gets a bent resample instead of a
-   straight one the charge check then guts. Not implemented here: it is a
-   behavior change to production PR-graph fitting (default-on for every
-   PDVD event, not an opt-in diagnostic), well outside what this debugging
-   session was asked to do, and it deserves its own knob/gate/validation
-   round per the usual bar (§4), not a same-session change bundled into an
-   investigation doc.
+1. **Candidate fix**, now precisely targeted and well-motivated by data:
+   in `organize_segments_path_3rd` (`clus/src/TrackFitting.cxx:1546-1555`),
+   change `if (!segment->fits().empty())` to also require the fitted path
+   have real extent/count (e.g. `fits().size() > 2` or a minimum chord
+   length check), falling back to `segment->wcpts()` — or better, to the
+   graph's own already-computed Steiner rough-path, which independently
+   agrees the real connection is not straight — whenever `fits()` has
+   degenerated to just its two vertex endpoints. This targets the exact
+   mechanism traced above and would let a genuinely bent, real connection
+   escape the 2-point fixed point instead of being asked to resample the
+   same doomed chord forever.
+2. **Not implemented here**: this is a change to production PR-graph
+   fitting behavior for every PDVD (and, since `TrackFitting` is shared,
+   potentially SBND) event, not an opt-in diagnostic -- outside what a
+   debugging session should do unilaterally. It needs the usual bar
+   (§4): a default-off knob or an explicit owner decision that this is a
+   universal improvement, a byte-identical-when-off gate, a knob-on smoke
+   run showing the recovered trajectory, and ideally a check on whether
+   any *other* long/branchy cluster in the existing validation manifests
+   changes shape once escaped from this fixed point.
 3. Whether cluster 86's TWO arms (the one just traced, and the separate
    low-z "Michel-like" arm toward the selected vertex) are one real
-   particle each or reflect an imaging mis-merge is still an open,
-   separate question worth checking against the raw 2D wire signals (a
-   known PDVD failure mode; see docs 25-26 in this directory) — but it is
-   no longer needed to explain *this* symptom, which is now fully
-   accounted for by the straight-line/charge-check mechanism above.
+   particle each or reflect an imaging mis-merge remains a separate, open
+   question worth checking against the raw 2D wire signals (a known PDVD
+   failure mode; see docs 25-26 in this directory) — but it is no longer
+   needed to explain *this* symptom, which is now fully accounted for by
+   the mechanism above.
