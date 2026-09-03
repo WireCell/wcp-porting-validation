@@ -61,4 +61,47 @@ for smp in ncpi0 nuecc48 mcp1k; do
 done
 echo "=== D99 FLASH GATE ARMS DONE rc_all=$rc_all $(date -Is)"
 echo "loadavg: $(cat /proc/loadavg)"
-exit $rc_all
+[ "$rc_all" -eq 0 ] || { echo "arms failed; not gating"; exit $rc_all; }
+
+# ---------------------------------------------------------------------------
+# The gate itself.  This lives HERE, not in the doc, on purpose: the expected-
+# diff column list is the whole subtlety of this gate, and an instruction that
+# only exists in prose has to be found and retyped correctly by whoever re-runs
+# it.  REFARM and NEWARM are parameters so this doubles as the post-master-merge
+# gate: point NEWARM at a fresh arm and REFARM at the last good one.
+#
+# DELIBERATELY NOT named BASE/ARM.  This script already uses BASE for $PWD
+# (inherited from d92_epoch_gate.sh), so `BASE=${BASE:-d92gate}` silently kept
+# the PATH: every leg looked for work-<smp>-/home/.../sbnd_xin, three failed
+# loudly and two reported PASS on zero events.  Both bugs are fixed (the tools
+# now refuse an empty comparison); the names stay distinct so it cannot recur.
+REFARM=${REFARM:-d92gate}
+NEWARM=${NEWARM:-d99fix}
+EXPECT=T_cluster:flash_id,T_cluster:flash_time_us,T_cluster:flash_pe
+gate_rc=0
+run() { echo; echo "--- $1"; shift; "$@"; rc=$?; echo "    rc=$rc"; [ $rc -eq 0 ] || gate_rc=1; }
+
+run "stage A, Q/L member content" \
+    python3 scripts/d97_ql_gate.py "$NEWARM" "$REFARM" ncpi0 nuecc48 mcp1k
+for smp in ncpi0 nuecc48 mcp1k; do
+    run "stage B archives, $smp" \
+        python3 scripts/pr85_hash_gate.py "work-$smp-${REFARM}pr" "work-$smp-${NEWARM}pr"
+done
+# EXHAUSTIVE, unlike pr87_root_tree_diff.py, which breaks at the first differing
+# branch of a tree and so cannot support a "nothing moved except these" claim.
+run "every ROOT branch (expected diffs: $EXPECT)" \
+    python3 scripts/analysis/d99_root_branch_census.py "${REFARM}pr" "${NEWARM}pr" \
+        --samples ncpi0,nuecc48,mcp1k --expect "$EXPECT"
+# The causal leg.  --stage pr is required: T_cluster is written from the PR-stage
+# grouping, and the PR chain re-clusters (evt 59685: 10 clusters in Q/L, 22 in PR).
+run "predict which rows may move (PR-stage census)" \
+    python3 scripts/analysis/d99_flash_index_census.py --arm "work-{s}-${NEWARM}pr" \
+        --stage pr --samples ncpi0,nuecc48,mcp1k \
+        --out "$LOGD/census-pr.tsv" --detail "$LOGD/detail-pr.tsv" --jobs "$PR_JOBS"
+run "the moved rows are exactly those, and read the sentinel" \
+    python3 scripts/analysis/d99_flash_ab.py --a "${REFARM}pr" --b "${NEWARM}pr" \
+        --samples ncpi0,nuecc48,mcp1k --detail "$LOGD/detail-pr.tsv"
+
+echo
+echo "=== D99 FLASH GATE VERDICT: $([ $gate_rc -eq 0 ] && echo PASS || echo FAIL)  $(date -Is)"
+exit $gate_rc

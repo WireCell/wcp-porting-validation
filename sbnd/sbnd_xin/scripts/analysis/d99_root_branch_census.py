@@ -50,11 +50,14 @@ def main():
     diffs = {}          # "tree:branch" -> set of (sample, event)
     only = {}           # "tree" -> list of (sample, event, side)
     nev = ntree = nbr = 0
+    missing = 0
     for smp in args.samples.split(","):
         da = os.path.join(args.root, "work-%s-%s" % (smp, args.armA))
         db = os.path.join(args.root, "work-%s-%s" % (smp, args.armB))
         if not (os.path.isdir(da) and os.path.isdir(db)):
-            print("skip %s: missing arm" % smp); continue
+            # NOT a skip: a mistyped arm name would otherwise compare nothing and
+            # report PASS.  A gate that passes on no data is worse than no gate.
+            print("MISSING ARM: %s or %s" % (da, db)); missing += 1; continue
         evts = sorted(int(m.group(1)) for m in
                       (re.match(r"pr_evt(\d+)$", d) for d in os.listdir(db)) if m)
         for e in evts:
@@ -88,6 +91,12 @@ def main():
             print("  %-18s %d events" % (t, len(v)))
     print("\ndiffering (tree, branch) pairs: %d" % len(diffs))
     rc = 0
+    why = "an unexpected branch moved"
+    if missing or nev == 0:
+        print("REFUSE: %d missing arm(s), %d events compared -- nothing was tested"
+              % (missing, nev))
+        rc = 1
+        why = "nothing was compared"
     for k in sorted(diffs, key=lambda k: (-len(diffs[k]), k)):
         tag = "EXPECTED" if k in expect else "UNEXPECTED"
         if k not in expect:
@@ -96,7 +105,7 @@ def main():
     if not diffs:
         print("  (none)")
     print("\nVERDICT: %s" % ("PASS -- every difference is an expected column"
-                             if rc == 0 else "FAIL -- an unexpected branch moved"))
+                             if rc == 0 else "FAIL -- " + why))
     return rc
 
 

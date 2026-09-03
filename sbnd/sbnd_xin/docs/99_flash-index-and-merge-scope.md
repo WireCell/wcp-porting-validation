@@ -26,20 +26,12 @@ python3 scripts/analysis/d99_flash_index_census.py --arm 'work-{s}-d97fvpr2' --s
     --samples nuecc48,ncpi0,mcp1k,mcp2k --out /home/xqian/tmp/d99-census-prod-pr.tsv \
     --detail /home/xqian/tmp/d99-detail-prod-pr.tsv --jobs 8
 
-# the gate arms (14 min at 8/8 jobs)
+# the arms (14 min at 8/8 jobs) AND all six gate legs, one command.
+# Existing arms are skipped (M13), so re-running it just re-gates.
 ./scripts/d99_flash_gate.sh
 
-# the four gate legs
-python3 scripts/d97_ql_gate.py d99fix d92gate ncpi0 nuecc48 mcp1k
-for s in ncpi0 nuecc48 mcp1k; do python3 scripts/pr85_hash_gate.py \
-    work-$s-d92gatepr work-$s-d99fixpr; done
-python3 scripts/analysis/d99_root_branch_census.py d92gatepr d99fixpr \
-    --expect T_cluster:flash_id,T_cluster:flash_time_us,T_cluster:flash_pe
-python3 scripts/analysis/d99_flash_index_census.py --arm 'work-{s}-d99fixpr' --stage pr \
-    --samples ncpi0,nuecc48,mcp1k --out /home/xqian/tmp/d99-census-pr308.tsv \
-    --detail /home/xqian/tmp/d99-flash-detail-pr308.tsv --jobs 8
-python3 scripts/analysis/d99_flash_ab.py --a d92gatepr --b d99fixpr \
-    --detail /home/xqian/tmp/d99-flash-detail-pr308.tsv
+# ... and as the post-master-merge gate, against any baseline:
+REFARM=d99fix NEWARM=<fresh-arm> ./scripts/d99_flash_gate.sh
 
 # unit tests
 cd /nfs/data/1/xqian/toolkit-dev/toolkit && ./build/clus/wcdoctest-clus
@@ -176,6 +168,32 @@ The three differing pairs are `T_cluster:flash_id` (66 events),
 used for it: it `break`s at the first differing branch of a tree and truncates
 its detail list, which is right for "did anything move?" and useless for
 "nothing moved except these three". Hence the exhaustive census script.
+
+All six legs are wired into `d99_flash_gate.sh` itself rather than left in this
+prose, because the expected-diff column list is the whole subtlety of the gate
+and an instruction that only lives in a doc has to be found and retyped. Wiring
+them up immediately earned its keep: it exposed that the driver's new `BASE`
+parameter silently kept the `$PWD` the script already had in that name, and —
+worse — that two of the legs reported **PASS having compared zero events**. Both
+tools now refuse an empty comparison, and a bogus arm name is the negative
+control:
+
+```
+$ d99_root_branch_census.py bogusarmpr d99fixpr --samples ncpi0 --expect T_cluster:flash_id
+REFUSE: 1 missing arm(s), 0 events compared -- nothing was tested
+VERDICT: FAIL -- nothing was compared            (rc=1)
+```
+
+The wired gate's own output, end to end:
+
+```
+--- stage A, Q/L member content            TOTAL events 308, identical 308   rc=0
+--- stage B archives, ncpi0/nuecc48/mcp1k  38 / 96 / 482 byte-identical       rc=0
+--- every ROOT branch                      PASS, only the expected columns    rc=0
+--- predict which rows may move            308 evts, 20156 matched, 158 OOB   rc=0
+--- the moved rows are exactly those       158 moved, 0 violations, 0 misses  rc=0
+=== D99 FLASH GATE VERDICT: PASS
+```
 
 **Causality** — `d99_flash_ab.py`, joining on cluster id per event against a
 census computed from the archives' cluster scalars with no ROOT file opened:

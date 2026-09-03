@@ -104,7 +104,10 @@ def main():
         da = os.path.join(args.root, "work-%s-%s" % (smp, args.a))
         db = os.path.join(args.root, "work-%s-%s" % (smp, args.b))
         if not (os.path.isdir(da) and os.path.isdir(db)):
-            print("skip %s: missing arm" % smp)
+            # NOT a skip: a mistyped arm name would otherwise compare nothing and
+            # report PASS.  A gate that passes on no data is worse than no gate.
+            print("MISSING ARM: %s or %s" % (da, db))
+            rc = 1
             continue
         evts = sorted(int(m.group(1)) for m in
                       (re.match(r"pr_evt(\d+)$", d) for d in os.listdir(db)) if m)
@@ -165,6 +168,9 @@ def main():
 
     print("\nTOTAL     events=%d  T_cluster rows=%d  differing rows=%d  events with a diff=%d"
           "  residual WRONG rows=%d" % tuple(grand))
+    if grand[0] == 0:
+        print("REFUSE: 0 events compared -- nothing was tested")
+        rc = 1
     print("VERDICT: %s" % ("PASS -- every differing row is an out-of-range cluster the census "
                            "predicted, and reads the sentinel after the fix" if rc == 0
                            else "FAIL -- see above"))
