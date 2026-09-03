@@ -2038,18 +2038,22 @@ against an arm run with the knob off has to scrub them.
 
 #### Levers left
 
-- **Port doc 78's busy-gated lazy walk into `connect_graph_relaxed_strict`.**
-  `ncomp = 509 > 200` says the gate would fire on exactly the clusters that
-  hurt. It carries doc 78's caveat — single-pass Kruskal vs the legacy
-  per-component Prim can differ on exact distance ties — so it needs the same
-  busy gate + knob + byte-identity gate, and it would help the *other*
-  detectors' imaging stages too. This is the general fix; the STM gate above
-  is the PDVD-shaped one.
-- **`get_closest_points` itself.** The seed loop calls `two.kd().knn(5, p1)`
-  and then discards both returned values, using the call only to run its body
-  five times. One kd query per seed is pure waste; it is production code
-  shared with every other flavor, so removing it is a behavior-preserving
-  perf change that needs its own gate, not a side edit here.
+- **Port doc 78's busy-gated lazy walk into `connect_graph_relaxed_strict`** —
+  **DONE**, `clus/docs/connect-graph-strict-perf-round1.md` (gate round 10).
+  The gate fires exactly as predicted (`ncomp=509 > 200`) and the stage on
+  039252/8 goes 1710.99 s → 797.65 s with a byte-identical `mabc-pr.zip`. It
+  ships as a separate flavor, `relaxed_strict_img_2d_rescue_long_wtrack_fast`,
+  which **no job selects**: doc 78's Kruskal-vs-Prim tie caveat still stands,
+  and with `stm_only_bundles` on this stage is 146 ms anyway, so the 2.15 ×
+  only applies in the knob-off regime. Select it with
+  `PDVD_PR_TLA="-S protect_graph_name='relaxed_strict_img_2d_rescue_long_wtrack_fast'"`.
+  Only 44.3 % of pairs are skipped, not doc 78's 97 %, because the gate defers
+  the closest-pair walk while `dir1`/`dir2` stay eager — that directional term
+  is the remaining half.
+- **`get_closest_points` itself** — **DONE** in the same round, together with
+  an allocation-free `Grouping::test_good_point`. Both are byte-identical
+  waste removal and both are **below the measurement noise floor**; the round-1
+  doc gives the arithmetic for why. Do not quote them as a speed-up.
 - **Revisit the 500 e `steiner_terminal_charge` floor** (§13.6). Note what
   it is and is not: it is the charge a 3D point must carry to be admitted as a
   *Steiner terminal* (`SteinerGrapher.cxx:432`, C++ default 4000 = prototype),

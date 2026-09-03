@@ -1,0 +1,39 @@
+doc clus/connect-graph-strict-perf-round1 -- round 10 of the doc 25 gate series
+date: 2026-09-03T06:11:28-07:00
+Change: connect_graph_relaxed_strict eval_pair_verdict hoist (refactor) + the doc 78
+busy-gated lazy walk as a NEW flavor relaxed_strict_img_2d_rescue_long_wtrack_fast
+(unselected by every job) + two byte-identical waste removals
+(get_closest_points' dead knn(5) seed query; allocation-free Grouping::test_good_point).
+OLD = 6365aa00 for this round's 9 files, the concurrent session's state untouched;
+NEW = same tree + this round.
+  lib_r10old clus md5 c018c30dc71d (fast flavor string absent)
+  lib_r10new clus md5 83055ddaa8f6 (fast flavor string present)
+  both built back to back by a scratch r10build.sh; the peer's uncommitted SBND
+  jsonnet fingerprint was 9dcc4029 before AND after; restore build reproduced
+  the NEW md5.  build only -- never install, a measurement run held local/lib.
+SOURCE: work-{nuecc48,ncpi0}-d99fix (same as rounds 8 and 9).
+arms: work-{nuecc48,ncpi0}-doc25r10{old,new} (48 + 19 events),
+      qlport sweep/doc25r10{old,new} (35 events); DL vertex off.
+
+SBND  : 201 SAME / 0 DIFF / 0 MISSING  (mabc-pr.zip member hashes, calib-pr JSON
+        minus the dual_chain timer, nusel-evt TSV)
+        -> /home/xqian/tmp/doc25gate/sbnd_compare_r10new.txt
+uBooNE: ZIPS: 35/35 content-identical
+        TAGGER: identical=34 diff=1 skip=0 (log: .../sweep/doc25r10new/ab_check_doc25r10old.log)
+        The one diff is idx=22 ev=6805 -- the documented bistable event
+        (5384-136-6805) on its two documented states: kine_pio_angle 109.512
+        (r10old) vs 14.8058 (r10new), the arms swapped relative to round 9,
+        with kine_pio_{theta_2,phi_2,dis_2} moving with it and the Bee zip
+        identical.  Same event, same two values, as rounds 1, 2, 3, 4, 6 and 9
+        (identical in 5, 7, 8).  Round 9's control (sweep/doc25r9oldB) ran the
+        OLD library a second time over the same 35 events and reproduced it
+        exactly, so 6805's state is fixed per relink, not per run.
+        See memory 'repeat_check blind to pi0' / doc 90 sec 6-7.
+
+PDVD side checks (not part of the shared gate):
+  039252/8  lazy vs eager, same binary: mabc-pr.zip member hash 20dc1d01... in BOTH,
+            all 25 split lines identical; stage 1710.99 s -> 797.65 s.
+  039252/16 pre-round vs this-round library, eager flavor, pinned + concurrent:
+            mabc-pr.zip member hash d9705233... in BOTH; stage 250.88 s vs 256.39 s
+            (no measurable win; see the doc sec 3 arithmetic).
+wcdoctest-clus: 263/263 test cases, 2863 assertions.
