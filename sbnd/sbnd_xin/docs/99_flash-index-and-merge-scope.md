@@ -505,10 +505,14 @@ Three details that are decisions, not incidentals:
 1. **PE is summed in ascending CHANNEL order, not row order.** The canonical
    flash PC's `value` is `FlashTensorToOpticalPCs`' `sum += pe` over channels
    `0..nchan-1`. Summing the opflash rows in channel order reproduces it
-   **bit-exactly**; summing in row order does not (measured: 273/273 vs 27.5%
-   agreement, worst error 1.5e-10). A unit test pins this with values whose two
-   orders give genuinely different doubles, and asserts they differ before
-   testing anything — otherwise the case would prove nothing.
+   **bit-exactly**; summing in row order does not. The evidence is §8 leg **D**,
+   which is as strong as this claim can get: `d99r2wrpr` reports `value()` read
+   straight off the merged flash PC's `value` array while `d99r2bothpr` reports
+   the channel-order sum of `opflash` rows, and the two agree by **exact**
+   float equality on all 20 156 rows — an independently written array, not a
+   tolerance. A unit test pins the ordering itself with values whose two
+   summation orders give genuinely different doubles, and asserts they differ
+   before testing anything — otherwise the case would prove nothing.
 2. **`ident()` becomes the GID.** So `T_cluster`'s `flash_id` changes *meaning*
    under the knob: it is the globally-unique gid, joinable to the `opflash` PC,
    not a per-input row id. §2 option 2 listed "changes what a shipped diagnostic
@@ -622,12 +626,38 @@ guard, and make `get_matched_flash()` delegate to `get_flash()` — fails **3 of
 the 6 cases and 13 assertions**; the other 3 cases still pass, so the suite is
 specific to the fix and not to the code's shape.
 
-Knob defaults are pinned in two more suites:
-`root/test/doctest_sbnd_pr_tracking_defaults.cxx` (`flash_by_gid` false) and
+Knob defaults are pinned in three more suites:
+`root/test/doctest_sbnd_pr_tracking_defaults.cxx` and
+`root/test/doctest_pdvd_tracking_defaults.cxx` (`flash_by_gid` false — on PDVD
+that assertion IS the tripwire holding §9's "not validated here"), and
 `match/test/doctest_qlmatching_config.cxx` (`merge_flash_pcs` false).
 
+**Stated gap.** The write fix's offset arithmetic (`shift_flash_indices`) has
+**no unit coverage** — only the default round-trip above. Reaching it from a
+doctest needs a multi-input `QLMatching` node, and the alternative, extracting a
+testable helper out of a production component, is what M10 forbids. Its evidence
+is leg **D**: two disjoint resolutions of the same question agreeing on every
+row. Naming the gap rather than papering over it.
+
 Full suites: `wcdoctest-clus` **2863** assertions, `wcdoctest-match` **38**,
-`wcdoctest-root` **4051**, all green.
+`wcdoctest-root` **4053**, all green.
+
+**Also verified in the CANONICAL cmake build, not only waf** (`toolkit/CLAUDE.md`
+builds with cmake and CI runs it with `-Werror`; waf is this tree's convention).
+Two traps worth writing down:
+
+- `root` is an **opt-in** package — a plain `cmake -S . -B build` prints
+  `WCT package 'root' disabled (missing dependency: ROOTSYS)` and silently
+  skips it, so none of this round's `root/` changes would have been compiled.
+  It needs `-DWITH_ROOTSYS=$(root-config --prefix)`, and adding it to
+  `CMAKE_PREFIX_PATH` is not enough.
+- tests are **off by default** (`WCT_WITH_TESTS=OFF`), so a green cmake build
+  says nothing about a new test file being picked up.
+
+With both on: build **rc=0, zero warnings**; aggregate `wcdoctest` **684 cases /
+185 097 assertions**, all passing, and the 6 new `flash_by_gid` cases are in that
+count — which is what proves cmake's `file(GLOB doctest*.cxx)` found the new
+file, something the waf build cannot tell you.
 
 ## Compiled-config proof
 
@@ -670,7 +700,22 @@ and it is **not** in either of this round's commits.
   config carries either key.
 - **PDVD carries the read knob in C++ and no config sets it.** The gid-uniqueness
   precondition (§6 detail 3) has not been checked for PDVD's
-  `opflash_phys_gid` / `shared_flash` encodings. Check that before wiring it.
+  `opflash_phys_gid` / `shared_flash` encodings. Check that before wiring it;
+  `doctest_pdvd_tracking_defaults.cxx` asserts the default stays false so the
+  omission is enforced rather than remembered.
+- **Scope of what the gate actually exercised.** The arms carry the `flash`,
+  `light`, `flashlight` and `opflash` PCs but **no `flashcov`** — that PC exists
+  only when the light chain ran with `emit_coverage`, and none of these inputs
+  did. So the write fix's `flashcov.flash` shift, and the merge's
+  emplace-vs-append path for that name, are **untested by these 308 events**.
+  The logic is uniform with the three PCs that were exercised, but say so rather
+  than let a reader assume coverage the manifest did not provide.
+- **`Facade_Flash.h`'s `operator bool()` contract was rewritten** to name both
+  producers and their separate reasons for returning false, and to state that
+  `ident()`/`type()`/`errors()`/`covs()` mean different things on the gid path.
+  §1's whole root cause was an implementation drifting from its declared
+  contract; adding a second producer of invalid Flashes without amending that
+  contract would have re-created the same failure mode.
 
 ## If the owner wants to flip
 
