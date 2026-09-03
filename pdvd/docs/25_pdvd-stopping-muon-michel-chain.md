@@ -1026,6 +1026,12 @@ mkdir -p /home/xqian/tmp/pinlib && cp -p ../../toolkit/build/*/libWireCell*.so /
 PDVD_MAX_JOBS=6 ./stm/run_campaign.sh stm1 all                      # full chain (-nu -stm-fit): stage -> clus(-save-pctree -calib) -> pr; 3-80 min/event at the 500 e floor
 PDVD_MAX_JOBS=12 STM_PR_MODE=-stm ./stm/run_campaign.sh stm2 all    # cosmic-tagger arm (-stm -stm-fit), ~1 min/event -- the population arm of 13.6
 ./stm/run_analysis.sh stm2                                          # census, contrast census, STM sample + tiers, dQ/dx field check, Michel routes 3-4
+# 13.6 follow-up: is the flat stop end real?  (each line writes its own tsv next to the script)
+python3 stm/stm_eval_anchor.py  --tag stm2 --out stm/stm_eval_anchor_stm2.tsv   # census window vs the tagger's own stop (res_length)
+python3 stm/residual_tail.py    --tag stm2 --out stm/residual_tail_stm2.tsv     # what the residual past that stop is made of
+python3 stm/end_reach.py        --tag stm2 --out stm/end_reach_stm2.tsv         # imaging charge past the fit end + perpendicular control
+python3 stm/raw_bragg_profile.py --tag stm2 --out stm/raw_bragg_stm2.tsv        # Bragg contrast from the charge alone + ENTRY-end control (~15 min)
+python3 stm/raw_bragg_profile.py --tag stm2 --veto 0.8 --out stm/raw_bragg_stm2_tight.tsv   # same, tight tube
 ./stm/run_michel_subset.sh stm2 stm3 stm/michel_subset_events.txt 6 # full chain on the contrast >= 1.5 events (Michel routes 1-2 need -nu dumps)
 ./stm/run_analysis.sh stm3
 # Magnify-tracking-PDVD, headless
@@ -1330,12 +1336,50 @@ Bragg contrast = median dQ/dx (rr < 2 cm) / median dQ/dx (20–40 cm)
 | ≥ 3.0 | 17 |
 
 Only 51 of 538 (9 %) show the ≥ 2× rise a stopping muon must have; the
-median contrast is 1.00 at the fitted stop and 0.95 at the other end, so it
-is not an rr-orientation flip — the STM verdict on PDVD is, for nine passes
-in ten, a track with a flat end. This is the same population §13.4 item 8
-saw on three events, now measured on 120: the tagger's dQ/dx evaluation
-(the KS tests against the MIP / Bragg hypotheses, with `mip_dqdx` 55000)
-passes flat ends, and §13.9 carries the fix (a contrast guard).
+median contrast is 1.00 at the fitted stop and 0.95 at the other end.
+
+**That census is a 3-point median in a 2 cm window, so it was re-derived
+five ways before anything was concluded from it** (`stm/stm_eval_anchor.py`,
+`stm/residual_tail.py`, `stm/end_reach.py`, `stm/raw_bragg_profile.py`, and
+the diagnostic `--anchor peak` of `collect_stm_sample.py`). Three of the
+five are negative controls, because each estimator has an end bias that a
+stop-end number alone cannot separate from physics.
+
+| # | question | PDVD `stm2`, accepted passes | control |
+|---|---|---|---|
+| 0 | is rr = 0 the stop end at all? | rr = max sits a median 4.6 cm from an active boundary (53 % within 5 cm); rr = 0 sits 20 cm inside | orientation confirmed |
+| 1 | is the census window where the TAGGER puts the stop? | **no**: `res_length` (fit path beyond the peak `eval_stm_core_impl` scores against) median **13.8 cm**, 77 % > 2 cm | SBND, same code, 7 arms: **1.6 cm**, 45 % (n = 11) |
+| 2 | re-anchored at that peak, is there a rise? | contrast median 1.70, 33 % ≥ 2× | — |
+| 3 | what is the material between the peak and the path end? | collinear with the muon to a median **3.7°** (83 % < 20°), 0.88 MIP, median 14 cm | a Michel is isotropic; this is track continuation, so the peak is a mid-track bump and row 2 is void |
+| 4 | is the flat end mechanical — an inflated terminal `dx`? | **no**: terminal `dx` / plateau `dx` = 1.00 (0.620 vs 0.623 cm); the flatness is in `dQ` | — |
+| 5 | what does the fitted profile actually do near the stop? | ÷ plateau: 1.30 (0–0.5 cm), 0.88–0.98 (0.5–2), 1.02–1.05 (2–5), 1.00 (5–10), 1.01 (10–20) | the 0.44 kV/cm muon table: **2.36** (0.5–2), 1.58 (2–5), 1.31 (5–10), 1.13 (10–20) |
+| 6 | is the Bragg charge there in the IMAGING and lost by the fit? | **no**: charge/cm in a 2.5 cm tube, stop 1.68 — but the same estimator at the **entry** end gives **1.72** (ratio 0.97); tighten the tube to 0.8 cm and both collapse to 1.16 / 1.18 | the entry end is the causal negative control: the "rise" is nearest-point pile-up at any terminus |
+| 7 | so where does the track end? | a median **30 cm** from any active boundary; only 8 % within 5 cm | — |
+| 8 | is the muon still there past the fit end? | **48 %** have ≥ 10 imaging points in a 25 cm cylinder along the muon direction beyond it | **6 %** in the same cylinder rotated 90° |
+
+Row 5 is the verdict: where the muon table demands 2.36× the plateau, the
+data reads 0.9×, and it stays flat out to 20 cm — this population has no
+stopping-muon profile at all, in the fit (rows 4, 5) or in the imaging
+charge (row 6). Rows 7 and 8 say why: these are MIP tracks whose
+**reconstruction** ends in the bulk, half of them with the muon's own charge
+still visible beyond the end. That is the skeleton-reach item of §13.9,
+whose independent raw-charge census already counts 320 clusters per 120
+events that look like stoppers while the tagger yields ~1 Bragg-clean track
+per three events.
+
+**The tagger is doing what it was built to do.** `eval_stm_core_impl` never
+tests for a Bragg rise of any size, and it never looks at the last 2 cm: it
+hunts a peak in the last `peak_range` cm, then asks whether the muon dE/dx
+table fits the 15–35 cm window ending at that peak better than a flat MIP
+line (`ks1 - ks2 < -0.02`, or the combined margin `< 0`). On this population
+it prefers muon over flat by a clear margin — median ks1 0.064 vs ks2 0.116,
+median ks1 − ks2 = −0.051, only 13 % on the marginal branch — because over
+35 cm the muon table rises just 13 % and a slightly sloped flat track beats
+a perfectly flat line. A relative criterion evaluated over 35 cm has nothing
+to say about the 2 cm that decide whether a muon stopped. So this is a
+**purity statement about the PDVD input**, not a defect in the tagger, and
+the same criterion on SBND's accepted passes gives a fitted contrast of 3.03
+(n = 5) — real Bragg peaks — against PDVD's 1.02.
 
 **The dQ/dx test.** `collect_stm_sample.py` (tagger verdict, status 0,
 ≥ 40 points, ≥ 6 rr bins, rr from ≤ 2 to ≥ 22 cm, contrast ≥ 2,
@@ -1425,11 +1469,23 @@ negative controls say why.
 ![](pics/pdvd_raw_stopper_michel_stm2.png)
 
 The Michel readout therefore waits on a stopping-muon sample whose stops
-are stops: the contrast guard of §13.9, plus a Michel extractor that walks
-the cluster from the fitted stop rather than the neutrino-PR vertex (§5's
+are stops: the §13.9 work order (skeleton reach first, then the existing
+guard family, then a contrast guard), plus a Michel extractor that walks the
+cluster from the fitted stop rather than the neutrino-PR vertex (§5's
 fallback, now the measured path). The 20-event full-chain subset `stm3`
 (`stm/run_michel_subset.sh`, the events of the contrast ≥ 1.5 tier, bundle
 floor 50 cm) is the sample to build it on.
+
+One route was ruled out afterwards rather than left open. The fit itself
+carries a residual past the stop the tagger scores against — a median 13.8 cm
+of it (§13.6 row 1) — and `eval_stm_core_impl`'s veto chain is literally
+written "If residual does not look like a michel electron", so that residual
+is the tagger's own Michel candidate and the one place none of the four
+routes looked. `stm/residual_tail.py` measures it: median 41.5 MeV under the
+same E = Q / 0.5 / 0.8 × 23.6 eV convention, but **83 % of the residuals lie
+within 20° of the muon direction (median 3.7°) at 0.88 MIP**. A Michel is
+emitted isotropically; this is track continuation. The residual is not a
+fifth Michel route, it is more evidence for §13.6.
 
 ### 13.8 Shared-component gates (`stm/gates/shared_gate_round{1..7}.txt`)
 
@@ -1464,14 +1520,30 @@ the PDVD pipeline; every new knob has a defaults doctest
 
 ### 13.9 Open items from the execution round
 
-- **The STM tagger needs a Bragg-contrast guard** (§13.6): nine accepted
-  passes in ten have a flat stop end (contrast median 1.00; 51 of 538 ≥ 2×).
-  Next round: a default-OFF `stm_bragg_contrast_guard` in `TaggerCheckSTM`
-  that rejects (or demotes to a new pass status) an accepted pass whose
-  rr < 2 cm / 20–40 cm dQ/dx ratio is below a threshold, gated on SBND and
-  uBooNE as usual, then the PDVD census again. Until it exists the
-  calibration sample is protected by the collector's own contrast cut, and
-  every Michel route that trusts the tagger's stop is blind (§13.7).
+- **STM purity on PDVD is an input problem, with a cheap tagger backstop**
+  (§13.6). The accepted population is MIP tracks that end in the bulk: the
+  profile is flat where the muon table demands 2.36× the plateau, the
+  imaging charge shows no rise either (stop 1.68 vs entry control 1.72), the
+  end sits a median 30 cm from any boundary, and 48 % still have the muon's
+  charge beyond it (6 % in the perpendicular control). Order of work:
+  1. **the skeleton-reach / premature-end item below** — the root cause, and
+     the only lever that also *grows* the calibration sample;
+  2. turn on the **existing** guard family in the PDVD job before writing any
+     new C++: `stm_accept_guards` is `false` there by the §2.3 "STM is the
+     signal" choice, and its `guard_ratio2_max` = 2.0 cap alone would veto
+     87 of 702 accepted passes (12 %), with the desert / spike guards on top;
+  3. only then a default-OFF `stm_bragg_contrast_guard`. It is genuinely
+     additive — `eval_stm_core_impl` scores a 15–35 cm window ending at a
+     peak it hunts, and never reads the last 2 cm — but key it on a window
+     with more than the census's 3–4 points (the fine profile above shows the
+     0–0.5 cm bin is the odd one at 1.30, so 0.5–3 cm vs 20–40 cm is the
+     honest pair), and calibrate the threshold on the SBND accepted set
+     (fitted contrast 3.03, n = 5) before gating on SBND and uBooNE.
+
+  Until then the calibration sample is protected by the collector's own
+  contrast cut, and every Michel route that trusts the tagger's stop is
+  blind (§13.7) — now with a mechanism: the residual those routes searched
+  is collinear muon continuation (3.7°, 0.88 MIP), not a Michel.
 - **The full chain is 30–80× slower than the tagger arm at the 500 e floor**
   (§13.6): the denser skeletons feed 24–43 bundles per event into the
   per-bundle neutrino PR, 3–80 min per event on one core, and the
@@ -1496,11 +1568,14 @@ the PDVD pipeline; every new knob has a defaults doctest
 - **The near-CRP dQ/dx rise** (§13.4 item 6): +50 % over the last 30 cm before
   either anode plane. Field response / SP / physics? Owner item; until known,
   30 cm margins and the |x| > 305 cm exclusion stand.
-- **STM purity on PDVD**: the tagger accepts flat MIP tracks that end in the
-  bulk (no Bragg rise) — likely clustering breaks / dead regions; a hand scan
-  of the `stm1` STM set (blind, per §9.2) is the re-derivation §2.3 asked for.
-  The calibration sample is protected by the collector's Bragg-contrast cut
-  regardless.
+- **STM purity on PDVD**: measured above — flat MIP tracks ending in the bulk,
+  48 % with the muon's charge continuing past the fit end (6 % control), so
+  "clustering breaks / dead regions" is now the leading reading rather than a
+  guess. A blind hand scan of the `stm1` STM set (per §9.2) is still the
+  re-derivation §2.3 asked for, and it is now a *targeted* one: scan the 48 %
+  reach-positive set against the 43 % reach-empty set (`stm/end_reach_stm2.tsv`)
+  and ask what ends the cluster. The calibration sample is protected by the
+  collector's Bragg-contrast cut regardless.
 - **Unnamed post-round-1 STM exits** (half of the evaluated mains): name them
   (log-only change) before tuning anything.
 - **`nu_per_bundle` cost**: every matched bundle gets its own neutrino PR
@@ -1529,3 +1604,23 @@ the PDVD pipeline; every new knob has a defaults doctest
   Measured: E-field 0.44 kV/cm consistent on 5–25 STM muons (§13.6); the
   STM tagger accepts flat ends on PDVD (§13.6); no Michel spectrum yet, with
   the negative controls that say why (§13.7).
+- **2026-09-02** — follow-up on the §13.6 "flat stop end", triggered by the
+  owner's question ("I assume that I do not have a bug in the STM tagger").
+  No code changed in the toolkit; five analysis scripts added on the
+  wcp-porting-img side (`stm/stm_eval_anchor.py`, `stm/residual_tail.py`,
+  `stm/end_reach.py`, `stm/raw_bragg_profile.py`, `--anchor` in
+  `collect_stm_sample.py`). **Not a tagger bug**: `eval_stm_core_impl` is a
+  relative muon-vs-flat KS test over a 15–35 cm window ending at a peak it
+  hunts, with no absolute Bragg requirement and no look at the last 2 cm —
+  by design, and it prefers muon over flat by a clear margin on this
+  population. The census window was also 13.8 cm past that peak (0.62–1.6 cm
+  on SBND), which cost a re-derivation; re-anchoring raises the contrast to
+  1.70, but the material in between is collinear muon continuation (3.7°),
+  so the re-anchored number is void. What survives, with a negative control
+  on every estimator: the accepted PDVD population is flat where the muon
+  table demands 2.36×, in the fit *and* in the imaging charge (stop 1.68 vs
+  entry 1.72; 1.16 vs 1.18 in a tight tube), ends a median 30 cm from any
+  boundary, and 48 % have the muon's charge still there past the fit end
+  (6 % perpendicular control). §13.9 re-ordered: skeleton reach first, the
+  existing `stm_accept_guards` family second (its `guard_ratio2_max` cap
+  alone vetoes 12 %), a new contrast guard third.

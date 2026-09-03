@@ -49,6 +49,11 @@ REF_JSON = os.path.join(HERE, "pdvd_ref_dqdx.json")
 HYPS = {"muon": "MuonDeDx", "pion": "PionDeDx", "kaon": "KaonDeDx", "proton": "ProtonDeDx"}
 BINS = [(0, 2), (2, 5), (5, 10), (10, 15), (15, 20), (20, 30), (30, 40), (40, 60)]
 
+ANCHOR = "end"           # "end" (default, and the physically right one) = rr from the fit path end.
+                         # "peak" re-anchors at the Bragg peak eval_stm_core_impl scores against and
+                         # drops the res_length tail.  DIAGNOSTIC ONLY: doc 25 sec 13.6 shows that
+                         # tail is collinear muon continuation (median 3.7 deg, 0.88 MIP), so the peak
+                         # is a mid-track bump, not a stop -- do not quote field numbers from it.
 MIN_NPTS = 40
 MIN_BINS = 6
 MAX_RRMIN = 2.0
@@ -116,6 +121,16 @@ def iter_blocks(tag, events=None):
         t = f["T_rec_charge"].arrays(["x", "y", "z", "q", "nq", "rr", "ndf", "status", "reduced_chi2", "pass"], library="np")
         if len(t["ndf"]) == 0:
             continue
+        res_of = {}
+        if ANCHOR == "peak":
+            if "T_stm_eval" not in f:
+                continue
+            ee = f["T_stm_eval"].arrays(library="np")
+            # the eval chain short-circuits (flag_pass = A || B), so the LAST
+            # verdict==1 record of a (cluster, pass) is the accepting call.
+            for i in range(len(ee["verdict"])):
+                if ee["verdict"][i] == 1:
+                    res_of[(int(ee["cluster_id"][i]), int(ee["pass"][i]))] = float(ee["res_length"][i])
         tr = f["Trun"].arrays(["dQdx_scale", "dQdx_offset", "eventNo"], library="np")
         verdicts = read_verdicts(os.path.join(wd, f"wct_pr_{run}_{idx}.log"))
         for b in sorted(set(t["ndf"].tolist())):
@@ -124,11 +139,25 @@ def iter_blocks(tag, events=None):
             dx = t["nq"][mk]
             dx = np.where(np.abs(t["x"][mk]) > MAX_ABS_X, 0.0, dx)   # near-anode points: dqdx -> 0 (excluded from every profile)
             cid = int(b) // 10
+            rr = t["rr"][mk]
+            dqdx = np.where(dx > 0, dQ / np.maximum(dx, 1e-9), 0.0)
+            x, y, z = t["x"][mk], t["y"][mk], t["z"][mk]
+            chi2v = t["reduced_chi2"][mk]
+            if ANCHOR == "peak":
+                res = res_of.get((cid, int(b) % 10))
+                if res is None:
+                    continue        # no accepting eval record => no tagger stop to anchor on
+                rr = rr - res
+                keep = rr >= 0      # drop the residual tail the tagger set aside
+                if keep.sum() < 2:
+                    continue
+                rr, dx, dqdx = rr[keep], dx[keep], dqdx[keep]
+                x, y, z, chi2v = x[keep], y[keep], z[keep], chi2v[keep]
             yield dict(workdir=wd, event=ev, evtno=int(tr["eventNo"][0]), block=int(b), cluster=cid,
-                       rr=t["rr"][mk], dx=dx, dqdx=np.where(dx > 0, dQ / np.maximum(dx, 1e-9), 0.0),
-                       x=t["x"][mk], y=t["y"][mk], z=t["z"][mk],
-                       status=int(t["status"][mk][0]), npts=int(mk.sum()),
-                       chi2=float(np.median(t["reduced_chi2"][mk])),
+                       rr=rr, dx=dx, dqdx=dqdx,
+                       x=x, y=y, z=z,
+                       status=int(t["status"][mk][0]), npts=int(len(rr)),
+                       chi2=float(np.median(chi2v)),
                        verdict=verdicts.get(cid, {}))
 
 
@@ -210,10 +239,17 @@ def main():
     ap.add_argument("--events", help="comma list or file of <RUN6>_<idx>")
     ap.add_argument("--no-tagger", action="store_true", help="ignore the STM/TGM verdict and pass status (diagnostic)")
     ap.add_argument("--ref-suffix", default="", help="'' = 0.44 kV/cm tables (config); '_E050' = the 0.50 comparison set")
+    ap.add_argument("--anchor", choices=["end", "peak"], default="end",
+                    help="'end' = residual range from the fit path end (default, and the physically right "
+                         "anchor); 'peak' = re-anchor at the peak eval_stm_core_impl scores against -- "
+                         "DIAGNOSTIC ONLY, see doc 25 sec 13.6: that tail is muon continuation, so the "
+                         "peak is a mid-track bump and its field numbers must not be quoted")
     ap.add_argument("--min-contrast", type=float, help="override MIN_CONTRAST (sensitivity tiers, doc 25 sec 13.6)")
     ap.add_argument("--max-chi2", type=float, help="override MAX_CHI2")
     ap.add_argument("--max-shape-rms", type=float, help="override MAX_SHAPE_RMS")
     args = ap.parse_args()
+    global ANCHOR
+    ANCHOR = args.anchor
     global MIN_CONTRAST, MAX_CHI2, MAX_SHAPE_RMS
     if args.min_contrast is not None: MIN_CONTRAST = args.min_contrast
     if args.max_chi2 is not None: MAX_CHI2 = args.max_chi2

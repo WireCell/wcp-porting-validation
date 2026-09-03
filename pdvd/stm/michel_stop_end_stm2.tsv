@@ -1,0 +1,2 @@
+# Michel candidates anchored on the STM stop end, tag stm2: max_dist 5.0 cm, max_len 40.0 cm, min_contrast 0.0
+event	evtno	cluster	nu_index	contrast	mu_L_cm	stop_x	stop_y	stop_z	dist_cm	kine_best_MeV	kine_charge_MeV	kine_range_MeV	segQ_E_MeV	length_cm	pdg	shower_id	conn	f7	f7_filled
