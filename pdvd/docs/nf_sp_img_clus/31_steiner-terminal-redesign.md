@@ -8,41 +8,53 @@ Steiner terminals after; the owner has opened this thread directly, which
 supersedes that ordering. Doc 26's *other* case, 039349/53, was closed by
 doc 27 as a stale-geometry face swap, not over-clustering.
 
-**Scope: this round changes no code and no config.** It examines the current
-algorithm, designs an alternative, and reports an initial feasibility study.
-No A/B gate is owed because nothing that can alter reconstruction output was
-touched.
+**Scope.** Round 1 examined the current algorithm, designed an alternative and
+reported a feasibility study, changing no code and no config. Round 2 ran the
+per-phase census round 1 asked for and added exactly one toolkit change: an
+**env-gated, log-only** terminal dump (`WCT_STEINER_PHASE_DUMP`, C++ default
+OFF). No production path moves, so no A/B gate is owed;
+`./build/clus/wcdoctest-clus` 270/270. **No fix is proposed or shipped here** —
+round 2 identifies a bug (§5.1) and round 3 fixes it.
 
 ---
 
-**TL;DR.** Two independent findings, and they point in different directions.
+**TL;DR.** Round 2 (§4.1, §5.1) ran the per-phase census this doc's round 1
+called for, and it **overturned round 1's own conclusion**. The corrected
+picture:
 
-1. **On the flagship event the terminal criterion is not the binding
-   constraint** (§4). In the 111 cm below V that has no Steiner coverage, the
-   sampler places 721 3-D points, **420 of them pass the terminal candidacy
-   gate** at PDVD's 500 e floor, and they occupy **263 distinct blobs**. Terminal
-   finding runs per blob, so Phase 1 must emit **≥263 terminals** there. One
-   survives into the tree. The control half of the same track has **72**
-   candidate-bearing blobs and keeps **40** terminals. So the filters between
-   Phase 1 and the tree keep **56 %** of terminals on the covered half and
-   **0.4 %** on the starved half. **Whatever redesign of the charge criterion we
-   ship, it cannot fix this event** — the terminals are already being made and
-   then thrown away.
-2. **A separate, previously unrecorded defect** (§5): along that same stretch
-   the V-plane per-point charge is **zero on 98.6 % of the sampled points while
-   the 2-D (wire, slice) charge map holds real charge — median 4979 e — at the
-   point's own cell**, for 677 of 721 points. U and W match the map exactly, so
-   this is not a face-attribution error. Mechanism not established.
+1. **The terminal finder IS the defect, and the filters are innocent** (§4.1).
+   Measured per phase inside `create_steiner_tree` on the real event: the
+   cluster the Steiner stage actually runs on has **1275 points along the
+   starved 111 cm, with a largest gap of 0.7 cm** — dense, continuous coverage.
+   `find_steiner_terminals` (Phase 1) returns **1** terminal there, against 45
+   on the control half. Phase 2 then removes 16 of 406 cluster-wide and
+   **Phase 3 removes nothing at all** (on every one of the 50 calls in the
+   event). So the terminals below V are never created; they are not filtered
+   away. Round 1's §4 said the opposite and was wrong — see §4.2 for why the
+   inference failed.
+2. **The V-plane zero-charge defect is now root-caused** (§5.1), and it is a
+   real bug with a named line. `charge_val == 0` **⟺ the point's induction wire
+   is the second segment of a wrapped strip** — perfect separation, 100 % / 0 %,
+   on 916 points in both regions. Event-wide, `P(charge==0 | segment==1)` is
+   **1.000 for anodes 4-7** (top drift) and ~0 for anodes 0-3, i.e. it is a
+   deterministic per-(apa, face, plane) property, not noise. Both `charge_val`
+   **and** `charge_unc` come back exactly 0, which `calc_charge_wcp` reads as
+   "no signal, don't hold it against the point" — so it is silent by
+   construction. Site: `BlobSampler.cxx:343-357`.
 
-Both reproduce unchanged on doc 27's fresh, fully self-consistent v7 arm, so
-neither is an artifact of the v6/v7 mixing doc 27 found.
+These are not two unrelated findings any more: (2) silently deletes an entire
+induction plane from every point along precisely the stretch where (1) fails to
+make terminals, and the terminal criterion is charge-based.
 
-The redesign (§6) therefore rests on doc 28's *population* evidence, not on
-039349/14. Its core idea — combine nearby wires over a fixed **physical**
-aperture instead of reading one snapped wire — is measured in §7 and works as
-intended: it removes essentially all of the peak-vs-losing candidate asymmetry
-that doc 28 identified as PDVD's dominant mechanism (losing/peak pass-rate ratio
-0.77 → 0.92-1.00 on PDVD, 0.68 → 0.93-1.00 on SBND).
+Everything reproduces on doc 27's fresh, fully self-consistent v7 arm, so none
+of it is an artifact of the v6/v7 mixing doc 27 found.
+
+The redesign (§6) still rests on doc 28's *population* evidence, and §7 measures
+its core idea — combine nearby wires over a fixed **physical** aperture instead
+of reading one snapped wire — which removes essentially all of the
+peak-vs-losing candidate asymmetry doc 28 identified (losing/peak pass-rate
+ratio 0.77 → 0.92-1.00 on PDVD, 0.68 → 0.93-1.00 on SBND). But the first thing
+to fix is (2), because it is an outright bug feeding the criterion (1) blames.
 
 ---
 
@@ -56,6 +68,24 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
 # geometry); d25r13fix is the older mixed arm, kept as a cross-check.
 python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py work/039349_14_d27fresh
 python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py work/039349_14_d25r13fix
+
+# Sections 4.1 / 5.1 (round 2) -- the per-phase terminal census.
+# The per-phase COUNTS are already TRACE lines in create_steiner_tree; they
+# only need the level raised, no code change:
+mkdir -p work/039349_14_d31phase
+cp -n work/039349_14_d27fresh/pctree-evt19689.{tar.gz,tlas} work/039349_14_d31phase/
+PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh -s d31phase -stm-fit 039349 14
+cd work/039349_14_d31phase
+wire-cell -l stderr -l "wct_pr_trace.log:trace" -L clus:trace -c .wct-pr_d31phase.json
+# The per-phase POSITIONS need the env-gated dump (toolkit, default OFF):
+WCT_STEINER_PHASE_DUMP=1 wire-cell -l stderr -l "wct_pr_dump.log:trace" \
+    -L clus:trace -c .wct-pr_d31phase.json
+
+# Section 5.1 -- the wrapped-strip root cause.  Needs the wires file's
+# channel/segment map; note the schema references faces/planes/wires by ARRAY
+# INDEX, not by `ident` (idents are local and repeat).
+python3 docs/nf_sp_img_clus/scripts/steiner_wrapped_channel_census.py \
+    work/039349_14_d27fresh/pctree-evt19689.tar.gz
 
 # Section 7 -- aperture feasibility, PDVD and the SBND control.
 python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
@@ -235,7 +265,7 @@ change is unchanged in `ChargeStepped`.
 
 ---
 
-## 4. The stage attribution: terminal selection is not what starves 039349/14
+## 4. The stage attribution (round 1 measurement, round 1 conclusion WITHDRAWN)
 
 Cluster 34 (`d27fresh`; 36 on `d25r13fix`) is one straight cosmic. Doc 26 §7.5
 established that its Steiner cloud stops at the vertex V (x 273, z 87): coverage
@@ -261,35 +291,57 @@ V→U line (above), endpoints excluded.
 candidates in 259 blobs, 1 terminal, 111.1 cm gap.)
 
 The starved half has **3.7× more** candidate-bearing blobs than the half that
-works, and ends with 1 terminal instead of ≥263. **The charge floor, the charge
-estimator and the peak finder all did their job here.** The loss is entirely
-between Phase 1 and the tree.
+works, and ends with 1 terminal. Round 1 concluded from this that the filters
+between Phase 1 and the tree were eating them. **That conclusion was wrong**;
+§4.1 measured it directly and §4.2 says where the inference failed.
 
-That is a negative result for the redesign in §6 as a fix *for this event*, and
-it is stated first deliberately: doc 30 shipped a knob on a plausible-but-unmeasured
-causal chain and it turned out to fire 93 times and change nothing. The
-surviving suspects, in the order they run:
+### 4.1 Round 2: the per-phase census, which names Phase 1
 
-- **`filter_by_reference_cluster`** (`:149-206`). Tests each terminal for
-  containment in the reference cluster's blob wire ranges via
-  `check_wire_ranges_match`, which requires **all three** planes to match. §5's
-  V-plane defect makes the V information along exactly this stretch unreliable,
-  which is the one place the two findings could couple — worth testing first.
-- **`filter_by_path_constraints`** (`:230-319`). Removes a terminal whose 2-D
-  distance to the path is < 1.8 cm on **any two of three** planes while its 3-D
-  distance exceeds 6 cm. Self-reinforcing: the path is built from the previous
-  skeleton, so a cloud that already stops at V supplies a path that stops at V.
-- **The retile** (`ImproveCluster_2` / `steiner_refresh`), which can hand
-  `create_steiner_tree` a different cluster than the one measured here.
+The counts were already in the code as `SPDLOG_LOGGER_TRACE` lines
+(`SteinerGrapher.cxx:39,55,68,78`); they only needed the level raised. Positions
+needed one env-gated, log-only dump (`WCT_STEINER_PHASE_DUMP`, default OFF).
+Over all 50 `create_steiner_tree` calls in the event:
 
-**Round 1 of the next round is a per-phase terminal count** — a log line
-reporting `steiner_terminals.size()` after each of phases 1, 2, 3 and 4, which
-is instrumentation, not an algorithm. Success criterion: it names the phase that
-takes 263 terminals to 1.
+- **Phase 3 (`filter_by_path_constraints`) removed nothing at all** — not one
+  terminal, in any call.
+- **Phase 2 (`filter_by_reference_cluster`) removed 797 of 12131** cluster-wide,
+  ≈ 6.6 %, with `wire_tol=1 adjacent_slice=true` confirmed in the log line.
+
+For the call that builds our track's tree (identified by its output: 1726
+steiner points and 394 terminals, matching the calib dump exactly):
+
+| phase | terminals | below V | above V |
+|---|---|---|---|
+| cluster's own points (`P0`) | **5705** | **1275**, largest gap **0.7 cm** | 694 |
+| P1 `find_steiner_terminals` | 406 | **1** | 45 |
+| P2 `filter_by_reference_cluster` | 390 | **1** | 40 |
+| P3 `filter_by_path_constraints` | 390 | **1** | 40 |
+
+The cluster the Steiner stage actually runs on **covers the starved 111 cm
+densely and continuously — 1275 points, largest gap 0.7 cm.** Phase 1 returns
+**one** terminal from it. The filters then take 1 → 1.
+
+**So the terminal finder is the defect, exactly where the owner's brief aimed,
+and the redesign of §6 is aimed at the right stage after all.**
+
+### 4.2 Why round 1's inference failed — worth recording
+
+Round 1 argued: 263 blobs below V hold a candidate, terminal finding is
+per blob, therefore Phase 1 must emit ≥263 terminals. Each step is true of the
+**input** point cloud. But `CreateSteinerGraph` **retiles** the cluster before
+building the tree, and the retiled cluster is a different object: 5705 points
+where the input cluster has 2348. The blobs Phase 1 iterates are not the blobs
+that were counted. A lower bound derived on one point cloud was applied to
+another.
+
+The general lesson, and it is the same one doc 30 taught: an inference chain
+over quantities that were never measured *at the site* is a hypothesis, not a
+result. The 20-minute census that would have tested it was available from the
+start — the TRACE lines already existed.
 
 ---
 
-## 5. A separate defect: V-plane charge present in the 2-D map, zero on the point
+## 5. The V-plane defect: charge present in the 2-D map, zero on the point
 
 Along the same stretch, cross-referencing each sampled point's stored per-plane
 charge against the 2-D `ctpc_a4f0p*` (wire, slice) charge map from the same dump:
@@ -309,14 +361,72 @@ the point keeps a healthy U/W RMS and still passes, which is why §4's candidate
 count is high despite a whole plane being blank. The defect is silent by
 construction.
 
-**Mechanism NOT established.** The attractive hypothesis is PDVD's wrapped
-induction strips: 1568 channels carry two segments whose lengths sum to exactly
-1720.04 mm, split at the CRU boundary at y = ±1685 mm, U and V only — W is never
-wrapped — and this track runs y −1189 → −1678, straight at that boundary, on the
-plane that is wrapped. That is circumstantial. The discriminating test, which
-this round does not do: are the affected V channels the two-segment ones, and
-was the `ctpc` row that holds the charge written from the *other* face's
-activity?
+### 5.1 Round 2: root-caused — the second segment of every wrapped strip
+
+The discriminating test round 1 deferred, run:
+
+| region | n | V wire is **segment 1** | `charge_val == 0` | agreement |
+|---|---|---|---|---|
+| below V (starved) | 721 | 711 (98.6 %) | 711 (98.6 %) | **1.000** |
+| above V (control) | 195 | 1 (0.5 %) | 1 (0.5 %) | **1.000** |
+
+**`charge_val == 0` ⟺ the point's induction wire is the second segment of a
+wrapped strip.** Perfect separation, both directions, on 916 points — stored-zero
+points are 100 % segment-1, stored-nonzero are 0 % segment-1.
+
+Event-wide it is deterministic per (apa, face, plane), which is what makes it a
+bookkeeping bug rather than a charge effect:
+
+| plane | segment | n points | `P(charge==0)` |
+|---|---|---|---|
+| U | 0 | 45825 | 0.088 |
+| U | **1** | 4362 | **0.563** |
+| V | 0 | 44741 | 0.084 |
+| V | **1** | 5446 | **0.582** |
+| W | 0 (never wrapped) | 50187 | 0.041 |
+
+and split by group, `P(charge==0 | segment==1)` is **1.000** for a4f0 V, a5f0 U,
+a6f1 V, a5f0 V, a7f1 V (and 0.980 for a4f0 U) but **0.000-0.16** for a0f0,
+a1f0, a2f1, a3f1 — i.e. **1.000 on anodes 4-7 (top drift) and ~0 on anodes 0-3**.
+Five of twelve groups are exactly deterministic. A charge fluctuation does not
+do that.
+
+**The site** is `BlobSampler.cxx:343-357`:
+
+```cpp
+IWire::pointer iwire = iwires[wire_index[ipt]];
+channel_ident[ipt]   = iwire->channel();
+channel_attach[ipt]  = p_chi2i[channel_ident[ipt]];   // operator[] on a miss -> 0
+auto ich             = channels[channel_attach[ipt]];
+auto ait             = activity.find(ich);
+if (ait != activity.end()) { charge_val[ipt] = ...; charge_unc[ipt] = ...; }
+```
+
+`p_chi2i` is an `unordered_map<int,int>` (`BlobSampler.cxx:231`) built from
+**this plane's** channel list. A wrapped channel is reachable from the face
+holding one segment and, in the failing groups, not listed under the face
+holding the other. `operator[]` on a missing key **inserts 0 and returns 0**, so
+the lookup silently resolves to `channels[0]` — the plane's first channel, whose
+activity is normally absent — and both `charge_val` and `charge_unc` stay
+exactly 0. That is why it is invisible: `calc_charge_wcp` (§1.2) reads a zero
+plane as *"no signal, don't hold it against the point"*, the point keeps a
+healthy two-plane U/W RMS, and nothing warns.
+
+**Still to confirm** (needs one probe line, not an algorithm): whether the
+wrapped channel's ident is genuinely absent from `iplane->channels()` in the
+failing groups, or is present and the failure is elsewhere in the chain.
+`channel_attach` is computed and would answer it immediately, but it is not
+persisted into this scope. Either way `operator[]` here converts a lookup miss
+into a wrong-channel read with no diagnostic, which is worth fixing on its own.
+
+**Scale, and why it matters for §4.1.** Roughly 11 % of all sampled points in
+this event (≈ 5600 of 50187) lose an entire induction plane silently. Along the
+starved stretch it is 98.6 % of points. Phase 1's criterion is charge-based and
+ANDs three planes, so it is being fed a systematically mutilated input over
+exactly the region where it fails to make terminals. That is now the leading
+candidate cause for §4.1 — **not yet proven**, because the retiled cluster's
+per-point charges are not dumped, and the input-cloud candidacy rate stayed high
+(58 %) with V zeroed. Establishing it is round 3's first task.
 
 A converse class also exists, at the few-percent level: points whose stored
 charge is nonzero but which do not match the map at their own cell (PDVD U,
@@ -478,22 +588,32 @@ Three honest qualifications:
 
 ## 8. What this round did not do, and what round 2 is
 
-Not done: no C++ change, no config change, no gate (none is owed). The
-mechanism of §5 is not established. §7's aperture is measured for its effect on
-the doc 28 ambiguity population only, not end-to-end through the tree.
+Round 2 added one toolkit change: an **env-gated, log-only** terminal dump in
+`create_steiner_tree` (`WCT_STEINER_PHASE_DUMP`, default OFF — `getenv` is null
+in production, the lambda returns immediately, no output changes).
+`./build/clus/wcdoctest-clus` 270/270. No config change; no A/B gate owed
+because nothing reachable in production moved.
 
-Round 2, in order:
+Still not done: whether the §5.1 bug is what breaks §4.1's Phase 1 (leading
+candidate, not proven); §7's aperture is measured on the doc 28 ambiguity
+population only, not end-to-end through the tree.
 
-1. **The per-phase terminal census on 039349/14** (§4). A log line, not an
-   algorithm. It names which of `filter_by_reference_cluster`,
-   `filter_by_path_constraints` or the retile takes 263 terminals to 1. Nothing
-   in §6 should be built before this answers, because §4 shows §6 cannot fix
-   this event.
-2. **The §5 discriminating test** — are the zero-V channels the wrapped
-   two-segment ones, and which face's activity wrote the `ctpc` row. Independent
-   of 1; likely a defect in its own right.
-3. **Only then** the §6 redesign, gated on §6.1's gap metric across a manifest,
-   with SBND and uBooNE byte-identity gates because `calc_charge_wcp` and
+Round 3, in order:
+
+1. **Fix the wrapped-segment charge lookup (§5.1).** It is an outright bug with
+   a named site, it silently zeroes ~11 % of this event's points and 98.6 % of
+   the starved stretch, and it feeds the very criterion §4.1 blames. Confirm the
+   `iplane->channels()` question with one probe on `channel_attach`, fix, and
+   re-run §4.1's census — the honest possibility is that this alone restores the
+   terminals and no redesign is needed for *this* event. Note the blast radius:
+   the fix is in `BlobSampler`, which every detector binds, so it needs the full
+   byte-identity treatment — though only a detector with wrapped channels can
+   move, which SBND and uBooNE do not have.
+2. **Re-measure Phase 1 with correct charges.** Only if terminals are still
+   missing does the §6 redesign become the answer for this event; §6 stands on
+   doc 28's population evidence regardless.
+3. **Then** the §6 redesign, gated on §6.1's gap metric across a manifest, with
+   SBND and uBooNE byte-identity gates because `calc_charge_wcp` and
    `Steiner::Grapher` are shared. `steiner_terminal_wire_tol` /
    `steiner_terminal_adjacent_slice` being off in SBND but on in PDVD (§3) is a
-   separate owner call that this campaign should surface, not silently resolve.
+   separate owner call this campaign should surface, not silently resolve.
