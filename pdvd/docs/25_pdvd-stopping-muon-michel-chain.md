@@ -2270,3 +2270,10 @@ against an arm run with the knob off has to scrub them.
   only half of a continuous track, which is the upstream defect to chase.
   Gates: PDVD 238/238, uBooNE 35/35 + tagger 34/35 with the known bistable
   6805 shown bistable on both binaries, SBND 96/96 + 38/38.
+- **2026-09-03** — owner's decisions on doc 26 §7.5 (doc 26 §8): no
+  duplicate-pair merge rule. 039349/14's half-covered steiner cloud goes to a
+  separate Steiner-terminals campaign (item 8 territory); 039349/53 is
+  over-clustering — the gap is real, the isolated piece must not be joined, and
+  the next round is proper separation after the chain's merges, following the
+  SBND precedent (`separate()` operating point, `unmerge_*` stages). Order:
+  over-clustering first, Steiner terminals after.

@@ -4,7 +4,10 @@
 terminated (they now finish); byte-identical everywhere the guard does not fire
 (gates in §5, §7.4). Toolkit commits `441b6de4` (round 1) and `87903977`
 (round 2, §7); this document, the gate scripts and their results are the
-wcp-porting-img record.
+wcp-porting-img record. The owner's decisions on the §7.5 questions are in
+§8 (2026-09-03): the duplicate-pair merge rule is NOT pursued; 039349/14 goes
+to a separate Steiner-terminals campaign, and the next round on this thread is
+the over-clustering behind 039349/53.
 
 **Correction (round 2, §7.1).** Round 1 attributed the hang to the
 `fetch_channel_from_anode` crash fix (toolkit `3e1854a8`) because the two
@@ -428,7 +431,7 @@ and doc pdvd/30's two-point fits, and it is what made both the loop and the
 duplicate. On 53 the question is why an isolated piece 75 cm away is in the
 same cluster and gets chords drawn to it.
 
-To judge:
+To judge (answered in §8):
 1. On 14: should the chord duplicate `36007` be dropped in favour of the fitted
    `36001` (the obvious merge rule: when a split is degenerate, keep the segment
    with more fit points on charge and remove the chord)? And is the missing
@@ -442,3 +445,83 @@ To judge:
 The Bee zips are `work/039349_14_d25r13fix/mabc-pr.zip` and
 `work/039349_53_d25r13fix/mabc-pr.zip` (layers `track_fit`, `shower_track`,
 `vertices` carry cluster 36's / 53's PR; not uploaded — upload is yours).
+
+## 8. Owner decisions (2026-09-03) and the next round
+
+The owner answered the three §7.5 questions the same day:
+
+1. **039349/14 (steiner cloud covering half a continuous track):** improve the
+   Steiner terminals. This is a **separate campaign**, not a merge rule in
+   `examine_partial_identical_segments`. The chord duplicate `36007` is a
+   symptom of the missing terminals below V and disappears when the cloud
+   covers the whole track; dropping it by a segment-level rule would treat the
+   symptom. Nothing in this thread touches it further. Starting points for that
+   campaign: doc 25 §13.4 item 8 (the Steiner terminal floor), doc pdvd/30's
+   two-point fits, and the measurement in §7.5 (632 points above V, 0 within
+   3 cm of the 111 cm V→A line, boundary not a readout-time cut).
+2. **039349/53 (isolated piece 75 cm away, chords across a charge void):** the
+   gap is real, so the two pieces should **not** be connected. The defect is
+   **over-clustering** — V's piece belongs to a different cluster (or its own),
+   and the three chords `53002`/`53003`/`53004` only exist because the cluster
+   boundary is wrong. The owner's framing: when clusters are passed along the
+   chain we sometimes have to merge them, but then we have to separate them
+   properly again, and the chain has graph-building devices for exactly this
+   (over-clustering avoidance). SBND had the same class of problem early on and
+   its chain was updated with proper separation.
+3. **Knob vs PDVD-only:** moot for this thread, since no merge rule ships.
+   Whatever the over-clustering round changes follows the standard bar
+   (default-OFF knob, key suppression, SBND + uBooNE byte-identity gates) — the
+   separation components are shared with SBND.
+
+**Order of work:** the over-clustering case (item 2, 039349/53) first; the
+Steiner-terminals campaign (item 1) after, as its own doc.
+
+### 8.1 What the next round has to establish (039349/53)
+
+Not started here; this is the scope, written down so the round opens with a
+Repro block and a measurable target.
+
+- **Which pass joined V's piece to the A→z 87 body.** PDVD's clustering runs
+  `separate()` at the drift-group stage with the full SEPARATION operating
+  point (`protodunevd/clus.jsonnet` around line 511: `track_recarve`,
+  `far_point_x_cut` 14 cm, `far_point_mid_dis` 60 cm, `dec1_guard_main_angle`
+  45, `iso_slab_split`, `collinear_*`), followed by `connect1(allow_mixed_faces,
+  respect_separate_family)`, `deghost`, `examine_x_boundary`, `neutrino`,
+  `isolated`. A 75 cm charge void with no collinearity argument should not
+  survive `separate()`; so either an earlier merge pass produced a shape
+  `separate()` does not split (a per-APA/face `connect1`, `parallel_prolong` at
+  35 cm, `extend_loop`), or a later pass (`connect1` at group scope, `neutrino`,
+  or the Q/L-side bundle grouping) re-joined them, or the PR-side
+  `find_other_segments` chords are what associates the piece. The first task is
+  the census: run the `_keep` clustering on 039349/53 with the per-pass Bee
+  dump (`trace_bee`-style) and name the pass whose output first contains both
+  pieces under one cluster id. Doc 96 did this for SBND (`96_over-clustering-
+  and-missing-trackfit.md`: over-clustering fused in imaging vs in clustering;
+  `dec2` dead for in-time clusters; `track_recarve` already splitting one case)
+  and doc 97 shipped the rescue (`sep_fv_point`, now SBND production).
+- **The SBND precedent to port, not re-invent.** SBND's PR job has
+  `unmerge_bundle` and `unmerge_assoc` (`sbnd/clus.jsonnet` ~2003–2035; docs
+  `45_unmerge-bundle-main-associated.md`, `50_stm-fit-scope-and-unmerge.md`,
+  `53_unmerge-vs-cathode-crossers.md`) which undo the flash-collapse merge
+  before pattern recognition and re-separate main from associated pieces. PDVD's
+  `pr.jsonnet` deliberately has neither (its header, line 10: PDVD never runs
+  `examine_bundles`, doc 25 §4). If the census shows V's piece is attached at
+  the bundle/association stage rather than in clustering proper, the fix is an
+  unmerge-type stage for PDVD (fork by duplication, default OFF); if it is in
+  clustering, it is a `separate()`/`connect1` operating-point question, gated
+  on SBND because the components are shared.
+- **Success criterion.** On 039349/53 cluster 53: V's piece and the A→z 87
+  body carry different cluster ids in the pre-PR Bee layer; the PR tail then
+  produces no segment crossing the void (no `53002`/`53003`/`53004`
+  equivalents), and `examine_partial_identical_segments` has no duplicate pair
+  to split, so the round-1 guard does not fire on this event (its DEBUG
+  "degenerate split skipped" line disappears from the log). Everything else on
+  the 120-event manifest byte-identical with the knob off (`r13_loop_gate.py`
+  style hash pairs), and a census of how many other `_keep` events change with
+  the knob on, each looked at.
+- **Inputs on disk.** `work/039349_53_keep/` (Q/L outputs + pctree),
+  `work/039349_53_d25r13fix/` (PR outputs, `mabc-pr.zip`, the calib dump used
+  for the §7.5 picture), pinned libs `/home/xqian/tmp/doc25r13/lib`. Picture
+  script `stm/gates/r13_duplicate_pair_png.py` (CASES list) can be reused to
+  draw the two pieces with their new cluster ids.
+
