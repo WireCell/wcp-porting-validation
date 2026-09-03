@@ -145,9 +145,10 @@ python3 docs/nf_sp_img_clus/scripts/steiner_orphan_channel_census.py
 #     even created).
 #   * LD_LIBRARY_PATH pins a snapshot of local/lib: this is a shared tree and a
 #     peer's `wcbuild` mid-arm silently swaps the binary under you.
-# The knob must be set at CLUSTERING time: the PR stage's retile inherits its
-# charges from the input pctree rather than re-sampling, so flipping it in the
-# PR job alone is byte-identical (verified).
+# The knob must be set at CLUSTERING time: flipping it in the PR job alone is
+# byte-identical (verified).  See section 8.2's round-4 correction for WHY --
+# the retile does re-sample, but its activity map is keyed from `channels`
+# itself, so the knob has nothing new to find there.
 mkdir -p /home/xqian/tmp/d31r3lib && cp -a ../../local/lib/. /home/xqian/tmp/d31r3lib/
 for arm in off on; do
   W=work/039349_14_d31fix2$arm; mkdir -p $W
@@ -757,11 +758,12 @@ Two things make this a result rather than a null:
   entering phase 2 go 12131 → **12127**. A small number, but a non-zero one: the
   stage's own output moved, so the correction reached it. (The earlier check
   that flipping the knob in the PR job *alone* left the calib dump
-  byte-identical is consistent with this — the retile inherits its charges from
-  the input point cloud rather than re-sampling, so the fix has to be applied at
-  **clustering** time, which is where `pctree-evt*.tar.gz` is written.) An
-  11 %-of-points charge correction moved Phase 1 by 4 terminals in 12131 and
-  moved this track's tree by nothing at all.
+  byte-identical stands, and the fix does have to be applied at **clustering**
+  time, where `pctree-evt*.tar.gz` is written — but the reason given here
+  originally, "the retile inherits its charges rather than re-sampling", is
+  **wrong and withdrawn**; see §8.2's round-4 correction. The retile re-samples
+  through a full `BlobSampler` pass.) An 11 %-of-points charge correction moved
+  Phase 1 by 4 terminals in 12131 and moved this track's tree by nothing at all.
 - **Correcting the charge made the gate *stricter*, not looser** — 58.3 % →
   50.9 % below V, while the control half did not move at all. That is
   `calc_charge_wcp`'s `flag_p = (q > cut) || (q == 0)` (§1.2) doing exactly what
@@ -1131,9 +1133,14 @@ read out of the extended dump):
 
 Every clause of the prediction holds. Below V, **99.8 % of the points cannot be
 candidates at any threshold** — not because the charge is missing from the
-detector, but because the retile re-keyed it. Above V, 21.7 % can, and Phase 1
-returns 44 terminals from them. The 44-vs-1 asymmetry that opened this document
-is fully accounted for by one line of channel bookkeeping.
+detector, but because the retile re-keyed it.
+
+The counts close, which is a stronger tie-off than the fractions: 0.002 × 1239 ≈
+**2–3 points** below V can reach the gate at all, and Phase 1 — which suppresses
+non-maximal candidates within each blob (§1.3) — returns exactly **1** terminal.
+Above V, 0.217 × 631 ≈ **137** reach the gate and Phase 1 returns **44**. The
+44-vs-1 asymmetry that opened this document is fully accounted for by one line of
+channel bookkeeping.
 
 Cross-checks that keep this from being a coincidence:
 
@@ -1146,20 +1153,40 @@ Cross-checks that keep this from being a coincidence:
   retiled cluster — the rest of the cluster lies on (apa, face) volumes whose U
   plane is not broken.
 
-**This is why round 3's fix could not have worked.** `wrapped_channel_charge`
-changes `BlobSampler`'s `p_chi2i` lookup. The retile never consults `p_chi2i`:
-it rebuilds an activity map from the ctpc clouds, and the ident fallback the knob
-adds searches *that* map, which never contained the wrapped channel to begin
-with. §5.3 recorded the null result and could not explain it; the explanation is
-that the fix and the defect are in different objects. It also means the round-3
-fix is still correct and still worth having — it repairs the persisted point
-cloud that clustering, Q/L and the taggers read — it simply does not reach the
-Steiner stage.
+**This is why round 3's fix could not have worked, and §5.3's stated reason was
+wrong.** §5.3 wrote that the retile "inherits its charges from the input point
+cloud rather than re-sampling". **It does not.** `ImproveCluster_1::mutate` runs
+a full `BlobSampler` pass over the retiled blobs (`Aux::sample_live`,
+`improvecluster_1.cxx:148`), which does consult `p_chi2i`
+(`BlobSampler.cxx:383`). §8.2's own measurement is the proof: if the charges were
+inherited, the knob-ON retiled cluster would show the real V charge below V — the
+input cloud matches `ctpc_a4f0pV` on 677/721 there — and it shows 0.004.
+
+The actual reason the knob is inert inside the retile is narrower and worth
+stating exactly. `slice_activity`'s **keys are drawn from `channels` itself**
+(`improvecluster_1.cxx:840`), so the map can only ever contain segment-0-listed
+channels. The knob changes behaviour only on a `p_chi2i` **miss**, i.e. on an
+orphan wire — and there knob-ON searches an ident map that by construction cannot
+hold that orphan, while knob-OFF reads `channels[0]`'s entry, which was absent on
+this event. Both give 0, hence byte-identical. Note that this last step is
+**empirical, not structural**: `channels[0]` could carry activity in another
+event, in which case the two arms would differ (and the legacy arm would be
+importing a foreign channel's charge, §5.2's "wrong non-zero" failure mode).
+
+So the conclusion "set the knob at clustering time" is unchanged and still
+verified; only the mechanism attributed to it was wrong. The round-3 fix remains
+correct and worth having — it repairs the persisted point cloud that clustering,
+Q/L and the taggers read — it simply cannot reach the Steiner stage, because the
+retile discards those charges and re-derives them through a map that never had
+the wrapped channels in it.
 
 **Blast radius: PDVD only.** SBND and uBooNE have no continuations. PDHD has more
-than PDVD but **does not run the Steiner stage at all** — no `CreateSteinerGraph`
-in any `cfg/pgrapher/experiment/pdhd/*.jsonnet` (44 files) or
-`wcp-porting-img/pdhd/*.jsonnet` (10 files). That is the opposite of §5.2's
+than PDVD but **does not run the Steiner stage at all** — the strings
+`CreateSteinerGraph`, `cm.steiner` and `steiner` do not appear in any of the
+37 `cfg/pgrapher/experiment/pdhd/*.jsonnet` or the 10
+`wcp-porting-img/pdhd/*.jsonnet` files (the only hit in either tree is a
+`pdhd/docs/*.md`), and no PDHD entry point imports a `pr.jsonnet`. That is the
+opposite of §5.2's
 conclusion for the *sampler* bug, where PDHD was the worse-hit detector, and the
 difference is worth stating plainly so the two are not conflated.
 
@@ -1264,9 +1291,16 @@ Two findings that belong with the table:
   `establish_same_blob_steiner_edges` at `:107` and `:158`
   (→ `SteinerGrapher.cxx:723`). So inside the retiler, terminals are selected at
   the C++ default **4000 e** with `wire_tol = 0`, on every detector, unreachable
-  from jsonnet. Those terminals set the intra-blob 0.8 / 0.9 edge weights that
-  decide the shortest path later handed to Phase 3. PDVD is therefore running
-  **two different thresholds in one stage**, and only one of them is configurable.
+  from jsonnet. Those terminals set the intra-blob 0.8 / 0.9 edge weights of
+  `basic_pid` and `ctpc_ref_pid`, whose shortest paths become
+  `orig_path_point_indices` / `temp_path_point_indices` and feed
+  `hack_activity_improved` (`improvecluster_2.cxx:113`, `:164`, `:194`, `:199`).
+  They therefore shape **which blobs the retile creates at all** — upstream of
+  Phase 1, not merely upstream of Phase 3. (The path Phase 3 actually filters
+  against comes from `CreateSteinerGraph.cxx:266`, on a graph whose same-blob
+  edges were established at `:252` by the `sg` grapher, which *does* carry PDVD's
+  500.) PDVD is therefore running **two different terminal thresholds in one
+  stage**, the earlier and more consequential of which is not configurable.
 - **The other hard-coded 4000 is inert** — `calculate_vertex_charges`
   (`SteinerGrapher.cxx:936`, called with the literal at `:1146`) passes
   `charge_cut` into `calc_charge_wcp` but keeps only `.second`, and `charge_cut`
@@ -1284,6 +1318,14 @@ Two findings that belong with the table:
    at `improvecluster_1.cxx:840` and its twin at `retile_cluster.cxx:433`.
    Same shape as round 3: default-OFF knob, SBND/uBooNE structurally unaffected,
    the doctest above as the premise, §6.1's three metrics as the acceptance test.
+   One design point already settled so round 5 need not rediscover it: two wires
+   of the *same* plane can share a channel (5568 such strips on PDHD), so the
+   corrected lookup can write the same key twice in one slice. That is benign —
+   `PointTreeBuilding::add_ctpc` walks activity forward and writes the *same*
+   channel charge into both wires' ctpc rows, so the two writes agree by
+   construction. And on SBND/uBooNE wire index and channel-list index coincide
+   exactly, so the corrected code is byte-identical there **by construction**
+   rather than by gate.
 2. **Re-measure before designing.** The redesign's entire case on *this event* is
    the 108.5 cm gap. §8.2 says Phase 1 was fed a plane of zeros and one plane of
    truth over that stretch, and `ncharge > 1` then guarantees no candidate at any
