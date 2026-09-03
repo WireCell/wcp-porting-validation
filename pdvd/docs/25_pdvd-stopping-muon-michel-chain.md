@@ -1041,6 +1041,17 @@ for e in 16 4; do ./run_pr_evt.sh -s stm4 -stm-fit 039252 $e; done  # knob ON (t
 python3 stm/pr_cost_census.py --tag stm4
 ./run_pr_evt.sh -s stm4 -stm-fit 039349 60                          # the zero-STM negative control (0 candidates, chain must survive)
 PDVD_PR_TLA="-S nu_per_bundle_stm_only=false" ./run_pr_evt.sh -s stm4off -stm-fit 039349 60
+# 13.11 why ProtectBundle is slow, and the STM-only bundle gate
+WCT_RELAXED_EDGE_CENSUS=1 ./run_pr_evt.sh -s cens8 \
+    -pipe switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle \
+    039252 8            # kill once 'OC53CENSUS-S cluster ... ncomp=' prints; the per-pair lines are the expensive part
+for e in 8 16; do ./run_pr_evt.sh -s d25r11on $([ $e = 8 ] && echo -stm || echo -nu) 039252 $e; \
+    PDVD_PR_TLA="-S protect_stm_only_bundles=false" ./run_pr_evt.sh -s d25r11off $([ $e = 8 ] && echo -stm || echo -nu) 039252 $e; done
+CFGROOT=<cfg with common/clus.jsonnet + protodunevd/pr.jsonnet from HEAD> ../abtest/compile_all_cfg.sh /tmp/cfgA
+../abtest/compile_all_cfg.sh /tmp/cfgB && ../abtest/cmp_cfg.sh /tmp/cfgA /tmp/cfgB   # 16/16 NORMDIFF 0
+NEW_ARM=r9new NEW_LIB=/home/xqian/tmp/doc25gate/lib_r9new OLD_ARM=r9old OLD_LIB=/home/xqian/tmp/doc25gate/lib_r9old \
+    QL_SUFFIX=d99fix PR_JOBS=6 ./stm/gates/shared_gate.sh arms
+NEW_ARM=r9new OLD_ARM=r9old ./stm/gates/shared_gate.sh compare
 # 13.8 round 8 shared-component gate (both arms from d99fix -- grp0825's ql_evt*/ were retired away)
 NEW_ARM=r8new NEW_LIB=/home/xqian/tmp/doc25gate/lib_r8new OLD_ARM=r8old OLD_LIB=/home/xqian/tmp/doc25gate/lib_r8old \
     QL_SUFFIX=d99fix PR_JOBS=6 ./stm/gates/shared_gate.sh arms
@@ -1601,9 +1612,12 @@ the PDVD pipeline; every new knob has a defaults doctest
   `ProtectBundle`/connect stage alone took 29 min on 039252/8. **Addressed in
   §13.10** — the owner's choice, the per-bundle PR now runs only on
   STM-tagged bundles (`nu_per_bundle_stm_only`), which removes the larger of
-  the two cost terms (73 % of the `stm3` arm). `ProtectBundle` (14 % of the
-  arm, but 94.5 % of the pathological 039252/8) is **not** touched and stays
-  open there.
+  the two cost terms (73 % of the `stm3` arm). **`ProtectBundle` is addressed
+  in §13.11** by the mirror knob `stm_only_bundles`: on 039252/8 the stage
+  goes 1726.8 s -> 146.2 ms and the event 1821 s -> 74 s; on 039252/16
+  261.8 s -> 18.6 ms and 431 s -> 176 s. Both items are closed; what remains
+  is the 500 e imaging floor itself (next bullet but one) and the taggers,
+  which are now the whole PR-tail cost.
 - **Grow the dQ/dx sample** (§13.6): 5–25 tracks give a "consistent with
   0.44 kV/cm" verdict, not a measurement of the field. The contrast guard
   above plus the skeleton-reach fix below are the two levers; a 1000-event
@@ -1769,15 +1783,17 @@ consumer-visible consequence of item 4 above.
 
 #### What this does NOT fix, and the levers left
 
-`ClusteringProtectBundle` is untouched, and with the neutrino term gone it is
-now **65 %** of what remains (`stm4`, 3 events). It is the next cost item, and
+`ClusteringProtectBundle` is untouched **by this knob**, and with the neutrino
+term gone it is now **65 %** of what remains (`stm4`, 3 events). §13.11 goes
+on to measure why and ships the mirror gate; everything below was written
+before that round and is kept as the reasoning that led to it. It is the next cost item, and
 it is not free work in this mode: PDVD sets
 `protect_open_convicted_bundles=true`, so an STM-tagged main *does* open its
 own bundle and its unconvicted companions are still split — that part is
 needed. What is not needed is splitting bundles no STM main is in. A gate on
 `ClusteringProtectBundle`'s `beam_gids` set (the mirror of this knob, one
 stage earlier) is the natural next round; it is a different component and a
-different gate.
+different gate. **Done — §13.11.**
 
 Choices deliberately left open, any of which can replace or join this one:
 
@@ -1791,7 +1807,247 @@ Choices deliberately left open, any of which can replace or join this one:
 
 **Arms `stm1`, `stm2` and `stm3` predate this flip** and ran with the knob
 off. Any comparison against them must pass
-`PDVD_PR_TLA="-S nu_per_bundle_stm_only=false"`.
+`PDVD_PR_TLA="-S nu_per_bundle_stm_only=false"` — and, since §13.11,
+`-S protect_stm_only_bundles=false` beside it. Either knob alone reproduces
+neither arm.
+
+
+### 13.11 Why `ClusteringProtectBundle` is slow, and the STM-only bundle gate
+
+§13.10 removed the neutrino-PR term and left `ClusteringProtectBundle` as
+**65 %** of what remained, with the mirror gate named as the natural next
+round. This section measures where that time actually goes and ships the gate.
+
+#### The anatomy: one cluster, 98.8 % of the stage
+
+`work/039252_8_stm2/wct_pr_039252_8.log`, the heaviest event of the campaign:
+
+```
+[15:26:17.462] cluster 83 (main): 1085 blobs -> retained 329 + 12 fragment(s)
+[15:52:59.150] cluster 84: dropped the pre-split steiner_pc
+[15:53:16.907] MABC timing: ClusteringProtectBundle:pr took 1621436.286406 ms
+```
+
+Nothing is logged between those first two lines. **1601.7 s of the stage's
+1621.4 s (98.8 %) is a single `Cluster::connected_blobs` call on one cluster** —
+ident 84, unconvicted, 18876 blobs. Everything else the stage did — the other
+24 splits (25 clusters → 302 fragments in total), 26 convicted mains skipped,
+26 bundles opened by a convicted main, and every member it examined — cost
+19.7 s.
+
+The census (`WCT_RELAXED_EDGE_CENSUS=1`, arm `cens8`, killed once the line
+printed) names the size:
+
+```
+OC53CENSUS-S cluster nblobs=18876 npoints=93584 ncomp=509
+```
+
+509 connected components ⇒ 509·508/2 = **129 286 component pairs**, so
+1601.7 s / 129 286 = **12.4 ms per pair**. Both factors matter: it is not the
+pair count alone (SBND's own busy clusters reach num ≈ 1000 in the imaging
+stage and cost seconds, not minutes), and not the per-pair cost alone.
+
+It is **CPU, not memory**: `pr_rss_039252_8.csv` is flat at 3.58 GB for the
+whole 26 minutes (3.58 → 3.59 → 3.58). The five `num × num`
+`tuple<int,int,double>` arrays are only ~15 MB at num = 509, so no allocation
+pressure and no swap — the process is simply computing.
+
+#### Why one pair costs 12 ms
+
+`connect_graph_relaxed_strict.cxx`, flavor
+`relaxed_strict_img_2d_rescue_long_wtrack`, does per pair `(j,k)`:
+
+| work | cost |
+|---|---|
+| `get_closest_points` (`Facade_Util.h:90`) | ~20 strided seeds × (one `knn(5)` + a 5-step alternating nearest-point walk, 2 kd queries per step) ≈ 220 kd queries |
+| Hough directions, for clouds >100/>500 points closer than 80 cm | 2 × `vhough_transform` over a 30 cm ball — thousands of points binned per call in a dense cluster |
+| the CTPC path walks, **three** per pair (closest pair, `dir1`, `dir2`) | `dis`/1 cm steps, each step a `Grouping::test_good_point` = a 2D neighbour query in **each of 3 planes** |
+| S6 two-plane gap kill and S7 corridor flood-fill on the surviving band | per plane again, with a cell budget |
+
+Nothing is cached across pairs, and the whole `for j / for k>j` structure
+repeats at `:1637`, `:2170`, `:2190` and `:2245`.
+
+**There is no fast path in this file.** The doc 78 round-2/3 busy-gated lazy
+walk — the `eb_fast` / `po_fast` family that is SBND production ON — was
+threaded into `connect_graph_relaxed` only (`RelaxedFastCfg*`,
+`busy_num_threshold`); `connect_graph_relaxed_strict` never receives that cfg
+and contains no `lazy_walk`. Since PDVD's `ncomp = 509 > 200`, the doc 78
+busy gate **would** fire if the walk were ported — that stays a live lever
+below, not something already available.
+
+#### Why SBND does not pay this
+
+SBND's PR-stage protect runs the **same** graph flavor with the same
+`open_convicted_bundles`, and costs 31–257 ms per event
+(`work-nuecc48-doc25r8new`, six events: 31.4, 38.9, 46.7, 94.9, 95.9,
+257.4 ms). The whole difference is the beam window:
+
+| | SBND | PDVD |
+|---|---|---|
+| `graph_name` | `relaxed_strict_img_2d_rescue_long_wtrack` | same |
+| `open_convicted_bundles` | true | true |
+| `beam_window_low/high` | **200 / 2200 ns** | **−10 000 000 / +10 000 000 ns** |
+| bundles opened | ≈ 1 | every matched bundle (22 distinct gids on 039252/8) |
+| `ClusteringProtectBundle:pr` | 31–257 ms | 265 s – 27 min |
+
+PDVD's window is readout-wide **by design** (§2.1): there is no beam, and the
+stopping muon can sit anywhere in the readout. So the fix is not an
+approximation — it is scope, exactly what SBND's narrow window buys for free.
+
+#### The knob: `stm_only_bundles` (C++ default OFF)
+
+`ClusteringProtectBundle` gains `stm_only_bundles`. When true (and with
+`beam_window_only` on), a gid enters `beam_gids` only if **some** cluster
+carrying it is `Flags::STM`-tagged.
+
+Four properties worth stating, because they are not the obvious ones:
+
+1. **It reads the flag on any cluster in the bundle, not on the bundle's
+   main.** §13.10 measured that an STM-tagged activity need not be its
+   bundle's longest main (36 of 132 on the `stm3` arm). Gating on the main
+   would change *which bundles the neutrino PR sees split*, i.e. its input;
+   gating on the bundle changes only the cost. (On 039252/8 the two coincide:
+   all 10 STM-tagged clusters are mains.)
+2. **The gate is checked before `skip_convicted`**, so an STM main still
+   reaches the `open_convicted_bundles` branch exactly as it does with the
+   knob off. On PDVD the STM flag *is* the conviction (§2.3 sign inversion),
+   so that branch is what opens the STM bundle at all — checking after it
+   would make the knob a no-op.
+3. **The convicted cluster is still never split.** The per-member
+   `skip_convicted` guard is untouched: the STM muon itself keeps its shape,
+   its unconvicted companions are what get examined.
+4. **It is NOT byte-identical when on.** A cosmic bundle that is no longer
+   split keeps its over-clustered shape in `mabc-pr.zip` and
+   `calib-pr-evt*.json`. This is a scope decision, not a no-op — see the gate
+   below for the property that *is* preserved.
+
+Wiring: `cfg/pgrapher/common/clus.jsonnet` `protect_bundle(...,
+stm_only_bundles=null)` with the key-suppression idiom;
+`protodunevd/pr.jsonnet` `protect_stm_only_bundles=null`; PDVD job TLA
+`protect_stm_only_bundles = true` in `pdvd/wct-pr-perevt.jsonnet`.
+`PDVD_PR_TLA="-S protect_stm_only_bundles=false"` restores the every-bundle
+stage that arms `stm1`/`stm2`/`stm3` ran.
+
+#### Measured (arms `d25r11on` / `d25r11off`, same binary, same pctree)
+
+| | 039252/8 (`-stm`) | 039252/16 (`-nu`) |
+|---|---|---|
+| `ClusteringProtectBundle:pr` OFF | **1726.8 s** | **261.8 s** |
+| `ClusteringProtectBundle:pr` ON | **146.2 ms** | **18.6 ms** |
+| speed-up of the stage | **11 810×** | **14 080×** |
+| bundles: opened / refused for no STM tag | 10 STM gids / 58 mains refused | 8 convicted skipped / 82 mains refused |
+| clusters split → fragments, OFF | 25 → 302 | 47 → 509 |
+| clusters split → fragments, ON | 4 → 20 | 2 → 4 |
+| `CreateSteinerGraph:prrefresh` OFF → ON | 21.8 s → 220 ms | 9.4 s → 106 ms |
+| event wall OFF → ON | 1821 s → **74 s** (`-stm`: taggers only, no neutrino PR) | 431 s → 176 s (`-nu`: the full working-mode chain) |
+
+With the stage gone, the PR tail's cost on 039252/16 is now
+`TaggerCheckSTM` 89.3 s, `TaggerCheckNeutrino` 39.5 s, `CreateSteinerGraph`
+32.5 s — the bottleneck has moved to the taggers, which is where §13.6's
+500 e imaging floor shows up.
+
+#### What actually changes in the output
+
+The knob is a scope decision, so `mabc-pr.zip` and `calib-pr-evt*.json` are
+**not** byte-identical with it on. What changes is much narrower than that
+implies. On 039252/16 (`-nu`, the full chain), comparing the two arms'
+`calib-pr-evt298791.json` section by section:
+
+| section | on vs off |
+|---|---|
+| `candidates` (6 in both), `segments`, `showers`, `vertices`, `kine`, `tagger`, `track_shower`, `main_vertex`, `dqdx_ref`, `dead`, `proj`, `vertex_scoreboard` | **identical up to cluster-ident renumbering** |
+| `steiner` | 90 vs 417 entries — the grouping-wide dump of the bundles the gate no longer opens |
+
+The neutrino PR selected the **same six candidates**, same gids, same cluster
+idents, same `t0` / length / associated counts:
+
+```
+gid 67: cluster 111 (t0 2433.310 us, L 31.8 cm, 0 associated)
+gid 86: cluster 118 (t0 2836.280 us, L 345.4 cm, 0 associated)
+gid 104: cluster 42 (t0 3277.334 us, L 145.5 cm, 0 associated)
+gid 108: cluster 120 (t0 3499.737 us, L 428.4 cm, 0 associated)
+gid 144: cluster 37 (t0 4750.764 us, L 85.9 cm, 3 associated)
+gid 168: cluster 85 (t0 5593.753 us, L 75.2 cm, 0 associated)
+```
+
+One candidate (gid 108) shows differing `segments` / `showers` /
+`vertices` / `track_shower` rows, and every one of those differences is an
+**id**: `cluster_id: on=122 off=583`, `on=123 off=584`, `on=124 off=585`, with
+the derived `id` / `start_vertex_id` / `end_vertex_id` / `shower_id` following.
+The OFF arm created 509 fragments before those clusters were allocated, so the
+next free ident sat 461 higher. Strip every `id` / `*_id` / `cluster_id` field
+and **every section except `steiner` hashes identically**. No geometry, no
+kinematics, no tagger flag, no topology moved.
+
+Cluster idents are allocation-order artifacts (`alloc_ident`), not physics —
+but they *are* the join key a downstream consumer would use, so any comparison
+against an arm run with the knob off has to scrub them.
+
+#### Gates
+
+- **Compiled-config diff-to-zero, every detector.**
+  `abtest/compile_all_cfg.sh` before/after (the "before" tree is `cfg/` with
+  `common/clus.jsonnet` and `protodunevd/pr.jsonnet` restored from `HEAD`),
+  `abtest/cmp_cfg.sh`: **16/16 jobs, `NORMDIFF 0`, same element count, same
+  order, same edges — OVERALL PASS**, including `sbnd_pr`, the job that binds
+  `ClusteringProtectBundle`. The shared `common/clus.jsonnet` edit reaches no
+  other detector's compiled config.
+- **PDVD PR job.** Knob off (`-S protect_stm_only_bundles=false`) is
+  byte-identical to the pre-knob compile; knob on adds exactly one line,
+  `"stm_only_bundles" : true`.
+- **STM-bundle invariance on 039252/8** — the property the knob must not
+  break. The four split lines produced with the knob ON,
+
+  ```
+  cluster 41 (main): 211 blobs -> retained 180 + 6 fragment(s) holding 31
+  cluster 42 (main): 23 blobs -> retained 18 + 1 fragment(s) holding 5
+  cluster 77 (main): 8 blobs -> retained 7 + 1 fragment(s) holding 1
+  cluster 83 (main): 1085 blobs -> retained 329 + 12 fragment(s) holding 756
+  ```
+
+  are byte-identical to the same four lines in the knob-off log. Every bundle
+  the neutrino PR will read is split exactly as before; only bundles it never
+  reads lost their splits.
+- **`./build/clus/wcdoctest-clus`**: 257/257 test cases, 2815 assertions
+  (+1 case, +9 assertions: `doctest_protect_bundle_stm_only_defaults.cxx`
+  pins `stm_only_bundles == false` together with `beam_window_only == false`,
+  `open_convicted_bundles == false`, `skip_convicted == true`).
+- **Shared-component gate round 9** (`stm/gates/shared_gate_round9.txt`):
+  SBND **201 SAME / 0 DIFF / 0 MISSING** over the 48 + 19 event
+  `d99fix` manifest (Bee member hashes, calib-pr JSON minus the `dual_chain`
+  timer, `nusel-evt` TSV); uBooNE **ZIPS 35/35 content-identical**, **TAGGER
+  34/35 identical**. The one tagger diff is idx 22 ev 6805 — the documented
+  bistable event 5384-136-6805, on its two documented states
+  (`kine_pio_angle` 14.806 vs 109.512), which also differed in gate rounds 1,
+  2, 3, 4 and 6 and was identical in 5, 7 and 8. **Causal control**: the
+  `r9old` library run a second time over the same 35 events
+  (`sweep/doc25r9oldB`) reproduces `r9old` exactly (ZIPS 35/35, TAGGER 35/35),
+  so the binary is deterministic run to run and 6805's state is fixed per
+  relink, not per run. Arms were built back to back with **only**
+  `ClusteringProtectBundle.cxx` toggled; the concurrent session's live WIP
+  fingerprint (`Facade_*`, `QLMatching.cxx`, the Magnify writers, SBND
+  jsonnet) was `91760964` before and after both builds, and the restore build
+  reproduced the NEW md5 `03241f3dc92b`.
+
+#### Levers left
+
+- **Port doc 78's busy-gated lazy walk into `connect_graph_relaxed_strict`.**
+  `ncomp = 509 > 200` says the gate would fire on exactly the clusters that
+  hurt. It carries doc 78's caveat — single-pass Kruskal vs the legacy
+  per-component Prim can differ on exact distance ties — so it needs the same
+  busy gate + knob + byte-identity gate, and it would help the *other*
+  detectors' imaging stages too. This is the general fix; the STM gate above
+  is the PDVD-shaped one.
+- **`get_closest_points` itself.** The seed loop calls `two.kd().knn(5, p1)`
+  and then discards both returned values, using the call only to run its body
+  five times. One kd query per seed is pure waste; it is production code
+  shared with every other flavor, so removing it is a behavior-preserving
+  perf change that needs its own gate, not a side edit here.
+- **Lift the 500 e imaging floor** (§13.6) — the root cause of the dense
+  skeletons behind both cost terms.
+- **Narrow the PDVD beam window.** Rejected for now: §2.1's readout-wide
+  window is what lets a stopping muon anywhere in the readout be found at
+  all.
 
 
 ## Milestone log
@@ -1813,6 +2069,17 @@ off. Any comparison against them must pass
   wcp-porting-img: the PDVD PR runner, `wct-pr-perevt.jsonnet`, `stm/`
   scripts and gates, this section. Energy_loss local commit `61d4c07`
   (0.44 / 0.50 tables); Magnify-tracking-PDVD local repo `7184ec6`.
+- **2026-09-02** — §13.10 `nu_per_bundle_stm_only` (toolkit `e2248fa3`, gate
+  round 8) and §13.11 `stm_only_bundles` (gate round 9): the two halves of the
+  PDVD working mode. The per-bundle neutrino PR and the PR-stage bundle
+  protection now both act only on STM-tagged bundles. `ClusteringProtectBundle`
+  on 039252/8 goes **1726.8 s → 146.2 ms** (98.8 % of it was a single
+  18876-blob, 509-component cluster at 12.4 ms per component pair in
+  `connect_graph_relaxed_strict`, which has no fast path); the event goes
+  1821 s → 74 s and 039252/16 goes 431 s → 176 s with the same six neutrino
+  candidates and every calib-dump section identical up to cluster-ident
+  renumbering. Both knobs default OFF; compiled-config diff-to-zero on 16/16
+  jobs; SBND 201/201 and uBooNE 35/35 zips.
   Measured: E-field 0.44 kV/cm consistent on 5–25 STM muons (§13.6); the
   STM tagger accepts flat ends on PDVD (§13.6); no Michel spectrum yet, with
   the negative controls that say why (§13.7).

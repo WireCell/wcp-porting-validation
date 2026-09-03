@@ -557,6 +557,34 @@ function(
     // 15 -> 0, worst 8.40 -> 0.83 cm).  null => C++ default false; pre-flip
     // arm: SBND_OPEN_CONVICTED_BUNDLES=0.
     protect_open_convicted_bundles = true,
+    // doc pdvd/25 sec 13.11 -- the mirror of nu_per_bundle_stm_only (sec
+    // 13.10), one stage earlier, and the PDVD working mode since 2026-09-02.
+    //
+    // With nu_per_bundle_stm_only on, the per-bundle neutrino PR only ever
+    // runs on STM-tagged activities.  Every split ClusteringProtectBundle
+    // performs in a bundle that holds no STM tag is therefore work no
+    // downstream stage reads -- and on PDVD that is where the time goes,
+    // because the beam window is readout-wide by design (sec 2.1) so EVERY
+    // matched bundle is opened, not the ~1 an SBND-width window opens.
+    // Measured on 039252/8 (stm2 arm): the stage took 1621 s, of which 1602 s
+    // (98.8 %) was ONE unconvicted 18876-blob cluster -- 93584 points, 509
+    // graph components, 129286 component pairs at 12.4 ms each in
+    // connect_graph_relaxed_strict, which has no fast path (the doc 78
+    // eb_fast/po_fast lazy walk was never threaded into the strict family).
+    //
+    // When true only a bundle holding an STM-tagged cluster is opened.  The
+    // gate reads the flag on ANY cluster in the bundle, not only its longest
+    // main, because an STM-tagged activity need not be its bundle's main (sec
+    // 13.10) -- gating on the main would change the PR's input instead of only
+    // its cost.
+    //
+    // NOT byte-identical when on: a cosmic bundle that is no longer split
+    // keeps its over-clustered shape in mabc-pr.zip and calib-pr-evt*.json.
+    // Every STM bundle's cluster set is unchanged, which is the property the
+    // sec 13.11 gate checks.  C++ default false; key omitted when off.
+    // PDVD_PR_TLA="-S protect_stm_only_bundles=false" restores the
+    // every-bundle stage the stm1/stm2/stm3 arms ran.
+    protect_stm_only_bundles    = true,
     protect_cathode_x           = 0,
     protect_cathode_rejoin_xcut = 5 * wc.cm,
     protect_cathode_rejoin_dyz  = 4 * wc.cm,
@@ -3610,6 +3638,7 @@ function(
                              protect_graph_name=protect_graph_name,
                              protect_skip_convicted=protect_skip_convicted,
                              protect_open_convicted_bundles=protect_open_convicted_bundles,
+                             protect_stm_only_bundles=if protect_stm_only_bundles then true else null,   // pdvd doc 25 sec 13.11; C++ default false. null => key omitted => byte-identical pre-knob config.
                              protect_cathode_x=protect_cathode_x,
                              protect_cathode_rejoin_xcut=protect_cathode_rejoin_xcut,
                              protect_cathode_rejoin_dyz=protect_cathode_rejoin_dyz,

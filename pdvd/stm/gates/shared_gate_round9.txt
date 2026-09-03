@@ -1,0 +1,26 @@
+doc pdvd/25 sec 13.11 round 9 -- stm_only_bundles (ClusteringProtectBundle, default OFF)
+date: 2026-09-02T21:08:19-07:00
+OLD = e2248fa3 + a concurrent session's live Facade_*/QLMatching/Magnify WIP; NEW = same tree + clus/src/ClusteringProtectBundle.cxx only.
+  r9old clus md5 540daab7e46a (knob string absent) / r9new clus md5 03241f3dc92b (knob string present)
+  both arms built back to back by stm/gates/../../../../tmp scratch script r9build.sh; the peer-file fingerprint (Facade_Cluster{.cxx,.h}, Facade_Grouping{.cxx,.h}, QLMatching.cxx, Sbnd/PdvdPrMagnifyTrackingVisitor.cxx, sbnd/{clus,wct-pr-perevt}.jsonnet) was 91760964 before AND after, so the arms differ by that one file and nothing else; the restore build reproduced the NEW md5.
+SOURCE: work-{nuecc48,ncpi0}-d99fix (same as round 8).
+arms: work-{nuecc48,ncpi0}-doc25r9{old,new} (48 + 19 events), qlport sweep/doc25r9{old,new} (35 events); DL vertex off.
+
+SBND  : 201 SAME / 0 DIFF / 0 MISSING  (mabc-pr.zip member hashes, calib-pr JSON minus the dual_chain timer, nusel-evt TSV)
+        -> /home/xqian/tmp/doc25gate/sbnd_compare_r9new.txt
+uBooNE: ZIPS: 35/35 content-identical
+        TAGGER: identical=34 diff=1 skip=0 (log: .../sweep/doc25r9new/ab_check_doc25r9old.log)
+        The one diff is idx=22 ev=6805 -- the documented bistable event (5384-136-6805),
+        on its two documented states: kine_pio_angle 14.8058 (r9old) vs 109.512 (r9new),
+        with kine_pio_{theta_2,phi_2,dis_2} moving with it and the Bee zip identical.
+        Same event, same two values, as gate rounds 1, 2, 3, 4 and 6 (identical in 5, 7, 8).
+        CONTROL: sweep/doc25r9oldB -- the r9old library run a SECOND time on the same
+        35 events reproduces r9old exactly (ZIPS 35/35, TAGGER identical=35 diff=0),
+        so the binary is deterministic run to run and 6805's state is fixed per relink,
+        not per run.  See memory 'repeat_check blind to pi0' / doc 90 sec 6-7.
+Compiled-config gate (this round only, because the knob touches the SHARED
+cfg/pgrapher/common/clus.jsonnet): abtest/compile_all_cfg.sh before/after +
+abtest/cmp_cfg.sh -> 16/16 jobs, NORMDIFF 0, same element count / order / edges,
+OVERALL PASS (incl. sbnd_pr, the job that binds ClusteringProtectBundle).
+PDVD PR job: knob off byte-identical to the pre-knob compile; knob on adds exactly
+one line, "stm_only_bundles" : true.

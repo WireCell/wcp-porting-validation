@@ -19,8 +19,21 @@
 #            Since 2026-09-02 the -nu chain runs the per-bundle PR ONLY on
 #            STM-tagged bundles (nu_per_bundle_stm_only=true in
 #            wct-pr-perevt.jsonnet; doc 25 sec 13.10) -- the PDVD working mode.
-#            PDVD_PR_TLA="-S nu_per_bundle_stm_only=false" restores the
-#            every-bundle chain the stm1/stm2/stm3 arms ran.
+#            PDVD_PR_TLA="-S nu_per_bundle_stm_only=false" turns that one knob
+#            off; since 2026-09-02 it is NO LONGER enough to reproduce the
+#            stm1/stm2/stm3 arms -- see protect_stm_only_bundles below, both
+#            must be passed together.
+#            Since 2026-09-02 protect_bundle is gated the same way
+#            (protect_stm_only_bundles=true; doc 25 sec 13.11): only a bundle
+#            holding an STM-tagged cluster is opened for splitting.  This is
+#            the mirror of the knob above and is what makes the chain usable --
+#            039252/8's ClusteringProtectBundle goes 1726.8 s -> 146.2 ms and
+#            the event 1821 s -> 74 s.  It is NOT byte-identical: cosmic
+#            bundles keep their over-clustered shape in mabc-pr.zip and
+#            calib-pr-evt*.json, while every STM bundle is split exactly as
+#            before.  PDVD_PR_TLA="-S protect_stm_only_bundles=false" restores
+#            the every-bundle stage.  To reproduce the stm1/stm2/stm3 arms pass
+#            BOTH: PDVD_PR_TLA="-S nu_per_bundle_stm_only=false -S protect_stm_only_bundles=false"
 #   -stm     cosmic taggers only (stops after steiner_refresh) + pr_display
 #   -empty   pipeline_names=[] : the M2 round-trip identity gate
 #   -pipe    explicit comma-separated pipeline list
