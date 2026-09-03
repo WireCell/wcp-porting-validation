@@ -46,8 +46,14 @@ CONFIRM=${CONFIRM:-no}
 # regenerable cmake build trees, and group-build scratch whose OUTPUTS live in
 # sbnd_xin/input_files_reco1/{extracted,staged}-dbg25*.
 LIBSNAPS="doc94-libsnap doc94b-libsnap doc94r3-libsnap d97-libsnap pr142-libsnap"
-OTHER="doc87/lib-knob cm-rel cm-fix1 cm-strict dbg25/groupbuild
-       scan2 pr40r5 pr43_cleanhead_ref48 pr88 pr63_render"
+OTHER="doc87/lib-knob cm-rel cm-fix1 cm-strict dbg25/groupbuild"
+# scan2 pr40r5 pr43_cleanhead_ref48 pr88 pr63_render -- NOT swept.  A find for
+# *.md5|*.tsv|*.json|*.log found 10-74 artifact-class files in EACH of them
+# (scored.json, rank-*.tsv, bisect-*.log, track_candidates.json ...), i.e. they
+# are closed-round evidence, not scratch, and this round has no record layer for
+# ~/tmp.  0.33 GiB is not worth deleting a possible last copy -- doc 89's own
+# rule was to copy such artifacts out of doc87/ BEFORE sweeping it.  Left for a
+# round that archives them properly.
 
 echo "== interlock 1: a pinned binary may not outlive... nor precede its arms =="
 fail=0
@@ -75,6 +81,19 @@ for O in $OTHER;    do PATHS="$PATHS $TMP/$O"; done
 hot=$(sig $PATHS)
 [ -z "$hot" ] || { echo "REFUSE: recently written under a drop path: $hot"; exit 2; }
 echo "  ok -- no drop path written in the last 30 minutes"
+
+echo "== pre-step: carry dbg25/groupbuild artifact files into the record tree =="
+GBREC=$SX/archive/records/campaign-close-20260902/tmp-artifacts/dbg25-groupbuild
+if [ -d "$TMP/dbg25/groupbuild" ]; then
+  mkdir -p "$GBREC"
+  ( cd "$TMP/dbg25/groupbuild" && find . \( -name '*.md5' -o -name '*.tsv' \
+      -o -name '*.json' -o -name '*.log' \) -size -4M \
+      -exec cp --parents -n {} "$GBREC"/ \; ) 2>/dev/null
+  n=$(find "$GBREC" -type f 2>/dev/null | wc -l)
+  echo "  carried $n artifact-class files -> $GBREC"
+  echo "  (dbg25/ top level -- cfg-live-{before,after}.md5, dump.log, img-*.log,"
+  echo "   pr-*.log -- is NOT in the drop list and survives untouched)"
+fi
 
 echo "== interlock 3: doc87 lib-knob really is a duplicate of lib-flip =="
 if [ -d "$TMP/doc87/lib-knob" ]; then

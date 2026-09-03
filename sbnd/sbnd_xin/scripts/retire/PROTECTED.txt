@@ -319,6 +319,15 @@ work-mcp1k-d97fvpr2 work-mcp2k-d97fvpr2 work-ncpi0-d97fvpr2 work-nuecc48-d97fvpr
 # lost, is NOT possible from production -- production is the arm that fails.
 work-sent97-mcp1k work-sent97-mcp2k work-sent97-ncpi0 work-sent97-nuecc48	the 31/31 sentinel witness carved out of d97off2pr before it was retired; 165 MB	doc 98, scripts/retire/witness_sentinels_20260902.py
 #
+# work-d97prodchk-* SCORES ZERO IN A NAME-EXACT CITATION CENSUS and is kept
+# anyway.  It is doc 97 sec 9's proof that the PRODUCTION DEFAULT (no env flag)
+# reproduces the validated d97fv arm byte-for-byte -- the doc references it at
+# line 588 as a path inside a table cell, which a token-level census does not
+# score.  This is doc 91's own failure mode (a census returning 0 for a genuinely
+# cited arm is indistinguishable from one that works).  Do not release it on a
+# zero-citation reading.
+work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodchk-nuecc48 work-dbg25a-d97prodchk	doc 97 sec 9: production default == the validated arm, 139 evts	doc 97, doc 98
+#
 # A LIVE PEER ROUND OWNS work-*-doc25new* / work-*-doc25old (PDVD doc 25's SBND
 # regression-gate arms, gate round 7 in flight 2026-09-02).  Protected by
 # PREFIX for the life of that round -- the same treatment doc 91 gave doc 90's

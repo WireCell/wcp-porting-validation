@@ -40,7 +40,7 @@ CONFIRM=yes ./scripts/retire/retire_20260902.sh          # (D2) 125.0 GiB
 
 # E. the same for ~/tmp
 ./scripts/retire/sweep_tmp_20260902.sh                   # dry run
-CONFIRM=yes ./scripts/retire/sweep_tmp_20260902.sh       # (E2) 30.4 GiB
+CONFIRM=yes ./scripts/retire/sweep_tmp_20260902.sh       # (E2) 30.0 GiB
 ```
 
 ## 1. What goes, and what it comes to
@@ -53,9 +53,9 @@ CONFIRM=yes ./scripts/retire/sweep_tmp_20260902.sh       # (E2) 30.4 GiB
 | small dead probes (`d97chk{,2,3}`, `d94scan{,off}-64475`) | 5 | 0.03 |
 | `work-*-grp0825/ql_evt*`, retired **in place** | (3067) | 9.0 |
 | **sbnd_xin total** | **62** | **125.0** |
-| `~/tmp`: 5 closed-round libsnaps, `doc87/lib-knob`, 3 cmake trees, `dbg25/groupbuild`, 5 old scratch dirs | 15 | 30.4 |
+| `~/tmp`: 5 closed-round libsnaps, `doc87/lib-knob`, 3 cmake trees, `dbg25/groupbuild` | 10 | 30.0 |
 
-sbnd_xin 189 → ~64 GiB; `~/tmp` 62 → ~31 GiB. 172 → 114 work dirs (110 kept
+sbnd_xin 189 → ~64 GiB; `~/tmp` 62 → ~32 GiB. 172 → 114 work dirs (110 kept
 plus the 4 new `work-sent97-*`).
 
 ## 2. Five things measured rather than inherited
@@ -150,6 +150,26 @@ measurements, the Bee sets are uploaded
 from kept imaging via `scripts/d97_on_arms.sh`. If the owner would rather scan
 first, keep `d97on`/`d97onpr` and the round frees 104.6 GiB instead of 125.0.
 
+## 5.1 Two things the `~/tmp` sweep does NOT touch, on purpose
+
+The sbnd_xin round archives a record layer for all 62 arms; the `~/tmp` sweep
+has **no record layer**, which is fine for regenerable cmake trees and
+explanatory-only libsnaps but not for evidence. So:
+
+- `scan2`, `pr40r5`, `pr43_cleanhead_ref48`, `pr88`, `pr63_render` were
+  **dropped from the sweep**. A `find` for `*.md5|*.tsv|*.json|*.log` returns
+  10–74 artifact-class files in *each* (`scored.json`, `rank-*.tsv`,
+  `bisect-*.log`, `track_candidates.json`) — closed-round evidence, not
+  scratch. 0.33 GiB is not worth deleting a possible last copy; doc 89's own
+  rule was to copy such artifacts out of `doc87/` *before* sweeping it. Left
+  for a round that archives them properly.
+- `dbg25/groupbuild` is swept, but a pre-step first copies its
+  artifact-class files (`entry_group.tsv` and friends, <4 MB each) into
+  `archive/records/campaign-close-20260902/tmp-artifacts/`. The `dbg25/` top
+  level — `cfg-live-{before,after}.md5` (the doc-95 compiled-config proof),
+  `dump.log`, `img-*.log`, `pr-*.log` — is not in the drop list and survives
+  untouched.
+
 ## 6. Kept, with reasons
 
 `grp0825/evt*` (imaging substrate) · `d97fv` + `d97fvpr2` (production) ·
@@ -159,8 +179,10 @@ manifests) · `pr130r1-probe98`, `pr134-f086` (sentinel witnesses, doc 91
 interlock 8) · `doc25*` (live peer round) · `dbg25a/b-*` (doc 95/96 owner scan
 set) · `stmfb8-*` (doc 93/94 symptom sample) · `87knob-min/sup`, `87flip`,
 `87grp-*` (doc 87 §6.2/6.4; release condition still unmet) · `91neg-*`
-(sentinel negative controls) · `d97prodchk` (doc 97 §9 production-default
-proof) · `tfix388-r9`, `probe178410a` (`PROTECTED.txt`).
+(sentinel negative controls) · `d97prodchk` (doc 97 §9 production-default proof — it scores **zero** in a
+name-exact citation census because the doc cites it as a path inside a table
+cell, which is doc 91's own failure mode; `PROTECTED.txt` now says so, so the
+next round cannot release it on a zero-citation reading) · `tfix388-r9`, `probe178410a` (`PROTECTED.txt`).
 
 In `~/tmp`: `doc25gate` and `pinlib*` (live peer), `claude-*` (session
 scratchpads), `d97b-libsnap` (the binary production ran under), `doc94c-libsnap`
