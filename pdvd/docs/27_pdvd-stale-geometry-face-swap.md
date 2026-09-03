@@ -316,6 +316,45 @@ artificial two-pieces-plus-chords geometry.
    sidecar; the runner guard is enough for the PDVD scripts but a LArSoft
    integration will not have the sidecar.
 
+## 8. Retire round (2026-09-03, owner's instruction)
+
+The owner asked to retire the products associated with the earlier geometry,
+to remove the confusion and free disk. Census first (`pdvd/work`: 56.1 GB in
+~1930 dirs), then one manifest-driven deletion:
+
+- **Deleted (1257 dirs, 30.87 GB), listed with sizes and last-modified times in
+  `stm/gates/r27_retire_v6_manifest.tsv`:** the eight 120-event PR arms run on
+  v6 point trees (`d25r12eager`, `d25r12fast`, `d25r13base`, `d25r13fix`,
+  `d25r14pre`, `d25r14cf`, `d25r14base2`, `d25r14fix2`) and their single-event
+  probes (`d25r13chk*`, `d25r13dbg`, `d27probe`, `d27guard`); the Sep 2 Q/L +
+  point-tree arms on v6 (`stm1` 120 events with its PR outputs, `stm2`, `stm3`,
+  `stm4`, `stm4off`, `m1on`, `m1gate`, `thr*`, `e4`, `g1`, `dbg1`, `cens8`,
+  `d25r11on/off`). No process had any of them open. Consequence for the
+  record: the doc 25 §13 and doc 26 §5/§7.4 PDVD gates are no longer
+  re-runnable from disk (their hash tables and census TSVs remain committed);
+  their replacement is `d27fresh`.
+- **Kept:** `d27fresh` (the baseline, 9.0 GB), `d27v7` (this document's
+  two-event record), the light arms (`*_light*`: the light chain does not use
+  the wires file), and the raw SP frames inside every `_keep` dir (the inputs
+  `d27fresh` was imaged from, by symlink).
+- **Stamped, not deleted:** the 120 `_keep` dirs' July imaging archives and
+  Q/L outputs (v6; 7.3 GB including the frames). Each now carries an
+  `img-provenance.txt` saying `wires=protodunevd-wires-larsoft-v6.json.bz2`
+  (retroactive: `params.jsonnet` held v6 from 07-13 14:43 to 09-03 07:51), so
+  `run_clus_evt.sh` **refuses** them under today's anodes (tested: rc 3 on a
+  `_keep`-seeded tag). `scripts/stage_ql_tag.sh` now seeds from `d27fresh` by
+  default and carries the provenance file along. These, and the July Q/L
+  calibration arms (`nm4b`, `ccprod`, `cctt`, `tm0*`, `ac*`, `cathxa`, `rc14`,
+  `cc3a`, `magnify`, the untagged dirs, ~6 GB), are the hand-scan records of
+  the Q/L rounds (docs 19–24; `work/ql_labels`, `ql_scores` key on their calib
+  dumps), so deleting them is the owner's call, not mine — see the report.
+- **Not touched:** the peer session's same-day probes (`v7img`, `v7chk`,
+  `v7test`, `v450`, `d31phase`, `stm1pf`, `r10*`, `b12*`, `dqdxdbg*`,
+  `pr67probe*`, `currptsprobe`, `stmrcidfix`, `drainprobe`, `stageprobe`,
+  `keepall`, `fixon*`, `fixoff*`, `noexcl*`; < 0.6 GB together).
+
+Disk after the round: 543 GB free on the volume (was ~512 GB).
+
 ## Milestone log
 
 - **2026-09-03** — investigation opened per doc 26 §8 (over-clustering on
@@ -334,3 +373,7 @@ artificial two-pieces-plus-chords geometry.
   0 WARN, 0 guard fires, TGM 1164 → 1592, STM 676 → 659, ν candidates
   624 → 590 versus the stale arm (§6.4). Peer-session files
   (`pdvd/docs/nf_sp_img_clus/scripts/steiner_*.py`) noticed untouched.
+- **2026-09-03 (retire round)** — 1257 v6-era dirs / 30.9 GB deleted per
+  `stm/gates/r27_retire_v6_manifest.tsv`; `_keep` imaging stamped v6 so the
+  guard refuses it; `stage_ql_tag.sh` seeds from `d27fresh`. Toolkit WARN
+  committed as `9cbed05f`; doc 27 round as `2a8f91b9`.
