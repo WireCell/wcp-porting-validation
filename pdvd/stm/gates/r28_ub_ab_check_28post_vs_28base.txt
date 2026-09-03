@@ -1,0 +1,26 @@
+# uBooNE qlport ab_check.sh doc25_28post vs doc25_28base (libs: lib_l2 = toolkit e7650c7d state, lib_base = 4e2bd2f1)
+ZIPS: 35/35 content-identical
+TAGGER: identical=34 diff=1 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/doc25_28post/ab_check_doc25_28base.log)
+# repeat_check.sh 22 4 (event 5384-136-6805) under each library: same two tagger states on both, Bee zip identical on all 8 runs
+## lib_base
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28base_1/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28base_2/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28base_3/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28base_4/22_6805/mabc_22.zip
+distinct hashes: 1 of 4 runs  DETERMINISTIC
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  rep28base_1/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  rep28base_2/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  rep28base_3/22_6805/track_com_5384_6805.root
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  rep28base_4/22_6805/track_com_5384_6805.root
+distinct tagger hashes: 2 of 4 runs  NONDETERMINISTIC
+## lib_l2
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28post_1/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28post_2/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28post_3/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  rep28post_4/22_6805/mabc_22.zip
+distinct hashes: 1 of 4 runs  DETERMINISTIC
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  rep28post_1/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  rep28post_2/22_6805/track_com_5384_6805.root
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  rep28post_3/22_6805/track_com_5384_6805.root
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  rep28post_4/22_6805/track_com_5384_6805.root
+distinct tagger hashes: 2 of 4 runs  NONDETERMINISTIC

@@ -1,0 +1,95 @@
+# gperftools CPU profile, PDVD PR job 039253_15, base lib (toolkit 4e2bd2f1), CPUPROFILE_FREQUENCY=250, libtcmalloc_and_profiler
+## flat top 40
+Total: 91718 samples
+   67720  73.8%  73.8%    68218  74.4% Eigen::internal::sparse_time_dense_product_impl::run (inline)
+    1040   1.1%  75.0%     1040   1.1% std::__detail::_Hashtable_base::_S_equals (inline)
+     855   0.9%  75.9%      855   0.9% tc_new
+     723   0.8%  76.7%      726   0.8% tcmalloc::CentralFreeList::FetchFromOneSpans
+     698   0.8%  77.5%      698   0.8% std::_Rb_tree_increment@@GLIBCXX_3.4@bfcb0
+     695   0.8%  78.2%      695   0.8% std::_Rb_tree::_S_right (inline)
+     681   0.7%  79.0%      681   0.7% __memcmp_evex_movbe
+     638   0.7%  79.6%     2477   2.7% std::_Rb_tree::_M_lower_bound (inline)
+     602   0.7%  80.3%     1766   1.9% std::_Rb_tree::_M_erase
+     516   0.6%  80.9%      516   0.6% std::__detail::_Mod_range_hashing::operator (inline)
+     501   0.5%  81.4%      501   0.5% __memset_avx512_unaligned_erms
+     470   0.5%  81.9%      480   0.5% Eigen::SparseCompressedBase::InnerIterator::InnerIterator (inline)
+     456   0.5%  82.4%      456   0.5% tc_delete_sized
+     451   0.5%  82.9%      810   0.9% __erf
+     449   0.5%  83.4%     1973   2.2% std::_Hashtable::_M_find_before_node
+     395   0.4%  83.8%      395   0.4% std::_Rb_tree_insert_and_rebalance@@GLIBCXX_3.4
+     391   0.4%  84.3%     1200   1.3% std::operator<  (inline)
+     381   0.4%  84.7%      381   0.4% std::_Rb_tree_increment@@GLIBCXX_3.4@bfc60
+     352   0.4%  85.1%      352   0.4% WireCell::Clus::TrackFitting::Coord2D::operator< (inline)
+     346   0.4%  85.4%     1376   1.5% std::_Rb_tree::_M_erase (inline)
+     327   0.4%  85.8%      327   0.4% __ieee754_exp_fma
+     288   0.3%  86.1%     4259   4.6% WireCell::Clus::TrackFitting::dQ_dx_fit
+     275   0.3%  86.4%      275   0.3% WireCell::Clus::TrackFitting::CoordReadout::operator< (inline)
+     273   0.3%  86.7%      273   0.3% __memcpy_avx512_unaligned_erms
+     268   0.3%  87.0%    73375  80.0% WireCell::Clus::TrackFitting::dQ_dx_multi_fit
+     264   0.3%  87.3%      264   0.3% std::__tuple_compare::__less (inline)
+     222   0.2%  87.5%      832   0.9% std::_Rb_tree::_M_get_insert_unique_pos
+     207   0.2%  87.8%     1018   1.1% WireCell::Clus::TrackFitting::cal_gaus_integral
+     200   0.2%  88.0%      850   0.9% nanoflann::KDTreeSingleIndexAdaptor::searchLevel
+     189   0.2%  88.2%      189   0.2% Eigen::internal::bicgstab (inline)
+     175   0.2%  88.4%     1323   1.4% WireCell::Clus::TrackFitting::cal_gaus_integral_seg
+     173   0.2%  88.6%      194   0.2% tcmalloc::CentralFreeList::ReleaseToSpans
+     168   0.2%  88.7%      200   0.2% tcmalloc::CentralFreeList::Populate
+     163   0.2%  88.9%      958   1.0% std::__new_allocator::deallocate (inline)
+     160   0.2%  89.1%      380   0.4% tcmalloc::ThreadCache::ReleaseToCentralCache
+     155   0.2%  89.3%      744   0.8% nanoflann::L2_Simple_Adaptor::evalMetric (inline)
+     151   0.2%  89.4%      151   0.2% runtime.futex.abi0
+     150   0.2%  89.6%      337   0.4% nanoflann::KDTreeSingleIndexDynamicAdaptor_::searchLevel
+     146   0.2%  89.7%     1688   1.8% WireCell::Clus::TrackFitting::fill_fitted_charge_2d::{lambda#1}::operator
+     144   0.2%  89.9%      505   0.6% std::_Sp_counted_base::_M_release
+
+## cumulative, toolkit functions
+Total: 91718 samples
+       0   0.0%   0.0%    83171  90.7% TaggerCheckNeutrino::visit
+       0   0.0%   0.0%    80731  88.0% WireCell::Clus::TrackFitting::do_multi_tracking
+       0   0.0%   0.0%    79595  86.8% WireCell::Clus::PR::PatternAlgorithms::find_proto_vertex
+       0   0.0%   0.0%    75158  81.9% TaggerCheckNeutrino::run_dual_chain_off_pass
+     268   0.3%   0.3%    73375  80.0% WireCell::Clus::TrackFitting::dQ_dx_multi_fit
+       5   0.0%   0.3%    68928  75.2% Eigen::internal::bicgstab
+       2   0.0%  74.1%    62138  67.7% WireCell::Clus::PR::PatternAlgorithms::find_other_segments
+       0   0.0%  74.1%    40148  43.8% WireCell::Clus::PR::PatternAlgorithms::break_segments
+       0   0.0%  74.1%     9192  10.0% WireCell::Clus::PR::PatternAlgorithms::merge_nearby_vertices
+       0   0.0%  74.1%     6930   7.6% WireCell::Clus::PR::PatternAlgorithms::examine_vertices
+       0   0.0%  74.1%     6865   7.5% WireCell::Clus::PR::PatternAlgorithms::examine_vertices_1
+       7   0.0%  74.1%     6295   6.9% WireCell::Clus::TrackFitting::form_map_graph
+       0   0.0%  74.1%     5082   5.5% WireCell::Clus::TrackFitting::do_single_tracking
+     288   0.3%  74.5%     4259   4.6% WireCell::Clus::TrackFitting::dQ_dx_fit
+       0   0.0%  74.5%     3597   3.9% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+       0   0.0%  74.5%     3597   3.9% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+       0   0.0%  74.5%     3392   3.7% TaggerCheckSTM::visit
+       0   0.0%  74.5%     3377   3.7% TaggerCheckSTM::check_stm_conditions
+       0   0.0%  74.5%     3356   3.7% TaggerCheckSTM::check_stm_conditions::{lambda#2}::operator
+       0   0.0%  74.5%     2739   3.0% WireCell::Clus::PR::PatternAlgorithms::improve_vertex
+       0   0.0%  74.5%     2685   2.9% WireCell::Clus::PR::PatternAlgorithms::examine_vertices_3
+     113   0.1%  74.6%     2670   2.9% WireCell::Clus::TrackFitting::form_point_association
+       0   0.0%  74.6%     2544   2.8% WireCell::Clus::ImproveCluster_2::mutate
+       0   0.0%  75.4%     2181   2.4% WireCell::Clus::TrackFitting::fill_fitted_charge_2d
+       0   0.0%  75.8%     1891   2.1% WireCell::Clus::PR::PatternAlgorithms::determine_main_vertex
+     146   0.2%  76.8%     1688   1.8% WireCell::Clus::TrackFitting::fill_fitted_charge_2d::{lambda#1}::operator
+      14   0.0%  76.8%     1441   1.6% WireCell::Clus::TrackFitting::update_association
+      32   0.0%  76.8%     1421   1.5% WireCell::Clus::TrackFitting::examine_point_association
+     175   0.2%  77.5%     1323   1.4% WireCell::Clus::TrackFitting::cal_gaus_integral_seg
+      61   0.1%  78.0%     1109   1.2% exclusion_closest_2d_dis
+     207   0.2%  79.4%     1018   1.1% WireCell::Clus::TrackFitting::cal_gaus_integral
+       0   0.0%  79.4%      980   1.1% TaggerCheckSTM::search_other_tracks
+       7   0.0%  79.7%      907   1.0% WireCell::Clus::TrackFitting::multi_trajectory_fit
+      48   0.1%  79.8%      890   1.0% WireCell::Clus::Facade::DynamicPointCloud::get_closest_2d_dis
+       3   0.0%  81.7%      797   0.9% WireCell::Clus::TrackFitting::update_dQ_dx_data
+       0   0.0%  81.7%      764   0.8% WireCell::Clus::ImproveCluster_1::mutate
+      41   0.0%  85.3%      609   0.7% WireCell::Clus::Graphs::connect_graph_closely_pid
+      24   0.0%  85.4%      540   0.6% WireCell::Clus::TrackFitting::calculate_compact_matrix_multi
+      19   0.0%  85.4%      540   0.6% WireCell::Clus::TrackFitting::fit_point
+       0   0.0%  87.5%      461   0.5% WireCell::Clus::PR::PatternAlgorithms::init_first_segment
+       9   0.0%  88.1%      434   0.5% WireCell::Clus::Graphs::connect_graph_ctpc_with_reference
+       6   0.0%  88.1%      426   0.5% WireCell::Clus::ImproveCluster_1::get_activity_improved
+       0   0.0%  88.1%      417   0.5% TaggerCheckTGM::check_tgm
+       0   0.0%  88.1%      417   0.5% TaggerCheckTGM::visit
+       0   0.0%  89.5%      363   0.4% WireCell::Clus::TrackFitting::form_map
+       0   0.0%  89.5%      359   0.4% WireCell::Clus::PR::PatternAlgorithms::main_vertex_graph_audit
+     352   0.4%  89.9%      352   0.4% WireCell::Clus::TrackFitting::Coord2D::operator< (inline)
+      27   0.0%  90.1%      329   0.4% WireCell::Clus::Graphs::Weighted::GraphAlgorithms::find_neighbors_nlevel
+      31   0.0%  90.6%      300   0.3% WireCell::Clus::TrackFitting::is_cell_covered_by_own_blobs

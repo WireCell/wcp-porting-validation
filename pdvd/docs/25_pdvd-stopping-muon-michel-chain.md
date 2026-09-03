@@ -2287,3 +2287,8 @@ against an arm run with the knob off has to scrub them.
   arm (imaging + clustering + PR on one wires file). Runner guards now refuse
   the mix; a log-only WARN in the retiler names it. 039349/14's steiner hole
   (anodes 4/5, unaffected) remains for the Steiner-terminals campaign.
+- **2026-09-03 (perf round 1, doc 28)** — the PR job profiled on `d27fresh`
+  (Neutrino 48 % / STM 21 % / steiner 18 %; per-unit cost equals SBND, the count
+  is the design); the 744 s tail of 039252/5 was the strict connector's ghost test
+  (454 s → 9.5 s, byte-identical); memory levers and the deferred items in
+  `28_pdvd-pr-perf-round1.md`.

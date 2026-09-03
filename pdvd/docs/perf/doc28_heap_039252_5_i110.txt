@@ -1,0 +1,71 @@
+# jemalloc sampling heap profile (lg_prof_sample 19), PDVD PR 039252/5 base lib, dump i110 (during ClusteringProtectBundle, after STM); jeprof --text --cum --inuse_space, ROOT/cling frames filtered
+Total: 1653.0 MB
+  1653.0 100.0% 100.0%   1653.0 100.0% malloc_usable_size
+     0.0   0.0% 100.0%   1652.5 100.0% __libc_start_call_main
+     0.0   0.0% 100.0%   1652.5 100.0% __libc_start_main_impl
+     0.0   0.0% 100.0%   1652.5 100.0% _start
+     0.0   0.0% 100.0%   1652.5 100.0% main
+     0.0   0.0% 100.0%   1651.7  99.9% malloc
+     0.0   0.0% 100.0%   1646.6  99.6% WireCell::Main::operator
+     0.0   0.0% 100.0%   1646.6  99.6% WireCell::Pgraph::Graph::call_node
+     0.0   0.0% 100.0%   1646.6  99.6% WireCell::Pgraph::Graph::execute
+     0.0   0.0% 100.0%   1646.6  99.6% WireCell::Pgraph::Pgrapher::execute
+     0.0   0.0% 100.0%   1552.9  93.9% std::__new_allocator::allocate (inline)
+     0.0   0.0% 100.0%   1552.9  93.9% std::allocator_traits::allocate (inline)
+     0.0   0.0% 100.0%   1547.3  93.6% WireCell::Clus::MultiAlgBlobClustering::operator
+     0.0   0.0% 100.0%   1547.3  93.6% WireCell::IFunctionNode::operator
+     0.0   0.0% 100.0%   1547.3  93.6% WireCell::Pgraph::Function::operator
+     0.0   0.0% 100.0%    706.6  42.7% WireCell::Aux::TensorDM::as_pctree@1b8910
+     0.0   0.0% 100.0%    706.6  42.7% WireCell::Aux::TensorDM::as_pctree@1b90e0
+     0.0   0.0% 100.0%    706.6  42.7% WireCell::Clus::MultiAlgBlobClustering::load_grouping
+     0.0   0.0% 100.0%    667.1  40.4% WireCell::PointCloud::Dataset::slice
+     0.0   0.0% 100.0%    562.6  34.0% WireCell::PointCloud::Dataset::add@2027f0
+     0.0   0.0% 100.0%    527.4  31.9% std::_Rb_tree::_M_create_node (inline)
+     0.0   0.0% 100.0%    517.0  31.3% std::_Vector_base::_M_allocate (inline)
+     0.0   0.0% 100.0%    481.9  29.2% std::__shared_count::__shared_count (inline)
+     0.0   0.0% 100.0%    481.9  29.2% std::__shared_ptr::__shared_ptr (inline)
+     0.0   0.0% 100.0%    481.9  29.2% std::make_shared (inline)
+     0.0   0.0% 100.0%    481.9  29.2% std::shared_ptr::shared_ptr (inline)
+     0.0   0.0% 100.0%    381.1  23.1% std::__allocate_guarded (inline)
+     0.0   0.0% 100.0%    373.0  22.6% WireCell::Clus::Steiner::CreateSteinerGraph::visit
+     0.0   0.0% 100.0%    373.0  22.6% WireCell::Clus::Steiner::CreateSteinerGraph::visit::{lambda#2}::operator [clone .isra.0]
+     0.0   0.0% 100.0%    328.3  19.9% WireCell::Clus::ImproveCluster_2::mutate
+     0.0   0.0% 100.0%    320.0  19.4% std::_Rb_tree::_M_get_node (inline)
+     0.0   0.0% 100.0%    309.2  18.7% std::allocator_traits::construct (inline)
+     0.0   0.0% 100.0%    301.9  18.3% std::_Rb_tree::_Auto_node::_Auto_node (inline)
+     0.0   0.0% 100.0%    300.4  18.2% std::_Rb_tree::_M_emplace_hint_unique
+     0.0   0.0% 100.0%    245.7  14.9% TaggerCheckSTM::visit
+     0.0   0.0% 100.0%    208.4  12.6% std::__new_allocator::construct (inline)
+     0.0   0.0% 100.0%    208.4  12.6% std::pair::pair (inline)
+     0.0   0.0% 100.0%    207.4  12.5% std::_Rb_tree::_M_construct_node (inline)
+     0.0   0.0% 100.0%    202.5  12.3% std::_Rb_tree::_Alloc_node::operator (inline)
+     0.0   0.0% 100.0%    201.5  12.2% std::_Rb_tree::_M_insert_ (inline)
+     0.0   0.0% 100.0%    197.2  11.9% TaggerCheckSTM::check_stm_conditions
+     0.0   0.0% 100.0%    197.2  11.9% TaggerCheckSTM::check_stm_conditions::{lambda#2}::operator
+     0.0   0.0% 100.0%    194.0  11.7% boost::adjacency_list::adjacency_list (inline)
+     0.0   0.0% 100.0%    194.0  11.7% boost::vec_adj_list_impl::vec_adj_list_impl (inline)
+     0.0   0.0% 100.0%    193.5  11.7% std::_Rb_tree::_M_insert_unique
+     0.0   0.0% 100.0%    193.5  11.7% std::map::insert (inline)
+     0.0   0.0% 100.0%    192.4  11.6% WireCell::Clus::Facade::Mixins::Graphs::give_graph
+     0.0   0.0% 100.0%    192.4  11.6% boost::vec_adj_list_impl::copy_impl
+     0.0   0.0% 100.0%    192.4  11.6% std::map::emplace (inline)
+     0.0   0.0% 100.0%    192.4  11.6% std::map::emplace_hint (inline)
+     0.0   0.0% 100.0%    190.0  11.5% WireCell::Clus::TrackFitting::do_single_tracking
+     0.0   0.0% 100.0%    180.5  10.9% boost::add_edge (inline)
+     0.0   0.0% 100.0%    180.5  10.9% boost::graph_detail::push_dispatch (inline)
+     0.0   0.0% 100.0%    178.7  10.8% std::unordered_map::operator[] (inline)
+     0.0   0.0% 100.0%    172.0  10.4% boost::graph_detail::push (inline)
+     0.0   0.0% 100.0%    170.7  10.3% std::__detail::_Map_base::operator[]
+     0.0   0.0% 100.0%    160.0   9.7% WireCell::Clus::Facade::Cluster::graph_algorithms
+     0.0   0.0% 100.0%    154.0   9.3% std::__detail::_Hashtable_alloc::_M_allocate_node (inline)
+     0.0   0.0% 100.0%    149.7   9.1% std::vector::_M_realloc_insert
+     0.0   0.0% 100.0%    148.2   9.0% std::vector::push_back (inline)
+     0.0   0.0% 100.0%    143.1   8.7% std::vector::_M_insert_dispatch (inline)
+     0.0   0.0% 100.0%    143.1   8.7% std::vector::insert (inline)
+     0.0   0.0% 100.0%    143.0   8.7% WireCell::Clus::Facade::Cluster::connected_blobs
+     0.0   0.0% 100.0%    134.5   8.1% std::_Hashtable::_Scoped_node::_Scoped_node (inline)
+     0.0   0.0% 100.0%    129.9   7.9% std::vector::_M_allocate_and_copy (inline)
+     0.0   0.0% 100.0%    115.3   7.0% WireCell::PointCloud::Tree::Points::scoped_view
+     0.0   0.0% 100.0%    114.9   7.0% std::_Construct (inline)
+     0.0   0.0% 100.0%    111.2   6.7% WireCell::PointCloud::Array::Array
+     0.0   0.0% 100.0%    109.5   6.6% std::map::operator[] (inline)

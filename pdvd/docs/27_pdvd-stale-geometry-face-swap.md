@@ -377,3 +377,6 @@ Disk after the round: 543 GB free on the volume (was ~512 GB).
   `stm/gates/r27_retire_v6_manifest.tsv`; `_keep` imaging stamped v6 so the
   guard refuses it; `stage_ql_tag.sh` seeds from `d27fresh`. Toolkit WARN
   committed as `9cbed05f`; doc 27 round as `2a8f91b9`.
+- **2026-09-03 (doc 28)** — the `d27fresh` arm's wall (8488 s, 52 % above the stale
+  arm) is profiled in `28_pdvd-pr-perf-round1.md`: the extra is the complete steiner
+  clouds and one 454 s strict-connector call (fixed there, byte-identical).

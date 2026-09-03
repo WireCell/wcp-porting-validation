@@ -43,6 +43,10 @@
 #   PDVD_PR_COMPILE_ONLY=1         write the compiled JSON and stop
 #   PDVD_KEEP_CFG=1                keep .wct-pr<TAG>.json
 #   PDVD_MAX_JOBS=N                parallel cap for 'evt all' (default 6)
+#   PDVD_PR_RELEASE=1              add release_post_nu after tagger_check_neutrino (doc pdvd/28)
+#   TCMALLOC_RELEASE_RATE=N        passed through to the preloaded tcmalloc (doc pdvd/28 M4)
+#   PDVD_LOG_LEVEL=trace           file-sink level (default debug); PDVD_LOG_LOGGERS
+#                                  the -L value (default = sink level), doc pdvd/28
 #   PDVD_RESMON=off                disable the RSS sampler
 #   WCT_TCMALLOC=off               drop the tcmalloc preload
 set -o pipefail
@@ -87,6 +91,15 @@ case "$MODE" in
     empty) PIPE="" ;;
 esac
 [ -n "$PIPE_EXPLICIT" ] && PIPE="$PIPE_EXPLICIT"
+# PDVD_PR_RELEASE=1 (doc pdvd/28): insert the ClusteringReleaseCaches visitor
+# right after tagger_check_neutrino (graphs + fitter scratch dropped before the
+# writers; output-neutral, lowers the writer-stage RSS).  Default off.
+if [ "${PDVD_PR_RELEASE:-0}" = 1 ] && [ -n "$PIPE" ]; then
+    case ",$PIPE," in
+        *,tagger_check_neutrino,*) PIPE=$(echo "$PIPE" | sed 's/tagger_check_neutrino/tagger_check_neutrino,release_post_nu/') ;;
+        *) PIPE="$PIPE,release_post_nu" ;;
+    esac
+fi
 if [ "$STM_FIT" = 1 ] && [ -n "$PIPE" ]; then PIPE="$PIPE,stm_magnify"; fi
 PIPE_JSON="[$(echo "$PIPE" | sed -e 's/,/","/g' -e 's/^/"/' -e 's/$/"/' -e 's/^""$//')]"
 
@@ -181,10 +194,14 @@ process_event() {
     local RES_TXT="$WORKDIR/pr_resource_${RUN_PADDED}_${EVT}.txt"
     local RES_CSV="$WORKDIR/pr_rss_${RUN_PADDED}_${EVT}.csv"
     local _t0=$SECONDS _smpid=""
+    # PDVD_LOG_LEVEL: file-sink level (default debug; 'trace' exposes the
+    # CreateSteinerGraph / ImproveCluster / NeutrinoPattern phase timers, doc
+    # pdvd/28).  PDVD_LOG_LOGGERS: the -L argument (default = the sink level;
+    # e.g. 'clus:trace' restricts trace to the clus logger).
     env $WC_PRELOAD GOGC=off wire-cell \
         -l stderr \
-        -l "${LOG}:debug" \
-        -L debug \
+        -l "${LOG}:${PDVD_LOG_LEVEL:-debug}" \
+        -L "${PDVD_LOG_LOGGERS:-${PDVD_LOG_LEVEL:-debug}}" \
         -c "$CFG_JSON" &
     local _wcpid=$!
     if [ "${PDVD_RESMON:-on}" != "off" ]; then
