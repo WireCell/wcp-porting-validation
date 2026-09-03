@@ -1478,7 +1478,21 @@ V: 0.004 → 0.009 → **0.665**.
 
 This retroactively justifies round 3. §5.3 could only say the fix was correct
 but ineffective on this stage; it is in fact **necessary** here, and was merely
-blocked by a second defect downstream of it.
+blocked by a second defect downstream of it. The premise is verified rather than
+assumed: `wrapped_channel_charge` is **absent from the `on` arm's compiled
+config** (0 occurrences, against 16 in the `both` arm), so the U-only recovery
+really is this knob acting alone.
+
+**Was the legacy path losing charge, or importing someone else's?** §5.2 warned
+that the failure mode admits a *wrong non-zero* value, and on a `first_bad = 0`
+plane the legacy code wrote each measure onto the channel of a wire 98 positions
+away — a real, listed channel of that plane, which the sampler then resolves. On
+the one plane this event lets us identify, a4f0's U (a `first_bad = 0` plane),
+the OFF arm has U ≠ 0 on **0 of 1870** corridor points: every shifted lookup
+landed on a channel with no activity in that slice. **On this event the failure
+was pure loss.** The import mode remains possible by construction — it is not
+demonstrated here, and the dump carries no (apa, face) so the rest of the event
+cannot be split the same way.
 
 **And the symptom that opened this campaign:**
 
@@ -1521,13 +1535,26 @@ the track axis (median 0.97 cm) than the control half's do (1.72 cm).
 
 **The density row is the one to look at, and it is a genuine question for the
 owner, not a defect I am reporting.** Below V the fix produces one terminal every
-**0.56 cm**, about 4.5× denser than the control half's 2.5 cm and 6.6× denser
-than pre-fix production's 3.7 cm there. That may be correct — this stretch really
-does have dense, continuous charge — or it may be the "smeared, hard to see the
-skeleton" regime the brief warns about. **§6.1's density metric existed for
-exactly one round before it had something to say.** Deciding it needs a Bee
-hand-scan of the restored skeleton, which is an owner call, and it is the natural
-first item of round 6.
+**0.56 cm**, against **2.5 cm** on the control half.
+
+Before reading 4.4× into that, normalise it — the two halves do not have the same
+point density either:
+
+| both-knobs arm | below V | above V | ratio |
+|---|---|---|---|
+| retiled points per cm | 9.87 | 4.19 | 2.4× |
+| terminals per cm | 1.78 | 0.40 | **4.4×** |
+| terminals **per point** | **0.180** | **0.096** | **1.9×** |
+
+So most of the 4.4× is just that the starved stretch has more blobs per cm; the
+criterion's own behaviour differs by about **2×**, not 4.4×. That is a much
+milder statement, and it is the one to hand the owner.
+
+Whether one terminal per 0.56 cm is right — this stretch really does carry dense,
+continuous charge — or is the *"smeared, hard to see the skeleton"* regime the
+brief warns about, is a judgement a count cannot make. **§6.1's density metric
+existed for exactly one round before it had something to say.** Deciding it needs
+a Bee hand-scan of the restored skeleton, and that is round 6's first item.
 
 ---
 
@@ -1644,6 +1671,13 @@ round 3 was necessary after all, merely blocked by a second defect downstream.
    population evidence and §7's aperture result, both measured on the input
    point cloud and untouched by any of this. §6 should be re-argued on that
    basis or retired; it should not be inherited.
+
+Newly owed by round 5: **the twin fix in base `RetileCluster::make_iblobs`
+(`retile_cluster.cxx:433`) is unreachable, so its knob-ON branch is untested
+code.** It was fixed for symmetry, and nothing gates it. If `cm.retile`
+(`ClusteringRetile`) is ever re-enabled, that branch needs a gate before it is
+trusted. Note also that the base path's activity carries a *hit flag* (1.0), not
+charge (`retile_cluster.cxx:143`), so its charges were never meaningful anyway.
 
 Still owed, unchanged: PDHD has no event-level gate for the round-3 fix (and
 runs no Steiner stage at all, so the round-5 one cannot reach it); the dead-blob
