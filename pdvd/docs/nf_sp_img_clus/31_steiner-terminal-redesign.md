@@ -2180,13 +2180,17 @@ what the third has to do.
    occupied slice (1.05 vs 1.04) and the **same** terminal-to-terminal spacing
    (0.59 vs 0.63 cm). §11.4's blob-granularity residual was itself a
    drift-alignment artefact. §12.2 and §12.3.
-3. **The defect is therefore not PDVD's, it is the criterion's, on both
-   detectors: terminal spacing is quantised by the time slicing.** One terminal
-   per candidate-bearing blob becomes, along a track, one terminal per occupied
+3. **What is left splits about evenly, half geometry and half criterion, and
+   the criterion half is a property of the rule on both detectors: terminal
+   spacing is quantised by the time slicing.** One terminal per
+   candidate-bearing blob becomes, along a track, one terminal per occupied
    slice — so density inherits the slice pitch and the track's drift angle
-   instead of a physical scale. The lever is a suppression pass with a
-   **physical** radius, and this round measures, offline on both detectors, what
-   each radius would do (§12.6).
+   instead of a physical scale. PDVD does additionally light up a larger share
+   of the slices it crosses (0.63 vs 0.55) *despite having fewer points in
+   them*, which is the one criterion-level residual round 8 leaves open (§12.2).
+   The lever for both is a suppression pass with a **physical** radius, and this
+   round measures, offline on both detectors, what each radius would do
+   (§12.6).
 
 **No code is changed this round** and no A/B gate is owed (§12.9). One script is
 added; the numbers below all come from it.
@@ -2242,7 +2246,12 @@ survives here (2.04 vs 1.51) and decomposes into:
   measured.
 - **fraction of crossed slices carrying a terminal: 0.63 vs 0.55**, a factor
   1.15. This is the only column where the criterion behaves differently, and it
-  is small.
+  is **not** small — 1.15 against a total of 1.35. Its *sign* also rules out the
+  obvious explanation: PDVD has **fewer** points per slice (2.16 vs 2.56) and
+  yet converts **more** of its slices into terminals, which is the opposite of
+  what point count predicts. This is a genuine criterion-level residual, not a
+  leftover of the geometry, and it is the column a cross-blob pass would act
+  on.
 - **slices crossed per cm: 3.23 vs 2.56**, a factor 1.26 — and this is pure
   geometry. PDVD's slice pitch is 0.296 cm against SBND's 0.313 (1.06×), and
   inside the same |cos| > 0.7 bin PDVD's cosmics are more nearly parallel to the
@@ -2253,11 +2262,14 @@ survives here (2.04 vs 1.51) and decomposes into:
 do not multiply exactly, so the decomposition is quoted as a decomposition and
 not as an identity.
 
-**The conclusion is that there is very little left that is PDVD's.** Its
-terminals are ~1.35× denser per cm of track because its time slices are 5 %
-thinner and its cosmic sample runs more nearly along the drift, not because its
-blobs or its threshold behave differently. Terminal spacing measured directly —
-0.59 cm on PDVD, 0.63 cm on SBND — is the same number.
+**Roughly half of the 1.35× is geometry and half is the criterion.** The two
+geometric factors multiply to 1.17 — a 5 % thinner time slice and a more
+drift-parallel sample — and the criterion factor is 1.15. What the round
+*removes* is the blob-granularity explanation (§12.3), the threshold (already
+closed by §11.3) and the sampler (§12.3); what it leaves is the slice-carrying
+fraction. Everything else matches: terminals per occupied slice 1.05 vs 1.04,
+and terminal spacing measured directly, 0.59 cm on PDVD against 0.63 cm on SBND,
+is the same number.
 
 ### 12.3 What "fewer points per blob" was
 
@@ -2368,21 +2380,35 @@ it is and filter its output: walk the terminals in decreasing
 vertex_set thin_terminals(const vertex_set& terminals, double min_separation) const;
 ```
 
-applied at **one** call site:
+applied at **one** call site, and the site matters. `create_steiner_tree` runs
+P1 `find_steiner_terminals` (`:95`), then P2 `filter_by_reference_cluster`
+(`:110`), then P3 `filter_by_path_constraints` (`:126`), then **P4, which
+*inserts* the cluster's extreme points** (`:136`). The thinning goes **after P3
+and before P4**:
 
 ```cpp
-// SteinerGrapher.cxx:95, create_steiner_tree.
-vertex_set steiner_terminals = find_steiner_terminals(graph_name, disable_dead_mix_cell);
+// SteinerGrapher.cxx, create_steiner_tree, between phase 3 and phase 4.
 if (m_config.terminal_min_separation > 0) {
     steiner_terminals = thin_terminals(steiner_terminals, m_config.terminal_min_separation);
 }
+// Phase 4: add extreme points -- unchanged, and deliberately AFTER the thinning,
+// so a cluster's own extremes can never be suppressed away.
+vertex_set extreme_points = get_extreme_points_for_reference(reference_cluster);
+steiner_terminals.insert(extreme_points.begin(), extreme_points.end());
 ```
 
-and **not** at `ImproveCluster_2`'s two `establish_same_blob_steiner_edges`
-passes: those terminals set the intra-blob 0.8/0.9 edge weights that decide the
-shortest path handed to Phase 3 (§8.4), so thinning there would change the tree
-rather than the flags on it. Keeping the knob to the one site makes it a pure
-subtraction from the published terminal set.
+Not at `:95`: P2 would then run on a thinned input and remove 6.6 % of a
+*different* set (§4.1), so the result would not be a subset of today's published
+terminals and the knob would stop being a pure subtraction. Not after P4 either:
+the extreme points are the cluster's coverage anchors and must survive
+unconditionally. And **not** at `ImproveCluster_2`'s two
+`establish_same_blob_steiner_edges` passes: those terminals set the intra-blob
+0.8/0.9 edge weights that decide the shortest path handed to P3 (§8.4), so
+thinning there would change the tree rather than the flags on it.
+
+The greedy order is `(charge descending, then point index)` — the same
+tie-break `candidates_set` already uses in `find_peak_point_indices`, so the
+result is deterministic and not pointer-ordered.
 
 Why this one first:
 
@@ -2462,7 +2488,8 @@ seeded shuffle.
 | 1.50 | 0.78 | 0.79 | 0.57 | 0.38 | 0.38 |
 
 (terminals/cm, median over clusters; the two orderings agree to ≤ 0.07 everywhere
-and the axis order is quoted. "kept" is the surviving fraction.)
+and the axis order is quoted. "kept" is the surviving fraction; the PDVD column
+is the 039349/14 arm, 298595 differs from it only in the third digit.)
 
 And the coverage cost, which is the point of the table:
 
@@ -2483,15 +2510,18 @@ what it looks like in practice, and it is far inside the bound.
 Two further readings:
 
 - **A common R does not equalise the two detectors**, and should not be expected
-  to. From R = 0.5 cm up PDVD stays 1.4–1.5× SBND, because greedy suppression yields
-  roughly min(original density, 1/R): PDVD's terminals are dense and nearly
-  uniformly spaced, so the cap binds and it lands near 1/R; SBND's are irregular,
-  so it lands *below* the cap. Reproducing SBND's present 1.51/cm on PDVD needs
-  R ≈ 0.6, which would cost SBND ~25 % of its terminals.
+  to. From R = 0.5 cm up PDVD stays 1.4–1.5× SBND, because greedy suppression
+  yields roughly min(original density, 1/R): PDVD's terminals are dense enough
+  along the track for the cap to bind, so it lands near 1/R; SBND's are more
+  irregular, so it lands *below* the cap. Reproducing SBND's present 1.51/cm on
+  PDVD needs R ≈ 0.6, which would cost SBND ~25 % of its terminals.
 - **SBND at R = 0.30 loses nothing** (kept 1.00), i.e. its production terminal
-  set is already 0.3-separated, while PDVD's is not (kept 0.83). That is the
-  same statement as the nn-distance quartiles: PDVD's 25th percentile is 0.39 cm
-  against SBND's 0.52.
+  set is already 0.3-separated, while PDVD's is not (kept 0.83). PDVD therefore
+  carries a **close-pair tail** — 17 % of its terminals have a partner inside
+  0.3 cm, and its nn-distance 25th percentile is 0.39 cm against SBND's 0.52 —
+  on top of the regular per-slice chain. §12.3 rules out those partners being in
+  the same slice, so they are in an adjacent one, which is exactly the pair a
+  cross-blob rule removes and a per-blob rule cannot see.
 
 The third simulated criterion, same-slice-only suppression, is in §12.3: it
 removes nothing on either detector and is not a candidate.
@@ -2548,6 +2578,15 @@ made by the compiled-config gate, not by an argument about geometry.
   `work/039252_2_d31r6e2e` and the 906-event doc-97 SBND production dumps
   `sbnd_xin/work-mcp2k-d97fvpr2` — read-only. Nothing under `work/` was written,
   regenerated or deleted (M13).
+- **What §12.6 simulates is not exactly what R1 does.** The dump's
+  `flag_terminal` is the **final** terminal set — after P2/P3 and *including*
+  P4's inserted extreme points — while R1 thins between P3 and P4. The two
+  differ by the extreme points, a handful per cluster, which R1 keeps
+  unconditionally and the simulation may drop. The difference is bounded by
+  |extreme points| and pushes the simulation's coverage rows *pessimistic*, not
+  optimistic. This is also why R1 is not placed at `:95`: there the 6.6 % P2
+  removes (§4.1) would come off a different set and the knob would stop being a
+  subtraction from today's published terminals.
 - **Evidence bars.** §12.2 and §12.3's tables are *measured*. §12.6 is a
   *simulation* on stored terminal sets, and its density column is order-robust
   (any maximal R-separated subset of a curve of length L has between L/2R and
@@ -2736,11 +2775,14 @@ halves and, in answering the second, overturns round 7's own residual:
    controls for, measured at whole-cluster granularity. What is left of the
    1.35× is PDVD's 5 % finer slice pitch and its more nearly drift-parallel
    cosmic sample.
-3. **The defect belongs to the criterion, on both detectors.** One terminal per
-   candidate-bearing blob becomes one terminal per occupied *slice*, so spacing
-   inherits the slice pitch and the track's drift angle instead of a physical
-   scale. SBND is consequently **not** an independent reference for "correct
-   density" (§12.7) — it is the same algorithm under a different geometry.
+3. **What remains splits about evenly, half geometry and half criterion.** One
+   terminal per candidate-bearing blob becomes one terminal per occupied
+   *slice*, so spacing inherits the slice pitch and the track's drift angle
+   instead of a physical scale — and SBND is consequently **not** an independent
+   reference for "correct density" (§12.7), being the same algorithm under a
+   different geometry. The one criterion-level residual left open is that PDVD
+   lights up 63 % of the slices it crosses against SBND's 55 % *while having
+   fewer points in them* — the opposite sign from what point count predicts.
 4. **The recommended lever is a cross-blob thinning pass with a physical
    radius** (§12.5 R1), applied to the terminal set at `create_steiner_tree`
    only, default-OFF. It has a coverage bound that holds whatever the charge
