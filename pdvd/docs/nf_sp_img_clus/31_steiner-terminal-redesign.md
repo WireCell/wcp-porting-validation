@@ -20,7 +20,13 @@ round-3 fix structurally could not reach. Round 4 changes no behaviour: one
 doctest plus three fields on round 2's env-gated dump line.
 **Round 5 (§9) fixes that site behind a second default-OFF knob
 (`wrapped_channel_activity`) and closes the 108.5 cm gap to 1.8 cm.**
-Gates in §5.3, §8 and §9.2; `./build/clus/wcdoctest-clus` **276/276**.
+**Round 6 (§10) is the owner's hand scan and the three decisions it settled**:
+both knobs go to PDVD production (the two downstream STM verdict changes are
+adjudicated in the fix's favour), `ImproveCluster_2`'s terminal threshold is
+synced to `CreateSteinerGraph`'s, and `traj_degenerate_wcpts_fallback` is
+retired. Its one negative verdict — the terminals are now too dense — is
+root-caused in §10.3 and becomes round 7.
+Gates in §5.3, §8, §9.2 and §10.5; `./build/clus/wcdoctest-clus` **277/277**.
 
 ---
 
@@ -267,6 +273,46 @@ done
 # OFF-path end-to-end gate: d31r5off's calib-pr must equal round 4's exactly.
 cmp work/039349_14_d31r4dump/calib-pr-evt19689.json \
     work/039349_14_d31r5off/calib-pr-evt19689.json
+
+# ---- round 6 (section 10) -------------------------------------------------
+# The three Bee hand-scan sets (no new reconstruction -- built from the arms
+# above).  Prints the per-event layer point counts; upload each zip and record
+# the UUID.  Set A carries the two NEW layers built from the calib steiner
+# section.
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+python3 docs/nf_sp_img_clus/scripts/build_bee_sets.py /home/xqian/tmp/beesets
+for z in A_density_039349_14 B_cl47_039349_14 C_cl109_039252_2; do
+  ./upload-to-bee.sh /home/xqian/tmp/beesets/$z.zip
+done
+
+# The two round-6 arms.  prod = the new PDVD defaults; sync = owner Q5, the
+# retiler's terminal finder at the same 500 e CreateSteinerGraph runs.
+mkdir -p /home/xqian/tmp/d31r6lib && cp -a ../../local/lib/. /home/xqian/tmp/d31r6lib/
+for arm in prod sync; do
+  W=work/039349_14_d31r6$arm; mkdir -p $W
+  ln -f work/039349_14_d31fix2off/pctree-evt19689.{tar.gz,tlas} $W/
+  [ $arm = sync ] && K="-S retile_steiner_terminal_charge=500" || K="-S retile_steiner_terminal_charge=null"
+  PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 PDVD_PR_TLA="$K" \
+      ./run_pr_evt.sh -s d31r6$arm 39349 14
+  (cd $W && env LD_LIBRARY_PATH=/home/xqian/tmp/d31r6lib GOGC=off \
+      WCT_STEINER_PHASE_DUMP=1 wire-cell -l stderr \
+      -l "wct_pr_dump.log:trace" -L clus:trace -c .wct-pr_d31r6$arm.json)
+done
+# Section 10.3's per-blob floor and section 10.6's density rows, both arms.
+python3 docs/nf_sp_img_clus/scripts/steiner_density_census.py \
+    work/039349_14_d31r5off work/039349_14_d31r6prod work/039349_14_d31r6sync
+# Section 10.5's end-to-end gate: the default flip must reproduce round 5 exactly.
+cmp work/039349_14_d31r5both/calib-pr-evt19689.json \
+    work/039349_14_d31r6prod/calib-pr-evt19689.json
+
+# Section 10.5's config gates.  The load-bearing one compiles the NEW tree with
+# the sync suppressed against the HEAD tree with both knobs passed as TLAs:
+#   git archive HEAD cfg | tar -x -C $G/headcfg
+#   git -C ../  show HEAD:pdvd/wct-pr-perevt.jsonnet > wct-pr-perevt-head.jsonnet
+#   WIRECELL_PATH=$TOOLKIT/cfg:$WCDATA     wcsonnet ... -S retile_steiner_terminal_charge=null wct-pr-perevt.jsonnet
+#   WIRECELL_PATH=$G/headcfg/cfg:$WCDATA   wcsonnet ... -S wrapped_channel_charge=true -S retile_wrapped_channel_activity=true wct-pr-perevt-head.jsonnet
+#   cmp                              # byte-identical, 279974 B
+# SBND 253993 B and uBooNE 255717 B are gated the same way (shared common/clus.jsonnet).
 
 # Section 7 -- aperture feasibility, PDVD and the SBND control.
 python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
@@ -931,6 +977,14 @@ perfectly on coverage.
 | **not too many** | terminals per cm of skeleton | never measured on any detector |
 | **on the track / vertex** | transverse distance from the **fitted** skeleton | never measured on any detector |
 
+**Round 6 update.** All three were measured together for the first time in
+§9.4, and the "not too many" row is the one that has since fired: the owner's
+hand scan of the restored skeleton returned *too dense*. §10.3 root-causes that
+— the local-max suppression is scoped to one blob, so terminal density is
+candidate-bearing **blob** density (1.02 terminals per such blob, measured) —
+and it is why round 7's lever is a cross-blob suppression pass rather than any
+of §6's. The row below is therefore no longer "never measured".
+
 The first is unchanged from round 1 and is still the headline: it is what was
 actually wrong on 039349/14, it is detector-comparable, and it is computable
 offline from the calib dump's `steiner`/`flag_terminal` arrays. The AND-gate
@@ -1558,7 +1612,191 @@ a Bee hand-scan of the restored skeleton, and that is round 6's first item.
 
 ---
 
-## 10. Scope of each round, and what round 6 is
+## 10. Round 6: the owner's hand scan, and the three decisions it settled
+
+Round 5 ended with three questions that no count could answer, and one that was
+purely a design call. All four are now answered. This section records the scan,
+the mechanism behind its one negative verdict, and what shipped as a result.
+
+### 10.1 The scan
+
+Three Bee sets were built from the existing arms — no new reconstruction — and
+handed over for a hand scan. Set A carries **two layers that had never been in a
+Bee zip before**, `steiner-global` and `steinerterm-global`, built from the calib
+dump's `steiner` section (per-cluster `x/y/z` + `flag_terminal`), which is the
+same source §9.4's numbers come from.
+
+| set | Bee UUID | contents | question |
+|---|---|---|---|
+| **A** density | `f4edc748-91ef-4dce-a67f-56a8c4fd5b63` | 039349/14, 3 events: 0 production, 1 retile fix, 2 both knobs | is one terminal per 0.56 cm readable, or smeared? |
+| **B** cluster 47 | `9c700983-1a2f-41a3-a4e6-f4ea182d5152` | 039349/14, round-3 knob OFF (0) vs ON (1) | is cl47 an STM, and is it one particle? |
+| **C** cluster 109 | `85529727-bd67-4189-8817-8e927e40b507` | 039252/2, round-3 knob OFF (0) vs ON (1) | does cl109 stop inside the volume? |
+
+The frame was proved before the sets were shipped rather than assumed: cluster
+34's 2561 steiner points nearest-neighbour into that arm's own Bee
+`clustering-global` at a **median 0.83 cm** and land on Bee `cluster_id` 34 on
+**2561 of 2561**, so the new layers sit on the charge and share its numbering.
+Builder: `scripts/build_bee_sets.py`.
+
+**The owner's verdicts, in their words:**
+
+- **Set A** — "the steiner-global are quite good, in terms of continuous, but
+  the steiner terminal seems to be too dense; I recall that we have some local
+  maximum selection right?"
+- **Set B** — "this track looks like a TGM, not a STM, despite it has some gaps."
+- **Set C** — "the 109 could be a STM."
+
+### 10.2 What B and C settle: both downstream verdict changes point the same way
+
+§5.3 and §8.3 each recorded an STM verdict that moved when round 3's knob went
+on, and each said in terms that **which verdict is right was not established**.
+The hand scan establishes both, and both go the fix's way:
+
+| | object | knob OFF | knob ON | owner's read | so the ON verdict is |
+|---|---|---|---|---|---|
+| §5.3 | cl 47, 039349/14 | STM-tagged | **not** tagged | **TGM**, not STM | **correct** |
+| §8.3 | cl 109, 039252/2 | not tagged | **tagged** | could be an STM | **plausible** |
+
+Cluster 47's geometry supports the reading independently of the tag: it is
+**760 cm** end to end and runs x −343 → +343, i.e. anode to anode across *both*
+drift volumes. A stopping-muon verdict on that object was the anomaly; removing
+it is the correction. This is the evidence §5.3's "must not arrive unannounced
+with a default flip" was asking for, and it is what unblocks §2 below.
+
+### 10.3 Set A's negative verdict, and why the peak finder cannot fix it
+
+**Yes, there is a local-maximum selection — and it is scoped to one blob, which
+is exactly why it cannot thin these terminals.**
+
+`find_peak_point_indices` (`SteinerGrapher.cxx:493`) is a genuine local-max
+suppression: candidates are walked in order of decreasing charge, each takes an
+`nlevel = 1` BFS neighbourhood on the graph, a candidate is demoted if any
+neighbour carries more charge, and finally connected components of surviving
+peaks are collapsed to the one point nearest each component's centre of mass.
+
+But `find_steiner_terminals` (`SteinerGrapher.cxx:681`) calls it **once per
+blob**, over that blob's points alone. The nlevel hops are taken on the full
+graph, yet the candidate set never leaves the blob, so the suppression can thin a
+blob to one terminal and can **never remove a blob's last one**. Terminal count
+is floored at the number of candidate-bearing blobs.
+
+Measured, not inferred — a new env-gated counter (`steiner_p1_blobs`, under the
+existing `WCT_STEINER_PHASE_DUMP` gate) prints `nblob / ncand_blob / nterm` per
+call, over the whole of 039349/14:
+
+| component | calls | blobs | candidate-bearing | terminals | terminals per candidate-bearing blob | `nterm == ncand` |
+|---|---|---|---|---|---|---|
+| `CreateSteinerGraph` | 92 | 69522 | 28726 | 29342 | **1.021** | 42/92 calls exactly |
+| `ImproveCluster_1` (inside `_2`) | 92 | 49376 | 15120 | 15190 | **1.005** | 73/92 calls exactly |
+
+The floor is essentially saturated: the peak finder is already emitting about one
+terminal per candidate-bearing blob, and the excess over 1.000 is blobs whose
+candidates fall into more than one connected component. **So terminal density is
+blob density**, and §9.4's 4.4× is the 2.4× retiled-blob-density difference plus
+that small excess — which is the same decomposition §9.4 arrived at from the
+other side (1.9× per point).
+
+Two consequences worth stating plainly:
+
+- **No threshold and no `nlevel` can thin this.** Raising
+  `terminal_charge_threshold` removes candidate-bearing blobs entirely (and with
+  them coverage, which is the metric round 5 just fixed); raising `nlevel`
+  widens a neighbourhood that is intersected with a single blob's points anyway.
+  The lever has to be a suppression pass that sees **across** blobs.
+- **Per-blob is prototype-faithful** (`find_steiner_terminals` mirrors the
+  prototype's per-mcell loop), so a cross-blob pass is a deliberate divergence
+  under M15, not a bug fix. It needs its own default-OFF knob and its own gate.
+  That is round 7, and §6.1's density metric is now the thing that grades it.
+
+### 10.4 What shipped
+
+Four owner decisions, three of them code.
+
+**(1) Q2 — both knobs are PDVD production.** `wrapped_channel_charge` (round 3)
+and `retile_wrapped_channel_activity` (round 5) now default **true** in PDVD's
+configs: `protodunevd/clus.jsonnet`, `protodunevd/pr.jsonnet`, and the runners
+`pdvd/wct-clustering.jsonnet` and `pdvd/wct-pr-perevt.jsonnet`. **The C++
+defaults are unchanged (both still `false`)**, so PDHD — which carries 2.5× the
+orphan fraction and still has no event-level gate here — and every other detector
+are untouched. This is a behaviour change by intent; §10.5's gate proves only
+that it *is* a default change and nothing more.
+
+**(2) Q5 — the Steiner stage no longer runs two terminal thresholds.**
+`ImproveCluster_2` gains a `terminal_charge_threshold` key (C++ default 4000, the
+historical value) which its internal `Grapher::Config` now carries, and PDVD sets
+it from the same `steiner_terminal_charge` value `CreateSteinerGraph` uses — one
+number, so the two cannot drift apart again. §8.4 recorded the inconsistency;
+this closes it.
+
+**(3) Q6 — `traj_degenerate_wcpts_fallback` is retired.** Removed from
+`TrackFitting::Parameters`, both `set_parameter`/`get_parameter` cases,
+`TaggerCheckNeutrino`'s member and config round-trip, and the PDVD runner TLA.
+The surviving expression is the legacy `segment->fits().empty()`. Retirement is
+byte-identical **by construction**: the default was 0 and no detector's config
+ever set it. Its doctest is replaced by a guard that the name now *throws* from
+`get_parameter`/`set_parameter`, so a silent reintroduction fails the suite.
+
+**(4) Q4 — §6 is parked, not retired.** The redesign's case on this event is
+gone; what survives untouched is doc 28's population evidence and §7's aperture
+result, both measured on the input point cloud. Either would reopen it.
+
+### 10.5 Gates
+
+| gate | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | **277/277**, 4006 assertions (1 new case: the `ImproveCluster_2` default) |
+| PDVD PR config: new defaults, sync suppressed, **vs HEAD + explicit knob TLAs** | **byte-identical**, 279974 B |
+| PDVD PR config: production default vs that | **exactly one key on one node** (`terminal_charge_threshold` on `ImproveCluster_2`), 59 nodes compared |
+| PDVD clustering config: new default vs HEAD + explicit TLA | **byte-identical**, 198097 B |
+| **SBND** `wct-pr-perevt` (shared `common/clus.jsonnet` edited) | **byte-identical**, 253993 B |
+| **uBooNE** `uboone-mabc` | **byte-identical**, 255717 B |
+| end-to-end: `d31r6prod` (new defaults) vs round 5's `d31r5both` | `calib-pr` **byte-identical**, 7160347 B |
+| freshness | source 17:30:23 → `local/lib` 17:34:01, md5 `be0aa5a7d88bc4bf046425692cadbde6` |
+
+The first row of the config block is the one that carries the argument: it
+compiles the *new* tree with the sync suppressed against the *HEAD* tree with
+both knobs passed as explicit TLAs, and gets the same bytes. That proves the
+commit changed defaults and plumbing and nothing else. It is deliberately **not**
+an end-to-end byte-identity claim — the flip changes reconstruction output, which
+is the point of it.
+
+### 10.6 What the Q5 sync actually costs
+
+Measured before it was set, on a fourth arm (`d31r6sync`, the sync applied by
+TLA), because lowering the retiler's threshold admits more terminals into
+`hack_activity_improved` and could plausibly have made the density the owner just
+flagged *worse*. It does not:
+
+| 039349/14, whole event | prod (4000 inside `_2`) | sync (500) |
+|---|---|---|
+| `ImproveCluster_1` candidate-bearing blobs | 15120 | **31360** (2.07×) |
+| steiner points / terminals, all clusters | 45874 / 13427 | 45935 / **13431** |
+| clusters whose steiner cloud changes | — | **1** (cluster 44: +61 points, +4 terminals) |
+| segments / vertices / showers / candidates | 20 / 23 / 2 / 3 | **identical** |
+| **cluster 34 below V**: points / terminals / gap | 666 / 198 / 1.8 cm | **666 / 198 / 1.8 cm** |
+
+So the retiler's internal terminal count doubles, and the flagship track's final
+Steiner cloud is bit-identical. One unrelated cluster moves. The sync removes a
+real inconsistency at close to zero cost **on this event** — one event is not a
+manifest, and it inherits the same validation debt as the two flips.
+
+### 10.7 Round 7
+
+1. **The cross-blob suppression pass** §10.3 identifies — a second peak stage
+   that sees beyond one blob, behind a default-OFF knob, graded by §6.1's three
+   metrics together (a lever that improves density while destroying coverage is
+   not an improvement). This is the first item in this campaign that the *"not
+   too many"* half of the owner's brief has actually asked for.
+2. **Manifest-scale validation of everything round 6 flipped.** Three changes
+   now ship ON for PDVD on the evidence of two events and two hand-scanned
+   clusters. That was enough to flip; it is not enough to leave unvalidated.
+3. **PDHD still has no event-level gate** for `wrapped_channel_charge`, and it
+   is the detector with 2.5× the orphan fraction. One knob-OFF PDHD event closes
+   it cheaply, and PDHD runs no Steiner stage so round 5's knob cannot reach it.
+
+---
+
+## 11. Scope of each round, and what round 7 is
 
 **Round 1** (doc + scripts, no code): the algorithm review, the four uBooNE
 couplings, the §6 redesign, §7's aperture feasibility. Its §4 conclusion was
@@ -1655,32 +1893,40 @@ composition finding is §9.3: the retile fix recovers **U** and round 3's
 `wrapped_channel_charge` is what recovers **V**, so the two are complementary and
 round 3 was necessary after all, merely blocked by a second defect downstream.
 
-**Round 6**, in priority order:
+**Round 6** (this one; §10): the owner's hand scan of three Bee sets, and the
+three code decisions it settled. Both downstream STM verdict changes are
+adjudicated **in the fix's favour** (cl 47 is a TGM, cl 109 a plausible STM), so
+both knobs are flipped to PDVD production; `ImproveCluster_2`'s terminal
+threshold is made configurable and synced to `CreateSteinerGraph`'s;
+`traj_degenerate_wcpts_fallback` is retired. The one negative verdict — the
+terminals are too dense — is root-caused in §10.3: the local-max suppression is
+scoped to a single blob, so terminal density *is* candidate-bearing blob density
+(1.02 terminals per such blob, measured over 92 calls). C++ defaults are
+unchanged everywhere; the flips are PDVD config only.
 
-1. **The density question §9.4 raises** — one terminal per 0.56 cm below the
-   vertex against 2.5 cm on the control half. Owner call, and it needs a Bee
-   hand-scan of the restored skeleton, not another count. It is the first thing
-   this campaign has produced that the *"not too many"* half of the brief can
-   actually bite on.
-2. **Manifest-scale validation of both knobs**, and only then a default-flip
-   proposal. One event is not a flip argument, and the two downstream verdict
-   changes already recorded (cluster 47 on 039349/14, cluster 109 on 039252/2)
-   still need hand scans.
-3. **Then reopen §6, or close it.** The redesign's case on *this* event is now
-   gone — the criterion was never the problem here. What survives is doc 28's
-   population evidence and §7's aperture result, both measured on the input
-   point cloud and untouched by any of this. §6 should be re-argued on that
-   basis or retired; it should not be inherited.
+**Round 7**, in priority order:
 
-Newly owed by round 5: **the twin fix in base `RetileCluster::make_iblobs`
-(`retile_cluster.cxx:433`) is unreachable, so its knob-ON branch is untested
-code.** It was fixed for symmetry, and nothing gates it. If `cm.retile`
-(`ClusteringRetile`) is ever re-enabled, that branch needs a gate before it is
-trusted. Note also that the base path's activity carries a *hit flag* (1.0), not
-charge (`retile_cluster.cxx:143`), so its charges were never meaningful anyway.
+1. **A cross-blob suppression pass** (§10.3, §10.7). The only lever that can
+   thin the terminals without also destroying the coverage round 5 restored.
+   Default-OFF knob, graded on all three §6.1 metrics at once. Per-blob is
+   prototype-faithful, so this is a deliberate divergence under M15.
+2. **Manifest-scale validation of the three round-6 changes.** They shipped ON
+   for PDVD on two events and two hand-scanned clusters — enough to flip, not
+   enough to leave unvalidated.
+3. **Then reopen §6, or retire it.** Parked by the owner in round 6. The
+   redesign's case on *this* event is gone — the criterion was never the problem
+   here. What survives is doc 28's population evidence and §7's aperture result,
+   both measured on the input point cloud and untouched by any of this. §6
+   should be re-argued on that basis or retired; it should not be inherited.
 
-Still owed, unchanged: PDHD has no event-level gate for the round-3 fix (and
-runs no Steiner stage at all, so the round-5 one cannot reach it); the dead-blob
-sampler still carries the round-3 defect; PDVD still runs two terminal
-thresholds in one stage (§8.4); the anodes 0-3 `wire_index` question is
-unexplained; §7's aperture was never taken end-to-end through the tree.
+Newly owed by round 6: the flips are PDVD-only and **PDHD still has no
+event-level gate** for `wrapped_channel_charge` despite carrying 2.5× the orphan
+fraction; the Q5 sync is measured on one event, where it moves exactly one
+cluster; and `retile_cluster.cxx:433`'s twin remains unreachable, so its knob-ON
+branch is still untested code.
+
+Still owed, unchanged from round 5: the dead-blob sampler still carries the
+round-3 defect; the anodes 0-3 `wire_index` question is unexplained; §7's
+aperture was never taken end-to-end through the tree; and the base `RetileCluster`
+path's activity carries a hit flag (1.0) rather than charge
+(`retile_cluster.cxx:143`), so its charges were never meaningful anyway.

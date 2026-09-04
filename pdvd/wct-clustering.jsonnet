@@ -26,7 +26,8 @@ function(
     // doc 31 round 3: resolve induction charge by channel IDENT on a wrapped
     // strip's continuation (PDVD 1568 U/V wires).  false => key omitted =>
     // byte-identical.  See pdvd/docs/nf_sp_img_clus/31_*.md.
-    wrapped_channel_charge = false,
+    // PDVD PRODUCTION ON, owner flip 2026-09-03 (doc 31 round 6).
+    wrapped_channel_charge = true,
     // Event-T0 / readout-tick0 compensation for the live BlobSampler drift-x
     // conversion.  PDVD has no per-event T0, so default 0 (no preset T0).
     // -250us would place trigger-time activity at its true x; see

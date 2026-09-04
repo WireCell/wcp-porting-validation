@@ -69,7 +69,11 @@ function(
     // (AnodePlane.cxx:244-247) so the legacy operator[] lookup read channels[0]
     // and left charge_val AND charge_unc at 0, which calc_charge_wcp reads as
     // "no signal".  C++ default false; key omitted when off => byte-identical.
-    wrapped_channel_charge = false,
+    // PDVD PRODUCTION ON, owner flip 2026-09-03 (doc 31 round 6): the hand
+    // scan of 039349/14 cluster 47 (a TGM, correctly losing its STM tag with
+    // the knob on) and of 039252/2 cluster 109 (a plausible STM, correctly
+    // gaining one) both back the corrected charge.  C++ default stays false.
+    wrapped_channel_charge = true,
     // doc 31 round 5: the SAME AnodePlane rule at a third site, and this one is
     // upstream of the Steiner terminal finder.  ImproveCluster_2 -- the retiler
     // the Steiner stage runs -- indexes IWirePlane::channels() by WIRE index
@@ -79,7 +83,19 @@ function(
     // of 039349/14, 99.8% of retiled points hold fewer than the two non-zero
     // planes calc_charge_wcp needs, so no threshold can make them terminals.
     // C++ default false; key omitted when off => byte-identical.
-    retile_wrapped_channel_activity = false,
+    // PDVD PRODUCTION ON, owner flip 2026-09-03 (doc 31 round 6): with both
+    // knobs the 108.5 cm steiner-free gap below the vertex closes to 1.8 cm.
+    // C++ default stays false.
+    retile_wrapped_channel_activity = true,
+    // doc 31 round 6 (owner Q5): ImproveCluster_2 runs its OWN Steiner terminal
+    // finder twice, and did so at the C++ default 4000 e regardless of
+    // steiner_terminal_charge -- so PDVD ran two thresholds in one stage.  Set
+    // to steiner_terminal_charge to sync them; null => 4000 => historical.
+    // PDVD PRODUCTION SYNCED, owner decision 2026-09-03: measured on 039349/14
+    // to move exactly one cluster (44: +61 steiner points, +4 terminals) and to
+    // leave the flagship cluster 34 bit-identical, so the sync costs nothing
+    // here and removes a real inconsistency.
+    retile_steiner_terminal_charge = steiner_terminal_charge,
     // Readout window in ticks: clamps T_bad_ch time ranges in the Magnify /
     // PrDisplay writers (SBND 3427; PDVD 10000 = 5 ms at 0.5 us).
     readout_window_ticks = 10000,
@@ -2842,12 +2858,6 @@ function(
     // trajectory-round-1 exclusion contention right after a do_rough_path graph edit adds
     // an overlapping segment) is resampled as a STRAIGHT chord and the bent 128-point
     // wcpts() path in the same object is never consulted again.  Rendered result: a 64 cm
-    // arm drawn with max perpendicular deviation 0.001 cm, a median 3.45 cm off the
-    // trajectory TaggerCheckSTM fits on the same charge.  true => fall back to wcpts()
-    // when fits() has <= 2 points and wcpts() has more than twice as many.
-    // C++ default false => key omitted => byte-identical.  Validation:
-    // --tla-code traj_degenerate_wcpts_fallback=true.
-    traj_degenerate_wcpts_fallback = false,
     // doc 77 round 1 (2026-08-24): dl_vtx_topo_weight/_center (pr/89 Arm C2
     // rule-1 outgoing-prong topology term) removed -- live A/B -8/1014.
     // See sbnd_xin/docs/77_knob-ledger.tsv.
@@ -3557,7 +3567,6 @@ function(
         [if dual_chain_allow_cluster_swap != null then 'dual_chain_allow_cluster_swap']: dual_chain_allow_cluster_swap,
         [if dual_chain_vtx_weight != null then 'dual_chain_vtx_weight']: dual_chain_vtx_weight,
         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
-        [if traj_degenerate_wcpts_fallback then 'traj_degenerate_wcpts_fallback']: true,
         [if main_vertex_swap_apply then 'main_vertex_swap_apply']: true,
         [if rough_path_probe then 'rough_path_probe']: true,
         [if steiner_gap_penalty != null then 'steiner_gap_penalty']: steiner_gap_penalty,
@@ -3674,6 +3683,7 @@ function(
                              stm_readout_edge_ticks=stm_readout_edge_ticks,
                              steiner_terminal_charge=steiner_terminal_charge,
                              retile_wrapped_channel_activity=retile_wrapped_channel_activity,
+                             retile_steiner_terminal_charge=retile_steiner_terminal_charge,
                              stm_anode_dist_fix=stm_anode_dist_fix,
                              stm_second_track_guard=stm_second_track_guard,
                              stm_deficit_guard=stm_deficit_guard,
