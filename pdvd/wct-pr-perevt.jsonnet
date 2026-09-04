@@ -1098,7 +1098,7 @@ function(
     // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
     // -fvz <cm>.
-    tgm_fv_zmax_margin = 5,
+    tgm_fv_zmax_margin = 18,   // doc 34: 15 (space charge) + 3 (FV_z_margin)
     // Downstream-z inset used by check_tgm's CASE-A INTERIOR-support tests
     // (chord midpoints + waypoint re-check) when > 0, in cm (default 0 =
     // OFF, key omitted => byte-identical; the interior tests then share
@@ -1106,13 +1106,36 @@ function(
     // wall-hugging corner clipper keeps its midpoint support (doc 35,
     // evt287517 cluster 16 / evt289805 cluster 9).  TGM only; FC untouched.
     // Runner flag: -fvzi <cm>.
-    tgm_fv_zmax_margin_interior = 3,
+    // PDVD doc 34: 0, i.e. the key is suppressed and TaggerCheckTGM.cxx:692
+    // falls back to fv_tolerance -- the interior-support tests use the SAME
+    // volume as the endpoint tests, which is the whole point of "consistent
+    // with clustering".  The doc-35 concern this knob exists for was measured
+    // at the 15 cm scale rather than assumed: interior 3 vs 0 moves 46 of 7135
+    // clusters' TGM verdict (2231 vs 2185) and moves the fully-contained
+    // population by ZERO (2290 either way).  Pass 3 here for the alternative.
+    tgm_fv_zmax_margin_interior = 0,
     // Drift-x and vertical-y insets of the TGM/FC fiducial box, in cm, both
     // faces symmetric (defaults 2 / 2.5 = byte-identical legacy margins).
     // Shared by tagger_check_tgm and tagger_check_fc, same as
     // tgm_fv_zmax_margin.  Runner flags: -fvx <cm> / -fvy <cm>.
-    tgm_fv_x_margin = 30,   // cm; PDVD: 30 -- the fitted dQ/dx rises ~50% over the last ~30 cm before either CRP plane (instrumental near-anode charge, doc 25 M3), so a track end there is an exit / cannot be judged; SBND 2
-    tgm_fv_y_margin = 3,
+    // PDVD doc 34 (owner, 2026-09-04): the tagger fiducial is made CONSISTENT
+    // with the clustering FV, whose 15 cm y/z inset is a SPACE-CHARGE
+    // allowance.  The arithmetic closes exactly, which is why these are not
+    // tunable numbers:
+    //   y: box 336.4 - 17.5 = 318.9 == dvm.overall FV_y 321.4 - FV_y_margin 2.5
+    //   z: box [0.05,299.25] -+ 18  == FV_z [15.05,284.25] -+ FV_z_margin 3
+    // x drops 30 -> 2.5 (SBND's value).  The 30 was doc 25 M3's near-CRP dQ/dx
+    // guard; doc 33 sec 7 measured that rise to be a smooth whole-drift
+    // gradient with no knee at 30 cm, and the owner's steer is that it be
+    // understood rather than paid for with volume.
+    // NOT byte-identical.  Measured over five 120-event arms (doc 34 sec 5):
+    // TGM 1592 -> 2185, fully-contained 2942 -> 2290, cluster ids unchanged.
+    tgm_fv_x_margin = 2.5,
+    tgm_fv_y_margin = 17.5,
+    // Upstream-z (z ~ 0 face) inset, in cm (default 3 = the byte-identical
+    // legacy literal that used to be hard-coded in pr.jsonnet's margin
+    // vectors).  Broken out for doc pdvd/34.
+    tgm_fv_zmin_margin = 18,   // doc 34: 15 (space charge) + 3 (FV_z_margin)
     // Persist the per-pass STM track fits (C++ default false; key omitted
     // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
     // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added
@@ -3665,6 +3688,7 @@ function(
                              tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior,
                              tgm_fv_x_margin=tgm_fv_x_margin,
                              tgm_fv_y_margin=tgm_fv_y_margin,
+                             tgm_fv_zmin_margin=tgm_fv_zmin_margin,
                              save_stm_fit=save_stm_fit,
                              pf_track_main_cluster_only=pf_track_main_cluster_only,
                              pf_track_bridged_clusters=pf_track_bridged_clusters,

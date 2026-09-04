@@ -278,6 +278,12 @@ Three conclusions:
 2. **The CRP y seam is real but far wider than the geometry says** — 0.02 cm of
    geometric gap, ~±1 cm of reduced efficiency. A fiducial volume built from
    `sensitive()` alone cannot see it.
+   **[Corrected by doc 34 §3.2: these profiles are binned finer than the ctpc
+   point pitch, so they are combs, not densities. Measured against a matched
+   control, the y = 0 CRP↔CRP seam is *exactly* its 0.61 cm mechanical
+   half-width, and the 0.02 cm CRU↔CRU seams cost a crossing track 0.6–2.9 mm,
+   at the measurement floor. What is ~±1 cm wide is a shallow density shoulder
+   that tracks cross, not a gap.]**
 3. **The cathode hole excludes real charge on PDVD and does not on SBND.**
    PDVD reconstructs 20–30 % of nominal density *inside* `|x| < 3` — 21 582
    imaged points and 85 fitted `track_fit` points over the 120-event arm — every
@@ -353,6 +359,16 @@ through-going.** That is the doc-25 Michel population.
 *Model and its limits*: clusters are reduced to their two PCA-extreme points and
 the PCA axis; `cluster_fc_check` uses steiner extreme groups and a Hough
 direction. These are population estimates, not a replay of the tagger.
+
+**[Corrected by doc 34 §5, which ran the arm instead of modelling it. Dropping
+the x margin to 2.5 cm moves STM = 1 by −26 (669 → 643), not by anything like
++232, while "fully contained" rises by 396. The model above could only see
+two-exit → one-exit conversions; the dominant move is one-exit → **zero**-exit,
+i.e. a stopping-muon candidate loses its single exit and becomes fully
+contained, which the PCA-extreme model had no way to represent. The −26 is
+signal, not noise: doc 34's repeat arm is bit-identical to its base on all
+7,135 clusters. The x-margin flip is still right — but not for the reason given
+here.]**
 
 ---
 
@@ -473,6 +489,12 @@ that defaults to ''), so the change is config-only and PDVD-local. A second
 consumer — a tagger test "this end sits in a structural gap, so it is not a
 stopping point" — is the useful one for the STM programme but needs a C++ site
 and its own round.
+
+**[Superseded by doc 34 §4: `m_cathode_fv` is read at `QLMatching.cxx:5149`
+for the cathode-end `at_x_boundary` flag and nothing else, where PDVD's flat
+6 cm slab gains nothing and the CRU seams are invisible. The fiducial is now
+built (`protodunevd/crp_gap_fiducial.jsonnet`); its consumer is the
+`FiducialUtils` `structure_fiducial` of R4a, not Q/L.]**
 
 What this recommendation does *not* carry is a measured value. §5 measures how
 wide each seam is; nothing here shows that excluding those bands improves any

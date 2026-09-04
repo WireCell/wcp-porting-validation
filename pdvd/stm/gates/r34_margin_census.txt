@@ -1,0 +1,72 @@
+# doc pdvd/34 -- tagger fiducial margins made consistent with the clustering FV.
+# Six 120-event PDVD PR arms off the same d28dlfp point-tree inputs, one pinned
+# library (libWireCellClus.so md5 c094432d5d1ce1876f02819492af7b68, re-verified
+# byte-identical against local/lib after the campaign), every arm -S dl_weights=''.
+#
+#   tag        x     y   z_max z_min interior
+#   d34base   30     3     5     3      3      (= production before this round)
+#   d34rep    30     3     5     3      3      (verbatim repeat: the noise band)
+#   d34x       2.5   3     5     3      3
+#   d34yz     30    17.5  18    18      0
+#   d34all     2.5  17.5  18    18      0      (= production after this round)
+#   d34alli3   2.5  17.5  18    18      3
+#
+# COMPILED-CONFIG PROOF (cfg/pgrapher/experiment/protodunevd/pr.jsonnet):
+#   tgm_fv_zmin_margin at its default 3  -> compiled JSON diff-to-zero vs pre-knob
+#   tgm_fv_zmin_margin = 18              -> TaggerCheck* fv_tolerance[5] = -180
+#   the flipped driver                   -> [-25,-25,-175,-175,-180,-180], no
+#                                           interior_fv_tolerance key
+#
+# NOISE BAND: d34rep vs d34base is +0 on every metric and 0 per-cluster flips of
+# 7,135, so every delta below is signal.
+#
+# NOT a baseline: d28dlfp ran 04:24 2026-09-04, before bec1bd75 (04:39, per-plane
+# good-point pitch floor) and 79235519 (06:05, good_point_pitch_frac=0.35 for PDVD
+# production, doc 32 round 3b) with local/lib rebuilt 06:02.  Across that change
+# STM=1 goes 663 -> 669 with 390 per-cluster flips, TGM/containment/stm_eval
+d34base    120/120 event logs,  7,135 distinct clusters
+d34rep     120/120 event logs,  7,135 distinct clusters
+d34x       120/120 event logs,  7,135 distinct clusters
+d34yz      120/120 event logs,  7,135 distinct clusters
+d34all     120/120 event logs,  7,135 distinct clusters
+d34alli3   120/120 event logs,  7,135 distinct clusters
+
+== totals ==
+tag          clusters        tgm       stm1   stm_eval      nofit  contained
+d34base         7,135      1,592        669      5,543      3,340      2,942
+d34rep          7,135      1,592        669      5,543      3,340      2,942
+d34x            7,135      1,213        643      5,922      3,804      3,338
+d34yz           7,135      2,501        708      4,634      2,337      2,018
+d34all          7,135      2,185        688      4,950      2,665      2,290
+d34alli3        7,135      2,231        670      4,904      2,665      2,290
+delta                                                                       
+d34rep             +0         +0         +0         +0         +0         +0
+d34x               +0       -379        -26       +379       +464       +396
+d34yz              +0       +909        +39       -909     -1,003       -924
+d34all             +0       +593        +19       -593       -675       -652
+d34alli3           +0       +639         +1       -639       -675       -652
+
+== per-cluster flips vs d34base (clusters present in both) ==
+  d34rep     common  7,135  TGM +   0/-   0   STM +   0/-   0   contained +   0/-   0
+  d34x       common  7,135  TGM +  22/- 401   STM +  65/-  91   contained + 396/-   0
+  d34yz      common  7,135  TGM + 949/-  40   STM + 206/- 167   contained +   0/- 924
+  d34all     common  7,135  TGM + 937/- 344   STM + 248/- 229   contained + 272/- 924
+  d34alli3   common  7,135  TGM + 966/- 327   STM + 233/- 232   contained + 272/- 924
+
+== no-fit reasons (clusters carrying each; a cluster can carry several) ==
+reason                                                 d34base    d34rep      d34x     d34yz    d34all  d34alli3
+N candidate exit points, need exactly N (Mid Point C        32        32        38        36        46        43
+evaluated but no pass recorded (exited after the rou     3,338     3,338     3,803     2,335     2,664     2,664
+fully contained (Mid Point A)                            2,942     2,942     3,338     2,018     2,290     2,290
+no steiner_pc                                              165       165       183       132       145       147
+roundN backward fit returned no points                       1         1         0         1         0         0
+roundN forward fit gave only N points (<=N)                115       115       142       117       143       144
+roundN forward fit returned no points                        1         1         1         1         1         1
+single exit point with a N deg mid-track kink, arms         84        84       102        32        40        40
+
+== biggest movers vs d34base (events by |TGM delta|), for hand-scan ==
+  d34rep     
+  d34x       039252/2:11, 039252/4:9, 039252/12:8, 039252/17:8, 039252/3:8, 039252/5:8
+  d34yz      039252/6:19, 039253/9:19, 039252/12:17, 039252/15:16, 039253/0:15, 039253/1:15
+  d34all     039253/9:23, 039252/12:21, 039252/6:21, 039253/0:21, 039253/17:20, 039252/2:19
+  d34alli3   039253/9:24, 039252/4:21, 039252/6:21, 039253/0:21, 039252/12:19, 039252/2:19
