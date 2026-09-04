@@ -1,0 +1,26 @@
+# uBooNE qlport ab_check.sh doc25_r2post5b (lib_r2post5, final binary) vs doc25_r2base (lib_r2base = toolkit 8bf5b1bc); 35-event sweep_5384
+ZIPS: 35/35 content-identical
+TAGGER: identical=35 diff=0 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/doc25_r2post5b/ab_check_doc25_r2base.log)
+# repeat_check.sh 22 4 (event 5384-136-6805) under each library -- Bee zip identical on all runs, tagger bistable as in doc 90/28 round 1
+## lib_r2base (rep28r2base_1..4)
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_1/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_2/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_3/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_4/22_6805/mabc_22.zip
+distinct hashes: 1 of 4 runs  DETERMINISTIC
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_1/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_2/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_3/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2base_4/22_6805/track_com_5384_6805.root
+distinct tagger hashes: 1 of 4 runs  DETERMINISTIC
+## lib_r2post5 (rep28r2post5_1..4)
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_1/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_2/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_3/22_6805/mabc_22.zip
+c685f6ec3c930ed1cda2efbe53fd904564a91eb86f079d89e20f3e370062a491  7  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_4/22_6805/mabc_22.zip
+distinct hashes: 1 of 4 runs  DETERMINISTIC
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_1/22_6805/track_com_5384_6805.root
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_2/22_6805/track_com_5384_6805.root
+7e53a4b03e68af90beac4af7e10f3930da544a39be93f5f5401f4ed78c56ac94  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_3/22_6805/track_com_5384_6805.root
+ed11ba118506771269d081d00f007d2dd33ce1dd1b00cc9e8935164dc1e2073a  /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/rep28r2post5_4/22_6805/track_com_5384_6805.root
+distinct tagger hashes: 2 of 4 runs  NONDETERMINISTIC

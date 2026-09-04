@@ -23,6 +23,13 @@ function(
     // Stepped-sampler fallback: blobs the stepped grid leaves point-less get
     // one point at the blob center.  Default off -> bit-identical output.
     stepped_center_fallback = false,
+    // doc pdvd/28 round 2: the SBND Q/L-tail fast flavors, off by default.
+    // ql_po_fast => ProtectOverclustering busy_num_threshold=200 (per-apa
+    // stage); ql_dg_fast => Deghost on the 'ctpc_fast' graph flavor (per-apa
+    // and per-group stages).  false => keys omitted in clus.jsonnet =>
+    // byte-identical compiled config (proof: doc pdvd/28 sec 12).
+    ql_po_fast = false,
+    ql_dg_fast = false,
     // doc 31 round 3: resolve induction charge by channel IDENT on a wrapped
     // strip's continuation (PDVD 1568 U/V wires).  false => key omitted =>
     // byte-identical.  See pdvd/docs/nf_sp_img_clus/31_*.md.
@@ -355,8 +362,8 @@ local group_pipe(gd) =
     local n = std.length(gd.anodes);
     local actives = [cluster_source("%s/clusters-apa-anode%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local maskeds = [cluster_source("%s/clusters-apa-anode%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
-    local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false) for i in std.range(0, n - 1)];
-    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false);
+    local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false, po_fast=ql_po_fast, dg_fast=ql_dg_fast) for i in std.range(0, n - 1)];
+    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false, dg_fast=ql_dg_fast);
     g.intern(
         innodes = actives + maskeds,
         centernodes = apa_pipes,

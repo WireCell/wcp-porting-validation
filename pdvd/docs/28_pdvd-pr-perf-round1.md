@@ -6,6 +6,15 @@ output-neutral memory visitor: toolkit `b53d19c2` (S1+S2), `fc751659` (T1), `9c5
 `e7650c7d` (M2+M3), pushed to `apply-pointcloud`. Gate labels and numbers in §6–§8. Everything that was
 measured and *not* taken is in §9; the next round's plan is §10.
 
+**Round 2 (2026-09-03, §11–§18).** The three items §10 named: T2 (the single-track dQ/dx
+fit's per-row containers, plus the compact-matrix dense array and a channel→wires memo),
+the point-tree footprint in `util` (Array 144 → 88 bytes), and the Q/L-stage fast
+flavors for PDVD (wired, gated identical, measured not worth turning on). Toolkit
+`66831770`, `34d0a5f5`, `1a7e1b66`. Busy set 1283 → 1176 node core-s (1.09×; the 120-event
+arm 8194 → 6935), STM stage 1.5–1.7× on every event, live heap at the STM stage 2290 →
+1587 MB; PDVD 28/28 and 478/480, SBND 201/201, uBooNE 35/35 — the one differing archive is
+a pre-existing out-of-range read in the STM eval that the gate exposed (§13, §15).
+
 **Scope.** The PR job = everything `run_pr_evt.sh` runs after Q/L matching
 (`pdvd/wct-pr-perevt.jsonnet` → `cfg/pgrapher/experiment/protodunevd/pr.jsonnet`).
 The three PDVD scope choices that set the *count* of work — the readout-wide beam window,
@@ -268,17 +277,298 @@ allocated over the event): round-2 material (§9).
   FastWriter's compositional grammar): not implemented this round; M2/M3 lower the
   plateau it sits on (§8).
 
-## 10. Next steps
+## 10. Next steps (as written at the end of round 1; 1–3 done in round 2, §11–§18)
 
-1. Round 2 = T2 (§9) with the census as the sizing instrument, gated on the same busy set.
+1. Round 2 = T2 (§9) with the census as the sizing instrument, gated on the same busy set. **Done, §13.**
 2. Q/L-stage `ctpc_fast` / `busy_num_threshold` for PDVD (SBND docs 78/79; the PDVD Q/L
-   job passes neither) — a separate Q/L round, same identity bar.
-3. Point-tree metadata sharing in `util` (the 707 MB) — owner decision, cross-detector.
+   job passes neither) — a separate Q/L round, same identity bar. **Done, §14: identical, not worth it on PDVD.**
+3. Point-tree metadata sharing in `util` (the 707 MB) — owner decision, cross-detector. **Round 2 took the exact part, §12.**
 4. The batch input stall (23 s of the median event's wall under 6 jobs): a zstd point-tree
    codec (the `sp_sink_ext` precedent, 27×) or staggered starts — runner work, no reco
    change.
+
+---
+
+# Round 2
+
+## 11. Round 2 — scope, repro, labels
+
+Three items from §10, in the order the owner listed them: T2, the point-tree footprint,
+the Q/L-stage fast connectors. Same bar as round 1: every default path byte-identical,
+proven by gates on pinned library snapshots (`/home/xqian/tmp/doc28/lib_r2base` = toolkit
+`8bf5b1bc`, the peer's doc 31 round-7 state, which is why the round-1 arms could not serve
+as this round's base; `lib_r2post` = that plus the round-2 commits). The 32-process licence
+was used: the two 120-event arms ran 14–16 jobs each with the pairs alongside.
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
+# census of the loaded tree: arrays per blob straight from the point-tree tarball
+python3 - <<'EOF'   # see sec 12: 64 414 live blobs x (21 "3d" + 18 "scalar") arrays
+import tarfile, json, io, numpy as np
+tf = tarfile.open('work/039252_5_d27fresh/pctree-evt298637.tar.gz')
+for m in tf.getmembers():
+    if m.name.endswith('metadata.json'):
+        md = json.load(tf.extractfile(m))
+        if md.get('datatype') == 'pcarray' and 'lpcmaps' in md['datapath']:
+            a = np.load(io.BytesIO(tf.extractfile(m.name.replace('metadata.json', 'array.npy')).read()))
+            print(md['datapath'].split('/')[-1], 'blobs', int((a > 0).sum()), 'points', int(a.sum()))
+EOF
+# busy-set clean pair (sequential per arm, the two side by side) and its gate
+/home/xqian/tmp/doc28/run_r2seqpair2.sh          # tags d28r2sb2 (lib_r2base) / d28r2sp2 (lib_r2post)
+python3 stm/gates/r28_gate.py d28r2sb2 d28r2sp2 --out stm/gates/r28_d28r2sp2_vs_d28r2sb2.txt
+# matched jemalloc pair of 039252/5, both with PDVD_PR_RELEASE=1 (round-1 operating point)
+/home/xqian/tmp/doc28/run_r2heappair2.sh         # tags d28r2hb2 / d28r2hp2, dumps in /home/xqian/tmp/doc28/heap2{b,p}2
+# 120-event arms and gate
+/home/xqian/tmp/doc28/run_full.sh d28r2fb /home/xqian/tmp/doc28/lib_r2base   # and d28r2fp on lib_r2post
+python3 stm/gates/r28_gate.py d28r2fb d28r2fp --out stm/gates/r28_d28r2fp_vs_d28r2fb.txt
+# Q/L fast flavors: knobs off vs on, same lib, five worst Deghost events
+/home/xqian/tmp/doc28/run_r2qlpair.sh            # tags r2qloff / r2qlon (PDVD_CLUS_TLA="-S ql_po_fast=true -S ql_dg_fast=true")
+python3 stm/gates/r28_ql_gate.py r2qloff r2qlon --out
+# compiled-config proof for the knobs (runner compile-only mode, knob off vs base, knob on)
+PDVD_CLUS_COMPILE_ONLY=1 PDVD_KEEP_CFG=1 ./run_clus_evt.sh -s r2cfgpost -calib -op -save-pctree 039252 8
+# shared-component gates
+QL_SUFFIX=d99fix OLD_ARM=_r2base NEW_ARM=_r2post OLD_LIB=/home/xqian/tmp/doc28/lib_r2base NEW_LIB=/home/xqian/tmp/doc28/lib_r2post ./stm/gates/shared_gate.sh arms
+QL_SUFFIX=d99fix OLD_ARM=_r2base NEW_ARM=_r2post ./stm/gates/shared_gate.sh compare
+(cd ../qlport/scripts && LD_LIBRARY_PATH=/home/xqian/tmp/doc28/lib_r2post:$LD_LIBRARY_PATH ./repeat_check.sh 22 4 rep28r2post 4)
+```
+
+Toolkit commits (`apply-pointcloud`): `66831770` (util Array footprint), `34d0a5f5` (T2 + memo +
+compact matrix), `1a7e1b66` (PDVD Q/L knobs). wcp-porting-img: this doc, the Q/L
+runner knobs, `stm/gates/r28_ql_gate.py`, the gate records.
+
+## 12. The loaded point tree: what the 707 MB is, and the exact part taken
+
+**Census (039252/5).** The live tree has 64 414 blobs. Every blob carries two local point
+clouds: `3d` with 21 arrays (x, y, z, t, x_t0cor, wpid, three wire indices, six charge
+val/unc, six 2D projections) over 2.7 points on average, and `scalar` with 18 one-element
+arrays. That is 39 `Array` objects per blob, 2.51 M for the event, and the per-object cost
+dominates the payload: jeprof under `as_pctree` splits the 707 MB into 373 MB of
+`make_shared<Array>` objects (144-byte `Array` + 16-byte control block → the 160-byte size
+class), 190 MB of `std::map` nodes in `Dataset` (80 bytes each), 104 MB of payload copies,
+25 MB of `local_pcs` map nodes. So "metadata" in §5 was the wrong word: the arrays' jsoncpp
+metadata is null; the cost is 2.5 M small objects. The same shape holds for every detector
+that loads a tree (SBND: `3d` + `scalar` per blob too).
+
+**What round 2 changed (util, exact, API unchanged; the only `util` edit of the campaign):**
+`Array` keeps its dtype as a pointer into a process-wide interned table (`dtype()` and
+`shape()` already return by value) and allocates its `Json::Value` metadata lazily (a const
+read of an array that never had metadata set returns a shared null value, which is what the
+always-present member held). `sizeof(Array)` 144 → 88, `Dataset` 112 → 88; the
+`make_shared<Array>` allocation moves from the 160- to the 112-byte class. Measured on the
+jemalloc pairs: at equal allocation volume during the load `as_pctree` 676 → 606 MB (the
+Array objects 350 → 266 MB); at the STM stage stamp of the final pair 676 → 650 MB. The
+sampled estimates spread by tens of MB; the arithmetic says −48 bytes × 2.5 M = −120 MB. All util/aux/clus doctests pass (276 / 22 / 277). The
+`Array` move-assignment swaps `m_bytes` but not `m_store` (pre-existing; a moved-from owner's
+span dangles) — left as is, noted for the owner.
+
+**Tried and dropped: `boost::container::flat_map` for `Dataset`'s store** (would have taken
+the 190 MB of map nodes to ~110). Boost 1.85's `flat_map` in this install mis-inserts under
+`-O2`: after `m.insert({"x", p})` the size is 1 but `find("x")` fails and `begin()==end()`
+(`/home/xqian/tmp/claude-25225/.../scratchpad/fm.cxx`, correct at `-O0`). It took the
+util/aux/clus doctests down with segfaults; reverted, plain `std::map` kept. Not a WCT bug,
+but a trap for anyone reaching for that container here.
+
+**Not taken, with the numbers to decide later:** (U1) sharing the aggregate arrays' bytes
+into the per-blob slices (`Dataset::slice(..., share=true)`) saves the 104 MB of payload
+copies but needs a keep-alive for the aggregate on the tree root — a `Points` API addition.
+(U3) the real fix is columnar: one `Array` per (point cloud, column) held by the tree with
+per-node views, which removes the 2.5 M objects entirely (~560 MB of the 707) but changes
+`local_pcs()` from a map of `Dataset` to a view type — a util redesign, cross-detector, the
+owner's call.
+
+## 13. T2 — the single-track dQ/dx fit without its per-row maps
+
+`TrackFitting::dQ_dx_fit` (the STM tagger's per-segment fit) built, for every segment it
+fitted, three `std::map<CoordReadout, pair<ChargeMeasurement, std::set<Coord2D>>>` over
+**every** 2D cell of the loaded cluster (up to ~90k rows, ~4 heap nodes per row), then
+`std::set` lookup tables and a wire index from them, then tore it all down; 22.5 % of
+039349/7's samples, 35 % of that in red-black-tree walks and 11 % in map destruction. The
+rows now live in flat per-plane tables (`DqdxRow`: key, measurement, and a `[c0,c1)` range
+into one shared `Coord2D` vector) built by one pointer sort of the unordered charge source:
+
+| change | identity argument |
+|---|---|
+| `build_dqdx_rows`: rows in `CoordReadout` order per plane, coords per row sorted+unique | the `std::map` iterated in `CoordReadout` order and each row's `std::set<Coord2D>` in `Coord2D` order; rows with no wires or a last-wire plane outside U/V/W were dropped by the old `switch` and are dropped here |
+| response fill reads the same `PlaneRow` wire index (row index `n` = position in the plane table) | identical `RU/RV/RW` rows, identical `reg_flag` OR |
+| `(wire,time)` membership tests (`set_UT.find`) → `binary_search` on sorted+unique vectors | same boolean |
+| `fill_fitted_charge_2d(rows, coords, ...)` overload mirrors the map flavour line for line; both flavours end in the shared `record_cluster_fitted_charge_2d()` | same product map, same per-cluster snapshot |
+| `get_wires_for_channel` memoised per (apa, channel), returns a const ref; cleared with the grouping in `reset_for_new_event` | geometry is fixed for the fitter's lifetime |
+| multi-track fit keeps its maps but builds them in key order with an `end()` hint from the memo | unique keys ⇒ identical maps |
+| `calculate_compact_matrix(_multi)`: the **dense** `n_3d × n_2d` double array `pair_values` (a 1000-point STM fit over a 90k-row cluster: 720 MB, zero-filled per call) → `(row·n_2d+col, value)` vector over the nonzeros in iteration order, **stable**-sorted, read as the **last** entry with the key | every read returns the same double: absent → 0.0 as the zero-filled array did, and a duplicated key → the last write, as the array did (see below) |
+
+**The one gate failure of the round, and what it taught.** The first post binary passed the
+busy set 28/28, SBND 201/201 and uBooNE 35/35 but failed the 120-event PDVD gate on ONE
+archive: `tracking-stm.root` of 039253/3, tree `T_stm_eval` (the STM tagger's per-pass
+evaluation record, `-stm-fit` only), rows 18–25 of 49 — `ratio1/ratio2/res_length/
+ave_res_dqdx` of a pass that both binaries went on to reject; Bee, calib and every other
+tree identical. Two reruns per library (`d28r2rb1/2`, `d28r2rp1/2`) were 4/4 identical
+within each library, so this was a real binary difference, not the bistability of §7.
+Bisecting it took three steps, each recorded under `/home/xqian/tmp/doc28/`:
+
+1. util-only build (`lib_utilonly`, tag `d28r2ua`): identical to base 4/4 — the Array
+   shrink is exact; the fitter change carries the difference.
+2. Identical env-gated hashes in both binaries (`WCT_DQDX_AB`, builds `dump*P/B`, tags
+   `d28r2d*`): every one of the 215 single-track fits agrees bit for bit on the row tables,
+   data vectors, `RU/RV/RW`, `MU`, regularisation flags, `F`, `b`, `A`, the solution and `dx`;
+   every one of the 215 `do_single_tracking` calls agrees on the trajectory, dQ, dx, the
+   whole loaded charge table and `global_rb_map`. So T2 is exact, and a first guess —
+   duplicate (row, col) entries from a wrapped channel taking a different one of two values
+   in the sparse `pair_values` lookup — was wrong (`std::stable_sort` + last-duplicate read
+   is kept anyway: it is what the dense array did).
+3. Hashes inside `eval_stm_core_impl`: all eight differing evals have identical points, `L`,
+   dQ/dx, kink and parameters and differ ONLY in `end_L`: base −2022.41 mm, post 2 mm. That
+   eval has `kink_num = 417 = num_pts` (the `short_track` branch sets `kink_num = dQ.size()`),
+   so `max_num = L.size()`; no bin qualified, `max_bin = max_num`, and the code reads
+   `L[max_bin]` — **one past the end of the vector** (`TaggerCheckSTM.cxx`, the line
+   `end_L = L[max_bin] + 0.2 * units::cm` after `if (max_bin == -1) max_bin = max_num;`).
+   The value is whatever sits after the vector on the heap; my change moved the heap around
+   it. Downstream, `res_length`/`ave_res_dqdx` for those rows are garbage in both binaries
+   and the pass was rejected in both, so nothing else moved.
+
+This is a pre-existing out-of-range read in the STM tagger, not a T2 defect, and it makes
+`T_stm_eval` binary-dependent on any event whose short-track branch finds no peak bin. It
+is **not fixed here**: a bounds guard changes that tree's values (and could change a pass
+verdict where the garbage happened to pass), so it is a behaviour change for the owner to
+decide (CLAUDE.md: report, do not fix in the same change; doc 92's `T_cluster`
+uninitialised-flash read is the precedent). The 120-event gate below therefore reads
+479/480 with this one archive explained to the byte; the busy-set, SBND and uBooNE gates
+are clean. All gates in §15 are on the final binary (`lib_r2post5`, source identical to
+`lib_r2post3`).
+
+Effect (busy set, clean sequential pair, `MABC timing:` stage seconds; §16 for the totals):
+
+| event | STM stage base → post | Neutrino stage | peak RSS (runner) |
+|---|---|---|---|
+| 039252/5 | 47.1 → 28.9 | 365.7 → 363.3 | 3.35 → 3.20 GB |
+| 039253/11 | 45.7 → 27.5 | 164.7 → 153.0 | 3.76 → 3.19 |
+| 039252/15 | 40.1 → 25.3 | 111.6 → 103.4 | 3.20 → 2.78 |
+| 039349/7 | 34.7 → 20.5 | 85.1 → 84.0 | 2.03 → 1.92 |
+| 039252/8 | 15.0 → 9.4 | 19.4 → 16.1 | 3.14 → 2.44 |
+| 039253/15 | 14.5 → 10.1 | 49.4 → 48.1 | 2.32 → 1.89 |
+| 039349/6 | 7.5 → 5.0 | 26.3 → 24.7 | 1.06 → 1.00 |
+
+The STM stage is 1.5–1.7× faster on every event (`d28r2sb5` vs `d28r2sp5`, the final pair;
+the first pair `d28r2sb2/sp2` read the same within noise); the neutrino stage moves 0–17 %
+(its single-track fits and the multi-fit map build); the RSS column is under tcmalloc and
+therefore only directionally meaningful (§8), but 7/7 down is the dense `pair_values`
+gone. Note the base here is HEAD `8bf5b1bc`, whose doc 31 steiner-threshold sync changed
+these events since round 1 (039253/15 is no longer BiCGSTAB-bound: 349.8 → 85.7 core-s).
+
+## 14. Q/L-stage fast connectors on PDVD: wired, identical, not worth turning on
+
+The SBND Q/L-tail flavors (docs 78/79: `ProtectOverclustering busy_num_threshold=200`,
+`Deghost` on the `ctpc_fast` graph) are now reachable for PDVD: `po_fast` / `dg_fast` args
+on `clus_per_apa` (and `dg_fast` on `clus_per_group`) in
+`cfg/pgrapher/experiment/protodunevd/clus.jsonnet`, TLAs `ql_po_fast` / `ql_dg_fast` in
+`pdvd/wct-clustering.jsonnet`, default **off** (ExamineBundles is disabled in the PDVD
+group stage, so `eb_fast` has no site). Compiled-config proof with the runner's own TLAs
+(`PDVD_CLUS_COMPILE_ONLY=1`, event 039252/8): knob-off JSON byte-identical to the
+pre-edit compile; knob-on puts the keys on all 18 Deghost/ProtectOverclustering nodes.
+
+Where the PDVD Q/L job's time goes (120 `d27fresh` events, `MABC timing:` sums, 1594 s):
+`done` (writers) 15.3 %, **Deghost 14.8 %**, Separate 13.2 %, `loaded live` 9.1 %,
+Connect1 7.4 %, ExtendLoop 7.0 %, Neutrino 4.4 %, **ProtectOverclustering 4.4 %**; worst
+Deghost 7.8 s (039252/8). Knobs on vs off, same `lib_r2base`, five worst Deghost events
+(`stm/gates/r28_ql_r2qlon_vs_r2qloff.txt`): **140/140 archives identical** (point tree,
+27 Bee zips and the calib dump per event), and
+
+| event | wall off/on | Deghost off/on | ProtectOverclustering off/on |
+|---|---|---|---|
+| 039252/8 | 74 / 72 | 8.4 / 6.9 | 5.6 / 3.7 |
+| 039252/14 | 51 / 52 | 5.2 / 5.3 | 1.9 / 1.8 |
+| 039252/2 | 48 / 48 | 5.4 / 5.4 | 1.9 / 1.9 |
+| 039252/5 | 57 / 56 | 5.0 / 4.6 | 1.7 / 1.7 |
+| 039253/5 | 54 / 54 | 5.1 / 5.1 | 1.7 / 1.7 |
+
+The lazy path engages only on clusters with more than 200 components; PDVD's Deghost
+seconds are spread over many small clusters (the readout-wide window again), so only the
+one event with a busy cluster moves, by 3.4 s of 74. The knobs stay off; the SBND
+production values are one TLA away if a future PDVD sample has the SBND tail shape.
+
+## 15. Round-2 gates
+
+All on pinned snapshots: `lib_r2base` (toolkit `8bf5b1bc`) vs `lib_r2post5` (the final
+source state; `lib_r2post3` is the same source). Every arm's `/proc/<pid>/maps` was checked.
+
+| gate | arms | result | record |
+|---|---|---|---|
+| PDVD busy set (7 events × bee, calib, tracking-pr, tracking-stm) | `d28r2sb5` / `d28r2sp5` | **28/28 identical** | `stm/gates/r28_d28r2sp5_vs_d28r2sb5.txt` |
+| PDVD 120 events (480 archives) | `d28r2fb` / `d28r2fp5` | **478/480**; 039253/3 `tracking-pr.root` identical, `tracking-stm.root` differs in `T_stm_eval` rows 18–25 only — the `L[L.size()]` read of §13, deterministic per binary (reruns `d28r2rb1/2` = `d28r2rp1/2` 4/4) | `stm/gates/r28_d28r2fp5_vs_d28r2fb.txt` |
+| PDVD Q/L fast flavors off vs on (5 events × point tree + 27 Bee zips + calib) | `r2qloff` / `r2qlon`, both `lib_r2base` | **140/140 identical** | `stm/gates/r28_ql_r2qlon_vs_r2qloff.txt` |
+| PDVD Q/L compiled config, knobs off | runner compile-only, 039252/8 | byte-identical to the pre-edit compile; knobs on: keys on 18 nodes | §14 |
+| SBND nuecc48 (48) + ncpi0 (19): Bee, calib, nusel | `doc25_r2base` / `doc25_r2post5` (d99fix Q/L, `dl_weights=''`) | **201/201 identical** | `stm/gates/r28_sbnd_compare_r2post5_vs_r2base.txt` |
+| uBooNE 35 events, Bee zip + tagger ROOT | `sweep/doc25_r2base` / `doc25_r2post5b` | **35/35 zips, 35/35 tagger identical**; `repeat_check.sh 22 4` on 6805 under each lib: Bee identical 4/4, tagger 1 and 2 states (the doc 90 bistability) | `stm/gates/r28_ub_ab_check_r2post5b_vs_r2base.txt` |
+| util-only bisect build | `d28r2ua` vs `d28r2fb` (039253/3) | 4/4 identical | `/home/xqian/tmp/doc28/split_gate_d28r2ua.txt` |
+
+Doctests on the final build: util 276/276, aux 22/22, clus 277/277 (1 skipped). The 120-event
+arm gives the arm-wide numbers: node core-s 8194 → 6935, stage sums STM 1834 → 1107 s,
+Neutrino 4377 → 3950, CreateSteinerGraph 1480 → 1376 (the arms ran under different job
+counts, so quote the clean pair of §16 for per-event factors).
+
+## 16. Round-2 timing and memory, before/after
+
+**Time** (busy set, `d28r2sb5` on `lib_r2base` vs `d28r2sp5` on `lib_r2post5`, each
+sequential, side by side while the 120-event arms ran; `Timer:` node core-s of
+`MultiAlgBlobClustering`; the quieter first pair `d28r2sb2/sp2` gave 1315.7 → 1187.3, 1.108×):
+
+| event | base core-s | post core-s | speed-up |
+|---|---|---|---|
+| 039252/5 | 475.9 | 454.4 | 1.05× |
+| 039253/11 | 250.2 | 220.2 | 1.14× |
+| 039252/15 | 177.3 | 154.9 | 1.15× |
+| 039349/7 | 137.9 | 121.9 | 1.13× |
+| 039252/8 | 116.4 | 108.5 | 1.07× |
+| 039253/15 | 83.7 | 78.1 | 1.07× |
+| 039349/6 (median) | 41.7 | 37.9 | 1.10× |
+| **sum** | **1283.2** | **1175.8** | **1.091×** |
+
+Against round 1's 1.34× on this set this is the smaller step the §9 arithmetic predicted
+(~10 % of an STM-heavy event); unlike round 1 it moves every event, including the median.
+
+**Memory** (matched jemalloc pair of 039252/5, both arms with `PDVD_PR_RELEASE=1`; live
+heap from the dump nearest each stage stamp):
+
+| 039252/5, live heap at the stage stamp | base `d28r2hb2` | post `d28r2hp5` |
+|---|---|---|
+| after CreateSteinerGraph | 1262 MB | 1290 MB |
+| after TaggerCheckSTM | 2290 MB | **1587 MB** (−703: the dense compact-matrix array of the last STM fit was live at the stamp) |
+| end of TaggerCheckNeutrino | 2705 MB | 2616 MB |
+| after `release_post_nu` | — (same-second dump) | 1656 MB |
+| PrDisplayDump | 1733 MB | 1577 MB |
+| peak of the sampled dumps (every 12th) | 2629 MB | **2033 MB** |
+| loaded tree (`as_pctree`) | 676 MB | 650 MB |
+| VmHWM (runner, jemalloc) | 2.94 GB | 2.77 GB |
+
+Under tcmalloc on the busy set (§13 table) the runner's peak RSS is lower on 7/7 events,
+by 0.1–0.7 GB, which is the dense `n_3d × n_2d` array no longer being allocated.
+
+## 17. Round 2 — measured and not taken
+
+- The `flat_map` store (§12) — a working idea blocked by the installed boost.
+- U1/U3 tree designs (§12) — owner's call; U3 is the one that halves the plateau.
+- `fill_fitted_charge_2d`'s remaining cost (6 % of 039349/7: a hash find, a
+  `std::set<Cluster*>` and 1–3 map inserts per row, then a deep copy of the 90k-entry
+  snapshot per fit): the copy could go if `get_fitted_charge_2d()` aliased the per-cluster
+  snapshot; deferred — it changes a getter's lifetime contract.
+- `update_dQ_dx_data` walks the fitter's whole `m_charge_data` per fit; not hot on the
+  profiled events, left.
+- The Q/L flavors' threshold (200 components) was not tuned for PDVD: the census says the
+  time is not in one busy cluster, so no threshold rescues it.
+
+## 18. Next steps after round 2
+
+1. U3 (columnar tree storage in `util`) is the only remaining lever on the plateau
+   (~560 MB of 707 per event, every detector) — design in §12, owner decision.
+2. The neutrino stage is now 60–80 % of every busy event and is fit numerics
+   (BiCGSTAB to the iteration cap, §9): a build-level threading option, or a tolerance
+   change *as a knob* judged on physics, are the only levers left there.
+3. The batch input stall (§10 item 4) is unchanged: 23 s of a median event's wall under
+   contention is the point-tree read; a zstd codec is runner-side work.
 
 ## Milestone log
 
 - 2026-09-03 — arm profile, three CPU profiles, one heap profile, SBND comparison;
   S1/S2/T1/D1/M2/M3/M4 shipped; gates §7; doc + memory note.
+- 2026-09-03 (round 2) — tree census + Array footprint (util `66831770`), T2 + compact-matrix
+  dense array + channel→wires memo (`34d0a5f5`), PDVD Q/L fast-flavor knobs, off
+  (`1a7e1b66`); the 039253/3 bisect found the STM eval's out-of-range read; gates §15.

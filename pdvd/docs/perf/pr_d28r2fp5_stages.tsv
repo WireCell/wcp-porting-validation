@@ -1,0 +1,22 @@
+stage	sum_s	share	max_s	max_event
+TaggerCheckNeutrino:pr	3950.2	0.5717	398.2	039252/5
+CreateSteinerGraph:pr	1375.7	0.1991	57.6	039252/8
+TaggerCheckSTM:pr	1107.0	0.1602	42.0	039252/16
+TaggerCheckTGM:pr	159.4	0.0231	11.9	039252/8
+done	82.8	0.0120	1.8	039252/16
+PrDisplayDump:pr	52.0	0.0075	1.4	039253/11
+loaded live	45.8	0.0066	1.4	039252/16
+CreateSteinerGraph:prrefresh	37.2	0.0054	10.0	039252/5
+ClusteringProtectBundle:pr	22.8	0.0033	17.1	039252/5
+PdvdPrMagnifyTrackingVisitor:pr	22.0	0.0032	0.3	039252/4
+TaggerCheckFC:pr	10.1	0.0015	0.3	039252/5
+ClusteringSwitchScope:pr	9.8	0.0014	0.3	039252/16
+loaded dead	9.6	0.0014	0.2	039252/17
+ClusteringFlagMatchedMains:pr	8.0	0.0012	0.2	039252/16
+PdvdMagnifyTrackingVisitor:pr	8.0	0.0012	0.1	039252/16
+dump live clusters to bee	4.3	0.0006	0.1	039252/4
+UbooneTaggerOutputVisitor:pr	3.8	0.0005	0.1	039252/4
+dump dead regions to bee	0.6	0.0001	0.0	039252/17
+MakeFiducialUtils:pr	0.0	0.0000	0.0	039252/15
+pre clustering	0.0	0.0000	0.0	039252/17
+start clustering	0.0	0.0000	0.0	039252/17
