@@ -741,16 +741,40 @@ told us. The same instrument on the same 120 events, one change per row:
 | doc-38 gap trim at 20 cm (`d38off` → `d38h20`; everything else fixed) | 107/120 (89.2 %) | 2.01 | **0/120** | 2187 → 2187 |
 
 Every change of this class reshuffles the STM set on most events — 79 to 98 % —
-so the STM row is not what distinguishes this flip. **TGM is.** It is the only
-one of the three that moves a through-going verdict at all, and the reason is in
-§2: `TaggerCheckTGM` is one of the two direct external callers of the changed
-query (`TaggerCheckTGM.cxx:1209-1211`), while the thinning and the trim reach
-the STM path only. That is what makes 27.5 % a property of the metric rather
-than of "any config change moves sets".
+so the STM row is not what distinguishes this flip. **TGM is**, and the two
+taggers depend on the ctpc by different routes:
+
+- **TGM** reaches it *directly*. `TaggerCheckTGM.cxx:1209-1211` issues three
+  `Grouping::get_closest_points` calls per test point, one per plane. Only a
+  change to the query itself can move that — which is why the metric moves TGM
+  and the thinning and the trim do not.
+- **STM** reaches it *through the trajectory*. `TaggerCheckSTM` never calls the
+  changed query (see the caution below); it consumes a fit built from Steiner
+  terminals and trimmed by `examine_end_ps_vec`, both of which sit downstream of
+  `is_good_point`. All three changes perturb that fit, so all three move the STM
+  set.
+
+**A caution for anyone re-deriving this: two unrelated functions share the name
+`get_closest_points`.** The one this round changed is
+`Grouping::get_closest_points(point, radius, apa, face, pind)` — the 2-D ctpc
+query — together with `has_closest_point`. The other is
+`Cluster::get_closest_points(const Cluster&)` (and the `Facade_Util.h:90`
+template), a 3-D cluster-to-cluster nearest-pair helper that this round never
+touched; it accounts for 67 of the call sites under `clus/src`, including
+`TaggerCheckSTM.cxx:3223`. A name-only grep therefore reports ~19 files calling
+"it" and makes STM look like a direct caller. Filtered by signature, the changed
+query has direct call sites in **five** files — `clustering_ctpointcloud.cxx`
+(6 calls), `NeutrinoTaggerNuE.cxx` (4), `PointTreeBuilding.cxx` (3),
+`TaggerCheckTGM.cxx` (3), `FiducialUtils.cxx` (1) — of which three run in the PR
+chain. **This corrects §1.2 and §2 of this doc, which said "the two direct
+external callers"**: `FiducialUtils` was missed, and the clustering-stage pair
+is out of scope only because the clustering job does not carry the knob (§11).
 
 The three-row framing is owed to the doc-37 session, which measured the same
 contrast on 20 events and corrected its own earlier reading twice to get there;
-the rows above are re-derived here on 120 events with the arms named.
+the rows above are re-derived here on 120 events with the arms named. The
+caller census was likewise prompted by that session and is re-derived here —
+its own count conflated the two same-named functions in the other direction.
 
 This is a disclosed cost of a flip that is already in production, not a reason
 to revert: the flip's coverage/support case (§10.3) is unchanged, and the
