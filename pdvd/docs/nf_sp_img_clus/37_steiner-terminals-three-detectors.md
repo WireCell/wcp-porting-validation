@@ -647,8 +647,12 @@ nm -DC local/lib/libWireCellClus.so | grep thin_by_min_separation   # freshness
 
 # ---- the two libraries every arm below is pinned to (the tree is shared and a
 # peer was rebuilding local/lib throughout; neither side used the live install)
-#   /home/xqian/tmp/doc37/lib_base  10:45  symbol ABSENT  (= toolkit 3d057557)
-#   /home/xqian/tmp/doc37/lib_new   10:48  symbol PRESENT (= 3d057557 + this change)
+#   /home/xqian/tmp/doc37/lib_base  10:45  md5 3f4a7e32  symbol ABSENT
+#   /home/xqian/tmp/doc37/lib_new   10:39  md5 da76bd4f  symbol PRESENT
+# (lib_new is the 10:39 build; local/lib was rebuilt again at 10:48 after the
+#  baseline detour, but the SNAPSHOT the arms ran is the 10:39 one -- an earlier
+#  version of this doc quoted 10:48 for it.  Both carry the same change; the
+#  identity that matters is the md5 and the symbol, both verified above.)
 
 # ---- compiled-config gate, 18 jobs, OFF must diff to zero (sec 12.2)
 abtest/compile_all_cfg.sh /home/xqian/tmp/doc37/cfg_{base,new}   # before / after
@@ -815,9 +819,12 @@ cmake --build .../cmbuild -j16 --target wcdoctest  rc=0
   CreateSteinerGraph.cxx.  The build's only warnings are pre-existing
   D3Vector.h ones raised from improvecluster_1.cxx and clustering_*.cxx.
 
-lib_base  10:45  nm -DC | grep thin_by_min_separation -> 0 symbols
-lib_new   10:48  nm -DC | grep thin_by_min_separation -> 1 symbol
+lib_base  10:45  md5 3f4a7e32  thin_by_min_separation -> 0 symbols
+lib_new   10:39  md5 da76bd4f  thin_by_min_separation -> 1 symbol
 sources   10:36-10:39
+Neither pin contains the doc-38 EndTrimGap symbol (nm: 0), so the concurrent
+C++ change committed at 11:28 could not reach any arm in this doc -- checked,
+because "I used a pin" is an assertion and the symbol table is a proof.
 ```
 
 Both PDVD/SBND/uBooNE A-sides ran against `lib_base`, both B-sides against
@@ -1168,6 +1175,26 @@ this section claimed; that came from setting a 20-event row against a 120-event
 one. The genuinely sharp separation is on **TGM: 35 % against 0 %**, and that one
 is a clean discriminator because the two were measured on the same events with
 the same instrument.
+
+**Independently corroborated at 120 events.** The doc-36/38 round re-derived the
+epoch row rather than taking mine, on its own arms (`d36off` vs `d36on`, 120
+events, this doc's thinning OFF on *both* sides, so nothing else is in it) with
+its own script: **STM set changes on 117/120 (97.5 %), mean 3.23; TGM on 33/120
+(27.5 %), mean 0.30**; counts STM 688 → 657, TGM 2185 → **2187**. My 20/20 and
+7/20 sit on top of that. Two instruments, two isolation strategies, two event
+counts, one answer — which is the corroboration a retraction of mine needed, and
+it is now a disclosed cost in doc 36 §11.1.
+
+That TGM count is the whole point in miniature: **+2 across the manifest**, which
+reads as nothing, while **more than a quarter of events change which clusters are
+tagged**. Same count-versus-set trap as §13.3, in someone else's flip.
+
+**A second thing changed in that window, and it did not reach these arms.** The
+same round's C++ knob landed at 11:28, between round 2's arms and round 3's. It
+cannot have reached either: both pins predate it and neither contains its symbol
+(`nm -DC … | grep -c EndTrimGap` → 0 on both, §0). Recorded because the next
+person reconstructing this window should not assume the two config commits were
+the only things moving in it.
 
 Two consequences for anyone reading this doc:
 
