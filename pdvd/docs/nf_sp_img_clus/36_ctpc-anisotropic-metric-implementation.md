@@ -731,6 +731,27 @@ per-bundle PR on the tagged set, not on its size, so a count-flat census is not
 evidence that downstream work is unchanged. Same trap as §4.2's log-line count,
 in the other direction.
 
+**Is set churn just what any change does?** No — and STM alone would not have
+told us. The same instrument on the same 120 events, one change per row:
+
+| change | STM set differs | mean | TGM set differs | TGM count |
+|---|---|---|---|---|
+| **this flip** (`d36off` → `d36on`; thinning off both sides, one pin) | 117/120 (97.5 %) | 3.23 | **33/120 (27.5 %)** | 2185 → 2187 |
+| doc-37 terminal thinning (`d36on` → `d38off`; metric on both sides, also crosses the binary) | 95/120 (79.2 %) | 1.78 | **0/120** | 2187 → 2187 |
+| doc-38 gap trim at 20 cm (`d38off` → `d38h20`; everything else fixed) | 107/120 (89.2 %) | 2.01 | **0/120** | 2187 → 2187 |
+
+Every change of this class reshuffles the STM set on most events — 79 to 98 % —
+so the STM row is not what distinguishes this flip. **TGM is.** It is the only
+one of the three that moves a through-going verdict at all, and the reason is in
+§2: `TaggerCheckTGM` is one of the two direct external callers of the changed
+query (`TaggerCheckTGM.cxx:1209-1211`), while the thinning and the trim reach
+the STM path only. That is what makes 27.5 % a property of the metric rather
+than of "any config change moves sets".
+
+The three-row framing is owed to the doc-37 session, which measured the same
+contrast on 20 events and corrected its own earlier reading twice to get there;
+the rows above are re-derived here on 120 events with the arms named.
+
 This is a disclosed cost of a flip that is already in production, not a reason
 to revert: the flip's coverage/support case (§10.3) is unchanged, and the
 gap-aware trim of doc 38 takes STM back past its pre-flip value (685 → 720 on
