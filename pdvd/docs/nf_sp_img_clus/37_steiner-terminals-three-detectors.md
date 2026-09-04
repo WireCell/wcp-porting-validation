@@ -201,9 +201,11 @@ and on matched topology — non-main clusters, i.e. cosmics in all three:
 | MicroBooNE (production) | 12 | 1.90 | 0.61 cm |
 | MicroBooNE (filters on) | 13 | 2.74 | 0.36 cm |
 
-**MicroBooNE is not sparser than PDVD. On the whole population it is the densest
-of the three, and it has been for a decade.** That single fact reframes the
-round-6 complaint: PDVD is not an outlier, it sits between SBND and uBooNE.
+**MicroBooNE is not sparser than PDVD.** As measured it is the densest of the
+three, and PDVD sits between SBND and uBooNE rather than being an outlier — which
+is the reframing the round-6 complaint needs. **But most of the SBND↔uBooNE gap
+is population, not detector**, and §3.4 decomposes it before any of it is used as
+a detector statement.
 
 ### 3.2 The spacing law, confirmed on three geometries
 
@@ -252,6 +254,60 @@ Doc 31 §12.6 found on 2 events that SBND's production terminal set is already
 0.3 cm-separated while PDVD's is not, and read that as a PDVD close-pair tail.
 At 118 / 906 / 35 events it holds — and **uBooNE has the same tail as PDVD
 (0.82 kept), so SBND is the exception, not PDVD the anomaly.**
+
+### 3.4 Why MicroBooNE reads 2.6x denser than SBND, when the geometries are twins
+
+The two detectors have the same wire pitch (3.000 vs 3.003 mm) and differ mainly
+in the slice width, 0.220 vs 0.313 cm — a factor **1.42**. That cannot by itself
+produce the 2.66x in §3.1, so the excess has to be named rather than absorbed.
+Medians over the relaxed selection:
+
+| factor | SBND | MicroBooNE | ratio |
+|---|---|---|---|
+| slice pitch (hence slices/cm: 1.29 vs 2.82) | 0.313 cm | 0.220 cm | **1.42** |
+| \|cos(axis, drift)\| of the *selected* clusters | 0.35 | 0.52 | **1.49** |
+| fraction of crossed slices lit | 0.93 | 0.93 | 1.00 |
+| terminals per **occupied** slice | 1.16 | 1.42 | **1.22** |
+| **terminals / cm** | **1.36** | **3.62** | **2.66** |
+
+`1.42 x 1.49 x 1.22 = 2.67`, i.e. the whole of it. **Only the first factor is a
+property of the detector.** The second is the drift alignment of whatever tracks
+the selection kept — a track more parallel to the drift crosses more slices per
+cm of its own length — and the third is topology: how many blobs share a slice.
+
+Splitting by cluster role shows the third factor is topology and not algorithm:
+
+| | n | terminals per occupied slice | pts/slice | 1 terminal per |
+|---|---|---|---|---|
+| SBND main | 289 | 1.16 | 5.2 | 0.74 cm |
+| SBND non-main (cosmics) | 47 | **1.21** | 5.3 | 0.69 cm |
+| MicroBooNE main | 13 | 1.81 | 11.9 | 0.21 cm |
+| MicroBooNE non-main (cosmics) | 12 | **1.30** | 7.7 | 0.53 cm |
+
+**On matched topology — cosmics in both — the criterion column agrees to 7 %
+(1.21 vs 1.30), and the spacing gap narrows to 0.69 vs 0.53 cm, i.e. 1.3x,
+close to the 1.42x the slice width alone predicts.** So the algorithm is doing
+the same thing on both detectors, exactly as §3.2's per-occupied-slice law says;
+what differs is the slice it is doing it in, and what the two populations contain.
+
+**And the populations differ by construction, not by chance.** `cm.steiner(...)`
+takes `require_beam_flash`, default **true**. MicroBooNE uses the default
+(`qlport/uboone-mabc.jsonnet:1263`), so it builds a Steiner graph **only for
+beam-coincident clusters** — the neutrino candidate and its companions. PDVD
+(`pr.jsonnet:1281`) and SBND (`sbnd/clus.jsonnet:2071`) both pass **false** and
+build one for every scope-passing cluster. MicroBooNE's Steiner population is
+therefore neutrino-interaction-heavy by design (560 clusters over 35 events,
+16/event, against PDVD's ~45/event), and its main clusters are dense multi-blob
+objects: 11.9 points per slice against SBND's 5.2.
+
+**What this does and does not change.** It does not touch §3.2 — one terminal per
+occupied slice still holds on all three geometries, and that is the finding R1
+rests on. It does not touch §5, which is measured per vertex and never divides
+one detector by another. What it does change is how §3.1's headline should be
+read: *"MicroBooNE is the densest"* is a statement about MicroBooNE's
+**beam-flash-selected** population, and the detector-level difference from SBND is
+the 1.42x slice width and little else. **n = 25 for MicroBooNE here (13 main,
+12 non-main), so the split above is an indication, not a measurement.**
 
 ---
 
