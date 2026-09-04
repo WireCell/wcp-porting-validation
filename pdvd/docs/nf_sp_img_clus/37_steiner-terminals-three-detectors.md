@@ -793,8 +793,21 @@ attributable to the knob being off rather than to the axis being blunt.
 ### 12.5 Unit tests and freshness
 
 ```
+# waf (this tree's build), all of clus:
 ./build/clus/wcdoctest-clus       292 passed | 0 failed  (22566 assertions)
   of which the 8 new thinning cases + the default pin: 13844 assertions
+
+# CANONICAL cmake build -- the one upstream CI runs with -Werror.  A new public
+# HEADER plus a new SOURCE file is exactly the shape that passes under waf and
+# fails there (feedback: verify in the canonical build), so it was run:
+cmake -S toolkit -B .../cmbuild -DCMAKE_PREFIX_PATH=.../local -DWCT_WITH_TESTS=ON
+cmake --build .../cmbuild -j16                     rc=0, 100 %
+cmake --build .../cmbuild -j16 --target wcdoctest  rc=0
+.../cmbuild/wcdoctest -tc="steiner thinning*"      8 passed | 0 failed
+  ZERO warnings from SteinerThinning.{h,cxx}, SteinerGrapher.* or
+  CreateSteinerGraph.cxx.  The build's only warnings are pre-existing
+  D3Vector.h ones raised from improvecluster_1.cxx and clustering_*.cxx.
+
 lib_base  10:45  nm -DC | grep thin_by_min_separation -> 0 symbols
 lib_new   10:48  nm -DC | grep thin_by_min_separation -> 1 symbol
 sources   10:36-10:39
@@ -827,6 +840,15 @@ Per event the kept fraction is **0.802 [p10 0.781, p90 0.818]** — §6 predicte
 0.81 from the offline simulation, and the live knob reproduces it. The bound is
 tight because it is geometric: every removed terminal was within 0.5 cm of a
 higher-charge one that survived.
+
+*Do not subtract row 1 from row 2.* `thin_out` (1 609 200) exceeds the dump's
+`nterm` (1 591 413) even though phase 4 only ever **adds**, for two reasons that
+are both bookkeeping: the `steiner_thin` lines are summed over **both**
+`CreateSteinerGraph` instances — `pr` contributes 6925 and `prrefresh` 1068, and
+the doc pr/23 refresh pass rebuilds clusters the first pass already counted — and
+a cluster whose graph comes out empty (§13.3) never reaches the dump at all. The
+two columns measure different populations on purpose; they are not a balance
+sheet.
 
 Wall time **improves**: median 36 s → 33 s per event, 5557 s → 5010 s over the
 arm (−9.8 %); peak RSS median 1.21 → 1.15 GB. A smaller terminal set makes a
@@ -907,6 +929,30 @@ On the 33 events where even the STM count is unchanged, 16 still move by ≥ 5.
 Three events (039349 2, 41, 78) went from **zero** STM tags to non-zero and now
 produce a `calib-pr` dump where before they produced none.
 
+**A second, smaller cost, bounded and worth stating plainly: 47 more clusters
+lose their Steiner graph entirely.** The `< 2 terminals` check in
+`create_steiner_tree` runs *after* phase 4, so the extreme points normally rescue
+a cluster the thinning took down to one terminal — but not always, and the
+doctest invariant ("the first terminal offered can never be suppressed") does not
+claim otherwise. Counted from the logs, which is the ungated axis — unlike
+`nsteiner_clusters`, these warnings are upstream of the STM gating that §13.3
+shows moves:
+
+| | OFF | ON |
+|---|---|---|
+| clusters reaching phase 3b | — | 7993 (6925 `pr` + 1068 `prrefresh`) |
+| thinned to < 2 terminals at phase 3b | — | 928 |
+| `... terminal(s) remain after filtering` (i.e. **still** < 2 after phase 4) | 4 | **51** |
+| `produced no steiner_graph` | 552 | 596 |
+| `< 2 steiner terminal(s) found` at phase 1 (untouched, as expected) | 548 | 545 |
+
+So phase 4's extreme points rescue 877 of the 928, and **47 clusters do not
+recover**, out of 7993 — **0.59 %**. Every one of the 928 entered phase 3b with
+**at most 3 terminals** (the maximum `nterm_in` among them is exactly 3): only
+clusters that were already at the edge of the ≥ 2 requirement can be pushed over
+it. That is a real cost, it is small, and it is bounded by construction rather
+than by luck.
+
 ### 13.4 Verdict on the fourth grading row
 
 Doc 31 §6.1's fourth row — *does not cost physics* — has been owed for nine
@@ -922,6 +968,8 @@ rounds because it needed the knob. It now has an answer, and the answer is
 - But the downstream PR output is **not** approximately unchanged. Aggregates
   are flat and TGM is untouched, yet the STM tag set moves on 109/120 events and
   the per-event segmentation swings by factors of 2–6 on the worst events.
+  0.59 % of clusters (47 of 7993) also lose their Steiner graph outright, all of
+  them clusters that reached the thinning with ≤ 3 terminals.
 - **Nothing here says the ON arm is worse.** It may well be better — 19 % fewer
   terminals is a less over-constrained tree, and the wall time supports that.
   It says the two arms reconstruct many events *differently*, and only a hand
