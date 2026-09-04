@@ -124,7 +124,7 @@ tree plus the knob (11:29). Freshness proved by `ls -la` on
 
 | gate | arms | result |
 |---|---|---|
-| **PDVD PR, 120 events** | `d38ref` (old pin) vs `d38off` (new pin), production config | **238 / 238 identical** (120 `mabc-pr.zip` member rollups + 118 calib JSON minus the `vertex_scoreboard.dual_chain` timer), 0 diff, 0 missing |
+| **PDVD PR, 120 events** | `d38ref` (old pin) vs `d38off` (new pin), production config | **238 / 238 identical**, 0 diff: **all 120** `mabc-pr.zip` member rollups, plus the calib JSON (minus the `vertex_scoreboard.dual_chain` timer) of the **118 of 120 events that produce one** — 039349/65 writes no dump because it has 0 STM tags (doc 25 §13.10), and 039349/76 writes none despite 1 STM tag, which this round does not explain. Both are covered by the zip comparison. |
 | **SBND PR chain** | `doc25d38old` vs `doc25d38new`, nuecc48 + ncpi0 | **201 / 201 identical** (zip + calib + nusel), 0 diff |
 | **uBooNE, 35 events** | `sweep/doc25d38old` vs `doc25d38new` | **35 / 35 zips content-identical; tagger 35 / 35** |
 | doctests | `./build/clus/wcdoctest-clus` | **294 / 294**, 22 624 assertions |
@@ -260,25 +260,33 @@ Not measurably slower — slightly faster, if anything, since a shorter trajecto
 is cheaper downstream. The scan itself is bounded: `body_len` stops being
 measured once it beats the island, and `max_scan` caps the walk at 1000 points.
 
-## 8. Recommendation
+## 8. The operating point is a physics choice, not a margin
 
-**Flip PDVD PR to `end_trim_gap_len = 20 cm`** (in
-`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`, the same file the
-retired floor lived in). It removes the defect this campaign exists for
-completely on both flagship clusters, takes unsupported trajectory from 12.7 %
-to 7.0 % — below the 8.3 % of the legacy frac-0 arm — raises coverage to 71.5 %
-and stopping-muon tags to 720, and costs nothing measurable in wall or RSS.
-Against the production of this morning (70.3 % / 10.2 % / 688) it is better on
-every axis at once.
+Flipping the knob is worth doing: every threshold in the window beats the
+production of this morning (70.3 % coverage / 10.2 % unsupported / 688 STM) on
+every axis at once, at no measurable wall or RSS cost, and the knob lives in
+`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json` — the same file
+the retired 0.35 floor lived in.
 
-**Take L = 40 instead if the seven destroyed fits are unacceptable.** It keeps
-the full STM gain and the highest coverage of the sweep, gives back 1.5 points
-of the ghost reduction, and leaves one destroyed fit. It is the conservative
-choice and it is defensible; the seven clusters L = 20 gives up are objects
-whose fit was 77–81 % invention.
+**Which threshold is not a question this doc can settle**, because 20 and 40 cm
+do not differ by margin: they trade *different clusters*.
 
-**Do not go below 10 cm.** The extra ghost removal between 20 and 2 cm is
-0.8 points and it costs 115 more damaged clusters.
+| | L = 20 cm | L = 40 cm |
+|---|---|---|
+| aggregate | 71.5 % / 7.0 % / STM 720 | 71.6 % / 8.5 % / STM 720 |
+| 039349/48 **cluster 53** | 152 cm, **0 %** off charge, coverage 86 % | 190 cm, 18 % off charge, coverage 83 % |
+| 039349/80 **cluster 67** | **fit destroyed** | 64 points, 36 cm, coverage 90 % |
+| clusters losing > 5 coverage points | 104 | 46 |
+| fits destroyed | 7 | 1 |
+
+The question that decides it: **is a trajectory drawn through 80 cm of empty
+space on a 51-point cluster better than no trajectory at all?** If yes, 40 cm —
+it keeps those fits and gives back 1.5 points of ghost removal. If no, 20 cm —
+it takes cluster 53's ghost extension to zero and finishes the defect this
+campaign exists for. Both are far better than either arm shipped today.
+
+**Do not go below 10 cm** whichever way that falls: between 20 and 2 cm the
+extra ghost removal is 0.8 points and it costs 115 more damaged clusters.
 
 Not decided here (CLAUDE.md §5.1): the flip is the owner's, and this doc ships
 the knob default-OFF with the evidence.
