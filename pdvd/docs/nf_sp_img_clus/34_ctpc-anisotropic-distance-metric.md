@@ -203,8 +203,11 @@ anisotropic   r ≥ sqrt((dx/2)² + (s·pitch/2)²) = dx/√2
 ```
 
 because with `s = dx/pitch` **both terms collapse to `dx/2`**. The anisotropic
-requirement is a property of the drift step alone — the same number on every
-plane of a detector, and nearly the same number on every detector:
+requirement is a property of the drift step alone, so it is **the same number
+on every plane of a detector** — which is exactly what an isotropic radius
+cannot deliver. Across detectors it still varies, because the drift steps do
+(1.56 → 2.23 mm, a 43 % spread); the plane-independence is the load-bearing
+claim, not a single universal constant:
 
 | | SBND | uBooNE | PDHD | PDVD W | PDVD U/V |
 |---|---|---|---|---|---|
@@ -215,8 +218,9 @@ The isotropic requirement spans 1.86 → 4.10 mm, a 2.2× spread; PDVD U/V's
 4.10 mm is 0.536 of a pitch, **above the 0.392 threshold at which doc 32 §19.4
 measured W unpinning and a 45 cm unsupported tail appearing**. That is the bind:
 isotropically, full coverage on U/V is not purchasable at any price PDVD can
-pay. The anisotropic requirement spans 1.56 → 2.23 mm and the legacy 0.2 cm is
-already within 10 % of it everywhere.
+pay. Anisotropically the legacy 0.2 cm is within 5 % of the requirement on
+PDVD, 8 % on SBND and 10 % on PDHD, and over-covers uBooNE by 28 % — near
+enough everywhere that the *radius* stops being the interesting parameter.
 
 Equivalently, and this is the cleanest way to state the knob: under this metric
 the pitch tolerance in units of a pitch is **`r/dx` — one number for all
@@ -371,11 +375,13 @@ codebase; it has simply never been applied to the ctpc distance.
 
 `good_point_pitch_frac = 0.35` is **live in PDVD production**
 (`pdvd_track_fitting.json:52`, shipped 2026-09-04). It is a per-plane floor on
-an isotropic radius, `r = max(0.2 cm, frac · pitch)` — a one-axis fix applied
+an isotropic radius, `r = max(0.2 cm, frac · pitch)` — a one-axis knob applied
 to a two-axis object. Raising `r` to reach across a pitch necessarily reaches
-proportionally further in **drift** as well, and that is why the value could
-not be raised past 0.39: above it, W unpins and the loosened trim stops masking
-the endpoint-selection defect of doc 32 §2.2.
+proportionally further in **drift** as well; the value could not be raised past
+0.39 because above it W unpins (0.2/0.510 = 0.392) and the loosened trim stops
+masking the endpoint-selection defect of doc 32 §2.2. **Which of the two axes
+carries that effect is not established** — see §9; this document does not claim
+it was the drift reach.
 
 §6 shows the anisotropic metric dominating the floor at every value tested, at
 a strictly smaller drift reach. **Two overlapping knobs governing one radius is
