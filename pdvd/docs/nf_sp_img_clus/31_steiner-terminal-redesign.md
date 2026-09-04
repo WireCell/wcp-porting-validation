@@ -301,6 +301,17 @@ done
 # Section 10.3's per-blob floor and section 10.6's density rows, both arms.
 python3 docs/nf_sp_img_clus/scripts/steiner_density_census.py \
     work/039349_14_d31r5off work/039349_14_d31r6prod work/039349_14_d31r6sync
+# The SHIPPED stack, both stages, no TLA -- everything from the new defaults.
+# wrapped_channel_charge acts at CLUSTERING time, so this combination is not
+# exercised by any PR-only arm.
+W=work/039349_14_d31r6e2e; mkdir -p $W
+ln -f work/039349_14_d31fix2off/clusters-apa-anode*-ms-*.tar.gz $W/
+ln -f work/039349_14_d31fix2off/img-provenance.txt $W/
+env LD_LIBRARY_PATH=/home/xqian/tmp/d31r6lib PDVD_LIGHT_SUFFIX=_keep PDVD_KEEP_CFG=1 \
+    ./run_clus_evt.sh -s d31r6e2e -save-pctree -calib 39349 14
+env LD_LIBRARY_PATH=/home/xqian/tmp/d31r6lib ./run_pr_evt.sh -s d31r6e2e 39349 14
+python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py $W   # 666 / 198 / 1.8 cm
+
 # Section 10.5's end-to-end gate: the default flip must reproduce round 5 exactly.
 cmp work/039349_14_d31r5both/calib-pr-evt19689.json \
     work/039349_14_d31r6prod/calib-pr-evt19689.json
@@ -1750,8 +1761,29 @@ result, both measured on the input point cloud. Either would reopen it.
 | PDVD clustering config: new default vs HEAD + explicit TLA | **byte-identical**, 198097 B |
 | **SBND** `wct-pr-perevt` (shared `common/clus.jsonnet` edited) | **byte-identical**, 253993 B |
 | **uBooNE** `uboone-mabc` | **byte-identical**, 255717 B |
-| end-to-end: `d31r6prod` (new defaults) vs round 5's `d31r5both` | `calib-pr` **byte-identical**, 7160347 B |
+| end-to-end, PR stage: `d31r6prod` (new defaults) vs round 5's `d31r5both` | `calib-pr` **byte-identical**, 7160347 B |
+| end-to-end, **both stages** (`d31r6e2e`): clustering with the knob on → PR on that pctree | clus rc=0, PR rc=0; cluster 34 below V **666 / 198 / 1.8 cm** |
 | freshness | source 17:30:23 → `local/lib` 17:34:01, md5 `be0aa5a7d88bc4bf046425692cadbde6` |
+
+**The shipped stack was run as one chain, not inferred from two halves.**
+`wrapped_channel_charge` acts at *clustering* time, so flipping it changes the
+point cloud the PR stage loads — a combination none of the round-3/4/5 arms
+exercised, since those all ran PR on a production knob-OFF pctree. `d31r6e2e`
+runs the shipped defaults from the imaging tarballs through clustering
+(`-save-pctree`) and then PR, and reproduces the campaign's headline exactly:
+
+| 039349/14, cluster 34 below V (111.5 cm) | round 3 only (`d31fix2on`) | **shipped stack (`d31r6e2e`)** |
+|---|---|---|
+| steiner points / terminals | 5 / 1 | **666 / 198** |
+| largest steiner-free gap | 108.5 cm | **1.8 cm** |
+| control half above V | 258 / 40 / 65.6 cm | 330 / 60 / 59.5 cm |
+
+Identical to the PR-only arms to the digit, so the two stages compose with no
+surprise at the boundary. The event-level output does move, in the direction
+§5.3 predicted and §10.2 has now adjudicated: cluster 47 leaves `track_fit`
+(it is a TGM), and with `nu_per_bundle_stm_only=true` its per-bundle PR goes
+with it — segments 20 → 11, vertices 23 → 16, showers 2 → 4, and the whole
+event's steiner cloud grows 45874 → 46068 points.
 
 The first row of the config block is the one that carries the argument: it
 compiles the *new* tree with the sync suppressed against the *HEAD* tree with
