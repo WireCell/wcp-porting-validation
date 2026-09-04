@@ -10,10 +10,12 @@
   default TLAs is byte-identical to the production one (§0.2). It ended in a
   recommendation (§6), not a knob.
 - **Round 3 (§15-§16, 2026-09-04) — the flip graded in the configuration
-  production actually runs** (DL/SCN vertex ON), with a repeat arm for the DL
-  noise floor. §13's finding survives (95 % vs a 5 % floor) and the aggregates
-  come out better than §13's. Also reports an unrelated pre-existing determinism
-  defect the round tripped over (§15.3).
+  production actually runs** (DL/SCN vertex ON), with a repeat arm as the noise
+  floor. §13's finding survives: the STM-tagged set moves on 79 % of events
+  against a **zero** floor. §15.3 **retracts a determinism claim an earlier
+  version of this round made** and replaces it with what the measurement really
+  showed — doc 36's metric flip, not the DL vertex. §13-vs-§15 comparisons span
+  that flip and are not attributed here.
 - **Round 2 (§11-§14, 2026-09-04) — the §6 recommendation EXECUTED, at the
   owner's instruction.** `terminal_min_separation` is now a real knob in `clus/`
   (C++ default 0 ⇒ byte-identical), and **PDVD production is flipped to 0.5 cm**
@@ -1053,16 +1055,21 @@ and a silent fall-back to geometric is what those warn about), and on
 
 | comparison | n | STM set differs | mean sym-diff | TGM set differs |
 |---|---|---|---|---|
-| `d37dloff` vs `d37dlrep` — **same config, the floor** | 20 | **1 (5.0 %)** | 0.15 | **0 (0.0 %)** |
-| `d37dloff` vs `d37dlon` — the knob, same 20 events | 20 | **19 (95.0 %)** | 2.80 | 0 (0.0 %) |
+| `d37dloff` vs `d37dlrep` — **same config, the floor** | 20 | **0 (0.0 %)** | 0.00 | **0 (0.0 %)** |
 | `d37dloff` vs `d37dlon` — the knob, all 120 | 120 | **95 (79.2 %)** | 1.78 | 0 (0.0 %) |
-| (round 2, geometric vertex, for reference) | 120 | 109 (90.8 %) | 2.39 | 0 (0.0 %) |
+| (round 2, geometric vertex + pre-flip cfg, for reference only — §15.3) | 120 | 109 (90.8 %) | 2.39 | 0 (0.0 %) |
 
-**§13.3's finding survives in the production configuration.** 95 % against a
-5 % floor on the same events is not DL instability; the thinning really does
-move which clusters the STM tagger claims, on the large majority of events.
+**§13.3's finding survives in the production configuration.** 79 % against a
+**zero** floor is not DL instability; the thinning really does move which
+clusters the STM tagger claims, on the large majority of events. PDVD PR's
+tag sets turn out to be exactly reproducible run-to-run even with DL on.
 
-### 15.2 …and the aggregates are *better* here than in §13
+*(An earlier version of this table reported the floor as 1/20. That was a
+measurement error, not a result: the wait loop keyed on log-file **existence**,
+and a log exists from the moment a job starts, so one event was read
+mid-write. Completion is `pr_resource_*.txt`, which is written at the end.)*
+
+### 15.2 The aggregates, and why they must not be compared to §13's
 
 Same census, `d37dloff` → `d37dlon`, 115 events with a dump on both sides:
 
@@ -1080,58 +1087,81 @@ Same census, `d37dloff` → `d37dlon`, 115 events with a dump on both sides:
 | main vertex present | 115 | 115 | — | — |
 
 The knob's own effect is identical to §13 (0.8027 vs 0.8029 kept — as it must
-be, phase 3b is upstream of everything DL touches). What changes is the
-downstream read, and it changes **in the flip's favour**:
+be, phase 3b is upstream of everything else here).
 
-- §13's `+5.8 % segments / +10.0 % vertices` becomes **−3.0 % / −3.4 %**, and the
-  per-event median ratio is exactly **1.000** for both.
-- Total reconstructed track length goes from **−0.19 %** to **+3.8 %**.
-- **TGM is untouched for the third independent time** (0 of 115 events, three
-  arms pairs, two vertex configurations). Whatever `TaggerCheckTGM` reads, it is
-  not the Steiner terminals.
+**The downstream read differs from §13's, and this doc will NOT attribute that
+difference to the DL vertex.** §13's arms ran before the doc-36 flip
+(`38245d18` / `605833eb`, 2026-09-04 11:31–11:32: PDVD PR moved to the
+anisotropic ctpc metric and `good_point_pitch_frac` was retired to 0); §15's ran
+after it. **Three things changed between the two rounds — metric, floor and
+vertex — so no §13-vs-§15 comparison isolates any one of them.** §15.3 measures
+which one it actually was. What can be said, within each round's own epoch:
+
+| | §13 (pre-flip cfg, geometric) | §15 (post-flip cfg, DL — production) |
+|---|---|---|
+| segments | +5.8 % | **−3.0 %** (per-event median 1.000) |
+| vertices | +10.0 % | **−3.4 %** (per-event median 1.000) |
+| track length | −0.19 % | **+3.8 %** |
+
+Both are valid statements about the knob **in their own epoch**, and the one that
+describes production today is the right-hand column.
+
+- **TGM is untouched for the third independent time** (0 of 115 events, two arm
+  pairs, two vertex configurations, two cfg epochs). Whatever `TaggerCheckTGM`
+  reads, it is not the Steiner terminals — and §15.3 shows it *does* move for
+  other reasons, so this is a real invariance and not a blunt instrument.
 
 The per-event churn does **not** go away: 53 of 115 events still move segment
 count by ≥ 5, 47 up and 55 down. So §13.3's headline stands — the change is
 large per-event churn that mostly cancels — but in the production configuration
 the residual after cancellation points the right way instead of the wrong one.
 
-### 15.3 An unrelated defect this round tripped over — reported, not fixed
+### 15.3 A claim this round made, then RETRACTED — and what it really was
 
-Comparing the two vertex configurations **at the same knob setting**
-(`d37off1` vs `d37dloff`, both 0 cm — only `dl_weights` differs):
+**An earlier version of this section reported a pointer-order determinism defect.
+That was wrong. It is retracted here, and the measurement that replaces it
+belongs to doc 36's flip, not to any determinism problem.**
 
-| | STM set differs | TGM set differs |
-|---|---|---|
-| geometric vs DL, knob 0 | 117 / 120 (97.5 %) | **33 / 120 (27.5 %)** |
-| geometric vs DL, knob 0.5 | 115 / 120 (95.8 %) | **33 / 120 (27.5 %)** |
-| DL vs DL, same config (the floor) | 1 / 20 | **0 / 20** |
+What happened: I compared `d37off1` (round 2) against `d37dloff` (round 3) at the
+same knob setting, described the pair as "only `dl_weights` differs", and read the
+result — TGM set differing on 33/120 events — as an allocation-order effect. The
+pair does **not** differ only in `dl_weights`. Round 2's arms ran before the
+doc-36 flip and round 3's after it, so the comparison also spanned the
+anisotropic ctpc metric and the retirement of `good_point_pitch_frac`. I had
+warned a concurrent round about exactly this class of cross-epoch comparison an
+hour earlier, and then published one.
 
-**TGM should not be able to move here, and it does.** Checked, not assumed:
+The fix was one 20-event arm, `d37geomoff` — knob 0, **geometric** vertex, run in
+the **post-flip** epoch — which makes every factor separable:
 
-- the SCN weights reach **exactly one component** in the compiled config,
-  `TaggerCheckNeutrino:pr`;
-- `tagger_check_tgm` and `tagger_check_stm` run **before** `tagger_check_neutrino`
-  in the PDVD `-nu` chain;
-- the verdicts are emitted **once per cluster**, not re-emitted by a later stage
-  (72 TGM lines / 72 distinct clusters; 52 STM lines / 52 distinct);
-- one wire-cell process per event, so there is no cross-event carry-over.
+| comparison | what varies | STM set differs | TGM set differs |
+|---|---|---|---|
+| `d37dloff` vs `d37dlrep` | **nothing** (a repeat) | 0 / 20 | 0 / 20 |
+| `d37geomoff` vs `d37dloff` | **the vertex only** | **0 / 20** | **0 / 20** |
+| `d37off1` vs `d37geomoff` | **the cfg epoch only** | **20 / 20 (100 %)** | **7 / 20 (35 %)** |
+| `d37dloff` vs `d37dlon` | **the thinning knob** | 95 / 120 (79 %) | 0 / 120 |
 
-A component that runs strictly *after* TGM therefore changes TGM's answer on a
-quarter of events — while being perfectly reproducible when its own
-configuration is held fixed. The reading, offered as an inference: every
-component is `configure()`d before any event is processed, and configuring
-`TaggerCheckNeutrino` loads the SCN model, which allocates heavily and moves
-every later allocation. Something on the TGM path is then **pointer-order
-dependent** — the failure mode CLAUDE.md M4 names and the "never iterate
-pointer-keyed containers" rule exists to prevent. STM's much larger 97.5 %
-follows from TGM's 27.5 % by cascade: STM skips a cluster TGM already claimed.
+**The DL vertex is inert for both cosmic taggers — 0 of 20, on both.** Which is
+what the pipeline said all along and what I should have trusted over a
+confounded measurement: the SCN weights reach exactly one component
+(`TaggerCheckNeutrino:pr`), and `tagger_check_tgm` / `tagger_check_stm` both run
+before it. The supporting facts in the retracted section were all correct; the
+comparison they were attached to was not.
 
-**This is not caused by the thinning** — it reproduces with the knob at 0 on
-both sides, and it predates this round entirely. It is reported here because
-this round is what exposed it, and because it has a practical consequence:
-**a PDVD PR A/B that changes `dl_weights` on one side is confounded**, and the
-0.5 cm flip could only be graded because both its sides held `dl_weights` fixed.
-Finding the pointer-ordered site is a separate investigation and is named in §16.
+**The 33/120 belongs to doc 36's flip, and that is a real result worth having.**
+With the vertex now proven inert, the epoch-only row isolates it: moving PDVD PR
+to the anisotropic ctpc metric and retiring the 0.35 floor **moves the STM-tagged
+set on 100 % of events and the TGM set on 35 %**. That is a much larger tagger
+effect than this doc's own flip, and it is handed to doc 36/38 as theirs.
+
+Two consequences for anyone reading this doc:
+
+- **The cross-epoch caveat in §15.2 is not boilerplate.** Two arm sets taken an
+  hour apart on this tree can differ by a production flip; check the cfg mtimes
+  against the arm timestamps, not the commit message.
+- **The TGM invariance under thinning is strengthened, not weakened.** TGM moves
+  35 % of the time for the metric flip and 0 % of the time for this one, on the
+  same events and the same instrument. It is a discriminating measurement.
 
 ### 15.4 An independent grade, from doc 38's instrument
 
@@ -1158,9 +1188,11 @@ nearly flat while individual events move a lot.
 
 ### 15.5 Verdict
 
-The flip is graded where production lives and the answer is better than §13's:
-the three set-level criteria hold, TGM is untouched, aggregate track length rises
-3.8 %, and segments and vertices are flat at the per-event median. The one thing
+The flip is graded where production lives, and in that epoch the answer is good:
+the three set-level criteria hold, TGM is untouched (0 of 115, while doc 36's
+flip moves it on 35 % of events — §15.3), aggregate track length rises 3.8 %, and
+segments and vertices sit at a per-event median ratio of exactly 1.000. This is
+a statement about the post-flip epoch, not a comparison with §13's. The one thing
 §13.4 asked for is still owed and is unchanged by this round — **a hand scan**,
 because 53 of 115 events reconstruct differently and no offline metric says which
 version is right. Scan pairs, now in the production configuration:
@@ -1176,13 +1208,33 @@ version is right. Scan pairs, now in the production configuration:
 1. **The hand scan** above. Everything else in §13.4, §15.2 and §15.4 is
    measured; this is the only thing that can say whether the flip is an
    improvement.
-2. **The pointer-order dependence §15.3 found.** Also recorded in doc 38 §5, so
-   the next person designing a PDVD PR A/B meets it before choosing the arms.
-   Reproducer: run any PDVD PR event twice at the same `steiner_terminal_min_sep_cm`, once with
-   `-S dl_weights=''` and once without, and diff the `TaggerCheckTGM: cluster N`
-   verdicts. 33 of 120 events differ. Candidates are any `std::set<T*>` /
-   `std::map<T*,…>` iterated on the TGM path.
+2. ~~The pointer-order dependence §15.3 found.~~ **RETRACTED — there is no such
+   defect.** See §15.3: the comparison spanned doc 36's production flip. The
+   DL vertex is inert for both cosmic taggers (0/20) and PDVD PR's tag sets are
+   exactly reproducible run-to-run (0/20). Doc 38 §5 recorded the retracted
+   claim on my report and has been told.
 3. **SBND at 0.5 cm.** Still unrun and still unasked-for: SBND stays at 0 by the
    owner's instruction, but §3.3 and §5 both say the same radius would bite it
    as hard as PDVD, so the number is not predictable from PDVD's.
 4. Junction protection, which is what would unlock 0.8–1.0 cm (§6, §9 item 2).
+
+## 17. Arms and records of round 3
+
+| label | `sep_cm` | vertex | cfg epoch | events | role |
+|---|---|---|---|---|---|
+| `d37dloff` | 0 | DL/SCN | post doc-36 flip | 120 | production before the thinning flip |
+| `d37dlon` | 0.5 | DL/SCN | post doc-36 flip | 120 | production after it |
+| `d37dlrep` | 0 | DL/SCN | post doc-36 flip | 20 | repeat of `d37dloff` — the noise floor (0/20) |
+| `d37geomoff` | 0 | geometric | post doc-36 flip | 20 | isolates the vertex from the cfg epoch (§15.3) |
+
+All staged fresh from `d34base` with `stage_pr_tag.sh`, all pinned to
+`/home/xqian/tmp/doc37/lib_new`. Round 2's arms (`d37off0/off1/on05/rep`) are in
+the **pre**-doc-36-flip epoch; §14 lists them.
+
+**Completion is `pr_resource_*.txt`, not the log file.** A log exists from the
+moment a job starts, so a census keyed on log existence can read an event
+mid-write — that is what produced the retracted 1/20 floor in §15.1. Two
+`d37dlon` events were also re-run at the end because a `PDVD_PR_COMPILE_ONLY=1`
+probe of mine had removed one of their logs, leaving the arm non-uniform; the
+numbers in §15.2 are from the repaired, uniform arm and are unchanged by the
+repair.
