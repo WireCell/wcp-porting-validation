@@ -1311,11 +1311,29 @@ a statement about the post-flip epoch, not a comparison with §13's. The one thi
 because 53 of 115 events reconstruct differently and no offline metric says which
 version is right. Scan pairs, now in the production configuration:
 
-| event | why | OFF | ON |
+**Built as one Bee set**, `/home/xqian/tmp/doc37/d37_scan_pairs.zip` (12 events,
+10.5 MB, builder `scripts/doc37_build_scan_pairs.py`). The two arms of each pair
+are **adjacent** Bee event indices, because the scan is a comparison and flipping
+between neighbours is the only way to make it one. **Not uploaded** — that is the
+owner's call (CLAUDE.md §5 rule 6); `pdvd/upload-to-bee.sh <zip>`.
+
+| bee # | event | OFF → ON | why this one |
 |---|---|---|---|
-| 039252/5 | large mover | `039252_5_d37dloff` | `039252_5_d37dlon` |
-| 039349/7 | large mover, other direction | `039349_7_d37dloff` | `039349_7_d37dlon` |
-| 039349/2 | zero STM tags → tagged | `039349_2_d37dloff` | `039349_2_d37dlon` |
+| 0, 1 | 039252/1 | nseg 41 → 11, nvtx 52 → 12 | biggest simplification |
+| 2, 3 | 039253/15 | nseg 24 → 4, nvtx 27 → 5 | second biggest — did 20 segments vanish, or 20 spurious ones? |
+| 4, 5 | 039349/33 | nseg 69 → 93, nvtx 105 → 124 | the other direction: **fragmentation** |
+| 6, 7 | 039252/15 | nseg 19 → 42, nvtx 17 → 40 | fragmentation again, on a smaller event |
+| 8, 9 | 039349/2 | **no PR output → tagged** | OFF has no `track_fit` / `shower_track` / `vertices` layers at all |
+| 10, 11 | 039349/67 | nseg 17 → 17, nvtx 24 → 24 | **control** — what "unchanged" looks like at 19 % fewer terminals |
+
+**These are the movers in the PRODUCTION (DL) arms.** §13.3's examples
+(039252/5 36 → 203, 039349/7 41 → 7) are the movers in the *geometric* arms and
+do not carry over — 039252/5 is 21 → 3 here. Two arm sets, two mover lists; the
+scan set must come from the arms whose configuration is being judged.
+
+**The question to hold while scanning**, since no offline metric answers it: on
+the events that simplified, did the ON arm drop *real* structure or *spurious*
+structure — and on the events that fragmented, is the extra structure real?
 
 ## 16. Still open
 
