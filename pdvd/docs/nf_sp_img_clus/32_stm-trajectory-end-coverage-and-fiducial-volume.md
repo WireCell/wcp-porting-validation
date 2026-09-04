@@ -1,9 +1,11 @@
 # PDVD doc 32 — the STM trajectory stops short of both track ends, and what PDVD's fiducial volume actually is
 
-**Status.** Diagnosis complete and pinned to one mechanism. **No code and no
-config changed this round**, so no A/B gate is owed and none is claimed. The two
-arms below use only knobs that are default-OFF and log-only, and both reproduce
-the shipped stack's STM output exactly (§2.1).
+**Status.** Diagnosis complete and pinned to one mechanism (rounds 1, §§1-9);
+the *reason* PDVD is affected and SBND is not is now measured and **confirmed**
+(round 2, §§10-16). **No code and no config changed in either round**, so no A/B
+gate is owed and none is claimed. The two arms in §2 use only knobs that are
+default-OFF and log-only, and both reproduce the shipped stack's STM output
+exactly (§2.1); round 2 ran no arm at all.
 
 > **Line numbers.** `clus/src/TrackFitting.cxx` and
 > `clus/inc/WireCellClus/TrackFitting.h` are **dirty in this working tree**
@@ -56,6 +58,15 @@ python3 docs/nf_sp_img_clus/scripts/stm_trajectory_coverage.py \
     d31r6e2e:work/039252_2_d31r6e2e \
     d31r7t500:work/039349_14_d31r7t500 \
     --axis 109:343.1,140.1,195.3:221.4,196.8,253.7
+
+# ---- round 2: the pitch measurement (read-only, no arm) ----
+# Reads the ctpc lattice straight out of the pctree tensor dumps, so it needs
+# only products already on disk.  ~4 min for PDVD, ~1 min per SBND event.
+cd $WCPI/pdvd
+python3 docs/nf_sp_img_clus/scripts/goodpoint_pitch_census.py \
+    PDVD:work/039252_2_d31r6e2e
+python3 docs/nf_sp_img_clus/scripts/goodpoint_pitch_census.py \
+    $(ls -d ../sbnd/sbnd_xin/work-mcp2k-d97fvpr2/pr_evt* | head -16 | sed 's/^/SBND:/')
 
 # ---- the two probe arms (section 2) ----
 # Pin first: local/lib and build/ were rebuilt at 20:49, AFTER the d31r6e2e arm
@@ -323,11 +334,19 @@ stepping in wire units) and doc 28 found once (crossing ambiguity), and it
 predicts exactly the observed asymmetry: PDVD loses metres of trajectory where
 SBND loses centimetres.
 
-**This is a hypothesis, not a measurement.** It is not established here, and the
-measurement that would settle it is named in §7 (H1): the per-plane
-`has_closest_point` match rate along a track, as a function of radius, on both
-detectors. The PR calib dump's `proj` section carries only apa 0 in this event,
-so it cannot be tested offline from what is on disk.
+**This was a hypothesis when round 1 shipped. Round 2 measured it and it is
+confirmed — see §§10-12.** The measurement named here as H1 has been done: the
+per-plane `has_closest_point` match rate along a track, as a function of radius,
+on both detectors. PDVD sits at the geometric ceiling on all three planes, SBND
+does not, and each detector's pass rate stops rising at its own half-pitch
+(§11.1).
+
+One sentence of this section was wrong and is corrected rather than deleted,
+because it is why the measurement waited a round: it said that the PR calib
+dump's `proj` section carries only apa 0 in this event *and therefore* the test
+could not be run offline. The first clause is true; the conclusion is not. The
+**pctree tensor dump carries the complete ctpc** for all 16 (apa, face) keys,
+and both detectors already had such dumps on disk. No arm was needed.
 
 ---
 
@@ -534,11 +553,23 @@ a byte-identical gate with the knob at its default, plus a knob-on arm on the
 PDVD manifest and an SBND arm — at SBND's pitch a half-pitch radius is *smaller*
 than 0.2 cm, so this is **not** PDVD-only in effect.
 
+> **Superseded by §16 R1.** H1 is done and the pitch explanation is confirmed
+> (§§10-12), so the evidence bar above is met. Two things also changed: a
+> per-plane radius cannot be delivered by a track-fitting parameter at all,
+> because `is_good_point` takes one scalar for three planes (§14), and writing
+> the knob as a **floor** — `max(radius, frac·pitch)` — *does* make it PDVD-only
+> in effect, contrary to the last sentence here.
+
 **R2 — relax `allowed_bad` at the trajectory ends only.** `allowed_bad = 0`
 demands all three planes simultaneously; two-of-three is the convention
 elsewhere in `is_good_point`'s callers (`minimal_views = 2` in
 `FiducialUtils::inside_dead_region`). Cheaper and blunter than R1 and does not
 need the pitch measurement. Knob: `traj_end_allowed_bad`, C++ default 0.
+
+> **Superseded by §16 R2, which recommends against it.** Now that H1 is
+> measured, R1 and R2 can be graded against each other on the same points: R2
+> recovers less on PDVD (0.518 against R1's 0.715) *and* moves SBND from 0.624
+> to 0.936, so it is both weaker and less containable.
 
 **R3 — give the amputation walk the same volume the taggers use.** Test 1 of the
 pop loop is `DetectorVolumes::contained_by()`, so a trajectory point in the
@@ -571,10 +602,11 @@ not a code change.
 
 ### Measurements owed before R1 ships
 
-- **H1 — the pitch hypothesis.** Per-plane `has_closest_point` match rate along
-  a track as a function of radius, on PDVD and SBND. Predicts a step at
-  radius ≈ half a pitch on PDVD and no step on SBND. Needs either the full
-  `proj` section for the relevant anodes or an in-process probe.
+- **H1 — the pitch hypothesis. DONE in round 2 (§§10-12): confirmed.** It
+  predicted a step at radius ≈ half a pitch on PDVD and none on SBND; what the
+  data show is a step at half a pitch on *each* detector, at 0.15 cm for SBND
+  and 0.38 cm for PDVD (§11.1). It needed neither the `proj` section nor an
+  in-process probe — the pctree dump carries the whole ctpc.
 - **H2 — separate genuine amputation from branch walk-back** at population scale
   (§2.3's caveat), by comparing each call's incoming and outgoing endpoints
   against the cluster's terminal extent rather than against each other.
@@ -624,3 +656,368 @@ not a code change.
    `BlobSampler`'s wire-unit stepping, and doc 28's crossing ambiguity). It is
    worth asking, once, which other constants in the fitting chain were tuned at
    3 mm.
+
+---
+
+# Round 2 — the pitch hypothesis, measured
+
+**Status of round 2.** §2.5 left the pitch explanation as an explicitly
+unproven hypothesis and said it could not be tested from what is on disk. The
+second half of that was wrong, and the correction is what made this round
+possible: the calib dump's `proj` section does carry only apa 0 in this event,
+but the **pctree tensor dump carries the entire ctpc** — every
+`ctpc_a<A>f<F>p<U|V|W>` dataset, for all 16 (apa, face) keys — and both
+detectors already have such dumps on disk. **Still no code change, no config
+change, and no new arm this round**, so again no A/B gate is owed and none is
+claimed.
+
+**Verdict: confirmed.** The 0.2 cm radius is pitch-blind, PDVD sits at the
+geometric ceiling that blindness imposes, SBND does not, and the region the
+trajectory loses is a region that has charge in it.
+
+## 10. How the test can be replicated exactly, offline
+
+`Grouping::has_closest_point` (`Facade_Grouping.cxx:687-701`) is a 2-D
+existence query in the (drift, pitch) plane against the ctpc — and the ctpc is
+an exact lattice, by construction:
+
+```
+PointTreeBuilding.cxx:313   y = pitch_mags[apa][face][plane] * (wind + 0.5) + proj_centers[...]
+PointTreeBuilding.cxx:312   x = time2drift(face, time_offset, drift_speed, slice->start())
+```
+
+Every occupied cell therefore sits at a wire centre in the pitch coordinate and
+at a slice boundary in drift. A trajectory point lands at an arbitrary phase in
+that grid, so "is there a hit within 0.2 cm of this projection" is only partly a
+question about charge — it is also a question about **where between two wires
+the point fell**. If half the pitch exceeds the radius, there is a band of
+phases that cannot match no matter how much charge is present.
+
+`docs/nf_sp_img_clus/scripts/goodpoint_pitch_census.py` replicates the query
+from a pctree dump plus the trajectories in `mabc-pr.zip` /
+`calib-pr-evt*.json`. Three things are proven rather than assumed:
+
+| gate | why it matters | PDVD | SBND |
+|---|---|---|---|
+| projection map refitted from the dump's own `2dp{p}_y` arrays against (y, z) | `y_proj = cos(a)·z − sin(a)·y` is linear, so a non-zero residual would mean the replica is not the code | max &#124;residual&#124; **8.19e-12 mm** | **7.28e-12 mm** |
+| pitch and drift step read off the ctpc arrays, not from a geometry file | the whole argument is about these two numbers | pitch **7.650 / 7.650 / 5.100 mm**, step **2.9615 mm** | pitch **3.000 mm**, step **3.126 mm** |
+| corrected→raw x offset read off the 3d point cloud (`x` − `x_t0cor` at the nearest point, mode over the trajectory) | the pctree dump is written at the **clustering** stage, so its cluster idents do **not** match the PR/Bee ids and `cluster_scalar/cluster_t0` cannot be indexed by them | purity 1.00 on cluster 109 | — |
+
+**Interior points only.** The first and last 3 points of every polyline are
+dropped. Those are exactly the points the pop loop *accepted*, so including
+them would measure survivorship instead of geometry. Every other point on a
+fitted trajectory was never subjected to the test, which makes it an unbiased
+sample of "a smooth trajectory through real charge".
+
+**One bias, stated before the numbers.** A fitted trajectory is fitted *to*
+charge, so its lattice phase is pulled toward occupied wires. Every rate below
+is therefore an **upper** bound on what an arbitrary point on the track would
+score. A measured rate at or slightly under the uniform-phase ceiling is the
+expected outcome; a rate far below it would mean charge absence, not geometry.
+
+## 11. The result: PDVD is limited by the lattice, SBND by the charge
+
+Distance from an interior trajectory point to the nearest ctpc cell, against the
+uniform-phase ceiling for that plane's own (pitch × drift-step) cell — the
+fraction of the cell within 0.2 cm of a lattice point when *every* neighbouring
+cell is occupied, i.e. the best any event can do.
+
+**PDVD** — 22 trajectories, 6700 interior points, `work/039252_2_d31r6e2e`
+(039252/2 evt 298595):
+
+| plane | median | p75 | p90 | pass @ 0.2 cm | lattice ceiling |
+|---|---|---|---|---|---|
+| U | 2.334 mm | 3.768 | 42.83 | **0.436** | 0.470 |
+| V | 2.322 mm | 3.546 | 22.10 | **0.428** | 0.470 |
+| W | 1.591 mm | 2.469 | 30.89 | **0.624** | 0.705 |
+
+**SBND** — 56 trajectories, 2830 interior points, 16 events of
+`sbnd_xin/work-mcp2k-d97fvpr2`:
+
+| plane | median | p75 | p90 | pass @ 0.2 cm | lattice ceiling |
+|---|---|---|---|---|---|
+| U | 1.247 mm | 1.527 | 1.782 | **0.963** | 0.988 |
+| V | 1.332 mm | 1.662 | 2.394 | **0.865** | 0.988 |
+| W | 1.448 mm | 2.173 | 4.348 | **0.729** | 0.988 |
+
+Read the last two columns together. **PDVD is at its ceiling on all three
+planes** — 0.436 against 0.470, 0.428 against 0.470, 0.624 against 0.705. There
+is no charge to add that would improve those numbers; the grid is the binding
+constraint. SBND's U plane is also at its ceiling (0.963 against 0.988) but the
+ceiling is 0.988, and its V and W fall well below theirs (0.865, 0.729), which
+is charge absence — dead channels and the sparser charge of a neutrino event.
+
+Same code, same constant, different binding constraint. The median PDVD U/V
+distance, 2.33 mm, sits *on* the 2.0 mm threshold; SBND's, 1.25 mm, sits at
+five eighths of it.
+
+### 11.1 The knee is at half a pitch, on each detector
+
+`is_good_point(radius, ch_range = 0, allowed_bad = 0)` — all three planes must
+pass — as a function of radius:
+
+| radius (cm) | PDVD | SBND | |
+|---|---|---|---|
+| 0.10 | 0.027 | 0.043 | |
+| 0.15 | 0.076 | 0.321 | ← SBND half-pitch = 0.150 cm |
+| **0.20 (production)** | **0.175** | **0.624** | |
+| 0.25 | 0.304 | 0.694 | ← PDVD W half-pitch = 0.255 cm |
+| 0.30 | 0.449 | 0.729 | |
+| 0.40 | 0.715 | 0.819 | ← PDVD U/V half-pitch = 0.3825 cm |
+| 0.50 | 0.738 | 0.880 | |
+| 0.60 | 0.751 | 0.912 | |
+
+PDVD climbs +0.54 between 0.15 and 0.40 cm and then flattens — +0.036 over the
+whole of 0.40 → 0.60. SBND climbs +0.58 between 0.10 and 0.20 cm and then
+crawls. **Each detector's rise ends where its own half-pitch is crossed.** That
+is the discriminating observation of this round: a charge-density explanation
+predicts no knee, and predicts any knee it did produce at the *same* radius on
+both detectors, because 0.2 cm is the same 0.2 cm. A lattice explanation
+predicts a knee at pitch/2, which is a different radius on each detector. The
+knee is at pitch/2 on each.
+
+The plateau heights say what geometry cannot explain: PDVD flattens at 0.75,
+SBND at 0.91. That residue is genuine charge absence, and it is what
+`allowed_bad` and `ch_range` exist for — not what the radius should be asked to
+fix.
+
+## 12. The region the trajectory loses has charge in it
+
+The rates above are about the whole trajectory. This is about the part that was
+amputated. For every trajectory end, walk outward along the local direction in
+0.6 cm steps and keep the **contiguous run of steps that have a 3d point within
+1.5 cm** — i.e. only where charge demonstrably exists. Because 3d points exist
+only inside the sensitive volume, that filter also keeps the walk inside the
+detector, which is what separates this measurement from the pop loop's *other*
+test, `DetectorVolumes::contained_by()`.
+
+**PDVD** — 44 ends; charge continues a median **4.8 cm** past the fit tip
+(p90 18.1 cm, max 19.8 cm):
+
+| radius (cm) | U | V | W | all three |
+|---|---|---|---|---|
+| **0.20** | 0.315 | 0.345 | 0.507 | **0.064** |
+| 0.30 | 0.507 | 0.578 | 0.786 | 0.266 |
+| 0.40 | 0.694 | 0.795 | 0.837 | **0.522** |
+| 0.60 | 0.801 | 0.884 | 0.904 | 0.677 |
+
+**SBND** — 109 ends; charge continues a median 3.0 cm:
+
+| radius (cm) | U | V | W | all three |
+|---|---|---|---|---|
+| **0.20** | 0.702 | 0.572 | 0.697 | **0.371** |
+| 0.40 | 0.823 | 0.712 | 0.811 | 0.557 |
+
+In the region where the fit gave up and the charge did not, the production test
+passes **6.4 %** of the time on PDVD and **37.1 %** on SBND — a 5.8× gap, same
+code, same radius, charge present on both sides. Widening PDVD's radius past its
+own half-pitch takes it to 52.2 %, an **8.2× recovery**, while SBND gains only
+1.5×. This is §1's stranded-terminal argument made quantitative: 39 + 27
+terminals lay beyond the amputated tips, terminals mean blobs mean occupied
+lattice cells, and a test that reports "nothing within 0.2 cm" there is failing
+on grid phase, not on charge.
+
+### 12.1 Cluster 109, and cluster 108 as the negative control
+
+| cluster / end | charge continues past the tip | all three @ 0.2 cm | @ 0.4 cm | amputated (§2.2) |
+|---|---|---|---|---|
+| 109, A / front | **19.2 cm** | 0.094 | 0.750 | 15.45 cm |
+| 109, B / back | **11.4 cm** | 0.000 | 0.474 | 11.00 cm |
+| **108, both ends** | **1.8 cm** | 0.000 | 0.000 / 0.333 | (reaches its terminals) |
+
+Cluster 109's B end is the cleanest single number in this document: charge
+continues 11.4 cm past where the fit stops, the fit was cut back by 11.00 cm,
+and **not one** of the 19 sampled points in that stretch passes the production
+test — while nearly half of them pass at half a pitch.
+
+Cluster 108 is the control. §2.3 identified it as the only fitted long-straight
+cluster in the event whose trajectory reaches its terminal extent and the only
+one with no probe lines at all. It has **1.8 cm** of charge-bearing extension at
+either end — its fit stops where the charge stops. The same measurement, applied
+to the cluster that did not lose its ends, finds essentially nothing there to
+lose. That is the negative control this round owed, and it passes.
+
+## 13. What round 2 does *not* establish
+
+- **Scale.** One PDVD event (22 trajectories) against 16 SBND events (56
+  trajectories). The PDVD side is one event because one event is what has a
+  pctree dump on disk; §2.3's population evidence is separate and broader.
+- **It does not separate the pop loop's two tests.** The charge-within-1.5-cm
+  filter keeps §12's walk inside the sensitive volume, so §12 is a clean
+  statement about `is_good_point` alone — but the *production* loop pops on
+  `contained_by` **or** `is_good_point`, and §2.2's estimate that ~3.9 of end
+  A's 18.6 cm lies outside the sensitive volume still stands and is not
+  displaced by anything here.
+- **Dead channels are not modelled.** `get_closest_dead_chs` can rescue a plane
+  that has no live hit, so the true production pass rate is somewhat higher than
+  every number above wherever dead channels are near. This does not touch the
+  cross-detector comparison, which applies the identical live-only model to
+  both.
+- **Correlation along a track is observed but not explained.** Failure runs:
+  PDVD median 3 points, p90 10, max 257; SBND median 1, p90 8, max 94. 12.1 % of
+  PDVD's failure runs are ≥ 10 points (≳ 6 cm) against 9.2 % of SBND's. Rates
+  alone would predict shorter runs than are observed, so failures are correlated
+  — the lattice phase advances smoothly along a smooth trajectory, and with
+  `allowed_bad = 0` three phases must be simultaneously in-band. The script
+  reports pass rate against phase-advance rate; the trend is monotone on both
+  detectors but in *opposite* directions, so no mechanism is claimed from it.
+  The long runs are the operative fact; their cause is not pinned.
+
+## 14. The same constant, in twenty other places
+
+The user asked for the places this has been met. There are two answers: the call
+sites of *this* test, and the campaign's wider pattern of pitch-blind constants
+(§15).
+
+Grouped by the `(radius, ch_range, allowed_bad)` triple actually passed —
+because it is the triple, not the file, that determines whether a site is
+exposed:
+
+| triple | sites | where |
+|---|---|---|
+| **0.2 cm, 0, 0** | **20** | `NeutrinoStructureExaminer.cxx` :211, :373, :1107, :1678, :2014, :3252, :3621, :3632, :3658, :3676, :3692, :3810, :3821 · **`TrackFitting.cxx` :2312, :2331, :2371, :2390** · `NeutrinoOtherSegments.cxx` :1382, :1568 · `NeutrinoShowerClustering.cxx` :2944 |
+| 0.3 cm, 0, 0 | 2 | `NeutrinoStructureExaminer.cxx` :907, :3847 |
+| 0.6 cm, 1, 1 (the defaults) | 12 | `connect_graph_ctpc.cxx` :118, :218, :274, :699, :735, :770 · `connect_graph_relaxed.cxx` :435, :549 · `connect_graph_relaxed_strict.cxx` :2000, :2135 · `clustering_protect_overclustering.cxx` :397 · `TaggerCheckTGM.cxx` :1234 |
+| 0.6 cm, 1, 0 | 4 | `connect_graph_relaxed.cxx` :444, :558 · `connect_graph_relaxed_strict.cxx` :2004, :2139 |
+| configurable radius | 2 | `NeutrinoSteinerGapGraph.cxx:76` (`m_sgp_point_radius`, `TaggerCheckNeutrino.h:538`, default 0.2 cm, exposed as `sgp_point_radius` and referenced at `pr.jsonnet:975`) · `NeutrinoGraphAudit.cxx:125` (`good_radius`) |
+
+Against the pitches, as 2 × radius in units of one pitch — the ratio that
+crosses 1.0 is the tell:
+
+| radius | SBND / uBooNE (0.300 cm) | PDVD U/V (0.765 cm) | PDVD W (0.510 cm) |
+|---|---|---|---|
+| **0.2 cm** | **1.33** | **0.52** | **0.78** |
+| 0.3 cm | 2.00 | 0.78 | 1.18 |
+| 0.6 cm | 4.00 | 1.57 | 2.35 |
+
+**The loose family is safe everywhere**; 0.6 cm spans more than a full pitch on
+every plane of both detectors, which is why the graph builders have never shown
+this symptom. Only the strict 0.2 cm family — and, on U/V, the 0.3 cm pair —
+crosses below 1.0 on PDVD while sitting above 1.0 at the pitch it was written
+for. Twenty sites are exposed; this round measured one of them.
+
+Two asymmetries worth recording, because they are themselves evidence:
+
+- `get_closest_dead_chs` takes `ch_range` in **channel** units
+  (`Facade_Grouping.cxx:703-717`), so the dead half of `is_good_point` is
+  already pitch-relative. Only the live half is blind. A single function
+  measures one thing in wires and the other in centimetres.
+- `is_good_point` takes **one scalar radius for three planes**, and PDVD has two
+  different pitches behind a single (apa, face). No value a caller could pass is
+  correct for all three planes at once — which is why §16 puts the fix inside
+  the loop rather than at the call sites.
+
+## 15. The campaign's pitch-blind constants — five now, four before
+
+Every one of these first presented as something else, and each was found by
+writing the constant as a fraction of the pitch:
+
+| # | constant | tuned at | on PDVD | doc |
+|---|---|---|---|---|
+| 1 | `terminal_charge_threshold` 4000 e | 0.300 cm pitch | needs 500 e | doc 31 / doc 28 |
+| 2 | `BlobSampler::Stepped` steps in **wire** units | — | 2.55× fewer sample points for a physically similar blob | doc 31 round 8 |
+| 3 | (U, V) crossing ambiguity | 21.0 % at SBND | **83.6 %** | doc 28 |
+| 4 | `channels()` indexed as a wire lookup | — | silent on PDVD/PDHD, three sites | doc 31 rounds 3, 5 |
+| 5 | **`is_good_point(..., 0.2 cm, 0, 0)`** | 1.33 pitches | **0.52 pitch** | **this doc, confirmed §11** |
+
+The general rule this round adds: a distance constant that is compared against
+detector charge is only meaningful **relative to the sampling that produced the
+charge**. The ctpc is a lattice; a radius smaller than half its cell can never
+be satisfied for a whole band of phases, whatever the physics. Where a constant
+of this kind is introduced or reviewed, write it as a fraction of the pitch and
+of the drift step, on every detector that binds the component, and put the table
+in the doc.
+
+## 16. Solutions
+
+Ranked. None is implemented — this round changed no code and no config — and
+each names the default-OFF knob it needs and the gate it would owe. R1 replaces
+round 1's R1 and R2; R3–R6 are unchanged from §7 and are listed for ordering
+only.
+
+### R1 — give `is_good_point` a per-plane pitch floor (recommended)
+
+The fix cannot go at the call sites. Twenty of them pass a scalar, and the
+scalar must serve three planes with two different pitches, so no value is right.
+It has to resolve inside the per-plane loop — and `fastgeom_t` **already caches
+what is needed**: `std::array<double,3> pitch` alongside `angle`
+(`Facade_Grouping.h:116`, filled at `Facade_Grouping.cxx:755`), so the lookup is
+free.
+
+```cpp
+// Facade_Grouping.h:296 -- one new defaulted argument
+bool is_good_point(const geo_point_t& point, int apa, int face,
+                   double radius = 0.6*units::cm, int ch_range = 1,
+                   int allowed_bad = 1, double pitch_frac = 0.0) const;
+
+// Facade_Grouping.cxx:537
+const auto& fg = fastgeom(apa, face);
+for (int pind = 0; pind < 3; ++pind) {
+    // pitch_frac = 0 => r == radius => every existing caller is unchanged.
+    const double r = pitch_frac > 0.0
+                   ? std::max(radius, pitch_frac * fg.pitch[pind])
+                   : radius;
+    if (has_closest_point(point, r, apa, face, pind)) { ... }
+```
+
+Then one call site opts in — `examine_end_ps_vec`'s four calls
+(`TrackFitting.cxx` :2312, :2331, :2371, :2390) — reading the fraction from the
+TrackFitting params struct in the same idiom as `traj_cover_probe`
+(`TrackFitting.cxx:63`, `TrackFitting.h:147`), C++ default 0.
+
+**Recommended value 0.5, and the `max()` is load-bearing.** Half a pitch is
+0.3825 cm on PDVD U/V and 0.255 cm on W — the plateau in §11.1. On SBND and
+uBooNE half a pitch is **0.150 cm, which is smaller than the existing 0.2 cm**,
+so `max(radius, 0.5·pitch)` returns 0.2 cm unchanged. This is the one form of
+the fix that is genuinely PDVD-only in effect, and it is the deliberate answer
+to the standing warning that a pitch-expressed constant usually makes SBND
+*stricter*: expressed as a floor rather than a replacement, it cannot.
+
+Expected effect, from §11.1 and §12: interior pass rate 0.175 → 0.715; in the
+amputated region 0.064 → 0.522.
+
+**Gate owed.** Knob off ⇒ byte-identical on PDVD *and* SBND (the signature
+change touches a function on every detector's hot path, so both manifests, not
+just PDVD's). Knob on ⇒ PDVD arm showing the trajectories reaching their
+terminal extents, plus an SBND knob-on arm proving the `max()` really is inert
+there rather than only arguably so. `./build/clus/wcdoctest-clus`.
+
+### R2 — relax `allowed_bad` at the ends (measured, and rejected in favour of R1)
+
+Round 1 listed this as a peer of R1. It is not; §11's data grades them directly.
+At the current 0.2 cm radius, requiring only 2 of 3 planes gives:
+
+| | all three | ≥ 2 of 3 | ≥ 1 of 3 |
+|---|---|---|---|
+| PDVD @ 0.2 cm | 0.175 | **0.518** | 0.795 |
+| SBND @ 0.2 cm | 0.624 | **0.936** | 0.995 |
+
+R2 buys PDVD less than R1 does (0.518 against 0.715) **and** moves SBND a long
+way (0.624 → 0.936), so it is neither as effective nor as containable. It also
+weakens the test's purpose: two planes agreeing is a real reduction in
+confidence that a point is on charge, whereas R1 leaves the confidence
+requirement intact and only stops asking for a precision the wire pitch cannot
+deliver. Recommend **not** pursuing R2 on its own. If R1 alone proves
+insufficient, R1+R2 together reach 0.829 at 0.4 cm — but that is a second round
+with its own evidence, not a hedge to ship now.
+
+### R3–R6 (unchanged from §7, re-ordered behind R1)
+
+- **R3** — give the amputation walk the tagger's fiducial volume rather than the
+  holed sensitive union. Independent of R1: it addresses the pop loop's *other*
+  test, which §13 records as still unseparated.
+- **R4** — route `MakeFiducialUtils` to a whole-detector fiducial (§6.2). The
+  broadest change and the one that most directly answers the owner's second
+  question; `EnvFiducial` needs no new constants (§6.3).
+- **R5** — fix `cluster_fc_check`'s round-2 write-back (`Clustering_Util.cxx`
+  :301-319 vs :260-263). Latent, not this defect.
+- **R6** — reconsider `tgm_fv_x_margin = 30 cm` (§6.1). An owner call, not a
+  code fix.
+
+### The measurement that is now discharged, and the one that is not
+
+**H1 is done** — this round is H1, and it confirms. **H2 is not**: separating
+genuine amputation from the branch walk-back at population scale still needs the
+probe arm's per-call front/back deltas cross-referenced against §12's
+charge-bearing extension per end. It is the natural next measurement and it
+needs no code change either.
