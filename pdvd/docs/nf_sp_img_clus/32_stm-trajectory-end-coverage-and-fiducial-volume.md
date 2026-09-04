@@ -3,10 +3,14 @@
 **Status.** Diagnosis complete and pinned to one mechanism (round 1, §§1-9);
 the *reason* PDVD is affected and SBND is not measured and **confirmed**
 (round 2, §§10-16); the fix built as a **default-OFF** knob, gated, and measured
-across four pitch fractions (round 3, §§17-20). Rounds 1 and 2 changed no code
-and no config. Round 3 changes C++ behind a knob whose default is 0: the
-knob-off path is proven byte-identical (§18) and **no production config was
-changed and no default was flipped** — that remains the owner's call (§5.1). The two arms in §2 use only knobs that are
+across six pitch fractions (round 3, §§17-20); and **0.35 set as PDVD
+production** on the owner's decision of 2026-09-04, validated over the
+120-event PR manifest (round 3b, §21). Rounds 1 and 2 changed no code and no
+config. Round 3 adds C++ behind a knob whose C++ default stays 0 — the knob-off
+path is proven byte-identical (§18) and pinned by a test (§21.2). Round 3b
+changes **PDVD production output**: one key in
+`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`. No other
+detector moves, and no C++ default was flipped. The two arms in §2 use only knobs that are
 default-OFF and log-only, and both reproduce the shipped stack's STM output
 exactly (§2.1); round 2 ran no arm at all.
 
@@ -1302,7 +1306,112 @@ that carry the argument.
    STM flips in §19.3. A PDHD **knob-on** arm is owed only for a fraction above
    0.417; at the recommended 0.35 PDHD does not move at all (§19.4).
 
+## 21. Round 3b — 0.35 set as PDVD production, and validated at manifest scale
+
+**Owner decision, 2026-09-04:** set the value. `good_point_pitch_frac = 0.35`
+is now in `cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`.
+
+**What that does and does not touch.** The C++ default stays 0, so the flip is
+carried entirely by one PDVD file. `sbnd_track_fitting.json` is untouched and
+every other detector keeps the legacy 0.2 cm radius by C++ default. Within PDVD,
+§19.4's activation table means the only plane that moves is **U/V** (0.268 cm);
+PDVD's own W plane, PDHD, SBND and uBooNE all stay at exactly 0.200 cm. The PR-
+side knob (`TaggerCheckNeutrino`) remains at 0 — it has no measurement of its
+own (§19.2).
+
+The production route was proven before the manifest run: an arm on 039252/2
+using the edited production JSON and **no TLA at all** reproduces the
+TLA-driven `d32r3f035` arm with byte-identical `mabc-pr.zip` member content. So
+the config path delivers exactly what §19 measured.
+
+### 21.1 The 120-event manifest
+
+`scripts/perf_manifest.tsv` (the doc-28 PR manifest, 120 events over runs 039252
+and 039349), both arms on the same pinned binary, fresh tags, inputs symlinked
+from `d27fresh`:
+
+| arm | config |
+|---|---|
+| `d32p000` | `-A trackfitting_config=<HEAD's pdvd_track_fitting.json>` — knob off |
+| `d32p035` | no TLA — picks up the edited production file |
+
+Both arms ran to completion: **120/120 events, rc=0, every `mabc-pr.zip`
+written, in both arms.** Nothing stopped working.
+
+**What we wanted to move, moved — at scale.** Over the ~1520 long-straight
+clusters that carry a trajectory (doc 31's selection: ≥200 Steiner points,
+λ0/Σλ > 0.95, extent > 50 cm), measured against each cluster's own terminal
+extent:
+
+| | knob off | **0.35** |
+|---|---|---|
+| clusters with a fit | 1528 | 1521 |
+| median shortfall, nearer end | 2.1 cm | **0.8 cm** |
+| median shortfall, further end | 12.2 cm | **6.0 cm** |
+| **median total across both ends** | **15.7 cm** | **7.6 cm** |
+| reaching both terminal extremes | 91 / 1528 (6.0 %) | **235 / 1521 (15.5 %)** |
+
+The median long track gets back **8.1 cm** of trajectory, and the fraction that
+reaches both of its own outermost terminals goes up **2.6×**. That is the
+defect this document opened with, closed at manifest scale rather than on one
+cluster.
+
+**What it costs.** 832 391 → 876 031 `stm_fit` points (+5.2 %), of which the
+fraction further than 2 cm from any reconstructed 3-D charge goes from **7.6 %
+to 9.2 %**, and beyond 10 cm from 3.3 % to 4.1 %. Same caveat as §19: read
+these as deltas, not absolutes — the knob-off baseline is not zero because an
+STM fit legitimately crosses dead regions. +1.6 points is in line with the
+single-event +0.7, and it is the price of the 8.1 cm.
+
+**The tagger census.**
+
+| metric | knob off | 0.35 | delta | events changed |
+|---|---|---|---|---|
+| TGM=true | 1592 | 1592 | **0** | **0 / 120** |
+| STM=1 | 1989 | 2007 | +18 (+0.9 %) | 98 / 120 |
+| stm_eval (`persist_stm_fit`) | 2293 | 2310 | +17 | 60 / 120 |
+| nu candidates | 5027 | 5030 | +3 | 90 / 120 |
+
+**TGM does not move at all** — zero events changed — which is the expected
+result and a useful control: TGM's verdict does not run through the end trim.
+
+**The STM number needs reading carefully, and it is the one thing to weigh.**
+The net is +0.9 %, but that is a small residue of real churn: **55 events gain
+STM tags, 43 lose them, 22 are unchanged**, with a per-event range of −15 to
++12 (worst: 039349/72 −15, 039252/5 −12, 039349/34 −12, 039349/74 −12). So this
+is not a uniform small shift — it is a redistribution that nets small. Whether
+the tracks that gained and lost tags were tagged rightly is a hand-scan
+question, not one this table can answer, and it is the same question §19.3
+raised on one event now posed on 120.
+
+**Cost.** Wall 5495 → 5257 s over the 120 events (**−4.3 %**), peak RSS 215.7 →
+212.0 GB (**−1.7 %**). Slightly cheaper, not more expensive — a longer
+trajectory is fewer pop-loop iterations and fewer re-entries, not more work.
+
+### 21.2 Gates for the flip
+
+| gate | result |
+|---|---|
+| production route delivers the measured result | arm on 039252/2 with the edited JSON and **no TLA** ≡ the TLA-driven `d32r3f035` arm, identical `mabc-pr.zip` member content |
+| only the intended file changed | `pdvd_track_fitting.json` +2 keys (49 → 51); `sbnd_track_fitting.json` untouched at 49 keys; C++ default still 0 |
+| C++ default pinned by a test | new case in `clus/test/doctest_clus_knob_defaults.cxx` — `get_parameter("good_point_pitch_frac") == 0`, the set/get round trip, and the preset. `wcdoctest-clus` 278 cases / 4009 assertions, rc=0 |
+| the accessor addition is output-neutral | `good_point_pitch_frac` was in `set_parameter` but not `get_parameter`; after adding it, an arm on 039252/0 reproduces `d32p035` byte-for-byte |
+| freshness (M1) | `libWireCellClus.so` 06:02:44 against a last source edit of 05:50:27 |
+
+Still not done, and still owed before this is treated as settled: the
+`abtest/events.txt` **clustering** gate on PDVD and PDHD (knob off — the
+`is_good_point` signature change is on every detector's hot path, and the
+clustering callers were never exercised by these PR arms), and the hand-scan of
+the STM churn above.
+
 ### Repro
+
+```bash
+cd $WCPI/pdvd
+# 120-event validation (both arms, one binary):
+#   knob-off baseline uses HEAD's config:  git show HEAD:cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json
+python3 docs/nf_sp_img_clus/scripts/pr_arm_census_diff.py d32p000 d32p035
+```
 
 ```bash
 cd $WCPI/pdvd
