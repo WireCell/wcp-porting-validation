@@ -2979,11 +2979,30 @@ function(
     // are untouched: the ellipse is answered exactly by a circumscribe-and-
     // filter two-level query (clus/inc/WireCellClus/CtpcAnisoMetric.h).
     // C++ default false; key suppressed when false => byte-identical config.
-    // PRODUCTION OFF: the measured arms (d36on vs the 0.35 floor, doc 36
-    // sec 4-5) are the evidence for the owner's flip decision.  When flipped,
-    // retire good_point_pitch_frac in pdvd_track_fitting.json in the same
-    // commit -- the floor and the metric must not stack (doc 34 sec 8).
-    ctpc_aniso_metric = false,
+    // **PDVD PRODUCTION ON, owner decision 2026-09-04** (doc pdvd/36 sec 11).
+    // This line -- not the toolkit -- IS the PDVD operating point: pr.jsonnet's
+    // arg default stays false and the C++ default stays false, so SBND, PDHD
+    // and uBooNE are untouched structurally, not by convention.  SBND is
+    // deliberately staying isotropic at the owner's instruction.
+    //
+    // WHAT IT COSTS, measured on this manifest (doc 36 sec 10.3): trajectory
+    // coverage 70.3 -> 71.1 % of each cluster's own 3-D charge, unsupported
+    // trajectory 10.2 -> 12.6 % of fit points more than 2 cm from any charge,
+    // and 657 STM-tagged clusters against 688 (-31 of 688).  The exchange rate
+    // is worse than the 0.35 floor's (0.33 points of coverage per point of
+    // ghost, against 1.05) and that is NOT the metric's fault: doc 36 sec 10.1
+    // shows the end trim is a TIP-ONLY test that used to walk unsupported
+    // chords back by accident, on the isotropic test's 82 % false-fail rate on
+    // real charge.  The retune is doc pdvd/38's gap-aware trim
+    // (TrackFitting end_trim_gap_len), and the owner's sequencing is explicit:
+    // fix the fundamental first, retune what is built on it step by step.
+    //
+    // Retired in the same change: good_point_pitch_frac in
+    // pdvd_track_fitting.json, 0.35 -> 0.  The metric subsumes the floor and
+    // they must not stack (doc 34 sec 8, measured in doc 36 sec 6).
+    // Pre-flip arm: -S ctpc_aniso_metric=false
+    //               -A trackfitting_config=<the 0.35 file, git show 730bc794:...>
+    ctpc_aniso_metric = true,
     // doc pr/51 round 6 -- weak-charge deficit term on the same gap flavor
     // (residuals 18259-131357 3-track V, 18255-506746 branch turn: chords
     // that are image-supported but charge-poor, invisible to the
