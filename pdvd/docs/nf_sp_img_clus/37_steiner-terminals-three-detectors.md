@@ -1133,7 +1133,30 @@ this round is what exposed it, and because it has a practical consequence:
 0.5 cm flip could only be graded because both its sides held `dl_weights` fixed.
 Finding the pointer-ordered site is a separate investigation and is named in §16.
 
-### 15.4 Verdict
+### 15.4 An independent grade, from doc 38's instrument
+
+Doc 38 (the gap-aware end trim round, a concurrent session) measures PDVD
+trajectory **coverage** and **unsupported trajectory** — two axes this round does
+not have. Grading its own arms it had to separate this flip out of a
+three-change comparison, and the number it reports for the thinning alone,
+holding the anisotropic metric and the `good_point_pitch_frac` floor fixed
+(`38_gap-aware-end-trim.md`, commit `7ece5327`):
+
+> coverage **71.1 → 71.7 %**, unsupported trajectory **12.6 → 12.7 %**
+
+**Not my measurement and not re-derived here** — quoted from that doc, and read
+from its committed text rather than from a message about it. It is worth
+recording because it is the only grade of this flip on an axis §13/§15 cannot
+see, and it points the same way as §15.2: a small gain on coverage, neutral on
+support. It also comes with its own caveat from that doc — the two arms hold
+different cluster sets (2176 vs 2159), because the PR stage the metric reads is
+downstream of the STM gating §15.1 shows moving.
+
+It does **not** replace the hand scan. Coverage and support are both aggregate
+statistics, and §13.3/§15.2's whole point is that this change's aggregates are
+nearly flat while individual events move a lot.
+
+### 15.5 Verdict
 
 The flip is graded where production lives and the answer is better than §13's:
 the three set-level criteria hold, TGM is untouched, aggregate track length rises
@@ -1150,10 +1173,12 @@ version is right. Scan pairs, now in the production configuration:
 
 ## 16. Still open
 
-1. **The hand scan** above. Everything else in §13.4 and §15.4 is measured; this
-   is the only thing that can say whether the flip is an improvement.
-2. **The pointer-order dependence §15.3 found.** Reproducer: run any PDVD PR
-   event twice at the same `steiner_terminal_min_sep_cm`, once with
+1. **The hand scan** above. Everything else in §13.4, §15.2 and §15.4 is
+   measured; this is the only thing that can say whether the flip is an
+   improvement.
+2. **The pointer-order dependence §15.3 found.** Also recorded in doc 38 §5, so
+   the next person designing a PDVD PR A/B meets it before choosing the arms.
+   Reproducer: run any PDVD PR event twice at the same `steiner_terminal_min_sep_cm`, once with
    `-S dl_weights=''` and once without, and diff the `TaggerCheckTGM: cluster N`
    verdicts. 33 of 120 events differ. Candidates are any `std::set<T*>` /
    `std::map<T*,…>` iterated on the TGM path.
