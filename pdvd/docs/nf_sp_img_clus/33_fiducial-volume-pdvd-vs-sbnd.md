@@ -126,7 +126,7 @@ document keeps running into.
 
 | | PDVD (`protodunevd/clus.jsonnet:98-151`) | SBND (`sbnd/clus.jsonnet:126-165`) |
 |---|---|---|
-| `overall` FV_x | ±341.55 cm — the W-plane centreline, **1.64 cm beyond** the sensitive edge (±339.91) | ±201.05 cm — W plane (±202.05) inset 1 cm, i.e. 0.4 cm **inside** the sensitive edge |
+| `overall` FV_x | ±341.55 cm — the **CRP centreline**; the sensitive volume starts 16.4 mm inward at the shield plane (±339.91), so the window reaches 1.64 cm into the CRP structure itself | ±201.05 cm — W plane (±202.05) inset 1 cm, i.e. 0.4 cm **inside** the sensitive edge |
 | `overall` FV_y | ±321.4 cm = active ±336.4 **inset 15 cm** | ±199.312 cm = wires bbox inset 1 cm |
 | `overall` FV_z | [15.05, 284.25] cm = active **inset 15 cm** | [0.85, 500.15] cm = wires bbox inset 1 cm |
 | margins | x 2, y 2.5, z 3 cm | x 2, y 2.5, z 3 cm (identical) |
@@ -142,10 +142,15 @@ Two things worth stating:
   (`clus/docs/clustering-separate-fv.md`). SBND's 1 cm inset is that same
   blindness left in place — consistent with doc 96's finding that SBND's dec2
   never fires on in-time clusters. **SBND's business, flagged not fixed here.**
-- PDVD's `overall` FV_x overhangs the sensitive volume by 1.64 cm. Because the
-  per-face x-windows disagree (bottom vs top), `select_scope_fv` falls back to
-  `overall` for an all-anode scope, so an all-detector clustering pass uses one
-  x-window spanning both drifts, the 6 cm cathode and 1.64 cm of PCB stack.
+- PDVD's `overall` FV_x is the CRP centreline, not the LAr boundary:
+  341.55 − 339.91 = 1.64 cm = the `apa_plane` = 16.4 mm shield-plane offset the
+  geometry is built with. So the window's last 1.64 cm at each end lies inside
+  the CRP electrode stack rather than in liquid argon — the two numbers describe
+  different surfaces, which is the substance of R7; nothing here says charge is
+  reconstructed there. Because the per-face x-windows disagree (bottom vs top),
+  `select_scope_fv` falls back to `overall` for an all-anode scope, so an
+  all-detector clustering pass uses one x-window spanning both drifts, the 6 cm
+  cathode and both shield-to-centreline offsets.
 - `clustering_examine_x_boundary` raises on differing `FV_x` metadata
   (`:92-103`); `allow_mixed_faces` waives the same-*face* check, not this one.
   That is the structural reason the clustering stage cannot be given one
@@ -373,9 +378,10 @@ first. A first measurement, on imaged-point charge over 40 events:
 | 300 – 400 cm | 0.93 | — |
 
 **The PDVD excess is not a near-CRP feature. It is a smooth, monotone gradient
-over the whole 340 cm of drift** — an exponential fit over drift > 10 cm gives
-τ ≈ 5.7 ms and a factor 0.67 across the full drift, which is what an electron
-lifetime of a few ms looks like. There is no step, edge or knee at 30 cm; 30 cm
+over the whole 340 cm of drift** — an exponential fit over drift > 10 cm gives a
+factor 0.67–0.73 across the full drift, i.e. τ of order 6 ms (the fit moves
+between ~5.7 and ~7.3 ms with the binning, so read the shape, not the value —
+it is nowhere near tight enough to be a lifetime measurement). There is no step, edge or knee at 30 cm; 30 cm
 is simply where a smooth curve first looks noticeably high. SBND's profile is
 flat to within 4 %, so the shape is not an artefact of the instrument. The one
 genuinely local feature is the **last 2 cm**, where PDVD drops to 0.89.
@@ -498,9 +504,11 @@ plus a count of vertices whose bonus changes.
 Cheap, self-contained, and doc 32 §19.1 already puts it on the critical path for
 any `good_point_pitch_frac` above ~0.4. Check the prototype's intent first.
 
-**R7 — `dvm.overall` FV_x = ±341.55 cm** (§3.2). 1.64 cm beyond the sensitive
-edge, feeding `select_scope_fv`'s all-anode fallback. Small, but it is a wrong
-number in the geometry metadata; fix or document.
+**R7 — `dvm.overall` FV_x = ±341.55 cm** (§3.2). The CRP centreline where every
+other FV in the chain uses the shield plane (±339.91), feeding
+`select_scope_fv`'s all-anode fallback. Small, and possibly deliberate — but the
+two surfaces are 1.64 cm apart and only one of them bounds the argon; fix or
+write down which was meant.
 
 **Not recommended.** Doc 32 R3 (giving the end-trim walk the tagger volume) as a
 standalone item: with `good_point_pitch_frac` at its production value the pitch
