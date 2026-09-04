@@ -1092,8 +1092,11 @@ endpoint that §2.2 already caught endpoint selection making. Loosen it past
 about 0.4 of a pitch and the second job stops happening: on cluster 109 the
 trajectory then runs 45 cm off the track and stops **0.3 cm** from the branch
 point at (211.83, 267.04, 287.66) — the terminus §2.2 measured 78.6 cm off the
-track, which the trim used to walk back from. At 0.35 the recovery is real and
-the tail never appears.
+track, which the trim used to walk back from. The cliff is not a matter of
+taste: it is where PDVD's **W** plane stops being pinned at 0.2 cm
+(frac = 0.2/0.510 = 0.392), and two arms bracket it between 0.38 and 0.40
+(§19.4). At 0.35 the recovery is real, the tail never appears, and nothing
+changes on SBND, uBooNE, PDHD, or even PDVD's own W plane.
 
 ## 17. What was built
 
@@ -1220,23 +1223,84 @@ said a longer trajectory is not automatically a better one, and this is that
 note coming due: these flips need a Bee hand-scan, which is not something this
 document can do for you.
 
+### 19.4 What actually protects the trajectory is the W plane staying pinned
+
+`max(radius, frac·pitch)` only changes a plane once `frac·pitch` exceeds
+0.2 cm, so each plane has its own activation threshold, `0.2 / pitch`:
+
+| plane | pitch | changes only when frac > | at 0.35 | at 0.38 | at 0.40 | at 0.50 |
+|---|---|---|---|---|---|---|
+| SBND / uBooNE U,V,W | 0.300 cm | **0.667** | 0.200 | 0.200 | 0.200 | 0.200 |
+| PDHD U,V | 0.4666 cm | 0.429 | 0.200 | 0.200 | 0.200 | 0.233 |
+| PDHD W | 0.480 cm | 0.417 | 0.200 | 0.200 | 0.200 | 0.240 |
+| **PDVD W** | 0.510 cm | **0.392** | 0.200 | 0.200 | **0.204** | 0.255 |
+| PDVD U,V | 0.765 cm | 0.261 | **0.268** | **0.291** | **0.306** | **0.383** |
+
+Everything below 0.200 in that table is a plane whose test is **byte-identical
+to today's**. So at 0.35 the only thing that changes anywhere, on any detector,
+is PDVD's U and V planes: SBND, uBooNE, PDHD and even PDVD's own W plane keep
+the shipped 0.2 cm. That is a much narrower change than §16 claimed for 0.6,
+and it removes the PDHD knob-on arm from what the recommended value owes.
+
+It also predicts where the tail comes from, and the prediction is testable: the
+W plane leaves 0.2 cm at frac = 0.2/0.510 = **0.392**. Two arms bracket it:
+
+| frac | PDVD W radius | cluster 109 | tail |
+|---|---|---|---|
+| 0.35 | 0.200 cm (pinned) | t = [8.7, 147.2] | **none**, 0.0 % beyond 2 cm |
+| **0.38** | **0.200 cm (pinned)** | t = [8.7, **148.2**] | **none**, 0.0 % beyond 2 cm |
+| — | — | *threshold 0.392* | |
+| **0.40** | **0.204 cm (unpinned)** | t = [8.7, **194.9**] | **156 pts, median 11.8 cm from charge** |
+| 0.50 | 0.255 cm | t = [3.9, 194.9] | same 156 pts |
+| 0.60 | 0.459 cm | t = [3.9, 194.9] | same 156 pts |
+
+The tail switches on between 0.38 and 0.40, bracketing the predicted 0.392 to
+within 0.02. **The W plane is what pins the trajectory to real charge**: while
+its test stays at 0.2 cm a ghost point must still find collection-plane charge
+within 0.2 cm, and the branch excursion cannot survive. Loosen W and the
+three-plane coincidence becomes satisfiable off the track — which is doc 28's
+(U,V) crossing ambiguity (83.6 % on PDVD against 21.0 % at SBND) arriving by a
+different door.
+
+This is why "higher to be sure" inverts: the safety margin here comes from W
+staying strict, not from a larger radius. It also suggests a cleaner shape than
+a single fraction — floor the induction planes only, or cap the floor at
+`0.2/pitch_W` — but that is a design change with no measurement yet, so it is
+recorded and not recommended.
+
+**One caveat on the table above.** The event-wide unsupported fraction (15.5 %
+at 0.35, 16.5 % at 0.38, 18.9 % at 0.40, 19.8 % at 0.50, 19.3 % at 0.60) and the
+STM flip lists are **not monotone** between 0.50 and 0.60. Cluster 109 is
+identical across those two, so the difference is other clusters, and with n = 1
+event these two columns should be read as "roughly this size", not as a
+resolved ordering. The cluster-109 split and the activation table are the parts
+that carry the argument.
+
 ## 20. Recommendation
 
 1. **Ship the mechanism, leave both defaults at 0.** Done — that is what is
    committed. It is byte-identical when off and reachable per detector.
-2. **If a value is to be set, the evidence supports 0.35, not 0.6.** It halves
-   the median shortfall (22.1 → 12.2 cm), brings cluster 109's B end to within
-   1.7 cm of its terminal extent and its A end from 18.6 to 8.7 cm, strands 22+4
-   terminals instead of 39+27, and costs +0.7 points of unsupported trajectory
-   with **no** tail. 0.6 scores better on coverage only because the coverage
-   metric counts a 45 cm excursion onto a branch as coverage.
+2. **If a value is to be set, the evidence supports 0.35–0.38, not 0.6** — and
+   the ceiling is not a matter of taste: PDVD's W plane leaves 0.2 cm at
+   **0.392** (§19.4), and the 45 cm tail switches on between 0.38 and 0.40.
+   0.35 halves the median shortfall (22.1 → 12.2 cm), brings cluster 109's B end
+   to within 1.7 cm of its terminal extent and its A end from 18.6 to 8.7 cm,
+   strands 22+4 terminals instead of 39+27, and adds **no** unsupported
+   trajectory. 0.38 is marginally better still (B end 1.2 cm short) with the same
+   zero tail, at the cost of sitting 0.012 from the cliff — 0.35 is the value to
+   pick if only one is picked. 0.6 scores better on coverage only because the
+   coverage metric counts a 45 cm excursion onto a branch as coverage.
+   At 0.35 **nothing changes on SBND, uBooNE or PDHD, and nothing changes on
+   PDVD's W plane either** (§19.4): the whole effect is PDVD U/V.
 3. **0.5 and above should wait for the endpoint fix.** §19.1 makes C1 a
    prerequisite, not a parallel item — which also raises §16 R5 (`cluster_fc_check`'s
    round-2 write-back, `Clustering_Util.cxx` :301-319 vs :260-263) from "latent"
    to "on the critical path for any large pitch fraction".
 4. **Owed before any default flips:** the full `abtest/events.txt` clus gate on
-   PDVD and PDHD; a PDHD knob-on arm (§14: 0.86 of a pitch, never measured); and
-   a hand-scan of the STM flips in §19.3.
+   PDVD and PDHD (knob off — owed whatever value is chosen, because the
+   signature change touches every detector's hot path); and a hand-scan of the
+   STM flips in §19.3. A PDHD **knob-on** arm is owed only for a fraction above
+   0.417; at the recommended 0.35 PDHD does not move at all (§19.4).
 
 ### Repro
 
