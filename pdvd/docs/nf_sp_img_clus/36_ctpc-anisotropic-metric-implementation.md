@@ -760,10 +760,15 @@ taggers depend on the ctpc by different routes:
 query — together with `has_closest_point`. The other is
 `Cluster::get_closest_points(const Cluster&)` (and the `Facade_Util.h:90`
 template), a 3-D cluster-to-cluster nearest-pair helper this round never
-touched; it has 46 live calls across 15 files, including `TaggerCheckSTM.cxx`.
+touched; it has **49** live calls across 15 files, including `TaggerCheckSTM.cxx`.
 A name-only grep cannot separate them, and also counts commented-out code and
-prose. Three counts were published for this set before anyone stripped comments
-— 19, 6 and 5 — for a set whose size is **4**.
+prose. Four counts were published for this set before anyone stripped comments
+— 19, 6 and 5, and then 46 for the *other* form in the sentence above — for
+sets whose sizes are **4** and **49**. Every wrong one was hand-derived from a
+grep; the rule that follows is not "grep more carefully" but **if the count is
+going to be published, do not hand-count it at all** — the two traps here (an
+overloaded name, and matches inside comments) are independent, and in both
+sessions knowing about the first did not prevent the second.
 
 `d36_ctpc_caller_census.py` strips `/* */`, `//` and string literals, then
 classifies each call by argument count (`has_closest_point` needs no
