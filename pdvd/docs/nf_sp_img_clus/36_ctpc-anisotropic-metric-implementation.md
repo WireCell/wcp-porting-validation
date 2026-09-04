@@ -13,6 +13,19 @@ by 78.** Recommendation (§8): do not flip; the tail is a pitch-axis effect
 that no metric on a three-plane 2-D test can remove. **PDVD production is
 unchanged by this round.**
 
+> **CORRECTED THE SAME DAY — read §10 before §5 or §8.** Two claims above are
+> wrong. (a) The STM figure is a LOG-LINE count: `pr_arm_census_diff.py` greps
+> the string `STM=1`, which every verdict prints three times (once by
+> `TaggerCheckSTM`, twice by `ClusteringProtectBundle`). The tagged-CLUSTER
+> census is 688 → 657, **−31 of 688 (−4.5 %)**, not −78 of 2064. (b) The tail
+> is **not** a pitch-axis ghost-support effect: 281 of the 289 tail points FAIL
+> the ellipse test as well. The tail survives because the end trim is a
+> TIP-ONLY test that used to walk the chord back by accident, on the isotropic
+> test's 82 % false-fail rate on real charge. §10 has the mechanism, a
+> population census that also shows the 0.35 floor doing the same thing at
+> nearly the same rate, and the two-axis grade the decision was finally taken
+> on. §11 records the owner's flip.
+
 Doc 34 is the investigation this executes; doc 32 is where the 0.35 floor
 came from. Read §1 of doc 34 for the lattice measurements this rests on.
 
@@ -264,13 +277,25 @@ All four arms: 120 / 120 events, rc = 0, every `mabc-pr.zip` written.
 | metric | `d36p000` | `d36refpr` (0.35) | `d36on` (aniso) | `d36on035` (stacked) |
 |---|---|---|---|---|
 | TGM = true | 2185 | 2185 | 2187 (+2, 31 events) | 2187 |
-| **STM = 1** | 2049 | 2064 (+15) | **1971 (−78, −3.8 %; 101 events change; worst 039252/10 +21)** | 1959 (−90) |
+| **STM = 1** (log lines — see the note) | 2049 | 2064 (+15) | 1971 | 1959 |
+| **STM = 1** (tagged clusters, corrected) | 683 | 688 (+5) | **657 (−31, −4.5 %)** | 653 (−35) |
 | stm_eval (`persist_stm_fit`) | 2445 | 2485 (+40) | 2533 (+88) | 2534 |
 | nu candidates | 5018 | 5034 (+16) | 5095 (+77) | 5100 |
 
-The floor moved STM by +15 across the manifest; the metric moves it by −78,
-with 101 of 120 events changing their count. That is a much larger churn than
-the floor's, and in the opposite direction.
+**Correction (§10.1).** The `STM = 1` row as first published counts log
+LINES, not clusters: `pr_arm_census_diff.py` matches the bare string, and each
+verdict is echoed by two `ClusteringProtectBundle` debug lines on top of the
+`TaggerCheckSTM` one. Anchoring the census on the line that carries the cluster
+id (`TaggerCheckSTM: cluster N → STM=d TGM=d`) gives 683 / 688 / 657 / 653
+distinct tagged clusters out of 4950 / 4950 / 4948 / 4948 evaluated, with no
+cluster evaluated twice in any arm. The ratio survives the inflation, which is
+why it went unnoticed; the absolute number does not. **The metric costs 31
+stopping-muon tags of 688, not 78 of 2064.** The `TGM`, `stm_eval` and
+`nu candidate` rows are unaffected (their patterns match one line each).
+
+The floor moved STM by +5 across the manifest; the metric moves it by −31,
+and 204 clusters lose the tag while 170 gain it — the churn is two-sided, not
+a uniform loss (§10.2).
 
 ### 4.3 The SUPPORT axis over the manifest (`pr_arm_support120.py`)
 
@@ -337,21 +362,34 @@ with the owner's A→B axis and the cluster's own core extent (149.4 cm):
 
 **The tail is back: −46.3 cm past the B end**, the same excursion the
 isotropic 0.50 / 0.60 floors grew in doc 32 §19 (−46.0 cm). Keeping the drift
-axis pinned at 2.0 mm did not prevent it. The mechanism runs through the
-**pitch axis**: with three planes each allowed ±5.2 mm (U/V) and ±3.4 mm (W)
-of pitch reach, a trajectory point 11 cm from any 3-D charge still finds
-*some* 2-D charge within the ellipse on every plane — the projections of
-other objects — and the end trim, whose whole purpose is to pop such points,
-keeps them. That answers doc 34 §9's open question, and it is the answer
-that refutes the doc-34 recommendation as stated.
+axis pinned at 2.0 mm did not prevent it.
+
+> **The mechanism stated here in the first version of this doc was WRONG and is
+> withdrawn.** It read: "the mechanism runs through the pitch axis — a
+> trajectory point 11 cm from any 3-D charge still finds *some* 2-D charge
+> within the ellipse on every plane, and the end trim keeps them." It does not.
+> Replaying the three-plane test offline on all 289 tail points, **281 fail the
+> ellipse** (per-plane pass 5 % U, 24 % V, 6 % W) and 0 of 289 pass under the
+> isotropic or 0.35-floor tests. The metric admits no ghost support along the
+> chord. The eight points that do pass sit on real charge. §10.1 has the actual
+> mechanism: `examine_end_ps_vec` is a **tip-only** test — it pops from each end
+> until the first point that PASSES and never examines the interior — so the
+> only thing that differs between the arms is whether the far endpoint's own
+> on-charge tip points pass, and under the isotropic test they falsely fail
+> 82 % of the time.
 
 Two things worth recording beside it. First, under today's tagger FV the
-production 0.35 floor already carries a small tail on this cluster (72
-points, 4.3 cm past the extent, median 4.6 cm from charge) that doc 32's
-arm did not show; the doc-35 FV change moved this event slightly, and the
-0.392 threshold was always within 0.02 of the floor's own W reach. Second,
-the STM verdict on cluster 109 flips 1 → 0 in *every* arm that loosens the
-trim, the floor included — the tail is not merely cosmetic.
+production 0.35 floor already carries a tail on this cluster that doc 32's arm
+did not show. The grader's "past the extent" count (72 points) is an
+axis-projection and over-states it — split by distance to charge, those 72 are
+14 on charge, 25 within 2–5 cm and **33 chord points**, a 37 cm excursion
+reaching 18.3 cm from any charge. The metric's 289 split 26 / 40 / **223**, a
+159 cm chord path. The frac-0 arm has none. So on the flagship cluster
+production is not the clean case: the floor already put 37 cm of trajectory
+into empty space, and the metric enlarges an existing production defect rather
+than creating one. Second, the STM verdict on cluster 109 flips 1 → 0 in
+*every* arm that loosens the trim, the floor included — only `d36p000` keeps
+the tag — so the tail is not merely cosmetic.
 
 ## 6. Stacked vs subsumed
 
@@ -389,7 +427,11 @@ early-exit brackets and the small absolute candidate counts absorb it. Peak
 RSS is 3 % lower with the metric on — fewer, shorter connector graphs, not a
 property of the query.
 
-## 8. Recommendation and what a production flip would take
+## 8. Recommendation as it stood at the end of round 1 — SUPERSEDED by §10–§11
+
+> Kept as the record of what this round concluded on its own evidence. Item 1
+> below is withdrawn (§10.1) and the recommendation itself was overturned by
+> the owner on the same day (§11) after the population census of §10.2–§10.3.
 
 **Do not flip.** Leave `ctpc_aniso_metric` OFF in PDVD production and keep
 `good_point_pitch_frac = 0.35`. The metric does what doc 34 said it would do
@@ -403,13 +445,11 @@ buys.
 
 What the round establishes for the next one:
 
-1. **The tail is a pitch-axis effect.** Any test that reaches past ~0.39 of
-   a W pitch grows it, isotropic or not. The drift axis is innocent (doc 34
-   §9's question, closed). So the end trim cannot be fixed by *any* choice of
-   metric on the good-point test alone; the fix is where doc 32 §2.2 put it,
-   in endpoint selection — or in a support test that is genuinely 3-D (distance
-   to reconstructed charge, which `stm_endtrim_grade.py` already computes
-   offline) rather than three 2-D projections.
+1. ~~**The tail is a pitch-axis effect.**~~ **WITHDRAWN — see §10.1.** The
+   chord fails the ellipse test at 281 / 289 points; there is no ghost support
+   to blame. What survives of this item is its last clause, and it is now the
+   whole story: the fix is where doc 32 §2.2 put it, in endpoint selection —
+   or in a trim that is gap-aware rather than tip-only.
 2. **The metric is not wrong, the radius is.** Under the lattice-normalised
    metric the single tuning parameter is `r / drift_step` (doc 34 §5). At
    0.2 cm it is 0.675 pitch on every plane, above the tail threshold. A
@@ -452,3 +492,242 @@ What the round establishes for the next one:
   untouched.
 - **`is_good_point_wc`** is covered by the switch but has no production
   caller; nothing measures it.
+
+## 10. Follow-up the same day — the mechanism, the population, and the grade the decision was taken on
+
+The owner's question after §5: *"focus on the 46 cm tail on cluster 109 and
+compare 0.35 vs the two-step case, to understand why it shows up on the latter.
+We are tuning something fundamental, and things built upon it may need to
+retune — changing it, not changing the higher-level things, and concluding it
+is not good, would not be a good approach."*  That is exactly what happened in
+§5, and the answer below reverses it.
+
+### 10.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+SC=docs/nf_sp_img_clus/scripts
+# is a cluster id the same object in both arms?  (98.41 % yes; the charge point
+# set is bit-identical, so a per-cluster join is legitimate)
+python3 $SC/d36_cluster_id_stability.py d36off d36on 50
+# per-cluster STM/TGM verdict flips, anchored on the line carrying the cluster id
+python3 $SC/d36_stm_verdict_flips.py d36off d36on
+# per-cluster fit-vs-charge support, every arm
+python3 $SC/d36_fit_support_scan.py  d36p000,d36off,d36on  /tmp/support.tsv
+# what each step ADDS to / REMOVES from a trajectory, and is it on charge?
+python3 $SC/d36_fit_added_scan.py    d36off  d36on   /tmp/added_off_on.tsv
+python3 $SC/d36_fit_added_scan.py    d36p000 d36off  /tmp/added_p000_off.tsv
+# the two-axis grade (coverage vs support) -- sec 10.3
+python3 $SC/d36_fit_twoaxis_scan.py  d36p000,d36off,d36on  /tmp/twoaxis.tsv
+# the per-cluster table of sec 10.4
+python3 $SC/d36_cluster_support.py   d36p000,d36off,d36on <<'IN'
+039252 2 109
+IN
+# the hand-scan Bee sets, then pdvd/upload-to-bee.sh on each zip
+python3 $SC/d36_build_bee_sets.py /home/xqian/tmp/d36bee
+```
+
+Validity of the per-cluster join: the three arms read the same `d27fresh`
+pctree, so each event's Bee `clustering-global` point set is **bit-identical**
+across arms (lexsorted arrays equal, 0 events differ). The PR stage does
+re-cluster slightly — cluster counts move by 4–6 per event and 0.04–0.14 % of
+points change owner — but 4776 of 4853 clusters with ≥ 50 points (98.41 %)
+keep their id at > 90 % overlap, and all five clusters showcased below have
+Jaccard 1.000 across the three arms.
+
+### 10.1 The mechanism: the end trim is a TIP test, and it was tuned on a broken good-point test
+
+`TrackFitting::examine_end_ps_vec` (`clus/src/TrackFitting.cxx:2279+`) pops
+points from each end of the fitted path **while** `is_good_point(…, 0.2 cm, 0,
+0, pitch_frac)` fails, and **breaks at the first point that passes**. It never
+looks at the interior. After the pop it interpolates back toward the popped
+point in 0.2 cm steps and re-inserts the first passing test point.
+
+Cluster 109 of evt 298595 is three things in one cluster: the 146 cm main
+track A→B; a real second segment beyond B (a kink to ≈ (269, 204) cm then a
+short piece up to (248, 233), x 236–238); and a **five-point fragment** at
+(211.83, 267.04, 287.66) — 5.7 cm from the cluster's other small blobs, 47.9 cm
+from any other cluster, and ≈ 55 cm past the end of the real charge.
+Endpoint selection (`get_two_boundary_wcps`, the doc 32 §2.2 defect) picks that
+fragment as the far endpoint, so the raw fitted path **always** contains a
+55 cm chord through empty space, in every arm.
+
+Replaying the strict three-plane test offline on all 289 points of the
+aniso arm's tail:
+
+| test | tail points passing all three planes | per-plane pass (U / V / W) |
+|---|---|---|
+| isotropic 0.2 cm | 0 / 289 | — |
+| isotropic + 0.35 floor | 0 / 289 | — |
+| **anisotropic ellipse** | **8 / 289** | 5 % / 24 % / 6 % |
+
+and the eight that pass are on real charge (six at the top of the second
+segment, two at the fragment's tip). **The metric admits no ghost support
+along the chord.** What differs between the arms is only the *tip*:
+
+| arm | fragment tip passes? | what the pop does | result |
+|---|---|---|---|
+| frac 0, isotropic | no | walks back the chord **and the real second segment** | stops at B — 50 cm of real charge amputated (the doc 32 defect) |
+| 0.35 floor (production) | no | walks back the chord | stops at the top of the second segment — right, by accident |
+| anisotropic | **yes** (its points are 0.3–0.6 cm from charge) | pops nothing | chord kept: the 46 cm tail |
+
+Under the isotropic test a point sitting on real charge fails 82 % of the
+time; the production result on this cluster was that false-fail rate landing on
+the right five points. The metric passes the tip because the tip **is** on
+charge — which is what the test is for. Run structure inward from the tip under
+the metric: (pass 1), (fail 90 = 54 cm), (pass 1), (fail 6), (pass 1),
+(fail 62), (pass 3), (fail 25); on-charge pass rate along the trajectory 0.91.
+
+**So the fundamental is right and the layer above it is what needs retuning.**
+A gap-aware trim — after finding a passing tip, look inward and discard the tip
+if the run of failing points exceeds a few cm — is writable only *with* the
+metric: at 0.91 on-charge pass the failing runs on real charge are 1–6 points,
+against a 90-point run across the chord. Under the isotropic test, where
+failing runs are everywhere, that rule cannot be stated at all. That is doc
+38's subject.
+
+### 10.2 The population — the 0.35 floor already does this, the metric does more of it
+
+Not one cluster: 2354 clusters carry a fit in some arm. A point is *added* by a
+step if it is more than 2 cm from every point of the other arm's fit for the
+same cluster.
+
+| step | added points | > 2 cm / > 10 cm from any charge | removed points | > 2 cm |
+|---|---|---|---|---|
+| frac 0 → 0.35, extensions of an existing fit | 45 958 | 48 % / 23 % | 4 095 | 50 % |
+| **0.35 → metric, extensions** | **49 880** | **64 % / 31 %** | 18 525 | 29 % |
+| 0.35 → metric, wholly new fits (67 clusters that had none) | 12 612 | 29 % / 14 % | — | — |
+
+Ghost extension is **already production behaviour**: per added point the 0.35
+floor is at 48 % / 23 % and the metric at 64 % / 31 %. The metric is not
+introducing a new failure mode; it is scaling one up — and it separately buys
+67 clusters a first fit, most of it on charge.
+
+Classifying the clusters whose fit diameter moves by more than 20 cm
+(0.35 → metric): **95 gain a ghost the floor did not have, 10 lose one the
+floor had, 8 are pure coverage wins**, and 26 % of all fitted clusters are
+unchanged. The STM churn is two-sided in the same way: 204 clusters lose the
+tag, 170 gain it (§4.2).
+
+### 10.3 The two-axis grade — the number the decision turns on
+
+`d36_fit_twoaxis_scan.py`, 2176 clusters with ≥ 50 charge points and a fit in
+some arm. **Coverage** = the fraction of a cluster's own 3-D charge within 2 cm
+of its fit (what doc 32 was trying to buy). **Support** = the fraction of fit
+points more than 2 / 10 cm from any 3-D charge of the event (what it costs).
+
+| arm | clusters fitted | own charge covered | fit points | > 2 cm off charge | > 10 cm |
+|---|---|---|---|---|---|
+| `d36p000` (frac 0) | 2134 | 68.3 % | 834 792 | 8.3 % | 3.5 % |
+| `d36off` (production 0.35) | 2148 | 70.3 % | 886 261 | 10.2 % | 4.5 % |
+| **`d36on` (metric)** | 2158 | **71.1 %** | 939 184 | **12.6 %** | 5.8 % |
+
+The exchange rate is the finding: the 0.35 floor bought **+2.0 points of
+coverage for +1.9 points of ghost** (1.05); the metric buys **+0.8 for +2.4**
+(0.33). With the end trim unchanged the metric is on the wrong side of the same
+trade production already makes. It is the trim, not the metric, that sets that
+rate — which is why §11 flips the metric and opens doc 38 on the trim.
+
+### 10.4 The hand-scan Bee sets
+
+Five sets, uploaded 2026-09-04, built by `d36_build_bee_sets.py` and
+content-verified server-side (3 events each, DAQ id and per-cluster fit point
+counts checked against the arms they were built from). **The Bee event index is
+the arm**: 0 = frac 0 isotropic, 1 = production 0.35, 2 = anisotropic metric.
+`cov` = own charge within 2 cm of the fit; `off` = fit points > 2 cm from any
+charge.
+
+| set | event / cluster | UUID | what it shows |
+|---|---|---|---|
+| A | 039252/2 cl 109 | `fcd75df5-33ca-478f-acce-52b15c43469d` | the 46 cm tail |
+| B | 039349/48 cl 53 | `969be515-8ff6-4764-969a-28f5b65216e5` | a ghost extension that *creates* an STM tag |
+| C | 039252/16 cl 103 | `4d638988-0891-4396-9bd1-168bf169436e` | the largest ghost extension in the manifest |
+| D | 039349/58 cl 68 | `3526d506-ecff-42ce-8248-6f183184dc2e` | production's **own** 67 cm ghost, removed by the metric |
+| E | 039349/3 cl 71 | `919f6569-a8e6-4d08-a349-9e8ef495e057` | a 434 cm cluster production never fits at all |
+
+| set | charge | arm 0 (frac 0) | arm 1 (production 0.35) | arm 2 (metric) |
+|---|---|---|---|---|
+| A cl 109 | 1049 pts, 205 cm | 128 cm, cov 79 %, off 0 %, **STM=1** | 150 cm, cov 90 %, off 18 % | 202 cm, cov 91 %, off 41 % |
+| B cl 53 | 1042 pts, 281 cm | 143 cm, cov 78 %, off 0 % | 151 cm, cov 83 %, off 0 % | 246 cm, cov 84 %, off 38 %, **STM=1** |
+| C cl 103 | 3152 pts, 408 cm | 343 cm, cov 86 %, off 10 % | 343 cm, cov 86 %, off 10 %, **STM=1** | 407 cm, cov 87 %, off 28 % |
+| D cl 68 | 76 pts, 74 cm | 4.7 cm, cov 7 %, off 0 % | 67 cm, cov 33 %, off 86 %, **STM=1** | 0.4 cm, cov 11 %, off 0 % |
+| E cl 71 | 2862 pts, 434 cm | no fit | no fit | 380 cm, cov 95 %, off 0 %, **STM=1** |
+
+B is the case that stops "STM gained" from being read as "better": the metric's
+95 cm extension is 38 % off charge and it is what earns the tag. D is a
+production-only defect — a 67 cm fit that is 86 % in empty space on a 76-point
+cluster, and production is the arm that calls it a stopping muon — but the
+metric's 3-point answer is not a fit either (11 % coverage): **neither arm
+reconstructs that object**, and that is a separate defect nothing here fixes.
+E is an unambiguous win.
+
+## 11. Owner decision, 2026-09-04: flip PDVD PR to the metric
+
+> *"I would like PDVD to update to this way of doing CTPC. For SBND, I want it
+> to stay with the old ways; we can then work on the later part step by step to
+> improve the performance — this is the first step."*
+
+Accepted on the §10 evidence, with the cost stated: **+0.8 points of trajectory
+coverage, +2.4 points of unsupported trajectory, −31 stopping-muon tags of
+688**, and 95 clusters gaining a ghost extension against 10 losing one. The
+owner's framing is the reason the §8 recommendation does not survive: the
+metric is the fundamental, the trim is built on top of it, and grading the
+fundamental through an untuned consumer is what §5 did wrong.
+
+**What the flip is** (one production change, three files):
+
+| file | change | why |
+|---|---|---|
+| `pdvd/wct-pr-perevt.jsonnet` | `ctpc_aniso_metric = false` → `true` | the PDVD PR operating point lives in the driver, not in `pr.jsonnet` |
+| `cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json` | `good_point_pitch_frac` `0.35` → `0` | the metric subsumes the floor (§6); they must not stack |
+| `cfg/pgrapher/experiment/protodunevd/pr.jsonnet` | comment only — the `ctpc_aniso_metric` arg's "PDVD production stays OFF" note | the arg default stays `false`; that file documents the SBND operating point |
+
+**What does NOT change.** The C++ default of `ctpc_aniso_metric` stays
+`false`, so SBND, PDHD and uBooNE are untouched *structurally*, not by
+convention: a config that does not mention the key gets the legacy metric, and
+none of theirs does. SBND is explicitly staying
+isotropic at the owner's instruction. The PDVD **clustering** job
+(`protodunevd/clus.jsonnet`, four MultiAlgBlobClustering nodes) also stays
+isotropic: wiring it changes the pctree itself and would invalidate every
+measurement in this doc, all of which share one `d27fresh` pctree. That is a
+separate round with its own imaging baseline (§9).
+
+**Gate for the flip.** This is not a knob-off byte-identity gate — the flip is
+an intended production output change. What must be proven is *equivalence to
+the measured arm*: the post-flip default config must reproduce `d36on`
+member-for-member, because `d36on` ran with `-A trackfitting_config=<the
+49-key file with the key ABSENT>` while the flipped production file carries an
+explicit `"good_point_pitch_frac": 0`. `load_trackfitting_config`
+(`TaggerCheckSTM.cxx:1023-1031`) calls `set_parameter(name, 0.0)`, which is the
+same value the C++ default holds, so they should be identical — but that is a
+claim about a loader, and it is cheap to prove on two events from different
+runs with `hash_archive.py --members`.
+
+**Status: the config edits are HELD, not yet made.** A concurrent session is
+running three 120-event PDVD PR arms (doc 37, `d37off0` / `d37off1` /
+`d37on05`) that compile `wct-pr-perevt.jsonnet` and read
+`pdvd_track_fitting.json` per event; editing either mid-flight would split
+their arms across two configurations and void their gates. The flip lands after
+their arms finish and their commits land. Sequencing agreed between the two
+sessions; the pre-flip arm recipe afterwards is
+`-S ctpc_aniso_metric=false -A trackfitting_config=<the 0.35 file>`.
+
+## 12. Doc 38 — the gap-aware end trim (opened by this round)
+
+The retune §10.1 names, and the reason the exchange rate of §10.3 is not the
+metric's fault. A default-OFF `TrackFitting` knob: after the pop loop finds the
+first passing tip, walk inward; if the arc length of the run of consecutive
+failing points before the next passing point exceeds the threshold, the tip is
+a detached island — pop it and resume. Off (0) is byte-identical. Sweep
+L ∈ {3, 5, 10} cm against post-flip production and grade with
+`d36_fit_twoaxis_scan.py`: the target is coverage holding at ≈ 71 % while the
+> 2 cm fraction falls below production's pre-flip 10.2 %. If coverage falls
+materially, L is amputating real ends — report it, do not tune past it.
+
+One risk to measure rather than design around: a long failing run is also what
+a genuine **dead-channel region** looks like, and this test is the strict
+three-plane one with no bad-plane allowance. Count, in the sweep arms, how many
+popped tips sit next to a dead area (the `channel-deadarea-*` layers are in
+every Bee zip). A large count means the rule needs a dead-channel exemption —
+that is a finding, not a failure.
+
