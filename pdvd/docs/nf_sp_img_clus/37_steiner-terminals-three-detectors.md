@@ -1134,12 +1134,18 @@ hour earlier, and then published one.
 The fix was one 20-event arm, `d37geomoff` — knob 0, **geometric** vertex, run in
 the **post-flip** epoch — which makes every factor separable:
 
+All four rows on the **same 20 events**, so the fractions are comparable — an
+earlier version mixed a 20-event row with a 120-event one and drew a magnitude
+conclusion from what was partly an `n` artefact:
+
 | comparison | what varies | STM set differs | TGM set differs |
 |---|---|---|---|
-| `d37dloff` vs `d37dlrep` | **nothing** (a repeat) | 0 / 20 | 0 / 20 |
-| `d37geomoff` vs `d37dloff` | **the vertex only** | **0 / 20** | **0 / 20** |
-| `d37off1` vs `d37geomoff` | **the cfg epoch only** | **20 / 20 (100 %)** | **7 / 20 (35 %)** |
-| `d37dloff` vs `d37dlon` | **the thinning knob** | 95 / 120 (79 %) | 0 / 120 |
+| `d37dloff` vs `d37dlrep` | **nothing** (a repeat) | 0 / 20, sym 0.00 | 0 / 20, sym 0.00 |
+| `d37geomoff` vs `d37dloff` | **the vertex only** | **0 / 20**, sym 0.00 | **0 / 20**, sym 0.00 |
+| `d37off1` vs `d37geomoff` | **the cfg epoch only** | 20 / 20, sym **4.50** | **7 / 20 (35 %)**, sym 0.40 |
+| `d37dloff` vs `d37dlon` | **the thinning knob** | 19 / 20, sym **2.80** | **0 / 20**, sym 0.00 |
+
+(the knob row over all 120 events is 95 / 120 and 0 / 120, §15.1)
 
 **The DL vertex is inert for both cosmic taggers — 0 of 20, on both.** Which is
 what the pipeline said all along and what I should have trusted over a
@@ -1151,8 +1157,17 @@ comparison they were attached to was not.
 **The 33/120 belongs to doc 36's flip, and that is a real result worth having.**
 With the vertex now proven inert, the epoch-only row isolates it: moving PDVD PR
 to the anisotropic ctpc metric and retiring the 0.35 floor **moves the STM-tagged
-set on 100 % of events and the TGM set on 35 %**. That is a much larger tagger
-effect than this doc's own flip, and it is handed to doc 36/38 as theirs.
+set on 20 of 20 events and the TGM set on 7 of 20 (35 %)**. Handed to doc 36/38
+as theirs.
+
+**How that compares to this doc's flip, stated carefully.** On STM the two are
+**comparable in event fraction** — 20/20 against 19/20 — and differ in *degree*:
+the epoch flip moves 4.50 clusters per event against the thinning's 2.80, i.e.
+about 1.6×. It is **not** the order-of-magnitude difference an earlier version of
+this section claimed; that came from setting a 20-event row against a 120-event
+one. The genuinely sharp separation is on **TGM: 35 % against 0 %**, and that one
+is a clean discriminator because the two were measured on the same events with
+the same instrument.
 
 Two consequences for anyone reading this doc:
 
@@ -1161,7 +1176,9 @@ Two consequences for anyone reading this doc:
   against the arm timestamps, not the commit message.
 - **The TGM invariance under thinning is strengthened, not weakened.** TGM moves
   35 % of the time for the metric flip and 0 % of the time for this one, on the
-  same events and the same instrument. It is a discriminating measurement.
+  same 20 events and the same instrument. So "TGM is untouched" is a
+  discriminating measurement rather than a blunt one — the instrument demonstrably
+  responds to a different change on the same events.
 
 ### 15.4 An independent grade, from doc 38's instrument
 
