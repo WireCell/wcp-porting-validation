@@ -311,8 +311,27 @@ campaign exists for. Both are far better than either arm shipped today.
 **Do not go below 10 cm** whichever way that falls: between 20 and 2 cm the
 extra ghost removal is 0.8 points and it costs 115 more damaged clusters.
 
-Not decided here (CLAUDE.md §5.1): the flip is the owner's, and this doc ships
-the knob default-OFF with the evidence.
+### 8.1 Owner decision, 2026-09-04: 20 cm, "for now"
+
+`end_trim_gap_len: 200` (WCT internal units, i.e. 20 cm) in
+`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`. The C++ default
+stays 0, so SBND, PDHD and uBooNE keep the legacy tip-only trim — the key in
+PDVD's file is the whole of the change, exactly as the retired 0.35 floor was.
+
+The seven destroyed fits are accepted, and "for now" is doing work in that
+sentence: the objects behind them are the doc 32 §2.2 over-clustering defect
+(§5.2), and if that is fixed upstream the trim stops meeting them at all. The
+40 cm alternative is not withdrawn, it is deferred — §5.1's table is what to
+re-read if the seven turn out to matter.
+
+**Gate** (an intended production output change, so the bar is equivalence to the
+measured arm, not byte identity): the flipped default config reproduces the
+`d38h20` arm **member-for-member** on 039252/2 and 039349/3 —
+`b67c53ac…` and `b9bc0e8a…` over 22 members each — and **differs** from the
+knob-off `d38off` arm on both, which is the control that proves the knob fires
+rather than being ON-but-inert (doc 77's failure mode). Run on `pin_d38new`
+with no TLA override, so the JSON's `end_trim_gap_len: 200` is what is being
+tested.
 
 ## 9. Not done in this round
 
