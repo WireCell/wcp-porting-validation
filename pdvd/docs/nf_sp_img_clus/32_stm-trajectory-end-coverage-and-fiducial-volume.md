@@ -1,9 +1,12 @@
 # PDVD doc 32 — the STM trajectory stops short of both track ends, and what PDVD's fiducial volume actually is
 
-**Status.** Diagnosis complete and pinned to one mechanism (rounds 1, §§1-9);
-the *reason* PDVD is affected and SBND is not is now measured and **confirmed**
-(round 2, §§10-16). **No code and no config changed in either round**, so no A/B
-gate is owed and none is claimed. The two arms in §2 use only knobs that are
+**Status.** Diagnosis complete and pinned to one mechanism (round 1, §§1-9);
+the *reason* PDVD is affected and SBND is not measured and **confirmed**
+(round 2, §§10-16); the fix built as a **default-OFF** knob, gated, and measured
+across four pitch fractions (round 3, §§17-20). Rounds 1 and 2 changed no code
+and no config. Round 3 changes C++ behind a knob whose default is 0: the
+knob-off path is proven byte-identical (§18) and **no production config was
+changed and no default was flipped** — that remains the owner's call (§5.1). The two arms in §2 use only knobs that are
 default-OFF and log-only, and both reproduce the shipped stack's STM output
 exactly (§2.1); round 2 ran no arm at all.
 
@@ -543,6 +546,7 @@ STM/TGM verdict counts and the segment/vertex census — because a longer
 trajectory is not automatically a better one.
 
 **R1 — make `is_good_point`'s search radius pitch-aware in the amputation walk.**
+*(Implemented in round 3, §17; measured in §19. Read §20 before choosing a value.)*
 The single highest-value change: it is the confirmed mechanism, and §2.5 gives a
 principled value (a radius of at least half a pitch makes the test satisfiable
 by construction, as it already is at 3 mm). Knob: a `traj_end_good_radius`
@@ -1068,3 +1072,186 @@ genuine amputation from the branch walk-back at population scale still needs the
 probe arm's per-call front/back deltas cross-referenced against §12's
 charge-bearing extension per end. It is the natural next measurement and it
 needs no code change either.
+
+---
+
+# Round 3 — the fix, built and measured
+
+**Status of round 3.** §16 R1 is implemented as a **default-OFF** knob and
+measured on 039252/2 evt 298595. Knob off is proven byte-identical against a
+reference binary; knob on recovers the trajectory, and at the owner's requested
+0.6 it also grows a 45 cm unsupported tail whose cause is *not* the radius.
+**No production config was changed and no default was flipped** (§5.1 is the
+owner's call), so what ships here is the mechanism, the gate and the number the
+evidence supports.
+
+**The one-paragraph answer.** It works, and "higher to be sure" is the one thing
+the data contradicts. The end trim turns out to do two jobs: it removes tips
+that genuinely have no charge under them, *and* it silently cleans up the bad
+endpoint that §2.2 already caught endpoint selection making. Loosen it past
+about 0.4 of a pitch and the second job stops happening: on cluster 109 the
+trajectory then runs 45 cm off the track and stops **0.3 cm** from the branch
+point at (211.83, 267.04, 287.66) — the terminus §2.2 measured 78.6 cm off the
+track, which the trim used to walk back from. At 0.35 the recovery is real and
+the tail never appears.
+
+## 17. What was built
+
+One parameter, one place, and it cannot be put at the call sites: `is_good_point`
+takes a single scalar radius for three planes and PDVD has two pitches behind a
+single (apa, face), so it has to resolve inside the per-plane loop (§14).
+
+```cpp
+// Facade_Grouping.h:296 -- one new defaulted argument
+bool is_good_point(..., const int allowed_bad = 1, const double pitch_frac = 0.0) const;
+
+// Facade_Grouping.cxx:537 -- the legacy path must cost nothing, so the
+// fastgeom lookup happens only when the knob is on.
+const fastgeom_t* fg = (pitch_frac > 0.0) ? &fastgeom(apa, face) : nullptr;
+for (int pind = 0; pind < 3; ++pind) {
+    const double r = fg ? std::max(radius, pitch_frac * fg->pitch[pind]) : radius;
+    if (has_closest_point(point, r, apa, face, pind)) { ... }
+```
+
+`fastgeom_t` already caches `pitch[3]` (`Facade_Grouping.h:116`, filled at
+`:755`), so the lookup is free and no geometry plumbing was added.
+
+**Two knobs, on purpose**, because §14's twenty sites are not one population:
+
+| knob | sites | default | evidence behind it |
+|---|---|---|---|
+| `good_point_pitch_frac` in the **TrackFitting** JSON (`TrackFitting.h:147`, `TrackFitting.cxx:65`) | the 4 end-trim calls in `examine_end_ps_vec` (`TrackFitting.cxx` :2315, :2335, :2376, :2396) | 0 | measured: §12's 0.064 → 0.522, cluster 109 verified |
+| `good_point_pitch_frac` on **TaggerCheckNeutrino** → `PatternAlgorithms` (`NeutrinoPatternBase.h`, `TaggerCheckNeutrino.cxx` :463, :1034, :2438) | the 18 strict PR sites — `NeutrinoStructureExaminer` (15, incl. the two 0.3 cm ones), `NeutrinoOtherSegments` (2), `NeutrinoShowerClustering` (1) | 0 | **none of its own** — inferred from sharing the constant |
+
+The PR half exists so the owner can measure it; it is not recommended for
+production on this round's evidence (§19). Two `pr118_probe_*` / `pr119_probe_*`
+call sites in `NeutrinoShowerClustering.cxx` were deliberately left on the
+legacy radius: a probe should measure the shipped path, not the knob's.
+
+## 18. Gates
+
+| gate | result |
+|---|---|
+| **knob-off byte identity** — `d32r3ref` (the same 10 files restored from HEAD, rebuilt) vs `d32r3base` (this change, knobs off), same event, same config | **PASS.** `mabc-pr.zip` member content identical, aggregate `9434eac7bf431bd0b99f9ef9bd2ed5cccd254009a013faad014d5a1cfa87d4cc` on both; `calib-pr-evt298595.json` md5 `8ad1e5665f31e8e01251b804fc9fde90` on both; all 21 `persist_stm_fit` records and all 60 `STM=0/1` verdicts identical |
+| **compiled-config** | key absent when off, present exactly once when on; the compiled JSON differs by the single line `"good_point_pitch_frac": 0.6` |
+| **unit tests** | `./build/clus/wcdoctest-clus` 277 cases / 4006 assertions, rc=0 |
+| **freshness (M1)** | `local/lib/libWireCellClus.so` 04:34:52 against a last source edit of 04:22:07 |
+
+The reference binary was built by restoring the ten touched files with
+`git show HEAD:<path>`, never `git stash` — a peer shares this tree's index.
+HEAD had moved five commits since the round-1 arms, one of which (`8c577c4b`)
+changes STM eval, so no stored arm was a valid reference and `d32r3base` was
+re-run for this purpose.
+
+**What is *not* gated.** Only PDVD 039252/2, and only the PR stage. The
+clustering callers of `is_good_point` (`connect_graph_*`,
+`clustering_protect_overclustering`, `TaggerCheckTGM`) were not touched at all —
+they still call the six-argument form — so for them the change is a compile-time
+fact, not a measured one. A full `abtest/events.txt` clus gate on PDVD **and
+PDHD** is still owed before any default flips, and PDHD matters here (§14: its
+0.467 cm pitch puts it in range).
+
+## 19. The measurement: it works, and 0.6 is past the useful point
+
+Four arms, one binary, one event. `stm_trajectory_coverage.py` supplies the
+coverage column; `stm_endtrim_grade.py` (new) supplies the support column,
+because coverage alone is a one-sided score — the end trim exists to *remove*
+unsupported points, so anything that loosens it must be charged for what it
+keeps.
+
+| frac | U/V radius | median total shortfall (n=10) | both ends | cluster 109 A / B short | stranded terminals | fit points > 2 cm from any charge | STM flips vs base |
+|---|---|---|---|---|---|---|---|
+| **0 (off)** | 0.200 cm | **22.1 cm** | 1/10 | **18.6 / 12.0** | 39 + 27 | 14.8 % | — |
+| **0.35** | 0.268 cm | **12.2 cm** | 1/10 | **8.7 / 1.7** | 22 + 4 | **15.5 %** | 55 (1→0), 97 (0→1) |
+| 0.50 | 0.383 cm | 4.8 cm | 4/10 | 3.9 / **−46.0** | 10 + 0 | 19.8 % | 97 (0→1) |
+| **0.60** | 0.459 cm | 3.8 cm | 5/10 | 3.9 / **−46.0** | 10 + 0 | 19.3 % | 86 (1→0), 97 (0→1) |
+
+A negative shortfall is an **overshoot**, and it is why the coverage column
+alone would pick 0.6: the metric rewards a trajectory for running past the
+track. Split cluster 109 at its own point-cloud extent (t = 149.4 cm along the
+owner's A→B axis) and the two halves separate cleanly:
+
+| frac | on the cluster | past it |
+|---|---|---|
+| 0 (off) | 197 pts, median 0.45 cm from charge, 0.0 % beyond 2 cm | — |
+| **0.35** | 230 pts, median 0.45 cm, **0.0 %** beyond 2 cm | **none** |
+| 0.50 / 0.60 | 262 pts, median 0.46 cm, 7.6 % beyond 2 cm | **156 pts, median 11.8 cm from any charge, 91.7 % beyond 2 cm** |
+
+Read the support column as a **delta**, never absolutely: the knob-off baseline
+is already 14.8 %, because an STM fit legitimately crosses dead regions, which
+carry no blob points at all. 0.35 costs +0.7 points of that; 0.5 and 0.6 cost
+about +5.
+
+### 19.1 Why 0.5 and 0.6 grow a tail, and why it is not the radius's fault
+
+The tail is not new trajectory. It is trajectory the end trim used to remove.
+The fix arm's cluster-109 trajectory terminates at **(211.9, 266.7, 287.7)** —
+**0.3 cm** from **(211.83, 267.04, 287.66)**, which §2.2 identified as call 1's
+incoming *back* endpoint, 78.6 cm off the track on a branch, chosen by
+`get_two_boundary_wcps` and then walked back by this very loop.
+
+So `examine_end_ps_vec` has been doing two jobs at once: removing genuinely
+unsupported tips, and silently repairing endpoint selection's mistakes. §2.2
+called C1 "exonerated at one end only, and NOT cleared" — this is what that was
+worth. Loosen the trim far enough and C1's error stops being masked and starts
+being fitted.
+
+That reframes the ranking. **R1 is not a standalone fix above ~0.4 of a pitch**;
+past that it needs the endpoint-selection defect fixed with it, or it hands the
+fitter a branch to follow. Below that it is a clean, self-contained gain.
+
+### 19.2 The PR-side knob buys nothing here
+
+`d32r3all` (both knobs at 0.6) has a **byte-identical `stm_fit` layer** to
+`d32r3fix` (TrackFitting only): identical point counts, identical coverage,
+identical `persist_stm_fit` records. It is not inert overall — `0-mc.json`,
+`0-shower_track-global.json` and `0-track_fit-global.json` all differ, so the 18
+PR sites do fire and do move shower/track classification and the PR track fits —
+but none of that touches the defect this document is about. On this round's
+evidence the PR knob is an unmeasured change with no measured benefit, and it
+should stay at 0.
+
+### 19.3 The STM verdicts move, and that is the owner's call
+
+Every value flips something. The STM=1 count is 6 at frac 0, 0.35 and 0.6, and 7
+at 0.5 — but the *identities* change: cluster 97 gains an STM tag at every
+non-zero value, 55 loses one at 0.35, 86 loses one at 0.6. §7's grading note
+said a longer trajectory is not automatically a better one, and this is that
+note coming due: these flips need a Bee hand-scan, which is not something this
+document can do for you.
+
+## 20. Recommendation
+
+1. **Ship the mechanism, leave both defaults at 0.** Done — that is what is
+   committed. It is byte-identical when off and reachable per detector.
+2. **If a value is to be set, the evidence supports 0.35, not 0.6.** It halves
+   the median shortfall (22.1 → 12.2 cm), brings cluster 109's B end to within
+   1.7 cm of its terminal extent and its A end from 18.6 to 8.7 cm, strands 22+4
+   terminals instead of 39+27, and costs +0.7 points of unsupported trajectory
+   with **no** tail. 0.6 scores better on coverage only because the coverage
+   metric counts a 45 cm excursion onto a branch as coverage.
+3. **0.5 and above should wait for the endpoint fix.** §19.1 makes C1 a
+   prerequisite, not a parallel item — which also raises §16 R5 (`cluster_fc_check`'s
+   round-2 write-back, `Clustering_Util.cxx` :301-319 vs :260-263) from "latent"
+   to "on the critical path for any large pitch fraction".
+4. **Owed before any default flips:** the full `abtest/events.txt` clus gate on
+   PDVD and PDHD; a PDHD knob-on arm (§14: 0.86 of a pitch, never measured); and
+   a hand-scan of the STM flips in §19.3.
+
+### Repro
+
+```bash
+cd $WCPI/pdvd
+# knob-on arm (TrackFitting only), any fraction:
+#   copy cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json, add
+#   "good_point_pitch_frac": <frac>, and point the runner at the copy.
+PDVD_PR_TLA="-A trackfitting_config=$PWD/stm/pdvd_track_fitting_pitch06.json" \
+  ./run_pr_evt.sh -s d32r3fix -stm-fit 039252 2 > pr.log 2>&1; echo rc=$?
+# the PR half as well:  add  -S good_point_pitch_frac=0.6
+python3 docs/nf_sp_img_clus/scripts/stm_trajectory_coverage.py \
+    base:work/039252_2_d32r3base f060:work/039252_2_d32r3fix \
+    --axis 109:343.1,140.1,195.3:221.4,196.8,253.7
+python3 docs/nf_sp_img_clus/scripts/stm_endtrim_grade.py \
+    base:work/039252_2_d32r3base f060:work/039252_2_d32r3fix \
+    --axis 109:343.1,140.1,195.3:221.4,196.8,253.7 --core-extent 149.4
+```
