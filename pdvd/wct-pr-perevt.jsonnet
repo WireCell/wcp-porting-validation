@@ -420,6 +420,37 @@ function(
     // so it can add or drop tree edges rather than only add terminals.
     // Set to false for the pre-fix arm.
     steiner_edge_charge_forward_dead_mix = true,
+    // Cross-blob Steiner terminal thinning, in CENTIMETRES (doc pdvd/37 R1).
+    // **PDVD PRODUCTION DEFAULT 0.5 cm, owner 2026-09-04.**  C++ default 0
+    // (none) and pr.jsonnet's default is 0 too, so this line -- not the
+    // toolkit -- IS the PDVD operating point, exactly as the two terminal
+    // filter knobs above are.  A bare pr.jsonnet run is NOT PDVD production.
+    // SBND is deliberately NOT changed: it binds the same shared cm.steiner()
+    // and stays at 0.
+    //
+    // WHY.  Phase 1 selects terminals one blob at a time
+    // (find_steiner_terminals -> find_peak_point_indices, whose candidate map
+    // never leaves the blob), so its local-maximum test cannot compare across
+    // a blob boundary and cannot remove a blob's LAST candidate.  Terminal
+    // density is therefore floored at the candidate-bearing blob density
+    // (1.02 terminals per such blob, doc pdvd/31 round 6) -- i.e. set by the
+    // time-slice pitch over the track's drift alignment, not by anything
+    // physical.  Doc pdvd/37 sec.3.2 measures the same law on PDVD, SBND and
+    // uBooNE.  This does not touch selection: after the reference and path
+    // filters the terminals are walked in DECREASING charge and one is kept
+    // only when no already-kept terminal lies strictly within this distance.
+    //
+    // WHY 0.5 AND NOT 1.0.  Doc pdvd/37 sec.5: at 1.0 cm, 7.4-16 % of PDVD's
+    // multi-branch PR vertices lose EVERY terminal within 1 cm of the vertex
+    // (order-dependent, three orders quoted); at 0.5 cm that is 1.5-3.1 %.
+    // The owner's fourth criterion is "do not miss terminals near the vertex",
+    // and 1.0 cm is where it breaks.  0.5 cm removes ~19 % of PDVD terminals,
+    // all of them near-duplicates: the survivors' median distance to the
+    // fitted skeleton moves by <= 0.02 cm and the largest terminal-free run
+    // does not move at all (doc pdvd/37 sec.4).
+    //
+    // Set to 0 for the pre-flip arm: -S steiner_terminal_min_sep_cm=0.
+    steiner_terminal_min_sep_cm = 0.5,
     // Isochronous first-segment endpoint finding (doc pr/24 round 2, SBND evt
     // 271851): for a long cluster whose quantile-trimmed drift-x extent is
     // small (a filled 2-D sheet), the first PR segment's endpoints come from
@@ -3768,6 +3799,7 @@ function(
                              steiner_terminal_wire_tol=steiner_terminal_wire_tol,
                              steiner_terminal_adjacent_slice=steiner_terminal_adjacent_slice,
                              steiner_edge_charge_forward_dead_mix=steiner_edge_charge_forward_dead_mix,
+                             steiner_terminal_min_separation=steiner_terminal_min_sep_cm * wc.cm,
                              protect_graph_name=protect_graph_name,
                              protect_skip_convicted=protect_skip_convicted,
                              protect_open_convicted_bundles=protect_open_convicted_bundles,

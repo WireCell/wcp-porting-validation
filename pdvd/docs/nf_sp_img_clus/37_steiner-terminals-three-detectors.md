@@ -1,10 +1,22 @@
 # Steiner terminals on PDVD, SBND and MicroBooNE — and does the round-8 alternative make sense?
 
-**Status: measurement and design review. No toolkit change, no production-config
-change, no arm of PDVD or SBND was re-run, so no A/B gate is owed and none is
-claimed.** The only new reconstruction is two 35-event MicroBooNE arms, and they
-run a *copy* of the uBooNE chain whose compiled config at default TLAs is
-byte-identical to the production one (§0.2).
+**Status: two rounds, and they have different statuses. Read §11 before quoting
+§0-§10.**
+
+- **Round 1 (§0-§10) — measurement and design review.** No toolkit change, no
+  production-config change, no arm of PDVD or SBND re-run, so no A/B gate was
+  owed and none was claimed. The only new reconstruction was two 35-event
+  MicroBooNE arms running a *copy* of the uBooNE chain whose compiled config at
+  default TLAs is byte-identical to the production one (§0.2). It ended in a
+  recommendation (§6), not a knob.
+- **Round 2 (§11-§13, 2026-09-04) — that recommendation EXECUTED, at the owner's
+  instruction.** `terminal_min_separation` is now a real knob in `clus/`
+  (C++ default 0 ⇒ byte-identical), and **PDVD production is flipped to 0.5 cm**
+  in `pdvd/wct-pr-perevt.jsonnet`. SBND is deliberately **not** changed. That is
+  an intentional, non-bit-identical change to PDVD output; §12 carries the
+  byte-identity gates for the OFF path on every job that binds the component,
+  and §13 the measured before/after. **Round 2 IS a behaviour change for PDVD
+  and needs revalidation of anything built on pre-2026-09-04 PDVD PR output.**
 
 The owner's brief, in their words: the Steiner terminals should **follow the
 skeleton of the interaction**; **a little inefficiency is OK**; they must not be
@@ -578,24 +590,26 @@ at q = 15000). **Not uploaded** — that is the owner's call.
 - **Nothing here re-opens the terminal charge floor**, and §3.2 is a further
   argument not to.
 
-## 9. Next
+## 9. Next (as written at the end of round 1; see §11–§14 for what round 2 did)
 
-1. Build **R1 as a single knob** `terminal_min_separation` (C++ default 0 ⇒
-   byte-identical), inserted between P3 and P4 exactly as doc 31 §12.5
-   specifies, and take it to arms at **0.5 cm**. No exemption is needed at that
-   radius, which is what makes it the shippable step.
+1. ~~Build **R1 as a single knob** `terminal_min_separation`~~ — **DONE, §11.**
+   C++ default 0 ⇒ byte-identical, inserted between P3 and P4 exactly as doc 31
+   §12.5 specifies, arms at **0.5 cm**, no exemption.
 2. **Separately**, settle junction protection, which is what would unlock 0.8–1.0.
    The PR vertex list is out of scope at Steiner time (§6), so the candidates are
    the P4 extreme points and branch-like structure of the Steiner graph itself.
    §5's instrument grades any of them without a new arm: re-run
    `steiner_terminal_skeleton.py` with the proxy substituted for the PR vertex
    list and compare the "loses ALL core terminals" column against §5.2.
-3. Arms at R = 0.5 on PDVD **and SBND** — §3.3 and §5 both show the same
-   radius bites SBND as hard as PDVD, so "PDVD-only in effect" is false for this
-   lever, and the compiled-config gate, not a geometry argument, must carry the
-   "SBND untouched" claim.
-4. Grade on the fourth row, and re-run §4 and §5 on the knob-ON arms — with a
-   live knob the vertices move, which is the caveat §8 cannot close offline.
+3. ~~Arms at R = 0.5 on PDVD **and SBND**~~ — **PARTLY DONE, §12.** The
+   "SBND untouched" claim is carried by the compiled-config gate *and* a binary
+   gate (§12.2, §12.3), exactly as this item demanded — SBND's operating point
+   stays at 0 by the owner's instruction, so no SBND *knob-ON* arm was run and
+   the question "what would 0.5 cm do to SBND" remains open.
+4. ~~Grade on the fourth row, and re-run §4 and §5 on the knob-ON arms~~ —
+   **DONE, §13.2 and §13.4.** The refit caveat is closed: both criteria survive
+   against the live skeleton. The fourth row's verdict is *not* a clean pass —
+   see §13.3, the STM tag set moves on 109/120 events.
 5. PDVD's terminal-free runs (4.46 cm vs SBND 3.44, uBooNE 1.86) are a separate,
    still-open question and the surviving motivation for doc 31 R2.
 
@@ -609,3 +623,341 @@ at q = 15000). **Not uploaded** — that is the owner's call.
   table §2 uses, including the uBooNE 1.101 mm/µs correction.
 - `sbnd_xin/docs/pr/29_steiner-graph-build-port-audit.md` — D1/D12, the two
   terminal-filter knobs §2 tabulates and the uBooNE arms toggle.
+
+---
+
+# Round 2 — R1 built, gated, and flipped ON for PDVD (2026-09-04)
+
+### Repro block (round 2)
+
+```bash
+# ---- build.  A new symbol + a doctest that uses it needs two passes: waf links
+# the test against the PREVIOUS library in the same run (feedback: new-symbol
+# test link/install).  build -k, install, then wcbuild.
+cd toolkit && ./wcb build --notests -p -k; ./wcb install --notests -p; wcbuild
+./build/clus/wcdoctest-clus                       # 292 passed, 0 failed
+nm -DC local/lib/libWireCellClus.so | grep thin_by_min_separation   # freshness
+
+# ---- the two libraries every arm below is pinned to (the tree is shared and a
+# peer was rebuilding local/lib throughout; neither side used the live install)
+#   /home/xqian/tmp/doc37/lib_base  10:45  symbol ABSENT  (= toolkit 3d057557)
+#   /home/xqian/tmp/doc37/lib_new   10:48  symbol PRESENT (= 3d057557 + this change)
+
+# ---- compiled-config gate, 18 jobs, OFF must diff to zero (sec 12.2)
+abtest/compile_all_cfg.sh /home/xqian/tmp/doc37/cfg_{base,new}   # before / after
+abtest/cmp_cfg.sh /home/xqian/tmp/doc37/cfg_base /home/xqian/tmp/doc37/cfg_new
+# plus the two jobs compile_all_cfg.sh does not cover, by hand:
+PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 PDVD_PR_TLA="-S dl_weights=''" \
+    pdvd/run_pr_evt.sh -s <tag> 39252 0 0        # -> .wct-pr_<tag>.json
+wcsonnet ... qlport/uboone-mabc.jsonnet -o uboone_mabc.json
+# NOTE the work-dir tag appears in 6 path strings; normalize it before diffing
+# or the 24 resulting lines read as a failure.
+
+# ---- binary gates, OFF path, on the three jobs that bind CreateSteinerGraph
+qlport/scripts/sweep_5384.sh d37offbase 12   # LD_LIBRARY_PATH=.../lib_base
+qlport/scripts/sweep_5384.sh d37offnew  12   # LD_LIBRARY_PATH=.../lib_new
+qlport/scripts/ab_check.sh d37offnew d37offbase
+sbnd/sbnd_xin/run_pr_chain_batch.sh work-d97prodchk-mcp2k work-d37sbnd{base,new} sim
+
+# ---- the PDVD arms.  Fresh tags staged from d34base so all three share
+# byte-identical input point trees (M13: never write into an existing label).
+for run_idx in $(cat manifest); do pdvd/scripts/stage_pr_tag.sh $run_idx <tag> d34base; done
+docs/nf_sp_img_clus/scripts/doc37_run_thinning_arms.sh d37off0 .../lib_base 0   14
+docs/nf_sp_img_clus/scripts/doc37_run_thinning_arms.sh d37off1 .../lib_new 0   12
+docs/nf_sp_img_clus/scripts/doc37_run_thinning_arms.sh d37on05 .../lib_new 0.5  8
+docs/nf_sp_img_clus/scripts/doc37_run_thinning_arms.sh d37rep  .../lib_new 0    3
+
+# ---- the numbers
+docs/nf_sp_img_clus/scripts/doc37_cmp_arms.py  d37off0 d37off1     # sec 12.3, the gate
+docs/nf_sp_img_clus/scripts/doc37_cmp_arms.py  d37rep  d37off1     # sec 12.4, the control
+docs/nf_sp_img_clus/scripts/doc37_arm_census.py d37off1 d37on05    # sec 13.1, 13.3
+docs/nf_sp_img_clus/scripts/steiner_terminal_skeleton.py --nms 0.5 \
+    "OFF:pdvd/work/*_d37off1/calib-pr-evt*.json" \
+    "ON:pdvd/work/*_d37on05/calib-pr-evt*.json"                    # sec 13.2
+```
+
+**All four PDVD arms ran with `-S dl_weights=''`.** PDVD production has had the
+DL/SCN vertex ON since 2026-09-04, so these arms are **not** the production
+vertex configuration — but DL inference is not bit-stable (M4), and this is the
+only configuration in which an OFF/OFF pair can be a byte-identity gate and an
+OFF/ON pair can attribute a difference to the knob. Every §13 number is the
+knob's effect in isolation, not a production forecast.
+
+Baseline toolkit `3d057557`, wcp-porting-img `2e950881` at the start of round 2.
+
+## 11. What shipped
+
+The owner's instruction: *"Let's implement R1 with 0.5 cm for PDVD for now. We do
+not need to change it for SBND production. Please then turn it on for PDVD
+production."* §6's recommendation, executed as written.
+
+### 11.1 The knob
+
+`Grapher::Config::terminal_min_separation`, a length in the WCT system of units,
+**C++ default 0 = no thinning**. When positive, `create_steiner_tree` runs a new
+**phase 3b** between the existing phase 3 and phase 4:
+
+> sort the surviving terminals by decreasing `calc_charge_wcp` — the same charge,
+> the same threshold and the same `disable_dead_mix_cell` that selected them in
+> phase 1 — and admit one only when no already-admitted terminal lies **strictly**
+> within `terminal_min_separation` of it.
+
+| file | what |
+|---|---|
+| `clus/inc/WireCellClus/SteinerThinning.h` + `clus/src/SteinerThinning.cxx` | the pure-geometry core, `thin_by_min_separation(ordered, min_separation)`. A uniform grid of cell edge `min_separation`, so 27 cells per candidate and O(N) overall; `std::floor`, not a cast, because half of PDVD sits at negative x and y. |
+| `clus/src/SteinerGrapher.{h,cxx}` | the Config field, `thin_terminals_by_separation()` (builds the charge order), the phase-3b call site, and one greppable `steiner_thin: nterm_in=… nterm_out=… min_sep_cm=…` line per cluster at **DEBUG** (TRACE is compiled out of this build). |
+| `clus/src/CreateSteinerGraph.cxx` | `get(cfg, "terminal_min_separation", …)`, negative clamped to 0 with a warning, round-tripped in `default_configuration()`. |
+| `cfg/pgrapher/common/clus.jsonnet` | `cm.steiner(… terminal_min_separation=0)` with the key-suppression idiom. **Shared function — SBND, uBooNE and ICARUS bind it and stay at 0.** |
+| `cfg/pgrapher/experiment/protodunevd/pr.jsonnet` | `steiner_terminal_min_separation=0` threaded into **both** `cm.steiner` call sites (`steiner` and `steiner_refresh`). Default 0: a bare `pr.jsonnet` run is *not* PDVD production. |
+| `pdvd/wct-pr-perevt.jsonnet` (wcp-porting-img) | **`steiner_terminal_min_sep_cm = 0.5`** — the PDVD operating point, in the same place and for the same reason as `steiner_terminal_wire_tol` / `_adjacent_slice` / `_charge`. |
+| `clus/test/doctest_steiner_terminal_thinning.cxx` | 8 cases. Pins the OFF pass-through as identity of the *sequence*; pins the strict `<` at exactly R; pins that **the first terminal offered can never be suppressed**, which is the invariant the phase-3b-before-phase-4 placement rests on; and brute-forces the pairwise guarantee over a 2197-point cloud. |
+| `clus/test/doctest_clus_knob_defaults.cxx` | one case pinning the C++ default at 0. |
+
+### 11.2 Two decisions worth recording
+
+**Why phase 3b sits before phase 4.** Phase 4's
+`steiner_terminals.insert(extreme_points…)` is unconditional: the extreme points
+pin the ends of the tree. Thinning after it would let an extreme point arriving
+mid-order be suppressed. Thinning before it means they cannot be. The doctest
+`"the first terminal offered can never be suppressed"` is the mechanical statement
+of that, and it fails if anyone moves the pass.
+
+**Scope: exactly one call site.** `create_steiner_tree` is called from
+`CreateSteinerGraph.cxx:276` and nowhere else. `improvecluster_2.cxx` — the
+retiler — builds its **own** `Grapher::Config` from scratch, sets only
+`terminal_charge_threshold`, and calls `find_steiner_terminals` directly rather
+than `create_steiner_tree`. Its terminals are therefore untouched by this knob,
+by construction and not by configuration. Checked, not assumed.
+
+## 12. Gates
+
+### 12.1 Which jobs actually bind the component
+
+The change is in a **shared** component, so the first question is which jobs
+reach it. Compiling all 18 live job configs and counting `CreateSteinerGraph`
+instances answers it exactly:
+
+| job | `CreateSteinerGraph` instances |
+|---|---|
+| `pdvd_pr` | **2** (`pr`, `prrefresh`) |
+| `sbnd_pr` | **1** (`pr`) |
+| `uboone_mabc` | **1** |
+| every img / clus / nfsp / sim job on PDHD, PDVD, SBND | **0** |
+
+So the img+clus `abtest` gate is **vacuous for this change** and was not run —
+it would have PASSed without executing a line of the new code. The three jobs
+above are gated instead, each on its own chain.
+
+### 12.2 Compiled config — OFF diff-to-zero, ON exactly two keys
+
+`abtest/compile_all_cfg.sh` (16 jobs) plus the PDVD PR driver and the uBooNE
+MABC job compiled by hand: **18 of 18 byte-identical** with the knob off
+(`cmp_cfg.sh`, normalized `_pnode`; `OVERALL: PASS`). With the driver at 0.5 cm,
+the only difference anywhere is:
+
+```
+> "terminal_min_separation": 5,      (CreateSteinerGraph:pr)
+> "terminal_min_separation": 5,      (CreateSteinerGraph:prrefresh)
+```
+
+5 = 0.5 cm in WCT units (`wc.cm` = 10). Nothing else moves, on any detector.
+
+### 12.3 Binary gates — the OFF path on all three chains
+
+| gate | arms | result |
+|---|---|---|
+| **uBooNE** `qlport/scripts/ab_check.sh` | `d37offnew` vs `d37offbase`, 35 events | **PASS** — 35/35 Bee zips content-identical, 35/35 tagger-compare logs identical |
+| **SBND** manual hash, `run_pr_chain_batch.sh` | `work-d37sbndnew` vs `work-d37sbndbase`, 28 events | **PASS** — 28/28 `mabc-pr.zip`, 28/28 `pctree-pr-evt*.tar.gz`, `nusel-table.tsv` and `nusel-events.tsv` diff to zero |
+| **PDVD** `doc37_cmp_arms.py` | `d37off1` vs `d37off0`, 120 events | **PASS** — 120/120 `mabc-pr.zip`, 116/116 `calib-pr-evt*.json`, 4 absent on **both** sides |
+
+The 4 PDVD events with no dump on either side (039349 2/41/78 and 65) are the
+known STM-only-PR mode: zero STM tags ⇒ no per-bundle PR ⇒ no dump at all (doc
+25 §13.10). Absent-on-both is agreement; the comparator counts a **one-sided**
+absence separately and fails on it.
+
+### 12.4 The control that makes the PDVD gate mean something
+
+`pdvd/run_pr_evt.sh` has **no `setarch -R`**, so the PDVD arms ran with ASLR on.
+A pass on 120 events could in principle be luck, and a *failure* would have been
+uninterpretable — "the change leaked" and "PDVD PR is not bit-stable" look the
+same. So a fourth arm, `d37rep`, re-ran 3 events with the **same** library and
+**same** config as `d37off1`:
+
+```
+d37rep vs d37off1:  mabc-pr.zip identical=3  calib-pr.json identical=3
+```
+
+PDVD PR is bit-reproducible under ASLR at this code state, so §12.3's identity is
+attributable to the knob being off rather than to the axis being blunt.
+
+### 12.5 Unit tests and freshness
+
+```
+./build/clus/wcdoctest-clus       292 passed | 0 failed  (22566 assertions)
+  of which the 8 new thinning cases + the default pin: 13844 assertions
+lib_base  10:45  nm -DC | grep thin_by_min_separation -> 0 symbols
+lib_new   10:48  nm -DC | grep thin_by_min_separation -> 1 symbol
+sources   10:36-10:39
+```
+
+Both PDVD/SBND/uBooNE A-sides ran against `lib_base`, both B-sides against
+`lib_new`, pinned via `LD_LIBRARY_PATH` — a peer was rebuilding `local/lib` in
+this shared tree throughout, so neither side used the live install.
+
+## 13. What the flip actually does — the fourth grading row, finally measurable
+
+Arms `d37off1` (0 cm) and `d37on05` (0.5 cm), same binary, same 120 events,
+**both with `-S dl_weights=''`**. That is *not* PDVD's production vertex
+configuration — the DL/SCN vertex has been PDVD production since 2026-09-04 —
+but it is the only configuration in which a difference can be attributed to this
+knob rather than to DL's own run-to-run instability (M4). Everything below is
+therefore the knob's effect in isolation, not a production forecast.
+
+### 13.1 The knob does what §6 said it would
+
+Two different denominators, and they should not be conflated:
+
+| quantity | measured at | OFF | ON | change |
+|---|---|---|---|---|
+| terminals entering / leaving phase 3b | before phase 4 | 2 004 215 | 1 609 200 | **kept 0.8029** |
+| `nterm` in the dump | after phase 4 | 1 970 130 | 1 591 413 | **−19.2 %** |
+| Steiner cloud points | dump | 7 852 287 | 7 225 019 | −8.0 % |
+
+Per event the kept fraction is **0.802 [p10 0.781, p90 0.818]** — §6 predicted
+0.81 from the offline simulation, and the live knob reproduces it. The bound is
+tight because it is geometric: every removed terminal was within 0.5 cm of a
+higher-charge one that survived.
+
+Wall time **improves**: median 36 s → 33 s per event, 5557 s → 5010 s over the
+arm (−9.8 %); peak RSS median 1.21 → 1.15 GB. A smaller terminal set makes a
+smaller Steiner tree.
+
+### 13.2 What does NOT move
+
+- **TGM is untouched.** 2116 tags on both arms, `nclus_tgm_eval` 6956 on both,
+  and **0 of 116 events** differ. The reading — offered as an inference, not a
+  measurement — is that `TaggerCheckTGM` does not consume the Steiner terminals,
+  while STM does.
+- **Total reconstructed track length is flat**: 81 840 → 81 681 cm, **−0.19 %**.
+- **FC barely moves**: 2242 → 2233 (−0.4 %), unchanged on 103 of 116 events.
+- Every event that had a main vertex still has one (116/116).
+
+**And — the caveat §8 said could not be closed offline is now closed.** §4 and §5
+were computed against the skeleton and vertices of the *un-thinned* arm; with a
+live knob both refit, so the honest worry was that the survivors sit on a
+skeleton that has moved out from under them. Re-running
+`steiner_terminal_skeleton.py` on the two live arms answers it:
+
+| | OFF (0 cm) | ON (0.5 cm) |
+|---|---|---|
+| clusters with a fitted skeleton | 147 | 179 |
+| **terminal → fitted skeleton**, median cm | 0.90 [0.73, 1.23] | **0.91** [0.73, 1.27] |
+| same for the whole Steiner cloud (matched control) | 1.38 | 1.31 |
+| **excess** (terminal − cloud) | −0.48 | **−0.43** |
+| terminal→skeleton p90 (the tail) | 2.62 | **2.28** |
+| vertices of degree ≥ 2 with terminals | 1044 | 1081 |
+| of those, with ≥ 1 terminal inside 1 cm of the vertex | 814 (**78.0 %**) | 848 (**78.4 %**) |
+| vertex-core terminals, total | 1798 | 1477 (−17.9 %) |
+| vertex-core terminals per vertex, median | 1.5 | 1.0 |
+
+Both owner criteria that §4 and §5 exist to grade **survive the refit**:
+
+- *follows the skeleton* — the terminals are still **closer to the fitted
+  trajectory than the Steiner cloud is** (excess −0.43 cm), the median distance
+  moves by 0.01 cm, and the p90 tail gets *shorter*, not longer.
+- *does not miss terminals near the vertex* — the fraction of multi-branch
+  vertices holding at least one terminal within 1 cm is **78.0 % → 78.4 %**,
+  i.e. flat. The count per vertex falls 1.5 → 1.0 at the median, which is the
+  price and is above zero. (The two vertex populations are not matched — the ON
+  arm has 37 more vertices — so read this as two populations, not a paired test.)
+
+One incidental check falls out and is worth keeping: applying a *further* 0.5 cm
+thinning to the ON arm's terminals removes **nothing** (C3 "plain" = 1.00 [1.00,
+1.00], and 0/1 vertices lose their core versus 12–25 on the OFF arm). The shipped
+C++ is idempotent at its own radius, which is what it should be if it implements
+the rule the offline simulation modelled — an end-to-end check that the knob and
+§5's instrument agree.
+
+### 13.3 What DOES move — and this is the part that needs a hand scan
+
+**⚠ The STM-tagged cluster-id SET differs on 109 of 120 events.** The *count*
+barely moves (685 → 699, +2.0 %; 43 events up, 40 down, 33 unchanged), which is
+why a count-only census would have called this flat. The identity of the tagged
+clusters is what changed.
+
+That propagates, because PDVD runs the per-bundle PR **only on STM-tagged
+bundles** (doc 25 §13.10): a different tagged set means a different set of
+bundles is reconstructed at all.
+
+| | OFF | ON | total | per-event median ratio |
+|---|---|---|---|---|
+| segments | 2004 | 2121 | +5.8 % | **0.923** [0.462, 2.500] |
+| vertices | 2417 | 2658 | +10.0 % | **0.976** [0.529, 2.333] |
+| showers | 458 | 452 | −1.3 % | 0.750 |
+
+The totals and the medians disagree in sign, and that is the finding: the change
+is **not a small systematic shift, it is large per-event churn that mostly
+cancels**. **56 of 116 events change their segment count by ≥ 5**, in both
+directions — 039252/5 goes 36 → 203, 039252/8 goes 42 → 144, 039349/7 goes
+41 → 7, 039253/4 goes 43 → 10. Δnseg and Δnvtx correlate at **0.986** (a split
+adds a segment and a vertex together), and Δnseg correlates with Δn(STM tags) at
+only **0.033** — so it is *which* bundle is tagged, not *how many*, that drives it.
+On the 33 events where even the STM count is unchanged, 16 still move by ≥ 5.
+
+Three events (039349 2, 41, 78) went from **zero** STM tags to non-zero and now
+produce a `calib-pr` dump where before they produced none.
+
+### 13.4 Verdict on the fourth grading row
+
+Doc 31 §6.1's fourth row — *does not cost physics* — has been owed for nine
+rounds because it needed the knob. It now has an answer, and the answer is
+**"not established, and bigger than a cleanup"**:
+
+- **Three of the owner's four criteria hold, and hold against the LIVE refitted
+  skeleton, not just the offline simulation** (§13.2): terminals stay closer to
+  the fitted trajectory than the cloud is, the inefficiency is 19 % of
+  near-duplicates, and the density that motivated the round is what got removed.
+  The fourth — *do not miss terminals near the vertex* — also holds: 78.0 % →
+  78.4 % of multi-branch vertices keep a terminal within 1 cm.
+- But the downstream PR output is **not** approximately unchanged. Aggregates
+  are flat and TGM is untouched, yet the STM tag set moves on 109/120 events and
+  the per-event segmentation swings by factors of 2–6 on the worst events.
+- **Nothing here says the ON arm is worse.** It may well be better — 19 % fewer
+  terminals is a less over-constrained tree, and the wall time supports that.
+  It says the two arms reconstruct many events *differently*, and only a hand
+  scan can say which is right. That scan is now the blocking item, and it is
+  cheap: both arms' Bee zips already exist, same event, same paths.
+
+**Recommended scan pairs** (`work/<dir>/mabc-pr.zip`, not uploaded — owner
+uploads):
+
+| event | why | OFF | ON |
+|---|---|---|---|
+| 039252/5 | biggest gain, 36 → 203 segments | `039252_5_d37off1` | `039252_5_d37on05` |
+| 039349/7 | biggest loss, 41 → 7 segments | `039349_7_d37off1` | `039349_7_d37on05` |
+| 039349/2 | zero STM tags → tagged | `039349_2_d37off1` | `039349_2_d37on05` |
+
+**Reverting is one TLA**: `PDVD_PR_TLA="-S steiner_terminal_min_sep_cm=0"`, and
+the compiled config is then byte-identical to the pre-flip one (§12.2).
+
+## 14. Arms and records of round 2
+
+| label | what | where |
+|---|---|---|
+| `d37off0` | PDVD PR, 120 evts, **baseline binary**, knob absent | `pdvd/work/*_d37off0/` |
+| `d37off1` | PDVD PR, 120 evts, new binary, knob 0 | `pdvd/work/*_d37off1/` |
+| `d37on05` | PDVD PR, 120 evts, new binary, **0.5 cm** | `pdvd/work/*_d37on05/` |
+| `d37rep` | PDVD PR, 3 evts, repeat of `d37off1` (§12.4) | `pdvd/work/*_d37rep/` |
+| `d37offbase` / `d37offnew` | uBooNE MABC, 35 evts each | `qlport/scripts/sweep/` |
+| `work-d37sbndbase` / `work-d37sbndnew` | SBND PR chain, 28 evts each | `sbnd/sbnd_xin/` |
+
+Every tag is fresh; nothing under an existing `work/`, `sweep/` or `snap/` label
+was written, regenerated or deleted (M13). All three PDVD arms were staged from
+`d34base` with `scripts/stage_pr_tag.sh`, so they share byte-identical input
+point trees.
+
+Scripts, all committed under `pdvd/docs/nf_sp_img_clus/scripts/`:
+`doc37_run_thinning_arms.sh` (runs one arm against a pinned library),
+`doc37_arm_census.py` (the per-event PR-level census; its header carries the
+two-denominator and STM-conditioned-on-TGM warnings),
+`doc37_cmp_arms.py` (the two-axis comparator).
