@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Per-cluster tagger-verdict census across PR arms that differ only in the
-tagger fiducial margins (doc pdvd/34).
+tagger fiducial margins (doc pdvd/35).
 
   usage: fv_margin_census.py <base-tag> <tag> [<tag> ...]
          fv_margin_census.py d34base d34x d34yz d34all d34alli3

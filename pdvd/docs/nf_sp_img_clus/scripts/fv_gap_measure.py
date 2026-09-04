@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure PDVD's CRP/CRU/cathode gaps from data, to build a fiducial on (doc pdvd/34).
+"""Measure PDVD's CRP/CRU/cathode gaps from data, to build a fiducial on (doc pdvd/35).
 
   usage: fv_gap_measure.py [--sbnd <sbnd-arm-dir> ...] <pdvd-arm-dir> [<pdvd-arm-dir> ...]
          fv_gap_measure.py work/*_d28dlfp

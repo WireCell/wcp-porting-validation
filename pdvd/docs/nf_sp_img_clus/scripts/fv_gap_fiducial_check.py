@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Validate the compiled PDVD gap fiducial against the arm it was measured on
-(doc pdvd/34).
+(doc pdvd/35).
 
   usage: fv_gap_fiducial_check.py <compiled-configs.json> <arm-dir> [<arm-dir> ...]
 
@@ -101,7 +101,7 @@ def main():
     print("  A box NARROWER than the ctpc point pitch holds no points whatever it")
     print("  sits on, so its 0.00 is not evidence of a deficit -- read it together")
     print("  with the flagged count above: the CRU boxes are inert by construction,")
-    print("  which is what doc 34 sec 3 measured and is the honest thing to ship.")
+    print("  which is what doc 35 sec 3 measured and is the honest thing to ship.")
 
 
 if __name__ == "__main__":

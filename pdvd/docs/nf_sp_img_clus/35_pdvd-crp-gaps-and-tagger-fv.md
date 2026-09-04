@@ -1,4 +1,4 @@
-# PDVD doc 34 — the CRP gaps, measured; and the tagger fiducial made consistent with clustering
+# PDVD doc 35 — the CRP gaps, measured; and the tagger fiducial made consistent with clustering
 
 **Status (2026-09-04).** Three owner steers, executed:
 
@@ -30,14 +30,14 @@ cd $WCPI/pdvd
 # (1) the gap measurement -- read-only, the 120-event d28dlfp arm already on disk
 python3 docs/nf_sp_img_clus/scripts/fv_gap_measure.py work/*_d28dlfp \
     --sbnd ../../toolkit/sbnd_xin/work-ncpi0-doc25_r2post5/pr_evt* \
-    --tsv /home/xqian/tmp/doc34/gap_widths.tsv
+    --tsv /home/xqian/tmp/doc35/gap_widths.tsv
 
 # (2) the constructed fiducial, and its test against the same arm
 echo "local g = import 'pgrapher/experiment/protodunevd/crp_gap_fiducial.jsonnet'; g().configs" \
-     > /home/xqian/tmp/doc34/gapfid_harness.jsonnet
-wcsonnet -o /home/xqian/tmp/doc34/gapfid.json /home/xqian/tmp/doc34/gapfid_harness.jsonnet
+     > /home/xqian/tmp/doc35/gapfid_harness.jsonnet
+wcsonnet -o /home/xqian/tmp/doc35/gapfid.json /home/xqian/tmp/doc35/gapfid_harness.jsonnet
 python3 docs/nf_sp_img_clus/scripts/fv_gap_fiducial_check.py \
-    /home/xqian/tmp/doc34/gapfid.json work/*_d28dlfp
+    /home/xqian/tmp/doc35/gapfid.json work/*_d28dlfp
 
 # (3) the margin arms.  -S is wcsonnet's --tla-code, so the numbers go straight
 #     through PDVD_PR_TLA and no driver edit is needed to measure.  Every arm
@@ -58,6 +58,12 @@ PDVD_PR_TLA="-S dl_weights='' -S tgm_fv_x_margin=2.5 -S tgm_fv_y_margin=17.5 \
 python3 docs/nf_sp_img_clus/scripts/fv_margin_census.py \
     d34base d34rep d34x d34yz d34all d34alli3
 ```
+
+The arm tags below carry a **`d34`** prefix: they were staged while this was
+doc 34, and a concurrent session had already taken that number
+(`34_ctpc-anisotropic-distance-metric.md`, commit `28d827e4`). The document
+renumbered; the tags did not, because a work tag is a record and records are not
+renamed (M13).
 
 Arms read read-only: `pdvd/work/*_d28dlfp` (the doc-28 §27 production arm).
 Arms written, all fresh tags: `d34base d34rep d34x d34yz d34all d34alli3`, plus

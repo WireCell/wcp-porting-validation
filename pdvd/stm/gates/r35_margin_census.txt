@@ -1,4 +1,4 @@
-# doc pdvd/34 -- tagger fiducial margins made consistent with the clustering FV.
+# doc pdvd/35 -- tagger fiducial margins made consistent with the clustering FV.
 # Six 120-event PDVD PR arms off the same d28dlfp point-tree inputs, one pinned
 # library (libWireCellClus.so md5 c094432d5d1ce1876f02819492af7b68, re-verified
 # byte-identical against local/lib after the campaign), every arm -S dl_weights=''.
