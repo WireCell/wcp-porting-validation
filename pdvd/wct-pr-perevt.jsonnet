@@ -2937,6 +2937,22 @@ function(
     // CHANGES OUTPUT: this is the PR half of the doc-32 fix and, unlike the
     // TrackFitting half, it has no measurement of its own yet.
     good_point_pitch_frac = null,
+    // doc pdvd/36 -- the lattice-normalised (anisotropic) ctpc metric.  Every
+    // ctpc radius query in this PR job (the trajectory end trim's and the
+    // pattern code's strict good-point tests, test_good_point in the
+    // connectors protect_bundle / steiner run here, the TGM candidate check,
+    // get_ave_charge in the vertex finder) scales the pitch axis by
+    // s = min(1, drift_step/pitch) per plane, so "within r" means the same
+    // number of lattice cells on PDVD (U/V s = 0.387, W 0.581) as on SBND,
+    // where s clamps to 1 and nothing changes.  The k-d tree and the pctree
+    // are untouched: the ellipse is answered exactly by a circumscribe-and-
+    // filter two-level query (clus/inc/WireCellClus/CtpcAnisoMetric.h).
+    // C++ default false; key suppressed when false => byte-identical config.
+    // PRODUCTION OFF: the measured arms (d36on vs the 0.35 floor, doc 36
+    // sec 4-5) are the evidence for the owner's flip decision.  When flipped,
+    // retire good_point_pitch_frac in pdvd_track_fitting.json in the same
+    // commit -- the floor and the metric must not stack (doc 34 sec 8).
+    ctpc_aniso_metric = false,
     // doc pr/51 round 6 -- weak-charge deficit term on the same gap flavor
     // (residuals 18259-131357 3-track V, 18255-506746 branch turn: chords
     // that are image-supported but charge-poor, invisible to the
@@ -3668,6 +3684,7 @@ function(
                              save_in_scope=save_in_scope,
                              pr_bee=pr_bee,
                              trackfitting_config_file=trackfitting_config,
+                             ctpc_aniso_metric=ctpc_aniso_metric,  // doc pdvd/36
                              particle_dataset=pds.particle_dataset,
                              extra_uses=pds.all,
                              dl_weights=dl_weights,
