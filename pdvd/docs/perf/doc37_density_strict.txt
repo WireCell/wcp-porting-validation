@@ -1,0 +1,33 @@
+== PDVD: 118 dump(s), 2949 long straight cluster(s) (>= 200 pts, linearity > 0.95, L > 50.0 cm)
+== SBND: 906 dump(s), 610 long straight cluster(s) (>= 200 pts, linearity > 0.95, L > 50.0 cm)
+== UB: 35 dump(s), 8 long straight cluster(s) (>= 200 pts, linearity > 0.95, L > 50.0 cm)
+== UBtol: 35 dump(s), 8 long straight cluster(s) (>= 200 pts, linearity > 0.95, L > 50.0 cm)
+
+-- all long straight clusters
+  PDVD                       n=2949  L=212.82 [128.46,316.29]cm  points/cm=  7.47 [ 6.71, 8.44]  terminals/cm=  2.06 [ 1.84, 2.30]  term/point=  0.27 [ 0.25, 0.30]  1 term per   0.48 [ 0.43, 0.54]cm
+  SBND                       n= 610  L=140.78 [92.82,232.75]cm  points/cm=  6.66 [ 5.52, 7.94]  terminals/cm=  1.32 [ 1.03, 1.59]  term/point=  0.20 [ 0.18, 0.21]  1 term per   0.76 [ 0.63, 0.97]cm
+  UB                         n=   8  L= 57.60 [55.82,72.07]cm  points/cm= 15.53 [ 7.16,61.49]  terminals/cm=  3.63 [ 1.20, 6.39]  term/point=  0.17 [ 0.12, 0.19]  1 term per   0.28 [ 0.16, 0.84]cm
+  UBtol                      n=   8  L= 56.68 [55.33,72.86]cm  points/cm= 19.26 [12.42,86.43]  terminals/cm=  4.19 [ 1.83,10.00]  term/point=  0.14 [ 0.13, 0.17]  1 term per   0.24 [ 0.10, 0.55]cm
+
+-- non-main only (cosmic-like on both detectors)
+  PDVD                       n=  14  L= 67.62 [54.63,105.07]cm  points/cm=  7.36 [ 6.87, 7.94]  terminals/cm=  2.24 [ 2.16, 2.36]  term/point=  0.31 [ 0.28, 0.32]  1 term per   0.45 [ 0.42, 0.46]cm
+  SBND                       n=  69  L=100.56 [73.72,168.90]cm  points/cm=  6.44 [ 4.88, 8.27]  terminals/cm=  1.31 [ 0.93, 1.78]  term/point=  0.20 [ 0.18, 0.22]  1 term per   0.76 [ 0.56, 1.07]cm
+  UB                         n=   3  L= 62.21 [59.74,136.85]cm  points/cm=  6.92 [ 6.44, 7.08]  terminals/cm=  1.17 [ 1.10, 1.19]  term/point=  0.17 [ 0.17, 0.17]  1 term per   0.85 [ 0.84, 0.91]cm
+  UBtol                      n=   3  L= 63.46 [59.76,132.82]cm  points/cm= 10.72 [10.32,11.85]  terminals/cm=  1.64 [ 1.54, 1.77]  term/point=  0.15 [ 0.14, 0.15]  1 term per   0.61 [ 0.57, 0.65]cm
+
+-- binned by drift alignment |cos(axis, x)|
+  PDVD transverse to drift   n= 197  L=264.09 [150.78,388.49]cm  points/cm=  8.94 [ 6.92,12.80]  terminals/cm=  1.63 [ 1.33, 2.26]  term/point=  0.18 [ 0.17, 0.20]  1 term per   0.61 [ 0.44, 0.75]cm
+  SBND transverse to drift   n= 282  L=164.25 [103.13,261.37]cm  points/cm=  5.71 [ 4.71, 6.77]  terminals/cm=  0.99 [ 0.80, 1.18]  term/point=  0.18 [ 0.15, 0.20]  1 term per   1.01 [ 0.85, 1.26]cm
+  UB transverse to drift     n=   3  L= 62.21 [59.74,136.85]cm  points/cm=  6.92 [ 6.44, 7.08]  terminals/cm=  1.17 [ 1.10, 1.19]  term/point=  0.17 [ 0.17, 0.17]  1 term per   0.85 [ 0.84, 0.91]cm
+  UBtol transverse to drift  n=   3  L= 63.46 [59.76,132.82]cm  points/cm= 10.72 [10.32,11.85]  terminals/cm=  1.64 [ 1.54, 1.77]  term/point=  0.15 [ 0.14, 0.15]  1 term per   0.61 [ 0.57, 0.65]cm
+
+  PDVD oblique               n= 793  L=218.48 [137.86,313.96]cm  points/cm=  7.82 [ 7.03, 8.87]  terminals/cm=  1.95 [ 1.77, 2.17]  term/point=  0.25 [ 0.23, 0.27]  1 term per   0.51 [ 0.46, 0.56]cm
+  SBND oblique               n= 226  L=134.93 [87.57,220.64]cm  points/cm=  7.80 [ 7.01, 8.60]  terminals/cm=  1.55 [ 1.42, 1.77]  term/point=  0.20 [ 0.19, 0.21]  1 term per   0.64 [ 0.57, 0.70]cm
+  UB oblique                 n=   4  L= 55.35 [52.67,68.86]cm  points/cm= 61.73 [49.90,71.09]  terminals/cm=  6.64 [ 5.48, 8.34]  term/point=  0.12 [ 0.11, 0.15]  1 term per   0.15 [ 0.13, 0.19]cm
+  UBtol oblique              n=   4  L= 55.27 [52.66,68.24]cm  points/cm= 88.22 [68.17,97.67]  terminals/cm= 10.20 [ 8.33,11.78]  term/point=  0.13 [ 0.12, 0.15]  1 term per   0.10 [ 0.09, 0.14]cm
+
+  PDVD along drift           n=1959  L=206.67 [123.59,312.80]cm  points/cm=  7.31 [ 6.60, 8.10]  terminals/cm=  2.12 [ 1.92, 2.33]  term/point=  0.29 [ 0.27, 0.31]  1 term per   0.47 [ 0.43, 0.52]cm
+  SBND along drift           n= 102  L=108.56 [75.23,147.65]cm  points/cm=  6.53 [ 5.74, 7.59]  terminals/cm=  1.51 [ 1.27, 1.66]  term/point=  0.22 [ 0.21, 0.24]  1 term per   0.66 [ 0.60, 0.79]cm
+  UB along drift             n=   1  L= 56.84 [56.84,56.84]cm  points/cm= 15.20 [15.20,15.20]  terminals/cm=  3.77 [ 3.77, 3.77]  term/point=  0.25 [ 0.25, 0.25]  1 term per   0.27 [ 0.27, 0.27]cm
+  UBtol along drift          n=   1  L= 56.03 [56.03,56.03]cm  points/cm= 19.77 [19.77,19.77]  terminals/cm=  4.46 [ 4.46, 4.46]  term/point=  0.23 [ 0.23, 0.23]  1 term per   0.22 [ 0.22, 0.22]cm
+

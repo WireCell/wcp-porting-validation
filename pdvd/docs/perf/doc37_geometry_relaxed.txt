@@ -1,0 +1,144 @@
+== PDVD: 118 dump(s), 3420 long straight cluster(s)
+== SBND: 906 dump(s), 770 long straight cluster(s)
+== UB: 35 dump(s), 25 long straight cluster(s)
+== UBtol: 35 dump(s), 25 long straight cluster(s)
+
+-- geometry of the stored terminal set (median [IQR] over clusters)
+  PDVD                   n=3420  L= 186.9 [  94.4, 299.7]cm  |cos(axis,x)|= 0.80 [ 0.61, 0.91]  terminals/cm= 2.03 [ 1.76, 2.28]
+                           slice pitch=0.296 [0.296,0.296]cm  slices/cm= 2.84 [ 2.16, 3.18]  pts/slice= 2.55 [ 2.15, 3.37]  terminals/slice= 0.72 [ 0.63, 0.89]
+                           slices with a terminal= 0.67 [ 0.60, 0.77]  terminals per OCCUPIED slice= 1.07 [ 1.03, 1.17]  in-slice partner < 1.0cm= 0.00 [ 0.00, 0.01]
+                           nn3d= 0.66 [ 0.57, 0.82]cm  largest terminal-free run= 4.46 [ 2.85,11.31]cm
+  SBND                   n= 770  L= 113.8 [  59.8, 202.7]cm  |cos(axis,x)|= 0.37 [ 0.17, 0.62]  terminals/cm= 1.38 [ 1.06, 1.69]
+                           slice pitch=0.313 [0.313,0.313]cm  slices/cm= 1.33 [ 0.67, 2.17]  pts/slice= 5.34 [ 4.02, 8.93]  terminals/slice= 1.10 [ 0.84, 1.67]
+                           slices with a terminal= 0.94 [ 0.78, 0.99]  terminals per OCCUPIED slice= 1.18 [ 1.05, 1.72]  in-slice partner < 1.0cm= 0.01 [ 0.00, 0.03]
+                           nn3d= 0.71 [ 0.65, 0.97]cm  largest terminal-free run= 3.44 [ 2.45, 5.01]cm
+  UB                     n=  25  L=  34.9 [  28.0,  52.8]cm  |cos(axis,x)|= 0.52 [ 0.29, 0.85]  terminals/cm= 3.62 [ 2.59, 4.98]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 2.82 [ 1.90, 3.66]  pts/slice= 8.31 [ 3.84,11.86]  terminals/slice= 1.33 [ 0.88, 1.91]
+                           slices with a terminal= 0.93 [ 0.84, 0.96]  terminals per OCCUPIED slice= 1.42 [ 1.14, 1.97]  in-slice partner < 1.0cm= 0.06 [ 0.03, 0.07]
+                           nn3d= 0.41 [ 0.28, 0.41]cm  largest terminal-free run= 1.86 [ 1.43, 4.05]cm
+  UBtol                  n=  25  L=  35.8 [  27.0,  53.2]cm  |cos(axis,x)|= 0.52 [ 0.30, 0.85]  terminals/cm= 4.54 [ 2.74, 7.55]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 2.83 [ 1.85, 3.77]  pts/slice=11.01 [ 5.62,17.24]  terminals/slice= 1.94 [ 1.09, 2.63]
+                           slices with a terminal= 0.98 [ 0.93, 0.99]  terminals per OCCUPIED slice= 1.94 [ 1.20, 2.63]  in-slice partner < 1.0cm= 0.08 [ 0.05, 0.09]
+                           nn3d= 0.41 [ 0.31, 0.41]cm  largest terminal-free run= 1.06 [ 0.86, 2.90]cm
+
+-- the same decomposition binned by drift alignment |cos(axis, x)|
+  PDVD transverse        n= 261  L= 194.8 [  74.4, 329.4]cm  |cos(axis,x)|= 0.09 [ 0.03, 0.21]  terminals/cm= 1.45 [ 0.66, 2.02]
+                           slice pitch=0.296 [0.296,0.296]cm  slices/cm= 0.54 [ 0.31, 0.90]  pts/slice=11.50 [ 6.80,24.63]  terminals/slice= 2.22 [ 1.35, 4.13]
+                           slices with a terminal= 0.91 [ 0.61, 0.97]  terminals per OCCUPIED slice= 2.67 [ 1.53, 4.89]  in-slice partner < 1.0cm= 0.00 [ 0.00, 0.01]
+                           nn3d= 1.14 [ 0.93, 1.33]cm  largest terminal-free run= 6.45 [ 4.15,24.07]cm
+  SBND transverse        n= 335  L= 138.6 [  73.7, 242.5]cm  |cos(axis,x)|= 0.15 [ 0.07, 0.22]  terminals/cm= 1.03 [ 0.80, 1.22]
+                           slice pitch=0.313 [0.313,0.313]cm  slices/cm= 0.60 [ 0.37, 0.86]  pts/slice= 9.81 [ 6.78,15.96]  terminals/slice= 1.77 [ 1.35, 2.51]
+                           slices with a terminal= 0.99 [ 0.96, 1.00]  terminals per OCCUPIED slice= 1.81 [ 1.40, 2.62]  in-slice partner < 1.0cm= 0.02 [ 0.00, 0.04]
+                           nn3d= 0.97 [ 0.93, 1.29]cm  largest terminal-free run= 4.51 [ 3.28, 6.55]cm
+  UB transverse          n=   7  L=  42.4 [  35.3,  59.7]cm  |cos(axis,x)|= 0.13 [ 0.08, 0.23]  terminals/cm= 1.21 [ 1.12, 3.07]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 0.92 [ 0.68, 1.28]  pts/slice=11.86 [ 7.71,39.66]  terminals/slice= 1.69 [ 1.34, 4.86]
+                           slices with a terminal= 0.95 [ 0.93, 0.96]  terminals per OCCUPIED slice= 1.81 [ 1.39, 5.16]  in-slice partner < 1.0cm= 0.06 [ 0.04, 0.07]
+                           nn3d= 0.66 [ 0.41, 0.74]cm  largest terminal-free run= 3.73 [ 2.67, 4.23]cm
+  UBtol transverse       n=   7  L=  43.7 [  35.6,  59.8]cm  |cos(axis,x)|= 0.11 [ 0.08, 0.23]  terminals/cm= 1.89 [ 1.71, 3.90]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 0.96 [ 0.68, 1.30]  pts/slice=17.17 [13.47,42.99]  terminals/slice= 2.59 [ 1.95, 5.31]
+                           slices with a terminal= 0.99 [ 0.96, 1.00]  terminals per OCCUPIED slice= 2.59 [ 1.96, 5.60]  in-slice partner < 1.0cm= 0.08 [ 0.05, 0.08]
+                           nn3d= 0.44 [ 0.41, 0.73]cm  largest terminal-free run= 2.90 [ 1.99, 3.61]cm
+
+  PDVD oblique           n= 933  L= 187.7 [  98.2, 301.4]cm  |cos(axis,x)|= 0.57 [ 0.46, 0.64]  terminals/cm= 1.92 [ 1.70, 2.14]
+                           slice pitch=0.296 [0.296,0.296]cm  slices/cm= 2.12 [ 1.73, 2.41]  pts/slice= 3.56 [ 2.93, 4.43]  terminals/slice= 0.91 [ 0.80, 1.06]
+                           slices with a terminal= 0.81 [ 0.72, 0.89]  terminals per OCCUPIED slice= 1.13 [ 1.06, 1.23]  in-slice partner < 1.0cm= 0.00 [ 0.00, 0.01]
+                           nn3d= 0.79 [ 0.66, 0.84]cm  largest terminal-free run= 3.38 [ 2.64, 7.85]cm
+  SBND oblique           n= 292  L= 111.7 [  56.5, 190.3]cm  |cos(axis,x)|= 0.49 [ 0.38, 0.59]  terminals/cm= 1.61 [ 1.45, 1.85]
+                           slice pitch=0.313 [0.313,0.313]cm  slices/cm= 1.76 [ 1.42, 2.08]  pts/slice= 4.71 [ 4.12, 5.30]  terminals/slice= 0.97 [ 0.85, 1.07]
+                           slices with a terminal= 0.89 [ 0.80, 0.96]  terminals per OCCUPIED slice= 1.07 [ 1.04, 1.14]  in-slice partner < 1.0cm= 0.01 [ 0.00, 0.02]
+                           nn3d= 0.68 [ 0.55, 0.70]cm  largest terminal-free run= 2.48 [ 2.01, 3.19]cm
+  UB oblique             n=  10  L=  31.6 [  25.8,  52.7]cm  |cos(axis,x)|= 0.51 [ 0.46, 0.62]  terminals/cm= 4.97 [ 3.91, 6.47]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 2.93 [ 2.66, 3.26]  pts/slice= 9.57 [ 8.46,22.21]  terminals/slice= 1.42 [ 1.24, 2.35]
+                           slices with a terminal= 0.96 [ 0.92, 0.98]  terminals per OCCUPIED slice= 1.57 [ 1.30, 2.44]  in-slice partner < 1.0cm= 0.06 [ 0.04, 0.07]
+                           nn3d= 0.39 [ 0.36, 0.41]cm  largest terminal-free run= 1.53 [ 1.17, 1.72]cm
+  UBtol oblique          n=  10  L=  31.4 [  25.5,  52.7]cm  |cos(axis,x)|= 0.51 [ 0.46, 0.62]  terminals/cm= 6.95 [ 4.98,10.41]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 3.00 [ 2.73, 3.30]  pts/slice=13.35 [10.84,32.52]  terminals/slice= 2.00 [ 1.49, 3.75]
+                           slices with a terminal= 0.99 [ 0.99, 1.00]  terminals per OCCUPIED slice= 2.05 [ 1.52, 3.79]  in-slice partner < 1.0cm= 0.09 [ 0.06, 0.10]
+                           nn3d= 0.41 [ 0.38, 0.41]cm  largest terminal-free run= 0.88 [ 0.80, 1.00]cm
+
+  PDVD along drift       n=2226  L= 186.1 [  94.4, 294.8]cm  |cos(axis,x)|= 0.88 [ 0.80, 0.95]  terminals/cm= 2.10 [ 1.87, 2.33]
+                           slice pitch=0.296 [0.296,0.296]cm  slices/cm= 3.08 [ 2.85, 3.30]  pts/slice= 2.30 [ 2.06, 2.62]  terminals/slice= 0.68 [ 0.61, 0.74]
+                           slices with a terminal= 0.64 [ 0.59, 0.69]  terminals per OCCUPIED slice= 1.05 [ 1.03, 1.09]  in-slice partner < 1.0cm= 0.00 [ 0.00, 0.01]
+                           nn3d= 0.59 [ 0.41, 0.66]cm  largest terminal-free run= 5.35 [ 2.88,11.49]cm
+  SBND along drift       n= 143  L=  78.5 [  42.4, 128.9]cm  |cos(axis,x)|= 0.84 [ 0.75, 0.92]  terminals/cm= 1.56 [ 1.31, 1.89]
+                           slice pitch=0.313 [0.313,0.313]cm  slices/cm= 2.60 [ 2.46, 2.77]  pts/slice= 2.57 [ 2.14, 3.03]  terminals/slice= 0.59 [ 0.52, 0.69]
+                           slices with a terminal= 0.56 [ 0.51, 0.65]  terminals per OCCUPIED slice= 1.04 [ 1.01, 1.09]  in-slice partner < 1.0cm= 0.02 [ 0.00, 0.04]
+                           nn3d= 0.61 [ 0.47, 0.68]cm  largest terminal-free run= 4.06 [ 2.73, 6.01]cm
+  UB along drift         n=   8  L=  33.2 [  26.6,  45.1]cm  |cos(axis,x)|= 0.89 [ 0.86, 0.91]  terminals/cm= 3.41 [ 2.54, 4.02]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 4.18 [ 3.66, 4.43]  pts/slice= 3.56 [ 2.74, 4.20]  terminals/slice= 0.85 [ 0.63, 0.92]
+                           slices with a terminal= 0.80 [ 0.54, 0.84]  terminals per OCCUPIED slice= 1.15 [ 1.06, 1.19]  in-slice partner < 1.0cm= 0.06 [ 0.05, 0.09]
+                           nn3d= 0.28 [ 0.26, 0.29]cm  largest terminal-free run= 3.41 [ 1.73, 7.65]cm
+  UBtol along drift      n=   8  L=  33.7 [  26.7,  43.5]cm  |cos(axis,x)|= 0.89 [ 0.87, 0.91]  terminals/cm= 4.34 [ 3.39, 4.85]
+                           slice pitch=0.220 [0.220,0.220]cm  slices/cm= 4.47 [ 3.60, 4.53]  pts/slice= 4.49 [ 3.74, 5.33]  terminals/slice= 1.01 [ 0.85, 1.07]
+                           slices with a terminal= 0.86 [ 0.76, 0.94]  terminals per OCCUPIED slice= 1.18 [ 1.09, 1.25]  in-slice partner < 1.0cm= 0.07 [ 0.06, 0.08]
+                           nn3d= 0.28 [ 0.26, 0.32]cm  largest terminal-free run= 1.62 [ 0.95, 7.13]cm
+
+
+-- simulated GLOBAL greedy suppression at radius R -- all long straight clusters
+  arm              R       axis order     random order           kept        gap after
+  PDVD          0.30  1.71 [ 1.50, 1.90]  1.69 [ 1.48, 1.88]  0.85 [ 0.81, 0.88]  4.49 [ 2.90,11.36]
+  PDVD          0.50  1.64 [ 1.44, 1.81]  1.61 [ 1.42, 1.78]  0.81 [ 0.77, 0.85]  4.49 [ 2.91,11.38]
+  PDVD          0.80  1.44 [ 1.27, 1.60]  1.42 [ 1.25, 1.56]  0.71 [ 0.67, 0.75]  4.56 [ 2.98,11.42]
+  PDVD          1.00  1.16 [ 1.03, 1.28]  1.11 [ 0.98, 1.22]  0.57 [ 0.54, 0.61]  4.64 [ 3.11,11.49]
+  PDVD          1.50  0.80 [ 0.71, 0.88]  0.72 [ 0.64, 0.80]  0.39 [ 0.36, 0.42]  4.99 [ 3.45,11.71]
+  SBND          0.30  1.38 [ 1.06, 1.69]  1.38 [ 1.06, 1.69]  1.00 [ 1.00, 1.00]  3.44 [ 2.45, 5.01]
+  SBND          0.50  1.17 [ 0.95, 1.35]  1.16 [ 0.94, 1.34]  0.86 [ 0.81, 0.91]  3.56 [ 2.55, 5.03]
+  SBND          0.80  0.96 [ 0.82, 1.08]  0.93 [ 0.81, 1.03]  0.70 [ 0.63, 0.80]  3.64 [ 2.75, 5.10]
+  SBND          1.00  0.82 [ 0.72, 0.92]  0.78 [ 0.70, 0.89]  0.60 [ 0.53, 0.72]  3.68 [ 2.83, 5.12]
+  SBND          1.50  0.62 [ 0.56, 0.69]  0.56 [ 0.51, 0.64]  0.44 [ 0.38, 0.58]  3.99 [ 3.22, 5.43]
+  UB            0.30  2.56 [ 2.14, 4.12]  2.56 [ 2.09, 4.08]  0.80 [ 0.75, 0.85]  1.86 [ 1.49, 4.05]
+  UB            0.50  2.00 [ 1.64, 3.29]  1.92 [ 1.49, 3.17]  0.65 [ 0.56, 0.71]  2.17 [ 1.74, 4.05]
+  UB            0.80  1.52 [ 1.14, 2.35]  1.38 [ 0.99, 2.27]  0.47 [ 0.41, 0.53]  2.21 [ 1.72, 4.21]
+  UB            1.00  1.32 [ 0.99, 1.94]  1.20 [ 0.79, 1.73]  0.39 [ 0.35, 0.47]  2.37 [ 1.58, 4.05]
+  UB            1.50  0.85 [ 0.70, 1.24]  0.74 [ 0.54, 1.11]  0.26 [ 0.23, 0.34]  2.92 [ 2.17, 4.05]
+  UBtol         0.30  3.40 [ 2.55, 5.91]  3.28 [ 2.51, 5.82]  0.81 [ 0.77, 0.85]  1.18 [ 0.91, 2.90]
+  UBtol         0.50  2.61 [ 1.80, 4.55]  2.39 [ 1.68, 4.23]  0.66 [ 0.60, 0.71]  1.27 [ 1.01, 3.08]
+  UBtol         0.80  1.79 [ 1.31, 3.18]  1.53 [ 1.11, 2.90]  0.46 [ 0.39, 0.52]  1.50 [ 1.28, 3.08]
+  UBtol         1.00  1.39 [ 1.05, 2.59]  1.28 [ 0.96, 2.41]  0.37 [ 0.32, 0.45]  1.56 [ 1.39, 3.11]
+  UBtol         1.50  1.00 [ 0.76, 1.68]  0.84 [ 0.68, 1.45]  0.23 [ 0.21, 0.31]  2.07 [ 1.93, 3.44]
+
+-- simulated GLOBAL greedy suppression at radius R -- along drift only (|cos(axis,x)| > 0.7), the matched bin
+  arm              R       axis order     random order           kept        gap after
+  PDVD          0.30  1.73 [ 1.55, 1.91]  1.71 [ 1.52, 1.89]  0.83 [ 0.79, 0.85]  5.41 [ 2.94,11.59]
+  PDVD          0.50  1.65 [ 1.48, 1.82]  1.62 [ 1.44, 1.78]  0.79 [ 0.76, 0.81]  5.44 [ 2.95,11.60]
+  PDVD          0.80  1.46 [ 1.29, 1.60]  1.42 [ 1.26, 1.56]  0.69 [ 0.66, 0.72]  5.50 [ 3.02,11.61]
+  PDVD          1.00  1.17 [ 1.04, 1.28]  1.10 [ 0.98, 1.21]  0.56 [ 0.53, 0.58]  5.63 [ 3.15,11.65]
+  PDVD          1.50  0.79 [ 0.70, 0.86]  0.71 [ 0.63, 0.78]  0.38 [ 0.36, 0.40]  5.86 [ 3.52,12.01]
+  SBND          0.30  1.56 [ 1.31, 1.89]  1.56 [ 1.31, 1.89]  1.00 [ 1.00, 1.00]  4.06 [ 2.73, 6.01]
+  SBND          0.50  1.22 [ 1.08, 1.45]  1.19 [ 1.06, 1.40]  0.80 [ 0.76, 0.83]  4.10 [ 2.73, 6.18]
+  SBND          0.80  0.98 [ 0.85, 1.14]  0.93 [ 0.82, 1.08]  0.63 [ 0.59, 0.66]  4.17 [ 2.95, 6.13]
+  SBND          1.00  0.81 [ 0.71, 0.93]  0.75 [ 0.67, 0.86]  0.52 [ 0.49, 0.55]  4.31 [ 3.10, 6.41]
+  SBND          1.50  0.58 [ 0.53, 0.66]  0.52 [ 0.47, 0.60]  0.38 [ 0.35, 0.40]  4.54 [ 3.54, 6.41]
+  UB            0.30  2.26 [ 1.81, 2.72]  2.17 [ 1.77, 2.60]  0.73 [ 0.67, 0.75]  3.51 [ 1.73, 7.65]
+  UB            0.50  1.79 [ 1.38, 2.03]  1.62 [ 1.27, 1.91]  0.54 [ 0.53, 0.56]  3.51 [ 2.11, 7.71]
+  UB            0.80  1.20 [ 0.96, 1.41]  1.04 [ 0.84, 1.27]  0.38 [ 0.36, 0.41]  3.50 [ 1.92, 7.89]
+  UB            1.00  1.02 [ 0.83, 1.16]  0.89 [ 0.67, 1.09]  0.32 [ 0.30, 0.35]  3.76 [ 2.39, 7.95]
+  UB            1.50  0.72 [ 0.60, 0.82]  0.60 [ 0.46, 0.71]  0.23 [ 0.20, 0.25]  3.76 [ 2.81, 7.95]
+  UBtol         0.30  2.92 [ 2.38, 3.57]  2.75 [ 2.31, 3.46]  0.74 [ 0.69, 0.77]  1.62 [ 1.11, 7.13]
+  UBtol         0.50  2.20 [ 1.87, 2.69]  2.05 [ 1.78, 2.48]  0.55 [ 0.53, 0.62]  1.82 [ 1.04, 7.13]
+  UBtol         0.80  1.38 [ 1.18, 1.86]  1.26 [ 1.00, 1.60]  0.37 [ 0.34, 0.40]  1.98 [ 1.44, 7.36]
+  UBtol         1.00  1.20 [ 0.96, 1.42]  0.99 [ 0.85, 1.27]  0.29 [ 0.28, 0.33]  1.87 [ 1.45, 7.36]
+  UBtol         1.50  0.78 [ 0.67, 1.02]  0.64 [ 0.52, 0.86]  0.20 [ 0.19, 0.21]  2.51 [ 1.91, 7.36]
+
+-- simulated SAME-SLICE-ONLY suppression at radius R (cannot open a gap)
+  arm              R     terminals/cm           kept        gap after
+  PDVD          0.30  2.03 [ 1.76, 2.28]  1.00 [ 1.00, 1.00]  4.46 [ 2.85,11.31]
+  PDVD          0.50  2.03 [ 1.76, 2.28]  1.00 [ 1.00, 1.00]  4.46 [ 2.85,11.31]
+  PDVD          0.80  2.03 [ 1.76, 2.28]  1.00 [ 1.00, 1.00]  4.46 [ 2.85,11.31]
+  PDVD          1.00  2.02 [ 1.75, 2.27]  1.00 [ 0.99, 1.00]  4.46 [ 2.85,11.31]
+  PDVD          1.50  2.01 [ 1.75, 2.26]  0.99 [ 0.99, 1.00]  4.46 [ 2.86,11.31]
+  SBND          0.30  1.38 [ 1.06, 1.69]  1.00 [ 1.00, 1.00]  3.44 [ 2.45, 5.01]
+  SBND          0.50  1.38 [ 1.05, 1.68]  1.00 [ 1.00, 1.00]  3.44 [ 2.45, 5.01]
+  SBND          0.80  1.37 [ 1.05, 1.68]  1.00 [ 0.99, 1.00]  3.44 [ 2.45, 5.01]
+  SBND          1.00  1.36 [ 1.04, 1.67]  0.99 [ 0.98, 1.00]  3.44 [ 2.45, 5.01]
+  SBND          1.50  1.34 [ 1.02, 1.65]  0.97 [ 0.95, 0.99]  3.46 [ 2.45, 5.01]
+  UB            0.30  3.62 [ 2.59, 4.98]  1.00 [ 1.00, 1.00]  1.86 [ 1.43, 4.05]
+  UB            0.50  3.62 [ 2.55, 4.94]  0.99 [ 0.98, 1.00]  1.86 [ 1.43, 4.05]
+  UB            0.80  3.56 [ 2.47, 4.82]  0.98 [ 0.97, 0.99]  1.86 [ 1.43, 4.05]
+  UB            1.00  3.53 [ 2.47, 4.82]  0.97 [ 0.96, 0.98]  1.86 [ 1.43, 4.05]
+  UB            1.50  3.49 [ 2.30, 4.53]  0.94 [ 0.91, 0.96]  1.86 [ 1.43, 4.05]
+  UBtol         0.30  4.54 [ 2.74, 7.55]  1.00 [ 1.00, 1.00]  1.06 [ 0.86, 2.90]
+  UBtol         0.50  4.47 [ 2.66, 7.41]  0.99 [ 0.98, 1.00]  1.06 [ 0.86, 2.90]
+  UBtol         0.80  4.41 [ 2.59, 7.32]  0.98 [ 0.97, 0.99]  1.06 [ 0.86, 2.90]
+  UBtol         1.00  4.41 [ 2.55, 7.18]  0.96 [ 0.96, 0.97]  1.06 [ 0.86, 2.90]
+  UBtol         1.50  4.30 [ 2.33, 6.27]  0.91 [ 0.87, 0.94]  1.24 [ 0.86, 2.90]

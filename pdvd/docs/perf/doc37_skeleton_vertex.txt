@@ -1,0 +1,85 @@
+== PDVD: 118 dump(s), 135 cluster(s) with a fitted skeleton, 1026 vertex(es) of degree>=2 with terminals
+== SBND: 906 dump(s), 1317 cluster(s) with a fitted skeleton, 1706 vertex(es) of degree>=2 with terminals
+== UB: 35 dump(s), 175 cluster(s) with a fitted skeleton, 216 vertex(es) of degree>=2 with terminals
+== UBtol: 35 dump(s), 191 cluster(s) with a fitted skeleton, 260 vertex(es) of degree>=2 with terminals
+
+-- C1  terminals vs the FITTED skeleton (median [IQR] over clusters; cloud = matched control)
+  arm         nclus           terminal              cloud             EXCESS           term p90
+  PDVD          135  0.87 [ 0.73, 1.22]  1.38 [ 1.22, 1.74] -0.48 [-0.57,-0.36]  2.71 [ 1.63, 5.77]
+  SBND         1317  0.39 [ 0.32, 0.55]  0.68 [ 0.62, 0.81] -0.28 [-0.35,-0.20]  1.01 [ 0.65, 1.77]
+  UB            175  0.36 [ 0.23, 0.55]  0.57 [ 0.45, 0.71] -0.19 [-0.28,-0.08]  0.99 [ 0.68, 1.80]
+  UBtol         191  0.39 [ 0.27, 0.63]  0.57 [ 0.48, 0.72] -0.17 [-0.26,-0.05]  1.07 [ 0.72, 1.74]
+
+-- C1  does thinning move the survivors OFF the skeleton?  (median terminal->skeleton, cm)
+  arm                production              R=0.3              R=0.5              R=0.8              R=1.0              R=1.5
+  PDVD        0.87 [ 0.73, 1.22]  0.89 [ 0.73, 1.22]  0.89 [ 0.74, 1.23]  0.90 [ 0.76, 1.23]  0.93 [ 0.78, 1.26]  0.98 [ 0.80, 1.33]
+  SBND        0.39 [ 0.32, 0.55]  0.39 [ 0.32, 0.55]  0.40 [ 0.32, 0.57]  0.41 [ 0.32, 0.60]  0.41 [ 0.32, 0.60]  0.40 [ 0.31, 0.62]
+  UB          0.36 [ 0.23, 0.55]  0.40 [ 0.26, 0.60]  0.45 [ 0.26, 0.67]  0.47 [ 0.27, 0.78]  0.47 [ 0.27, 0.80]  0.44 [ 0.26, 0.83]
+  UBtol       0.39 [ 0.27, 0.63]  0.45 [ 0.29, 0.64]  0.47 [ 0.30, 0.70]  0.50 [ 0.31, 0.78]  0.52 [ 0.32, 0.79]  0.52 [ 0.29, 0.84]
+
+-- C2  the vertex region: core radius 1.0 cm, neighbourhood 3.0 cm
+  arm         nvtx         branches     core terminals     near terminals
+  PDVD        1026  2.0 [ 2.0, 2.0]   2.0 [  1.0,  3.0]   8.0 [  6.0, 11.0]
+  SBND        1706  2.0 [ 2.0, 3.0]   3.0 [  1.0,  4.0]   7.0 [  5.0, 10.0]
+  UB           216  3.0 [ 2.0, 3.0]   3.0 [  2.0,  5.0]  13.0 [  8.8, 17.0]
+  UBtol        260  3.0 [ 2.0, 3.0]   4.0 [  3.0,  6.0]  17.0 [ 11.0, 26.0]
+
+-- C2  BRANCHES EMPTIED inside 3.0 cm by thinning at R (total over all vertices; 'bound' is the order-free upper bound)
+  arm            R    bound     axis  shuffled  adversarial  of branches   exempt
+  PDVD        0.30       10       10        11            8         2213        0
+  PDVD        0.50       14       13        16           14         2213        0
+  PDVD        0.80       34       28        27           28         2213        0
+  PDVD        1.00       90       61        78           69         2213        0
+  PDVD        1.50      227      181       240          153         2213        0
+  SBND        0.30        0        0         0            0         3768        0
+  SBND        0.50       10       15        11           14         3768        0
+  SBND        0.80       40       52        68           64         3768        0
+  SBND        1.00       84       98       136           98         3768        0
+  SBND        1.50      264      278       435          283         3768        0
+  UB          0.30        1        1         0            0          553        0
+  UB          0.50        6        4         5            2          553        0
+  UB          0.80       12       12        15           12          553        0
+  UB          1.00       16       22        23           19          553        0
+  UB          1.50       57       42        67           45          553        0
+  UBtol       0.30        1        0         1            1          681        0
+  UBtol       0.50        4        2         2            3          681        0
+  UBtol       0.80       13       10        13           11          681        0
+  UBtol       1.00       21       14        20           16          681        0
+  UBtol       1.50       82       37        60           50          681        0
+
+-- C3  what the 3.0 cm vertex exemption costs (fraction of terminals kept, median over vertices' clusters)
+  arm            R              plain             exempt
+  PDVD        0.30  0.85 [ 0.83, 0.89]  0.88 [ 0.85, 0.91]
+  PDVD        0.50  0.81 [ 0.78, 0.85]  0.85 [ 0.82, 0.88]
+  PDVD        0.80  0.72 [ 0.69, 0.77]  0.78 [ 0.74, 0.82]
+  PDVD        1.00  0.58 [ 0.56, 0.62]  0.66 [ 0.63, 0.71]
+  PDVD        1.50  0.40 [ 0.38, 0.43]  0.52 [ 0.47, 0.55]
+  SBND        0.30  1.00 [ 1.00, 1.00]  1.00 [ 1.00, 1.00]
+  SBND        0.50  0.85 [ 0.79, 0.89]  0.93 [ 0.90, 0.97]
+  SBND        0.80  0.68 [ 0.62, 0.75]  0.87 [ 0.78, 0.93]
+  SBND        1.00  0.58 [ 0.52, 0.67]  0.82 [ 0.71, 0.91]
+  SBND        1.50  0.42 [ 0.36, 0.50]  0.73 [ 0.59, 0.86]
+  UB          0.30  0.82 [ 0.78, 0.85]  0.92 [ 0.88, 0.96]
+  UB          0.50  0.67 [ 0.62, 0.71]  0.85 [ 0.79, 0.90]
+  UB          0.80  0.53 [ 0.46, 0.56]  0.78 [ 0.70, 0.86]
+  UB          1.00  0.46 [ 0.38, 0.49]  0.75 [ 0.65, 0.84]
+  UB          1.50  0.32 [ 0.25, 0.37]  0.69 [ 0.58, 0.79]
+  UBtol       0.30  0.83 [ 0.79, 0.85]  0.93 [ 0.89, 0.97]
+  UBtol       0.50  0.68 [ 0.62, 0.71]  0.86 [ 0.80, 0.92]
+  UBtol       0.80  0.51 [ 0.44, 0.55]  0.79 [ 0.70, 0.88]
+  UBtol       1.00  0.43 [ 0.35, 0.48]  0.76 [ 0.66, 0.87]
+  UBtol       1.50  0.29 [ 0.24, 0.33]  0.69 [ 0.57, 0.83]
+
+-- C2  vertex-CORE terminals (within 1.0 cm of the vertex fit point) surviving, TOTAL over vertices
+  arm          nvtx   production    R=0.3 adv    R=0.3 exm    R=0.5 adv    R=0.5 exm    R=0.8 adv    R=0.8 exm    R=1.0 adv    R=1.0 exm    R=1.5 adv    R=1.5 exm
+  PDVD         1026         1779         1427         1779         1341         1779         1123         1779          820         1779          446         1779
+  SBND         1706         4358         4358         4358         3357         4358         2406         4358         1915         4358         1034         4358
+  UB            216          739          572          739          444          739          297          739          238          739          130          739
+  UBtol         260         1046          808         1046          611         1046          389         1046          298         1046          134         1046
+
+-- C2  vertices that lose EVERY vertex-core terminal (of those that had >=1), under all three orders
+  arm         had core     R=0.3 ax    R=0.3 rnd    R=0.3 adv     R=0.5 ax    R=0.5 rnd    R=0.5 adv     R=0.8 ax    R=0.8 rnd    R=0.8 adv     R=1.0 ax    R=1.0 rnd    R=1.0 adv     R=1.5 ax    R=1.5 rnd    R=1.5 adv
+  PDVD             802            7           10           18           12           14           25           24           26           44           59           82          128          192          222          367
+  SBND            1547            0            0            0            8           12           17           21           29           49           54           66          117          269          333          551
+  UB               195            0            0            0            0            2            2            1            4            4            3            7           11           35           33           72
+  UBtol            237            0            1            1            0            2            4            2            7           10            4           11           19           42           42          107
