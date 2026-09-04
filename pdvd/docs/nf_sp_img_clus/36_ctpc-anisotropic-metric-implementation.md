@@ -712,6 +712,38 @@ their arms finish and their commits land. Sequencing agreed between the two
 sessions; the pre-flip arm recipe afterwards is
 `-S ctpc_aniso_metric=false -A trackfitting_config=<the 0.35 file>`.
 
+### 11.1 Disclosed cost the count-based census hid: the tagger SET
+
+Added 2026-09-04 after the flip was pushed, prompted by doc 37 §15.5.
+`d36_tagger_set_diff.py` on the same 120 events, holding everything but the flip
+fixed (`d36off` → `d36on`: both pre-doc-37-thinning, same pin, same
+`dl_weights`), compares the *set* of tagged cluster ids rather than its size:
+
+| tagger | events whose tagged SET changes | mean symmetric difference | total tagged |
+|---|---|---|---|
+| **STM** | **117 / 120 (97.5 %)** | 3.23 clusters | 688 → 657 |
+| **TGM** | **33 / 120 (27.5 %)** | 0.30 clusters | 2185 → 2187 |
+
+The TGM row is the one worth pausing on: §4.2 reports the TGM count moving by
+**+2** across the manifest, which reads as nothing, while **more than a quarter
+of events change which clusters are tagged as through-going**. PDVD runs its
+per-bundle PR on the tagged set, not on its size, so a count-flat census is not
+evidence that downstream work is unchanged. Same trap as §4.2's log-line count,
+in the other direction.
+
+This is a disclosed cost of a flip that is already in production, not a reason
+to revert: the flip's coverage/support case (§10.3) is unchanged, and the
+gap-aware trim of doc 38 takes STM back past its pre-flip value (685 → 720 on
+its own epoch). It is recorded because 27.5 % of events changing a cosmic-tagger
+verdict is not something to ship silently.
+
+Independent corroboration: doc 37 §15.3 first attributed these same rates
+(TGM 27.5 %, STM 97.5 %) to `dl_weights`, from a 20-event pair that turned out
+to span this flip. That reading is retracted (doc 37 §15.5, a 20-event arm with
+every factor separated). The 120-event measurement above holds `dl_weights`
+fixed and reproduces the rates, which is what identifies the flip — not the
+vertex — as their cause.
+
 ## 12. Doc 38 — the gap-aware end trim (opened by this round)
 
 The retune §10.1 names, and the reason the exchange rate of §10.3 is not the

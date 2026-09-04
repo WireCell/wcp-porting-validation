@@ -195,12 +195,14 @@ on both axes" is a **three-change** comparison, not one. (ii) *Different
 cluster set*: 2176 clusters there against 2159 here, because the PR stage
 re-clusters slightly.
 (iii) `dl_weights` is the **same on every side of every comparison in this doc**
-(the SCN vertex is ON, the jsonnet default; no arm overrides it) — which matters
-because a PDVD PR A/B that changes it is confounded: doc 37 §15.3 measures the
-TGM set moving on 27.5 % of events and the STM set on 97.5 % with nothing else
-changed, against a 0 % / 5 % same-config floor. That is a pre-existing
-determinism defect (CLAUDE.md M4), it is not exercised here, and TGM is 0 in
-every arm of this manifest anyway.
+(the SCN vertex is ON, the jsonnet default; no arm overrides it), verified from
+the compiled config rather than from the invocation. An earlier version of this
+paragraph cited doc 37 §15.3 for a pointer-order determinism defect on the TGM
+path; **that claim has been retracted at its source** (doc 37 §15.5) — the pair
+it rested on spanned the doc-36 §11 flip as well as the vertex. The DL/SCN
+vertex is inert for both cosmic taggers, as the pipeline order always implied.
+What the retraction leaves standing is a measurement of the **flip**, not of the
+vertex: see doc 36 §11.1.
 
 Within the epoch, **every threshold takes unsupported trajectory from 12.7 % to
 6.2–8.5 % while coverage moves by at most 0.6 points and STM rises** — the first
