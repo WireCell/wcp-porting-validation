@@ -557,8 +557,10 @@ than 0.2 cm, so this is **not** PDVD-only in effect.
 > (§§10-12), so the evidence bar above is met. Two things also changed: a
 > per-plane radius cannot be delivered by a track-fitting parameter at all,
 > because `is_good_point` takes one scalar for three planes (§14), and writing
-> the knob as a **floor** — `max(radius, frac·pitch)` — *does* make it PDVD-only
-> in effect, contrary to the last sentence here.
+> the knob as a **floor** — `max(radius, frac·pitch)` — makes it inert at SBND
+> and uBooNE by construction, which is the useful half of the sentence here.
+> It does **not** make it PDVD-only: PDHD's 0.467 cm pitch puts half a pitch
+> above 0.2 cm, so PDHD changes too (§16 R1).
 
 **R2 — relax `allowed_bad` at the trajectory ends only.** `allowed_bad = 0`
 demands all three planes simultaneously; two-of-three is the convention
@@ -791,6 +793,13 @@ only inside the sensitive volume, that filter also keeps the walk inside the
 detector, which is what separates this measurement from the pop loop's *other*
 test, `DetectorVolumes::contained_by()`.
 
+The 1.5 cm threshold is not itself the argument, and it is wide enough (about
+two U/V pitches) to admit a point that is near *some* charge without being near
+a wire centre in any plane. What calibrates it is §12.1: on cluster 109 the
+charge-bearing extension it selects, 19.2 and 11.4 cm, reproduces the
+independently measured amputations of 15.45 and 11.00 cm from the probe arm.
+The filter is validated by that agreement, not by the choice of 1.5 cm.
+
 **PDVD** — 44 ends; charge continues a median **4.8 cm** past the fit tip
 (p90 18.1 cm, max 19.8 cm):
 
@@ -823,7 +832,7 @@ on grid phase, not on charge.
 |---|---|---|---|---|
 | 109, A / front | **19.2 cm** | 0.094 | 0.750 | 15.45 cm |
 | 109, B / back | **11.4 cm** | 0.000 | 0.474 | 11.00 cm |
-| **108, both ends** | **1.8 cm** | 0.000 | 0.000 / 0.333 | (reaches its terminals) |
+| **108, both ends** | **1.8 cm** | *n = 3* | *n = 3* | (reaches its terminals) |
 
 Cluster 109's B end is the cleanest single number in this document: charge
 continues 11.4 cm past where the fit stops, the fit was cut back by 11.00 cm,
@@ -836,6 +845,13 @@ one with no probe lines at all. It has **1.8 cm** of charge-bearing extension at
 either end — its fit stops where the charge stops. The same measurement, applied
 to the cluster that did not lose its ends, finds essentially nothing there to
 lose. That is the negative control this round owed, and it passes.
+
+Its pass-rate cells are deliberately left blank: 1.8 cm is **three sampled
+steps** per end, and a rate over three points is not a measurement. The
+load-bearing number for the control is the extension length, and only that.
+(For the record those three steps sit a median 7.6 mm from the nearest U cell,
+i.e. they are not near charge in the pitch coordinate at all — consistent with
+"the track ends here", not with "the test failed here".)
 
 ## 13. What round 2 does *not* establish
 
@@ -884,11 +900,23 @@ exposed:
 Against the pitches, as 2 × radius in units of one pitch — the ratio that
 crosses 1.0 is the tell:
 
-| radius | SBND / uBooNE (0.300 cm) | PDVD U/V (0.765 cm) | PDVD W (0.510 cm) |
-|---|---|---|---|
-| **0.2 cm** | **1.33** | **0.52** | **0.78** |
-| 0.3 cm | 2.00 | 0.78 | 1.18 |
-| 0.6 cm | 4.00 | 1.57 | 2.35 |
+| radius | SBND / uBooNE (0.300 cm) | **PDHD (0.467 / 0.480 cm)** | PDVD W (0.510 cm) | PDVD U/V (0.765 cm) |
+|---|---|---|---|---|
+| **0.2 cm** | **1.33** | **0.86 / 0.83** | **0.78** | **0.52** |
+| 0.3 cm | 2.00 | 1.29 / 1.25 | 1.18 | 0.78 |
+| 0.6 cm | 4.00 | 2.57 / 2.50 | 2.35 | 1.57 |
+
+(Pitches measured from the wires files themselves —
+`protodunehd-wires-larsoft-v1.json.bz2`,
+`protodunevd-wires-larsoft-v7-uvwfit.json.bz2`,
+`sbnd-wires-geometry-v0206.json.bz2` — as the perpendicular spacing of adjacent
+wire centre lines, not quoted from a config.)
+
+**PDHD is exposed too, and this document did not look for it.** At 0.86 of a
+pitch the strict test is not satisfiable-by-construction there either, only less
+severely than at PDVD's 0.52. Nothing here measures PDHD; the prediction is that
+the same amputation happens at PDHD at roughly half the PDVD amplitude, and a
+PDHD arm is owed before any fix ships (§16 R1).
 
 **The loose family is safe everywhere**; 0.6 cm spans more than a full pitch on
 every plane of both detectors, which is why the graph builders have never shown
@@ -918,7 +946,7 @@ writing the constant as a fraction of the pitch:
 | 2 | `BlobSampler::Stepped` steps in **wire** units | — | 2.55× fewer sample points for a physically similar blob | doc 31 round 8 |
 | 3 | (U, V) crossing ambiguity | 21.0 % at SBND | **83.6 %** | doc 28 |
 | 4 | `channels()` indexed as a wire lookup | — | silent on PDVD/PDHD, three sites | doc 31 rounds 3, 5 |
-| 5 | **`is_good_point(..., 0.2 cm, 0, 0)`** | 1.33 pitches | **0.52 pitch** | **this doc, confirmed §11** |
+| 5 | **`is_good_point(..., 0.2 cm, 0, 0)`** | 1.33 pitches | **0.52 pitch** (PDHD 0.86) | **this doc, confirmed §11** |
 
 The general rule this round adds: a distance constant that is compared against
 detector charge is only meaningful **relative to the sampling that produced the
@@ -968,19 +996,38 @@ TrackFitting params struct in the same idiom as `traj_cover_probe`
 **Recommended value 0.5, and the `max()` is load-bearing.** Half a pitch is
 0.3825 cm on PDVD U/V and 0.255 cm on W — the plateau in §11.1. On SBND and
 uBooNE half a pitch is **0.150 cm, which is smaller than the existing 0.2 cm**,
-so `max(radius, 0.5·pitch)` returns 0.2 cm unchanged. This is the one form of
-the fix that is genuinely PDVD-only in effect, and it is the deliberate answer
-to the standing warning that a pitch-expressed constant usually makes SBND
-*stricter*: expressed as a floor rather than a replacement, it cannot.
+so `max(radius, 0.5·pitch)` returns 0.2 cm unchanged there. Expressed as a
+floor rather than a replacement, the knob **cannot** make a fine-pitch detector
+stricter — which is the deliberate answer to the standing warning that a
+pitch-expressed constant usually does exactly that.
+
+**It is not, however, PDVD-only.** Half a pitch at PDHD is **0.233–0.240 cm,
+which is larger than 0.2 cm**, so a PDHD job with the knob on *would* change:
+
+| detector | pitch (cm) | 0.5 × pitch | knob-on effect |
+|---|---|---|---|
+| uBooNE, SBND | 0.300 | 0.150 | **inert** (floor below 0.2) |
+| **PDHD** | 0.467 / 0.480 | **0.233 / 0.240** | **changes** — mild loosening |
+| PDVD W | 0.510 | 0.255 | changes |
+| PDVD U/V | 0.765 | 0.3825 | changes — the case measured here |
+
+So the three detectors that bind this component split into "inert by
+construction" (uBooNE, SBND) and "must be gated" (PDHD, PDVD). An earlier draft
+of this section claimed PDVD-only and was wrong; the arithmetic above is the
+correction.
 
 Expected effect, from §11.1 and §12: interior pass rate 0.175 → 0.715; in the
 amputated region 0.064 → 0.522.
 
-**Gate owed.** Knob off ⇒ byte-identical on PDVD *and* SBND (the signature
-change touches a function on every detector's hot path, so both manifests, not
-just PDVD's). Knob on ⇒ PDVD arm showing the trajectories reaching their
-terminal extents, plus an SBND knob-on arm proving the `max()` really is inert
-there rather than only arguably so. `./build/clus/wcdoctest-clus`.
+**Gate owed.** Knob off ⇒ byte-identical on **every** detector that binds
+`is_good_point` — PDVD, PDHD, SBND, uBooNE — because the signature change
+touches a function on all of their hot paths. Knob on ⇒ a PDVD arm showing the
+trajectories reaching their terminal extents; an SBND knob-on arm proving the
+`max()` really is inert there rather than only arguably so; and, because §14's
+table puts PDHD at 0.86 of a pitch, **a PDHD knob-on arm as a first-class part
+of the grading, not an afterthought** — PDHD is the detector this document
+never measured and the one where the effect is real but unquantified.
+`./build/clus/wcdoctest-clus`.
 
 ### R2 — relax `allowed_bad` at the ends (measured, and rejected in favour of R1)
 
