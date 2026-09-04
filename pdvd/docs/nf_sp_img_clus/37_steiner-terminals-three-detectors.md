@@ -1212,21 +1212,43 @@ so this doc's central number reproduces outside this doc.
 **On STM the three are not distinguishable**: 79–98 % of events reshuffle under
 any of them. **TGM separates them cleanly: 27.5 % against 0 % and 0 %.**
 
-**Why — and the part of the proposed mechanism that survives checking.** That
-round suggested `TaggerCheckTGM` is "one of only two direct external callers" of
-the ctpc query the metric changed. That specific claim does not hold: **19 files
-under `clus/src/` call `get_closest_points` / `has_closest_point`, and
-`TaggerCheckSTM.cxx` is one of them.** What *is* verified, and what the contrast
-actually rests on:
+**Why: the two taggers differ by ROUTE.** Establishing that took two wrong turns,
+both recorded because the trap is easy to fall into.
 
-- `TaggerCheckTGM.cxx:1209-1211` issues three `get_closest_points` calls per
-  point (one per plane) — so the **metric has a direct path into TGM**, and into
-  STM as well. Both moving under the metric flip is expected.
-- This doc's knob changes **Steiner terminals**, which reach STM through the
-  Steiner-derived trajectory fit but have **no path into TGM's ctpc query** —
-  which is why the thinning sits at 0/120 while the metric sits at 27.5 %. That
-  second half is an inference from the call graph, not a measurement; the 0/120
-  is the measurement.
+There are **two unrelated functions named `get_closest_points`**, and a name-only
+grep cannot tell them apart:
+
+| | what it is | changed by doc 36? |
+|---|---|---|
+| `Grouping::get_closest_points(point, radius, apa, face, pind)`, and `has_closest_point` | the **2-D ctpc lattice** query | **yes** |
+| `Cluster::get_closest_points(const Cluster&)` (`Facade_Util.h:90`, `Facade_Cluster.h:353`) | a **3-D cluster-to-cluster** nearest-pair helper | no |
+
+An earlier version of this section said "19 files call it, and
+`TaggerCheckSTM.cxx` is one of them", offered as a refutation of that round's
+mechanism. **That was wrong** — the 19 is a name-only count spanning both
+functions, and `TaggerCheckSTM.cxx:3223` is
+`main_cluster.get_closest_points(*cluster)`, the **one-argument Cluster helper**.
+**STM does not query the ctpc at all.** (That round's own "one of only two direct
+external callers" was also wrong, in the other direction.)
+
+Signature-filtered — the 5-argument form, plus `has_closest_point` whose name *is*
+unique to `Grouping` — the changed query has **six** external callers:
+
+```
+clustering_ctpointcloud.cxx  6     PointTreeBuilding.cxx           3
+NeutrinoTaggerNuE.cxx        4     FiducialUtils.cxx               1
+TaggerCheckTGM.cxx           3     connect_graph_relaxed_strict.cxx 1   (has_closest_point)
+```
+
+So the mechanism holds, and the half this doc previously marked as inference is
+now a route with call sites behind it:
+
+- **TGM** issues three ctpc queries per test point, one per plane
+  (`TaggerCheckTGM.cxx:1209-1211`). Only a change to *the query* moves it — hence
+  27.5 % under the metric flip and **0 %** under both terminal-side changes.
+- **STM** consumes a **trajectory built from Steiner terminals** and trimmed by
+  `examine_end_ps_vec`. The thinning, the gap trim and the metric all perturb
+  that — hence 79 %, 89 % and 97 %, indistinguishable on that axis.
 
 Two consequences for anyone reading this doc:
 
