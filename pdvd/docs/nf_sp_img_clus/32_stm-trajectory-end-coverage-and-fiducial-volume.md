@@ -219,12 +219,22 @@ Reading those against the owner's two endpoints:
   whole track.
 - **Call 3 then removed 11.00 cm from that B end**, ending 9.95 cm from end B.
 
-So the endpoints were right and the fit threw them away. Of the three candidates
-carried into this round, **C2 (end amputation inside the fit) is confirmed** and
-C1 (endpoint selection) and C3 (`cluster_fc_check`'s round-2 boundary points
-never being written back, `Clustering_Util.cxx:301-319` vs `:260-263`) are
-excluded *for this cluster* — C3 remains a real latent defect, just not this
-symptom's cause.
+So **C2 (end amputation inside the fit) is confirmed**: the trajectory that
+reached both ends existed, and the fit threw it away.
+
+**But C1 is only half exonerated, and the doc should not be read as clearing
+it.** Call 1's incoming *front* was 3.26 cm from end A — that end was selected
+correctly. Its incoming *back* was 78.6 cm away at (211.83, 267.04, 287.66),
+off the track entirely: that is the rough path's other terminus, and it came
+from the endpoint pair. **So the selected pair was one good end plus one point
+on a branch**, and `examine_end_ps_vec`'s 78.40 cm walk-back is what rescued it.
+Endpoint selection is exonerated at the A end and is *not* exonerated at the B
+end; it simply is not what caused the missing coverage, because the amputation
+undid its rescue 11.00 cm later.
+
+C3 (`cluster_fc_check`'s round-2 boundary points never being written back,
+`Clustering_Util.cxx:301-319` vs `:260-263`) is not this symptom's cause either,
+but remains a real latent defect — see R5.
 
 ### 2.3 The amputation at population scale
 
@@ -238,6 +248,12 @@ symptom's cause.
 | 20 cm | 66 / 832 |
 | 50 cm | 34 / 832 |
 | largest single move | **489.1 cm** |
+
+**These are per-fit-call events, not per-cluster, and they are concentrated.**
+Five clusters (39, 40, 55, 86, 87) carry **735 of the 832** calls — the neutrino
+stage re-fits some segments hundreds of times — so the table above describes how
+often the trimmer acts, not how many clusters it damages. The per-cluster view
+is the §1.1 shortfall table.
 
 **Caveat, and it is not a small one:** as cluster 109's own call 1 shows, a large
 move can be a path being correctly walked back onto the track after wandering
@@ -595,8 +611,11 @@ not a code change.
 1. The end-coverage defect has **one confirmed site**: `examine_end_ps_vec`
    (`TrackFitting.cxx:2275`), reached from `do_single_tracking`. Round 2 does not
    need to re-search the chain.
-2. The endpoint selection (`get_two_boundary_wcps`) is **exonerated for cluster
-   109** — it delivered both ends. It is not exonerated in general.
+2. The endpoint selection (`get_two_boundary_wcps`) is **exonerated at one end
+   only**: on cluster 109 it delivered end A to within 3.3 cm but put the other
+   terminus 78.6 cm away on a branch, which the end walk then rescued. It is not
+   this symptom's cause, and it is not cleared — a later round must still check
+   it.
 3. `DetectorVolumes`'s holed union is load-bearing in *two* places at once — the
    FV that `FiducialUtils` serves and the amputation walk's containment test —
    which makes R3/R4 one decision, not two.
