@@ -759,16 +759,31 @@ taggers depend on the ctpc by different routes:
 `Grouping::get_closest_points(point, radius, apa, face, pind)` — the 2-D ctpc
 query — together with `has_closest_point`. The other is
 `Cluster::get_closest_points(const Cluster&)` (and the `Facade_Util.h:90`
-template), a 3-D cluster-to-cluster nearest-pair helper that this round never
-touched; it accounts for 67 of the call sites under `clus/src`, including
-`TaggerCheckSTM.cxx:3223`. A name-only grep therefore reports ~19 files calling
-"it" and makes STM look like a direct caller. Filtered by signature, the changed
-query has direct call sites in **five** files — `clustering_ctpointcloud.cxx`
-(6 calls), `NeutrinoTaggerNuE.cxx` (4), `PointTreeBuilding.cxx` (3),
-`TaggerCheckTGM.cxx` (3), `FiducialUtils.cxx` (1) — of which three run in the PR
-chain. **This corrects §1.2 and §2 of this doc, which said "the two direct
-external callers"**: `FiducialUtils` was missed, and the clustering-stage pair
-is out of scope only because the clustering job does not carry the knob (§11).
+template), a 3-D cluster-to-cluster nearest-pair helper this round never
+touched; it has 46 live calls across 15 files, including `TaggerCheckSTM.cxx`.
+A name-only grep cannot separate them, and also counts commented-out code and
+prose. Three counts were published for this set before anyone stripped comments
+— 19, 6 and 5 — for a set whose size is **4**.
+
+`d36_ctpc_caller_census.py` strips `/* */`, `//` and string literals, then
+classifies each call by argument count (`has_closest_point` needs no
+classification: the name is unique to `Grouping`). Live external callers of the
+changed query, 4 files and 10 calls:
+
+| file | calls | stage |
+|---|---|---|
+| `TaggerCheckTGM.cxx` (`:1209-1211`) | 3 | PR chain |
+| `NeutrinoTaggerNuE.cxx` (`:2943, 2949, 2955`) | 3 | PR chain |
+| `clustering_ctpointcloud.cxx` (`:92-94`) | 3 | clustering (a `std::cout` debug block) |
+| `FiducialUtils.cxx` (`:205`) | 1 | PR chain |
+
+and `has_closest_point` has **no** external callers at all — only the three
+`Grouping` wrappers inside `Facade_Grouping.cxx`. **This corrects §1.2 and §2 of
+this doc, which said "the two direct external callers"**: `FiducialUtils` was
+missed. `PointTreeBuilding.cxx` and the second block of
+`clustering_ctpointcloud.cxx` appear in a name-only grep but are commented out;
+`connect_graph_relaxed_strict.cxx` matches only in a comment and, at
+`:1921`, calls the cluster-pair form.
 
 The three-row framing is owed to the doc-37 session, which measured the same
 contrast on 20 events and corrected its own earlier reading twice to get there;
