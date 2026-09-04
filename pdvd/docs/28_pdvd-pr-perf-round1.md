@@ -27,6 +27,14 @@ uBooNE 35/35). Busy set 1135 → 660 node core-s (1.72×), 039252/5 2.37×, the 
 6935 → 4742 (1.46×). The rest of the gap to SBND is the count and the length of PDVD's
 candidates (§21); the busy-event gate that fits is a scope knob for the owner (§23).
 
+**Owner flip 2026-09-04 (§27).** *"Right now PDVD does not need the dual chain process,
+but for the single chain, I think we can use the MicroBooNE DL vertex as the main result."*
+`dl_vtx_dual_chain` off and `dl_weights` = the uBooNE SCN net in `pdvd/wct-pr-perevt.jsonnet`;
+the runner preloads libpython for it. Engages on 342 of 579 candidates over 120 events (0
+failures), costs ~1.5 core-s and 0.4 GB per event (arm 4742 → 4922 core-s). NOT
+bit-identical, a deliberate production change; PDVD identity gates now run
+`PDVD_PR_TLA="-S dl_weights=''"` (M4).
+
 **Scope.** The PR job = everything `run_pr_evt.sh` runs after Q/L matching
 (`pdvd/wct-pr-perevt.jsonnet` → `cfg/pgrapher/experiment/protodunevd/pr.jsonnet`).
 The three PDVD scope choices that set the *count* of work — the readout-wide beam window,
@@ -792,6 +800,71 @@ end — but the peak on the events where the OFF pass held the largest fit is lo
 4. `detect_proton`'s fallback (§20) is instrumented; if the DEBUG line ever fires on a gated
    event, that event needs a look.
 
+## 27. Owner flip 2026-09-04: single chain, the uBooNE DL vertex is PDVD's main-vertex result
+
+Owner, on §22's question: *"Right now PDVD does not need the dual chain process, but for
+the single chain, I think we can use the MicroBooNE DL vertex as the main result."*
+Two TLA values in `pdvd/wct-pr-perevt.jsonnet` change, dated in place:
+
+| key | was | now |
+|---|---|---|
+| `dl_weights` | `''` (doc 25 §4 dropped it: no neutrino vertex to find) | `'uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth'` — the uBooNE-trained SCN net, as SBND production |
+| `dl_vtx_dual_chain` | `true` (copied from SBND production; its OFF pass never read, §21) | `false` — key omitted; `dual_chain_mode` / `transfer_max` inert |
+
+The DL path is the SBND one, untouched: `determine_overall_main_vertex_DL` with the
+composite re-rank (`dl_vtx_rerank`, `min_accept_score` 10, `top_k` 5, the values PDVD's TLA
+file already carried) and `dQdx_scale` 0.1 / `dQdx_offset` −1000 from `pr.jsonnet`.
+
+**Runner.** The SCN net runs in an embedded interpreter that needs `libpython` loaded
+`RTLD_GLOBAL`, or the import fails and the tagger falls back to the geometric vertex after
+one WARN. `run_pr_evt.sh` now preloads it next to tcmalloc (`WCT_PYLIB=off` drops it) and
+pins `OMP_NUM_THREADS=1 MKL_NUM_THREADS=1` so torch does not start a thread per core in
+every batch job; `profile_pr.sh` the same. Checked live: every arm process maps
+`libpython3.11.so.1.0` and the pinned `lib_r3post` libraries, 7 threads.
+
+**Compiled-config proof** (runner compile-only, 039349/6, tag `d28dlcfg`):
+`TaggerCheckNeutrino.dl_weights = uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth`,
+`dl_vtx_dual_chain` absent (0 occurrences in the JSON), `dl_vtx_rerank true`,
+`min_accept 10`, `top_k 5`, `dQdx_scale 0.1`.
+
+**Engagement proof** (`stm/perf/dl_engage.py d28r3fp d28dlfp`: per candidate, matched by
+`nu_index` and main cluster id, the main-vertex distance between the DL-off arm `d28r3fp`
+and the DL-on arm `d28dlfp`, same binary `lib_r3post`): 119 events with both dumps, 579 candidates matched; **342 main vertices moved** (median 94 cm, p90 289 cm, max 719 cm on 039349/44's 7 m main), 230 unchanged, 7 unmatched (a candidate's main cluster id changed). `"DL vertex failed"`
+lines: 0 in 120 logs. The moves are what a cosmic sample should show — on a through-going
+muon the net and the geometric rule pick different ends of the track (399 cm and 146 cm on
+039349/6's two long mains), and on the short ones they agree.
+
+**Cost.** The net's first call loads the model (~1 s per job); every later candidate's
+`overall main vertex` step is milliseconds. Busy set, `d28r3sp` (DL off) vs `d28dls` (DL on),
+sequential:
+
+| event | DL off core-s | DL on core-s | TaggerCheckNeutrino s | peak RSS GB |
+|---|---|---|---|---|
+| 039252/5 | 183.2 | 179.0 | 86.6 → 83.9 | 3.21 → 3.60 |
+| 039253/11 | 148.8 | 140.1 | 81.8 → 75.5 | 3.19 → 3.62 |
+| 039252/15 | 97.0 | 97.1 | 46.0 → 63.9 | 2.78 → 3.20 |
+| 039349/7 | 68.6 | 62.5 | 29.4 → 26.4 | 1.91 → 2.33 |
+| 039252/8 | 88.1 | 85.4 | 6.8 → 7.3 | 2.45 → 2.80 |
+| 039253/15 | 50.7 | 58.7 | 20.0 → 20.9 | 1.74 → 2.32 |
+| 039349/6 (median) | 23.9 | 22.1 | 11.6 → 11.0 | 1.13 → 1.54 |
+| **sum** | **660.3** | **644.8** | | |
+
+(TSVs `docs/perf/pr_d28dls_*.tsv`, `pr_d28dlfp_*.tsv`; per-event differences are the
+PR chain taking a different vertex, not the net.)
+
+120-event arm: node core-s 4742 → 4922, TaggerCheckNeutrino 1721 → 1854 s,
+peak RSS max 3.26 → 3.69 GB (the interpreter and the net, ~0.4 (median +0.42) GB per job).
+
+**Gates from here on.** The DL vertex is not bit-stable (CLAUDE.md M4), so every PDVD
+identity gate runs `PDVD_PR_TLA="-S dl_weights=''"` on both arms, as SBND's do; the flip
+itself is recorded, not gated: `stm/gates/r28_d28dlfp_vs_d28r3fp.txt` lists the archives
+it moves (327 of 480 differ: the Bee zip, calib dump and `tracking-pr.root` of 109 events; 11 events and all 120 `tracking-stm.root` identical). The STM tree cannot move (the STM stage runs before the
+neutrino stage); the Bee zips, calib dumps and `tracking-pr.root` of every event with a
+moved vertex do.
+
+**NOT bit-identical — a deliberate production change** (owner, 2026-09-04). Revert with
+`-S dl_weights=''` (`PDVD_PR_TLA`) or by editing the two lines back.
+
 ## Milestone log
 
 - 2026-09-03 — arm profile, three CPU profiles, one heap profile, SBND comparison;
@@ -802,3 +875,6 @@ end — but the peak on the events where the OFF pass held the largest fit is lo
 - 2026-09-03 (round 3) — STM eval fallback fixed (`8c577c4b`); neutrino-stage census by
   candidate length, five CPU profiles; the unconsumed dual-chain OFF pass skipped
   (`a94ce32e`); gates §24, timing §25.
+- 2026-09-04 — owner flip: dual chain off, uBooNE DL vertex on for PDVD (`wct-pr-perevt.jsonnet`,
+  `run_pr_evt.sh` libpython preload); compiled-config proof, engagement census
+  (`stm/perf/dl_engage.py`), flip record `stm/gates/r28_d28dlfp_vs_d28r3fp.txt`, cost §27.

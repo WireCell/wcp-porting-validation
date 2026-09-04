@@ -25,6 +25,14 @@ CFG_JSON="$WORKDIR/.wct-pr_${TAG}.json"
 ( cd "$PDVD_DIR" && env PDVD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh ${PR_ARGS:--stm-fit} -s "$TAG" "$RUN" "$IDX" )
 [ -s "$CFG_JSON" ] || { echo "no compiled cfg at $CFG_JSON" >&2; exit 1; }
 PROFLIB=${PROFLIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4}
+# doc pdvd/28 sec 27: the DL vertex is PDVD production; its SCN import needs
+# libpython preloaded (as run_pr_evt.sh does) or the profile runs the
+# geometric fallback silently.  WCT_PYLIB=off drops it.
+if [ "${WCT_PYLIB:-on}" != "off" ]; then
+    PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
+    PROFLIB="$PROFLIB:$PYLIB"
+fi
+export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1} MKL_NUM_THREADS=${MKL_NUM_THREADS:-1}
 LOG="$WORKDIR/wct_pr_${RUN_PADDED}_${IDX}.log"
 cd "$WORKDIR"
 if [ -n "$HEAPOUT" ]; then

@@ -971,7 +971,13 @@ function(
     // Without it the SCN module import fails and TaggerCheckNeutrino silently
     // falls back to the geometric vertex after one WARN line -- always
     //     grep -c "DL vertex failed" <log>   # expect 0
-    dl_weights     = '',   // PDVD: no DL/SCN vertex (doc 25 sec 4); SBND 'uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth'
+    // PDVD 2026-09-04, owner flip (doc pdvd/28 sec 27): "for the single chain,
+    // I think we can use the MicroBooNE DL vertex as the main result".  The
+    // uBooNE-trained SCN net is the main-vertex result on PDVD from this date;
+    // doc 25 sec 4 had dropped it ('').  run_pr_evt.sh preloads libpython for
+    // it (WCT_PYLIB=off drops the preload).  Identity gates (CLAUDE.md M4: the
+    // DL vertex is not bit-stable) run PDVD_PR_TLA="-S dl_weights=''".
+    dl_weights     = 'uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth',
     // DL re-rank operating point (TaggerCheckNeutrino), threaded as TLAs for
     // A/B runs (doc pr/79).  min_accept 4.0 -> 10.0 adopted 2026-08-15
     // (owner, doc pr/79: +36/473 on the hand-scan live A/B); top_k=5 kept —
@@ -2836,7 +2842,12 @@ function(
     // is also the retrain-era off switch the owner asked for.
     // mode/transfer_max are pinned explicitly so the operating point is visible
     // in the compiled config rather than inherited from a C++ default.
-    dl_vtx_dual_chain = true,
+    // PDVD 2026-09-04, owner: "Right now PDVD does not need the dual chain
+    // process" -- OFF (key omitted).  It was copied from SBND production and,
+    // with dl_weights '' until today, its OFF pass ran on every candidate and
+    // was never read (doc pdvd/28 sec 21-22, 33% of the PR arm).  The mode /
+    // transfer_max values below are inert while this is false.
+    dl_vtx_dual_chain = false,
     dual_chain_mode = 'snap',
     dual_chain_transfer = true,
     dual_chain_transfer_max = 2.0,
@@ -2893,6 +2904,16 @@ function(
     sgp_min_edge = null,
     sgp_sample_step = null,
     sgp_point_radius = null,
+    // doc pdvd/32 round 3 -- per-plane pitch floor for the PR pattern code's
+    // strict good-point tests (the 18 is_good_point(..., 0.2/0.3 cm, 0, 0)
+    // sites in NeutrinoStructureExaminer / NeutrinoOtherSegments /
+    // NeutrinoShowerClustering), as a fraction of the wire pitch.  Applied as
+    // max(radius, frac*pitch) per plane, so it can only loosen.  C++ default
+    // 0; key suppressed when null => byte-identical config.  0.6 is the
+    // largest round value that leaves SBND/uBooNE untouched.  A value > 0
+    // CHANGES OUTPUT: this is the PR half of the doc-32 fix and, unlike the
+    // TrackFitting half, it has no measurement of its own yet.
+    good_point_pitch_frac = null,
     // doc pr/51 round 6 -- weak-charge deficit term on the same gap flavor
     // (residuals 18259-131357 3-track V, 18255-506746 branch turn: chords
     // that are image-supported but charge-poor, invisible to the
@@ -3574,6 +3595,7 @@ function(
         [if sgp_min_edge != null then 'sgp_min_edge']: sgp_min_edge,
         [if sgp_sample_step != null then 'sgp_sample_step']: sgp_sample_step,
         [if sgp_point_radius != null then 'sgp_point_radius']: sgp_point_radius,
+        [if good_point_pitch_frac != null then 'good_point_pitch_frac']: good_point_pitch_frac,
         [if sgp_weak_scale != null then 'sgp_weak_scale']: sgp_weak_scale,
         [if sgp_weak_qref != null then 'sgp_weak_qref']: sgp_weak_qref,
         [if sgp_edge_probe then 'sgp_edge_probe']: true,

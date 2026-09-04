@@ -53,11 +53,23 @@ set -o pipefail
 PDVD_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH="$WCT_BASE/toolkit/cfg:$WCT_BASE/wire-cell-data${WIRECELL_PATH:+:$WIRECELL_PATH}"
+_PRELOADS=""
 if [ "${WCT_TCMALLOC:-on}" != "off" ] && [ -f /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4 ]; then
-    WC_PRELOAD="LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4"
-else
-    WC_PRELOAD=""
+    _PRELOADS="/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4"
 fi
+# doc pdvd/28 sec 27 (2026-09-04): the DL (SCN) vertex is PDVD production now.
+# Its embedded interpreter needs libpython loaded RTLD_GLOBAL or the SCN import
+# fails and TaggerCheckNeutrino silently falls back to the geometric vertex
+# after one WARN ("DL vertex failed") -- same idiom as sbnd_xin/run_pr_chain_batch.sh.
+# WCT_PYLIB=off drops it (only sensible with dl_weights='').
+if [ "${WCT_PYLIB:-on}" != "off" ]; then
+    PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
+    [ -r "$PYLIB" ] || { echo "ERROR: libpython not found: $PYLIB (WCT_PYLIB=off to skip)" >&2; exit 1; }
+    _PRELOADS="${_PRELOADS:+$_PRELOADS:}$PYLIB"
+fi
+WC_PRELOAD="${_PRELOADS:+LD_PRELOAD=$_PRELOADS}"
+# torch inside the SCN call would otherwise spawn a thread per core in every job
+export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1} MKL_NUM_THREADS=${MKL_NUM_THREADS:-1}
 . "$PDVD_DIR/_runlib.sh"
 
 SEL_TAG=""
