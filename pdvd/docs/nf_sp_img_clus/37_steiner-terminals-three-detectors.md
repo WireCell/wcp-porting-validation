@@ -1196,6 +1196,38 @@ cannot have reached either: both pins predate it and neither contains its symbol
 person reconstructing this window should not assume the two config commits were
 the only things moving in it.
 
+**Three changes on one instrument, one change per row** — the doc-36/38 round's
+120-event version (`7ee09f70`), which also reproduces this doc's own knob result
+on its arms:
+
+| change | arms | STM set differs | TGM set differs |
+|---|---|---|---|
+| the ctpc metric flip | `d36off` → `d36on` | 117/120 (97.5 %), mean 3.23 | **33/120 (27.5 %)** |
+| **this doc's thinning** | `d36on` → `d38off` | **95/120 (79.2 %), mean 1.78** | **0/120** |
+| that round's gap trim @20 | `d38off` → `d38h20` | 107/120 (89.2 %), mean 2.01 | **0/120** |
+
+Its middle row is exactly §15.1's 95/120 and 1.78, measured on different arms —
+so this doc's central number reproduces outside this doc.
+
+**On STM the three are not distinguishable**: 79–98 % of events reshuffle under
+any of them. **TGM separates them cleanly: 27.5 % against 0 % and 0 %.**
+
+**Why — and the part of the proposed mechanism that survives checking.** That
+round suggested `TaggerCheckTGM` is "one of only two direct external callers" of
+the ctpc query the metric changed. That specific claim does not hold: **19 files
+under `clus/src/` call `get_closest_points` / `has_closest_point`, and
+`TaggerCheckSTM.cxx` is one of them.** What *is* verified, and what the contrast
+actually rests on:
+
+- `TaggerCheckTGM.cxx:1209-1211` issues three `get_closest_points` calls per
+  point (one per plane) — so the **metric has a direct path into TGM**, and into
+  STM as well. Both moving under the metric flip is expected.
+- This doc's knob changes **Steiner terminals**, which reach STM through the
+  Steiner-derived trajectory fit but have **no path into TGM's ctpc query** —
+  which is why the thinning sits at 0/120 while the metric sits at 27.5 %. That
+  second half is an inference from the call graph, not a measurement; the 0/120
+  is the measurement.
+
 Two consequences for anyone reading this doc:
 
 - **The cross-epoch caveat in §15.2 is not boilerplate.** Two arm sets taken an
