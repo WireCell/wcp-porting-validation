@@ -51,7 +51,16 @@ def corridor(P, end):
 
 
 def largest_gap(t_sorted, length):
-    """Largest run along the axis with no point, in cm."""
+    """Largest run along the axis with no point, in cm.
+
+    CAVEAT (doc 31 round 7 section 11.7): `corridor` above clips the first and
+    last 2 % of the segment, so this gap can never fall below 2 % of `length` --
+    2.2 cm on the 111.5 cm half, which is why every round-7 threshold arm
+    reported 2.8 cm here regardless of the threshold.  For COVERAGE use
+    steiner_terminal_attribution.py, which does not clip and which reproduces
+    section 10.5's 1.8 cm.  This script's trustworthy outputs are section 1's
+    per-blob census and section 2's per-cm point/terminal densities.
+    """
     if len(t_sorted) == 0:
         return length
     edges = np.concatenate(([0.0], np.sort(t_sorted), [1.0]))

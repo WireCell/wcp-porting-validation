@@ -26,7 +26,14 @@ adjudicated in the fix's favour), `ImproveCluster_2`'s terminal threshold is
 synced to `CreateSteinerGraph`'s, and `traj_degenerate_wcpts_fallback` is
 retired. Its one negative verdict — the terminals are now too dense — is
 root-caused in §10.3 and becomes round 7.
-Gates in §5.3, §8, §9.2 and §10.5; `./build/clus/wcdoctest-clus` **277/277**.
+**Round 7 (§11) runs event 298595 on the shipped stack and answers the density
+question against SBND**, again with no behaviour change (two counters on the
+env-gated dump line): the terminals are ~1.5× denser than SBND's, but the 500 e
+threshold is *not* the cause — it has the same point-level selectivity as SBND's
+4000 e, and forcing PDVD to 4000 overshoots to sparser-than-SBND while widening
+the control half's coverage gap. The residual is blob granularity.
+Gates in §5.3, §8, §9.2, §10.5 and §11.7; `./build/clus/wcdoctest-clus`
+**277/277**.
 
 ---
 
@@ -324,6 +331,42 @@ cmp work/039349_14_d31r5both/calib-pr-evt19689.json \
 #   WIRECELL_PATH=$G/headcfg/cfg:$WCDATA   wcsonnet ... -S wrapped_channel_charge=true -S retile_wrapped_channel_activity=true wct-pr-perevt-head.jsonnet
 #   cmp                              # byte-identical, 279974 B
 # SBND 253993 B and uBooNE 255717 B are gated the same way (shared common/clus.jsonnet).
+
+# ---- Round 7 (section 11) ----
+# Event 298595 on the shipped stack, no TLA at all.
+W=work/039252_2_d31r6e2e; mkdir -p $W
+ln -f work/039252_2_d27fresh/clusters-apa-anode*-ms-*.tar.gz $W/
+ln -f work/039252_2_d27fresh/img-provenance.txt $W/
+env LD_LIBRARY_PATH=/home/xqian/tmp/d31r6lib PDVD_KEEP_CFG=1 PDVD_LIGHT_SUFFIX=_keep \
+    ./run_clus_evt.sh -s d31r6e2e -save-pctree -calib 39252 2
+env LD_LIBRARY_PATH=/home/xqian/tmp/d31r6lib PDVD_KEEP_CFG=1 WCT_STEINER_PHASE_DUMP=1 \
+    ./run_pr_evt.sh -s d31r6e2e -stm-fit 39252 2
+# The Bee set the owner scans: event 0 = the round-4 knob-ON arm, event 1 = this one.
+python3 docs/nf_sp_img_clus/scripts/build_bee_set_prod.py /home/xqian/tmp/beeD D_prod_039252_2 \
+    039252_2_d31r4on:calib-pr-evt298595.json 039252_2_d31r6e2e:calib-pr-evt298595.json
+./upload-to-bee.sh /home/xqian/tmp/beeD/D_prod_039252_2.zip   # ee3782a1-...
+
+# Section 11.3's threshold sweep: PR-only, single variable, on the SHIPPED pctree.
+for T in 500 1000 1500 2000 4000; do
+  W=work/039349_14_d31r7t$T; mkdir -p $W
+  ln -f work/039349_14_d31r6e2e/pctree-evt19689.tar.gz work/039349_14_d31r6e2e/pctree-evt19689.tlas $W/
+  PDVD_KEEP_CFG=1 PDVD_PR_COMPILE_ONLY=1 PDVD_PR_TLA="-S steiner_terminal_charge=$T" \
+      ./run_pr_evt.sh -s d31r7t$T 39349 14
+  (cd $W && env LD_LIBRARY_PATH=/home/xqian/tmp/d31r7lib GOGC=off WCT_STEINER_PHASE_DUMP=1 \
+      wire-cell -l stderr -l "wct_pr_dump.log:trace" -L clus:trace -c .wct-pr_d31r7t$T.json)
+  python3 docs/nf_sp_img_clus/scripts/steiner_terminal_attribution.py $W   # coverage, UNCLIPPED
+done
+# Section 11.2's cross-detector density (identical selection both detectors).
+python3 docs/nf_sp_img_clus/scripts/steiner_density_xdet.py \
+    "PDVD 500:work/039349_14_d31r7t500/calib-pr-evt19689.json" \
+    "PDVD 4000:work/039349_14_d31r7t4000/calib-pr-evt19689.json" \
+    "SBND 4000:../sbnd/sbnd_xin/work-mcp2k-d97fvpr2/pr_evt*/calib-pr-evt*.json"
+# Section 11.3's selectivity: SBND run with the SAME binary, fresh work root (M13).
+#   R=$SBND/work-d31r7probe2; mkdir -p $R
+#   for e in 2 12 14 31 41; do ln -sfn $SBND/work-dbg25a-d97prodchk/ql_evt$e $R/ql_evt$e; done
+#   for i in 1 4 5 7 9; do env SBND_WORK_ROOT=$R LD_LIBRARY_PATH=/home/xqian/tmp/d31r7lib \
+#       WCT_STEINER_PHASE_DUMP=1 ./run_pr_evt.sh mc -nu $i; done
+# then aggregate the npt / ncand_pt fields of the steiner_p1_blobs lines.
 
 # Section 7 -- aperture feasibility, PDVD and the SBND control.
 python3 docs/nf_sp_img_clus/scripts/steiner_aperture_feasibility.py \
@@ -1828,7 +1871,236 @@ manifest, and it inherits the same validation debt as the two flips.
 
 ---
 
-## 11. Scope of each round, and what round 7 is
+## 11. Round 7: event 298595 on the shipped stack, and "is the density the 500 e?"
+
+The owner asked two things after round 6 shipped: run event **298595** on the
+current code and hand back a Bee link, and — comparing with SBND — **is the
+Steiner terminal density too high, and is that because PDVD runs 500 e where
+SBND runs 4000 e?**
+
+Short answers, both measured below. **The density is higher than SBND's — about
+1.5× — but the 500 e is not the reason.** At their respective production
+thresholds the two detectors' charge cut passes *the same fraction of sampled
+points* (PDVD 18.0 % at 500 e, SBND 16.6 % at 4000 e) and produces a candidate in
+the same fraction of blobs (42.0 % vs 39.5 %): 500 e is the correctly-scaled PDVD
+analogue of SBND's 4000 e, not a loosening of it. Forcing PDVD to 4000 e
+*overshoots* — it lands at one terminal per 1.00 cm, **sparser** than SBND's
+0.76 cm — while halving the terminals everywhere and widening the control half's
+coverage gap from 59.5 to 85.5 cm. What is left is blob granularity: PDVD's
+blobs carry 3.60 sampled points against SBND's 10.33, so a track crosses roughly
+3× more blobs, and §10.3's per-blob floor turns each of them into a terminal.
+
+### 11.1 What was run
+
+| arm | what | tag |
+|---|---|---|
+| 039252/2 (**298595**) | shipped stack end to end, **no TLA**: clustering `-save-pctree` then PR `-stm-fit` | `work/039252_2_d31r6e2e` |
+| 039349/14 | PR-only threshold sweep on the shipped production point cloud, single variable `steiner_terminal_charge` ∈ {500, 1000, 1500, 2000, 4000} | `work/039349_14_d31r7t{500,1000,1500,2000,4k}` |
+| 039349/14 | the 500 / 4000 pair re-run with the extended probe (below) | `work/039349_14_d31r7q{500,4000}` |
+| SBND, 5 MC events | the same binary, `-nu`, phase dump on, from the doc-97 production-check pctrees | `sbnd_xin/work-d31r7probe2` |
+| SBND, 906 events | read-only, the doc-97 `sep_fv_point` production arm's calib dumps | `sbnd_xin/work-mcp2k-d97fvpr2` |
+
+Both 298595 stages returned rc=0 and the compiled configs carry all three
+round-6 changes with no TLA at all: `wrapped_channel_charge` on 16 `BlobSampler`
+nodes at clustering, `wrapped_channel_activity` on `ImproveCluster_2` and
+`terminal_charge_threshold=500` (numeric) on `ImproveCluster_2` and both
+`CreateSteinerGraph` nodes at PR.
+
+**Bee set (owner scan):** `https://www.phy.bnl.gov/twister/bee/set/ee3782a1-2bab-4e6f-ae72-b564c95b6396/event/list/`
+— event **0** is `d31r4on` (round 3's knob only: the arm whose set-C image the
+owner judged "the 109 could be a STM"), event **1** is the shipped stack. Both
+carry `steiner-global` and `steinerterm-global` alongside the usual layers.
+Content-verified after upload by fetching the layers back: 140650 / 29416 points
+on event 0 and 156511 / 34222 on event 1, run 39252 event 298595 on both.
+
+### 11.2 Is it denser than SBND? Yes, about 1.5×
+
+`steiner_density_xdet.py` applies one selection to both detectors — clusters
+with ≥ 200 steiner points, PCA linearity λ1/Σλ > 0.95 and 5th–95th-percentile
+extent L > 50 cm — and reports median [inter-quartile] over the survivors.
+Points/cm is reported next to terminals/cm so the sampling normalisation is
+visible.
+
+| arm | n | points/cm | terminals/cm | terminals/point | 1 terminal per |
+|---|---|---|---|---|---|
+| **SBND 4000 e** (`work-mcp2k-d97fvpr2`, 906 events) | 610 | 6.66 [5.52, 7.94] | **1.32** [1.03, 1.59] | 0.20 [0.18, 0.21] | **0.76 cm** |
+| PDVD 500 e, 039349/14 (`d31r7t500`) | 22 | 7.02 [6.48, 7.69] | **1.99** [1.85, 2.22] | 0.29 [0.25, 0.31] | **0.50 cm** |
+| PDVD 500 e, 298595 (`039252_2_d31r6e2e`) | 32 | 7.66 [7.09, 8.60] | **2.09** [1.91, 2.47] | 0.27 [0.23, 0.29] | **0.48 cm** |
+
+PDVD sits outside SBND's inter-quartile band on both events, by a factor 1.5 in
+terminals/cm — while its steiner point density is the *same* (7.0–7.7 vs 6.7 per
+cm). So this is not a sampling-density artefact: PDVD marks a larger share of an
+equally dense cloud.
+
+**The two sides are not equally determined.** SBND's row is 610 clusters drawn
+from 906 events, so its inter-quartile range is a population spread. PDVD's rows
+are *one event each*, so theirs is within-event spread between cosmic tracks of a
+single readout — a second PDVD event could move the median. What survives that
+asymmetry is the size of the gap: the two IQRs do not overlap on either PDVD
+event, and the two PDVD events agree with each other to 4 %.
+
+Two confounds were controlled rather than assumed:
+
+- **Topology.** PDVD's arms are cosmics, SBND's are neutrino MC. Restricting
+  SBND to **non-main** clusters (cosmic-like, n = 69) gives 1.31 terminals/cm and
+  1 per 0.76 cm — indistinguishable from the full set. The comparison is not
+  driven by object type.
+- **Drift alignment.** For a drift-parallel track the blob sequence is set by
+  time slicing, not by wire pitch, and 20 of PDVD's 22 clusters are in the
+  |cos(axis, x)| > 0.7 bin. Comparing that bin to itself: **PDVD 2.04 vs SBND
+  1.51** terminals/cm — the 1.35× survives the matched comparison.
+
+### 11.3 Is it the 500 e? No — the two thresholds have the same selectivity
+
+Round 6's probe counted candidate-bearing *blobs*, which cannot be compared
+across detectors on its own: a blob with more sampled points has more chances to
+carry one over the bar, and PDVD's blobs are geometrically larger. Round 7
+extends the probe (`npt`, `ncand_pt`) so blob **size** and the threshold's
+**point-level** selectivity separate. Aggregated over `CreateSteinerGraph`:
+
+| | points/blob | points over threshold | blobs with a candidate | terminals per candidate blob |
+|---|---|---|---|---|
+| PDVD @ 500 e (039349/14, `d31r7q500`) | **3.60** | **18.0 %** | **42.0 %** | 1.020 |
+| SBND @ 4000 e (5 events, `work-d31r7probe2`) | **10.33** | **16.6 %** | **39.5 %** | 1.179 |
+| PDVD @ 4000 e (039349/14, `d31r7q4000`) | 3.61 | 6.9 % | 19.5 % | 1.014 |
+
+These are a *different* SBND arm from §11.2's band — the density band is read
+from the doc-97 production calib dumps, while selectivity needs the run-time
+probe and so was taken by re-running five `work-dbg25a-d97prodchk` pctrees under
+this round's binary. Both are SBND at the 4000 e default, which is what the
+comparison rests on.
+
+The first two rows are the answer. **PDVD at 500 e and SBND at 4000 e select
+essentially the same fraction of points and produce a candidate in essentially
+the same fraction of blobs.** Doc 25 §13.6 chose 500 for PDVD's charge scale and
+it landed on SBND's operating point; the third row shows what "reverting" would
+actually do — 6.9 % of points, half of SBND's selectivity.
+
+The independent check is the A/B. `steiner_terminal_charge` is the only variable
+between these arms, on the shipped production point cloud; the 500 arm's
+`steiner` section is **md5-identical** to the shipped end-to-end arm's
+(`844cca96aca8`), so the baseline is the production one.
+
+| threshold | terminals/cm (n≈22) | 1 per | cluster 34 below V | gap below V | above V (control) | gap above V | whole event |
+|---|---|---|---|---|---|---|---|
+| **500 (production)** | **1.99** | 0.50 cm | 666 pts / 198 term | **1.8 cm** | 330 / 60 | **59.5 cm** | 45 cl / 46068 / 13461 |
+| 1000 | 1.74 | 0.58 cm | 555 / 150 | 1.8 cm | 267 / 53 | 72.1 cm | — |
+| 1500 | 1.51 | 0.66 cm | 504 / 132 | 1.8 cm | 232 / 45 | 74.3 cm | — |
+| 2000 | 1.36 | 0.73 cm | 472 / 118 | 1.8 cm | 219 / 42 | 74.3 cm | — |
+| **4000** | **1.00** | **1.00 cm** | 290 / 67 | 1.8 cm | 181 / 33 | **85.5 cm** | 35 cl / 26837 / 6359 |
+| *SBND 4000 reference* | *1.32* | *0.76 cm* | — | — | — | — | — |
+
+Raising the threshold to 4000 does not land on SBND — it goes **past** it, to
+1 terminal per 1.00 cm against SBND's 0.76 cm, and costs: the whole event loses
+10 of 45 clusters' Steiner clouds entirely, 42 % of the points and 53 % of the
+terminals, and the control half's coverage gap widens 59.5 → 85.5 cm. The
+restored half's 1.8 cm gap is *not* what pays for it — that number is threshold-
+independent across the whole sweep, which is a further check that rounds 3 and 5
+fixed a charge-mapping bug and not a threshold problem.
+
+### 11.4 What the density actually is, then
+
+Terminal density factorises as
+
+```
+terminals/cm  =  (blobs per cm)  x  (fraction of blobs with a candidate)  x  (terminals per candidate blob)
+```
+
+The third factor is pinned near 1 by §10.3's per-blob call (measured 1.02 PDVD,
+1.18 SBND). The second is the threshold's entire reach, and §11.3 measured it
+**matched** between the two detectors. So the 1.35–1.5× residual is the first
+factor, and the probe measures its cause directly: **SBND blobs carry 10.33
+sampled points, PDVD blobs 3.60** — PDVD's blob granularity along a track is
+about 3× finer, so a track crosses about 3× more blobs, and the per-blob floor
+converts roughly 40 % of them into terminals on both detectors.
+
+Why PDVD's blobs are that much smaller is **not** established here. One
+hypothesis was checked and falsified: both detectors slice at `span=4` ticks, and
+PDVD's faster drift makes its slices *thicker* in x, which predicts fewer blobs
+per cm, the opposite of what is seen. Record it as open.
+
+This is the same conclusion §10.3 reached from the code, now with the
+cross-detector number attached: the lever cannot be the threshold, because the
+threshold is already at SBND's operating point, and it cannot be `nlevel`,
+because that neighbourhood is intersected with a single blob. It has to be a
+suppression pass that sees **across** blobs.
+
+### 11.5 A costed option the owner did not ask for, stated as an option
+
+If the owner does want PDVD inside SBND's band without waiting for round 7's
+cross-blob pass, the sweep says the price. **1500–2000 e** puts PDVD at
+1.51–1.36 terminals/cm against SBND's 1.32, and the restored half's gap holds at
+1.8 cm the whole way. The cost is on the *control* half, which starts degrading
+immediately: 59.5 → 72.1 cm at 1000 e and 74.3 cm at 1500–2000 e, and cluster 34
+loses a quarter of its terminals (631 → 438).
+
+This is **not** a recommendation. Doc 25 §13.6 bought the 500 with evidence this
+round did not re-measure — no-steiner exits 39 → 14, STM tags 16 → 18, the first
+Bragg-clean track appearing at 500 — and none of that was re-run at 1500. Any
+flip would need that census repeated, plus the §6.1 three-metric grading.
+
+### 11.6 Event 298595 on the shipped stack: what moved
+
+Against `d31r4on` (the arm the owner scanned), production changes the event:
+
+| | steiner clusters | steiner points | terminals | segments | vertices | showers |
+|---|---|---|---|---|---|---|
+| `d31r4off` (pre-round-3) | 84 | 140810 | 29427 | 6 | 7 | 1 |
+| `d31r4on` (round 3 only) | 85 | 140650 | 29416 | 6 | 10 | 3 |
+| **shipped (round 6)** | **88** | **156511** | **34222** | **8** | **9** | **2** |
+
+The STM set moves too, and this is what to look at in the Bee `stm_fit` layer.
+**Cluster 109 keeps its STM tag** — the owner's round-6 verdict survives the U
+fix and the threshold sync — but its fitted track shrinks from 419 to 197
+points. Clusters **29 and 95 lose** their STM tags, with nothing gained; seven
+other tagged clusters change their fitted point counts, the largest being 85
+(749 → 1329) and 110 (117 → 457). None of this has been hand-scanned; it is the
+scan this Bee set is for.
+
+### 11.7 Gates, and two caveats about the measurement scripts
+
+- `./build/clus/wcdoctest-clus` **277/277**, 4006 assertions, with the extended
+  probe in.
+- Freshness (M1): source `SteinerGrapher.cxx` 18:12:26 →
+  `local/lib/libWireCellClus.so` 18:12:55, md5
+  `738d269ebe7ffadb7604cc9a1c7241a5`, pinned to `/home/xqian/tmp/d31r7lib` for
+  every round-7 arm (M-shared-tree).
+- **No A/B gate is owed and none is claimed.** The probe extension adds two
+  counters and one optional out-parameter defaulted to `nullptr`; the only
+  observable change is the text of a log line that is already behind
+  `WCT_STEINER_PHASE_DUMP` (unset in production ⇒ `getenv` null ⇒ not emitted).
+  No config key, no compiled-config change. The empirical check is §11.3's
+  md5: the 500 arm run under the *new* binary reproduces the shipped arm's
+  `steiner` section exactly.
+- **Caveat 1 — the census script's gap has a floor.**
+  `steiner_density_census.py` clips the first and last 2 % of each corridor
+  (`t > 0.02 & t < 0.98`), so its reported gap can never fall below 2 % of the
+  corridor length — 2.2 cm on the 111.5 cm half. It reports 2.8 cm at *every*
+  threshold for exactly that reason. Coverage numbers in this document come
+  from `steiner_terminal_attribution.py`, which does not clip, and which
+  reproduces §10.5's 1.8 cm. Use that one for gaps; the census script is for
+  the per-blob census and the per-point density.
+- **Caveat 2 — `terminals per candidate blob` is an event aggregate.** It is
+  1.020 on 039349/14, 1.217 on 298595 and 1.179 on the SBND five, i.e. not a
+  per-call identity (§10.3 already said so). §11.4's factorisation is used
+  qualitatively for that reason; no residual factor is computed by dividing
+  through it.
+
+### 11.8 What this pins down for round 7
+
+The lever is now bounded on both sides by measurement. It cannot be the charge
+threshold — that is already at SBND's selectivity, and moving it overshoots in
+one direction and destroys coverage in the other. It cannot be `nlevel`. It must
+be a pass that suppresses terminals **across** blob boundaries, and since
+per-blob is prototype-faithful (§10.3), it ships as its own default-OFF knob and
+is graded on all three of §6.1's metrics at once — coverage (the unclipped gap),
+density (terminals/cm against SBND's 1.32 band) and localisation (transverse
+distance to the skeleton, which the sweep leaves flat at 0.93–1.04 cm and which
+a bad suppression pass would move).
+
+---
+
+## 12. Scope of each round, and what round 8 is
 
 **Round 1** (doc + scripts, no code): the algorithm review, the four uBooNE
 couplings, the §6 redesign, §7's aperture feasibility. Its §4 conclusion was
@@ -1936,20 +2208,40 @@ scoped to a single blob, so terminal density *is* candidate-bearing blob density
 (1.02 terminals per such blob, measured over 92 calls). C++ defaults are
 unchanged everywhere; the flips are PDVD config only.
 
-**Round 7**, in priority order:
+**Round 7** (this one; §11): the owner's two follow-ups — run 298595 on the
+shipped stack, and compare the terminal density with SBND. **No behaviour
+change**: two counters and one `nullptr`-defaulted out-parameter extend round
+2's env-gated dump line so blob *size* and the threshold's *point-level*
+selectivity can be separated. The density question is answered against 610 SBND
+clusters from 906 production events plus a single-variable threshold sweep on
+PDVD: the terminals **are** ~1.5× denser than SBND's, and the 500 e is **not**
+why — at their production thresholds the two detectors pass the same fraction of
+points (18.0 % vs 16.6 %) and light up the same fraction of blobs (42.0 % vs
+39.5 %), while forcing PDVD to 4000 e overshoots to *sparser* than SBND and
+widens the control half's gap 59.5 → 85.5 cm. The residual is measured to be
+blob granularity: PDVD blobs hold 3.60 sampled points against SBND's 10.33.
 
-1. **A cross-blob suppression pass** (§10.3, §10.7). The only lever that can
-   thin the terminals without also destroying the coverage round 5 restored.
+**Round 8**, in priority order:
+
+1. **A cross-blob suppression pass** (§10.3, §11.8). The only lever left: §11.3
+   removed the threshold from contention on measurement, not on argument.
    Default-OFF knob, graded on all three §6.1 metrics at once. Per-blob is
    prototype-faithful, so this is a deliberate divergence under M15.
 2. **Manifest-scale validation of the three round-6 changes.** They shipped ON
    for PDVD on two events and two hand-scanned clusters — enough to flip, not
-   enough to leave unvalidated.
+   enough to leave unvalidated. §11.6's event-level moves on 298595 (two STM tags
+   lost, cluster 109's fit shrinking 419 → 197 points) are unscanned.
 3. **Then reopen §6, or retire it.** Parked by the owner in round 6. The
    redesign's case on *this* event is gone — the criterion was never the problem
    here. What survives is doc 28's population evidence and §7's aperture result,
    both measured on the input point cloud and untouched by any of this. §6
    should be re-argued on that basis or retired; it should not be inherited.
+
+Newly owed by round 7: **why PDVD's blobs carry ~3× fewer sampled points than
+SBND's** is unexplained (§11.4; the slice-thickness hypothesis was checked and
+falsified). SBND's side of §11.3 rests on **five** events against PDVD's two, and
+its density band on 906 events of one MC sample. The 1500–2000 e option in §11.5
+is costed on coverage only — doc 25 §13.6's STM/Bragg census was not re-run.
 
 Newly owed by round 6: the flips are PDVD-only and **PDHD still has no
 event-level gate** for `wrapped_channel_charge` despite carrying 2.5× the orphan
