@@ -67,8 +67,11 @@ renamed (M13).
 
 Arms read read-only: `pdvd/work/*_d28dlfp` (the doc-28 §27 production arm).
 Arms written, all fresh tags: `d34base d34rep d34x d34yz d34all d34alli3`, plus
-a one-event plumbing check `d34smoke` (039252/0) left in place. Nothing under an
-existing tag, `sweep/` or `abtest/snap/` was touched.
+three one-event tags left in place — `d34smoke` (039252/0, a plumbing check),
+`d34dlrep` (039349/50, the flipped driver run end to end), and **`d34dlrep2`**
+(039349/50, production margins with the DL vertex **on** under the current
+library — this is the control §5.1 cites). Nothing under an existing tag,
+`sweep/` or `abtest/snap/` was touched.
 
 ---
 
@@ -307,9 +310,14 @@ containment and the evaluated set are untouched — the pitch floor feeds the
 strict good-point tests and so the STM fit, which is exactly where it shows up.
 Comparing anything here against `d28dlfp` would have charged that round's effect
 to this one. A one-event control settles the other candidate: `039349/50` rerun
-at production margins with the **DL vertex ON** under the current library gives
-STM = 1 : 21, the same as `d34base` and `d34rep`, against `d28dlfp`'s 27. So
-`dl_weights` is not the cause; the library is.
+at production margins with the **DL vertex ON** under the current library
+(`d34dlrep2`) gives STM = 1 : 21, the same as `d34base` and `d34rep`, against
+`d28dlfp`'s 27. That rules `dl_weights` out cleanly. It does not by itself
+*demonstrate* the library: the remaining known difference is the 04:39–06:05
+window, and the two commits in it act on the good-point pitch floor, which feeds
+the strict good-point tests and so the STM fit. That is elimination plus a
+mechanism in the right place, not a controlled test — nothing here was rerun
+under a snapshot of the pre-06:02 libraries.
 
 ### 5.2 The census
 
