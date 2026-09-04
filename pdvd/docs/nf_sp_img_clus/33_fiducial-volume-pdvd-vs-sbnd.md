@@ -474,6 +474,13 @@ consumer — a tagger test "this end sits in a structural gap, so it is not a
 stopping point" — is the useful one for the STM programme but needs a C++ site
 and its own round.
 
+What this recommendation does *not* carry is a measured value. §5 measures how
+wide each seam is; nothing here shows that excluding those bands improves any
+downstream verdict. So R2 is "the primitive exists, here is the width to build
+it at, and the first consumer is config-only" — not a fix waiting to be applied.
+Its own round would grade it on the Q/L side first (crosser admission, boundary
+flags), where a wrong answer is cheap to see.
+
 **R3 — measure the seams the same way for SBND before generalising.** SBND's
 CPA profile (§5) shows the same qualitative shape as PDVD's cathode with a much
 smaller hole. If a PDVD gap fiducial is built, the same script grades whether
