@@ -1311,11 +1311,17 @@ a statement about the post-flip epoch, not a comparison with §13's. The one thi
 because 53 of 115 events reconstruct differently and no offline metric says which
 version is right. Scan pairs, now in the production configuration:
 
-**Built as one Bee set**, `/home/xqian/tmp/doc37/d37_scan_pairs.zip` (12 events,
-10.5 MB, builder `scripts/doc37_build_scan_pairs.py`). The two arms of each pair
-are **adjacent** Bee event indices, because the scan is a comparison and flipping
-between neighbours is the only way to make it one. **Not uploaded** — that is the
-owner's call (CLAUDE.md §5 rule 6); `pdvd/upload-to-bee.sh <zip>`.
+**Built as one Bee set** and **uploaded at the owner's explicit instruction**
+(2026-09-04; CLAUDE.md §5 rule 6 is an ask-first rule, and it was asked):
+
+> **https://www.phy.bnl.gov/twister/bee/set/912ae8d8-9dd0-4559-a903-a7a10feb98a9/event/list/**
+
+12 events, HTTP 200, all 12 indices live. Source zip
+`/home/xqian/tmp/doc37/d37_scan_pairs.zip` (10.5 MB), builder
+`scripts/doc37_build_scan_pairs.py`. The two arms of each pair are **adjacent**
+Bee event indices, because the scan is a comparison and flipping between
+neighbours is the only way to make it one: **even = OFF (0 cm), odd = ON
+(0.5 cm)**.
 
 | bee # | event | OFF → ON | why this one |
 |---|---|---|---|
