@@ -180,11 +180,31 @@ it.
 | **20** | **71.5 %** | **7.0 %** | 2.4 % | 720 | 619 | 104 | 7 |
 | **40** | **71.6 %** | **8.5 %** | 2.9 % | 720 | 406 | **46** | **1** |
 
-For reference, the **pre-flip** production of doc 36 (isotropic + the 0.35
-floor) graded 70.3 % / 10.2 % with 688 STM tags on the same instrument, and the
-legacy frac-0 arm 68.3 % / 8.3 %. **Every threshold beats pre-flip production on
-both axes at once** — the first time in this campaign either axis has moved
-without paying on the other.
+**The comparison that is clean is within this table**: every arm here shares one
+config epoch and one binary family, and differs only in `end_trim_gap_len`.
+
+For reference, doc 36's arms graded 68.3 % / 8.3 % (legacy frac-0),
+**70.3 % / 10.2 % / 688 STM (pre-flip production: isotropic + the 0.35 floor)**
+and 71.1 % / 12.6 % (the metric). **Read that reference with two caveats.**
+(i) *Different epoch.* Doc 36's arms predate doc 37's Steiner terminal thinning,
+which went to PDVD production at `730bc794` between the two rounds; the d38 arms
+all carry it. Holding the metric and the floor fixed, thinning accounts for
+71.1 → 71.7 % coverage and 12.6 → 12.7 % unsupported, i.e. it helps coverage a
+little and is neutral on support — so "metric + trim beats pre-flip production
+on both axes" is a **three-change** comparison, not one. (ii) *Different
+cluster set*: 2176 clusters there against 2159 here, because the PR stage
+re-clusters slightly.
+(iii) `dl_weights` is the **same on every side of every comparison in this doc**
+(the SCN vertex is ON, the jsonnet default; no arm overrides it) — which matters
+because a PDVD PR A/B that changes it is confounded: doc 37 §15.3 measures the
+TGM set moving on 27.5 % of events and the STM set on 97.5 % with nothing else
+changed, against a 0 % / 5 % same-config floor. That is a pre-existing
+determinism defect (CLAUDE.md M4), it is not exercised here, and TGM is 0 in
+every arm of this manifest anyway.
+
+Within the epoch, **every threshold takes unsupported trajectory from 12.7 % to
+6.2–8.5 % while coverage moves by at most 0.6 points and STM rises** — the first
+time in this campaign either axis has moved without paying on the other.
 
 Three things the sweep says:
 
@@ -262,9 +282,10 @@ measured once it beats the island, and `max_scan` caps the walk at 1000 points.
 
 ## 8. The operating point is a physics choice, not a margin
 
-Flipping the knob is worth doing: every threshold in the window beats the
-production of this morning (70.3 % coverage / 10.2 % unsupported / 688 STM) on
-every axis at once, at no measurable wall or RSS cost, and the knob lives in
+Flipping the knob is worth doing: within its own epoch every threshold in the
+window cuts unsupported trajectory by 4.2 to 5.7 points for at most 0.6 points
+of coverage and raises STM tagging, at no measurable wall or RSS cost, and the
+knob lives in
 `cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json` — the same file
 the retired 0.35 floor lived in.
 
