@@ -1223,22 +1223,38 @@ grep cannot tell them apart:
 | `Grouping::get_closest_points(point, radius, apa, face, pind)`, and `has_closest_point` | the **2-D ctpc lattice** query | **yes** |
 | `Cluster::get_closest_points(const Cluster&)` (`Facade_Util.h:90`, `Facade_Cluster.h:353`) | a **3-D cluster-to-cluster** nearest-pair helper | no |
 
-An earlier version of this section said "19 files call it, and
-`TaggerCheckSTM.cxx` is one of them", offered as a refutation of that round's
-mechanism. **That was wrong** — the 19 is a name-only count spanning both
-functions, and `TaggerCheckSTM.cxx:3223` is
-`main_cluster.get_closest_points(*cluster)`, the **one-argument Cluster helper**.
-**STM does not query the ctpc at all.** (That round's own "one of only two direct
-external callers" was also wrong, in the other direction.)
+`TaggerCheckSTM.cxx:3223` is `main_cluster.get_closest_points(*cluster)` — the
+**one-argument Cluster helper**. **STM does not query the ctpc at all.**
 
-Signature-filtered — the 5-argument form, plus `has_closest_point` whose name *is*
-unique to `Grouping` — the changed query has **six** external callers:
+Counting the callers of the changed query took **four published attempts** across
+two sessions, and all four were wrong:
+
+| count | by | why it was wrong |
+|---|---|---|
+| 2 | the doc-36 round | missed `FiducialUtils` |
+| **19** | **this doc** | name-only grep, merging both functions |
+| **6** | **this doc** | comment-blind — counted a `has_closest_point` inside a comment block |
+| 5 | the doc-36 round | comment-blind — counted a `//`-blocked debug stanza |
+
+The answer, comment-stripped and arity-classified — independently reproduced here
+and by that round's committed `d36_ctpc_caller_census.py` (`430b87d7`), which
+agrees call-for-call:
 
 ```
-clustering_ctpointcloud.cxx  6     PointTreeBuilding.cxx           3
-NeutrinoTaggerNuE.cxx        4     FiducialUtils.cxx               1
-TaggerCheckTGM.cxx           3     connect_graph_relaxed_strict.cxx 1   (has_closest_point)
+5-arg Grouping ctpc query, EXTERNAL callers:  4 files, 10 calls
+   TaggerCheckTGM.cxx      :1209-1211      3    PR chain
+   NeutrinoTaggerNuE.cxx   :2943,2949,2955 3    PR chain
+   clustering_ctpointcloud.cxx :92-94      3    clustering (a std::cout debug block)
+   FiducialUtils.cxx       :205            1    PR chain
+has_closest_point:  ZERO external callers (all inside Facade_Grouping's own wrappers)
+cluster-pair form (untouched): 15 files, 49 calls -- TaggerCheckSTM.cxx among them
 ```
+
+**The lesson is not the number.** One small set moved 19 → 2 → 6 → 5 → 4 because
+everyone, twice each, reached for `grep`. Two independent traps: an **overloaded
+name** merges call graphs, and **comments and commented-out code** inflate the
+count — and knowing about the first did not prevent the second, in either
+session. Use the script.
 
 So the mechanism holds, and the half this doc previously marked as inference is
 now a route with call sites behind it:
