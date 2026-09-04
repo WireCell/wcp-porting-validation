@@ -15,6 +15,18 @@ arm 8194 → 6935), STM stage 1.5–1.7× on every event, live heap at the STM s
 1587 MB; PDVD 28/28 and 478/480, SBND 201/201, uBooNE 35/35 — the one differing archive is
 a pre-existing out-of-range read in the STM eval that the gate exposed (§13, §15).
 
+**Round 3 (2026-09-03, §19–§26).** The owner's asks: fix the STM eval's out-of-range read
+(done, toolkit `8c577c4b`; fires on 2 of 120 PDVD events, `T_stm_eval` rows only, no
+verdict moves; SBND/uBooNE untouched), and explain why PDVD events cost so much more than
+SBND's, borrowing SBND's busy-event gating where it applies. The neutrino stage was 57 %
+of the arm; 57 % of *it* was doc pr/112's dual-chain OFF pass, copied from SBND's production
+settings and, on a detector with no DL vertex net, never read by anything — 2263 of 6935
+node core-s. It is now skipped when nothing can consume it (`a94ce32e`, output-identical by
+construction, PDVD 477/480 with the two STM archives above the only movers, SBND 201/201,
+uBooNE 35/35). Busy set 1135 → 660 node core-s (1.72×), 039252/5 2.37×, the 120-event arm
+6935 → 4742 (1.46×). The rest of the gap to SBND is the count and the length of PDVD's
+candidates (§21); the busy-event gate that fits is a scope knob for the owner (§23).
+
 **Scope.** The PR job = everything `run_pr_evt.sh` runs after Q/L matching
 (`pdvd/wct-pr-perevt.jsonnet` → `cfg/pgrapher/experiment/protodunevd/pr.jsonnet`).
 The three PDVD scope choices that set the *count* of work — the readout-wide beam window,
@@ -555,7 +567,7 @@ by 0.1–0.7 GB, which is the dense `n_3d × n_2d` array no longer being allocat
 - The Q/L flavors' threshold (200 components) was not tuned for PDVD: the census says the
   time is not in one busy cluster, so no threshold rescues it.
 
-## 18. Next steps after round 2
+## 18. Next steps after round 2 (as written then; the STM read is fixed and the neutrino stage re-examined in round 3, §19–§26)
 
 1. U3 (columnar tree storage in `util`) is the only remaining lever on the plateau
    (~560 MB of 707 per event, every detector) — design in §12, owner decision.
@@ -565,6 +577,221 @@ by 0.1–0.7 GB, which is the dense `n_3d × n_2d` array no longer being allocat
 3. The batch input stall (§10 item 4) is unchanged: 23 s of a median event's wall under
    contention is the point-tree read; a zstd codec is runner-side work.
 
+## 19. Round 3 — scope, repro, labels
+
+The owner's three asks after round 2: fix the STM eval's out-of-range read that the round-2
+gate exposed (§13, §15); explain why some PDVD events cost so much more than SBND's and take
+what SBND's perf rounds can offer, confining any behaviour change to the busy events; doc,
+commit, push. Base for every gate is the round-2 final binary (`lib_r2post5`, toolkit
+`1a7e1b66`); the round-3 snapshots are `lib_r3fix` (STM fix only) and `lib_r3post` (STM fix +
+the OFF-pass skip of §22). Every arm's `/proc/<pid>/maps` was checked against its snapshot.
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
+# where the neutrino stage goes, per candidate, from the round-2 arm's logs (sec 21)
+python3 /home/xqian/tmp/doc28/r3/nu_census.py d28r2fp5
+# CPU profiles of the five heaviest neutrino-stage events, round-2 binary (sec 21, sec 23)
+LD_LIBRARY_PATH=/home/xqian/tmp/doc28/lib_r2post5:$LD_LIBRARY_PATH TAG=profpr3_039252_5 ./profile_pr.sh 039252 5 /home/xqian/tmp/doc28/r3/pr_039252_5.prof
+google-pprof --text --focus=run_dual_chain_off_pass build/apps/wire-cell /home/xqian/tmp/doc28/r3/pr_039252_5.prof | head -3
+# busy-set clean pair, the 120-event arm, the shared-detector arms (one launcher, 26 processes)
+/home/xqian/tmp/doc28/r3/run_r3.sh          # d28r3sb (lib_r2post5) / d28r3sp (lib_r3post); d28r3fp; SBND/uB _r3post
+python3 stm/gates/r28_gate.py d28r3sb d28r3sp --out stm/gates/r28_d28r3sp_vs_d28r3sb.txt
+python3 stm/gates/r28_gate.py d28r2fp5 d28r3fp --out stm/gates/r28_d28r3fp_vs_d28r2fp5.txt
+QL_SUFFIX=d99fix OLD_ARM=_r2post5 NEW_ARM=_r3post ./stm/gates/shared_gate.sh compare
+(cd ../qlport/scripts && ./ab_check.sh doc25_r3post doc25_r2post5b)
+python3 stm/perf/pr_perf_profile.py --tag d28r3fp     # docs/perf/pr_d28r3fp_{events,stages}.tsv
+grep -l "end bin falls back" work/*_d28r3fp/wct_pr_*.log   # which events the STM fix touches
+```
+
+Toolkit commits (`apply-pointcloud`): `8c577c4b` (STM eval fallback), `a94ce32e` (dual-chain
+OFF pass skipped without DL weights). wcp-porting-img: this doc, `stm/perf/nu_census.py`,
+the gate records and perf TSVs named below.
+
+## 20. The STM eval's out-of-range read — fixed
+
+**Symptom.** Round 2's 120-event gate (§15) found one archive of 480 differing between two
+binaries built from sources that a three-level hash bisect proved arithmetically identical:
+039253/3 `tracking-stm.root`, `T_stm_eval` rows 18–25 of a rejected pass, with `end_L`
+−2022.41 mm under the base library and 2 mm under the post library.
+
+**Root cause.** `TaggerCheckSTM::eval_stm_core_impl` ends the dQ/dx comparison window at the
+bin of maximal 5-point mean dQ/dx inside `[end_L − peak_range, end_L + 0.5 cm)`. When no bin
+in that window carries positive dQ/dx (all fitted charges zero) `max_bin` stays −1 and the
+fallback was `max_bin = max_num`. In the kink branch `max_num` is the kink index — a valid
+point. In the no-kink branch `max_num = L.size()`, so the next line, `end_L = L[max_bin] +
+0.2 cm`, read one element past the end of `L`. The toolkit reaches the no-kink branch more
+often than the prototype did: the short-track reset (`TaggerCheckSTM.cxx:3692`) sets
+`kink_num = dQ.size()`, which the `kink_num >= num_pts` test treats as "no kink".
+`detect_proton` has the same window search with no fallback at all — `max_bin == −1` would
+index `L[-1]`; it has never fired on a gated event (the new DEBUG line would show it).
+
+**Why it hid.** The value read is whatever the allocator left after the vector's storage:
+deterministic for one binary and one heap layout (four reruns per library agreed), so every
+same-binary repeat check passed, and the pass it sat in was rejected on other grounds so the
+STM verdict never moved. Only a gate between two different binaries could see it, and round
+2's was the first such gate on that event.
+
+**Fix** (toolkit `8c577c4b`, `clus/src/TaggerCheckSTM.cxx`, both sites). When no window bin
+qualifies, the end bin is `min(max_num, L.size() − 1)`: the kink point when there is a kink,
+the track's last point when there is none — which is what `end_L = L.back()` at the top of
+the function already says the no-kink end is. A DEBUG line names every fire
+(`eval_stm: no positive dQ/dx window, end bin falls back to …`). No knob: the previous
+behaviour was an undefined read, not a legacy path anyone can want back. **NOT
+bit-identical where it fires**; everywhere else it is a no-op by construction (the branch
+only runs when `max_bin == −1`).
+
+**Verification.** Doctests clus 277/277 (1 skipped) on both builds (`lib_r3fix`, `lib_r3post`). Gates in §24: on the 120 PDVD events the
+fallback fired on two events — 039253/3 (8 evaluations, end bin 416 of 417, `kink_num` 417 = the short-track reset) and 039349/33 (4 evaluations, 628 of 629, `kink_num` 629); the only archives that differ between `d28r2fp5` and
+`d28r3fp` are exactly those two events' `tracking-stm.root`, and inside them only `T_stm_eval` (rows 18–25 and 13–16: `ks1`/`ks2` were 0 with `res_length` 273 / 400 mm and a garbage `ave_res_dqdx`, now real KS values with an empty residual, as an end at the last point implies); `T_stm_pass` and every other tree identical, so no verdict moved. SBND and uBooNE arms identical (201/201, 35/35 zips, 34/35 tagger with 6805 the one difference — the doc 90 bistable event, 35/35 against the partial `doc25_r2post5` arm),
+i.e. the branch never fired there. The reproducing test is the event itself: the same
+hash gate that exposed the bug now shows the rows carrying `L.back() + 0.2 cm`.
+
+## 21. Why a PDVD event costs more than an SBND event
+
+Round 1 (§2) answered this at the stage level: the same code at the same per-unit cost, and
+PDVD does 5 ν candidates and 60–80 mains per event where SBND does one. Round 3 looked one
+level down, into the neutrino stage, which after round 2 is 57 % of the arm (3950 of 6935
+node core-s over 120 events; 583 candidates). Two things there are PDVD-specific.
+
+**The candidates are long cosmics, and the cost is superlinear in their length.** From the
+round-2 arm's logs (`nu_census.py`; per candidate = the selected main's `initial PR` +
+`other_clusters PR` + the small stages, OFF pass excluded — see below):
+
+| main length | candidates | production PR, sum | share | median per candidate | max |
+|---|---|---|---|---|---|
+| < 100 cm | 188 | 69 s | 4 % | 0.2 s | 5.1 s |
+| 100–200 cm | 119 | 116 s | 7 % | 0.7 s | 10.5 s |
+| 200–400 cm | 178 | 498 s | 31 % | 1.7 s | 37.3 s |
+| 400–600 cm | 72 | 542 s | 33 % | 5.9 s | 30.4 s |
+| 600–1000 cm | 26 | 398 s | 25 % | 12.8 s | 52.0 s |
+
+98 candidates longer than 4 m — through-going cosmic muons up to 9.2 m (039252/14 cluster
+113) — are 58 % of the production PR time; the median PDVD candidate costs 0.2–1.7 s. SBND's
+candidates on the same binary (the `_r2post5` gate arms, 136 candidates, `dl_weights=''`):
+median length 87 cm, maximum 264 cm, and **7.0 s** median for a 100–200 cm candidate against
+PDVD's 0.7 s — a νe or NCπ0 shower breaks into many segments and refits each; a straight
+cosmic does not. So per centimetre PDVD's PR is ten times cheaper than SBND's; what makes
+the PDVD event slow is five candidates per event and the 4–9 m lengths the readout-wide
+window admits.
+
+**The dual-chain OFF pass ran on every candidate and was never read.** PDVD's PR TLA file
+carries SBND's production operating point for doc pr/112's dual chain (`dl_vtx_dual_chain =
+true`, mode `snap`, transfer on, D = 2 cm — `pdvd/wct-pr-perevt.jsonnet:2839`). The OFF pass
+is a full exclusion-free PR of the main cluster on its own graph and fitter; its product is a
+`DualChainHint` whose only consumer is `determine_overall_main_vertex_DL`
+(`TaggerCheckNeutrino.cxx:2955-2962`: the snap transfer, the voxels/union re-rank and the
+scoreboard's `dual_chain` block all live inside it), and that function runs only `if
+(!m_dl_weights.empty())`. PDVD has no DL vertex net (`dl_weights = ''`, doc 25 §4). So on
+PDVD every OFF pass — 583 of them, **2263 s = 57 % of the neutrino stage and 33 % of the
+arm** — computed a vertex that nothing read; no PDVD calib dump has ever contained a
+`dual_chain` block (grep over the 120 dumps: 0). The pass is also more expensive than the
+production pass it shadows because exclusion is off: 1.1–4.7× (039252/5 cluster 84, 6.6 m:
+OFF 262 s, production 52 s; the profile of that event is 62 % OFF pass, and 57 % of the
+whole event is the BiCGSTAB solve of the exclusion-free multi-fit running to its iteration
+cap). On SBND the same pass is consumed (DL weights configured) and costs 1.58× the visit
+(pr/112 §11); on the SBND gate arms, which run `dl_weights=''` (M4), it was likewise
+unconsumed — 882 s of their 1809 s of candidate time.
+
+## 22. The OFF pass is skipped when nothing can consume it
+
+Toolkit `a94ce32e`, `clus/src/TaggerCheckNeutrino.cxx`: with `dl_vtx_dual_chain` on and
+`dl_weights` empty the pass is not run and one INFO line per candidate says why
+(`dual_chain: OFF pass skipped for cluster N -- no DL weights, so nothing consumes the
+hint`). Output-identical by construction — the hint's every reader is inside a function that
+does not run — and pr/112 §11.2's probe gate had already shown the pass leaks nothing into
+production (graph, fitter, flags all its own; 96/96 + 200/200). No knob: there is no output
+the legacy path produced that this removes. SBND production, with its DL weights, is
+untouched; the SBND gate arms (`dl_weights=''`) exercise the skip and are the identity
+proof on 67 more events (§24).
+
+Whether PDVD *should* have a dual chain is a separate, physics question for the owner: the
+design's value is an exclusion-free suggestion for the neutrino vertex, and wiring the snap
+into the traditional `determine_overall_main_vertex` path would make it live on a no-DL
+detector — at the 2263 s this round removed, or at the fraction of it a length-gated
+version would cost. Not done here.
+
+## 23. SBND-style busy-event gating: what is left to gate, and its ceiling
+
+After §22 the neutrino stage is ~1690 s of a ~4670 s arm (36 %), CreateSteinerGraph 1376 s
+(29 %), TaggerCheckSTM 1107 s (24 %). Inside the production PR of the busy candidates
+(profiles of the five heaviest events, samples outside `run_dual_chain_off_pass`):
+
+| event (profile s) | ν stage outside the OFF pass | `dQ_dx_multi_fit` | of which `BiCGSTAB` | `form_point_association` | `exclusion_closest_2d_dis` | STM stage | steiner |
+|---|---|---|---|---|---|---|---|
+| 039252/5 (439) | 17.8 % | 9.9 % | 7.5 % | 2.0 % | 1.7 % | 6.0 % | 9.5 % |
+| 039252/14 (261) | 17.0 % | 6.2 % | 3.5 % | 2.8 % | 3.6 % | 6.6 % | 11.3 % |
+| 039253/11 (193) | 37.6 % | 10.3 % | 0.6 % | 4.9 % | 10.1 % | 12.2 % | 14.7 % |
+| 039349/72 (147) | 26.0 % | 7.3 % | 0.3 % | 4.0 % | 3.7 % | 6.3 % | 6.9 % |
+| 039252/10 (122) | 34.7 % | 7.1 % | 0.4 % | 5.8 % | 12.3 % | 4.8 % | 7.6 % |
+
+(percent of the whole profiled event, which still includes its OFF pass — 50–62 % of these
+five; `pprof --focus=<f> --ignore=run_dual_chain_off_pass`, files `/home/xqian/tmp/doc28/r3/pprof_rest.txt`.)
+
+The two exact levers with any weight are the association step (`form_point_association` +
+`exclusion_closest_2d_dis`, the kd-2D queries and per-point containers) and the multi-fit's
+response build (`cal_gaus_integral` / `erf`, the row maps) — both already through SBND's
+pr/98 perf round, each worth a few percent of an event for a delicate rewrite. The solver
+itself, outside the OFF pass, is 7.5 % of 039252/5 — the round-1 §9 candidate for
+a busy-gated tolerance knob (`n_3d > N` only) is now small.
+
+What SBND's tail-gating idea (doc 76 §9.3) maps onto here is not an approximation but a
+scope gate: 98 candidates over 4 m are 58 % of the remaining PR time, and every one of them
+is a through-going cosmic that the neutrino chain fits, breaks and refits as if it might
+hold a vertex. A `nu_max_main_length_cm` knob (default 0 = today) that leaves such
+candidates without a PR pass would be the "limit the change to the busy events" shape —
+but it removes their PF/kine rows, i.e. it changes what PDVD's products *are*, and doc 25's
+STM/Michel work reads those rows. Owner decision; the arithmetic is in the §21 table
+(≥ 400 cm: −940 s of 4670; ≥ 600 cm: −400 s, 26 candidates).
+
+## 24. Round-3 gates
+
+| gate | arms | result | record |
+|---|---|---|---|
+| PDVD busy set (7 events × bee, calib, tracking-pr, tracking-stm) | `d28r3sb` (`lib_r2post5`) / `d28r3sp` (`lib_r3post`) | **28/28 identical** | `stm/gates/r28_d28r3sp_vs_d28r3sb.txt` |
+| PDVD 120 events (480 archives) | `d28r2fp5` / `d28r3fp` | **477/480**: the two `tracking-stm.root` of §20's two events, `T_stm_eval` only; every Bee zip, calib dump and `tracking-pr.root` identical, so the OFF-pass skip changed nothing downstream | `stm/gates/r28_d28r3fp_vs_d28r2fp5.txt` |
+| SBND nuecc48 (48) + ncpi0 (19): Bee, calib, nusel; `dl_weights=''` so the skip fires on every candidate | `doc25_r2post5` / `doc25_r3post` | 201/201 | `stm/gates/r28_sbnd_compare_r3post_vs_r2post5.txt` |
+| uBooNE 35 events, Bee zip + tagger ROOT | `sweep/doc25_r2post5b` / `doc25_r3post` | 35/35 zips, 34/35 tagger with 6805 the one difference — the doc 90 bistable event, 35/35 against the partial `doc25_r2post5` arm | `stm/gates/r28_ub_ab_check_r3post_vs_r2post5b.txt` |
+
+Doctests on the final build: clus 277/277 (1 skipped) on both builds (`lib_r3fix`, `lib_r3post`) (the STM fix and the skip touch no other
+package). Freshness proofs: `libWireCellClus.so` newer than the last source edit before
+each snapshot.
+
+## 25. Round-3 timing
+
+Busy set, `d28r3sb` (`lib_r2post5`) vs `d28r3sp` (`lib_r3post`), each sequential, side by
+side while the 120-event arm and the SBND arms ran; `Timer:` node core-s:
+
+| event | base core-s | post core-s | speed-up | TaggerCheckNeutrino s | peak RSS GB |
+|---|---|---|---|---|---|
+| 039252/5 | 434.7 | 183.2 | 2.37× | 350.2 → 86.6 | 3.20 → 3.21 |
+| 039253/11 | 223.6 | 148.8 | 1.50× | 154.1 → 81.8 | 3.19 → 3.19 |
+| 039252/15 | 148.8 | 97.0 | 1.53× | 97.1 → 46.0 | 2.79 → 2.78 |
+| 039349/7 | 126.4 | 68.6 | 1.84× | 85.4 → 29.4 | 1.92 → 1.91 |
+| 039252/8 | 93.9 | 88.1 | 1.07× | 13.6 → 6.8 | 2.45 → 2.45 |
+| 039253/15 | 71.8 | 50.7 | 1.42× | 44.5 → 20.0 | 1.90 → 1.74 |
+| 039349/6 (median) | 36.2 | 23.9 | 1.51× | 23.5 → 11.6 | 1.13 → 1.13 |
+| **sum** | **1135.3** | **660.3** | **1.719×** | | |
+
+TSVs: `docs/perf/pr_d28r3{sb,sp,fp}_{events,stages}.tsv`. The 039252/8 event is the one whose
+time is the steiner build and the strict connector, not the neutrino stage.
+
+120-event arm: node core-s 6935 → 4742; TaggerCheckNeutrino 3950 → 1721 s.
+The removed time is the OFF pass exactly (predicted 2263 s from the base arm's `[dual-off]`
+timers). Memory is unchanged in kind — the OFF pass's graph and fitter were released at its
+end — but the peak on the events where the OFF pass held the largest fit is lower
+(3 of 7 busy events lower, none higher by more than 0.01 GB; the arm's maximum 3.26 GB (039252/16) unchanged; median event 39.2 → 30.4 core-s).
+
+## 26. Next steps after round 3
+
+1. Owner: should PDVD have a dual chain at all? If yes, the snap belongs in the traditional
+   vertex path (§22); if no, `dl_vtx_dual_chain = false` in `wct-pr-perevt.jsonnet` makes
+   the config say what the code now does.
+2. Owner: the length gate of §23 — a scope knob, not a perf lever.
+3. U3 (columnar tree storage, §12) remains the memory lever; the per-candidate exact levers
+   of §23 are the remaining CPU ones, each a few percent.
+4. `detect_proton`'s fallback (§20) is instrumented; if the DEBUG line ever fires on a gated
+   event, that event needs a look.
+
 ## Milestone log
 
 - 2026-09-03 — arm profile, three CPU profiles, one heap profile, SBND comparison;
@@ -572,3 +799,6 @@ by 0.1–0.7 GB, which is the dense `n_3d × n_2d` array no longer being allocat
 - 2026-09-03 (round 2) — tree census + Array footprint (util `66831770`), T2 + compact-matrix
   dense array + channel→wires memo (`34d0a5f5`), PDVD Q/L fast-flavor knobs, off
   (`1a7e1b66`); the 039253/3 bisect found the STM eval's out-of-range read; gates §15.
+- 2026-09-03 (round 3) — STM eval fallback fixed (`8c577c4b`); neutrino-stage census by
+  candidate length, five CPU profiles; the unconsumed dual-chain OFF pass skipped
+  (`a94ce32e`); gates §24, timing §25.

@@ -1,0 +1,8 @@
+# uBooNE qlport ab_check.sh doc25_r3post (lib_r3post) vs doc25_r2post5b (lib_r2post5); 35-event sweep_5384
+ZIPS: 35/35 content-identical
+TAGGER: identical=34 diff=1 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/doc25_r3post/ab_check_doc25_r2post5b.log)
+# and vs the partial doc25_r2post5 arm (shared_gate compare):
+uBooNE ab_check rc=0 -> /home/xqian/tmp/doc25gate/ub_ab_check__r3post.txt
+ZIPS: 35/35 content-identical
+TAGGER: identical=35 diff=0 skip=0 (log: /home/xqian/toolkit-dev/wcp-porting-img/qlport/scripts/sweep/doc25_r3post/ab_check_doc25_r2post5.log)
+shared_gate step 'compare' done 2026-09-03T22:06:40-07:00
