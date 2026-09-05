@@ -3,7 +3,8 @@
 **Status.** Rounds 1–2 (§1–§13) are diagnosis only. **Round 3 (§15) ships
 the fix** behind two default-OFF knobs on the retiler (`bad_blob_max_run`,
 `bad_blob_report`); with both absent every job config compiles and runs
-byte-identically (§15.5). Rounds 1–2 changed no code and no config; the production PDVD chain is exactly what it was. Two named
+byte-identically (§15.5); the PDVD flip is the owner's decision and
+seven OFF/ON Bee sets are built for it (§15.10). Rounds 1–2 changed no code and no config; the production PDVD chain is exactly what it was. Two named
 points are traced to two different causes, one of which is a knob the owner
 flipped ON on 2026-09-04 and which this document does **not** flip back —
 §10 states why that decision is not free and belongs to the owner.
@@ -911,7 +912,7 @@ and every one of them is a fit-status change on the same fitted track
 | gained | 4 | 3 → 0 | same fit (npts, exit_L within a few %), the dQ/dx KS test now passes |
 | gained | 1 | 2 → 0 | the fit itself was repaired: 039252/10 cluster 70 (§15.7) |
 | lost | 5 | 0 → 3 | same fit, the dQ/dx KS test now fails |
-| lost | 2 | 0 → 2 | the fit breaks at a kink 3–6 points in with 134–186 cm left over (039349/23 cluster 59, 039349/69 cluster 26): the path the fitter used to cross a real gap was the fabricated bridge |
+| lost | 2 | 0 → 2 | **same fit**, the kink relocates to point 3 / 6 so 134–186 cm becomes “leftover” (039349/23 cluster 59, 039349/69 cluster 26) — see the correction below |
 | lost | 1 | 0 → 4 | extra-tracks veto (039349/48 cluster 15) |
 
 The 120th event, 039349/7, is excluded from the by-id table because its live
@@ -924,9 +925,35 @@ Two readings, both stated because they pull in opposite directions: the
 dQ/dx-KS flips (9 of 13) are the tagger reacting to a Steiner graph with
 fewer ghost points along a *real* track — end-charge profiles change when
 fabricated points near the end disappear — and are as likely to be
-corrections as losses; the two `0 → 2` losses are a real cost, the fitter
-losing a crossing it used to have. Neither is adjudicated here; both are
-named so the flip decision is made with them in view.
+corrections as losses; the two `0 → 2` losses are the same *kink-placement*
+fragility as the one gain, running the other way (below). Neither is
+adjudicated here; both are named so the flip decision is made with them in
+view.
+
+**Correction (2026-09-05, from the Bee sets of §15.10).** An earlier version
+of the row above said the two `0 → 2` losses were the fitter losing a
+crossing the fabricated bridge used to give it. The `stm_fit` layer says
+otherwise: the trajectory is unchanged in both arms —
+
+| case | OFF | ON |
+|---|---|---|
+| 039349/23 cluster 59 | `status=0 kink=215 exit_L=136.0 left_L=0.0 npts=215`, fit path 135.4 cm | `status=2 kink=3 exit_L=2.1 left_L=133.8 npts=216`, fit path 135.3 cm, **same two ends** |
+| 039349/69 cluster 26 | `status=0 kink=294 exit_L=190.2 left_L=0.0 npts=294`, fit path 190.5 cm | `status=2 kink=6 exit_L=3.5 left_L=186.3 npts=293`, fit path 190.0 cm, **same two ends** |
+| 039252/10 cluster 70 (the gain, §15.7) | `status=2 kink=30 exit_L=19.9 left_L=108.5 npts=200` | `status=0 kink=226 exit_L=144.4 left_L=0.0 npts=226` |
+
+so nothing breaks and no crossing is lost: what moves is where
+`TaggerCheckSTM` puts the kink. In both losses it jumps to the third or sixth
+trajectory point — 2.1 and 3.5 cm from the end — and the whole track past it
+is then counted as leftover. In both cases the removed ghost was attached at
+exactly that end (039349/23 cluster 59: a 134.8 cm removed group running from
+(315.8, 44.8, 272.1) to (448.5, 66.0, 283.6), off the fit end at
+(313.1, 67.6, 273.4)). 039252/10 cluster 70 is the same mechanism with the
+signs swapped: OFF puts the kink at point 30 and rejects, ON finds none.
+The kink test near a track end is therefore fragile to the charge sitting
+just beyond that end, in both directions; the flip changes which tracks it
+bites, not whether the tracks are real. That is a lead for its own round
+(the kink finder, not the retiler) and it lowers the weight of the `0 → 2`
+column in the decision below.
 
 ### 15.9 Recommendation
 
@@ -938,10 +965,11 @@ named so the flip decision is made with them in view.
    the two named points and 95 % of everything like them are gone, the
    cosmic taggers TGM/FC do not move, and the STM set turns over 13 of ~585
    ids for a net −1 with 9 of 13 being the dQ/dx test reacting to a cleaner
-   graph. Against it: two STM tracks lose the crossing the ghost bridge gave
-   them, and the STM tag set is what the PDVD stopping-muon campaign (doc 25)
-   is built on, so a turnover of 2 % is not free. A hand scan of the 13 would
-   settle which way each goes.
+   graph and 3 more (2 lost, 1 gained) being kink placement moving within an
+   unchanged trajectory. Against it: the STM tag set is what the PDVD
+   stopping-muon campaign (doc 25) is built on, so a turnover of 2 % is not
+   free even when no fit is damaged. A hand scan of the 13 would settle which
+   way each goes; the Bee sets of §15.10 are built for it.
 3. **The residual lead is class (c)**, not a smaller bound: blobs that overlap
    an original blob in wire space but sample far from it in 3D. A per-blob 3D
    support test against the original cluster's points (the `time_blob_map`
@@ -953,3 +981,36 @@ named so the flip decision is made with them in view.
    second faces unfiltered since the port. That is a §5.1 decision.
 5. Two doc-40 items stay open: the uncapped `connect_graph` bridge (§7, §13.2)
    and the sentinel-T0 leak (§8).
+
+### 15.10 Bee sets for the flip decision (uploaded 2026-09-05)
+
+Seven sets, one per event, **each holding two Bee events on the same
+geometry: event `0` = knob OFF (`d41base2`), event `1` = knob ON at 20 cm
+(`d41fix20x`)**, so the arms toggle in one tab. Built by re-indexing
+`work/<evt>_<arm>/mabc-pr.zip` `data/0/0-*.json` into `data/0` and `data/1`
+(the `run_bee_combined_evt.sh` idiom) and uploaded with `upload-to-bee.sh`;
+each UUID was content-verified (HTTP 200, both events listed). Repro:
+
+```
+docs/nf_sp_img_clus/scripts/d40r3_bee_compare.sh \
+    039252_2 039252_4 039252_10 039349_23 039349_69 039349_48 039349_52
+```
+
+| event | set | what to look at |
+|---|---|---|
+| 039252/2 | `386e9ea2-37b6-4740-a8bb-81e175f21bc5` | the origin. P1 (39.0, 75.7, 201.8) and P2 (275.5, 12.1, 8.8): 73 / 50 `steiner_graph` points within 8 cm in event 0, **0** in event 1. Cluster 119's two columns removed whole: (−9.8, 74.9, 200.0)→(124.6, 78.4, 204.9) 134.6 cm / 456 pts and (−2.1, 74.4, 207.2)→(124.6, 77.9, 208.7) 126.8 cm / 237 pts |
+| 039252/4 | `63988137-54cb-47e4-aad3-b541e7ebdc01` | the largest removal in the 120: 8 160 of 59 282 `steiner_graph` points (13.8 %), 49 groups > 10 cm. Biggest at (226.0, −51.6, 204.5) 103.7 cm and (100.5, −35.7, 192.8) 98.1 cm |
+| 039252/10 | `70bc1140-d5fd-4d33-bca7-0cce0d799f9a` | the STM **gain**. `stm_tagged` cluster 70: absent in event 0, 214 points in event 1; `stm_fit` 127.8 → 143.8 cm as the fit reaches the true end. The ghost that caused it: 123.8 cm / 623 pts at (−56.1, 210.6, 213.9), removed |
+| 039349/23 | `d24d7369-ca59-4e36-ba88-9bc6389bd5b5` | both signs in one event. Removed: 223.2 cm / 760 pts at (79.3, 267.0, 111.5) and 208.6 cm / 709 pts at (86.6, 272.0, 106.0). Lost: `stm_tagged` cluster 59 (1 056 pts in event 0, 0 in event 1) — its `stm_fit` is unchanged in both (135.4 / 135.3 cm, same ends), only the kink moves, and the 134.8 cm ghost at (381.7, 54.8, 277.8) that used to sit off its end is gone |
+| 039349/69 | `454c7698-8abe-44cf-9a96-bf1292e59edb` | the marginal cost: only 39 points removed event-wide, one 18.7 cm group at (320.9, 80.2, 145.2), and `stm_tagged` cluster 26 (1 283 pts) is lost on it. `stm_fit` again unchanged (190.5 / 190.0 cm) |
+| 039349/48 | `55f18fde-522f-4fa9-811f-c93dc9cf89ca` | the `0 → 4` loss (extra-tracks veto), `stm_tagged` cluster 15. Removed: two ~22 cm groups at (150.9, 223.6, 286.5) |
+| 039349/52 | `e95684e0-d29e-4158-81a5-952d5347e8ca` | the **residual**. The census's worst 3D group (cluster 58, 244.4 cm, 798 pts) is still there in event 1: only 26 points are removed event-wide, none in a group > 10 cm. This is what the flip does *not* buy — the class-(c) lead of §15.9 item 3 |
+
+Reading notes: `clustering` (live charge) and `stm` are **byte-identical**
+between the two events of every set — they are the backdrop, not the signal.
+`steiner_graph` carries only two distinct `cluster_id` values event-wide, so
+identify the ghosts by the coordinates above, not by cluster. `stm_tagged`
+shows the verdict (cluster present = tagged) and `stm_fit` the trajectory;
+both loss clusters keep their `stm_fit` in event 1, so the fit can be
+compared directly. The 9 dQ/dx-KS flips are not 3D-visible and no set is
+built for them.
