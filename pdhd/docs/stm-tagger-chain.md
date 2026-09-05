@@ -411,6 +411,70 @@ nothing about it; it is graded on outputs (§8).
 
 ---
 
+### 7.4 The inherited Steiner and ctpc operating point, and where it lands
+
+`pr.jsonnet`'s builder defaults are the legacy ones (`terminal_wire_tol` 0,
+`terminal_adjacent_slice` false, `terminal_min_separation` 0, `terminal_charge`
+null = the C++ 4000 e, `ctpc_aniso_metric` false) — a bare `pr.jsonnet` run is
+not PDVD production, exactly as `protodunevd/pr.jsonnet` says of itself. But the
+**driver** is a duplication fork of PDVD's and carries PDVD's tuned point
+unchanged, so that is what every arm in §8 and §9.1 ran:
+
+| `wct-pr-perevt.jsonnet` | PDHD | PDVD | provenance of the value |
+|---|---|---|---|
+| `steiner_terminal_charge` | 500 e | 500 e | doc 25 §13.6, a **PDVD** census |
+| `steiner_terminal_wire_tol` | 1 | 1 | doc pdvd/31 round 6 |
+| `steiner_terminal_adjacent_slice` | true | true | doc pdvd/31 round 6 |
+| `steiner_edge_charge_forward_dead_mix` | true | true | doc pdvd/31 |
+| `steiner_terminal_min_sep_cm` | 0.5 | 0.5 | doc pdvd/37 §6 |
+| `steiner_gap_penalty` | 2.0 | 2.0 | doc pdvd/40 |
+| `ctpc_aniso_metric` | true | true | doc pdvd/36 |
+
+Neither of the two geometry-sensitive ones is hard-coded to PDVD, and both were
+measured on PDHD here rather than argued about.
+
+**The ctpc metric self-derives, and PDHD's lattice is the mild one.**
+`Facade_Grouping.cxx:793` builds the metric per (apa, face) from
+`drift_step = nticks_per_slice × tick × drift_speed` and
+`yscale = min(1, drift_step / pitch)` (`CtpcAnisoMetric.h:74`) — geometry, not a
+constant. The knob logs what it derived, and the arms say:
+
+| | drift_step | pitch U/V/W | **yscale U/V/W** | lattice |
+|---|---|---|---|---|
+| **PDHD** | 3.152 mm | 4.669 / 4.669 / 4.792 | **0.675 / 0.675 / 0.658** | 1.48 : 1 |
+| PDVD | 2.962 mm | 7.650 / 7.650 / 5.100 | 0.387 / 0.387 / 0.581 | 2.58 : 1 |
+
+PDHD's correction is about half PDVD's and is nearly plane-independent, where
+PDVD's differs strongly between induction and collection. So the knob is doing
+much less work here — it is *right* to have it on, and it is also much less
+likely to be the lever it was on PDVD (doc pdvd/36: 0.18 → 0.70 pass rate).
+
+**The terminal thinning lands on the SBND side.** Doc pdvd/37 §3.2's law is that
+terminal density is `1/slice-pitch` with no physics in it: uBooNE 0.220 cm <
+PDVD 0.296 < SBND 0.313 cm. **PDHD's slice pitch is 0.3152 cm** — SBND's, to
+0.7 %. And 0.5 cm was not derived from PDVD's geometry either; doc 37 §6 picked
+it off a branch-loss/vertex-loss trade measured on all three detectors. The keep
+fraction at R = 0.5 cm, counted straight out of the `steiner_thin` log lines:
+
+| arm | clusters | terminals in → out | **keep** |
+|---|---|---|---|
+| **PDHD** `stm0` | 1 194 | 152 833 → 135 628 | **0.887** |
+| **PDHD** `stmw` | 2 189 | 363 004 → 321 198 | **0.885** |
+| PDVD `d42fit` | 30 415 | 1 981 175 → 1 590 877 | 0.803 |
+| SBND (doc 37 §6) | — | — | 0.85 |
+
+PDHD is thinned *least* of the three, exactly as the slice-pitch law predicts —
+fewer near-duplicate pairs to remove. So on both knobs PDHD is nearer SBND than
+PDVD, and neither is doing PDVD-scale work here.
+
+What is **not** established: `steiner_terminal_charge` 500 e is a PDVD number
+(doc 25 §13.6 measured PDVD's W-plane per-point median at ~1400 e) carried over
+without a PDHD charge census, and it is the one setting in the table with no
+self-adapting mechanism behind it. It is the first thing item 3 of §10 should
+measure.
+
+---
+
 ## 8. The measurement: does the PDHD fit need an effective transverse smearing?
 
 Arm `stm0`: run 029107, events 0–29, 175 accepted STM fit passes, 46 256
@@ -747,10 +811,16 @@ scans. §10 item 1 is still what is owed.)
    (2-D metrics, ring shares, dQ/dx, STM verdict churn) as the acceptance bar.
    The measurement machinery is committed and validated (§8.1), so that round is
    a re-run, not a rebuild.
-3. **A PDHD Steiner-terminal round** (the doc pdvd/37 analogue). This round takes
-   SBND's operating point (4000 e, `wire_tol` 1, `adjacent_slice` true,
-   `terminal_min_separation` 0) on the argument that PDHD's 4.67 mm pitch carries
-   ~1.6× SBND's charge per point. That is an argument, not a measurement.
+3. **Grade the inherited PDVD Steiner/ctpc operating point** (the doc pdvd/37 and
+   pdvd/36 analogue). This round did **not** run at the `pr.jsonnet` builder
+   defaults; the driver is a duplication fork of PDVD's and carries PDVD's whole
+   tuned point — `terminal_min_separation` 0.5 cm, `terminal_wire_tol` 1,
+   `terminal_adjacent_slice` true, `edge_charge_forward_dead_mix` true,
+   `steiner_terminal_charge` 500 e (doc 25 §13.6, a PDVD census),
+   `steiner_gap_penalty` 2.0, `ctpc_aniso_metric` true. See §7.4 for where each
+   lands on PDHD's geometry: both self-adapt, and both land nearer SBND than
+   PDVD. Nothing there is wrong in spirit, but no number in it was measured on
+   PDHD, and 500 e in particular was chosen from a PDVD charge census.
 4. **More imaged events.** 30 events give 175 accepted STM passes — plenty for
    §8 — but only **one** track passing the doc-55 stopping-muon cuts, so §6's
    comparison against data cannot be made. PDHD has ~100 more events with input
@@ -767,11 +837,15 @@ scans. §10 item 1 is still what is owed.)
    follows one prong. The inputs are already on disk — `resid_*_blocks.tsv` plus
    the pctrees of §0 — so this is an analysis round, not a run.
 
-**Explicitly out of scope and ungraded:** `tagger_check_neutrino` and its whole
-tail (PID, Michel finder, the PF/kine trees); the DL/SCN vertex; the STM accept
-guards, every one of which is off; `ctpc_aniso_metric`; the curved fiducial
-volume. Each is reachable from `wct-pr-perevt.jsonnet` and none has a PDHD number
-behind it.
+**Explicitly out of scope:** `tagger_check_neutrino` and its whole tail (PID,
+Michel finder, the PF/kine trees); the DL/SCN vertex; the STM accept guards,
+every one of which is off; the curved fiducial volume. Each is reachable from
+`wct-pr-perevt.jsonnet` and none has a PDHD number behind it.
+
+**ON in every arm but ungraded on PDHD** (§7.4): the inherited PDVD Steiner and
+ctpc operating point, item 3 above. This is a different status from "out of
+scope" — these settings shaped every number in §8, they are not defaults, and
+they came from PDVD measurements.
 
 **Flagged, not fixed** (§4): `params.jsonnet` still inherits generic
 `lar.DL 7.2 / DT 12.0 / lifetime 8 ms`, which PDHD's *simulation* consumes.
