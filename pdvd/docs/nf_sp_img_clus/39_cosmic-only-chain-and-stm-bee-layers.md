@@ -622,6 +622,10 @@ Both verified live (HTTP 200, event 0, all six layers present).
 
 ## 15. Related
 
+- **doc 40 — the follow-up.** The owner scanned the round-2 Bee set and named
+  two Steiner points with no image behind them. One is `ctpc_aniso_metric`
+  (the owner's 2026-09-04 flip, not this round); the other is the uncapped
+  component bridge §14 item 1 leaves open, now measured on 21 events.
 - doc 25 §2.1 — PDVD's readout-wide beam window
 - doc 30 — the same event 298595, `stm_fit` vs `track_fit` (why they disagree)
 - doc 37 — Steiner terminals, the 0.5 cm thinning now in production
