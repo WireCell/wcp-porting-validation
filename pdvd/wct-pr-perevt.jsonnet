@@ -1241,6 +1241,11 @@ function(
     curved_fv = false,
     curved_fv_margin_y = 3,
     curved_fv_margin_z = 3,
+    // curved_fv_profile (doc pdvd/43): with curved_fv on, which measured surface:
+    // 'd50' (doc 41 sec 9 median, the default) or the exit-gap quantiles 'p80' /
+    // 'p90' (cfg/.../curved_fiducial_profiles.jsonnet).  Arm:
+    // PDVD_PR_TLA="-S curved_fv=true -A curved_fv_profile=p90".
+    curved_fv_profile = 'd50',
     // Persist the per-pass STM track fits (C++ default false; key omitted
     // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
     // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added
@@ -3833,6 +3838,7 @@ function(
                              curved_fv=curved_fv,
                              curved_fv_margin_y=curved_fv_margin_y,
                              curved_fv_margin_z=curved_fv_margin_z,
+                             curved_fv_profile=curved_fv_profile,
                              save_stm_fit=save_stm_fit,
                              pf_track_main_cluster_only=pf_track_main_cluster_only,
                              pf_track_bridged_clusters=pf_track_bridged_clusters,

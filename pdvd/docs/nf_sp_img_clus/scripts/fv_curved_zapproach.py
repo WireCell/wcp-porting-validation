@@ -35,6 +35,9 @@ def main():
     ap.add_argument("--verdicts", default="/home/xqian/tmp/doc41/ab_verdicts.json")
     ap.add_argument("--minlen", type=float, default=200.0)
     ap.add_argument("--out", default="/home/xqian/tmp/doc41/zapp")
+    # doc 43: the 25 cm cap sits on the p90 at the cathode (12 % of z+ bottom
+    # approaches are beyond 20 cm); the quantile surface is built at --cap 40.
+    ap.add_argument("--cap", type=float, default=25.0)
     a = ap.parse_args()
 
     G = json.load(open(a.verdicts))["geometry"]
@@ -63,7 +66,7 @@ def main():
             for w in WALLS:
                 d = wall_dist(w, Q[:, 1], Q[:, 2])
                 i = int(np.argmin(d))
-                if d[i] > 25:
+                if d[i] > a.cap:
                     continue
                 p = Q[i]
                 dd = np.linalg.norm(Q - p, axis=1)
