@@ -21,7 +21,7 @@ cd /home/xqian/toolkit-dev/wcp-porting-img/pdvd
 # pins (libWireCell*.so + .pcm copied from local/lib): ref = today's production binary
 #   /home/xqian/tmp/d45_libpin/ref   libWireCellClus.so md5 fd273dc8f000780f5503af29dca88881
 #   /home/xqian/tmp/d45_libpin/new2  the shipped knob (md5 in stm/gates/d45_excl_frame_gate.txt)
-# toolkit 4e55b145 -> <this round's commit>; wcp-porting-img 029a0b50 -> <this round's commit>
+# toolkit 4e55b145 -> db166521 (the knob); wcp-porting-img 029a0b50 -> 8fc8b70f (this doc)
 S=docs/nf_sp_img_clus/scripts
 
 # A. baseline: the full PR tail (-nu) with today's production knobs, 120 events, stm_fit dump on

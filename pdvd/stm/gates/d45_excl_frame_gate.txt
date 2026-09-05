@@ -101,3 +101,4 @@
 #   (owner authorized 2026-09-05): https://www.phy.bnl.gov/twister/bee/set/0b40b1d3-462e-4a9e-b037-d4fe6643653d/event/list/
 # DETERMINISM  SBND 256587 re-run on both pins: ref == refb, off2 == off2b, refb == off2b (mabc + nusel).
 # PRODUCTION UNCHANGED: canonical PDVD/SBND configs carry no excl_t0_frame key; all production paths byte-identical (gates 1-3).
+# toolkit commit db166521 (clus knob + porting dictionary); wcp-porting-img 8fc8b70f (doc 45, scripts, jsonnet TLA, this record).
