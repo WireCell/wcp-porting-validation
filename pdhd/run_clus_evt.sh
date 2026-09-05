@@ -3,6 +3,9 @@
 # Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] [-noq] <run> <evt|all> [subrun]
 #        ./run_clus_evt.sh               # list available runs
 #
+# -save-pctree persists the post-Q/L point-cloud tree (pctree-evt<EVT>.tar.gz)
+# that ./run_pr_evt.sh reloads for the PR / STM tagger tail.
+#
 # Q/L (charge-light) matching runs by DEFAULT; -noq (or PDHD_QLMATCH=0) disables it.
 # An event with no converted light (opflash_pdhd-wct.tar.gz) auto-falls back to the
 # no-matching chain, so 'evt all' never fails on a light-less event.
@@ -44,11 +47,19 @@ QLMATCH=${PDHD_QLMATCH:-1}
 # Implies Q/L matching; the matched mabc-*.zip output is byte-identical with/without it.
 CALIB=0
 OPDUMP=${PDHD_OPDUMP:-1}   # optical "op" bee instance (light + Q/L pred); default ON, -noop to disable
+# -save-pctree: also persist the post-Q/L point-cloud tree
+# (work/<run6>_<evt>/pctree-evt<EVT>.tar.gz) that run_pr_evt.sh reloads.  Off by
+# default => the all-TPC TensorFileSink stays in dump_mode and the compiled
+# config / mabc output are byte-identical.
+SAVE_PCTREE=${PDHD_SAVE_PCTREE:-0}
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
+        # MUST precede the -s / -s* cases: '-save-pctree' starts with '-s' and the
+        # -s* catch-all would swallow it as a selection tag "ave-pctree".
+        -save-pctree|--save-pctree) SAVE_PCTREE=1; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
@@ -66,7 +77,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-noop] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; optical bee instance ON by default, -noop to disable)" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-noop] [-save-pctree] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; -save-pctree: persist the pctree for run_pr_evt.sh; optical bee instance ON by default, -noop to disable)" >&2
     exit 1
 fi
 RUN=$1
@@ -235,6 +246,26 @@ PY
         fi
     fi
 
+    local PCTREE_OUT=""
+    if [ "$SAVE_PCTREE" = 1 ]; then
+        PCTREE_OUT="$WORKDIR/pctree-evt${EVENT_NO}.tar.gz"
+        # TLA sidecar for run_pr_evt.sh: the PR job must rebuild DetectorVolumes
+        # with EXACTLY the values this Q/L job used, or switch_scope re-derives
+        # x_t0cor differently and the round-trip identity gate fails.  PDVD
+        # parity (pdvd/run_clus_evt.sh), minus the per-crate drift speeds --
+        # PDHD's single drift speed lives in params.jsonnet and is recorded here
+        # only so a later change is visible in the sidecar diff.
+        {
+            echo "run=${RUN_STRIPPED}"
+            echo "subrun=${SUBRUN}"
+            echo "event=${EVENT_NO}"
+            echo "trigger_offset_us=${TRIGGER_OFFSET_US:-0}"
+            echo "time_offset=0"
+            echo "readout_window_ticks=${READOUT_NTICKS:-6000}"
+            echo "qlmatch=${QLMATCH_EVT}"
+        } > "${WORKDIR}/pctree-evt${EVENT_NO}.tlas"
+    fi
+
     local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
@@ -248,10 +279,25 @@ PY
         -S "save_opflash=$([ "$OPDUMP" = 1 ] && echo true || echo false)" \
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
         -S "readout_window_ticks=${READOUT_NTICKS}" \
+        -A "save_tensors=${PCTREE_OUT}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
         return 1
+    fi
+    # Geometry / drift provenance for the PR job's staleness guard, read out of
+    # the COMPILED config so it can never disagree with what actually ran.
+    if [ "$SAVE_PCTREE" = 1 ]; then
+        python3 - "$CFG_JSON" >> "${WORKDIR}/pctree-evt${EVENT_NO}.tlas" <<'PYPROV'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+wires = sorted({n["data"]["filename"] for n in cfg if n.get("type") == "WireSchemaFile"})
+speeds = sorted({n["data"]["drift_speed"] for n in cfg
+                 if n.get("type") == "BlobSampler" and "drift_speed" in n.get("data", {})})
+print("wires=%s" % (wires[0] if wires else "unknown"))
+# WCT internal units are mm and ns, so a speed is mm/ns: multiply by 1e3 for mm/us.
+print("drift_speed_mmus=%s" % (("%.6g" % (speeds[0] * 1e3)) if speeds else "unknown"))
+PYPROV
     fi
     # Resource recording (additive; does not change reco output, disable with
     # PDHD_RESMON=off): run wire-cell in the background and sample its

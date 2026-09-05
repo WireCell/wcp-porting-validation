@@ -52,6 +52,13 @@ function(
     // flag.  run_clus_evt.sh reads the real value from the SP frame (~5999) and
     // passes it here; 6000 is a sane PDHD fallback.  See qlmatching.jsonnet.
     readout_window_ticks = 6000,
+    // Persist the post-Q/L point-cloud tree for the PR job (run_pr_evt.sh).
+    // '' (default) leaves the all-TPC TensorFileSink in its inert dump_mode
+    // (trash-all-apa.tar.gz) => compiled config byte-identical.  A path turns it
+    // into a real TensorDM writer.  run_clus_evt.sh -save-pctree passes
+    // work/<RUN6>_<EVT>/pctree-evt<EVT>.tar.gz.  See
+    // pgrapher/experiment/pdhd/clus.jsonnet clus_all_tpc tensor_outname.
+    save_tensors = '',
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -105,8 +112,8 @@ local group_pipes = [group_pipe(gd) for gd in groups];
 // all-TPC stage skips its input PointTreeMerging (premerged).  Without matching the two
 // per-side clustering outputs still fan into the ngroups-way merge.
 local clus_all_tpc = if do_qlmatch
-    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash)
-    else clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash);
+    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash, tensor_outname=save_tensors)
+    else clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash, tensor_outname=save_tensors);
 
 // JOINT Q/L matching: both drift sides enter ONE QLMatching node (like SBND) so the
 // cross-cathode (xTPC) consistency pass can pair a cathode-crosser's two halves.  Per
