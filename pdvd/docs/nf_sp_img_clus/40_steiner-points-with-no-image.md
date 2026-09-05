@@ -31,8 +31,9 @@ Two further results that qualify the first one:
   fabricated points beyond 3 cm (5.06 % → 4.58 % of all Steiner points) and
   **25 %** of those beyond 30 cm. Event 298595 is an outlier, not the norm
   (§6).
-* Turning the metric off on those 21 events **costs 28 STM tags**
-  (127 → 99, 96 cluster ids moving). It is not a free fix (§6, §10).
+* Turning the metric off on those 21 events **turns over the STM tag set**:
+  96 of 127 cluster ids move, for a net 127 → 99. It is not a display-only
+  fix (§6, §10).
 
 A third, unrelated defect surfaced in the same layer and is reported here
 because it is in the `clustering` layer the owner looks at: **29 clusters /
@@ -63,7 +64,9 @@ docs/nf_sp_img_clus/scripts/d40_aniso_arm_summary.py <events.txt> d39r2base d40a
 
 Gate record: `pdvd/stm/gates/d40_aniso_ghost_gate.txt`.
 Pinned library for every arm: `local/lib/libWireCellClus.so`, 2026-09-04
-18:54:31 — older than the first arm and unchanged across all of them.
+18:54:31 — older than the first arm and unchanged across all of them, and
+byte-identical (`cmp`) to `/home/xqian/tmp/d39r2_libpin/libWireCellClus.so`,
+the copy the §6 base arm `d39r2base` ran against.
 
 ---
 
@@ -233,6 +236,18 @@ Same construction on the doc pdvd/39 round-2 manifest: one pctree per event,
 two `-stm` PR passes over it, only `ctpc_aniso_metric` differing.
 (`stm/gates/d40_aniso_ghost_gate.txt`.)
 
+**The pipeline differs from §5.** §5's demo pair runs `-unmerge` (the round-2
+chain, which is what the owner's Bee set shows); this table runs `-stm` (the
+production chain, which is what `d39r2base` is). So 039252_2 appears twice
+with different numbers — 1 579 → 900 fabricated > 3 cm under `-unmerge`,
+2 428 → 1 405 under `-stm`. Do not diff one against the other; each pair is
+internally controlled.
+
+Both arms ran against the **same** `libWireCellClus.so`: the doc-39 round-2
+pin `/home/xqian/tmp/d39r2_libpin/libWireCellClus.so` and today's
+`local/lib/libWireCellClus.so` are byte-identical (`cmp`, 421 627 544 bytes,
+2026-09-04 18:54:31).
+
 | | metric ON (production) | metric OFF |
 |---|---:|---:|
 | Steiner points, 21 events | 488 262 | 492 820 |
@@ -254,8 +269,14 @@ Two things follow, and they point in opposite directions:
   beyond 30 cm (401 → 0);
   across 21 events it is 8 % and 25 %. **Most fabricated Steiner points in
   PDVD are not caused by this knob.**
-* The metric is **carrying 28 STM tags** (127 → 99 without it). Removing it to
-  clean up the display would forfeit those.
+* The **STM tag population turns over** when the metric is removed: 96 of the
+  127 base ids move in one direction or the other, for a net 127 → 99. The
+  count alone ("28 tags lost") badly understates that — most of the tagged set
+  is not the same set. TGM moves 7 ids for a net −1; FC does not move at all.
+  What this does **not** say is *why*: nothing here shows the fabricated points
+  are what moves the STM verdicts (§9). It says only that removing the metric
+  is a large, mostly-lateral change to the STM output, not a display-only
+  cleanup.
 
 The mean wall in the table's source run (25.1 s vs 48.3 s) is **not a
 measurement**: the two batches ran at different concurrency. Run alone on the
@@ -333,9 +354,10 @@ behind a default-OFF knob like everything else.
 ## 10. Recommendation
 
 **Do not flip `ctpc_aniso_metric` back off.** It answers the owner's P1 and
-would make event 298595's picture clean, but §6 says it would cost 28 STM tags
-across 21 events for an event-wide reduction of 0.5 percentage points in
-fabricated Steiner points, and it does nothing for P2 or for cluster 87. That
+would make event 298595's picture clean, but §6 says it would move 96 of 127
+STM-tagged cluster ids across 21 events (net 127 → 99) for an event-wide
+reduction of 0.5 percentage points in fabricated Steiner points, and it does
+nothing for P2 or for cluster 87. That
 trade is the owner's to make, not this document's; the knob is one TLA away
 (`PDVD_PR_TLA="-S ctpc_aniso_metric=false"`) whenever the owner wants an arm.
 
