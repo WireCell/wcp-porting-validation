@@ -891,7 +891,12 @@ not counted as lines (doc 36): 5,859 clusters evaluated, and the cluster-id set
 is identical in both arms on all 99 events.
 
 **Control**: against `d41base`, an arm run independently in another session on
-the same 99 events, the OFF arm's TGM is **identical — 2,148 with zero flips**.
+the same 99 events, the OFF arm's TGM is **identical — 2,148 with zero flips**
+over all 5,859 clusters. Read that narrowly: it says the OFF arm's TGM is
+reproducible by a separate run, not that the two arms are the same
+configuration — they differ on STM (+10 net, 54/44 flips) and FC (+49), so that
+arm has something else set, and the claim that OFF *is* today's operating point
+rests on the byte-identity proof in §10.1, not on this comparison.
 
 ### 10.3 The answer
 
@@ -915,16 +920,22 @@ PCA end's distance to the nearest boundary (four transverse walls + the two
 anode faces; the cathode slab is spanned by both fiducials), then the worse of
 the two.
 
-| category | n | no t0 | 0–3 cm | 3–5 | 5–8 | 8–12 | 12–15 | 15–18 | 18–25 | 25–40 | >40 |
+| category | n | < 5 pts | 0–3 cm | 3–5 | 5–8 | 8–12 | 12–15 | 15–18 | 18–25 | 25–40 | >40 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | TGM kept | 1,418 | 59 | **815** | 121 | 78 | 90 | 35 | 29 | 18 | 30 | 76 |
 | TGM lost | 730 | 60 | **20** | 64 | 126 | 167 | 137 | 118 | 10 | 5 | 23 |
 | TGM gained | 13 | 0 | 5 | 1 | 0 | 2 | 0 | 3 | 2 | 0 | 0 |
 | never TGM | 3,698 | 286 | 20 | 53 | 36 | 44 | 32 | 71 | 310 | 577 | 2,267 |
 
+The "< 5 pts" column is 3- and 4-point specks, too small for a PCA axis: 405 of
+the 5,859 evaluated clusters, of which **119 carry a TGM tag under the flat box
+and 59 under the curved surface**. (None of the 5,859 is flash-less — every one
+has a cluster T0, checked against the Bee layer's sentinel x — so nothing here
+comes from the tagger's offset-scanning no-flash branch.)
+
 The kept tags have their deciding end **on** the wall (57 % within 3 cm, median
 1.6 cm). The lost tags have it **in the 3–18 cm band** — 612 of the 670 with a
-t0, median 11.1 cm — which is precisely the shell the flat 15/18 cm inset adds
+PCA, median 11.1 cm — which is precisely the shell the flat 15/18 cm inset adds
 and the measured surface does not, except near the cathode. And the lost
 population is not made of muons: **median length 24 cm** against 176 cm for the
 kept, 409 of 670 shorter than 50 cm, and for 463 of 670 *neither* end is within
@@ -940,7 +951,7 @@ detector inside which any small object with both ends in the shell is
 | 50–100 cm | 668 | 190 | 132 | −30.5 % |
 | 100–200 cm | 959 | 316 | 256 | −19.0 % |
 | > 200 cm | 1,509 | 754 | 619 | **−17.9 %** |
-| (no t0) | 405 | 119 | 59 | −50 % |
+| < 5 points (no PCA) | 405 | 119 | 59 | −50 % |
 
 The 140 long (> 200 cm) losses are the population that matters, and they have a
 consistent shape: **best end 0.6 cm from a wall, deciding end 11.8 cm (quartiles
