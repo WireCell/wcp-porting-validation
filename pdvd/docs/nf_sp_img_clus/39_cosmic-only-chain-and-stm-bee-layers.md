@@ -708,6 +708,14 @@ lost split. Count matches §14 exactly.
 - **The `-nu` chain is ungraded.** Everything above is `-stm`. `unmerge_assoc`
   now sits in `PIPE_NU` too, and doc 38's retirement changes `track_fit` by an
   amount §4 says is larger than the STM change. Nobody has looked.
+  A **smoke test only** was run (`d38qnusmoke`, 039252/2): rc=0, wall **41 s**,
+  peak RSS **2.67 GB**, completion marker written, zero error/critical log
+  lines, and the full layer set present (`track_fit`, `shower_track`,
+  `vertices` alongside the STM layers). So the chain runs — notably it does not
+  hit doc 25 §13.11's `ProtectBundle` cost even at 522 clusters, because the
+  per-bundle PR and `ProtectBundle` are both gated on STM-tagged bundles and
+  that set went 9 → 5. That is a liveness check, **not** a grade: no arm
+  compares `track_fit` before and after.
 - **The §13 A/B that §12 was waiting on** was not what adjudicated this; the
   owner's decision was. The measurement here is narrower.
 
