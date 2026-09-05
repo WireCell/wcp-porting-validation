@@ -1085,35 +1085,85 @@ What §7.4 called "an SP-filter term that is too small" is better stated as: the
 model has **no term at all** for the transverse spread that PDVD's data shows,
 and the constant that looks like it ought to carry it does not.
 
-### 8.7 What to measure next
+### 8.7 How to derive the effective transverse width empirically, all three views
 
-0. **Settle the upstream question first (§8.8).** PDVD's induction wire filter
-   is a 6.7× outlier against every other detector in the tree and is effectively
-   no filter. Whether the transverse spread we are calling "missing smearing" is
-   physical charge or un-suppressed deconvolution noise decides whether the fix
-   belongs in the fit at all. The same dump answers it.
-1. **Find where the 2–3 mm enters, before modelling it.** `OmnibusSigProc`
-   already has the taps, both default-off: `dump_2d_spectra` / `dump_2d_prefix`
-   (`:212-213`) writes the per-plane input, response, deconvolved spectrum and
-   wire filter to npz, and `rawdecon_tag` (`:207`) taps the deconvolved frame
-   *before* any software filter. Running one PDVD event with these on and
-   measuring the transverse profile of an isolated stopping muon at each stage
-   separates three candidates that no fit-side scan can distinguish: residual
-   field-response spread the 2-D deconvolution does not remove, something added
-   downstream in imaging/ctpc, and genuine physical spread (delta rays). This
-   is the measurement to do first.
-2. **Test the induction branch that already exists.** `flag = 1` in
-   `cal_gaus_integral` is the bipolar-response induction model, written and
-   unused. Reaching it for U and V is a code change behind a default-OFF knob,
-   not a constant change, and it is the one candidate whose shape is physically
-   motivated for the planes that need it. It should be measured against
-   `d42fit` before any width constant is touched.
-3. **`nsigma` is a cheap, honest sensitivity test, and it is bounded.** Raising
-   it from 4 changes no physics constant — it only stops truncating a Gaussian
-   the model already has. §8.5 already bounds the effect at 5.6 % of the
-   first-neighbour share in the worst (prolonged) limit, so this cannot be the
-   2–3 mm; run it to close the item, not expecting it to explain anything.
-4. **Do not move `D_T`** (§7.4) or `ind_sigma_*_T` (§8.3) on this evidence.
+The owner's direction (2026-09-05): derive the effective smearing for U, V and W
+**from the data**, rather than from the SP filter or from any closed form. That
+is the right call — §8.2 shows the closed form is the wrong source and §8.9
+shows the width being modelled is real charge. What follows is the design; none
+of it has been run beyond the single-anode check of §8.9.
+
+**The estimator, per (detector, plane).**
+
+1. **Prolonged segments only.** §8.9 is unambiguous here: on transversally
+   localized segments the first-neighbour shape is 0.282, on isochronous ones
+   0.573 — and the second number is the track crossing strips within the slice,
+   not charge sharing. Pooling the two inflates the answer by nearly a factor
+   two. Cut on the local wire advance (< 0.25 strips/slice) exactly as
+   `d42_transverse_moments.py --max-span` already does.
+2. **Resolve by drift time, and fit both terms.** The model is
+   σ_T = hypot(√(2·D_T·t), `ind_sigma`)/pitch, so the empirical answer is a
+   *line*, not a number: measure σ_eff in drift bins and fit
+   **σ_eff² = 2·D_T_eff·t + c²**. That returns the effective diffusion
+   coefficient and the constant separately. Fitting a single constant instead
+   would bake §7.4's drift-dependent residual into a drift-independent number
+   and be wrong at both ends of the drift — which is also the only clean way to
+   revisit `D_T` (§7.4 showed a constant-only reading demands an unphysical
+   20 cm²/s).
+3. **Derive against the ctpc, cross-check against the SP frame.** The fit is
+   compared to `T_proj_data`, so that is what the constant must describe. But
+   §8.9 measures 0.282 in the SP waveform against 0.311 in the ctpc for the same
+   tracks: something in imaging/blob widens it slightly. Quote both. If the
+   constant is derived from the ctpc it silently absorbs that step, which is
+   operationally right for fit quality and worth stating out loud.
+4. **Check the shape before quoting a width.** The model's transverse shape is a
+   Gaussian (`flag = 0`, §8.5). If the measured profile has non-Gaussian tails —
+   and the raw induction profile has negative side lobes at ±3–4 strips (§8.9) —
+   then a single σ trades the core against the tails and the residual will not
+   go to zero. Compare the measured profile to the best-fit Gaussian per plane
+   and report the mismatch; if it is large, `flag = 1` (the unused bipolar
+   induction branch) is the better instrument than a wider σ.
+5. **SBND is the closure test, not a comparison.** Run the identical machinery
+   on SBND, whose model already describes its data (§8.4: W deficit exactly
+   0.00). It must return approximately SBND's working values. **If it does not,
+   the method is measuring something other than the transverse width and the
+   PDVD numbers must not be used.** This is the one step that makes the
+   derivation falsifiable.
+
+**Cost.** The primary derivation needs **no new running**: the per-point width
+is already measured from `T_proj_data` by `d42_transverse_moments.py` on the
+120-event PDVD and 99-event SBND arms on disk. What it needs is the prolonged
+cut, drift binning and the two-parameter fit added to that script. The SP-frame
+cross-check needs `run_nf_sp_evt.sh -R` on a handful of events (~40 s per anode).
+
+**Ordering, and one condition that can invalidate the whole thing.**
+
+- **Raise `nsigma` first.** It is not a physics constant, §8.5 bounds it at
+  5.6 %, and at a wider σ it stops biting anyway — but derived *while* it
+  truncates, the constant would partly be compensating for a threshold.
+- **Settle the `Wire_ind` question before freezing any number.** Doc 12 §11.5's
+  rationale for PDVD's value is inverted (§8.8), so that setting is under a
+  question mark. If it changes, the measured transverse profile changes and
+  **every constant derived here is invalidated and must be re-derived.** The two
+  are alternatives, not a pair: the fit constant describes whatever the SP
+  delivers. Any derivation done now is explicitly conditional on today's SP.
+
+**Still open from the earlier list.** `flag = 1`, the unused bipolar induction
+branch of `cal_gaus_integral` (§8.5), remains the one candidate whose *shape* is
+physically motivated for the planes that need it, and step 4 above is what
+decides between it and a wider σ. `D_T` is not to be moved except through the
+two-parameter fit of step 2.
+
+**The arm, with its success criteria fixed in advance.** Gated arm carrying the
+derived per-plane constants via `-A trackfitting_config=<a copy>` against
+`d42fit`, same 120 events, same pctrees. `pdvd_track_fitting.json` is read at
+**runtime**, so the compiled config is byte-identical either way and the arm must
+be graded on outputs, never on a config hash. Pre-registered: `B_foot` moves
+toward 0 on all three planes; `U_foot` falls; the dQ/dx scale k rises from 0.93
+toward 1; and the §4.2 hump at 3–20 cm either shrinks — which would identify it
+as the induction deficit propagating — or does not, which would hand it back to
+the recombination table. Rewrite the config comment in the same commit so the
+next reader does not re-derive the constant from `Wire_ind`.
 
 ### 8.8 Upstream: is PDVD's own signal processing filtering the wire dimension at all?
 
