@@ -357,3 +357,87 @@ tested.
   it there, and SBND is staying on the isotropic metric anyway, where doc 36
   §10.1's argument says the rule cannot be stated.
 - **The PDVD clustering job** still uses the isotropic metric (doc 36 §11).
+
+## 10. RETIRED the same day — `unmerge_assoc` pre-empts it (owner, 2026-09-04)
+
+**Repro**
+
+```bash
+cd pdvd
+for t in d38qon d38qoff d38qunon d38qunoff d38qunrep d38qnewprod d38qesc; do
+    ./scripts/stage_pr_tag.sh 39252 2 $t d39r2prov; done
+OFF=<a copy of pdvd_track_fitting.json with end_trim_gap_len 0>
+./run_pr_evt.sh -nounmerge -s d38qon  39252 2                          # merged chain, trim 20 cm
+PDVD_PR_TLA="-A trackfitting_config=$OFF" ./run_pr_evt.sh -nounmerge -s d38qoff 39252 2
+./run_pr_evt.sh -s d38qunon  39252 2                                   # unmerged chain, trim 20 cm
+PDVD_PR_TLA="-A trackfitting_config=$OFF" ./run_pr_evt.sh -s d38qunoff 39252 2
+python3 ../../wcp-porting-img/abtest/hash_archive.py work/039252_2_*/mabc-pr.zip
+```
+
+### 10.1 The finding
+
+`§8.1`'s 20 cm operating point lived for six hours. The owner asked for the
+same A/B on the chain with `unmerge_assoc` (doc 39 round 2) in it, and the
+answer is unambiguous:
+
+| chain | trim 20 cm vs trim 0 | `hash_archive.py` |
+|---|---|---|
+| merged (pre-flip, `-nounmerge`) | **differs** | `1e723bfe…` vs `2079fd78…` |
+| **unmerged (`unmerge_assoc` in the pipeline)** | **BYTE-IDENTICAL** | `e728abfe…` both |
+
+Noise floor is **0** on both chains: an independent repeat arm reproduces its
+partner's hash exactly (`d38qrep` ≡ `d38qon`, `d38qunrep` ≡ `d38qunon`).
+`run_pr_evt.sh` carries no `setarch -R`, so this is a real ASLR-exposed
+reproducibility check and it makes the identity above *attributable*.
+
+**Mechanism** (consistent with the measurement; not proven at the predicate):
+the two features address the same defect from opposite ends. `scan_tip_island`
+drops a **detached island** at a trajectory tip; `unmerge_assoc` splits
+`clustering_isolated`'s detached clumps into their own clusters *before* the
+taggers run. Once the clumps are separate objects, no tip has an island left
+to drop and the trim never fires.
+
+### 10.2 What the trim was doing on the merged chain
+
+For the record, on 039252/2 (evt 298595), trim 0 → 20 cm, merged chain:
+
+| | trim 0 | trim 20 cm |
+|---|---|---|
+| STM-evaluated clusters | 23 | 23 |
+| `stm_fit` points | 6530 | **5807** (−723, −11.1 %) |
+| STM-tagged clusters | 8 | **9** |
+
+Tag set `[39,40,55,86,87,100,109,111,113]` (20 cm) vs
+`[39,40,55,87,89,100,111,113]` (0): the trim **gained** 86 and **109** and
+**lost** 89. Cluster 109 is doc 32/36's 146 cm problem track; the trim removed
+270 of its 800 fit points and it became STM-tagged.
+
+Cluster-identity check, because the `clustering` layer differs by 62 bytes:
+total 3-D points 196745 in both arms; all nine ids above identical in point
+count **and** centroid; the only movers are ids 90 (31→10 pts) and 99 (17→7),
+whose 31 shed points become OFF-only ids 122–125. That is
+`ClusteringProtectBundle` — gated on `protect_stm_only_bundles`, so a different
+STM tag set opens different bundles. A consequence of the tag change, not an id
+remap.
+
+### 10.3 What shipped
+
+`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json`:
+`end_trim_gap_len` **200 → 0**. C++ default is 0, so this returns PDVD to the
+legacy tip-only trim in `examine_end_ps_vec`. `sbnd_track_fitting.json` is
+untouched and no other detector ever saw the knob.
+
+Pre-flip arm: `-A trackfitting_config=<a copy of this file with 200>`.
+
+### 10.4 Scope of the evidence — read before extending this
+
+- **n = 1 event.** The byte-identity is measured on 039252/2 only. The 120-event
+  manifest would be the general claim and was not run.
+- **STM side only.** `-stm` (the production mode) carries no `track_fit` layer.
+  This same file feeds `TaggerCheckNeutrino`, and §9 already records that
+  `end_trim_gap_len` moved the `track_fit` layer by **+174 clusters / +13.0 %
+  points** — *more* than it moved the STM layer, and still ungraded (doc 39 §4).
+  Retiring the knob therefore changes the `-nu` chain by an amount nobody has
+  measured. That is the first thing to check if the neutrino chain moves.
+- The §5–§8 sweep that chose 20 cm was run on the **merged** chain. Every number
+  in it is now a statement about a configuration PDVD no longer runs.

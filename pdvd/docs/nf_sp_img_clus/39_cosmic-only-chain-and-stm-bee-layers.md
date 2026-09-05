@@ -630,3 +630,93 @@ Both verified live (HTTP 200, event 0, all six layers present).
 - doc 30 — the same event 298595, `stm_fit` vs `track_fit` (why they disagree)
 - doc 37 — Steiner terminals, the 0.5 cm thinning now in production
 - doc 38 — the gap-aware end trim, also in this binary
+
+## 16. `unmerge_assoc` is PDVD PRODUCTION (owner decision, 2026-09-04)
+
+§12 shipped `unmerge_assoc` wired but **held out of the default** pending the
+§13 A/B adjudication. The owner adjudicated it the same day and flipped it on,
+together with the retirement of doc 38's gap-aware end trim (doc 38 §10).
+
+**Repro**
+
+```bash
+cd pdvd
+./scripts/stage_pr_tag.sh 39252 2 d38qnewprod d39r2prov
+./run_pr_evt.sh -s d38qnewprod 39252 2          # no TLAs at all
+python3 ../../wcp-porting-img/abtest/hash_archive.py work/039252_2_d38qnewprod/mabc-pr.zip
+# -> e728abfe697d4cb309c9d7778dca3ea2a8155a26104fdb8ab63422adcab086a2
+```
+
+### 16.1 What changed
+
+| file | change |
+|---|---|
+| `pdvd/run_pr_evt.sh` | `unmerge_assoc` added to **both** `PIPE_STM` and `PIPE_NU`, so `-nu` does not silently lose the new default. `PIPE_STM_MERGED` / `PIPE_NU_MERGED` keep the pre-flip chains verbatim, reachable as `-nounmerge` / `-nounmerge-nu`. `PIPE_STM_UNMERGE` is now an alias of `PIPE_STM`, so existing `-unmerge` commands keep working. |
+| `pdvd/run_pr_evt.sh` | the `-save-assoc` provenance guard is re-keyed on **the selected pipeline containing `unmerge_assoc`**, not on `MODE = unmerge`. Left on `MODE` it would have stopped guarding the moment the default changed, and §12.2's silently-inert arm would be back. |
+| `pdvd/run_clus_evt.sh` | `SAVE_ASSOC` default **0 → 1**, with `-no-save-assoc` to restore. Required: the default PR chain now hard-errors rc=4 on a pctree with no `perblob` provenance, so a default-off clustering stage would make the default PR stage refuse its own default input. |
+| `cfg/…/protodunevd/pdvd_track_fitting.json` | `end_trim_gap_len` 200 → 0 (doc 38 §10). |
+
+The clus-stage pctree is therefore **no longer byte-identical** to a pre-flip
+one — it gains the three `perblob` provenance arrays. Cluster membership and
+every physics quantity are unchanged; the arrays are additive.
+
+### 16.2 The gates
+
+Both on 039252/2 (evt 298595), same binary (`local/lib/libWireCellClus.so`
+2026-09-04 18:54, newest `clus` source 18:47), same pctree (`d39r2prov`).
+
+| gate | arms | result |
+|---|---|---|
+| the flip reproduces the measured configuration | `d38qnewprod` (**no TLAs**) vs `d38qunoff` (unmerge + trim 0 via TLA) | **PASS**, `e728abfe…` both |
+| the escape hatch reproduces the pre-flip chain | `d38qesc` (`-nounmerge`) vs `d38qoff` (merged + trim 0 via TLA) | **PASS**, `2079fd78…` both |
+| noise floor | `d38qunrep` vs `d38qunon`; `d38qrep` vs `d38qon` | **0** — identical, no `setarch -R` |
+
+The first gate is the load-bearing one: a run with **no TLAs at all** landing on
+the hash that the explicitly-configured arm produced proves both edits landed,
+that the runner picks up `unmerge_assoc` by default, and that the cfg picks up
+`end_trim_gap_len: 0` — in one check.
+
+### 16.3 What `unmerge_assoc` does, on this event
+
+`d38qon` → `d38qunon` (trim 20 cm on both sides, so this isolates the unmerge):
+
+| | merged | unmerged |
+|---|---|---|
+| clusters | 121 | **522** |
+| total 3-D points | 196745 | 196745 |
+| STM-evaluated | 23 | **15** |
+| STM-tagged | 9 | **5** |
+| `stm_fit` points | 5807 | 4051 |
+
+Tag set `[39,40,55,86,87,100,109,111,113]` → `[55,83,86,87,109]`.
+
+**The sign of that is unknown and this doc does not claim one.** Fewer tags may
+be correct — §12's stated purpose is to let the taggers see individual objects
+instead of a main body plus detached clumps, and a clump that was dragging a
+main into an STM verdict *should* stop doing so. It may equally be lost
+efficiency. It needs a hand scan, on more than one event.
+
+The 33 `no flash-merge provenance … not split` warnings on this event are the
+**known cosmetic condition** §14 already records (clusters `clustering_isolated`
+never touched, so there is nothing to undo) — not a provenance gap and not a
+lost split. Count matches §14 exactly.
+
+### 16.4 Not established by this flip
+
+- **n = 1.** Both the flip's gates and the §16.3 census are one event. The
+  120-event manifest is the general claim and was not run.
+- **The `-nu` chain is ungraded.** Everything above is `-stm`. `unmerge_assoc`
+  now sits in `PIPE_NU` too, and doc 38's retirement changes `track_fit` by an
+  amount §4 says is larger than the STM change. Nobody has looked.
+- **The §13 A/B that §12 was waiting on** was not what adjudicated this; the
+  owner's decision was. The measurement here is narrower.
+
+### 16.5 Bee
+
+- old production (merged + trim 20 cm) vs trim OFF:
+  https://www.phy.bnl.gov/twister/bee/set/49f303b0-ddb5-4787-b897-928da86cf355/event/list/
+  (idx 0 = trim 20 cm, idx 1 = trim 0)
+- **new production vs old production**:
+  https://www.phy.bnl.gov/twister/bee/set/52e201f4-68b0-47ab-a9a5-6df0b394ea01/event/list/
+  (**idx 0 = new production** — `unmerge_assoc` ON, trim OFF; **idx 1 = old
+  production** — merged, trim 20 cm)

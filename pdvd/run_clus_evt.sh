@@ -13,10 +13,11 @@
 #                   (pctree-evt<EVENTNO>.tar.gz; doc pdvd/25 M1, input of run_pr_evt.sh)
 #   -save-assoc     record what clustering_isolated merged (the
 #                   isolated/assoc_cluster_id/assoc_cluster_main perblob arrays)
-#                   so run_pr_evt.sh -unmerge can undo it (doc pdvd/39 round 2).
+#                   so the PR unmerge_assoc stage can undo it (doc pdvd/39 r2).
 #                   Cluster membership is unchanged; the pctree gains 3 arrays.
-#                   Required for the PR -unmerge mode -- without it the
-#                   unmerge_assoc visitor has no provenance and is inert.
+#                   DEFAULT ON since 2026-09-04 (owner): unmerge_assoc is in the
+#                   default PR chain and run_pr_evt.sh refuses a pctree without
+#                   this provenance.  -no-save-assoc writes the pre-flip pctree.
 #   -op / -noop     optical "op" bee instance (default ON when matching)
 #   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
 #   PDVD_DRIFT_SPEED_BOT_MMUS / PDVD_DRIFT_SPEED_TOP_MMUS
@@ -77,7 +78,13 @@ SEL_TAG=""
 QLMATCH=${PDVD_QLMATCH:-1}
 CALIB=0
 SAVE_PCTREE=${PDVD_SAVE_PCTREE:-0}
-SAVE_ASSOC=${PDVD_SAVE_ASSOC:-0}   # doc pdvd/39 r2: isolated-grouping provenance
+# PDVD PRODUCTION 2026-09-04 (owner): DEFAULT ON.  unmerge_assoc is now in the
+# default PR chain, and run_pr_evt.sh hard-errors (rc=4) on a pctree with no
+# perblob provenance -- so a default-off clustering stage would make the
+# default PR stage refuse its own default input.  -no-save-assoc restores 0.
+# The pctree is NOT byte-identical to a pre-flip one: it gains 3 provenance
+# arrays.  Cluster membership and every physics quantity are unchanged.
+SAVE_ASSOC=${PDVD_SAVE_ASSOC:-1}   # doc pdvd/39 r2: isolated-grouping provenance
 OPDUMP=${PDVD_OPDUMP:-1}   # optical "op" bee instance; default ON, -noop to disable
 _args=()
 while [ $# -gt 0 ]; do
@@ -86,6 +93,7 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -save-pctree|--save-pctree) SAVE_PCTREE=1; shift ;;   # before -s* (prefix clash)
         -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;      # before -s* (prefix clash)
+        -no-save-assoc|--no-save-assoc) SAVE_ASSOC=0; shift ;;  # pre-flip pctree (owner 2026-09-04)
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;

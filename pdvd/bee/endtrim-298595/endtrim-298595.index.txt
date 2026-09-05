@@ -1,0 +1,141 @@
+# PDVD evt 298595 (run 39252, event index 2) -- gap-aware end trim A/B
+# Bee set: https://www.phy.bnl.gov/twister/bee/set/49f303b0-ddb5-4787-b897-928da86cf355/event/list/
+#
+# bee_idx	arm	end_trim_gap_len	work dir
+0	PRODUCTION	200 (= 20 cm)	pdvd/work/039252_2_d38qon
+1	OFF	0	pdvd/work/039252_2_d38qoff
+#
+# Repro:
+#   ./scripts/stage_pr_tag.sh 39252 2 <tag> d39r2prov
+#   ./run_pr_evt.sh -s d38qon  39252 2                     # production (-stm default mode)
+#   PDVD_PR_TLA="-A trackfitting_config=<abs>/pdvd_track_fitting_endtrim0.json" \
+#     ./run_pr_evt.sh -s d38qoff 39252 2
+#   ./run_pr_evt.sh -s d38qrep 39252 2                     # noise floor
+#   python3 merge_bee.py out.zip work/039252_2_d38qon/mabc-pr.zip work/039252_2_d38qoff/mabc-pr.zip
+#   pdvd/upload-to-bee.sh out.zip
+#
+# Binary pin: local/lib/libWireCellClus.so 2026-09-04 18:54 (newest clus source 18:47).
+# Tree: de3ce282.  Input pctree: 039252_2_d39r2prov (clustering from d27fresh imaging).
+#
+# GATES
+#   noise floor  d38qon vs d38qrep  hash_archive.py 1e723bfe52471d56048bcd6b960cfd6975b004244d22b46b115a1d54e78ae217  IDENTICAL (22/22 members)
+#                -> run_pr_evt.sh has no setarch -R; two independent runs agree, so every
+#                   ON/OFF difference below is attributable to the knob alone.
+#   knob fires   d38qoff            hash_archive.py 2079fd78140fea22a40ba97706869a53fe9a61a92476dd1d199a54d396f298cd  DIFFERS
+#   config proof pdvd_track_fitting.json vs ...endtrim0.json: 53 keys both sides,
+#                exactly one value differs (end_trim_gap_len 200 -> 0).  Compiled-config
+#                diff = arm paths + the one trackfitting_config_file string, nothing else.
+#                (Guards the empty-TLA trap: a bad path silently reverts EVERY TrackFitting
+#                parameter to the uBooNE-hardcoded C++ presets and the event still runs.)
+#
+# WHAT MOVES (3 of 22 Bee members differ: clustering, stm_fit, stm_tagged;
+#             steiner_graph and steiner_terminals are byte-identical -- the trim is
+#             downstream of the Steiner stage, as expected)
+#   STM-evaluated clusters   23 both arms
+#   stm_fit points           6530 (OFF) -> 5807 (production)   -723, -11.1 %
+#   STM-tagged clusters      8 (OFF)    -> 9 (production)
+#     gained by the trim: 86, 109        lost by the trim: 89
+#
+# per-cluster fit-point change (production - OFF), nonzero only:
+#   cluster 39   -69   (124 -> 55)
+#   cluster 45   -96   (521 -> 425)
+#   cluster 48   -38   ( 72 -> 34)
+#   cluster 86   -73   (219 -> 146)   GAINS its STM tag under the trim
+#   cluster 89   -78   ( 82 -> 4)     LOSES its STM tag under the trim  <-- the cost case
+#   cluster 100  -67   ( 71 -> 4)     keeps its tag on 4 points
+#   cluster 103   +4   (193 -> 197)
+#   cluster 109 -270   (800 -> 530)   GAINS its STM tag -- doc 32/36's problem track
+#   cluster 111  -36   ( 50 -> 14)
+#
+# Scan targets: 109 first (the 146 cm track doc 36 sec 5 called three things in one
+# cluster), then 86, then 89 and 100 as the damage side.
+#
+# CLUSTER-IDENTITY CHECK (the clustering layer differs by 62 bytes; ids must be
+# proven to mean the same object before any per-cluster delta above is quotable)
+#   total 3-D points        196745 both arms (nothing created or lost)
+#   clusters                121 (production) vs 125 (OFF)
+#   all 9 table ids         IDENTICAL npoints AND centroid to 1e-6 in both arms
+#                           -> the per-cluster rows compare the same physical objects
+#   the only movers         id 90  31 -> 10 pts   id 99  17 -> 7 pts (OFF splits them further)
+#   OFF-only ids            122 (9 pts), 123 (5), 124 (7), 125 (10) = exactly the 31 points
+#                           shed by 90 and 99
+#   mechanism               ClusteringProtectBundle ran (191 log lines) and is gated on
+#                           protect_stm_only_bundles=true -- only bundles holding an
+#                           STM-tagged cluster are opened for splitting.  The arms have
+#                           different STM tag sets, so two extra bundles were split in OFF.
+#                           This is a CONSEQUENCE of the tag change, not an id remap.
+#
+# SCOPE: -stm mode (the PDVD production working mode since doc 39) stops after
+# steiner_refresh, so this set carries NO track_fit layer.  It grades the STM side only.
+# Doc 39 sec 4 reports the neutrino track_fit layer moves MORE than STM under this knob
+# and has never been graded -- that needs a -nu pair, not this one.
+#
+# ============================================================================
+# UNMERGE_ASSOC INTERACTION (asked 2026-09-04, arms d38qunon/d38qunoff/d38qunrep)
+# ============================================================================
+# The four arms above ran the PDVD DEFAULT chain, which has NO unmerge_assoc:
+#   switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,
+#   tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display
+# (wct-pr-perevt.jsonnet:130 "the trimmed chain -- no unmerge_bundle /
+#  unmerge_assoc"; -unmerge is an opt-in runner mode added by doc 39 round 2.)
+#
+# Re-ran the same trim A/B with -unmerge (pipeline gains unmerge_assoc after
+# flag_mains).  Same binary, same pctree (d39r2prov), same OFF config file.
+#
+#   d38qunon  (trim 20 cm)  e728abfe697d4cb309c9d7778dca3ea2a8155a26104fdb8ab63422adcab086a2
+#   d38qunrep (repeat)      e728abfe...  IDENTICAL -> noise floor 0 on this chain too
+#   d38qunoff (trim 0)      e728abfe...  IDENTICAL
+#
+# ==> WITH unmerge_assoc ON, THE GAP-AWARE END TRIM IS A COMPLETE NO-OP on this
+#     event: all 22 Bee members byte-identical between trim 20 cm and trim 0.
+#     Mechanism is consistent (NOT yet proven at the predicate): scan_tip_island
+#     drops a DETACHED ISLAND at a trajectory tip; unmerge_assoc splits the
+#     detached clumps into their own clusters, so no tip has an island left.
+#     The two features address the same defect and unmerge pre-empts the trim.
+#
+# What unmerge_assoc itself does on this event (d38qon -> d38qunon, trim 20 cm
+# both, so this row is the unmerge effect alone):
+#   clusters            121 -> 522        (splits; total 3-D points 196745 both)
+#   STM-evaluated       23  -> 15  clusters
+#   STM-tagged          9   -> 5   clusters   ids [39,40,55,86,87,100,109,111,113]
+#                                             ->  [55,83,86,87,109]
+#   stm_fit points      5807 -> 4051
+#   SIGN UNKNOWN -- fewer tags may be CORRECT (doc 39 r2's stated purpose is to
+#   let the taggers see individual objects instead of a main body plus detached
+#   clumps).  Needs a hand scan; do not read the drop as a regression.
+#
+# PREREQUISITE, and one CORRECTION to an earlier note in this file
+#   (1) CORRECTED.  The 33 "no flash-merge provenance ... not split" warnings are
+#       NOT a provenance gap and cost no splits.  Doc 39 sec 14 already records
+#       them as a known cosmetic condition: they are clusters clustering_isolated
+#       never touched, so there is nothing to undo.  The count matches sec 14
+#       exactly (33 on this event).  An earlier version of this file listed them
+#       as a blocker; that was wrong.
+#   (2) REAL, and handled in the flip.  run_pr_evt.sh hard-errors rc=4 on a pctree
+#       with no 'perblob' cloud.  Sampled 25 recent real pctrees: 21 have it, 4 do
+#       not -- and the 4 include d27fresh, stage_pr_tag.sh's DEFAULT source tag.
+#       So run_clus_evt.sh SAVE_ASSOC was flipped 0 -> 1 in the same change:
+#       otherwise the default PR chain refuses the default clustering chain's own
+#       output.  Historical arms staged from d27fresh need -nounmerge (or
+#       PDVD_ALLOW_NO_ASSOC=1).
+#
+# ============================================================================
+# THE FLIP (owner, 2026-09-04) -- unmerge_assoc ON, gap-aware end trim OFF
+# ============================================================================
+#   pdvd/run_pr_evt.sh                 unmerge_assoc into PIPE_STM and PIPE_NU;
+#                                      PIPE_STM_MERGED / PIPE_NU_MERGED keep the
+#                                      pre-flip chains (-nounmerge / -nounmerge-nu);
+#                                      provenance guard re-keyed on the PIPELINE.
+#   pdvd/run_clus_evt.sh               SAVE_ASSOC 0 -> 1 (-no-save-assoc restores).
+#   cfg/.../pdvd_track_fitting.json    end_trim_gap_len 200 -> 0.
+#
+#   GATE 1  d38qnewprod (NO TLAs at all)  e728abfe...  == d38qunoff   PASS
+#           -> proves both edits landed, the runner takes unmerge by default and
+#              the cfg takes trim 0, in one check.
+#   GATE 2  d38qesc (-nounmerge)          2079fd78...  == d38qoff     PASS
+#           -> the escape hatch reproduces the pre-flip merged chain.
+#
+# Bee, new production vs old production:
+#   https://www.phy.bnl.gov/twister/bee/set/52e201f4-68b0-47ab-a9a5-6df0b394ea01/event/list/
+#   idx 0 = NEW production (unmerge_assoc ON, trim OFF)
+#   idx 1 = OLD production (merged, trim 20 cm)

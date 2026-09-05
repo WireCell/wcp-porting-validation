@@ -97,6 +97,8 @@ while [ $# -gt 0 ]; do
         -stm) MODE=stm; shift ;;
         -stmlean) MODE=stmlean; shift ;;   # must precede the -s* catch-all
         -unmerge) MODE=unmerge; shift ;;   # doc pdvd/39 r2; before the -s* catch-all
+        -nounmerge) MODE=merged; shift ;;    # pre-flip merged chain (owner 2026-09-04)
+        -nounmerge-nu) MODE=numerged; shift ;;  # pre-flip merged NEUTRINO chain
         -nu) MODE=nu; shift ;;
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
@@ -111,8 +113,14 @@ if [ $# -lt 2 ]; then
 fi
 RUN=$1; EVT=$2; SUBRUN_ARG=${3:-}
 
-PIPE_NU="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
-PIPE_STM="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+PIPE_NU="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
+# PDVD PRODUCTION (owner decision 2026-09-04): unmerge_assoc is in the DEFAULT
+# chain now, in both PIPE_STM and PIPE_NU, so -nu does not silently lose it.
+# Pre-flip chain = -nounmerge (PIPE_STM_MERGED / PIPE_NU_MERGED below).
+PIPE_STM="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+# The pre-flip (merged) chains, kept verbatim for A/B archaeology.
+PIPE_STM_MERGED="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+PIPE_NU_MERGED="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
 # doc pdvd/39: same stages, but tagger_check_tgm moved AHEAD of steiner so the
 # Steiner build can skip TGM-flagged clusters (pair with
 # PDVD_PR_TLA="-S 'steiner_skip_flags=[\"TGM\"]'").  Held out of the default
@@ -127,10 +135,13 @@ PIPE_STM_LEAN="switch_scope,flag_mains,fiducialutils,tagger_check_tgm,steiner,ta
 # REQUIRES a pctree written by run_clus_evt.sh -save-assoc; without the
 # provenance arrays the visitor is inert (it warns and splits nothing).
 # Held out of the default until the doc pdvd/39 sec 12 A/B is adjudicated.
-PIPE_STM_UNMERGE="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+# -unmerge is now the default; the name is kept so old commands keep working.
+PIPE_STM_UNMERGE="$PIPE_STM"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
     stm) PIPE="$PIPE_STM" ;;
+    numerged) PIPE="$PIPE_NU_MERGED" ;;
+    merged) PIPE="$PIPE_STM_MERGED" ;;
     stmlean) PIPE="$PIPE_STM_LEAN" ;;
     unmerge) PIPE="$PIPE_STM_UNMERGE" ;;
     empty) PIPE="" ;;
@@ -241,7 +252,12 @@ process_event() {
     # array under restore_demoted_mains (ClusteringUnmergeBundle.cxx:426).
     # So check here.  The probe reads only the tarball's metadata members (~0.1 s
     # on a 20 MB pctree).
-    if [ "$MODE" = unmerge ]; then
+    # PDVD PRODUCTION 2026-09-04: unmerge_assoc is in the default chain, so this
+    # guard must key on the SELECTED PIPELINE, not on MODE -- otherwise the
+    # default path (MODE=stm) would run the stage unguarded and go silently inert.
+    local _need_assoc
+    case ",$PIPE," in *,unmerge_assoc,*) _need_assoc=1 ;; *) _need_assoc=0 ;; esac
+    if [ "$_need_assoc" = 1 ]; then
         # NB grep -q/-m1 would exit on the first match, SIGPIPE the tar, and
         # under this script's `set -o pipefail` the pipeline would report
         # FAILURE on a match -- the guard would then reject every tree,
@@ -254,7 +270,7 @@ process_event() {
         elif [ "${PDVD_ALLOW_NO_ASSOC:-0}" = 1 ]; then
             echo "WARNING: $PCTREE has no perblob provenance; -unmerge will split NOTHING (allowed by PDVD_ALLOW_NO_ASSOC=1)" >&2
         else
-            echo "ERROR: run=$RUN evt=$EVT: -unmerge needs a pctree written with run_clus_evt.sh -save-assoc, but $PCTREE carries no 'perblob' point cloud -- unmerge_assoc would split nothing and the arm would be silently identical to -stm (doc pdvd/39 sec 12.2).  Re-run clustering with -save-assoc, or set PDVD_ALLOW_NO_ASSOC=1 to run it anyway." >&2
+            echo "ERROR: run=$RUN evt=$EVT: unmerge_assoc (in the DEFAULT chain since 2026-09-04) needs a pctree written with run_clus_evt.sh -save-assoc, but $PCTREE carries no 'perblob' point cloud -- unmerge_assoc would split nothing and the arm would be silently identical to -stm (doc pdvd/39 sec 12.2).  Re-run clustering with -save-assoc, or set PDVD_ALLOW_NO_ASSOC=1 to run it anyway." >&2
             rm -f "$CFG_JSON"; return 4
         fi
     fi
