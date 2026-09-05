@@ -1,0 +1,36 @@
+# doc pdvd/42 -- gate record for the STM fit-dump instrument fix (per-pass 2D charge snapshots)
+# and the two validation arms.  2026-09-05.
+#
+# toolkit HEAD before the change: 6a0f0346 (apply-pointcloud); wcp-porting-img HEAD 1c2d064c -> 3803e268 (peer, doc 41) during the round
+# pins (libWireCell*.so + *.pcm copied from local/lib):
+#   ref  /home/xqian/tmp/d42_libpin/ref   libWireCellClus.so 84a93f34c9d85440c99833eb86f3928f  libWireCellRoot.so 8d7402cf50bfef00eb6a8a1a8785be7b  (pre-change, == local/lib 2026-09-04 21:18)
+#   new  /home/xqian/tmp/d42_libpin/new   libWireCellClus.so 8fd9007c33c38f1495095e6f974b2e1b  libWireCellRoot.so 1c7f43db67f9b750f4564e153ef63a59  (snapshot fix, box cells)
+#   new2 /home/xqian/tmp/d42_libpin/new2  libWireCellClus.so 8fd9007c33c38f1495095e6f974b2e1b  libWireCellRoot.so 9ee0a1e8ff642246bb571af0213ff645  (FINAL: + owner-filtered cells; clus lib identical to new)
+# freshness: local/lib/libWireCellClus.so 2026-09-05 07:31:32, libWireCellRoot.so 07:39:07, sources edited 07:28 / 07:38.
+# doctests: wcdoctest-clus 306 cases (3 new, doctest_trackfitting_snapshot_pass.cxx) SUCCESS 22688 assertions; wcdoctest-root SUCCESS 4053 assertions.
+#
+# CODE CHANGE (toolkit): TrackFitting.h/.cxx  ClusterFitted2D::pass{-1} + add_fitted_charge_2d_snapshot();
+#   TaggerCheckSTM.cxx  StmPassRecord::cells + per-pass snapshots handed to the 'stm' holder (only under save_stm_fit);
+#   PdvdMagnifyTrackingVisitor.cxx + SbndMagnifyTrackingVisitor.cxx  write_proj_data emits a pass snapshot under block ident*10+pass,
+#   keeping the fitted cluster's own cells (owner set) + owner-less dead fillers.  No jsonnet change.
+#
+# GATE 1  PDVD production chain unchanged (-stm, no -stm-fit; PIN new; tag d42stmchk) vs d41stmon (2026-09-05 pre-change):
+#   d40r3_hash_gate.py d41stmon d42stmchk events2  -> PASS 2 FAIL 0 (039252_2, 039349_23)  [mabc-pr.zip member content]
+#   compiled configs differ only in the per-tag paths (inname/output_filename)
+# GATE 2  SBND bare production chain (run_nusel_evt.sh data, no -stm-fit), fresh roots work-stmcamp-d42gateold (PIN ref) vs
+#   work-stmcamp-d42gatenew (PIN new), events 284349 285999 286065: nusel-evt*.tsv sha256, mabc-pr.zip members, pctree-pr tar members
+#   -> 3/3 identical.  (SBND production has save_stm_fit=false; identity by construction, run anyway.)
+# GATE 3  PDVD -stm -stm-fit, PIN ref (d42fitold) vs PIN new2 (d42fitnew2), 2 events:
+#   hash_root_trees.py per tree: T_rec_charge T_stm_pass T_stm_eval T_bad_ch Trun  SAME SAME;  mabc-pr.zip members identical (PASS 2/2)
+#   T_proj_data (content sha256 from d42_proj2d_selfcheck.py; hash_root_trees.py is BLIND to vector<vector<int>> branches and says SAME for
+#   different trees):  039252_2  old 84091ed01a8f5194 (155 blocks, 88535 cells, 7017 pred>0) -> new2 2601dc7a7aa67fa5 (16 blocks, 211573 cells, 37083 pred>0)
+#                      039349_23 old ... -> new2 b2ba555dcea0ddc0 (15 blocks, 110788 cells, 42371 pred>0)
+#   positive control (d42_proj2d_selfcheck.py, fraction of a block's own footprint cells with charge_pred>0):
+#     old: every block but the LAST fitted one = 0.000 (the defect); new2: every fitted block 0.57-0.98
+# GATE 4  the graded arm d42fit (PIN new2, -stm -stm-fit, 120 events) vs d41stmon on the 2 common events: mabc-pr.zip PASS 2/2
+#   -> the dump does not perturb the verdicts (STM/TGM Bee layers identical).
+#
+# ARMS   d42fit  120/120 rc=0, 120 tracking-stm.root, 1806 (cluster,pass) blocks, 582 status-0 passes  (/home/xqian/tmp/d42_arms/d42fit.info)
+#        SBND work-stmcamp-d42fit  99/99 rc=0 (72 doc-62 baseline events + 30 doc-55 events, union 99; pctrees from work-mcp1k-d97fv),
+#          99 tracking-stm.root, 84 with T_proj_data, 92 blocks, 44 status-0 passes
+# selfcheck over every file: PDVD 108/120 PASS at 0.5, 12 files with one block at 0.38-0.50 (marginal, reported in the doc); SBND 84/84 PASS.

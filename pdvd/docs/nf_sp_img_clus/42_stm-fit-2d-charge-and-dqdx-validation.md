@@ -1,0 +1,546 @@
+# 42 — Validating the STM trajectory + dQ/dx fit on PDVD against SBND: measured vs predicted 2-D pixel charge, and dQ/dx vs residual range
+
+**Status.** Analysis round with one instrument fix. The STM fit dump's
+`T_proj_data` (measured vs predicted 2-D charge) was found **defective on both
+detectors** — it carried the prediction of the *last fitted cluster only* — and
+is fixed in the toolkit (`clus` + `root`, per-pass snapshots; §1). Every
+production output is byte-identical across the fix (gates in §1.5); only
+`tracking-stm.root`'s `T_proj_data` changes, and only with `-stm-fit`. **No
+knob, no default, no physics constant changed.** Both checks the owner asked for
+were then run on fresh arms at today's production operating points: PDVD 120
+events (`d42fit`) and SBND 99 events (`work-stmcamp-d42fit`, the 72
+owner-adjudicated STM-baseline events of doc 62 plus the 30 doc-55 events).
+
+**Owner request (2026-09-05).** *"What I would like to validate, using the STM
+tagger fitted track trajectory and dQ/dx results, are its performance: 1. the
+predicted vs. measured 2D pixel charge after the track trajectory and dQ/dx
+fit — compare SBND (pretty good, validated) vs PDVD, all 3 views; 2. for the
+STM tagged events, dQ/dx vs residual range (best fitted) for the stopping muon
+(remove the Michel electron part) vs the expectation. The above check is on
+1. whether our Steiner Graph and terminal build is solid 2. whether the entire
+track fitting chain is solid. Use the Magnify-tracking-PDVD machinery."*
+
+**Short answer.**
+
+| | PDVD (585 accepted passes, 120 events) | SBND (45 accepted passes, 99 events) |
+|---|---|---|
+| charge the trajectory never reaches, `f_off` (median, all planes) | **0.33** [IQR 0.20–0.53]; 21 % of blocks lose > 50 % | **0.05** [0.04–0.08]; 0 % |
+| … of which > 5 wires away (`f_off_far`) | 0.25 | 0.002 |
+| unexplained fraction on the footprint, `U_foot` (U / V / W) | 0.36 / 0.37 / **0.24** | 0.23 / 0.27 / **0.19** |
+| bias on the footprint, `B_foot` (U / V / W) | **−0.22 / −0.22 / −0.10** | −0.07 / −0.07 / −0.09 |
+| χ²/N on the footprint, fit's own σ (U / V / W) | 9.2 / 6.5 / 18.4 | 6.8 / 6.6 / 11.0 |
+| pull robust rms (U / V / W) | 1.93 / 1.60 / 2.57 | 1.57 / 1.52 / 2.48 |
+| dQ/dx vs rr, muon-like stopping tracks: scale k, χ²/11 bins | 45 tracks, **k = 0.93, χ² = 69.5** (shape hump +10 % at 3–20 cm) | 5 tracks, **k = 1.01, χ² = 10.0** |
+| dQ/dx vs rr, all accepted passes | 582, k = 0.92, χ² = 2343 (Bragg bin at 0.65 of the table: flat ends, doc 25 §13.6) | 44, k = 1.00, χ² = 51 |
+
+- **Steiner graph / trajectory reach (check 1a):** on PDVD one third of an
+  accepted cluster's own 2-D charge lies more than one wire/slice from the
+  fitted trajectory, and three quarters of that is more than 5 wires away —
+  charge the path never went through. On SBND it is 5 % and essentially none is
+  far. This is the doc 39 "fused clusters" residual seen in 2-D, and it is the
+  dominant PDVD–SBND difference. It rises to 0.5–0.6 within 60 cm of the
+  cathode and within 40 cm of the CRPs (§3.4), and it is larger for short
+  tracks (0.61 below 50 cm, 0.22 above 200 cm).
+- **Fitting chain where the trajectory IS (check 1b):** the fit describes the
+  charge it reaches **well on W** (U 0.24 vs SBND 0.19, bias −0.10 vs −0.09)
+  and **worse on U/V**: PDVD's induction planes are systematically
+  under-predicted by 22 % (SBND 7 %), with the deficit largest in the Bragg bin
+  (−0.28) and flat along the rest of the track (−0.21). The pull widths and
+  tails are 20–30 % wider than SBND on U/V and equal on W. The induction
+  deficit is a *scale* effect on two planes, not a trajectory effect, and points
+  at the induction-plane charge or its uncertainty model (`rel_uncer_ind`,
+  smearing σ) rather than at the Steiner build; it is not tuned here (§5).
+- **dQ/dx vs rr (check 2):** for muon-like stopping tracks selected with the
+  doc-55 cuts the PDVD Bragg curve follows the 0.45 kV/cm table to a scale
+  k = 0.93 (SBND 1.01) with a **+10 % hump at 3–20 cm** relative to the table
+  shape, which SBND does not show (χ² 69.5 vs 10.0 for 11 bins). The
+  population of *all* accepted passes reproduces doc 25's finding: the median
+  PDVD "stop" is flat (contrast 1.07, Bragg bin at 0.65 of the table), so most
+  PDVD STM tags are not stopping muons in the data, while SBND's are (contrast
+  2.04). The Michel/leftover removal is the tagger's own kink: 154/582 PDVD and
+  18/44 SBND accepted passes carry a leftover (median 5.8 / 7.3 cm); anchoring
+  at the kink instead of the path end moves the PDVD profile by < 5 % (§4.4).
+
+## 0. Repro block
+
+```bash
+# Pins (a peer rebuilds local/lib mid-campaign): /home/xqian/tmp/d42_libpin/{ref,new2}
+#   ref   libWireCellClus.so 84a93f34c9d85440c99833eb86f3928f  libWireCellRoot.so 8d7402cf50bfef00eb6a8a1a8785be7b   (pre-fix)
+#   new2  libWireCellClus.so 8fd9007c33c38f1495095e6f974b2e1b  libWireCellRoot.so 9ee0a1e8ff642246bb571af0213ff645   (this round)
+# toolkit HEAD before the round 6a0f0346; wcp-porting-img 1c2d064c (3803e268 by a peer during it)
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild && ./build/clus/wcdoctest-clus && ./build/root/wcdoctest-root
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+# 0.45 kV/cm reference table (the production particle_dataset.jsonnet since 2026-09-03; self-gated against the compiled jsonnet)
+python3 docs/nf_sp_img_clus/scripts/d42_make_ref_dqdx_045.py                         # -> stm/pdvd_ref_dqdx_045.json
+# gate arms (2 events: 039252/2, 039349/23), fresh tags, pctrees symlinked from d39r2prov / d41prov
+E=/home/xqian/tmp/d42_libpin/events2.txt; R=docs/nf_sp_img_clus/scripts/run_d42_arms.sh
+ARM=d42stmchk PIN=new  NOSTMFIT=1 EVENTS=$E JOBS=2 $R      # production chain, vs d41stmon
+ARM=d42fitold PIN=ref  EVENTS=$E JOBS=2 $R                 # pre-fix dump
+ARM=d42fitnew2 PIN=new2 EVENTS=$E JOBS=2 $R                # fixed dump
+python3 docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41stmon d42stmchk $E          # PASS 2/2
+python3 docs/nf_sp_img_clus/scripts/d42_proj2d_selfcheck.py work/039252_2_d42fitnew2/tracking-stm.root
+# the graded arms
+ARM=d42fit PIN=new2 JOBS=16 $R                                                       # 120 events, -stm -stm-fit
+cd ../sbnd/sbnd_xin && D42_LIBPIN=/home/xqian/tmp/d42_libpin/new2 NJOBS=14 ./stm_campaign/run_d42_stmfit.sh d42fit   # 99 events
+STM_EVENTS="284349 285999 286065" D42_LIBPIN=/home/xqian/tmp/d42_libpin/ref D42_NO_STMFIT=1 ./stm_campaign/run_d42_stmfit.sh d42gateold  # + d42gatenew with new2
+cd ../../pdvd; F=docs/nf_sp_img_clus/figs; S=../sbnd/sbnd_xin
+# check 1: measured vs predicted 2-D charge
+python3 docs/nf_sp_img_clus/scripts/d42_proj2d_resid.py --det pdvd --out $F/42_proj2d_pdvd work/*_d42fit/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_proj2d_resid.py --det sbnd --out $F/42_proj2d_sbnd $S/work-stmcamp-d42fit/nusel_evt*/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_proj2d_plots.py --pdvd $F/42_proj2d_pdvd --sbnd $F/42_proj2d_sbnd --out $F/42
+python3 docs/nf_sp_img_clus/scripts/d42_proj2d_panels.py --det pdvd --block 400 -o $F/42_panel_pdvd_best_039252_16_d42fit_b400.png work/039252_16_d42fit/tracking-stm.root
+# check 2: dQ/dx vs residual range
+python3 docs/nf_sp_img_clus/scripts/d42_dqdx_rr.py --det pdvd --ref stm/pdvd_ref_dqdx_045.json --ref-key MuonDeDx --out $F/42_dqdx_pdvd work/*_d42fit/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_dqdx_rr.py --det sbnd --ref $S/nusel_display/stm_ref_dqdx.json --ref-key MuonDeDxBox --max-abs-x 1e9 --out $F/42_dqdx_sbnd $S/work-stmcamp-d42fit/nusel_evt*/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_dqdx_plots.py --pdvd $F/42_dqdx_pdvd --pdvd-ref stm/pdvd_ref_dqdx_045.json:MuonDeDx --sbnd $F/42_dqdx_sbnd --sbnd-ref $S/nusel_display/stm_ref_dqdx.json:MuonDeDxBox --out $F/42 --tier doc55_muon
+# Magnify-tracking renders (doc 43 recipe; drive.C = /home/xqian/tmp/drive.C, cluster INDEX from T_rec.rec_cluster_id)
+wire-cell-sbnd-magnify-tracking-convert -bwork/039252_16_d42fit/tracking-stm.root -tT_rec_charge -o/home/xqian/tmp/d42_arms/magnify/track_com_pdvd_039252_16_d42fit.root -f2
+( cd /nfs/data/1/xqian/toolkit-dev/Magnify-tracking-PDVD/scripts && xvfb-run -a -s "-screen 0 1920x1080x24" root -l -q loadClasses.C \
+  '/home/xqian/tmp/drive.C("/home/xqian/tmp/d42_arms/magnify/track_com_pdvd_039252_16_d42fit.root","<out>.png",10)' )
+# gate record: stm/gates/d42_stm_proj2d_gate.txt
+```
+
+The per-block tables (`figs/42_proj2d_{pdvd,sbnd}_blocks.tsv`), the per-track
+dQ/dx tables (`figs/42_dqdx_*_tracks.tsv`) and the tier summaries
+(`figs/42_dqdx_*_summary.tsv`) are committed; the per-point and per-cell
+products (`*_points.tsv`, `*_rr.tsv`, `*_pulls.npz`, 8–12 MB each) are
+regenerated by the commands above.
+
+## 1. The instrument, and the defect found in planning
+
+### 1.1 What exists
+
+The dQ/dx system minimises |data − R·x|² over the measured 2-D charge, and the
+per-cell answer is persisted: `TrackFitting::fill_fitted_charge_2d`
+(`TrackFitting.cxx:1286-1404`) stores `charge / charge_err / pred_charge /
+flag / owning clusters` per (apa, face, plane, wire, slice), and the STM writers
+`root/src/{Pdvd,Sbnd}MagnifyTrackingVisitor.cxx::write_proj_data` emit it as the
+tree `T_proj_data` (`cluster_id*10+pass / channel / time_slice / charge /
+charge_err / charge_pred`) of `tracking-stm.root`, next to `T_rec_charge` (per
+fitted point `x y z q nq(=dx) pu pv pw pt rr reduced_chi2 pass status`),
+`T_stm_pass` (`kink_num exit_L left_L`) and `T_stm_eval`. Runner:
+`pdvd/run_pr_evt.sh -stm -stm-fit` (39 s/event), SBND `run_nusel_evt.sh data
+-stm-fit`. The viewer `Magnify-tracking-PDVD` (doc 25 §13.5) draws exactly this
+tree: measured charge and `(pred−meas)/meas` per plane (`event/Data.cc:683-800`).
+So the owner's check 1 needed no new instrumentation — *if the tree was right*.
+
+### 1.2 Symptom
+
+On PDVD 039252/2 (`d38h20`, the newest arm with the dump) only **6 923 of
+177 857** `T_proj_data` cells carried `charge_pred > 0`, Σpred/Σmeas = 2.7 %.
+Block by block: cluster 119 (the last one the tagger fitted) had predictions on
+91–100 % of its trajectory footprint cells; **every other block had 0.000 on
+its own footprint** — including accepted stopping muons with 200–500 fitted
+points. The SBND showcase files (docs 42–46) looked healthy only because they
+hold one or two blocks.
+
+### 1.3 Root cause
+
+`TaggerCheckSTM::begin_pass_record` (`TaggerCheckSTM.cxx:883-897`) copied the
+private fitter's merged `m_fitted_charge_2d` into one grouping-level
+accumulator, **last-writer-wins per cell**. Each pass's measured map spans the
+**bounding box** of main + associated clusters per (apa, face, plane)
+(`TrackFitting::prepare_data`, `get_uvwt_range` →
+`get_overlap_good_ch_charge`), so it contains the cells of every earlier
+cluster that falls in the box — with `pred_charge = 0`, because this fit's
+trajectory is elsewhere. Those zeros overwrote the earlier clusters'
+predictions; the visitor then attributed each cell to its owning cluster (from
+`global_rb_map`) and found nothing predicted. This is the STM-path twin of doc
+pr/109 §8, which fixed the PR stage with per-cluster snapshots; the STM holder
+"carries no snapshots, so that path … takes the fallback" — a comment that
+described the bug (`PdvdMagnifyTrackingVisitor.cxx:373-376`, now rewritten).
+
+### 1.4 Why it hid
+
+The GUI shows one cluster at a time and the showcase events had one fit; the
+ROOT tree hasher used for A/B gates (`qlport/scripts/hash_root_trees.py`)
+**cannot see `vector<vector<int>>` branches** — it reports two different
+`T_proj_data` trees as SAME (verified here: 155 vs 16 blocks, both "SAME"), so
+no gate ever looked at this tree's content. `d42_proj2d_selfcheck.py` now prints
+a content sha256 of the sorted cells.
+
+### 1.5 Fix and verification
+
+- `TrackFitting.h/.cxx`: `ClusterFitted2D::pass{-1}` (declared last, so the
+  PR-stage `{cluster, ident, cells}` initialiser is untouched) and an additive
+  `add_fitted_charge_2d_snapshot(cluster, ident, pass, cells)`.
+- `TaggerCheckSTM.cxx`: each `StmPassRecord` keeps **its own** map (copied right
+  after its round-2 fit); `persist_stm_fit` queues (cluster, ident, pass, cells)
+  and the hand-off block adds them to the `"stm"` holder. The merged accumulator
+  is kept for any reader that does not use snapshots. All under `save_stm_fit`.
+- Both STM visitors (owner decision 2026-09-05: fix PDVD *and* SBND): a snapshot
+  with `pass >= 0` is emitted under exactly `ident*10+pass`, keeping the fitted
+  cluster's own cells (owner set) plus owner-less dead-region fillers — the block
+  is "this cluster's measured 2-D charge against this pass's prediction", which
+  is what the GUI showed before and what a residual metric needs.
+- `clus/test/doctest_trackfitting_snapshot_pass.cxx` (3 cases): default pass −1;
+  two passes of one cluster stay two entries with their own predictions; adding
+  snapshots leaves the merged map alone. `wcdoctest-clus` 306 cases /
+  `wcdoctest-root` pass.
+
+| gate | arms | result |
+|---|---|---|
+| PDVD production chain (`-stm`, no dump), new binary vs `d41stmon` | `d42stmchk`, 039252/2 + 039349/23 | `mabc-pr.zip` member-identical **2/2** |
+| SBND bare production chain, old vs new binary | `work-stmcamp-d42gate{old,new}`, 3 events | tsv + Bee members + pctree-pr members identical **3/3** |
+| PDVD `-stm -stm-fit`, old vs new binary | `d42fitold` vs `d42fitnew2` | `T_rec_charge T_stm_pass T_stm_eval T_bad_ch Trun` identical, Bee identical; **`T_proj_data` differs** (intended) |
+| positive control: predicted fraction of a block's own footprint | same | old: 0.000 on every block but the last; new: 0.57–0.98 on every fitted block |
+| the graded arm vs `d41stmon` (verdicts unperturbed by the dump) | `d42fit`, 2 common events | Bee **2/2** identical |
+
+Full record with pins and hashes: `stm/gates/d42_stm_proj2d_gate.txt`.
+**Status: NOT bit-identical for `tracking-stm.root::T_proj_data` (the fix);
+every production output byte-identical.** PDVD production runs with
+`save_stm_fit = true`, so the per-pass copies are now held in memory during
+`TaggerCheckSTM::visit` on every PDVD event (a few MB per fitted pass, freed at
+hand-off); wall/RSS of `d42fit` (median 38 s, 1.7 GB) match `d41stmon`.
+
+## 2. Metrics — fixed before the numbers
+
+`d42_proj2d_resid.py` (port of `sbnd_xin/scripts/pr109_2d_resid.py` from
+near-vertex boxes to whole STM blocks). Per (event, block, plane), over the
+block's cells with `charge > 0` and not on a dead channel (`T_bad_ch`):
+
+| symbol | definition | reads on |
+|---|---|---|
+| **footprint** | cells within 1 channel × 1 slice (Chebyshev) of a fitted point of that plane | — |
+| **`f_off`** | 1 − Σy(footprint)/Σy(all): the cluster's own charge the trajectory does **not** pass through; split `f_off_near` (1 < d ≤ 5) / `f_off_far` (d > 5) | Steiner path / terminal reach |
+| **`U_foot`** | Σ|y−ŷ|/Σy on the footprint (pr/109's headline) | fit quality where the fit is |
+| `B_foot` | (Σŷ−Σy)/Σy on the footprint | charge scale of the prediction |
+| χ²/N | Σ((y−ŷ)/σ)²/N, σ = √(err² + (q·rel)² + add²), rel 0.075/0.075/0.05, add 0/0/300 — identical in `pdvd_track_fitting.json` and `sbnd_track_fitting.json` | the fit's own whitening |
+| `uncov_foot` | Σy[ŷ=0]/Σy on the footprint | cells the fit reached but predicted nothing |
+| pull | (y−ŷ)/σ on covered footprint cells: robust rms 1.4826·MAD, |pull| > 3 fraction | residual shape |
+| per rr bin | the footprint sums per residual-range bin of the nearest fitted point | Bragg vs plateau |
+
+The prediction's response reach is ~1 wire (ind σ 0.26–0.43 mm vs 7.65 mm
+pitch; add σ_L ≈ 2 mm vs 3 mm slices), so "footprint" is the set of cells the
+fit can predict at all; charge beyond it is charge the trajectory did not
+visit. Headline population = **accepted passes (status 0)**; the other
+statuses are reported alongside (§3.5). Plane bounds: PDVD U [0,3808) V
+[3808,7616) W [7616,12288) and 2500 slices; SBND U [0,3968) V [3968,7936) W
+[7936,11276) and 857 slices; `T_bad_ch` in ticks (÷4).
+
+Decision rules: the Steiner/terminal verdict is read from `f_off` (PDVD vs
+SBND); the fitting-chain verdict from `U_foot`, `B_foot`, the pulls and the
+dQ/dx-vs-rr shape χ² and k spread. The PDVD U/V-vs-W split was predicted from the
+pitch-blind-constant history (doc 32) before the numbers were read.
+
+## 3. Check 1 — measured vs predicted 2-D charge, all three views
+
+### 3.1 Populations
+
+PDVD `d42fit`: 120 events, 1 806 fitted (cluster, pass) blocks, statuses
+0/2/3/4/5/7 = 585/118/674/26/73/330. SBND `work-stmcamp-d42fit`: 99 events
+(84 with at least one fit), 92 blocks, 45/12/17/3/3/12. Every fitted block in
+both arms passes the footprint positive control (PDVD 108/120 files clean at
+0.5, 12 files with one block at 0.38–0.50 — dead cells and unpredicted
+footprint cells, see `uncov_foot`; SBND 84/84).
+
+### 3.2 Accepted passes, per plane (median [IQR])
+
+| det | plane | blocks | U_foot | B_foot | χ²/N | uncov_foot | f_off | pull rms | |pull|>3 |
+|---|---|---|---|---|---|---|---|---|---|
+| PDVD | U | 585 | 0.360 [0.284, 0.466] | −0.221 | 9.2 | 0.036 | 0.335 [0.210, 0.503] | 2.10 | 0.267 |
+| PDVD | V | 583 | 0.369 [0.298, 0.471] | −0.217 | 6.5 | 0.032 | 0.390 [0.198, 0.577] | 1.71 | 0.192 |
+| PDVD | W | 585 | 0.244 [0.199, 0.314] | −0.101 | 18.4 | 0.009 | 0.294 [0.159, 0.492] | 2.81 | 0.333 |
+| PDVD | all | 585 | 0.327 [0.274, 0.408] | −0.185 | 12.5 | 0.031 | 0.334 [0.199, 0.530] | 2.20 | 0.267 |
+| SBND | U | 45 | 0.232 [0.188, 0.289] | −0.074 | 6.8 | 0.000 | 0.059 [0.037, 0.087] | 1.86 | 0.175 |
+| SBND | V | 45 | 0.270 [0.202, 0.320] | −0.073 | 6.6 | 0.000 | 0.058 [0.025, 0.099] | 1.68 | 0.151 |
+| SBND | W | 45 | 0.186 [0.143, 0.221] | −0.091 | 11.0 | 0.000 | 0.046 [0.035, 0.062] | 2.42 | 0.254 |
+| SBND | all | 45 | 0.240 [0.196, 0.277] | −0.080 | 9.3 | 0.000 | 0.051 [0.038, 0.082] | 1.89 | 0.205 |
+
+![](figs/42_proj2d_dists.png)
+
+*Accepted passes: `U_foot`, `B_foot`, χ²/N and `uncov_foot` per plane, PDVD
+(red) vs SBND (blue), normalised.*
+
+Reading it:
+
+- **W is the good plane on both detectors.** PDVD W: U 0.24, bias −0.10 —
+  within 0.06 / 0.01 of SBND W. The collection plane's charge is described the
+  same way on both.
+- **PDVD U and V are under-predicted by 22 %** where SBND's are by 7 %. The
+  bias distributions are shifted whole (PDVD peaks at −0.25, SBND at −0.08),
+  not tailed: a scale on the induction planes. The un-whitened prediction is
+  `pred_data · σ_cell` with σ built from `rel_uncer_ind = 0.075`; the fit
+  weights W by ¼ in its reduced χ² (`TrackFitting.cxx:8041`) and the three
+  planes share one dQ/dx per point, so an induction charge scale that differs
+  from the collection one (PDVD's SP W-plane recovery vs the induction planes,
+  or the 0.3/0.5 empirical induction smearing factors kept from uBooNE,
+  `pdvd_track_fitting.json` comment) shows up exactly as a two-plane bias. It
+  is a calibration/uncertainty-model question, not a trajectory one, and is left
+  for the owner (§5).
+- **PDVD pulls are 20–30 % wider on U/V, equal on W**, and the |pull| > 3
+  fraction is one-sided: PDVD U 18.9 % positive vs 5.3 % negative (SBND 9.2 /
+  6.1 %) — the measured charge exceeds the prediction. χ²/N is dominated by the
+  W plane on both detectors (18.4 vs 11.0), whose `add_uncer_col = 300` and
+  narrower pitch make σ small.
+
+![](figs/42_proj2d_pulls.png)
+
+### 3.3 Coverage: charge the trajectory does not reach
+
+| det | plane | f_off median | f_off_near (1–5 wires) | f_off_far (> 5) | blocks with f_off_far > 0.5 |
+|---|---|---|---|---|---|
+| PDVD | U / V / W | 0.335 / 0.390 / 0.294 | 0.049 / 0.083 / 0.028 | 0.220 / 0.249 / 0.255 | 19 / 21 / 21 % |
+| SBND | U / V / W | 0.059 / 0.058 / 0.046 | 0.056 / 0.050 / 0.039 | 0.001 / 0.000 / 0.001 | 0 % |
+
+![](figs/42_proj2d_coverage.png)
+
+*`f_off` per plane and vs track length. SBND's off-footprint charge is all
+within 5 wires (delta rays, the response tails); PDVD's is mostly far.*
+
+The near component (1–5 wires) is the **same on both detectors** (5–8 %) — that
+is the physics halo a trajectory cannot describe. The far component is the
+difference: on PDVD a median quarter of an accepted cluster's charge, and more
+than half in one block of five, is charge that the fitted path never visited.
+By track length: `f_off` 0.61 for L < 50 cm, 0.46 for 50–100, 0.35 for 100–200,
+0.22 above 200 cm — short accepted passes on PDVD are mostly *not* the cluster
+they were accepted for. This is the imaging-level fusion of doc 39 (median
+90.7 % 3-D coverage on the fitted set, "one defect: fused multi-track
+clusters") measured in the 2-D charge for every accepted pass, and it is the
+Steiner/terminal answer: **the graph reaches what it is pointed at, but on PDVD
+the cluster handed to it is one third something else.**
+
+### 3.4 Drift position (PDVD)
+
+| median |x| of the block (cm) | blocks | U_foot | B_foot | f_off |
+|---|---|---|---|---|---|
+| 0–60 | 30 | 0.255 | −0.137 | 0.481 |
+| 60–120 | 59 | 0.305 | −0.160 | 0.355 |
+| 120–180 | 94 | 0.296 | −0.166 | 0.254 |
+| 180–240 | 164 | 0.306 | −0.182 | 0.273 |
+| 240–300 | 150 | 0.336 | −0.192 | 0.355 |
+| 300–340 | 88 | 0.416 | −0.248 | 0.575 |
+
+![](figs/42_proj2d_vs_x.png)
+
+The bias grows monotonically towards the CRPs (−0.14 near the cathode to
+−0.25 at |x| > 300 cm) and `U_foot` with it; `f_off` is U-shaped — worst near
+the cathode (0.48) *and* near the CRPs (0.58), best mid-drift (0.25). The
+near-CRP rise is the region doc 25 §13.4 excludes from every dQ/dx profile
+(|x| > 305 cm); it is now seen in the 2-D residual as well.
+
+### 3.5 By residual range, and by tagger status
+
+| det | plane | U 0–2 | 2–5 | 5–10 | 10–20 | 20–40 | 40+ | B 0–2 | 2–5 | 5–10 | 10–20 | 20–40 | 40+ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| PDVD | U | 0.473 | 0.398 | 0.365 | 0.333 | 0.352 | 0.344 | −0.283 | −0.243 | −0.226 | −0.207 | −0.211 | −0.214 |
+| PDVD | V | 0.474 | 0.415 | 0.386 | 0.343 | 0.336 | 0.358 | −0.286 | −0.254 | −0.232 | −0.200 | −0.198 | −0.211 |
+| PDVD | W | 0.429 | 0.318 | 0.263 | 0.238 | 0.246 | 0.243 | −0.308 | −0.197 | −0.139 | −0.103 | −0.110 | −0.103 |
+| SBND | U | 0.314 | 0.235 | 0.257 | 0.222 | 0.207 | 0.247 | −0.176 | −0.096 | −0.066 | −0.052 | −0.067 | −0.094 |
+| SBND | V | 0.315 | 0.275 | 0.255 | 0.278 | 0.303 | 0.309 | −0.154 | −0.113 | −0.072 | −0.074 | −0.058 | −0.070 |
+| SBND | W | 0.280 | 0.187 | 0.170 | 0.153 | 0.145 | 0.197 | −0.166 | −0.091 | −0.097 | −0.078 | −0.060 | −0.073 |
+
+![](figs/42_proj2d_vs_rr.png)
+
+Both detectors describe the Bragg bin worst (U 0.43–0.47 PDVD, 0.28–0.31
+SBND) with the prediction 17–31 % low there — the end of the track is where
+the trajectory and the charge model are weakest on either detector. Along the
+plateau PDVD's U/V deficit stays at −0.21 while SBND's falls to −0.06.
+
+By status (PDVD, `U_foot` median): accepted 0.327, long-leftover (2) 0.483,
+dQ/dx-rejected (3) 0.322, guard-rejected (7) 0.310 — the fit quality on the
+footprint is the same for accepted and rejected passes; the tagger's verdict
+is not driven by how well the fit describes the charge.
+
+### 3.6 Pictures — the Magnify machinery
+
+Best / median / worst `U_foot` among PDVD accepted passes with ≥ 100 fitted
+points, and the median SBND one, each as (a) the Magnify-tracking GUI rendered
+headlessly (doc 43 recipe; top row dQ/dx along the track, 3-D view; middle
+measured charge; bottom `|pred−meas|/meas`) and (b) the same block through
+`d42_proj2d_panels.py` with the predicted charge as its own row and the signed
+residual.
+
+| pick | event / block | U_foot | B_foot | f_off | npts | GUI | panels |
+|---|---|---|---|---|---|---|---|
+| PDVD best | 039252/16 cluster 40 | 0.158 | −0.052 | 0.551 | 111 | `figs/42_magnify_pdvd_best_039252_16_d42fit_b400.png` | `figs/42_panel_pdvd_best_039252_16_d42fit_b400.png` |
+| PDVD median | 039253/17 cluster 77 | 0.318 | −0.184 | 0.543 | 129 | `figs/42_magnify_pdvd_median_039253_17_d42fit_b770.png` | `figs/42_panel_pdvd_median_039253_17_d42fit_b770.png` |
+| PDVD worst | 039253/2 cluster 75 pass 1 | 1.165 | −0.201 | 0.766 | 156 | `figs/42_magnify_pdvd_worst_039253_2_d42fit_b751.png` | `figs/42_panel_pdvd_worst_039253_2_d42fit_b751.png` |
+| SBND median | 278662 cluster 1 | 0.263 | −0.073 | 0.036 | 390 | `figs/42_magnify_sbnd_median_nusel_evt278662_b10.png` | `figs/42_panel_sbnd_sbnd_nusel_evt278662_b10.png` |
+
+![](figs/42_magnify_pdvd_best_039252_16_d42fit_b400.png)
+
+*PDVD best: a clean 73 cm stopping track; the residual pads are blue (< 0.2)
+along the whole track on all three planes and the dQ/dx rises at the end.
+Even here `f_off` = 0.55 — half of cluster 40's charge is elsewhere in the
+cluster, outside these pads.*
+
+![](figs/42_panel_pdvd_worst_039253_2_d42fit_b751.png)
+
+*PDVD worst, an accepted pass: a 100 cm path through a multi-track cluster;
+the trajectory rides a small part of the charge, the prediction is 27–38 % of
+the measured charge on V/W and 9× on the sparse U cells. This is a false STM
+tag (a 156-point path through debris), and it is the class the far
+off-footprint charge counts.*
+
+![](figs/42_panel_sbnd_sbnd_nusel_evt278662_b10.png)
+
+*SBND median: 390 points, `f_off` 0.04, the residual pads uniform.*
+
+## 4. Check 2 — dQ/dx vs residual range for the tagged stopping muons
+
+### 4.1 Sample and method
+
+`d42_dqdx_rr.py`: accepted passes (status 0) from `T_rec_charge` + `T_stm_pass`;
+dQ/dx = ((q − offset)/scale)/nq in e/cm; **Michel / leftover removal = the
+tagger's own kink**: when `left_L > 0` the points past `kink_num` are dropped
+and rr is re-anchored there (`rr_kink = rr − rr[kink]`); the path-end anchor
+(`persist_stm_fit`'s `rr`) is kept as the cross-check. PDVD points with |x| >
+305 cm are excluded (near-CRP rise, doc 25 §13.4). Expectation: PDVD the
+**0.45 kV/cm** Modified-Box muon table the production config carries since
+2026-09-03 (`stm/pdvd_ref_dqdx_045.json`, self-gated against the compiled
+`particle_dataset.jsonnet`; doc 25 graded the 0.44 set), SBND the 0.5 kV/cm
+Box table `MuonDeDxBox` that its tagger uses. Per tier one global scale
+k_pop = exp(median log(dQ/dx / table)) is removed and the per-bin median of
+dQ/dx/(k_pop·table) is compared to 1 with a 1.2533·MAD/√n error and a 3 %
+systematic floor (doc 25 §13.6 convention).
+
+| det | tier | tracks | points | k_pop | χ²/11 | per-track k med ± rms | contrast med | leftover frac |
+|---|---|---|---|---|---|---|---|---|
+| PDVD | all status 0 | 582 | 143 379 | 0.922 | **2343** | 0.86 ± 0.25 | **1.07** | 0.27 |
+| PDVD | contrast ≥ 2 | 102 | 25 314 | 0.916 | 47.2 | 0.97 ± 0.25 | 2.43 | 0.32 |
+| PDVD | doc-55 five cuts | 47 | 13 039 | 0.926 | 67.8 | 1.00 ± 0.09 | 2.29 | 0.36 |
+| PDVD | doc-55 + muon k ∈ [0.85, 1.25] | **45** | 12 544 | **0.931** | **69.5** | 1.01 ± 0.08 | 2.29 | 0.36 |
+| SBND | all status 0 | 44 | 5 186 | 0.997 | 50.7 | 1.07 ± 0.46 | **2.04** | 0.41 |
+| SBND | contrast ≥ 2 | 16 | 1 750 | 1.098 | 56.7 | 1.08 ± 0.43 | 2.17 | 0.38 |
+| SBND | doc-55 five cuts | 10 | 926 | 1.379 | 88.2 | 1.47 ± 0.43 | 2.17 | 0.40 |
+| SBND | doc-55 + muon k | **5** | 483 | **1.009** | **10.0** | 1.04 ± 0.01 | 2.25 | 0.80 |
+
+(The doc-55 cuts without the k window admit protons on SBND — k 1.4–1.9, the
+doc 55 §11 population — which is why `collect_dqdx_rr_sample.py` assigns the
+particle by k; the muon-k tier is the like-for-like one. SBND's k_pop = 1.009
+reproduces doc 55 §13's k ≈ 1 on the same operating point, the sanity check
+this round was gated on.)
+
+### 4.2 The Bragg curve
+
+![](figs/42_dqdx_rr_2d.png)
+
+*Muon-like stopping tracks (doc-55 cuts + muon k), kink-anchored, leftover
+removed; the detector's own muon table in colour, per-bin medians in black.*
+
+Per-bin median dQ/dx / (k_pop × table), muon-like tier:
+
+| det | 0–1 | 1–2 | 2–3 | 3–5 | 5–7 | 7–10 | 10–15 | 15–20 | 20–30 | 30–40 | 40–60 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PDVD | 1.017 | 1.066 | 1.110 | 1.110 | 1.115 | 1.123 | 1.117 | 1.098 | 1.063 | 1.056 | 1.049 |
+| SBND | 0.905 | 0.954 | 1.104 | 1.052 | 1.045 | 1.002 | 1.011 | 1.062 | 0.984 | 0.994 | 0.978 |
+
+![](figs/42_dqdx_rr_ratio.png)
+
+*Per tier: the ratio to the scaled table. PDVD all-status-0 (left) collapses
+to 0.65 in the 1–2 cm bin — the flat ends of doc 25 — and recovers to the
+table only with a contrast cut; the muon-like tier (right) sits 5–12 % above
+the table shape at 2–20 cm and 2–5 % at the plateau.*
+
+Reading it:
+
+- **PDVD follows the table at k = 0.93** (SBND 1.01; both within the 3–6 %
+  uncalibrated gain / recombination-fudge freedom doc 25 §7c lists). The PDVD
+  *shape* deviates: relative to the table the data is 1.02 in the Bragg bin,
+  1.11–1.12 through 2–15 cm, 1.05 at the plateau — a **hump of +10 % at 3–20
+  cm**, the same sign in every bin, χ² 69.5 for 11 bins against 10.0 on SBND.
+  With k fixed by the plateau instead, the Bragg bin would read 0.97 and the
+  hump +6 %. Doc 25 §13.6 saw the strict 5-track sample at χ²/10 = 6.9 against
+  the 0.44 table with the same rise at 3–10 cm; with 45 tracks it is now
+  significant. Candidate mechanisms, none tested here: the table's 0.45 kV/cm
+  and Box parameters (the hump is where dE/dx changes fastest, i.e. where the
+  recombination model matters most — doc 55 §7d found the same under-prediction
+  of the upper dE/dx half on SBND and fitted a free-power form), the end-trim
+  at 20 cm (doc 38) moving points near the stop, and the induction-plane charge
+  deficit of §3.2 feeding the joint dQ/dx.
+- **The population of all accepted passes is not a stopping-muon sample on
+  PDVD.** Median Bragg contrast 1.07 (SBND 2.04); the ratio falls to 0.65 in
+  the 1–2 cm bin and the χ² is 2343. This is doc 25 §13.6's purity finding
+  re-measured on today's chain with 582 passes: the tagger accepts flat ends,
+  and only a contrast cut (102 passes) or the doc-55 cuts (47) leave a Bragg
+  peak. The SBND accepted population *is* muons (χ² 51 for 44 passes, 3 false
+  STM against the owner's hand adjudication, §4.5).
+
+### 4.3 Per-track quantities
+
+![](figs/42_dqdx_tracks.png)
+
+*Per accepted pass: scale k, shape rms, Bragg contrast, median reduced χ² of
+the trajectory fit.* PDVD's k distribution peaks at 0.9 with a low tail (flat
+ends read as k < 0.8 against a Bragg table); the shape rms is 0.15–0.4 for most
+PDVD passes vs 0.1 for SBND muons; the trajectory fit's reduced χ² medians are
+2.0 (PDVD) vs 1.6 (SBND).
+
+### 4.4 The Michel / leftover removal
+
+![](figs/42_dqdx_anchor.png)
+
+*Kink-anchored (leftover removed) vs end-anchored profiles, all accepted
+passes.* 154 of 582 PDVD passes (26 %) and 18 of 44 SBND passes (41 %) carry a
+leftover past the tagger's kink, median `left_L` 5.8 / 7.3 cm. Re-anchoring at
+the kink changes the PDVD population profile by < 5 % in every bin (both
+anchors are flat at the end); on SBND it sharpens the Bragg bin (149 vs 128
+ke/cm at 0–1 cm) and lowers the 15–30 cm bins by 8–10 % — the leftover, which
+on SBND is Michel-sized, was inflating the plateau when the path end was the
+anchor. Doc 25 §13.6 showed that the PDVD material past the kink is collinear
+muon continuation at 0.88 MIP, not a Michel; the kink anchor is still the
+right one because it is the tagger's own hypothesis, and the small effect on
+PDVD says the same thing that doc did.
+
+### 4.5 SBND today vs the owner's doc-62 adjudication (sanity)
+
+On the 72 in-beam bundles the owner hand-adjudicated (doc 62): tagged & owner
+STM 33, tagged & owner not 3, untagged & owner STM 4, untagged & owner not 32
+— 65/72 agreement at today's operating point against 56/72 at the doc-62
+baseline (the doc 63/94 campaigns removed 12 of the 15 false tags; 3 remain:
+278662 main 1, 290201 main 9, 319809 main 20; and 3 owner-STM bundles the
+baseline tagged are now untagged: 283463/14, 315849/10, 401824/4). The SBND
+reference arm is therefore the validated tagger at its production point, not a
+degraded one.
+
+## 5. What the two checks say, and what to do next
+
+1. **Steiner graph and terminals — solid in reach, not in what they are
+   handed.** Where the trajectory goes it sits on the charge (PDVD W plane
+   `U_foot` 0.24 vs SBND 0.19; `uncov_foot` 3 %). What differs by a factor 7
+   is `f_off`: a third of an accepted PDVD cluster's charge is not on the path
+   and three quarters of that is > 5 wires away, worst for short passes and at
+   both drift ends. That is the fused-cluster residual of doc 39 and the
+   false-tag class of doc 25, in 2-D. **Next:** the `f_off_far` column of
+   `42_proj2d_pdvd_blocks.tsv` is a per-pass fusion score with no tuning in
+   it; a cut on it (e.g. > 0.5, 21 % of accepted passes) is a candidate
+   STM-purity guard that the contrast census could not give, and the same
+   number grades any cluster-splitting round (doc 39's "only lead that moves
+   both axes").
+2. **Fitting chain — sound on W, biased on U/V.** The 22 % induction
+   under-prediction is a scale, uniform along the plateau and largest at the
+   Bragg end, absent on SBND (7 %). Two things it can be, both owner-level:
+   the induction charge that PDVD's SP delivers relative to W, and the
+   induction uncertainty model (`rel_uncer_ind`, `ind_sigma` 0.3/0.5 factors
+   kept from uBooNE). The 3-plane joint dQ/dx then carries a W-dominated value
+   that the U/V cells do not match. **Next:** a per-plane dQ/dx readout (the
+   R·x split per plane exists inside `dQ_dx_fit`) on the 45 muon-like tracks,
+   to see whether the +10 % Bragg-region hump of §4.2 is the induction deficit
+   propagating or the recombination table.
+3. **dQ/dx vs rr — the table is followed to a scale; the shape has a +10 %
+   hump at 3–20 cm that SBND lacks**, on a sample nine times doc 25's. The
+   recombination-model question (Box vs the doc-55 free-power form, and the
+   0.45 kV/cm field) is now measurable on PDVD; the sample is the
+   `doc55_muon` tier of `42_dqdx_pdvd_tracks.tsv`. **Not tuned here** (§5 rule
+   7): the hump, the k = 0.93 and the induction bias are reported as readings.
+4. **The instrument.** `T_proj_data` is trustworthy from this round on, for
+   both detectors, and `d42_proj2d_selfcheck.py` is the positive control to
+   run on any new STM-fit arm. The generic tree hasher stays blind to jagged
+   branches; the content hash the self-check prints is the one to record.
+
+## 6. Files
+
+- toolkit: `clus/inc/WireCellClus/TrackFitting.h`, `clus/src/TrackFitting.cxx`,
+  `clus/src/TaggerCheckSTM.cxx`, `root/src/PdvdMagnifyTrackingVisitor.cxx`,
+  `root/src/SbndMagnifyTrackingVisitor.cxx`, `clus/test/doctest_trackfitting_snapshot_pass.cxx`.
+- scripts (`docs/nf_sp_img_clus/scripts/`): `run_d42_arms.sh`,
+  `d42_proj2d_resid.py`, `d42_proj2d_plots.py`, `d42_proj2d_panels.py`,
+  `d42_proj2d_selfcheck.py`, `d42_dqdx_rr.py`, `d42_dqdx_plots.py`,
+  `d42_make_ref_dqdx_045.py`; SBND arm `sbnd_xin/stm_campaign/run_d42_stmfit.sh`.
+- products: `figs/42_*.png`, `figs/42_proj2d_*_blocks.tsv`,
+  `figs/42_dqdx_*_{tracks,summary}.tsv`, `stm/pdvd_ref_dqdx_045.json`,
+  `stm/gates/d42_stm_proj2d_gate.txt`.
+- arms on disk: `work/<ev>_d42fit` (120), `sbnd_xin/work-stmcamp-d42fit` (99),
+  gate arms `d42stmchk`, `d42fitold`, `d42fitnew`, `d42fitnew2`,
+  `work-stmcamp-d42gate{old,new}`.
