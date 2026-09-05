@@ -745,3 +745,114 @@ lost split. Count matches §14 exactly.
   https://www.phy.bnl.gov/twister/bee/set/52e201f4-68b0-47ab-a9a5-6df0b394ea01/event/list/
   (**idx 0 = new production** — `unmerge_assoc` ON, trim OFF; **idx 1 = old
   production** — merged, trim 20 cm)
+
+---
+
+## 17. Round 3 — the STM Bee layers carry the VERDICT population (owner decision, 2026-09-05)
+
+Round 2 (§11, §12.1) put the four STM display layers on `require_pc: 'stm_fit'`
+— the object set the tagger **fitted**, verdict or not — precisely so that
+`stm`, `steiner_graph` and `steiner_terminals` would cover the same clusters as
+`stm_fit`, and it added a separate `stm_tagged` layer to carry the verdict. The
+owner now asks for the opposite emphasis: the display should show the tagged
+clusters, not the candidate pool.
+
+**Repro**
+
+```bash
+printf '39252 2 298595 1\n39349 23 19869 1\n' > /home/xqian/tmp/events2.txt
+cd pdvd
+ARM=d44beestm PIN=new EVENTS=/home/xqian/tmp/events2.txt JOBS=4 \
+    ./docs/nf_sp_img_clus/scripts/run_d44_arms.sh      # canonical JSON, no TLAs
+# reference arm: work/039252_2_d44prod, work/039349_23_d44prod (doc 44 gate 5,
+# same pin, same pctree, same canonical config)
+```
+
+Pin `/home/xqian/tmp/d44_libpin/new` (`libWireCellClus.so` md5 `fd273dc8f000780f`,
+`libWireCellRoot.so` `48e63189e8c192f5`) on both sides — **the binary is
+identical; only the compiled jsonnet differs.** Toolkit at the run: `b72d00e0`.
+
+### 17.1 What changed
+
+`cfg/pgrapher/experiment/protodunevd/pr.jsonnet`, `bee_points_sets` only:
+
+| set | round 2 | round 3 |
+|---|---|---|
+| `stm_fit` | (no gate) | `require_flag: 'STM'` |
+| `stm` | `require_pc: 'stm_fit'` | `require_flag: 'STM'` |
+| `steiner_graph` | `require_pc: 'stm_fit'` | `require_flag: 'STM'` |
+| `steiner_terminals` | `require_pc: 'stm_fit'` | `require_flag: 'STM'` |
+| `stm_tagged` | `require_flag: 'STM'` | **removed** |
+
+No C++ change. `require_flag` is the round-2 field
+(`MultiAlgBlobClustering.cxx:863`), applied in the same per-cluster loop that
+feeds `fill_bee_points_from_cluster`, so it gates the `pcname == "stm_fit"`
+branch exactly as it gates the `'3d'` and `steiner_pc` branches.
+
+**Why `require_flag` alone and not ANDed with `require_pc`.** Every tagged
+cluster is a fitted one — `set_flag(Flags::STM)` (`TaggerCheckSTM.cxx:595`) and
+`persist_stm_fit` (`:614`) run in the same evaluate loop over the same
+`main_cluster` — so the AND would admit the same set on a normal event. But the
+tagger can also evaluate a cluster that records no pass (`:609`, "evaluated but
+no pass recorded"), and if such a cluster were ever tagged, `require_pc` would
+hide it. `require_flag` alone means the layer shows every tagged cluster,
+which is what was asked for.
+
+**Why `stm_tagged` is gone.** With `stm` on `require_flag: 'STM'` the two sets
+select the same clusters and dump the same PC through the same coords, so they
+render the same picture. Measured, not assumed: on both gate events the round-2
+`0-stm_tagged-global.json` and the round-3 `0-stm-global.json` agree on every
+array — `x`, `y`, `z`, `q`, `cluster_id`, `real_cluster_id`, and the run/event
+header — and differ only in the layer's own `type` string
+(`"stm_tagged-global"` vs `"stm-global"`).
+
+### 17.2 Gates
+
+**Compiled-config proof.** With the two arm names normalized, the entire
+compiled `wct-pr-perevt.jsonnet` differs in exactly one place: the
+`bee_points_sets` list shrinks 9 → 8 entries, and within it the four changes in
+the table above and nothing else. No pipeline node, no other component's `data`,
+no path moves.
+
+**Nothing outside the Bee display moves.**
+
+| check | result |
+|---|---|
+| `tracking-stm.root`, `hash_root_trees.py --per-tree` | **SAME** — file hash `216b3031e2328eed…`, `T_rec_charge` `3d0cc3da8eca2304…`, both events |
+| `mabc-pr.zip` members, content sha256 | 17 of 21 **identical** (`clustering-global` + all 16 dead-area), both events |
+| the 4 that differ | exactly `stm`, `stm_fit`, `steiner_graph`, `steiner_terminals` — the rescoped layers |
+| `stm_tagged` | removed, both events |
+| `d42_proj2d_selfcheck.py` | **PASS** on 039252/2 — every fitted block still predicts on its own footprint |
+
+`clustering-global` being byte-identical is the load-bearing row: the tagger,
+the fit and the clustering all ran unchanged. This is a **display** change.
+
+### 17.3 What the display now shows
+
+| layer | 039252/2 (evt 298595) | 039349/23 (evt 19869) |
+|---|---|---|
+| | round 2 → round 3 | round 2 → round 3 |
+| `stm` | 53659 pts / 16 cl → **4902 / 8** | 16102 / 16 → **3577 / 3** |
+| `stm_fit` | 4342 / 16 → **1000 / 8** | 4362 / 16 → **952 / 3** |
+| `steiner_graph` | 49217 / 16 → **3032 / 8** | 14407 / 16 → **3029 / 3** |
+| `steiner_terminals` | 9217 / 16 → **728 / 8** | 3657 / 16 → **773 / 3** |
+
+All four agree object-for-object at the new scope. On 298595 the tagged set is
+`{39, 55, 79, 83, 86, 103, 109, 113}`, a subset of the fitted
+`{38, 39, 45, 55, 79, 83, 84, 86, 87, 103, 105, 108, 109, 110, 113, 119}`.
+
+### 17.4 What this costs
+
+The 8 clusters (298595) / 13 clusters (19869) that the tagger **fitted and
+rejected** are no longer drawn anywhere. Asking "why was this one not tagged?"
+from the Bee set alone is no longer possible — it needs the log's `STM=0` lines,
+or a one-off arm with `-A`-style overrides restoring `require_pc: 'stm_fit'`.
+Round 2 added those layers for exactly that question (§11), so this is a real
+trade the owner chose knowingly, not an oversight.
+
+### 17.5 Bee
+
+- **round 3, evt 298595** (`-nu` chain, canonical post-flip config):
+  https://www.phy.bnl.gov/twister/bee/set/971dc70d-98ca-4f30-88e7-76078ccf64dc/event/list/
+- round 2 / doc 44 production, same event, for comparison:
+  https://www.phy.bnl.gov/twister/bee/set/3106aeb0-3a07-41c5-881e-99ba5cd332e0/event/list/
