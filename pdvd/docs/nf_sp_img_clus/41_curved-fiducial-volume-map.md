@@ -1133,3 +1133,101 @@ python3 docs/nf_sp_img_clus/scripts/fv_curved_longloss.py /home/xqian/tmp/doc41/
 python3 docs/nf_sp_img_clus/scripts/fv_curved_band.py        # the exact band + readout test
 python3 docs/nf_sp_img_clus/scripts/fv_curved_approach.py    # closest approach per surface
 ```
+
+---
+
+## 12. A Bee set for the scan, and the induction-plane hypothesis
+
+### 12.1 The set
+
+**https://www.phy.bnl.gov/twister/bee/set/7bbfe9cd-4dae-4fae-a6e6-052964ac2dbe/event/list/**
+
+Nine Bee indices, one per cluster, each carrying three things: the full
+`clustering-global` layer as reconstructed, a **`target-global` layer holding only
+the cluster to look at**, and the dead-channel maps. The selection is exactly
+what §11.4 leaves open — long (> 2 m) TGM losses that are **not** readout-clipped,
+whose end points at its wall, with no other-cluster charge beyond it, and which
+the curved fiducial declares **fully contained** (not one point of the cluster
+lies outside the new volume). Nine of the 140 meet all of that; none is
+STM-tagged.
+
+| Bee | run / idx | event | cluster | length | end at | gap | path along the track | end (x, y, z) |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 039252/3 | 298609 | 105 | 661 cm | anode | 27.2 cm | 29 cm | (−312.7, 134.5, 173.5) |
+| 1 | 039253/13 | 49946 | 86 | 431 cm | z+ | 11.8 cm | 33 cm | (143.3, −152.1, 286.6) |
+| 2 | 039252/13 | 298749 | 94 | 406 cm | z+ | 72.5 cm | 103 cm | (240.8, 136.6, 225.9) |
+| 3 | 039349/61 | 55866 | 68 | 355 cm | anode | 111.0 cm | 161 cm | (228.9, 210.2, 140.2) |
+| 4 | 039252/4 | 298623 | 116 | 353 cm | z+ | 11.8 cm | 16 cm | (154.5, −24.1, 286.6) |
+| 5 | 039253/15 | 49986 | 106 | 341 cm | z+ | 12.3 cm | 16 cm | (39.0, −66.7, 286.1) |
+| 6 | 039252/12 | 298735 | 37 | 311 cm | z+ | 15.8 cm | 20 cm | (−263.8, −199.3, 282.6) |
+| 7 | 039349/55 | 23317 | 66 | 299 cm | z− | 111.8 cm | — | (−1.6, 156.9, 112.6) |
+| 8 | 039349/6 | 19529 | 70 | 212 cm | z− | 103.7 cm | 388 cm | (5.6, 138.9, 104.5) |
+
+"gap" is the perpendicular distance from that end to its nearest boundary
+surface; "path" is how far along the track's own direction the wall is. Note
+indices 2, 3, 7, 8: their deciding end is 70–110 cm from **any** surface, so
+those are not "a track stopping just short of a wall" at all — they are objects
+whose second end is deep in the volume, and the flat 15 cm inset was tagging
+them because their *other* end is on a wall and the shell did the rest. Indices
+1, 4, 5, 6 are the real question: a 3–4 m track ending 12–16 cm from the
+downstream z wall, pointing at it.
+
+### 12.2 Is it an induction-plane signal-processing failure?
+
+A 3-D point needs charge in all three planes, so if U/V signal processing fails
+near a wall while W keeps its signal, the 3-D cloud stops where the charge does
+not — and §5's surface would be measuring the SP failure. The ctpc answers this
+directly: it is the per-plane, post-SP charge map on an exact (drift-step ×
+wire-pitch) lattice, so the question "is there charge at this position in plane
+p" is a k-d query (doc 32 round 2's replica, `scripts/fv_curved_planes.py`).
+
+For each of the 57 class-5 clusters: walk the track's own direction outward from
+its last 3-D point in 1 cm steps, up to the wall or 30 cm, and ask each plane
+separately. Two controls: the same query on the track's **interior** (all three
+planes must answer yes) and the same probe **displaced 25 cm perpendicular** (how
+often an unrelated track lands on the projection by accident).
+
+| region | U | V | W | all three |
+|---|---|---|---|---|
+| in-track (control) | 0.956 | 0.967 | 0.978 | 0.900 |
+| **beyond the end** | **0.160** | **0.138** | **0.129** | **0.047** |
+| displaced 25 cm (null) | 0.060 | 0.080 | 0.029 | 0.000 |
+
+**The collection plane does not go further.** Beyond the end, W occupancy is
+0.129 — no higher than the induction planes and close to the null floor — and
+the all-three occupancy is 0.047, i.e. essentially nothing that could have been
+imaged. Per cluster:
+
+- the SP-failure signature (W lit > 0.5 while an induction plane is < 0.3):
+  **1 of 57** (039349/62 c61, W 1.00 over 13 cm with U 0.08);
+- the **mirror** case (an induction plane lit while W is not): **7 of 57** — so
+  if anything the asymmetry runs the other way, and those are candidates for a
+  collection-side dead region rather than an induction SP failure;
+- all three lit beyond the end: **0 of 57**.
+
+So for this population the charge itself stops at the reconstructed end. The
+in-track control at 0.96–0.98 says SP is working on the very same track right up
+to that point, which is what makes the null result meaningful: this is not a
+plane that quietly gives out near a wall.
+
+### 12.3 So what makes a cosmic track's end contained?
+
+The evidence now excludes three of the four candidates: it is not the readout
+window (§11.2, that is a separate 21 % with its own fix), not lost or
+mis-attributed end points (§11.3), and not an induction-plane SP failure (§12.2).
+What is left, and what the Bee set is for:
+
+1. **They are stopping muons.** 26 of the 59 class-5 clusters already carry an
+   STM tag in the ON arm; the rest may be stops that STM declined for its own
+   reasons (no flash, fit quality, the length cuts). If the scan says "Bragg
+   peak", the curved surface is simply right and the flat inset was tagging
+   stops as through-goers.
+2. **They are over-clustered objects** whose PCA end is a fragment tip rather
+   than a muon end — which the 70–110 cm gaps of Bee indices 2, 3, 7 and 8 look
+   exactly like. Then the object is not a single track at all and neither
+   fiducial statement about "its ends" means much.
+
+Both are visible at a glance in the target layer, which is why the set exists.
+The dQ/dx-versus-residual-range check that would separate a Bragg stop from a
+truncated track is the STM tagger's own instrument and would be the next
+measurement if the scan is ambiguous.
