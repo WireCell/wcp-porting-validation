@@ -214,8 +214,8 @@ Re-verified: pdvd **3661/3661** across both codecs.
   re-run also demonstrated the peer protection working: `KEEP` moved 1516 → 1522
   dirs because the live session created six new `d39` arms since the plan was
   written, and the prefix rule absorbed them with no edit.
-- `work-dbg25a-ql` regeneration (§4) — owner call.
-- The PROTECTED display/sentinel block (~9.8 GiB) — the owner chose to honour it.
+- `work-dbg25a-ql` regeneration (§4) — **DONE, see §12.**
+- The PROTECTED display/sentinel block — **settled in §10**, measured not deferred.
 
 
 ## 10. Round C — the PROTECTED block, measured before it was released
@@ -311,3 +311,64 @@ and confirm the live doc-39 session created **seven new arm families**
 `d39r2noprov`), KEEP moved 1516 → 1583 dirs, and the `d39` **prefix** rule
 absorbed all of them with no edit. A name-list would have released seven live
 arms.
+
+
+## 12. `work-dbg25a-ql` regenerated, and the §4 damage is undone
+
+Owner-authorised 2026-09-05. `scripts/d100_dbg25a_img_regen.sh`, 20 events at
+`D100_JOBS=32`, **30 seconds wall**. `scripts/d100_dbg25a_regen_gate.sh` is
+the re-runnable proof.
+
+**Imaging only, and no write into the protected arm.** All 100 dangling links
+resolve *through* `work-dbg25a-ql/evt<N>/`:
+
+```
+work-dbg25a-d97prodchk/evt16                    -> work-dbg25a-ql/evt16
+work-dbg25a-d97prodchk/ql_evt16/icluster-*.npz  -> …/d97prodchk/evt16/icluster-*.npz
+```
+
+so recreating `evt<N>/` repairs all 100 with **no repair script and no M13
+question** — the links were never wrong, their target had simply been deleted.
+`work-dbg25a-ql/ql_evt<N>/` was deliberately **not** rebuilt: nothing points at
+it, and `d97prodchk` carries its own.
+
+**The driver had to be forked, and this is the reason.** `scripts/dbg25_run.sh`
+pins `LD_LIBRARY_PATH` to `~/tmp/doc94r3b-libsnap` — **which this round's own
+~/tmp sweep deleted** (dropped on the ground "backs `work-dbg25a-*`, which
+retire"). A missing directory in `LD_LIBRARY_PATH` is *silently ignored*, so
+running it unchanged would have fallen back to live `local/lib` with no warning:
+the M1 shape exactly. The fork names a fresh pin (`~/tmp/d100regen-libsnap`,
+snapshotted before launch against a peer's mid-run `wcbuild`) and refuses if it
+is absent. `dbg25_run.sh` itself stays byte-untouched — it is the doc-95 record.
+
+### The gate: this is a restoration, not merely a regeneration
+
+The original ran 2026-09-02 under a pin that no longer exists, so "same
+operating point" had to be *demonstrated*, not assumed. Two independent checks:
+
+| check | result |
+|---|---|
+| npz count + byte total vs the archived manifest | **80 files / 105 545 029 bytes — exact** |
+| per-event `wct_img_evt<N>.log` content vs the archived logs | **20 / 20 identical** |
+| dangling links in `work-dbg25a-d97prodchk` | **0** (was 100) |
+
+The byte total is the *only* number the record kept for the npz — they were a
+DROPPED heavy class, so no per-file hash survives. The log comparison is what
+supplies content-level evidence, and the record layer kept those in full.
+
+**What had to be normalised away, and why none of it is physics:** the
+`[HH:MM:SS.mmm]` line prefix; `TICK: N ms (this: N ms)` integer counters; and
+the whole `I [ timer ] Timer:` block — wall/core-sec figures which are *sorted
+by duration*, so their order varies run to run as well as their values. Nothing
+else is stripped.
+
+**The gate carries its own negative control**, because normalising in the safe
+direction is easy and worthless: it compares evt2's archived log against evt4's
+regenerated one under the *same* normalisation and fails loudly if they compare
+equal. They do not. A gate that cannot fail proves nothing.
+
+Conclusion: **the SBND imaging stage did not move between 2026-09-02 and
+2026-09-05**, and `work-dbg25a-d97prodchk` is once again self-contained and
+re-runnable. The pdvd doc 28/31 casualty in §10 is a *different* arm
+(`work-dbg25a-d97off`) and is **not** restored by this — it was a Q/L-stage
+product at its own operating point.
