@@ -59,6 +59,12 @@ function(
     // work/<RUN6>_<EVT>/pctree-evt<EVT>.tar.gz.  See
     // pgrapher/experiment/pdhd/clus.jsonnet clus_all_tpc tensor_outname.
     save_tensors = '',
+    // Wrapped-plane induction charge for the sampled points (doc
+    // pdhd/docs/stm-tagger-chain.md sec 12).  false (default) => the key is
+    // omitted from every BlobSampler and the compiled config is byte-identical.
+    // Turning it on changes the pctree this job writes, hence production Q/L
+    // output -- a measurement arm only, not a flip.
+    wrapped_channel_charge = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -95,7 +101,7 @@ local group_pipe(gd) =
     local n = std.length(gd.anodes);
     local actives = [cluster_source("%s/clusters-apa-apa%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local maskeds = [cluster_source("%s/clusters-apa-apa%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
-    local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false) for i in std.range(0, n - 1)];
+    local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false, wrapped_channel_charge=wrapped_channel_charge) for i in std.range(0, n - 1)];
     local pg = clus_maker.per_group(gd.anodes, gd.name, gd.face, dump=false);
     g.intern(
         innodes = actives + maskeds,

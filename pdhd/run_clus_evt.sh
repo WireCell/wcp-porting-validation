@@ -12,6 +12,9 @@
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDHD_MAX_JOBS=N).  Events with missing inputs are skipped.
+#   PDHD_CLUS_TLA="-S key=val ..."  extra wcsonnet args (knob overrides), e.g.
+#     PDHD_CLUS_TLA="-S wrapped_channel_charge=true"  -- doc stm-tagger-chain
+#     sec 12.  NOT production: it changes the pctree this job writes.
 #
 # Input:  work/<run>_<evt>[_sel<TAG>]/ (from imaging) or input_data event dir as fallback
 # Output: work/<run>_<evt>[_sel<TAG>]/mabc-apa{N}.zip, mabc-all-apa.zip
@@ -280,6 +283,7 @@ PY
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
         -S "readout_window_ticks=${READOUT_NTICKS}" \
         -A "save_tensors=${PCTREE_OUT}" \
+        ${PDHD_CLUS_TLA:-} \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

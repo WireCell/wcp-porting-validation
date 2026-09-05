@@ -89,7 +89,10 @@ Committed products: this doc; `docs/scripts/{d44_sigma_fit,d42_proj2d_resid,d42_
 `run_pr_evt.sh`, and the `-save-pctree` additions to `wct-clustering.jsonnet` /
 `run_clus_evt.sh`. In the toolkit: `cfg/pgrapher/experiment/pdhd/{pr.jsonnet,
 particle_dataset.jsonnet,pdhd_track_fitting.json}` and the `clus.jsonnet`
-additions. Regenerated, not committed: the arms `work/029107_*_{stm0,stmw}` and
+additions, plus the `wrapped_channel_charge` threading through
+`clus_per_apa`/`clus_per_face` that makes that knob reachable from the
+clustering path at all (§12.4). Regenerated, not committed: the arms
+`work/029107_*_{stm0,stmw,stmc4000,stmc2000,stmc1000,stmc250,phdump*,wcc*}` and
 the analysis products under `/home/xqian/tmp/pdhdstm/`.
 
 ---
@@ -803,15 +806,23 @@ scans. §10 item 1 is still what is owed.)
 **Recommendation, in order.**
 
 1. **Settle the wrapped-strip question first.** It is upstream of everything else
-   in this doc. Concretely: (a) grade `retile_wrapped_channel_activity` on a hand
-   scan of the STM verdicts it moves, the way doc pdvd/31 round 6 did; (b) take
-   `wrapped_channel_charge` to the owner as a PDHD *clustering* change, since it
-   moves production Q/L output. Only then re-derive §8 and propose constants.
+   in this doc, and §12 now says *why*: 78 % of PDHD's sampled points carry fewer
+   than two plane charges and can never be Steiner terminals, against 32 % on
+   PDVD. Concretely: grade **`retile_wrapped_channel_activity`** on a hand scan of
+   the STM verdicts it moves, the way doc pdvd/31 round 6 did. It is the only
+   knob measured to raise the terminal ceiling (3.6×, §12.4) and the only one
+   that moves the §8.6 coverage number. Then re-derive §8 and propose constants.
+   **Not** `wrapped_channel_charge`: §12.4 measures it at zero effect on the
+   terminal population (the Steiner stage runs on the retiled cloud, never the
+   sampled one). It is now reachable from the clustering driver
+   (`PDHD_CLUS_TLA="-S wrapped_channel_charge=true"`) if someone wants to grade
+   it against **Q/L matching**, which is a different consumer and untested here.
 2. **Then flip the transverse constants**, re-derived, with the doc-44 grading
    (2-D metrics, ring shares, dQ/dx, STM verdict churn) as the acceptance bar.
    The measurement machinery is committed and validated (§8.1), so that round is
    a re-run, not a rebuild.
-3. **Grade the inherited PDVD Steiner/ctpc operating point** (the doc pdvd/37 and
+3. **The `steiner_terminal_charge` floor is DONE — see §12.** Keep 500 e. What
+   remains of this item is the rest of the inherited point (the doc pdvd/37 and
    pdvd/36 analogue). This round did **not** run at the `pr.jsonnet` builder
    defaults; the driver is a duplication fork of PDVD's and carries PDVD's whole
    tuned point — `terminal_min_separation` 0.5 cm, `terminal_wire_tol` 1,
@@ -819,14 +830,20 @@ scans. §10 item 1 is still what is owed.)
    `steiner_terminal_charge` 500 e (doc 25 §13.6, a PDVD census),
    `steiner_gap_penalty` 2.0, `ctpc_aniso_metric` true. See §7.4 for where each
    lands on PDHD's geometry: both self-adapt, and both land nearer SBND than
-   PDVD. Nothing there is wrong in spirit, but no number in it was measured on
-   PDHD, and 500 e in particular was chosen from a PDVD charge census.
+   PDVD. Nothing there is wrong in spirit. `steiner_terminal_charge` now has a
+   PDHD census behind it (§12); `wire_tol`, `adjacent_slice`,
+   `edge_charge_forward_dead_mix`, `steiner_gap_penalty` and the ctpc metric
+   still do not.
 4. **More imaged events.** 30 events give 175 accepted STM passes — plenty for
    §8 — but only **one** track passing the doc-55 stopping-muon cuts, so §6's
    comparison against data cannot be made. PDHD has ~100 more events with input
    data and no imaging.
 
-5. **Name the coverage defect** (§8.6, the f_off shells). PDHD's fitted
+5. **The coverage defect is named — see §12.6 item 3.** It is the wrapped-plane
+   terminal starvation, and item 1 is its fix. The original statement of the
+   problem follows; what is left is to confirm the fix closes it rather than
+   just shrinking it (retiler on still leaves `f_off_far` at 0.586).
+   PDHD's fitted
    trajectories cover far less of their own blocks than PDVD's: median
    f_off_far 0.72/0.69/0.93 against 0.22/0.24/0.24, all of it at d > 5 cells,
    and it scales inversely with fit length. This is the one PDHD number with no
@@ -854,6 +871,8 @@ compiled config and is an owner decision.
 
 ---
 
+---
+
 ## 11. Files
 
 **Toolkit** (`cfg/pgrapher/experiment/pdhd/`, branch `apply-pointcloud`):
@@ -866,8 +885,158 @@ default-off, gate T0).
 `wct-pr-perevt.jsonnet` (new), `run_pr_evt.sh` (new), `wct-clustering.jsonnet` and
 `run_clus_evt.sh` (the `-save-pctree` path); `stm/pdhd_transport.py`,
 `stm/pdhd_transport.tsv`, `stm/pdhd_ref_dqdx.json`; `docs/scripts/*.py`;
+`docs/figs/pdhd_terminal_charge_census.tsv` (§12); the `PDHD_CLUS_TLA`
+passthrough in `run_clus_evt.sh` and the `wrapped_channel_charge` TLA in
+`wct-clustering.jsonnet` (§12.4, default off, gated byte-identical);
 `docs/figs/pdhd_sigma_*`.
 
-**Not committed:** the arms `work/029107_{0..29}_{stm0,stmw}`, the pinned binary
-`/home/xqian/tmp/pdhdstm_libpin`, and the analysis products under
-`/home/xqian/tmp/pdhdstm/{ana2,ctl2}`.
+**Not committed:** the arms `work/029107_{0..29}_{stm0,stmw}` and the §12 scan
+arms `_{stmc4000,stmc2000,stmc1000,stmc250}` plus the single-event probes
+`_{phdump,phdumpw,wcc,wccdump,wccdumpw}`; the pinned binary
+`/home/xqian/tmp/pdhdstm_libpin`; and the analysis products under
+`/home/xqian/tmp/pdhdstm/{ana2,ctl2,scan}`.
+
+---
+
+## 12. The `steiner_terminal_charge` census — and what it found instead
+
+§7.4 flagged 500 e as the one inherited setting with no self-adapting mechanism:
+a PDVD number (doc 25 §13.6) carried across without a PDHD charge census. This
+section runs that census. It says 500 e is a defensible choice for PDHD — and
+that the floor is not PDHD's binding constraint.
+
+### 12.1 What the gate actually tests
+
+`find_peak_point_indices` (`SteinerGrapher.cxx:530`) calls
+`Cluster::calc_charge_wcp(idx, T, disable_dead_mix_cell)` per sampled point and
+keeps it iff `charge > T && charge_quality`. The only call site passes
+`disable_dead_mix_cell = false` (`CreateSteinerGraph.cxx:323`), so
+`calc_charge_wcp` (`Facade_Cluster.cxx:1031`) reduces to:
+
+* `flag_p = (q_p > T) or (q_p == 0)` — **a zero plane is exempt, not disqualifying**;
+* `ncharge` = number of planes with `q_p != 0`;
+* `charge = sqrt(Σ q_p² / ncharge)` over those, and **0 if `ncharge <= 1`**;
+* candidate iff `charge > T` and all three flags.
+
+So the binding conditions are *every non-zero plane above T* and — the one that
+matters below — **at least two planes carrying charge at all**.
+
+### 12.2 Measuring it, and a positive control
+
+The charges are not recoverable from the pctree: the Steiner stage runs on a
+**retiled** cluster whose point cloud is never persisted. Doc pdvd/31 round 4
+built the probe for exactly this — `WCT_STEINER_PHASE_DUMP=1` emits every point
+of every >1000-point cluster with its three plane charges. Four events
+(029107/0,10,12,14), production settings, pinned binary: 922 469 points.
+
+The offline predicate is validated against the run's own `ncand_pt` counter,
+per `create_steiner_tree` call: **170 of 170 calls exact, max |Δ| = 0**. The
+threshold curve below is therefore the C++'s own arithmetic, not a model of it.
+
+| plane | median non-zero [e] | **fraction with q = 0** |
+|---|---|---|
+| U | 2350 | **0.799** |
+| V | 3468 | **0.938** |
+| W | 7695 | 0.252 |
+
+### 12.3 The finding: no PDHD point ever has three-plane charge
+
+| `ncharge` | PDHD | **PDVD** (039252/2, same probe) |
+|---|---|---|
+| 0 | 0.206 | 0.173 |
+| 1 | 0.577 | 0.146 |
+| 2 | 0.217 | 0.219 |
+| **3** | **0.000** | **0.462** |
+| **> 1 = eligible at any T** | **0.217** | **0.680** |
+
+`ncharge = 3` is **exactly zero** over 922 469 points, and the two-plane cases
+are only ever **UW (79 %) or VW (21 %)** — never UV. PDVD shows every
+combination and a symmetric `q = 0` fraction of ~0.34 on all three planes. A
+PDHD point never gets charge from both induction planes at once.
+
+Those are the **wrapped** planes (§9: 65 % of U/V wires are `segment > 0`
+continuations, against PDVD's 11.3 %). So **78 % of PDHD's sampled points can
+never be Steiner terminals at any threshold**, and the candidate ceiling is
+0.217 — a property of the charge lookup, not of the floor.
+
+### 12.4 Which knob moves it: the 2 × 2
+
+Event 029107/0, one imaging input, one pinned binary, all four combinations of
+the two wrapped-plane knobs:
+
+| arm | `ncharge = 3` | `ncharge > 1` | cand @ 500 e | q = 0 on U |
+|---|---|---|---|---|
+| sampler off, retiler off (**production**) | 0.000 | 0.134 | 0.082 | 0.912 |
+| sampler off, **retiler on** (§9.1) | **0.048** | **0.484** | **0.302** | 0.703 |
+| **sampler on**, retiler off | 0.000 | 0.134 | 0.082 | 0.911 |
+| sampler on, retiler on | 0.048 | 0.475 | 0.295 | 0.705 |
+
+**`wrapped_channel_charge` does nothing here** — 0.134 → 0.134, to three
+decimals. It is a *sampler* knob and the Steiner stage never sees the sampled
+cloud; the retiler re-samples. Only `retile_wrapped_channel_activity` moves the
+ceiling, and it moves it **3.6×**. This corrects §10 item 1, which recommended
+taking `wrapped_channel_charge` to the owner as the fix for this: for the
+terminal population it buys nothing. (It may still matter to Q/L matching, a
+different consumer, on which this measurement says nothing.)
+
+Even with the retiler on, `ncharge = 3` is 0.048 against PDVD's 0.462 — the knob
+is a **partial** fix and the residual gap is not explained.
+
+### 12.5 The threshold scan
+
+Six arms, 30 events each, 120/120 rc = 0, binary pinned to the §8 snapshot,
+`retile_steiner_terminal_charge` tied to the floor as production ties it.
+Accepted = status-0 blocks (`d42_proj2d_resid.py`); the last row changes the
+*retiler* knob instead of the floor and is the comparison that matters.
+
+| floor [e] | accepted | few-terminal warns | no-steiner | terminals in | `f_off_far` U | `k_pop` | contrast ≥ 2 (n) |
+|---|---|---|---|---|---|---|---|
+| 4000 (C++/SBND) | 154 | 4496 | 1568 | 106 105 | 0.631 | 0.907 | 20 |
+| 2000 | 157 | 4170 | 1475 | 128 055 | 0.711 | 0.898 | 22 |
+| 1000 | 164 | 3909 | 1381 | 146 182 | 0.693 | 0.888 | 20 |
+| **500 (production)** | **175** | **3719** | **1317** | **163 639** | 0.721 | 0.888 | 17 |
+| 250 | 178 | 3616 | 1297 | 180 278 | 0.716 | 0.859 | 23 |
+| **500 + retiler fix** | **207** | **1560** | **574** | **385 623** | **0.586** | 0.927 | 24 |
+
+A 16× sweep of the floor buys +16 % accepted passes (154 → 178) and −20 %
+few-terminal warnings, monotonically. The retiler knob, at the *same* 500 e,
+buys +18 % more on top, cuts the warnings by **58 %**, and is the only column
+that moves `f_off_far` — the coverage number of §8.6 — at all. The floor never
+moves it outside 0.63–0.72 and not even monotonically.
+
+**Doc 25's deciding metric is uninformative here.** The doc-55 stopping-muon
+count across the six arms is 0/1/0/1/1/1. PDHD has one such track in 30 events
+(§10 item 4), so this census cannot be decided the way PDVD's was. Reported for
+completeness, not used.
+
+### 12.6 Verdict
+
+1. **Keep 500 e.** It takes most of the available gain (154 → 175 of the 178 at
+   250 e) for 91 % of 250 e's terminal inflation, and below it `k_pop` degrades
+   (0.888 → 0.859) while accepted passes flatten. The PDVD value transfers, and
+   now it has a PDHD measurement behind it rather than an argument. It captures
+   **63 % of the ceiling** on PDHD — and 62 % with the retiler fix on, so the
+   floor's selectivity and the wrapped defect are independent levers.
+2. **The floor was the wrong thing to tune.** The binding constraint is that 78 %
+   of PDHD's points carry fewer than two plane charges. No threshold reaches
+   them. `retile_wrapped_channel_activity` does, 3.6×, and beats the entire 16×
+   floor sweep on every counter.
+3. **This is the mechanism behind §8.6's coverage defect.** A starved terminal
+   population gives a fragmentary skeleton, and the fit follows a fragment —
+   which is what `f_off_far` 0.72 measures. The one knob that raises the ceiling
+   is also the only one that lowers `f_off_far` (0.721 → 0.586). §10 item 5 is
+   no longer unexplained; it is the wrapped-plane defect of §9.
+
+**Repro** (binary pin `/home/xqian/tmp/pdhdstm_libpin`, §0):
+
+```bash
+# 12.2-12.4: the charge distribution.  WCT_STEINER_PHASE_DUMP=1 -> ~45 MB/event.
+WCT_STEINER_PHASE_DUMP=1 ./run_pr_evt.sh -s phdump  -stm -stm-fit 029107 0   # and 10,12,14
+WCT_STEINER_PHASE_DUMP=1 PDHD_PR_TLA="-S retile_wrapped_channel_activity=true"     ./run_pr_evt.sh -s phdumpw -stm -stm-fit 029107 0
+PDHD_CLUS_TLA="-S wrapped_channel_charge=true" ./run_clus_evt.sh -s wcc -save-pctree 029107 0
+WCT_STEINER_PHASE_DUMP=1 ./run_pr_evt.sh -s wccdump  -stm -stm-fit 029107 0
+# 12.5: the scan (30 events x 4 floors; 500 e = the sec 8 stm0 arm, same pin)
+for T in 4000 2000 1000 250; do PDHD_PR_TLA="-S steiner_terminal_charge=$T"     ./run_pr_evt.sh -s stmc$T -stm -stm-fit 029107 all; done
+```
+
+Table: `docs/figs/pdhd_terminal_charge_census.tsv`.
