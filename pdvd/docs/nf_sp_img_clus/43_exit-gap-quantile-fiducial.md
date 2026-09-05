@@ -1,8 +1,10 @@
 # 43 — A fiducial volume from exit-gap quantiles, and what it does to the taggers
 
-**Status: measured and A/B-tested on the 99-event production set; nothing flipped.
-`curved_fv_profile` is a default-OFF selector (toolkit) behind the default-OFF
-`curved_fv` knob of doc 41; production is byte-identical.**
+**Status: PDVD PRODUCTION since 2026-09-05 at p90 + 5 cm (owner decision, §8).
+The driver `pdvd/wct-pr-perevt.jsonnet` now passes `curved_fv=true,
+curved_fv_profile='p90', curved_fv_margin_y/z=5`; the toolkit knobs keep their
+default-OFF values for any other caller. §1–7 are the measurement and the A/B
+that led to the decision, written before it.**
 
 Follows doc 41 §13, which ended with the owner's scan: four of the long tracks the
 median-based curved surface had un-tagged are through-going, so a tagger boundary
@@ -432,3 +434,61 @@ Files: `scripts/fv_exit_census.py`, `fv_quantile_surface.py`,
 `fv_quantile_cfg_proof.sh`, `fv_quantile_run_{arms,ctrl}.sh`; `figs/43_*`;
 toolkit `cfg/pgrapher/experiment/protodunevd/{curved_fiducial,
 curved_fiducial_profiles, pr}.jsonnet`; driver `pdvd/wct-pr-perevt.jsonnet`.
+
+## 8. Production: p90 + 5 cm (owner decision, 2026-09-05)
+
+The owner chose **p90 + 5** as the PDVD operating point for the taggers and the
+PR chain — the arm `d43p90c5` of §6. It goes into production the way doc 35's
+flat inset did: in the driver, which is the only production caller of
+`protodunevd/pr.jsonnet`:
+
+```jsonnet
+// pdvd/wct-pr-perevt.jsonnet
+curved_fv = true,
+curved_fv_margin_y = 5,
+curved_fv_margin_z = 5,
+curved_fv_profile = 'p90',
+```
+
+The toolkit's `pr.jsonnet` keeps `curved_fv=false, curved_fv_profile='d50',
+curved_fv_margin_y/z=3` as function defaults (a caller that passes nothing still
+gets the byte-identical legacy box), with its comment updated to name the
+production values. Nothing else moves: `tgm_fv_x_margin` stays 2.5 cm on the
+anode faces, and the flat-inset knobs `tgm_fv_y_margin` / `tgm_fv_z*_margin`
+stay in the driver, inert while `curved_fv` is on.
+
+**Gates** (`fv_quantile_cfg_proof_prod.sh`, four compiles of the driver with the
+production TLAs):
+
+| compile | vs | result |
+|---|---|---|
+| working tree, **no TLA** (= production) | `git archive HEAD cfg` + `git show HEAD:` driver with the `d43p90c5` TLAs | `cmp` identical (273 882 B) — production **is** the graded arm |
+| working tree, `-S curved_fv=false` | HEAD, no TLA | `cmp` identical (270 828 B) — the doc 35 flat point stays one TLA away |
+
+**Equivalence run**: the 99 events re-run under the new defaults with no TLA as
+the fresh tag `d43prod` (`fv_quantile_run_prod.sh`), compared with `d43p90c5` by
+`fv_curved_ab.py`: **0 verdict flips over 5859 clusters** (TGM 2095, STM 476, FC 2105 in both), binary fingerprint identical before and after.
+
+**What production now does** (from §6, the `d43p90c5` column): TGM 2148 → 2095
+(−2.5 %; −221 / +168), long (> 2 m) TGM 754 → 769, STM 470 → 476, FC 2045 → 2105;
+per exit end 6.7 % called contained (cross-validated 6.4 %) against 7.5 % before,
+6.4 / 7.1 % in the anode / cathode halves against 4.0 / 10.8; 122 of doc 41's 140
+long losses re-tagged, the owner's Bee 1, 4, 5 recovered (6 remains the far-tail
+case of §6.4).
+
+**Arm switches from here on**:
+
+| want | `PDVD_PR_TLA` |
+|---|---|
+| production (p90 + 5) | (none) |
+| the doc 35 flat inset | `-S curved_fv=false` |
+| the doc 41 d50 surface + 3 | `-A curved_fv_profile=d50 -S curved_fv_margin_y=3 -S curved_fv_margin_z=3` |
+| p90 + 3 | `-S curved_fv_margin_y=3 -S curved_fv_margin_z=3` |
+| p80 + 3 | `-A curved_fv_profile=p80 -S curved_fv_margin_y=3 -S curved_fv_margin_z=3` |
+
+**Still open, now as follow-ups on production** (§7's list, re-ordered): the scan
+of the short anode-half losses and the cathode-half gains; the TGM / FC
+readout-edge guard; more events for y+ and a regeneration of the profiles when
+they arrive (re-run the §1 Repro block; the profile file is generated and carries
+its census line). The doc 25 stopping-muon census on production is the
+containment sentinel to re-run first.

@@ -1231,21 +1231,26 @@ function(
     // legacy literal that used to be hard-coded in pr.jsonnet's margin
     // vectors).  Broken out for doc pdvd/35.
     tgm_fv_zmin_margin = 18,   // doc 35: 15 (space charge) + 3 (FV_z_margin)
-    // curved_fv (doc pdvd/41 sec 9): swap the tagger's flat box for the MEASURED
-    // curved (space-charge) surface, cfg/pgrapher/experiment/protodunevd/
-    // curved_fiducial.jsonnet.  ON also replaces the y/z margins above with the
-    // CUSHION alone (curved_fv_margin_y/z, 3 cm) -- the 15 cm those carry IS the
-    // flat space-charge allowance the surface replaces.  x keeps
-    // tgm_fv_x_margin = 2.5.  Default false => byte-identical to the doc-35
-    // operating point.  Arm: PDVD_PR_TLA="-S curved_fv=true".
-    curved_fv = false,
-    curved_fv_margin_y = 3,
-    curved_fv_margin_z = 3,
+    // curved_fv (doc pdvd/41 sec 9, doc pdvd/43): swap the tagger's flat box for a
+    // MEASURED surface, cfg/pgrapher/experiment/protodunevd/curved_fiducial.jsonnet
+    // + curved_fiducial_profiles.jsonnet.  ON also replaces the y/z margins above
+    // with the CUSHION alone (curved_fv_margin_y/z) -- the 15 cm those carry IS the
+    // flat space-charge allowance the surface replaces.  x keeps tgm_fv_x_margin =
+    // 2.5.
+    // PDVD PRODUCTION since 2026-09-05 (owner decision, doc 43 sec 8): the
+    // exit-gap p90 surface with a 5 cm cushion, i.e. the arm d43p90c5 -- TGM 2148
+    // -> 2095 on the 99-event set, long (> 2 m) TGM 754 -> 769, STM 470 -> 476,
+    // 122 of doc 41's 140 long losses re-tagged.  The doc-35 flat operating point
+    // is PDVD_PR_TLA="-S curved_fv=false" (tgm_fv_y/zmin_margin above then
+    // apply); the doc-41 d50 arm is "-A curved_fv_profile=d50 -S
+    // curved_fv_margin_y=3 -S curved_fv_margin_z=3".
+    curved_fv = true,
+    curved_fv_margin_y = 5,
+    curved_fv_margin_z = 5,
     // curved_fv_profile (doc pdvd/43): with curved_fv on, which measured surface:
-    // 'd50' (doc 41 sec 9 median, the default) or the exit-gap quantiles 'p80' /
-    // 'p90' (cfg/.../curved_fiducial_profiles.jsonnet).  Arm:
-    // PDVD_PR_TLA="-S curved_fv=true -A curved_fv_profile=p90".
-    curved_fv_profile = 'd50',
+    // 'd50' (doc 41 sec 9 median), or the exit-gap quantiles 'p80' / 'p90'
+    // (cfg/.../curved_fiducial_profiles.jsonnet).  Production: 'p90'.
+    curved_fv_profile = 'p90',
     // Persist the per-pass STM track fits (C++ default false; key omitted
     // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
     // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added

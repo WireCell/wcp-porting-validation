@@ -1,5 +1,12 @@
 # PDVD doc 35 — the CRP gaps, measured; and the tagger fiducial made consistent with clustering
 
+> **Superseded 2026-09-05 (doc pdvd/43 §8).** The flat 15 cm space-charge inset this
+> document adopted for the taggers (`tgm_fv_y_margin` 17.5 / `tgm_fv_z*_margin` 18)
+> is no longer PDVD production: the driver now runs the measured exit-gap p90
+> surface with a 5 cm cushion (`curved_fv=true`, `curved_fv_profile='p90'`). The
+> flat point is one TLA away (`-S curved_fv=false`). The CRP-gap and CRU-seam
+> findings here are unaffected.
+
 **Status (2026-09-04).** Three owner steers, executed:
 
 1. **The 15 cm y/z inset in the clustering FV is space charge.** Recorded (§1);

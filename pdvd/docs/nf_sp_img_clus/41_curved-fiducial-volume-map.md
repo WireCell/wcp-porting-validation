@@ -1,5 +1,10 @@
 # PDVD doc 41 — the apparent side-wall position as a function of drift: can a curved (space-charge) fiducial surface be mapped from the Q/L-matched cosmics?
 
+> **Continued in doc pdvd/43 (2026-09-05).** §13's closest-approach table was a
+> passing-by-contaminated sample; doc 43 builds the tagger surface from an EXIT-gap
+> census, p80 / p90 per wall / volume / drift bin, and the owner put **p90 + 5 cm**
+> into PDVD production (doc 43 §8). §13.3's "keep the flat inset" is superseded.
+
 **Status (2026-09-04).** Measurement + write-up only. No toolkit code, no config,
 no arm, no `work/` directory written. The inputs are the 120-event `d28dlfp`
 cosmic-data arm already on disk (the arm docs 33 and 35 measured on; the imaged
