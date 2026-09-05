@@ -66,6 +66,17 @@ python3 $S/fv_curved_map.py /home/xqian/tmp/doc41/points_d28dlfp.npz --out /home
 # (3) figures
 python3 $S/fv_curved_plots.py /home/xqian/tmp/doc41/map_result.json \
     --npz /home/xqian/tmp/doc41/points_d28dlfp.npz --figdir docs/nf_sp_img_clus/figs --prefix 41
+
+# (4) sec 9: the fiducial volume built from the surface -- refit, polygons, census, figure
+python3 $S/fv_curved_surface.py /home/xqian/tmp/doc41/map20_result.json \
+    --npz /home/xqian/tmp/doc41/points_d28dlfp.npz --out /home/xqian/tmp/doc41/fv \
+    --fig docs/nf_sp_img_clus/figs/41_fv_surface.png
+#     the compiled-config proof of the emitted jsonnet
+cat > /home/xqian/tmp/doc41/curved_test.jsonnet <<'EOJ'
+local f = import 'pgrapher/experiment/protodunevd/curved_fiducial.jsonnet';
+{ cushion0: f(), cushion3: f(cushion_y=3.0, cushion_z=3.0) }
+EOJ
+wcsonnet /home/xqian/tmp/doc41/curved_test.jsonnet > /home/xqian/tmp/doc41/curved_test.json
 ```
 
 The per-bin table this document quotes is committed as
@@ -549,6 +560,9 @@ with the doc-96/97 separation cases re-checked.
 
 ### 8.3 Recommended next step
 
+*(Executed in §9 below — the surface is emitted as a `PolyFiducial` pair with
+MicroBooNE's cushion and censused offline; the A/B remains owed.)*
+
 Wire the eight M1 profiles as a default-OFF `PolyFiducial` + `CompositeFiducial`
 in `cfg/pgrapher/experiment/protodunevd/` (a `curved_fiducial.jsonnet` sibling
 of `crp_gap_fiducial.jsonnet`, imported by nothing until a knob selects it for
@@ -560,3 +574,280 @@ parallel, image and Q/L-match the ~200 further PDVD data events already on
 disk under `input_data/run0393*` and `run04*`: it halves every error here and
 settles the corner quarters, at which point the ten-slab MicroBooNE form is
 measurable too.
+
+---
+
+## 9. A fiducial volume built from that surface
+
+§8.3's next step, executed: the surface of §5–7 turned into a volume the STM
+tagger (and later the PR chain) can bind, with the cushion MicroBooNE puts
+between a calibrated surface and a fiducial volume. Nothing is wired — the
+config file this section emits is imported by nothing.
+
+### 9.1 What MicroBooNE puts between the two — and it is two numbers, not one
+
+The prototype keeps **two** boundary objects and cushions them differently. The
+one that matters for a tagger is the second.
+
+| use | object | cushion | where |
+|---|---|---|---|
+| containment / physics FV | `boundary_xy`, `boundary_xz` — the 6-vertex polygons built in the constructor | `boundary_dis_cut` = **3 cm** on the y walls and on **both** x faces, **4 cm** on the z walls (3 + a hard-coded extra 1 cm), and the knee's x moves 3 cm toward the anode too | `ToyFiducial.cxx:117-136`, `:190-202`; every production app passes 3 (`wire-cell-prod-nue.cxx:417`, `wire-cell-stm.cxx:314`, `prod-wire-cell-matching-nusel.cxx:351`) |
+| cosmic tagger (STM / TGM) | `boundary_SCB_*` — the **uncushioned** measured space-charge boundary, ten z-slabs and ten y-slabs | a **band** of 2.0–2.8 cm passed per call: STM `{x_ano 0.0, x_cat 2.0, y_bot 2.0, y_top 2.5, z 2.0}`, TGM `{2.2, 2.8, 2.8, 2.8, 2.8}`, TGM-no-flash `{0.8, 1.2, 1.2, 1.2, 1.2}` cm, all ×1.3 when the flash KS is poor | `Cosmic_tagger.h:34-36, 49-51, 64-66`; `check_boundary` (`:613-637`) requires *inside* SCB+tol and calls *outside* SCB−tol "at a boundary" |
+
+The header's `boundary_dis_cut = 2*units::cm` default is never used in
+production. So: **3 cm (4 in z) for containment, ±2.0–2.8 cm for the tagger.**
+
+Two further details that matter when copying this to PDVD:
+
+- **MicroBooNE insets the vertex; WCT offsets the point.** `FiducialUtils::
+  inside_fiducial_volume(p, tol)` (`clus/src/FiducialUtils.cxx:79-119`) and
+  `TaggerCheckTGM::inside_fv` require the point shifted *outward* by the
+  tolerance along each axis to still be contained. For a box the two are
+  identical; on a ramped surface an axis-aligned probe gives a perpendicular
+  inset of tol·cos θ, and the steepest ramp here (9.2 cm over 61 cm) has
+  cos θ = 0.989 — under 4 mm on a 3 cm cushion, so the two constructions agree.
+- **PDVD already carries MicroBooNE's tagger-regime cushion**, and independently
+  reproduces its y-vs-z asymmetry: `tgm_fv_x_margin = 2.5`, `y = 17.5`,
+  `z = 18` cm (`pdvd/wct-pr-perevt.jsonnet:1189-1194`), i.e. **2.5 / 2.5 / 3 cm
+  of cushion plus the flat 15 cm space-charge allowance** doc 35 adopted. This
+  section replaces the 15 cm, and only the 15 cm.
+
+**So the volume is emitted at cushion 0 and the cushion stays in
+`fv_tolerance`**, exactly as both MicroBooNE's tagger and WCT's taggers do
+today: one polygon then serves the containment test and the "at a boundary"
+band, with the cushion visible in the config that owns the verdict. 3 cm is the
+recommendation for y and z (MicroBooNE's containment value, above PDVD's
+present 2.5/3, and — §9.2 — larger than every place the surface is measurably
+wrong), with x left at its present 2.5 cm since no drift-direction surface was
+measured (§8.2).
+
+### 9.2 The surface, refit as a volume
+
+§7's M1 is the best *estimate* of the surface. A fiducial surface needs one
+property M1 was never asked for: **it must not sit inside the measured surface
+by more than the cushion, anywhere**. Two changes, both in
+`scripts/fv_curved_surface.py`:
+
+1. **the foot of the ramp is constrained to the anode face.** The displacement a
+   drifting charge accumulates is zero at the anode by construction; with a free
+   width the y− top fit put the foot at |x| = 476 cm, i.e. gave the anode plane
+   itself a 0.6 cm inset.
+2. **a cathode-side plateau is allowed** — M3, the trapezoid: inset `dc` for
+   |x| ≤ x1, linear to 0 at x2, 0 beyond. M1 is M3 with x1 = the cathode face,
+   so one Δχ² chooses between them. Selection: **flat** if the M1 amplitude is
+   under 2σ; else **M3** if Δχ² > 4 for the one extra parameter; else **M1**.
+
+| wall | volume | model | inset at the cathode dc (cm) | plateau to x1 (cm) | ramp foot x2 (cm) | χ²/ndf | why |
+|---|---|---|---|---|---|---|---|
+| y+ | bottom | flat | 0 | — | — | 5.0/15 | amplitude 0.15 ± 0.69, under 2σ |
+| y+ | top | M1 | 2.76 ± 1.21 | — | 126.8 | 8.2/15 | single ramp adequate |
+| y− | bottom | **M3** | **9.22 ± 0.69** | **114.8** | **176.2** | **2.9/14** | Δχ² = 7.7 |
+| y− | top | M1 | 2.45 ± 0.64 | — | 339.9 | 19.6/15 | single ramp adequate |
+| z− | bottom | M1 | 11.15 ± 1.43 | — | 200.9 | 7.5/15 | single ramp adequate |
+| z− | top | M1 | 3.78 ± 0.43 | — | 339.9 | 25.1/15 | single ramp adequate |
+| z+ | bottom | M1 | 17.66 ± 1.25 | — | 205.1 | 12.8/15 | single ramp adequate |
+| z+ | top | M1 | 11.02 ± 0.60 | — | 164.6 | 11.4/15 | single ramp adequate |
+
+The trapezoid matters on exactly one wall, and it matters in the direction that
+*costs* volume nowhere: y− bottom saturates at ~9 cm from the cathode face out
+to |x| ≈ 115, and the single ramp forced through that plateau extrapolates to
+13.9 cm at the cathode — 5 cm past the innermost measured bin (6.2 ± 4.1).
+
+**The deficit test.** Per bin, `d50 − surface`; positive means the emitted
+surface lies inside the measurement, which is what the cushion has to cover:
+
+| wall, volume | largest deficit | at \|x\| | its significance | largest significance | its size, at \|x\| |
+|---|---|---|---|---|---|
+| y+ bottom | 1.12 cm | 310 | 0.8σ | 1.0σ | 1.01 cm at 30 |
+| y+ top | 1.29 cm | 50 | 0.7σ | 1.2σ | 1.25 cm at 250 |
+| y− bottom | 0.57 cm | 70 | 0.7σ | 0.7σ | 0.57 cm at 70 |
+| y− top | 6.59 cm | 110 | 1.7σ | **3.3σ** | 1.57 cm at 330 |
+| z− bottom | 3.00 cm | 30 | 0.9σ | 1.2σ | 2.27 cm at 130 |
+| z− top | **7.16 cm** | 50 | 1.9σ | **2.8σ** | 0.92 cm at 330 |
+| z+ bottom | 3.75 cm | 110 | 1.2σ | 1.6σ | 2.99 cm at 130 |
+| z+ top | 0.81 cm | 12 | 1.1σ | 1.1σ | 0.81 cm at 12 |
+
+Read together the two columns say the same thing twice: **every deficit is
+either smaller than the 3 cm cushion or smaller than 2σ.** The two largest
+*sizes* (7.2 cm on z− top at |x| = 50, 6.6 cm on y− top at |x| = 110) are single
+20 cm bins with 3.8 cm bootstrap errors on profiles whose innermost bin is
+*smaller* (1.7 ± 3.4 on z− top at |x| = 11.5) — noise, not a knee, and the
+fitted single ramp is what the weighted data support. The two largest
+*significances*, 3.3σ and 2.8σ, are both at |x| = 330 where they are 1.6 and
+0.9 cm: the anode end of exactly the two walls where §4.1's control found a
+~+0.9 cm instrumental pedestal. Neither is a reason to add a vertex; both are
+reasons the cushion is 3 cm and not 1.
+
+### 9.3 The volume
+
+One polygon per plane, spanning **both** drift volumes and continuous across the
+6 cm cathode slab (so a cathode crosser is not an "exiter" at x = 0, exactly as
+`pdvd_pr_fv`'s box is today). Cushion 0 — these vertices *are* the calibrated
+surface. Units cm, WCT frame:
+
+```
+boundary_xy (x, y): (-339.91, -336.39), (-176.19, -336.39), (-114.79, -327.17), (-3.00, -327.17),
+                    (3.00, -333.94), (339.91, -336.39), (339.91, 336.39), (126.82, 336.39),
+                    (3.00, 333.63), (-3.00, 336.39), (-339.91, 336.39)
+boundary_xz (x, z): (-339.91, 0.81), (-200.95, 0.81), (-3.00, 11.96), (3.00, 4.59), (339.91, 0.81),
+                    (339.91, 298.44), (164.61, 298.44), (3.00, 287.42), (-3.00, 280.77),
+                    (-205.14, 298.44), (-339.91, 298.44)
+```
+
+**`cfg/pgrapher/experiment/protodunevd/curved_fiducial.jsonnet`** (toolkit repo,
+sibling of `crp_gap_fiducial.jsonnet`) builds these from the eight `{dc, x1, x2}`
+triples of §9.2 rather than from a frozen vertex list, so a re-measurement is an
+edit of 24 numbers, and takes `cushion_x/y/z` for a consumer that wants
+MicroBooNE's vertex-inset arrangement instead of `fv_tolerance`. It returns
+`{polys, composite, tn, configs, boundary_xy, boundary_xz}` and emits
+
+- `PolyFiducial{axis: 2}` — one slab, corners **(x, y)**;
+- `PolyFiducial{axis: 1}` — one slab, corners **(z, x)**;
+- `CompositeFiducial{logic: 'and'}` over the two.
+
+The corner order is not free: `PolyFiducial` takes the two transverse
+coordinates in (axis+1, axis+2) mod 3 order (`aux/src/PolyFiducial.cxx:66-68`),
+so axis 2 is (x, y) and axis 1 is (z, x). The AND must be the composite's —
+slabs *inside* one `PolyFiducial` OR together. Each slab's axis span is padded to
+±1000 cm because `contained()` short-circuits on a bounding box built from the
+slab extents (`:139`); the transverse polygon is the cut, and the other plane's
+polygon is the other cut.
+
+Verification (`scripts/fv_curved_surface.py` + `wcsonnet`):
+
+- **nothing imports it**: `grep -rn curved_fiducial cfg/` returns the file only,
+  so the compiled config of every existing job is unchanged by construction;
+- **compiled-config proof**: `wcsonnet` on a two-line file that calls the
+  function at cushion 0 and cushion 3 compiles, and its 11 + 11 emitted corners
+  agree with the Python construction to 1e-6 cm at **both** cushions, with
+  `axis` 2 / 1, `logic: and`, and
+  `tn = CompositeFiducial:pdvdcurved-fv` referencing both polys;
+- **functional probe**, on an offline transcription of `PolyFiducial`'s own
+  pnpoly AND-ed the way the composite does (surface / surface + 3 cm probe /
+  today's box + margins):
+
+  | probe point | curved | curved + 3 | today |
+  |---|---|---|---|
+  | cathode (x = −10), 16 cm inside the z+ wall | out | out | out |
+  | cathode, 22 cm inside the z+ wall | in | in | in |
+  | anode (x = −330), 4 cm inside the z+ wall | **in** | **in** | out |
+  | anode, 4 cm inside the y+ wall | **in** | **in** | out |
+  | cathode, 4 cm inside the y+ wall | **in** | **in** | out |
+  | cathode, 8 cm inside the y− wall | out | out | out |
+  | cathode, 14 cm inside the y− wall | **in** | **in** | out |
+  | the cathode slab centre (0, 0, 150) | in | in | in |
+  | 5 cm past the anode | out | out | out |
+
+`figs/41_fv_surface.png` draws it: both planes at true scale against the
+sensitive volume and today's box, then the four walls with the measured d50, the
+emitted surface, and the surface + 3 cm that is the actual fiducial boundary.
+
+### 9.4 What it would change, measured on the same 120 events
+
+An **offline** census, no arm: the polygons above with `fv_tolerance`
+x 2.5 / y 3 / z 3 cm, against today's box with x 2.5 / y 17.5 / z 18 cm, on the
+arm's own points and PCA track ends. This is a **proxy** — the taggers test
+`get_extreme_wcps()` / steiner boundary points, not PCA ends — so it says which
+population moves and where, not what TGM will count.
+
+**Points** (2.0 M sampled from the 7.83 M with a cluster T0):
+
+| | inside today | inside proposed | gained | lost |
+|---|---|---|---|---|
+| all | 1,687,869 (84.4 %) | 1,921,505 (96.1 %) | 234,003 | 367 |
+| cathode half (\|x\| < 170) | | | 81,878 | 361 |
+| anode half | | | 152,125 | 6 |
+
+**Transverse area kept** (the x margin is 2.5 cm in both schemes and cancels):
+today 83.8 % at every x; proposed **91.7 % at the cathode face, 96.9 % at the
+anode**, 94.5 % averaged over the drift. The flat allowance removes three times
+more volume than the measurement supports, and it removes it in the wrong place.
+
+**PCA track ends** (9,228 ends of tracks with ≥ 40 points and ≥ 30 cm extent;
+1,254 sit at a readout-window edge and are listed separately):
+
+| population | ends | outside today | outside proposed | newly inside | newly outside |
+|---|---|---|---|---|---|
+| all | 9,228 | 4,268 | 3,218 | 1,056 | 6 |
+| away from the readout window | 7,974 | 4,042 | 3,125 | 923 | 6 |
+
+Decomposed the way doc 35 §5.2 insists on — by axis, and by which effect does
+it:
+
+| | ends outside the bare envelope | y margin | z margin | x margin |
+|---|---|---|---|---|
+| today (box + 17.5/18/2.5) | 901 | 1,183 | 2,383 | 94 |
+| proposed (surface + 3/3/2.5) | 1,757 | 500 | 914 | 127 |
+
+(the margin columns count ends *contained* by the envelope that a margin probe
+then rejects, else a point past the anode would be counted six times; the x
+columns differ only because the two conditioning populations do. The bare
+sensitive-volume envelope alone puts 966 ends outside, so **791 of the 1,757 are
+the curvature itself** — the boundary contacts the flat inset cannot see because
+they are not near the cathode wall by 15 cm, they are past a surface that has
+moved 11–18 cm inward.)
+
+And by wall:
+
+| nearest wall | drift half | ends | outside today | outside proposed | newly inside |
+|---|---|---|---|---|---|
+| y+ | cathode | 530 | 248 | 156 | 92 |
+| y+ | anode | 563 | 372 | 299 | 73 |
+| y− | cathode | 530 | 252 | 176 | 76 |
+| y− | anode | 653 | 457 | 367 | 90 |
+| z− | cathode | 1,727 | 513 | 329 | 184 |
+| z− | anode | 1,834 | 1,041 | 822 | 219 |
+| z+ | cathode | 1,669 | 431 | 318 | 119 |
+| z+ | anode | 1,722 | 954 | 751 | 203 |
+
+**The headline is a trade, not a win.** Doc 35 raised TGM 1592 → 2185 by
+insetting 15 cm at every x; 585 of the 1,056 ends that this surface hands back
+are in the anode half, where the measurement says the apparent wall *is* the
+nominal wall to within 1.1 cm. The claim this section makes is therefore that a
+sizeable part of that TGM gain was over-tagging — a track end that stops 10 cm
+short of the anode-side wall is a stopping muon, not an exiter — and the price
+of collecting it back is paid on **y+**, which goes from 17.5 cm of margin to 3
+on a wall with no measurable effect in either drift volume (0.15 ± 0.69 bottom,
+2.76 ± 1.21 top). That is the wall to watch in an A/B, and the reason this is
+not a config flip to be made from a table.
+
+In the other direction the surface is *tighter* than today in exactly one place,
+and it is the place §8.1 predicted: the z+ wall of the bottom volume near the
+cathode (17.7 + 3 = 20.7 cm vs today's 18), which is all six of the newly-outside
+ends and 361 of the 367 newly-outside points.
+
+### 9.5 Caveats specific to the volume, and the next step
+
+- **The frame is a precondition, and it is met.** A curved surface is only
+  meaningful if x is the true drift coordinate: MicroBooNE's
+  `inside_fiducial_volume(p, offset_x, …)` takes the drift offset as an
+  argument, WCT's takes none, so the points reaching it must already be
+  corrected. On PDVD they are — every tagger is built from the `cm`
+  `clustering_methods` instance, whose scope is `t0cor_coords`
+  (`protodunevd/pr.jsonnet:1163, 1404, 1559, 1609, 1626`; `clus.jsonnet:920`).
+  A cluster with no flash keeps `QLMatching`'s initial `set_cluster_t0(-1e12)`
+  (`match/src/QLMatching.cxx:1351`), i.e. x_t0cor ≈ ±1.5e8 cm, and is outside
+  every bounded fiducial, box or polygon alike — no new failure mode. The real
+  exposure is a cluster with a *wrong* t0: it is placed at the wrong drift
+  position and now reads the wrong inset. That is not new either (a wrong x
+  already breaks the x margins), but it is newly *y/z-dependent*, and the
+  489 wrong-t0 tracks of §2 are the population to watch.
+- **The envelope is not quite today's box.** `pdvd_pr_fv` spans
+  z ∈ [0.05, 299.25] and |y| ≤ 336.4; the polygons use the `sensvol` union,
+  z ∈ [0.813, 298.435] and |y| ≤ 336.39. The z difference (0.76 / 0.82 cm) is
+  the whole reason the bare-envelope count goes 901 → 966 above. It is smaller
+  than the cushion, but it should be a deliberate choice by whoever wires this,
+  not a side effect.
+- **One running period, no MC control, corner dependence** — §8.2 unchanged; a
+  volume inherits every caveat of the surface it is built from.
+
+**Next step, and it is a knobbed one.** Add a `curved_fiducial` selector to
+`protodunevd/pr.jsonnet` that swaps `pdvd_pr_fv` for the composite above and
+`pdvd_pr_fv_margins` for the 2.5/3/3 cushion, **default off and key-suppressed**
+so the compiled config is byte-identical when off, and A/B it on the 120-event
+`d28dlfp` manifest with the doc 35 §5.2 census: TGM, fully-contained, STM, and
+the per-wall end census above. Report it decomposed by axis and by drift half —
+a single TGM number will hide the trade this section has just measured. The
+y+ wall and the anode half are where the answer lives, and the owner's call on
+whether doc 35's flat 15 cm or this surface is the better operating point should
+be made on that table, not on this one.
