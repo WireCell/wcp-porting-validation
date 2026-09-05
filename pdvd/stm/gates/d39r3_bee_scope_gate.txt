@@ -59,6 +59,18 @@
 #   restoring require_pc:'stm_fit'.  Round 2 added those layers for that question (doc 39 sec 11); the
 #   owner chose this trade knowingly.
 #
+# EPOCH NOTE (checked, not assumed).  doc 39 sec 16.3 reports 5 STM tags on 298595 under unmerge_assoc
+#   (2026-09-04).  These arms DO run unmerge_assoc (99 log lines; 523 clusters in the live grouping, the
+#   unmerged count sec 16.3 measured as 522) and the log shows 54 clusters evaluated, 8 at STM=1.  The
+#   difference is the two production flips in between -- curved_fv p90+5 cm (doc 41/43, 09:16) and the
+#   effective transverse smearing (doc 44 sec 7.1) -- both of which move STM verdicts.  sec 16.3's tag set
+#   is the 2026-09-04 configuration; the counts in this file are today's.
+#
+# BEE-URL TRAP: a Bee layer route returns HTTP 200 for a layer that is NOT in the zip, with the body
+#   "<path>/0-<name>-global.json does not exist" -- byte-for-byte the same shape a name that never existed
+#   returns.  So a status-code probe cannot confirm a REMOVED layer.  Use the set's event/list/ page, which
+#   enumerates only the layers present: the round-3 set lists nine, without stm_tagged.
+#
 # BEE
 #   round 3, evt 298595 (-nu chain, canonical post-flip config):
 #     https://www.phy.bnl.gov/twister/bee/set/971dc70d-98ca-4f30-88e7-76078ccf64dc/event/list/

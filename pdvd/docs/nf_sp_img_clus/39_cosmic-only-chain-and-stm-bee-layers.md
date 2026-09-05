@@ -841,6 +841,16 @@ All four agree object-for-object at the new scope. On 298595 the tagged set is
 `{39, 55, 79, 83, 86, 103, 109, 113}`, a subset of the fitted
 `{38, 39, 45, 55, 79, 83, 84, 86, 87, 103, 105, 108, 109, 110, 113, 119}`.
 
+**This supersedes §16.3's tag census on the same event, and the difference is
+epoch, not pipeline.** §16.3 (2026-09-04) reported 5 tags under `unmerge_assoc`
+on 298595. `unmerge_assoc` is running in these arms — 99 log lines, 523 clusters
+in the live grouping, i.e. the unmerged count §16.3 measured as 522 — and the
+log still shows 54 clusters evaluated and **8** at `STM=1`. Two production flips
+landed in between: the curved fiducial surface at p90 + 5 cm (doc 41/43,
+2026-09-05 09:16) and the effective transverse smearing (doc 44 §7.1, the same
+day). Both move STM verdicts. Read §16.3's `[55,83,86,87,109]` as the
+2026-09-04 configuration, not as today's.
+
 ### 17.4 What this costs
 
 The 8 clusters (298595) / 13 clusters (19869) that the tagger **fitted and
@@ -851,6 +861,14 @@ Round 2 added those layers for exactly that question (§11), so this is a real
 trade the owner chose knowingly, not an oversight.
 
 ### 17.5 Bee
+
+One trap when checking a set by URL: a Bee layer route returns **HTTP 200 for a
+layer that is not in the zip**, with the body `"…/0-<name>-global.json does not
+exist"` — identical to what a name that never existed returns. `curl -o /dev/null
+-w '%{http_code}'` therefore proves nothing about a *removed* layer. The
+authoritative check is the set's `event/list/` page, which enumerates the layers
+that are actually present; on the round-3 set it lists nine, and `stm_tagged` is
+not among them.
 
 - **round 3, evt 298595** (`-nu` chain, canonical post-flip config):
   https://www.phy.bnl.gov/twister/bee/set/971dc70d-98ca-4f30-88e7-76078ccf64dc/event/list/
