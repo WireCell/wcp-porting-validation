@@ -984,7 +984,7 @@ column in the decision below.
 
 ### 15.10 Bee sets for the flip decision (uploaded 2026-09-05)
 
-Seven sets, one per event, **each holding two Bee events on the same
+Eight sets, one per event, **each holding two Bee events on the same
 geometry: event `0` = knob OFF (`d41base2`), event `1` = knob ON at 20 cm
 (`d41fix20x`)**, so the arms toggle in one tab. Built by re-indexing
 `work/<evt>_<arm>/mabc-pr.zip` `data/0/0-*.json` into `data/0` and `data/1`
@@ -993,7 +993,7 @@ each UUID was content-verified (HTTP 200, both events listed). Repro:
 
 ```
 docs/nf_sp_img_clus/scripts/d40r3_bee_compare.sh \
-    039252_2 039252_4 039252_10 039349_23 039349_69 039349_48 039349_52
+    039252_2 039252_4 039252_8 039252_10 039349_23 039349_69 039349_48 039349_52
 ```
 
 | event | set | what to look at |
@@ -1004,7 +1004,22 @@ docs/nf_sp_img_clus/scripts/d40r3_bee_compare.sh \
 | 039349/23 | `d24d7369-ca59-4e36-ba88-9bc6389bd5b5` | both signs in one event. Removed: 223.2 cm / 760 pts at (79.3, 267.0, 111.5) and 208.6 cm / 709 pts at (86.6, 272.0, 106.0). Lost: `stm_tagged` cluster 59 (1 056 pts in event 0, 0 in event 1) — its `stm_fit` is unchanged in both (135.4 / 135.3 cm, same ends), only the kink moves, and the 134.8 cm ghost at (381.7, 54.8, 277.8) that used to sit off its end is gone |
 | 039349/69 | `454c7698-8abe-44cf-9a96-bf1292e59edb` | the marginal cost: only 39 points removed event-wide, one 18.7 cm group at (320.9, 80.2, 145.2), and `stm_tagged` cluster 26 (1 283 pts) is lost on it. `stm_fit` again unchanged (190.5 / 190.0 cm) |
 | 039349/48 | `55f18fde-522f-4fa9-811f-c93dc9cf89ca` | the `0 → 4` loss (extra-tracks veto), `stm_tagged` cluster 15. Removed: two ~22 cm groups at (150.9, 223.6, 286.5) |
-| 039349/52 | `e95684e0-d29e-4158-81a5-952d5347e8ca` | the **residual**. The census's worst 3D group (cluster 58, 244.4 cm, 798 pts) is still there in event 1: only 26 points are removed event-wide, none in a group > 10 cm. This is what the flip does *not* buy — the class-(c) lead of §15.9 item 3 |
+| 039252/8 | `021d4505-86a5-4b7f-b8bb-f4f10e1179c7` | the **residual**, and the biggest visible cleanup: points > 10 cm from live charge 1 275 → 74, groups > 10 cm 27 → 3. What survives at 20 cm is the worst residual group in the whole 120 — 22.5 cm, 9 points, at (205.1, 55.7, 70.4). Removed: 162.8 cm at (21.7, 74.9, 81.7) and 159.8 cm at (195.2, 93.4, 58.6) |
+| 039349/52 | `e95684e0-d29e-4158-81a5-952d5347e8ca` | **a set that shows the layer's scope, not a physics case.** The census's worst 3D group (cluster 58, 244.4 cm, 798 pts) *is* removed by the fix — in the calib dump that cluster goes 1 954 → 1 113 Steiner points, and 825 of the 827 removed form exactly that 243.8 cm group at (−103.6, −234.8, 270.5). None of it is in the Bee `steiner_graph` layer, so the two events look almost identical (26 points differ). Open it only as the reminder below |
+
+**The Bee `steiner_graph` layer is a subset — 2 560 880 points over the 120
+events against the calib census's 7 164 712.** It carries the Steiner graph of
+the STM-fitted clusters only (doc pdvd/39 round 2 re-scoped the STM layers to
+the fitted set), which is why 039349/52's ghost is invisible above. Counting
+points in Bee will therefore not reproduce the §15.6 table. On the layer that
+*is* visible, over the same 120 events:
+
+| Bee `steiner_graph`, points > 10 cm from the `clustering` layer | OFF | ON 20 cm |
+|---|---:|---:|
+| points | 12 547 | **313** |
+| connected groups > 10 cm | 142 | **5** |
+| worst group span | 196.8 cm | **22.5 cm** |
+| events with any such point | 76 / 120 | **27 / 120** |
 
 Reading notes: `clustering` (live charge) and `stm` are **byte-identical**
 between the two events of every set — they are the backdrop, not the signal.
