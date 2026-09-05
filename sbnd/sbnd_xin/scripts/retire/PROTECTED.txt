@@ -339,6 +339,35 @@ work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodch
 # PREFIX for the life of that round -- the same treatment doc 91 gave doc 90's
 # arms.  Release when the PDVD doc 25 round closes, not before.
 
+# --- doc 100, the 2026-09-04 round (added 2026-09-04) ---------------------
+# Owner: "keep the latest production result as well as their input", and, asked
+# which depth, "honour PROTECTED.txt".  So the display/sentinel block below and
+# every doc-87 line survived this round untouched.  77 dirs / 12.6 GiB released;
+# records in archive/records/campaign-close-20260904 (integrity 77/77).
+#
+# INTERLOCK 5 REFUSED TWO ARMS THAT WERE ON THE FIRST DRAFT of RETIRE_LABELS --
+# work-probe178410a and work-dbg25a-d97prodchk.  Both are lines in this file.
+# That is the second round running in which this file has vetoed a deletion the
+# planner would otherwise have made; it is not decoration.
+work-ncpi0-d99r3prod work-ncpi0-d99r3prodpr	the ref/prod-2026-09-05 flip's own arm (doc 99 r3): knobs ON in the jsonnet defaults with no TLA, i.e. the path production actually takes.  The NEWEST operating point on disk -- work-*-d97fvpr2 is 3067 events but at prod-2026-09-04	doc 99 r3, doc 100
+#
+# *** DAMAGE RECORD, doc 100 sec 4 -- work-dbg25a-d97prodchk IS NO LONGER
+# SELF-CONTAINED. ***  This round deleted work-dbg25a-ql, which it borrowed its
+# imaging input from, because INTERLOCK 3 was VACUOUS for absolutely-spelled
+# symlinks (it compared realpath() against ROOT written with the /nfs/data/1
+# alias, and /nfs/data/1/xqian/toolkit-dev is itself a symlink to
+# /home/xqian/toolkit-dev, so the comparison could never match an arm name).
+# Interlock 3 is fixed in plan_20260904.py -- realpath BOTH sides, full depth --
+# and proven against the exact link it missed.
+# What survives in that arm: all 20 ql_evt<N>/ with their mabc-*.zip,
+# pctree-evt<N>.tar.gz and logs -- i.e. everything doc 97 sec 9 measures.
+# What is gone: the 20 evt<N> input links and the 105 MB of icluster-apa*.npz
+# behind them.  REGENERABLE: input_files_reco1/stm_tagger_feedback/
+# debug-25evt-reco1.root (708 MB), the 26 staged-dbg25/ dirs and
+# bee/dbg25/dbg25.manifest.tsv all survive; dbg25_stage.sh -> dbg25_run.sh ->
+# d97_dbg25_arm.sh rebuilds it.  NOT rebuilt -- re-creating a just-deleted label
+# is an owner call (M13).
+#
 # --- RETIRED (kept for provenance) ---------------------------------------
 #
 # RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
