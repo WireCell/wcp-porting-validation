@@ -1,12 +1,18 @@
 #!/bin/bash
 # Run the PDVD pattern-recognition (PR) tail for one event (doc pdvd/25).
-# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-nu|-stm|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-stmlean|-nu|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+#
+# DEFAULT MODE IS -stm (doc pdvd/39, owner 2026-09-04): the chain stops after
+# the cosmic taggers.  Pass -nu to run the full neutrino PR tail again, which
+# is what restores the track_fit / shower_track / vertices / mc Bee layers.
 #
 # Input : work/<RUN6>_<EVT>[_<TAG>]/pctree-evt<ID>.tar.gz + pctree-evt<ID>.tlas
 #         (both written by run_clus_evt.sh -save-pctree; the .tlas sidecar carries
 #         the drift speeds / trigger offsets / readout window the Q/L job used, so
 #         the PR job rebuilds DetectorVolumes identically).
-# Output: work/<RUN6>_<EVT>[_<TAG>]/mabc-pr.zip            Bee: clustering + dead + stm_fit + track_fit/shower_track/vertices + mc
+# Output: work/<RUN6>_<EVT>[_<TAG>]/mabc-pr.zip            Bee: clustering + dead + stm_fit
+#                                                          + stm/steiner_graph/steiner_terminals (STM-tagged clusters only)
+#                                                          + track_fit/shower_track/vertices/mc ONLY with -nu
 #         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump (segments, showers, kine, tagger flags)
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-stm.root      STM fits (T_rec_charge/T_stm_pass/T_stm_eval), with -stm-fit
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits + T_tagger/T_kine
@@ -73,7 +79,7 @@ export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1} MKL_NUM_THREADS=${MKL_NUM_THREADS:-
 . "$PDVD_DIR/_runlib.sh"
 
 SEL_TAG=""
-MODE=nu
+MODE=stm    # doc pdvd/39: cosmic taggers only; -nu restores the PR tail
 STM_FIT=0
 PIPE_EXPLICIT=""
 _args=()
@@ -81,6 +87,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -stm) MODE=stm; shift ;;
+        -stmlean) MODE=stmlean; shift ;;   # must precede the -s* catch-all
         -nu) MODE=nu; shift ;;
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
@@ -97,9 +104,15 @@ RUN=$1; EVT=$2; SUBRUN_ARG=${3:-}
 
 PIPE_NU="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
 PIPE_STM="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+# doc pdvd/39: same stages, but tagger_check_tgm moved AHEAD of steiner so the
+# Steiner build can skip TGM-flagged clusters (pair with
+# PDVD_PR_TLA="-S 'steiner_skip_flags=[\"TGM\"]'").  Held out of the default
+# until the sec.5 A/B shows the TGM and STM verdict sets are unchanged.
+PIPE_STM_LEAN="switch_scope,flag_mains,fiducialutils,tagger_check_tgm,steiner,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
     stm) PIPE="$PIPE_STM" ;;
+    stmlean) PIPE="$PIPE_STM_LEAN" ;;
     empty) PIPE="" ;;
 esac
 [ -n "$PIPE_EXPLICIT" ] && PIPE="$PIPE_EXPLICIT"

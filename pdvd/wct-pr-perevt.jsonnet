@@ -451,6 +451,24 @@ function(
     //
     // Set to 0 for the pre-flip arm: -S steiner_terminal_min_sep_cm=0.
     steiner_terminal_min_sep_cm = 0.5,
+    // Skip the Steiner build for clusters an earlier visitor already tagged
+    // (doc pdvd/39).  PDVD passes ["TGM"] together with the reordered pipeline
+    // that puts tagger_check_tgm AHEAD of 'steiner': a through-going muon can
+    // never reach the STM tagger, which skips TGM-flagged mains
+    // (TaggerCheckSTM.cxx:566), so building its Steiner graph is pure cost.
+    // On PDVD this is worth real time because there is NO effective beam
+    // bundle: beam_window_us below is readout-wide, so the beam_window_only
+    // gate selects everything, and flag_mains makes every flash-matched
+    // cluster a main.
+    //
+    // NOT free of output change: tagger_check_fc then sees no steiner_pc on a
+    // TGM cluster and returns the conservative is_fc=false, so the FC flag can
+    // move on TGM-tagged clusters.  The TGM and STM verdict SETS must be
+    // unchanged -- that is the gate this ships behind (doc pdvd/39 sec.5).
+    //
+    // Set to [] for the pre-flip arm: -S 'steiner_skip_flags=[]' (and use the
+    // legacy pipeline order, runner: -stm).
+    steiner_skip_flags = [],
     // Isochronous first-segment endpoint finding (doc pr/24 round 2, SBND evt
     // 271851): for a long cluster whose quantile-trimmed drift-x extent is
     // small (a filled 2-D sheet), the first PR segment's endpoints come from
@@ -3819,6 +3837,7 @@ function(
                              steiner_terminal_adjacent_slice=steiner_terminal_adjacent_slice,
                              steiner_edge_charge_forward_dead_mix=steiner_edge_charge_forward_dead_mix,
                              steiner_terminal_min_separation=steiner_terminal_min_sep_cm * wc.cm,
+                             steiner_skip_flags=steiner_skip_flags,
                              protect_graph_name=protect_graph_name,
                              protect_skip_convicted=protect_skip_convicted,
                              protect_open_convicted_bundles=protect_open_convicted_bundles,
