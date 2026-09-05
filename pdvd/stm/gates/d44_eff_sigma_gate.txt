@@ -43,3 +43,16 @@
 #   width deficit 0.69/0.65/0.35 mm), U_foot -14/-8/-9 %, chi2/N -17/-12/-21 %, uncov_foot 3.6 % -> 0.1 %; B_foot only -0.23/-0.22/-0.10 ->
 #   -0.17/-0.18/-0.09 (pre-registered +-0.10 NOT met); dQ/dx vs rr unchanged (k 0.933 -> 0.934). STM status unchanged on 1489/1800 blocks.
 #   Canonical constants NOT changed: production flip is the owner's decision.
+#
+# GATE 5  PRODUCTION FLIP (owner decision 2026-09-05): canonical cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json now carries
+#   DT 4.872e-7, ind_sigma_u_T 2.300, ind_sigma_v_T 2.304, col_sigma_w_T 1.176 (== stm/pdvd_track_fitting_d44.json, non-comment keys identical).
+#   d44prod = production chain, canonical file, NO trackfitting_config TLA, pin new, 2 events (039252/2, 039349/23), -stm -stm-fit:
+#     d40r3_hash_gate.py d44sig d44prod -> PASS 2  FAIL 0  MISSING 0  of 2   (mabc-pr.zip member hashes + calib dump)
+#     hash_root_trees.py --per-tree: every tracking-stm.root tree SAME on both events
+#     T_proj_data content sha256: 039252_2 53ce06c25e42657b == d44sig; 039349_23 d8896f6ca61959a3 == d44sig
+#   => PDVD production now reproduces the graded arm exactly.  NOT bit-identical to the pre-flip chain BY DESIGN (see d44ref vs d44sig, doc 44 sec 5-6);
+#      the compiled jsonnet is unchanged (runtime file), so this flip is invisible to a config hash.
+#   Accepted for now (owner): STM verdicts move on 311/1800 blocks; TaggerCheckNeutrino (-nu) reads the same file, ungraded.
+#   -nu consumer smoke (TaggerCheckNeutrino reads the same file): work/039252_2_d44nuchk, pin new, canonical file: rc=0, mabc-pr.zip +
+#     tracking-pr.root + calib-pr-evt298595.json written, 0 error/exception lines, 317 TaggerCheckNeutrino log lines.  Runs; NOT graded.
+#   toolkit commit 869a554c (cfg/protodunevd), on top of 49ad872f (the knob).

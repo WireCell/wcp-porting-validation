@@ -12,9 +12,10 @@ footprint bias only from −0.23/−0.22/−0.10 to −0.17/−0.18/−0.09 and 
 residual range unchanged.** The pre-registered B and U_foot targets are therefore
 **not met**: about a quarter of the induction bias was smearing; the rest is a
 normalization deficit that is present, plane-independent, on SBND too (−0.08) and
-does not respond to the transverse width. Flipping production is the owner's
-decision (§7); the recommendation is to flip the *share-matched* set and open the
-normalization question as its own round.
+does not respond to the transverse width. **Flipped to PDVD production the same day
+(owner decision 2026-09-05, §7.1):** the four share-matched constants are now in the
+canonical `pdvd_track_fitting.json`; the STM-verdict re-shuffle is accepted as later
+work, and the normalization question is the next round.
 
 Companion of doc 42 (`42_stm-fit-2d-charge-and-dqdx-validation.md`, whose §8.7 is
 the design executed here and whose §7.4 this doc corrects, §1).
@@ -457,7 +458,29 @@ fit removes the *shape* discrepancy completely and improves every 2-D metric, bu
 explains only about a quarter of the induction footprint bias, and none of the dQ/dx
 scale.
 
-**Recommendation (owner's decision).** Flip PDVD production to the share-matched set
+### 7.1 Flipped to production (owner decision 2026-09-05)
+
+The owner accepted the recommendation below ("proceed to update the production chain
+for PDVD; we do not yet need to worry about STM, which will be a later work"). The
+canonical `cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json` now carries
+`DT 4.872e-7`, `ind_sigma_u_T 2.300`, `ind_sigma_v_T 2.304`, `col_sigma_w_T 1.176`
+(toolkit commit `cfg/protodunevd: effective transverse smearing …`); `_comment` and a
+new `_comment_transverse_smearing` record the derivation, the condition on today's SP
+and the two accepted-for-now caveats (STM verdict churn; the TaggerCheckNeutrino
+consumer ungraded); the physical-diffusion comment is kept as
+`_comment_diffusion_superseded` (DL is unchanged). `gaus_nsigma` is not set (4.0).
+
+**Flip gate** (`stm/gates/d44_eff_sigma_gate.txt`, GATE 5): production chain with the
+canonical file and no TLA (`d44prod`, 2 events, new binary) against the graded arm
+`d44sig`: `mabc-pr.zip` member hashes **PASS 2/2**, every `tracking-stm.root` tree
+SAME, `T_proj_data` sha identical (`53ce06c2…`, `d8896f6c…`) — production now *is* the
+arm graded in §5–6. The compiled jsonnet is unchanged by construction (the file is read
+at runtime, §4), so the change is invisible to a config hash and visible in every PDVD
+output: **NOT bit-identical, by design.** The `-nu` (TaggerCheckNeutrino) consumer was
+smoke-run on 039252/2 (`d44nuchk`), see the gate record. Re-derivation trigger: any
+change to `sp-filters.jsonnet` `Wire_ind`/`Wire_col`.
+
+**Recommendation as it stood before the decision.** Flip PDVD production to the share-matched set
 (`stm/pdvd_track_fitting_d44.json` → the canonical file, same four keys), keep
 `gaus_nsigma` at 4.0. Reasons for: every metric improves or holds, the model's shape now
 matches the data, and the first-neighbour truncation artefact (uncov) is gone. Reasons
