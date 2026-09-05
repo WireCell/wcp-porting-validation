@@ -856,3 +856,127 @@ a single TGM number will hide the trade this section has just measured. The
 y+ wall and the anode half are where the answer lives, and the owner's call on
 whether doc 35's flat 15 cm or this surface is the better operating point should
 be made on that table, not on this one.
+
+---
+
+## 10. The A/B: TGM goes DOWN by a third, and the reason is measurable
+
+§9.4's census was a proxy. This is the arm.
+
+### 10.1 The knob and its byte-identity gate
+
+`curved_fv` (`protodunevd/pr.jsonnet`, threaded through
+`pdvd/wct-pr-perevt.jsonnet`) swaps the tagger fiducial for the composite of
+§9.3 **and** drops the y/z margins to the cushion alone — the two must move
+together or the 15 cm allowance is counted twice. Default false.
+
+- **Off is byte-identical**: the compiled driver config with the knob absent is
+  `cmp`-identical to the same compile from `git show HEAD:` copies of both files
+  (`/home/xqian/tmp/doc41/cfgproof/{ref_norm,new_off}.json`).
+- **On does what it says**: `tagger_check_tgm`, `tagger_check_stm` and
+  `tagger_check_fc` all move from `BoxFiducial:pdvd_pr_fv` to
+  `CompositeFiducial:pdvdcurved-fv`, their `fv_tolerance` y/z entries from
+  −175/−180 to −30 (WCT mm), the x entries unchanged at −25, and the two
+  `PolyFiducial` nodes replace the box in the component list.
+
+### 10.2 The arms
+
+`d41fvoff` / `d41fvon`, the production PR chain (`-stm`, unmerge_assoc live),
+**99 of the 120 manifest events** — the ones whose pctree carries the
+`-save-assoc` provenance the production chain requires (`d41prov`); the other 21
+have no such clustering output. Identical inputs, one binary (the four plugin
+fingerprints are unchanged across both arms), 99/99 rc=0 each, ~4 min per arm at
+16 jobs. Verdicts are read per (event, cluster) from the taggers' own log lines,
+not counted as lines (doc 36): 5,859 clusters evaluated, and the cluster-id set
+is identical in both arms on all 99 events.
+
+**Control**: against `d41base`, an arm run independently in another session on
+the same 99 events, the OFF arm's TGM is **identical — 2,148 with zero flips**.
+
+### 10.3 The answer
+
+| verdict | off (today's flat box) | on (curved + 3 cm) | Δ | gained | lost | events changed |
+|---|---|---|---|---|---|---|
+| **TGM** | **2,148** | **1,431** | **−717 (−33.4 %)** | 13 | 730 | 99 of 99 |
+| STM | 470 | 530 | +60 | 128 | 68 | 77 of 99 |
+| fully contained | 2,045 | 2,622 | +577 | 581 | 4 | 98 of 99 |
+
+TGM **decreases**, by a third. The three numbers are one mechanism: STM skips a
+cluster that is already TGM, and its evaluated population rises by exactly the
+TGM drop (3,711 → 4,428 = +717); 123 of the 730 clusters that lose TGM pick up
+an STM tag instead, and 345 of the 581 new fully-contained verdicts are the same
+objects.
+
+### 10.4 Why — the deciding end
+
+TGM needs **both** ends at a boundary, so the end that decides is the one
+*farther* from every surface. Per cluster, from the arm's own Bee layer: each
+PCA end's distance to the nearest boundary (four transverse walls + the two
+anode faces; the cathode slab is spanned by both fiducials), then the worse of
+the two.
+
+| category | n | no t0 | 0–3 cm | 3–5 | 5–8 | 8–12 | 12–15 | 15–18 | 18–25 | 25–40 | >40 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| TGM kept | 1,418 | 59 | **815** | 121 | 78 | 90 | 35 | 29 | 18 | 30 | 76 |
+| TGM lost | 730 | 60 | **20** | 64 | 126 | 167 | 137 | 118 | 10 | 5 | 23 |
+| TGM gained | 13 | 0 | 5 | 1 | 0 | 2 | 0 | 3 | 2 | 0 | 0 |
+| never TGM | 3,698 | 286 | 20 | 53 | 36 | 44 | 32 | 71 | 310 | 577 | 2,267 |
+
+The kept tags have their deciding end **on** the wall (57 % within 3 cm, median
+1.6 cm). The lost tags have it **in the 3–18 cm band** — 612 of the 670 with a
+t0, median 11.1 cm — which is precisely the shell the flat 15/18 cm inset adds
+and the measured surface does not, except near the cathode. And the lost
+population is not made of muons: **median length 24 cm** against 176 cm for the
+kept, 409 of 670 shorter than 50 cm, and for 463 of 670 *neither* end is within
+3 cm of a wall. A uniform 15 cm inset makes a 15 cm-thick shell around the whole
+detector inside which any small object with both ends in the shell is
+"through-going"; that is what most of the −717 is.
+
+**Split by length, which is where the judgement lives:**
+
+| cluster length | n | TGM off | TGM on | Δ |
+|---|---|---|---|---|
+| < 50 cm | 2,318 | 769 | 365 | **−52.5 %** |
+| 50–100 cm | 668 | 190 | 132 | −30.5 % |
+| 100–200 cm | 959 | 316 | 256 | −19.0 % |
+| > 200 cm | 1,509 | 754 | 619 | **−17.9 %** |
+| (no t0) | 405 | 119 | 59 | −50 % |
+
+The 140 long (> 200 cm) losses are the population that matters, and they have a
+consistent shape: **best end 0.6 cm from a wall, deciding end 11.8 cm (quartiles
+8.7 / 16.3)** — one end genuinely on the boundary, the other stopping ~1 dm
+short — with the deciding wall mostly z± at intermediate drift (|x| ≲ 170,
+where the measured ramp has already decayed to a few cm while the flat inset was
+still 18). 42 of the 140 are STM-tagged in the ON arm instead.
+
+### 10.5 What this does and does not settle
+
+- **Settled**: the direction and its size (TGM −33 %, and −18 % restricted to
+  tracks over 2 m), that it is one mechanism (the 15 cm shell), and that the
+  bulk of it is sub-50 cm objects that no one would call through-going muons.
+- **Not settled**: the 140 long losses. Either they are entering-and-stopping
+  muons the flat inset over-tagged — which is what §5's measurement says, since
+  at |x| ≳ 200 the apparent wall *is* the nominal wall to 1.1 cm — or they are
+  exiting muons whose imaged charge stops ~1 dm short of the wall, in which case
+  the flat inset was covering an imaging shortfall rather than space charge, and
+  removing it costs real cosmic rejection. The two are distinguishable by eye:
+  **a hand-scan of a sample of those 140 (they are listed in
+  `ab_verdicts.json`'s `tgm.lost_list` with their geometry) is the next step,
+  and it is the owner's call, not this document's.**
+- Nothing is flipped. `curved_fv` stays false; the PDVD operating point is
+  unchanged.
+
+Repro:
+
+```bash
+# arms (99 events x 2, ~4 min each at 16 jobs)
+for t in d41fvoff d41fvon; do
+  TLA=""; [ $t = d41fvon ] && TLA="-S curved_fv=true"
+  for r in 039252 039253 039349; do
+    PDVD_MAX_JOBS=16 PDVD_PR_TLA="$TLA" ./run_pr_evt.sh -s $t $r all
+  done
+done
+# the verdict census (per object, with the deciding-end geometry)
+python3 docs/nf_sp_img_clus/scripts/fv_curved_ab.py d41fvoff d41fvon --geom \
+    --out /home/xqian/tmp/doc41/ab
+```

@@ -1231,6 +1231,16 @@ function(
     // legacy literal that used to be hard-coded in pr.jsonnet's margin
     // vectors).  Broken out for doc pdvd/35.
     tgm_fv_zmin_margin = 18,   // doc 35: 15 (space charge) + 3 (FV_z_margin)
+    // curved_fv (doc pdvd/41 sec 9): swap the tagger's flat box for the MEASURED
+    // curved (space-charge) surface, cfg/pgrapher/experiment/protodunevd/
+    // curved_fiducial.jsonnet.  ON also replaces the y/z margins above with the
+    // CUSHION alone (curved_fv_margin_y/z, 3 cm) -- the 15 cm those carry IS the
+    // flat space-charge allowance the surface replaces.  x keeps
+    // tgm_fv_x_margin = 2.5.  Default false => byte-identical to the doc-35
+    // operating point.  Arm: PDVD_PR_TLA="-S curved_fv=true".
+    curved_fv = false,
+    curved_fv_margin_y = 3,
+    curved_fv_margin_z = 3,
     // Persist the per-pass STM track fits (C++ default false; key omitted
     // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
     // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added
@@ -3820,6 +3830,9 @@ function(
                              tgm_fv_x_margin=tgm_fv_x_margin,
                              tgm_fv_y_margin=tgm_fv_y_margin,
                              tgm_fv_zmin_margin=tgm_fv_zmin_margin,
+                             curved_fv=curved_fv,
+                             curved_fv_margin_y=curved_fv_margin_y,
+                             curved_fv_margin_z=curved_fv_margin_z,
                              save_stm_fit=save_stm_fit,
                              pf_track_main_cluster_only=pf_track_main_cluster_only,
                              pf_track_bridged_clusters=pf_track_bridged_clusters,
