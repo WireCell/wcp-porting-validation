@@ -172,7 +172,11 @@ have = set()
 if os.path.isdir(REC):
     for cur, sub, files in os.walk(REC):
         for f in files:
+            # The archive is MIXED after recompress_archive_20260904.py:
+            # 2046 tarballs are .tar.zst and 1615 stayed .tar.gz (below the
+            # size floor).  Both codecs are a valid record; accept either.
             if f.endswith(".tar.gz"): have.add(f[:-7])
+            elif f.endswith(".tar.zst"): have.add(f[:-8])
 miss = [d for d in RETIRE if d not in have]
 check(5, not miss, f"record layer archived for {len(RETIRE) - len(miss)}/{len(RETIRE)} "
                    f"retiring arms (missing e.g. {miss[:2] or 'none'})")

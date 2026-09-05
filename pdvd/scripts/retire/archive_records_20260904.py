@@ -72,12 +72,27 @@ def archive_one(args):
 def verify(args):
     tag, group = args
     d = os.path.join(OUT, group)
-    tgz, man = os.path.join(d, tag + ".tar.gz"), os.path.join(d, tag + ".manifest.tsv")
+    man = os.path.join(d, tag + ".manifest.tsv")
+    # Mixed-codec archive: recompress_archive_20260904.py re-encodes tarballs
+    # above its size floor to .tar.zst and leaves the rest .tar.gz.  A record is
+    # a record in either codec, so verify whichever is present -- and if BOTH
+    # exist that is a half-finished re-encode, which is an error, not a choice.
+    gz, zst = os.path.join(d, tag + ".tar.gz"), os.path.join(d, tag + ".tar.zst")
+    if os.path.exists(gz) and os.path.exists(zst):
+        return (tag, "both .tar.gz and .tar.zst present (interrupted re-encode)")
+    tgz = zst if os.path.exists(zst) else gz
     if not (os.path.exists(tgz) and os.path.exists(man)):
         return (tag, "missing")
     try:
-        with tarfile.open(tgz, "r:gz") as tf:
-            n = sum(1 for m in tf.getmembers() if m.isfile())
+        if tgz.endswith(".zst"):
+            import subprocess as _sp
+            raw = _sp.run(["zstd", "-dc", tgz], capture_output=True).stdout
+            import io
+            with tarfile.open(fileobj=io.BytesIO(raw)) as tf:
+                n = sum(1 for m in tf.getmembers() if m.isfile())
+        else:
+            with tarfile.open(tgz, "r:gz") as tf:
+                n = sum(1 for m in tf.getmembers() if m.isfile())
     except Exception as e:
         return (tag, f"unreadable {e}")
     want = 0

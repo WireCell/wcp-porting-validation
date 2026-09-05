@@ -72,13 +72,25 @@ plan=json.load(open(os.path.join(STATE,"plan.json")))
 bad=[]
 for tag in plan["ARCHIVE"]:
     d=os.path.join(REC, plan["group"][tag])
-    tgz=os.path.join(d, tag+".tar.gz")
+    # Mixed codec: recompress_archive_*.py re-encodes tarballs above its size
+    # floor to .tar.zst and leaves the rest .tar.gz.  Accept either; BOTH
+    # present means an interrupted re-encode and is an error.
+    gz=os.path.join(d, tag+".tar.gz"); zst=os.path.join(d, tag+".tar.zst")
     man=os.path.join(d, tag+".manifest.tsv")
+    if os.path.exists(gz) and os.path.exists(zst):
+        bad.append((tag,"both .tar.gz and .tar.zst (interrupted re-encode)")); continue
+    tgz = zst if os.path.exists(zst) else gz
     if not (os.path.exists(tgz) and os.path.exists(man)):
         bad.append((tag,"missing")); continue
     try:
-        with tarfile.open(tgz,"r:gz") as tf:
-            n=sum(1 for m in tf.getmembers() if m.isfile())
+        if tgz.endswith(".zst"):
+            import subprocess, io
+            raw=subprocess.run(["zstd","-dc",tgz],capture_output=True).stdout
+            with tarfile.open(fileobj=io.BytesIO(raw)) as tf:
+                n=sum(1 for m in tf.getmembers() if m.isfile())
+        else:
+            with tarfile.open(tgz,"r:gz") as tf:
+                n=sum(1 for m in tf.getmembers() if m.isfile())
     except Exception as e:
         bad.append((tag,f"unreadable {e}")); continue
     want=0
