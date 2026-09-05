@@ -39,6 +39,16 @@ DETS = [
 ]
 
 
+# Every wire filter in the tree, for the cross-detector comparison (sec 8.8).
+# PDVD's induction value was 0.75 -- the PDHD/PDSP/ICARUS value -- at the first
+# commit of its sp-filters.jsonnet (a688e5228), where the line still carried a
+# trailing "// 0.75"; that note was dropped when the top/bottom instances were
+# split (9f0179f90) and no rationale for the change is recorded in the tree.
+ALL_DETS = [("PDHD", 0.75, 10.0), ("PDSP", 0.75, 10.0), ("ICARUS", 0.75, 3.0),
+            ("SBND", 1.05, 3.60), ("PDVD", 5.0, 10.0),
+            ("(commented default)", 1.4, 3.0)]
+
+
 def filter_waveform(nbins, sigma, power=2.0, max_freq=1.0, use_negative_freqs=True):
     """Byte-for-byte the array SigProc::HfFilter::filter_waveform(nbins) returns."""
     ff = 2.0 if use_negative_freqs else 1.0
@@ -185,6 +195,14 @@ def main():
                 1.0 / (SQRTPI * X), rms_of(x[m], h[m])))
     if a.fig:
         make_fig(kern, N, a.fig)
+    print("\n  the same filter across every detector in the tree (cfg/.../sp-filters.jsonnet):")
+    print("  %-22s %7s %10s %10s   %7s %10s %10s" % ("detector", "X ind", "sigma_f",
+                                                     "pass@Nyq", "X col", "sigma_f", "pass@Nyq"))
+    for nm, xi, xc in ALL_DETS:
+        si, sc = xi / SQRTPI, xc / SQRTPI
+        print("  %-22s %7.2f %10.3f %10.3f   %7.2f %10.3f %10.3f%s" % (
+            nm, xi, si, np.exp(-0.5 / si ** 2), xc, sc, np.exp(-0.5 / sc ** 2),
+            "   <-- outlier" if xi > 2.0 else ""))
     print("\n  central-wire weight of the true kernel, and its first neighbour:")
     for k, (x, h) in kern.items():
         c = np.argmin(np.abs(x))

@@ -997,6 +997,29 @@ drift spread all cancel — and the displacement between the two centroids:
 | SBND V | 2.42 | 2.33 | 0.64 | 0.39 |
 | SBND W | 3.21 | 3.21 | **0.00** | 0.15 |
 
+**Is the estimator itself doing this? (the integral-vs-sampling question.)** The
+model *integrates* its Gaussian over each wire bin (`cal_gaus_integral`'s erf
+over ±0.5 wire), and the statistic above treats each wire's charge as a point
+mass at the wire centre. For a distribution wider than ~0.3 pitch the apparent
+rms is √(σ² + 1/12) and the bin term cancels in the difference — but PDVD's
+model sits at 0.20 pitch, *below* that, where the apparent rms collapses toward
+zero instead and the cancellation is not exact. So it had to be inverted rather
+than assumed. `--unfold` solves the track's in-slice transverse extent from the
+predicted profile (whose σ is known exactly) and then the measured σ at that
+same extent: PDVD U **3.16 → 3.12 mm**, V 2.96 → 2.92, W 1.96 → 1.96. A ≤ 2 %
+correction — **the deficit is not an artefact of integral-vs-sampling.** The
+same inversion is *not usable on SBND*: SBND is isochronous, so a track spans
+many wires within one slice, the extent solve runs to its ceiling on U and W,
+and the SBND column of the table above should be read as indicative only. In
+particular "SBND W needs exactly nothing" is the direct observation that its two
+profiles have equal width, not a result the inversion confirms.
+
+**How much does the analysis window matter?** Widening it from ±2 to ±3 to ±4
+cells gives PDVD U 2.51 / 3.16 / 3.65 mm and SBND U 0.89 / 1.11 / 1.28. The sign,
+the plane ordering and the PDVD-vs-SBND contrast hold at every window; the
+magnitude carries about ±25 %, so **2–3 mm on PDVD's induction planes** is the
+honest precision, not 3.16.
+
 The measured profile is wider than the predicted one **at each point**, so this
 is a genuine smearing deficit and not a displacement artifact. It is worst on
 PDVD's induction planes, present on PDVD W, small on SBND U/V, and **exactly
@@ -1049,6 +1072,11 @@ and the constant that looks like it ought to carry it does not.
 
 ### 8.7 What to measure next
 
+0. **Settle the upstream question first (§8.8).** PDVD's induction wire filter
+   is a 6.7× outlier against every other detector in the tree and is effectively
+   no filter. Whether the transverse spread we are calling "missing smearing" is
+   physical charge or un-suppressed deconvolution noise decides whether the fix
+   belongs in the fit at all. The same dump answers it.
 1. **Find where the 2–3 mm enters, before modelling it.** `OmnibusSigProc`
    already has the taps, both default-off: `dump_2d_spectra` / `dump_2d_prefix`
    (`:212-213`) writes the per-plane input, response, deconvolved spectrum and
@@ -1071,3 +1099,65 @@ and the constant that looks like it ought to carry it does not.
    first-neighbour share in the worst (prolonged) limit, so this cannot be the
    2–3 mm; run it to close the item, not expecting it to explain anything.
 4. **Do not move `D_T`** (§7.4) or `ind_sigma_*_T` (§8.3) on this evidence.
+
+### 8.8 Upstream: is PDVD's own signal processing filtering the wire dimension at all?
+
+**Owner question (2026-09-05).** *"I assume we did the signal processing for
+PDVD ourselves, so we did not messed up the filtered function during signal
+processing, right?"*
+
+We did run it ourselves, and the filter is not corrupted — but the value PDVD
+uses is a stark outlier against every other detector in the tree, and its
+rationale is not recorded anywhere. Same filter, same units, all from
+`cfg/pgrapher/experiment/<det>/sp-filters.jsonnet`:
+
+| detector | `Wire_ind` X | σ_f [Nyquist] | **passes at Nyquist** | `Wire_col` X | passes at Nyquist |
+|---|---|---|---|---|---|
+| PDHD | 0.75 | 0.423 | **0.061** | 10.0 | 0.984 |
+| PDSP | 0.75 | 0.423 | **0.061** | 10.0 | 0.984 |
+| ICARUS | 0.75 | 0.423 | **0.061** | 3.0 | 0.840 |
+| SBND | 1.05 | 0.592 | 0.241 | 3.60 | 0.886 |
+| **PDVD** | **5.00** | **2.821** | **0.939** | 10.0 | 0.984 |
+| (the commented-out default) | 1.40 | 0.790 | 0.449 | 3.0 | 0.840 |
+
+PDVD's induction wire filter passes **94 %** of the highest wire frequency the
+lattice carries. PDHD's, on the same code with the same convention, passes 6 %.
+That is a factor 6.7 in X against PDHD/PDSP/ICARUS and 4.8 against SBND — PDVD
+is the only detector in the tree whose induction planes are effectively **not
+wire-filtered at all**. The collection value (10.0) is shared with PDHD and is
+not anomalous in the same way.
+
+**It was a deliberate edit, not a typo, and the note is gone.** At the first
+commit of the file (`a688e5228`) the line read
+
+```jsonnet
+wf('Wire_ind', { sigma: 1.0 / wc.sqrtpi * 5.0 }), // 0.75
+```
+
+— the trailing `// 0.75` recording the PDHD value it was changed from. That
+comment was dropped when the top/bottom instances were split (`9f0179f90`,
+2026-05-02), so the current file gives no sign that the value ever moved, and no
+commit message or comment anywhere says why.
+
+**Why this matters for §8.4's deficit, in both directions.** The wire filter's
+job in a 2-D deconvolution is to suppress the high wire-frequency content that
+dividing by a small response amplifies. Removing it does not *widen* the true
+charge profile — a smoothing filter widens, and taking it away narrows — but it
+does leave wire-to-wire deconvolution noise and residual response structure
+un-suppressed. Because the charge that reaches the ctpc is thresholded and
+positive, positive excursions on neighbouring wires survive where negative ones
+are cut, which would show up as **both** extra apparent transverse width **and**
+extra apparent charge — the two things §7 and §8.4 measure. That is a
+hypothesis, not a result: it is consistent with the sign of every number in this
+doc, and it is exactly what the §8.7 item 1 dump would confirm or kill, because
+`dump_2d_spectra` writes the deconvolved spectrum *and* the wire filter, and
+`rawdecon_tag` taps the frame before any software filter.
+
+**Not changed here, and not to be changed casually.** `Wire_ind` is a production
+SP constant: moving it re-runs signal processing and changes every downstream
+product for every PDVD event on disk. It is a stop-and-ask of the first kind
+(§5 rule 1). What is proposed is the *measurement* — §8.7 item 1, one event,
+both taps, default-off — which costs nothing and would say whether PDVD's
+induction wire profile is dominated by un-suppressed deconvolution noise. If it
+is, the smearing deficit of §8.4 is a symptom and the fit-side remedies of §8.7
+items 2 and 3 would be treating it in the wrong place.
