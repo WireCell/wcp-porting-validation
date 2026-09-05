@@ -1,7 +1,25 @@
-# 29 — pdvd `work/` retire plan (2026-09-04): PLANNED, NOT EXECUTED
+# 29 — pdvd `work/` retire round (2026-09-04): EXECUTED
 
-**Status: staged and dry-run clean. One command away from execution, held back
-deliberately because a peer session is live in this tree.**
+**Status: EXECUTED by the owner, 2026-09-05.** `work/` **86 GiB → 39 GiB**;
+3661 dirs removed, 1850 children remain (1583 kept arms + 267 out-of-scope
+light dirs). Every interlock PASS at confirm time.
+
+**The post-state check predicted 0 broken symlinks and got 0** — see §6: the six
+pre-existing ones were recorded *before* the round precisely so that number
+would mean something, and it is the check that would have caught a repeat of
+[doc 100 §4](../../sbnd/sbnd_xin/docs/100_cleanup-two-tree-retire.md). 6245
+links remain, all resolving; a kept gate arm (`d38h20`) still reaches its
+`d27fresh` pctree.
+
+Verified intact after execution: all 16 substrate + gate arms at full coverage
+(`keep`, `d27fresh`, `d28dlfp`, `d34base`, `d37dloff`, `d31r6e2e`, `perfslide`,
+`magnify`, `d36on/off`, `d37on05/off0/off1`, `d38h20/off/flip20`).
+
+**The peer protection did real work.** KEEP grew 1516 → 1583 dirs and 25 → 32
+arm families between planning and execution: the live doc-39 session created
+`d39r2base`, `d39r2prov`, `d39r2unm`, `d39r2cfg`, `d39r2cfgc`, `d39r2ctl` and
+`d39r2noprov` while the plan sat staged, and the `d39` **prefix** rule absorbed
+every one with no edit. A name-list would have missed all seven.
 
 Companion to [sbnd_xin doc 100](../../sbnd/sbnd_xin/docs/100_cleanup-two-tree-retire.md),
 which covers the sbnd_xin half (executed) and the `~/tmp` sweep (executed).

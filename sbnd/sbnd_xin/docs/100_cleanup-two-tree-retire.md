@@ -11,7 +11,7 @@ Asked which depth, the owner chose **honour PROTECTED.txt** for sbnd_xin,
 | tree | before | after | released |
 |---|---|---|---|
 | `sbnd_xin` | 84 G / 199 work dirs | **71 G / 122** | 77 dirs, 12.6 GiB — **EXECUTED** |
-| `pdvd/work` | 90 G / 5444 children | unchanged | 3661 dirs, 47.2 GiB — **PLANNED, not executed** |
+| `pdvd/work` | 90 G / 5444 children | **43 G / 1850** | 3661 dirs, 47.2 GiB — **EXECUTED 2026-09-05** |
 | `~/tmp` | 132 G | **66 G at sweep completion** | 38 dirs, 66.4 GiB in two passes — **EXECUTED** |
 
 The pdvd half is doc [pdvd/29](../../pdvd/docs/29_pdvd-work-dir-retire.md).
@@ -289,3 +289,25 @@ they become re-readable rather than re-runnable, the same trade taken for
 
 `sbnd_xin` 71 → **70 G**; `~/tmp` 67 → **60 G**; `/home/xqian` free
 408 → **494 G** across the whole day.
+
+
+## 11. Final state, all four passes
+
+| | start | end |
+|---|---|---|
+| `sbnd_xin` | 84 G / 199 work dirs | **70 G / 116** |
+| `pdvd` | 90 G / 5444 work children | **43 G / 1850** |
+| `~/tmp` | 132 G | **60 G** |
+| `/home/xqian` free | 408 G | **541 G** |
+
+**133 GB recovered.** Production verified sound at every step: `work-*-d97fv`
+and `work-*-d97fvpr2` 3067/3067, `pr127_sentinels.py` 30 PASS / 0 FAIL, all 39
+active `PROTECTED.txt` arms on disk, and — after the pdvd round — **0 broken
+symlinks** in a 6245-link graph.
+
+The pdvd execution also settled the peer question empirically: between planning
+and confirm the live doc-39 session created **seven new arm families**
+(`d39r2base`, `d39r2prov`, `d39r2unm`, `d39r2cfg`, `d39r2cfgc`, `d39r2ctl`,
+`d39r2noprov`), KEEP moved 1516 → 1583 dirs, and the `d39` **prefix** rule
+absorbed all of them with no edit. A name-list would have released seven live
+arms.
