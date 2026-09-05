@@ -1052,6 +1052,8 @@ Table: `docs/figs/pdhd_terminal_charge_census.tsv`.
 says the STM verdicts it moves are *better*. §10 item 1 asks for the doc
 pdvd/31 round 6 treatment. This is that scan, set up and waiting for labels.
 
+### 13.1 The population, the stratification, and the blind
+
 **The population.** All 224 clusters whose STM verdict differs between `stm0`
 (off) and `stmw` (on) over run 029107's 30 events — 10.0 % of 2246 verdicts,
 130 gaining the tag and 94 losing it. The `(event, cluster)` key sets of the two
@@ -1090,4 +1092,81 @@ its own extent looks contained in every view.
 scoring script prints it): flip only if the knob is net-positive in stratum A
 **and** its stratum-B gains are not predominantly `THRU`/`UNCLEAR`.
 
-**Status: awaiting labels.** Process and scoring in `pdhd/stm_scan/README.md`.
+### 13.2 The label alphabet, and the under-clustering category added one label in
+
+The scan opened with three choices — `STM` / `THRU` / `UNCLEAR`. One label in
+(item 1, evt 21 cl 125, `UNCLEAR`) the scanner reported the case that breaks
+them: **some of these clusters are under-clustered pieces of a longer object,
+e.g. part of a TGM.** The cluster stops mid-volume; the particle does not.
+
+Folding that into `THRU` is wrong (the cluster genuinely ends where it is
+drawn), and folding it into `UNCLEAR` is worse — it is not a confidence
+statement, and it would silently delete a third of the sample from the scoring.
+So the alphabet became six:
+
+| choice | the cluster is… | the full object… | scores as |
+|---|---|---|---|
+| `STM` | the whole object | stops inside | STM |
+| `THRU` | the whole object | crosses / exits | THRU |
+| `FRAG → STM` | only part of it | stops inside | STM, `partial: true` |
+| `FRAG → THRU` | only part of it | exits (piece of a TGM) | THRU, `partial: true` |
+| `MESSY` | not one track | *ill-posed* | unscored |
+| `UNCLEAR` | — | scanner cannot tell | unscored |
+
+**Why `FRAG` is two buttons.** "Cluster ends, grey continues" contains two
+opposite physics truths — a fragment of a **TGM** (an STM tag is wrong) and a
+fragment of a **stopping muon** (an STM tag is right, on a wrong-sized object).
+One `FRAG` bucket would mix both signs and be uninterpretable, and scoring it
+neutral would throw away the second kind. Splitting it keeps the binary intact:
+a `FRAG` row contributes the **full object's** verdict, so under-clustering
+costs the scan **no statistical power**, and `partial` is tallied separately as
+the under-clustering rate. `MESSY` is separated from `UNCLEAR` for the same
+reason in the other direction: `MESSY` is a property of the object, `UNCLEAR` of
+the scanner.
+
+**The display had to change with it.** `FRAG`-vs-`STM` rests entirely on seeing
+charge continue past the cluster end, and at `CONTEXT_MAX = 8000` globally
+decimated a 300-point continuation renders as a handful of dots — the category
+would have been unanswerable. `Dense context near cluster` (**default on**) now
+draws **every** other-charge point within `DENSE_R = 40 cm` of the cluster, with
+the rest of the event still thinned 1-in-N. Both selections are purely
+geometric; the self-test rebuilds the dense set by brute force from coordinates
+alone and requires an exact index match, so nothing arm-dependent can enter it.
+`clustering-global` is byte-identical across the arms, so the fragment
+judgement cannot favour either.
+
+**How common will it be?** Measured offline before any labelling, and kept off
+both the sheet and the display (`feedback_blind_the_scan_sheet`): other charge
+within 30 cm of a cluster's PCA extreme, ≥ 20 points = "buried"
+(`docs/scripts/d45_frag_prevalence.py`, which reads the key and must not be run
+while scanning).
+
+| population | n | one end buried | both ends |
+|---|---|---|---|
+| all | 224 | 33 % | 6 % |
+| knob **gains** the tag | 130 | 34 % | 6 % |
+| knob **loses** the tag | 94 | 32 % | 5 % |
+| stratum A | 174 | 34 % | 5 % |
+| stratum B | 50 | 28 % | 8 % |
+
+An upper bound of about a third (much of that will be crossing cosmics, not
+continuation). It is nearly **the same rate on gains as on loses**, so fragments
+are not expected to bias one arm — but they are common enough that the category
+had to exist.
+
+**Pre-registered, with one label in existence.** The bar in §13.1 is unchanged —
+`FRAG` rows count in it. Added: *if the `FRAG` share of the knob's gains is
+large, the finding is about under-clustering rather than about this knob, and
+that is the more important result even if the binary comes out favourable.*
+Stated before the remaining 223 labels exist, so it cannot be fitted afterwards.
+The original bar text is kept verbatim in `stm_scan/README.md`; the revision is
+appended below it, not edited into it.
+
+Two defects fixed alongside: `score_stm_scan.py` folded any unrecognised label
+into `THRU` through a bare `else`, which would have mis-scored every `FRAG` and
+`MESSY` row silently — it now has an explicit whitelist and exits non-zero on an
+unknown label, with a self-test that feeds it one. The self-test also asserts
+the dense path is not inert (strictly more points than the thinned one).
+
+**Status: awaiting labels.** Process and scoring in `pdhd/stm_scan/README.md`;
+52 headless checks pass (`selftest_stm_scan.py`, rc=0).

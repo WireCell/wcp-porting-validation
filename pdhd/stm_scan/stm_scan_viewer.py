@@ -8,7 +8,7 @@ is untouched.
 WHAT THIS IS FOR
   retile_wrapped_channel_activity changes the STM verdict on 224 of 2246
   clusters (doc sec 12).  This app shows each of those clusters as raw charge in
-  three projections and records a human STM / THRU / UNCLEAR label.  The labels
+  three projections and records a human label from the sec 13.2 alphabet.  The labels
   are then scored against both arms (score_stm_scan.py) to decide whether the
   knob should be flipped.
 
@@ -24,15 +24,35 @@ THE BLIND IS STRUCTURAL, NOT AN INSTRUCTION
   nudge from a label that says 'small'.
 
 WHAT YOU ARE JUDGING
-  From the charge alone: does this track enter the detector and STOP inside the
-  active volume (STM), or does it pass through / exit a face (THRU)?  UNCLEAR is
-  a real answer -- fragment, too sparse, overlapping, genuinely ambiguous.
+  From the charge alone, judge the WHOLE OBJECT -- the coloured cluster together
+  with any grey charge that continues along the same trajectory.  Does that
+  object enter the detector and STOP inside the active volume, or does it pass
+  through / exit a face?
 
-  The GREY points are the rest of the event's charge, decimated for speed.  They
-  are the reason this is a display and not a table: a track that continues into
-  a neighbouring cluster is THRU even though the coloured cluster looks to stop.
-  Grey is a charge-independent decimation of ALL other charge -- it is not
-  "clusters the tagger considered", which would leak the answer.
+    STM         the cluster is the whole object, and it stops inside
+    THRU        the cluster is the whole object, and it crosses / exits
+    FRAG -> STM the cluster is only PART of the object (under-clustered) and the
+                FULL object stops inside
+    FRAG -> THRU the cluster is only PART of the object and the FULL object exits
+    MESSY       not one track -- fused tracks or a shower, so "does it stop" is
+                ill-posed for this object
+    UNCLEAR     you genuinely cannot tell
+
+  A FRAG button records the same STM/THRU verdict as the plain button plus
+  partial=True, so a fragment still scores in the binary AND the under-clustering
+  rate comes out as its own number.  Do not spend a fragment on UNCLEAR: UNCLEAR
+  is about YOUR confidence, MESSY is about the OBJECT, FRAG is about the CLUSTER.
+
+  The GREY points are the rest of the event's charge.  They are the reason this
+  is a display and not a table: a track that continues into a neighbouring
+  cluster is a fragment, not a stopper, even though the coloured cluster looks
+  to stop.  With 'Dense context near cluster' on (the default) EVERY grey point
+  within DENSE_R of the cluster is drawn and the rest of the event is thinned
+  1-in-N; the FRAG/STM call rests on that dense set, which global decimation
+  alone renders as a handful of dots.  Both selections are purely geometric over
+  ALL other charge -- neither is "clusters the tagger considered", which would
+  leak the answer.  clustering-global is byte-identical between the two arms, so
+  the fragment judgement cannot favour either one.
 
   Panels default to the FULL detector volume with the active boundary drawn.
   A cluster auto-zoomed to its own extent looks contained in every projection,
@@ -55,6 +75,7 @@ from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, Select, Button, Div, TextInput,
                           Toggle, ColorBar, LinearColorMapper)
 from bokeh.plotting import figure
+from scipy.spatial import cKDTree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PDHD = os.path.dirname(HERE)
@@ -64,7 +85,20 @@ SHEET = os.path.join(PDHD, "docs", "scan", "pdhd_retile_scan_sheet.tsv")
 # PDHD active volume (cm) -- the pr.jsonnet BoxFiducial, doc sec 7.1.
 VOL = dict(x=(-357.985, 357.985), y=(7.61, 606.0), z=(0.234, 462.297))
 CONTEXT_MAX = 8000          # decimated grey points per event, per the perf note
+DENSE_R = 40.0              # cm: radius around the cluster for the dense context
+DENSE_MAX = 25000           # cap on the dense set, decimated uniformly if over
 ARM_DIR = "stm0"            # either arm serves: the two layers read are identical
+
+# The scan alphabet.  A FRAG* button records the verdict for the WHOLE object,
+# including the grey continuation, plus partial=True -- so a fragment still
+# scores in the binary and the under-clustering rate is a separate number.
+# (doc sec 13.2)
+CHOICES = {"STM":  dict(label="STM", partial=False),
+           "THRU": dict(label="THRU", partial=False),
+           "FRAG_STM":  dict(label="STM", partial=True),
+           "FRAG_THRU": dict(label="THRU", partial=True),
+           "MESSY": dict(label="MESSY", partial=False),
+           "UNCLEAR": dict(label="UNCLEAR", partial=False)}
 
 
 def parse_args(argv):
@@ -127,6 +161,34 @@ def event_charge(event):
            np.asarray(d["cluster_id"], int))
     _cache[event] = out
     return out
+
+
+# ---------------------------------------------------------------------------
+# context selection.  BOTH paths are purely geometric over ALL other charge:
+# no cluster-id filtering, no tagger output, nothing that could carry an arm's
+# verdict.  The dense path exists because FRAG-vs-STM rests on seeing charge
+# continue past the cluster end, which 1-in-N global decimation cannot show.
+# ---------------------------------------------------------------------------
+def context_index(P, mask, dense):
+    """Indices into P of the grey points to draw.  P is (N,3), mask the target."""
+    other = np.flatnonzero(~mask)
+    if other.size == 0:
+        return other, 1, 0
+    step = max(1, other.size // CONTEXT_MAX)
+    far = other[::step]                      # charge-independent global thinning
+    if not dense:
+        return far, step, 0
+    tgt = P[mask]
+    if tgt.size == 0:
+        return far, step, 0
+    # every other-charge point within DENSE_R of ANY cluster point.  Query the
+    # OTHER points against a tree of the cluster (one distance each) rather than
+    # ball-querying every cluster point, which duplicates indices millions of times.
+    d, _ = cKDTree(tgt).query(P[other], k=1, distance_upper_bound=DENSE_R)
+    near = other[np.isfinite(d)]
+    if near.size > DENSE_MAX:
+        near = near[::max(1, near.size // DENSE_MAX)]
+    return np.union1d(far, near), step, int(near.size)
 
 
 # ---------------------------------------------------------------------------
@@ -194,7 +256,8 @@ for ha, va, title in PANELS:
 # widgets
 # ---------------------------------------------------------------------------
 def item_option(it):
-    mark = LABELS.get(item_key(it), {}).get("label", "")
+    rec = LABELS.get(item_key(it), {})
+    mark = rec.get("choice") or rec.get("label", "")
     return "%3d %s  evt %s cl %d  n=%d  %.0f cm%s" % (
         it["scan_id"], "*" if mark else " ", it["event"], it["cluster"],
         it["npts"], it["length"], ("   [%s]" % mark) if mark else "")
@@ -207,24 +270,35 @@ next_btn = Button(label="next >", width=90)
 next_unl_btn = Button(label="next unlabelled >>", width=150)
 stm_btn = Button(label="STM  (stops inside)", button_type="success", width=200)
 thru_btn = Button(label="THRU (through-going / exits)", button_type="primary", width=230)
+frag_stm_btn = Button(label="FRAG \u2192 STM  (part of a stopper)",
+                      button_type="success", width=250)
+frag_thru_btn = Button(label="FRAG \u2192 THRU  (part of a TGM)",
+                       button_type="primary", width=250)
+messy_btn = Button(label="MESSY (not one track)", button_type="warning", width=190)
 uncl_btn = Button(label="UNCLEAR", button_type="warning", width=120)
 clear_btn = Button(label="clear this label", width=130)
 zoom_tog = Toggle(label="Zoom to cluster", width=140)
+dense_tog = Toggle(label="Dense context near cluster", width=200, active=True)
 notes = TextInput(title="notes (optional)", width=430)
 progress = Div(text="", width=430)
-status = Div(text="", width=940)
-header = Div(width=940, text="""
+status = Div(text="", width=1420)
+header = Div(width=1420, text="""
 <b>PDHD stopping-muon hand scan</b> &mdash; gate on
 <code>retile_wrapped_channel_activity</code> (doc stm-tagger-chain &sect;13).
-<br>From the <b>charge alone</b>: does this track enter and <b>stop</b> inside the
-active volume (<b>STM</b>), or does it pass through / exit a face (<b>THRU</b>)?
-<b>UNCLEAR</b> is a real answer &mdash; fragment, too sparse, overlapping, ambiguous.
-<br><span style="color:#555">Coloured = the cluster in question (colour is its charge).
-Grey = all other charge in the event, decimated &mdash; use it to see whether the track
-continues into a neighbouring cluster. Red dashed = the active boundary. Panels show the
-full detector by default on purpose: a cluster zoomed to its own extent looks contained
-in every view.</span>
-""")
+<br><b>Judge the whole object, including the grey continuation</b> &mdash; not just the
+coloured points. Does that object enter and <b>stop</b> inside the active volume, or does
+it pass through / exit a face?
+<br><span style="color:#555">Use the top row when the coloured cluster <i>is</i> the whole
+object. Use <b>FRAG</b> when the cluster is only a piece of it (under-clustering) &mdash;
+still say what the <i>full</i> object does, and the fragment is recorded separately.
+<b>MESSY</b> = not one track (fused tracks, shower), so "does it stop" is ill-posed.
+<b>UNCLEAR</b> = you genuinely cannot tell.</span>
+<br><span style="color:#555">Coloured = the cluster (colour is its charge). Grey = all
+other charge in the event; with <i>Dense context</i> on, <b>every</b> grey point within
+%.0f cm of the cluster is drawn, so a continuation off an end is visible rather than
+thinned to a few dots. Red dashed = the active boundary. Panels show the full detector by
+default on purpose: a cluster zoomed to its own extent looks contained in every view.</span>
+""" % DENSE_R)
 
 state = dict(idx=0)
 
@@ -245,11 +319,8 @@ def render():
         return
     X, Y, Z, Q, C = ch
     m = C == it["cluster"]
-    other = ~m
-    # charge-independent decimation of the context: every Nth point, no cuts
-    n_other = int(other.sum())
-    step = max(1, n_other // CONTEXT_MAX)
-    oi = np.flatnonzero(other)[::step]
+    P = np.c_[X, Y, Z]
+    oi, step, n_near = context_index(P, m, bool(dense_tog.active))
     axes = dict(x=X, y=Y, z=Z)
     qt = Q[m]
     cmap.low = float(qt.min()) if qt.size else 0.0
@@ -275,10 +346,13 @@ def render():
     d1 = sum(1 for i in t1 if item_key(i) in LABELS)
     progress.text = ("<b>%d / %d</b> labelled overall &nbsp;|&nbsp; tranche 1: "
                      "<b>%d / %d</b> &nbsp;|&nbsp; this item: <b>%s</b>"
-                     % (done, len(ITEMS), d1, len(t1), rec.get("label", "&mdash;")))
+                     % (done, len(ITEMS), d1, len(t1),
+                        rec.get("choice") or rec.get("label", "&mdash;")))
     status.text = ("event %s, cluster %d &mdash; %d points, %.0f cm, %d grey context "
-                   "points (1 in %d)" % (it["event"], it["cluster"], it["npts"],
-                                         it["length"], len(oi), step))
+                   "points (1 in %d overall%s)"
+                   % (it["event"], it["cluster"], it["npts"], it["length"], len(oi), step,
+                      ("; %d of them ALL charge within %.0f cm of the cluster"
+                       % (n_near, DENSE_R)) if n_near else ""))
 
 
 def refresh_options():
@@ -295,9 +369,11 @@ def go(idx, keep_notes=False):
     render()
 
 
-def set_label(lab):
+def set_label(choice):
     it = current()
-    LABELS[item_key(it)] = dict(label=lab, notes=notes.value,
+    c = CHOICES[choice]
+    LABELS[item_key(it)] = dict(label=c["label"], partial=c["partial"],
+                                choice=choice, notes=notes.value,
                                 scan_id=it["scan_id"], event=it["event"],
                                 cluster=it["cluster"], npts=it["npts"],
                                 length_cm=it["length"])
@@ -340,15 +416,24 @@ next_btn.on_click(lambda: go(state["idx"] + 1))
 next_unl_btn.on_click(next_unlabelled)
 stm_btn.on_click(lambda: set_label("STM"))
 thru_btn.on_click(lambda: set_label("THRU"))
+frag_stm_btn.on_click(lambda: set_label("FRAG_STM"))
+frag_thru_btn.on_click(lambda: set_label("FRAG_THRU"))
+messy_btn.on_click(lambda: set_label("MESSY"))
 uncl_btn.on_click(lambda: set_label("UNCLEAR"))
 clear_btn.on_click(clear_label)
 zoom_tog.on_click(lambda a: render())
+dense_tog.on_click(lambda a: render())
 notes.on_change("value", lambda a, o, n: None)
 
 curdoc().add_root(column(
     header,
     row(item_select, prev_btn, next_btn, next_unl_btn),
-    row(stm_btn, thru_btn, uncl_btn, clear_btn, zoom_tog),
+    Div(text="<b>the cluster IS the whole object:</b>", width=1420),
+    row(stm_btn, thru_btn),
+    Div(text="<b>the cluster is only PART of the object</b> "
+             "(under-clustered) &mdash; verdict is for the FULL object:", width=1420),
+    row(frag_stm_btn, frag_thru_btn),
+    row(messy_btn, uncl_btn, clear_btn, zoom_tog, dense_tog),
     row(notes, progress),
     row(*[FIGS[(ha, va)] for ha, va, _ in PANELS]),
     status,

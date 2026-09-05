@@ -42,30 +42,62 @@ active boundary drawn as a red dashed box:
 | end view | X (drift) vs Y (vertical) |
 
 - **Coloured** — the cluster in question, coloured by its charge.
-- **Grey** — *all other charge in the event*, decimated ~1-in-N for speed. This
-  is the most important thing on the screen after the cluster itself: a track
-  that continues into a neighbouring cluster is `THRU` even though the coloured
-  points appear to stop. The grey is a charge-independent decimation of
-  everything else — **not** "clusters the tagger considered", which would leak
-  the answer. Sparse grey means decimation, not absence of charge.
+- **Grey** — *all other charge in the event*. This is the most important thing
+  on the screen after the cluster itself: a track that continues into a
+  neighbouring cluster is a **fragment**, not a stopper, even though the
+  coloured points appear to stop.
+  - With **`Dense context near cluster`** on (the default), **every** grey point
+    within **40 cm** of the cluster is drawn, and the rest of the event is
+    thinned ~1-in-N. The whole `FRAG`-vs-`STM` call rests on that dense set: at
+    global decimation alone a 300-point continuation renders as a handful of
+    dots, which is indistinguishable from nothing.
+  - Both selections are **purely geometric** over all other charge — no cluster
+    ids, no tagger output, **not** "clusters the tagger considered", which would
+    leak the answer. The self-test reproduces the dense set by brute force from
+    coordinates alone and requires an exact match.
+  - Outside 40 cm, sparse grey still means decimation, not absence of charge.
 - Panels default to the whole detector on purpose. A cluster auto-zoomed to its
   own extent looks contained in every projection, which would invert
   `THRU`/`STM` judgements. `Zoom to cluster` is there when you want it.
 
 ## What to answer
 
-From the charge alone: does this track enter the detector and **stop** inside
-the active volume?
+From the charge alone, judge the **whole object** — the coloured cluster
+*together with any grey charge that continues along the same trajectory*. Does
+that object enter the detector and **stop** inside the active volume?
 
-| button | meaning |
-|---|---|
-| `STM` | enters and stops inside |
-| `THRU` | through-going, or exits any face (anode / cathode included) |
-| `UNCLEAR` | fragment, too sparse, overlapping, genuinely ambiguous |
+| button | the cluster is… | and the full object… |
+|---|---|---|
+| `STM` | the whole object | stops inside |
+| `THRU` | the whole object | crosses / exits a face (anode and cathode count) |
+| `FRAG → STM` | only **part** of the object (under-clustered) | stops inside |
+| `FRAG → THRU` | only **part** of the object (under-clustered) | exits — e.g. the cluster is a piece of a TGM |
+| `MESSY` | not one track at all — fused tracks, a shower | *ill-posed*: "does it stop" has no answer |
+| `UNCLEAR` | — | you genuinely cannot tell |
 
-`UNCLEAR` is a real answer, not a failure — and in one half of this sample it is
-the informative one (see below). There is a free-text `notes` box; type the note
-*before* clicking the label, since the click saves and advances.
+**Why `FRAG` is two buttons and not one.** "The cluster ends but grey continues"
+covers two opposite physics truths: a fragment of a **TGM** (an STM tag is
+wrong) and a fragment of a **stopping muon** (an STM tag is right, just on a
+wrong-sized object). Collapsing them into one category would make it
+uninterpretable. So a `FRAG` button records the *same binary verdict* as its
+plain counterpart, plus `partial: true`. Under-clustering therefore costs this
+scan **no statistical power** — every fragment still scores — and the
+under-clustering rate falls out as its own reportable number.
+
+Keep the three escape hatches distinct, because they answer different questions:
+
+- `FRAG` is about the **cluster** (it is a piece of something bigger).
+- `MESSY` is about the **object** (the question does not apply to it).
+- `UNCLEAR` is about **your confidence** (it might be any of the above).
+
+Do not spend a fragment on `UNCLEAR` — that is the one substitution that loses
+information the scan cannot recover.
+
+Because `clustering-global` is byte-identical between the two arms, the fragment
+judgement cannot be biased toward either one.
+
+There is a free-text `notes` box; type the note *before* clicking the label,
+since the click saves and advances.
 
 Clicking a label **saves immediately** and jumps to the next unlabelled item.
 Nothing is lost to a reload or a restart. `next unlabelled >>` resumes wherever
@@ -114,8 +146,11 @@ python3 score_stm_scan.py            # --tag NAME to score another pass
 ```
 
 That script reads the answer key; the viewer never does. It scores each arm
-against your labels per stratum and per direction of change, and reports the
-`UNCLEAR` rate per stratum, which is where a fragment-tagging knob shows up.
+against your labels per stratum and per direction of change, reports the
+unscored (`MESSY` + `UNCLEAR`) rate per stratum, and breaks down the composition
+of the tags the knob **adds** — which is where a fragment-tagging knob shows up.
+It refuses to run on a label it does not recognise rather than silently folding
+it into `THRU`.
 
 **Acceptance bar**, stated before the scan so it cannot be fitted afterwards —
 and yours to overrule: flip only if the knob is net-positive in **stratum A**
@@ -123,13 +158,32 @@ and yours to overrule: flip only if the knob is net-positive in **stratum A**
 that fixes real tracks while inventing fragment tags is a different decision
 from one that only does the first.
 
+**Appended 2026-09-05** — the paragraph above is the original and is left
+exactly as it was written. At the moment of this addition **exactly one label
+existed**: item 1, event 21 cluster 125, `UNCLEAR`. The `FRAG` and `MESSY`
+categories were added after the scanner reported that some clusters are
+under-clustered pieces of a TGM. Two things follow, both stated here *before*
+the remaining labels exist:
+
+1. **The bar itself is unchanged.** `FRAG` rows carry the full object's binary
+   verdict, so they count in "net-positive in stratum A" and in the stratum-B
+   clause exactly as a plain `STM`/`THRU` would.
+2. **If fragments dominate the knob's gains, the finding is about
+   under-clustering, not about this knob** — and that is the more important
+   result even if the binary comes out favourable. An offline proxy (other
+   charge within 30 cm of a PCA extreme, measured before any labelling and kept
+   off both the sheet and the display) puts an upper bound of ~⅓ of items, and
+   nearly the same rate on gains (34 %) as on loses (32 %) — so fragments are
+   not expected to bias one arm, but they are expected to be common enough to
+   matter. Report it either way; the flip is the owner's call.
+
 ## Files
 
 | file | |
 |---|---|
 | `stm_scan_viewer.py` | the app; fork by duplication of `../ql_scan/ql_scan_viewer.py`, which is untouched |
 | `serve_stm_scan.sh` | fork of `../ql_scan/serve_ql_scan.sh` |
-| `selftest_stm_scan.py` | 27 headless checks: the blind, the render path, decimation, full-volume default, label round-trip |
+| `selftest_stm_scan.py` | 52 headless checks: the blind, the render path, the dense context vs a brute-force geometric reimplementation, full-volume default, every label round-trip, the scorer's rejection of an unknown label |
 | `score_stm_scan.py` | scores labels against both arms |
 | `../docs/scan/pdhd_retile_scan_sheet.tsv` | the item list (no verdicts) |
 | `../docs/scan/pdhd_retile_scan_key.tsv` | the answer key — closed until labelling is done |
