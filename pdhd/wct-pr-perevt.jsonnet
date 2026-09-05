@@ -1,5 +1,5 @@
 // PDHD per-event pattern-recognition (PR) job -- standalone, self-contained
-// (pdhd/docs/stm-tagger-chain.md sec 6).  Forked BY DUPLICATION from the PDVD
+// (pdhd/docs/stm-tagger-chain.md sec 7).  Forked BY DUPLICATION from the PDVD
 // job pdvd/wct-pr-perevt.jsonnet (itself a duplication fork of the canonical
 // SBND job cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet); BOTH source
 // files are untouched.  Lives in the working repo (pdhd/), like
@@ -83,7 +83,7 @@ function(
     //   * retile_wrapped_channel_activity has no such constraint (the retiler is
     //     new on PDHD) but changes the Steiner input on every cluster.
     // This is the single largest known gap in the PDHD PR chain -- see
-    // pdhd/docs/stm-tagger-chain.md sec 9, first item.
+    // pdhd/docs/stm-tagger-chain.md sec 9, and sec 10 item 1.
     wrapped_channel_charge = false,
     retile_wrapped_channel_activity = false,
     // doc 31 round 6 (owner Q5): ImproveCluster_2 runs its OWN Steiner terminal

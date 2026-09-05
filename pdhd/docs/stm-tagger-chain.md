@@ -69,6 +69,12 @@ python3 docs/scripts/d42_dqdx_rr.py --det pdhd --ref stm/pdhd_ref_dqdx.json --re
         --out /home/xqian/tmp/pdhdstm/ana2/dqdx_stm0 $R
 python3 docs/scripts/pdhd_sigma_plots.py --bins docs/figs/pdhd_sigma_bins.tsv \
         --fit docs/figs/pdhd_sigma_fit.tsv --out docs/figs/pdhd_sigma
+python3 docs/scripts/d44_foff_shells.py \
+        "PDHD stm0=/home/xqian/tmp/pdhdstm/ana2/resid_stm0_blocks.tsv" \
+        "PDHD stmw=/home/xqian/tmp/pdhdstm/ana2/resid_stmw_blocks.tsv" \
+        "PDVD pre=/home/xqian/tmp/d44/ana/resid_d44ref_blocks.tsv" \
+        "PDVD post=/home/xqian/tmp/d44/ana/resid_d44sig_blocks.tsv" \
+        "SBND=/home/xqian/tmp/d44/ana/resid_sbnd_d42fit_blocks.tsv"          # sec 8.6
 # POSITIVE CONTROL (sec 8.1): the same fork must reproduce doc pdvd/44's published PDVD numbers
 git -C ../../toolkit show 869a554c^:cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json \
         > /home/xqian/tmp/pdhdstm/ctl2/pdvd_tf_preflip.json
@@ -77,7 +83,7 @@ python3 docs/scripts/d44_sigma_fit.py --det pdvd --nboot 200 \
         --out /home/xqian/tmp/pdhdstm/ctl2/pdvd_repro_preflip ../pdvd/work/*_d42fit/tracking-stm.root
 ```
 
-Committed products: this doc; `docs/scripts/{d44_sigma_fit,d42_proj2d_resid,d42_shape_diag,d42_ring_frame,d42_dqdx_rr,d42_make_ref_dqdx,pdhd_sigma_plots}.py`;
+Committed products: this doc; `docs/scripts/{d44_sigma_fit,d42_proj2d_resid,d42_shape_diag,d42_ring_frame,d42_dqdx_rr,d42_make_ref_dqdx,d44_foff_shells,pdhd_sigma_plots}.py`;
 `docs/figs/pdhd_sigma_{bins,fit,shape}.tsv` + the two PNGs; `stm/pdhd_transport.py`,
 `stm/pdhd_transport.tsv`, `stm/pdhd_ref_dqdx.json`; `wct-pr-perevt.jsonnet`,
 `run_pr_evt.sh`, and the `-save-pctree` additions to `wct-clustering.jsonnet` /
@@ -559,8 +565,19 @@ And the first-neighbour share the model predicts against the measured one
   — the same sign and comparable size to PDVD's pre-fix 0.07–0.11, and nothing
   like SBND, whose own derived constants moved nothing outside noise;
 - the measured effective width exceeds the configured one by 3.1× / 1.45× / 52×;
-- every 2-D metric is worse than PDVD's *pre-fix* state, and W is worse than any
-  plane on either detector.
+- every footprint metric is worse than PDVD's *pre-fix* state, and W is worse
+  than any plane on either detector — but read that line with the coverage
+  caveat below, not as a like-for-like number.
+
+The verdict rests on the **first two** bullets. Both are measured on charge that
+lies on the fitted trajectory — the ring share against the profile's own centroid,
+σ_eff against the centroid of the same ±3-wire window — so neither depends on how
+much of a cluster the trajectory covers. The third bullet's metrics (B_foot,
+U_foot, χ²/N, pull rms) are reported because doc pdvd/44 reports them, but PDHD's
+fits cover a much smaller fraction of their own clusters than PDVD's do, and a
+per-block charge normalisation set over the whole cluster couples that coverage
+into the footprint bias. They are not yet a clean cross-detector comparison; the
+next paragraph measures the difference rather than asserting it.
 
 The plane ordering is inverted relative to PDVD, and §5's table says why: PDHD's
 `Wire_ind` of 0.75 makes its induction seed the largest of the three detectors
@@ -573,12 +590,53 @@ PDVD and a uniform ~1.6 on SBND. There is no law here — the effective width is
 property of the whole SP + imaging + charge-solving chain, which is exactly doc
 44's conclusion, now with a third detector behind it.
 
-One number in the table above is unlike anything on PDVD or SBND and is not a
-smearing statement: **f_off** — the fraction of the block's charge lying beyond a
-Chebyshev-2 window of the fitted trajectory — is 0.77/0.76/0.94 on PDHD against
-0.34 on PDVD and 0.06 on SBND. Three quarters of the charge in an accepted STM
-block is nowhere near the trajectory that was fitted to it. That is not a kernel
-width; it is the fit tracking a fragment of its cluster. §9 is about why.
+#### The one number that is not a smearing statement, and the shell that proves it
+
+**f_off** — the fraction of the block's charge outside the ±1-cell footprint of
+the fitted trajectory — is 0.77/0.76/0.94 on PDHD against 0.34/0.39/0.29 on PDVD
+and 0.06 on SBND. Three quarters of the charge in an accepted PDHD STM block is
+outside the footprint of the trajectory fitted to it. Left there, that number
+invites the reading "PDHD's kernel is so wrong the charge misses the footprint",
+which would make the whole §8.6 table circular.
+
+It is not that, and `d42_proj2d_resid.py` already carries the discriminator: it
+splits the off-footprint charge into a **near** shell (1 < d ≤ 5 cells) and a
+**far** shell (d > 5 cells). A kernel that is too narrow spills into the near
+shell — five cells is 23 mm on PDHD, far beyond any plausible σ. Charge in the
+far shell is charge the trajectory never went near, i.e. coverage.
+
+Medians over status-0 blocks (`docs/scripts/d44_foff_shells.py`):
+
+| median f_off / near / far | U | V | W |
+|---|---|---|---|
+| **PDHD** `stm0` | 0.773 / **0.047** / 0.721 | 0.761 / **0.064** / 0.687 | 0.944 / **0.010** / 0.931 |
+| PDHD `stmw` (§9.1) | 0.676 / 0.056 / 0.586 | 0.677 / 0.054 / 0.576 | 0.959 / 0.005 / 0.935 |
+| PDVD before its flip | 0.343 / **0.048** / 0.224 | 0.391 / **0.082** / 0.241 | 0.294 / **0.028** / 0.244 |
+| PDVD after | 0.342 / 0.048 / 0.219 | 0.391 / 0.085 / 0.238 | 0.284 / 0.028 / 0.238 |
+| SBND | 0.059 / **0.056** / 0.001 | 0.058 / **0.050** / 0.000 | 0.046 / **0.039** / 0.001 |
+
+**The near shell is the same on all three detectors** — 0.047/0.064/0.010 on
+PDHD, 0.048/0.082/0.028 on PDVD, 0.056/0.050/0.039 on SBND; PDHD's collection
+plane has the *smallest* near shell of any entry in the table. Every bit of
+PDHD's f_off excess sits at d > 5. So f_off is a coverage number, not a width
+number, and it does not undercut the verdict.
+
+The same split against block length says what the coverage problem is:
+
+| plane U, `stm0` | n | length | f_off (near / far) |
+|---|---|---|---|
+| shortest 25 % | 43 | 3.0–65.1 cm | 0.970 (0.017 / 0.950) |
+| middle 50 % | 86 | 65.2–340.2 cm | 0.758 (0.046 / 0.699) |
+| longest 25 % | 46 | 341.6–781.1 cm | 0.564 (0.096 / 0.420) |
+
+f_off_far falls monotonically with the length of the *fitted* trajectory, from
+0.95 on the shortest quartile to 0.42 on the longest, while the near shell rises
+(0.017 → 0.096) exactly as a longer track should. PDVD shows the same trend at
+half the amplitude (0.422 → 0.116); SBND is flat at ~0.000. The picture is a fit
+that latches onto one prong of an over-clustered PDHD block: short fit, most of
+the cluster elsewhere. §9 gives the most likely upstream cause, and §9.1 shows
+the retiler knob recovers about a fifth of it (far 0.721 → 0.586 on U) without
+touching the near shell or the smearing answer. Naming the cause is §10 item 5.
 
 ---
 
@@ -659,6 +717,8 @@ the knob on its own merits, not because it changes the smearing answer:
 | χ²/N | 23.1 / 21.6 / 63.7 | **16.7 / 14.4 / 40.2** |
 | pull rms | 3.62 / 3.52 / 5.55 | **2.96 / 3.02 / 4.32** |
 | f_off | 0.773 / 0.761 / 0.944 | 0.676 / 0.677 / 0.959 |
+| f_off_far, d > 5 cells (§8.6) | 0.721 / 0.687 / 0.931 | **0.586 / 0.576** / 0.935 |
+| f_off_near, 1 < d ≤ 5 (§8.6) | 0.047 / 0.064 / 0.010 | 0.056 / 0.054 / 0.005 |
 | dQ/dx k, all status-0 (n) | 0.888 (170) | 0.927 (205) |
 | dQ/dx k, contrast ≥ 2 (n) | 0.784 (17) | 0.907 (24) |
 | ring-share gap meas − pred | +0.069 / +0.051 / +0.081 | +0.082 / +0.058 / +0.072 |
@@ -695,6 +755,17 @@ scans. §10 item 1 is still what is owed.)
    §8 — but only **one** track passing the doc-55 stopping-muon cuts, so §6's
    comparison against data cannot be made. PDHD has ~100 more events with input
    data and no imaging.
+
+5. **Name the coverage defect** (§8.6, the f_off shells). PDHD's fitted
+   trajectories cover far less of their own blocks than PDVD's: median
+   f_off_far 0.72/0.69/0.93 against 0.22/0.24/0.24, all of it at d > 5 cells,
+   and it scales inversely with fit length. This is the one PDHD number with no
+   counterpart on either other detector, it is *not* a smearing statement, and it
+   is not explained. Candidates, in the order they are cheap to test: PDHD blocks
+   are more over-clustered than PDVD's (compare block charge to fitted length);
+   `flag_mains_min_length = 0` admits multi-track clusters as mains; the STM fit
+   follows one prong. The inputs are already on disk — `resid_*_blocks.tsv` plus
+   the pctrees of §0 — so this is an analysis round, not a run.
 
 **Explicitly out of scope and ungraded:** `tagger_check_neutrino` and its whole
 tail (PID, Michel finder, the PF/kine trees); the DL/SCN vertex; the STM accept
