@@ -749,6 +749,20 @@ starts at 2.2 mm at the shortest drift, so a large part is drift-independent
 and belongs to the `ind_sigma_*_T` / `col_sigma_w_T` constants. The unfused
 subset gives the same slopes. SBND shows no clean drift trend (n = 45).
 
+> **Correction (2026-09-05, doc 44 §1).** The "drift terciles" above are bands of
+> **|x|**, and both detectors are cathode-centred: the PDVD collection planes sit at
+> x = ±341.55 cm and SBND's at ±202.05 cm (wires files), so the fit's drift distance is
+> `x_anode − |x|` (`TrackFitting.cxx:7283,7304`), **not** |x|. Read in the right
+> direction the sequence 2.24 → 2.59 → 2.93 mm runs from the **longest** drift to the
+> **shortest**: the missing width is largest near the anode and *shrinks* with drift,
+> and the ΔD_T ≈ 11.7 cm²/s inference below is void. Doc 44 resolves the width in the
+> true drift time and fits both terms: the effective D_T is *smaller* than the
+> configured 7.9 cm²/s (2.8 ± 1.3 rms-matched, 4.9 ± 0.6 share-matched) and the
+> constant is 2.3–2.9 mm on U/V, 1.2–2.0 mm on W. `fig_sigma` in
+> `d42_shape_plots.py` evaluated σ_model at |x|/v as well, so the σ_model column of
+> the table below is at the wrong drift time (the ordering and the monotone B–σ
+> relation survive; the numerical σ values do not).
+
 **But the drift-correlated part is probably not diffusion either.** Charging
 the whole growth to D_T requires Δ(σ²) = 2·ΔD_T·Δt: PDVD U's 1.90 → 2.68 mm
 across a Δt of 1 526 µs is 3.57 mm², i.e. ΔD_T ≈ **11.7 cm²/s** on top of the
@@ -1086,6 +1100,13 @@ model has **no term at all** for the transverse spread that PDVD's data shows,
 and the constant that looks like it ought to carry it does not.
 
 ### 8.7 How to derive the effective transverse width empirically, all three views
+
+> **Executed in doc 44** (`44_effective-transverse-smearing-derivation.md`,
+> 2026-09-05): steps 1–5 below were run on both detectors; the constants, the arms
+> and the re-validation live there. Two things changed against this design: the
+> prolonged cut is the local wire *advance* per slice (the `--max-span` cut named
+> below is nearly inert), and the shape check found the profile more peaked than a
+> Gaussian of equal rms, so a second, share-matched estimator was added and ships.
 
 The owner's direction (2026-09-05): derive the effective smearing for U, V and W
 **from the data**, rather than from the SP filter or from any closed form. That

@@ -1,0 +1,45 @@
+# doc pdvd/44 -- gate record for the gaus_nsigma knob (TrackFitting, default 4.0 = the legacy literal)
+# and the effective-transverse-smearing arms.  2026-09-05.
+#
+# toolkit HEAD before the change: 0b90fda5 (apply-pointcloud); wcp-porting-img HEAD d8dc5858
+# pins (libWireCell*.so + WireCellRootDict_rdict.pcm copied from local/lib):
+#   ref  /home/xqian/tmp/d44_libpin/ref  libWireCellClus.so 8fd9007c33c38f1495095e6f974b2e1b  libWireCellRoot.so 9ee0a1e8ff642246bb571af0213ff645  (== doc-42 pin new2, local/lib 2026-09-05 07:31)
+#   new  /home/xqian/tmp/d44_libpin/new  libWireCellClus.so fd273dc8f000780f5503af29dca88881  libWireCellRoot.so 48e63189e8c192f50e667a7dc2aaa67c  (gaus_nsigma knob; root lib relinked, source untouched)
+# freshness: local/lib/libWireCellClus.so 2026-09-05 10:36:20, clus/src/TrackFitting.cxx edited 10:34:57; wcbuild rc=0 (/home/xqian/tmp/d44_libpin/wcbuild1.log).
+# doctests: ./wcb build -p (tests) rc=0; wcdoctest-clus 308 cases passed, 1 skipped (3 new, doctest_trackfitting_gaus_nsigma.cxx), 22698 assertions SUCCESS.
+#
+# CODE CHANGE (toolkit, clus only):
+#   TrackFitting.h  Parameters::gaus_nsigma = 4.0 (new member, documented)
+#   TrackFitting.cxx set_parameter/get_parameter "gaus_nsigma"; the nine cal_gaus_integral_seg call sites pass
+#                    m_params.gaus_nsigma instead of the literal 4 (double 4.0 == int 4 promoted: bit-identical)
+#   clus/test/doctest_trackfitting_gaus_nsigma.cxx (3 cases)
+#   No jsonnet change.  The smearing constants ship as COPIES of the runtime parameter JSON
+#   (pdvd/stm/pdvd_track_fitting_d44*.json, sbnd_xin/stm_campaign/sbnd_track_fitting_d44.json);
+#   the canonical cfg/pgrapher/experiment/*/\*_track_fitting.json files are untouched.
+#
+# GATE 1  PDVD production chain (-stm, no fit dump), ref vs new binary, SAME config epoch, 2 events (events2.txt: 039252/2, 039349/23)
+#   d40r3_hash_gate.py d44stmref d44stmchk -> PASS 2  FAIL 0  MISSING 0  of 2   (mabc-pr.zip member hashes + calib dump)
+#   note: d41stmon (the doc-42 partner) is one config epoch behind -- production flipped to curved_fv p90+5 cm at 09:16
+#   (toolkit 0b90fda5 / wcp fdafd07e); d41stmon vs d44stmchk DIFFERS in the Bee clustering/steiner globals for that
+#   reason (FAIL 2/2), which is why the gate partner was re-run with the ref binary under today's config.
+# GATE 2  PDVD -stm -stm-fit, ref (d44fitold) vs new (d44fitnew) binary, canonical JSON, same 2 events
+#   hash_root_trees.py --per-tree: every tree SAME on both events
+#   d42_proj2d_selfcheck.py T_proj_data content sha256: 039252_2 22215f86710a6281 == 22215f86710a6281; 039349_23 b749cc3f91df4feb == b749cc3f91df4feb
+# GATE 3  SBND bare production (run_d42_stmfit.sh, D42_NO_STMFIT=1), ref (d44gateold) vs new (d44gatenew), events 284349 285999 286065
+#   mabc-pr.zip member hashes SAME 3/3; pctree-pr-evt*.tar.gz SAME 3/3; nusel-evt*.tsv SAME 3/3
+# GATE 4  knob-on smoke: see the d44sign6 arm below (gaus_nsigma 6.0 read from the runtime JSON; T_proj_data changes)
+#
+# GATE 4  knob on: 039252/2 T_proj_data content sha256  d44ref 22215f86710a6281 (canonical) | d44sig 53ce06c25e42657b (share constants, nsigma 4)
+#         | d44sign6 5f783a34f2e6d8f9 (same constants, gaus_nsigma 6.0 in the JSON) -> the key is read and acts.
+#
+# ARMS (120 events of stm/events.txt, pctrees d39r2prov/d41prov, pin new, JOBS=16, TF JSON recorded in /home/xqian/tmp/d44_arms/<ARM>.info):
+#   d44ref    canonical pdvd_track_fitting.json (same config epoch as the arms below)   120/120 rc=0, 120 tracking-stm.root, 1809 blocks, 585 status-0; selfcheck 108/120 (12 marginal, as doc 42)
+#   d44sig    stm/pdvd_track_fitting_d44.json    (share-matched: DT 4.872e-7, c 2.300/2.304/1.176 mm)   120/120, 592 status-0, selfcheck 120/120
+#   d44sigb   stm/pdvd_track_fitting_d44b.json   (rms-matched:   DT 2.778e-7, c 2.897/2.872/2.027 mm)   120/120, 600 status-0, selfcheck 120/120
+#   d44sign6  stm/pdvd_track_fitting_d44_n6.json (share-matched + gaus_nsigma 6.0)                       120/120, 562 status-0, selfcheck 120/120
+#   SBND work-stmcamp-d44sig  stm_campaign/sbnd_track_fitting_d44.json (share-matched: DT 6.73e-7, c 1.32/1.32/0.38 mm), pin new, NJOBS 14: 99/99 rc=0
+#   gate partners: d44stmref d44stmchk (production chain, 2 events); d44fitold d44fitnew (-stm-fit, 2 events); SBND work-stmcamp-d44gate{old,new} (3 events)
+# RESULT (doc 44 sec 5-7): shape fixed (first-neighbour share 0.20/0.24/0.15 -> 0.28/0.32/0.18 vs measured 0.31/0.33/0.21; residual
+#   width deficit 0.69/0.65/0.35 mm), U_foot -14/-8/-9 %, chi2/N -17/-12/-21 %, uncov_foot 3.6 % -> 0.1 %; B_foot only -0.23/-0.22/-0.10 ->
+#   -0.17/-0.18/-0.09 (pre-registered +-0.10 NOT met); dQ/dx vs rr unchanged (k 0.933 -> 0.934). STM status unchanged on 1489/1800 blocks.
+#   Canonical constants NOT changed: production flip is the owner's decision.
