@@ -216,3 +216,76 @@ Re-verified: pdvd **3661/3661** across both codecs.
   written, and the prefix rule absorbed them with no edit.
 - `work-dbg25a-ql` regeneration (§4) — owner call.
 - The PROTECTED display/sentinel block (~9.8 GiB) — the owner chose to honour it.
+
+
+## 10. Round C — the PROTECTED block, measured before it was released
+
+Owner, later on 2026-09-04: *release the PROTECTED display/sentinel block*
+(~9.8 GiB by my estimate). **Measuring it first cut that to 1.2 GiB, and the
+measurement overturned two of my own claims.**
+
+### The decisive test: which arms do the live manifests still resolve into?
+
+`em_display/*manifest*.tsv` reference **420 distinct arms; exactly 10 still
+exist** — `work-pr130r1-probe98-*` (4), `work-pr130r1-probe141-*` (2),
+`work-pr134-f086-*` (4). Everything else the manifests name (pr117…pr142,
+prod0825, prod0901, empre0901) was retired in earlier rounds. So:
+
+| family | manifest-resolving? | verdict |
+|---|---|---|
+| `pr130r1-probe98/141`, `pr134-f086` | **yes — the only 10** | **KEEP** |
+| `em114`, `em114c` | no | **RELEASED, 1.2 GiB** |
+| `vtx105-base` | no — but see below | **KEEP** |
+| `d97prodchk` | n/a | **KEEP** — cited by pdvd docs 31 and 37 |
+
+### `em114`/`em114c`: a protection that was true of a *different* arm
+
+Their PROTECTED ground was "live em_display manifests". False. My first
+citation grep scored them "cited" by substring-matching `em114` inside
+`work-em114c-prodnowdbg-mcp1k` — a **different arm, and one already deleted**.
+Exact-arm matching shows no manifest references `work-em114-*` or
+`work-em114c-*` at all. Released; records in
+`archive/records/campaign-close-20260904c/` (integrity 6/6).
+
+### `vtx105-base`: I was wrong, and the interlock caught me
+
+I listed it for release on the ground that PROTECTED.txt's
+`dl_vtx_training` citation was stale. **That was wrong — I grepped `scripts/`
+only, and `dl_vtx_training/` is a top-level directory** (67 MB, `runs/vtx105/`
+present). INTERLOCK 5 refused the round, which forced the check that settles it:
+`vertex_labels/vtxscan-vtx105-{delta,mcp1k,mcp2k,mcp2k-auto,mcp2k-ragree,ncpi0,nuecc48}`
+hold **878 hand-scan label files referencing `work-*-vtx105-base` 1724 times**,
+and those arms exist. Hand-scan labels are scientific record (M13) and were
+scanned against *those* dumps; a different operating point is never a
+substitute — the same argument that refused `prod0825` in the 08-31 round.
+**4.21 GiB stays.**
+
+### A SECOND casualty of the §4 defect, found only by asking this question
+
+PDVD docs 28 (§364) and 31 (§403) cite
+`sbnd_xin/work-dbg25a-d97off/ql_evt16/pctree-evt16.tar.gz` as the **SBND side of
+a cross-detector comparison**. `dbg25a-d97off` was on this round's retire list
+and is **gone**. A same-event pctree survives at
+`work-dbg25a-d97prodchk/ql_evt16/` but at a *different operating point*, so it
+is not a substitute for a byte-level claim. The five `ql_evt{2,12,14,31,41}`
+doc 31 uses are present.
+
+**Why this was missed:** §4's blast-radius check scanned `sbnd_xin/docs` only.
+`dbg25` is an SBND set (doc 95, `wire-cell-sbnd-reco1`) that **PDVD docs borrow**,
+so the consumer lived in the other tree. *Scan both repos before releasing
+anything either tree can cite.*
+
+### ~/tmp pass 3: doc 87's libsnaps, 7.5 GiB
+
+`doc87/lib-{flip,post,pre,tc}`. **Checked for duplication first and they are not
+duplicates:** `libWireCellClus.so` md5 matches across `lib-pre`/`lib-post`/
+`lib-tc`, but the full 14007-file directory rollups all differ — a
+dedupe-to-symlinks would have been wrong. Four distinct binaries, regenerable
+from the commits doc 87 records. doc 87's **arms stay PROTECTED and untouched**;
+they become re-readable rather than re-runnable, the same trade taken for
+`pinlib2..7`.
+
+### Round C totals
+
+`sbnd_xin` 71 → **70 G**; `~/tmp` 67 → **60 G**; `/home/xqian` free
+408 → **494 G** across the whole day.

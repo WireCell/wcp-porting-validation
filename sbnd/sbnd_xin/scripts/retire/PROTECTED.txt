@@ -368,6 +368,25 @@ work-ncpi0-d99r3prod work-ncpi0-d99r3prodpr	the ref/prod-2026-09-05 flip's own a
 # d97_dbg25_arm.sh rebuilds it.  NOT rebuilt -- re-creating a just-deleted label
 # is an owner call (M13).
 #
+# --- doc 100 round C, 2026-09-04 -----------------------------------------
+# RELEASED: work-em114-* and work-em114c-* (6 arms, 1.2 GiB).  Their ground was
+# "live em_display manifests" and it was FALSE -- measured, the manifests
+# reference 420 arms of which only TEN still exist, and none of them is an
+# em114/em114c arm.  The earlier "cited" reading came from substring-matching
+# em114 inside work-em114c-prodnowdbg-mcp1k, a different and already-deleted arm.
+#
+# NOT RELEASED, though the owner authorised the block, because measuring it said
+# otherwise -- each of these has a named live consumer:
+#   work-pr130r1-probe98-* work-pr130r1-probe141-* work-pr134-f086-*
+#       the ONLY ten arms any em_display manifest still resolves into
+#   work-vtx105-base-*
+#       878 hand-scan label files under vertex_labels/vtxscan-vtx105-* reference
+#       these 1724 times.  My claim that the dl_vtx_training ground was stale was
+#       WRONG -- I grepped scripts/ and dl_vtx_training/ is top-level.  M13.
+#   work-*-d97prodchk work-dbg25a-d97prodchk
+#       pdvd docs 31 and 37 use its ql_evt<N> as the SBND cross-detector
+#       reference, and doc 37 is the CURRENT pdvd epoch.
+#
 # --- RETIRED (kept for provenance) ---------------------------------------
 #
 # RELEASED 2026-08-31b (doc pr/135 sec 11.2), owner-approved after the direct
