@@ -39,6 +39,15 @@ A third, unrelated defect surfaced in the same layer and is reported here
 because it is in the `clustering` layer the owner looks at: **29 clusters /
 225 live points are drawn 1 480 km from the detector** (§8).
 
+**Round 2 (§11-§13), answering the owner's follow-up.** P1's cause cannot occur
+on SBND — the anisotropic metric is the *identity* there by geometry, not by
+configuration. P2's machinery is live on SBND, and was measured: across 67 SBND
+events **not one** Steiner point is more than 10 cm from live charge, against
+10 255 on PDVD, because PDVD has 15x more multi-component clusters and worse
+gaps within them. And the retiler already has its own anti-ghost filter,
+`remove_bad_blobs`, which deletes 31 533 blobs on this event and still lets the
+column through — **the fix is to strengthen a filter, not to add one**.
+
 ---
 
 ## Repro
@@ -62,7 +71,22 @@ done < <(grep -o '^########## [0-9_]*' stm/gates/d39r2_unmerge_gate.txt | awk '{
 docs/nf_sp_img_clus/scripts/d40_aniso_arm_summary.py <events.txt> d39r2base d40a0
 ```
 
-Gate record: `pdvd/stm/gates/d40_aniso_ghost_gate.txt`.
+```bash
+# round 2 (sec 11-12): the cross-detector census and the filter measurement
+while read ev; do run=${ev%_*}; evt=${ev#*_}
+  ./run_pr_evt.sh -nu -s d40nu $run $evt &          # -nu writes the calib dump
+done < <(...21-event manifest...); wait
+docs/nf_sp_img_clus/scripts/d40_steiner_void_xdet.py --route-control \
+    "PDVD:$PWD/work/*_d40nu" \
+    "SBNDncpi0:../sbnd/sbnd_xin/work-ncpi0-doc25d38new/pr_evt*" \
+    "SBNDnuecc:../sbnd/sbnd_xin/work-nuecc48-doc25d38new/pr_evt*"
+
+PDVD_LOG_LEVEL=trace ./run_pr_evt.sh -unmerge -s d40trace 039252 2   # remove_bad_blobs counts
+grep "blobs removed for apa" work/039252_2_d40trace/wct_pr_039252_2.log
+```
+
+Gate records: `pdvd/stm/gates/d40_aniso_ghost_gate.txt` (rounds 1),
+`pdvd/stm/gates/d40r2_xdet_gate.txt` (round 2).
 Pinned library for every arm: `local/lib/libWireCellClus.so`, 2026-09-04
 18:54:31 — older than the first arm and unchanged across all of them, and
 byte-identical (`cmp`) to `/home/xqian/tmp/d39r2_libpin/libWireCellClus.so`,
@@ -378,7 +402,161 @@ Three leads, in the order this document would rank them:
 3. **Filter the sentinel-T0 points out of the Bee dump** (§8), same shape of
    fix.
 
-## 11. Related
+## 11. Round 2 — is this PDVD-only? (owner question, 2026-09-04)
+
+### 11.1 P1's cause cannot occur on SBND, for two independent reasons
+
+1. **Configuration.** `ctpc_aniso_metric` appears nowhere in
+   `cfg/pgrapher/experiment/sbnd/` nor in `sbnd_xin`'s drivers. SBND has never
+   run it.
+2. **Structure — the stronger reason.**
+   `ctpc_yscale = min(1, drift_step / pitch)`
+   (`CtpcAnisoMetric.h:74`). Doc pdvd/34 §2 measured the lattice constants:
+
+   | detector | drift step | pitch U/V/W | pitch/drift | yscale |
+   |---|---:|---:|---:|---:|
+   | SBND | 3.126 mm | 3.000 / 3.000 / 3.000 | 0.96 | **1.000 — identity** |
+   | PDVD | 2.9615 mm | 7.650 / 7.650 / 5.100 | 2.58 / 2.58 / 1.72 | 0.387 / 0.387 / 0.581 |
+
+   On SBND the drift step is already *coarser* than the pitch, so the metric
+   clamps to 1 and is the identity function. Even if someone enabled the knob
+   on SBND, not one query result would change. Doc 34 §2 is titled for exactly
+   this: *"Why SBND never saw this and PDVD cannot avoid it."*
+
+### 11.2 P2's machinery IS live on SBND, so it had to be measured
+
+`CreateSteinerGraph` / `ImproveCluster_2` are bound by
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet` and
+`sbnd/wct-pr-perevt.jsonnet` — the same retile-and-tile code that fabricates
+the blobs. Nothing about §11.1 protects SBND from that.
+
+**Measurement.** SBND dumps no Steiner Bee layer, so both sides are read from
+the **PrDisplayDump calib JSON**, whose `steiner` block carries every cluster
+that has a `steiner_pc` (87 on PDVD evt 298595 against the Bee layer's 9–15).
+No detector config was touched. Two controls, both passing:
+
+* **route** — on PDVD, where both sources exist, the calib `steiner` points and
+  the Bee `steiner_graph` layer are the same points to **0.0007 cm** on all 15
+  shared clusters. The calib route *is* the §5 route, with a bigger population.
+* **frame** — `flag_terminal` terminals sit on the live cloud at median
+  **0.252 cm** (PDVD), **0.173** (SBND ncpi0), **0.001** (SBND nuecc).
+
+Both sides run `unmerge_assoc` (PDVD arm `d40nu`'s pipeline line names it;
+the SBND arm logs `ClusteringUnmergeBundle:prassoc`), so the comparison is not
+confounded by the doc pdvd/39 round-2 flip.
+
+| | PDVD, 21 evt (cosmics) | SBND ncpi0, 19 evt | SBND nuecc, 48 evt |
+|---|---:|---:|---:|
+| clusters with a `steiner_pc` | 5 503 | 495 | 1 351 |
+| Steiner points | 1 322 557 | 69 953 | 242 187 |
+| unsupported > 3 cm | 1.84 % | 0.06 % | 0.04 % |
+| **unsupported > 10 cm** | **0.78 % (10 255 pts)** | **0.00 % (0)** | **0.00 % (0)** |
+| unsupported > 30 cm | 0.29 % (3 787) | 0 | 0 |
+| worst unsupported group span | 230.7 cm | 6.9 cm | 19.2 cm |
+| **multi-component clusters** | **7.1 %** (max **25** comps) | 0.4 % (max 2) | 0.5 % (max 3) |
+| *conditioned on multi-component:* > 3 cm | **3.12 %** | 0.59 % | 0.58 % |
+| *conditioned:* > 10 cm | **1.37 %** | **0.00 %** | **0.00 %** |
+| 1-component clusters: > 3 cm | 0.21 % | 0.02 % | 0.00 % |
+
+**Answer: PDVD-specific in practice, shared in code.** Not one SBND Steiner
+point in 67 events is more than 10 cm from live charge, against 10 255 on
+PDVD. The gap has two independent factors, and the conditioning separates them:
+
+* **Exposure — 15×.** 7.1 % of PDVD clusters are multi-component against
+  0.4–0.5 % on SBND, and PDVD reaches 25 components where SBND caps at 3. The
+  mechanism can only fire on a cluster that is disconnected in space.
+* **Severity — 5× on top.** Even restricted to multi-component clusters, PDVD
+  is 3.12 % against SBND's 0.58 %, and 1.37 % against 0.00 % beyond 10 cm.
+  PDVD's gaps are simply longer.
+
+Note that SBND is not at zero: 11 unsupported groups exist across the 67
+events, the worst spanning 19.2 cm. The defect is present, just never large.
+
+**The confound that remains.** SBND arms are neutrino MC, PDVD arms are
+cosmics. Conditioning on component count controls the cluster *shape*, but
+SBND's sample contains no 25-component cathode-crossing muon at all, so part of
+"SBND is clean" is "SBND's events do not produce the input." A cosmic-rich SBND
+arm would test that; none was run here.
+
+## 12. What `remove_bad_blobs` already does — a filter that is too weak
+
+The retiler has its **own anti-ghost filter**, and it is not a missing feature:
+`ImproveCluster_1::remove_bad_blobs` (`improvecluster_1.cxx:626`), called from
+`improvecluster_2.cxx:267` after every retile. Measured on 039252/2 with
+`PDVD_LOG_LEVEL=trace` (arm `d40trace`):
+
+```
+filter invoked 1192 times (per cluster per apa/face); blobs removed = 31533
+clusters where it removed anything: 61 of 494 retiled
+   ('main', 119) apa 3 face 0: removed   20, remaining  1254
+   ('main', 119) apa 7 face 0: removed    0, remaining  2484   <- the column lives here
+   ('main',  84) apa 5 face 0: removed  741, remaining  1915
+   ('main',  84) apa 6 face 1: removed    0, remaining  8482
+```
+
+It is doing real work — 31 533 blobs deleted on one event — and it still lets
+the 618-point column through.
+
+Its criterion: build a graph over the **new** blobs with adjacent-slice
+`overlap_fast` edges; **if there is more than one connected component**,
+validate each by whether *one representative blob* of it overlaps an
+**original** blob within ±1 slice; drop whole components that fail. Two holes:
+
+* **(a)** with `num_components == 1` it removes nothing at all, however much of
+  the single component is fabricated;
+* **(b)** a component is judged by one blob, so a fabricated column that
+  touches the real track anywhere inherits that blob's verdict.
+
+**Which hole lets cluster 119 through is NOT established.** apa 7 face 0
+removed 0, which is consistent with either. Establishing it needs one log line
+(`num_components` and the per-component vote) and is the first step of any fix,
+not an afterthought.
+
+### 12.1 The run-length evidence for a threshold
+
+A per-blob support test would also delete the *intended* fills — bridging short
+dead/inefficiency gaps is what the retile is for. The bound has to be on how
+**long** an unsupported run may be, and the distribution says where:
+
+| unsupported-group span | PDVD (1 727 groups) | SBND (11 groups) |
+|---|---:|---:|
+| p50 | 1.4 cm | 3.0 / 3.3 cm |
+| p75 | 5.4 cm | 4.2 / 3.9 cm |
+| p90 | 14.1 cm | 5.8 / 11.6 cm |
+| p95 | 23.7 cm | 6.3 / 15.4 cm |
+| max | **230.7 cm** | 6.9 / 19.2 cm |
+
+Groups longer than 20 cm are **6.3 % of PDVD's groups but 63.3 % of its
+fabricated points** (15 407 of 24 323), and **SBND has none at all**. A bound
+somewhere in 20–30 cm therefore removes about two thirds of the fabricated
+content, leaves the sub-10 cm fills that the feature exists for, and would not
+touch a single SBND group in these 67 events. That is an argument for the
+*shape* of the threshold; the value still has to be scanned, and 21 cosmic
+events is a thin basis for it.
+
+## 13. Revised recommendation
+
+§10 stands — do not flip `ctpc_aniso_metric`. Ranked, with what supports each:
+
+1. **Bound the unsupported run inside `remove_bad_blobs`** (§12). The filter,
+   the support test and the call site all already exist; this changes a
+   component-level vote into a per-blob one with a run-length bound. It is the
+   only proposal that attacks the metric-independent majority of the defect,
+   it is in shared code so SBND is protected too, and §12.1 gives the
+   threshold its evidence. Default-OFF knob, standard gate. **Blocked on the
+   one-line measurement in §12 that says which hole is operating.**
+2. **Cap the component bridge** in `connect_graph.cxx:20-26, :91` — the same
+   defect one stage earlier: stop the path crossing the gap instead of deleting
+   the blobs it caused. More invasive, because that graph feeds the taggers, so
+   it will move verdicts where (1) only moves display and Steiner content.
+3. **A "no live support" filter on the Bee `steiner_graph` layer.** No
+   reconstruction effect whatever, byte-identical when off, and it answers the
+   owner's actual complaint — the picture — immediately. It would have kept
+   these points out of the hand scan in the first place. Independent of 1 and 2
+   and the cheapest thing on this list.
+4. **Filter the sentinel-T0 points out of the Bee dump** (§8).
+
+## 14. Related
 
 * `39_cosmic-only-chain-and-stm-bee-layers.md` — round 2 re-scoped the STM
   layers (why these points became visible) and named the uncapped bridge as
@@ -392,4 +570,7 @@ Three leads, in the order this document would rank them:
   long-range merge family that makes cluster 84 a 17-component object.
 * `stm/gates/d40_aniso_ghost_gate.txt` — the full gate record.
 * Scripts: `scripts/d40_steiner_void_census.py`,
-  `scripts/d40_aniso_arm_summary.py`, `scripts/d36_ctpc_caller_census.py`.
+  `scripts/d40_aniso_arm_summary.py`, `scripts/d40_steiner_void_xdet.py`,
+  `scripts/d36_ctpc_caller_census.py`.
+* `34_ctpc-anisotropic-distance-metric.md` §2 — the lattice table that makes
+  the metric the identity on SBND.
