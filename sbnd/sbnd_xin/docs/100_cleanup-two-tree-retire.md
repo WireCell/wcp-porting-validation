@@ -12,7 +12,7 @@ Asked which depth, the owner chose **honour PROTECTED.txt** for sbnd_xin,
 |---|---|---|---|
 | `sbnd_xin` | 84 G / 199 work dirs | **71 G / 122** | 77 dirs, 12.6 GiB — **EXECUTED** |
 | `pdvd/work` | 90 G / 5444 children | unchanged | 3661 dirs, 47.2 GiB — **PLANNED, not executed** |
-| `~/tmp` | 132 G | **76 G** | 30 dirs, 56.7 GiB — **EXECUTED** |
+| `~/tmp` | 132 G | **66 G** | 38 dirs, 66.4 GiB in two passes — **EXECUTED** |
 
 The pdvd half is doc [pdvd/29](../../pdvd/docs/29_pdvd-work-dir-retire.md).
 
@@ -165,11 +165,47 @@ not been written since 09-03 05:49 — which reads as a dead session — but
 `claude --resume 7117f9b1-…` is **running**. The sweep derives live sessions
 from `ps`, never from mtime, and protects every one.
 
-## 7. Not done
+## 7. ~/tmp pass 2 (owner-selected)
+
+`sweep_tmp_20260904b.sh`, 9.7 GiB: `pinlib2..pinlib7` (zero citations anywhere;
+`pinlib` unsuffixed IS cited by doc pdvd/25 and stays) plus `doc27` and `doc35`,
+both closed rounds. **The cost, stated:** `pinlib{2..7}` are the pins behind
+`work-*-doc25new{2..7}`, which are KEPT — so this deliberately departs from
+doc 98's "a pin goes with its arms". Those arms keep their measurements but can
+no longer be re-run against the exact binary that made them, only re-read. The
+owner made that trade; the commit each pinned is recorded in doc pdvd/25.
+## 8. The archive re-encode, measured — and why the estimate was wrong
+
+Run on both trees. **sbnd_xin: 35 tarballs, 0.22 → 0.07 GiB (3.3×, 0.16 GiB
+freed). pdvd: 2046 tarballs, 0.53 → 0.23 GiB (2.3×, 0.30 GiB freed).**
+Total **0.46 GiB** — against an off-the-cuff "~4–5 G" estimate given mid-round.
+
+The estimate was wrong because it read `archive/records` as 7.16 GiB of gzip.
+**4.68 GiB of it was already `.tar.zst`** — doc 89 did that pass on 2026-09-01.
+Only 0.22 GiB of gz above the 1 MB floor remained. *Check what a lever has
+already been pulled on before quoting its size.*
+
+pdvd's 2.3× is also below doc 89's 3.6× aggregate and far below its 16×
+single-file probe, for the reason doc 89 already recorded: the win comes from
+zstd seeing across near-identical files, and these are 3661 **small per-arm**
+tarballs (median ~170 KB), not one big one. The floor had to drop to 0.05 MB
+for anything to qualify at all.
+
+**Consequence both record trees now carry, and every future round inherits:
+the archive is MIXED CODEC.** pdvd 2046 `.tar.zst` / 1615 `.tar.gz`; sbnd_xin
+2143 / 2308. Every interlock that looks for a record — `plan` interlock 5, the
+archiver's `verify()`, the driver's interlock B — was written against
+`.tar.gz` alone and would have refused the pdvd round for 2046 arms whose
+records are present and valid. All three now accept either codec and treat
+*both* being present as an error (an interrupted re-encode), not as a choice.
+Re-verified: pdvd **3661/3661** across both codecs.
+
+## 9. Not done
 
 - **pdvd is planned, not executed** — see doc pdvd/29. A peer session is live in
-  `pdvd/work`; the owner chose to run it after that round closes.
+  `pdvd/work`; the owner chose to run it after that round closes. The end-to-end
+  re-run also demonstrated the peer protection working: `KEEP` moved 1516 → 1522
+  dirs because the live session created six new `d39` arms since the plan was
+  written, and the prefix rule absorbed them with no edit.
 - `work-dbg25a-ql` regeneration (§4) — owner call.
-- The archive is gzip. doc 89 measured `zstd -19` at 3.6× aggregate over gz;
-  `recompress_archive_20260901.py` would apply here for ~0.6 GiB across both
-  new record trees. Not run.
+- The PROTECTED display/sentinel block (~9.8 GiB) — the owner chose to honour it.
