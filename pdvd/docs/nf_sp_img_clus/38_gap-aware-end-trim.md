@@ -433,11 +433,15 @@ Pre-flip arm: `-A trackfitting_config=<a copy of this file with 200>`.
 
 - **n = 1 event.** The byte-identity is measured on 039252/2 only. The 120-event
   manifest would be the general claim and was not run.
-- **STM side only.** `-stm` (the production mode) carries no `track_fit` layer.
-  This same file feeds `TaggerCheckNeutrino`, and §9 already records that
-  `end_trim_gap_len` moved the `track_fit` layer by **+174 clusters / +13.0 %
-  points** — *more* than it moved the STM layer, and still ungraded (doc 39 §4).
-  Retiring the knob therefore changes the `-nu` chain by an amount nobody has
-  measured. That is the first thing to check if the neutrino chain moves.
+- **The `-nu` chain: now measured, and also neutral.** `-stm` carries no
+  `track_fit` layer, and this same file feeds `TaggerCheckNeutrino` (the
+  compiled `-nu` config binds it twice), so the retirement had to be graded
+  there separately. It was: holding the chain at the new default and varying
+  only `end_trim_gap_len`, arms `d38qnusmoke` (0) / `d38qnurep` (0, repeat) /
+  `d38qnutrim` (200) all hash `17147f16…` — noise floor 0, trim a no-op.
+  The repeat arm is mandatory on this chain because the DL/SCN vertex is not
+  bit-stable in general (M4). This **supersedes §9's** +174 clusters / +13.0 %
+  `track_fit` figure as a reason for concern: that was measured on the
+  **merged** chain, and under `unmerge_assoc` the effect is exactly zero.
 - The §5–§8 sweep that chose 20 cm was run on the **merged** chain. Every number
   in it is now a statement about a configuration PDVD no longer runs.

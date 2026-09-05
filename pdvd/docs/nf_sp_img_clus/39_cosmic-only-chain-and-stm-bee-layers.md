@@ -705,17 +705,34 @@ lost split. Count matches §14 exactly.
 
 - **n = 1.** Both the flip's gates and the §16.3 census are one event. The
   120-event manifest is the general claim and was not run.
-- **The `-nu` chain is ungraded.** Everything above is `-stm`. `unmerge_assoc`
-  now sits in `PIPE_NU` too, and doc 38's retirement changes `track_fit` by an
-  amount §4 says is larger than the STM change. Nobody has looked.
-  A **smoke test only** was run (`d38qnusmoke`, 039252/2): rc=0, wall **41 s**,
-  peak RSS **2.67 GB**, completion marker written, zero error/critical log
-  lines, and the full layer set present (`track_fit`, `shower_track`,
-  `vertices` alongside the STM layers). So the chain runs — notably it does not
-  hit doc 25 §13.11's `ProtectBundle` cost even at 522 clusters, because the
-  per-bundle PR and `ProtectBundle` are both gated on STM-tagged bundles and
-  that set went 9 → 5. That is a liveness check, **not** a grade: no arm
-  compares `track_fit` before and after.
+- **The `-nu` chain: GRADED, and the trim retirement is neutral there too.**
+  Arms on 039252/2, chain held at the new default (`unmerge_assoc` ON), varying
+  only `end_trim_gap_len`:
+
+  | arm | `end_trim_gap_len` | `hash_archive.py` |
+  |---|---|---|
+  | `d38qnusmoke` | 0 (production) | `17147f16…` |
+  | `d38qnurep` | 0 (repeat) | `17147f16…` |
+  | `d38qnutrim` | 200 (pre-flip) | `17147f16…` |
+
+  Noise floor **0** — and that repeat arm is mandatory here, not optional: the
+  `-nu` chain runs `tagger_check_neutrino` with the DL/SCN vertex, which is not
+  bit-stable in general (M4). It was on this event.
+
+  So the trim is a no-op on the **neutrino** chain as well, `track_fit` layer
+  included. This **retires the §16.4 concern as written and doc 38 §9's**: that
+  section measured `end_trim_gap_len` moving `track_fit` by +174 clusters /
+  +13.0 % points, but that was on the **merged** chain. Under `unmerge_assoc`
+  the effect is exactly zero, on both consumers of `pdvd_track_fitting.json`.
+  The compiled `-nu` config binds that file twice — `TaggerCheckSTM:pr` and
+  `TaggerCheckNeutrino:pr` — so both were exercised.
+
+  Liveness, for the record: rc=0, wall **41 s**, peak RSS **2.67 GB**, zero
+  error/critical log lines, full layer set (`track_fit`, `shower_track`,
+  `vertices` alongside the STM layers). It does not hit doc 25 §13.11's
+  `ProtectBundle` cost even at 522 clusters, because the per-bundle PR and
+  `ProtectBundle` are both gated on STM-tagged bundles and that set went 9 → 5.
+
 - **The §13 A/B that §12 was waiting on** was not what adjudicated this; the
   owner's decision was. The measurement here is narrower.
 
