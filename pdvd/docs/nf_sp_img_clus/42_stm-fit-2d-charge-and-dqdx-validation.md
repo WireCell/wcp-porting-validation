@@ -130,6 +130,9 @@ python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det sbnd --tsv $D/d42_ri
 python3 docs/nf_sp_img_clus/scripts/d42_wire_filter_toy.py --rings $D/d42_rings_{pdvd,sbnd}.tsv --fig $F/42_wire_filter.png
 python3 docs/nf_sp_img_clus/scripts/d42_transverse_moments.py --det pdvd work/*_d42fit/tracking-stm.root
 python3 docs/nf_sp_img_clus/scripts/d42_transverse_moments.py --det sbnd $S/work-stmcamp-d42fit/*/tracking-stm.root
+# sec 8.9: the SP debug tap (NEW work dir work/039252_2; -R = pre-filter rawdecon tap)
+./run_nf_sp_evt.sh -R -a 4 039252 2                       # ~40 s, one anode
+tar xjf work/039252_2/protodune-sp-frames-anode4.tar.bz2 -C $D/d42sp   # frame_{rawdecon,gauss,wiener}4_298595.npy
 # gate record: stm/gates/d42_stm_proj2d_gate.txt
 ```
 
@@ -963,10 +966,18 @@ modelled smearing **narrower** (0.21 mm instead of 0.86 mm before the empirical
 `ind_sigma_*_T` exists to represent one thing: the SP software wire filter. On
 PDVD that filter contributes **0.21 mm** on induction and **0.04 mm** on
 collection. The width §7 measures as missing is 2–3 mm. The filter is two
-orders of magnitude short of it, so widening `ind_sigma_*_T` to 0.35 pitch would
-not be a re-derivation of anything — it would be an unphysical fudge factor
-wearing the name of the SP filter. **The owner is right that a brute-force scan
-is not the answer.**
+orders of magnitude short of it, so **deriving `ind_sigma_*_T` from the filter is
+wrong**, and re-deriving it more carefully would make it smaller rather than
+larger. The owner is right that a brute-force scan is not the answer.
+
+> **Corrected in §8.10.** This section originally went further and called any
+> widening of `ind_sigma_*_T` "an unphysical fudge factor wearing the name of the
+> SP filter", on the premise stated in its first line that the constant "exists to
+> represent one thing: the SP software wire filter". §8.9 measures the extra width
+> to be *real charge* on the neighbouring strips, and in
+> `σ_T = hypot(√(2·D_T·t), ind_sigma)/pitch` the constant is structurally the
+> model's **entire non-diffusion transverse width**, not merely its SP-filter
+> term. It is the right slot, wrongly derived; the stronger verdict is withdrawn.
 
 It also explains why SBND's model works and PDVD's does not, and the reason is
 not the pitch alone: SBND's SP genuinely smears charge across wires and SBND's
@@ -1058,6 +1069,10 @@ Found while reading `cal_gaus_integral`; both are the fit's own, not the SP's.
 
 ### 8.6 Correction to §7.7
 
+> **Superseded by §8.10** once the empirical check of §8.9 came back: the arm is
+> reinstated, with its value measured rather than scanned. The paragraph below
+> is kept as the record of the intermediate position.
+
 §7.7 item 1 recommended a gated arm widening `ind_sigma_u/v_T` toward the
 measured missing width. **§8.2–8.3 withdraw that as a first step.** The constant
 represents the SP wire filter, the filter is measured here to be a near-identity
@@ -1148,8 +1163,11 @@ un-suppressed. Because the charge that reaches the ctpc is thresholded and
 positive, positive excursions on neighbouring wires survive where negative ones
 are cut, which would show up as **both** extra apparent transverse width **and**
 extra apparent charge — the two things §7 and §8.4 measure. That is a
-hypothesis, not a result: it is consistent with the sign of every number in this
-doc, and it is exactly what the §8.7 item 1 dump would confirm or kill, because
+hypothesis, not a result — and **§8.9 ran the dump and killed it**: the
+neighbour-strip signal is 20–54 σ above the noise floor, so it is charge, not
+rectified noise. The paragraph is kept because the reasoning is what the check
+was designed against. It was exactly what the §8.7 item 1 dump would settle,
+because
 `dump_2d_spectra` writes the deconvolved spectrum *and* the wire filter, and
 `rawdecon_tag` taps the frame before any software filter.
 
@@ -1161,3 +1179,109 @@ both taps, default-off — which costs nothing and would say whether PDVD's
 induction wire profile is dominated by un-suppressed deconvolution noise. If it
 is, the smearing deficit of §8.4 is a symptom and the fit-side remedies of §8.7
 items 2 and 3 would be treating it in the wrong place.
+
+### 8.9 The empirical check: it is real charge on the neighbouring strips, not noise
+
+**Owner request (2026-09-05).** *"Can you check this then? If this is confirmed,
+I assume we just need to put in an effective filter width from empirical
+results?"*
+
+Checked. §8.8's noise hypothesis is **disfavoured**, and the answer to the
+second half is *yes in substance* — with two corrections to §8.3 and §8.6
+recorded in §8.10.
+
+**What was run.** `./run_nf_sp_evt.sh -R -a 4 039252 2` — NF+SP on anode 4 of
+event 039252/2 with the `-R` debug tap (40 s, one anode). The `-R` mode is
+pre-existing and was built for exactly this purpose (`sp_plot/filter_tune_viewer.py`).
+It writes `frame_rawdecon4` — the deconvolved waveform **after** FR/ER division
+but **before** any software filter (`Wire_*`, `Wiener_*`, `Gaus_wide`, `ROI_*_lf`)
+and before any ROI mask (`OmnibusSigProc.cxx:1296-1303`) — alongside the
+production `frame_gauss4` / `frame_wiener4`. Output went to a **new** directory
+`work/039252_2`, which did not exist; no existing record was touched.
+
+**1. The neighbour-strip signal is real signal.** In the production `gauss`
+frame, the transverse profile about the ridge of the tagged muon, against the
+noise rms measured in the same strips at quiet ticks:
+
+| offset [strips] | −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | +4 |
+|---|---|---|---|---|---|---|---|---|---|
+| fraction of peak | 0.055 | 0.165 | 0.335 | 0.537 | 1.000 | 0.596 | 0.383 | 0.184 | 0.034 |
+| **significance [σ]** | 6 | 17 | 34 | **54** | 101 | **60** | 39 | 19 | 3 |
+
+The first neighbour carries 54 σ and the second 34 σ. **That is not
+rectified noise**, which was §8.8's proposal; it is charge. The hypothesis is
+recorded there and is now retired by measurement.
+
+**2. But the raw deconvolution really is noise-dominated, and the wire filter is
+not what saves it.** Before any filter the same window has noise rms 5.1 × 10⁵
+against a peak of 8.0 × 10⁵ — signal-to-noise **1.6** — with negative side lobes
+at ±3–4 strips (the bipolar induction response the deconvolution leaves behind).
+The production `gauss` frame has S/N ≈ 100. So the noise suppression is done by
+the **time-domain** filters (`Gaus_wide`, `Wiener`), not by `Wire_ind` — which is
+why PDVD's near-absent wire filter (§8.8) does not leave the final product
+noise-dominated, and why the sign of that setting, though wrongly documented,
+has not produced a visible disaster.
+
+**3. The extra width is in the SP waveform itself, not introduced downstream.**
+Tying the profile to the *fitted* trajectory of every accepted block on this
+anode, and splitting by local topology so the track's own motion across strips
+is separated from charge sharing:
+
+| segments | n | profile/peak at ±1 | **first-neighbour shape r** |
+|---|---|---|---|
+| **prolonged** (< 0.25 strips/slice) | 105 | 0.220 / 0.172 | **0.282** |
+| isochronous (≥ 0.25) | 62 | 0.614 / 0.726 | 0.573 |
+| — the fit model predicts | | | 0.203 |
+| — the ctpc / `T_proj_data` measures (pooled, §8.4) | | | 0.311 |
+
+For **transversally localized** tracks — where the profile is charge sharing and
+nothing else — the SP output gives r = 0.282 against the model's 0.203. The
+isochronous number (0.573) is the track crossing strips within the slice and is
+correctly *not* evidence of smearing. So the deficit §7 and §8.4 measure is
+already present in the signal-processing output; nothing between SP and the ctpc
+creates it.
+
+**4. The effective width it implies.** Inverting the shape through the toy's
+r(σ) curve (used on the *difference*, since the toy's absolute r is only
+indicative, §8 part C):
+
+| | r | σ_transverse | implied `ind_sigma_u_T` |
+|---|---|---|---|
+| fit model today | 0.203 | 1.93 mm | 0.259 mm (in the config) |
+| SP waveform, prolonged | 0.282 | 2.70 mm | ≈ 2.2 mm |
+| ctpc pooled | 0.311 | 2.99 mm | ≈ 2.6 mm |
+
+Together with §8.4's independent per-point estimate (3.1 mm missing in
+quadrature), three different estimators put the effective non-diffusion
+transverse width at **2–3 mm**, against the 0.259 mm the config carries — a
+factor of roughly eight to ten.
+
+**Scope, honestly.** One event, one anode, one plane (U), 105 prolonged
+trajectory points, and a single noise estimate. It is enough to retire the noise
+hypothesis and to locate the width upstream of the ctpc; it is **not** a
+calibration. Before any constant moves this must be repeated across events,
+anodes, and the V and W planes, and the same measurement run on SBND — whose
+model already matches its data — as the control.
+
+### 8.10 Correction: §8.3 and §8.6 were too strong
+
+§8.3 concluded that widening `ind_sigma_*_T` "would be an unphysical fudge
+wearing that constant's name", and §8.6 withdrew §7.7's arm on that basis. §8.9
+shows the transverse width is **real charge**, so that verdict was wrong, and
+the reasoning behind it needs splitting in two:
+
+- **What survives.** The SP wire filter contributes 0.21 mm on PDVD and cannot
+  supply 2–3 mm (§8.2, §8.3). Deriving `ind_sigma_*_T` *from the filter* — which
+  is what `pdvd_track_fitting.json` and doc 25 §7b do — is therefore wrong, and
+  re-deriving it more carefully from the filter would make it smaller, not
+  larger.
+- **What was wrong.** `ind_sigma_*_T` is not merely "the SP filter term": in
+  `σ_T = hypot(√(2·D_T·t), ind_sigma)/pitch` it is structurally **the entire
+  non-diffusion transverse width**. That is exactly the slot a measured
+  cross-strip charge-sharing width belongs in. The defect is the *derivation*,
+  not the parameter.
+
+So §7.7's arm is reinstated, with its number coming from the measurement rather
+than from a scan, and with the config comment rewritten so the next person does
+not re-derive it from `Wire_ind`. That is the shape of the owner's proposal, and
+it is right — the correction is only that it is not a "filter width" at all.

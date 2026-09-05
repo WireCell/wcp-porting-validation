@@ -261,10 +261,16 @@ Identical between detectors:
   Wiener-tight path affects the `wiener{N}` output (and through it, track
   finding); a re-tuning pass against PDVD data should be planned.
 
-- **Wire-domain induction smoothing was independently tuned for CRP
-  geometry.**  The `Wire_ind` change from `0.75/√π` to `5.0/√π` is one
-  clear deliberate VD-specific choice, acknowledging that CRP induction
-  strips span more channels per track than PDHD APA wires.
+- **Wire-domain induction smoothing: PDVD applies essentially none, and the
+  recorded rationale had the sign backwards.**  The `Wire_ind` change from
+  `0.75/√π` to `5.0/√π` is a deliberate VD-specific choice (the first commit
+  of `sp-filters.jsonnet` carried a trailing `// 0.75`), but because the σ is
+  a frequency-domain width it made the real-space kernel **6.7× narrower**,
+  not wider: PDVD moves 2.5 % of a strip's charge onto its neighbours where
+  PDHD moves 45.5 %.  The stated motivation — that CRP strips share charge
+  across more channels — is measured to be true (doc 42 §8.9) and is exactly
+  what this setting does not implement.  Corrected in §11.5 on 2026-09-05;
+  the value itself is untouched and is a production SP constant.
 
 - **Top/bottom split is a structural hook, not a tuning.**  When
   VD-specific per-region SP calibration becomes available, the `_b`/`_t`
@@ -460,12 +466,29 @@ processing loop.  Both PDHD and PDVD always run the wide path.
 
 ---
 
-### 11.5 Wire-domain induction filter — PDVD has ~6.7× more wire-direction smearing than PDHD
+### 11.5 Wire-domain induction filter — PDVD has ~6.7× **LESS** wire-direction smearing than PDHD
+
+> **CORRECTED 2026-09-05 (doc `nf_sp_img_clus/42` §8.8, §8.9).** This section
+> previously read "~6.7× **more**" and explained the value as deliberate extra
+> cross-strip smoothing for CRP geometry. **The direction was inverted.** The
+> `wf()` σ is a width in the wire-*frequency* domain, so a LARGER σ is a WIDER
+> pass-band and therefore a NARROWER real-space kernel — less mixing, not more.
+> Verified by inverse-transforming the exact array `HfFilter::filter_waveform`
+> builds (`docs/nf_sp_img_clus/scripts/d42_wire_filter_toy.py`): the PDHD kernel
+> moves **45.5 %** of a wire's charge onto its two neighbours, the PDVD kernel
+> **2.5 %**. The factor 6.7 is right; the sign was not. The text below is
+> corrected; the "Physical motivation" paragraph is retained but marked, because
+> the physics it describes (CRP strips do share charge across neighbours — doc 42
+> §8.9 measures the sharing directly, at 20–54 σ) is real and is exactly what the
+> filter as set does **not** do.
 
 The `Wire_ind` and `Wire_col` filters are Gaussian kernels applied
 along the wire/strip axis (before `inv_c2r`) to smooth the
-2-D deconvolved data across adjacent readout elements.  A wider σ
-means more cross-channel mixing.
+2-D deconvolved data across adjacent readout elements.  The σ quoted
+below is in the wire-**frequency** domain (units of Nyquist, see
+`HfFilter.cxx:39-61`), so a wider σ means **less** cross-channel mixing:
+the real-space kernel width is `1/(√π·X)` wires, inversely proportional
+to the tabulated number.
 
 | Detector | `Wire_ind` σ | `Wire_col` σ | Source |
 |----------|-------------|-------------|--------|
@@ -473,11 +496,22 @@ means more cross-channel mixing.
 | PDVD bottom | `5.0/√π` ≈ 2.82 | `10.0/√π` ≈ 5.64 | `protodunevd/sp-filters.jsonnet:111,113` |
 | PDVD top | `5.0/√π` ≈ 2.82 | `10.0/√π` ≈ 5.64 | `protodunevd/sp-filters.jsonnet:112,114` |
 
-**PDVD induction smearing is ~6.7× wider than PDHD's.**  The
+**PDVD induction smearing is ~6.7× NARROWER than PDHD's** — real-space
+kernel 0.113 wires against PDHD's 0.752, moving 2.5 % of a strip's charge
+onto its neighbours against PDHD's 45.5 %.  PDVD is the only detector in
+the tree whose induction planes are effectively **not wire-filtered**.  The
 `Wire_ind_b` and `Wire_ind_t` values are numerically identical today
 (the `_b`/`_t` split is a structural hook — see §2).
 
-**Physical motivation.**  PDHD APAs use tensioned wires with ≈5 mm
+**Physical motivation (retained, but it argues the OTHER way).**  The
+reasoning below — that CRP strips share charge across more neighbours than
+PDHD wires — is sound, and doc 42 §8.9 measures that sharing directly
+(first neighbour at 54 σ, ~0.22 of the peak for a transversally localized
+track).  But the filter as set does essentially no cross-strip smoothing,
+so it does not implement this motivation; if anything the motivation calls
+for the PDHD-like value.  Whether the production number is nonetheless
+right for other reasons is an open question for whoever set it — doc 42
+§8.9 does not answer it, and nothing here changes it.  PDHD APAs use tensioned wires with ≈5 mm
 pitch; induced charge from a charged-particle track lands primarily on
 one to two wires.  PDVD CRP induction *strips* are wider and at an
 angle such that a typical track projects across more strips; the SP
@@ -488,8 +522,10 @@ collection geometry is more similar across the two designs.
 
 **Context among other detectors.**  uBooNE `Wire_ind` ≈ 1.4/√π,
 SBND ≈ 1.05/√π, pDSP ≈ 0.75/√π (matching PDHD).  PDVD's 5.0/√π
-is the largest among production WCT configs and reflects the
-strip-geometry readout rather than a tuning choice.
+is the largest among production WCT configs, i.e. **the least
+wire-direction smoothing of any of them**.  The claim that this
+"reflects the strip-geometry readout" does not follow from the number as
+set (see the correction note at the head of this section).
 
 ---
 
