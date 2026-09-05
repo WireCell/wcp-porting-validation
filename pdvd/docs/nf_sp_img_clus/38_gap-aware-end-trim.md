@@ -257,6 +257,12 @@ refusing to invent a trajectory across it. Whether refusing is better than
 inventing is a physics call for the owner, and it is the only reason to prefer
 L = 40 (one destroyed fit) over L = 20 (seven).
 
+> **Superseded in part by doc 39 §5.2.** The ranges above were measured over
+> four of the seven. Over all seven they are 53–420 charge points, 56–131 cm,
+> 0.13–2.03 cm per point and 77–91 % ghost; **three of the seven are dense, not
+> sparse**, and the over-clustering attribution does not explain those. The
+> operating point is unaffected — all seven were ≥ 77 % ghost.
+
 ## 6. Dead channels — measured, not designed around
 
 A long run of failing points is also what a genuine dead-channel region looks
@@ -342,6 +348,11 @@ tested.
 - **Splitting a path at an interior gap.** The trim reaches only from the ends.
   039252/16 cluster 103 keeps 17 % unsupported at every threshold because its
   chords sit between two supported stretches.
+- **The neutrino PR stage.** `pdvd_track_fitting.json` is handed to
+  `tagger_check_neutrino` as well as `tagger_check_stm` (`pr.jsonnet:1341`,
+  `:1562`), so `end_trim_gap_len` changes the `track_fit` layer too — by +174
+  clusters / +13.0 % points, more than it changed the STM layer. Nothing in this
+  doc grades it. See doc 39 §4.
 - **SBND.** The knob is detector-agnostic and default-OFF; nothing here measures
   it there, and SBND is staying on the isotropic metric anyway, where doc 36
   §10.1's argument says the rule cannot be stated.
