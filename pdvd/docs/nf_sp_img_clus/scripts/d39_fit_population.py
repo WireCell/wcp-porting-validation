@@ -71,7 +71,7 @@ def _work(args):
             cid = int(m.group(1))
             if cid in big:
                 reasons.append((re.sub(r'[0-9][0-9.]*', 'N', m.group(2)).strip(), cid))
-    return census_all, (ev, evb, nfb), reasons
+    return base, census_all, (ev, evb, nfb), reasons
 
 
 def run(spec):
@@ -87,12 +87,15 @@ def run(spec):
             if r is None:
                 continue
             nev += 1
-            a, b, reasons = r
+            base, a, b, reasons = r
             for i in range(4):
                 tot[i] += a[i]
             ev += b[0]; evb += b[1]; nfb += b[2]
             for why, cid in reasons:
-                rc.setdefault(why, set()).add((nev, cid))
+                # key on the EVENT, not on nev: nev is an arrival counter under
+                # imap_unordered, not an event identifier, so a dedup against it
+                # is accidental (feedback_flash_not_unique_bundle_key).
+                rc.setdefault(why, set()).add((base, cid))
 
     print('=== %s  (%d events) ===' % (tag, nev))
     print('  every cluster >=%d charge points : %5d clusters, %9d charge points'

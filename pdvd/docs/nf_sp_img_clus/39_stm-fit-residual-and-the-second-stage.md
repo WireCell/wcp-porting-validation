@@ -284,10 +284,23 @@ decision in doc 38 §8.1 is unaffected: all seven fits were ≥ 77 % ghost eithe
 
 ## 6. What this says to do next
 
-1. **Grade `track_fit` the way `stm_fit` was graded** (§4.2). It is a small
-   change to `d36_fit_twoaxis_scan.py` — the PC name is the only thing that is
-   STM-specific. Until that exists, two production flips have an unmeasured
-   effect on the chain that produces the physics output.
+1. **Grade `track_fit`** (§4.2). Until something does, two production flips have
+   an unmeasured effect on the chain that produces the physics output.
+
+   The *join* is already compatible: `track_fit`'s `cluster_id` is the same
+   parent-cluster key `stm_fit` uses (checked on 039252/2 and 039349/3 — all
+   seven and three of five `track_fit` clusters respectively appear in
+   `stm_fit`), so pointing `d36_fit_twoaxis_scan.py` at the other PC name runs.
+
+   The *grade* is not a rename, and should not be quoted as one. `stm_fit` is a
+   single trajectory per main cluster; `track_fit` is a **branched topology** —
+   `real_cluster_id` carries a per-segment id (`cluster_id * 1000 + segment`,
+   e.g. 109001…109018 under cluster 109), plus `-1` for points MABC's fallback
+   path emits (`MultiAlgBlobClustering.cxx:1119`). Coverage and ghost therefore
+   mean something different: a shower branch legitimately sits off any one
+   track, so a low per-cluster coverage is not by itself a defect the way §3
+   treats it. Decide what the two axes should be for a branched fit *before*
+   running the scan, or the first table will be uninterpretable.
 2. **Then** decide on the fused-cluster splitting (§3.4, doc 38 §9). It is the
    only lead that moves both axes at once, because §3.3 shows they are one
    defect. Trim retuning is exhausted: doc 38 §5's sweep spans 2–40 cm and the
@@ -299,7 +312,8 @@ decision in doc 38 §8.1 is unaffected: all seven fits were ≥ 77 % ghost eithe
 ## 7. Not done
 
 - **No grade on `track_fit`.** §4.2 counts points and clusters only. Whether the
-  neutrino layer's extra 174 clusters are real trajectories or ghosts is unknown.
+  neutrino layer's extra 174 clusters are real trajectories or ghosts is unknown,
+  and §6.1 notes the two axes need redefining for a branched fit first.
 - **The dense three of §5.2** have no mechanism. They are a different failure
   from the sparse four and were not investigated.
 - **The 96 genuine no-fit clusters** (§2.1: 46 Mid Point C, 40 Mid Point B,
