@@ -991,3 +991,145 @@ done
 python3 docs/nf_sp_img_clus/scripts/fv_curved_ab.py d41fvoff d41fvon --geom \
     --out /home/xqian/tmp/doc41/ab
 ```
+
+---
+
+## 11. The 140 long losses, opened up
+
+§10.5 left the 140 tracks over 2 m as the open item. Three questions decide them:
+is the contact that disappears an artefact of the **readout window**; if not, did
+we **lose the end points**; or is the **boundary itself** in the wrong place for
+an endpoint test? Answered on the clusters' own points, with the kept long tracks
+(614) as the control throughout.
+
+### 11.1 The instrument: no PCA-end proxy
+
+§10.4 scored the "deciding end" from a PCA, which is only a proxy for the extreme
+points the tagger actually pairs. §11 works instead with the **band**: for each
+cluster, the points that are outside the OFF volume (box + 2.5/17.5/18) *and*
+inside the ON volume (curved + 2.5/3/3). Those are exactly the boundary contacts
+the flip removes — a median of 246 points per lost cluster, at a median 12.8 cm
+from their nearest wall and a median |x| of 166 cm.
+(`scripts/fv_curved_band.py`, `scripts/fv_curved_longloss.py`.)
+
+### 11.2 Q1 — the readout window: yes for a fifth of them, and at the *start* edge
+
+The raw readout x of every point comes from the pctree `3d/x`; per drift side the
+window runs from tick 0 at |x_raw| = 341.55 cm to the late edge at 398.52 cm. A
+cluster with points at either plane is cut there, and its true end was never
+recorded.
+
+| | band points at the window END plane | at the window START plane | any point at the START plane |
+|---|---|---|---|
+| TGM lost (140) | 4 (3 %) | **26 (19 %)** | 31 (22 %) |
+| TGM kept (614) | 2 (0 %) | 10 (2 %) | 51 (8 %) |
+
+**All 26 are truncations in the bulk** — the band points sit at |x| = 0 to 296 cm,
+never at the anode plane, so the window edge is not standing in for a physical
+boundary. That is a 12× enrichment over the control, and it is the one place the
+flat 15 cm inset was doing real work: it happened to keep tagging tracks whose
+ends the readout had eaten.
+
+**It also exposes a hole.** None of those 30 clusters (the 26 plus 4 at the late
+edge) picks up an STM tag in the ON arm — `stm_readout_edge_guard` is ON in PDVD
+production (doc 25 M3) precisely to stop STM believing a stop that sits at a
+window edge. TGM and FC have no such guard. So a readout-clipped cosmic that
+loses its TGM tag to the curved surface currently ends up with **no tag at all**.
+The fix is the guard TGM is missing, not a fatter transverse inset.
+
+### 11.3 Q2 — the ends are not lost
+
+Two independent tests, both against the control:
+
+- **Charge beyond the end.** Walk the local track direction from the deciding end
+  to the wall and count imaged points of *other* clusters in a 5 cm cylinder:
+  9 % of the lost have any, against 8 % of the kept. The end is not a clustering
+  mis-attribution, and there is no imaged charge sitting between the end and the
+  wall. Only 8 of 140 ends are near a CRP/CRU seam.
+- **Does charge that approaches a surface reach it?** Closest approach of every
+  long cluster that comes within 25 cm of a surface, pooled over the 97 events:
+
+| surface | n | 0–1 cm | 1–2 | 2–3 | 3–5 | 5–8 | 8–12 | 12–18 | 18–25 | median |
+|---|---|---|---|---|---|---|---|---|---|---|
+| anode plane (control) | 729 | 10 | 11 | 18 | 18 | 13 | 31 | 37 | 50 | **−3.2** |
+| y+ anode half | 145 | 62 | 1 | 3 | 6 | 4 | 13 | 12 | 15 | 0.2 |
+| y− anode half | 174 | 75 | 2 | 4 | 6 | 10 | 8 | 10 | 10 | 0.2 |
+| z+ anode half | 320 | 149 | 5 | 3 | 11 | 14 | 19 | 29 | 37 | 0.1 |
+| z− anode half | 379 | 188 | 65 | 9 | 11 | 20 | 20 | 34 | 32 | 1.1 |
+| y+ cathode half | 131 | 37 | 11 | 5 | 10 | 14 | 7 | 16 | 11 | 1.8 |
+| y− cathode half | 129 | 32 | 3 | 6 | 14 | 15 | 27 | 12 | 10 | 4.9 |
+| z− cathode half | 336 | 71 | 30 | 21 | 37 | 64 | 45 | 42 | 26 | 5.2 |
+| z+ cathode half | 318 | 34 | 12 | 10 | 34 | 56 | 61 | 72 | 33 | 8.6 |
+
+The control settles it: charge that reaches the anode plane goes **past** it
+(median −3.2 cm; the plane is 1.6 cm inside the raw tick-0 position). On the
+transverse walls in the anode half the modal approach is the **first bin, 0–1 cm**
+— when a long track crosses a wall there, its imaged charge is on the wall. So
+imaging and clustering do not habitually amputate a decimetre; a long track whose
+charge stops 11 cm short in the anode half really does stop there.
+
+The same table answers the boundary question from the other side: the cathode-half
+medians (y+ 1.8, y− 4.9, z− 5.2, z+ 8.6 cm) reproduce the mapped surface's
+ordering and size, per track rather than per unit charge. **The endpoint view and
+the §5 density view agree, so the surface is the right object to hand a tagger,
+and nothing here argues for widening it** — beyond the 3 cm cushion it already
+carries.
+
+### 11.4 What the 140 actually are
+
+Mutually exclusive, in priority order:
+
+| class | n | share | perp. gap | path along the track to the wall | now STM |
+|---|---|---|---|---|---|
+| readout-clipped (§11.2) | 30 | 21 % | 14.6 cm | 87 cm | 0 |
+| runs along the wall (\|cos\| < 0.2 to its normal) | 45 | 32 % | 10.8 cm | 108 cm | 15 |
+| charge beyond → attribution | 6 | 4 % | 44.6 cm | 158 cm | 1 |
+| points at the wall, stops short | 59 | 42 % | 10.7 cm | 20 cm | 26 |
+
+and the same classification of the 614 kept, for scale: readout-clipped 2 %,
+along the wall 27 %, attribution 4 %, stops short 67 % — but with a perpendicular
+gap of 1.8 cm and 4 cm of path, i.e. *on* the wall.
+
+- The **45 wall-parallel** tracks need a metre of track that does not exist to
+  reach the wall they were being tagged against. A 15 cm inset applied uniformly
+  makes a shell in which such a track is simply "outside the fiducial volume"
+  along its whole length, and both its ends are then trivially "at a boundary".
+- The **59 that point at the wall and stop** ~11 cm short have no charge beyond
+  them, and 26 of them are STM-tagged in the ON arm — they are stopping muons,
+  re-classified rather than lost.
+- That leaves **33 genuinely open cases** (the 59 minus the 26 now STM), 0.33 per
+  event, plus the 30 readout-clipped ones which are a separate, fixable defect.
+
+### 11.5 Answers, and what to do
+
+1. **Is the flipping end at the readout window?** For 21 % of them, yes — at the
+   window *start* edge, always in the bulk. Their true end was never recorded, so
+   neither fiducial surface is meaningful there and both arms are guessing. They
+   are also the sub-population that currently falls through both taggers.
+2. **Otherwise, lost end points or a wrong boundary?** Neither. The ends are not
+   lost (no charge beyond them, at the control rate; and charge that does cross a
+   surface is imaged onto it, median 0.1–1.1 cm in the anode half, past the anode
+   plane itself). The boundary is not wrong for endpoint use either: the
+   per-track closest-approach medians reproduce the mapped surface. What the flat
+   15 cm inset was really buying was tags on tracks running *along* a wall and on
+   stopping muons — which is over-tagging, not containment.
+
+**Recommended next, in order:**
+
+1. **Give TGM and FC the readout-edge guard STM already has** (a point whose raw
+   tick is within N of [0, `readout_nticks`) is not a physical end), default OFF,
+   then re-run this A/B. It should recover most of the 30 and it is a defect
+   independent of the fiducial question.
+2. Hand-scan the **33** remaining ambiguous long tracks (listed in
+   `figs/41_ab_verdicts.json`, class 5 of the table above); if they are stopping
+   muons the curved surface is simply right and the flat inset was tagging
+   stops.
+3. Only then is the fiducial choice an operating-point decision rather than an
+   open question.
+
+```bash
+python3 docs/nf_sp_img_clus/scripts/fv_curved_longloss.py /home/xqian/tmp/doc41/ab_verdicts.json \
+    --tag d41fvoff --minlen 200 --out /home/xqian/tmp/doc41/longloss
+python3 docs/nf_sp_img_clus/scripts/fv_curved_band.py        # the exact band + readout test
+python3 docs/nf_sp_img_clus/scripts/fv_curved_approach.py    # closest approach per surface
+```
