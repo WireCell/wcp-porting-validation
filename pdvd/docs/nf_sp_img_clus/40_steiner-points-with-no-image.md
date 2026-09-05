@@ -1076,6 +1076,18 @@ docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41fix20x d41prod <events>
 docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41base2  d41prod <events>
 ```
 
+**The `-stm` mode, which is what the campaign runs.** Every arm of this round
+used `-nu` (only it writes the calib dump the census reads), but
+`run_pr_evt.sh` defaults to `-stm` (doc pdvd/39, owner 2026-09-04) and the
+flip lives in the driver, so `-stm`, `-stmlean` and `-unmerge` inherit it
+un-graded. One `-stm` pair closes that: `d41stmon` (flipped default) vs
+`d41stmoff` (`-S retile_bad_blob_max_run=null`) on 039252/2 and 039349/23
+differ in `steiner_graph`, `steiner_terminals` and `stm_fit` — the knob fires
+in that chain too — and the verdicts land exactly where the `-nu` grade put
+them: TGM unchanged on both, STM ids `55 83 86 87 109` identical on 039252/2,
+and 039349/23 losing cluster 59 and nothing else. The cost disclosed above is
+the cost in the mode doc 25 depends on.
+
 Recorded in `stm/gates/d40r3_bad_blob_gate.txt`. What production output moves
 is §15.8's table: Steiner points > 10 cm from live charge 38 652 → 2 040 over
 the 120 events, TGM and FC unchanged, STM 583 → 582 with the 13 named

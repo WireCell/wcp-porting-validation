@@ -78,3 +78,9 @@
    GATE d41fix20x vs d41prod: PASS 3  FAIL 0  MISSING 0  of 3      <- reproduces the graded arm member-for-member
    GATE d41base2  vs d41prod: PASS 0  FAIL 3  MISSING 0  of 3      <- control: the knob fires (7-8 zip members + calib differ per event)
    (the first row also proves bad_blob_report output-neutral: d41fix20x ran with the census on, d41prod with it off)
+   -stm MODE (run_pr_evt.sh default since doc 39; every round-3 arm was -nu):
+     d41stmon (flipped default) vs d41stmoff (-S retile_bad_blob_max_run=null), 039252_2 + 039349_23:
+       DIFF 2/2 in steiner_graph + steiner_terminals + stm_fit -> the knob fires in the -stm chain too
+       TGM id sets identical on both; STM ids 039252_2 = 55 83 86 87 109 in BOTH arms;
+       039349_23 = 4 28 43 46 50 54 59 (off) -> 4 28 43 46 50 54 (on), i.e. exactly the cluster-59
+       loss the 120-event -nu grade reported, and nothing else.
