@@ -619,7 +619,8 @@ band, with the cushion visible in the config that owns the verdict. 3 cm is the
 recommendation for y and z (MicroBooNE's containment value, above PDVD's
 present 2.5/3, and — §9.2 — larger than every place the surface is measurably
 wrong), with x left at its present 2.5 cm since no drift-direction surface was
-measured (§8.2).
+measured (§8.2). Concretely: **the proposed `fv_tolerance` is x 2.5 / y 3 /
+z 3 cm** — the vector §9.4 censuses — replacing today's 2.5 / 17.5 / 18.
 
 ### 9.2 The surface, refit as a volume
 
@@ -825,11 +826,15 @@ ends and 361 of the 367 newly-outside points.
   corrected. On PDVD they are — every tagger is built from the `cm`
   `clustering_methods` instance, whose scope is `t0cor_coords`
   (`protodunevd/pr.jsonnet:1163, 1404, 1559, 1609, 1626`; `clus.jsonnet:920`).
-  A cluster with no flash keeps `QLMatching`'s initial `set_cluster_t0(-1e12)`
-  (`match/src/QLMatching.cxx:1351`), i.e. x_t0cor ≈ ±1.5e8 cm, and is outside
-  every bounded fiducial, box or polygon alike — no new failure mode. The real
-  exposure is a cluster with a *wrong* t0: it is placed at the wrong drift
-  position and now reads the wrong inset. That is not new either (a wrong x
+  `QLMatching` initialises **every** cluster to `set_cluster_t0(-1e12)`
+  (`match/src/QLMatching.cxx:1351`) and overwrites only the ones it matches
+  (`:3738`, `:3748`), so an unmatched cluster reaches the taggers at
+  x_t0cor ≈ ±1.5e8 cm — outside every bounded fiducial, box or polygon alike,
+  which §2's 289,079 sentinel points confirm on this arm. Note that is a
+  property of the *initializer*, not of "unmatched" as such: a matching stage
+  that ever assigns a plausible-but-wrong t0 instead of leaving the sentinel
+  puts the cluster at the wrong drift position — and the real exposure is
+  exactly that, a cluster with a *wrong* t0, which now reads the wrong inset. That is not new either (a wrong x
   already breaks the x margins), but it is newly *y/z-dependent*, and the
   489 wrong-t0 tracks of §2 are the population to watch.
 - **The envelope is not quite today's box.** `pdvd_pr_fv` spans
