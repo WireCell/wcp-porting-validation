@@ -1,0 +1,103 @@
+# doc pdvd/45 -- gate record for the excl_t0_frame knob (TrackFitting, default 0 = legacy) and the
+# PR-chain track_fit arms.  2026-09-05.
+#
+# toolkit HEAD before the change: 4e55b145 (apply-pointcloud); wcp-porting-img HEAD 029a0b50
+# pins (libWireCell*.so + WireCellRootDict_rdict.pcm copied from local/lib):
+#   ref   /home/xqian/tmp/d45_libpin/ref   libWireCellClus.so fd273dc8f000780f5503af29dca88881  libWireCellRoot.so 48e63189e8c192f50e667a7dc2aaa67c
+#         (== doc-44 pin new == today's production binary; local/lib 2026-09-05 15:1x before the build)
+#   new   /home/xqian/tmp/d45_libpin/new   libWireCellClus.so db9445356adf60afd131e420cc5edff3  (SUPERSEDED: first cut of the knob,
+#         shift = dirx*t0*v; over-corrects by v*trigger_offset on PDVD, see the doc sec 4.1; kept because the SBND
+#         knob-OFF arm work-d45sbnd-off-nuecc48 ran on it -- its OFF path is the same code as new2)
+#   new2  /home/xqian/tmp/d45_libpin/new2  (the shipped knob: per-fit-point measured frame offset)  md5 recorded below
+# doctests: ./wcb build -p rc=0; wcdoctest-clus 310 cases passed, 1 skipped (2 new: the pdvd45 update_association
+#   case in doctest_update_association.cxx and the knob-default case in doctest_clus_knob_defaults.cxx).
+#
+# CODE CHANGE (toolkit, clus only):
+#   TrackFitting.h    Parameters::excl_t0_frame = 0 (new); member std::map<int,double> m_excl_x_shift
+#   TrackFitting.cxx  set_parameter/get_parameter "excl_t0_frame"; form_map_graph fills m_excl_x_shift per fit
+#                     point (knob-on only); update_association subtracts it from raw_x in the three plane loops
+#                     (guarded by !m_excl_x_shift.empty()); comment at organize_segments_path_3rd re-attributed.
+#   TaggerCheckNeutrino.h/.cxx  m_excl_t0_frame config key (default false), echoed, set_parameter ONLY when true
+#                     (so a runtime-JSON value survives; SBND diagnostic arms need no cfg edit).
+#   pdvd/wct-pr-perevt.jsonnet  TLA excl_t0_frame = false, key-suppression binding.  SBND cfg untouched.
+#   clus/docs/porting/porting_dictionary.md  new entry (the frame divergence vs the prototype's own-point offset_t).
+#
+# SYMPTOM (baseline arm d45nu0 = today's production knobs, -nu -stm-fit, pin ref, 120 events, 120/120 rc=0):
+#   594 STM-tagged clusters on 119 events; coverage of stm_fit by track_fit (pt within 1 cm): median 0.44,
+#   quantiles 10/25/50/75/90 = 0.06/0.17/0.44/0.87/1.00; 1-segment clusters 1.00, >=6 segments 0.31.
+#   pre-dQ/dx zero-quantity drop: 1468898 / 2884704 trajectory points = 50.9 % (per-event median 53 %).
+#   SBND control (pr/87 zips, same script): 0.7 / 0.7 / 1.0 %; 133 clusters, no one-winner cluster.
+#   039252/2 (evt 298595): 5142/8458 = 60.8 %; one winning segment on 11 of 15 PR-fitted clusters.
+# PROOF (d45dump = 298595 with WCT_EXCL_DUMP, pin ref): 815202 exclusion decisions, own-segment distance median
+#   per cluster 62-594 cm = 0.91-1.00 x v_drift*(flash_time + trigger_offset); 0.0000 floored; minimum own
+#   distance seen 39.99 cm; kept 25 %.  SBND control dump (6 nueCC48 events, pin ref): see the doc sec 2.4.
+# ISOLATION 2x2 on 298595 (pin ref): fit_exclusion=false -> drop 22/378 (5.8 %), coverage 0.97-1.00 on 6/8
+#   (79/103 unchanged 0.89/0.90; 113 = topology, 0.04); dqdx_fit_keep_all_points alone -> points back but
+#   d50 to stm_fit 0.37-0.40 cm vs 0.14-0.21 with exclusion off; both = exclusion-off exactly.
+#
+# GATE 1  PDVD -nu -stm-fit, knob OFF, ref (d45nu0) vs new (d45g1new), events2 (039252/2, 039349/23):
+#   d40r3_hash_gate.py -> PASS 2  FAIL 0  MISSING 0  of 2 (mabc-pr.zip members + calib dump); tracking-pr.root
+#   hash_root_trees.py identical on both events (91e03d47..., 3a159a2d...).
+# GATE 2  PDVD -stm -stm-fit, knob OFF, d44beestm (pin ref, today's cfg) vs d45g2new: PASS 2 FAIL 0 of 2;
+#   tracking-stm.root identical (216b3031..., 8fed8051...).
+# GATE 3  SBND bare production, 3 events (284349 285999 286065), D42_NO_STMFIT=1, pin ref (d45g3ref) vs new
+#   (d45g3new): mabc-pr.zip members SAME 3/3, pctree-pr members SAME 3/3, nusel-evt*.tsv SAME 3/3.
+#   (hash_archive.py --members prints the archive PATH on its summary line -- compare the hash columns only.)
+# GATE 4  compiled-config proof: .wct-pr_d45nu0.json has 0 "excl_t0_frame" keys, .wct-pr_d45on1.json has 1.
+# GATE 5  knob-on smoke, first cut (d45on1, pin new): NOT the fix -- own distance median 340-369 cm on every
+#   cluster (= v*|trigger_offset| 365/369 cm), drop 3078/6639 = 46 %.  The geometric offset_t and the
+#   grouping's convert_3Dpoint_time_ch do not share a time origin on PDVD, so t0 arithmetic alone is wrong by
+#   the trigger offset (and by sign on the bottom side).  Superseded by the per-point measured shift (new2).
+#
+# ===== the shipped knob: pin new2  libWireCellClus.so b6ba5eb0008eeadd467897f0ea5fd136  libWireCellRoot.so 210e4a568fed9df911a31c9d7538c5bd
+#   freshness: local/lib/libWireCellClus.so 2026-09-05 15:24:44 > clus/src/TrackFitting.cxx 15:23:54; wcbuild rc=0 (wcbuild3.log);
+#   ./wcb build -p rc=0; wcdoctest-clus 310 cases passed, 1 skipped, SUCCESS (doctest_clus3.log).
+# GATE 1 (new2)  PDVD -nu -stm-fit, knob OFF, d45nu0 (ref) vs d45g1n2 (new2), events2: d40r3_hash_gate.py PASS 2 FAIL 0 of 2;
+#   tracking-pr.root hash SAME on both events.
+# GATE 2 (new2)  PDVD -stm -stm-fit, knob OFF, d44beestm (ref) vs d45g2n2 (new2): PASS 2 FAIL 0 of 2; tracking-stm.root SAME both.
+# GATE 3 (SBND)  bare production 3 events ref vs new: SAME 3/3 (above; the OFF path is byte-for-byte the same code in new and new2).
+# GATE 3b (SBND, exclusion-active) 6 nueCC48 events (10550 46363 81597 360535 256587 433451, source work-nuecc48-d97fv,
+#   run_pr_chain_batch.sh): pin ref (work-d45sbnd-ref-nuecc48) vs pin new (work-d45sbnd-off-nuecc48): mabc-pr.zip members,
+#   nusel-evt*.tsv, tracking-pr.root SAME 6/6;  pin ref vs pin new2 (work-d45sbnd-off2-nuecc48): see the SBND block below.
+# GATE 4 (new2)  compiled-config proof: .wct-pr_d45on2.json carries 1 "excl_t0_frame" key, d45nu0 0.
+# GATE 5 (new2)  knob-on smoke d45on2 (298595, WCT_EXCL_DUMP): drop 16/1176 = 1.4 % (pre-registered < 5 %; SBND floor 1 %);
+#   own-distance medians 0.74-0.97 cm on every cluster (were 62-594), 13.4 % floored (was 0), 90 % kept (was 25 %);
+#   coverage 0.92-1.00 on 7/8 STM clusters (113 = topology case 0.11 -> 0.29); median distance to stm_fit 0.18-0.30 cm.
+#   Downstream on this event: 8 candidates in both arms; vertex moved > 5 cm on 2 (109: 119 cm, 39: 30 cm); kine_reco_Enu
+#   changed by -100..-160 MeV on 5 and is -nan on 109 (kine_long_muon dqdx=-nan over a 2-segment chain -- a latent
+#   kinematics defect exposed by the changed trajectory, counted over 120 events in the doc); wall 66 s -> 45 s.
+#
+# ===== SBND (shared TrackFitting; SBND cfg untouched, the knob reaches SBND only through a COPY of the runtime JSON
+#        /home/xqian/tmp/d45/sbnd_track_fitting_d45on.json = canonical sbnd_track_fitting.json + "excl_t0_frame": 1.0,
+#        passed as SBND_TRACKFIT_JSON; TaggerCheckNeutrino sets the parameter only when its config bool is true, so the
+#        JSON value survives).  Source work-nuecc48-d97fv, events 10550 46363 81597 360535 256587 433451, run_pr_chain_batch.sh PR_JOBS=6.
+# GATE 3b knob OFF identity, pin ref (work-d45sbnd-ref-nuecc48) vs pin new2 (work-d45sbnd-off2-nuecc48), all arms COMPLETE:
+#   mabc-pr.zip members SAME 6/6, pctree-pr SAME 6/6, nusel-evt*.tsv SAME 6/6, tracking-pr.root SAME 6/6.
+#   (A first comparison, made while the off2 arm was still writing 256587, reported DIFF on clustering-global and the
+#    dead-area members -- feedback_gate_against_a_running_arm, again.  Wait for the job's completion notice, not rc.txt.)
+#   pin new (work-d45sbnd-off-nuecc48) vs ref: SAME 6/6 as well.
+# SBND knob ON (work-d45sbnd-on2-nuecc48) vs OFF (off2): nusel-evt*.tsv SAME 6/6 (selection rows unchanged); tracking-pr.root
+#   DIFF 6/6 (the fits move); T_kine kine_reco_Enu [MeV] off -> on: 850->850, 3709->3671, 2091->2219, 2618->2540,
+#   1728->1572, 1479->1473; census (d45_trackfit_vs_stmfit.py --all-clusters): 316 -> 317 PR-fitted clusters, track_fit
+#   points 5770 -> 6181, segments 546 -> 592, one-winner multi-segment clusters 2 -> 2, clusters with ghost > 5 %: 48 -> 48.
+# SBND exclusion dump, evt 46363 (candidate t0 0.836 us => v*t0 = 1.3 mm), pin new2, knob off (work-d45sbnd-off2dump-nuecc48)
+#   vs on (work-d45sbnd-on2dump-nuecc48): own-distance quantiles 10/25/50/75/90 = 0.19/0.32/0.55/0.87/1.23 cm -> 0.19/0.33/0.55/0.86/1.20;
+#   floored 23.3 % -> 21.0 %; kept 67 % -> 62 %; no own distance > 10 cm either way; median competing segments 35 -> 41.
+#   => on SBND the frame offset is a millimetre-scale perturbation of a tournament that already arbitrates real proximity.
+# SBND control dump (6 events, pin ref, work-d45sbnd-ref-nuecc48, 11.96 M decisions): own median 0.55 cm, 23 % floored,
+#   82 % < 1 cm, none > 10 cm (PDVD 298595: median 62-594 cm, 0 % floored, minimum 40 cm).
+#
+# ===== GRADE (pin new2, knob ON via -S excl_t0_frame=true)
+# d45on  120 events -nu -stm-fit: 120/120 rc=0.  Census vs d45nu0 (594 STM clusters): coverage quantiles 10/25/50/75/90
+#   0.06/0.17/0.44/0.87/1.00 -> 0.59/0.93/0.98/1.00/1.00; mean 0.50 -> 0.88; < 0.5: 54 % -> 8.6 %; one-winner multi-seg
+#   clusters 271/483 -> 2/460; median dist stm_fit->track_fit 1.27 -> 0.21 cm; ghost p90 0.09 -> 0.09; drop 50.9 % -> 6.0 %;
+#   improved > 0.1 on 395 clusters, worsened > 0.1 on 3; 25 STM clusters have no track_fit in either arm.
+#   pr_arm_census_diff.py: tgm 2549, stm 1782, stm_eval 1809, nu_cands 5042 unchanged; wall 4332 -> 4508 s (+4.1 %); RSS +0.5 %.
+# d45onkeep (2 events, knob ON + dqdx_fit_keep_all_points=true): differs from d45on by ONE point (039252/2 cl 109: 265 -> 266).
+# DOWNSTREAM (d45_downstream.py d45nu0 d45on): 560 candidates in both, 9 lost / 9 gained; vertex moved > 5 cm on 321,
+#   median 17 cm, p90 182 cm; kine_reco_Enu median -132 MeV (p10/p90 -695/+122), |dE| > 200 MeV on 210;
+#   Enu NaN 10 -> 72 (kine_long_muon dqdx=-nan: cal_kine_dQdx sums recomb dE(dQ, dx) with no dx <= 0 guard -- OWED before a flip).
+# BEE  /home/xqian/tmp/d45_bee/beecmp_039252_2.zip (event 0 = d45nu0, event 1 = d45on; d40r3_bee_compare.sh) uploaded
+#   (owner authorized 2026-09-05): https://www.phy.bnl.gov/twister/bee/set/0b40b1d3-462e-4a9e-b037-d4fe6643653d/event/list/
+# DETERMINISM  SBND 256587 re-run on both pins: ref == refb, off2 == off2b, refb == off2b (mabc + nusel).
+# PRODUCTION UNCHANGED: canonical PDVD/SBND configs carry no excl_t0_frame key; all production paths byte-identical (gates 1-3).

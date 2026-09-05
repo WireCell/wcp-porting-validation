@@ -586,6 +586,19 @@ maps regardless of its shape.
 
 ### What actually causes it: `fit_exclusion` contention (2x2, isolated)
 
+> **Correction (2026-09-05, doc pdvd/45).** The 2x2 below stands: `fit_exclusion=false`
+> restores the leg, `traj_degenerate_wcpts_fallback` adds nothing. The *mechanism*
+> named in this section — a duplicate segment placed over the same charge — is
+> **superseded**. `update_association` builds each 2-D cell's test point in the RAW
+> drift frame (geometric `offset_t`) but queries segment clouds that live in the
+> t0-CORRECTED frame, so on a PDVD cosmic every distance is off by `v_drift * t0`
+> (584 cm on cluster 86, measured with `WCT_EXCL_DUMP`), and whichever segment's
+> cloud reaches farthest in x wins every cell of the cluster. The collapse coincided
+> with the appearance of a *second* segment because the tournament only runs when
+> there is a competitor — any competitor, duplicate or not. Event-wide on 298595:
+> 61 % of PR trajectory points dropped, one winning segment per cluster; SBND 1 %.
+> Fixed behind the default-OFF knob `excl_t0_frame` (doc pdvd/45 sec 2, 4).
+
 | `fit_exclusion` | fallback | pts in box | max perp | median dist to `stm_fit` |
 |---|---|---|---|---|
 | `true` (PDVD production) | off | 2 | — | 7.07 cm |
@@ -623,7 +636,12 @@ where the charge goes. The fix belongs at the duplicate segment.
 
 - **Q1 — FIXED** (toolkit `ab0762c6`): the `stm_fit` Bee layer's hard-coded
   `real_cluster_id = 0` now carries the cluster id.
-- **Q2 — root cause FOUND AND PROVEN, and it is not where rounds 1-2 put it.**
+- **Q2 — root cause: see the 2026-09-05 correction above and doc pdvd/45.** The
+  round-3 finding that `fit_exclusion` contention is the lever is right; the
+  "duplicate segment" mechanism is superseded by the raw-vs-corrected drift-frame
+  mismatch in `update_association` (knob `excl_t0_frame`). The text below is the
+  round-3 record as written.
+- **Q2 (round 3 record) — root cause FOUND AND PROVEN, and it is not where rounds 1-2 put it.**
   The STM=1 tag is well-founded: with `fit_exclusion` off, the PR fitter's own
   trajectory lands a median **0.20 cm** from the one `TaggerCheckSTM` fits on the
   same charge. `track_fit_global`'s missing leg is caused by **`fit_exclusion`
@@ -642,7 +660,7 @@ where the charge goes. The fix belongs at the duplicate segment.
 
 ## Recommendation / next steps
 
-1. **Fix the duplicate segment; that is the whole defect.** The exclusion
+1. ~~**Fix the duplicate segment; that is the whole defect.**~~ **Superseded 2026-09-05 (doc pdvd/45): the defect is the drift frame of the exclusion test point, not a duplicate segment.** The exclusion
    contention exists only because two segments end up on one arm. `mvga: op1
    dup-merge` already fires on this cluster (removing a 69.53 cm segment at
    overlap 0.99) but later `do_rough_path` calls re-add overlapping segments —

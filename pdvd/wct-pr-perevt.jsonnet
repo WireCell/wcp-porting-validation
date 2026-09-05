@@ -3001,6 +3001,17 @@ function(
     // C++ default false => key omitted => byte-identical.  Validation:
     // --tla-code dqdx_fit_keep_all_points=true (or SBND_DQDX_FIT_KEEP_ALL_POINTS).
     dqdx_fit_keep_all_points = false,
+    // doc pdvd/45 -- the exclusion tournament (TrackFitting::update_association)
+    // builds each candidate 2-D cell's test point in the RAW drift frame while
+    // the per-segment "fit"/"main" clouds it queries are t0-CORRECTED, so every
+    // distance is off by v_drift * cluster_t0 (metres on a PDVD cosmic): the
+    // segment whose cloud reaches farthest in x wins every cell and the others
+    // lose all charge (039252/2: 61 % of PR trajectory points dropped, SBND 1 %).
+    // true => the cell is shifted by dirx * cluster_t0 * v_drift before the
+    // cloud query (the prototype's own-point offset_t, restored).
+    // C++ default false => key omitted => byte-identical.  NOT production yet:
+    // the flip is the owner's decision on the doc 45 numbers.
+    excl_t0_frame = false,
     // doc pdvd/30 round 2 (039252/2 evt 298595, cluster 86): organize_segments_path_3rd
     // reads its input path from segment->fits() whenever that is merely non-empty, so a
     // segment whose fits() has collapsed to its two endpoint vertices (measured here:
@@ -3761,6 +3772,7 @@ function(
         [if dual_chain_allow_cluster_swap != null then 'dual_chain_allow_cluster_swap']: dual_chain_allow_cluster_swap,
         [if dual_chain_vtx_weight != null then 'dual_chain_vtx_weight']: dual_chain_vtx_weight,
         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
+        [if excl_t0_frame then 'excl_t0_frame']: true,
         [if main_vertex_swap_apply then 'main_vertex_swap_apply']: true,
         [if rough_path_probe then 'rough_path_probe']: true,
         [if steiner_gap_penalty != null then 'steiner_gap_penalty']: steiner_gap_penalty,
