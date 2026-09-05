@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run the PDVD pattern-recognition (PR) tail for one event (doc pdvd/25).
-# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-stmlean|-nu|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-stmlean|-unmerge|-nu|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
 #
 # DEFAULT MODE IS -stm (doc pdvd/39, owner 2026-09-04): the chain stops after
 # the cosmic taggers.  Pass -nu to run the full neutrino PR tail again, which
@@ -11,8 +11,15 @@
 #         the drift speeds / trigger offsets / readout window the Q/L job used, so
 #         the PR job rebuilds DetectorVolumes identically).
 # Output: work/<RUN6>_<EVT>[_<TAG>]/mabc-pr.zip            Bee: clustering + dead + stm_fit
-#                                                          + stm/steiner_graph/steiner_terminals (STM-tagged clusters only)
+#                                                          + stm/steiner_graph/steiner_terminals (the clusters the STM
+#                                                            tagger FITTED, i.e. the same object set as stm_fit)
+#                                                          + stm_tagged (the STM verdict, a subset of those)
 #                                                          + track_fit/shower_track/vertices/mc ONLY with -nu
+#
+# -unmerge (doc pdvd/39 round 2) adds the unmerge_assoc stage, which undoes the
+# clustering-stage isolated grouping so the taggers see individual objects
+# instead of a main body plus detached clumps.  Needs a pctree from
+# run_clus_evt.sh -save-assoc.
 #         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump (segments, showers, kine, tagger flags)
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-stm.root      STM fits (T_rec_charge/T_stm_pass/T_stm_eval), with -stm-fit
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits + T_tagger/T_kine
@@ -88,6 +95,7 @@ while [ $# -gt 0 ]; do
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -stm) MODE=stm; shift ;;
         -stmlean) MODE=stmlean; shift ;;   # must precede the -s* catch-all
+        -unmerge) MODE=unmerge; shift ;;   # doc pdvd/39 r2; before the -s* catch-all
         -nu) MODE=nu; shift ;;
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
@@ -109,10 +117,21 @@ PIPE_STM="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_
 # PDVD_PR_TLA="-S 'steiner_skip_flags=[\"TGM\"]'").  Held out of the default
 # until the sec.5 A/B shows the TGM and STM verdict sets are unchanged.
 PIPE_STM_LEAN="switch_scope,flag_mains,fiducialutils,tagger_check_tgm,steiner,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
+# doc pdvd/39 round 2: PIPE_STM plus unmerge_assoc, which undoes the isolated
+# GROUPING clustering_isolated performed at the clus stage (a main cluster
+# physically merged with the small clusters near but NOT connected to it).
+# Placed after flag_mains -- so the split-off fragments leave the main's Steiner
+# build and STM fit without being promoted to mains -- and before steiner,
+# because separate() does not carry node-local PCs.
+# REQUIRES a pctree written by run_clus_evt.sh -save-assoc; without the
+# provenance arrays the visitor is inert (it warns and splits nothing).
+# Held out of the default until the doc pdvd/39 sec 12 A/B is adjudicated.
+PIPE_STM_UNMERGE="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
     stm) PIPE="$PIPE_STM" ;;
     stmlean) PIPE="$PIPE_STM_LEAN" ;;
+    unmerge) PIPE="$PIPE_STM_UNMERGE" ;;
     empty) PIPE="" ;;
 esac
 [ -n "$PIPE_EXPLICIT" ] && PIPE="$PIPE_EXPLICIT"

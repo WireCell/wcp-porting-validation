@@ -60,6 +60,13 @@ function(
     // Dump the optical "op" bee instance (measured flash PE + Q/L predicted PE
     // per matched cluster) from the all-TPC MABC.  Needs do_qlmatch.
     save_opflash = false,
+    // doc pdvd/39 round 2: record what clustering_isolated merged, so the PR job
+    // can undo it (pr.jsonnet unmerge_assoc).  Writes the
+    // isolated/assoc_cluster_id/assoc_cluster_main perblob arrays; cluster
+    // membership is untouched.  NOT free of output change: the saved pctree
+    // gains three arrays (its clustering-global Bee member must stay identical --
+    // that is the gate).  false => both keys omitted => byte-identical.
+    clus_save_assoc_id = false,
     // Per-event light-vs-charge time-base offsets in MICROSECONDS, PER CRATE
     // (opflash metadata offset_bot_us/offset_top_us + the per-run residual;
     // see run_clus_evt.sh).  The BDE (bottom volume, anodes 0-3) and TDE (top
@@ -363,7 +370,8 @@ local group_pipe(gd) =
     local actives = [cluster_source("%s/clusters-apa-anode%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local maskeds = [cluster_source("%s/clusters-apa-anode%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false, po_fast=ql_po_fast, dg_fast=ql_dg_fast) for i in std.range(0, n - 1)];
-    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false, dg_fast=ql_dg_fast);
+    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false, dg_fast=ql_dg_fast,
+                                    save_assoc_id=clus_save_assoc_id);
     g.intern(
         innodes = actives + maskeds,
         centernodes = apa_pipes,
@@ -391,13 +399,13 @@ local clus_all_tpc = if do_qlmatch
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
                             cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side,
-                            tensor_outname=pctree_outname)
+                            tensor_outname=pctree_outname, save_assoc_id=clus_save_assoc_id)
     else clus_maker.all_tpc(anodes, ngroups=ngroups,
                             cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
                             cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side,
-                            tensor_outname=pctree_outname);
+                            tensor_outname=pctree_outname, save_assoc_id=clus_save_assoc_id);
 
 // JOINT Q/L matching (shared-flash): both drift sides enter ONE QLMatching node and
 // each reads the SAME all-PD opflash archive.  Per side: opflash source ->

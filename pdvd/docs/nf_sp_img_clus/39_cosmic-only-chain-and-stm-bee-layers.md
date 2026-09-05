@@ -250,8 +250,8 @@ gets by accident. Re-running the arm is one flag plus one TLA.
   rejection lines) but not root-caused to a specific cache or population step.
   That is the open question if anyone wants the Steiner saving back.
 - `stm_fit` was deliberately **left unrestricted**, so it still shows rejected
-  candidates. If the display is still too busy, restricting it is a one-line
-  `require_flag: 'STM'` on that entry.
+  candidates. SUPERSEDED by §11-12.1: `stm_fit` still shows them, and the other
+  three STM layers were widened to match it instead.
 - Pre-existing, reported not fixed: the `steiner_pc` Bee branch hard-codes a
   4000 e threshold in `calc_charge_wcp` (`MultiAlgBlobClustering.cxx:2961`) — a
   uBooNE value applied to a PDVD dump. It affects only the `q` shading of the
@@ -266,7 +266,345 @@ gets by accident. Re-running the arm is one flag plus one TLA.
    is sound — what needs solving is giving TGM its production view of the charge
    without running `CreateSteinerGraph` first.
 
-## 9. Related
+## 9. Round 2 — the owner's two questions on the Bee set
+
+The owner reviewed the §4.2 set and raised two things. Both are real. One is a
+scope mistake in §4.2 that I made; the other is a genuine reconstruction defect
+that SBND already fixed and PDVD never did.
+
+> 1. The Steiner Graph image seems to jump many gaps that are not in the
+>    original 3D images. This seems to imply that the cluster are not separated
+>    properly, it may contain the main cluster as well as the isolated clusters
+>    done in the initial clustering step. In SBND, we have a step to separate to
+>    individual clusters.
+> 2. I do not quite understand why the stm-global's images are much smaller than
+>    the stm-fit-global's result.
+
+### 9.1 Repro block for everything below
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+# Pinned library for every round-2 arm:
+#   /home/xqian/tmp/d39r2_libpin/libWireCellClus.so   2026-09-04 18:54
+# toolkit HEAD at the time: 28cd60d8   wcp-porting-img: 6e7f6350
+
+# The clus stage now records what clustering_isolated merged (M13: fresh tags).
+PDVD_LIGHT_SUFFIX=_keep ./run_clus_evt.sh -save-pctree -save-assoc -s d39r2prov 39252 2
+# ... and the CONTROL, same binary, same day, knob off (sec 13.1):
+PDVD_LIGHT_SUFFIX=_keep ./run_clus_evt.sh -save-pctree             -s d39r2ctl  39252 2
+
+# Two PR passes over the SAME pctree; only unmerge_assoc differs.
+./run_pr_evt.sh            -s d39r2base 39252 2
+./run_pr_evt.sh -unmerge   -s d39r2unm  39252 2
+
+# The 21-event gate (10-way parallel), then the census:
+#   scratch driver: d39r2_arms.sh -- one clus pass + two PR passes per event
+docs/nf_sp_img_clus/scripts/d39_unmerge_census.py \
+    work/039252_2_d39r2base work/039252_2_d39r2unm
+# full record: stm/gates/d39r2_unmerge_gate.txt
+```
+
+## 10. "The Steiner graph jumps gaps" — confirmed, and it is `clustering_isolated`
+
+### 10.1 The gaps are real and the points in them are fabricated
+
+For each Steiner point, the distance to the nearest **live 3D point anywhere in
+the 121-cluster event**. A point with none within 3 cm was not reconstructed from
+charge — it was manufactured.
+
+| STM cluster (evt 298595) | 3D pts | Steiner pts | Steiner pts with no 3D within 3 cm |
+|---|---:|---:|---:|
+| 100 | 18 | 51 | **39 (76.5 %)** |
+| 87 | 152 | 175 | 52 (29.7 %) |
+| 109 | 1049 | 1279 | 268 (21.0 %) |
+| 111 | 61 | 49 | 10 (20.4 %) |
+| 97 | 1927 | 2016 | 7 (0.3 %) |
+| 40 | 1201 | 1034 | 4 (0.4 %) |
+| 39 / 55 / 86 | 311 / 343 / 598 | 283 / 254 / 428 | 0 |
+
+Cluster 100's 39 fabricated points interpolate a straight line from
+`(91.6, −334.1, 234.6)` to `(72.1, −333.8, 261.1)` — a 41 cm bridge between its
+only two real pieces.
+
+They are **not borrowed from a neighbouring cluster**: every one of them is >3 cm
+from every point of every one of the 121 clusters, and no Steiner cloud extends
+more than **1.8 cm** beyond its own cluster's 3D bounding box on any axis (the
+boxes shrink in places — cluster 87's Steiner x-extent is 31.4 cm against the
+cluster's 59.2 — but they never reach outside). The fabricated points sit
+*inside* the object, in its gaps.
+
+### 10.2 Why: the retiler synthesises wire activity along a whole-cluster path
+
+`CreateSteinerGraph` merges nothing — one cluster in, one out, and the scratch
+child is destroyed on every path (`CreateSteinerGraph.cxx:271-275, :354-356,
+:374`). The fabrication is in the **retiler**, which on PDVD is
+`ImproveCluster_2` (`pr.jsonnet:1246`, passed at `:1316`/`:1336`):
+
+- `improvecluster_2.cxx:124-128` takes a **whole-cluster** shortest path between
+  the two boundary points;
+- `:209, :214` call `hack_activity_improved` (`improvecluster_1.cxx:451`), which
+  interpolates that path at 0.3 cm and writes `hit` into all three planes over
+  ±3 time slices wherever real activity is missing. Tiling then produces blobs in
+  charge-free space, and those become Steiner nodes and terminals.
+- The path crosses the gaps because the graph flavors that carry it
+  (`basic_pid`, `ctpc_ref_pid`) bridge disconnected components with an
+  **uncapped** MST — `connect_graph.cxx:20-26, :91`; a >5 cm bridge only changes
+  the weight branch (`:161-166`), never whether the edge is added.
+
+### 10.3 And the reason a path has gaps to cross: `clustering_isolated`
+
+The clusters really do contain a body plus detached clumps. Minimum distance from
+each satellite to the main body, evt 298595:
+
+| cluster | main | satellites (points @ gap) |
+|---|---:|---|
+| 109 | 938 | 19@76 cm, 11@72, 14@62, 19@61, 10@54, 12@46, 12@38, 5@38, 9@16 |
+| 87 | 102 | 27@81 cm, 3@66, 15@55, 5@19 |
+| 100 | 13 | 5@41 cm |
+| 97 | 1809 | 7@69 cm, 3@13, 108@6 |
+
+48 of the 54 clusters with ≥50 points are multi-component at a 6 cm link.
+
+The membership is set in the **clustering** stage, not in PR: the same 1049
+points are one cluster already in `mabc-group4567.zip` (id 387) and in
+`mabc-all-apa.zip` (id 124).
+
+The site is `ClusteringIsolated` — `clustering_isolated.cxx:601`,
+`merge_clusters(g, live_grouping, "isolated")`. It **physically merges** a main
+with the small clusters near but *not connected to* it; the prototype only
+*groups* them. PDVD called it bare (`protodunevd/clus.jsonnet:552`,
+`cm.isolated(),`). SBND calls it with provenance and undoes it in PR, and says
+why in its own config (`sbnd/clus.jsonnet:2011-2018`):
+
+> *"the toolkit physically merges them, so the STM/PR endpoint finder walks into
+> a detached clump across empty space (docs 50, 51)"*
+
+**So the owner's recollection was right, and so was the inference.** PDVD does run
+`cm.separate(...)` (`clus.jsonnet:534`, with all the doc 25/26 refinements), but
+that is a different question; the stage SBND has and PDVD lacked is
+`unmerge_assoc`.
+
+### 10.4 Why nothing downstream rescues it
+
+PDVD's only PR-stage splitter is `protect_bundle`
+(`ClusteringProtectBundle` = uBooNE `Protect_Over_Clustering`). It runs *after*
+the taggers, and `skip_convicted` makes it refuse exactly the clusters that
+carry a verdict:
+
+```
+OC53SKIP member ident=109 nblobs=496 main=1 convicted TGM=0 STM=1 lm=-1 -- never split
+split 0 bundle cluster(s) into 0 extra cluster(s) (0 cathode re-join(s),
+   14 convicted main(s) skipped, 78 main(s) refused for holding no STM tag, ...)
+```
+
+It would not have helped anyway: it splits a *bundle* into its member clusters,
+and these fragments live inside one cluster ident.
+
+### 10.5 The disclosure that matters (reported, not tuned — CLAUDE.md §5.7)
+
+**Cluster 100 was tagged STM=1 on 18 real 3D points in two fragments 41 cm apart,
+with 39 of its 51 Steiner points fabricated.** Cluster 87 (152 points in five
+fragments over 90 cm, 30 % fabricated) is the same shape. This is the defect the
+companion doc `39_stm-fit-residual-and-the-second-stage.md` named as the sole
+residual — *"cluster splitting is the only lead that moves both axes"* — found
+independently by the owner in the display.
+
+## 11. "stm is much smaller than stm_fit" — a scope mismatch in §4.2
+
+Not a bug in the reconstruction; a wrong gate on the layer I added.
+
+`TaggerCheckSTM::persist_stm_fit` writes the `stm_fit` local PC for **every**
+evaluated main that recorded a fit pass — the call at `TaggerCheckSTM.cxx:614`
+is unconditional on `is_stm`. `stm` carried `require_flag: 'STM'`, i.e. the
+verdict. The funnel on evt 298595 (§4.2 arm):
+
+| stage | count | source |
+|---|---:|---|
+| clusters in the live grouping | 121 | `clustering-global` |
+| flash-matched mains | 92 | `TaggerCheckTGM` verdict lines |
+| skipped as already TGM | 31 | `already TGM; skipping` |
+| evaluated by STM | 61 | `STM=0/1` lines |
+| **wrote an `stm_fit` PC** | **25** | `save_stm_fit stored 29 segment(s)` |
+| **tagged STM** | **9** | `set_flag(Flags::STM)` |
+
+Two corrections worth stating plainly:
+
+- **`stm` is not sparser.** On the nine ids the two layers share, `stm` carries
+  5660 points and `stm_fit` 2687 — `stm` is 2.1× *denser*. The whole visual
+  difference is the 16 fitted-but-untagged clusters (6182 `stm_fit` points).
+- The layers draw **different geometry**: `stm_fit` is a 1-D fitted polyline
+  sampled along `rec.segment->fits()`; `stm` is the per-blob 3D cloud. Even on
+  identical cluster sets they would not be the same picture.
+
+## 12. What shipped in round 2
+
+### 12.1 `require_pc` — the layers now cover one object set
+
+New `BeePointsConfig` field `require_pc` (default `""`), ANDed with
+`require_flag` in the existing per-cluster gate
+(`MultiAlgBlobClustering.cxx:857-872`): admit a cluster only if it carries a
+non-empty local PC of that name. No new flag was needed in `TaggerCheckSTM` —
+the `stm_fit` PC **is** the "this cluster was fitted" marker.
+
+PDVD (`protodunevd/pr.jsonnet`, PDVD only) now declares four STM layers:
+
+| layer | gate | evt 298595 |
+|---|---|---|
+| `stm` (3D image) | `require_pc: 'stm_fit'` | 23 objects |
+| `steiner_graph` | `require_pc: 'stm_fit'` | 23 |
+| `steiner_terminals` | `require_pc: 'stm_fit'` | 23 |
+| `stm_fit` (unchanged) | — (culled by the missing PC) | 23 |
+| **`stm_tagged`** (the verdict) | `require_flag: 'STM'` | 9 |
+
+The census asserts the first four sets are identical in every arm; they were, on
+all 21 gate events, in both the base and the un-merged arm.
+
+**Read `stm_tagged` first.** `stm` is now the candidate population — 58 893 points
+on evt 298595, about 30 % of the whole `clustering` layer — so it is heavy enough
+to want hiding while scanning.
+
+### 12.2 The PDVD un-merge chain (config only — no new C++)
+
+Every piece already existed; PDVD simply never wired them.
+
+| where | change | default |
+|---|---|---|
+| `protodunevd/clus.jsonnet:552` | `cm.isolated(save_assoc_id=save_assoc_id)` | off |
+| same, both group MABCs + `clus_all_tpc` | `[if save_assoc_id then 'save_assoc_cluster_id']: true` | off |
+| `protodunevd/pr.jsonnet` `cm_by_name` | `unmerge_assoc: cm.unmerge_bundle(name='assoc', mode='real', id_aname='assoc_cluster_id', main_aname='assoc_cluster_main')` | not in `pipeline_names` |
+| `pdvd/wct-clustering.jsonnet` | TLA `clus_save_assoc_id` | false |
+| `pdvd/run_clus_evt.sh` | `-save-assoc` | off |
+| `pdvd/run_pr_evt.sh` | `-unmerge` → `PIPE_STM_UNMERGE` | mode stays `-stm` |
+
+Pipeline position, per the owner's decision:
+
+```
+switch_scope, flag_mains, unmerge_assoc, steiner, fiducialutils,
+tagger_check_tgm, tagger_check_stm, tagger_check_fc,
+protect_bundle, steiner_refresh, pr_display
+```
+
+*Before* `steiner` because `separate()` does not carry node-local PCs, so the
+split must precede `steiner_pc` creation. *After* `flag_mains` so the split-off
+fragments are removed from the main's Steiner build and fit **without** being
+promoted to mains and given cosmic verdicts of their own. That worked exactly as
+intended: **1277 mains evaluated in both arms across the manifest, identical.**
+
+The attribution is confirmed, not assumed — the visitor's own accounting on
+evt 298595 reproduces the satellites measured in §10.3 before any of this was
+built:
+
+```
+cluster 109: 496 blobs -> main 434 + 11 associated cluster(s) holding 62 (real mode)
+cluster  87:  77 blobs -> main  69 +  2 associated cluster(s) holding  8
+cluster 100:  14 blobs -> main   9 +  1 associated cluster(s) holding  5
+```
+
+## 13. The round-2 gates
+
+### 13.1 The provenance knobs change nothing but provenance
+
+Two clus runs, same binary, same day, same event, fresh tags `d39r2ctl`
+(off) and `d39r2prov` (on):
+
+- `mabc-all-apa.zip`, `mabc-group0123.zip`, `mabc-group4567.zip` — **every member
+  content hash identical** (`abtest/hash_archive.py --members`, never `cmp`, M2).
+- the pctree gains **exactly** 1465 → 1474 members, and the added datapaths are
+  exactly `live/pointclouds/namedpcs/perblob` + its three arrays
+  `isolated`, `assoc_cluster_id`, `assoc_cluster_main`, plus the `lpcmaps` entry.
+
+### 13.2 Compiled-config, knobs absent
+
+`abtest/compile_all_cfg.sh` before vs after, pre-change tree reconstructed from
+`git show HEAD:` — **16/16 PASS**, 0 normalized diff lines, same element counts,
+same component order, same Pgrapher edges.
+
+`pdvd_pr` compiled by hand (compile-only, both arms): the whole diff is the four
+Bee layer entries — three `require_flag: 'STM'` → `require_pc: 'stm_fit'` and the
+new `stm_tagged` block. **No reconstruction component changed.** Compiled-config
+proof with the knobs ON: `save_assoc_cluster_id` appears on all three MABC nodes,
+`save_assoc_id=true` on both `ClusteringIsolated`, and
+`ClusteringUnmergeBundle:prassoc mode=real id_aname=assoc_cluster_id` in the
+`-unmerge` config.
+
+`./build/clus/wcdoctest-clus`: **296/296 pass** (the new case pins
+`require_flag` / `require_pc` / `steiner_terminals_only` all admitting
+everything).
+
+### 13.3 The A/B: 21 events, one clus pass each, two PR passes over it
+
+Full record: `stm/gates/d39r2_unmerge_gate.txt`.
+
+Cluster ids are **not** comparable across these arms — the un-merge splits one
+cluster into several — so the census matches objects **geometrically** through
+the `clustering` layer and scores each base cluster against the arm cluster that
+inherited the largest share of its points. An id-keyed diff here would be
+meaningless.
+
+| metric | base (`-stm`) | arm (`-unmerge`) |
+|---|---:|---:|
+| clusters in the live grouping | 61–161 per event | 180–832 |
+| mains evaluated | **1277** | **1277** (identical) |
+| TGM tagged | 421 | **463** |
+| STM tagged | 136 | **113** |
+| FC tagged | 407 | **434** |
+| **mains carrying any cosmic tag** | 964 (75.5 %) | **1010 (79.1 %)** |
+| STM candidates that are multi-component | 351/392 = **90 %** | 89/329 = **27 %** |
+| Steiner points with no 3D support | 24 691/488 262 = **5.06 %** | 7337/456 497 = **1.61 %** |
+| worst cluster's fabricated fraction | 19–85 % per event | 0–47 % |
+| mean wall | 25.1 s | **20.0 s (−20 %)** |
+
+Where the STM tags went: of the **54** base STM tags whose heir is not STM,
+**28 are TGM or FC in the arm** — still cosmic, reclassified — and **26 carry no
+cosmic tag at all**. There are also **28** `cand -> STM` gains. On evt 298595
+specifically, clusters 39, 40 and 100 became TGM and 111 became FC; only 113 lost
+its cosmic verdict.
+
+### 13.4 Verdict
+
+The knob **ships OFF**. It is not a byte-identical change and it is not meant to
+be — it moves cosmic verdicts by construction, which is the point. What the gate
+establishes is that the movement is in the right direction on every aggregate
+that can be measured without a hand scan: the same mains evaluated, more of them
+tagged, far fewer fabricated points, 20 % less wall. What it cannot establish is
+the 26 objects that lost their cosmic tag. **That is the owner's call and it
+wants eyes, not another aggregate.**
+
+Bee, event 298595, same pctree, same binary, only `unmerge_assoc` differing:
+
+- **before** — https://www.phy.bnl.gov/twister/bee/set/ddc5da45-b1a5-4cb9-9876-de32dc48c332/event/list/
+- **after**  — https://www.phy.bnl.gov/twister/bee/set/01f28648-c628-4f70-89bd-031fcccd865c/event/list/
+
+Both verified live (HTTP 200, event 0, all six layers present).
+
+## 14. Round 2 — not established
+
+- **The 26 objects that lost their cosmic tag are not explained.** They are the
+  reason the knob is off.
+- The gate is **21 events, PDVD data only**. Every rate above is a rate on that
+  sample.
+- **Un-merging does not cap the bridge length.** `ImproveCluster_2` will still
+  fabricate blobs across a gap *inside* one cluster, because the component
+  bridges in `basic_pid` / `ctpc_ref_pid` are uncapped
+  (`connect_graph.cxx:20-26`). The residual shows in the arm: 27 % of STM
+  candidates are still multi-component, and evt 298595 cluster 84 has 17
+  components. Those come from the long-range merge family (docs 25/26), not from
+  `clustering_isolated`. A distance cap on the MST bridge is the obvious next
+  knob and was not attempted here.
+- `ClusteringUnmergeBundle` warns once per cluster that has **no** `perblob` PC
+  at all (33 of 92 mains on evt 298595) — clusters `clustering_isolated` never
+  touched. Cosmetic; the homogenization loop at
+  `MultiAlgBlobClustering.cxx:3898` only reaches clusters that already have the
+  PC. Not fixed here.
+- The round-2 arms use a **fresh clus pass**, so they are not directly comparable
+  to the §4.2 arm, which read the `d27fresh` pctree from an older cfg epoch
+  (23 fitted / 9 tagged here vs 25 / 9 there). Base-vs-arm comparisons are all
+  within one epoch.
+- Still unfixed from round 1: the `steiner_pc` Bee branch hard-codes a 4000 e
+  uBooNE threshold in `calc_charge_wcp`. It affects only the `q` shading of the
+  two Steiner layers.
+
+## 15. Related
 
 - doc 25 §2.1 — PDVD's readout-wide beam window
 - doc 30 — the same event 298595, `stm_fit` vs `track_fit` (why they disagree)

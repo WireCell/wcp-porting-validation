@@ -11,6 +11,12 @@
 #   -calib          also dump the hand-scan calib JSON (calib-evt<EVENTNO>.json)
 #   -save-pctree    persist the post-Q/L point-cloud tree for the PR job
 #                   (pctree-evt<EVENTNO>.tar.gz; doc pdvd/25 M1, input of run_pr_evt.sh)
+#   -save-assoc     record what clustering_isolated merged (the
+#                   isolated/assoc_cluster_id/assoc_cluster_main perblob arrays)
+#                   so run_pr_evt.sh -unmerge can undo it (doc pdvd/39 round 2).
+#                   Cluster membership is unchanged; the pctree gains 3 arrays.
+#                   Required for the PR -unmerge mode -- without it the
+#                   unmerge_assoc visitor has no provenance and is inert.
 #   -op / -noop     optical "op" bee instance (default ON when matching)
 #   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
 #   PDVD_DRIFT_SPEED_BOT_MMUS / PDVD_DRIFT_SPEED_TOP_MMUS
@@ -71,6 +77,7 @@ SEL_TAG=""
 QLMATCH=${PDVD_QLMATCH:-1}
 CALIB=0
 SAVE_PCTREE=${PDVD_SAVE_PCTREE:-0}
+SAVE_ASSOC=${PDVD_SAVE_ASSOC:-0}   # doc pdvd/39 r2: isolated-grouping provenance
 OPDUMP=${PDVD_OPDUMP:-1}   # optical "op" bee instance; default ON, -noop to disable
 _args=()
 while [ $# -gt 0 ]; do
@@ -78,6 +85,7 @@ while [ $# -gt 0 ]; do
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -save-pctree|--save-pctree) SAVE_PCTREE=1; shift ;;   # before -s* (prefix clash)
+        -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;      # before -s* (prefix clash)
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
@@ -422,6 +430,12 @@ PY
     # tips' connection is ~perpendicular, indistinguishable from coincidences).
     local CC_DIST_ARG=()
     CC_DIST_ARG+=(-S "cc_dis_cut_cm=${PDVD_CC_DIS_CUT:-16}")
+    # doc pdvd/39 round 2: isolated-grouping provenance for the PR un-merge.
+    # Empty array when off => key absent => byte-identical compiled config.
+    local ASSOC_ARG=()
+    if [ "${SAVE_ASSOC:-0}" = 1 ]; then
+        ASSOC_ARG=(-S "clus_save_assoc_id=true")
+    fi
     CC_DIST_ARG+=(-S "cc_drift_cut_cm=${PDVD_CC_DRIFT_CUT:-14}")
     CC_DIST_ARG+=(-S "cc_cathode_x_cut_cm=${PDVD_CC_CATHODE_X_CUT:-8}")
     CC_DIST_ARG+=(-S "cc_crosser_conn_relax=${PDVD_CC_CROSSER_CONN_RELAX:-75}")
@@ -834,6 +848,7 @@ PY
         "${QL_SATFLAG_ARG[@]}" \
         "${CC_TIPTOUCH_ARG[@]}" \
         "${CC_DIST_ARG[@]}" \
+        "${ASSOC_ARG[@]}" \
         ${PDVD_CLUS_TLA:-} \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
