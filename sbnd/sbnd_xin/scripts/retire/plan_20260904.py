@@ -304,9 +304,16 @@ if os.path.isdir(recdir):
         for f in files:
             frozen.add(f.split(".")[0])
 missing = [d for d in SRC if d not in frozen]
-check(8, SRC and not missing,
+# POST-ROUND NOTE: once the round has executed, SRC is empty (the arms are
+# gone), so this reads PASS-by-vacuity rather than FAIL-by-emptiness.  An empty
+# proof class is a RESULT, not a bypass (the 08-31 round's catch 3) -- but here
+# emptiness genuinely means "nothing left to freeze", which is the post-state we
+# want, so it is distinguished explicitly instead of being scored as a failure.
+check(8, (not SRC) or not missing,
       f"doc-99-r3 flip-gate source arms hash-frozen first: {len(SRC)} arms, "
-      f"missing={missing or 'none'} (run archive_records_20260904.py before retire)")
+      f"missing={missing or 'none'}"
+      + (" -- ROUND ALREADY EXECUTED, nothing left to freeze"
+         if not SRC else " (run archive_records_20260904.py before retire)"))
 
 # ------------------------------------------------------------------ report --
 def kb(paths):

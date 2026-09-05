@@ -12,7 +12,7 @@ Asked which depth, the owner chose **honour PROTECTED.txt** for sbnd_xin,
 |---|---|---|---|
 | `sbnd_xin` | 84 G / 199 work dirs | **71 G / 122** | 77 dirs, 12.6 GiB — **EXECUTED** |
 | `pdvd/work` | 90 G / 5444 children | unchanged | 3661 dirs, 47.2 GiB — **PLANNED, not executed** |
-| `~/tmp` | 132 G | **66 G** | 38 dirs, 66.4 GiB in two passes — **EXECUTED** |
+| `~/tmp` | 132 G | **66 G at sweep completion** | 38 dirs, 66.4 GiB in two passes — **EXECUTED** |
 
 The pdvd half is doc [pdvd/29](../../pdvd/docs/29_pdvd-work-dir-retire.md).
 
@@ -137,7 +137,14 @@ production and protected arms, 7/7 ALLOW on this round's real targets.
 out to do. Neither is stale; do not "fix" one to match the other. Post-round,
 production is unchanged at 30/0.
 
-## 6. ~/tmp: 132 G → 76 G
+## 6. ~/tmp: 132 G → 66 G
+
+**The figure moves.** `~/tmp` was 66 G when the sweep finished and read 67G a few
+minutes later, with `df` drifting 1 G in the same window: three live Claude
+sessions and their background tasks write here continuously. Quote it as
+"66 G at sweep completion", not as a steady state, and **re-measure rather than
+diffing against this number** — that is the same drift doc 89 recorded when
+09-01's DROP dirs vanished with no sweep having run.
 
 `~/tmp` is overwhelmingly **pinned library snapshots** (1.2–1.9 GiB copies of
 `local/lib`, taken so a campaign survives a peer's mid-round `wcbuild`) and

@@ -155,6 +155,10 @@ echo "  removed $nq grp0825 ql_evt dirs (imaging kept)"
 
 echo
 echo "== post-state =="
-echo "broken symlinks: $(find work-*/ -maxdepth 1 -xtype l 2>/dev/null | wc -l)"
+# NO -maxdepth.  The first version of this line used -maxdepth 1 and reported
+# 20 broken links when there were 100: the other 80 sit inside ql_evt<N>/
+# subdirs.  A post-state check that is shallower than the damage is worse than
+# none, because its small number reads as a small problem.
+echo "broken symlinks (any depth): $(find work-*/ -xtype l 2>/dev/null | wc -l)"
 echo "work dirs: $(ls -d work-*/ 2>/dev/null | wc -l)"
 du -sh "$ROOT"

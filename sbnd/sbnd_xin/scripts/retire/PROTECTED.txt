@@ -332,7 +332,7 @@ work-sent97-mcp1k work-sent97-mcp2k work-sent97-ncpi0 work-sent97-nuecc48	the 31
 # score.  This is doc 91's own failure mode (a census returning 0 for a genuinely
 # cited arm is indistinguishable from one that works).  Do not release it on a
 # zero-citation reading.
-work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodchk-nuecc48 work-dbg25a-d97prodchk	doc 97 sec 9: production default == the validated arm, 139 evts	doc 97, doc 98
+work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodchk-nuecc48 work-dbg25a-d97prodchk	doc 97 sec 9: production default == the validated arm, 139 evts. AMENDED 2026-09-04 (doc 100 sec 4): the four sample arms are whole; work-dbg25a-d97prodchk is NOT -- its 20 ql_evt<N> OUTPUTS (mabc, pctree, logs), which are what sec 9 measures, are intact, but its imaging INPUT is gone (work-dbg25a-ql was deleted under it) so it can be re-read, NOT re-run. Regenerable via dbg25_stage.sh -> dbg25_run.sh -> d97_dbg25_arm.sh	doc 97, doc 98, doc 100
 #
 # A LIVE PEER ROUND OWNS work-*-doc25new* / work-*-doc25old (PDVD doc 25's SBND
 # regression-gate arms, gate round 7 in flight 2026-09-02).  Protected by
