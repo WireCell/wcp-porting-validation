@@ -200,9 +200,12 @@ check_tgm: cluster 97 CASE-A pair (0,1) rejected: no 30.0 cm-step charge path be
 check_tgm: cluster 118 CASE-B pair (0,5) rejected: rescued end, straight chord 173.0 cm has an unsupported run > 30.0 cm
 ```
 
-— and in the reordered chain it accepts both (`TGM=true`). TGM's chord-support
-test queries the ctpc; running it before `CreateSteinerGraph` gives it a
-different view of the charge than production does. **Not a relabeling artefact:**
+— and in the reordered chain it accepts both (`TGM=true`). So TGM's
+chord-support test depends on grouping-level state that `CreateSteinerGraph`
+touches first in production. **Which** state, and how, is not established (§7):
+`CreateSteinerGraph` calls `destroy_child` on every path, so its retiled
+clusters do not survive, and the attribution here is to the ordering, not yet to
+a named cache. **Not a relabeling artefact:**
 `clustering-global` is byte-identical across all three arms
 (`d13aede9…`), so the cluster ids being compared are the same objects.
 
@@ -219,6 +222,14 @@ gets by accident. Re-running the arm is one flag plus one TLA.
 
 ## 6. Gates
 
+- **Binary, knobs off ⇒ byte-identical.** The pre-change library was rebuilt
+  from `HEAD~1` of the four touched C++ files and snapshotted
+  (`/home/xqian/tmp/d39/lib_base`, no `has no array` string), then 3 manifest
+  events (039252_10, 039349_14, 039349_67) were re-run on it with `-stm`.
+  `clustering-global` and `stm_fit-global` member hashes are identical to the
+  new-binary arm on all 3, and `clustering-global` is identical across all four
+  arms on event 298595 — 4 events total. The new fields are absent from those
+  layers' configs, so this is the knob-off path.
 - **Compiled config, knobs absent ⇒ byte-identical.** All 16 configs in
   `abtest/compile_all_cfg.sh` identical, including `sbnd_pr`; `uboone_mabc`
   identical (0 diff lines). `pdvd_pr` differs on **exactly** the three new
@@ -232,7 +243,8 @@ gets by accident. Re-running the arm is one flag plus one TLA.
 ## 7. Not established
 
 - The gate ran on **20 events, one detector, data only**. The 18/20 TGM rate is
-  a rate on that sample, not a bound.
+  a rate on that sample, not a bound. The knob-off binary equivalence (§6) rests
+  on 4 events, not the full manifest.
 - The *reason* TGM's chord-support test sees different charge before vs after
   `CreateSteinerGraph` is characterized empirically (which clusters, which
   rejection lines) but not root-caused to a specific cache or population step.

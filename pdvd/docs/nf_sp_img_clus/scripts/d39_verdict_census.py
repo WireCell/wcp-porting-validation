@@ -22,10 +22,12 @@ import sys
 import glob
 import os
 
-# "visit: TaggerCheckTGM: cluster 1 -> TGM=false"  (arrow is U+2192)
+# "visit: TaggerCheckTGM: cluster 1 -> TGM=false"  (arrow is U+2192).
+# The key is back-referenced to the tagger name so a TaggerCheckX line can never
+# be scored on some other tagger's key if the log format grows one.
 PAT = re.compile(
     r"visit: TaggerCheck(TGM|STM|FC): cluster (\d+) \S+ "
-    r"(?:TGM|STM|FC)=(true|false|1|0)")
+    r"\1=(true|false|1|0)")
 # TaggerCheckSTM logs both verdicts on one line: "-> STM=1 TGM=0"
 PAT_STM = re.compile(r"visit: TaggerCheckSTM: cluster (\d+) \S+ STM=([01]) TGM=([01])")
 # CreateSteinerGraph's skip accounting, when skip_flags is on.
