@@ -494,7 +494,10 @@ boundary_xz (x, z): (339.9, 0.8), (339.9, 0.8), (3.0, 4.6), (3.0, 287.4), (164.6
 ```
 
 (`figs/41_polygons_M1_d50.json` carries the same numbers with the per-wall
-M1 parameters.) In WCT this is two `PolyFiducial` slabs per volume — one with
+M1 parameters. **`figs/41_surface_overlay.png` draws these polygons in detector
+coordinates over the measured points** — both planes at true scale, then the
+last 30 cm at each wall with the nominal wall and the flat 15 cm inset for
+comparison.) In WCT this is two `PolyFiducial` slabs per volume — one with
 `axis: 2` whose corners are these (x, y) pairs, one with `axis: 1` whose
 corners are the (z, x) pairs — AND-ed through `CompositeFiducial{logic: 'and'}`
 (doc 33 §3.1 / the `aux/test/doctest_fiducials.cxx` example). The AND must be
