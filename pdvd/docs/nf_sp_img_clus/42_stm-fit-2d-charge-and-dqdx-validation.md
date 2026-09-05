@@ -1016,9 +1016,15 @@ Found while reading `cal_gaus_integral`; both are the fit's own, not the SP's.
    only if `|wbin − w_center| ≤ nsigma·w_sigma`, and **all nine call sites pass
    nsigma = 4**. That is harmless while 4σ comfortably exceeds one wire, and
    PDVD is the only place it does not: 4σ = 0.81 wires on U, 0.83 on V, 1.20 on
-   W, against SBND's 1.64–1.95. The toy puts the cost at about 6 % of the
-   first-neighbour share on PDVD U/V and nil on SBND — real, small, and worth
-   knowing because it is a pure artefact of a threshold, not physics.
+   W, against SBND's 1.64–1.95. Scoring it needs the segment structure the code
+   really uses — `cal_gaus_integral_seg` sums ten sub-points spanning prev→next
+   (`:8455+`), each with its own `w_center` and its own gate — because a
+   **prolonged** segment has all ten at one wire and is the worst case, while an
+   isochronous one spreads them over ±0.82 wires and escapes. Modelling both
+   limits, the cut costs **5.6 % / 4.8 % / 0.6 %** of the first-neighbour share
+   on PDVD U/V/W in the prolonged limit (PDVD's dominant topology, §7.5),
+   ≤ 0.4 % isochronous, and **0.0 % on every SBND plane**. Real, small, and
+   worth knowing because it is a pure artefact of a threshold, not physics.
 2. **`flag = 0` at all nine call sites** — the pure-Gaussian branch. The
    `flag = 1` *"induction plane with bipolar response"* and `flag = 2` *"more
    complex induction plane response"* branches exist in `cal_gaus_integral`
@@ -1059,8 +1065,9 @@ and the constant that looks like it ought to carry it does not.
    not a constant change, and it is the one candidate whose shape is physically
    motivated for the planes that need it. It should be measured against
    `d42fit` before any width constant is touched.
-3. **`nsigma` is a cheap, honest sensitivity test.** Raising it from 4 changes
-   no physics constant — it only stops truncating a Gaussian the model already
-   has. Worth one arm to bound its size, expecting ~6 % of the first-neighbour
-   share on PDVD U/V.
+3. **`nsigma` is a cheap, honest sensitivity test, and it is bounded.** Raising
+   it from 4 changes no physics constant — it only stops truncating a Gaussian
+   the model already has. §8.5 already bounds the effect at 5.6 % of the
+   first-neighbour share in the worst (prolonged) limit, so this cannot be the
+   2–3 mm; run it to close the item, not expecting it to explain anything.
 4. **Do not move `D_T`** (§7.4) or `ind_sigma_*_T` (§8.3) on this evidence.

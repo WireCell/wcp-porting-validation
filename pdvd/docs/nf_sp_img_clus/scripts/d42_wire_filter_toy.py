@@ -78,6 +78,27 @@ def bin_gauss(sigma_pitch, offset, nmax=6):
     return n, v
 
 
+def shares_seg(sigma_pitch, advance, nsub=10, nu=201, nmax=12, nsigma=None):
+    """Shares with the segment structure the code really uses: TrackFitting.cxx:8455+
+    builds `nsub` sub-points spanning prev->next around each trajectory point, each
+    with its OWN w_center and its own nsigma gate, summed by cal_gaus_integral_seg.
+    `advance` is the wire coordinate advanced per trajectory point, so the sub-points
+    span +-advance wires.  advance = 0 is the PROLONGED limit (all sub-points
+    coincide, the worst case for the gate); advance = 0.82 is the isochronous limit
+    at PDVD's 6.3 mm point spacing and 7.65 mm pitch."""
+    tot = np.zeros(2 * nmax + 1)
+    subs = np.linspace(-advance, advance, nsub) if advance > 0 else np.zeros(nsub)
+    for off in np.linspace(-0.5, 0.5, nu):
+        for sc in subs:
+            n, v = bin_gauss(sigma_pitch, off + sc, nmax)
+            if nsigma is not None:
+                v = np.where(np.abs(n - (off + sc)) <= nsigma * sigma_pitch, v, 0.0)
+            tot += v
+    tot /= tot.sum()
+    c = nmax
+    return tot[c], tot[c - 1] + tot[c + 1], tot.sum() - tot[c] - tot[c - 1] - tot[c + 1]
+
+
 def shares(sigma_pitch, kern=None, nu=201, nmax=12, nsigma=None):
     """Centre / first-neighbour / beyond charge shares, averaged over a uniform
     sub-pitch track position.  Offsets run over [-0.5, 0.5] pitch, so wire 0 is
@@ -208,10 +229,8 @@ def main():
     if not rings:
         print("  (no --rings given; skipped)")
         return
-    grid = np.linspace(0.05, 1.5, 400)
-    rvals = np.array([shares(s)[1] / (shares(s)[0] + shares(s)[1]) for s in grid])
-    print("  %-6s %-6s %8s %8s %9s %9s %11s %11s" % (
-        "det", "plane", "r_meas", "r_pred", "sig_mod", "sig_toy", "sig_needed", "missing[mm]"))
+    print("  %-6s %-6s %9s %9s %11s %11s" % (
+        "det", "plane", "r_meas", "r_pred", "sig_mod", "r_toy(sig_mod)"))
     for D in DETS:
         t_us = D["absx"] / (D["v"] / 10.0)
         sig_diff_mm = np.sqrt(2 * D["DT"] * 1e-7 * t_us * 1e3)
@@ -223,20 +242,18 @@ def main():
             rm, rp = rings[key]
             sig_mod = np.hypot(sig_diff_mm, ind) / pitch
             c0, n0, _ = shares(sig_mod)
-            r_toy = n0 / (c0 + n0)
-            s_need = float(np.interp(rm, rvals, grid))
-            missing = np.sqrt(max((s_need * pitch) ** 2 - (sig_mod * pitch) ** 2, 0))
-            print("  %-6s %-6s %8.3f %8.3f %9.3f %9.3f %11.3f %11.2f" % (
-                D["name"], pl, rm, rp, sig_mod, r_toy, s_need, missing))
+            print("  %-6s %-6s %9.3f %9.3f %11.3f %11.3f   %s" % (
+                D["name"], pl, rm, rp, sig_mod, n0 / (c0 + n0),
+                "meas > pred" if rm > rp else "meas <= pred"))
     print()
-    print("  CAVEAT: sig_toy is the toy's r for the model's own sigma, and it does NOT")
-    print("  reproduce r_pred closely (0.164 vs 0.203 on PDVD U, 0.345 vs 0.255 on SBND U).")
-    print("  The toy is single-drift, normal-incidence and segment-free, so its r(sigma)")
-    print("  inversion is ORIENTATION ONLY -- it says the model is too narrow and roughly")
-    print("  by how much, and nothing finer.  The quantitative missing width comes from")
-    print("  d42_transverse_moments.py, which measures the per-point width of the measured")
-    print("  and predicted profiles about their OWN centroids on the same cells, so the bin")
-    print("  width, the track's extent within a slice and the drift spread all cancel.")
+    print("  r_meas > r_pred on EVERY plane of BOTH detectors: the model is relatively")
+    print("  too narrow everywhere, by most on PDVD U/V.  That is all this table claims.")
+    print("  NO width is inverted from it: r_toy does not reproduce r_pred (0.164 vs 0.203")
+    print("  on PDVD U, 0.345 vs 0.255 on SBND U) because the toy is single-drift,")
+    print("  normal-incidence and segment-free.  The quantitative missing width is")
+    print("  measured directly by d42_transverse_moments.py, which compares the per-point")
+    print("  width of the measured and predicted profiles about their OWN centroids on")
+    print("  the same cells, so bin width, track extent and drift spread all cancel.")
 
     print()
     print("=" * 78)
@@ -246,17 +263,26 @@ def main():
     print("      |wbin - w_center| <= nsigma * w_sigma, with nsigma = 4 at all nine call")
     print("      sites.  That is harmless while 4*sigma > 1 wire and amputates the first")
     print("      neighbour when it is not.")
-    print("  %-6s %-6s %9s %9s %11s %11s" % ("det", "plane", "sig_mod", "4*sigma", "r no cut", "r nsigma=4"))
+    print("      The 10 sub-points cal_gaus_integral_seg sums span prev->next, so a")
+    print("      PROLONGED segment (PDVD's 83 %) has them all at one wire and is the worst")
+    print("      case; an isochronous one spreads them over +-0.82 wires and is the best.")
+    print("  %-6s %-6s %9s %9s %13s %13s" % ("det", "plane", "sig_mod", "4*sigma",
+                                                  "loss prolonged", "loss isochron"))
     for D in DETS:
         t_us = D["absx"] / (D["v"] / 10.0)
         sig_diff_mm = np.sqrt(2 * D["DT"] * 1e-7 * t_us * 1e3)
         for pl, ind, pitch in (("U", D["ind_u"], D["pind"]), ("V", D["ind_v"], D["pind"]),
                                ("W", D["col"], D["pcol"])):
             sig_mod = np.hypot(sig_diff_mm, ind) / pitch
-            c0, n0, _ = shares(sig_mod)
-            c1, n1, _ = shares(sig_mod, nsigma=4.0)
-            print("  %-6s %-6s %9.3f %9.3f %11.3f %11.3f%s" % (
-                D["name"], pl, sig_mod, 4 * sig_mod, n0 / (c0 + n0), n1 / (c1 + n1),
+            adv = 6.3 / pitch                                   # wires advanced per point
+            # The cut's cost must be read at FIXED topology: spreading the sub-points
+            # also spreads the charge for a physical reason (the track's own extent),
+            # so r is not comparable between the two columns -- only each ratio is.
+            r = lambda a, ns: (lambda t: t[1] / (t[0] + t[1]))(shares_seg(sig_mod, a, nsigma=ns))
+            lp = 1 - r(0.0, 4.0) / r(0.0, None)
+            li = 1 - r(adv, 4.0) / r(adv, None)
+            print("  %-6s %-6s %9.3f %9.3f %12.1f %% %12.1f %%%s" % (
+                D["name"], pl, sig_mod, 4 * sig_mod, 100 * lp, 100 * li,
                 "   <-- cut bites" if 4 * sig_mod < 1.5 else ""))
     print("  (ii) all nine call sites pass flag = 0, the pure-Gaussian branch.  The")
     print("       flag = 1 'induction plane with bipolar response' and flag = 2 branches")
