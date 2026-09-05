@@ -1,0 +1,71 @@
+# doc pdvd/40 round 3 -- the retiler's bad-blob filter (ImproveCluster_1::remove_bad_blobs)
+# knobs bad_blob_max_run / bad_blob_report, PDVD 120-event manifest (stm/events.txt)
+# generated 2026-09-04 by hand from docs/nf_sp_img_clus/scripts/{run_d40r3_arms.sh,d40r3_hash_gate.py}
+#
+# HEADs before this round: toolkit 4c170fd3 (a448708f), wcp-porting-img 4c170fd3
+# cfg epoch: a448708f (end trim retired, 20:16) and c747b6b4 (unmerge_assoc default, 20:18) both
+#            PRECEDE every arm below; no doc-40 round-1/2 arm is a valid reference (they straddle them).
+#
+# pctrees: d39r2prov (21 events, doc 39 r2) + d41prov (99 events, this round, run_clus_evt.sh -save-pctree,
+#          save-assoc default ON), all wires=protodunevd-wires-larsoft-v7-uvwfit, perblob provenance verified 99/99.
+# all PR arms: -nu chain, PDVD_PR_TLA includes -S dl_weights='' (deterministic neutrino tail), PDVD_KEEP_CFG=1
+#
+# pins (/home/xqian/tmp/d41_libpin/<pin>/libWireCellClus.so, md5):
+#   ref   3bf0440ce2ac2f7331ded4b07acc12b2  = local/lib before this round (18:54, == /home/xqian/tmp/d39r2_libpin by cmp)
+#   new3  d71b5702a85d5f0074473cb8018077bd  = build 4 (any-blob vote core, census line)
+#   new5  (see below)                        = build 6 (+ cache refresh under the knob, BADBLOBRM/BADBLOBSKIP census)
+#   (new, new2, new4 = intermediate builds; arms on them are diagnostic only, see the doc)
+#
+# compiled-config gate (scratch cfg_gate_pdvd.sh): HEAD cfg vs working tree, knobs absent  -> ref==new True
+#   knobs on -> the only differing node is ImproveCluster_2 'pr', keys bad_blob_max_run=200, bad_blob_report=true
+#   SBND sbnd_xin/wct-pr-perevt.jsonnet, HEAD cfg vs working tree: byte-identical (267112 bytes)
+# doctests: build/clus/wcdoctest-clus 6 new cases (40 assertions) + full suite 22671 assertions PASS
+#
+# GATE 1: d41ref (pin ref, no knobs) vs d41base2 (pin new3, bad_blob_report=true), 120 events,
+#         mabc-pr.zip by member content + calib-pr-evt*.json with *_ms timers stripped:
+#         PASS 120  FAIL 0  MISSING 0       => new binary OFF path == old binary; report knob is log-only
+# (first attempt d41base, pin new, FAILED 120/120: the pure core mis-read the historical loop as a
+#  first-blob vote; the legacy loop skips only components already found good, i.e. ANY-blob vote.
+#  Corrected in build 4; the failing arm is kept as the record of the catch.)
+#   new6  84a93f34c9d85440c99833eb86f3928f  = build 7, the FINAL pin of this round (all d41fix* graded arms, d41rep)
+#   new5  4ca428061a13ace387d973400c96b0d9  = build 6 (d41fix20b, the single-event debug arm; same code as new6 minus a census line)
+#
+# THRESHOLD SCAN, 21 events (d39r2prov set), pin new6, knob OFF (d41base2) vs d41fix10/20/30
+#   (d40_steiner_void_xdet.py; frame control terminals median 0.252 cm on every arm)
+#             steiner pts   >3cm            >10cm          >30cm   STM set vs OFF   TGM/FC   wall(21)
+#   OFF       1322557       24393 (1.84%)   10255 (0.78%)  3787    115 ids          -        754 s
+#   10 cm     1289110        4151 (0.32%)     226 (0.02%)     3    +1 -0            same     811 s
+#   20 cm     1295872        6425 (0.50%)     269 (0.02%)     3    +1 -0            same     789 s
+#   30 cm     1298573        8149 (0.63%)     581 (0.04%)     3    +1 -0            same     811 s
+#   live 'clustering' layer identical in all arms (21/21, points + cluster-id multiset) => by-id verdict diff valid
+#   the +1 STM is 039252/10 cluster 70 at every value (doc sec 15.7)
+#   chosen value for the graded 120-event arm: 20 cm (doc sec 15.6)
+#
+# SINGLE-EVENT DEBUG, 039252/2 (pctree d39r2prov):
+#   d41dbg  (pin new)   report on            -- census, wrong cluster-id key (ident), superseded
+#   d41dbg2 (pin new2)  report on            -- census, cid+ident, raw-frame run centers
+#   d41dbg3 (pin new2)  report on, TRACE     -- per-blob dump (BADBLOBPT), first-blob-vote core (WRONG, see GATE 1 note)
+#   d41dbg4 (pin new3)  report on, TRACE     -- per-blob dump, any-blob core
+#   d41fix20 (pin new3) max_run=20           -- run bound WITHOUT the cache refresh: clusters 119/84 bit-identical to OFF
+#   d41fix1  (pin new4) max_run=1            -- BADBLOBRM census: npts unchanged by removal => the stale ClusterCache
+#   d41fix20b (pin new5) max_run=20          -- cache refresh + bound: P1 -> 25.19 cm, P2 -> 17.58 cm, cl.119 fabricated 698 -> 7, event >30cm 484 -> 0
+#
+# GATE 2: d41base2 (pin new3, report on) vs d41rep (pin new6 = FINAL, report on), 120 events, same hash rule:
+#         PASS 120  FAIL 0  MISSING 0       => final binary's default/report path == build 4's; noise floor 0
+#
+# GRADED ARM: d41fix20x (pin new6, -S retile_bad_blob_max_run=20 -S retile_bad_blob_report=true), 120 events, 120/120 ok
+#   fabricated (d40_steiner_void_xdet.py, 119 events with a calib dump):
+#                       steiner pts     >3cm              >10cm            >30cm
+#     OFF  d41base2     7164712         123140 (1.72%)    38652 (0.54%)    8982
+#     ON   d41fix20x    6999099         41185 (0.59%)     2040 (0.03%)     24
+#   verdict sets (d40r3_grade.py; live clustering layer identical 119/120 -- 039349_7 differs because ON gains
+#   STM on cluster 32 and protect_bundle then splits one more bundle):
+#     TGM 2586 -> 2586 (0/0)   STM 583 -> 582 (only-OFF 7 / only-ON 6)   FC 2462 -> 2462 (0/0)
+#     STM movers: gained 039252_10:70 039252_14:84 039253_8:98 039349_26:45 039349_57:18 039349_79:71 (+039349_7:32)
+#                 lost   039252_9:104 039253_5:39 039349_23:59 039349_29:53 039349_48:15 039349_60:46 039349_69:26
+#     status codes OFF->ON: gained 3->0 x4, 2->0 x1; lost 0->3 x5, 0->2 x2, 0->4 x1  (doc sec 15.8)
+#   wall sum 4071 s -> 3619 s; peak RSS 3.20 -> 3.30 GB (shared box, treat as noise)
+#   039252/2 in this arm: P1 -> 25.19 cm, P2 -> 17.58 cm, cl.119 fabricated 698 -> 7, event >30cm 484 -> 0, TGM/STM/FC identical
+#
+# outputs: /home/xqian/tmp/d41_{grade_120,xdet_120,cases_120,cases_120_on,cases_base2,probe_120,gate_rep}.txt (scratch copies)
+# STATUS: knob ships OFF.  PDVD flip (retile_bad_blob_max_run=20 in pdvd/wct-pr-perevt.jsonnet) = owner decision, doc sec 15.9.

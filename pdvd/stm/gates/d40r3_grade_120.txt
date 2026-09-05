@@ -1,0 +1,22 @@
+== d41base2 vs d41fix20x: 120 events
+   live clustering layer identical (points + cluster-id multiset): 119/120  MISMATCH 039349_7
+   by-id verdict comparison NOT VALID for the mismatching events; they are excluded below
+   TGM tagged ids: base 2586  arm 2586   only-base   0  only-arm   0
+   STM tagged ids: base  583  arm  582   only-base   7  only-arm   6
+   FC  tagged ids: base 2462  arm 2462   only-base   0  only-arm   0
+   events with any verdict-set change: 13
+      039252_10 STM -[] +[70]
+      039252_14 STM -[] +[84]
+      039252_9 STM -[104] +[]
+      039253_5 STM -[39] +[]
+      039253_8 STM -[] +[98]
+      039349_23 STM -[59] +[]
+      039349_26 STM -[] +[45]
+      039349_29 STM -[53] +[]
+      039349_48 STM -[15] +[]
+      039349_57 STM -[] +[18]
+      039349_60 STM -[46] +[]
+      039349_69 STM -[26] +[]
+      039349_79 STM -[] +[71]
+   steiner points (calib): base 7100063  arm 6935383  (-2.3%)
+   wall sum: base 4071 s  arm 3619 s ;  peak RSS max: base 3.20 GB  arm 3.30 GB

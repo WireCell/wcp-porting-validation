@@ -96,6 +96,13 @@ function(
     // leave the flagship cluster 34 bit-identical, so the sync costs nothing
     // here and removes a real inconsistency.
     retile_steiner_terminal_charge = steiner_terminal_charge,
+    // doc pdvd/40 round 3: ImproveCluster_1::remove_bad_blobs knobs.  A run of
+    // retiled blobs with no original-blob support longer than this (cm) is
+    // removed; 0 / null = the historical component vote (C++ default).  Arm:
+    // PDVD_PR_TLA="-S retile_bad_blob_max_run=20 -S retile_bad_blob_report=true".
+    // Held OFF until the doc 40 round-3 120-event A/B is adjudicated.
+    retile_bad_blob_max_run = null,
+    retile_bad_blob_report = false,
     // Readout window in ticks: clamps T_bad_ch time ranges in the Magnify /
     // PrDisplay writers (SBND 3427; PDVD 10000 = 5 ms at 0.5 us).
     readout_window_ticks = 10000,
@@ -3815,6 +3822,8 @@ function(
                              steiner_terminal_charge=steiner_terminal_charge,
                              retile_wrapped_channel_activity=retile_wrapped_channel_activity,
                              retile_steiner_terminal_charge=retile_steiner_terminal_charge,
+                             retile_bad_blob_max_run=retile_bad_blob_max_run,
+                             retile_bad_blob_report=retile_bad_blob_report,
                              stm_anode_dist_fix=stm_anode_dist_fix,
                              stm_second_track_guard=stm_second_track_guard,
                              stm_deficit_guard=stm_deficit_guard,

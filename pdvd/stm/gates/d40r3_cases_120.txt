@@ -1,0 +1,41 @@
+== 119 events, 7164712 steiner points, 1527 3D groups >10 cm, 41261 BADBLOB runs
+   sentinel-T0 clusters excluded from the 3D census (doc 40 sec 8): 0 clusters, 0 steiner points
+   legacy vote: 3698488 blobs removed in 14809 (cluster,apa,face) calls of 80917; run bound would remove 1085409
+   class census (groups / steiner points):  a single-component 49 / 3338   b mixed-component 1065 / 65842   c wire-supported 373 / 20244   d no-run 40 / 1069
+   worst 30 groups:
+   event                 clus cls  span_cm   npts center (x,y,z) cm            blob-space run
+   039349_52_d41base2      58  b     244.4    798 ( -102.7, -235.9,  267.9) run nb=1376 nsl=927 span=274.5 dyz=3.5; ident 58 apa5 f1 ncomp=25 nsup=276/3539 legacy_rm=573
+   039253_8_d41base2       99  b     242.2   1362 (  104.7,  -37.0,  243.4) run nb=2770 nsl=1038 span=307.5 dyz=1.3; ident 99 apa1 f0 ncomp=9 nsup=160/3369 legacy_rm=423
+   039349_22_d41base2      67  b     230.7   2432 ( -111.8,  199.2,  112.1) run nb=904 nsl=899 span=266.0 dyz=1.6; ident 67 apa2 f1 ncomp=8 nsup=257/1169 legacy_rm=7
+   039349_50_d41base2      67  b     216.8    702 (   82.5,   28.8,  243.1) run nb=904 nsl=806 span=238.6 dyz=1.5; ident 67 apa3 f0 ncomp=25 nsup=463/2403 legacy_rm=236
+   039349_23_d41base2      62  c     211.3    715 (   85.0,  272.1,  105.9) run nb=2 nsl=2 span=0.3 dyz=1.7; ident 62 apa2 f1 ncomp=6 nsup=306/319 legacy_rm=10
+   039349_23_d41base2      62  b     204.2    685 (   88.7,  267.7,  110.1) run nb=2674 nsl=971 span=288.0 dyz=1.7; ident 62 apa2 f1 ncomp=29 nsup=303/3748 legacy_rm=620
+   039349_63_d41base2      65  b     203.2    347 (   71.4,   69.9,  155.7) run nb=762 nsl=747 span=221.6 dyz=1.2; ident 65 apa3 f0 ncomp=11 nsup=529/2071 legacy_rm=131
+   039349_47_d41base2      76  b     201.0    624 (   81.6,  273.0,  172.4) run nb=1789 nsl=905 span=268.1 dyz=0.8; ident 76 apa3 f1 ncomp=13 nsup=301/2468 legacy_rm=367
+   039349_12_d41base2      57  b     187.6    615 (  -83.8, -270.8,  250.2) run nb=1627 nsl=903 span=267.3 dyz=0.7; ident 57 apa5 f1 ncomp=27 nsup=272/1993 legacy_rm=72
+   039349_63_d41base2      65  b     175.4    301 (   85.2,   76.6,  155.1) run nb=635 nsl=634 span=187.5 dyz=2.7; ident 65 apa3 f0 ncomp=11 nsup=529/2071 legacy_rm=131
+   039253_5_d41base2      116  b     173.6   1157 (  -76.1, -252.3,  171.5) run nb=2148 nsl=1012 span=299.6 dyz=0.3; ident 116 apa5 f1 ncomp=11 nsup=158/2739 legacy_rm=419
+   039253_1_d41base2      112  b     173.0    450 (   97.1, -232.9,   97.8) run nb=1922 nsl=1053 span=311.8 dyz=1.0; ident 112 apa0 f1 ncomp=5 nsup=116/2106 legacy_rm=61
+   039253_5_d41base2      121  b     150.1    609 (   74.0,  135.7,  265.7) run nb=2054 nsl=678 span=201.2 dyz=1.7; ident 121 apa3 f0 ncomp=7 nsup=111/2303 legacy_rm=114
+   039349_22_d41base2      68  b     150.0    867 (   55.3,  173.6,  166.6) run nb=1659 nsl=1044 span=309.1 dyz=2.7; ident 68 apa3 f1 ncomp=5 nsup=103/1785 legacy_rm=11
+   039252_8_d41base2       87  c     144.7    777 (   23.0,   81.9,   86.4) run nb=68 nsl=12 span=34.9 dyz=0.9; ident 88 apa6 f0 ncomp=3798 nsup=8798/28609 legacy_rm=12251
+   039252_2_d41base2      119  b     137.1    461 (   56.2,   78.0,  202.5) run nb=1372 nsl=675 span=199.9 dyz=3.0; ident 119 apa3 f0 ncomp=8 nsup=366/1905 legacy_rm=128
+   039349_23_d41base2      59  b     132.4    441 (  381.6,   55.2,  277.8) run nb=454 nsl=454 span=136.1 dyz=0.9; ident 59 apa7 f0 ncomp=32 nsup=484/1057 legacy_rm=87
+   039252_8_d41base2       91  b     130.0    880 (  191.9,  111.8,   79.7) run nb=11210 nsl=119 span=186.2 dyz=9.6; ident 87 apa6 f0 ncomp=5600 nsup=1472/37593 legacy_rm=23826
+   039349_77_d41base2     270  c     127.0    195 (   35.5,  271.5,   37.8) run nb=1 nsl=1 span=0.0 dyz=2.7; ident 53 apa6 f1 ncomp=23 nsup=764/832 legacy_rm=67
+   039349_72_d41base2      62  b     126.8    328 (   28.3, -290.6,  134.5) run nb=985 nsl=564 span=167.3 dyz=1.5; ident 62 apa0 f1 ncomp=24 nsup=646/2013 legacy_rm=355
+   039252_12_d41base2     402  a     126.5    214 ( -100.8, -153.0,  162.8) run nb=518 nsl=496 span=147.8 dyz=0.9; ident 402 apa1 f0 ncomp=1 nsup=12/530 legacy_rm=0
+   039252_2_d41base2      119  b     125.6    235 (   61.8,   76.2,  208.0) run nb=645 nsl=643 span=190.2 dyz=1.6; ident 119 apa7 f0 ncomp=12 nsup=492/1215 legacy_rm=39
+   039252_10_d41base2     102  b     123.4    618 (  -55.8,  210.3,  214.3) run nb=1307 nsl=753 span=223.1 dyz=0.6; ident 102 apa7 f1 ncomp=13 nsup=170/1798 legacy_rm=312
+   039349_16_d41base2     230  b     119.2    168 (  122.5,  134.1,  219.4) run nb=366 nsl=310 span=116.1 dyz=3.7; ident 230 apa7 f0 ncomp=7 nsup=12/452 legacy_rm=12
+   039349_28_d41base2     197  b     118.9    298 (  287.2,  208.7,   91.4) run nb=415 nsl=369 span=123.4 dyz=1.5; ident 197 apa6 f1 ncomp=3 nsup=12/430 legacy_rm=3
+   039349_70_d41base2      65  b     118.0    988 (  -36.9, -163.5,   39.4) run nb=1960 nsl=898 span=265.9 dyz=0.1; ident 65 apa4 f0 ncomp=8 nsup=114/2134 legacy_rm=10
+   039349_74_d41base2      70  b     117.8    474 (   53.5,  257.1,   89.3) run nb=1566 nsl=878 span=260.2 dyz=0.7; ident 70 apa2 f1 ncomp=13 nsup=379/2237 legacy_rm=290
+   039253_1_d41base2      102  c     117.2    200 (  106.3,  138.5,    5.7) run nb=1 nsl=1 span=0.0 dyz=2.4; ident 406 apa6 f0 ncomp=1 nsup=8/9 legacy_rm=0
+   039253_2_d41base2      209  b     116.6     58 (  251.3,   59.2,   22.4) run nb=138 nsl=110 span=120.7 dyz=0.7; ident 209 apa6 f0 ncomp=19 nsup=14/217 legacy_rm=62
+   039252_7_d41base2      328  b     113.1    190 (   91.5,  128.7,   66.9) run nb=400 nsl=386 span=117.3 dyz=0.3; ident 328 apa6 f0 ncomp=35 nsup=16/586 legacy_rm=170
+   3D group spans   : p50=1.4 p75=5.3 p90=13.3 p95=22.3 p99=58.7 max=244.4 n=11082
+   blob-space run spans (BADBLOB, every reported run): p50=3.8 p75=9.0 p90=21.5 p95=37.3 p99=162.0 max=633.8 n=41261
+   groups >10 cm: 3D  1527 ( 13.8%)   blob-space  9258 ( 22.4%)
+   groups >20 cm: 3D   649 (  5.9%)   blob-space  4516 ( 10.9%)
+   groups >30 cm: 3D   355 (  3.2%)   blob-space  2720 (  6.6%)

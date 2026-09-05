@@ -1,7 +1,9 @@
 # doc pdvd/40 — Steiner-graph points where there is no 3D image
 
-**Status.** Diagnosis only. **No code and no config is changed by this
-document**; the production PDVD chain is exactly what it was. Two named
+**Status.** Rounds 1–2 (§1–§13) are diagnosis only. **Round 3 (§15) ships
+the fix** behind two default-OFF knobs on the retiler (`bad_blob_max_run`,
+`bad_blob_report`); with both absent every job config compiles and runs
+byte-identically (§15.5). Rounds 1–2 changed no code and no config; the production PDVD chain is exactly what it was. Two named
 points are traced to two different causes, one of which is a knob the owner
 flipped ON on 2026-09-04 and which this document does **not** flip back —
 §10 states why that decision is not free and belongs to the owner.
@@ -551,7 +553,9 @@ events is a thin basis for it.
 
 §10 stands — do not flip `ctpc_aniso_metric`. Ranked, with what supports each:
 
-1. **Bound the unsupported run inside `remove_bad_blobs`** (§12). The filter,
+1. **Bound the unsupported run inside `remove_bad_blobs`** (§12). **DONE in
+   round 3 (§15)** — and the measurement it was blocked on found a third
+   hole, a stale cache, that mattered more than either of the two named here. The filter,
    the support test and the call site all already exist; this changes a
    component-level vote into a per-blob one with a run-length bound. It is the
    only proposal that attacks the metric-independent majority of the defect,
@@ -587,3 +591,365 @@ events is a thin basis for it.
   `scripts/d36_ctpc_caller_census.py`.
 * `34_ctpc-anisotropic-distance-metric.md` §2 — the lattice table that makes
   the metric the identity on SBND.
+
+## 15. Round 3 — the fix (owner request, 2026-09-04)
+
+> Can you provide a fix to improve the remove_bad_blobs filter function that
+> leads to these ghost connections? Please design and use this event to debug.
+> Please also run the 120 events and focus on this kind of similar issues.
+
+**Short answer.** Two default-OFF knobs on the retiler
+(`ImproveCluster_1`/`_2`, shared with SBND): `bad_blob_max_run` (a length; a
+connected run of retiled blobs with no original-blob support longer than this
+is removed whole) and `bad_blob_report` (a log-only census). On 039252/2 at
+20 cm both named points are gone — the nearest surviving Steiner point to P1
+is 25.2 cm away and to P2 17.6 cm, i.e. exactly the live charge doc 40 §1
+measured them against — cluster 119's fabricated points go 698 → 7, and the
+event has no Steiner point beyond 30 cm of live charge (484 → 0). The
+instrumentation the fix was blocked on (§12) found that **neither of the two
+holes named in §12 is the main one**: the filter never ran at all on the face
+where the column lives, because the shadow cluster's cache goes stale between
+faces (§15.2). The 120-event result, the threshold scan and the verdict-set
+check are in §15.6–§15.8; the knobs ship OFF and the PDVD flip is the owner's
+decision (§15.9).
+
+### 15.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+# toolkit HEAD before this round a448708f; wcp-porting-img 4c170fd3.  Pins in
+# /home/xqian/tmp/d41_libpin/{ref,new3,new6}/ (md5 in stm/gates/d40r3_bad_blob_gate.txt).
+# Work tags of this round are d41*; the docs/scripts/gate carry the d40r3 prefix
+# (a peer opened doc pdvd/41 the same evening).
+
+# 99 provenance pctrees for the manifest events the doc-39 round-2 set lacked:
+for e in <run idx from stm/events.txt without work/<run6>_<idx>_d39r2prov>; do
+  ./scripts/stage_ql_tag.sh $run $idx d41prov
+  PDVD_LIGHT_SUFFIX=_keep PDVD_MAX_JOBS=8 ./run_clus_evt.sh -save-pctree -s d41prov $run all
+done
+# the arms (each: -nu chain, -S dl_weights='', one pin, fresh tags):
+ARM=d41ref   PIN=ref  JOBS=8 ./docs/nf_sp_img_clus/scripts/run_d40r3_arms.sh
+ARM=d41base2 PIN=new3 JOBS=8 EXTRA="-S retile_bad_blob_report=true" ./docs/nf_sp_img_clus/scripts/run_d40r3_arms.sh
+ARM=d41rep   PIN=new6 JOBS=3 EXTRA="-S retile_bad_blob_report=true" ./docs/nf_sp_img_clus/scripts/run_d40r3_arms.sh
+ARM=d41fixNN PIN=new6 EVENTS=<21-event list> EXTRA="-S retile_bad_blob_max_run=NN -S retile_bad_blob_report=true" ...   # NN = 10, 20, 30
+ARM=d41fix20x PIN=new6 JOBS=8 EXTRA="-S retile_bad_blob_max_run=20 -S retile_bad_blob_report=true" ...  # the graded 120
+# gates and censuses:
+docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41ref d41base2          # OFF path + report neutrality
+docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41base2 d41rep          # final binary, noise floor
+docs/nf_sp_img_clus/scripts/d40r3_bad_blob_cases.py --runs-from d41fix20x work/*_d41base2
+docs/nf_sp_img_clus/scripts/d40_steiner_void_xdet.py "PDVD:work/*_d41base2" "PDVD:work/*_d41fix20x"
+docs/nf_sp_img_clus/scripts/d40r3_grade.py d41base2 d41fix20x
+# the single-event debug loop (trace level dumps one line per retiled blob):
+./scripts/stage_pr_tag.sh 39252 2 d41dbg4 d39r2prov
+PDVD_LOG_LEVEL=trace PDVD_PR_TLA="-S retile_bad_blob_report=true -S dl_weights=''" ./run_pr_evt.sh -nu -s d41dbg4 39252 2
+```
+
+### 15.2 What the instrumentation found: a third hole, and it is the one that matters
+
+`bad_blob_report=true` makes `remove_bad_blobs` print one `BADBLOB` line per
+(cluster, apa, face) call — blob counts, component counts, per-blob support,
+what the legacy vote removes, and the connected **runs** of unsupported blobs
+with their span — and, at trace level, one `BADBLOBPT` line per retiled blob.
+Read on 039252/2 (arms `d41dbg2`/`d41dbg4`), three things came out, in the
+order they were understood:
+
+1. **The log's cluster ids are not the Bee/calib ids.** `Cluster::ident()`
+   (= `get_cluster_id()`) at retile time is not the `cluster_id` the dump
+   writes at the end of the chain: for this event Bee cluster 119 is retile
+   ident 120, Bee 84 is a union of several retile idents (104, 108, 325, …).
+   Ids drift as later stages split and re-home clusters. Every join in this
+   round is therefore **geometric** — runs and 3D groups are matched on (y, z),
+   the coordinate the raw drift frame of the blob centers shares with the
+   corrected frame of the dump. The census script says so in its header so it
+   is not re-derived.
+2. **The historical vote is an any-blob vote, not a first-blob vote.** The loop
+   at `improvecluster_1.cxx:710-765` does `if (good.count(comp)) continue;` —
+   it skips only components *already found good*, so a component's blobs are
+   tested in order until one is supported. §12's hole (b) as written ("one
+   representative blob speaks for the component") is not quite what the code
+   does; the real shape of the hole is that a fabricated column *attached to a
+   real track* sits in a component that has supported blobs and is kept
+   whole. My first pure reimplementation read the loop as first-blob and the
+   120-event hash gate caught it (arm `d41base`, 120/120 FAIL, kept as the
+   record); the corrected core (`d41base2`) is identical to the old binary on
+   all 120 events (§15.5).
+3. **The filter never ran on the column's face.** The `BADBLOBRM` census
+   (points before/after removal) and the missing second-face `BADBLOB` lines
+   showed that `Cluster::npoints()` and `time_blob_map()` on the shadow cluster
+   do not change when blobs are inserted or removed. The shadow cluster's
+   `ClusterCache` (`Mixins::Cached`) is filled on first use and **nothing
+   invalidates it on child insert/remove** — `Cluster::on_insert/on_remove`
+   clear only the `sv3d` memo. The caller (`improvecluster_2.cxx:195-274`)
+   inserts one face's blobs, filters, removes, inserts the next face's blobs,
+   filters again — and from the second face on, `time_blob_map()` has no
+   entry for the face being filtered, `all_new_blobs` is empty, and the
+   function returns nothing. On 039252/2, 80 of 493 retiled clusters span more
+   than one (apa, face) and **not one of them has a second-face `BADBLOB`
+   line in the knob-OFF arm**. Cluster 119 (retile ident 120) spans apa 3 face 0
+   and apa 7 face 0; the fabricated column is a 1047-blob / 1035-blob pair of
+   runs along the drift direction (one blob per slice, ~310 cm in raw x), one
+   on each face, and the apa-7 half was never examined. This is the "apa 7
+   face 0 — removed 0" of §12, now explained: not a weak vote but a filter
+   that did not run.
+
+The stale cache is a pre-existing defect of the historical path (it is present
+in `ImproveCluster_1::mutate` too, same loop shape). It is **fixed only under
+the knob** (`if (m_bad_blob_max_run > 0) shad_cluster.invalidate_cache();` at
+the top of `remove_bad_blobs`), because fixing it unconditionally changes the
+legacy output for every multi-face cluster — §5.1 stop-and-ask territory,
+reported here rather than done. Under the knob the second faces are filtered
+by the same legacy vote plus the run bound.
+
+### 15.3 The fix, as shipped
+
+`clus/inc/WireCellClus/BadBlobRuns.h` holds the decision core as a pure
+function over indices (components, the historical any-blob vote, runs of
+unsupported blobs inside kept components, bounding-box span, removal list);
+`remove_bad_blobs_runs` in `improvecluster_1.cxx` builds its inputs from the
+two blob maps and is the only path taken when either knob is set. Semantics:
+
+* adjacency = the historical adjacent-slice `overlap_fast(·,1)` **plus
+  same-slice overlap**, so a column at fixed drift time (many blobs in one
+  slice) is one run rather than N singletons;
+* per-blob support = the historical ±1-slice overlap with an *original* blob,
+  applied to every blob;
+* component vote = the historical any-blob vote, unchanged (asserted equal to
+  a literal transcription in the doctest);
+* run bound = connected pieces of unsupported blobs inside kept components; a
+  run whose bounding-box diagonal of blob centers exceeds `bad_blob_max_run`
+  is removed whole. Short unsupported fills — the dead-region bridging the
+  retile exists for — survive;
+* `bad_blob_max_run <= 0` (the C++ default) takes the historical code path
+  textually unchanged; `bad_blob_report` alone routes through the new function
+  but returns exactly the legacy vote (gated, §15.5).
+
+This is a **deliberate divergence from the prototype** (M15):
+`Improve_PR3DCluster_2` (`ImprovePR3DCluster.cxx:515-620`) has the same
+`num > 1` guard and the same component vote, and the toolkit port was
+faithful. The divergence is licensed by this request and confined to the
+knob-ON path.
+
+Config: `cm.improve_cluster_2(bad_blob_max_run=null, bad_blob_report=false)`
+in `cfg/pgrapher/common/clus.jsonnet` with the key-suppression idiom;
+`protodunevd/pr.jsonnet` params `retile_bad_blob_max_run` (cm) /
+`retile_bad_blob_report`; `pdvd/wct-pr-perevt.jsonnet` TLAs of the same names
+(`PDVD_PR_TLA="-S retile_bad_blob_max_run=20 -S retile_bad_blob_report=true"`).
+SBND's job config compiles byte-identically (§15.5); no SBND file is touched.
+
+Tests: `clus/test/doctest_bad_blob_runs.cxx` — the 30 cm middle removed at
+20 and kept at 40; a detached unsupported component removed at any bound;
+bound 0 equals the legacy vote; the any-blob vote (a component whose only
+supported blob is its last is kept); same-slice adjacency joining a
+fixed-time column; longest-first reporting. `wcdoctest-clus`: 22 671
+assertions pass.
+
+### 15.4 039252/2 before and after
+
+Same pctree (`d39r2prov`), same chain (`-nu`, `dl_weights=''`), knob-OFF arm
+`d41base2` vs knob-ON `d41fix20b` (20 cm, pin `new5`, the same code as the
+final pin `new6` except a census line):
+
+| | knob OFF | 20 cm bound |
+|---|---:|---:|
+| nearest Steiner point to P1 (39.02, 75.74, 201.84) | 0.01 cm | **25.19 cm** |
+| nearest Steiner point to P2 (275.46, 12.14, 8.80) | 0.01 cm | **17.58 cm** |
+| cluster 119: Steiner points / fabricated > 3 / > 10 / > 30 cm | 2808 / 698 / 618 / 401 | 2112 / **7 / 0 / 0** |
+| cluster 84: Steiner points / fabricated > 3 / > 10 / > 30 cm | 40 382 / 766 / 191 / 0 | 36 958 / 196 / 20 / 0 |
+| event: fabricated > 3 / > 10 / > 30 cm | 3574 (2.52 %) / 1516 / 484 | **1150 (0.85 %) / 173 / 0** |
+| retiled blobs removed (all calls) | 31 600 (legacy vote) | 57 742 |
+| TGM / STM / FC tagged sets | 39 / 5 / 33 | identical |
+
+The 25.2 cm and 17.6 cm are the distances §1 measured from P1 and P2 to the
+nearest *live* point: what remains nearest is real charge. The points that
+survive beyond 3 cm in cluster 84 are short fills (the largest surviving group
+is 20 points beyond 10 cm; nothing beyond 30 cm in the event).
+
+A knob-ON arm at 20 cm **without** the cache refresh (`d41fix20`, pin `new3`)
+left both clusters bit-identical to knob-OFF while removing 13 220 blobs
+elsewhere — the run bound alone cannot reach a face the filter never visits.
+That arm is the proof that §15.2 item 3 is the operative defect for P1 and P2,
+not a side finding.
+
+### 15.5 Gates
+
+Everything below is in `stm/gates/d40r3_bad_blob_gate.txt` with the pin
+checksums.
+
+* **Compiled config.** `wct-pr-perevt.jsonnet` at HEAD vs the working tree
+  with both knobs absent: identical JSON. Knobs on: the only differing node is
+  `ImproveCluster_2:pr`, keys `bad_blob_max_run` and `bad_blob_report`. SBND's
+  `sbnd_xin/wct-pr-perevt.jsonnet` compiles byte-identically against HEAD cfg
+  and the working tree (267 112 bytes).
+* **OFF path and report neutrality, 120 events.** `d41ref` (pre-round binary,
+  no knobs) vs `d41base2` (new binary, `bad_blob_report=true`), `mabc-pr.zip`
+  by member content plus the calib dump with the `*_ms` timers stripped:
+  **PASS 120 / FAIL 0**. One gate proves both that the new code's default path
+  is the old code and that the census knob touches only the log.
+* **Final binary, noise floor, 120 events.** `d41base2` (pin `new3`) vs
+  `d41rep` (pin `new6`, same knobs): **PASS 120 / FAIL 0** — the final binary's default path is build 4's, and the run-to-run noise floor of this chain is zero.
+* **Doctests.** `wcdoctest-clus` 22 671 assertions, six new cases.
+* **The gate that failed.** The first census arm (`d41base`, pin `new`) failed
+  120/120 against `d41ref` because the pure core mis-read the historical loop
+  as a first-blob vote (§15.2 item 2). A reading of a loop is a hypothesis;
+  the hash gate is the test. Kept in the gate file.
+
+### 15.6 Threshold scan, 21 events
+
+The 21 doc-39 round-2 events (`d39r2prov` pctrees), knob OFF vs 10 / 20 /
+30 cm, same pin `new6`, same chain. "Fabricated" as everywhere in this doc: a
+Steiner point with no live 3D point of any cluster in the event within N cm
+(`d40_steiner_void_xdet.py`, frame control terminals median 0.252 cm on every
+arm):
+
+| 21 events, 5 503 clusters, | OFF | 10 cm | 20 cm | 30 cm |
+|---|---:|---:|---:|---:|
+| Steiner points | 1 322 557 | 1 289 110 | 1 295 872 | 1 298 573 |
+| > 3 cm from live | 24 393 (1.84 %) | 4 151 (0.32 %) | 6 425 (0.50 %) | 8 149 (0.63 %) |
+| > 10 cm | 10 255 (0.78 %) | 226 (0.02 %) | 269 (0.02 %) | 581 (0.04 %) |
+| > 30 cm | 3 787 (0.29 %) | 3 | 3 | 3 |
+| 1-component clusters, > 10 cm | 89 | 0 | 0 | 0 |
+| TGM / FC tagged sets vs OFF | — | identical | identical | identical |
+| STM tagged set vs OFF | 115 ids | +1, −0 | +1, −0 | +1, −0 |
+| wall, sum of 21 | 754 s | 811 s | 789 s | 811 s |
+
+Reading it:
+
+* the bound removes **97–98 % of the points beyond 10 cm at any of the three
+  values**, and everything beyond 30 cm except three points. The choice of
+  value trades the 3–10 cm band: 10 cm removes 2 300 more points there than
+  20 cm does. Those are exactly the short unsupported fills §12.1 argued the
+  retile exists for (dead-region bridging), and this census cannot tell a
+  legitimate fill from a short ghost — "unsupported" is the definition of a
+  fill. So the value is set by §12.1's argument, not by this table: **20 cm**,
+  above every SBND group ever measured (max 19.2 cm, §11.2) and below PDVD's
+  p95 (22.3 cm).
+* the live `clustering` layer is identical in all arms (asserted, 21/21), so
+  the id-keyed verdict comparison is valid; the taggers move by **one STM tag
+  on one event** (039252/10 cluster 70, gained, same at all three values —
+  §15.7), TGM and FC not at all;
+* the cost is +5–8 % wall on the PR job. Two sources: the second faces are now
+  actually filtered (they were skipped before), and the same-slice adjacency
+  is O(n²) per slice. Peak RSS unchanged (3.0 GB).
+
+### 15.7 The one verdict that moves: 039252/10 cluster 70 gains STM
+
+Same at 10, 20 and 30 cm, so it is the cache refresh (second face now
+filtered) rather than the bound value. Cluster 70 is a 62 cm, 214-live-point
+track lying almost in a drift plane (live x 261.8–267.1 cm). Knob OFF its
+Steiner graph carried a fringe of points 2–10 cm from the charge and the STM
+fit **failed** — `persist_stm_fit: pass=0 status=2 kink=30 exit_L=19.9
+left_L=108.5 npts=200`. Knob ON the graph is re-drawn (107 of 141 Steiner
+points replaced; 132 remain), the fit runs the length of the track —
+`status=0 kink=226 exit_L=144.4 left_L=0.0 npts=226` — and the verdict passes
+the cathode and readout-edge guards: `STM=1`. Reported, not adjudicated: it
+reads as a fit that was being spoiled by ghost points, but one event is one
+event. TGM and FC sets do not move on any of the 21 events.
+
+### 15.8 The 120-event manifest: cases, the fix, and what it costs
+
+**The cases.** With the knob-ON arm's run reports joined to the knob-OFF arm's
+3D groups (`d40r3_bad_blob_cases.py --runs-from d41fix20x`; the OFF arm cannot
+report its own hidden faces), the 1 527 Steiner groups more than 10 cm from
+live charge on the 119 events with a calib dump classify as:
+
+| class | groups | Steiner points | meaning |
+|---|---:|---:|---|
+| (b) mixed component | 1 065 | 65 842 | the run sits in a component that also holds real blobs — attached to a track, inherits its vote |
+| (c) wire-supported | 373 | 20 244 | the group's blobs overlap an *original* blob in wire space within ±1 slice, yet the sampled 3D points are far — the per-blob support test itself is loose here |
+| (a) single component | 49 | 3 338 | the retile of that face is one component, never voted on |
+| (d) no run within 15 cm | 40 | 1 069 | the census's own blind spot |
+
+Read against the OFF arm's *own* run reports (first faces only: b 772 / c 475
+/ d 235), about 300 of the (b) groups and most of the (d) groups were on faces
+the filter never visited. The worst cases are all of one shape: a single run
+of one blob per slice along the drift direction, 250–310 cm long, attached to
+a cathode-crossing muon (039349/52 cluster 58, 039253/8 cluster 99, 039349/22
+cluster 67, …; table in `/home/xqian/tmp/d41_cases_120.txt`, reproducible from
+the Repro block). That is the same object as §5's column, and it is what
+`hack_activity_improved` draws when the whole-cluster shortest path crosses
+between drift volumes.
+
+**The fix, 120 events, 20 cm** (`d41base2` vs `d41fix20x`, same pctrees, same
+pin, same chain; `d40_steiner_void_xdet.py`):
+
+| 119 events, 30 109 clusters with a `steiner_pc` | knob OFF | 20 cm bound |
+|---|---:|---:|
+| Steiner points | 7 164 712 | 6 999 099 (−2.3 %) |
+| > 3 cm from live | 123 140 (1.72 %) | **41 185 (0.59 %)** |
+| > 10 cm | 38 652 (0.54 %) | **2 040 (0.03 %)** |
+| > 30 cm | 8 982 (0.13 %) | **24** |
+| 1-component clusters, > 10 cm | 220 | 9 |
+| ≥ 5-component clusters, > 10 cm | 9 975 (0.95 %) | 1 066 (0.11 %) |
+| 3D groups > 10 / > 20 / > 30 cm | 1 527 / 649 / 355 | 527 / 81 / 26 |
+| group span p95 / p99 / max | 22.3 / 58.7 / 244.4 cm | 11.1 / 19.9 / 64.4 cm |
+| wall, sum | 4 071 s | 3 619 s |
+| peak RSS, max | 3.20 GB | 3.30 GB |
+
+95 % of the points beyond 10 cm and 99.7 % of those beyond 30 cm are gone. The
+residual beyond 10 cm is mostly class **(c)** — 135 of the 527 surviving
+groups, and the four longest (40–64 cm) — which the run bound cannot reach by
+construction: those blobs are "supported" in wire space. That is the lead for
+any further round, not a tighter bound. (The wall time went *down* on the
+120; on the 21 it went up 5–8 %. Both arms ran on a shared box; the honest
+statement is "no cost visible above the noise".)
+
+**Verdict sets** (`d40r3_grade.py`; the live `clustering` layer is asserted
+identical, points and cluster-id multiset, before any by-id comparison):
+
+| | TGM | STM | FC |
+|---|---:|---:|---:|
+| tagged ids, OFF → ON (119 comparable events) | 2 586 → 2 586 | 583 → 582 | 2 462 → 2 462 |
+| only-OFF / only-ON | 0 / 0 | **7 / 6** | 0 / 0 |
+
+TGM and FC do not move. **STM turns over 13 ids on 13 events** for a net −1,
+and every one of them is a fit-status change on the same fitted track
+(`persist_stm_fit`, status codes: 0 accepted, 2 long leftover past the kink,
+3 dQ/dx KS rejection, 4 extra-tracks veto):
+
+| direction | n | status OFF → ON | what changed |
+|---|---:|---|---|
+| gained | 4 | 3 → 0 | same fit (npts, exit_L within a few %), the dQ/dx KS test now passes |
+| gained | 1 | 2 → 0 | the fit itself was repaired: 039252/10 cluster 70 (§15.7) |
+| lost | 5 | 0 → 3 | same fit, the dQ/dx KS test now fails |
+| lost | 2 | 0 → 2 | the fit breaks at a kink 3–6 points in with 134–186 cm left over (039349/23 cluster 59, 039349/69 cluster 26): the path the fitter used to cross a real gap was the fabricated bridge |
+| lost | 1 | 0 → 4 | extra-tracks veto (039349/48 cluster 15) |
+
+The 120th event, 039349/7, is excluded from the by-id table because its live
+layer differs: knob ON gains STM on cluster 32, `protect_bundle` therefore
+opens one more bundle (20 → 21 extra clusters), and the live cluster ids
+downstream shift. That is a consequence of a verdict change, not the retile
+touching the live grouping. Counting it, the turnover is 7 lost / 7 gained.
+
+Two readings, both stated because they pull in opposite directions: the
+dQ/dx-KS flips (9 of 13) are the tagger reacting to a Steiner graph with
+fewer ghost points along a *real* track — end-charge profiles change when
+fabricated points near the end disappear — and are as likely to be
+corrections as losses; the two `0 → 2` losses are a real cost, the fitter
+losing a crossing it used to have. Neither is adjudicated here; both are
+named so the flip decision is made with them in view.
+
+### 15.9 Recommendation
+
+1. **Ship as is, default OFF** (done). The code path with both keys absent is
+   the pre-round binary on 120/120 events; SBND's config is untouched and
+   compiles identically.
+2. **The PDVD flip** — `retile_bad_blob_max_run = 20` in
+   `pdvd/wct-pr-perevt.jsonnet` — is the owner's decision (§5.1). For it:
+   the two named points and 95 % of everything like them are gone, the
+   cosmic taggers TGM/FC do not move, and the STM set turns over 13 of ~585
+   ids for a net −1 with 9 of 13 being the dQ/dx test reacting to a cleaner
+   graph. Against it: two STM tracks lose the crossing the ghost bridge gave
+   them, and the STM tag set is what the PDVD stopping-muon campaign (doc 25)
+   is built on, so a turnover of 2 % is not free. A hand scan of the 13 would
+   settle which way each goes.
+3. **The residual lead is class (c)**, not a smaller bound: blobs that overlap
+   an original blob in wire space but sample far from it in 3D. A per-blob 3D
+   support test against the original cluster's points (the `time_blob_map`
+   overlap helper already exists on `Cluster`) would replace the wire-space
+   test; it is a different knob and a different round.
+4. **The stale cache is worth fixing in the legacy path too**, as a
+   default-ON behaviour change with its own gate: every multi-face retile on
+   every detector that binds `ImproveCluster_2` has been running with its
+   second faces unfiltered since the port. That is a §5.1 decision.
+5. Two doc-40 items stay open: the uncapped `connect_graph` bridge (§7, §13.2)
+   and the sentinel-T0 leak (§8).
