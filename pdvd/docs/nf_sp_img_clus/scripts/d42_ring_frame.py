@@ -30,6 +30,9 @@ def main():
     ap.add_argument("--det", required=True, choices=PITCH)
     ap.add_argument("--status", type=int, default=0)
     ap.add_argument("--step", type=float, default=0.2, help="densification step [cells]")
+    ap.add_argument("--max-foff", type=float, default=1.1,
+                    help="keep only blocks whose W-plane charge beyond 1.5 pitches is below this")
+    ap.add_argument("--tsv", help="also write the measured/predicted ring shares here")
     a = ap.parse_args()
     P, bounds = PITCH[a.det], BOUNDS[a.det]
     acc = {p: {k: np.zeros(3) for k in ("y", "h")} for p in "UVW"}
@@ -48,6 +51,20 @@ def main():
             m = r["ndf"] == blk
             if m.sum() < 5 or (a.status >= 0 and int(r["status"][m][0]) != a.status):
                 continue
+            ch0 = np.asarray(list(d["channel"][0][i]), dtype=np.int64)
+            if a.max_foff < 1.0:
+                pl0 = np.digitize(ch0, bounds)
+                q0 = np.asarray(list(d["charge"][0][i]), float)
+                mW = pl0 == 2
+                if mW.sum() == 0:
+                    continue
+                o0 = np.argsort(-r["rr"][m])
+                pwW = r["pw"][m][o0]; ptW = r["pt"][m][o0]
+                dd = np.min(np.abs(ch0[mW][:, None] - pwW[None, :]), axis=1)
+                lv0 = q0[mW] > 0
+                if q0[mW][lv0].sum() <= 0 or \
+                   q0[mW][lv0 & (dd > 1.5)].sum() / q0[mW][lv0].sum() > a.max_foff:
+                    continue
             nb += 1
             ch = np.asarray(list(d["channel"][0][i]), dtype=np.int64)
             ts = np.asarray(list(d["time_slice"][0][i]), dtype=np.int64)
@@ -85,11 +102,26 @@ def main():
                         acc["UVW"[Pi]]["h"][k] += QP[sc][kk].sum()
     print("%s: %d status-%d blocks; predicted/measured by wire ring (share of measured)"
           % (a.det, nb, a.status))
+    rows = []
     for p in "UVW":
         y = acc[p]["y"]; h = acc[p]["h"]
         print("  %s  centre %.2f (%.0f %%)   first neighbour %.2f (%.0f %%)   beyond %.2f (%.0f %%)"
               % (p, h[0] / max(y[0], 1), 100 * y[0] / y.sum(), h[1] / max(y[1], 1),
                  100 * y[1] / y.sum(), h[2] / max(y[2], 1), 100 * y[2] / y.sum()))
+        # the shape statistic used by d42_wire_filter_toy.py: first neighbour as a
+        # fraction of (centre + first neighbour).  Insensitive to how much charge
+        # a fused cluster puts beyond 1.5 pitches, which is why it, not the raw
+        # share, is what the toy is compared against.
+        rows.append((p, y[0], y[1], h[0], h[1],
+                     y[1] / max(y[0] + y[1], 1e-9), h[1] / max(h[0] + h[1], 1e-9)))
+    print("  shape r = 1st/(centre+1st):  " + "   ".join(
+        "%s meas %.3f pred %.3f" % (r[0], r[5], r[6]) for r in rows))
+    if a.tsv:
+        with open(a.tsv, "w") as fh:
+            fh.write("det\tplane\tmeas_centre\tmeas_first\tpred_centre\tpred_first\tr_meas\tr_pred\n")
+            for r in rows:
+                fh.write("%s\t%s\t%.6g\t%.6g\t%.6g\t%.6g\t%.5f\t%.5f\n" % ((a.det,) + r))
+        print("  -> %s" % a.tsv)
 
 
 if __name__ == "__main__":

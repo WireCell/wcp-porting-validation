@@ -14,7 +14,14 @@ owner-adjudicated STM-baseline events of doc 62 plus the 30 doc-55 events).
 check 1 against the three mechanisms the owner named — the smearing model,
 busy events, and PDVD's prolonged topology — and finds the first, with the
 other two tested and excluded. It is re-analysis of the same arms; no code,
-config, constant or output changed.
+config, constant or output changed. **§8 (added the same day, third owner
+question)** is a toy study of the SP wire filter itself, from the toolkit
+source: it confirms the `ind_sigma` derivation is algebraically right, shows its
+continuum approximation breaks down above Nyquist — in the direction of
+*overstating* the filter — and therefore **withdraws §7.7's proposal to widen
+that constant** (§8.6). It also shows the missing width is a genuine per-point
+smearing deficit rather than a displaced trajectory, and finds two unused or
+truncating approximations inside the fit's own integrator.
 
 **Owner request (2026-09-05).** *"What I would like to validate, using the STM
 tagger fitted track trajectory and dQ/dx results, are its performance: 1. the
@@ -117,6 +124,12 @@ python3 docs/nf_sp_img_clus/scripts/d42_shape_plots.py --pdvd $D/d42diag_pdvd --
     --pdvd-clean $D/d42clean_pdvd --sbnd-clean $D/d42clean_sbnd --out $F/42
 python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det pdvd work/*_d42fit/tracking-stm.root   # sec 7.4 frame cross-check
 python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det sbnd $S/work-stmcamp-d42fit/*/tracking-stm.root
+# sec 8: the wire-filter toy and the smearing-vs-trajectory discriminator
+python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det pdvd --tsv $D/d42_rings_pdvd.tsv work/*_d42fit/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det sbnd --tsv $D/d42_rings_sbnd.tsv $S/work-stmcamp-d42fit/*/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_wire_filter_toy.py --rings $D/d42_rings_{pdvd,sbnd}.tsv --fig $F/42_wire_filter.png
+python3 docs/nf_sp_img_clus/scripts/d42_transverse_moments.py --det pdvd work/*_d42fit/tracking-stm.root
+python3 docs/nf_sp_img_clus/scripts/d42_transverse_moments.py --det sbnd $S/work-stmcamp-d42fit/*/tracking-stm.root
 # gate record: stm/gates/d42_stm_proj2d_gate.txt
 ```
 
@@ -551,9 +564,12 @@ degraded one.
    −0.09 once σ ≳ 0.4 pitch; PDVD U/V sit at 0.20 pitch because of the 7.65 mm
    pitch and the small `ind_sigma_*_T` derived from PDVD's sharp `Wire_ind`
    filter. Busy events and prolonged topology were tested and are not the cause
-   (§7.3, §7.5). **Next:** the gated `ind_sigma` arm of §7.7 — a
-   production-constant change, so stop-and-ask — and the per-plane dQ/dx
-   readout (the R·x split per plane exists inside `dQ_dx_fit`) on the 45
+   (§7.3, §7.5). §8 then goes to the SP wire filter those constants are
+   derived from and shows the filter is a near-identity on PDVD, so
+   `ind_sigma_*_T` is **not** the knob — see §8.6 for the withdrawn
+   recommendation and §8.7 for what replaces it. **Next:** the SP 2-D spectrum
+   dump of §8.7 item 1, the unused induction branch of §8.7 item 2, and the
+   per-plane dQ/dx readout (the R·x split per plane exists inside `dQ_dx_fit`) on the 45
    muon-like tracks, to see whether the +10 % Bragg-region hump of §4.2 is the
    induction deficit propagating or the recombination table.
 3. **dQ/dx vs rr — the table is followed to a scale; the shape has a +10 %
@@ -577,7 +593,8 @@ degraded one.
   `d42_proj2d_resid.py`, `d42_proj2d_plots.py`, `d42_proj2d_panels.py`,
   `d42_proj2d_selfcheck.py`, `d42_dqdx_rr.py`, `d42_dqdx_plots.py`,
   `d42_make_ref_dqdx_045.py`, `d42_shape_diag.py`, `d42_shape_plots.py`,
-  `d42_ring_frame.py` (§7);
+  `d42_ring_frame.py` (§7), `d42_wire_filter_toy.py`,
+  `d42_transverse_moments.py` (§8);
   SBND arm `sbnd_xin/stm_campaign/run_d42_stmfit.sh`.
 - products: `figs/42_*.png` (incl. `42_shape_{window,profile,drift,angle,h2,sigma}.png`,
   §7), `figs/42_proj2d_*_blocks.tsv`,
@@ -832,7 +849,12 @@ either detector.
 
 ### 7.7 What to measure next (readings, not tunings)
 
-1. **The one arm that would settle it.** `ind_sigma_u_T` / `ind_sigma_v_T` are
+1. ~~**The one arm that would settle it.**~~ **Superseded by §8.6** — the toy
+   study of the wire filter shows `ind_sigma_*_T` is the wrong vehicle: it
+   represents the SP software wire filter, which on PDVD is a near-identity
+   operator contributing 0.21 mm, so widening it to absorb 2–3 mm would be a
+   fudge wearing that constant's name. §8.7 lists what to do instead. The
+   original text is kept for the record: `ind_sigma_u_T` / `ind_sigma_v_T` are
    production constants, so this is stop-and-ask, not a flip: run a gated arm
    with `-A trackfitting_config=<a copy of pdvd_track_fitting.json>` carrying
    `ind_sigma_u_T` and `ind_sigma_v_T` widened to the measured missing width
@@ -862,3 +884,183 @@ either detector.
    recommendation: it lives at > 5 cells, far outside the ~1-wire reach of the
    smearing question, and PDVD 0.25 vs SBND 0.002 is too large a contrast to be
    a windowing effect.
+
+## 8. Toy study of the wire filter: is `ind_sigma` mis-derived, or is the approximation breaking down?
+
+**Owner question (2026-09-05).** *"Did I understand correctly that the current
+ind_sigma used in the track trajectory fitting is derived from the wire filter,
+but this approximation is not good for the PDVD situation due to wide wire
+pitch? Or did we somehow miscalculate the smearing width? Can you perform a toy
+study on this wire filter to see what is actually the issue here? It is possible
+that some of our approximation broken down? I am not sure if a brute force scan
+is the answer here, we should understand this smearing situation better."*
+
+**Short answer.** The algebra is right; the approximation does break down; but it
+breaks in the direction that makes the filter contribute *less*, not more — so
+the filter is **not** where the missing width can come from, and `ind_sigma_*_T`
+is the wrong knob to scan. §7.7's first recommendation is corrected in §8.6.
+
+`d42_wire_filter_toy.py` reproduces the filter from the toolkit source rather
+than from any fit.
+
+### 8.1 What the filter is, and where the closed form comes from
+
+Three files define it:
+
+| | |
+|---|---|
+| `cfg/.../sp-filters.jsonnet` | `wf(name, {sigma: 1/√π · X, power: 2, flag: false, max_freq: 1})`; PDVD `Wire_ind` X = 5.0, `Wire_col` X = 10.0; SBND 1.05 and 3.60 |
+| `sigproc/src/HfFilter.cxx:39-61` | `filter_waveform(N)`: `freq = i/N · 2 · max_freq`, wrapped to [−1, 1) — so **freq is in units of the Nyquist frequency** |
+| `util/src/Response.cxx:441` | `hf_filter = exp(−0.5·(freq/σ)^power)` |
+
+Applied in `OmnibusSigProc.cxx:1306-1310` along the **wire** axis of each plane
+after the response division. With f in Nyquist units and k in cycles per wire
+(f = 2k), the filter is exp(−2k²/σ²); matching that to the transform pair
+exp(−2π²σ_x²k²) gives
+
+> σ_x = 1/(π·σ) = **1/(√π·X) wires**
+
+which is exactly the closed form `pdvd_track_fitting.json` and
+`sbnd_track_fitting.json` use. **So the derivation is not a miscalculation** —
+it is the correct continuum inverse transform of that filter.
+
+### 8.2 …but the continuum step is only valid below Nyquist, and PDVD is far above it
+
+The closed form assumes the frequency-domain Gaussian dies inside the band that
+is actually sampled. It does not, except on SBND's induction plane:
+
+| | X | σ_f [Nyquist] | filter at Nyquist | closed form [wires] | **true kernel rms** | overstated by |
+|---|---|---|---|---|---|---|
+| PDVD ind | 5.00 | 2.82 | **0.939** | 0.1128 | **0.0278** | 4.1× |
+| PDVD col | 10.00 | 5.64 | **0.984** | 0.0564 | **0.0070** | 8.1× |
+| SBND ind | 1.05 | 0.59 | 0.241 | 0.5373 | 0.4683 | 1.15× |
+| SBND col | 3.60 | 2.03 | 0.886 | 0.1567 | 0.0529 | 3.0× |
+
+("true kernel" = the inverse DFT of exactly the array `filter_waveform(3808)`
+returns.) The real-space kernels say the same thing more plainly:
+
+| kernel | h[0] | h[±1] | h[±2] |
+|---|---|---|---|
+| PDVD ind | 0.979 | +0.012 | −0.003 |
+| PDVD col | 0.995 | +0.003 | −0.001 |
+| **SBND ind** | **0.675** | **+0.174** | −0.016 |
+| SBND col | 0.961 | +0.023 | −0.006 |
+
+**SBND's induction filter is the only one that does anything**: it moves 35 % of
+each wire's charge onto its two neighbours. PDVD's filters pass ≥ 94 % of every
+frequency the lattice can carry — they are near-identity operators, and a
+"width" of 0.11 wires is not a quantity the wire lattice can represent.
+
+So the owner's reading is right *and* the sign is worth stating: the
+approximation breaks down at PDVD's setting, and correcting it would make the
+modelled smearing **narrower** (0.21 mm instead of 0.86 mm before the empirical
+0.3 factor, 0.06 mm after it), not wider.
+
+![](figs/42_wire_filter.png)
+
+### 8.3 Which means the filter cannot be the missing width
+
+`ind_sigma_*_T` exists to represent one thing: the SP software wire filter. On
+PDVD that filter contributes **0.21 mm** on induction and **0.04 mm** on
+collection. The width §7 measures as missing is 2–3 mm. The filter is two
+orders of magnitude short of it, so widening `ind_sigma_*_T` to 0.35 pitch would
+not be a re-derivation of anything — it would be an unphysical fudge factor
+wearing the name of the SP filter. **The owner is right that a brute-force scan
+is not the answer.**
+
+It also explains why SBND's model works and PDVD's does not, and the reason is
+not the pitch alone: SBND's SP genuinely smears charge across wires and SBND's
+`ind_sigma` (0.161 pitch, against a true 0.468 × the 0.3 factor = 0.140) happens
+to describe it well. PDVD's SP does no wire smoothing, the model therefore
+carries diffusion only — and PDVD's data still shows transverse spread that
+nothing in the model accounts for.
+
+### 8.4 The missing width is real, and it is not the trajectory being in the wrong place
+
+Before blaming any smearing term, the alternative had to be excluded: if the
+trajectory were simply displaced from the true track, the *ensemble* profile
+about the trajectory would be broadened while each individual profile stayed the
+model's width. That is a trajectory problem, not a smearing one, and it has a
+different fix.
+
+`d42_transverse_moments.py` separates them by measuring, per (block, plane, time
+slice), the width of the measured and predicted profiles **about their own
+centroids** — so the bin width, the track's extent within the slice and the
+drift spread all cancel — and the displacement between the two centroids:
+
+| | rms measured [mm] | rms predicted | **width in quadrature** | median displacement |
+|---|---|---|---|---|
+| PDVD U | 4.28 | 2.89 | **3.16** | 0.84 |
+| PDVD V | 4.11 | 2.86 | **2.96** | 0.85 |
+| PDVD W | 3.19 | 2.51 | **1.96** | 0.31 |
+| SBND U | 2.96 | 2.75 | 1.11 | 0.32 |
+| SBND V | 2.42 | 2.33 | 0.64 | 0.39 |
+| SBND W | 3.21 | 3.21 | **0.00** | 0.15 |
+
+The measured profile is wider than the predicted one **at each point**, so this
+is a genuine smearing deficit and not a displacement artifact. It is worst on
+PDVD's induction planes, present on PDVD W, small on SBND U/V, and **exactly
+zero on SBND W** — the one plane whose model needs nothing. A displacement
+exists too (0.84 mm on PDVD U against 0.32 on SBND U) but it is the smaller
+effect. The per-slice displacement autocorrelates at +0.45 for lag 1 and dies by
+lag 5, which is **not** evidence of trajectory wander: the longitudinal spread
+(σ_L ≈ 0.8 slices) puts one deposit into adjacent slices, so neighbouring slices
+are not independent samples and a lag-1 correlation is expected with a perfect
+trajectory.
+
+### 8.5 Two approximations inside the model itself
+
+Found while reading `cal_gaus_integral`; both are the fit's own, not the SP's.
+
+1. **A hard `nsigma` window.** `TrackFitting.cxx:6267` contributes a wire bin
+   only if `|wbin − w_center| ≤ nsigma·w_sigma`, and **all nine call sites pass
+   nsigma = 4**. That is harmless while 4σ comfortably exceeds one wire, and
+   PDVD is the only place it does not: 4σ = 0.81 wires on U, 0.83 on V, 1.20 on
+   W, against SBND's 1.64–1.95. The toy puts the cost at about 6 % of the
+   first-neighbour share on PDVD U/V and nil on SBND — real, small, and worth
+   knowing because it is a pure artefact of a threshold, not physics.
+2. **`flag = 0` at all nine call sites** — the pure-Gaussian branch. The
+   `flag = 1` *"induction plane with bipolar response"* and `flag = 2` *"more
+   complex induction plane response"* branches exist in `cal_gaus_integral`
+   (`:6284-6340`) and are **never reached**, so U and V are modelled with
+   exactly the same transverse shape as the collection plane. Given that the
+   deficit is worst on the induction planes of both detectors, this is the more
+   interesting of the two.
+
+### 8.6 Correction to §7.7
+
+§7.7 item 1 recommended a gated arm widening `ind_sigma_u/v_T` toward the
+measured missing width. **§8.2–8.3 withdraw that as a first step.** The constant
+represents the SP wire filter, the filter is measured here to be a near-identity
+on PDVD, and setting it to 0.35 pitch would be assigning a physical name to a
+number that has nothing to do with the thing it names. §7's *measurement* — the
+model is too narrow, monotonically in σ/pitch — stands unchanged; only the
+proposed vehicle was wrong.
+
+What §7.4 called "an SP-filter term that is too small" is better stated as: the
+model has **no term at all** for the transverse spread that PDVD's data shows,
+and the constant that looks like it ought to carry it does not.
+
+### 8.7 What to measure next
+
+1. **Find where the 2–3 mm enters, before modelling it.** `OmnibusSigProc`
+   already has the taps, both default-off: `dump_2d_spectra` / `dump_2d_prefix`
+   (`:212-213`) writes the per-plane input, response, deconvolved spectrum and
+   wire filter to npz, and `rawdecon_tag` (`:207`) taps the deconvolved frame
+   *before* any software filter. Running one PDVD event with these on and
+   measuring the transverse profile of an isolated stopping muon at each stage
+   separates three candidates that no fit-side scan can distinguish: residual
+   field-response spread the 2-D deconvolution does not remove, something added
+   downstream in imaging/ctpc, and genuine physical spread (delta rays). This
+   is the measurement to do first.
+2. **Test the induction branch that already exists.** `flag = 1` in
+   `cal_gaus_integral` is the bipolar-response induction model, written and
+   unused. Reaching it for U and V is a code change behind a default-OFF knob,
+   not a constant change, and it is the one candidate whose shape is physically
+   motivated for the planes that need it. It should be measured against
+   `d42fit` before any width constant is touched.
+3. **`nsigma` is a cheap, honest sensitivity test.** Raising it from 4 changes
+   no physics constant — it only stops truncating a Gaussian the model already
+   has. Worth one arm to bound its size, expecting ~6 % of the first-neighbour
+   share on PDVD U/V.
+4. **Do not move `D_T`** (§7.4) or `ind_sigma_*_T` (§8.3) on this evidence.
