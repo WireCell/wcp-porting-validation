@@ -1,5 +1,11 @@
 # Hand scan: `retile_wrapped_channel_activity` on PDHD
 
+> **Superseded by the display.** Labelling is now done in the Bokeh app
+> `pdhd/stm_scan/` (port 5017) rather than by editing the TSV by hand — the app
+> renders the three projections and enforces the blind structurally. See
+> `pdhd/stm_scan/README.md`. The two TSVs here remain the item list and the
+> answer key that the app and its scorer read.
+
 Gate for doc `stm-tagger-chain.md` §10 item 1. §12 measured that this knob
 raises the Steiner terminal ceiling 3.6× and is the only knob that moves the
 §8.6 coverage number; it is still **default OFF**. This scan decides whether the

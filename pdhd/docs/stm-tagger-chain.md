@@ -873,6 +873,8 @@ compiled config and is an owner decision.
 
 ---
 
+---
+
 ## 11. Files
 
 **Toolkit** (`cfg/pgrapher/experiment/pdhd/`, branch `apply-pointcloud`):
@@ -1040,3 +1042,52 @@ for T in 4000 2000 1000 250; do PDHD_PR_TLA="-S steiner_terminal_charge=$T"     
 ```
 
 Table: `docs/figs/pdhd_terminal_charge_census.tsv`.
+
+---
+
+## 13. The hand scan on `retile_wrapped_channel_activity`
+
+§12 left the knob measured but ungraded: it raises the Steiner terminal ceiling
+3.6× and is the only knob that moves §8.6's coverage number, but nothing yet
+says the STM verdicts it moves are *better*. §10 item 1 asks for the doc
+pdvd/31 round 6 treatment. This is that scan, set up and waiting for labels.
+
+**The population.** All 224 clusters whose STM verdict differs between `stm0`
+(off) and `stmw` (on) over run 029107's 30 events — 10.0 % of 2246 verdicts,
+130 gaining the tag and 94 losing it. The `(event, cluster)` key sets of the two
+arms are **identical** (2246 = 2246, zero one-sided), so the knob changes no
+cluster partition, only the Steiner stage — which also means ids join directly
+and `feedback_retile_ident_is_not_bee_cluster_id` does not bite here.
+
+**Stratified, because the churn is not size-symmetric:**
+
+| stratum | n | knob gains tag | knob loses tag |
+|---|---|---|---|
+| A `npts ≥ 200` | 174 | 83 | 91 |
+| **B `npts < 200`** | **50** | **47** | **3** |
+
+**36 % of every tag the knob adds sits on a cluster under 200 points.** Cutting
+those — the obvious way to shorten the scan — would have hidden the effect most
+likely to argue against the knob. A asks whether real tracks improve; B asks
+whether the denser graph manufactures tags on fragments.
+
+**The blind is structural.** `pdhd/stm_scan/` is a Bokeh app (port 5017, forked
+by duplication from `pdhd/ql_scan/`) that opens **only** the `clustering-global`
+and `channel-deadarea` members of `mabc-pr.zip`. Those two are byte-identical
+between the arms by zip-member SHA-256, so the pixels cannot encode which arm
+they came from; `stm_fit`, `stm_tagged` and the `steiner_*` layers are never
+opened, and `selftest_stm_scan.py` asserts the viewer's source does not even
+name them. The viewer never reads the answer key, and the stratum flag is kept
+out of the UI so a "small" badge cannot nudge a fragment toward `UNCLEAR`.
+
+Three projections (Z–Y, Z–X, X–Y), the cluster coloured by charge over a
+decimated grey rendering of **all** other charge in the event — the grey is what
+distinguishes a track that stops from one that continues into a neighbour — at
+full detector extent with the active boundary drawn, because a cluster zoomed to
+its own extent looks contained in every view.
+
+**Acceptance bar, fixed before any label exists** (`stm_scan/README.md`, and the
+scoring script prints it): flip only if the knob is net-positive in stratum A
+**and** its stratum-B gains are not predominantly `THRU`/`UNCLEAR`.
+
+**Status: awaiting labels.** Process and scoring in `pdhd/stm_scan/README.md`.
