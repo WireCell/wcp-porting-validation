@@ -1231,3 +1231,119 @@ Both are visible at a glance in the target layer, which is why the set exists.
 The dQ/dx-versus-residual-range check that would separate a Bragg stop from a
 truncated track is the STM tagger's own instrument and would be the next
 measurement if the scan is ambiguous.
+
+---
+
+## 13. The scan says they are through-going — so the surface is right and the *estimator* is wrong
+
+The owner's scan of the §12 set: **Bee indices 1, 4, 5 and 6 all look like TGM**.
+That is decisive, and it is worth stating what it forces before the numbers.
+
+All four are **z− → z+ crossers**: end A is 5.7–12.3 cm from the upstream z wall,
+end B is 11.8–15.8 cm from the downstream one, the direction at each end points
+out of the detector, and the extrapolation leaves the volume after 11–33 cm. So
+each track stops short at *both* z walls by ~6–16 cm, symmetrically. §11 and §12
+already established that nothing is beyond those ends — no other cluster's charge
+in a 10 cm cylinder (0 points for 7 of the 8 ends), no ctpc charge in the planes
+with resolving power there. And yet the tracks cross the detector.
+
+There is only one way to hold all of that at once: **the imaged charge of an
+exiting track sometimes stops a decimetre inside the wall, and the fiducial
+surface of §5–9 cannot see it, because d50 is a median.**
+
+### 13.1 The endpoint distribution, which is what a tagger actually tests
+
+Closest approach of every long (> 2 m) cluster to each side wall, over the 97
+events — the same quantity §11.3 histogrammed, now per wall, per drift volume and
+per drift bin, against the surface this document built:
+
+| wall | vol | \|x\| bin | n | median | p70 | p80 | p90 | §9 surface |
+|---|---|---|---|---|---|---|---|---|
+| y+ | bot | 3–80 | 24 | 1.2 | 4.5 | 8.4 | 12.8 | 0.0 |
+| y+ | top | 3–80 | 22 | 3.9 | 5.6 | 6.9 | 15.6 | 1.8 |
+| y+ | bot | 240–340 | 25 | 0.2 | 2.0 | 8.7 | 14.3 | 0.0 |
+| y+ | top | 240–340 | 46 | 0.1 | 0.5 | 3.4 | 11.0 | 0.0 |
+| y− | bot | 3–80 | 27 | 10.6 | 11.3 | 12.8 | 20.1 | 9.2 |
+| y− | bot | 80–160 | 21 | 6.7 | 8.4 | 8.8 | 10.2 | 9.1 |
+| y− | top | 240–340 | 74 | 0.0 | 0.5 | 0.5 | 2.6 | 0.3 |
+| z− | bot | 3–80 | 57 | 8.2 | 11.7 | 13.8 | 16.3 | 8.8 |
+| z− | top | 3–80 | 53 | 5.2 | 7.4 | 11.3 | 14.3 | 3.2 |
+| z− | bot | 240–340 | 60 | 0.6 | 1.7 | 8.7 | 13.5 | 0.0 |
+| z− | top | 240–340 | 136 | 0.6 | 1.1 | 1.7 | 7.0 | 0.5 |
+| z+ | bot | 3–80 | 52 | **15.3** | 17.5 | **19.2** | 20.3 | 13.9 |
+| z+ | top | 3–80 | 72 | 7.9 | 11.1 | 12.5 | 16.3 | 7.7 |
+| z+ | bot | 80–160 | 55 | 10.7 | 12.7 | 14.0 | 15.6 | 8.4 |
+| z+ | bot | 240–340 | 49 | −0.0 | 0.5 | 6.8 | 13.7 | 0.0 |
+| z+ | top | 240–340 | 108 | 0.1 | 0.3 | 4.7 | **15.6** | 0.0 |
+
+(the full table is `figs/41_zapproach.json`; `scripts/fv_curved_zapproach.py`.)
+
+Two things at once:
+
+- **The §9 surface is a correct description of the median.** Column "median" and
+  column "§9 surface" agree bin by bin, at the cathode (z+ bot 15.3 vs 13.9,
+  y− bot 10.6 vs 9.2) and at the anode (0.0–0.6 vs 0.0). The space-charge map is
+  not wrong.
+- **The median is the wrong statistic for a boundary test.** Pooled over the four
+  walls in the anode half, where the surface says ~0: **17.0 % of long-track
+  approaches stop more than 8 cm short, p80 = 5.7 cm and p90 = 15.3 cm.** A
+  boundary set at the median therefore declares roughly one wall approach in six
+  to be "contained" — and the scan says those are exits.
+
+### 13.2 The tail is instrumental, and it has the asymmetry the owner suspected
+
+It is not space charge, because it does not scale with drift; it tracks the
+readout instead.
+
+- **Wire angle.** Using the lattice phase rate d(pitch)/d(path) — zero means the
+  track runs parallel to a plane's strips, the prolonged-signal configuration:
+
+  | min phase rate over the three planes | n | > 8 cm short | p80 |
+  |---|---|---|---|
+  | 0.00–0.15 (parallel to a plane) | 238 | **26.5 %** | 11.8 cm |
+  | 0.15–0.30 | 292 | 15.1 % | 4.7 cm |
+  | 0.30+ | 381 | 12.6 % | 2.2 cm |
+
+- **Per CRU.** The > 8 cm-short rate by (anode, face) runs from **6.7 %**
+  (apa 6 face 0, p80 5.7 cm) to **31.8 %** (apa 1 face 1, p80 15.8 cm).
+- **In y along the wall**: 10.7 % at \|y\| 84–168 against **25.8 %** at
+  \|y\| > 252 — the outer CRUs.
+
+That is the asymmetry: not a smooth y-dependence of a drift-field distortion, but
+a per-CRU, per-angle imaging efficiency at the very edge of the anode plane.
+
+### 13.3 What this means for the fiducial volume — the §9 recommendation is withdrawn
+
+The flat 15 cm inset doc 35 adopted was doing **two** jobs, and this document only
+measured one of them. As a space-charge allowance it is wrong in both directions
+(§8.1). As a cover for the **endpoint tail** it is close to right: pooled over the
+anode half, p90 = 15.3 cm. Replacing it with a median-based surface removes that
+cover, and the 717 TGM losses of §10 are the bill.
+
+**So the tagger's boundary should be built from an endpoint quantile, not from
+d50.** The table above is that surface: ~8–19 cm near the cathode falling to
+2–9 cm at the anode for p80, or ~10–20 cm nearly everywhere for p90 — which is
+why today's flat 17.5 / 18 cm behaves sensibly despite having no measurement
+behind it. Concretely:
+
+1. **Keep the flat inset for the taggers for now.** It is within a couple of cm of
+   the p90 endpoint surface at every wall, and this document has not shown
+   anything better.
+2. **The one place the curved map genuinely adds** is the z+ wall of the bottom
+   volume near the cathode, where p80 = 19.2 and p90 = 20.3 cm against today's
+   18 — the flat inset is 1–2 cm short exactly where §8.1 predicted.
+3. **Build the next fiducial from the closest-approach quantiles**, per wall, per
+   drift volume, per drift bin, with the quantile as the stated operating point
+   (p80 costs containment, p90 costs over-tagging). `PolyFiducial` takes such a
+   surface unchanged; only the numbers in `curved_fiducial.jsonnet` change.
+4. **The real fix is upstream.** A 26.5 %-versus-12.6 % dependence on whether a
+   track runs parallel to a plane's strips, and a 6.7 %-to-31.8 % spread across
+   CRUs, is a signal-processing / imaging efficiency problem at the anode-plane
+   edge. Every centimetre recovered there is a centimetre the fiducial volume
+   does not have to give away.
+
+The caveat that keeps this honest: the closest-approach tail contains genuine
+stopping muons as well as truncated exits, and only four events have been
+scanned. The quantile that separates them is an operating point, and the
+population that would settle it is a scan of the tail itself — the 155 anode-half
+approaches beyond 8 cm — not another fit.
