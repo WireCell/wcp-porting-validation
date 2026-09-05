@@ -115,6 +115,8 @@ python3 docs/nf_sp_img_clus/scripts/d42_shape_diag.py --det pdvd --max-foff 0.15
 python3 docs/nf_sp_img_clus/scripts/d42_shape_diag.py --det sbnd --max-foff 0.15 --out $D/d42clean_sbnd $S/work-stmcamp-d42fit/*/tracking-stm.root
 python3 docs/nf_sp_img_clus/scripts/d42_shape_plots.py --pdvd $D/d42diag_pdvd --sbnd $D/d42diag_sbnd \
     --pdvd-clean $D/d42clean_pdvd --sbnd-clean $D/d42clean_sbnd --out $F/42
+python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det pdvd work/*_d42fit/tracking-stm.root   # sec 7.4 frame cross-check
+python3 docs/nf_sp_img_clus/scripts/d42_ring_frame.py --det sbnd $S/work-stmcamp-d42fit/*/tracking-stm.root
 # gate record: stm/gates/d42_stm_proj2d_gate.txt
 ```
 
@@ -574,7 +576,8 @@ degraded one.
 - scripts (`docs/nf_sp_img_clus/scripts/`): `run_d42_arms.sh`,
   `d42_proj2d_resid.py`, `d42_proj2d_plots.py`, `d42_proj2d_panels.py`,
   `d42_proj2d_selfcheck.py`, `d42_dqdx_rr.py`, `d42_dqdx_plots.py`,
-  `d42_make_ref_dqdx_045.py`, `d42_shape_diag.py`, `d42_shape_plots.py` (§7);
+  `d42_make_ref_dqdx_045.py`, `d42_shape_diag.py`, `d42_shape_plots.py`,
+  `d42_ring_frame.py` (§7);
   SBND arm `sbnd_xin/stm_campaign/run_d42_stmfit.sh`.
 - products: `figs/42_*.png` (incl. `42_shape_{window,profile,drift,angle,h2,sigma}.png`,
   §7), `figs/42_proj2d_*_blocks.tsv`,
@@ -699,6 +702,17 @@ larger pitch), and PDVD then predicts a smaller fraction of that smaller share.
 For PDVD U this is 0.25 × (1 − 0.47) = 0.13 of the block's charge lost from the
 first ring alone, on top of 0.06 from the centre — which is the −0.20 bias.
 
+**Frame cross-check.** Those rings are measured from each cell's *nearest
+fitted point*, whose wire coordinate can sit up to ~0.8 wires from where the
+track actually crosses that slice — and because PDVD is 83 % prolonged against
+SBND's 15 % (§7.5) the bias is not symmetric between the detectors.
+`d42_ring_frame.py` repeats the table in a frame that cannot have it: the
+trajectory is densified to a 0.2-cell step and each cell's distance is taken to
+the trajectory **at the cell's own time slice**. First-neighbour ratios become
+PDVD 0.50 / 0.57 / 0.63 and SBND 0.78 / 0.80 / 0.86 (centre 0.89 / 0.88 / 0.96
+and 0.99 / 0.98 / 0.90). Every number moves by ≤ 0.06 and the PDVD-vs-SBND
+contrast survives, so the reading does not depend on the frame.
+
 A free per-plane scale confirms this is not a normalisation error — refitting
 one scale factor per block leaves `U_foot` at 0.35 (from 0.35, k = 1.06). The
 same is visible in the window ladder: B at the single nearest cell is only
@@ -714,6 +728,16 @@ the missing width goes 2.24 → 2.59 → 2.93 mm (PDVD U), 2.16 → 2.50 (V),
 starts at 2.2 mm at the shortest drift, so a large part is drift-independent
 and belongs to the `ind_sigma_*_T` / `col_sigma_w_T` constants. The unfused
 subset gives the same slopes. SBND shows no clean drift trend (n = 45).
+
+**But the drift-correlated part is probably not diffusion either.** Charging
+the whole growth to D_T requires Δ(σ²) = 2·ΔD_T·Δt: PDVD U's 1.90 → 2.68 mm
+across a Δt of 1 526 µs is 3.57 mm², i.e. ΔD_T ≈ **11.7 cm²/s** on top of the
+configured 7.91 — a total near 20 cm²/s, well outside the physical range for
+liquid argon at 0.45 kV/cm. So the drift trend is unmodelled spread that
+*correlates* with drift rather than a diffusion coefficient that is simply too
+small, and **nobody should propose moving D_T on the strength of it** — D_T is
+a physical constant shared with the simulation (`_comment_diffusion`). This
+strengthens rather than weakens the filter-constant reading.
 
 ![](figs/42_shape_drift.png)
 
@@ -814,7 +838,11 @@ either detector.
    `ind_sigma_u_T` and `ind_sigma_v_T` widened to the measured missing width
    (≈ 2.7 / 2.4 mm, i.e. 0.35 / 0.31 pitch — SBND's working point is 0.16 /
    0.27 pitch), against the `d42fit` arm on the same 120 events and the same
-   pctrees. Prediction if §7.4 is right: `B_foot` on U/V moves from −0.22
+   pctrees. Treat that target as an **indicator, not a calibration**:
+   √(rms² − rmŝ²) assumes two Gaussians and the profiles are combs with
+   wire-pitch teeth and non-Gaussian tails, and restricting to unfused blocks
+   already moves PDVD U from 2.65 to 2.35 mm — so scan two or three values
+   rather than trusting one. Prediction if §7.4 is right: `B_foot` on U/V moves from −0.22
    toward PDVD W's −0.13, `U_foot` falls, and the dQ/dx-vs-rr scale k rises
    from 0.93 toward 1. Grade with `d42_proj2d_resid.py` + `d42_dqdx_rr.py`
    unchanged. **The knob is a runtime JSON file, so the compiled config is
