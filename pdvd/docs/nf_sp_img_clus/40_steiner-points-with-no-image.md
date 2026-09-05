@@ -3,8 +3,10 @@
 **Status.** Rounds 1–2 (§1–§13) are diagnosis only. **Round 3 (§15) ships
 the fix** behind two default-OFF knobs on the retiler (`bad_blob_max_run`,
 `bad_blob_report`); with both absent every job config compiles and runs
-byte-identically (§15.5); the PDVD flip is the owner's decision and
-seven OFF/ON Bee sets are built for it (§15.10). Rounds 1–2 changed no code and no config; the production PDVD chain is exactly what it was. Two named
+byte-identically (§15.5); eight OFF/ON Bee sets were built for the decision
+(§15.10) and **the owner flipped it ON for PDVD production on 2026-09-05**
+at 20 cm — `retile_bad_blob_max_run = 20` in `pdvd/wct-pr-perevt.jsonnet`,
+gated in §15.11. Rounds 1–2 changed no code and no config; the production PDVD chain is exactly what it was. Two named
 points are traced to two different causes, one of which is a knob the owner
 flipped ON on 2026-09-04 and which this document does **not** flip back —
 §10 states why that decision is not free and belongs to the owner.
@@ -961,7 +963,8 @@ column in the decision below.
    the pre-round binary on 120/120 events; SBND's config is untouched and
    compiles identically.
 2. **The PDVD flip** — `retile_bad_blob_max_run = 20` in
-   `pdvd/wct-pr-perevt.jsonnet` — is the owner's decision (§5.1). For it:
+   `pdvd/wct-pr-perevt.jsonnet` — **DONE, owner decision 2026-09-05, gate in
+   §15.11.** The case, as it was put: for it:
    the two named points and 95 % of everything like them are gone, the
    cosmic taggers TGM/FC do not move, and the STM set turns over 13 of ~585
    ids for a net −1 with 9 of 13 being the dQ/dx test reacting to a cleaner
@@ -1029,3 +1032,51 @@ shows the verdict (cluster present = tagged) and `stm_fit` the trajectory;
 both loss clusters keep their `stm_fit` in event 1, so the fit can be
 compared directly. The 9 dQ/dx-KS flips are not 3D-visible and no set is
 built for them.
+
+
+### 15.11 The flip (PDVD production, owner decision 2026-09-05)
+
+`pdvd/wct-pr-perevt.jsonnet`: `retile_bad_blob_max_run = null` → **`20`**
+(cm; `pr.jsonnet` multiplies by `wc.cm`, so the compiled key is
+`"bad_blob_max_run" : 200`). `retile_bad_blob_report` stays `false` — it is a
+log-only census and the gate below proves it output-neutral. Nothing else
+changes: the C++ default stays 0, `cfg/pgrapher/common/clus.jsonnet` keeps
+its key-suppression idiom, and SBND — the only other binding of
+`improve_cluster_2` (`cfg/pgrapher/experiment/sbnd/clus.jsonnet:1984`) —
+is untouched and keeps the legacy filter.
+
+**Compiled-config proof.** With the flip in place and no TLA, the compiled
+job config is byte-identical to the pre-flip file compiled with
+`-S retile_bad_blob_max_run=20` (sha256 `3007a0b80080e7a0…` both), and its
+whole difference from the pre-flip production config is one added key:
+
+```
+917a918
+> 			"bad_blob_max_run" : 200,
+```
+
+**Gate** (an intended output change, so the bar is equivalence to the
+measured arm, plus a control that the knob fires — the doc pdvd/38 §8.1
+pattern). Arm `d41prod`: the flipped default, **no knob TLA**, `-nu` with
+`-S dl_weights=''`, pin `/home/xqian/tmp/d41_libpin/new6`
+(`libWireCellClus.so` md5 `84a93f34…`, identical to `local/lib` at flip
+time), staged from the same provenance pctrees as every round-3 arm.
+
+| comparison | events | result |
+|---|---|---|
+| `d41fix20x` (the graded 20 cm arm) vs `d41prod` | 039252/2, 039349/23, 039349/52 | **PASS 3 / 3** — every `mabc-pr.zip` member and the timer-stripped calib dump identical |
+| `d41base2` (knob off) vs `d41prod` | same 3 | **DIFF 3 / 3** (7–8 zip members + calib each) — the knob fires |
+
+The first row also settles `bad_blob_report`: `d41fix20x` ran with the census
+on and `d41prod` with it off, and they are member-identical, so the report is
+log-only as designed. Command:
+
+```
+docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41fix20x d41prod <events>
+docs/nf_sp_img_clus/scripts/d40r3_hash_gate.py d41base2  d41prod <events>
+```
+
+Recorded in `stm/gates/d40r3_bad_blob_gate.txt`. What production output moves
+is §15.8's table: Steiner points > 10 cm from live charge 38 652 → 2 040 over
+the 120 events, TGM and FC unchanged, STM 583 → 582 with the 13 named
+flips.

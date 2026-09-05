@@ -98,10 +98,49 @@ function(
     retile_steiner_terminal_charge = steiner_terminal_charge,
     // doc pdvd/40 round 3: ImproveCluster_1::remove_bad_blobs knobs.  A run of
     // retiled blobs with no original-blob support longer than this (cm) is
-    // removed; 0 / null = the historical component vote (C++ default).  Arm:
-    // PDVD_PR_TLA="-S retile_bad_blob_max_run=20 -S retile_bad_blob_report=true".
-    // Held OFF until the doc 40 round-3 120-event A/B is adjudicated.
-    retile_bad_blob_max_run = null,
+    // removed; 0 / null = the historical component vote (C++ default).
+    //
+    // PDVD PRODUCTION at 20 cm, owner decision 2026-09-05 (doc 40 sec 15.9).
+    // Pre-flip arm: -S retile_bad_blob_max_run=null.  Census log lines:
+    // -S retile_bad_blob_report=true (log-only, no output change).
+    //
+    // WHAT IT FIXES.  ImproveCluster_2 retiles a cluster face by face; the
+    // filter that is supposed to delete the blobs its whole-cluster shortest
+    // path fabricates was reading a ClusterCache (time_blob_map) that is never
+    // invalidated when blobs are inserted or removed, so from the SECOND face
+    // on it saw no blobs at all and removed nothing.  80 of 493 retiled
+    // clusters on 039252/2 span more than one (apa,face) and not one second
+    // face was ever filtered.  Above 0 the filter refreshes that cache, adds
+    // same-slice adjacency (a fabricated column at fixed drift time has no
+    // adjacent-slice edges, so without it every such blob is a run of length
+    // 1), keeps the historical any-blob component vote, and additionally
+    // removes a connected run of unsupported retiled blobs whose bounding-box
+    // diagonal exceeds this value.  Short unsupported fills -- the dead-region
+    // bridging the retile exists for -- survive.
+    //
+    // MEASURED, 120 events, d41base2 (off) vs d41fix20x (doc 40 sec 15.8):
+    // Steiner points more than 10 cm from any live charge 38652 -> 2040, more
+    // than 30 cm 8982 -> 24, groups >20 cm 649 -> 81; TGM 2586 -> 2586 and FC
+    // 2462 -> 2462 unchanged; wall 4071 -> 3619 s, peak RSS 3.20 -> 3.30 GB.
+    // On 039252/2 the owner's two 'no image' points are gone (nearest Steiner
+    // 0.01 -> 25.19 cm and 0.01 -> 17.58 cm, the live-charge distances).
+    //
+    // DISCLOSED COST: the STM tag set turns over 13 ids on 13 events for a net
+    // -1 (583 -> 582).  Nine are the dQ/dx KS test reacting to a cleaner
+    // Steiner graph on an unchanged fit; three are kink PLACEMENT moving
+    // within an unchanged trajectory (2 lost, 1 gained -- doc 40 sec 15.8
+    // correction; the kink finder is fragile to charge just past a track end
+    // in both directions and owns its own round); one is the extra-tracks
+    // veto.  No fit is shortened or broken by the flip.
+    //
+    // Thresholds scanned at 10/20/30 cm on 21 events (doc 40 sec 15.6): all
+    // three remove 97-98 % of the >10 cm points and give the same STM delta.
+    // 20 is chosen because it is above SBND's longest unsupported group
+    // (19.2 cm, where this defect does not occur) and below PDVD's p95 group
+    // span (22.3 cm).  Do NOT read the residual as a reason to lower it: what
+    // survives is class (c), blobs that overlap an original blob in WIRE space
+    // but sample far from it in 3D, and it needs a 3D support test instead.
+    retile_bad_blob_max_run = 20,
     retile_bad_blob_report = false,
     // Readout window in ticks: clamps T_bad_ch time ranges in the Magnify /
     // PrDisplay writers (SBND 3427; PDVD 10000 = 5 ms at 0.5 us).

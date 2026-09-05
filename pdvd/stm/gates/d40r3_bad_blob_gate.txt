@@ -69,3 +69,12 @@
 #
 # outputs: /home/xqian/tmp/d41_{grade_120,xdet_120,cases_120,cases_120_on,cases_base2,probe_120,gate_rep}.txt (scratch copies)
 # STATUS: knob ships OFF.  PDVD flip (retile_bad_blob_max_run=20 in pdvd/wct-pr-perevt.jsonnet) = owner decision, doc sec 15.9.
+
+== FLIP GATE (owner decision 2026-09-05): retile_bad_blob_max_run = 20 in pdvd/wct-pr-perevt.jsonnet
+   arm d41prod = flipped default, NO knob TLA, -nu -S dl_weights='', pin new6 (libWireCellClus.so md5 84a93f34c9d85440c99833eb86f3928f)
+   events: 039252_2 039349_23 039349_52 (staged from d39r2prov / d41prov, same pctrees as every round-3 arm)
+   compiled config: flipped+noTLA == preflip + "-S retile_bad_blob_max_run=20", sha256 3007a0b80080e7a0... both;
+                    vs pre-flip production config the only difference is one added key "bad_blob_max_run" : 200
+   GATE d41fix20x vs d41prod: PASS 3  FAIL 0  MISSING 0  of 3      <- reproduces the graded arm member-for-member
+   GATE d41base2  vs d41prod: PASS 0  FAIL 3  MISSING 0  of 3      <- control: the knob fires (7-8 zip members + calib differ per event)
+   (the first row also proves bad_blob_report output-neutral: d41fix20x ran with the census on, d41prod with it off)
