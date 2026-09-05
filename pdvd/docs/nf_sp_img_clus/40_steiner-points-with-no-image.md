@@ -377,6 +377,11 @@ behind a default-OFF knob like everything else.
 
 ## 10. Recommendation
 
+> **The ranking below is SUPERSEDED by §13**, written before the §12
+> `remove_bad_blobs` measurement and the §12.1 run-length distribution existed.
+> The "do not flip the metric" verdict stands; the ordering of the leads does
+> not. Read §13.
+
 **Do not flip `ctpc_aniso_metric` back off.** It answers the owner's P1 and
 would make event 298595's picture clean, but §6 says it would move 96 of 127
 STM-tagged cluster ids across 21 events (net 127 → 99) for an event-wide
@@ -441,9 +446,15 @@ No detector config was touched. Two controls, both passing:
 * **frame** — `flag_terminal` terminals sit on the live cloud at median
   **0.252 cm** (PDVD), **0.173** (SBND ncpi0), **0.001** (SBND nuecc).
 
-Both sides run `unmerge_assoc` (PDVD arm `d40nu`'s pipeline line names it;
-the SBND arm logs `ClusteringUnmergeBundle:prassoc`), so the comparison is not
-confounded by the doc pdvd/39 round-2 flip.
+Both sides run `unmerge_assoc`, verified from the logs rather than from the
+runner (a peer flipped it into `PIPE_STM`/`PIPE_NU` during this session, so the
+script is not evidence for what an older arm did):
+`grep -c 'ClusteringUnmergeBundle":"prassoc"'` gives **2** on every `d40nu`
+log and the SBND arm configures the same component. The §5-§6 arms are the
+other side of that flip — `d39r2base` and `d40a0` both give **0**, so they ran
+the pre-flip `PIPE_STM` and that A/B remains single-variable. The two tables
+therefore sit on opposite sides of the un-merge and must not be diffed against
+each other.
 
 | | PDVD, 21 evt (cosmics) | SBND ncpi0, 19 evt | SBND nuecc, 48 evt |
 |---|---:|---:|---:|
@@ -526,8 +537,10 @@ dead/inefficiency gaps is what the retile is for. The bound has to be on how
 | p95 | 23.7 cm | 6.3 / 15.4 cm |
 | max | **230.7 cm** | 6.9 / 19.2 cm |
 
-Groups longer than 20 cm are **6.3 % of PDVD's groups but 63.3 % of its
-fabricated points** (15 407 of 24 323), and **SBND has none at all**. A bound
+Groups longer than 20 cm are **6.3 % of PDVD's groups but 63.3 % of the points
+that sit in unsupported groups** (15 407 of 24 323 — note this denominator is
+the unsupported population, not the 1 322 557-point Steiner cloud of §11.2),
+and **SBND has none at all**. A bound
 somewhere in 20–30 cm therefore removes about two thirds of the fabricated
 content, leaves the sub-10 cm fills that the feature exists for, and would not
 touch a single SBND group in these 67 events. That is an argument for the
