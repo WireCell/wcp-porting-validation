@@ -474,7 +474,23 @@ Every piece already existed; PDVD simply never wired them.
 | `protodunevd/pr.jsonnet` `cm_by_name` | `unmerge_assoc: cm.unmerge_bundle(name='assoc', mode='real', id_aname='assoc_cluster_id', main_aname='assoc_cluster_main')` | not in `pipeline_names` |
 | `pdvd/wct-clustering.jsonnet` | TLA `clus_save_assoc_id` | false |
 | `pdvd/run_clus_evt.sh` | `-save-assoc` | off |
-| `pdvd/run_pr_evt.sh` | `-unmerge` → `PIPE_STM_UNMERGE` | mode stays `-stm` |
+| `pdvd/run_pr_evt.sh` | `-unmerge` → `PIPE_STM_UNMERGE`, + a provenance guard | mode stays `-stm` |
+
+**The guard matters more than it looks.** `ClusteringUnmergeBundle`'s stance is
+"no usable provenance ⇒ skip, never guess" (it must not fall back to splitting on
+graph connectivity — that would break cathode crossers), so `-unmerge` on a
+pctree written without `-save-assoc` finishes **rc=0 with a normal-looking Bee
+set and nothing split**: a vacuous arm that reads like a real one. Its
+`require_provenance` knob does *not* cover this — it guards only the `wasmain`
+array under `restore_demoted_mains` (`ClusteringUnmergeBundle.cxx:426`). So
+`run_pr_evt.sh` now probes the pctree's metadata for a `perblob` datapath
+(~0.1 s on a 20 MB tree) and refuses with rc=4; `PDVD_ALLOW_NO_ASSOC=1`
+overrides. Verified with a causal negative control — the guard refuses the
+`d39r2ctl` tree, passes the `d39r2prov` tree, and leaves `-stm` untouched on
+both. Its first form was **broken**: `grep -qm1` exits on the first match,
+SIGPIPEs the `tar`, and under the runner's `set -o pipefail` the pipeline then
+reports failure *on a match* — so the guard rejected every tree, provenance or
+not. Only the positive control caught it.
 
 Pipeline position, per the owner's decision:
 

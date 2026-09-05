@@ -18,8 +18,9 @@
 #
 # -unmerge (doc pdvd/39 round 2) adds the unmerge_assoc stage, which undoes the
 # clustering-stage isolated grouping so the taggers see individual objects
-# instead of a main body plus detached clumps.  Needs a pctree from
-# run_clus_evt.sh -save-assoc.
+# instead of a main body plus detached clumps.  REQUIRES a pctree from
+# run_clus_evt.sh -save-assoc; the runner refuses otherwise (the stage is
+# silently inert without the provenance).  PDVD_ALLOW_NO_ASSOC=1 overrides.
 #         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump (segments, showers, kine, tagger flags)
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-stm.root      STM fits (T_rec_charge/T_stm_pass/T_stm_eval), with -stm-fit
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits + T_tagger/T_kine
@@ -229,6 +230,32 @@ process_event() {
         else
             echo "ERROR: run=$RUN evt=$EVT: pctree was sampled with wires=$TLA_WIRES but this PR job compiles wires=$PR_WIRES -- regenerate imaging + clustering (run_img_evt.sh, run_clus_evt.sh -save-pctree) before PR, or set PDVD_ALLOW_STALE_GEOMETRY=1 (doc pdvd/27)" >&2
             rm -f "$CFG_JSON"; return 3
+        fi
+    fi
+    # doc pdvd/39 round 2: -unmerge is INERT on a pctree written without
+    # -save-assoc.  ClusteringUnmergeBundle's "no usable provenance => skip"
+    # stance is deliberate (it must never fall back to splitting on graph
+    # connectivity), so the run finishes rc=0 with a normal-looking Bee set and
+    # nothing split -- a vacuous arm that reads like a real one.  Its
+    # require_provenance knob does NOT cover this: it guards only the wasmain
+    # array under restore_demoted_mains (ClusteringUnmergeBundle.cxx:426).
+    # So check here.  The probe reads only the tarball's metadata members (~0.1 s
+    # on a 20 MB pctree).
+    if [ "$MODE" = unmerge ]; then
+        # NB grep -q/-m1 would exit on the first match, SIGPIPE the tar, and
+        # under this script's `set -o pipefail` the pipeline would report
+        # FAILURE on a match -- the guard would then reject every tree,
+        # provenance or not.  Count instead, so grep drains the stream.
+        local _nprov
+        _nprov=$(tar -xzOf "$PCTREE" --wildcards '*_metadata.json' 2>/dev/null \
+                 | grep -c perblob || true)
+        if [ "${_nprov:-0}" -gt 0 ]; then
+            :
+        elif [ "${PDVD_ALLOW_NO_ASSOC:-0}" = 1 ]; then
+            echo "WARNING: $PCTREE has no perblob provenance; -unmerge will split NOTHING (allowed by PDVD_ALLOW_NO_ASSOC=1)" >&2
+        else
+            echo "ERROR: run=$RUN evt=$EVT: -unmerge needs a pctree written with run_clus_evt.sh -save-assoc, but $PCTREE carries no 'perblob' point cloud -- unmerge_assoc would split nothing and the arm would be silently identical to -stm (doc pdvd/39 sec 12.2).  Re-run clustering with -save-assoc, or set PDVD_ALLOW_NO_ASSOC=1 to run it anyway." >&2
+            rm -f "$CFG_JSON"; return 4
         fi
     fi
     if [ "${PDVD_PR_COMPILE_ONLY:-0}" = 1 ]; then
