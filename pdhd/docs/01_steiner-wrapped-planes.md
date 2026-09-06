@@ -306,9 +306,18 @@ Steiner-side counters say the input to the taggers is now what PDVD's is; whethe
 the taggers do better with it is the open question §13 left, now on the right
 arm.
 
-**Not done, deliberately:** no default was flipped. `pdhd/wct-pr-perevt.jsonnet`
-still carries both knobs `false`; production PDHD PR output is untouched by this
-round.
+**Flipped, owner decision 2026-09-05 ("turn both knobs on by default for PDHD,
+we will scan and worry about STM later").** `pdhd/wct-pr-perevt.jsonnet:87-88`
+and the in-tree `cfg/pgrapher/experiment/pdhd/pr.jsonnet` defaults are now
+`true`; the C++ defaults stay `false`, and the Q/L clustering job's own sampler
+knob is untouched. Gate shape of doc pdvd/31 round 6: the compiled config with the
+new defaults and no TLA is **byte-identical** (261 754 B) to the `stmwc` compile
+(old file + both TLAs), and one event run with the new defaults and no TLA on the
+same pin hash-matches the `stmwc` arm's `mabc-pr.zip` member for member (§8).
+Pre-flip arm: `PDHD_PR_TLA="-S retile_wrapped_channel_activity=false -S
+wrapped_channel_charge=false"` (key-suppressed, 0 occurrences in the compiled
+config). The `stmwc` arm is therefore PDHD production as of this commit, and the
+hand scan of its 237 contested tags is deferred, not waived.
 
 ## 6. Question 3b: the residual, and what "nearby wires" would reach
 
@@ -452,6 +461,7 @@ is unlisted. Tier 1 first.
 | `./build/clus/wcdoctest-clus` | 22 720 / 22 720, rc = 0; zero compiler warnings on the touched file |
 | Freshness | `local/lib/libWireCellClus.so` 18:21:23 > `SteinerGrapher.cxx` 18:20:09; `d46_libpin` copy hashes `c6ecaf2e…` = `local/lib` |
 | Arms | `phdumpwc` 4/4 rc 0; `stmwc` 30/30 `pr_resource` markers, runner rc 0; `phdumpx`/`d46base`/`d46dump`/`d46base`/SBND 2 all rc 0 |
+| Default flip (§5) | compiled config, new defaults, no TLA ≡ `stmwc` compile, `cmp` byte-identical 261 754 B; event 029107/0 run `stmdef` (new defaults, no TLA, `pdhdstm_libpin`) `mabc-pr.zip` member hashes ≡ `stmwc` |
 | Binary pins | §2–§5 on `pdhdstm_libpin` (`f143ab82…`, stm-tagger-chain §0); §6 on `d46_libpin`. No number in this document compares across the two pins: the probe arm `phdumpx` reproduces `phdumpwc`'s census on the same event to the last digit (68 866 candidates both) |
 
 Not claimed: an img/clus A/B (vacuous for `SteinerGrapher`, doc pdvd/37); a
@@ -462,8 +472,8 @@ the evidence, not a gate).
 ## 9. Recommendation and next step
 
 1. **Hand-scan `stm0 → stmwc`** (237 contested tags, fresh label tag) with the
-   §13 apparatus; the PR-job pair flips on that verdict alone. This is the one
-   blocking item and it is the owner's.
+   §13 apparatus. The pair is already production (§5); the scan now grades what
+   production does, and can reverse it with one TLA.
 2. **Build Tier 3 as a default-OFF knob** in the shape of §7 (sentinel-only,
    ±2 ctpc neighbour, eligibility-only) and grade it on all three detectors with
    `steiner_terminal_attribution.py`. It is the first lever in this campaign that

@@ -75,17 +75,17 @@ function(
     // calc_charge_wcp reads as "no signal"; in ImproveCluster_2's retiler
     // (retile_wrapped_channel_activity) it writes each slice's activity under
     // the wrong channel, upstream of the Steiner terminal finder.
-    // BOTH DEFAULT FALSE HERE, unlike PDVD, and both are UNGRADED on PDHD:
-    //   * wrapped_channel_charge must match what the Q/L job that WROTE the
-    //     pctree used, and no PDHD Q/L job has ever run with it on -- turning it
-    //     on here alone would make the PR job re-sample charge differently from
-    //     the tree it loaded;
-    //   * retile_wrapped_channel_activity has no such constraint (the retiler is
-    //     new on PDHD) but changes the Steiner input on every cluster.
-    // This is the single largest known gap in the PDHD PR chain -- see
-    // pdhd/docs/stm-tagger-chain.md sec 9, and sec 10 item 1.
-    wrapped_channel_charge = false,
-    retile_wrapped_channel_activity = false,
+    // BOTH PDHD PRODUCTION, owner decision 2026-09-05 (doc pdhd/01 sec 5; the
+    // STM hand scan of the 237 contested tags is deferred, not waived).  In
+    // this job the samplers feed ONLY ImproveCluster_2's retiler (compiled
+    // config: no other consumer), so wrapped_channel_charge here does not have
+    // to match the Q/L job that wrote the pctree -- the retiled cloud is never
+    // persisted.  The Q/L job's own sampler knob (pdhd/wct-clustering.jsonnet)
+    // is a separate, still-parked decision.  Measured on 029107, 4 events:
+    // ncharge=3 0.000 -> 0.532, eligible 0.217 -> 0.779.  Pre-flip arm:
+    // PDHD_PR_TLA="-S retile_wrapped_channel_activity=false -S wrapped_channel_charge=false".
+    wrapped_channel_charge = true,
+    retile_wrapped_channel_activity = true,
     // doc 31 round 6 (owner Q5): ImproveCluster_2 runs its OWN Steiner terminal
     // finder twice, and did so at the C++ default 4000 e regardless of
     // steiner_terminal_charge -- so PDVD ran two thresholds in one stage.  Set
