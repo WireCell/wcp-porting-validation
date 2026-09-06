@@ -613,6 +613,111 @@ PDHD and the uBooNE chain, so knob-off byte-identity is owed on each affected
 detector's standard manifest, not only SBND's 3067.
 
 
+### 6.4 Root cause, named: a vertex is removed while its edges are still attached
+
+The `-Og` rebuild the method note above asks for turned out to be unnecessary —
+the existing valgrind log already carries the full lifecycle, and reading the
+*graph type* rather than the line numbers settles it.
+
+`PR::Graph` is `boost::adjacency_list<setS, setS, undirectedS, NodeBundle,
+EdgeBundle, GraphBundle, listS>`.  **`setS` vertex storage means descriptors are
+stable** — removing a vertex does not renumber or invalidate the others.  That
+kills one of the two candidate shapes outright: this is not descriptor
+invalidation in `m_all_edges`, and it is not a missed `sync_from_graph()`.
+
+What is left is the BGL contract on `remove_vertex`:
+
+> Removes vertex *u* from the vertex set of the graph.  **It is assumed that
+> there are no edges to or from vertex u when it is removed.**  To ensure this,
+> `clear_vertex()` should be called first.
+
+`PR::remove_vertex` (`PRGraph.cxx:41-49`) does not clear:
+
+```cpp
+bool remove_vertex(Graph& graph, VertexPtr vtx)
+{
+    if (! vtx->descriptor_valid()) { return false; }
+    auto desc = vtx->get_descriptor();
+    boost::remove_vertex(desc, graph);      // <-- no clear_vertex(desc, graph)
+    vtx->invalidate_descriptor();
+    return true;
+}
+```
+
+So if the removed vertex still has an incident edge, the *node* is deleted while
+the *edge* survives in the graph's edge set.  The next consumer walks that edge
+and dereferences a freed node:
+
+```cpp
+// TrackFitting::get_ordered_segment_vertices, TrackFitting.cxx:1631-1636
+vd1 = boost::source(ed, *m_graph);
+auto& v1_bundle = (*m_graph)[vd1];       // freed node
+start_v = v1_bundle.vertex;              // shared_ptr copied out of freed memory
+...
+// TrackFitting::organize_segments_path, TrackFitting.cxx:2119-2121
+PR::Fit start_fit = start_v->fit();
+start_fit.point = start_p;
+start_v->fit(start_fit);                 // the "Invalid write of size 1 ... 184
+                                         // bytes inside a block of size 200"
+```
+
+That is exactly the `Address … is 184 bytes inside a block of size 200 free'd`
+record, the `D3Vector.h:77` frame, and gdb's `v_bundle1.vertex._M_ptr =
+0x555500000000` with a pointer-sized value in `index` — a node bundle read out
+of reclaimed memory.
+
+**Which call site removes a non-isolated vertex.**  Of the five cases in
+`eliminate_short_vertex_activities`, four guard the degree of the vertex they
+delete (case 2 by its branch condition `num_segs_v2 == 1`, case 4 and case 5
+explicitly).  **Case 3 does not:**
+
+```cpp
+if ((v1 == main_vertex && num_segs_v1 > 1) || (v2 == main_vertex && num_segs_v2 > 1)) {
+    if (length < 0.1*units::cm) {
+        to_be_removed_segments.insert(sg);
+        VertexPtr to_remove = (v1 == main_vertex) ? v2 : v1;
+        to_be_removed_vertices.insert(to_remove);   // degree unconstrained
+```
+
+The knob's whole role is upstream of this: it changes the trajectory enough that
+`snap_main_vertex_to_kink` fires, `break_segment` allocates a vertex, and that
+vertex reaches case 3 with more than one segment attached.
+
+**The prototype does the same thing and gets away with it.**
+`NeutrinoID_improve_vertex.h:411-419` has the identical unguarded case-3 removal,
+and `del_proto_vertex` (`NeutrinoID_proto_vertex.h:2002`) erases the vertex from
+each of its segments' vertex sets:
+
+```cpp
+for (auto it = map_vertex_segments[pv].begin(); it != map_vertex_segments[pv].end(); it++)
+    map_segment_vertices[*it].erase(map_segment_vertices[*it].find(pv));
+map_vertex_segments.erase(pv);
+```
+
+A prototype segment can legally end up with **one** vertex.  A BGL edge cannot —
+it has two endpoints or it does not exist.  **This is an undocumented
+prototype/toolkit divergence** (CLAUDE.md §5.4) and it is why the port inherited
+a memory-corruption bug from a construct that is merely untidy in the original.
+
+**Two fixes, and the recommendation.**
+
+| | change | what it does when the removed vertex has other segments | divergence from the prototype |
+|---|---|---|---|
+| **(a)** | `PR::remove_vertex` **refuses** and returns `false` (with a log line) when `boost::degree(desc, graph) > 0` | the short segment is still removed; the vertex survives with its other segments intact | the vertex stays where the prototype detached it — the port does **less** |
+| **(b)** | `PR::remove_vertex` calls `boost::clear_vertex(desc, graph)` first | the vertex goes **and so do its other segments' edges**, while those `Segment` objects stay registered elsewhere | strictly **more** destructive than the prototype |
+
+**Recommended: (a).**  It is one guard in one function; it protects every one of
+`remove_vertex`'s call sites rather than only case 3; it converts a silent
+memory-corruption path into a no-op with a log line; and callers already have to
+tolerate a `false` return, because the function already returns `false` on an
+invalid descriptor.  (b) invents a deletion the prototype never performs.
+
+Either way it is a **shared production code** change — `TrackFitting` and
+`PRGraph` bind on PDVD, PDHD and the uBooNE chain — so it is owed a knob-off
+byte-identity gate on each affected detector's standard manifest, not only
+SBND's 3067.  Since the guard only fires where the current behaviour is
+undefined, the expectation is byte-identity everywhere except 494297.
+
 ---
 
 ## 7 The labelled-set adjudication
@@ -813,7 +918,7 @@ the guard attribution (§4.5).
 | # | item | status |
 |---|---|---|
 | 1 | **turn on this, since it is a bug fix** | **DONE** — both defaults flipped, §2's T0′/T1′/T1″ proofs, this commit |
-| 2 | **fix the crashing event** | open — §6.3 carries the diagnosis and the method note; gate it as a shared-code change on every binder |
+| 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
 | 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | open — 177536 and 347890; note that 3 of 5 cathode-bridge sentinels still pass (§7.1), so this is two events, not a broken mechanism |
 | 4 | **understand why the energy was added for idx 3** | open — 393505, a `mu- 268` node appears and Enu goes 560 → 858; establish whether that node is the pr/129 cosmic returning or a real daughter previously missed |
 | 5 | **improve the hadronic shower reconstruction** | open — 137238 is doc 127's own event; the reading list the owner pointed at is docs 127, 93, 125, 133, 136 and 141, whose closing finding is that PID, not clustering, is the next front (≥ 29 % of μ-typed objects are EM showers) |
