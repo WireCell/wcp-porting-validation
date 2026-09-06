@@ -1070,6 +1070,21 @@ compared recursively -- not a fixed list of arrays that might have missed one.
 `op_pes_pred` -- the Q/L *predicted* PE per flash -- being identical is worth calling out: that is
 the light prediction the matching is scored on, and it does not move.
 
+> **Correction 2026-09-06 (doc pdhd/05 sec 4).**  The sweep above is over the **clustering job's**
+> products.  The cosmic taggers do not run on those: they run inside the PR job, on `mabc-pr.zip`,
+> where the PR chain has re-clustered -- and there the two arms do **not** agree on the cluster
+> list (clusters in `mabc-pr.zip`, ON / OFF: 98/98, 86/99, **126/96**, 104/103, 131/150, 103/92).
+> So "sec 10.2 proves the clustering is the same objects, therefore idents are comparable" does
+> not follow as written.  Measured over the clusters the taggers actually evaluate, the claim
+> comes out **stronger** than the one it replaces: every ident `TaggerCheckTGM` evaluates is a Bee
+> `cluster_id` (0 exceptions, both arms, six events); the **evaluated ident set is identical
+> between the arms on all six events** (574 each, matching the sec 10.3 table); and **565 of those
+> 574 have bit-identical point sets**.  The cluster-count spread is entirely in clusters below the
+> tagger's threshold, which never enter the mover derivation.  The 9 that do differ are `evt1/36`,
+> `evt12/{28,35,37}`, `evt16/67`, `evt20/31`, `evt22/{31,34,56}`; **one of them, `evt 20 cluster
+> 31`, is on the sec 11 scan sheet** (11 432 points ON, 11 065 OFF) and is scanned as the ON-arm
+> object.
+
 And the Q/L matching itself, compared as the set of `(flash id, cluster ident, gidx)` bundles the
 `QLMatching:matching_joint` stage logs -- meaningful precisely because `cluster_id` is preserved:
 
@@ -1124,8 +1139,10 @@ census over all six events moves correspondingly little:
 as a second, independent lead and sec 9.7 left open whether it was the same family as this defect.
 It is **not**: it survives the fix untouched, so it is a separate defect and stays on the list.
 
-The STM movement is the one to read carefully, and cluster idents are comparable across arms
-(sec 10.2 proves the clustering is the same objects):
+The STM movement is the one to read carefully.  Cluster idents **are** comparable across arms,
+but for the reason in the sec 10.2 correction above -- the evaluated ident set is identical on all
+six events and 565 of 574 evaluated clusters are bit-identical point sets -- not because sec 10.2's
+clustering-job sweep says so:
 
 | | count |
 |---|---|
@@ -1268,9 +1285,16 @@ chain.  Either way this is 6 events -- it bounds nothing about the full run.
 
 ### 11.6 Returning the labels
 
-Fill the `label` column of `bee-pr-run029107-d04movers.sheet.tsv` (`note` is free text, e.g. which
-end is in a dead region) and hand it back.  Scoring is one command against the KEY, and the bar
-above is fixed as of this commit -- it is not to be re-tuned after the labels are seen.
+**Superseded 2026-09-06 by the scan display, doc [pdhd/05](05_mover-scan-display.md).**  The Bee
+set stays as the record, but the scan itself is now `pdhd/d05_scan/serve_d05_scan.sh 5017`: the
+object is on screen with its ends marked and the eight labels of sec 11.3 are buttons, and every
+click writes `work/d05_scan_labels/<tag>/{labels.json,filled_sheet.tsv}`.  Scoring is unchanged --
+`d04_movers_score.py` against `filled_sheet.tsv` -- and **the bar in sec 11.5 is fixed as of commit
+`546fcbaa`; it is not to be re-tuned after the labels are seen.**
+
+The manual route still works if preferred: fill the `label` column of
+`bee-pr-run029107-d04movers.sheet.tsv` (`note` is free text, e.g. which end is in a dead region)
+and hand it back.
 
 ## 12. Not done / next
 
