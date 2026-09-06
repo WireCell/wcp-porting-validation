@@ -805,13 +805,18 @@ scans. §10 item 1 is still what is owed.)
 
 **Recommendation, in order.**
 
-1. **Settle the wrapped-strip question first.** It is upstream of everything else
-   in this doc, and §12 now says *why*: 78 % of PDHD's sampled points carry fewer
-   than two plane charges and can never be Steiner terminals, against 32 % on
-   PDVD. Concretely: grade **`retile_wrapped_channel_activity`** on a hand scan of
-   the STM verdicts it moves, the way doc pdvd/31 round 6 did. It is the only
-   knob measured to raise the terminal ceiling (3.6×, §12.4) and the only one
-   that moves the §8.6 coverage number. Then re-derive §8 and propose constants.
+1. **DONE — and the answer is no. See §13.3.** The hand scan graded
+   **`retile_wrapped_channel_activity`** on all 224 STM verdicts it moves:
+   **73 % of the tags it adds are on through-going objects**, and its entire
+   measured benefit comes from tags it correctly *deletes*. **Keep it default
+   OFF.** The consequence for this doc is the negative result: the knob does
+   raise the terminal ceiling 3.6× (§12.4), and that **does not** buy better STM
+   verdicts — so terminal starvation is not the binding constraint on PDHD's STM
+   quality, and no further effort should go into widening the terminal set.
+   §8's constants can now be re-derived on the knob-off arm, which §9.1 already
+   showed does not move the answer.
+   The remaining open question is *why* a denser graph re-fits 130 clusters into
+   stopping muons a human reads as through-going.
    **Not** `wrapped_channel_charge`: §12.4 measures it at zero effect on the
    terminal population (the Steiner stage runs on the retiled cloud, never the
    sampled one). It is now reachable from the clustering driver
@@ -1168,5 +1173,88 @@ into `THRU` through a bare `else`, which would have mis-scored every `FRAG` and
 unknown label, with a self-test that feeds it one. The self-test also asserts
 the dense path is not inert (strictly more points than the thinned one).
 
-**Status: awaiting labels.** Process and scoring in `pdhd/stm_scan/README.md`;
-52 headless checks pass (`selftest_stm_scan.py`, rc=0).
+**Status: complete.** Process and scoring in `pdhd/stm_scan/README.md`;
+52 headless checks pass (`selftest_stm_scan.py`, rc=0). Result in §13.3.
+
+### 13.3 Result: do not flip — the knob's gain is all on the tags it *removes*
+
+All 224 items scanned by the owner on 2026-09-05.
+Repro: `cd pdhd/stm_scan && python3 score_stm_scan.py` (labels in
+`pdhd/work/stm_scan_labels/retile0/labels.json`).
+
+| choice | n |
+|---|---|
+| `UNCLEAR` | 101 |
+| `THRU` | 68 |
+| `STM` | 26 |
+| `FRAG → THRU` | 24 |
+| `MESSY` | 4 |
+| `FRAG → STM` | 1 |
+
+119 rows score, 105 do not.
+
+**The decomposition that decides it.** The scorer's headline (stratum A net
+**+18** for ON) is a sum of two opposite effects, and only one of them is the
+knob working:
+
+| | n | deserve an STM tag | agreement net |
+|---|---|---|---|
+| tags the knob **adds** (off 0 → on 1) | 130 | **27 %** (14 of 52 scored) | **−23** |
+| tags the knob **removes** (off 1 → on 0) | 94 | 19 % (13 of 67 scored) | **+41** |
+
+**73 % of the tags this knob adds are on through-going objects.** Its entire
+measured benefit comes from tags it *deletes* — which it deletes correctly, 81 %
+of the time. Nothing in the scan supports the mechanism the knob was proposed
+for.
+
+**In tag-set terms**, extrapolating the scored rate to all 224 contested tags,
+flipping ON buys **+17 true STM tags at the cost of +19 false ones**. Bounds
+over the 105 unjudgeable rows: +52 true / −16 false if every one is really a
+stopper (implausible — see below), +1 true / +35 false if none is.
+
+**The `FRAG` pre-registration did not fire.** Only **13 of 130 gains (10 %)**
+sit on an under-clustered fragment, so this scan is *not* a story about
+under-clustering, and the knob verdict stands on its own. Fragments are 96 %
+pieces of **through-goers** (24 `FRAG → THRU` vs 1 `FRAG → STM`), which is what
+the geometry predicts and is a useful check that the category was used as
+intended.
+
+**A defect in my own acceptance bar.** Clause 2 — "stratum-B gains are not
+predominantly `THRU`/`UNCLEAR`" — is **unsatisfiable by construction**, and I
+should have seen it before the scan. Judgeability is a clean monotone function
+of cluster size:
+
+| npts | n | unjudgeable |
+|---|---|---|
+| < 50 | 28 | **100 %** |
+| 50–200 | 22 | 95 % |
+| 200–1000 | 41 | 73 % |
+| 1000–4000 | 51 | 39 % |
+| > 4000 | 82 | **7 %** |
+
+Stratum B is `npts < 200`, so it is 98 % unjudgeable (49 of 50 `UNCLEAR`). A
+30-point blob has no visible trajectory — this is not a display limitation that
+a better viewer could fix, and no hand scan can adjudicate stratum B. §13.1's
+stratification was right to *keep* those items (they are 36 % of the gains), but
+the bar should have asked something answerable of them. The bar therefore
+returns "do not flip" mechanically; the decision below rests on the
+gains/removals decomposition instead, which needs no stratum-B input.
+
+**That the labels are internally consistent** is worth stating, since the scan
+took about 20 minutes: the judgeability gradient above is cleanly monotone over
+five size bins, and the fragment split is 96 % one-sided in the physically
+expected direction. Neither would hold for careless labelling. The scored rows
+are, by construction, the **large and clear** ones — so the +18 in stratum A is
+measured on the easiest 68 % of stratum A, and the knob's *gains* are much more
+often unjudgeable (60 %) than its *removals* (29 %).
+
+**Verdict: keep `retile_wrapped_channel_activity` default OFF.**
+
+The finding that matters for §12 is the negative one. §12.4 measured that this
+knob raises the Steiner terminal ceiling **3.6×** (0.134 → 0.484 eligible
+points) and is the only knob that moves §8.6's coverage number. §13.3 measures
+that those extra terminals **do not produce better STM verdicts**. So terminal
+starvation is *not* the binding constraint on PDHD's STM quality, and §10's
+remaining items should not be spent on widening the terminal set further. The
+open question moves to why a denser graph re-fits 130 clusters into stopping
+muons that a human reads as through-going.

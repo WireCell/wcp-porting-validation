@@ -1,5 +1,13 @@
 # PDHD stopping-muon hand scan — `retile_wrapped_channel_activity`
 
+> **COMPLETE, 2026-09-05.** All 224 items scanned. **Verdict: do not flip —
+> keep the knob default OFF.** 73 % of the tags it adds are on through-going
+> objects; its whole measured benefit is on tags it correctly deletes. Full
+> result and the reasoning in `../docs/stm-tagger-chain.md` §13.3; the scorer
+> output as run is saved at `../docs/scan/pdhd_retile_scan_result.txt`.
+> Labels: `../work/stm_scan_labels/retile0/labels.json` (a record — do not
+> regenerate; a re-scan gets a new `--tag`).
+
 The gate doc `../docs/stm-tagger-chain.md` §10 item 1 asks for, now as a
 dedicated display instead of a TSV you fill in by hand.
 

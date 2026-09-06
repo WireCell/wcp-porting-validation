@@ -1,0 +1,57 @@
+labels: 224   scored: 119   MESSY: 4   UNCLEAR: 101   not in key: 0
+of the scored rows, 25 (21%) are FRAG -- the cluster was only part of the object
+
+BY STRATUM
+  A  npts >= 200                     n=118   OFF right  50 (42%)   ON right  68 (58%)   net +18   [unscored 56, FRAG 25]
+  B  npts <  200                     n=  1   OFF right   1 (100%)   ON right   0 (0%)   net -1   [unscored 49, FRAG 0]
+
+BY DIRECTION OF CHANGE
+  knob GAINS the tag (off0 -> on1)   n= 52   OFF right  38 (73%)   ON right  14 (27%)   net -24   [unscored 78, FRAG 13]
+  knob LOSES the tag (off1 -> on0)   n= 67   OFF right  13 (19%)   ON right  54 (81%)   net +41   [unscored 27, FRAG 12]
+
+BY BOTH
+  A, knob gains                      n= 51   OFF right  37 (73%)   ON right  14 (27%)   net -23   [unscored 32, FRAG 13]
+  A, knob loses                      n= 67   OFF right  13 (19%)   ON right  54 (81%)   net +41   [unscored 24, FRAG 12]
+  B, knob gains                      n=  1   OFF right   1 (100%)   ON right   0 (0%)   net -1   [unscored 46, FRAG 0]
+  B, knob loses                      (none)
+
+OVERALL
+  all scored                         n=119   OFF right  51 (43%)   ON right  68 (57%)   net +17   [unscored 105, FRAG 25]
+
+SENSITIVITY -- whole objects only (FRAG rows dropped)
+  all scored, partial excluded       n= 94   OFF right  39 (41%)   ON right  55 (59%)   net +16   [unscored 105, FRAG 0]
+  A, gains, partial excluded         n= 38   OFF right  25 (66%)   ON right  13 (34%)   net -12   [unscored 32, FRAG 0]
+  B, gains, partial excluded         n=  1   OFF right   1 (100%)   ON right   0 (0%)   net -1   [unscored 46, FRAG 0]
+
+WHAT THE KNOB IS ACTUALLY DOING -- composition of the tags it ADDS
+  UNCLEAR       77  (59%)
+  THRU          26  (20%)
+  STM           13  (10%)
+  FRAG_THRU     12  (9%)
+  MESSY          1  (1%)
+  FRAG_STM       1  (1%)
+  --> 13 of 130 gains (10%) are on an under-clustered fragment
+
+unscored rate by stratum (MESSY + UNCLEAR):
+  A: 56 / 174 (32%)
+  B: 49 / 50 (98%)
+
+ACCEPTANCE BAR
+  ORIGINAL, stated in docs/scan/README.md before any label existed, quoted
+  verbatim and NOT revised:
+
+    "flip only if the knob is net-positive in stratum A AND its stratum-B gains
+     are not predominantly THRU/UNCLEAR.  A knob that fixes real tracks while
+     inventing fragment tags is a different decision from one that does only the
+     first."
+
+  APPENDED 2026-09-05, with exactly ONE label in existence (item 1, evt 21
+  cl 125, UNCLEAR), when the scanner reported that some clusters are
+  under-clustered pieces of a TGM and the FRAG/MESSY categories were added:
+
+    The binary above is unchanged -- FRAG rows carry the full object's verdict,
+    so they count in it.  Read 'BY BOTH' for the bar itself.  Additionally, and
+    stated here before the labels exist: IF the FRAG share of the knob's GAINS
+    is large, then the scan's finding is about under-clustering rather than
+    about this knob, and that is the more important result even if the binary
+    comes out favourable.  Report it either way; the flip is the owner's call.
