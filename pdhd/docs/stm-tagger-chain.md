@@ -29,6 +29,16 @@ retiler's channel lookup does not handle that. Turning the existing
 Settling the wrapped-strip question is item 1 of §10; re-deriving the constants
 and proposing them for production is item 2.
 
+> **Correction, 2026-09-05 — `01_steiner-wrapped-planes.md` §4.** The wrapped-strip
+> gap named here was only *half* diagnosed. There are **two** broken reverse
+> wire→channel lookups on the Steiner input path, not one, and the second — the PR
+> job's own samplers, knob `wrapped_channel_charge` — is what zeroes 55–60 % of the
+> induction points (every segment-1 wire, deterministically). With both knobs on,
+> `ncharge = 3` goes 0.000 → 0.532 and eligible points 0.217 → 0.779. **Both are
+> PDHD PR production since 2026-09-05** (owner decision), so "nothing is flipped"
+> no longer holds for the PR job. Every arm below labelled "knob on" is the
+> half-fix.
+
 ---
 
 ## 0. Repro
@@ -392,7 +402,7 @@ SBND/PDVD values as documentation.
 | `dl_weights` | `''` | geometric vertex only; the uBooNE-trained SCN net is ungraded on PDHD and is not bit-stable (CLAUDE.md M4). PDVD flipped it on 2026-09-04; pass the path (and preload libpython) to try it |
 | `steiner_terminal_charge` | unset ⇒ C++ 4000 e | SBND's operating point. PDVD needed 500 e for its 7.65 mm pitch; PDHD's 4.67 mm pitch carries ~1.6× SBND's charge per point, so 4000 is if anything easier to pass. A PDHD doc-37 round is owed (§10) |
 | `ctpc_aniso_metric` | off | PDHD's pitch/slice-step ratio is 1.48/1.48/1.52, between SBND's 0.96 and MicroBooNE's 1.36, far from PDVD's 2.58 that motivated the metric (doc pdvd/34, 36) |
-| `wrapped_channel_charge`, `retile_wrapped_channel_activity` | off | §9 — the single largest known gap |
+| `wrapped_channel_charge`, `retile_wrapped_channel_activity` | **both on** — PDHD PR production 2026-09-05 | was §9's "single largest known gap"; both flipped once `01_steiner-wrapped-planes.md` §4 found the *second* broken lookup. Pre-flip arm: `PDHD_PR_TLA="-S retile_wrapped_channel_activity=false -S wrapped_channel_charge=false"` |
 
 `run_pr_evt.sh` modes: `-stm` (default, the chain of this round), `-nu`
 (ungraded), `-empty` (the §3 gate), `-pipe`. `-stm-fit` adds the
@@ -822,6 +832,18 @@ scans. §10 item 1 is still what is owed.)
    sampled one). It is now reachable from the clustering driver
    (`PDHD_CLUS_TLA="-S wrapped_channel_charge=true"`) if someone wants to grade
    it against **Q/L matching**, which is a different consumer and untested here.
+
+   > **Superseded, 2026-09-05 — `01_steiner-wrapped-planes.md` §4.3, §5.** Two
+   > errors here. (i) The scan graded the **half**-fix: with only the retiler knob
+   > on, the sampler still zeroes every segment-1 wire, so the added candidates sit
+   > only in the two corner stripes of the plane. (ii) "**Not**
+   > `wrapped_channel_charge`" is wrong — §12.4 set that knob in the **clustering**
+   > job, whose sampler output the Steiner stage never reads (it retiles and
+   > re-samples with the PR job's own samplers, whose only consumer is
+   > `ImproveCluster_2:pr`). Set in the PR job it takes `ncharge = 3` from 0.000 to
+   > 0.532. **Both knobs are PDHD PR production since 2026-09-05.** The full-fix
+   > arm `stmwc` moves 237 tags against production and is **not** hand-scanned;
+   > that scan is deferred, not waived.
 2. **Then flip the transverse constants**, re-derived, with the doc-44 grading
    (2-D metrics, ring shares, dQ/dx, STM verdict churn) as the acceptance bar.
    The measurement machinery is committed and validated (§8.1), so that round is
@@ -966,6 +988,15 @@ continuations, against PDVD's 11.3 %). So **78 % of PDHD's sampled points can
 never be Steiner terminals at any threshold**, and the candidate ceiling is
 0.217 — a property of the charge lookup, not of the floor.
 
+> **Superseded, 2026-09-05 — `01_steiner-wrapped-planes.md` §4.** Every number in
+> this subsection is a **production** measurement with *both* wrapped-plane
+> lookups broken; none of it is a property of PDHD. The zero is deterministic by
+> wire **segment**, not statistical — `P(q ≠ 0)` is 0.000 on segment-1 wires,
+> which carry 55–60 % of the induction points. With both knobs on, over the same
+> four events, `ncharge = 3` is **0.532**, eligible is **0.779** (so 22 %, not
+> 78 %, can never be terminals), and all seven plane combinations appear. Both
+> knobs are PDHD PR production since 2026-09-05.
+
 ### 12.4 Which knob moves it: the 2 × 2
 
 Event 029107/0, one imaging input, one pinned binary, all four combinations of
@@ -1040,6 +1071,13 @@ completeness, not used.
    which is what `f_off_far` 0.72 measures. The one knob that raises the ceiling
    is also the only one that lowers `f_off_far` (0.721 → 0.586). §10 item 5 is
    no longer unexplained; it is the wrapped-plane defect of §9.
+
+> **Amended, 2026-09-05 — `01_steiner-wrapped-planes.md` §4–§5.** Item 1 stands
+> (500 e is still not binding on any arm, including the fully-fixed one). Items 2
+> and 3 name only *half* the defect: `retile_wrapped_channel_activity` alone
+> leaves the sampler zeroing every segment-1 wire, and the pair takes the ceiling
+> to 0.779 eligible / 0.532 `ncharge = 3` and `f_off_far` to 0.565. Both knobs
+> are PDHD PR production since 2026-09-05.
 
 **Repro** (binary pin `/home/xqian/tmp/pdhdstm_libpin`, §0):
 
@@ -1278,6 +1316,20 @@ measured on the easiest 68 % of stratum A, and the knob's *gains* are much more
 often unjudgeable (60 %) than its *removals* (29 %).
 
 **Verdict: keep `retile_wrapped_channel_activity` default OFF.**
+
+> **Superseded, 2026-09-05 — `01_steiner-wrapped-planes.md` §5.** The arm scanned
+> here is the half-fix. The sampler's own wrapped lookup was still broken, so
+> segment-1 wires — 55–60 % of the induction points — read exactly zero and the
+> extra terminals were confined to two corner stripes; the scanned population is
+> therefore biased, not a sample of what the full fix adds. With both knobs the arm
+> is a different object (`stmwc`: 178 accepted passes against this arm's 207 and
+> production's 175, and the best Steiner counters of any arm — few-terminal
+> 3719 → 960, no-steiner 1317 → 319). `retile_wrapped_channel_activity` is **ON in
+> PDHD PR production** since 2026-09-05 (owner decision), paired with
+> `wrapped_channel_charge`. The negative conclusion below — that terminal
+> starvation is not the binding constraint — is *consistent* with the full fix
+> (178 ≈ 175) but was not re-established on it: the 237 tags `stmwc` moves are
+> ungraded in both directions.
 
 The finding that matters for §12 is the negative one. §12.4 measured that this
 knob raises the Steiner terminal ceiling **3.6×** (0.134 → 0.484 eligible

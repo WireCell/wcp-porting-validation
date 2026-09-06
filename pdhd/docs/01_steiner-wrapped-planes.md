@@ -189,8 +189,10 @@ by two *reverse* lookups, both broken on a wrapped face:
 
 1. **The retiler's activity** (`improvecluster_1.cxx:1028-1064`): activity is
    collected per wire index (1148 entries), and the ISlice the sampler will read is
-   keyed by `channels[wire_idx]` — the 800-entry channel list indexed by a wire
-   index. U survives only at indices < 400 and happens to be addressed correctly
+   keyed by `channels[wire_idx]` — a **400-entry** list (`IWirePlane::channels()`
+   keeps one entry per *segment-0* wire, so the plane's 800 channels are
+   represented by 400 list slots) indexed by a 1148-wire index. U survives only
+   at indices < 400 and happens to be addressed correctly
    there; V's surviving 400 entries are mis-addressed by 748 wires; everything at
    index ≥ 400 is dropped. `retile_wrapped_channel_activity` resolves by ident
    through `IAnodePlane::channel()` instead.

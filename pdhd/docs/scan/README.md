@@ -6,11 +6,20 @@
 > `pdhd/stm_scan/README.md`. The two TSVs here remain the item list and the
 > answer key that the app and its scorer read.
 
+> **Historical, 2026-09-05 — `docs/01_steiner-wrapped-planes.md` §5.** This scan
+> graded the **half**-fix (retiler knob only); the PR sampler's own wrapped lookup
+> was still broken, so segment-1 wires — 55–60 % of the induction points — read
+> exactly zero and the arm's extra terminals were confined to two corner stripes.
+> **Both** wrapped-plane knobs have since been flipped to PDHD PR production
+> (2026-09-05, owner decision). The scan owed now is `stm0 → stmwc` (237 contested
+> tags) on a **fresh** label tag — never into this one (CLAUDE.md M13). The two
+> TSVs here are a record of the half-fix arm and stay as they are.
+
 Gate for doc `stm-tagger-chain.md` §10 item 1. §12 measured that this knob
 raises the Steiner terminal ceiling 3.6× and is the only knob that moves the
-§8.6 coverage number; it is still **default OFF**. This scan decides whether the
-STM verdicts it moves get better, and it is the last thing standing between the
-measurement and a flip proposal.
+§8.6 coverage number; it was **default OFF** when this scan ran. This scan
+decides whether the STM verdicts it moves get better, and it is the last thing
+standing between the measurement and a flip proposal.
 
 ## What you need to look at
 

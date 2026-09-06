@@ -59,11 +59,20 @@ function(
     // work/<RUN6>_<EVT>/pctree-evt<EVT>.tar.gz.  See
     // pgrapher/experiment/pdhd/clus.jsonnet clus_all_tpc tensor_outname.
     save_tensors = '',
-    // Wrapped-plane induction charge for the sampled points (doc
-    // pdhd/docs/stm-tagger-chain.md sec 12).  false (default) => the key is
-    // omitted from every BlobSampler and the compiled config is byte-identical.
-    // Turning it on changes the pctree this job writes, hence production Q/L
-    // output -- a measurement arm only, not a flip.
+    // Wrapped-plane induction charge for the sampled points (docs
+    // pdhd/docs/01_steiner-wrapped-planes.md sec 4 and 7, stm-tagger-chain sec 12).
+    // false (default) => the key is omitted from every BlobSampler and the
+    // compiled config is byte-identical.  Turning it on changes the pctree this
+    // job writes, hence production Q/L output -- a measurement arm only, not a
+    // flip.
+    //
+    // NOT the same decision as the PR job's knob of the same name.  The PR job
+    // (wct-pr-perevt.jsonnet) has had wrapped_channel_charge = true since
+    // 2026-09-05: its samplers feed only ImproveCluster_2's retiler and their
+    // point cloud is discarded after the Steiner stage, so nothing persists.
+    // THIS one rewrites the pctree that dQ/dx, track fitting and Q/L matching
+    // all read, and is still PARKED pending an owner decision (doc 01 sec 7).
+    // The two need not agree -- see doc 01 sec 4.3.
     wrapped_channel_charge = false,
 )
 
