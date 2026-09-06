@@ -1,6 +1,10 @@
 # Steiner terminals on wrapped induction planes — the PDHD charge ceiling on three detectors, the fix that was never applied, and what "nearby wires" can and cannot buy
 
-Round of 2026-09-05. Follows `stm-tagger-chain.md` §12 (the charge census that
+Round of 2026-09-05. **First numbered PDHD doc** (owner convention 2026-09-05:
+new `pdhd/docs` files carry a `NN_` prefix so rounds can be tracked; the earlier
+topic-named files keep their names because other docs cite them). The toolkit
+commit `3bd4e4fd` cites this file by its pre-rename name `steiner-wrapped-planes`.
+Follows `stm-tagger-chain.md` §12 (the charge census that
 found `ncharge = 3` is exactly zero on PDHD) and §13 (the hand scan that rejected
 the retiler knob). Owner's three questions, in order:
 
@@ -30,10 +34,10 @@ TLA="-S retile_wrapped_channel_activity=true -S wrapped_channel_charge=true"
 
 # --- sec 2-4: the census on EXISTING dumps (no reconstruction), then the arm sec 12.4 never ran
 W=../../wire-cell-data/protodunehd-wires-larsoft-v1.json.bz2
-python3 docs/scripts/d46_steiner_plane_multiplicity.py --wires $W --det pdhd --geometry     # sec 3
+python3 docs/scripts/d01_steiner_plane_multiplicity.py --wires $W --det pdhd --geometry     # sec 3
 for e in 0 10 12 14; do mkdir -p work/029107_${e}_phdumpwc; ln -sfn $PWD/work/029107_${e}_stm0/pctree-evt*.{tar.gz,tlas} work/029107_${e}_phdumpwc/; done
 for e in 0 10 12 14; do WCT_STEINER_PHASE_DUMP=1 PDHD_KEEP_CFG=1 PDHD_PR_TLA="$TLA" ./run_pr_evt.sh -s phdumpwc -stm -stm-fit 029107 $e; done
-python3 docs/scripts/d46_steiner_plane_multiplicity.py \
+python3 docs/scripts/d01_steiner_plane_multiplicity.py \
     "pdhd_prod_4evt:work/029107_*_phdump/wct_pr_029107_*.log" \
     "pdhd_prod_evt0:work/029107_0_phdump/wct_pr_029107_0.log" \
     "pdhd_retiler_evt0:work/029107_0_phdumpw/wct_pr_029107_0.log" \
@@ -43,24 +47,24 @@ python3 docs/scripts/d46_steiner_plane_multiplicity.py \
     "pdhd_both_evt0:work/029107_0_phdumpwc/wct_pr_029107_0.log" \
     "pdhd_both_probe_evt0:work/029107_0_phdumpx/wct_pr_029107_0.log" \
     --thr 500 --validate --wires $W --det pdhd \
-    --tsv docs/figs/d46_plane_multiplicity_pdhd.tsv --seg-tsv docs/figs/d46_segment_attribution_pdhd.tsv
-python3 docs/scripts/d46_steiner_plane_multiplicity.py \
+    --tsv docs/figs/d01_plane_multiplicity_pdhd.tsv --seg-tsv docs/figs/d01_segment_attribution_pdhd.tsv
+python3 docs/scripts/d01_steiner_plane_multiplicity.py \
     "pdvd_039252_2_d31r6e2e:../pdvd/work/039252_2_d31r6e2e/wct_pr_039252_2.log" \
     "pdvd_039252_2_probe:../pdvd/work/039252_2_d46dump/wct_pr_039252_2.log" \
-    --thr 500 --validate --det pdvd --tsv docs/figs/d46_plane_multiplicity_pdvd.tsv
-python3 docs/scripts/d46_steiner_plane_multiplicity.py \
+    --thr 500 --validate --det pdvd --tsv docs/figs/d01_plane_multiplicity_pdvd.tsv
+python3 docs/scripts/d01_steiner_plane_multiplicity.py \
     "sbnd_5evt:../sbnd/sbnd_xin/work-d31r7probe2/pr_evt*/wct_pr_evt*.log" \
     "sbnd_2evt_probe:../sbnd/sbnd_xin/work-d46probe/pr_evt*/wct_pr_evt*.log" \
-    --thr 4000 --validate --det sbnd --tsv docs/figs/d46_plane_multiplicity_sbnd.tsv
+    --thr 4000 --validate --det sbnd --tsv docs/figs/d01_plane_multiplicity_sbnd.tsv
 
 # --- sec 5: the 30-event arm with both knobs, and the sec 12.5 metrics
 for d in work/029107_*_stm0; do n=${d%_stm0}_stmwc; mkdir -p $n; ln -sfn $PWD/$d/pctree-evt*.{tar.gz,tlas} $n/; done
 PDHD_MAX_JOBS=8 PDHD_KEEP_CFG=1 PDHD_PR_TLA="$TLA" ./run_pr_evt.sh -s stmwc -stm -stm-fit 029107 all
-python3 docs/scripts/d46_harvest_counters.py stm0 stmw stmwc --churn
+python3 docs/scripts/d01_harvest_counters.py stm0 stmw stmwc --churn
 for arm in stm0 stmw stmwc; do
   python3 docs/scripts/d42_proj2d_resid.py --det pdhd --out /home/xqian/tmp/d46/ana/resid_$arm work/029107_*_$arm/tracking-stm.root
   python3 docs/scripts/d42_dqdx_rr.py --det pdhd --ref stm/pdhd_ref_dqdx.json --ref-key MuonDeDx --out /home/xqian/tmp/d46/ana/dqdx_$arm work/029107_*_$arm/tracking-stm.root
-done   # -> docs/figs/d46_stm_arms.tsv (columns documented in the file header)
+done   # -> docs/figs/d01_stm_arms.tsv (columns documented in the file header)
 
 # --- sec 6: the probe extension (toolkit commit of this round), NEW pin, env set vs unset
 export LD_LIBRARY_PATH=/home/xqian/tmp/d46_libpin
@@ -76,9 +80,9 @@ for i in 1 5; do SBND_WORK_ROOT=$R WCT_STEINER_PHASE_DUMP=1 ./run_pr_evt.sh mc -
 cd ..; python3 ../abtest/hash_archive.py pdhd/work/029107_0_{phdumpx,d46base}/mabc-pr.zip pdvd/work/039252_2_{d46dump,d46base}/mabc-pr.zip
 ```
 
-Committed products: this doc; `docs/scripts/d46_steiner_plane_multiplicity.py`,
-`docs/scripts/d46_harvest_counters.py`; `docs/figs/d46_plane_multiplicity_{pdhd,pdvd,sbnd}.tsv`,
-`docs/figs/d46_segment_attribution_pdhd.tsv`, `docs/figs/d46_stm_arms.tsv`; the
+Committed products: this doc; `docs/scripts/d01_steiner_plane_multiplicity.py`,
+`docs/scripts/d01_harvest_counters.py`; `docs/figs/d01_plane_multiplicity_{pdhd,pdvd,sbnd}.tsv`,
+`docs/figs/d01_segment_attribution_pdhd.tsv`, `docs/figs/d01_stm_arms.tsv`; the
 correction pointer under `stm-tagger-chain.md` §12.4. Toolkit: the env-gated
 probe extension in `clus/src/SteinerGrapher.cxx` (§6.1). Not committed: the arms
 `work/029107_*_{phdumpwc,stmwc,phdumpx,d46base}`, `pdvd/work/039252_2_{d46dump,d46base}`,
@@ -267,7 +271,7 @@ configuration (`protodunevd/pr.jsonnet:52,95` pass both), which is why PDVD read
 ## 5. Question 3a: is it a problem — the 30-event arm
 
 The §12.5 table gains its missing row. Same 30 pctrees, same pin, same scripts
-(`docs/figs/d46_stm_arms.tsv`; the `stm0`/`stmw` rows re-derive the published
+(`docs/figs/d01_stm_arms.tsv`; the `stm0`/`stmw` rows re-derive the published
 ones exactly):
 
 | arm (PR job knobs) | accepted passes | few-terminal warns | no-steiner | terminals in | `f_off_far` U | `f_off_near` U | `k_pop` | contrast ≥ 2 (n) | doc-55 stopping μ | STM tags |
@@ -469,9 +473,9 @@ the evidence, not a gate).
 
 ## 10. Files
 
-Tracked: `docs/steiner-wrapped-planes.md` (this), `docs/scripts/d46_steiner_plane_multiplicity.py`,
-`docs/scripts/d46_harvest_counters.py`, `docs/figs/d46_plane_multiplicity_{pdhd,pdvd,sbnd}.tsv`,
-`docs/figs/d46_segment_attribution_pdhd.tsv`, `docs/figs/d46_stm_arms.tsv`, the
+Tracked: `docs/01_steiner-wrapped-planes.md` (this), `docs/scripts/d01_steiner_plane_multiplicity.py`,
+`docs/scripts/d01_harvest_counters.py`, `docs/figs/d01_plane_multiplicity_{pdhd,pdvd,sbnd}.tsv`,
+`docs/figs/d01_segment_attribution_pdhd.tsv`, `docs/figs/d01_stm_arms.tsv`, the
 §12.4 pointer in `docs/stm-tagger-chain.md`. Toolkit: `clus/src/SteinerGrapher.cxx`
 (probe fields, env-gated). Inputs reused: `work/029107_*_{stm0,stmw,phdump,phdumpw,wccdump,wccdumpw}`,
 `pdvd/work/039252_2_d31r6e2e`, `sbnd_xin/work-d31r7probe2`, `sbnd_xin/work-dbg25a-d97prodchk/ql_evt{2,14}`.

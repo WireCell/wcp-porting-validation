@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pdhd/docs/steiner-wrapped-planes.md: the plane-multiplicity census of the
+"""pdhd/docs/01_steiner-wrapped-planes.md: the plane-multiplicity census of the
 RETILED cluster the Steiner stage reads, on any detector, from the env-gated
 probe WCT_STEINER_PHASE_DUMP=1 (clus/src/SteinerGrapher.cxx, `steiner_phase_pt`
 lines with phase=P0_cluster: every point of every >1000-point retiled cluster
@@ -29,12 +29,12 @@ What it reports per label (an arm = one or more logs):
     wires in the same slice > 0) / empty, per plane.
 
 Usage (from wcp-porting-img/pdhd):
-  python3 docs/scripts/d46_steiner_plane_multiplicity.py \
+  python3 docs/scripts/d01_steiner_plane_multiplicity.py \
       "PDHD prod:work/029107_*_phdump/wct_pr_*.log" \
       "PDVD:../pdvd/work/039252_2_d31r6e2e/wct_pr_039252_2.log" \
       "SBND:../sbnd/sbnd_xin/work-d31r7probe2/pr_evt*/wct_pr_evt*.log" \
-      --thr 500 --validate --tsv docs/figs/d46_plane_multiplicity.tsv
-  python3 docs/scripts/d46_steiner_plane_multiplicity.py \
+      --thr 500 --validate --tsv docs/figs/d01_plane_multiplicity.tsv
+  python3 docs/scripts/d01_steiner_plane_multiplicity.py \
       "retiler on:work/029107_0_phdumpw/wct_pr_029107_0.log" \
       --wires ../../wire-cell-data/protodunehd-wires-larsoft-v1.json.bz2 --det pdhd
 

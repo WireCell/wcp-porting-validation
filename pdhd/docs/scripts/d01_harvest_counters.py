@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pdhd/docs/steiner-wrapped-planes.md sec 5: the per-arm log counters of the
+"""pdhd/docs/01_steiner-wrapped-planes.md sec 5: the per-arm log counters of the
 stm-tagger-chain.md sec 12.5 table (a tracked replacement for the scratch
 harvest_scan.py that produced it), plus the STM-tagged SET per event so two
 arms can be compared the way sec 13.1 did (on the (event, cluster) key, not on
@@ -13,8 +13,8 @@ Counters per arm, summed over its logs (strings are the log's own):
   n_verdicts 'TaggerCheckSTM: cluster'                -- all STM verdicts
 
 Usage (from wcp-porting-img/pdhd):
-  python3 docs/scripts/d46_harvest_counters.py stm0 stmw stmwc [--run 029107]
-  python3 docs/scripts/d46_harvest_counters.py stm0 stmwc --churn   # STM set diff, first vs each other arm
+  python3 docs/scripts/d01_harvest_counters.py stm0 stmw stmwc [--run 029107]
+  python3 docs/scripts/d01_harvest_counters.py stm0 stmwc --churn   # STM set diff, first vs each other arm
 """
 import argparse
 import glob

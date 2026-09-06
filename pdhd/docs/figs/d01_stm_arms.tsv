@@ -1,13 +1,13 @@
-# pdhd/docs/steiner-wrapped-planes.md sec 5: run 029107, 30 events, binary pinned to /home/xqian/tmp/pdhdstm_libpin (stm-tagger-chain.md sec 0).
+# pdhd/docs/01_steiner-wrapped-planes.md sec 5: run 029107, 30 events, binary pinned to /home/xqian/tmp/pdhdstm_libpin (stm-tagger-chain.md sec 0).
 # stm0 / stmw rows are the sec 12.5 '500' and '500 + retiler fix' rows re-derived with the tracked scripts (identical to the published ones);
 # stmwc = both wrapped-plane knobs in the PR job (-S retile_wrapped_channel_activity=true -S wrapped_channel_charge=true).
 # acc_resid = unique (event,cluster,pass) with status 0 in d42_proj2d_resid.py blocks; acc_dqdx = all_status0 ntracks of d42_dqdx_rr.py;
-# fewterm/nosteiner/thin_calls/term_in/term_out/keep_tags/n_verdicts from d46_harvest_counters.py; foff = median over accepted U blocks;
+# fewterm/nosteiner/thin_calls/term_in/term_out/keep_tags/n_verdicts from d01_harvest_counters.py; foff = median over accepted U blocks;
 # k_pop / n_c2 / doc55 from d42_dqdx_rr.py summary (all_status0 k_pop, contrast_ge2 ntracks, doc55_muon ntracks).
 arm	retiler_knob	sampler_knob	acc_resid	acc_dqdx	fewterm	nosteiner	thin_calls	term_in	term_out	keep_tags	n_verdicts	foff_far_U	foff_near_U	k_pop	n_c2	doc55
 stm0	off	off	175	170	3719	1317	1454	163639	145124	175	2246	0.721	0.047	0.8876	17	1
 stmw	on	off	207	205	1560	574	2631	385623	341260	211	2246	0.586	0.056	0.9268	24	1
 stmwc	on	on	178	172	960	319	2876	489043	436042	182	2246	0.565	0.059	0.9707	19	3
-# STM tag-set churn on the (event, cluster) key (d46_harvest_counters.py --churn), all 30 events differ in both comparisons:
+# STM tag-set churn on the (event, cluster) key (d01_harvest_counters.py --churn), all 30 events differ in both comparisons:
 # stm0 -> stmw : kept by both 81, gained 130, lost 94   (= sec 13.1's 224 contested tags)
 # stm0 -> stmwc: kept by both 60, gained 122, lost 115  (237 contested tags)
