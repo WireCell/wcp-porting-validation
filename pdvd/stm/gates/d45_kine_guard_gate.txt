@@ -79,3 +79,35 @@
 #   STM cluster (one PR candidate per bundle, nu_per_bundle) + 6 below the 15 cm floor; cluster 113 of 298595 sits at x = 336-338 cm against the anode.
 #
 # COMMITS: toolkit c1cd59b3 (apply-pointcloud, the guard knob) on db166521; wcp-porting-img a6313bd7 (main, this round: jsonnet flip, doc sec 8-12, scan, this record).
+#
+# ===== ROUND 3 (2026-09-05, owner: "fix" the 039253_16 tracking-stm.root wobble) -- knob proj_skip_unmapped_face (TrackFitting::Parameters, default 0)
+# ROOT CAUSE (found with a temporary env-guarded print, removed before commit): the 61 wobbling rows are cluster 37's gap-bridging path points
+#   (x -105..-77 cm, y ~ 0.7-1.6 cm, the rough path across the 28 cm gap between the cluster's two components).  IDetectorVolumes::contained_by()
+#   places them in apa 2 FACE 0, a volume with no wire planes: the geometry fill (TrackFitting.cxx ~:650-720, driven by the grouping's
+#   apa/face set) never creates a wpid_offsets/wpid_slopes entry for (2,0) -- the PDVD fill has 15 faces, apa 2 only face 1.  The 2nd-pass
+#   projection loop of do_single_tracking then does std::get<0>(offset_it->second) on end(): pu/pv/pw/pt of those 61 points are denormals
+#   (2^-1018 .. 2^-1016) that differ run to run; the dQ/dx fit finds no cells for them and leaves the 50000 e initial guess (the q = 4000 rows).
+#   122 misses per event (61 points x forward + backward pass), all apa=2 face=0; trajectory_fit's sibling loop already guards the same miss.
+# pins: new3 (above) vs new4 /home/xqian/tmp/d45_libpin/new4  libWireCellClus.so 1f197ab8b881a6f91a599d0e50b6a0c0  libWireCellRoot.so 821f83d8f3ce411148b70df0f282d7da
+#   freshness local/lib/libWireCellClus.so 18:01:31 > TrackFitting.cxx 18:00:41; wcdoctest-clus 313 cases pass (new: knob default/round-trip case).
+# CODE: TrackFitting.h Parameters::proj_skip_unmapped_face = 0; set/get_parameter; do_single_tracking 2nd-pass loop: on a wpid_offsets/slopes miss
+#   and knob > 0, skip the point (ptss/pu/pv/pw/pt/paf stay aligned) and WARN once per call with the count and the first point.  Knob 0 = the
+#   legacy (UB) path, byte-identical.  Runtime-JSON copy stm/pdvd_track_fitting_d45skip.json = canonical + proj_skip_unmapped_face 1 (canonical untouched).
+# GATE 1  PDVD -nu 2 events, knob OFF: pin new3 post-flip production (d45prod, same 2 events) vs new4 (d45g1n4): PASS 2/2, tracking-pr/stm SAME 2/2.
+#   (d45g1n3 vs d45g1n4 FAILs 2/2 -- d45g1n3 predates the round-2 flip: a config-epoch mismatch, not the code; feedback_check_the_cfg_epoch_between_arms.)
+# GATE 2  PDVD -stm 2 events: d45g2n3 vs d45g2n4 PASS 2/2, tracking-stm SAME 2/2.
+# GATE 3  SBND bare production 3 events: work-stmcamp-d45g3n3 vs d45g3n4 mabc/pctree/nusel SAME 3/3.
+# GATE 3b SBND exclusion-active 6 events: work-d45sbnd-off3-nuecc48 vs off4: mabc/pctree/nusel/tracking-pr SAME 6/6.
+# KNOB ON (runtime-JSON copy stm/pdvd_track_fitting_d45skip.json, pin new4), 120 events:
+#   -stm -stm-fit: d45skipoff (canonical, OFF) vs d45skipon (ON): d40r3_hash_gate PASS 120/120 (mabc-pr.zip + calib); STM=1 lines 594 = 594, TGM 2549 = 2549;
+#     tracking-stm.root SAME 119, DIFF 1 = 039253_16 (the fixed dump); the knob fires 3 times in 2 events: 039253_16 apa=2 face=0 (61 of 497/500 points,
+#     forward + backward pass) and 039252_7 apa=3 face=1 (5 of 712 points at (-92.0,169.0,154.2) cm -- a face present in the geometry of other events but
+#     absent from THIS event's grouping table).
+#   determinism: d45skipdet1 == d45skipdet2 == d45skipon tracking-stm.root for 039253_16 (SAME); the wobble is gone.
+#   -nu -stm-fit: d45prod (post-flip production, pin new3) vs d45skipnu (ON, new4): PASS 120/120; 569 candidates, vertex shift 0.00 on all, Enu identical on all,
+#     pre-dQ/dx drop identical (100714/1686254).  The knob touches no production product on this set.
+# FLIP (2026-09-05, under the owner's "fix" instruction; zero production change measured above): cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json
+#   gains proj_skip_unmapped_face 1.0 (+ a comment key; 3-line diff).  Confirm arms on the two firing events with the CANONICAL file (no TLA):
+#   d45skipcanon (-stm) == d45skipon PASS 2/2, tracking-stm SAME 2/2; d45skipcanonnu (-nu) == d45skipnu PASS 2/2; fires 2+1 as in the copy arms.
+#   SBND's sbnd_track_fitting.json untouched (C++ default 0; no SBND arm has ever shown the wobble).
+# COMMITS: toolkit 71b83e77 (knob + canonical JSON); wcp-porting-img: this record, doc sec 13, stm/pdvd_track_fitting_d45skip.json.

@@ -8,7 +8,10 @@ push"*): the NaN-Enu defect is guarded behind `kine_dqdx_skip_zero_dx` (sec 8), 
 are PDVD PRODUCTION since 2026-09-05** (sec 9; the production arm reproduces the graded arm
 120/120), the moved vertices are hand-scanned blind (sec 10: at a track end 14 -> 22 of 40),
 SBND is measured and NOT flipped (sec 11), and the two leftover `track_fit` questions are
-answered (sec 12). Gate record for round 2: `stm/gates/d45_kine_guard_gate.txt`. Doc pdvd/30's
+answered (sec 12). Round 3 (owner: *"fix"* the 039253/16 STM-dump wobble): it was a
+dereferenced missing geometry entry in `do_single_tracking`, not the writer; knob
+`proj_skip_unmapped_face`, **PDVD production ON**, zero production change on 120 events
+(sec 13). Gate record for rounds 2-3: `stm/gates/d45_kine_guard_gate.txt`. Doc pdvd/30's
 "duplicate segment" attribution is superseded (sec 3; a dated correction is in doc 30).
 
 Owner (2026-09-05), on the round-3 Bee set for evt 298595: *"if you compare the stm_fit
@@ -541,7 +544,8 @@ One arm-to-arm wobble surfaced: `tracking-stm.root` of 039253_16 differs between
 arms of this event (`d45nu0`, `d45on`, `d45on3`, `d45prod` all distinct) in the STM dump's
 `T_rec_charge.pt` branch on 61 of 6877 rows by ≤ 1.9e-309 — denormal garbage from an
 uninitialised read in the `stm_magnify` filler. Untouched by both knobs, invisible in every
-production product; owed to the owner as a separate one-liner.
+production product. **Fixed in round 3 (sec 13): the blame on the writer was wrong — the
+garbage is produced upstream, in the fitter's projection loop.**
 
 ## 10. Round 2c — the moved vertices, measured and hand-scanned blind
 
@@ -602,3 +606,51 @@ diagonal through the sheet; the PR's graph builds a V through it (three segments
 the STM path 0.29 even after the flip, 0 on two of the segments). Neither is "right"; the
 information to decide is not in the point cloud. It is the same class as the anode-hugging
 clusters of doc pdvd/35.
+
+## 13. Round 3 — the 039253/16 STM-dump wobble is a dereferenced missing geometry entry, fixed (`proj_skip_unmapped_face`, PDVD production ON)
+
+**Symptom.** `tracking-stm.root` of 039253/16 differed between *every* pair of arms of this
+event in `T_rec_charge.pt` on 61 of 6877 rows by ≤ 2e-309 (sec 9). Section 9 blamed the
+`stm_magnify` writer. It was wrong.
+
+**Root cause** (found with a temporary, env-guarded print in the fitter, removed before the
+commit). The 61 rows are cluster 37's gap-bridging path points: the cluster has two charge
+components, the rough path crosses the 28 cm gap between them at x = −105 … −77 cm, y ≈ 1 cm.
+`IDetectorVolumes::contained_by()` places those points in **apa 2 face 0**. The fitter's
+geometry table (`wpid_offsets` / `wpid_slopes`, `TrackFitting.cxx` ≈ :650–720) is built from
+the (apa, face) pairs present in the grouping, and apa 2 has only face 1 there (15 faces are
+filled; (2,0) is not). The second-pass projection loop of `do_single_tracking` then executed
+`std::get<0>(offset_it->second)` on `end()`: all four projections of those points were
+denormals (2⁻¹⁰¹⁸ … 2⁻¹⁰¹⁶) that differed run to run, the dQ/dx fit found no cells for them
+and left its 50000 e initial guess — the `q = 4000` rows. 122 misses per event (61 points ×
+forward + backward pass), all on apa 2 face 0. The sibling loop in `trajectory_fit` already
+guards the same miss with a WARN and a skip; this one did not.
+
+**Fix.** `TrackFitting::Parameters::proj_skip_unmapped_face` (default 0 = the legacy path,
+byte-identical). When > 0 a path point whose face has no geometry entry is skipped in the
+second-pass loop (the path and the projection vectors stay aligned) and the call WARNs once
+with the count, the face and the first point. Doctest: knob default and round-trip.
+
+**Verification** (pins `new3` → `new4`, `stm/gates/d45_kine_guard_gate.txt` round 3).
+Knob OFF: PDVD `-nu` 2/2 against the post-flip production arm (the `new3` gate partner from
+round 2 predates the flip and FAILs for that reason alone), PDVD `-stm` 2/2, SBND bare 3/3,
+SBND exclusion-active 6/6, trees SAME throughout. Knob ON on the 120-event STM set: it fires
+on **2 events** — 039253/16 (61 points, apa 2 face 0) and 039252/7 (5 points on apa 3 face 1,
+a face that exists in other events' tables but carries no data in this one) — and leaves
+**every production product identical 120/120** on both the cosmic-only chain
+(`d45skipoff` vs `d45skipon`: STM 594 = 594, TGM 2549 = 2549) and the full chain
+(`d45prod` vs `d45skipnu`: 569 candidates, vertex shift 0.00 and Enu identical on all).
+`tracking-stm.root` changes only for 039253/16, and two knob-on runs of that event now
+reproduce it bit for bit.
+
+**Flip.** Under the owner's *"fix"* instruction and with zero measured production change,
+`cfg/pgrapher/experiment/protodunevd/pdvd_track_fitting.json` carries
+`proj_skip_unmapped_face = 1.0` (toolkit `71b83e77`). Confirm arms with the canonical file on
+the two firing events reproduce the copy arms 2/2 on both chains. SBND's file is untouched
+(C++ default 0; no SBND arm has shown the wobble). Runtime-JSON copy for A/B:
+`stm/pdvd_track_fitting_d45skip.json`.
+
+**Lesson.** Denormal, run-to-run garbage in an output column is an uninitialised or
+out-of-range read *upstream*; naming the writer because the column lives in its tree is the
+mistake `feedback_name_the_site_by_tracing_data` already describes. Trace the value to its
+producer before blaming the last hand that touched it.
