@@ -331,13 +331,115 @@ objects also *lost* their tag (46, 57, 92, 104).
    Steiner/STM cleanup the feature exists for — the trade PDVD's §11 ordering decision made without
    this case in view.
 
+### 8.5 Owner 2026-09-06: "why can the Steiner graph jump through gaps?" — and what PDVD/SBND are missing
+
+Because it is built to. The Steiner cloud is **not** the cluster's measured charge: `steiner:
+cm.steiner(retiler=improve2, …)` on all three detectors, and `ImproveCluster_2::mutate` assembles
+the activity it tiles from three sources, two of which reach past the charge.
+
+**(1) A hard-coded 20 cm reach over real activity.** `ImproveCluster_1::get_activity_improved`
+takes the cluster's (u, v, w, t) bounding box, pulls every good channel's charge and every
+dead-channel range inside it from the *Grouping* — the whole event's 2-D activity, no
+cluster-membership filter — and admits each one whose 2-D (drift, wire) point is within
+
+```cpp
+const double dis_cut = 20 * units::cm;            // improvecluster_1.cxx:378
+… if (sqrt(ret_matches[0].second) > dis_cut) continue;   // :419  (good)   :405 (dead)
+```
+
+of the cluster's own 2-D projection, **independently per plane**. Faithful port — the prototype has
+the same constant three times (`ImprovePR3DCluster.cxx:209, 750, 1433`). **It is not reachable from
+jsonnet on any detector.** On PDHD 20 cm is ≈ 63 time slices and ≈ 43 wires at the 4.67 mm pitch.
+
+**(2) Synthetic activity painted along the cluster's own path, with no length limit.**
+`hack_activity_improved` (`improvecluster_1.cxx:454`) takes the shortest path between the cluster's
+two boundary points, interpolates it at `low_dis_limit = 0.3 cm` (`ncount = int(dis/0.3) + 1`,
+**uncapped**), and wherever the path is not already covered by activity in all three planes, it
+**invents** some:
+
+```cpp
+for (int dt = -3; dt <= 3; dt++)
+  for (size_t plane = 0; plane < 3; plane++)
+    for (int dw = -3; dw <= 3; dw++) {
+      if (… || pow(dw,2) + pow(dt,2) > 3*3) continue;
+      if (measures.at(wire) > 0.0) continue;
+      measures.at(wire) = 1.0e-3;                 // Set activity
+    }
+```
+
+A 7×7 disc of fake activity in **all three planes**, every 0.3 cm along the path.
+`ImproveCluster_2::mutate` calls it **twice** — once on the original cluster's path, once on the
+retiled cluster's path. RayGrid then tiles blobs out of that, they are sampled, and the Steiner
+tree is built on the result.
+
+So the answer to "how can it jump a gap" is: it does not jump one — **it fills it in first**. The
+reach is not a distance parameter at all, it is *whatever the cluster's own graph connects*, and
+the painting has no cap.
+
+Cluster 42 shows both limits at once. Its 84 nodes fill x −42.86…−16.07 at a median spacing of
+**0.315 cm — exactly one time slice** — straight across the 5 cm and 20 cm gaps. The **103 cm gap
+is not filled**, because the graph never connected that component, so no path ran through it.
+
+### 8.6 The guard for this exists, and is OFF on all three detectors
+
+`ImproveCluster_1::remove_bad_blobs` is, in the header's own words, *"its only anti-ghost filter"*.
+The historical form (a faithful port, kept byte-for-byte when the knobs are off) *"votes per
+connected component, by that component's **FIRST** blob, and only when there is more than one
+component"* — so a fabricated run inside a single-component cluster is never tested at all. Doc
+pdvd/40 round 3 added the real test:
+
+> `bad_blob_max_run` (length; C++ default **0 = OFF**): when > 0 every new blob is tested for
+> support (overlap with an ORIGINAL blob within one slice), a component is kept iff ANY blob is
+> supported, and a connected run of UNSUPPORTED blobs inside a kept component whose bounding-box
+> diagonal exceeds this length is removed whole.
+
+**Nobody turns it on.** Comparing the three detectors, arg by arg:
+
+| `cm.improve_cluster_2(…)` | PDHD `pr.jsonnet:1268` | PDVD `pr.jsonnet:1306` | SBND `clus.jsonnet:1984` |
+|---|---|---|---|
+| `wrapped_channel_activity` | `true` | `true` | **not passed** (C++ default `true`) |
+| `terminal_charge_threshold` | threaded | threaded | **not passed** → C++ 4000 e |
+| **`bad_blob_max_run`** | `null` → **OFF** | `null` → **OFF** | **not passed** → **OFF** |
+| `bad_blob_report` | `false` | `false` | **not passed** |
+
+| `cm.steiner(…)` | PDHD `:1373` | PDVD `:1410` | SBND `:2071` |
+|---|---|---|---|
+| `terminal_wire_tol` / `terminal_adjacent_slice` / `edge_charge_forward_dead_mix` | ✓ | ✓ | ✓ |
+| `terminal_min_separation` | ✓ | ✓ | **absent** |
+| `skip_flags` | ✓ | ✓ | **absent** |
+| `terminal_charge_threshold` | ✓ (conditional) | ✓ (conditional) | **absent** |
+
+**What is missing, then:**
+
+1. **The anti-ghost bound is off everywhere.** `bad_blob_max_run` was built for exactly this failure
+   in doc pdvd/40 r3 and has never been enabled on PDHD, PDVD or SBND. Turning it on — or even just
+   `bad_blob_report=true` for a census — costs nothing and is the obvious first measurement. This
+   is the same shape as `feedback_zero_fires_not_dead_code`: a guard that never fires because
+   nobody armed it.
+2. **`dis_cut = 20 cm` is unreachable from config on all three.** It is the one number that decides
+   how far the retiler reaches for real charge, and it cannot be varied to find out what it costs.
+3. **`hack_activity_improved` has no length cap at all** on any detector — no knob, no constant to
+   raise. A path-length or per-run bound there is a separate, missing guard.
+4. **SBND passes almost nothing** to either call. `wrapped_channel_activity` not being passed is
+   harmless (SBND has zero `segment>0` wires, so it is structurally immune), but
+   `terminal_charge_threshold` unthreaded means SBND runs the retiler's internal terminal finder at
+   the hard-coded 4000 e — the doc pdvd/31 r6 "two thresholds in one stage" problem, fixed on
+   PDHD/PDVD and still open on SBND. `terminal_min_separation` and `skip_flags` are absent too.
+
+None of this is measured yet; it is a config and code audit. The first experiment is
+`bad_blob_report=true` on the two events here, to see how many fabricated runs the census finds.
+
 ## 9. Not done / next
 
-0. **The false STM tag of §8.4** is the first thing to settle: a main gutted to 8 % of its blobs
+0. **Arm the anti-ghost guard (§8.6).** `bad_blob_report=true` costs nothing and would say how
+   many fabricated runs the retile makes per event; `bad_blob_max_run > 0` is the bound that
+   removes them. Off on PDHD, PDVD *and* SBND today. This is upstream of everything below —
+   §8.4's false STM tag is fitted on 220 points that mostly do not exist.
+1. **The false STM tag of §8.4** is the next thing to settle: a main gutted to 8 % of its blobs
    keeps its main flag, loses TGM mechanically, and is tagged STM on a fabricated 220-point fit
    built from 19 points of charge. Until that is addressed `unmerge_assoc` should not be considered
    for a PDHD default, whatever the aggregate counts say.
-1. **Grading.** Two events, no hand scan, sign unknown. Before anyone proposes making this a PDHD
+2. **Grading.** Two events, no hand scan, sign unknown. Before anyone proposes making this a PDHD
    default it needs the 30-event arm and a scan of what the 40-odd splits per event did to the
    objects — the PDVD flip (doc pdvd/38+39) came *after* that work, not before.
 2. **The accept guard on cluster 113** is now the sole remaining explanation for that lost stopper
