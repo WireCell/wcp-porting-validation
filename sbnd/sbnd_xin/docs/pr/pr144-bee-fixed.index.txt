@@ -1,0 +1,50 @@
+# doc sbnd_xin/pr/144 -- the POST-FIX scan set, built from work-*-d144fixprod:
+# the committed SBND production (excl_t0_frame + kine_dqdx_skip_zero_dx ON by
+# default, toolkit 4c84855c) on the crash-fixed binary (toolkit 25baa8aa).
+#
+#   FIXED: https://www.phy.bnl.gov/twister/bee/set/42a635f6-475b-4a17-9e5d-913fdb355bab/event/list/
+#   OFF  : https://www.phy.bnl.gov/twister/bee/set/a6027cd7-14e8-43fa-a16a-d5b10fe166ba/event/list/
+#   ON   : https://www.phy.bnl.gov/twister/bee/set/2455120d-016d-40bc-8b23-96e4db8c8f07/event/list/
+#
+# READ THIS BEFORE SCANNING.  Indices 0-11 are the same 12 events in the same
+# order as the OFF and ON sets, and their Bee zips are BYTE-IDENTICAL to the ON
+# set already scanned on 2026-09-06 (member-content hash, all 12).  Nothing in
+# those pictures changed, because the two things that landed since -- the
+# remove_vertex crash fix and the near-cross-cluster pointing knob -- do not
+# touch them:
+#   * the crash fix is byte-identical on 3066 of 3067 events and the exception
+#     is 494297 (doc 144 sec 6.5);
+#   * kine_near_pointing_impact is DEFAULT OFF, and even armed it changes only
+#     393505's kine tree (root + calib), not its mabc-pr.zip -- the cosmic it
+#     removes from the ENERGY stays in the PF picture, which is what pr/123 r2
+#     requires.  So the item-4 fix is not scannable; it is a number, and the
+#     number is in doc 144 sec 13.2.1 (Enu 858.2 -> 574.8).
+#
+# WHAT IS NEW: index 12 only.
+#
+# bee_idx  event    sample    what to look at
+0   179369  mcp2k   unchanged vs the ON set (idx 0)
+1   47212   mcp2k   unchanged vs the ON set (idx 1)
+2   175896  mcp1k   unchanged vs the ON set (idx 2)
+3   393505  mcp2k   unchanged vs the ON set (idx 3).  The extra muon you asked about is
+                    a cluster-15 cosmic admitted by kine_count_near_cross_cluster on
+                    proximity alone (gap 0.00 cm, no direction test); the fix is
+                    committed default-OFF and shows up in Enu, not in this picture.
+4   94392   mcp2k   unchanged vs the ON set (idx 4)
+5   171572  mcp2k   unchanged vs the ON set (idx 5)
+6   177536  mcp2k   unchanged vs the ON set (idx 6).  doc 144 sec 14.2: nothing is lost
+                    here -- tracklen 398.5 -> 398.2 cm, ke_range 902.5 -> 901.7 -- the
+                    muon is SPLIT into two PF nodes (276 + 644) and the split adds a
+                    spurious 105.7 MeV rest mass.
+7   347890  mcp2k   unchanged vs the ON set (idx 7).  doc 144 sec 14.1: the far half IS
+                    still reconstructed, but typed 11 (EM) instead of 211, and doc 84
+                    r4's partner filter refuses EM partners by design.  A PID problem.
+8   137238  nuecc48 unchanged vs the ON set (idx 8)
+9   111412  nuecc48 unchanged vs the ON set (idx 9)
+10  98844   mcp2k   unchanged vs the ON set (idx 10)
+11  100135  mcp2k   unchanged vs the ON set (idx 11)
+12  494297  mcp2k   *** NEW -- NEVER SEEN BEFORE ***  This is the event that SIGSEGVed
+                    with excl_t0_frame on.  It has no picture in either earlier set
+                    (the crashed arm wrote a zero-byte mabc-pr.zip).  It reconstructs
+                    now, rc=0, and this is its first reconstruction: worth a look on
+                    its own merits, since nothing has ever adjudicated it.

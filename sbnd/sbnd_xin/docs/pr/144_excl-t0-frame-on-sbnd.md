@@ -442,13 +442,22 @@ pair produces a finite Enu with the guard on and a NaN with it off, so zero NaN
 on a guarded arm says nothing.
 
 The honest test is a byte gate between a frame-only arm and the ON arm, and it
-is now scheduled onto the next production arm rather than the d144 pin, because
-the cfg epoch closed (§3.2).  `docs/pr/pr144-frameonly.tla` states **both** keys
-explicitly (`excl_t0_frame=true`, `kine_dqdx_skip_zero_dx=false`) so it means the
-same thing before and after the default flip, and `scripts/pr144_arms.sh
-frameonly` runs it.  Until that gate exists this doc claims only what it
-measured: the pair is NaN-free on SBND, and the guard's separate contribution is
-**unmeasured**, not zero.
+was run: **`work-*-d144fixframeonly`** (`docs/pr/pr144-frameonly.tla`, which states
+**both** keys explicitly so it means the same thing before and after the default
+flip) against `work-*-d144fixprod`, one binary, one cfg, all 3067 events.
+
+    ncpi0    tsv/root/zip/tar SAME=19    calib SAME=19    both nusel tables SAME
+    nuecc48  tsv/root/zip/tar SAME=48    calib SAME=48    both nusel tables SAME
+    mcp1k    tsv/root/zip/tar SAME=1000  calib SAME=462 (538 absent both)
+    mcp2k    tsv/root/zip/tar SAME=2000  calib SAME=906 (1094 absent both)
+
+**Byte-identical on every artefact of every event.**  `kine_dqdx_skip_zero_dx` is
+**inert on SBND** with the frame knob on, exactly as doc 45 §11 measured it with
+the frame knob off.  So the OFF→ON delta in this doc is attributable entirely to
+`excl_t0_frame`; the guard ships with it as the PDVD production pair and costs
+nothing here.  (It is not useless — it is what stands between a coincident
+fit-point pair and a NaN `kine_reco_Enu`, which is 73 candidates on PDVD. SBND
+simply has no such pair.)
 
 ### 4.6 The mover census
 
@@ -1469,3 +1478,38 @@ is priced here rather than done unasked.
 
 `./scripts/pr127_sentinels.py --all` re-evaluates the INERT entries, for whoever
 takes that round.
+
+---
+
+## 17 The post-fix scan set, and why 11 of 12 pictures are unchanged
+
+The owner asked for the 12 Bee events again "after the fix and upgrade".  Built
+from `work-*-d144fixprod` — the committed default on the crash-fixed binary —
+with the same 12 events in the same order plus **494297 appended at index 12**:
+
+    FIXED  https://www.phy.bnl.gov/twister/bee/set/42a635f6-475b-4a17-9e5d-913fdb355bab/event/list/
+    OFF    https://www.phy.bnl.gov/twister/bee/set/a6027cd7-14e8-43fa-a16a-d5b10fe166ba/event/list/
+    ON     https://www.phy.bnl.gov/twister/bee/set/2455120d-016d-40bc-8b23-96e4db8c8f07/event/list/
+
+**Indices 0–11 are byte-identical to the ON set already scanned** — member-content
+hash of `mabc-pr.zip`, all 12 events, `work-*-d144on` vs `work-*-d144np2` and vs
+`work-*-d144fixprod`.  Saying so is the point of this section: handing over a set
+that looks identical without saying it invites a wasted scan.
+
+Neither thing that landed since touches those pictures:
+
+- the **crash fix** is byte-identical on 3066 of 3067 events and the exception is
+  494297 itself (§6.5);
+- **`kine_near_pointing_impact`** is default OFF, and even armed
+  (`work-*-d144np2`, the 12 events + 494297 on the knob) it changes exactly one
+  event, 393505, and only its `root` and `calib` — **the `mabc-pr.zip` is
+  unchanged**.  The cosmic it removes from the ENERGY stays in the PF picture,
+  which is what pr/123 r2 requires ("OK to be in PR").  So **item 4's fix is not
+  scannable**; it is a number, and the number is §13.2.1's Enu 858.2 → 574.8.
+
+**Index 12 is the only new content.**  494297 has no picture in either earlier
+set — the crashed arm wrote a zero-byte `mabc-pr.zip` — so this is its first
+reconstruction, and nothing has ever adjudicated it.
+
+`docs/pr/pr144-bee-fixed.index.txt` carries the annotated index, and it repeats
+per row what §§13–15 found, so the scan sheet stands alone.
