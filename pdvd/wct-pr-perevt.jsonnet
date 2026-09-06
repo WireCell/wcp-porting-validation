@@ -3009,9 +3009,20 @@ function(
     // lose all charge (039252/2: 61 % of PR trajectory points dropped, SBND 1 %).
     // true => the cell is shifted by dirx * cluster_t0 * v_drift before the
     // cloud query (the prototype's own-point offset_t, restored).
-    // C++ default false => key omitted => byte-identical.  NOT production yet:
-    // the flip is the owner's decision on the doc 45 numbers.
-    excl_t0_frame = false,
+    // C++ default false => key omitted => the pre-2026-09-05 chain.
+    // PDVD PRODUCTION ON since 2026-09-05 (owner decision on the doc 45 numbers:
+    // stm_fit coverage median 0.44 -> 0.98, dropped points 51 % -> 6 %; gate
+    // record stm/gates/d45_kine_guard_gate.txt).  -S excl_t0_frame=false restores
+    // the old tournament.
+    excl_t0_frame = true,
+    // doc pdvd/45 sec 5.4 -- the vector cal_kine_dQdx (multi-segment and long-muon
+    // showers) sums recomb dE(dQ, dx) with no dx <= 0 guard; a coincident pair of
+    // fit points gives 0/0 and kine_reco_Enu is NaN (11 of 569 PDVD candidates
+    // in production, 73 with excl_t0_frame on).  true => such points are skipped,
+    // the prototype's (dx + 1e-9) outcome.  C++ default false => key omitted =>
+    // the pre-2026-09-05 chain.  PDVD PRODUCTION ON since 2026-09-05 together
+    // with excl_t0_frame (owner decision; 73 NaN Enu -> 0 on the 120 events).
+    kine_dqdx_skip_zero_dx = true,
     // doc pdvd/30 round 2 (039252/2 evt 298595, cluster 86): organize_segments_path_3rd
     // reads its input path from segment->fits() whenever that is merely non-empty, so a
     // segment whose fits() has collapsed to its two endpoint vertices (measured here:
@@ -3773,6 +3784,7 @@ function(
         [if dual_chain_vtx_weight != null then 'dual_chain_vtx_weight']: dual_chain_vtx_weight,
         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
         [if excl_t0_frame then 'excl_t0_frame']: true,
+        [if kine_dqdx_skip_zero_dx then 'kine_dqdx_skip_zero_dx']: true,
         [if main_vertex_swap_apply then 'main_vertex_swap_apply']: true,
         [if rough_path_probe then 'rough_path_probe']: true,
         [if steiner_gap_penalty != null then 'steiner_gap_penalty']: steiner_gap_penalty,

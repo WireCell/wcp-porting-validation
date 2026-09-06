@@ -1,0 +1,41 @@
+sheet	event	cluster	label_base	label_arm	note
+00	039349_82	54	KINK	END	sparse cluster; A on an isolated end clump, B at the apex of the V in z-x
+01	039253_15	105	MID	MID	long track, both mid-track on charge
+02	039349_70	20	MID	MID	straight track, both mid-track
+03	039349_55	24	MID	MID	A 15 cm short of the upper end, B mid-track
+04	039349_32	58	MID	END	B at the lower end of the track
+05	039349_29	47	END	END	opposite ends of the same track
+06	039349_7	29	OFF	MID	A 50 cm above the track in z-y
+07	039349_1	52	END	END	two fragments in z-x; A at the bottom of the lower one, B at the top of the upper one
+08	039349_77	26	END	END	A at the lower-left end; B 4-5 cm short of the upper end
+09	039253_7	92	END	END	opposite ends of the same track
+10	039349_19	52	END	MID	A at the upper-left end; B 15 cm down the track
+11	039349_15	30	MID	MID	straight track
+12	039349_17	51	MID	MID	both mid-track
+13	039349_77	52	UNCLEAR	UNCLEAR	10 cm diffuse blob, no track topology
+14	039349_75	26	MID	END	B at the upper-left end
+15	039349_15	18	END	END	two fragments; A on the detached lower clump (top end in z-x), B at the lower end of the upper fragment
+16	039349_4	56	OFF	END	A at the lower end; B 10 cm off the track in z-y
+17	039252_12	95	END	OFF	A at the left end; B 9 cm off the track in z-y
+18	039252_3	75	OFF	END	A 5 cm off the short track in z-y; B at the lower-left end
+19	039349_40	49	UNCLEAR	UNCLEAR	20 cm blob, no track topology
+20	039349_25	37	MID	MID	B 13 cm short of the lower end
+21	039349_38	32	OFF	END	A at the upper end of a short track; B 170 cm above it in y, same z-x
+22	039349_6	62	END	MID	B at the right end
+23	039349_27	41	END	END	opposite ends of a 20 cm track
+24	039349_29	45	KINK	END	A at the bend where the steep z-x segment turns shallow; B at the upper-left end
+25	039252_10	73	END	MID	A 40 cm short of the far end along x; B at the top end
+26	039349_56	23	MID	END	A at the upper-left end; B 20 cm short of the far end
+27	039253_6	94	END	END	opposite ends
+28	039349_37	39	MID	MID	A 15 cm from the curved lower end
+29	039349_25	43	MID	MID	sparse vertical track along x, both mid
+30	039252_1	30	MID	END	B at the left end
+31	039253_17	127	MID	KINK	A at the junction of the main track with the horizontal side structure in z-x (8 cm off the dense track in z-y); B on the main track
+32	039349_8	51	UNCLEAR	UNCLEAR	30 cm diffuse blob
+33	039252_3	68	END	END	A 4 cm from the left tip, B at the tip
+34	039349_81	14	MID	END	B at the top end
+35	039252_8	97	MID	END	A at the apex of a shower-like fan; B inside the fan
+36	039349_43	65	MID	END	A at the top end; B 18 cm short of the lower end
+37	039349_15	17	END	END	two z-y fragments; A and B at the fragment ends bordering the gap
+38	039253_5	32	END	END	opposite ends
+39	039349_42	43	MID	MID	A beside a small delta stub, B 13 cm short of the lower end

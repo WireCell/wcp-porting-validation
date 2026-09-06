@@ -1,0 +1,42 @@
+# hand labels, filled in BLIND from sheets/NN.png; one of END KINK MID OFF UNCLEAR per marker
+sheet	label_A	label_B	note
+00	END	KINK	sparse cluster; A on an isolated end clump, B at the apex of the V in z-x
+01	MID	MID	long track, both mid-track on charge
+02	MID	MID	straight track, both mid-track
+03	MID	MID	A 15 cm short of the upper end, B mid-track
+04	MID	END	B at the lower end of the track
+05	END	END	opposite ends of the same track
+06	OFF	MID	A 50 cm above the track in z-y
+07	END	END	two fragments in z-x; A at the bottom of the lower one, B at the top of the upper one
+08	END	END	A at the lower-left end; B 4-5 cm short of the upper end
+09	END	END	opposite ends of the same track
+10	END	MID	A at the upper-left end; B 15 cm down the track
+11	MID	MID	straight track
+12	MID	MID	both mid-track
+13	UNCLEAR	UNCLEAR	10 cm diffuse blob, no track topology
+14	MID	END	B at the upper-left end
+15	END	END	two fragments; A on the detached lower clump (top end in z-x), B at the lower end of the upper fragment
+16	END	OFF	A at the lower end; B 10 cm off the track in z-y
+17	END	OFF	A at the left end; B 9 cm off the track in z-y
+18	OFF	END	A 5 cm off the short track in z-y; B at the lower-left end
+19	UNCLEAR	UNCLEAR	20 cm blob, no track topology
+20	MID	MID	B 13 cm short of the lower end
+21	END	OFF	A at the upper end of a short track; B 170 cm above it in y, same z-x
+22	MID	END	B at the right end
+23	END	END	opposite ends of a 20 cm track
+24	KINK	END	A at the bend where the steep z-x segment turns shallow; B at the upper-left end
+25	MID	END	A 40 cm short of the far end along x; B at the top end
+26	END	MID	A at the upper-left end; B 20 cm short of the far end
+27	END	END	opposite ends
+28	MID	MID	A 15 cm from the curved lower end
+29	MID	MID	sparse vertical track along x, both mid
+30	MID	END	B at the left end
+31	KINK	MID	A at the junction of the main track with the horizontal side structure in z-x (8 cm off the dense track in z-y); B on the main track
+32	UNCLEAR	UNCLEAR	30 cm diffuse blob
+33	END	END	A 4 cm from the left tip, B at the tip
+34	MID	END	B at the top end
+35	END	MID	A at the apex of a shower-like fan; B inside the fan
+36	END	MID	A at the top end; B 18 cm short of the lower end
+37	END	END	two z-y fragments; A and B at the fragment ends bordering the gap
+38	END	END	opposite ends
+39	MID	MID	A beside a small delta stub, B 13 cm short of the lower end

@@ -1,9 +1,14 @@
 # 45 — Why the PR chain's `track_fit` is full of gaps while `stm_fit` is smooth: the exclusion tournament compares each 2-D cell in the wrong drift frame
 
-**Status (2026-09-05).** Root cause found, proven with the fitter's own exclusion dump on
-evt 298595 and on 120 events, fixed behind the default-OFF `TrackFitting` knob
-`excl_t0_frame` (production byte-identical on PDVD and SBND, gates below), graded on the
-120-event STM set. **The flip is the owner's decision** (sec 6). Doc pdvd/30's
+**Status (2026-09-05, round 2).** Root cause found, proven with the fitter's own exclusion
+dump on evt 298595 and on 120 events, fixed behind the `TrackFitting` knob `excl_t0_frame`,
+graded on the 120-event STM set (sec 1-5). Round 2 (same day, owner: *"Guard cal_kine_dQdx
+first, then flip … then hand-scan the moved vertices"*, *"flip it on for PDVD, commit and
+push"*): the NaN-Enu defect is guarded behind `kine_dqdx_skip_zero_dx` (sec 8), **both knobs
+are PDVD PRODUCTION since 2026-09-05** (sec 9; the production arm reproduces the graded arm
+120/120), the moved vertices are hand-scanned blind (sec 10: at a track end 14 -> 22 of 40),
+SBND is measured and NOT flipped (sec 11), and the two leftover `track_fit` questions are
+answered (sec 12). Gate record for round 2: `stm/gates/d45_kine_guard_gate.txt`. Doc pdvd/30's
 "duplicate segment" attribution is superseded (sec 3; a dated correction is in doc 30).
 
 Owner (2026-09-05), on the round-3 Bee set for evt 298595: *"if you compare the stm_fit
@@ -52,9 +57,29 @@ ARM=d45on2 PIN=new2 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=1 EVENTS=/ho
   EXTRA="-S excl_t0_frame=true" WCT_EXCL_DUMP=/home/xqian/tmp/d45/excl_298595_on2.txt $S/run_d45_arms.sh
 ARM=d45on PIN=new2 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=16 EXTRA="-S excl_t0_frame=true" $S/run_d45_arms.sh
 python3 $S/d45_trackfit_vs_stmfit.py --tsv /home/xqian/tmp/d45/d45on_census.tsv work/*_d45on
+
+# ---- round 2 (toolkit db166521 -> the guard commit; wcp-porting-img 007ae9bb -> this round) ----
+# F. the guard, knob-off gates (pins new2 = the doc-45 knob, new3 = the guard): PDVD -nu/-stm 2 events, SBND bare 3 + exclusion-active 6
+for m in nu:d45g1n3 stm:d45g2n3; do ARM=${m#*:} PIN=new3 PINROOT=/home/xqian/tmp/d45_libpin MODE=${m%%:*} JOBS=2 \
+  EVENTS=/home/xqian/tmp/d45/events2.txt $S/run_d45_arms.sh; done
+python3 $S/d40r3_hash_gate.py d45g1n2 d45g1n3 /home/xqian/tmp/d45/events2.txt; python3 $S/d40r3_hash_gate.py d45g2n2 d45g2n3 /home/xqian/tmp/d45/events2.txt
+(cd ../sbnd/sbnd_xin && D42_LIBPIN=/home/xqian/tmp/d45_libpin/new3 D42_NO_STMFIT=1 STM_EVENTS="284349 285999 286065" NJOBS=3 ./stm_campaign/run_d42_stmfit.sh d45g3n3 \
+  && LD_LIBRARY_PATH=/home/xqian/tmp/d45_libpin/new3 PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-d97fv work-d45sbnd-off3-nuecc48 data 10550 46363 81597 360535 256587 433451)
+# G. both knobs ON via -S (d45on3), then the FLIP in wct-pr-perevt.jsonnet and the canonical production arm (d45prod)
+ARM=d45on3 PIN=new3 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=12 EXTRA="-S excl_t0_frame=true -S kine_dqdx_skip_zero_dx=true" $S/run_d45_arms.sh
+python3 $S/d45_downstream.py d45on d45on3 --tsv /home/xqian/tmp/d45/on_vs_on3.tsv
+ARM=d45prod PIN=new3 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=14 $S/run_d45_arms.sh
+python3 $S/d40r3_hash_gate.py d45on3 d45prod; python3 $S/d45_trackfit_vs_stmfit.py --tsv /home/xqian/tmp/d45/d45prod_census.tsv work/*_d45prod
+# H. the blind vertex hand-scan (sheets under /home/xqian/tmp/d45/vscan; labels + key + movers copied to figs/45_vertex_scan/)
+python3 $S/d45_vertex_scan.py d45nu0 d45on3 --out /home/xqian/tmp/d45/vscan --n 40 --seed 45
+python3 $S/d45_vertex_scan.py --unblind /home/xqian/tmp/d45/vscan/labels.tsv --out /home/xqian/tmp/d45/vscan
+# I. SBND decision arms (48 nueCC48 + 19 NCpi0 events), knob OFF vs ON through the runtime-JSON copy
+(cd ../sbnd/sbnd_xin && for set in nuecc48:data ncpi0:sim; do s=${set%%:*}; r=${set#*:}; \
+  LD_LIBRARY_PATH=/home/xqian/tmp/d45_libpin/new3 PR_JOBS=8 ./run_pr_chain_batch.sh work-$s-d97fv work-d45sbnd-off3all-$s $r; \
+  LD_LIBRARY_PATH=/home/xqian/tmp/d45_libpin/new3 PR_JOBS=8 SBND_TRACKFIT_JSON=/home/xqian/tmp/d45/sbnd_track_fitting_d45on.json ./run_pr_chain_batch.sh work-$s-d97fv work-d45sbnd-on3all-$s $r; done)
 ```
 
-Gate record: `stm/gates/d45_excl_frame_gate.txt`. Scripts: `d45_trackfit_vs_stmfit.py` (the
+Gate records: `stm/gates/d45_excl_frame_gate.txt` (round 1), `stm/gates/d45_kine_guard_gate.txt` (round 2). Scripts: `d45_trackfit_vs_stmfit.py` (the
 census: coverage / ghost / winner / drop per STM cluster), `d45_excl_frame.py` (the dump
 reader), `run_d45_arms.sh` (fork of `run_d44_arms.sh` with `MODE=nu|stm` and the debug-env
 passthrough).
@@ -392,7 +417,10 @@ production set the owner looked at: `971dc70d-98ca-4f30-88e7-76078ccf64dc`.
 
 ## 6. Recommendation
 
-1. **Flip `excl_t0_frame` on for PDVD production** — the owner's decision. The case for:
+> **Round 2 (2026-09-05):** items 1 and 4 are executed (sec 8-12); item 2 is measured and
+> the answer is "not yet" (sec 11).
+
+1. **Flip `excl_t0_frame` on for PDVD production** — *done, sec 9.* The case for:
    the exclusion fit is currently arbitrating charge with a metres-wrong test point on every
    PDVD cosmic candidate, the fix is prototype parity, and it takes coverage of the STM fit
    from 0.44 to 0.98 with 3 of 594 clusters worse. The case for waiting: every downstream
@@ -426,3 +454,151 @@ production set the owner looked at: `971dc70d-98ca-4f30-88e7-76078ccf64dc`.
   `d45g1new`/`d45g2new`/`d45g1n2`/`d45g2n2`; SBND `work-stmcamp-d45g3ref/new`,
   `work-d45sbnd-{ref,off,off2,on,on2,on2dump,off2dump,off2b,refb}-nuecc48`,
   `work-stmcamp-d45sbnddump`. Dumps and censuses under `/home/xqian/tmp/d45/`.
+- Round 2, toolkit: `clus/inc/WireCellClus/PRSegmentFunctions.h` + `clus/src/PRSegmentFunctions.cxx`
+  (`cal_kine_dQdx(..., skip_zero_dx)`), `clus/inc/WireCellClus/NeutrinoPatternBase.h`
+  (`KineChargeOptions::dqdx_skip_zero_dx`), `clus/inc/WireCellClus/PRShower.h` + `clus/src/PRShower.cxx`,
+  `clus/src/NeutrinoEnergyReco.cxx`, `clus/src/NeutrinoShowerClustering.cxx` (24 callers),
+  `clus/inc/WireCellClus/TaggerCheckNeutrino.h` + `clus/src/TaggerCheckNeutrino.cxx` (key
+  `kine_dqdx_skip_zero_dx`), `clus/test/doctest_cal_kine_dqdx_zero_dx.cxx`,
+  `clus/test/doctest_clus_knob_defaults.cxx`, `clus/docs/porting/porting_dictionary.md`.
+- Round 2, wcp-porting-img: `pdvd/wct-pr-perevt.jsonnet` (TLA `kine_dqdx_skip_zero_dx`; BOTH
+  knobs flipped to true), `scripts/d45_vertex_scan.py`, `stm/gates/d45_kine_guard_gate.txt`,
+  `figs/45_vertex_scan/{movers,key,labels,unblinded}.tsv` + six example sheets,
+  `figs/45_cl113_prod.png`, `figs/45_d45prod_census.tsv`. Arms: PDVD `d45g1n3`, `d45g2n3`,
+  `d45on3`, **`d45prod`** (the post-flip production arm, 120 events); SBND
+  `work-stmcamp-d45g3n3`, `work-d45sbnd-off3-nuecc48`, `work-d45sbnd-{off3all,on3all}-{nuecc48,ncpi0}`.
+  Pin `new3` = `/home/xqian/tmp/d45_libpin/new3` (libWireCellClus `d604cb27…`).
+
+## 8. Round 2a — the `cal_kine_dQdx` guard (`kine_dqdx_skip_zero_dx`, default OFF)
+
+**Symptom.** `kine_reco_Enu` is NaN on 11 of 569 PDVD candidates in production and on 73 with
+`excl_t0_frame` on (sec 5.4). The log line is `kine_long_muon … dqdx=-nan`.
+
+**Root cause.** The vector form `cal_kine_dQdx(vec_dQ, vec_dx, model)` (`PRSegmentFunctions.cxx`),
+used by `PRShower::calculate_kinematics` (multi-segment showers) and
+`calculate_kinematics_long_muon`, sums `recomb_model->dE(dQ, dx)` over every fit point with no
+guard on `dx`. `PracticalBoxRecombination::dE` computes `dQ/dX`; a coincident fit pair (`dx == 0`)
+gives `0/0` (or `exp(inf) * 0`) and the NaN passes both clamps (`dE < 0`, `dE > 50 MeV/cm * dx`
+are false for NaN) into `kenergy_dQdx`. The prototype (`ProtoSegment.cxx:1316`) divides by
+`dx + 1e-9` and multiplies by `dx`, so such a point contributes exactly 0 — the port dropped the
+epsilon (porting-dictionary entry added). The segment form `segment_cal_kine_dQdx` already skips
+`dx <= 0`; only the vector form lacked it. A negative `dx` is worse than NaN in the legacy code:
+the `50 MeV/cm * dx` clamp flips sign and the point *subtracts* energy.
+
+**Why it hid.** Two ways. (i) For a long muon in mode 2 the NaN reaches `kine_reco_Enu` and is
+visible — 11 candidates, nobody looked. (ii) For a hadronic shower under K3
+(`kine_hadronic_dqdx`, ON in the PDVD operating point) `apply_hadronic_dqdx_best` tests
+`dqdx > 0`, which a NaN fails, so the shower silently kept `kine_best = 0` and Enu stayed
+finite but low.
+
+**Fix.** `cal_kine_dQdx(vec_dQ, vec_dx, model, bool skip_zero_dx = false)`:
+`if (skip_zero_dx && dx <= 0) continue;`. Threaded as `KineChargeOptions::dqdx_skip_zero_dx`
+through `PRShower::calculate_kinematics{,_long_muon}` (new trailing defaulted parameters, all
+24 callers pass it) from the `TaggerCheckNeutrino` key `kine_dqdx_skip_zero_dx`. Fail-first
+doctest `doctest_cal_kine_dqdx_zero_dx.cxx`: the legacy call returned `-nan` on
+`{50e3, 0, 50e3} / {1 cm, 0, 1 cm}` (recorded in the gate record); after the fix it pins the
+legacy NaN and checks the guarded value equals the two-point sum and that knob-on with no
+degenerate point is bit-identical to knob-off.
+
+**Verification (gates PASS, `stm/gates/d45_kine_guard_gate.txt`).** Pins `new2` (the doc-45
+knob) vs `new3` (the guard), knob OFF: PDVD `-nu` 2/2 (+ `tracking-pr/stm.root` trees SAME),
+PDVD `-stm` 2/2, SBND bare production 3/3, SBND exclusion-active 6/6 (mabc, pctree, nusel,
+tracking-pr). Compiled-config proof: knob-off JSON == HEAD's byte for byte; each key once when
+on; the `-stm` chain's compiled JSON is identical with both knobs on (it cannot see them).
+`wcdoctest-clus` 312 pass.
+
+**Knob on (120 events, `d45on3` vs `d45on`).** NaN rows 73 -> 0. Vertices identical on all 569
+candidates. 73 candidates NaN -> finite (recovered Enu median 673 MeV, p10/p90 404/1044). Six
+candidates with finite Enu move, all *up* by 19–180 MeV — each is a K3 hadronic shower whose
+`kine_best` was silently 0 (calib dumps: `kine_best 0.0 -> 45.5, 78.5, 18.9, 30.1, 129.6, 179.8`).
+`T_rec_charge` SAME 120/120; `T_tagger` differs on 14 events in kinematics-derived features
+only (`lem_e_dQdx`, `ssm_*angle*`, `*_kine_energy_best`); on one event (039349_37 cluster 39)
+a shower energy 0 -> 474 MeV re-evaluates the nue sub-flags gap/pio/br1/br3/tro;
+`cosmic_flag` and `numu_cc_flag` unchanged on every row (the BDT scores are not run on PDVD).
+
+## 9. Round 2b — the PDVD production flip
+
+`pdvd/wct-pr-perevt.jsonnet`: `excl_t0_frame = true`, `kine_dqdx_skip_zero_dx = true`
+(owner decision 2026-09-05). `d45prod` = the canonical production chain (no `-S`), pin `new3`,
+120 events: `d40r3_hash_gate.py d45on3 d45prod` **PASS 120/120** (mabc-pr.zip members + calib
+dump), `tracking-pr.root` SAME 120/120, NaN Enu 0/569. Production reproduces the graded arm
+exactly; it is NOT bit-identical to the pre-flip chain by design.
+`-S excl_t0_frame=false -S kine_dqdx_skip_zero_dx=false` restores the old chain. The cosmic-only
+`-stm` production chain is unchanged (sec 8 compiled-config proof).
+
+Production census, `d45nu0` -> `d45prod` (569 PR-fitted STM clusters):
+
+| | pre-flip | post-flip |
+|---|---|---|
+| coverage of `stm_fit` by `track_fit`, median / mean | 0.48 / 0.52 | **0.98 / 0.92** |
+| clusters with coverage < 0.5 | 52.2 % | 4.6 % |
+| one-winner multi-segment clusters | 262 / 483 | 2 / 460 |
+| segments per cluster | 5.4 | 4.2 |
+| trajectory points dropped as zero-charge (all passes) | 64.3 % | 6.7 % |
+| clusters better / worse by > 0.1 | | 395 / 3 |
+
+One arm-to-arm wobble surfaced: `tracking-stm.root` of 039253_16 differs between *every* pair of
+arms of this event (`d45nu0`, `d45on`, `d45on3`, `d45prod` all distinct) in the STM dump's
+`T_rec_charge.pt` branch on 61 of 6877 rows by ≤ 1.9e-309 — denormal garbage from an
+uninitialised read in the `stm_magnify` filler. Untouched by both knobs, invisible in every
+production product; owed to the owner as a separate one-liner.
+
+## 10. Round 2c — the moved vertices, measured and hand-scanned blind
+
+321 candidates moved their main vertex by more than 5 cm (`d45_vertex_scan.py d45nu0 d45on3`;
+the vertices of `d45on3` and `d45prod` are identical). Proxies over all 321:
+
+| | production | knob ON |
+|---|---|---|
+| distance to own cluster charge, median | 0.49 cm | 0.49 cm |
+| distance to the nearest END of the STM trajectory, median | 25.6 cm | **1.6 cm** |
+| vertex within 3 cm of an STM end | 14 % | **59 %** |
+
+(at an STM end: production only 26, knob only 171, both 18, neither 106.)
+
+Blind sample of 40 (seed 45, marker A/B randomised per sheet, `key.tsv` opened only after
+labelling; labels END = at a track end, KINK = at a kink/branch, MID = mid-track on charge,
+OFF = off the charge; `figs/45_vertex_scan/`):
+
+| | END | KINK | MID | OFF | UNCLEAR |
+|---|---|---|---|---|---|
+| production | 14 | 2 | 17 | 4 | 3 |
+| knob ON | **22** | 1 | 13 | **1** | 3 |
+
+Transitions production -> ON: END->END 10, MID->MID 9, **MID->END 7, OFF->END 3, KINK->END 2,
+OFF->MID 1** (13 improvements), END->MID 3, END->OFF 1 (4 regressions), MID->KINK 1 (neutral),
+UNCLEAR->UNCLEAR 3 (10–30 cm blobs with no track topology). The hand labels agree with the
+proxy: the vertex moves *to* a track end, which for a cosmic muon is where it should be. The
+four regressions (sheets 03/20-type MID and one END->OFF) are the price; none of them is a
+selection flip on PDVD.
+
+## 11. Round 2d — SBND, measured, NOT flipped
+
+Selection rows (`nusel-evt*.tsv`) are identical with the frame knob on: 48/48 nueCC48 and
+19/19 NCpi0 (pin `new3`, `work-d45sbnd-{off3all,on3all}-*`). But the kinematics are not a
+millimetre perturbation: vertex shift median 0.33 / 1.07 cm with 4 / 3 candidates moving
+> 5 cm (max 44 / 78 cm); Enu change median +0.3 / +34.9 MeV, |dE| > 50 MeV on 23 of 48 and
+15 of 20 candidates, > 200 MeV on 4 and 7. A 1–3 mm shift near the 0.3 cm floor re-arbitrates
+boundary cells, the charge attribution moves, and everything downstream follows. The
+`kine_dqdx_skip_zero_dx` knob is inert on SBND (0 NaN-Enu candidates in the 3067-event
+production, `work-*-d97fvpr2`). **Recommendation:** an SBND flip needs its own round with truth
+Enu on the MC sets, the pi0 66-set census and the doc 91 sentinel suite; nothing here is
+evidence for or against it.
+
+## 12. The two leftover `track_fit` questions
+
+**The 25 STM clusters the PR never fits are by design, not a defect.** Reading the
+`[nu_per_bundle]` census in the logs: 19 of 25 sit in a flash bundle whose PR candidate is a
+*different, longer* STM-tagged cluster (one candidate per bundle; e.g. 039252_17 cluster 88
+lost gid 121 to cluster 90, L 194.6 cm), and 6 are below the 15 cm `nu_per_bundle_min_length`
+floor (4–13 STM points). Whether the second STM cluster of a bundle deserves its own PR fit is a
+design question for the owner, not a bug in the chain.
+
+**Cluster 113 of 298595 is an imaging degeneracy, not a fitter fault.** Its charge sits at
+x = 336–338 cm, against the anode, in a 40 × 40 cm triangular *sheet* in y-z
+(`figs/45_cl113_prod.png`): a track parallel to the anode plane arrives within a microsecond,
+and the three planes' wire crossings tile a fan of ghost blobs. The STM's single path takes one
+diagonal through the sheet; the PR's graph builds a V through it (three segments, coverage of
+the STM path 0.29 even after the flip, 0 on two of the segments). Neither is "right"; the
+information to decide is not in the point cloud. It is the same class as the anode-hugging
+clusters of doc pdvd/35.
