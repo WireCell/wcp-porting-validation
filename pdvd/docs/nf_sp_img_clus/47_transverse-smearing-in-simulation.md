@@ -25,6 +25,13 @@ data carry something the simulation does not model.
   (0.54 vs 0.38) is fine. The ProtoDUNE data carry an extra ~1.0–1.9 mm (0.2–0.25 pitch) on
   exactly the planes where the simulated constant is small. That part is a data effect the
   simulation does not model; §6 names the candidates and the data test that separates them.
+  *(Third round, §9: that extra width **is** the charge sitting ≥ 2 wires from the track — it
+  alone accounts for the whole gap between the rms-matched and share-matched widths (§9.6). It
+  is not topology: it survives isolation and straightness cuts that discard 75–98 % of the
+  charge (§9.4). And it is not in the deconvolution's output: data and simulation feed ROI
+  formation the same cross-channel amplitude — measured on |q|, where clipping cannot bias it,
+  they agree to a few per cent — and the ROI stage removes 99.3 % of it in simulation against
+  93–95 % in the data (§9.5). The next test is the ROI stage, and only then a pulser run.)*
 - The low effective D_T the data return (PDVD 4.9, PDHD 6.1 cm²/s against physical 7.9/8.2)
   is partly an SP effect: the simulation returns 5.5/6.8/8.2 for configured 7.9/8.2/8.8.
 
@@ -86,13 +93,48 @@ python3 $S/d47_peakedness.py --out $F/47_peakedness.tsv data:pdvd:$F/44_sigma_pd
 python3 $S/d47_phase_plot.py --table $F/47_phase_table.tsv --out $F/47_phase2.png
 ```
 
+Third round (§9; analysis only, the same arms and the same data again):
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img; S=pdvd/docs/nf_sp_img_clus/scripts; F=pdvd/docs/nf_sp_img_clus/figs; X=/home/xqian/tmp/xtrack; A=/home/xqian/tmp/d47tail
+# --- legacy regression gate for the two additive columns (oth/oth4) -- must be byte-identical
+python3 $S/d44_sigma_fit.py --det pdvd --nboot 30 --out $A/reg_new $(ls pdvd/work/039252_*_d42fit/tracking-stm.root | head -6)          # vs the pre-patch copy: cmp _{bins,fit,shape}.tsv
+(cd pdhd && python3 docs/scripts/d44_sigma_fit.py --det pdhd --max-advance 0.436 --nboot 30 --out $A/regh_new $(ls work/029107_*_stmwc/tracking-stm.root | head -5))
+python3 $S/d47_sim_transverse_profile.py --det pdvd --truth $X/pdvd/truth_pdvd_a0.json --frames $X/pdvd/S1-anode0-sp.tar.bz2 --tag gauss --nboot 100 --out $A/simreg_pdvd   # cmp vs $X/pdvd/ana/S1_gauss_{bins,fit,shape,calib}.tsv
+#  and d44_sp_profile.py without --rings-tsv on all six event/anode pairs: console + --tsv pool cmp SAME
+# --- the cuts and the two cut-free statistics, on the data
+python3 $S/d47_tail_isolation.py --det pdvd --nboot 50 --out $F/47_tail_pdvd $(ls pdvd/work/039252_*_d42fit/tracking-stm.root)
+python3 $S/d47_tail_isolation.py --det sbnd --nboot 50 --out $F/47_tail_sbnd $(ls sbnd/sbnd_xin/work-stmcamp-d42fit/*/tracking-stm.root)
+(cd pdhd && python3 ../$S/d47_tail_isolation.py --det pdhd --sigma-fit docs/scripts/d44_sigma_fit.py --max-advance 0.436 --nboot 50 --out ../$F/47_tail_pdhd $(ls work/029107_*_stmwc/tracking-stm.root))
+# --- the same statistics on every simulated arm (no cut applies: the tracks are clean lines)
+rm -f $F/47_tail_sim_*_anatomy.tsv $F/47_tail_frame_pdvd_anatomy.tsv $A/rings_*.tsv $A/rawdp_*.tsv   # --append refuses to dedupe
+for d in pdhd pdvd sbnd; do for arm in S0v3_splat S1_gauss S1n05_gauss S1n2_gauss S2_gauss S3_gauss S5_gauss S1_raw S1_rawdecon S1_wiener; do \
+  python3 $S/d47_tail_isolation.py --det pdvd --rows $X/$d/ana/${arm}_rows.tsv --tag $arm --append --out $F/47_tail_sim_$d; done; done
+# --- does imaging gate the tail?  the same PDVD profiles read as ctpc, as the SP frame and as rawdecon
+#     (frames from doc 44 sec 3.2's run_nf_sp_evt.sh -R; the rawdecon tick origin is PINNED to the gauss scan's)
+for spec in 039252_2:4:-1 039252_16:4:0 039252_16:6:0 039253_17:2:0 039253_17:6:0 039349_23:6:0; do e=${spec%%:*}; an=$(echo $spec|cut -d: -f2); off=$(echo $spec|cut -d: -f3)
+  python3 $S/d44_sp_profile.py --root pdvd/work/${e}_d42fit/tracking-stm.root --frames /home/xqian/tmp/d44sp/$e --anode $an              --rings-tsv $A/rings
+  python3 $S/d44_sp_profile.py --root pdvd/work/${e}_d42fit/tracking-stm.root --frames /home/xqian/tmp/d44sp/$e --anode $an --tag rawdecon --tick-offset $off --rings-tsv $A/rawdp; done
+for t in ctpc:rings_ctpc sp:rings_sp rawdecon:rawdp_sp rawdecon_abs:rawdp_spabs; do python3 $S/d47_tail_isolation.py --det pdvd --rows $A/${t##*:}.tsv --tag ${t%%:*} --append --out $F/47_tail_frame_pdvd; done
+# --- the |q| basis for rawdecon (sec 9.5: data and sim do not clip the same amount of a bipolar frame)
+for d in pdvd pdhd sbnd; do an=$([ $d = pdhd ] && echo 1 || echo 0)
+  python3 $S/d47_sim_transverse_profile.py --det $d --truth $X/$d/truth_${d}_a${an}.json --frames $X/$d/S1-anode${an}-sp.tar.bz2 --tag rawdecon --abs-charge --nboot 5 --out $A/simabs_$d
+  python3 $S/d47_tail_isolation.py --det pdvd --rows $A/simabs_${d}_rows.tsv --tag S1_rawdecon_abs --append --out $F/47_tail_sim_$d; done
+python3 $S/d47_tail_plot.py --figs $F --out $F/47_tail.png
+```
+
 Committed: the three drivers (`pdhd_sim/`, `pdvd_sim/`, `sbnd_sim/wct-sim-xtrack-sp.jsonnet`),
 `scripts/d47_{make_xtracks,sim_transverse_profile,collect,plots,scale_noise}.py`,
 `scripts/run_d47_xtrack_arms.sh`, `scripts/d47_run_ana.sh`, `figs/47_sim_summary.tsv`, per
 (detector, arm) `figs/47_<det>_<arm>_<tag>_{fit,bins,shape,phase_fit,ksum,kernel_sr}.tsv`,
 the truth/track JSONs `figs/47_{truth,tracks}_<det>_a<N>.json`, `figs/47_arms.png`,
 `figs/47_phase.png`. Frames and logs stay under `/home/xqian/tmp/xtrack/` (regenerated in
-~25 min of wall time; every arm is 20–60 s).
+~25 min of wall time; every arm is 20–60 s). Third round adds
+`scripts/d47_tail_isolation.py`, `scripts/d47_tail_plot.py`, `figs/47_tail.png` and
+`figs/47_tail_{pdhd,pdvd,sbnd}_{anatomy,cuts}.tsv`,
+`figs/47_tail_sim_{pdhd,pdvd,sbnd}_anatomy.tsv`, `figs/47_tail_frame_pdvd_anatomy.tsv`, and
+`--rings-tsv` / `--tick-offset` on `d44_sp_profile.py` plus `--abs-charge` on
+`d47_sim_transverse_profile.py`; it runs in ~4 min per detector and touches no wire-cell job.
 
 ## 1. What was known before running anything
 
@@ -360,11 +402,19 @@ Not decided here; listed with the test that separates them.
 - **Cross-talk between adjacent front-end channels** (PDHD/PDVD-bottom FEMBs, PDVD-top TDE):
   a fixed fraction of a channel's signal on its neighbours, independent of drift and phase.
   A pulser run answers it directly; §8.5(b) shows the data do carry a ≥ 2-wire component the
-  simulation has none of, on all three detectors.
+  simulation has none of, on all three detectors. **Downgraded by §9.5:** a linear
+  channel-to-channel leak has to be present in the 2-D deconvolution's own output, and on |q|
+  the data's `rawdecon` ≥2-wire amplitude equals the simulation's (0.52/0.51/0.50 against
+  0.52/0.53/0.53 on PDVD) while its `gauss` share is 6–7× larger. The difference is made after
+  the deconvolution, in ROI formation. Not a bound on cross-talk — that share saturates near
+  0.5 in every arm — but enough to make the pulser run the second test, after the ROI stage.
 - **The data's noise/ROI environment** (§4.3): worth ±0.5 mm on PDHD, ≤ 0.2 mm on PDVD.
 - **Track topology**: the data's prolonged segments carry δ-rays, multiple scattering and any
   3-D angle; the simulated tracks are clean lines. Doc 44 §3.1 measured the Bragg region
   0.4 mm wider than the plateau on PDVD — the size of a topology term, not of the 1.9 mm gap.
+  **Bounded in §9.4**: real but confined to PDVD's induction far tail (half to three quarters
+  of it) and probably SBND; none of PDHD's and none of PDVD collection's, i.e. none of the
+  planes that carry the excess.
 
 ## 6. Consequences for the fit constants
 
@@ -390,13 +440,19 @@ Not decided here; listed with the test that separates them.
 1. ~~**Run the phase split on data**~~ — **DONE and CLOSED, §8**: the split was run on all
    three detectors, and preparing it showed the §3.4 contrast to be an estimator artefact.
    The test decides nothing (§8.4); §8.5 gives two phase-free replacements and §8.6 the
-   next step.
+   next step — **executed and closed in §9**: the ≥2-wire tail is not topology, and the
+   data/simulation difference is made in ROI formation — the deconvolution feeds it the same
+   cross-channel amplitude in both. §9.7 names the next step.
 2. PDVD's splat calibration (wire-bin sampling at σ < 0.25 pitch) and the `DepoFluxSplat`
    dense-accumulator drop: report upstream; not touched here.
 3. The FR-region diffusion gap (the Drifter stops 9–18 cm short of the wires; c² ≈ −0.1 mm²):
    negligible for this study, but it is a bias of every WCT simulation's near-anode width.
 4. A noise-level scan on data would bound §4.3 for PDHD without simulation: the doc-44
-   estimator per run / per APA against the measured RMS.
+   estimator per run / per APA against the measured RMS. **§9.5 makes this the live question**:
+   the ROI thresholds are noise-scaled, and it is the ROI stage that separates data from
+   simulation.
+5. (§9.7) The ROI comparison itself — ROI widths and the occupancy the thresholds see, on the
+   four PDVD events whose SP frames already exist.
 
 ---
 
@@ -633,7 +689,13 @@ do not, which is itself a tail source (§5, last bullet) and is now the first th
 - The shipped constants (docs 44, pdhd/02) are untouched: they come from `all` rows, whose
   code path is byte-identical (§8.1 verification 1).
 
-**Next step.** Bound the non-instrumental contributions to the far tail of §8.5(b) before
+**Next step — executed in §9, and its conclusion superseded there.** The tail survives both
+cuts (§9.4), so it is not topology; but §9.5 finds that the cross-channel residual entering
+ROI formation is the same size in data and simulation, which excludes the cross-talk the
+paragraph below proposes to measure and points at the ROI stage instead. Read §9 for what to
+do next. As written at the time:
+
+Bound the non-instrumental contributions to the far tail of §8.5(b) before
 anything else, both with flags `d44_sigma_fit.py` already has, on the same arms:
 
 1. **Isolation** (the likelier of the two): `--max-foff 0.15` keeps only blocks whose live
@@ -646,4 +708,290 @@ anything else, both with flags `d44_sigma_fit.py` already has, on the same arms:
 If the ≥ 2-wire share falls toward the simulation's zero under either, the tail is topology
 and the ProtoDUNE width excess of §4.4 needs another explanation. If it does not, the tail is
 instrumental, and a pulser run on one PDHD FEMB measures channel-to-channel cross-talk
-directly — the one measurement that would close §5.
+directly — the one measurement that would close §5. *(The second branch is what happened, but
+the pulser conclusion does not follow: §9.7.)*
+
+---
+
+# 9. The ≥ 2-wire tail: is it topology? (2026-09-06, third round)
+
+Section 8.6 said to bound the non-instrumental sources of the ≥2-wire tail before calling it
+instrumental. **Answer: it is not topology.** On the planes that carry the ProtoDUNE excess
+the tail survives cuts that throw away 75–98 % of the charge, it is distributed across
+profiles the way the simulation's own tail is rather than as a rare add-on, and it grows with
+the profile's charge instead of falling like clipped noise. §9.5 then finds the stage that
+makes it — the 2-D deconvolution's cross-channel amplitude is the same in data and simulation
+and the ROI stage that follows removes ten times less of it in the data — and that supersedes
+§8.6's own proposal for what to measure next. Everything here
+is `d47_tail_isolation.py` on the same three data sets and the same simulated arms; nothing
+new was run through wire-cell, and §§1–7 and §8 are untouched.
+
+## 9.1 Two things had to be fixed before §8.6 could be run as written
+
+**`--max-foff 0.15` cannot be run on the detector it matters for, and is circular on W
+everywhere.** `foff` is the fraction of a block's live **W** charge more than 2 wires
+(Chebyshev) from the fitted trajectory (`d44_sigma_fit.py collect()`). So for a W profile the
+tag is computed on the very charge whose own tail is being measured; and at a radius of two
+wires it measures *width* as much as isolation — the confound doc 46 records for `f_off`.
+PDHD's profiles are 0.7–0.8 pitch wide and its block `foff` quantiles are 0.71 / 0.83 / 0.96
+(10 / 50 / 90 %): **`foff < 0.15` keeps fewer than 20 profiles on PDHD.** On SBND it keeps
+97–100 % and is inert. It is a real cut only on PDVD (25–46 % of the charge), and PDVD is
+reported with it below.
+
+Replacement, computed in the same pass and added to the estimator additively: **`oth4`** —
+per (block, plane, slice), the fraction of the **other two planes'** live charge *at that same
+time slice* lying more than **four** wires from the fitted trajectory. The other planes cannot
+see the charge being measured, and at four wires a clean track of any width this chain
+produces contributes nothing (4 wires is 5 σ even at PDHD's 0.8 pitch). `oth2` — the same at
+two wires — is kept in the tables to show the confound directly: on PDHD it retains 7 % of the
+charge where `oth4` retains 14–31 %.
+
+**Every cut moves σ, so the raw ring share cannot carry the verdict.** `adv < 0.10` removes
+the slices with the most in-window geometric spread and `rr > 30 cm` removes the Bragg region
+(doc 44 §3.1: 0.4 mm wider); a narrower σ lowers the beyond-±2 share with the same underlying
+physics. Every number below is the measured share **minus the binned Gaussian at that
+selection's own re-fitted σ and mean extent**. For the same reason a sub-selection's fitted
+`c` is not usable — the cuts are drift-correlated, the lever arm collapses, and PDHD W returns
+c² < 0 on three of them. The script prints that warning; this section uses the
+charge-weighted width `sig_mm` and the excess only.
+
+*Gate.* Both changes to `d44_sigma_fit.py` and to its PDHD fork are additive (two columns on
+the per-profile array, read by nothing else). Legacy regression on 6 PDVD `d42fit` and 5 PDHD
+`stmwc` events, before vs after: `_bins.tsv`, `_fit.tsv`, `_shape.tsv` byte-identical (`cmp`)
+on both scripts. `--rings-tsv` and `--tick-offset` on `d44_sp_profile.py` are additive in the
+same sense: run without them on all six PDVD event/anode pairs, before vs after, the console
+output and the `--tsv` pool are byte-identical (`cmp`). `--abs-charge` on
+`d47_sim_transverse_profile.py` (§9.5) likewise: the published PDVD S1 `gauss` call at
+`--nboot 100` reproduces `_bins/_fit/_shape/_calib.tsv` byte for byte.
+
+## 9.2 The control that had to come first: imaging does not gate the tail
+
+§8.5(b) compared the data's **ctpc** profile — where a cell with no blob is an exact zero —
+with the simulation's **SP frame** profile, which is dense. If imaging were removing a small
+ubiquitous tail, the data's could look rare when it is not. `d44_sp_profile.py --rings-tsv`
+reads the same 3042 profiles of the same four PDVD events all three ways:
+
+| PDVD data, charge share at ≥ 2 wires / beyond ±2 | U | V | W |
+|---|---|---|---|
+| ctpc (`T_proj_data`, what the fit sees) | 0.0166 / 0.0036 | 0.0147 / 0.0023 | 0.0338 / 0.0025 |
+| SP `gauss` frame (dense) | 0.0248 / 0.0057 | 0.0283 / 0.0050 | 0.0349 / 0.0029 |
+| SP `rawdecon` frame (before ROI) | 0.254 / 0.068 | 0.421 / 0.158 | 0.323 / 0.139 |
+
+(the `rawdecon` row is bipolar and is quoted here only for completeness — §9.5 shows the
+clipping is not symmetric between data and simulation and redoes it on \|q\|.)
+
+Imaging **removes** part of the tail — a third of it on U, half on V, none on W — rather than creating it,
+so §8.5(b)'s comparison was conservative. The fraction of profiles carrying no ≥2-wire charge
+at all falls from 0.84 / 0.83 / 0.51 (ctpc) to 0.59 / 0.65 / 0.51 (SP frame), against
+0.69 / 0.69 / 0.45 in the simulation's own frames: read dense-against-dense, the data tail is
+**more** ubiquitous than the simulated one, not less. The third row is §9.5.
+
+## 9.3 It is not δ-rays, and it is not clipped noise
+
+Two statistics that need no cut and no threshold (`figs/47_tail_*_anatomy.tsv`, upper right
+and lower panels of the figure). `t2p` is the share of a profile's charge at ≥ 2 wires from
+its own centroid; *zero* is the fraction of profiles carrying none of it; *top1/null* is the
+share of all the ≥2-wire charge held by the top 1 % of profiles **divided by the same
+statistic computed on the profile charge itself** — the null for anything strictly
+proportional to the signal, which normalises away part of the data/simulation difference in
+how the two windows are filled.
+
+| base selection | PDHD U / V / W | PDVD U / V / W | SBND U / V / W |
+|---|---|---|---|
+| data `t2p` | 0.098 / 0.080 / 0.075 | 0.0096 / 0.0083 / 0.0184 | 0.026 / 0.021 / 0.028 |
+| sim S1 `t2p` | 0.033 / 0.037 / 0.0032 | 0.0039 / 0.0038 / 0.0047 | 0.026 / 0.022 / 0.0047 |
+| data top1/null | 3.6 / 3.7 / 5.0 | 15.0 / 14.5 / 13.8 | 9.0 / 4.5 / 11.0 |
+| sim S1 top1/null | 3.7 / 3.3 / 9.3 | 13.2 / 13.5 / 7.8 | 4.1 / 5.4 / 6.8 |
+| **truth splat `t2p`** (no SP at all) | 0.0002 | 0.0000 | 0.0013–0.0016 |
+
+- **Concentration does not discriminate on PDHD or PDVD.** The ratio to the proportional null
+  is 3.6–15 in the data and 3.3–13.5 in the simulation, plane for plane: the data tail is 2×
+  to 23× larger but is spread over profiles the way the simulation's own Gaussian tail is, so
+  the statistic gives no reason to call it a rare topological add-on — and no reason on its
+  own to exclude one either. (The simulation's own value is far above 1 because the tail share
+  climbs steeply with σ and σ varies over the drift, not because anything is rare.) Where the
+  statistic *is* informative it says topology, and that is SBND, whose W tail is carried by
+  two or three profiles (§9.4). **The argument against topology is §9.4's — the excess
+  surviving cuts that discard 75–98 % of the charge — not this one.**
+- **The truth-splat arm (`DepoFluxSplat`, no signal processing in the chain at all) gives
+  0.0000–0.0016**, so the estimator itself contributes no ≥2-wire charge; whatever makes the
+  tail is made by the detector or by SP.
+- **Not clipped noise.** The estimator clips negatives, so positive noise excursions on the
+  outer wires make a tail of roughly constant *absolute* size, i.e. a share ∝ 1/q. The
+  measured share instead **rises** with the profile charge on every plane of every
+  detector — lowest to highest decile 0.040→0.158 (PDHD U), 0.0045→0.054 (PDVD W),
+  0.0043→0.049 (SBND U) — and rises the same way in the simulation. The one U-shaped case
+  (a raised lowest decile) is PDVD U, whose bottom decile is 2.4× its middle, and SBND V
+  (n = 397); that is the clipped-noise term, and it is a few 10⁻³ of the charge.
+
+## 9.4 The cuts: the tail survives them exactly where it matters
+
+Share beyond ±2 wires in excess of that selection's own fitted Gaussian, and (in brackets) the
+fraction of the plane's charge the selection keeps. `foff<0.15` is shown only where §9.1 says
+it is a cut. **PDHD's ±2 ring is not usable** — at σ = 3.8 mm the Gaussian itself predicts
+0.079 there — so PDHD is read on the beyond-±2 column alone.
+
+| beyond ±2, excess over the fitted Gaussian | PDHD U | PDHD V | PDHD W | PDVD U | PDVD V | PDVD W |
+|---|---|---|---|---|---|---|
+| base (prolonged) | +0.0111 | +0.0110 | +0.0169 | +0.0011 | +0.0010 | +0.0019 |
+| `foff<0.15` (§8.6 step 1) | — | — | — | +0.0006 [0.25] | +0.0009 [0.46] | +0.0014 [0.37] |
+| `oth4<0.05` (isolation) | +0.0111 [0.16] | +0.0078 [0.14] | +0.0123 [0.31] | +0.0004 [0.65] | +0.0007 [0.66] | +0.0018 [0.65] |
+| `adv<0.10` (straightness) | +0.0122 [0.15] | +0.0157 [0.15] | +0.0192 [0.23] | +0.0014 [0.44] | +0.0007 [0.50] | +0.0018 [0.44] |
+| `rr>30 cm` | +0.0111 [0.87] | +0.0113 [0.87] | +0.0163 [0.90] | +0.0009 [0.83] | +0.0009 [0.82] | +0.0016 [0.82] |
+| **all three** | **+0.0103 [0.025]** | +0.0039 [0.018] | **+0.0160 [0.074]** | +0.0003 [0.24] | +0.0005 [0.29] | **+0.0011 [0.24]** |
+
+And the ±2 ring, where it is usable (PDVD): base +0.0082 / +0.0070 / +0.0164 → all three cuts
++0.0071 / +0.0045 / +0.0139.
+
+- **PDHD U and W do not move**: −7 % and −5 % on a selection that keeps 2.5 % and 7.4 % of the
+  charge. PDHD V halves (−65 %).
+- **PDVD W does not move either**: the ±2 excess falls 15 % and the beyond-±2 excess 42 %,
+  while three quarters of the charge is thrown away.
+- **PDVD U/V do fall by half to three quarters** on the far tail — there the excess is small
+  in absolute terms (10⁻³) and a topological component is visible.
+- **SBND cannot answer this question.** 410 / 397 / 237 profiles at base, 22–54 under the
+  combined cut: the numbers are in `figs/47_tail_sbnd_cuts.tsv` and are not interpreted here.
+  What can be said is that SBND's tail is the concentrated one — 94.5 % of its W profiles
+  carry no ≥2-wire charge and the top 1 % (two or three profiles) carry half of it — and it
+  does fall under `oth4<0.05` (+0.0132 → +0.0006 on 219 of 237 profiles). On SBND, on this
+  sample, topology is the likelier reading; on PDHD and PDVD W it is excluded.
+
+![the >=2-wire tail: cuts, concentration and charge dependence](figs/47_tail.png)
+
+## 9.5 Where the tail is made: the deconvolution makes it, the ROI removes it
+
+The same measurement run on every simulated arm (`figs/47_tail_sim_<det>_anatomy.tsv`,
+share at ≥ 2 wires / beyond ±2):
+
+| PDVD arm | U | V | W |
+|---|---|---|---|
+| S0 truth splat (no SP) | 0.0000 / 0.0000 | 0.0000 / 0.0000 | 0.0000 / 0.0000 |
+| S1 `rawdecon` (2-D decon, before ROI) | 0.440 / 0.176 | 0.442 / 0.170 | 0.447 / 0.185 |
+| S1 `gauss` (production) | 0.0039 / 0.0001 | 0.0038 / 0.0000 | 0.0047 / 0.0000 |
+| S5 `gauss` (no wire filter) | 0.0038 / 0.0001 | 0.0038 / 0.0000 | 0.0048 / 0.0000 |
+| S3 `gauss` (no noise, no diffusion) | 0.286 / 0.143 | 0.277 / 0.137 | 0.0037 / 0.0012 |
+| S1 `gauss`, noise ×0.5 \| ×2 (≥2 wires) | 0.0155 \| 0.0085 | 0.0071 \| 0.0083 | 0.0022 \| 0.0086 |
+
+Three things follow.
+
+1. **The 2-D deconvolution's own output is far wider than anything that reaches the fit** —
+   44 % of the charge beyond ±2 wires on every PDVD plane, 0.33–0.53 on PDHD and SBND — **and
+   ROI formation plus the time filters remove essentially all of it** (×95–116 on PDVD). What
+   survives is the ~0.2-pitch residual §3.5 measures about the true position.
+2. **The zero-noise arms keep it** (S3 induction 0.28 / 0.14 against S1's 0.004 / 0.000): what
+   suppresses the residual is the ROI, whose thresholds are set by the noise. This is the
+   §4.3 pathology seen from the other side.
+3. **The wire filter is not the source of the far tail** — S5, with the filter replaced by a
+   pass-through, gives the same shares as S1 on PDVD; on PDHD/SBND induction it is the wire
+   filter that fills the ±2 ring (S5 0.006–0.007 against S1 0.026–0.037) but not the ring
+   beyond it.
+
+Now the data — and first the trap. `rawdecon` is bipolar and the estimator clips negatives,
+so the two sides can only be compared once the clipping is shown to be symmetric. **It is
+not.** The median `neg_frac` (magnitude of the clipped-away negative charge over the surviving
+positive sum) in the ±3 window is 0.87 / 0.77 / 0.67 in the data against 0.30 / 0.56 / 0.40 in
+the simulation: the data frame swings further negative and loses more to the clip. So the
+clipped shares — data 0.254 / 0.421 / 0.323 against the simulation's 0.440 / 0.442 / 0.447 —
+compare two different fractions of two different waveforms and settle nothing. Measured on
+**|q|**, which the clip cannot bias (`--abs-charge`, `_spabs`):
+
+| `rawdecon` on \|q\|, share ≥ 2 wires / beyond ±2 | U | V | W |
+|---|---|---|---|
+| **PDVD data** (4 events, 2984 profiles) | **0.523 / 0.228** | **0.509 / 0.212** | **0.497 / 0.216** |
+| PDVD simulation S1 | 0.522 / 0.225 | 0.529 / 0.226 | 0.531 / 0.234 |
+| PDHD simulation S1 | 0.502 / 0.202 | 0.508 / 0.203 | 0.522 / 0.228 |
+| SBND simulation S1 | 0.506 / 0.221 | 0.522 / 0.221 | 0.519 / 0.221 |
+
+**The 2-D deconvolution puts the same cross-channel amplitude into the window in data and in
+simulation** — half of it beyond ±1 wire and 0.20–0.23 beyond ±2, the same on every plane of
+all three detectors, and the PDVD data agree with their own simulation to 1–6 %. What the next
+stage does with it does not agree:
+
+| PDVD, ≥2-wire share, `rawdecon`(\|q\|) → `gauss` | U | V | W |
+|---|---|---|---|
+| simulation | 0.522 → 0.0039 (**×134**) | 0.529 → 0.0038 (**×139**) | 0.531 → 0.0047 (**×113**) |
+| data | 0.523 → 0.0248 (**×21**) | 0.509 → 0.0283 (**×18**) | 0.497 → 0.0349 (**×14**) |
+
+The `gauss` frame is positive on both sides (median `neg_frac` 0.000), so no clipping question
+arises on the output side. **ROI formation and the time filters remove 99.3 % of the
+deconvolution's cross-channel amplitude in the simulation and 93–95 % of it in the data.**
+
+How much the input agreement is worth, stated honestly: the |q| share at ≥ 2 wires is
+0.50–0.53 in *every* arm of *every* detector, data and simulation alike — it is close to what
+a bipolar deconvolution kernel gives whatever is fed to it, and a statistic that takes the
+same value everywhere has little power to detect a small added component. A cross-talk leak of
+the few per cent that would be needed to make the `gauss` tail 6–7× larger would move a 0.52
+share by less than the 1–6 % spread already seen between arms. So this is **no evidence of
+extra cross-channel amplitude in the data**, not a bound on it. The conclusion that the
+difference is made *after* the deconvolution does not rest on that bound: it rests on the
+output being 6–7× apart while the input agrees.
+Four PDVD events, so the factor is a factor and not a three-digit measurement; but the input
+side now agrees to a few per cent, and that is what makes the output difference attributable
+to this one stage. (Tick origin: each `rawdecon` pass is pinned to the offset its own event's
+`gauss` scan finds, where the correlation is 0.67–0.99; the `rawdecon` frame's own scan only
+reaches 0.10–0.36 and pinning changes the clipped shares by < 0.006.)
+
+## 9.6 The tail *is* the peakedness of §8.5(a)
+
+The width the ≥2-wire excess carries on its own — the second moment it adds over the fitted
+Gaussian, charging the beyond-±2 ring at its smallest possible offset of 3 wires
+(`sig_excess_mm`) — added in quadrature to the share-matched σ, against ρ·σ, the rms-matched
+width §8.5(a) measured:
+
+| [mm] | σ(share) | σ(excess) | quadrature | ρ·σ(share) |
+|---|---|---|---|---|
+| PDHD U | 3.78 | 1.59 | 4.10 | 4.18 |
+| PDHD V | 3.32 | 1.92 | 3.83 | 3.92 |
+| PDHD W | 1.94 | 2.94 | 3.52 | 3.02 |
+| PDVD U | 2.50 | 1.59 | 2.96 | 3.05 |
+| PDVD V | 2.54 | 1.48 | 2.94 | 3.02 |
+| PDVD W | 1.53 | 1.47 | 2.12 | 2.20 |
+
+Five of the six agree to 3 % (PDHD W to 16 %). **§8.5's two phase-free comparisons are one
+thing**: the charge at ≥ 2 wires is exactly what makes the data profile more peaked than a
+Gaussian of equal rms, and on PDVD collection it alone is worth 1.47 mm of width against the
+1.53 mm the plane's whole σ amounts to at its mean drift. It is also the reason the
+share-matched estimator was the right one to ship (doc 44 §3.3): the share-matched σ is fitted
+to the centre and is blind to this charge, which is what makes it stable.
+
+## 9.7 What this changes
+
+- **§8.6's next step is superseded.** It said that a tail surviving the two cuts would be
+  instrumental and that "a pulser run on one PDHD FEMB measures channel-to-channel cross-talk
+  directly — the one measurement that would close §5". The tail does survive, but the pulser
+  run is now the **wrong** next test: cross-talk is a linear channel-to-channel leak, so it
+  has to be present in the deconvolution's own output — and on |q|, where the clipping cannot
+  bias the comparison, the data's `rawdecon` carries the same amplitude at ≥ 2 wires as the
+  simulation's (0.52 / 0.51 / 0.50 against 0.52 / 0.53 / 0.53, §9.5). That is no evidence of a
+  leak, though it does not bound one: the share saturates near 0.5 in every arm (§9.5). It is
+  enough to make the pulser run the *second* test rather than the first, and §5's second
+  bullet is downgraded accordingly.
+- **§5's fourth bullet (track topology) is bounded.** It is real but small: it accounts for
+  half to three quarters of PDVD's induction far tail, most likely all of SBND's, and none of
+  PDHD's or of PDVD collection's — i.e. none of the planes that carry the 0.2–0.3 pitch
+  ProtoDUNE excess of §4.4.
+- **§4.4's excess now has a named stage.** Not topology (§9.4) and not the wire filter (§9.5
+  item 3), both of which are measured out; cross-talk and a field-response mismatch are
+  disfavoured rather than excluded (they would act before the deconvolution, where data and
+  simulation agree — on a statistic with limited power to a few-per-cent leak). What is left,
+  and what the data actually point at, is **ROI formation and the time filters**: on the |q|
+  basis `OmnibusSigProc`'s ROI stage removes 99.3 % of the deconvolution's cross-channel
+  amplitude in simulation and 93–95 % in the data. Measured on four PDVD events, so it names
+  one stage rather than quantifying it.
+- Nothing shipped moves. Every constant in docs 44 and pdhd/02 comes from `all` rows on a
+  byte-identical code path (§9.1 gate).
+
+**Next step.** Compare the ROI stage itself, on the same PDVD events, since the frames the
+comparison needs already exist for four of them:
+
+1. **The width of the ROIs.** Dump the ROI boundaries the data and the simulated arm produce
+   for the same trajectory (`OmnibusSigProc` ROI refinement; the `wiener` and `gauss` tags
+   are two filters applied inside the same ROIs, and both are already saved for those
+   events). If the data's ROIs are wider in channel, the extra tail is charge the stage
+   admits, not charge it creates.
+2. **The occupancy the thresholds see.** The ROI thresholds are noise-scaled; §4.3 already
+   shows the arm is worth ±0.5 mm on PDHD through this path, but a factor of ten needs the
+   real occupancy — the data's tracks are not alone in the window and the simulated ones are.
+   The `oth4` tag of §9.1 measures exactly that and is now on every profile.
+3. Only if both come back null is a hardware measurement (the pulser run) worth its cost, and
+   it should then look for a *non-linear* or ROI-coupled effect, not for plain cross-talk.

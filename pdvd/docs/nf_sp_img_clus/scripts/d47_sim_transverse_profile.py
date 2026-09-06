@@ -87,6 +87,11 @@ def main():
     ap.add_argument("--seed", type=int, default=47)
     ap.add_argument("--drop-edge-slices", type=int, default=3)
     ap.add_argument("--no-clip", action="store_true", help="use the unclipped charge for the estimator")
+    ap.add_argument("--abs-charge", action="store_true",
+                    help="doc 47 sec 9.5: use |charge| instead of clipping.  The rawdecon frame "
+                         "is bipolar and data and simulation do not clip the same amount of it, "
+                         "so the ring shares of that tag are only comparable on |q|.  Affects "
+                         "nothing when the frame is positive (gauss/wiener/splat).")
     ap.add_argument("--phase-split", action="store_true")
     ap.add_argument("--kernel", action="store_true")
     ap.add_argument("--phase-bins", type=int, default=10)
@@ -234,7 +239,7 @@ def main():
                 if j0 < 0 or j1 > ncol:
                     continue
                 Q = np.array([fr[r, j0:j1].sum() if r >= 0 else 0.0 for r in rows], float)
-                y = Q.copy() if a.no_clip else np.where(Q > 0, Q, 0.0)
+                y = np.abs(Q) if a.abs_charge else (Q.copy() if a.no_clip else np.where(Q > 0, Q, 0.0))
                 if y.sum() <= 0 or (y > 0).sum() < 2:
                     continue
                 n = np.arange(-hw, hw + 1)

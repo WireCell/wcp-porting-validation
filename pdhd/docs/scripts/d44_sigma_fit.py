@@ -214,6 +214,43 @@ def collect(a, det, model):
                     foff = 1 - qW[dW <= 2].sum() / qW.sum()
             bid += 1
             blocks[bid] = dict(run=run, length_cm=float(rr.max()), foff=float(foff), path=path, blk=blk)
+            # doc 47 sec 9: per (plane, slice) fraction of that plane's live charge lying
+            # more than 2 (oth2) and more than 4 (oth4) wires from the trajectory.  A
+            # profile on plane P takes its isolation tag from the OTHER two planes, so
+            # the tag cannot see the charge whose own tail is being measured -- unlike
+            # the block-level foff above, which is computed on W and is therefore
+            # circular for a W profile.  Use oth4 as the isolation cut: at 2 wires the
+            # tag is dominated by the profile's OWN width (a 0.7-pitch sigma puts ~8 %
+            # of a clean track beyond 2 wires, so a "> 2 wires" tag selects narrow
+            # slices, not isolated ones -- the same confound doc 46 records for f_off);
+            # beyond 4 wires a clean track contributes nothing on any detector.
+            # Additive: nothing else reads offmap.
+            offmap = [dict(), dict(), dict()]
+            offmap4 = [dict(), dict(), dict()]
+            for Pi, key in enumerate(("pu", "pv", "pw")):
+                mp = pl == Pi
+                if mp.sum() == 0:
+                    continue
+                pw_ = r[key][m][o]
+                cw_ = ch[mp].astype(float); ct_ = ts[mp]
+                Q_ = np.where(q[mp] > 0, q[mp], 0.0)
+                us, inv = np.unique(ct_, return_inverse=True)
+                w0s = np.zeros(len(us)); oks = np.zeros(len(us), bool)
+                for k_, s_ in enumerate(us):
+                    near = np.abs(pt - s_) <= 0.6
+                    if not near.any():
+                        continue
+                    w0s[k_] = np.round(0.5 * (pw_[near].min() + pw_[near].max()))
+                    oks[k_] = True
+                qt_ = np.zeros(len(us)); qo_ = np.zeros(len(us)); qo4 = np.zeros(len(us))
+                dw_ = np.abs(cw_ - w0s[inv])
+                np.add.at(qt_, inv, Q_)
+                np.add.at(qo_, inv, Q_ * (dw_ > 2))
+                np.add.at(qo4, inv, Q_ * (dw_ > 4))
+                for k_, s_ in enumerate(us):
+                    if oks[k_] and qt_[k_] > 0:
+                        offmap[Pi][int(s_)] = float(qo_[k_] / qt_[k_])
+                        offmap4[Pi][int(s_)] = float(qo4[k_] / qt_[k_])
             for Pi, key in enumerate(("pu", "pv", "pw")):
                 mp = pl == Pi
                 if mp.sum() == 0:
@@ -262,10 +299,16 @@ def collect(a, det, model):
                     n0 = int(np.round(mu_m)) - w0
                     dd = np.abs(np.arange(-hw, hw + 1) - n0)
                     sh = [y[dd == 0].sum(), y[dd == 1].sum(), y[dd == 2].sum(), y[dd >= 3].sum()]
+                    o_ = [offmap[k_][int(s_)] for k_ in range(3)
+                          if k_ != Pi and int(s_) in offmap[k_]]
+                    o4 = [offmap4[k_][int(s_)] for k_ in range(3)
+                          if k_ != Pi and int(s_) in offmap4[k_]]
+                    oth = max(o_) if o_ else np.nan
+                    oth4 = max(o4) if o4 else np.nan
                     rows.append((bid, Pi, s_, t_ns, y.sum(), vm, yh.sum(), vp, mu_m - mu_p,
-                                 advance, float(rr[j0]), np.sign(px[j0]), *sh, ph))
+                                 advance, float(rr[j0]), np.sign(px[j0]), *sh, ph, oth, oth4))
     cols = ("bid", "plane", "slice", "t_ns", "y", "vm", "yh", "vp", "off", "adv", "rr", "xsign",
-            "r0", "r1", "r2", "r3", "ph")
+            "r0", "r1", "r2", "r3", "ph", "oth", "oth4")
     R = {c: np.array([row[k] for row in rows]) for k, c in enumerate(cols)}
     R["bid"] = R["bid"].astype(int); R["plane"] = R["plane"].astype(int)
     return R, blocks

@@ -448,6 +448,13 @@ doc 42 §4.2). SBND: k 1.009 → 1.007, unchanged.
 > (0.4–0.5 vs 1.2–1.5 mm): that part is a data effect outside the simulation. The low D_T,eff
 > of §2.2 reading (ii) is mostly an SP effect (the simulation returns 70 % of the configured
 > D_T on PDVD with no extra physics).
+> **Doc 47 §9 (third round) localises that data effect**: the missing width is charge sitting
+> ≥ 2 wires from the track — the same charge that makes §3.3's profile "more peaked than a
+> Gaussian of equal rms" (on PDVD W it is worth 1.47 mm on its own) — it is not δ-rays or
+> track topology, and the 2-D deconvolution feeds ROI formation the same cross-channel
+> residual in data and in simulation. The data's ROI stage lets ten times more of it through.
+> `d44_sigma_fit.py` gained two more additive per-profile columns and `d44_sp_profile.py` a
+> `--rings-tsv` / `--tick-offset` pair; the legacy paths are byte-identical again.
 
 **Against the pre-registered criteria (§Plan, fixed before the arms ran):**
 

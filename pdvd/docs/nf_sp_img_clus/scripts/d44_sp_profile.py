@@ -61,7 +61,20 @@ def main():
     ap.add_argument("--halfwidth", type=int, default=3)
     ap.add_argument("--ticks-per-slice", type=int, default=4)
     ap.add_argument("--which-anode", action="store_true")
+    ap.add_argument("--tick-offset", type=int, default=None,
+                    help="doc 47 sec 9: pin the frame tick origin instead of scanning for it. "
+                         "The scan maximises the correlation of the frame charge with the ctpc "
+                         "charge, which is 0.9 for gauss but only 0.1-0.4 for rawdecon (that "
+                         "frame is not the ROI-cleaned charge) -- so a rawdecon run must be "
+                         "pinned to the offset its own event's GAUSS run found.")
     ap.add_argument("--tsv", default=None, help="append per-profile rows here (for pooling over events)")
+    ap.add_argument("--rings-tsv", default=None,
+                    help="doc 47 sec 9: append PER-PROFILE ring shares to <path>_ctpc.tsv and "
+                         "<path>_sp.tsv (columns as d47_sim_transverse_profile.py's _rows.tsv, "
+                         "so d47_tail_isolation.py --rows reads either).  The ctpc window is "
+                         "sparse (a cell with no blob is an exact zero) and the SP window is "
+                         "dense, so the two files answer whether imaging gates the >=2-wire tail. "
+                         "Additive: --tsv output is unchanged.")
     a = ap.parse_args()
     det = DET[a.det]; model = load_model(a.model_json or det["json"])
     rank, base, ch2anode = chan_scheme(a.wires)
@@ -129,14 +142,16 @@ def main():
     print("%s: %d profiles in anode %d frame (%d rows x %d ticks)" % (a.root, len(prof), a.anode, *frame.shape))
 
     # ---- tick origin: scan offsets, maximise correlation of ctpc charge vs frame charge
-    def frame_sum(rows, s_, off):
+    def frame_sum(rows, s_, off, raw=False):
         t0 = s_ * a.ticks_per_slice + off
         if t0 < 0 or t0 + a.ticks_per_slice > nt:
             return None
         v = frame[rows, t0:t0 + a.ticks_per_slice].sum(axis=1)
-        return np.where(v > 0, v, 0.0)
+        return v if raw else np.where(v > 0, v, 0.0)
     best = None
-    for off in range(-12, 13):
+    if a.tick_offset is not None:
+        best = (a.tick_offset, float("nan"))
+    for off in range(-12, 13) if a.tick_offset is None else ():
         xs, ys = [], []
         for (Pi, s_, t_ns, adv, y, yh, rows) in prof[:: max(1, len(prof) // 400)]:
             v = frame_sum(rows, s_, off)
@@ -155,6 +170,7 @@ def main():
     # ---- estimator per plane, prolonged only
     n = np.arange(-hw, hw + 1, dtype=float)
     out = []
+    rings = {"ctpc": [], "sp": [], "spabs": []}
     for Pi in range(3):
         acc = dict(vm=0.0, wm=0.0, vs=0.0, ws=0.0, vp=0.0, wp=0.0, t=0.0, k=0,
                    rm=np.zeros(4), rs=np.zeros(4))
@@ -171,6 +187,18 @@ def main():
                     dd = np.abs(n - np.round(mu))
                     acc["r" + key] += [arr[dd == 0].sum(), arr[dd == 1].sum(), arr[dd == 2].sum(), arr[dd >= 3].sum()]
             acc["t"] += y.sum() * t_ns; acc["k"] += 1
+            if a.rings_tsv:
+                # neg_frac, as d47_sim_transverse_profile.py defines it: the magnitude of the
+                # clipped-away negative charge over the surviving positive sum.  Doc 47 sec 9.5
+                # compares the data's rawdecon shares with the simulation's, and both are read
+                # under this clipping -- if one frame swings more negative than the other, the
+                # shares are not comparable, so the number has to be reported next to them.
+                vr = frame_sum(rows, s_, off, raw=True)
+                nf = float(-vr[vr < 0].sum() / v.sum()) if v.sum() > 0 else np.nan
+                for key, arr, ng in (("ctpc", y, 0.0), ("sp", v, nf), ("spabs", np.abs(vr), nf)):
+                    dd = np.abs(n - np.round(np.average(n, weights=arr)))
+                    rings[key].append((0, Pi, s_, t_ns, arr.sum(), adv,
+                                       *[arr[dd == k_].sum() for k_ in (0, 1, 2)], arr[dd >= 3].sum(), ng))
             if a.tsv:
                 out.append((a.root, Pi, s_, t_ns, y.sum(), np.average((n - np.average(n, weights=y)) ** 2, weights=y),
                             v.sum(), np.average((n - np.average(n, weights=v)) ** 2, weights=v),
@@ -189,6 +217,18 @@ def main():
             "UVW"[Pi], acc["k"], tm / 1e3, rm * pitch, rs * pitch, rp * pitch,
             s_ctpc * pitch, s_sp * pitch, sm * pitch, ext, " CEILING" if hitc else ""))
         print("        rings centre/+-1/+-2/beyond  ctpc %.3f %.3f %.3f %.3f   SP %.3f %.3f %.3f %.3f" % (*rmm, *rss))
+    if a.rings_tsv:
+        for key, rws in rings.items():
+            if not rws:
+                continue
+            path = a.rings_tsv + "_" + key + ".tsv"
+            new_ = not os.path.exists(path)
+            with open(path, "a") as fo:
+                if new_:
+                    fo.write("bid\tplane\tslice\tt_ns\ty\tadv\tr0\tr1\tr2\tr3\tneg_frac\n")
+                for row in rws:
+                    fo.write("\t".join("%.6g" % v for v in row) + "\n")
+            print("  -> %s (%d profiles)" % (path, len(rws)))
     if a.tsv and out:
         new = not os.path.exists(a.tsv)
         with open(a.tsv, "a") as fo:

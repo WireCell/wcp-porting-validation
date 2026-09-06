@@ -213,7 +213,13 @@ The STM verdict churn (74 of 178 status-0 blocks) is ungraded by hand, as on PDV
    SBND) plus a pitch-scaled term from the 2-D deconvolution against the impact-averaged
    field response; the collection constant on PDHD (1.46 mm) and PDVD (1.18 mm) is *not*
    reproduced by the simulation and is the open data-only item. Re-derive here if
-   `sp-filters.jsonnet` changes.
+   `sp-filters.jsonnet` changes. **Doc 47 §9** shows the missing width on PDHD is charge at
+   ≥ 2 wires from the track that survives every isolation and straightness cut (the excess is
+   unchanged on a selection keeping 2.5 % of U's charge and 7.4 % of W's), that it is what
+   item 3 below is describing, and that the difference from simulation is made in ROI
+   formation rather than in the field response or in front-end cross-talk. Note for anyone
+   re-running that study here: PDHD's block `foff` runs 0.71–0.96, so doc 47 §8.6's
+   `--max-foff 0.15` selects nothing on this detector — use the `oth4` tag.
 2. The ~1 mm self-consistency residual (§5) and the −0.03 B_foot shift are the same
    normalization question doc 44 §7 handed on for PDVD; next test is the fit's cell weights
    (`rel_uncer_ind` 0.075).
