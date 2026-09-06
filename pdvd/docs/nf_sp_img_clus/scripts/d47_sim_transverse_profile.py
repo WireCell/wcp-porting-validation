@@ -55,8 +55,13 @@ def read_frame(path, tag):
             raise SystemExit("tag %s not in %s (%s)" % (tag, path, tags))
         get = lambda pre: np.load(io.BytesIO(t.extractfile(next(n for n in names if re.match(r"^%s_%s_\d+\.npy$" % (pre, re.escape(tag)), n))).read()))
         fr, ch, ti = get("frame"), get("channels"), get("tickinfo")
+        # doc 47 sec 11: the per-channel ROI threshold basis (cal_RMS), written by
+        # OmnibusSigProc as the `wiener` trace summary.  One per job, so it is read from the
+        # wiener member whatever tag is being measured; absent in the splat/raw archives.
+        sm = next((n for n in names if re.match(r"^summary_wiener\d*_\d+\.npy$", n)), None)
+        summ = np.load(io.BytesIO(t.extractfile(sm).read())) if sm else None
     return dict(frame=fr, chans=ch, t0_ns=float(ti[0]), tick_ns=float(ti[1]), tbin=int(ti[2]),
-                row_of={int(c): i for i, c in enumerate(ch)}, tag=tag)
+                row_of={int(c): i for i, c in enumerate(ch)}, tag=tag, summary=summ)
 
 
 def truth_rms(sig, extent, phase=None):
@@ -87,6 +92,11 @@ def main():
     ap.add_argument("--seed", type=int, default=47)
     ap.add_argument("--drop-edge-slices", type=int, default=3)
     ap.add_argument("--no-clip", action="store_true", help="use the unclipped charge for the estimator")
+    ap.add_argument("--roi-tsv", default=None,
+                    help="doc 47 sec 11: per-profile, the signed slice sum at each offset of the "
+                         "window measured from the TRUE trajectory (the twin of "
+                         "d44_sp_profile.py --roi-tsv; `gauss` is exactly zero outside an ROI "
+                         "and never negative, so sum != 0 is the in-ROI flag)")
     ap.add_argument("--abs-charge", action="store_true",
                     help="doc 47 sec 9.5: use |charge| instead of clipping.  The rawdecon frame "
                          "is bipolar and data and simulation do not clip the same amount of it, "
@@ -211,6 +221,7 @@ def main():
     R = {k: [] for k in ("bid", "plane", "slice", "t_ns", "x_mm", "phase", "extent", "y", "vm", "vt", "y_raw", "vm_raw", "neg_frac",
                          "r0", "r1", "r2", "r3", "t0", "t1", "t2", "t3", "n_missing", "off")}
     prof_y = {pi: [] for pi in range(3)}
+    roi_rows = []
     for t in tr["tracks"]:
         if t["id"] not in lines:
             continue
@@ -256,10 +267,23 @@ def main():
                                              r[0], r[1], r[2], r[3], tt[0], tt[1], tt[2], tt[3], sum(1 for rr in rows if rr < 0),
                                              mu - ph)):
                     R[kk].append(vv)
+                if a.roi_tsv:
+                    th = (float(F["summary"][rows[hw]])
+                          if (F.get("summary") is not None and rows[hw] >= 0) else float("nan"))
+                    roi_rows.append((t["id"], pi, s, t_ns, ext, th, *Q.tolist()))
                 prof_y[pi].append((ph, y))
     R = {k: np.array(v) for k, v in R.items()}
     if len(R["bid"]) == 0:
         print("no profiles", file=sys.stderr); return 1
+    if a.roi_tsv:
+        cols = ("bid", "plane", "slice", "t_ns", "extent", "thresh") + tuple("q%+d" % k for k in range(-hw, hw + 1))
+        isnew = not os.path.exists(a.roi_tsv)
+        with open(a.roi_tsv, "a") as f:
+            if isnew:
+                f.write("\t".join(cols) + "\n")
+            for rw in roi_rows:
+                f.write("\t".join(("%.6g" % x if isinstance(x, float) else str(x)) for x in rw) + "\n")
+        print("  -> %s (%d profiles)" % (a.roi_tsv, len(roi_rows)))
     write_tsv(a.out + "_rows.tsv", [dict(zip(R.keys(), vals)) for vals in zip(*[R[k].tolist() for k in R])][:200000])
     print("  %d profiles (U/V/W %d/%d/%d); extent per slice U/V/W %s wires; drift %.0f-%.0f us" % (
         len(R["bid"]), *(int((R["plane"] == pi).sum()) for pi in range(3)),

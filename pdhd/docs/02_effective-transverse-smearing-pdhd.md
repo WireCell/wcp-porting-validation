@@ -231,6 +231,12 @@ The STM verdict churn (74 of 178 status-0 blocks) is ungraded by hand, as on PDV
    1.93/1.91/2.41 on APA1–3). Only U is quotable there: the PDHD simulation does not apply
    `plane2layer`, so a simulated APA0 event has the collection response on the V readout plane
    while SP deconvolves V as induction (doc 47 §10.8, upstream report).
+   **Doc 47 §11** then rules out the ROI stage for W's 1.41 mm: measured on PDVD, whose SP
+   frames exist, the data and the simulation admit the ±1 and ±2 channels at the same rate and
+   differ only in the amplitude that survives inside the ROI, and the data's
+   signal-to-threshold is 1.5× *worse* than the simulation's, so it is not a noise-configuration
+   effect either. The open collection candidates are charge sharing and front-end cross-talk;
+   the discriminator is the post-NF `raw` waveform, not yet on disk for PDHD.
 2. The ~1 mm self-consistency residual (§5) and the −0.03 B_foot shift are the same
    normalization question doc 44 §7 handed on for PDVD; next test is the fit's cell weights
    (`rel_uncer_ind` 0.075).

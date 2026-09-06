@@ -68,6 +68,14 @@ def main():
                          "frame is not the ROI-cleaned charge) -- so a rawdecon run must be "
                          "pinned to the offset its own event's GAUSS run found.")
     ap.add_argument("--tsv", default=None, help="append per-profile rows here (for pooling over events)")
+    ap.add_argument("--roi-tsv", default=None,
+                    help="doc 47 sec 11: per-profile, the SIGNED slice sum at each offset of the "
+                         "+-halfwidth window measured from the FITTED TRAJECTORY (not from the "
+                         "profile's own centroid -- the question is whether an ROI exists that far "
+                         "from the track, and that must not be defined by the charge being "
+                         "measured).  `gauss`/`wiener` are exactly zero outside an ROI and never "
+                         "negative, so sum != 0 IS the in-ROI flag.  Also carries the centre "
+                         "channel's threshold basis.")
     ap.add_argument("--rings-tsv", default=None,
                     help="doc 47 sec 9: append PER-PROFILE ring shares to <path>_ctpc.tsv and "
                          "<path>_sp.tsv (columns as d47_sim_transverse_profile.py's _rows.tsv, "
@@ -97,6 +105,12 @@ def main():
     if not fr or not chf:
         print("no frame for anode", a.anode, "in", a.frames, file=sys.stderr); return 1
     frame = np.load(fr[0]); chans = np.load(chf[0])
+    # doc 47 sec 11: the per-channel ROI threshold basis.  OmnibusSigProc writes it as the
+    # `wiener` trace summary (cal_RMS); it is the same for every tag of a job, so it is loaded
+    # from the wiener member whatever --tag is being read.  NB on data it is a percentile
+    # spread computed on waveforms that CONTAIN signal, so it is contaminated by occupancy.
+    smf = sorted(glob.glob(os.path.join(a.frames, "summary_wiener%d_*.npy" % a.anode)))
+    summ = np.load(smf[0]) if smf else None
     row_of = {int(c): i for i, c in enumerate(chans)}
     nt = frame.shape[1]
     hw = a.halfwidth
@@ -171,6 +185,7 @@ def main():
     n = np.arange(-hw, hw + 1, dtype=float)
     out = []
     rings = {"ctpc": [], "sp": [], "spabs": []}
+    roi = []
     for Pi in range(3):
         acc = dict(vm=0.0, wm=0.0, vs=0.0, ws=0.0, vp=0.0, wp=0.0, t=0.0, k=0,
                    rm=np.zeros(4), rs=np.zeros(4))
@@ -199,6 +214,10 @@ def main():
                     dd = np.abs(n - np.round(np.average(n, weights=arr)))
                     rings[key].append((0, Pi, s_, t_ns, arr.sum(), adv,
                                        *[arr[dd == k_].sum() for k_ in (0, 1, 2)], arr[dd >= 3].sum(), ng))
+            if a.roi_tsv:
+                vs = frame_sum(rows, s_, off, raw=True)
+                th = float(summ[rows[hw]]) if (summ is not None and rows[hw] >= 0) else np.nan
+                roi.append((a.root, Pi, s_, t_ns, adv, th, *vs.tolist()))
             if a.tsv:
                 out.append((a.root, Pi, s_, t_ns, y.sum(), np.average((n - np.average(n, weights=y)) ** 2, weights=y),
                             v.sum(), np.average((n - np.average(n, weights=v)) ** 2, weights=v),
@@ -217,6 +236,15 @@ def main():
             "UVW"[Pi], acc["k"], tm / 1e3, rm * pitch, rs * pitch, rp * pitch,
             s_ctpc * pitch, s_sp * pitch, sm * pitch, ext, " CEILING" if hitc else ""))
         print("        rings centre/+-1/+-2/beyond  ctpc %.3f %.3f %.3f %.3f   SP %.3f %.3f %.3f %.3f" % (*rmm, *rss))
+    if a.roi_tsv:
+        cols = ("root", "plane", "slice", "t_ns", "adv", "thresh") + tuple("q%+d" % k for k in range(-hw, hw + 1))
+        isnew = not os.path.exists(a.roi_tsv)
+        with open(a.roi_tsv, "a") as f:
+            if isnew:
+                f.write("\t".join(cols) + "\n")
+            for rw in roi:
+                f.write("\t".join(("%.6g" % x if isinstance(x, float) else str(x)) for x in rw) + "\n")
+        print("  -> %s (%d profiles)" % (a.roi_tsv, len(roi)))
     if a.rings_tsv:
         for key, rws in rings.items():
             if not rws:

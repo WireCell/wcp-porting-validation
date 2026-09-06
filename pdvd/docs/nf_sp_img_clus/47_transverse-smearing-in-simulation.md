@@ -43,6 +43,15 @@ data carry something the simulation does not model.
   **up to +1.7 mm on induction and nothing on collection** (§10.5). So the hypothesis covers the
   ProtoDUNE induction excess and **fails on the collection planes**, whose 1.05 mm (PDVD) and
   1.41 mm (PDHD) remain unexplained.)*
+- *(Fifth round, §11: the ROI stage — §9.7's and §10.8's first item — is **not** the
+  discriminator. `gauss` is exactly zero outside an ROI, so admission can be counted directly:
+  the data and the simulation open an ROI two wires from the track at the same rate (×1.0–1.9,
+  drift-matched) and the surviving amplitude there differs by ×9.4–24.6. Nor is it a
+  signal-to-noise configuration difference — the data's signal-to-threshold is 1.5× **worse**
+  than the simulation's, and a fourfold threshold sweep never reaches the data's value. On
+  collection the ±1 neighbour is admitted identically and simply carries 20 % more charge, so
+  the remaining candidates are physical charge sharing and front-end cross-talk, and the
+  discriminator is the post-NF `raw` waveform — one run away.)*
 - The low effective D_T the data return (PDVD 4.9, PDHD 6.1 cm²/s against physical 7.9/8.2)
   is partly an SP effect: the simulation returns 5.5/6.8/8.2 for configured 7.9/8.2/8.8.
 
@@ -143,6 +152,17 @@ for arm in FRc FRm FRr; do for tag in gauss rawdecon; do \
     --frames $X/pdvd/$arm-anode0-sp.tar.bz2 --tag $tag --nboot 100 --out $X/pdvd/ana/${arm}_$tag; done; done
 cp $A/d02_apa_bins.tsv $F/47_fr_apa_pdhd_bins.tsv; cp $A/d02_apa_fit.tsv $F/47_fr_apa_pdhd_fit.tsv
 python3 $S/d47_fr_budget.py --figs $F --sim-root $X --apa-bins $F/47_fr_apa_pdhd_bins.tsv --out $F/47_fr_budget
+# --- E. fifth round (sec 11): the ROI stage.  --roi-tsv on both profile scripts (byte-identical
+#     when unused); the offsets are TRAJECTORY-relative and `gauss` is exactly 0 outside an ROI.
+R=/home/xqian/tmp/d47roi
+for ea in "039252_16 4" "039252_16 6" "039253_17 2" "039253_17 6" "039349_23 6"; do set -- $ea
+  python3 $S/d44_sp_profile.py --root work/$1_d42fit/tracking-stm.root --frames /home/xqian/tmp/d44sp/$1 \
+    --anode $2 --tag gauss --roi-tsv $R/roi_data_pdvd.tsv; done
+for arm in S1 S1n05 S1n2; do python3 $S/d47_sim_transverse_profile.py --det pdvd \
+  --truth $X/pdvd/truth_pdvd_a0.json --frames $X/pdvd/$arm-anode0-sp.tar.bz2 --tag gauss \
+  --nboot 5 --roi-tsv $R/roi_sim_pdvd_$arm.tsv --out $R/tmp_$arm; done
+python3 $S/d47_roi_compare.py --data $R/roi_data_pdvd.tsv --sim S1=$R/roi_sim_pdvd_S1.tsv \
+  --sim S1n05=$R/roi_sim_pdvd_S1n05.tsv --sim S1n2=$R/roi_sim_pdvd_S1n2.tsv --out $F/47_roi
 ```
 
 Committed: the three drivers (`pdhd_sim/`, `pdvd_sim/`, `sbnd_sim/wct-sim-xtrack-sp.jsonnet`),
@@ -155,6 +175,9 @@ the truth/track JSONs `figs/47_{truth,tracks}_<det>_a<N>.json`, `figs/47_arms.pn
 `scripts/d47_tail_isolation.py`, `scripts/d47_tail_plot.py`, `figs/47_tail.png` and
 `figs/47_tail_{pdhd,pdvd,sbnd}_{anatomy,cuts}.tsv`,
 `figs/47_tail_sim_{pdhd,pdvd,sbnd}_anatomy.tsv`, `figs/47_tail_frame_pdvd_anatomy.tsv`, and
+Fifth round adds `scripts/d47_roi_compare.py`, `figs/47_roi.tsv`,
+`figs/47_roi_rows_{data_pdvd,sim_pdvd_S1,sim_pdvd_S1n05,sim_pdvd_S1n2}.tsv` and `--roi-tsv`
+on `d44_sp_profile.py` and `d47_sim_transverse_profile.py`.
 Fourth round adds `scripts/d47_fr_budget.py`, `figs/47_fr_budget.tsv`,
 `figs/47_fr_pdvd_FR{c,m,r}_{fit,shape}.tsv`, `figs/47_fr_apa_pdhd_{bins,fit}.tsv`, the
 `sim_fields`/`sp_fields` TLAs on `pdvd_sim/wct-sim-xtrack-sp.jsonnet` with the FRc/FRm/FRr
@@ -1015,6 +1038,14 @@ to the centre and is blind to this charge, which is what makes it stable.
 - Nothing shipped moves. Every constant in docs 44 and pdhd/02 comes from `all` rows on a
   byte-identical code path (§9.1 gate).
 
+> **Executed and superseded by §11 (fifth round).** The comparison below was run and the
+> answer is a negative: the ROI stage admits the ±2 channel at the same rate in data and
+> simulation (×1.0–1.9), and the ×14–21 lives entirely in the amplitude that survives inside
+> the ROI (×9.4–24.6). Items 1 and 2 as written are not worth doing — ROI *width* is a
+> time-axis quantity and occupancy is confounded by the cosmic/8-track difference; the
+> admission question they were proxies for is answered directly in §11.1. Item 3's pulser run
+> is still gated, now on the `raw`-waveform test of §11.4.
+
 **Next step.** Compare the ROI stage itself, on the same PDVD events, since the frames the
 comparison needs already exist for four of them:
 
@@ -1355,7 +1386,8 @@ Three things this round turned up that are **not** part of it and were not touch
 
 **Next step, in order:**
 
-1. **The ROI comparison of §9.7 is still first.** §10.4 sharpens why: the ≥2-wire residual is
+1. **The ROI comparison of §9.7 is still first.** *(Done — §11: it is not admission, it is
+   amplitude, and the noise lever points the wrong way.)* §10.4 sharpens why: the ≥2-wire residual is
    enormous before the ROI (12 % of the charge on PDVD induction with the noise off) and the
    ROI removes all but 0.008 % of it in simulation and 0.9 % in the data. A factor of ~100 in
    what one stage rejects is the largest single unexplained number in this document, it is
@@ -1365,11 +1397,11 @@ Three things this round turned up that are **not** part of it and were not touch
    only part of the *shipped constants* left unexplained. The response cannot do it; the
    candidates are the ROI (again), charge sharing between adjacent collection
    wires/strips that the 2-D model does not carry, and electronics cross-talk.
-3. **Only then the signed ≥2-wire sum** (unclipped net charge at |Δ| ≥ 2 in `gauss`: positive
-   and equal to the clipped sum ⇒ real charge or a unipolar long-range response error; ≈ 0
-   with the clipped part about half ⇒ capacitive cross-talk, which appears post-deconvolution
-   as a time derivative). It discriminates for the *tail*, which is the universal effect, so
-   it comes after the stage that actually gates the tail has been compared.
+3. ~~**Only then the signed ≥2-wire sum**~~ — **withdrawn by §11.3.** The `gauss` frame is
+   **non-negative by construction** (`min() == 0`, 97.9 % exact zero), so there is no clipped
+   charge there and the signed-versus-clipped test has no power. `rawdecon` cannot substitute:
+   the data's is far less coherent than the simulation's even at the centre cell. The
+   discriminator is the post-NF `raw` waveform, which is not on disk — see §11.4.
 
 **Gates for this round.**
 
@@ -1385,3 +1417,167 @@ Three things this round turned up that are **not** part of it and were not touch
   `1984cc94d88e9c0b7fc67dfd32495ea7`, `libWireCellGen.so` `3f33af41af3252b8189c2582e343d86d`).
 - Every number above comes from `figs/47_fr_budget.tsv`, written by the committed
   `d47_fr_budget.py`.
+
+---
+
+# 11. The ROI stage: it admits equally, it is the amplitude that differs (2026-09-06, fifth round)
+
+**The question §9.7 and §10.8 both put first.** The 2-D deconvolution feeds ROI formation the
+same cross-channel amplitude in data and in simulation (§9.5, measured on |q| where clipping
+cannot bias it), and the stage that follows removes 99.3 % of it in simulation against 93–95 %
+in the data. A factor of ~100 in what one stage rejects, on every plane of every detector, is
+the largest unexplained number in this document.
+
+**Answer: the ROI stage is not the discriminator.** It admits the ±2 channel at essentially the
+same rate in data and simulation; what differs by an order of magnitude is how much charge is
+there once admitted. And the noise lever cannot close the gap — the data's signal-to-threshold
+is *worse* than the simulation's, so its thresholds bite harder, not less.
+
+**The instrument, and it needs no new job.** `gauss` and `wiener` are **exactly zero outside an
+ROI and never negative** — 97.9 % of the frame is exact zero and `min() == 0`, verified on both
+sides. So for a cell *D* wires from the fitted trajectory, "slice sum ≠ 0" is an exact in-ROI
+flag, and the survival of the cross-channel charge splits into two factors with different
+causes and different next steps:
+
+> share(*D*) ≈ **P(*D*)** × **E(*D*)** — P = fraction of profiles where that cell is inside an
+> ROI at all ("does the stage admit the channel"), E = mean charge there given it is admitted,
+> over the same at *D* = 0 ("how much of what is admitted the filters keep").
+
+Offsets are measured from the **trajectory**, never from the profile's own centroid: the
+question is whether an ROI exists that far from the track, and that must not be defined by the
+charge being measured. Data is the four PDVD events whose SP frames exist (five event/anode
+pairs, 2786 profiles); simulation is the PDVD S1 arm plus the two noise arms.
+
+## 11.1 Admission is the same; amplitude is not
+
+Drift-matched (the simulation reweighted to the data's drift distribution over the 158–2120 µs
+window the two share — §10.4's lesson: ROI admission grows with the diffusion width, so a
+pooled ratio is not safe):
+
+| | plane | P(\|D\|=2) | ×data/sim | E(\|D\|=2) | ×data/sim |
+|---|---|---|---|---|---|
+| **data** | U | 0.2407 | — | 0.1468 | — |
+| S1 | U | 0.1570 | **×1.5** | 0.0148 | **×9.9** |
+| **data** | V | 0.3008 | — | 0.3654 | — |
+| S1 | V | 0.1564 | **×1.9** | 0.0148 | **×24.6** |
+| **data** | W | 0.2868 | — | 0.0885 | — |
+| S1 | W | 0.2857 | **×1.0** | 0.0094 | **×9.4** |
+
+The product ×15 / ×47 / ×9 brackets §9.5's ×21 / ×18 / ×14 measured a different way, so the
+decomposition is consistent with what it is decomposing. **Admission carries ×1.0–1.9 of it;
+amplitude carries ×9.4–24.6.** On collection the admission ratio is 1.00.
+
+So the data's ROI stage is not letting in channels the simulation's shuts out. Both stages open
+an ROI two wires from the track for about a quarter of the profiles; in the simulation almost
+nothing survives there and in the data a tenth of the centre's charge does.
+
+**The third wire is the exception, and it is small and contaminated.** P(\|D\|=3) is 0.047 /
+0.082 / 0.047 in the data against 0.0025 / 0.0004 / 0.0000 in S1. But that is ~55 profiles on
+U, and E(*D*=+3) comes out *larger* than E(*D*=+2) — the few profiles with an ROI three wires
+out are the ones with something else nearby, so the third ring is conditioned on a biased
+subset rather than measured. It is the isolation problem of §9.4 reappearing at the window
+edge. Do not read the ±3 column as a measurement.
+
+**One data-only feature worth recording:** P(*D*=0) is 0.958 / 0.727 / 0.973 in the data and
+exactly 1.000 in every simulated arm. Between 3 % and 27 % of positions on a *fitted
+trajectory* have no ROI at all — dead channels and ROI gaps that the controlled simulation
+never has. The V plane's 0.727 is the number to be uneasy about; it is out of scope here.
+
+## 11.2 The noise lever cannot close the gap — and it points the wrong way
+
+The ROI thresholds are noise-scaled, so the obvious deflationary explanation is that the
+simulated tracks are simply fainter relative to the noise than real ones. Measured at each
+profile's own centre channel, with the threshold basis `OmnibusSigProc` itself writes (the
+`wiener` trace summary, `cal_RMS`):
+
+| sample | q(*D*=0) / threshold, U / V / W |
+|---|---|
+| **data** | **67.8 / 80.2 / 103.3** |
+| S1 (nominal noise) | 101.1 / 98.5 / 166.8 |
+| S1 noise ×0.5 | 224.4 / 219.8 / 321.0 |
+| S1 noise ×2 | 49.2 / 48.0 / 83.6 |
+
+**The data's signal-to-threshold is 1.5–1.6× *worse* than the nominal simulation's**, sitting
+between the ×1 and ×2 noise arms. If threshold were the mechanism the data should carry *less*
+surviving cross-channel charge, not ten times more. And across a fourfold threshold range the
+simulated E(\|D\|=2) only moves between 0.0046 and 0.0346 — it never approaches the data's
+0.088–0.365, and it is not even monotonic in the noise. The factor of ~100 is not a
+signal-to-noise configuration difference.
+
+*Read the threshold basis with care on the data side.* `cal_RMS` is a percentile spread
+computed on waveforms that contain signal — the reason `pdhd/sp.jsonnet` carries a MAD-based
+alternative at all — so on a cosmic-filled data event it is an upper bound on the noise, not
+the noise. That biases it in the direction that would *help* the deflationary explanation, and
+the explanation still fails.
+
+## 11.3 The collection question, as far as it goes without new frames
+
+§10.7 left PDVD's 1.05 mm and PDHD's 1.41 mm collection excess as the only part of the shipped
+constants that a response modelling error cannot produce. On PDVD W the data's centre share is
+0.749 against the simulation's 0.788 — about 4 % of the charge sits on the ±1 neighbour that
+the simulation does not put there. Split the same way:
+
+| PDVD W | P(\|D\|=1) | E(\|D\|=1) |
+|---|---|---|
+| data | 0.731 | 0.221 |
+| S1 | 0.715 | 0.184 |
+
+**Admission is identical (0.73 vs 0.72); the neighbour simply carries ~20 % more charge.** So
+the collection excess is not the ROI admitting a channel it should not — it is real amplitude
+on the adjacent collection wire. That bounds the answer to two candidates, and this round
+cannot separate them:
+
+1. **charge sharing** between adjacent collection wires — a genuinely 3-D effect the 1-D
+   response model does not carry (§10.2), which would appear as a unipolar, time-coincident
+   signal on the neighbour's raw waveform;
+2. **capacitive cross-talk**, which appears on the raw waveform as the time derivative of the
+   aggressor and so is bipolar and antisymmetric.
+
+**The discriminator is the `raw` (post-NF ADC) waveform, and it is a job away, not a script
+away.** The `gauss` frame cannot do it: it is non-negative by construction, so the
+signed-versus-clipped test §10.8 item 3 proposed has **no power** there — recorded here so
+nobody re-proposes it. `rawdecon` cannot do it either: measured at the same trajectory
+positions, the data's rawdecon is far less coherent than the simulation's even at the *centre*
+cell (net/|q| 0.35 / 0.47 / 0.74 against 0.87 / 0.75 / 0.74), its 4-tick sums are dominated by
+the bipolar swing §9.5 already flagged (`neg_frac` 0.87 data against 0.30 sim), and the
+resulting ratios are unstable in both directions. The frames on disk carry `gauss`, `wiener`
+and `rawdecon`; none carries `raw`. Producing it means re-running `run_nf_sp_evt.sh` with the
+pre-filter tap on those four events — cheap, but it is a run, and it is the next round's cost.
+
+## 11.4 What this changes
+
+- **§9.7's and §10.8's first item is closed, with a negative.** The ROI stage does not admit
+  more; the difference is the amplitude that survives inside it. Nothing about ROI widths or
+  occupancy needs measuring — those are time-axis and event-composition quantities and the
+  question is transverse.
+- **The deflationary explanation is excluded.** It is not that the simulated tracks are too
+  faint: the data's signal-to-threshold is worse and its surviving amplitude is ten times
+  larger.
+- **§9.5's "the deconvolution feeds ROI formation the same amplitude" needs one qualification.**
+  It was measured on |q|, and |q| is blind to how much of that amplitude is coherent. The
+  attempt to measure the signed version (§11.3) does not converge on the data side, so the
+  statement stands as "the same |q|", not "the same signal".
+- **§10's split survives and is sharpened.** On induction, a response mismatch of the size two
+  accepted models actually disagree by produces coherent charge on the ±1 and ±2 neighbours —
+  charge any ROI would keep, which is exactly the E-not-P signature measured here. On
+  collection the same signature appears at ±1 with a response that cannot produce it, so the
+  two remaining candidates are physical charge sharing and front-end cross-talk.
+- Nothing shipped moves. No production file is touched.
+
+**Next step.** Re-run `run_nf_sp_evt.sh -R` on the four PDVD events keeping the `raw` tag, and
+look at the ±1 collection neighbour's post-NF waveform conditioned on a large centre signal:
+unipolar and time-coincident ⇒ charge sharing; derivative-shaped and antisymmetric ⇒
+capacitive cross-talk. That is a single discriminating measurement on one plane of one
+detector, and it decides which of §10.7's two open collection numbers is a detector property
+and which is electronics. Only if it is cross-talk does the pulser run become worth its cost.
+
+**Gates for this round.**
+
+- `--roi-tsv` on `d44_sp_profile.py` **byte-identical when unused**: pre- vs post-patch console
+  output and `--tsv` pool SAME over all five PDVD event/anode pairs.
+- `--roi-tsv` on `d47_sim_transverse_profile.py` **byte-identical when unused**: pre- vs
+  post-patch `_bins/_fit/_shape/_calib/_rows.tsv` SAME on the published PDVD S1 `gauss` call.
+- The in-ROI flag is exact, not a threshold: `gauss`/`wiener` are 97.9 % exact zero with
+  `min() == 0` in both the data frames and the simulated archive.
+- Every number above is in `figs/47_roi.tsv`, from the committed `d47_roi_compare.py`; the
+  per-profile inputs are `figs/47_roi_rows_{data_pdvd,sim_pdvd_S1,sim_pdvd_S1n05,sim_pdvd_S1n2}.tsv`.

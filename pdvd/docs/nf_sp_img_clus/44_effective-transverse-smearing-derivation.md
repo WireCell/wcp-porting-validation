@@ -466,6 +466,13 @@ doc 42 §4.2). SBND: k 1.009 → 1.007, unchanged.
 > collection**. So PDVD U/V (1.90/1.92 mm over the simulated floor) are within reach of a
 > response modelling error and **PDVD W's 1.05 mm is not**. `d44_sigma_fit.py` gained an
 > `apa` column and `--split apa`, byte-identical when unused.
+> **Doc 47 §11 (fifth round) closes the ROI question with a negative and narrows W's 1.05 mm.**
+> `gauss` is exactly zero outside an ROI, so admission can be counted: data and simulation open
+> an ROI two wires from the track at the same rate, and the ×14–21 of §9.5 is entirely the
+> amplitude surviving inside it. On PDVD W the ±1 neighbour is admitted identically (0.73 vs
+> 0.72) and carries 20 % more charge — real amplitude on the adjacent collection wire, not an
+> ROI artefact. The two remaining candidates are physical charge sharing and front-end
+> cross-talk, and the discriminator is the post-NF `raw` waveform on the same four events.
 
 **Against the pre-registered criteria (§Plan, fixed before the arms ran):**
 
