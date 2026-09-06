@@ -893,10 +893,10 @@ ident-to-index map built from it, across the whole tree:
 
 | # | site | failure mode | status |
 |---|---|---|---|
-| 1 | `BlobSampler::make_dataset` (`BlobSampler.cxx:395-431`) | `p_chi2i[ident]` -- `operator[]` **inserts 0** on a miss, so the point silently takes `channels[0]`'s activity: charge **and** uncertainty 0 | knobbed, **now default ON** |
-| 2 | `ImproveCluster_1::make_iblobs_improved` (`improvecluster_1.cxx:1035-1055`) | `channels[wire_idx]` -- correct until the first skipped continuation, then off by one; past the end the wire's activity is dropped | knobbed, **now default ON**; live in the PR job |
-| 3 | `RetileCluster::make_iblobs` (`retile_cluster.cxx:443-463`) | identical to 2 | knobbed, **now default ON**; dormant (`cm.retile` is commented out in every experiment config) |
-| 4 | **`ChargeStepped::is_plane_bad` and `::get_wire_charge`** (`BlobSampler.cxx:1346, 1474`) | the **quiet** variant: `p_chi2i.find()` misses and the function fails **closed** -- "wire not bad" / "charge 0.0" -- rather than reading `channels[0]` | **was NOT fixed and NOT knobbed.  Fixed in this change**, same knob, same ident resolution |
+| 1 | `BlobSampler::make_dataset` (the `wrapped_channel_charge` branch, `BlobSampler.cxx:395`) | `p_chi2i[ident]` -- `operator[]` **inserts 0** on a miss, so the point silently takes `channels[0]`'s activity: charge **and** uncertainty 0 | knobbed, **now default ON** |
+| 2 | `ImproveCluster_1::make_iblobs_improved` (`improvecluster_1.cxx:1053`) | `channels[wire_idx]` -- correct until the first skipped continuation, then off by one; past the end the wire's activity is dropped | knobbed, **now default ON**; live in the PR job |
+| 3 | `RetileCluster::make_iblobs` (`retile_cluster.cxx:461`) | identical to 2 | knobbed, **now default ON**; dormant (`cm.retile` is commented out in every experiment config) |
+| 4 | **`ChargeStepped::is_plane_bad` and `::get_wire_charge`** (`BlobSampler.cxx:1346, 1465`) | the **quiet** variant: `p_chi2i.find()` misses and the function fails **closed** -- "wire not bad" / "charge 0.0" -- rather than reading `channels[0]` | **was NOT fixed and NOT knobbed.  Fixed in this change**, same knob, same ident resolution |
 
 Site 4 is the answer to *"where will we hit this again?"*.  It is reachable only from the
 `charge_stepped` sampling strategy, which today is configured **only in uBooNE test jsonnets**
@@ -948,6 +948,40 @@ PDVD's clustering job and both PR jobs already passed `true`; SBND and uBooNE ne
 | SBND | all | key absent, C++ default OFF | key present, `true` | **compiled config changes; behaviour cannot** |
 | uBooNE | all | key absent, C++ default OFF | key present, `true` | **compiled config changes; behaviour cannot** |
 
+**Callers of the shared builder, enumerated** (`feedback_count_the_binding_instances`: a flipped
+builder default is invisible to every gate that only runs the ON arm).  `cm.improve_cluster_2` has
+exactly three production call sites and four test ones:
+
+| caller | passes the argument? | effect of the builder-default flip |
+|---|---|---|
+| `cfg/pgrapher/experiment/pdhd/pr.jsonnet:1268` | yes, `true` | none |
+| `cfg/pgrapher/experiment/protodunevd/pr.jsonnet:1306` | yes, `true` | none |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet:1984` | **no** | OFF -> ON, but unreachable (no wrapped wire) |
+| `clus/test/uboone-mabc.jsonnet`, `test-porting/{steiner,stm}/main.jsonnet` | **no** | OFF -> ON, unreachable (uBooNE) |
+| **`clus/test/test-porting/pdhd/clus.jsonnet:405`** | **no** | **OFF -> ON and REACHABLE** -- a PDHD geometry |
+
+That last row is the one worth checking rather than reasoning about: the `porting pdhd` bats test
+(`clus/test/test-porting.bats`) runs a PDHD geometry through a config that names neither knob, and
+its own `bs_live_face` carries no `wrapped_channel_charge` key either, so **both** fixes turn on
+there and the branches really are reachable.  **Run: `ok 1 porting pdhd`**, and its `do_log_digest`
+comparison against the stored historical copy
+(`build/tests/history/apply-pointcloud-0.35.0-1367-g772c753d/test-porting/pdhd.dig`) is
+**byte-identical, 1165 lines against 1165, `diff` rc 0**.  So the porting reference does not need
+re-blessing.
+
+Read that for exactly what it is: the digest keeps only the sorted ` D ` debug lines containing
+`[`, and the test's only output assertion is that the Bee zips are larger than 22 bytes.  It is
+evidence that the change did not disturb the porting chain's *structure*, **not** evidence that
+its reconstructed output is unchanged -- that test has no output comparison to make such a claim
+with.
+
+**uBooNE is a frozen reference in this tree, and this change reaches it -- deliberately.**  The
+default flip turns the knob on in uBooNE's own configs, and site 4 of sec 9.3 is a function only
+uBooNE configs bind.  Both are safe for one reason and one reason only: uBooNE has zero
+`segment > 0` wires, so neither new branch can execute.  The doctests that read the checked-in
+`clus/test/data/uboone-mabc_config.json` are unaffected (they read the stored JSON, not the
+jsonnet) and pass.  If a uBooNE wires file ever gains a wrapped strip, this paragraph is void.
+
 The SBND/uBooNE claim is **structural, not a gate result**: both geometries have **zero
 `segment > 0` wires**, so `p_chi2i.find()` never misses and the ident-resolved branch is
 unreachable.  That is pinned by the existing doctest *"unwrapped detectors have no orphans at
@@ -968,6 +1002,7 @@ will flag it; that is expected and is the price of putting the fix in the defaul
 | **default-ON run == the TLA arm** | 029107/12 `mabc-pr.zip` member hash `504efac55d4787afba04e639f761786d873876eebd7a4b00da43487c32080ee5`, **identical** for `d05prod` (no TLA, new defaults) and `d05wc` (old defaults + `PDHD_CLUS_TLA`) |
 | pre-fix production, same event | `91ef5b5185d9bd8a66df3af70f882bc5d9cf7326f75c9add74ee1ff7bb795070` -- **different, as intended** |
 | cluster 128, default-ON | excluded **14**, 4 path components, **`TGM=true`**; 23 clusters TGM=true (was 18) |
+| `porting pdhd` bats (a PDHD geometry whose config names neither knob) | **ok**; log digest byte-identical to the stored history, 1165/1165 lines (see sec 9.5 for what that does and does not prove) |
 
 The middle-to-last row is the one that matters: **flipping the default lands exactly where the
 explicit TLA did**, byte for byte.
