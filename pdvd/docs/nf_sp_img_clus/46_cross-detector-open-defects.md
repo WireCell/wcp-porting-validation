@@ -525,8 +525,8 @@ legacy path takes: that arm is byte-identical to a knob-OFF arm **by
 construction**, and no OFF partner is owed. An OFF partner *would* be owed for
 any detector that fired. None did, so none was run.
 
-Two controls, because a count of zero is worthless if the file was not read or
-the message could not reach the log:
+Three checks, because a count of zero is worthless if the file was not read, the
+message could not reach the log, or the glob was empty:
 
 * **Was my file read, and by which loader?** `load_trackfitting_config()` exists
   twice — `TaggerCheckSTM.cxx:1035` and `TaggerCheckNeutrino.cxx:3979` — and each
@@ -540,6 +540,10 @@ the message could not reach the log:
   `pdvd/work/039253_16_d45skipon`: *"skipped 61 of 497 … (apa=2 face=0)"*, and
   `039252_7_d45skipon`: *"skipped 5 of 712 … (apa=3 face=1)"*. A zero is a real
   zero.
+* **Did the arms actually produce logs to grep?** An empty glob greps to zero
+  exactly like a clean one. Log counts match event counts on all four arms
+  (30 / 99 / 67 / 35), none is empty, and every one of SBND's 99 cosmic logs
+  mentions `TaggerCheckSTM`, i.e. the tagger ran in each.
 
 Binary pin `/home/xqian/tmp/d46_libpin` (`libWireCellClus.so
 e3304cb9b362cd680ee3182452751a96`) = toolkit `d398ca14` plus the §9 `util` fix,
@@ -551,10 +555,10 @@ All knob-ON, all fresh tags, all on the pin.
 
 | detector | chain / loader exercised | events | **fires** | points skipped | products |
 |---|---|---|---|---|---|
-| PDHD | STM (`TaggerCheckSTM`) | 30 | **0** | 0 | 30/30 rc=0, 30 `mabc-pr.zip`, 30 `tracking-stm.root`, 0 error lines |
-| SBND | cosmic STM/TGM/FC (`TaggerCheckSTM`) | 99 | **0** | 0 | 99/99 rc=0 |
-| SBND | full PR chain (`TaggerCheckNeutrino`) | 48 nueCC48 + 19 NCpi0 | **0** | 0 | 67/67 rc=0 |
-| uBooNE | PR chain (`TaggerCheckNeutrino`) | 35 (all of `qlport/filelist`) | **0** | 0 | 35/35 rc=0 |
+| PDHD | STM (`TaggerCheckSTM`) | 30 | **0** | 0 | 30/30 rc=0, 30 `mabc-pr.zip`, 30 `tracking-stm.root`, 30 non-empty logs, 0 error lines |
+| SBND | cosmic STM/TGM/FC (`TaggerCheckSTM`) | 99 | **0** | 0 | 99/99 rc=0, 99 `mabc-pr.zip`, 99 non-empty logs (28 017 lines), all 99 mention `TaggerCheckSTM` |
+| SBND | full PR chain (`TaggerCheckNeutrino`) | 48 nueCC48 + 19 NCpi0 | **0** | 0 | 67/67 rc=0, 67 `mabc-pr.zip`, 67 non-empty logs |
+| uBooNE | PR chain (`TaggerCheckNeutrino`) | 35 (all of `qlport/filelist`) | **0** | 0 | 35/35 rc=0, 35 `mabc_<idx>.zip`, 35 non-empty logs |
 | **total** | | **231** | **0** | **0** | |
 | *PDVD, doc 45 §13, for contrast* | both | *120* | *2* | *66* | *products identical 120/120* |
 
@@ -562,16 +566,22 @@ All knob-ON, all fresh tags, all on the pin.
 
 This is a statement about these manifests, not about these detectors. PDVD fires
 on 2 of 120 events = 1.7 %. The 95 % upper limit on the rate from a null
-observation is 3/N:
+observation is 3/N — and the four arms must be kept **separate**, because they
+exercise two different loaders on four different event samples fitting different
+objects, so pooling them would assume the very thing that is unknown:
 
-| detector | events | 95 % UL on the per-event rate | excludes PDVD's 1.7 %? |
-|---|---|---|---|
-| SBND (both chains) | 166 | 1.8 % | **borderline — this is the only real bound** |
-| uBooNE | 35 | 8.6 % | no |
-| PDHD | 30 | 10 % | no |
+| arm | loader | events | 95 % UL on the per-event rate | excludes PDVD's 1.7 %? |
+|---|---|---|---|---|
+| SBND cosmic | `TaggerCheckSTM` | 99 | 3.0 % | no |
+| SBND full PR | `TaggerCheckNeutrino` | 67 | 4.5 % | no |
+| uBooNE PR | `TaggerCheckNeutrino` | 35 | 8.6 % | no |
+| PDHD STM | `TaggerCheckSTM` | 30 | 10 % | no |
 
-So *"SBND does not do this"* is measured; *"PDHD and uBooNE do not do this"* is
-only bounded, and a later round that wants that claim needs more events, not a
+**So no arm here excludes a PDVD-like rate.** What the measurement establishes is
+that the condition is not common on any of these chains — not that it cannot
+happen on them. An earlier draft of this section pooled SBND's two chains into
+166 events and read the resulting 1.8 % as "SBND is measured"; that pooling is
+withdrawn. A later round that wants the stronger claim needs more events, not a
 re-reading of these.
 
 ### 8.4 Why PDVD is the odd one out — and what to do
@@ -582,9 +592,19 @@ and its rough path crosses the gap at y ≈ 1 cm — the CRP boundary — where
 `contained_by()` returns apa 2 face 0, a volume with no wire planes. The
 condition needs a path point that lies outside *every* face carrying data in that
 event, which a two-drift CRP geometry with internal gaps produces routinely and a
-single-drift APA geometry largely does not. That reading also predicts PDHD's
-non-imaging second faces would *not* fire — as they did not — because nothing
-puts a trajectory point there.
+single-drift APA geometry largely does not. Note that a face can be missing from
+the table for either of two reasons — it is not in the detector's geometry at
+all, or it simply carries no data in *this* event (doc 45 §13: PDVD's second
+fire, apa 3 face 1 on 039252/7, is a face that exists in other events' tables).
+
+**This is stated as a falsifiable prediction, not as a result.** PDHD has four
+anodes × two faces of which only one face per anode images
+(`pdhd/pr.jsonnet:14`), so the naive expectation was that PDHD would fire on its
+non-imaging faces; it did not, on any of 30 events. The prediction that explains
+that is: *the trajectory never leaves the imaged volume, because there is no
+internal gap for the rough path to bridge.* A single future PDHD WARN naming a
+non-imaging face would refute it, and the WARN prints `apa=` and `face=` exactly
+so that check is one grep. Nothing here proves the negative.
 
 **The flip is the owner's and is not taken here.** The case for it: it converts
 an undefined read (`std::get<0>` on `end()`) into a logged skip, at a cost these

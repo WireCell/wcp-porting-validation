@@ -78,20 +78,34 @@
 #   TOTAL                                               231      0        0
 #   PDVD (doc 45 sec 13, for contrast)                  120      2       66
 #
+# ARM INTEGRITY (a zero from an empty glob reads the same as a zero from clean logs):
+#   PDHD   30 logs, uBooNE 35 logs, SBND cosmic 99 logs (0 empty, 28017 lines, and all 99
+#   mention TaggerCheckSTM so the tagger really ran), SBND PR 67 logs (0 empty).
+#
 # READING IT.  On these manifests the flip is a PROVABLE no-op on all three detectors.
-# That is a statement about the manifests, not about the detectors: PDVD fires on 2/120 =
-# 1.7 % of events, and at that rate the 95 % upper limits from a null observation are
-#   SBND   3/166 = 1.8 %   -- the only sample large enough to bound the rate at PDVD's level
-#   uBooNE 3/35  = 8.6 %   -- does not exclude a PDVD-like rate
-#   PDHD   3/30  = 10  %   -- does not exclude a PDVD-like rate
-# so "SBND does not do this" is measured; "PDHD/uBooNE do not do this" is only bounded.
+# That is a statement about the manifests, not about the detectors.  PDVD fires on 2/120 =
+# 1.7 % of events.  The 95 % upper limit from a null observation is 3/N, and the four arms
+# must be kept SEPARATE -- two loaders, four samples, different objects fitted -- so:
+#   SBND cosmic (TaggerCheckSTM)       3/99 = 3.0 %   does NOT exclude PDVD's rate
+#   SBND full PR (TaggerCheckNeutrino) 3/67 = 4.5 %   does NOT exclude it
+#   uBooNE PR    (TaggerCheckNeutrino) 3/35 = 8.6 %   does NOT exclude it
+#   PDHD STM     (TaggerCheckSTM)      3/30 = 10  %   does NOT exclude it
+# NO arm here excludes a PDVD-like rate.  The measurement says the condition is not COMMON
+# on any of these chains; it does not say it cannot happen on them.  (An earlier draft
+# pooled SBND's two chains into 166 events and read 1.8 % as "SBND is measured".  That
+# pooling is WITHDRAWN: it assumes the per-event fire probability is the same on both
+# chains, which is exactly what is unknown.)
 #
 # LIKELY MECHANISM for the difference (inference, not measured here).  Both PDVD fires are on
 # GAP-BRIDGING rough-path points: cluster 37 of 039253/16 crosses a 28 cm gap between two
 # charge components at y ~ 1 cm -- the CRP boundary -- and contained_by() places those points
 # in apa 2 face 0, a volume with no wire planes.  The condition needs a path point that lies
 # outside every face carrying data in that event, which a two-drift CRP geometry with internal
-# gaps produces and a single-drift APA geometry largely does not.
+# gaps produces and a single-drift APA geometry largely does not.  Stated as a FALSIFIABLE
+# PREDICTION, not a result: PDHD has 4 anodes x 2 faces with only one face per anode imaging
+# (pdhd/pr.jsonnet:14), so the naive expectation was a fire on its non-imaging faces; there
+# was none in 30 events.  A single future PDHD WARN naming a non-imaging face refutes it, and
+# the WARN prints apa= and face= so that check is one grep.  Nothing here proves the negative.
 #
 # RECOMMENDATION.  Flipping is the owner's call and is NOT done here.  The case for it is that
 # it converts an undefined read into a logged skip at zero measured cost; the case against is
