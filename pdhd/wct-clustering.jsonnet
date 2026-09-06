@@ -60,20 +60,25 @@ function(
     // pgrapher/experiment/pdhd/clus.jsonnet clus_all_tpc tensor_outname.
     save_tensors = '',
     // Wrapped-plane induction charge for the sampled points (docs
-    // pdhd/docs/01_steiner-wrapped-planes.md sec 4 and 7, stm-tagger-chain sec 12).
-    // false (default) => the key is omitted from every BlobSampler and the
-    // compiled config is byte-identical.  Turning it on changes the pctree this
-    // job writes, hence production Q/L output -- a measurement arm only, not a
-    // flip.
+    // pdhd/docs/01_steiner-wrapped-planes.md sec 4 and 7,
+    // pdhd/docs/04_stm-tagger-scan.md sec 8-9).
     //
-    // NOT the same decision as the PR job's knob of the same name.  The PR job
-    // (wct-pr-perevt.jsonnet) has had wrapped_channel_charge = true since
-    // 2026-09-05: its samplers feed only ImproveCluster_2's retiler and their
-    // point cloud is discarded after the Steiner stage, so nothing persists.
-    // THIS one rewrites the pctree that dQ/dx, track fitting and Q/L matching
-    // all read, and is still PARKED pending an owner decision (doc 01 sec 7).
-    // The two need not agree -- see doc 01 sec 4.3.
-    wrapped_channel_charge = false,
+    // PDHD PRODUCTION ON since 2026-09-06 (owner: "we need these fixes default
+    // on, since they are fixing bugs").  THIS is the sampler that writes the
+    // pctree dQ/dx, track fitting, the cosmic taggers and Q/L matching all read.
+    // With it off, `is_point_good` (>= 2 of 3 planes with charge) threw away
+    // 29.4 % of every cluster's points on 029107/12 -- the 2-D measurement was
+    // there in all three views on 99.5 % of them -- and a 790 cm through-going
+    // muon read TGM=false.  On: 0.08 % excluded, TGM=true.
+    //
+    // The PR job's same-named knob (wct-pr-perevt.jsonnet, true since
+    // 2026-09-05) configures a DIFFERENT binding of the same call site: its
+    // samplers feed only ImproveCluster_2's retiler and that cloud is discarded,
+    // so fixing it did not fix this.  Both are now on.
+    //
+    // NOT byte-identical: it changes the pctree, hence clustering and Q/L
+    // output.  Pass false here to reproduce a pre-2026-09-06 run.
+    wrapped_channel_charge = true,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];

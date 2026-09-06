@@ -7,6 +7,11 @@ with its Steiner graph, Steiner terminals, cluster image and fit trajectory, and
 tagger-level census that says where the candidates are lost, PDHD against PDVD.
 **No code or config is changed by this doc.**
 
+**Sec 9 (2026-09-06, third owner question) EXECUTES the fix**: both wrapped-channel knobs now
+default ON in C++, PDHD's clustering job is flipped, and a fourth, previously unknobbed instance of
+the same defect (`ChargeStepped`) is fixed.  Sec 9.2 answers "is this the one we fixed yesterday?"
+-- same defect, same call site, a different binding -- and sec 9.3 is the audit.
+
 **Sec 8 (2026-09-06, second owner question) is the load-bearing result.**  Following the 3-D image
 against the 2-D measurement point by point: the image is supported by measured charge in **all
 three** views at 99.9 % of cluster 128's points, including 100 % of the points the tagger threw
@@ -54,6 +59,9 @@ LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=128 WCT_TGM_PATH_DUMP_DIR=<out/off> \
 # the causal control: re-cluster the SAME imaging with the wrapped-channel lookup fixed
 PDHD_CLUS_TLA="-S wrapped_channel_charge=true" \
     ./run_clus_evt.sh -s d05wc -save-pctree 029107 12    # 75 s; writes a new pctree
+# sec 9, after the default flip the TLA is no longer needed -- arm d05prod reproduces
+# d05wc byte for byte, and -S wrapped_channel_charge=false reproduces the old behaviour
+./run_clus_evt.sh -s d05prod -save-pctree 029107 12
 LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=-1  WCT_TGM_PATH_DUMP_DIR=<out/on> \
     ./run_pr_evt.sh -s d05wc -stm-fit 029107 12
 python3 docs/scripts/d04_cluster128_wrapped.py <out/off> <out/on> \
@@ -798,6 +806,8 @@ the attribution changed.**
 ### 8.8 What this changes about the fix (supersedes sec 7.6)
 
 1. **`wrapped_channel_charge = true` in the PDHD *clustering* job** (`pdhd/wct-clustering.jsonnet:76`).
+   **DONE 2026-09-06 -- see sec 9**, on the owner's instruction that a bug fix belongs on by
+   default.  Both knobs' C++ defaults were flipped with it.  The caveats below stand unchanged.
    This is the cause, the knob already exists, its C++ default is `false`, and the PR job has run
    with it true since 2026-09-05.  **Cost, stated plainly:** it rewrites the persisted pctree, so
    it is a behaviour change for clustering **and** Q/L matching, not a PR-only change; it cannot
@@ -823,7 +833,161 @@ Q/L output the way doc pdhd/01 gated its PR flip, and re-run `d04_stm_tagger_cen
 population of sec 2-4 is measured on the same broken cloud and every number in it is provisional
 until that is done.
 
-## 9. Not done / next
+## 9. Owner question 2026-09-06: what was the actual bug, is it the one we fixed yesterday, and where else does it live?
+
+**Executed, not proposed.**  The owner's instruction -- *"we need these fixes default on, since
+they are fixing bugs"* -- is implemented in this section.  Sec 8.8's first option is now done.
+
+### 9.1 The actual bug, in one call site
+
+`Gen::AnodePlane::configure` builds each plane's channel list by **walking the plane's wires and
+skipping every `segment() > 0` wire** (`gen/src/AnodePlane.cxx:243-254`):
+
+```cpp
+for (auto w : wires) {
+    if (w->segment() > 0) { continue; }        // <-- the whole bug lives here
+    ...
+    plane_channels.push_back(ich);
+}
+```
+
+That is a correct channel **list** -- one entry per channel, attached to the plane that holds its
+segment-0 wire.  It is **not** a wire-indexed table, and on a wrapped-strip detector it does not
+contain every channel the plane's wires carry.  A PDHD (anode, face, U or V) plane holds **1148
+wires on 800 channels** and `channels()` has **400 entries**.
+
+Every consumer that treats that list as "the plane's channels, indexed like its wires" is wrong
+in the same way, and wrong **silently**: no warning fires, the charge simply becomes 0 or another
+wire's, and `calc_charge_wcp` / `is_point_good` read a zero plane as *"no signal, don't hold it
+against the point."*
+
+### 9.2 Is it the same bug we fixed yesterday?  Same defect, a different binding
+
+**Yes -- and that is the lesson.**  This is not a new bug; it is the fourth time the same
+misconception has been paid for.
+
+| when | commit | what was fixed | which binding |
+|---|---|---|---|
+| doc pdvd/31 r3 | -- | `BlobSampler::make_dataset` (`wrapped_channel_charge`) | knob added, default OFF |
+| doc pdvd/31 r5 | `19cf41dc` | `ImproveCluster_1` / `RetileCluster` (`wrapped_channel_activity`) | knob added, default OFF |
+| doc pdvd/31 r6 | `16c7728a` | both flipped ON | **PDVD** clustering + PR |
+| doc pdhd/01, **2026-09-05** | `d398ca14` | both flipped ON | **PDHD PR job only** |
+| doc pdhd/04 sec 8, **2026-09-06** | this | the same `BlobSampler::make_dataset` | **PDHD clustering job** -- the one that writes the persisted pctree |
+
+Yesterday's `d398ca14` and today's change are **the same code defect at the same call site**.  What
+differed was the *binding*: yesterday's flip configured the PR job's samplers, which feed only
+`ImproveCluster_2`'s retiler and whose cloud is discarded after the Steiner stage.  The taggers
+read `ucharge_val` from the **persisted** pctree, written by the *clustering* job, whose
+same-named knob was left `false`.  Fixing one did not fix the other, and the doc comment added by
+`a3f06c1a` -- "the two need not agree" -- is exactly what let the second one hide.
+
+`feedback_cpp_default_governs_only_silent_configs` names this shape: **exposure is the binding,
+not the C++ default.**  The corollary this section acts on: when the fix is a *bug fix*, the C++
+default is the right place to close it, because a default reaches every binding including the
+ones nobody has enumerated yet.
+
+### 9.3 Where else does it live?  One misconception, four bindings, plus a cousin
+
+Audited by grepping every positional index into `IWirePlane::channels()` and every
+ident-to-index map built from it, across the whole tree:
+
+| # | site | failure mode | status |
+|---|---|---|---|
+| 1 | `BlobSampler::make_dataset` (`BlobSampler.cxx:395-431`) | `p_chi2i[ident]` -- `operator[]` **inserts 0** on a miss, so the point silently takes `channels[0]`'s activity: charge **and** uncertainty 0 | knobbed, **now default ON** |
+| 2 | `ImproveCluster_1::make_iblobs_improved` (`improvecluster_1.cxx:1035-1055`) | `channels[wire_idx]` -- correct until the first skipped continuation, then off by one; past the end the wire's activity is dropped | knobbed, **now default ON**; live in the PR job |
+| 3 | `RetileCluster::make_iblobs` (`retile_cluster.cxx:443-463`) | identical to 2 | knobbed, **now default ON**; dormant (`cm.retile` is commented out in every experiment config) |
+| 4 | **`ChargeStepped::is_plane_bad` and `::get_wire_charge`** (`BlobSampler.cxx:1346, 1474`) | the **quiet** variant: `p_chi2i.find()` misses and the function fails **closed** -- "wire not bad" / "charge 0.0" -- rather than reading `channels[0]` | **was NOT fixed and NOT knobbed.  Fixed in this change**, same knob, same ident resolution |
+
+Site 4 is the answer to *"where will we hit this again?"*.  It is reachable only from the
+`charge_stepped` sampling strategy, which today is configured **only in uBooNE test jsonnets**
+(`clus/test/uboone-mabc.jsonnet`, `clus/test/test-porting/*/main.jsonnet`) -- and uBooNE has no
+wrapped wire, so it has never fired.  It is a trap armed for the day anyone points that strategy
+at PDHD or PDVD.  Fixed now, at zero measurable cost, because no live config reaches it.
+
+**A cousin, named but NOT fixed here.**  `PrDisplayDump::chan_scheme()`
+(`clus/src/PrDisplayDump.cxx:152`) and the two SBND magnify visitors
+(`root/src/SbndPrMagnifyTrackingVisitor.cxx:142`, `root/src/SbndMagnifyTrackingVisitor.cxx:74`)
+use `planes[p]->channels().size()` as *the plane's channel count* for a display axis.  On PDHD
+that is **400** for a plane carrying 1148 wires on 800 channels.  This is the same misconception
+in its "list length is not the channel count" form (`feedback_channel_list_is_not_a_wire_lookup`),
+but it is **display-layout only** and `pr_display` is inert in PDHD's `-stm` chain.  Separate
+defect, separate change -- mixing it in would muddy this gate.
+
+### 9.4 What changed
+
+**C++ defaults flipped from `false` to `true`** -- these are bug fixes, so the fixed path is the
+default and the legacy positional lookup survives only for a config that asks for it:
+
+* `BlobSampler::CommonConfig::wrapped_channel_charge` (`clus/inc/WireCellClus/BlobSampler.h`)
+* `RetileCluster::m_wrapped_channel_activity` (`clus/src/retile_cluster.h`)
+
+**The key-suppression idiom had to go with them.**  Every threading site used
+`[if wrapped_channel_charge then 'wrapped_channel_charge']: true`, which emits **nothing** when
+the argument is false.  With a `true` C++ default that makes `false` **unreachable** -- passing
+false would silently leave the fix on.  All three emitters now write the key unconditionally:
+
+* `cfg/pgrapher/experiment/pdhd/clus.jsonnet`
+* `cfg/pgrapher/experiment/protodunevd/clus.jsonnet`
+* `cfg/pgrapher/common/clus.jsonnet` (`improve_cluster_2`; its own argument default flipped too,
+  or every caller would have turned the fix back off)
+
+**Site 4 fixed** (`ChargeStepped::is_plane_bad` / `get_wire_charge`), resolving by channel ident
+through the slice exactly as `make_dataset` does, under the same knob.
+
+**PDHD's clustering job flipped to ON** (`pdhd/wct-clustering.jsonnet`,
+`cfg/pgrapher/experiment/pdhd/clus.jsonnet`).  **This is the only production behaviour change**:
+PDVD's clustering job and both PR jobs already passed `true`; SBND and uBooNE never thread the key.
+
+### 9.5 Blast radius, honestly
+
+| detector | job | before | after | behaviour |
+|---|---|---|---|---|
+| **PDHD** | **clustering** | OFF | **ON** | **CHANGES** -- the pctree, hence clustering, Q/L, dQ/dx and every tagger |
+| PDHD | PR | ON | ON | unchanged |
+| PDVD | clustering, PR | ON | ON | unchanged |
+| SBND | all | key absent, C++ default OFF | key present, `true` | **compiled config changes; behaviour cannot** |
+| uBooNE | all | key absent, C++ default OFF | key present, `true` | **compiled config changes; behaviour cannot** |
+
+The SBND/uBooNE claim is **structural, not a gate result**: both geometries have **zero
+`segment > 0` wires**, so `p_chi2i.find()` never misses and the ident-resolved branch is
+unreachable.  That is pinned by the existing doctest *"unwrapped detectors have no orphans at
+all"* (`count_orphans == 0` on `sbnd-wires-geometry-v0206` and `microboone-celltree-wires-v2.1`),
+which is now load-bearing for the byte-identity argument rather than decoration.  **Their compiled
+JSON is not byte-identical** -- one new key each -- so any config-diff gate on those detectors
+will flag it; that is expected and is the price of putting the fix in the default.
+
+### 9.6 Gates
+
+| gate | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | **323 cases / 23 061 assertions SUCCESS** (one new assertion: `false` still round-trips) |
+| PDHD compiled config, no TLA | `"wrapped_channel_charge" : true` x8 (4 anodes x 2 faces) |
+| PDHD compiled config, `-S wrapped_channel_charge=false` | `"wrapped_channel_charge" : false` x8 -- **present**, not absent |
+| PDVD compiled config, both directions | `true` x16 / `false` x16 |
+| `cm.improve_cluster_2` emitter, both directions | `wrapped_channel_activity` `true` (default) / `false` (asked) |
+| **default-ON run == the TLA arm** | 029107/12 `mabc-pr.zip` member hash `504efac55d4787afba04e639f761786d873876eebd7a4b00da43487c32080ee5`, **identical** for `d05prod` (no TLA, new defaults) and `d05wc` (old defaults + `PDHD_CLUS_TLA`) |
+| pre-fix production, same event | `91ef5b5185d9bd8a66df3af70f882bc5d9cf7326f75c9add74ee1ff7bb795070` -- **different, as intended** |
+| cluster 128, default-ON | excluded **14**, 4 path components, **`TGM=true`**; 23 clusters TGM=true (was 18) |
+
+The middle-to-last row is the one that matters: **flipping the default lands exactly where the
+explicit TLA did**, byte for byte.
+
+### 9.7 What is still owed
+
+1. **The 6-event manifest, end to end** (clustering + Q/L + PR) on the new defaults, with a Q/L
+   revalidation.  One event has been run.  This is the gate that would let the flip be called
+   validated rather than merely correct.
+2. **Re-run `d04_stm_tagger_census.py`.**  Every population number in secs 2-4 -- including the
+   PDHD-vs-PDVD STM comparison this whole doc started from -- is measured on the broken cloud and
+   is provisional.
+3. **The four other new TGM tags** (clusters 31, 47, 102, 103 on 029107/12) have not been looked
+   at.  "More tags" is not "more correct tags".
+4. **The `PrDisplayDump` / magnify-visitor channel-count cousin** of sec 9.3: unfixed, display
+   only, needs its own change.
+5. **SBND and uBooNE config-diff gates will flag one new key each.**  Expected; not investigated
+   further here.
+
+## 10. Not done / next
 
 0. **The lead, after sec 8:** every population number in secs 2-4 is measured on a point cloud
    whose induction charge is missing on ~30 % of points.  The 6-event manifest re-run with
