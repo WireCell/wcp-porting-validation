@@ -1,5 +1,11 @@
 # 47 — Where the constant transverse smearing comes from: the same measurement on simulated tracks, three detectors
 
+**Status (2026-09-06): CLOSED after five rounds** (owner decision). Two of the three parts of
+the constant are explained and the third is bounded to two named candidates with one
+measurement that would separate them. Nothing here changed a production file; the constants
+docs 44 and pdhd/02 shipped are untouched and remain correct. **§12 is the consolidated
+summary — read that first; §§1–11 are the rounds in order.**
+
 **Question (owner, 2026-09-05).** The track fit needs a constant transverse smearing `c` far
 above what diffusion and the SP wire filter give (doc 44: PDVD 2.30/2.30/1.18 mm U/V/W; doc
 pdhd/02: PDHD 3.21/2.72/1.46; doc 44 §2.4: SBND 1.32/1.32/0.38, with SBND "not seeing the
@@ -1581,3 +1587,116 @@ and which is electronics. Only if it is cross-talk does the pulser run become wo
   `min() == 0` in both the data frames and the simulated archive.
 - Every number above is in `figs/47_roi.tsv`, from the committed `d47_roi_compare.py`; the
   per-profile inputs are `figs/47_roi_rows_{data_pdvd,sim_pdvd_S1,sim_pdvd_S1n05,sim_pdvd_S1n2}.tsv`.
+
+
+---
+
+# 12. Closing summary (2026-09-06)
+
+Five rounds. What follows is the net position, organised by conclusion rather than by round.
+
+## 12.1 What the constant is
+
+The track fit spreads each trajectory point's charge across wires with
+`σ_T = hypot(√(2·D_T·t_drift), c) / pitch`. `c` is the drift-independent floor — everything
+that widens the reconstructed charge profile besides diffusion. It is **not** a property of the
+ionisation; it is the width the signal-processing chain leaves behind, and the fit must model it
+because it compares its prediction against SP's output, not against truth.
+
+It has three parts, and they were separated in that order:
+
+| part | size | status |
+|---|---|---|
+| **the SP wire filter's real-space kernel** | PDHD 3.40 mm, SBND 1.41, PDVD 0.21 (induction); ~0 on all collection | **explained** (§3.5). A deliberate configuration choice, per detector. The closed-form "inverse" that produced the shipped seed values was wrong — it read a frequency-domain σ as a real-space width. |
+| **a residual of the 2-D deconvolution** against the pitch-averaged field response | ~0.2 pitch induction, ~0.12 collection, every detector | **explained** (§3.5), and **phase-independent** — §8 withdrew the earlier claim that it concentrates at the wire-region boundary. |
+| **a data-only excess** | PDHD U 1.76 / W 1.41 mm; PDVD 1.90 / 1.92 / 1.05; **zero on SBND and PDHD V** | **half explained** — see §12.2. |
+
+## 12.2 The data-only excess: what settled it
+
+- **The simulation could never have found it.** Sim and SP convolve/deconvolve with the *same*
+  field response file, so an error in that file cancels by construction. The simulated `c` is a
+  **floor**, and `c_data ⊖ c_sim` is the budget for any data-only effect (§10.1). Naming that
+  turned a standing open item into a measurement.
+- **Induction: consistent with a field-response modelling error.** Breaking the sharing — two
+  accepted PDVD response files differing 1.74–1.87× in the ±1-wire amplitude — puts **+0.67 mm
+  on U (3.4 σ) and +1.69 mm on V (16.9 σ)** (§10.5), the same order as the 1.90/1.92 mm
+  measured. The sign matters: under-deconvolving a *wider* true response leaves width, the
+  reverse does not, so the mechanism predicts the real response is wider than the model — which
+  is the direction PDHD's MCMC refit to data actually moved (±1 amplitude 0.274 → 0.466).
+- **Collection: not the response.** The same mismatch produces **nothing** on W (0.468 mm
+  against a 0.524 matched control). PDVD's 1.05 mm and PDHD's 1.41 mm are unexplained.
+- **Not the ROI stage either.** `gauss` is exactly zero outside an ROI, so admission is
+  countable: data and simulation open an ROI two wires from the track at the same rate
+  (×1.0–1.9) and differ only in the amplitude surviving inside it (×9.4–24.6) (§11.1). On
+  collection the ±1 neighbour is admitted *identically* (0.731 vs 0.715) and carries 20 % more
+  charge — real amplitude on the adjacent wire.
+- **Not a signal-to-noise configuration difference.** The data's signal-to-threshold is 1.5×
+  *worse* than the nominal simulation's, and a fourfold threshold sweep never reaches the data's
+  value (§11.2).
+
+## 12.3 Why SBND does not need a correction — precisely
+
+SBND's constant sits on the simulated floor: 1.316 ± 0.060 against 1.345 ± 0.024 on U, and its
+profile core matches the simulation's **to 1 % at matched drift** (§10.3, §10.4). Three
+qualifications that the short answer loses:
+
+1. SBND's *canonical* JSON (0.48/0.81/0.09) is still wrong by the same measure as PDVD's and
+   PDHD's were — the flip was simply never made. That is an owner decision, not a physics result.
+2. **SBND W is not informative**: ±0.191 mm on 0.378 cannot distinguish 0.38 from 0.54. Never
+   quote it as agreement.
+3. SBND **does** carry the ≥2-wire tail — 14–55×, the same band as ProtoDUNE (§10.4). The
+   owner's "SBND should have the effect too" is right about the tail and wrong about `c`.
+
+## 12.4 Claims withdrawn or corrected in the course of the work
+
+Recorded because each survived at least one round before falling:
+
+- **§8 withdraws §3.4/§4.2's sub-pitch-phase mechanism** — a phase-averaged model inverted on a
+  phase-selected subset invented a 2–7× contrast that null runs did not support.
+- **§10.4 withdraws §9's headline** that the ≥2-wire tail *is* the ProtoDUNE excess. Measured
+  against the simulation rather than against a Gaussian, the tail is universal (all three
+  detectors) while the *core* widening is ProtoDUNE-only. §9.6's quadrature result is intact but
+  is about peakedness, not about `c`.
+- **§10 amendment corrects §10.4's own first version**: the centre shares were pooled over
+  drift. Matched, SBND is *flat*, not "more peaked".
+- **§9.5's rawdecon comparison had to be redone on |q|** — the frame is bipolar and the two
+  sides do not clip the same amount (`neg_frac` 0.87 data vs 0.30 sim); the first version's
+  conclusion inverted.
+- **§11.3 withdraws §10.8's own proposed next test.** The signed-vs-clipped ≥2-wire test is
+  vacuous on `gauss` — the frame is non-negative by construction.
+
+## 12.5 Open, and what would close each
+
+1. **The ProtoDUNE collection excess** (PDVD 1.05 mm, PDHD 1.41 mm) — the only part of the
+   *shipped* constants still unexplained. Two candidates: physical charge sharing between
+   adjacent collection wires (a 3-D effect the 1-D response model cannot carry) or front-end
+   capacitive cross-talk. **One measurement separates them**: re-run `run_nf_sp_evt.sh -R` on
+   the four PDVD events keeping the `raw` tag and look at the ±1 neighbour's post-NF waveform
+   under a large centre signal — unipolar and time-coincident ⇒ charge sharing;
+   derivative-shaped and antisymmetric ⇒ cross-talk. Only cross-talk makes a pulser run worth
+   its cost.
+2. **PDHD APA0's simulation is internally inconsistent with its own SP** — `plane2layer [0,2,1]`
+   is applied in `OmnibusSigProc` and not in the `DepoTransform` the simulation builds, so a
+   simulated APA0 event has the collection response on the V readout plane (§10.6, §10.8).
+   Affects any PDHD APA0 simulation. **Upstream report.**
+3. **The derived constants are not a fixed point of their own estimator** — `d44_sigma_fit.py`
+   solves the in-slice extent against the model σ it reads from the track-fitting JSON, so
+   re-deriving after the flip returns PDHD U 3.55 where the derivation returned 3.21 (§10.8).
+   Whether to iterate is an owner decision; the shipped values are the ones derived against the
+   pre-flip model, which is what docs 44 and pdhd/02 record.
+4. **SBND's canonical `sbnd_track_fitting.json`** still carries the seed values (§12.3 item 1).
+   Owner's call.
+5. **P(D=0) < 1 on data** — 3–27 % of positions on a *fitted* trajectory have no ROI at all
+   (PDVD V: 0.727), against exactly 1.000 in every simulated arm (§11.1). Out of scope here and
+   not obviously benign.
+
+## 12.6 Dead ends, so they are not retried
+
+- ROI **tick-width** and frame **occupancy**: time-axis and event-composition quantities for a
+  transverse question, and occupancy is confounded by the cosmic-vs-8-track difference (§11.4).
+- The **signed ≥2-wire sum on `gauss`** (§11.3) and **`rawdecon` as a substitute** — the data's
+  rawdecon is less coherent than the simulation's even at the centre cell.
+- **`--max-foff` as an isolation cut**: `foff` is a width statistic, computed on W, and on PDHD
+  it selects fewer than 20 profiles (§9.1). The replacement is `oth4`.
+- **`c` from any sub-selection**: the cuts are drift-correlated, the lever arm collapses, and
+  PDHD W returned c² < 0 three times (§9.4). Use a fixed `D_T`, or read the width instead.
