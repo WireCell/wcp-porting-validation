@@ -77,3 +77,5 @@
 #
 # The two remaining track_fit questions (doc 45 sec 6): see the doc sec 12 -- 25 never-fitted STM clusters = 19 that lost their flash bundle to a longer
 #   STM cluster (one PR candidate per bundle, nu_per_bundle) + 6 below the 15 cm floor; cluster 113 of 298595 sits at x = 336-338 cm against the anode.
+#
+# COMMITS: toolkit c1cd59b3 (apply-pointcloud, the guard knob) on db166521; wcp-porting-img a6313bd7 (main, this round: jsonnet flip, doc sec 8-12, scan, this record).

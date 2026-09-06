@@ -58,7 +58,7 @@ ARM=d45on2 PIN=new2 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=1 EVENTS=/ho
 ARM=d45on PIN=new2 PINROOT=/home/xqian/tmp/d45_libpin MODE=nu JOBS=16 EXTRA="-S excl_t0_frame=true" $S/run_d45_arms.sh
 python3 $S/d45_trackfit_vs_stmfit.py --tsv /home/xqian/tmp/d45/d45on_census.tsv work/*_d45on
 
-# ---- round 2 (toolkit db166521 -> the guard commit; wcp-porting-img 007ae9bb -> this round) ----
+# ---- round 2 (toolkit db166521 -> c1cd59b3 the guard knob; wcp-porting-img 007ae9bb -> a6313bd7 this round) ----
 # F. the guard, knob-off gates (pins new2 = the doc-45 knob, new3 = the guard): PDVD -nu/-stm 2 events, SBND bare 3 + exclusion-active 6
 for m in nu:d45g1n3 stm:d45g2n3; do ARM=${m#*:} PIN=new3 PINROOT=/home/xqian/tmp/d45_libpin MODE=${m%%:*} JOBS=2 \
   EVENTS=/home/xqian/tmp/d45/events2.txt $S/run_d45_arms.sh; done
