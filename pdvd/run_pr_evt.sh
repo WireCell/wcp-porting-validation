@@ -1,20 +1,25 @@
 #!/bin/bash
 # Run the PDVD pattern-recognition (PR) tail for one event (doc pdvd/25).
-# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-stmlean|-unmerge|-nu|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-stmlean|-unmerge|-nu|-nu-legacy|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
 #
 # DEFAULT MODE IS -stm (doc pdvd/39, owner 2026-09-04): the chain stops after
-# the cosmic taggers.  Pass -nu to run the full neutrino PR tail again, which
-# is what restores the track_fit / shower_track / vertices / mc Bee layers.
+# the cosmic taggers.  -nu appends the PR tail, which since doc pdvd/48 (owner
+# 2026-09-05) is the STM + MICHEL stage (check_stm_michel): every STM-tagged
+# main is reconstructed as entry -> muon body (+ delta rays) -> Bragg stop ->
+# Michel e- (+ nearby dots), the particle flow is rooted at the ENTRY point,
+# and a reject verdict flags tagged clusters that are not stopped muons
+# (T_stm_michel in tracking-pr.root; 'CheckSTM_Michel: cluster' in the log).
+# It restores the track_fit / shower_track / vertices / mc Bee layers.
+# -nu-legacy runs the pre-doc-48 neutrino PR tail (tagger_check_neutrino).
 #
 # Input : work/<RUN6>_<EVT>[_<TAG>]/pctree-evt<ID>.tar.gz + pctree-evt<ID>.tlas
 #         (both written by run_clus_evt.sh -save-pctree; the .tlas sidecar carries
 #         the drift speeds / trigger offsets / readout window the Q/L job used, so
 #         the PR job rebuilds DetectorVolumes identically).
 # Output: work/<RUN6>_<EVT>[_<TAG>]/mabc-pr.zip            Bee: clustering + dead + stm_fit
-#                                                          + stm/steiner_graph/steiner_terminals (the clusters the STM
-#                                                            tagger FITTED, i.e. the same object set as stm_fit)
-#                                                          + stm_tagged (the STM verdict, a subset of those)
-#                                                          + track_fit/shower_track/vertices/mc ONLY with -nu
+#                                                          + stm/steiner_graph/steiner_terminals (doc pdvd/39 round 3:
+#                                                            the clusters the STM tagger TAGGED; stm_tagged is gone)
+#                                                          + track_fit/shower_track/vertices/mc ONLY with -nu / -nu-legacy
 #
 # -unmerge (doc pdvd/39 round 2) adds the unmerge_assoc stage, which undoes the
 # clustering-stage isolated grouping so the taggers see individual objects
@@ -23,13 +28,16 @@
 # silently inert without the provenance).  PDVD_ALLOW_NO_ASSOC=1 overrides.
 #         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump (segments, showers, kine, tagger flags)
 #         work/<RUN6>_<EVT>[_<TAG>]/tracking-stm.root      STM fits (T_rec_charge/T_stm_pass/T_stm_eval), with -stm-fit
-#         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits + T_tagger/T_kine
+#         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits (T_rec_charge) + T_stm_michel/T_stm_michel_pts (-nu);
+#                                                          + T_tagger/T_kine with -nu-legacy
 #         work/<RUN6>_<EVT>[_<TAG>]/wct_pr_<RUN6>_<EVT>.log
 # Verdicts: grep 'TaggerCheckSTM: cluster' / 'TaggerCheckTGM: cluster' in the log.
 #
-#   -nu      (default) the full PDVD chain: switch_scope, flag_mains, steiner, fiducialutils,
+#   -nu      the PDVD PR chain: switch_scope, flag_mains, unmerge_assoc, steiner, fiducialutils,
 #            tagger_check_tgm, tagger_check_stm, tagger_check_fc, protect_bundle,
-#            steiner_refresh, tagger_check_neutrino, tracking_visitor, tagger_output, pr_display
+#            steiner_refresh, check_stm_michel, tracking_visitor, pr_display   (doc pdvd/48)
+#   -nu-legacy  the pre-doc-48 chain with tagger_check_neutrino + tagger_output in place
+#            of check_stm_michel.  The notes below describe THAT tail.
 #            Since 2026-09-02 the -nu chain runs the per-bundle PR ONLY on
 #            STM-tagged bundles (nu_per_bundle_stm_only=true in
 #            wct-pr-perevt.jsonnet; doc 25 sec 13.10) -- the PDVD working mode.
@@ -100,6 +108,7 @@ while [ $# -gt 0 ]; do
         -nounmerge) MODE=merged; shift ;;    # pre-flip merged chain (owner 2026-09-04)
         -nounmerge-nu) MODE=numerged; shift ;;  # pre-flip merged NEUTRINO chain
         -nu) MODE=nu; shift ;;
+        -nu-legacy) MODE=nulegacy; shift ;;   # doc pdvd/48: the pre-replacement neutrino PR tail
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -113,7 +122,13 @@ if [ $# -lt 2 ]; then
 fi
 RUN=$1; EVT=$2; SUBRUN_ARG=${3:-}
 
-PIPE_NU="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
+# doc pdvd/48 (owner 2026-09-05): -nu now runs the STM + Michel stage
+# (check_stm_michel) in place of the neutrino PR tail; tagger_output is dropped
+# with it (T_tagger/T_kine carried only neutrino BDT features).  The legacy
+# neutrino tail is preserved VERBATIM as PIPE_NU_LEGACY behind -nu-legacy for
+# the A/B gates (same precedent as PIPE_NU_MERGED).
+PIPE_NU="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,check_stm_michel,tracking_visitor,pr_display"
+PIPE_NU_LEGACY="switch_scope,flag_mains,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,tracking_visitor,tagger_output,pr_display"
 # PDVD PRODUCTION (owner decision 2026-09-04): unmerge_assoc is in the DEFAULT
 # chain now, in both PIPE_STM and PIPE_NU, so -nu does not silently lose it.
 # Pre-flip chain = -nounmerge (PIPE_STM_MERGED / PIPE_NU_MERGED below).
@@ -139,6 +154,7 @@ PIPE_STM_LEAN="switch_scope,flag_mains,fiducialutils,tagger_check_tgm,steiner,ta
 PIPE_STM_UNMERGE="$PIPE_STM"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
+    nulegacy) PIPE="$PIPE_NU_LEGACY" ;;
     stm) PIPE="$PIPE_STM" ;;
     numerged) PIPE="$PIPE_NU_MERGED" ;;
     merged) PIPE="$PIPE_STM_MERGED" ;;

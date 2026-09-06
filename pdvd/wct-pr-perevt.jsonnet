@@ -182,11 +182,20 @@ function(
     // dQ/dx fit, track/shower separation, PID and the Michel finder live.
     // stm_magnify is appended by the runner (-stm-fit).  Pass [] for the M2
     // round-trip identity gate.
+    // doc pdvd/48 (owner 2026-09-05): the neutrino PR tail is REPLACED by
+    // check_stm_michel -- stopping-muon + Michel reconstruction rooted at the
+    // STM entry point.  tagger_output (T_tagger/T_kine, the neutrino BDT
+    // features) has nothing to carry any more and is dropped.  The legacy
+    // tail is still reachable: run_pr_evt.sh -nu-legacy.
     pipeline_names = ['switch_scope', 'flag_mains', 'steiner', 'fiducialutils',
                       'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
                       'protect_bundle', 'steiner_refresh',
-                      'tagger_check_neutrino', 'tracking_visitor', 'tagger_output',
+                      'check_stm_michel', 'tracking_visitor',
                       'pr_display'],
+    // doc pdvd/48: verdict thresholds / PR-partition overrides for
+    // check_stm_michel, as an object (-S 'stm_michel_knobs={"bragg_contrast_min":0.5}').
+    // {} => the C++ defaults documented in CheckSTM_Michel::default_configuration().
+    stm_michel_knobs = {},
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for
     // SBND.  DEFAULT = the canonical in-tree file; TaggerCheckSTM resolves it
@@ -3838,6 +3847,7 @@ function(
                              flag_mains_min_length=flag_mains_min_cm * wc.cm,
                              mip_dqdx_median=mip_dqdx_median,
                              pipeline_names=pipeline_names,
+                             stm_michel_knobs=stm_michel_knobs,   // doc pdvd/48
                              tensor_outname=save_tensors,
                              save_in_scope=save_in_scope,
                              pr_bee=pr_bee,

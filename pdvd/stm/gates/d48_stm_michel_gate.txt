@@ -1,0 +1,80 @@
+# doc pdvd/48 -- gate record for CheckSTM_Michel (new clus visitor + T_stm_michel trees in
+# PdvdPrMagnifyTrackingVisitor + the PDVD -nu chain replacement).  2026-09-05.
+#
+# toolkit HEAD before the change: 76f47614 (apply-pointcloud); wcp-porting-img HEAD 1cecd23c
+# pins (libWireCell*.so + WireCellRootDict_rdict.pcm copied from local/lib):
+#   ref   /home/xqian/tmp/d47_libpin/ref   libWireCellClus.so e3304cb9b362cd680ee3182452751a96  libWireCellRoot.so 1f46de9fa5be3023743a847a25c6e1ca
+#         (== local/lib 2026-09-05 19:02, the doc-46 Array-fix build = today's production binary)
+#   new   /home/xqian/tmp/d47_libpin/new   libWireCellClus.so 42f60d2fb92d59f777beff974bec0c72  (SUPERSEDED: first cut; lengths in internal units)
+#   new2  /home/xqian/tmp/d47_libpin/new2  libWireCellClus.so 8d6a8388b32d121cd3242bdfb837fdfd  (SUPERSEDED: lengths in cm; split-vertex bug, sec 8.0)
+#   new3  /home/xqian/tmp/d47_libpin/new3  libWireCellClus.so 1a72e201ba121f7423084d1d50cc3843  (SUPERSEDED: split vertex stamped with its cluster)
+#   new4  /home/xqian/tmp/d47_libpin/new4  libWireCellClus.so 7abbc6782ecf11fb221f3ffbe7d9f372  (SUPERSEDED: entry_snap_tol_cm; the d48nu2 arm ran on it)
+#   new5  /home/xqian/tmp/d47_libpin/new5  libWireCellClus.so 1af4cbbf699252ab13d0739a74fabc40  libWireCellRoot.so 4a9efb7f52d22d93f2d9fcc9df394222
+#         (THE SHIPPED BINARY: Michel/continuation definitions closed, doc 48 sec 3; libWireCellRoot.so unchanged since new)
+#   Every superseded pin differs from new5 ONLY in clus/src/CheckSTM_Michel.cxx / StmMichelFunctions.cxx, code that no gated
+#   chain instantiates; the gates below were nevertheless re-run on new5 (round 4) so the record cites the shipped binary.
+# freshness (new5): local/lib/libWireCellClus.so 2026-09-05 20:50:20, libWireCellRoot.so 20:46:44; last source edits
+#   clus/src/CheckSTM_Michel.cxx + StmMichelFunctions.cxx 20:49:52, root/src/PdvdPrMagnifyTrackingVisitor.cxx 20:29:30.
+#   wcbuild rc=0 (/home/xqian/tmp/d48_build11.log); test build ./wcb build -p rc=0 (d48_build12.log).
+# doctests: wcdoctest-clus 320 cases SUCCESS -- the 7 new cases (doctest_stm_michel.cxx x6 + doctest_check_stm_michel_defaults.cxx)
+#   210 assertions on new5; full suite 22926 assertions SUCCESS on new2 (the doctest sources did not change afterwards except
+#   the two new-case files, re-run each time); wcdoctest-root 4053 assertions SUCCESS.
+#
+# CODE CHANGE (toolkit):
+#   clus/inc/WireCellClus/StmMichelFunctions.h, clus/src/StmMichelFunctions.cxx   (new) chain walk, profile, Bragg
+#       contrast, arm classification, reject bits
+#   clus/src/CheckSTM_Michel.cxx                                                   (new) the visitor
+#   clus/test/doctest_stm_michel.cxx, clus/test/doctest_check_stm_michel_defaults.cxx (new)
+#   root/inc/WireCellRoot/PdvdPrMagnifyTrackingVisitor.h, root/src/PdvdPrMagnifyTrackingVisitor.cxx
+#       write_pc_tree / write_stm_michel_trees: T_stm_michel + T_stm_michel_pts, created ONLY when a cluster carries
+#       the stm_michel PC (PDHD binds this class: gate 4)
+#   cfg/pgrapher/common/clus.jsonnet         builder check_stm_michel(...)  (additive)
+#   cfg/pgrapher/experiment/protodunevd/pr.jsonnet   cm_by_name.check_stm_michel, tagger_uses, pr_visitor/pr_tail_on
+#       for the Bee PR layers, stm_michel_knobs pr() param
+#   No pdhd/, sbnd/, uboone/ config touched.
+# CODE CHANGE (wcp-porting-img): pdvd/wct-pr-perevt.jsonnet pipeline_names default + stm_michel_knobs TLA;
+#   pdvd/run_pr_evt.sh PIPE_NU (new chain) + PIPE_NU_LEGACY / -nu-legacy; docs + census script + this record.
+#
+# COMPILED-CONFIG PROOFS (wcsonnet via run_pr_evt.sh compile-only, tag d48cfg staged from d39r2prov, 039252/2):
+#   T0  production -stm -stm-fit: pre-change vs post-change compiled JSON  cmp IDENTICAL
+#       (/home/xqian/tmp/d48_cfg_stm_base.json md5 fbf5da9d843efb3d54812f92c0dd1dd5 == d48_cfg_stm_new.json)
+#   T2  -nu-legacy (post-change) vs the old -nu (pre-change)              cmp IDENTICAL
+#       (d48_cfg_nu_base.json md5 8e801a266407111da68aa6c08e4f9300 == d48_cfg_nulegacy_new.json)
+#   T1  new -nu: 'CheckSTM_Michel:pr' appears 5x (pipeline + 3 Bee layers + bee_pf); the CheckSTM_Michel node carries
+#       49 keys incl. mip_dqdx 55000 / mip_dqdx_median 47000, fiducial CompositeFiducial:pdvdcurved-fv,
+#       fv_tolerance [-25,-25,-50,-50,-50,-50] (mm), excl_t0_frame true, fit_blob_coverage 0 -- the PDVD production
+#       partition.  pipeline = ... CreateSteinerGraph:prrefresh, CheckSTM_Michel:pr, PdvdPrMagnifyTrackingVisitor:pr,
+#       PrDisplayDump:pr, PdvdMagnifyTrackingVisitor:pr.
+#
+# GATE ARMS.  Reference arms = round 2 (/home/xqian/tmp/d48_arms/launch_gates2.sh, pin ref); new arms = round 4
+#   (launch_gates4.sh, pin new5); rc2.txt / rc4.txt: every job rc=0.  Rounds 2 (new2) and 3 (new4) also PASSED
+#   identically and are not cited.  Round 1 is void (its launcher lost the mode flags).
+# GATE 2  PDVD production -stm -stm-fit, ref (d48stmref2) vs new5 (d48stmnew4), events 039252/2 + 039349/23
+#         (pctrees d39r2prov / d41prov): d40r3_hash_gate.py -> PASS 2 FAIL 0 MISSING 0 of 2 (mabc-pr.zip members +
+#         calib dump); hash_root_trees.py --per-tree tracking-stm.root: all 3 trees SAME on both events.
+# GATE 3  PDVD -nu-legacy -stm-fit (the OLD neutrino tail), ref (d48legref2) vs new5 (d48legnew4), same 2 events:
+#         PASS 2 FAIL 0 MISSING 0 of 2; tracking-pr.root (T_kine, T_tagger, T_rec_charge) and tracking-stm.root
+#         trees SAME on both events.  => the root-writer change is inert without the stm_michel PC, and the
+#         legacy tail is untouched.
+# GATE 4  PDHD -nu -stm-fit (its tracking_visitor is the same PdvdPrMagnifyTrackingVisitor class), ref (d48ref2) vs
+#         new5 (d48new4), 029107/0 (pctree from 029107_0_d02prod): mabc-pr.zip 13 members SAME; tracking-pr.root
+#         and tracking-stm.root trees SAME.  PDHD cfg untouched.
+# GATE 5  SBND bare production (run_d42_stmfit.sh, D42_NO_STMFIT=1), ref (work-stmcamp-d48gateold2) vs new5
+#         (work-stmcamp-d48gatenew4), events 284349 285999 286065: mabc-pr.zip SAME 3/3 (3 members each),
+#         pctree-pr-evt*.tar.gz SAME 3/3 (425/427/425 members), nusel-evt*.tsv cmp SAME 3/3.  SBND cfg untouched.
+#
+# SMOKE  039252/2 -nu -stm-fit: d48smoke2 (new2), d48smoke3/4 (new3, WCT_BEE_PF_PRINT=1), d48smoke5 (new4); the
+#        new5 numbers are the arm's own 039252_2_d48nu3.  rc=0 throughout; wall 39-50 s (legacy -nu on the same event:
+#        d48legnew4 47 s on new5, d48legnew2 53 s on new2; production -stm -stm-fit d48stmnew4 42 s).  CheckSTM_Michel:pr
+#        TICK ~2.0-2.2 s vs TaggerCheckNeutrino:pr 4.4 s.  8 STM candidates, 3 pass every check, 5 with a Michel
+#        (21-28 MeV; one 2.5 MeV stub), cluster 109 with 2 delta rays; tracking-pr.root trees T_bad_ch T_cluster T_proj
+#        T_proj_data T_rec_charge T_stm_michel T_stm_michel_pts Trun; mabc-pr.zip carries track_fit / shower_track /
+#        vertices / mc (+ the unchanged clustering / stm* / steiner* layers); calib-pr-evt298595.json 10 MB.
+#        The PF-print run (d48smoke3) is what exposed the split-vertex bug (doc 48 sec 8.0): cluster 86's Michel was a
+#        "ROOT shower (fallback: start_vtx not in BFS tree)" and its mu- node was missing.
+#
+# 120-EVENT ARMS (run_d45_arms.sh, MODE=nu, JOBS=16, stm/events.txt; all 120/120 rc=0):
+#   d48nu   pin new2  -- before the split-vertex fix (PF roots with mu- first child 473/574, 73 empty roots)
+#   d48nu2  pin new4  -- split vertex fixed, entry snap loosened (563/574, 0 empty), pre-definition-change Michel set
+#   d48nu3  pin new5  -- THE CENSUS ARM (doc 48 sec 8)
+# NOT FLIPPED / NOT TUNED: every verdict threshold is at the C++ default documented in doc 48 sec 3.
