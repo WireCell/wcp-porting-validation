@@ -1,0 +1,92 @@
+# doc sbnd_xin/pr/143 -- gate record for the break_segment cluster stamp.
+#
+# CHANGE (toolkit apply-pointcloud, clus only, UNCONDITIONAL -- no config key on any detector).
+#   PR::break_segment was the only vertex factory in the PR chain that left vtx->cluster() null
+#   (16 other make_vertex call sites all stamp; no back-fill pass exists), so the new vertex was
+#   invisible to every cluster-filtered loop for the rest of the event.  The factory now stamps it,
+#   and the four caller-side stamps that were compensating for the omission are deleted:
+#     clus/inc/WireCellClus/PRSegmentFunctions.h   doc comment + signature unchanged in arity
+#     clus/src/PRSegmentFunctions.cxx              vtx->cluster(seg->cluster());
+#     clus/src/NeutrinoPatternBase.cxx:3097        deleted vtx->cluster(&cluster)      (break_two_end_dqdx)
+#     clus/src/NeutrinoVertexFinder.cxx:2866       deleted vtx_new->cluster(&cluster)  (snap_main_vertex_to_kink)
+#     clus/src/CheckSTM_Michel.cxx:644             deleted the dead guarded stamp in anchor_vertex
+#     clus/test/doctest_prsegment.cxx              new TEST_CASE, 3 subcases / 15 assertions
+#   Each deleted stamp was proven statically to write the identical pointer the factory now writes
+#   (every one selected its segment under sg->cluster() == &cluster), and empirically by GATE G below.
+#
+# PINS (libWireCell*.so + WireCellRootDict_rdict.pcm copied from local/lib):
+#   ref     /home/xqian/tmp/d47_libpin/new11   libWireCellClus.so a4ff5439991ee343f8e0c0dcda13128f  (shipped build, toolkit 5d0b4e77)
+#   knob    /home/xqian/tmp/d143_libpin/new    libWireCellClus.so 6aa917a541f10f1d91642e2bcd40727d  (scaffolding knob, default OFF)
+#   final   /home/xqian/tmp/d143_libpin/final  libWireCellClus.so d107fd66a603daa52714fb95baa6b381
+#   final2  /home/xqian/tmp/d143_libpin/final2 libWireCellClus.so b46179b20533eacc9cf7cf85430e7a81  (SHIPPED; == local/lib)
+#   libWireCellRoot.so 4a9efb7f52d22d93f2d9fcc9df394222 on every pin -- untouched.
+#   Freshness: local/lib/libWireCellClus.so 2026-09-06 07:09:17 > last source edit 07:08:37.
+#   Build recipe was the new-symbol one (build -k, install -k, build, install) because the added
+#   parameter of the scaffolding phase changed break_segment's mangled name and the doctest links
+#   against the INSTALLED library (feedback_new_symbol_test_link_install).
+#
+# HOW THE MEASUREMENT WAS STAGED.  OFF and ON had to come from one binary, so the round was run with a
+# scaffolding knob break_seg_stamp_cluster (default OFF).  The owner then ruled it should ship
+# unconditionally on all three detectors, so the knob was deleted.  GATE G is the bridge: it proves the
+# shipped unconditional binary is byte-identical to the scaffolding build's ON arm.  Gates A-F below were
+# taken on the scaffolding build with the knob UNSET, i.e. they are legacy-path byte-identity gates.
+#
+# CONFIG PROOFS (scaffolding phase)
+#   T0  knob-off compiled config byte-identical to HEAD's.  One event (mcp1k 59929) compiled twice through
+#       the runner's own wcsonnet step: once with PR_CFG_TREE pointing at a symlink mirror carrying
+#       git show HEAD:.../sbnd/wct-pr-perevt.jsonnet, once with the live tree.  After normalising the
+#       arm-directory path the compiled JSON is IDENTICAL, md5 cebd93bb7b736a4212bda6a40810286a.
+#   T1  work-pr143-on/.wct-cfg-evt48301.json carries "break_seg_stamp_cluster": true exactly once, in the
+#       TaggerCheckNeutrino node; work-pr143-off's does not carry the key at all.
+#   Neither proof applies to the shipped code, which has no key.
+#
+# BYTE-IDENTITY GATES -- ref pin vs knob pin, knob unset.  Compared per pair: mabc-pr.zip and
+# pctree-*.tar.gz by MEMBER CONTENT hash (never cmp on an archive, M2); tracking-{pr,stm}.root by
+# hash_root_trees.py --per-tree over EVERY tree the file holds (its default list is the SBND triple and
+# would silently skip tracking-stm.root's trees); calib dumps with the *_ms scoreboard timers stripped;
+# TSVs by bytes.  A file present on one side only is a FAIL, not a skip.
+#   GATE A  PDVD -stm -stm-fit (production)          039252/2, 039349/23     PASS 4/4
+#   GATE B  PDVD -nu-legacy (TaggerCheckNeutrino)    039252/2, 039349/23     PASS 7/7
+#   GATE C  PDHD -stm -stm-fit (production)          029107/0, /6            PASS 4/4
+#   GATE D  PDHD -nu-legacy (TaggerCheckNeutrino)    029107/0                PASS 3/3
+#   GATE E  SBND bare production                     284349, 285999, 286065  PASS 9/9
+#           (run_d42_stmfit.sh, D42_NO_STMFIT=1)
+#   GATE F  PDHD -nu = CheckSTM_Michel               029107/0                PASS 4/4
+#   B and D are the gates that carry weight: they are the arms that actually instantiate
+#   TaggerCheckNeutrino.  F passes for a weaker reason -- CheckSTM_Michel called break_segment with six
+#   arguments, so the scaffolding parameter defaulted false there and its own stamp still fired; the path
+#   was untouched rather than exercised.  A, C and E prove the shared clus library carries no other change.
+#   F reported MISSING twice before I noticed I had omitted -stm-fit; re-run as d143nu2 / d143fnu.
+#   The comparer was validated in BOTH directions before use (feedback_check_numbers_in_both_directions):
+#   a file against itself reports SAME, two different events report DIFF on 6 trees (pr143_pair_compare.py).
+#
+# GATE G -- THE SHIPPED CODE IS THE ON ARM.  work-pr143-final (final pin, no knob) vs work-pr143-on
+# (knob pin, knob ON), 3000 SBND events (mcp1k 1000 + mcp2k 2000):
+#   nusel-evt<ID>.tsv SAME 3000 | tracking-pr.root per-tree SAME 3000 | mabc-pr.zip SAME 3000
+#   pctree-pr-evt<ID>.tar.gz SAME 3000 | calib-pr-evt<ID>.json SAME 1368 | nusel-{table,events}.tsv SAME
+#   T_tagger (1229 branches) + T_kine, branch by branch: 0 / 3000 events move a leaf.
+#   This one comparison carries both halves of the change -- the factory stamp AND the inertness of the
+#   four deletions.  It has teeth: snap_main_vertex_to_kink fires on 109 of ~2138 SBND events with
+#   two_end_break = true, so the deleted stamps are exercised, not merely unvisited.
+#
+# EFFECT (work-pr143-off vs work-pr143-on, 3000 events) -- recorded here because a gate that shows only
+# SAME would misrepresent a change that is NOT byte-identical by design:
+#   clusterless PR vertices  47 on 44 events -> 0   (vertex total 30684 unchanged)
+#   nusel / pctree           SAME 3000 (no selection verdict changes anywhere)
+#   root / zip / calib       DIFF on EXACTLY the 44 orphan events, SAME on the other 2956 -- no collateral
+#   18 of 3000 events move >= 1 T_tagger leaf; NO T_kine leaf moves anywhere (Enu and pi0 kinematics
+#   untouched); all 111 score-like branches identical on all 18 movers, checked value by value
+#   (nue_score and numu_score included).  One verdict changes in 3000 events: photon_flag 1 -> 0 on 173495.
+#   PDVD -nu-legacy, 120 events: 52 clusterless on 37 of 119 (31 %, ten times SBND's density);
+#   mabc/tracking-pr/calib DIFF 37, tracking-stm.root SAME 120 -- the STM tagger runs before the PR tail.
+#   PDVD and PDHD production are -stm and never reach the changed sites.
+#
+# TESTS
+#   clus/test/doctest_prsegment.cxx "clus pr break_segment stamps the new vertex" -- 3 subcases,
+#   15 assertions: the new vertex AND both children carry the parent's cluster (so a "fix" that MOVES
+#   the stamp off the children rather than adding one fails), a clusterless parent yields a clusterless
+#   vertex rather than a crash, and orient_split does not change who owns the vertex.
+#   ./build/clus/wcdoctest-clus: 323 cases / 23060 assertions SUCCESS.
+#
+# KNOWN GAPS (doc 143 sec 7.4): no PDHD -nu-legacy population arm; the photon_flag flip on SBND 173495
+# is unscanned; the PDVD/PDHD -nu-legacy movers are unscanned.  None is on a production chain.
