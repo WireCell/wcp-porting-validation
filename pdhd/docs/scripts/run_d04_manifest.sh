@@ -64,7 +64,11 @@ done
   echo "toolkit=$(git -C /home/xqian/toolkit-dev/toolkit rev-parse --short HEAD) wcp=$(git -C /home/xqian/toolkit-dev/wcp-porting-img rev-parse --short HEAD)"
 } > "work/.d04m_$ARM.info"
 
-run_stage () {                     # $1 = label, rest = command template with %E
+# Concurrency throttle: launch, count, and block on `wait -n` once JOBS are in
+# flight.  Verified empirically (12 jobs at JOBS=3 -> max 3 concurrent), not
+# assumed -- `wait -n` returns on the FIRST job to finish, which is what makes
+# the running-- bookkeeping correct.
+run_stage () {                     # $1 = label, rest = a function to call with the event id
     local label="$1"; shift
     local rc=0 running=0
     for e in $EVENTS; do

@@ -1060,10 +1060,16 @@ moving part.  Full table: `figs/d04_manifest_census.tsv`.
 
 Every archive differs by member hash, which on its own says nothing useful.  Opened up:
 
+Both sweeps below are exhaustive in the same way: **every member, every field, all six events**,
+compared recursively -- not a fixed list of arrays that might have missed one.
+
 | product | what differs |
 |---|---|
-| `mabc-all-apa.zip` (clustering) | **only `q`**.  Point count, `x`, `y`, `z` and `cluster_id` are **identical**, all 6 events (evt 0: 109 221 points; evt 12: 161 854) |
-| `mabc-group02.zip`, `mabc-group13.zip` (Q/L) | **only `q`** -- swept over every array of every member of both zips on all 6 events, the *only* array that ever differs is `q` |
+| `mabc-all-apa.zip` (clustering, 5 members incl. the img, dead-area and optical layers) | **only `q`**.  Identical: `x`, `y`, `z`, `cluster_id`, `real_cluster_id`, `apa`, `tpc`, `geom`, `polygons`, `op_t`, `op_pes`, **`op_pes_pred`**, `op_peTotal`, `op_flash_group`, `op_cluster_ids`, run/subrun/event.  784 637 clustering-layer points compared |
+| `mabc-group02.zip`, `mabc-group13.zip` (Q/L) | **only `q`** |
+
+`op_pes_pred` -- the Q/L *predicted* PE per flash -- being identical is worth calling out: that is
+the light prediction the matching is scored on, and it does not move.
 
 And the Q/L matching itself, compared as the set of `(flash id, cluster ident, gidx)` bundles the
 `QLMatching:matching_joint` stage logs -- meaningful precisely because `cluster_id` is preserved:
@@ -1085,7 +1091,7 @@ charge and nothing else upstream of the PR chain.**
 | TGM evaluated | 574 | 574 | 0 |
 | **TGM = true** | **128** | **154** | **+26 (+20.3 %)** |
 | STM evaluated (not already TGM) | 446 | 420 | -26 |
-| STM fitted | 164 | 145 | -19 |
+| STM fitted | 164 | 145 | -19 (23 of the 25 losses are the TGM reroute; see below) |
 | STM **tagged** | 38 | 37 | **-1** |
 | FC evaluated | 574 | 574 | 0 |
 | FC = true | 202 | 199 | -3 |
@@ -1093,6 +1099,31 @@ charge and nothing else upstream of the PR chain.**
 Per event, TGM=true: 18->22, 29->35, 18->23, 21->25, 28->32, 14->17.  **Every event gains, none
 loses: the 26 new TGM tags are strictly additive, and not one cluster lost its TGM tag.**  That is
 the signature of a guard that was firing spuriously, which is what sec 8 said it was.
+
+**The fitted-count drop is a reroute, not a loss.**  164 -> 145 is a net -19 made of 25 clusters
+that stopped producing a fit and 6 that started:
+
+| | count |
+|---|---|
+| stopped producing an STM fit | 25 |
+| ... of those, **never offered to `TaggerCheckSTM` at all** (newly TGM) | **23** |
+| ... of those, still evaluated and stopped fitting | **2** |
+| started producing an STM fit | 6 |
+
+So the fix costs **two** fits across six events and reroutes twenty-three.  The no-fit reason
+census over all six events moves correspondingly little:
+
+| reason | OFF | ON |
+|---|---|---|
+| evaluated but no pass recorded (exited after the round-N fit) | 282 | 275 |
+| fully contained (Mid Point A) | 202 | 198 |
+| **no steiner_pc** | **61** | **61** |
+| round-N forward fit gave only N points | 17 | 15 |
+| N candidate exit points, need exactly N (Mid Point C) | 2 | 1 |
+
+**`no steiner_pc` does not move at all -- 61 both ways.**  Sec 2 flagged its 3.5x excess over PDVD
+as a second, independent lead and sec 9.7 left open whether it was the same family as this defect.
+It is **not**: it survives the fix untouched, so it is a separate defect and stays on the list.
 
 The STM movement is the one to read carefully, and cluster idents are comparable across arms
 (sec 10.2 proves the clustering is the same objects):
@@ -1121,7 +1152,8 @@ Still owed, unchanged from sec 9.7 except where marked:
 1. ~~The 6-event manifest end to end plus a Q/L revalidation.~~  **DONE (this section).**
 2. The STM population of secs 2-4 was measured on the broken cloud.  The manifest numbers above
    supersede it *for these six events only*; the 30-event PDHD arm and the PDHD-vs-PDVD comparison
-   of sec 3 have **not** been re-run.
+   of sec 3 have **not** been re-run.  Sec 2's `no steiner_pc` lead is now known to be
+   **independent** of this defect (61 -> 61) and is unaffected by that caveat.
 3. **A hand scan of the movers** is now the top item: the 26 new TGM tags, the 8 new STM tags and
    the 5 unexplained STM removals.  A Bee set at the doc-04 scope over the `d05mON` arm is the
    scan sheet; it has not been built.
