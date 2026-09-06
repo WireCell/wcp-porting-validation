@@ -1193,21 +1193,27 @@ Repro: `cd pdhd/stm_scan && python3 score_stm_scan.py` (labels in
 
 119 rows score, 105 do not.
 
-**The decomposition that decides it.** The scorer's headline (stratum A net
-**+18** for ON) is a sum of two opposite effects, and only one of them is the
-knob working:
+**The decomposition that decides it.** The scorer's headline net for ON is a sum
+of two opposite effects, and only one of them is the knob working:
 
-| | n | deserve an STM tag | agreement net |
-|---|---|---|---|
-| tags the knob **adds** (off 0 → on 1) | 130 | **27 %** (14 of 52 scored) | **−23** |
-| tags the knob **removes** (off 1 → on 0) | 94 | 19 % (13 of 67 scored) | **+41** |
+| | n | scored | deserve an STM tag | agreement net |
+|---|---|---|---|---|
+| tags the knob **adds** (off 0 → on 1) | 130 | 52 | **27 %** (14 of 52) | **−24** |
+| tags the knob **removes** (off 1 → on 0) | 94 | 67 | 19 % (13 of 67) | **+41** |
+| overall | 224 | 119 | 23 % (27 of 119) | **+17** |
+
+(Stratum A alone decomposes the same way — its **+18** is **+41** on removals
+against **−23** on its 51 scored gains. Do not mix the two: the table above is
+all strata.)
 
 **73 % of the tags this knob adds are on through-going objects.** Its entire
 measured benefit comes from tags it *deletes* — which it deletes correctly, 81 %
 of the time. Nothing in the scan supports the mechanism the knob was proposed
 for.
 
-**In tag-set terms**, extrapolating the scored rate to all 224 contested tags,
+**In tag-set terms**, extrapolating each direction's scored rate to all of its
+contested tags — generous to the knob, since the unjudged rows are the small
+ones where fragments and noise live —
 flipping ON buys **+17 true STM tags at the cost of +19 false ones**. Bounds
 over the 105 unjudgeable rows: +52 true / −16 false if every one is really a
 stopper (implausible — see below), +1 true / +35 false if none is.
