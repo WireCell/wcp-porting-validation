@@ -1,0 +1,14 @@
+# doc pdhd/04 -- PDHD PR Bee set, chain UP TO THE STM TAGGER (run_pr_evt.sh -stm -stm-fit)
+# run 029107, arm tag d04bee, pin libWireCellClus b46179b2 (toolkit 5d0b4e77 + uncommitted pr/143 edits;
+#   evt 0 mabc-pr.zip member hashes IDENTICAL to the shipped-pin arm d03stmnew11 => the -stm chain is unmoved)
+# SET: https://www.phy.bnl.gov/twister/bee/set/1450e84b-009b-4779-a14a-88c14e3d4fae/event/list/
+# Layers: clustering (all mains) | stm, steiner_graph, steiner_terminals, stm_fit (the clusters the STM
+#   tagger FITTED, gated require_pc:'stm_fit') | stm_tagged (the flag_STM verdict subset) | dead areas.
+#   NOTE: PDVD's nominal scope for the first four is require_flag:'STM' (the TAGGED set) since 2026-09-05.
+# bee_idx	evt	art_event	layers (nclusters)
+0	12	1079	clustering=96 steiner_graph=29 steiner_terminals=29 stm=29 stm_fit=29 stm_tagged=8
+1	1	991	clustering=99 steiner_graph=25 steiner_terminals=25 stm=25 stm_fit=25 stm_tagged=7
+2	16	1111	clustering=103 steiner_graph=32 steiner_terminals=32 stm=32 stm_fit=32 stm_tagged=7
+3	20	1143	clustering=150 steiner_graph=29 steiner_terminals=29 stm=29 stm_fit=29 stm_tagged=9
+4	22	1159	clustering=92 steiner_graph=22 steiner_terminals=22 stm=22 stm_fit=22 stm_tagged=5
+5	0	983	clustering=98 steiner_graph=27 steiner_terminals=27 stm=27 stm_fit=27 stm_tagged=2
