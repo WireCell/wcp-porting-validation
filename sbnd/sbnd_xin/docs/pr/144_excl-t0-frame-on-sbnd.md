@@ -920,7 +920,7 @@ the guard attribution (§4.5).
 | 1 | **turn on this, since it is a bug fix** | **DONE** — both defaults flipped, §2's T0′/T1′/T1″ proofs, this commit |
 | 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
 | 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one: 347890's bridge is killed by an x-position pre-filter at the cathode seam (a doc-84 threshold tuned in the biased frame), while 177536's muon is not lost at all — it is split into two PF nodes, which double-counts a 105.7 MeV rest mass |
-| 4 | **understand why the energy was added for idx 3** | **answered, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. The pr/129 pointing guard still SKIPs it correctly; it is wired to the guard-freed pool only |
+| 4 | **understand why the energy was added for idx 3** | **answered AND fixed behind a default-OFF knob, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. `kine_near_pointing_impact` (toolkit `7c4bf46a`) brings Enu back to 574.8 and restores the pr/129 sentinel's energy clause. Owed: its own 3067-event arm before it is flipped |
 | 5 | **improve the hadronic shower reconstruction** | **scoped, §15** — on 137238 the exclusion pool empties (`kine_n_excluded` 9 → 1, 316.4 → 0.0 MeV) and the EM shower absorbs it (354 → 555 MeV, 103 → 143 cm). Decide first whether this is an exclusion-threshold round or a PID round, with a population census of `kine_n_excluded`; reading list docs 127, 93, 125, 133, 136, 141 |
 | — | **update the sentinels** | §16, on the `d144fixprod` arm |
 
@@ -1009,11 +1009,47 @@ no direction test at all.  The pointing guard that would have refused it
 guard-freed pool only.
 
 This is the failure mode doc pr/128 predicted in its own words — proximity alone
-admits cosmics — arriving for real.  **The actionable fix is to give the
-near-cross-cluster pool the same pointing test the guard-freed pool has** (or
-the pr/128 continuation terms, which still hold on the 72786 control).  That is
-a knobbed change with an obvious negative control, and it is the recommended
-next step for item 4.
+admits cosmics — arriving for real.
+
+### 13.2.1 The fix, built and measured (toolkit `7c4bf46a`, default OFF)
+
+The same three-clause test pr/129 already ships for the guard-freed pool is now
+offered to this one, behind its own knob:
+
+| knob | meaning |
+|---|---|
+| `kine_near_pointing_impact` | cm; **0 = no test = byte-identical** (C++ default) |
+| `kine_near_pointing_miss_deg` | deg; only read when the impact cut is armed |
+
+On 393505, one-event arm `work-mcp2k-d144np` at 20 cm / 30° — pr/129's own SBND
+production values:
+
+| | Enu | `add_energy` | `n_excluded` |
+|---|---|---|---|
+| OFF (pre-flip) | 559.9 | 105.7 | 5 |
+| ON (flip, knob off) | **858.2** | 211.3 | 4 |
+| ON + pointing test armed | **574.8** | 105.7 | 5 |
+
+    kine_near_pointing_impact: seg idx=14 cluster=15 ke_mev=177.78 d_vtx_cm=68.91
+                               impact_cm=69.10 miss_deg=112.2 -> SKIP
+
+**The test removes the contamination and keeps the improvement.**  The residual
++14.9 MeV over the pre-flip arm is the shower going 66.9 → 81.8 MeV, which is
+the genuine charge re-attribution `excl_t0_frame` exists to make.  It also
+restores the pr/129 sentinel's energy clause — `Enu = 574.8` is back inside the
+shipped window [540, 600] where the unguarded ON arm read 858.2.  (That
+sentinel's other clause, `pf_contains 'mu-  268'`, still fails on a **stale
+literal**: the segment's KE is 177.8 now, not 268.70.  Re-expressing it belongs
+to §16, not here.)
+
+Gates: compiled-config T0 — knob off compiles **byte-identical** to the committed
+`4c84855c`, knob on adds exactly two keys (248 → 250); `wcdoctest-clus` 323 /
+23061, 0 failed; freshness proof done.
+
+**NOT flipped.**  It is a hypothesis with one supporting event.  Before it earns
+a default it needs its own 3067-event arm — to price how often the test refuses
+a segment that *should* have been counted — and its own negative control.  That
+is the named next step for item 4.
 
 ### 13.3 The other half of the +298 is arithmetic, not physics
 
