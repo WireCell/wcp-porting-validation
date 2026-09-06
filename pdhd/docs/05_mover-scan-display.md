@@ -191,9 +191,25 @@ Check 1 is the one that would have caught the worst silent failure: `d04bee` and
 have all six events on disk, and pointing the display at either would have drawn a different
 epoch's objects under the sheet's numbers.
 
-## 7. Not done
+## 7. It was used
 
-- The labels themselves. The display is the instrument; the scan is the owner's.
+The owner scanned all 39 objects on it in one pass on 2026-09-06 (tag `movers0`, no notes) and the
+pre-registered bar **PASSES**: 24/24 through-going, 0/24 stopping. The result, including the one
+adverse finding it turned up — two stopping muons that lost their STM tag — is
+[doc 04 §11.7](04_stm-tagger-scan.md); the labels joined to the key are
+`bee-pr-run029107-d04movers.LABELS.tsv`.
+
+Two things the display can take credit for, and one it cannot. All nine `UNCLEAR` labels landed
+below 1000 points and none at or above it, which is what §11.4's judgeability measurement
+predicted — so the panels were sufficient wherever the bar depended on them. The close-ups earned
+their place: `evt 16 cluster 90` came back `FRAG>THRU`, a distinction that only exists if you can
+see grey charge continuing past an end. What it cannot take credit for is the verdict itself.
+
+## 8. Not done
+
+- Nothing further on this scan. The display stays for the next one — the natural user is doc 04
+  §12 item 0, the two lost stoppers, which needs `stm_fit` / `steiner_graph` layers this app
+  deliberately does not open and so would need a non-blind variant.
 - No 2-D wire-plane (channel vs time) view: the ctpc is not in the Bee zip, so "the end is in a
   dead region" is answerable here only through the (y, z) dead-area polygons and the measured
   distance to them.

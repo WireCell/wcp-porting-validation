@@ -1296,26 +1296,99 @@ The manual route still works if preferred: fill the `label` column of
 `bee-pr-run029107-d04movers.sheet.tsv` (`note` is free text, e.g. which end is in a dead region)
 and hand it back.
 
+### 11.7 The labels came back: the bar PASSES, and two stopping muons were lost
+
+Scanned by the owner on 2026-09-06 on the doc [pdhd/05](05_mover-scan-display.md) display
+(`pdhd/d05_scan`, tag `movers0`), one pass, **39 / 39 objects**, no notes.  Labels are joined to
+the key in `bee-pr-run029107-d04movers.LABELS.tsv`; the live file is
+`work/d05_scan_labels/movers0/labels.json`.
+
+```
+python3 docs/scripts/d04_movers_score.py \
+    --sheet work/d05_scan_labels/movers0/filled_sheet.tsv \
+    --key   bee-pr-run029107-d04movers.KEY.tsv
+```
+
+**The pre-registered bar of sec 11.5, unchanged since `546fcbaa`:**
+
+| primary stratum: TGM-gained, npts >= 1000 | | bar |
+|---|---|---|
+| labelled | 24 | |
+| judgeable (UNCLEAR excluded) | **24** (0 UNCLEAR) | |
+| through-going, `THRU` + `FRAG>THRU` | **24 / 24 = 1.000** | >= 0.80 |
+| stopping, `STOP` + `FRAG>STOP` | **0 / 24 = 0.000** | <= 0.10 |
+| | **PASS** | |
+
+Not a marginal pass: every well-resolved object the fix newly tags as through-going **is**
+through-going by eye, and not one of them stops.  One of the 24 is `FRAG>THRU` (evt 16 cluster 90)
+-- a piece of a through-goer, so it scores in the numerator and separately puts the
+under-clustering rate of this population at **1/24**.
+
+The reported (never gated) strata, and they are the interesting half:
+
+| stratum | n | labels |
+|---|---|---|
+| **STM lost *to* TGM**, >= 1000 | 4 | **THRU x 4** |
+| STM gained, >= 1000 | 4 | STOP x 3, MESSY x 1 |
+| **STM lost, "unexplained", >= 1000** | **2** | **STOP x 2** |
+| TGM gained, < 200 | 2 | UNCLEAR x 2 |
+| STM gained, < 1000 | 4 | UNCLEAR x 4 |
+| STM lost, < 1000 | 3 | UNCLEAR x 3 |
+
+**The reclassification is confirmed object by object.**  All four clusters that lost an STM tag
+*because they became TGM* are labelled `THRU`.  Sec 10.3 argued that a cluster moving from STM to
+TGM is a correction, not a loss; that was an argument, and it is now a measurement: 4/4.
+
+**The three new STM tags that can be judged are stoppers** (evt 16/129, evt 20/105, evt 22/27),
+and the fourth (evt 12 cluster 25, 13 547 points) is `MESSY` -- ill-posed, not wrong.
+
+**The cost, stated plainly: two stopping muons lost their STM tag and did not become TGM.**
+
+| event | cluster | npts | label |
+|---|---|---|---|
+| 1 | 113 | 1 955 | STOP |
+| 12 | 108 | 6 714 | STOP |
+
+These are sec 10.3's "5 unexplained removals": three were too small to judge, and the two that are
+well resolved are, by eye, stopping muons that the fixed chain no longer tags.  That is a real
+regression inside a net-positive change, it is **not** covered by the bar (the bar is about the
+TGM gains), and it is the first item on the sec 12 list.  Two objects over six events is a small
+number, but it is not zero and it should not be rounded to zero.
+
+**The judgeability measurement of sec 11.4 held.**  All nine `UNCLEAR` labels fall in the bands
+below 1000 points -- the 3-, 4-, 9-, 32-, 88-, 163-, 275-, 518- and 630-point objects -- and not
+one object at or above 1000 points was returned `UNCLEAR`.  Measuring judgeability *before*
+writing the bar is what kept those bands out of it; a bar that had included them would have been
+unsatisfiable for reasons having nothing to do with the fix.
+
+**Verdict.** The `wrapped_channel_charge` flip is validated by hand at the object level: the 26
+new TGM tags are through-going muons (24 judged, 24 correct, 0 wrong, 2 unjudgeable), the four
+STM->TGM moves are corrections, and the new STM tags are stoppers.  Two genuine stopping muons are
+lost and are now named.
+
 ## 12. Not done / next
 
-0. **The lead, after secs 8-10:** every population number in secs 2-4 is measured on a point cloud
-   whose induction charge is missing on ~30 % of points.  The 6-event manifest has now been re-run
-   end to end (sec 10) and supersedes them *for those six events*; the 30-event PDHD arm and the
-   PDHD-vs-PDVD comparison of sec 3 have not.  The **hand scan of sec 10.3's movers** -- 26 new TGM
-   tags, 8 new STM tags, 5 unexplained STM removals -- is the next step that would turn a validated
-   flip into a physics statement.  The blind package is sec 11; only the labels are missing.
-1. The Bee set is the scan sheet; no hand scan has been made from it.  Nothing here is a
+0. **Two stopping muons lost their STM tag** -- `029107` evt 1 cluster 113 (1 955 pts) and evt 12
+   cluster 108 (6 714 pts), both hand-labelled `STOP`, neither now TGM (sec 11.7).  This is the
+   only adverse finding of the scan and the only item the fix made worse.  It is two objects over
+   six events, it is *not* a reason to unflip anything, and it is unread: nobody has looked at why
+   `TaggerCheckSTM` stops fitting or stops passing on them with the charge restored.  Next step is
+   one `stm_fit` / `steiner_graph` pass over those two clusters in both arms.
+1. **The population numbers of secs 2-4 are still measured on the broken cloud.**  The 6-event
+   manifest has been re-run end to end (sec 10) and supersedes them *for those six events*; the
+   30-event PDHD arm and the PDHD-vs-PDVD comparison of sec 3 have not been re-run.
+2. The hand scan is **done** (sec 11.7: bar PASS, 39/39 labelled).  Nothing in it is a
    recommendation to change a threshold.
-2. The status-2/status-4 excess (sec 3) is the lead.  It needs one hand pass over the `stm` +
+3. The status-2/status-4 excess (sec 3) is the lead.  It needs one hand pass over the `stm` +
    `steiner_graph` layers of a few status-2 clusters to say whether the leftover is a real second
    particle, a delta ray, or a clustering merge -- `feedback_owner_kink_discriminator` says charge
    shape will not separate the first two.
-3. The `no steiner_pc` 3.5x (sec 2) is a second, independent lead, and it is on the input side of
+4. The `no steiner_pc` 3.5x (sec 2) is a second, independent lead, and it is on the input side of
    the same layers.  doc pdhd/01 changed the terminal finding for PDHD's wrapped planes; whether
    this residual is the same family is unmeasured.
-4. The 8 tagged mains the `CheckSTM_Michel` stage never evaluated (sec 4) are a separate, small,
+5. The 8 tagged mains the `CheckSTM_Michel` stage never evaluated (sec 4) are a separate, small,
    fully-specified bug hunt: reproduce one (`029107/5` cl 94 is in the standard manifest) and read
    why the stage's candidate loop skips it.
-5. A PDVD Bee set at the same scope (`require_pc:'stm_fit'` rather than PDVD's nominal
+6. A PDVD Bee set at the same scope (`require_pc:'stm_fit'` rather than PDVD's nominal
    `require_flag:'STM'`) would make the two directly comparable by eye.  Not built -- it is a
    config fork of the PDVD production display and needs the owner's word.

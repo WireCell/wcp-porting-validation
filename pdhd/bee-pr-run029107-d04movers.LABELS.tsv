@@ -1,0 +1,47 @@
+# doc pdhd/04 sec 11.7 -- the RETURNED hand-scan labels, joined to the answer key.
+# Scanned by the owner 2026-09-06 on the doc pdhd/05 display (pdhd/d05_scan, tag 'movers0'),
+# one pass, 39/39 objects, blind: the direction column below was not visible while scanning.
+# Source of truth for the labels: work/d05_scan_labels/movers0/labels.json (labels.json is
+# gitignored under work/, which is why this joined copy is committed).
+# Scored by: python3 docs/scripts/d04_movers_score.py --sheet work/d05_scan_labels/movers0/filled_sheet.tsv \
+#                   --key bee-pr-run029107-d04movers.KEY.tsv   -> PRIMARY BAR PASS (24/24 THRU, 0/24 STOP)
+event	cluster	npts	directions	label	note
+0	63	9	STM_gained	UNCLEAR	
+0	101	3943	TGM_gained	THRU	
+0	118	4518	TGM_gained	THRU	
+0	124	4594	TGM_gained	THRU	
+0	132	7976	TGM_gained	THRU	
+1	32	630	STM_lost	UNCLEAR	
+1	77	12870	TGM_gained	THRU	
+1	83	12289	TGM_gained	THRU	
+1	98	7740	TGM_gained	THRU	
+1	110	7898	TGM_gained	THRU	
+1	111	7794	TGM_gained	THRU	
+1	112	13013	STM_lost_to_TGM+TGM_gained	THRU	
+1	113	1955	STM_lost	STOP	
+12	21	275	STM_gained	UNCLEAR	
+12	25	13547	STM_gained	MESSY	
+12	31	12407	TGM_gained	THRU	
+12	47	15042	TGM_gained	THRU	
+12	102	2638	TGM_gained	THRU	
+12	103	6376	STM_lost_to_TGM+TGM_gained	THRU	
+12	108	6714	STM_lost	STOP	
+12	128	11517	TGM_gained	THRU	
+16	53	88	STM_gained	UNCLEAR	
+16	86	10158	TGM_gained	THRU	
+16	90	5676	TGM_gained	FRAG>THRU	
+16	91	8153	TGM_gained	THRU	
+16	97	11360	TGM_gained	THRU	
+16	111	32	STM_lost	UNCLEAR	
+16	129	4897	STM_gained	STOP	
+20	13	4	TGM_gained	UNCLEAR	
+20	31	11432	TGM_gained	THRU	
+20	63	6221	TGM_gained	THRU	
+20	105	1770	STM_gained	STOP	
+20	150	6204	STM_lost_to_TGM+TGM_gained	THRU	
+22	27	3337	STM_gained	STOP	
+22	36	163	STM_gained	UNCLEAR	
+22	47	3	TGM_gained	UNCLEAR	
+22	48	4262	STM_lost_to_TGM+TGM_gained	THRU	
+22	107	6496	TGM_gained	THRU	
+22	119	518	STM_lost	UNCLEAR	
