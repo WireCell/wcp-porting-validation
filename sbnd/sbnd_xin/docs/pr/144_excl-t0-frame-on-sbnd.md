@@ -1301,3 +1301,86 @@ small enough to hand-scan and it is *selected by the mechanism*, not by the
 outcome — and ask on each whether the objects the shower absorbed belong to the
 electron.  137238 has a hand label already (doc 127).  Only then go to the
 template work, with the two traps above in hand.
+
+---
+
+## 16 The sentinel re-baseline
+
+Fourteen of the thirty pr/127 sentinels stopped holding (§7.1).  The doc 91 §12
+discipline is not to move a threshold onto the new number — it is to **measure
+both sides at the new pinned point** and assert the structural property the fix
+shipped, with the threshold between them.  This round adds a step to that,
+because the epoch changed twice over: it measures the full **2 × 2**.
+
+### 16.1 The design, and proving the controls are causal
+
+One negative-control arm per knob (`scripts/pr144_sentinel_neg.sh`), each
+running its event with that fix's own knob off.  **Before believing any of them**,
+every control's compiled config was diffed against production's for the same
+event: each differs in **exactly the one intended key and nothing else**
+(`sccc_max_gap` 10 → 6; the other seven key-suppressed to their C++ default).
+A control that silently failed to disable anything would report "the fix is
+inert" for free, which is the trap this check exists for.
+
+Then the same nine events were run again in the **legacy** frame
+(`docs/pr/pr144-legacyframe.tla`), giving all four cells on one binary
+(`d144_libpin4`) and one cfg.  Both positive cells are anchored to the real
+production arms: `work-s144posleg-mcp2k` is byte-identical to `work-mcp2k-d144off`
+on 6/6, and `work-s144pos-mcp2k` to `work-mcp2k-d144on` on 6/6.
+
+### 16.2 The result
+
+| knob | event(s) | legacy frame | new frame | reading |
+|---|---|---|---|---|
+| `stem_backfill_back_dvtx` | 179369 | DIFF | **DIFF** | live in both |
+| `sccc_max_gap` 10 → 6 | 137238 | DIFF | **DIFF** | live in both |
+| `stem_backfill_back_guard` | 47212 | DIFF | **SAME** | inert at the new epoch |
+| `shower_pass3_cone_guard_len` | 52693 | DIFF | **SAME** | inert |
+| `shower_pass4_prox_guard_len` | 100222 | DIFF | **SAME** | inert |
+| `shower_pass3_backfill_guard_len` | 175896 | DIFF | **SAME** | inert |
+| `long_muon_members_geometry` | 281595 | DIFF | **SAME** | inert |
+| `kine_guard_freed_impact` | 94392, 171572 | **SAME** | SAME | **already** inert |
+
+**Five shipped fixes stopped biting on their own sentinel event when the drift
+frame was corrected.**  Not "the fix died" — the event simply no longer
+exercises the knob.  And one, `kine_guard_freed_impact`, was already inert on
+both its events **before** this round, in both frames: pr/129's own footprint
+note says as much ("exactly ONE event's `kine_reco_Enu` moves, 393505"), and this
+2 × 2 is what exposed that those two entries never discriminated.
+
+Note what this does **not** say.  A knob inert *on its sentinel event* is not a
+knob inert everywhere — §13 shows `kine_guard_freed_impact` still doing real work
+on 393505.  The claim is about the registry's coverage, not the knobs' value.
+
+### 16.3 What was changed
+
+| action | entries | why |
+|---|---|---|
+| **INERT** (new state) | 47212, 52693, 100222, 175896, 281595, 94392, 171572 | Reporting FAIL would say something false; re-baselining to PASS would be worse — green and unable to fail, the dead safety net doc pr/127 exists to prevent. They report `INERT` with the measurement attached. |
+| **OPEN** (new state) | 137238, 177536, 347890, 393505 | They fail for a real, named reason (§§13–15). The suite must neither go green over them nor read them as unexplained. `OPEN` does not fail the run; a bare `FAIL` still does. |
+| **re-expressed** | 72786 (`decline seg=9004` → `log_count_ge 'decline seg=' 4`), 66366 (`nseg_chain=4 L_cm=300.6` → `nseg_chain=`) | Both named something that is not a property of the reconstruction. The guard still declines the same four objects on 72786 — one id renumbered, 9004 → 9003 — and 66366's chain is still assembled, from 3 segments at 299.5 cm. |
+| **re-baselined** | 179369 (`pf_absent 'pi0'` → `pf_absent 'pi0  112'`) | Measured on both sides: pr/130 B is **alive** and still removes its own π⁰ (112) plus the `e- 201` / `gamma 201` pair and `pi+ 54`. A *different* π⁰ at 130 MeV appears in the corrected frame — on the event the owner scanned and ruled better (Bee idx 0). |
+| **new assertion kind** | `log_count_ge` | For guards whose log line names a segment id: ids renumber whenever the fit changes, the count does not. |
+
+Suite on the new epoch: **10 PASS, 0 FAIL, 1 OPEN, 7 INERT** (12 SKIP pending the
+mcp2k arm), `rc = 0`.
+
+### 16.4 The consequence, stated once
+
+Six shipped SBND-ON knobs — `stem_backfill_back_guard`,
+`shower_pass3_cone_guard_len`, `shower_pass4_prox_guard_len`,
+`shower_pass3_backfill_guard_len`, `long_muon_members_geometry` and
+`kine_guard_freed_impact` — now have **no event in this registry that can catch
+them dying**.  If one of them dies the way pr/93 r4 did, nothing here will see it.
+
+The fix is to retarget each onto an event where it still bites.  That is a
+population scan per knob: run the 3067 with the knob off, diff against
+production, take any event that moves.  It is affordable — one arm per knob at
+≈ 3.5 core-hours, or one combined arm with all six off to find the union of
+affected events and then one small arm per knob to attribute — but it is six
+arms of work and the owner **declined the same offer** in doc pr/130 ("re-targeting
+each onto an event where its knob still bites was offered and DECLINED"), so it
+is priced here rather than done unasked.
+
+`./scripts/pr127_sentinels.py --all` re-evaluates the INERT entries, for whoever
+takes that round.
