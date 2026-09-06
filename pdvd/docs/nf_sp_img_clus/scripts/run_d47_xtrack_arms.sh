@@ -57,6 +57,13 @@ arm_tlas() {
         top)   echo "--tla-code dump_rawdecon=true" ;;
         S1n05) echo "--tla-code dump_rawdecon=true --tla-str noise_tag=x0.5" ;;
         S1n2)  echo "--tla-code dump_rawdecon=true --tla-str noise_tag=x2" ;;
+        # doc 47 sec 10 -- the field-response mismatch test (PDVD only; the two
+        # files share origin 181 mm, period, pitches and plane order, and differ
+        # by ~1.7x in the +-1-wire response amplitude).  FRc is the MATCHED
+        # control on the non-production file; FRm/FRr are the two mismatches.
+        FRc)   echo "--tla-code dump_rawdecon=true --tla-str sim_fields=protodunevd_FR_3view_speed1d55.json.bz2" ;;
+        FRm)   echo "--tla-code dump_rawdecon=true --tla-str sim_fields=protodunevd_FR_3view_speed1d55.json.bz2 --tla-str sp_fields=protodunevd_FR_imbalance3p_260501.json.bz2" ;;
+        FRr)   echo "--tla-code dump_rawdecon=true --tla-str sp_fields=protodunevd_FR_3view_speed1d55.json.bz2" ;;
         *) echo "unknown arm $1" >&2; return 1 ;;
     esac
 }

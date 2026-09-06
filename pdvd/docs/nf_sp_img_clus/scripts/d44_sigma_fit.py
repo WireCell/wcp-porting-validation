@@ -26,7 +26,7 @@ Usage:
   d44_sigma_fit.py --det sbnd --out figs/44_sigma_sbnd .../work-stmcamp-d42fit/*/tracking-stm.root
   --model-json <track_fitting.json>   read DT / ind_sigma_u_T / ind_sigma_v_T / col_sigma_w_T
                                       from there (default: the canonical file of --det)
-  --split face,run,length,rr,foff,window,advance   the validation "occasions"
+  --split face,run,length,rr,foff,window,apa,advance   the validation "occasions"
 """
 import argparse, json, os, re, sys
 import numpy as np
@@ -137,6 +137,8 @@ def collect(a, det, model):
     rows = []          # see COLS
     blocks = {}        # bid -> dict(run, length_cm, foff_W)
     P, bounds = det["pitch"], det["bounds"]
+    apa_ch = det.get("apa_chans")                 # doc 47 sec 10; None => apa = -1
+    pbase = (0,) + tuple(bounds)
     hw = int(round(a.halfwidth))
     bid = 0
     for path in a.roots:
@@ -270,10 +272,16 @@ def collect(a, det, model):
                           if k_ != Pi and int(s_) in offmap4[k_]]
                     oth = max(o_) if o_ else np.nan
                     oth4 = max(o4) if o4 else np.nan
+                    # doc 47 sec 10: which APA/CRP this profile sits on.  The
+                    # channel coordinate is the COMPACT PER-PLANE RANK (see DET),
+                    # so plane Pi starts at pbase[Pi] and each APA contributes
+                    # det["apa_chans"][Pi] of them in APA order.  -1 where the
+                    # detector entry does not declare the per-APA counts.
+                    apa = -1 if apa_ch is None else int((w0 - pbase[Pi]) // apa_ch[Pi])
                     rows.append((bid, Pi, s_, t_ns, y.sum(), vm, yh.sum(), vp, mu_m - mu_p,
-                                 advance, float(rr[j0]), np.sign(px[j0]), *sh, ph, oth, oth4))
+                                 advance, float(rr[j0]), np.sign(px[j0]), *sh, ph, oth, oth4, apa))
     cols = ("bid", "plane", "slice", "t_ns", "y", "vm", "yh", "vp", "off", "adv", "rr", "xsign",
-            "r0", "r1", "r2", "r3", "ph", "oth", "oth4")
+            "r0", "r1", "r2", "r3", "ph", "oth", "oth4", "apa")
     R = {c: np.array([row[k] for row in rows]) for k, c in enumerate(cols)}
     R["bid"] = R["bid"].astype(int); R["plane"] = R["plane"].astype(int)
     return R, blocks
@@ -415,7 +423,7 @@ def main():
     ap.add_argument("--nboot", type=int, default=200)
     ap.add_argument("--seed", type=int, default=44)
     ap.add_argument("--split", default="",
-                    help="comma list of occasions: face,run,length,rr,foff,advance (window needs a rerun)")
+                    help="comma list of occasions: face,run,length,rr,foff,apa,advance (window needs a rerun)")
     ap.add_argument("--max-foff", type=float, default=1.1)
     ap.add_argument("--phase-split", action="store_true",
                     help="doc 47 sec 8: repeat the fit on sub-pitch-phase windows of the FITTED "
@@ -498,6 +506,10 @@ def main():
             cats = {"rr<10cm": R["rr"] < 10, "rr>30cm": R["rr"] > 30}
         elif occ == "foff":
             cats = {"foff<0.15": np.nan_to_num(bf, nan=1) < 0.15, "foff>=0.15": np.nan_to_num(bf, nan=1) >= 0.15}
+        elif occ == "apa":
+            cats = {"apa%d" % u: R["apa"] == u for u in np.unique(R["apa"].astype(int)) if u >= 0}
+            if not cats:
+                print("split apa: detector entry declares no apa_chans", file=sys.stderr)
         elif occ == "advance":
             cats = {"adv<0.10": R["adv"] < 0.10, "adv0.10-0.25": (R["adv"] >= 0.10) & (R["adv"] < 0.25),
                     "adv0.25-0.5": (R["adv"] >= 0.25) & (R["adv"] < 0.5)}

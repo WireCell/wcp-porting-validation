@@ -455,6 +455,17 @@ doc 42 §4.2). SBND: k 1.009 → 1.007, unchanged.
 > residual in data and in simulation. The data's ROI stage lets ten times more of it through.
 > `d44_sigma_fit.py` gained two more additive per-profile columns and `d44_sp_profile.py` a
 > `--rings-tsv` / `--tick-offset` pair; the legacy paths are byte-identical again.
+> **Doc 47 §10 (fourth round) corrects the sentence above and splits the remainder in two.**
+> Measured against the *simulation* rather than against a Gaussian, the ≥2-wire tail is
+> under-produced by 14–55× on **all three** detectors including SBND, so it is not what makes
+> the ProtoDUNE constants large; the ProtoDUNE-only effect is a widening of the profile CORE
+> (PDVD centre share 0.72 against the simulation's 0.81, SBND's *narrower* than its
+> simulation's). §10 then shows why the simulation could never have carried a field-response
+> error — sim and SP deconvolve with the same file — and, by giving them different files,
+> that a realistic response mismatch is worth **up to +1.7 mm on induction and nothing on
+> collection**. So PDVD U/V (1.90/1.92 mm over the simulated floor) are within reach of a
+> response modelling error and **PDVD W's 1.05 mm is not**. `d44_sigma_fit.py` gained an
+> `apa` column and `--split apa`, byte-identical when unused.
 
 **Against the pre-registered criteria (§Plan, fixed before the arms ran):**
 

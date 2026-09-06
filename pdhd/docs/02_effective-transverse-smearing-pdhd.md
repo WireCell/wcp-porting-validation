@@ -220,6 +220,17 @@ The STM verdict churn (74 of 178 status-0 blocks) is ungraded by hand, as on PDV
    formation rather than in the field response or in front-end cross-talk. Note for anyone
    re-running that study here: PDHD's block `foff` runs 0.71–0.96, so doc 47 §8.6's
    `--max-foff 0.15` selects nothing on this detector — use the `oth4` tag.
+   **Doc 47 §10 corrects that reading**: the ≥2-wire tail is under-produced by the simulation
+   on all three detectors including SBND, so it is not the ProtoDUNE-specific effect; what is
+   ProtoDUNE-specific is a widening of the profile core, worth 1.76 mm on U and 1.41 mm on W
+   over the simulated floor (5.2 σ and 4.0 σ; PDHD V is consistent with the floor). A
+   deliberate field-response mismatch reaches the induction number but produces **nothing** on
+   collection, so W's 1.41 mm is still open. §10.6 splits this measurement by APA — PDHD
+   deconvolves APA0 against an MCMC refit to PDHD data and APA1–3 against the generic DUNE
+   response, and **the refit does not reduce the excess** (2.01 mm on APA0's U against
+   1.93/1.91/2.41 on APA1–3). Only U is quotable there: the PDHD simulation does not apply
+   `plane2layer`, so a simulated APA0 event has the collection response on the V readout plane
+   while SP deconvolves V as induction (doc 47 §10.8, upstream report).
 2. The ~1 mm self-consistency residual (§5) and the −0.03 B_foot shift are the same
    normalization question doc 44 §7 handed on for PDVD; next test is the fit's cell weights
    (`rel_uncer_ind` 0.075).

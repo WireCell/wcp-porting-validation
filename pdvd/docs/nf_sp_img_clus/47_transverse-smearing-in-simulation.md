@@ -25,13 +25,24 @@ data carry something the simulation does not model.
   (0.54 vs 0.38) is fine. The ProtoDUNE data carry an extra ~1.0–1.9 mm (0.2–0.25 pitch) on
   exactly the planes where the simulated constant is small. That part is a data effect the
   simulation does not model; §6 names the candidates and the data test that separates them.
-  *(Third round, §9: that extra width **is** the charge sitting ≥ 2 wires from the track — it
-  alone accounts for the whole gap between the rms-matched and share-matched widths (§9.6). It
-  is not topology: it survives isolation and straightness cuts that discard 75–98 % of the
-  charge (§9.4). And it is not in the deconvolution's output: data and simulation feed ROI
-  formation the same cross-channel amplitude — measured on |q|, where clipping cannot bias it,
-  they agree to a few per cent — and the ROI stage removes 99.3 % of it in simulation against
-  93–95 % in the data (§9.5). The next test is the ROI stage, and only then a pulser run.)*
+  *(Third round, §9: the ≥ 2-wire tail is real and **is not topology** — it survives isolation
+  and straightness cuts that discard 75–98 % of the charge (§9.4) — and it accounts for the
+  whole gap between the rms-matched and share-matched widths (§9.6). It is not in the
+  deconvolution's output: data and simulation feed ROI formation the same cross-channel
+  amplitude — measured on |q|, where clipping cannot bias it, they agree to a few per cent —
+  and the ROI stage removes 99.3 % of it in simulation against 93–95 % in the data (§9.5).
+  **§9's further claim that this tail IS the ProtoDUNE excess is withdrawn by §10.4:** measured
+  against the simulation rather than against a Gaussian, the tail is under-produced by 14–55×
+  on **all three** detectors, SBND included, while the widening of the profile CORE that the
+  shipped constants correct is ProtoDUNE-only. Two effects, not one.)*
+- *(Fourth round, §10, the owner's 2-D-response question: in this simulation a field-response
+  error **cancels by construction**, so the simulated `c` is a floor and `c_data ⊖ c_sim` is the
+  budget for any data-only effect — non-zero on five of nine planes, all ProtoDUNE, and
+  consistent with zero on all of SBND. Broken deliberately (sim and SP given different FR files
+  that differ by 1.74–1.87× in the ±1-wire amplitude), a realistic response mismatch is worth
+  **up to +1.7 mm on induction and nothing on collection** (§10.5). So the hypothesis covers the
+  ProtoDUNE induction excess and **fails on the collection planes**, whose 1.05 mm (PDVD) and
+  1.41 mm (PDHD) remain unexplained.)*
 - The low effective D_T the data return (PDVD 4.9, PDHD 6.1 cm²/s against physical 7.9/8.2)
   is partly an SP effect: the simulation returns 5.5/6.8/8.2 for configured 7.9/8.2/8.8.
 
@@ -121,6 +132,16 @@ for d in pdvd pdhd sbnd; do an=$([ $d = pdhd ] && echo 1 || echo 0)
   python3 $S/d47_sim_transverse_profile.py --det $d --truth $X/$d/truth_${d}_a${an}.json --frames $X/$d/S1-anode${an}-sp.tar.bz2 --tag rawdecon --abs-charge --nboot 5 --out $A/simabs_$d
   python3 $S/d47_tail_isolation.py --det pdvd --rows $A/simabs_${d}_rows.tsv --tag S1_rawdecon_abs --append --out $F/47_tail_sim_$d; done
 python3 $S/d47_tail_plot.py --figs $F --out $F/47_tail.png
+# --- D. fourth round (sec 10): the field-response budget and the two mismatch arms
+#     the estimator gains an `apa` column + `--split apa`; byte-identical when unused (gate in sec 10.8)
+python3 $S/d44_sigma_fit.py --det pdhd --max-advance 0.436 --nboot 200 --split apa --out $A/d02_apa ../pdhd/work/029107_*_stmwc/tracking-stm.root
+#     the pdvd driver gains sim_fields / sp_fields, both inert when ''.  FRc = matched control on
+#     the non-production file; FRm/FRr = the two crossed pairs.
+DET=pdvd ARMS="FRc FRm FRr" NPAR=3 $S/run_d47_xtrack_arms.sh
+for arm in FRc FRm FRr; do for tag in gauss rawdecon; do \
+  python3 $S/d47_sim_transverse_profile.py --det pdvd --truth $X/pdvd/truth_pdvd_a0.json \
+    --frames $X/pdvd/$arm-anode0-sp.tar.bz2 --tag $tag --nboot 100 --out $X/pdvd/ana/${arm}_$tag; done; done
+python3 $S/d47_fr_budget.py --figs $F --sim-root $X --apa-bins $A/d02_apa_bins.tsv --out $F/47_fr_budget
 ```
 
 Committed: the three drivers (`pdhd_sim/`, `pdvd_sim/`, `sbnd_sim/wct-sim-xtrack-sp.jsonnet`),
@@ -133,6 +154,11 @@ the truth/track JSONs `figs/47_{truth,tracks}_<det>_a<N>.json`, `figs/47_arms.pn
 `scripts/d47_tail_isolation.py`, `scripts/d47_tail_plot.py`, `figs/47_tail.png` and
 `figs/47_tail_{pdhd,pdvd,sbnd}_{anatomy,cuts}.tsv`,
 `figs/47_tail_sim_{pdhd,pdvd,sbnd}_anatomy.tsv`, `figs/47_tail_frame_pdvd_anatomy.tsv`, and
+Fourth round adds `scripts/d47_fr_budget.py`, `figs/47_fr_budget.tsv`,
+`figs/47_fr_pdvd_FR{c,m,r}_{fit,shape}.tsv`, `figs/47_fr_apa_pdhd_{bins,fit}.tsv`, the
+`sim_fields`/`sp_fields` TLAs on `pdvd_sim/wct-sim-xtrack-sp.jsonnet` with the FRc/FRm/FRr
+arms in `run_d47_xtrack_arms.sh`, and the `apa` column + `--split apa` on BOTH forks of
+`d44_sigma_fit.py`.
 `--rings-tsv` / `--tick-offset` on `d44_sp_profile.py` plus `--abs-charge` on
 `d47_sim_transverse_profile.py`; it runs in ~4 min per detector and touches no wire-cell job.
 
@@ -715,6 +741,13 @@ the pulser conclusion does not follow: §9.7.)*
 
 # 9. The ≥ 2-wire tail: is it topology? (2026-09-06, third round)
 
+> **Corrected by §10.4 (fourth round).** Everything measured in this section stands, but its
+> reading does not: the ≥2-wire tail is compared here to a *Gaussian at the same share-matched
+> σ*, which is the right comparison for peakedness (§9.6) and the wrong one for the ProtoDUNE
+> excess. Against the **simulation**, the tail is under-produced by 14–55× on all three
+> detectors — SBND included — while the core widening that the shipped constants correct is
+> ProtoDUNE-only. Read §9 as "what the ≥2-wire tail is", not as "what the ProtoDUNE excess is".
+
 Section 8.6 said to bound the non-instrumental sources of the ≥2-wire tail before calling it
 instrumental. **Answer: it is not topology.** On the planes that carry the ProtoDUNE excess
 the tail survives cuts that throw away 75–98 % of the charge, it is distributed across
@@ -995,3 +1028,311 @@ comparison needs already exist for four of them:
    The `oth4` tag of §9.1 measures exactly that and is now on every profile.
 3. Only if both come back null is a hardware measurement (the pulser run) worth its cost, and
    it should then look for a *non-linear* or ROI-coupled effect, not for plain cross-talk.
+
+---
+
+# 10. Is the remaining width a field-response modelling error? (2026-09-06, fourth round)
+
+**Question (owner, 2026-09-06).** *"In a real detector the geometry is 3-D, but the field
+response calculation may be limited. In this case, it is possible that the data contains more
+spread? But in principle SBND also has such an effect, but the geometry may be more
+symmetric."*
+
+**Answer. Right in kind, for the induction planes — and the round splits the remainder in two,
+which corrects §9's headline.**
+
+- The hypothesis has a structural consequence nobody had drawn: **in the simulation an error
+  in the field response cancels by construction**, because the sim convolves with the same FR
+  file SP deconvolves with. The simulated constant is therefore a *floor*, and `c_data ⊖
+  c_sim` is the budget available to any data-only effect. Measured with both sides' bootstrap
+  errors, that budget is non-zero on **five of nine planes, all on ProtoDUNE**, and is
+  consistent with zero on all three SBND planes and on PDHD V (§10.3).
+- **Broken deliberately, a realistic FR modelling error produces up to +1.7 mm on induction
+  and nothing on collection.** Two accepted PDVD field response files differ by 1.74–1.87× in
+  the ±1-wire response amplitude; generating with one and deconvolving with the other gives
+  `c` = 1.489 ± 0.032 / 2.144 ± 0.035 / 0.468 ± 0.042 mm against a matched control of 1.331 /
+  1.321 / 0.524 — **+0.67 mm on U (3.4 σ), +1.69 mm on V (16.9 σ), nothing on W** (§10.5).
+  Against a data-only excess of 1.90 / 1.92 / 1.05 mm, the mechanism is quantitatively viable
+  on induction and **fails on collection**.
+- **The ProtoDUNE excess and the ≥2-wire tail are two different things**, and §9 conflated
+  them. The tail is under-produced by the simulation by 14–55× on **all three detectors,
+  SBND included**; the widening of the *core* is ProtoDUNE-only. §9.6's quadrature result is
+  intact but is about peakedness (rms-vs-share), not about the shipped constant (§10.4).
+- The owner's "SBND should have the effect too" is **correct about the tail and wrong about
+  `c`**: SBND's ≥2-wire share is 0.0093 against its simulation's 0.00017, the largest ratio of
+  the three, yet its constant sits exactly on the simulated floor.
+- Two controls were needed first and both pass: the `nsigma` truncation of the simulated depos
+  is inert, and SBND's agreement is a real measurement, not small statistics (§10.4).
+
+Nothing shipped moves. No production file is touched.
+
+## 10.1 The structural point: a field-response error cannot appear in this simulation
+
+`DepoTransform` builds each plane's signal by convolving the drifted charge with
+`PlaneImpactResponse` over the FR file named in `params.files.fields`; `OmnibusSigProc`
+deconvolves with `Response::wire_region_average` of *the same file*
+(`sigproc/src/OmnibusSigProc.cxx:941`). Whatever that file gets wrong about the detector is
+therefore applied and removed in the same job. Every arm of §§3–9 shares this property, so:
+
+> **The simulated `c` of §3 is a lower bound on the real one.** It contains the SP wire
+> filter, the pitch-averaging residual and the ROI/time-filter behaviour, and by construction
+> contains **no** contribution from the response model being wrong.
+
+That is why the round-3 result — the deconvolution feeds ROI formation the same cross-channel
+amplitude in data and simulation, and the ROI stage removes 99.3 % of it in simulation against
+93–95 % in the data (§9.5) — is not in tension with this hypothesis but predicted by it. A
+response mismatch leaves a residual that is *coherent with the signal*: same time slice, same
+sign, scaling with the charge. Such a residual survives a noise-scaled ROI threshold. The
+simulation's residual is the incoherent ringing of a deconvolution against its own kernel, and
+that does not.
+
+## 10.2 The field response files are one-dimensional
+
+Read directly (`d47_fr_budget.py` cites them; the check is three lines of json):
+
+- Every `PathResponse` in every file used here — `garfield-sbnd-v1`, `dune-garfield-1d565`,
+  `np04hd-garfield-6paths-mcmc-bestfit`, `protodunevd_FR_imbalance3p_260501`,
+  `protodunevd_FR_3view_speed1d55` — carries **`wirepos: 0.0`**. There is one longitudinal
+  position. The response is a scan in the pitch coordinate only: 21 wire regions × 6 impact
+  positions covering half a pitch, mirrored.
+- `util/src/Response.cxx:79` says so itself: *"Warning! this function is NOT GENERAL. It is
+  actually specific to Garfield 1D line of paths with half the impact positions
+  represented!"*
+
+So the model is a 2-D field problem — infinitely long parallel electrodes, charge represented
+as a line parallel to them. **The caveat that keeps this from being a proof:** for infinitely
+long parallel *cylindrical wires* the weighting potential really is translation-invariant
+along the wire, so the 2-D calculation is essentially exact and the argument is weak for PDHD
+and SBND. It is strong for PDVD, whose anode is a perforated-PCB CRP: finite-width strips,
+holes that break invariance along the strip, and two induction views on one board. That PDVD's
+production FR is `protodunevd_FR_imbalance3p_260501` — an ad-hoc 3 % imbalance variant — is
+itself evidence the model needed tuning it could not derive.
+
+**This does not cover PDHD collection**, which is the largest single unexplained gap (1.46 mm
+measured against a 0.39 mm floor) on a plane of ordinary cylindrical wires. Keep that as an
+open counterexample; do not let the CRP story absorb it.
+
+## 10.3 The budget: what is left for a data-only effect
+
+`c` is the joint share-matched constant on both sides — data from doc 44 / doc pdhd/02, sim
+from the S1 production arm — each with its bootstrap error. `d_quad = √(c_data² − c_sim²)`.
+
+| det | pl | c_data [mm] | c_sim [mm] | d_quad | in pitch | |
+|---|---|---|---|---|---|---|
+| pdhd | U | 3.210 ± 0.088 | 2.687 ± 0.034 | 1.756 | 0.376 | **excess 5.2 σ** |
+| pdhd | V | 2.717 ± 0.128 | 2.789 ± 0.035 | 0 | 0 | consistent (−0.6 σ) |
+| pdhd | W | 1.460 ± 0.171 | 0.386 ± 0.039 | 1.408 | 0.294 | **excess 4.0 σ** |
+| pdvd | U | 2.300 ± 0.042 | 1.290 ± 0.028 | 1.904 | 0.249 | **excess 17.7 σ** |
+| pdvd | V | 2.304 ± 0.044 | 1.272 ± 0.028 | 1.921 | 0.251 | **excess 17.3 σ** |
+| pdvd | W | 1.176 ± 0.049 | 0.540 ± 0.032 | 1.045 | 0.205 | **excess 9.0 σ** |
+| sbnd | U | 1.316 ± 0.060 | 1.345 ± 0.024 | 0 | 0 | consistent (−0.4 σ) |
+| sbnd | V | 1.321 ± 0.061 | 1.330 ± 0.025 | 0 | 0 | consistent (−0.1 σ) |
+| sbnd | W | 0.378 ± 0.191 | 0.540 ± 0.029 | 0 | 0 | consistent (−1.0 σ) |
+
+SBND U and V are a real agreement — the errors are ±0.06 and ±0.02 mm on a 1.3 mm quantity,
+tighter than the 0.03 pitch the acceptance of §2.4 asked for. **SBND W is not informative**:
+±0.191 mm on 0.378 is a 50 % error and the plane cannot distinguish 0.38 from 0.54. Do not
+quote SBND W as agreement.
+
+## 10.4 Two effects, not one — the correction to §9
+
+§9's headline says the ProtoDUNE excess **is** the charge sitting ≥2 wires from the track.
+Measured against the simulation rather than against a Gaussian, that is wrong. The two
+quantities separate cleanly:
+
+| | centre-wire share (core) | | | ≥2 wires (tail) | | |
+|---|---|---|---|---|---|---|
+| | data | sim S1 | | data | sim S1 | ratio |
+| pdhd U | 0.436 | 0.524 | wider | 0.01478 | 0.00031 | 48× |
+| pdhd V | 0.481 | 0.511 | wider | 0.01213 | 0.00024 | 51× |
+| pdhd W | 0.622 | 0.773 | wider | 0.01692 | 0.00000 | ∞ |
+| pdvd U | 0.722 | 0.810 | wider | 0.00197 | 0.00008 | 25× |
+| pdvd V | 0.720 | 0.811 | wider | 0.00154 | 0.00003 | 51× |
+| pdvd W | 0.749 | 0.788 | wider | 0.00217 | 0.00000 | ∞ |
+| sbnd U | 0.581 | 0.564 | *narrower* | 0.00931 | 0.00017 | 55× |
+| sbnd V | 0.582 | 0.568 | *narrower* | 0.00373 | 0.00027 | 14× |
+| sbnd W | 0.709 | 0.685 | *narrower* | 0.01323 | 0.00000 | ∞ |
+
+- **The core widening is ProtoDUNE-only.** On SBND the data's core is if anything *more*
+  peaked than the simulation's. This is the effect the shipped constants correct, and it is
+  what §10.3's budget measures.
+- **The ≥2-wire tail is universal.** Every plane of every detector carries 14–55× the
+  simulated share, SBND's U ratio being the largest of the nine. A statement about ProtoDUNE
+  cannot be built on it.
+- The two do not follow one another: SBND has the tail and no core widening; PDHD V has
+  neither a `c` excess nor a smaller tail than its neighbours.
+
+**Why §9 read otherwise.** §9 compared the measured shares to a *Gaussian at the same
+share-matched σ*, not to the simulation. That comparison is the right one for peakedness and
+§9.6's √(σ_share² + σ_excess²) ≈ ρ·σ_share stands. But the share-matched σ is driven by the
+centre share and is nearly blind to a 1 % far tail, so "the tail explains the rms-vs-share
+gap" does not imply "the tail explains the `c` excess". §9's opening paragraph and the
+third-round parenthetical in the Answer are corrected above and in place.
+
+**Two controls, both passed before any of this was used.**
+
+1. **`nsigma` truncation is inert.** `DepoTransform` hard-codes `nsigma: 3`
+   (`cfg/pgrapher/common/sim/nodes.jsonnet:82`), so each depo's Gaussian is cut at ±3 σ and
+   the simulation cannot put *diffusion* charge at ±2 wires at all. The `nsig5` arm is
+   S2 + `nsigma` 5 (`run_d47_xtrack_arms.sh:53`), so the control pair is **nsig5 vs S2, both
+   noiseless** — not nsig5 vs S1. On that pair the ≥2-wire and beyond-±2 shares move by less
+   than 0.0013 on every plane of every detector. The budget stands.
+2. **But the noise does everything.** Comparing S1 (production) with S2 (noise and
+   fluctuation off) on the same tag: PDVD U's beyond-±2 share goes 0.00008 → **0.12237**,
+   PDHD U 0.00031 → 0.02253, SBND U 0.00017 → 0.03832. Turn the noise off and the ROI's
+   noise-scaled thresholds collapse and the deconvolution's long-range residual survives
+   whole. This is §9.5's mechanism seen from the other side, and it is why a *small* increase
+   in that residual — from a response mismatch — can cross the threshold and appear.
+
+One arithmetic note that survives from the round-3 framing: no single Gaussian reproduces both
+the core and the tail. Widening a Gaussian until it puts the measured share beyond ±2 wires
+needs σ 1.2–3.0× the measured core width (`d47_fr_budget.py` section C). The tail is not a
+broadening. The **core** is, and that is what §10.5 tests.
+
+## 10.5 Breaking the response deliberately: the mismatch arms
+
+The driver gained two TLAs (`sim_fields`, `sp_fields`) that split the file the simulation
+convolves with from the file SP deconvolves with. `protodunevd/sp.jsonnet:179` merges the
+caller's `override` into the `OmnibusSigProc` data block last, so `field_response` set there
+wins; the extra `FieldResponse` component is appended to the config the same way `Wire_pass`
+already was.
+
+The pair is chosen so that only the response shape differs: **same** `origin` (181 mm — which
+is `params.det.response_plane`), **same** period, **same** pitches (7.65/7.65/5.10), **same**
+plane order (collection at index 2). They differ in the ±1-wire response amplitude by
+**1.74× (U), 1.81× (V), 1.87× (W)** — a real disagreement between two accepted PDVD models,
+not a synthetic perturbation.
+
+| arm | sim FR | SP FR | cU [mm] | cV | cW | added vs its control |
+|---|---|---|---|---|---|---|
+| S1 | imbalance3p | imbalance3p | 1.290 ± 0.028 | 1.272 ± 0.028 | 0.540 ± 0.032 | matched (production) |
+| FRc | speed1d55 | speed1d55 | 1.331 ± 0.033 | 1.321 ± 0.028 | 0.524 ± 0.034 | matched (control) |
+| FRm | speed1d55 | imbalance3p | 1.489 ± 0.032 | **2.144 ± 0.035** | 0.468 ± 0.042 | **+0.67 (3.4 σ) / +1.69 (16.9 σ) / 0 (−1.0 σ)** |
+| FRr | imbalance3p | speed1d55 | 1.335 ± 0.033 | 1.343 ± 0.059 | 0.462 ± 0.041 | +0.34 (1.0 σ) / +0.43 (1.1 σ) / 0 (−1.5 σ) |
+
+Four things this says.
+
+1. **Which file you use, matched, hardly matters** (S1 vs FRc: 1.290 → 1.331, 1.272 → 1.321).
+   The effect below is the *mismatch*, not the file.
+2. **A realistic mismatch is worth up to 1.7 mm on induction** — the same order as the
+   1.90/1.92 mm the PDVD data carry over the floor. The hypothesis is quantitatively viable
+   there.
+3. **It is worth nothing on collection.** FRm's W is 0.468 mm against a 0.524 mm matched
+   control — at or below it, on every mismatch arm. PDVD's 1.05 mm and PDHD's 1.37 mm
+   collection excesses are **not** explained by a response modelling error of this size.
+4. **The sign matters.** FRm (true response *wider* than the model) adds width; FRr (true
+   *narrower*) adds essentially none — over-sharpening is clipped by the filters and the ROI,
+   under-deconvolving is not. So the mechanism predicts the real response is **wider** than
+   the model. Independent file-level support: PDHD's `np04hd-garfield-6paths-mcmc-bestfit`, an
+   MCMC refit of the generic `dune-garfield-1d565` **to PDHD data**, has a ±1-wire induction
+   amplitude 0.466 against 0.274 — the refit moved the response 1.7× *wider*.
+
+**Two checks on the arms themselves.** FRm's charge per tick is 4324 against the matched arms'
+4212 (truth 3920) — a mismatch shifts the normalisation by ~3 %, but the share-matched
+estimator works on ring *shares* inside a ±3 window and cannot read a global normalisation.
+The per-arm tick offsets (median −33.0 / −23.9 / −11.8 for FRm / FRc / FRr, from the two files'
+1.3 % speed difference) are absorbed by the per-track self-calibration, which returns
+`mm/tick fit/pred median 1.0000` on all three.
+
+**What the U-vs-V asymmetry is not.** FRm adds 0.67 mm on U and 1.69 mm on V, but the two
+files differ by nearly the same factor on both planes (1.74 vs 1.81). The asymmetry is
+therefore made downstream of the response — in the per-plane wire filters, the L1SP `dump`
+stage that runs on U and V, or the ROI — and is not explained here.
+
+## 10.6 PDHD by APA: the response refit to PDHD data does not reduce the excess
+
+PDHD deconvolves **APA0** against `np04hd-garfield-6paths-mcmc-bestfit` and **APA1–3** against
+the generic `dune-garfield-1d565` (`pdhd/params.jsonnet:189`). If the excess were a response
+modelling error, the APA whose response was refit to this very detector should carry less of
+it. The estimator's channel coordinate is a compact per-plane rank, so the APA is recoverable
+(800 U, 800 V, 960 W per APA); `--split apa` was added to both forks and gated byte-identical.
+Per-APA joint `D_T` is unusable (3.4–11.2 cm²/s against 8.28 for the whole sample), so `c` is
+re-solved with `D_T` **fixed**: `c² = Σw(σ² − 2D t)/Σw`.
+
+| selection | U: c_fix [mm] | sim floor | data-only excess | SP field response |
+|---|---|---|---|---|
+| apa0 | 3.734 | 3.149 (S6b) | **2.007** | mcmc-bestfit, refit to PDHD data |
+| apa1 | 3.307 | 2.687 (S1) | 1.928 | dune-garfield-1d565, generic |
+| apa2 | 3.299 | 2.687 (S1) | 1.914 | dune-garfield-1d565, generic |
+| apa3 | 3.611 | 2.687 (S1) | 2.412 | dune-garfield-1d565, generic |
+
+**APA0's excess sits in the middle of APA1–3's. The refit did not reduce it.** The caveat that
+keeps this from killing §10.5: the MCMC refit was tuned to waveform shape and timing, so it is
+not necessarily a fit to the transverse part of the response — even though, as §10.5 note 4
+records, it did move the ±1-wire amplitude by 1.7×.
+
+**Only U is quotable here.** `np04hd-garfield-6paths-mcmc-bestfit` orders its planes U, W, V
+(its plane 1 is the collection response), which is what `pdhd/sp.jsonnet:167`'s
+`plane2layer: [0,2,1]` compensates — but **the simulation does not apply `plane2layer`**: the
+ductor hands `PIRfield0plane<i>` to readout plane *i*. On APA0 the sim therefore puts the
+collection response on readout plane V while SP deconvolves V with the induction response.
+That makes S6b unusable as an APA0 control on V and W. U is FR plane 0 under both mappings and
+is unaffected. See §10.8.
+
+## 10.7 What this leaves
+
+| | induction | collection |
+|---|---|---|
+| **SBND** | explained: wire filter, and `c` sits on the simulated floor | floor, but the measurement cannot tell 0.38 from 0.54 |
+| **PDHD** | 1.76 mm over the floor on U; a response mismatch of the measured size reaches this | **1.41 mm over the floor, unexplained** |
+| **PDVD** | 1.90 / 1.92 mm over the floor; same conclusion | **1.05 mm over the floor, unexplained** |
+| **all three** | ≥2-wire tail 14–55× the simulation, on every plane | same |
+
+So the owner's reading is right for the planes it was aimed at and there is a second thing on
+collection that it does not cover. A collection plane's modelled response puts essentially
+nothing on its neighbours (`|resp|` at ±1 is 0.20–0.38 of centre and the *integral* is ~0.003
+of it), so a modelling error there has almost no lever on the transverse profile — which is
+exactly what FRm's W column shows. Whatever widens the ProtoDUNE collection profile by
+1.0–1.4 mm is not the field response.
+
+## 10.8 Findings to report elsewhere, and the next step
+
+Three things this round turned up that are **not** part of it and were not touched:
+
+1. **The PDHD APA0 simulation is internally inconsistent with its own SP.** `plane2layer
+   [0,2,1]` is applied in `OmnibusSigProc` (`sigproc/src/OmnibusSigProc.cxx:286, 941`) but not
+   in the `DepoTransform` the simulation builds, so a simulated APA0 event has the collection
+   response on the V readout plane and is deconvolved as induction. This affects any PDHD
+   APA0 simulation, not just this study. Upstream report.
+2. **The derived constants are not a fixed point of their own estimator.** `d44_sigma_fit.py`
+   solves the in-slice extent against the model σ it reads from the track-fitting JSON, so
+   re-deriving after the flip returns different numbers: PDHD U 3.55 against the shipped 3.21,
+   PDVD's committed `44_sigma_pdvd_*` TSVs no longer reproduce (only `sig_model_pitch` and
+   `extent` move; every `meas_*` column is identical). The shipped values are the ones derived
+   against the *pre-flip* model and that is what doc 44 and doc pdhd/02 record. Whether to
+   iterate to a fixed point is an owner decision, not a defect found here.
+3. **`--split apa` and the `apa` column** are now in both forks of the estimator and cost
+   nothing when unused (gate below).
+
+**Next step, in order:**
+
+1. **The ROI comparison of §9.7 is still first.** §10.4 sharpens why: the ≥2-wire residual is
+   enormous before the ROI (12 % of the charge on PDVD induction with the noise off) and the
+   ROI removes all but 0.008 % of it in simulation and 0.9 % in the data. A factor of ~100 in
+   what one stage rejects is the largest single unexplained number in this document, it is
+   universal across the three detectors, and the frames it needs already exist for four PDVD
+   events.
+2. **Then the collection question**, which is now separated from the induction one and is the
+   only part of the *shipped constants* left unexplained. The response cannot do it; the
+   candidates are the ROI (again), charge sharing between adjacent collection
+   wires/strips that the 2-D model does not carry, and electronics cross-talk.
+3. **Only then the signed ≥2-wire sum** (unclipped net charge at |Δ| ≥ 2 in `gauss`: positive
+   and equal to the clipped sum ⇒ real charge or a unipolar long-range response error; ≈ 0
+   with the clipped part about half ⇒ capacitive cross-talk, which appears post-deconvolution
+   as a time derivative). It discriminates for the *tail*, which is the universal effect, so
+   it comes after the stage that actually gates the tail has been compared.
+
+**Gates for this round.**
+
+- Estimator patch (`apa` column + `--split apa`) **byte-identical on both forks**: pre-patch
+  vs post-patch `_bins/_fit/_shape.tsv` SAME on PDVD (585 blocks, 395 644 profiles), PDHD
+  (178 blocks) and SBND; SBND additionally SAME against the committed `44_sigma_sbnd_*`.
+- Driver patch **inert with default TLAs**: recompiled `S1.json` byte-identical (`cmp`) to the
+  arm's committed compiled config.
+- **Compiled-config proof per arm**: the `FieldResponse` filename reached by every
+  `PlaneImpactResponse` (sim) and by `OmnibusSigProc.field_response` (SP), printed for S1,
+  FRc, FRm and FRr — matched, matched, crossed, crossed.
+- Binary pin unchanged end to end (`libWireCellSigProc.so`
+  `1984cc94d88e9c0b7fc67dfd32495ea7`, `libWireCellGen.so` `3f33af41af3252b8189c2582e343d86d`).
+- Every number above comes from `figs/47_fr_budget.tsv`, written by the committed
+  `d47_fr_budget.py`.

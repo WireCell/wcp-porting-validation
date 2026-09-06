@@ -66,7 +66,18 @@ function(
     seed = 0,
     save_raw = true,
     noise_tag = '',              // 'x0.5' | 'x2': amplitude-scaled noise spectra (d47_scale_noise.py) in /home/xqian/tmp/xtrack/noise
-    nf = true,                   // false: skip OmnibusNoiseFilter (noiseless arms on SBND: its per-channel
+    nf = true,
+    // doc 47 sec 10 -- the field-response mismatch test.  In the simulation the
+    // sim convolves with the SAME field response file SP deconvolves with, so an
+    // error in that file CANCELS by construction and the simulated constant is a
+    // floor.  These two knobs break that: `sim_fields` replaces params.files.fields
+    // for the whole job (sim, chndb, NF and, unless pinned below, SP), while
+    // `sp_fields` pins ONLY OmnibusSigProc's field_response to a named file.
+    // Setting sim_fields alone is a MATCHED control (a different but
+    // self-consistent detector); setting both is the mismatch.  Both are bare
+    // wire-cell-data filenames; '' keeps production.
+    sim_fields = '',
+    sp_fields = '',                   // false: skip OmnibusNoiseFilter (noiseless arms on SBND: its per-channel
                                  // filters flag every flat channel bad regardless of the RMS cuts)
 )
 
@@ -78,7 +89,8 @@ local params = base {
         lifetime: lar_lifetime * wc.ms,
     },
     sim: super.sim { fluctuate: fluctuate },
-    files: super.files { noises: if noise_tag == '' then super.noises else ['/home/xqian/tmp/xtrack/noise/' + std.strReplace(f, '.json.bz2', '.' + noise_tag + '.json.bz2') for f in super.noises] },
+    files: super.files { noises: if noise_tag == '' then super.noises else ['/home/xqian/tmp/xtrack/noise/' + std.strReplace(f, '.json.bz2', '.' + noise_tag + '.json.bz2') for f in super.noises] }
+                       + (if sim_fields == '' then {} else { fields: [sim_fields, sim_fields] }),   // doc 47 sec 10
 };
 local tools = tools_maker(params);
 local sim = sim_maker(params, tools);
@@ -148,8 +160,13 @@ local wire_pass = {
     type: 'HfFilter', name: 'Wire_pass',
     data: { max_freq: 1, power: 2, flag: false, sigma: 1e9 },   // exp(-0.5 (f/1e9)^2) == 1.0 in float
 };
+// SP-only field response (doc 47 sec 10).  protodunevd/sp.jsonnet merges
+// `override` into the OmnibusSigProc data block LAST (sp.jsonnet:179), so
+// field_response set here wins over its own wc.tn(tools.field).
+local sp_fr = { type: 'FieldResponse', name: 'spfield', data: { filename: sp_fields } };
 local sp_override = { sparse: false }
-    + (if wire_filter == 'passthrough' then { Wire_filters: ['Wire_pass', 'Wire_pass', 'Wire_pass'] } else {});
+    + (if wire_filter == 'passthrough' then { Wire_filters: ['Wire_pass', 'Wire_pass', 'Wire_pass'] } else {})
+    + (if sp_fields == '' then {} else { field_response: wc.tn(sp_fr) });
 local sp = sp_maker(params, tools, sp_override);
 local sp_pipe = sp.make_sigproc(anode, l1sp_pd_mode=l1sp_mode, dump_rawdecon=dump_rawdecon);
 
@@ -179,4 +196,5 @@ local cmdline = {
     },
 };
 
-[cmdline] + patched + (if wire_filter == 'passthrough' then [wire_pass] else []) + [app]
+[cmdline] + patched + (if wire_filter == 'passthrough' then [wire_pass] else [])
+         + (if sp_fields == '' then [] else [sp_fr]) + [app]
