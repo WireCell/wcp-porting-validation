@@ -178,7 +178,87 @@ server: 7 layers × 2 events listed in each set.
 
 The earlier pair from doc 05 §8 (pre-fix vs fixed) stays valid and is a different comparison.
 
-## 8. Not done / next
+## 8. Owner 2026-09-06: event 991, (119.2, 96.2, 379.6), cluster 290 "strange for the Steiner-Graph"
+
+Two answers: cluster 290 has **no Steiner graph at all** and that is the display scope, not a bug —
+but checking it turned up something that does matter for this feature.
+
+### 8.1 Which set, and what cluster 290 is
+
+That coordinate is cluster 290 in **exactly one** arm on disk. Every other event-991 arm (27 of
+them, `stm0` / `d02*` / `d03*` / `d04bee` / `d05m*` / `d06base` …) calls it **cluster 83**:
+
+| | |
+|---|---|
+| `d06um` (the with-unmerge link, §7) | cluster **290**, 11 points |
+| everything else | cluster **83**, 12 289 points |
+
+So cluster 290 is an 11-point clump that `unmerge_assoc` split off cluster 83 — and cluster 83 is
+one of the `TGM_gained` movers of doc 04 §10.3, hand-labelled **THRU**. The clump has **nothing
+within 50 cm**; the muon's body passes 50–80 cm away (1 032 points of cluster 83 within 80 cm, none
+within 50). That is the isolated-merge signature doc pdvd/39 r2 describes almost exactly ("a
+938-point body plus nine 5–19 point fragments at 16–76 cm"), so splitting it off is the intended
+behaviour, not the anomaly.
+
+### 8.2 Why it has no Steiner graph — and neither does its 12 289-point parent
+
+`pr.jsonnet` scopes the three layers with **`require_pc: 'stm_fit'`**, so `stm`, `steiner_graph`
+and `steiner_terminals` cover exactly the clusters `TaggerCheckSTM` recorded a fit for. Proof, not
+inference — the layer's cluster set equals the `persist_stm_fit` set exactly, both arms:
+
+| arm | clusters | `steiner_graph` clusters | `persist_stm_fit` clusters |
+|---|---|---|---|
+| `d06base` | 86 | 20: `29 34 36 37 40 45 46 50 57 73 82 85 88 92 95 99 100 101 104 113` | the same 20 |
+| `d06um` | 418 | 15: `29 32 36 37 40 42 50 73 82 85 88 95 101 104 113` | the same 15 |
+
+Cluster 290 is a fragment, never promoted to a main, never evaluated — no fit, no layer. **And
+cluster 83 has no Steiner graph either**, in any arm: it is `TGM=true`, so `TaggerCheckSTM: cluster
+83 already TGM; skipping`. Measured: **zero** Steiner, terminal, `stm` or `stm_fit` points within
+80 cm of that coordinate, in both arms. Nothing is drawn there because nothing is meant to be.
+
+### 8.3 The thing that does matter: the retile undoes the split
+
+Looking at the Steiner layer for the rest of the event, one cluster stands out. Cluster **36**:
+
+| | `d06base` | `d06um` |
+|---|---|---|
+| charge points | 2 650 | 1 581 (unmerge split off 442 / 439 / 444 / 446 …) |
+| Steiner nodes | 2 848 | 2 834 |
+| nodes on **its own** charge | 2 848 / 2 848 | 1 759 / 2 834 |
+| nodes on **another cluster's** charge | **0** | **1 075** → 521 on cl 442, 173 on cl 439, 112 on cl 444, 80 on cl 446 |
+
+Every one of those four clusters was part of cluster 36 before the split (verified point-for-point,
+max match distance 0.000 cm). **So the Steiner build puts 38 % of cluster 36's nodes back on the
+charge `unmerge_assoc` had just removed from it.**
+
+The mechanism is in the code, not a guess. `steiner: cm.steiner(retiler=improve2, …)`, and
+`ImproveCluster_1::get_activity_improved` (`improvecluster_1.cxx:256`) takes the cluster's
+**(u, v, w, t) bounding box** — `get_uvwt_min/max` — and asks the *Grouping* for every good channel's
+charge inside it:
+
+```cpp
+map_u_tcc = grouping->get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, apa, face, 0);
+```
+
+There is **no cluster-membership filter**. Any charge inside the box is retiled back in, whoever
+owns it. Unmerge removes the fragments in 3-D; the main's bounding box still contains them; they
+return in 2-D.
+
+**This is pre-existing and not caused by unmerge** — that had to be checked before blaming the new
+feature. Over event 12 the fraction of Steiner nodes sitting on another cluster's charge is
+**7.9 % in both arms** (4 242 / 53 585 vs 4 024 / 50 728); the mechanism is simply how the retiler
+has always worked. What unmerge changes is *whose* charge it is: a main's own split-off fragments
+now count as "another cluster", so on event 1 the fraction goes 0.1 % → 4.8 %, essentially all of
+it cluster 36.
+
+**The consequence for this feature is the one worth stating: the unmerge split does not reach the
+Steiner build.** Whatever it removes in 3-D comes back through the 2-D bounding-box retile, so the
+STM fit still walks over the fragments' charge. PDVD carries the identical wiring
+(`protodunevd/pr.jsonnet:1410`, `cm.steiner(retiler=improve2, …)`), so the same limitation presumably
+applies to the shipped PDVD unmerge — **measured here on PDHD only**, and worth checking there
+before anyone leans on either.
+
+## 9. Not done / next
 
 1. **Grading.** Two events, no hand scan, sign unknown. Before anyone proposes making this a PDHD
    default it needs the 30-event arm and a scan of what the 40-odd splits per event did to the
