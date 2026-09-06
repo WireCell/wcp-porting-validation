@@ -130,13 +130,21 @@ Every split came from **exact provenance**, none from the component-mode fallbac
 | TGM evaluated | 82 → 82 | 92 → 92 |
 | TGM = true | 35 → **36** | 23 → **24** |
 | STM evaluated | 47 → 46 | 69 → 68 |
-| **STM tagged** | 4 → **4** | 8 → **8** |
+| **STM tagged** (a count — the *set* changes, see below) | 4 → 4 | 8 → 8 |
 | STM fitted | 20 → 16 | 26 → 22 |
+
+> **CORRECTION 2026-09-06 (see §8.4).** The "STM tagged 4 → 4 / 8 → 8" row above is a **count**,
+> and reading it as "the STM tags do not move" was wrong. Matched by point set rather than by
+> ident, event 1 replaces **all four** tags (zero overlap: 46/57/92/104 out, 32/42/82/85 in) and
+> event 12 changes six of eight (25/112/125 out, 32/95/129 in) — **14 tag changes behind an
+> unchanged count**, `feedback_count_vs_set_census` walked straight into. One of the new tags is a
+> false positive with a named mechanism (§8.4).
 
 TGM-evaluated is unchanged because the split-off fragments are **not** promoted to mains — that is
 what the `flag_mains`-before-`unmerge_assoc` ordering buys. So the defect is real and large in
 cluster count (40–46 mains per event were carrying detached clumps) while the tagger verdicts move
-little on these two events: +1 TGM each, STM tags unchanged, 8 fewer STM fits.
+little **in aggregate** on these two events: +1 TGM each, the same number of STM tags on a largely
+different set of objects, 8 fewer STM fits.
 
 **Sign unknown — this is not graded.** Two events is not a measurement, and doc pdvd/39 made the
 same point about PDVD: fewer fits may be correct (a clump dragging a main into a fit should stop
@@ -258,8 +266,77 @@ STM fit still walks over the fragments' charge. PDVD carries the identical wirin
 applies to the shipped PDVD unmerge — **measured here on PDHD only**, and worth checking there
 before anyone leans on either.
 
+### 8.4 Owner 2026-09-06: (-41.9, 12.3, 450.1), cluster 42 — a gutted main, and a false STM tag
+
+This one is a defect of the feature, not of the display. Cluster 42's Steiner graph draws a
+continuous 27 cm track through charge that is three dots.
+
+**What the cluster is.** In `d06base` cluster 42 is 293 points / **180 blobs**, 36 components,
+sprawling x −325…−1.6, y 7.6…85.6, z 394…462 — junk along the detector floor (y floor 7.61) near
+the z+ edge. The tagger handled it correctly: **TGM=true**, and `TaggerCheckSTM: cluster 42 already
+TGM; skipping`.
+
+**What unmerge does to it.**
+
+```
+ClusteringUnmergeBundle:prassoc> cluster 42: 180 blobs -> main 16 + 36 associated cluster(s)
+                                 holding 164 (real mode)
+```
+
+**164 of 180 blobs leave. The main keeps 8 % of itself — 19 points — and keeps the main flag**,
+because `flag_mains` ran *before* `unmerge_assoc`. The ordering that stops fragments being promoted
+to mains does nothing to stop a main being hollowed out and staying one.
+
+The remnant is four dots along the drift axis:
+
+| | x [cm] | y | z | pts |
+|---|---|---|---|---|
+| dot 1 | −145.6…−144.7 | 15.6 | 456.3 | 4 |
+| dot 2 | −42.9…−41.9 | 12.3–14.7 | 450.1 | 7 |
+| dot 3 | −37.5…−36.6 | 12.9 | 450.6 | 4 |
+| dot 4 | −17.0…−16.1 | 14.3–15.1 | 451.5 | 4 |
+
+Gaps of **103, 5 and 20 cm**; `component_extreme_wcps: cluster 42 4 component(s), **0 above 10.0
+cm**`.
+
+**Then the verdict flips.** With the connecting charge gone, the TGM chord test can no longer walk
+it —
+
+```
+check_tgm: cluster 42 CASE-A pair (0,1) rejected: no 30.0 cm-step charge path between the ends
+           (129.6 cm chord)
+```
+
+— so **TGM goes true → false**, the cluster falls through to `TaggerCheckSTM`, and the Steiner build
+fabricates a track to fit: **84 of its 88 Steiner nodes fill x −42.86…−16.07 continuously** (26.8 cm)
+where the charge is three dots totalling 15 points; 7 terminals. STM then fits **220 points** —
+eleven times the real charge — and returns **STM=1**, `exit_L 131.6 cm`.
+
+**A junk cluster that was correctly tagged through-going becomes a false stopping-muon tag.**
+
+It is the only case of its kind in event 1: of the four new STM tags, 42 is the one where unmerge
+gutted the main (16/180 = 8 %) and flipped TGM. The other three (32, 82, 85) kept 77–91 % of their
+blobs and were TGM=false in both arms, so their 0→1 flip is the cleanup working as intended. Four
+objects also *lost* their tag (46, 57, 92, 104).
+
+**What this says about the feature.** Two things, both unaddressed:
+
+1. `flag_mains` before `unmerge_assoc` protects against fragment→main promotion but not against
+   main→remnant. A main reduced to 8 % of its blobs should arguably be re-tested for main-ness, or
+   dropped.
+2. Losing TGM by losing the charge path is a **mechanical** consequence of the split, not a physics
+   re-judgement: the object did not change, only which points are labelled as belonging to it. Any
+   cluster whose TGM verdict rests on a charge path that unmerge is about to remove will flip the
+   same way. Ordering `unmerge_assoc` *after* the cosmic taggers would avoid it, at the cost of the
+   Steiner/STM cleanup the feature exists for — the trade PDVD's §11 ordering decision made without
+   this case in view.
+
 ## 9. Not done / next
 
+0. **The false STM tag of §8.4** is the first thing to settle: a main gutted to 8 % of its blobs
+   keeps its main flag, loses TGM mechanically, and is tagged STM on a fabricated 220-point fit
+   built from 19 points of charge. Until that is addressed `unmerge_assoc` should not be considered
+   for a PDHD default, whatever the aggregate counts say.
 1. **Grading.** Two events, no hand scan, sign unknown. Before anyone proposes making this a PDHD
    default it needs the 30-event arm and a scan of what the 40-odd splits per event did to the
    objects — the PDVD flip (doc pdvd/38+39) came *after* that work, not before.
