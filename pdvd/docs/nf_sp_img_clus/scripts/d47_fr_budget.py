@@ -271,7 +271,6 @@ def main():
         print("   %-4s | %7s %7s %7s | %7s %7s %7s | %s"
               % ("arm", "cU", "cV", "cW", "addU", "addV", "addW", "what it is"))
         for arm, what in fr_arms:
-            ref = "FRc" if arm in ("FRm", "S1") else "FRc"
             ref = {"S1": None, "FRc": None, "FRm": "FRc", "FRr": "S1"}[arm]
             cs = [have.get((arm, pl), float("nan")) for pl in PLANES]
             if ref is None:

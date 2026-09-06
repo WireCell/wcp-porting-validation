@@ -141,7 +141,8 @@ DET=pdvd ARMS="FRc FRm FRr" NPAR=3 $S/run_d47_xtrack_arms.sh
 for arm in FRc FRm FRr; do for tag in gauss rawdecon; do \
   python3 $S/d47_sim_transverse_profile.py --det pdvd --truth $X/pdvd/truth_pdvd_a0.json \
     --frames $X/pdvd/$arm-anode0-sp.tar.bz2 --tag $tag --nboot 100 --out $X/pdvd/ana/${arm}_$tag; done; done
-python3 $S/d47_fr_budget.py --figs $F --sim-root $X --apa-bins $A/d02_apa_bins.tsv --out $F/47_fr_budget
+cp $A/d02_apa_bins.tsv $F/47_fr_apa_pdhd_bins.tsv; cp $A/d02_apa_fit.tsv $F/47_fr_apa_pdhd_fit.tsv
+python3 $S/d47_fr_budget.py --figs $F --sim-root $X --apa-bins $F/47_fr_apa_pdhd_bins.tsv --out $F/47_fr_budget
 ```
 
 Committed: the three drivers (`pdhd_sim/`, `pdvd_sim/`, `sbnd_sim/wct-sim-xtrack-sp.jsonnet`),
@@ -1059,8 +1060,9 @@ which corrects §9's headline.**
   SBND included**; the widening of the *core* is ProtoDUNE-only. §9.6's quadrature result is
   intact but is about peakedness (rms-vs-share), not about the shipped constant (§10.4).
 - The owner's "SBND should have the effect too" is **correct about the tail and wrong about
-  `c`**: SBND's ≥2-wire share is 0.0093 against its simulation's 0.00017, the largest ratio of
-  the three, yet its constant sits exactly on the simulated floor.
+  `c`**: SBND's ≥2-wire share is 0.0093 against its simulation's 0.00017, in the same 14–55×
+  band as the other two, yet its constant sits exactly on the simulated floor and its profile
+  core matches the simulation's to 1 % at matched drift.
 - Two controls were needed first and both pass: the `nsigma` truncation of the simulated depos
   is inert, and SBND's agreement is a real measurement, not small statistics (§10.4).
 
@@ -1129,6 +1131,14 @@ from the S1 production arm — each with its bootstrap error. `d_quad = √(c_da
 | sbnd | V | 1.321 ± 0.061 | 1.330 ± 0.025 | 0 | 0 | consistent (−0.1 σ) |
 | sbnd | W | 0.378 ± 0.191 | 0.540 ± 0.029 | 0 | 0 | consistent (−1.0 σ) |
 
+**These significances are statistical only.** Both sides carry bootstrap errors and nothing
+else. The larger systematic is named in §10.8 item 2: `c_data` depends on the model JSON the
+estimator unfolds the in-slice extent against, and re-deriving PDHD U against the *shipped*
+constants returns 3.55 mm where the derivation returned 3.21 — a 0.34 mm shift against a
+±0.088 mm statistical error. It is unquantified on PDVD, and the three detectors sit in
+different states (PDVD and PDHD flipped, SBND not). The excesses are 1.0–1.9 mm, so no
+conclusion here moves; the σ values should not be read as anything but statistical.
+
 SBND U and V are a real agreement — the errors are ±0.06 and ±0.02 mm on a 1.3 mm quantity,
 tighter than the 0.03 pitch the acceptance of §2.4 asked for. **SBND W is not informative**:
 ±0.191 mm on 0.378 is a 50 % error and the plane cannot distinguish 0.38 from 0.54. Do not
@@ -1149,18 +1159,35 @@ quantities separate cleanly:
 | pdvd U | 0.722 | 0.810 | wider | 0.00197 | 0.00008 | 25× |
 | pdvd V | 0.720 | 0.811 | wider | 0.00154 | 0.00003 | 51× |
 | pdvd W | 0.749 | 0.788 | wider | 0.00217 | 0.00000 | ∞ |
-| sbnd U | 0.581 | 0.564 | *narrower* | 0.00931 | 0.00017 | 55× |
-| sbnd V | 0.582 | 0.568 | *narrower* | 0.00373 | 0.00027 | 14× |
-| sbnd W | 0.709 | 0.685 | *narrower* | 0.01323 | 0.00000 | ∞ |
+| sbnd U | 0.581 | 0.564 | **flat** | 0.00931 | 0.00017 | 55× |
+| sbnd V | 0.582 | 0.568 | **flat** | 0.00373 | 0.00027 | 14× |
+| sbnd W | 0.709 | 0.685 | **flat** | 0.01323 | 0.00000 | ∞ |
 
-- **The core widening is ProtoDUNE-only.** On SBND the data's core is if anything *more*
-  peaked than the simulation's. This is the effect the shipped constants correct, and it is
-  what §10.3's budget measures.
+The centre shares above are pooled over each sample's own drift distribution, and the centre
+share falls with drift, so they are compared again **in matched drift windows** (the sim's
+`centre_share(t)` interpolated to each data bin's `t_us`, weighted by the data bin's profile
+count). The conclusion is unchanged for ProtoDUNE and *sharpened* for SBND:
+
+| | pdhd U/V/W | pdvd U/V/W | sbnd U/V/W |
+|---|---|---|---|
+| data − sim at matched drift | −0.087 / −0.031 / −0.162 | −0.092 / −0.094 / −0.051 | **+0.005 / +0.011 / −0.007** |
+
+SBND's core is **flat to about 1 %**, not "more peaked": the small positive sign in the pooled
+column is a drift-mixing artefact (SBND's data blocks reach 65 µs where its simulated tracks
+start at 174 µs). The ProtoDUNE deficits are 3–16 % and survive matching. The ≥2-wire ratios
+in the table above are *not* drift-controlled — the committed `_bins.tsv` carries
+`centre_share` but not the ring shares per drift bin — so read them as a band, 14–55× on all
+three detectors, and not as an ordering between detectors.
+
+- **The core widening is ProtoDUNE-only.** On SBND the data's core matches the simulation's
+  to 1 % at matched drift. This is the effect the shipped constants correct, and it is what
+  §10.3's budget measures.
 - **The ≥2-wire tail is universal.** Every plane of every detector carries 14–55× the
   simulated share, SBND's U ratio being the largest of the nine. A statement about ProtoDUNE
   cannot be built on it.
 - The two do not follow one another: SBND has the tail and no core widening; PDHD V has
-  neither a `c` excess nor a smaller tail than its neighbours.
+  neither a `c` excess nor a smaller tail than its neighbours. Whatever makes the tail is
+  therefore not what makes the ProtoDUNE constants large.
 
 **Why §9 read otherwise.** §9 compared the measured shares to a *Gaussian at the same
 share-matched σ*, not to the simulation. That comparison is the right one for peakedness and
@@ -1252,6 +1279,8 @@ re-solved with `D_T` **fixed**: `c² = Σw(σ² − 2D t)/Σw`.
 | selection | U: c_fix [mm] | sim floor | data-only excess | SP field response |
 |---|---|---|---|---|
 | apa0 | 3.734 | 3.149 (S6b) | **2.007** | mcmc-bestfit, refit to PDHD data |
+
+(U only; the V and W rows of `figs/47_fr_apa_pdhd_fit.tsv` are permuted on APA0 — see below.)
 | apa1 | 3.307 | 2.687 (S1) | 1.928 | dune-garfield-1d565, generic |
 | apa2 | 3.299 | 2.687 (S1) | 1.914 | dune-garfield-1d565, generic |
 | apa3 | 3.611 | 2.687 (S1) | 2.412 | dune-garfield-1d565, generic |
@@ -1261,13 +1290,33 @@ keeps this from killing §10.5: the MCMC refit was tuned to waveform shape and t
 not necessarily a fit to the transverse part of the response — even though, as §10.5 note 4
 records, it did move the ±1-wire amplitude by 1.7×.
 
-**Only U is quotable here.** `np04hd-garfield-6paths-mcmc-bestfit` orders its planes U, W, V
-(its plane 1 is the collection response), which is what `pdhd/sp.jsonnet:167`'s
-`plane2layer: [0,2,1]` compensates — but **the simulation does not apply `plane2layer`**: the
-ductor hands `PIRfield0plane<i>` to readout plane *i*. On APA0 the sim therefore puts the
-collection response on readout plane V while SP deconvolves V with the induction response.
-That makes S6b unusable as an APA0 control on V and W. U is FR plane 0 under both mappings and
-is unaffected. See §10.8.
+**Only U is quotable here, and the V/W rows are permuted on APA0 in the data as well.**
+`np04hd-garfield-6paths-mcmc-bestfit` orders its planes U, W, V — its plane 1 is the
+collection response — which is what `pdhd/sp.jsonnet:167`'s `plane2layer: [0,2,1]`
+compensates. Two consequences, and they are different things:
+
+1. **In the simulation.** `plane2layer` is applied in `OmnibusSigProc`
+   (`sigproc/src/OmnibusSigProc.cxx:286, 941`) and **not** in the `DepoTransform` the
+   simulation builds: the ductor hands `PIRfield0plane<i>` to readout plane *i*. So a
+   simulated APA0 event has the collection response on readout plane V and is deconvolved
+   there as induction. S6b is therefore unusable as an APA0 control on V and W — its own
+   numbers show the swap (c = 3.149 / **0.384** / **4.423**, i.e. its "V" is collection-like
+   and its "W" induction-like). Upstream report, §10.8.
+2. **In the data.** The same permutation is visible with no simulation involved. The
+   charge-weighted centre share of APA0's rank-`W` profiles is **0.335** — induction-like,
+   and wider than any induction plane — against 0.713 / 0.691 / 0.693 on APA1–3, while
+   APA0's rank-`V` is 0.528 against 0.476 / 0.440 / 0.472. So the estimator's plane-by-channel
+   -rank labels do not name the same physical layers on APA0 as on APA1–3, and the raw table's
+   apa0 V = 2.365 and W = 5.058 must be read swapped: **collection 2.37 mm** (against
+   0.93–1.09 on APA1–3) and **second induction 5.06 mm** (against 3.06–3.38). Both are
+   markedly worse, but APA0 also carries the per-wire-region `fltresp` filters, the `_APA1`
+   Wiener set and a `gauss` re-deconvolved without the filters — four differences the
+   simulation cannot control for, which is why the plan kept APA0 out of the primary arm.
+   Nothing here is quotable as a field-response statement.
+
+**U is untouched by any of this**: it is plane 0 and layer 0 under both mappings, its centre
+share is 0.428 / 0.432 / 0.453 / 0.423 across the four APAs — flat — and it is the row the
+conclusion above rests on.
 
 ## 10.7 What this leaves
 
