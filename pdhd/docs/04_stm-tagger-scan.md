@@ -7,6 +7,15 @@ with its Steiner graph, Steiner terminals, cluster image and fit trajectory, and
 tagger-level census that says where the candidates are lost, PDHD against PDVD.
 **No code or config is changed by this doc.**
 
+**Sec 8 (2026-09-06, second owner question) is the load-bearing result.**  Following the 3-D image
+against the 2-D measurement point by point: the image is supported by measured charge in **all
+three** views at 99.9 % of cluster 128's points, including 100 % of the points the tagger threw
+away.  The zeros are the wrapped strips' **segment-1** wires -- the `IWirePlane::channels()`
+lookup defect -- and the fix knob exists but is still `false` in the **clustering** job that
+writes the persisted pctree.  Re-clustering the same event with it true takes the cluster's
+excluded points 3542 -> 14 and its verdict `TGM=false` -> `TGM=true`.  Secs 2-4's population
+numbers are all measured on the unfixed cloud.
+
 ## 0. Repro
 
 ```
@@ -37,6 +46,18 @@ LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=-1  WCT_TGM_PATH_DUMP_DIR=<out> \
     ./run_pr_evt.sh -s d04prb   -stm        029107 <evt>     # every evaluated cluster
 python3 docs/scripts/d04_cluster128_plot.py docs/figs/d04_tgm_path_cluster128.csv.gz \
     docs/figs/d04_exclusion_by_apa.tsv -o docs/figs/d04_cluster128_path_veto.png
+
+# sec 8, the 3-D-vs-2-D consistency probe (same env var; the probe now also dumps, per point
+# and per plane, the ctpc 2-D measurement at the point's own wire and tick, in the RAW frame)
+LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=128 WCT_TGM_PATH_DUMP_DIR=<out/off> \
+    ./run_pr_evt.sh -s d05p  -stm-fit 029107 12          # production pctree
+# the causal control: re-cluster the SAME imaging with the wrapped-channel lookup fixed
+PDHD_CLUS_TLA="-S wrapped_channel_charge=true" \
+    ./run_clus_evt.sh -s d05wc -save-pctree 029107 12    # 75 s; writes a new pctree
+LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=-1  WCT_TGM_PATH_DUMP_DIR=<out/on> \
+    ./run_pr_evt.sh -s d05wc -stm-fit 029107 12
+python3 docs/scripts/d04_cluster128_wrapped.py <out/off> <out/on> \
+    docs/figs/d04_cluster128_wrapped.png
 ```
 
 Binary: `libWireCellClus b46179b2` = toolkit `5d0b4e77` plus the uncommitted doc sbnd_xin/pr/143
@@ -441,10 +462,16 @@ single **130 cm run** in the middle of the track.
 | z < 60 cm, x < 0 (healthy) | **exactly 0 on 100 %** | ok (median 1545) | ok (median 9820) | 2.00 |
 | z 80-200 cm, x < 0 (the run) | **exactly 0 on 98.2 %** | **exactly 0 on 98.2 %** | ok (median 12 137) | **1.00** |
 
-So the U plane contributes nothing to this track anywhere, and over those 130 cm **V drops to zero
-as well**, leaving collection alone.  Of the 3542 excluded points, 3470 have their one surviving
-plane = W.  The charge is real and the 3-D points are real -- what is missing is the *induction
-attribution*, which is what `is_point_good` counts.
+Over those 130 cm **both induction planes drop to zero**, leaving collection alone.  Of the 3542
+excluded points, 3470 have their one surviving plane = W.  The charge is real and the 3-D points
+are real -- what is missing is the *induction attribution*, which is what `is_point_good` counts.
+
+> **Corrected 2026-09-06 (sec 8).**  The sentence that stood here -- "the U plane contributes
+> nothing to this track anywhere" -- is **wrong**, and it was wrong in a way that hid the
+> mechanism.  The table above reads two z-slices; over the whole track U carries charge on 44 %
+> of the points and V on 30 %, and *which* induction plane is live **swaps** along the track (U
+> dead / V live below z ~ 60, both dead over the run, V dead / U live beyond z ~ 240).  That
+> alternation is the signature sec 8 identifies.
 
 ### 7.3 That splits the walk, and the two ends land on opposite sides
 
@@ -498,12 +525,16 @@ one plane only, and that plane is the collection plane.**  APA0's different fiel
 the driver -- it survives only as the mild 1.46x excess in *rejections* of sec 6.2, which is a
 different quantity and is not contradicted.
 
-This is the same family as doc pdhd/01 (Steiner terminals on wrapped induction planes): both
-`wrapped_channel_charge` and `retile_wrapped_channel_activity` are ON in this job (PDHD PR
-production since 2026-09-05), so what sec 7.2 measures is the **residual after that fix**, the
-`ncharge = 3` shortfall doc pdhd/01 sec 6 left open (0.00 -> 0.53, so ~47 % still short).
-Whether the residual is the same wrap-topology lookup or a distinct SP/attribution effect is
-**not established here**.
+This is the same family as doc pdhd/01 (Steiner terminals on wrapped induction planes).
+
+> **Corrected 2026-09-06 (sec 8.6).**  This paragraph said the PDHD PR job's
+> `wrapped_channel_charge` / `retile_wrapped_channel_activity` are ON, so these numbers are the
+> **residual after that fix**.  They are not.  Those two knobs configure the PR job's own
+> samplers, which feed only `ImproveCluster_2`'s retiler; the per-point charge `is_point_good`
+> reads comes from the **persisted pctree**, written by the *clustering* job, whose same-named
+> knob is still `false` (`pdhd/wct-clustering.jsonnet:76`, "Still parked").  So sec 7.2 and 7.5
+> measure the **unfixed** cloud, and the question the paragraph left open -- same wrap-topology
+> lookup, or a distinct effect? -- is answered in sec 8: **the same lookup, in the other job.**
 
 ### 7.6 What this changes about the fix
 
@@ -519,8 +550,253 @@ Sec 6's three options stand, but the diagnosis reorders them:
 
 Still owner's call; nothing was changed.
 
-## 8. Not done / next
+> **Superseded by sec 8.8.**  Sec 8 finds the cause one layer up -- the points are excluded
+> because their induction charge was never attached, not because they are bad points -- and puts
+> a fourth, better-targeted option at the top of this list.
 
+## 8. Owner question 2026-09-06: follow the 3-D image against the 2-D measurement
+
+The owner's reading of sec 7, in their words: *the 3-D image was reconstructed correctly, covering
+the path -- in this case there got to be charge in each of the 2-D measurement views; the check is
+supposed to be on the actual measurement, and you are excluding things, so there must be a mismatch
+somehow.*  Two candidate mechanisms were named: **(1)** the wrapped-wire situation -- one channel
+carries several wires, and a bug there loses charge; **(2)** APA0 being special -- its V plane
+behaving like a collection view, or a distorted reconstructed signal.
+
+**The reading is right in every part.  Mechanism (1) is the cause, exactly.  Mechanism (2) is
+excluded at the point level.**  The 3-D image of cluster 128 is supported by measured 2-D charge in
+**all three** planes at 99.91 % of its points, including at every one of the 3542 points
+`is_point_good` threw away.  The charge is in the ctpc; it was never attached to the point.
+
+![cluster 128: 3-D image vs 2-D measurement](figs/d04_cluster128_wrapped.png)
+
+### 8.1 The instrument
+
+The doc pdhd/04 probe (`TaggerCheckTGM::path_components`, env-gated on `WCT_TGM_PATH_DUMP`) was
+extended to write, per point and per plane, both sides of the comparison:
+
+| side | columns | source |
+|---|---|---|
+| 3-D (what the tagger judges) | `qu qv qw` `uunc vunc wunc` `uw3 vw3 ww3` | `Cluster::charge_value / charge_uncertainty / wire_index` -- the sampled arrays of the **persisted** pctree |
+| 2-D (the measurement) | `uhcp vhcp whcp` `uavg vavg wavg` | `Grouping::has_closest_point` / `get_ave_charge` at 0.6 cm -- **the same ctpc query `is_good_point` uses** |
+| geometry cross-check | `uw2 vw2 ww2` `tind` | `Grouping::convert_3Dpoint_time_ch` -- the grouping's own projection |
+| dead channels | `figs/d04_dead_cluster128.csv` | `Grouping::get_all_dead_chs` for every (apa, face) the cluster touches |
+
+**Byte-identity gate for the extension.**  Same binary, env unset, 029107/12: the `mabc-pr.zip`
+member content hash (`abtest/hash_archive.py`) is
+`91ef5b5185d9bd8a66df3af70f882bc5d9cf7326f75c9add74ee1ff7bb795070`, **identical** to arm `d04bee`
+(the probe-free reference).  `./build/clus/wcdoctest-clus`: 323 cases / 23 060 assertions SUCCESS.
+
+Two controls before any number is read from it:
+
+* **The projections agree exactly.**  The sampler's wire index and the grouping's own projection
+  give the *same* wire on **11 517 / 11 517 points x 3 planes**.  There is no wire-index or
+  geometry mismatch anywhere in this cluster.
+* **Dead channels are not the explanation.**  Over the three volumes the cluster crosses there are
+  **42 dead wires in total** (a0f0: 1; a2f0: 24; a3f1: 17), none of them contiguous.  A dead
+  block would have been the competing explanation for a sharp 130 cm band; there is no such block.
+
+### 8.2 The frame trap (a probe bug, not a production one -- worth recording)
+
+The first version of the probe queried the ctpc with `cluster.point3d(i)` and found **nothing**
+within 0.6 cm on 82 % of points, on **all three planes including collection**.  That is the doc
+pdvd/45 trap: after `switch_scope` the cluster's default scope is the **T0-corrected** frame
+(`x_t0cor`), while the ctpc is written by `PointTreeBuilding::add_ctpc` from the slice time, i.e.
+the **raw** drift frame.  Measured on this cluster:
+
+```
+x_raw - x_corrected = +7.703 cm (a0f0), +7.703 cm (a2f0), -7.703 cm (a3f1)
+```
+
+-- one magnitude, sign flipping with the drift direction: `dirx * v_drift * t0` exactly.
+
+**Production already does this correctly.**  Every ctpc caller back-transforms first:
+`TaggerCheckTGM`'s own `to_raw` lambda (`TaggerCheckTGM.cxx:1248`, used at 1317-1343) and the
+`ctpc_transform->backward(test_p, cluster_t0, face, apa)` calls in `connect_graph_ctpc.cxx`,
+`connect_graph_relaxed.cxx` and `connect_graph_relaxed_strict.cxx`.  The probe was fixed to use
+the same transform, and **every number in sec 8.3 onward is measured in the raw frame by the
+production query**.  No defect here -- but the failure mode is silent (it just answers "no
+charge"), so it is recorded.
+
+### 8.3 The 3-D image is supported in 2-D -- in all three views
+
+With the frame right, on cluster 128 (11 517 points):
+
+| | U | V | W |
+|---|---|---|---|
+| sampled per-point charge > 10 e (what `is_point_good` reads) | **0.440** | **0.298** | 0.993 |
+| 2-D measurement present within 0.6 cm (`has_closest_point`) | **0.999** | **1.000** | 1.000 |
+| sampled = 0 **while** the 2-D measurement is there | **0.560** | **0.702** | 0.007 |
+
+Points by number of planes:
+
+| planes | 0 | 1 | 2 | 3 |
+|---|---|---|---|---|
+| by sampled per-point charge | 13 | **3529** | 7522 | 453 (3.9 %) |
+| by 2-D measurement | 0 | 0 | 10 | **11 507 (99.91 %)** |
+
+And the number that answers the question directly: **of the 3542 points `is_point_good` excluded,
+3542 -- 100.0 % -- have measured 2-D charge on at least two planes.**  Not one of them is a point
+the data fails to support.
+
+### 8.4 The zeros are exactly the wrapped strips' segment-1 wires
+
+A PDHD (anode, face, U or V) imaging plane holds **1148 wires on 800 channels**: 400 segment-0,
+400 segment-1, 348 segment-2, in three contiguous stripes in pitch order, with V's order reversed
+so its edges sit at 348 / 748 instead of U's 400 / 800 (`protodunehd-wires-larsoft-v1`; doc
+pdhd/01 sec 3).  Splitting the same points by the stripe their wire falls in:
+
+| plane | segment | n | sampled charge > 10 | **2-D measurement present** |
+|---|---|---|---|---|
+| U | 0 | 2864 | 0.984 | 0.984 |
+| U | **1** | 6417 | **0.018** | **0.986** |
+| U | 2 | 2236 | 0.953 | 0.953 |
+| V | 0 | 2276 | 0.809 | 0.997 |
+| V | **1** | 8705 | **0.123** | **0.979** |
+| V | 2 | 536 | 0.965 | 0.965 |
+| W (never wraps) | -- | 11 517 | 0.993 | 0.993 |
+
+On segment-0 and segment-2 wires the sampled charge tracks the measurement to three decimals.  On
+**segment-1** wires the measurement is there on ~98 % of points and the sampler attached nothing.
+The rule
+
+> sampled charge is non-zero **<=>** the point's wire is not a segment-1 continuation
+
+holds on **97.4 %** (22 440 / 23 034) of U/V point-planes.  Panel B of
+`figs/d04_cluster128_wrapped.png` is this statement drawn: the U and V wire-index tracks fade to
+transparent exactly inside the shaded stripe.
+
+This is also what produced sec 7's z-bands.  In a0f0 **every** U point of this track is
+segment-1 (5783/5783), so U is dead there; V is segment-0 up to z ~ 60 and segment-1 after, so V
+dies at z ~ 60 and both are gone -- the 130 cm run; in a2f0 U becomes segment-0 and comes back.
+The "swap" is the geometry of the stripes, not a plane behaving oddly.
+
+The mechanism is the one named in `feedback_channel_list_is_not_a_wire_lookup`:
+`Gen::AnodePlane::configure` builds each plane's `IChannel::vector` by walking the plane's wires
+and **skipping every `segment() > 0` wire**, so a continuation's channel is simply not in
+`IWirePlane::channels()`.  `BlobSampler`'s legacy lookup then does
+`p_chi2i[channel_ident]` -- `operator[]` **inserts 0** on the miss and reads `channels[0]`'s
+activity, which in almost every slice is nothing.  `charge_val` **and** `charge_unc` are left at 0
+(`BlobSampler.cxx:412-431`), and `is_point_good` reads a zero plane as "no signal".
+
+### 8.5 Mechanism (2), APA0, is excluded at the point level
+
+Splitting by volume as well:
+
+| volume | plane | segment | n | sampled > 10 | 2-D present |
+|---|---|---|---|---|---|
+| **a0f0** | U | 1 | 5783 | 0.020 | 0.986 |
+| **a0f0** | V | 0 | 1775 | 0.999 | 0.999 |
+| **a0f0** | V | 1 | 3459 | 0.025 | 0.989 |
+| **a0f0** | V | 2 | 549 | 0.989 | 0.989 |
+| **a2f0** | U | 0 | 2864 | 0.984 | 0.984 |
+| **a2f0** | U | 1 | 634 | 0.000 | 0.987 |
+| **a2f0** | V | 1 | 2606 | 0.014 | 0.966 |
+| **a2f0** | V | 2 | 892 | 0.946 | 0.946 |
+| **a3f1** | U | 2 | 2236 | 0.953 | 0.953 |
+| **a3f1** | V | 1 | 2236 | 0.065 | 0.989 |
+
+APA2 and APA3 -- both on the standard `dune-garfield-1d565` field response -- fail on segment-1
+exactly as APA0 does (0.000 and 0.065 against 0.020), and succeed on segment-0/2 exactly as APA0
+does.  **APA0's anomalous plane is not involved.**  This is the point-level version of sec 7.5's
+population argument and it is stronger: it is the *same* failure, keyed on the *same* variable, in
+the volumes that have nothing special about them.
+
+### 8.6 The cause in config: the clustering job's knob is still parked
+
+`wrapped_channel_charge` is the existing fix for precisely this lookup, and it is set in **two
+different jobs**:
+
+| job | file | value | what its samplers feed |
+|---|---|---|---|
+| PR (`run_pr_evt.sh`) | `cfg/pgrapher/experiment/pdhd/pr.jsonnet:59` | **true** since 2026-09-05 | only `ImproveCluster_2`'s retiler; that cloud is never persisted |
+| clustering (`run_clus_evt.sh`) | `pdhd/wct-clustering.jsonnet:76` | **false** -- "Still parked" | the **persisted pctree**, i.e. `ucharge_val` / `vcharge_val` |
+
+`Cluster::charge_value` reads `points_property<double>("ucharge_val")` -- the persisted arrays.
+So the cloud `is_point_good` judges is the one written with the **broken** lookup, and the PR
+job's fix never touches it.  Config-level proof for the arm that produced this pctree: the key is
+absent from its compiled clustering config (the key-suppression idiom), i.e. C++ default `false`.
+
+This is also the correction to sec 7.5 (marked there): sec 7.2/7.5 measured the **unfixed** cloud,
+not a residual after a fix.
+
+### 8.7 The causal control: re-cluster with the lookup fixed
+
+Not an argument -- a run.  The same imaging inputs, re-clustered with the one knob flipped, then
+the same PR chain on the new pctree:
+
+```
+PDHD_CLUS_TLA="-S wrapped_channel_charge=true" ./run_clus_evt.sh -s d05wc -save-pctree 029107 12
+```
+
+Compiled-config proof: `"wrapped_channel_charge" : true` appears 8 times (4 anodes x 2 faces) in
+`work/029107_12_d05wc/.wct-clus.json`.  Clustering wall 75 s.
+
+**Cluster 128** -- the same object (same ident, same **11 517** points, (y, z) 5 cm-grid Jaccard
+1.000 against the production arm):
+
+| | knob OFF (production) | knob ON |
+|---|---|---|
+| points excluded by `is_point_good` | **3542 (30.8 %)** | **14 (0.1 %)** |
+| sampled U > 10 | 0.440 | **0.979** |
+| sampled V > 10 | 0.298 | **0.982** |
+| sampled W > 10 | 0.993 | 0.993 |
+| points with 3 planes | 453 (3.9 %) | **11 001 (95.5 %)** |
+| `path_components` | **5** (6093 / 1773 / 50 / 50 / 9) | **4** (**11 480** / 10 / 9 / 4) |
+| **verdict** | **`TGM=false`** (12 pairs rejected, 5 of them "no 30.0 cm-step charge path") | **`TGM=true`** |
+| then | falls through to `TaggerCheckSTM` | `TaggerCheckSTM: cluster 128 already TGM; skipping` |
+
+The through-going muon is tagged TGM, and is correctly never offered to the STM tagger.
+
+Event-wide on 029107/12 (`figs/d04_wrapped_exclusion_census.tsv`):
+
+| | knob OFF | knob ON |
+|---|---|---|
+| clusters evaluated / points | 90 / 160 977 | 92 / 161 854 |
+| excluded by `is_point_good` | **29.45 %** | **0.08 %** |
+| points with 3 planes | 24.75 % | **94.96 %** |
+| sampled U / V / W > 10 | 0.535 / 0.426 / 0.989 | 0.977 / 0.983 / 0.989 |
+| **2-D charge present in all three planes** | **0.9949** | **0.9949** |
+| clusters tagged `TGM=true` | 18 | **23** |
+
+The last row of the middle block is the whole finding in one line: **the 2-D measurement is
+identical in the two arms -- 99.49 % of all points have charge in all three views either way.  Only
+the attribution changed.**
+
+### 8.8 What this changes about the fix (supersedes sec 7.6)
+
+1. **`wrapped_channel_charge = true` in the PDHD *clustering* job** (`pdhd/wct-clustering.jsonnet:76`).
+   This is the cause, the knob already exists, its C++ default is `false`, and the PR job has run
+   with it true since 2026-09-05.  **Cost, stated plainly:** it rewrites the persisted pctree, so
+   it is a behaviour change for clustering **and** Q/L matching, not a PR-only change; it cannot
+   be made byte-identical-when-on and it is not a one-event decision.  What it needs before it can
+   ship: an A/B on the standard manifest, a Q/L revalidation, and a look at the STM/TGM population
+   (18 -> 23 TGM on one event is a large move).  **Owner's call -- nothing was changed here.**
+2. `path_components` ignoring `excluded_points` (sec 7.6's former first choice).  Still defensible
+   as robustness, but it now reads as papering over a charge-attribution bug, and it leaves the
+   same bug deleting ~29 % of every cluster's points from the Steiner graph build -- a far larger
+   blast radius than the TGM guard.
+3. / 4. `tgm_chord_mode='chord'` and `tgm_chord_charge=false` (sec 6): now clearly the wrong layer.
+
+**Scope and caveats.**  One event, one cluster, one detector.  The knob-on arm is *not*
+byte-identical and has had no validation beyond the two runs above.  The cluster count moved 90 ->
+92, so cluster identity across arms is not guaranteed in general -- here it was checked on the
+(y, z) footprint, not assumed from the ident.  The 0.9949 "2-D charge in all three planes" figure
+is the fraction of *walked* points in clusters the TGM tagger evaluated, not of all points in the
+event.
+
+**Recommended next step**, if the owner wants this closed: run the standard 6-event manifest with
+`PDHD_CLUS_TLA="-S wrapped_channel_charge=true"` end to end (clustering + Q/L + PR), gate the
+Q/L output the way doc pdhd/01 gated its PR flip, and re-run `d04_stm_tagger_census.py` -- the STM
+population of sec 2-4 is measured on the same broken cloud and every number in it is provisional
+until that is done.
+
+## 9. Not done / next
+
+0. **The lead, after sec 8:** every population number in secs 2-4 is measured on a point cloud
+   whose induction charge is missing on ~30 % of points.  The 6-event manifest re-run with
+   `PDHD_CLUS_TLA="-S wrapped_channel_charge=true"` (clustering + Q/L + PR), gated the way doc
+   pdhd/01 gated its flip, is the single next step that would move everything else here.
 1. The Bee set is the scan sheet; no hand scan has been made from it.  Nothing here is a
    recommendation to change a threshold.
 2. The status-2/status-4 excess (sec 3) is the lead.  It needs one hand pass over the `stm` +
