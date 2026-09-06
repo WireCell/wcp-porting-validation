@@ -1,0 +1,78 @@
+# doc pdhd/03 -- gate record for CheckSTM_Michel on PDHD + the algorithm changes it forced (2026-09-05, one night).
+#
+# toolkit HEAD before the change: de1e846a (doc pdvd/48 shipped); wcp-porting-img HEAD b835281c.  Toolkit commit of this round: 5d0b4e77.
+# pins (libWireCell*.so + *.pcm copied from local/lib) under /home/xqian/tmp/d47_libpin/:
+#   ref   libWireCellClus.so e3304cb9b362cd680ee3182452751a96  libWireCellRoot.so 1f46de9fa5be3023743a847a25c6e1ca  (pre-doc-48 production binary)
+#   new5  libWireCellClus.so 1af4cbbf699252ab13d0739a74fabc40  libWireCellRoot.so 4a9efb7f52d22d93f2d9fcc9df394222  (doc 48 as shipped; arms d03nu1, d03nu2)
+#   new6  libWireCellClus.so 3482ded841e0b14f2d871570d9d50b55  (live profile, profile_sparse bit, farthest-vertex fallback, electron knob; arms d03nu3, d03nu4)
+#   new7  libWireCellClus.so b4bd5acaa28b00ecdb192b0f5f68274e  (+ continuation ignores the shower flag; arm d03nu5)
+#   new8  libWireCellClus.so c557f0ff8c0cb5bfccc4d643e5a26b0e  (+ pid_mode, plateau window, stop_extend_max, dead_volume_check, min_chain_coverage; arms d03nu6, PDVD d48nu4)
+#   new9  libWireCellClus.so ea8d5540667a2b23496d78ce80a6a581  (+ michel_guards_stop; arms d03nu7, PDVD d48nu5)
+#   new10 libWireCellClus.so 425577d6336209d698bac4b1b7bead63  (+ michel_shower_min_kink_deg, Bragg-stub absorption, stop_fv_use_config_tolerance; arms d03nu8, PDVD d48nu6)
+#   new11 libWireCellClus.so a4ff5439991ee343f8e0c0dcda13128f  libWireCellRoot.so 4a9efb7f52d22d93f2d9fcc9df394222
+#         (stub absorption behind absorb_bragg_stub, default off; THE SHIPPED BINARY; arms d03nu9, PDVD d48nu7)
+#   Every libWireCell*.so other than Clus is md5-identical across new5..new11 (checked pairwise at each pin).
+# freshness (new11): local/lib/libWireCellClus.so 2026-09-05 22:22:39 > last source edit clus/src/CheckSTM_Michel.cxx 22:22:13.
+#   wcbuild: build rc=0 / install rc=0 / test build rc=0 (/home/xqian/tmp/d03_build22-24.log).
+# doctests: ./build/clus/wcdoctest-clus -tc='*stm_michel*,*CheckSTM_Michel*': 9 cases, 325 assertions, SUCCESS on new11
+#   (new cases: farthest vertex + predicate; live profile; shower-flagged continuation + Bragg stub; defaults of every new knob);
+#   full ./build/clus/wcdoctest-clus: 322 cases, 23036 assertions, SUCCESS (new9; /home/xqian/tmp/d03_cfg/wcdoctest_clus_full.log).
+#
+# CODE CHANGE (toolkit), all in code only the check_stm_michel stage instantiates:
+#   clus/inc/WireCellClus/StmMichelFunctions.h, clus/src/StmMichelFunctions.cxx
+#       stm_michel_farthest_vertex, stm_michel_profile_live, bits R_PROFILE_SPARSE 512 / R_PLATEAU_OFF_MIP 1024 /
+#       R_STOP_INTO_DEAD 2048 / R_CLUSTER_NOT_TRACK 4096; continuation test no longer consults the shower flag
+#   clus/src/CheckSTM_Michel.cxx
+#       knobs (all default = doc pdvd/48): profile_min_dqdx_frac 0, pid_mode 0, plateau_mip_lo/hi 0/0, stop_extend_max 0,
+#       michel_guards_stop false, michel_shower_min_kink_deg -1, absorb_bragg_stub false, stop_fv_use_config_tolerance false, dead_volume_check false,
+#       min_chain_coverage 0 (coverage_radius_cm 3);
+#       farthest-vertex fallback for an unmatched stop; new T_stm_michel columns n_live_pts n_dead_pts n_cmp_live
+#       dead_frac_cmp n_ext ext_len dead_ahead n_cluster_pts chain_coverage
+#   clus/test/doctest_stm_michel.cxx, clus/test/doctest_check_stm_michel_defaults.cxx
+#   cfg/pgrapher/experiment/pdhd/pr.jsonnet   stm_michel_knobs pr() param, cm_by_name.check_stm_michel, tagger_uses,
+#       pr_visitor / pr_tail_on for the PR Bee layers (counterpart of the doc-48 PDVD change)
+#   No protodunevd/, sbnd/, uboone/ config touched.
+# CODE CHANGE (wcp-porting-img): pdhd/wct-pr-perevt.jsonnet (stm_michel_knobs TLA with the PDHD operating point as
+#   default; excl_t0_frame TLA = true), pdhd/run_pr_evt.sh (PIPE_NU = the new chain; PIPE_NU_LEGACY / -nu-legacy),
+#   pdhd/docs/03_check-stm-michel-pdhd.md, pdhd/docs/scripts/{run_d03_arms.sh,d03_stm_michel_census.py,
+#   d03_render_candidates.py,d03_trackfit_vs_stmfit.py}, pdhd/docs/figs/d03_*.tsv, this record;
+#   pdvd/docs/nf_sp_img_clus/scripts/d48_stm_michel_census.py (new bit names) + doc 48 addendum.
+#
+# COMPILED-CONFIG PROOFS (PDHD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh -s d03cfg ..., event 029107/0; /home/xqian/tmp/d03_cfg/):
+#   T0  production -stm -stm-fit, -stm, -empty: pre-change vs final compiled JSON cmp IDENTICAL after normalising the
+#       work-dir path alias (/home/xqian/work/scratch_wcgpu1 == /home/xqian; the base was compiled through the alias);
+#       T0_stm_base md5 a1f231fc2b2509e13b14bcf0707974c6 (alias form).
+#   T1  final -nu -stm-fit: CheckSTM_Michel:pr x5, 0 TaggerCheckNeutrino:pr; the node carries 56 keys incl. mip_dqdx 56000,
+#       mip_dqdx_median 48000, fiducial BoxFiducial:pdhd_pr_fv, fv_tolerance [-20,-20,-175,-175,-180,-180] mm,
+#       fit_blob_coverage 0, excl_t0_frame true, profile_min_dqdx_frac 0.15, pid_mode 2, plateau_mip_lo/hi 0.6/1.6,
+#       stop_extend_max 3, michel_guards_stop true, dead_volume_check true (min_chain_coverage absent).
+#   T2  -nu-legacy -stm-fit vs the pre-doc-03 -nu -stm-fit: IDENTICAL before the excl_t0_frame TLA (md5 d91531b0);
+#       afterwards identical only with -S excl_t0_frame=false (the knob also reaches tagger_check_neutrino; gate D).
+#
+# GATE ARMS (launchers /home/xqian/tmp/d03_arms/launch_gates{1,2,3,4}.sh, rc{1,2,3,4}.txt: every job rc=0;
+#   comparer compare.py: zip/tar members by content hash, calib JSON timers stripped, tsv bytes, ROOT trees via
+#   qlport/scripts/hash_root_trees.py --per-tree; a MISSING side FAILS the pair).
+#   References: PDVD d48stmref2 / d48legref2 (doc 48 round 2, ref pin; 039252/2 + 039349/23), PDHD d48ref2 (old -nu, ref pin,
+#   029107/0), PDHD d03stmref (-stm -stm-fit, ref pin, 029107/0 and /6, run fresh in round 1), SBND work-stmcamp-d48gateold2.
+#   GATE A  PDVD production -stm -stm-fit: mabc-pr.zip (21 members) + tracking-stm.root (T_rec_charge T_stm_pass T_stm_eval), 2 events
+#   GATE B  PDVD -nu-legacy -stm-fit: zip (25), calib-pr JSON, tracking-pr.root (T_kine T_tagger T_rec_charge), tracking-stm.root, 2 events
+#   GATE C  PDHD production -stm -stm-fit: zip (9) + tracking-stm.root, events 0 and 6
+#   GATE D  PDHD -nu-legacy -stm-fit with -S excl_t0_frame=false: zip (13) + tracking-pr.root + tracking-stm.root, event 0
+#           (round 1 first ran it WITHOUT the -S: DIFF on the PR layers / tracking-pr.root, SAME tracking-stm.root -- the
+#            config change of sec 4, not the binary; T2 above is the compiled-config form)
+#   GATE E  SBND bare production (run_d42_stmfit.sh, D42_NO_STMFIT=1): mabc-pr.zip (3), pctree-pr tar (425/427/425), nusel tsv x 3 events
+#   round 1 (new6): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3 (with -S)  E PASS 9/9
+#   round 2 (new7): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3           E PASS 9/9
+#   round 3 (new8): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3           E PASS 9/9
+#   round 4 (new9): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3           E PASS 9/9   (22:03)
+#   round 5 (new10): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3           E PASS 9/9   (22:14)
+#   round 6 (new11): A PASS 4/4  B PASS 8/8  C PASS 4/4  D PASS 3/3           E PASS 9/9   (22:25, the shipped binary)
+#
+# PDHD 30-EVENT ARMS (docs/scripts/run_d03_arms.sh, run 029107 events 0-29 from work/029107_<evt>_stm0, all 30/30 rc=0):
+#   d03nu1 new5 driver-as-of-doc-48            d03nu2 new5 + excl_t0_frame          d03nu3 new6 knobs default
+#   d03nu4 new6 frac 0.15 + electron off       d03nu5 new7 same                     d03nu6 new8 full bag (coverage 0.6)
+#   d03nu7 new9 the driver's bag as of new9        d03nu8 new10 the bag incl. stub absorption (is_stm 7; cluster 113 lost to it)
+#   d03nu9 new11 the driver's DEFAULT bag -- THE CENSUS ARM (doc sec 7)
+# PDVD 120-EVENT ARMS (run_d45_arms.sh MODE=nu, stm/events.txt): d48nu4 new8 C++ defaults (is_stm 99 == d48nu3, 28 bit
+#   relabels, 0 is_stm flips); d48nu5 new9 with the PDHD bag (is_stm 147); d48nu6 new10 (150); d48nu7 new11 with the final
+#   PDHD bag (doc sec 7).

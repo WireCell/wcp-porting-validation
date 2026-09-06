@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""doc pdvd/48 -- census of the CheckSTM_Michel verdicts over one PR arm.
+"""doc pdhd/03 -- census of the CheckSTM_Michel verdicts over one PR arm.
 
 Reads T_stm_michel from every work/<RUN6>_<idx>_<tag>/tracking-pr.root of the
 manifest (default stm/events.txt) and reports: candidates, the reject-bit
@@ -9,7 +9,7 @@ census and energy quantiles, the dots census, the continuation fraction, and
 the wall time per event from the run logs.  Report only -- nothing here tunes
 a threshold.
 
-Usage: d48_stm_michel_census.py <tag> [events.txt] [--tsv out.tsv]
+Usage: d03_stm_michel_census.py <tag> [events.txt] [--tsv out.tsv]
 """
 import sys, os, glob, re, statistics
 try:
@@ -17,16 +17,22 @@ try:
 except ImportError:
     sys.exit("needs uproot")
 
-PDVD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-W = os.path.join(PDVD, 'work')
+# pdhd/docs/scripts/<this> -> pdhd/ (fork BY DUPLICATION of pdvd/docs/nf_sp_img_clus/scripts/d48_stm_michel_census.py)
+PDHD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+W = os.path.join(PDHD, 'work')
 argv = sys.argv[1:]
 tsv_out = None
 if '--tsv' in argv:
     i = argv.index('--tsv'); tsv_out = argv[i + 1]; del argv[i:i + 2]
 args = [a for a in argv if not a.startswith('--')]
 tag = args[0]
-ev_file = args[1] if len(args) > 1 else os.path.join(PDVD, 'stm', 'events.txt')
-events = ['%06d_%s' % (int(l.split()[0]), l.split()[1]) for l in open(ev_file) if l.strip() and not l.startswith('#')]
+ev_file = args[1] if len(args) > 1 else os.path.join(PDHD, 'stm', 'events.txt')
+if os.path.isfile(ev_file):
+    events = ['%06d_%s' % (int(l.split()[0]), l.split()[1]) for l in open(ev_file) if l.strip() and not l.startswith('#')]
+else:
+    # PDHD default manifest: every work/029107_<idx>_<tag> dir of the arm
+    events = sorted({os.path.basename(d)[:-len(tag) - 1] for d in glob.glob(os.path.join(W, '*_' + tag))},
+                    key=lambda e: (e.split('_')[0], int(e.split('_')[1])))
 
 BITS = [(1, 'no_chain'), (2, 'stop_unmatched'), (4, 'no_bragg'), (8, 'shape_flat'), (16, 'not_muon_pid'),
         (32, 'continuation'), (64, 'stop_near_boundary'), (128, 'vertex_hadron'), (256, 'short'),
@@ -82,6 +88,10 @@ have_chain = [r for r in rows if r['n_chain_segs'] > 0]
 print('chain: %d with a muon chain; segments per chain p10/25/50/75/90 = %s; muon length cm = %s' % (
     len(have_chain), q([r['n_chain_segs'] for r in have_chain]), q([r['muon_len'] for r in have_chain])))
 print('stop vertex vs tagger stop (cm) = %s' % q([r['stop_dis'] for r in have_chain]))
+if 'n_dead_pts' in rows[0]:
+    dead = [r['n_dead_pts'] / max(1, r['n_profile_pts']) for r in have_chain]
+    print('dead profile points (dQ/dx < profile_min_dqdx_frac x mip): fraction per chain p10/25/50/75/90 = %s; chains with dead_frac_cmp > 0.3 within the compare range: %d / %d' % (
+        q(dead), sum(1 for r in have_chain if r['dead_frac_cmp'] > 0.3), len(have_chain)))
 bv = [r for r in have_chain if r['bragg_valid']]
 print('bragg: %d valid; contrast p10/25/50/75/90 = %s; expected = %s; contrast/expected = %s' % (
     len(bv), q([r['contrast'] for r in bv]), q([r['contrast_expected'] for r in bv]),
@@ -91,6 +101,12 @@ print('  contrast >= 2.0: %d / %d (doc 25 sec 13.6 measured 51/538 on the tagger
 print('KS: ks_mu < ks_flat on %d / %d chains' % (sum(1 for r in have_chain if r['ks_mu'] < r['ks_flat']), len(have_chain)))
 print('template PID forward gate=1 and muon best: %d / %d' % (
     sum(1 for r in have_chain if r['comp_fwd0'] > 0.5 and r['comp_fwd1'] < r['comp_fwd2'] and r['comp_fwd1'] < r['comp_fwd3']), len(have_chain)))
+if 'n_ext' in rows[0]:
+    ne = [r for r in have_chain if r['n_ext'] > 0]
+    print('chain extended past the tagger stop (stop_extend_max): %d / %d chains; extensions per chain p10/25/50/75/90 = %s; total extension cm = %s; stop moved by (cm) = %s' % (
+        len(ne), len(have_chain), q([r['n_ext'] for r in ne]), q([r['ext_len'] for r in ne]), q([r['stop_dis'] for r in ne])))
+    print('dead region ahead of the visible end (dead_volume_check): %d flagged, %d clear, %d not evaluated' % (
+        sum(1 for r in rows if r['dead_ahead'] == 1), sum(1 for r in rows if r['dead_ahead'] == 0), sum(1 for r in rows if r['dead_ahead'] < 0)))
 nc = sum(1 for r in have_chain if r['reject_bits'] & 32)
 print('continuation past the stop: %d / %d = %.1f %% (doc 42 sec 4.4: 26 %% leftover)' % (nc, len(have_chain), 100.0 * nc / max(1, len(have_chain))))
 na = sum(1 for r in have_chain if r['n_stop_arms'] > 0)

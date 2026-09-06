@@ -192,6 +192,28 @@ function(
     pipeline_names = ['switch_scope', 'flag_mains', 'steiner', 'fiducialutils',
                       'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc',
                       'protect_bundle', 'steiner_refresh'],
+    // doc pdhd/03 (counterpart of doc pdvd/48): verdict thresholds /
+    // PR-partition overrides for check_stm_michel, as an object
+    // (-S 'stm_michel_knobs={...}' replaces the whole bag).  The DEFAULT is the
+    // PDHD operating point of doc pdhd/03 sec 6, chosen on the 30-event run
+    // 029107 arms (d03nu1..6) -- every entry differs from the C++ default,
+    // which reproduces doc pdvd/48; pass {} to get that.  Inert unless
+    // 'check_stm_michel' is in pipeline_names (runner: -nu), so the
+    // production (-stm) compiled config does not carry it.
+    stm_michel_knobs = {
+        profile_min_dqdx_frac: 0.15,   // drop fit points below 0.15 MIP from the verdict metrics (dead cells; sec 5)
+        pid_mode: 2,                   // template PID = proton veto only (sec 6.1)
+        plateau_mip_lo: 0.6,           // plateau_med / mip_dqdx window (sec 6.2)
+        plateau_mip_hi: 1.6,
+        stop_extend_max: 3,            // follow a collinear MIP continuation past the tagger's stop (sec 6.3) ...
+        michel_guards_stop: true,      // ... unless a Michel arm or the Bragg rise says the muon stopped here (sec 6.3)
+        michel_shower_min_kink_deg: 15, // a shower-flagged stop arm must still turn 15 deg (sec 6.8; the muon's own Bragg stub is not a Michel)
+        // absorb_bragg_stub is NOT set: absorbing 029107/1 cluster 113's 5.5 cm stub turned a clean STM into no_bragg (sec 6.8)
+        stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins, not a flat 5 cm (sec 6.9)
+        dead_volume_check: true,       // stop that walks into a dead region (sec 6.4; fired 0/165 on 029107, kept for the record)
+        // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
+        // one EM blob (sec 6.5), so the guard does not separate; chain_coverage is persisted for scans.
+    },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for
     // SBND.  DEFAULT = the canonical in-tree file; TaggerCheckSTM resolves it
@@ -2993,6 +3015,21 @@ function(
     // C++ default false => key omitted => byte-identical.  Validation:
     // --tla-code dqdx_fit_keep_all_points=true (or SBND_DQDX_FIT_KEEP_ALL_POINTS).
     dqdx_fit_keep_all_points = false,
+    // doc pdvd/45 sec 3 (mechanism) / doc pdhd/03 (PDHD adoption): TrackFitting's
+    // update_association rebuilds each 2-D cell's 3-D point with the geometric
+    // (time - offset_t)/slope_t -- the RAW drift frame -- while the per-segment
+    // "fit"/"main" clouds it queries are t0-CORRECTED, so every distance is off by
+    // v_drift * cluster_t0 (metres on a PDHD cosmic): the segment whose cloud
+    // reaches farthest in x wins every cell and the others lose all charge.
+    // Measured on PDHD 029107 d03nu1 (doc pdhd/03 sec 4): the PR fit kept 0.1-0.6
+    // of the STM tagger's fit points on the same clusters (PDVD after the fix:
+    // ~1.1).  true => the cell is shifted by dirx * cluster_t0 * v_drift before
+    // the cloud query (the prototype's own-point offset_t, restored).  C++ default
+    // false => key omitted => the pre-doc-03 tail.  Consumed by tagger_check_neutrino
+    // and check_stm_michel only (via tcn_knobs), NEITHER in the production
+    // pipeline => the -stm compiled config is byte-identical.  PDHD -nu ON since
+    // doc pdhd/03; -S excl_t0_frame=false restores the old tournament.
+    excl_t0_frame = true,
     // doc pdvd/30 round 2 (039252/2 evt 298595, cluster 86): organize_segments_path_3rd
     // reads its input path from segment->fits() whenever that is merely non-empty, so a
     // segment whose fits() has collapsed to its two endpoint vertices (measured here:
@@ -3746,6 +3783,7 @@ function(
         [if dual_chain_allow_cluster_swap != null then 'dual_chain_allow_cluster_swap']: dual_chain_allow_cluster_swap,
         [if dual_chain_vtx_weight != null then 'dual_chain_vtx_weight']: dual_chain_vtx_weight,
         [if dqdx_fit_keep_all_points then 'dqdx_fit_keep_all_points']: true,
+        [if excl_t0_frame then 'excl_t0_frame']: true,   // doc pdhd/03
         [if main_vertex_swap_apply then 'main_vertex_swap_apply']: true,
         [if rough_path_probe then 'rough_path_probe']: true,
         [if steiner_gap_penalty != null then 'steiner_gap_penalty']: steiner_gap_penalty,
@@ -3799,6 +3837,7 @@ function(
                              flag_mains_min_length=flag_mains_min_cm * wc.cm,
                              mip_dqdx_median=mip_dqdx_median,
                              pipeline_names=pipeline_names,
+                             stm_michel_knobs=stm_michel_knobs,   // doc pdhd/03
                              tensor_outname=save_tensors,
                              save_in_scope=save_in_scope,
                              pr_bee=pr_bee,

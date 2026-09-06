@@ -427,3 +427,18 @@ Not done in this round, for the owner to schedule:
    sim (doc 25 owner decision: data first).
 5. The legacy `-nu-legacy` tail and `tagger_output` can be retired from the
    PDVD driver once the owner is satisfied with §8 — a config-only follow-up.
+
+
+## 10. Addendum 2026-09-05 (doc pdhd/03): what PDHD taught the stage
+
+PDHD adopted this stage the same night (`pdhd/docs/03_check-stm-michel-pdhd.md`).  Its 30-event arms
+found five defects/weaknesses that are now knobs or verdict semantics in `CheckSTM_Michel`; every
+C++ default reproduces this doc's behaviour, and the PDVD `-nu` chain with defaults on the new
+binary (`d48nu4`, pin new8) gives the SAME 99 `is_stm` of 574 as sec 8 (28 candidates change reject
+*reasons*: 21 `no_bragg` -> `profile_sparse`, 6 collinear shower-flagged "Michels" -> `continuation`,
+1 unmatched-stop chain re-walked).  New: `profile_min_dqdx_frac` (dead fit points out of the metrics),
+`pid_mode` (the electron test rejected textbook muons; recomputed from this doc's TSV, 151 of 574 pass
+everything but that test), `plateau_mip_lo/hi`, `stop_extend_max` + `michel_guards_stop`,
+`dead_volume_check`, `min_chain_coverage`; bits 512-4096.  The PDVD arm with PDHD's operating point
+(`d48nu5`, pin new9) is reported in doc pdhd/03 sec 7 -- NOT adopted for PDVD here; that is the
+owner's call after a hand-scan.  The census script `d48_stm_michel_census.py` knows the new bit names.

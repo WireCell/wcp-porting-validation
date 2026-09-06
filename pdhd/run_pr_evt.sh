@@ -1,14 +1,19 @@
 #!/bin/bash
 # Run the PDHD pattern-recognition (PR) tail for one event.
-# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-nu|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-nu|-nu-legacy|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
 #
 # Forked BY DUPLICATION from pdvd/run_pr_evt.sh; the PDVD script is untouched.
-# See pdhd/docs/stm-tagger-chain.md.
+# See pdhd/docs/stm-tagger-chain.md and pdhd/docs/03_check-stm-michel-pdhd.md.
 #
-# DEFAULT MODE IS -stm: the chain stops after the cosmic taggers, which is the
-# scope of this round ("up to the STM tagger").  -nu appends the neutrino PR
-# tail (tagger_check_neutrino, tracking_visitor, tagger_output); NOTHING in that
-# tail has been graded on PDHD -- it is provided so the next round can start.
+# DEFAULT MODE IS -stm: the chain stops after the cosmic taggers (PDHD
+# production).  -nu appends the PR tail, which since doc pdhd/03 (owner
+# 2026-09-05, counterpart of doc pdvd/48) is the STM + MICHEL stage
+# (check_stm_michel): every STM-tagged main is re-fitted from its ENTRY point,
+# walked to the Bragg stop, searched for a Michel e- (+ nearby dots), the
+# particle flow is rooted at the entry, and a reject verdict is persisted
+# (T_stm_michel in tracking-pr.root; 'CheckSTM_Michel: cluster' in the log).
+# -nu-legacy runs the pre-doc-03 neutrino PR tail (tagger_check_neutrino +
+# tagger_output), which was never graded on PDHD.
 #
 # Input : work/<RUN6>_<EVT>[_<TAG>]/pctree-evt<ID>.tar.gz + pctree-evt<ID>.tlas
 #         (both written by run_clus_evt.sh -save-pctree; the .tlas sidecar carries
@@ -17,7 +22,10 @@
 # Output: work/<RUN6>_<EVT>[_<TAG>]/mabc-pr.zip            Bee: clustering + dead + stm_fit
 #                                                          + stm/steiner_graph/steiner_terminals
 #                                                          + stm_tagged (the STM verdict)
-#         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump -- ONLY with -nu.
+#                                                          + track_fit/shower_track/vertices/mc with -nu / -nu-legacy
+#         work/<RUN6>_<EVT>[_<TAG>]/tracking-pr.root       PR fits (T_rec_charge) + T_stm_michel/T_stm_michel_pts (-nu);
+#                                                          + T_tagger/T_kine with -nu-legacy
+#         work/<RUN6>_<EVT>[_<TAG>]/calib-pr-evt<ID>.json  PrDisplayDump -- ONLY with -nu / -nu-legacy.
 #           pr_display is in the -stm pipeline for PDVD parity but is INERT there:
 #           it warns "no TrackFitting in grouping 'live'" and writes no file,
 #           because the dump reads the fit TaggerCheckNeutrino builds.
@@ -29,9 +37,10 @@
 #   -stm     (default) switch_scope, flag_mains, steiner, fiducialutils,
 #            tagger_check_tgm, tagger_check_stm, tagger_check_fc, protect_bundle,
 #            steiner_refresh, pr_display
-#   -nu      the above plus tagger_check_neutrino, tracking_visitor, tagger_output
-#            (UNGRADED on PDHD; needs libpython only if dl_weights is set, which
-#            it is not by default here)
+#   -nu      the above plus check_stm_michel, tracking_visitor (doc pdhd/03)
+#   -nu-legacy  the above plus tagger_check_neutrino, tracking_visitor, tagger_output
+#            (the pre-doc-03 tail; UNGRADED on PDHD; needs libpython only if
+#            dl_weights is set, which it is not by default here)
 #   -empty   pipeline_names=[] : the round-trip identity gate
 #   -pipe    explicit comma-separated pipeline list
 #   -stm-fit append stm_magnify (tracking-stm.root); save_stm_fit is ON by default
@@ -79,6 +88,7 @@ while [ $# -gt 0 ]; do
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -stm) MODE=stm; shift ;;
         -nu) MODE=nu; shift ;;
+        -nu-legacy) MODE=nulegacy; shift ;;   # doc pdhd/03: the pre-replacement neutrino PR tail
         -empty) MODE=empty; shift ;;
         -pipe) PIPE_EXPLICIT="$2"; shift 2 ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -96,12 +106,16 @@ RUN=$1; EVT=$2; SUBRUN_ARG=${3:-}
 # no cm.isolated() merge (the defect doc pdvd/39 round 2 undoes on PDVD), so
 # there is no isolated grouping to split and the stage would be inert.
 PIPE_STM="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
-# UNGRADED on PDHD -- provided so the next round can start.  tagger_check_neutrino
-# is where the trajectory + dQ/dx fit, track/shower separation, PID and the
-# Michel finder live.
-PIPE_NU="$PIPE_STM,tagger_check_neutrino,tracking_visitor,tagger_output"
+# doc pdhd/03 (owner 2026-09-05): -nu runs the STM + Michel stage
+# (check_stm_michel) in place of the neutrino PR tail; tagger_output is dropped
+# with it (T_tagger/T_kine carried only neutrino BDT features).  pr_display is
+# already in PIPE_STM (inert there; live here).  The legacy neutrino tail is
+# preserved VERBATIM as PIPE_NU_LEGACY behind -nu-legacy for the A/B gates.
+PIPE_NU="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,check_stm_michel,tracking_visitor,pr_display"
+PIPE_NU_LEGACY="$PIPE_STM,tagger_check_neutrino,tracking_visitor,tagger_output"
 case "$MODE" in
     nu) PIPE="$PIPE_NU" ;;
+    nulegacy) PIPE="$PIPE_NU_LEGACY" ;;
     stm) PIPE="$PIPE_STM" ;;
     empty) PIPE="" ;;
 esac
