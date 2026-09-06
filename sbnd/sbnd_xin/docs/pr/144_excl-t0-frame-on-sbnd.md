@@ -755,10 +755,26 @@ adjudicated nine of them by eye.
 
 **Three things this table says that the raw 16/14 does not.**
 
-1. **Three of the fourteen are not physics failures at all.**  72786, 100222 and
-   66366 fail only on a `log_contains` clause keyed to a *segment id* or an exact
-   chain length.  Segment ids renumber whenever the fit changes; those clauses
-   were never discriminators and they are the first thing §13 must re-express.
+1. **Three of the fourteen fail only on a `log_contains` clause — but they are
+   not the same case, and the logs had to be read to tell them apart.**
+
+   | event | the clause | what the logs actually show |
+   |---|---|---|
+   | 72786 | `decline seg=9004` | the guard **still fires on the same objects**; OFF declines `{45038, 9004, 9006, 9008}`, ON declines `{45038, **9003**, 9006, 9008}`. Pure segment-id renumbering — the clause was never a discriminator. |
+   | 66366 | `nseg_chain=4 L_cm=300.6` | the chain is **still assembled**, from 3 segments instead of 4 and at 299.5 cm instead of 300.6. Outcome intact (`pf_node_ge mu- 650` passes at 689); the literal is stale. |
+   | 100222 | `decline seg=14003` | **no `pass4_prox_guard: decline` line at all on ON.** The guard stops firing on this event. Its two physics clauses still pass, so the outcome pr/130 shipped it for — the 110 cm muon leaving the EM shower — still holds, *by some other route*. |
+
+   Only 72786 is purely brittle.  100222 is the "zero fires is not dead code"
+   case: **pre-empted, not superseded**, and it must not be quietly re-baselined
+   as brittleness — its negative control (`SBND_SHOWER_PASS4_PROX_GUARD_LEN=0`)
+   is the thing that says whether the outcome still depends on the guard at all.
+
+   And 100222 is not an isolated coincidence: it is **one of the eight
+   candidates whose excluded pool empties** (§15.1, `n_excluded` 5 → 1,
+   359.0 → 135.0 MeV).  A guard that declines objects has nothing to decline
+   once the objects are no longer in the pool, which is a coherent account of
+   both the silence and the surviving outcome — and a reason to read this
+   sentinel together with item 5 rather than on its own.
 2. **The background-admission control holds.**  72786 is the pr/128 CONTROL
    sentinel — "the continuation terms keep the cosmics OUT" — and its outcome
    assertion passes on the ON arm.  Together with §4.4's zero background admitted
