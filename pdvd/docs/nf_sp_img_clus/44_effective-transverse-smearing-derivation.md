@@ -434,6 +434,16 @@ doc 42 §4.2). SBND: k 1.009 → 1.007, unchanged.
 
 ## 7. Verdict, recommendation, and what this hands on
 
+> **Follow-up, 2026-09-05 — doc 47 (`47_transverse-smearing-in-simulation.md`).** The same
+> estimator on simulated tracks reproduces the induction constant on SBND (1.35 vs 1.32 mm) and
+> on PDHD, and names the mechanism: the SP wire-filter kernel in quadrature with a residual of
+> the 2-D deconvolution that depends on the charge's sub-pitch position (≈ 0 at a wire-region
+> centre, 1.2–2.3 mm at the boundary, all planes, all detectors). It does **not** reproduce
+> PDVD's induction constant (1.29 vs 2.30 mm) nor the ProtoDUNE collection constants
+> (0.4–0.5 vs 1.2–1.5 mm): that part is a data effect outside the simulation. The low D_T,eff
+> of §2.2 reading (ii) is mostly an SP effect (the simulation returns 70 % of the configured
+> D_T on PDVD with no extra physics).
+
 **Against the pre-registered criteria (§Plan, fixed before the arms ran):**
 
 | criterion | result |

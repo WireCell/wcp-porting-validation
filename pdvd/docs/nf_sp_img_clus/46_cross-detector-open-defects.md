@@ -451,6 +451,8 @@ splitting (doc 39 §6); the `steiner_pc` Bee branch's hard-coded 4000 e shading
 and PDVD's `Wire_ind` filter width and stale Wiener-tight set (doc 12 §11.5,
 production SP constants).
 
+> **2026-09-05, doc 47:** PDVD's `Wire_ind` = 5.0 has no bearing on the fit's transverse constant — the filter is already off in wire space (kernel 0.21 mm) and the simulated constant (1.29 mm) is the deconvolution's impact-position residual; the data excess (2.30 mm) is not in the simulation.
+
 ---
 
 ## 5. Work order, ranked

@@ -1,0 +1,4 @@
+plane	rms_sr_pitch	rms_sr_mm	rms_boxcar	sig_diff_pitch	rms_boxcar_diff	excess_over_boxcar_diff_pitch	excess_mm	t_mean_us	n_prof
+U	1.42954	10.936	0.288675	0.176594	0.338406	1.38891	10.6252	1153.13	7856
+V	1.41403	10.8174	0.288675	0.177001	0.338619	1.37289	10.5026	1158.45	7856
+W	0.345648	1.7628	0.288675	0.263237	0.390675	0	0	1138.76	7855
