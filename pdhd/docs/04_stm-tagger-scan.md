@@ -7,6 +7,11 @@ with its Steiner graph, Steiner terminals, cluster image and fit trajectory, and
 tagger-level census that says where the candidates are lost, PDHD against PDVD.
 **No code or config is changed by this doc.**
 
+**Sec 10 (2026-09-06) is the 6-event end-to-end validation of the sec 9 flip**: on one binary with
+one variable, clustering and Q/L come back **unchanged except for the per-point charge itself** (the
+Q/L bundle set is identical on all six events), TGM goes 128 -> 154 strictly additively, and STM
+tags move 38 -> 37 with 4 of the 9 removals explained as TGM reclassification.
+
 **Sec 9 (2026-09-06, third owner question) EXECUTES the fix**: both wrapped-channel knobs now
 default ON in C++, PDHD's clustering job is flipped, and a fourth, previously unknobbed instance of
 the same defect (`ChargeStepped`) is fixed.  Sec 9.2 answers "is this the one we fixed yesterday?"
@@ -66,6 +71,12 @@ LD_LIBRARY_PATH=$PIN WCT_TGM_PATH_DUMP=-1  WCT_TGM_PATH_DUMP_DIR=<out/on> \
     ./run_pr_evt.sh -s d05wc -stm-fit 029107 12
 python3 docs/scripts/d04_cluster128_wrapped.py <out/off> <out/on> \
     docs/figs/d04_cluster128_wrapped.png
+
+# sec 10, the 6-event manifest END TO END (clustering + Q/L + PR), one binary, one variable
+ARM=d05mON  PIN=<pin>                                            ./docs/scripts/run_d04_manifest.sh
+ARM=d05mOFF PIN=<pin> CLUS_TLA="-S wrapped_channel_charge=false"  ./docs/scripts/run_d04_manifest.sh
+python3 docs/scripts/d04_manifest_census.py work/029107_{0,1,12,16,20,22}_d05mON
+#   -> docs/figs/d04_manifest_census.tsv
 ```
 
 > **Pin provenance (2026-09-06).**  The `$PIN` directory that produced sec 7's numbers was
@@ -1009,9 +1020,8 @@ explicit TLA did**, byte for byte.
 
 ### 9.7 What is still owed
 
-1. **The 6-event manifest, end to end** (clustering + Q/L + PR) on the new defaults, with a Q/L
-   revalidation.  One event has been run.  This is the gate that would let the flip be called
-   validated rather than merely correct.
+1. ~~**The 6-event manifest, end to end** (clustering + Q/L + PR) on the new defaults, with a Q/L
+   revalidation.~~  **DONE -- sec 10.**
 2. **Re-run `d04_stm_tagger_census.py`.**  Every population number in secs 2-4 -- including the
    PDHD-vs-PDVD STM comparison this whole doc started from -- is measured on the broken cloud and
    is provisional.
@@ -1022,12 +1032,109 @@ explicit TLA did**, byte for byte.
 5. **SBND and uBooNE config-diff gates will flag one new key each.**  Expected; not investigated
    further here.
 
-## 10. Not done / next
+## 10. Owner request 2026-09-06: the 6-event manifest, end to end, on the new defaults
 
-0. **The lead, after sec 8:** every population number in secs 2-4 is measured on a point cloud
-   whose induction charge is missing on ~30 % of points.  The 6-event manifest re-run with
-   `PDHD_CLUS_TLA="-S wrapped_channel_charge=true"` (clustering + Q/L + PR), gated the way doc
-   pdhd/01 gated its flip, is the single next step that would move everything else here.
+Run, not proposed.  This is sec 9.7's first owed item.
+
+### 10.1 Design
+
+The existing `stm0` / `d04bee` arms are from 2026-09-05 and several unrelated commits have landed
+since, so comparing the new defaults against them would confound the knob with everything else.
+Both arms were therefore re-run here on **one binary** (toolkit `ef995685`,
+`libWireCellClus md5 495ed07e9bc471a485fb1d9d8f40538b`), **clustering + Q/L + PR**, with exactly
+one variable:
+
+```
+ARM=d05mON  PIN=<pin>                                       ./docs/scripts/run_d04_manifest.sh
+ARM=d05mOFF PIN=<pin> CLUS_TLA="-S wrapped_channel_charge=false" ./docs/scripts/run_d04_manifest.sh
+python3 docs/scripts/d04_manifest_census.py work/029107_{0,1,12,16,20,22}_d05m{OFF,ON}
+```
+
+Manifest: 029107 events 0, 1, 12, 16, 20, 22.  Both arms `clus_rc=0 pr_rc=0`, 6/6 pctrees, 6/6
+`mabc-pr.zip`; all six clustered with Q/L on (`flags=q1`).  Wall: clustering 21-66 s, PR 23-56 s
+per event.  The PDHD clustering job builds **no** `ImproveCluster_2` and its `cm.retile` is
+commented out, so `wrapped_channel_activity` is inert there and the sampler knob really is the only
+moving part.  Full table: `figs/d04_manifest_census.tsv`.
+
+### 10.2 Clustering and Q/L: unchanged
+
+Every archive differs by member hash, which on its own says nothing useful.  Opened up:
+
+| product | what differs |
+|---|---|
+| `mabc-all-apa.zip` (clustering) | **only `q`**.  Point count, `x`, `y`, `z` and `cluster_id` are **identical**, all 6 events (evt 0: 109 221 points; evt 12: 161 854) |
+| `mabc-group02.zip`, `mabc-group13.zip` (Q/L) | **only `q`** -- swept over every array of every member of both zips on all 6 events, the *only* array that ever differs is `q` |
+
+And the Q/L matching itself, compared as the set of `(flash id, cluster ident, gidx)` bundles the
+`QLMatching:matching_joint` stage logs -- meaningful precisely because `cluster_id` is preserved:
+
+| event | 0 | 1 | 12 | 16 | 20 | 22 |
+|---|---|---|---|---|---|---|
+| bundle set identical? | **YES** | **YES** | **YES** | **YES** | **YES** | **YES** |
+
+620 bundles, 374 flashes, 512 matched clusters, median best-bundle strength 0.8115 -- the same in
+both arms.  **The Q/L revalidation sec 9.7 owed comes back clean: the fix changes the per-point
+charge and nothing else upstream of the PR chain.**
+
+### 10.3 The taggers: what moved
+
+| | OFF (pre-fix) | ON (new defaults) | delta |
+|---|---|---|---|
+| clusters (clustering Bee) | 608 | 608 | 0 |
+| Q/L bundles / flashes / matched clusters | 620 / 374 / 512 | 620 / 374 / 512 | 0 |
+| TGM evaluated | 574 | 574 | 0 |
+| **TGM = true** | **128** | **154** | **+26 (+20.3 %)** |
+| STM evaluated (not already TGM) | 446 | 420 | -26 |
+| STM fitted | 164 | 145 | -19 |
+| STM **tagged** | 38 | 37 | **-1** |
+| FC evaluated | 574 | 574 | 0 |
+| FC = true | 202 | 199 | -3 |
+
+Per event, TGM=true: 18->22, 29->35, 18->23, 21->25, 28->32, 14->17.  **Every event gains, none
+loses: the 26 new TGM tags are strictly additive, and not one cluster lost its TGM tag.**  That is
+the signature of a guard that was firing spuriously, which is what sec 8 said it was.
+
+The STM movement is the one to read carefully, and cluster idents are comparable across arms
+(sec 10.2 proves the clustering is the same objects):
+
+| | count | which |
+|---|---|---|
+| STM tags **lost** | 9 | evt1 32, 112, 113; evt12 103, 108; evt16 111; evt20 150; evt22 48, 119 |
+| ... of those, **now tagged TGM** | **4** | evt1 112; evt12 103; evt20 150; evt22 48 |
+| ... remainder, unexplained | **5** | evt1 32, 113; evt12 108; evt16 111; evt22 119 |
+| STM tags **gained** | 8 | evt0 63; evt12 21, 25; evt16 53, 129; evt20 105; evt22 27, 36 |
+
+A cluster that moves from STM to TGM is a **correction**, not a loss -- a through-going muon is not
+a stopping muon, and that reclassification is exactly what the fix is for.  Net STM is -1 (38 ->
+37) with 8 genuinely new tags.  **The 5 unexplained removals and the 8 gains have not been
+looked at**; that is a hand scan, not a number.
+
+### 10.4 Verdict and what is still owed
+
+The flip is **validated at the level this run can validate**: clustering and Q/L are unchanged
+except for the charge the fix repairs, the tagger movement is in the expected direction and is
+strictly additive on TGM, and no event regressed on any aggregate.  It is **not** validated as
+*physics* -- 6 events, no hand scan.
+
+Still owed, unchanged from sec 9.7 except where marked:
+
+1. ~~The 6-event manifest end to end plus a Q/L revalidation.~~  **DONE (this section).**
+2. The STM population of secs 2-4 was measured on the broken cloud.  The manifest numbers above
+   supersede it *for these six events only*; the 30-event PDHD arm and the PDHD-vs-PDVD comparison
+   of sec 3 have **not** been re-run.
+3. **A hand scan of the movers** is now the top item: the 26 new TGM tags, the 8 new STM tags and
+   the 5 unexplained STM removals.  A Bee set at the doc-04 scope over the `d05mON` arm is the
+   scan sheet; it has not been built.
+4. The `PrDisplayDump` / magnify-visitor channel-count cousin of sec 9.3: unfixed, display only.
+
+## 11. Not done / next
+
+0. **The lead, after secs 8-10:** every population number in secs 2-4 is measured on a point cloud
+   whose induction charge is missing on ~30 % of points.  The 6-event manifest has now been re-run
+   end to end (sec 10) and supersedes them *for those six events*; the 30-event PDHD arm and the
+   PDHD-vs-PDVD comparison of sec 3 have not.  The **hand scan of sec 10.3's movers** -- 26 new TGM
+   tags, 8 new STM tags, 5 unexplained STM removals -- is the next step that would turn a validated
+   flip into a physics statement.
 1. The Bee set is the scan sheet; no hand scan has been made from it.  Nothing here is a
    recommendation to change a threshold.
 2. The status-2/status-4 excess (sec 3) is the lead.  It needs one hand pass over the `stm` +

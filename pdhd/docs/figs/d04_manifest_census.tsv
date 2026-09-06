@@ -1,0 +1,20 @@
+# doc pdhd/04 sec 10 -- 6-event manifest, end to end (clustering + Q/L + PR), one binary (toolkit ef995685), one variable: the clustering job's wrapped_channel_charge
+# arm d05mOFF = -S wrapped_channel_charge=false ; arm d05mON = the 2026-09-06 defaults
+## ARM d05mOFF
+event	nclus	bundles	flashes	clus_matched	med_strength	tgm_eval	tgm_true	stm_eval	stm_skip	stm_fitted	stm_tagged	fc_eval	fc_true
+029107_0_d05mOFF	103	108	66	92	0.8008	98	18	80	18	27	2	98	37
+029107_1_d05mOFF	86	89	61	74	0.8221	82	29	53	29	25	7	82	21
+029107_12_d05mOFF	100	101	67	86	0.7551	92	18	74	18	29	8	92	35
+029107_16_d05mOFF	108	107	62	85	0.8283	102	21	81	21	32	7	102	34
+029107_20_d05mOFF	116	116	62	101	0.8221	108	28	80	28	29	9	108	39
+029107_22_d05mOFF	95	99	56	74	0.7652	92	14	78	14	22	5	92	36
+TOTAL	608	620	374	512	0.8115	574	128	446	128	164	38	574	202
+## ARM d05mON
+event	nclus	bundles	flashes	clus_matched	med_strength	tgm_eval	tgm_true	stm_eval	stm_skip	stm_fitted	stm_tagged	fc_eval	fc_true
+029107_0_d05mON	103	108	66	92	0.8008	98	22	76	22	25	3	98	36
+029107_1_d05mON	86	89	61	74	0.8221	82	35	47	35	20	4	82	20
+029107_12_d05mON	100	101	67	86	0.7551	92	23	69	23	24	8	92	35
+029107_16_d05mON	108	107	62	85	0.8283	102	25	77	25	29	8	102	34
+029107_20_d05mON	116	116	62	101	0.8221	108	32	76	32	27	9	108	38
+029107_22_d05mON	95	99	56	74	0.7652	92	17	75	17	20	5	92	36
+TOTAL	608	620	374	512	0.8115	574	154	420	154	145	37	574	199
