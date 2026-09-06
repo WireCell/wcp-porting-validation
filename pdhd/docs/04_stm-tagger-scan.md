@@ -60,6 +60,12 @@ python3 docs/scripts/d04_cluster128_wrapped.py <out/off> <out/on> \
     docs/figs/d04_cluster128_wrapped.png
 ```
 
+> **Pin provenance (2026-09-06).**  The `$PIN` directory that produced sec 7's numbers was
+> **overwritten in-session** while assembling the sec 8 probe build (a `cp` followed a symlink).
+> No gate depends on re-running it -- the recorded member hashes stand -- but a reader
+> re-deriving sec 7 must rebuild that pin from toolkit `d44405ca` (sec 8's pin is `7887b05b`;
+> the two give the same output with `WCT_TGM_PATH_DUMP` unset, which is what the gate below says).
+
 Binary: `libWireCellClus b46179b2` = toolkit `5d0b4e77` plus the uncommitted doc sbnd_xin/pr/143
 `break_segment` edits of a concurrent session.  `break_segment` has no caller in
 `TaggerCheckSTM.cxx`, and the claim is **gated, not argued**: event 0's `mabc-pr.zip` member
@@ -648,13 +654,13 @@ pdhd/01 sec 3).  Splitting the same points by the stripe their wire falls in:
 
 | plane | segment | n | sampled charge > 10 | **2-D measurement present** |
 |---|---|---|---|---|
-| U | 0 | 2864 | 0.984 | 0.984 |
-| U | **1** | 6417 | **0.018** | **0.986** |
-| U | 2 | 2236 | 0.953 | 0.953 |
-| V | 0 | 2276 | 0.809 | 0.997 |
-| V | **1** | 8705 | **0.123** | **0.979** |
-| V | 2 | 536 | 0.965 | 0.965 |
-| W (never wraps) | -- | 11 517 | 0.993 | 0.993 |
+| U | 0 | 2864 | 0.984 | 1.000 |
+| U | **1** | 6417 | **0.018** | **1.000** |
+| U | 2 | 2236 | 0.953 | 0.996 |
+| V | 0 | 1775 | 0.999 | 1.000 |
+| V | **1** | 8301 | **0.033** | **1.000** |
+| V | 2 | 1441 | 0.963 | 1.000 |
+| W (never wraps) | -- | 11 517 | 0.993 | 1.000 |
 
 On segment-0 and segment-2 wires the sampled charge tracks the measurement to three decimals.  On
 **segment-1** wires the measurement is there on ~98 % of points and the sampler attached nothing.
@@ -671,6 +677,25 @@ segment-1 (5783/5783), so U is dead there; V is segment-0 up to z ~ 60 and segme
 dies at z ~ 60 and both are gone -- the 130 cm run; in a2f0 U becomes segment-0 and comes back.
 The "swap" is the geometry of the stripes, not a plane behaving oddly.
 
+**The 2-4 % of segment-1 points that do carry charge carry the WRONG charge.**  Comparing the
+sampled value against `get_wire_charge` at the point's own wire and tick:
+
+| plane | segment | points with sampled > 10 | sampled == measured, exactly | median abs. difference |
+|---|---|---|---|---|
+| U | 0 | 2817 | **2817 / 2817 = 1.000** | 0 |
+| U | **1** | 115 | **0 / 115 = 0.000** | **4632 e** |
+| U | 2 | 2130 | **2130 / 2130 = 1.000** | 0 |
+| V | 0 | 1773 | **1773 / 1773 = 1.000** | 0 |
+| V | **1** | 270 | **68 / 270 = 0.252** | **2091 e** |
+| V | 2 | 1387 | **1387 / 1387 = 1.000** | 0 |
+| W | -- | 11 440 | **11 440 / 11 440 = 1.000** | 0 |
+
+On segments 0 and 2 the sampled charge is the measurement, bit for bit.  On segment 1 it is
+somebody else's -- which is exactly the failure signature below: the legacy lookup does not return
+nothing, it returns `channels[0]`'s activity, which is usually zero and occasionally is not.  So
+segment 1 is not "98 % lost, 2 % recovered"; it is **100 % unattached, with a few per cent of
+spurious charge on top**.
+
 The mechanism is the one named in `feedback_channel_list_is_not_a_wire_lookup`:
 `Gen::AnodePlane::configure` builds each plane's `IChannel::vector` by walking the plane's wires
 and **skipping every `segment() > 0` wire**, so a continuation's channel is simply not in
@@ -685,16 +710,16 @@ Splitting by volume as well:
 
 | volume | plane | segment | n | sampled > 10 | 2-D present |
 |---|---|---|---|---|---|
-| **a0f0** | U | 1 | 5783 | 0.020 | 0.986 |
-| **a0f0** | V | 0 | 1775 | 0.999 | 0.999 |
-| **a0f0** | V | 1 | 3459 | 0.025 | 0.989 |
-| **a0f0** | V | 2 | 549 | 0.989 | 0.989 |
-| **a2f0** | U | 0 | 2864 | 0.984 | 0.984 |
-| **a2f0** | U | 1 | 634 | 0.000 | 0.987 |
-| **a2f0** | V | 1 | 2606 | 0.014 | 0.966 |
-| **a2f0** | V | 2 | 892 | 0.946 | 0.946 |
-| **a3f1** | U | 2 | 2236 | 0.953 | 0.953 |
-| **a3f1** | V | 1 | 2236 | 0.065 | 0.989 |
+| **a0f0** | U | 1 | 5783 | 0.020 | 1.000 |
+| **a0f0** | V | 0 | 1775 | 0.999 | 1.000 |
+| **a0f0** | V | 1 | 3459 | 0.025 | 1.000 |
+| **a0f0** | V | 2 | 549 | 0.989 | 1.000 |
+| **a2f0** | U | 0 | 2864 | 0.984 | 1.000 |
+| **a2f0** | U | 1 | 634 | 0.000 | 1.000 |
+| **a2f0** | V | 1 | 2606 | 0.014 | 1.000 |
+| **a2f0** | V | 2 | 892 | 0.946 | 1.000 |
+| **a3f1** | U | 2 | 2236 | 0.953 | 0.996 |
+| **a3f1** | V | 1 | 2236 | 0.065 | 1.000 |
 
 APA2 and APA3 -- both on the standard `dune-garfield-1d565` field response -- fail on segment-1
 exactly as APA0 does (0.000 and 0.065 against 0.020), and succeed on segment-0/2 exactly as APA0
@@ -758,6 +783,13 @@ Event-wide on 029107/12 (`figs/d04_wrapped_exclusion_census.tsv`):
 | sampled U / V / W > 10 | 0.535 / 0.426 / 0.989 | 0.977 / 0.983 / 0.989 |
 | **2-D charge present in all three planes** | **0.9949** | **0.9949** |
 | clusters tagged `TGM=true` | 18 | **23** |
+| which ones | 4 12 17 27 39 43 49 60 61 65 75 86 90 105 106 115 122 123 | the same 18 **plus 31, 47, 102, 103, 128** |
+
+The move is **strictly additive** -- no cluster lost its TGM tag -- but "5 more TGM tags" is
+**not** the same claim as "5 more correct TGM tags": a guard that stops rejecting also stops
+rejecting things it should reject.  Only cluster 128 was examined.  The other four (**31, 47, 102,
+103**) are named so they can be looked at in the Bee set before anyone reads this row as an
+improvement.
 
 The last row of the middle block is the whole finding in one line: **the 2-D measurement is
 identical in the two arms -- 99.49 % of all points have charge in all three views either way.  Only
