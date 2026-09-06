@@ -921,8 +921,8 @@ the guard attribution (§4.5).
 | 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
 | 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one: 347890's bridge is killed by an x-position pre-filter at the cathode seam (a doc-84 threshold tuned in the biased frame), while 177536's muon is not lost at all — it is split into two PF nodes, which double-counts a 105.7 MeV rest mass |
 | 4 | **understand why the energy was added for idx 3** | **answered, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. The pr/129 pointing guard still SKIPs it correctly; it is wired to the guard-freed pool only |
-| 5 | **improve the hadronic shower reconstruction** | open — 137238 is doc 127's own event; the reading list the owner pointed at is docs 127, 93, 125, 133, 136 and 141, whose closing finding is that PID, not clustering, is the next front (≥ 29 % of μ-typed objects are EM showers) |
-| — | **update the sentinels** | §15, on the next production arm |
+| 5 | **improve the hadronic shower reconstruction** | **scoped, §15** — on 137238 the exclusion pool empties (`kine_n_excluded` 9 → 1, 316.4 → 0.0 MeV) and the EM shower absorbs it (354 → 555 MeV, 103 → 143 cm). Decide first whether this is an exclusion-threshold round or a PID round, with a population census of `kine_n_excluded`; reading list docs 127, 93, 125, 133, 136, 141 |
+| — | **update the sentinels** | §16, on the `d144fixprod` arm |
 
 **A shared-mechanism check comes before items 3 and 4 are opened as two
 investigations.**  The fourteen failures cluster: two cathode-bridge sentinels
@@ -1101,3 +1101,93 @@ His reading of idx 6/7 as "the two cathode-bridge muons are lost" holds for
   spurious rest mass.
 
 Both are worth fixing, and neither is a reason to keep the biased frame.
+
+---
+
+## 15 Item 5 — what actually happens on 137238, and where the campaign should start
+
+The owner's idx-8 reading is *"the hadronic shower made to an EM shower"*.  The
+`kine` block says what that looks like in numbers, and it points somewhere more
+specific than "PID is hard".
+
+| | OFF | ON |
+|---|---|---|
+| `kine_reco_Enu` | 735.7 | **1161.2** |
+| `kine_n_excluded` | **9** | **1** |
+| `kine_energy_excluded_other` | **316.4 MeV** | **0.0 MeV** |
+| main EM shower | `id 144056`, pdg 11, **354.3 MeV**, **102.7 cm** | `id 144050`, pdg 11, **555.3 MeV**, **142.9 cm** |
+| counted muons | `13 / 88.1`, `13 / 60.0` | `13 / 212.2`, `13 / 63.3`, `13 / 60.3` |
+| counted particles | 7 | 13 |
+| `kine_reco_add_energy` | 211.3 | 211.3 (unchanged — no rest-mass double count here) |
+
+**The exclusion pool empties.**  Nine excluded objects worth 316 MeV become one
+worth nothing, and the main EM shower grows by 201 MeV and 40 cm.  That is not a
+PID flip in the first instance — it is the **exclusion tournament**, the thing
+this patch changes, ceasing to exclude anything on this event, after which the
+shower-building stage sweeps the freed objects into the electron.
+
+That reframes item 5's entry point.  The question to ask first is not "why is
+this hadronic shower typed EM" but **"is `kine_n_excluded` 9 → 1 the right
+answer here, and how often does the exclusion pool empty across the 3067?"** —
+a population measurement on arms that already exist (`kine_n_excluded` and
+`kine_energy_excluded_other` are columns in the score tables).  If the pool
+empties broadly, the exclusion thresholds are the lever; if it is rare, this
+event is a PID case after all.
+
+Note also that the ON arm's muon list `[212.2, 63.3, 60.3]` is close to doc
+127's measured **pre**-pr/127 state, `mu- [207, 88, 58]`, against production's
+`[88, 60, 58]`.  The 207/212 body node returning is the specific thing pr/127's
+`sccc_max_gap` 6 → 10 flip removed, so the sentinel is reporting something real
+and named, not drift.
+
+**Reading list the owner pointed at** (*"we have a lot of md files before that
+can be used to do the tuning"*), in the order they help here: doc 127 (this
+event's own doc), doc 93 (`electron-really-tracks-and-pi0`), doc 125 (fake-e →
+tracks), doc 133 (π⁰ muon showers, the NC signature), doc 136 (the EM
+charge-attribution charter) and doc 141, whose closing finding is that **PID,
+not clustering, is the next front — ≥ 29 % of μ-typed objects are EM showers**.
+
+Two traps already paid for, to carry into the round: a near-flat electron
+template beats real muons at MIP, so the template comparison is usable as a
+**proton veto** and not as a positive electron ID; and zero-charge fit points
+corrupt dq/dx medians, so live points must be filtered before any template is
+evaluated or a dead stretch will hand PID to the flattest candidate.
+
+### 15.1 The census that decides it — run, and it says PID
+
+The population comparison off `products/d144{off,on}/*.tsv`, 1434 evaluated
+candidates carrying an excluded census on both arms:
+
+| | OFF | ON |
+|---|---|---|
+| Σ `kine_n_excluded` | 3172 | 3124 (−1.5 %) |
+| Σ excluded energy | 50 416 MeV | 48 223 MeV (−4.4 %) |
+| candidates with an empty pool | 454 | 456 |
+| `n_excluded` fell / rose / unchanged | — | 108 / 92 / **1234** |
+| "pool empties" (≥ 5 excluded OFF → ≤ 1 ON) | — | **8 of 1434** |
+
+    mcp2k   321235   n  6-> 1   E   765.0 ->   2.0 MeV
+    mcp1k   345633   n  6-> 1   E   588.3 ->   1.6 MeV
+    nuecc48 137238   n  9-> 1   E   428.9 -> 124.5 MeV
+    mcp2k   100222   n  5-> 1   E   359.0 -> 135.0 MeV
+    nuecc48 235435   n  5-> 0   E   147.4 ->   0.0 MeV
+    ncpi0    56982   n  5-> 1   E   142.6 ->   1.3 MeV
+    mcp2k   171528   n  5-> 1   E   101.6 ->   1.4 MeV
+    mcp2k    91917   n  5-> 1   E    83.1 ->   2.3 MeV
+
+**The exclusion pool does not empty broadly.**  Across the population it barely
+moves — 1.5 % on the count, 4.4 % on the energy, two more empty pools out of 454
+— and it falls on 108 candidates while rising on 92.  137238 sits in an
+**8-event tail**, not in a systematic collapse.
+
+So the first question is answered and it points the other way: **item 5 is a PID
+/ shower-building round, not an exclusion-threshold round.**  The exclusion
+tournament is arbitrating sensibly; on this handful of events it hands the
+shower stage objects it did not hand it before, and the shower stage absorbs
+them into an electron.  That is where the tuning belongs.
+
+**Named next step:** take the 8-event tail above as the working set — it is
+small enough to hand-scan and it is *selected by the mechanism*, not by the
+outcome — and ask on each whether the objects the shower absorbed belong to the
+electron.  137238 has a hand label already (doc 127).  Only then go to the
+template work, with the two traps above in hand.
