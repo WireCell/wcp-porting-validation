@@ -919,10 +919,10 @@ the guard attribution (§4.5).
 |---|---|---|
 | 1 | **turn on this, since it is a bug fix** | **DONE** — both defaults flipped, §2's T0′/T1′/T1″ proofs, this commit |
 | 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
-| 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | open — 177536 and 347890; note that 3 of 5 cathode-bridge sentinels still pass (§7.1), so this is two events, not a broken mechanism |
-| 4 | **understand why the energy was added for idx 3** | open — 393505, a `mu- 268` node appears and Enu goes 560 → 858; establish whether that node is the pr/129 cosmic returning or a real daughter previously missed |
+| 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one: 347890's bridge is killed by an x-position pre-filter at the cathode seam (a doc-84 threshold tuned in the biased frame), while 177536's muon is not lost at all — it is split into two PF nodes, which double-counts a 105.7 MeV rest mass |
+| 4 | **understand why the energy was added for idx 3** | **answered, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. The pr/129 pointing guard still SKIPs it correctly; it is wired to the guard-freed pool only |
 | 5 | **improve the hadronic shower reconstruction** | open — 137238 is doc 127's own event; the reading list the owner pointed at is docs 127, 93, 125, 133, 136 and 141, whose closing finding is that PID, not clustering, is the next front (≥ 29 % of μ-typed objects are EM showers) |
-| — | **update the sentinels** | §13, on the next production arm |
+| — | **update the sentinels** | §15, on the next production arm |
 
 **A shared-mechanism check comes before items 3 and 4 are opened as two
 investigations.**  The fourteen failures cluster: two cathode-bridge sentinels
@@ -959,3 +959,145 @@ x in the raw frame, items 3 and 4 are one defect of the same class as doc 45.
   carries neither.
 - **Any arm launched after 2026-09-06 10:08** is on a different cfg epoch than
   `d144off`/`d144on` (§3.2).
+
+---
+
+## 13 Item 4 — why 393505 gained 298 MeV, and the rest-mass double count behind it
+
+The owner's idx-3 question — *"not sure why the extra muon were added to the
+energy"* — is answered from the arms already on disk.  No re-run.
+
+### 13.1 The accounting, exactly
+
+`calib-pr-evt393505.json`, `kine` block:
+
+| | OFF | ON |
+|---|---|---|
+| `kine_reco_Enu` | 559.9 | **858.2** |
+| counted particles (pdg, MeV, info) | 13 / 371.6 / 1 · 11 / 66.9 / 2 · 11 / 9.0 / 2 · 11 / 1.5 / 2 · 11 / 5.2 / 2 | the same five **plus 13 / 177.8 / 1** |
+| `kine_n_excluded` | 5 | **4** |
+| `kine_energy_excluded_other` | 772.7 | 592.1 |
+| `kine_reco_add_energy` | 105.7 | **211.3** |
+
+The +298.3 MeV decomposes with no remainder:
+
+    +177.8   the new mu- node's kinetic energy
+    + 14.9   the 66.9 -> 81.8 MeV shower
+    +105.7   kine_reco_add_energy, which DOUBLED
+    -------
+    +298.4
+
+### 13.2 Where the new muon came in — and it is not the pr/129 pool
+
+The pointing test pr/129 shipped is still doing its job.  Its per-candidate log
+line is present on **both** arms and SKIPs every cluster-15 candidate on both:
+
+    OFF  kine_guard_freed_impact: seg idx=13 cluster=15 ke_mev=268.70 d_vtx_cm=74.37 impact_cm=68.67 miss_deg=67.4 -> SKIP
+    ON   kine_guard_freed_impact: seg idx=14 cluster=15 ke_mev=177.78 d_vtx_cm=68.91 impact_cm=69.10 miss_deg=112.2 -> SKIP
+
+The segment came in through a **different pool**, which logs it plainly:
+
+    ON   kine_count_near_cross_cluster: COUNT seg idx=14 cluster=15 pdg=13 score=0.159 ke_mev=177.78 len_cm=65.5 gap_cm=0.00
+    OFF  (no such line — the pool counted nothing)
+
+So a 65.5 cm segment of **cluster 15 — the cosmic pr/129 was written to keep
+out** — is admitted by `kine_count_near_cross_cluster`, the pr/128 class-A
+near-cross-cluster pool, whose test is **proximity only**: the gap collapsed to
+`0.00 cm` once the fit points moved into the corrected frame, and that pool has
+no direction test at all.  The pointing guard that would have refused it
+(`miss_deg = 112.2` — it aims *away* from the vertex) is wired to the
+guard-freed pool only.
+
+This is the failure mode doc pr/128 predicted in its own words — proximity alone
+admits cosmics — arriving for real.  **The actionable fix is to give the
+near-cross-cluster pool the same pointing test the guard-freed pool has** (or
+the pr/128 continuation terms, which still hold on the 72786 control).  That is
+a knobbed change with an obvious negative control, and it is the recommended
+next step for item 4.
+
+### 13.3 The other half of the +298 is arithmetic, not physics
+
+`kine_reco_add_energy` accumulates `rest_term_rules(pdg, mass)` **once per
+counted particle** (`NeutrinoKinematics.cxx:230, 274`), and a muon's rest mass is
+105.658 MeV.  It doubled here because a second `mu-` node was counted.  That is
+correct behaviour *if* the second node is a second muon.  §14 shows a case where
+it is not.
+
+---
+
+## 14 Item 3 — the two "lost cathode-bridge muons" are two different defects
+
+The owner read idx 6 and 7 as one failure.  The logs say they are not.
+
+### 14.1 347890 — the bridge really does stop firing
+
+| | OFF | ON |
+|---|---|---|
+| bridge log | `merge shower sid=5 (mu_len=182.9cm) <- sid=0 (mu_len=27.1cm) gap=14.3cm ends x=(4.9,-4.2)cm` | **nothing** |
+| bridge *reject* log | — | **nothing** |
+| MCS chain | `nseg=6 npoints=356 len=210.0cm ... cathode_drop=2/3` → `ke_range_toolkit=488.7` | `nseg=1 npoints=306 len=182.9cm ... cathode_drop=1/1` → `ke_range_toolkit=429.4` |
+| counted particles | `2212 133.7 (1)` · `11 1.2 (2)` · **`13 488.7 (1)`** | `2212 135.9 (2)` · `11 59.0 (2)` · `11 26.0 (1)` · **`13 429.4 (1)`** |
+
+429.4 is exactly the sentinel's `seen: 429`.  The far half — the 27.1 cm partner
+— never joins, and the muon is the 182.9 cm near half alone.
+
+**And there is no reject line**, which localises it.  Doc 84 round 4 added
+`long_muon_cathode_bridge: reject …` for every *geometrically reachable*
+candidate precisely so a non-firing bridge could be diagnosed.  Silence means the
+pair never became a candidate — it was dropped by the pre-filter above the angle
+tests, `if (std::abs(p.x() - cfg.x) >= cfg.xcut) continue;`, or by the
+opposite-side sign test `(me.far_p.x() - cfg.x) * (pe.far_p.x() - cfg.x) > 0`.
+Both are **x-position tests at the cathode seam**, and the OFF arm's ends sit at
+x = (4.9, −4.2) cm, i.e. a few centimetres either side of a cathode at
+∓0.0045 m.
+
+So this is not a second frame bug — the bridge reads `fit`-frame x, which is the
+frame the patch **corrects**.  It is **threshold sensitivity**: doc 84's
+`long_muon_cathode_bridge_x` / `_xcut` window was tuned against fit points built
+in the biased frame, and the corrected points no longer land inside it.
+
+**Recommended next step for item 3a:** instrument the pre-filter with the same
+one-line-per-candidate treatment the angle test already has (it is a silent
+`continue` today), re-measure the seam-end x distribution on the corrected
+frame, and re-derive `xcut` from it.  Doc 84's five cathode-bridge sentinels are
+the negative control set, and **three of them still pass** (53793, 172794,
+67026) plus 77978, so the retune has to hold those.
+
+### 14.2 177536 — the muon is not lost; it is split, and the split invents 105.7 MeV
+
+| | OFF | ON |
+|---|---|---|
+| bridge log | `absorb bare chain into sid=1 nseg=1 len=98.8cm gap=9.4cm ends x=(-2.5,3.3)cm reseat=1` | **identical** (`len=98.7cm`, same gap, same ends, same reseat) |
+| MCS chain | `nseg=2 npoints=654 len=391.2cm tracklen=398.5cm ke_range=902.5` | `nseg=2 npoints=632 len=378.3cm tracklen=398.2cm ke_range=901.7` |
+| counted muons | **one, `13 908.6`** | **two, `13 276.0` + `13 644.3` = 920.3** |
+| `kine_reco_add_energy` | 114.3 | **219.9** |
+| `kine_reco_Enu` | 1222.4 | 1339.8 |
+
+**The bridge fires identically and the muon's range is intact** — `tracklen`
+398.5 → 398.2 cm, `ke_range` 902.5 → 901.7 MeV.  What changed is that the PF
+tree renders that one muon as **two nodes**.  Total muon energy even rises
+slightly, 908.6 → 920.3.  Nothing is lost.
+
+But `kine_reco_add_energy` gains **105.6 MeV — one muon rest mass** — because
+`rest_term_rules` is applied per counted node.  Splitting one muon into two nodes
+therefore **double-counts its rest mass into `kine_reco_Enu`**, and that is the
+whole of this event's +117 MeV.
+
+**This is a defect independent of the T0 patch.**  Any reconstruction change that
+splits a muon inflates Enu by 105.658 MeV, silently.  It is also the same term
+that supplies a third of §13's +298.  **Recommended next step for item 3b:**
+count, over the 3067-event population, how often two `pdg == 13` nodes belong to
+one MCS chain, and decide whether `rest_term_rules` should be charged per
+*particle* rather than per *node*.  That is a population measurement on arms that
+already exist.
+
+### 14.3 What to tell the owner
+
+His reading of idx 6/7 as "the two cathode-bridge muons are lost" holds for
+**347890** and not for **177536**:
+
+- 347890 — real loss, 59 MeV of far half, bridge pre-filter at the cathode seam.
+- 177536 — no loss at all; the muon is split in two and the *energy goes up* by a
+  spurious rest mass.
+
+Both are worth fixing, and neither is a reason to keep the biased frame.
