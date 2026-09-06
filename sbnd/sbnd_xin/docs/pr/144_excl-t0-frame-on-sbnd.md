@@ -919,7 +919,7 @@ the guard attribution (§4.5).
 |---|---|---|
 | 1 | **turn on this, since it is a bug fix** | **DONE** — both defaults flipped, §2's T0′/T1′/T1″ proofs, this commit |
 | 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
-| 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one: 347890's bridge is killed by an x-position pre-filter at the cathode seam (a doc-84 threshold tuned in the biased frame), while 177536's muon is not lost at all — it is split into two PF nodes, which double-counts a 105.7 MeV rest mass |
+| 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one. 347890: the far half is still reconstructed but its PID flips 211 → 11, and doc 84 r4's partner filter refuses EM partners *by design*, so this merges into item 5. 177536: nothing is lost — the muon is split into two PF nodes, which double-counts a 105.7 MeV rest mass (21 splits in the population, 6 pay it) |
 | 4 | **understand why the energy was added for idx 3** | **answered AND fixed behind a default-OFF knob, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. `kine_near_pointing_impact` (toolkit `7c4bf46a`) brings Enu back to 574.8 and restores the pr/129 sentinel's energy clause. Owed: its own 3067-event arm before it is flipped |
 | 5 | **improve the hadronic shower reconstruction** | **scoped, §15** — on 137238 the exclusion pool empties (`kine_n_excluded` 9 → 1, 316.4 → 0.0 MeV) and the EM shower absorbs it (354 → 555 MeV, 103 → 143 cm). Decide first whether this is an exclusion-threshold round or a PID round, with a population census of `kine_n_excluded`; reading list docs 127, 93, 125, 133, 136, 141 |
 | — | **update the sentinels** | §16, on the `d144fixprod` arm |
@@ -1080,24 +1080,48 @@ The owner read idx 6 and 7 as one failure.  The logs say they are not.
 **And there is no reject line**, which localises it.  Doc 84 round 4 added
 `long_muon_cathode_bridge: reject …` for every *geometrically reachable*
 candidate precisely so a non-firing bridge could be diagnosed.  Silence means the
-pair never became a candidate — it was dropped by the pre-filter above the angle
-tests, `if (std::abs(p.x() - cfg.x) >= cfg.xcut) continue;`, or by the
-opposite-side sign test `(me.far_p.x() - cfg.x) * (pe.far_p.x() - cfg.x) > 0`.
-Both are **x-position tests at the cathode seam**, and the OFF arm's ends sit at
-x = (4.9, −4.2) cm, i.e. a few centimetres either side of a cathode at
-∓0.0045 m.
+pair never became a candidate at all — it was filtered above the angle tests.
 
-So this is not a second frame bug — the bridge reads `fit`-frame x, which is the
-frame the patch **corrects**.  It is **threshold sensitivity**: doc 84's
-`long_muon_cathode_bridge_x` / `_xcut` window was tuned against fit points built
-in the biased frame, and the corrected points no longer land inside it.
+The `calib` dumps say which filter, and it is **not** a geometric one:
 
-**Recommended next step for item 3a:** instrument the pre-filter with the same
-one-line-per-candidate treatment the angle test already has (it is a silent
-`continue` today), re-measure the seam-end x distribution on the corrected
-frame, and re-derive `xcut` from it.  Doc 84's five cathode-bridge sentinels are
-the negative control set, and **three of them still pass** (53793, 172794,
-67026) plus 77978, so the retune has to hold those.
+| | OFF | ON |
+|---|---|---|
+| shower list | `(4000, pdg 13, 210.0 cm)` + 4 tiny e⁻ | `(4000, pdg 13, **182.9 cm**)` + **`(8017, pdg 11, 18.9 cm)`** + **`(8018, pdg 11, 8.8 cm)`** + 3 tiny e⁻ |
+| the far half | one 27.1 cm partner, **typed 211 (π⁺)** | two showers totalling ≈ 27.7 cm, **typed 11 (EM)** |
+| bridged muon | 210.0 cm | 182.9 cm (near half only) |
+
+The far half **is still reconstructed**.  What changed is its **PID**: 211 → 11.
+And doc 84 round 4's partner filter refuses EM partners *on purpose*
+(`TaggerCheckNeutrino.cxx:1418-1431`), naming this very event:
+
+```cpp
+// doc 84 round 4 (G2): a cathode-split muon's near-seam stub is often
+// mis-PID'd -- 347890's far half is a |13| shower but its facing
+// partner is a 27cm shower typed 211 (pi+) ... track_partner admits
+// |211| as well.  EM (11/22) is NOT admitted and must not be:
+// absorbing a genuine EM shower across the seam is the failure mode
+// this guard exists for (392901's far half is a 106 MeV electron
+// shower with comparably good geometry).
+const int optype = std::abs(osh->get_particle_type());
+const bool ok = (optype == 13) || (cfg.track_partner && optype == 211);
+if (!ok) continue;
+```
+
+`continue` — before `collect_ends`, which is why nothing is logged.
+
+**So the guard is doing exactly what it was built to do; its input changed.**
+This is *not* a threshold that needs widening at the cathode seam (an earlier
+draft of this section guessed the `xcut` pre-filter, and the dumps say
+otherwise — the ends are unchanged at x = (106.91, 4.95) for the muon).  It is a
+**PID flip on the far half of a cathode-split muon**, π⁺ → EM.
+
+**That merges item 3a into item 5.**  Both are the same failure: a track-like
+object typed EM after the frame correction (§15's 137238 is the same shape at a
+larger scale).  Widening the bridge's partner filter to admit EM would defeat the
+guard doc 84 round 4 shipped it for — 392901's far half really is a 106 MeV
+electron.  **The fix belongs upstream, in the typing**, and doc 84's five
+cathode-bridge sentinels are the negative control set for it: three still pass
+(53793, 172794, 67026) plus 77978, so any change has to hold those.
 
 ### 14.2 177536 — the muon is not lost; it is split, and the split invents 105.7 MeV
 
