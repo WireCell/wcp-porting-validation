@@ -9,6 +9,15 @@ re-checked (tagged **[doc-only]**). Nothing here is fixed by this round; §5 is
 the ranked work order and §6 says what each fix would cost in byte-identity
 terms.
 
+**Round 2, same day (§8, §9).** On the owner's instruction — *"Go ahead with
+`Array::operator=(Array&&)`, yes, please measure `proj_skip_unmapped_face`
+before the flip. We do not need the cache fix for SBND, we should leave it."* —
+§3.3 is **FIXED** (toolkit `76f47614`, byte-identical, doctest + negative
+control, §9), §2.2 is **MEASURED** on 231 events across the three exposed
+detectors and **fires zero times** (§8; no flip taken, that is still the
+owner's), and §2.3 is **CLOSED as a decision, not a fix** (§2.3.1). Rounds 1
+and 2 change no detector's production output.
+
 **Read §1.1 first: the premise this document was commissioned on is wrong for
 two of the six items.** The owner's instruction was *"we should fix this for
 SBND and PDHD"* for the three knobbed defects of §2. Re-checking the per-detector
@@ -61,6 +70,46 @@ grep -rnE "^\s*[A-Za-z_][A-Za-z0-9_.\[\]()*>-]*\s*=\s*std::move\(" \
      --include=*.cxx --include=*.h $T | grep -iE "arr|array"   # F: no live caller (empty)
 ```
 
+Round 2 (§8, §9). Full command list with pins and controls in
+`pdvd/stm/gates/d46_proj_skip_census.txt`; the short form:
+
+```bash
+# --- sec 9: the Array fix ---------------------------------------------------
+wcbuild && ./build/util/wcdoctest-util -tc="point cloud array move assignment*"
+for pkg in util aux clus; do ./build/$pkg/wcdoctest-$pkg; echo "$pkg rc=$?"; done
+# negative control: same assertions, edited header, PRE-fix installed .so
+g++ -std=c++17 -DSPDLOG_FMT_EXTERNAL -o negctl negctl.cxx -I $T/util/inc -I local/include \
+    -L local/lib -lWireCellUtil -lfmt -ljsoncpp && LD_LIBRARY_PATH=$PWD/local/lib ./negctl
+
+# --- sec 8: the proj_skip_unmapped_face census ------------------------------
+PIN=/home/xqian/tmp/d46_libpin
+# PDHD (30 evt, STM chain)
+(cd $W/pdhd && for d in work/029107_*_stmwc; do e=${d#work/029107_}; e=${e%_stmwc}; \
+   mkdir -p work/029107_${e}_d46skip && ln -sfn $PWD/$d/pctree-evt*.tar.gz $PWD/$d/pctree-evt*.tlas work/029107_${e}_d46skip/; done
+ LD_LIBRARY_PATH=$PIN PDHD_MAX_JOBS=10 \
+   PDHD_PR_TLA="-A trackfitting_config=$PWD/stm/pdhd_track_fitting_d46skip.json" \
+   ./run_pr_evt.sh -s d46skip -stm -stm-fit 029107 all)
+# SBND cosmic chain (99 evt) and full PR chain (48+19 evt)
+(cd $W/sbnd/sbnd_xin/stm_campaign && NJOBS=10 D42_LIBPIN=$PIN \
+   SBND_TRACKFIT_JSON=$PWD/sbnd_track_fitting_d46skip.json ./run_d42_stmfit.sh d46skip)
+(cd $W/sbnd/sbnd_xin && for set in nuecc48:data ncpi0:sim; do s=${set%%:*}; r=${set#*:}; \
+   LD_LIBRARY_PATH=$PIN PR_JOBS=8 \
+   SBND_TRACKFIT_JSON=$PWD/stm_campaign/sbnd_track_fitting_d46skip.json \
+   ./run_pr_chain_batch.sh work-$s-d97fv work-d46sbnd-on-$s $r; done)
+# uBooNE (35 evt); UB_TRACKFIT_JSON is new in run_one.sh
+(cd $W/qlport && for i in $(seq 0 34); do LD_LIBRARY_PATH=$PIN \
+   UB_TRACKFIT_JSON=$PWD/uboone_track_fitting_d46skip.json ./scripts/run_one.sh $i d46skip_ub; done)
+
+# the count (zero everywhere; the same grep on a PDVD d45skipon arm is the control)
+grep -h "proj_skip_unmapped_face" $W/pdhd/work/029107_*_d46skip/wct_pr_*.log \
+     $W/sbnd/sbnd_xin/work-stmcamp-d46skip/nusel_evt*/*.log \
+     $W/sbnd/sbnd_xin/work-d46sbnd-on-*/pr_evt*/wct_pr_evt*.log \
+     $W/qlport/scripts/sweep/d46skip_ub/*_*/wct_5384_*.log | wc -l
+# positive control: which loader read my file
+grep -rh "Failed to set parameter" $W/pdhd/work/029107_0_d46probe \
+     $W/sbnd/sbnd_xin/work-stmcamp-d46probe $W/qlport/scripts/sweep/d46probe_ub | sort -u
+```
+
 ---
 
 ## 1. What this document is
@@ -85,11 +134,11 @@ each detector's driver, not the C++ default. **[verified]**
 | defect | knob | PDVD | PDHD | SBND | uBooNE |
 |---|---|---|---|---|---|
 | §2.1 `cal_kine_dQdx` 0/0 NaN | `kine_dqdx_skip_zero_dx` | **ON** (`pdvd/wct-pr-perevt.jsonnet:3025`) | *no exposure* — `TaggerCheckNeutrino` is not in `pipeline_names` | **OFF, exposed** | **OFF, exposed** |
-| §2.2 `end()` deref on an unmapped face | `proj_skip_unmapped_face` | **ON** (`protodunevd/pdvd_track_fitting.json`) | **OFF, exposed** | **OFF, exposed** | **OFF, exposed** |
+| §2.2 `end()` deref on an unmapped face | `proj_skip_unmapped_face` | **ON** (`protodunevd/pdvd_track_fitting.json`) | OFF; **0 fires / 30 evt** (§8) | OFF; **0 fires / 166 evt** (§8) | OFF; **0 fires / 35 evt** (§8) |
 | §2.3 shadow-cluster stale `ClusterCache` | `bad_blob_max_run` | **ON** (20) | **ON** (20, `pdhd/wct-pr-perevt.jsonnet:142`) | **OFF, exposed** | **OFF, exposed** |
 | §3.1 `cluster_fc_check` round-2 write-back | *(none)* | exposed | exposed | exposed | exposed |
 | §3.2 sentinel-T0 leak into the Bee dump | *(none)* | exposed | exposed | exposed | exposed |
-| §3.3 `Array` move-assignment | *(none)* | latent, no live caller on any detector | | | |
+| §3.3 `Array` move-assignment | *(none needed)* | **FIXED `76f47614`** — no live caller, byte-identical on every detector (§9) | | | |
 
 Two corrections to the reading that commissioned this document:
 
@@ -196,6 +245,12 @@ trustworthy.
 `TaggerCheckNeutrino` (`pgrapher/common/clus.jsonnet:307` and `:536`), so the key
 lands on both taggers at once and both need to be in the gate.
 
+> **Measured, 2026-09-05 — see §8.** 231 knob-ON events across the three
+> detectors (PDHD 30, SBND 166 over both chains, uBooNE 35) and **the condition
+> never fires**. Because the counter only increments inside the knob-on branch,
+> zero fires means those arms are byte-identical to knob-OFF *by construction*,
+> so no OFF partner was owed and none was run. No default was flipped.
+
 ### 2.3 The shadow cluster's `ClusterCache` is never invalidated — and the fix is entangled with a second change
 
 *Found in doc 40 §15.2.*
@@ -224,16 +279,28 @@ added). So today, on SBND and uBooNE:
 
 Doc 40 §15.2 is explicit that invalidating the cache *unconditionally* changes
 legacy output for every multi-face cluster, which is stop-and-ask territory — so
-the entanglement was deliberate, not an oversight. Two ways out, both the owner's
-to pick, neither taken here:
+the entanglement was deliberate, not an oversight. Two ways out were put to the
+owner: **(a)** bind `bad_blob_max_run` on SBND / uBooNE and grade the
+run-bounded filter there the way doc 40 §15.9–15.11 graded it on PDVD, closing
+the cache defect as a side effect of a decision about the filter; or **(b)**
+split the invalidation into its own default-OFF knob so the cache fix could be
+graded alone, on the legacy vote, without adopting the run bound.
 
-* **(a) Bind `bad_blob_max_run` on SBND / uBooNE** and grade the run-bounded
-  filter on those detectors the way doc 40 §15.9-15.11 graded it on PDVD. This
-  closes the cache defect as a side effect of a decision about the filter.
-* **(b) Split the invalidation into its own default-OFF knob** so the cache fix
-  can be graded alone, on the legacy vote, without adopting the run bound. This
-  is the smaller experiment and the cleaner attribution, at the cost of one more
-  knob in a file doc 77 is already trying to shrink.
+### 2.3.1 Owner decision, 2026-09-05: leave it
+
+> *"We do not need the cache fix for SBND, we should leave it."*
+
+**Neither (a) nor (b) is taken. `clus/src/improvecluster_1.cxx` is untouched and
+SBND and uBooNE keep the legacy path.** This item is closed as a decision, not
+as a fix, and should not be re-opened by a later round without new evidence.
+
+What that decision accepts, stated so it is on the record: on SBND and uBooNE
+the retiler's anti-ghost filter is a no-op from the second (apa, face) onward on
+any cluster spanning more than one face. Nobody has counted how many SBND
+clusters that is — the PDVD number is 80 of 493 on 039252/2, and SBND's two-APA
+geometry makes multi-face clusters at least as common. The evidence that would
+re-open it is a demonstration that ghost blobs surviving on second faces are
+costing SBND STM or PR verdicts; a knob binding alone is not that evidence.
 
 **Exposure.** SBND builds its Steiner retiler with `cm.steiner(retiler=improve2)`
 (`sbnd/clus.jsonnet:2071,2088`) and never passes `bad_blob_max_run`; uBooNE the
@@ -312,9 +379,10 @@ drops sentinel-T0 clusters or falls back to raw `x` for them. The gate is the Be
 zip member hashes, which must be identical with the knob off and *will* differ
 with it on — so this one is cheap to gate and cheap to grade.
 
-### 3.3 `Array::operator=(Array&&)` — the one item that can be fixed outright
+### 3.3 `Array::operator=(Array&&)` — FIXED, toolkit `76f47614`
 
-*Found in doc 28 §12 ("left as is, noted for the owner").*
+*Found in doc 28 §12 ("left as is, noted for the owner"); fixed 2026-09-05 on
+the owner's "go ahead". The verification is §9.*
 
 **Root cause** **[verified]**, `util/src/PointCloudArray.cxx:107-116`. The move
 assignment does `clear()` and then swaps `m_shape`, `m_ele_size`, `m_dtype`,
@@ -334,8 +402,8 @@ There is no live caller, so adding the missing `m_store` swap **cannot change an
 output on any detector — it is byte-identical by construction**. It therefore
 needs **no knob and no A/B arm**: a doctest that move-assigns an owning `Array`,
 destroys the source and reads the destination is the whole verification, and it
-fails today. This is the only one of the six that can be closed as a plain bug
-fix.
+failed before the fix. This is the only one of the six that could be closed as a
+plain bug fix, and it is now closed — §9.
 
 ---
 
@@ -362,6 +430,16 @@ recorded here so nobody re-derives them:
 * The hard-coded 4000 e in `NeutrinoSteinerGapGraph.cxx:170` is inert at the
   default `sgp_weak_scale = 0`. **[verified]**
 
+Found while writing §9's test and **not fixed** (it is an API shape, not a
+defect, and changing it would touch every `Array` construction site):
+`Array x{Array(v)}` does **not** select the move constructor. The
+`template<typename ElementType> Array(std::initializer_list<ElementType>)`
+overload (`PointCloudArray.h:104-107`) wins with `ElementType = Array`, so the
+result is a silent 1-element array *of Arrays* — `size_major() == 1`, no
+warning. `Array x(Array(v))` is worse: it is a function declaration. The only
+spelling that means what it looks like is a named temporary plus
+`std::move`. **[verified — it cost one build cycle]**
+
 Deliberately **out of scope**, because they are deferred design or tuning
 questions rather than defects, and each has a home document: the uncapped
 component bridge (`connect_graph.cxx:20-26`, doc 39 §14, doc 40 P2); fused-cluster
@@ -377,21 +455,19 @@ production SP constants).
 
 ## 5. Work order, ranked
 
-1. **§3.3 `Array` move-assignment.** No knob, no arm, byte-identical by
-   construction, one doctest. Do it first because it is the only free one.
-2. **§2.2 `proj_skip_unmapped_face` on PDHD, SBND and uBooNE.** Run a knob-on arm
-   per detector and read the WARN count *before* proposing any flip. On PDVD the
-   answer was 2 events of 120 and zero production change; if the other detectors
-   answer zero, the flip is free and provable. This is the item where the owner's
-   "SBND and PDHD" reading is exactly right, and it is the only UB of the six.
+1. ~~**§3.3 `Array` move-assignment.**~~ **DONE**, toolkit `76f47614` (§9).
+2. ~~**§2.2 measure `proj_skip_unmapped_face`.**~~ **DONE**, §8: 0 fires on 231
+   events. What is left is the *flip*, which is the owner's and which this
+   measurement makes free-but-pointless on these manifests; §8.4 states the case
+   both ways.
 3. **§3.1 count how often `cluster_fc_check` round 2 runs.** A log census on an
    arm already on disk. That number decides whether R5 is a two-line fix worth a
-   knob or a curiosity.
+   knob or a curiosity. **This is now the top open item.**
 4. **§2.1 `kine_dqdx_skip_zero_dx` on SBND**, with the NaN → finite census and
    the selection rows. Then uBooNE separately, with the SBND evidence in hand.
-5. **§2.3** — put option (a) vs (b) of §2.3 to the owner *before* running
-   anything, because the two answer different questions and only one of them is
-   about the cache.
+   The §8 arms show what this costs: an SBND PR-chain arm is 67 events and ran
+   in about ten minutes.
+5. ~~**§2.3.**~~ **CLOSED by the owner, 2026-09-05** — leave it (§2.3.1).
 6. **§3.2 sentinel-T0 Bee filter.** Cheap, gated by Bee member hashes, display
    only. Last because nothing physics-facing depends on it.
 
@@ -400,16 +476,154 @@ production SP constants).
 | item | knob needed? | knob-off byte-identical? | changes output when on |
 |---|---|---|---|
 | §2.1 | exists | yes (key absent) | yes — NaN becomes finite; selection rows can move |
-| §2.2 | exists | yes (key absent) | only where it fires; on PDVD 0 of 120 events' products moved |
-| §2.3 | exists, but see (a)/(b) | yes (key absent) | yes — and it also swaps the removal rule |
+| §2.2 | exists | yes (key absent) | only where it fires; 0 fires on PDHD/SBND/uBooNE (§8), and on PDVD 0 of 120 events' products moved |
+| §2.3 | exists, but entangled | yes (key absent) | yes — and it also swaps the removal rule; **closed, not taken** (§2.3.1) |
 | §3.1 | **new** (threaded from two taggers) | yes if default-OFF | yes, on clusters where round 2 decides |
 | §3.2 | **new** | yes if default-OFF | yes, Bee layer only |
-| §3.3 | **none** | n/a — no live caller | nothing, on any detector |
+| §3.3 | **none** | n/a — no live caller | nothing, on any detector — **shipped `76f47614`** |
 
 ## 7. Files
 
-This document only. No script, no figure, no arm, no config, no C++.
+**Round 1:** this document only — no script, no figure, no arm, no config, no C++.
+
+**Round 2:**
+* toolkit `76f47614` — `util/src/PointCloudArray.cxx` (the swap),
+  `util/inc/WireCellUtil/PointCloudArray.h` (`owns_bytes()`),
+  `util/test/doctest_pointcloud.cxx` (the case).
+* `pdvd/stm/gates/d46_proj_skip_census.txt` — the §8 record: pin, controls,
+  arm commands, per-detector counts.
+* A/B copies of the three runtime parameter files, canonical files untouched:
+  `pdhd/stm/pdhd_track_fitting_d46skip.json`,
+  `sbnd/sbnd_xin/stm_campaign/sbnd_track_fitting_d46skip.json`,
+  `qlport/uboone_track_fitting_d46skip.json`, plus the `*_d46probe.json`
+  bogus-key copies used for the positive control.
+* `qlport/scripts/run_one.sh` — new `UB_TRACKFIT_JSON` override (the uBooNE job
+  hard-codes the file's basename, so the override is the symlink target).
+* Arms on disk (fresh tags, none committed): `pdhd/work/029107_*_d46skip`,
+  `sbnd_xin/work-stmcamp-d46skip`, `sbnd_xin/work-d46sbnd-on-{nuecc48,ncpi0}`,
+  `qlport/scripts/sweep/d46skip_ub`, and the three `*d46probe*` probe dirs.
 
 Sources: doc 45 §5.4 / §8 / §13, doc 40 §8 / §15.2, doc 32 §7 R5 / §16 / §20,
 doc 28 §12 / §16 / §20, doc 39 §7 / §14, doc 12 §11.5, doc pdhd
 `stm-tagger-chain.md` §4 and `01_steiner-wrapped-planes.md` §4.
+
+---
+
+## 8. Round 2a — measuring `proj_skip_unmapped_face` on the three exposed detectors
+
+Owner, 2026-09-05: *"please measure `proj_skip_unmapped_face` before the flip."*
+**No default is flipped by this section and no canonical config is touched.**
+Full record with every command, pin and control:
+`pdvd/stm/gates/d46_proj_skip_census.txt`.
+
+### 8.1 What makes a null result meaningful here
+
+The counter `n_unmapped_skipped` is incremented **only inside** the knob-on
+branch (`TrackFitting.cxx:10008`) and the WARN is guarded on it (`:10035`). So a
+knob-ON arm with **zero** WARNs took, at every path point, exactly the branch the
+legacy path takes: that arm is byte-identical to a knob-OFF arm **by
+construction**, and no OFF partner is owed. An OFF partner *would* be owed for
+any detector that fired. None did, so none was run.
+
+Two controls, because a count of zero is worthless if the file was not read or
+the message could not reach the log:
+
+* **Was my file read, and by which loader?** `load_trackfitting_config()` exists
+  twice — `TaggerCheckSTM.cxx:1035` and `TaggerCheckNeutrino.cxx:3979` — and each
+  catches an unknown key and prints `<ClassName>: Failed to set parameter …`. A
+  probe copy carrying a deliberately bogus key was run on one event per chain:
+  PDHD and SBND's cosmic chain answered **`TaggerCheckSTM`**, uBooNE answered
+  **`TaggerCheckNeutrino`**. Both loaders are therefore covered, and each read
+  the copy at my path rather than the canonical file.
+* **Can the WARN reach a log at all?** The identical string is present in the
+  PDVD arms where the knob fires, at the same runner and log level —
+  `pdvd/work/039253_16_d45skipon`: *"skipped 61 of 497 … (apa=2 face=0)"*, and
+  `039252_7_d45skipon`: *"skipped 5 of 712 … (apa=3 face=1)"*. A zero is a real
+  zero.
+
+Binary pin `/home/xqian/tmp/d46_libpin` (`libWireCellClus.so
+e3304cb9b362cd680ee3182452751a96`) = toolkit `d398ca14` plus the §9 `util` fix,
+now `76f47614`; the two peer commits that landed during the arms are cfg-only.
+
+### 8.2 The arms and the count
+
+All knob-ON, all fresh tags, all on the pin.
+
+| detector | chain / loader exercised | events | **fires** | points skipped | products |
+|---|---|---|---|---|---|
+| PDHD | STM (`TaggerCheckSTM`) | 30 | **0** | 0 | 30/30 rc=0, 30 `mabc-pr.zip`, 30 `tracking-stm.root`, 0 error lines |
+| SBND | cosmic STM/TGM/FC (`TaggerCheckSTM`) | 99 | **0** | 0 | 99/99 rc=0 |
+| SBND | full PR chain (`TaggerCheckNeutrino`) | 48 nueCC48 + 19 NCpi0 | **0** | 0 | 67/67 rc=0 |
+| uBooNE | PR chain (`TaggerCheckNeutrino`) | 35 (all of `qlport/filelist`) | **0** | 0 | 35/35 rc=0 |
+| **total** | | **231** | **0** | **0** | |
+| *PDVD, doc 45 §13, for contrast* | both | *120* | *2* | *66* | *products identical 120/120* |
+
+### 8.3 How far the null actually reaches
+
+This is a statement about these manifests, not about these detectors. PDVD fires
+on 2 of 120 events = 1.7 %. The 95 % upper limit on the rate from a null
+observation is 3/N:
+
+| detector | events | 95 % UL on the per-event rate | excludes PDVD's 1.7 %? |
+|---|---|---|---|
+| SBND (both chains) | 166 | 1.8 % | **borderline — this is the only real bound** |
+| uBooNE | 35 | 8.6 % | no |
+| PDHD | 30 | 10 % | no |
+
+So *"SBND does not do this"* is measured; *"PDHD and uBooNE do not do this"* is
+only bounded, and a later round that wants that claim needs more events, not a
+re-reading of these.
+
+### 8.4 Why PDVD is the odd one out — and what to do
+
+**Inference, not measured here.** Both PDVD fires are on **gap-bridging**
+rough-path points. Cluster 37 of 039253/16 has two charge components 28 cm apart
+and its rough path crosses the gap at y ≈ 1 cm — the CRP boundary — where
+`contained_by()` returns apa 2 face 0, a volume with no wire planes. The
+condition needs a path point that lies outside *every* face carrying data in that
+event, which a two-drift CRP geometry with internal gaps produces routinely and a
+single-drift APA geometry largely does not. That reading also predicts PDHD's
+non-imaging second faces would *not* fire — as they did not — because nothing
+puts a trajectory point there.
+
+**The flip is the owner's and is not taken here.** The case for it: it converts
+an undefined read (`std::get<0>` on `end()`) into a logged skip, at a cost these
+231 events measure as exactly zero. The case against: it buys nothing observable
+on any of the three manifests today, and one more key in three runtime files is
+a real cost in a tree doc 77 is trying to shrink. If PDHD or uBooNE is flipped on
+this evidence, the honest wording is *"free on 30 / 35 events"*, not *"free"*.
+
+## 9. Round 2b — §3.3 fixed: `Array` move-assignment (toolkit `76f47614`)
+
+**The fix.** `std::swap(m_store, rhs.m_store)` added to
+`Array::operator=(Array&&)` (`util/src/PointCloudArray.cxx:107-124`), so the
+store travels with the span. `std::vector`'s swap preserves the buffer address,
+so the swapped span stays valid; the sharing case (empty store, external span)
+is unaffected.
+
+**Byte-identical, and not by gate — by construction.** A tree-wide search finds
+no move-assignment into an `Array` lvalue on any code path, so no detector's
+output can move. **No knob, no A/B arm, and none is claimed.**
+
+**Verification.**
+
+* `wcbuild` rc=0; freshness proof (`local/lib/libWireCellUtil.so` 19:02 vs the
+  source edits at 19:00).
+* `wcdoctest-util` 277 cases / 42 587 assertions, `wcdoctest-aux` 22 / 110 738,
+  `wcdoctest-clus` 313 / 22 720 — all pass. Only `util` is touched; `aux` and
+  `clus` are run because `Array` is the point-tree spine.
+* New case *"point cloud array move assignment keeps the store with the span"*
+  pins three things: an owning source (destination owns after the move, source
+  is left empty, destination still readable after the source is destroyed), a
+  sharing source (stays sharing), and the move constructor.
+* **Negative control.** The same assertions compiled against the edited header
+  but linked to the *pre-fix* installed `libWireCellUtil.so` report
+  `dst.owns_bytes() = 0` and `src.owns_bytes() = 1` — the two values the new
+  case asserts against. The test discriminates; it is not vacuous.
+
+**One addition to the public API**, kept as small as it can be:
+`Array::owns_bytes()` (inline, const, `PointCloudArray.h`) exposes the invariant
+the `m_store` member already documents — *"if sharing user data, m_store is
+empty"* — so a test can assert ownership without reading freed memory. Without
+it the only observable difference is a use-after-free, which is not something to
+pin a permanent doctest on.

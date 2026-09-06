@@ -47,7 +47,11 @@ RUN=${BASH_REMATCH[1]} SR=${BASH_REMATCH[2]} EV=${BASH_REMATCH[3]}
 DEST="$SCRIPTS/sweep/$LABEL/${IDX}_${EV}"
 mkdir -p "$DEST"
 ln -sfn "$QLPORT/rootfiles" "$DEST/rootfiles"
-ln -sfn "$QLPORT/uboone_track_fitting.json" "$DEST/uboone_track_fitting.json"
+# doc pdvd/46 sec 8: UB_TRACKFIT_JSON points the job at an A/B COPY of the
+# runtime TrackFitting parameter file (the job hard-codes the basename in
+# uboone-mabc.jsonnet, so the override is the symlink target, not a TLA).
+# Unset => the canonical qlport/uboone_track_fitting.json, as before.
+ln -sfn "${UB_TRACKFIT_JSON:-$QLPORT/uboone_track_fitting.json}" "$DEST/uboone_track_fitting.json"
 
 NOASLR="setarch $(uname -m) -R"
 [ "${ASLR:-0}" = "1" ] && NOASLR=""
