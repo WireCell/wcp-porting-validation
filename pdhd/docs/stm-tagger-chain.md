@@ -1212,11 +1212,27 @@ of the time. Nothing in the scan supports the mechanism the knob was proposed
 for.
 
 **In tag-set terms**, extrapolating each direction's scored rate to all of its
-contested tags — generous to the knob, since the unjudged rows are the small
-ones where fragments and noise live —
-flipping ON buys **+17 true STM tags at the cost of +19 false ones**. Bounds
-over the 105 unjudgeable rows: +52 true / −16 false if every one is really a
-stopper (implausible — see below), +1 true / +35 false if none is.
+contested tags, flipping ON buys **+17 true STM tags at the cost of +19 false
+ones**. Bounds over the 105 unjudgeable rows: +52 true / −16 false if every one
+is really a stopper (implausible — see below), **+1 true / +35 false if none
+is**.
+
+That extrapolation is **generous to the knob**, and the reason is an asymmetry
+rather than a guess about small clusters: the *gains* carry **78** unjudged rows
+against the removals' **27**, a factor 2.9. So a shared downward shift in the
+assumed STM rate of the unjudged population — which is what a THRU-skew among
+small clusters would produce, on *both* sides at once — strips more true tags
+from the ADD side than from the REMOVE side, monotonically:
+
+| assumed STM rate among unjudged | net true | net false |
+|---|---|---|
+| each direction's own scored rate | +17 | +19 |
+| 0.20 | +11 | +25 |
+| 0.10 | +6 | +30 |
+| 0.00 | +1 | +35 |
+
+Every row of that table is a worse trade than the one above it, so no plausible
+treatment of the unjudged population rescues the knob.
 
 **The `FRAG` pre-registration did not fire.** Only **13 of 130 gains (10 %)**
 sit on an under-clustered fragment, so this scan is *not* a story about
