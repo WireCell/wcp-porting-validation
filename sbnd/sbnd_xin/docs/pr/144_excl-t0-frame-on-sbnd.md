@@ -1084,12 +1084,46 @@ therefore **double-counts its rest mass into `kine_reco_Enu`**, and that is the
 whole of this event's +117 MeV.
 
 **This is a defect independent of the T0 patch.**  Any reconstruction change that
-splits a muon inflates Enu by 105.658 MeV, silently.  It is also the same term
-that supplies a third of §13's +298.  **Recommended next step for item 3b:**
-count, over the 3067-event population, how often two `pdg == 13` nodes belong to
-one MCS chain, and decide whether `rest_term_rules` should be charged per
-*particle* rather than per *node*.  That is a population measurement on arms that
-already exist.
+splits a muon can inflate Enu by 105.658 MeV, silently
+(`rest_term_rules`, `NeutrinoKinematics.cxx:102-111`: `pdg 13 → mass/MeV`).  It
+is also the same term that supplies a third of §13's +298.
+
+### 14.2.1 How often it happens — measured
+
+Over the 1434 candidates carrying a `calib` dump on both arms, counting the
+**split-muon signature** (more `pdg == 13` counted nodes on ON, with total muon
+energy preserved to within 5 %):
+
+| | |
+|---|---|
+| candidates showing the signature | **21 of 1434** |
+| of those, paying a spurious rest mass | **6** |
+| total spurious `kine_reco_add_energy` | **270.0 MeV** across the population |
+
+    mcp2k    98844   nmu 1->2  Emu  174.2->  176.8  d_add= +139.6   <- Bee idx 10
+    mcp1k   407280   nmu 4->5  Emu  907.6->  910.9  d_add= +105.7
+    mcp1k    55595   nmu 1->2  Emu  470.6->  464.6  d_add= +105.7
+    mcp2k   177536   nmu 1->2  Emu  908.6->  920.3  d_add= +105.7   <- Bee idx 6
+    mcp2k    78743   nmu 2->3  Emu  305.9->  311.6  d_add= +105.7
+    mcp2k    97260   nmu 1->2  Emu  820.2->  849.1  d_add= +105.7
+    mcp1k   279256   nmu 1->3  Emu  677.8->  667.6  d_add=   +0.0
+    ... (15 more at +0.0)
+
+**The charge is conditional, which is itself the finding.**  Fifteen of the 21
+splits pay nothing, because only two of the counting sites call
+`rest_term_rules` (`:230`, `:274`); others add only `ave_binding_energy`.  So the
+rest-mass term is charged **per counted node at some admission paths and not at
+others** — the same physical muon is priced differently depending on which pool
+admitted its second half.
+
+In aggregate this is small (270 MeV over 1434 candidates) and it is **not** a
+reason to hold the flip.  Per event it is material: 105.7 MeV on 177536 and
+139.6 on 98844, the owner's own Bee rows 6 and 10.
+
+**Recommended next step for item 3b:** decide whether `rest_term_rules` should be
+charged per *particle* rather than per *node*, and make the charge uniform across
+admission paths.  The 21-candidate list above is the working set and the
+negative control is free — the OFF arm.
 
 ### 14.3 What to tell the owner
 
