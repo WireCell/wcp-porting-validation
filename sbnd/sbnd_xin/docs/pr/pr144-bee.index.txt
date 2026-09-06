@@ -1,0 +1,39 @@
+# doc sbnd_xin/pr/144 -- the fit_exclusion T0 frame patch (excl_t0_frame +
+# kine_dqdx_skip_zero_dx) on SBND, before vs after.
+#
+# OFF = today's SBND production (both knobs at their default false)
+# ON  = the PDVD production pair turned on, via docs/pr/pr144-on.tla
+# Both arms: one binary, pin /home/xqian/tmp/d144_libpin, libWireCellClus.so
+# b46179b20533eacc9cf7cf85430e7a81 (toolkit 70c23cc7); 3067 events each.
+#
+#   OFF: https://www.phy.bnl.gov/twister/bee/set/a6027cd7-14e8-43fa-a16a-d5b10fe166ba/event/list/
+#   ON : https://www.phy.bnl.gov/twister/bee/set/2455120d-016d-40bc-8b23-96e4db8c8f07/event/list/
+#
+# Same 12 events in the same order in both sets, so bee_idx N is the same event
+# on both sides -- open the two tabs and step to the same index.
+# Direct link form: .../bee/set/<uuid>/event/<bee_idx>/
+#
+# WHY THESE 12.  Rows 0-8 are the sentinel regressions: events where
+# scripts/pr127_sentinels.py PASSES on OFF and FAILS on ON, i.e. a previously
+# shipped fix stops holding.  The suite is 30 PASS / 0 FAIL on OFF and
+# 16 PASS / 14 FAIL on ON.  Rows 9-11 are the largest score/vertex movers, for
+# contrast.  The question for each row is the one the metrics cannot answer:
+# is the AFTER picture a better reconstruction of this event, or a worse one?
+#
+# Caveat to carry while looking: these sentinels were written and validated
+# against the OFF reconstruction, which is the one built on the biased drift
+# frame.  A sentinel breaking is evidence, not a verdict.
+#
+# bee_idx  event    sample    sentinel / class          what to look at in AFTER
+0   179369  mcp2k   pr/130 B                  A spurious pi0 is BACK: the sentinel asserts pf_absent 'pi0' and AFTER has one among 46 PF nodes. This sentinel exists because pr/130 removed that pi0. Enu 1327->1457 MeV (+130); numu 3.23->3.53.
+1   47212   mcp2k   pr/120 stem_backfill      The muon PF node is GONE: sentinel wants a mu- of >= 40 MeV, AFTER has none at all. Enu 1413->1312 MeV (-101); vtx 1.8 cm.
+2   175896  mcp1k   pr/130 backfill           The proton collapses 100 -> 31 MeV (sentinel wants >= 100). pr/130 shipped the guard that stops a declined proton being re-adopted. Enu 326->386 MeV; vtx 11.7 cm.
+3   393505  mcp2k   pr/129 cosmic             Enu 560 -> 858 MeV, far outside the sentinel window [540,600], and a 'mu- 268' node appears among 14. The sentinel asserts cosmic cluster 15 is no longer counted.
+4   94392   mcp2k   pr/129 guard-freed        Enu 1040 MeV against the sentinel window [1136,1149] -- the guard-freed/continuation hand-off no longer lands where pr/129 put it.
+5   171572  mcp2k   pr/129 real daughter      The real daughter 'mu- 304' the pointing guard was shipped to KEEP is missing from the 11 PF nodes AFTER.
+6   177536  mcp2k   doc 84 r2.1               The cathode-bridge muon drops 800 -> 644 MeV (a second node at 276). Is the long muon being split? Enu 1222->1340 MeV.
+7   347890  mcp2k   doc 84 r4                 The bridged track partner's muon 460 -> 429 MeV -- a 7 % shortfall, milder than the rows above; included as the marginal case.
+8   137238  nuecc48 pr/93 r4 + pr/127 sccc    Sentinel wants every mu- under 150 MeV; AFTER has 212 (plus 63, 60). Also a nue-BDT fill flip and Enu 736 -> 1161 MeV (+426).
+9   111412  nuecc48 top mover (FOR the fix)   The strongest single argument in favour: nue_score 0.23 -> 9.04, crossing the uB nue>7.0 point, with the vertex moving 42.3 cm. Does the AFTER vertex sit better on the charge?
+10  98844   mcp2k   top mover (vertex)        The largest vertex move in 3067 events, 52.4 cm. numu 1.27->0.68.
+11  100135  mcp2k   top mover (energy)        The largest energy move, Enu 144 -> 1369 MeV (+1225), numu -0.90 -> 4.48. Enormous -- worth knowing which arm is right.

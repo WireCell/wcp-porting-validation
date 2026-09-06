@@ -1,0 +1,11 @@
+sample	arm	rows	evaluated	degenerate	clean
+nuecc48	d144off	48	48	0	48
+nuecc48	d144on	48	48	0	48
+ncpi0	d144off	19	19	0	19
+ncpi0	d144on	19	19	0	19
+mcp1k	d144off	1000	462	16	446
+mcp1k	d144on	1000	462	16	446
+mcp2k	d144off	2000	906	34	872
+mcp2k	d144on	2000	906	34	872
+ALL	d144off	3067	1435	50	1385
+ALL	d144on	3067	1435	50	1385
