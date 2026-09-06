@@ -802,13 +802,12 @@ Event-wide on 029107/12 (`figs/d04_wrapped_exclusion_census.tsv`):
 | sampled U / V / W > 10 | 0.535 / 0.426 / 0.989 | 0.977 / 0.983 / 0.989 |
 | **2-D charge present in all three planes** | **0.9949** | **0.9949** |
 | clusters tagged `TGM=true` | 18 | **23** |
-| which ones | 4 12 17 27 39 43 49 60 61 65 75 86 90 105 106 115 122 123 | the same 18 **plus 31, 47, 102, 103, 128** |
+| which ones | (idents moved to the sec 11 KEY file -- the scan is blind) | strictly a superset of the 18 |
 
 The move is **strictly additive** -- no cluster lost its TGM tag -- but "5 more TGM tags" is
 **not** the same claim as "5 more correct TGM tags": a guard that stops rejecting also stops
-rejecting things it should reject.  Only cluster 128 was examined.  The other four (**31, 47, 102,
-103**) are named so they can be looked at in the Bee set before anyone reads this row as an
-improvement.
+rejecting things it should reject.  Only cluster 128 was examined here; the other four go into the
+sec 11 hand scan.
 
 The last row of the middle block is the whole finding in one line: **the 2-D measurement is
 identical in the two arms -- 99.49 % of all points have charge in all three views either way.  Only
@@ -1025,8 +1024,8 @@ explicit TLA did**, byte for byte.
 2. **Re-run `d04_stm_tagger_census.py`.**  Every population number in secs 2-4 -- including the
    PDHD-vs-PDVD STM comparison this whole doc started from -- is measured on the broken cloud and
    is provisional.
-3. **The four other new TGM tags** (clusters 31, 47, 102, 103 on 029107/12) have not been looked
-   at.  "More tags" is not "more correct tags".
+3. **The four other new TGM tags on 029107/12** have not been looked at.  "More tags" is not
+   "more correct tags".  Superseded by sec 11, which scans all of them.
 4. **The `PrDisplayDump` / magnify-visitor channel-count cousin** of sec 9.3: unfixed, display
    only, needs its own change.
 5. **SBND and uBooNE config-diff gates will flag one new key each.**  Expected; not investigated
@@ -1128,12 +1127,18 @@ It is **not**: it survives the fix untouched, so it is a separate defect and sta
 The STM movement is the one to read carefully, and cluster idents are comparable across arms
 (sec 10.2 proves the clustering is the same objects):
 
-| | count | which |
-|---|---|---|
-| STM tags **lost** | 9 | evt1 32, 112, 113; evt12 103, 108; evt16 111; evt20 150; evt22 48, 119 |
-| ... of those, **now tagged TGM** | **4** | evt1 112; evt12 103; evt20 150; evt22 48 |
-| ... remainder, unexplained | **5** | evt1 32, 113; evt12 108; evt16 111; evt22 119 |
-| STM tags **gained** | 8 | evt0 63; evt12 21, 25; evt16 53, 129; evt20 105; evt22 27, 36 |
+| | count |
+|---|---|
+| STM tags **lost** | 9 |
+| ... of those, **now tagged TGM** | **4** |
+| ... remainder, unexplained | **5** |
+| STM tags **gained** | 8 |
+
+> The per-cluster idents used to be printed here.  They were **moved out** on 2026-09-06 when the
+> sec 11 hand scan was built: the scan is blind, and a reader who has seen "evt1 cluster 32 lost
+> its STM tag" cannot then label cluster 32 without knowing the answer
+> (`feedback_blind_the_scan_sheet`).  They are in
+> `bee-pr-run029107-d04movers.KEY.tsv`, to be read **after** scanning.
 
 A cluster that moves from STM to TGM is a **correction**, not a loss -- a through-going muon is not
 a stopping muon, and that reclassification is exactly what the fix is for.  Net STM is -1 (38 ->
@@ -1154,19 +1159,127 @@ Still owed, unchanged from sec 9.7 except where marked:
    supersede it *for these six events only*; the 30-event PDHD arm and the PDHD-vs-PDVD comparison
    of sec 3 have **not** been re-run.  Sec 2's `no steiner_pc` lead is now known to be
    **independent** of this defect (61 -> 61) and is unaffected by that caveat.
-3. **A hand scan of the movers** is now the top item: the 26 new TGM tags, the 8 new STM tags and
-   the 5 unexplained STM removals.  A Bee set at the doc-04 scope over the `d05mON` arm is the
-   scan sheet; it has not been built.
+3. ~~**A hand scan of the movers.**~~  Package **built and uploaded -- sec 11**; the labels are
+   outstanding.
 4. The `PrDisplayDump` / magnify-visitor channel-count cousin of sec 9.3: unfixed, display only.
 
-## 11. Not done / next
+## 11. The hand scan of the movers (owner 2026-09-06: "yes, please, I am happy to do a hand scan")
+
+**Built and uploaded; the labels are the owner's to supply.**  This section pre-registers the bar
+*before* any label exists.
+
+### 11.1 The package
+
+| what | where |
+|---|---|
+| **Bee set (blind)** | `https://www.phy.bnl.gov/twister/bee/set/6bd58e60-04b2-4c9f-8c0f-eb8021892230/event/list/` |
+| scan sheet (blind) | `pdhd/bee-pr-run029107-d04movers.sheet.tsv` |
+| bee index -> event | `pdhd/bee-pr-run029107-d04movers.index.txt` |
+| **answer key -- read AFTER** | `pdhd/bee-pr-run029107-d04movers.KEY.tsv` |
+| builder | `docs/scripts/d04_movers_scan.py` (derives the movers from the two arms' PR logs; nothing hand-copied) |
+
+```
+python3 docs/scripts/d04_movers_scan.py \
+    --off work/029107_{0,1,12,16,20,22}_d05mOFF \
+    --on  work/029107_{0,1,12,16,20,22}_d05mON  \
+    --out pdhd/bee-pr-run029107-d04movers
+BROWSER=echo ./upload-to-bee.sh bee-pr-run029107-d04movers.zip
+```
+
+**39 objects, 43 moves** -- four objects gained TGM *and* lost their STM tag in the same step, so
+the object count and the move count differ on purpose.  Bee index order = events 0, 1, 12, 16, 20,
+22.
+
+### 11.2 Blinding
+
+The set carries **three** kinds of layer and no others:
+
+* `clustering` -- the full 3-D image of the event, i.e. the dense local context a fragment
+  judgement needs;
+* `channel-deadarea-*` -- where charge could not have been seen, so "it stops" can be told from
+  "it enters a dead region";
+* `scan` -- **only the 39 movers**, so they can be found among ~100 clusters per event.
+
+Deliberately **absent**: `stm`, `stm_fit`, `stm_tagged`, `steiner_graph`, `steiner_terminals`.
+Those layers *are* the tagger's answer, and the tagger's answer is the thing this scan exists to
+test (`feedback_blind_the_scan_sheet`).  Proven from the server rather than asserted: the set's
+`event/list/` page lists exactly `clustering-global` and `scan-global` per event, and
+`.../event/0/stm_tagged-global/` returns *"does not exist"*.
+
+The sheet prints `bee_idx, event, cluster, npts` and nothing else -- **not** which way the object
+moved.  Sec 10.3's per-ident lists were moved into the KEY file for the same reason.
+
+### 11.3 Label vocabulary
+
+```
+  THRU        through-going: BOTH ends leave the active volume (or die in a dead region at it)
+  STOP        stopping: ONE end enters, the other stops inside the active volume
+  CONT        fully contained: NEITHER end reaches a boundary
+  FRAG>THRU   this cluster is only PART of the object; the FULL object is through-going
+  FRAG>STOP   this cluster is only PART of the object; the FULL object is a stopper
+  FRAG>CONT   this cluster is only PART of the object; the FULL object is contained
+  MESSY       ill-posed: several particles merged, or a shower
+  UNCLEAR     cannot judge from the display
+```
+
+`FRAG>` carries the **full object's** verdict on purpose: a fragment of a through-goer and a
+fragment of a stopper are opposite physics truths, and one undivided `FRAG` bucket would throw the
+second kind away (`feedback_fragment_label_carries_object_verdict`).  `FRAG` is about the
+*cluster*, `MESSY` about the *object*, `UNCLEAR` about the *scanner's confidence* -- keep them
+distinct.
+
+### 11.4 Judgeability, measured before the bar is written
+
+Object size is the clean predictor of whether a display question is answerable at all (doc
+pdhd/stm-tagger-chain sec 13: ~100 % unjudgeable below 50 points, ~95 % at 50-200, 7 % above
+4000).  This sample:
+
+| npts band | objects | of which TGM-gained |
+|---|---|---|
+| **>= 1000 (well resolved)** | **30** | **24** |
+| 200-1000 (hard) | 3 | 0 |
+| < 200 (essentially unjudgeable) | 6 | 2 |
+
+Median 6204 points, max 15042, min 3.  **The bar below therefore rests only on the >= 1000 TGM
+subset**, which is 24 of the 26 TGM gains -- the effect and the resolution are in the same place.
+Pre-registering a threshold on the STM movers would repeat the doc-13 mistake: only 4 of the 8
+gains and 2 of the 5 unexplained losses clear 1000 points, so any clause about them would be
+unsatisfiable by construction.
+
+### 11.5 The pre-registered bar
+
+**Primary (decides the round).**  Over the TGM-gained objects with `npts >= 1000` (n = 24):
+
+* **PASS** if `THRU` + `FRAG>THRU` >= **80 %** of the *judgeable* ones (excluding `UNCLEAR`), **and**
+  `STOP` + `FRAG>STOP` <= **10 %**.
+
+The second clause is the one that matters for physics: a guard that stops rejecting will also stop
+rejecting things it should reject, and calling a **stopping** muon through-going is the harmful
+failure -- it removes a real STM candidate from the sample this whole doc is about.
+
+**Reported, not gated:** the 8 STM gains, the 5 unexplained STM removals, the 3 hard and 6
+unjudgeable objects, and the `UNCLEAR` rate per band (which is its own number: it measures the
+display, not the tagger).
+
+**What each outcome means.**  PASS => the flip is validated as physics *on this sample*, and the
+sec 2-4 population numbers can be re-derived on the fixed cloud.  FAIL => the 26 TGM gains are not
+all real; the mislabelled ones get read individually before any STM efficiency claim rests on this
+chain.  Either way this is 6 events -- it bounds nothing about the full run.
+
+### 11.6 Returning the labels
+
+Fill the `label` column of `bee-pr-run029107-d04movers.sheet.tsv` (`note` is free text, e.g. which
+end is in a dead region) and hand it back.  Scoring is one command against the KEY, and the bar
+above is fixed as of this commit -- it is not to be re-tuned after the labels are seen.
+
+## 12. Not done / next
 
 0. **The lead, after secs 8-10:** every population number in secs 2-4 is measured on a point cloud
    whose induction charge is missing on ~30 % of points.  The 6-event manifest has now been re-run
    end to end (sec 10) and supersedes them *for those six events*; the 30-event PDHD arm and the
    PDHD-vs-PDVD comparison of sec 3 have not.  The **hand scan of sec 10.3's movers** -- 26 new TGM
    tags, 8 new STM tags, 5 unexplained STM removals -- is the next step that would turn a validated
-   flip into a physics statement.
+   flip into a physics statement.  The blind package is sec 11; only the labels are missing.
 1. The Bee set is the scan sheet; no hand scan has been made from it.  Nothing here is a
    recommendation to change a threshold.
 2. The status-2/status-4 excess (sec 3) is the lead.  It needs one hand pass over the `stm` +

@@ -1,0 +1,59 @@
+# doc pdhd/04 sec 11 -- BLIND hand-scan sheet.  Bee set: bee-pr-run029107-d04movers.zip
+# One row per object whose cosmic-tagger verdict moved when the wrapped-channel
+# charge lookup was fixed.  WHICH WAY it moved is deliberately NOT printed here
+# (it is the thing this scan tests); it is in the .KEY.tsv, to be read AFTER.
+# Toggle the 'scan' layer to see only these objects; 'clustering' is the full context.
+#
+# label vocabulary (put one in the 'label' column):
+#
+#  THRU        through-going: BOTH ends leave the active volume (or die in a dead region at it)
+#  STOP        stopping: ONE end enters, the other stops inside the active volume
+#  CONT        fully contained: NEITHER end reaches a boundary
+#  FRAG>THRU   this cluster is only PART of the object; the FULL object is through-going
+#  FRAG>STOP   this cluster is only PART of the object; the FULL object is a stopper
+#  FRAG>CONT   this cluster is only PART of the object; the FULL object is contained
+#  MESSY       the object is ill-posed: several particles merged, or a shower
+#  UNCLEAR     cannot judge from the display
+#
+# FRAG> carries the FULL object's verdict on purpose: a fragment of a through-goer
+# and a fragment of a stopper are opposite physics truths.
+bee_idx	event	cluster	npts	label	note
+0	0	63	9		
+0	0	101	3943		
+0	0	118	4518		
+0	0	124	4594		
+0	0	132	7976		
+1	1	32	630		
+1	1	77	12870		
+1	1	83	12289		
+1	1	98	7740		
+1	1	110	7898		
+1	1	111	7794		
+1	1	112	13013		
+1	1	113	1955		
+2	12	21	275		
+2	12	25	13547		
+2	12	31	12407		
+2	12	47	15042		
+2	12	102	2638		
+2	12	103	6376		
+2	12	108	6714		
+2	12	128	11517		
+3	16	53	88		
+3	16	86	10158		
+3	16	90	5676		
+3	16	91	8153		
+3	16	97	11360		
+3	16	111	32		
+3	16	129	4897		
+4	20	13	4		
+4	20	31	11432		
+4	20	63	6221		
+4	20	105	1770		
+4	20	150	6204		
+5	22	27	3337		
+5	22	36	163		
+5	22	47	3		
+5	22	48	4262		
+5	22	107	6496		
+5	22	119	518		
