@@ -1,0 +1,49 @@
+# pdhd -- arms and dirs that must survive any retire round
+#
+# WHY THIS FILE EXISTS.  pdhd had no retire machinery and no protection list
+# until 2026-09-05.  The sbnd_xin file of the same name explains the general
+# problem (each round's driver carries its own inline PROTECTED and nothing
+# carries forward automatically); this file is pdhd's carry-forward list.
+#
+# It does NOT retire anything and is not executable.  A round's planner must
+# union its inline PROTECTED with every line below.  Removing a line is a
+# deliberate decision; never remove one because a doc "already has the
+# numbers" -- CLAUDE.md M13 protects the record, not the summary of it.
+#
+# Format: <arm-or-path>  TAB  why it must survive  TAB  who cites it
+# Field 1 may hold several whitespace-separated names.
+# Housekeeping: when something is genuinely superseded, move its line to the
+# RETIRED section at the bottom with the date; do not delete it.
+#
+# PRIMARY SOURCE for the first four blocks: docs/stm-tagger-chain.md line 95
+# (the sec-0 repro block) and line 901 (its "Not committed:" list).  Those two
+# lines are the doc's own statement of what exists only on disk.
+
+# --- the STM hand scan (doc sec 13, closed 2026-09-05) --------------------
+029107_{0..29}_stm0	knob-OFF arm; ARM_DIR in stm_scan/stm_scan_viewer.py:90 -- the display reads THIS arm, so it is the dump source the 224 hand labels were scanned against.  Verified 2026-09-05: all 30 events in docs/scan/pdhd_retile_scan_labels.json resolve 30/30 here, mabc-pr.zip present 30/30.  A fresh arm at a different operating point is never a substitute (the 08-31 prod0825 doctrine).	docs/stm-tagger-chain.md sec 13; stm_scan/
+029107_{0..29}_stmw	knob-ON arm.  Load-bearing for the STRUCTURAL BLIND, not just for the numbers: the claim that the viewer cannot leak the answer rests on clustering-global and channel-deadarea being byte-identical between stm0 and stmw by zip-member SHA-256.  Deleting either arm makes that blind un-recheckable.	docs/stm-tagger-chain.md sec 13.1; stm_scan/stm_scan_viewer.py:17-18
+029107_*_stmc4000 029107_*_stmc2000 029107_*_stmc1000 029107_*_stmc250	the sec-12 terminal-charge scan; these four arms back the 0.134 -> 0.484 eligible-point ceiling (3.6x) that sec 13 then graded and rejected.  Named in the doc's own "Not committed" list.	docs/stm-tagger-chain.md sec 12.4, sec 901
+029107_*_phdump 029107_*_phdumpw 029107_*_wcc 029107_*_wccdump 029107_*_wccdumpw	single-event probes behind sec 12; named in the doc's own "Not committed" list.	docs/stm-tagger-chain.md line 901
+
+# --- the substrate the above borrows from (measured, not assumed) ---------
+029107_<N> (38 bare run_evt dirs)	SUBSTRATE, not old arms.  Symlink census 2026-09-05: _stm0 holds 270 links INTO these dirs (SP+DNNROI frames, clusters-apa-*.tar.gz, opflash), and every other stm arm then borrows 60 links each from _stm0.  Releasing a bare dir breaks the protected scan arms.  Same shape as pdvd's d27fresh.	symlink census; run_clus_evt.sh
+029107_allpd*	link targets of the bare dirs and of _stm0 (1 link each); part of the same connected substrate.	symlink census
+
+# --- label dirs: CLAUDE.md M13 ------------------------------------------
+work/stm_scan_labels/	hand-scan labels, the scientific record itself	M13
+work/ql_labels/	hand-scan labels from the earlier ql_scan round	M13
+
+# --- pinned binary and analysis products in ~/tmp ------------------------
+/home/xqian/tmp/pdhdstm_libpin	the binary the sec-12/13 arms were produced with; named in the doc's own "Not committed" list.  A sweep that drops it leaves the arms re-readable but NOT re-runnable, and note a missing LD_LIBRARY_PATH entry is silently ignored (M1 shape, doc 100).	docs/stm-tagger-chain.md line 901
+/home/xqian/tmp/pdhdstm/{ana2,ctl2,scan}	analysis products behind sec 12 and sec 13; named in the doc's own "Not committed" list.	docs/stm-tagger-chain.md lines 95, 901
+
+# --- inputs owned by another user: never delete THROUGH a symlink --------
+input_data_7p8_new_coh_grouping	symlink -> /nfs/data/1/xning/wirecell-working/data/hd  -- another user's tree	-
+input_data_14_old_coh_grouping	symlink -> /nfs/data/1/xning/wirecell-working/data/hd_old_3wire/  -- another user's tree	-
+
+# --- pulled from the 09-05 retire set by INTERLOCK 6 (cross-repo citation) ---
+029107_0_qlt	Q/L timing arm cited by PDVD docs qlmatch/02_pdvd-anode-time-consistency.md and qlmatch/03_pdhd-anode-time-consistency.md.  A pdhd-only blast-radius check would not have seen this -- it is the doc 100 sec 10 shape (pdvd docs 28/31 cited an SBND arm that an SBND-only check released).	pdvd/docs/qlmatch/{02,03}
+029107_0_perfslide	the timing arm behind the pdhd computational-performance doc	pdhd/docs/pdhd-computational-performance.md
+
+# ================= RETIRED =================
+# (nothing yet)
