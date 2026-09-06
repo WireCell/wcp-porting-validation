@@ -1373,7 +1373,12 @@ lost and are now named.
    only adverse finding of the scan and the only item the fix made worse.  It is two objects over
    six events, it is *not* a reason to unflip anything, and it is unread: nobody has looked at why
    `TaggerCheckSTM` stops fitting or stops passing on them with the charge restored.  Next step is
-   one `stm_fit` / `steiner_graph` pass over those two clusters in both arms.
+   one `stm_fit` / `steiner_graph` pass over those two clusters in both arms.  **The sets for that
+   are built and uploaded** -- doc [pdhd/05](05_mover-scan-display.md) sec 8, one Bee link per arm,
+   all layers -- and the fit numbers there already say the two are **different** failures: evt 1
+   cl 113 fits the same as before (kink 442->453) and is vetoed by an accept guard (status 7),
+   while evt 12 cl 108 has its kink relocate 758->114 and trips the contained test (status 2).
+   Neither is read past that.
 1. **The population numbers of secs 2-4 are still measured on the broken cloud.**  The 6-event
    manifest has been re-run end to end (sec 10) and supersedes them *for those six events*; the
    30-event PDHD arm and the PDHD-vs-PDVD comparison of sec 3 have not been re-run.

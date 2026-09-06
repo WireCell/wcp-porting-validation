@@ -79,6 +79,19 @@ function(
     // NOT byte-identical: it changes the pctree, hence clustering and Q/L
     // output.  Pass false here to reproduce a pre-2026-09-06 run.
     wrapped_channel_charge = true,
+    // doc pdhd/06: record what clustering_isolated MERGED (the perblob arrays
+    // isolated / assoc_cluster_id / assoc_cluster_main) so the PR job's
+    // unmerge_assoc visitor can undo it.  PDHD runs cm.isolated() at the
+    // per-drift-group stage; it just never saved the provenance, so the PR
+    // stage had nothing to undo and was inert.  Counterpart of pdvd's
+    // clus_save_assoc_id (doc pdvd/39 round 2).
+    //
+    // Additive: three perblob arrays.  Cluster membership and every physics
+    // number are untouched, but the pctree is NOT byte-identical (it gains the
+    // arrays), so a pctree written with this on and one written with it off are
+    // different files.  false (default) => both keys omitted => byte-identical
+    // compiled config.  Runner flag: run_clus_evt.sh -save-assoc.
+    clus_save_assoc_id = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -116,7 +129,8 @@ local group_pipe(gd) =
     local actives = [cluster_source("%s/clusters-apa-apa%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local maskeds = [cluster_source("%s/clusters-apa-apa%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false, wrapped_channel_charge=wrapped_channel_charge) for i in std.range(0, n - 1)];
-    local pg = clus_maker.per_group(gd.anodes, gd.name, gd.face, dump=false);
+    local pg = clus_maker.per_group(gd.anodes, gd.name, gd.face, dump=false,
+                                    save_assoc_id=clus_save_assoc_id);
     g.intern(
         innodes = actives + maskeds,
         centernodes = apa_pipes,
@@ -132,8 +146,10 @@ local group_pipes = [group_pipe(gd) for gd in groups];
 // all-TPC stage skips its input PointTreeMerging (premerged).  Without matching the two
 // per-side clustering outputs still fan into the ngroups-way merge.
 local clus_all_tpc = if do_qlmatch
-    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash, tensor_outname=save_tensors)
-    else clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash, tensor_outname=save_tensors);
+    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash, tensor_outname=save_tensors,
+                            save_assoc_id=clus_save_assoc_id)
+    else clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash, tensor_outname=save_tensors,
+                            save_assoc_id=clus_save_assoc_id);
 
 // JOINT Q/L matching: both drift sides enter ONE QLMatching node (like SBND) so the
 // cross-cathode (xTPC) consistency pass can pair a cathode-crosser's two halves.  Per

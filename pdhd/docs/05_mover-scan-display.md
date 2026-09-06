@@ -205,11 +205,73 @@ predicted — so the panels were sufficient wherever the bar depended on them. T
 their place: `evt 16 cluster 90` came back `FRAG>THRU`, a distinction that only exists if you can
 see grey charge continuing past an end. What it cannot take credit for is the verdict itself.
 
-## 8. Not done
+## 8. Follow-up sets: the two lost stoppers, both arms, all layers
 
-- Nothing further on this scan. The display stays for the next one — the natural user is doc 04
-  §12 item 0, the two lost stoppers, which needs `stm_fit` / `steiner_graph` layers this app
-  deliberately does not open and so would need a non-blind variant.
+Doc 04 §12 item 0. Built by `docs/scripts/d05_arms_bee.py`, which is the **opposite** of
+`d04_movers_scan.py` on purpose: that one withheld the tagger layers because the scan it fed was
+testing the tagger's answer, and that scan is over. This is a diagnostic, so it keeps every layer
+— `stm`, `stm_fit`, `stm_tagged`, `steiner_graph`, `steiner_terminals`, `clustering`,
+`channel-deadarea-*` — plus a `scan` layer holding just the cluster in question.
+
+One set per **arm**, not one set with the arms interleaved: two Bee slots that both say "event 1"
+are indistinguishable inside the display, so the arm has to be in the URL.
+
+| | link | slot 0 | slot 1 |
+|---|---|---|---|
+| **pre-fix** (`d05mOFF`) | https://www.phy.bnl.gov/twister/bee/set/9e9f8a08-ad36-4de4-99f9-0bbf0662d6e5/event/list/ | evt 1, cl 113 | evt 12, cl 108 |
+| **fixed** (`d05mON`, production) | https://www.phy.bnl.gov/twister/bee/set/e08a179b-018e-4d80-9d1a-ee3de3781dce/event/list/ | evt 1, cl 113 | evt 12, cl 108 |
+
+```bash
+python3 docs/scripts/d05_arms_bee.py --dirs work/029107_1_d05mOFF work/029107_12_d05mOFF \
+        --out bee-pr-run029107-d05lostOFF --highlight 1:113,12:108
+python3 docs/scripts/d05_arms_bee.py --dirs work/029107_1_d05mON  work/029107_12_d05mON  \
+        --out bee-pr-run029107-d05lostON  --highlight 1:113,12:108
+```
+
+Both clusters have **bit-identical point sets across the arms** (1 955 and 6 714 points — they are
+not among the nine of §4), so `stm_tagged` present on the left and absent on the right is a clean
+A/B on the same object.
+
+### 8.1 What the logs already say — and it is two different mechanisms
+
+Read before opening the display, because it changes what to look at. `persist_stm_fit`, both arms:
+
+| | evt 1 cluster 113 | evt 12 cluster 108 |
+|---|---|---|
+| STM, pre-fix → fixed | 1 → **0** | 1 → **0** |
+| fit `status` | 0 → **7** | 0 → **2** |
+| `kink` | 442 → 453 | 758 → **114** |
+| `exit_L` | 278.3 → 283.7 cm | 480.5 → **68.7 cm** |
+| `left_L` | 0.0 → 0.0 cm | 25.1 → **506.6 cm** |
+| fit `npts` | 442 → 453 | 797 → 909 |
+| components (`component_extreme_wcps`) | 5 → 8, 1 above 10 cm both ways | 6 → 6, unchanged |
+
+**They are not the same failure.**
+
+- **evt 1 cluster 113 — the fit barely moves and a guard rejects it.** Kink 442→453, exit length
+  278.3→283.7 cm: with the induction charge restored the fit lands in the same place. Status **7**
+  is `accept_guards_reject` — the doc-63 round-1 *desert + spike* pass-level guards
+  (`TaggerCheckSTM.cxx:3798-3857`). So this object still fits as a stopper and is then vetoed by a
+  guard that reads the charge profile, on charge that just changed. That is the more suspicious of
+  the two: a guard tuned on the broken cloud is exactly the kind of thing this fix would newly
+  trip.
+- **evt 12 cluster 108 — the fit itself relocates.** The kink moves from point 758 to point 114 and
+  `left_L` from 25.1 cm to 506.6 cm, so the fit now says the track exits after 69 cm with five
+  metres unaccounted for. Status **2** is the `left_L > 40 cm` "Mid Point A" branch
+  (`TaggerCheckSTM.cxx:3712`), which is the *contained* rejection — it is counted in §10.3's
+  "fully contained (Mid Point A)" row. Here the question is why the restored charge moved the kink
+  to near the start of the track.
+
+Neither has been read further than this. `feedback_status_code_is_not_a_mechanism` is why the
+table above quotes the fit's own numbers rather than just the status: the status alone would have
+made these look like one problem with two labels, and they are two problems.
+
+## 9. Not done
+
+- The two lost stoppers themselves. §8 built and uploaded the sets and read the fit numbers; why
+  the accept guard fires on one and why the kink relocates on the other are both unread.
+- Nothing further on the mover scan. The display stays for the next blind one; a non-blind variant
+  (showing `stm_fit` / `steiner_graph`) would be the tool for §8, and does not exist.
 - No 2-D wire-plane (channel vs time) view: the ctpc is not in the Bee zip, so "the end is in a
   dead region" is answerable here only through the (y, z) dead-area polygons and the measured
   distance to them.

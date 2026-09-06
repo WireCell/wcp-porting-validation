@@ -1,0 +1,4 @@
+# bee_idx -> event.  FULL-LAYER set (doc pdhd/05 sec 9): the tagger layers
+# ARE included -- this is a diagnostic, not a blind scan.
+0	029107 evt 1	029107_1_d06um	channel-deadarea-apa1-face1,channel-deadarea-apa2-face0,channel-deadarea-apa3-face1,clustering,scan,steiner_graph,steiner_terminals,stm,stm_fit,stm_tagged	highlighted: cl 113 (1866 pts)
+1	029107 evt 12	029107_12_d06um	channel-deadarea-apa1-face1,channel-deadarea-apa2-face0,channel-deadarea-apa3-face1,clustering,scan,steiner_graph,steiner_terminals,stm,stm_fit,stm_tagged	highlighted: cl 108 (6670 pts)

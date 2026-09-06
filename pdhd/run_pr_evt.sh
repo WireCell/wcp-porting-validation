@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run the PDHD pattern-recognition (PR) tail for one event.
-# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-stm|-nu|-nu-legacy|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
+# Usage: ./run_pr_evt.sh [-s sel_tag] [-stm-fit] [-unmerge] [-stm|-nu|-nu-legacy|-empty] [-pipe a,b,c] <run> <evt|all> [subrun]
 #
 # Forked BY DUPLICATION from pdvd/run_pr_evt.sh; the PDVD script is untouched.
 # See pdhd/docs/stm-tagger-chain.md and pdhd/docs/03_check-stm-michel-pdhd.md.
@@ -81,11 +81,14 @@ export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1} MKL_NUM_THREADS=${MKL_NUM_THREADS:-
 SEL_TAG=""
 MODE=stm    # cosmic taggers only, up to tagger_check_stm; -nu appends the PR tail
 STM_FIT=0
+UNMERGE=0   # doc pdhd/06: split back what clustering_isolated merged
 PIPE_EXPLICIT=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
+        -unmerge|--unmerge) UNMERGE=1; shift ;;   # doc pdhd/06
+        -nounmerge|--nounmerge) UNMERGE=0; shift ;;
         -stm) MODE=stm; shift ;;
         -nu) MODE=nu; shift ;;
         -nu-legacy) MODE=nulegacy; shift ;;   # doc pdhd/03: the pre-replacement neutrino PR tail
@@ -102,9 +105,19 @@ if [ $# -lt 2 ]; then
 fi
 RUN=$1; EVT=$2; SUBRUN_ARG=${3:-}
 
-# PDHD pipelines.  unmerge_assoc is DELIBERATELY absent: PDHD's clustering runs
-# no cm.isolated() merge (the defect doc pdvd/39 round 2 undoes on PDVD), so
-# there is no isolated grouping to split and the stage would be inert.
+# PDHD pipelines.  unmerge_assoc is OFF BY DEFAULT and selected with -unmerge
+# (doc pdhd/06).
+#
+# CORRECTION 2026-09-06: this comment used to read "unmerge_assoc is
+# DELIBERATELY absent: PDHD's clustering runs no cm.isolated() merge ... so the
+# stage would be inert".  The first clause is FALSE -- the compiled PDHD
+# clustering config contains TWO live ClusteringIsolated instances (group02,
+# group13), and cm.isolated() MERGES, not groups (clustering_isolated.cxx: the
+# save_assoc_id knob gates only the RECORDING of what was merged, never the
+# merge).  The conclusion "inert" happened to be right, for the other reason:
+# PDHD never wrote the assoc_cluster_id/assoc_cluster_main provenance, so there
+# was nothing for the visitor to undo.  That is now a knob:
+# run_clus_evt.sh -save-assoc writes it, this -unmerge consumes it.
 PIPE_STM="switch_scope,flag_mains,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,pr_display"
 # doc pdhd/03 (owner 2026-09-05): -nu runs the STM + Michel stage
 # (check_stm_michel) in place of the neutrino PR tail; tagger_output is dropped
@@ -120,6 +133,18 @@ case "$MODE" in
     empty) PIPE="" ;;
 esac
 [ -n "$PIPE_EXPLICIT" ] && PIPE="$PIPE_EXPLICIT"
+# Position (PDVD parity, doc pdvd/39 sec 11): AFTER flag_mains and BEFORE
+# steiner -- before steiner because separate() does not carry node-local PCs, so
+# the split must precede steiner_pc creation; after flag_mains so the split-off
+# fragments are removed from the main's Steiner build and STM fit WITHOUT being
+# promoted to mains and given cosmic verdicts of their own.
+if [ "$UNMERGE" = 1 ] && [ -n "$PIPE" ]; then
+    case ",$PIPE," in
+        *,unmerge_assoc,*) ;;
+        *,flag_mains,*) PIPE="${PIPE/flag_mains,/flag_mains,unmerge_assoc,}" ;;
+        *) echo "ERROR: -unmerge needs flag_mains in the pipeline (got '$PIPE')" >&2; exit 4 ;;
+    esac
+fi
 if [ "$STM_FIT" = 1 ] && [ -n "$PIPE" ]; then PIPE="$PIPE,stm_magnify"; fi
 PIPE_JSON="[$(echo "$PIPE" | sed -e 's/,/","/g' -e 's/^/"/' -e 's/$/"/' -e 's/^""$//')]"
 
@@ -158,6 +183,24 @@ process_event() {
         echo "[skip] run=$RUN evt=$EVT: the pctree was written WITHOUT Q/L matching (qlmatch=$QL); no matched bundles to tag" >&2
         return 2
     fi
+    # doc pdhd/06: unmerge_assoc reads the assoc_cluster_id/assoc_cluster_main
+    # perblob arrays.  On a pctree written without -save-assoc they are absent
+    # and the visitor is SILENTLY INERT -- it cannot invent what was never
+    # recorded, and the run looks like a normal one.  That silence is exactly
+    # the failure this feature exists to fix, so refuse instead.  Keyed on the
+    # selected PIPELINE, not on the -unmerge flag: if unmerge_assoc ever becomes
+    # a default the flag stops being the thing that selects it.
+    case ",$PIPE," in
+        *,unmerge_assoc,*)
+            local SA
+            SA=$(awk -F= '$1=="save_assoc_id"{print $2}' "$TLAS")
+            if [ "$SA" != "true" ]; then
+                echo "ERROR: run=$RUN evt=$EVT: the pipeline contains unmerge_assoc but this pctree carries no isolated-merge provenance (save_assoc_id=${SA:-absent})." >&2
+                echo "       Re-run clustering with: ./run_clus_evt.sh -q -save-pctree -save-assoc -s <tag> $RUN $EVT" >&2
+                echo "       (or drop -unmerge; the visitor would be silently inert on this input)" >&2
+                return 4
+            fi ;;
+    esac
     local TAG_SUFFIX=""
     local LOG="$WORKDIR/wct_pr_${RUN_PADDED}_${EVT}.log"
     local CFG_JSON="$WORKDIR/.wct-pr${SEL_TAG:+_$SEL_TAG}.json"

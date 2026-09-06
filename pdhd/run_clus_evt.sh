@@ -55,6 +55,12 @@ OPDUMP=${PDHD_OPDUMP:-1}   # optical "op" bee instance (light + Q/L pred); defau
 # default => the all-TPC TensorFileSink stays in dump_mode and the compiled
 # config / mabc output are byte-identical.
 SAVE_PCTREE=${PDHD_SAVE_PCTREE:-0}
+# doc pdhd/06: record what clustering_isolated MERGED, so run_pr_evt.sh -unmerge
+# can split it back.  Additive (three perblob arrays); cluster membership and
+# every physics number are unchanged, but the PCTREE IS NOT BYTE-IDENTICAL --
+# it gains the arrays -- so a -save-assoc pctree and a plain one are different
+# files.  Default 0 => byte-identical compiled config and pctree.
+SAVE_ASSOC=${PDHD_SAVE_ASSOC:-0}
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -63,6 +69,8 @@ while [ $# -gt 0 ]; do
         # MUST precede the -s / -s* cases: '-save-pctree' starts with '-s' and the
         # -s* catch-all would swallow it as a selection tag "ave-pctree".
         -save-pctree|--save-pctree) SAVE_PCTREE=1; shift ;;
+        # Also before -s / -s*: '-save-assoc' starts with '-s'.
+        -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
@@ -80,7 +88,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-noop] [-save-pctree] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; -save-pctree: persist the pctree for run_pr_evt.sh; optical bee instance ON by default, -noop to disable)" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-noop] [-save-pctree] [-save-assoc] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; -save-pctree: persist the pctree for run_pr_evt.sh; -save-assoc: + the isolated-merge provenance run_pr_evt.sh -unmerge needs; optical bee instance ON by default, -noop to disable)" >&2
     exit 1
 fi
 RUN=$1
@@ -283,6 +291,7 @@ PY
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
         -S "readout_window_ticks=${READOUT_NTICKS}" \
         -A "save_tensors=${PCTREE_OUT}" \
+        -S "clus_save_assoc_id=$([ "$SAVE_ASSOC" = 1 ] && echo true || echo false)" \
         ${PDHD_CLUS_TLA:-} \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
@@ -301,6 +310,12 @@ speeds = sorted({n["data"]["drift_speed"] for n in cfg
 print("wires=%s" % (wires[0] if wires else "unknown"))
 # WCT internal units are mm and ns, so a speed is mm/ns: multiply by 1e3 for mm/us.
 print("drift_speed_mmus=%s" % (("%.6g" % (speeds[0] * 1e3)) if speeds else "unknown"))
+# doc pdhd/06: whether this pctree carries the isolated-merge provenance.  Read
+# from the COMPILED config, so it cannot disagree with what actually ran, and
+# read by run_pr_evt.sh -unmerge -- without it that visitor is silently inert.
+print("save_assoc_id=%s" % ("true" if any(
+    n.get("data", {}).get("save_assoc_cluster_id") for n in cfg
+    if n.get("type") == "MultiAlgBlobClustering") else "false"))
 PYPROV
     fi
     # Resource recording (additive; does not change reco output, disable with
