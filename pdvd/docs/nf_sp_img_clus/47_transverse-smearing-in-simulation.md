@@ -510,9 +510,9 @@ S1 (`figs/47_phase_bias.tsv`, `d47_phase_bias.py`) — but the truth-splat arm S
 contains no signal processing at all, gives s = −0.11 to −0.40, and a Gaussian of the same
 width binned on wires predicts −0.06 to −0.32. The pull is the estimator's own binning
 shrinkage; what is left over after subtracting it is between +0.06 and −0.06 in the
-production SP arms and −0.05 to −0.08 in the splat control, which contains no signal
-processing at all. No SP position bias is established. (Unchanged
-by `--no-clip` and by a ±5-wire window: −0.217 → −0.217 / −0.213 on PDVD U.)
+production SP arms and −0.05 to −0.08 in the splat control itself. No SP position bias is
+established. (Unchanged by `--no-clip` and by a ±5-wire window: −0.217 → −0.217 / −0.213 on
+PDVD U.)
 
 ## 8.3 The data, measured the same way
 
