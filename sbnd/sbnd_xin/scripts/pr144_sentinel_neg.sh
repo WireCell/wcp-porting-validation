@@ -20,7 +20,13 @@
 # purpose (177536, 347890, 393505 -- doc 144 secs 13/14) get no control here:
 # they are open defects, not stale thresholds.
 #
-# Usage: [PIN=/home/xqian/tmp/d144_libpin4] [JOBS=4] ./scripts/pr144_sentinel_neg.sh
+# THE 2x2.  Run once with no TLA (frame ON, the new default) and once with
+# TLA=docs/pr/pr144-legacyframe.tla SUF=leg (frame OFF).  Together with the two
+# positive arms that is {frame on, frame off} x {fix on, fix off}, which is what
+# says whether the frame patch made a shipped fix inert or whether it already was.
+#
+# Usage: [PIN=/home/xqian/tmp/d144_libpin4] [JOBS=4] [TLA=<file>] [SUF=<suffix>]
+#        ./scripts/pr144_sentinel_neg.sh
 # Then:  ./scripts/pr127_sentinels.py --arms 'work-*-d144fixprod' 'work-s144neg*'
 set -u
 PIN=${PIN:-/home/xqian/tmp/d144_libpin4}
@@ -30,20 +36,21 @@ cd "$SX" || exit 2
 export LD_LIBRARY_PATH="$PIN:${LD_LIBRARY_PATH:-}"
 export PR_EXTRA_STAGES=pr_display
 unset PR_GROUP_SIZE
-unset PR_EXTRA_TLA                      # the flipped default IS the epoch
+SUF=${SUF:-}
+if [ -n "${TLA:-}" ]; then export PR_EXTRA_TLA="$SX/$TLA"; else unset PR_EXTRA_TLA; fi
 
 LOG=/home/xqian/tmp/d144
 mkdir -p "$LOG"
-echo "=== pr144 sentinel negative controls  pin=$PIN  $(date +%F_%H:%M:%S)"
+echo "=== pr144 sentinel negative controls  suffix=${SUF:-<none>}  tla=${TLA:-<none>}  pin=$PIN  $(date +%F_%H:%M:%S)"
 md5sum "$PIN/libWireCellClus.so"
 
 # name  env-assignment  ql-root  out-tag  events...
 run() {
   local name=$1 env=$2 ql=$3 tag=$4; shift 4
   echo "--- $name  ($env)  events: $*  $(date +%H:%M:%S)"
-  env $env PR_JOBS=$JOBS ./run_pr_chain_batch.sh "$ql" "work-s144neg-$tag" data "$@" \
-      > "$LOG/s144neg_$tag.log" 2>&1
-  echo "--- $name rc=$? events=$(ls -d work-s144neg-$tag/pr_evt*/ 2>/dev/null | wc -l)"
+  env $env PR_JOBS=$JOBS ./run_pr_chain_batch.sh "$ql" "work-s144neg$SUF-$tag" data "$@" \
+      > "$LOG/s144neg_$tag$SUF.log" 2>&1
+  echo "--- $name rc=$? events=$(ls -d work-s144neg$SUF-$tag/pr_evt*/ 2>/dev/null | wc -l)"
 }
 
 run "pr/130 B back-guard dvtx"     SBND_STEM_BACKFILL_BACK_DVTX=0        work-mcp2k-d97fv   dvtx     179369
