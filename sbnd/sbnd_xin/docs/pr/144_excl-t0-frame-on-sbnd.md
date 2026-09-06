@@ -107,6 +107,28 @@ done
 python3 scripts/pr144_pick_movers.py --movers docs/pr/pr144-movers.tsv \
     --a products/d144off/*.tsv --b products/d144on/*.tsv --n 12 \
     --pick-tsv docs/pr/pr144-beepick.tsv
+
+# G. the crash fix (sec 6.4) and the arms that gate it.  d144_libpin4 = the
+#    build carrying clus/src/PRGraph.cxx's degree guard (toolkit 25baa8aa).
+LD_LIBRARY_PATH=/home/xqian/tmp/d144_libpin4 PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-mcp2k-d97fv work-mcp2k-d144fix data 494297   # rc=0, guard fires once
+PIN=/home/xqian/tmp/d144_libpin4 TAG=d144fix JOBS=12 ./scripts/pr144_arms.sh prod &
+PIN=/home/xqian/tmp/d144_libpin4 TAG=d144fix JOBS=12 ./scripts/pr144_arms.sh frameonly &
+# then, per sample: pr143_compare_arms.py work-<s>-d144on work-<s>-d144fixprod
+#                   pr143_compare_arms.py work-<s>-d144fixprod work-<s>-d144fixframeonly
+
+# H. the sentinel 2x2 (sec 16).  Negative controls at BOTH frames, one binary.
+PIN=/home/xqian/tmp/d144_libpin4 JOBS=4 ./scripts/pr144_sentinel_neg.sh
+PIN=/home/xqian/tmp/d144_libpin4 JOBS=4 TLA=docs/pr/pr144-legacyframe.tla SUF=leg \
+    ./scripts/pr144_sentinel_neg.sh
+# the two positive cells, same binary, same 9 events:
+#   no TLA                              -> work-s144pos-{mcp2k,mcp1k,nuecc48}
+#   PR_EXTRA_TLA=pr144-legacyframe.tla  -> work-s144posleg-{mcp2k,mcp1k,nuecc48}
+# prove every control is CAUSAL before believing it -- diff the per-event
+# .wct-cfg-evt<N>.json TaggerCheckNeutrino block, pos vs neg; exactly one key
+# may differ.  Then:
+python3 scripts/analysis/pr143/pr143_compare_arms.py work-s144pos-mcp2k work-s144neg-<knob>
+./scripts/pr127_sentinels.py --arms 'work-*-d144fixprod' 'work-s144pos-*'
 ```
 
 ---
@@ -1362,8 +1384,27 @@ on 393505.  The claim is about the registry's coverage, not the knobs' value.
 | **re-baselined** | 179369 (`pf_absent 'pi0'` → `pf_absent 'pi0  112'`) | Measured on both sides: pr/130 B is **alive** and still removes its own π⁰ (112) plus the `e- 201` / `gamma 201` pair and `pi+ 54`. A *different* π⁰ at 130 MeV appears in the corrected frame — on the event the owner scanned and ruled better (Bee idx 0). |
 | **new assertion kind** | `log_count_ge` | For guards whose log line names a segment id: ids renumber whenever the fit changes, the count does not. |
 
-Suite on the new epoch: **10 PASS, 0 FAIL, 1 OPEN, 7 INERT** (12 SKIP pending the
-mcp2k arm), `rc = 0`.
+### 16.3.1 The suite on the new production arm
+
+Run against the full `work-*-d144fixprod` (3067 events, the committed default on
+the crash-fixed binary), no events skipped:
+
+    19 PASS, 0 FAIL, 4 OPEN, 7 INERT, 0 SKIP        rc = 0
+
+The four OPEN are exactly the events the owner flagged or that §§13–15 name as
+open defects — 137238, 177536, 347890, 393505 — and nothing else is red.  The
+three edited entries pass on assertions that still discriminate:
+
+    PASS 72786   [ok] log_absent 'pr128 pf-orphan-near-cross-cluster'
+                 [ok] log_count_ge 'pr130 pass4_prox_guard: decline seg=' want >= 4 (seen: 4)
+    PASS 66366   [ok] pf_node_ge mu- 650 MeV (seen: 689)
+                 [ok] log_contains 'nseg_chain='
+    PASS 179369  [ok] pf_absent 'pi0  112' (46 PF nodes)
+                 [ok] log_contains 'pr130 stem_backfill_back_dvtx: suppress decline seg=17002'
+
+Before this round the same suite read **16 PASS / 14 FAIL** on the ON arm and
+**30 PASS / 0 FAIL** on the OFF arm.  The 30/0 was not the healthier number: it
+included the seven entries this 2 × 2 has now shown could not fail.
 
 ### 16.4 The consequence, stated once
 
