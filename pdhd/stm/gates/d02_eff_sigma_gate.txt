@@ -1,0 +1,56 @@
+doc pdhd/02 -- effective transverse smearing flip gates (2026-09-05)
+pin /home/xqian/tmp/pdhd02_libpin:
+e3304cb9b362cd680ee3182452751a96  /home/xqian/tmp/pdhd02_libpin/libWireCellClus.so
+1984cc94d88e9c0b7fc67dfd32495ea7  /home/xqian/tmp/pdhd02_libpin/libWireCellSigProc.so
+1f46de9fa5be3023743a847a25c6e1ca  /home/xqian/tmp/pdhd02_libpin/libWireCellRoot.so
+toolkit 76f47614 (before the flip commit), wcp-porting-img 1cecd23c
+
+GATE 1: stmwc (production arm, pin pdhdstm_libpin) vs d02ref (canonical JSON, no TLA, this pin) -- same epoch + newer default-OFF knobs inert
+GATE stmwc vs d02ref: PASS 30  FAIL 0  MISSING 0  of 30
+== evt 0 trees
+4347a8ebbdffbd47d429e5bbf8485febb9fcf4da1b15ef3a2169f3550b40cd43  work/029107_0_stmwc/tracking-stm.root
+    (absent)  T_kine
+    (absent)  T_tagger
+    31040ccafb7dafe77e0d044b7d6f57e26b7fd1803f956b3cba1a94092b36ccd5  T_rec_charge   [rows not in canonical order]
+4347a8ebbdffbd47d429e5bbf8485febb9fcf4da1b15ef3a2169f3550b40cd43  work/029107_0_d02ref/tracking-stm.root
+    (absent)  T_kine
+    (absent)  T_tagger
+    31040ccafb7dafe77e0d044b7d6f57e26b7fd1803f956b3cba1a94092b36ccd5  T_rec_charge   [rows not in canonical order]
+work/029107_0_stmwc/tracking-stm.root: blocks=30 cells=743172 cells_pred>0=150374 (20.2%) T_proj_data_sha256=b6646423fd08561f
+work/029107_0_d02ref/tracking-stm.root: blocks=30 cells=743172 cells_pred>0=150374 (20.2%) T_proj_data_sha256=b6646423fd08561f
+== evt 6 trees
+5c596000a37f88e20f971f5b879e3955a0c2de727ef396f963d6caa77ee7d626  work/029107_6_stmwc/tracking-stm.root
+    (absent)  T_kine
+    (absent)  T_tagger
+    8902424f938c135b8824f0ce96f0af1a47598b312eb9cd5cba33c4c5967d09a2  T_rec_charge   [rows not in canonical order]
+5c596000a37f88e20f971f5b879e3955a0c2de727ef396f963d6caa77ee7d626  work/029107_6_d02ref/tracking-stm.root
+    (absent)  T_kine
+    (absent)  T_tagger
+    8902424f938c135b8824f0ce96f0af1a47598b312eb9cd5cba33c4c5967d09a2  T_rec_charge   [rows not in canonical order]
+work/029107_6_stmwc/tracking-stm.root: blocks=21 cells=401465 cells_pred>0=123932 (30.9%) T_proj_data_sha256=10d1b8c333b6761a
+work/029107_6_d02ref/tracking-stm.root: blocks=21 cells=401465 cells_pred>0=123932 (30.9%) T_proj_data_sha256=10d1b8c333b6761a
+
+Compiled proof: trackfitting_config occurrences in .wct-pr_<arm>.json: d02sig=1 d02fix=1 d02prod=1
+T_proj_data sha evt 0: d02ref b6646423fd08561f d02sig 73768f725d515704 d02sigb f2ad5cb04dd3f594 d02fix 2eb02e06cb31d25d (all differ from the reference: the runtime file was read)
+
+GATE 2: d02sig (TLA copy) vs d02prod (flipped canonical file, no TLA, same pin), events 0 and 6
+== evt 0
+3a2ac3a0776ade7f55dfaaeb123f5b83066ed671725d125aedb1fd2682eacd67  9  work/029107_0_d02sig/mabc-pr.zip
+3a2ac3a0776ade7f55dfaaeb123f5b83066ed671725d125aedb1fd2682eacd67  9  work/029107_0_d02prod/mabc-pr.zip
+227b1e6d7320be0a37b57550ff83144ffae5c51cb544684183ff79aafaed9013  work/029107_0_d02sig/tracking-stm.root
+227b1e6d7320be0a37b57550ff83144ffae5c51cb544684183ff79aafaed9013  work/029107_0_d02prod/tracking-stm.root
+T_proj_data_sha256=73768f725d515704
+T_proj_data_sha256=73768f725d515704
+== evt 6
+27c10835000b9f139395e01abf3fdfe38210489c609860506039f234233fcdf0  9  work/029107_6_d02sig/mabc-pr.zip
+27c10835000b9f139395e01abf3fdfe38210489c609860506039f234233fcdf0  9  work/029107_6_d02prod/mabc-pr.zip
+d7fe803185cac2a94a333a263f5ca08c3ca78167966151169f228d1db944fc1c  work/029107_6_d02sig/tracking-stm.root
+d7fe803185cac2a94a333a263f5ca08c3ca78167966151169f228d1db944fc1c  work/029107_6_d02prod/tracking-stm.root
+T_proj_data_sha256=f75784bd50e56ffc
+T_proj_data_sha256=f75784bd50e56ffc
+
+arm=d02ref pin=/home/xqian/tmp/pdhd02_libpin tf=canonical extra='' events=all launched=2026-09-05T19:41 via run_pr_evt.sh -s d02ref -stm -stm-fit 029107 all (PDHD_MAX_JOBS=8 PDHD_KEEP_CFG=1)
+arm=d02sig pin=/home/xqian/tmp/pdhd02_libpin tf=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02.json md5 1d64286a7fd770c2 extra=' -A trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02.json' events=all date=2026-09-05T19:51:30-07:00
+arm=d02sigb pin=/home/xqian/tmp/pdhd02_libpin tf=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02b.json md5 126c355ff7a9ddd9 extra=' -A trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02b.json' events=all date=2026-09-05T19:51:30-07:00
+arm=d02fix pin=/home/xqian/tmp/pdhd02_libpin tf=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02fix.json md5 3317382ada369b67 extra=' -A trackfitting_config=/home/xqian/toolkit-dev/wcp-porting-img/pdhd/stm/pdhd_track_fitting_d02fix.json' events=all date=2026-09-05T19:49:29-07:00
+arm=d02prod pin=/home/xqian/tmp/pdhd02_libpin tf=canonical extra='' events=0 6 date=2026-09-05T20:03:30-07:00

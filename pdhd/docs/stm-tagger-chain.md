@@ -844,7 +844,14 @@ scans. §10 item 1 is still what is owed.)
    > 0.532. **Both knobs are PDHD PR production since 2026-09-05.** The full-fix
    > arm `stmwc` moves 237 tags against production and is **not** hand-scanned;
    > that scan is deferred, not waived.
-2. **Then flip the transverse constants**, re-derived, with the doc-44 grading
+2. > **DONE 2026-09-05 — doc `02_effective-transverse-smearing-pdhd.md`.** Re-derived on
+   > `stmwc` (share-matched joint: D_T,eff 6.13 ± 2.11 cm²/s, c 3.210 / 2.717 / 1.460 mm; W
+   > halves against §8.3 once the Steiner input is fixed), graded (`d02sig` vs `d02ref`: ring-share
+   > gap 0.073/0.047/0.059 → 0.030/0.018/0.032, U/V χ²/N better, W mixed, B_foot −0.03) and
+   > shipped in `pdhd_track_fitting.json` (gates in `stm/gates/d02_eff_sigma_gate.txt`). The
+   > origin of the constant: doc pdvd/47.
+
+   **Then flip the transverse constants**, re-derived, with the doc-44 grading
    (2-D metrics, ring shares, dQ/dx, STM verdict churn) as the acceptance bar.
    The measurement machinery is committed and validated (§8.1), so that round is
    a re-run, not a rebuild.
