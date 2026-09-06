@@ -601,7 +601,7 @@ fires and produces a vertex that then gets eliminated — the ordering that
 exposes the bug.  The knob's own write is to a `std::map<int,double>`; it cannot
 corrupt anything.
 
-### 6.3 Not fixed here, and why
+### 6.3 Not fixed in the first pass, and why two guesses failed
 
 Two one-line guards were tried and **both failed**, because this is not a missing
 guard — no test at the read site can repair a pointer that was already freed:
@@ -620,8 +620,8 @@ correcting object lifetime between `eliminate_short_vertex_activities` and
 on its own evidence and belongs in its own round.  **Owed, and it is owed on
 PDVD's behalf more than SBND's**: PDVD runs this knob in production today.
 
-**Scheduled.**  This is item 2 of the owner's programme (§11).  The method note
-for whoever takes it, so the two failed attempts are not repeated: the sites
+**Scheduled.**  This is item 2 of the owner's programme (§11), and §6.5 closes
+it.  The method note for whoever takes it, so the two failed attempts are not repeated: the sites
 above are attributed by an `-O2` build, and `TrackFitting.cxx:9107` / `:4115` are
 *inlined call sites* inside `do_multi_tracking`, not the writing and reading
 statements.  Build `clus` at `-Og -g` into its own pin and re-run 494297 under
@@ -739,6 +739,50 @@ Either way it is a **shared production code** change — `TrackFitting` and
 byte-identity gate on each affected detector's standard manifest, not only
 SBND's 3067.  Since the guard only fires where the current behaviour is
 undefined, the expectation is byte-identity everywhere except 494297.
+
+### 6.5 FIXED — toolkit `25baa8aa`, and gated on the 3067
+
+`PR::remove_vertex` now refuses a vertex that still has incident edges, returning
+`false` (which callers already handle, for the invalid-descriptor case) and
+logging the vertex's graph index and degree at WARN.  §6.4's table (a) — the
+owner's choice over `clear_vertex`, which would delete the other segments' edges,
+a deletion the prototype never performs.
+
+| | |
+|---|---|
+| 494297 on the config that SIGSEGV'd | **`rc = 0`**, guard fires **once** |
+| the whole arm, `work-*-d144fixprod` (committed default, crash-fixed binary) | **3067 / 3067 `rc = 0`** — ncpi0 19, nuecc48 48, mcp1k 1000, mcp2k 2000 |
+| guard fires across those 3067 events | **exactly 1** — 494297, and nothing else |
+| `wcdoctest-clus` | 323 cases / 23061 assertions, 0 failed |
+| freshness (M1) | `libWireCellClus.so` 12:28:48 newer than `PRGraph.cxx` 12:28:19, `wcbuild rc=0` |
+
+**Byte gate, `work-*-d144on` vs `work-*-d144fixprod`, all 3067 events:**
+
+    ncpi0    tsv/root/zip/tar/calib  SAME=19    both nusel tables SAME
+    nuecc48  tsv/root/zip/tar/calib  SAME=48    both nusel tables SAME
+    mcp1k    tsv/root/zip/tar        SAME=1000  calib SAME=462 (538 absent both)
+    mcp2k    tsv/root/zip            SAME=1999  calib SAME=905 (1094 absent both)
+             the one non-SAME event is 494297
+
+On mcp2k the comparison reports `MISSING_A` / "File is not a zip file" / a tar
+error on exactly one event.  That event is **494297**, and the reason is the
+crash itself: the pre-fix arm's directory holds `rc=139` and **zero-byte**
+`mabc-pr.zip` and `pctree-pr-evt494297.tar.gz`.  The two `nusel` tables DIFF for
+the same reason — `nusel-events.tsv` is 2000 lines on the pre-fix arm and 2001 on
+the fixed one, the extra row being the event that now reconstructs.
+
+**So the guard is byte-identical on every event where the old behaviour was
+defined, and the only difference in 3067 events is the one that used to crash.**
+The fire count is the stronger statement: the guard is a no-op unless it fires,
+and it fires once.
+
+The same argument is what the **other detectors** are owed — PDVD, PDHD and the
+uBooNE chain all bind `TrackFitting` and `PRGraph`.  Their gate is cheap for the
+same reason: run each detector's standard manifest and grep for
+`pr144 remove_vertex: refusing`.  Zero fires ⇒ byte-identical by construction.
+**That is still owed** and is the one piece of this fix not yet discharged.
+
+**Item 2 of the owner's programme (§11) is closed on SBND.**
 
 ---
 
