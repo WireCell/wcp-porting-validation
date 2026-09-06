@@ -989,6 +989,13 @@ different consumer, on which this measurement says nothing.)
 Even with the retiler on, `ncharge = 3` is 0.048 against PDVD's 0.462 — the knob
 is a **partial** fix and the residual gap is not explained.
 
+> **Corrected in `steiner-wrapped-planes.md` (2026-09-05).** The "sampler on"
+> rows above set `wrapped_channel_charge` in the *clustering* job and re-ran the
+> PR job without it; the retiler's samplers are the PR job's own and take the
+> knob from `wct-pr-perevt.jsonnet`, so the arm that fixes the residual was
+> never run here. With both knobs in the PR job `ncharge = 3` is **0.53** over
+> the same four events (§4–§5 there), and the residual is the segment-1 stripe.
+
 ### 12.5 The threshold scan
 
 Six arms, 30 events each, 120/120 rc = 0, binary pinned to the §8 snapshot,
