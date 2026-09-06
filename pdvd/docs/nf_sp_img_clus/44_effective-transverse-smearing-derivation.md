@@ -437,8 +437,13 @@ doc 42 §4.2). SBND: k 1.009 → 1.007, unchanged.
 > **Follow-up, 2026-09-05 — doc 47 (`47_transverse-smearing-in-simulation.md`).** The same
 > estimator on simulated tracks reproduces the induction constant on SBND (1.35 vs 1.32 mm) and
 > on PDHD, and names the mechanism: the SP wire-filter kernel in quadrature with a residual of
-> the 2-D deconvolution that depends on the charge's sub-pitch position (≈ 0 at a wire-region
-> centre, 1.2–2.3 mm at the boundary, all planes, all detectors). It does **not** reproduce
+> the 2-D deconvolution against the pitch-averaged field response (≈ 0.2 pitch on induction,
+> 0.12 on collection). ~~That residual depends on the charge's sub-pitch position (≈ 0 at a
+> wire-region centre, 1.2–2.3 mm at the boundary).~~ **The phase dependence is WITHDRAWN in
+> doc 47 §8: it was an artefact of inverting a phase-selected measurement against the
+> phase-averaged model of `_binned_profiles`. The residual is phase-independent. `d44_sigma_fit.py`
+> gained an optional phase window for that test; the legacy path is byte-identical (doc 47
+> §8.1 verification 1), so every number in this doc stands.** It does **not** reproduce
 > PDVD's induction constant (1.29 vs 2.30 mm) nor the ProtoDUNE collection constants
 > (0.4–0.5 vs 1.2–1.5 mm): that part is a data effect outside the simulation. The low D_T,eff
 > of §2.2 reading (ii) is mostly an SP effect (the simulation returns 70 % of the configured

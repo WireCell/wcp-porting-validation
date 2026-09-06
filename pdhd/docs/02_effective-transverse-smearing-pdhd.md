@@ -11,7 +11,9 @@ This executes item 2 of `stm-tagger-chain.md` §10, the PDHD analogue of doc pdv
 The *origin* of the constant — why the SP output is this wide on every detector — is the
 subject of doc pdvd/47 (`pdvd/docs/nf_sp_img_clus/47_transverse-smearing-in-simulation.md`),
 which reproduces the induction constant in simulation; read that before touching these
-numbers again.
+numbers again. Its §8 (second round) withdraws the sub-pitch-phase mechanism of its §3.4 and
+adds a phase-window mode to the estimator — the legacy path is byte-identical on this arm too
+(5 `stmwc` events, `_bins/_fit/_shape.tsv` unchanged), so the constants below are unaffected.
 
 ## 0. Repro
 

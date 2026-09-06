@@ -59,11 +59,16 @@ def read_frame(path, tag):
                 row_of={int(c): i for i, c in enumerate(ch)}, tag=tag)
 
 
-def truth_rms(sig, extent):
+def truth_rms(sig, extent, phase=None):
     """rms of the binned profile about the TRUE centre (the Gaussian's mean), averaged
-    over the sub-bin position: 1/sqrt(12) for a point source, unlike apparent_rms."""
-    v = _binned_profiles(sig, extent)
-    cs = _U + 0.5 * extent
+    over the sub-bin position: 1/sqrt(12) for a point source, unlike apparent_rms.
+    `phase` restricts the average to segment centres inside that sub-pitch window."""
+    v = _binned_profiles(sig, extent, None, phase)
+    if phase is None:
+        cs = _U + 0.5 * extent
+    else:
+        nu = v.shape[0]
+        cs = phase[0] + (phase[1] - phase[0]) * (np.arange(nu) + 0.5) / nu
     var = (v * (_N[None, :] - cs[:, None]) ** 2).sum(axis=1)
     return np.sqrt(var.mean())
 
@@ -85,6 +90,13 @@ def main():
     ap.add_argument("--phase-split", action="store_true")
     ap.add_argument("--kernel", action="store_true")
     ap.add_argument("--phase-bins", type=int, default=10)
+    ap.add_argument("--phase-src", default="truth", choices=("truth", "centroid"),
+                    help="which phase the windows are cut on: the TRUTH (perfect knowledge) or the "
+                         "profile's own charge centroid -- a charge-driven estimator with the same "
+                         "kind of selection correlation the data's fitted trajectory has")
+    ap.add_argument("--phase-jitter", type=float, default=0.0,
+                    help="wires: bin by the TRUE phase smeared by this rms, to emulate the "
+                         "resolution of the fitted trajectory phase the data must use (doc 47 sec 8)")
     ap.add_argument("--min-frac", type=float, default=0.15, help="slices below this fraction of the track's median window charge are dropped")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -192,7 +204,7 @@ def main():
     # ---- profiles
     rows_out = []
     R = {k: [] for k in ("bid", "plane", "slice", "t_ns", "x_mm", "phase", "extent", "y", "vm", "vt", "y_raw", "vm_raw", "neg_frac",
-                         "r0", "r1", "r2", "r3", "t0", "t1", "t2", "t3", "n_missing")}
+                         "r0", "r1", "r2", "r3", "t0", "t1", "t2", "t3", "n_missing", "off")}
     prof_y = {pi: [] for pi in range(3)}
     for t in tr["tracks"]:
         if t["id"] not in lines:
@@ -236,7 +248,8 @@ def main():
                 yr = Q.sum(); vmr = ((n - (n * Q).sum() / yr) ** 2 * Q).sum() / yr if yr > 0 else np.nan
                 t_ns = abs(x - x_W) / v_mm_ns
                 for kk, vv in zip(R.keys(), (t["id"], pi, s, t_ns, x, ph, ext, y.sum(), vm, vt, yr, vmr, -Q[Q < 0].sum() / y.sum(),
-                                             r[0], r[1], r[2], r[3], tt[0], tt[1], tt[2], tt[3], sum(1 for rr in rows if rr < 0))):
+                                             r[0], r[1], r[2], r[3], tt[0], tt[1], tt[2], tt[3], sum(1 for rr in rows if rr < 0),
+                                             mu - ph)):
                     R[kk].append(vv)
                 prof_y[pi].append((ph, y))
     R = {k: np.array(v) for k, v in R.items()}
@@ -252,7 +265,7 @@ def main():
     rng = np.random.default_rng(a.seed)
     pitch = tr["pitch_mm"]
 
-    def bin_and_fit(sel, label):
+    def bin_and_fit(sel, label, phase=None):
         out_bins, out_fit, joint = [], [], []
         for Pi in range(3):
             s = sel & (R["plane"] == Pi)
@@ -274,9 +287,9 @@ def main():
                 for ib in range(a.nbins):
                     if not ok[ib]:
                         continue
-                    sme, _ = _bisect(lambda g: apparent_rms(g, ex[ib]), rm[ib], 0.02, 3.0)
-                    ssh, _ = _bisect(lambda g: -ring_shares(g, ex[ib])[0], -sh[ib], 0.02, 3.0)
-                    str_, _ = _bisect(lambda g: truth_rms(g, ex[ib]), rt[ib], 0.02, 3.0)
+                    sme, _ = _bisect(lambda g: apparent_rms(g, ex[ib], None, phase), rm[ib], 0.02, 3.0)
+                    ssh, _ = _bisect(lambda g: -ring_shares(g, ex[ib], None, phase)[0], -sh[ib], 0.02, 3.0)
+                    str_, _ = _bisect(lambda g: truth_rms(g, ex[ib], phase), rt[ib], 0.02, 3.0)
                     res[ib] = (sme, ssh, str_)
                 return res * pitch[Pi], tm, rm * pitch[Pi], sh, rt * pitch[Pi], ex, Y
             full = acc.sum(axis=0)
@@ -293,9 +306,9 @@ def main():
                     if not np.isfinite(sig2[ib]):
                         continue
                     out_bins.append(dict(label=label, est=est, plane="UVW"[Pi], tbin=ib, t_us=tm[ib] * 1e-3, n_prof=int((tb == ib).sum()),
-                                         q=Ym[ib], rms_meas_mm=rmm[ib], rms_pred_mm=apparent_rms(sig_mod[ib], exm[ib]) * pitch[Pi],
+                                         q=Ym[ib], rms_meas_mm=rmm[ib], rms_pred_mm=apparent_rms(sig_mod[ib], exm[ib], None, phase) * pitch[Pi],
                                          sig_model_mm=sig_mod[ib] * pitch[Pi], sig2_eff_mm2=sig2[ib], sig2_err=e2[ib],
-                                         sig2_naive_mm2=(sig_mod[ib] * pitch[Pi]) ** 2 + rmm[ib] ** 2 - (apparent_rms(sig_mod[ib], exm[ib]) * pitch[Pi]) ** 2,
+                                         sig2_naive_mm2=(sig_mod[ib] * pitch[Pi]) ** 2 + rmm[ib] ** 2 - (apparent_rms(sig_mod[ib], exm[ib], None, phase) * pitch[Pi]) ** 2,
                                          extent=exm[ib], ceiling=0, centre_share=shm[ib], rms_truth_mm=rtm[ib]))
                 good = np.isfinite(sig2)
                 A = np.column_stack([2 * tm[good], np.ones(good.sum())]); w = 1.0 / e2[good]
@@ -321,8 +334,31 @@ def main():
     base = np.ones(len(R["bid"]), bool)
     bins, fits = bin_and_fit(base, "all")
     if a.phase_split:
-        for name, lo, hi in (("q1", -0.5, -0.25), ("q2", -0.25, 0.0), ("q3", 0.0, 0.25), ("q4", 0.25, 0.5)):
-            b_, f_ = bin_and_fit(base & (R["phase"] >= lo) & (R["phase"] < hi), "phase:" + name); bins += b_; fits += f_
+        # the phase used for BINNING: the truth, optionally smeared to the resolution the
+        # data's fitted trajectory has (doc 47 sec 8.4).  The model each window is inverted
+        # against is restricted to the same window -- the uniform-phase model manufactures a
+        # centre/boundary contrast out of a phase-independent sigma (sec 8.1).
+        phm = R["phase"] + (R["off"] if a.phase_src == "centroid" else 0.0)
+        phm = phm - np.round(phm)
+        if a.phase_jitter > 0:
+            phm = phm + rng.normal(0.0, a.phase_jitter, len(phm))
+            phm = phm - np.round(phm)
+        for name, lo, hi in (("full", -0.5, 0.5), ("q1", -0.5, -0.25), ("q2", -0.25, 0.0),
+                             ("q3", 0.0, 0.25), ("q4", 0.25, 0.5), ("centre", -0.25, 0.25)):
+            b_, f_ = bin_and_fit(base & (phm >= lo) & (phm < hi), "phase:" + name, (lo, hi)); bins += b_; fits += f_
+        b_, f_ = bin_and_fit(base & (np.abs(phm) >= 0.25), "phase:edge", (0.25, 0.5)); bins += b_; fits += f_
+        prow = []
+        for Pi in range(3):
+            m_ = R["plane"] == Pi
+            if m_.sum() < 20:
+                continue
+            prow.append(dict(plane="UVW"[Pi], n=int(m_.sum()), jitter=a.phase_jitter,
+                             phase_src=a.phase_src,
+                             rms_off_wire=float(np.sqrt(np.average(R["off"][m_] ** 2, weights=np.maximum(R["y"][m_], 0)))),
+                             med_abs_off=float(np.median(np.abs(R["off"][m_])))))
+        write_tsv(a.out + "_phase.tsv", prow)
+        print("  centroid - truth (wires, charge weighted): %s" % " ".join(
+            "%s %.3f" % (r_["plane"], r_["rms_off_wire"]) for r_ in prow))
     write_tsv(a.out + "_bins.tsv", bins); write_tsv(a.out + "_fit.tsv", fits)
 
     # shape (all t): measured ring shares about the own centroid vs the binned Gaussian at the fitted sigma

@@ -96,15 +96,28 @@ def sigma_model_pitch(model, t_ns, plane, pitch):
 # ----------------------------------------------------------------------------- estimator
 _U = np.linspace(-0.5, 0.5, 21)          # sub-bin positions averaged over
 _N = np.arange(-14, 15)                  # unit wire bins
+_NPH = 96                                # sub-bin positions per PITCH inside a phase window
 
 
-def _binned_profiles(sig, extent, nsigma=None):
+def _binned_profiles(sig, extent, nsigma=None, phase=None):
     """unit-bin integrals of a Gaussian line source of width sig (pitch units)
     spanning `extent` wires, for every sub-bin start offset in _U -> (nu, nbins).
     With nsigma, a bin farther than nsigma*sig from a sub-point gets nothing from
-    that sub-point -- the fit's cal_gaus_integral acceptance window (nsigma = 4)."""
+    that sub-point -- the fit's cal_gaus_integral acceptance window (nsigma = 4).
+
+    `phase = (lo, hi)` restricts the average to sources whose CENTRE lies in that
+    sub-pitch window (doc 47 sec 8): the statistics below depend strongly on where
+    the source sits inside the wire bin, so a phase-selected measurement must be
+    inverted against the model over the SAME window.  phase=None is the legacy
+    uniform average and takes the identical code path it always did."""
     ncs = max(2, int(extent * 20) + 2) if extent > 0 else 1
-    cs = _U[:, None] + (np.linspace(0, extent, ncs) if extent > 0 else np.zeros(1))[None, :]   # (nu, ncs)
+    seg = (np.linspace(0, extent, ncs) if extent > 0 else np.zeros(1))
+    if phase is None:
+        u = _U                                            # legacy: segment START, endpoints included
+    else:                                                 # midpoint rule over the phase window
+        nu = max(8, int(round((phase[1] - phase[0]) * _NPH)))
+        u = phase[0] + (phase[1] - phase[0]) * (np.arange(nu) + 0.5) / nu - 0.5 * extent
+    cs = u[:, None] + seg[None, :]                                                             # (nu, ncs)
     dlt = _N[None, None, :] - cs[:, :, None]                                                    # (nu, ncs, nb)
     lo = (dlt - 0.5) / (np.sqrt(2) * sig); hi = (dlt + 0.5) / (np.sqrt(2) * sig)
     v = 0.5 * (erf(hi) - erf(lo))
@@ -115,22 +128,22 @@ def _binned_profiles(sig, extent, nsigma=None):
     return v / np.where(tot > 0, tot, 1.0)
 
 
-def apparent_rms(sig, extent, nsigma=None):
+def apparent_rms(sig, extent, nsigma=None, phase=None):
     """rms about its own centroid of the binned profile, averaged over the sub-bin
     position -- exactly the statistic measured below (doc 42 sec 8.4)."""
-    v = _binned_profiles(sig, extent, nsigma)
+    v = _binned_profiles(sig, extent, nsigma, phase)
     mu = (v * _N).sum(axis=1)
     var = (v * (_N[None, :] - mu[:, None]) ** 2).sum(axis=1)
     return np.sqrt(var.mean())
 
 
-def ring_shares(sig, extent, nsigma=None):
+def ring_shares(sig, extent, nsigma=None, phase=None):
     """share of the binned profile in the wire nearest its centroid, the +-1 ring,
     the +-2 ring and beyond, averaged over the sub-bin position."""
-    v = _binned_profiles(sig, extent, nsigma)
+    v = _binned_profiles(sig, extent, nsigma, phase)
     mu = (v * _N).sum(axis=1)
     d = np.abs(_N[None, :] - np.round(mu)[:, None])
-    return np.array([v[d == 0].sum(), v[d == 1].sum(), v[d == 2].sum(), v[d >= 3].sum()]) / len(_U)
+    return np.array([v[d == 0].sum(), v[d == 1].sum(), v[d == 2].sum(), v[d >= 3].sum()]) / v.shape[0]
 
 
 def _bisect(f, target, lo, hi, n=36):
@@ -143,12 +156,13 @@ def _bisect(f, target, lo, hi, n=36):
     return 0.5 * (lo + hi), (hi > 0.999 * 2.0)
 
 
-def unfold(sig_mod, rp, rm, nsigma):
+def unfold(sig_mod, rp, rm, nsigma, phase=None):
     """solve the in-slice extent from the PREDICTED rms (its sigma and truncation are
-    known), then the measured sigma at that extent with no truncation.
+    known), then the measured sigma at that extent with no truncation.  BOTH steps take
+    the phase window: on a phase-selected subset the extent solve is biased too.
     Returns (sig_meas [pitch], extent, ceiling_hit)."""
-    ext, hitc = _bisect(lambda e: apparent_rms(sig_mod, e, nsigma), rp, 0.0, 2.0)
-    sme, _ = _bisect(lambda g: apparent_rms(g, ext), rm, 0.02, 3.0)
+    ext, hitc = _bisect(lambda e: apparent_rms(sig_mod, e, nsigma, phase), rp, 0.0, 2.0)
+    sme, _ = _bisect(lambda g: apparent_rms(g, ext, None, phase), rm, 0.02, 3.0)
     return sme, ext, hitc
 
 
@@ -244,20 +258,21 @@ def collect(a, det, model):
                     vp = np.average((x - mu_p) ** 2, weights=yh)
                     absx = abs(float(px[j0]))
                     t_ns = max(MIN_DRIFT_NS, (det["x_anode"] - absx) * 10.0 / det["v"] * 1e3)
+                    ph = wc - np.round(wc)          # sub-pitch phase of the FITTED trajectory
                     n0 = int(np.round(mu_m)) - w0
                     dd = np.abs(np.arange(-hw, hw + 1) - n0)
                     sh = [y[dd == 0].sum(), y[dd == 1].sum(), y[dd == 2].sum(), y[dd >= 3].sum()]
                     rows.append((bid, Pi, s_, t_ns, y.sum(), vm, yh.sum(), vp, mu_m - mu_p,
-                                 advance, float(rr[j0]), np.sign(px[j0]), *sh))
+                                 advance, float(rr[j0]), np.sign(px[j0]), *sh, ph))
     cols = ("bid", "plane", "slice", "t_ns", "y", "vm", "yh", "vp", "off", "adv", "rr", "xsign",
-            "r0", "r1", "r2", "r3")
+            "r0", "r1", "r2", "r3", "ph")
     R = {c: np.array([row[k] for row in rows]) for k, c in enumerate(cols)}
     R["bid"] = R["bid"].astype(int); R["plane"] = R["plane"].astype(int)
     return R, blocks
 
 
 # ----------------------------------------------------------------------------- aggregation
-def bin_and_fit(R, sel, det, model, nbins, nboot, rng, label):
+def bin_and_fit(R, sel, det, model, nbins, nboot, rng, label, phase=None):
     """per plane: drift bins, bootstrap over blocks, unfold, line fit. Returns rows."""
     out_bins, out_fit = [], []
     joint = []      # (plane, t, sig2, err)
@@ -291,12 +306,12 @@ def bin_and_fit(R, sel, det, model, nbins, nboot, rng, label):
                 rm = np.sqrt(tot_[ib, 0] / Y); rp = np.sqrt(tot_[ib, 2] / YH)
                 tm = tot_[ib, 4] / Y
                 sm = sigma_model_pitch(model, tm, Pi, pitch)
-                sme, ext, hitc = unfold(sm, rp, rm, model["nsigma"])
+                sme, ext, hitc = unfold(sm, rp, rm, model["nsigma"], phase)
                 naive2 = (sm * pitch) ** 2 + ((rm * pitch) ** 2 - (rp * pitch) ** 2)
                 # second estimator: the sigma whose binned Gaussian puts the measured share
                 # of charge in the wire nearest the centroid (monotone decreasing in sigma)
                 share = tot_[ib, 5] / Y
-                ssh, _ = _bisect(lambda g: -ring_shares(g, ext)[0], -share, 0.02, 3.0)
+                ssh, _ = _bisect(lambda g: -ring_shares(g, ext, None, phase)[0], -share, 0.02, 3.0)
                 res.append((tm, rm * pitch, rp * pitch, sm * pitch, (sme * pitch) ** 2, naive2, ext, hitc,
                             (ssh * pitch) ** 2))
             return res
@@ -394,6 +409,9 @@ def main():
     ap.add_argument("--split", default="",
                     help="comma list of occasions: face,run,length,rr,foff,advance (window needs a rerun)")
     ap.add_argument("--max-foff", type=float, default=1.1)
+    ap.add_argument("--phase-split", action="store_true",
+                    help="doc 47 sec 8: repeat the fit on sub-pitch-phase windows of the FITTED "
+                         "trajectory, each inverted against the model over the same window")
     a = ap.parse_args()
     det = DET[a.det]
     model = load_model(a.model_json or det["json"])
@@ -411,6 +429,53 @@ def main():
     print("  DT %.4g cm2/s  c(U,V,W) %s mm  nsigma %g" % (model["DT"] * 1e7, model["c"], model["nsigma"]))
 
     bins, fits = bin_and_fit(R, base, det, model, a.nbins, a.nboot, rng, "all")
+
+    if a.phase_split:
+        # the phase of the fitted trajectory inside its wire bin.  Windows are inverted
+        # against the model restricted to the SAME window (doc 47 sec 8): the binned
+        # statistics are strongly phase dependent, so the uniform-phase model would
+        # manufacture a centre/boundary contrast out of a phase-independent sigma.
+        wins = [("full", -0.5, 0.5), ("q1", -0.5, -0.25), ("q2", -0.25, 0.0), ("q3", 0.0, 0.25),
+                ("q4", 0.25, 0.5), ("centre", -0.25, 0.25), ("edge_lo", -0.5, -0.25), ("edge_hi", 0.25, 0.5)]
+        for name, lo, hi in wins:
+            msk = base & (R["ph"] >= lo) & (R["ph"] < hi)
+            if msk.sum() < 20:
+                continue
+            b_, f_ = bin_and_fit(R, msk, det, model, a.nbins, max(50, a.nboot // 4), rng,
+                                 "phase:" + name, phase=(lo, hi))
+            bins += b_; fits += f_
+        # "edge" = both outer quartiles, one fit, model averaged over the two windows by
+        # symmetry (|ph| in [0.25, 0.5]); done as a second call with the symmetric window
+        msk = base & (np.abs(R["ph"]) >= 0.25)
+        if msk.sum() >= 20:
+            b_, f_ = bin_and_fit(R, msk, det, model, a.nbins, max(50, a.nboot // 4), rng,
+                                 "phase:edge", phase=(0.25, 0.5))
+            bins += b_; fits += f_
+        # phase distribution and the centroid-vs-fit offset (the phase estimator's own error)
+        ph_rows = []
+        for Pi in range(3):
+            sm = base & (R["plane"] == Pi)
+            if sm.sum() < 20:
+                continue
+            ph = R["ph"][sm]; wq = R["y"][sm]; off = R["off"][sm]
+            h, _e = np.histogram(ph, bins=10, range=(-0.5, 0.5))
+            hq, _e = np.histogram(ph, bins=10, range=(-0.5, 0.5), weights=wq)
+            row = dict(plane="UVW"[Pi], n=int(sm.sum()),
+                       rms_off_wire=float(np.sqrt(np.average(off ** 2, weights=np.maximum(wq, 0)))),
+                       med_abs_off=float(np.median(np.abs(off))),
+                       frac_centre=float((np.abs(ph) < 0.25).mean()),
+                       peakedness=float(h[4:6].sum() / h.sum() / 0.2))
+            for k in range(10):
+                row["n_ph%d" % k] = float(h[k] / h.sum())
+                row["q_ph%d" % k] = float(hq[k] / hq.sum())
+            ph_rows.append(row)
+        write_tsv(a.out + "_phase.tsv", ph_rows)
+        print("  phase distribution of the fitted trajectory (10 bins over one pitch):")
+        for r_ in ph_rows:
+            print("    %s n=%6d  %s  |ph|<0.25 %.3f  central-bin excess %.2fx  rms(off) %.3f wire" % (
+                r_["plane"], r_["n"], " ".join("%.3f" % r_["n_ph%d" % k] for k in range(10)),
+                r_["frac_centre"], r_["peakedness"], r_["rms_off_wire"]))
+
     occasions = [x for x in a.split.split(",") if x]
     for occ in occasions:
         if occ == "face":

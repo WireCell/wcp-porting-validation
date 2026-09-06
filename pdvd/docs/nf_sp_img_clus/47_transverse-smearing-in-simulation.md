@@ -11,13 +11,15 @@ data carry something the simulation does not model.
 **Answer.** Both, and the split is by detector and plane:
 
 - **The simulation reproduces the INDUCTION constant on SBND exactly and on PDHD within
-  its noise-level sensitivity**, and it names the mechanism: the SP wire filter's real-space
-  kernel (PDHD 3.4 mm, SBND 1.4 mm, PDVD 0.2 mm) in quadrature with a **residual of the 2-D
-  deconvolution that depends on where the charge sits within the wire pitch** — ~0 for
-  charge at a wire-region centre, 1.2–2.3 mm for charge at the region boundary, on every plane
-  of every detector including collection. Doc 44's "the profile is more peaked than a Gaussian
-  of equal rms" is this mixture. The ROI/noise environment then modulates it (PDHD: noise
-  ×0.5 → 3.1 mm, ×2 → 1.6 mm; PDVD and SBND ±0.15 mm).
+  its noise-level sensitivity**: the SP wire filter's real-space kernel (PDHD 3.4 mm, SBND
+  1.4 mm, PDVD 0.2 mm) in quadrature with a **residual of the 2-D deconvolution against the
+  pitch-averaged field response**, ~0.2 pitch on induction and 0.12 on collection (§3.5).
+  The ROI/noise environment modulates it (PDHD: noise ×0.5 → 3.1 mm, ×2 → 1.6 mm; PDVD and
+  SBND ±0.15 mm). *(Second round, §8: the further claim that this residual is concentrated at
+  the wire-region boundary — §3.4, §4.2 — is **withdrawn**; it was an artefact of inverting a
+  phase-selected measurement against a phase-averaged model. The residual is real and
+  phase-independent, so doc 44's "more peaked than a Gaussian of equal rms" is not a phase
+  mixture; §8.5 measures what the data's peakedness actually is.)*
 - **The simulation does NOT reproduce PDVD's induction constant (1.29 vs 2.30 mm) nor the
   collection constants of either ProtoDUNE (0.4–0.5 vs 1.2–1.5 mm)**, while SBND's collection
   (0.54 vs 0.38) is fine. The ProtoDUNE data carry an extra ~1.0–1.9 mm (0.2–0.25 pitch) on
@@ -56,6 +58,32 @@ python3 $S/d47_sim_transverse_profile.py --det pdhd --truth $X/pdhd/truth_pdhd_a
 python3 $S/d47_sim_transverse_profile.py --det pdhd --truth $X/pdhd/truth_pdhd_a1.json --frames $X/pdhd/S1-anode1-sp.tar.bz2 --tag gauss --nboot 60 --phase-split --out $X/pdhd/ana/S1_gauss_ph
 python3 $S/d47_collect.py --root $X --out pdvd/docs/nf_sp_img_clus/figs/47_sim_summary.tsv
 python3 $S/d47_plots.py --summary pdvd/docs/nf_sp_img_clus/figs/47_sim_summary.tsv --figs pdvd/docs/nf_sp_img_clus/figs --out pdvd/docs/nf_sp_img_clus/figs/47
+```
+
+Second round (§8; analysis only, no new wire-cell runs — the arms above are reused):
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img; S=pdvd/docs/nf_sp_img_clus/scripts; F=pdvd/docs/nf_sp_img_clus/figs; X=/home/xqian/tmp/xtrack
+# --- legacy regression gate for the estimator change (must be byte-identical; T=a scratch dir)
+python3 $S/d44_sigma_fit.py --det pdvd --nboot 30 --out $T/reg_new $(ls pdvd/work/039252_*_d42fit/tracking-stm.root | head -6)   # vs the pre-patch copy: cmp _{bins,fit,shape}.tsv
+python3 pdhd/docs/scripts/d44_sigma_fit.py --det pdhd --max-advance 0.436 --nboot 30 --out $T/regh_new $(ls pdhd/work/029107_*_stmwc/tracking-stm.root | head -5)
+# --- the artefact: what the OLD (phase-averaged) inversion reports for a phase-INDEPENDENT sigma
+for d in pdvd sbnd; do python3 $S/d47_phase_artefact.py --det $d --fit $F/44_sigma_${d}_fit.tsv --bins $F/44_sigma_${d}_bins.tsv --est share --out $F/47_phase_artefact_$d.tsv; done
+python3 $S/d47_phase_artefact.py --det pdhd --fit pdhd/docs/figs/d02_sigma_fit.tsv --bins pdhd/docs/figs/d02_sigma_bins.tsv --est share --out $F/47_phase_artefact_pdhd.tsv
+for d in pdhd pdvd sbnd; do python3 $S/d47_phase_artefact.py --det $d --fit $X/$d/ana/S1_gauss_fit.tsv --bins $X/$d/ana/S1_gauss_bins.tsv --est share --out $F/47_phase_artefact_sim_$d.tsv; done
+# --- simulation, corrected inversion: truth phase (_ph2), the profile's own centroid (_phc), truth + 0.26 wire (_phj)
+python3 $S/d47_sim_transverse_profile.py --det pdvd --truth $X/pdvd/truth_pdvd_a0.json --frames $X/pdvd/S1-anode0-sp.tar.bz2 --tag gauss --nboot 60 --phase-split --out $X/pdvd/ana/S1_gauss_ph2
+#   ... the same for (pdhd a1, sbnd a0) x (S1, S3), and with --phase-src centroid / --phase-jitter 0.26 ; controls: --no-clip, --halfwidth 5
+python3 $S/d47_sim_transverse_profile.py --det pdvd --truth $X/pdvd/truth_pdvd_a0.json --frames $X/pdvd/S0-anode0-splat.tar.bz2 --tag auto --nboot 20 --out $X/pdvd/ana/S0v3_splat     # the no-SP null for sec 8.2
+# --- data, same machinery
+python3 $S/d44_sigma_fit.py --det pdvd --nboot 200 --phase-split --out $F/47_phase_pdvd pdvd/work/039252_*_d42fit/tracking-stm.root
+python3 $S/d44_sigma_fit.py --det sbnd --nboot 200 --phase-split --out $F/47_phase_sbnd sbnd/sbnd_xin/work-stmcamp-d42fit/*/tracking-stm.root
+(cd pdhd && python3 docs/scripts/d44_sigma_fit.py --det pdhd --max-advance 0.436 --nboot 200 --phase-split --out ../$F/47_phase_pdhd work/029107_*_stmwc/tracking-stm.root)
+# --- tables, bias, shape, figure
+for d in pdhd pdvd sbnd; do python3 $S/d47_phase_table.py --bins $F/47_phase_${d}_bins.tsv --fit $F/47_phase_${d}_fit.tsv --est share --artefact $F/47_phase_artefact_$d.tsv --tag data_$d --out $F/47_phase_table.tsv --append; done   # + one call per sim arm/variant
+python3 $S/d47_phase_bias.py --out $F/47_phase_bias.tsv pdvd:S1:$X/pdvd/ana/S1_gauss_ph2_rows.tsv pdvd:S0splat:$X/pdvd/ana/S0v3_splat_rows.tsv ...
+python3 $S/d47_peakedness.py --out $F/47_peakedness.tsv data:pdvd:$F/44_sigma_pdvd_bins.tsv sim:pdvd:$X/pdvd/ana/S1_gauss_bins.tsv data:pdhd:pdhd/docs/figs/d02_sigma_bins.tsv sim:pdhd:$X/pdhd/ana/S1_gauss_bins.tsv data:sbnd:$F/44_sigma_sbnd_bins.tsv sim:sbnd:$X/sbnd/ana/S1_gauss_bins.tsv
+python3 $S/d47_phase_plot.py --table $F/47_phase_table.tsv --out $F/47_phase2.png
 ```
 
 Committed: the three drivers (`pdhd_sim/`, `pdvd_sim/`, `sbnd_sim/wct-sim-xtrack-sp.jsonnet`),
@@ -232,6 +260,12 @@ table file). Data rows from doc pdhd/02 §2.1 (PDHD, arm stmwc) and doc 44 §2.2
 
 ### 3.4 The sub-pitch phase (`--phase-split`, production arm S1; `figs/47_<det>_S1_gauss_phase_fit.tsv`)
 
+> **WITHDRAWN 2026-09-05 (§8.1).** Every number in this subsection is an artefact of
+> inverting a phase-selected measurement against the phase-averaged model; a σ with no phase
+> dependence reproduces the table value for value (§8.1 verification 3). The corrected
+> measurement is §8.2 and shows ≤ 5 % contrast under production conditions. The text is kept
+> as published, for the record.
+
 c [mm] by quartile of the true position's phase within the wire region (±0.5 = boundary):
 
 | det | plane | −0.5…−0.25 | −0.25…0 | 0…0.25 | 0.25…0.5 |
@@ -264,7 +298,10 @@ about **0.2 pitch on induction and 0.12 pitch on collection** on every detector.
    and its whole simulated constant, 1.27–1.29 mm, is the residual. In quadrature,
    filter ⊕ S5 = 3.55 (PDHD), 1.50 (SBND) — slightly above S1 (2.69, 1.35) because the ROI
    trims the filtered tails.
-2. **The residual is the impact-position effect, and it is not a boxcar.** §3.4: for charge
+2. **The residual is the impact-position effect, and it is not a boxcar.** *(The
+   phase-dependence claim of this item is **WITHDRAWN**, §8.1/§8.2: the residual is
+   phase-independent under production conditions. Its size, from §3.5, stands; §8.5 revisits
+   the shape.)* §3.4: for charge
    at a wire-region centre the SP output is as narrow as the model (c ≈ 0 on W of all three
    detectors, on PDVD U/V 0.3 mm); for charge near the boundary c is 1.2–2.3 mm. The
    pitch-averaged response is exact for charge spread uniformly across the region and worst
@@ -315,13 +352,15 @@ Not decided here; listed with the test that separates them.
   SP's deconvolution kernel, so a forward/backward mismatch cancels in the simulation and
   survives only in data. Induced signals on neighbouring strips/wires wider than Garfield
   predicts (CRP strips; the PDHD collection plane's transparency) would give exactly a
-  detector-wide, drift-independent extra width. Test: the doc-44 SP cross-check split by
-  sub-pitch phase (`T_rec_charge` carries the fitted trajectory's fractional wire position):
-  the simulation predicts c → 0 at the region centre and the maximum at the boundary (§3.4);
-  an excess that is phase-independent is not the deconvolution mechanism.
+  detector-wide, drift-independent extra width. ~~Test: the doc-44 SP cross-check split by
+  sub-pitch phase; the simulation predicts c → 0 at the region centre and the maximum at the
+  boundary (§3.4).~~ **The phase test is WITHDRAWN (§8.4): there is no predicted contrast to
+  look for (§8.2), and the fitted trajectory's phase resolution dilutes any contrast by
+  ×0.01–0.05 (PDHD) to ×0.26–0.50 (PDVD/SBND). Use §8.5 instead.**
 - **Cross-talk between adjacent front-end channels** (PDHD/PDVD-bottom FEMBs, PDVD-top TDE):
   a fixed fraction of a channel's signal on its neighbours, independent of drift and phase.
-  Same test; a pulser run answers it directly.
+  A pulser run answers it directly; §8.5(b) shows the data do carry a ≥ 2-wire component the
+  simulation has none of, on all three detectors.
 - **The data's noise/ROI environment** (§4.3): worth ±0.5 mm on PDHD, ≤ 0.2 mm on PDVD.
 - **Track topology**: the data's prolonged segments carry δ-rays, multiple scattering and any
   3-D angle; the simulated tracks are clean lines. Doc 44 §3.1 measured the Bragg region
@@ -338,21 +377,273 @@ Not decided here; listed with the test that separates them.
   call and was not part of this round.
 - PDVD's `Wire_ind` = 5.0 (doc 46's open item) has no bearing on its constant — the filter is
   already off in wire space; PDVD's constant is the deconvolution residual plus the data excess.
-- The two-component shape (§4.2) is what a better kernel would need: not a wider Gaussian but
-  a phase-dependent one. The fit knows the trajectory's sub-pitch position; a σ(phase) is
-  implementable inside `cal_gaus_integral` behind a knob if the phase test of §5 confirms the
-  data follow the simulation's pattern.
+- ~~The two-component shape (§4.2) is what a better kernel would need: not a wider Gaussian
+  but a phase-dependent one; a σ(phase) is implementable inside `cal_gaus_integral` behind a
+  knob if the phase test of §5 confirms it.~~ **WITHDRAWN (§8.6): the width does not depend on
+  the sub-pitch phase, so there is nothing for a σ(phase) to model. What the data do carry
+  beyond the model is a ≥ 2-wire tail (§8.5), which a Gaussian of any width fits badly and a
+  two-component kernel would fit — but only once its origin (topology vs cross-talk) is
+  known.**
 
 ## 7. Open items and the next step
 
-1. **Run the phase split on data** (PDVD `d42fit` arms, PDHD `stmwc`): one script change to
-   `d44_sigma_fit.py` (bin by the fractional part of the trajectory's wire coordinate). If the
-   data show the simulation's centre/boundary contrast on top of a flat excess, the excess is
-   FR/cross-talk; if the data are flat, the deconvolution mechanism is not what the fit is
-   seeing in data at all. This decides §5 and is a two-hour item.
+1. ~~**Run the phase split on data**~~ — **DONE and CLOSED, §8**: the split was run on all
+   three detectors, and preparing it showed the §3.4 contrast to be an estimator artefact.
+   The test decides nothing (§8.4); §8.5 gives two phase-free replacements and §8.6 the
+   next step.
 2. PDVD's splat calibration (wire-bin sampling at σ < 0.25 pitch) and the `DepoFluxSplat`
    dense-accumulator drop: report upstream; not touched here.
 3. The FR-region diffusion gap (the Drifter stops 9–18 cm short of the wires; c² ≈ −0.1 mm²):
    negligible for this study, but it is a bias of every WCT simulation's near-anode width.
 4. A noise-level scan on data would bound §4.3 for PDHD without simulation: the doc-44
    estimator per run / per APA against the measured RMS.
+
+---
+
+# 8. The sub-pitch-phase test, redone (2026-09-05, second round)
+
+Section 7 item 1 said to run the phase split on data. Preparing it uncovered that **the
+phase split of §3.4 measured the estimator, not the detector**. This section retracts that
+measurement, redoes it correctly on simulation and on data for all three detectors, shows
+that the corrected test has essentially no power in data and why, and replaces the data test
+§5 proposed with two phase-free ones that do discriminate. §3.5 (the kernel about the true
+position) and §4.4 (the ProtoDUNE data excess) are untouched by any of this.
+
+## 8.1 The defect
+
+**Symptom.** §3.4 reported, on every plane of every detector, `c ≈ 0` for charge at a wire
+region's centre and 1.2–2.3 mm at its boundary, and §4.2 read that as the impact-position
+residual of deconvolving against the pitch-averaged field response.
+
+**Root cause.** `apparent_rms` and `ring_shares` (`d44_sigma_fit.py:96-118` after the fix)
+marginalise the
+binned-Gaussian model over the source's sub-pitch position (the `_U` grid) — correct for a
+sample that uniformly covers the pitch, which every `all` row is. The phase-split rows fed
+that same phase-averaged model a subset **selected on that very position**. Both statistics
+depend on the position enormously: a point source at a bin centre puts all its charge in one
+wire (own-centroid rms 0), the same source at a bin boundary splits it in two (rms 0.5
+pitch). Inverting a boundary-selected measurement against the phase-averaged model therefore
+returns a σ far above the truth, and a centre-selected one a σ far below — out of a σ that
+does not depend on phase at all.
+
+**Why it hid.** The published centre quartiles were *negative* (PDHD W −0.14, PDVD W
+−0.02/−0.03, SBND W −0.43/−0.49 mm). Those are not small numbers, they are the bisection
+hitting its floor (`_bisect(..., 0.02, 3.0)`), i.e. an inversion driven below its own range —
+and they were read as "c ≈ 0 at the centre", the very signature the mechanism predicted. The
+artefact also scales with σ (large where σ is small, vanishing where σ is large), so it
+reproduced a plausible plane-to-plane gradient: strong on collection, weak on PDHD induction.
+
+**Fix.** `_binned_profiles(sig, extent, nsigma, phase=(lo, hi))` restricts the average to
+sources whose centre lies in the window (midpoint rule, 96 points per pitch); `apparent_rms`,
+`ring_shares`, `truth_rms` and **both** steps of `unfold` (the extent solve is phase-blind
+too) take it. `phase=None` is the legacy code path, unchanged.
+
+**Verification.**
+
+1. *Legacy regression, all three scripts.* `d44_sigma_fit.py` on 6 PDVD `d42fit` events and
+   the PDHD fork on 5 `stmwc` events, before vs after the patch: `_bins.tsv`, `_fit.tsv`,
+   `_shape.tsv` byte-identical (`cmp`). `d47_sim_transverse_profile.py`, whose `bin_and_fit`
+   was edited too, re-run with the published arguments (`--nboot 100`, no `--phase-split`) on
+   the S1 arms of all three detectors: `_bins/_fit/_shape/_calib.tsv` byte-identical to the
+   files §§1–7 were written from. So docs 44, pdhd/02 and §§1–7 here are unaffected. (A
+   caveat found on the way: the fitted D_T,eff and c depend on `--nboot` at the 0.2 % level,
+   because the line is weighted by bootstrap errors — compare arms only at equal `--nboot`.)
+2. *Closure (self-consistency, not evidence).* `d47_phase_artefact.py` inverts a synthetic
+   phase-independent σ with the corrected model and returns the input c to the last digit in
+   every window. This cannot fail — the same model generates and inverts — and is only a
+   check that the window bookkeeping is right. The test that could have failed is §8.2: a
+   simulation whose width is known to be phase-independent, put through the corrected
+   machinery, comes back flat (0.95–1.03) instead of the 2–7× the old machinery gave it.
+3. *The artefact reproduces the published table.* Feed the same script each arm's own `all`
+   fit as the truth, assume σ is phase independent, invert the **old** way:
+
+   | c [mm], share-matched | q1 | q2 | q3 | q4 |
+   |---|---|---|---|---|
+   | PDVD U published §3.4 | 2.32 | 0.30 | 0.39 | 2.31 |
+   | PDVD U artefact prediction | 2.36 | −0.31 | −0.31 | 2.36 |
+   | PDVD W published §3.4 | 1.35 | −0.01 | −0.03 | 1.19 |
+   | PDVD W artefact prediction | 1.35 | −0.35 | −0.35 | 1.35 |
+   | SBND U published §3.4 | 1.78 | 1.08 | 1.07 | 1.66 |
+   | SBND U artefact prediction | 1.60 | 1.06 | 1.06 | 1.60 |
+   | SBND W published §3.4 | 1.49 | −0.43 | −0.49 | 1.00 |
+   | SBND W artefact prediction | 1.08 | −0.45 | −0.45 | 1.08 |
+   | PDHD U published §3.4 | 2.79 | 2.71 | 2.78 | 2.93 |
+   | PDHD U artefact prediction | 2.99 | 2.37 | 2.37 | 2.99 |
+   | PDHD W published §3.4 | 1.28 | −0.14 | 0.08 | 1.52 |
+   | PDHD W artefact prediction | 1.19 | −0.38 | −0.38 | 1.19 |
+
+   A phase-independent width reproduces the published contrast plane by plane, including the
+   flat PDHD U row and the negative centre values. §3.4 is withdrawn.
+
+A footnote for the record: the legacy `_U` grid (21 points spanning the pitch with both
+endpoints, so the boundary phase carries double weight) differs from the converged midpoint
+average by ≤ 1 % in rms and ≤ 0.013 in centre share for σ ≥ 0.3 pitch, growing to 3 % / 0.025
+at σ = 0.05. Both sides of every inversion use the same grid, so the effect on the published
+constants is below 0.1 mm; the legacy grid is kept exactly as it is so those numbers stay
+reproducible.
+
+## 8.2 The simulation, measured correctly
+
+⟨σ_eff⟩ charge-weighted over the drift bins, boundary quartiles over centre quartiles (1 =
+no phase dependence; the fitted `c` per window is in `figs/47_phase_table.tsv`, and is the
+worse statistic here because on angled tracks the phase advances with drift, so a phase
+window samples a periodic subset of drift slices and D_T,eff trades against c):
+
+| edge/centre | PDHD U / V / W | PDVD U / V / W | SBND U / V / W |
+|---|---|---|---|
+| **S1 production, share-matched** | 0.95 / 0.95 / 1.00 | 1.03 / 1.03 / 1.02 | 1.03 / 0.99 / 1.00 |
+| **S1 production, truth-centred** | 1.01 / 0.99 / 1.07 | 1.02 / 0.99 / 1.04 | 1.01 / 0.97 / 1.02 |
+| S3 no diffusion/noise, share | 1.08 / 1.06 / 0.59 | 1.16 / 1.15 / 0.83 | 1.19 / 1.12 / 0.91 |
+| S3 no diffusion/noise, truth-centred | 1.02 / 1.01 / 0.71 | 1.03 / 1.03 / 1.19 | 1.04 / 1.01 / 1.14 |
+
+**Under production conditions the simulated width does not depend on the sub-pitch phase**
+(≤ 5 %, both estimators, all nine planes) — against the 2–7× of §3.4. In the idealised
+no-diffusion, no-noise arm a small effect survives on induction (+2 to +19 %, sign as
+expected: wider at the boundary); collection there is inconsistent in sign between detectors
+and sits at σ ≈ 0.2 pitch where the estimator is weakest, and the PDVD S3 arm is the
+pathological zero-noise one of §4.3 (truth-centred σ 1.4 pitch). So the impact-position
+effect is real but marginal, and diffusion plus the ROI erase what is left of it.
+
+A candidate that the controls closed: the reconstructed centroid **is** pulled toward the
+nearest wire centre, ⟨centroid − truth⟩ = s·phase with s = −0.15 to −0.22 wire/wire on PDVD
+S1 (`figs/47_phase_bias.tsv`, `d47_phase_bias.py`) — but the truth-splat arm S0, which
+contains no signal processing at all, gives s = −0.11 to −0.40, and a Gaussian of the same
+width binned on wires predicts −0.06 to −0.32. The pull is the estimator's own binning
+shrinkage; what is left over after subtracting it is between +0.06 and −0.06 in the
+production SP arms and −0.05 to −0.08 in the splat control, which contains no signal
+processing at all. No SP position bias is established. (Unchanged
+by `--no-clip` and by a ±5-wire window: −0.217 → −0.217 / −0.213 on PDVD U.)
+
+## 8.3 The data, measured the same way
+
+`d44_sigma_fit.py --phase-split` (PDVD `d42fit`, SBND `work-stmcamp-d42fit`, PDHD `stmwc` via
+the fork), binning on the fitted trajectory's own phase `pu/pv/pw − round(pu/pv/pw)`:
+
+| ⟨σ_eff⟩ [mm] | full | centre | edge | edge/centre |
+|---|---|---|---|---|
+| PDHD U / V / W | 3.81 / 3.36 / 2.33 | 3.97 / 3.57 / 2.26 | 3.62 / 3.08 / 2.93 | 0.91 / 0.86 / 1.30 |
+| PDVD U / V / W | 2.61 / 2.67 / 1.61 | 2.87 / 2.97 / 1.78 | 2.62 / 2.14 / 2.26 | 0.92 / 0.72 / 1.26 |
+| SBND U / V / W | 1.58 / 1.60 / 1.01 | 1.67 / 1.71 / 1.04 | 1.44 / 1.43 / 1.44 | 0.87 / 0.84 / 1.38 |
+
+Profiles per plane: PDHD 5744 / 5081 / 7442, PDVD 9575 / 8229 / 8000, **SBND 410 / 397 / 237**
+— SBND's ratios carry ±0.06 / ±0.08 / ±0.31 and constrain nothing on their own (its W is
+1.2 σ from 1); PDVD and PDHD carry ±0.03 on induction and ±0.06 / ±0.08 on W.
+
+The 2–3× contrast the old machinery would have produced (`sig_artefact_old_mm` in
+`figs/47_phase_table_*.tsv`: edge/centre 1.14 on PDHD U up to 2.35 on PDVD U/V) is not there.
+What is left is a small pattern with a consistent sign — induction 0.86–0.92, collection
+1.26–1.38 — significant on PDHD and PDVD, not on SBND. §8.4 shows that pattern is what a
+phase *estimator* does, not what a detector does.
+
+## 8.4 Why the data test has no power
+
+The data must bin on the **fitted** phase, and that phase is neither precise nor independent
+of the profile being measured.
+
+- **Precision.** `rms(measured centroid − fitted position)` per plane: PDHD 0.45 / 0.52 /
+  0.41 wire, PDVD 0.28 / 0.28 / 0.20, SBND 0.24 / 0.30 / 0.26. The same quantity against the
+  *truth* in simulation (which is centroid noise alone) is 0.23 / 0.21 / 0.07 (PDHD S1),
+  0.10 / 0.10 / 0.08 (PDVD), 0.09 / 0.14 / 0.04 (SBND). The difference in quadrature — the
+  fit's own phase error — is 0.39–0.48 wire on PDHD, 0.19–0.26 on PDVD, 0.23–0.27 on SBND.
+  A centre/boundary contrast is a first harmonic in phase, so a wrapped-Gaussian phase error
+  σ_φ multiplies it by exp(−2π²σ_φ²): **0.01–0.05 on PDHD, 0.26–0.50 on PDVD, 0.25–0.37 on
+  SBND.** On PDHD the test is dead on arrival; on PDVD and SBND a true 2× contrast would show
+  up as 1.2–1.5×.
+- **Selection.** The fitted phase is driven by the same charge whose width is being measured.
+  Where the profile is narrow the fit sits near a wire centre; where it is wide the fit is
+  free to sit anywhere. The fitted phase distribution shows it: instead of the uniform
+  distribution the geometry demands, the two central bins carry 1.5–2.5× their share on the
+  collection planes (PDVD W 0.240/0.257 against 0.10 flat; PDHD W 1.7×, SBND W 2.0×), and are
+  flat within 10 % on PDVD V and PDHD U where the fit is least charge-driven.
+
+Both effects are measurable on simulation, where the answer is known to be flat, by binning
+the same simulated profiles on data-like phases (`--phase-src centroid`, `--phase-jitter`):
+
+| edge/centre, sim S1 (truly flat: 0.95–1.03) | PDHD U/V/W | PDVD U/V/W | SBND U/V/W |
+|---|---|---|---|
+| binned on the profile's own centroid | 0.99 / 0.98 / 1.22 | 1.34 / 1.35 / 1.26 | 1.00 / 0.95 / 1.16 |
+| binned on the truth + 0.26 wire | 0.86 / 0.87 / 0.47 | 0.44 / 0.44 / 0.45 | 0.83 / 0.83 / 0.64 |
+
+A charge-driven phase manufactures edge/centre > 1 on collection (up to 1.35), a noisy phase
+manufactures < 1 (down to 0.44) — the two directions the data show, on the planes where each
+mechanism should dominate. Applied to the S3 arm, where a real +6 to +19 % contrast exists,
+the same estimators return 0.86–1.71 (centroid) and 0.13–0.93 (jitter): the input contrast is
+not recoverable — on the collection planes it is turned into a 1.65–1.71 boundary excess. **The data numbers of §8.3 lie inside the null band and constrain nothing.**
+
+![phase contrast by inversion and phase estimator](figs/47_phase2.png)
+
+## 8.5 Two phase-free comparisons that do discriminate
+
+Since the phase route is closed, the same data and simulation were compared on statistics
+that need no phase at all.
+
+**(a) Peakedness.** ρ = σ(rms-matched) / σ(share-matched) per drift bin: 1 for a Gaussian,
+above 1 for a narrow core with tails (`d47_peakedness.py`, `figs/47_peakedness.tsv`). Over every
+drift bin of every plane and detector (54 bins each), **the simulation gives ρ = 0.99–1.16
+(10–90 % 1.00–1.11) and the data ρ = 0.98–2.32 (10–90 % 1.08–1.57)** — the simulated profile
+is Gaussian to a few per cent at every width the chain produces, and the data profile is not,
+most strongly on collection (plane means: PDHD W 1.56, SBND W 1.50, PDVD W 1.44).
+
+ρ rises slowly with σ, so the comparison is only clean where the two σ ranges overlap. Four
+of the nine planes have the data at or below the simulation's own σ and need no extrapolation
+at all:
+
+| | data σ [mm] / ρ | sim σ [mm] / ρ |
+|---|---|---|
+| **SBND W** | 1.00 / **1.501** | 1.15 / 1.029 |
+| SBND U | 1.58 / 1.154 | 1.69 / 1.042 |
+| SBND V | 1.59 / 1.060 | 1.67 / 1.013 |
+| PDHD V | 2.95 / 1.183 | 3.05 / 0.994 |
+
+SBND W is the sharpest point of the whole comparison: **on the one plane whose width §4.4
+found fully reproduced, the data profile is far more peaked than the simulated one** — the
+width agrees and the shape does not. (The `sim rho AT the data's sigma` column in the TSV
+extrapolates the sim's ρ(σ) line up to 71 % beyond its support on PDHD W and PDVD U/V and
+runs below 1 there, which is unphysical; it is kept in the TSV as a diagnostic and is not
+used here.)
+
+**(b) The far tail.** Ring shares of the stacked profile (`_shape.tsv`, share beyond ±2
+wires): simulation gives **0.000 on every plane of every detector**; data give 0.015 / 0.012 /
+0.017 (PDHD U/V/W), 0.002 / 0.002 / 0.002 (PDVD), 0.009 / 0.004 / 0.013 (SBND). The ±2 ring
+tells the same story on collection: PDHD 0.058 data vs 0.003 sim, SBND 0.015 vs 0.005.
+
+So the data profile is not a wider version of the simulated one: it is the simulated core
+plus a component at ≥ 2 wires that the simulation does not produce **on every detector,
+including SBND, whose width §4.4 found fully reproduced**. That component is small in charge
+(1–6 %) and large in leverage (it enters the variance with a weight of 4–9 wire²), and it is
+the natural place to look for the ProtoDUNE collection excess of §4.4 — with the caveat that
+the data's prolonged segments carry δ-rays and 3-D angles that the straight simulated tracks
+do not, which is itself a tail source (§5, last bullet) and is now the first thing to bound.
+
+## 8.6 What this changes
+
+- §3.4 is **withdrawn** (§8.1) and replaced by §8.2; §4.2's second sentence (the residual is
+  concentrated at the wire-region boundary) is withdrawn with it. §4.2's first claim — that
+  the deconvolution leaves a residual of ~0.2 pitch on induction and 0.12 on collection —
+  rests on §3.5, which stacks the SP output about the *true* position and never uses the
+  own-centroid inversion; it stands, and it is now known to be **phase-independent**, which
+  the mechanism as stated did not predict. Why a pitch-averaged deconvolution leaves a
+  phase-independent residual is open.
+- §5's first bullet proposed the phase split as the test that separates the field response
+  and cross-talk from the deconvolution. **That test is withdrawn**: it has no signal to look
+  for (§8.2) and no power to see one (§8.4). §8.5 replaces it.
+- §6's last bullet ("a σ(phase) is implementable inside `cal_gaus_integral` behind a knob")
+  is withdrawn: there is nothing to implement. The fit's transverse model does not need a
+  phase dependence.
+- The shipped constants (docs 44, pdhd/02) are untouched: they come from `all` rows, whose
+  code path is byte-identical (§8.1 verification 1).
+
+**Next step.** Bound the non-instrumental contributions to the far tail of §8.5(b) before
+anything else, both with flags `d44_sigma_fit.py` already has, on the same arms:
+
+1. **Isolation** (the likelier of the two): `--max-foff 0.15` keeps only blocks whose live
+   charge sits within Chebyshev 2 of the trajectory, i.e. blocks with no δ-ray or second
+   track inside the window. This is the direct measure of the "other activity within ±3
+   wires" hypothesis, and `foff` is already an occasion so the split comes for free.
+2. **Straightness**: `--max-advance 0.10` and the `rr > 30 cm` plateau, against the same
+   quantity.
+
+If the ≥ 2-wire share falls toward the simulation's zero under either, the tail is topology
+and the ProtoDUNE width excess of §4.4 needs another explanation. If it does not, the tail is
+instrumental, and a pulser run on one PDHD FEMB measures channel-to-channel cross-talk
+directly — the one measurement that would close §5.
