@@ -1009,10 +1009,10 @@ the guard attribution (§4.5).
 | # | item | status |
 |---|---|---|
 | 1 | **turn on this, since it is a bug fix** | **DONE** — both defaults flipped, §2's T0′/T1′/T1″ proofs, this commit |
-| 2 | **fix the crashing event** | **root cause named** (§6.4): `PR::remove_vertex` deletes a vertex without clearing its incident edges, and `eliminate_short_vertex_activities` case 3 is the one site that can hand it a non-isolated vertex. Two fixes tabled, (a) recommended. Needs the owner's call because it is an undocumented prototype/toolkit divergence, and then a byte-identity gate on every binder |
+| 2 | **fix the crashing event** | **DONE on SBND** — toolkit `25baa8aa`, the owner's option (a): `PR::remove_vertex` refuses a vertex whose degree is > 0 (§6.4). Gated on all 3067 (§6.5): every artefact byte-identical to `d144on` except 494297 itself, which recovers from `rc=139` + zero-byte outputs; the guard fires on **exactly 1 event of 3067**. **Owed:** the same knob-off gate on PDVD, PDHD and the uBooNE chain, which also bind `TrackFitting`/`PRGraph` — cheap, because zero refusal lines ⇒ byte-identical |
 | 3 | **examine idx 6, 7 for the cathode-bridge muon to improve** | **diagnosed, §14** — and they are TWO defects, not one. 347890: the far half is still reconstructed but its PID flips 211 → 11, and doc 84 r4's partner filter refuses EM partners *by design*, so this merges into item 5. 177536: nothing is lost — the muon is split into two PF nodes, which double-counts a 105.7 MeV rest mass (21 splits in the population, 6 pay it) |
 | 4 | **understand why the energy was added for idx 3** | **answered AND fixed behind a default-OFF knob, §13** — 393505's +298 MeV is a 177.8 MeV cluster-15 cosmic segment admitted by `kine_count_near_cross_cluster` (proximity only, `gap_cm = 0.00`, no direction test) plus one muon rest mass. `kine_near_pointing_impact` (toolkit `7c4bf46a`) brings Enu back to 574.8 and restores the pr/129 sentinel's energy clause. Owed: its own 3067-event arm before it is flipped |
-| 5 | **improve the hadronic shower reconstruction** | **scoped, §15** — on 137238 the exclusion pool empties (`kine_n_excluded` 9 → 1, 316.4 → 0.0 MeV) and the EM shower absorbs it (354 → 555 MeV, 103 → 143 cm). Decide first whether this is an exclusion-threshold round or a PID round, with a population census of `kine_n_excluded`; reading list docs 127, 93, 125, 133, 136, 141 |
+| 5 | **improve the hadronic shower reconstruction** | **scoped, §15** — on 137238 the exclusion pool empties (`kine_n_excluded` 9 → 1, 316.4 → 0.0 MeV) and the EM shower absorbs it (354 → 555 MeV, 103 → 143 cm). **The deciding census has run** (§15.1, 1434 candidates on both arms): the pool does NOT collapse — Σ`kine_n_excluded` −1.5 %, Σ excluded energy −4.4 %, 108 fell / 92 rose / 1234 unchanged — so 137238 sits in an **8-event tail**, and this is a **PID / shower-building round, not an exclusion-threshold round**. Working set = those 8 events; reading list docs 127, 93, 125, 133, 136, 141. **No code changed** |
 | — | **update the sentinels** | §16, on the `d144fixprod` arm |
 
 **A shared-mechanism check comes before items 3 and 4 are opened as two
@@ -1026,6 +1026,18 @@ changes sign across the cathode and |x| is not drift distance.  Grep
 `long_muon_cathode_bridge*` (`TaggerCheckNeutrino.cxx`, `MuonMCSDriver.cxx`) and
 the pointing-guard code for their own drift arithmetic first.  If either computes
 x in the raw frame, items 3 and 4 are one defect of the same class as doc 45.
+
+**ANSWERED — and it is not a shared frame defect.**  It was settled by
+measurement rather than by the grep, which is the stronger form: on **347890**
+the calib dumps show the bridged muon's ends *unchanged* at x = (106.91, 4.95)
+between the arms (§14.1), so no second `time → x` site moved them; what moved is
+the far half's PID, 211 → 11.  On **393505** §13.2 traces the new muon to
+`kine_count_near_cross_cluster`'s proximity-only admission, not to drift
+arithmetic.  So items 3 and 4 are **not** one defect: 3a merges into item 5
+(typing), 3b is a segment split (§14.2), and 4 has its own fix (§13.2.1).  What
+is still *not* done is the generic sweep — no exhaustive audit of every site
+outside `TrackFitting::update_association` that does its own drift conversion.
+That remains open for any future round.
 
 ---
 
