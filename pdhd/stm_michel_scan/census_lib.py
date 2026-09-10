@@ -44,7 +44,8 @@ MIP = 54000.0            # e/cm, the display's own reference curve plateau
 MIP_MEDIAN = 47000.0     # mip_dqdx_median the PDVD taggers run with (wct-pr-perevt.jsonnet:301)
 STM_BITS = ["no_chain", "stop_unmatched", "no_bragg", "shape_flat", "not_muon_pid",
             "continuation", "stop_near_boundary", "vertex_hadron", "short",
-            "profile_sparse", "plateau_off_mip", "stop_into_dead", "cluster_not_track"]
+            "profile_sparse", "plateau_off_mip", "stop_into_dead", "cluster_not_track",
+            "profile_geometry"]   # doc pdvd/66: 1 << 13
 
 
 def bare(v):

@@ -1,7 +1,7 @@
 # 56 — From the 569-item hand scan to a task set for the STM + Michel pattern recognition
 
-**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2, T3, T5, T6 and T7).
-§8's T1a, T1b, T1c, T4, T2, T3, T5, T6 and T7 rows are now executed — see doc pdvd/57
+**Status (2026-09-10, the task set is EXECUTED: T1a, T1c, T1b, T4, T2, T3, T5, T6, T7
+and T8). Every §8 row is now executed — see doc pdvd/57
 (T1a: the stop retreat), doc pdvd/58 (T1c: the stop split), doc pdvd/59
 (T1b: the asymmetric kink), doc pdvd/60 (T4: persist the per-plane
 dead-channel flags), doc pdvd/61 (T2: the moved-stop Michel veto, plus §9
@@ -9,8 +9,9 @@ fixes), doc pdvd/62 (T3: the Michel with no trajectory) and doc pdvd/63
 (T5: the fit-end undershoot) and doc pdvd/64 (T6: the interior arms as role
 7, rows only, OFF in production like the survey) and doc pdvd/65 (T7: the
 shape-test tables, the sampling sweep, the autocorrelation length, and the
-peak-anchored origin measured and left OFF) for their code, gates and
-results. All
+peak-anchored origin measured and left OFF) and doc pdvd/66 (T8: the
+coiled-end and charge-support fields, the guard measured and left OFF) for
+their code, gates and results. All
 byte-identical gates PASS. Seven knobs (`stop_retreat_max: 2`,
 `stop_split_max: 1`, `stm_kink_asym_enable: true`,
 `moved_stop_michel_guard: true`, `stop_local_michel_pieces: true`,
@@ -57,7 +58,9 @@ pdvd/63 (T5 executed: the class-F stubs are fitted `kOther` arms and
 chain's `kOther` arms, the prep's role-2 gap fixed, 33 scan-michel `kOther`
 arms named), pdvd/65 (T7 executed: `ks_margin` is the shape-test lever, the
 step moves the tagger's candidate set, the smoother averages ~2 samples;
-`bragg_peak_anchor` built and left OFF).
+`bragg_peak_anchor` built and left OFF), pdvd/66 (T8 executed: `end_arc_span`
+and the charge-support fields written by the chain; `profile_geometry_guard`
+measured and left OFF).
 
 ---
 
@@ -374,7 +377,7 @@ components (`feedback_shared_component_merge_gating`).
 | **T5** | ✅ **DONE, doc pdvd/63. Knob `absorb_bragg_stub: true` is PDVD PRODUCTION.** None of the three named owners is the mechanism: the END trimmer is `TrackFitting.cxx:2693` (not `:2609`, the start side) and it is geometric (three-plane `is_good_point` at 0.2 cm); `end_point_limit` cannot move the STM path end (the final `organize_ps_path` passes 0 — it is a last-point-dQ/dx knob); the terminal set does not bound the path end (extreme points are inserted un-charge-tested). The five stubs ARE fitted, as separate `kOther` arms at the stop vertex (hot > `michel_mip_hi`, so neither Michel nor continuation), and the chain ends one segment short — exactly what the existing default-OFF `absorb_bragg_stub` (doc pdhd/03 §6.8) was built for and never scored. Scored on the record vs `d62bc`: fires on 7 items, **3 `is_stm` stoppers recovered** (`039253_0/110`, `039349_64/65`, `039349_66/78` = doc 55's scan 474), 0 new FPs, 0 TPs lost, `michel_found` census identical (no Michel orphaned; `039253_0/110`'s becomes attached), class F 5 → 3. The PDHD `no_bragg` regression does not reproduce on any PDVD item. Left, with their C++ kinks: `039252_5/73` (20.6°, 0.6° over the 20° angle), `039253_13/39` (24.6°, not a terminal), `039349_18/33` (32.9°) — not tuned for | 1, 2 | (scored, see doc 63 §3) | F 5 → **3**; `is_stm` census (547,149,9,119,270,.943,.556) → (547,**152**,9,**116**,270,.944,.567) | knob `absorb_bragg_stub`; off = byte-identical (PDVD 578/578 vs `d62bc`, PDHD 325/325); flip-equivalence + OFF-path 0 lines; PDHD stays OFF (its one recorded case) |
 | **T6** | ✅ **DONE, doc pdvd/64. Knob `publish_other_arms` shipped, rows-only; production stays OFF (the survey's precedent), ON in the scan arms' `SURVEY` TLA.** Two corrections first: interior `kOther` arms were never dropped by C++ (`n_body_other` has been persisted since doc 48 but never read into the payload; stop-vertex `kOther` arms genuinely had nothing), and `prep_stm_michel_scan.py` omitted role 2 from its role set, so every published delta read as "no role" offline (206 items) — fixed; C3 on the same arm 605 → 520 segments, no class count moves. Role 7: `kOther` arms collected during classification, emitted LAST and claiming nothing (282 counted, 278 published — the 4 were interior arms the Michel object had claimed; role-3 rows identical 3568/3568). ON arm vs leg: every verdict branch bit-identical, 0 `is_stm` / `michel_found` flips, 4960 new points on 166 items. The 172 `delta / other` tags resolve into 172 companion SURVEY segments (role 6), 80 role-2 deltas, 45 role-7 arms (33 attached > 8 cm interior, median 0.28 MIP — this row's "46 at 0.30 MIP", now named by the chain), and 42 with no role at all (not arms of any chain vertex). **Lead: 33 scan-tagged MICHEL segments are chain `kOther` arms** — a named list for a future admission round | 4 | (see doc 64 §3) | scan-tag × chain-role table (doc 64 §3.3); role-7 278 segs / 166 items; C2 "no role" 41 → 8 | knob `publish_other_arms`; off = byte-identical (PDVD 578/578 vs `d63a`, PDHD 325/325); ON = rows only (124/124 verdict branches identical) |
 | **T7** | ✅ **DONE, doc pdvd/65 — measurements delivered, one knob built and left OFF, no threshold moved.** (1) `bragg_contrast_min` × `ks_margin` grid from the published fields: **the KS margin is the lever** — at the shipped `cmin 0.60`, `ks_margin` 0 → −0.05 buys 34 TPs for 5 FPs on the shape tests alone (F1 0.726 → 0.808); the contrast threshold is flat. Window recomputation (agreement: KS to 1e-4, contrast p90 0.033): tail and plateau windows flat to ±0.01; `compare_range_cm` 35 → 60 gains 10 TPs / −5 FPs but feeds three consumers. (2) Sampling sweep, four arms: `low_dis_limit` ±4 mm changes the tagger's own candidate set (136–167 of 569 items unmatched) and cannot be graded by this record; `dx_norm_length` 4 mm is the one setting the record mildly prefers (michel F1 0.863 → 0.875, `is_stm` net −6 TP, 35 unmatched). (3) Autocorrelation on the plateau: lag-1 0.42 (PDVD) / 0.60 (PDHD), below 1/e from 1.2 cm on both — the smoother averages ~2 samples on PDVD, ~3 on PDHD. (4) `bragg_peak_anchor` (the prototype `eval_stm` origin, ported behind a knob): TP 152 → 182 but FP 9 → 22 (purity 0.944 → 0.892) — fires on 71 % of items at a 10 cm window; **not flipped**; the 3 cm window is measured in doc 65 §5.1. Correction: `stm_recomb_calibrated` is `true` in production and reaches neither shape test | 1 | (see doc 65 §2–§5) | §2.1's grid, §2.2's window table, §4's sweep table, §5's anchor census | any operating-point move is the owner's call (§5.1, §5.7); recommended order: `ks_margin`, then `compare_range_cm`, then a re-scan for `dx_norm_length` 4 |
-| **T8** | **coiled and unsupported fits** (G 18, H 20): publish `arc/span` over the last 20 cm and `charge_supported` per segment as reject-class inputs | 1 | `039349_48/21` (arc/span 3.41), `039253_6/82` (208 cm at 0.11 plateau) | G, H counts | later; doc pdvd/31/37/40 machinery |
+| **T8** | ✅ **DONE, doc pdvd/66. Fields shipped (unconditional); the guard built, scored and left OFF.** `T_stm_michel` gains `end_arc_cm`, `end_span_cm`, `end_arc_span`, `n_end_pts` (the last 20 cm of the geometric profile) and `n_unsupported_segs`, `unsupported_len_cm`, `unsupported_frac_min`, `chain_support_min` (every fitted segment of the main cluster against the verdict's plateau median); `T_stm_michel_pts` gains `q_sup` per point. Agreement with the offline classes: G 566/566 item for item (|Δ arc/span| median 2e-4); H 552/558, the 6 disagreements all from the two plateau definitions (verdict 20–40 cm live vs offline median of all q > 0). `profile_geometry_guard` (new bit `R_PROFILE_GEOMETRY` 1<<13) would veto 29 judged items — **5 true stoppers and 1 FP among the `is_stm = 1`** — fails the strict bar, stays OFF; the field a future guard should read is `chain_support_min` (the chain's OWN support), not "any unsupported segment in the cluster" | 1 | `039252_3/74`, `039253_8/62`, `039349_37/39`, `039253_17/127`, `039349_12/44` (the 5 it would cost), `039349_22/45` (the FP it would remove) | G 15 (C++ = offline), H 20 (offline) / 17 (C++) | fields: byte-identical on every existing branch (PDVD 578/578 on all 125 shared, PDHD 325/325); guard off |
 
 **Order.** T1a, T1b, T1c, T2 and T3 are done, and T4 alongside them →
 **T5** next. T1a+T1b+T1c touched the class the scan sized largest,
@@ -396,7 +399,19 @@ and found 33 scan-michel segments among the chain's `kOther` arms. T7 (doc
 65) delivered the three measurements the owner asked for — the KS margin is
 the lever, the step moves the candidate set, the smoother averages two
 samples — and built the peak-anchored origin behind a knob that trades
-purity for efficiency and stays OFF. **Next: T8.**
+purity for efficiency and stays OFF. T8 (doc 66) wrote the coiled-end and
+charge-support fields from the chain (G reproduced item for item) and showed
+the natural guard on them costs 5 true stoppers for 1 FP — left OFF.
+
+**The task set is executed: T1a, T1b, T1c, T2, T3, T4, T5, T6, T7, T8 (docs
+57–66).** Seven knobs are PDVD production; `is_stm` went from 144 / 9 / 125
+(`d53v`) to 152 / 9 / 116 and `michel_found` from F1 0.735 to 0.863, with 0
+new `is_stm` false positives across the campaign. What is left is the
+owner's: the operating points doc 65 tabulates (`ks_margin` first, then the 3
+cm `bragg_peak_anchor`, `compare_range_cm`, the 3 cm `michel_range_energy_dis_cm`
+row, a re-scan for `dx_norm_length` 4 mm), the two measured-mixed knobs
+(`stop_local_residual_cm`, `publish_other_arms` in production), and the named
+leads with no code yet (doc 66 §6).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
@@ -478,6 +493,11 @@ moved; the scan record is not re-labelled; no C++ is touched.
    continuation nor delta. Visible as role 7 on any arm with
    `publish_other_arms`; a named list for a future admission round. Not
    fixed.
+13. **Two plateau definitions (doc pdvd/66 §2).** The verdict's `plateau_med`
+   is the live median over rr 20–40 cm; the offline class H uses the median of
+   every q > 0 row. They differ by 5 % typically and by a factor on items whose
+   whole profile is faint, which is why the chain's `n_unsupported_segs` and
+   the offline H disagree on 6 of 558. Not changed; stated.
 
 ## 10. Gates
 

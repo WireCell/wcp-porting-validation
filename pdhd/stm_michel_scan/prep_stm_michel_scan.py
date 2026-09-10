@@ -125,7 +125,8 @@ KEY_HEADER = (
 # clus/inc/WireCellClus/StmMichelFunctions.h:169-183
 BITS = ["no_chain", "stop_unmatched", "no_bragg", "shape_flat", "not_muon_pid",
         "continuation", "stop_near_boundary", "vertex_hadron", "short",
-        "profile_sparse", "plateau_off_mip", "stop_into_dead", "cluster_not_track"]
+        "profile_sparse", "plateau_off_mip", "stop_into_dead", "cluster_not_track",
+        "profile_geometry"]   # doc pdvd/66: 1 << 13
 
 # T_stm_michel scalars carried into the reveal block, verbatim.
 VERDICT_SCALARS = [
@@ -182,6 +183,9 @@ VERDICT_SCALARS = [
     "n_body_other", "n_stop_other", "n_other_published",
     # doc pdvd/65 (T7) -- the peak-anchored rr origin's shift (0 when off).
     "bragg_anchor_shift_cm",
+    # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
+    "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
+    "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",
