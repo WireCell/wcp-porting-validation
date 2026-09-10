@@ -349,6 +349,43 @@ function(
         // byte-identity check (the exact trap doc pdvd/58 sec 6 already
         // documented and fixed the same way for split_kink_min_deg).
         moved_stop_michel_guard: true,
+        // doc pdvd/62 (T3b) -- PDVD PRODUCTION.  A fitted piece of the MAIN
+        // cluster that is disconnected from the muon chain (its own two
+        // vertices, no edge to a chain segment -- what a pr54-kept residual
+        // looks like, and what the "passes every gate, still not admitted"
+        // arms of doc 56 sec 3 turned out to be) joins the Michel object under
+        // the same three gates a companion piece gets (michel_dot_radius_cm,
+        // dot_max_len_cm, the dot_body_exclusion_cm body test).  Measured on
+        // the 569-item smx1a record against d61v, item by item: 70 pieces on
+        // 27 items; michel_found TP 118 -> 135, 0 TPs lost, FP 39 -> 43 (the
+        // four named: 039349_20/32, 039349_62/63, 039349_76/23, 039349_78/22,
+        // all bridged within 2 cm of the stop); scan-tagged michel segments
+        // with role 3 189 -> 225.  is_stm bit-identical (0 of 566 flips) --
+        // the knob runs after the verdict.  The companion knob
+        // stop_local_residual_cm (T3a, keep a pr54 residual near the stop)
+        // is NOT set: measured on the same record it adds 2 Michels for 5
+        // spurious ones, loses 1, and flips is_stm on 3 items by changing the
+        // PR graph (doc 62 sec 4.3) -- left OFF for the owner.
+        stop_local_michel_pieces: true,
+        // doc pdvd/62 (T3c) -- PDVD PRODUCTION.  doc 55 sec 15.1's kinematic
+        // test as a knob: a bridged (conn_type 2) or charge-only (3) Michel
+        // more than michel_range_energy_dis_cm (C++ default 5 cm, the argued
+        // distance -- an electron born at the stop cannot travel 5 cm and
+        // deposit under 10 MeV) from the stop with michel_ke_best below
+        // michel_range_energy_ke_min (10 MeV) is demoted via michel_conn_type
+        // only; is_stm untouched (0 of 566 flips).  Measured alone (d62c):
+        // 21 named FPs removed, 3 TPs lost (039252_14/81, 039253_13/73,
+        // 039349_44/28 -- 13.5-14.9 cm from the stop at 1-6 MeV), michel F1
+        // 0.764 -> 0.807.  With T3b (d62bc, the arm this production bag
+        // reproduces): TP 118 -> 132, FP 39 -> 22, F1 0.764 -> 0.863.  Both
+        // thresholds stay UNSET at their C++ defaults (the values the scored
+        // arm ran) for the same inert-key reason as moved_stop_michel_ke_min
+        // above.  doc 55's best-F1 row was 3 cm (F1 0.821 alone, five more
+        // non-michel items removed at no TP cost on this record) -- chosen
+        // on the same 569 items, so it is the owner's option
+        // (-S stm_michel_extra={michel_range_energy_dis_cm:3.0}), not the
+        // default.  PDHD stays OFF for both: no PDHD hand-scan record.
+        michel_range_energy_guard: true,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

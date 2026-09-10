@@ -1,23 +1,29 @@
 # 56 — From the 569-item hand scan to a task set for the STM + Michel pattern recognition
 
-**Status (2026-09-09, updated same day after T1a, T1c, T1b, T4 and T2). §8's
-T1a, T1b, T1c, T4 and T2 rows are now executed — see doc pdvd/57 (T1a: the
-stop retreat), doc pdvd/58 (T1c: the stop split), doc pdvd/59 (T1b: the
-asymmetric kink), doc pdvd/60 (T4: persist the per-plane dead-channel flags)
-and doc pdvd/61 (T2: the moved-stop Michel veto, plus §9 fixes) for their
-code, gates and results. All byte-identical gates PASS. Four knobs
+**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2 and T3).
+§8's T1a, T1b, T1c, T4, T2 and T3 rows are now executed — see doc pdvd/57
+(T1a: the stop retreat), doc pdvd/58 (T1c: the stop split), doc pdvd/59
+(T1b: the asymmetric kink), doc pdvd/60 (T4: persist the per-plane
+dead-channel flags), doc pdvd/61 (T2: the moved-stop Michel veto, plus §9
+fixes) and doc pdvd/62 (T3: the Michel with no trajectory) for their code,
+gates and results. All byte-identical gates PASS. Six knobs
 (`stop_retreat_max: 2`, `stop_split_max: 1`, `stm_kink_asym_enable: true`,
-`moved_stop_michel_guard: true`) are now PDVD PRODUCTION in
+`moved_stop_michel_guard: true`, `stop_local_michel_pieces: true`,
+`michel_range_energy_guard: true`) are now PDVD PRODUCTION in
 `pdvd/wct-pr-perevt.jsonnet` — each confirmed on the 569-item scan record,
-0 regressions (`is_stm` bit-identical for T2's veto; 0 new `is_stm` false
-positives for the other three). PDHD stays OFF for all four: no PDHD
-STM/Michel hand-scan record exists to confirm any of them there. SBND is
-untouched (T1b's knob is threaded through `sbnd/clus.jsonnet` but its own
-`wct-pr-perevt.jsonnet` never sets it, confirmed by a compiled-config grep;
-T2's knob lives in `CheckSTM_Michel`, which SBND does not bind at all). T4 is
+0 regressions (`is_stm` bit-identical for T2's veto and both T3 knobs; 0
+new `is_stm` false positives for the other three). The `michel_found`
+census now stands at TP 132 / FP 22 / FN 20, F1 0.863 (from 0.735 on
+`d53v`). PDHD stays OFF for all six: no PDHD STM/Michel hand-scan record
+exists to confirm any of them there. SBND is untouched (T1b's knob is
+threaded through `sbnd/clus.jsonnet` but its own `wct-pr-perevt.jsonnet`
+never sets it, confirmed by a compiled-config grep; T2's and T3's knobs
+live in `CheckSTM_Michel`, which SBND does not bind at all; T3a's two new
+`PatternAlgorithms` members are never set by `TaggerCheckNeutrino`). T4 is
 writer-only and has no knob to flip. T2a and T2b (doc 56's other two
 Michel-admission questions) are measured negatives — no knob for either
-(doc 61 §2-3). Everything else below is still analysis: no other C++
+(doc 61 §2-3); T3a (the stop-anchored `pr54` keep) is measured and left OFF
+(doc 62 §4.3). Everything else below is still analysis: no other C++
 changed, no other knob moved.** It answers the owner's request after doc
 pdvd/55 closed the
 hand scan: read the scan against the reconstruction code, find the mechanism
@@ -36,7 +42,9 @@ retreat, its gates and its results), pdvd/58 (T1c executed: the stop split at
 a fit row, its gates and its results, and the corrected 9+14 population
 count for the items T1a's retreat cannot reach), pdvd/59 (T1b executed: the
 asymmetric kink), pdvd/60 (T4 executed: the per-plane dead flags), pdvd/61
-(T2 executed: the moved-stop Michel veto, and the doc 56 §9 fixes).
+(T2 executed: the moved-stop Michel veto, and the doc 56 §9 fixes), pdvd/62
+(T3 executed: the disconnected same-cluster Michel piece and the
+range-energy guard; the stop-anchored residual keep measured and left off).
 
 ---
 
@@ -89,7 +97,7 @@ and the scorer cannot drift apart on a definition.
 |---|---|---|---|---|
 | 1 | some fits never show the Bragg peak; is 0.6 cm the right step for PDVD's pitch; Steiner terminals; dead channels | the peak is usually *there* — the profile is read at the wrong place (the stop overshoots, §2) or judged by a test it fails while rising (§4); dead channels do **not** separate missed from found stoppers (§5); the step is pitch-blind on every detector and one config key reaches only half the fitters (§6) | `TrackFitting.cxx` passes 2-3 (`:9524`, `:9702`, `:10076`), the dead-plane smoother (`:9058-9105`), `examine_end_ps_vec` (`:2562`) | T4, T5, T7, T8 |
 | 2 | the STM end point is wrong — `break_segments` or the Bragg search | the stop is, in practice, **the far end of the tagger's trajectory fit**: `find_first_kink` returns its no-kink sentinel on 74 of 131 accepted stoppers and on 29 of the 51 overshoots, and `CheckSTM_Michel` clamps the stop to the last fit row. `break_segments` never reaches the STM verdict (it runs in `CheckSTM_Michel`, downstream); the fit's path end is chosen by geometry, not charge. **T1a executed (doc 57): a graph-local retreat recovers 2 of the 51 outright with 0 regressions. T1c executed (doc 58): of the 23 with no chain vertex to retreat onto (corrected: 9 structurally unreachable by any graph walk + 14 excluded only by an offline proxy), a fit-row split gated on the fitted trajectory's own bend recovers 1 more, 0 regressions. T1b executed (doc 59): a third, additive charge-gate clause in `find_first_kink` itself admits an asymmetric kink (Bragg into a cold Michel) upstream of the graph stage, recovering 2 more, 0 regressions, identical `is_stm` FP set. All three knobs are PDVD production** | `TaggerCheckSTM.cxx:1570` (`find_first_kink`), `:3557-3666` (path ends), `CheckSTM_Michel.cxx:788`, `:1226`, `:1298`; `StmMichelFunctions.cxx:stm_michel_stop_retreat`/`stm_michel_stop_split` (doc 57/58) | **T1a ✅, T1b ✅, T1c ✅** |
-| 3 | the Michel is not identified when it is nearly isotropic / has no trajectory | 38 of the 41 missed Michels sit on items whose stop was already wrong; of the arms that touch the fit end, 8 fail `michel_mip_lo` and 7 pass every threshold yet are not admitted; 29 scan-michel segments are detached; doc 54 §2's `pr54` residual drop discards every residual in the Michel-size band. **T2 executed (doc 61): the moved-stop side of this is fixed — 5 spurious attachments removed, 1 real cost, net-positive F1, PDVD production. The charge/KE and non-`stop_v`-vertex questions came back measured negatives (T2a/T2b); T2a's finding (charge genuinely small at the fit) now sharpens T3** | `StmMichelFunctions.cxx:279-315`, `CheckSTM_Michel.cxx:1498-1608`, `:1692-1719`, `NeutrinoOtherSegments.cxx:36` | **T2 ✅**, T3 |
+| 3 | the Michel is not identified when it is nearly isotropic / has no trajectory | 38 of the 41 missed Michels sit on items whose stop was already wrong; of the arms that touch the fit end, 8 fail `michel_mip_lo` and 7 pass every threshold yet are not admitted; 29 scan-michel segments are detached; doc 54 §2's `pr54` residual drop discards every residual in the Michel-size band. **T2 executed (doc 61): the moved-stop side of this is fixed — 5 spurious attachments removed, 1 real cost, net-positive F1, PDVD production. The charge/KE and non-`stop_v`-vertex questions came back measured negatives (T2a/T2b). **T3 executed (doc 62): the "7 that pass every gate" were disconnected pieces of the main cluster that nothing in the Michel search looked at — a same-cluster piece admission finds 17 Michels (0 lost), and doc 55 §15.1's range-energy guard removes 21 spurious ones; together `michel_found` F1 0.764 → 0.863, `is_stm` bit-identical, PDVD production**. The `pr54` residual keep itself (T3a) is measured and left OFF | `StmMichelFunctions.cxx:279-315`, `CheckSTM_Michel.cxx:1498-1608`, `:1692-1719`, `NeutrinoOtherSegments.cxx:36` | **T2 ✅, T3 ✅** |
 | 4 | unassociated segments — delta rays, or over-clustering | 172 same-cluster fitted segments with no role on 51 stoppers; 152 are attached to the chain interior and 46 of those are > 8 cm at median 0.30 MIP, so `stm_michel_classify_chain_arm` returns `kOther` and they vanish from every product | `StmMichelFunctions.cxx:317-332`, `CheckSTM_Michel.cxx:1476-1495` | T6 |
 | 5 | the scan doc already holds the key information | yes — and the piece it could not hold is *how the numbers move when code changes*; §7 turns the record into that instrument | `census_score.py` | **T0** |
 
@@ -342,27 +350,27 @@ components (`feedback_shared_component_merge_gating`).
 | **T1c** | ✅ **DONE, doc pdvd/58. Knob `stop_split_max: 1` is PDVD PRODUCTION.** Fit-row split: `PR::break_segment` (already used by `anchor_vertex` to split at the tagger's own entry/stop) splits the chain's last segment at a fit row instead of an existing vertex, gated on the fitted trajectory's own bend at that row (`stm_michel_row_kink_deg >= 15°`) rather than a vertex — losing the vertex constraint is what T1a's safety depended on, so the kink is what replaces it (median bend 18.5° on the target population vs 6.3° on the through-going negative control). **Correction to the population this task targets**: the "23" doc 57 named is 9 items structurally unreachable by any graph walk (`n_chain_segs <= 1`, T1a's loop cannot even start) + 14 excluded only by the offline vertex proxy. Result: **1 of 23 recovered**, 0 regressions, 0 new `is_stm` false positives (identical FP set before/after); pin residual 3.53→3.16 cm; role 3 185→186. Confirms the structural claim directly: 2 of the 10 items the split fired on had a pre-split `n_chain_segs = 1`, unreachable by T1a by construction. Three THRU items (of five that fired) picked up a spurious `michel_found=1`, on top of T1a's own two — feeds T2. **Correction to doc 56's original pricing**: this was NOT "a materially larger change... plan it as its own session" — `break_segment` already existed in this exact component, so T1c was a third call to a doctest-pinned primitive, not new graph machinery | 2 | (scored, see doc 58 §5) | stop residual 36 pins 3.53→**3.16 cm**, within 2 cm 6→**10**; `is_stm` census (549,146,9,123,271,.942,.543)→(549,147,9,122,271,.942,.546) | knob `stop_split_max`; off = byte-identical vs `d57v` (same config, new binary — not vs `d53v`, which already differs by T1a's own recoveries) and vs `d53h`; first STM/Michel knob that mutates PR graph topology when on (new vertex, new segment), reported via the `T_stm_michel_pts` role/geometry census |
 | **T1b** | ✅ **DONE, doc pdvd/59. Knob `stm_kink_asym_enable: true` is PDVD PRODUCTION.** A third, additive OR-clause in BOTH of `find_first_kink`'s charge gates (there are two, not one — sweep 1's own OR-branch relaxes magnitude, not asymmetry), accepting a kink where one 10-point arm is ≥ 1.2 MIP and the other ≤ 0.5 MIP, either direction — the asymmetric muon-into-Michel junction the existing "both arms hot" gates never admit. Result on the real chain (not the offline charge-only sizing probe, which found 25 of 125 missed items and 55 of 271 THRU items with a candidate row): **2 of the missed stoppers recovered** (`039349_52/36`, `039349_67/78`), 0 regressions, identical 9-item `is_stm` FP set before/after (both byte-identical gates PASS, PDVD 579/579 + PDHD 325/325). Pin residual 3.16→**2.78 cm**. Confirmed via the real arm that this is upstream of, and can PREEMPT, T1a/T1c: 3 items where `n_retreat`/`n_split` used to fire no longer need to (T1b finds the real kink directly), with **no change to any of those items' `is_stm` verdict** — credit reassignment, not regression. `vertex_kink_reject` (`TaggerCheckSTM.cxx:2474`) still evaluates at `n−1` under the sentinel — untouched, and `m_vertex_kink_guard` is off on PDVD anyway. One new spurious `michel_found` on a MESSY item — feeds T2. SBND untouched: the knob is threaded through `sbnd/clus.jsonnet` but `sbnd/wct-pr-perevt.jsonnet` never sets it (confirmed by compiled-config grep, 0 occurrences) | 2 | `039349_52/36`, `039349_67/78` | sentinel rate; `T_stm_pass.kink_num` vs scan pin; `is_stm` census (549,147,9,122,271,.942,.546)→(547,149,9,119,271,.943,.556) | knob `stm_kink_asym_enable`; off = byte-identical (both detectors, verified); SBND compiled-config proof (key absent) substitutes for an `ab_check.sh` run this round |
 | **T2** | ✅ **DONE, doc pdvd/61. Knob `moved_stop_michel_guard: true` is PDVD PRODUCTION.** Three questions, one shipped: **T2c** (does a moved stop need a stronger Michel gate) — an attached (`michel_conn_type==1`) Michel whose stop was moved this event (`n_retreat>0` or `n_split>0`) is demoted when its assembled `michel_ke_best` falls below `moved_stop_michel_ke_min` (10.0 MeV, doc 55 §15.1's own floor, applied to a narrower population). Demotes via `michel_conn_type`, never `reject_bits` — `is_stm` untouched by construction, confirmed bit-identical on all 566 common items between `d59v` and the feature arm. Real-arm result, matching the offline census-payload estimate item for item: **veto fires on exactly 6 items** — the 5 named spurious THRU attachments docs 57/58/59 flagged (`039252_2/79`, `039252_4/55`, `039349_20/41`, `039349_48/21`, `039349_61/62`) plus 1 real cost, a genuine scan-confirmed Michel (`039349_36/63`, KE 6.61 MeV) that loses its correct attachment — no threshold cleanly separates the two (two of the recovered FPs sit at 8.9/8.7 MeV, ABOVE the lost TP's 6.61). `michel_found` census: FP 44→39, TP 119→118, **F1 0.755→0.764** (net positive). Both byte-identical gates PASS (PDVD 578/578, PDHD 325/325); flip-equivalence and true OFF-path byte-identity both verified by compiled-JSON diff (0 lines each). **T2a** (charge/KE vs median dQ/dx on the 9 named arms) — measured negative: all 9 have zero nearby unfitted charge (`n_dots`/`dots_ke_*` all 0), so a KE test finds nothing a charge-based admission could recover; the charge these arms carry is genuinely small at the fit (doc 55 §15.2's dilution mechanism), a T3 question not a T2 one. **T2b** (do the "passes everything" arms hang off a non-`stop_v` vertex) — measured negative: 6 of the 9 named items no longer apply on the current arm (`039253_17/77` is now T1b-recovered), and of what remains, `n_stop_arms` is 1 on 8 of 8 — there is no alternate vertex, the hypothesis does not hold. No C++ for either | 3 | (scored, see doc 61 §4) | `michel_found` census (549,111,39,41,358,.740,.730)→(547,118,39,34,356,.752,.776), F1 0.755→**0.764**; `is_stm` bit-identical (0 of 566 flips) | knob `moved_stop_michel_guard`; off = byte-identical (both detectors, verified); flip-equivalence + true OFF-path both verified |
-| **T3** | **Michel with no trajectory.** Doc 54 §2: the `pr54` isolated-residual drop (`NeutrinoOtherSegments.cxx:36`) discards every residual in the 2–24-point band — 363 on d53v — so add a default-OFF *stop-local admission* (keep a residual within ~20 cm of the STM stop regardless of the terminal floor). Cheap probe first: how many of the 363 sit within 20 cm of a scan stop. Plus the 29 detached scan-michel segments (doc pdhd/13 §8's held fix) and doc 55 §15.1's range-energy gate on `conn_type 2` | 3 | `039253_8/62`, `039253_2/77`, `039349_33/45`, `039349_81/54`; detached: `039252_6/100` (9.4 cm gap), `039252_15/77`, `039349_23/54`, `039349_5/65` | D 41 → ?, C 39 → ?, the 44-item unfitted-lump census | §15.1 cut as a knob first; admission knob priced on both ProtoDUNEs; a `pr67 fos` re-run for the 27 lumps with no drop line |
+| **T3** | ✅ **DONE, doc pdvd/62. Knobs `stop_local_michel_pieces: true` and `michel_range_energy_guard: true` are PDVD PRODUCTION.** Three knobs built, two shipped. **T3b** — a fitted piece of the MAIN cluster disconnected from the muon chain (its own two vertices, no edge to a chain segment — what a `pr54`-kept residual is, and what doc 56 §3's "7 arms that pass every gate" turned out to be: they hang off no chain vertex at all, which is why T2b saw no alternate vertex) joins the Michel object under the same radius / length / body gates a companion piece gets. Real arm (`d62b`): 70 pieces on 27 items, `michel_found` TP 118 → 135, **0 lost**, FP 39 → 43 (4 named, all bridged within 2 cm), scan-tagged michel segments with role 3 189 → 225, `is_stm` bit-identical (0 of 566). **T3c** — doc 55 §15.1 as a knob, C++ default at the ARGUED 5 cm (not the best-F1 3 cm row chosen on this same record): 21 FPs removed, 3 named TPs lost (13.5–14.9 cm from the stop at 1–6 MeV), `is_stm` untouched. **Together (`d62bc`, the production bag): TP 118 → 132, FP 39 → 22, FN 34 → 20, F1 0.764 → 0.863.** **T3a** — the stop-anchored `pr54` keep (`stop_local_residual_cm`, `PatternAlgorithms` anchor members, never set by the neutrino path): 46 fires on 40 items; on top of B it adds 2 Michels, costs 5 spurious ones and 1 lost TP, and flips `is_stm` on 3 items (a kept residual changes the PR graph: segment counts, vertex positions, the stop snap) — measured, named, **left OFF**. The probe corrected the framing: 74 of the 363 drops sit within 20 cm of a candidate stop, only 5 class-D items are reachable through the keep, and 14 of B's 17 recoveries needed no keep at all. `pr67 fos` forwarded (log-only) and run: of doc 54 §2.5's 27 no-drop lumps, 18 are single-terminal fragmentation, ≤ 8 are "already covered" | 3 | (scored, see doc 62 §4) | D 34 → **20**, C 39 → **22**, E 32 → 5; role 3 189 → **225** | knobs `stop_local_michel_pieces`, `michel_range_energy_guard` (+ `stop_local_residual_cm` off); off = byte-identical (PDVD 578/578, PDHD 325/325); flip-equivalence + true OFF-path 0 lines; 16 live jobs' compiled config unchanged |
 | **T4** | ✅ **DONE, doc pdvd/60 (writer-only, no knob).** Persist `reg_flag_u/v/w` (per fit point, from `TrackFitting::dQ_dx_fit`'s own already-computed dead-channel flags — confirmed to be the function STM's fit path actually calls, not `dQ_dx_multi_fit`) on `PR::Fit`, the `stm_fit` PC and `T_rec_charge`, both ProtoDUNEs. Every existing branch verified bit-identical (18/18 pre-existing `T_rec_charge` columns spot-checked, plus doc 59's `T_stm_michel` byte-identical gates on the same binary); three new branches added. Measured the dead-plane/Bragg-contrast correlation this was built to answer on 13 candidates: **weak/mixed, not confirmed** — some high-dead-density items flatten, but the flattest item in the sample (`039253_17/77`, q(0-3)=53) has 0% dead coverage in its last 5 cm, and the strongest Bragg rise (`039349_5/54`) also has 0%. Reinforces §5's own aggregate finding rather than overturning it; not tuned to look more conclusive | 1 | the 13 missed stoppers with ≥ 20% dead-band coverage (population re-derived on the current arm; doc 56 named 14 before T1a/T1b/T1c recovered some of them) | per-item dead-plane fraction vs contrast (doc 60 §5's table) | no verdict path; every existing branch byte-identical (verified) |
 | **T5** | **fit-end undershoot.** Which of the tip trim (`TrackFitting.cxx:2609`), `end_point_limit`, or the terminal set owns the 5 class-F items; `absorb_bragg_stub` regressed on PDHD, so a new mechanism is needed | 1, 2 | `039252_5/73`, `039349_66/78`, `039253_13/39`, `039349_18/33`, `039253_0/110` | F 5 → 0; last-point dQ/dx | knob; PDHD gate |
 | **T6** | **interior arms.** Classify the 172 no-role same-cluster segments — 152 attached to the chain interior, 46 of them > 8 cm at median 0.30 MIP (none hadron-hot, so `kOther`); publish `role 7 = other` so display and scan can see them; the over-clustering half goes upstream to `unmerge_assoc` / `protect_bundle` | 4 | `039252_3/74` (11), `039253_12/41`, `039253_17/127`, `039253_2/77`, `039253_8/62` | interior-arm table vs scan tags | payload/display first; no verdict path |
 | **T7** | **sampling step and the two shape tests** (analysis; the owner decides). `TrackFitting.cxx:9714`'s pass-3 step now reads the knob (**fixed doc pdvd/61**, §9 item 1 — proven byte-identical, no operating-point change); sweep `low_dis_limit` / `dx_norm_length`; measure the profile autocorrelation length; re-derive `bragg_tail_*`, `compare_range_cm`, `bragg_contrast_min`, `ks_margin` jointly on §4's table; test the peak-anchored `rr` origin; note `stm_recomb_calibrated` is false in production so the Bragg reference and the data are on different charge scales (doc pdhd/16) | 1 | the 57 rise-to-end misses (`039349_2/38`, `039349_29/45`, `039349_27/41`, `039349_3/46`); the 9 FPs (`039349_22/45`, `039349_6/62`) | §4's purity / efficiency table | any operating-point move is the owner's call (§5.1, §5.7) |
 | **T8** | **coiled and unsupported fits** (G 18, H 20): publish `arc/span` over the last 20 cm and `charge_supported` per segment as reject-class inputs | 1 | `039349_48/21` (arc/span 3.41), `039253_6/82` (208 cm at 0.11 plateau) | G, H counts | later; doc pdvd/31/37/40 machinery |
 
-**Order.** T1a, T1b, T1c and T2 are all done, and T4 alongside them → **T3**
-shares the stop and unlocks next; together T1a+T1b+T1c touched the class the
-scan sized largest, recovering 5 of it outright (2 + 2 + 1) with 12 more
-Michel segments freed as a side effect (docs 57+58+59) and 6 named spurious
-`michel_found` items that fed T2. T4 (writer-only, done alongside) answered
-its own question with a measured negative on the sample checked. T2 closed
-the moved-stop question those 6 items raised: 5 of them recovered by the
-veto, 1 real cost named, net-positive F1, shipped to PDVD production
-(doc pdvd/61). T2's own two other questions (charge/KE admission, T2a; the
-non-`stop_v` vertex hypothesis, T2b) both came back measured negatives —
-T2a's finding (the charge these arms carry is genuinely small at the fit)
-is now T3's own starting point, sharper than the hypothetical doc 56
-originally posed it as. T3 is the natural next session for exactly that
-reason. Then T5, T6, T7 (§9 item 1 of which is already fixed), T8.
+**Order.** T1a, T1b, T1c, T2 and T3 are done, and T4 alongside them →
+**T5** next. T1a+T1b+T1c touched the class the scan sized largest,
+recovering 5 of it outright (2 + 2 + 1) with 12 more Michel segments freed
+as a side effect (docs 57+58+59) and 6 named spurious `michel_found` items
+that fed T2. T4 (writer-only) answered its own question with a measured
+negative. T2 closed the moved-stop question (5 recovered, 1 cost, doc 61);
+its T2a/T2b came back negative. T3 (doc 62) then found what T2b could not:
+the "passes everything" arms were disconnected pieces of the main cluster
+the Michel search never looked at — admitting them (T3b) and applying doc 55
+§15.1's kinematic guard (T3c) took the `michel_found` census from F1 0.764
+to 0.863 with `is_stm` untouched, the largest single move of the campaign;
+the `pr54` keep itself (T3a) was measured and left off. Then T5 (two of its
+five class-F items now carry a found Michel through T3b — the Bragg stub
+question is unchanged), T6, T7 (§9 item 1 of which is already fixed), T8.
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
@@ -406,6 +414,27 @@ moved; the scan record is not re-labelled; no C++ is touched.
 5. **FIXED, doc pdvd/61.** `prep_stm_michel_scan.py` refuses to run without
    `--pin-tranche` once a label file exists — correct (doc pdhd/15 §10), and
    now stated in this doc's §0 repro block (and doc 61's own).
+6. **Doc 61's T2b conclusion, re-read (doc pdvd/62 §7.1).** The seven
+   "passes every gate, still not admitted" arms of §3 hang off no alternate
+   vertex because they hang off no chain vertex at all — they are
+   disconnected pieces of the main cluster. T3b admits them; the
+   "non-`stop_v` vertex" hypothesis was the wrong question, not a wrong
+   answer.
+7. **A kept `pr54` residual is a graph change, not a refit (doc 62 §4.3).**
+   `stop_local_residual_cm` changes segment counts, vertex positions and the
+   stop snap on the items it fires on, moving `is_stm` either way; any future
+   keep-more-residuals knob in this chain needs the same `is_stm`-by-name
+   check. Left OFF.
+8. **The 27 no-drop lumps of doc 54 §2.5 (doc 62 §5).** With
+   `traj_cover_probe` forwarded into `CheckSTM_Michel`'s partition: 18 are
+   single-terminal fragmentation (`step8 DROP single_point` on the components
+   proposed over the lump), at most 8 are the "already covered" tagging doc
+   54 hypothesised. A Steiner-terminal-density question near the stop (docs
+   pdvd/31/37), outside this task set; not fixed.
+9. **Pin residual is baseline-relative.** `census_score.py --baseline`
+   places the 36 pins on the BASELINE arm's chain, so the residual reported
+   against `d61v` (5.27 cm median) is not comparable to the `d53v`-based
+   4.60 → 2.78 cm sequence of docs 57–59. State the baseline with the number.
 
 ---
 

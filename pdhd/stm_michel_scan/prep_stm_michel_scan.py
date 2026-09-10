@@ -172,6 +172,9 @@ VERDICT_SCALARS = [
     "n_split", "split_len", "split_kink_deg",
     # doc pdvd/61 (T2c) -- the moved-stop Michel veto.  Same absent-on-older-arm guard.
     "n_michel_veto",
+    # doc pdvd/62 (T3) -- the stop-local residual keep (main / companion fires),
+    # the disconnected same-cluster pieces admitted, and the range-energy veto.
+    "n_kept_near_stop_main", "n_kept_near_stop_comp", "n_local_pieces", "n_michel_range_veto",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",
