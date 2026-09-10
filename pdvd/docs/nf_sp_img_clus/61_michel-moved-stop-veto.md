@@ -313,18 +313,37 @@ pre-doc-48), run directly for this gate on 3 PDVD events (`039252_0`,
 |---|---|
 | `T_rec_charge` (the direct fitted-track product), all 19 branches, 3 events | **bit-identical**, before vs after |
 | `mabc-pr.zip` content hash (`hash_archive.py`, timestamp-insensitive) | **identical**, before vs after |
-| `T_tagger`/`T_kine`/`T_proj_data` (the legacy neutrino-tail trees) | differ, before vs after |
+| `T_tagger`/`T_kine`/`T_proj_data` (the legacy neutrino-tail trees) | **bit-identical**, before vs after — *corrected by doc 69; this row first read "differ, before vs after"* |
 
-The third row looked like a failure until checked against a control: running
-the **same, unmodified** (pre-fix) binary **twice** on the same event
-produces the **same kind and scope** of `T_tagger`/`T_kine`/`T_proj_data`
-differences — this is **pre-existing non-determinism in the deprecated
-legacy neutrino tail**, not something this fix introduces (CLAUDE.md's M4
-already documents this class of tail as not bit-stable). `T_rec_charge` is
-the direct product of `TrackFitting`/`PR::Fit` and is the meaningful gate
-for this specific edit; it is bit-identical on all 3 events, carrying real
-non-trivial data (2252 fitted points on `039252_0` alone, not a vacuous
-match).
+> **Correction (doc 69, 2026-09-10).** The third row and the paragraph
+> below it are wrong. There is no non-determinism in the legacy tail. The
+> saved control dirs (`pdvd/work/039252_{0,10,12}_d61item1{a,b}`,
+> `039252_0_d61item1a2`) are bit-identical on every branch of all 8 trees
+> in `tracking-pr.root`, in all 4 pairs: same binary twice, and before vs
+> after on each event. The "differences" came from the inline check used
+> here: `arrays(library='np')` then `np.array_equal` under
+> `except: ok = False`. With `library='np'`, a `vector<>` branch comes back
+> as an object array of arrays, and that check marks every such branch
+> "differ" whatever it contains. That is why the same-binary control showed
+> the same kind and scope of "differences", and why the flat-only
+> `T_rec_charge` "passed". The item-1 fix is therefore byte-identical on
+> **all** legacy trees, not only on `T_rec_charge`. M4 does not describe
+> this tail. Evidence and replay: doc 69 §2
+> (`scripts/d69_full_output_compare.py --replay-d61`). The original
+> paragraph is kept below for the record.
+>
+> ~~The third row looked like a failure until checked against a control:
+> running the **same, unmodified** (pre-fix) binary **twice** on the same
+> event produces the **same kind and scope** of
+> `T_tagger`/`T_kine`/`T_proj_data` differences — this is **pre-existing
+> non-determinism in the deprecated legacy neutrino tail**, not something
+> this fix introduces (CLAUDE.md's M4 already documents this class of tail
+> as not bit-stable).~~
+
+`T_rec_charge` is the direct product of `TrackFitting`/`PR::Fit` and is the
+meaningful gate for this specific edit; it is bit-identical on all 3 events,
+carrying real non-trivial data (2252 fitted points on `039252_0` alone, not a
+vacuous match).
 
 ### 5.2 Item 4 — `census_score.py`'s F/H classes tracked by name
 
@@ -390,10 +409,13 @@ either.
    1's fix) is left untouched — SBND is a different experiment this doc
    never otherwise touches; a comment-only fix there is still out of scope
    per CLAUDE.md §5.3 without the owner's say-so.
-2. The legacy `-nu-legacy` neutrino tail (`T_tagger`/`T_kine`/
-   `T_proj_data`) is confirmed non-bit-stable run-to-run on the SAME
-   unmodified binary — a pre-existing condition (CLAUDE.md M4), not
-   introduced here, and out of scope for this doc's own task set.
+2. **Withdrawn (doc 69, 2026-09-10).** ~~The legacy `-nu-legacy` neutrino
+   tail (`T_tagger`/`T_kine`/`T_proj_data`) is confirmed non-bit-stable
+   run-to-run on the SAME unmodified binary — a pre-existing condition
+   (CLAUDE.md M4), not introduced here, and out of scope for this doc's own
+   task set.~~ The saved same-binary pair is bit-identical on every tree. The
+   "non-determinism" was the §5.1 comparator marking every `vector<>` branch
+   as different (doc 69 §2).
 3. T2a's measurement (§2) hands T3 a sharper starting point than "T2a
    failed": the charge these 9 arms carry is genuinely small at the fit,
    consistent with doc 55 §15.2's dilution mechanism — the natural next
@@ -413,7 +435,7 @@ either.
 | flip-equivalence (prod bag == arm override) | 0-line diff |
 | true OFF-path (pre-round file == post-round file, same forced-off override) | 0-line diff |
 | `census_score.py --prep <scratch> --arm d61v` vs `d59v`, by name | 5 FP removed, 1 TP lost, 0 new either way, `is_stm` bit-identical (0 of 566) |
-| §9 item 1: `T_rec_charge` before/after, 3 events | bit-identical; legacy-tail noise shown to be pre-existing via same-binary-twice control |
+| §9 item 1: `T_rec_charge` before/after, 3 events | bit-identical. Re-compared by doc 69: **all 8 legacy trees** bit-identical, before/after and same-binary-twice. ~~legacy-tail noise shown to be pre-existing via same-binary-twice control~~ was a comparator artifact |
 | §9 item 4: `census_score.py --check` | still 0 of 14 differ |
 | `census_score.py --check` | 0 of 14 differ |
 

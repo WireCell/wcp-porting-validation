@@ -328,6 +328,9 @@ frame, and it reports the error too late and too anonymously to act on. A
 `do_shots` that checked the canvas for content before writing the PNG — or that
 simply retried once on `context lost` — would close this. That is a harness
 change and is not made in this round.
+*Update (doc pdvd/69 §8.3, 2026-09-10):* the harness now names the affected
+items itself, as it goes, in `OUT/_webgl_lost.txt`, and exits 1.
+`check_shots.py` is committed. Retry is still not implemented.
 
 **Bearing on the human scanner:** the owner runs one browser, so they will not
 hit the context budget. This is a harness-parallelism defect, not a display

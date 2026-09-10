@@ -276,6 +276,24 @@ JS_CAM = """(a) => {
 }"""
 
 
+# Which backend the 3-D panel really got.  output_backend="webgl" is a request:
+# a headless chromium without WebGL makes Bokeh fall back to Canvas2D without a
+# word -- on wcgpu1 an unreachable forwarded $DISPLAY does it, because
+# chromium's SwiftShader then fails xcb_connect (doc pdvd/69 sec 8.3).  Then
+# there is no context to lose, and the frames are Canvas2D renders.
+JS_BACKEND_3D = """() => {
+  const seen = new Set(); let st = 'unknown (no f3d view)';
+  const visit = (v) => {
+    if (!v || seen.has(v)) return; seen.add(v);
+    if (v.model && v.model.name === 'f3d' && v.canvas_view)
+      st = v.canvas_view.webgl ? 'webgl' : 'canvas2d';
+    try { for (const c of (v.child_views || [])) visit(c); } catch (e) {}
+  };
+  try { for (const v of Object.values(Bokeh.index)) visit(v); }
+  catch (e) { st = 'unknown (' + e + ')'; }
+  return st;
+}"""
+
 # ---------------------------------------------------------------------------
 def free_port(start):
     for p in range(start, start + 60):
@@ -322,6 +340,18 @@ class App:
         self.page = self.browser.new_page(viewport={"width": VIEW_W, "height": VIEW_H})
         self.errs = []
         self.page.on("pageerror", lambda e: self.errs.append(str(e)))
+        # Every sign of a lost WebGL context, as it happens (doc pdvd/69).
+        # do_shots reads this per item; the end-of-run JS ERRORS summary above
+        # names no item.  Two signals, because they arrive differently: chromium
+        # logs a console warning when the context goes, and regl throws
+        # "(regl) context lost" (a pageerror) at the next draw.
+        self.gl_events = []
+        self.gl_suspect = []
+        self.page.on("pageerror", lambda e: self._gl_note(str(e)))
+        self.page.on("console", lambda m: self._gl_note(m.text))
+        # Which backend the 3-D panel really got; do_shots reads it once the
+        # first item's 3-D frames exist (JS_BACKEND_3D).
+        self.backend_3d = None
         self.page.goto(self.url, wait_until="networkidle", timeout=180000)
         self.page.wait_for_timeout(2500)
 
@@ -335,6 +365,12 @@ class App:
                 self.proc.wait(timeout=10)
             except Exception:
                 self.proc.kill()
+
+    def _gl_note(self, text):
+        t = (text or "").lower()
+        if ("context lost" in t or "context_lost" in t
+                or "too many active webgl contexts" in t):
+            self.gl_events.append(text)
 
     # -- driving -----------------------------------------------------------
     def _ev(self, js, arg=None, what=""):
@@ -464,55 +500,103 @@ D3_HALF = 45.0          # cm about the pin in the 3-D panel
 CAM = [(0.60, 0.35), (2.17, 0.35), (3.74, 0.35)]
 
 
+LOST_FILE = "_webgl_lost.txt"
+
+
 def do_shots(app, keys, out):
-    """Seven frames per item, in the order a scanner actually looks at them."""
+    """Seven frames per item, in the order a scanner actually looks at them.
+
+    A lost WebGL context does not fail anything.  The 3-D panel just draws
+    blank or smeared (doc pdvd/55 sec 13.2).  So each item's shots are bracketed
+    by the context-loss signals App collects, and from the first one on every
+    item is named as it happens on stderr, and in OUT/_webgl_lost.txt (one key
+    per line, the --items-file format; `check_shots.py` reads it).  The item
+    before the first signal is named too: regl throws only at the draw AFTER
+    the loss, so the context can go while one item is being shot and the
+    signal arrive during the next.  Nothing is retried here.  Re-shoot the
+    named items, fewer processes at a time.
+    """
     os.makedirs(out, exist_ok=True)
-    made = {}
-    for key in keys:
-        d = os.path.join(out, key.replace("/", "_"))
-        os.makedirs(d, exist_ok=True)
-        app.goto(key)
-        # Particle flow ON: the per-segment colouring is the whole basis of the
-        # attribution half of the scan.  `bundle only` stays at its default (on).
-        app.toggle("show particle flow", True)
-
-        # 1. the three projections, at the full detector extent they are stuck
-        # at (docstring).  That is the frame this question wants anyway: does
-        # the track end inside the volume, or reach a face?  An object framed on
-        # itself looks contained in every projection, which is how a through-
-        # goer reads as a stopper (doc pdhd/12).
-        app.tab(TAB_PROJ)
-        app.shoot(os.path.join(d, "a_proj_full.png"), SZ_PROJ)
-
-        # 2. the whole object in 3-D, then the stop at three azimuths 90 deg
-        # apart.  Three, because the owner's rule -- gammas lie ALONG the Michel
-        # direction, and activity close to the track and BACKWARD is not the
-        # Michel -- is a 3-D judgement, and one viewing angle can fake either
-        # answer by projecting a separation to zero.
-        app.tab(TAB_3D)
-        app.camera(*CAM[0])
-        app.shoot(os.path.join(d, "b_3d_wide.png"), SZ_3D)
-        for nm, (az, el) in zip(("c", "d", "e"), CAM):
-            app.camera(az, el)
-            app.zoom_3d(D3_HALF)
-            app.shoot(os.path.join(d, "%s_3d_stop.png" % nm), SZ_3D)
-
-        # 3. the nine measured / predicted / difference panels around the stop
-        # -- did it stop, or leave through a dead region, and is that Michel
-        # real charge or a prediction artefact.  This is the zoomed 2-D view of
-        # the real image, and it is the one the projections cannot give.
-        app.tab(TAB_MEAS)
-        app.radio(["whole cluster", "± 150 around the stop"], 1)
-        app.shoot(os.path.join(d, "f_meas.png"), SZ_MEAS)
-
-        # 4. the Bragg evidence.  Always visible, so no tab switch.
-        app.shoot(os.path.join(d, "g_dqdx.png"), SZ_DQDX)
-
-        ctx = context_of(app)
-        json.dump(ctx, open(os.path.join(d, "context.json"), "w"), indent=1)
-        made[key] = d
-        print("shot %s -> %s  (%d objects)" % (key, d, len(ctx["objects"])))
+    made, order, lost_at = {}, [], None
+    n_start = len(app.gl_events)
+    try:
+        for key in keys:
+            n_gl = len(app.gl_events)
+            _shoot_item(app, key, out, made)
+            order.append(key)
+            if app.backend_3d is None:
+                app.backend_3d = app.page.evaluate(JS_BACKEND_3D)
+                print("scan_harness: 3-D panel backend %s%s" % (app.backend_3d, {
+                    "webgl": "", "canvas2d": " -- no WebGL context, so none can be lost"
+                }.get(app.backend_3d, " -- could not tell")), file=sys.stderr)
+            if lost_at is None and len(app.gl_events) > n_gl:
+                lost_at = max(0, len(order) - 2)
+                print("WEBGL CONTEXT LOST while shooting %s (%s) -- this item, the one "
+                      "before it and every later one are suspect"
+                      % (key, app.gl_events[n_gl][:80]), file=sys.stderr)
+    finally:
+        # also on the way out of an exception: whatever was shot is on disk
+        if lost_at is None and len(app.gl_events) > n_start:
+            lost_at = max(0, len(order) - 1)
+        app.gl_suspect = order[lost_at:] if lost_at is not None else []
+        lf = os.path.join(out, LOST_FILE)
+        with open(lf, "w") as fh:
+            fh.write("# scan_harness.py shots: items shot at or after the first WebGL "
+                     "context loss, plus the one before it (doc pdvd/69). "
+                     "No keys = none lost.\n")
+            fh.write("# 3-D panel backend: %s\n" % app.backend_3d)
+            fh.write("".join(k + "\n" for k in app.gl_suspect))
+        if app.gl_suspect:
+            print("%d of %d item(s) suspect after a lost WebGL context -- re-shoot "
+                  "with --items-file %s" % (len(app.gl_suspect), len(order), lf),
+                  file=sys.stderr)
     return made
+
+
+def _shoot_item(app, key, out, made):
+    d = os.path.join(out, key.replace("/", "_"))
+    os.makedirs(d, exist_ok=True)
+    app.goto(key)
+    # Particle flow ON: the per-segment colouring is the whole basis of the
+    # attribution half of the scan.  `bundle only` stays at its default (on).
+    app.toggle("show particle flow", True)
+
+    # 1. the three projections, at the full detector extent they are stuck
+    # at (docstring).  That is the frame this question wants anyway: does
+    # the track end inside the volume, or reach a face?  An object framed on
+    # itself looks contained in every projection, which is how a through-
+    # goer reads as a stopper (doc pdhd/12).
+    app.tab(TAB_PROJ)
+    app.shoot(os.path.join(d, "a_proj_full.png"), SZ_PROJ)
+
+    # 2. the whole object in 3-D, then the stop at three azimuths 90 deg
+    # apart.  Three, because the owner's rule -- gammas lie ALONG the Michel
+    # direction, and activity close to the track and BACKWARD is not the
+    # Michel -- is a 3-D judgement, and one viewing angle can fake either
+    # answer by projecting a separation to zero.
+    app.tab(TAB_3D)
+    app.camera(*CAM[0])
+    app.shoot(os.path.join(d, "b_3d_wide.png"), SZ_3D)
+    for nm, (az, el) in zip(("c", "d", "e"), CAM):
+        app.camera(az, el)
+        app.zoom_3d(D3_HALF)
+        app.shoot(os.path.join(d, "%s_3d_stop.png" % nm), SZ_3D)
+
+    # 3. the nine measured / predicted / difference panels around the stop
+    # -- did it stop, or leave through a dead region, and is that Michel
+    # real charge or a prediction artefact.  This is the zoomed 2-D view of
+    # the real image, and it is the one the projections cannot give.
+    app.tab(TAB_MEAS)
+    app.radio(["whole cluster", "± 150 around the stop"], 1)
+    app.shoot(os.path.join(d, "f_meas.png"), SZ_MEAS)
+
+    # 4. the Bragg evidence.  Always visible, so no tab switch.
+    app.shoot(os.path.join(d, "g_dqdx.png"), SZ_DQDX)
+
+    ctx = context_of(app)
+    json.dump(ctx, open(os.path.join(d, "context.json"), "w"), indent=1)
+    made[key] = d
+    print("shot %s -> %s  (%d objects)" % (key, d, len(ctx["objects"])))
 
 
 def payload_of(det, key):
@@ -876,6 +960,8 @@ def main(argv=None):
             do_apply(app, spec, labelfile)
         if app.errs:
             print("JS ERRORS: %s" % app.errs[:5], file=sys.stderr)
+            return 1
+        if app.gl_suspect:   # a console-only context loss raises no pageerror
             return 1
     finally:
         app.close()

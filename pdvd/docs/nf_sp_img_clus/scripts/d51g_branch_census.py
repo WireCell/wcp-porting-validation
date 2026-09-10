@@ -39,6 +39,23 @@ import uproot
 KEY = ("event", "cluster_id")
 
 
+def event_of(d, arm):
+    """<event> from an <event>_<arm> dir; refuse a dir that does not end in _<arm>.
+
+    The key is the basename with len(arm)+1 characters cut off, so an --*-arm
+    that is not the glob's real suffix cuts the wrong number and a DIFFERENT
+    event's key comes out: '*_d66vleg' read with arm d66vlegX paired 27
+    candidates of unrelated events and printed 15 is_stm flips (doc pdvd/69).
+    A false DIFF, not a false PASS -- but a confident one.
+    """
+    b = os.path.basename(d.rstrip("/"))
+    if not b.endswith("_" + arm):
+        print("REFUSE: %s does not end in _%s -- the glob and the arm name disagree"
+              % (b, arm), file=sys.stderr)
+        sys.exit(2)
+    return b[: -len(arm) - 1]
+
+
 def load(pattern, arm):
     """{(event, cluster_id): {branch: value}} plus the branch name set."""
     out, names = {}, None
@@ -51,7 +68,7 @@ def load(pattern, arm):
         except Exception as e:
             print("SKIP %s: %s" % (os.path.basename(d), e), file=sys.stderr)
             continue
-        ev = os.path.basename(d)[: -len(arm) - 1]
+        ev = event_of(d, arm)
         if names is None:
             names = set(a.keys())
         else:
@@ -72,20 +89,35 @@ def load_pts(pattern, arm):
             a = uproot.open(fp)["T_stm_michel_pts"].arrays(library="np")
         except Exception:
             continue
-        ev = os.path.basename(d)[: -len(arm) - 1]
+        ev = event_of(d, arm)
         for i in range(len(a["cluster_id"])):
             k = (ev, int(a["cluster_id"][i]))
             out.setdefault(k, []).append(
                 (int(a["role"][i]), int(a["seg_id"][i]),
-                 round(float(a["x"][i]), 6), round(float(a["y"][i]), 6),
-                 round(float(a["z"][i]), 6), round(float(a["q"][i]), 6)))
+                 exact(a["x"][i]), exact(a["y"][i]),
+                 exact(a["z"][i]), exact(a["q"][i])))
     return out
+
+
+def exact(x):
+    """A point coordinate as an exact, sortable comparison key.
+
+    It was round(x, 6) until doc pdvd/69, so "identical point geometry" meant
+    equal to 6 decimals, not equal.  Now the value itself is used.  NaN becomes
+    (True, 0.0), so a NaN sorts and compares equal to a NaN, the same way same()
+    treats one.  The ==-equal pair -0.0 / 0.0 is left as it was.
+    """
+    x = float(x)
+    return (True, 0.0) if x != x else (False, x)
 
 
 def same(u, v):
     fu, fv = isinstance(u, (float, np.floating)), isinstance(v, (float, np.floating))
     if fu or fv:
-        if not np.isfinite(u) and not np.isfinite(v):
+        # NaN == NaN and nothing else among the non-finite values.  Until doc
+        # pdvd/69 ANY two non-finite values passed here, so NaN <-> +inf <-> -inf
+        # all read "identical"; now +inf == +inf goes through == below.
+        if np.isnan(u) and np.isnan(v):
             return True
         return bool(u == v)          # BIT equality, deliberately not a tolerance
     return bool(u == v)
@@ -212,12 +244,25 @@ def main():
     c, cn = load(a.after, a.after_arm)
     if not b or not c:
         sys.exit("empty arm: before %d, after %d" % (len(b), len(c)))
+    # Two non-empty arms can still share no candidate (globs over different
+    # event sets).  The census would then print "BIT-IDENTICAL 0 / 0" and "NO
+    # shared branch moved" -- a PASS that compared nothing -- so refuse instead
+    # (doc pdvd/69).  A wrong arm suffix is caught earlier, in event_of().
+    if not set(b) & set(c):
+        print("REFUSE: arms loaded (%d, %d candidates) but share no (event, cluster_id) "
+              "-- check --before-arm / --after-arm" % (len(b), len(c)), file=sys.stderr)
+        sys.exit(2)
+    if a.pts:
+        pb, pc = load_pts(a.before, a.before_arm), load_pts(a.after, a.after_arm)
+        if not set(pb) & set(pc):
+            print("REFUSE: --pts asked for, but T_stm_michel_pts shares no candidate "
+                  "(%d before, %d after)" % (len(pb), len(pc)), file=sys.stderr)
+            sys.exit(2)
     open(a.out, "w").close()
     compare(b, c, bn, cn, a.label or ("%s -> %s" % (a.before_arm, a.after_arm)),
             a.out, a.split_key if a.split_key in cn else None)
     if a.pts:
-        compare_pts(load_pts(a.before, a.before_arm), load_pts(a.after, a.after_arm),
-                    a.label or ("%s -> %s" % (a.before_arm, a.after_arm)), a.out)
+        compare_pts(pb, pc, a.label or ("%s -> %s" % (a.before_arm, a.after_arm)), a.out)
     print("\nwrote %s" % a.out, file=sys.stderr)
 
 

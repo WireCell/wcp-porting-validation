@@ -439,9 +439,14 @@ moved; the scan record is not re-labelled; no C++ is touched.
    mm, equal to the C++ default). Gated on the general `-nu-legacy`
    PatternAlgorithms path (none of the STM/Michel arms exercise
    `do_multi_tracking`), 3 PDVD events: `T_rec_charge` bit-identical
-   before/after; the legacy tail's other trees (`T_tagger`/`T_kine`) differ,
+   before/after. ~~the legacy tail's other trees (`T_tagger`/`T_kine`) differ,
    but confirmed pre-existing (same unmodified binary run twice shows the
-   same differences) rather than caused by this edit.
+   same differences) rather than caused by this edit.~~ **Corrected by doc
+   69 (2026-09-10):** every legacy tree, `T_tagger`/`T_kine`/`T_proj_data`
+   included, is bit-identical, both before/after and same-binary-twice. The
+   reported difference was a comparator artifact: numpy `array_equal` marks
+   every `vector<>` branch "differ". The legacy tail shows no
+   non-determinism.
 2. `vertex_kink_reject` (`TaggerCheckSTM.cxx:2474`) measures at `n−1` under the
    no-kink sentinel — at the Michel's tip on an overshoot. **T1b executed**
    (doc 59): a real kink now corrects this automatically wherever the new

@@ -36,6 +36,8 @@ numbers are in §14, the two failure mechanisms and the recommended cut in
         ../../pdvd/docs/scan/pdvd_stm_michel_scan_sheet.tsv > $W/items_t2.txt
     # shots: five processes is what loses the WebGL context (section 13.2) --
     # two at a time, then check, then re-shoot whatever the check names
+    # (check_shots.py committed in doc pdvd/69; since then the harness also
+    # names context-lost items as it goes, in $W/shots_t2/_webgl_lost.txt)
     ./scan_harness.py --det pdvd --tag blank --labeldir $W/blank \
         shots --items-file $W/items_t2.txt --out $W/shots_t2
     python3 check_shots.py $W/shots_t2 $W/reshoot.txt
@@ -926,6 +928,11 @@ All 204 were re-shot with two concurrent browsers instead of five (min 1421,
 median 4069, zero smeared) and swapped in before the scan began. The predictor
 to act on is the **process**, not the frame: if a shots process logged the error,
 every item it produced is suspect. `check_shots.py` now applies both tests.
+*Correction (doc pdvd/69 §8.3):* that `check_shots.py` lived only in a session
+scratchpad and was never committed, so the repro above could not run. It is
+committed now as `pdhd/stm_michel_scan/check_shots.py`, reproducing this table
+(187 of 204 on the degraded set, 0 on either re-shoot). Its process-level test
+reads the harness's own per-item record instead of a scratch log map.
 
 ---
 
@@ -1288,6 +1295,14 @@ plateau ratio (§15.2) and the shape tests, which are scale-free and survive
 harness neither detects the loss per-item nor retries — it reports
 `(regl) context lost` in an end-of-run summary naming nothing, and writes the
 degraded PNG without complaint. §13.2 has the measurement and the workaround.
+*Update (doc pdvd/69 §8.3):* detection is now per item. The harness names every
+item shot at or after a context loss as it happens, writes them to
+`OUT/_webgl_lost.txt` and exits 1. `check_shots.py`, now committed, reads that
+record beside its md5 and colour tests, and `selftest_webgl_loss.py` forces a
+loss mid-run and checks that both catch it. Retry is still not done. Separately,
+on wcgpu1 a dead forwarded `$DISPLAY` leaves headless chromium with no WebGL at
+all: Bokeh then draws the 3-D panel with Canvas2D, which has no context to lose,
+and the harness now prints which backend it got.
 
 **`selftest_pin_persistence.py` check 10 hardcodes a PDVD item.** The check is
 guarded only by "does this detector have an `smx1` tag", but its fixture key
