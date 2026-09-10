@@ -4,9 +4,11 @@
 (toolkit `f66a8b9f`).** Knob off: byte-identical on PDVD (120 events) and
 PDHD (61) against the merged binary. Knob on: the C++ matches the offline
 rule item for item, `is_stm` 197 / 7 / 79 → **221 / 7 / 55**, `michel_found`
-identical. The one-line PDVD production flip is prepared and proven (§10.4)
-and **waits for the owner's go**, with `topology_clears_sparse` (+4 / 0) as
-the owner's second decision.
+identical. **On the owner's go ("flip with sparse please"), both
+`topology_stop_evidence` and `topology_clears_sparse` are now PDVD
+production** (§10.4): `is_stm` 197 / 7 / 79 → **225 / 7 / 51** on the updated
+record (purity 0.970, efficiency 0.815, F1 0.886), 0 new false positives.
+PDHD stays OFF.
 
 **Update (2026-09-10, after the owner's `smx4` scan, §9): P1 is cleared for
 implementation.** The owner judged, blind to P1, all 54 Michel-carrying items
@@ -554,7 +556,7 @@ association on the next scan.
 
 | id | knob(s), default OFF | mechanism site | sizing on `d68a3` (merged record) | gate | scan need |
 |---|---|---|---|---|---|
-| **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10)**; PDVD flip awaits the owner |
+| **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10); PDVD PRODUCTION with `topology_clears_sparse` (§10.4)**: 197/7/79 → 225/7/51 |
 | **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | none for membership; role 4 drawn for the next scan |
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | +2 owner-confirmed Michels (59.6°, 132.6°), 0 of doc 61's 3 THRU re-admitted (17°, 44°, 48°) | exact offline | none |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped); `michel_kink_window_cm` 10 | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits | arm; both flags reported | none |
@@ -562,8 +564,8 @@ association on the next scan.
 | **P1b** | anchor rise precondition (doc 65 §5.1) | `:1764-1803` | ≤ 3 stoppers not already inside P1 | offline from `profile` first | — |
 | **P5** | `pr.jsonnet` `stm_trackfitting_config_file` (default = shared file) | `protodunevd/pr.jsonnet:175, :1550, :1695` | none; enables a scoped `dx_norm_length` / step study | compiled-config diff 0 when unset | any step change → new scan |
 
-**Recommended order:** P1 — `smx4` found no cost (§9); built and gated with
-the knob OFF, the production flip waits for the owner (§10) → P4 (the Michel object's
+**Recommended order:** P1 — `smx4` found no cost (§9); built, gated and
+flipped to PDVD production with `topology_clears_sparse` (§10) → P4 (the Michel object's
 completeness; no verdict moves) → P3b + P2 together (the attached gate and
 its vetoes, one arm) → P3 → P1b → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
@@ -586,6 +588,7 @@ members' rows (`:2041-2059`); the "15-key default" comment at
 | `smx4` display | all 54 items rendered in process with payload and question panel (scratch labeldir); the Michel radio resets to "not set" on an unlabelled item; the live label dir was empty before the scan; the process on :5017 was checked by its command line |
 | §9 numbers | `d70_score_smx4.py` stdout (`/home/xqian/tmp/d70/score_smx4.txt`); its production row reproduced by `census_score.py` on the new record (`/home/xqian/tmp/d70/score_merged4_d68a3.txt`: `is_stm` 197 / 7 / 79, `michel_found` 133 / 12 / 25) |
 | P1 C++ (§10) | `wcdoctest-clus` 360/360; knob-OFF gate PDVD 120/120 zips, 578/578 candidates × 133 `T_stm_michel` branches; PDHD 61/61, 325/325; knob ON = the offline rule on 568/568 candidates (§10.2) |
+| PDVD flip (§10.4) | compiled JSON of the committed `pdvd/wct-pr-perevt.jsonnet`: flip-equivalence (pre-flip file + `{topology_stop_evidence:true, topology_clears_sparse:true}` vs the flipped file) 0 lines; OFF path (both files + both keys false) 0 lines; pre-flip vs flipped exactly the two keys (`/home/xqian/tmp/d71/flip/F_*.json`) |
 | §3.3 corrected grid | `d70_sizing.py` with the residual-bit test (`/home/xqian/tmp/d70r2/sizing.txt`); the doc 68-record row of §9.3 is the same number from the other script (219 / 10) |
 | every number in §3–§5 | `d70_sizing.py` stdout (`/home/xqian/tmp/d70/sizing.txt`), read-only over `prep_d68a3`, the two baseline preps and the merged record |
 | §2 facts | `TrackFitting.cxx` / `TrackFittingPresets.h` / wire files, cited by line; doc 65 §3–§4 numbers quoted, not recomputed |
@@ -732,7 +735,7 @@ smx1a-only verdicts: `039349_13/56`, `039349_38/60`, `039349_59/14` (all
 medium confidence, none with a Michel). The other four are owner THRU. Given
 8 of 13 here and 4 of 6 in doc 68, a three-item look is cheap.
 
-### 9.5 Decision and next step (steps 1–3 executed in §10; step 4 waits for the owner)
+### 9.5 Decision and next step (executed in §10; flipped with `topology_clears_sparse`)
 
 P1 clears the owner's rule at the argued point with 0 new false positives on
 the owner's own verdicts. Implementation, under doc 56's bar:
@@ -767,10 +770,9 @@ Then P4 → P3b + P2 → P3 → P1b → P5, as §6.
 
 The owner: "please stop 5017, and proceed to the steps before P4, please
 update the md file, commit and push." The `smx4` display on :5017 is stopped.
-This section is §9.5's steps 1–3. Step 4, the production flip, is prepared
-(§10.4) but not applied: it changes PDVD production output, which is the
-owner's call, and the owner has not yet chosen whether `topology_clears_sparse`
-rides along.
+This section is §9.5's steps 1–3. Step 4, the production flip, was first held
+back (it changes PDVD production output, the owner's call) and then applied on
+the owner's reply, "flip with sparse please" (§10.4).
 
 ### 10.1 What was built (toolkit `f66a8b9f`)
 
@@ -851,35 +853,39 @@ Every stopper P1 flips carries ≤ 50.7 MeV. A `topology_michel_ke_max` of about
 60 MeV would cost nothing on this record and is physically argued. It is
 offered as an option, not built.
 
-### 10.4 The production flip — prepared, not applied
+### 10.4 The production flip — applied with `topology_clears_sparse` (owner, 2026-09-10)
 
-The whole change to `pdvd/wct-pr-perevt.jsonnet`, after
-`bragg_peak_search_cm: 3.0,`:
+The flip was first held back and shown as a one-line diff. The owner
+answered "flip with sparse please". The whole change to
+`pdvd/wct-pr-perevt.jsonnet` is two keys after `bragg_peak_search_cm: 3.0,`,
+with a comment carrying the C++ defaults, the guarantee and the graded result:
 
 ```jsonnet
-        // doc pdvd/70 (P1): topology-first stop evidence.  A Michel object of at
-        // least 10 MeV and 3 cm, attached or bridged, clears no_bragg and
-        // shape_flat just before the verdict is persisted; is_stm moves only
-        // 0 -> 1 and only when nothing else rejects.  C++ default false.  The two
-        // minima stay UNSET at their C++ defaults (10 MeV, 3 cm, what the scored
-        // arm ran) for the inert-key reason above.  On the owner's smx4 blind
-        // re-judge: is_stm 197/7/79 -> 221/7/55 on the smx1a+smx3+smx4 record,
-        // 0 new FP, michel_found identical (doc 70 sec 10).  PDHD stays OFF.
         topology_stop_evidence: true,
+        topology_clears_sparse: true,
 ```
 
-Compiled-config proofs, on scratch copies (`/home/xqian/tmp/d71/flip/`):
-**flip-equivalence**, the production file plus `-S
-stm_michel_extra={topology_stop_evidence:true}` against the flipped file, is 0
-lines. The **OFF path**, both files with `{topology_stop_evidence:false}`, is 0
-lines. Production against the flipped file differs by exactly one line, the
-key. With the owner's choice of the sparse option, the flip adds
-`topology_clears_sparse: true` (+4 TP / 0 FP, §10.3). Nothing else in
-production changes; PDHD stays OFF.
+The two minima stay **unset** at their C++ defaults (10 MeV, 3 cm, what the
+scored arm ran), for the inert-key reason docs 58 and 61 found. PDVD
+production is therefore exactly what arm `d71vsp` ran: `is_stm` 197 / 7 / 79 →
+**225 / 7 / 51** (purity 0.966 → 0.970, efficiency 0.714 → 0.815, F1 0.821 →
+0.886), 0 new false positives, `michel_found` identical. The new baseline prep
+for later rounds is `/home/xqian/tmp/d71/prep_d71vsp`.
+
+Compiled-config proofs, on the committed file (`/home/xqian/tmp/d71/flip/F_*.json`):
+
+* **flip-equivalence:** the pre-flip file plus `-S
+  stm_michel_extra={topology_stop_evidence:true,topology_clears_sparse:true}`
+  against the flipped file: 0 lines.
+* **OFF path:** both files with both keys forced false: 0 lines.
+* **what moved:** the pre-flip file against the flipped file differs by exactly
+  the two keys.
+
+The file was edited with no PDVD run in flight. PDHD stays OFF, since there is
+no PDHD hand-scan record.
 
 ### 10.5 Next
 
-On the owner's go: apply §10.4 (with or without `topology_clears_sparse`),
-repeat the two compiled-config proofs on the committed file, commit and push.
-Then **P4** (`michel_gamma_collect`), sized on the updated record's 345 gamma
-tags.
+**P4** (`michel_gamma_collect`), sized on the updated record's 345 gamma tags,
+graded against the new production (`d71vsp`'s verdicts are what PDVD now
+produces). The `topology_michel_ke_max` cap of §10.3 stays an open option.

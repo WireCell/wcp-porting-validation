@@ -290,6 +290,21 @@ function(
         // dilution the 3 cm window lands on.  PDHD stays OFF.
         bragg_peak_anchor: true,
         bragg_peak_search_cm: 3.0,
+        // doc pdvd/70 (P1): topology-first stop evidence -- the owner's rule that a
+        // Michel at the end is by itself strong evidence of a stop, while the dQ/dx
+        // rise counts only when it genuinely matches a Bragg peak.  A Michel object
+        // of at least 10 MeV and 3 cm, attached or bridged, clears no_bragg and
+        // shape_flat -- and, with topology_clears_sparse (the owner's choice),
+        // profile_sparse -- just before the verdict is persisted; is_stm moves only
+        // 0 -> 1 and only when nothing else rejects; michel_found is read, never
+        // written.  C++ defaults false / false.  The two minima stay UNSET at their
+        // C++ defaults (10 MeV, 3 cm -- what the scored arm ran) for the inert-key
+        // reason above.  Graded on the owner's blind smx4 re-judge (record
+        // smx1a+smx3+smx4): is_stm 197/7/79 -> 225/7/51 (purity 0.966 -> 0.970,
+        // efficiency 0.714 -> 0.815), 0 new FP, michel_found identical; arm d71vsp
+        // matched the offline rule item for item (doc 70 sec 10).  PDHD stays OFF.
+        topology_stop_evidence: true,
+        topology_clears_sparse: true,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the

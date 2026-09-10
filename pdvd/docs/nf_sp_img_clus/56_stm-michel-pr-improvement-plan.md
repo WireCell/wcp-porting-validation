@@ -434,7 +434,8 @@ questions): P1 a topology-first verdict — 40 of the 75 missed stoppers already
 carry a found Michel and fail only the shape tests — whose blind `smx4`
 re-judge of 54 items is done (doc 70 §9: +24 stoppers, 0 new FP at 10 MeV /
 3 cm; built in toolkit `f66a8b9f` behind the default-OFF `topology_stop_evidence`
-and gated, doc 70 §10; the PDVD flip waits for the owner; grade on
+and gated, doc 70 §10; flipped to PDVD production with `topology_clears_sparse`
+on the owner's go, is_stm 197/7/79 -> 225/7/51; grade on
 `pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json`
 from here on); P4 Michel gamma collection (154 of 165 tagged gamma
 fragments on found-Michel events sit outside the object); P3b/P2/P3 the
