@@ -288,8 +288,15 @@ scan-Michel item whose Michel the arm found: 159 tags on 76 items.
   Michel the chain found there is itself a `michel_found` false positive.
   - `039252_16/98` (kind not set, 2 segments);
   - `039349_81/51` ("detached dots", 1 segment, the delta above).
-- **Untagged:** no role-4 segment on a judged item is untagged, so the tags
-  cover what P4 takes.
+- **Untagged:** on judged items every role-4 segment carries a tag. The 11
+  (35 cm) and 21 (60 cm) role-4 segments on items the record does not judge are
+  unmeasured. The owner's tags do not cover everything, and this is where the
+  gap sits.
+- **The two tables count differently.** The recall table counts gamma tags on
+  scan-Michel items (66 land in role 4, each on its own segment; no segment
+  absorbs two). The purity table counts role-4 segments on every judged item.
+  Its 67th gamma segment, and its one Michel-tagged segment, are the two blobs
+  on `039252_16/98`, an item the record says has no Michel.
 
 **Energy** (§C). The Michel's own `michel_ke_best` is unchanged;
 `michel_ke_total` adds the blobs.
