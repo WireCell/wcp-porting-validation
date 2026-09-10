@@ -170,6 +170,8 @@ VERDICT_SCALARS = [
     "n_retreat", "retreat_len",
     # doc pdvd/58 (T1c) -- the stop split.  Same absent-on-older-arm guard.
     "n_split", "split_len", "split_kink_deg",
+    # doc pdvd/61 (T2c) -- the moved-stop Michel veto.  Same absent-on-older-arm guard.
+    "n_michel_veto",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",

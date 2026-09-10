@@ -324,6 +324,31 @@ function(
         // which is not byte-identical in the sense CLAUDE.md sec 4 means).
         // PDHD is NOT flipped, same reason as the retreat above.
         stop_split_max: 1,
+        // doc pdvd/61 (T2c) -- PDVD PRODUCTION.  An attached (michel_conn_type
+        // == 1) Michel whose stop was moved this event (n_retreat > 0 or
+        // n_split > 0 fired) is demoted when its assembled michel_ke_best
+        // falls below moved_stop_michel_ke_min -- touches michel_found only,
+        // never reject_bits/is_stm (verified bit-identical on all 566 common
+        // items between d59v and d61v).  Measured on the real d61v arm, item
+        // by item, not offline-predicted: the veto fires on exactly 6 items
+        // -- 5 named through-going tracks (039252_2/79, 039252_4/55,
+        // 039349_20/41, 039349_48/21, 039349_61/62, all KE 4.6-8.9 MeV,
+        // conn_type 1, dis_cm 0) lose a spurious michel_found=1 that T1a/T1c
+        // gave them (docs 57/58 sec 5), and 1 genuine STM_MICHEL stopper
+        // (039349_36/63, KE 6.61) loses a correct one --
+        // michel/census: FP 44 -> 39, TP 119 -> 118, F1 0.755 -> 0.764 (net
+        // positive; no threshold cleanly separates the two populations, since
+        // two of the recovered FPs sit at KE 8.92/8.67, ABOVE the lost TP's
+        // 6.61).  is_stm bit-identical (0 of 566 flips).  Both byte-identical
+        // OFF-path gates PASS (PDVD 578/578, PDHD 325/325).  PDHD stays OFF:
+        // no hand-scan record to confirm it there.  moved_stop_michel_ke_min
+        // stays UNSET at its C++ default (10.0, the value the scored arm
+        // ran) -- pinning it here, even at the same numeric value, makes it
+        // an inert-but-present key that survives an override forcing
+        // moved_stop_michel_guard back to false, breaking the OFF-path
+        // byte-identity check (the exact trap doc pdvd/58 sec 6 already
+        // documented and fixed the same way for split_kink_min_deg).
+        moved_stop_michel_guard: true,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

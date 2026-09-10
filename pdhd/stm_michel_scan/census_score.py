@@ -48,6 +48,16 @@ ap.add_argument("--check", action="store_true", help="diff the baseline numbers 
 ap.add_argument("--json", default=None, help="write the summary dict here (scratch)")
 a = ap.parse_args()
 
+def match_segment(pts0, pay):
+    """The arm segment whose points sit on the baseline segment: best mean nearest-distance under 1.5 cm."""
+    best, bd = None, 1.5
+    for s in pay["pf"]["seg"]:
+        pts = C.seg_points(s)
+        d = np.mean([np.linalg.norm(pts0 - p, axis=1).min() for p in pts[:: max(1, len(pts) // 12)]])
+        if d < bd:
+            best, bd = s, d
+    return best
+
 rec = C.load_record()
 sheet = C.load_sheet()
 P, missing = C.load_payloads(a.prep, rec)
@@ -92,6 +102,28 @@ def stop_frame(pay):
     n = np.linalg.norm(fwd)
     return xyz[0], (fwd / n if n > 0 else fwd)
 
+def flagged_ids(pay, cls):
+    """Segment ids in `pay` failing this file's F ('fit stops short') or H
+    ('fit unsupported by charge') thresholds -- the exact tests the main loop
+    below runs, factored out so section B2 (doc pdvd/61 sec 9 item 4) can
+    apply the SAME test to a baseline segment matched by geometry into a new
+    arm, rather than re-deriving a bare recount that cannot tell a real
+    behavior change from a re-segmentation artifact."""
+    stop, fwd = stop_frame(pay)
+    rr, q, xyz = C.profile(pay)
+    live = q[q > 0]
+    ids = set()
+    for s in pay["pf"]["seg"]:
+        pts = C.seg_points(s)
+        d_min = float(np.linalg.norm(pts - stop, axis=1).min())
+        cen = pts.mean(0) - stop
+        cf = float(np.dot(cen, fwd) / (np.linalg.norm(cen) + 1e-9))
+        if cls == "F" and cf >= 0.85 and d_min <= 2.0 and (s["len_cm"] or 0) <= 6.0 and (s["dqdx_med"] or 0) >= 1.67 * C.MIP:
+            ids.add(s["id"])
+        if cls == "H" and len(live) >= 20 and (s["len_cm"] or 0) >= 20.0 and 0 < (s["dqdx_med"] or 0) < 0.25 * float(np.median(live)):
+            ids.add(s["id"])
+    return ids
+
 cls_items = collections.defaultdict(set)
 def add(k, c):
     cls_items[c].add(k)
@@ -104,18 +136,9 @@ for k in keys:
         if C.is_michel(r) and not r["_mi"]: add(k, "D_michel_false_negative")
     if r["_mi"] and (v["michel_dis_cm"] or 0) > 3.0 and (v["michel_ke_best"] or 0) < 10.0:
         add(k, "E_michel_range_energy_impossible")
-    stop, fwd = stop_frame(pay)
     rr, q, xyz = C.profile(pay)
-    for s in pay["pf"]["seg"]:
-        pts = C.seg_points(s)
-        d_min = float(np.linalg.norm(pts - stop, axis=1).min())
-        cen = pts.mean(0) - stop
-        cf = float(np.dot(cen, fwd) / (np.linalg.norm(cen) + 1e-9))
-        if cf >= 0.85 and d_min <= 2.0 and (s["len_cm"] or 0) <= 6.0 and (s["dqdx_med"] or 0) >= 1.67 * C.MIP:
-            add(k, "F_fit_stops_short")
-        live = q[q > 0]
-        if len(live) >= 20 and (s["len_cm"] or 0) >= 20.0 and 0 < (s["dqdx_med"] or 0) < 0.25 * float(np.median(live)):
-            add(k, "H_fit_unsupported_by_charge")
+    if flagged_ids(pay, "F"): add(k, "F_fit_stops_short")
+    if flagged_ids(pay, "H"): add(k, "H_fit_unsupported_by_charge")
     take = np.where(rr <= 20.0)[0]
     if len(take) >= 6:
         L = np.asarray(pay["muon"]["L"], float)[np.argsort(np.asarray(pay["muon"]["rr"], float))]
@@ -135,6 +158,40 @@ print("\n=== 17 failure classes (items) ===")
 for c in sorted(cls_items):
     summary["class/" + c] = len(cls_items[c])
     print("  %-36s %4d" % (c, len(cls_items[c])))
+
+# doc pdvd/56 sec 9 item 4 / doc pdvd/61: F and H above are a bare per-arm
+# recount -- a real behavior change and a re-segmentation artifact both move
+# the number, indistinguishably.  Track each baseline-flagged segment BY NAME
+# (matched into this arm by geometry, same primitive C2 uses for Michel
+# segments) so kept/lost/new is reported, not just a new total.  Runs against
+# --baseline (defaults to --prep, so a bare `--check` reports every baseline
+# item "kept" -- the identity case that gates this fix itself).
+if a.baseline:
+    print("\n=== B2. F/H tracked by NAME (baseline-flagged segment matched by geometry into this arm) ===")
+    for cls, label in (("F", "F_fit_stops_short"), ("H", "H_fit_unsupported_by_charge")):
+        base_ids = {k: flagged_ids(B0[k], cls) for k in keys if k in B0}
+        base_ids = {k: v for k, v in base_ids.items() if v}
+        now_ids = {k: flagged_ids(P[k], cls) for k in keys}
+        now_ids = {k: v for k, v in now_ids.items() if v}
+        kept, lost, newk = [], [], sorted(set(now_ids) - set(base_ids))
+        for k, ids0 in base_ids.items():
+            segs0, _ = C.seg_index(B0[k])
+            found = False
+            for sid0 in ids0:
+                s0 = segs0.get(str(sid0))
+                if s0 is None:
+                    continue
+                s = match_segment(C.seg_points(s0), P[k]) if k in P else None
+                if s is not None and s["id"] in now_ids.get(k, set()):
+                    found = True
+                    break
+            (kept if found else lost).append(k)
+        print("  %-26s baseline %3d  kept %3d  lost %3d  new %3d" % (label, len(base_ids), len(kept), len(lost), len(newk)))
+        if lost:
+            print("    lost:", ", ".join(sorted(lost)))
+        if newk:
+            print("    new: ", ", ".join(newk))
+        summary["class_by_name/" + label] = dict(baseline=len(base_ids), kept=len(kept), lost=sorted(lost), new=newk)
 
 # ------------------------------------------------------ C. intermediate metrics
 print("\n=== C1. the stop ===")
@@ -168,15 +225,6 @@ if res:
     summary["pin_residual"] = dict(n=len(res), median=float(np.median(res)), p90=float(np.percentile(res, 90)), within2=int((res <= 2).sum()))
 
 print("\n=== C2. Michel attachment: scan-tagged michel segments, matched by geometry into the arm ===")
-def match_segment(pts0, pay):
-    """The arm segment whose points sit on the baseline segment: best mean nearest-distance under 1.5 cm."""
-    best, bd = None, 1.5
-    for s in pay["pf"]["seg"]:
-        pts = C.seg_points(s)
-        d = np.mean([np.linalg.norm(pts0 - p, axis=1).min() for p in pts[:: max(1, len(pts) // 12)]])
-        if d < bd:
-            best, bd = s, d
-    return best
 att = collections.Counter(); att_items = collections.Counter()
 for k in keys:
     if k not in B0 or not C.is_michel(rec[k]):
