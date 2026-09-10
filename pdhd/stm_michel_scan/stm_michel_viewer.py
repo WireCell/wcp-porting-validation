@@ -123,11 +123,12 @@ IMG = os.path.dirname(os.path.dirname(HERE))
 # arguments
 # ---------------------------------------------------------------------------
 def parse_args(argv):
-    a = dict(det="pdhd", tag="smx1", manifest=None, prepdir=None, labeldir=None)
+    a = dict(det="pdhd", tag="smx1", manifest=None, prepdir=None, labeldir=None,
+             questions=None)
     i = 0
     while i < len(argv):
         t = argv[i]
-        for k in ("det", "tag", "manifest", "prepdir", "labeldir"):
+        for k in ("det", "tag", "manifest", "prepdir", "labeldir", "questions"):
             if t == "--" + k and i + 1 < len(argv):
                 a[k] = argv[i + 1]; i += 1
             elif t.startswith("--" + k + "="):
@@ -153,6 +154,19 @@ LABEL_DIR = ARGS["labeldir"] or os.path.join(
     DETROOT, "work", "stm_michel_labels", SCAN_TAG)
 os.makedirs(LABEL_DIR, exist_ok=True)
 LABEL_FILE = os.path.join(LABEL_DIR, "labels.json")
+
+# doc pdvd/68: an OPTIONAL per-item question file, for a scan that grades an
+# OPTION (a knob setting the chain does not run in production) rather than the
+# production chain itself.  {"items": {"<event>/<cluster>": {"html": ...,
+# "anchor_rr_cm": float or null}}}.  Absent => the app is exactly what it was:
+# no panel, no marker, the same layout and the same renderers, so every tag
+# scanned without it (smx1, smx1a) renders as before.  It carries what the
+# OPTION and PRODUCTION say -- never a previous scan's verdict, which is what
+# this scan is checking (feedback_blind_the_scan_sheet).
+QUESTIONS = {}
+if ARGS["questions"]:
+    with open(ARGS["questions"]) as fh:
+        QUESTIONS = json.load(fh).get("items", {})
 
 VOL = smgeom.ENVELOPE[DETNAME]
 PAD = 20.0
@@ -719,6 +733,13 @@ fq.line("a", "b", source=ColumnDataSource(dict(a=[], b=[])), color="#e377c2")
 SRCQ["origin"] = ColumnDataSource(dict(a=[], b=[]))
 fq.line("a", "b", source=SRCQ["origin"], color="#e377c2", line_width=2,
         line_dash="dashed")
+if QUESTIONS:
+    # doc pdvd/68: where the OPTION under test puts the Bragg peak (the
+    # bragg_peak_anchor end_L, as a residual range from the fit end), drawn
+    # through the SAME origin as the points so it moves with the pin.
+    SRCQ["anchor"] = ColumnDataSource(dict(a=[], b=[]))
+    fq.line("a", "b", source=SRCQ["anchor"], color="#2ca02c", line_width=3,
+            line_dash="dotdash")
 
 
 # ---------------------------------------------------------------------------
@@ -1072,6 +1093,16 @@ progress = Div(text="", width=620)
 badge = Div(text="", width=1420)
 status = Div(text="", width=1420, name="status_div")
 reveal_div = Div(text="", width=620)
+question_div = Div(text="", width=1420)   # doc pdvd/68; in the layout only with --questions
+
+
+def question_html(it):
+    q = QUESTIONS.get(item_key(it))
+    if not q:
+        return ("<div style='background:#fbeaea;padding:6px'><b>no question is recorded "
+                "for this item</b> in the --questions file</div>")
+    return ("<div style='background:#eef6ff;border:1px solid #9cc3e6;border-radius:3px;"
+            "padding:6px 8px;font-size:105%%'>%s</div>" % q.get("html", ""))
 flow_div = Div(text="", width=1420, name="flow_div")
 cursor_div = Div(text="", width=620)
 save_div = Div(text="", width=620)
@@ -1512,6 +1543,8 @@ def render(reframe=False):
     """
     it = current()
     pay = payload(it)
+    if QUESTIONS:
+        question_div.text = question_html(it)
     # The blind is gone (owner 2026-09-08, doc pdhd/12 sec 13): the chain's
     # answer is on screen from the first paint.  `rev` stays as a parameter
     # through the fill_* helpers because it still marks which text and which
@@ -2439,6 +2472,9 @@ def fill_dqdx(pay, v, px, py, pz, prr, psrc, rev):
                         RR - (RR[int(np.argmin(d))] if RR.size else 0.0))
     else:
         s_mu = RR - prr
+    # doc pdvd/68: the same origin as a number, for the option's anchor line
+    off = ((float(RR[int(np.argmin(d))]) if RR.size else 0.0)
+           if (psrc == "manual" or prr is None) else float(prr))
     m = pay["muon"]
     SRCQ["muon"].data = _qdata(s_mu[live], Q[live], Q[live], X[live], Y[live], Z[live],
                                _col(m, "pu", live), _col(m, "pv", live),
@@ -2466,6 +2502,10 @@ def fill_dqdx(pay, v, px, py, pz, prr, psrc, rev):
         SRCQ[nm].data = dict(a=xs[:len(ys)], b=list(ys))
     hi = max([1.0] + [t for t in Q[live]] + [t for t in ((_REF or {}).get("muon") or [])[:80]])
     SRCQ["origin"].data = dict(a=[0.0, 0.0], b=[0.0, hi * 1.05])
+    if "anchor" in SRCQ:
+        ar = (QUESTIONS.get(item_key(current())) or {}).get("anchor_rr_cm")
+        SRCQ["anchor"].data = (dict(a=[ar - off, ar - off], b=[0.0, hi * 1.05])
+                               if ar is not None else dict(a=[], b=[]))
     fq.x_range.start = -40.0
     fq.x_range.end = float(max(60.0, (s_mu.max() if s_mu.size else 60.0)))
     fq.y_range.start = 0.0
@@ -3053,6 +3093,7 @@ curdoc().add_root(column(
                                "border-radius": "3px", "padding": "3px"})),
     row(item_select, prev_btn, next_btn, next_unl_btn, copy_key),
     badge,
+    *([question_div] if QUESTIONS else []),   # doc pdvd/68
     Div(text="<b>the cluster IS the whole object:</b>", width=1420),
     row(stm_mic_btn, stm_only_btn, thru_btn),
     Div(text="<b>the cluster is only PART of the object</b> (under-clustered) "

@@ -1,0 +1,302 @@
+{
+ "scan": "pdvd option scan (doc pdvd/68)",
+ "prod": "/home/xqian/tmp/d67/prep_d67v",
+ "anchor": "/home/xqian/tmp/d68/prep_d68a3",
+ "dx": "/home/xqian/tmp/d68/prep_d68d4",
+ "items": {
+  "039252_2/79": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.799999999999932
+  },
+  "039253_0/44": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>1.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 1.757028084015883
+  },
+  "039253_13/73": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 1. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 1.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.799999999999977
+  },
+  "039253_3/66": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 1. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 1.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>1.7 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 1.7261405526064437
+  },
+  "039253_6/85": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.8
+  },
+  "039349_14/22": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.7974837364591396
+  },
+  "039349_15/23": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>1.6 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 1.6275646701067559
+  },
+  "039349_24/23": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.3 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.28258542023176
+  },
+  "039349_30/21": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.7 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.673740993134288
+  },
+  "039349_36/46": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 1. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 1.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>1.6 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 1.6000000000000227
+  },
+  "039349_43/66": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.7998593683408215
+  },
+  "039349_72/11": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.8 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.7699411699059056
+  },
+  "039349_76/75": {
+   "group": 1,
+   "src": "prod",
+   "html": "<b>[group 1: anchor]</b> <b>Option under test: the Bragg-peak anchor</b> (<code>bragg_peak_anchor</code>, 3 cm search). It re-reads the Bragg-peak tests from the dQ/dx maximum it finds near the end of the fit instead of from the fit's last point.<br>Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 0</b> (rejected by plateau_off_mip), michel_found 0.<br>The <span style='color:#2ca02c'><b>green dot-dash line</b></span> on the dQ/dx panel is where the option puts the Bragg peak: <b>2.7 cm</b> before the fit end.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": 2.6556337676735664
+  },
+  "039252_1/109": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat, profile_sparse), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039252_16/31": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039252_8/72": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by plateau_off_mip), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_10/30": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_12/93": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>This cluster is a stopping-muon candidate <b>both</b> with the option and in today's production, but it is not in the 569-item scan (the candidate set moved after that sample was drawn), so it has never been scanned. Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_2/50": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_3/60": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 1</b>, michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_7/30": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039253_8/65": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 1</b>, michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_23/41": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat, stop_near_boundary), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_25/57": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat, stop_near_boundary), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_25/69": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_25/71": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_26/43": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_27/54": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_29/44": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_33/60": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by stop_near_boundary), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_45/19": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_48/20": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_50/55": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 1</b>, michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_57/18": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_66/77": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_68/23": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_68/55": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_7/20": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_74/53": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_75/67": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 1</b>, michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_81/56": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>This cluster is a stopping-muon candidate <b>both</b> with the option and in today's production, but it is not in the 569-item scan (the candidate set moved after that sample was drawn), so it has never been scanned. Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_81/62": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 1</b>, michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_82/50": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_83/32": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_9/56": {
+   "group": 2,
+   "src": "dx",
+   "html": "<b>[group 2: dx 4 mm, new candidate]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>With the option the STM tagger flags this cluster as a stopping-muon candidate; <b>production does not</b>, so it has never been scanned. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_31/51": {
+   "group": 3,
+   "src": "dx",
+   "html": "<b>[group 3: dx 4 mm]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>Production reads <b>is_stm 1</b>, michel_found 1. The option reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_48/21": {
+   "group": 3,
+   "src": "dx",
+   "html": "<b>[group 3: dx 4 mm]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>Production reads <b>is_stm 0</b> (rejected by no_bragg, shape_flat), michel_found 0. The option reads <b>is_stm 1</b>, michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_61/58": {
+   "group": 3,
+   "src": "dx",
+   "html": "<b>[group 3: dx 4 mm]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>Production reads <b>is_stm 1</b>, michel_found 1. The option reads <b>is_stm 0</b> (rejected by plateau_off_mip), michel_found 1.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  },
+  "039349_76/25": {
+   "group": 3,
+   "src": "dx",
+   "html": "<b>[group 3: dx 4 mm]</b> <b>Option under test: <code>dx_norm_length</code> 4 mm</b> (the track fit's charge-smoothing length; production 6 mm). It changes the fit, so the display below is the reconstruction <b>with the option</b>.<br>Production reads <b>is_stm 1</b>, michel_found 0. The option reads <b>is_stm 0</b> (rejected by no_bragg), michel_found 0.<br><b>Your verdict decides which reading is right</b>: does the muon stop inside, is there a Michel, and where does it stop (move the pin if the fit end is wrong)?",
+   "anchor_rr_cm": null
+  }
+ }
+}

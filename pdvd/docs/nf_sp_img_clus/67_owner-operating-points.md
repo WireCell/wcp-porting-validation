@@ -200,9 +200,9 @@ later round (`prep_d67v`).
 
 | item | status | what it needs |
 |---|---|---|
-| `bragg_peak_anchor` 3 cm (doc 65 §5.1) | not flipped | it swaps the FP set (+5 / −3 even with `ks −0.02`) and reaches the same profiles as §1 and §3; if wanted, a combined arm on top of this production bag, and a look at `039252_2/79`, `039349_14/22`, `039349_24/23`, `039349_43/66`, `039349_72/11` (new FPs) and `039253_3/66`, `039253_6/85`, `039349_76/75` (lost) first |
-| `dx_norm_length` 4 mm (doc 65 §4) | not flipped | **the one item that needs a scan**: it changes which clusters the tagger flags, 35 candidates the record never saw |
-| `stop_local_residual_cm` (doc 62 §4.3) | not flipped; not recommended | measured worse on Michel purity (+2 / −1 TP for +5 FP on top of B); nothing to scan |
+| `bragg_peak_anchor` 3 cm (doc 65 §5.1) | **FLIPPED by doc pdvd/68** on the owner's scan (`is_stm` 176/7 → 197/7 on the merged record); the rest of this row is superseded | it swaps the FP set (+5 / −3 even with `ks −0.02`) and reaches the same profiles as §1 and §3; if wanted, a combined arm on top of this production bag, and a look at `039252_2/79`, `039349_14/22`, `039349_24/23`, `039349_43/66`, `039349_72/11` (new FPs) and `039253_3/66`, `039253_6/85`, `039349_76/75` (lost) first |
+| `dx_norm_length` 4 mm (doc 65 §4) | measured on the owner's scan (doc pdvd/68 §4): better than this doc's production alone, **worse on top of the anchor** (`is_stm` F1 0.807 → 0.792); OFF — its file is also shared with `TaggerCheckNeutrino` | **the one item that needs a scan**: it changes which clusters the tagger flags, 35 candidates the record never saw |
+| `stop_local_residual_cm` (doc 62 §4.3) | **dropped by the owner (2026-09-10)** | measured worse on Michel purity (+2 / −1 TP for +5 FP on top of B); off the decision list. The C++ knob stays, default OFF |
 | `publish_other_arms` in production (doc 64 §5) | unchanged | a display choice (+3 % `stm_michel_pts` rows, no verdict effect); not a physics decision |
 
 ## 6. Gates

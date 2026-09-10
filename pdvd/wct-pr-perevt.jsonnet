@@ -274,6 +274,22 @@ function(
         ks_margin: -0.02,
         michel_range_energy_dis_cm: 3.0,
         compare_range_cm: 45.0,
+        // doc pdvd/68 -- PDVD PRODUCTION, on the owner's own hand scan (tag
+        // smx3, 2026-09-10).  The Bragg-peak anchor (doc 65 sec 5, the
+        // prototype eval_stm origin): the verdict's contrast and KS windows are
+        // read from the dQ/dx maximum found within 3 cm of the fit end instead
+        // of from the fit's last point.  C++ defaults false / 10.0, so neither
+        // key is inert.  Measured on arm d68a3 (this bag + the two keys) against
+        // the merged record (smx1a + the owner's 49 verdicts, 580 judged):
+        // is_stm TP/FP/FN 176/7/108 -> 197/7/87 (purity 0.962 -> 0.966,
+        // efficiency 0.620 -> 0.694), michel_found identical.  It clears the
+        // owner's rule ("better w.r.t. our scan"), NOT the 0-new-FP bar: three
+        // FPs swapped for three.  Cost, named: 7 true stoppers lost
+        // (039253_0/44, 039253_13/73, 039253_3/66, 039253_6/85, 039349_15/23,
+        // 039349_36/46, 039349_76/75), four of them carrying a Michel whose
+        // dilution the 3 cm window lands on.  PDHD stays OFF.
+        bragg_peak_anchor: true,
+        bragg_peak_search_cm: 3.0,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the

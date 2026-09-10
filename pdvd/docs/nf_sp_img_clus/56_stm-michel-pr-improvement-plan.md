@@ -28,7 +28,11 @@ thresholds in PDVD production** — `ks_margin: -0.02`,
 arm `d67v` item by item: `is_stm` now TP 177 / FP 6 / FN 91 (purity 0.967; 26
 stoppers gained, 3 FPs removed, 0 new FPs, one stopper lost,
 `039349_48/63`), `michel_found` TP 132 / FP 17 / FN 20 (F1 0.877). Ten
-knobs are now PDVD production. PDHD stays OFF for all ten: no PDHD STM/Michel hand-scan record
+knobs were then PDVD production. **Doc pdvd/68 took the owner's option scan
+(tag `smx3`, 49 items) and flipped `bragg_peak_anchor` (3 cm search)**: on the
+merged record (smx1a + the owner's verdicts) `is_stm` 176 / 7 / 108 → 197 / 7 /
+87, `michel_found` unchanged. Eleven knobs are now PDVD production. PDHD stays
+OFF for all eleven: no PDHD STM/Michel hand-scan record
 exists to confirm any of them there. SBND is untouched (T1b's knob is
 threaded through `sbnd/clus.jsonnet` but its own `wct-pr-perevt.jsonnet`
 never sets it, confirmed by a compiled-config grep; T2's and T3's knobs
@@ -416,11 +420,15 @@ new `is_stm` false positives across the campaign. The owner's list
 (doc 66 §6) was answered in doc pdvd/67: `ks_margin` −0.02, the 3 cm
 `michel_range_energy_dis_cm` and `compare_range_cm` 45 are flipped, each on a
 real arm (`is_stm` 152 / 9 / 116 → 177 / 6 / 91, `michel_found` F1 0.863 →
-0.877). What remains: the 3 cm `bragg_peak_anchor` (it swaps the FP set), a
-re-scan for `dx_norm_length` 4 mm (the one item that needs a scan — 35
-candidates the record never saw), `stop_local_residual_cm` (not
-recommended), `publish_other_arms` in production (a display choice), and the
-named leads with no code yet (doc 66 §6).
+0.877). The owner then scanned the two options left open (doc pdvd/68, tag
+`smx3`): the 3 cm `bragg_peak_anchor` is flipped (it was right on three items
+smx1a had called THRU); `dx_norm_length` 4 mm beats the old production alone but
+not the new one (with the anchor, `is_stm` F1 0.807 → 0.792), and its file is
+shared with the neutrino chain, so it stays OFF. What remains:
+`publish_other_arms` in production (a display choice), and the named
+leads with no code yet (doc 66 §6, doc 68 §5). `stop_local_residual_cm` was
+dropped by the owner. From doc 68 on, the grading record is the merged
+smx1a + smx3 record (`STM_SCAN_RECORD`); docs 56–67 are on smx1a.
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.

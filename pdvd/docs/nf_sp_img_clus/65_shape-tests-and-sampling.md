@@ -328,6 +328,11 @@ precondition on the peak (the anchored contrast must exceed the geometric
 one, or the peak row must sit above the plateau by some factor) is the
 obvious next refinement and is not built here.
 
+**Superseded (2026-09-10) by doc pdvd/68 §3.** On the owner's hand scan three
+of the anchor's "new FPs" (`039252_2/79`, `039349_43/66`, `039349_72/11`) are
+stoppers that smx1a had labelled THRU; on the merged record the 3 cm anchor
+raises purity and efficiency together, and it is now PDVD production.
+
 ## 6. Gates
 
 | gate | result |

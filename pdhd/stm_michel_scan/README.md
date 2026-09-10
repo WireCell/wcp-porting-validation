@@ -32,6 +32,25 @@ overclustering 5018, em_display 5021, split_display 5022. **This app owns 5023
 (PDHD) and 5024 (PDVD)**, and `serve_*.sh` **refuses** a busy port rather than
 letting a second `bokeh serve` exit and leave the old app answering.
 
+## Scanning an OPTION rather than production (doc pdvd/68)
+
+`--questions FILE` gives every item a blue panel under the stopping-point badge
+that says which option (a knob setting production does not run) the item is in
+the scan for, and what production and the option each read. For the Bragg-peak
+anchor it also draws a green dot-dash line on the dQ/dx panel where the option
+puts the peak; the line follows your pin. The panel never shows a previous
+scan's verdict. Without `--questions` the app is unchanged (no panel, no line,
+same layout). The set is built by
+`pdvd/docs/nf_sp_img_clus/scripts/d68_build_scan_set.py`:
+
+```bash
+I=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img
+./serve_stm_michel_scan.sh 5017 --det pdvd --scan-tag smx3 \
+    --manifest  $I/pdvd/docs/scan/pdvd_stm_michel_smx3_sheet.tsv \
+    --prepdir   $I/pdhd/stm_michel_scan/prep-pdvd-smx3 \
+    --questions $I/pdvd/docs/scan/pdvd_stm_michel_smx3_questions.json
+```
+
 ## What is on the screen
 
 **Left, three tabs.**

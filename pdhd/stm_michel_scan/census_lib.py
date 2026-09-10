@@ -36,7 +36,10 @@ import csv, glob, json, os, sys
 import numpy as np
 
 IMG = "/home/xqian/toolkit-dev/wcp-porting-img"
-REC = IMG + "/pdvd/docs/scan/pdvd_stm_michel_smx1a_verdicts.json"
+# doc pdvd/68: STM_SCAN_RECORD names another record -- the merged smx1a + owner smx3
+# record is pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_verdicts.json.  Unset => smx1a,
+# so `census_score.py --check` (doc 55's literals) is unchanged.
+REC = os.environ.get("STM_SCAN_RECORD") or IMG + "/pdvd/docs/scan/pdvd_stm_michel_smx1a_verdicts.json"
 SHEET = IMG + "/pdvd/docs/scan/pdvd_stm_michel_scan_sheet.tsv"
 PREP_DEFAULT = IMG + "/pdhd/stm_michel_scan/prep-pdvd"
 WORK = IMG + "/pdvd/work"

@@ -3,6 +3,7 @@
 #
 #   ./serve_stm_michel_scan.sh [PORT] --det pdhd|pdvd [--scan-tag NAME]
 #                              [--manifest TSV] [--prepdir DIR]
+#                              [--questions JSON]   (doc pdvd/68: a scan that grades an option)
 #
 # PORT defaults to 5023.  Everything from 5006 to 5022 is already a default
 # somewhere in this tree (img_plot 5012/5013, pd_plot 5014, ql_scan 5008/5015/5016,
@@ -47,6 +48,7 @@ while [ "$#" -gt 0 ]; do
         --scan-tag=*) VIEWER_OPTS+=(--tag "${1#*=}"); shift ;;
         --manifest)   VIEWER_OPTS+=(--manifest "$2"); shift 2 ;;
         --prepdir)    VIEWER_OPTS+=(--prepdir "$2"); shift 2 ;;
+        --questions)  VIEWER_OPTS+=(--questions "$2"); shift 2 ;;
         *)            echo "unknown option: $1" >&2; exit 3 ;;
     esac
 done
