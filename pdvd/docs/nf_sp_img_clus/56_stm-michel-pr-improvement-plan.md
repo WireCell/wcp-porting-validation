@@ -1,20 +1,23 @@
 # 56 — From the 569-item hand scan to a task set for the STM + Michel pattern recognition
 
-**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2 and T3).
-§8's T1a, T1b, T1c, T4, T2 and T3 rows are now executed — see doc pdvd/57
+**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2, T3 and T5).
+§8's T1a, T1b, T1c, T4, T2, T3 and T5 rows are now executed — see doc pdvd/57
 (T1a: the stop retreat), doc pdvd/58 (T1c: the stop split), doc pdvd/59
 (T1b: the asymmetric kink), doc pdvd/60 (T4: persist the per-plane
 dead-channel flags), doc pdvd/61 (T2: the moved-stop Michel veto, plus §9
-fixes) and doc pdvd/62 (T3: the Michel with no trajectory) for their code,
-gates and results. All byte-identical gates PASS. Six knobs
-(`stop_retreat_max: 2`, `stop_split_max: 1`, `stm_kink_asym_enable: true`,
+fixes), doc pdvd/62 (T3: the Michel with no trajectory) and doc pdvd/63
+(T5: the fit-end undershoot) for their code, gates and results. All
+byte-identical gates PASS. Seven knobs (`stop_retreat_max: 2`,
+`stop_split_max: 1`, `stm_kink_asym_enable: true`,
 `moved_stop_michel_guard: true`, `stop_local_michel_pieces: true`,
-`michel_range_energy_guard: true`) are now PDVD PRODUCTION in
+`michel_range_energy_guard: true`, `absorb_bragg_stub: true`) are now PDVD
+PRODUCTION in
 `pdvd/wct-pr-perevt.jsonnet` — each confirmed on the 569-item scan record,
 0 regressions (`is_stm` bit-identical for T2's veto and both T3 knobs; 0
-new `is_stm` false positives for the other three). The `michel_found`
+new `is_stm` false positives for the other four). The `michel_found`
 census now stands at TP 132 / FP 22 / FN 20, F1 0.863 (from 0.735 on
-`d53v`). PDHD stays OFF for all six: no PDHD STM/Michel hand-scan record
+`d53v`); `is_stm` at TP 152 / FP 9 / FN 116 (from 144 / 9 / 125). PDHD
+stays OFF for all seven: no PDHD STM/Michel hand-scan record
 exists to confirm any of them there. SBND is untouched (T1b's knob is
 threaded through `sbnd/clus.jsonnet` but its own `wct-pr-perevt.jsonnet`
 never sets it, confirmed by a compiled-config grep; T2's and T3's knobs
@@ -44,7 +47,9 @@ count for the items T1a's retreat cannot reach), pdvd/59 (T1b executed: the
 asymmetric kink), pdvd/60 (T4 executed: the per-plane dead flags), pdvd/61
 (T2 executed: the moved-stop Michel veto, and the doc 56 §9 fixes), pdvd/62
 (T3 executed: the disconnected same-cluster Michel piece and the
-range-energy guard; the stop-anchored residual keep measured and left off).
+range-energy guard; the stop-anchored residual keep measured and left off),
+pdvd/63 (T5 executed: the class-F stubs are fitted `kOther` arms and
+`absorb_bragg_stub` recovers 3 of them).
 
 ---
 
@@ -302,10 +307,12 @@ the flags to the `stm_fit` PC before anyone tunes anything.
   change. `dx_norm_length` (the smoother's length scale) is the most direct
   Bragg-relevant knob.
 * The **undershoot** is real and small: 5 items carry a > 1.67 MIP forward stub
-  past the fit end (class F, doc 55 §15.3), all rejected. `examine_end_ps_vec`'s
-  tip trim (`TrackFitting.cxx:2609`) and the Steiner terminal set are the two
-  owners; `absorb_bragg_stub` was the last attempt and regressed on PDHD (doc
-  pdhd/03 §6.8).
+  past the fit end (class F, doc 55 §15.3), all rejected. **Corrected in doc
+  pdvd/63 (T5)**: `examine_end_ps_vec`'s END trimmer is `:2693` (`:2609` is
+  the start side) and is geometric, not charge-based; the terminal set does
+  not bound the path end; the stub is FITTED, as a `kOther` arm at the stop
+  vertex, and `absorb_bragg_stub` (doc pdhd/03 §6.8) is the mechanism — now
+  scored (3 recovered, 0 cost) and PDVD production.
 * The **coiled** (class G, 18) and **unsupported** (class H, 20 items) fits are
   the cases where the *path* is wrong and the profile is not a measurement; they
   are the tail of the list on purpose.
@@ -352,7 +359,7 @@ components (`feedback_shared_component_merge_gating`).
 | **T2** | ✅ **DONE, doc pdvd/61. Knob `moved_stop_michel_guard: true` is PDVD PRODUCTION.** Three questions, one shipped: **T2c** (does a moved stop need a stronger Michel gate) — an attached (`michel_conn_type==1`) Michel whose stop was moved this event (`n_retreat>0` or `n_split>0`) is demoted when its assembled `michel_ke_best` falls below `moved_stop_michel_ke_min` (10.0 MeV, doc 55 §15.1's own floor, applied to a narrower population). Demotes via `michel_conn_type`, never `reject_bits` — `is_stm` untouched by construction, confirmed bit-identical on all 566 common items between `d59v` and the feature arm. Real-arm result, matching the offline census-payload estimate item for item: **veto fires on exactly 6 items** — the 5 named spurious THRU attachments docs 57/58/59 flagged (`039252_2/79`, `039252_4/55`, `039349_20/41`, `039349_48/21`, `039349_61/62`) plus 1 real cost, a genuine scan-confirmed Michel (`039349_36/63`, KE 6.61 MeV) that loses its correct attachment — no threshold cleanly separates the two (two of the recovered FPs sit at 8.9/8.7 MeV, ABOVE the lost TP's 6.61). `michel_found` census: FP 44→39, TP 119→118, **F1 0.755→0.764** (net positive). Both byte-identical gates PASS (PDVD 578/578, PDHD 325/325); flip-equivalence and true OFF-path byte-identity both verified by compiled-JSON diff (0 lines each). **T2a** (charge/KE vs median dQ/dx on the 9 named arms) — measured negative: all 9 have zero nearby unfitted charge (`n_dots`/`dots_ke_*` all 0), so a KE test finds nothing a charge-based admission could recover; the charge these arms carry is genuinely small at the fit (doc 55 §15.2's dilution mechanism), a T3 question not a T2 one. **T2b** (do the "passes everything" arms hang off a non-`stop_v` vertex) — measured negative: 6 of the 9 named items no longer apply on the current arm (`039253_17/77` is now T1b-recovered), and of what remains, `n_stop_arms` is 1 on 8 of 8 — there is no alternate vertex, the hypothesis does not hold. No C++ for either | 3 | (scored, see doc 61 §4) | `michel_found` census (549,111,39,41,358,.740,.730)→(547,118,39,34,356,.752,.776), F1 0.755→**0.764**; `is_stm` bit-identical (0 of 566 flips) | knob `moved_stop_michel_guard`; off = byte-identical (both detectors, verified); flip-equivalence + true OFF-path both verified |
 | **T3** | ✅ **DONE, doc pdvd/62. Knobs `stop_local_michel_pieces: true` and `michel_range_energy_guard: true` are PDVD PRODUCTION.** Three knobs built, two shipped. **T3b** — a fitted piece of the MAIN cluster disconnected from the muon chain (its own two vertices, no edge to a chain segment — what a `pr54`-kept residual is, and what doc 56 §3's "7 arms that pass every gate" turned out to be: they hang off no chain vertex at all, which is why T2b saw no alternate vertex) joins the Michel object under the same radius / length / body gates a companion piece gets. Real arm (`d62b`): 70 pieces on 27 items, `michel_found` TP 118 → 135, **0 lost**, FP 39 → 43 (4 named, all bridged within 2 cm), scan-tagged michel segments with role 3 189 → 225, `is_stm` bit-identical (0 of 566). **T3c** — doc 55 §15.1 as a knob, C++ default at the ARGUED 5 cm (not the best-F1 3 cm row chosen on this same record): 21 FPs removed, 3 named TPs lost (13.5–14.9 cm from the stop at 1–6 MeV), `is_stm` untouched. **Together (`d62bc`, the production bag): TP 118 → 132, FP 39 → 22, FN 34 → 20, F1 0.764 → 0.863.** **T3a** — the stop-anchored `pr54` keep (`stop_local_residual_cm`, `PatternAlgorithms` anchor members, never set by the neutrino path): 46 fires on 40 items; on top of B it adds 2 Michels, costs 5 spurious ones and 1 lost TP, and flips `is_stm` on 3 items (a kept residual changes the PR graph: segment counts, vertex positions, the stop snap) — measured, named, **left OFF**. The probe corrected the framing: 74 of the 363 drops sit within 20 cm of a candidate stop, only 5 class-D items are reachable through the keep, and 14 of B's 17 recoveries needed no keep at all. `pr67 fos` forwarded (log-only) and run: of doc 54 §2.5's 27 no-drop lumps, 18 are single-terminal fragmentation, ≤ 8 are "already covered" | 3 | (scored, see doc 62 §4) | D 34 → **20**, C 39 → **22**, E 32 → 5; role 3 189 → **225** | knobs `stop_local_michel_pieces`, `michel_range_energy_guard` (+ `stop_local_residual_cm` off); off = byte-identical (PDVD 578/578, PDHD 325/325); flip-equivalence + true OFF-path 0 lines; 16 live jobs' compiled config unchanged |
 | **T4** | ✅ **DONE, doc pdvd/60 (writer-only, no knob).** Persist `reg_flag_u/v/w` (per fit point, from `TrackFitting::dQ_dx_fit`'s own already-computed dead-channel flags — confirmed to be the function STM's fit path actually calls, not `dQ_dx_multi_fit`) on `PR::Fit`, the `stm_fit` PC and `T_rec_charge`, both ProtoDUNEs. Every existing branch verified bit-identical (18/18 pre-existing `T_rec_charge` columns spot-checked, plus doc 59's `T_stm_michel` byte-identical gates on the same binary); three new branches added. Measured the dead-plane/Bragg-contrast correlation this was built to answer on 13 candidates: **weak/mixed, not confirmed** — some high-dead-density items flatten, but the flattest item in the sample (`039253_17/77`, q(0-3)=53) has 0% dead coverage in its last 5 cm, and the strongest Bragg rise (`039349_5/54`) also has 0%. Reinforces §5's own aggregate finding rather than overturning it; not tuned to look more conclusive | 1 | the 13 missed stoppers with ≥ 20% dead-band coverage (population re-derived on the current arm; doc 56 named 14 before T1a/T1b/T1c recovered some of them) | per-item dead-plane fraction vs contrast (doc 60 §5's table) | no verdict path; every existing branch byte-identical (verified) |
-| **T5** | **fit-end undershoot.** Which of the tip trim (`TrackFitting.cxx:2609`), `end_point_limit`, or the terminal set owns the 5 class-F items; `absorb_bragg_stub` regressed on PDHD, so a new mechanism is needed | 1, 2 | `039252_5/73`, `039349_66/78`, `039253_13/39`, `039349_18/33`, `039253_0/110` | F 5 → 0; last-point dQ/dx | knob; PDHD gate |
+| **T5** | ✅ **DONE, doc pdvd/63. Knob `absorb_bragg_stub: true` is PDVD PRODUCTION.** None of the three named owners is the mechanism: the END trimmer is `TrackFitting.cxx:2693` (not `:2609`, the start side) and it is geometric (three-plane `is_good_point` at 0.2 cm); `end_point_limit` cannot move the STM path end (the final `organize_ps_path` passes 0 — it is a last-point-dQ/dx knob); the terminal set does not bound the path end (extreme points are inserted un-charge-tested). The five stubs ARE fitted, as separate `kOther` arms at the stop vertex (hot > `michel_mip_hi`, so neither Michel nor continuation), and the chain ends one segment short — exactly what the existing default-OFF `absorb_bragg_stub` (doc pdhd/03 §6.8) was built for and never scored. Scored on the record vs `d62bc`: fires on 7 items, **3 `is_stm` stoppers recovered** (`039253_0/110`, `039349_64/65`, `039349_66/78` = doc 55's scan 474), 0 new FPs, 0 TPs lost, `michel_found` census identical (no Michel orphaned; `039253_0/110`'s becomes attached), class F 5 → 3. The PDHD `no_bragg` regression does not reproduce on any PDVD item. Left, with their C++ kinks: `039252_5/73` (20.6°, 0.6° over the 20° angle), `039253_13/39` (24.6°, not a terminal), `039349_18/33` (32.9°) — not tuned for | 1, 2 | (scored, see doc 63 §3) | F 5 → **3**; `is_stm` census (547,149,9,119,270,.943,.556) → (547,**152**,9,**116**,270,.944,.567) | knob `absorb_bragg_stub`; off = byte-identical (PDVD 578/578 vs `d62bc`, PDHD 325/325); flip-equivalence + OFF-path 0 lines; PDHD stays OFF (its one recorded case) |
 | **T6** | **interior arms.** Classify the 172 no-role same-cluster segments — 152 attached to the chain interior, 46 of them > 8 cm at median 0.30 MIP (none hadron-hot, so `kOther`); publish `role 7 = other` so display and scan can see them; the over-clustering half goes upstream to `unmerge_assoc` / `protect_bundle` | 4 | `039252_3/74` (11), `039253_12/41`, `039253_17/127`, `039253_2/77`, `039253_8/62` | interior-arm table vs scan tags | payload/display first; no verdict path |
 | **T7** | **sampling step and the two shape tests** (analysis; the owner decides). `TrackFitting.cxx:9714`'s pass-3 step now reads the knob (**fixed doc pdvd/61**, §9 item 1 — proven byte-identical, no operating-point change); sweep `low_dis_limit` / `dx_norm_length`; measure the profile autocorrelation length; re-derive `bragg_tail_*`, `compare_range_cm`, `bragg_contrast_min`, `ks_margin` jointly on §4's table; test the peak-anchored `rr` origin; note `stm_recomb_calibrated` is false in production so the Bragg reference and the data are on different charge scales (doc pdhd/16) | 1 | the 57 rise-to-end misses (`039349_2/38`, `039349_29/45`, `039349_27/41`, `039349_3/46`); the 9 FPs (`039349_22/45`, `039349_6/62`) | §4's purity / efficiency table | any operating-point move is the owner's call (§5.1, §5.7) |
 | **T8** | **coiled and unsupported fits** (G 18, H 20): publish `arc/span` over the last 20 cm and `charge_supported` per segment as reject-class inputs | 1 | `039349_48/21` (arc/span 3.41), `039253_6/82` (208 cm at 0.11 plateau) | G, H counts | later; doc pdvd/31/37/40 machinery |
@@ -368,9 +375,10 @@ the "passes everything" arms were disconnected pieces of the main cluster
 the Michel search never looked at — admitting them (T3b) and applying doc 55
 §15.1's kinematic guard (T3c) took the `michel_found` census from F1 0.764
 to 0.863 with `is_stm` untouched, the largest single move of the campaign;
-the `pr54` keep itself (T3a) was measured and left off. Then T5 (two of its
-five class-F items now carry a found Michel through T3b — the Bragg stub
-question is unchanged), T6, T7 (§9 item 1 of which is already fixed), T8.
+the `pr54` keep itself (T3a) was measured and left off. T5 (doc 63) then
+showed the class-F stubs are fitted `kOther` arms at the stop and that the
+existing `absorb_bragg_stub` knob recovers 3 stoppers at no cost — flipped.
+**Next: T6**, then T7 (§9 item 1 of which is already fixed), T8.
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
@@ -436,6 +444,11 @@ moved; the scan record is not re-labelled; no C++ is touched.
    against `d61v` (5.27 cm median) is not comparable to the `d53v`-based
    4.60 → 2.78 cm sequence of docs 57–59. State the baseline with the number.
 
+10. **The `:2609` citation (doc pdvd/63 §5).** `TrackFitting.cxx:2609` is the
+   START-side pop loop of `examine_end_ps_vec`; the fit-END trimmer is `:2693`,
+   and its criterion is three-plane `is_good_point` at 0.2 cm, not charge.
+   `end_point_limit` on the STM path is a last-point-dQ/dx knob (the final
+   `organize_ps_path` passes 0). Corrected in §6 above.
 ---
 
 ## 10. Gates

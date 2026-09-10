@@ -175,6 +175,8 @@ VERDICT_SCALARS = [
     # doc pdvd/62 (T3) -- the stop-local residual keep (main / companion fires),
     # the disconnected same-cluster pieces admitted, and the range-energy veto.
     "n_kept_near_stop_main", "n_kept_near_stop_comp", "n_local_pieces", "n_michel_range_veto",
+    # doc pdvd/63 (T5) -- how many of n_ext were absorb_bragg_stub's.
+    "n_stub_absorb",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",

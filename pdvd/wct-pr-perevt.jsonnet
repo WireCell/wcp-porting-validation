@@ -235,7 +235,24 @@ function(
         stop_extend_max: 3,            // follow a collinear MIP continuation past the tagger's stop (sec 6.3; 7 PDVD chains) ...
         michel_guards_stop: true,      // ... unless a Michel arm or the Bragg rise says the muon stopped here (sec 6.3)
         michel_shower_min_kink_deg: 15, // a shower-flagged stop arm must still turn 15 deg (sec 6.8; the muon's own Bragg stub is not a Michel)
-        // absorb_bragg_stub is NOT set: on PDHD it turned a clean STM into no_bragg (sec 6.8)
+        // doc pdvd/63 (T5) -- PDVD PRODUCTION.  A short (<= delta_max_len_cm),
+        // collinear (< continuation_max_angle_deg), HOT (> continuation_mip_hi)
+        // arm at the stop is the muon's own Bragg stub the partition split off:
+        // it is absorbed into the chain as the true end (doc pdhd/03 sec 6.8's
+        // knob, built for exactly this and never scored until now).  Measured
+        // on the 569-item smx1a record against d62bc, item by item: fires on 7
+        // items, recovers 3 is_stm stoppers (039253_0/110, 039349_64/65,
+        // 039349_66/78 -- two of doc 55 sec 15.3's five class-F "fit stops
+        // short" items, plus one the offline census did not flag), 0 new
+        // is_stm FPs, 0 is_stm TPs lost, michel_found census IDENTICAL (TP/FP
+        // 132/22; the feared orphaning of a Michel sharing the stop vertex did
+        // not occur -- 039253_0/110's Michel re-attaches at the new stop).
+        // Class F 5 -> 3.  The PDHD regression that kept this OFF (029107/1
+        // c113, sec 6.8: the tail window slid onto the absorbed stub's fading
+        // tip -> no_bragg) does not reproduce on any PDVD item: the 4 non-
+        // recovered fires keep their verdicts.  PDHD stays OFF (its one
+        // recorded case regressed; no PDHD hand-scan record).
+        absorb_bragg_stub: true,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
