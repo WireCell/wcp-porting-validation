@@ -20,9 +20,15 @@ PRODUCTION in
 `pdvd/wct-pr-perevt.jsonnet` — each confirmed on the 569-item scan record,
 0 regressions (`is_stm` bit-identical for T2's veto and both T3 knobs; 0
 new `is_stm` false positives for the other four). The `michel_found`
-census now stands at TP 132 / FP 22 / FN 20, F1 0.863 (from 0.735 on
-`d53v`); `is_stm` at TP 152 / FP 9 / FN 116 (from 144 / 9 / 125). PDHD
-stays OFF for all seven: no PDHD STM/Michel hand-scan record
+census stood at TP 132 / FP 22 / FN 20, F1 0.863 (from 0.735 on
+`d53v`); `is_stm` at TP 152 / FP 9 / FN 116 (from 144 / 9 / 125). **Doc
+pdvd/67 (the owner's decision on doc 66 §6, 2026-09-10) then moved three
+thresholds in PDVD production** — `ks_margin: -0.02`,
+`michel_range_energy_dis_cm: 3.0`, `compare_range_cm: 45.0` — confirmed on
+arm `d67v` item by item: `is_stm` now TP 177 / FP 6 / FN 91 (purity 0.967; 26
+stoppers gained, 3 FPs removed, 0 new FPs, one stopper lost,
+`039349_48/63`), `michel_found` TP 132 / FP 17 / FN 20 (F1 0.877). Ten
+knobs are now PDVD production. PDHD stays OFF for all ten: no PDHD STM/Michel hand-scan record
 exists to confirm any of them there. SBND is untouched (T1b's knob is
 threaded through `sbnd/clus.jsonnet` but its own `wct-pr-perevt.jsonnet`
 never sets it, confirmed by a compiled-config grep; T2's and T3's knobs
@@ -406,12 +412,15 @@ the natural guard on them costs 5 true stoppers for 1 FP — left OFF.
 **The task set is executed: T1a, T1b, T1c, T2, T3, T4, T5, T6, T7, T8 (docs
 57–66).** Seven knobs are PDVD production; `is_stm` went from 144 / 9 / 125
 (`d53v`) to 152 / 9 / 116 and `michel_found` from F1 0.735 to 0.863, with 0
-new `is_stm` false positives across the campaign. What is left is the
-owner's: the operating points doc 65 tabulates (`ks_margin` first, then the 3
-cm `bragg_peak_anchor`, `compare_range_cm`, the 3 cm `michel_range_energy_dis_cm`
-row, a re-scan for `dx_norm_length` 4 mm), the two measured-mixed knobs
-(`stop_local_residual_cm`, `publish_other_arms` in production), and the named
-leads with no code yet (doc 66 §6).
+new `is_stm` false positives across the campaign. The owner's list
+(doc 66 §6) was answered in doc pdvd/67: `ks_margin` −0.02, the 3 cm
+`michel_range_energy_dis_cm` and `compare_range_cm` 45 are flipped, each on a
+real arm (`is_stm` 152 / 9 / 116 → 177 / 6 / 91, `michel_found` F1 0.863 →
+0.877). What remains: the 3 cm `bragg_peak_anchor` (it swaps the FP set), a
+re-scan for `dx_norm_length` 4 mm (the one item that needs a scan — 35
+candidates the record never saw), `stop_local_residual_cm` (not
+recommended), `publish_other_arms` in production (a display choice), and the
+named leads with no code yet (doc 66 §6).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
@@ -498,6 +507,12 @@ moved; the scan record is not re-labelled; no C++ is touched.
    every q > 0 row. They differ by 5 % typically and by a factor on items whose
    whole profile is faint, which is why the chain's `n_unsupported_segs` and
    the offline H disagree on 6 of 558. Not changed; stated.
+14. **Single-consumer thresholds re-verdict exactly offline (doc pdvd/67
+   §1).** `ks_margin` (read only at `R_SHAPE_FLAT`) and
+   `michel_range_energy_dis_cm` (read only at the range-energy veto) can be
+   swept on any arm's payloads with no new run; the prediction matched two
+   real arms item for item. `compare_range_cm` cannot (three consumers) —
+   and its arms reversed doc 65's offline reading: it raises purity.
 
 ## 10. Gates
 

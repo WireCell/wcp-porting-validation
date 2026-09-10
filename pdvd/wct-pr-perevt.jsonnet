@@ -253,6 +253,27 @@ function(
         // recovered fires keep their verdicts.  PDHD stays OFF (its one
         // recorded case regressed; no PDHD hand-scan record).
         absorb_bragg_stub: true,
+        // doc pdvd/67 -- PDVD PRODUCTION, three operating points the owner
+        // took from doc 66 sec 6 ("if better w.r.t. our scan, update").
+        // Measured against the preceding production bag (arm d66vleg) on the
+        // 569-item smx1a record, all three together on arm d67v, item by item:
+        //   ks_margin -0.02 (C++ default 0.0): the largest relaxation of the
+        //     KS-vs-muon shape test that adds no is_stm false positive.  Read
+        //     at one place only (CheckSTM_Michel R_SHAPE_FLAT), so it can only
+        //     ADD stoppers; alone +19 TP, 0 new FP.
+        //   michel_range_energy_dis_cm 3.0 (C++ default 5.0; doc 62 sec 4.4's
+        //     3 cm row): the range-energy veto of a Michel 3-5 cm from the
+        //     stop under 10 MeV; removes 5 michel FPs, 0 michel TPs lost.
+        //   compare_range_cm 45 (C++ default 35): the KS / do_track_comp
+        //     window; the only lever that raises is_stm purity.
+        // Together: is_stm TP/FP/FN 152/9/116 -> 177/6/91 (purity 0.944 ->
+        // 0.967, 26 stoppers gained, 3 FPs removed, 0 new FPs, ONE stopper
+        // lost: 039349_48/63, STM_ONLY, medium confidence); michel_found
+        // 132/22/20 -> 132/17/20.  None equals its C++ default (no inert key).
+        // PDHD stays OFF (no PDHD hand-scan record).
+        ks_margin: -0.02,
+        michel_range_energy_dis_cm: 3.0,
+        compare_range_cm: 45.0,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
