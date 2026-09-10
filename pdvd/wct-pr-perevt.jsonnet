@@ -305,6 +305,20 @@ function(
         // matched the offline rule item for item (doc 70 sec 10).  PDHD stays OFF.
         topology_stop_evidence: true,
         topology_clears_sparse: true,
+        // doc pdvd/71 (P4): the Michel's isolated gamma blobs -- the owner's Q4 and his
+        // three criteria (along the Michel direction, a dot near the stop, an energy
+        // guard against over-clustering).  Unclaimed companion clusters within 35 cm of
+        // the final stop, <= 10 cm long, in a 60 deg cone about the Michel direction,
+        // closer to the Michel than to the muon body, <= 20 MeV each, taken nearest
+        // first while the Michel + blobs stays <= 60 MeV, become role-4 members with
+        // michel_ke_gamma / michel_ke_total.  michel_ke_best, michel_found and is_stm
+        // are never written, so every pre-existing branch, the zip and the calib JSON
+        // are unchanged (gated 120/120 events, 578/578 candidates).  C++ default
+        // false; the five sub-knobs stay UNSET at their C++ defaults (35 cm = today's
+        // admission radius, so no companion is newly admitted).  Graded on the
+        // smx1a+smx3+smx4 gamma tags: in the Michel object 9 -> 75 of 159, purity
+        // 0.958.  PDHD stays OFF.
+        michel_gamma_collect: true,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the

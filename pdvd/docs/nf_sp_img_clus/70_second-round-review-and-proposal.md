@@ -1,5 +1,21 @@
 # 70 — Second-round review of `CheckSTM_Michel`: the owner's four questions, and the next proposal set
 
+**Update 3 (2026-09-10): P4 is built (toolkit `d227d5b8`), gated and in PDVD
+production. It has its own doc, pdvd/71; from P4 on each proposal carries its own md file, and P1
+stays here in §9–§10.** P4 (`michel_gamma_collect`) adds the Michel's isolated
+gamma blobs to the Michel object as role-4 members with their own energy
+(`michel_ke_gamma`, `michel_ke_total`). It follows the owner's three criteria:
+along the Michel direction, a dot near the stop, and an energy guard against
+over-clustering. At 35 cm:
+- the owner's gamma tags inside the Michel object go from 9 to 75 of 159;
+- 0.958 of the tagged blobs it takes are gamma or Michel;
+- no pre-existing branch, zip or calib moves.
+
+**Correction to §10.4:** `d71vsp` ran with the survey, i.e. 60 cm companion
+admission, and production does not. The first bare-production census on the
+record reads `is_stm` **223 / 8 / 53**, not 225 / 7 / 51. Three named items
+move with the admission radius (doc 71 §7).
+
 **Update 2 (2026-09-10, §10): P1 is built and gated, knob default OFF
 (toolkit `f66a8b9f`).** Knob off: byte-identical on PDVD (120 events) and
 PDHD (61) against the merged binary. Knob on: the C++ matches the offline
@@ -557,7 +573,7 @@ association on the next scan.
 | id | knob(s), default OFF | mechanism site | sizing on `d68a3` (merged record) | gate | scan need |
 |---|---|---|---|---|---|
 | **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10); PDVD PRODUCTION with `topology_clears_sparse` (§10.4)**: 197/7/79 → 225/7/51 |
-| **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | none for membership; role 4 drawn for the next scan |
+| **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | **Built, gated and PDVD PRODUCTION at 35 cm (doc 71)**: gamma tags in the object 9 → 75 of 159, purity 0.958, every pre-existing output identical; 60 cm (74.8 %, purity 0.926, widens admission) is the owner's call |
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | +2 owner-confirmed Michels (59.6°, 132.6°), 0 of doc 61's 3 THRU re-admitted (17°, 44°, 48°) | exact offline | none |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped); `michel_kink_window_cm` 10 | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits | arm; both flags reported | none |
 | **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | 4 items (2 cool, 2 hot = named risk) | arm; 0 new `is_stm` FPs | none |
@@ -566,7 +582,7 @@ association on the next scan.
 
 **Recommended order:** P1 — `smx4` found no cost (§9); built, gated and
 flipped to PDVD production with `topology_clears_sparse` (§10) → P4 (the Michel object's
-completeness; no verdict moves) → P3b + P2 together (the attached gate and
+completeness; no verdict moves; **done, doc 71, PDVD production**) → P3b + P2 together (the attached gate and
 its vetoes, one arm) → P3 → P1b → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
 detectors, every gain and loss by item name, flip only on the owner's rule.
@@ -872,6 +888,23 @@ production is therefore exactly what arm `d71vsp` ran: `is_stm` 197 / 7 / 79 →
 0.886), 0 new false positives, `michel_found` identical. The new baseline prep
 for later rounds is `/home/xqian/tmp/d71/prep_d71vsp`.
 
+**Correction (doc 71 §7, 2026-09-10): "exactly what arm `d71vsp` ran" is not
+right.** Every §10 arm carried the survey TLA, which widens companion admission
+from 35 to 60 cm, and doc 53 measured that widening as a fit perturbation on
+20 % of PDVD candidates. Production runs without the survey. The first
+bare-production arm (`p4vleg`, the same f66a8b9f binary, the flipped bag) reads
+`is_stm` **223 / 8 / 53** on the record (purity 0.965, efficiency 0.808), with
+`michel_found` 133 / 12 / 25 unchanged. Three items differ from `d71vsp`:
+- `039253_10/93`: record THRU, `is_stm` 1 in production;
+- `039349_64/24`: record STM_MICHEL, 0 in production;
+- `039349_64/61`: record STM_ONLY, 0 in production. This is doc 53's
+  "scan before trusting 60 cm" flip, and the record says 60 cm had it right.
+
+The P1 gain above (+28 / 0 FP) was measured with both arms at 60 cm and stands
+as measured there. Its bare-production size was not measured separately. The
+baseline prep for later rounds is the bare-production `/home/xqian/tmp/p4/prep_p4v35`
+(doc 71).
+
 Compiled-config proofs, on the committed file (`/home/xqian/tmp/d71/flip/F_*.json`):
 
 * **flip-equivalence:** the pre-flip file plus `-S
@@ -889,3 +922,6 @@ no PDHD hand-scan record.
 **P4** (`michel_gamma_collect`), sized on the updated record's 345 gamma tags,
 graded against the new production (`d71vsp`'s verdicts are what PDVD now
 produces). The `topology_michel_ke_max` cap of §10.3 stays an open option.
+
+*Done:* P4 is doc 71 (built, gated, PDVD production at 35 cm). The sentence
+above about `d71vsp` is corrected in §10.4. Next is P3b + P2, in their own doc.

@@ -186,6 +186,10 @@ VERDICT_SCALARS = [
     # doc pdvd/70 (P1) -- the reject bits topology_stop_evidence cleared.  The
     # branch exists only on an arm with the knob on; skipped when missing.
     "topology_cleared_bits",
+    # doc pdvd/71 (P4) -- the Michel's isolated gamma blobs (role 4 rows).  The
+    # branches exist only on an arm with michel_gamma_collect on; skipped when missing.
+    "n_michel_gammas", "n_michel_gamma_cand", "n_michel_gamma_capped",
+    "michel_ke_gamma", "michel_ke_total", "michel_gamma_dis_max",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",
