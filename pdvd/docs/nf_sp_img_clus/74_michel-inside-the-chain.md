@@ -212,7 +212,18 @@ Arms (bare production config, `d74_arms.sh`):
 *Under `retreat_tail_strict + retreat_tail_sublive`:*
 - `039349_10/58` and `039349_5/54`: the same as above.
 - `039349_20/41`: unchanged from production. The sub-live rows keep its retreat.
-- `039349_54/56`: retreats two segments (11.79 cm) and turns `is_stm` 0 → 1 (MESSY, not judged).
+- `039349_54/56`: retreats two segments (14.22 cm dropped; stop distance 6.74 → 11.79 cm) and turns `is_stm` 0 → 1 (MESSY, not judged).
+
+**The C++'s own account of the four `retreat_tail_strict` changes.** Each fire logs the legacy reading beside the new one (`CheckSTM_Michel P3:` lines, `pdvd/work/<evt>_p74vts/wct_pr_*.log`):
+
+| item | P3 retreat | doc 57 tail reading | reading |
+|---|---|---|---|
+| `039349_10/58` | n_drop 1 (10.95 cm) | 0 | retreat now fires, so the split does not |
+| `039349_5/54` | n_drop 1 (5.92 cm) | 0 | retreat now fires, so the split does not |
+| `039349_20/41` | n_drop 0 | 1 | production retreat undone |
+| `039349_54/56` | n_drop 0 | 1 | production retreat undone |
+
+Each line matches the story above. Under `p74vtl` the first two log the same; `039349_20/41` logs nothing (its sub-live reading agrees with doc 57); `039349_54/56` logs n_drop 2 (14.22 cm) against doc 57's 1.
 
 ## 7. Result, by name
 
@@ -289,6 +300,10 @@ The first confirmation attempt, `p74vprod`, is not used. The harness stopped it 
 The stop corrupted nothing that finished. The killed arm's 116 finished events are zip-identical to `p74vts`, 116 / 116. The 4 in flight (`039349_79`, `_81`, `_82`, `_83`) wrote no output at all.
 
 PDHD stays OFF: there is no PDHD hand-scan record.
+
+**What production now writes that it did not before:**
+- **A new branch, `stop_move_p3_bits`, on every PDVD candidate.** It is persisted because the knob is on. A byte gate against a pre-flip baseline will list it under "NEW branches", as doc 58's three scalars were.
+- **One owner tag leaves the rows.** On `039252_16/32`, the owner's `michel` tag on 32007 goes from role 1 to no row: 32007 is now a kOther stop arm, and kOther arms get no rows in production (`publish_other_arms` is off). The same item's 32009 tag enters role 3, so the net on this item is one tag into role 3 and one out of the muon. A re-scan will show 32007 missing. (`p74voff` → `p74vts` point rows: role 1 226 → 219, which is 32007's 7 points; role 2 12 → 0 and role 3 0 → 12, which is 32009.) The owner's own note on this item tags 32007 "per the rubric" and says it "looks more like the fit over-extending through sparse points than electron charge - the real Michel is the 6.8 cm arm 32009". So the tag that leaves is the rubric tag, and the one that enters is the physical Michel.
 
 ## 9. Observations and next
 
