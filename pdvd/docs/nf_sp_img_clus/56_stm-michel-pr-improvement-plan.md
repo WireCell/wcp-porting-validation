@@ -453,7 +453,11 @@ pdvd/74, toolkit `54e6ab99`**: `retreat_tail_strict` in PDVD production -- the
 stop retreat reads the dropped tail past the vertex, michel_found 134/12/24 ->
 136/12/22, is_stm identical; the proposal as written and the sub-live reading
 left OFF); P1b the
-anchor's rise precondition; P5 an STM-only track-fitting file (the 0.6 cm step
+anchor's rise precondition (**built, doc pdvd/75, toolkit `567a7232`**:
+`bragg_anchor_geo_fallback` in PDVD production -- the one-sided precondition is
+backwards on production, the two-sided form recovers all four named stoppers and
+`039349_36/46`, is_stm 225/7/51 -> 230/7/46, 0 new FP, michel_found identical);
+P5 an STM-only track-fitting file (the 0.6 cm step
 itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
 two samples).
 

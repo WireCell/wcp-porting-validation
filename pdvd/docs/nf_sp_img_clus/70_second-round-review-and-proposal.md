@@ -1,5 +1,11 @@
 # 70 — Second-round review of `CheckSTM_Michel`: the owner's four questions, and the next proposal set
 
+**Update 6 (2026-09-10): P1b is built (toolkit `567a7232`) and gated, in its own doc, pdvd/75.**
+- **In PDVD production: `bragg_anchor_geo_fallback`** (rise 1.5). When the 3 cm peak anchor rejects a profile on a shape bit although its own peak is prominent, and the shape tests pass at the geometric origin, the geometric reading stands.
+  - `is_stm` 225 / 7 / 51 → **230 / 7 / 46**: all four of §3.4's targets (`039253_0/44`, `039253_6/85`, `039349_15/23`, `039349_76/75`) and `039349_36/46`. 0 new FP, 0 lost TP; `michel_found`, every stop and every pin identical.
+  - Without the threshold (`p75vfb0`) the same five plus 3 THRU false positives.
+- **Correction to §3.4** (marked in place): doc 65's precondition as written is backwards on production; the working rule is two-sided.
+
 **Update 5 (2026-09-10): P3 is built (toolkit `54e6ab99`) and gated, in its own doc, pdvd/74.**
 - **In PDVD production: `retreat_tail_strict`.** The stop retreat judges the dropped tail on the rows past the vertex.
   - `michel_found` 134 / 12 / 24 → **136 / 12 / 22** (`039252_16/32`, `039349_11/19`).
@@ -432,6 +438,20 @@ items.) Size it offline from the payloads' `profile` before any C++ (the anchor
 is exactly reproducible offline, doc 65 §2.2); build it only if it recovers
 ≥ 2 of the 4 without a new FP.
 
+**Correction (doc pdvd/75, 2026-09-10).** Sized on the bare-production arm
+`p74vprod2`: doc 65's precondition *as written* is backwards. The anchor's 34
+`is_stm` gains have the **less** prominent peaks (anchored peak / plateau p50
+1.22) and the lost stoppers the most prominent (1.7–2.0); "keep the anchor only
+when the peak is prominent" removes it from its own gains and recovers none of
+the four. What happens on the four is that the Bragg rise runs to the fit's last
+row, whose low partial-step dQ/dx pulls the 5-point maximum 2–3 rows back, so
+the anchor discards the top of the rise and the anchored profile reads flat. The
+rule that separates is **two-sided**: keep the anchored verdict, but when it
+rejects on a shape bit, the geometric reading passes, and the anchored peak is
+≥ 1.5 × the plateau, let the geometric reading stand. Built as
+`bragg_anchor_geo_fallback` / `bragg_anchor_rise_min`; **all four recovered,
+plus `039349_36/46`, 0 new FP; PDVD production** (doc 75).
+
 ---
 
 ## 4. Question 3 — Michels the chain did not identify
@@ -632,13 +652,13 @@ association on the next scan.
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | ~~+2 owner-confirmed Michels (59.6°, 132.6°)~~ **+1 at 60°, `039349_48/21` (59.6 < 60)**, 0 of doc 61's 3 THRU re-admitted (17°, 44°, ~~48°~~ **58.7° on bare production**; doc 72 §2) | exact offline | none. **Built and PDVD PRODUCTION (doc 72)**: +1 Michel (`039349_48/21`), nothing else moves; 90° identical |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped; built as `michel_far_len_shower_max_cm`); `michel_kink_window_cm` ~~10~~ **shorter than today's 15 cm: 5 (doc 73 §2)** | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits. **On production (doc 73 §2): one needs a cap above ~66 cm, one is (c)'s, one has no stop arm, one is out under any cap; ~0 `michel_found` TP predicted** | arm; both flags reported | none. **Built and gated, NOT flipped (doc 73)**: 0 judged `michel_found` TP (as predicted). Each sub-knob attaches owner-tagged delta / muon arms; (b) loses `039253_13/73` |
 | **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | ~~4 items (2 cool, 2 hot = named risk)~~ **on production, as written: 1 item, and it is not one of the 4. The cool 2 are retreat cases the retreat's tail reading misses; the hot 2 are not collapses (doc 74 §2)** | arm; 0 new `is_stm` FPs | none. **Built (doc 74). As written it loses an `is_stm` TP. `retreat_tail_strict` is in PDVD production: +2 `michel_found` TP, `is_stm` identical** |
-| **P1b** | anchor rise precondition (doc 65 §5.1) | `:1764-1803` | ≤ 3 stoppers not already inside P1 | offline from `profile` first | — |
+| **P1b** | ~~anchor rise precondition (doc 65 §5.1)~~ **`bragg_anchor_geo_fallback` + `bragg_anchor_rise_min` 1.5: the geometric reading stands when the anchor rejects a prominent peak (doc 75 §2: the one-sided precondition is backwards on production)** | verdict stage, after the KS test | ~~≤ 3 stoppers~~ **offline on `p74vprod2`: +4 of the 4 named + `039349_36/46`, 0 new FP at rise 1.5–1.6; 3 THRU FPs without the threshold** | offline from `profile` first, then one arm | none. **Built, gated and PDVD PRODUCTION (doc 75)**: `is_stm` 225/7/51 → 230/7/46, `michel_found` identical, prediction matched item for item |
 | **P5** | `pr.jsonnet` `stm_trackfitting_config_file` (default = shared file) | `protodunevd/pr.jsonnet:175, :1550, :1695` | none; enables a scoped `dx_norm_length` / step study | compiled-config diff 0 when unset | any step change → new scan |
 
 **Recommended order:** P1 — `smx4` found no cost (§9); built, gated and
 flipped to PDVD production with `topology_clears_sparse` (§10) → P4 (the Michel object's
 completeness; no verdict moves; **done, doc 71, PDVD production**) → P3b + P2 together (the attached gate and
-its vetoes, one arm; **done, docs 72–73: P3b PDVD production, P2 left OFF**) → P3 (**done, doc 74: `retreat_tail_strict` PDVD production**) → P1b → P5 at the owner's discretion. Each is a
+its vetoes, one arm; **done, docs 72–73: P3b PDVD production, P2 left OFF**) → P3 (**done, doc 74: `retreat_tail_strict` PDVD production**) → P1b (**done, doc 75: `bragg_anchor_geo_fallback` PDVD production**) → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
 detectors, every gain and loss by item name, flip only on the owner's rule.
 
@@ -984,3 +1004,4 @@ above about `d71vsp` is corrected in §10.4. Next is P3b + P2, in their own doc.
 *(Update 4: P3b + P2 are done in docs 72 and 73: P3b in PDVD production, P2
 built, gated and left OFF. Next is P3.)*
 *(Update 5: P3 is done in doc 74, with `retreat_tail_strict` in PDVD production. Next is P1b.)*
+*(Update 6: P1b is done in doc 75, with `bragg_anchor_geo_fallback` in PDVD production. Next is P5.)*

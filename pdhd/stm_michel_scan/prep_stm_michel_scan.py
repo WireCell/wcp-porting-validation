@@ -196,6 +196,9 @@ VERDICT_SCALARS = [
     # doc pdvd/74 (P3) -- bit0 the retreat's P3 tail reading changed its answer, bit1
     # the stop moved on a Bragg-confirmed chain.  Exists only with a P3 knob on.
     "stop_move_p3_bits",
+    # doc pdvd/75 (P1b) -- 1 when the geometric reading replaced the anchor's rejection.
+    # Exists only with bragg_anchor_geo_fallback on.
+    "bragg_anchor_fallback",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",
