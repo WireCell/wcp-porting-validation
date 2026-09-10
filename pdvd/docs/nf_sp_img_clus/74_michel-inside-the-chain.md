@@ -275,7 +275,18 @@ Compiled-config proofs (`/home/xqian/tmp/p74/flip/`, `flip_proofs.sh` with `-P`;
 - **OFF path:** both files with the key forced false: 0 lines.
 - **what moved:** pre vs post differ by exactly `"retreat_tail_strict": true`.
 
-PDVD production is therefore what `p74vts` ran. Confirmation arm `p74vprod`: bare flipped production, P74 pin. *(result below)*
+PDVD production is therefore what `p74vts` ran. The bare-production confirmation arm shows it (`/home/xqian/tmp/p74/vprod_check.sh` → `vprod_check.txt`). `p74vprod2` ran the flipped file on the P74 pin with no TLA; its runner rc=1 is the known `039252_11`, which writes no candidate on any arm (`p74vleg` reports the same).
+- **Identical to `p74vts`:**
+  - `mabc-pr.zip` member content 120 / 120;
+  - calib 119 / 119, plus 1 absent on both;
+  - **578 / 578 candidates bit-identical on all 139 branches**;
+  - point rows 578 / 578.
+- **Census:** `is_stm` 225 / 7 / 51, `michel_found` 136 / 12 / 22; `census_score.py --check` 0 of 14.
+- The new baseline prep for later rounds is `/home/xqian/tmp/p74/prep_p74vprod2`.
+
+The first confirmation attempt, `p74vprod`, is not used. The harness stopped it at 116 / 120 ("the system is running low on memory"), with SIGTERM and not a kernel OOM kill; the host had 230 GB available. It was re-run detached (`nohup`) under a fresh label, and the killed arm is left in place, unused.
+
+The stop corrupted nothing that finished. The killed arm's 116 finished events are zip-identical to `p74vts`, 116 / 116. The 4 in flight (`039349_79`, `_81`, `_82`, `_83`) wrote no output at all.
 
 PDHD stays OFF: there is no PDHD hand-scan record.
 

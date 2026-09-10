@@ -396,6 +396,21 @@ function(
         // sheet is unfilled), and CLAUDE.md sec 5.7 forbids flipping what
         // cannot be scored.
         stop_retreat_max: 2,
+        // doc pdvd/74 (P3) -- PDVD PRODUCTION.  The retreat's collapse test reads
+        // only the rows strictly past the vertex it would retreat onto (C++
+        // default false; key absent => the doc 57 reading, byte-identical).
+        // The vertex row is written once per segment and is the kept segment's
+        // end: on an overshoot it carries the Bragg peak and, over a 2-3 cm
+        // segment, set the tail median by itself, so the Michel the fit
+        // carried past the peak stayed inside the chain.  Graded on the
+        // smx1a+smx3+smx4 record (arm p74vts vs p74voff, bare production):
+        // michel_found 134/12/24 -> 136/12/22 (039252_16/32, 039349_11/19),
+        // is_stm identical (225/7/51), owner michel tags in role 3 209 -> 215,
+        // 0 new FP, 0 lost TP, no scan pin further away.  Its siblings stay
+        // off: retreat_tail_sublive (a THRU Michel FP, 039349_23/43) and
+        // michel_collinear_split (a lost is_stm TP, 039349_68/65).  PDHD is
+        // NOT flipped, same reason as the retreat above.
+        retreat_tail_strict: true,
         // doc pdvd/58: the STOP SPLIT (T1c).  The retreat above can only
         // move the stop onto a vertex the chain already has; this instead
         // splits the fit's last chain segment at a fit row (PR::break_segment
