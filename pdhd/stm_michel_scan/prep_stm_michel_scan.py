@@ -180,6 +180,8 @@ VERDICT_SCALARS = [
     # doc pdvd/64 (T6) -- kOther arms: interior (persisted since doc pdvd/48 but
     # never read here), at the stop, and how many got a role-7 row.
     "n_body_other", "n_stop_other", "n_other_published",
+    # doc pdvd/65 (T7) -- the peak-anchored rr origin's shift (0 when off).
+    "bragg_anchor_shift_cm",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",
