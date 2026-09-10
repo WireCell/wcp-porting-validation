@@ -31,7 +31,10 @@
 # change move the scan silently.  Verified with wcsonnet that this reproduces
 # the component config the retired pr.jsonnet stm_survey=true route produced.
 #
-#   SURVEY='-S stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0}'
+#   SURVEY='-S stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0,publish_other_arms:true}'
+#   (doc pdvd/64: publish_other_arms rides with the survey -- rows-only, OFF in
+#   production like the survey itself, ON on every scan arm so the display can
+#   show the chain's kOther arms as role 7.)
 #   ARM=d53v    DET=pdvd SRC=d16vnu JOBS=8 PR_TLA="$SURVEY" ./d53_run_arms.sh
 #   ARM=d53vleg DET=pdvd SRC=d16vnu JOBS=8 ./d53_run_arms.sh
 #   ARM=d53h    DET=pdhd SRC=d16hnu JOBS=8 PR_TLA="$SURVEY" ./d53_run_arms.sh

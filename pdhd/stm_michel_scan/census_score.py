@@ -238,7 +238,7 @@ for k in keys:
         if s is None:
             att["lost (no fitted segment there)"] += 1; att_items[k] += 1; continue
         rl = role.get(str(s["id"]))
-        att[{3: "role 3 michel", 1: "role 1 muon (swallowed)", 2: "role 2 delta", 5: "role 5 gamma", 6: "role 6 survey", None: "no role"}.get(rl, "role %s" % rl)] += 1
+        att[{3: "role 3 michel", 1: "role 1 muon (swallowed)", 2: "role 2 delta", 5: "role 5 gamma", 6: "role 6 survey", 7: "role 7 other", None: "no role"}.get(rl, "role %s" % rl)] += 1   # 7: doc pdvd/64
 tot = sum(att.values())
 for nm, c in att.most_common():
     print("  %-28s %4d  (%.0f%%)" % (nm, c, 100 * c / max(tot, 1)))

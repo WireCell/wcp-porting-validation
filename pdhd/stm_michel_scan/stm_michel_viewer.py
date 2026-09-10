@@ -326,6 +326,11 @@ LAYERS = [
     # because it is the chain saying "I reconstructed this and I do not
     # know what it is", which is not a verdict.
     ("survey",   10.0, 0.95, "#00879e",        "cross",    True,  0.0),
+    # doc pdvd/64: role 7 -- a chain ARM (attached to the muon at an interior
+    # vertex or at the stop) the classifier called neither delta, hadron,
+    # Michel nor continuation.  Different from the survey (companion pieces):
+    # this is charge the chain KNOWS is attached and could not name.
+    ("other",     9.0, 0.95, "#9467bd",        "triangle", True,  0.0),
     ("entry",    16.0, 0.95, "#2ca02c",        "triangle", True,  0.0),
     ("stop",     16.0, 0.95, "#2ca02c",        "inverted_triangle", True, 0.0),
     ("tstop",    16.0, 0.95, "#2ca02c",        "x",        True,  0.0),
@@ -681,12 +686,13 @@ fq.toolbar.active_tap = _tapq
 # a, b are the plotted pair; c the colour field; the rest ride along for the
 # cursor.  ONE column list, so a fill that forgets one fails loudly.
 QCOLS = ["a", "b", "c", "x", "y", "z", "pu", "pv", "pw", "pt"]
-QSCAT = ("muon", "delta", "michel", "dots", "gamma", "survey")
+QSCAT = ("muon", "delta", "michel", "dots", "gamma", "survey", "other")
 SRCQ = {}
 for name, col, sz in (("ref_muon", "#333333", 0), ("ref_electron", "#8c564b", 0),
                       ("muon", "#000000", 6), ("delta", "#ff7f0e", 8),
                       ("michel", "#1f77b4", 9), ("dots", "#d62728", 11),
-                      ("gamma", "#17a55a", 12), ("survey", "#00879e", 12)):
+                      ("gamma", "#17a55a", 12), ("survey", "#00879e", 12),
+                      ("other", "#9467bd", 11)):   # doc pdvd/64
     src = ColumnDataSource(dict(a=[], b=[]) if sz == 0
                            else {k: [] for k in QCOLS}, name="srcq_" + name)
     SRCQ[name] = src
@@ -707,7 +713,8 @@ for name, col, sz in (("ref_muon", "#333333", 0), ("ref_electron", "#8c564b", 0)
         fq.scatter("a", "b", source=src, fill_color=col,
                    marker=("diamond" if name == "dots"
                            else "hex" if name == "gamma"
-                           else "cross" if name == "survey" else "circle"), **common)
+                           else "cross" if name == "survey"
+                           else "triangle" if name == "other" else "circle"), **common)
 fq.line("a", "b", source=ColumnDataSource(dict(a=[], b=[])), color="#e377c2")
 SRCQ["origin"] = ColumnDataSource(dict(a=[], b=[]))
 fq.line("a", "b", source=SRCQ["origin"], color="#e377c2", line_width=2,
@@ -778,6 +785,7 @@ MEAS_TRACKS = [("muon", "#000000", 3.0, False),
                ("dots", "#d62728", 8.0, True),
                ("gamma", "#17a55a", 8.0, True),      # doc pdvd/51
                ("survey", "#00879e", 8.0, True),     # doc pdvd/53
+               ("other", "#9467bd", 7.0, True),      # doc pdvd/64
                # the particle flow, in the space where the charge lives -- which
                # is where "is this branch a real deposit" is answerable
                ("pfvtx", "#8c564b", 9.0, False),
@@ -848,7 +856,7 @@ for pl in PLANES:
                 continue
             rr = f.scatter("w", "t", source=src, size=sz, color=col,
                            marker="circle_cross" if nm == "cursor" else "circle",
-                           line_color="#333333" if nm in ("dots", "gamma", "survey", "cursor") else None,
+                           line_color="#333333" if nm in ("dots", "gamma", "survey", "other", "cursor") else None,
                            fill_alpha=0.85, line_alpha=0.9)
             MEAS_REND.setdefault(nm, []).append(rr)
         f.add_tools(HoverTool(renderers=[r], tooltips=[
@@ -966,7 +974,7 @@ def fill_meas(pay, v, rev, pin=None, reframe=False):
         mw, mt = _wt(pay.get("muon"), pl)
         SRCT[(pl, "muon")].data = dict(w=mw, t=mt)
         if rev:
-            for nm in ("delta", "michel", "dots", "gamma", "survey"):
+            for nm in ("delta", "michel", "dots", "gamma", "survey", "other"):
                 w_, t_ = _wt(v.get(nm), pl)
                 SRCT[(pl, nm)].data = dict(w=w_, t=t_)
         allw = list(ch) + mw
@@ -1560,7 +1568,7 @@ def render(reframe=False):
         "pin": ([px], [py], [pz], {}),
     }
     if rev:
-        for nm in ("delta", "michel", "dots", "gamma", "survey"):
+        for nm in ("delta", "michel", "dots", "gamma", "survey", "other"):
             g = v.get(nm) or dict(x=[], y=[], z=[])
             layers[nm] = (g["x"], g["y"], g["z"], {})
         tf = v.get("tagger_fit") or []
@@ -1983,7 +1991,7 @@ def chain_group(pay, sid):
         return "michel"
     if r == 5:
         return "gamma"
-    if r == 2:
+    if r in (2, 7):        # 7: doc pdvd/64, the chain's own "other" arm
         return "delta / other"
     if r == 6:
         return "unassigned"
@@ -1998,9 +2006,10 @@ def chain_note(pay, sid):
     rj = (pf.get("seg_rej") or {}).get(str(sid))
     if rj:
         return REJ_NAMES.get(int(rj.get("rej", -1)), "rej %s" % rj.get("rej"))
-    if r in (1, 2, 3, 5):
+    if r in (1, 2, 3, 5, 7):
         return {1: "the muon chain", 2: "a delta ray",
-                3: "the Michel object", 5: "a capture gamma"}[r]
+                3: "the Michel object", 5: "a capture gamma",
+                7: "an attached arm the chain could not classify"}[r]
     pt = (((pay or {}).get("verdict") or {}).get("pf_type") or {}).get(str(sid), {})
     if not pt:
         return "not named"
@@ -2439,7 +2448,7 @@ def fill_dqdx(pay, v, px, py, pz, prr, psrc, rev):
     # so every capture gamma has been missing from this panel since it shipped.
     # Reported rather than folded in silently: it is a pre-existing gap, found
     # while adding the layer beside it.
-    for nm in ("delta", "michel", "dots", "gamma", "survey"):
+    for nm in ("delta", "michel", "dots", "gamma", "survey", "other"):
         g = (v.get(nm) if rev else None) or dict(x=[], y=[], z=[], q=[])
         gx = np.asarray(g["x"], float); gy = np.asarray(g["y"], float)
         gz = np.asarray(g["z"], float); gq = np.asarray(g["q"], float)

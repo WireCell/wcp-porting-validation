@@ -177,6 +177,9 @@ VERDICT_SCALARS = [
     "n_kept_near_stop_main", "n_kept_near_stop_comp", "n_local_pieces", "n_michel_range_veto",
     # doc pdvd/63 (T5) -- how many of n_ext were absorb_bragg_stub's.
     "n_stub_absorb",
+    # doc pdvd/64 (T6) -- kOther arms: interior (persisted since doc pdvd/48 but
+    # never read here), at the stop, and how many got a role-7 row.
+    "n_body_other", "n_stop_other", "n_other_published",
     "contrast", "contrast_expected", "plateau_med", "tail_med",
     "n_tail", "n_plateau", "short_track", "ks_mu", "ks_flat",
     "stop_dis", "t0_us", "gid", "chain_coverage", "n_cluster_pts",
@@ -646,7 +649,11 @@ def build_event(det, evtdir, with_tagger_fit=True):
         # near the stop the scanner is asked to group -- 039253_13 cluster 102's
         # gamma is segment 431017 and was already fitted at doc pdvd/51; nothing
         # named it, so nothing drew it.
-        extra = sorted({int(t) for t in p["seg_id"][sel & np.isin(p["role"], (3, 4, 5, 6))]})
+        # doc pdvd/64 (T6): role 2 (delta) was missing from this set through doc
+        # pdvd/63, so every published delta read as "no role" offline (0 of 569
+        # chain_role dicts carried a 2 while 211 items had n_delta > 0); role 7
+        # is the chain's kOther arm, published rows-only when publish_other_arms.
+        extra = sorted({int(t) for t in p["seg_id"][sel & np.isin(p["role"], (2, 3, 4, 5, 6, 7))]})
         pf, pf_types = particle_flow(rc, cid, pf_sc, pf_off, extra_segs=extra)
         pf["chain_segs"] = extra
         # doc pdvd/53: the chain's OWN grouping of every segment it named, and
@@ -688,7 +695,7 @@ def build_event(det, evtdir, with_tagger_fit=True):
         # chain fitted and no stage claimed.  Its own colour, because it is not
         # a verdict -- it is the pile the scanner is asked to sort.
         for role, name in ((2, "delta"), (3, "michel"), (4, "dots"), (5, "gamma"),
-                           (6, "survey")):
+                           (6, "survey"), (7, "other")):   # doc pdvd/64: role 7
             k = sel & (p["role"] == role)
             RX = np.c_[p["x"][k], p["y"][k], p["z"][k]] if k.sum() else None
             r_pu, r_pv, r_pw, r_pt = wire_join(rc_tree, rc, RX)

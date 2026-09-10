@@ -1,12 +1,14 @@
 # 56 — From the 569-item hand scan to a task set for the STM + Michel pattern recognition
 
-**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2, T3 and T5).
-§8's T1a, T1b, T1c, T4, T2, T3 and T5 rows are now executed — see doc pdvd/57
+**Status (2026-09-09, updated overnight after T1a, T1c, T1b, T4, T2, T3, T5 and T6).
+§8's T1a, T1b, T1c, T4, T2, T3, T5 and T6 rows are now executed — see doc pdvd/57
 (T1a: the stop retreat), doc pdvd/58 (T1c: the stop split), doc pdvd/59
 (T1b: the asymmetric kink), doc pdvd/60 (T4: persist the per-plane
 dead-channel flags), doc pdvd/61 (T2: the moved-stop Michel veto, plus §9
 fixes), doc pdvd/62 (T3: the Michel with no trajectory) and doc pdvd/63
-(T5: the fit-end undershoot) for their code, gates and results. All
+(T5: the fit-end undershoot) and doc pdvd/64 (T6: the interior arms as role
+7, rows only, OFF in production like the survey) for their code, gates and
+results. All
 byte-identical gates PASS. Seven knobs (`stop_retreat_max: 2`,
 `stop_split_max: 1`, `stm_kink_asym_enable: true`,
 `moved_stop_michel_guard: true`, `stop_local_michel_pieces: true`,
@@ -49,7 +51,9 @@ asymmetric kink), pdvd/60 (T4 executed: the per-plane dead flags), pdvd/61
 (T3 executed: the disconnected same-cluster Michel piece and the
 range-energy guard; the stop-anchored residual keep measured and left off),
 pdvd/63 (T5 executed: the class-F stubs are fitted `kOther` arms and
-`absorb_bragg_stub` recovers 3 of them).
+`absorb_bragg_stub` recovers 3 of them), pdvd/64 (T6 executed: role 7 for the
+chain's `kOther` arms, the prep's role-2 gap fixed, 33 scan-michel `kOther`
+arms named).
 
 ---
 
@@ -332,7 +336,7 @@ for any arm against the frozen record:
 | failure classes A–L | doc 55 §17 queries, recomputed | A 9, B 125, C 39, D 41, E 32, F 5, G 18, H 20, K 36 |
 | **stop residual** | \|arm stop − scan pin\| over the 36 pins; shape census; sentinel rate per class | median 4.60 cm, within 2 cm **3 of 36**; collapse 51 / 10 / 81; sentinel 29 of 51 |
 | **Michel attachment** | every scan-`michel` segment matched by geometry, its role in the arm | role 3 **180**, no role 85, role 1 (swallowed) 19, survey 8 |
-| **interior arms** | same-cluster no-role segments on scan stoppers | 174 stoppers, 664 segments, 518 > 5 cm |
+| **interior arms** | same-cluster no-role segments on scan stoppers | 174 stoppers, 664 segments, 518 > 5 cm — **inflated (doc pdvd/64 §1): the prep script dropped role 2, so every published delta counted as "no role"; with the fix the same population on `d63a` reads 167 / 520 / 443, and on an arm with `publish_other_arms` on, 155 / 426 / 376** |
 
 `--check` diffs the baseline against doc 55's published literals: **0 of 14
 differ**. The join is by `(event, cluster_id)`, stable for any change downstream
@@ -360,7 +364,7 @@ components (`feedback_shared_component_merge_gating`).
 | **T3** | ✅ **DONE, doc pdvd/62. Knobs `stop_local_michel_pieces: true` and `michel_range_energy_guard: true` are PDVD PRODUCTION.** Three knobs built, two shipped. **T3b** — a fitted piece of the MAIN cluster disconnected from the muon chain (its own two vertices, no edge to a chain segment — what a `pr54`-kept residual is, and what doc 56 §3's "7 arms that pass every gate" turned out to be: they hang off no chain vertex at all, which is why T2b saw no alternate vertex) joins the Michel object under the same radius / length / body gates a companion piece gets. Real arm (`d62b`): 70 pieces on 27 items, `michel_found` TP 118 → 135, **0 lost**, FP 39 → 43 (4 named, all bridged within 2 cm), scan-tagged michel segments with role 3 189 → 225, `is_stm` bit-identical (0 of 566). **T3c** — doc 55 §15.1 as a knob, C++ default at the ARGUED 5 cm (not the best-F1 3 cm row chosen on this same record): 21 FPs removed, 3 named TPs lost (13.5–14.9 cm from the stop at 1–6 MeV), `is_stm` untouched. **Together (`d62bc`, the production bag): TP 118 → 132, FP 39 → 22, FN 34 → 20, F1 0.764 → 0.863.** **T3a** — the stop-anchored `pr54` keep (`stop_local_residual_cm`, `PatternAlgorithms` anchor members, never set by the neutrino path): 46 fires on 40 items; on top of B it adds 2 Michels, costs 5 spurious ones and 1 lost TP, and flips `is_stm` on 3 items (a kept residual changes the PR graph: segment counts, vertex positions, the stop snap) — measured, named, **left OFF**. The probe corrected the framing: 74 of the 363 drops sit within 20 cm of a candidate stop, only 5 class-D items are reachable through the keep, and 14 of B's 17 recoveries needed no keep at all. `pr67 fos` forwarded (log-only) and run: of doc 54 §2.5's 27 no-drop lumps, 18 are single-terminal fragmentation, ≤ 8 are "already covered" | 3 | (scored, see doc 62 §4) | D 34 → **20**, C 39 → **22**, E 32 → 5; role 3 189 → **225** | knobs `stop_local_michel_pieces`, `michel_range_energy_guard` (+ `stop_local_residual_cm` off); off = byte-identical (PDVD 578/578, PDHD 325/325); flip-equivalence + true OFF-path 0 lines; 16 live jobs' compiled config unchanged |
 | **T4** | ✅ **DONE, doc pdvd/60 (writer-only, no knob).** Persist `reg_flag_u/v/w` (per fit point, from `TrackFitting::dQ_dx_fit`'s own already-computed dead-channel flags — confirmed to be the function STM's fit path actually calls, not `dQ_dx_multi_fit`) on `PR::Fit`, the `stm_fit` PC and `T_rec_charge`, both ProtoDUNEs. Every existing branch verified bit-identical (18/18 pre-existing `T_rec_charge` columns spot-checked, plus doc 59's `T_stm_michel` byte-identical gates on the same binary); three new branches added. Measured the dead-plane/Bragg-contrast correlation this was built to answer on 13 candidates: **weak/mixed, not confirmed** — some high-dead-density items flatten, but the flattest item in the sample (`039253_17/77`, q(0-3)=53) has 0% dead coverage in its last 5 cm, and the strongest Bragg rise (`039349_5/54`) also has 0%. Reinforces §5's own aggregate finding rather than overturning it; not tuned to look more conclusive | 1 | the 13 missed stoppers with ≥ 20% dead-band coverage (population re-derived on the current arm; doc 56 named 14 before T1a/T1b/T1c recovered some of them) | per-item dead-plane fraction vs contrast (doc 60 §5's table) | no verdict path; every existing branch byte-identical (verified) |
 | **T5** | ✅ **DONE, doc pdvd/63. Knob `absorb_bragg_stub: true` is PDVD PRODUCTION.** None of the three named owners is the mechanism: the END trimmer is `TrackFitting.cxx:2693` (not `:2609`, the start side) and it is geometric (three-plane `is_good_point` at 0.2 cm); `end_point_limit` cannot move the STM path end (the final `organize_ps_path` passes 0 — it is a last-point-dQ/dx knob); the terminal set does not bound the path end (extreme points are inserted un-charge-tested). The five stubs ARE fitted, as separate `kOther` arms at the stop vertex (hot > `michel_mip_hi`, so neither Michel nor continuation), and the chain ends one segment short — exactly what the existing default-OFF `absorb_bragg_stub` (doc pdhd/03 §6.8) was built for and never scored. Scored on the record vs `d62bc`: fires on 7 items, **3 `is_stm` stoppers recovered** (`039253_0/110`, `039349_64/65`, `039349_66/78` = doc 55's scan 474), 0 new FPs, 0 TPs lost, `michel_found` census identical (no Michel orphaned; `039253_0/110`'s becomes attached), class F 5 → 3. The PDHD `no_bragg` regression does not reproduce on any PDVD item. Left, with their C++ kinks: `039252_5/73` (20.6°, 0.6° over the 20° angle), `039253_13/39` (24.6°, not a terminal), `039349_18/33` (32.9°) — not tuned for | 1, 2 | (scored, see doc 63 §3) | F 5 → **3**; `is_stm` census (547,149,9,119,270,.943,.556) → (547,**152**,9,**116**,270,.944,.567) | knob `absorb_bragg_stub`; off = byte-identical (PDVD 578/578 vs `d62bc`, PDHD 325/325); flip-equivalence + OFF-path 0 lines; PDHD stays OFF (its one recorded case) |
-| **T6** | **interior arms.** Classify the 172 no-role same-cluster segments — 152 attached to the chain interior, 46 of them > 8 cm at median 0.30 MIP (none hadron-hot, so `kOther`); publish `role 7 = other` so display and scan can see them; the over-clustering half goes upstream to `unmerge_assoc` / `protect_bundle` | 4 | `039252_3/74` (11), `039253_12/41`, `039253_17/127`, `039253_2/77`, `039253_8/62` | interior-arm table vs scan tags | payload/display first; no verdict path |
+| **T6** | ✅ **DONE, doc pdvd/64. Knob `publish_other_arms` shipped, rows-only; production stays OFF (the survey's precedent), ON in the scan arms' `SURVEY` TLA.** Two corrections first: interior `kOther` arms were never dropped by C++ (`n_body_other` has been persisted since doc 48 but never read into the payload; stop-vertex `kOther` arms genuinely had nothing), and `prep_stm_michel_scan.py` omitted role 2 from its role set, so every published delta read as "no role" offline (206 items) — fixed; C3 on the same arm 605 → 520 segments, no class count moves. Role 7: `kOther` arms collected during classification, emitted LAST and claiming nothing (282 counted, 278 published — the 4 were interior arms the Michel object had claimed; role-3 rows identical 3568/3568). ON arm vs leg: every verdict branch bit-identical, 0 `is_stm` / `michel_found` flips, 4960 new points on 166 items. The 172 `delta / other` tags resolve into 172 companion SURVEY segments (role 6), 80 role-2 deltas, 45 role-7 arms (33 attached > 8 cm interior, median 0.28 MIP — this row's "46 at 0.30 MIP", now named by the chain), and 42 with no role at all (not arms of any chain vertex). **Lead: 33 scan-tagged MICHEL segments are chain `kOther` arms** — a named list for a future admission round | 4 | (see doc 64 §3) | scan-tag × chain-role table (doc 64 §3.3); role-7 278 segs / 166 items; C2 "no role" 41 → 8 | knob `publish_other_arms`; off = byte-identical (PDVD 578/578 vs `d63a`, PDHD 325/325); ON = rows only (124/124 verdict branches identical) |
 | **T7** | **sampling step and the two shape tests** (analysis; the owner decides). `TrackFitting.cxx:9714`'s pass-3 step now reads the knob (**fixed doc pdvd/61**, §9 item 1 — proven byte-identical, no operating-point change); sweep `low_dis_limit` / `dx_norm_length`; measure the profile autocorrelation length; re-derive `bragg_tail_*`, `compare_range_cm`, `bragg_contrast_min`, `ks_margin` jointly on §4's table; test the peak-anchored `rr` origin; note `stm_recomb_calibrated` is false in production so the Bragg reference and the data are on different charge scales (doc pdhd/16) | 1 | the 57 rise-to-end misses (`039349_2/38`, `039349_29/45`, `039349_27/41`, `039349_3/46`); the 9 FPs (`039349_22/45`, `039349_6/62`) | §4's purity / efficiency table | any operating-point move is the owner's call (§5.1, §5.7) |
 | **T8** | **coiled and unsupported fits** (G 18, H 20): publish `arc/span` over the last 20 cm and `charge_supported` per segment as reject-class inputs | 1 | `039349_48/21` (arc/span 3.41), `039253_6/82` (208 cm at 0.11 plateau) | G, H counts | later; doc pdvd/31/37/40 machinery |
 
@@ -378,7 +382,10 @@ to 0.863 with `is_stm` untouched, the largest single move of the campaign;
 the `pr54` keep itself (T3a) was measured and left off. T5 (doc 63) then
 showed the class-F stubs are fitted `kOther` arms at the stop and that the
 existing `absorb_bragg_stub` knob recovers 3 stoppers at no cost — flipped.
-**Next: T6**, then T7 (§9 item 1 of which is already fixed), T8.
+T6 (doc 64) published the chain's `kOther` arms as role 7 (rows only, OFF in
+production like the survey), fixed the prep's role-2 gap, resolved the 172
+and found 33 scan-michel segments among the chain's `kOther` arms.
+**Next: T7** (§9 item 1 of which is already fixed), then T8.
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
@@ -450,6 +457,16 @@ moved; the scan record is not re-labelled; no C++ is touched.
    `end_point_limit` on the STM path is a last-point-dQ/dx knob (the final
    `organize_ps_path` passes 0). Corrected in §6 above.
 ---
+11. **FIXED, doc pdvd/64.** `prep_stm_michel_scan.py` built `chain_role` from
+   roles (3, 4, 5, 6) only, so role-2 deltas never reached the payload and
+   every offline "no role" count (this doc's §7 C3 664, §8 T6's 152) included
+   them. Role set is now (2, 3, 4, 5, 6, 7); the committed `d53v` payloads
+   are untouched and still reproduce doc 55 (`--check` 0 of 14).
+12. **33 scan-tagged michel segments are chain `kOther` arms (doc pdvd/64
+   §3.3)** — attached to a chain vertex, classified as neither Michel nor
+   continuation nor delta. Visible as role 7 on any arm with
+   `publish_other_arms`; a named list for a future admission round. Not
+   fixed.
 
 ## 10. Gates
 
