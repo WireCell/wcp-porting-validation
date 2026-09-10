@@ -429,6 +429,15 @@ shared with the neutrino chain, so it stays OFF. What remains:
 leads with no code yet (doc 66 §6, doc 68 §5). `stop_local_residual_cm` was
 dropped by the owner. From doc 68 on, the grading record is the merged
 smx1a + smx3 record (`STM_SCAN_RECORD`); docs 56–67 are on smx1a.
+**The next task set is doc pdvd/70 §6** (2026-09-10, the owner's four
+questions): P1 a topology-first verdict — 40 of the 75 missed stoppers already
+carry a found Michel and fail only the shape tests — with a blind `smx4`
+re-judge of 54 items; P4 Michel gamma collection (154 of 165 tagged gamma
+fragments on found-Michel events sit outside the object); P3b/P2/P3 the
+attached-gate and veto fixes for the 12 found-stopper Michel misses; P1b the
+anchor's rise precondition; P5 an STM-only track-fitting file (the 0.6 cm step
+itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
+two samples).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
