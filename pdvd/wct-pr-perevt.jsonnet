@@ -521,6 +521,13 @@ function(
     // through unchanged, so the runners' absolute paths keep working.  '' selects
     // the uBooNE presets.
     trackfitting_config = 'pgrapher/experiment/protodunevd/pdvd_track_fitting.json',  // PDVD (doc 25 sec 7b); SBND: sbnd_track_fitting.json
+    // stm_trackfitting_config (doc pdvd/76, P5): a TrackFitting JSON for the STM side
+    // only (TaggerCheckSTM + CheckSTM_Michel); TaggerCheckNeutrino keeps
+    // trackfitting_config.  null => the shared file, compiled config byte-identical.
+    // -A stm_trackfitting_config=/abs/path.json scopes a sampling study to the STM
+    // chain (doc 68 sec 4's dx_norm_length arm could not be scoped).  Any value that
+    // moves the candidate set needs a new scan; this is a study handle, not a knob.
+    stm_trackfitting_config = null,
     // MIP dQ/dx scale in e/cm handed to TaggerCheckSTM.  56000 = the SBND value
     // (docs/48), matching the *DeDx tables now regenerated at 0.5 kV/cm.  Pass
     // 50000 (the MicroBooNE value, and the C++ default) to isolate the
@@ -4198,6 +4205,7 @@ function(
                              save_in_scope=save_in_scope,
                              pr_bee=pr_bee,
                              trackfitting_config_file=trackfitting_config,
+                             stm_trackfitting_config_file=stm_trackfitting_config,   // doc pdvd/76 (P5); null => the shared file
                              ctpc_aniso_metric=ctpc_aniso_metric,  // doc pdvd/36
                              particle_dataset=pds.particle_dataset,
                              extra_uses=pds.all,

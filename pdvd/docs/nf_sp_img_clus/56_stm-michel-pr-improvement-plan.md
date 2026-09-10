@@ -459,7 +459,10 @@ backwards on production, the two-sided form recovers all four named stoppers and
 `039349_36/46`, is_stm 225/7/51 -> 230/7/46, 0 new FP, michel_found identical);
 P5 an STM-only track-fitting file (the 0.6 cm step
 itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
-two samples).
+two samples; **built, doc pdvd/76**: `pr.jsonnet` `stm_trackfitting_config_file`
++ the perevt TLA `stm_trackfitting_config`, default = the shared file, compiled
+config byte-identical, nothing to flip). **The P1-P5 set is complete**; the
+owner's review of the chain against the record is doc pdvd/77.
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
