@@ -139,7 +139,8 @@ Where the attribution is needed, `p72v2a` / `p72v2b` isolate (a) and (b). **(c) 
 
 - **Rule check:** all 200 stop-arm lines per arm, re-judged by `d72_score.py`'s twin of the classifier using that arm's settings.
   - Every arm has one flagged line: `039349_10/58` arm 58020, printed mip 0.30. `p72v2ab` has one more: `039349_22/63` arm 63005, printed 0.15.
-  - The persisted, unrounded values are 0.3032 and 0.1530. Both lie above their strict thresholds, as the C++ decided; the line prints two decimals. **0 real mismatches.**
+  - The persisted, unrounded values are 0.3032 and 0.1530. Both lie above their strict thresholds, as the C++ decided. **0 real mismatches.**
+  - The cause is the twin's input, not the twin. It reads the DEBUG line, which prints mip with two decimals, so any arm whose mip prints as exactly 0.30 or 0.15 is flagged against a strict `>`. A later round reusing `d72_score.py` will see the same flag on such arms; check the persisted `michel_mip` before reading it as a defect.
 - **The fence:** 19004's `far_full` is **63.68 cm**, against the payload estimate of ~66 cm, so there is no re-entry. On every non-terminal arm whose capped walk was exact, `far_full` equals `far_len`.
 
 ## 7. Result, by sub-knob (census on the 544 judged items)
@@ -155,7 +156,12 @@ Where the attribution is needed, `p72v2a` / `p72v2b` isolate (a) and (b). **(c) 
 
 **The §4 prediction held.** In every column the one `michel_found` TP over production is P3b's `039349_48/21`. No P2 sub-knob adds a judged TP. (a) gives `michel_found` to `039252_13/66`, a MESSY item that is not judged.
 
-- **Recall.** `michel` tags in role 3 go from 209 of 263 (79.5 %) to 211 with (a) or (b) and 214 with both (81.4 %). That is small next to the contamination each brings.
+- **Recall.** `michel` tags in role 3 go from 209 of 263 (79.5 %) to 211 with (a) or (b), and to 214 with both (81.4 %). The sum 209 + 2 + 2 would give 213. The extra one is `039349_22/63`'s arm 63005 (7.54 cm, far subtree 19.16 cm, 0.153 MIP, 69°, shower-flagged), which needs both knobs:
+  - (a) alone lowers the charge floor but keeps the reach test, and 7.54 + 19.16 > 25 cm;
+  - (b) alone relaxes the reach test but keeps the 0.3 MIP floor.
+
+  Either way, the gain is small next to the contamination each knob brings.
+- **Baselines.** `p72voff` is production *before* the P3b flip. Production *after* it is `p72vprod`, bit-identical to `p72vb60` (doc 72 §8). The one `michel_found` TP every P2 column adds over `p72voff` is P3b's. Future rounds grade against `/home/xqian/tmp/p72/prep_p72vprod`.
 - **The lost stopper, `039253_13/73`.** The chain has a bridged Michel object (`conn_type` 2), 9.8 cm and 30.5 MeV. (b) makes arm 73015 (2.38 cm, 59°) the attached seed, so `michel_len` becomes 2.38. P1 needs `michel_len` ≥ 3 cm, so it no longer clears `shape_flat`, and `is_stm` goes 1 → 0. This is the P1 route §4 named.
 - **The object where a sub-knob fires** (`conn_type` 2 → 1 unless noted):
 
