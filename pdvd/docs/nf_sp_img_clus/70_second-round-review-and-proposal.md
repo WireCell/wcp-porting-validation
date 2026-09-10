@@ -11,6 +11,12 @@ over-clustering. At 35 cm:
 - 0.958 of the tagged blobs it takes are gamma or Michel;
 - no pre-existing branch, zip or calib moves.
 
+Then, on the owner's call (X0 = 14 cm, a gamma's conversion length ~18 cm, 3 ×
+18 ≈ 54 cm), the radius is **50 cm** (doc 71 §11). That widens admission.
+Production now reads `is_stm` **225 / 7 / 51**; the three items below move
+the way the record says, and `michel_found` is unchanged. Gamma tags in the
+object reach 104 of 159 at purity 0.933.
+
 **Correction to §10.4:** `d71vsp` ran with the survey, i.e. 60 cm companion
 admission, and production does not. The first bare-production census on the
 record reads `is_stm` **223 / 8 / 53**, not 225 / 7 / 51. Three named items
@@ -573,7 +579,7 @@ association on the next scan.
 | id | knob(s), default OFF | mechanism site | sizing on `d68a3` (merged record) | gate | scan need |
 |---|---|---|---|---|---|
 | **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10); PDVD PRODUCTION with `topology_clears_sparse` (§10.4)**: 197/7/79 → 225/7/51 |
-| **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | **Built, gated and PDVD PRODUCTION at 35 cm (doc 71)**: gamma tags in the object 9 → 75 of 159, purity 0.958, every pre-existing output identical; 60 cm (74.8 %, purity 0.926, widens admission) is the owner's call |
+| **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | **Built, gated and PDVD PRODUCTION (doc 71)**: at 35 cm gamma tags in the object 9 → 75 of 159, purity 0.958, every pre-existing output identical; **radius 50 cm on the owner's call (§11)**: 104 of 159, purity 0.933, `is_stm` 223/8/53 → 225/7/51, three named movers all as the record says |
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | +2 owner-confirmed Michels (59.6°, 132.6°), 0 of doc 61's 3 THRU re-admitted (17°, 44°, 48°) | exact offline | none |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped); `michel_kink_window_cm` 10 | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits | arm; both flags reported | none |
 | **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | 4 items (2 cool, 2 hot = named risk) | arm; 0 new `is_stm` FPs | none |
@@ -902,8 +908,9 @@ bare-production arm (`p4vleg`, the same f66a8b9f binary, the flipped bag) reads
 
 The P1 gain above (+28 / 0 FP) was measured with both arms at 60 cm and stands
 as measured there. Its bare-production size was not measured separately. The
-baseline prep for later rounds is the bare-production `/home/xqian/tmp/p4/prep_p4v35`
-(doc 71).
+baseline prep for later rounds is the bare-production `/home/xqian/tmp/p4/prep_p4v50`
+(doc 71 §11: production with the owner's 50 cm P4 radius, which also brings production
+back to 225 / 7 / 51).
 
 Compiled-config proofs, on the committed file (`/home/xqian/tmp/d71/flip/F_*.json`):
 

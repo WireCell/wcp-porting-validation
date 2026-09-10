@@ -1,7 +1,20 @@
 # 71 — P4: the Michel's isolated gamma blobs (`michel_gamma_collect`)
 
+**Update (2026-09-10, §11): on the owner's call the radius is 50 cm in PDVD
+production.** The argument: X0 = 14 cm, a gamma's conversion length ~18 cm, and
+three of them ~54 cm. The bare-production arm at 50 cm reads `is_stm`
+**225 / 7 / 51** (purity 0.970, efficiency 0.815) against 223 / 8 / 53 at 35 cm.
+Exactly three verdicts move, all the way the owner's record says
+(`039253_10/93` THRU 1 → 0; `039349_64/24`, `039349_64/61` stoppers 0 → 1), and
+`michel_found` is unchanged. The owner's gamma tags inside the Michel object
+reach **104 of 159** (65.4 %) at purity 0.933. The same three over-clustered
+cores are the only Michels above 60 MeV, and they gain nothing. The C++ matches
+its offline twins with 0 mismatches. The widening moves 107 of 578 candidates'
+fits (doc 53's preload perturbation) and `mabc-pr.zip` on 91 of 120 events.
+
 **Status (2026-09-10): built behind a default-OFF knob, gated, and switched on
-in PDVD production at 35 cm (§9). PDHD stays OFF.**
+in PDVD production at 35 cm (§9); the radius then became 50 cm (§11). PDHD
+stays OFF.**
 
 All seven pre-stated criteria (§4) hold.
 - **Knob off** is byte-identical on both detectors.
@@ -58,6 +71,10 @@ cp -a /nfs/data/1/xqian/toolkit-dev/local/lib /home/xqian/tmp/p4/libpin_p4      
 # sec 5-6: six arms on two pins, bare production config, then every gate and the grading
 pdvd/docs/nf_sp_img_clus/scripts/d71_p4_arms.sh     # p4vleg p4hleg (P1 pin) | p4voff p4hoff (P4, off) | p4v35 p4v60 (P4 on)
 pdvd/docs/nf_sp_img_clus/scripts/d71_p4_gates.sh | tee /home/xqian/tmp/p4/gates.log
+
+# sec 11: the owner's 50 cm radius -- AFTER the jsonnet carries michel_gamma_radius_cm: 50.0,
+# one bare-production arm (p4v50) on the P4 pin, then prep, census, movers and grading
+JOBS=24 pdvd/docs/nf_sp_img_clus/scripts/d71_p4_r50.sh > /home/xqian/tmp/p4/r50.log 2>&1
 ```
 
 ---
@@ -404,3 +421,113 @@ no hand-scan record.
   operating points and the T2c exemption for a hard-turning Michel. The
   `topology_michel_ke_max` cap of doc 70 §10.3 stays open; §7's energy table
   shows the same three over-clustered cores are the only Michels above 60 MeV.
+
+---
+
+## 11. The owner's 50 cm radius (2026-09-10)
+
+The owner, after reading §8: "The radiation length is 14 cm, for gamma, it
+would be 18 cm, so 3-sigma stel would be 54 cm. I feel we should have a radius
+cut at 50 cm, can you do that? commit and push. Turn it on".
+
+The argument, in numbers:
+- X0 = 14 cm in liquid argon.
+- A gamma's mean free path to pair conversion is 9/7 X0 ≈ 18 cm.
+- By three conversion lengths (≈ 54 cm), 1 − e⁻³ = 95 % of the gammas have converted.
+
+Past that, a blob is more likely unrelated than the Michel's. The cut is
+50 cm. This is the owner's decision, so §4's criteria do not gate it. The arm
+below grades it by name.
+
+**The change.** It is config only; the C++ is `d227d5b8`, unchanged. One key
+goes in the PDVD `stm_michel_knobs` bag, after `michel_gamma_collect`, with the
+argument in its comment:
+
+```jsonnet
+        michel_gamma_radius_cm: 50.0,
+```
+
+Past the 35 cm capture-gamma radius, this key **widens companion admission** to
+50 cm. The added companions enter the candidate's fit through `preload_clusters`
+(doc 53 §6.2), so, unlike the 35 cm flip, pre-existing outputs and verdicts can
+move. The capture-gamma ring (35 cm) and the Michel piece radius (15 cm) keep
+their own tests.
+
+Compiled-config proofs on the committed file (`/home/xqian/tmp/p4/r50/`):
+* **flip-equivalence:** the pre-change file plus `-S stm_michel_extra={michel_gamma_radius_cm:50.0}`
+  (`pre_B`) against the new file (`post_A`): **0 lines**.
+* **what moved:** pre-change (`pre_A`) against new: exactly `+ "michel_gamma_radius_cm": 50`.
+* **P4 forced off:** both files with `michel_gamma_collect:false` differ only by
+  that key. The key is inert there: the C++ reads it only inside the
+  `michel_gamma_collect` ternary of the admission radius and in the
+  collect-gated phase 1.
+
+The file was edited with no PDVD job of this tree in flight. The arm below
+(`p4v50`, P4 pin `1af886223e13`, **no TLA**) was launched after the edit and
+therefore is production.
+
+### 11.1 What 50 cm does — arm `p4v50`, which is production
+
+Outputs: `/home/xqian/tmp/p4/r50.log`, `g_v50.txt`, `score_p4v50.txt`,
+`score_p4_r50.txt` / `.json`; prep `/home/xqian/tmp/p4/prep_p4v50`.
+
+* **The arm:** 120 / 120 events, 0 loader deaths, pin `1af886223e13` before and
+  after. As on every arm, the runner's one "incomplete" event is the
+  no-candidate `039252_11`.
+* **What the widening moves** (against `p4v35`, production at 35 cm):
+  - `mabc-pr.zip` differs on 91 of 120 events.
+  - 471 of 578 candidates are bit-identical on all 137 branches. 107 move, on
+    the muon profile quantities (`ks_*`, `contrast`, `plateau_med`,
+    `muon_ke_*`) as well as the P4 branches. This is doc 53's preload
+    perturbation, about 18 % of candidates.
+* **Verdicts, by name, against the record:**
+
+| item | record | `is_stm` 35 cm → 50 cm |
+|---|---|---|
+| `039253_10/93` | THRU (medium) | 1 → **0** (a false positive removed) |
+| `039349_64/24` | STM_MICHEL (medium) | 0 → **1** |
+| `039349_64/61` | STM_ONLY (medium) | 0 → **1** (doc 53's "scan before trusting 60 cm" flip) |
+
+  These are exactly the three items §7's correction named, and all three move
+  the way the record says. `michel_found` moves on none. `039349_42/41` (MESSY)
+  joins the payload population. From 50 to 60 cm no verdict moves at all.
+
+| arm | radius | `is_stm` TP / FP / FN | purity | efficiency | F1 | `michel_found` |
+|---|---|---|---:|---:|---:|---|
+| `p4v35` | 35 cm | 223 / 8 / 53 | 0.965 | 0.808 | 0.880 | 133 / 12 / 25 |
+| **`p4v50` (production)** | **50 cm** | **225 / 7 / 51** | **0.970** | **0.815** | **0.886** | 133 / 12 / 25 |
+| `p4v60` | 60 cm | 225 / 7 / 51 | 0.970 | 0.815 | 0.886 | 133 / 12 / 25 |
+
+Production and the survey arms every census since doc 68 was graded on
+(60 cm admission) now agree on every verdict.
+
+* **Recall:** the owner's gamma tags inside the Michel object.
+
+| radius | role 3 | role 4 | in the object |
+|---|---:|---:|---:|
+| off | 9 | 0 | 5.7 % |
+| 35 cm | 9 | 66 | 47.2 % |
+| **50 cm** | 9 | **95** | **65.4 %** (104 / 159) |
+| 60 cm | 9 | 110 | 74.8 % |
+
+  - 59 items gain gamma tags in the object and none loses one.
+  - All 29 tags that 50 cm adds over 35 cm lie 35–50 cm from the final stop.
+* **Purity:** 124 role-4 segments: 97 gamma, 1 michel, 7 delta / other, and 19
+  on items the record does not judge (unmeasured). That is 98 / 105 = **0.933**.
+  - The four delta / other blobs beyond 35 cm: `039253_15/45` 148030,
+    `039349_48/54` 211011, and `039349_61/51` 97008 and 178009.
+  - Items without a Michel where P4 fires: `039252_12/90` (STM_ONLY, detached
+    dots, 1 segment) joins `039252_16/98` and `039349_81/51`.
+* **Energy:** 69 Michels carry ≥ 1 blob (122 blobs); 3 blobs are refused by
+  the 60 MeV guard.
+  - Totals above 52.8 MeV: 8, against 3 cores.
+  - Above 60 MeV: the same 3 over-clustered cores, which gain nothing.
+  - Largest additions: `039349_51/24` +24.1 → 44.3, `039349_42/41` (MESSY)
+    +19.1 → 59.6, `039253_3/29` +18.8 → 39.4 MeV.
+* **Rule check:** 304 blob lines on 119 candidates, gate codes {0: 152, 1: 6,
+  2: 4, 3: 121, 4: 20, 5: 1}. **0 gate and 0 take mismatches.** The taken blobs
+  re-derive from the payload to ≤ 0.0106 cm.
+* `census_score.py --check`: 0 of 14 differ.
+
+**Baseline prep for later rounds:** `/home/xqian/tmp/p4/prep_p4v50`, which is
+PDVD production.

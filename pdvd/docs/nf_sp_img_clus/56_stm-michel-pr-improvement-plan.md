@@ -440,9 +440,10 @@ in bare production (doc 71 §7); grade on
 `pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json`
 from here on); P4 Michel gamma collection (154 of 165 tagged gamma
 fragments on found-Michel events sat outside the object) -- **built, gated and
-in PDVD production at 35 cm, doc pdvd/71** (`michel_gamma_collect`: gamma tags
-in the object 9 -> 75 of 159, purity 0.958, no pre-existing output moved; from
-P4 on each proposal has its own doc); P3b/P2/P3 the
+in PDVD production, doc pdvd/71** (`michel_gamma_collect`: at 35 cm gamma tags
+in the object 9 -> 75 of 159, purity 0.958, no pre-existing output moved; then
+the owner's 50 cm radius, doc 71 §11: 104 of 159, purity 0.933, production
+is_stm 225/7/51; from P4 on each proposal has its own doc); P3b/P2/P3 the
 attached-gate and veto fixes for the 12 found-stopper Michel misses; P1b the
 anchor's rise precondition; P5 an STM-only track-fitting file (the 0.6 cm step
 itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
