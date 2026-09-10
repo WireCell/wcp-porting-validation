@@ -448,7 +448,11 @@ attached-gate and veto fixes for the 12 found-stopper Michel misses (P3b and P2
 **built, docs pdvd/72 and pdvd/73, toolkit `299d8bc4`**: P3b
 `moved_stop_michel_kink_min` 60 in PDVD production, michel_found 133/12/25 ->
 134/12/24, nothing else moved; P2 gated and left OFF -- each sub-knob attaches
-owner-tagged non-Michel arms and none adds a judged Michel); P1b the
+owner-tagged non-Michel arms and none adds a judged Michel; P3 **built, doc
+pdvd/74, toolkit `54e6ab99`**: `retreat_tail_strict` in PDVD production -- the
+stop retreat reads the dropped tail past the vertex, michel_found 134/12/24 ->
+136/12/22, is_stm identical; the proposal as written and the sub-live reading
+left OFF); P1b the
 anchor's rise precondition; P5 an STM-only track-fitting file (the 0.6 cm step
 itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
 two samples).

@@ -1,5 +1,13 @@
 # 70 — Second-round review of `CheckSTM_Michel`: the owner's four questions, and the next proposal set
 
+**Update 5 (2026-09-10): P3 is built (toolkit `54e6ab99`) and gated, in its own doc, pdvd/74.**
+- **In PDVD production: `retreat_tail_strict`.** The stop retreat judges the dropped tail on the rows past the vertex.
+  - `michel_found` 134 / 12 / 24 → **136 / 12 / 22** (`039252_16/32`, `039349_11/19`).
+  - `is_stm` identical (225 / 7 / 51); the owner's `michel` tags in role 3 go 209 → 215.
+- **Off: `michel_collinear_split`** (P3 as written here). It fires on one production item and loses that item's `is_stm` TP (`039349_68/65`).
+- **Off: `retreat_tail_sublive`.** It adds `039253_3/61` but makes a through-going Michel false positive (`039349_23/43`).
+- **Correction to §4.2 P3** (marked in place): its premise does not hold on production.
+
 **Update 4 (2026-09-10): P3b and P2 are built (toolkit `299d8bc4`) and gated, each in its own doc: pdvd/72 (P3b) and pdvd/73 (P2).**
 
 **P3b is in PDVD production** (`moved_stop_michel_kink_min: 60.0`, doc 72):
@@ -494,6 +502,15 @@ at 1.35–1.47 MIP over 4–7 cm) may be Bragg tail rather than Michel and are t
 named risk. Gate: `is_stm` 0 new FPs (a split can only move a found stopper's
 stop backwards; `michel_guards_stop` then decides).
 
+*Corrected 2026-09-10 (doc 74 §2), re-measured on bare production (`p72vprod`):*
+- **The premise does not hold.** Neither cool item is Bragg-confirmed at the chain walk's geometric origin, because the tail window reads the collapse. Their verdict passes only through T7's peak anchor. So T1a and T1c were eligible and failed their own tests.
+- **Doc 70's P3 as written fires on one production candidate:** `039349_68/65`, STM_ONLY.
+- **The cool Michels are whole last chain segments ending at a vertex.** That makes them a retreat case, not a split. The retreat's collapse test misses them for two reasons:
+  - its tail includes the vertex row, which carries the Bragg peak;
+  - the live floor drops the 0.1–0.2 MIP collapse as dead cells.
+- **The hot items are not collapses:** `039349_60/40` reads 1.03 × plateau, and `039349_64/65` is the absorbed Bragg stub. Both are out of reach.
+- Doc 74 builds both: the literal proposal, and the retreat's tail reading.
+
 **P3b — a turn exemption for the moved-stop veto.** T2c (`:2701-2706`) skips
 when the attached arm turns hard: `moved_stop_michel_kink_min` 60°. Checked
 on the arm's own DEBUG lines: the two owner-confirmed Michels it demotes turn
@@ -614,14 +631,14 @@ association on the next scan.
 | **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | **Built, gated and PDVD PRODUCTION (doc 71)**: at 35 cm gamma tags in the object 9 → 75 of 159, purity 0.958, every pre-existing output identical; **radius 50 cm on the owner's call (§11)**: 104 of 159, purity 0.933, `is_stm` 223/8/53 → 225/7/51, three named movers all as the record says |
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | ~~+2 owner-confirmed Michels (59.6°, 132.6°)~~ **+1 at 60°, `039349_48/21` (59.6 < 60)**, 0 of doc 61's 3 THRU re-admitted (17°, 44°, ~~48°~~ **58.7° on bare production**; doc 72 §2) | exact offline | none. **Built and PDVD PRODUCTION (doc 72)**: +1 Michel (`039349_48/21`), nothing else moves; 90° identical |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped; built as `michel_far_len_shower_max_cm`); `michel_kink_window_cm` ~~10~~ **shorter than today's 15 cm: 5 (doc 73 §2)** | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits. **On production (doc 73 §2): one needs a cap above ~66 cm, one is (c)'s, one has no stop arm, one is out under any cap; ~0 `michel_found` TP predicted** | arm; both flags reported | none. **Built and gated, NOT flipped (doc 73)**: 0 judged `michel_found` TP (as predicted). Each sub-knob attaches owner-tagged delta / muon arms; (b) loses `039253_13/73` |
-| **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | 4 items (2 cool, 2 hot = named risk) | arm; 0 new `is_stm` FPs | none |
+| **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | ~~4 items (2 cool, 2 hot = named risk)~~ **on production, as written: 1 item, and it is not one of the 4. The cool 2 are retreat cases the retreat's tail reading misses; the hot 2 are not collapses (doc 74 §2)** | arm; 0 new `is_stm` FPs | none. **Built (doc 74). As written it loses an `is_stm` TP. `retreat_tail_strict` is in PDVD production: +2 `michel_found` TP, `is_stm` identical** |
 | **P1b** | anchor rise precondition (doc 65 §5.1) | `:1764-1803` | ≤ 3 stoppers not already inside P1 | offline from `profile` first | — |
 | **P5** | `pr.jsonnet` `stm_trackfitting_config_file` (default = shared file) | `protodunevd/pr.jsonnet:175, :1550, :1695` | none; enables a scoped `dx_norm_length` / step study | compiled-config diff 0 when unset | any step change → new scan |
 
 **Recommended order:** P1 — `smx4` found no cost (§9); built, gated and
 flipped to PDVD production with `topology_clears_sparse` (§10) → P4 (the Michel object's
 completeness; no verdict moves; **done, doc 71, PDVD production**) → P3b + P2 together (the attached gate and
-its vetoes, one arm; **done, docs 72–73: P3b PDVD production, P2 left OFF**) → P3 → P1b → P5 at the owner's discretion. Each is a
+its vetoes, one arm; **done, docs 72–73: P3b PDVD production, P2 left OFF**) → P3 (**done, doc 74: `retreat_tail_strict` PDVD production**) → P1b → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
 detectors, every gain and loss by item name, flip only on the owner's rule.
 
@@ -966,3 +983,4 @@ produces). The `topology_michel_ke_max` cap of §10.3 stays an open option.
 above about `d71vsp` is corrected in §10.4. Next is P3b + P2, in their own doc.
 *(Update 4: P3b + P2 are done in docs 72 and 73: P3b in PDVD production, P2
 built, gated and left OFF. Next is P3.)*
+*(Update 5: P3 is done in doc 74, with `retreat_tail_strict` in PDVD production. Next is P1b.)*
