@@ -290,6 +290,19 @@ function(
         // dilution the 3 cm window lands on.  PDHD stays OFF.
         bragg_peak_anchor: true,
         bragg_peak_search_cm: 3.0,
+        // doc pdvd/75 (P1b): the anchor's other side.  On a Bragg rise that runs to
+        // the fit's last row the low partial-step end row pulls the running-mean
+        // maximum 2-3 rows back and the anchor discards the top of the rise, so the
+        // anchored profile reads flat.  When the anchor fired, rejected on a shape
+        // bit, and its own peak is at least bragg_anchor_rise_min (C++ default 1.5)
+        // x the anchored plateau, the shape tests are re-read at the geometric
+        // origin and a clean reading stands.  Recovers four of doc 68's seven lost
+        // stoppers (039253_0/44, 039253_6/85, 039349_15/23, 039349_76/75) and
+        // 039349_36/46; 0 new FP, michel_found identical.  The 1.5 sits in the
+        // 1.47-1.68 gap between the three THRU items the anchor removed and the
+        // recovered stoppers, found on this record (doc 75 sec 2.3).  C++ default
+        // false.  PDHD stays OFF.
+        bragg_anchor_geo_fallback: true,
         // doc pdvd/70 (P1): topology-first stop evidence -- the owner's rule that a
         // Michel at the end is by itself strong evidence of a stop, while the dQ/dx
         // rise counts only when it genuinely matches a Bragg peak.  A Michel object
