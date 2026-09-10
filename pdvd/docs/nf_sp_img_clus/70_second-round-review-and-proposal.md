@@ -1,7 +1,29 @@
 # 70 — Second-round review of `CheckSTM_Michel`: the owner's four questions, and the next proposal set
 
-**Status (2026-09-10). Review and proposal only — no C++, no config, no label
-touched.** After the doc 56–68 campaign (11 T-series flips in the 25-key
+**Update 2 (2026-09-10, §10): P1 is built and gated, knob default OFF
+(toolkit `f66a8b9f`).** Knob off: byte-identical on PDVD (120 events) and
+PDHD (61) against the merged binary. Knob on: the C++ matches the offline
+rule item for item, `is_stm` 197 / 7 / 79 → **221 / 7 / 55**, `michel_found`
+identical. The one-line PDVD production flip is prepared and proven (§10.4)
+and **waits for the owner's go**, with `topology_clears_sparse` (+4 / 0) as
+the owner's second decision.
+
+**Update (2026-09-10, after the owner's `smx4` scan, §9): P1 is cleared for
+implementation.** The owner judged, blind to P1, all 54 Michel-carrying items
+production rejects. At the argued point (10 MeV / 3 cm) P1 fires on 25 of them:
+**24 are stoppers, 0 through-going, 1 MESSY**. On the grading record with the
+owner's verdicts folded in (`pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json`),
+`is_stm` goes 197 / 7 / 79 → **221 / 7 / 55** (purity 0.966 → 0.969, efficiency
+0.714 → 0.801, F1 0.821 → 0.877). All three record-THRU items P1 admits are
+stoppers; 8 of the 13 record-THRU items the owner judged are. **Correction to
+§3.3:** its first table counted 5 items that keep a reject bit P1 does not clear
+(`profile_sparse` ×4, `continuation` ×1). The exact first sizing was +22 TP /
++3 FP, not +26 / +4, and its "F1 0.807 → 0.88" compared a union baseline with a
+payload result. §3.3 now carries the exact numbers; §9.5 is the implementation
+plan.
+
+**Status (2026-09-10). Review and proposal — no C++, no config touched; the
+owner's `smx4` labels and a new merged record were added in §9.** After the doc 56–68 campaign (11 T-series flips in the 25-key
 `stm_michel_knobs` bag; `is_stm` 144 / 9 / 125 → 197 / 7 / 87, `michel_found`
 F1 0.735 → 0.863) and the owner's `smx3` scan, the owner asked four questions:
 (1) is the 0.6 cm trajectory step right for PDVD's strip pitch; (2) the stop
@@ -19,9 +41,11 @@ production still misses, **40 already carry a Michel the chain found and
 attached at the stop** — the stopper was then rejected on the dQ/dx shape
 tests alone. The verdict has 18 reject sites and not one topology test, while
 the scan rubric (doc 55) says "a Michel topology is sufficient on its own". A
-topology-first verdict recovers 26 of the 40 for 4 possible false positives at
-the argued operating point (F1 0.807 → ~0.88), and those 4 plus 10 more are a
-blind re-judge for the owner, not a tuning question.
+topology-first verdict recovers 22 of the 40 for 3 possible false positives at
+the argued operating point (F1 0.828 → 0.874 on the payload population;
+corrected from "26 for 4, F1 0.807 → ~0.88", §3.3), and those 3 plus 11 more
+were a blind re-judge for the owner, not a tuning question. The owner found no
+false positive among them (§9).
 
 Companion docs: pdvd/56 (the task set), 62–66 (T3–T8), 67–68 (the owner's
 operating points and scan), 54 (the two stop defects), 65 §3–§4 (sampling),
@@ -42,10 +66,37 @@ python3 pdhd/stm_michel_scan/census_score.py --prep /home/xqian/tmp/d68/prep_d68
 # every table in sec 3-5: the four is_stm cells split by michel_found, the P1 grid, the
 # 12 found-stopper Michel misses with the classifier's own per-arm line, the gamma-tag roles
 python3 pdvd/docs/nf_sp_img_clus/scripts/d70_sizing.py --prep /home/xqian/tmp/d68/prep_d68a3 \
-        --arm d68a3 --out /home/xqian/tmp/d70                       # -> /home/xqian/tmp/d70/sizing.txt
+        --arm d68a3 --out /home/xqian/tmp/d70r2                     # -> /home/xqian/tmp/d70r2/sizing.txt
+# (first version, before the P1 gate's residual-bit test: /home/xqian/tmp/d70/sizing.txt)
 
 # the record is untouched
 python3 pdhd/stm_michel_scan/census_score.py --check                # "0 of 14 differ"
+
+# sec 9: P1's blind re-judge smx4 -- built, served on :5017, scored
+python3 pdvd/docs/nf_sp_img_clus/scripts/d70_build_smx4.py --cells /home/xqian/tmp/d70/d70_cells.json \
+        --prep /home/xqian/tmp/d68/prep_d68a3 --outprep pdhd/stm_michel_scan/prep-pdvd-smx4 \
+        --sheet pdvd/docs/scan/pdvd_stm_michel_smx4_sheet.tsv \
+        --questions pdvd/docs/scan/pdvd_stm_michel_smx4_questions.json \
+        --key pdvd/docs/scan/pdvd_stm_michel_smx4_key.tsv          # refuses to rebuild an existing set
+(cd pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdvd --scan-tag smx4 \
+        --manifest $PWD/../../pdvd/docs/scan/pdvd_stm_michel_smx4_sheet.tsv --prepdir $PWD/prep-pdvd-smx4 \
+        --questions $PWD/../../pdvd/docs/scan/pdvd_stm_michel_smx4_questions.json)
+cp -p pdvd/work/stm_michel_labels/smx4/labels.json pdvd/docs/scan/pdvd_stm_michel_smx4_labels.json
+python3 pdvd/docs/nf_sp_img_clus/scripts/d70_score_smx4.py --labels pdvd/docs/scan/pdvd_stm_michel_smx4_labels.json \
+        --key pdvd/docs/scan/pdvd_stm_michel_smx4_key.tsv --prep /home/xqian/tmp/d68/prep_d68a3 \
+        --write-merged pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json   # -> /home/xqian/tmp/d70/score_smx4.txt
+STM_SCAN_RECORD=$PWD/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json \
+    python3 pdhd/stm_michel_scan/census_score.py --prep /home/xqian/tmp/d68/prep_d68a3 --arm d68a3 \
+        --baseline /home/xqian/tmp/d67/prep_d67v                    # -> /home/xqian/tmp/d70/score_merged4_d68a3.txt
+
+# sec 10: P1 built (toolkit f66a8b9f) and gated.  Two pins, both full copies of local/lib:
+#   /home/xqian/tmp/d71/libpin_base = the merged 98140fee build (libWireCellClus e5cd0364be81)
+#   /home/xqian/tmp/d71/libpin_p1   = f66a8b9f                  (libWireCellClus 0d7027b23351)
+(cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild; wcbuild; ./build/clus/wcdoctest-clus)   # 360/360
+#   (the first wcbuild fails to link the doctest against the OLD installed lib -- the
+#    new-symbol trap; the library itself installs, and the second pass links)
+pdvd/docs/nf_sp_img_clus/scripts/d70_p1_arms.sh    # d71vleg d71hleg (base) | d71voff d71hoff (P1, off) | d71vp1 d71vsp (P1 on)
+pdvd/docs/nf_sp_img_clus/scripts/d70_p1_gates.sh   # -> /home/xqian/tmp/d71/gates.log: OFF gates, prep, rule check, census
 ```
 
 The arm's per-event logs (`pdvd/work/<evt>_d68a3/wct_pr_<evt>.log`) carry the
@@ -87,7 +138,9 @@ judged items have a payload on `d68a3`):
 | `michel_found` | 132 | 17 | 25 | 374 | 0.886 | 0.841 |
 
 On the 580-item union (an item with no candidate counts as 0) the FN columns
-read 87 and 32 — same arm, larger denominator (doc 68 §3). Failure classes:
+read 87 and 32 — same arm, larger denominator (doc 68 §3). (§9.3 updates
+these on the record with the owner's `smx4` verdicts: `is_stm` 197 / 7 / 79,
+`michel_found` 133 / 12 / 25.) Failure classes:
 A 7, B 75, C 17, D 25, F 3, G 15, H 20, K 34, L_plateau 46, L_sparse 26. The
 C1 stop table says where the 75 missed stoppers sit: collapse 24 / rise 35 /
 flat 16 by shape; sentinel 35 / kink 40 by anchor.
@@ -259,7 +312,7 @@ the Michel-carrying through-goers are mostly sub-3 cm, sub-7 MeV objects.
 **Rule.** After `michel_found` is derived (`:2728`) and before `is_stm`
 (`:2790`): if the candidate carries a Michel of sufficient quality —
 `michel_conn_type ∈ {1, 2}`, `michel_ke_best ≥ topology_michel_ke_min`,
-`michel_len ≥ topology_michel_len_min`, and the stop is inside the fiducial
+`michel_len ≥ topology_michel_len_min_cm`, and the stop is inside the fiducial
 inset — clear **`R_NO_BRAGG` and `R_SHAPE_FLAT` only**. Every other bit stays:
 `plateau_off_mip`, `profile_sparse`, `continuation`, `vertex_hadron`,
 `stop_near_boundary`, `cluster_not_track`, `stop_into_dead`, `not_muon_pid`,
@@ -270,38 +323,47 @@ default OFF; `michel_found` is bit-identical by construction (the rule reads
 it, never writes it); `is_stm` moves only 0 → 1.
 
 **Sizing** (exact offline re-verdict — both bits are single-consumer, doc 67
-confirmed that route item for item on real arms):
+confirmed that route item for item on real arms — and an item that keeps any
+other reject bit stays rejected). *Corrected 2026-09-10:* the first version of
+this table left out that last test and counted five items P1 cannot move:
+`039252_3/45`, `039349_41/51`, `039349_61/21`, `039349_82/54` (`profile_sparse`)
+and `039349_5/65` (`continuation`). At the argued point it read +26 / +4. Exact,
+on the doc 68 record (`d70_sizing.py` §B, payload population, 548 items):
 
 | KE ≥ (MeV) | len ≥ (cm) | FN → TP | TN → FP | `is_stm` TP / FP | purity | efficiency |
 |---:|---:|---:|---:|---|---:|---:|
-| 5 | 0 | 35 | 7 | 232 / 14 | 0.943 | 0.853 |
-| 5 | 3 | 28 | 4 | 225 / 11 | 0.953 | 0.827 |
-| 8 | 3 | 26 | 4 | 223 / 11 | 0.953 | 0.820 |
-| **10** | **3** | **26** | **4** | **223 / 11** | **0.953** | **0.820** |
-| 12 | 3 | 23 | 4 | 220 / 11 | 0.952 | 0.809 |
-| 15 | 3 | 20 | 3 | 217 / 10 | 0.956 | 0.798 |
+| 5 | 0 | 29 | 5 | 226 / 12 | 0.950 | 0.831 |
+| 5 | 3 | 24 | 3 | 221 / 10 | 0.957 | 0.812 |
+| 8 | 3 | 22 | 3 | 219 / 10 | 0.956 | 0.805 |
+| **10** | **3** | **22** | **3** | **219 / 10** | **0.956** | **0.805** |
+| 12 | 3 | 20 | 3 | 217 / 10 | 0.956 | 0.798 |
+| 15 | 3 | 17 | 2 | 214 / 9 | 0.960 | 0.787 |
 
-Today: 197 / 7, purity 0.966, efficiency 0.724, F1 0.807. At the argued point
-(10 MeV = the T2c/T3c floor already in the bag, 3 cm = the range-energy
-distance) F1 is 0.88. Purity falls from 0.966 to 0.953 **if all four admitted
-THRU items are really THRU** — and that is the question, not a tuning knob:
+Today: 197 / 7, purity 0.966, efficiency 0.724, F1 0.828 on this payload
+population (0.807 on the 580-item union, where an item with no candidate counts
+as 0; the first version of this paragraph compared the two). At the argued
+point (10 MeV = the T2c/T3c floor already in the bag, 3 cm = the range-energy
+distance) F1 is 0.874 (union 0.854). Purity falls from 0.966 to 0.956 **if the
+three admitted THRU items are really THRU** — and that was the question, not a
+tuning knob:
 
-* admitted: `039252_3/45` (smx1a **low** confidence, 24.8 MeV, 8.1 cm),
-  `039349_39/56` (medium, 29.0 MeV, 7.9 cm), `039349_45/25` (FRAG_THRU, medium,
-  27.2 MeV, 8.4 cm), `039349_81/51` (medium, 12.9 MeV, 4.8 cm, `conn_type` 2).
-  None was in the owner's `smx3` re-judge; three Michel-carrying "THRU" items
-  in that re-judge turned out to be stoppers.
-* not recovered at 10 MeV / 3 cm (14): two on `stop_near_boundary`
-  (`039252_2/103`, `039349_27/41` — correctly left to the fiducial rule), three
-  on `profile_sparse`, and nine short or faint Michels (1.3–4.2 cm, 3–14 MeV)
-  including the owner's `039253_12/93` ("not fully identified", 4.6 MeV,
-  2.6 cm) and `039349_36/46` (4.6 MeV, 1.8 cm).
+* admitted: `039349_39/56` (smx1a medium, 29.0 MeV, 7.9 cm), `039349_45/25`
+  (FRAG_THRU, medium, 27.2 MeV, 8.4 cm), `039349_81/51` (medium, 12.9 MeV,
+  4.8 cm, `conn_type` 2). (`039252_3/45`, low confidence, was on the first list;
+  it keeps `profile_sparse`.) None was in the owner's `smx3` re-judge; three
+  Michel-carrying "THRU" items in that re-judge turned out to be stoppers.
+* not recovered at 10 MeV / 3 cm (18): two on `stop_near_boundary`
+  (`039252_2/103`, `039349_27/41` — correctly left to the fiducial rule), six
+  that keep `profile_sparse` or `continuation` (the five above plus
+  `039253_6/90`, `039349_54/56`; `039252_3/45` is a TN), and ten short or faint
+  Michels (1.3–4.2 cm, 3–14 MeV) including the owner's `039253_12/93` ("not
+  fully identified", 4.6 MeV, 2.6 cm) and `039349_36/46` (4.6 MeV, 1.8 cm).
 
-**Scan need — `smx4` group A.** The 14 TN-with-Michel and the 40 FN-with-Michel
-(54 items), served blind (the option's answer not shown, per doc 68's
-`--questions` panel with the Michel outlined but no verdict). If the owner
-confirms the four admitted items as THRU, P1 ships at 10 MeV / 3 cm and costs
-4 FPs for 26 stoppers; if they are stoppers, it costs nothing.
+**Scan need — `smx4` group A: DONE (§9).** The 14 TN-with-Michel and the 40
+FN-with-Michel (54 items), served blind (P1's answer and the record's verdict
+not shown). The owner called all three admitted items stoppers (and
+`039252_3/45` too). On the updated record P1 at 10 MeV / 3 cm costs 0 false
+positives for 24 stoppers.
 
 ### 3.4 P1b — the Bragg match on the other side
 
@@ -310,12 +372,15 @@ match a Bragg peak. Today that is `contrast ≥ 0.6 × expected` plus the KS
 margin on the anchored profile. Doc 65 §5.1's unbuilt refinement — the anchor
 re-origins the profile only when the anchored peak row exceeds the plateau by a
 factor (a "rise precondition"), otherwise the geometric origin stands — targets
-the 7 stoppers the 3 cm anchor lost (doc 68 §3). Four of those seven
-(`039253_0/44`, `039253_13/73`, `039253_3/66`, `039349_36/46`) carry a Michel
-and are inside P1's 40 (three at ≥ 10 MeV); the other three (`039253_6/85`,
-`039349_15/23`, `039349_76/75`) are P1b's real target. Size it offline from the
-payloads' `profile` before any C++ (the anchor is exactly reproducible offline,
-doc 65 §2.2); build it only if it recovers ≥ 2 of the 3 without a new FP.
+the 7 stoppers the 3 cm anchor lost (doc 68 §3). Three of those seven
+(`039253_13/73`, `039253_3/66`, `039349_36/46`) carry a Michel and are inside
+P1's 40; the two at ≥ 10 MeV are recovered by P1 (§9). The other four
+(`039253_0/44` — `michel_found` 0, the owner's "Michel not identified" —,
+`039253_6/85`, `039349_15/23`, `039349_76/75`) are P1b's real target.
+(Corrected: the first version put `039253_0/44` among the Michel-carrying
+items.) Size it offline from the payloads' `profile` before any C++ (the anchor
+is exactly reproducible offline, doc 65 §2.2); build it only if it recovers
+≥ 2 of the 4 without a new FP.
 
 ---
 
@@ -342,8 +407,9 @@ segments matched into the arm and the classifier's own line:
 | **No fitted segment within 8 cm of the stop** | `039349_30/45`, `039349_43/66` (owner: "both"), `039349_58/69` (`n_stop_gammas = 7` — the dots are reconstructed, as capture gamma), `039349_72/11` (owner) | pdhd/13 D3: on PDVD 77 of 84 Michel losses have no arm at the stop; the fix is upstream of the classifier (Steiner terminal fragmentation, doc 62 §5) or in §5's collection |
 
 The owner's smx3 notes land on these mechanisms exactly: `039253_0/44` and
-`039349_48/21` ("Michel not identified" / "did not get accessed") are in §3's
-40 (the stopper missed first) — `039349_48/21` carries a `kind 1` arm at
+`039349_48/21` ("Michel not identified" / "did not get accessed") are among
+§3's 75 missed stoppers but not its 40 — their Michel was not found either, so
+they are in the thirteen above (corrected from "in §3's 40") — `039349_48/21` carries a `kind 1` arm at
 8.7 MeV that T2c demoted; `039253_13/73` ("clear Michel, the muon did not
 reach the end, thus less clear Bragg peak") is the dilution mechanism in the
 owner's words.
@@ -488,7 +554,7 @@ association on the next scan.
 
 | id | knob(s), default OFF | mechanism site | sizing on `d68a3` (merged record) | gate | scan need |
 |---|---|---|---|---|---|
-| **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | **+26 TP / +4 FP**, 197/7 → 223/11, F1 0.807 → 0.88; `michel_found` bit-identical | exact offline re-verdict, then one arm; byte-identical OFF | **smx4 A**: the 14 TN- and 40 FN-with-Michel, blind |
+| **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10)**; PDVD flip awaits the owner |
 | **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | none for membership; role 4 drawn for the next scan |
 | **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | +2 owner-confirmed Michels (59.6°, 132.6°), 0 of doc 61's 3 THRU re-admitted (17°, 44°, 48°) | exact offline | none |
 | **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped); `michel_kink_window_cm` 10 | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits | arm; both flags reported | none |
@@ -496,8 +562,8 @@ association on the next scan.
 | **P1b** | anchor rise precondition (doc 65 §5.1) | `:1764-1803` | ≤ 3 stoppers not already inside P1 | offline from `profile` first | — |
 | **P5** | `pr.jsonnet` `stm_trackfitting_config_file` (default = shared file) | `protodunevd/pr.jsonnet:175, :1550, :1695` | none; enables a scoped `dx_norm_length` / step study | compiled-config diff 0 when unset | any step change → new scan |
 
-**Recommended order:** P1 with the `smx4` blind re-judge (the largest lever,
-and the one whose only cost is a scan question) → P4 (the Michel object's
+**Recommended order:** P1 — `smx4` found no cost (§9); built and gated with
+the knob OFF, the production flip waits for the owner (§10) → P4 (the Michel object's
 completeness; no verdict moves) → P3b + P2 together (the attached gate and
 its vetoes, one arm) → P3 → P1b → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
@@ -515,8 +581,12 @@ members' rows (`:2041-2059`); the "15-key default" comment at
 
 | gate | result |
 |---|---|
-| code / config / labels touched | none — this doc and `scripts/d70_sizing.py` only |
-| `census_score.py --check` | 0 of 14 differ (record untouched) |
+| code / config / labels touched | no C++, no config. Scripts `d70_sizing.py` (P1 gate corrected, §3.3), `d70_build_smx4.py`, `d70_score_smx4.py`. New record files only: the owner's labels committed byte-identical to `pdvd/work/stm_michel_labels/smx4/labels.json` (md5 `2a026c1e`) as `pdvd_stm_michel_smx4_labels.json`; the new merged record `pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json` (601 records, 54 from smx4; the 547 others byte-equal to the doc 68 record's; the owner's PF tags laid **on top of** the record's, since `pf_segments` holds overrides only: 0 earlier tags dropped, gamma tags 334 → 345). The doc 68 record is untouched (md5 `c8db1220`, git clean) |
+| `census_score.py --check` | 0 of 14 differ (record untouched), before and after `smx4` |
+| `smx4` display | all 54 items rendered in process with payload and question panel (scratch labeldir); the Michel radio resets to "not set" on an unlabelled item; the live label dir was empty before the scan; the process on :5017 was checked by its command line |
+| §9 numbers | `d70_score_smx4.py` stdout (`/home/xqian/tmp/d70/score_smx4.txt`); its production row reproduced by `census_score.py` on the new record (`/home/xqian/tmp/d70/score_merged4_d68a3.txt`: `is_stm` 197 / 7 / 79, `michel_found` 133 / 12 / 25) |
+| P1 C++ (§10) | `wcdoctest-clus` 360/360; knob-OFF gate PDVD 120/120 zips, 578/578 candidates × 133 `T_stm_michel` branches; PDHD 61/61, 325/325; knob ON = the offline rule on 568/568 candidates (§10.2) |
+| §3.3 corrected grid | `d70_sizing.py` with the residual-bit test (`/home/xqian/tmp/d70r2/sizing.txt`); the doc 68-record row of §9.3 is the same number from the other script (219 / 10) |
 | every number in §3–§5 | `d70_sizing.py` stdout (`/home/xqian/tmp/d70/sizing.txt`), read-only over `prep_d68a3`, the two baseline preps and the merged record |
 | §2 facts | `TrackFitting.cxx` / `TrackFittingPresets.h` / wire files, cited by line; doc 65 §3–§4 numbers quoted, not recomputed |
 | §3.1 / §5.1 code facts | `CheckSTM_Michel.cxx`, `StmMichelFunctions.cxx` at toolkit `HEAD`, cited by line |
@@ -526,3 +596,290 @@ members' rows (`:2041-2059`); the "15-key default" comment at
 Doc 56's Order paragraph gains one line: the campaign's close-out list is
 superseded by this doc's §6 as the next task set; the grading record stays the
 merged one.
+
+---
+
+## 9. The owner's `smx4` scan — P1 graded (2026-09-10)
+
+The owner: "I would like to proceed to P1, please serve the display, and make
+it clear what I need to select", then, after scanning, "review it and update
+the 70*.md and next step".
+
+### 9.1 What was scanned, and how it was blinded
+
+`scripts/d70_build_smx4.py` took all 54 judged items on which production
+(`d68a3`) reads `is_stm 0` and `michel_found 1`: the 40 the record called
+stoppers and the 14 it called THRU (§3.2). Production reads the same on every
+one (the script asserts it), so the display, which shows production's answer,
+could not tell the two groups apart. The order was shuffled (seed 70), every
+sheet row was tranche 1, and the group, the record verdict and P1's reading
+lived only in `pdvd/docs/scan/pdvd_stm_michel_smx4_key.tsv`. The blue panel
+stated production's reading and its reject bits in words, and the choices:
+verdict button, Michel radio, pin only if the fit end is wrong, and **a note
+whenever the muon stops but the chain's Michel is the wrong object**. The
+residual leak was stated on the panel: the chain-answer box prints the
+Michel's KE and length, which are P1's gate variables ("judge from the
+picture"). Four items were already owner verdicts from `smx3`; they stayed in as
+a repeat look.
+
+### 9.2 The owner against the record
+
+| record said | n | owner: stopper | THRU | MESSY |
+|---|---:|---:|---:|---:|
+| stopper (the 40 FN-with-Michel) | 40 | 36 | 1 | 3 |
+| THRU (the 14 TN-with-Michel) | 14 | **8** | 5 | 1 |
+
+Stopper/not agreement is 41 of the 50 items the owner judged. Changed:
+THRU → stopper `039252_12/90`, `039252_3/45`, `039349_35/30`, `039349_39/56`,
+`039349_45/25`, `039349_76/23`, `039349_78/22`, `039349_81/51`; stopper → THRU
+`039252_8/82`; → MESSY `039253_6/90`, `039349_54/56`, `039349_63/41`
+("overclustering"), `039349_12/45`. The direction is the one doc 68 found (4 of
+its 6 changes were THRU → stopper): smx1a under-calls stoppers that carry a
+reconstructed Michel, here on 8 of 13 judged record-THRU items. The set is
+selected (every item has a production Michel), so this is not the record's
+error rate.
+
+The four repeat looks agree with `smx3` on stopper/not 4 of 4. Three are
+identical; `039253_12/93` moved from Michel "both" to "attached", with the same
+comment worded twice ("not fully identified" / "Michel did not cover the entire
+thing").
+
+### 9.3 P1 against the owner
+
+At the argued point (exact rule), P1 fires on 25 of the 54: **24 owner
+stoppers, 0 THRU, 1 MESSY** (`039349_63/41`, which the census does not score).
+All three record-THRU items it admits (`039349_39/56`, `039349_45/25`,
+`039349_81/51`) are stoppers. On `039349_39/56` the owner wrote down the
+mechanism P1 rests on: *"The reason there is no Bragg peak is that it overlapped
+with the Michel electron, so the dQ/dx was shared."*
+
+Census on the `d68a3` payload population (`d70_score_smx4.py` §4; the
+production rows are reproduced by `census_score.py`):
+
+| record | arm | TP | FP | FN | purity | efficiency | F1 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| doc 68 (smx1a + smx3) | production | 197 | 7 | 75 | 0.966 | 0.724 | 0.828 |
+| doc 68 | P1 10 MeV / 3 cm | 219 | 10 | 53 | 0.956 | 0.805 | 0.874 |
+| **+ smx4** | production | 197 | 7 | 79 | 0.966 | 0.714 | 0.821 |
+| **+ smx4** | **P1 10 MeV / 3 cm** | **221** | **7** | **55** | **0.969** | **0.801** | **0.877** |
+| + smx4 | P1 10 / 3 + `topology_clears_sparse` | 225 | 7 | 51 | 0.970 | 0.815 | 0.886 |
+| + smx4 | `michel_found` (P1 does not touch it) | 133 | 12 | 25 | 0.917 | 0.842 | 0.878 |
+
+On the 576-item union of the updated record (four items became MESSY), where
+an item with no candidate counts as 0, `is_stm` F1 goes 0.801 → 0.857. `michel_found` moves only because the truth moved: the
+owner's verdicts remove 5 of its 17 false positives (production is unchanged).
+
+The P1 grid on the updated record (new TP / new FP over production, exact rule):
+
+| KE ≥ \ len ≥ | 0 | 2 | 2.5 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 0 MeV | +34 / +6 | +31 / +2 | +28 / 0 | +27 / 0 | +26 / 0 | +21 / 0 |
+| 5 | +30 / +3 | +29 / +2 | +26 / 0 | +26 / 0 | +26 / 0 | +21 / 0 |
+| 8 | +26 / 0 | +26 / 0 | +24 / 0 | +24 / 0 | +24 / 0 | +21 / 0 |
+| **10** | +26 / 0 | +26 / 0 | +24 / 0 | **+24 / 0** | +24 / 0 | +21 / 0 |
+| 15 | +18 / 0 | +18 / 0 | +18 / 0 | +18 / 0 | +18 / 0 | +17 / 0 |
+
+The six owner-THRU items in the set carry "Michels" of 0.8–2.4 cm and
+1.7–7.0 MeV, so either cut alone separates them from every stopper P1 touches.
+The argued point sits outside both. The looser rows buy +2 to +4 stoppers, but
+they were picked on this very scan: they are offered, not recommended (doc 62:
+never ship the in-sample best row as a default).
+
+### 9.4 What P1 does not reach, and what the scan says about the rest
+
+P1 leaves 20 owner stoppers in the set at `is_stm 0`:
+
+* **Four keep only `profile_sparse` besides the shape bits:** `039252_3/45`,
+  `039349_41/51`, `039349_61/21`, `039349_82/54`. All four are owner
+  STM_MICHEL with 6–22 cm, 12–27 MeV Michels. `profile_sparse` means the dQ/dx
+  has too few live points to judge, i.e. the rise evidence is missing, which is
+  exactly where the owner's rule lets topology decide. Clearing it too gives
+  **+4 TP, 0 FP** on the updated record (on the doc 68 record its one "FP" was
+  `039252_3/45`, now an owner stopper). Proposed as sub-knob
+  `topology_clears_sparse`, default off, measured in the same arm; the owner
+  decides.
+* **Four are on `stop_near_boundary`:** `039252_2/103`, `039349_27/41`,
+  `039349_35/30`, `039349_78/22` (the owner: "Again the STM did not read the
+  end?"). All are owner stoppers, but the fiducial inset is a containment rule
+  for the energy, not a stop test; P1 does not touch it.
+* **Two keep an arm bit:** `039349_5/65` keeps `continuation` (owner: stopper
+  with detached dots) and `039349_76/23` keeps `vertex_hadron` (a 0.7 MeV
+  Michel, pin moved 2.3 cm). Both belong to P2 / P3.
+* **Ten have short or faint Michels** (0.9–4.2 cm, 3–14 MeV): `039252_12/90`,
+  `039253_12/93`, `039253_8/64`, `039349_19/52`, `039349_22/56`,
+  `039349_36/46`, `039349_38/57`, `039349_63/55`, `039349_68/63`,
+  `039349_70/61`. These are what the grid's looser rows would reach.
+
+**Two P1 recoveries are right for the wrong reason.** `039252_16/98` (owner
+STM_ONLY, "hadronic shower?") and `039349_81/51` (STM_ONLY, detached dots, the
+µ⁻ capture signature of §5.2) are stoppers, but the object that fired P1 (both
+`conn_type` 2) is not a Michel to the owner. `is_stm` is right on both, and
+`michel_found` stays a false positive, as it is today.
+
+**Stop-point evidence (for P3 / T1a, not P1).** Pins moved on six stoppers by
+1.2–9.5 cm: `039349_68/63` 1.2, `039349_76/23` 2.3, `039349_63/55` 4.3,
+`039349_19/52` 4.7, `039349_70/61` 6.5, `039349_28/60` 9.5. Notes: "the muon
+end point was not done properly" (`039253_0/102`) and "PR not exactly right
+near vertex" (`039349_61/21`). `039253_8/31` (THRU) carries a pin moved
+29.1 cm, which the census ignores on a THRU item. `039253_12/93`'s "Michel did
+not cover the entire thing" is a P4 case. So are the owner's PF tags: on 8
+items the owner tagged segments, 11 more of them as gamma, so the updated
+record carries 345 gamma tags (§5.2's 334 are on the doc 68 record). P4 is
+sized on the updated record when it is built.
+
+**The last unreviewed production FPs.** Three of production's seven FPs are
+smx1a-only verdicts: `039349_13/56`, `039349_38/60`, `039349_59/14` (all
+medium confidence, none with a Michel). The other four are owner THRU. Given
+8 of 13 here and 4 of 6 in doc 68, a three-item look is cheap.
+
+### 9.5 Decision and next step (steps 1–3 executed in §10; step 4 waits for the owner)
+
+P1 clears the owner's rule at the argued point with 0 new false positives on
+the owner's own verdicts. Implementation, under doc 56's bar:
+
+1. **C++**, `CheckSTM_Michel.cxx`, between `michel_found` (`:2728`) and
+   `is_stm` (`:2790`). Knobs: `topology_stop_evidence` (bool, default false),
+   `topology_michel_ke_min` (10.0 MeV), `topology_michel_len_min_cm` (3.0 cm),
+   `topology_clears_sparse` (false). The rule is exactly §3.3's: `michel_found`
+   1, `conn_type` ∈ {1, 2}, both minima; clear `R_NO_BRAGG` and
+   `R_SHAPE_FLAT` (plus `R_PROFILE_SPARSE` with the sub-knob). Persist
+   `topology_cleared_bits` (the bits it cleared; written only when the knob is
+   on) so the census can name every fire. Round-trip the
+   keys in `default_configuration()` (`:251`), extend
+   `doctest_check_stm_michel_defaults.cxx`, and add a rule test on synthetic
+   reject bits.
+2. **OFF gate**, byte-identical, PDVD and PDHD, against a fresh legacy arm on
+   the **merged binary** (toolkit `98140fee`, pinned). `local/lib` moved today,
+   so the doc 68 arms are not a valid baseline.
+3. **ON arm, PDVD**, `is_stm` and `michel_found`, graded on the updated record.
+   It must reproduce this section item for item: +24 named stoppers and 0 new
+   FP at 10 / 3, +4 more with `topology_clears_sparse`, and `michel_found`
+   bit-identical.
+4. **Flip** in `pdvd/wct-pr-perevt.jsonnet` on the owner's go. PDHD stays OFF
+   (it has no hand-scan record). From here on, the grading record is
+   `pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json`.
+
+Then P4 → P3b + P2 → P3 → P1b → P5, as §6.
+
+---
+
+## 10. P1 built and gated (2026-09-10)
+
+The owner: "please stop 5017, and proceed to the steps before P4, please
+update the md file, commit and push." The `smx4` display on :5017 is stopped.
+This section is §9.5's steps 1–3. Step 4, the production flip, is prepared
+(§10.4) but not applied: it changes PDVD production output, which is the
+owner's call, and the owner has not yet chosen whether `topology_clears_sparse`
+rides along.
+
+### 10.1 What was built (toolkit `f66a8b9f`)
+
+* **The rule is one pure function**, `stm_michel_topology_clear`
+  (`StmMichelFunctions.{h,cxx}`). From reject_bits, michel_found, conn_type, KE,
+  length, the two minima and `clears_sparse`, it returns the bits to clear.
+  This is the same expression `d70_score_smx4.py` applied offline. Three new
+  doctest cases pin it: the shape bits clear, and every other bit survives;
+  `R_PROFILE_SPARSE` clears only on request; no Michel, a charge-only object,
+  a short or faint one (including `039349_77/52`'s 9.966 MeV) and a NaN clear
+  nothing. Both minima are inclusive.
+* **`CheckSTM_Michel.cxx`** has four knobs: `topology_stop_evidence` (false),
+  `topology_michel_ke_min` (10 MeV), `topology_michel_len_min_cm` (3 cm) and
+  `topology_clears_sparse` (false). They are round-tripped in
+  `default_configuration()` and pinned in
+  `doctest_check_stm_michel_defaults.cxx`. The call sits **just before
+  `persist`**, after `R_CLUSTER_NOT_TRACK` and `R_STOP_NEAR_BOUNDARY` are
+  set, so every bit is final when it runs. A DEBUG line names each fire.
+  `topology_cleared_bits` is persisted **only when the knob is on** (the
+  survey's pattern), so the knob-off tree keeps its branch list.
+  (The length knob carries its unit: `_cm`, renamed from this doc's first
+  `topology_michel_len_min`.)
+* **`prep_stm_michel_scan.py`** carries `topology_cleared_bits` into the
+  payloads.
+
+### 10.2 Gates
+
+Six arms on the same input (`d16vnu` / `d16hnu`), each on a private pin:
+`d71vleg` and `d71hleg` on the merged binary before the change, and the other
+four on `f66a8b9f`: `d71voff` and `d71hoff` (knob off), `d71vp1`
+(`topology_stop_evidence`) and `d71vsp` (plus `topology_clears_sparse`). All
+arms use the scan TLA doc 68 used (the survey), and none touches production.
+
+| gate | result |
+|---|---|
+| unit tests | `wcdoctest-clus` 360/360, 3 new |
+| freshness / pins | installed lib 09:42:14, after the last source edit (09:41:11); pins md5 `e5cd0364be81` (base) and `0d7027b23351` (P1), unchanged before and after every arm; 0 loader deaths |
+| compiled config | leg and off arms: no `topology_*` key in `CheckSTM_Michel`; `d71vp1`: `topology_stop_evidence` only; `d71vsp`: both keys |
+| **OFF gate PDVD** (`d71vleg` vs `d71voff`, 120 events) | `mabc-pr.zip` member content 120/120; `calib-pr` JSON 119/119 (`039252_11` writes none on either binary, as on `d68a3`); `T_stm_michel` **578 / 578 candidates bit-identical on all 133 branches**, 0 new / 0 dropped; `T_stm_michel_pts` geometry and roles 578 / 578 |
+| **OFF gate PDHD** (`d71hleg` vs `d71hoff`, 61 events) | zip 61/61; calib 61/61; **325 / 325 on 133 branches**; points 325 / 325 |
+| the prediction transfers | `d68a3` (doc 66's binary, the arm §9 was computed on) vs `d71vleg` (merged binary): 568 / 568 payload verdicts identical — the merge moved nothing here, so §9's numbers apply unchanged |
+| **ON = the rule** (`d70_p1_check.py`) | `d71vp1` vs `d71vleg`: 0 mismatches on 568 candidates in `is_stm`, `reject_bits` and `topology_cleared_bits`; no other verdict field moved. The same for `d71vsp` (`--sparse`). On `d71voff` the rule never fires and the branch is absent from all 568 |
+| `census_score.py --check` | 0 of 14 differ |
+
+Labels: gate outputs in `/home/xqian/tmp/d71/` (`gates.log`, `g_pdvd/`,
+`g_pdhd/`, `p1_check.txt`, `sp_check.txt`, `off_check.txt`,
+`score_d71v*.txt`); preps `/home/xqian/tmp/d71/prep_d71v{leg,off,p1,sp}`.
+
+### 10.3 What P1 does on PDVD
+
+Graded on the smx1a + smx3 + smx4 record, payload population
+(`census_score.py`):
+
+| arm | `is_stm` TP / FP / FN | purity | efficiency | F1 | `michel_found` TP / FP / FN |
+|---|---|---:|---:|---:|---|
+| `d71vleg` (P1 off) | 197 / 7 / 79 | 0.966 | 0.714 | 0.821 | 133 / 12 / 25 |
+| **`d71vp1` (P1, 10 MeV / 3 cm)** | **221 / 7 / 55** | **0.969** | **0.801** | **0.877** | 133 / 12 / 25 |
+| `d71vsp` (+ `topology_clears_sparse`) | 225 / 7 / 51 | 0.970 | 0.815 | 0.886 | 133 / 12 / 25 |
+
+This is §9.3's prediction exactly. The rule fires on 32 candidates and flips 26
+of them to `is_stm 1`: the 24 owner stoppers of §9.3, and two items the census
+does not score, `039349_63/41` (owner MESSY, "overclustering") and
+`039253_0/99` (smx1a MESSY; not in the smx4 set, since the record never called
+it a stopper or a THRU). Six fire without flipping because another bit remains:
+`039252_3/45`, `039349_41/51`, `039349_61/21` (`profile_sparse`),
+`039349_5/65` (`continuation`), `039349_46/58` (`profile_sparse`, MESSY) and
+`039349_81/54` (`plateau_off_mip`, MESSY). With `topology_clears_sparse` it
+flips 31: add `039252_3/45`, `039349_41/51`, `039349_61/21`, `039349_82/54`
+(owner stoppers) and `039349_46/58` (MESSY).
+
+**One observation, no change made.** P1 has no upper energy bound. Two MESSY
+items carry P1-qualifying objects far above the 52.8 MeV Michel endpoint:
+`039349_81/54` (206 MeV) keeps `plateau_off_mip` and does not flip, but
+`039349_46/58` (76 MeV) **does** flip once `topology_clears_sparse` is on. The
+census does not score either, but nothing in P1 stops such an object from
+clearing the shape bits on a candidate with no other objection.
+Every stopper P1 flips carries ≤ 50.7 MeV. A `topology_michel_ke_max` of about
+60 MeV would cost nothing on this record and is physically argued. It is
+offered as an option, not built.
+
+### 10.4 The production flip — prepared, not applied
+
+The whole change to `pdvd/wct-pr-perevt.jsonnet`, after
+`bragg_peak_search_cm: 3.0,`:
+
+```jsonnet
+        // doc pdvd/70 (P1): topology-first stop evidence.  A Michel object of at
+        // least 10 MeV and 3 cm, attached or bridged, clears no_bragg and
+        // shape_flat just before the verdict is persisted; is_stm moves only
+        // 0 -> 1 and only when nothing else rejects.  C++ default false.  The two
+        // minima stay UNSET at their C++ defaults (10 MeV, 3 cm, what the scored
+        // arm ran) for the inert-key reason above.  On the owner's smx4 blind
+        // re-judge: is_stm 197/7/79 -> 221/7/55 on the smx1a+smx3+smx4 record,
+        // 0 new FP, michel_found identical (doc 70 sec 10).  PDHD stays OFF.
+        topology_stop_evidence: true,
+```
+
+Compiled-config proofs, on scratch copies (`/home/xqian/tmp/d71/flip/`):
+**flip-equivalence**, the production file plus `-S
+stm_michel_extra={topology_stop_evidence:true}` against the flipped file, is 0
+lines. The **OFF path**, both files with `{topology_stop_evidence:false}`, is 0
+lines. Production against the flipped file differs by exactly one line, the
+key. With the owner's choice of the sparse option, the flip adds
+`topology_clears_sparse: true` (+4 TP / 0 FP, §10.3). Nothing else in
+production changes; PDHD stays OFF.
+
+### 10.5 Next
+
+On the owner's go: apply §10.4 (with or without `topology_clears_sparse`),
+repeat the two compiled-config proofs on the committed file, commit and push.
+Then **P4** (`michel_gamma_collect`), sized on the updated record's 345 gamma
+tags.

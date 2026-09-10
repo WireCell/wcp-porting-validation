@@ -183,6 +183,9 @@ VERDICT_SCALARS = [
     "n_body_other", "n_stop_other", "n_other_published",
     # doc pdvd/65 (T7) -- the peak-anchored rr origin's shift (0 when off).
     "bragg_anchor_shift_cm",
+    # doc pdvd/70 (P1) -- the reject bits topology_stop_evidence cleared.  The
+    # branch exists only on an arm with the knob on; skipped when missing.
+    "topology_cleared_bits",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",

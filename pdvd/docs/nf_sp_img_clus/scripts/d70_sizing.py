@@ -123,9 +123,14 @@ print("  conn_type       TP %s  FN %s  TN %s" % (dict(collections.Counter(V(k)["
 
 
 def gate(k, ke, ln):
+    # P1 clears no_bragg + shape_flat ONLY: an item keeping any other bit stays
+    # rejected.  (The first version of this gate, used for doc 70's first table,
+    # omitted that test and counted 5 profile_sparse / continuation items; doc 70
+    # sec 9 corrects the table.)  The boundary clause is then redundant, kept.
     v = V(k)
     return v["michel_conn_type"] in (1, 2) and (v["michel_ke_best"] or 0) >= ke and (v["michel_len"] or 0) >= ln \
-        and "stop_near_boundary" not in C.reject_names(v)
+        and "stop_near_boundary" not in C.reject_names(v) \
+        and not (set(C.reject_names(v)) - {"no_bragg", "shape_flat"})
 
 
 nTP, nFP = len(cell["TP"]), len(cell["FP"])

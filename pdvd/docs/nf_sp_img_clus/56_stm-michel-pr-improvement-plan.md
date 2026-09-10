@@ -431,8 +431,12 @@ dropped by the owner. From doc 68 on, the grading record is the merged
 smx1a + smx3 record (`STM_SCAN_RECORD`); docs 56–67 are on smx1a.
 **The next task set is doc pdvd/70 §6** (2026-09-10, the owner's four
 questions): P1 a topology-first verdict — 40 of the 75 missed stoppers already
-carry a found Michel and fail only the shape tests — with a blind `smx4`
-re-judge of 54 items; P4 Michel gamma collection (154 of 165 tagged gamma
+carry a found Michel and fail only the shape tests — whose blind `smx4`
+re-judge of 54 items is done (doc 70 §9: +24 stoppers, 0 new FP at 10 MeV /
+3 cm; built in toolkit `f66a8b9f` behind the default-OFF `topology_stop_evidence`
+and gated, doc 70 §10; the PDVD flip waits for the owner; grade on
+`pdvd_stm_michel_smx1a_smx3_smx4_verdicts.json`
+from here on); P4 Michel gamma collection (154 of 165 tagged gamma
 fragments on found-Michel events sit outside the object); P3b/P2/P3 the
 attached-gate and veto fixes for the 12 found-stopper Michel misses; P1b the
 anchor's rise precondition; P5 an STM-only track-fitting file (the 0.6 cm step
