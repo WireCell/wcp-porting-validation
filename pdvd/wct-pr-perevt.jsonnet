@@ -325,6 +325,16 @@ function(
         // candidate's fit through preload_clusters (doc pdvd/53 sec 6.2) and verdicts
         // can move; the 50 cm arm p4v50 is graded by name in doc 71 sec 11.
         michel_gamma_radius_cm: 50.0,
+        // doc pdvd/72 (P3b): the moved-stop veto (moved_stop_michel_guard, doc 61) spares an
+        // attached Michel that turns at least 60 deg at the stop -- the turn is the Michel's
+        // own evidence, which the 10 MeV floor alone does not read.  C++ default -1 = off.
+        // Arm p72vb60 (bare production + this key) against p72voff, item by item: michel_found
+        // gains one owner-confirmed Michel (039349_48/21, 132.6 deg) and spares no through-going
+        // item (17.2 / 43.5 / 58.7 deg on bare production); every other branch, point row, zip
+        // and calib is identical, is_stm included (a spared Michel is under 10 MeV and
+        // topology_stop_evidence needs >= 10).  90 deg (arm p72vb90) is identical item for item.
+        // 039252_2/79 (59.6 deg) stays demoted.  PDHD stays OFF.
+        moved_stop_michel_kink_min: 60.0,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the

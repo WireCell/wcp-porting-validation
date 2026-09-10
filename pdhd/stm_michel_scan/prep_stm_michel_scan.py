@@ -190,6 +190,9 @@ VERDICT_SCALARS = [
     # branches exist only on an arm with michel_gamma_collect on; skipped when missing.
     "n_michel_gammas", "n_michel_gamma_cand", "n_michel_gamma_capped",
     "michel_ke_gamma", "michel_ke_total", "michel_gamma_dis_max",
+    # doc pdvd/72 (P3b) -- a moved-stop veto the Michel's turn spared.  The
+    # branch exists only on an arm with moved_stop_michel_kink_min set.
+    "n_michel_veto_exempt",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",

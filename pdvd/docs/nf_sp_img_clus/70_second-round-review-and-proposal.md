@@ -1,5 +1,23 @@
 # 70 — Second-round review of `CheckSTM_Michel`: the owner's four questions, and the next proposal set
 
+**Update 4 (2026-09-10): P3b and P2 are built (toolkit `299d8bc4`) and gated, each in its own doc: pdvd/72 (P3b) and pdvd/73 (P2).**
+
+**P3b is in PDVD production** (`moved_stop_michel_kink_min: 60.0`, doc 72):
+- the moved-stop veto spares the owner-confirmed Michel `039349_48/21` (132.6°);
+- `michel_found` 133 / 12 / 25 → **134 / 12 / 24**;
+- nothing else moves, `is_stm` included (225 / 7 / 51); 90° is bit-identical.
+
+**P2 stays OFF** (doc 73):
+- none of the three sub-knobs adds a judged `michel_found` TP, as predicted;
+- each attaches an arm the owner tagged delta / other or muon;
+- (b) also loses the stopper `039253_13/73`: its new 2.4 cm seed fails P1's 3 cm test.
+
+**Corrections to §4.2 and §6** (marked in place):
+- the 60° cut spares one Michel, not two;
+- the through-going kinks were survey-arm numbers;
+- the kink window is 15 cm, so (c) is a *shorter* window;
+- on production, doc 70's four named P2 items are out of reach at the argued points.
+
 **Update 3 (2026-09-10): P4 is built (toolkit `d227d5b8`), gated and in PDVD
 production. It has its own doc, pdvd/71; from P4 on each proposal carries its own md file, and P1
 stays here in §9–§10.** P4 (`michel_gamma_collect`) adds the Michel's isolated
@@ -455,6 +473,15 @@ over-clustered structure); (c) `michel_kink_window_cm` 5 → 10 as an option
 from the DEBUG line; `is_stm` can move through `michel_guards_stop`
 (`:1972-1975`), so the census reports both flags.
 
+*Corrected 2026-09-10 (doc 73 §2), re-measured on bare production (`p4v50`):*
+- **(c) is misframed.** The classifier's kink window is 15 cm (`StmMichelArmThresholds::dir_window`), not 5 cm, so the helpful change is a *shorter* window for the Michel turn test.
+- **The four named items do not all reach on production:**
+  - `039349_11/19` needs (a) and (b), and 19004's whole subtree is ~66 cm, so it is out under a 60 cm cap.
+  - `039349_69/56` no longer has a stop arm.
+  - `039253_3/61` is (c)'s only.
+  - `039349_32/63`'s 206 cm subtree is out under any cap.
+- At the argued points (a) + (b) mostly turn bridged Michels into attached ones on items that already have `michel_found`; the predicted `michel_found` gain is about 0.
+
 **P3 — `michel_collinear_split`.** On a *found* stopper (Bragg confirmed) whose
 last chain segment continues past the Bragg peak for ≥ 3 cm at a dQ/dx that has
 fallen back below 0.5 × plateau, split the segment at the fall (reuse
@@ -478,6 +505,11 @@ against 0 of 3. The range-energy veto (T3c) needs no exemption: on
 `039253_3/61` and `039349_32/63` it is right about the dots, and the loss is
 P2's (the attached arm was `kOther`). Exact offline; a 60° cut on 5 items is a
 small-sample threshold and is stated as such.
+
+*Corrected 2026-09-10 (doc 72 §2):*
+- **The 60° cut spares one item, not two.** 59.6 < 60, so it spares `039349_48/21` only.
+- **The THRU kinks above (17 / 44 / 48°) are survey-arm numbers.** On bare production (35 or 50 cm admission), `039349_61/62` turns 58.7°; the 60 cm survey admission changes its fit.
+- A threshold in (58.7°, 59.6°] would spare both Michels. A threshold in (59.6°, 132.6°] spares `039349_48/21` alone.
 
 ---
 
@@ -580,8 +612,8 @@ association on the next scan.
 |---|---|---|---|---|---|
 | **P1** | `topology_stop_evidence`, `topology_michel_ke_min` 10, `topology_michel_len_min_cm` 3 — a Michel of sufficient quality clears `R_NO_BRAGG` + `R_SHAPE_FLAT` only | verdict, between `:2728` and `:2790` | exact: +22 TP / +3 FP on the doc 68 record (first version: +26 / +4, §3.3); **after `smx4`: +24 TP / 0 FP**, 197/7/79 → 221/7/55, F1 0.821 → 0.877; `michel_found` bit-identical; sub-knob `topology_clears_sparse` +4 TP / 0 FP more | exact offline re-verdict, then one arm; byte-identical OFF | **`smx4` DONE (§9)**: 0 of the admitted items are THRU. **Built and gated (§10); PDVD PRODUCTION with `topology_clears_sparse` (§10.4)**: 197/7/79 → 225/7/51 |
 | **P4** | `michel_gamma_collect` (+ radius 60, max_len 10, forward_only), role 4, `michel_ke_gamma/_total`, `n_michel_gammas`; admission from the final stop | new block after `:2272`; `:1381-1425` | 154 of 165 gamma fragments on 78 Michel events outside the object today | rows + new branches only; `michel_ke_best`, `michel_found`, `is_stm` bit-identical | **Built, gated and PDVD PRODUCTION (doc 71)**: at 35 cm gamma tags in the object 9 → 75 of 159, purity 0.958, every pre-existing output identical; **radius 50 cm on the owner's call (§11)**: 104 of 159, purity 0.933, `is_stm` 223/8/53 → 225/7/51, three named movers all as the record says |
-| **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | +2 owner-confirmed Michels (59.6°, 132.6°), 0 of doc 61's 3 THRU re-admitted (17°, 44°, 48°) | exact offline | none |
-| **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped); `michel_kink_window_cm` 10 | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits | arm; both flags reported | none |
+| **P3b** | `moved_stop_michel_kink_min` 60° — T2c skips a hard-turning attached Michel | `:2701-2706` | ~~+2 owner-confirmed Michels (59.6°, 132.6°)~~ **+1 at 60°, `039349_48/21` (59.6 < 60)**, 0 of doc 61's 3 THRU re-admitted (17°, 44°, ~~48°~~ **58.7° on bare production**; doc 72 §2) | exact offline | none. **Built and PDVD PRODUCTION (doc 72)**: +1 Michel (`039349_48/21`), nothing else moves; 90° identical |
+| **P2** | `michel_mip_lo_turned` 0.15 @ kink ≥ 60°; `michel_far_len_shower_exempt` (capped; built as `michel_far_len_shower_max_cm`); `michel_kink_window_cm` ~~10~~ **shorter than today's 15 cm: 5 (doc 73 §2)** | `StmMichelFunctions.cxx:482-518`, `:459-479` | 4 named items (2 of them then lose their T3c veto for free) + whatever else the DEBUG line admits. **On production (doc 73 §2): one needs a cap above ~66 cm, one is (c)'s, one has no stop arm, one is out under any cap; ~0 `michel_found` TP predicted** | arm; both flags reported | none. **Built and gated, NOT flipped (doc 73)**: 0 judged `michel_found` TP (as predicted). Each sub-knob attaches owner-tagged delta / muon arms; (b) loses `039253_13/73` |
 | **P3** | `michel_collinear_split` — split a confirmed chain's last segment where dQ/dx falls after the peak, re-classify the remainder | after `:1699`, reuse `stm_michel_stop_split` + `break_segment` | 4 items (2 cool, 2 hot = named risk) | arm; 0 new `is_stm` FPs | none |
 | **P1b** | anchor rise precondition (doc 65 §5.1) | `:1764-1803` | ≤ 3 stoppers not already inside P1 | offline from `profile` first | — |
 | **P5** | `pr.jsonnet` `stm_trackfitting_config_file` (default = shared file) | `protodunevd/pr.jsonnet:175, :1550, :1695` | none; enables a scoped `dx_norm_length` / step study | compiled-config diff 0 when unset | any step change → new scan |
@@ -589,7 +621,7 @@ association on the next scan.
 **Recommended order:** P1 — `smx4` found no cost (§9); built, gated and
 flipped to PDVD production with `topology_clears_sparse` (§10) → P4 (the Michel object's
 completeness; no verdict moves; **done, doc 71, PDVD production**) → P3b + P2 together (the attached gate and
-its vetoes, one arm) → P3 → P1b → P5 at the owner's discretion. Each is a
+its vetoes, one arm; **done, docs 72–73: P3b PDVD production, P2 left OFF**) → P3 → P1b → P5 at the owner's discretion. Each is a
 default-OFF knob under doc 56's bar: byte-identical OFF path on both
 detectors, every gain and loss by item name, flip only on the owner's rule.
 
@@ -932,3 +964,5 @@ produces). The `topology_michel_ke_max` cap of §10.3 stays an open option.
 
 *Done:* P4 is doc 71 (built, gated, PDVD production at 35 cm). The sentence
 above about `d71vsp` is corrected in §10.4. Next is P3b + P2, in their own doc.
+*(Update 4: P3b + P2 are done in docs 72 and 73: P3b in PDVD production, P2
+built, gated and left OFF. Next is P3.)*
