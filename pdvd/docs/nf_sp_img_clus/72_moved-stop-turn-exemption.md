@@ -168,4 +168,6 @@ The production baseline prep is now `/home/xqian/tmp/p72/prep_p72vprod`.
   - a reach test, len + far_len ≥ 8 cm (Michels 9.3–12.0, THRU 4.9–5.4).
 
   Both are fitted to the same five points, which will always offer some separator.
+
+  *(Doc 84, 2026-09-11: on the 12 T2c instances of 28 arms the KE floor does not separate, and the reach test does, in (5.8, 7.5] cm. It was built as `moved_stop_michel_reach_min_cm` and flipped in PDVD production at 6.5 cm, not 8: `039252_2/79` reads 7.5 cm on the stop-mover arms.)*
 - **Next:** P3, the collinear split on a confirmed chain (doc 70 §4.2), in its own doc.

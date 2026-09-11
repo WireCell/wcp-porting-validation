@@ -10,6 +10,8 @@ The owner asked (2026-09-11, after doc 82) to proceed with doc 78's action item 
 
 The OFF path is byte-identical on both detectors. PDHD stays off.
 
+*(Doc 84 §7.3, 2026-09-11: the counts above are `census_score.py`'s default record, the frozen smx1a scan. On the owner's merged record, the grading record since doc 68, the same arms read `michel_found` 138 / 12 / 22 → 140 / 12 / 20 and `is_stm` 232 / 7 / 46 → 233 / 7 / 45: the same +2 and +1, 0 FP. Both targets are STM_MICHEL on both records.)*
+
 Of doc 78's four targets, two are refused by the production gate, which was not loosened for them. Doc 78's "as energy" half is doc 73's failure family and was not built (§2.4). This round also corrects one slip in doc 82's offline twin (§9.5).
 
 ## 0. Repro

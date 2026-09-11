@@ -363,6 +363,20 @@ function(
         // topology_stop_evidence needs >= 10).  90 deg (arm p72vb90) is identical item for item.
         // 039252_2/79 (59.6 deg) stays demoted.  PDHD stays OFF.
         moved_stop_michel_kink_min: 60.0,
+        // doc pdvd/84 (doc 78 action item 3): the moved-stop veto also spares an attached
+        // Michel whose reach (michel_len + michel_far_len) is at least 6.5 cm.  C++ default -1 = off.
+        // Every T2c instance on 28 PDVD arms (12 on 7 items, d84_t2c_census.py) puts the THRU arms
+        // at 4.9-5.8 cm and the owner-confirmed Michels at 7.5-11.9 cm; the kink leaves only
+        // (58.68, 59.58] deg, and 039349_61/62's kink reads 48.2 deg under the survey bag and 58.7
+        // bare (doc 72 sec 2), so the 60 deg exemption above stays as it is; KE does not separate
+        // (61/62 reads 8.0 MeV with the survey, 039252_2/79 7.2 MeV on the stop-mover arms).
+        // Arm p84vr65 (bare production + this key) against p83vprod: one candidate moves,
+        // 039252_2/79 (owner STM_MICHEL, 9.3 cm,
+        // 59.58 deg) michel_found 0 -> 1; 039252_4/55 (5.1 cm) and 039349_61/62 (5.4 cm) stay
+        // vetoed; every other branch, point row, zip and calib identical, is_stm included (a
+        // spared Michel is under 10 MeV, and topology_stop_evidence needs >= 10).  8.0 cm (p84vr8)
+        // is identical item for item; 5.0 (p84vr5) spares both THRU arms.  PDHD stays OFF.
+        moved_stop_michel_reach_min_cm: 6.5,
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins (PDVD 2.5 / 5 / 5 cm), not a flat 5 cm (sec 6.9); +1
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4); fires on 2 of 574 here -- PDVD's FiducialUtils does carry the map (0 fires on PDHD)
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the

@@ -471,7 +471,11 @@ corrects item 2's own rule and finds that what keeps the stop where it is on
 14 of the 21 overshoot items is the Bragg gate on the movers, not the collapse
 test) and doc pdvd/83 (item 4, the attached arm near the stop -- an arm leaving
 the chain's penultimate vertex is offered the stop-arm gate within 5 cm of the
-stop; flipped in PDVD production, +2 Michels and +1 stopper, 0 FP).
+stop; flipped in PDVD production, +2 Michels and +1 stopper, 0 FP) and doc
+pdvd/84 (item 3, T2c's margin -- the moved-stop veto now also spares an
+attached Michel whose arm plus far subtree reaches >= 6.5 cm, the one separator
+of its 12 instances on 28 arms that no configuration moves across; flipped in
+PDVD production, +1 owner-confirmed Michel on the merged record, 0 FP).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
