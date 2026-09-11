@@ -1,0 +1,78 @@
+=== 0. completeness, loader deaths, the cap's log line
+  p82hoff dirs 61 complete 61 loader-deaths 0 | cap lines:       1 CheckSTM_Michel: 10 candidates, keeping the first 8;      1 CheckSTM_Michel: 11 candidates, keeping the first 8;      2 CheckSTM_Michel: 12 candidates, keeping the first 8;      3 CheckSTM_Michel: 9 candidates, keeping the first 8;
+  p82bhoff dirs 61 complete 61 loader-deaths 0 | cap lines:       1 CheckSTM_Michel: 10 candidates, keeping the first 8;      1 CheckSTM_Michel: 11 candidates, keeping the first 8;      2 CheckSTM_Michel: 12 candidates, keeping the first 8;      3 CheckSTM_Michel: 9 candidates, keeping the first 8;
+  h18s dirs 61 complete 61 loader-deaths 0 | cap lines: none
+  h18b dirs 61 complete 61 loader-deaths 0 | cap lines: none
+  h18s: [h18s] libWireCellClus md5 5f2c3ede7076  (/home/xqian/tmp/p82/libpin_p82) [h18s] complete 61, incomplete 0, run rc=0 [h18s] libWireCellClus md5 AFTER 5f2c3ede7076 
+  h18b: [h18b] libWireCellClus md5 5f2c3ede7076  (/home/xqian/tmp/p82/libpin_p82) [h18b] complete 61, incomplete 0, run rc=0 [h18b] libWireCellClus md5 AFTER 5f2c3ede7076 
+=== h18s vs p82hoff
+  h18s vs p82hoff: events with an identical zip 54, differing 7, missing 0 | calib json same 54 diff 7
+    zip members that differ, by layer (events): {'shower_track-global': 7, 'mc': 7, 'track_fit-global': 7, 'vertices-global': 7}
+    zip events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    calib events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+  h18s vs p82hoff over 61 events: trees identical on every event: ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun']
+    T_proj_data differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_rec_charge differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_stm_michel differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_stm_michel_pts differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+  branch census rc=0  (/home/xqian/tmp/h18/gates/g_h18s.txt)
+  matched candidates      : 325  (before 325, after 341)
+  candidates BIT-IDENTICAL on all 133 shared branches : 325 / 325
+  NO shared branch moved on any candidate.
+  is_stm FLIPS : 0
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+  h18s: baseline candidates 325, arm 341, NEW 16, DROPPED 0
+    NEW 028084_23/125    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  801.4
+    NEW 028084_7/109     is_stm 0 bits   512 michel_found 1 ke    1.8 len   0.7 muon_len   28.0
+    NEW 028084_7/124     is_stm 0 bits    12 michel_found 1 ke   13.5 len   2.8 muon_len  474.7
+    NEW 028084_7/135     is_stm 0 bits    76 michel_found 1 ke    4.3 len   1.4 muon_len  280.8
+    NEW 029107_12/129    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  429.3
+    NEW 029107_18/130    is_stm 1 bits     0 michel_found 1 ke    4.9 len   0.7 muon_len  311.4
+    NEW 029107_18/146    is_stm 1 bits     0 michel_found 1 ke   31.5 len  12.6 muon_len  268.1
+    NEW 029107_20/151    is_stm 0 bits  1024 michel_found 1 ke   16.3 len   6.2 muon_len  596.7
+    NEW 029107_26/109    is_stm 0 bits    76 michel_found 1 ke    9.4 len   1.1 muon_len  524.4
+    NEW 029107_26/111    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  240.2
+    NEW 029107_26/114    is_stm 0 bits  1036 michel_found 1 ke   37.4 len  15.9 muon_len  113.2
+    NEW 029107_26/89     is_stm 0 bits    12 michel_found 0 ke    0.0 len   0.0 muon_len   63.0
+    NEW 029107_5/107     is_stm 0 bits   520 michel_found 0 ke    0.0 len   0.0 muon_len   28.7
+    NEW 029107_5/119     is_stm 0 bits    76 michel_found 1 ke    9.0 len   0.0 muon_len   38.8
+    NEW 029107_5/96      is_stm 0 bits    12 michel_found 0 ke    0.0 len   0.0 muon_len   74.9
+    NEW 029107_5/98      is_stm 0 bits     8 michel_found 0 ke    0.0 len   0.0 muon_len  473.1
+=== h18b vs p82bhoff
+  h18b vs p82bhoff: events with an identical zip 54, differing 7, missing 0 | calib json same 54 diff 7
+    zip members that differ, by layer (events): {'mc': 7, 'vertices-global': 7, 'track_fit-global': 7, 'shower_track-global': 7}
+    zip events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    calib events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+  h18b vs p82bhoff over 61 events: trees identical on every event: ['T_bad_ch', 'T_cluster', 'T_proj', 'Trun']
+    T_proj_data differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_rec_charge differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_stm_michel differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+    T_stm_michel_pts differs on 7 events: 028084_23 028084_7 029107_12 029107_18 029107_20 029107_26 029107_5
+  branch census rc=0  (/home/xqian/tmp/h18/gates/g_h18b.txt)
+  matched candidates      : 325  (before 325, after 341)
+  candidates BIT-IDENTICAL on all 130 shared branches : 325 / 325
+  NO shared branch moved on any candidate.
+  is_stm FLIPS : 0
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+  h18b: baseline candidates 325, arm 341, NEW 16, DROPPED 0
+    NEW 028084_23/125    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  801.4
+    NEW 028084_7/109     is_stm 0 bits   512 michel_found 1 ke    1.8 len   0.7 muon_len   28.0
+    NEW 028084_7/124     is_stm 0 bits    12 michel_found 1 ke   13.5 len   2.8 muon_len  474.7
+    NEW 028084_7/135     is_stm 0 bits    76 michel_found 1 ke    4.3 len   1.4 muon_len  280.8
+    NEW 029107_12/129    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  429.3
+    NEW 029107_18/130    is_stm 1 bits     0 michel_found 1 ke    4.9 len   0.7 muon_len  311.4
+    NEW 029107_18/146    is_stm 1 bits     0 michel_found 1 ke   31.5 len  12.6 muon_len  268.1
+    NEW 029107_20/151    is_stm 0 bits  1024 michel_found 1 ke   16.3 len   6.2 muon_len  596.7
+    NEW 029107_26/109    is_stm 0 bits    76 michel_found 1 ke    9.4 len   1.1 muon_len  524.4
+    NEW 029107_26/111    is_stm 1 bits     0 michel_found 0 ke    0.0 len   0.0 muon_len  240.2
+    NEW 029107_26/114    is_stm 0 bits    12 michel_found 1 ke   42.1 len  16.9 muon_len  115.7
+    NEW 029107_26/89     is_stm 0 bits    12 michel_found 0 ke    0.0 len   0.0 muon_len   63.0
+    NEW 029107_5/107     is_stm 0 bits   520 michel_found 0 ke    0.0 len   0.0 muon_len   28.7
+    NEW 029107_5/119     is_stm 0 bits    76 michel_found 1 ke    9.0 len   0.0 muon_len   38.8
+    NEW 029107_5/96      is_stm 0 bits    12 michel_found 0 ke    0.0 len   0.0 muon_len   74.9
+    NEW 029107_5/98      is_stm 0 bits     8 michel_found 0 ke    0.0 len   0.0 muon_len  473.1
+GATES_DONE

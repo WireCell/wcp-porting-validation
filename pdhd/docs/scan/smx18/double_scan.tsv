@@ -1,0 +1,22 @@
+# deliberate seeded re-scan (waves dbl*): primary vs re-scan
+key	primary_writer	primary_verdict	primary_kind	primary_conf	primary_pin_rr	rescan_writer	rescan_verdict	rescan_kind	rescan_conf	rescan_pin_rr
+028084_20/39	w2_a0	STM_MICHEL	attached	low		dbl_a3	STM_ONLY	none	medium	
+028084_23/53	w2_a1	STM_ONLY	detached dots	medium		dbl_a4	STM_ONLY	detached dots	medium	
+028084_24/114	w2_a2	STM_ONLY	detached dots	medium		dbl_a0	STM_ONLY	detached dots	medium	
+028084_26/38	w2_a2	MESSY	none	medium		dbl_a4	UNCLEAR	none	medium	
+028084_29/101	w2_a3	STM_ONLY	none	low		dbl_a2	THRU	none	medium	
+028084_6/117	w3_a0	STM_ONLY	detached dots	high		dbl_a3	STM_ONLY	detached dots	medium	
+028084_7/124	w4_a4	STM_MICHEL	attached	medium		dbl_a2	STM_MICHEL	attached	medium	11.5
+029107_0/103	w3_a1	UNCLEAR	none	medium		dbl_a1	STM_MICHEL	both	low	
+029107_10/80	w3_a1	STM_MICHEL	attached	low		dbl_a2	STM_MICHEL	both	medium	
+029107_13/52	w3_a2	THRU	none	high		dbl_a0	THRU	none	high	
+029107_18/130	w4_a4	STM_MICHEL	both	medium		dbl_a4	STM_MICHEL	both	medium	
+029107_19/123	w3_a4	THRU	none	medium		dbl_a2	STM_MICHEL	attached	medium	
+029107_2/39	w3_a4	THRU	none	medium		dbl_a3	THRU	none	medium	
+029107_21/65	w4_a0	STM_MICHEL	attached	medium		dbl_a0	STM_MICHEL	attached	low	
+029107_24/33	w4_a0	STM_ONLY	detached dots	medium		dbl_a1	STM_ONLY	detached dots	medium	
+029107_27/99	w4_a1	STM_ONLY	detached dots	high		dbl_a1	STM_ONLY	detached dots	high	
+029107_5/51	w4_a2	STM_MICHEL	attached	medium		dbl_a3	STM_MICHEL	attached	medium	
+029107_5/98	w4_a4	STM_ONLY	detached dots	high		dbl_a1	STM_ONLY	detached dots	high	
+029107_8/44	w4_a3	UNCLEAR	none	medium		dbl_a0	STM_MICHEL	attached	medium	
+029107_9/117	w4_a3	UNCLEAR	none	medium		dbl_a4	UNCLEAR	none	medium	

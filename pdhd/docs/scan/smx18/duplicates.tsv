@@ -1,0 +1,49 @@
+# items with more than one primary record (not the deliberate double scan): the earliest
+# `written` is kept, except keys in --supersede, where the re-scan is kept
+key	writer	verdict	michel_kind	confidence	pin_rr	resolution
+029107_12/110	w1_a0	THRU	none	high		superseded
+029107_12/110	w2_a0	THRU	none	high		KEPT (re-scan: anode band face.x 6.4)
+029107_14/89	w1_a0	STM_ONLY	none	medium		superseded
+029107_14/89	w2_a1	STM_ONLY	none	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+029107_21/41	w1_a0	STM_MICHEL	attached	high		superseded
+029107_21/41	w2_a2	STM_MICHEL	attached	medium		KEPT (re-scan: anode band face.x 6.2)
+029107_26/87	w1_a1	THRU	none	medium		superseded
+029107_26/87	w2_a3	THRU	none	high		KEPT (re-scan: anode band face.x 5.9)
+029107_7/34	w1_a1	STM_ONLY	none	medium		superseded
+029107_7/34	w2_a4	STM_ONLY	none	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+028084_0/35	w1_a2	THRU	none	high		superseded
+028084_0/35	w2_a2	THRU	none	high		KEPT (re-scan: anode band face.x 5.9)
+028084_0/43	w1_a2	STM_MICHEL	attached	medium	10.5	superseded
+028084_0/43	w2_a3	THRU	none	medium		KEPT (re-scan: anode band face.x 6.9)
+028084_0/108	w1_a2	STM_ONLY	none	medium		superseded
+028084_0/108	w2_a0	STM_ONLY	none	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+028084_0/117	w1_a2	THRU	none	medium		superseded
+028084_0/117	w2_a1	THRU	none	high		KEPT (re-scan: anode band face.x 7.1)
+028084_1/25	w1_a2	THRU	none	medium		superseded
+028084_1/25	w2_a0	THRU	none	high		KEPT (re-scan: anode band face.x 6.7)
+028084_1/48	w1_a2	THRU	none	medium		superseded
+028084_1/48	w2_a1	THRU	none	high		KEPT (re-scan: anode band face.x 6.4)
+028084_11/116	w1_a2	STM_MICHEL	attached	medium		superseded
+028084_11/116	w2_a4	THRU	none	high		KEPT (re-scan: anode band face.x 6.7)
+028084_13/109	w1_a3	THRU	none	medium		superseded
+028084_13/109	w2_a2	THRU	none	high		KEPT (re-scan: anode band face.x 5.9)
+028084_14/20	w1_a3	STM_MICHEL	attached	medium		superseded
+028084_14/20	w2_a3	THRU	none	medium		KEPT (re-scan: anode band face.x 5.9)
+028084_15/28	w1_a3	STM_ONLY	none	medium		superseded
+028084_15/28	w2_a4	STM_ONLY	none	low		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+028084_16/100	w1_a3	THRU	none	medium		superseded
+028084_16/100	w2_a0	THRU	none	high		KEPT (re-scan: anode band face.x 5.9)
+028084_16/106	w1_a3	STM_ONLY	detached dots	medium		superseded
+028084_16/106	w2_a1	STM_ONLY	detached dots	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+028084_16/110	w1_a4	STM_MICHEL	attached	medium	10.5	superseded
+028084_16/110	w2_a2	THRU	none	medium		KEPT (re-scan: anode band face.x 6.4)
+028084_17/110	w1_a4	STM_ONLY	none	medium		superseded
+028084_17/110	w2_a3	THRU	none	high		KEPT (re-scan: anode band face.x 6.0; FLAT_STOP under v2 rule 3)
+028084_17/113	w1_a4	THRU	none	medium		superseded
+028084_17/113	w2_a4	THRU	none	high		KEPT (re-scan: anode band face.x 6.0)
+028084_18/50	w1_a4	THRU	none	medium		superseded
+028084_18/50	w2_a0	THRU	none	high		KEPT (re-scan: anode band face.x 6.0)
+028084_2/49	w1_a4	STM_MICHEL	both	medium		superseded
+028084_2/49	w2_a2	STM_MICHEL	both	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)
+028084_20/20	w1_a4	STM_ONLY	none	medium		superseded
+028084_20/20	w2_a1	STM_ONLY	none	medium		KEPT (re-scan: FLAT_STOP under v2 rule 3)

@@ -1,0 +1,31 @@
+{
+ "doc": "pdhd/docs/18_stm-michel-handscan-pdhd.md",
+ "tag": "smx18",
+ "det": "pdhd",
+ "display_arm": "h18s",
+ "display_arm_tla": "stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0,publish_other_arms:true,max_candidates:64}",
+ "grading_arms": {
+  "p82bhoff": "PDHD production (bare), the 303 items it reaches",
+  "h18b": "bare production + max_candidates:64, the 14 cap extras"
+ },
+ "binary_pin": "/home/xqian/tmp/p82/libpin_p82 (full local/lib snapshot), toolkit 082376c5, libWireCellClus md5 5f2c3ede, libWireCellRoot md5 46bf5105",
+ "prep": "pdhd/stm_michel_scan/prep-pdhd-smx18 (prep_stm_michel_scan.py --arm h18s --pin-tranche pdhd/docs/scan/pdhd_stm_michel_scan_sheet.tsv)",
+ "sheet": "pdhd/docs/scan/smx18/pdhd_stm_michel_scan_sheet.tsv (scan_id re-keyed: 303 old ids kept, extras 304-317)",
+ "blind": "scan_harness.py --blind: ends.is_stm, ends.reject_names, ends.in_fv, flow removed; --hide-selection",
+ "rubric": "pdhd/docs/scan/pdhd_stm_michel_scan_rubric.md",
+ "rubric_versions": {
+  "v1": "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d (calibration wave)",
+  "v2": "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36 (main wave 1)",
+  "v3": "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1 (waves 2-4, the 23 re-scans, the double scan)"
+ },
+ "owner_labels": "pdhd/work/stm_michel_labels/smx1/labels.json (30 items, arm d53h), read from its Phase-0 backup",
+ "superseded": "23 wave-1 records re-scanned under v3 (anode band / FLAT_STOP); list in smx18/duplicates.tsv",
+ "gates": "/home/xqian/tmp/h18/gates/gates.log (h18s vs p82hoff, h18b vs p82bhoff: 325/325 shared candidates bit-identical)",
+ "n_records": 317,
+ "n_owner": 30,
+ "rubric_shas": [
+  "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
+  "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
+  "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
+ ]
+}

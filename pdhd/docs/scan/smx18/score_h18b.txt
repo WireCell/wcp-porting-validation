@@ -1,0 +1,20 @@
+=== pdhd, tag smx18: 317 labels over 317 key rows
+
+stratum  parent  labelled  unscored(MESSY+UNCLEAR)  weight
+  S1        29       29        1 (  3.4 %)            1.00
+  S2        37       37        0 (  0.0 %)            1.00
+  S3       100      100       11 ( 11.0 %)            1.00
+  S4       151      151       32 ( 21.2 %)            1.00
+
+--- labels taken with the reconstruction REVEALED (273 scored) ---
+  STM + Michel   purity     raw  22/28  = 0.786   reweighted = 0.786
+  STM + Michel   efficiency raw  22/101 = 0.218   reweighted = 0.218
+  is_stm alone   purity     raw  65/65  = 1.000   efficiency raw  65/183 = 0.355
+  confusion (human -> chain), raw counts:
+                             chain: STM+Mic  STM only  Michel only  neither
+      STM + MICHEL                 22        11           42       26
+      STM, no Michel                6        26            8       42
+      THRU                          0         0           39       51
+
+under-clustering (FRAG) rate: S3 2/89  S4 1/119
+pin moved off the drawn chain end on 18 labels: median 7.27 cm, p90 15.30 cm, max 19.71 cm

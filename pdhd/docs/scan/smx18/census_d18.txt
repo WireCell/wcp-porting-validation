@@ -1,0 +1,160 @@
+record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx18_verdicts.json (317 items)  truth: owner where labelled, else agent
+chain: bare production key /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv; cap extras from /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/smx18/pdhd_stm_michel_scan_key_h18b.tsv
+
+== verdicts: {'STM_MICHEL': 101, 'STM_ONLY': 81, 'THRU': 90, 'UNCLEAR': 34, 'MESSY': 11}
+== truth source: {'owner': 30, 'agent': 287}
+
+== chain vs hand
+  production (303)           is_stm       TP  60 FP   0 FN 112 TN  87 | purity 1.000 efficiency 0.349 F1 0.517   unscored {'UNCLEAR': 34, 'MESSY': 10}
+                             michel_found TP  61 FP  14 FN  36 TN  61 | purity 0.813 efficiency 0.629 F1 0.709   (on hand stoppers only)
+  cap-64 extras (h18b)       is_stm       TP   5 FP   0 FN   5 TN   3 | purity 1.000 efficiency 0.500 F1 0.667   unscored {'MESSY': 1}
+                             michel_found TP   4 FP   0 FN   0 TN   6 | purity 1.000 efficiency 1.000 F1 1.000   (on hand stoppers only)
+  all                        is_stm       TP  65 FP   0 FN 117 TN  90 | purity 1.000 efficiency 0.357 F1 0.526   unscored {'UNCLEAR': 34, 'MESSY': 11}
+                             michel_found TP  65 FP  14 FN  36 TN  67 | purity 0.823 efficiency 0.644 F1 0.722   (on hand stoppers only)
+
+== by the scanner's confidence (agent truth only)
+  production, high           is_stm       TP  28 FP   0 FN  25 TN  40 | purity 1.000 efficiency 0.528 F1 0.691   unscored {}
+                             michel_found TP  22 FP   2 FN  11 TN  18 | purity 0.917 efficiency 0.667 F1 0.772   (on hand stoppers only)
+  production, medium         is_stm       TP  15 FP   0 FN  65 TN  39 | purity 1.000 efficiency 0.188 F1 0.316   unscored {'MESSY': 8, 'UNCLEAR': 21}
+                             michel_found TP  21 FP   8 FN  20 TN  31 | purity 0.724 efficiency 0.512 F1 0.600   (on hand stoppers only)
+  production, low            is_stm       TP   0 FP   0 FN  16 TN   4 | purity 0.000 efficiency 0.000 F1 0.000   unscored {'UNCLEAR': 12}
+                             michel_found TP   5 FP   1 FN   5 TN   5 | purity 0.833 efficiency 0.500 F1 0.625   (on hand stoppers only)
+
+== robustness of the efficiency (production 303, agent truth where no owner label)
+  without FLAT_STOP calls    is_stm       TP  59 FP   0 FN  77 TN  87 | purity 1.000 efficiency 0.434 F1 0.605   unscored {'UNCLEAR': 34, 'MESSY': 10}
+                             michel_found TP  58 FP  11 FN  32 TN  35 | purity 0.841 efficiency 0.644 F1 0.730   (on hand stoppers only)
+  owner + agent-high only    is_stm       TP  45 FP   0 FN  31 TN  44 | purity 1.000 efficiency 0.592 F1 0.744   unscored {'UNCLEAR': 1, 'MESSY': 2}
+                             michel_found TP  35 FP   5 FN  11 TN  25 | purity 0.875 efficiency 0.761 F1 0.814   (on hand stoppers only)
+
+== hand stoppers whose fit end is the UPPER end of the track: 23 of 182 (FLAT_STOP among them: 11; chain is_stm=1 among them: 0)
+  028084_0/108 028084_1/39 028084_15/102 028084_15/28 028084_18/17 028084_2/26 028084_20/39 028084_24/114 028084_29/101 028084_29/44 028084_3/91 028084_7/36 029107_1/32 029107_1/36 029107_10/37 029107_15/26 029107_18/79 029107_21/64 029107_24/47 029107_27/64 029107_29/119 029107_3/23 029107_7/45
+
+== by the stop's APA (production 303)
+  APA0 (n=103)               is_stm       TP   7 FP   0 FN  46 TN  24 | purity 1.000 efficiency 0.132 F1 0.233   unscored {'UNCLEAR': 20, 'MESSY': 6}
+                             michel_found TP  18 FP   3 FN  12 TN  20 | purity 0.857 efficiency 0.600 F1 0.706   (on hand stoppers only)
+  APA1 (n=51)                is_stm       TP  10 FP   0 FN  19 TN  17 | purity 1.000 efficiency 0.345 F1 0.513   unscored {'MESSY': 1, 'UNCLEAR': 4}
+                             michel_found TP  11 FP   1 FN  11 TN   6 | purity 0.917 efficiency 0.500 F1 0.647   (on hand stoppers only)
+  APA2 (n=81)                is_stm       TP  22 FP   0 FN  23 TN  26 | purity 1.000 efficiency 0.489 F1 0.657   unscored {'MESSY': 2, 'UNCLEAR': 8}
+                             michel_found TP  15 FP   6 FN   8 TN  16 | purity 0.714 efficiency 0.652 F1 0.682   (on hand stoppers only)
+  APA3 (n=68)                is_stm       TP  21 FP   0 FN  24 TN  20 | purity 1.000 efficiency 0.467 F1 0.636   unscored {'UNCLEAR': 2, 'MESSY': 1}
+                             michel_found TP  17 FP   4 FN   5 TN  19 | purity 0.810 efficiency 0.773 F1 0.791   (on hand stoppers only)
+
+== pins and notes prefixes (agent records)
+  pins moved (pin_rr): 18   notes prefixes: {'OVERSHOOT:': 18, 'UNDERSHOOT:': 16, 'SEAM:': 14, 'NO_MEASUREMENT:': 35, 'ANODE:': 45, 'FLAT_STOP:': 38, 'REVERSED:': 17, 'CATHODE:': 3, 'ISOCHRONOUS:': 45, 'FACE:': 16, 'DEAD:': 17}
+  confidence: {'high': 120, 'low': 33, 'medium': 164}
+  michel_kind: {'both': 58, 'none': 167, 'attached': 43, 'detached dots': 49}
+  tags: {'muon': 1252, 'michel': 199, 'gamma': 267, 'delta / other': 1258}
+
+== disagreements, production (303), by name
+  028084_1/39     hand STM_MICHEL (owner, low)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  028084_10/108   hand STM_MICHEL (owner, medium)  chain is_stm 0  reject no_bragg
+  028084_15/102   hand STM_ONLY   (owner, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_18/108   hand STM_MICHEL (owner, high)  chain is_stm 0  reject shape_flat
+  028084_23/114   hand STM_ONLY   (owner, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_30/37    hand STM_ONLY   (owner, high)  chain is_stm 0  reject shape_flat
+  029107_14/89    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_19/111   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_19/120   hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_21/41    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject stop_near_boundary
+  029107_26/27    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_3/23     hand STM_MICHEL (agent, low)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_5/32     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_7/34     hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_0/108    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_10/46    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_10/109   hand STM_ONLY   (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_11/130   hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_12/101   hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_12/117   hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  028084_14/83    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_15/28    hand STM_ONLY   (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_16/106   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_18/17    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject profile_sparse
+  028084_18/104   hand STM_ONLY   (agent, high)  chain is_stm 0  reject shape_flat
+  028084_19/59    hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  028084_2/26     hand STM_MICHEL (agent, low)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  028084_2/27     hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_2/49     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_2/116    hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_20/20    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_20/39    hand STM_MICHEL (agent, low)  chain is_stm 0  reject plateau_off_mip
+  028084_20/65    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_20/116   hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  028084_21/17    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_21/56    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_21/132   hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_22/57    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_23/53    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_24/49    hand STM_MICHEL (agent, high)  chain is_stm 0  reject plateau_off_mip
+  028084_24/114   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_27/27    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_27/107   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_28/106   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_28/110   hand STM_MICHEL (agent, high)  chain is_stm 0  reject plateau_off_mip
+  028084_28/131   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_29/44    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_29/53    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_29/101   hand STM_ONLY   (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_29/115   hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|profile_sparse
+  028084_3/23     hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|plateau_off_mip
+  028084_3/91     hand STM_ONLY   (agent, medium)  chain is_stm 0  reject plateau_off_mip
+  028084_30/26    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_30/33    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  028084_30/34    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_4/18     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject plateau_off_mip
+  028084_4/20     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  028084_4/29     hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_5/115    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_6/42     hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_6/97     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  028084_7/36     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  028084_8/110    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  028084_8/120    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_1/32     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  029107_1/36     hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  029107_1/85     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_10/37    hand STM_ONLY   (agent, low)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_10/80    hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  029107_11/18    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject not_muon_pid
+  029107_11/22    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_12/33    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject plateau_off_mip
+  029107_12/48    hand STM_ONLY   (agent, low)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  029107_12/95    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_12/118   hand STM_ONLY   (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_15/26    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject plateau_off_mip
+  029107_18/24    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  029107_18/45    hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_18/79    hand STM_ONLY   (agent, low)  chain is_stm 0  reject no_bragg|plateau_off_mip
+  029107_19/30    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_2/108    hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_20/17    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject stop_unmatched
+  029107_20/24    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat|plateau_off_mip
+  029107_20/57    hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  029107_20/108   hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_20/139   hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_21/32    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_21/43    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_21/64    hand STM_ONLY   (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_21/65    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_22/40    hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_23/116   hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_23/128   hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  029107_24/19    hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_24/33    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_24/47    hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_27/64    hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_27/99    hand STM_ONLY   (agent, high)  chain is_stm 0  reject shape_flat
+  029107_28/30    hand STM_MICHEL (agent, low)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  029107_28/109   hand STM_MICHEL (agent, medium)  chain is_stm 0  reject shape_flat
+  029107_29/119   hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_3/99     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_4/58     hand STM_ONLY   (agent, high)  chain is_stm 0  reject shape_flat
+  029107_4/69     hand STM_MICHEL (agent, high)  chain is_stm 0  reject shape_flat
+  029107_5/31     hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_5/51     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_6/122    hand STM_ONLY   (agent, high)  chain is_stm 0  reject shape_flat
+  029107_7/45     hand STM_MICHEL (agent, low)  chain is_stm 0  reject shape_flat|profile_sparse
+  029107_7/85     hand STM_MICHEL (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_8/104    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat
+  029107_8/136    hand STM_ONLY   (agent, medium)  chain is_stm 0  reject no_bragg|shape_flat|plateau_off_mip
+  029107_9/109    hand STM_MICHEL (agent, high)  chain is_stm 0  reject no_bragg|shape_flat

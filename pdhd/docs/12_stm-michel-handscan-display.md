@@ -1067,3 +1067,14 @@ check (H8) now requires those renderers to be visible.
 6. **`revealed_before_label` is now a constant.** It stays in the schema because
    the four `false` rows need it to remain meaningful, not because it still
    discriminates anything written from here on.
+
+## 14. The PDHD scan was carried to completion (doc pdhd/18, 2026-09-11)
+
+The 303-item PDHD sheet (plus the 14 candidates the `max_candidates` = 8 cap
+drops) was scanned by five agents driving this app headless, verdict-blind, on
+PDHD production (arm `h18s`, new tag `smx18`); the owner's `smx1` (30 items) is
+untouched and is the calibration. See
+[doc pdhd/18](18_stm-michel-handscan-pdhd.md). Two display facts it found that
+concern this app: the PDHD box and every x distance put the anode at ±358 cm
+where the wire planes are at ±352.1 cm (§6.2a), and the measurement panels show
+only the fitted cluster's own cells (§6.2b).

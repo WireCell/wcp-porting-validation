@@ -1,0 +1,31 @@
+key	owner_verdict	owner_frag	owner_kind	agent_verdict	agent_kind	agent_conf	verdict_agree	stopper_agree	kind_agree	tags_agree	owner_pin	agent_pin	owner_notes
+028084_0/97	STM_MICHEL		attached	STM_MICHEL	both	high	Y	Y	n	4/4			
+028084_1/142	STM_MICHEL		attached	STM_MICHEL	attached	high	Y	Y	Y	0/0			
+028084_1/39	STM_MICHEL		attached	UNCLEAR	none	low	n	n	n	0/0			
+028084_10/108	STM_MICHEL		attached	STM_MICHEL	attached	medium	Y	Y	Y	0/0		rr 3.5	
+028084_11/59	STM_ONLY		detached dots	STM_ONLY	detached dots	high	Y	Y	Y	5/5			
+028084_12/36	STM_MICHEL		both	STM_MICHEL	both	high	Y	Y	Y	2/2			
+028084_15/102	STM_ONLY		detached dots	THRU	none	medium	n	n	n	2/5			
+028084_17/29	THRU		— not set —	THRU	none	high	Y	Y		0/0			
+028084_17/35	THRU		— not set —	THRU	none	medium	Y	Y		0/0			
+028084_17/55	STM_MICHEL		attached	STM_ONLY	none	medium	n	Y	n	0/0			
+028084_17/97	FRAG_STM_MICHEL	FRAG	both	STM_MICHEL	both	high	Y	Y	Y	7/8			
+028084_18/108	STM_MICHEL		both	STM_MICHEL	attached	high	Y	Y	n	0/1			
+028084_2/19	STM_ONLY		none	STM_ONLY	none	high	Y	Y	Y	0/0			
+028084_20/124	STM_ONLY		detached dots	STM_ONLY	detached dots	high	Y	Y	Y	1/1			
+028084_23/114	STM_ONLY		detached dots	STM_MICHEL	both	medium	n	Y	n	2/2		rr 2.7	
+028084_23/51	STM_MICHEL		both	STM_MICHEL	both	high	Y	Y	Y	1/1			
+028084_24/103	THRU		none	THRU	none	high	Y	Y	Y	0/0			
+028084_26/109	STM_MICHEL		both	STM_ONLY	detached dots	medium	n	Y	n	4/4			
+028084_27/57	THRU		none	STM_MICHEL	attached	medium	n	n	n	0/0			
+028084_29/38	UNCLEAR		— not set —	STM_ONLY	detached dots	medium	n	n		0/0			
+028084_3/27	STM_ONLY		detached dots	STM_ONLY	detached dots	high	Y	Y	Y	4/4			
+028084_30/111	STM_ONLY		detached dots	STM_ONLY	detached dots	high	Y	Y	Y	0/0			
+028084_30/37	FRAG_STM_ONLY	FRAG	detached dots	STM_ONLY	detached dots	high	Y	Y	Y	4/4			
+028084_4/114	STM_MICHEL		both	STM_MICHEL	both	high	Y	Y	Y	4/4			
+028084_4/41	STM_ONLY		detached dots	STM_ONLY	detached dots	medium	Y	Y	Y	3/3			
+028084_7/56	STM_ONLY		detached dots	STM_ONLY	detached dots	high	Y	Y	Y	2/2			
+029107_0/127	STM_MICHEL		both	STM_MICHEL	both	high	Y	Y	Y	2/3			
+029107_0/50	STM_MICHEL		both	STM_MICHEL	both	high	Y	Y	Y	3/3	rr 0.7		
+029107_0/56	MESSY		— not set —	UNCLEAR	none	medium	n	n		0/0			
+029107_10/50	MESSY		— not set —	STM_MICHEL	attached	medium	n	n		0/0			

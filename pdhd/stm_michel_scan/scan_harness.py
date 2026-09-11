@@ -294,6 +294,28 @@ JS_BACKEND_3D = """() => {
   return st;
 }"""
 
+# doc pdhd/18, --hide-selection: empty the amber "picked object" layer
+# (LAYERS "pfsel" in stm_michel_viewer.py: 9 px, alpha 0.95 in 3-D, 7 px in the
+# nine measurement panels) just before a frame is taken.  The object table opens
+# with row 0 picked, and on PDHD row 0 is usually the muon segment that runs INTO
+# the stop -- so the band sat on exactly the cells f_meas exists to show and on
+# the dQ/dx colouring of the 3-D frames.  On PDVD it was the same band (rubric
+# trap 2) but row 0 often lay outside the +-150 window.  Client-side only: the
+# server's state and every other layer are untouched, and a shots session never
+# saves, so nothing but the picture changes.  The server re-fills the layer on
+# its next render, which is why this runs per frame, not once per item.
+JS_CLEAR_SEL = """() => {
+%s
+  let n = 0;
+  for (const m of _by(m => { const nm = m.name || '';
+        return nm === 'src3_pfsel' || (nm.startsWith('srct_') && nm.endsWith('_pfsel')); })) {
+    const e = {}; for (const k of Object.keys(m.data)) e[k] = [];
+    m.data = e; n++;
+  }
+  return n;
+}""" % JS_FIND
+
+
 # ---------------------------------------------------------------------------
 def free_port(start):
     for p in range(start, start + 60):
@@ -309,13 +331,23 @@ def free_port(start):
 class App:
     """The served viewer plus a chromium page pointed at it."""
 
-    def __init__(self, det, tag, labeldir=None, logdir="/home/xqian/tmp"):
+    def __init__(self, det, tag, labeldir=None, logdir="/home/xqian/tmp",
+                 prepdir=None, manifest=None):
         self.det, self.tag = det, tag
+        self.blind = False       # doc pdhd/18; main() sets it from --blind
+        self.hide_selection = False   # doc pdhd/18; --hide-selection
         self.port = free_port(5300)
         self.logpath = os.path.join(logdir, "scan_harness_%d.log" % self.port)
         args = ["--det", det, "--tag", tag]
         if labeldir:
             args += ["--labeldir", labeldir]
+        # doc pdhd/18: the viewer has always taken --prepdir / --manifest; the
+        # harness never passed them, so it could only drive prep-<det> and the
+        # default sheet.  Absent => the argument list is exactly what it was.
+        if prepdir:
+            args += ["--prepdir", prepdir]
+        if manifest:
+            args += ["--manifest", manifest]
         self.log = open(self.logpath, "w")
         self.proc = subprocess.Popen(
             [BOKEH, "serve", "--port", str(self.port),
@@ -467,6 +499,11 @@ class App:
 
         `want` is a list of (w, h) tolerated to a few px -- Bokeh rounds.
         """
+        if self.hide_selection:          # doc pdhd/18; see JS_CLEAR_SEL
+            n = self.page.evaluate(JS_CLEAR_SEL)
+            if not n:
+                raise SystemExit("--hide-selection: no pfsel source found")
+            self.page.wait_for_timeout(250)
         cs = [c for c in self.canvases()
               if any(abs(c["w"] - w) < 6 and abs(c["h"] - h) < 6 for w, h in want)]
         if not cs:
@@ -593,15 +630,20 @@ def _shoot_item(app, key, out, made):
     # 4. the Bragg evidence.  Always visible, so no tab switch.
     app.shoot(os.path.join(d, "g_dqdx.png"), SZ_DQDX)
 
-    ctx = context_of(app)
+    ctx = context_of(app, blind=app.blind)
     json.dump(ctx, open(os.path.join(d, "context.json"), "w"), indent=1)
     made[key] = d
     print("shot %s -> %s  (%d objects)" % (key, d, len(ctx["objects"])))
 
 
+# doc pdhd/18: set by main() from --prepdir.  None => prep-<det>, as before.
+PREPDIR = None
+
+
 def payload_of(det, key):
     ev, cl = key.split("/")
-    p = os.path.join(HERE, "prep-" + det, "smprep-%s-c%s.json" % (ev, cl))
+    p = os.path.join(PREPDIR or os.path.join(HERE, "prep-" + det),
+                     "smprep-%s-c%s.json" % (ev, cl))
     return json.load(open(p)) if os.path.exists(p) else None
 
 
@@ -705,7 +747,21 @@ def object_geometry(det, key, pin):
     return out
 
 
-def context_of(app):
+# doc pdhd/18, --blind: the chain's VERDICT, removed from context.json so a
+# scanner judges the stop before knowing what the chain decided.  The PDVD
+# tranche-2 record was taken with these on screen and leaned toward the chain:
+# the owner's smx4 re-judge flipped 8 of 13 of its THRU calls to stoppers
+# (doc pdvd/70 sec 9, feedback_blind_the_scan_sheet).  What stays is attribution
+# the frames draw anyway -- the object table's `group` / `chain` columns and
+# `seg_head`'s group counts are the chain's typing of each object, drawn as the
+# per-group layers of every 3-D frame -- so this is VERDICT-blind, not blind.
+# The seven frames are canvas clips (App.shoot) and no canvas title carries a
+# verdict, so the frames need no change.
+BLIND_ENDS = ("is_stm", "reject_names", "in_fv")
+BLIND_TOP = ("flow",)      # flow_div: "the chain's answer -- particle flow"
+
+
+def context_of(app, blind=False):
     """The non-visual half of what the scanner has in front of them."""
     t = app.table() or {}
     n = len(t.get("key") or [])
@@ -721,10 +777,18 @@ def context_of(app):
         g = geo.get(o["key"])
         if g:
             o.update(g)
-    return dict(key=key, pin=[round(c, 2) for c in pin] if pin else None,
-                ends=face_distances(app.det, key) if "/" in key else {},
-                objects=objs, seg_head=d.get("seg_head"),
-                status=d.get("status"), flow=d.get("flow"))
+    ctx = dict(key=key, pin=[round(c, 2) for c in pin] if pin else None,
+               ends=face_distances(app.det, key) if "/" in key else {},
+               objects=objs, seg_head=d.get("seg_head"),
+               status=d.get("status"), flow=d.get("flow"))
+    if blind:
+        for k in BLIND_ENDS:
+            ctx["ends"].pop(k, None)
+        for k in BLIND_TOP:
+            ctx.pop(k, None)
+        ctx["blind"] = "verdict-blind (doc pdhd/18): %s removed" % ", ".join(
+            ["ends." + k for k in BLIND_ENDS] + list(BLIND_TOP))
+    return ctx
 
 
 VERDICT_BTN = {
@@ -819,7 +883,7 @@ def do_apply(app, spec, labelfile):
 
         def tag_pass():
             keys, grp = stable_keys()
-            wait = 650 + 6 * max(len(keys), 1)
+            wait = int((650 + 6 * max(len(keys), 1)) * getattr(app, "settle_scale", 1.0))
             for k in want:
                 for _ in range(3):
                     if k not in keys:
@@ -874,7 +938,7 @@ def do_apply(app, spec, labelfile):
         app.click("SAVE this item", settle=vs)
 
         rec, short = None, []
-        for _ in range(4):
+        for _ in range(getattr(app, "tag_passes", 4)):     # doc pdhd/18: --tag-passes
             rec = None
             for _ in range(20):        # the write is a websocket round trip
                 rec = json.load(open(labelfile))["labels"].get(key)
@@ -926,7 +990,24 @@ def main(argv=None):
     ap.add_argument("--items-file", default=None)
     ap.add_argument("--out", default=None)
     ap.add_argument("--verdicts", default=None)
+    # doc pdhd/18.  All three default to the pre-existing behaviour.
+    ap.add_argument("--prepdir", default=None,
+                    help="payload dir (default prep-<det>); passed to the viewer too")
+    ap.add_argument("--manifest", default=None,
+                    help="scan sheet (default <det>/docs/scan/<det>_stm_michel_scan_sheet.tsv)")
+    ap.add_argument("--blind", action="store_true",
+                    help="drop the chain's verdict from context.json (BLIND_ENDS, BLIND_TOP)")
+    # doc pdhd/18: big object tables (17-26 rows) re-sort under the clicks and
+    # four passes did not converge on a loaded machine.  Defaults = the old values.
+    ap.add_argument("--tag-passes", type=int, default=4,
+                    help="apply: passes before an item is declared 'did not land' (default 4)")
+    ap.add_argument("--settle-scale", type=float, default=1.0,
+                    help="apply: multiply the per-click settle of the tag pass (default 1.0)")
+    ap.add_argument("--hide-selection", action="store_true",
+                    help="shots: empty the amber picked-object layer before each frame (JS_CLEAR_SEL)")
     a = ap.parse_args(argv)
+    global PREPDIR
+    PREPDIR = a.prepdir
 
     keys = [k for k in a.items.split(",") if k.strip()]
     if a.items_file:
@@ -942,7 +1023,10 @@ def main(argv=None):
         a.det, "work", "stm_michel_labels", a.tag)
     labelfile = os.path.join(labeldir, "labels.json")
 
-    app = App(a.det, a.tag, a.labeldir)
+    app = App(a.det, a.tag, a.labeldir, prepdir=a.prepdir, manifest=a.manifest)
+    app.blind = a.blind
+    app.hide_selection = a.hide_selection
+    app.tag_passes, app.settle_scale = a.tag_passes, a.settle_scale
     try:
         if a.cmd == "shots":
             if not a.out:
@@ -953,7 +1037,7 @@ def main(argv=None):
             for k in keys:
                 app.goto(k)
                 app.toggle("show particle flow", True)
-                out[k] = context_of(app)
+                out[k] = context_of(app, blind=app.blind)
             print(json.dumps(out, indent=1))
         else:
             spec = json.load(open(a.verdicts))
