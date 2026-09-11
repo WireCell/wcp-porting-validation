@@ -386,10 +386,15 @@ REJ_NAMES = {
     8: "energy window / per-candidate cap",
     9: "survey only -- neither stage was offered it",
     10: "no stop vertex -- nothing examined it",
+    # doc pdvd/71: the gamma collect's reserved blobs that no member row took
+    11: "gamma collect: refused by the total-energy guard",
+    12: "gamma collect: the Michel was vetoed",
     # doc pdvd/80: the segment census (role 8) adds three codes of its own
     13: "attached to the muon chain, not taken",
     14: "passes every piece gate, still unclaimed",
     15: "no endpoint vertices",
+    # doc pdvd/85: stop_gamma_require_stm -- a capture gamma on a rejected candidate
+    16: "capture gamma withheld: the candidate is not a stopper",
 }
 # Measured over 25 events per detector (doc pdhd/12 sec 5.7): only 3.7 % (PDHD)
 # and 6.3 % (PDVD) of PF segments carry points on BOTH sides of the muon/Michel

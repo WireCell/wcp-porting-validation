@@ -475,7 +475,13 @@ stop; flipped in PDVD production, +2 Michels and +1 stopper, 0 FP) and doc
 pdvd/84 (item 3, T2c's margin -- the moved-stop veto now also spares an
 attached Michel whose arm plus far subtree reaches >= 6.5 cm, the one separator
 of its 12 instances on 28 arms that no configuration moves across; flipped in
-PDVD production, +1 owner-confirmed Michel on the merged record, 0 FP).
+PDVD production, +1 owner-confirmed Michel on the merged record, 0 FP) and doc
+pdvd/85 (item 5, the gamma collect's rejections -- P4's gates reject more
+delta/other than gamma on every gate, so none is loosened; the stop-anchored
+collect already exists as the capture stage, and widening it is dead; the
+capture gamma is now withheld from a candidate the verdict rejects, flipped in
+PDVD production: role-5 clusters 43 gamma / 33 delta-other -> 36 / 0, verdicts
+identical).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.

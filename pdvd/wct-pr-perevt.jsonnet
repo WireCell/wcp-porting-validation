@@ -353,6 +353,19 @@ function(
         // candidate's fit through preload_clusters (doc pdvd/53 sec 6.2) and verdicts
         // can move; the 50 cm arm p4v50 is graded by name in doc 71 sec 11.
         michel_gamma_radius_cm: 50.0,
+        // doc pdvd/85 (doc 78 action item 5): a capture gamma (doc 51, role 5) only on a
+        // stopper.  A capture gamma claims the muon STOPPED and was captured, and the stage
+        // runs on every candidate before the verdict exists.  C++ default false.  On: after the
+        // verdict, a candidate with any reject bit keeps no capture gamma (no role-5 rows, no
+        // PF gamma node, stop_gamma_* at their defaults; n_stop_gammas_withheld counts them).
+        // Owner's merged record, cluster-level tags: role-5 clusters on is_stm 1 candidates are
+        // 36 gamma / 0 delta-other, on is_stm 0 ones 7 gamma / 33 delta-other (27 of them on
+        // through-going muons) / 1 untagged.  Arm p85vwh (bare production + this key) against
+        // p84vprod: 36 is_stm-0 candidates lose 45 capture gammas, role 5 on judged items goes
+        // 43 / 33 / 1 -> 36 / 0 / 0; is_stm, michel_found and reject_bits identical on 596, every
+        // is_stm-1 candidate bit-identical, zips / calib / trees move only on the 30 events holding
+        // a withheld candidate.  PDHD stays OFF.
+        stop_gamma_require_stm: true,
         // doc pdvd/72 (P3b): the moved-stop veto (moved_stop_michel_guard, doc 61) spares an
         // attached Michel that turns at least 60 deg at the stop -- the turn is the Michel's
         // own evidence, which the 10 MeV floor alone does not read.  C++ default -1 = off.

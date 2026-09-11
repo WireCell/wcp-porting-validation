@@ -8,6 +8,13 @@ owner's doc pdhd/14 waiver — *"You do not have default off knob. We are
 developing this module for both PDHD and PDVD, this can be new feature default
 on"* — with a doc pdhd/15 §7-style census as the substitute gate (§6).
 
+**Update (2026-09-11, doc pdvd/85):** the capture gamma is now withheld from a
+candidate the verdict rejects (`stop_gamma_require_stm: true` in PDVD
+production). On the owner's merged record this stage's clusters were 36 gamma /
+0 delta-other on `is_stm` 1 candidates, and 7 gamma / 33 delta-other on
+`is_stm` 0 ones, 27 of those on through-going muons. Widening the ring to 50 cm
+is measured dead (doc 85 §2.2).
+
 Nothing outside the two ProtoDUNEs can see any of it: only
 `cfg/pgrapher/experiment/{protodunevd,pdhd}/pr.jsonnet` bind
 `check_stm_michel`, and the one shared-file change

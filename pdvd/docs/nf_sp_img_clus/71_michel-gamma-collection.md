@@ -12,6 +12,14 @@ cores are the only Michels above 60 MeV, and they gain nothing. The C++ matches
 its offline twins with 0 mismatches. The widening moves 107 of 578 candidates'
 fits (doc 53's preload perturbation) and `mabc-pr.zip` on 91 of 120 events.
 
+**Update (2026-09-11, doc pdvd/85 = doc 78 item 5):** P4's gates were
+re-graded against the owner's merged record at cluster level. On items with a
+Michel every gate rejects at least as much delta/other as gamma (the cone 12 /
+29, the body test 6 / 7), so none is loosened. On today's record, at cluster
+level, role-4 purity reads 0.861 (0.907 on `is_stm` 1). The 0.933 above is
+segment-level, and the scan arms' segment ids drift against production's
+(doc 85 §1.3).
+
 **Status (2026-09-10): built behind a default-OFF knob, gated, and switched on
 in PDVD production at 35 cm (§9); the radius then became 50 cm (§11). PDHD
 stays OFF.**
