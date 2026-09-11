@@ -462,7 +462,11 @@ itself is recommended unchanged: 0.78 PDVD pitch, profile already smoothed over
 two samples; **built, doc pdvd/76**: `pr.jsonnet` `stm_trackfitting_config_file`
 + the perevt TLA `stm_trackfitting_config`, default = the shared file, compiled
 config byte-identical, nothing to flip). **The P1-P5 set is complete**; the
-owner's review of the chain against the record is doc pdvd/77.
+owner's review of the chain against the record is doc pdvd/77. The owner's
+three observations after it (stop overshoot, the near-isolated Michel,
+unassociated segments) are sized in doc pdvd/78, whose action items start with
+doc pdvd/79 (the `max_candidates` cap, doc 77 §7.1) and doc pdvd/80 (the
+segment census).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.

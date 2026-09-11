@@ -160,4 +160,6 @@ Of the 12 judged stoppers with no candidate, 2 are the cap (§7.1) and **10 are 
 
 ## 8. Recommendation
 
+*Follow-up (2026-09-10):* the owner's three observations after this review — the stop overshoot, the near-isolated Michel, unassociated segments — are sized on the same arm in doc 78, which orders its action items behind (1) and (2) below; the cap is doc 79.
+
 In this order, each under the doc 56 bar: **(1)** the candidate cap — a config value, an arm, two named gains, no threshold; **(2)** P1's floors at 3 MeV / 3 cm — a config value, four named gains, the 2.0–2.4 cm THRU arms as the named negatives; **(3)** the tagger's admission — a default-OFF knob in `TaggerCheckSTM`, the six named stoppers as the target and the 19 status-3 THRU items as the control, gated on PDHD and PDVD and checked against the uBooNE reference; **(4)** `plateau_mip_hi` 2.0. Then a re-judge of the 29 medium-confidence disagreements, which is where the remaining error concentrates, before anything is aimed at them.
