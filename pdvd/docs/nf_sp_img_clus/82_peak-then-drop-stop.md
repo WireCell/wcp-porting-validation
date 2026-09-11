@@ -2,7 +2,7 @@
 
 The owner asked (2026-09-10, after docs 79 and 80) to proceed with doc 78's action item 2 — *"a peak-then-drop stop mover: after a Bragg peak ≥ 1.4 × plateau, a tail whose median falls to ≤ f × the peak (not the plateau) with a bend ≥ 15° at the drop row marks the stop"*. Target: the 14 hot-tail items of doc 78 §2.3, behind which sit 13 missed Michels and 8 missed stoppers.
 
-**Status (2026-09-10). The knob is built, gated and NOT flipped: measured on the arm, the peak-relative tail reading costs 7 new `is_stm` false positives and 4 true positives (two owner-confirmed) for 5 recovered stoppers. The mechanism is reported dead, with the reason — on through-going tracks a large bend at a hot-tail row is common, so no bend threshold separates. Doc 78's side-sweep `split_kink_min_deg: 10.0` IS now PDVD production: four stops move, the verdict census is identical on every class, and the mean distance from the scanner's own pin falls 4.76 → 4.33 cm (within 1 cm: 3 → 5). Byte-identical OFF gates PASS on both ProtoDUNEs (PDVD 596/596 × 140 branches and every point row, PDHD 325/325 × 130). Doc 78 item 2 is corrected in three places.**
+**Status (2026-09-10). The knob this doc was built for is NOT flipped: measured on the arm, the peak-relative tail reading costs 7 new `is_stm` false positives and 4 true positives (two owner-confirmed) for 5 recovered stoppers. The mechanism is reported dead, with the reason — on through-going tracks a large bend at a hot-tail row is common, so no bend threshold separates. Separately, doc 78's side-sweep on an *existing* knob, `split_kink_min_deg: 10.0`, IS now PDVD production — a **stop-accuracy-only** result: four stops move, the verdict census is identical to production on every class, and the mean distance from the scanner's own pin falls 4.76 → 4.33 cm (within 1 cm: 3 → 5), with one Michel energy improving. One reversible key; §8 says so plainly and offers the revert. Byte-identical OFF gates PASS on both ProtoDUNEs (PDVD 596/596 × 140 branches and every point row, PDHD 325/325 × 130). Doc 78 item 2 is corrected in three places.**
 
 ## 0. Repro
 
@@ -25,10 +25,13 @@ Production's two stop movers (doc 57 retreat, doc 58 split) call a tail collapse
 
 | *f* (tail ≤ *f* × peak) | bend ≥ | pin_rr items reached (of 21) | within 2 cm of the pin | THRU control fires (of 259) |
 |---|---:|---:|---:|---:|
-| production (plateau only) | 15° | 6 | 5 | 17 |
-| 0.5 | 15° | 16 | 11 | 63 |
-| 0.6 | 25° | 13 | 8 | 45 |
-| 0.7 | 15° | 16 | 10 | 91 |
+| production (plateau only) | 15° | 5 | — | 11 |
+| 0.5 | 15° | 16 | 11 | 60 |
+| 0.5 | 25° | 13 | 8 | 33 |
+| 0.6 | 25° | 13 | 8 | 42 |
+| 0.7 | 15° | 16 | 10 | **88** |
+
+(Every number here is printed by `d82_sizing.py` §1 as committed, with candidate rows restricted to the chain's last segment — the only rows `stm_michel_stop_split` can reach. An earlier unconstrained sweep over the whole profile read 92 rather than 88 at `f` 0.7 / 15°; the two commit messages of this round quote that 92. The constrained reading is the one to use, and it is the one the script prints.)
 
 The arithmetic is the reason. With peak/plateau in 1.4–3 — which is what the peak gate already requires — `tail ≤ 0.7 × peak` is `tail ≤ 0.98–2.1 × plateau`. **A muon that simply keeps going passes it.** The literal rule is not a collapse test at all; it is a threshold that rises with the peak it is meant to be anchored against. Doc 75 hit the same shape of problem with doc 65's anchor precondition, and the answer is the same: build, but not the literal rule.
 
@@ -105,7 +108,7 @@ Peak-relative test, Bragg-confirmed chains only, rows inside the chain's last se
 | 0.6 | 25° | 8 | 6 | 7 |
 | 0.7 | 25° | 8 | 6 | 7 |
 
-`f = 0.5`, bend ≥ 25° is where the control falls to 2 without costing a signal item. Above 25° the signal starts paying; below it the control triples by 15°.
+`f = 0.5`, bend ≥ 25° is where the control falls to 2 without costing a signal item. Above 25° the signal starts paying; below it the control quadruples by 15°. Ungated, the same rule fires on **33 of the 259** through-going control items — what the Bragg gate was meant to buy.
 
 ## 4. Built
 
@@ -164,6 +167,8 @@ Completeness: 120/120 PDVD and 61/61 PDHD dirs with a `tracking-pr.root` on ever
 **OFF gate, PDHD — `p82bhoff` vs `p80bhoff`:** 61/61 zips, 61/61 calib json, all eight trees, **325/325 candidates × 130 branches**, 0 flips, 325/325 identical point geometry.
 
 `p80boff` and `p80bhoff` ran on the **pre-doc-81** binary, so this gate re-proves doc 81's OFF path as well as this round's.
+
+**The baseline chain, which every ON number in §7 rests on.** The feature arms ran on this round's binary and are graded against `p79vprod`, which ran on the pre-doc-80 one. That comparison is legitimate only through two links, both measured: `p79vprod ≡ p80boff` (doc 80 §4, 596/596 × 140 branches and every point row) and `p80boff ≡ p82boff` (§6 above). So `p79vprod ≡ p82boff`, and a difference between a feature arm and `p79vprod` is this round's knob and nothing else.
 
 ## 7. Result
 
@@ -233,7 +238,11 @@ Two of doc 78 §2.3's four "straight gap-bridge" items are recovered this way; `
 
 ## 8. Flip
 
-**Flipped in PDVD production** (`pdvd/wct-pr-perevt.jsonnet`, one key in `stm_michel_knobs`): `split_kink_min_deg: 10.0`. The owner authorised the flip for confirmed improvements on 2026-09-10; §7.4 is the confirmation.
+**The knob this doc was built for is NOT flipped.** `stop_tail_peak_frac` and `stop_tail_peak_kink_min_deg` stay at their C++ defaults (0, 25) and appear nowhere in any production config: §7.1 measured them harmful. The owner's 2026-09-10 message authorising a PDVD flip was written about that knob, before it was measured; it does not carry over to a different one.
+
+**Separately flipped** (`pdvd/wct-pr-perevt.jsonnet`, one key in `stm_michel_knobs`): `split_kink_min_deg: 10.0`, doc 78 item 2's side-sweep A on an **existing** knob. Its result is **stop accuracy only** — the verdict census is identical to production on every class, so nothing the record grades improves. What improves is the distance from the scanner's own pin (§7.4), and one physics consequence beyond geometry: `039349_7/4`'s Michel energy rises 9.4 → 15.5 MeV. All four movers are judged items; no unjudged candidate moved. It is one reversible key, proven bit-identical to the graded arm — say the word and it comes out.
+
+One caution to carry: this round's §7.1 showed through-going fits bending 27–69° at hot-tail rows, which is wider than the distribution doc 58 set 15° against (bend median 18.5° on missed stoppers vs 6.3° on its control). Lowering the bar to 10° spends margin on a discriminator this round partly weakened. On this record it costs nothing measurable; that is the whole of the evidence for it.
 
 The note doc 58 left at this site says `split_kink_min_deg` was deliberately left **unset** so it could not appear as an inert key. 10 is not its C++ default, so it is a real value and belongs in the file — the OFF proof for it is an override back to 15.0, not the key's absence. Proofs (`d82_proofs.sh`, `/home/xqian/tmp/p82/proofs.txt`):
 
