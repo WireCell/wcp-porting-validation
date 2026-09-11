@@ -33,6 +33,8 @@ Production's two stop movers (doc 57 retreat, doc 58 split) call a tail collapse
 
 (Every number here is printed by `d82_sizing.py` §1 as committed, with candidate rows restricted to the chain's last segment — the only rows `stm_michel_stop_split` can reach. An earlier unconstrained sweep over the whole profile read 92 rather than 88 at `f` 0.7 / 15°; the two commit messages of this round quote that 92. The constrained reading is the one to use, and it is the one the script prints.)
 
+*Correction (doc 83 §9.5, 2026-09-11).* The script's live-row floor used `mip_dqdx` 50000; the compiled PDVD value is 55000 (`wct-pr-perevt.jsonnet:578`), and the committed script now uses it. Re-run with 55000, this table reads: production 4 / — / 9; 0.5 / 15° 15 / 10 / 60; 0.5 / 25° 12 / 7 / 33; 0.6 / 25° 12 / 7 / 42; 0.7 / 15° 16 / 10 / 88. The argument is unchanged. §2.3's twin validation reads 13 of 565 (2.3 %), and §3's operating point (8 / 6 / 2) does not move. Every C++ arm result in this doc is unaffected.
+
 The arithmetic is the reason. With peak/plateau in 1.4–3 — which is what the peak gate already requires — `tail ≤ 0.7 × peak` is `tail ≤ 0.98–2.1 × plateau`. **A muon that simply keeps going passes it.** The literal rule is not a collapse test at all; it is a threshold that rises with the peak it is meant to be anchored against. Doc 75 hit the same shape of problem with doc 65's anchor precondition, and the answer is the same: build, but not the literal rule.
 
 ## 2. What actually keeps the stop where it is
@@ -234,7 +236,7 @@ Four stops move; the verdict census is **identical to production on every class*
 
 Mean \|stop − pin\| over the 25 overshoot items **4.76 → 4.33 cm**, within 2 cm 4 → 6, **within 1 cm 3 → 5**. `039349_7/4`'s Michel gains 6 MeV because the charge past the old stop now joins the Michel instead of the muon — which is the physics doc 78 §2 was after.
 
-Two of doc 78 §2.3's four "straight gap-bridge" items are recovered this way; `039349_81/25` (12°) and `039252_9/101` (13°) did not move on the real graph, the offline twin's 2× over-count showing up exactly where §2.3 predicted it would.
+Two of doc 78 §2.3's four "straight gap-bridge" items are recovered this way; `039349_81/25` (12°) and `039252_9/101` (13°) did not move on the real graph, the offline twin's 2× over-count showing up exactly where §2.3 predicted it would. *(Doc 83 §9.5: for `039252_9/101` that reading is wrong. With the compiled live-row floor the twin does not predict it either; only `039349_81/25` is the over-count.)*
 
 ## 8. Flip
 

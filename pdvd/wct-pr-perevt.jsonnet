@@ -556,6 +556,23 @@ function(
         // (-S stm_michel_extra={michel_range_energy_dis_cm:3.0}), not the
         // default.  PDHD stays OFF for both: no PDHD hand-scan record.
         michel_range_energy_guard: true,
+        // doc pdvd/83 (doc 78 action item 4) -- PDVD PRODUCTION.  C++ default
+        // 0 (off).  Where no Michel was found, a kOther arm leaving the muon
+        // chain at a vertex within 5 cm (along the chain) BEFORE the stop is
+        // offered the same gate a stop arm faces (kink against the incoming
+        // chain segment); the nearest such Michel becomes an attached one
+        // (conn 1, michel_near_arm 1, michel_dis_cm = that distance).  The
+        // four missed Michels of doc 78 sec 3.2 all hang there; measured on
+        // p83v5 against production (p82vprod): 2 fire, both of them --
+        // 039349_64/24 (s24003, 2.5 cm, 38.9 MeV) and 039349_9/19 (s19003,
+        // 3.8 cm, 16.8 MeV; is_stm 0 -> 1 through topology_stop_evidence) --
+        // michel TP 134 -> 136, is_stm TP 225 -> 226, 0 FP, 0 TP lost; the
+        // other 594 candidates bit-identical on every branch.  7 cm is
+        // identical on this record; 10 cm adds a THRU and an STM_ONLY FP
+        // (039252_12/114, 039252_16/108), so the distance is what holds the
+        // purity.  039349_69/56 (0.29 MIP) and 039349_64/52 (reach) are
+        // refused by the gate, which is not loosened for them.
+        michel_near_stop_arm_cm: 5.0,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

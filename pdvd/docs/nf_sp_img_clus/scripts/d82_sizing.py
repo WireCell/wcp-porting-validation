@@ -27,7 +27,7 @@ population and counted separately.
 Each candidate row is judged with the production thresholds
 (CheckSTM_Michel.cxx defaults + pdvd/wct-pr-perevt.jsonnet):
   plateau      median dQ/dx over rr in [20, 40] cm (halved under 40 cm of track),
-               live rows only (q >= profile_min_dqdx_frac * mip_dqdx = 0.15*50k)
+               live rows only (q >= profile_min_dqdx_frac * mip_dqdx = 0.15*55k; 50k through doc 82)
   peak         max of the 3-row running median of the SURVIVING rows within
                retreat_peak_window_cm = 15 cm of the candidate row
   collapse     tail median < retreat_collapse_frac = 0.5 x plateau   (production)
@@ -56,7 +56,7 @@ ap.add_argument("--strict", action="store_true", help="read the tail the RETREAT
 args = ap.parse_args()
 
 # production operating point
-MINLIVE = 0.15 * 50000.0          # profile_min_dqdx_frac * mip_dqdx
+MINLIVE = 0.15 * 55000.0          # profile_min_dqdx_frac * mip_dqdx -- the COMPILED PDVD value (wct-pr-perevt.jsonnet:578); 50000 through doc 82, corrected in doc 83
 COLLAPSE, PEAK_FRAC, PEAK_WIN = 0.5, 1.4, 15.0
 MIN_DROP, MAX_DROP = 3.0, 25.0    # split_min_drop_cm, michel_max_len_cm
 DIR_WIN = 5.0                     # split_dir_window_cm
