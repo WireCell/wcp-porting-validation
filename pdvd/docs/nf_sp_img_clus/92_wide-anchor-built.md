@@ -7,7 +7,8 @@ and PDHD production are untouched.
 *+5 stoppers at 0 judged THRU* — **did not survive the blind re-judge**. The owner reversed their own
 smx7 call on `039349_71/37` (STM_MICHEL → THRU), which is one of the five gains. On the corrected
 record the selected point gains **4 stoppers and 1 false positive**: efficiency 0.832 → 0.846,
-purity 0.971 → 0.968. It is now a real trade, not a free gain. §6 has the numbers, §9 the pick.
+purity 0.971 → 0.968. It is now a real trade, not a free gain — and a third blind look (§5.1, `smx9`) confirmed that item
+THRU, 2 of 3, so the cost is settled rather than suspected. §6 has the numbers, §9 the pick.
 
 ## 0. Repro
 
@@ -174,6 +175,25 @@ Michel call.
   rested on that verdict. It reads p 1.81 — above both R 1.3 and R 1.5 — so **R 1.5 does not protect
   against it**.
 
+### 5.1 `smx9`, the blind tie-break — the item is THRU, 2 of 3
+
+Two blind owner verdicts disagreeing is not a result, so the item was served a **third** time, blind,
+with 6 fresh controls drawn from items not used in smx8 (`d92_build_smx9.py`, tag `smx9`). The two
+prior calls were deliberately **not** shown: an anchored third call settles nothing.
+
+| | smx7 | smx8 | **smx9** | majority |
+|---|---|---|---|---|
+| `039349_71/37` | STM_MICHEL (pin 6.5) | THRU (pin 1.8) | **THRU** (pin 3.0) | **THRU, 2 of 3** |
+
+The controls held **6 of 6**, and the two most recent independent readings agree. So the false
+positive is real and settled: the rule's one cost at either operating point is this track, and it is
+through-going. The census in §6 is unchanged — the smx8 record already carried it as THRU, so the
+fold of smx9 (`d92_fold_smx9.py`) moves no stopper / Michel / judged class and is provenance only.
+
+What this does **not** say is that the item is easy: one of three blind owner readings called it a
+Michel, and the pin has landed at 6.5, 1.8 and 3.0 cm on three viewings. It sits inside the record's
+own resolution. That is the honest characterisation of the rule's single false positive.
+
 ## 6. The corrected census (`score_smx8.txt`)
 
 The fold changed the stopper/THRU class on 4 of 601 records; judged stoppers 285 → 286.
@@ -236,16 +256,18 @@ under a re-judge of items the owner had already judged, by enough to turn a "+5 
 
 - **Out-of-record purity.** W, R and D were chosen on the smx7 record. No build can prove purity away
   from it.
-- **`039349_71/37` itself.** Two blind owner judgements 80 minutes apart disagree. Nothing here says
-  which is right; the rule's one false positive is exactly this item.
+- **How reproducible `039349_71/37` is.** §5.1 settles its verdict (THRU, 2 of 3) but not its
+  difficulty: three blind owner readings put the pin at 6.5, 1.8 and 3.0 cm and split 1–2 on the
+  call. The rule's single false positive is a track the record itself resolves only barely.
 - **The Michel for the gains.** They read `is_stm` 1 / `michel_found` 0 — doc 78 item 8's population.
 - **PDHD is not graded.** The rule is OFF there; doc 88 §9.5 item 2 is still open.
 
 ## 9. Next, ranked
 
-1. **The owner's call on whether to flip at all.** R 1.3 dominates R 1.5, so the question is no longer
-   which R but whether +4 stoppers is worth +1 false positive (eff +1.4 pts, pur −0.3 pts). Both arms
-   are built, gated and predicted exactly; flipping is a one-line jsonnet change plus proofs.
+1. **The owner's call on whether to flip at all.** R 1.3 dominates R 1.5, and after §5.1 the trade is
+   fully measured and no longer contingent: **+4 owner-judged stoppers against 1 confirmed false
+   positive** (eff 0.832 → 0.846, purity 0.971 → 0.968). Both arms are built, gated and predicted
+   exactly; flipping is a one-line jsonnet change plus the usual proofs.
 2. **Doc 90 §8 item 2 / doc 78 item 8 — the 10 stop-called-but-no-Michel candidates.** §7 makes this
    the one population left with a named cause and a real size.
 3. **A fresh, non-boundary tranche** if D 1.0 is ever to be settled honestly.

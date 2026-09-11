@@ -248,6 +248,10 @@ Doc 92: doc 91 §10 item 1, built OFF and gated, **not flipped**.
   11 decision items — and one of them, `039349_71/37`, was the owner's own smx7 STM_MICHEL call, now
   THRU. It is a gain at both R points, so doc 91's "+5 at 0 judged THRU" becomes **+4 stoppers and
   1 false positive**: eff 0.832 → 0.846, purity 0.971 → 0.968. R 1.3 dominates R 1.5.
+- **The tie-break** (doc 92 §5.1). `039349_71/37` was served blind a third time (`smx9`, 6 fresh
+  controls, controls 6/6): **THRU, 2 of 3**, the two most recent readings agreeing. The false
+  positive is confirmed and the census is unchanged; the trade is +4 stoppers against 1 FP. But the
+  pin landed at 6.5 / 1.8 / 3.0 cm on three viewings — the item is barely resolved by the record.
 - **The headroom** (doc 92 §7): of 44 remaining missed stoppers only **5** have a chain-side lever,
   all five blocked by the same `topology_michel_len_min_cm` 3 cm floor, which is what protects purity.
   The Michel side still has 10 stop-called-but-no-Michel candidates.

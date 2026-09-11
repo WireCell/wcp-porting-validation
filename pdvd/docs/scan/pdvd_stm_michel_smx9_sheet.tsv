@@ -1,0 +1,10 @@
+# doc pdvd/92 -- smx9, PDVD: the blind tie-break on 039349_71/37 (judged twice, differently) + 6 controls. Production (p90vprod) reads is_stm 0 / michel_found 0 / shape bits only on every item; order shuffled (seed 93).
+# built by d92_build_smx9.py from prep=/home/xqian/tmp/p90/prep_p90vprod
+scan_id	tranche	event	cluster	npts	muon_len_cm
+1	1	039349_45	52	685	412.8
+2	1	039349_82	25	167	99.5
+3	1	039349_38	32	41	24.0
+4	1	039349_63	47	175	119.9
+5	1	039349_75	69	553	331.3
+6	1	039349_71	37	334	197.4
+7	1	039349_83	68	115	67.2

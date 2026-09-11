@@ -1,0 +1,9 @@
+# doc pdvd/92 -- smx9 KEY (do not show the scanner). group: tiebreak = the contested item, control = settled and moved by no operating point. record_verdict is the CURRENT (smx8) call; prior_verdict is the earlier record's (smx7) call, so the reveal can show all three.
+scan_id	key	group	record_verdict	record_confidence	record_source	prior_verdict	reject_names
+1	039349_45/52	control	THRU	high	smx1a	THRU	no_bragg+shape_flat
+2	039349_82/25	control	THRU	owner	smx7 (owner, 2026-09-11)	THRU	shape_flat
+3	039349_38/32	control	THRU	medium	smx1a	THRU	no_bragg+shape_flat
+4	039349_63/47	control	THRU	medium	smx1a	THRU	no_bragg+plateau_off_mip
+5	039349_75/69	control	THRU	medium	smx1a	THRU	no_bragg+shape_flat
+6	039349_71/37	tiebreak	THRU	owner	smx8 (owner, 2026-09-11)	STM_MICHEL	no_bragg+shape_flat
+7	039349_83/68	control	THRU	high	smx1a	THRU	no_bragg+shape_flat
