@@ -1,0 +1,3 @@
+# doc pdvd/88 -- smx6 KEY (do not show the scanner): the record's reading and the answer the p88v5fr arm's reading predicts, written before the scan.
+scan_id	key	record_verdict	record_michel_kind	record_source	pred_mech	pred_dead	offline_reading
+1	039253_15/36	STM_ONLY	none	smx1a	unfitted	none	PR fits a 12-terminal 8.78 cm residual at the stop and drops it as isolated (pr54, production); p88v5fr keeps it (floor 5/5, radius 5 cm) and T3b makes it the Michel. d86 sec 8.1 U2: 77 own points in excess of the body rate within 10 cm of the fit end, the largest on an STM_ONLY item. Record: STM_ONLY (smx1a, high)

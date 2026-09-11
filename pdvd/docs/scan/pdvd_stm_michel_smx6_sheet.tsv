@@ -1,0 +1,4 @@
+# doc pdvd/88 -- smx6, PDVD, doc 78 action item 7. Production (p85vwh == p85vprod) reads is_stm 1 / michel_found 0; the payload is production's (blind to the flip candidate).
+# built by d88_build_smx6.py from prep=/home/xqian/tmp/p87/prep_p85vprod
+scan_id	tranche	event	cluster	npts	muon_len_cm
+1	1	039253_15	36	537	321.8
