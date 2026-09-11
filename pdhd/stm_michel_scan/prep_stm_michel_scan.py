@@ -203,6 +203,13 @@ VERDICT_SCALARS = [
     # that pass every T3b piece gate yet were unclaimed (rej 14).  Exist only with
     # segment_census on.
     "n_census_segs", "n_census_admissible",
+    # doc pdvd/81 -- the charge-based Michel energy (2-D charge minus the muon fit's
+    # prediction) and its pieces.  Exist only with michel_q2d on.
+    "michel_q2d_valid", "michel_q2d_reason", "michel_q2d_dropped_plane",
+    "michel_q2d_u", "michel_q2d_v", "michel_q2d_w", "michel_q2d_mu_u", "michel_q2d_mu_v", "michel_q2d_mu_w",
+    "michel_q2d_n_u", "michel_q2d_n_v", "michel_q2d_n_w", "michel_q2d_nx_u", "michel_q2d_nx_v", "michel_q2d_nx_w",
+    "michel_q2d_raw_u", "michel_q2d_raw_v", "michel_q2d_raw_w", "michel_q2d", "michel_q2d_gamma",
+    "michel_ke_q2d", "michel_ke_q2d_gamma", "michel_ke_q2d_total",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",
