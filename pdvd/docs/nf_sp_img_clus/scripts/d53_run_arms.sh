@@ -31,7 +31,10 @@
 # change move the scan silently.  Verified with wcsonnet that this reproduces
 # the component config the retired pr.jsonnet stm_survey=true route produced.
 #
-#   SURVEY='-S stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0,publish_other_arms:true}'
+#   SURVEY='-S stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0,publish_other_arms:true,segment_census:true}'
+#   (doc pdvd/80: segment_census rides with the survey too -- role-8 rows for every
+#   PR segment of the main cluster no stage claimed, with the piece gate that left it;
+#   rows only, OFF in production by the same diagnostic-rows rule)
 #   (doc pdvd/64: publish_other_arms rides with the survey -- rows-only, OFF in
 #   production like the survey itself, ON on every scan arm so the display can
 #   show the chain's kOther arms as role 7.)

@@ -78,6 +78,8 @@ Across all judged stoppers, **42 michel tags on 32 items** are PR segments of th
 
 So the "close-to-ISO, missing trajectory" case is, on this record, mostly a Michel that **goes backward along the muon body** — the one geometry the body exclusion was written to reject (a muon's own residuals look the same). Nothing in the output today lets a scanner or a script see these segments at all.
 
+*Correction (doc 80 §5.1, 2026-09-10):* the census knob's own reading of these four segments is **rej 13, attached to the muon chain** (an endpoint vertex on the chain or an out-edge to a chain segment), not the body test: T3b admits only *disconnected* pieces and never examined them. The offline `d_body < d_stop` reading above was right about the geometry and wrong about the gate. Action item 4 below is therefore an attached-arm rule, not a body-exclusion exception; the body test does bite on the four free pieces of `039349_64/52`'s shower at 11–13 cm.
+
 ### 3.3 The record's "detached dots" Michels, as the chain reads them
 
 Of the 68 STM_MICHEL items the scanner called "both" (attached + detached) the chain finds 58 (49 attached, 9 bridged) and misses 10 (5 of them `is_stm` 0); of the 4 "detached dots" it finds 2 (one attached, one bridged). A bridged reading is not the failure mode; the misses are the stop's and the orphans'.
@@ -129,7 +131,7 @@ Each under the doc 56 bar (default-OFF knob, byte-identical OFF gate on both Pro
 
 3. **T2c's kink margin.** `039252_2/79`: owner-confirmed STM_MICHEL, split fired, 8.9 MeV / 9.3 cm Michel at 59.58°, demoted by `moved_stop_michel_guard` with `moved_stop_michel_kink_min` 60. Re-grade T2c on the current record (doc 61 graded it on smx1a, where this item read THRU): if it is now 1 owner TP lost for 4 THRU FPs removed, state so; a value under 59.5° recovers the item — a one-item margin, to be declared as such. No scan.
 
-4. **Backward-Michel admission, default OFF.** A main-cluster piece whose near end lies within ~5 cm of the stop and whose direction has cos < −0.5 to the muon's last 5 cm joins the Michel even inside the body exclusion. Target: `039349_64/24`, `039349_9/19`, `039349_64/52`, `039349_69/56` (and the 21 stop-touching members on found items, as energy). Negative control: the muon's own split-off fragments and pr54 residuals — which item 1's census is what names. After item 1.
+4. **Backward-Michel admission, default OFF** *(re-read after doc 80: an attached-arm rule, not a body-exclusion exception — the four segments are connected to the chain, rej 13, and the Michel classification did not take them)*. A main-cluster piece whose near end lies within ~5 cm of the stop and whose direction has cos < −0.5 to the muon's last 5 cm joins the Michel. Target: `039349_64/24`, `039349_9/19`, `039349_64/52`, `039349_69/56` (and the 21 stop-touching members on found items, as energy). Negative control: the muon's own split-off fragments and pr54 residuals — which item 1's census is what names. After item 1.
 
 5. **P4 rejection census.** For the 76 same-bundle gamma tags within 35 cm and ≤ 10 cm on items *with* a Michel object, which gate excluded them (cone, per-gamma cap, body); then decide whether the collect should anchor on the stop when no Michel is found (the other 54 items). Item 1's per-piece `rej` column is the natural carrier. Doc 71's purity (0.933) is the bar.
 

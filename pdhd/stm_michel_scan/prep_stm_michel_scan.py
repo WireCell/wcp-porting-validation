@@ -199,6 +199,10 @@ VERDICT_SCALARS = [
     # doc pdvd/75 (P1b) -- 1 when the geometric reading replaced the anchor's rejection.
     # Exists only with bragg_anchor_geo_fallback on.
     "bragg_anchor_fallback",
+    # doc pdvd/80 -- the segment census: role-8 segments written, and of them the ones
+    # that pass every T3b piece gate yet were unclaimed (rej 14).  Exist only with
+    # segment_census on.
+    "n_census_segs", "n_census_admissible",
     # doc pdvd/66 (T8) -- the profile-geometry fields (always written; -1 = not computed).
     "end_arc_cm", "end_span_cm", "end_arc_span", "n_end_pts",
     "n_unsupported_segs", "unsupported_len_cm", "unsupported_frac_min", "chain_support_min",
@@ -675,7 +679,11 @@ def build_event(det, evtdir, with_tagger_fit=True):
         # pdvd/63, so every published delta read as "no role" offline (0 of 569
         # chain_role dicts carried a 2 while 211 items had n_delta > 0); role 7
         # is the chain's kOther arm, published rows-only when publish_other_arms.
-        extra = sorted({int(t) for t in p["seg_id"][sel & np.isin(p["role"], (2, 3, 4, 5, 6, 7))]})
+        # doc pdvd/80: role 8 is the SEGMENT CENSUS -- every PR segment of the main
+        # cluster no stage claimed or published, with the T3b piece gates read on it
+        # (rej 2/3/4), or 13 attached to the chain and not taken, 14 passes every
+        # gate yet unclaimed, 15 no endpoint vertices, 9 T3b off, 10 no stop vertex.
+        extra = sorted({int(t) for t in p["seg_id"][sel & np.isin(p["role"], (2, 3, 4, 5, 6, 7, 8))]})
         pf, pf_types = particle_flow(rc, cid, pf_sc, pf_off, extra_segs=extra)
         pf["chain_segs"] = extra
         # doc pdvd/53: the chain's OWN grouping of every segment it named, and
@@ -690,7 +698,7 @@ def build_event(det, evtdir, with_tagger_fit=True):
             if not k.sum():
                 continue
             chain_role[str(sid)] = int(p["role"][k][0])
-            if has_rej and int(p["role"][k][0]) == 6:
+            if has_rej and int(p["role"][k][0]) in (6, 8):   # 8: doc pdvd/80, the census carries the same columns
                 seg_rej[str(sid)] = dict(
                     rej=int(p["rej"][k][0]),
                     d_stop=round(float(p["d_stop"][k][0]), 2),
