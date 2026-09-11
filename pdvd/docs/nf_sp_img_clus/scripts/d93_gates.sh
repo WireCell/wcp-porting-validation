@@ -88,6 +88,14 @@ A, AP = read(ARM)
 def compare(base, label, expect_identical):
     B, BP = read(base)
     print("\n=== %s: %s vs %s (%d vs %d candidates)" % (label, ARM, base, len(A), len(B)))
+    # d90_gates.sh reported the branch SETS and the first fork of this script dropped the line.
+    # It has to be here: the per-candidate loop below iterates the BASELINE's branches, so a branch
+    # present only in ARM is structurally invisible to it -- which is exactly what a default-OFF
+    # writer does the moment the knob is flipped ON (doc 92 writes bragg_wide_fired and
+    # bragg_wide_shift_cm only when bragg_wide_anchor_cm > 0, so the flip changes the schema).
+    ba = {b for v in A.values() for b in v}; bb = {b for v in B.values() for b in v}
+    print("    T_stm_michel branches: %s %d, %s %d | only in %s: %s | only in %s: %s" % (
+        ARM, len(ba), base, len(bb), ARM, sorted(ba - bb) or "none", base, sorted(bb - ba) or "none"))
     for k in sorted(set(A) - set(B)): print("    NEW candidate %s" % k)
     for k in sorted(set(B) - set(A)): print("    DROPPED candidate %s" % k)
     moved, bset = {}, collections.Counter()

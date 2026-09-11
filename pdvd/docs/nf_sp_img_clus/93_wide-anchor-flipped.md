@@ -137,18 +137,33 @@ doc 92 is the trade production now runs — not something adjacent to it.
   stopper stops having its gamma withheld. The zips differ on exactly those two events
   (`039253_12`, `039349_51`) and on no others.
 
+**The flip also changes the `T_stm_michel` schema: 147 → 149 branches.** Doc 92's writer is
+conditional — `bragg_wide_fired` and `bragg_wide_shift_cm` are written only when
+`bragg_wide_anchor_cm > 0` — so they were absent from pre-flip production and are present now. No
+branch was removed. This is an intended doc 92 output and nothing downstream reads by position, so it
+does not affect the trade; it is recorded because **the first version of this gate could not have
+seen it.** The per-candidate comparison iterates the *baseline's* branches, so a branch present only
+in the new arm is structurally invisible to it, and the fork had dropped `d90_gates.sh`'s explicit
+"branches only in" line. That line is restored in `d93_gates.sh`, which matters because the next
+round's script forks from it. The "589/596 untouched, seven move" result above is therefore a
+statement about the 147 shared branches, and is unchanged by the two added ones.
+
 ## 5. The census (`/home/xqian/tmp/p93/score_p9*.json`)
 
 Scored against the **smx1a..smx9** record (601 records, 286 judged stoppers).
 
 | population | pre-flip `p90vprod` | **flipped `p93vprod`** |
 |---|---|---|
-| all judged | 238 / 7 / 48 — eff 0.832, purity 0.971 | **242 / 8 / 44 — eff 0.846, purity 0.968** |
-| with a candidate (546) | 238 / 7 / 38 — eff 0.862, purity 0.971 | 242 / 8 / 34 — eff 0.877, purity 0.968 |
-| `michel_found` | 144 / 12 / 20 — eff 0.878, purity 0.923 | **144 / 12 / 20 — identical** |
+| `is_stm`, all 576 judged | 238 / 7 / 48 — eff 0.832, purity 0.971 | **242 / 8 / 44 — eff 0.846, purity 0.968** |
+| `is_stm`, with a candidate (546) | 238 / 7 / 38 — eff 0.862, purity 0.971 | 242 / 8 / 34 — eff 0.877, purity 0.968 |
+| `michel_found`, all 576 judged | 144 / 12 / 25 — eff 0.852, purity 0.923 | **144 / 12 / 25 — identical** |
+| `michel_found`, with a candidate (546) | 144 / 12 / 20 — eff 0.878, purity 0.923 | **144 / 12 / 20 — identical** |
 
-(The two rows differ by the 10 judged stoppers the STM tagger never hands on, which count as misses
-in the first and are absent from the second — doc 89 §1's two denominators.)
+**Both denominators are given deliberately, because they are not interchangeable** (doc 89 §1). The
+all-judged rows count the judged items the STM tagger never hands on as misses; the with-a-candidate
+rows exclude them. For `is_stm` the gap is the 10 judged stoppers with no candidate (48 = 38 + 10);
+the 576-judged denominator makes the 286 judged stoppers reconstructible (242 + 44). Quoting an
+efficiency without saying which population it is on is how 0.846 and 0.877 get confused for movement.
 
 `census_score --check`: 0 of 14 differ.
 
