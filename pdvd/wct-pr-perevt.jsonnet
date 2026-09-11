@@ -466,6 +466,34 @@ function(
         // which is not byte-identical in the sense CLAUDE.md sec 4 means).
         // PDHD is NOT flipped, same reason as the retreat above.
         stop_split_max: 1,
+        // doc pdvd/82 (doc 78 action item 2's side-sweep B) -- PDVD PRODUCTION.
+        // The bend bar the split's row must clear, lowered from the C++ default
+        // 15 to 10 deg.  The note just above says split_kink_min_deg was
+        // deliberately left UNSET so it could not appear as an inert key; 10 is
+        // NOT its default, so it is a real value and belongs here -- the OFF
+        // proof for it is an override back to 15.0, not the key's absence.
+        // Doc 78 sec 2.3 named four "straight gap-bridge" overshoot items whose
+        // tail IS collapsed and whose bend is 9-13 deg, just under the bar.
+        // Measured on arm p82bk10 (120 events, 596 candidates, bare production)
+        // against p79vprod, item by item on the smx1a+smx3+smx4 record:
+        // FOUR stops move and the verdict census is IDENTICAL on every class
+        // (is_stm FP 13 / FN 43, michel FP 18 / FN 18, exactly production's;
+        // 0 is_stm flips, 0 michel_found flips).  What it buys is stop
+        // ACCURACY, measured against the scanner's own pin_rr: mean |stop -
+        // pin| over the 25 overshoot items 4.76 -> 4.33 cm, within 1 cm 3 -> 5.
+        // Two of doc 78's named items land on the pin -- 039349_34/48 (5.24 vs
+        // pin 5.5, bend 12.1) and 039349_7/4 (5.40 vs pin 5.9, bend 10.4) --
+        // and 039349_7/4's Michel energy rises 9.4 -> 15.5 MeV as the charge
+        // past the old stop joins the Michel instead of the muon.  The other
+        // two moves are 039349_26/40 (STM_MICHEL, no pin, bend 13.2, verdict and
+        // Michel energy unchanged) and 039349_17/62 (THRU, bend 10.7, is_stm
+        // stays 0 -- the negative control holds).  doc 58's discriminator
+        // margin (bend median 18.5 deg on missed stoppers vs 6.3 on the
+        // through-going control) still brackets 10.
+        // 8 was equivalent offline and 12 reached only one item; 10 is the knee
+        // and the value doc 78 named.  PDHD stays OFF (the split does not run
+        // there at all).
+        split_kink_min_deg: 10.0,
         // doc pdvd/61 (T2c) -- PDVD PRODUCTION.  An attached (michel_conn_type
         // == 1) Michel whose stop was moved this event (n_retreat > 0 or
         // n_split > 0 fired) is demoted when its assembled michel_ke_best

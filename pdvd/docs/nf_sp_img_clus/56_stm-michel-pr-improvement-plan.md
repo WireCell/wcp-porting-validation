@@ -465,8 +465,11 @@ config byte-identical, nothing to flip). **The P1-P5 set is complete**; the
 owner's review of the chain against the record is doc pdvd/77. The owner's
 three observations after it (stop overshoot, the near-isolated Michel,
 unassociated segments) are sized in doc pdvd/78, whose action items start with
-doc pdvd/79 (the `max_candidates` cap, doc 77 §7.1) and doc pdvd/80 (the
-segment census).
+doc pdvd/79 (the `max_candidates` cap, doc 77 §7.1), doc pdvd/80 (the
+segment census) and doc pdvd/82 (item 2, the peak-then-drop stop -- which
+corrects item 2's own rule and finds that what keeps the stop where it is on
+14 of the 21 overshoot items is the Bragg gate on the movers, not the collapse
+test).
 
 **What stays out of this round.** The §15.1 cut is not applied; no threshold is
 moved; the scan record is not re-labelled; no C++ is touched.
