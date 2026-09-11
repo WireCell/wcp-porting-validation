@@ -318,6 +318,37 @@ function(
         // recovered stoppers, found on this record (doc 75 sec 2.3).  C++ default
         // false.  PDHD stays OFF.
         bragg_anchor_geo_fallback: true,
+        // doc pdvd/93 (doc 92 sec 9 item 1) -- PDVD PRODUCTION.  A SECOND, wider Bragg
+        // peak read, tried only where the four shape tests still reject.  Doc 68's
+        // 3 cm anchor is right for a peak at the fit end but cannot see a stop whose
+        // rise begins further back, so the anchored profile reads flat and the
+        // candidate is rejected on shape.  Where a shape bit is set, the peak is
+        // searched again within bragg_wide_anchor_cm, and the shape bits are cleared
+        // only if the wider reading both RISES (peak >= bragg_wide_anchor_rise_min x
+        // the wide plateau) and has a quiet TAIL past the peak (median of the rows
+        // beyond it <= bragg_wide_anchor_tail_max x the wide plateau, >= 3 such rows).
+        // It clears bits ONLY: rec.bragg / ks_* / ratio_* are deliberately left alone,
+        // unlike doc 75's fallback, because bragg_here (CheckSTM_Michel.cxx:2950)
+        // would otherwise couple this rule to the kContinuation stop demotion.
+        // The trade, on the smx1a..smx9 record (601 records, 286 judged stoppers):
+        // is_stm 238/7/48 -> 242/8/44, efficiency 0.832 -> 0.846, purity 0.971 ->
+        // 0.968.  That is +4 owner-judged stoppers (039252_9/101, 039253_12/93,
+        // 039349_44/28, 039349_51/29) against 1 confirmed false positive
+        // (039349_71/37).  R 1.3 DOMINATES R 1.5: the same single FP, twice the gain.
+        // The FP is settled, not suspected: the owner judged it STM_MICHEL in smx7,
+        // THRU in smx8 and THRU again in a blind third look (smx9, 6 fresh controls,
+        // controls 6/6) -- THRU, 2 of 3.  It is not an easy item: the pin landed at
+        // 6.5 / 1.8 / 3.0 cm on the three viewings, so it sits inside the record's own
+        // resolution (doc 92 sec 5.1).  The operating point is doc 91's PRE-REGISTERED
+        // W 8 / R 1.3 / D 0.8; D 1.0 was NOT re-selected on this record -- the tranche
+        // was drawn from the decision boundary, so re-choosing on it would be circular
+        // (doc 92 sec 6).  tail_max 0.8 equals the C++ default and is written anyway so
+        // the file carries the same three keys as the arm p92v13 that measured the
+        // trade, which is what makes proof A a 0-line claim (doc 93 sec 2).
+        // C++ defaults 0.0 (off) / 1.5 / 0.8.  PDHD stays OFF.
+        bragg_wide_anchor_cm: 8.0,
+        bragg_wide_anchor_rise_min: 1.3,
+        bragg_wide_anchor_tail_max: 0.8,
         // doc pdvd/70 (P1): topology-first stop evidence -- the owner's rule that a
         // Michel at the end is by itself strong evidence of a stop, while the dQ/dx
         // rise counts only when it genuinely matches a Bragg peak.  A Michel object

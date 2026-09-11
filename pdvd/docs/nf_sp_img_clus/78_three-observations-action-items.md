@@ -257,3 +257,24 @@ Doc 92: doc 91 §10 item 1, built OFF and gated, **not flipped**.
   The Michel side still has 10 stop-called-but-no-Michel candidates.
 - **Next** (doc 92 §9): the owner decides whether +4 stoppers is worth +1 FP; then doc 90 §8 item 2
   (the 10 Michels); then pause the stopper side.
+
+Doc 93: doc 92 §9 item 1 — the owner decided, and the rule is **FLIPPED in PDVD production**
+(`bragg_wide_anchor_cm: 8.0`, `_rise_min: 1.3`, `_tail_max: 0.8` in `pdvd/wct-pr-perevt.jsonnet`).
+No C++ changed — the code shipped OFF in doc 92 (`ec6990e0`); PDHD stays OFF.
+- **The proofs.** PRE + the measured arm's TLA vs POST is **0 lines**: the flipped file compiles to
+  exactly what `p92v13` ran. Forcing the three keys back gives the inert-key form (each equals its
+  C++ initializer, grepped and printed). The other 16 live jobs: every one NORMDIFF 0, **OVERALL PASS**.
+- **The confirmation arm.** `p93vprod` — the flipped file, no TLA, on the same pinned binary — is
+  bit-identical to `p92v13` on all 596 candidates, all 8 trees on every event, every zip and every
+  calib dump. So production runs the trade that was measured, not something adjacent to it.
+- **The effect**, against pre-flip `p90vprod`: exactly the 5 predicted `is_stm` flips — **+4
+  owner-judged stoppers** (`039252_9/101`, `039253_12/93`, `039349_44/28`, `039349_51/29`) and the
+  **1 confirmed false positive** (`039349_71/37`) — plus the 2 pre-registered bits-only movers
+  (`039253_8/65`, `039349_48/54`) that P1 would have cleared anyway. Census on the smx1a..smx9
+  record: **238/7/48 → 242/8/44**, eff 0.832 → 0.846, purity 0.971 → 0.968; `michel_found` untouched
+  at 144/12/20. Scoring against the smx9 record (not smx8) independently re-confirms the tie-break
+  fold's "0 class changes".
+- **Next**: doc 92 §9 item 2 — the 10 stop-called-but-no-Michel candidates — recomputed on the
+  **flipped** prep. Three of the ten (`039252_9/101`, `039349_44/28`, `039349_51/29`) are stop-called
+  only because this rule fires, so doc 90 §8 item 2's pre-flip "8 unfitted Michels" is a different,
+  now-stale population. Then pause the stopper side.

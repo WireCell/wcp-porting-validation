@@ -3,6 +3,16 @@
 **Status: built behind three default-OFF knobs, gated, NOT flipped.** No jsonnet file changed; PDVD
 and PDHD production are untouched.
 
+> **UPDATE 2026-09-11 — the rule is now FLIPPED; see doc pdvd/93.** The status line above records
+> what was true when this doc was written, and is left standing. The owner then took §9 item 1 and
+> flipped the pre-registered point W 8 / R 1.3 / D 0.8 in `pdvd/wct-pr-perevt.jsonnet`. Doc 93's
+> confirmation arm `p93vprod` (the flipped file, no TLA, same pinned binary) is **bit-identical to
+> this doc's arm `p92v13`** on all 596 candidates, so the trade measured here is the trade production
+> now runs. PDHD stays OFF. Two things in this doc are superseded only in scope, not in substance:
+> §7's headroom is measured *crediting* the rule, which is now production; and §9 item 2's "10
+> stop-called-but-no-Michel" is the population to recompute on the flipped prep, since three of the
+> ten exist only because this rule makes the stop call.
+
 **The one-line result:** the rule works exactly as the offline twin predicted, but doc 91's headline —
 *+5 stoppers at 0 judged THRU* — **did not survive the blind re-judge**. The owner reversed their own
 smx7 call on `039349_71/37` (STM_MICHEL → THRU), which is one of the five gains. On the corrected
