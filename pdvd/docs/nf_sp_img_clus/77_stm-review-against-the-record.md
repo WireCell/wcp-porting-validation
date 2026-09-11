@@ -53,6 +53,8 @@ The reading: **on the items the first scanner was sure about, the chain is essen
 
 ## 2. Every missed stopper, by mechanism (58)
 
+*Update (2026-09-11, doc 89): re-censused on today's production (`p88vprod`) and the smx6 record, the count is 55 (45 with a candidate + 10 without). Three left since this table and none entered: two through doc 79's cap, one through doc 83. Doc 89 adds each bit's margin to its threshold, the first eval condition for the tagger's status-3 items, and a partition by what can act on each. The table below is kept as doc 77 measured it.*
+
 | deciding mechanism | n | of which STM_MICHEL on the record | of which carry a Michel object | the doc that owns it |
 |---|---:|---:|---:|---|
 | **no candidate at all** (the STM tagger never handed the cluster on, or the cap dropped it) | 12 | 7 | — | §7.1, §7.3 |
