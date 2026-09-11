@@ -6,8 +6,12 @@
         --key-extras pdhd/docs/scan/smx18/pdhd_stm_michel_scan_key_h18b.tsv \
         --shots /home/xqian/tmp/h18/shots [--agent-only]
 
-Truth per item = the owner's smx1 verdict where the owner labelled the item, else
-the agent record (--agent-only: always the agent record, i.e. the blind calls).
+Truth per item = the owner's ruling where the record carries `owner_review` (doc
+pdhd/19 sec 8: the owner's later look, which outranks their smx1 label), else the
+owner's smx1 verdict where the owner labelled the item, else the agent record
+(--agent-only: always the agent record, i.e. the blind calls).  An owner_review
+with no michel_kind is a stopper call without a kind: it counts in is_stm and is
+left out of the michel_found tally, never scored as "no Michel".
 The chain = the bare-production key: p82bhoff (PDHD production, max_candidates 8)
 for the 303 items it holds, and h18b (production + max_candidates 64) for the 14
 cap extras, which production does not reach at all.  NEVER the scan arm's key:
@@ -47,6 +51,9 @@ if a.key_extras:
 
 
 def truth(r):
+    if not a.agent_only and r.get("owner_review"):
+        o = r["owner_review"]
+        return base(o["verdict"]), o.get("michel_kind"), "owner_review"
     if not a.agent_only and r.get("owner_smx1"):
         o = r["owner_smx1"]
         return base(o.get("choice") or o.get("label")), o.get("michel_kind"), "owner"
@@ -66,6 +73,7 @@ def apa(k):
 
 def tally(items, label):
     c = collections.Counter(); m = collections.Counter(); uns = collections.Counter()
+    nokind = 0
     for r, (v, kind, src), kk in items:
         if v in ("MESSY", "UNCLEAR"):
             uns[v] += 1
@@ -73,7 +81,9 @@ def tally(items, label):
         hs = v in ("STM_MICHEL", "STM_ONLY")
         cs = int(kk["is_stm"]) == 1
         c[("TP" if hs and cs else "FN" if hs else "FP" if cs else "TN")] += 1
-        if hs:
+        if hs and src == "owner_review" and kind is None:
+            nokind += 1
+        elif hs:
             hm = kind in ("attached", "both")
             cm = int(kk["michel_found"]) == 1
             m[("TP" if hm and cm else "FN" if hm else "FP" if cm else "TN")] += 1
@@ -85,6 +95,8 @@ def tally(items, label):
             t["TP"], t["FP"], t["FN"], t["TN"], p, e, f)
     print("  %-26s is_stm       %s   unscored %s" % (label, pe(c), dict(uns)))
     print("  %-26s michel_found %s   (on hand stoppers only)" % ("", pe(m)))
+    if nokind:
+        print("  %-26s michel_found: %d owner stopper(s) with no michel_kind left out" % ("", nokind))
     return c, m
 
 
@@ -110,7 +122,7 @@ print("\n== robustness of the efficiency (production 303, agent truth where no o
 flat = lambda r: "FLAT_STOP:" in (r.get("notes") or "")
 tally([t for t in items if t[2]["src"] == "p82bhoff" and not (t[1][2] == "agent" and flat(t[0]))],
       "without FLAT_STOP calls")
-tally([t for t in items if t[2]["src"] == "p82bhoff" and (t[1][2] == "owner" or t[0]["confidence"] == "high")],
+tally([t for t in items if t[2]["src"] == "p82bhoff" and (t[1][2] in ("owner", "owner_review") or t[0]["confidence"] == "high")],
       "owner + agent-high only")
 
 

@@ -312,8 +312,8 @@ The nine verdict disagreements, and what each taught the rubric:
 
 | item | owner | blind agent | lesson → v2 |
 |---|---|---|---|
-| `028084_15/102` | STM_ONLY | THRU (medium) | mid-volume end, charge ends in all planes, flat profile → **a stop** (rule 3) |
-| `028084_1/39` | STM_MICHEL | UNCLEAR (low) | the same, and the backward arm from the stop vertex is the Michel |
+| `028084_15/102` | STM_ONLY | THRU (medium) | mid-volume end, charge ends in all planes, flat profile → **a stop** (rule 3). *Withdrawn by the owner, doc pdhd/19 §8: an upper end, not a stopper* |
+| `028084_1/39` | STM_MICHEL | UNCLEAR (low) | the same, and the backward arm from the stop vertex is the Michel. *Withdrawn by the owner, doc pdhd/19 §8: an upper end whose line continues in grey, not a stopper* |
 | `028084_17/55` | STM_MICHEL | STM_ONLY (medium) | an 8 cm arm from the stop running back along the body is **the Michel** |
 | `028084_26/109` | STM_MICHEL | STM_ONLY (medium) | two clumps 3.2 cm out are **the Michel**, not detached dots (the ≤ 5 cm rule) |
 | `028084_27/57` | THRU | STM_MICHEL (medium) | a collinear straight-on stub is **weak topology**; near-isochronous tracks excepted from rule 3 |
@@ -501,7 +501,8 @@ fail there most, and so does the scanners' profile reading (26 unscored).
   track, so a stop there needs an upward-going particle. 11 of them rest on
   `FLAT_STOP`.
 * **The owner's own precedent.** Two of the 23 are the owner's own stoppers
-  (`028084_1/39`, `028084_15/102`).
+  (`028084_1/39`, `028084_15/102`). *The owner has since called both not
+  stoppers and confirmed the direction rule (doc pdhd/19 §8).*
 * **The chain on these.** It calls none of the 23 a stopper.
 * **What the scanners did.** They split. Some called such ends `THRU` on the
   direction argument; others applied rule 3 as written.

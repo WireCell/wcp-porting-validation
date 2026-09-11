@@ -1,0 +1,21 @@
+{
+  "doc": "pdhd/docs/19_stm-michel-display-fix-and-review.md sec 8",
+  "date": "2026-09-11",
+  "viewer": "smx19 on :5017 (prep-pdhd-smx19, the fixed display with grey ctpc cells)",
+  "how": "The owner looked at five smx19 items in the viewer and answered three questions in the Claude Code chat. They did not click labels. The questions are the ones in the session report: Q1 asked whether rule 7 should exist, using the owner's own two smx1 calls #9 and #35; Q2 asked rule 7 against rule 4 on #270; Q3 asked rule 7 against rule 1 on #184 and #46.",
+  "owner_words": "Q1: these may not be soppers: Q2: it seems to be STM + Michel Q3: looks like STM topology and #46 not likely STM, I guess.",
+  "rulings_on_the_rubric": {
+    "rule_7_flat_upper_end": "CONFIRMED (Q1 on #9 and #35, and #46): a flat upper end of a steep track is not a stop",
+    "rule_7_vs_rule_1": "RULE 1 WINS (Q3 on #184; Q2 on #270): a clear decay topology at an upper fit end makes it a stopper. This overrules v4 rule 7 bullet 2 ('activity at that end is not enough on its own')",
+    "rule_7_vs_rule_4": "NOT RULED: #270 was decided on topology, so an upper end with an unreadable profile and no topology is still open"
+  },
+  "items": {
+    "028084_1/39":   {"scan_id": 9,   "question": "Q1", "owner_verdict": "THRU",       "michel_kind": null, "owner_smx1": "STM_MICHEL", "smx19": "FRAG_THRU high",  "words": "these may not be stoppers", "note": "the owner revises their own smx1 call; the owner did not choose between THRU and FRAG_THRU (the same class for grading)"},
+    "028084_15/102": {"scan_id": 35,  "question": "Q1", "owner_verdict": "THRU",       "michel_kind": null, "owner_smx1": "STM_ONLY",   "smx19": "THRU medium",     "words": "these may not be stoppers", "note": "the owner revises their own smx1 call"},
+    "029107_4/56":   {"scan_id": 270, "question": "Q2", "owner_verdict": "STM_MICHEL", "michel_kind": null, "owner_smx1": null,         "smx19": "THRU medium",     "words": "it seems to be STM + Michel", "note": "no michel_kind or pin given: excluded from Michel-kind scoring, never inferred from the chain"},
+    "029107_15/26":  {"scan_id": 184, "question": "Q3", "owner_verdict": "STM_MICHEL", "michel_kind": null, "owner_smx1": null,         "smx19": "THRU medium",     "words": "looks like STM topology", "note": "read as STM_MICHEL: the question asked whether the angled arm at the upper end makes it a Michel (rule 1). No michel_kind given: excluded from Michel-kind scoring",
+                     "app_edit": {"what": "during the owner's look, the smx19 viewer (:5017, write-through) saved a placed pin on this item: rr 3.0 cm, moved 1.91 cm from the fit end, source 'pin'; the label stayed THRU", "when": "pdhd/work/stm_michel_labels/smx19/labels.json mtime 2026-09-11 14:17:41, inside the owner's session (WebSocket opened 14:11:21)", "extent": "the only row that changed: smx19 rebuilt from smx18 plus the three h19 apply label dirs differs from the file on disk in this row's pin only", "status": "kept (M13); not confirmed by the owner as the stop of their STM_MICHEL call, so it is not used anywhere"}},
+    "028084_18/17":  {"scan_id": 46,  "question": "Q3", "owner_verdict": "THRU",       "michel_kind": null, "owner_smx1": null,         "smx19": "THRU medium",     "words": "#46 not likely STM, I guess", "note": "agrees with smx19"}
+  },
+  "hedges": "Every answer is hedged ('may not be', 'seems', 'I guess'). They are the owner's calls and outrank the agents and owner_smx1, but are recorded as the owner's first look, not a re-scan."
+}

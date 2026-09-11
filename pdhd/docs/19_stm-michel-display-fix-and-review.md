@@ -8,6 +8,8 @@ three at a time), not by hand. Grading PDVD's production knobs on PDHD is next,
 in a new session.
 
 **Status.** Display: **fixed, gated**. Review round (tag `smx19`): §4–§6.
+The owner's rulings, rubric v5 and a v5 double scan (tag `smx20`, now the
+current record): §8.
 No C++ and no production jsonnet changed; nothing here moves reconstruction
 output.
 
@@ -52,18 +54,22 @@ python3 $I/pdhd/docs/scripts/d18_census.py --record $I/pdhd/docs/scan/pdhd_stm_m
     --key-extras $I/pdhd/docs/scan/smx18/pdhd_stm_michel_scan_key_h18b.tsv --shots /home/xqian/tmp/h18/shots
 ```
 
-The reviewed record is served for the owner on **:5024**, with the fixed display
-(grey cells and the true anode):
+The reviewed record is served for the owner on **:5017**, with the fixed display
+(grey cells and the true anode). It was first served on :5024, which the owner's
+laptop did not forward, so the page showed empty. It moved to :5017, the port the
+owner already uses, on 2026-09-11. After the owner's look (§8), both viewers
+(:5017 smx19, :5023 smx18) were stopped at the owner's request; the command
+below restarts one.
 
 ```bash
-./serve_stm_michel_scan.sh 5024 --det pdhd --scan-tag smx19 \
+./serve_stm_michel_scan.sh 5017 --det pdhd --scan-tag smx19 \
     --manifest $I/pdhd/docs/scan/smx18/pdhd_stm_michel_scan_sheet.tsv \
     --prepdir  $I/pdhd/stm_michel_scan/prep-pdhd-smx19
 ```
 
 It was checked headless by reading the item selector from the Bokeh document
-model: 317 items, 317 labelled. smx18 stays on :5023, on the display it was
-scanned with.
+model: 317 items, 317 labelled. smx18 was served on :5023, on the display it
+was scanned with.
 
 ---
 
@@ -455,7 +461,9 @@ heads the owner's list.
 ## 7. What is left, and what the reviewers found in the rubric
 
 **For the owner, in order of how much they move:**
-1. **Rule 7 (direction), and the two rule-3 exemplars** (§5.1). Keeping rule 7
+1. **Rule 7 (direction), and the two rule-3 exemplars** (§5.1). *Ruled by the
+   owner on 2026-09-11 (§8): rule 7 stands, rule 1 outranks it, and both
+   exemplars are withdrawn.* Keeping rule 7
    confirms tier C's 16 `THRU` calls. The owner's own `028084_1/39` and
    `028084_15/102` then need a second look on the fixed display. Three items
    show how far rule 7 reaches, all on the smx19 viewer:
@@ -512,6 +520,224 @@ frozen through the round; `$H/objections.md` has each with its item key):
   * a Michel inside one fitted row cannot be recorded;
   * a true stop can lie off the chain, in a side branch.
 
+## 8. The owner's rulings, rubric v5, and a v5 double scan (tag `smx20`)
+
+```bash
+I=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img; H=/home/xqian/tmp/h20
+C=$I/pdhd/stm_michel_scan/campaign; X=$I/pdhd/docs/scan
+K="--key $X/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv --key-extras $X/smx18/pdhd_stm_michel_scan_key_h18b.tsv --shots /home/xqian/tmp/h19/shots"
+# the census script's new owner_review precedence: its smx19 output is byte-identical before and after
+python3 $I/pdhd/docs/scripts/d18_census.py --record $X/pdhd_stm_michel_smx19_verdicts.json $K   # = $X/smx20/census_smx19_baseline.txt
+# the owner's rulings alone
+python3 $C/mkowner_record.py $X/pdhd_stm_michel_smx19_verdicts.json $X/smx20/owner_rulings.json $H \
+    $H/interim_owner_only.json $H/interim_prov.json --skip-v5
+python3 $I/pdhd/docs/scripts/d18_census.py --record $H/interim_owner_only.json $K   # = $X/smx20/census_owner_rulings_only.txt
+# the v5 double scan: agents rv5_a1, rv5_a2 ($H/AGENT_TASK.md, $H/items_a<i>.txt -> $H/v_parts/rv5_a<i>), then
+python3 $C/mkowner_record.py $X/pdhd_stm_michel_smx19_verdicts.json $X/smx20/owner_rulings.json $H \
+    $X/pdhd_stm_michel_smx20_verdicts.json $X/smx20/provenance.json --provenance-json $H/provenance_in.json
+python3 $I/pdhd/docs/scripts/d18_census.py --record $X/pdhd_stm_michel_smx20_verdicts.json $K   # = $X/smx20/census_smx20.txt
+# labels: the adopted items onto the real widgets, into the new tag smx20 on top of smx19
+python3 $C/mkspec.py $H $H/items_adopted.txt 1 v5
+$C/apply_parallel.sh $H pdhd $X/smx18/pdhd_stm_michel_scan_sheet.tsv $I/pdhd/stm_michel_scan/prep-pdhd-smx19 v5 1
+python3 $C/merge.py $H pdhd smx20 $H/items_adopted.txt --base smx19 --write
+cd $I/pdhd/stm_michel_scan && ./verify_scan_record.py --det pdhd --tag smx20 --record ../../pdhd/docs/scan/pdhd_stm_michel_smx20_verdicts.json
+```
+
+### 8.1 What the owner looked at, and the rulings
+
+The owner looked at five smx19 items on the fixed display (:5017) and answered
+three questions in the session chat, without clicking labels. Their words, verbatim:
+*"Q1: these may not be soppers: Q2: it seems to be STM + Michel Q3: looks like
+STM topology and #46 not likely STM, I guess."*
+
+| # | item | question | before | owner now |
+|---|---|---|---|---|
+| 9 | `028084_1/39` | Q1: should rule 7 exist? | owner smx1 `STM_MICHEL`; smx19 `FRAG_THRU` high (grey continuation, upper end) | not a stopper |
+| 35 | `028084_15/102` | Q1 | owner smx1 `STM_ONLY`; smx19 `THRU` medium (flat upper end of a steep track) | not a stopper |
+| 270 | `029107_4/56` | Q2: rule 7 vs rule 4 at an unreadable upper end | smx18 `UNCLEAR`; smx19 `THRU` (production's only false positive) | `STM_MICHEL` |
+| 184 | `029107_15/26` | Q3: rule 7 vs rule 1, an angled arm at an upper end | smx18 `STM_MICHEL`; smx19 `THRU` | `STM_MICHEL` |
+| 46 | `028084_18/17` | Q3: the shallowest rule-7 call (dy/chord 0.41) | smx18 `STM_MICHEL`; smx19 `THRU` | not a stopper |
+
+What the rulings say about the rubric:
+* **Rule 7 stands for flat upper ends** (#9, #35, #46). Two of these are the
+  owner's own smx1 stoppers. This is the first time the owner has revised an
+  earlier call of their own, so the record keeps both values.
+* **Rule 1 outranks rule 7** (#184, and #270, which the owner read as
+  topology): a clear decay arm at an upper fit end makes it a stopper. This
+  overrules v4 rule 7's second bullet ("activity at that end is not enough").
+* **Rule 7 against rule 4 is not ruled.** #270 was settled on topology, so an
+  upper end with no topology and no readable profile is still open. By their
+  notes, four reviewed items are that case: `028084_15/28`, `029107_15/40`,
+  `029107_18/59`, `029107_21/64` (all `THRU` in smx19).
+
+**How the rulings are stored.** `smx20/owner_rulings.json` holds the words, the
+question each answers, and the reading of each answer. `mkowner_record.py`
+writes them to the record as an `owner_review` block and changes nothing else.
+The agent verdict stays in place. `d18_census.py` now takes `owner_review`
+first, then `owner_smx1`, then the agent. The owner gave no `michel_kind` for
+the two new stoppers, so they count in `is_stm` and are left out of the
+`michel_found` tally. They are neither scored as "no Michel" nor filled in from
+the chain. `smx1/labels.json` is not written (M13). The labels stay the
+agents'; the owner's call lives in the record.
+
+**One edit the look made.** The smx19 viewer writes every change to disk,
+and it has no read-only mode. During the owner's look, one smx19 label row
+changed:
+* **The row.** `029107_15/26` (#184) gained a placed pin at rr 3.0 cm, 1.91 cm
+  from the fit end. The label stayed `THRU`.
+* **When.** The file's mtime is 14:17:41, inside the owner's session.
+* **Extent.** Rebuilding the smx19 labels from smx18 plus the round's three
+  apply label dirs shows no other row changed.
+
+The pin is the owner's, so it is kept (M13). It is not known whether it marks
+the stop of the owner's `STM_MICHEL` call, so it is stored as
+`owner_review.app_edit` and used nowhere. Two consequences:
+* `verify_scan_record.py` now reports this row as its one mismatch. That holds
+  on smx19, which was clean when doc 19 was committed, and on smx20, which
+  carries the row over.
+* A viewer served for a look should serve a copy of the tag, not the record's
+  own tag.
+
+### 8.2 Rubric v5
+
+`pdhd_stm_michel_scan_rubric.md` v5 (sha `750751ea…`; the v4 text is kept as
+`smx20/rubric_v4.md`) makes rows 26–29 of its change table:
+* **Rule 7's second bullet.** At an upper end, topology decides as in rule 1.
+  A clear arm or piece leaving the fit end at an angle makes it `STM_MICHEL`.
+  A straight-on stub, or the track's own line continuing in grey, is not
+  topology. A clear rise with no topology makes it `STM_ONLY`. In both cases
+  the call is at most `medium`, with `DIRECTION:`.
+* **Rule 3 loses both of its owner examples.** The `FLAT_STOP` rule was written
+  from #9 and #35, and the owner now calls both not stoppers. The rule now
+  rests on the argument alone and applies only at a lower end. This makes the
+  26 unreviewed smx18 `FLAT_STOP` calls (§7 item 2) more pressing: every one is
+  a stopper whose only support is this rule.
+* **The unruled case gets a marked default.** An upper end with no topology and
+  no readable profile is called as in v4 (`THRU`, `DIRECTION:`) with
+  `NO_MEASUREMENT:` added, so it can be re-graded once the owner rules.
+* **No item keys in the rubric.** v4 named nine keys with the owner's verdict
+  (§4). v5 cites "calibration items" instead, and a regex check confirmed no
+  key is left.
+
+### 8.3 What the rulings alone change in the census
+
+Production (303 items), bare-production key, from `census_smx19_baseline.txt`
+and `census_owner_rulings_only.txt`:
+
+| | TP | FP | FN | TN | purity | efficiency |
+|---|---|---|---|---|---|---|
+| smx19 | 60 | 1 | 89 | 111 | 0.984 | 0.403 |
+| + the owner's five rulings | 61 | **0** | 88 | 112 | **1.000** | 0.409 |
+
+Item by item:
+* #270 moves from FP to TP; production's only false positive is gone.
+* #184 moves from TN to FN, a stopper production misses (reject `plateau_off_mip`).
+* #9 and #35 move from FN to TN.
+* #46 does not change.
+
+The hand-stopper count stays at 159 (two in, two out). Owner plus agent-high
+efficiency goes from 0.662 to 0.676. `michel_found` loses the two withdrawn
+owner stoppers (TP 54 → 53, FP 13 → 12). The two new owner stoppers have no
+kind and are left out of that tally.
+
+### 8.4 The v5 double scan
+
+**Which items.** The smx19 round called 25 reviewed items not-a-stopper under
+rule 7. Remove the owner's five and tier A `029107_10/50` (owner `MESSY`, which
+stands), and 19 are left. By their notes, five describe an arm or piece
+leaving the upper fit end at an angle, the rule-1 topology that v4's second
+bullet overruled:
+* two clear: `029107_3/23`, a 5.3 cm arm folding back from the fit end at
+  about 30°, plus a detached piece; `029107_1/32`, a short hook leaving the end
+  sideways;
+* three borderline: `029107_24/47`, pdg-11 forks after a peak 7 cm past the fit
+  end; `029107_1/36`, a backward arm from a vertex 8.75 cm back; `029107_5/93`,
+  a 20 cm pdg-11 line leaving at a 40° kink.
+
+The other 14 carry no topology claim: bare ends, straight-on stubs, or a
+three-plane grey continuation. Two that look close, `028084_2/26` and
+`028084_20/39`, are straight-on continuations with grey past the end. Rule 1
+already excludes those, so v5 cannot change them.
+
+**Design.** Two verdict-blind scanners each judged all five items under v5,
+in independently shuffled orders (seeds 2026091101 and 2026091102):
+* each had a private out dir and a private scratch dir, the lesson of the v4
+  round's crop collision;
+* the frames were the v4 round's blind frames, linked one by one into
+  `/home/xqian/tmp/h20/shots`;
+* h18 and h19 were off limits.
+
+Each item's outcome follows its stop / thru / unscored class:
+* **confirmed**: both scans agree with smx19;
+* **adopted**: both scans agree on a different class, and the record is rebuilt
+  from one scan;
+* **split**: the scans disagree; smx19 is kept and the item goes to the owner
+  queue.
+
+**Result.** Both scanners' audits are clean: 50 and 51 tool calls, with no
+forbidden path. The audit script flags a synthetic read of h19 and passes a
+read through `<SHOTS>`, so its zero can be trusted.
+
+| item | smx19 | `rv5_a1` | `rv5_a2` | outcome |
+|---|---|---|---|---|
+| `029107_3/23` | `THRU` | `STM_MICHEL` both | `STM_MICHEL` both | **adopted** (a1) |
+| `029107_1/32` | `THRU` | `STM_MICHEL` attached | `STM_MICHEL` attached | **adopted** (a1) |
+| `029107_1/36` | `THRU` | `THRU` (+`NO_MEASUREMENT:`) | `THRU` (+`NO_MEASUREMENT:`) | confirmed |
+| `029107_24/47` | `THRU` | `STM_MICHEL` attached, `UNDERSHOOT:` (a peak ~7 cm into 47010, then the forks as the electron) | `THRU` (47010 is the track's own line; the fall is APA2 coverage) | **split**, owner queue |
+| `029107_5/93` | `THRU` | `FRAG_THRU` (the 40° arm hands off across the cathode to 92017) | `STM_MICHEL` (the arm is the incoming muon; the chain has the muon and the electron swapped) | **split**, owner queue |
+
+* **The two clear topology items** became stoppers on agreement.
+* **The two splits** are about *where* the track stops (an undershoot, a
+  muon/electron swap), not about whether an arm at the upper end counts. So
+  v5's rule change is not what the scanners disagree on.
+* **`029107_1/36`** was flagged `NO_MEASUREMENT:` by both scanners, so it
+  joins the four rule 7 against rule 4 items in §8.1.
+
+All five calls are `medium`, which is the rule 7 cap at an upper end.
+
+**Census, the full smx20 record** (`census_smx20.txt`, production 303):
+
+| | TP | FP | FN | TN | purity | efficiency |
+|---|---|---|---|---|---|---|
+| smx19 | 60 | 1 | 89 | 111 | 0.984 | 0.403 |
+| + the owner's rulings | 61 | 0 | 88 | 112 | 1.000 | 0.409 |
+| + the v5 pass (smx20) | 61 | **0** | 90 | 110 | **1.000** | 0.404 |
+
+* **The two adopted stoppers** are both chain rejects: `shape_flat|profile_sparse`
+  and `shape_flat|plateau_off_mip`. Both have `michel_found` = 1, so the
+  `michel_found` TP goes from 53 to 55.
+* **Hand stoppers:** 159 → 161.
+* **Upper-end hand stoppers:** 6 of the 161. Four of them (`029107_1/32`,
+  `029107_15/26`, `029107_3/23`, `029107_4/56`) stand on topology, the case the
+  owner's ruling admits.
+
+Against smx19, production's efficiency is unchanged: 0.403 → 0.404. Its one
+false positive is gone.
+
+**Labels.** The two adopted items were applied on the real widgets into the new
+tag `smx20`, on top of smx19:
+* 315 rows carried over and 2 replaced; sha `7433d5c7…`;
+* the smx1, smx18 and smx19 label files keep their shas (`e928a784`,
+  `f63a7034`, and `39e51f00` since the owner's pin);
+* `verify_scan_record.py --tag smx20`: 317 records over 317 rows, with one
+  mismatch, the owner's pin on `029107_15/26` (§8.1). The pin is kept.
+
+### 8.5 What is left
+
+0. **The two v5 splits**, `029107_24/47` and `029107_5/93` (`owner_queue` in
+   the record): smx19's `THRU` stands until the owner looks.
+1. **The 26 unreviewed `FLAT_STOP` calls.** Rule 3 now has no owner example.
+   A v5 pass over them is the cheapest way to settle the record before the
+   knob grading uses it.
+2. **Rule 7 against rule 4**, for the four items in §8.1 plus `029107_1/36`,
+   whenever the owner wants to rule.
+3. **The owner's other tier A disagreements** (§5.1). The owner's smx1 label
+   stands on each; they are listed only in case the owner wants a look:
+   * `028084_23/114`, a kind difference only;
+   * `028084_29/38`, `UNCLEAR` against `FRAG_THRU`;
+   * `029107_0/56` and `029107_10/50`, `MESSY` against `THRU`.
+4. **Next session:** grade PDVD's production knobs on PDHD against `smx20`.
+
 ## Files
 
 | what | where |
@@ -527,3 +753,9 @@ frozen through the round; `$H/objections.md` has each with its item key):
 | smx18 provenance note | `pdhd/docs/scan/smx18/provenance.json` `display_envelope` |
 | prep (gitignored) | `pdhd/stm_michel_scan/prep-pdhd-smx19/` (317 payloads with `proj_ctx`) |
 | round scratch | `/home/xqian/tmp/h19/` (shots, `v_parts/rv*`, `v_parts/adj*`, `adj/`, logs) |
+| §8: the owner's rulings | `pdhd/docs/scan/smx20/owner_rulings.json` (verbatim words, question, reading per item) |
+| §8: rubric v5 | `pdhd/docs/scan/pdhd_stm_michel_scan_rubric.md` (sha `750751ea…`); the v4 text kept as `smx20/rubric_v4.md` |
+| §8: record | `pdhd/docs/scan/pdhd_stm_michel_smx20_verdicts.json` (`owner_review` on five items, `review_v5` on five) and `smx20/provenance.json` |
+| §8: census | `pdhd/docs/scripts/d18_census.py` (`owner_review` precedence; kind-less owner stoppers out of the Michel tally), `smx20/census_smx19_baseline.txt`, `census_owner_rulings_only.txt`, `census_smx20.txt` |
+| §8: tooling | `pdhd/stm_michel_scan/campaign/mkowner_record.py` |
+| §8: round scratch | `/home/xqian/tmp/h20/` (`AGENT_TASK.md`, `RUBRIC.md`, `items_a<i>.txt`, `v_parts/rv5_a<i>`, `scratch_a<i>`, links into h19's shots) |

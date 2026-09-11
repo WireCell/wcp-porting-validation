@@ -1,0 +1,38 @@
+{
+ "doc": "pdhd/docs/19_stm-michel-display-fix-and-review.md sec 8",
+ "tag": "smx20",
+ "det": "pdhd",
+ "based_on": "pdhd/docs/scan/pdhd_stm_michel_smx19_verdicts.json (tag smx19): every record not named below is copied from it verbatim",
+ "owner_rulings": "pdhd/docs/scan/smx20/owner_rulings.json: the owner's chat answers on five items (2026-09-11), stored as owner_review; the census takes owner_review before owner_smx1 before the agent",
+ "v5_pass": "two verdict-blind scanners (rv5_a1, rv5_a2) each judged the same five items under rubric v5, in seeded shuffled orders, with private out and scratch dirs; outcome per item: confirmed / adopted (both agree on a class change) / split (owner queue)",
+ "v5_items_why": "of the 25 reviewed items the v4 round called not-a-stopper under rule 7, the five whose notes describe an arm or piece leaving the upper fit end at an angle (rule-1 topology that v4 rule 7 bullet 2 overruled); the owner's five and tier A 029107_10/50 excluded; the other 14 carry no topology claim (straight-on stubs and grey continuations are not topology under rule 1)",
+ "display_arm": "h18s",
+ "binary_pin": "/home/xqian/tmp/p82/libpin_p82, toolkit 082376c5 -- the same arms as smx18/smx19, not re-run",
+ "prep": "pdhd/stm_michel_scan/prep-pdhd-smx19 (unchanged)",
+ "shots": "/home/xqian/tmp/h19/shots (the v4 round's blind frames, unchanged), linked into /home/xqian/tmp/h20/shots for the five items only",
+ "rubric": "pdhd/docs/scan/pdhd_stm_michel_scan_rubric.md",
+ "rubric_versions": {
+  "v4": "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624 (the smx19 round; text kept as pdhd/docs/scan/smx20/rubric_v4.md)",
+  "v5": "750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d (the v5 pass)"
+ },
+ "census_script": "pdhd/docs/scripts/d18_census.py gains owner_review precedence and leaves an owner stopper with no michel_kind out of the michel_found tally; gate: its output on the smx19 record is byte-identical before and after the change",
+ "n_records": 317,
+ "n_owner_review": 5,
+ "n_v5": 5,
+ "v5_outcomes": {
+  "confirmed": 1,
+  "adopted": 2,
+  "split": 2
+ },
+ "adopted": [
+  "029107_3/23",
+  "029107_1/32"
+ ],
+ "rubric_shas": [
+  "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624",
+  "750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d",
+  "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
+  "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
+  "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
+ ]
+}

@@ -1,15 +1,13 @@
 # The PDHD STM + Michel hand-scan rubric — apply this exactly
 
-> Doc pdhd/18, tag `smx18`; v4 for the review round, doc pdhd/19, tag
-> `smx19`; **v5 after the owner's rulings, doc pdhd/19 §8, tag `smx20`**. Ported from the frozen PDVD rubric
+> Doc pdhd/18, tag `smx18`; **v4 for the review round, doc pdhd/19, tag
+> `smx19`**. Ported from the frozen PDVD rubric
 > (`pdvd/docs/scan/pdvd_stm_michel_scan_rubric.md`, doc pdvd/55), not copied:
 > the detector is different, the scan is **verdict-blind**, and the corrections
 > doc pdvd/55 §17.3–17.4 and the owner's re-judges (doc pdvd/68, doc pdvd/70 §9)
 > recorded are folded in. The last section lists every change. **v4 changes the
 > display (the anode, the cathode and the grey cells in `f_meas`) and adds
-> rule 7, direction** — read those sections even if you know v3. **v5 changes
-> rule 7's second bullet (topology at an upper end decides) and removes item
-> keys from the text** — read rules 1, 3 and 7 again even if you know v4.
+> rule 7, direction** — read those sections even if you know v3.
 >
 > **Version.** The sha of this file is recorded before each wave and stamped on
 > every record. It changes only between waves, never while scanners work.
@@ -36,11 +34,10 @@ The question, in the detector owner's own words, has three parts:
    * the prep payloads (`prep-*/smprep-*.json`), any `tracking-*.root`,
      `calib-*.json`, `mabc-*.zip`, or anything under `pdhd/work/`. They carry
      the chain's verdict;
-   * **(v5) anything under `/home/xqian/tmp/h18/` or `/home/xqian/tmp/h19/`**
-     (the previous rounds: their records, waves and adjudications are the
-     answers you are checking; read frames only through `<SHOTS>`), anything
-     under `/home/xqian/tmp/h20/` other than `RUBRIC.md`, `AGENT_TASK.md`,
-     `shots/`, your own item list, your own out dir and your own scratch dir, and
+   * **(v4) anything under `/home/xqian/tmp/h18/`** (the previous round: its
+     frames, records and waves are the answers you are checking), anything
+     under `/home/xqian/tmp/h19/` other than `RUBRIC.md`, `AGENT_TASK.md`,
+     `shots/`, your own item list and your own out dir, and
      **nothing under `pdhd/docs/` except this rubric** (the previous round's
      record, its queue and its doc name these items and their verdicts), nor
      `pdvd/docs/scan/`;
@@ -215,15 +212,11 @@ order:
    no kink, a few cm) is weak: it can be the muon's own continuation. It does
    not decide the verdict on its own; it needs a rise or rule 3. The owner
    called two such items `THRU` and `MESSY` where the blind calibration had
-   called them `STM_MICHEL` on the stub alone.
+   called them `STM_MICHEL` on the stub alone (`028084_27/57`, `029107_10/50`).
    An arm attached **at the stop vertex** counts as decay activity **even when
    it runs back along the muon body**. The owner took a backward arm doubling
-   along the body as the Michel on two calibration items, where the blind
-   calibration had called it body activity. **(v5)** One of the two was an
-   upper end whose line continues in grey, and the owner has since called it
-   not a stopper; the rule rests on the other.
-
-   **(v5) This holds at an upper end too** — see rule 7's second bullet.
+   along the body as the Michel on `028084_1/39` and `028084_17/55`, where the
+   blind calibration had called it body activity.
 2. **Otherwise the Bragg rise decides.** With no electron-like activity, a
    rise at the end means `STM_ONLY`.
 3. **(v2, corrected v3) A flat profile means `THRU` only where the track could
@@ -252,13 +245,10 @@ order:
    In that case the missing rise is a measurement failure, not evidence of a
    through-goer (the Bragg peak can be unresolved, or carried by a short piece
    at the end). Call it `STM_ONLY`, or `STM_MICHEL` if there is decay activity,
-   at most `medium`, with `--notes` starting `FLAT_STOP:`. **(v5)** The two
-   owner calibration stoppers this rule was written from were both upper ends
-   of steep tracks. On the fixed display, with rule 7, the owner now calls both
-   not stoppers, so **rule 3 has no owner example left**: it rests on the
-   argument above, and it applies only at a lower end (or where rule 7 does
-   not apply). The owner's four `THRU` calibration items all end at a face,
-   the APA seam, or on a near-isochronous track.
+   at most `medium`, with `--notes` starting `FLAT_STOP:`. The owner called
+   both such calibration items stoppers where the blind scan had said
+   `THRU` / `UNCLEAR` (`028084_15/102`, `028084_1/39`). The owner's four `THRU`
+   items all end at a face, the APA seam, or on a near-isochronous track.
 
    **Exception — near-isochronous tracks** (x nearly constant along the track,
    so the whole track sits in a few time slices): their imaging and their ends
@@ -274,7 +264,7 @@ order:
 6. **(v2) A busy stop is `MESSY`.** If another large object runs along or
    across the muon near its end (a long cluster lying on the body, a shower),
    so that you cannot isolate where this track ends and what leaves it, answer
-   `MESSY` (owner, one calibration item).
+   `MESSY` (owner, `029107_10/50`).
 7. **(v4) Direction: cosmic muons travel down.** A stopping cosmic muon stops at
    the **lower** end of its track, and its upper end reaches a face (usually
    the top, y ≈ 606) or a gap it crossed. Compute from `ends`:
@@ -293,22 +283,10 @@ order:
      past that end), or the
      particle was produced in the volume. That is not a stop: `THRU`, with
      `--notes` starting `DIRECTION:`.
-   * **(v5, owner ruling) At an upper end, topology or a clear rise makes it a
-     stop.** v4 said activity at an upper end is not enough, because a
-     production vertex looks like decay activity. The owner overruled that:
-     on two upper ends with an arm leaving the end at an angle, the owner
-     called `STM_MICHEL`. So apply rule 1 at an upper end as anywhere else. A
-     clear electron-like arm or separate piece leaving the fit end (a kink, or
-     a piece that starts there) makes it `STM_MICHEL`. As everywhere, a
-     straight-on stub is not topology, and neither is the track's own line
-     continuing in grey (`CONTINUES:` → `THRU`). With no topology, a clear
-     Bragg rise makes it `STM_ONLY`. Either way, at most `medium`, `--notes`
-     starting `DIRECTION:`, and say what the arm or the rise looked like.
-   * **(v5) Not ruled: an upper end with no topology and no readable profile**
-     (dead band, coverage hole, APA0/APA2 wave). Rule 7 says `THRU`, rule 4
-     says `UNCLEAR`, and the owner has not chosen between them. Call it as v4
-     did, `THRU` with `DIRECTION:`, and add `NO_MEASUREMENT:` to the notes so
-     the item can be re-graded when the owner rules.
+   * **Only a clear Bragg rise at the upper end makes it a stop.** Activity at
+     that end is not enough on its own, because a production vertex looks like
+     decay activity. With a clear rise, call `STM_ONLY` / `STM_MICHEL` at most
+     `medium`, starting `DIRECTION:`, and say what the rise looked like.
    * **A rise at the lower end** (the chain's "entry" end) is `REVERSED:`. The
      verdict for the fit end is then `THRU` if that end is flat, or `UNCLEAR`.
    * The same test explains an entry at the **bottom** face (y ≈ 7.6): a track
@@ -317,8 +295,7 @@ order:
    This rule is new in v4. The previous round's rubric had no direction test,
    and 22 of its 183 hand stoppers stopped at the upper end, 14 of them on
    steep tracks (`|dy| ≥ 0.6 × chord`). Several had their other end within a
-   few cm of the floor. **(v5)** The owner confirmed rule 7 on three flat upper
-   ends, two of them the owner's own earlier stoppers.
+   few cm of the floor.
 
 ## Bragg — how to read `h_dqdx_zoom.png`
 
@@ -391,7 +368,7 @@ is which.
 plateau. When the fit instead bridges a **charge-free gap** to a detached piece
 further out, the empty bridge is a fit artifact: tag it `delta / other`, and
 tag the far piece by the attachment-distance rule (`gamma` beyond ~10 cm). The
-overshoot and attribution rules then agree (a wave-1 scanner).
+overshoot and attribution rules then agree (wave-1 scanner, `029107_19/111`).
 
 **Moving the stop moves the attribution with it.** A small isolated piece
 that reads as a lone capture gamma beside an `STM_ONLY` can become part of the
@@ -446,8 +423,8 @@ collide in both directions:
   (`gamma`). **(v2) Within ~5 cm of the stop a compact piece is part of the
   Michel even across a gap.** The ±45 cm frames cannot resolve a 3 cm gap, and
   the owner called two 3.2 cm clumps the Michel where the blind calibration had
-  called them detached (one calibration item). Beyond ~10 cm, a detached piece is
-  `gamma`; the owner agreed on two calibration items.
+  called them detached (`028084_26/109`). Beyond ~10 cm, a detached piece is
+  `gamma`; the owner agreed on `028084_4/41` and `028084_23/114`.
 
 Resolve these on **how far the piece sits off the muon's line**, and let that
 outrank both the `cos_fwd` number and the chain's own label:
@@ -599,11 +576,11 @@ decide:
 
 | # | change | owner evidence |
 |---|---|---|
-| 10 | an end mid-volume where the charge ends in all planes is a stop, even with a flat profile (`FLAT_STOP:`); near-isochronous tracks excepted | two owner calibration stoppers (both withdrawn in v5, row 27); four owner `THRU` all at a face / seam / isochronous |
-| 11 | a collinear straight-on stub is weak topology; it does not decide the verdict alone | two owner calibration items (`THRU`, `MESSY`) |
-| 12 | an arm from the stop vertex running back along the body is the Michel | two owner calibration items (one withdrawn in v5) |
-| 13 | within ~5 cm, a compact piece is the Michel even across a gap | one owner calibration item |
-| 14 | a busy stop is `MESSY` | one owner calibration item |
+| 10 | an end mid-volume where the charge ends in all planes is a stop, even with a flat profile (`FLAT_STOP:`); near-isochronous tracks excepted | `028084_15/102`, `028084_1/39` (stoppers); four owner `THRU` all at a face / seam / isochronous |
+| 11 | a collinear straight-on stub is weak topology; it does not decide the verdict alone | `028084_27/57` (`THRU`), `029107_10/50` (`MESSY`) |
+| 12 | an arm from the stop vertex running back along the body is the Michel | `028084_1/39`, `028084_17/55` |
+| 13 | within ~5 cm, a compact piece is the Michel even across a gap | `028084_26/109` |
+| 14 | a busy stop is `MESSY` | `029107_10/50` |
 | 15 | gamma radius a hard 60.0 cm; degenerate rows are `delta / other`; confidence scopes the verdict; `ANODE:` / `REVERSED:` prefixes | scanner objections, calibration wave |
 
 **v3 (after main wave 1).** One factual correction, found by a wave-1 scanner.
@@ -615,7 +592,7 @@ numbers put the face at 358 cm.
 |---|---|---|
 | 16 | `face.x` ≲ 8 cm is AT the anode: an exit with a flat profile | the |x| distribution of all 634 ends (doc pdhd/18 §6.2) |
 | 17 | `FACE:` / `DEAD:` / `ISOCHRONOUS:` prefixes; THRU stubs; the isochronous exception limits rule 3 only | wave-1 scanner objections |
-| 18 | an overshoot bridge through a charge-free gap is a fit artifact, not the Michel; `UNCLEAR` tagging | a wave-1 scanner |
+| 18 | an overshoot bridge through a charge-free gap is a fit artifact, not the Michel; `UNCLEAR` tagging | wave-1 scanner, `029107_19/111` |
 | 19 | APA0 patchy collection charge is a hole, not a flat profile; the horizontal line in `f_meas` named | wave-1 scanners |
 | 20 | rule 3's "nothing continues" is read off the 3-D frames, not `f_meas`: `f_meas` draws only this cluster's own cells | a wave-1 scanner; `prep_stm_michel_scan.proj_cells` reads one `T_proj_data` row, the muon's cluster |
 
@@ -624,7 +601,7 @@ calls (rule 3 as written in v2 leaned on `f_meas` for "nothing continues"),
 were re-scanned under v3. The re-scan supersedes their v2 record
 (`resolve.py --supersede`); the v2 records are kept and listed.
 
-Left unchanged: the overshoot rule. On one calibration item the owner placed no
+Left unchanged: the overshoot rule. On `028084_23/114` the owner placed no
 pin where the blind scan moved it 2.7 cm, but on PDVD the owner moved pins by
 1.2–9.5 cm (doc pdvd/70 §9.4). One item does not set a length threshold.
 
@@ -638,13 +615,3 @@ found were fixed, and the direction question it left open is now a rule.
 | 23 | U/V coloured cells read 2–3× the channel charge on wrapped planes | ctpc vs `T_proj_data`, doc pdhd/19 |
 | 24 | rule 7, direction: an upper fit end (`dy ≥ 0.3 × chord`) is not a flat stop; only a clear rise makes it a stop, at most `medium`; `DIRECTION:` prefix | 22 of 183 smx18 hand stoppers stopped at the upper end (doc pdhd/18 §7, queue tier C) |
 | 25 | the previous round's files are off limits | the review re-scans items the previous round judged |
-
-**v5 (after the owner's rulings, doc pdhd/19 §8).** The owner looked at five
-items on the fixed display and ruled on rule 7.
-
-| # | change | evidence |
-|---|---|---|
-| 26 | rule 7's second bullet: at an upper end, topology decides as in rule 1 (v4: activity at an upper end was not enough) | owner: two upper ends with an angled arm called `STM_MICHEL` |
-| 27 | rule 7 confirmed for flat upper ends; rule 3's two owner examples withdrawn | owner: three flat upper ends called not stoppers, two of them the owner's own earlier stoppers |
-| 28 | an upper end with no topology and no readable profile is not ruled: `THRU` + `DIRECTION:` + `NO_MEASUREMENT:` | the owner left rule 7 vs rule 4 open |
-| 29 | item keys removed from the rules and these tables | v4 named nine keys with the owner's verdict, which made those items non-blind (doc pdhd/19 §4) |
