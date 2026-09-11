@@ -218,7 +218,7 @@ That is 5 gained Michels for 5 spurious ones, an added-set purity of 0.5. It wou
 
 ## 10. Observations
 
-1. **Unfitted charge also sits beside found Michels.** 36 of 120 found stoppers carry an excess of ≥ 10 unfitted own-cluster points near the stop (U2), so the Michel **energy** is under-counted on about a third of the found population. That is a larger lever than items 7 and 8, and it is doc 81's estimator (built, OFF). It is recorded, not scoped here.
+1. **Unfitted charge also sits beside found Michels.** 36 of 120 found stoppers carry an excess of ≥ 10 unfitted own-cluster points near the stop (U2), so the Michel **energy** is under-counted on about a third of the found population. That is a larger lever than items 7 and 8, and it is doc 81's estimator (built, OFF). It is recorded, not scoped here. *Correction (2026-09-11, after doc 88): the 36 is a count of unfitted 3-D points, not a measured energy shortfall. Doc 81's estimator as built does not necessarily recover that charge: it selects the Michel's cells by association with the Michel's segments. See doc 78 action item 9.*
 2. **Doc 62 T3a's grading is stale.** `039253_0/44` was one of its "five extra michel FPs" and is an owner-confirmed Michel, and the production it was graded on (`d61v`) predates docs 63–85. Item 7 re-grades it.
 3. **The item 6 hypothesis (unimaged, dead region) came from the absence of a second PR segment.** It was not a look at the image. On all four items the 3-D image carries the charge, in the muon's own cluster.
 4. `:5017` still serves `smx5`. The labels are copied into `pdvd/docs/scan/pdvd_stm_michel_smx5_labels.json`, and the four other PDVD label files are unchanged against the pre-scan backup (`cmp`).

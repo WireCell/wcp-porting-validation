@@ -560,9 +560,10 @@ function(
         // with role 3 189 -> 225.  is_stm bit-identical (0 of 566 flips) --
         // the knob runs after the verdict.  The companion knob
         // stop_local_residual_cm (T3a, keep a pr54 residual near the stop)
-        // is NOT set: measured on the same record it adds 2 Michels for 5
-        // spurious ones, loses 1, and flips is_stm on 3 items by changing the
-        // PR graph (doc 62 sec 4.3) -- left OFF for the owner.
+        // was left OFF by doc 62 (unfloored at 20 cm: 2 Michels for 5
+        // spurious ones, 1 lost, 3 is_stm flips, doc 62 sec 4.3); it is set
+        // below since docs pdvd/87-88, floored and with the reachable stop
+        // snap.
         stop_local_michel_pieces: true,
         // doc pdvd/62 (T3c) -- PDVD PRODUCTION.  doc 55 sec 15.1's kinematic
         // test as a knob: a bridged (conn_type 2) or charge-only (3) Michel
@@ -600,6 +601,28 @@ function(
         // purity.  039349_69/56 (0.29 MIP) and 039349_64/52 (reach) are
         // refused by the gate, which is not loosened for them.
         michel_near_stop_arm_cm: 5.0,
+        // docs pdvd/87 + pdvd/88 (doc 78 action items 7 and 7b) -- PDVD
+        // PRODUCTION.  C++ defaults 0 / 0 / 0 / false (off).  doc 62's T3a
+        // keep of the pr54 isolated residual PR fits and then drops at the
+        // STM tagger's stop -- within 5 cm, and only with >= 5 Steiner
+        // terminals AND >= 5 cm fitted length (doc 87's floor) -- and, on
+        // exactly the candidates where it kept one, the stop snapped only
+        // onto vertices the entry reaches (doc 88: a kept residual is
+        // disconnected and captured the snap on 039349_36/63).  T3b then
+        // admits the residual into the Michel.  The owner's smx5 Michels
+        // 039253_0/44 and 039349_30/45 are such residuals, and their smx6
+        // look at 039253_15/36, the one other Michel it adds, called it a
+        // Michel too.  Measured on p88v5fr against production (p85vprod), on
+        // the smx1a+smx3+smx4+smx5+smx6 record: the keep fires on 7
+        // candidates and nothing else moves; michel TP 141 -> 144, FP 12 ->
+        // 12, FN 20 -> 17; is_stm 233 / 7 / 45 unchanged; 0 through-going
+        // touched.  The floor is what holds the purity: unfloored at 5 cm the
+        // keep touches 4 THRU, at 20 cm 16 (doc 87).  PDHD stays OFF (no
+        // hand-scan record there).
+        stop_local_residual_cm: 5.0,
+        stop_local_residual_min_points: 5,
+        stop_local_residual_min_len_cm: 5.0,
+        stop_snap_reachable: true,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

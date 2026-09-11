@@ -8,7 +8,9 @@ Doc 87 built a size floor on doc 62's stop-local residual keep. At 5 cm, with 5 
 The owner asked to advance to that next step (item 7b) under the same bar: an md, a flip if good, commit and push. Their standing answer from doc 87 still holds: if `039253_15/36` is the only new Michel FP, hold the flip and show it to them first.
 
 
-**Status (2026-09-11): BUILT; flip HELD for the owner's look at `039253_15/36`, which is served blind as `smx6` on :5017.**
+**Status (2026-09-11, later): FLIPPED in PDVD production (§9).** The owner judged `039253_15/36` on smx6: STM + MICHEL, attached, "clear image results near the end of the STM … no track trajectory fit, but clear in image" (the predicted `unfitted`). On the record that now includes smx6, the flip candidate is Michel 141 / 12 / 20 → **144 / 12 / 17** (0 FP added, 0 TP lost) with `is_stm` unchanged. The four keys are in `pdvd/wct-pr-perevt.jsonnet`; PDHD stays OFF.
+
+*What follows through §8 was written while the flip was held (2026-09-11, before the owner's answer).*
 - **The knob.** `stop_snap_reachable` (C++ default false) acts only where the stop-local keep fired. There, the stop snaps onto nothing the entry cannot reach. With the knob off, output is byte-identical on both detectors. With the knob on and no keep, it is byte-identical on every shared branch and row (§5).
 - **The flip candidate** is `p88v5fr`: doc 87's floored keep (5 cm, 5 terminals, 5 cm) plus the knob.
   - The skip fires on `039349_36/63` alone, and 36/63 is a stopper with its Michel again.
@@ -163,4 +165,57 @@ PDHD stays OFF either way (no record).
 1. **The 20 cm arms are not a quieter alternative.** `p88v20fr` has the best Michel F1 (0.909) but keeps the THRU `is_stm` FP `039252_8/93`, and its 64/65 recovery rests on a stop moved 18.7 cm.
 2. **0/44's recovered Michel reads 5.0 MeV** for a 10.6 cm, 20-terminal piece. The bridged object's energy is doc 81's question (the 2-D charge estimator, built, OFF); recorded, not scoped.
 3. **The unjudged `039253_8/81`** turns `is_stm` 1 on every arm that keeps its residual. It would enter a later scan tranche.
-4. **Next:** the owner judges `039253_15/36` on :5017 (smx6). Then the flip or not (§7), then item 8's blind re-judge (doc 86 §9).
+4. **Next** (as written before the answer): the owner judges `039253_15/36` on :5017 (smx6); then the flip or not (§7); then item 8's blind re-judge (doc 86 §9).
+
+## 9. The owner's answer, the fold, and the flip
+
+### 9.1 Score (`scripts/d88_score_smx6.py`, `/home/xqian/tmp/p88/score_smx6.txt`)
+
+| item | record before | the owner (smx6) | key's MECH | owner's MECH |
+|---|---|---|---|---|
+| `039253_15/36` | STM_ONLY (smx1a, high) | **STM_MICHEL, attached** | `unfitted` | `unfitted`, from the notes: "Yes, there are some clear image results near the end of the STM. They were not identified as Michel, so no track trajectory fit, but clear in image." |
+
+- **The answer's form.** The owner answered in the notes, not in the `MECH:` line. The mapping to `unfitted` is mine, and the words are quoted beside it. DEAD was not answered.
+- **The pin.** It was left on the fit end (not placed).
+- **`revealed_before_label` is true on every label the viewer writes now.** The chain's answer on that panel was production's (`michel_found` 0), so the label was not steered toward the flip.
+- **The smx1a call and the display's blind spot.** The smx1a scanner's high-confidence STM_ONLY rested on "the display draws exactly ONE object… nothing past the stop". That is what a residual PR drops looks like on that display, the same blind spot that made `039253_0/44`'s first call wrong.
+
+### 9.2 The fold
+
+`pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_verdicts.json` has 601 rows. It is a new file; the smx5 record is untouched. It differs from the smx5 record on one row: 15/36 goes STM_ONLY → STM_MICHEL (`michel_kind` attached, confidence owner, source smx6). The stopper class is unchanged, and the Michel class goes False → True. The labels are copied to `pdvd/docs/scan/pdvd_stm_michel_smx6_labels.json`. **From here on, scoring uses this record.**
+
+### 9.3 The census on the new record (546 judged items with a payload)
+
+| arm | Michel TP / FP / FN | purity | F1 | `is_stm` TP / FP / FN |
+|---|---|---:|---:|---|
+| production `p85vprod` | 141 / 12 / 20 | 0.922 | 0.898 | 233 / 7 / 45 |
+| **`p88v5fr`** | **144 / 12 / 17** | **0.923** | **0.909** | 233 / 7 / 45 |
+
+Michel TP gained: `039253_0/44`, `039253_15/36`, `039349_30/45`. Michel TP lost: none. FP new: none. `is_stm`: identical. THRU touched: 0. **Bars 1–4 of §7 hold with 0 new FP.**
+
+### 9.4 The flip and its proofs
+
+The flip is four keys at the end of `stm_michel_knobs` in `pdvd/wct-pr-perevt.jsonnet`, each with a comment giving the C++ default, the numbers and the owner's scans:
+- `stop_local_residual_cm: 5.0`;
+- `stop_local_residual_min_points: 5`;
+- `stop_local_residual_min_len_cm: 5.0`;
+- `stop_snap_reachable: true`.
+
+The T3b comment's "T3a is NOT set" is updated to point here. The PRE copy is `/home/xqian/tmp/p88/pre_wct-pr-perevt.jsonnet` (md5 `5cfa3f86`).
+
+| proof (`scripts/d88_proofs.sh`, `/home/xqian/tmp/p88/proofs.txt`) | result |
+|---|---|
+| A: PRE + `p88v5fr`'s TLA vs POST | **0 lines** |
+| B: POST with the radius forced to 0 vs PRE | the four keys present (radius 0; floors 5 / 5; snap true), all inert at radius 0. The floors are read only inside `m_stop_local_residual_cm > 0`, and the snap is gated on a keep fire (`p88vr` ≡ production, §5). |
+| C: PRE vs POST | exactly the four keys |
+| D: PDHD | 0 lines |
+| `abtest/compile_all_cfg.sh` before and after, `cmp_cfg.sh` | all 16 live SBND / PDHD / PDVD jobs NORMDIFF 0: **OVERALL PASS** (`/home/xqian/tmp/p88/cfg_{before,after}`, `cfg_cmp.txt`) |
+| confirmation arm `p88vprod` (the flipped file, no TLA) vs `p88v5fr` | zips 120 / 120, trees 8 / 8 on every event, calib 119 / 119; 596 / 596 candidates bit-identical on all 147 branches, identical point geometry, 0 flips (`/home/xqian/tmp/p88/g_confirm.txt`). Same pinned binary (Clus `53ea5fe5408b`, md5 unchanged). **PASS**: production is `p88vprod`. |
+
+### 9.5 Next, ranked (the owner asked for suggestions after this round)
+
+1. **A census of the 45 missed stoppers** (`is_stm` efficiency 0.838), by the reject bit that decides each one, on today's production and the smx6 record. Items 1–8 were mostly about Michels; this is the largest gap left. It is read-only.
+2. **The PDVD flips of docs 83–88 graded on PDHD.** PDHD now has a hand-scan record (`pdhd_stm_michel_smx18_verdicts.json`, doc pdhd/18). It was a verdict-blind agent scan, not the owner's, so any PDHD flip would say so.
+3. **Doc 78 item 9, the role-0 measurement.** How much Michel charge the association-based cell selection of doc 81 leaves out, before the definition is changed.
+4. **Item 8's blind re-judge** of the anchor-tail rule's 10 fires. Its ceiling is now about 4 Michels (30/45 is found).
+5. **Housekeeping.** The unjudged candidates the flip changes (`039253_8/81` becomes a stopper, `039349_64/80` gains a Michel) go in the next scan tranche.

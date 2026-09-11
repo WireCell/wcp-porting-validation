@@ -1,0 +1,45 @@
+{
+ "scan": "stm_michel_topology",
+ "doc": "pdhd/docs/12_stm-michel-handscan-display.md",
+ "det": "pdvd",
+ "tag": "smx6",
+ "sheet": "docs/scan/pdvd_stm_michel_smx6_sheet.tsv",
+ "labels": {
+  "039253_15/36": {
+   "label": "STM_MICHEL",
+   "partial": false,
+   "choice": "STM_MICHEL",
+   "michel_kind": "attached",
+   "pin": {
+    "x": -318.75,
+    "y": -2.58,
+    "z": 209.2,
+    "rr": 0.0,
+    "placed": false,
+    "source": "fit-end",
+    "moved_cm": 0.0,
+    "off_fit": false,
+    "unit": 1,
+    "cru": 3,
+    "face": 0,
+    "unit_source": "wire"
+   },
+   "revealed_before_label": true,
+   "notes": "Yes, there are some clear image results near the end of the STM. They were not identified as Michel, so no track trajectory fit, but clear in image. ",
+   "scan_id": 1,
+   "tranche": 1,
+   "event": "039253_15",
+   "cluster": 36,
+   "npts": 537,
+   "muon_len_cm": 321.8,
+   "det": "pdvd",
+   "pf_segments": {},
+   "pf_tagged": 0,
+   "n_pf_segments": 1,
+   "pf_chain_group": {
+    "36000": "muon"
+   },
+   "n_pf_objects": 1
+  }
+ }
+}
