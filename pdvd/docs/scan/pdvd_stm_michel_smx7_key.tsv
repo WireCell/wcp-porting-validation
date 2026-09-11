@@ -1,0 +1,32 @@
+# doc pdvd/90 -- smx7 KEY (do not show the scanner). group: b1 = record stopper doc 89 could not grade (medium/low agent verdict), control = record THRU with the same production reading. record_pin_rr = the agent's overshoot reading (not shown).
+scan_id	key	group	record_verdict	record_michel_kind	record_confidence	record_pin_rr	reject_names	plateau_mip
+1	039349_71/37	b1	STM_MICHEL	none	medium	6.5	no_bragg+shape_flat	0.74
+2	039349_19/56	control	THRU	none	medium		no_bragg+shape_flat	1.02
+3	039253_8/27	b1	STM_ONLY	detached dots	medium		shape_flat	0.74
+4	039349_51/29	b1	STM_MICHEL	detached dots	medium	9.0	no_bragg+shape_flat	1.14
+5	039349_29/40	b1	STM_ONLY	detached dots	medium		no_bragg+shape_flat	1.05
+6	039349_44/28	b1	FRAG_STM_MICHEL	both	medium	4.3	no_bragg+shape_flat	1.51
+7	039252_8/102	b1	STM_MICHEL	both	medium		no_bragg+plateau_off_mip	0.60
+8	039349_3/47	b1	FRAG_STM_ONLY	none	medium		no_bragg	0.96
+9	039349_82/25	b1	STM_ONLY	none	medium		shape_flat	1.02
+10	039252_12/123	b1	STM_ONLY	detached dots	medium		no_bragg	1.02
+11	039349_81/25	b1	STM_MICHEL	none	medium	6.0	no_bragg+shape_flat	0.93
+12	039349_38/33	control	THRU	none	medium		shape_flat	1.08
+13	039252_5/73	b1	STM_ONLY	detached dots	medium		shape_flat	0.78
+14	039253_2/13	b1	STM_MICHEL	attached	medium	3.4	shape_flat	1.04
+15	039252_9/101	b1	STM_MICHEL	both	medium	5.0	no_bragg+shape_flat	0.74
+16	039349_77/48	control	THRU	none	medium		no_bragg+shape_flat	1.15
+17	039349_0/28	b1	STM_ONLY	detached dots	medium		no_bragg	1.02
+18	039349_81/44	b1	STM_MICHEL	attached	medium	7.5	no_bragg+shape_flat	0.93
+19	039349_7/57	control	THRU	none	medium		no_bragg	0.84
+20	039349_32/63	b1	STM_MICHEL	attached	medium		no_bragg+shape_flat	0.95
+21	039349_26/34	b1	STM_ONLY	none	medium		plateau_off_mip	0.41
+22	039349_53/46	control	THRU	none	medium		no_bragg+shape_flat	0.83
+23	039349_16/70	b1	STM_ONLY	none	low		plateau_off_mip	0.34
+24	039349_7/65	b1	STM_ONLY	detached dots	medium		plateau_off_mip	0.59
+25	039349_48/63	b1	STM_ONLY	detached dots	medium		shape_flat	0.88
+26	039349_56/30	control	THRU	none	medium		no_bragg	1.22
+27	039349_34/48	b1	STM_ONLY	detached dots	low	5.5	no_bragg+shape_flat	1.03
+28	039252_7/37	control	THRU	none	medium		no_bragg+shape_flat+plateau_off_mip	0.54
+29	039349_64/52	b1	STM_MICHEL	both	medium		no_bragg+shape_flat	1.11
+30	039253_7/64	control	THRU	none	medium		no_bragg+shape_flat	0.79

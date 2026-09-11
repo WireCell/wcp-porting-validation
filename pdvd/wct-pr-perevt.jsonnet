@@ -246,7 +246,7 @@ function(
         profile_min_dqdx_frac: 0.15,   // drop fit points below 0.15 MIP from the verdict metrics (dead cells; doc pdhd/03 sec 5)
         pid_mode: 2,                   // template PID = proton veto only (sec 6.1); +49 of PDVD's +50
         plateau_mip_lo: 0.6,           // plateau_med / mip_dqdx window (sec 6.2); costs 1 vs doc 48, 13 vs the bag without it
-        plateau_mip_hi: 1.6,
+        plateau_mip_hi: 2.0,           // doc pdvd/90: 1.6 -> 2.0 (+039252_6/106, STM_ONLY high confidence, plateau 1.79 MIP; 0 FP on the record)
         stop_extend_max: 3,            // follow a collinear MIP continuation past the tagger's stop (sec 6.3; 7 PDVD chains) ...
         michel_guards_stop: true,      // ... unless a Michel arm or the Bragg rise says the muon stopped here (sec 6.3)
         michel_shower_min_kink_deg: 15, // a shower-flagged stop arm must still turn 15 deg (sec 6.8; the muon's own Bragg stub is not a Michel)
@@ -325,14 +325,34 @@ function(
         // shape_flat -- and, with topology_clears_sparse (the owner's choice),
         // profile_sparse -- just before the verdict is persisted; is_stm moves only
         // 0 -> 1 and only when nothing else rejects; michel_found is read, never
-        // written.  C++ defaults false / false.  The two minima stay UNSET at their
-        // C++ defaults (10 MeV, 3 cm -- what the scored arm ran) for the inert-key
-        // reason above.  Graded on the owner's blind smx4 re-judge (record
+        // written.  C++ defaults false / false.  Doc 70 left both minima UNSET at their
+        // C++ defaults (10 MeV, 3 cm) for the inert-key reason above; doc pdvd/90 sets
+        // the energy floor (below), and the length floor stays unset at 3 cm.  Graded
+        // on the owner's blind smx4 re-judge (record
         // smx1a+smx3+smx4): is_stm 197/7/79 -> 225/7/51 (purity 0.966 -> 0.970,
         // efficiency 0.714 -> 0.815), 0 new FP, michel_found identical; arm d71vsp
         // matched the offline rule item for item (doc 70 sec 10).  PDHD stays OFF.
         topology_stop_evidence: true,
         topology_clears_sparse: true,
+        // doc pdvd/90 (doc 89 sec 9 item 1) -- PDVD PRODUCTION.  P1's energy floor at
+        // 3 MeV (C++ default 10).  It is a NEW key: the OFF proof forces 10.0 back and
+        // shows the key present at the C++ default value, which the component reads as
+        // before.  Together with plateau_mip_hi 2.0 (above) it clears 5 of doc 89's
+        // missed stoppers at 0 FP: four owner smx4 STM_MICHEL stoppers whose attached
+        // Michel is 3.3-8.7 MeV and 3.8-4.2 cm long (039349_19/52, 039349_48/21,
+        // 039349_63/55, 039349_70/61), plus 039252_6/106 through the plateau.  The 3 cm
+        // length floor is what protects purity: every through-going Michel-like arm on
+        // the record is under 2.5 cm.  Arm p90vb vs p88vprod: exactly the offline twin's
+        // movers (those 5 stoppers + the MESSY 039349_77/52; 039349_27/41 and
+        // 039349_35/30 lose shape_flat but stay out on the boundary), is_stm 233/7/55 ->
+        // 238/7/50 on the 576 judged items of the smx1a..smx6 record, 0 new FP,
+        // michel_found identical, 588 / 596 candidates bit-identical, zips differ on one
+        // event (the MESSY mover's capture gamma, no longer withheld).
+        // CAUTION (doc 89 sec 5.1): below 10 MeV the docs 72/84 argument that the T2c
+        // veto and its exemptions cannot move is_stm no longer holds
+        // (CheckSTM_Michel.cxx:664-678); a T2c change must now be graded on is_stm too.
+        // PDHD stays OFF.
+        topology_michel_ke_min: 3.0,
         // doc pdvd/71 (P4): the Michel's isolated gamma blobs -- the owner's Q4 and his
         // three criteria (along the Michel direction, a dot near the stop, an energy
         // guard against over-clustering).  Unclaimed companion clusters within

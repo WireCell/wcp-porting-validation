@@ -219,3 +219,12 @@ Doc 79: the cap. Doc 80: item 1. Doc 82: item 2 (with the corrections above; the
   - 8 are closed by the owner's fiducial / continuation / hadron preference.
   - 10 are the tagger's. Its combined score separates 4 of its 6 status-3 stoppers from the 19 THRU items on the record, but as a waiver it hands on 12–34 clusters, mostly unjudged.
 - **Next** (doc 89 §9): flip that 0-FP bundle, pending the owner's yes on lowering the P1 energy floor; then a blind re-judge of the 22.
+
+Doc 90: both done.
+- **The flip.** The bundle is FLIPPED in PDVD, and the arm matched the twin exactly: +5 stoppers, 0 FP.
+- **The re-judge** (smx7, on :5018). The owner kept 18 of the 22 as stoppers, 13 of them with a Michel. 4 are THRU, and 1 of the 8 controls is a stopper.
+- **The new record** is `…smx6_smx7_verdicts.json`. Production with the flip reads `is_stm` 238 / 7 / 47 and `michel_found` 144 / 12 / 25.
+- **The owner's 13 Michels are invisible to the chain:**
+  - on 5 the fit runs 3.6–7.2 cm into the Michel, beyond the 3 cm anchor;
+  - on 8 there is off-fit charge that no segment carries.
+- **Next** (doc 90 §8): size a wider anchor for the fit-through five, offline first.

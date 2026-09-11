@@ -249,6 +249,12 @@ No item entered the missed set, and no non-stopper's `is_stm` moved.
    - So the proofs are: PRE vs POST differs in exactly these two keys; POST with an override forcing 10.0 / 1.6 diffs to zero against PRE except for the added `topology_michel_ke_min` key itself, and the value-equality is shown.
    - Needs the owner's yes on the energy floor (§5.1).
 2. **A blind owner re-judge of the 22 (b1) items (smx7).** This is the largest bucket, and the only one whose size is a record question. 8 of them carry a scanner-moved stop 3.4–9.0 cm back.
+
+*Done (doc 90, 2026-09-11).*
+- *Item 1 is FLIPPED:* `topology_michel_ke_min` 3, `plateau_mip_hi` 2.0; the arm matched the twin exactly, 238 / 7 / 50, 0 new FP.
+- *Item 2 is re-judged (smx7, 22 items + 8 controls):* 18 of the 22 are stoppers (13 with a Michel), 4 are THRU, and 1 control is a stopper.
+  - On the new record `…smx6_smx7_verdicts.json`, the flipped production reads 238 / 7 / 47.
+  - 5 of 30 were overturned. That population was selected differently from smx3 / smx4, so the rate is not comparable with the third cited in §4 above (doc 90 §5.2).*
 3. **Doc 88 §9.5 item 2**: the PDVD flips of docs 83–88 graded on PDHD's smx18 record.
 4. **The tagger waiver (§3.2)**, only after a blind scan of its 12–34 new candidates and an arm on both ProtoDUNEs. Its ceiling is 3 stoppers.
 5. **Doc 78 items 9 and 8**, as in doc 88 §9.5.
