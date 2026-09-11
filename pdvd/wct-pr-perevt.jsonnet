@@ -228,6 +228,21 @@ function(
     // exactly one key.  {} => compiled config byte-identical.
     stm_michel_extra = {},
     stm_michel_knobs = {
+        // doc pdvd/79 (doc 77 sec 7.1) -- PDVD PRODUCTION.  CheckSTM_Michel keeps
+        // the first max_candidates STM-flagged main clusters per event, by
+        // cluster id (C++ default 8).  On the 120-event sample the cap fired on
+        // 6 events (9-13 candidates) and dropped 19 tagger-accepted clusters,
+        // two of them owner-confirmed STM_MICHEL stoppers (039253_8/65,
+        // 039349_81/62).  Arm p79vcap vs production: the 578 existing candidates
+        // bit-identical on all 140 branches and every point row, 18 new
+        // candidates on those 6 events, the two named recovered as is_stm 1 with
+        // a found Michel (31.7 / 40.6 MeV), 0 new FP, nothing lost: is_stm
+        // 230/7/46 -> 232/7/46, michel_found 136/12/22 -> 138/12/22.  The other
+        // 16 new candidates are unjudged (never a candidate, never scanned).
+        // 64 is "no cap" on this sample; the cost is wall time on those events.
+        // PDHD's cap also fires (7 of 61 events) and stays at the C++ default:
+        // no PDHD record to confirm it.
+        max_candidates: 64,
         profile_min_dqdx_frac: 0.15,   // drop fit points below 0.15 MIP from the verdict metrics (dead cells; doc pdhd/03 sec 5)
         pid_mode: 2,                   // template PID = proton veto only (sec 6.1); +49 of PDVD's +50
         plateau_mip_lo: 0.6,           // plateau_med / mip_dqdx window (sec 6.2); costs 1 vs doc 48, 13 vs the bag without it

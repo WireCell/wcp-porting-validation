@@ -115,6 +115,8 @@ Each entry is sized on `p75vprod`, offline and exact where the setting has one c
 
 ### 7.1 The candidate cap (`max_candidates` 8) — +2 owner-confirmed Michel stoppers, no scan needed
 
+*Done (doc 79, 2026-09-10): `max_candidates` 64 in PDVD production; the 578 candidates bit-identical, both named items recovered with a found Michel, 16 unjudged new candidates.*
+
 `CheckSTM_Michel` sorts the STM-flagged main clusters by cluster id and keeps the first 8 (`CheckSTM_Michel.cxx:1527-1533`, C++ default 8, not set in the PDVD config). On this arm the cap fires on **6 of 120 events** (9–13 flagged clusters), drops **19 tagger-accepted clusters**, and **two of them are owner-confirmed STM_MICHEL items**: `039253_8/65` and `039349_81/62` — both `T_stm_pass` status 0 (accepted by the tagger), both simply never reconstructed. The other 17 dropped clusters are unjudged (they were never candidates, so never scanned). Raising the cap is a config change (`max_candidates` in `stm_michel_knobs`); the arm must show that the 578 existing candidates are unchanged (the chain claims clusters and pieces per candidate, so order could matter) and what the 17 new candidates read; CPU cost is the only known price. **Recommendation: build first** — it is the only item that recovers owner-confirmed stoppers with no threshold and no scan.
 
 ### 7.2 P1's floors — +4 stoppers at 3 MeV / 3 cm, 0 FP on the record
