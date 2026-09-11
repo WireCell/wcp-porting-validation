@@ -218,6 +218,10 @@ Fork of doc 86's off-fit reading, run on all 22 (b1) items grouped by the owner'
    - The owner's pins (3.6–7.2 cm) lie beyond the 3 cm anchor search.
    - Doc 68's 10 cm anchor cost is_stm purity (9 → 22 FP, on smx1a). The question is whether a wider search restricted to candidates the owner's rule already favours keeps purity: e.g. only where the fit's tail past the peak reads below the plateau, as in doc 78 item 8.
    - Size it offline on the new record (the 5 targets against the smx7 controls and the record's THRU) before any build. Doc 78 item 8's blind re-judge of its 10 fires is part of the same question.
+   - *Sized in doc 91 (read-only):*
+     - A second, wider peak read, cleared only when the reading passes and two charge guards hold. At W 8 cm, R 1.3, D 0.8 it gains the stopper call on 5 owner-judged Michels at 0 judged THRU (238 / 7 / 47 → 243 / 7 / 42). Two of them (`71/37`, `44/28`) are from this item's pinned five.
+     - The R guard keeps the owner THRU `039349_81/25` out by 0.02; R 1.5 gains 3 at a 0.22 margin.
+     - Item 8's fires turned out not to be in smx7: they are all `is_stm` 1.
 2. **The 8 unfitted Michels:** find a discriminator before any rule. Charge amount, direction relative to the muon and compactness, measured against the 6 non-Michel items that also carry off-fit charge.
 3. **Doc 88 §9.5 item 2:** grade the PDVD flips of docs 83–90 on PDHD's smx18 record.
 4. **Doc 78 item 9**, the Michel charge energy.

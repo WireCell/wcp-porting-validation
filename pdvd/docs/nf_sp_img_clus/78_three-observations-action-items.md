@@ -228,3 +228,10 @@ Doc 90: both done.
   - on 5 the fit runs 3.6–7.2 cm into the Michel, beyond the 3 cm anchor;
   - on 8 there is off-fit charge that no segment carries.
 - **Next** (doc 90 §8): size a wider anchor for the fit-through five, offline first.
+
+Doc 91: doc 90 §8 item 1, sized offline and not built.
+- **The rule.** A second Bragg-peak read, searched up to W cm back, where production still fails a shape test. It clears the four shape bits only when that reading passes, the peak is ≥ R × plateau, and the rows past the peak read ≤ D × plateau.
+- **The result.** At W 8, R 1.3, D 0.8: +5 owner-judged stoppers at 0 judged THRU (`is_stm` 238 / 7 / 47 → 243 / 7 / 42). R 1.5 gives +3 with a wider margin against the owner THRU `039349_81/25`.
+- **The twin is exact** (585 / 585) once it reads the unrounded fit rows from the ROOT tree. The payload's 0.01 cm rounding had misplaced the anchor on 25 candidates.
+- **Scope.** The stopper call only: no Michel object.
+- **Next** (doc 91 §10): build it as a default-OFF knob and run both operating points; the owner picks.
