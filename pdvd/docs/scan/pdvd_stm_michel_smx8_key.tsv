@@ -1,0 +1,21 @@
+# doc pdvd/92 -- smx8 KEY (do not show the scanner). group: decision = an operating point would call it a stopper, control = no grid point moves it. moved_at = the W/R/D points that move it. record_pin_rr = the previous scanner's overshoot reading (not shown).
+scan_id	key	group	record_verdict	record_michel_kind	record_confidence	record_pin_rr	reject_names	plateau_mip	moved_at
+1	039349_51/44	decision	THRU	none	medium		no_bragg	0.84	8/1.3/1
+2	039349_81/25	decision	THRU	— not set —	owner	6.0	no_bragg+shape_flat	0.93	10/1.3/0.8
+3	039349_44/28	decision	STM_MICHEL	both	owner	4.3	no_bragg+shape_flat	1.51	8/1.3/0.8 8/1.5/0.8 8/1.3/1 10/1.3/0.8
+4	039349_24/58	decision	THRU	none	medium		no_bragg	0.77	8/1.3/1
+5	039349_44/18	control	THRU	none	high		no_bragg+shape_flat	1.04	
+6	039349_3/47	decision	STM_MICHEL	attached	owner		no_bragg	0.96	8/1.3/1
+7	039349_45/16	control	THRU	none	high		no_bragg+shape_flat	1.02	
+8	039252_8/102	decision	STM_MICHEL	attached	owner		no_bragg+plateau_off_mip	0.60	8/1.3/1
+9	039349_29/40	control	STM_MICHEL	both	owner		no_bragg+shape_flat	1.05	
+10	039349_51/29	decision	STM_MICHEL	attached	owner	9.0	no_bragg+shape_flat	1.14	8/1.3/0.8 8/1.3/1
+11	039252_9/101	decision	STM_MICHEL	attached	owner	5.0	no_bragg+shape_flat	0.74	8/1.3/0.8 8/1.5/0.8 8/1.3/1 10/1.3/0.8
+12	039349_15/30	control	THRU	none	high		no_bragg+shape_flat	1.00	
+13	039349_4/26	control	THRU	none	high		no_bragg+shape_flat	1.12	
+14	039349_71/37	decision	STM_MICHEL	attached	owner	6.5	no_bragg+shape_flat	0.74	8/1.3/0.8 8/1.5/0.8 8/1.3/1 10/1.3/0.8
+15	039349_42/53	control	THRU	none	high		no_bragg+shape_flat	0.97	
+16	039349_17/62	decision	THRU	none	medium		no_bragg	0.69	8/1.3/1
+17	039349_42/45	control	THRU	none	high		no_bragg+shape_flat	0.96	
+18	039349_68/28	control	THRU	none	medium		no_bragg+shape_flat	1.22	
+19	039349_50/46	decision	THRU	none	medium		no_bragg+shape_flat	0.85	8/1.3/1

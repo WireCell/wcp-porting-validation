@@ -1,0 +1,22 @@
+# doc pdvd/92 -- smx8, PDVD: the wide-anchor decision set (11) + 8 controls. Production (p90vprod) reads is_stm 0 / michel_found 0 / shape bits only on every item; order shuffled (seed 92); the group key is kept in a separate file.
+# built by d92_build_smx8.py from prep=/home/xqian/tmp/p90/prep_p90vprod twin=/home/xqian/tmp/p92/twin.json
+scan_id	tranche	event	cluster	npts	muon_len_cm
+1	1	039349_51	44	256	148.8
+2	1	039349_81	25	141	84.3
+3	1	039349_44	28	42	24.1
+4	1	039349_24	58	174	103.5
+5	1	039349_44	18	102	60.4
+6	1	039349_3	47	120	71.7
+7	1	039349_45	16	437	263.0
+8	1	039252_8	102	179	106.9
+9	1	039349_29	40	509	304.9
+10	1	039349_51	29	123	73.8
+11	1	039252_9	101	170	113.4
+12	1	039349_15	30	439	262.1
+13	1	039349_4	26	610	364.2
+14	1	039349_71	37	334	197.4
+15	1	039349_42	53	236	139.9
+16	1	039349_17	62	133	79.6
+17	1	039349_42	45	157	93.4
+18	1	039349_68	28	331	199.1
+19	1	039349_50	46	361	216.1

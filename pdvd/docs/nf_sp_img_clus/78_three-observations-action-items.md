@@ -235,3 +235,20 @@ Doc 91: doc 90 §8 item 1, sized offline and not built.
 - **The twin is exact** (585 / 585) once it reads the unrounded fit rows from the ROOT tree. The payload's 0.01 cm rounding had misplaced the anchor on 25 candidates.
 - **Scope.** The stopper call only: no Michel object.
 - **Next** (doc 91 §10): build it as a default-OFF knob and run both operating points; the owner picks.
+
+Doc 92: doc 91 §10 item 1, built OFF and gated, **not flipped**.
+- **The build.** Three default-OFF knobs (`bragg_wide_anchor_cm` / `_rise_min` / `_tail_max`) in one
+  block after doc 75's fallback. It only clears bits, and deliberately does **not** replace
+  `rec.bragg` (which `bragg_here` reads at `:2950`), so the published result is exactly "the same
+  bits with the four shape bits cleared, then P1" — what the twin predicts.
+- **The gates.** OFF is byte-identical on **both** detectors (PDVD 120 zips / 596 candidates, PDHD 61
+  zips / 325 candidates, no shared branch moved). Both ON arms match the exact twin item by item.
+- **The re-judge changed the headline.** smx8 (19 blind items, controls 8/8 held) overturned 3 of the
+  11 decision items — and one of them, `039349_71/37`, was the owner's own smx7 STM_MICHEL call, now
+  THRU. It is a gain at both R points, so doc 91's "+5 at 0 judged THRU" becomes **+4 stoppers and
+  1 false positive**: eff 0.832 → 0.846, purity 0.971 → 0.968. R 1.3 dominates R 1.5.
+- **The headroom** (doc 92 §7): of 44 remaining missed stoppers only **5** have a chain-side lever,
+  all five blocked by the same `topology_michel_len_min_cm` 3 cm floor, which is what protects purity.
+  The Michel side still has 10 stop-called-but-no-Michel candidates.
+- **Next** (doc 92 §9): the owner decides whether +4 stoppers is worth +1 FP; then doc 90 §8 item 2
+  (the 10 Michels); then pause the stopper side.

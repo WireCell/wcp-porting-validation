@@ -191,6 +191,16 @@ The wide origin is the top of the Bragg rise, so it lands 0.4–2.2 cm upstream 
 
 ## 10. Next, ranked
 
+> **Update (doc pdvd/92, same day).** Item 1 is **done**: the rule is built behind
+> `bragg_wide_anchor_cm` / `_rise_min` / `_tail_max`, OFF is byte-identical on both detectors, and
+> both arms reproduce the twin item by item. But the blind re-judge doc 92 ran alongside it
+> (`smx8`) **overturned the owner's own smx7 verdict on `039349_71/37`**, from STM_MICHEL to THRU.
+> That item is one of the five gains below, at both R 1.3 and R 1.5. So §4's headline — *+5 stoppers
+> at 0 judged THRU* — does not survive: on the corrected record the selected point gains **4
+> stoppers and 1 false positive** (eff 0.832 → 0.846, purity 0.971 → 0.968), and R 1.3 dominates
+> R 1.5. The numbers in §4–§7 below are as measured on the smx7 record and are left unchanged as
+> that round's record; read doc 92 §6 for the corrected census.
+
 1. **Build the rule as a new default-OFF knob:** e.g. `bragg_wide_anchor_cm` (0 = off), `bragg_wide_anchor_rise_min`, `bragg_wide_anchor_tail_max`.
    - Placement: after the fallback, all four bits or none, with a persisted flag and the wide shift, and a DEBUG line per re-read.
    - Order: the C++ must keep the twin's order, or the exact twin stops being exact. The fallback runs first; the wide read runs only where the fallback left a shape bit, so both can run on one candidate, and a fallback that stood leaves nothing for the wide read.
