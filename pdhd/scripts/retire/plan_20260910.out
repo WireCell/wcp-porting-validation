@@ -4,7 +4,7 @@
 ==============================================================================
   PASS  INTERLOCK 1: substrate present (all present)
   PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
-  PASS  INTERLOCK 3: no live writer (0 of 4 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 3: no live writer (0 of 0 sampled dirs moved, 0 tree-scoped wire-cell procs)
   PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
   PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
   PASS  INTERLOCK 7: no record/label dir in the release (clear)
@@ -16,11 +16,9 @@
   PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
   PASS  INTERLOCK 16: live-by-uncommitted-record: 8 tokens from 1 file(s); 0 resolve in this tree (none)
 
-  universe 85 dirs | KEEP 81 = 76.12 GiB | RELEASE 4 = 0.09 GiB | out-of-scope (untouched) 39
+  universe 81 dirs | KEEP 81 = 76.12 GiB | RELEASE 0 = 0.00 GiB | out-of-scope (untouched) 39
   --- RELEASE ---   arm                       dirs      GiB  cited
-                    d147-c8                      2     0.04      2
-                    d147-tail8                   2     0.04      2
-  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260910.txt  (4 lines, 0.09 GiB)
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260910.txt  (0 lines, 0.00 GiB)
 
 ==============================================================================
 == pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
@@ -28,7 +26,7 @@
         closure: +1 dirs pulled back as substrate of a kept dir
   PASS  INTERLOCK 1: substrate present (all present)
   PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
-  PASS  INTERLOCK 3: no live writer (0 of 122 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 3: no live writer (0 of 0 sampled dirs moved, 0 tree-scoped wire-cell procs)
   PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
   PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
   PASS  INTERLOCK 7: no record/label dir in the release (clear)
@@ -36,39 +34,13 @@
   PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
   PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
   PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd53v', 'd67v', 'd68a3', 'd68d4']
-  PASS  INTERLOCK 14: 19 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
   PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
   PASS  INTERLOCK 16: live-by-uncommitted-record: 8 tokens from 1 file(s); 6 resolve in this tree (['p80boff', 'p82vcs', 'p82vk10', 'p82voff', 'p82vtp', 'p82vtp0'])
 
-  universe 14696 dirs | KEEP 5341 = 54.05 GiB | RELEASE 9355 = 77.31 GiB | out-of-scope (untouched) 270
+  universe 5461 dirs | KEEP 5461 = 58.91 GiB | RELEASE 0 = 0.00 GiB | out-of-scope (untouched) 270
   --- RELEASE ---   arm                       dirs      GiB  cited
-                    d65s08                     120     1.15      2
-                    d30vnupost                 120     1.13    144
-                    d30vnupre                  120     1.13    124
-                    d62fos                     120     1.04      4
-                    d59vleg                    120     1.03     10
-                    d62ab                      120     1.03      5
-                    d62v                       120     1.03      5
-                    d58v                       120     1.03     31
-                    d58vleg                    120     1.03      9
-                    d57v                       120     1.03     29
-                    d57vleg                    120     1.03      6
-                    d71vp1                     120     1.03     12
-                    d71vsp                     120     1.03     33
-                    d71vleg                    120     1.03     23
-                    d71voff                    120     1.03     13
-                    p4v60                      120     1.03     31
-                    d66v                       120     1.03     13
-                    d65v3                      120     1.03     10
-                    d67ks                      120     1.03      9
-                    d67cr45                    120     1.03     10
-                    d66vleg                    120     1.03     41
-                    d67cr60                    120     1.03      6
-                    d64v                       120     1.03     13
-                    d65vleg                    120     1.03     29
-                    d65v                       120     1.03      6
-                    ... and 105 more families
-  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260910.txt  (9355 lines, 77.31 GiB)
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260910.txt  (0 lines, 0.00 GiB)
 
 ==============================================================================
 == pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
@@ -87,7 +59,7 @@
   PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
   PASS  INTERLOCK 16: live-by-uncommitted-record: 8 tokens from 1 file(s); 2 resolve in this tree (['p80bhoff', 'p82hoff'])
 
-  universe 4503 dirs | KEEP 1323 = 42.51 GiB | RELEASE 3180 = 35.22 GiB | out-of-scope (untouched) 109
+  universe 4503 dirs | KEEP 1323 = 43.15 GiB | RELEASE 3180 = 35.22 GiB | out-of-scope (untouched) 109
   --- RELEASE ---   arm                       dirs      GiB  cited
                     d09ref                      30     1.27     11
                     d30hnupost                  61     1.11    149
@@ -118,7 +90,7 @@
   tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260910.txt  (3180 lines, 35.22 GiB)
 
 ==============================================================================
-GRAND TOTAL release 112.62 GiB
+GRAND TOTAL release 35.22 GiB
 interlock failures: NONE
 
 This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).

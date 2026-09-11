@@ -40,29 +40,40 @@ CONFIRM=${CONFIRM:-no}
 # ---- INTERLOCK A: RE-PLAN AT CONFIRM TIME -------------------------------
 # On 09-06 a peer session started 11 minutes into planning and wrote two new
 # arms; on 09-04 a live round created SEVEN new families between plan and
-# confirm.  A tier file frozen at plan time cannot see them.  Scoped to the tier
-# being run: comparing every tier file means tier 1 having executed makes
-# tier 2 refuse -- the round's own first pass raising a peer alarm.
-# NOTE the 09-06 bug this avoids: ${TIER} must be assigned ABOVE this block.
+# confirm.  A tier file frozen at plan time cannot see them.
+#
+# SCOPED TO THE TIER *AND* THE TREES BEING RUN.  The 09-08 version scoped to the
+# tier only, and on 2026-09-10 that reproduced the very defect its own comment
+# describes, on a new axis: this round has ONE tier and THREE trees, so running
+# `1 sbnd` and `1 pdvd` first emptied their tier files -- correctly, there is
+# nothing left to release there -- and the next invocation, `1 pdhd`, compared
+# ALL tier files, saw pdvd go 9355 -> 0, and refused with a peer-session alarm
+# caused by the round's own completed passes.  An already-executed tree is not
+# a peer.  Compare only the trees this invocation will touch.
+# NOTE the 09-06 bug this avoids: ${TIER} must be assigned ABOVE this block,
+# and so must TREES.
 if [ "${CONFIRM:-no}" = yes ] && [ "${REPLAN:-yes}" = yes ]; then
   echo "== INTERLOCK A: re-planning before deleting (peer-session guard)"
   mkdir -p "$D/.preplan-$STAMP"
-  cp "$D"/tier${TIER}_*_${STAMP}.txt "$D/.preplan-$STAMP/" 2>/dev/null || true
+  for t in $TREES; do
+    cp "$D/tier${TIER}_${t}_${STAMP}.txt" "$D/.preplan-$STAMP/" 2>/dev/null || true
+  done
   if ! python3 "$D/plan_${STAMP}.py" > "$D/plan_${STAMP}.confirm.out" 2>&1; then
     echo "   REFUSING: the plan no longer passes its interlocks. See"
     echo "   $D/plan_${STAMP}.confirm.out"; exit 10
   fi
   changed=0
-  for f in "$D"/tier${TIER}_*_${STAMP}.txt; do
-    b=$(basename "$f")
-    cmp -s "$f" "$D/.preplan-$STAMP/$b" || { echo "   CHANGED since plan time: $b"; changed=1; }
+  for t in $TREES; do
+    b="tier${TIER}_${t}_${STAMP}.txt"
+    cmp -s "$D/$b" "$D/.preplan-$STAMP/$b" || { echo "   CHANGED since plan time: $b"; changed=1; }
   done
   if [ "$changed" != 0 ]; then
     echo "   REFUSING: the tier files moved between plan and confirm -- that is"
     echo "   what a live peer looks like.  Review the diff, then re-confirm."
     exit 11
   fi
-  echo "   OK: all interlocks still PASS and every tier file is unchanged."
+  echo "   OK: all interlocks still PASS; the tier file of every tree being"
+  echo "   run ($TREES) is unchanged."
 fi
 
 for t in $TREES; do

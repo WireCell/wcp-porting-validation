@@ -1,6 +1,10 @@
 # 104 — cleanup round 2026-09-10: retire the intermediate arms, keep production and the hand scans
 
-**Status: STAGED. Nothing in `work/` has been deleted.** Every step up to the
+**Status: PARTLY EXECUTED (2026-09-10, late).** The owner ran sbnd and pdvd;
+both completed. pdhd refused on an INTERLOCK A defect, now fixed (§12), and is
+ready to re-run. The `~/tmp` tiers are staged.
+
+**Original status, kept for the record: STAGED. Nothing in `work/` had been deleted.** Every step up to the
 deletion has run and passed: the sentinel suite, both censuses, sixteen
 interlocks, the frozen record layer, a stubbed run of the real confirm path and
 a causal negative control. The three `CONFIRM=yes` commands are the owner's —
@@ -287,3 +291,93 @@ Run the four commands above. Then: `l1sp_wf_v9` (11 GiB) is still an open
 question with no regeneration path, and `wt-merge` / `wt-premerge` (17.8 GiB)
 are worktrees of a merge that landed today and can be `git worktree remove`d
 once the doc-82 and mg10 rounds close.
+
+## 12. Post-execution: what ran, and the guard bug that stopped pdhd
+
+**sbnd and pdvd executed cleanly.** Verified after the fact: **0 broken symlinks
+on all three trees**, against the pre-round baseline of 0/0/0 that interlock 4
+recorded. Every protected name still resolves — the hand-scan sources
+(`d53v` 120, `d67v` 120, `d68d4` 120, `d68a3` 120, `d08pv30on/off` 30+30),
+production (`p79vprod` 120), the open doc-81 gate arms, the live `p82*` family,
+and the whole substrate chain (`keep`, `d27fresh`, `d51vclus`, `d41prov`).
+pdvd went **146 GiB → 81 GiB**.
+
+**Then `CONFIRM=yes ./retire_20260910.sh 1 pdhd` refused:**
+
+```
+   CHANGED since plan time: tier1_pdvd_20260910.txt
+   REFUSING: the tier files moved between plan and confirm
+```
+
+That was **not** a peer. It was INTERLOCK A firing on the round's own completed
+work. The 09-08 version scoped the comparison to the **tier** being run, and its
+own comment explains why: *"comparing every tier file means tier 1 having
+executed makes tier 2 refuse — the round's own first pass raising a peer
+alarm."* This round has **one tier and three trees**, so the same defect came
+back on the other axis: running sbnd and pdvd emptied their tier files —
+correctly, there is nothing left to release there — and the pdhd invocation
+compared **all** tier files, saw pdvd go 9355 → 0, and refused.
+
+**Fixed:** the comparison is now scoped to the tier **and** the trees this
+invocation will touch. An already-executed tree is not a peer. Proven by running
+the real `REPLAN=yes` guard path with the deletion stubbed:
+
+```
+== INTERLOCK A: re-planning before deleting (peer-session guard)
+   OK: all interlocks still PASS; the tier file of every tree being
+   run (pdhd) is unchanged.
+   lines 3180 | present 3180 | already gone 0 | 35.22 GiB
+```
+
+**The generalisation worth keeping:** a confirm-time guard must be scoped to
+exactly what the invocation will act on. Scope it to any wider set and the
+round's own earlier passes look like a concurrent writer. It has now cost two
+rounds, on two different axes.
+
+## 13. Going further: where the remaining bytes are
+
+Measured after the sbnd and pdvd releases, against the owner's narrower rule
+(*"maintain the latest production, as well as keep the hand scan results"*).
+
+| what | GiB | needs |
+|---|---|---|
+| **pdhd tier 1, already staged** | **35.22** | re-run, now unblocked (§12) |
+| **`~/tmp` tier 2: the two merge build trees** | **14.5** | run `./sweep_tmp_20260910.sh 2` |
+| pdvd old flip-evidence + `d41prov` | ~12 | a round 2 — see below |
+| `pdhd/l1sp_wf_v9` | 11 | **owner decision**, no regeneration path, declined 09-05 and 09-08 |
+| sbnd `work-*-d145np` | 9.8 | **owner decision** — is doc pr/148 still open? |
+| `~/tmp` tier 1: pure pins of closed rounds | 3.41 | run `./sweep_tmp_20260910.sh 1` |
+| `wt-merge`/`wt-premerge` `install/` | 3.1 | after the merge arms are finished |
+| `~/tmp` tier 3: nested pins of dead rounds | 0 today | self-sequencing, grows after pdhd |
+
+**What CANNOT go, and why the trees stay sizable.** sbnd_xin's 92 GiB is
+**45 GiB of `work-*-d102m`** (latest production stage A) plus 10 of `d102mpr`
+(stage B), 8.1 of the frozen record layer, 4.5 of `input_files_reco1` (the art
+files stage A re-images from), and **3.9 GiB of `work-vtx105-base-*`, which 878
+hand-scan label files reference 1724 times** — a hand scan, kept by the owner's
+own instruction. pdvd's remaining 59 GiB is **20 GiB of pure substrate**
+(`d27fresh` 8.41, `keep` 6.77, `d51vclus` 3.28, `d41prov` 1.61): the corrected
+census still reads 7204 inbound links into `d51vclus` and 4110 into `d27fresh`
+from the arms that survive, so it is the input, not history.
+
+**The pdvd round 2, stated but not built.** The chain is
+`keep ← d27fresh ← d41prov ← {d42fit, d43*, d44*, d45prod, d48nu3, d48nu7,
+d143pnew, d41prod, d38qnewprod}` — old **flip evidence** for constants shipped
+weeks ago, kept today only because `PROTECTED.txt` still names them. They are
+neither latest production nor a hand scan. Releasing that set would also strand
+`d41prov` (1.61 GiB), except that the `d08pv30on/off` **hand-scan** arms pin 92
+links into it — a materialise step, cheap. `keep`, `d27fresh` and `d51vclus`
+stay regardless, because the surviving `p79*`/`p81*`/`p82*` arms borrow from
+them. Estimated ~12 GiB. It needs those `PROTECTED.txt` lines retired
+deliberately, the way §9 retired the 09-08 ones, so it is the owner's call
+rather than something to fold in silently.
+
+## 14. What the owner runs now
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire
+CONFIRM=yes ./retire_20260910.sh 1 pdhd     # 3180 dirs, 35.22 GiB  (unblocked)
+CONFIRM=yes ./sweep_tmp_20260910.sh 1       #    6 pins,  3.41 GiB
+CONFIRM=yes ./sweep_tmp_20260910.sh 2       #    2 build trees, 14.5 GiB
+CONFIRM=yes ./sweep_tmp_20260910.sh 3       #    self-sequencing; run it AFTER pdhd
+```

@@ -36,7 +36,9 @@
 set -u
 T=/home/xqian/tmp
 R=/home/xqian/toolkit-dev/wcp-porting-img
-TIER=${1:?tier (1)}
+D="$(cd "$(dirname "$0")" && pwd)"
+STAMP=20260910
+TIER=${1:?tier (1, 2 or 3)}
 CONFIRM=${CONFIRM:-no}
 
 run() {
@@ -136,6 +138,95 @@ PY
 )"
   run $T1
   ;;
- *) echo "this round has one tier: 1"; exit 1;;
+
+ 2)
+  # ---- TIER 2: the BUILD trees of the two merge worktrees -----------------
+  # 14.5 GiB of compile output, and the honest unit here is build/ -- NOT the
+  # worktree.  `git worktree remove` would take install/ with it, and
+  # ~/tmp/mg10/env_{A,B}.sh put THAT on LD_LIBRARY_PATH:
+  #     env_A.sh -> /home/xqian/tmp/wt-premerge/install/lib   (arm A, 8b1374f9)
+  #     env_B.sh -> /home/xqian/tmp/wt-merge/install/lib      (arm B, adf0fd9c)
+  # A missing LD_LIBRARY_PATH directory is SILENTLY ignored and falls back to
+  # the shared /home/xqian/toolkit-dev/local/lib, so removing the worktrees
+  # would not fail -- it would make both merge-gate arms quietly re-run against
+  # the WRONG libraries.  That is the M1 shape and doc 100 already paid for it
+  # once, when a ~/tmp sweep deleted the pin a runner named.
+  #
+  # MEASURED 2026-09-10: every reference anywhere in both repos and in
+  # ~/tmp/mg10 is to install/, cfg/ or the worktree root.  NOTHING names
+  # build/.  install/ is self-contained -- 0 symlinks, 0 hardlinks into build,
+  # and both binaries run and report the exact commits RESULTS.md names.
+  # The merge itself is safe either way: 98140fee and 8b1374f9 are both
+  # reachable from apply-pointcloud, so no commit lives only in a worktree.
+  echo "== TIER 2: build/ trees of the merge worktrees (worktrees themselves stay)"
+  T2=""
+  for w in $T/wt-merge $T/wt-premerge; do
+    [ -d "$w" ] || { echo "   (absent, skipping) $w"; continue; }
+    # (a) nothing may be lost: HEAD must be reachable from a branch
+    h=$(git -C "$w" rev-parse HEAD 2>/dev/null) || { echo "   REFUSING $w: not a worktree"; exit 5; }
+    git -C "$w" branch -a --contains "$h" 2>/dev/null | grep -q . || {
+      echo "   REFUSING $w: HEAD $h is on no branch -- removing anything here loses a commit"; exit 6; }
+    # (b) no uncommitted tracked work
+    d=$(git -C "$w" status --porcelain --untracked-files=no 2>/dev/null | wc -l)
+    [ "$d" = 0 ] || { echo "   REFUSING $w: $d modified tracked file(s)"; exit 7; }
+    # (c) the arm must survive: install/ present, self-contained, and RUNNING
+    [ -x "$w/install/bin/wire-cell" ] || { echo "   REFUSING $w: no install/bin/wire-cell to fall back on"; exit 8; }
+    n=$(find "$w/install" -type l -printf '%l
+' 2>/dev/null | grep -c build)
+    [ "$n" = 0 ] || { echo "   REFUSING $w: install/ has $n symlink(s) into build/"; exit 9; }
+    v=$(LD_LIBRARY_PATH=$w/install/lib $w/install/bin/wire-cell --version 2>&1 | head -1)
+    case "$v" in HEAD-*) ;; *) echo "   REFUSING $w: install binary does not run ($v)"; exit 10;; esac
+    # (d) nothing may name build/
+    c=$(grep -rhoE "$w/build[A-Za-z0-9/._-]*" $T/mg10 $R 2>/dev/null | wc -l)
+    [ "$c" = 0 ] || { echo "   REFUSING $w: $c reference(s) to $w/build"; exit 11; }
+    [ -d "$w/build" ] || { echo "   (build/ already gone) $w"; continue; }
+    echo "   $(du -sh --apparent-size $w/build | cut -f1) | $w/build  (install/ runs: $v)"
+    T2="$T2 $w/build"
+  done
+  [ -n "$T2" ] || { echo "   nothing to do"; exit 0; }
+  run $T2
+  echo "   NOTE: the worktrees and their install/ trees are KEPT.  When the owner"
+  echo "   is done with the merge arms, 'git -C <wt> ...' then"
+  echo "   'git -C /home/xqian/toolkit-dev/toolkit worktree remove <wt>' releases"
+  echo "   the remaining 3.1 GiB -- and env_{A,B}.sh must be retired with them."
+  ;;
+
+ 3)
+  # ---- TIER 3: nested pins whose round has NO surviving arm ---------------
+  # SELF-SEQUENCING.  pins_of_dead_rounds_20260910.py recomputes which arm
+  # families are on disk at RUN time, so running this before the pdhd release
+  # correctly frees less, and running it after frees more.  Nothing is frozen
+  # to a moment, which is the opposite of a tier file.
+  #
+  # The test is VALUE-FIRST.  By NAME, ~/tmp/p75/libpin_p75 belongs to round
+  # p75 whose arms are all released -- but d81_arms.sh names that pin and it is
+  # the binary behind p79vprod, CURRENT PDVD PRODUCTION (doc pdvd/81 sec 6).
+  # ~/tmp/d66/libpin is the same shape: d68_arms.sh ties it to d68a3/d68d4, the
+  # smx3/smx4 HAND-SCAN sources.  Both are held.  This is the d08cap10 mistake
+  # and the reason the script greps for the pin, pulls the arm tokens out of
+  # every file that names it, and keeps the pin if ANY of them still exists.
+  # It also scans the rounds' OWN runners in ~/tmp: without those, a pin named
+  # only by ~/tmp/d62/run_arms.sh reads as "named by 0 files" and looks
+  # releasable on no evidence at all.  Adding them took the tier from 7 pins to
+  # 2 -- over-keeping is the safe direction.
+  echo "== TIER 3: nested pins of rounds with no surviving arm"
+  python3 "$D/pins_of_dead_rounds_${STAMP}.py" | sed 's/^/   /'
+  mapfile -t T3 < <(python3 "$D/pins_of_dead_rounds_${STAMP}.py" --list)
+  [ "${#T3[@]}" -gt 0 ] || { echo "   nothing releasable yet -- run the pdhd release first"; exit 0; }
+  # pure_so() EXITS on an impure dir, which is right for a hand-written tier
+  # but wrong for a derived one: a single full local/lib snapshot in the list
+  # would abort the whole tier.  Here it filters instead, and says so --
+  # ~/tmp/d57/pin_lib is one of those (13448 non-.so files, a whole install
+  # tree rather than the ~19-object pin class).
+  KEEPLIST=()
+  for d in "${T3[@]}"; do
+    kb=$(find "$d" -type f ! -name '*.so*' -printf '%k\n' 2>/dev/null | awk '{s+=$1}END{print s+0}')
+    if [ "${kb:-0}" -lt 2048 ]; then KEEPLIST+=("$d")
+    else echo "   SKIP $d: ${kb} KiB of non-.so content -- not the regenerable class"; fi
+  done
+  [ "${#KEEPLIST[@]}" -gt 0 ] || { echo "   nothing left after the purity filter"; exit 0; }
+  run "${KEEPLIST[@]}"
+  ;;
+ *) echo "this round has tiers 1, 2 and 3"; exit 1;;
 esac
 [ "$CONFIRM" = yes ] || echo -e "\nDRY RUN.  Re-run with CONFIRM=yes to execute."
