@@ -8,8 +8,9 @@ three at a time), not by hand. Grading PDVD's production knobs on PDHD is next,
 in a new session.
 
 **Status.** Display: **fixed, gated**. Review round (tag `smx19`): §4–§6.
-The owner's rulings, rubric v5 and a v5 double scan (tag `smx20`, now the
-current record): §8.
+The owner's rulings, rubric v5 and a v5 double scan (tag `smx20`): §8. The owner's
+judge queue and the 26 unreviewed `FLAT_STOP` items (tag `smx21`, now the current
+record): §9.
 No C++ and no production jsonnet changed; nothing here moves reconstruction
 output.
 
@@ -728,7 +729,7 @@ tag `smx20`, on top of smx19:
    the record): smx19's `THRU` stands until the owner looks.
 1. **The 26 unreviewed `FLAT_STOP` calls.** Rule 3 now has no owner example.
    A v5 pass over them is the cheapest way to settle the record before the
-   knob grading uses it.
+   knob grading uses it. *(Done: §9.2–§9.3. It removes 2 of the 26.)*
 2. **Rule 7 against rule 4**, for the four items in §8.1 plus `029107_1/36`,
    whenever the owner wants to rule.
 3. **The owner's other tier A disagreements** (§5.1). The owner's smx1 label
@@ -737,6 +738,162 @@ tag `smx20`, on top of smx19:
    * `028084_29/38`, `UNCLEAR` against `FRAG_THRU`;
    * `029107_0/56` and `029107_10/50`, `MESSY` against `THRU`.
 4. **Next session:** grade PDVD's production knobs on PDHD against `smx20`.
+
+## 9. The owner's judge queue, and the 26 unreviewed `FLAT_STOP` items (tag `smx21`)
+
+```bash
+I=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img; H=/home/xqian/tmp/h21
+C=$I/pdhd/stm_michel_scan/campaign; S=$I/pdhd/stm_michel_scan; X=$I/pdhd/docs/scan
+K="--key $X/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv --key-extras $X/smx18/pdhd_stm_michel_scan_key_h18b.tsv --shots /home/xqian/tmp/h19/shots"
+# the owner's judge queue: its OWN label tag, empty, so their clicks cannot reach a record
+cd $S && ./serve_stm_michel_scan.sh 5017 --det pdhd --scan-tag own19 --manifest $H/own19_sheet.tsv --prepdir $S/prep-pdhd-smx19
+# blind frames for the 26 (2 browsers, blank private labeldirs), then the zoom and the check
+./scan_harness.py shots --det pdhd --tag shots21 --labeldir $H/lbl_blank_<i> --prepdir $S/prep-pdhd-smx19 \
+    --manifest $X/smx18/pdhd_stm_michel_scan_sheet.tsv --blind --hide-selection \
+    --items-file $H/ops/chunk_<i>.txt --out $H/shots_p<i>
+python3 $C/mkzoom.py $H/shots; python3 ./check_shots.py $H/shots
+#   agents rv5_a1..a6: $H/AGENT_TASK.md + $H/items_a<i>.txt -> $H/v_parts/rv5_a<i>
+python3 $C/mkowner_record.py $X/pdhd_stm_michel_smx20_verdicts.json $X/smx21/owner_rulings_own19.json $H \
+    $X/pdhd_stm_michel_smx21_verdicts.json $X/smx21/provenance.json --provenance-json $H/provenance_in.json --stopper-split
+python3 $C/mkspec.py $H $H/items_adopted.txt 1 v5
+$C/apply_parallel.sh $H pdhd $X/smx18/pdhd_stm_michel_scan_sheet.tsv $S/prep-pdhd-smx19 v5 1
+python3 $C/merge.py $H pdhd smx21 $H/items_adopted.txt --base smx20 --write
+cd $S && ./verify_scan_record.py --det pdhd --tag smx21 --record ../../pdhd/docs/scan/pdhd_stm_michel_smx21_verdicts.json
+python3 $I/pdhd/docs/scripts/d18_census.py --record $X/pdhd_stm_michel_smx21_verdicts.json $K   # = $X/smx21/census_smx21.txt
+```
+
+### 9.1 The owner's judge queue (`own19`)
+
+The owner asked for their items on :5017. They were served under **their own label
+tag**, `own19`, empty at the start, so their clicks and pins could not reach a record
+tag. That is the fix for §8.1. It worked: after the session the smx1, smx18, smx19 and
+smx20 label files are byte-unchanged, and the owner's eight labels sit in
+`own19/labels.json` (sha `6d5d9ae7…`), read into
+`smx21/owner_rulings_own19.json`.
+
+| # | item | question | the owner |
+|---|---|---|---|
+| 239 | `029107_24/47` | v5 split: is the stop 7 cm past the fit end? | `THRU` |
+| 283 | `029107_5/93` | v5 split: Michel, or the track crossing the cathode? | `THRU` |
+| 184 | `029107_15/26` | the kind and pin of their own §8 ruling | `STM_MICHEL`, **attached**, no pin |
+| 32 | `028084_15/28` | rule 7 against rule 4 | `THRU` |
+| 157 | `029107_1/36` | rule 7 against rule 4 | `THRU` |
+| 185 | `029107_15/40` | rule 7 against rule 4 | `STM_ONLY` |
+| 200 | `029107_18/59` | rule 7 against rule 4 | `MESSY` |
+| 225 | `029107_21/64` | rule 7 against rule 4 | `THRU`, pin at rr 7.2 |
+
+* **Both v5 splits are resolved**, as not stoppers: the call smx20 already carried.
+* **Rule 7 against rule 4 is ruled item by item, not as a rule**: three `THRU`, one
+  `STM_ONLY`, one `MESSY`. v5's marked default therefore stays a default.
+* **`029107_15/26` gains its kind**, so it enters the `michel_found` tally. The owner
+  placed **no** pin here, so the unconfirmed pin their earlier look had saved into the
+  smx19 labels (§8.1) stays provenance, not a stop.
+* **The owner's caveat, verbatim:** *"All of these cases, the dQ/dx fit are not good
+  enough. Difficult to judge."* Their verdicts are recorded as hard calls, not
+  confident ones, and the reconstruction-side question behind it is §9.6.
+
+Census of the rulings alone (`census_owner_own19.txt`, production 303), against §8.3's
+0.404: TP 61, FP 0, FN 91, TN 108, purity 1.000, efficiency **0.401**;
+`michel_found` TP 55 → 56; hand stoppers 161 → 162. `029107_15/40` becomes a stopper
+production misses (`plateau_off_mip`); `029107_18/59` leaves the scored set.
+
+### 9.2 The pass over the 26, designed before it ran
+
+`smx21/preregistered_plan.md` was written before any result: the items, the design, the
+outcome rule, **the wording of the headline**, and the rule for where the section goes.
+
+* **The items.** The 26 smx18 `FLAT_STOP` records that doc 18's owner queue never
+  reached. All are `medium`, none is owner-labelled, 21 `STM_ONLY` and 5 `STM_MICHEL`.
+  Every one is a stopper whose only support is rule 3 — which v5 narrowed and which lost
+  both of its owner examples in §8. **They were selected because they rest on that rule**,
+  so the pass measures the rule, not production.
+* **The design.** Two verdict-blind scans per item, by two of six agents (`rv5_a1…a6`),
+  three at a time, each with a private out dir and a private scratch dir; seeded shuffles;
+  frames shot blind for this pass on the fixed display (`check_shots` clean, no WebGL
+  loss, canvas2d backend as in the earlier rounds); rubric v5 frozen at the same sha the
+  §8 pass used, stamped on all 52 records.
+* **The outcome rule** (`mkowner_record.py --stopper-split`), on stopper-or-not only:
+  both scans stoppers → **confirmed**; both not → **adopted**; one each way → **split**,
+  which keeps the previous call and sets `owner_queue`. A `michel_kind` or `FRAG`
+  difference inside an agreed class is resolved by rule, never sent to the owner.
+* **The audits.** Every transcript was checked for the forbidden paths **and** for any
+  other scanner's dirs, since the second wave ran beside the first wave's records:
+  0 flagged over 88, 86, 98, 91, 77 and 86 tool calls. The audit script is
+  negative-controlled.
+
+### 9.3 Result
+
+| outcome | n | items |
+|---|---|---|
+| confirmed | 20 | the record stands |
+| adopted | 2 | `028084_20/20` (the track's own line continues in grey), `029107_8/136` (at the APA seam) |
+| split | 4 | `028084_16/106`, `029107_20/24`, `029107_21/43`, `029107_4/72` |
+
+**The headline, as pre-registered: rule 3's narrowing removes 2 of the 26 stoppers, not
+the block.** The rule survived two fresh blind looks on 20 of 26, and the remaining 4 are
+unsettled rather than overturned. Both items that go are ones production also rejects
+(`no_bragg|shape_flat`), so the census moves only through the denominator.
+
+Every split is a stopper against `UNCLEAR` or `THRU` at an end whose profile cannot be
+read — the owner's own difficulty (§9.1), not the direction question of §8. Two agreed
+stoppers differ only on whether there is a Michel (`029107_3/99`, `029107_7/34`);
+the rule keeps the base record and neither went to the owner.
+
+One agent revised its own record during the run (`029107_21/32`, `UNCLEAR` →
+`STM_ONLY`, after an interior-gap check): the counts here are from the final records.
+
+**Census** (`census_smx21.txt`, production 303), against §9.1's 0.401:
+
+| | TP | FP | FN | TN | purity | efficiency |
+|---|---|---|---|---|---|---|
+| smx20 | 61 | 0 | 90 | 110 | 1.000 | 0.404 |
+| + the owner's `own19` rulings | 61 | 0 | 91 | 108 | 1.000 | 0.401 |
+| + the 26-item pass (smx21) | 61 | **0** | 89 | 110 | **1.000** | 0.407 |
+
+Hand stoppers 162 → 160; `michel_found` unchanged (TP 56). The efficiency rise is two
+missed stoppers leaving the denominator, not a new true positive.
+
+### 9.4 The record and the labels
+
+`pdhd_stm_michel_smx21_verdicts.json` (317 records) is smx20 with the owner's eight
+`owner_review` blocks and a `review_v5` block on each of the 26. Labels: tag `smx21`
+(`merge.py --base smx20`), 315 rows carried verbatim and 2 replaced, sha `7137756e…`.
+`verify_scan_record` reports the same single mismatch as smx20 — the owner's pin on
+`029107_15/26` (§8.1) — and every earlier label file keeps its sha.
+
+### 9.5 What the six scanners flagged in the rubric
+
+Logged, not folded in; v5 stayed frozen through the round.
+
+* **Rule 3 carries most of this block**, and v5 records that it has no owner example
+  left. Four scanners flagged their own exposure to it rather than letting it move their
+  calls.
+* **A lower end with an unreadable profile is unruled.** v5's "not ruled" note covers
+  only *upper* ends, so rule 3 against rule 4 at a lower end was decided scanner by
+  scanner. This is the direct cause of all four splits.
+* **The overshoot rule has no branch for a bridge into nothing** — a collapse past the
+  last charge with no piece beyond it (`029107_8/104`).
+* **A collinear stub at a stop**: rule 1 calls it weak topology, the undershoot section
+  calls a short forward piece below plateau the ordinary Michel. The two readings give
+  `STM_ONLY` or `STM_MICHEL` on the same object (`029107_3/99`, `029107_7/34`).
+* **The michel/gamma band between ~5 and ~10 cm** has no tie-break (`029107_21/43`).
+* **"Near-isochronous" has no threshold**, and the ratio and the image quality can point
+  opposite ways on two items of the same pass.
+* **Prefix scope**: `NO_MEASUREMENT:` was used beside a non-`UNCLEAR` verdict, and the
+  `DEAD:` threshold was each scanner's own.
+
+### 9.6 What is left
+
+1. **The four splits.** They stay unsettled in the record with `owner_queue`, and they
+   are deliberately **not** sent to the owner: they are the same unreadable ends the
+   owner has just called too hard to judge. The recommendation is to keep them out of
+   the knob grading rather than force a verdict the display cannot support.
+2. **Why the dQ/dx profile is unreadable at these ends** (the owner's caveat, §9.1). It
+   is a reconstruction question, not a scanning one, and it now blocks the weakest part
+   of the record: every split, every `FLAT_STOP`, and the owner's own eight items sit on
+   it. This should be measured before the knob grading treats these items as truth.
+3. **Rule 7 against rule 4** stays unruled in general (§8.1).
+4. **Next:** grade PDVD's production knobs on PDHD against `smx21`.
 
 ## Files
 
@@ -759,3 +916,8 @@ tag `smx20`, on top of smx19:
 | §8: census | `pdhd/docs/scripts/d18_census.py` (`owner_review` precedence; kind-less owner stoppers out of the Michel tally), `smx20/census_smx19_baseline.txt`, `census_owner_rulings_only.txt`, `census_smx20.txt` |
 | §8: tooling | `pdhd/stm_michel_scan/campaign/mkowner_record.py` |
 | §8: round scratch | `/home/xqian/tmp/h20/` (`AGENT_TASK.md`, `RUBRIC.md`, `items_a<i>.txt`, `v_parts/rv5_a<i>`, `scratch_a<i>`, links into h19's shots) |
+| §9: the owner's queue | `pdhd/docs/scan/smx21/owner_rulings_own19.json` (their 8 labels, words and the reading of each); labels tag `own19` |
+| §9: the pass | `pdhd/docs/scan/smx21/preregistered_plan.md` (written before the results), `AGENT_TASK.md`, `items_flat26.txt`, `items_a<i>.txt`, `rubric_v5.sha` |
+| §9: record | `pdhd/docs/scan/pdhd_stm_michel_smx21_verdicts.json` (317; 8 `owner_review`, 26 `review_v5`) and `smx21/provenance.json`; labels tag `smx21` |
+| §9: census | `pdhd/docs/scan/smx21/census_owner_own19.txt`, `census_smx21.txt` |
+| §9: round scratch | `/home/xqian/tmp/h21/` (blind `shots/`, `v_parts/rv5_a1..a6`, `scratch_a<i>`, `ops/` operator files, logs) |

@@ -2,7 +2,7 @@
 """The committed record after the owner's rulings and the v5 double scan (doc pdhd/19 sec 8).
 
     mkowner_record.py BASE_RECORD RULINGS_JSON ROUND OUT_RECORD OUT_PROV
-                      [--provenance-json F] [--pick KEY=SCANNER ...] [--skip-v5] [--arm h18s]
+                      [--provenance-json F] [--pick KEY=SCANNER ...] [--skip-v5] [--stopper-split] [--arm h18s]
 
 One record per item of BASE_RECORD (the smx19 record), in its order:
   * an item in RULINGS_JSON's `items` gets an `owner_review` block (verdict,
@@ -22,8 +22,14 @@ One record per item of BASE_RECORD (the smx19 record), in its order:
         the two scans disagree                          -> base kept, "split",
             owner_queue true
     Every v5 item carries a `review_v5` block with both scans and the outcome.
-    The base record's `review` block (the smx19 round) is kept as it was;
+    The base record's `review` block (the smx19 round) is kept as it was.  An
+    `owner_queue` flag is cleared on any item the owner has since ruled;
   * every other item is copied from BASE_RECORD verbatim.
+--stopper-split (doc pdhd/19 sec 9) judges the pass on stopper-or-not only, so a
+THRU / UNCLEAR / MESSY difference is never a split.  When an adopted item's two
+verdicts differ, the unscored call is taken (conservative: the item leaves the
+scored set rather than asserting THRU), else the lower-numbered scanner; the rule
+used is stamped as review_v5.pick_rule.
 BASE_RECORD is never written (M13).  --skip-v5 ignores the v5 pass, which gives
 the record with the owner's rulings alone, so their census effect can be stated
 apart from the pass.
@@ -36,6 +42,8 @@ ap.add_argument("out_record"); ap.add_argument("out_prov")
 ap.add_argument("--provenance-json", default=None)
 ap.add_argument("--pick", action="append", default=[], help="KEY=SCANNER, for an adopted item whose two verdicts differ within one class")
 ap.add_argument("--skip-v5", action="store_true")
+ap.add_argument("--stopper-split", action="store_true",
+                help="judge the v5 pass on stopper-or-not only (doc pdhd/19 sec 9)")
 ap.add_argument("--arm", default="h18s")
 a = ap.parse_args()
 if os.path.abspath(a.out_record) == os.path.abspath(a.base):
@@ -49,6 +57,10 @@ def base_v(v):
 def klass(v):
     b = base_v(v)
     return "stop" if b in ("STM_MICHEL", "STM_ONLY") else ("thru" if b == "THRU" else "unscored")
+
+
+def stopper_class(v):
+    return "stop" if klass(v) == "stop" else "not"
 
 
 base = json.load(open(a.base))
@@ -80,10 +92,12 @@ for o in base:
     rec = o
     if k in v5:
         s = v5[k]
-        cls = [klass(r["verdict"]) for r in s]
+        kf = stopper_class if a.stopper_split else klass
+        cls = [kf(r["verdict"]) for r in s]
+        pick_rule = None
         if cls[0] != cls[1]:
             outcome, chosen = "split", None
-        elif cls[0] == klass(o["verdict"]):
+        elif cls[0] == kf(o["verdict"]):
             outcome, chosen = "confirmed", None
         else:
             outcome = "adopted"
@@ -91,6 +105,12 @@ for o in base:
                 chosen = pick.get(k, s[0].get("scanner"))
             elif k in pick:
                 chosen = pick[k]
+            elif a.stopper_split:
+                uns = [r for r in s if klass(r["verdict"]) == "unscored"]
+                if cls[0] == "not" and len(uns) == 1:
+                    chosen, pick_rule = uns[0].get("scanner"), "the unscored call (conservative)"
+                else:
+                    chosen, pick_rule = s[0].get("scanner"), "the lower-numbered scanner"
             else:
                 sys.exit("%s: both scans say %s but the verdicts differ (%s / %s): name one with --pick"
                          % (k, cls[0], s[0]["verdict"], s[1]["verdict"]))
@@ -122,7 +142,7 @@ for o in base:
         rec["review_v5"] = dict(
             previous={f: o.get(f) for f in ("verdict", "michel_kind", "confidence", "rubric_sha", "scanner")},
             scans=[{f: r.get(f) for f in ("scanner", "verdict", "michel_kind", "confidence", "rubric_sha", "notes")} for r in s],
-            outcome=outcome, adopted=chosen)
+            outcome=outcome, adopted=chosen, **({"pick_rule": pick_rule} if pick_rule else {}))
         n[outcome] += 1
     if k in rul:
         u = rul[k]
@@ -132,6 +152,7 @@ for o in base:
                                    scan_id=u.get("scan_id"), note=u.get("note"),
                                    source=os.path.relpath(os.path.abspath(a.rulings),
                                                           os.path.dirname(os.path.abspath(a.out_record))))
+        rec.pop("owner_queue", None)   # the owner has ruled it: it is no longer queued for them
         if u.get("app_edit"):
             # an edit the owner's viewer session saved without a stated ruling: kept as provenance, never used
             rec["owner_review"]["app_edit"] = u["app_edit"]

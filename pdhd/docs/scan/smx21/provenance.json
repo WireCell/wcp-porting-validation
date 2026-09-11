@@ -1,0 +1,40 @@
+{
+ "doc": "pdhd/docs/19_stm-michel-display-fix-and-review.md sec 9",
+ "tag": "smx21",
+ "det": "pdhd",
+ "based_on": "pdhd/docs/scan/pdhd_stm_michel_smx20_verdicts.json (tag smx20): every record not named below is copied from it verbatim",
+ "owner_rulings": "pdhd/docs/scan/smx21/owner_rulings_own19.json: the owner's 8 labels from their own19 judge queue on :5017 (their own label tag, so their clicks could not touch a record tag), stored as owner_review; the census takes owner_review before owner_smx1 before the agent",
+ "v5_pass": "the 26 smx18 FLAT_STOP items that doc 18's owner queue never reached, so smx19 and smx20 carried them verbatim. Each was judged twice, verdict-blind, by two of six agents (rv5_a1..a6) under rubric v5; three concurrent, private out and scratch dirs, seeded shuffles (items 20260912, per-agent order 1000+i)",
+ "why_these_items": "all 26 are stoppers whose only support is rule 3, which v5 narrowed, and rule 3 lost both of its owner examples when the owner withdrew them (sec 8). They were selected because they rest on that rule, so the pass measures the rule, not production",
+ "outcome_rule": "mkowner_record.py --stopper-split, judged on stopper-or-not only: both scans stoppers -> confirmed (smx20 kept); both not -> adopted (record rebuilt from one scan: the unscored call if the two differ, else the lower-numbered scanner); one each way -> split (smx20 kept, owner_queue true). A michel_kind or FRAG difference inside an agreed class is resolved by rule and never sent to the owner",
+ "display_arm": "h18s",
+ "binary_pin": "/home/xqian/tmp/p82/libpin_p82, toolkit 082376c5 -- the same arms as smx18..smx20, not re-run",
+ "prep": "pdhd/stm_michel_scan/prep-pdhd-smx19 (unchanged)",
+ "shots": "/home/xqian/tmp/h21/shots: new blind frames for these 26 on the fixed display (grey ctpc cells), scan_harness.py shots --blind --hide-selection, 2 browsers, blank private labeldirs (0 rows written). check_shots.py clean: 0 incomplete dirs, 0 blank 3-D frames, min 3027 unique colours; no WebGL context loss. The 3-D backend is canvas2d, as it was for the h18 and h19 frames",
+ "rubric": "pdhd/docs/scan/pdhd_stm_michel_scan_rubric.md",
+ "rubric_versions": {
+  "v5": "750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d (every record of this pass carries it)"
+ },
+ "audits": "each of the six transcripts was checked for the forbidden paths and for any other scanner's v_parts or scratch dir: 0 flagged over 88, 86, 98, 91, 77 and 86 tool calls. The audit script was negative-controlled (it flags a synthetic read of an earlier round and of another scanner's dir, and passes a frame read through <SHOTS>)",
+ "census_baseline": "pdhd/docs/scan/smx20/census_smx20.txt and, after the owner's own19 rulings land, /home/xqian/tmp/h21/ops/census_own19.txt -- the pass is reported against the latter",
+ "preregistration": "pdhd/docs/scan/smx21/preregistered_plan.md, written before any result: items, design, outcome rule, headline framing and doc placement",
+ "n_records": 317,
+ "n_owner_review": 8,
+ "n_v5": 26,
+ "v5_outcomes": {
+  "confirmed": 20,
+  "adopted": 2,
+  "split": 4
+ },
+ "adopted": [
+  "028084_20/20",
+  "029107_8/136"
+ ],
+ "rubric_shas": [
+  "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624",
+  "750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d",
+  "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
+  "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
+  "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
+ ]
+}

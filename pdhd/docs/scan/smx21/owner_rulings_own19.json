@@ -1,0 +1,23 @@
+{
+  "doc": "pdhd/docs/19_stm-michel-display-fix-and-review.md sec 9",
+  "date": "2026-09-11",
+  "viewer": "tag own19 on :5017 (its own label tag, empty at the start, so the owner could click and pin freely; prep-pdhd-smx19, the fixed display with grey cells)",
+  "how": "The owner labelled all 8 items of their judge queue in the viewer: the two v5 splits, the item whose Michel kind was missing, and the five rule-7-against-rule-4 items. Labels read from pdhd/work/stm_michel_labels/own19/labels.json (written 2026-09-11 15:21:35, sha256 6d5d9ae7eb60f3ec10d5b91c77e90612ce8f8393197d00415069df6c55aba426). The viewer was stopped at the owner's request once they had judged all 8; the smx1, smx18, smx19 and smx20 label files are unchanged by the session (e928a784, f63a7034, 39e51f00, 7433d5c7).",
+  "owner_words": "I have scanned the result in 5017. All of these cases, the dQ/dx fit are not good enough. Difficult to judge.",
+  "caveat": "The owner says the dQ/dx fits on these items are not good enough to judge confidently. The verdicts are theirs and outrank the agents, but they are stated as hard calls, not as confident ones. The class they cover -- upper ends on APA0/APA2 waves and coverage holes -- is exactly where the rubric's rules 3, 4 and 7 meet, so the reconstruction-side question (why the dQ/dx profile is unreadable there) is an open item, not a scanning one.",
+  "rulings_on_the_rubric": {
+    "rule_7_vs_rule_4": "RULED ITEM BY ITEM, not by a blanket rule: of the five, three THRU (rule 7's reading), one STM_ONLY and one MESSY. So an upper end with an unreadable profile is not automatically THRU and not automatically UNCLEAR; the v5 default (THRU + DIRECTION: + NO_MEASUREMENT:) stands as a default only.",
+    "v5_splits": "BOTH RESOLVED as not stoppers (029107_24/47, 029107_5/93), which is the call smx20 already carried.",
+    "michel_kind": "029107_15/26 is attached, which fills the kind the owner's chat ruling left open."
+  },
+  "items": {
+    "028084_15/28":  {"scan_id": 32,  "question": "rule 7 vs rule 4", "owner_verdict": "THRU",       "michel_kind": null,       "smx20": "THRU medium", "words": "see owner_words", "note": "agrees with smx20"},
+    "029107_1/36":   {"scan_id": 157, "question": "rule 7 vs rule 4", "owner_verdict": "THRU",       "michel_kind": null,       "smx20": "THRU medium (v5 pass: confirmed by both scanners, NO_MEASUREMENT:)", "words": "see owner_words", "note": "agrees with smx20 and with both v5 scanners"},
+    "029107_15/26":  {"scan_id": 184, "question": "the Michel kind of the owner's chat ruling", "owner_verdict": "STM_MICHEL", "michel_kind": "attached", "smx20": "THRU medium; owner_review STM_MICHEL with no kind", "words": "see owner_words", "note": "supersedes the chat ruling of the same day by adding the kind, so the item now counts in the michel_found tally. The owner placed NO pin here in own19; the unconfirmed pin their earlier look saved into the smx19 labels (rr 3.0) is therefore left as provenance only (owner_review.app_edit), not as their stop"},
+    "029107_15/40":  {"scan_id": 185, "question": "rule 7 vs rule 4", "owner_verdict": "STM_ONLY",   "michel_kind": null,       "smx20": "THRU medium", "words": "see owner_words", "note": "a stopper: this is the one of the five where the owner reads a stop at the upper end. No michel tag, so michel_kind none by the owner's own label"},
+    "029107_18/59":  {"scan_id": 200, "question": "rule 7 vs rule 4", "owner_verdict": "MESSY",      "michel_kind": null,       "smx20": "THRU medium", "words": "see owner_words", "note": "unscored: leaves the is_stm and michel_found tallies"},
+    "029107_21/64":  {"scan_id": 225, "question": "rule 7 vs rule 4", "owner_verdict": "THRU",       "michel_kind": null,       "smx20": "THRU medium", "words": "see owner_words", "note": "agrees with smx20", "app_edit": {"what": "the owner placed a pin at rr 7.20 cm on this item while judging it", "status": "kept as provenance; a pin does not change a THRU verdict or any census number"}},
+    "029107_24/47":  {"scan_id": 239, "question": "v5 split (one scanner read an undershoot with a Michel 7 cm past the fit end)", "owner_verdict": "THRU", "michel_kind": null, "smx20": "THRU medium, owner_queue", "words": "see owner_words", "note": "the split is resolved: not a stopper, as smx20 carried"},
+    "029107_5/93":   {"scan_id": 283, "question": "v5 split (one scanner read the 40 deg arm as a Michel, the other as the track continuing across the cathode)", "owner_verdict": "THRU", "michel_kind": null, "smx20": "THRU low, owner_queue", "words": "see owner_words", "note": "the split is resolved: not a stopper, as smx20 carried"}
+  }
+}
