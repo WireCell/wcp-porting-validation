@@ -1,0 +1,48 @@
+# scan tags carrying labels (the thing being protected FOR)
+TAG   pdhd  d05_scan_labels/movers0                  1 label file(s)
+TAG   pdhd  d08_scan_labels/_scorertest              1 label file(s)
+TAG   pdhd  d08_scan_labels/_selftest                1 label file(s)
+TAG   pdhd  d08_scan_labels/d08flip0                 1 label file(s)
+TAG   pdhd  stm_michel_labels/smx1                   1 label file(s)
+TAG   pdhd  stm_scan_labels/retile0                  1 label file(s)
+TAG   pdvd  d08_scan_labels/_selftest                1 label file(s)
+TAG   pdvd  d08pv_scan_labels/_scorertest            1 label file(s)
+TAG   pdvd  d08pv_scan_labels/d08pvflip0             1 label file(s)
+TAG   pdvd  ql_labels/candles-am2                    18 label file(s)
+TAG   pdvd  ql_labels/candles-keep                   18 label file(s)
+TAG   pdvd  ql_labels/candles-spcov                  18 label file(s)
+TAG   pdvd  ql_labels/cathxa                         1 label file(s)
+TAG   pdvd  ql_labels/cathxa-18evt                   18 label file(s)
+TAG   pdvd  ql_labels/claude-cathxa                  17 label file(s)
+TAG   pdvd  ql_labels/wfresc                         1 label file(s)
+TAG   pdvd  stm_michel_labels/smx1                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx1a                  1 label file(s)
+TAG   pdvd  stm_michel_labels/smx3                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx4                   1 label file(s)
+# arm tokens named by a prep set / viewer / harness
+TOKEN d05mON                   <- d05_scan_viewer.py
+TOKEN d08cap10                 <- d08_scan_viewer.py
+TOKEN d08goff                  <- d08_scan_viewer.py
+TOKEN d08pv30off               <- d08pv_scan_viewer.py
+TOKEN d08pv30on                <- d08pv_scan_viewer.py
+TOKEN d53h                     <- prep-pdhd, prep_stm_michel_scan.py
+TOKEN d53v                     <- prep-pdvd, prep_stm_michel_scan.py
+TOKEN d67v                     <- prep-pdvd-smx3
+TOKEN d68a3                    <- prep-pdvd-smx4
+TOKEN d68d4                    <- prep-pdvd-smx3
+TOKEN stm0                     <- stm_scan_viewer.py
+# resolved: token x arms that exist on disk
+KEEP  pdvd  d08pv30off                 30 dirs
+KEEP  pdvd  d08pv30on                  30 dirs
+KEEP  pdvd  d53v                      120 dirs
+KEEP  pdvd  d67v                      120 dirs
+KEEP  pdvd  d68a3                     120 dirs
+KEEP  pdvd  d68d4                     120 dirs
+#     pdvd: named but not on this tree: d05mON d08cap10 d08goff d53h stm0
+KEEP  pdhd  d05mON                      6 dirs
+KEEP  pdhd  d08cap10                   30 dirs
+KEEP  pdhd  d08goff                    30 dirs
+KEEP  pdhd  d53h                       61 dirs
+KEEP  pdhd  stm0                       30 dirs
+#     pdhd: named but not on this tree: d08pv30off d08pv30on d53v d67v d68a3 d68d4
+# wrote scan_arms_20260910.json

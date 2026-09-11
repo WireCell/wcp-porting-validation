@@ -46,14 +46,22 @@ magnify	the Magnify dump root; not an arm	-
 # --- label dirs: CLAUDE.md M13 -------------------------------------------
 work/d08_scan_labels/ work/d08pv_scan_labels/	hand-scan labels, the scientific record itself.  They are not <run6>_<idx>_<arm> dirs so a planner's arm grammar leaves them out of scope -- that is luck, not protection, so they are named here	M13
 
-# --- added 2026-09-08 (doc 103): the LIVE doc-50/pdhd-16 round -------------
-# Protected by PREFIX, not enumeration -- doc pdvd/50 was still being edited on
-# 2026-09-08 (round 2 landed 09-07, the pdhd/16 follow-up 09-08) and the 09-04
-# lesson is that a live round grows new arm families between plan and confirm.
-d51v*	doc pdvd/50 round 2's four PDVD arms (d51vclus/d51vnu/d51vfit0/d51vstm, 120 dirs each): the dQ/dx-vs-residual-range measurement redone on the post-doc-11 chain.  Doc 50 names them 40 times and doc pdhd/16 (2026-09-08) reads the normalization off them	doc pdvd/50 sec 10-16; docs/nf_sp_img_clus/scripts/d51_dqdx_rr_apa.py
-d30vpre d30vpost d30vnupre d30vnupost d30r3v*	the doc pdvd/30 PR-memory before/after arms (2026-09-07); the round's whole claim is a paired comparison, so releasing either half makes the other unreadable	doc pdvd/30
-d14vnu d15vnu d16vnu d15leg	the doc pdhd/14+15+16 STM/Michel kinematics arms on PDVD (120 dirs each, 2026-09-07/08).  d15leg is the legacy-comparison half	doc pdhd/14, 15, 16; doc pdvd/48
+# --- added 2026-09-10 (doc 104): substrate, scans, production, live round ---
+# Derived, not typed.  Substrate is the corrected symlink census (see below);
+# the scan arms come from scan_arms_20260910.py, which reads each scan prep
+# set's OWN provenance key rather than a name anybody chose.
+d51vclus	THE TREE'S SUBSTRATE.  Corrected symlink census 2026-09-10: 23728 inbound links, every p4*/p7*/p8* arm stages its clustering from it.  NOTE the census defect this number fixes: os.path.realpath() follows a chain, so a link into <evt>_keep/<file> whose target is itself a link into /home/xqian/pdvd-frame-store resolved PAST keep and scored it 0 inbound.  Resolve the target lexically.	symlink census; doc pdvd/50
+keep d27fresh d41prov d39r2prov d143pnew d28dlfp d34base d48nu7	the rest of the substrate chain, inbound 968 / 4113 / 3368 / 625 / 36 / 9 / 18 / 1524.  keep's own entries are links into /home/xqian/pdvd-frame-store -- that store is the true input and is OUTSIDE every tree this round touches.	symlink census
+d53v	**THE smx1/smx1a HAND-SCAN SOURCE.**  prep-pdvd names it as the arm for 569 of its 570 prep items.  The owner asked on 2026-09-10 to keep the STM hand scans for PDVD and PDHD; keeping labels without the dump they were scanned against does not keep a scan.  A fresh arm at a different operating point is never a substitute.	stm_michel_scan/prep-pdvd; work/stm_michel_labels/smx1,smx1a
+d67v d68d4	**THE smx3 HAND-SCAN SOURCE** (prep-pdvd-smx3: 13 items from d67v, 36 from d68d4).	stm_michel_scan/prep-pdvd-smx3; work/stm_michel_labels/smx3
+d68a3	**THE smx4 HAND-SCAN SOURCE** (prep-pdvd-smx4, 54 items).  Scanned 2026-09-10, the labels were written at 09:19 the same day.	stm_michel_scan/prep-pdvd-smx4; work/stm_michel_labels/smx4
+d08pv30on d08pv30off	**THE d08pvflip0 HAND-SCAN SOURCE** (d08pv_scan_viewer.py's ARM binding).  A hand-written list of scan dirs missed these; scan_arms_20260910.py discovers the scan dirs instead of enumerating them.	pdvd/d08_scan/d08pv_scan_viewer.py
+p79vprod	**THE LATEST PDVD PRODUCTION ARM.**  Primary source: doc pdvd/81 sec 6 -- "p81vleg2 reproduces production (p79vprod) exactly".  Not read off the `prod` substring.	doc pdvd/81 sec 6, doc pdvd/79
+p81voff3 p81vq2d3 p81vleg2	an OPEN decision, not a closed one.  Doc pdvd/81 shipped michel_q2d and michel_q2d_cells default OFF and put the flip to the owner (sec 8-9); d81_proofs.sh is written and waiting.  These three are the gate and the ON reading that decision will be made on.	doc pdvd/81 sec 8-9
+p82*	A LIVE ROUND, by PREFIX.  doc pdvd/82 (82_peak-then-drop-stop.md) was written 2026-09-10 21:13 and is still UNCOMMITTED; its arms were being created while the cleanup round planned -- p82btp/p82boff/p82btp0 appeared AFTER the first plan run, which is the 09-04 shape exactly.  A derived live set only knows the tokens the doc has written down so far, so the prefix is what actually holds.	doc pdvd/82; work mtimes
+mg10*	A LIVE ROUND, protected by PREFIX and not by enumeration (the 09-04 lesson: seven new families appeared between plan and confirm).  A peer `claude --resume d9d688aa` was alive on 2026-09-10 and ~/tmp/mg10 was written at 09:11; the family has arms in all three trees and NO doc yet, which is exactly the shape a citation census scores zero.	ps; ~/tmp/mg10; work mtimes
 work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a bokeh server was serving it on 2026-09-08.  M13	M13; pdhd/stm_michel_scan/serve_stm_michel_scan.sh
+
 
 # ================= RETIRED =================
 # 2026-09-06 (doc 101 tier 2): d48nu, d48nu2 (superseded inside doc 48 sec 8.0
@@ -62,3 +70,32 @@ work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a b
 # iterations superseded by d45prod), d143pref (pr/143's PDVD reference arm; sec
 # 7.3 states the PDVD chain is not production).  Manifests + record layer frozen
 # in sbnd_xin/archive/records/cleanup-20260906/pdvd-tier2/ before deletion.
+
+# 2026-09-10 (cleanup round, doc 104).  OWNER INSTRUCTION, in their words:
+#   "we want to keep the latest production, but for work* directory that are
+#    intermediate results, we can retire them to save disk"
+# plus, on the same day: "We want to save the hand scan results for STM, which
+# we still need them for improvements.  PDVD and PDHD".
+#
+# THIS CHANGES THE KEEP TEST, and that is the whole point of the round.  Every
+# round from 09-02 to 09-08 kept an arm because a doc CITED it, and concluded
+# (doc 103 sec 4) that pdvd and pdhd could release nothing at all.  Citation is
+# no longer sufficient: a committed doc IS the record of a closed A/B, and the
+# per-event bytes under it are the intermediate result the owner is releasing.
+# What still keeps an arm: it is substrate, it is the latest production, it is
+# what a hand scan was scanned against, it belongs to a live round, or it backs
+# a decision that is still OPEN.
+#
+# The blocks below were added 2026-09-08 to protect rounds that were live THEN
+# and are closed now.  They are moved here rather than deleted.  Note what did
+# NOT move: d51vclus/d51hclus (they became the tree's largest symlink substrate
+# after 09-08 -- 23728 and 5132 inbound links), d53v/d53h (the smx1/smx1a scan
+# source), and every label dir.
+# --- moved here from the 09-08 LIVE-round block ---
+# --- added 2026-09-08 (doc 103): the LIVE doc-50/pdhd-16 round -------------
+# Protected by PREFIX, not enumeration -- doc pdvd/50 was still being edited on
+# 2026-09-08 (round 2 landed 09-07, the pdhd/16 follow-up 09-08) and the 09-04
+# lesson is that a live round grows new arm families between plan and confirm.
+# d51v*	doc pdvd/50 round 2's four PDVD arms (d51vclus/d51vnu/d51vfit0/d51vstm, 120 dirs each): the dQ/dx-vs-residual-range measurement redone on the post-doc-11 chain.  Doc 50 names them 40 times and doc pdhd/16 (2026-09-08) reads the normalization off them	doc pdvd/50 sec 10-16; docs/nf_sp_img_clus/scripts/d51_dqdx_rr_apa.py
+# d30vpre d30vpost d30vnupre d30vnupost d30r3v*	the doc pdvd/30 PR-memory before/after arms (2026-09-07); the round's whole claim is a paired comparison, so releasing either half makes the other unreadable	doc pdvd/30
+# d14vnu d15vnu d16vnu d15leg	the doc pdhd/14+15+16 STM/Michel kinematics arms on PDVD (120 dirs each, 2026-09-07/08).  d15leg is the legacy-comparison half	doc pdhd/14, 15, 16; doc pdvd/48
