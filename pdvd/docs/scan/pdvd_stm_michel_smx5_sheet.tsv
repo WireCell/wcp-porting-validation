@@ -1,0 +1,7 @@
+# doc pdvd/86 -- smx5, PDVD, doc 78 action item 6. Production (p85vwh == p85vprod) reads is_stm 1 / michel_found 0 on every item; doc 78's order.
+# built by d86_build_smx5.py from prep=/home/xqian/tmp/p85/prep_p85vwh
+scan_id	tranche	event	cluster	npts	muon_len_cm
+1	1	039349_43	66	300	190.7
+2	1	039349_72	11	570	342.3
+3	1	039253_0	44	136	81.2
+4	1	039349_30	45	363	221.2

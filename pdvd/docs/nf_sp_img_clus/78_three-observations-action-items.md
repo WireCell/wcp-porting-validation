@@ -155,10 +155,23 @@ Each under the doc 56 bar (default-OFF knob, byte-identical OFF gate on both Pro
 
 6. **Hand-check, no code.** `039349_43/66`, `039349_72/11`, `039253_0/44`, `039349_30/45`: no fitted charge near the stop; the Michel is unimaged or in a dead region — doc 96's territory.
 
+   *Result (doc 86, the owner's `smx5` scan, 2026-09-11): all four are STM + MICHEL (attached), and none is unimaged.* On `039349_43/66` and `039349_72/11` the Michel is collinear: the fit runs from a clear Bragg peak into a short segment after it (`fit-through`). On `039253_0/44` and `039349_30/45` a clear blob sits at the stop that PR fitted as a residual and dropped as isolated (`unfitted`). The owner: "Those should be Michel electrons, but not identified by the PR chain at all. These should be improved." The mechanism matched the prediction written before the scan on 4 of 4. `039349_30/45` is now owner-confirmed. The answers are folded into `pdvd_stm_michel_smx1a_smx3_smx4_smx5_verdicts.json`, and no census number moves.
+
+   *Correction (doc 86).* "No fitted charge near the stop" meant that no second PR segment lies near it; the muon's own fit ends there on all four. "Unimaged or in a dead region" does not hold. Within 10 cm of the fit end every imaged point is in the muon's own cluster: 55, 73, 148 and 142 points. Only `039253_0/44` has a dead band close by (V 4360–4367, 1.8 channels away), and the owner saw a segment there, not a two-plane artefact. This is not doc 96's territory.
+
+7. **The unfitted Michel blob at the stop (doc 86 §8.1).** PR fits a residual at the stop and drops it as isolated (`pr54`). Doc 62 T3a's `stop_local_residual_cm` keeps such a residual, but it has no size floor, and at 20 cm it touches 31 items, 14 of them through-going. Add a size floor to the anchor keep, default OFF (≥ 5 points, ≥ 5 cm), and run it at 5 cm. On today's production that touches **5 items**:
+   - 2 targets (`039253_0/44`, `039349_30/45`);
+   - 1 STM_ONLY (`039253_15/36`);
+   - 2 already-found Michels;
+   - 0 THRU.
+
+   Re-grade doc 62's T3a in the same arm set: its "extra FP" `039253_0/44` is an owner-confirmed Michel.
+8. **The collinear Michel in the fit's tail (doc 86 §8.2).** The verdict's own anchored Bragg peak (`bragg_anchor_shift_cm`) marks where the fit runs on into the Michel. A post-verdict tail Michel cannot move `is_stm`. At shift ≥ 2.5 cm and a tail at ≤ 1.0 × plateau it is 5 targets against 3 STM_ONLY (smx1a, medium) and 2 THRU, an added-set purity of 0.5, which is below the bar. **Gate before any build:** a blind re-judge of those 10 fires. Build only if the 3 STM_ONLY are collinear Michels.
+
 ## 6. Order
 
 Doc 77's own items stay in front: **the candidate cap first** (two owner-confirmed Michel stoppers, a config value, no scan — doc 79), then P1's floors. Of the items here, **1 before 2, 4 and 5** (it is what makes them gradeable); 2 is the largest physics gain (13 missed Michels and 8 missed stoppers sit behind the stop); 3 is a one-line re-grade.
 
 ## 7. Next
 
-Doc 79: the cap. Doc 80: item 1. Doc 82: item 2 (with the corrections above; the peak-relative rule is dead, `split_kink_min_deg` 10 flipped). Items 3, 4 and 5 remain — and doc 82 §9 recommends **4 before 3**, since `039252_2/79` turns out to want a smaller stop correction than item 2 applied, and doc 80's census now makes the attached-arm population (rej 13) gradeable. Doc 83: item 4 (flipped: `michel_near_stop_arm_cm` 5). Doc 84: item 3 (flipped as a reach exemption: `moved_stop_michel_reach_min_cm` 6.5). Items 5 and 6 remain; 5 is next. Doc 85: item 5 (no P4 gate to loosen; the stop anchor is dead at 50 cm; `stop_gamma_require_stm` flipped: no capture gamma on a rejected candidate). Item 6 remains, and it is next.
+Doc 79: the cap. Doc 80: item 1. Doc 82: item 2 (with the corrections above; the peak-relative rule is dead, `split_kink_min_deg` 10 flipped). Items 3, 4 and 5 remain — and doc 82 §9 recommends **4 before 3**, since `039252_2/79` turns out to want a smaller stop correction than item 2 applied, and doc 80's census now makes the attached-arm population (rej 13) gradeable. Doc 83: item 4 (flipped: `michel_near_stop_arm_cm` 5). Doc 84: item 3 (flipped as a reach exemption: `moved_stop_michel_reach_min_cm` 6.5). Items 5 and 6 remain; 5 is next. Doc 85: item 5 (no P4 gate to loosen; the stop anchor is dead at 50 cm; `stop_gamma_require_stm` flipped: no capture gamma on a rejected candidate). Doc 86: item 6 (the owner's hand check: all four are Michels the chain misses, two collinear with the fit's tail and two unfitted blobs PR drops; none is unimaged). It opens items 7 and 8. **Item 7 is next**, the floored stop-local residual keep; item 8 waits for a blind re-judge of its 10 fires.

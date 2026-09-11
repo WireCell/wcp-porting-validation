@@ -274,7 +274,7 @@ positions, the stop snap), and on the ~40 items where it fires the verdict
 can move either way. Net: `is_stm` TP +1, FP count unchanged with one THRU
 swapped for another, `michel_found` +2 / −1 TP and +5 FP. That is not the
 bar every prior flip met (0 new `is_stm` FP), and the two Michels it adds
-are bought at a worse purity than B's own. **A stays OFF**; it is measured,
+are bought at a worse purity than B's own. *Update (doc pdvd/86, 2026-09-11): `039253_0/44`, one of the five extra FPs above, is an owner-confirmed Michel (smx3, and again smx5: a blob at the stop PR drops as an isolated residual). Re-counted on today's production, the 20 cm keep touches 31 items (14 THRU); with a size floor (≥ 5 points, ≥ 5 cm) at 5 cm it touches 5 (2 owner Michels, 0 THRU). The floor is doc 78 action item 7.* **A stays OFF**; it is measured,
 named, and left for the owner (the 5 recoverable class-D items the probe
 named split 3 to B alone, 2 to A+B).
 
