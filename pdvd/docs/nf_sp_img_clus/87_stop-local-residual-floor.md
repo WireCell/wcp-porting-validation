@@ -144,7 +144,7 @@ All item names are 0392xx_… as in the record (0/44 = `039253_0/44`; 15/36 = `0
 - the chain is walked to the farthest vertex of the main cluster: 2 segments, muon length 332.4 → 340.7 cm, the stop now 6.1 cm from the tagger's;
 - `is_stm` 1 → 0, and the Michel survives as a bridged object (conn 1 → 2).
 
-The same path explains:
+Two more losses are **consistent with** the same path. Their residual distances and bit patterns match, but their snapped stop vertex was not read:
 - **`039349_61/21`** (unfloored arms). A 2-terminal stub at 0.4 cm: `stop_dis` 1.1 → 6.5 cm, bits 0 → 14 (`stop_unmatched` + `no_bragg` + `shape_flat`), and the Michel is lost. This is doc 62 §4.3's loss, reproduced on today's production.
 - **`039349_36/63` in `p87v5`.** A 3-terminal residual at 2.2 cm: `stop_dis` 2.3 → 11.3 cm, bits 0 → 14.
 
@@ -167,8 +167,8 @@ The owner's option is `-S stm_michel_extra={stop_local_residual_cm:5.0,stop_loca
 ## 8. Observations and next
 
 1. **Next: item 7b, the stop snap within the entry's component.** When the stop-local keep has fired on a candidate, the stop's `anchor_vertex` should consider only vertices the entry can reach. Kept residuals are disconnected by construction, so this removes exactly the capture of §6.2. It needs a new default-OFF knob, evaluated only on keep-fire candidates (7 on `p87v5f`), so every other candidate stays bit-identical by construction. Re-run `p87v5f` with it.
-   - Predicted: 36/63 keeps its stopper and its Michel, and the rest is unchanged.
-   - If so, 15/36 is the only FP left, and the owner's blind look at it decides the flip. The smx6 builder is drafted and parked in `/home/xqian/tmp/p87/d87_build_smx6.py`; it serves production's payload, so the chain's kept-residual Michel is not drawn.
+   - **This is a hypothesis, not a forecast.** 7b removes the capture traced on 36/63. Moving the stop vertex re-runs everything downstream on the 7 keep-fire candidates, including the two Michels just gained. Whether 36/63's stopper returns, and whether 0/44 and 30/45 survive, is what the arm measures.
+   - If both hold and 15/36 is the only FP left, the owner's blind look at it decides the flip. The smx6 builder is drafted and parked in `/home/xqian/tmp/p87/d87_build_smx6.py`; it serves production's payload, so the chain's kept-residual Michel is not drawn.
 2. **The new Michels' energy.** 0/44's recovered Michel reads 5.0 MeV (`michel_ke_best`), low for a 10.6 cm, 20-terminal piece. The others read 23.2 (30/45), 16.1 (15/36) and 23.9 (64/80) MeV. The bridged object's energy is doc 81's question (the 2-D charge estimator, built, OFF). It is recorded here, not scoped.
 3. **`039349_42/41`** (MESSY, unjudged) loses its payload on `p87v20`: the kept residual collapses its chain from 12.6 to 1.9 cm, and the prep drops it. It is a 20 cm-only pathology and is not in the census.
 4. **15/36** also belongs in item 8's blind re-judge (doc 86 §9), which is still the gate on item 8.
