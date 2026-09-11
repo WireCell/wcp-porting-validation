@@ -203,7 +203,7 @@ That is 5 gained Michels for 5 spurious ones, an added-set purity of 0.5. It wou
 
 ## 9. The plan: item 6 closes, items 7 and 8 open (doc 78 §5)
 
-- **Item 7, the unfitted Michel blob at the stop (owner: "should be improved").**
+- **Item 7, the unfitted Michel blob at the stop (owner: "should be improved").** *Done in doc 87:* built and OFF. At 5 cm with 5 / 5 the keep gains both owner Michels (Michel census 143 / 13 / 17) with 0 THRU, but `039349_36/63` loses its stopper call when the stop snaps onto the kept residual. Item 7b is next.
   - **Build:** a size floor on doc 62 T3a's anchor keep, default OFF: `stop_local_residual_min_points` 5 and `stop_local_residual_min_len_cm` 5. Run it with `stop_local_residual_cm` 5.
   - **Arms:**
     - OFF gate on both detectors;
