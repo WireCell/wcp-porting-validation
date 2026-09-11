@@ -216,6 +216,6 @@ The T3b comment's "T3a is NOT set" is updated to point here. The PRE copy is `/h
 
 1. **A census of the 45 missed stoppers** (`is_stm` efficiency 0.838), by the reject bit that decides each one, on today's production and the smx6 record. Items 1–8 were mostly about Michels; this is the largest gap left. It is read-only.
 2. **The PDVD flips of docs 83–88 graded on PDHD.** PDHD now has a hand-scan record (`pdhd_stm_michel_smx18_verdicts.json`, doc pdhd/18). It was a verdict-blind agent scan, not the owner's, so any PDHD flip would say so.
-3. **Doc 78 item 9, the role-0 measurement.** How much Michel charge the association-based cell selection of doc 81 leaves out, before the definition is changed.
+3. **Doc 78 item 9, the Michel charge energy.** First, why the nominal association-based `michel_ke_charge` reads 0 on 94–96 % of found Michels on both detectors. Then the role-0 measurement: how much Michel charge doc 81's association-based cell selection leaves out, before the definition is changed.
 4. **Item 8's blind re-judge** of the anchor-tail rule's 10 fires. Its ceiling is now about 4 Michels (30/45 is found).
 5. **Housekeeping.** The unjudged candidates the flip changes (`039253_8/81` becomes a stopper, `039349_64/80` gains a Michel) go in the next scan tranche.
