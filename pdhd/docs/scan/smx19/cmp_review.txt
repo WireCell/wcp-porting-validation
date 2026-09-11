@@ -1,0 +1,51 @@
+review records 94 of 94 queued items
+
+old (smx18, v1-v3, old display) vs review (smx19, v4, fixed display):
+  tier A                             n=  9  verdict   2/9    stopper-or-not   4/7    kind (same verdict) 1/1
+  tier B                             n= 31  verdict  24/31   stopper-or-not  25/29   kind (same verdict) 24/24
+  tier C                             n= 16  verdict   0/16   stopper-or-not   0/16   kind (same verdict) 0/0
+  tier D                             n= 18  verdict  18/18   stopper-or-not  18/18   kind (same verdict) 17/18
+  tier E                             n= 20  verdict  10/20   stopper-or-not   7/7    kind (same verdict) 3/3
+  POOLED B-E (tier A and non-blind out) n= 84  verdict  51/84   stopper-or-not  49/69   kind (same verdict) 43/44
+  non-blind, tiers B-E (not pooled)  n=  1  verdict   1/1    stopper-or-not   1/1    kind (same verdict) 1/1
+
+by confidence, pooled B-E:
+  review high                        n= 26  verdict  20/26   stopper-or-not  20/25   kind (same verdict) 19/20
+  review medium                      n= 51  verdict  25/51   stopper-or-not  24/39   kind (same verdict) 20/20
+  review low                         n=  7  verdict   6/7    stopper-or-not   5/5    kind (same verdict) 4/4
+  old high                           n= 29  verdict  29/29   stopper-or-not  29/29   kind (same verdict) 28/29
+  old medium                         n= 23  verdict  11/23   stopper-or-not  12/22   kind (same verdict) 11/11
+  old low                            n= 32  verdict  11/32   stopper-or-not   8/18   kind (same verdict) 4/4
+  both high                          n= 18  verdict  18/18   stopper-or-not  18/18   kind (same verdict) 17/18
+
+verdict transitions, pooled B-E (old -> review):
+  STM_MICHEL  -> STM_MICHEL   33
+  STM_ONLY    -> STM_ONLY     11
+  STM_ONLY    -> THRU         10
+  STM_MICHEL  -> THRU         10
+  UNCLEAR     -> THRU          7
+  THRU        -> THRU          4
+  UNCLEAR     -> UNCLEAR       3
+  UNCLEAR     -> STM_ONLY      2
+  STM_MICHEL  -> UNCLEAR       2
+  STM_MICHEL  -> STM_ONLY      1
+  STM_ONLY    -> UNCLEAR       1
+
+tier A against the owner's smx1 label (the truth there):
+  028084_1/39     owner STM_MICHEL  old-blind UNCLEAR     review FRAG_THRU   (high)
+  028084_15/102   owner STM_ONLY    old-blind THRU        review THRU        (medium)
+  028084_17/55    owner STM_MICHEL  old-blind STM_ONLY    review STM_MICHEL  (medium)  = owner
+  028084_23/114   owner STM_ONLY    old-blind STM_MICHEL  review STM_MICHEL  (medium)
+  028084_26/109   owner STM_MICHEL  old-blind STM_ONLY    review STM_MICHEL  (medium)  = owner
+  028084_27/57    owner THRU        old-blind STM_MICHEL  review THRU        (medium)  = owner
+  028084_29/38    owner UNCLEAR     old-blind STM_ONLY    review FRAG_THRU   (medium)
+  029107_0/56     owner MESSY       old-blind UNCLEAR     review THRU        (medium)
+  029107_10/50    owner MESSY       old-blind STM_MICHEL  review THRU        (medium)
+DIRECTION:   review 25  old  0
+CONTINUES:   review 17  old  0
+FLAT_STOP:   review  3  old 12
+ANODE:       review  1  old  0
+OVERSHOOT:   review 11  old 17
+UNDERSHOOT:  review 11  old 15
+
+adjudication list (stop / thru / unscored class changed, tier A excluded) -> /home/xqian/tmp/claude-25225/-home-xqian-toolkit-dev-toolkit/1fce3b9b-3cb7-4171-9cbd-f3e5eedce907/scratchpad/h19private/adjudicate.tsv

@@ -27,5 +27,11 @@
   "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
   "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
   "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
- ]
+ ],
+ "display_envelope": {
+  "judged_under": "smgeom.ENVELOPE['pdhd'] x = (-357.985, 357.985), cathode = 2.54 (fiducial-cut numbers, not the active volume)",
+  "effect": "every x number in the records' context (face.x, d_face on x, seams_at_stop.anode_face / cathode) reads ~5.9 cm too far from the anode and 2.4 cm too far from the cathode; the red box sat ~6 cm outside the anode wire planes",
+  "corrected_in": "doc pdhd/19: x = (-352.095, 352.095), cathode = 0.159 (job-log AnodePlane sensvol). Re-shooting an smx18 item now gives numbers that differ from the ones its evidence quotes"
+ },
+ "rubric_v3_text": "pdhd/docs/scan/smx18/rubric_v3.md (sha f0f695f0; the repo rubric path now holds v4, doc pdhd/19)"
 }

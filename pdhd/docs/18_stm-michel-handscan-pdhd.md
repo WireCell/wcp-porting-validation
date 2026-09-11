@@ -389,7 +389,10 @@ stops.
 * The other 18 (all six `FLAT_STOP` calls among them) kept their verdict.
 * The v2 records are kept and listed in `smx18/duplicates.tsv`.
 * **Not fixed here, and it should be:** `smgeom.ENVELOPE["pdhd"]` still draws
-  the box at 358 cm on the owner's display.
+  the box at 358 cm on the owner's display. *(Fixed in
+  [doc pdhd/19](19_stm-michel-display-fix-and-review.md) §1; this round's
+  records keep the numbers they were judged under, and `smx18/provenance.json`
+  says so.)*
 
 **(b) `f_meas` shows only this cluster's own cells.** `prep_stm_michel_scan.
 proj_cells` reads one `T_proj_data` row: the muon's cluster, and only the
@@ -410,6 +413,7 @@ inside the window that `f_meas` did not draw.
 * **The viewer's own text overstates the panel** ("that is exactly where an
   unreconstructed Michel shows up", README). That needs correcting, or the
   panel needs the event's other clusters; both are outside this round.
+  *(Both done in [doc pdhd/19](19_stm-michel-display-fix-and-review.md) §2.)*
 
 **(c) One procedural slip, recorded as it happened.** While writing v3, the v3
 draft sat in the rubric's repo path for about 3 minutes. At that moment one

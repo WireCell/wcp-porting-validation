@@ -169,7 +169,19 @@ Type a note *before* clicking. `next unlabelled >>` resumes where you left off.
 three 2-D projections to the clusters that share the muon's matched Q-L bundle —
 same `flash_id` *and* same `cluster_t0_us`. The **2-D measurement panels are not
 filtered and should not be**: they show what the wires measured against what the
-fit predicts, and that is exactly where an unreconstructed Michel shows up.
+fit predicts.
+
+**Their coloured cells are this cluster's only** (one `T_proj_data` row, the
+cells the fit touched). Through doc pdhd/18 that was all they drew, so charge the
+clustering put in another cluster, or left unclustered, never appeared there — a
+Michel that is not in the muon's cluster did NOT show up in these panels (doc
+pdhd/18 §6.2b). A prep built with `--ctx-cells` (doc pdhd/19) adds that charge:
+**grey squares** in the `measured` column are every other live (channel, slice)
+of the event within ±200 channels and slices of the fit's end (the dashed box),
+from the imaging's ctpc. Grey is the channel's charge counted once. On a
+wrapped plane (PDHD U/V) the coloured cells count it once per wire segment the
+fit touched, so they read 2–3× higher. A payload without `proj_ctx` draws no
+grey, as before.
 
 You want this on, because the Bee layer the display reads places **every**
 cluster at its **own** bundle's t0-corrected position. Two cosmics thousands of
@@ -476,7 +488,7 @@ writer's default wire.
 
 | file | |
 |---|---|
-| `prep_stm_michel_scan.py` | builds the blind sheet, the closed key and one JSON sidecar per item |
+| `prep_stm_michel_scan.py` | builds the blind sheet, the closed key and one JSON sidecar per item. `--ctx-cells` (doc pdhd/19, default OFF, payloads byte-identical without it) adds `proj_ctx`: the event's other live 2-D charge near the fit's end, read from the pctree ctpc and gated on the fitted cells (99.7–99.9 % of each plane's own cells land on a ctpc cell over the 317 smx18 items) |
 | `stm_michel_viewer.py` | the app; fork by duplication of `../stm_scan/stm_scan_viewer.py`, which is untouched |
 | `smx3d.py` | the 3-D trackball; fork of `sbnd_xin/em_display/em3d.py`, which is untouched |
 | `smgeom.py` | the one shared module: envelopes, seams, wire→unit, the plane split, ticks→slices |
@@ -486,9 +498,10 @@ writer's default wire.
 | `selftest_smx3d_browser.py` | 77 checks per detector in headless chromium: a real drag reaches the CustomJS, every layer moves with it, the pin stays exactly at the rotation centre, no point projects outside its own distance from the camera, **the drag survives a label click** — the camera the scanner drags to lives only in the browser, so this is the one gate that can see the server pushing a stale angle back — the nine measurement panels paint on the heaviest item of the arm (with the causal control that emptying the cell sources changes the pixels), the click link survives the websocket round trip, and the particle-flow toggle and the grouped object table are pressed as real widgets |
 | `score_stm_michel_scan.py` | scores against the key, stratum-reweighted, revealed labels separately |
 | `scan_harness.py` | drives **this app** headlessly (bokeh serve on a scratch port + playwright chromium) so an agent can scan by looking: `shots` writes 7 framed PNGs per item, `context` dumps the object table and the chain's scalars, `apply` presses the real widgets — radio, every object row + tag button, the pin, the verdict, SAVE — and re-reads `labels.json` to prove each row landed. Never touches the port a human is on. Used for doc [pdvd/55](../../pdvd/docs/nf_sp_img_clus/55_stm-michel-handscan-pdvd.md) and doc [pdhd/18](../docs/18_stm-michel-handscan-pdhd.md). Doc pdhd/18 flags, all default OFF (without them the output is byte-identical to before): `--prepdir` / `--manifest` (pass through to the viewer), `--blind` (drop the chain's verdict — `is_stm`, `reject_names`, `in_fv`, `flow` — from `context.json`), `--hide-selection` (empty the amber picked-object layer before each frame; on PDHD it sat on the stop's cells) |
-| `campaign/` | doc [pdhd/18](../docs/18_stm-michel-handscan-pdhd.md): the multi-agent scan round, committed this time — `AGENT_TASK.md` (the scanner's brief), `mkv.py` (the only write path: alphabets, every row tagged, kind from tags, verdict against tags, rubric sha stamped), `nextwave.py` (waves recomputed from disk; `--double` for a seeded re-scan), `shoot.sh`, `mkzoom.py` (the 3× dQ/dx frame), `resolve.py` (`--supersede`, `--partial`), `mkspec.py` / `apply_parallel.sh` (the apply, pipelined by batch), `fixup_spec.py` (rows that did not land), `merge.py` (into a NEW tag, sha-guarded), `mkrecord.py`, `mkqueue.py` (tiered owner queue), `cmp_owner.py` (the blind calibration) |
+| `campaign/` | doc [pdhd/18](../docs/18_stm-michel-handscan-pdhd.md): the multi-agent scan round, committed this time — `AGENT_TASK.md` (the scanner's brief), `mkv.py` (the only write path: alphabets, every row tagged, kind from tags, verdict against tags, rubric sha stamped), `nextwave.py` (waves recomputed from disk; `--double` for a seeded re-scan), `shoot.sh`, `mkzoom.py` (the 3× dQ/dx frame), `resolve.py` (`--supersede`, `--partial`), `mkspec.py` / `apply_parallel.sh` (the apply, pipelined by batch), `fixup_spec.py` (rows that did not land), `merge.py` (into a NEW tag, sha-guarded), `mkrecord.py`, `mkqueue.py` (tiered owner queue), `cmp_owner.py` (the blind calibration). Doc [pdhd/19](../docs/19_stm-michel-display-fix-and-review.md), the review round: `cmp_review.py` (review vs the round it reviews, by the private tier map and by confidence; writes the adjudication list), `mkadj.py` (adjudication packets, the two scans as A/B in seeded random order, map kept outside the round), `mkreview_record.py` (the post-review record: reviewed items rebuilt with a `review` block, the rest copied verbatim), `merge.py --base TAG` (carry the unreviewed rows of an existing tag into the new one) |
+| `../docs/scan/pdhd_stm_michel_smx19_verdicts.json` | the doc pdhd/19 record, the current PDHD one: 317 records. The 94 items of doc 18's owner queue (tiers A–E) were re-scanned blind on the fixed display (rubric v4) and adjudicated where the class changed; each carries a `review` block keeping the smx18 call and the blind call. The other 223 are copied from smx18 verbatim. The owner's `smx1` label still decides the 30 owner items. Label tag `smx19` (`merge.py --base smx18`); round files in `../docs/scan/smx19/` |
 | `../docs/scan/pdhd_stm_michel_smx18_verdicts.json` | the doc pdhd/18 record: 317 PDHD items on production (arm `h18s`), each naming its arm, rubric sha, scanner and wave; the owner's `smx1` verdict on the 30 they labelled. Sheet, keys and provenance in `../docs/scan/smx18/` |
-| **PDHD anode, known display defect** | `smgeom.ENVELOPE["pdhd"]` puts the x faces at ±357.985 cm; the anode wire planes are at ±352.1 cm, and no reconstructed end goes past 352.2 (doc pdhd/18 §6.2). The red box and every x distance overstate the distance to the anode by ~6 cm. Likewise `f_meas` shows only **this cluster's** fitted cells, not the event's other clusters (§6.2b) |
+| **PDHD envelope, FIXED in doc pdhd/19** | Through doc pdhd/18, `smgeom.ENVELOPE["pdhd"]` put the x faces at ±357.985 cm and the cathode at 2.54 cm. Those are fiducial-cut numbers, not the active volume. The sensvol in the job log runs from \|x\| = 0.159 to 352.095 cm, and no reconstructed end goes past 352.2 (doc pdhd/18 §6.2). The box and every x distance now use the sensvol. Labels `smx1` and `smx18` were taken with the old box, which overstated the distance to the anode by ~6 cm. `f_meas` showing only this cluster's cells (§6.2b) is fixed by prep `--ctx-cells` (above). |
 | `compare_scan_tags.py` | two tags item by item: verdict confusion matrix, `michel_kind`, and per-object attribution on the **effective** group (`pf_segments` when the scanner tagged it, `pf_chain_group` otherwise) so "agreed with the chain" is not scored as "never looked". Read-only on both tags |
 | `verify_scan_record.py` | does `work/stm_michel_labels/<tag>/labels.json` say what the committed scan record says? Per item: verdict (`choice`, so a `FRAG_*` stays one), Michel kind, every object tag, `pf_tagged == n_pf_objects`, and the pin. The label dirs are not committed, so this is what makes a published scan checkable |
 | `../docs/scan/<det>_stm_michel_scan_sheet.tsv` | the item list — no verdict, no stratum |

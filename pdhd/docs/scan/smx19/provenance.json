@@ -1,0 +1,35 @@
+{
+ "doc": "pdhd/docs/19_stm-michel-display-fix-and-review.md",
+ "tag": "smx19",
+ "det": "pdhd",
+ "based_on": "pdhd/docs/scan/pdhd_stm_michel_smx18_verdicts.json (tag smx18, doc pdhd/18): the 223 unreviewed records are copied from it verbatim",
+ "reviewed": "doc 18's owner queue tiers A-E, 94 items (pdhd/docs/scan/pdhd_stm_michel_smx18_owner_queue.md)",
+ "display_arm": "h18s",
+ "display_arm_tla": "stm_michel_extra={survey_enable:true,survey_radius_cm:60.0,survey_max_len_cm:25.0,publish_other_arms:true,max_candidates:64}",
+ "grading_arms": {
+  "p82bhoff": "PDHD production (bare), the 303 items it reaches",
+  "h18b": "bare production + max_candidates:64, the 14 cap extras"
+ },
+ "binary_pin": "/home/xqian/tmp/p82/libpin_p82 (full local/lib snapshot), toolkit 082376c5 -- the same arms as smx18, not re-run",
+ "prep": "pdhd/stm_michel_scan/prep-pdhd-smx19 (prep_stm_michel_scan.py --arm h18s --ctx-cells --pin-tranche pdhd/docs/scan/pdhd_stm_michel_scan_sheet.tsv); 317/317 payloads byte-identical to prep-pdhd-smx18 once proj_ctx is removed",
+ "sheet": "pdhd/docs/scan/smx18/pdhd_stm_michel_scan_sheet.tsv (unchanged)",
+ "display": "smgeom.ENVELOPE['pdhd'] x = (-352.095, 352.095), cathode 0.159 (job-log sensvol); f_meas grey cells from the pctree ctpc (proj_ctx)",
+ "blind": "scan_harness.py --blind --hide-selection; reviewers got a flat seed-20260911 shuffle with no tier (tiers B-D are defined by the chain's is_stm); the tier and A/B maps were kept outside the round dir",
+ "nonblind": "pdhd/docs/scan/smx19/nonblind_named.txt: the 9 keys RUBRIC v4 names with an owner outcome (7 tier A, 029107_19/111 tier B, 028084_4/41 not queued) -- out of every pooled number",
+ "rubric": "pdhd/docs/scan/pdhd_stm_michel_scan_rubric.md",
+ "rubric_versions": {
+  "v4": "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624 (blind review rv1/rv2 and adjudication adj)"
+ },
+ "owner_labels": "pdhd/work/stm_michel_labels/smx1/labels.json (30 items, arm d53h): still the grading truth on those items, never overridden",
+ "adjudication": "items whose stop / thru / unscored class changed between smx18 and the blind review (tier A excluded): pdhd/docs/scan/smx19/adjudicate.tsv; the adjudication supersedes the blind review in the record, which keeps the blind call in review.blind",
+ "n_records": 317,
+ "n_reviewed": 94,
+ "n_adjudicated": 32,
+ "n_owner": 30,
+ "rubric_shas": [
+  "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624",
+  "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
+  "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
+  "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
+ ]
+}

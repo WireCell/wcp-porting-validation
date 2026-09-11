@@ -822,8 +822,27 @@ MEAS_TRACKS = [("muon", "#000000", 3.0, False),
                ("pfsel", "#ffb000", 7.0, False),
                ("cursor", "#17becf", 15.0, False)]
 MEAS_REND = {}
+# doc pdhd/19: the event's OTHER live charge (payload `proj_ctx`, prep
+# --ctx-cells), drawn under this cluster's cells in the `measured` column only
+# -- there is no prediction for it.  Grey, on its own scale, because it is a
+# different quantity: the channel's charge once, from the imaging's ctpc, where
+# T_proj_data's U/V cells on a wrapped plane count it once per wire segment the
+# fit touched.  A payload without the key draws nothing and the panel is what it
+# was.  CTX_HIGH is the plane's p90 `proj_ctx` cell charge over the 317 smx18
+# payloads (p50 3.1k / 3.2k / 6.7k, p90 18.1k / 19.7k / 27.6k e).  PDVD has
+# not been measured: its row copies CELL_HIGH until a PDVD --ctx-cells prep does.
+CTX_HIGH = {"pdhd": dict(u=1.8e4, v=2.0e4, w=2.8e4),
+            "pdvd": dict(u=3.1e4, v=2.7e4, w=1.8e4)}
+PAL_CTX = ["#%02x%02x%02x" % (g, g, g) for g in np.linspace(170, 0, 256).astype(int)]
+SRCX, SRCXB, CM_CTX, CTX_REND = {}, {}, {}, []
+CTX_WIN = 200            # prep's CTX_WIN; the payload's own `win` wins when present
 
 for pl in PLANES:
+    CM_CTX[pl] = LinearColorMapper(palette=PAL_CTX, low=0.0,
+                                   high=CTX_HIGH[DETNAME][pl])
+    SRCX[pl] = ColumnDataSource(dict(ch=[], ts=[], q=[]), name="srcx_" + pl)
+    SRCXB[pl] = ColumnDataSource(dict(left=[], right=[], bottom=[], top=[]),
+                                 name="srcxb_" + pl)
     CM_CELL[pl] = LinearColorMapper(palette=Turbo256, low=0.0,
                                     high=CELL_HIGH[DETNAME][pl])
     CM_DIFF[pl] = LinearColorMapper(palette=PAL_DIFF,
@@ -853,6 +872,17 @@ for pl in PLANES:
         f.quad(left="left", right="right", bottom="bottom", top="top",
                source=SRCD[pl], fill_color="#b9b9b9", fill_alpha=0.5,
                line_color=None, level="underlay")
+        if fld == "q":
+            rx = f.scatter(x="ch", y="ts", marker="square", size=CELL_PX[1],
+                           source=SRCX[pl], line_color=None,
+                           fill_color={"field": "q", "transform": CM_CTX[pl]})
+            CTX_REND.append(rx)
+            f.quad(left="left", right="right", bottom="bottom", top="top",
+                   source=SRCXB[pl], fill_alpha=0.0, line_color="#555555",
+                   line_dash="dashed", line_width=1.0, line_alpha=0.8)
+            f.add_tools(HoverTool(renderers=[rx], tooltips=[
+                ("channel", "@ch{0}"), ("slice", "@ts{0}"),
+                ("not in this fit — channel charge", "@q{0} e")]))
         r = f.scatter(x="ch", y="ts", marker="square", size=CELL_PX[1],
                       source=SRCM[pl], line_color=None,
                       fill_color={"field": fld,
@@ -912,7 +942,7 @@ meas_note = Div(width=1320, text="")
 
 
 def apply_cell_size():
-    for r in CELL_REND:
+    for r in CELL_REND + CTX_REND:
         r.glyph.size = CELL_PX[cell_size.active]
 
 
@@ -933,10 +963,19 @@ def apply_cell_scale():
         "items are comparable. Grey hatched = dead channel — <b>inside one, `measured` is "
         "the imaging model's filler, not a reading, so the residual there means nothing.</b> "
         "Black line = the CheckSTM_Michel PR fit (0.600 cm steps); click a point in the "
-        "dQ/dx panel to drop the cyan cursor here.</span>"
+        "dQ/dx panel to drop the cyan cursor here. <b>Grey squares</b> (measured column, "
+        "when the item carries them) = live charge this fit does NOT cover — other "
+        "clusters, unclustered activity — from the imaging's ctpc, within the dashed box "
+        "(± %d channels / slices of the fit's end); grey scale 0–%s / %s / %s e is the "
+        "channel's charge once, whereas this cluster's U/V cells on a wrapped plane count "
+        "it once per wire segment the fit touched.</span>"
         % (m, _fmt_e(CELL_HIGH[DETNAME]["u"] * m), _fmt_e(CELL_HIGH[DETNAME]["v"] * m),
            _fmt_e(CELL_HIGH[DETNAME]["w"] * m), _fmt_e(DIFF_SPAN[DETNAME]["u"] * m),
-           _fmt_e(DIFF_SPAN[DETNAME]["v"] * m), _fmt_e(DIFF_SPAN[DETNAME]["w"] * m)))
+           _fmt_e(DIFF_SPAN[DETNAME]["v"] * m), _fmt_e(DIFF_SPAN[DETNAME]["w"] * m),
+           CTX_WIN, _fmt_e(CTX_HIGH[DETNAME]["u"] * m), _fmt_e(CTX_HIGH[DETNAME]["v"] * m),
+           _fmt_e(CTX_HIGH[DETNAME]["w"] * m)))
+    for pl in PLANES:
+        CM_CTX[pl].high = CTX_HIGH[DETNAME][pl] * m
 
 
 apply_cell_scale()
@@ -946,6 +985,8 @@ apply_cell_size()
 def blank_meas():
     for pl in PLANES:
         SRCM[pl].data = dict(ch=[], ts=[], q=[], qp=[], qe=[], d=[])
+        SRCX[pl].data = dict(ch=[], ts=[], q=[])
+        SRCXB[pl].data = dict(left=[], right=[], bottom=[], top=[])
         SRCD[pl].data = dict(left=[], right=[], bottom=[], top=[])
         for nm, _c, _sz, _rv in MEAS_TRACKS:
             SRCT[(pl, nm)].data = dict(w=[], t=[])
@@ -993,6 +1034,7 @@ def fill_meas(pay, v, rev, pin=None, reframe=False):
     blank_meas()
     prj = pay.get("proj") or {}
     dead = pay.get("dead") or {}
+    ctx = pay.get("proj_ctx") or {}          # doc pdhd/19; absent => nothing drawn
     tlo, thi = [], []
     for pl in PLANES:
         c = prj.get(pl) or dict(ch=[], ts=[], q=[], qp=[], qe=[])
@@ -1001,6 +1043,14 @@ def fill_meas(pay, v, rev, pin=None, reframe=False):
         qe = np.asarray(c["qe"], float)
         SRCM[pl].data = dict(ch=list(ch), ts=list(ts), q=list(q), qp=list(qp),
                              qe=list(qe), d=list(q - qp))
+        cx = ctx.get(pl)
+        if cx:
+            SRCX[pl].data = dict(ch=list(cx["ch"]), ts=list(cx["ts"]), q=list(cx["q"]))
+            cc = (ctx.get("center") or {}).get(pl)
+            if cc:
+                wn = ctx.get("win", CTX_WIN)
+                SRCXB[pl].data = dict(left=[cc[0] - wn], right=[cc[0] + wn],
+                                      bottom=[cc[1] - wn], top=[cc[1] + wn])
         mw, mt = _wt(pay.get("muon"), pl)
         SRCT[(pl, "muon")].data = dict(w=mw, t=mt)
         if rev:

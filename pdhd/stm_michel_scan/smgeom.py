@@ -49,11 +49,24 @@ ENVELOPES
   protodunevd/clus.jsonnet:102-105) and would draw a box inside the charge.
   Sources: pdhd/curved_fiducial.jsonnet:72-77, protodunevd/crp_gap_fiducial.jsonnet,
   cross-checked against the AnodePlane sensvol lines in the production PR logs.
+
+  CORRECTION (doc pdhd/19): PDHD x was NOT the sensvol.  Through doc pdhd/18 it
+  read x = +-357.985 (the FV_xmin/FV_xmax of pdhd/clus.jsonnet:61-62) and
+  cathode = 2.54 (the per-face FV_xmax, clus.jsonnet:84) -- fiducial numbers, not
+  the active volume.  The job log's sensvol is
+      <AnodePlane:apa0> face:0 sensvol: [(-3520.95 76.1 2.34345) --> (-1.5875 6060 2302.36)]
+  i.e. |x| from 0.159 (the CPA face) to 352.095 cm (the first induction plane,
+  params.jsonnet apa_cpa - (0.5*apa_g2g - plane_gap) = 357.34 - 5.2455).  Of the
+  634 fit ends of the smx18 sample none reaches past |x| = 352.2 and 9 sit inside
+  |x| = 2.54, so the old box put every anode end ~6 cm inside the detector and
+  the cathode 2.4 cm too far out.  Labels smx1 and smx18 were taken with the old
+  numbers (their `face`/`seams_at_stop` notes quote them); y and z were already
+  the sensvol and do not move.  PDVD is unchanged.
 """
 
 ENVELOPE = {
-    "pdhd": dict(x=(-357.985, 357.985), y=(7.61, 606.0), z=(0.234345, 462.297),
-                 cathode=2.54),
+    "pdhd": dict(x=(-352.095, 352.095), y=(7.61, 606.0), z=(0.234345, 462.297),
+                 cathode=0.159),
     "pdvd": dict(x=(-339.91, 339.91), y=(-336.39, 336.39), z=(0.813, 298.435),
                  cathode=3.0),
 }

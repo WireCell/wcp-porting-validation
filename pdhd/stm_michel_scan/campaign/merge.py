@@ -25,6 +25,10 @@ import argparse, collections, hashlib, json, os, sys
 ap = argparse.ArgumentParser()
 ap.add_argument("round"); ap.add_argument("det"); ap.add_argument("tag")
 ap.add_argument("items")
+ap.add_argument("--base", default=None,
+                help="doc pdhd/19: carry every row of this EXISTING tag whose key is not "
+                     "in ITEMS_FILE into the new tag verbatim (read only; its sha is "
+                     "printed), so a review round's tag is the whole current record")
 g = ap.add_mutually_exclusive_group(required=True)
 g.add_argument("--check", action="store_true"); g.add_argument("--write", action="store_true")
 a = ap.parse_args()
@@ -80,6 +84,20 @@ for b in bad[:20]:
 if missing or extra or bad:
     sys.exit("refusing: %d missing, %d extra, %d disagreeing" % (len(missing), len(extra), len(bad)))
 print("every row agrees with its resolved record")
+
+if a.base:
+    if a.base == a.tag:
+        sys.exit("--base must differ from the tag being written (M13)")
+    BASE = os.path.join(IMG, a.det, "work", "stm_michel_labels", a.base, "labels.json")
+    braw = open(BASE, "rb").read()
+    B = json.loads(braw)
+    carried = {k: v for k, v in B["labels"].items() if k not in set(want)}
+    print("base %s (sha %s): %d rows, %d carried verbatim, %d replaced by this round"
+          % (a.base, hashlib.sha256(braw).hexdigest()[:12], len(B["labels"]),
+             len(carried), len(B["labels"]) - len(carried)))
+    if head is None:
+        head = {k: v for k, v in B.items() if k != "labels"}
+    merged = dict(carried, **merged)
 
 if a.check:
     print("--check only, nothing written")

@@ -1,13 +1,10 @@
 # The PDHD STM + Michel hand-scan rubric — apply this exactly
 
-> Doc pdhd/18, tag `smx18`; **v4 for the review round, doc pdhd/19, tag
-> `smx19`**. Ported from the frozen PDVD rubric
+> Doc pdhd/18, tag `smx18`. Ported from the frozen PDVD rubric
 > (`pdvd/docs/scan/pdvd_stm_michel_scan_rubric.md`, doc pdvd/55), not copied:
 > the detector is different, the scan is **verdict-blind**, and the corrections
 > doc pdvd/55 §17.3–17.4 and the owner's re-judges (doc pdvd/68, doc pdvd/70 §9)
-> recorded are folded in. The last section lists every change. **v4 changes the
-> display (the anode, the cathode and the grey cells in `f_meas`) and adds
-> rule 7, direction** — read those sections even if you know v3.
+> recorded are folded in. The last section lists every change.
 >
 > **Version.** The sha of this file is recorded before each wave and stamped on
 > every record. It changes only between waves, never while scanners work.
@@ -34,13 +31,8 @@ The question, in the detector owner's own words, has three parts:
    * the prep payloads (`prep-*/smprep-*.json`), any `tracking-*.root`,
      `calib-*.json`, `mabc-*.zip`, or anything under `pdhd/work/`. They carry
      the chain's verdict;
-   * **(v4) anything under `/home/xqian/tmp/h18/`** (the previous round: its
-     frames, records and waves are the answers you are checking), anything
-     under `/home/xqian/tmp/h19/` other than `RUBRIC.md`, `AGENT_TASK.md`,
-     `shots/`, your own item list and your own out dir, and
-     **nothing under `pdhd/docs/` except this rubric** (the previous round's
-     record, its queue and its doc name these items and their verdicts), nor
-     `pdvd/docs/scan/`;
+   * anything under `/home/xqian/tmp/h18/` other than `shots/` and your own out
+     dir, and nothing under `pdvd/docs/scan/`;
    * another scanner's out dir. Do not `ls` the `v_parts` tree.
 2. **Never run `scan_harness.py`** in any mode. Your only write is one record
    per item, through `mkv.py`, into your own out dir.
@@ -66,24 +58,24 @@ Michel, and a missing one does not mean there is none.
 
 * **Drift is along x.** There are two drift volumes with a **central cathode
   at x ≈ 0**; it is drawn as the dotted line at x = 0 in the top and end views.
-  The anode wire planes are at **|x| = 352.1 cm**. Active y runs 7.6 → 606 cm
-  and active z runs 0.2 → 462 cm. The red dashed box is the active boundary,
-  and **(v4) it and every number in `ends` are now the true active volume**
-  (below).
+  The anode wire planes are at |x| ≈ 352 cm (the box and the `ends` numbers
+  say 358 — see Anode below). Active y runs 7.6 → 606 cm and active z runs
+  0.2 → 462 cm. The red dashed box is the active boundary.
 * **Four APAs.** APA0 is x<0, z<231; APA1 is x>0, z<231; APA2 is x<0, z>232;
   APA3 is x>0, z>232. The APA seam at **z ≈ 231** is drawn as a grey dotted
   line in the side and top views.
 * **Most cosmics enter through the top (y ≈ 606).** An entry at `d_face` ≈ 0 on
   y is normal.
-* **Anode — (v4) the numbers are now right.** Through v3 the box and every x
-  distance in `ends` put the anode faces at |x| = 358 cm, ~6 cm outside the
-  wire planes, and v3 told you to read `face.x` ≲ 8 cm as "at the anode". The
-  display now uses the job's own active volume, |x| = 352.1 cm (no reconstructed
-  end in this sample goes past 352.2). **So `face.x` and
-  `seams_at_stop.anode_face` are the real distance: an end with `face.x` ≲ 2 cm
-  is at the anode face.** With a flat profile it is an exit (`ANODE:`). Only a
-  clear rise or clear decay topology makes it a stop, and then say in the
-  evidence that it sits at the anode. **Do not subtract 6 cm any more.**
+* **Anode — read this, the numbers mislead by ~6 cm (v3).** The red dashed box
+  and every x distance in `ends` (`face.x`, `d_face` when x is nearest,
+  `seams_at_stop.anode_face`) put the anode faces at |x| = 358 cm. But the
+  anode wire planes, where the charge of a track leaving through the anode
+  *ends*, are at **|x| ≈ 352 cm**. On this sample no end reaches past
+  |x| = 352.2 cm, and 46 fit stops and 10 entries pile up at `face.x` 5–8 cm:
+  those are tracks crossing the anode. **So an end with `face.x` ≲ 8 cm (|x| ≳
+  350 cm) IS at the anode face.** With a flat profile it is an exit
+  (`ANODE:`). Only a clear rise or clear decay topology makes it a stop, and
+  then say in the evidence that it sits at the anode.
 * **Cathode, the PDHD-specific trap.** A track whose fit ends within a few cm
   of x = 0 may simply **cross into the other drift volume**, where the
   clustering can put the continuation into a different cluster. The display
@@ -91,9 +83,7 @@ Michel, and a missing one does not mean there is none.
   can sit visibly offset. An end at the cathode with **no Bragg rise** is
   `THRU` (or `FRAG_THRU` if you can see the continuation); it is a stop only
   when the profile rises there. `ends.seams_at_stop.cathode` is the distance in
-  cm from the stop to the cathode plane — **(v4) now to the cathode's own face
-  at |x| = 0.16 cm** (through v3 it measured to |x| = 2.54, a fiducial cut, so
-  v3 numbers read 2.4 cm short).
+  cm from the stop to the cathode plane.
 * **APA seam.** An end within a few cm of z ≈ 231 with a flat profile is a gap
   crossing, not a stop. `ends.seams_at_stop.seam_z` gives that distance.
 * **Two known charge deficits.** Neither is a physics feature of the track:
@@ -113,9 +103,6 @@ Michel, and a missing one does not mean there is none.
 * **Wires.** U and V are wrapped induction planes, and W is collection. In
   `f_meas` the W row is the most direct charge picture. Grey hatched bands are
   dead channels, and inside one the "measured" charge is the imaging's filler.
-  **(v4)** On U and V the coloured cells read 2–3× the channel's charge (the
-  fit's 2-D tree counts a wrapped channel once per wire segment the fit
-  touched). Compare U/V cells with each other, never with W or the grey cells.
   **(v3)** A thin **horizontal** line across many channels at one time slice
   is charge arriving at a single drift time, i.e. an isochronous track (this
   one or another object). It is not a continuation along the drift direction.
@@ -130,7 +117,7 @@ and a `context.json`.
 | `a_proj_full.png` | the three 2-D projections at full detector extent — overall topology, which faces it touches |
 | `b_3d_wide.png` | the 3-D point cloud, the whole object |
 | `c_3d_stop.png`, `d_3d_stop.png`, `e_3d_stop.png` | the 3-D cloud zoomed to ±45 cm about the stop at three azimuths 90° apart — *along the Michel direction* vs *close and backward* is a 3-D judgement, and one view can fake either |
-| `f_meas.png` | U/V/W measured, predicted and difference, ±150 channels/slices around the stop, with dead channels. **Coloured cells** are the cells this cluster's own fit touched. **(v4) Grey squares, in the `measured` column only, are every OTHER live charge cell of the event** — other clusters, other flash bundles, unclustered activity — from the imaging, out to ±200 channels/slices of the fit end (so the whole ±150 frame is covered). Read here: does this track's charge end, run into a dead band or coverage hole, or **continue in grey** |
+| `f_meas.png` | U/V/W measured, predicted and difference, ±150 channels/slices around the stop, with dead channels — **only the cells this cluster's own fit touched** (v3): does *this cluster's* charge end, or run into a dead band / coverage hole. It cannot show charge that sits in another cluster |
 | `g_dqdx.png` | **dQ/dx vs signed arc length** through the stop, with the muon (solid) and electron (dashed) reference curves |
 | `h_dqdx_zoom.png` | the same panel as `g_dqdx.png`, upscaled 3×. **Read this one for the Bragg judgement** — there is no need to crop anything yourself |
 
@@ -223,24 +210,19 @@ order:
    have left.** The track stopped if all four hold:
    * **its own charge ends** in all three planes of `f_meas` at the fit end;
    * no dead band or coverage hole swallows the end;
-   * the end is not at a face (anode: **(v4)** `face.x` ≲ 2 cm), the cathode or the APA
+   * the end is not at a face (anode: `face.x` ≲ 8 cm), the cathode or the APA
      seam (use the numbers);
-   * **nothing continues past it** — not in the 3-D frames and the
-     projections, **and (v4) not in `f_meas`'s grey cells**; no large object in
-     the table starts at the stop and carries on;
-   * **(v4) it is not the track's upper end** (rule 7).
+   * **nothing continues past it in the 3-D frames and the projections**, and
+     no large object in the table starts at the stop and carries on.
 
-   **(v4) Reading a continuation in the grey cells.** Through v3, `f_meas`
-   showed only this cluster's own cells, so it could not show a continuation
-   the clustering had put in another cluster. v4 draws the rest of the event in
-   grey, **including other flash bundles** (which the 3-D frames hide under
-   `bundle only`). A continuation is grey charge that **picks up the track's
-   own line at the fit end and carries on in the same direction, in all three
-   planes at matching time slices**. Grey that merely crosses the region, or
-   sits in one plane only, is another object. A grey continuation makes the end
-   `THRU` (or `FRAG_THRU` if you can tell the pieces are one track); say
-   `CONTINUES:` in `--notes`. Grey is per-channel charge on its own scale; use
-   it for *where*, not *how much*.
+   **(v3) Why the last test is not `f_meas`.** `f_meas` shows only the cells
+   *this cluster's* fit touched (`T_proj_data` is written one row per fitted
+   cluster), so it **cannot show a continuation that the clustering put in
+   another cluster** (a wave-1 scanner saw a 99 cm unfitted cluster inside the
+   window that `f_meas` did not draw). The 3-D colour layer draws *all* imaged
+   charge near the fit from every cluster in the muon's bundle, so read
+   continuation there. Charge in a different flash bundle is hidden by
+   `bundle only`; that is a residual blind spot, so keep such calls `medium`.
 
    In that case the missing rise is a measurement failure, not evidence of a
    through-goer (the Bragg peak can be unresolved, or carried by a short piece
@@ -265,37 +247,6 @@ order:
    across the muon near its end (a long cluster lying on the body, a shower),
    so that you cannot isolate where this track ends and what leaves it, answer
    `MESSY` (owner, `029107_10/50`).
-7. **(v4) Direction: cosmic muons travel down.** A stopping cosmic muon stops at
-   the **lower** end of its track, and its upper end reaches a face (usually
-   the top, y ≈ 606) or a gap it crossed. Compute from `ends`:
-   `dy = stop.xyz[1] − entry.xyz[1]` and `chord` = the distance between
-   `entry.xyz` and `stop.xyz`. The fit end is the **upper end** when
-   `dy ≥ 0.3 × chord` (the track rises at least ~17° towards the fit end).
-   For a flatter track (`|dy| < 0.3 × chord`) geometry cannot tell direction,
-   and this rule does not apply.
-
-   At an **upper** fit end, a stop needs an upward-going particle. Among
-   cosmics that is rare: a particle made in an interaction below, not a
-   cosmic muon. So:
-   * **Rule 3 does not apply at an upper end.** A flat profile there is where
-     the track's charge **starts**: its upper part was not imaged, went into
-     another cluster or bundle (look in `f_meas` for grey carrying its line on
-     past that end), or the
-     particle was produced in the volume. That is not a stop: `THRU`, with
-     `--notes` starting `DIRECTION:`.
-   * **Only a clear Bragg rise at the upper end makes it a stop.** Activity at
-     that end is not enough on its own, because a production vertex looks like
-     decay activity. With a clear rise, call `STM_ONLY` / `STM_MICHEL` at most
-     `medium`, starting `DIRECTION:`, and say what the rise looked like.
-   * **A rise at the lower end** (the chain's "entry" end) is `REVERSED:`. The
-     verdict for the fit end is then `THRU` if that end is flat, or `UNCLEAR`.
-   * The same test explains an entry at the **bottom** face (y ≈ 7.6): a track
-     that enters through the floor is not a cosmic muon going down.
-
-   This rule is new in v4. The previous round's rubric had no direction test,
-   and 22 of its 183 hand stoppers stopped at the upper end, 14 of them on
-   steep tracks (`|dy| ≥ 0.6 × chord`). Several had their other end within a
-   few cm of the floor.
 
 ## Bragg — how to read `h_dqdx_zoom.png`
 
@@ -538,14 +489,12 @@ python3 <MKV> '<event>/<cluster>' <VERDICT> '<michel_kind>' <confidence> \
 * `--notes` prefixes that are counted across the round: `OVERSHOOT:`,
   `UNDERSHOOT:`, `NO_MEASUREMENT:`, `FLAT_STOP:` (rule 3), `CATHODE:` (the end
   is at the cathode crossing), `SEAM:` (the end is at the APA seam), `ANODE:`
-  (the end is at an anode face, i.e. **(v4)** `face.x` ≲ 2 cm — see The detector),
+  (the end is at an anode face, i.e. `face.x` ≲ 8 cm — see The detector),
   `FACE:` (the end is at the top / bottom / front / back face), `DEAD:` (the
   end runs into a dead band or a coverage hole), `ISOCHRONOUS:` (the track is
   near-isochronous), `REVERSED:` (the chain's "entry" end looks like the real
   stop candidate; the verdict is still for the fit end, and the far end cannot
-  be judged from these frames), **(v4)** `DIRECTION:` (rule 7: the fit end is
-  the track's upper end), `CONTINUES:` (grey charge in `f_meas` continues the
-  track past the fit end). An item may carry several, separated by `; `.
+  be judged from these frames). An item may carry several, separated by `; `.
 * **(v3) Stubs on a `THRU`.** A fitted piece with real charge continuing
   straight on past a `THRU` end is `muon`. A row with no charge value or zero
   size is `delta / other`.
@@ -604,14 +553,3 @@ were re-scanned under v3. The re-scan supersedes their v2 record
 Left unchanged: the overshoot rule. On `028084_23/114` the owner placed no
 pin where the blind scan moved it 2.7 cm, but on PDVD the owner moved pins by
 1.2–9.5 cm (doc pdvd/70 §9.4). One item does not set a length threshold.
-
-**v4 (the review round, doc pdhd/19).** Two display defects the smx18 scanners
-found were fixed, and the direction question it left open is now a rule.
-
-| # | change | evidence |
-|---|---|---|
-| 21 | the box and every `ends` x number use the job's active volume: anode \|x\| = 352.1, cathode face \|x\| = 0.16. `face.x` ≲ 2 cm is at the anode (was ≲ 8); do not subtract 6 cm | job-log `AnodePlane` sensvol; `smgeom.ENVELOPE["pdhd"]` (doc pdhd/19) |
-| 22 | `f_meas` draws the event's other live charge in grey (±200 channels / slices of the fit end, all bundles). Rule 3's "nothing continues" now includes it; `CONTINUES:` prefix | prep `--ctx-cells`, gated on the fitted cells (doc pdhd/19) |
-| 23 | U/V coloured cells read 2–3× the channel charge on wrapped planes | ctpc vs `T_proj_data`, doc pdhd/19 |
-| 24 | rule 7, direction: an upper fit end (`dy ≥ 0.3 × chord`) is not a flat stop; only a clear rise makes it a stop, at most `medium`; `DIRECTION:` prefix | 22 of 183 smx18 hand stoppers stopped at the upper end (doc pdhd/18 §7, queue tier C) |
-| 25 | the previous round's files are off limits | the review re-scans items the previous round judged |

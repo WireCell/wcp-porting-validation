@@ -394,6 +394,127 @@ def proj_cells(pj, cid, det):
     return out
 
 
+# doc pdhd/19: the event's OTHER live charge for the measurement panels.
+# `proj` above is one T_proj_data row -- the cells THIS cluster's fit touched --
+# so a Michel the clustering put in another cluster, or left unclustered, was
+# invisible there (doc pdhd/18 sec 6.2b: a scanner saw a 99 cm cluster in the
+# 3-D window that f_meas did not draw).  The imaging's ctpc
+# (PointTreeBuilding.cxx:293-327) holds EVERY live (channel, slice) of the event
+# with its channel ident and the slice's start tick, and the pctree tarball
+# carries it whole (feedback_ctpc_is_a_lattice).  So it maps onto the panel's
+# own coordinates with no geometry at all: channel ident -> ChanScheme rank
+# (PdvdPrMagnifyTrackingVisitor.cxx:138-177, re-derived from the wires file and
+# gated on smgeom.NCH), start tick -> tick // TICKS_PER_SLICE.
+# CAUSAL GATE: the fitted clusters' own T_proj_data cells must land on ctpc
+# cells -- measured 30845/30901 (0.998) on 028084_0; the rest are dead-region
+# fillers, which the ctpc does not carry.  W charges are equal cell for cell.
+# U/V are NOT: on PDHD's wrapped induction planes T_proj_data adds a channel's
+# charge once per wire segment the fit touched (write_proj_data keys cells by
+# global channel but accumulates per wire), so its U/V cells read 2-3x the
+# channel charge.  The ctpc value is the channel's own charge, once.
+CTX_WIN = 200            # channels and slices each side of the fit's rr=0 end
+_WIRE_RANK = {}
+
+
+def chan_rank(det, wires_name):
+    """{channel ident: (plane, global rank)} -- ChanScheme::global's numbering."""
+    if (det, wires_name) in _WIRE_RANK:
+        return _WIRE_RANK[(det, wires_name)]
+    import bz2
+    path = None
+    for d in os.environ.get("WIRECELL_PATH", "").split(":") + [
+            os.path.join(os.path.dirname(IMG), "wire-cell-data")]:
+        if d and os.path.exists(os.path.join(d, wires_name)):
+            path = os.path.join(d, wires_name)
+            break
+    if path is None:
+        raise SystemExit("--ctx-cells: wires file %s not found" % wires_name)
+    S = json.load(bz2.open(path) if path.endswith(".bz2") else open(path))["Store"]
+    chans = [set(), set(), set()]
+    for an in S["anodes"]:
+        for fi in an["Anode"]["faces"]:
+            for p, pi in enumerate(S["faces"][fi]["Face"]["planes"][:3]):
+                for wi in S["planes"][pi]["Plane"]["wires"]:
+                    chans[p].add(int(S["wires"][wi]["Wire"]["channel"]))
+    nch = tuple(len(c) for c in chans)
+    if nch != tuple(smgeom.NCH[det]):
+        raise SystemExit("--ctx-cells: %s gives nch %s, smgeom.NCH[%s] is %s"
+                         % (wires_name, nch, det, smgeom.NCH[det]))
+    b = smgeom.BASE[det]
+    rank = {}
+    for p in range(3):
+        for r, c in enumerate(sorted(chans[p])):
+            rank[c] = (p, b[p] + r)
+    _WIRE_RANK[(det, wires_name)] = rank
+    return rank
+
+
+def event_ctpc(det, evtdir):
+    """{plane: {(global channel, time slice): charge}} for the whole event, or None."""
+    import io, re, tarfile
+    tars = sorted(glob.glob(os.path.join(evtdir, "pctree-evt*.tar.gz")))
+    if not tars:
+        return None
+    wires = None
+    for tl in glob.glob(os.path.join(evtdir, "pctree-evt*.tlas")):
+        for line in open(tl):
+            if line.startswith("wires="):
+                wires = line.split("=", 1)[1].strip()
+    rank = chan_rank(det, wires or {"pdhd": "protodunehd-wires-larsoft-v1.json.bz2",
+                                    "pdvd": "protodunevd-wires-larsoft-v7-uvwfit.json.bz2"}[det])
+    meta, arr = {}, {}
+    with tarfile.open(tars[0]) as tf:
+        for mem in tf.getmembers():
+            mm = re.match(r".*_(\d+)_(metadata\.json|array\.npy)$", mem.name)
+            if not mm:
+                continue
+            if mm.group(2) == "metadata.json":
+                meta[int(mm.group(1))] = json.loads(tf.extractfile(mem).read())
+            else:
+                arr[int(mm.group(1))] = tf.extractfile(mem).read()
+    ds = {}
+    for i, md in meta.items():
+        mm = re.search(r"namedpcs/ctpc_a\d+f\d+p([UVW])/arrays/(cident|slice_index|charge)$",
+                       md.get("datapath", ""))
+        if mm and i in arr:
+            key = md["datapath"].rsplit("/arrays/", 1)[0]
+            ds.setdefault(key, {"plane": "UVW".index(mm.group(1))})[mm.group(2)] = \
+                np.load(io.BytesIO(arr[i]))
+    tps = smgeom.TICKS_PER_SLICE[det]
+    out = {0: {}, 1: {}, 2: {}}
+    for d in ds.values():
+        if not all(k in d for k in ("cident", "slice_index", "charge")):
+            continue
+        for c, s, q in zip(d["cident"], d["slice_index"], d["charge"]):
+            r = rank.get(int(c))
+            if r is None or r[0] != d["plane"]:
+                continue
+            out[r[0]][(r[1], int(s) // tps)] = float(q)
+    return out
+
+
+def ctx_cells(ctpc, proj, stop_wt):
+    """The event's live cells near the fit's end that this cluster's own
+    T_proj_data row does not carry, plus the own-cell gate for the item."""
+    out = dict(win=CTX_WIN, center={}, gate={})
+    for pl, nm in enumerate("uvw"):
+        own = set(zip(proj[nm]["ch"], proj[nm]["ts"]))
+        cells = ctpc[pl]
+        out["gate"][nm] = [len(own), sum(1 for k in own if k in cells)]
+        c = stop_wt.get(nm)
+        if c is None:
+            out[nm] = dict(ch=[], ts=[], q=[])
+            continue
+        w0, t0 = c
+        out["center"][nm] = [round(w0, 1), round(t0, 1)]
+        sel = sorted(k for k in cells
+                     if abs(k[0] - w0) <= CTX_WIN and abs(k[1] - t0) <= CTX_WIN
+                     and k not in own)
+        out[nm] = dict(ch=[k[0] for k in sel], ts=[k[1] for k in sel],
+                       q=[int(round(cells[k])) for k in sel])
+    return out
+
+
 def dead_bands(bc, det):
     """T_bad_ch as [channel, first slice, last slice] per plane.
 
@@ -568,12 +689,13 @@ def load_image(evtdir, muon_xyz, stop_xyz=None, bundle=None):
     return near, far, read
 
 
-def build_event(det, evtdir, with_tagger_fit=True):
+def build_event(det, evtdir, with_tagger_fit=True, with_ctx=False):
     """[(row dict, payload dict)] for every candidate in one event."""
     f = uproot.open(os.path.join(evtdir, "tracking-pr.root"))
     keys = {k.split(";")[0] for k in f.keys()}
     if "T_stm_michel" not in keys:
         return []
+    ctpc = event_ctpc(det, evtdir) if with_ctx else None
     m = f["T_stm_michel"].arrays(library="np")
     p = f["T_stm_michel_pts"].arrays(library="np")
     rc = f["T_rec_charge"].arrays(
@@ -674,6 +796,14 @@ def build_event(det, evtdir, with_tagger_fit=True):
             ticks_per_slice=smgeom.TICKS_PER_SLICE[det],
             proj=proj_cells(pj, cid, det), dead=dead_bands(bc, det),
         )
+        if ctpc is not None:          # doc pdhd/19, --ctx-cells; absent otherwise
+            stop_wt = {}
+            if rr_mu.size:
+                k0 = int(np.argmin(rr_mu))
+                for nm, wl in (("u", m_pu), ("v", m_pv), ("w", m_pw)):
+                    if wl[k0] is not None and m_pt[k0] is not None:
+                        stop_wt[nm] = (float(wl[k0]), float(m_pt[k0]))
+            pay["proj_ctx"] = ctx_cells(ctpc, pay["proj"], stop_wt)
         # doc pdvd/51: hand the PF selector the chain's own member segments
         # (roles 3 michel / 4 dot / 5 capture gamma), so a bridged Michel and a
         # capture gamma appear in the flow panel and not only in the 3-D view.
@@ -870,6 +1000,10 @@ def main():
                     help="inherit tranche membership from a previous sheet "
                          "(path, or <rev>:<path> read with git show) instead "
                          "of re-drawing it; see read_pinned_tranche")
+    ap.add_argument("--ctx-cells", action="store_true",
+                    help="doc pdhd/19: add `proj_ctx`, the event's other live 2-D "
+                         "charge near the fit's end, from the pctree ctpc.  Off: "
+                         "the payloads are byte-identical to before")
     a = ap.parse_args()
     det = a.det
     if a.arm:                     # doc pdvd/51: validate a new arm before promoting
@@ -907,7 +1041,7 @@ def main():
 
     rows, keys, nmissing = [], [], 0
     for i, d in enumerate(dirs):
-        got = build_event(det, d, not a.no_tagger_fit)
+        got = build_event(det, d, not a.no_tagger_fit, a.ctx_cells)
         if not got:
             nmissing += 1
         for row, key, pay in got:

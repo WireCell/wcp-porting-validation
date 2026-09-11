@@ -1078,3 +1078,14 @@ untouched and is the calibration. See
 concern this app: the PDHD box and every x distance put the anode at ±358 cm
 where the wire planes are at ±352.1 cm (§6.2a), and the measurement panels show
 only the fitted cluster's own cells (§6.2b).
+
+## 15. Both display facts fixed; the owner queue reviewed (doc pdhd/19, 2026-09-11)
+
+`smgeom.ENVELOPE["pdhd"]` now uses the job's own sensitive volume (x ±352.095,
+cathode 0.159; PDVD was already right and is unchanged). The measurement panels
+draw the event's other live charge as grey squares when the prep is built with
+`--ctx-cells`, read from the imaging's ctpc and gated on the fitted cells
+(99.7–99.9 %), with the prep byte-identical without the flag. The panel note
+also says that on PDHD's wrapped U/V planes the coloured cells count a channel
+once per wire segment the fit touched (2–3×). See
+[doc pdhd/19](19_stm-michel-display-fix-and-review.md).
