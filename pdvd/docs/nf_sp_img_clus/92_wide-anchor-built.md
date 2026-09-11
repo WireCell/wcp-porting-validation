@@ -124,6 +124,11 @@ items production rejects.
 The OFF gate is the bar this round had to clear, and it clears it exactly: with the knob absent the
 new binary reproduces production byte for byte on both detectors.
 
+**The census in this table is on the smx7 record**, deliberately: the twin's prediction was computed
+on that record, so this is a like-for-like check that the arm does what was predicted. §6 gives the
+same arms on the corrected smx8 record, where the numbers are different (242 / 8 / 44) because the
+*record* moved, not because the code did.
+
 In `p92v13` the only branches that move at all are `reject_bits` (5), `is_stm` (5),
 `topology_cleared_bits` (2) and the capture-gamma family (2 candidates). The last was pre-registered
 in `pred.txt`: `stop_gamma_require_stm` is ON in PDVD production (doc 85), so a candidate whose
@@ -144,8 +149,12 @@ controls** no grid point moves. Every item read the same in production (`is_stm`
 shape bits only); order shuffled; the group and record verdict only in the key file.
 `039253_12/93` was dropped by the builder for reading `michel_found` 1, which would have marked it out.
 
-**The controls are the null, and they held: 8 of 8.** So the re-judge itself is stable; what moved,
-moved at the boundary.
+**The controls are the null, and on the stopper call they held 8 of 8** — so the stopper-vs-THRU
+re-judge is stable, and what moved on that axis moved at the boundary. **The null is narrower than
+it looks, though:** one control, `039349_29/40`, went STM_MICHEL → STM_ONLY. That keeps it a stopper,
+so it does not dent the 8/8, but it is a Michel-axis move on a control — and that item is one of doc
+90's five pinned fit-through Michels. Read the 8/8 as a null for the stopper call only, not for the
+Michel call.
 
 **The decision set: 8 of 11 held, 3 overturned.**
 

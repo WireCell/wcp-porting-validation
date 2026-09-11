@@ -243,7 +243,8 @@ Doc 92: doc 91 §10 item 1, built OFF and gated, **not flipped**.
   bits with the four shape bits cleared, then P1" — what the twin predicts.
 - **The gates.** OFF is byte-identical on **both** detectors (PDVD 120 zips / 596 candidates, PDHD 61
   zips / 325 candidates, no shared branch moved). Both ON arms match the exact twin item by item.
-- **The re-judge changed the headline.** smx8 (19 blind items, controls 8/8 held) overturned 3 of the
+- **The re-judge changed the headline.** smx8 (19 blind items; controls held 8/8 on the stopper call,
+  though one, `039349_29/40`, moved on the Michel axis) overturned 3 of the
   11 decision items — and one of them, `039349_71/37`, was the owner's own smx7 STM_MICHEL call, now
   THRU. It is a gain at both R points, so doc 91's "+5 at 0 judged THRU" becomes **+4 stoppers and
   1 false positive**: eff 0.832 → 0.846, purity 0.971 → 0.968. R 1.3 dominates R 1.5.
