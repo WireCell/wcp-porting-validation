@@ -42,9 +42,11 @@ and **scan the cap-64 extras too**.
    * The PDHD anode is at |x| ≈ 352 cm, but the display and every x distance
      say 358. 23 items were re-scanned, and 5 stoppers became `THRU`.
    * The measurement panels show only the fitted cluster's own cells.
-5. **Scanning took 1 h 50 min against PDVD's ~5.5 h**, for 310 records, at
-   ~1.5 min per item per agent against ~2.7. Most of the gain came from the
-   pre-made frames and the numbers-first rubric (§6.1).
+5. **Each agent scanned an item in ~1.5 min, against ~2.7 on PDVD.** The
+   scanning itself took 1 h 50 min for 310 records, against PDVD's ~5.5 h
+   for 517. Both wall-clocks count scanning only: calibration, frames and
+   apply are excluded on both sides. Most of the gain came from the pre-made
+   frames and the numbers-first rubric (§6.1).
 
 The next step (§11): grade PDVD's production knobs on PDHD against this record,
 starting with P1, after the owner's review of queue tiers A–E.
@@ -270,10 +272,16 @@ source. The main ones:
 | version | sha256 | frozen | used by |
 |---|---|---|---|
 | v1 | `7b8406b8…` | 2026-09-11 06:03 | the calibration wave (30 records) |
-| v2 | `b0c3842e…` | 2026-09-11 06:25 | every main-wave and double-scan record |
+| v2 | `b0c3842e…` | 2026-09-11 06:25 | wave `w1` (52 records in the final record, plus the 23 it superseded) |
+| v3 | `f0f695f0…` | 2026-09-11 06:52 | waves `w2`–`w4` with the 23 re-scans (235 records in the final record), and the double scan's 20 (`smx18/double_scan.tsv`) |
+
+A first v3 draft (`4829aa6e…`, 06:52:29) still carried two stale v2 lines.
+It was corrected and re-frozen as `f0f695f0` 28 s later, before any v3 wave
+started. No record carries the draft's sha. v3's changes are §6.2.
 
 Every record carries the sha of the rubric it was judged under (`mkv.py` reads
-`ROUND/RUBRIC.sha`). The rubric never changed while a wave was running.
+`ROUND/RUBRIC.sha`). The frozen text never changed while a wave was running.
+The one exception is a 3-minute window, §6.2c.
 
 ## 5. The blind calibration: the agents against the owner's 30
 
@@ -348,7 +356,7 @@ pdvd/55 §13.2, findings §0b):
 | frame phase, wall | ~50 min + re-shoot | ~45 min |
 | rubric churn | a whole wave (60 items) discarded | a calibration wave on purpose, 23 targeted re-scans |
 | per agent | ~2.7 min / item, 12-item chunks, ~32 min | **~1.5 min / item**, 15–17-item chunks, 20–27 min |
-| scanning, wall | ~5.5 h | **1 h 50 min** for the 310 main + re-scan records |
+| scanning, wall (scan waves only: calibration, frames and apply excluded on both sides) | ~5.5 h for 517 records (07:45–13:18 on 2026-09-09, the frozen-rubric waves; the discarded wave 06:55–07:35 not counted) | **1 h 50 min** for 310 records (`w1`–`w4`, 06:26–08:14, re-scans included; the double scan not counted) |
 | apply (real widgets) | ~4 h after the scan (3–5 procs, OOM) | pipelined behind the waves, 4–6 procs |
 
 **What made it faster**, in order of effect:
@@ -391,6 +399,14 @@ inside the window that `f_meas` did not draw.
 * v2 rule 3 had used `f_meas` for "nothing continues past the end". v3 moves
   that test to the 3-D frames, and the re-scan above covered the calls that
   relied on it.
+* **Why waves 1–4 can be pooled.** Rule 3 (`FLAT_STOP`) is a judgement rule
+  and the largest single driver of hand-stopper calls (38 items carry the
+  prefix), and its load-bearing test changed between wave 1 and wave 2. All 6
+  wave-1 `FLAT_STOP` calls were re-scanned blind under v3, and **6 of 6 kept
+  their verdict**: the v2→v3 change to rule 3 is measured to have moved
+  nothing. The other 52 wave-1 records were judged under v2's rule 3 and
+  were not re-scanned. That result is the evidence they pool with waves 2–4.
+  The anode correction is the change that did move verdicts (5 of 17).
 * **The viewer's own text overstates the panel** ("that is exactly where an
   unreconstructed Michel shows up", README). That needs correcting, or the
   panel needs the event's other clusters; both are outside this round.
@@ -599,6 +615,9 @@ Tiers A–E (94 items) are the ones where a second opinion moves a number.
   * The grading instrument, `census_score.py` / `census_lib.py`, is
     PDVD-hardcoded (`MIP_MEDIAN = 47000`, the PDVD record path). It needs a
     `--det pdhd` port first, and `d18_census.py` is the minimal PDHD version.
+    **No number in this doc went through `census_lib`.** Every figure comes from
+    `d18_census.py`, `score_stm_michel_scan.py`, `cmp_owner.py` or
+    `resolve.py`'s `double_scan.tsv`.
 * **The owner's review of tiers A–E**, above all tier C (the direction
   question) and the seven pins beyond 9.5 cm. A ruling on the direction test
   would be the first v4 rubric change.
