@@ -80,3 +80,52 @@ REMOVED (3):
 CHANGED (0):
 
 PROOF LINE: 0 added, 3 removed, 0 changed
+
+== doc pdhd/25 sec 5 arms, generated 2026-09-12 15:21:44; same instrument and compile-only runner as above (029107_17) ==
+TLA K: -S stm_michel_extra={ks_margin:-0.10,topology_michel_ke_min:5.0,topology_michel_len_min_cm:1.5}
+TLA R: -S stm_michel_extra={compare_range_cm:45.0}
+TLA KR: -S stm_michel_extra={ks_margin:-0.10,topology_michel_ke_min:5.0,topology_michel_len_min_cm:1.5,compare_range_cm:45.0}
+
+== negative control: K against itself ==
+PROOF LINE: 0 added, 0 removed, 0 changed
+
+== PDHD production -> arm K ==
+before 88 keys -> after 90 keys
+ADDED   (2):
+  + topology_michel_ke_min             5
+  + topology_michel_len_min_cm         1.5
+REMOVED (0):
+CHANGED (1):
+  ~ ks_margin                          -0.02 -> -0.1
+
+PROOF LINE: 2 added, 0 removed, 1 changed
+
+== PDHD production -> arm R ==
+before 88 keys -> after 89 keys
+ADDED   (1):
+  + compare_range_cm                   45
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 1 added, 0 removed, 0 changed
+
+== PDHD production -> arm KR ==
+before 88 keys -> after 91 keys
+ADDED   (3):
+  + compare_range_cm                   45
+  + topology_michel_ke_min             5
+  + topology_michel_len_min_cm         1.5
+REMOVED (0):
+CHANGED (1):
+  ~ ks_margin                          -0.02 -> -0.1
+
+PROOF LINE: 3 added, 0 removed, 1 changed
+
+== arm K -> arm KR (must be exactly compare_range_cm added) ==
+before 90 keys -> after 91 keys
+ADDED   (1):
+  + compare_range_cm                   45
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 1 added, 0 removed, 0 changed

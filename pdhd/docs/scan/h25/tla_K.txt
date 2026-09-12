@@ -1,0 +1,1 @@
+-S stm_michel_extra={ks_margin:-0.10,topology_michel_ke_min:5.0,topology_michel_len_min_cm:1.5}

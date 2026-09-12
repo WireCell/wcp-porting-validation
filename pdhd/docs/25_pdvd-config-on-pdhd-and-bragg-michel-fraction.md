@@ -17,13 +17,17 @@
    the Michel given a Bragg-path accept (0.846 vs 0.923).
 3. *How to raise PDHD further?* PDHD's 28 remaining misses are **25 shape-test rejections** (`no_bragg` /
    `shape_flat`), and PDHD's shape quantities separate stoppers from through-goers far worse than
-   PDVD's (**AUC 0.73 vs 0.88**). Offline, on production's own payload, two PDHD-only threshold moves
-   — `ks_margin` −0.10 and the P1 Michel floors at 5 MeV / 1.5 cm — would recover **+13 stoppers
-   for 0 false positives** (0.733 → 0.857). On PDVD the same moves cost 22 false positives, so they
-   are PDHD-specific. The last 13 misses are unreadable profiles that no threshold reaches.
+   PDVD's (**AUC 0.73 vs 0.88**). Two PDHD-only threshold moves — `ks_margin` −0.10 and the P1 Michel
+   floors at 5 MeV / 1.5 cm — were sized offline at +13 stoppers for 0 false positives, and **a real arm
+   graded as one unit (§5) delivers exactly that, item by item: 77/0/28/69 → 90/0/15/69, efficiency
+   0.733 → 0.857 at purity 1.000**, Michel census unchanged, golden fraction 0.524 → 0.587. PDVD sits at
+   0.877. `compare_range_cm` 45 alone gives +3 (0.762) and nothing on top of the lever. On PDVD the same
+   moves cost 22 false positives, so they are PDHD-specific. The 13 unreadable profiles and 2 plateau
+   misses are what is left. **The blind re-judge the owner asked for before any flip is §6 (pending in
+   this commit).**
 
 **Read-only for production.** No C++ change, no production jsonnet edit, no record or label touched.
-Three new arms on a pinned binary, new tags only.
+Six new arms on a pinned binary, new tags only.
 
 ## 0. Repro
 
@@ -37,7 +41,8 @@ S=$I/pdvd/docs/nf_sp_img_clus/scripts/d53_run_arms.sh
 (cd $I/pdvd && PDVD_LIGHT_SUFFIX=_keep PDVD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh -nu -stm-fit -s h25vcfg 39252 0)
 python3 $I/pdhd/docs/scan/h22/d22_cfg_keys.py \
     $I/pdhd/work/029107_17_h25cfg0/.wct-pr_h25cfg0.json $I/pdvd/work/039252_0_h25vcfg/.wct-pr_h25vcfg.json
-#    (arms A and B compiled the same way with PDHD_PR_TLA="$(cat $X/tla_A.txt)" / tla_B.txt: cfg_proofs.txt)
+#    (arms A, B, K, R, KR compiled the same way with PDHD_PR_TLA="$(cat $X/tla_<arm>.txt)": cfg_proofs.txt;
+#     a compile-only dir needs the pctree symlinks of 029107_17_d51hclus)
 
 # 2. the arms (61 events, ~5 min each), launched by $X/run_arm.sh
 ARM=h25base DET=pdhd SRC=d16hnu JOBS=8 PIN=$PIN LOGD=$H/arm_h25base bash $S
@@ -53,6 +58,19 @@ python3 $I/pdhd/docs/scan/h23/d23_apa.py   h25base h25va h25vb      # per APA, A
 python3 $X/d25_movers.py h25base h25va h25vb                        # movers by name and mechanism
 python3 $X/d25_bragg_michel.py --pdhd h23conf,h25va,h25vb --pdvd p96vprod   # section 2
 python3 $X/d25_misses.py                                            # section 3 (offline, production payload)
+
+# 4. section 5: the levers as real arms (pre-registration and frozen re-judge controls written first)
+python3 $X/d25_controls.py > $X/controls_frozen.txt                 # BEFORE any lever arm
+bash $X/run_arm.sh h25k $X/tla_K.txt ; bash $X/run_arm.sh h25r $X/tla_R.txt
+python3 $X/d25_misses.py --pdhd h25r > $X/q3_misses_on_h25r.txt      # h25kr's twin, written before h25kr runs
+bash $X/run_arm.sh h25kr $X/tla_KR.txt
+#    branch gates g_h25k/g_h25r/g_h25kr.txt as in 3 (--before h25base); then
+python3 $X/d25_twin_check.py --arm h25k  --ks -0.10 --ke 5 --len 1.5 > $X/twin_h25k.txt
+python3 $X/d25_twin_check.py --arm h25r  --named 028084_20/116,028084_5/115,029107_24/33 > $X/twin_h25r.txt
+python3 $X/d25_twin_check.py --arm h25kr --ks -0.10 --ke 5 --len 1.5 > $X/twin_h25kr.txt
+python3 $I/pdhd/docs/scan/h23/d23_grade.py h25base h25k h25r h25kr ; python3 $I/pdhd/docs/scan/h23/d23_apa.py h25base h25k h25r h25kr
+python3 $X/d25_movers.py h25base h25k h25r h25kr > $X/movers_h25k.txt
+python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h25r,h25kr --pdvd p96vprod > $X/q2_levers.txt
 ```
 
 Every grader self-gates before printing: `d23_*` on `p82bhoff` = 61/0/87/108 (smx23);
@@ -265,6 +283,10 @@ use — hand stoppers vs `michel_kind` (PDHD's graders, used here on both) and a
 `STM_MICHEL` (`census_score` §14.2, PDVD's 144/12/20). Both are printed by the script. Both
 denominators are candidate pools.
 
+With lever 1 as a real arm (§5), PDHD's golden fraction is **37/63 = 0.587 ± 0.062**, still below
+PDVD's 0.671: the lever lifts the Bragg-path accept on hand Michel items 0.619 → 0.714, while Michel
+found given a Bragg-path accept moves 0.846 → 0.822 (the new accepts carry fewer found Michels).
+
 ## 3. Q3 — what is left on PDHD, and what would move it
 
 ### 3.1 The misses are shape-test rejections, and only shape-test rejections
@@ -332,7 +354,8 @@ contrast < `bragg_contrast_min` × expected (`:3083`); `shape_flat` = `ks_mu` + 
 * `is_stm` ≡ (`reject_bits` = 0) on all items.
 
 **These are predictions for single threshold moves on a fixed payload.** They cannot see a knob that
-moves the fit or the pool, and they are in-sample.
+moves the fit or the pool, and they are in-sample. **The combined lever and `compare_range_cm` 45 were
+then run as real arms: §5.**
 
 | lever (all else production) | PDHD APA0 strict | PDHD all APAs | PDVD |
 |---|---|---|---|
@@ -386,20 +409,18 @@ Michel only 0.4 cm long. Seven sit in APA3, four in APA1 and two in APA2.
 ### 3.6 Recommendations, ranked, each with the measurement that would test it
 
 1. **A PDHD-specific shape operating point: `ks_margin` −0.10 plus the P1 floors at 5 MeV / 1.5 cm,
-   graded as one unit.** **Predicted — not measured —** +13 stoppers at 0 false positives, 0.733 → 0.857
-   (strict), which is PDVD's 0.877 territory. The +13 is an offline re-verdict of production's payload.
-   The two levers overlap (`028084_20/116` is in both lists). The campaign's own precedent cuts both
-   ways: `h21f` was predicted at +17 and delivered +19 (doc pdhd/21 §4). Only an arm gives the number. Both keys exist; this needs no C++. It does need three things:
-   * a real arm, since combined arms have broken naive twins before (docs pdhd/21–23);
-   * the item list pre-registered;
-   * a **blind re-judge** of the 13 recoveries plus the THRU items nearest the cut. Zero false positives
-     on 69 through-goers bounds the rate only below ~4 % (95 %), and both thresholds were chosen on
-     this record.
+   graded as one unit.** **Measured (§5): +13 stoppers at 0 false positives, 0.733 → 0.857 (strict),
+   the offline twin held item by item on every population; the Michel census does not move.** It needs
+   no C++. What still stands between it and a flip:
+   * the **blind re-judge** of the 13 recoveries plus the THRU items nearest the cut (§6). Zero false
+     positives on 69 through-goers bounds the rate only below ~4 % (95 %), both thresholds were chosen
+     on this record, and all 13 recoveries rest on agent calls;
+   * the owner's decision.
 
    Do not port it to PDVD: there it costs 22 false positives.
-2. **From PDVD's delta, take only what Arm B shows is free.** On this record that is **`compare_range_cm` 45 alone** (+3 stoppers, 0 false positives, Arm B). It
-should get its own arm before anything is flipped. Its three recoveries are a subset of lever 1's, so
-if both are taken they must be graded together. Keep `absorb_bragg_stub`,
+2. **From PDVD's delta, take only what Arm B shows is free.** On this record that is **`compare_range_cm` 45 alone**:
+   **measured (§5), +3 stoppers at 0 false positives (0.762), and nothing on top of lever 1** — the
+   combined arm `h25kr` is census-identical to `h25k`, because its three recoveries are a subset of lever 1's. Keep `absorb_bragg_stub`,
    `topology_clears_sparse` and `topology_michel_ke_min` 3 off. Hold `michel_range_energy_dis_cm` 3: it
    vetoed three hand-confirmed small PDHD Michels. Hold `kink_asym`: it lost `029107_26/88`.
 3. **A strong-Michel override for `plateau_off_mip`** (+2, new C++ behind a default-OFF knob).
@@ -417,23 +438,131 @@ if both are taken they must be graded together. Keep `absorb_bragg_stub`,
 
 ## 4. What is NOT concluded
 
-* **Not** a flip. Nothing here changes production; every threshold in §3.4 is an offline prediction.
+* **Not** a flip. Nothing here changes production; §3.4's thresholds are offline predictions, and §5's
+  arms measure them without turning anything on.
 * **Not** that PDVD's efficiency advantage is physics. PDVD's scan was not blind; both denominators are
   candidate pools; the two records differ in size (105 vs 276 stoppers on the compared populations).
 * **Not** that the correlated wave causes PDHD's weaker shape separation — §3.3 is consistent with it,
   no more.
 * **Not** attributed within Arm B beyond what its movers name — it is still a multi-key unit.
 * **Not** a statement about APA0, excluded throughout at the owner's request.
+* **Not** that §5's +13 are true stoppers beyond what the `smx23` record says. All 13 are agent calls,
+  and the record is exactly what the blind re-judge (§6) tests.
+
+## 5. The levers as real arms (the owner's request of 2026-09-12)
+
+Three arms on the pin and source of §1, each on top of the production file through
+`stm_michel_extra` only, **pre-registered before launch** (`preregistered.txt`) with the re-judge
+controls frozen before any of them ran (`controls_frozen.txt`, §6):
+
+* **`h25k` — lever 1, one unit:** `ks_margin` −0.10, `topology_michel_ke_min` 5, `topology_michel_len_min_cm` 1.5.
+* **`h25r` — `compare_range_cm` 45 alone.**
+* **`h25kr` — both**, pre-registered from `d25_misses.py` run on `h25r`'s own payload after `h25r` finished.
+
+### 5.1 Gates
+
+| gate | result |
+|---|---|
+| compiled config, production → K / R / KR | **2 added + `ks_margin` −0.02 → −0.1 / 1 added / 3 added + 1 changed**; K → KR = `compare_range_cm` only; negative control 0/0/0 (`cfg_proofs.txt`) |
+| every arm | 61/61 complete, rc 0, pin md5 `4e1db810` before and after |
+| candidate pool | **341 in every arm** (none in, none out) |
+| `h25base` → `h25k` branch gate (`g_h25k.txt`) | 174/341 bit-identical; point geometry **338/341** |
+| `h25base` → `h25r` | 41/341 bit-identical (`ks_mu`/`ks_flat`/`comp_*` on 287); point geometry **341/341** |
+| `h25base` → `h25kr` | 29/341 bit-identical; point geometry **338/341** |
+| `h25kr`'s twin input: `d25_misses.py` on `h25r` | model self-check 170/170 bits, 174/174 P1 clears, 174/174 `is_stm` |
+
+### 5.2 Results, on `smx23`
+
+| APA0 strict unless stated | production `h25base` | **`h25k`** lever 1 | `h25r` `compare_range_cm` 45 | `h25kr` both |
+|---|---|---|---|---|
+| **`is_stm`, strict** | 77/0/28/69 — 1.000 / 0.733 | **90/0/15/69 — 1.000 / 0.857** | 80/0/25/69 — 1.000 / 0.762 | 90/0/15/69 — 1.000 / 0.857 |
+| `is_stm`, majority | 79/1/30/70 — 0.988 / 0.725 | 93/1/16/70 — 0.989 / 0.853 | 82/1/27/70 — 0.988 / 0.752 | 93/1/16/70 — 0.989 / 0.853 |
+| `is_stm`, all four APAs | 96/1/52/107 — 0.990 / 0.649 | 115/1/33/107 — 0.991 / 0.777 | 101/1/47/107 — 0.990 / 0.682 | 115/1/33/107 — 0.991 / 0.777 |
+| all APAs, owner + high-confidence truth (reading B) | 66/1/5/58 — 0.985 / 0.930 | 67/1/4/58 — 0.985 / 0.944 | 67/1/4/58 | 67/1/4/58 |
+| Michel, strict | 51/2/12/39 — 0.810 | **unchanged** | unchanged | unchanged |
+| Bragg-path accept, all hand stoppers | 69/105 = 0.657 | **79/105 = 0.752** | 71/105 = 0.676 | 79/105 = 0.752 |
+| **GOLDEN** (§2) | 33/63 = 0.524 | **37/63 = 0.587 ± 0.062** | 34/63 = 0.540 | 37/63 = 0.587 |
+| per APA (all-APA population) | APA1 0.621, APA2 0.743, APA3 0.778, APA0 0.436 | APA1 0.828, APA2 0.886, APA3 0.844, APA0 0.564 | APA2 0.771, APA3 0.822, APA0 0.487 | as `h25k` |
+
+*PDVD production for comparison: 0.968 / 0.877, golden 0.671.* Lever 1 brings PDHD's APA0-strict
+efficiency to within 0.02 of PDVD's at higher purity; the golden fraction still trails (0.587 vs 0.671),
+because the lever's new accepts are the shape-marginal ones and carry fewer found Michels.
+
+The 15 strict misses left after `h25k` are exactly §3.5's 13 unreadable profiles plus the 2
+`plateau_off_mip` items with strong Michels.
+
+Outside the scored 303-item population, `h25k` also flips 4 candidates: two cap extras that the record
+calls stoppers (`028084_7/124`, `029107_5/98`) and two record-`UNCLEAR` items in APA0 (`029107_18/45`,
+`029107_8/44`). None enters any number above.
+
+### 5.3 The pre-registration, graded
+
+| arm | expectation | outcome |
+|---|---|---|
+| `h25k` | 61/61, rc 0, pin unchanged, pool 341 | **HELD** |
+| `h25k` | the offline twin, item by item: strict +13 by name, majority +14, all +19; 0 new FP, 0 lost | **HELD EXACTLY** on all three populations (`twin_h25k.txt`) — the offline model's per-item prediction is the arm's result |
+| `h25k` | Michel census unchanged | **HELD** |
+| `h25k` | geometry 341/341 and contrast / KS inputs unchanged on every candidate ("both keys only gate bits") | **FAILED on 6 candidates, with no verdict consequence.** Three newly accepted stoppers (`028084_2/49`, `028084_4/29`, `029107_5/32`) gained stop gammas — `stop_gamma_require_stm` keys gamma collection on `is_stm`, so an accept feeds back into the stop's companions (role-5 points 31 → 39). Three already-accepted stoppers (`028084_12/36`, `028084_17/97`, `029107_20/57`) switched their Bragg-anchor geometric-fallback reading, which is decided on whether the anchored profile rejects. The keys do more than gate the final bits; the census is untouched |
+| `h25r` | 61/61, pool 341, geometry 341/341, Michel unchanged | **HELD** |
+| `h25r` | `ks_mu`/`ks_flat` move on ~286 | **HELD** (287) |
+| `h25r` | `no_bragg` unchanged on every candidate (contrast does not read `compare_range_cm`) | **HELD** — 0 movers; `shape_flat` newly set on 13 already-rejected candidates, cleared on 16 |
+| `h25r` | strict +3 by name, 0 FP, 0 lost | **HELD** (strict and majority, `twin_h25r.txt`). On all four APAs it adds two APA0 stoppers (`028084_21/17`, `028084_30/34`), a population that was not pre-registered |
+| `h25kr` | the twin from `h25r`'s payload: the same 13 / 14 / 19 as `h25k`, 0 FP, Michel unchanged; saturation survives the wider window (0 of 55 `shape_flat` THRU pass with it removed) | **HELD EXACTLY** (`twin_h25kr.txt`); census identical to `h25k` in every population |
+
+### 5.4 What the arms say
+
+* **Lever 1 is what the offline model said it is, on every item.** That is the strongest form of
+  prediction this campaign has had: the naive twins of `h21f`, `h21z` and `h22c` all broke (docs
+  pdhd/21–22); this one, built item by item on the arm's own payload, held on all three populations,
+  and again for `h25kr`.
+* **`compare_range_cm` 45 is free on its own and redundant with lever 1.** If lever 1 is taken, adding it
+  changes no verdict on this record (it does move the KS inputs on 287 candidates, which is a reason to
+  leave it out rather than add a key that buys nothing).
+* **Neither arm touches the Michel side.** The golden fraction rises only through the Bragg-path accept.
+* **What the arms cannot say:** whether the 13 are true stoppers. All 13 are agent calls on `smx23`
+  (none owner-labelled), and the thresholds were sized on this very record. That is §6.
+
+## 6. The blind re-judge (`smx25`) — design frozen, scan pending in this commit
+
+**Owner's choice:** agents now, blind. The design, the controls and the outcome rule were written to
+`preregistered.txt` **before any lever arm ran**; only the decision set itself comes from the arms.
+
+* **Decision set — 14 items:** every `is_stm` mover of `h25k`/`h25r`/`h25kr` on the APA0-majority-excluded
+  303 population (the 13 strict recoveries plus the majority-only `028084_29/53`). All 14 read like
+  production's misses (`is_stm` 0, shape bits only). **All 14 are agent calls in `smx23`**; none is
+  owner-labelled.
+* **Two strata**, because a Michel the chain found is visible on the display even with `--blind`:
+  M (production `michel_found` 1) and N (0) — 7 decision items each.
+* **Controls — 12 items, frozen by `d25_controls.py` before the arms:** per stratum, the 4 hand-THRU
+  items nearest the new operating point (fewest bits left with `shape_flat` off and P1 at 5 / 1.5, then
+  the Michel's shortfall to the floor, then contrast/expected nearest 0.60) and 2 hand-stopper misses
+  that no arm moves (seed 25). No arm moved any control, so no replacement was needed.
+  * THRU M: `028084_18/122`, `029107_5/28`, `028084_18/17` (owner THRU), `029107_19/123`
+  * THRU N: `028084_24/114`, `028084_0/108`, `029107_4/118`, `028084_1/28`
+  * stoppers M: `028084_24/49`, `029107_19/120`; N: `028084_8/120`, `028084_23/53`
+* **Scan:** 26 items shuffled (seed 25) into three groups; **two verdict-blind scans per item** by two of
+  six agents over two waves, rubric v5 (sha `750751ea…`, the same text as docs pdhd/19 §8–9), frames shot
+  blind on today's production (`prep-pdhd-h25base`, with the grey context cells). Transcripts audited
+  for forbidden reads (`d25_audit.py`, negative control 8/8 flagged, 0/5 false alarms).
+* **What each set can do**, fixed before the arms: a decision item re-judged not-a-stopper turns an arm
+  TP into an **FP** (the only items that can cost purity); a THRU control re-judged a stopper is
+  TN → FN (efficiency, not purity); a stopper control that moves measures the re-judge itself.
+* **Fold:** `mkowner_record.py --stopper-split` into a new record `smx25` (smx23 is never written):
+  confirmed / adopted / split. **Reading B** (worst case for the lever): a split decision item counts
+  as THRU. **Decision rule:** the lever is *free on the re-judged record* iff 0 new FP on APA0 strict
+  under reading B. Thresholds are never re-selected on this tranche.
 
 ## Files
 
 | what | where |
 |---|---|
 | compiled-config proofs, whole-config diff | `docs/scan/h25/cfg_proofs.txt`, `cfg_wholecfg_diff.txt` |
-| arm TLAs and launcher | `docs/scan/h25/tla_A.txt`, `tla_B.txt`, `run_arm.sh` |
+| arm TLAs and launcher | `docs/scan/h25/tla_A.txt`, `tla_B.txt`, `tla_K.txt`, `tla_R.txt`, `tla_KR.txt`, `run_arm.sh` |
 | pre-registration (written before each launch) | `docs/scan/h25/preregistered.txt` |
-| branch gates | `docs/scan/h25/g_h25base.txt`, `g_h25va.txt`, `g_h25vb.txt` |
-| censuses | `docs/scan/h25/census_h25.txt` (d23_grade + d23_apa) |
-| movers by name | `docs/scan/h25/d25_movers.py`, `movers_h25va.txt`, `movers_h25vb.txt` |
-| §2, the Bragg + Michel fraction | `docs/scan/h25/d25_bragg_michel.py`, `q2_bragg_michel.txt` |
-| §3, misses, separation, noise, offline sweeps | `docs/scan/h25/d25_misses.py`, `q3_misses.txt` |
+| branch gates | `docs/scan/h25/g_h25base.txt`, `g_h25va.txt`, `g_h25vb.txt`, `g_h25k.txt`, `g_h25r.txt`, `g_h25kr.txt` |
+| censuses | `docs/scan/h25/census_h25.txt` (§1), `census_h25k.txt` (§5) (d23_grade + d23_apa) |
+| movers by name | `docs/scan/h25/d25_movers.py`, `movers_h25va.txt`, `movers_h25vb.txt`, `movers_h25k.txt` |
+| §2, the Bragg + Michel fraction | `docs/scan/h25/d25_bragg_michel.py`, `q2_bragg_michel.txt`, `q2_levers.txt` (§5) |
+| §3, misses, separation, noise, offline sweeps | `docs/scan/h25/d25_misses.py`, `q3_misses.txt`, `q3_misses_on_h25r.txt` (`h25kr`'s twin) |
+| §5, item-level twins | `docs/scan/h25/d25_twin_check.py`, `twin_h25k.txt`, `twin_h25r.txt`, `twin_h25kr.txt` |
+| §6, frozen controls | `docs/scan/h25/d25_controls.py`, `controls_frozen.txt` |

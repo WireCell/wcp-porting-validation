@@ -40,3 +40,90 @@ absorb_bragg_stub).  What IS expected, stated so it can fail:
     are 26/28 shape_flat and carry no stop_near_boundary / continuation bit, i.e. none of the
     rejection sites PDVD's extra keys address -- so the prediction is that PDVD's config does NOT
     close the gap (eff strict 0.733 stays below ~0.78).  FALSIFIER: strict eff >= 0.80 on either arm.
+
+== doc pdhd/25 sec 5-6: h25k (lever 1) and h25r (compare_range_cm 45 alone), and the re-judge controls ==
+written 2026-09-12 15:24:41, BEFORE either arm is launched.  Owner request 2026-09-12: run lever 1 as a real arm
+graded as one unit, a compare_range_cm-45-only arm, and a blind re-judge (owner chose: agents now, blind).
+TLAs docs/scan/h25/tla_K.txt, tla_R.txt, tla_KR.txt; compiled-config proofs appended to cfg_proofs.txt:
+production -> K = +topology_michel_ke_min 5, +topology_michel_len_min_cm 1.5, ks_margin -0.02 -> -0.1;
+production -> R = +compare_range_cm 45; K -> KR = +compare_range_cm 45 only; negative control 0/0/0.
+
+h25k -- the twin is d25_misses.py's per-item offline line "ks -0.10 + P1 ke 5 len 1.5" on production's
+payload (q3_misses.txt sec 4), which reproduces production's bits exactly:
+ 1. 61/61 complete, rc=0, pin md5 unchanged.
+ 2. candidate pool 341 unchanged; point geometry 341/341 identical; michel_found, contrast, ks_mu, ks_flat
+    unchanged on every candidate (both keys only gate verdict bits: :3121 and P1, run last).
+ 3. strict 90/0/15/69 = +13 TP by name: 028084_10/46 028084_2/116 028084_2/49 028084_20/116 028084_5/115
+    029107_1/85 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109 029107_3/99 029107_7/85
+    majority 93/1/16/70 (+14), all four APAs 115/1/33/107 (+19); 0 new FP and 0 lost TP everywhere.
+ FALSIFIER: any change in geometry / michel_found / ks inputs, or any item-level deviation from the twin.
+ (Precedent that cuts both ways: h21f predicted +17 and delivered +19.  This twin is per-item on a fixed
+ payload, so a deviation would mean the keys do more than gate bits.)
+
+h25r -- from Arm B's item trace (Arm B bundled kink_asym, so these are sharper than "+3 / 0 FP"):
+ 1. 61/61, rc=0, pin md5 unchanged.
+ 2. the pool stays 341 (Arm B's 340 was kink_asym moving 028084_16/106 out).
+ 3. point geometry 341/341 identical; michel_found unchanged.
+ 4. ks_mu / ks_flat move on ~286 candidates (Arm B: 286).
+ 5. no_bragg unchanged on EVERY candidate: contrast reads the bragg_tail / bragg_plateau windows
+    (:3077-3085), not compare_range_cm.  This is the decisive one -- sec 3.4's 0-FP saturation rests on the
+    shape_flat THRU carrying other bits; if any no_bragg bit moves, sec 6 of d25_misses is re-derived on
+    h25r before KR is pre-registered.  compare_range_cm also feeds n_cmp_live / dead_frac_cmp (:3021) and
+    do_track_comp (:3128); any other reject bit that moves is reported by name.
+ 6. strict +3 TP (028084_20/116, 028084_5/115, 029107_24/33), 0 new FP, 0 lost TP.
+
+h25kr -- pre-registered separately, after h25r finishes and before h25kr launches, from d25_misses.py run
+on h25r's payload (its bit self-check must pass on h25r first).
+
+THE BLIND RE-JUDGE (tag smx25) -- design and controls frozen now, before any arm result:
+ * decision set = every is_stm mover (either direction) in h25k / h25r / h25kr on the APA0-majority-excluded
+   population, taken from the ARMS, including any new FP.
+ * two strata, because a found Michel is visible on the display even with --blind: M = production
+   michel_found 1, N = production michel_found 0.
+ * controls by d25_controls.py (output controls_frozen.txt; gate h23conf majority 79/1/30/70 PASS; offline
+   lever-1 movers 14 on majority, 13 strict == the twin above):
+     THRU nearest the cut (4 per stratum), ranked by bits left with shape_flat off and P1 at 5/1.5, then the
+     P1-eligible Michel's shortfall to 5 MeV / 1.5 cm, then |contrast/expected - 0.60|:
+       M: 028084_18/122 029107_5/28 028084_18/17 029107_19/123
+       N: 028084_24/114 028084_0/108 029107_4/118 028084_1/28
+     stopper controls (2 per stratum, seed-25 order over unmoved read-alike hand-stopper misses):
+       M: 028084_24/49 029107_19/120
+       N: 028084_8/120 028084_23/53
+   If an arm moves a control, it joins the decision set and the next item of its frozen list replaces it.
+   (A first freeze excluded only the strict twin and let the majority-only lever-1 mover 028084_29/53 into
+   STOP_N's order; corrected before any launch.  Its first two stopper picks were then 029107_23/116,
+   028084_27/107.)
+ * direction of each set, fixed now: a DECISION item re-judged not-a-stopper turns an arm TP into an FP --
+   the only items that can cost purity; a THRU CONTROL re-judged a stopper is TN -> FN (efficiency, not
+   purity); a STOPPER CONTROL that moves measures the re-judge itself.
+ * fold: two blind scans per item by two of six agents (rubric v5, sha 750751ea...), mkowner_record.py
+   --stopper-split into a NEW record smx25 (smx23 is never written): confirmed / adopted / split.
+   Owner-labelled items keep precedence; the agents' agreement with them is reported as calibration.
+ * reading A = the record rule (a split keeps the base record).  Reading B = worst case for the lever:
+   a split DECISION item counts as THRU (an FP); a split THRU control stays THRU.
+ * decision rule: lever 1 is "free on the re-judged record" iff 0 new FP on APA0 strict under reading B.
+   Thresholds are never re-selected on this tranche.
+
+== h25kr (lever 1 + compare_range_cm 45, graded as ONE unit) ==
+written 2026-09-12 15:36:57, AFTER h25k and h25r finished and BEFORE h25kr is launched.  TLA tla_KR.txt
+(compiled-config proof: production -> KR = 3 added + ks_margin changed; K -> KR = compare_range_cm only).
+What h25k and h25r already showed, stated so the KR prediction is read against it:
+  * h25k's twin HELD item by item (strict 13/13, majority 14/14, all 19/19), 0 FP, 0 lost, Michel unchanged.
+    Its "nothing but verdict bits moves" falsifier FAILED on 6 candidates, with no verdict consequence:
+    3 newly accepted stoppers (028084_2/49, 028084_4/29, 029107_5/32) gained stop gammas because
+    stop_gamma_require_stm keys on is_stm; 3 already-accepted ones (028084_12/36, 028084_17/97, 029107_20/57)
+    changed their bragg_anchor_fallback reading.
+  * h25r: the named +3 held (strict and majority), pool 341, point geometry 341/341, Michel unchanged,
+    no_bragg movers 0, ks inputs moved on 287.
+The twin = d25_misses.py run on h25r's payload (q3_misses_on_h25r.txt; self-check 170/170 bits, 174/174 P1,
+174/174 is_stm), line "ks -0.10 + P1 ke 5 len 1.5":
+ 1. 61/61, rc 0, pin md5 unchanged; pool 341.
+ 2. strict 90/0/15/69: h25r's 80 + 10 named (028084_10/46 028084_2/116 028084_2/49 029107_1/85 029107_12/118
+    029107_12/95 029107_21/65 029107_28/109 029107_3/99 029107_7/85), i.e. the SAME 13 items as h25k over
+    production; majority 93/1/16/70; all four APAs 115/1/33/107; 0 new FP, 0 lost TP everywhere.
+ 3. saturation survives the wider window: on h25r's payload 0 of 55 shape_flat THRU (strict) would pass with
+    shape_flat removed (sec 6), so no FP is expected from the KS move either.
+ 4. Michel census unchanged (51/2/12/39 strict).
+ 5. Expected, NOT a falsifier: non-verdict branches move on newly accepted candidates through stop gammas and
+    on anchor-fallback candidates, as h25k showed.
+ FALSIFIER: any census or item-level deviation from 2, or any Michel change.

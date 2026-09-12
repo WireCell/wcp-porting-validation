@@ -1,0 +1,36 @@
+twin thresholds {'ks_margin': -0.1, 'contrast_min': 0.6, 'p1': True, 'ke_min': 5.0, 'len_min': 1.5, 'sparse': False, 'mip': 56000.0}
+
+==== 1. the twin, item by item (scored population, truth = the record in use) ====
+  --- strict: predicted gains 13, arm gains 13; predicted losses 0, arm losses 0
+      predicted and happened      13
+      predicted, did NOT happen   -
+      happened, NOT predicted     -
+      lost: predicted - | arm -
+      TWIN HELD on strict
+  --- majority: predicted gains 14, arm gains 14; predicted losses 0, arm losses 0
+      predicted and happened      14
+      predicted, did NOT happen   -
+      happened, NOT predicted     -
+      lost: predicted - | arm -
+      TWIN HELD on majority
+  --- all: predicted gains 19, arm gains 19; predicted losses 0, arm losses 0
+      predicted and happened      19
+      predicted, did NOT happen   -
+      happened, NOT predicted     -
+      lost: predicted - | arm -
+      TWIN HELD on all
+
+==== 2. candidates whose NON-verdict branches moved (every candidate, scored or not) ====
+  candidates 341 -> 341; only in base []; only in arm []
+  028084_12/36    is_stm 1->1  moved: bragg_anchor_fallback chain_support_min comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 contrast contrast_expected dead_frac_cmp ks_flat ks_mu n_cmp_live n_plateau plateau_med ratio_flat ratio_mu tail_med unsupported_frac_min
+  028084_17/97    is_stm 1->1  moved: bragg_anchor_fallback chain_support_min comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 contrast contrast_expected dead_frac_cmp ks_flat ks_mu n_cmp_live n_plateau n_tail plateau_med ratio_flat ratio_mu tail_med
+  028084_2/49     is_stm 0->1  moved: comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 ks_flat ks_mu n_cmp_live n_stop_gammas n_stop_gammas_withheld ratio_flat ratio_mu stop_gamma_charge stop_gamma_dis_max stop_gamma_dis_min stop_gamma_ke_max stop_gamma_ke_tot stop_gamma_seg_id
+  028084_4/29     is_stm 0->1  moved: comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 ks_flat ks_mu n_cmp_live n_stop_gammas n_stop_gammas_withheld ratio_flat ratio_mu stop_gamma_charge stop_gamma_dis_max stop_gamma_dis_min stop_gamma_ke_max stop_gamma_ke_tot stop_gamma_seg_id
+  029107_20/57    is_stm 1->1  moved: bragg_anchor_fallback chain_support_min comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 contrast contrast_expected ks_flat ks_mu n_cmp_live n_plateau plateau_med ratio_flat ratio_mu tail_med
+  029107_5/32     is_stm 0->1  moved: comp_bwd1 comp_bwd2 comp_bwd3 comp_fwd1 comp_fwd2 comp_fwd3 dead_frac_cmp ks_flat ks_mu n_cmp_live n_stop_gammas n_stop_gammas_withheld ratio_flat ratio_mu stop_gamma_charge stop_gamma_dis_max stop_gamma_dis_min stop_gamma_ke_max stop_gamma_ke_tot stop_gamma_seg_id
+  branch move counts: comp_bwd1 289, comp_bwd2 289, comp_bwd3 289, comp_fwd1 287, comp_fwd2 287, comp_fwd3 287, ks_flat 287, ks_mu 287, n_cmp_live 287, ratio_flat 287, ratio_mu 287, dead_frac_cmp 145, comp_fwd0 27, comp_bwd0 16, bragg_anchor_fallback 3, chain_support_min 3, contrast 3, contrast_expected 3, n_plateau 3, plateau_med 3, tail_med 3, n_stop_gammas 3, n_stop_gammas_withheld 3, stop_gamma_charge 3, stop_gamma_dis_max 3, stop_gamma_dis_min 3, stop_gamma_ke_max 3, stop_gamma_ke_tot 3, stop_gamma_seg_id 3, unsupported_frac_min 1, n_tail 1
+
+==== 3. pre-P1 reject bits, per candidate, before -> after ====
+  bits newly SET:     {'shape_flat': 1}
+  bits newly CLEARED: {'shape_flat': 164}
+  no_bragg movers (0): -

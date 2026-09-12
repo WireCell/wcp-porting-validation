@@ -1,0 +1,75 @@
+==============================================================================
+h25base -> h25kr
+  matched candidates      : 341  (before 341, after 341)
+  branches shared / new / dropped : 149 / 0 / 0
+  candidates BIT-IDENTICAL on all 149 shared branches : 29 / 341
+  branches that moved, and on how many candidates:
+      comp_bwd1                    289
+      comp_bwd2                    289
+      comp_bwd3                    289
+      comp_fwd1                    287
+      comp_fwd2                    287
+      comp_fwd3                    287
+      ks_flat                      287
+      ks_mu                        287
+      n_cmp_live                   287
+      ratio_flat                   287
+      ratio_mu                     287
+      dead_frac_cmp                145
+      reject_bits                  144
+      topology_cleared_bits         33
+      comp_fwd0                     27
+      is_stm                        23
+      comp_bwd0                     16
+      bragg_anchor_fallback          3
+      chain_support_min              3
+      contrast                       3
+      contrast_expected              3
+      n_plateau                      3
+      n_stop_gammas                  3
+      n_stop_gammas_withheld         3
+      plateau_med                    3
+      stop_gamma_charge              3
+      stop_gamma_dis_max             3
+      stop_gamma_dis_min             3
+      stop_gamma_ke_max              3
+      stop_gamma_ke_tot              3
+      stop_gamma_seg_id              3
+      tail_med                       3
+      n_tail                         1
+      unsupported_frac_min           1
+  movers with n_stop_gammas > 0 : 11 of 312  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 23
+      028084_10      cl   46  is_stm 0 -> 1  contrast 1.8921 -> 1.8921  muon_len 162.177 -> 162.177
+      028084_2       cl   49  is_stm 0 -> 1  contrast 0.8017 -> 0.8017  muon_len 152.818 -> 152.818
+      028084_2       cl  116  is_stm 0 -> 1  contrast 0.7830 -> 0.7830  muon_len 153.408 -> 153.408
+      028084_20      cl   65  is_stm 0 -> 1  contrast 0.8694 -> 0.8694  muon_len 61.339 -> 61.339
+      028084_20      cl  116  is_stm 0 -> 1  contrast 1.2744 -> 1.2744  muon_len 193.428 -> 193.428
+      028084_21      cl   17  is_stm 0 -> 1  contrast 1.7631 -> 1.7631  muon_len 59.815 -> 59.815
+      028084_29      cl   53  is_stm 0 -> 1  contrast 1.3642 -> 1.3642  muon_len 322.718 -> 322.718
+      028084_30      cl   34  is_stm 0 -> 1  contrast 1.2747 -> 1.2747  muon_len 162.438 -> 162.438
+      028084_4       cl   29  is_stm 0 -> 1  contrast 1.5492 -> 1.5492  muon_len 51.676 -> 51.676
+      028084_5       cl  115  is_stm 0 -> 1  contrast 1.2440 -> 1.2440  muon_len 42.775 -> 42.775
+      028084_7       cl  124  is_stm 0 -> 1  contrast 1.0956 -> 1.0956  muon_len 474.679 -> 474.679
+      029107_1       cl   85  is_stm 0 -> 1  contrast 0.7738 -> 0.7738  muon_len 136.275 -> 136.275
+      029107_12      cl   95  is_stm 0 -> 1  contrast 1.5250 -> 1.5250  muon_len 158.458 -> 158.458
+      029107_12      cl  118  is_stm 0 -> 1  contrast 1.3220 -> 1.3220  muon_len 61.137 -> 61.137
+      029107_18      cl   45  is_stm 0 -> 1  contrast 0.5922 -> 0.5922  muon_len 534.900 -> 534.900
+      029107_21      cl   65  is_stm 0 -> 1  contrast 1.4281 -> 1.4281  muon_len 294.000 -> 294.000
+      029107_24      cl   33  is_stm 0 -> 1  contrast 1.1981 -> 1.1981  muon_len 146.674 -> 146.674
+      029107_28      cl  109  is_stm 0 -> 1  contrast 1.2700 -> 1.2700  muon_len 595.935 -> 595.935
+      029107_3       cl   99  is_stm 0 -> 1  contrast 0.9223 -> 0.9223  muon_len 112.202 -> 112.202
+      029107_5       cl   32  is_stm 0 -> 1  contrast 1.2372 -> 1.2372  muon_len 195.402 -> 195.402
+      029107_5       cl   98  is_stm 0 -> 1  contrast 1.2631 -> 1.2631  muon_len 473.110 -> 473.110
+      029107_7       cl   85  is_stm 0 -> 1  contrast 0.6616 -> 0.6616  muon_len 199.190 -> 199.190
+      029107_8       cl   44  is_stm 0 -> 1  contrast 1.2740 -> 1.2740  muon_len 436.168 -> 436.168
+==============================================================================
+h25base -> h25kr  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 338 / 341
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 3
+  role histogram before : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 31}
+  role histogram after  : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 39}

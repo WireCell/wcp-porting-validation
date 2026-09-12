@@ -1,0 +1,68 @@
+GATE h23conf APA0-majority is_stm (79, 1, 30, 70) == (79, 1, 30, 70) PASS
+offline lever-1 movers, majority population: 14 (13 strict == TWIN_K)
+
+== stratum M (production michel_found 1): THRU nearest the cut, ranked ==
+  read-alike THRU 9
+  * 028084_18/122   bits_left 1 p1_short 0.00 |c/e-0.6| 0.08  reject plateau_off_mip          truth-src agent        strict        mf 1 ke 80.3 len 5.2 c/e 0.68 ks_gap -0.052
+  * 029107_5/28     bits_left 1 p1_short 0.00 |c/e-0.6| 0.76  reject plateau_off_mip          truth-src agent        strict        mf 1 ke 14.2 len 15.1 c/e 1.36 ks_gap -0.046
+  * 028084_18/17    bits_left 1 p1_short 0.00 |c/e-0.6| 9.00  reject profile_sparse           truth-src owner_review strict        mf 1 ke 5.5 len 5.9 c/e nan ks_gap +0.086
+  * 029107_19/123   bits_left 1 p1_short 0.00 |c/e-0.6| 9.00  reject profile_sparse           truth-src agent        strict        mf 1 ke 14.6 len 7.3 c/e nan ks_gap +0.026
+    029107_7/45     bits_left 1 p1_short 0.00 |c/e-0.6| 9.00  reject profile_sparse           truth-src agent        strict        mf 1 ke 10.5 len 7.5 c/e nan ks_gap -0.075
+    028084_15/50    bits_left 1 p1_short 0.42 |c/e-0.6| 0.22  reject no_bragg+shape_flat      truth-src agent        strict        mf 1 ke 2.9 len 2.6 c/e 0.38 ks_gap -0.078
+    028084_15/102   bits_left 1 p1_short 0.52 |c/e-0.6| 0.20  reject no_bragg+shape_flat      truth-src owner_review strict        mf 1 ke 2.4 len 2.4 c/e 0.40 ks_gap -0.075
+    028084_22/103   bits_left 1 p1_short 0.68 |c/e-0.6| 0.33  reject no_bragg+shape_flat      truth-src agent        strict        mf 1 ke 1.6 len 2.1 c/e 0.27 ks_gap -0.088
+    029107_25/93    bits_left 1 p1_short 0.70 |c/e-0.6| 0.43  reject no_bragg+shape_flat      truth-src agent        strict        mf 1 ke 1.5 len 1.8 c/e 0.17 ks_gap -0.104
+
+== stratum M: stopper controls, seed-25 order (first 2 taken; a moved one is replaced by the next) ==
+  * 028084_24/49    bits_left 1 p1_short 0.00 |c/e-0.6| 1.16  reject plateau_off_mip          truth-src agent        strict        mf 1 ke 41.5 len 15.2 c/e 1.76 ks_gap +0.068
+  * 029107_19/120   bits_left 1 p1_short 0.75 |c/e-0.6| 0.09  reject no_bragg+shape_flat      truth-src agent        strict        mf 1 ke 18.3 len 0.4 c/e 0.51 ks_gap -0.094
+    028084_28/110   bits_left 1 p1_short 0.00 |c/e-0.6| 1.23  reject plateau_off_mip          truth-src agent        strict        mf 1 ke 44.4 len 18.6 c/e 1.83 ks_gap +0.066
+
+== stratum N (production michel_found 0): THRU nearest the cut, ranked ==
+  read-alike THRU 25
+  * 028084_24/114   bits_left 1 p1_short 2.00 |c/e-0.6| 0.03  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.57 ks_gap -0.059
+  * 028084_0/108    bits_left 1 p1_short 2.00 |c/e-0.6| 0.03  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.57 ks_gap -0.082
+  * 029107_4/118    bits_left 1 p1_short 2.00 |c/e-0.6| 0.09  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.51 ks_gap -0.054
+  * 028084_1/28     bits_left 1 p1_short 2.00 |c/e-0.6| 0.10  reject shape_flat+plateau_off_mip truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.70 ks_gap -0.026
+    029107_23/108   bits_left 1 p1_short 2.00 |c/e-0.6| 0.14  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.46 ks_gap -0.088
+    029107_21/64    bits_left 1 p1_short 2.00 |c/e-0.6| 0.14  reject no_bragg+shape_flat      truth-src owner_review strict        mf 0 ke 0.0 len 0.0 c/e 0.46 ks_gap -0.066
+    029107_21/109   bits_left 1 p1_short 2.00 |c/e-0.6| 0.14  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.46 ks_gap -0.089
+    029107_16/118   bits_left 1 p1_short 2.00 |c/e-0.6| 0.16  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.44 ks_gap -0.088
+    029107_3/86     bits_left 1 p1_short 2.00 |c/e-0.6| 0.18  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.42 ks_gap -0.104
+    028084_29/101   bits_left 1 p1_short 2.00 |c/e-0.6| 0.19  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.41 ks_gap -0.078
+    028084_27/46    bits_left 1 p1_short 2.00 |c/e-0.6| 0.20  reject no_bragg                 truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.40 ks_gap -0.016
+    029107_16/79    bits_left 1 p1_short 2.00 |c/e-0.6| 0.21  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.39 ks_gap -0.069
+    028084_16/106   bits_left 1 p1_short 2.00 |c/e-0.6| 0.22  reject no_bragg+shape_flat      truth-src owner_review strict        mf 0 ke 0.0 len 0.0 c/e 0.38 ks_gap -0.105
+    029107_1/82     bits_left 1 p1_short 2.00 |c/e-0.6| 0.36  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.24 ks_gap -0.093
+    028084_6/109    bits_left 1 p1_short 2.00 |c/e-0.6| 0.49  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.11 ks_gap -0.095
+    029107_2/39     bits_left 1 p1_short 2.00 |c/e-0.6| 0.53  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.07 ks_gap -0.100
+    028084_3/91     bits_left 1 p1_short 2.00 |c/e-0.6| 1.22  reject plateau_off_mip          truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 1.82 ks_gap +0.099
+    029107_18/54    bits_left 1 p1_short 2.00 |c/e-0.6| 9.00  reject shape_flat+profile_sparse truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e nan ks_gap -0.039
+    029107_21/51    bits_left 1 p1_short 2.00 |c/e-0.6| 9.00  reject shape_flat+profile_sparse truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e nan ks_gap -0.125
+    029107_26/50    bits_left 1 p1_short 2.00 |c/e-0.6| 9.00  reject shape_flat+profile_sparse truth-src agent        strict        mf 0 ke 1.8 len 0.1 c/e nan ks_gap -0.034
+    029107_15/57    bits_left 2 p1_short 2.00 |c/e-0.6| 0.04  reject no_bragg+shape_flat+plateau_off_mip truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.56 ks_gap -0.058
+    028084_17/38    bits_left 2 p1_short 2.00 |c/e-0.6| 0.09  reject no_bragg+shape_flat+plateau_off_mip truth-src agent        strict        mf 0 ke 1.5 len 0.5 c/e 0.51 ks_gap -0.170
+    029107_8/136    bits_left 2 p1_short 2.00 |c/e-0.6| 0.17  reject no_bragg+shape_flat+plateau_off_mip truth-src agent        majority-only mf 0 ke 0.0 len 0.0 c/e 0.43 ks_gap -0.028
+    028084_6/91     bits_left 2 p1_short 2.00 |c/e-0.6| 0.21  reject no_bragg+shape_flat+plateau_off_mip truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.39 ks_gap -0.094
+    029107_5/39     bits_left 2 p1_short 2.00 |c/e-0.6| 0.36  reject no_bragg+shape_flat+plateau_off_mip truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.24 ks_gap -0.089
+
+== stratum N: stopper controls, seed-25 order (first 2 taken; a moved one is replaced by the next) ==
+  * 028084_8/120    bits_left 1 p1_short 2.00 |c/e-0.6| 9.00  reject shape_flat+profile_sparse truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e nan ks_gap -0.037
+  * 028084_23/53    bits_left 1 p1_short 2.00 |c/e-0.6| 0.31  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.29 ks_gap -0.095
+    029107_7/34     bits_left 1 p1_short 2.00 |c/e-0.6| 0.33  reject no_bragg+shape_flat      truth-src agent        majority-only mf 0 ke 0.0 len 0.0 c/e 0.27 ks_gap -0.098
+    029107_29/119   bits_left 1 p1_short 2.00 |c/e-0.6| 0.29  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.31 ks_gap -0.065
+    028084_28/106   bits_left 1 p1_short 2.00 |c/e-0.6| 0.30  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.30 ks_gap -0.095
+    029107_23/116   bits_left 1 p1_short 2.00 |c/e-0.6| 0.24  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.36 ks_gap -0.084
+    028084_27/107   bits_left 1 p1_short 2.00 |c/e-0.6| 0.23  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.37 ks_gap -0.086
+    028084_11/130   bits_left 1 p1_short 2.00 |c/e-0.6| 0.27  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.33 ks_gap -0.100
+    028084_14/83    bits_left 1 p1_short 2.00 |c/e-0.6| 0.33  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.27 ks_gap -0.092
+    029107_14/89    bits_left 1 p1_short 2.00 |c/e-0.6| 0.08  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.52 ks_gap -0.088
+    028084_22/57    bits_left 1 p1_short 2.00 |c/e-0.6| 0.40  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.20 ks_gap -0.090
+    029107_8/104    bits_left 1 p1_short 2.00 |c/e-0.6| 0.43  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 0.0 len 0.0 c/e 0.17 ks_gap -0.093
+    028084_29/115   bits_left 1 p1_short 2.00 |c/e-0.6| 0.28  reject no_bragg+shape_flat      truth-src agent        strict        mf 0 ke 1.8 len 0.2 c/e 0.32 ks_gap -0.098
+
+FROZEN LISTS (in order; the first 4 THRU and first 2 stoppers per stratum are the controls):
+  THRU_M  028084_18/122 029107_5/28 028084_18/17 029107_19/123 029107_7/45 028084_15/50 028084_15/102 028084_22/103 029107_25/93
+  STOP_M  028084_24/49 029107_19/120 028084_28/110
+  THRU_N  028084_24/114 028084_0/108 029107_4/118 028084_1/28 029107_23/108 029107_21/64 029107_21/109 029107_16/118 029107_3/86 028084_29/101 028084_27/46 029107_16/79 028084_16/106 029107_1/82 028084_6/109 029107_2/39 028084_3/91 029107_18/54 029107_21/51 029107_26/50 029107_15/57 028084_17/38 029107_8/136 028084_6/91 029107_5/39
+  STOP_N  028084_8/120 028084_23/53 029107_7/34 029107_29/119 028084_28/106 029107_23/116 028084_27/107 028084_11/130 028084_14/83 029107_14/89 028084_22/57 029107_8/104 028084_29/115

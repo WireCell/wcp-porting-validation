@@ -189,11 +189,16 @@ def main():
     Php, Pvd = prod_params("pdhd"), prod_params("pdvd")
     hd = {pop: Q.items("pdhd", a.pdhd, pop)[0] for pop in ("strict", "majority", "all")}
     vd = Q.items("pdvd", a.pdvd, "all")[0]
-    # the arms must be the committed production censuses (same gate as d25_bragg_michel)
+    # the arms must be the committed production censuses (same gate as d25_bragg_michel).
+    # doc pdhd/25 sec 5: a NON-production PDHD arm (h25r, the base of h25kr's twin) moves the census by
+    # construction, so its census gate is skipped and said so; the bit self-check below still gates it.
     for lab, its, want in (("pdhd strict", hd["strict"], (77, 0, 28, 69)),
                            ("pdhd majority", hd["majority"], (79, 1, 30, 70)),
                            ("pdvd", vd, (242, 8, 34, 262))):
         got = Q.census(its)[0]
+        if lab.startswith("pdhd") and a.pdhd not in ("h23conf", "h25base"):
+            print(f"GATE {lab}: {got} -- arm {a.pdhd} is not production; census gate SKIPPED, the model self-check gates it")
+            continue
         print(f"GATE {lab}: {got} want {want} -> {'PASS' if got == want else 'FAIL'}")
         if got != want: sys.exit("gate failed")
     self_check("pdhd strict", hd["strict"], Php)
