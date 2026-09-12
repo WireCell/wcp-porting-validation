@@ -488,6 +488,61 @@ function(
         // C++ default false, so omitting the key is byte-identical.
         michel_unfit_from_model: true,
         michel_unfit_dedx: 2.1,
+        // doc pdvd/95 (doc 78 action item 9) -- PDVD PRODUCTION.  The Michel's energy as
+        // CHARGE IN A REGION AROUND THE STOP, which is the owner's standing intent: the
+        // energy must not depend on the Michel's own trajectory or segmentation, and the fit
+        // enters only to predict, and subtract, the MUON's charge.  Doc pdvd/81 built that
+        // subtraction but selected the Michel's cells by association to a Michel SEGMENT, so
+        // charge PR never gave a Michel segment -- a dropped residual, blob points partitioned
+        // to the muon's last segment, or a Michel with no segment at all -- was outside the
+        // sum.  With michel_q2d_region_cm > 0 every cell within that 2-D radius of the stop
+        // contributes (measured - muon prediction) WHATEVER role, if any, claimed it.
+        //
+        // Graded on the smx1a..smx9 record (596 candidates, d95_region.py), median MeV at
+        // R = 10, by the record's own verdict:
+        //     owner says Michel, chain found it   34.6   (body control 3.1)
+        //     owner says Michel, chain found none  8.6   -- michel_ke_best reads 0.00 here
+        //     owner says stopper, NO Michel        4.9   <- the phantom, and the real cost
+        //     through-going                        5.2
+        // So 7.1 : 1 against the class that must read zero, where today's headline
+        // michel_ke_best reads 23.23 on found Michels and exactly 0.00 on all three others.
+        // Ordering region (34.6) > association (29.98) > fit (23.23) is the intended effect:
+        // each step collects charge the previous one's trajectory missed, consistent with
+        // doc 86 sec 10's under-count on about a third of the found population.
+        //
+        // THE RADIUS IS POST-HOC AND SAYS SO.  doc 95's pre-registration asked for the
+        // smallest R where the found-Michel curve plateaus AND the zero-control is still ~0;
+        // (a) first holds at 15 cm, (b) holds at NO radius, and the registration's own conflict
+        // clause says to report that rather than split the difference.  10 cm is chosen after
+        // the fact because the signal-to-phantom ratio peaks there (7.1, decaying to 4.7 by
+        // 20 cm) and because the owner's constraint is that the Michel sits near the stop.
+        //
+        // KNOWN COST, not designed away: a ~2 MeV phantom is irreducible at any radius at a
+        // real Bragg peak, and its TAIL reaches 48 MeV on 18 % of STM_ONLY items.  That tail
+        // is why doc 95 sec 6 could NOT build the owner's point 4 (admitting a Michel from the
+        // energy): best added-set purity 0.25 against a pre-registered bar of 0.8.
+        // michel_q2d_region_ctl_cm puts the SAME radius on a second centre 35 cm back up the
+        // fit, where no Michel can be -- it is the per-item reliability flag, and it is what
+        // distinguished "the estimator is inflating on this cluster" from "the hand scan
+        // under-called a Michel" (it fires on 13 % of found Michels and 35 % of through-going
+        // ones).  A consumer cannot recover it after the fact, so it ships.
+        //
+        // ADDITIVE BY CONSTRUCTION: michel_ke_best, michel_ke_total, michel_found, is_stm and
+        // every reject bit are never written by this block.  Gate p95vq2db vs p95voffb:
+        // 596/596 candidates bit-identical on every pre-existing branch AND point row, 0 is_stm
+        // flips, 0 michel_found flips, 0 zips differing; T_stm_michel 149 -> 198, exactly the
+        // 49 pre-registered new branches.  michel_q2d_valid == 1 on 596/596.
+        // michel_q2d_cells writes the per-cell table (T_stm_michel_2d) -- the owner's second
+        // deliverable in doc 81 and their explicit choice for production, at doc 81 sec 9.4's
+        // measured +22 % on tracking-pr.root.  It carries d_stop_cm / d_ctl_cm / own_blob, so
+        // any other radius or scope is recomputable offline without re-running.
+        // C++ defaults: false / false / 0.0 / -1.0.  PDHD stays OFF -- doc 81 sec 8a measured
+        // 45 % of its Michels leaning on the cross-shared fitted substitution against 22 % on
+        // PDVD, and PDHD has no owner hand-scan of this chain.
+        michel_q2d: true,
+        michel_q2d_cells: true,
+        michel_q2d_region_cm: 10.0,
+        michel_q2d_region_ctl_cm: 35.0,
         // doc pdvd/57/58: retreat the STM stop off the fit's far end when the
         // trailing tail is charge-collapsed and a Bragg rise survives before
         // it.  Confirmed on the 569-item smx1a scan record: +2 is_stm TP / 0
