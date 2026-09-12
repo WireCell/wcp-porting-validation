@@ -1,0 +1,31 @@
+doc pdhd/22 -- h22base, THE GATE: the flipped production file on the NEW binary
+generated 2026-09-12 05:28:08
+pin /home/xqian/tmp/p65/libpin_p65  toolkit d65f8165  libWireCellClus md5 3e23bf8a
+compare arm h21p = the SAME config on libpin_p82 (toolkit 082376c5, md5 5f2c3ede)
+
+instrument validated: p82bhoff reproduces the committed census 61/0/86/110
+
+  p82bhoff   TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+  h22base    TP  80 FP   0 FN  67 TN 110 | purity 1.000 efficiency 0.544
+             gained TP (19): 028084_10/108 028084_10/109 028084_12/101 028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_23/114 028084_28/131 028084_30/37 029107_11/18 029107_19/30 029107_2/108 029107_20/139 029107_20/57 029107_23/128 029107_27/99 029107_4/69 029107_6/122
+             NEW FP   (0): none
+             michel_found moved on 0 item(s) (predicted: none)
+
+--- michel side ---
+an owner_review stopper with no kind is EXCLUDED, never scored 'no Michel'.
+
+  p82bhoff   TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h22base    TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+
+== branch census h21p -> h22base (same config, different binary) ==
+  matched candidates      : 341  (before 341, after 341)
+  candidates BIT-IDENTICAL on all 131 shared branches : 341 / 341
+  is_stm FLIPS : 0
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+
+== VERDICT ==
+PRE-REGISTERED PREDICTION: identical to h21p in every scored respect.  HELD EXACTLY.
+The peer's seven commits between 082376c5 and d65f8165 are INERT-WHEN-OFF for the
+PDHD config.  Commit 51a25063 therefore describes what production actually does --
+a claim nothing in round h21 had tested, because every h21 arm ran the old pin.

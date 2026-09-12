@@ -1,0 +1,69 @@
+==============================================================================
+h22g -> h22p2
+  matched candidates      : 341  (before 341, after 341)
+  branches shared / new / dropped : 146 / 1 / 0
+  NEW branches   : topology_cleared_bits
+  candidates BIT-IDENTICAL on all 146 shared branches : 313 / 341
+  branches that moved, and on how many candidates:
+      reject_bits                   28
+      is_stm                        19
+  movers with n_stop_gammas > 0 : 0 of 28  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 19
+      028084_12      cl   46  is_stm 0 -> 1  contrast 1.0411 -> 1.0411  muon_len 184.536 -> 184.536
+      028084_12      cl  117  is_stm 0 -> 1  contrast 1.2919 -> 1.2919  muon_len 93.501 -> 93.501
+      028084_27      cl   27  is_stm 0 -> 1  contrast 1.3235 -> 1.3235  muon_len 272.181 -> 272.181
+      028084_3       cl   72  is_stm 0 -> 1  contrast 0.5118 -> 0.5118  muon_len 230.532 -> 230.532
+      028084_30      cl   26  is_stm 0 -> 1  contrast 1.1830 -> 1.1830  muon_len 146.896 -> 146.896
+      028084_6       cl   42  is_stm 0 -> 1  contrast 0.9289 -> 0.9289  muon_len 245.616 -> 245.616
+      028084_6       cl   97  is_stm 0 -> 1  contrast 0.7997 -> 0.7997  muon_len 243.031 -> 243.031
+      028084_8       cl  110  is_stm 0 -> 1  contrast 1.5526 -> 1.5526  muon_len 67.350 -> 67.350
+      029107_18      cl   24  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 45.214 -> 45.214
+      029107_19      cl  123  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 220.384 -> 220.384
+      029107_20      cl  108  is_stm 0 -> 1  contrast 1.2565 -> 1.2565  muon_len 109.641 -> 109.641
+      029107_22      cl   40  is_stm 0 -> 1  contrast 1.1160 -> 1.1160  muon_len 189.485 -> 189.485
+      029107_24      cl   19  is_stm 0 -> 1  contrast 1.0864 -> 1.0864  muon_len 82.782 -> 82.782
+      029107_27      cl   64  is_stm 0 -> 1  contrast 1.3216 -> 1.3216  muon_len 39.958 -> 39.958
+      029107_3       cl   23  is_stm 0 -> 1  contrast 0.6526 -> 0.6526  muon_len 117.190 -> 117.190
+      029107_4       cl   24  is_stm 0 -> 1  contrast 0.2103 -> 0.2103  muon_len 146.856 -> 146.856
+      029107_6       cl   97  is_stm 0 -> 1  contrast 0.7399 -> 0.7399  muon_len 309.615 -> 309.615
+      029107_7       cl   45  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 59.311 -> 59.311
+      029107_9       cl  109  is_stm 0 -> 1  contrast 0.6701 -> 0.6701  muon_len 242.169 -> 242.169
+  every mover, on the verdict-relevant branches:
+      028084_0       cl   43  reject_bits 584->64
+      028084_1       cl   39  reject_bits 1036->1024
+      028084_12      cl   46  is_stm 0->1; reject_bits 12->0
+      028084_12      cl  117  is_stm 0->1; reject_bits 8->0
+      028084_17      cl   35  reject_bits 76->64
+      028084_18      cl  122  reject_bits 1032->1024
+      028084_27      cl   27  is_stm 0->1; reject_bits 8->0
+      028084_3       cl   72  is_stm 0->1; reject_bits 12->0
+      028084_30      cl   26  is_stm 0->1; reject_bits 12->0
+      028084_6       cl   42  is_stm 0->1; reject_bits 4->0
+      028084_6       cl   97  is_stm 0->1; reject_bits 12->0
+      028084_8       cl  110  is_stm 0->1; reject_bits 8->0
+      029107_1       cl   32  reject_bits 1032->1024
+      029107_10      cl   80  reject_bits 1036->1024
+      029107_17      cl   33  reject_bits 522->2
+      029107_18      cl   24  is_stm 0->1; reject_bits 512->0
+      029107_19      cl  123  is_stm 0->1; reject_bits 512->0
+      029107_20      cl  108  is_stm 0->1; reject_bits 12->0
+      029107_22      cl   40  is_stm 0->1; reject_bits 12->0
+      029107_24      cl   19  is_stm 0->1; reject_bits 12->0
+      029107_26      cl  114  reject_bits 1036->1024
+      029107_27      cl   64  is_stm 0->1; reject_bits 8->0
+      029107_3       cl   23  is_stm 0->1; reject_bits 12->0
+      029107_4       cl   24  is_stm 0->1; reject_bits 12->0
+      029107_5       cl   28  reject_bits 1032->1024
+      029107_6       cl   97  is_stm 0->1; reject_bits 12->0
+      029107_7       cl   45  is_stm 0->1; reject_bits 520->0
+      029107_9       cl  109  is_stm 0->1; reject_bits 12->0
+==============================================================================
+h22g -> h22p2  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 0
+  role histogram before : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 31}
+  role histogram after  : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 31}

@@ -1,0 +1,32 @@
+doc pdhd/22 -- h22conf, THE CONFIRMATION ARM: the FLIPPED FILE, no TLA
+generated 2026-09-12 06:04:08; pin libpin_p65 md5 3e23bf8a; complete 61, incomplete 0, rc=0
+driver echoed tla=<none> -- this arm runs the FILE, not a TLA.
+
+             NEW FP   (1): 029107_10/44
+             michel_found moved on 34 item(s): 028084_1/25 028084_17/38 028084_2/116 028084_20/107 028084_20/65 028084_21/26 028084_22/103 028084_24/52 028084_25/36 028084_27/27 028084_30/33 028084_4/119 028084_4/20 028084_4/29 028084_4/41 028084_5/115 028084_6/97 029107_10/44 029107_18/79 029107_19/106 029107_19/111 029107_19/30 029107_2/108 029107_21/43 029107_22/40 029107_23/128 029107_24/33 029107_25/109 029107_25/110 029107_26/50 029107_27/39 029107_28/30 029107_3/107 029107_5/42
+  h22conf    TP  82 FP   1 FN  65 TN 109 | purity 0.988 efficiency 0.558
+             gained TP (21): 028084_10/108 028084_10/109 028084_12/101 028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_23/114 028084_28/131 028084_30/37 029107_11/18 029107_19/111 029107_19/30 029107_2/108 029107_20/139 029107_20/57 029107_23/128 029107_27/99 029107_4/58 029107_4/69 029107_6/122
+             NEW FP   (1): 029107_10/44
+             michel_found moved on 34 item(s): 028084_1/25 028084_17/38 028084_2/116 028084_20/107 028084_20/65 028084_21/26 028084_22/103 028084_24/52 028084_25/36 028084_27/27 028084_30/33 028084_4/119 028084_4/20 028084_4/29 028084_4/41 028084_5/115 028084_6/97 029107_10/44 029107_18/79 029107_19/106 029107_19/111 029107_19/30 029107_2/108 029107_21/43 029107_22/40 029107_23/128 029107_24/33 029107_25/109 029107_25/110 029107_26/50 029107_27/39 029107_28/30 029107_3/107 029107_5/42
+
+--- michel side ---
+  p82bhoff   TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h22g       TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+  h22conf    TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+
+== bit-identity gate h22g -> h22conf ==
+  matched candidates      : 341  (before 341, after 341)
+  candidates BIT-IDENTICAL on all 146 shared branches : 341 / 341
+  is_stm FLIPS : 0
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+
+== PRE-REGISTERED PREDICTION: HELD EXACTLY ==
+Predicted: bit-identical to h22g, 82/1/65/109, michel 68/2/18, 341/341, 0 flips.
+Actual   : exactly that.  341/341 bit-identical on all 146 shared branches, 0 is_stm
+           flips, point geometry identical 341/341, 0 role moves.
+
+Together with the compiled-config proof -- the flipped file's config is IDENTICAL to
+h22g's TLA config (0 added, 0 removed, 0 changed), and 16 added / 0 / 0 against the
+pre-edit file -- this establishes that PRODUCTION RUNS WHAT WAS MEASURED.  That is why
+the flip is quotable rather than merely plausible.

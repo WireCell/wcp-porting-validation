@@ -1,0 +1,37 @@
+doc pdhd/22 -- BOTH TRUTH READINGS (the owner's 2026-09-11 ruling), 2026-09-12 05:57:55
+
+Reading A = what d21_grade.py uses: owner_review > owner_smx1 > agent verdict.
+Reading B = owner_review > owner_smx1 > the agent's verdict ONLY when its confidence
+            field is 'high'; every other agent item is EXCLUDED, never guessed.
+44 of 317 records are owner-adjudicated; reading B scores 129 of the 303, reading A 257.
+
+
+=== reading A: all truth (owner > smx1 > agent) ===
+  h22base   TP  80 FP   0 FN  67 TN 110 | purity 1.000 efficiency 0.544  (scored 257)
+  h22g      TP  82 FP   1 FN  65 TN 109 | purity 0.988 efficiency 0.558  (scored 257)
+  h22p1     TP  94 FP   3 FN  53 TN 107 | purity 0.969 efficiency 0.639  (scored 257)
+  h22p2     TP  95 FP   5 FN  52 TN 105 | purity 0.950 efficiency 0.646  (scored 257)
+  h22p3     TP  99 FP   6 FN  48 TN 104 | purity 0.943 efficiency 0.673  (scored 257)
+
+=== reading B: owner + HIGH-confidence agent only ===
+  h22base   TP  59 FP   0 FN  11 TN  59 | purity 1.000 efficiency 0.843  (scored 129)
+  h22g      TP  60 FP   1 FN  10 TN  58 | purity 0.984 efficiency 0.857  (scored 129)
+  h22p1     TP  64 FP   1 FN   6 TN  58 | purity 0.985 efficiency 0.914  (scored 129)
+  h22p2     TP  64 FP   1 FN   6 TN  58 | purity 0.985 efficiency 0.914  (scored 129)
+  h22p3     TP  64 FP   2 FN   6 TN  57 | purity 0.970 efficiency 0.914  (scored 129)
+
+== WHY THIS MATTERS FOR P1 ==
+Reading A: P1 (h22p1) costs 2 extra false positives, purity 0.988 -> 0.969.
+Reading B: P1 costs NOTHING -- purity 0.984 -> 0.985, i.e. unchanged within one item,
+           while efficiency goes 0.857 -> 0.914 (+4 stoppers).
+
+The whole disagreement sits on agent-only items the SCANNER ITSELF did not call high
+confidence.  Both of P1's extra FPs under reading A (028084_12/46, 028084_3/72) are
+such items.  So the question 'does P1 cost purity' is really 'do you trust a
+medium-confidence agent verdict against the chain' -- which is the owner's call, not
+the agent's.  Under the reading built only on adjudicated + high-confidence truth,
+P1 at the DEFAULT floors is free.
+
+topology_clears_sparse adds NOTHING under reading B (h22p2 == h22p1: 64/1/6/58) while
+costing 2 more FPs under reading A.  topology_michel_ke_min:3 costs under BOTH.
+If P1 is ever taken, h22p1 -- P1 alone at the C++ default floors -- is the variant.

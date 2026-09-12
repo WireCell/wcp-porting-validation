@@ -114,8 +114,15 @@ predicted gain by adding single-knob arms is wrong in both directions here.
 This is the campaign's most useful negative result: PDVD's knobs are not portable on their own
 authority.
 
-* **The wide Bragg anchor** — PDVD's doc 93 flip, worth +4 stoppers for 1 FP there — recovers
-  **nothing** on PDHD. `h21w` is identical to `h21g` on every count and the same 10 items.
+* ~~**The wide Bragg anchor** — PDVD's doc 93 flip, worth +4 stoppers for 1 FP there — recovers
+  **nothing** on PDHD. `h21w` is identical to `h21g` on every count and the same 10 items.~~
+  **RETRACTED 2026-09-12 by doc pdhd/22 §1. This claim was VOID, not merely wrong.**
+  `bragg_wide_anchor_cm` was introduced in `ec6990e0` (doc pdvd/92), *after* the `082376c5`
+  pin every arm in this round ran on. The binary did not implement the key and dropped it
+  silently, so `h21w` being identical to `h21g` is the signature of an **inert key**, not a
+  measurement. Re-measured on a binary that implements it (arm `h22w`, pin `libpin_p65` =
+  `d65f8165`): the wide anchor recovers **+1 stopper (`028084_21/132`) at ZERO false
+  positives**, purity 1.000 held — less than PDVD's +4-for-1-FP, but it costs nothing here.
 * **`plateau_mip_hi` 1.6 → 2.0** — PDVD's doc 90 flip, +1 at 0 FP there — recovers **zero**.
 * **No plateau window move earns its keep, length-aware or not.** This answers the open item of
   doc pdhd/20 §9.1, negatively:

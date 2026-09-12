@@ -271,9 +271,46 @@ function(
         bragg_peak_search_cm: 3.0,     // C++ default 10.0.   the geometric end; arm h21g: +10 stoppers, 0 FP.
         bragg_anchor_geo_fallback: true,  // C++ default false.  Keep the geometric reading when the peak anchor
                                        // rejects a prominent rise (doc pdvd/75's mechanism, confirmed on PDHD).
-        // NOT set, and each for a measured PDHD reason (doc pdhd/21 sec 5):
-        //   bragg_wide_anchor_cm  -- PDVD's doc 93 flip (+4 for 1 FP there) recovers NOTHING here:
-        //                            arm h21w is identical to h21g on all 10 items.
+        // ---- doc pdhd/22: the Michel bag, graded on smx22 and FLIPPED ----
+        // Arm h22g on pin libpin_p65 (toolkit d65f8165, libWireCellClus md5 3e23bf8a):
+        //   michel_found 56/11/30 -> 68/2/18, purity 0.836 -> 0.971 AND efficiency
+        //   0.651 -> 0.791 (+12 true Michels, -9 false), for ONE stopper false positive
+        //   (029107_10/44): is_stm 80/0/67/110 -> 82/1/65/109, purity 1.000 -> 0.988.
+        //   That is exactly the trade the owner approved on 2026-09-12.
+        // These sixteen are a UNIT and must be re-graded as one; retreat_tail_strict acts on
+        // the retreat mechanism stop_retreat_max enables, so the three stop-topology knobs
+        // ride with the Michel knobs even though alone (arm h21s) they gained 0 stoppers.
+        // WARNING, doc pdhd/22 sec 1: six of these did NOT EXIST in round h21's pin
+        // (082376c5) and were silently ignored there -- get(config,key,default) drops an
+        // unknown key, and a compiled-config proof CANNOT see it.  h21z's "67/2/19 from 16
+        // keys" was really 10 keys.  Production's local/lib must be at or after d65f8165.
+        stop_retreat_max: 2,                    // C++ default 0
+        stop_split_max: 1,                      // C++ default 0
+        split_kink_min_deg: 10,                 // C++ default 15.0
+        michel_gamma_collect: true,             // C++ default false (doc pdvd/71 P4)
+        michel_gamma_radius_cm: 50.0,           // C++ default 35.0
+        moved_stop_michel_kink_min: 60.0,       // C++ default -1.0 = off
+        retreat_tail_strict: true,              // C++ default false
+        stop_local_michel_pieces: true,         // C++ default false
+        michel_range_energy_guard: true,        // C++ default false
+        stop_local_residual_cm: 5.0,            // C++ default 0.0 = off
+        // the six that round h21 could not actually test -- first measured on PDHD in doc 22,
+        // worth +1 true Michel (67/2/19 -> 68/2/18) at no cost, arm h22g vs h22t:
+        stop_gamma_require_stm: true,           // C++ default false (doc pdvd/85)
+        moved_stop_michel_reach_min_cm: 6.5,    // C++ default -1.0 = off (doc pdvd/84)
+        michel_near_stop_arm_cm: 5.0,           // C++ default 0.0 = off (doc pdvd/83)
+        stop_local_residual_min_points: 5,      // C++ default 0 = no floor (doc pdvd/87)
+        stop_local_residual_min_len_cm: 5.0,    // C++ default 0.0 = no floor (doc pdvd/87)
+        stop_snap_reachable: true,              // C++ default false (doc pdvd/88)
+        // NOT set, and each for a measured PDHD reason (doc pdhd/21 sec 5, doc pdhd/22):
+        //   bragg_wide_anchor_cm  -- doc pdhd/21's "recovers NOTHING here" is RETRACTED: that
+        //                            arm (h21w) passed a key its binary did not implement.
+        //                            Re-measured (h22w): +1 stopper 028084_21/132 at 0 FP,
+        //                            purity 1.000 -- free ALONE.  But combined with the Michel
+        //                            bag (arm h22c) it produces a SECOND false positive
+        //                            028084_3/72 that neither arm produces alone: 83/2/64/108,
+        //                            purity 0.976.  Marginal cost +1 TP / +1 FP, more than was
+        //                            approved, so it is HELD pending the owner's ruling.
         //   plateau_mip_hi 2.0    -- PDVD's doc 90 flip recovers ZERO on PDHD; and no plateau window
         //                            move earns its keep: the 12 plateau_off_mip misses are LONG tracks
         //                            (138-446 cm) reading 0.28-0.56 MIP, interleaved with hand-THRU

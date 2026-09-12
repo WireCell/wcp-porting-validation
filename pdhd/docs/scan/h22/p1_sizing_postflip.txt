@@ -1,0 +1,39 @@
+doc pdhd/22 -- P1 re-sized on the POST-FLIP baseline (h22base), generated 2026-09-12 05:31:00
+
+WHY THIS EXISTS: round h21 sized P1 against the PRE-flip baseline, where 86 hand
+stoppers were missed.  The doc-21 flip recovered 19 of them, so both P1's eligible
+population AND its null floor have moved.  Re-using the h21 numbers would size the
+knob on a pool that no longer exists -- the exact error that inverted this campaign's
+P1 conclusion once already (see feedback: size a knob on its eligible population).
+
+h22base: TP 80 FP 0 FN 67 TN 110   (self-gate OK)
+
+reject bits on the 67 REMAINING missed hand stoppers:
+   shape_flat            57
+   no_bragg              37
+   plateau_off_mip       11
+   profile_sparse         2
+   stop_near_boundary     1
+   stop_unmatched         1
+
+P1: eligible misses 52/67, eligible THRU (FP pool) 23/110
+   michel_found=1 among eligible misses : 24/52 = 0.462   <- recoverable
+   michel_found=1 among eligible THRU   : 4/23 = 0.174   <- NULL FLOOR / FP risk
+   recoverable items: 029107_19/111 029107_19/120 029107_3/23 029107_5/32 028084_12/117 028084_2/49 028084_20/116 028084_21/17 028084_30/26 028084_4/29 028084_5/115 028084_6/42 028084_8/110 029107_1/85 029107_20/108 029107_21/43 029107_21/65 029107_24/19 029107_24/33 029107_27/64 029107_3/99 029107_4/58 029107_7/85 029107_9/109
+   FP-risk items    : 028084_15/102 028084_12/46 028084_15/50 029107_25/93
+
+P1+clears_sparse: eligible misses 54/67, eligible THRU (FP pool) 31/110
+   michel_found=1 among eligible misses : 25/54 = 0.463   <- recoverable
+   michel_found=1 among eligible THRU   : 8/31 = 0.258   <- NULL FLOOR / FP risk
+   recoverable items: 029107_19/111 029107_19/120 029107_3/23 029107_5/32 028084_12/117 028084_2/49 028084_20/116 028084_21/17 028084_30/26 028084_4/29 028084_5/115 028084_6/42 028084_8/110 029107_1/85 029107_18/24 029107_20/108 029107_21/43 029107_21/65 029107_24/19 029107_24/33 029107_27/64 029107_3/99 029107_4/58 029107_7/85 029107_9/109
+   FP-risk items    : 028084_15/102 028084_12/46 028084_15/50 028084_18/17 029107_19/123 029107_25/93 029107_26/50 029107_7/45
+
+== READING ==
+pre-flip  (h21, p82bhoff): 0.448 recoverable vs 0.136 null floor, FP pool 22/110
+post-flip (h22base)      : 0.462 recoverable vs 0.174 null floor, FP pool 23/110
+
+P1 still discriminates, but the floor rose ~28% because the flip already took the
+easy shape-rejected stoppers.  clears_sparse remains the expensive variant: +1
+recoverable item for a floor of 0.258, matching h21's measured +2 stoppers / +2 FP.
+028084_12/46 -- P1's measured false positive in arm h21a -- is in the FP-risk list,
+so the offline model is tracking the same mechanism the arm found.

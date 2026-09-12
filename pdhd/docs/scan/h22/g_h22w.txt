@@ -1,0 +1,24 @@
+==============================================================================
+h22base -> h22w
+  matched candidates      : 341  (before 341, after 341)
+  branches shared / new / dropped : 131 / 2 / 0
+  NEW branches   : bragg_wide_fired, bragg_wide_shift_cm
+  candidates BIT-IDENTICAL on all 131 shared branches : 340 / 341
+  branches that moved, and on how many candidates:
+      is_stm                         1
+      reject_bits                    1
+  movers with n_stop_gammas > 0 : 0 of 1  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 1
+      028084_21      cl  132  is_stm 0 -> 1  contrast 0.3910 -> 0.3910  muon_len 206.420 -> 206.420
+  every mover, on the verdict-relevant branches:
+      028084_21      cl  132  is_stm 0->1; reject_bits 12->0
+==============================================================================
+h22base -> h22w  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 0
+  role histogram before : {1: 105701, 2: 2573, 3: 1351, 5: 154}
+  role histogram after  : {1: 105701, 2: 2573, 3: 1351, 5: 154}

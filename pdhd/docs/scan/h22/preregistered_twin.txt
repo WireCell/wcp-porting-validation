@@ -1,0 +1,276 @@
+# doc pdhd/22 -- the offline twin, each entry written BEFORE its arm launched
+
+Round h22.  Binary pin: /home/xqian/tmp/p65/libpin_p65, toolkit d65f8165,
+libWireCellClus.so md5 3e23bf8a.  This is a DIFFERENT binary from round h21's
+libpin_p82 (toolkit 082376c5, md5 5f2c3ede) -- which is the whole point of the
+first arm below.
+
+Record: pdhd_stm_michel_smx22_verdicts.json, 303 judged production items.
+Truth precedence (d18_census.py:53-60): owner_review > owner_smx1 > agent,
+FRAG_ stripped, MESSY/UNCLEAR unscored.
+
+Gate for every arm: it must move THE NAMED ITEMS AND NO OTHERS.
+"0 missing, 0 unpredicted."  A miss is reported, never retrofitted.
+
+================================================================================
+WHY THIS ROUND EXISTS -- the finding, stated before any arm
+================================================================================
+
+Six keys in round h21's h21z TLA DID NOT EXIST in libpin_p82.  They were
+introduced after toolkit 082376c5 and were therefore passed and silently
+ignored (get(config, key, default) drops unknown keys):
+
+    michel_near_stop_arm_cm           5904f1d2  (doc pdvd/83)
+    moved_stop_michel_reach_min_cm    77f4d2d6  (doc pdvd/84)
+    stop_gamma_require_stm            51adc923  (doc pdvd/85)
+    stop_local_residual_min_points    314186f8  (doc pdvd/87)
+    stop_local_residual_min_len_cm    314186f8  (doc pdvd/87)
+    stop_snap_reachable               a4bba314  (doc pdvd/88)
+    -- and bragg_wide_anchor_cm       ec6990e0  (doc pdvd/92), which arm h21w tested
+
+Instrument:  git grep "\"<knob>\"" 082376c5 -- clus/
+Positive control: ks_margin, which IS present at 082376c5 and demonstrably works
+(arm h21k, +11 stoppers).  A `strings -x` test was tried FIRST and REJECTED: it
+reports ks_margin missing from a binary that uses it, because the literal is
+stored overlapping as m_ks_margin/vks_margin.  The source-tree test is the
+instrument; the strings test is not.
+
+Consequences carried into this round's predictions:
+ 1. h21z's michel_found 67/2/19 came from 10 live keys, not 16.
+ 2. h21w is VACUOUS -- "the wide anchor recovers nothing on PDHD" measured a key
+    the binary ignores.  h21w == h21g is the signature of an inert key, not a
+    measurement.  Re-measured here as h22w.
+
+================================================================================
+h22base -- the flipped production jsonnet, NO TLA, on the NEW pin
+================================================================================
+
+Written 2026-09-12, before the arm launched.
+
+This arm changes NOTHING in the configuration.  It changes only the binary:
+h21p ran the same file on libpin_p82; h22base runs it on libpin_p65.  Its whole
+purpose is to test a claim nobody has yet tested -- that the peer's seven
+commits between 082376c5 and d65f8165 are inert-when-off for the PDHD config.
+Production loads local/lib, so until this arm runs, the flip committed in
+51a25063 is not known to describe what production actually does.
+
+PREDICTION: h22base is IDENTICAL to h21p in every respect that the record scores.
+
+    is_stm census      80 / 0 / 67 / 110   purity 1.000   efficiency 0.544
+    michel_found       56 / 11 / 30        purity 0.836   efficiency 0.651
+    candidate set      341
+    is_stm flips vs h21p : 0
+    recovered items    : NONE beyond h21p's (this is not a knob change)
+    new FP             : NONE
+
+Branch-level expectation: the shared branches must be bit-identical to h21p.
+NEW branches ARE expected and are not a failure -- d65f8165 adds the keys listed
+above plus their persisted outputs (e.g. michel_q2d_* from doc pdvd/95).  A new
+branch appearing is a finding to note; an EXISTING branch moving is a failure.
+
+FALSIFIER, and it outranks everything else in this round: if h22base differs
+from h21p by even one is_stm item, then a default-OFF claim in one of the peer's
+seven commits is wrong, the committed flip does not describe production, and
+this round STOPS and reports.  It does not tune. (CLAUDE.md sec 5.7)
+
+================================================================================
+h22t -- the TEN keys that were genuinely live in h21z
+================================================================================
+
+Written 2026-09-12, before the arm launched, and before h22base reported.
+
+The production file is now flipped, so the TLA carries ONLY the extra keys;
+stm_michel_extra merges on top of stm_michel_knobs (wct-pr-perevt.jsonnet:4013),
+so this is configuration-equivalent to h21z's 21-key TLA minus the six dead ones.
+
+  -S stm_michel_extra={stop_retreat_max:2,stop_split_max:1,split_kink_min_deg:10,
+  michel_gamma_collect:true,michel_gamma_radius_cm:50.0,moved_stop_michel_kink_min:60.0,
+  retreat_tail_strict:true,stop_local_michel_pieces:true,michel_range_energy_guard:true,
+  stop_local_residual_cm:5.0}                                          (no spaces in the real TLA)
+
+This is a CROSS-BINARY REPRODUCTION GATE, not a knob measurement.  h21z ran these
+same ten live keys (plus six inert ones) on libpin_p82.  h22t runs exactly the ten
+on libpin_p65.
+
+PREDICTION: h22t reproduces h21z exactly on everything the record scores.
+
+    is_stm census      82 / 1 / 65 / 109   purity 0.988   efficiency 0.558
+    michel_found       67 / 2 / 19         purity 0.971   efficiency 0.779
+    gained TP vs h22base (2): 029107_19/111  029107_4/58
+    NEW FP (1):              029107_10/44
+    candidate set      341
+
+FALSIFIER: any difference from h21z means the six dead keys were NOT inert after
+all, or the peer's commits are not default-OFF-clean.  Either is a finding that
+must be reported before anything is flipped.
+
+================================================================================
+h22g -- the FULL sixteen keys.  DELIBERATELY NOT PREDICTED.
+================================================================================
+
+Written 2026-09-12, before the arm launched.
+
+  h22t's ten, PLUS the six that have never executed on PDHD:
+  stop_gamma_require_stm:true, moved_stop_michel_reach_min_cm:6.5,
+  michel_near_stop_arm_cm:5.0, stop_local_residual_min_points:5,
+  stop_local_residual_min_len_cm:5.0, stop_snap_reachable:true
+
+I am NOT predicting this arm's census, and saying so in advance is the honest
+position: these six knobs have literally never run on PDHD data.  Inventing a
+number here and then "confirming" it would be theatre.
+
+What IS pre-registered, and what the arm will be judged against:
+
+ 1. h22g must differ from h22t ONLY in ways attributable to the six keys.  The
+    difference between the two arms IS the measurement of what they do.
+ 2. I do NOT assume h22g >= h22t.  Four of the six are RESTRICTIVE by design --
+    stop_gamma_require_stm WITHHOLDS a gamma, and the two residual floors DROP
+    small keeps.  h22g losing stoppers or Michels relative to h22t is a plausible
+    outcome, not a malfunction.
+ 3. Named interaction mechanism, stated in advance: the Michel bag moved point
+    geometry on 108 of 325 candidates in h21j, and the stopper tests read the
+    dQ/dx profile built from those points.  So the stopper side may move even
+    though these are nominally Michel-side knobs.  That is exactly how h21z's
+    pre-registration FAILED in round h21, and it is why this arm is graded as a
+    unit rather than assembled from single-knob arms.
+
+FLIP RULE, fixed before the number is known so it cannot be fitted to it: the
+owner approved a cost of ONE stopper false positive (purity 0.988) in exchange
+for the Michel gain.  Flip h22g if its cost is no worse than that AND the Michel
+gain holds.  If it is materially worse, REPORT AND HOLD -- they approved a stated
+trade, not an open-ended one.
+
+================================================================================
+h22w -- the wide Bragg anchor, re-measured on a binary that implements it
+================================================================================
+
+Written 2026-09-12, before the arm launched.
+
+  -S stm_michel_extra={bragg_wide_anchor_cm:8.0,bragg_wide_anchor_rise_min:1.3,
+  bragg_wide_anchor_tail_max:0.8}
+
+Round h21 recorded "the wide anchor recovers NOTHING on PDHD" from arm h21w.
+That claim is VOID: bragg_wide_anchor_cm was introduced in ec6990e0, after the
+082376c5 pin, so h21w passed a key its binary ignored and reproduced h21g
+identically -- the signature of an inert key, not a negative result.
+
+PREDICTION: none is defensible, because the only PDHD "measurement" of this knob
+was of the knob being absent.  The PDVD result (doc pdvd/93: +4 stoppers for 1 FP)
+is the prior, but this campaign's central finding is that PDVD knobs do not
+transfer on their own authority -- so quoting it as a prediction would repeat the
+error this round exists to correct.
+
+What is pre-registered: whatever h22w returns REPLACES the void claim in doc
+pdhd/21 sec 5 and in the stm_michel_knobs comment block.  A null result is a
+real result here and will be reported as such -- but it will be a null result
+from a binary that implements the knob.
+
+================================================================================
+h22c -- the COMBINED production candidate: Michel bag (16) + wide anchor (3)
+================================================================================
+
+Written 2026-09-12, AFTER h22t/h22g/h22w reported and BEFORE this arm launched.
+Their results are therefore known and are the basis of the prediction; this arm
+is a test of whether the two halves INTERACT, not of either half alone.
+
+  h22g's sixteen, PLUS bragg_wide_anchor_cm:8.0, bragg_wide_anchor_rise_min:1.3,
+  bragg_wide_anchor_tail_max:0.8        (19 keys on top of the flipped five)
+
+Why this arm is mandatory rather than an assembly of the two: this campaign's
+governing lesson is that a knob set must be graded as a UNIT.  In round h21 the
+combined arm h21f gained 19 where the naive union of its single-knob arms
+predicted 17, because the Bragg anchor moved ks_mu/ks_flat -- the very quantities
+the KS margin compares.  Adding h22g and h22w by arithmetic would repeat exactly
+that error.
+
+MEASURED INPUTS:
+  h22g : stopper 82/1/65/109 (purity 0.988, eff 0.558) ; michel 68/2/18
+  h22w : stopper 81/0/66/110 (purity 1.000, eff 0.551) ; michel 56/11/30 unchanged
+         h22w's single extra stopper over h22base is 028084_21/132
+  the two arms' gained-TP sets overlap on h22base's 19; h22g adds
+  029107_19/111 + 029107_4/58, h22w adds 028084_21/132 -- disjoint additions.
+
+PREDICTION: the additions are disjoint and do not interact.
+
+    is_stm census      83 / 1 / 64 / 109   purity 0.988   efficiency 0.565
+    gained TP (22)     h22g's 21, PLUS 028084_21/132
+    NEW FP (1)         029107_10/44        (h22g's, unchanged)
+    michel_found       68 / 2 / 18         purity 0.971   efficiency 0.791
+    candidate set      341
+
+FALSIFIER, with the mechanism named in advance: bragg_wide_anchor_cm RE-READS the
+Bragg peak in a wider window, which moves the rr origin and therefore the dQ/dx
+profile that the stop-local and Michel tests are built on -- the same coupling
+that made h21f beat its twin and h21z fail its.  If h22c returns anything other
+than the above, the Michel bag and the wide anchor interact, and the combined set
+must be flipped (or not) on h22c's own number rather than on its parts.
+
+================================================================================
+P1 -- deliberately NOT pre-registered until h22c reports
+================================================================================
+
+P1's predicted movers depend on the reject bits of the baseline it sits on, and
+that baseline is h22c, which does not exist yet.  Round h21's P1 numbers were
+taken against the PRE-flip baseline (86 missed stoppers); 19 of those have since
+been recovered, so both the eligible pool and the null floor have moved -- already
+re-measured on h22base in docs/scan/h22/p1_sizing_postflip.txt (0.462 recoverable
+vs a 0.174 null floor, up from 0.448 vs 0.136).
+
+Writing P1's predicted item list now, against a baseline that will change under
+it, would be a prediction I could not honestly score.  It is written after h22c.
+
+================================================================================
+P1 on the h22g baseline -- written 2026-09-12 05:46 BEFORE the arms launched
+================================================================================
+
+Baseline is h22g (the Michel bag, 82/1/65/109), NOT h22c: h22c's twin failed with an
+unpredicted 2nd FP, so the wide anchor is held and production is the flipped 5 + 16.
+
+The gate applied offline is P1's EXACT admission test (CheckSTM_Michel.cxx:4444):
+  michel_found AND michel_conn_type in {1,2} AND michel_ke_best >= ke_min
+  AND michel_len >= 3 cm  -> clears no_bragg + shape_flat (+ profile_sparse with
+  clears_sparse), applied AFTER all other bits, so is_stm moves only 0 -> 1.
+A michel_found-only proxy over-predicts (23 vs 12); it is NOT used here.
+
+Generated by d22_p1_twin.py, not transcribed:
+
+baseline h22g: TP 82 FP 1 FN 65 TN 109  (self-gate OK)
+
+== h22p1  P1 ==  +12 stoppers / +2 FP
+   predicted census 94/3/53/107  purity 0.969  efficiency 0.639
+   recovered (12): 028084_12/117 028084_27/27 028084_30/26 028084_6/42 028084_6/97 028084_8/110 029107_20/108 029107_22/40 029107_24/19 029107_27/64 029107_3/23 029107_9/109
+   new FP    (2): 028084_12/46 028084_3/72
+
+== h22p2  +clears_sparse ==  +13 stoppers / +4 FP
+   predicted census 95/5/52/105  purity 0.950  efficiency 0.646
+   recovered (13): 028084_12/117 028084_27/27 028084_30/26 028084_6/42 028084_6/97 028084_8/110 029107_18/24 029107_20/108 029107_22/40 029107_24/19 029107_27/64 029107_3/23 029107_9/109
+   new FP    (4): 028084_12/46 028084_3/72 029107_19/123 029107_7/45
+
+== h22p3  +ke_min 3 ==  +17 stoppers / +5 FP
+   predicted census 99/6/48/104  purity 0.943  efficiency 0.673
+   recovered (17): 028084_12/117 028084_2/116 028084_20/65 028084_27/27 028084_30/26 028084_6/42 028084_6/97 028084_8/110 029107_18/24 029107_20/108 029107_22/40 029107_24/19 029107_27/64 029107_3/23 029107_3/99 029107_5/32 029107_9/109
+   new FP    (5): 028084_12/46 028084_18/17 028084_3/72 029107_19/123 029107_7/45
+
+FALSIFIER: an arm moving any item absent from its list means the offline model of
+the P1 gate is wrong, and every P1 number in this doc must be recomputed.
+
+================================================================================
+h22conf -- THE CONFIRMATION ARM: the FLIPPED file, NO TLA
+================================================================================
+
+Written 2026-09-12 05:57 BEFORE the arm launched.
+
+wct-pr-perevt.jsonnet now carries the 16 Michel-bag keys in stm_michel_knobs.
+h22g reached the same configuration through a TLA.  This arm runs the FILE.
+
+Already proven before launch: the compiled config of the flipped file (no TLA) is
+IDENTICAL to h22g's compiled config -- d22_cfg_keys.py reports 0 added, 0 removed,
+0 changed between them, and 16 added / 0 / 0 against the pre-edit file.
+
+PREDICTION: h22conf is BIT-IDENTICAL to h22g.
+    is_stm census   82 / 1 / 65 / 109   purity 0.988   efficiency 0.558
+    michel_found    68 / 2 / 18         purity 0.971   efficiency 0.791
+    candidates BIT-IDENTICAL vs h22g : 341 / 341 ; is_stm flips 0 ; geometry 341/341
+
+FALSIFIER: any difference means production does NOT run what was measured, and the
+flip must be reverted rather than explained.  This is the whole point of the arm.
