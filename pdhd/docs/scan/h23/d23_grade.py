@@ -19,6 +19,11 @@ IMG = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img"; X = IMG + "/pdhd/docs/sca
 REC = os.environ.get("STM_SCAN_RECORD", X + "/pdhd_stm_michel_smx23_verdicts.json")
 base = lambda v: v[5:] if v and v.startswith("FRAG_") else v
 GATE = {"p82bhoff": (61, 0, 87, 108)}          # smx23's value, NOT smx22's 61/0/86/110
+# doc pdhd/25 sec 6: a later record moves this gate by construction; D25_GATES="p82bhoff=a/b/c/d" names the
+# value derived for that record by an independent census (d25_score_smx25.py).  Unset => unchanged.
+for _g in filter(None, os.environ.get("D25_GATES", "").split(";")):
+    _k, _, _v = _g.partition("=")
+    if _k == "p82bhoff": GATE["p82bhoff"] = tuple(int(x) for x in _v.split("/")[:4])
 
 def arm(tag):
     out = {}

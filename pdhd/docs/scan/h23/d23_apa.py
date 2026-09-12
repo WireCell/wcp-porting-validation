@@ -47,7 +47,7 @@ def arm(tag):
                                        int(s["michel_found"][i]))
     return out
 
-rec = json.load(open(f"{X}/pdhd_stm_michel_smx23_verdicts.json"))
+rec = json.load(open(os.environ.get("STM_SCAN_RECORD", f"{X}/pdhd_stm_michel_smx23_verdicts.json")))  # doc pdhd/25 sec 6: env names a later record
 def truth(r):
     if r.get("owner_review"): return base(r["owner_review"]["verdict"])
     if r.get("owner_smx1"):

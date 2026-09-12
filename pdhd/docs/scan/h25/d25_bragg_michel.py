@@ -31,7 +31,7 @@ import numpy as np
 import uproot
 
 IMG = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img"
-HD_REC = IMG + "/pdhd/docs/scan/pdhd_stm_michel_smx23_verdicts.json"
+HD_REC = os.environ.get("STM_SCAN_RECORD", IMG + "/pdhd/docs/scan/pdhd_stm_michel_smx23_verdicts.json")  # doc pdhd/25 sec 6
 HD_KEY = IMG + "/pdhd/docs/scan/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv"
 VD_REC = IMG + "/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json"
 BR = ["cluster_id", "is_stm", "michel_found", "reject_bits", "topology_cleared_bits",
@@ -207,6 +207,18 @@ def main():
              ("pdhd", "h23conf", "majority", (79, 1, 30, 70), (52, 2, 12, 42), None),
              ("pdhd", "h23conf", "strict", (77, 0, 28, 69), (51, 2, 12, 39), None),
              ("pdvd", "p96vprod", "all", (242, 8, 34, 262), None, (144, 12, 20))]
+    # doc pdhd/25 sec 6: a later PDHD record (STM_SCAN_RECORD) moves the PDHD gates by construction.
+    # D25_GATES="h23conf:strict=a/b/c/d,e/f/g/h;..." names is_stm[,michel] values derived for that record
+    # by an independent census (d25_score_smx25.py).  Unset => the gates above, unchanged.
+    for g in filter(None, os.environ.get("D25_GATES", "").split(";")):
+        k, _, v = g.partition("=")
+        if ":" not in k:
+            continue                                   # e.g. d23_grade's p82bhoff entry
+        garm, gpop = k.split(":")
+        parts = [tuple(int(x) for x in p.split("/")) for p in v.split(",")]
+        GATES = [(d, ar, po, parts[0], parts[1] if len(parts) > 1 else wm, wm2)
+                 if (d == "pdhd" and ar == garm and po == gpop) else (d, ar, po, w, wm, wm2)
+                 for d, ar, po, w, wm, wm2 in GATES]
     for det, arm, pop, want, wantm, wantm2 in GATES:
         its, _ = items(det, arm, pop)
         got, gotm, gotm2 = census(its)

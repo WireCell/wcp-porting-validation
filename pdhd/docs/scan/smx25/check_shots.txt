@@ -1,0 +1,8 @@
+26 item dirs, 104 distinct 3-D frames
+incomplete dirs: 0
+blank 3-D frames (md5 shared by 3+ items): 0 frames over 0 items
+c_3d_stop.png unique colours: n 26, min 2246, median 5612; below 1000: 0
+harness context-loss record: none (_webgl_lost.txt absent -- written before doc 69, or by an older harness)
+
+wrote /home/xqian/tmp/h25r/logs/reshoot.txt with 0 item(s) to re-shoot
+VERDICT: clean

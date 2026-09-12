@@ -127,7 +127,11 @@ for o in base:
             rec.update(evidence=v["evidence"], tags=v["tags"], arm=a.arm,
                        rubric_sha=v.get("rubric_sha"), scanner=v.get("scanner"),
                        wave=v.get("wave"), written=v.get("written"))
-            for f in ("review", "owner_smx1", "calibration"):
+            # doc pdhd/25 sec 6: an EARLIER owner ruling (owner_review from a previous round) must survive an
+            # adopted agent pass -- the census takes owner_review first, and dropping it let two agents
+            # silently overturn the owner's THRU on 028084_18/17.  No committed record is changed by this:
+            # no adopted item of smx20 or smx21 carried an owner_review.
+            for f in ("review", "owner_smx1", "calibration", "owner_review"):
                 if f in o:
                     rec[f] = o[f]
             os.makedirs(os.path.join(a.round, "v_resolved"), exist_ok=True)

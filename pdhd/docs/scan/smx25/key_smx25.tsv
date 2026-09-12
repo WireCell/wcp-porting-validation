@@ -1,0 +1,28 @@
+# doc pdhd/25 sec 6 -- smx25 KEY (never shown to a scanner). group: decision = an arm moved is_stm; control_thru / control_stop = frozen before the arms ran (controls_frozen.txt). stratum = production michel_found (M 1 / N 0). truth = the smx23 record's (source). scanners = the two agents given it.
+order	key	group	stratum	reads_alike	strict	moved_by	truth_verdict	truth_kind	truth_source	record_confidence	prod_reject	prod_michel_found	scanners
+1	029107_4/118	control_thru	N	1	1	-	THRU	none	agent	medium	no_bragg+shape_flat	0	rv5_a1,rv5_a6
+2	028084_20/116	decision	M	1	1	h25k:0->1 h25r:0->1 h25kr:0->1	STM_MICHEL	both	agent	high	shape_flat	1	rv5_a2,rv5_a4
+3	029107_19/120	control_stop	M	1	1	-	STM_MICHEL	both	agent	medium	no_bragg+shape_flat	1	rv5_a3,rv5_a5
+4	028084_10/46	decision	N	1	1	h25k:0->1 h25kr:0->1	STM_ONLY	detached dots	agent	medium	shape_flat	0	rv5_a1,rv5_a6
+5	028084_18/17	control_thru	M	1	1	-	THRU	None	owner_review	medium	profile_sparse	1	rv5_a2,rv5_a4
+6	028084_24/49	control_stop	M	1	1	-	STM_MICHEL	attached	agent	high	plateau_off_mip	1	rv5_a3,rv5_a5
+7	028084_8/120	control_stop	N	1	1	-	STM_ONLY	none	agent	medium	shape_flat+profile_sparse	0	rv5_a1,rv5_a6
+8	028084_2/116	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	attached	agent	low	no_bragg+shape_flat	1	rv5_a2,rv5_a4
+9	028084_18/122	control_thru	M	1	1	-	THRU	none	agent	medium	plateau_off_mip	1	rv5_a3,rv5_a5
+10	028084_29/53	decision	N	1	0	h25k:0->1 h25kr:0->1	STM_ONLY	none	agent	medium	shape_flat	0	rv5_a1,rv5_a6
+11	029107_7/85	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	both	agent	medium	no_bragg+shape_flat	1	rv5_a2,rv5_a4
+12	029107_1/85	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	both	agent	medium	no_bragg+shape_flat	1	rv5_a3,rv5_a5
+13	029107_12/95	decision	N	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	attached	agent	medium	shape_flat	0	rv5_a1,rv5_a6
+14	029107_3/99	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	attached	agent	medium	no_bragg+shape_flat	1	rv5_a2,rv5_a4
+15	029107_21/65	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	attached	agent	medium	shape_flat	1	rv5_a3,rv5_a5
+16	029107_28/109	decision	N	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	attached	agent	medium	shape_flat	0	rv5_a1,rv5_a6
+17	029107_19/123	control_thru	M	1	1	-	THRU	none	agent	medium	profile_sparse	1	rv5_a2,rv5_a4
+18	028084_23/53	control_stop	N	1	1	-	STM_ONLY	detached dots	agent	medium	no_bragg+shape_flat	0	rv5_a3,rv5_a5
+19	028084_1/28	control_thru	N	1	1	-	THRU	none	agent	medium	shape_flat+plateau_off_mip	0	rv5_a1,rv5_a6
+20	029107_12/118	decision	N	1	1	h25k:0->1 h25kr:0->1	STM_ONLY	detached dots	agent	medium	shape_flat	0	rv5_a2,rv5_a4
+21	029107_24/33	decision	N	1	1	h25k:0->1 h25r:0->1 h25kr:0->1	STM_ONLY	detached dots	agent	medium	shape_flat	0	rv5_a3,rv5_a5
+22	028084_24/114	control_thru	N	1	1	-	THRU	none	agent	medium	no_bragg+shape_flat	0	rv5_a1,rv5_a6
+23	028084_2/49	decision	M	1	1	h25k:0->1 h25kr:0->1	STM_MICHEL	both	agent	medium	no_bragg+shape_flat	1	rv5_a2,rv5_a4
+24	028084_0/108	control_thru	N	1	1	-	THRU	none	agent	medium	no_bragg+shape_flat	0	rv5_a3,rv5_a5
+25	029107_5/28	control_thru	M	1	1	-	THRU	none	agent	medium	plateau_off_mip	1	rv5_a1,rv5_a6
+26	028084_5/115	decision	N	1	1	h25k:0->1 h25r:0->1 h25kr:0->1	STM_ONLY	detached dots	agent	medium	shape_flat	0	rv5_a2,rv5_a4

@@ -23,8 +23,10 @@
    0.733 → 0.857 at purity 1.000**, Michel census unchanged, golden fraction 0.524 → 0.587. PDVD sits at
    0.877. `compare_range_cm` 45 alone gives +3 (0.762) and nothing on top of the lever. On PDVD the same
    moves cost 22 false positives, so they are PDHD-specific. The 13 unreadable profiles and 2 plateau
-   misses are what is left. **The blind re-judge the owner asked for before any flip is §6 (pending in
-   this commit).**
+   misses are what is left. **The blind re-judge (§6): 13 of 14 recoveries are stoppers on two further
+   blind looks; one splits (stopper / unreadable), so by the pre-registered rule lever 1 is not free
+   (worst case 89/1/15/69, purity 0.989), while `compare_range_cm` 45 is. The owner's ruling on that
+   item, and on an owner-ruled control both agents disagreed with, is what stands before a flip.**
 
 **Read-only for production.** No C++ change, no production jsonnet edit, no record or label touched.
 Six new arms on a pinned binary, new tags only.
@@ -71,6 +73,24 @@ python3 $X/d25_twin_check.py --arm h25kr --ks -0.10 --ke 5 --len 1.5 > $X/twin_h
 python3 $I/pdhd/docs/scan/h23/d23_grade.py h25base h25k h25r h25kr ; python3 $I/pdhd/docs/scan/h23/d23_apa.py h25base h25k h25r h25kr
 python3 $X/d25_movers.py h25base h25k h25r h25kr > $X/movers_h25k.txt
 python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h25r,h25kr --pdvd p96vprod > $X/q2_levers.txt
+
+# 5. section 6: the blind re-judge, tag smx25 (R=/home/xqian/tmp/h25r, the round dir)
+(cd $I/pdhd/stm_michel_scan && ./prep_stm_michel_scan.py --det pdhd --arm h25base --ctx-cells \
+    --outdir $PWD/prep-pdhd-h25base --sheetdir $R/prep_sheets --pin-tranche ../docs/scan/smx18/pdhd_stm_michel_scan_sheet.tsv)
+python3 $X/d25_build_smx25.py --arms h25k,h25r,h25kr --round $R --outdir $I/pdhd/docs/scan/smx25 \
+    --prep $I/pdhd/stm_michel_scan/prep-pdhd-h25base
+#    frames: scan_harness.py shots --det pdhd --blind --hide-selection --prepdir .../prep-pdhd-h25base \
+#            --manifest docs/scan/smx18/pdhd_stm_michel_scan_sheet.tsv --items-file $R/chunk_<n>.txt (2 processes,
+#            private blank labeldirs); campaign/mkzoom.py $R/shots; check_shots.py $R/shots
+#    scanners rv5_a1..a6: $R/AGENT_TASK.md + $R/items_a<i>.txt -> $R/v_parts/rv5_a<i> (rubric v5 frozen in $R/RUBRIC.sha)
+python3 $X/d25_audit.py --selftest ; python3 $X/d25_audit.py <session>/subagents/agent-<id>.jsonl rv5_a<i>
+python3 $I/pdhd/stm_michel_scan/campaign/mkowner_record.py $I/pdhd/docs/scan/pdhd_stm_michel_smx23_verdicts.json \
+    $I/pdhd/docs/scan/smx25/rulings_empty.json $R $I/pdhd/docs/scan/pdhd_stm_michel_smx25_verdicts.json \
+    $I/pdhd/docs/scan/smx25/provenance.json --provenance-json $R/provenance_in.json --stopper-split --arm h25base
+python3 $X/d25_score_smx25.py --key $I/pdhd/docs/scan/smx25/key_smx25.tsv --round $R \
+    --record $I/pdhd/docs/scan/pdhd_stm_michel_smx25_verdicts.json --reading-b-out $I/pdhd/docs/scan/smx25/record_readingB.json
+STM_SCAN_RECORD=<smx25 record | record_readingB.json> D25_GATES="<printed by the scorer>" \
+    python3 $I/pdhd/docs/scan/h23/d23_grade.py h25base h25k h25r h25kr     # likewise d23_apa.py, d25_bragg_michel.py
 ```
 
 Every grader self-gates before printing: `d23_*` on `p82bhoff` = 61/0/87/108 (smx23);
@@ -412,14 +432,18 @@ Michel only 0.4 cm long. Seven sit in APA3, four in APA1 and two in APA2.
    graded as one unit.** **Measured (§5): +13 stoppers at 0 false positives, 0.733 → 0.857 (strict),
    the offline twin held item by item on every population; the Michel census does not move.** It needs
    no C++. What still stands between it and a flip:
-   * the **blind re-judge** of the 13 recoveries plus the THRU items nearest the cut (§6). Zero false
-     positives on 69 through-goers bounds the rate only below ~4 % (95 %), both thresholds were chosen
-     on this record, and all 13 recoveries rest on agent calls;
+   * **the blind re-judge (§6) is done:** 13 of 14 recoveries are stoppers on two further blind looks,
+     and one (`029107_21/65`) splits stopper / unreadable. By the pre-registered rule the lever is
+     therefore **not free** (reading B 89/1/15/69, purity 0.989). Zero false positives on 69
+     through-goers still bounds the rate only below ~4 % (95 %), and both thresholds were chosen on
+     this record;
+   * the owner's ruling on `029107_21/65`, and a look at `028084_18/17`, where both blind agents called
+     the owner's THRU a stopper;
    * the owner's decision.
 
    Do not port it to PDVD: there it costs 22 false positives.
 2. **From PDVD's delta, take only what Arm B shows is free.** On this record that is **`compare_range_cm` 45 alone**:
-   **measured (§5), +3 stoppers at 0 false positives (0.762), and nothing on top of lever 1** — the
+   **measured (§5), +3 stoppers at 0 false positives (0.762), free on the re-judged record (§6), and nothing on top of lever 1** — the
    combined arm `h25kr` is census-identical to `h25k`, because its three recoveries are a subset of lever 1's. Keep `absorb_bragg_stub`,
    `topology_clears_sparse` and `topology_michel_ke_min` 3 off. Hold `michel_range_energy_dis_cm` 3: it
    vetoed three hand-confirmed small PDHD Michels. Hold `kink_asym`: it lost `029107_26/88`.
@@ -446,8 +470,9 @@ Michel only 0.4 cm long. Seven sit in APA3, four in APA1 and two in APA2.
   no more.
 * **Not** attributed within Arm B beyond what its movers name — it is still a multi-key unit.
 * **Not** a statement about APA0, excluded throughout at the owner's request.
-* **Not** that §5's +13 are true stoppers beyond what the `smx23` record says. All 13 are agent calls,
-  and the record is exactly what the blind re-judge (§6) tests.
+* **Not** that §5's +13 are owner-confirmed stoppers. All 13 were agent calls; the blind re-judge (§6)
+  is a second agent pass (13 confirmed, 1 split), and on the one owner-ruled control it disagreed with
+  the owner, in the lever's direction.
 
 ## 5. The levers as real arms (the owner's request of 2026-09-12)
 
@@ -522,7 +547,16 @@ calls stoppers (`028084_7/124`, `029107_5/98`) and two record-`UNCLEAR` items in
 * **What the arms cannot say:** whether the 13 are true stoppers. All 13 are agent calls on `smx23`
   (none owner-labelled), and the thresholds were sized on this very record. That is §6.
 
-## 6. The blind re-judge (`smx25`) — design frozen, scan pending in this commit
+## 6. The blind re-judge (`smx25`)
+
+**Result in one line.** 13 of the 14 recoveries were called stoppers by both blind scanners. One,
+`029107_21/65`, split between STM_ONLY and UNCLEAR. By the pre-registered rule, that split makes lever 1
+**not free**: reading B has 89/1/15/69, purity 0.989. `compare_range_cm` 45 alone **is free**. The
+controls held 4/4 on stoppers and 7/8 on through-goers. The eighth is the tranche's only owner-ruled
+item, and both agents called the owner's THRU a stopper. A defect in the fold tool, which would have
+let that call overwrite the owner's ruling, was found and fixed before any number was computed (§6.3).
+
+### 6.1 Design (frozen before the arms)
 
 **Owner's choice:** agents now, blind. The design, the controls and the outcome rule were written to
 `preregistered.txt` **before any lever arm ran**; only the decision set itself comes from the arms.
@@ -552,6 +586,124 @@ calls stoppers (`028084_7/124`, `029107_5/98`) and two record-`UNCLEAR` items in
   as THRU. **Decision rule:** the lever is *free on the re-judged record* iff 0 new FP on APA0 strict
   under reading B. Thresholds are never re-selected on this tranche.
 
+### 6.2 Integrity
+
+| check | result |
+|---|---|
+| frames | `prep-pdhd-h25base` with `--ctx-cells` (the `h23conf` prep has no `proj_ctx`, so no grey cells); Canvas2D; `check_shots` clean (0 blank, `c_3d_stop` min 2246 unique colours); `context.json` carries no chain-verdict key on 26/26 (`smx25/check_shots.txt`) |
+| scans | 26 items × 2 = **52 records, each item scanned by exactly its two assigned scanners**; rubric sha `750751ea…` on all 52 |
+| order | each item's second scan started only after its first scanner had finished (`a6` after `a1`, `a4` after `a2`, `a5` after `a3`) |
+| audit | 6 transcripts, 87 / 86 / 78 / 92 / 77 / 87 tool calls, **0 flagged** (`smx25/audit.txt`); the audit flags 8/8 synthetic forbidden reads and 0/5 clean ones |
+| display note | `f_meas`'s time axis is the payload's absolute slice index. `a1` asked; on `029107_4/118` the track's charge runs down to slice 5, so its THRU at the readout-window start is read correctly |
+
+### 6.3 A defect in the fold tool, found and fixed before scoring
+
+**Symptom.** The first fold of `smx25` turned the THRU control `028084_18/17` into STM_MICHEL, with outcome
+*adopted* (both agents called it a stopper), and the record lost the item's `owner_review` block. That block
+is the owner's own THRU ruling from doc pdhd/19 §8 ("#46 not likely STM, I guess").
+
+**Root cause.** `stm_michel_scan/campaign/mkowner_record.py` rebuilds an *adopted* item from the chosen
+scan. It carried `review`, `owner_smx1` and `calibration` across, but not an `owner_review` written by an
+**earlier** round. The census reads `owner_review` first, so it would have scored the agents' call over
+the owner's.
+
+**Why it hid.** No item ever adopted before carried an `owner_review`: 2 were adopted in smx20 and 4 in
+smx21, none of them owner-ruled. The builder gate (an empty pass must rebuild smx23) cannot reach the
+adopted branch.
+
+**Fix.** The adopted branch now carries `owner_review` as well.
+
+**Verification.**
+* Rebuilding **smx21** with the fixed tool, from smx20, the `own19` rulings and the h21 round's own
+  52 scans, reproduces the committed record **317/317**, with only the path field `owner_review.source`
+  masked. Its provenance is byte-identical.
+* The empty pass still rebuilds smx23 identically.
+* The fixed smx25 differs from the first build **only** in restoring that `owner_review`, which is equal
+  to smx23's. Provenance is identical.
+* **No committed record is affected**, and the first build was never committed.
+
+### 6.4 Outcomes (`score_smx25.txt`, judged on stopper-or-not, the fold's own rule)
+
+| group | n | confirmed by both scans | split | against the truth in force |
+|---|---|---|---|---|
+| decision, stratum M | 7 | 6 stoppers | **1: `029107_21/65`** (STM_ONLY / UNCLEAR) | 6 agree |
+| decision, stratum N | 7 | 7 stoppers | 0 | 7 agree |
+| THRU controls, M | 4 | 3 not-stopper; **`028084_18/17` both STM_MICHEL** (adopted into the agent verdict; the owner's THRU governs) | 0 | 3 agree, **1 disagrees with the owner** |
+| THRU controls, N | 4 | 4 not-stopper | 0 | 4 agree |
+| stopper controls, M / N | 2 / 2 | 4 stoppers | 0 | 4 agree |
+
+* **13 of 14 recoveries** are stoppers on two further blind looks. Four of the 13 rest on at least one
+  *low*-confidence scan: `028084_2/49`, `029107_7/85` and `028084_29/53` on one, `029107_3/99` on both.
+* The split item `029107_21/65` is a near-isochronous APA2 track. Its scanners wrote "the end rise may
+  be just another bump of a wavy … profile" and "a ~14 cm periodic wave". That is the doc pdhd/24 wave on
+  a shape-marginal accept, exactly the population §3.3 describes.
+* Inside agreed stoppers, the Michel **kind** moved on some items (for example `029107_7/85`, record
+  STM_MICHEL, both scans STM_ONLY; `028084_29/53` the other way). The fold rule keeps the base record for a
+  kind difference, so `michel_found` scoring is not re-graded here.
+
+### 6.5 The census on the re-judged record
+
+Reading A is the record rule. Reading B is the pre-registered worst case: the split decision item counts as
+THRU. The last row is **not pre-registered** and is shown only as a sensitivity: neither scanner called
+the split item THRU, so it is counted as unscored there. All numbers come from the independent recount in
+`d25_score_smx25.py`, cross-checked 4/4 on smx23, and are reproduced by the committed graders with the
+derived gates (`census_smx25_A.txt`, `census_smx25_B.txt`, `q2_smx25_A/B.txt`).
+
+| APA0 strict | production `h25base` | **`h25k` lever 1** (= `h25kr`) | `h25r` `compare_range_cm` 45 |
+|---|---|---|---|
+| smx23 = smx25 reading A | 77/0/28/69 — 1.000 / 0.733 | **90/0/15/69 — 1.000 / 0.857** | 80/0/25/69 — 1.000 / 0.762 |
+| **smx25 reading B** | 77/0/27/70 — 1.000 / 0.740 | **89/1/15/69 — 0.989 / 0.856** | 80/0/24/70 — 1.000 / 0.769 |
+| *split item unscored (sensitivity)* | *77/0/27/69 — 0.740* | *89/0/15/69 — 1.000 / 0.856* | *80/0/24/69 — 0.769* |
+| majority, reading B | 79/1/29/71 — 0.988 / 0.731 | 92/2/16/70 — 0.979 / 0.852 | 82/1/26/71 — 0.988 / 0.759 |
+| all four APAs, reading B | 96/1/51/108 — 0.990 / 0.653 | 114/2/33/107 — 0.983 / 0.776 | 101/1/46/108 — 0.990 / 0.687 |
+| GOLDEN, reading A / B | 33/63 = 0.524 / 33/62 = 0.532 | **37/63 = 0.587 / 36/62 = 0.581** | 34/63 = 0.540 / 34/62 = 0.548 |
+| Michel, strict, A / B | 51/2/12/39 / 50/2/12/39 | unchanged | unchanged |
+
+Reading A equals smx23 item for item. The only adopted item is owner-governed, so it moves no truth, and
+the split keeps the base record.
+
+### 6.6 The pre-registered decision
+
+| arm | new false positives, APA0 strict, reading B | verdict by the rule |
+|---|---|---|
+| `h25r` `compare_range_cm` 45 | none | **free on the re-judged record** |
+| `h25k` lever 1 | `029107_21/65` | **not free** |
+| `h25kr` both | `029107_21/65` | **not free** |
+
+The rule was fixed before the arms, and it is applied as written. Lever 1's case now rests on one item.
+Two blind scanners saw that item's stop as a stopper or as unreadable; neither saw a through-going muon.
+Thresholds are not re-selected on this tranche.
+
+### 6.7 What the re-judge may and may not conclude
+
+**It may conclude:**
+* Lever 1's efficiency gain is not one agent's artefact. 13 of 14 recoveries hold on two further blind
+  looks.
+* The stopper null held 4/4 and the agent-governed THRU null held 7/7.
+* `compare_range_cm` 45 passes its pre-registered test.
+
+**It may not conclude:**
+* **That these are the owner's verdicts.** This is an agent pass.
+* **That agent confirmation settles it.** The tranche's one owner-ruled item is the calibration point,
+  and there both blind agents called the owner's THRU a stopper. `028084_18/17` is also one of the three
+  `topology_clears_sparse` false positives of §1.4. On the only item where the owner's answer is known,
+  the agents err toward "stopper", which is the lever's own direction. So 13/14 confirmations are weaker
+  evidence than they look. Doc pdvd/92 found the same instability near a shape threshold, where the owner's
+  own call flipped on a blind re-look.
+* **A flip.** What stands between lever 1 and a flip:
+  1. the owner's ruling on `029107_21/65` (the split);
+  2. the owner's look at `028084_18/17` as a calibration probe of the agents;
+  3. optionally, the low-confidence confirmations (`029107_3/99` first);
+  4. the owner's decision.
+
+**Rubric points the scanners flagged**, logged and not folded, since the rubric stayed frozen:
+* Unfitted `C` rows never carry a dqdx, which conflicts with the "no dqdx ⇒ degenerate row" clause. Five
+  of the six scanners raised this.
+* The ~10 cm michel/gamma edge (`029107_24/33` sits at 10.02 cm).
+* Whether a straight-on stub counts as the Michel once rule 3 has established the stop.
+* A fit end at the readout-window edge.
+* No threshold for "near-isochronous".
+
 ## Files
 
 | what | where |
@@ -566,3 +718,8 @@ calls stoppers (`028084_7/124`, `029107_5/98`) and two record-`UNCLEAR` items in
 | §3, misses, separation, noise, offline sweeps | `docs/scan/h25/d25_misses.py`, `q3_misses.txt`, `q3_misses_on_h25r.txt` (`h25kr`'s twin) |
 | §5, item-level twins | `docs/scan/h25/d25_twin_check.py`, `twin_h25k.txt`, `twin_h25r.txt`, `twin_h25kr.txt` |
 | §6, frozen controls | `docs/scan/h25/d25_controls.py`, `controls_frozen.txt` |
+| §6, the tranche | `docs/scan/h25/d25_build_smx25.py`; `docs/scan/smx25/key_smx25.tsv` (never shown to a scanner), `items_smx25.txt`, `items_a1.txt`…`items_a6.txt`, `AGENT_TASK.md`, `rubric_v5.sha` |
+| §6, frames and audit | `stm_michel_scan/prep-pdhd-h25base` (gitignored payloads), `docs/scan/smx25/check_shots.txt`, `docs/scan/h25/d25_audit.py`, `docs/scan/smx25/audit.txt` |
+| §6, the record | `docs/scan/pdhd_stm_michel_smx25_verdicts.json` (317 records, `review_v5` on the 26), `smx25/provenance.json`, `smx25/rulings_empty.json`, `smx25/record_readingB.json` |
+| §6.3, the fold-tool fix | `stm_michel_scan/campaign/mkowner_record.py` (the adopted branch keeps `owner_review`) |
+| §6, scoring | `docs/scan/h25/d25_score_smx25.py`, `score_smx25.txt`, `census_smx25_A.txt`, `census_smx25_B.txt`, `q2_smx25_A.txt`, `q2_smx25_B.txt`, `sens_smx25_split_unscored.txt`; grader overrides `STM_SCAN_RECORD` / `D25_GATES` in `h23/d23_grade.py`, `h23/d23_apa.py`, `h25/d25_bragg_michel.py` |
