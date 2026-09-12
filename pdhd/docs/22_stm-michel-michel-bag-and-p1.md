@@ -1,5 +1,9 @@
 # doc pdhd/22 — the Michel bag, P1, and six knobs that were never actually on
 
+**Superseded in part by doc pdhd/23**, which flips the two sets this doc holds and — after the
+owner scanned the three false positives — shows that **neither of them cost purity at all**. The
+retractions are marked inline in §5 and §6.
+
 **Status:** the **Michel bag is flipped** in PDHD production (16 keys), and doc pdhd/21's
 already-committed five are now gated against the binary production actually runs.
 `michel_found` **56/11/30 → 68/2/18** (purity 0.836 → 0.971 *and* efficiency 0.651 → 0.791) for
@@ -234,9 +238,16 @@ the approved trade buys: the Michel bag alone clears every bit (contrast 0.894 �
 The branch gates are consistent: `h22c` flips 5 `is_stm` and moves geometry on 125/341, against
 3 and 1 for its parents — but the geometry movement is the Michel bag's, which `h22g` shows too.
 
-**So the wide anchor is HELD, not flipped.** Alone it is +1/0; added to the Michel bag its
-*marginal* cost is **+1 TP / +1 FP**, taking purity to 0.976 — more than the owner approved, and
-a purity trade nobody has ruled on. Same rule as P1: measure, report, recommend, leave unflipped.
+~~**So the wide anchor is HELD, not flipped.** Alone it is +1/0; added to the Michel bag its
+*marginal* cost is **+1 TP / +1 FP**, taking purity to 0.976.~~
+
+**RETRACTED 2026-09-12 by doc pdhd/23 §6 — and it was the owner's scan, not a new arm, that
+overturned it.** The "second false positive" `028084_3/72` is a **genuine stopping muon with an
+attached Michel**: the owner scanned it on :5017 and ruled STM_MICHEL, pin at rr 6.02 cm. On the
+corrected record `smx23` the wide anchor's marginal effect is **+2 TP / +0 FP** (`h22g`
+82/1/66/107 → `h22c` 84/1/64/107). **It never cost purity.** The arm, the twin and the branch
+gates in this section were all correct — they faithfully measured a trade whose truth value was
+wrong. With a cost of one or two items, a single label *is* the measurement.
 
 This is the third arm in two rounds to show that **a knob set must be graded as a unit** — `h21f`
 beat its twin, `h21z` failed its, `h22c` failed its. Assembling a combined result by adding
@@ -273,8 +284,11 @@ while efficiency rises 0.857 → 0.914. Both of A's extra FPs (`028084_12/46`, `
 agent-only items the scanner itself did **not** mark high confidence. So "does P1 cost purity"
 reduces to "do you trust a medium-confidence agent verdict against the chain" — the owner's call.
 
-**Not flipped**, by the rule fixed before the numbers were known: nonzero cost under reading A →
-measure, report both readings, recommend, leave unflipped. `michel_found` is unchanged at 68/2/18
+~~**Not flipped**, by the rule fixed before the numbers were known: nonzero cost under reading A →
+measure, report both readings, recommend, leave unflipped.~~ **SUPERSEDED: the owner ruled on
+2026-09-12 to flip both (doc pdhd/23), and on the corrected record `smx23` P1 costs nothing
+either — `h22g` → `h22p1` is +13 TP / +0 FP, purity 0.988 → 0.990.** Both of P1's extra FPs
+under reading A were agent-only sub-`high` items; one is a real stopper and one is MESSY. `michel_found` is unchanged at 68/2/18
 on all three (P1 reads the Michel object, never writes one), and point geometry is identical
 341/341 for `h22p1`/`h22p2` — P1 moves verdict bits only.
 
