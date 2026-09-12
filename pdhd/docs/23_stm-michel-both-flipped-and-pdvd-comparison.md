@@ -212,6 +212,73 @@ verdict was on screen while these three were judged, and `revealed_before_label`
 three. This is a physicist's review of the reconstruction, not an independent verdict, and the
 bias runs toward agreement with the chain — two of the three rulings did agree with it.
 
+## 7. APA0 excluded — the owner's cut, and what it does to the PDVD comparison
+
+APA0 has a known hardware problem on PDHD, so the owner asked for the numbers on the three
+healthy APAs. **The convention is doc pdhd/04 §6.2's, not invented here:** face 0 = x<0 (APA 0,2),
+face 1 = x>0 (APA 1,3), z<231 cm = APA 0,1, z>231 cm = APA 2,3 — so **APA0 = x<0 ∧ z<231 cm**,
+matching `smgeom.py`'s `apa0` sensvol (x −352…0 cm, z 0…230 cm).
+
+A candidate is assigned to the APA holding **most of its role-1 muon points** — doc 04's own
+rule. That reads the *fit*, not the verdict: bucketing by the chain's `stop_x/y/z` would be
+circular for the 52 misses, where no stop was declared. 36 of 256 candidates span more than one
+APA, so a **strict** variant (drop any candidate with *any* point in APA0) is reported alongside.
+
+### `is_stm`, production (`h23conf`) on `smx23`
+
+| population | TP/FP/FN/TN | n | purity | efficiency |
+|---|---|---|---|---|
+| all four APAs | 96/1/52/107 | 256 | 0.990 | 0.649 |
+| **APA0 excluded (majority)** | 79/1/30/70 | 180 | **0.988** | **0.725** |
+| **APA0 excluded (strict)** | 77/0/28/69 | 174 | **1.000** | **0.733** |
+| APA0 only | 17/0/22/37 | 76 | 1.000 | **0.436** |
+| APA1 only | 18/0/11/19 | 48 | 1.000 | 0.621 |
+| APA2 only | 26/1/9/29 | 65 | 0.963 | 0.743 |
+| APA3 only | 35/0/10/22 | 67 | 1.000 | 0.778 |
+
+**APA0 is the weak APA, by a wide margin: 0.436 against 0.621 / 0.743 / 0.778.** Excluding it
+lifts production from 0.649 to **0.725** (majority) or **0.733** (strict). Under the strict cut
+purity is **1.000** — the single false positive `029107_10/44` has points in APA0.
+
+**The deficit predates this campaign** and the flips did not close it: on `p82bhoff` APA0 was
+0.282 against APA2/APA3's 0.486/0.533, and APA0 gained **+0.154** across the campaign where APA3
+gained **+0.245**.
+
+**The Michel side is APA-flat**: `michel_found` efficiency 0.739 in APA0 against 0.727 in APA1,
+and excluding APA0 moves it only 0.793 → 0.812 (purity 0.972 → 0.963). Whatever APA0 costs, it
+costs it in **stopper identification**, not in finding the Michel once a stop is called.
+
+### The comparison to PDVD, redone
+
+| | PDVD (`p93vprod`) | PDHD, all 4 APAs | PDHD, **APA0 excluded** |
+|---|---|---|---|
+| `is_stm` purity | 0.968 | 0.990 | **0.988** (strict **1.000**) |
+| `is_stm` efficiency | **0.877** *(with a candidate)* | 0.649 | **0.725** (strict **0.733**) |
+| `michel_found` purity | 0.923 | 0.972 | 0.963 |
+| `michel_found` efficiency | **0.878** *(with a candidate)* | 0.793 | 0.812 |
+
+PDVD's *with-a-candidate* column is the like-for-like one, because PDHD's population is by
+construction the chain's candidate pool. On that basis:
+
+* **PDHD is the purer chain on both sides** — 0.988 vs 0.968 for stoppers, 0.963 vs 0.923 for
+  Michels — and that was already true before the cut.
+* **The efficiency gap narrows from 0.228 to 0.144** (0.877 − 0.733), i.e. excluding APA0
+  accounts for **about 37 %** of it. The remaining ~0.14 is not APA0.
+
+### What this does NOT establish
+
+1. **The comparison is now asymmetric**: PDHD-healthy against PDVD-*all*. No equivalent bad
+   region was excluded on PDVD, and none is named in the PDVD docs. If PDVD has one, its 0.877
+   is correspondingly pessimistic.
+2. **The mechanism behind APA0's STM deficit is not identified here.** Doc pdhd/04 §7.5 and §8.5
+   concluded the induction deficit behind the TGM rejection excess is **detector-wide, not
+   APA0** — all four APAs in a 20–26 % band. That was a point-level charge measurement of one
+   specific mechanism (APA0's field response). This is a different quantity, the STM verdict
+   efficiency, and on it APA0 *is* clearly worse. The two are not the same claim, but the tension
+   is real and this table does not resolve it.
+3. **PDVD's scan was not blind** (§4), which inflates its numbers by an unknown amount.
+4. Neither number is an absolute efficiency — both denominators are candidate pools.
+
 ## Files
 
 | what | where |
@@ -223,3 +290,4 @@ bias runs toward agreement with the chain — two of the three rulings did agree
 | the owner's scan (§6) | `docs/scan/smx23/owner_rulings_own23.json`, `provenance.json`, labels tag `own23` |
 | the corrected record | `docs/scan/pdhd_stm_michel_smx23_verdicts.json` |
 | re-scored, and its grader | `docs/scan/h23/census_smx23.txt`, `d23_grade.py` |
+| per-APA, and APA0 excluded (§7) | `docs/scan/h23/census_apa.txt`, `d23_apa.py` |
