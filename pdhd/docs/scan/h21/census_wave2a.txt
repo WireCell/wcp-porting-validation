@@ -1,0 +1,55 @@
+doc pdhd/21 wave 2 batch A -- census and gates, generated 2026-09-11 19:39:04
+
+instrument validated: p82bhoff reproduces the committed census 61/0/86/110
+
+  p82bhoff   TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+  h21m       TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+             gained TP (0): none
+             NEW FP   (0): none
+             michel_found moved on 0 item(s) (predicted: none)
+  h21g       TP  71 FP   0 FN  76 TN 110 | purity 1.000 efficiency 0.483
+             gained TP (10): 028084_10/108 028084_10/109 028084_18/108 028084_23/114 028084_30/37 029107_11/18 029107_2/108 029107_20/139 029107_4/69 029107_6/122
+             NEW FP   (0): none
+             michel_found moved on 0 item(s) (predicted: none)
+  h21w       TP  71 FP   0 FN  76 TN 110 | purity 1.000 efficiency 0.483
+             gained TP (10): 028084_10/108 028084_10/109 028084_18/108 028084_23/114 028084_30/37 029107_11/18 029107_2/108 029107_20/139 029107_4/69 029107_6/122
+             NEW FP   (0): none
+             michel_found moved on 0 item(s) (predicted: none)
+
+== movers gates vs p82bhoff ==
+--- h21m ---
+    matched candidates      : 325  (before 325, after 341)
+    candidates BIT-IDENTICAL on all 130 shared branches : 325 / 325
+    is_stm FLIPS : 0
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+--- h21g ---
+    matched candidates      : 325  (before 325, after 325)
+    NEW branches   : bragg_anchor_fallback
+    candidates BIT-IDENTICAL on all 130 shared branches : 180 / 325
+    is_stm FLIPS : 11
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+--- h21w ---
+    matched candidates      : 325  (before 325, after 325)
+    NEW branches   : bragg_anchor_fallback
+    candidates BIT-IDENTICAL on all 130 shared branches : 180 / 325
+    is_stm FLIPS : 11
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+
+== reading ==
+h21m max_candidates:64 -- 325/325 bit-identical, 0 is_stm flips, candidate set 325 -> 341.
+   PDVD doc 79's precondition (existing candidates unchanged) HOLDS on PDHD.
+   The census is unchanged only because the grader fixes the population at the
+   committed 303; the gain is in the 14 cap extras: +5 stoppers / 0 FP from the
+   committed h18b key.  NOT 'no effect'.
+h21g bragg_peak_anchor + search 3.0 + geo fallback -- +10 stoppers, 0 FP, purity 1.000.
+h21w + wide anchor (8.0/1.3/0.8) -- IDENTICAL to h21g, same 10 items.  The wide
+   anchor, PDVD's doc 93 flip (+4 for 1 FP there), adds NOTHING on PDHD.
+CAUTION: h21g/h21w are only 180/325 bit-identical and add a new branch
+   (bragg_anchor_fallback) -- the anchor family re-reads the Bragg peak on ~145
+   candidates.  Point geometry identical 325/325 (no fit moved), but this had NO
+   offline twin, so unlike wave 1 the movement was unpredicted.
+OVERLAP with h21k (ks_margin): 028084_18/108 028084_30/37 029107_20/139
+   029107_4/69 029107_6/122 -- 5 of 10 shared, so the two are NOT additive.

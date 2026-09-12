@@ -207,7 +207,25 @@ over length, **MH odds ratio 2.58, CMH χ² 9.33, z = 3.05, p ≈ 0.002 — it s
 
 1. Test whether a **length-aware plateau window** recovers stoppers without adding false
    ones — the confirmatory step §7.3 does not itself justify.
+   * **ANSWERED, NEGATIVELY, in doc pdhd/21 §5.** `short_track` (the window already halves
+     below 40 cm) fires on **5 of 86** misses. The 12 `plateau_off_mip` misses are **long**
+     tracks (138–446 cm) whose whole plateau reads **0.28–0.56 MIP** — a charge-scale
+     problem, not a length one — and the hand-THRU items rejected on the same bit read
+     **0.22–0.54 MIP**, *interleaved* with them, so no window position separates the two.
+     A sweep confirms it: lo 0.5 → +2/+1 FP, 0.4 → +3/+1, 0.3 → +4/**+5**. PDVD's own
+     `plateau_mip_hi` 2.0 flip recovers **zero** on PDHD. No plateau window move earns its
+     keep here, length-aware or not. The §7.3 result stands as a statement about scanner
+     *confidence*, which does not transfer to the miss population.
 2. Port `census_score.py` / `census_lib.py` to `--det pdhd` (its PDVD constants are at
    `census_lib.py:38-51`); `d18_census.py` is already PDHD.
+   * **DONE in doc pdhd/21 §2**, and scoped down by evidence: only `census_lib` is needed
+     (the knob graders import it alone), `MIP_MEDIAN` = 48000 was read from the *compiled*
+     config, and `census_score.py` was deliberately **not** ported.
 3. Grade PDVD's production knobs on PDHD against `smx22` (P1 `topology_stop_evidence`).
+   * **DONE in doc pdhd/21 §3–§5.** P1 is not the first candidate it appeared to be: it
+     costs purity (74/1, 76/3, 78/4). `ks_margin` and the Bragg anchor are the PDHD winners.
 4. Then update the PDHD production chain.
+   * **DONE in doc pdhd/21 §6**: four knobs flipped, `is_stm` 61/0/86/110 → 80/0/67/110,
+     purity 1.000 held, efficiency 0.415 → 0.544.
+
+**Superseded by doc pdhd/21** for everything in this list.

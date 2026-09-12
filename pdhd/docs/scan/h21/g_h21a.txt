@@ -1,0 +1,63 @@
+==============================================================================
+p82bhoff -> h21a
+  matched candidates      : 325  (before 325, after 325)
+  branches shared / new / dropped : 130 / 1 / 0
+  NEW branches   : topology_cleared_bits
+  candidates BIT-IDENTICAL on all 130 shared branches : 299 / 325
+  branches that moved, and on how many candidates:
+      reject_bits                   26
+      is_stm                        15
+  movers with n_stop_gammas > 0 : 0 of 26  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 15
+      028084_12      cl   46  is_stm 0 -> 1  contrast 1.0411 -> 1.0411  muon_len 184.536 -> 184.536
+      028084_12      cl  101  is_stm 0 -> 1  contrast 0.8521 -> 0.8521  muon_len 449.592 -> 449.592
+      028084_12      cl  117  is_stm 0 -> 1  contrast 1.2919 -> 1.2919  muon_len 93.501 -> 93.501
+      028084_18      cl  108  is_stm 0 -> 1  contrast 1.2969 -> 1.2969  muon_len 88.938 -> 88.938
+      028084_19      cl   59  is_stm 0 -> 1  contrast 1.3782 -> 1.3782  muon_len 282.317 -> 282.317
+      028084_30      cl   26  is_stm 0 -> 1  contrast 0.8081 -> 0.8081  muon_len 146.896 -> 146.896
+      028084_6       cl   42  is_stm 0 -> 1  contrast 0.9289 -> 0.9289  muon_len 245.616 -> 245.616
+      028084_8       cl  110  is_stm 0 -> 1  contrast 1.5526 -> 1.5526  muon_len 67.350 -> 67.350
+      029107_20      cl   57  is_stm 0 -> 1  contrast 1.6933 -> 1.6933  muon_len 110.514 -> 110.514
+      029107_20      cl  108  is_stm 0 -> 1  contrast 1.2565 -> 1.2565  muon_len 109.641 -> 109.641
+      029107_20      cl  139  is_stm 0 -> 1  contrast 1.2276 -> 1.2276  muon_len 319.405 -> 319.405
+      029107_24      cl   19  is_stm 0 -> 1  contrast 0.6704 -> 0.6704  muon_len 82.782 -> 82.782
+      029107_4       cl   24  is_stm 0 -> 1  contrast 0.2103 -> 0.2103  muon_len 146.856 -> 146.856
+      029107_4       cl   69  is_stm 0 -> 1  contrast 1.2446 -> 1.2446  muon_len 68.876 -> 68.876
+      029107_9       cl  109  is_stm 0 -> 1  contrast 0.6701 -> 0.6701  muon_len 242.169 -> 242.169
+  every mover, on the verdict-relevant branches:
+      028084_1       cl   39  reject_bits 1036->1024
+      028084_12      cl   46  is_stm 0->1; reject_bits 12->0
+      028084_12      cl  101  is_stm 0->1; reject_bits 12->0
+      028084_12      cl  117  is_stm 0->1; reject_bits 8->0
+      028084_17      cl   35  reject_bits 76->64
+      028084_18      cl  108  is_stm 0->1; reject_bits 8->0
+      028084_18      cl  122  reject_bits 1032->1024
+      028084_19      cl   59  is_stm 0->1; reject_bits 8->0
+      028084_3       cl   23  reject_bits 1028->1024
+      028084_30      cl   26  is_stm 0->1; reject_bits 12->0
+      028084_6       cl   42  is_stm 0->1; reject_bits 12->0
+      028084_8       cl  110  is_stm 0->1; reject_bits 8->0
+      029107_1       cl   32  reject_bits 1032->1024
+      029107_18      cl   24  reject_bits 1032->1024
+      029107_19      cl  123  reject_bits 520->512
+      029107_20      cl   57  is_stm 0->1; reject_bits 8->0
+      029107_20      cl  108  is_stm 0->1; reject_bits 12->0
+      029107_20      cl  139  is_stm 0->1; reject_bits 8->0
+      029107_24      cl   19  is_stm 0->1; reject_bits 12->0
+      029107_27      cl   64  reject_bits 520->512
+      029107_3       cl   23  reject_bits 520->512
+      029107_4       cl   24  is_stm 0->1; reject_bits 12->0
+      029107_4       cl   69  is_stm 0->1; reject_bits 8->0
+      029107_5       cl   28  reject_bits 1032->1024
+      029107_7       cl   45  reject_bits 520->512
+      029107_9       cl  109  is_stm 0->1; reject_bits 12->0
+==============================================================================
+p82bhoff -> h21a  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 0
+  role histogram before : {1: 97895, 2: 2459, 3: 1269, 5: 148}
+  role histogram after  : {1: 97895, 2: 2459, 3: 1269, 5: 148}

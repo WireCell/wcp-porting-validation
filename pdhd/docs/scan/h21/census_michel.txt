@@ -1,0 +1,31 @@
+doc pdhd/21 -- the MICHEL side, generated 2026-09-11 19:50:09
+instrument: d21_michel_census.py (michel_found vs hand michel_kind on hand stoppers)
+
+michel_found graded on hand stoppers only; truth = michel_kind in (attached, both);
+an owner_review stopper with no kind is EXCLUDED, never scored 'no Michel'.
+
+  p82bhoff   TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h21k       TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h21g       TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h21s       TP  58 FP  10 FN  28 TN  48 | purity 0.853 efficiency 0.674 (excluded 3)
+  h21j       TP  67 FP   2 FN  19 TN  56 | purity 0.971 efficiency 0.779 (excluded 3)
+  h21x       TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+
+== reading ==
+The Michel family is the ONE PDVD group that transfers to PDHD, and it transfers
+strongly: michel_found 56/11/30 (purity 0.836, eff 0.651) -> 67/2/19 (purity 0.971,
+eff 0.779).  +11 true Michels AND -9 false ones: purity and efficiency both rise.
+
+Every stopper-side knob (ks_margin, the anchor family, max_candidates) leaves the
+Michel side EXACTLY unchanged at 56/11/30 -- the two sides are orthogonal on PDHD.
+
+CAVEATS, stated rather than buried:
+ 1. h21j bundles the stop-topology knobs with the Michel knobs.  h21s (stop topology
+    alone) gives 58/10/28, so ~2 of the +11 belong there and ~9 to the Michel knobs.
+    WHICH Michel knob does the work is NOT attributed -- they ran as one bag.
+ 2. h21j is the only arm that perturbs the FIT: point geometry moved on 108 of 325
+    candidates, 8 new branches, 216/325 bit-identical.  Everything else moved verdict
+    bits only.  That is expected for gamma collection (it adds points to the Michel
+    object) but it means the arm cannot be treated as a pure relabelling.
+ 3. No offline twin existed for this family, so unlike wave 1 nothing here was
+    predicted in advance.  It is a measurement, not a confirmed prediction.

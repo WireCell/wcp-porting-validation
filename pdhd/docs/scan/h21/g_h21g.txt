@@ -1,0 +1,56 @@
+==============================================================================
+p82bhoff -> h21g
+  matched candidates      : 325  (before 325, after 325)
+  branches shared / new / dropped : 130 / 1 / 0
+  NEW branches   : bragg_anchor_fallback
+  candidates BIT-IDENTICAL on all 130 shared branches : 180 / 325
+  branches that moved, and on how many candidates:
+      bragg_anchor_shift_cm        145
+      ks_mu                        141
+      ratio_mu                     141
+      tail_med                     141
+      ks_flat                      137
+      ratio_flat                   137
+      contrast                     134
+      contrast_expected            134
+      chain_support_min            132
+      plateau_med                  132
+      comp_fwd1                    130
+      comp_fwd2                    130
+      comp_fwd3                    130
+      n_tail                        99
+      n_plateau                     90
+      reject_bits                   61
+      bragg_valid                   23
+      comp_bwd2                     21
+      comp_bwd1                     18
+      comp_fwd0                     14
+      comp_bwd3                     11
+      is_stm                        11
+      n_unsupported_segs             6
+      unsupported_len_cm             6
+      unsupported_frac_min           5
+      short_track                    2
+  movers with n_stop_gammas > 0 : 11 of 145  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 11
+      028084_10      cl  108  is_stm 0 -> 1  contrast 0.6809 -> 1.9106  muon_len 196.170 -> 196.170
+      028084_10      cl  109  is_stm 0 -> 1  contrast 1.1460 -> 1.7537  muon_len 589.505 -> 589.505
+      028084_18      cl  108  is_stm 0 -> 1  contrast 1.2969 -> 1.6626  muon_len 88.938 -> 88.938
+      028084_23      cl  114  is_stm 0 -> 1  contrast 0.4637 -> 2.0143  muon_len 210.990 -> 210.990
+      028084_30      cl   37  is_stm 0 -> 1  contrast 1.7326 -> 1.5712  muon_len 429.161 -> 429.161
+      029107_11      cl   18  is_stm 0 -> 1  contrast 3.5046 -> 2.1108  muon_len 55.532 -> 55.532
+      029107_2       cl  108  is_stm 0 -> 1  contrast 0.8489 -> 1.4417  muon_len 386.343 -> 386.343
+      029107_20      cl  139  is_stm 0 -> 1  contrast 1.2276 -> 1.5118  muon_len 319.405 -> 319.405
+      029107_24      cl   47  is_stm 0 -> 1  contrast 1.0418 -> 1.7663  muon_len 17.400 -> 17.400
+      029107_4       cl   69  is_stm 0 -> 1  contrast 1.2446 -> 1.4993  muon_len 68.876 -> 68.876
+      029107_6       cl  122  is_stm 0 -> 1  contrast 1.8586 -> 1.3599  muon_len 78.348 -> 78.348
+==============================================================================
+p82bhoff -> h21g  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 0
+  role histogram before : {1: 97895, 2: 2459, 3: 1269, 5: 148}
+  role histogram after  : {1: 97895, 2: 2459, 3: 1269, 5: 148}

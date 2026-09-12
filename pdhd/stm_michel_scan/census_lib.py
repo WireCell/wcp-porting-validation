@@ -36,15 +36,37 @@ import csv, glob, json, os, sys
 import numpy as np
 
 IMG = "/home/xqian/toolkit-dev/wcp-porting-img"
+# doc pdhd/21: the detector switch.  STM_DET defaults to "pdvd", so each of the 30
+# PDVD scripts importing this module keeps byte-for-byte the constants it had; only
+# an explicit STM_DET=pdhd changes anything.
+DET = (os.environ.get("STM_DET") or "pdvd").lower()
+if DET not in ("pdvd", "pdhd"):
+    raise SystemExit("census_lib: STM_DET must be 'pdvd' or 'pdhd', got %r" % DET)
 # doc pdvd/68: STM_SCAN_RECORD names another record -- the merged smx1a + owner smx3
 # record is pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_verdicts.json.  Unset => smx1a,
 # so `census_score.py --check` (doc 55's literals) is unchanged.
-REC = os.environ.get("STM_SCAN_RECORD") or IMG + "/pdvd/docs/scan/pdvd_stm_michel_smx1a_verdicts.json"
-SHEET = IMG + "/pdvd/docs/scan/pdvd_stm_michel_scan_sheet.tsv"
-PREP_DEFAULT = IMG + "/pdhd/stm_michel_scan/prep-pdvd"
-WORK = IMG + "/pdvd/work"
-MIP = 54000.0            # e/cm, the display's own reference curve plateau
-MIP_MEDIAN = 47000.0     # mip_dqdx_median the PDVD taggers run with (wct-pr-perevt.jsonnet:301)
+REC = os.environ.get("STM_SCAN_RECORD") or IMG + {
+    "pdvd": "/pdvd/docs/scan/pdvd_stm_michel_smx1a_verdicts.json",
+    "pdhd": "/pdhd/docs/scan/pdhd_stm_michel_smx22_verdicts.json",
+}[DET]
+SHEET = IMG + {"pdvd": "/pdvd/docs/scan/pdvd_stm_michel_scan_sheet.tsv",
+               "pdhd": "/pdhd/docs/scan/pdhd_stm_michel_scan_sheet.tsv"}[DET]
+PREP_DEFAULT = IMG + {"pdvd": "/pdhd/stm_michel_scan/prep-pdvd",
+                      "pdhd": "/pdhd/stm_michel_scan/prep-pdhd-smx19"}[DET]
+WORK = IMG + {"pdvd": "/pdvd/work", "pdhd": "/pdhd/work"}[DET]
+MIP = 54000.0            # e/cm, the PDVD display's own reference-curve plateau.  Consumed
+                         # ONLY by census_score.py (class F, :121), which doc pdhd/21 does
+                         # NOT port; no PDHD value is asserted because none was measured.
+MIP_MEDIAN = {"pdvd": 47000.0,   # PDVD taggers (pdvd/wct-pr-perevt.jsonnet:699)
+              "pdhd": 48000.0,   # PDHD taggers -- read from the COMPILED config, not the
+                                 # jsonnet source (doc pdhd/21 sec 2 Repro)
+              }[DET]
+
+# doc pdhd/21: truth on the PDHD record needs the owner precedence that d18_census.py
+# applies (owner_review > owner_smx1 > agent).  is_stopper()/is_michel() below read the
+# flat `verdict` field only, which on smx22 is the AGENT call -- correct for PDVD's
+# smx1a, WRONG for any PDHD number that must match the committed census.  Use
+# d18_census.py for headline PDHD censuses; use this module for per-knob movers.
 STM_BITS = ["no_chain", "stop_unmatched", "no_bragg", "shape_flat", "not_muon_pid",
             "continuation", "stop_near_boundary", "vertex_hadron", "short",
             "profile_sparse", "plateau_off_mip", "stop_into_dead", "cluster_not_track",

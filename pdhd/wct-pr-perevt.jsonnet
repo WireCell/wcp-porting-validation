@@ -250,6 +250,39 @@ function(
         // absorb_bragg_stub is NOT set: absorbing 029107/1 cluster 113's 5.5 cm stub turned a clean STM into no_bragg (sec 6.8)
         stop_fv_use_config_tolerance: true,  // stop containment with the taggers' per-wall margins, not a flat 5 cm (sec 6.9)
         dead_volume_check: true,       // stop that walks into a dead region (sec 6.4; fired 0/165 on 029107, kept for the record)
+        // ---- doc pdhd/21: the first PDHD knobs graded on a PDHD hand-scan record ----
+        // Every knob below was OFF only because "no PDHD hand-scan record" existed; smx22
+        // (317 items, 61 events) is that record.  Graded on arm h21f against p82bhoff with
+        // the libpin_p82 binary (md5 5f2c3ede, identical before and after every arm):
+        //   is_stm 61/0/86/110 -> 80/0/67/110, purity 1.000 HELD, efficiency 0.415 -> 0.544,
+        //   michel_found unchanged at 56/11/30.  ZERO new false positives, which is why this
+        //   set needed no operating-point ruling.
+        // The four knobs act as a UNIT and must be re-graded as one: the anchor re-reads the
+        // Bragg peak, which moves ks_mu/ks_flat, so h21f gained 19 where the naive union of
+        // the single-knob arms predicted 17 (the pre-registered twin FAILED here; see
+        // docs/scan/h21/census_h21f.txt).  Never re-derive this gain by adding single arms.
+        ks_margin: -0.02,              // C++ default 0.0.  shape_flat fires when ks_mu + margin >= ks_flat;
+                                       // arm h21k alone: +11 stoppers, 0 FP.  0 FP is structural here --
+                                       // the pool of hand-THRU items rejected by shape_flat ALONE is empty.
+        max_candidates: 64,            // C++ default 8.  The cap dropped 16 candidates on 7 of 61 events;
+                                       // arm h21m: all 325 existing candidates BIT-IDENTICAL, 0 is_stm flips,
+                                       // set 325 -> 341, and +5 hand stoppers / 0 FP among the extras.
+        bragg_peak_anchor: true,       // C++ default false.  Anchor the profile on the Bragg peak rather than
+        bragg_peak_search_cm: 3.0,     // C++ default 10.0.   the geometric end; arm h21g: +10 stoppers, 0 FP.
+        bragg_anchor_geo_fallback: true,  // C++ default false.  Keep the geometric reading when the peak anchor
+                                       // rejects a prominent rise (doc pdvd/75's mechanism, confirmed on PDHD).
+        // NOT set, and each for a measured PDHD reason (doc pdhd/21 sec 5):
+        //   bragg_wide_anchor_cm  -- PDVD's doc 93 flip (+4 for 1 FP there) recovers NOTHING here:
+        //                            arm h21w is identical to h21g on all 10 items.
+        //   plateau_mip_hi 2.0    -- PDVD's doc 90 flip recovers ZERO on PDHD; and no plateau window
+        //                            move earns its keep: the 12 plateau_off_mip misses are LONG tracks
+        //                            (138-446 cm) reading 0.28-0.56 MIP, interleaved with hand-THRU
+        //                            items at 0.22-0.54, so no window position separates them.
+        //   stop_retreat_max / stop_split_max / split_kink_min_deg -- arm h21s: 0 stoppers gained.
+        //   topology_stop_evidence and friends -- each COSTS purity (74/1 .. 78/4); the owner rules.
+        //   the Michel bag (michel_gamma_collect ...) -- arm h21z lifts michel_found to 67/2/19
+        //                            (purity 0.836 -> 0.971, eff 0.651 -> 0.779) but spends 1 stopper
+        //                            FP, breaking purity 1.000.  Recommended, awaiting the owner's ruling.
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
         // one EM blob (sec 6.5), so the guard does not separate; chain_coverage is persisted for scans.
         // doc pdhd/16: MCS momentum for the STM muon -- the third energy scale,

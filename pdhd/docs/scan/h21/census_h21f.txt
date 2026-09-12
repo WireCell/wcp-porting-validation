@@ -1,0 +1,34 @@
+doc pdhd/21 -- h21f, the combined zero-FP stopper set.  generated 2026-09-11 19:57:58
+TLA: ks_margin:-0.02, max_candidates:64, bragg_peak_anchor:true,
+     bragg_peak_search_cm:3.0, bragg_anchor_geo_fallback:true
+
+instrument validated: p82bhoff reproduces the committed census 61/0/86/110
+
+  p82bhoff   TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+  h21f       TP  80 FP   0 FN  67 TN 110 | purity 1.000 efficiency 0.544
+             gained TP (19): 028084_10/108 028084_10/109 028084_12/101 028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_23/114 028084_28/131 028084_30/37 029107_11/18 029107_19/30 029107_2/108 029107_20/139 029107_20/57 029107_23/128 029107_27/99 029107_4/69 029107_6/122
+             NEW FP   (0): none
+             michel_found moved on 0 item(s) (predicted: none)
+--- michel side ---
+
+  h21f       TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+
+== movers gate vs p82bhoff ==
+    matched candidates      : 325  (before 325, after 341)
+    NEW branches   : bragg_anchor_fallback
+    candidates BIT-IDENTICAL on all 130 shared branches : 167 / 325
+    is_stm FLIPS : 20
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+
+== PRE-REGISTERED PREDICTION: FAILED ==
+Predicted 17 recovered (the naive union of h21k's 11 and h21g's 10, overlapping on 4).
+ACTUAL: 19.  Two items appear ONLY in combination:
+    028084_12/101   029107_19/30
+The falsifier written before the arm said: 'if the arm returns anything other than 17,
+the anchor and the KS margin interact, and the combined set must be graded as a unit
+rather than assembled from single-knob arms.'  That is what happened, and it is why
+the flip is graded on h21f/h21z as units and never by adding single-knob gains.
+The interaction is FAVOURABLE (+2, still 0 FP), but it was not predicted.
+The Michel half of the prediction HELD: 56/11/30 unchanged, as the stopper knobs
+leave michel_found alone.

@@ -1,0 +1,116 @@
+==============================================================================
+p82bhoff -> h21s
+  matched candidates      : 325  (before 325, after 325)
+  branches shared / new / dropped : 130 / 0 / 0
+  candidates BIT-IDENTICAL on all 130 shared branches : 313 / 325
+  branches that moved, and on how many candidates:
+      chain_support_min             12
+      comp_fwd1                     12
+      comp_fwd2                     12
+      comp_fwd3                     12
+      contrast                      12
+      contrast_expected             12
+      end_arc_span                  12
+      end_span_cm                   12
+      ks_flat                       12
+      ks_mu                         12
+      muon_ke_best                  12
+      muon_ke_dqdx                  12
+      muon_ke_mcs                   12
+      muon_ke_range                 12
+      muon_len                      12
+      muon_mcs_amb                  12
+      muon_mcs_range_ke             12
+      muon_mcs_tracklen             12
+      muon_p_dqdx                   12
+      muon_p_mcs                    12
+      muon_p_range                  12
+      n_live_pts                    12
+      n_profile_pts                 12
+      n_tail                        12
+      ratio_flat                    12
+      ratio_mu                      12
+      stop_dis                      12
+      stop_vtx_id                   12
+      stop_x                        12
+      stop_y                        12
+      stop_z                        12
+      tail_med                      12
+      end_arc_cm                    11
+      n_cmp_live                    10
+      n_end_pts                     10
+      plateau_med                   10
+      dead_frac_cmp                  9
+      reject_bits                    9
+      n_stop_arms                    8
+      n_stop_other                   8
+      michel_ke_best                 7
+      michel_ke_core                 7
+      michel_ke_dqdx                 7
+      michel_ke_range                7
+      michel_len                     7
+      michel_n_pieces                7
+      michel_parent_vtx_id           7
+      michel_seg_id                  7
+      michel_start_x                 7
+      michel_start_y                 7
+      michel_start_z                 7
+      n_dead_pts                     7
+      n_michel_segs                  7
+      n_split                        7
+      split_kink_deg                 7
+      split_len                      7
+      michel_conn_type               6
+      michel_dis_cm                  6
+      michel_kink_deg                6
+      michel_mip                     6
+      michel_n_clusters              6
+      n_plateau                      6
+      bragg_valid                    5
+      n_chain_segs                   5
+      n_retreat                      5
+      retreat_len                    5
+      michel_found                   4
+      in_fv                          3
+      muon_mcs_nsegs                 3
+      comp_bwd1                      2
+      comp_bwd2                      2
+      dots_ke_dqdx                   2
+      michel_far_len                 2
+      n_dots                         2
+      n_stop_gammas                  2
+      stop_gamma_charge              2
+      stop_gamma_dis_max             2
+      stop_gamma_dis_min             2
+      stop_gamma_ke_tot              2
+      comp_bwd3                      1
+      delta_len                      1
+      n_body_other                   1
+      n_delta                        1
+      stop_gamma_ke_max              1
+      stop_gamma_seg_id              1
+  movers with n_stop_gammas > 0 : 1 of 12  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 0
+  every mover, on the verdict-relevant branches:
+      028084_1       cl   25  reject_bits 76->72; muon_ke_best 151.29421571280417->143.39691204631941; contrast 0.34430543039317135->1.1872715304441495; muon_len 53.23208229446639->49.6410481569827
+      028084_2       cl  116  reject_bits 12->520; michel_found 0->1; michel_conn_type 0->1; muon_ke_best 373.1881845998634->365.42864226739067; contrast 0.40510834547686025->0.0; muon_len 157.00785365433663->153.4078536543367
+      028084_29      cl   53  muon_ke_best 755.1158239552428->742.9783857773319; contrast 0.3415973716663349->0.5160535767809062; muon_len 327.97371877262015->322.7181854273621
+      028084_29      cl  115  reject_bits 520->12; michel_found 0->1; michel_conn_type 0->2; muon_ke_best 255.28336294118898->243.2916493571353; contrast 0.0->0.3083741690051231; muon_len 101.83599294530002->96.19170865240359
+      028084_3       cl   72  reject_bits 584->12; muon_ke_best 582.3771955558337->534.1449627064484; contrast 0.0->0.511801450066083; muon_len 252.13178321790184->230.53178321790182
+      028084_6       cl  115  michel_conn_type 2->1; muon_ke_best 458.5212338826067->442.1164593980446; contrast 0.23908329375311282->0.9368816024049618; muon_len 196.26374688435126->188.76476494490637
+      029107_1       cl   82  reject_bits 76->12; muon_ke_best 426.73547110481377->420.86715322511446; contrast 0.3934615583065582->0.18529246070122687; muon_len 181.71312223710953->179.01743048355266
+      029107_10      cl   44  reject_bits 76->1036; michel_found 0->1; michel_conn_type 0->1; muon_ke_best 871.8868762502635->853.3698791541303; contrast 0.8944996454009367->0.9201139767815563; muon_len 378.028497406362->370.15014251965954
+      029107_19      cl  111  reject_bits 12->8; michel_found 1->0; michel_conn_type 1->0; muon_ke_best 298.91742512623165->269.6570509554136; contrast 0.17037405621650198->1.4175104643284169; muon_len 122.35280338420264->108.5999999999998
+      029107_20      cl   22  reject_bits 520->1032; muon_ke_best 281.9397968398801->238.76144980824535; contrast 0.0->1.7661907784069935; muon_len 114.37723451474366->94.05891976972191
+      029107_29      cl   35  muon_ke_best 1255.626166312974->1244.2861663129738; contrast 0.3508682949384854->0.8093289816264848; muon_len 553.7669363395114->548.3669363395113
+      029107_3       cl   23  reject_bits 520->12; michel_conn_type 1->2; muon_ke_best 302.25647229335937->287.923224207016; contrast 0.0->0.704623411851877; muon_len 123.91881650558555->117.19044537729755
+==============================================================================
+p82bhoff -> h21s  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 313 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 12
+  role histogram before : {1: 97895, 2: 2459, 3: 1269, 5: 148}
+  role histogram after  : {1: 97745, 2: 2453, 3: 1322, 5: 144}

@@ -1,0 +1,140 @@
+==============================================================================
+p82bhoff -> h21z
+  matched candidates      : 325  (before 325, after 341)
+  branches shared / new / dropped : 130 / 9 / 0
+  NEW branches   : bragg_anchor_fallback, michel_gamma_dis_max, michel_ke_gamma, michel_ke_total, n_michel_gamma_cand, n_michel_gamma_capped, n_michel_gammas, n_michel_veto_exempt, stop_move_p3_bits
+  candidates BIT-IDENTICAL on all 130 shared branches : 119 / 325
+  branches that moved, and on how many candidates:
+      ks_mu                        157
+      ratio_mu                     157
+      tail_med                     156
+      ks_flat                      154
+      ratio_flat                   154
+      comp_fwd1                    151
+      comp_fwd2                    151
+      comp_fwd3                    151
+      bragg_anchor_shift_cm        150
+      chain_support_min            150
+      plateau_med                  149
+      contrast                     148
+      contrast_expected            147
+      n_tail                       103
+      n_plateau                    100
+      reject_bits                   83
+      comp_bwd2                     51
+      comp_bwd1                     49
+      michel_seg_id                 48
+      michel_conn_type              46
+      muon_ke_dqdx                  46
+      muon_p_dqdx                   46
+      muon_ke_best                  44
+      muon_ke_range                 44
+      muon_len                      44
+      muon_p_range                  44
+      dots_ke_dqdx                  43
+      michel_found                  42
+      michel_ke_best                42
+      michel_ke_dqdx                42
+      muon_mcs_range_ke             42
+      muon_mcs_tracklen             42
+      comp_bwd3                     41
+      n_dots                        41
+      n_local_pieces                41
+      stop_vtx_id                   41
+      michel_ke_core                40
+      muon_mcs_amb                  40
+      end_arc_span                  39
+      end_span_cm                   39
+      muon_ke_mcs                   39
+      muon_p_mcs                    39
+      michel_parent_vtx_id          38
+      michel_start_x                38
+      michel_start_y                38
+      michel_start_z                38
+      n_profile_pts                 38
+      michel_ke_range               36
+      michel_len                    36
+      michel_n_pieces               35
+      n_michel_segs                 35
+      michel_dis_cm                 34
+      n_live_pts                    34
+      end_arc_cm                    33
+      stop_dis                      33
+      stop_y                        33
+      stop_z                        33
+      stop_x                        32
+      michel_n_clusters             31
+      n_cmp_live                    29
+      n_dead_pts                    28
+      n_end_pts                     25
+      bragg_valid                   23
+      dead_frac_cmp                 23
+      is_stm                        23
+      n_michel_range_veto           22
+      n_chain_segs                  19
+      comp_fwd0                     18
+      michel_mip                    18
+      michel_kink_deg               15
+      stop_gamma_seg_id             15
+      delta_len                     12
+      n_stop_arms                   11
+      n_stop_other                  11
+      n_body_other                   9
+      n_delta                        9
+      n_kept_near_stop_main          9
+      entry_vtx_id                   8
+      n_stop_gammas                  8
+      stop_gamma_charge              8
+      stop_gamma_dis_max             8
+      stop_gamma_dis_min             8
+      stop_gamma_ke_max              8
+      stop_gamma_ke_tot              8
+      muon_mcs_nsegs                 7
+      n_retreat                      7
+      n_split                        7
+      retreat_len                    7
+      split_kink_deg                 7
+      split_len                      7
+      unsupported_frac_min           7
+      unsupported_len_cm             7
+      n_unsupported_segs             6
+      michel_far_len                 4
+      in_fv                          3
+      short_track                    3
+      comp_bwd0                      2
+      michel_ke_charge               1
+  movers with n_stop_gammas > 0 : 18 of 206  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 23
+      028084_10      cl  108  is_stm 0 -> 1  contrast 0.6809 -> 1.9106  muon_len 196.170 -> 196.170
+      028084_10      cl  109  is_stm 0 -> 1  contrast 1.1460 -> 1.7537  muon_len 589.505 -> 589.505
+      028084_12      cl  101  is_stm 0 -> 1  contrast 0.8521 -> 1.2357  muon_len 449.592 -> 449.592
+      028084_18      cl  104  is_stm 0 -> 1  contrast 1.3448 -> 1.3448  muon_len 351.147 -> 351.147
+      028084_18      cl  108  is_stm 0 -> 1  contrast 1.2969 -> 1.6626  muon_len 88.938 -> 88.938
+      028084_19      cl   59  is_stm 0 -> 1  contrast 1.3782 -> 1.3782  muon_len 282.317 -> 282.317
+      028084_21      cl   56  is_stm 0 -> 1  contrast 2.3421 -> 2.3421  muon_len 274.328 -> 274.328
+      028084_23      cl  114  is_stm 0 -> 1  contrast 0.4637 -> 1.6628  muon_len 210.990 -> 208.048
+      028084_28      cl  131  is_stm 0 -> 1  contrast 1.3894 -> 1.3894  muon_len 600.491 -> 600.491
+      028084_30      cl   37  is_stm 0 -> 1  contrast 1.7326 -> 1.5712  muon_len 429.161 -> 429.161
+      029107_10      cl   44  is_stm 0 -> 1  contrast 0.8945 -> 2.2635  muon_len 378.028 -> 370.150
+      029107_11      cl   18  is_stm 0 -> 1  contrast 3.5046 -> 2.1108  muon_len 55.532 -> 55.532
+      029107_19      cl   30  is_stm 0 -> 1  contrast 0.8800 -> 2.0117  muon_len 233.942 -> 235.923
+      029107_19      cl  111  is_stm 0 -> 1  contrast 0.1704 -> 1.6651  muon_len 122.353 -> 108.600
+      029107_2       cl  108  is_stm 0 -> 1  contrast 0.8489 -> 1.4417  muon_len 386.343 -> 386.343
+      029107_20      cl   57  is_stm 0 -> 1  contrast 1.6933 -> 1.6933  muon_len 110.514 -> 110.514
+      029107_20      cl  139  is_stm 0 -> 1  contrast 1.2276 -> 1.5118  muon_len 319.405 -> 319.405
+      029107_23      cl  128  is_stm 0 -> 1  contrast 1.5130 -> 1.5130  muon_len 45.439 -> 45.439
+      029107_24      cl   47  is_stm 0 -> 1  contrast 1.0418 -> 1.7663  muon_len 17.400 -> 17.400
+      029107_27      cl   99  is_stm 0 -> 1  contrast 1.8109 -> 1.8109  muon_len 58.097 -> 58.097
+      029107_4       cl   58  is_stm 0 -> 1  contrast 1.1901 -> 1.2978  muon_len 218.104 -> 213.248
+      029107_4       cl   69  is_stm 0 -> 1  contrast 1.2446 -> 1.4993  muon_len 68.876 -> 68.876
+      029107_6       cl  122  is_stm 0 -> 1  contrast 1.8586 -> 1.3599  muon_len 78.348 -> 78.348
+==============================================================================
+p82bhoff -> h21z  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 217 / 325
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 108
+  role histogram before : {1: 97895, 2: 2459, 3: 1269, 5: 148}
+  role histogram after  : {1: 97773, 2: 2447, 3: 2176, 4: 203, 5: 130}

@@ -1,0 +1,193 @@
+# doc pdhd/21 — the offline twin, written BEFORE any arm launched
+
+Written 2026-09-11 from the `p82bhoff` ROOT output (`T_stm_michel`, 325 candidates over 61
+events) joined to the `smx22` record with the owner precedence `d18_census.py` uses
+(`owner_review` > `owner_smx1` > agent). Baseline: `is_stm` TP 61 / FP 0 / FN 86 / TN 110 on the
+303 production items — reproduced exactly by the join before any prediction below was computed.
+
+**The gate this file is:** each arm must move *these named items and no others*. The PDVD
+standard (doc 90 §3) is "held exactly: 0 missing, 0 unpredicted". A miss is reported, never
+retrofitted.
+
+## What is predicted, and on what arithmetic
+
+* `shape_flat` fires when `ks_mu + ks_margin >= ks_flat` (`CheckSTM_Michel.cxx:2904`).
+  The offline formula reproduces production's own `shape_flat` bit on **86/86** misses and
+  **109/110** hand-THRU. The single disagreement is `028084_17/38`, whose reject is
+  `profile_sparse` with `ks_mu = ks_flat = 0` — the KS test never ran on it. It is therefore a
+  degenerate row, not a counterexample, and it is excluded from the sweep by the
+  `bits == {shape_flat}` condition anyway.
+* P1 (`topology_stop_evidence`) clears the *shape* bits, so only candidates whose whole reject
+  set is clearable can move. Eligibility is `bits ⊆ {shape_flat, no_bragg}`, plus
+  `profile_sparse` when `topology_clears_sparse` is on. An item carrying `plateau_off_mip`,
+  `stop_near_boundary`, `stop_unmatched` or `not_muon_pid` cannot move and is excluded.
+* All 26 `shape_flat`-only misses carry `has_pass = 1` and `in_fv = 1`, so no other gate blocks
+  them.
+
+## h21k — `stm_michel_extra={ks_margin:-0.02}` (PDVD's own value)
+
+**+11 stoppers, 0 new false positives.**
+
+recovered (11):
+028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_28/131 028084_30/37
+029107_20/57 029107_23/128 029107_27/99 029107_4/69 029107_6/122
+
+new FP (0): NONE — and this is structural, not luck: the pool of hand-THRU items rejected by
+`shape_flat` **alone** is empty (0 of 110), so on this record loosening the KS margin cannot
+manufacture a false stopper. The nearest THRU items all carry a second bit that survives.
+
+Predicted census: **61/0/86/110 → 72/0/75/110, purity 1.000, efficiency 0.415 → 0.490.**
+
+## h21a — `{topology_stop_evidence:true}` at production's own floors (10 MeV / 3 cm)
+
+**+13 stoppers, +1 false positive.**
+
+recovered (13):
+028084_12/101 028084_12/117 028084_18/108 028084_19/59 028084_30/26 028084_6/42
+028084_8/110 029107_20/108 029107_20/139 029107_20/57 029107_24/19 029107_4/69 029107_9/109
+
+new FP (1): 028084_12/46
+
+Predicted census: **74/1/73/109, purity 0.987, efficiency 0.503.**
+
+## h21b — `{topology_stop_evidence:true, topology_clears_sparse:true}`
+
+**+15 stoppers, +3 false positives.**
+
+recovered (15):
+028084_12/101 028084_12/117 028084_18/108 028084_19/59 028084_30/26 028084_6/42 028084_8/110 029107_20/108 029107_20/139 029107_20/57 029107_24/19 029107_4/69 029107_9/109 029107_27/64 029107_3/23
+new FP (3):
+028084_12/46 029107_19/123 029107_7/45
+
+Predicted census: **76/3/71/107, purity 0.962, efficiency 0.517.**
+The two extra false positives are attributable to the sparse clearing alone — which is why this
+is a separate arm from h21a rather than bundled with it.
+
+## h21c — h21b plus `{topology_michel_ke_min:3}`
+
+**+17 stoppers, +4 false positives.**
+
+recovered (17):
+028084_12/101 028084_12/117 028084_18/108 028084_19/59 028084_30/26 028084_6/42 028084_8/110 029107_20/108 029107_20/139 029107_20/57 029107_24/19 029107_4/69 029107_9/109 029107_27/64 029107_3/23 029107_3/99 029107_5/32
+new FP (4):
+028084_12/46 029107_19/123 029107_7/45 028084_18/17
+
+Predicted census: **78/4/69/106, purity 0.951, efficiency 0.531.**
+
+## Overlap, stated in advance
+
+`ks_margin` and P1 are **not** additive. Four items appear in both h21k and h21a
+(`028084_18/108`, `028084_19/59`, `029107_20/57`, `029107_4/69`), so a combined arm is predicted
+to gain **fewer** than 11 + 13. The combined arm is deliberately left to wave 2, after each
+mechanism is attributed on its own.
+
+## What would falsify the whole approach
+
+If an arm moves items absent from its list, the offline model of the reject logic is wrong and
+every sizing number in this campaign — including the ones that argued *against* the plateau
+window — must be recomputed before anything is flipped. That is the point of naming items rather
+than quoting counts.
+
+## Explicitly NOT predicted
+
+* Downstream effects: a candidate whose `is_stm` flips may claim clusters or pieces differently,
+  which can perturb *other* candidates. The branch census (`d51g_branch_census.py --pts`) is the
+  instrument for that, and any such movement is a finding, not a failure.
+* `michel_found` movements. P1 reads the Michel object but does not create one; if
+  `michel_found` moves anywhere, that is unpredicted and reportable.
+
+## h21x — `{ks_margin:-0.02, max_candidates:64}` (the leading flip candidate)
+
+Written 2026-09-11 19:39, BEFORE the arm reported, while it was still running.
+
+The two knobs act on **disjoint populations**: `ks_margin` moves the `shape_flat` bit on
+candidates production already reconstructs (the 303), while `max_candidates` only adds
+candidates production never reached (the 14 extras). h21m already showed the cap leaves all
+325 existing candidates BIT-IDENTICAL with 0 is_stm flips. So they must not interact.
+
+**Prediction, on the 303 population:** exactly h21k's 11 items, no more, no fewer.
+
+recovered (11):
+028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_28/131 028084_30/37
+029107_20/57 029107_23/128 029107_27/99 029107_4/69 029107_6/122
+
+new FP (0): NONE
+
+Predicted census: **72/0/75/110, purity 1.000, efficiency 0.490** — identical to h21k.
+Predicted candidate set: **325 -> 341**, and BIT-IDENTICAL to h21k on all 325 shared
+candidates (the cap adds rows, it does not perturb existing ones).
+
+**Falsifier:** if h21x differs from h21k on the 303 by even one item, the two knobs interact
+and neither may be flipped on the strength of its own arm alone.
+
+## h21f — the combined zero-FP flip candidate, pre-registered BEFORE the arm
+
+`{ks_margin:-0.02, max_candidates:64, bragg_peak_anchor:true, bragg_peak_search_cm:3.0,
+bragg_anchor_geo_fallback:true}`
+
+Written 2026-09-11 19:49 , before h21f was launched.
+
+h21k recovered 11, h21g recovered 10, overlapping on 4 items.
+Naive union = **17**.
+
+**Prediction: 17 recovered, 0 new FP, purity 1.000.**
+recovered (17):
+028084_10/108 028084_10/109 028084_18/104 028084_18/108 028084_19/59 028084_21/56 028084_23/114 028084_28/131 028084_30/37 029107_11/18 029107_2/108 029107_20/139 029107_20/57 029107_23/128 029107_27/99 029107_4/69 029107_6/122
+
+**Caveat making this a real test:** `bragg_peak_anchor` RE-ANCHORS the peak, which changes
+`contrast` and can change `ks_mu`/`ks_flat` — the very quantities `ks_margin` compares. So
+the two are NOT obviously independent (unlike ks_margin x max_candidates, which act on
+disjoint populations). If the arm returns anything other than 17, the anchor and the KS
+margin interact, and the combined set must be graded as a unit rather than assembled from
+single-knob arms. That is the finding either way.
+
+## Michel side — expectation for any final combined arm, pre-registered
+
+Written 2026-09-11 19:52, before any combined stopper+Michel arm exists.
+
+Measured, one family at a time, on the 303:
+
+| arm | michel_found TP/FP/FN | purity | efficiency |
+|---|---|---|---|
+| p82bhoff | 56/11/30 | 0.836 | 0.651 |
+| h21k (ks_margin) | 56/11/30 | 0.836 | 0.651 |
+| h21g (anchor) | 56/11/30 | 0.836 | 0.651 |
+| h21x (ks+cap) | 56/11/30 | 0.836 | 0.651 |
+| h21s (stop topology) | 58/10/28 | 0.853 | 0.674 |
+| h21j (stop topology + Michel bag) | **67/2/19** | **0.971** | **0.779** |
+
+**Prediction for a combined arm carrying BOTH the stopper set and the Michel bag:**
+the Michel side lands at **67/2/19** and the stopper side at whatever h21f returns, because
+the three stopper knobs leave michel_found EXACTLY unchanged (56/11/30 on all three) and the
+Michel bag leaves is_stm almost unchanged (+2).
+
+**Falsifier:** if a combined arm gives a Michel census other than 67/2/19, or a stopper
+census differing from h21f, the two sides interact and must be graded as one unit. The
+mechanism by which they could interact is real and named: the Michel bag moves point
+geometry on 108 of 325 candidates, which can change the dQ/dx profile the stopper tests read.
+
+## h21z — the FULL production candidate, pre-registered BEFORE the arm
+
+`{ks_margin:-0.02,max_candidates:64,bragg_peak_anchor:true,bragg_peak_search_cm:3.0,bragg_anchor_geo_fallback:true,stop_retreat_max:2,stop_split_max:1,split_kink_min_deg:10,michel_gamma_collect:true,michel_gamma_radius_cm:50.0,stop_gamma_require_stm:true,moved_stop_michel_kink_min:60.0,moved_stop_michel_reach_min_cm:6.5,retreat_tail_strict:true,stop_local_michel_pieces:true,michel_range_energy_guard:true,michel_near_stop_arm_cm:5.0,stop_local_residual_cm:5.0,stop_local_residual_min_points:5,stop_local_residual_min_len_cm:5.0,stop_snap_reachable:true}`
+
+Written 2026-09-11 19:53, while h21f was still running (31/61) — so neither h21f's result
+nor h21z's is known here.
+
+**Composition rationale:** the three stopper knobs are the zero-FP set (h21k +11/0, h21g
++10/0, h21m +5/0 on the extras).  stop-topology and the Michel bag ride together because
+`retreat_tail_strict` acts on the retreat mechanism that `stop_retreat_max` enables.
+NOT included: the wide anchor (adds nothing on PDHD), plateau_mip_hi 2.0 (recovers zero),
+absorb_bragg_stub (PDHD jsonnet :250 records it broke 029107/1 c113), and every P1 variant
+(each costs purity — the owner's call, not mine).
+
+**Prediction:**
+* Michel side **67/2/19, purity 0.971, efficiency 0.779** — h21j's value, because all three
+  stopper knobs leave michel_found exactly unchanged at 56/11/30.
+* Stopper side **equal to h21f's census**, because h21s adds 0 stoppers and the Michel bag
+  added only +2 in h21j.
+* Candidate set **325 -> 341**.
+
+**Falsifier, and the named mechanism:** if either side differs from those, the stopper and
+Michel halves interact.  The mechanism is real — the Michel bag moved point geometry on 108
+of 325 candidates in h21j, and the dQ/dx profile the stopper tests read is built from those
+points.  A difference is a finding to report, not a failure to hide.

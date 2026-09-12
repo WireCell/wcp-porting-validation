@@ -1,0 +1,48 @@
+doc pdhd/21 wave 1 -- twin vs arm, and the movers gates
+generated 2026-09-11 19:33:17
+
+== twin vs arm (pre-registration: docs/scan/h21/preregistered_twin.txt) ==
+  h21k  gained TP pred 11 act 11 missing - unpredicted - HELD
+  h21k  NEW FP    pred  0 act  0 missing - unpredicted - HELD
+  h21a  gained TP pred 13 act 13 missing - unpredicted - HELD
+  h21a  NEW FP    pred  1 act  1 missing - unpredicted - HELD
+  h21b  gained TP pred 15 act 15 missing - unpredicted - HELD
+  h21b  NEW FP    pred  3 act  3 missing - unpredicted - HELD
+  h21c  gained TP pred 17 act 17 missing - unpredicted - HELD
+  h21c  NEW FP    pred  4 act  4 missing - unpredicted - HELD
+
+  GATE: TWIN HELD EXACTLY (0 missing, 0 unpredicted) on all four arms
+
+== movers gates (d51g_branch_census.py --pts, vs p82bhoff) ==
+--- h21k ---
+    matched candidates      : 325  (before 325, after 325)
+    candidates BIT-IDENTICAL on all 130 shared branches : 299 / 325
+    is_stm FLIPS : 11
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+--- h21a ---
+    matched candidates      : 325  (before 325, after 325)
+    candidates BIT-IDENTICAL on all 130 shared branches : 299 / 325
+    is_stm FLIPS : 15
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+--- h21b ---
+    matched candidates      : 325  (before 325, after 325)
+    candidates BIT-IDENTICAL on all 130 shared branches : 299 / 325
+    is_stm FLIPS : 19
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+--- h21c ---
+    matched candidates      : 325  (before 325, after 325)
+    candidates BIT-IDENTICAL on all 130 shared branches : 288 / 325
+    is_stm FLIPS : 27
+    candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 325 / 325
+    of those, role labels moved on : 0
+
+== every is_stm flip classified against the judged population ==
+  h21k: 11 flips -> 11 judged stoppers (nothing else)
+  h21a: 15 -> 13 stoppers + 1 THRU + 1 UNCLEAR
+  h21b: 19 -> 15 stoppers + 3 THRU + 1 UNCLEAR
+  h21c: 27 -> 17 stoppers + 4 THRU + 5 UNCLEAR + 1 MESSY
+  (the census scores only the 303 judged items, so UNCLEAR/MESSY flips are
+   real chain movement that no purity/efficiency number can see)
