@@ -8,6 +8,10 @@ purity 0.988 → 0.969, efficiency 0.558 → **0.646**; on owner+high-confidence
 **341/341 bit-identical** to `h23a`, so production runs what was measured. §4 compares the
 finished PDHD chain to PDVD's.
 
+**§6, added after the owner scanned the three false positives (2026-09-12):** two of the three
+were **not false**. On the corrected record `smx23` production reads **96/1/52/107, purity
+0.990** — and *neither* flipped set costs any purity at all.
+
 ## 0. Repro
 
 ```sh
@@ -41,6 +45,10 @@ the second costs under both readings and additionally flips 5 UNCLEAR and 1 MESS
 | `h22c` | wide anchor | 83/2/64/108 | 0.976 | 0.565 | 61/1/9/58 | 0.984 | 0.871 |
 | `h22p1` | P1 | 94/3/53/107 | 0.969 | 0.639 | 64/1/6/58 | 0.985 | 0.914 |
 | **`h23a`** | **both** | **95/3/52/107** | **0.969** | **0.646** | **65/1/5/58** | **0.985** | **0.929** |
+
+> **These are on `smx22`, the record as it stood when the arm ran. §6 supersedes them:** the owner
+> later ruled `028084_3/72` a genuine stopper, so on `smx23` `h22c` is 84/1/64/107 and `h23a`/
+> `h23conf` is **96/1/52/107, purity 0.990**. The *measurements* are unchanged — the truth moved.
 
 **Pre-registered prediction: 95/3/52/107, purity 0.969, efficiency 0.646, the wide anchor firing
 on exactly `028084_21/132` and `028084_3/72`. HELD EXACTLY.**
@@ -83,25 +91,37 @@ on **2 of 341** candidates; P1 clears bits on **25 of 341**.
 | owner+high-confidence truth | 1.000 / 0.843 | **0.985 / 0.929** | purity essentially held, efficiency +0.086 |
 
 Efficiency **+55 % relative** on the all-truth reading, for three false positives — none of which
-is owner-adjudicated, and none of which counts against the chain on adjudicated truth.
+was owner-adjudicated at the time.
+
+**On the corrected record `smx23` (§6) the same campaign reads:**
+
+| | before | after | |
+|---|---|---|---|
+| `is_stm` | 61/0/87/108 | **96/1/52/107** | purity 1.000 → **0.990**, efficiency 0.412 → **0.649** |
+| owner+high-confidence truth | 1.000 / 0.662 | **0.985 / 0.930** | efficiency +0.268 |
+
+— i.e. **+35 stoppers for exactly one false positive**, and that one came with the Michel bag,
+which is the trade the owner approved in doc pdhd/22.
 
 ## 4. How PDHD now compares to PDVD
 
-The short answer: **purity has converged; efficiency has not**, and part of the remaining gap is
-a difference in how the two records were scanned rather than in the two chains.
+The short answer: **PDHD is now the purer chain; PDVD is still the more efficient one**, and part
+of that efficiency gap is a difference in how the two records were scanned rather than in the two
+chains themselves.
 
 ### Stopping-muon identification
 
-| | PDVD (`p93vprod`, doc pdvd/93) | PDHD (`h23a`, this doc) |
+| | PDVD (`p93vprod`, doc pdvd/93) | PDHD (`h23conf`, on `smx23`) |
 |---|---|---|
-| all judged | 242/8/44 — purity **0.968**, eff **0.846** | 100/3/57/110 — purity **0.971**, eff **0.637** |
-| with a candidate | 242/8/34 — purity 0.968, eff **0.877** | 95/3/52/107 — purity 0.969, eff **0.646** |
-| judged items | 576 (601 scanned, 120 events) | 257 of 303 (317 scanned, 61 events) |
-| hand-stopper fraction | 286/576 = **49.7 %** | 147/257 = **57.2 %** |
+| all judged | 242/8/44 — purity **0.968**, eff **0.846** | 101/1/57/110 — purity **0.990**, eff **0.639** |
+| with a candidate | 242/8/34 — purity 0.968, eff **0.877** | 96/1/52/107 — purity **0.990**, eff **0.649** |
+| judged items | 576 (601 scanned, 120 events) | 256 of 303 (317 scanned, 61 events) |
+| hand-stopper fraction | 286/576 = **49.7 %** | 148/256 = **57.8 %** |
 
-**Purity is matched: 0.969–0.971 against 0.968.** Efficiency is **~0.21 lower on PDHD** under
-either denominator convention — and the conventions must be stated, because PDVD's own doc warns
-that "quoting an efficiency without saying which population it is on is how 0.846 and 0.877 get
+**PDHD's purity now EXCEEDS PDVD's — 0.990 against 0.968** — on a record where PDHD carries one
+false positive and PDVD carries eight. Efficiency is **~0.21–0.24 lower on PDHD** under either
+denominator convention, and the conventions must be stated, because PDVD's own doc warns that
+"quoting an efficiency without saying which population it is on is how 0.846 and 0.877 get
 confused for movement."
 
 ### Michel identification
@@ -142,9 +162,55 @@ optimistic. A like-for-like statement would need a blind PDVD re-scan, which doe
 * **Not** that PDHD is finished. The chain now carries 25 of PDVD's knobs; the remainder are
   measured dead on PDHD, held with a number, or (for `absorb_bragg_stub`) known to break an event.
 * **Not** a re-judged record: `smx22` as it stands.
-* **Not** settled that the 3 false positives are false — all three are agent-only items, none
-  owner-adjudicated, and on owner+high-confidence truth the flip costs **zero** new FP. A hand
-  look at `028084_3/72`, `028084_12/46` and `029107_10/44` would settle it: three items.
+* ~~**Not** settled that the 3 false positives are false.~~ **SETTLED — see §6.** The owner
+  scanned all three on 2026-09-12: one is a genuine stopping muon (the chain was right), one is
+  MESSY and leaves the population, one is a real false positive. Production purity is **0.990**,
+  not 0.969, and the campaign's total cost is **one** false positive.
+
+## 6. The owner scanned the three false positives — and two were not false
+
+Served on **:5017** under label tag **`own23`** — its own tag, empty at the start, so taps and
+pins could not reach a record — with `prep-pdhd-h23conf`, so the chain's answer on screen was
+*today's*, not the pre-flip one. Record **`smx23` = `smx22` + these three rulings**, built by
+`mkowner_record.py --skip-v5`; `smx22` is never written (M13).
+
+| item | agent (smx22) | owner (own23) | effect |
+|---|---|---|---|
+| `028084_3/72` | THRU, *medium* | **STM_MICHEL**, Michel *attached*, pin at rr 6.02 cm | **the chain was right** — FP → TP |
+| `028084_12/46` | FRAG_THRU, *medium* | **MESSY** — *"messy, does not see to be an STM"* | unscored; leaves the population |
+| `029107_10/44` | THRU, **high** | **THRU**, confirmed | a real false positive — the only one |
+
+### Re-scored on `smx23`
+
+| arm | | reading A | purity | eff | reading B | purity | eff |
+|---|---|---|---|---|---|---|---|
+| `p82bhoff` | pre-campaign | 61/0/87/108 | 1.000 | 0.412 | 47/0/24/59 | 1.000 | 0.662 |
+| `h22base` | doc 21 | 80/0/68/108 | 1.000 | 0.541 | 59/0/12/59 | 1.000 | 0.831 |
+| `h22g` | doc 22 | 82/1/66/107 | 0.988 | 0.554 | 60/1/11/58 | 0.984 | 0.845 |
+| `h22c` | + wide anchor | 84/1/64/107 | 0.988 | 0.568 | 62/1/9/58 | 0.984 | 0.873 |
+| `h22p1` | + P1 | 95/1/53/107 | 0.990 | 0.642 | 65/1/6/58 | 0.985 | 0.915 |
+| **`h23conf`** | **production** | **96/1/52/107** | **0.990** | **0.649** | **66/1/5/58** | **0.985** | **0.930** |
+
+**Two claims in this doc and in doc pdhd/22 are retracted by this.**
+
+1. **The wide anchor never cost purity.** §5 held it because, combined with the Michel bag, it
+   produced a "second false positive" `028084_3/72`. That item is a genuine stopping muon. On
+   `smx23` the anchor's marginal effect is **+2 TP / +0 FP** (`h22g` → `h22c`). It was free all
+   along, and the owner's decision to turn it on is vindicated by the very item that argued
+   against it.
+2. **Neither flipped set costs purity.** `h22g` → `h23conf` is **+14 TP / +0 FP**; purity *rises*
+   0.988 → 0.990. The campaign's entire purity cost is the **one** false positive
+   `029107_10/44`, which came with the Michel bag — the trade the owner approved.
+
+**The ruling is not free scoring for the new chain.** `028084_3/72` is a genuine stopper that
+*every* arm before doc 23 missed, so it moves TN → FN for them: the pre-campaign baseline gets
+*worse* (efficiency 0.415 → 0.412) and so does doc 21's (0.544 → 0.541). It costs the old chains
+a miss and pays the new one a true positive.
+
+**Caveat, stated rather than buried.** The blind is gone (owner decision 2026-09-08): the chain's
+verdict was on screen while these three were judged, and `revealed_before_label` is true on all
+three. This is a physicist's review of the reconstruction, not an independent verdict, and the
+bias runs toward agreement with the chain — two of the three rulings did agree with it.
 
 ## Files
 
@@ -154,3 +220,6 @@ optimistic. A like-for-like statement would need a blind PDVD re-scan, which doe
 | the combined arm and its gate | `docs/scan/h23/census_h23a.txt`, `g_h23a.txt` |
 | both truth readings, and the per-item trace | `docs/scan/h22/d22_truth2.py`, `d22_item_trace.py` |
 | the flip | `pdhd/wct-pr-perevt.jsonnet` `stm_michel_knobs` |
+| the owner's scan (§6) | `docs/scan/smx23/owner_rulings_own23.json`, `provenance.json`, labels tag `own23` |
+| the corrected record | `docs/scan/pdhd_stm_michel_smx23_verdicts.json` |
+| re-scored, and its grader | `docs/scan/h23/census_smx23.txt`, `d23_grade.py` |

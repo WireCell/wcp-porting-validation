@@ -1,0 +1,37 @@
+{
+ "doc": "pdhd/docs/23_stm-michel-both-flipped-and-pdvd-comparison.md sec 6",
+ "date": "2026-09-12",
+ "viewer": "tag own23 on :5017 -- its own label tag, empty at the start, so the owner's clicks and pins could not reach a record; prepdir prep-pdhd-h23conf (the doc-23 production arm), so the chain's answer on screen was TODAY's",
+ "how": "The owner scanned the three items that are the entire purity cost of doc pdhd/23: the false positives 028084_12/46, 028084_3/72 and 029107_10/44. All three were agent-only calls in smx22, none owner-adjudicated.",
+ "owner_words": "see each item's words",
+ "caveat": "The blind is gone (owner decision 2026-09-08): the chain's verdict was on screen. These are a physicist's review of the reconstruction, not an independent verdict, and revealed_before_label is true on all three.",
+ "items": {
+  "028084_12/46": {
+   "scan_id": 22,
+   "question": "is this a stopping muon, or through-going? -- the three false positives of doc pdhd/23",
+   "owner_verdict": "MESSY",
+   "michel_kind": null,
+   "smx22": "FRAG_THRU  (agent only)",
+   "words": "messy, does not see to be an STM ",
+   "note": "no pin placed"
+  },
+  "028084_3/72": {
+   "scan_id": 116,
+   "question": "is this a stopping muon, or through-going? -- the three false positives of doc pdhd/23",
+   "owner_verdict": "STM_MICHEL",
+   "michel_kind": "attached",
+   "smx22": "THRU  (agent only)",
+   "words": "see owner_words",
+   "note": "pin placed rr 6.02 cm, moved 3.65 cm"
+  },
+  "029107_10/44": {
+   "scan_id": 162,
+   "question": "is this a stopping muon, or through-going? -- the three false positives of doc pdhd/23",
+   "owner_verdict": "THRU",
+   "michel_kind": null,
+   "smx22": "THRU  (agent only)",
+   "words": "see owner_words",
+   "note": "no pin placed"
+  }
+ }
+}

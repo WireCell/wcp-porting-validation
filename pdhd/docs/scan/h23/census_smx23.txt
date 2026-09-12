@@ -1,0 +1,46 @@
+doc pdhd/23 sec 6 -- the owner's own23 scan folded into record smx23
+generated 2026-09-12 06:52:16
+record: pdhd_stm_michel_smx23_verdicts.json (smx22 + 3 owner_review blocks; smx22 NEVER written)
+labels: work/stm_michel_labels/own23/labels.json  md5 b497335f
+
+record: pdhd_stm_michel_smx23_verdicts.json
+instrument validated: p82bhoff reproduces smx23's (61, 0, 87, 108)
+
+=== reading A ===
+  p82bhoff   TP  61 FP  0 FN  87 TN 108 | n 256 | purity 1.000 efficiency 0.412
+  h22base    TP  80 FP  0 FN  68 TN 108 | n 256 | purity 1.000 efficiency 0.541
+  h22g       TP  82 FP  1 FN  66 TN 107 | n 256 | purity 0.988 efficiency 0.554
+  h22c       TP  84 FP  1 FN  64 TN 107 | n 256 | purity 0.988 efficiency 0.568
+  h22p1      TP  95 FP  1 FN  53 TN 107 | n 256 | purity 0.990 efficiency 0.642
+  h23conf    TP  96 FP  1 FN  52 TN 107 | n 256 | purity 0.990 efficiency 0.649
+=== reading B ===
+  p82bhoff   TP  47 FP  0 FN  24 TN  59 | n 130 | purity 1.000 efficiency 0.662
+  h22base    TP  59 FP  0 FN  12 TN  59 | n 130 | purity 1.000 efficiency 0.831
+  h22g       TP  60 FP  1 FN  11 TN  58 | n 130 | purity 0.984 efficiency 0.845
+  h22c       TP  62 FP  1 FN   9 TN  58 | n 130 | purity 0.984 efficiency 0.873
+  h22p1      TP  65 FP  1 FN   6 TN  58 | n 130 | purity 0.985 efficiency 0.915
+  h23conf    TP  66 FP  1 FN   5 TN  58 | n 130 | purity 0.985 efficiency 0.930
+
+== THE RULINGS ==
+  028084_3/72   agent THRU (medium)      -> owner STM_MICHEL, Michel 'attached',
+                                             pin placed at rr 6.02 cm (moved 3.65 cm)
+                                             => THE CHAIN WAS RIGHT: this FP becomes a TP
+  028084_12/46  agent FRAG_THRU (medium) -> owner MESSY, 'messy, does not see to be an STM'
+                                             => unscored; it LEAVES the population
+  029107_10/44  agent THRU (HIGH)        -> owner THRU, confirmed
+                                             => a real false positive, and the only one left
+
+== EFFECT ON THE HEADLINE (reading A) ==
+  production h23conf  95/3/52/107 purity 0.969  ->  96/1/52/107 purity 0.990
+  Two of the three false positives were not false.  Production now carries exactly ONE.
+
+  The pre-campaign baseline gets slightly WORSE (eff 0.415 -> 0.412) and so does doc 21's
+  (0.544 -> 0.541): 028084_3/72 is a genuine stopper that every arm before doc 23 missed,
+  so it moves from TN to FN for them.  The ruling is not free scoring for the new chain --
+  it costs the old ones a miss and pays the new one a true positive.
+
+== CAVEAT, stated rather than buried ==
+  The blind is gone (owner decision 2026-09-08): the chain's verdict was on screen while
+  these three were judged, and revealed_before_label is true on all three.  This is a
+  physicist's review of the reconstruction, not an independent verdict.  The direction of
+  that bias is toward agreement with the chain, and two of three rulings did agree.
