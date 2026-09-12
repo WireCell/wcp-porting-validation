@@ -1,0 +1,14 @@
+
+=== pw: stratum where the W wire cell is resolvable and the other is not (27 items) ===
+  items with >= 3 cells crossed: 22
+  LS peak period in pw units: median 1.828 cells   [q25 0.792, q75 3.187]   frac in [0.8,1.25]: 0.18
+  LS peak period in cm:        median 15.57 cm ; cm per cell median 6.89 cm
+  ratio (period_cm / cm_per_cell): median 2.305  [q25 1.478, q75 3.366]  frac in [0.8,1.25]: 0.14
+  NULL (circular shift): frac in [0.8,1.25] = 0.127 +- 0.068 ; observed 0.182 ; p=0.3085
+
+=== pt: stratum where the time slice cell is resolvable and the other is not (26 items) ===
+  items with >= 3 cells crossed: 18
+  LS peak period in pt units: median 2.113 cells   [q25 1.485, q75 5.179]   frac in [0.8,1.25]: 0.11
+  LS peak period in cm:        median 28.74 cm ; cm per cell median 11.45 cm
+  ratio (period_cm / cm_per_cell): median 2.093  [q25 1.508, q75 4.295]  frac in [0.8,1.25]: 0.00
+  NULL (circular shift): frac in [0.8,1.25] = 0.110 +- 0.069 ; observed 0.111 ; p=0.6418

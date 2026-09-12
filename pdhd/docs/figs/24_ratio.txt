@@ -1,0 +1,14 @@
+lambda / cm-per-cell -- 1.0 is what a geometric (one-cell) scale requires.
+
+collection wire
+   cm/cell [0   ,0.8  ) n= 30  med   0.68 (q25  0.60 q75   0.71)  lambda 1.45 cm  ratio 2.12
+   cm/cell [0.8 ,1.5  ) n= 87  med   1.12 (q25  0.96 q75   1.31)  lambda 1.74 cm  ratio 1.55
+   cm/cell [1.5 ,3    ) n= 51  med   2.13 (q25  1.78 q75   2.64)  lambda 1.68 cm  ratio 0.79
+   cm/cell [3   ,8    ) n= 38  med   4.68 (q25  3.66 q75   5.49)  lambda 1.74 cm  ratio 0.37
+   cm/cell [8   ,1e+09) n= 21  med  18.05 (q25 10.02 q75  30.44)  lambda 2.54 cm  ratio 0.14
+drift time slice
+   cm/cell [0   ,0.8  ) n= 69  med   0.56 (q25  0.45 q75   0.70)  lambda 1.27 cm  ratio 2.25
+   cm/cell [0.8 ,1.5  ) n= 60  med   1.10 (q25  0.93 q75   1.22)  lambda 1.69 cm  ratio 1.54
+   cm/cell [1.5 ,3    ) n= 45  med   2.06 (q25  1.82 q75   2.31)  lambda 2.18 cm  ratio 1.06
+   cm/cell [3   ,8    ) n= 30  med   4.15 (q25  3.65 q75   5.11)  lambda 2.02 cm  ratio 0.49
+   cm/cell [8   ,1e+09) n= 23  med  15.40 (q25 10.18 q75  20.60)  lambda 3.75 cm  ratio 0.24

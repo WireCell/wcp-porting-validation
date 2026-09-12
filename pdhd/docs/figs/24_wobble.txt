@@ -1,0 +1,3 @@
+wobble  |transverse excursion|         r=-0.1394   null +0.0008 +- 0.0087   p(2-sided)=0.0020
+wobble  d|excursion|/dL                r=-0.0190   null +0.0001 +- 0.0027   p(2-sided)=0.0020
+segment  distance to nearest vertex    r=+0.0186   null +0.0005 +- 0.0095   p(2-sided)=0.0439

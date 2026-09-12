@@ -1,0 +1,6 @@
+W wire stratum, per-item free phase (27 items)
+   free-phase first harmonic  removed 0.0325   null 0.0216 +- 0.0048   EXCESS 0.0109   p=0.0200
+   free 12-bin profile        removed 0.0949   null 0.0785 +- 0.0075   EXCESS 0.0164   p=0.0249
+time slice stratum, per-item free phase (26 items)
+   free-phase first harmonic  removed 0.0215   null 0.0257 +- 0.0052   EXCESS -0.0042   p=0.7905
+   free 12-bin profile        removed 0.0723   null 0.0779 +- 0.0069   EXCESS -0.0056   p=0.7731

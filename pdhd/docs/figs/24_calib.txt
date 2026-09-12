@@ -1,0 +1,18 @@
+(a) single-axis regression, chain 028084_8/120 rows 30:250
+
+  pt  best axis x  -3.1726 units/cm  (0.3152 cm/unit)  |r|=1.000000   EXACT -- this axis alone
+  pw  best axis z  +2.0865 units/cm  (0.4793 cm/unit)  |r|=0.999992   EXACT -- this axis alone
+  pv  best axis y  -1.3085 units/cm  (0.7642 cm/unit)  |r|=0.999935   NOT a single axis (artifact if read as a pitch)
+  pu  best axis y  -1.1914 units/cm  (0.8394 cm/unit)  |r|=0.999716   NOT a single axis (artifact if read as a pitch)
+
+(b) gradient magnitude |dp|/|dr| pooled over all chains -> 1/pitch
+
+  pt  q99.5 |dp|/|dr| = 3.1055 /cm  =>  pitch 0.3220 cm   discontinuous steps 0.017%   ESTABLISHED   (n=96472)
+  pw  q99.5 |dp|/|dr| = 2.0716 /cm  =>  pitch 0.4827 cm   discontinuous steps 0.009%   ESTABLISHED   (n=96530)
+  pv  q99.5 |dp|/|dr| = 4.7531 /cm  =>  pitch 0.2104 cm   discontinuous steps 2.404%   NOT ESTABLISHED (wrapped plane)   (n=96363)
+  pu  q99.5 |dp|/|dr| = 4.6898 /cm  =>  pitch 0.2132 cm   discontinuous steps 1.225%   NOT ESTABLISHED (wrapped plane)   (n=96414)
+
+  The discontinuity rate above is the discriminator, two orders of magnitude
+  apart.  frac(pu) and frac(pv) are therefore not a clean cell phase, and
+  sec 2's null fold result on those two planes is weaker evidence than the
+  pw and pt results, not equal evidence.

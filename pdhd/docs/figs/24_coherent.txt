@@ -1,0 +1,22 @@
+median trajectory point spacing: 0.600 cm
+pooled ACF of the detrended residual (lag in points / cm):
+   lag   1 (  0.60 cm)   ACF +0.8361
+   lag   2 (  1.20 cm)   ACF +0.5658
+   lag   3 (  1.80 cm)   ACF +0.3455
+   lag   4 (  2.40 cm)   ACF +0.2162
+   lag   5 (  3.00 cm)   ACF +0.1538
+   lag   8 (  4.80 cm)   ACF +0.0899
+   lag  10 (  6.00 cm)   ACF +0.0595
+   lag  15 (  9.00 cm)   ACF +0.0069
+   lag  20 ( 12.00 cm)   ACF -0.0326
+   lag  30 ( 18.00 cm)   ACF -0.0636
+   lag  50 ( 30.00 cm)   ACF -0.0354
+
+coherent variance share (= ACF at lag 1): 0.836
+correlation length (ACF -> 1/e): 3 points = 1.8 cm
+
+=> a mechanism removing f of the TOTAL residual variance removes
+   f/0.836 = 1.2 x that share of the COHERENT (wave) part.
+   sub-cell fold, W wire (pooled)       total 0.0052  -> coherent 0.006
+   sub-cell fold, time slice (pooled)   total 0.0036  -> coherent 0.004
+   trajectory wobble (r=-0.1394)        total 0.0194  -> coherent 0.023

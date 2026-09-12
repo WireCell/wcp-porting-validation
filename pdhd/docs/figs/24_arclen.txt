@@ -1,0 +1,12 @@
+(a) 3-D step / dL over 96606 steps of 303 chains:
+      q01 0.9847
+      q05 0.9885
+      q25 0.9953
+      q50 1.0004
+      q75 1.0047
+      q95 1.0112
+      q99 1.0152
+      => L is the true arc length; the +-1.5%% tail is not a dQ/dx wave.
+
+(b) plateau (rr>30) dQ/dx fractional RMS per chain, 233 chains:
+      median 0.375   q25 0.279   q75 0.540

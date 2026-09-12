@@ -1,0 +1,11 @@
+cm per W wire in [0,0.8)                   items= 30  cm/cell med   0.68   ACF1 0.752   1/e at 2.42 pts = 1.45 cm
+cm per W wire in [0.8,1.5)                 items= 87  cm/cell med   1.12   ACF1 0.843   1/e at 2.90 pts = 1.74 cm
+cm per W wire in [1.5,3)                   items= 51  cm/cell med   2.13   ACF1 0.844   1/e at 2.80 pts = 1.68 cm
+cm per W wire in [3,8)                     items= 38  cm/cell med   4.68   ACF1 0.840   1/e at 2.90 pts = 1.74 cm
+cm per W wire in [8,1e+09)                 items= 21  cm/cell med  18.05   ACF1 0.886   1/e at 4.23 pts = 2.54 cm
+
+cm per time slice in [0,0.5)               items= 28  cm/cell med   0.44   ACF1 0.732   1/e at 1.93 pts = 1.16 cm
+cm per time slice in [0.5,1)               items= 67  cm/cell med   0.74   ACF1 0.792   1/e at 2.37 pts = 1.42 cm
+cm per time slice in [1,2)                 items= 53  cm/cell med   1.32   ACF1 0.849   1/e at 2.98 pts = 1.79 cm
+cm per time slice in [2,6)                 items= 51  cm/cell med   2.90   ACF1 0.886   1/e at 3.65 pts = 2.19 cm
+cm per time slice in [6,1e+09)             items= 28  cm/cell med  13.85   ACF1 0.915   1/e at 5.49 pts = 3.30 cm

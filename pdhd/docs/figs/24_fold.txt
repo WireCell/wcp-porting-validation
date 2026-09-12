@@ -1,0 +1,15 @@
+pw   all      items=227 pts= 60281  A1=0.0073  null95=0.0152  p=0.5225
+pw   spc>=3   items= 87 pts= 26588  A1=0.0105  null95=0.0258  p=0.5774
+pw   spc>=6   items= 30 pts=  8963  A1=0.0775  null95=0.0501  p=0.0020
+pw   spc<3    items=126 pts= 30514  A1=0.0097  null95=0.0188  p=0.4765
+pu   all      items=227 pts= 60281  A1=0.0039  null95=0.0148  p=0.8042
+pu   spc>=3   items= 44 pts= 11598  A1=0.0113  null95=0.0354  p=0.7423
+pu   spc<3    items=107 pts= 27241  A1=0.0106  null95=0.0216  p=0.4855
+pv   all      items=227 pts= 60281  A1=0.0048  null95=0.0152  p=0.7652
+pv   spc>=3   items= 28 pts=  6391  A1=0.0247  null95=0.0537  p=0.5055
+pv   spc<3    items=141 pts= 37891  A1=0.0129  null95=0.0191  p=0.2228
+pt   all      items=227 pts= 60281  A1=0.0343  null95=0.0160  p=0.0010
+pt   spc>=3   items= 74 pts= 20690  A1=0.0559  null95=0.0331  p=0.0010
+pt   spc>=6   items= 29 pts=  8687  A1=0.0842  null95=0.0622  p=0.0060
+pt   spc<3    items=111 pts= 28671  A1=0.0287  null95=0.0199  p=0.0010
+CTRL L/0.4792  items=227 pts= 60281  A1=0.0052  null95=0.0065  p=0.1538
