@@ -18,6 +18,10 @@ def bad_patterns(own):
          r'verdicts', r'queue', r'rulings', r'/adj', r'smprep-', r'controls', r'preregistered', r'movers',
          r'census', r'twin', r'misses', r'v_parts/?"', r'v_parts/?$']
     n = int(own.rsplit("a", 1)[1])
+    # widened after the first audit (advisor, 2026-09-12): the literal patterns above miss a globbed or
+    # recursive read of another scanner's records.  Any `v_parts` not followed by the scanner's OWN dir,
+    # any `find`, any recursive grep, and any wildcard in a path under the round dir are flagged.
+    B += [r'v_parts(?!/%s\b)' % re.escape(own), r'\bfind\b', r'grep[^"]*\s-[a-zA-Z]*r', r'h25r/?[^"\s]*[*?]']
     B += [r'rv5_a%d\b' % i for i in range(1, 10) if i != n]
     B += [r'scratch_a%d\b' % i for i in range(1, 10) if i != n]
     B += [r'items_a%d\b' % i for i in range(1, 10) if i != n]
@@ -62,7 +66,12 @@ if sys.argv[1:] == ["--selftest"]:
            tu({"file_path": "/home/xqian/tmp/h25r/items_a5.txt"}),
            tu({"command": "ls /home/xqian/tmp/h25r/v_parts"}),
            tu({"file_path": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/stm_michel_scan/prep-pdhd-h25base/smprep-029107_1-c85.json"}),
-           tu({"file_path": "/home/xqian/tmp/h25r/smx25_key.tsv"})]
+           tu({"file_path": "/home/xqian/tmp/h25r/smx25_key.tsv"}),
+           # the globbed / recursive forms the literal patterns missed
+           tu({"command": "cat /home/xqian/tmp/h25r/v_parts/*/029107_1_85.json"}),
+           tu({"command": "grep -r STM /home/xqian/tmp/h25r/v_parts/"}),
+           tu({"command": "find /home/xqian/tmp/h25r -name '029107_1_85.json'"}),
+           tu({"command": "ls /home/xqian/tmp/h25r/*/"})]
     ng, hg = audit(good, "rv5_a3")
     nb, hb = audit(bad, "rv5_a3")
     ok = ng == len(good) and not hg and nb == len(bad) and len(hb) == len(bad)

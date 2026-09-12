@@ -577,7 +577,8 @@ let that call overwrite the owner's ruling, was found and fixed before any numbe
 * **Scan:** 26 items shuffled (seed 25) into three groups; **two verdict-blind scans per item** by two of
   six agents over two waves, rubric v5 (sha `750751ea…`, the same text as docs pdhd/19 §8–9), frames shot
   blind on today's production (`prep-pdhd-h25base`, with the grey context cells). Transcripts audited
-  for forbidden reads (`d25_audit.py`, negative control 8/8 flagged, 0/5 false alarms).
+  for forbidden reads (`d25_audit.py`, negative control 12/12 flagged including globbed, recursive and
+  `find` reads of another scanner's records, 0/5 false alarms).
 * **What each set can do**, fixed before the arms: a decision item re-judged not-a-stopper turns an arm
   TP into an **FP** (the only items that can cost purity); a THRU control re-judged a stopper is
   TN → FN (efficiency, not purity); a stopper control that moves measures the re-judge itself.
@@ -593,8 +594,10 @@ let that call overwrite the owner's ruling, was found and fixed before any numbe
 | frames | `prep-pdhd-h25base` with `--ctx-cells` (the `h23conf` prep has no `proj_ctx`, so no grey cells); Canvas2D; `check_shots` clean (0 blank, `c_3d_stop` min 2246 unique colours); `context.json` carries no chain-verdict key on 26/26 (`smx25/check_shots.txt`) |
 | scans | 26 items × 2 = **52 records, each item scanned by exactly its two assigned scanners**; rubric sha `750751ea…` on all 52 |
 | order | each item's second scan started only after its first scanner had finished (`a6` after `a1`, `a4` after `a2`, `a5` after `a3`) |
-| audit | 6 transcripts, 87 / 86 / 78 / 92 / 77 / 87 tool calls, **0 flagged** (`smx25/audit.txt`); the audit flags 8/8 synthetic forbidden reads and 0/5 clean ones |
+| audit | 6 transcripts, 87 / 86 / 78 / 92 / 77 / 87 tool calls, **0 flagged** (`smx25/audit.txt`); the audit flags 12/12 synthetic forbidden reads and 0/5 clean ones. The first version matched only literal paths, so a globbed (`v_parts/*/…`), recursive-grep or `find` read of another scanner's records would have passed. It was widened after the scan (any `v_parts` not followed by the scanner's own dir, any `find`, any `grep -r`, any wildcard under the round dir) and re-run: still 0 |
+| independence | the 26 pairs' evidence texts share at most 0.25 of their characters in order (`difflib` ratio; median about 0.16). Two pairs pinned the same 0.1 cm (`029107_19/120` at 10.5, `029107_1/85` at 7.4); pins snap to chain points, and both pairs' evidence texts differ (ratio 0.07 and 0.10) |
 | display note | `f_meas`'s time axis is the payload's absolute slice index. `a1` asked; on `029107_4/118` the track's charge runs down to slice 5, so its THRU at the readout-window start is read correctly |
+| labels artifact | **no labels tag was written for `smx25`.** Doc pdhd/19 §9.4 wrote one for its adopted items. Here the only adopted item, `028084_18/17`, keeps the owner's `owner_review` (THRU), which supersedes the adopted verdict in every census, so a labels tag would carry a call no number uses. The record `pdhd_stm_michel_smx25_verdicts.json` is the round's artifact |
 
 ### 6.3 A defect in the fold tool, found and fixed before scoring
 
