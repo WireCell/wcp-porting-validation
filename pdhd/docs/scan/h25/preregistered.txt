@@ -1,0 +1,42 @@
+doc pdhd/25 -- pre-registered expectations, written BEFORE each arm is launched.
+All arms: DET=pdhd SRC=d16hnu JOBS=8 PIN=/home/xqian/tmp/p96/libpin_p96 (libWireCellClus md5 4e1db810, toolkit 81ff37d7).
+
+== h25base (written 2026-09-12 14:29:04, before launch) ==
+production file, NO TLA, on libpin_p96 instead of h23conf's libpin_p65 (3e23bf8a).
+The only toolkit commit between the pins is 81ff37d7 (michel_q2d_region_scope, default 0; PDHD
+carries no michel_q2d key), so the prediction is:
+  * 61/61 complete, rc=0, pin md5 unchanged
+  * h23conf -> h25base: 341/341 candidates bit-identical on every shared branch, 0 is_stm flips,
+    0 michel_found flips, point geometry identical, branch sets identical (149 = 149)
+  * census on smx23: 96/1/52/107 (all APAs), strict APA0-excluded 77/0/28/69
+FALSIFIER: any flip means the pin change is NOT inert and every A/B below must be read
+against h25base, never against h23conf.
+
+== h25va (Arm A, literal PDVD STM/Michel config) and h25vb (Arm B = A minus the 3 PDHD-negative keys) ==
+written 2026-09-12 14:31:16, BEFORE either arm is launched.  TLAs: /home/xqian/tmp/h25/tla_{A,B}.txt,
+compiled-config proofs in cfg_proofs.txt (A = production + 11 keys + plateau_mip_hi 2.0 and the
+TaggerCheckSTM kink_asym trio; A -> PDVD production = 8 detector constants only; A -> B = 3 keys).
+
+No item-level twin is claimed for either arm.  Four of the campaign's five combined arms broke a
+naive twin (docs pdhd/21-23), and these arms combine keys never run together on PDHD
+(kink_asym, compare_range_cm 45, michel_range_energy_dis_cm 3, moved_stop_michel_guard,
+absorb_bragg_stub).  What IS expected, stated so it can fail:
+
+ 1. Both: 61/61 complete, rc=0, pin md5 unchanged.
+ 2. Both: michel_q2d* keys are energy-only by construction (doc pdvd/95-96) -- they may add branches
+    (T_stm_michel 149 -> ~198) but must not by themselves move is_stm or michel_found.
+ 3. Both: stm_kink_asym_enable changes TaggerCheckSTM's kink_num, which can move a cluster IN or OUT
+    of the CheckSTM_Michel candidate population (doc pdvd/59: 3 PDVD items dropped out).  Expect the
+    341-candidate set to change by a few; every POP item with no candidate is reported, not hidden.
+ 4. Arm A only (topology_clears_sparse + topology_michel_ke_min 3 on top of production's P1):
+    on h22g's chain these two keys added TP 028084_2/116 028084_20/65 029107_18/24 029107_3/99
+    029107_5/32 and FP 028084_18/17 029107_19/123 029107_7/45 (h22p3 minus h22p1, smx22).  Expect
+    that direction again: Arm A purity BELOW production and Arm B, with some of those three FPs.
+    (smx23 did not re-judge those three; 028084_18/17 is owner THRU per own19.)
+ 5. Arm A only: absorb_bragg_stub's one named PDHD regression, 029107_1/113 (doc pdhd/03 sec 6.8),
+    is NOT in the smx23 record, so it cannot move the census; it is checked in the branch gate only.
+ 6. plateau_mip_hi 2.0 recovered 0 stoppers on PDHD before (doc pdhd/21 sec 5): expect ~0 from it.
+ 7. Direction, both arms: efficiency within a few items of production.  PDHD's APA0-excluded misses
+    are 26/28 shape_flat and carry no stop_near_boundary / continuation bit, i.e. none of the
+    rejection sites PDVD's extra keys address -- so the prediction is that PDVD's config does NOT
+    close the gap (eff strict 0.733 stays below ~0.78).  FALSIFIER: strict eff >= 0.80 on either arm.

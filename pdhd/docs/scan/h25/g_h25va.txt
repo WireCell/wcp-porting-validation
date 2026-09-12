@@ -1,0 +1,140 @@
+==============================================================================
+h25base -> h25va
+  matched candidates      : 340  (before 341, after 340)
+  branches shared / new / dropped : 149 / 49 / 0
+  NEW branches   : michel_ke_q2d, michel_ke_q2d_ctl, michel_ke_q2d_gamma, michel_ke_q2d_region, michel_ke_q2d_total, michel_q2d, michel_q2d_ctl, michel_q2d_ctl_dropped_plane, michel_q2d_ctl_n_u, michel_q2d_ctl_n_v, michel_q2d_ctl_n_w, michel_q2d_ctl_u, michel_q2d_ctl_v, michel_q2d_ctl_valid, michel_q2d_ctl_w, michel_q2d_dropped_plane, michel_q2d_gamma, michel_q2d_mu_u, michel_q2d_mu_v, michel_q2d_mu_w, michel_q2d_n_role0, michel_q2d_n_u, michel_q2d_n_v, michel_q2d_n_w, michel_q2d_nx_u, michel_q2d_nx_v, michel_q2d_nx_w, michel_q2d_raw_u, michel_q2d_raw_v, michel_q2d_raw_w, michel_q2d_reason, michel_q2d_region, michel_q2d_region_dropped_plane, michel_q2d_region_mu_u, michel_q2d_region_mu_v, michel_q2d_region_mu_w, michel_q2d_region_n_u, michel_q2d_region_n_v, michel_q2d_region_n_w, michel_q2d_region_nd_u, michel_q2d_region_nd_v, michel_q2d_region_nd_w, michel_q2d_region_u, michel_q2d_region_v, michel_q2d_region_w, michel_q2d_u, michel_q2d_v, michel_q2d_valid, michel_q2d_w
+  candidates BIT-IDENTICAL on all 149 shared branches : 39 / 340
+  branches that moved, and on how many candidates:
+      comp_bwd1                    288
+      comp_bwd2                    288
+      comp_bwd3                    288
+      comp_fwd1                    286
+      comp_fwd2                    286
+      comp_fwd3                    286
+      ks_flat                      286
+      ks_mu                        286
+      n_cmp_live                   286
+      ratio_flat                   286
+      ratio_mu                     286
+      dead_frac_cmp                145
+      reject_bits                   39
+      comp_fwd0                     30
+      stop_dis                      21
+      topology_cleared_bits         20
+      contrast                      19
+      tail_med                      19
+      chain_support_min             18
+      is_stm                        18
+      muon_ke_best                  18
+      muon_ke_dqdx                  18
+      muon_ke_mcs                   18
+      muon_ke_range                 18
+      muon_len                      18
+      muon_mcs_amb                  18
+      muon_mcs_range_ke             18
+      muon_mcs_tracklen             18
+      muon_p_dqdx                   18
+      muon_p_mcs                    18
+      muon_p_range                  18
+      n_live_pts                    18
+      n_profile_pts                 18
+      end_arc_span                  17
+      end_span_cm                   17
+      plateau_med                   17
+      stop_vtx_id                   17
+      stop_x                        17
+      stop_y                        17
+      stop_z                        17
+      comp_bwd0                     15
+      contrast_expected             15
+      n_end_pts                     15
+      ext_len                       14
+      n_chain_segs                  14
+      n_ext                         14
+      n_stop_other                  14
+      n_stub_absorb                 14
+      n_tail                        14
+      michel_conn_type              13
+      n_stop_arms                   13
+      end_arc_cm                    11
+      michel_found                   9
+      n_plateau                      9
+      kink_num                       8
+      michel_parent_vtx_id           8
+      tagger_stop_x                  8
+      tagger_stop_y                  8
+      tagger_stop_z                  8
+      michel_dis_cm                  7
+      michel_ke_core                 7
+      michel_ke_total                7
+      michel_mip                     7
+      n_michel_range_veto            7
+      bragg_anchor_shift_cm          6
+      michel_gamma_dis_max           6
+      michel_ke_best                 6
+      michel_ke_dqdx                 6
+      michel_ke_range                6
+      michel_kink_deg                6
+      dots_ke_dqdx                   5
+      n_dots                         5
+      michel_len                     4
+      michel_n_pieces                4
+      michel_seg_id                  4
+      michel_start_x                 4
+      michel_start_y                 4
+      michel_start_z                 4
+      n_local_pieces                 4
+      n_michel_segs                  4
+      michel_far_len                 3
+      n_michel_gammas                3
+      michel_ke_gamma                2
+      michel_n_clusters              2
+      muon_mcs_nsegs                 2
+      n_body_other                   2
+      bragg_anchor_fallback          1
+      in_fv                          1
+      n_dead_pts                     1
+      n_kept_near_stop_main          1
+      n_michel_gamma_cand            1
+      n_michel_veto                  1
+      n_michel_veto_exempt           1
+      n_michel_veto_reach_exempt     1
+      n_stop_gammas                  1
+      n_stop_gammas_withheld         1
+      short_track                    1
+      stop_gamma_charge              1
+      stop_gamma_dis_max             1
+      stop_gamma_dis_min             1
+      stop_gamma_ke_max              1
+      stop_gamma_ke_tot              1
+      stop_gamma_seg_id              1
+  movers with n_stop_gammas > 0 : 9 of 301  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 18
+      028084_18      cl   17  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 131.442 -> 131.442
+      028084_2       cl  116  is_stm 0 -> 1  contrast 0.7830 -> 0.7830  muon_len 153.408 -> 153.408
+      028084_20      cl   65  is_stm 0 -> 1  contrast 0.8694 -> 0.8694  muon_len 61.339 -> 61.339
+      028084_20      cl  116  is_stm 0 -> 1  contrast 1.2744 -> 1.3615  muon_len 193.428 -> 195.274
+      028084_21      cl   17  is_stm 0 -> 1  contrast 1.7631 -> 1.7631  muon_len 59.815 -> 59.815
+      028084_3       cl   23  is_stm 0 -> 1  contrast 2.0261 -> 2.0261  muon_len 39.599 -> 39.599
+      028084_30      cl   34  is_stm 0 -> 1  contrast 1.2747 -> 1.2747  muon_len 162.438 -> 162.438
+      028084_5       cl  115  is_stm 0 -> 1  contrast 1.2440 -> 1.2440  muon_len 42.775 -> 42.775
+      029107_18      cl   24  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 45.214 -> 45.214
+      029107_18      cl   45  is_stm 0 -> 1  contrast 0.5922 -> 0.5922  muon_len 534.900 -> 534.900
+      029107_19      cl  123  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 220.384 -> 220.384
+      029107_24      cl   33  is_stm 0 -> 1  contrast 1.1981 -> 1.1981  muon_len 146.674 -> 146.674
+      029107_26      cl   88  is_stm 1 -> 0  contrast 2.4690 -> 1.2871  muon_len 86.163 -> 82.978
+      029107_3       cl   99  is_stm 0 -> 1  contrast 0.9223 -> 0.9223  muon_len 112.202 -> 112.202
+      029107_5       cl   32  is_stm 0 -> 1  contrast 1.2372 -> 1.2372  muon_len 195.402 -> 195.402
+      029107_5       cl   98  is_stm 0 -> 1  contrast 1.2631 -> 1.5196  muon_len 473.110 -> 475.510
+      029107_7       cl   45  is_stm 0 -> 1  contrast 0.0000 -> 0.0000  muon_len 59.311 -> 59.311
+      029107_8       cl   44  is_stm 0 -> 1  contrast 1.2740 -> 1.2740  muon_len 436.168 -> 436.168
+==============================================================================
+h25base -> h25va  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 319 / 340
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 21
+  role histogram before : {1: 104793, 2: 2568, 3: 2315, 4: 224, 5: 31}
+  role histogram after  : {1: 104848, 2: 2568, 3: 2321, 4: 223, 5: 35}

@@ -1,0 +1,47 @@
+==== h25base -> h25vb   candidates 341 -> 340; only in h25base: ['028084_16/106']; only in h25vb: []
+  --- strict ---
+    gained TP                3
+    lost TP                  1
+        029107_26/88   STM_ONLY    apa 3  bits - -> shape_flat  topo_clr 0  ks_gap +0.087 -> -0.091  mf 0->0 ke 0.0 len 0.0  stop moved 4.0 cm  muon_len 86->83
+    NEW FP                   0
+    FP removed               0
+    LEFT the candidate pool  1
+        028084_16/106  THRU        apa 1
+    Michel gained            0
+    Michel lost              3
+    Michel FP added          0
+    Michel FP removed        1
+  --- majority ---
+    gained TP                3
+    lost TP                  1
+        029107_26/88   STM_ONLY    apa 3  bits - -> shape_flat  topo_clr 0  ks_gap +0.087 -> -0.091  mf 0->0 ke 0.0 len 0.0  stop moved 4.0 cm  muon_len 86->83
+    NEW FP                   0
+    FP removed               0
+    LEFT the candidate pool  1
+        028084_16/106  THRU        apa 1
+    Michel gained            0
+    Michel lost              3
+    Michel FP added          0
+    Michel FP removed        1
+  --- all ---
+    gained TP                6
+        028084_20/116  STM_MICHEL  apa 3  bits shape_flat -> -  topo_clr 0  ks_gap -0.039 -> -0.004  mf 1->1 ke 22.6 len 1.9  stop moved 0.0 cm  muon_len 193->193
+        028084_21/17   STM_MICHEL  apa 0  bits shape_flat -> -  topo_clr 0  ks_gap -0.068 -> -0.013  mf 1->1 ke 1.9 len 1.6  stop moved 0.0 cm  muon_len 60->60
+        028084_3/23    STM_MICHEL  apa 0  bits plateau_off_mip -> -  topo_clr 0  ks_gap +0.068 -> +0.068  mf 1->1 ke 18.4 len 6.2  stop moved 0.0 cm  muon_len 40->40
+        028084_30/34   STM_ONLY    apa 0  bits shape_flat -> -  topo_clr 0  ks_gap -0.059 -> -0.006  mf 0->0 ke 0.0 len 0.0  stop moved 0.0 cm  muon_len 162->162
+        028084_5/115   STM_ONLY    apa 3  bits shape_flat -> -  topo_clr 0  ks_gap -0.029 -> +0.039  mf 0->0 ke 4.7 len 0.0  stop moved 0.0 cm  muon_len 43->43
+        029107_24/33   STM_ONLY    apa 2  bits shape_flat -> -  topo_clr 0  ks_gap -0.062 -> -0.014  mf 0->0 ke 3.3 len 2.9  stop moved 0.0 cm  muon_len 147->147
+    lost TP                  1
+        029107_26/88   STM_ONLY    apa 3  bits - -> shape_flat  topo_clr 0  ks_gap +0.087 -> -0.091  mf 0->0 ke 0.0 len 0.0  stop moved 4.0 cm  muon_len 86->83
+    NEW FP                   0
+    FP removed               0
+    LEFT the candidate pool  1
+        028084_16/106  THRU        apa 1
+    Michel gained            0
+    Michel lost              3
+        028084_26/109  STM_MICHEL  apa 3  bits - -> -  topo_clr 0  ks_gap +0.002 -> +0.009  mf 1->0 ke 3.7 len 0.0  stop moved 0.0 cm  muon_len 49->49
+        028084_7/61    STM_MICHEL  apa 2  bits - -> -  topo_clr 0  ks_gap +0.018 -> +0.022  mf 1->0 ke 1.8 len 0.2  stop moved 0.0 cm  muon_len 119->119
+        029107_12/108  STM_MICHEL  apa 3  bits - -> -  topo_clr 0  ks_gap +0.074 -> +0.071  mf 1->0 ke 7.9 len 0.1  stop moved 0.0 cm  muon_len 508->508
+    Michel FP added          0
+    Michel FP removed        1
+        028084_23/114  STM_ONLY    apa 3  bits - -> -  topo_clr 0  ks_gap +0.059 -> +0.060  mf 1->0 ke 5.4 len 2.9  stop moved 0.0 cm  muon_len 208->208

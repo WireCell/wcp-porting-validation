@@ -1,0 +1,298 @@
+GATE pdhd strict: (77, 0, 28, 69) want (77, 0, 28, 69) -> PASS
+GATE pdhd majority: (79, 1, 30, 70) want (79, 1, 30, 70) -> PASS
+GATE pdvd: (242, 8, 34, 262) want (242, 8, 34, 262) -> PASS
+MODEL CHECK pdhd strict: params {'ks_margin': -0.02, 'contrast_min': 0.6, 'p1': True, 'ke_min': 10.0, 'len_min': 3.0, 'sparse': False, 'mip': 56000.0}
+  modelled 170/174; pre-P1 bits reproduced on 170/170
+  P1 clear reproduces topology_cleared_bits on 174/174
+  is_stm == (reject_bits == 0) on 174/174
+MODEL CHECK pdhd majority: params {'ks_margin': -0.02, 'contrast_min': 0.6, 'p1': True, 'ke_min': 10.0, 'len_min': 3.0, 'sparse': False, 'mip': 56000.0}
+  modelled 176/180; pre-P1 bits reproduced on 176/176
+  P1 clear reproduces topology_cleared_bits on 180/180
+  is_stm == (reject_bits == 0) on 180/180
+MODEL CHECK pdvd: params {'ks_margin': -0.02, 'contrast_min': 0.6, 'p1': True, 'ke_min': 3.0, 'len_min': 3.0, 'sparse': True, 'mip': 55000.0}
+  modelled 534/546; pre-P1 bits reproduced on 534/534
+  P1 clear reproduces topology_cleared_bits on 546/546
+  is_stm == (reject_bits == 0) on 546/546
+
+==== 1. MISSED hand stoppers, by reject bits (after P1) ====
+  PDHD strict: 28 misses; only no_bragg/shape_flat: 25; carry michel_found=1: 10
+      no_bragg+shape_flat                           17
+      shape_flat                                    8
+      plateau_off_mip                               2
+      shape_flat+profile_sparse                     1
+  PDVD: 34 misses; only no_bragg/shape_flat: 22; carry michel_found=1: 11
+      no_bragg+shape_flat                           9
+      shape_flat                                    9
+      no_bragg                                      4
+      stop_near_boundary                            4
+      plateau_off_mip                               3
+      continuation                                  2
+      no_bragg+plateau_off_mip                      1
+      no_bragg+shape_flat+vertex_hadron             1
+      shape_flat+continuation+stop_near_boundary    1
+
+==== 2. SEPARATION: AUC of the chain's own shape quantities, hand stoppers vs hand THRU ====
+  (0.5 = no separation, 1.0 = perfect; ks_gap = ks_flat - ks_mu, cr = contrast / contrast_expected)
+  PDHD strict    n_stop 105 n_thru  69   AUC ks_gap 0.732   AUC contrast/expected 0.735
+      stoppers: ks_gap p25/50/75 -0.042/0.015/0.062   c/e 0.61/0.78/0.94   plateau/mip 0.96/1.05/1.13
+      THRU    : ks_gap p25/50/75 -0.091/-0.066/-0.030   c/e 0.39/0.49/0.68   plateau/mip 0.67/0.86/1.01
+  PDHD majority  n_stop 109 n_thru  71   AUC ks_gap 0.724   AUC contrast/expected 0.724
+      stoppers: ks_gap p25/50/75 -0.049/0.015/0.060   c/e 0.61/0.78/0.94   plateau/mip 0.95/1.05/1.13
+      THRU    : ks_gap p25/50/75 -0.090/-0.062/-0.028   c/e 0.39/0.49/0.68   plateau/mip 0.63/0.86/1.00
+  PDVD           n_stop 276 n_thru 270   AUC ks_gap 0.877   AUC contrast/expected 0.880
+      stoppers: ks_gap p25/50/75 -0.009/0.031/0.066   c/e 0.70/0.84/0.96   plateau/mip 0.93/1.02/1.11
+      THRU    : ks_gap p25/50/75 -0.086/-0.073/-0.047   c/e 0.43/0.50/0.57   plateau/mip 0.79/0.94/1.04
+
+==== 3. PROFILE NOISE on the muon plateau (rr 20-60 cm, live points) ====
+  PDHD strict  stopper TP    n= 77  scatter p25/50/75 0.163/0.191/0.271   jump 0.053/0.072/0.087   pts 67
+  PDHD strict  stopper MISS  n= 28  scatter p25/50/75 0.171/0.231/0.284   jump 0.057/0.069/0.083   pts 66
+  PDHD strict  THRU          n= 65  scatter p25/50/75 0.197/0.280/0.396   jump 0.058/0.092/0.121   pts 64
+  PDVD         stopper TP    n=229  scatter p25/50/75 0.151/0.182/0.232   jump 0.083/0.102/0.135   pts 66
+  PDVD         stopper MISS  n= 33  scatter p25/50/75 0.132/0.200/0.274   jump 0.085/0.102/0.140   pts 66
+  PDVD         THRU          n=260  scatter p25/50/75 0.166/0.231/0.319   jump 0.085/0.109/0.145   pts 66
+
+==== 4. OFFLINE SWEEPS (prediction on production's payload; one lever at a time) ====
+
+  --- PDHD APA0 strict ---
+  production                          77/ 0/ 28/ 69  purity 1.000 eff 0.733  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 2              77/ 0/ 28/ 69  purity 1.000 eff 0.733  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 1.5            79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_20/116 029107_7/85
+      new FP -
+  P1 ke_min 10 len_min 1              79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_20/116 029107_7/85
+      new FP -
+  P1 ke_min 7 len_min 3               78/ 0/ 27/ 69  purity 1.000 eff 0.743  (+1 TP, +0 FP, -0 TP)
+      gained 028084_2/116
+      new FP -
+  P1 ke_min 5 len_min 3               79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_2/116 029107_3/99
+      new FP -
+  P1 ke_min 5 len_min 2               80/ 0/ 25/ 69  purity 1.000 eff 0.762  (+3 TP, +0 FP, -0 TP)
+      gained 028084_2/116 029107_1/85 029107_3/99
+      new FP -
+  P1 ke_min 5 len_min 1.5             83/ 0/ 22/ 69  purity 1.000 eff 0.790  (+6 TP, +0 FP, -0 TP)
+      gained 028084_2/116 028084_2/49 028084_20/116 029107_1/85 029107_3/99 029107_7/85
+      new FP -
+  P1 ke_min 3 len_min 3               79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_2/116 029107_3/99
+      new FP -
+  P1 ke_min 3 len_min 1.5             83/ 0/ 22/ 69  purity 1.000 eff 0.790  (+6 TP, +0 FP, -0 TP)
+      gained 028084_2/116 028084_2/49 028084_20/116 029107_1/85 029107_3/99 029107_7/85
+      new FP -
+  P1 ke_min 0 len_min 0               85/ 4/ 20/ 65  purity 0.955 eff 0.810  (+8 TP, +4 FP, -0 TP)
+      gained 028084_2/116 028084_2/49 028084_20/116 029107_1/85 029107_19/120 029107_21/65 029107_3/99 029107_7/85
+      new FP 028084_15/102 028084_15/50 028084_22/103 029107_25/93
+  P1 + clears_sparse                  77/ 2/ 28/ 67  purity 0.975 eff 0.733  (+0 TP, +2 FP, -0 TP)
+      gained 
+      new FP 029107_19/123 029107_7/45
+  ks_margin -0.03                     78/ 0/ 27/ 69  purity 1.000 eff 0.743  (+1 TP, +0 FP, -0 TP)
+      gained 028084_5/115
+      new FP -
+  ks_margin -0.04                     79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_20/116 028084_5/115
+      new FP -
+  ks_margin -0.05                     81/ 0/ 24/ 69  purity 1.000 eff 0.771  (+4 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/95
+      new FP -
+  ks_margin -0.06                     82/ 0/ 23/ 69  purity 1.000 eff 0.781  (+5 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/95 029107_21/65
+      new FP -
+  ks_margin -0.08                     84/ 0/ 21/ 69  purity 1.000 eff 0.800  (+7 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/118 029107_12/95 029107_21/65 029107_24/33
+      new FP -
+  ks_margin -0.1                      85/ 0/ 20/ 69  purity 1.000 eff 0.810  (+8 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109
+      new FP -
+  ks_margin -0.12                     85/ 0/ 20/ 69  purity 1.000 eff 0.810  (+8 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109
+      new FP -
+  ks_margin -0.15                     85/ 0/ 20/ 69  purity 1.000 eff 0.810  (+8 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109
+      new FP -
+  ks_margin -0.2                      85/ 0/ 20/ 69  purity 1.000 eff 0.810  (+8 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109
+      new FP -
+  bragg_contrast_min 0.5              77/ 0/ 28/ 69  purity 1.000 eff 0.733  (+0 TP, +0 FP, -0 TP)
+  bragg_contrast_min 0.4              77/ 1/ 28/ 68  purity 0.987 eff 0.733  (+0 TP, +1 FP, -0 TP)
+      gained 
+      new FP 028084_27/46
+  bragg_contrast_min 0.3              77/ 1/ 28/ 68  purity 0.987 eff 0.733  (+0 TP, +1 FP, -0 TP)
+      gained 
+      new FP 028084_27/46
+  ks -0.05 + contrast 0.5             81/ 0/ 24/ 69  purity 1.000 eff 0.771  (+4 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_20/116 028084_5/115 029107_12/95
+      new FP -
+  ks -0.05 + P1 ke 5 len 1.5          86/ 0/ 19/ 69  purity 1.000 eff 0.819  (+9 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_2/116 028084_2/49 028084_20/116 028084_5/115 029107_1/85 029107_12/95 029107_3/99 029107_7/85
+      new FP -
+  ks -0.10 + P1 ke 5 len 1.5          90/ 0/ 15/ 69  purity 1.000 eff 0.857  (+13 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_2/116 028084_2/49 028084_20/116 028084_5/115 029107_1/85 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109 029107_3/99 029107_7/85
+      new FP -
+  HYPO strong Michel clears plateau (20 MeV, 10 cm)  79/ 0/ 26/ 69  purity 1.000 eff 0.752  (+2 TP, +0 FP, -0 TP)
+      gained 028084_24/49 028084_28/110
+      new FP -
+  HYPO ks -0.10 + P1 5/1.5 + plateau 20/10  92/ 0/ 13/ 69  purity 1.000 eff 0.876  (+15 TP, +0 FP, -0 TP)
+      gained 028084_10/46 028084_2/116 028084_2/49 028084_20/116 028084_24/49 028084_28/110 028084_5/115 029107_1/85 029107_12/118 029107_12/95 029107_21/65 029107_24/33 029107_28/109 029107_3/99 029107_7/85
+      new FP -
+
+  --- PDHD APA0 majority ---
+  production                          79/ 1/ 30/ 70  purity 0.988 eff 0.725  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 2              79/ 1/ 30/ 70  purity 0.988 eff 0.725  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 1.5            81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 1              81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 7 len_min 3               80/ 1/ 29/ 70  purity 0.988 eff 0.734  (+1 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 3               81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 2               82/ 1/ 27/ 70  purity 0.988 eff 0.752  (+3 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 1.5             85/ 1/ 24/ 70  purity 0.988 eff 0.780  (+6 TP, +0 FP, -0 TP)
+  P1 ke_min 3 len_min 3               81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 3 len_min 1.5             85/ 1/ 24/ 70  purity 0.988 eff 0.780  (+6 TP, +0 FP, -0 TP)
+  P1 ke_min 0 len_min 0               87/ 5/ 22/ 66  purity 0.946 eff 0.798  (+8 TP, +4 FP, -0 TP)
+  P1 + clears_sparse                  79/ 3/ 30/ 68  purity 0.963 eff 0.725  (+0 TP, +2 FP, -0 TP)
+  ks_margin -0.03                     80/ 1/ 29/ 70  purity 0.988 eff 0.734  (+1 TP, +0 FP, -0 TP)
+  ks_margin -0.04                     81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  ks_margin -0.05                     83/ 1/ 26/ 70  purity 0.988 eff 0.761  (+4 TP, +0 FP, -0 TP)
+  ks_margin -0.06                     84/ 1/ 25/ 70  purity 0.988 eff 0.771  (+5 TP, +0 FP, -0 TP)
+  ks_margin -0.08                     86/ 1/ 23/ 70  purity 0.989 eff 0.789  (+7 TP, +0 FP, -0 TP)
+  ks_margin -0.1                      88/ 1/ 21/ 70  purity 0.989 eff 0.807  (+9 TP, +0 FP, -0 TP)
+  ks_margin -0.12                     88/ 1/ 21/ 70  purity 0.989 eff 0.807  (+9 TP, +0 FP, -0 TP)
+  ks_margin -0.15                     88/ 1/ 21/ 70  purity 0.989 eff 0.807  (+9 TP, +0 FP, -0 TP)
+  ks_margin -0.2                      88/ 1/ 21/ 70  purity 0.989 eff 0.807  (+9 TP, +0 FP, -0 TP)
+  bragg_contrast_min 0.5              79/ 1/ 30/ 70  purity 0.988 eff 0.725  (+0 TP, +0 FP, -0 TP)
+  bragg_contrast_min 0.4              79/ 2/ 30/ 69  purity 0.975 eff 0.725  (+0 TP, +1 FP, -0 TP)
+  bragg_contrast_min 0.3              79/ 2/ 30/ 69  purity 0.975 eff 0.725  (+0 TP, +1 FP, -0 TP)
+  ks -0.05 + contrast 0.5             83/ 1/ 26/ 70  purity 0.988 eff 0.761  (+4 TP, +0 FP, -0 TP)
+  ks -0.05 + P1 ke 5 len 1.5          88/ 1/ 21/ 70  purity 0.989 eff 0.807  (+9 TP, +0 FP, -0 TP)
+  ks -0.10 + P1 ke 5 len 1.5          93/ 1/ 16/ 70  purity 0.989 eff 0.853  (+14 TP, +0 FP, -0 TP)
+  HYPO strong Michel clears plateau (20 MeV, 10 cm)  81/ 1/ 28/ 70  purity 0.988 eff 0.743  (+2 TP, +0 FP, -0 TP)
+  HYPO ks -0.10 + P1 5/1.5 + plateau 20/10  95/ 1/ 14/ 70  purity 0.990 eff 0.872  (+16 TP, +0 FP, -0 TP)
+
+  --- PDHD all four APAs (APA0 INCLUDED, reference only) ---
+  production                          96/ 1/ 52/107  purity 0.990 eff 0.649  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 2              96/ 1/ 52/107  purity 0.990 eff 0.649  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 1.5            98/ 1/ 50/107  purity 0.990 eff 0.662  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 1              98/ 1/ 50/107  purity 0.990 eff 0.662  (+2 TP, +0 FP, -0 TP)
+  P1 ke_min 7 len_min 3               99/ 1/ 49/107  purity 0.990 eff 0.669  (+3 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 3              100/ 1/ 48/107  purity 0.990 eff 0.676  (+4 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 2              101/ 1/ 47/107  purity 0.990 eff 0.682  (+5 TP, +0 FP, -0 TP)
+  P1 ke_min 5 len_min 1.5            104/ 1/ 44/107  purity 0.990 eff 0.703  (+8 TP, +0 FP, -0 TP)
+  P1 ke_min 3 len_min 3              100/ 1/ 48/107  purity 0.990 eff 0.676  (+4 TP, +0 FP, -0 TP)
+  P1 ke_min 3 len_min 1.5            104/ 1/ 44/107  purity 0.990 eff 0.703  (+8 TP, +0 FP, -0 TP)
+  P1 ke_min 0 len_min 0              107/ 5/ 41/103  purity 0.955 eff 0.723  (+11 TP, +4 FP, -0 TP)
+  P1 + clears_sparse                  97/ 3/ 51/105  purity 0.970 eff 0.655  (+1 TP, +2 FP, -0 TP)
+  ks_margin -0.03                     98/ 1/ 50/107  purity 0.990 eff 0.662  (+2 TP, +0 FP, -0 TP)
+  ks_margin -0.04                     99/ 1/ 49/107  purity 0.990 eff 0.669  (+3 TP, +0 FP, -0 TP)
+  ks_margin -0.05                    101/ 1/ 47/107  purity 0.990 eff 0.682  (+5 TP, +0 FP, -0 TP)
+  ks_margin -0.06                    103/ 1/ 45/107  purity 0.990 eff 0.696  (+7 TP, +0 FP, -0 TP)
+  ks_margin -0.08                    107/ 1/ 41/107  purity 0.991 eff 0.723  (+11 TP, +0 FP, -0 TP)
+  ks_margin -0.1                     109/ 1/ 39/107  purity 0.991 eff 0.736  (+13 TP, +0 FP, -0 TP)
+  ks_margin -0.12                    109/ 1/ 39/107  purity 0.991 eff 0.736  (+13 TP, +0 FP, -0 TP)
+  ks_margin -0.15                    109/ 1/ 39/107  purity 0.991 eff 0.736  (+13 TP, +0 FP, -0 TP)
+  ks_margin -0.2                     109/ 1/ 39/107  purity 0.991 eff 0.736  (+13 TP, +0 FP, -0 TP)
+  bragg_contrast_min 0.5              96/ 1/ 52/107  purity 0.990 eff 0.649  (+0 TP, +0 FP, -0 TP)
+  bragg_contrast_min 0.4              96/ 2/ 52/106  purity 0.980 eff 0.649  (+0 TP, +1 FP, -0 TP)
+  bragg_contrast_min 0.3              96/ 2/ 52/106  purity 0.980 eff 0.649  (+0 TP, +1 FP, -0 TP)
+  ks -0.05 + contrast 0.5            101/ 1/ 47/107  purity 0.990 eff 0.682  (+5 TP, +0 FP, -0 TP)
+  ks -0.05 + P1 ke 5 len 1.5         108/ 1/ 40/107  purity 0.991 eff 0.730  (+12 TP, +0 FP, -0 TP)
+  ks -0.10 + P1 ke 5 len 1.5         115/ 1/ 33/107  purity 0.991 eff 0.777  (+19 TP, +0 FP, -0 TP)
+  HYPO strong Michel clears plateau (20 MeV, 10 cm)  98/ 1/ 50/107  purity 0.990 eff 0.662  (+2 TP, +0 FP, -0 TP)
+  HYPO ks -0.10 + P1 5/1.5 + plateau 20/10 117/ 1/ 31/107  purity 0.992 eff 0.791  (+21 TP, +0 FP, -0 TP)
+
+  --- PDVD (with a candidate) ---
+  production                         242/ 8/ 34/262  purity 0.968 eff 0.877  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 10 len_min 2             240/ 8/ 36/262  purity 0.968 eff 0.870  (+2 TP, +0 FP, -4 TP)
+  P1 ke_min 10 len_min 1.5           240/ 8/ 36/262  purity 0.968 eff 0.870  (+2 TP, +0 FP, -4 TP)
+  P1 ke_min 10 len_min 1             240/ 8/ 36/262  purity 0.968 eff 0.870  (+2 TP, +0 FP, -4 TP)
+  P1 ke_min 7 len_min 3              239/ 8/ 37/262  purity 0.968 eff 0.866  (+0 TP, +0 FP, -3 TP)
+  P1 ke_min 5 len_min 3              241/ 8/ 35/262  purity 0.968 eff 0.873  (+0 TP, +0 FP, -1 TP)
+  P1 ke_min 5 len_min 2              244/10/ 32/260  purity 0.961 eff 0.884  (+3 TP, +2 FP, -1 TP)
+  P1 ke_min 5 len_min 1.5            244/11/ 32/259  purity 0.957 eff 0.884  (+3 TP, +3 FP, -1 TP)
+  P1 ke_min 3 len_min 3              242/ 8/ 34/262  purity 0.968 eff 0.877  (+0 TP, +0 FP, -0 TP)
+  P1 ke_min 3 len_min 1.5            245/12/ 31/258  purity 0.953 eff 0.888  (+3 TP, +4 FP, -0 TP)
+  P1 ke_min 0 len_min 0              247/14/ 29/256  purity 0.946 eff 0.895  (+5 TP, +6 FP, -0 TP)
+  P1 + clears_sparse                 242/ 8/ 34/262  purity 0.968 eff 0.877  (+0 TP, +0 FP, -0 TP)
+  ks_margin -0.03                    242/ 9/ 34/261  purity 0.964 eff 0.877  (+0 TP, +1 FP, -0 TP)
+  ks_margin -0.04                    243/12/ 33/258  purity 0.953 eff 0.880  (+1 TP, +4 FP, -0 TP)
+  ks_margin -0.05                    247/14/ 29/256  purity 0.946 eff 0.895  (+5 TP, +6 FP, -0 TP)
+  ks_margin -0.06                    249/18/ 27/252  purity 0.933 eff 0.902  (+7 TP, +10 FP, -0 TP)
+  ks_margin -0.08                    251/26/ 25/244  purity 0.906 eff 0.909  (+9 TP, +18 FP, -0 TP)
+  ks_margin -0.1                     251/27/ 25/243  purity 0.903 eff 0.909  (+9 TP, +19 FP, -0 TP)
+  ks_margin -0.12                    251/27/ 25/243  purity 0.903 eff 0.909  (+9 TP, +19 FP, -0 TP)
+  ks_margin -0.15                    251/27/ 25/243  purity 0.903 eff 0.909  (+9 TP, +19 FP, -0 TP)
+  ks_margin -0.2                     251/27/ 25/243  purity 0.903 eff 0.909  (+9 TP, +19 FP, -0 TP)
+  bragg_contrast_min 0.5             244/22/ 32/248  purity 0.917 eff 0.884  (+2 TP, +14 FP, -0 TP)
+  bragg_contrast_min 0.4             245/26/ 31/244  purity 0.904 eff 0.888  (+3 TP, +18 FP, -0 TP)
+  bragg_contrast_min 0.3             245/27/ 31/243  purity 0.901 eff 0.888  (+3 TP, +19 FP, -0 TP)
+  ks -0.05 + contrast 0.5            250/38/ 26/232  purity 0.868 eff 0.906  (+8 TP, +30 FP, -0 TP)
+  ks -0.05 + P1 ke 5 len 1.5         249/17/ 27/253  purity 0.936 eff 0.902  (+7 TP, +9 FP, -0 TP)
+  ks -0.10 + P1 ke 5 len 1.5         252/30/ 24/240  purity 0.894 eff 0.913  (+10 TP, +22 FP, -0 TP)
+  HYPO strong Michel clears plateau (20 MeV, 10 cm) 242/ 8/ 34/262  purity 0.968 eff 0.877  (+0 TP, +0 FP, -0 TP)
+  HYPO ks -0.10 + P1 5/1.5 + plateau 20/10 252/30/ 24/240  purity 0.894 eff 0.913  (+10 TP, +22 FP, -0 TP)
+
+==== 5. PDHD APA0-strict misses, one row each ====
+  APA0-majority items are excluded here; apa = the majority APA of the role-1 points
+  apa key            verdict     kind      bits                    mf conn  keMeV  mlen  muon  plat/mip  c/e   ks_mu  ks_flat gap    dead/prof  scatter  nearest lever
+    2 028084_10/46   STM_ONLY    detached dots shape_flat               0    0    0.0   0.0   162     0.97  0.90  0.130   0.090 -0.040    0/ 271    0.110  ks_margin (shape_flat only, gap > -0.05)
+    3 028084_11/130  STM_MICHEL  attached  no_bragg+shape_flat      0    0    0.0   0.0    72     1.09  0.33  0.163   0.063 -0.100    0/ 122    0.211  no Michel found, profile unreadable
+    1 028084_14/83   STM_ONLY    detached dots no_bragg+shape_flat      0    0    0.0   0.0   488     0.79  0.27  0.241   0.150 -0.092   11/ 790    0.420  no Michel found, profile unreadable
+    1 028084_2/116   STM_MICHEL  attached  no_bragg+shape_flat      1    1    7.8   3.6   153     0.83  0.39  0.195   0.097 -0.098    3/ 255    0.263  P1 floor (Michel found, below KE/len floor)
+    2 028084_2/49    STM_MICHEL  both      no_bragg+shape_flat      1    1    6.6   1.8   153     1.17  0.40  0.180   0.084 -0.096    3/ 256    0.201  P1 floor (Michel found, below KE/len floor)
+    3 028084_20/116  STM_MICHEL  both      shape_flat               1    1   22.6   1.9   193     1.06  0.64  0.081   0.042 -0.039    0/ 323    0.115  P1 floor (Michel found, below KE/len floor)
+    2 028084_22/57   STM_MICHEL  both      no_bragg+shape_flat      0    0    0.0   0.0   259     1.10  0.20  0.235   0.145 -0.090    0/ 434    0.276  no Michel found, profile unreadable
+    2 028084_23/53   STM_ONLY    detached dots no_bragg+shape_flat      0    0    0.0   0.0    56     0.92  0.29  0.195   0.100 -0.095    1/  95    0.260  no Michel found, profile unreadable
+    2 028084_24/49   STM_MICHEL  attached  plateau_off_mip          1    1   41.5  15.2   267     0.56  1.76  0.117   0.185  0.068    0/ 446    0.414  plateau scale (doc 21 sec 5: no window separates)
+    3 028084_27/107  STM_ONLY    detached dots no_bragg+shape_flat      0    0    0.0   0.0   110     1.16  0.37  0.158   0.072 -0.086    4/ 181    0.147  no Michel found, profile unreadable
+    1 028084_28/106  STM_ONLY    none      no_bragg+shape_flat      0    0    0.0   0.0   108     0.80  0.30  0.139   0.044 -0.095   15/ 171    0.223  no Michel found, profile unreadable
+    1 028084_28/110  STM_MICHEL  both      plateau_off_mip          1    1   44.4  18.6   326     0.46  1.83  0.138   0.205  0.066    2/ 547    0.315  plateau scale (doc 21 sec 5: no window separates)
+    3 028084_29/115  STM_MICHEL  both      no_bragg+shape_flat      0    0    1.8   0.2    96     1.28  0.32  0.185   0.087 -0.098    3/ 162    0.120  no Michel found, profile unreadable
+    3 028084_5/115   STM_ONLY    detached dots shape_flat               0    0    4.7   0.0    43     1.05  0.62  0.088   0.059 -0.029    0/  72    0.462  ks_margin (shape_flat only, gap > -0.05)
+    3 028084_8/120   STM_ONLY    none      shape_flat+profile_sparse  0    0    0.0   0.0   346     1.08   nan  0.124   0.087 -0.037   16/ 553    0.309  other
+    1 029107_1/85    STM_MICHEL  both      no_bragg+shape_flat      1    1    9.1   2.4   136     0.96  0.39  0.229   0.144 -0.085   10/ 229    0.245  P1 floor (Michel found, below KE/len floor)
+    3 029107_12/118  STM_ONLY    detached dots shape_flat               0    0    0.0   0.0    61     0.93  0.66  0.118   0.039 -0.079    1/ 103    0.151  no Michel found, profile unreadable
+    1 029107_12/95   STM_MICHEL  attached  shape_flat               0    0    0.0   0.0   158     1.15  0.78  0.130   0.088 -0.042    0/ 267    0.155  ks_margin (shape_flat only, gap > -0.05)
+    3 029107_14/89   STM_ONLY    none      no_bragg+shape_flat      0    0    0.0   0.0   105     1.22  0.52  0.172   0.083 -0.088    0/ 176    0.322  no Michel found, profile unreadable
+    3 029107_19/120  STM_MICHEL  both      no_bragg+shape_flat      1    1   18.3   0.4   158     1.25  0.51  0.134   0.040 -0.094    0/ 266    0.206  P1 floor (Michel found, below KE/len floor)
+    2 029107_21/65   STM_MICHEL  attached  shape_flat               1    1    5.5   1.4   294     1.07  0.71  0.111   0.051 -0.060   18/ 491    0.172  P1 floor (Michel found, below KE/len floor)
+    3 029107_23/116  STM_ONLY    none      no_bragg+shape_flat      0    0    0.0   0.0   112     0.96  0.36  0.156   0.072 -0.084    3/ 191    0.275  no Michel found, profile unreadable
+    2 029107_24/33   STM_ONLY    detached dots shape_flat               0    0    3.3   2.9   147     1.22  0.61  0.089   0.027 -0.062    0/ 246    0.225  no Michel found, profile unreadable
+    1 029107_28/109  STM_MICHEL  attached  shape_flat               0    0    0.0   0.0   596     1.17  0.63  0.130   0.041 -0.089   10/ 991    0.167  no Michel found, profile unreadable
+    1 029107_29/119  STM_MICHEL  attached  no_bragg+shape_flat      0    0    0.0   0.0    71     1.23  0.31  0.157   0.092 -0.065    9/ 115    0.236  no Michel found, profile unreadable
+    1 029107_3/99    STM_MICHEL  attached  no_bragg+shape_flat      1    1    5.4   3.6   112     0.66  0.45  0.136   0.094 -0.042   12/ 189    0.437  P1 floor (Michel found, below KE/len floor)
+    1 029107_7/85    STM_MICHEL  both      no_bragg+shape_flat      1    2   12.2   1.7   199     1.35  0.34  0.200   0.108 -0.091    0/ 334    0.174  P1 floor (Michel found, below KE/len floor)
+    1 029107_8/104   STM_ONLY    none      no_bragg+shape_flat      0    0    0.0   0.0   355     0.88  0.17  0.142   0.050 -0.093    3/ 589    0.242  no Michel found, profile unreadable
+
+==== 6. THRU items with shape_flat in their pre-P1 bits: accepted if shape_flat never fired? ====
+  PDHD APA0 strict: THRU 69, carrying shape_flat 55, accepted with shape_flat removed 0; ks_gap -0.170 .. -0.026; unmodelled 0
+      still set: no_bragg                                      18
+      still set: no_bragg+stop_near_boundary                   14
+      still set: stop_near_boundary                            8
+      still set: no_bragg+plateau_off_mip                      4
+      still set: profile_sparse                                4
+      still set: plateau_off_mip                               3
+      still set: stop_near_boundary+profile_sparse             2
+      still set: no_bragg+stop_near_boundary+vertex_hadron     1
+      still set: no_bragg+stop_near_boundary+stop_into_dead    1
+  PDHD all four APAs: THRU 108, carrying shape_flat 78, accepted with shape_flat removed 0; ks_gap -0.170 .. -0.025; unmodelled 0
+      still set: no_bragg                                      22
+      still set: no_bragg+stop_near_boundary                   20
+      still set: stop_near_boundary                            10
+      still set: no_bragg+plateau_off_mip                      8
+      still set: plateau_off_mip                               7
+      still set: profile_sparse                                6
+      still set: stop_near_boundary+profile_sparse             2
+      still set: no_bragg+stop_near_boundary+vertex_hadron     1
+      still set: no_bragg+stop_near_boundary+stop_into_dead    1
+      still set: continuation+stop_near_boundary               1
+  PDVD: THRU 270, carrying shape_flat 227, accepted with shape_flat removed 19; ks_gap -0.131 .. -0.023; unmodelled 0
+      still set: no_bragg                                      163
+      still set: -                                             19
+      still set: no_bragg+stop_near_boundary                   12
+      still set: no_bragg+plateau_off_mip                      12
+      still set: profile_sparse                                8
+      still set: plateau_off_mip                               5
+      still set: no_bragg+stop_near_boundary+plateau_off_mip   2
+      still set: no_bragg+vertex_hadron                        2
+      still set: stop_unmatched+no_bragg                       1
+      still set: no_bragg+stop_into_dead                       1
+      still set: stop_near_boundary                            1
+      still set: stop_near_boundary+profile_sparse             1

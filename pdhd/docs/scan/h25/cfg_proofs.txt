@@ -1,0 +1,82 @@
+doc pdhd/25 -- compiled-config proofs (M6), generated 2026-09-12 14:28:16; instrument docs/scan/h22/d22_cfg_keys.py
+PDHD compiled with run_pr_evt.sh PDHD_PR_COMPILE_ONLY=1 -nu -stm-fit on 029107_17; PDVD on 039252_0 (p96vprod pctree)
+TLA A: -S stm_kink_asym_enable=true -S stm_michel_extra={absorb_bragg_stub:true,compare_range_cm:45.0,michel_q2d:true,michel_q2d_cells:true,michel_q2d_region_cm:10.0,michel_q2d_region_ctl_cm:35.0,michel_q2d_region_scope:1,michel_range_energy_dis_cm:3.0,moved_stop_michel_guard:true,topology_clears_sparse:true,topology_michel_ke_min:3.0,plateau_mip_hi:2.0}
+TLA B: -S stm_kink_asym_enable=true -S stm_michel_extra={compare_range_cm:45.0,michel_q2d:true,michel_q2d_cells:true,michel_q2d_region_cm:10.0,michel_q2d_region_ctl_cm:35.0,michel_q2d_region_scope:1,michel_range_energy_dis_cm:3.0,moved_stop_michel_guard:true,plateau_mip_hi:2.0}
+
+== negative control: A against itself ==
+PROOF LINE: 0 added, 0 removed, 0 changed
+
+== PDHD production -> PDVD production (defines the delta) ==
+before 88 keys -> after 99 keys
+ADDED   (11):
+  + absorb_bragg_stub                  True
+  + compare_range_cm                   45
+  + michel_q2d                         True
+  + michel_q2d_cells                   True
+  + michel_q2d_region_cm               10
+  + michel_q2d_region_ctl_cm           35
+  + michel_q2d_region_scope            1
+  + michel_range_energy_dis_cm         3
+  + moved_stop_michel_guard            True
+  + topology_clears_sparse             True
+  + topology_michel_ke_min             3
+REMOVED (0):
+CHANGED (9):
+  ~ detector_volumes                   'DetectorVolumes:dv-apa0-1-2-3' -> 'DetectorVolumes:dv-apa0-1-2-3-4-5-6-7'
+  ~ fiducial                           'CompositeFiducial:pdhdcurved-fv' -> 'CompositeFiducial:pdvdcurved-fv'
+  ~ fv_tolerance                       [-20, -20, -30, -30, -30, -30] -> [-25, -25, -50, -50, -50, -50]
+  ~ mip_dqdx                           56000 -> 55000
+  ~ mip_dqdx_median                    48000 -> 47000
+  ~ pc_transforms                      'PCTransformSet:dv-apa0-1-2-3' -> 'PCTransformSet:dv-apa0-1-2-3-4-5-6-7'
+  ~ plateau_mip_hi                     1.6 -> 2
+  ~ recombination_model                'PowerBoxRecombination:pdhd_stm_recomb' -> 'PowerBoxRecombination:pdvd_stm_recomb'
+  ~ trackfitting_config_file           'pgrapher/experiment/pdhd/pdhd_track_fitting.json' -> 'pgrapher/experiment/protodunevd/pdvd_track_fitting.json'
+
+PROOF LINE: 11 added, 0 removed, 9 changed
+
+== PDHD production -> Arm A ==
+before 88 keys -> after 99 keys
+ADDED   (11):
+  + absorb_bragg_stub                  True
+  + compare_range_cm                   45
+  + michel_q2d                         True
+  + michel_q2d_cells                   True
+  + michel_q2d_region_cm               10
+  + michel_q2d_region_ctl_cm           35
+  + michel_q2d_region_scope            1
+  + michel_range_energy_dis_cm         3
+  + moved_stop_michel_guard            True
+  + topology_clears_sparse             True
+  + topology_michel_ke_min             3
+REMOVED (0):
+CHANGED (1):
+  ~ plateau_mip_hi                     1.6 -> 2
+
+PROOF LINE: 11 added, 0 removed, 1 changed
+
+== Arm A -> PDVD production (must be detector constants only) ==
+before 99 keys -> after 99 keys
+ADDED   (0):
+REMOVED (0):
+CHANGED (8):
+  ~ detector_volumes                   'DetectorVolumes:dv-apa0-1-2-3' -> 'DetectorVolumes:dv-apa0-1-2-3-4-5-6-7'
+  ~ fiducial                           'CompositeFiducial:pdhdcurved-fv' -> 'CompositeFiducial:pdvdcurved-fv'
+  ~ fv_tolerance                       [-20, -20, -30, -30, -30, -30] -> [-25, -25, -50, -50, -50, -50]
+  ~ mip_dqdx                           56000 -> 55000
+  ~ mip_dqdx_median                    48000 -> 47000
+  ~ pc_transforms                      'PCTransformSet:dv-apa0-1-2-3' -> 'PCTransformSet:dv-apa0-1-2-3-4-5-6-7'
+  ~ recombination_model                'PowerBoxRecombination:pdhd_stm_recomb' -> 'PowerBoxRecombination:pdvd_stm_recomb'
+  ~ trackfitting_config_file           'pgrapher/experiment/pdhd/pdhd_track_fitting.json' -> 'pgrapher/experiment/protodunevd/pdvd_track_fitting.json'
+
+PROOF LINE: 0 added, 0 removed, 8 changed
+
+== Arm A -> Arm B (must be exactly the 3 negative keys) ==
+before 99 keys -> after 96 keys
+ADDED   (0):
+REMOVED (3):
+  - absorb_bragg_stub                  True
+  - topology_clears_sparse             True
+  - topology_michel_ke_min             3
+CHANGED (0):
+
+PROOF LINE: 0 added, 3 removed, 0 changed

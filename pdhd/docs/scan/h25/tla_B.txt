@@ -1,0 +1,1 @@
+-S stm_kink_asym_enable=true -S stm_michel_extra={compare_range_cm:45.0,michel_q2d:true,michel_q2d_cells:true,michel_q2d_region_cm:10.0,michel_q2d_region_ctl_cm:35.0,michel_q2d_region_scope:1,michel_range_energy_dis_cm:3.0,moved_stop_michel_guard:true,plateau_mip_hi:2.0}

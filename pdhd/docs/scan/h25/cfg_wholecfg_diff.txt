@@ -1,0 +1,58 @@
+== production -> Arm A: components 51 -> 51; only-in-prod set(); only-in-arm set()
+  component ('CheckSTM_Michel', 'pr') 12 leaf diffs
+      /data/absorb_bragg_stub <absent> -> True
+      /data/compare_range_cm <absent> -> 45
+      /data/michel_q2d <absent> -> True
+      /data/michel_q2d_cells <absent> -> True
+      /data/michel_q2d_region_cm <absent> -> 10
+      /data/michel_q2d_region_ctl_cm <absent> -> 35
+      /data/michel_q2d_region_scope <absent> -> 1
+      /data/michel_range_energy_dis_cm <absent> -> 3
+      /data/moved_stop_michel_guard <absent> -> True
+      /data/plateau_mip_hi 1.6 -> 2
+      /data/topology_clears_sparse <absent> -> True
+      /data/topology_michel_ke_min <absent> -> 3
+  component ('MultiAlgBlobClustering', 'clus_pr') 2 leaf diffs
+      /data/bee_dir /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0 -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA
+      /data/bee_zip /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/mabc-pr.zip -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA/mabc-pr.zip
+  component ('PdvdMagnifyTrackingVisitor', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/tracking-stm.root -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA/tracking-stm.root
+  component ('PdvdPrMagnifyTrackingVisitor', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/tracking-pr.root -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA/tracking-pr.root
+  component ('PrDisplayDump', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/calib-pr-evt1119.json -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA/calib-pr-evt1119.json
+  component ('TaggerCheckSTM', 'pr') 3 leaf diffs
+      /data/kink_asym_enable <absent> -> True
+      /data/kink_asym_entry_mip <absent> -> 1.2
+      /data/kink_asym_far_mip <absent> -> 0.5
+  component ('TensorFileSource', 'pr_pctree') 1 leaf diffs
+      /data/inname /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/pctree-evt1119.tar.gz -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgA/pctree-evt1119.tar.gz
+== production -> Arm B: components 51 -> 51; only-in-prod set(); only-in-arm set()
+  component ('CheckSTM_Michel', 'pr') 9 leaf diffs
+      /data/compare_range_cm <absent> -> 45
+      /data/michel_q2d <absent> -> True
+      /data/michel_q2d_cells <absent> -> True
+      /data/michel_q2d_region_cm <absent> -> 10
+      /data/michel_q2d_region_ctl_cm <absent> -> 35
+      /data/michel_q2d_region_scope <absent> -> 1
+      /data/michel_range_energy_dis_cm <absent> -> 3
+      /data/moved_stop_michel_guard <absent> -> True
+      /data/plateau_mip_hi 1.6 -> 2
+  component ('MultiAlgBlobClustering', 'clus_pr') 2 leaf diffs
+      /data/bee_dir /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0 -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB
+      /data/bee_zip /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/mabc-pr.zip -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB/mabc-pr.zip
+  component ('PdvdMagnifyTrackingVisitor', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/tracking-stm.root -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB/tracking-stm.root
+  component ('PdvdPrMagnifyTrackingVisitor', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/tracking-pr.root -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB/tracking-pr.root
+  component ('PrDisplayDump', 'pr') 1 leaf diffs
+      /data/output_filename /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/calib-pr-evt1119.json -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB/calib-pr-evt1119.json
+  component ('TaggerCheckSTM', 'pr') 3 leaf diffs
+      /data/kink_asym_enable <absent> -> True
+      /data/kink_asym_entry_mip <absent> -> 1.2
+      /data/kink_asym_far_mip <absent> -> 0.5
+  component ('TensorFileSource', 'pr_pctree') 1 leaf diffs
+      /data/inname /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfg0/pctree-evt1119.tar.gz -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/work/029107_17_h25cfgB/pctree-evt1119.tar.gz
+A TaggerCheckSTM pr {'kink_asym_enable': True, 'kink_asym_entry_mip': 1.2, 'kink_asym_far_mip': 0.5}
+B TaggerCheckSTM pr {'kink_asym_enable': True, 'kink_asym_entry_mip': 1.2, 'kink_asym_far_mip': 0.5}
+PDVD TaggerCheckSTM pr {'kink_asym_enable': True, 'kink_asym_entry_mip': 1.2, 'kink_asym_far_mip': 0.5}
