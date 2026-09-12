@@ -105,10 +105,19 @@ def measure(k):
         ctl_off = int((ctl & (dfit > 2.0)).sum())
     pin = r.get("pin") or {}
     pin_rr = pin.get("rr") if pin.get("placed") else r.get("pin_rr")
+    # doc 90 sec D, RESTORED: d90_offfit.py printed the fit's own rows from the owner's pin to the
+    # fit end, and the first version of this fork dropped them.  It is the test of the "fit-through"
+    # reading: if the Michel is inside the fit, these rows must sit ABOVE the plateau.  Reading at or
+    # below plateau means there is no Michel-like charge in the fit either -- so off==0 alone is an
+    # ABSENCE of evidence beside the fit, never evidence of charge within it.
+    plat = float(v.get("plateau_med") or 0)
+    qrow = np.asarray(m["q"], float)
+    tsel = (rr <= rr[i] + float(pin_rr)) if pin_rr is not None else ((rr - rr[i]) <= 5.0)
+    tail_med = float(np.median(qrow[tsel])) if tsel.any() else float("nan")
     ndead = 0
-    for pl, key in (("u", "pu"), ("v", "pv"), ("w", "pw")):
+    for plane, key in (("u", "pu"), ("v", "pv"), ("w", "pw")):
         ch0, t0 = m[key][i], m["pt"][i]
-        dd = p["dead"][pl]
+        dd = p["dead"][plane]
         ndead += bool([1 for x, lo, hi in zip(dd["ch"], dd["t0"], dd["t1"])
                        if abs(x - ch0) <= 15 and lo - 30 <= t0 <= hi + 30])
     return dict(key=k, new=k in NEW3, off=int(off.sum()), q_off=float(q[off].sum() / 1e3),
@@ -116,6 +125,8 @@ def measure(k):
                 other10=int(((cl != int(c)) & (dstop <= 10.0)).sum()),
                 ctl_off=ctl_off, dead=ndead, arms=int(v.get("n_stop_arms") or 0),
                 pin_rr=(None if pin_rr is None else float(pin_rr)),
+                plateau=plat / 1e3, tail_med=tail_med / 1e3,
+                tail_ratio=(None if plat <= 0 else tail_med / plat),
                 conf=rec[k].get("confidence"), muon_cm=p.get("muon_len_cm"))
 
 
@@ -131,6 +142,29 @@ for s in OUT["TARGET"]:
     print("  %-14s %-4s %-7s %4d %8.0f %5d %8d %7d %5d %5d %6s" % (
         s["key"], "NEW" if s["new"] else "", s["conf"], s["off"], s["q_off"], s["past"], s["past_off"],
         s["ctl_off"], s["arms"], s["dead"], "-" if s["pin_rr"] is None else "%.1f" % s["pin_rr"]))
+
+print("\n" + "=" * 104)
+print("THE FIT'S OWN TAIL (doc 90 sec D, restored): the fit rows from the owner's pin to the fit end.")
+print("  This is the TEST of the 'fit-through' reading.  off == 0 says only that there is no charge")
+print("  BESIDE the fit; it is not evidence of charge INSIDE it.  If the Michel were swallowed by the")
+print("  fit, these rows would read ABOVE the plateau.  Reading at or below plateau means there is no")
+print("  Michel-like charge anywhere -- neither beside the fit nor in it.")
+print("  %-14s %-4s %6s %9s %9s %13s  %s" % ("item", "new", "pin_rr", "plateau", "med tail", "tail/plateau", "reading"))
+for s in sorted(OUT["TARGET"], key=lambda t: (t["off"] > 0, -(t["tail_ratio"] or 0))):
+    rat = s["tail_ratio"]
+    rd = "-" if rat is None else ("excess in the fit" if rat >= 1.5 else
+                                  "at plateau" if rat >= 0.95 else "BELOW plateau")
+    print("  %-14s %-4s %6s %9.0f %9.0f %13s  %-18s%s" % (
+        s["key"], "NEW" if s["new"] else "", "-" if s["pin_rr"] is None else "%.1f" % s["pin_rr"],
+        s["plateau"], s["tail_med"], "-" if rat is None else "%.2f" % rat, rd,
+        "  [off==0]" if s["off"] == 0 else ""))
+n0 = [s for s in OUT["TARGET"] if s["off"] == 0]
+nfit = [s for s in n0 if (s["tail_ratio"] or 0) >= 1.5]
+print("  => fit-through (off == 0 AND tail >= 1.5x plateau) holds on %d of the %d off==0 items: %s"
+      % (len(nfit), len(n0), " ".join(s["key"] for s in nfit) or "none"))
+print("     On the other %d there is NO Michel-like charge anywhere -- none beside the fit, none in its"
+      % (len(n0) - len(nfit)))
+print("     tail.  That strengthens the negative result: nothing is being looked for in the wrong place.")
 
 med = lambda xs: float(np.median(xs)) if len(xs) else float("nan")
 print("\n" + "=" * 104)

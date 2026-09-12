@@ -97,9 +97,13 @@ end. `ctl_off` = the same reading on a body control 30–40 cm upstream, where n
 | TARGET: the 3 NEW | 3 | 67% | 12.0 | 127 | 4.0 | 0 |
 | TARGET: the 7 pre-existing | 7 | 43% | **0.0** | 0 | **0.0** | 0 |
 
-**`past` is the column that decides this.** Where the chain finds a Michel, the median charge past the
-fit end is **35 points**. On the ten it is **1.5** — indistinguishable from the null's 2.0. The targets
-do not merely fail a threshold; they do not have the charge that a Michel is made of.
+**`past` is the column that decides this — but read the right comparison.** On the ten the median
+charge past the fit end is **1.5 points**, against the null's **2.0**: indistinguishable. *That*
+equality is the result. The TP column (median **35**) is shown for scale, not as an independent test:
+those are candidates where a Michel object was actually built, and charge past the stop is close to a
+precondition for building one, so the contrast is partly definitional. The honest statement is the
+weaker-sounding one, and it is enough: **the ten do not merely fail a threshold — on the measurement
+that matters they are the null.**
 
 **Threshold sweep** — a usable rule needs high TARGET and low N1:
 
@@ -124,14 +128,33 @@ agent's own recent output — exactly the confound the split was built to expose
 
 Doc 90 §6's two mechanisms, now measured on the current population:
 
-- **Fit-through (5 of 10, all with `off == 0`):** the Michel is inside the muon fit, 3.0–6.1 cm of it
-  by the owner's pins. Doc 93's wide Bragg read already exploits this to make the **stop call** — and
-  indeed two of these five are doc 93's own gains. But the Michel **object** is a different problem:
-  building it means splitting the fit, not finding charge beside it.
-- **Genuinely thin or absent charge (the rest):** no arm, no rejected residual, no companion cluster,
-  and charge past the stop at the null's level.
+The obvious reading of the five `off == 0` items is **fit-through**: no charge beside the fit, owner
+pins 3.0–6.1 cm back, so the Michel must be *inside* the fit. That reading is testable, and it mostly
+**fails**. If the Michel were inside the fit, the fit's own rows from the pin to the end would read
+**above** the plateau. Restoring doc 90 §D's measurement (which the first version of `d94_offfit.py`
+had dropped):
 
-Neither is a thresholding problem, which is why no threshold separates them.
+| item | pin_rr | plateau (k e/cm) | med tail | **tail / plateau** | reading |
+|---|---:|---:|---:|---:|---|
+| `039349_69/56` | — | 46 | 94 | **2.05** | a real excess — the Michel plausibly *is* in the fit |
+| `039349_43/66` | 4.8 | 54 | 64 | 1.19 | at plateau |
+| `039349_60/40` | 6.1 | 55 | 59 | 1.08 | at plateau |
+| `039349_44/28` | 3.7 | 83 | 56 | **0.67** | *below* plateau |
+| `039349_72/11` | 3.0 | 60 | 40 | **0.68** | *below* plateau |
+
+**So "fit-through" is confirmed on one of the five, not five.** Two sit at plateau and two read *below*
+it — the opposite of the excess a swallowed Michel would deposit. On four of these five there is no
+Michel-like charge **anywhere**: none beside the fit (`off == 0`), and none in the fit's own tail.
+
+This is a correction to the first draft of this section, which asserted fit-through for all five from
+`off == 0` plus the pins alone. The absence of off-fit charge is not evidence of charge inside the
+fit; it had to be measured, and when measured it mostly is not there.
+
+**It strengthens the negative result rather than weakening it.** The ten are not a population whose
+charge the chain is looking for in the wrong place — for most of them there is no excess charge to
+find at all. That is why no threshold on any of these quantities separates them from the null, and it
+is why the remaining lead is narrow: at most one or two items where splitting the fit could recover a
+Michel object, which is a PR-level change, not a knob.
 
 ## 6. What this does not settle
 
