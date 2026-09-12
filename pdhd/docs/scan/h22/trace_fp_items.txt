@@ -1,0 +1,37 @@
+doc pdhd/22 sec 5.1 -- reconciling the two false positives, 2026-09-12 06:09:11
+shape_flat fires when ks_mu + ks_margin >= ks_flat, ks_margin = -0.02, i.e. margin >= 0.02.
+
+028084_3/72   h22base  is_stm=0 bits=no_bragg|shape_flat|stop_near_boundary contrast= 0.230 ks_margin=+0.0624
+029107_10/44   h22base  is_stm=0 bits=no_bragg|shape_flat|stop_near_boundary contrast= 0.894 ks_margin=+0.0938
+
+028084_3/72   h22w     is_stm=0 bits=no_bragg|shape_flat|stop_near_boundary contrast= 0.230 ks_margin=+0.0624 wide_fired=0 shift=0.00
+029107_10/44   h22w     is_stm=0 bits=no_bragg|shape_flat|stop_near_boundary contrast= 0.894 ks_margin=+0.0938 wide_fired=0 shift=0.00
+
+028084_3/72   h22g     is_stm=0 bits=no_bragg|shape_flat                contrast= 0.512 ks_margin=+0.0967
+029107_10/44   h22g     is_stm=1 bits=-STM-                              contrast= 2.264 ks_margin=+0.0067
+
+028084_3/72   h22c     is_stm=1 bits=-STM-                              contrast= 0.512 ks_margin=+0.0967 wide_fired=1 shift=7.62
+029107_10/44   h22c     is_stm=1 bits=-STM-                              contrast= 2.264 ks_margin=+0.0067 wide_fired=0 shift=0.00
+
+028084_3/72   h22p1    is_stm=1 bits=-STM-                              contrast= 0.512 ks_margin=+0.0967 topo_cleared=no_bragg|shape_flat
+029107_10/44   h22p1    is_stm=1 bits=-STM-                              contrast= 2.264 ks_margin=+0.0067 topo_cleared=none
+
+== READING ==
+028084_3/72 -- the wide anchor does NOT fire on it alone (h22w: wide_fired=0, and the
+  arm is byte-identical to h22base on it).  The MICHEL BAG moves the stop, which clears
+  stop_near_boundary and lifts contrast 0.230 -> 0.512.  ONLY THEN is the candidate
+  reachable, and either trigger tips it: the wide anchor now fires (h22c, shift 7.62 cm)
+  or P1 clears no_bragg|shape_flat by topology (h22p1).  Two DISTINCT trigger paths on a
+  candidate the Michel bag enabled.  Consistent with d22_bits.py: the item is absent from
+  h22base's FP-risk pool and present in h22g's.
+
+029107_10/44 -- purely the Michel bag: it alone clears every bit (contrast 0.894 -> 2.264,
+  ks_margin +0.0938 -> +0.0067, below the 0.02 threshold).  No anchor, no topology
+  (h22p1 shows topo_cleared=none).  This is the one FP the approved trade buys.
+
+== CORRECTION TO sec 5 ==
+The doc first glossed the interaction as 'the wide anchor re-reads the Bragg peak, moving
+the rr origin and therefore the profile the Michel tests read'.  The causal direction is
+the REVERSE: the Michel bag's stop move is the ENABLER, and the wide anchor is a trigger
+that cannot fire without it.  The measured cost (+1 TP / +1 FP marginal) is unchanged and
+the hold stands; the attribution is corrected.

@@ -42,3 +42,8 @@ Rule: zero purity cost -> flip; nonzero -> measure, report, recommend, leave unf
 => P1 is NOT flipped.  It is a real efficiency gain (0.558 -> 0.639 for h22p1, +12
    stoppers) bought with 2 extra false positives, and that is an operating-point
    choice for the owner, not the agent's to take.
+
+ADDENDUM (doc 22 sec 5.1): "nonzero cost" above is READING A.  Under reading B (owner +
+high-confidence) P1 costs NOTHING -- purity 0.984 -> 0.985 -- see census_truth_readings.txt.
+The hold stands because the two readings disagree and the choice between them is the owner's,
+not because P1 is unambiguously costly.

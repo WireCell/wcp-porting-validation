@@ -203,10 +203,36 @@ named items) and the Michel side held *exactly* (68/2/18) — but a **second fal
 `028084_3/72`, appeared that neither parent produces**: `h22g`'s only new FP is `029107_10/44`,
 and `h22w` has none. It exists only in combination.
 
-The falsifier named the mechanism in advance: `bragg_wide_anchor_cm` re-reads the Bragg peak in
-a wider window, moving the rr origin and therefore the dQ/dx profile the stop-local and Michel
-tests are built on. The branch gates show it: `h22c` flips 5 `is_stm` and moves geometry on
-125/341, against 3 and 1 for its parents.
+The falsifier predicted *that* the two halves could interact, and they do. But the mechanism it
+guessed — "the wide anchor moves the rr origin and so perturbs the profile the Michel tests
+read" — has the causal direction **backwards**, and tracing the candidate says so
+(`trace_fp_items.txt`, §5.1).
+
+### 5.1 What actually happens to `028084_3/72`
+
+| arm | `is_stm` | reject bits | contrast | which knob acted |
+|---|---|---|---|---|
+| `h22base` | 0 | `no_bragg│shape_flat│stop_near_boundary` | 0.230 | — |
+| `h22w` | 0 | *the same three* | 0.230 | **`bragg_wide_fired=0` — the anchor never fires** |
+| `h22g` | 0 | `no_bragg│shape_flat` | **0.512** | Michel bag moved the stop; boundary bit gone |
+| `h22c` | **1** | `-STM-` | 0.512 | `bragg_wide_fired=1`, shift **7.62 cm** |
+| `h22p1` | **1** | `-STM-` | 0.512 | `topology_cleared_bits = no_bragg│shape_flat` |
+
+The wide anchor **cannot fire on this candidate at all** until something else moves the stop.
+The **Michel bag is the enabler**: it clears `stop_near_boundary` — a bit neither the anchor nor
+P1 can touch — and lifts contrast 0.230 → 0.512. Only then is the candidate reachable, and then
+*either* trigger tips it: the wide anchor (which now fires) or P1 (which clears the shape bits by
+topology). Two genuinely distinct trigger paths on a candidate one knob set made eligible. It is
+why the item sits in `h22g`'s FP-risk pool but **not** in `h22base`'s.
+
+**The hold is unchanged** — the marginal cost of adding the wide anchor really is +1 TP / +1 FP,
+measured. What changes is the attribution: this is not the anchor perturbing the Michel side, it
+is the Michel side unlocking the anchor. The other FP, `029107_10/44`, is simpler and is the one
+the approved trade buys: the Michel bag alone clears every bit (contrast 0.894 → 2.264, KS margin
++0.0938 → +0.0067, under the 0.02 threshold), with no anchor or topology involved.
+
+The branch gates are consistent: `h22c` flips 5 `is_stm` and moves geometry on 125/341, against
+3 and 1 for its parents — but the geometry movement is the Michel bag's, which `h22g` shows too.
 
 **So the wide anchor is HELD, not flipped.** Alone it is +1/0; added to the Michel bag its
 *marginal* cost is **+1 TP / +1 FP**, taking purity to 0.976 — more than the owner approved, and
@@ -289,9 +315,12 @@ UNCLEAR and 1 MESSY item — pushing the chain into a population the scanners co
    the least attractive of the open trades, but it is measured and costed.
 3. **Attribute the Michel bag** knob by knob, if it is ever worth ~13 arms. The six late knobs
    are worth +1 Michel *as a block*; nobody knows which one.
-4. **Re-check `028084_3/72` and `029107_10/44`** — the two false positives this round buys. Both
-   are agent-only, neither owner-adjudicated. A hand look would convert an operating-point
-   argument into a factual one, and `028084_3/72` is implicated in both `h22c` and P1.
+4. **A hand look at `028084_3/72` and `029107_10/44`** — the two false positives in play. Their
+   *mechanisms* are now traced (§5.1): one is the Michel bag acting alone, the other is the
+   Michel bag enabling a second trigger. What is still open is whether they are false at all —
+   both are agent-only items, neither owner-adjudicated, and under the owner+high-confidence
+   reading they do not count against the chain. A hand scan would convert an operating-point
+   argument into a factual one and would settle P1 as well.
 5. The 31-knob PDVD inventory is now graded out: flipped, measured-dead, or held with a number.
 
 ## Files
@@ -311,6 +340,7 @@ All under `pdhd/docs/scan/h22/` unless stated.
 | P1 measured (§6) | `census_h22p.txt`, `g_h22p1.txt`, `g_h22p2.txt`, `g_h22p3.txt` |
 | both truth readings, and its instrument (§6) | `census_truth_readings.txt`, `d22_truth2.py` |
 | the confirmation arm (§4) | `census_h22conf.txt`, `g_h22conf.txt` |
+| the two FPs traced knob by knob (§5.1) | `d22_item_trace.py`, `trace_fp_items.txt` |
 | graders, reused unchanged from round h21 | `../h21/d21_grade.py`, `../h21/d21_michel_census.py` |
 | the flip | `pdhd/wct-pr-perevt.jsonnet` `stm_michel_knobs` |
 
