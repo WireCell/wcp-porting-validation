@@ -355,11 +355,33 @@ correct one denominator conflation in the gate script, and doc 93 §5 needed the
    contamination, moving the ratio 7.1 → 7.6. It was not rebuilt into the C++ this round because
    the gain is modest and the cell table already carries `own_blob`, so the restricted sum is
    computable today. Making it the headline is a knob plus one arm.
+
+   > **CORRECTED by doc pdvd/96 — this item is wrong twice over, and the numbers did not
+   > reproduce.** `own_blob > 0` is **not** doc 78 item 9's scope: bit 2 covers only the
+   > *segment-less* companions and `n_dot_clusters_unfit` is **0 on all 596** candidates, so it
+   > never fires, while a companion that *did* produce segments set **no bit at all**. The column
+   > was main-cluster-only. Nor is it "one key" — no scope knob existed; doc 96 had to add bit 4
+   > (a preloaded *fitted* companion, which fires on 2.5 % of cells) and sweep every
+   > `(face, wire)` rather than the first. With the specification-faithful filter the measured
+   > result is **ratio 7.06 → 7.22, not 7.1 → 7.6**, and a 20 000-sample bootstrap puts the
+   > difference at +0.299 with 95 % CI **[−0.612, +2.156]** — *not significant*. The flip that
+   > shipped rests on specification fidelity, a 27.1 % cut in through-going contamination and a
+   > negative-prediction clamp — **not** on this ratio.
 2. **The ~2 MeV pedestal is the accuracy limit, and its mechanism is unexamined.** Cells the muon
    fit models carry a uniform **+0.084 MeV/cell** residual (role 1) — the fit slightly
    under-predicts everywhere, and a region sums that over hundreds of cells. This sets the floor
    under every number in §4 and is the one thing that would improve the energy itself rather than
    its selection. It is a `TrackFitting` question, not a `CheckSTM_Michel` one.
+
+   > **CORRECTED by doc pdvd/96 — neither "uniform" nor "unexamined" survives measurement.**
+   > 0.084 MeV/cell is a *mean* over a strongly prediction-dependent quantity. Binned by
+   > `pred_mu`, the **median** residual/prediction runs **−0.113, −0.080, −0.022, +0.032, +0.063,
+   > +0.081, +0.092, +0.105** — the fit slightly *over*-predicts in the middle and under-predicts
+   > ~10 % at the top, where the Bragg peak is, and that shape holds inside every record class.
+   > And the mechanism was already on the record: doc 42 measured the signed bias per plane
+   > (U −0.221, V −0.217, W −0.101) and **refuted the clipped-window explanation empirically**,
+   > while doc 44 §7 named charge-dependent whitening as the candidate. The `TrackFitting`
+   > attribution stands; "unexamined" does not.
 3. **The plane rule is now load-bearing and was not designed to be.** 84 % of candidates drop a
    plane (doc 81: 57 %). More cells and more dead exposure push the two largest planes apart more
    often, so a rule written for the association's ~80 cells per plane is now arbitrating a

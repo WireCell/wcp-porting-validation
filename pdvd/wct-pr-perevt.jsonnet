@@ -534,8 +534,13 @@ function(
         // 49 pre-registered new branches.  michel_q2d_valid == 1 on 596/596.
         // michel_q2d_cells writes the per-cell table (T_stm_michel_2d) -- the owner's second
         // deliverable in doc 81 and their explicit choice for production, at doc 81 sec 9.4's
-        // measured +22 % on tracking-pr.root.  It carries d_stop_cm / d_ctl_cm / own_blob, so
-        // any other radius or scope is recomputable offline without re-running.
+        // measured +22 % on tracking-pr.root.  It carries d_stop_cm / d_ctl_cm / own_blob.
+        // CORRECTED by doc pdvd/96: an earlier version of this comment claimed "any other
+        // radius or scope is recomputable offline without re-running".  That is true only out
+        // to the RUNNING radius.  own_blob and the role-0 rows are computed inside
+        // `if (in_region || in_ctl)`, so at production's R = 10 a cell beyond 10 cm has no row
+        // at all and own_blob == 0 means "not computed", not "not own".  Sweeping a wider
+        // radius or re-scoping beyond it needs a wide diagnostic arm (doc 96 used R = 40).
         // C++ defaults: false / false / 0.0 / -1.0.  PDHD stays OFF -- doc 81 sec 8a measured
         // 45 % of its Michels leaning on the cross-shared fitted substitution against 22 % on
         // PDVD, and PDHD has no owner hand-scan of this chain.
@@ -543,6 +548,56 @@ function(
         michel_q2d_cells: true,
         michel_q2d_region_cm: 10.0,
         michel_q2d_region_ctl_cm: 35.0,
+        // doc pdvd/96 (doc pdvd/95 sec 9 item 1) -- PDVD PRODUCTION.  WHOSE charge the region
+        // sums.  doc 78 item 9 scopes it to "the main cluster and the admitted companions", but
+        // the charge maps are the union over EVERY preloaded cluster, so scope 0 also sums
+        // charge another cluster's own fit already accounts for -- and there the main fit has
+        // no row, so pmu is 0 and "measured - muon" is the raw measurement, not an excess.
+        // 1 = own != 0 (main + admitted companions).  2 = own & 1 (main alone).  0 = off.
+        //
+        // TWO CORRECTIONS TO doc pdvd/95 sec 9 ITEM 1, which recommended this as "one key":
+        //   * own_blob as doc 95 shipped it could NOT express that scope.  Bit 2 (an admitted
+        //     UNFITTED companion) never fires -- n_dot_clusters_unfit is 0 on all 596 PDVD
+        //     candidates -- and a companion that DID produce segments set no bit at all.  The
+        //     column was main-cluster-only.  doc 96 adds bit 4 for a preloaded FITTED
+        //     companion, and it fires on 2.5 % of region cells, so that population is real.
+        //   * the own test swept only the first (face, wire) a channel maps to.  Harmless for
+        //     a diagnostic column, a systematic loss on wrapped channels once it FILTERS.
+        //     Fixed here; own coverage 69.9 % -> 78.2 %.
+        //
+        // THE HEADLINE RATIO GAIN IS NOT SIGNIFICANT, AND THIS FLIP IS NOT JUSTIFIED BY IT.
+        // Graded on the smx1a..smx9 record, median MeV at R = 10 (floored, as production
+        // publishes), scope 0 -> scope 1:
+        //     owner says Michel, chain found it   34.65 -> 34.28   (-1.1 %)
+        //     owner says Michel, chain found none  8.56 ->  6.35   (median dragged by two items
+        //                                                           doc 94 already called
+        //                                                           unreliable; the four largest
+        //                                                           are 46.8->46.8, 45.3->44.9,
+        //                                                           21.8->20.6, 16.8->16.7)
+        //     owner says stopper, NO Michel        4.91 ->  4.75   <- the phantom
+        //     through-going                        5.20 ->  3.79   (-27.1 %, on 270 candidates)
+        //     ratio TP / phantom                   7.06 ->  7.22
+        // Bootstrap, 20000 paired resamples: the ratio difference is +0.299 with 95 % CI
+        // [-0.612, +2.156] -- it SPANS ZERO, and scope 1 wins only 71.8 % of resamples.  The
+        // pre-registered rule selected scope 1 on a point estimate the data cannot support, and
+        // doc 96 says so.  What IS well measured is the case this flip rests on: the estimator
+        // now sums the cells its own specification names, through-going contamination falls
+        // 27.1 % on a 270-candidate sample, an unphysical negative muon prediction is clamped
+        // (0.167 % of cells, min -58016 e, worth 0.091 % of the total), and the found-Michel
+        // energy is untouched.  Owner's call, 2026-09-12: flip on fidelity, not on the ratio.
+        //
+        // TRAP, stated because it is easy to misuse: under scope > 0 michel_q2d_region_nd_*
+        // (dead cells) and michel_q2d_n_role0 stay REGION-WIDE by design, while
+        // michel_q2d_region_n_* counts only what was summed.  So nd / n is NOT a fraction and
+        // can exceed 1.
+        //
+        // Gates: p96voff vs p95vprodb 596/596 bit-identical on every branch and point row, all
+        // 9 trees on 120 events, census unmoved (is_stm 242/8/34, michel 144/12/20) -- the
+        // knob at its C++ default 0 changes nothing.  p96vbase vs p95vq2db 596/596 across
+        // binaries.  p96vscope vs p96vbase: 21 of 21 pre-registered movers, 0 unexpected, 0
+        // frozen counters moved, 0 is_stm flips, 0 michel_found flips, 0 point rows, 0 zips.
+        // C++ default 0.  PDHD stays OFF and carries no michel_q2d key at all.
+        michel_q2d_region_scope: 1,
         // doc pdvd/57/58: retreat the STM stop off the fit's far end when the
         // trailing tail is charge-collapsed and a Bragg rise survives before
         // it.  Confirmed on the 569-item smx1a scan record: +2 is_stm TP / 0

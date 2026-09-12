@@ -202,6 +202,21 @@ Each under the doc 56 bar (default-OFF knob, byte-identical OFF gate on both Pro
      - *Where association and segmentation meet.* Blob points join a Michel segment's association only if a Michel segment exists to win them in the Voronoi partition. Item 7's flip (doc 88) now makes a kept residual such a segment on its 7 candidates.
      - *To do, first:* diagnose why the nominal `michel_ke_charge` is 0 on both detectors. That is a read-only check of whether `cal_kine_charge` runs on the Michel shower and in which frame. Then either retire it or repair it as the association-based reading beside doc 81's. Then the role-0 measurement above.
 
+   *Follow-up (doc 96, 2026-09-12): the SCOPE half of this item is now implemented, and doc 95's
+   account of it was wrong.* Item 9 scopes the region to "the main cluster and the admitted
+   companions", and doc 95 §9 claimed `own_blob > 0` already expressed that. It did not: bit 2
+   covers only the *segment-less* companions and `n_dot_clusters_unfit` is **0 on all 596**
+   candidates so it never fires, while a companion that *did* produce segments set **no bit at
+   all** — the column was main-cluster-only. Doc 96 adds bit 4 (a preloaded *fitted* companion,
+   firing on **2.5 %** of region cells) and sweeps every `(face, wire)` instead of the first, then
+   gates the sum on it via `michel_q2d_region_scope: 1`, **FLIPPED in PDVD production**. Measured
+   at R=10 (median MeV, floored as production publishes), scope 0 → 1: found Michels 34.65 →
+   34.28, phantom 4.91 → 4.75, through-going 5.20 → **3.79 (−27.1 %)**. **The ratio gain
+   (7.06 → 7.22) is NOT significant** — bootstrap difference +0.299, 95 % CI [−0.612, +2.156] —
+   so the flip rests on specification fidelity, the 270-candidate through-going reduction and a
+   negative-prediction clamp, *not* on the headline metric. Doc 95 §4.3's "7.1 → 7.6" did not
+   reproduce, because its "own" was a narrower, bit-1-only filter without the `(face, wire)` sweep.
+
    *Result (doc 95, 2026-09-11): the region definition is BUILT, GATED and FLIPPED in PDVD production* as `michel_q2d` / `michel_q2d_cells` / `michel_q2d_region_cm: 10.0` / `michel_q2d_region_ctl_cm: 35.0` (toolkit `d65f8165`). The role-0 measurement this item asked for is done: cells a region covers and no role claims are emitted as role 0 and run to a **median 1495 per candidate**, so the association-based selection was indeed dropping a large population. Graded on the smx1a..smx9 record at R=10, median MeV: found Michels **34.6** (body control 3.1), owner-Michel-but-chain-found-none **8.6**, owner-stopper-with-no-Michel **4.9**, through-going 5.2 — against `michel_ke_best` reading 23.23 on the first and exactly **0.00** on the other three. On four items the chain misses entirely it recovers 16–47 MeV. Gates: OFF byte-identical on both detectors, ON purely additive (596/596 bit-identical on every pre-existing branch, 149 → 198 branches), confirmation arm 596/596 against the twin. **Not settled:** there is no energy truth anchor (the record carries no energy field of any kind); the radius is post-hoc because the pre-registered rule selected none; a ~2 MeV phantom is irreducible at a real Bragg peak and its tail reaches 48 MeV on 18 % of STM_ONLY items. The `michel_ke_charge == 0` half of this bullet is answered for PDVD by doc 81 §5.1's drift-frame diagnosis (`CheckSTM_Michel.cxx:1757`) and is **not** re-diagnosed for PDHD here.
 
 ## 6. Order
