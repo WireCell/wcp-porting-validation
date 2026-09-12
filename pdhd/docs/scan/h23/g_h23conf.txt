@@ -1,0 +1,18 @@
+==============================================================================
+h23a -> h23conf
+  matched candidates      : 341  (before 341, after 341)
+  branches shared / new / dropped : 149 / 0 / 0
+  candidates BIT-IDENTICAL on all 149 shared branches : 341 / 341
+  NO shared branch moved on any candidate.
+  movers with n_stop_gammas > 0 : 0 of 0  (a LOWER bound on the perturbed set --
+      a companion can be admitted, perturb the fit, and then fail the
+      post-fit energy window, leaving no trace in the tree)
+  is_stm FLIPS : 0
+==============================================================================
+h23a -> h23conf  (T_stm_michel_pts)
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+  candidates whose point geometry changed (new gamma points, or the
+      preload perturbation moving the fit)                  : 0
+  role histogram before : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 31}
+  role histogram after  : {1: 105532, 2: 2573, 3: 2315, 4: 224, 5: 31}

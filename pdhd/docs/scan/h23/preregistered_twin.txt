@@ -1,0 +1,34 @@
+# doc pdhd/23 -- the owner's ruling: turn on BOTH the wide anchor and P1
+# written 2026-09-12 06:18 BEFORE the arm launched
+
+Owner ruling 2026-09-12: flip both held sets.  P1 = the RECOMMENDED variant h22p1,
+i.e. topology_stop_evidence alone at the C++ default floors (10 MeV / 3 cm); NOT
+topology_clears_sparse (buys nothing under reading B, costs 2 FP under A) and NOT
+topology_michel_ke_min:3 (costs under BOTH, and flips 5 UNCLEAR + 1 MESSY items).
+
+Baseline = the CURRENT production file (doc 21's five + doc 22's Michel-bag sixteen).
+TLA adds 4 keys: {bragg_wide_anchor_cm:8.0,bragg_wide_anchor_rise_min:1.3,bragg_wide_anchor_tail_max:0.8,topology_stop_evidence:true}
+
+WHY THIS ARM IS MANDATORY: the combination has never been run.  This campaign is
+3-for-3 on combined sets differing from their parts (h21f beat its twin, h21z and
+h22c failed theirs).
+
+MEASURED INPUTS (both on the h22g baseline 82/1/65/109):
+  h22c  (wide anchor) 83/2/64/108 -- +1 TP 028084_21/132, +1 FP 028084_3/72
+  h22p1 (P1)          94/3/53/107 -- +12 TP, +2 FP 028084_12/46 AND 028084_3/72
+
+PREDICTION -- and the interesting part is that the costs OVERLAP, they do not add:
+028084_3/72 is the SAME item both knobs tip.  P1 already produces it, so the wide
+anchor contributes NO new false positive on top of P1.  Its unique contribution is
+the one true stopper 028084_21/132, which is absent from P1's recovered list.
+
+    is_stm census   95 / 3 / 52 / 107   purity 0.969   efficiency 0.646
+    = h22p1's 94/3/53/107 PLUS the single item 028084_21/132
+    michel_found    68 / 2 / 18  (unchanged: neither knob writes a Michel)
+    candidate set   341
+    wide anchor expected to FIRE on exactly 2 of 341: 028084_21/132, 028084_3/72
+
+FALSIFIER, mechanism named: bragg_wide_anchor re-reads the Bragg peak, moving the rr
+origin and hence ks_mu/ks_flat -- the quantities shape_flat compares and P1 clears.
+If the arm returns anything other than 95/3/52/107, the two interact and the set must
+be flipped (or not) on ITS OWN number, never on the sum of its parts.

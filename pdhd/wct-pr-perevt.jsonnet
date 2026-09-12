@@ -302,24 +302,33 @@ function(
         stop_local_residual_min_points: 5,      // C++ default 0 = no floor (doc pdvd/87)
         stop_local_residual_min_len_cm: 5.0,    // C++ default 0.0 = no floor (doc pdvd/87)
         stop_snap_reachable: true,              // C++ default false (doc pdvd/88)
-        // NOT set, and each for a measured PDHD reason (doc pdhd/21 sec 5, doc pdhd/22):
-        //   bragg_wide_anchor_cm  -- doc pdhd/21's "recovers NOTHING here" is RETRACTED: that
-        //                            arm (h21w) passed a key its binary did not implement.
-        //                            Re-measured (h22w): +1 stopper 028084_21/132 at 0 FP,
-        //                            purity 1.000 -- free ALONE.  But combined with the Michel
-        //                            bag (arm h22c) it produces a SECOND false positive
-        //                            028084_3/72 that neither arm produces alone: 83/2/64/108,
-        //                            purity 0.976.  Marginal cost +1 TP / +1 FP, more than was
-        //                            approved, so it is HELD pending the owner's ruling.
+        // ---- doc pdhd/23: the owner's ruling of 2026-09-12 -- turn on BOTH held sets ----
+        // Arm h23a (pin libpin_p65 = d65f8165), graded against h22g as ONE unit:
+        //   is_stm 82/1/65/109 -> 95/3/52/107, purity 0.988 -> 0.969, efficiency 0.558 -> 0.646.
+        //   michel_found UNCHANGED 68/2/18; point geometry identical 341/341 -- verdict bits only.
+        //   On owner + high-confidence truth: 60/1/10/58 -> 65/1/5/58, purity 0.984 -> 0.985,
+        //   efficiency 0.857 -> 0.929, i.e. +5 stoppers at ZERO new false positive.
+        // The two knobs SHARE a false positive rather than adding one: 028084_3/72 is tipped both
+        // by P1's topology clear and by the wide anchor, so the anchor's only unique contribution
+        // is the true stopper 028084_21/132.  Pre-registered and HELD EXACTLY -- the first
+        // combined arm of this campaign whose twin held, because the prediction was built from
+        // the per-item trace (doc pdhd/22 sec 5.1), not from arm-level arithmetic.
+        bragg_wide_anchor_cm: 8.0,       // C++ default 0.0 = off.  Fires on just 2 of 341 candidates.
+        bragg_wide_anchor_rise_min: 1.3, // C++ default 1.5
+        bragg_wide_anchor_tail_max: 0.8, // C++ default 0.8 -- written because the MEASURED arm wrote it
+        topology_stop_evidence: true,    // C++ default false (doc pdvd/70 P1).  A Michel at the end
+                                         // clears no_bragg|shape_flat AFTER every other bit, so is_stm
+                                         // moves only 0 -> 1.  Cleared bits on 25 of 341; +12 stoppers.
+        // NOT set, and each for a measured PDHD reason (docs pdhd/21 sec 5, pdhd/22, pdhd/23):
         //   plateau_mip_hi 2.0    -- PDVD's doc 90 flip recovers ZERO on PDHD; and no plateau window
         //                            move earns its keep: the 12 plateau_off_mip misses are LONG tracks
         //                            (138-446 cm) reading 0.28-0.56 MIP, interleaved with hand-THRU
         //                            items at 0.22-0.54, so no window position separates them.
-        //   stop_retreat_max / stop_split_max / split_kink_min_deg -- arm h21s: 0 stoppers gained.
-        //   topology_stop_evidence and friends -- each COSTS purity (74/1 .. 78/4); the owner rules.
-        //   the Michel bag (michel_gamma_collect ...) -- arm h21z lifts michel_found to 67/2/19
-        //                            (purity 0.836 -> 0.971, eff 0.651 -> 0.779) but spends 1 stopper
-        //                            FP, breaking purity 1.000.  Recommended, awaiting the owner's ruling.
+        //   topology_clears_sparse -- arm h22p2: buys NOTHING on owner+high-confidence truth
+        //                            (identical to h22p1) while costing 2 more FP on all-truth.
+        //   topology_michel_ke_min:3 -- arm h22p3: costs purity under BOTH readings, and flips 5
+        //                            UNCLEAR + 1 MESSY item, a population the scanners could not judge.
+        //   absorb_bragg_stub     -- see the note above: it broke 029107/1 cluster 113.
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
         // one EM blob (sec 6.5), so the guard does not separate; chain_coverage is persisted for scans.
         // doc pdhd/16: MCS momentum for the STM muon -- the third energy scale,

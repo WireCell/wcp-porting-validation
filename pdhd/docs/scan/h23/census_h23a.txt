@@ -1,0 +1,50 @@
+doc pdhd/23 -- h23a: the owner's ruling, wide anchor + P1 flipped as ONE unit
+generated 2026-09-12 06:25:15; pin libpin_p65 md5 3e23bf8a; complete 61, incomplete 0, rc=0
+baseline h22g = the doc-22 production chain (doc 21's five + the Michel bag's sixteen)
+
+  p82bhoff   TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+  h22g       TP  82 FP   1 FN  65 TN 109 | purity 0.988 efficiency 0.558
+  h22c       TP  83 FP   2 FN  64 TN 108 | purity 0.976 efficiency 0.565
+  h22p1      TP  94 FP   3 FN  53 TN 107 | purity 0.969 efficiency 0.639
+  h23a       TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646
+
+--- michel side ---
+  p82bhoff   TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h22g       TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+  h23a       TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+
+--- both truth readings ---
+
+=== reading A: all truth (owner > smx1 > agent) ===
+  h22g      TP  82 FP   1 FN  65 TN 109 | purity 0.988 efficiency 0.558  (scored 257)
+  h23a      TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646  (scored 257)
+
+=== reading B: owner + HIGH-confidence agent only ===
+  h22g      TP  60 FP   1 FN  10 TN  58 | purity 0.984 efficiency 0.857  (scored 129)
+  h23a      TP  65 FP   1 FN   5 TN  58 | purity 0.985 efficiency 0.929  (scored 129)
+
+== PRE-REGISTERED TWIN: HELD EXACTLY ==
+Predicted 95/3/52/107 purity 0.969 eff 0.646, michel 68/2/18, wide anchor firing on
+exactly 028084_21/132 and 028084_3/72.  ACTUAL: all of it.
+
+THE PREDICTION THAT MATTERED -- the costs OVERLAP rather than add:
+  h22c (wide anchor on h22g): +1 TP 028084_21/132, +1 FP 028084_3/72
+  h22p1 (P1 on h22g)        : +12 TP, +2 FP 028084_12/46 AND 028084_3/72
+  h23a (both)               : +13 TP, +2 FP -- the SAME two P1 already had.
+The wide anchor contributes NO new false positive on top of P1, because P1 already
+tips 028084_3/72 by a different path (doc 22 sec 5.1).  Its unique contribution is the
+single true stopper 028084_21/132.  Adding the two arms' costs would have over-counted.
+
+This is the campaign's FOURTH combined arm and the FIRST whose twin held (h21f beat
+its twin, h21z and h22c failed theirs).  It held because the prediction was built from
+the per-item trace of sec 5.1 rather than from arm-level arithmetic.
+
+== branch gate h22g -> h23a ==
+  matched candidates      : 341  (before 341, after 341)
+  NEW branches   : bragg_wide_fired, bragg_wide_shift_cm, topology_cleared_bits
+  candidates BIT-IDENTICAL on all 146 shared branches : 314 / 341
+  is_stm FLIPS : 17
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+  point geometry IDENTICAL 341/341: both knobs move verdict bits only, no fit moves.
+  wide anchor fired on 2 of 341; P1 cleared bits on 25 of 341.

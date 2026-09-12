@@ -1,0 +1,43 @@
+doc pdhd/23 -- h23conf, THE CONFIRMATION ARM: the flipped FILE, no TLA
+generated 2026-09-12 06:33:54; pin libpin_p65 md5 3e23bf8a; complete 61, incomplete 0, rc=0
+driver echoed tla=<none>: this arm runs the FILE.
+
+  p82bhoff   TP  61 FP   0 FN  86 TN 110 | purity 1.000 efficiency 0.415
+  h23a       TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646
+  h23conf    TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646
+
+--- michel ---
+  p82bhoff   TP  56 FP  11 FN  30 TN  47 | purity 0.836 efficiency 0.651 (excluded 3)
+  h23a       TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+  h23conf    TP  68 FP   2 FN  18 TN  56 | purity 0.971 efficiency 0.791 (excluded 3)
+
+--- both truth readings ---
+=== reading A: all truth (owner > smx1 > agent) ===
+  h22base   TP  80 FP   0 FN  67 TN 110 | purity 1.000 efficiency 0.544  (scored 257)
+  h22g      TP  82 FP   1 FN  65 TN 109 | purity 0.988 efficiency 0.558  (scored 257)
+  h23a      TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646  (scored 257)
+  h23conf   TP  95 FP   3 FN  52 TN 107 | purity 0.969 efficiency 0.646  (scored 257)
+
+=== reading B: owner + HIGH-confidence agent only ===
+  h22base   TP  59 FP   0 FN  11 TN  59 | purity 1.000 efficiency 0.843  (scored 129)
+  h22g      TP  60 FP   1 FN  10 TN  58 | purity 0.984 efficiency 0.857  (scored 129)
+  h23a      TP  65 FP   1 FN   5 TN  58 | purity 0.985 efficiency 0.929  (scored 129)
+  h23conf   TP  65 FP   1 FN   5 TN  58 | purity 0.985 efficiency 0.929  (scored 129)
+
+== bit-identity gate h23a -> h23conf ==
+  matched candidates      : 341  (before 341, after 341)
+  candidates BIT-IDENTICAL on all 149 shared branches : 341 / 341
+  is_stm FLIPS : 0
+  candidates with IDENTICAL point geometry (seg_id,x,y,z,q) : 341 / 341
+  of those, role labels moved on : 0
+
+== PRE-REGISTERED PREDICTION: HELD EXACTLY ==
+341/341 bit-identical on all 149 shared branches, 0 is_stm flips, geometry 341/341,
+0 role moves; census and Michel identical.  With the compiled-config proof (the file
+and h23a's TLA compile to the SAME config, 0 added / 0 removed / 0 changed), this
+establishes that PRODUCTION RUNS WHAT WAS MEASURED.
+
+== THE CAMPAIGN, END TO END (docs pdhd/21 + 22 + 23) ==
+  is_stm  61/0/86/110 -> 95/3/52/107 : purity 1.000 -> 0.969, efficiency 0.415 -> 0.646
+  michel  56/11/30    -> 68/2/18     : purity 0.836 -> 0.971, efficiency 0.651 -> 0.791
+  owner + high-confidence truth      : purity 1.000 -> 0.985, efficiency 0.843 -> 0.929
