@@ -332,7 +332,7 @@ class App:
     """The served viewer plus a chromium page pointed at it."""
 
     def __init__(self, det, tag, labeldir=None, logdir="/home/xqian/tmp",
-                 prepdir=None, manifest=None):
+                 prepdir=None, manifest=None, deadpts=False):
         self.det, self.tag = det, tag
         self.blind = False       # doc pdhd/18; main() sets it from --blind
         self.hide_selection = False   # doc pdhd/18; --hide-selection
@@ -348,6 +348,10 @@ class App:
             args += ["--prepdir", prepdir]
         if manifest:
             args += ["--manifest", manifest]
+        # doc pdhd/20: default OFF.  Absent => the argument list is EXACTLY what it
+        # was, which is what makes an OFF render byte-comparable with the baseline.
+        if deadpts:
+            args += ["--dead-points"]
         self.log = open(self.logpath, "w")
         self.proc = subprocess.Popen(
             [BOKEH, "serve", "--port", str(self.port),
@@ -1005,6 +1009,11 @@ def main(argv=None):
                     help="apply: multiply the per-click settle of the tag pass (default 1.0)")
     ap.add_argument("--hide-selection", action="store_true",
                     help="shots: empty the amber picked-object layer before each frame (JS_CLEAR_SEL)")
+    # doc pdhd/20.  Default OFF; greys the points the chain dropped below
+    # profile_min_dqdx_frac * mip_dqdx, which the panel has always drawn as if
+    # they were measurements.
+    ap.add_argument("--dead-points", action="store_true",
+                    help="draw the chain's sub-cut dQ/dx points hollow grey (default off)")
     a = ap.parse_args(argv)
     global PREPDIR
     PREPDIR = a.prepdir
@@ -1023,7 +1032,8 @@ def main(argv=None):
         a.det, "work", "stm_michel_labels", a.tag)
     labelfile = os.path.join(labeldir, "labels.json")
 
-    app = App(a.det, a.tag, a.labeldir, prepdir=a.prepdir, manifest=a.manifest)
+    app = App(a.det, a.tag, a.labeldir, prepdir=a.prepdir, manifest=a.manifest,
+              deadpts=a.dead_points)
     app.blind = a.blind
     app.hide_selection = a.hide_selection
     app.tag_passes, app.settle_scale = a.tag_passes, a.settle_scale

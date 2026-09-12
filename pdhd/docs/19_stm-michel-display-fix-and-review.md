@@ -893,7 +893,25 @@ Logged, not folded in; v5 stayed frozen through the round.
    of the record: every split, every `FLAT_STOP`, and the owner's own eight items sit on
    it. This should be measured before the knob grading treats these items as truth.
 3. **Rule 7 against rule 4** stays unruled in general (§8.1).
-4. **Next:** grade PDVD's production knobs on PDHD against `smx21`.
+4. **Next:** grade PDVD's production knobs on PDHD against `smx22`.
+
+**Superseded by doc pdhd/20** (`pdhd/docs/20_stm-michel-dqdx-readability.md`), which took
+up item 2 above. What it found, so a reader stops here with the right picture:
+
+* The dQ/dx panel's live mask was **inert on the muon chain** (`live = Q > 0`, but no chain
+  point has `q <= 0`), so points the chain discards from every verdict metric were drawn as
+  measurements. Fixed default-OFF and gated; the cut is validated against the chain's own
+  `n_dead_pts` on 317/317 PDHD and 569/569 PDVD payloads.
+* The owner re-judged all 12 of their items on the fixed panel: **3 of 8 changed** and all
+  four splits were settled. They still report the items as hard.
+* Item 2's premise was tested and is **wrong**: the difficulty is not coverage at the stop
+  (0/8 of the owner's items above a 0.25 dead fraction, against a 12.0 % base). Two
+  pre-registered coverage predictions failed; a third, on the **fit quality** the owner
+  actually named, survived length adjustment (MH odds ratio 2.58, z = 3.05).
+* Record `smx22`: production FN 89 → 86, efficiency 0.407 → 0.415, purity 1.000, hand
+  stoppers 160 → 157.
+* The four splits **re-enter** the knob grading (owner, 2026-09-11): they are ruled, not
+  unsettled, and `owner_queue` is clear on every item.
 
 ## Files
 

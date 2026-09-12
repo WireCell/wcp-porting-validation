@@ -124,10 +124,13 @@ IMG = os.path.dirname(os.path.dirname(HERE))
 # ---------------------------------------------------------------------------
 def parse_args(argv):
     a = dict(det="pdhd", tag="smx1", manifest=None, prepdir=None, labeldir=None,
-             questions=None)
+             questions=None, deadpts=False)
     i = 0
     while i < len(argv):
         t = argv[i]
+        # doc pdhd/20: a BARE flag, so it cannot ride the value-taking loop below.
+        if t == "--dead-points":
+            a["deadpts"] = True
         for k in ("det", "tag", "manifest", "prepdir", "labeldir", "questions"):
             if t == "--" + k and i + 1 < len(argv):
                 a[k] = argv[i + 1]; i += 1
@@ -143,6 +146,18 @@ if DETNAME not in smgeom.ENVELOPE:
     raise SystemExit("unknown --det %r" % DETNAME)
 DETROOT = os.path.join(IMG, DETNAME)
 SCAN_TAG = ARGS["tag"]
+
+# doc pdhd/20.  The chain drops profile points below
+# `profile_min_dqdx_frac * mip_dqdx` from EVERY verdict metric, but this panel has
+# always drawn them at full opacity, identical to a measurement.  Per detector,
+# from that detector's OWN production config:
+#     pdhd  0.15 x 56000 = 8400 e/cm   (pdhd/wct-pr-perevt.jsonnet:243, :310)
+#     pdvd  0.15 x 55000 = 8250 e/cm   (pdvd/wct-pr-perevt.jsonnet:246, :696)
+# Both verified against the chain's own `verdict.n_dead_pts`: 317/317 PDHD payloads
+# and 569/569 PDVD.  census_lib.MIP (54000) is the DISPLAY's reference-curve
+# plateau, NOT mip_dqdx -- using it here would mislabel 71 PDVD items.
+DEAD_CUT = {"pdhd": 0.15 * 56000.0, "pdvd": 0.15 * 55000.0}
+SHOW_DEAD = bool(ARGS["deadpts"]) and DETNAME in DEAD_CUT
 PREPDIR = ARGS["prepdir"] or os.path.join(HERE, "prep-" + DETNAME)
 SHEET = ARGS["manifest"] or os.path.join(
     DETROOT, "docs", "scan", "%s_stm_michel_scan_sheet.tsv" % DETNAME)
@@ -709,13 +724,21 @@ fq.toolbar.active_tap = _tapq
 # a, b are the plotted pair; c the colour field; the rest ride along for the
 # cursor.  ONE column list, so a fill that forgets one fails loudly.
 QCOLS = ["a", "b", "c", "x", "y", "z", "pu", "pv", "pw", "pt"]
-QSCAT = ("muon", "delta", "michel", "dots", "gamma", "survey", "other")
+# doc pdhd/20: `muon_dead` joins this tuple ONLY when the flag is on, so with the
+# flag off the glyph list, the clear shape (blank()) and the tap wiring are all
+# exactly as they were.
+QSCAT = ((("muon", "muon_dead") if SHOW_DEAD else ("muon",))
+         + ("delta", "michel", "dots", "gamma", "survey", "other"))
 SRCQ = {}
-for name, col, sz in (("ref_muon", "#333333", 0), ("ref_electron", "#8c564b", 0),
-                      ("muon", "#000000", 6), ("delta", "#ff7f0e", 8),
-                      ("michel", "#1f77b4", 9), ("dots", "#d62728", 11),
-                      ("gamma", "#17a55a", 12), ("survey", "#00879e", 12),
-                      ("other", "#9467bd", 11)):   # doc pdvd/64
+_QSPEC = [("ref_muon", "#333333", 0), ("ref_electron", "#8c564b", 0),
+          ("muon", "#000000", 6)]
+if SHOW_DEAD:                                      # doc pdhd/20
+    _QSPEC.append(("muon_dead", "#9e9e9e", 6))
+_QSPEC += [("delta", "#ff7f0e", 8),
+           ("michel", "#1f77b4", 9), ("dots", "#d62728", 11),
+           ("gamma", "#17a55a", 12), ("survey", "#00879e", 12),
+           ("other", "#9467bd", 11)]               # doc pdvd/64
+for name, col, sz in _QSPEC:
     src = ColumnDataSource(dict(a=[], b=[]) if sz == 0
                            else {k: [] for k in QCOLS}, name="srcq_" + name)
     SRCQ[name] = src
@@ -732,6 +755,16 @@ for name, col, sz in (("ref_muon", "#333333", 0), ("ref_electron", "#8c564b", 0)
     if name == "muon":
         fq.scatter("a", "b", source=src,
                    fill_color={"field": "c", "transform": cm_muon}, **common)
+    elif name == "muon_dead":
+        # doc pdhd/20: below the chain's live cut, so NOT a measurement.  Hollow,
+        # grey-edged and on NO colour scale -- it cannot be misread as a low dQ/dx
+        # value the way a dark-blue Turbo marker at 8400/150000 can.
+        # Bigger and darker-edged than the live markers' outline: at native size
+        # the first version was too faint for the one job it has.
+        fq.scatter("a", "b", source=src, marker="circle",
+                   fill_color="#ffffff", fill_alpha=0.15, size=sz + 2,
+                   line_color="#5f5f5f", line_width=1.7, line_alpha=1.0,
+                   nonselection_fill_alpha=0.15, nonselection_line_alpha=1.0)
     else:
         fq.scatter("a", "b", source=src, fill_color=col,
                    marker=("diamond" if name == "dots"
@@ -2535,9 +2568,32 @@ def fill_dqdx(pay, v, px, py, pz, prr, psrc, rev):
     off = ((float(RR[int(np.argmin(d))]) if RR.size else 0.0)
            if (psrc == "manual" or prr is None) else float(prr))
     m = pay["muon"]
-    SRCQ["muon"].data = _qdata(s_mu[live], Q[live], Q[live], X[live], Y[live], Z[live],
-                               _col(m, "pu", live), _col(m, "pv", live),
-                               _col(m, "pw", live), _col(m, "pt", live))
+    shown = live
+    # bound on EVERY path: the title block below reads `dead` whenever SHOW_DEAD,
+    # and an item that reaches it unbound would NameError at render time on that
+    # item alone -- invisible until a scanner happened to open it.
+    dead = np.zeros(Q.shape, dtype=bool)
+    if SHOW_DEAD:                                   # doc pdhd/20
+        _cut = DEAD_CUT[DETNAME]
+        dead = live & (Q < _cut)
+        _nd = (pay.get("verdict") or {}).get("n_dead_pts")
+        # The constant must reproduce the CHAIN's own dead count on THIS item.  If
+        # it does not, grey NOTHING: a wrong cut must never dress a real
+        # measurement as a hole.
+        if _nd is not None and int(np.count_nonzero(Q < _cut)) != int(_nd):
+            dead = np.zeros(Q.shape, dtype=bool)
+            state["dead_mismatch"] = True
+        else:
+            state["dead_mismatch"] = False
+        shown = live & ~dead
+        SRCQ["muon_dead"].data = _qdata(
+            s_mu[dead], Q[dead], Q[dead], X[dead], Y[dead], Z[dead],
+            _col(m, "pu", dead), _col(m, "pv", dead),
+            _col(m, "pw", dead), _col(m, "pt", dead))
+    SRCQ["muon"].data = _qdata(s_mu[shown], Q[shown], Q[shown],
+                               X[shown], Y[shown], Z[shown],
+                               _col(m, "pu", shown), _col(m, "pv", shown),
+                               _col(m, "pw", shown), _col(m, "pt", shown))
     # doc pdvd/53 adds `survey` (role 6).  It also adds `gamma`, which doc
     # pdvd/51 gave a SRCQ source and a marker (:689) and then never filled --
     # so every capture gamma has been missing from this panel since it shipped.
@@ -2569,8 +2625,17 @@ def fill_dqdx(pay, v, px, py, pz, prr, psrc, rev):
     fq.x_range.end = float(max(60.0, (s_mu.max() if s_mu.size else 60.0)))
     fq.y_range.start = 0.0
     fq.y_range.end = float(hi * 1.05)
-    fq.title.text = ("dQ/dx vs signed arc length — origin: %s%s"
-                     % ({"pin": "YOUR PIN", "manual": "your typed x,y,z",
+    # doc pdhd/20: this title is ALREADY clipped at the panel's width, so anything
+    # appended to it is never read.  The live/dead COUNT is on the badge div
+    # ("chain %.1f cm, N live / M dead pts") and does not need repeating here.  The
+    # title carries only what that div cannot say -- that the cut disagreed with the
+    # chain, so NOTHING was greyed and the panel is the old, misleading one --
+    # PREPENDED so it survives the clip.
+    _dn = ("DEAD-POINT CHECK FAILED, nothing greyed — "
+           if (SHOW_DEAD and state.get("dead_mismatch")) else "")
+    fq.title.text = ("%sdQ/dx vs signed arc length — origin: %s%s"
+                     % (_dn,
+                        {"pin": "YOUR PIN", "manual": "your typed x,y,z",
                          "fit-end": "the fit's own last point (no pin yet)"}[psrc],
                         "" if prr is None else " at rr = %.1f cm" % prr))
 

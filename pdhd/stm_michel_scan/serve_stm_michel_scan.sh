@@ -49,6 +49,7 @@ while [ "$#" -gt 0 ]; do
         --manifest)   VIEWER_OPTS+=(--manifest "$2"); shift 2 ;;
         --prepdir)    VIEWER_OPTS+=(--prepdir "$2"); shift 2 ;;
         --questions)  VIEWER_OPTS+=(--questions "$2"); shift 2 ;;
+        --dead-points) VIEWER_OPTS+=(--dead-points); shift ;;   # doc pdhd/20, default OFF
         *)            echo "unknown option: $1" >&2; exit 3 ;;
     esac
 done

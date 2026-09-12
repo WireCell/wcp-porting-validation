@@ -1,0 +1,47 @@
+=== doc pdhd/20 step 1 -- gate results ===
+
+GATE 1 (default-OFF byte identity): PASS   2026-09-11
+  Pre-patch baseline : /home/xqian/tmp/h22/shots_base  (viewer at git 5fd0ef20, UNPATCHED)
+  Post-patch, flag off: /home/xqian/tmp/h22/shots_off
+  4 items: 028084_17/38, 029107_25/27, 028084_15/31, 028084_0/108
+  All 4 g_dqdx.png shas identical; all 4 context.json shas identical (8/8 SAME).
+  Both runs: canvas2d backend, private empty labeldir, 0 rows written, rc=0.
+  => the patched viewer with --dead-points absent renders EXACTLY the pre-patch panel.
+
+GATE 2 (flag ON must change the dead-ended items): PASS   2026-09-11
+  028084_17/38 (dead frac 1.000), 029107_25/27 (1.000), 028084_15/31 (0.447)
+  all three g_dqdx.png differ from their OFF render => the dead series draws.
+
+GATE 3 (zero-dead control ON == OFF): PASS -- the PREDICTION HELD
+  028084_0/108 (n_dead 0): ON render byte-identical to OFF.
+  Recorded in design.md BEFORE the run: an extra renderer carrying zero rows was an
+  empirical question, not a logical one.  Bokeh emits identical bytes.
+
+GATE 4 (cut == the chain's own n_dead_pts on the gate items): PASS
+  028084_17/38 17/17 | 029107_25/27 15/15 | 028084_15/31 24/24 | 028084_0/108 0/0
+  => no item rendered the "DEAD-POINT CHECK FAILED" title.
+
+MANIFEST CHECK (for the owner's re-judge, doc pdhd/20 step 2): PASS
+  pdhd/docs/scan/pdhd_stm_michel_scan_sheet.tsv = 304 non-comment rows = 303 item
+  keys + 1 header (NOT 303 + 14 cap extras -- the 14 extras are NOT in this sheet).
+  All 12 of the owner's judge items (8 own19 + 4 smx21 splits) are present.
+
+ALL RUNS: rc=0, canvas2d, private empty labeldir, 0 label rows written.
+
+--- AFTER the follow-up patch (title clip + glyph legibility) ALL GATES RE-RUN ---
+  Not assumed to still hold: a style change invalidates every earlier render result.
+  Fresh dirs shots_off2 / shots_on2, fresh private labeldirs.
+
+GATE 1 (re-run): PASS -- OFF still byte-identical to the PRE-patch baseline, 8/8
+  (4 g_dqdx.png + 4 context.json vs shots_base, viewer at git 5fd0ef20 unpatched)
+GATE 2 (re-run): PASS -- ON differs on 028084_17/38, 029107_25/27, 028084_15/31
+GATE 3 (re-run): PASS -- zero-dead control 028084_0/108 ON == OFF, prediction holds
+LABEL WRITES: none, in either run (lbl_off2 and lbl_on2 both empty)
+
+Follow-up patch content:
+  1. title: the panel title is clipped at the figure width, so the appended count note
+     was never visible AND duplicated the badge div's "N live / M dead pts".  The title
+     now carries ONLY the failure case, PREPENDED so it survives the clip.
+  2. glyph: size sz+2, line_width 1.7, line_color #5f5f5f -- the first version was too
+     faint at native size.
+  Found by LOOKING at the render.  No byte gate can catch either fault.
