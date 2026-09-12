@@ -278,3 +278,25 @@ No C++ changed — the code shipped OFF in doc 92 (`ec6990e0`); PDHD stays OFF.
   **flipped** prep. Three of the ten (`039252_9/101`, `039349_44/28`, `039349_51/29`) are stop-called
   only because this rule fires, so doc 90 §8 item 2's pre-flip "8 unfitted Michels" is a different,
   now-stale population. Then pause the stopper side.
+
+Doc 94: doc 92 §9 item 2 / **item 8, CLOSED by measurement** — read-only, and the result is
+**negative**: no discriminator separates the 10 stop-called-but-no-Michel candidates from the null.
+- **The null**: 93 candidates where the chain calls the stop, finds no Michel, and the owner agrees
+  there is none. A rule must fire on the ten and not on these.
+- **Three levers ruled out before any charge was measured**: `n_stop_arms == 0` holds on 80% of the
+  ten but **97% of the null** (it is what "no Michel found" looks like, not a signal); `pf.seg_rej`
+  is empty on all ten, so no dropped PR residual holds the Michel and doc 88's floored keep cannot
+  reach them; the only cluster at the stop is the candidate's own.
+- **The deciding measurement is charge past the fit end**: median **35** points where the chain finds
+  a Michel, **1.5** on the ten, **2.0** on the null. The ten do not fail a threshold — they lack the
+  charge a Michel is made of. No cut separates: `off ≥ 1` fires 5/10 against 28/93 of the null;
+  `off ≥ 30` gives 3 against 2, and of those three one is a messy cluster by its own body control
+  (`ctl_off` 23) and one is a single-scanner medium call.
+- **Artifact check**: the 3 items doc 93's flip created carry median `off` 12, the 7 pre-existing
+  carry median **0** — the signal is concentrated in the agent's own recent output.
+- **What the ten are**: 5 are fit-through (no off-fit charge, owner pins 3.0–6.1 cm back — the Michel
+  *is* the fit's last few cm). Building that object means **splitting the fit**, a PR-level change,
+  not a knob. The rest have genuinely thin or absent charge.
+- **Next**: both the stopper and Michel sides are now closed by measurement rather than fatigue.
+  **Pause**, and take doc 88 §9.5 item 2 — grade the PDVD flips of docs 83–93 on PDHD's `smx18`
+  record. The unexamined risk is cross-detector, not further tuning on PDVD.
