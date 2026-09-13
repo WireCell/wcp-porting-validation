@@ -66,6 +66,7 @@ ARM=p98kq ./d99_chain.sh clus ; ARM=p98kq ./d99_chain.sh pr                 # cl
 SRC=p98voff DST=p98voffq ./d99_stage_q.sh ; ARM=p98voffq ./d99_chain.sh clus ; ARM=p98voffq ./d99_chain.sh pr
 SRC=p98von  DST=p98vonq  ./d99_stage_q.sh ; ARM=p98vonq  ./d99_chain.sh clus ; ARM=p98vonq  ./d99_chain.sh pr
 python3 d99_frames.py --all --arms p98voff p98von --json <sums>            # d99/frame_sums_120evt.txt
+(cd ../../.. && python3 docs/nf_sp_img_clus/scripts/d99_readout_window.py)  # sec 4.1 -> d99/readout_window_effect_p98voff.txt
 
 # carry the record (sec 5), grade (sec 6), measure (sec 7-8); per ARM in p98voffq p98vonq
 python3 d99_match.py --arm $ARM --out <match.json> --carried ../../scan/pdvd_stm_michel_smx9_carried_$ARM.json   # d99/match_$ARM.txt
@@ -151,7 +152,7 @@ Per-plane sums of the saved `gauss` frames (DNN-ROI + L1SP output), ON / OFF:
 
 1/0.889 = 1.1249: the sign is right, and the size is exact channel by channel.
 
-The plane sums on U and V are 0.5–1.2 % above 1/s. On W they are within 0.1 %. SP's absolute thresholds (ROI, DNN-ROI mask,
+Over the 120 events the U and V plane sums are 0.7–1.2 % above 1/s (0.5–0.7 % on 039252_0). On W they are within 0.1 %. SP's absolute thresholds (ROI, DNN-ROI mask,
 L1SP triggers on U/V) now admit a little more top charge. That is part of putting the constant in SP rather than scaling
 afterwards. It is also why the Michel *control* region, which is mostly small charges, scales by more than 1/s (§6.2).
 
@@ -201,6 +202,9 @@ The cause is in the clustering runner:
 - With the true window, the PR's `readout_edge_guard` fires 363 times instead of 264 and removes stoppers whose stop lies
   in the last 60 ticks.
 - The runner's own comment still says "10000 ticks × 0.5 us".
+- Record: `d99/readout_window_effect_p98voff.txt` (`scripts/d99_readout_window.py`). It holds the candidates (596 / 503 /
+  597 on `p96vprod` / `p98voff` / `p98voffq`), the guard firings (264 / 363 / 256), the window per event, and the 205
+  cleanly matched items that lost their candidate.
 
 This is neither the gain constant nor the SP rerun. For this round the arms reproduce production:
 - `d99_stage_q.sh` stages clustering into `p98voffq` / `p98vonq` exactly as `stage_ql_tag.sh` does: imaging archives +
@@ -519,6 +523,7 @@ borrows") is untouched. **The owner decides.**
 | `scripts/d99_match.py`, `d99_rescan.py` | geometric carry-over of the record; re-scan list |
 | `scripts/d99_grade.py`, `d99_dqdx_drift.py` | grading and dQ/dx forks with their controls |
 | `scripts/d99_closure.py` | per-track OFF → ON plateau ratio, common-track samples |
+| `scripts/d99_readout_window.py` | §4.1: candidates, edge-guard firings and clustering window per arm |
 | `scripts/d99_michel_ql.py` | Michel energy by volume, per-item ON/OFF, flash changes |
 | `scripts/d99_trim_off.sh`, `d99_retire_keep_sp.sh` | guarded OFF-frame trim; guarded retire of the July SP frames (held) |
 | `../scan/pdvd_stm_michel_smx9_carried_p98voffq.json`, `_p98vonq.json` | the carried hand-scan records (new keys; the smx record untouched) |

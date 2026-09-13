@@ -1,0 +1,10 @@
+# doc pdvd/99 sec 4.1 -- readout window: frames in the clustering input dir (p98voff) vs production staging
+p96vprod  events 120  readout_edge_guard log lines 1200, of which firing  264  STM candidates  596  readout_window_ticks {'10000': 120}
+p98voff   events 120  readout_edge_guard log lines 1290, of which firing  363  STM candidates  503  readout_window_ticks {'10000': 36, '6400': 84}
+p98voffq  events 120  readout_edge_guard log lines 1184, of which firing  256  STM candidates  597  readout_window_ticks {'10000': 120}
+p98vonq   events 120  readout_edge_guard log lines 1368, of which firing  309  STM candidates  656  readout_window_ticks {'10000': 120}
+example firing p96vprod: [06:16:13.684] I [clus.NeutrinoPattern] readout_edge_guard: cluster 79 rejected: stop at tick 9986.0 within 60 ticks of the readout window edge (window truncation, not a stop)
+example firing p98voff: [08:24:46.649] I [clus.NeutrinoPattern] readout_edge_guard: cluster 42 rejected: stop at tick 9990.7 within 60 ticks of the readout window edge (window truncation, not a stop)
+example firing p98voffq: [08:49:17.424] I [clus.NeutrinoPattern] readout_edge_guard: cluster 42 rejected: stop at tick 9990.7 within 60 ticks of the readout window edge (window truncation, not a stop)
+example firing p98vonq: [09:02:25.237] I [clus.NeutrinoPattern] readout_edge_guard: cluster 43 rejected: stop at tick 9990.7 within 60 ticks of the readout window edge (window truncation, not a stop)
+record on p98voff: 601 items, ok 567; ok with a candidate on p96vprod and none on p98voff: 205
