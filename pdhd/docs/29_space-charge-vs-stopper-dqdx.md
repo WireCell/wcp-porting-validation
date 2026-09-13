@@ -46,11 +46,57 @@ curve, rr 40–60 cm, no free scale) on hand stoppers the chain accepted on its 
    The offset follows the readout boundary: top-drift electronics (TDE) above, bottom-drift electronics (BDE, PDHD's
    cold electronics) below.
 
+**The owner's follow-up (2026-09-13), answered in §8–9:**
+* *"For PDVD, the top volume and bottom volume are using different electronics. So the gain of the electronics may be
+  able to explain the observed asymmetry … the PDVD bottom share the same electronics as the PDHD (both sides). Only
+  PDVD top uses a different electronics. Are we sure that the PDVD bottom is consistent with PDHD side? This needs to
+  double check the expectation calculation of dQ/dx vs. rr in both cases, if this is confirmed, we can then say the
+  observed asymmetry is coming from the gain."*
+* *"The PDVD is running about 450 V/cm, and PDHD is running at higher electric field … When we calculate the charge
+  --> energy for the Michel electron, I wonder whether this effect is properly taken into account between the PDHD and
+  PDVD chains in terms of the average recombination factor."*
+
+5. **The expected dQ/dx-vs-rr curve is the same calculation on both detectors; only the field differs (§8.1).**
+   * Rebuilt here from the CSDA table with `convert_field.C`'s own formula, it matches both committed tables to 2e-16,
+     and each production chain's own `dqdx_ref` to the 6 significant figures the jsonnet carries.
+   * From the field alone, PDHD's expected plateau is 1.25 % above PDVD's (rr 50 cm).
+6. **PDVD bottom agrees with PDHD to about ±5 %, and the top is low against both (§8.2–8.3).**
+   * Bottom/PDHD is **1.051 [1.026, 1.071]** on the fitted plateau (95 % [0.998, 1.094]).
+   * It is **0.981 [0.959, 1.007]** on the collection-plane estimator, which removes the fit's W bias.
+   * In matched drift-time bins it is 1.023 / 1.054 / 0.999 / 1.000.
+   * **Top/bottom is 0.892 and 0.883** on the two estimators; top/PDHD is 0.938 and 0.866.
+   * **SP treats BDE identically on both detectors.** On real collection signals, SP's electrons per ADC tick agree to
+     1–2 % between PDVD bottom and PDHD.
+   * **SP applies PDHD's two gain settings exactly.** Run 028084 at 14 mV/fC over run 029107 at 7.8 gives
+     **0.557–0.560**, against the expected 7.8/14 = 0.557.
+7. **So the asymmetry belongs to the top volume, and the TDE readout is the leading candidate. "Gain" is not yet shown
+   (§8.4–8.5).**
+   * **Shared by top and bottom:** field, expected curve, drift speed, recombination model and field-response file.
+   * **Different in the top readout:**
+     * a different electronics response shape (area/peak 5.0 µs against 2.8);
+     * postgain 1.36;
+     * a 2.0 V ADC full scale.
+   * **SP's electrons per ADC tick on the top are 0.68 of the bottom's.** This is a conversion factor, not a charge
+     deficit.
+     * Neither the response peak (0.88) nor its area (0.63) predicts it.
+     * Together with the dQ/dx 0.89, it says the top's real ADC per electron is about 1.3× the bottom's, where SP
+       expects 1.47×.
+     * Separating a gain error from a response-shape error needs a direct test (§7 item 1).
+8. **Each chain's Michel charge→energy conversion uses its own field (§9).**
+   * The conversion constant k = B·2.1/(ρE) equals the configured value at 0.4959 and at 0.45 kV/cm to 1e-16.
+   * PDVD turns each electron into 3.4 % more MeV than PDHD. That is 1.1 % from the field times 2.3 % from the per-detector
+     calibration constant C.
+   * Evaluating recombination at a fixed 2.1 MeV/cm misses at most 0.9–2.0 % of the field difference for denser
+     deposits.
+   * None of this can produce doc 26 §3.4's 45.3 against 34.3 MeV: it acts in the other direction.
+
 **Production / scope.**
 * **Read-only analysis** of the committed doc 27 table. No C++, config, arm, record or label is touched.
 * **No correction proposed:** the chain applies no space-charge or lifetime correction to this dQ/dx, and this doc
   does not add one.
 * **Not a measured space charge:** the model is a stated 1-D toy.
+* **§8–9 are also read-only.** They read SP archives, arm outputs and compiled configs already on disk. No wire-cell job
+  was run.
 
 ## 0. Repro
 
@@ -58,7 +104,13 @@ curve, rr 40–60 cm, no free scale) on hand stoppers the chain accepted on its 
 I=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img ; X=$I/pdhd/docs/scan/d29
 # input: $I/pdhd/docs/scan/d27/dqdx_drift.json (doc pdhd/27 sec 5, committed; PDVD p96vprod, PDHD h26q2dprod whose
 #        T_stm_michel_pts rows equal production h28prod's -- doc pdhd/28 writes no point row)
-python3 $X/d29_space_charge.py > $X/space_charge.txt      # every number below + figs/29_space_charge.png
+python3 $X/d29_space_charge.py > $X/space_charge.txt      # sec 1-7 + figs/29_space_charge.png
+python3 $X/d29_gain_recomb.py  > $X/gain_recomb.txt       # sec 8-9 + figs/29_gain_recomb.png (~3 min, 8 processes)
+#   also reads: toolkit-dev/energy_loss/pion_travel/stopping.root; d27/dqdx_rr_vs_drift.json (mpW);
+#   calib-pr-evt*.json of h28prod / p96vprod; SP archives pdhd/work/028084_{0,1}_d09, 029107_{0,1}_d09ctl (anode 1),
+#   pdvd/work/039252_0_d27fresh, 039253_0_d27fresh (anodes 0, 4) -- the imaging inputs of both production arms;
+#   p96vprod T_stm_michel(_2d); pdhd/work/029107_17_h28cfgoff/.wct-pr_h28cfgoff.json; toolkit pr.jsonnet (pdhd, protodunevd)
+#   --skip-frames / --skip-michel drop sec 8.3-8.4's frame check / sec 9.3 if those inputs are ever retired
 ```
 
 The durable input is the committed `scan/d27/dqdx_drift.json`. Regenerating this doc needs neither `p96vprod` nor
@@ -281,6 +333,8 @@ Four models over both PDVD volumes (n 183), each plateau = A × toy:
      by PDHD.
    * **Candidates:** a gain or response difference in the processing, or one that depends on pulse width. Not tested
      here.
+   * **§8 re-tests this.** PDVD bottom agrees with PDHD to ±5 %, and the top is low against both. On real signals SP's
+     top normalisation follows neither the electronics response's peak nor its area.
 2. **Whether the collection-plane fit bias and space charge overlap.** Doc 27 §5.3 halved the top-volume fall toward
    the anode (0.086 → 0.043) by multiplying the plateau by W measured/predicted.
    * **Space charge cannot be that part.** It displaces charge and changes its size the same way on all three wire
@@ -316,11 +370,29 @@ Four models over both PDVD volumes (n 183), each plateau = A × toy:
 * **The literature percentages** (ProtoDUNE-SP −10 % / +20 %, MicroBooNE −5 % / +12 %) are quoted from search summaries,
   not read from their figures (§1).
 * **Small samples.** PDVD bottom has 42 tracks, 11 of them steep; PDHD has 74. PDHD's null is uninformative, not zero.
+* **Not a measured TDE gain (§8).**
+  * §8 places the offset in the top volume and shows what SP applies there. It does not measure the real TDE response.
+  * No "effective top gain" is quoted. SP's charge scale on real signals follows neither the electronics response's
+    peak nor its area.
+* **PDVD bottom against PDHD is resolved only to about ±5 % (§8.2).**
+  * Electron lifetime is unmeasured on both detectors; a common τ of about 12 ms would close the plateau gap.
+  * The space-charge toy moves the ratio by 2–3 %.
+  * The two estimators bracket 1.
+* **The Michel split by drift volume cannot test the gain reading (§9.3).** The bottom has 38 Michels, and the interval
+  covers both 0.89 and 1.
+* **SP settings that may differ per anode beyond the electronics response** (filters, ROI thresholds, the 500 ns tick
+  relabel on the top) are not audited here.
 
 ## 7. Next, ranked
 
 1. **Split PDVD's top-volume plateau by TDE channel group and by pulse width** (doc 27 §8 item 4). This decides the
    offset's mechanism independently of space charge.
+   * **Sharpened by §8.4:** measure the top's charge scale directly, because a config audit cannot separate a gain
+     error from a response-shape error. Two ways:
+     * put a known charge through SP on TDE channels (pulser or calibration injection);
+     * compare the top collection pulse shape (width, area/peak) with `dunevd-coldbox-elecresp-top-psnorm_400` × 1.36.
+   * **What each outcome means.** A gain error scales peak and area alike. A shape error changes SP's in-band scale,
+     the 0.68 of §8.4.
 2. **A space-charge test through dE/dx.** The two couplings respond differently to dE/dx:
    * **recombination** makes the deficit about 3× larger at the Bragg peak (10 MeV/cm) than on the plateau;
    * **drift velocity** does not depend on dE/dx;
@@ -335,13 +407,278 @@ Four models over both PDVD volumes (n 183), each plateau = A × toy:
 4. **Only then** consider a space-charge or lifetime term in the expected curve. Today neither is corrected, and they
    pull in opposite directions.
 
+## 8. PDVD bottom against PDHD, and what signal processing assumes per volume
+
+The owner's inference has two steps:
+1. PDVD bottom uses PDHD's cold electronics, so if it reads like PDHD,
+2. the top/bottom offset must come from the top electronics.
+
+This section tests step 1, and what SP applies on each side. Every number is in `scan/d29/gain_recomb.txt`.
+
+![](figs/29_gain_recomb.png)
+
+*(a) per-track plateau by unit, on the fitted plateau (filled) and × W measured/predicted (open). (b) plateau against
+drift time. (c) SP's electrons per raw ADC tick on real collection signals, against the area-normalisation prediction.
+(d) the recombination field ratio against dE/dx. (e) PDVD's hand-Michel region energy by drift volume. (f) summary.*
+
+### 8.1 The expected curve: one calculation, two fields
+
+**The chain:**
+1. `energy_loss/pion_travel/stopping.root` (CSDA, 1000 points; 2.206 MeV/cm at rr 50);
+2. `convert_field.C`: Modified Box dQ/dx = ln(A + β′·dE/dx)/(β′·W) × 0.85, with β′ = B/(ρE), A 0.93, B 0.212,
+   ρ 1.38 g/cm³, W 23.6 eV;
+3. 1 cm bins, each the average of 10 points;
+4. `particle_dataset.jsonnet`, from which `ParticleDataSet` builds the chain's `dqdx_ref`.
+
+**Rebuilt here with that formula:**
+
+| check | max \|ratio − 1\| |
+|---|---|
+| rebuilt vs `pdhd/stm/pdhd_ref_dqdx.json` (0.4959 kV/cm) | 2.2e-16 |
+| rebuilt vs `pdvd/stm/pdvd_ref_dqdx_045.json` (0.45) | 2.2e-16 |
+| rebuilt vs `pdvd/stm/pdvd_ref_dqdx.json` (0.44, the doc-25 record) | 4.4e-16 |
+| chain `dqdx_ref`, `h28prod` | 3.75e-6 (the jsonnet's 6 significant figures) |
+| chain `dqdx_ref`, `p96vprod` | 1.55e-6 |
+
+| rr (cm) | 1 | 5 | 10 | 30 | 50 |
+|---|---|---|---|---|---|
+| PDHD, 0.4959 kV/cm (e/cm) | 142 970 | 85 905 | 72 357 | 58 516 | 55 612 |
+| PDVD, 0.45 | 137 181 | 83 770 | 70 916 | 57 709 | 54 927 |
+| PDVD at 0.4393 | 135 749 | 83 222 | 70 539 | 57 489 | 54 738 |
+| PDHD / PDVD | 1.0422 | 1.0255 | 1.0203 | 1.0140 | 1.0125 |
+
+**Both detectors share every input except E:** dE/dx table, A, B, ρ, W, the ×0.85 and the binning.
+
+**The fields were obtained differently.**
+* **PDHD's 0.4959** is the field its calibrated drift speed (1.576 mm/µs) implies at 87.68 K.
+* **PDVD's 0.45** was set directly (doc pdvd/29). Its chain drift speed, 1.48073 mm/µs for both volumes, implies 0.4393
+  at 87.68 K (`pdvd/stm/pdvd_transport.tsv`).
+* **Either reading moves PDVD by under 1 %:**
+  * if 0.4393 is the true field, the expectation is 0.35 % too high and PDVD reads 0.35 % low;
+  * if 0.45 is true, the chain's drift speed is 1.2 % slow, and bottom's along-drift dQ/dx reads 0.8 % high.
+
+### 8.2 Bottom against PDHD
+
+Two estimators:
+* **the fitted plateau** of §3–4, with no free scale;
+* **plateau × W measured/predicted** on the muon footprint (doc 27 §5.3). It reads the collection plane and removes
+  the fit's W bias.
+
+| unit | n | plateau | plateau × W meas/pred (n) | median drift time | median \|cos_x\| |
+|---|---|---|---|---|---|
+| PDVD bottom (BDE) | 42 | 1.039 [1.025, 1.060] | 1.102 [1.094, 1.114] (42) | 0.97 ms | 0.80 |
+| PDVD top (TDE) | 141 | 0.927 [0.913, 0.938] | 0.973 [0.964, 0.988] (139) | 0.86 ms | 0.85 |
+| PDHD APA1–3 | 74 | 0.988 [0.983, 1.009] | 1.124 [1.101, 1.151] (70) | 1.57 ms | 0.27 |
+
+| ratio | plateau | plateau × W meas/pred |
+|---|---|---|
+| **bottom / PDHD** | **1.051** [1.026, 1.071], 95 % [0.998, 1.094] | **0.981** [0.959, 1.007], 95 % [0.934, 1.039] |
+| top / PDHD | 0.938 [0.911, 0.949], 95 % [0.887, 0.965] | 0.866 [0.847, 0.887], 95 % [0.825, 0.906] |
+| **top / bottom** | **0.892** [0.870, 0.906], 95 % [0.851, 0.920] | **0.883** [0.866, 0.898], 95 % [0.837, 0.914] |
+
+**Splits (plateau):**
+* PDHD by run: 028084 1.007, 029107 0.976.
+* PDHD by APA: 1.016 / 0.993 / 0.983.
+* PDVD bottom by anode: 1.066 / 1.084 / 1.044 / 1.008. By run: 039252 1.056, 039253 1.036, 039349 1.028.
+* PDVD top by anode: 0.899 / 0.923 / 0.918 / 0.887. By run: 0.888, 0.956, 0.923.
+* **Every bottom anode reads above every top anode on both estimators.**
+
+**Matched in drift time**, which is what an uncorrected lifetime acts on:
+
+| drift time | bottom (n) | top (n) | PDHD (n) | bottom / PDHD |
+|---|---|---|---|---|
+| 0–0.5 ms | 1.000 (9) | 0.880 (45) | 0.977 (8) | 1.023 |
+| 0.5–1.0 ms | 1.042 (13) | 0.924 (37) | 0.988 (14) | 1.054 |
+| 1.0–1.5 ms | 1.076 (13) | 0.931 (36) | 1.076 (14) | 0.999 |
+| 1.5–2.0 ms | 0.956 (5) | 0.966 (17) | 0.955 (31) | 1.000 |
+
+**What else can move bottom/PDHD:**
+
+| term | size | from |
+|---|---|---|
+| PDHD run to run | ±1.6 % (1.007 against 0.976) | the split above |
+| PDVD field against its drift speed | +0.8 % or −0.3 % | §8.1 |
+| space charge × angle | −1.9 % at δ 0.07, −3.0 % at δ 0.11. Bottom tracks follow the drift, PDHD's cross it | the doc 29 toy at each track's own drift and angle |
+| the fit's W bias | 1.051 → 0.981 | the second estimator |
+| uncorrected electron lifetime | a common τ of 12.1 ms closes the gap; at τ 30 ms it moves 2.0 % | median drift times 0.97 against 1.57 ms |
+| charge the reconstruction does not recover | 2 % (0.941 PDHD, 0.921 PDVD, pooled over both volumes) | doc pdhd/17 §4 |
+
+**Reading it.**
+* **Bottom and PDHD agree to about ±5 %.**
+  * The two estimators bracket 1: 1.051 and 0.981.
+  * Three of the four matched drift-time bins agree within 2.3 %.
+  * Every listed term is 1–7 %.
+  * The data cannot do better than ±5 %, and do not need to for step 2.
+* **The top does not agree.**
+  * It reads 0.94 / 0.87 of PDHD and 0.89 / 0.88 of bottom, the same on both estimators.
+  * None of the listed terms can remove it. Field, expected curve, drift speed, recombination model and field-response
+    file are shared by top and bottom, and §4 matched drift distance and angle.
+
+### 8.3 The gain SP applies is right where the gain is known
+
+PDHD's two runs were read out at different gains:
+* 028084 at 14 mV/fC, 029107 at 7.8. This is the `META.json` inference from orig-frame ADC RMS.
+* The input directory name `input_data_7p8_new_coh_grouping` records the coherent-noise epoch, not the gain (doc
+  pdhd/10, Repro block).
+
+**Frame check.** SP's archives carry the deconvolved charge (`frame_gauss`, electrons) and the post-NF waveform
+(`frame_raw`, ADC).
+* **Selection:** channels with more than 3×10⁴ e in the gauss ROI dilated by ±N ticks, and a unipolar raw signal there
+  (Σraw > 0.8 Σ|raw|, i.e. collection channels).
+* **Quantity:** Σgauss / Σraw, SP's electrons per ADC tick on real signals.
+* **Sources:** the imaging inputs of the production arms, two events per unit.
+
+| unit | ±0 ticks | ±20 | ±60 | if SP normalised by the response area |
+|---|---|---|---|---|
+| PDHD 028084, APA1 | 7.16 | 7.07 | 7.02 | 6.82 (14 mV/fC) |
+| PDHD 029107, APA1 | 12.80 | 12.65 | 12.61 | 12.25 (7.8 mV/fC) |
+| PDVD bottom, anode 0 | 12.89 | 12.89 | 12.82 | 12.25 (7.8 mV/fC) |
+| PDVD top, anode 4 | 9.54 | 8.68 | 8.70 | 7.76 (JSON × 1.36, 2.0 V) |
+
+* **028084 / 029107 = 0.560 / 0.559 / 0.557, against 7.8/14 = 0.557.** SP applied 14 mV/fC to 028084 and 7.8 to 029107.
+  * The two runs' dQ/dx plateaus agree: 1.007 and 0.976.
+  * A gain mis-set by that factor would read 1.79× or 0.56×.
+  * **This is the positive control:** the chain's charge scale follows the hardware gain when SP's gain is set right.
+* **PDVD bottom / PDHD 029107 = 1.008 / 1.019 / 1.016.** The same ColdElec response at 7.8 mV/fC gets the same SP
+  normalisation within 2 %, despite different field-response files. **On the SP side, bottom and PDHD are the same
+  electronics.**
+* **Same-response units sit 3–5 % above the area prediction.** That is the common field-response and filter factor.
+
+### 8.4 What SP assumes on the top
+
+| | PDVD bottom (BDE) | PDVD top (TDE) |
+|---|---|---|
+| electronics response | ColdElec 7.8 mV/fC, 2.2 µs shaping | `JsonElecResponse` `dunevd-coldbox-elecresp-top-psnorm_400.json.bz2` |
+| response peak / area / area÷peak | 7.80 mV/fC / 21.8 mV·µs/fC / 2.79 µs | 7.21 mV/fC / 36.1 mV·µs/fC / 5.00 µs |
+| postgain | 1.0 | 1.36 (`protodunevd/params.jsonnet:192-196`) |
+| ADC full scale, 14 bit | 1.4 V (0.2–1.6) → 11.70 ADC/mV | 2.0 V (`protodunevd/sp.jsonnet:96-98`) → 8.19 ADC/mV |
+| field response | `protodunevd_FR_imbalance3p_260501` | the same file |
+| tick | 512 → 500 ns resampled | relabelled 500 ns (`pdvd/wct-nf-sp.jsonnet:157-170`) |
+
+**Three versions of the assumed top/bottom scale:**
+
+| basis | top / bottom |
+|---|---|
+| response peak (ADC per fC) | 0.881 |
+| response area | 1.577 in ADC·tick per fC, so 0.634 in electrons per ADC tick |
+| **measured on real signals** (ROI dilated ±20 / ±60) | **0.674 / 0.679** |
+
+**Reading it.**
+* **0.68 is SP's conversion factor, not a charge ratio, so it does not contradict §8.2's 0.89.**
+  * SP credits a top ADC tick with 0.68 of a bottom tick's electrons, because it expects the top electronics to produce
+    about 1.47× more ADC per electron.
+  * Suppose imaging, clustering and the fit treat the volumes alike. Then the dQ/dx top/bottom of 0.89 says the top
+    really produces about 1.3× the bottom's ADC per electron, not 1.47× (`gain_recomb.txt` §C).
+  * That number is in band, on the collection plane, and carries gain and response shape together. It does not
+    separate them.
+* **The top pulse runs past the deconvolved ROI.**
+  * Undilated, the top reads 9.54 e/ADC tick, 10 % above its value at ±20 ticks. That change is on the same 1138
+    channels, so it is not a selection effect. The bottom does not move (12.89 at both).
+  * This is a measured property of the real top pulse: a tail of about 10 % of its area outside the charge ROI.
+  * The configured top response is itself long (area/peak 5.0 µs), so a long tail is expected. By itself this does not
+    show that the real pulse shape differs from the JSON.
+* **Against the area prediction, the top gets 12 % more electrons per ADC tick and the bottom 5 %.** The field response
+  is one file, so the 7 % difference comes from how SP's filters meet the two response shapes.
+* **So neither the response peak nor its area is SP's charge scale on the top.** A config audit cannot give an
+  "effective top gain", and this doc quotes none.
+
+### 8.5 What this does and does not license
+
+* **0.889 is an internal comparison.**
+  * **Shared:** one field, one expected curve, one drift speed, one recombination model and one field-response file.
+  * **Matched:** drift distance and angle (§4.2).
+  * **§8.2:** the bottom agrees with PDHD to ±5 %, so the deficit belongs to the top.
+* **The top differs from the bottom only in its readout.**
+  * TDE hardware;
+  * a different electronics response (shape, postgain 1.36);
+  * a 2.0 V full scale and a relabelled tick;
+  * any per-anode SP settings not audited here.
+* **So the owner's reading holds as a candidate.** The top's electronics scale in SP is off by about 11 %, but gain has
+  not been shown to be the cause over response shape (§7 item 1 separates them).
+* **The May postgain change neither caused nor hid it.** Toolkit `546b2dac` (2026-05-03) was a pair of changes:
+  * it fixed the W normalisation of the one field-response file both volumes use (×1.117);
+  * it divided both postgains by the same factor: top 1.52 → 1.36, bottom 1.1365 → 1.0.
+
+  Each volume's charge scale was meant to stay where it was. Relative to the bottom, SP's assumed top response moved by
+  1.0169, so top charge relative to bottom moved by 0.983. That is 1.7 %, against an 11 % offset.
+
+## 9. The field in the Michel charge→energy conversion
+
+### 9.1 Each chain converts at its own field
+
+**Where the field enters.**
+* The region, control and unfitted-charge energies go through `stm_michel_charge_to_energy_model`
+  (`clus/src/StmMichelFunctions.cxx:227-240`).
+* That function asks the bound `PowerBoxRecombination` for the charge 2.1 MeV/cm makes (`michel_unfit_dedx`). So MeV
+  per electron = Wi / (C · R(2.1)).
+* Fitted segments are inverted point by point through the same model (`michel_ke_dqdx`, the association estimator's
+  fitted half).
+* `PowerBoxRecombination` has no field key. **The field enters only through k = B · pivot / (ρE).**
+
+| | E (kV/cm) | k configured | k = B·2.1/(ρE) | C | R(2.1) | MeV per electron |
+|---|---|---|---|---|---|---|
+| PDHD (`pdhd/pr.jsonnet` `pdhd_stm_recomb`) | 0.4959 | 0.6505519170 | 0.6505519170 (diff 1e-16) | 0.8120 | 0.7037 | 4.13035e-05 |
+| PDVD (`protodunevd/pr.jsonnet` `pdvd_stm_recomb`) | 0.45 | 0.7169082126 | 0.7169082126 (diff 0) | 0.7941 | 0.6959 | 4.27058e-05 |
+
+**Confirmations.**
+* **PDHD's compiled config** (`h28cfgoff`) carries Efield 0.4959, k 0.6505519170239442 and C 0.812.
+* **PDVD's constant equals the K doc pdvd/96 measured on `p96vprod` candidates:** 4.27058e-05.
+
+**Answer: yes. Each chain's Michel energy uses the recombination at its own field.** Nothing ties k to the field,
+though, so any future field change must recompute k by hand.
+
+### 9.2 How big the field term is, and what else differs
+
+| dE/dx (MeV/cm) | R at 0.45 | R at 0.4393 | R at 0.4959 | R(0.4959)/R(0.45) |
+|---|---|---|---|---|
+| 2.1 | 0.6959 | 0.6937 | 0.7037 | 1.0112 |
+| 3 | 0.6542 | 0.6507 | 0.6674 | 1.0202 |
+| 5 | 0.5680 | 0.5635 | 0.5861 | 1.0318 |
+| 10 | 0.4302 | 0.4254 | 0.4497 | 1.0453 |
+
+* **PDVD / PDHD MeV per electron = 1.0340.** That is the field (1.0112) times C (1.0225).
+  * **C is a calibration, not recombination.** It is 0.85 × the charge the reconstruction does not recover (docs
+    pdhd/16 §4, pdhd/17 §4).
+  * It was fitted per detector on stoppers: PDVD on 43 bottom plus 108 top tracks pooled, PDHD on 54 with APA0
+    excluded.
+* **The fixed 2.1 MeV/cm evaluation is the same on both chains.**
+  * If the Michel charge is really deposited at 3 or 5 MeV/cm, the conversion misses 0.9 % or 2.0 % of the field
+    difference. PDHD then reads that much high relative to PDVD.
+  * The absolute MIP bias is doc pdhd/17 §9's.
+* **Direction.** PDVD's constant is the more generous one. The conversion cannot explain doc 26 §3.4's PDHD 45.3
+  against PDVD 34.3 MeV; removing the field difference would widen that gap by 1.1 %.
+
+### 9.3 The gain reading, through the Michel energy
+
+If the top's charge scale is low, PDVD's pooled C (mostly top tracks) makes top-volume Michels read low and
+bottom-volume Michels high. Their ratio would be near the dQ/dx 0.89.
+
+**Test:** `p96vprod` `T_stm_michel`, doc 26 §3's hand-Michel population, split on `stop_x`.
+
+| estimator | top median (n 96) | bottom median (n 38) | top / bottom |
+|---|---|---|---|
+| `michel_ke_q2d_region` | 34.2 [31.7, 35.2] MeV | 36.9 [29.8, 39.0] MeV | 0.929 [0.847, 1.114], 95 % [0.784, 1.217] |
+| `michel_ke_q2d_ctl` | 3.0 [2.5, 3.8] | 2.0 [1.3, 2.5] | 1.51 [1.10, 2.42] |
+| `michel_ke_best` | 23.4 [21.7, 25.1] | 21.1 [19.4, 24.1] | 1.11 [0.95, 1.25] |
+
+**Reading it.**
+* **The region ratio falls between 0.89 and 1**, and its interval covers both, so this is a weak test.
+* **The other two estimators do not move like a charge scale.**
+  * The control is a geometry-driven floor (doc 27).
+  * The association estimator carries its own fit systematics.
+* **Result: neither a confirmation nor a contradiction.** All the chain's STM+Michel items (106 top / 41 bottom) give the
+  same picture: region 0.951 [0.853, 1.141].
+
 ## Files
 
 | file | what |
 |---|---|
-| `scan/d29/d29_space_charge.py` | every number in this doc, and the figure; input `scan/d27/dqdx_drift.json` |
+| `scan/d29/d29_space_charge.py` | every number in §1–7, and the figure; input `scan/d27/dqdx_drift.json` |
 | `scan/d29/space_charge.txt` | its output |
 | `figs/29_space_charge.png` | §2–4 figure |
+| `scan/d29/d29_gain_recomb.py` | every number in §8–9, and the figure. Reads the committed d27 tables, `stopping.root`, both production arms' `dqdx_ref` and PDVD's `T_stm_michel`, the SP archives of their imaging inputs, the compiled `h28cfgoff` config and both `pr.jsonnet` |
+| `scan/d29/gain_recomb.txt` | its output |
+| `figs/29_gain_recomb.png` | §8–9 figure |
 
 ## Sources
 

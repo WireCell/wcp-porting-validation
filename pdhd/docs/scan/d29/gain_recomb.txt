@@ -1,0 +1,137 @@
+=== A. the expected muon dQ/dx vs rr: rebuilt from the CSDA source with convert_field.C's formula
+  source stopping.root muon: 1000 points, rr 0.000-431.6 cm, dE/dx at rr 50 2.206 MeV/cm
+  pdhd/stm/pdhd_ref_dqdx.json        _meta E 0.4959: max |rebuilt/json - 1| = 2.22e-16
+  pdvd/stm/pdvd_ref_dqdx_045.json    _meta E 0.45: max |rebuilt/json - 1| = 2.22e-16
+  pdvd/stm/pdvd_ref_dqdx.json        _meta E 0.44: max |rebuilt/json - 1| = 4.44e-16
+  chain dqdx_ref h28prod   (calib-pr-evt74408.json): max |chain/rebuilt(0.4959) - 1| at rr 0.5+i = 3.75e-06  (jsonnet carries 6 significant figures)
+  chain dqdx_ref p96vprod  (calib-pr-evt298567.json): max |chain/rebuilt(0.45) - 1| at rr 0.5+i = 1.55e-06  (jsonnet carries 6 significant figures)
+  rr (cm)              1        5       10       30       50
+  E 0.4959 e/cm  142970    85905    72357    58516    55612
+  E 0.4500 e/cm  137181    83770    70916    57709    54927
+  E 0.4393 e/cm  135749    83222    70539    57489    54738
+  PDHD/PDVD       1.0422   1.0255   1.0203   1.0140   1.0125
+  plateau (rr 40-60) expectation 0.45 / 0.4393 = 1.0035: if PDVD's true field is the one its drift speed implies, PDVD plateau ratios read 0.35 % LOW
+  identical inputs on both detectors: dE/dx table, A, B, rho, W, x0.85, binning; only E differs.
+
+=== B. PDVD bottom against PDHD, per-track plateau (median dQ/dx / expected, rr 40-60, no free scale)
+  population: PDVD p96vprod every record item with a candidate; PDHD h26q2dprod APA0 strict (apa field = majority 2-D cell): PDHD APAs [1, 2, 3]
+  unit                         n   plateau median [p16,p84]   plateau x W meas/pred (n)       median drift time ms   median |cos_x|
+  PDVD bottom (BDE)           42   1.039 [1.025,1.060]        1.102 [1.094,1.114]    ( 42)     0.97               0.80
+  PDVD top (TDE)             141   0.927 [0.913,0.938]        0.973 [0.964,0.988]    (139)     0.86               0.85
+  PDHD APA1-3                 74   0.988 [0.983,1.009]        1.124 [1.101,1.151]    ( 70)     1.57               0.27
+  split:
+    PDHD run 028084            n  39  plateau 1.007 [0.988,1.048]   x W meas/pred 1.134 [1.090,1.165]
+    PDHD run 029107            n  35  plateau 0.976 [0.911,1.003]   x W meas/pred 1.111 [1.088,1.152]
+    PDHD APA 1                 n  18  plateau 1.016 [0.932,1.060]   x W meas/pred 1.183 [1.090,1.195]
+    PDHD APA 2                 n  27  plateau 0.993 [0.976,1.024]   x W meas/pred 1.123 [1.089,1.150]
+    PDHD APA 3                 n  29  plateau 0.983 [0.956,1.025]   x W meas/pred 1.120 [1.100,1.157]
+    PDVD bottom anode 0        n  10  plateau 1.066 [1.021,1.140]   x W meas/pred 1.123 [1.054,1.218]
+    PDVD bottom anode 1        n  10  plateau 1.084 [1.069,1.111]   x W meas/pred 1.141 [1.112,1.169]
+    PDVD bottom anode 2        n  12  plateau 1.044 [1.020,1.072]   x W meas/pred 1.105 [1.075,1.149]
+    PDVD bottom anode 3        n  10  plateau 1.008 [0.953,1.020]   x W meas/pred 1.065 [1.025,1.085]
+    PDVD top anode 4           n  35  plateau 0.899 [0.891,0.938]   x W meas/pred 0.964 [0.951,0.972]
+    PDVD top anode 5           n  27  plateau 0.923 [0.899,0.956]   x W meas/pred 0.983 [0.956,1.022]
+    PDVD top anode 6           n  43  plateau 0.918 [0.910,0.932]   x W meas/pred 0.988 [0.957,1.015]
+    PDVD top anode 7           n  24  plateau 0.887 [0.874,0.916]   x W meas/pred 0.940 [0.909,0.949]
+    PDVD bottom run 039252     n   8  plateau 1.056 [1.039,1.092]   x W meas/pred 1.110 [1.096,1.113]
+    PDVD bottom run 039253     n  14  plateau 1.036 [1.009,1.084]   x W meas/pred 1.085 [1.054,1.120]
+    PDVD bottom run 039349     n  20  plateau 1.028 [1.005,1.066]   x W meas/pred 1.125 [1.095,1.190]
+    PDVD top run 039252        n  22  plateau 0.888 [0.838,0.927]   x W meas/pred 0.937 [0.888,0.958]
+    PDVD top run 039253        n  32  plateau 0.956 [0.932,0.967]   x W meas/pred 1.022 [1.009,1.040]
+    PDVD top run 039349        n  87  plateau 0.923 [0.903,0.934]   x W meas/pred 0.966 [0.954,0.983]
+  ratios (median/median; bootstrap [p16,p84] and 95 %):
+    bottom / PDHD  plateau                  1.051 [1.026,1.071]  95 % [0.998,1.094]
+    bottom / PDHD  plateau x W meas/pred    0.981 [0.959,1.007]  95 % [0.934,1.039]
+    top / PDHD     plateau                  0.938 [0.911,0.949]  95 % [0.887,0.965]
+    top / PDHD     plateau x W meas/pred    0.866 [0.847,0.887]  95 % [0.825,0.906]
+    top / bottom   plateau                  0.892 [0.870,0.906]  95 % [0.851,0.920]
+    top / bottom   plateau x W meas/pred    0.883 [0.866,0.898]  95 % [0.837,0.914]
+
+  matched drift TIME (attachment scales with time; PDHD v 1.576, PDVD 1.48073 mm/us):
+    0.0-0.5 ms: bottom 1.000 ( 9)  top 0.880 ( 45)  PDHD 0.977 ( 8)  bottom/PDHD 1.023
+    0.5-1.0 ms: bottom 1.042 (13)  top 0.924 ( 37)  PDHD 0.988 (14)  bottom/PDHD 1.054
+    1.0-1.5 ms: bottom 1.076 (13)  top 0.931 ( 36)  PDHD 1.076 (14)  bottom/PDHD 0.999
+    1.5-2.0 ms: bottom 0.956 ( 5)  top 0.966 ( 17)  PDHD 0.955 (31)  bottom/PDHD 1.000
+    2.0-2.5 ms: bottom 1.070 ( 2)  top 1.045 (  6)  PDHD 0.983 ( 7)
+  median drift time bottom 0.97 ms, PDHD 1.57 ms: an uncorrected lifetime common to both closes bottom/PDHD 1.051 at tau = 12.1 ms (illustration only; tau is not measured and need not be common)
+    tau    10 ms: exp(-(t_PDHD - t_bottom)/tau) = 0.941
+    tau    30 ms: exp(-(t_PDHD - t_bottom)/tau) = 0.980
+    tau   100 ms: exp(-(t_PDHD - t_bottom)/tau) = 0.994
+
+  toy copy self-check vs space_charge.txt (pdvd delta 0.10 cos^2 0.72 at 0 / 340 cm): 0.944 / 1.089 -> OK
+  angle x space charge: median toy factor per unit (recombination + drift-velocity pitch, A = 1) at each track's own drift and angle
+    PDVD bottom (BDE)       delta 0.07: 0.987  delta 0.11: 0.979
+    PDVD top (TDE)          delta 0.07: 0.987  delta 0.11: 0.978
+    PDHD APA1-3             delta 0.07: 1.006  delta 0.11: 1.009
+    delta 0.07: toy bottom/PDHD 0.981, top/bottom 1.000
+    delta 0.11: toy bottom/PDHD 0.970, top/bottom 0.999
+
+  PDVD field provenance: the chain drifts at 1.48073 mm/us; at 87.68 K that is 0.4393 kV/cm, while the tables use 0.45.
+    (a) field 0.45 true -> true v 1.4992 mm/us, chain v0/v 0.9877: along-drift dQ/dx reads x1.0080 on bottom's median cos^2 0.65
+    (b) drift speed true -> field 0.4393: expectation too high, plateau reads x0.9965
+
+  SYSTEMATIC BUDGET for bottom/PDHD (each term: how far it can move the ratio; sign where known)
+    observed bottom/PDHD plateau                      1.051 [1.026,1.071]  95 % [0.998,1.094]
+    1 PDHD run-to-run (028084 / 029107 medians)       1.007 / 0.976: +-1.6 %
+    2 PDVD field vs drift speed                        (a) +0.8 % on bottom  /  (b) -0.3 %
+    3 space charge x angle (toy, delta 0.07 / 0.11)    -1.9 % / -3.0 %
+    4 the fit's W bias (plateau x W meas/pred)         bottom/PDHD 0.981 instead of 1.051
+    5 uncorrected attachment                           closes the gap at tau 12.1 ms; tau 30 ms moves it -2.0 %
+    6 charge recovery (doc pdhd/17 sec 4, pooled PDVD) 0.941 PDHD / 0.921 PDVD: 2 %, not split by volume
+
+=== C. what signal processing assumes, per unit
+  electronics response   peak mV/fC  area mV.us/fC  area/peak us  postgain  ADC/mV   peak ADC/fC  area ADC.tick/e   e per ADC.tick if SP normalises by area
+  PDHD / PDVD bottom at 7.8    7.800       21.776        2.79      1.00   11.702       91.3      0.08165         12.25
+  PDHD at 14                 14.000       39.085        2.79      1.00   11.702      163.8      0.14656          6.82
+  PDVD top (JSON x 1.36)      7.214       36.080        5.00      1.36    8.191       80.4      0.12880          7.76
+  assumed top/bottom: by peak 0.881, by area 1.577 (ADC tick per fC; in electrons per ADC tick 0.634) -- NEITHER is SP's effective charge scale: the deconvolved charge depends on the response in the pass band of the software filters, and the two response shapes differ (top area/peak above). The frame check below measures it.
+  PDVD BDE and PDHD share ColdElec, 2.2 us shaping, 14 bit over 0.2-1.6 V, postgain 1.0; PDHD's gain follows the run's hardware (run_nf_sp_evt.sh -g / input-root name); PDVD bottom is 7.8 for every run (META: all runs 7.8).
+  PDHD META.json (input_data_7p8_new_coh_grouping): run028084 14.0 mV/fC, run029107 7.8 (inferred from orig-frame ADC RMS); PDVD input_data/META.json: 039252/039253/039349 7.8.
+  postgain history (toolkit 546b2dac, 2026-05-03): the shared field-response file's W normalisation was fixed (x1.117) and both postgains de-compensated, top 1.52 -> 1.36, bottom 1.1365 -> 1.0.  Top relative to bottom, SP's assumed response moved x1.0169, i.e. top charge relative to bottom x0.9834; a mis-set 7.8 vs 14 mV/fC is x1.79
+  FRAME CHECK: SP's effective electrons per ADC tick on collection signals
+    selection: channel sum(gauss) > 3e4 e in the gauss ROI dilated by +-N ticks, and sum(raw) > 0.8 sum|raw| there (unipolar)
+    PDHD 028084 apa1     dilation +- 0 ticks: channels  943  pooled e/(ADC tick)   7.16  per-event medians 7.16 / 7.15
+    PDHD 028084 apa1     dilation +-20 ticks: channels  936  pooled e/(ADC tick)   7.07  per-event medians 7.07 / 7.06
+    PDHD 028084 apa1     dilation +-60 ticks: channels  736  pooled e/(ADC tick)   7.02  per-event medians 7.06 / 7.02
+    PDHD 029107 apa1     dilation +- 0 ticks: channels  991  pooled e/(ADC tick)  12.80  per-event medians 12.74 / 12.85
+    PDHD 029107 apa1     dilation +-20 ticks: channels  986  pooled e/(ADC tick)  12.65  per-event medians 12.58 / 12.67
+    PDHD 029107 apa1     dilation +-60 ticks: channels  812  pooled e/(ADC tick)  12.61  per-event medians 12.51 / 12.65
+    PDVD bottom anode0   dilation +- 0 ticks: channels  483  pooled e/(ADC tick)  12.89  per-event medians 12.93 / 12.88
+    PDVD bottom anode0   dilation +-20 ticks: channels  464  pooled e/(ADC tick)  12.89  per-event medians 12.93 / 12.86
+    PDVD bottom anode0   dilation +-60 ticks: channels  369  pooled e/(ADC tick)  12.82  per-event medians 12.85 / 12.77
+    PDVD top anode4      dilation +- 0 ticks: channels 1138  pooled e/(ADC tick)   9.54  per-event medians 9.94 / 9.80
+    PDVD top anode4      dilation +-20 ticks: channels 1138  pooled e/(ADC tick)   8.68  per-event medians 8.74 / 8.77
+    PDVD top anode4      dilation +-60 ticks: channels  924  pooled e/(ADC tick)   8.70  per-event medians 8.70 / 8.78
+    dilation +- 0: 028084/029107 0.560 (7.8/14 would be 0.557)   top/bottom 0.740   PDVD bottom / PDHD 029107 1.008
+    dilation +-20: 028084/029107 0.559 (7.8/14 would be 0.557)   top/bottom 0.674   PDVD bottom / PDHD 029107 1.019
+    dilation +-60: 028084/029107 0.557 (7.8/14 would be 0.557)   top/bottom 0.679   PDVD bottom / PDHD 029107 1.016
+    area-normalisation prediction (collection FR integrating to one electron): 7.8 mV/fC 12.25, 14 mV/fC 6.82, top 7.76 e/(ADC tick)
+    e/(ADC tick) top/bottom is SP's CONVERSION FACTOR, not a charge ratio: SP credits a top ADC tick with that fraction of a bottom tick's electrons because it expects 1/that more ADC per electron from the top.  If everything after SP treats the volumes alike, the measured dQ/dx top/bottom then implies the top's real ADC per electron relative to the bottom (collection plane, in band, gain and shape together):
+      dilation +-20: SP expects x1.485; dQ/dx says x1.324 (plateau) / x1.311 (x W meas/pred)
+      dilation +-60: SP expects x1.474; dQ/dx says x1.314 (plateau) / x1.301 (x W meas/pred)
+
+=== D. the field in the Michel charge -> energy conversion
+  Modified Box survival R (A 0.93, B 0.212, rho 1.38)
+  dE/dx MeV/cm    E 0.4500   E 0.4393   E 0.4959   R(0.4959)/R(0.45)
+         2.1      0.6959     0.6937     0.7037     1.0112
+         3.0      0.6542     0.6507     0.6674     1.0202
+         5.0      0.5680     0.5635     0.5861     1.0318
+        10.0      0.4302     0.4254     0.4497     1.0453
+  compiled PDHD config (h28cfgoff): box Efield 0.4959, stm k 0.6505519170239442, C 0.812
+  pdhd: jsonnet E 0.4959  k 0.6505519170  k recomputed B*pivot/(rho E) 0.6505519170 (diff 1.1e-16)  C 0.812  R(2.1) 0.7037  MeV/electron = Wi/(C R) 4.13035e-05
+  pdvd: jsonnet E 0.45  k 0.7169082126  k recomputed B*pivot/(rho E) 0.7169082126 (diff 0.0e+00)  C 0.7941  R(2.1) 0.6959  MeV/electron = Wi/(C R) 4.27058e-05
+  doc pdvd/96 measured K on p96vprod candidates: 4.27058e-05 (this script 4.27058e-05)
+  PDVD / PDHD MeV per electron = 1.0340 = field (R ratio) 1.0112 x C ratio 1.0225
+  if Michel charge were deposited at 3 MeV/cm, the field correction the 2.1 MeV/cm conversion misses: 0.9 % (PDHD energy reads that much HIGH relative to PDVD)
+  if Michel charge were deposited at 5 MeV/cm, the field correction the 2.1 MeV/cm conversion misses: 2.0 % (PDHD energy reads that much HIGH relative to PDVD)
+
+  PDVD Michel energy by drift volume, p96vprod, split on stop_x (x>0 top/TDE, x<0 bottom/BDE); median MeV [p16,p84]
+    hand Michel (doc 26 sec 3) michel_ke_q2d_region  top n  96 34.218 [31.693,35.169]  bottom n  38 36.850 [29.771,38.976]  top/bottom 0.929 [0.847,1.114] 95 % [0.784,1.217]
+    hand Michel (doc 26 sec 3) michel_ke_q2d_ctl     top n  96 3.019 [2.526,3.830]  bottom n  38 1.995 [1.330,2.541]  top/bottom 1.513 [1.096,2.421] 95 % [0.835,3.386]
+    hand Michel (doc 26 sec 3) michel_ke_best        top n  96 23.351 [21.736,25.131]  bottom n  38 21.091 [19.365,24.075]  top/bottom 1.107 [0.952,1.254] 95 % [0.846,1.482]
+    all chain STM+Michel       michel_ke_q2d_region  top n 106 34.218 [31.693,35.000]  bottom n  41 35.998 [29.991,38.491]  top/bottom 0.951 [0.853,1.141] 95 % [0.793,1.229]
+    all chain STM+Michel       michel_ke_q2d_ctl     top n 106 3.646 [2.910,4.135]  bottom n  41 1.824 [1.194,2.528]  top/bottom 1.998 [1.329,2.940] 95 % [0.989,4.065]
+    all chain STM+Michel       michel_ke_best        top n 106 23.351 [21.736,24.900]  bottom n  41 20.789 [20.151,23.908]  top/bottom 1.123 [0.971,1.242] 95 % [0.874,1.478]
+    gain reading predicts top/bottom ~0.89 on region and control alike (both are charge through the same SP)
+
+figure: ../../figs/29_gain_recomb.png
