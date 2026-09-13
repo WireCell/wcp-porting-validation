@@ -1,0 +1,100 @@
+# doc pdvd/98 sec 11 -- the top gain divided out of the latest crops / put into the round-1 crops (s 1.1249); d98_rescale_check.py; model epoch 20
+closure latest : max |mu_Z re-scored - scores.tsv| = 0.0500 cm over 80 crops (gate < 0.1: PASS)
+closure round 1: max |mu_Z re-scored - scores.tsv| = 0.0500 cm over 91 crops (gate < 0.1: PASS)
+
+== A. pixels on the 55 common objects (latest top / 1.1249; bottom as is)
+  top    common 39, same crop origin 13: charge latest/round1 median 1.1248 [p16 1.0730, p84 1.1253]; L1 residual as is median 0.1349, after /s median 0.0115 [p84 0.0486, max 0.0813]
+  bottom common 16, same crop origin 9: charge latest/round1 median 1.0000 [p16 1.0000, p84 1.0021]; L1 residual as is median 0.0000, after /s median 0.0000 [p84 0.0081, max 0.0240]
+
+== B. readouts on the common in-range objects, per image set
+  all: n 37; median |mu(latest/s) - mu(round 1)| 4.69 cm, median |mu(round 1 x s) - mu(latest)| 4.69 cm, median |mu(latest) - mu(round 1)| 6.25 cm
+    round 1 (production)         Z: n= 37  r=+0.62 [+0.49,+0.72]  rho=+0.58  p_perm=0.0002  slope=+0.51 [+0.38,+0.62]  icpt=+40  resid_rms=34 cm  pull_sd=1.54
+    round 1 x s (gain put in)    Z: n= 37  r=+0.60 [+0.46,+0.71]  rho=+0.56  p_perm=0.0002  slope=+0.46 [+0.33,+0.56]  icpt=+45  resid_rms=32 cm  pull_sd=1.53
+    latest                       Z: n= 37  r=+0.53 [+0.39,+0.67]  rho=+0.54  p_perm=0.0005  slope=+0.39 [+0.26,+0.51]  icpt=+58  resid_rms=32 cm  pull_sd=1.59
+    latest / s (gain taken out)  Z: n= 37  r=+0.55 [+0.42,+0.68]  rho=+0.58  p_perm=0.0002  slope=+0.43 [+0.30,+0.57]  icpt=+54  resid_rms=34 cm  pull_sd=1.56
+  top: n 29; median |mu(latest/s) - mu(round 1)| 3.91 cm, median |mu(round 1 x s) - mu(latest)| 4.69 cm, median |mu(latest) - mu(round 1)| 6.25 cm
+    round 1 (production)         Z: n= 29  r=+0.71 [+0.62,+0.79]  rho=+0.67  p_perm=0.0001  slope=+0.60 [+0.48,+0.71]  icpt=+23  resid_rms=32 cm  pull_sd=1.56
+    round 1 x s (gain put in)    Z: n= 29  r=+0.70 [+0.62,+0.79]  rho=+0.66  p_perm=0.0001  slope=+0.55 [+0.44,+0.66]  icpt=+27  resid_rms=29 cm  pull_sd=1.54
+    latest                       Z: n= 29  r=+0.61 [+0.49,+0.73]  rho=+0.62  p_perm=0.0005  slope=+0.45 [+0.34,+0.58]  icpt=+46  resid_rms=31 cm  pull_sd=1.47
+    latest / s (gain taken out)  Z: n= 29  r=+0.62 [+0.50,+0.74]  rho=+0.64  p_perm=0.0004  slope=+0.49 [+0.37,+0.63]  icpt=+44  resid_rms=33 cm  pull_sd=1.44
+  bottom: n 8; median |mu(latest/s) - mu(round 1)| 5.86 cm, median |mu(round 1 x s) - mu(latest)| 5.86 cm, median |mu(latest) - mu(round 1)| 5.86 cm
+    round 1 (production)         Z: n=  8  r=-0.14 [-0.44,+0.35]  rho=+0.26  p_perm=0.2658  slope=-0.14 [-0.50,+0.18]  icpt=+134  resid_rms=33 cm  pull_sd=1.95
+    round 1 x s (gain put in)    Z: n=  8  r=-0.14 [-0.44,+0.35]  rho=+0.26  p_perm=0.2658  slope=-0.14 [-0.50,+0.18]  icpt=+134  resid_rms=33 cm  pull_sd=1.95
+    latest                       Z: n=  8  r=-0.14 [-0.46,+0.34]  rho=+0.14  p_perm=0.3719  slope=-0.13 [-0.54,+0.19]  icpt=+132  resid_rms=31 cm  pull_sd=2.07
+    latest / s (gain taken out)  Z: n=  8  r=-0.14 [-0.46,+0.34]  rho=+0.14  p_perm=0.3719  slope=-0.13 [-0.54,+0.19]  icpt=+132  resid_rms=31 cm  pull_sd=2.07
+
+== C. where the rest sits: per object, split by crop origin (same c0,t0 as round 1 or moved) and anode
+  (anodes 2,3,6,7 exchange face channel sets between the v5 and v7 wire order, doc pdvd/99 sec 4.3; 4-7 carry the gain)
+  top    same origin  n 13 anodes {4: 2, 5: 3, 6: 6, 7: 2}: median |mu latest - round1| 3.12 cm, after the gain is taken out 1.17 cm; the scale alone on round 1 1.95 cm
+  top    origin moved n 26 anodes {4: 15, 5: 2, 6: 7, 7: 2}: median |mu latest - round1| 6.25 cm, after the gain is taken out 5.47 cm; the scale alone on round 1 1.95 cm; origin shift (dc, dt) median (+0, +1), max |dc| 3, max |dt| 15
+  bottom same origin  n  9 anodes {0: 5, 1: 1, 2: 1, 3: 2}: median |mu latest - round1| 0.00 cm, after the gain is taken out 0.00 cm; the scale alone on round 1 0.00 cm
+  bottom origin moved n  7 anodes {1: 1, 2: 4, 3: 2}: median |mu latest - round1| 10.94 cm, after the gain is taken out 10.94 cm; the scale alone on round 1 0.00 cm; origin shift (dc, dt) median (+0, -1), max |dc| 3, max |dt| 13
+
+== D. leave one out: OLS slope on the common in-range objects without each object (only those moving the latest - round 1 slope difference by > 0.03 are listed)
+  all    n 37: slope round 1 0.509, round 1 x s 0.456, latest 0.388, latest / s 0.434; drop +0.121 of which the scale alone +0.053 (round 1 side) / +0.046 (latest side)
+    without 039253_2/92    (npix 254->302, mu 133->222 cm at drift 237->237): round 1 0.528, latest 0.337, drop +0.191, scale alone +0.054
+    without 039349_5/66    (npix 466->235, mu 256->95 cm at drift 271->271): round 1 0.420, latest 0.467, drop -0.047, scale alone +0.051
+  top    n 29: slope round 1 0.596, round 1 x s 0.546, latest 0.451, latest / s 0.493; drop +0.145 of which the scale alone +0.051 (round 1 side) / +0.042 (latest side)
+    without 039253_2/92    (npix 254->302, mu 133->222 cm at drift 237->237): round 1 0.620, latest 0.399, drop +0.221, scale alone +0.052
+    without 039349_5/66    (npix 466->235, mu 256->95 cm at drift 271->271): round 1 0.504, latest 0.548, drop -0.044, scale alone +0.049
+  bottom n 8: slope round 1 -0.136, round 1 x s -0.136, latest -0.127, latest / s -0.127; drop -0.009 of which the scale alone +0.000 (round 1 side) / +0.000 (latest side)
+    without 039252_1/30    (npix 304->259, mu 101->90 cm at drift 173->172): round 1 -0.093, latest -0.042, drop -0.051, scale alone +0.000
+    without 039252_14/37   (npix 170->248, mu 95->89 cm at drift 94->94): round 1 -0.350, latest -0.377, drop +0.027, scale alone +0.000
+    without 039349_38/72   (npix 202->202, mu 103->109 cm at drift 208->208): round 1 -0.085, latest -0.190, drop +0.104, scale alone +0.000
+
+== E. every common object
+    039252_1/30    <- 039252_1/30    apa 2 inrange 11 origin moved q latest/r1 1.028 npix 304->259 drift 172.7->171.7 mu r1  100.8 r1xs  100.8 latest   89.8 latest/s   89.8
+    039252_12/93   <- 039252_12/95   apa 6 inrange 11 origin moved q latest/r1 1.090 npix 366->398 drift 173.2->173.1 mu r1  110.2 r1xs  106.2 latest  100.0 latest/s  102.3
+    039252_14/37   <- 039252_14/37   apa 2 inrange 11 origin moved q latest/r1 2.953 npix 170->248 drift 93.92->93.67 mu r1   94.5 r1xs   94.5 latest   89.1 latest/s   89.1
+    039252_14/86   <- 039252_14/81   apa 4 inrange 11 origin moved q latest/r1 1.125 npix 351->298 drift 101.2->101.6 mu r1   87.9 r1xs   87.1 latest   87.9 latest/s   88.7
+    039252_15/94   <- 039252_15/91   apa 7 inrange 11 origin same  q latest/r1 1.125 npix 419->419 drift 164.6->164.6 mu r1  132.0 r1xs  126.6 latest  125.8 latest/s  132.0
+    039252_16/99   <- 039252_16/88   apa 4 inrange 11 origin moved q latest/r1 1.125 npix 252->246 drift 113.4->113.7 mu r1   92.2 r1xs   91.0 latest   91.8 latest/s   94.1
+    039252_2/51    <- 039252_2/55    apa 3 inrange 00 origin same  q latest/r1 1.041 npix 293->292 drift 63.01->63.01 mu r1   74.2 r1xs   74.2 latest   74.2 latest/s   74.2
+    039252_2/90    <- 039252_2/86    apa 4 inrange 00 origin moved q latest/r1 1.262 npix 501->550 drift 58.46->58.55 mu r1   82.4 r1xs   82.0 latest   80.1 latest/s   81.2
+    039252_3/40    <- 039252_3/40    apa 1 inrange 00 origin moved q latest/r1 1.000 npix 434->426 drift 79.01->78.95 mu r1   82.4 r1xs   82.4 latest   84.4 latest/s   84.4
+    039252_3/77    <- 039252_3/68    apa 4 inrange 11 origin moved q latest/r1 1.053 npix 341->314 drift 189->189.2 mu r1  203.1 r1xs  193.0 latest  209.4 latest/s  218.8
+    039252_8/38    <- 039252_8/32    apa 1 inrange 11 origin same  q latest/r1 1.074 npix 426->426 drift 123.4->123.4 mu r1   86.7 r1xs   86.7 latest   86.7 latest/s   86.7
+    039253_1/31    <- 039253_1/36    apa 0 inrange 11 origin same  q latest/r1 1.000 npix 115->115 drift 105.2->105.2 mu r1  178.9 r1xs  178.9 latest  178.9 latest/s  178.9
+    039253_11/118  <- 039253_11/116  apa 7 inrange 00 origin moved q latest/r1 1.028 npix 216->182 drift 37.56->37.77 mu r1  102.3 r1xs   98.8 latest   98.4 latest/s   99.6
+    039253_12/35   <- 039253_12/35   apa 0 inrange 11 origin same  q latest/r1 1.000 npix 334->334 drift 137.5->137.5 mu r1   93.8 r1xs   93.8 latest   93.8 latest/s   93.8
+    039253_14/45   <- 039253_14/49   apa 2 inrange 11 origin moved q latest/r1 0.676 npix 497->471 drift 153.9->153.9 mu r1  164.8 r1xs  164.8 latest  149.2 latest/s  149.2
+    039253_15/41   <- 039253_15/45   apa 3 inrange 00 origin moved q latest/r1 0.972 npix 448->432 drift 20.91->20.75 mu r1  134.4 r1xs  134.4 latest  170.3 latest/s  170.3
+    039253_17/110  <- 039253_17/115  apa 6 inrange 00 origin same  q latest/r1 1.112 npix 364->351 drift 24.5->24.48 mu r1   83.6 r1xs   82.8 latest   82.0 latest/s   82.4
+    039253_2/121   <- 039253_2/117   apa 4 inrange 11 origin moved q latest/r1 1.166 npix 299->307 drift 177.5->177.5 mu r1  108.6 r1xs  107.0 latest  109.4 latest/s  111.7
+    039253_2/32    <- 039253_2/34    apa 2 inrange 00 origin same  q latest/r1 0.969 npix 398->408 drift 51.8->51.79 mu r1   83.2 r1xs   83.2 latest   82.8 latest/s   82.8
+    039253_2/92    <- 039253_2/89    apa 4 inrange 11 origin moved q latest/r1 1.173 npix 254->302 drift 236.9->236.9 mu r1  132.8 r1xs  127.3 latest  221.9 latest/s  232.8
+    039253_4/77    <- 039253_4/79    apa 4 inrange 00 origin moved q latest/r1 1.131 npix 435->467 drift 22.3->22.02 mu r1   80.9 r1xs   80.1 latest   82.4 latest/s   83.2
+    039253_5/32    <- 039253_5/32    apa 0 inrange 00 origin same  q latest/r1 1.000 npix 246->246 drift 19.67->19.67 mu r1  108.6 r1xs  108.6 latest  108.6 latest/s  108.6
+    039253_8/28    <- 039253_8/28    apa 0 inrange 00 origin same  q latest/r1 1.000 npix 165->165 drift 13.01->13.01 mu r1  108.6 r1xs  108.6 latest  108.6 latest/s  108.6
+    039253_9/106   <- 039253_9/111   apa 6 inrange 11 origin moved q latest/r1 0.959 npix 445->432 drift 114.3->114.4 mu r1   94.5 r1xs   93.4 latest   96.1 latest/s   97.3
+    039349_1/61    <- 039349_1/52    apa 4 inrange 00 origin moved q latest/r1 1.031 npix 67->79 drift 78.99->79.5 mu r1   94.9 r1xs   93.8 latest   78.5 latest/s   77.3
+    039349_18/40   <- 039349_18/36   apa 4 inrange 11 origin moved q latest/r1 1.125 npix 53->68 drift 116.8->116.9 mu r1   82.8 r1xs   82.8 latest   86.3 latest/s   86.3
+    039349_18/34   <- 039349_18/39   apa 4 inrange 00 origin same  q latest/r1 1.143 npix 192->193 drift 60.79->60.79 mu r1   89.8 r1xs   89.1 latest   89.1 latest/s   90.2
+    039349_21/53   <- 039349_21/51   apa 5 inrange 11 origin moved q latest/r1 1.093 npix 208->191 drift 204.4->203.9 mu r1   93.0 r1xs   91.8 latest  107.0 latest/s  110.2
+    039349_23/56   <- 039349_23/54   apa 6 inrange 11 origin moved q latest/r1 1.733 npix 429->470 drift 151.8->151.1 mu r1  119.5 r1xs  115.6 latest  114.8 latest/s  118.8
+    039349_27/65   <- 039349_27/62   apa 6 inrange 11 origin moved q latest/r1 1.107 npix 581->558 drift 277.8->278.3 mu r1  189.1 r1xs  182.8 latest  187.5 latest/s  193.0
+    039349_3/47    <- 039349_3/46    apa 4 inrange 00 origin moved q latest/r1 1.173 npix 83->88 drift 20.58->20.54 mu r1   95.3 r1xs   94.9 latest   91.8 latest/s   92.2
+    039349_34/46   <- 039349_34/46   apa 4 inrange 11 origin moved q latest/r1 1.025 npix 336->332 drift 95.01->94.9 mu r1  124.2 r1xs  119.5 latest  112.5 latest/s  115.6
+    039349_35/67   <- 039349_35/62   apa 6 inrange 11 origin same  q latest/r1 1.164 npix 294->282 drift 192.9->192.8 mu r1  102.3 r1xs   98.8 latest  113.3 latest/s  121.1
+    039349_36/49   <- 039349_36/41   apa 6 inrange 11 origin same  q latest/r1 1.086 npix 542->517 drift 108.8->108.9 mu r1   81.6 r1xs   80.1 latest   77.7 latest/s   79.3
+    039349_37/38   <- 039349_37/39   apa 4 inrange 11 origin moved q latest/r1 0.299 npix 281->75 drift 203.4->202.3 mu r1   94.5 r1xs   92.6 latest  114.8 latest/s  121.1
+    039349_38/72   <- 039349_38/67   apa 0 inrange 11 origin same  q latest/r1 1.000 npix 202->202 drift 207.7->207.7 mu r1  103.1 r1xs  103.1 latest  109.4 latest/s  109.4
+    039349_4/39    <- 039349_4/36    apa 3 inrange 00 origin same  q latest/r1 1.000 npix 412->412 drift 8.075->8.075 mu r1   65.6 r1xs   65.6 latest   65.6 latest/s   65.6
+    039349_42/56   <- 039349_42/52   apa 6 inrange 11 origin same  q latest/r1 1.155 npix 533->541 drift 138.2->138.2 mu r1  101.6 r1xs   99.6 latest  101.6 latest/s  104.7
+    039349_43/52   <- 039349_43/54   apa 6 inrange 00 origin moved q latest/r1 1.359 npix 390->431 drift 78.38->78.35 mu r1   99.6 r1xs   97.7 latest   89.8 latest/s   91.4
+    039349_47/32   <- 039349_47/31   apa 3 inrange 00 origin moved q latest/r1 1.126 npix 156->174 drift 15.72->16.05 mu r1   86.7 r1xs   86.7 latest   85.5 latest/s   85.5
+    039349_5/66    <- 039349_5/64    apa 4 inrange 11 origin moved q latest/r1 1.125 npix 466->235 drift 271.4->271.1 mu r1  256.2 r1xs  245.3 latest   94.5 latest/s   96.5
+    039349_52/33   <- 039349_52/36   apa 4 inrange 11 origin same  q latest/r1 1.045 npix 165->173 drift 187.5->187.5 mu r1  121.9 r1xs  115.6 latest  111.7 latest/s  118.0
+    039349_53/48   <- 039349_53/45   apa 5 inrange 11 origin same  q latest/r1 1.125 npix 367->361 drift 200.3->138.5 mu r1  137.5 r1xs  130.5 latest  134.4 latest/s  139.8
+    039349_54/58   <- 039349_54/54   apa 5 inrange 11 origin moved q latest/r1 1.089 npix 341->321 drift 134.9->135.2 mu r1  126.6 r1xs  120.3 latest  125.0 latest/s  131.2
+    039349_59/60   <- 039349_59/61   apa 6 inrange 11 origin moved q latest/r1 0.801 npix 514->431 drift 245->246 mu r1  217.2 r1xs  197.7 latest  207.8 latest/s  223.4
+    039349_61/16   <- 039349_61/18   apa 2 inrange 11 origin moved q latest/r1 1.059 npix 352->388 drift 137.1->137.4 mu r1   98.4 r1xs   98.4 latest  117.2 latest/s  117.2
+    039349_61/44   <- 039349_61/50   apa 4 inrange 11 origin moved q latest/r1 1.189 npix 239->296 drift 211.2->211.5 mu r1   91.8 r1xs   91.8 latest  125.8 latest/s  132.0
+    039349_61/45   <- 039349_61/51   apa 4 inrange 11 origin moved q latest/r1 1.081 npix 297->279 drift 235.9->236.1 mu r1  137.5 r1xs  128.9 latest  117.2 latest/s  126.6
+    039349_64/66   <- 039349_64/71   apa 6 inrange 11 origin moved q latest/r1 1.151 npix 538->549 drift 258.1->257.9 mu r1  182.8 r1xs  171.9 latest  176.6 latest/s  185.9
+    039349_67/78   <- 039349_67/75   apa 6 inrange 00 origin same  q latest/r1 1.125 npix 118->118 drift 20.78->20.78 mu r1   91.0 r1xs   91.0 latest   91.0 latest/s   91.0
+    039349_77/59   <- 039349_77/63   apa 7 inrange 11 origin moved q latest/r1 1.164 npix 264->310 drift 107.8->107.9 mu r1   94.1 r1xs   93.0 latest  102.3 latest/s  104.7
+    039349_81/64   <- 039349_81/62   apa 6 inrange 00 origin same  q latest/r1 1.081 npix 723->710 drift 45.4->45.41 mu r1   91.0 r1xs   90.2 latest   92.2 latest/s   92.2
+    039349_82/48   <- 039349_82/48   apa 7 inrange 11 origin same  q latest/r1 1.085 npix 409->382 drift 216.2->216.2 mu r1  168.8 r1xs  159.4 latest  132.8 latest/s  141.4
+    039349_83/67   <- 039349_83/60   apa 5 inrange 11 origin same  q latest/r1 1.125 npix 443->443 drift 171.4->171.4 mu r1  103.1 r1xs  101.6 latest  101.6 latest/s  103.1
+    039349_9/50    <- 039349_9/47    apa 5 inrange 11 origin same  q latest/r1 1.125 npix 480->480 drift 221.4->221.4 mu r1  192.2 r1xs  185.2 latest  185.2 latest/s  192.2

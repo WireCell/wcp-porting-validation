@@ -96,10 +96,14 @@ def score(net, dev, dets):
 
 
 def main():
+    global SCAN, OUT_TMP
     ap = argparse.ArgumentParser()
     ap.add_argument("--closure", action="store_true")
     ap.add_argument("--det", default="pdhd,pdvd")
+    ap.add_argument("--run", default="", help="doc pdvd/98 sec 11: read/write scan/d98/<run>/ and /home/xqian/tmp/d98/<run>/")
     a = ap.parse_args()
+    if a.run:
+        SCAN, OUT_TMP = f"{SCAN}/{a.run}", f"{OUT_TMP}/{a.run}"
     import torch
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     assert dev == "cuda", "the published function is the bf16 CUDA one; refuse to score on CPU"

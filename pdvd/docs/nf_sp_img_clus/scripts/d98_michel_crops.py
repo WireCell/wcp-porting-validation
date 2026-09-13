@@ -347,11 +347,22 @@ def build_one(args):
 
 
 def main():
+    global SCAN, OUT_TMP
     ap = argparse.ArgumentParser()
     ap.add_argument("--census", action="store_true", help="selection only; no frames read")
     ap.add_argument("-j", type=int, default=8)
     ap.add_argument("--det", default="pdhd,pdvd")
+    # doc pdvd/98 sec 11 (the latest configuration, doc pdvd/99): a named run reads another PDVD arm with its own record
+    # and writes scan/d98/<run>/ + /home/xqian/tmp/d98/<run>/.  No --run = round 1's paths, arms and record, unchanged.
+    ap.add_argument("--run", default="")
+    ap.add_argument("--pdvd-arm", default=ARM["pdvd"])
+    ap.add_argument("--pdvd-record", default=m.VD_REC)
     a = ap.parse_args()
+    if a.run:
+        SCAN, OUT_TMP = f"{SCAN}/{a.run}", f"{OUT_TMP}/{a.run}"
+    elif (a.pdvd_arm, a.pdvd_record) != (ARM["pdvd"], m.VD_REC):
+        sys.exit("--pdvd-arm / --pdvd-record need --run (round 1's records are never overwritten)")
+    ARM["pdvd"], m.VD_REC = a.pdvd_arm, a.pdvd_record
     os.makedirs(SCAN, exist_ok=True); os.makedirs(OUT_TMP, exist_ok=True)
     allrows = []
     for det in a.det.split(","):

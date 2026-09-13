@@ -134,10 +134,20 @@ def data_bins(x, y, rng_b):
     return out
 
 
+ARM_LABEL = {"pdhd": "h28prod", "pdvd": "p96vprod"}
+FIGP = "98_"                                      # figure file prefix; a named --run writes 98_<run>_*.png
+
+
 def main():
+    global SCAN, OUT_TMP, FIGP
     ap = argparse.ArgumentParser()
     ap.add_argument("--tag", default="round1")
+    ap.add_argument("--run", default="", help="doc pdvd/98 sec 11: read/write scan/d98/<run>/ and /home/xqian/tmp/d98/<run>/")
+    ap.add_argument("--pdvd-arm", default=ARM_LABEL["pdvd"], help="figure label only")
     a = ap.parse_args()
+    if a.run:
+        SCAN, OUT_TMP, FIGP = f"{SCAN}/{a.run}", f"{OUT_TMP}/{a.run}", f"98_{a.run}_"   # never over round 1's figures
+    ARM_LABEL["pdvd"] = a.pdvd_arm
     os.makedirs(FIGS, exist_ok=True)
     rows = load()
     rng = np.random.default_rng(SEED)
@@ -257,7 +267,7 @@ def main():
             A.set_title(f"{det.upper()}  variant {v}: " + ("Michel only, muon removed" if v == "Z" else "muon left in"))
             A.legend(fontsize=8, loc="upper left")
         fig.suptitle("doc pdvd/98 -- m3-200k-w drift regressor on real STM+Michel crops")
-        fig.tight_layout(); fig.savefig(f"{FIGS}/98_mu_vs_drift_{det}.png", dpi=110); plt.close(fig)
+        fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}mu_vs_drift_{det}.png", dpi=110); plt.close(fig)
 
         # residuals and the crop diagnostics
         fig, ax = plt.subplots(1, 3, figsize=(15, 4.4))
@@ -274,7 +284,7 @@ def main():
         ax[2].scatter([r["ke_best"] for r in T], y - x, c=x, s=16, cmap="plasma")
         ax[2].set_xlabel("michel_ke_best [MeV]"); ax[2].set_ylabel("mu_Z - drift [cm]"); ax[2].axhline(0, color="k", lw=0.8)
         ax[2].set_title("colour = drift [cm]")
-        fig.tight_layout(); fig.savefig(f"{FIGS}/98_resid_{det}.png", dpi=110); plt.close(fig)
+        fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}resid_{det}.png", dpi=110); plt.close(fig)
 
     # model-free width check: per-channel tick RMS^2 of the Z crop within +-WIN ticks of the column's peak (so a
     # second blob on the same channel does not count), 25th percentile over the Michel's channels (the columns least
@@ -314,7 +324,7 @@ def main():
         ax[k].plot(xx, exp_slope * xx + ic, "g:", label=f"expected 2D$_L$/v$^3$ = {exp_slope:.4f}")
         ax[k].set_xlabel("Q-L drift [cm]"); ax[k].set_ylabel("Michel tick RMS$^2$, 25th pct over channels [ticks$^2$]")
         ax[k].set_title(f"{det.upper()} model-free width vs drift (all scored)"); ax[k].legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(f"{FIGS}/98_width_vs_drift.png", dpi=110); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}width_vs_drift.png", dpi=110); plt.close(fig)
     txt2 = "\n".join(wl) + "\n"
     open(f"{SCAN}/stats_{a.tag}.txt", "a").write(txt2); print(txt2)
 
@@ -360,7 +370,7 @@ def main():
         A.set_xlim(70, 350); A.set_ylim(0, 400)
         A.set_xlabel("true drift distance of the Michel from Q-L matching  [cm]", fontsize=11)
         A.set_ylabel("regressor prediction mu  [cm]  (bars: the model's own sigma)", fontsize=11)
-        A.set_title(f"{det.upper()} ({'p96vprod' if det == 'pdvd' else 'h28prod'}): Michel-only crop, muon removed", fontsize=12)
+        A.set_title(f"{det.upper()} ({ARM_LABEL[det]}): Michel-only crop, muon removed", fontsize=12)
         A.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.11), ncol=2, frameon=False)
         # rank-rank view (what Spearman sees)
         B = ax2[k]
@@ -373,8 +383,8 @@ def main():
         B.set_title(f"{det.upper()}: rank vs rank, rho = {s['rho']:+.2f}, p = {s['p_perm']:.1g}")
         B.legend(fontsize=9, loc="upper left")
     fig.suptitle("doc pdvd/98 -- DUNE-VD-simulation-trained diffusion drift regressor (m3-200k-w) on real STM+Michel electrons", fontsize=12)
-    fig.tight_layout(); fig.savefig(f"{FIGS}/98_correlation_summary.png", dpi=120); plt.close(fig)
-    fig2.tight_layout(); fig2.savefig(f"{FIGS}/98_rank_rank.png", dpi=110); plt.close(fig2)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}correlation_summary.png", dpi=120); plt.close(fig)
+    fig2.tight_layout(); fig2.savefig(f"{FIGS}/{FIGP}rank_rank.png", dpi=110); plt.close(fig2)
 
     # topology splits: the same reco-vs-true axes, one panel per split, each group with its own rho / n
     SPLITS = [("muon overlap", lambda r: r["frac_lost"] < 0.2, "Michel loses <20 % to the muon", "loses >=20 % (overlapping)"),
@@ -421,7 +431,7 @@ def main():
             A.set_title(f"{det.upper()} split by {name}", fontsize=11)
             A.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.13), frameon=False)
         fig.suptitle(f"doc pdvd/98 -- {det.upper()}: reco vs true drift by topology (variant Z, Michel only, 80-340 cm)", fontsize=12)
-        fig.tight_layout(); fig.savefig(f"{FIGS}/98_topology_{det}.png", dpi=105); plt.close(fig)
+        fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}topology_{det}.png", dpi=105); plt.close(fig)
     open(f"{SCAN}/stats_{a.tag}.txt", "a").write("\n".join(tl) + "\n"); print("\n".join(tl))
     open(f"{SCAN}/stats_{a.tag}.txt", "a").write("\n".join(simlines) + "\n"); print("\n".join(simlines))
 
@@ -447,7 +457,7 @@ def main():
             A.legend(fontsize=8); A.set_yticks([])
     fig.suptitle("doc pdvd/98 -- data (red) vs the model's own simulation for the same drifts and Michel energies "
                  "(tier B in-range, variant Z; sim = isolated electrons)", fontsize=11)
-    fig.tight_layout(); fig.savefig(f"{FIGS}/98_data_vs_sim_expectation.png", dpi=105); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}data_vs_sim_expectation.png", dpi=105); plt.close(fig)
 
     # label check
     fig, ax = plt.subplots(1, 2, figsize=(10, 4.4))
@@ -461,7 +471,7 @@ def main():
         ax[k].set_ylabel("tick route: (tick*0.5 - t0 - trig)*v [cm]")
         ok = np.isfinite(a_)
         ax[k].set_title(f"{det.upper()} label check, median diff {np.median(b_[ok] - a_[ok]):+.1f} cm, sd {np.std(b_[ok] - a_[ok]):.1f}")
-    fig.tight_layout(); fig.savefig(f"{FIGS}/98_label_check.png", dpi=110); plt.close(fig)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}label_check.png", dpi=110); plt.close(fig)
 
     # example crops: near / far, Z beside M, zoomed to the nonzero box of M
     for det in ("pdhd", "pdvd"):
@@ -491,7 +501,7 @@ def main():
                                                     f"mu_M {r['mu_M']:.0f}; ke {r['ke_best']:.0f} MeV; lost {r['frac_lost']:.2f}"),
                             fontsize=8)
         fig.suptitle(f"doc pdvd/98 -- {det.upper()} example crops (zoomed to the Michel's box; full crop is 256 ch x 1024 ticks)")
-        fig.tight_layout(); fig.savefig(f"{FIGS}/98_crops_{det}.png", dpi=100); plt.close(fig)
+        fig.tight_layout(); fig.savefig(f"{FIGS}/{FIGP}crops_{det}.png", dpi=100); plt.close(fig)
     print("figures in", FIGS)
     return 0
 
