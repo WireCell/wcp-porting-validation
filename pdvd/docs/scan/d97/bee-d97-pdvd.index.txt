@@ -1,0 +1,10 @@
+# doc pdvd/97 -- Bee set pdvd, production arm p96vprod, built 2026-09-13T05:40:31-07:00
+# bee_idx	class	rank	key (run_evt/cluster)	source zip	layers (nclusters)
+0	dots	1	039349_48/58	039349_48_p96vprod/mabc-pr.zip	clustering=277 mc shower_track=14 steiner_graph=6 steiner_terminals=6 stm=6 stm_fit=6 track_fit=16 vertices=16
+1	dots	2	039349_17/52	039349_17_p96vprod/mabc-pr.zip	clustering=192 mc shower_track=7 steiner_graph=3 steiner_terminals=3 stm=3 stm_fit=3 track_fit=7 vertices=7
+2	attached	1	039252_17/88	039252_17_p96vprod/mabc-pr.zip	clustering=570 mc shower_track=15 steiner_graph=5 steiner_terminals=5 stm=5 stm_fit=5 track_fit=15 vertices=15
+3	attached	2	039252_16/88	039252_16_p96vprod/mabc-pr.zip	clustering=829 mc shower_track=24 steiner_graph=7 steiner_terminals=7 stm=7 stm_fit=7 track_fit=24 vertices=24
+4	both	1	039253_3/79	039253_3_p96vprod/mabc-pr.zip	clustering=246 mc shower_track=8 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=8 vertices=8
+5	both	2	039253_8/59	039253_8_p96vprod/mabc-pr.zip	clustering=589 mc shower_track=30 steiner_graph=13 steiner_terminals=13 stm=13 stm_fit=13 track_fit=31 vertices=31
+6	bare	1	039349_20/80	039349_20_p96vprod/mabc-pr.zip	clustering=214 mc shower_track=16 steiner_graph=7 steiner_terminals=7 stm=7 stm_fit=7 track_fit=16 vertices=16
+7	bare	2	039253_4/80	039253_4_p96vprod/mabc-pr.zip	clustering=505 mc shower_track=15 steiner_graph=4 steiner_terminals=4 stm=4 stm_fit=4 track_fit=15 vertices=15

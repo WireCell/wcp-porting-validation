@@ -1,0 +1,44 @@
+# doc pdvd/97 -- Bee showcase sets (built by scripts/d97_build_bee.sh; every member sha256-identical to production)
+# det   arm       events  uploaded                   url
+pdhd    h28prod   7       2026-09-13 (this session)  https://www.phy.bnl.gov/twister/bee/set/c75d14ee-07ae-4ebb-bcaf-1cb2b8451a55/event/list/
+pdvd    p96vprod  8       2026-09-13 (owner go)      https://www.phy.bnl.gov/twister/bee/set/b2c9c178-7515-4f47-8796-b2698a652dea/event/list/
+
+# PDHD presence check, 2026-09-13: event/list/ lists event/0/ .. event/6/ (7 events).  Per event, layer route
+# downloaded with curl -sk -w '%{http_code} %{size_download}' and compared to the zip member's size
+# (an HTTP 200 alone proves nothing on Bee: a missing layer also returns 200 with a short "does not exist" body).
+# event  layer             http  size_download  zip_member_size
+0  mc                200   7984    7984
+0  track_fit-global  200   185875  185875
+1  mc                200   9986    9986
+1  track_fit-global  200   141298  141298
+2  mc                200   3502    3502
+2  track_fit-global  200   83796   83796
+3  mc                200   5451    5451
+3  track_fit-global  200   85708   85708
+4  mc                200   5986    5986
+4  track_fit-global  200   87623   87623
+5  mc                200   6225    6225
+5  track_fit-global  200   132548  132548
+6  mc                200   7984    7984
+6  track_fit-global  200   185875  185875
+# 14/14 match.  Events 0 and 6 are the same readout 028084_21 (clusters 55 and 120), hence identical layer sizes.
+
+# PDVD presence check, 2026-09-13: event/list/ lists event/0/ .. event/7/ (8 events); same method as PDHD.
+# event  layer             http  size_download  zip_member_size
+0  mc                200   5844    5844
+0  track_fit-global  200   101948  101948
+1  mc                200   2604    2604
+1  track_fit-global  200   24611   24611
+2  mc                200   3596    3596
+2  track_fit-global  200   55061   55061
+3  mc                200   6092    6092
+3  track_fit-global  200   76087   76087
+4  mc                200   3122    3122
+4  track_fit-global  200   46763   46763
+5  mc                200   11175   11175
+5  track_fit-global  200   217788  217788
+6  mc                200   4404    4404
+6  track_fit-global  200   92962   92962
+7  mc                200   2441    2441
+7  track_fit-global  200   89341   89341
+# 16/16 match.

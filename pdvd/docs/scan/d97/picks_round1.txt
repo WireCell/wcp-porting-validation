@@ -1,0 +1,57 @@
+# doc pdvd/97 video picks; PDHD record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+# skipped after the visual check: (none)
+
+== pdhd arm h28prod  (record items without a candidate in the arm: 0)
+  dots      Q1 hand class 31 | Q4 Bragg-path accept 27 | Q5 michel_found agrees 25 | Q6 zip has mc+track_fit 25 | Q7 PF only mu-/e-/gamma 25 | Q8 gamma node (dots/both) 10 | Q2 owner/high (with Q4-Q8) 8
+            tiers: 0=8 1=2 2=15
+  attached  Q1 hand class 21 | Q4 Bragg-path accept 13 | Q5 michel_found agrees 12 | Q6 zip has mc+track_fit 12 | Q7 PF only mu-/e-/gamma 11 | Q8 gamma node (dots/both) 11 | Q2 owner/high (with Q4-Q8) 9
+            tiers: 0=9 1=2 2=0
+  both      Q1 hand class 36 | Q4 Bragg-path accept 29 | Q5 michel_found agrees 24 | Q6 zip has mc+track_fit 24 | Q7 PF only mu-/e-/gamma 23 | Q8 gamma node (dots/both) 5 | Q2 owner/high (with Q4-Q8) 3
+            tiers: 0=3 1=2 2=18
+  bare      Q1 hand class 10 | Q4 Bragg-path accept 5 | Q5 michel_found agrees 5 | Q6 zip has mc+track_fit 5 | Q7 PF only mu-/e-/gamma 5 | Q8 gamma node (dots/both) 5 | Q2 owner/high (with Q4-Q8) 4
+            tiers: 0=4 1=1 2=0
+  PICK pdhd dots      #1 028084_21/55    ratio 1.05 len 180 cm ke_best 0.0 region 3.5 src agent:high
+       PF mu- 123 MeV(mu- 64 MeV(mu- 70 MeV(mu- 70 MeV(mu- 40 MeV(mu- 207 MeV(gamma 0.42 MeV(e- 0.42 MeV)))))), e- 19 MeV)
+  PICK pdhd dots      #2 028084_30/111   ratio 1.00 len 144 cm ke_best 0.0 region 19.0 src owner
+       PF mu- 32 MeV(mu- 57 MeV(mu- 60 MeV(mu- 104 MeV(mu- 48 MeV(mu- 67 MeV(mu- 124 MeV(e- 7.27 MeV, mu- 47 MeV(gamma 1.01 MeV(e- 1.01 MeV)))))))))
+  PICK pdhd attached  #1 028084_0/97     ratio 1.07 len 62 cm ke_best 30.5 region 57.0 src owner
+       PF mu- 164 MeV(mu- 19 MeV(e- 30 MeV))
+  PICK pdhd attached  #2 028084_1/142    ratio 1.02 len 201 cm ke_best 31.2 region 53.5 src owner
+       PF mu- 469 MeV(e- 31 MeV)
+  PICK pdhd both      #1 028084_26/109   ratio 0.91 len 49 cm ke_best 3.7 region 11.5 src owner
+       PF mu- 143 MeV(gamma 3.68 MeV(e- 3.68 MeV))
+  PICK pdhd both      #2 029107_3/107    ratio 0.90 len 304 cm ke_best 19.0 region 70.0 src agent:high
+       PF mu- 700 MeV(gamma 19 MeV(e- 19 MeV), mu- 7.38 MeV)
+  PICK pdhd bare      #1 029107_26/88    ratio 1.17 len 86 cm ke_best 0.0 region 0.0 src agent:high
+       PF mu- 67 MeV(mu- 178 MeV(mu- 18 MeV))
+  PICK pdhd bare      #2 028084_26/115   ratio 0.87 len 230 cm ke_best 0.0 region 12.6 src agent:high
+       PF mu- 532 MeV
+
+== pdvd arm p96vprod  (record items without a candidate in the arm: 31)
+  dots      Q1 hand class 61 | Q4 Bragg-path accept 50 | Q5 michel_found agrees 50 | Q6 zip has mc+track_fit 50 | Q7 PF only mu-/e-/gamma 49 | Q8 gamma node (dots/both) 25 | Q2 owner/high (with Q4-Q8) 20
+            tiers: 0=20 1=5 2=24
+  attached  Q1 hand class 97 | Q4 Bragg-path accept 58 | Q5 michel_found agrees 52 | Q6 zip has mc+track_fit 52 | Q7 PF only mu-/e-/gamma 52 | Q8 gamma node (dots/both) 52 | Q2 owner/high (with Q4-Q8) 39
+            tiers: 0=39 1=13 2=0
+  both      Q1 hand class 64 | Q4 Bragg-path accept 59 | Q5 michel_found agrees 56 | Q6 zip has mc+track_fit 56 | Q7 PF only mu-/e-/gamma 55 | Q8 gamma node (dots/both) 12 | Q2 owner/high (with Q4-Q8) 10
+            tiers: 0=10 1=2 2=43
+  bare      Q1 hand class 46 | Q4 Bragg-path accept 43 | Q5 michel_found agrees 41 | Q6 zip has mc+track_fit 41 | Q7 PF only mu-/e-/gamma 41 | Q8 gamma node (dots/both) 41 | Q2 owner/high (with Q4-Q8) 30
+            tiers: 0=30 1=11 2=0
+  PICK pdvd dots      #1 039349_48/58    ratio 1.12 len 265 cm ke_best 0.5 region 6.8 src pdvd-record:high
+       PF mu- 33 MeV(mu- 63 MeV(mu- 547 MeV(e- 13 MeV, mu- 40 MeV(gamma 0.51 MeV(e- 0.51 MeV)))))
+  PICK pdvd dots      #2 039349_17/52    ratio 1.09 len 86 cm ke_best 0.0 region 9.3 src pdvd-record:high
+       PF mu- 222 MeV(gamma 2.06 MeV(e- 2.06 MeV))
+  PICK pdvd attached  #1 039252_17/88    ratio 1.58 len 68 cm ke_best 24.5 region 37.9 src pdvd-record:high
+       PF mu- 185 MeV(e- 24 MeV)
+  PICK pdvd attached  #2 039253_3/66     ratio 1.21 len 162 cm ke_best 36.9 region 47.5 src pdvd-record:owner
+       PF mu- 352 MeV(mu- 28 MeV(mu- 50 MeV(e- 36 MeV)), e- 17 MeV)
+  PICK pdvd both      #1 039253_3/79     ratio 1.23 len 94 cm ke_best 14.9 region 28.0 src pdvd-record:high
+       PF mu- 239 MeV(gamma 14 MeV(e- 14 MeV), e- 9.63 MeV)
+  PICK pdvd both      #2 039252_0/82     ratio 1.00 len 107 cm ke_best 17.5 region 22.6 src pdvd-record:high
+       PF mu- 267 MeV(e- 17 MeV, gamma 7.09 MeV(e- 7.09 MeV))
+  PICK pdvd bare      #1 039349_20/80    ratio 1.50 len 39 cm ke_best 0.0 region 16.0 src pdvd-record:high
+       PF mu- 102 MeV(mu- 41 MeV)
+  PICK pdvd bare      #2 039253_4/80     ratio 1.46 len 215 cm ke_best 0.0 region 1.4 src pdvd-record:high
+       PF mu- 205 MeV(mu- 328 MeV)
+
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/d97/picks.tsv 16 picks
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/figs/97_picks_dqdx_rr.png

@@ -1,0 +1,9 @@
+# doc pdvd/97 -- Bee set pdhd, production arm h28prod, built 2026-09-13T05:40:27-07:00
+# bee_idx	class	rank	key (run_evt/cluster)	source zip	layers (nclusters)
+0	dots	1	028084_21/55	028084_21_h28prod/mabc-pr.zip	clustering=368 mc shower_track=14 steiner_graph=21 steiner_terminals=21 stm=21 stm_fit=21 stm_tagged=8 track_fit=15 vertices=15
+1	dots	2	028084_30/111	028084_30_h28prod/mabc-pr.zip	clustering=301 mc shower_track=18 steiner_graph=14 steiner_terminals=14 stm=14 stm_fit=14 stm_tagged=7 track_fit=18 vertices=18
+2	attached	1	028084_0/97	028084_0_h28prod/mabc-pr.zip	clustering=402 mc shower_track=12 steiner_graph=20 steiner_terminals=20 stm=20 stm_fit=20 stm_tagged=5 track_fit=14 vertices=14
+3	attached	2	028084_1/142	028084_1_h28prod/mabc-pr.zip	clustering=346 mc shower_track=11 steiner_graph=23 steiner_terminals=23 stm=23 stm_fit=23 stm_tagged=8 track_fit=13 vertices=13
+4	both	1	029107_3/111	029107_3_h28prod/mabc-pr.zip	clustering=340 mc shower_track=16 steiner_graph=19 steiner_terminals=19 stm=19 stm_fit=19 stm_tagged=6 track_fit=16 vertices=16
+5	both	2	029107_20/57	029107_20_h28prod/mabc-pr.zip	clustering=423 mc shower_track=21 steiner_graph=23 steiner_terminals=23 stm=23 stm_fit=23 stm_tagged=9 track_fit=22 vertices=22
+6	bare	1	028084_21/120	028084_21_h28prod/mabc-pr.zip	clustering=368 mc shower_track=14 steiner_graph=21 steiner_terminals=21 stm=21 stm_fit=21 stm_tagged=8 track_fit=15 vertices=15
