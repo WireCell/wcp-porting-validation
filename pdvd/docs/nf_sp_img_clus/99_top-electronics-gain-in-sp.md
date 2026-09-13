@@ -17,8 +17,8 @@
   - Round 1's "rerunning SP costs is_stm efficiency 0.877 → 0.801" overstated it. The tagged population keeps its size
     (265 / 255 / 273 is_stm), but about 30 % of the tagged clusters swap in both directions, and the record sees only the
     losses (§0, §6.3).
-- **Disk:** the OFF trim is done. The July SP frames are still held, but they are no longer unique: they regenerate
-  bit for bit (§9).
+- **Disk:** the OFF trim is done. The July SP frames are **retired** (owner yes, 2026-09-13: 768 archives, 29.4 GiB, a
+  sha256 manifest first); they regenerate bit for bit with `--wires` (§9).
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -167,7 +167,8 @@ python3 d99_closure.py --write-common <dq> > ../d99/closure_pertrack.txt   # the
                                                                            #   -> d99/space_charge_<arm>_common.txt
 # disk (sec 9)
 CONFIRM=1 ./d99_trim_off.sh
-./d99_retire_keep_sp.sh ; NEGCTL=1 ./d99_retire_keep_sp.sh                 # dry run + negative control only (HELD)
+./d99_retire_keep_sp.sh ; NEGCTL=1 ./d99_retire_keep_sp.sh                 # dry run + negative control
+CONFIRM=1 ./d99_retire_keep_sp.sh    # owner yes 2026-09-13 -> d99/retire_keep_sp_confirm.txt, d99/retire_keep_sp_manifest.txt
 ```
 
 ## 1. The constant and where it acts
@@ -629,7 +630,7 @@ Every constant fitted on reconstructed top charge was fitted on the old top scal
 
 Refitting any of these is the owner's decision, after the flip decision.
 
-## 9. Disk: OFF trim done; the July SP frames regenerate bit for bit, retire recommended (not executed)
+## 9. Disk: OFF trim done; the July SP frames retired (owner yes, 2026-09-13)
 
 Owner: trim the control arm's frames after imaging; keep the latest SP results; retire the previous round's.
 
@@ -647,10 +648,24 @@ Owner: trim the control arm's frames after imaging; keep the latest SP results; 
 - **Recoverability:** SP is bit-deterministic (G2, and the rc=2 reruns), and the manifests hold every deleted archive's
   member hashes. Any OFF event can be regenerated and checked.
 
-**The July SP frames — HELD, not executed** (`d99_retire_keep_sp.sh`). The frames are
-`/home/xqian/pdvd-frame-store/*_keep/protodune-sp-dnnroi-frames-anode*` (SP of 07-13 with the v5 wire order).
+**The July SP frames — RETIRED** (`CONFIRM=1 d99_retire_keep_sp.sh`, 2026-09-13, after the owner's yes: "Please retire the
+July-frame to save some disk"). The frames were `/home/xqian/pdvd-frame-store/*_keep/protodune-sp-dnnroi-frames-anode*`
+(SP of 07-13 with the v5 wire order).
 
-Dry run with the final keep list (`d99/retire_keep_sp_dryrun.txt`):
+- **Executed** (`d99/retire_keep_sp_confirm.txt`): 768 archives and the 1536 links onto them (`work/<evt>_keep/<frame>` and
+  `work/<evt>_d27fresh/<frame>`) deleted; dangling links under `pdvd/work` 0 before and 0 after; `wire-cell` not running.
+- **Manifest first** (`d99/retire_keep_sp_manifest.txt`): file sha256 and bytes of all 768 archives, and every removed link
+  with its target, written and counted (768 hash lines) before the first `rm`.
+- **Disk:** `/home/xqian` available 450.50 → 482.04 GB (+31.5 GB = 29.4 GiB); the store 40 G → 11 G.
+- **Kept:** 192 archives = the 24 events below, unchanged (`d99/retire_keep_sp_dryrun_final.txt`, the same census).
+- **What it costs.** Re-imaging from the July frames is no longer possible for the other 96 events without regenerating them:
+  `run_nf_sp_dnnroi_evt.sh --wires protodunevd-wires-larsoft-v5.json.bz2 -O _<tag> <run> <evt>` reproduces them sample for
+  sample (§4.3), and the manifest's sha256 checks the result. The imaging, clustering and PR products built on them
+  (`d27fresh`, `d51vclus`, `p96vprod`) are real files and stay readable. One analysis read the frames through that path:
+  doc pdvd/98's PDVD crops (production arm). Doc 98 now reads the latest configuration (`p98vonq` on the `p98von` frames,
+  all 960 archives kept), and its round-1 production numbers stay as the committed `scan/d98/` tables.
+
+Dry run with the final keep list, before the owner's yes (`d99/retire_keep_sp_dryrun.txt`):
 - 768 archives, 29.37 GiB, and 1536 links pointing at them, closure reached in 2 passes;
 - 24 events kept:
   - 039252_0..17 and 039253_0, which a committed script or doc Repro reads (doc qlmatch/18, doc nf_sp_img_clus/28,
@@ -660,15 +675,15 @@ Dry run with the final keep list (`d99/retire_keep_sp_dryrun.txt`):
 - negative control (an ON-arm frame injected): refused, rc 13;
 - liveness guard: refused while PR was running, rc 11.
 
-**Why it was held, and why that reason is gone.**
+**Why it was held, and why it could go.**
 - **Round 1:** the frames were held as the only copy of the SP that production and every hand scan were built on, and as
   the reference for splitting the SP difference.
 - **Round 2:** that split is done (§4.3). Today's SP with `--wires protodunevd-wires-larsoft-v5.json.bz2` regenerates the
   July frames sample for sample from the raw frames. They are no longer unique evidence.
-- **Recommendation:** retire them with the ready script. It remains the owner's call; nothing was deleted in round 2.
+- **Round 3:** the owner said retire, and it was run as above.
 
-The script and dry run are ready. `pdvd/scripts/retire/PROTECTED.txt`'s `keep` line ("it holds the SP+DNNROI frames d27fresh
-borrows") is untouched. **The owner decides.**
+`pdvd/scripts/retire/PROTECTED.txt`'s `keep` line ("it holds the SP+DNNROI frames d27fresh borrows") is not edited here: that
+file carries a peer's uncommitted changes. The line now describes only the 24 kept events.
 
 ## 10. Not concluded / next
 
@@ -712,6 +727,6 @@ borrows") is untouched. **The owner decides.**
 | `scripts/d99_frame_identity.py` | §4.3: sample-level identity of two SP frame arms per anode, plane and frame tag |
 | `scripts/d99_population.py` | §6.3: record-free STM census and is_stm transitions between arms (geometric match) |
 | `scripts/d99_michel_ql.py` | Michel energy by volume, per-item ON/OFF, flash changes |
-| `scripts/d99_trim_off.sh`, `d99_retire_keep_sp.sh` | guarded OFF-frame trim; guarded retire of the July SP frames (held) |
+| `scripts/d99_trim_off.sh`, `d99_retire_keep_sp.sh` | guarded OFF-frame trim; guarded retire of the July SP frames (executed 2026-09-13) |
 | `../scan/pdvd_stm_michel_smx9_carried_p98voffq.json`, `_p98vonq.json` | the carried hand-scan records (new keys; the smx record untouched) |
 | `d99/` | gate records and every number in this doc |

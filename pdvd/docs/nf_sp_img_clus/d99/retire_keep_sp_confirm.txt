@@ -1,0 +1,5 @@
+census: cited literal events [039252_0 039252_2 039253_0] all KEPT
+link closure: 1536 links after 2 passes
+retire: 768 archives, 29.37 GiB; 1536 links; kept events: 24
+deleted 768 archives + 1536 links; dangling links in work before 0 after 0 (must be equal)
+manifest /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/d99/retire_keep_sp_manifest.txt
