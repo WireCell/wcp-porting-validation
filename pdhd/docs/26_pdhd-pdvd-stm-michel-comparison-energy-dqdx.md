@@ -21,7 +21,7 @@ energy estimation for this"* and *"Please flip it as default for PDHD"*.
 4. **Michel energy (§3).** On hand Michel items the region estimator reads a median **39.5 MeV [37.4, 42.3]
    on PDHD against 34.3 [32.0, 35.7] on PDVD**, with 27 % vs 9 % above the 52.8 MeV endpoint. The PDHD excess
    is **not** a Michel difference we can claim: the same sum taken on the muon body 35 cm upstream reads
-   **8.5 MeV on PDHD against 2.6 on PDVD**, and region − control reverses the order (26.3 vs 29.3). PDHD's
+   **8.5 MeV on PDHD against 2.6 on PDVD** — a floor difference about as large as the region difference. PDHD's
    region energy carries a larger non-Michel floor. The pre-registered expectation that PDHD would read
    *lower* (E1/E2 in `scan/d26/preregistered.txt`) **missed**.
 5. **dQ/dx vs RR (§4).** **Both detectors match their own expectation on the plateau, with no free scale, and
@@ -56,7 +56,8 @@ python3 $I/pdvd/docs/nf_sp_img_clus/scripts/d81_readout.py --det pdhd --arm h26q
 python3 $I/pdvd/docs/nf_sp_img_clus/scripts/d81_tail.py <scratch>/readout.json pdhd      # (same two for --det pdvd --arm p96vprod)
 
 # 2. part B, the comparison (figures into pdhd/docs/figs/)
-python3 $D/h25/d25_bragg_michel.py --pdhd h26conf,h26q2dprod --pdvd p96vprod > $X/census.txt   # with D25_GATES of doc 25 sec 0 step 7
+export D25_GATES="p82bhoff=61/0/86/107;h23conf:strict=77/0/27/68,47/3/10/38;h23conf:majority=79/1/29/69,48/3/10/40;h23conf:all=96/1/51/106,65/3/16/54"
+python3 $D/h25/d25_bragg_michel.py --pdhd h26conf,h26q2dprod --pdvd p96vprod > $X/census.txt   # self-gates on smx27 need both exports
 python3 $X/d26_compare.py       > $X/compare.txt        # sec 2: 26_eff_purity.png, 26_eff_purity_units.png
 python3 $X/d26_michel_energy.py > $X/michel_energy.txt  # sec 3: 26_michel_energy{,_split,_cdf}.png
 python3 $X/d26_dqdx_rr.py       > $X/dqdx_rr.txt        # sec 4: 26_dqdx_rr{,_split}.png, 26_plateau_vs_drift.png
@@ -87,7 +88,11 @@ cells (main cluster + admitted companions), minus the charge the muon's trajecto
 through the bound recombination model — so the energy does not depend on how PR segmented the Michel. The
 same sum on a region 35 cm back up the muon is the **body control**. **The key set is PDVD's, inherited with
 no PDHD tuning**: R = 10 was post-hoc on PDVD (doc 95) and scope 1 was flipped there on fidelity (doc 96). A
-PDHD-selected radius would make the two spectra different estimators. Doc pdvd/81 §8a held PDHD OFF because
+PDHD-selected radius would make the two spectra different estimators. Two further knobs of the same
+component, `michel_q2d_dis_cm` (C++ 0.6) and `michel_q2d_stm_window_cm` (C++ 30.0), are set by **neither**
+detector: both production files are silent on them, and the compiled q2d key sets are the same five keys on
+both (`029107_17_h27cfg` for PDHD, `039252_0_h25vcfg` for PDVD, compiled after PDVD's last production edit), so
+both run the C++ defaults and the estimator is the same. Doc pdvd/81 §8a held PDHD OFF because
 its Michels lean more on cross-shared cells; the owner took the flip with that known, and §3.3 re-measures it.
 
 ### 1.2 Gates
@@ -229,7 +234,7 @@ detector; 52.8 MeV is the only absolute anchor.*
 | region p10 / p90 / max | 18.0 / 59.8 / 69.8 | 17.4 / 51.5 / 90.9 |
 | region above 52.8 MeV | **12 (0.273)** | 12 (0.090) |
 | **body control**, median | **8.5 MeV** | **2.6 MeV** |
-| region − body control, median (diagnostic) | 26.3 [21.9, 29.5] | 29.3 [27.1, 30.8] |
+| region − body control, median (diagnostic only, see §3.2) | 26.3 [21.9, 29.5]; p10 −6.8, ≤ 0 on 6 of 44 | 29.3 [27.1, 30.8]; p10 +11.6, ≤ 0 on 3 of 134 |
 | `michel_ke_best`, median | 25.3 [23.8, 26.2] | 23.3 [21.4, 24.3] |
 | `michel_ke_best` above 52.8 MeV | 4 (0.091) | 1 (0.007) |
 | region / `michel_ke_best`, median | 1.551 | 1.391 |
@@ -242,10 +247,12 @@ The 7 non-Michel items in PDHD's selection read 21.3 MeV median (region), PDVD's
 
 * **The region reads higher on PDHD, and so does its floor.** The body control is the same sum on the muon,
   where there is no Michel and the fit's prediction should net the charge to about zero. It reads 8.5 MeV on
-  PDHD against 2.6 on PDVD — about the size of the region difference (5.2 MeV). Region − control reverses the
-  order. **The spectra therefore do not show a PDHD Michel that is more energetic**; they show a PDHD
-  estimator that keeps more non-Michel charge. The control sits where the fit is best, so it bounds that floor
-  from below, not above.
+  PDHD against 2.6 on PDVD — a 5.9 MeV difference, about the size of the region difference (5.2 MeV). **The
+  spectra therefore do not show a PDHD Michel that is more energetic**; they show a PDHD estimator that keeps
+  more non-Michel charge. The per-item difference region − control is a weak diagnostic and is not used for
+  this: the control is noisy item by item, so the difference goes negative or to zero on 6 of 44 PDHD items
+  (3 of 134 on PDVD). Its medians (26.3 vs 29.3) point the same way, but the conclusion rests on the control
+  medians.
 * **Half of PDHD's endpoint tail has a hot control.** Of the 12 PDHD items above 52.8 MeV, 6 have a body
   control above 10 MeV (`029107_23/128` 67.2, `029107_1/85` 50.7, `029107_2/108` 30.8, `028084_3/72` 17.4,
   `029107_19/106` 14.7, `028084_18/108` 12.6). On those the whole track reads high, not the Michel. PDVD's 12
