@@ -37,6 +37,8 @@
 **Production.** Sections 1–8 are read-only for production. §9 flips lever 1 into PDHD's production file
 `pdhd/wct-pr-perevt.jsonnet` on the owner's go. There is no C++ change, no other detector's config is
 touched, and no earlier record or label is written. All arms run on a pinned binary, under new tags only.
+**Doc pdhd/26 builds on §9:** it flips PDVD's region-based Michel energy into the same file (additive; no verdict
+moves) and refreshes the PDHD vs PDVD comparison on the flipped chain.
 
 ## 0. Repro
 

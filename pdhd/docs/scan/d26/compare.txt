@@ -1,0 +1,83 @@
+PDHD record: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+PDVD record: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json
+PDHD h26q2dprod strict  : judged 172, no candidate 0; is_stm (89, 1, 15, 67), michel(stoppers) (47, 3, 10, 38), michel(all judged) (48, 30, 10, 84)
+PDHD h26q2dprod majority: judged 178, no candidate 0; is_stm (92, 2, 16, 68), michel(stoppers) (48, 3, 10, 40), michel(all judged) (49, 31, 10, 88)
+PDHD h26q2dprod all     : judged 254, no candidate 0; is_stm (114, 2, 33, 105), michel(stoppers) (65, 3, 16, 54), michel(all judged) (66, 42, 16, 130)
+PDVD p96vprod: judged with a candidate 546; is_stm (242, 8, 34, 262), michel(stoppers) (142, 8, 19, 107), michel(all judged) (144, 12, 20, 370)
+PDVD record items with no candidate 31 (hand stoppers 10, STM_MICHEL 5, verdicts {'STM_MICHEL': 5, 'THRU': 20, 'MESSY': 1, 'STM_ONLY': 5})
+PDVD all judged: is_stm 242/8/44 eff 0.846; michel(all judged) 144/12/25 eff 0.852
+
+=== PDHD APA0 strict
+  STM purity                                         89/  90 = 0.989 +- 0.011
+  STM efficiency                                     89/ 104 = 0.856 +- 0.034
+  Michel purity (on hand stoppers)                   47/  50 = 0.940 +- 0.034
+  Michel efficiency (on hand stoppers)               47/  57 = 0.825 +- 0.050
+  Michel purity (all judged vs STM_MICHEL)           48/  78 = 0.615 +- 0.055
+  Michel efficiency (all judged vs STM_MICHEL)       48/  58 = 0.828 +- 0.050
+  STM+Michel purity                                  44/  48 = 0.917 +- 0.040
+  STM+Michel efficiency                              44/  57 = 0.772 +- 0.056
+  GOLDEN purity (chain selection vs hand Michel)     36/  39 = 0.923 +- 0.043
+  GOLDEN efficiency (over hand Michel)               36/  57 = 0.632 +- 0.064
+  Bragg-path accept | hand Michel                    42/  57 = 0.737 +- 0.058
+  Michel found | Bragg-path accept, hand Michel      36/  42 = 0.857 +- 0.054
+  sel_composition                                  {'hand Michel': 44, 'STM_ONLY': 3, 'THRU': 1}
+  gsel_composition                                 {'hand Michel': 36, 'STM_ONLY': 2, 'THRU': 1}
+
+=== PDHD APA0 majority
+  STM purity                                         92/  94 = 0.979 +- 0.015
+  STM efficiency                                     92/ 108 = 0.852 +- 0.034
+  Michel purity (on hand stoppers)                   48/  51 = 0.941 +- 0.033
+  Michel efficiency (on hand stoppers)               48/  58 = 0.828 +- 0.050
+  Michel purity (all judged vs STM_MICHEL)           49/  80 = 0.613 +- 0.054
+  Michel efficiency (all judged vs STM_MICHEL)       49/  59 = 0.831 +- 0.049
+  STM+Michel purity                                  45/  50 = 0.900 +- 0.042
+  STM+Michel efficiency                              45/  58 = 0.776 +- 0.055
+  GOLDEN purity (chain selection vs hand Michel)     37/  41 = 0.902 +- 0.046
+  GOLDEN efficiency (over hand Michel)               37/  58 = 0.638 +- 0.063
+  Bragg-path accept | hand Michel                    43/  58 = 0.741 +- 0.057
+  Michel found | Bragg-path accept, hand Michel      37/  43 = 0.860 +- 0.053
+  sel_composition                                  {'hand Michel': 45, 'STM_ONLY': 3, 'THRU': 2}
+  gsel_composition                                 {'hand Michel': 37, 'STM_ONLY': 2, 'THRU': 2}
+
+=== PDHD all APAs
+  STM purity                                        114/ 116 = 0.983 +- 0.012
+  STM efficiency                                    114/ 147 = 0.776 +- 0.034
+  Michel purity (on hand stoppers)                   65/  68 = 0.956 +- 0.025
+  Michel efficiency (on hand stoppers)               65/  81 = 0.802 +- 0.044
+  Michel purity (all judged vs STM_MICHEL)           66/ 108 = 0.611 +- 0.047
+  Michel efficiency (all judged vs STM_MICHEL)       66/  82 = 0.805 +- 0.044
+  STM+Michel purity                                  56/  61 = 0.918 +- 0.035
+  STM+Michel efficiency                              56/  81 = 0.691 +- 0.051
+  GOLDEN purity (chain selection vs hand Michel)     45/  49 = 0.918 +- 0.039
+  GOLDEN efficiency (over hand Michel)               45/  81 = 0.556 +- 0.055
+  Bragg-path accept | hand Michel                    52/  81 = 0.642 +- 0.053
+  Michel found | Bragg-path accept, hand Michel      45/  52 = 0.865 +- 0.047
+  sel_composition                                  {'hand Michel': 56, 'STM_ONLY': 3, 'THRU': 2}
+  gsel_composition                                 {'hand Michel': 45, 'STM_ONLY': 2, 'THRU': 2}
+
+=== PDVD
+  STM purity                                        242/ 250 = 0.968 +- 0.011
+  STM efficiency                                    242/ 276 = 0.877 +- 0.020
+  Michel purity (on hand stoppers)                  142/ 150 = 0.947 +- 0.018
+  Michel efficiency (on hand stoppers)              142/ 161 = 0.882 +- 0.025
+  Michel purity (all judged vs STM_MICHEL)          144/ 156 = 0.923 +- 0.021
+  Michel efficiency (all judged vs STM_MICHEL)      144/ 164 = 0.878 +- 0.026
+  STM+Michel purity                                 134/ 139 = 0.964 +- 0.016
+  STM+Michel efficiency                             134/ 161 = 0.832 +- 0.029
+  GOLDEN purity (chain selection vs hand Michel)    108/ 110 = 0.982 +- 0.013
+  GOLDEN efficiency (over hand Michel)              108/ 161 = 0.671 +- 0.037
+  Bragg-path accept | hand Michel                   117/ 161 = 0.727 +- 0.035
+  Michel found | Bragg-path accept, hand Michel     108/ 117 = 0.923 +- 0.025
+  sel_composition                                  {'hand Michel': 134, 'STM_ONLY': 4, 'STM_MICHEL': 1}
+  gsel_composition                                 {'hand Michel': 108, 'STM_ONLY': 2}
+
+=== BY HARDWARE UNIT (PDHD: the candidate's majority APA over all four; PDVD: drift volume of the median role-1 x)
+  unit             n  STM purity                  STM efficiency              STM+Michel purity           STM+Michel efficiency       GOLDEN efficiency (over ha
+  PDHD APA0       76   22/ 22 1.000+-0.000         22/ 39 0.564+-0.079         11/ 11 1.000+-0.000         11/ 23 0.478+-0.104          8/ 23 0.348+-0.099      
+  PDHD APA1       48   24/ 24 1.000+-0.000         24/ 29 0.828+-0.070         13/ 14 0.929+-0.069         13/ 18 0.722+-0.106          9/ 18 0.500+-0.118      
+  PDHD APA2       64   30/ 32 0.938+-0.043         30/ 34 0.882+-0.055         11/ 14 0.786+-0.110         11/ 15 0.733+-0.114          8/ 15 0.533+-0.129      
+  PDHD APA3       66   38/ 38 1.000+-0.000         38/ 45 0.844+-0.054         21/ 22 0.955+-0.044         21/ 25 0.840+-0.073         20/ 25 0.800+-0.080      
+  PDVD x<0       193   59/ 64 0.922+-0.034         59/ 70 0.843+-0.043         33/ 35 0.943+-0.039         33/ 41 0.805+-0.062         25/ 41 0.610+-0.076      
+  PDVD x>0       353  183/186 0.984+-0.009        183/206 0.888+-0.022        101/104 0.971+-0.016        101/120 0.842+-0.033         83/120 0.692+-0.042      
+
+figures: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/figs/26_eff_purity.png /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/figs/26_eff_purity_units.png
