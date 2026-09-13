@@ -1,0 +1,96 @@
+# scan tags carrying labels (the thing being protected FOR)
+TAG   pdhd  d05_scan_labels/movers0                  1 label file(s)
+TAG   pdhd  d08_scan_labels/_scorertest              1 label file(s)
+TAG   pdhd  d08_scan_labels/_selftest                1 label file(s)
+TAG   pdhd  d08_scan_labels/d08flip0                 1 label file(s)
+TAG   pdhd  stm_michel_labels/own19                  1 label file(s)
+TAG   pdhd  stm_michel_labels/own20                  1 label file(s)
+TAG   pdhd  stm_michel_labels/own23                  1 label file(s)
+TAG   pdhd  stm_michel_labels/own25                  1 label file(s)
+TAG   pdhd  stm_michel_labels/own26                  1 label file(s)
+TAG   pdhd  stm_michel_labels/smx1                   1 label file(s)
+TAG   pdhd  stm_michel_labels/smx18                  1 label file(s)
+TAG   pdhd  stm_michel_labels/smx19                  1 label file(s)
+TAG   pdhd  stm_michel_labels/smx20                  1 label file(s)
+TAG   pdhd  stm_michel_labels/smx21                  1 label file(s)
+TAG   pdhd  stm_scan_labels/retile0                  1 label file(s)
+TAG   pdvd  d08_scan_labels/_selftest                1 label file(s)
+TAG   pdvd  d08pv_scan_labels/_scorertest            1 label file(s)
+TAG   pdvd  d08pv_scan_labels/d08pvflip0             1 label file(s)
+TAG   pdvd  ql_labels/candles-am2                    18 label file(s)
+TAG   pdvd  ql_labels/candles-keep                   18 label file(s)
+TAG   pdvd  ql_labels/candles-spcov                  18 label file(s)
+TAG   pdvd  ql_labels/cathxa                         1 label file(s)
+TAG   pdvd  ql_labels/cathxa-18evt                   18 label file(s)
+TAG   pdvd  ql_labels/claude-cathxa                  17 label file(s)
+TAG   pdvd  ql_labels/wfresc                         1 label file(s)
+TAG   pdvd  stm_michel_labels/smx1                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx1a                  1 label file(s)
+TAG   pdvd  stm_michel_labels/smx3                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx4                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx5                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx6                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx7                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx8                   1 label file(s)
+TAG   pdvd  stm_michel_labels/smx9                   1 label file(s)
+# arm tokens named by a prep set / viewer / harness
+TOKEN d05mON                   <- d05_scan_viewer.py
+TOKEN d08cap10                 <- d08_scan_viewer.py, d08_stm_flip_labels.json, d08_stm_flip_sheet.tsv
+TOKEN d08flip0                 <- d08_stm_flip_labels.json
+TOKEN d08goff                  <- d08_scan_viewer.py, d08_stm_flip_labels.json, d08_stm_flip_sheet.tsv
+TOKEN d08pv30off               <- d08pv_scan_viewer.py, d08pv_stm_flip_labels.json, d08pv_stm_flip_sheet.tsv
+TOKEN d08pv30on                <- d08pv_scan_viewer.py, d08pv_stm_flip_labels.json, d08pv_stm_flip_sheet.tsv
+TOKEN d08pvflip0               <- d08pv_stm_flip_labels.json
+TOKEN d53h                     <- itemset_diff.tsv, manifest_own20.tsv, pdhd_stm_michel_scan_key.tsv, pdhd_stm_michel_scan_key.tsv, pdhd_stm_michel_scan_key_h18b.tsv, pdhd_stm_michel_scan_key_p82bhoff.tsv, pdhd_stm_michel_scan_sheet.tsv, pdhd_stm_michel_scan_sheet.tsv, pdhd_stm_michel_smx18_verdicts.json, pdhd_stm_michel_smx19_verdicts.json, pdhd_stm_michel_smx20_verdicts.json, pdhd_stm_michel_smx21_verdicts.json, pdhd_stm_michel_smx22_verdicts.json, pdhd_stm_michel_smx23_verdicts.json, pdhd_stm_michel_smx25_verdicts.json, pdhd_stm_michel_smx26_verdicts.json, pdhd_stm_michel_smx27_verdicts.json, prep-pdhd, prep_stm_michel_scan.py, provenance.json, provenance.json, record_readingB.json, record_smx26_readingB.json, record_smx27_readingB.json
+TOKEN d53v                     <- pdvd_stm_michel_scan_key.tsv, pdvd_stm_michel_scan_sheet.tsv, prep-pdvd, prep_stm_michel_scan.py
+TOKEN d67v                     <- prep-pdvd-smx3
+TOKEN d68a3                    <- pdvd_stm_michel_smx4_sheet.tsv, prep-pdvd-smx4
+TOKEN d68d4                    <- prep-pdvd-smx3
+TOKEN h18b                     <- census_owner_rulings_only.txt, pdhd_stm_michel_scan_key_h18b.tsv, pdhd_stm_michel_smx18_owner_queue.md, provenance.json, provenance.json
+TOKEN h18s                     <- itemset_diff.tsv, pdhd_stm_michel_scan_key.tsv, pdhd_stm_michel_scan_sheet.tsv, pdhd_stm_michel_smx18_verdicts.json, pdhd_stm_michel_smx19_verdicts.json, pdhd_stm_michel_smx20_verdicts.json, pdhd_stm_michel_smx21_verdicts.json, pdhd_stm_michel_smx22_verdicts.json, pdhd_stm_michel_smx23_verdicts.json, pdhd_stm_michel_smx25_verdicts.json, pdhd_stm_michel_smx26_verdicts.json, pdhd_stm_michel_smx27_verdicts.json, prep-pdhd-smx18, prep-pdhd-smx19, provenance.json, provenance.json, provenance.json, provenance.json, record_readingB.json, record_smx26_readingB.json, record_smx27_readingB.json
+TOKEN h23conf                  <- owner_rulings_own23.json, prep-pdhd-h23conf
+TOKEN h25base                  <- movers_h25k.txt, movers_h25va.txt, movers_h25vb.txt, owner_rulings_own25.json, owner_rulings_own26.json, pdhd_stm_michel_smx25_verdicts.json, pdhd_stm_michel_smx26_verdicts.json, pdhd_stm_michel_smx27_verdicts.json, prep-pdhd-h25base, provenance.json, record_readingB.json, record_smx26_readingB.json, record_smx27_readingB.json
+TOKEN h25k                     <- key_smx25.tsv, movers_h25k.txt
+TOKEN h25kr                    <- key_smx25.tsv, movers_h25k.txt
+TOKEN h25r                     <- AGENT_TASK.md, check_shots.txt, key_smx25.tsv, movers_h25k.txt, provenance.json
+TOKEN h25va                    <- movers_h25va.txt
+TOKEN h25vb                    <- movers_h25vb.txt
+TOKEN p82bhoff                 <- pdhd_stm_michel_scan_key_p82bhoff.tsv, pdhd_stm_michel_smx18_owner_queue.md, provenance.json, provenance.json
+TOKEN p82hoff                  <- provenance.json
+TOKEN p85vprod                 <- pdvd_stm_michel_smx5_sheet.tsv, pdvd_stm_michel_smx6_sheet.tsv, prep-pdvd-smx6
+TOKEN p85vwh                   <- pdvd_stm_michel_smx5_sheet.tsv, pdvd_stm_michel_smx6_sheet.tsv, prep-pdvd-smx5
+TOKEN p88v5fr                  <- pdvd_stm_michel_smx6_key.tsv
+TOKEN p88vprod                 <- pdvd_stm_michel_smx7_sheet.tsv, prep-pdvd-smx7
+TOKEN p90vprod                 <- pdvd_stm_michel_smx8_sheet.tsv, pdvd_stm_michel_smx9_sheet.tsv, prep-pdvd-smx8, prep-pdvd-smx9
+TOKEN stm0                     <- stm_scan_viewer.py
+# resolved: token x arms that exist on disk
+KEEP  pdvd  d08pv30off                 30 dirs
+KEEP  pdvd  d08pv30on                  30 dirs
+KEEP  pdvd  d53v                      120 dirs
+KEEP  pdvd  d67v                      120 dirs
+KEEP  pdvd  d68a3                     120 dirs
+KEEP  pdvd  d68d4                     120 dirs
+KEEP  pdvd  p85vprod                  120 dirs
+KEEP  pdvd  p85vwh                    120 dirs
+KEEP  pdvd  p88v5fr                   120 dirs
+KEEP  pdvd  p88vprod                  120 dirs
+KEEP  pdvd  p90vprod                  120 dirs
+#     pdvd: named but not on this tree: d05mON d08cap10 d08flip0 d08goff d08pvflip0 d53h h18b h18s h23conf h25base h25k h25kr h25r h25va h25vb p82bhoff p82hoff stm0
+KEEP  pdhd  d05mON                      6 dirs
+KEEP  pdhd  d08cap10                   30 dirs
+KEEP  pdhd  d08goff                    30 dirs
+KEEP  pdhd  d53h                       61 dirs
+KEEP  pdhd  h18b                       61 dirs
+KEEP  pdhd  h18s                       61 dirs
+KEEP  pdhd  h23conf                    61 dirs
+KEEP  pdhd  h25base                    61 dirs
+KEEP  pdhd  h25k                       61 dirs
+KEEP  pdhd  h25kr                      61 dirs
+KEEP  pdhd  h25r                       61 dirs
+KEEP  pdhd  h25va                      61 dirs
+KEEP  pdhd  h25vb                      61 dirs
+KEEP  pdhd  p82bhoff                   61 dirs
+KEEP  pdhd  p82hoff                    61 dirs
+KEEP  pdhd  stm0                       30 dirs
+#     pdhd: named but not on this tree: d08flip0 d08pv30off d08pv30on d08pvflip0 d53v d67v d68a3 d68d4 p85vprod p85vwh p88v5fr p88vprod p90vprod
+# wrote scan_arms_20260912.json

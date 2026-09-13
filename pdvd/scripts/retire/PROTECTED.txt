@@ -56,12 +56,16 @@ d53v	**THE smx1/smx1a HAND-SCAN SOURCE.**  prep-pdvd names it as the arm for 569
 d67v d68d4	**THE smx3 HAND-SCAN SOURCE** (prep-pdvd-smx3: 13 items from d67v, 36 from d68d4).	stm_michel_scan/prep-pdvd-smx3; work/stm_michel_labels/smx3
 d68a3	**THE smx4 HAND-SCAN SOURCE** (prep-pdvd-smx4, 54 items).  Scanned 2026-09-10, the labels were written at 09:19 the same day.	stm_michel_scan/prep-pdvd-smx4; work/stm_michel_labels/smx4
 d08pv30on d08pv30off	**THE d08pvflip0 HAND-SCAN SOURCE** (d08pv_scan_viewer.py's ARM binding).  A hand-written list of scan dirs missed these; scan_arms_20260910.py discovers the scan dirs instead of enumerating them.	pdvd/d08_scan/d08pv_scan_viewer.py
-p79vprod	**THE LATEST PDVD PRODUCTION ARM.**  Primary source: doc pdvd/81 sec 6 -- "p81vleg2 reproduces production (p79vprod) exactly".  Not read off the `prod` substring.	doc pdvd/81 sec 6, doc pdvd/79
 p81voff3 p81vq2d3 p81vleg2	an OPEN decision, not a closed one.  Doc pdvd/81 shipped michel_q2d and michel_q2d_cells default OFF and put the flip to the owner (sec 8-9); d81_proofs.sh is written and waiting.  These three are the gate and the ON reading that decision will be made on.	doc pdvd/81 sec 8-9
-p82*	A LIVE ROUND, by PREFIX.  doc pdvd/82 (82_peak-then-drop-stop.md) was written 2026-09-10 21:13 and is still UNCOMMITTED; its arms were being created while the cleanup round planned -- p82btp/p82boff/p82btp0 appeared AFTER the first plan run, which is the 09-04 shape exactly.  A derived live set only knows the tokens the doc has written down so far, so the prefix is what actually holds.	doc pdvd/82; work mtimes
 mg10*	A LIVE ROUND, protected by PREFIX and not by enumeration (the 09-04 lesson: seven new families appeared between plan and confirm).  A peer `claude --resume d9d688aa` was alive on 2026-09-10 and ~/tmp/mg10 was written at 09:11; the family has arms in all three trees and NO doc yet, which is exactly the shape a citation census scores zero.	ps; ~/tmp/mg10; work mtimes
 work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a bokeh server was serving it on 2026-09-08.  M13	M13; pdhd/stm_michel_scan/serve_stm_michel_scan.sh
 
+# --- added 2026-09-12 (doc 105): production moved, the new hand scans, a live peer ---
+# Same keep test as 09-10 (the owner: "please do it like what we did before").
+p96vprod p96vscope	**THE LATEST PDVD PRODUCTION ARM** and its measurement twin.  Primary source: doc pdvd/96 sec 0 ("p96vprod, the flipped file with NO TLA") and its confirm step `d96_confirm.py --arm p96vscope --confirm p96vprod`.  One claim, two arms.  Supersedes p79vprod (RETIRED below).	doc pdvd/96 sec 0, line 266
+p85vprod p85vwh p88vprod p88v5fr p90vprod	**THE smx5..smx9 HAND-SCAN SOURCES**, derived by scan_arms_20260912.py: the per-item arm key of prep-pdvd-smx5..smx9, and docs/scan/pdvd_stm_michel_smx{7,8,9}_{sheet,key}.tsv.  All five were scanned 2026-09-11.	stm_michel_scan/prep-pdvd-smx5..9; work/stm_michel_labels/smx5..smx9
+h28* p97voff p97vwl	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~19:30: pdvd work tags p97voff/p97vwl (also under p97*), pin ~/tmp/h28/libpin_h28, runner ~/tmp/h28/run_arm28.sh, uncommitted record pdhd/docs/scan/d28/.  Gate baselines p96vprod (kept as production).	peer message; ~/tmp/h28
+h26* h27* p97*	A LIVE ROUND, by PREFIX.  The peer session that wrote doc pdhd/26 (committed 18:24 2026-09-12) is still running: ~/tmp/h27 written 18:24, h27cfg* work dirs, transcript written 18:31; the PDHD rounds also write PDVD cfg dirs (h25vcfg).  p97 is the next PDVD round's name -- nothing on disk yet, and a prefix for a round that has not started costs nothing.	ps; ~/tmp/h27; work mtimes
 
 # ================= RETIRED =================
 # 2026-09-06 (doc 101 tier 2): d48nu, d48nu2 (superseded inside doc 48 sec 8.0
@@ -70,6 +74,16 @@ work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a b
 # iterations superseded by d45prod), d143pref (pr/143's PDVD reference arm; sec
 # 7.3 states the PDVD chain is not production).  Manifests + record layer frozen
 # in sbnd_xin/archive/records/cleanup-20260906/pdvd-tier2/ before deletion.
+
+# 2026-09-12 (cleanup round, doc 105).  Same owner instruction as 09-10; these two
+# lines were live protection until today and are moved here deliberately:
+# p79vprod	**THE LATEST PDVD PRODUCTION ARM.**  Primary source: doc pdvd/81 sec 6 -- "p81vleg2 reproduces production (p79vprod) exactly".  Not read off the `prod` substring.	doc pdvd/81 sec 6, doc pdvd/79
+#   -> SUPERSEDED.  Fifteen PDVD production flips landed after it (docs pdvd/82..96);
+#      production is now p96vprod.  Not a hand-scan source: scan_arms_20260912 does
+#      not name it (~/tmp/p82/prep_p79vprod is a CENSUS prep, not a scan).  Record
+#      layer frozen in sbnd_xin/archive/records/cleanup-20260912/ before deletion.
+# p82*	A LIVE ROUND, by PREFIX.  doc pdvd/82 (82_peak-then-drop-stop.md) was written 2026-09-10 21:13 and is still UNCOMMITTED; its arms were being created while the cleanup round planned -- p82btp/p82boff/p82btp0 appeared AFTER the first plan run, which is the 09-04 shape exactly.  A derived live set only knows the tokens the doc has written down so far, so the prefix is what actually holds.	doc pdvd/82; work mtimes
+#   -> CLOSED.  doc pdvd/82 committed 2026-09-10 22:16 (045f5933) and 22:20 (affafcdd).
 
 # 2026-09-10 (cleanup round, doc 104).  OWNER INSTRUCTION, in their words:
 #   "we want to keep the latest production, but for work* directory that are

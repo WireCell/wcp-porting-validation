@@ -1,0 +1,123 @@
+
+==============================================================================
+== sbnd   (/home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 0 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 446 arms, 14 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: none for this tree
+  PASS  INTERLOCK 14: 0 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 9 tokens from 4 file(s); 0 resolve in this tree (none)
+
+  universe 81 dirs | KEEP 81 = 76.12 GiB | RELEASE 0 = 0.00 GiB | out-of-scope (untouched) 39
+  --- RELEASE ---   arm                       dirs      GiB  cited
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_sbnd_20260912.txt  (0 lines, 0.00 GiB)
+
+==============================================================================
+== pdvd   (/home/xqian/toolkit-dev/wcp-porting-img/pdvd/work)
+==============================================================================
+        closure: +1 dirs pulled back as substrate of a kept dir
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 121 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 0 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d08pv30off', 'd08pv30on', 'd53v', 'd67v', 'd68a3', 'd68d4', 'p85vprod', 'p85vwh', 'p88v5fr', 'p88vprod', 'p90vprod']
+  PASS  INTERLOCK 14: 1 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 9 tokens from 4 file(s); 1 resolve in this tree (['p96vprod'])
+
+  universe 10742 dirs | KEEP 3659 = 45.67 GiB | RELEASE 7083 = 60.14 GiB | out-of-scope (untouched) 270
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    p96vbase                   120     1.09      9
+                    p95vq2db                   120     1.09     14
+                    p95vq2d                    120     1.09      3
+                    p95vprodb                  120     1.07      7
+                    p96voff                    120     1.07      6
+                    p81vq2d2                   120     1.05      3
+                    p85vwhs                    120     1.04      9
+                    p82vtp                     120     1.04      7
+                    p82vtp0                    120     1.04      6
+                    p82voff                    120     1.04      4
+                    p82vcs                     120     1.04      5
+                    p82vk10                    120     1.04      6
+                    p87v20                     120     1.04     11
+                    p87v20f                    120     1.04     12
+                    p88v20fr                   120     1.04     12
+                    p80bcen                    120     1.04     10
+                    p93vprod                   120     1.04     26
+                    p95voffb                   120     1.04      4
+                    p92v13                     120     1.04     29
+                    p92v15                     120     1.04     11
+                    p95voff                    120     1.04      5
+                    p87v5                      120     1.04     12
+                    p88v5r                     120     1.04     16
+                    p87v5f                     120     1.04     26
+                    p90vk                      120     1.04     10
+                    ... and 37 more families
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdvd_20260912.txt  (7083 lines, 60.14 GiB)
+
+==============================================================================
+== pdhd   (/home/xqian/toolkit-dev/wcp-porting-img/pdhd/work)
+==============================================================================
+  PASS  INTERLOCK 1: substrate present (all present)
+  PASS  INTERLOCK 2: no kept symlink resolves into a releasing dir (0 would dangle)
+  PASS  INTERLOCK 3: no live writer (0 of 123 sampled dirs moved, 0 tree-scoped wire-cell procs)
+  PASS  INTERLOCK 4: pre-existing broken symlinks recorded: 0 (the post-state number only means something against this)
+  PASS  INTERLOCK 5: PROTECTED.txt clear of the release (clear)
+  PASS  INTERLOCK 7: no record/label dir in the release (clear)
+  PASS  INTERLOCK 8: no target is itself a symlink (clear)
+  PASS  INTERLOCK 9: manifests name 1 arms, 0 exist, 0 in the release (none)
+  PASS  INTERLOCK 11: every substrate/production/scan name resolves (all resolve)
+  PASS  INTERLOCK 13: hand-scan sources kept: ['d05mON', 'd08cap10', 'd08goff', 'd53h', 'h18b', 'h18s', 'h23conf', 'h25base', 'h25k', 'h25kr', 'h25r', 'h25va', 'h25vb', 'p82bhoff', 'p82hoff', 'stm0']
+  PASS  INTERLOCK 14: 4 uncited families in the release; each maps to a committed doc by round number (0 do not: none)
+  PASS  INTERLOCK 15: nothing released is named by an uncommitted record (clear)
+  PASS  INTERLOCK 16: live-by-uncommitted-record: 9 tokens from 4 file(s); 3 resolve in this tree (['h26conf', 'h26q2d', 'h26q2dprod'])
+
+  universe 3958 dirs | KEEP 1632 = 48.81 GiB | RELEASE 2326 = 33.52 GiB | out-of-scope (untouched) 109
+  --- RELEASE ---   arm                       dirs      GiB  cited
+                    h21z                        61     0.92     37
+                    h22t                        61     0.92     22
+                    h22c                        61     0.92     46
+                    h23a                        61     0.92     31
+                    h22p1                       61     0.92     41
+                    h22p2                       61     0.92     16
+                    h22p3                       61     0.92     16
+                    h22conf                     61     0.92     20
+                    h22g                        61     0.92    110
+                    h21p                        61     0.92     19
+                    h22w                        61     0.92     31
+                    h21f                        61     0.92     43
+                    p96hoff                     61     0.92      7
+                    h22base                     61     0.92     53
+                    h21m                        61     0.92      9
+                    h21x                        61     0.92     11
+                    p81hq2d2                    61     0.90      4
+                    p81hq2d                     61     0.90      6
+                    h21j                        61     0.89     14
+                    p87hoff                     61     0.89      6
+                    p85hoff                     61     0.89     16
+                    h21g                        61     0.89     20
+                    h21c                        61     0.89     11
+                    h21w                        61     0.89     20
+                    p88hoff                     61     0.89     11
+                    ... and 21 more families
+  tier 1 file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tier1_pdhd_20260912.txt  (2326 lines, 33.52 GiB)
+
+==============================================================================
+GRAND TOTAL release 93.66 GiB
+interlock failures: NONE
+
+This script retired nothing.  Review the tier files, then run the retire driver (CONFIRM=yes).
+rc=0

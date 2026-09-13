@@ -381,3 +381,28 @@ CONFIRM=yes ./sweep_tmp_20260910.sh 1       #    6 pins,  3.41 GiB
 CONFIRM=yes ./sweep_tmp_20260910.sh 2       #    2 build trees, 14.5 GiB
 CONFIRM=yes ./sweep_tmp_20260910.sh 3       #    self-sequencing; run it AFTER pdhd
 ```
+
+## 15. Post-state, read back on 2026-09-12 (doc 105)
+
+Nobody wrote down which of §14's commands ran, so the next round read it off
+the disk rather than assume:
+
+- **pdhd tier 1 RAN.** `tier1_pdhd_20260910.txt` lists 3180 dirs and **0 of
+  them exist**. The driver's own guard would now refuse it with "already gone"
+  — the shape of pointing at a previous round's list — so it must not be re-run.
+- **`~/tmp` tier 1 RAN.** All six pins (`d46_libpin`, `d30_libpin`,
+  `d30_libpin_post`, `d30_libpin_r3`, `d30_libpin_r3g`, `d30r2_libpin`) are gone.
+- **`~/tmp` tier 2 RAN.** `wt-merge/build` and `wt-premerge/build` are gone;
+  both worktrees are still registered, with `install/` in place, as intended.
+- **A record was overwritten by the confirm path.** The `1 pdhd` invocation's
+  INTERLOCK A re-plan (2026-09-11 05:00) re-ran `plan_20260910.py` for all
+  three trees, which rewrote every plan-time output (`tier1_*`, `keep_*`,
+  `prebroken_*_20260910.txt` all carry mtime 09-11 05:00). Only one changed in
+  content: the committed `keep_pdvd_20260910.txt` (+120 `p82vprod` lines, arms
+  created after the plan); the prebroken baselines happened to read 0 both
+  times, which is luck rather than protection. The committed keep file was restored
+  from HEAD; the confirm-time version is kept beside it as
+  `keep_pdvd_20260910.confirm-20260911.txt`. Doc 105 fixes the driver so a
+  confirm-time re-plan writes only `*.confirm.txt`.
+
+Every command in §10 and §14 is spent. The next round is doc 105.
