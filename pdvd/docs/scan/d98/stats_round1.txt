@@ -1,0 +1,63 @@
+# doc pdvd/98 -- readouts (round1); d98_plots.py on scan/d98/scores.tsv; perm N=10000, boot N=2000, seed 20260913
+# x = drift_tick (Q-L label), y = mu of the named variant; in-range = 80 <= drift <= 340 cm unless 'all'
+
+== pdhd: 33 scored, tier A 2, in-range 28; expected slope ~1.6
+  tier B in-range Z : n= 28  r=+0.52 [+0.43,+0.63]  rho=+0.56  p_perm=0.0006  slope=+0.45 [+0.32,+0.60]  icpt=+43  resid_rms=58 cm  pull_sd=2.42
+  tier B in-range S : n= 28  r=+0.40 [+0.28,+0.52]  rho=+0.36  p_perm=0.0277  slope=+0.34 [+0.20,+0.51]  icpt=+54  resid_rms=63 cm  pull_sd=4.46
+  tier B in-range M : n= 28  r=+0.49 [+0.38,+0.61]  rho=+0.48  p_perm=0.0051  slope=+0.44 [+0.30,+0.58]  icpt=+52  resid_rms=61 cm  pull_sd=3.03
+  tier B in-range Zw: n= 28  r=+0.57 [+0.47,+0.68]  rho=+0.63  p_perm=0.0003  slope=+0.48 [+0.35,+0.62]  icpt=+34  resid_rms=56 cm  pull_sd=2.47
+  tier B controls: r(q_keep,drift)=+0.17  r(n_pix,drift)=-0.06  r(mu_Z,q_keep)=-0.10  r(mu_Z,ke_best)=-0.33
+  tier B all      Z : n= 33  r=+0.60 [+0.52,+0.69]  rho=+0.70  p_perm=0.0001  slope=+0.41 [+0.31,+0.50]  icpt=+54  resid_rms=54 cm  pull_sd=2.43
+  tier B all      S : n= 33  r=+0.50 [+0.41,+0.59]  rho=+0.59  p_perm=0.0003  slope=+0.33 [+0.23,+0.44]  icpt=+56  resid_rms=58 cm  pull_sd=4.23
+  tier B all      M : n= 33  r=+0.60 [+0.52,+0.70]  rho=+0.66  p_perm=0.0001  slope=+0.43 [+0.34,+0.53]  icpt=+54  resid_rms=57 cm  pull_sd=3.00
+  tier B all      Zw: n= 33  r=+0.63 [+0.55,+0.72]  rho=+0.74  p_perm=0.0001  slope=+0.42 [+0.32,+0.52]  icpt=+50  resid_rms=52 cm  pull_sd=2.51
+  tier A in-range Z : n=2 (too few)
+  tier A in-range S : n=2 (too few)
+  tier A in-range M : n=2 (too few)
+  tier A in-range Zw: n=2 (too few)
+  tier A all      Z : n=2 (too few)
+  tier A all      S : n=2 (too few)
+  tier A all      M : n=2 (too few)
+  tier A all      Zw: n=2 (too few)
+  drift [80,150): n= 5  median mu_Z=88  q16/q84=84/115  median drift=104
+  drift [150,220): n= 5  median mu_Z=113  q16/q84=104/133  median drift=187
+  drift [220,340): n=18  median mu_Z=174  q16/q84=100/212  median drift=299
+  doc 97 pick 028084_0/97 (attached): drift 326  mu_Z 119 +- 20  mu_M 107  ke 30 MeV  frac_lost 0.36  tier B
+  doc 97 pick 028084_1/142 (attached): drift 304  mu_Z 123 +- 22  mu_M 108  ke 31 MeV  frac_lost 0.36  tier B
+  doc 97 pick 029107_3/111 (both): drift 265  mu_Z 208 +- 26  mu_M 216  ke 40 MeV  frac_lost 0.36  tier B
+  doc 97 pick 029107_20/57 (both): drift 311  mu_Z 198 +- 30  mu_M 189  ke 22 MeV  frac_lost 0.40  tier B
+  mu_Z < 90 cm (floor-saturated): 8; mu_Z > 540: 0; drift < 80: 5
+
+== pdvd: 91 scored, tier A 26, in-range 58; expected slope ~1.3
+  tier B in-range Z : n= 58  r=+0.58 [+0.50,+0.66]  rho=+0.61  p_perm=0.0001  slope=+0.43 [+0.35,+0.52]  icpt=+51  resid_rms=36 cm  pull_sd=1.51
+  tier B in-range S : n= 58  r=+0.63 [+0.53,+0.72]  rho=+0.59  p_perm=0.0001  slope=+0.45 [+0.35,+0.55]  icpt=+43  resid_rms=33 cm  pull_sd=1.50
+  tier B in-range M : n= 58  r=+0.66 [+0.58,+0.74]  rho=+0.63  p_perm=0.0001  slope=+0.56 [+0.47,+0.65]  icpt=+47  resid_rms=37 cm  pull_sd=1.84
+  tier B in-range Zw: n= 58  r=+0.58 [+0.50,+0.67]  rho=+0.58  p_perm=0.0001  slope=+0.44 [+0.36,+0.53]  icpt=+51  resid_rms=36 cm  pull_sd=1.57
+  tier B controls: r(q_keep,drift)=+0.17  r(n_pix,drift)=+0.09  r(mu_Z,q_keep)=+0.11  r(mu_Z,ke_best)=+0.27
+  tier B all      Z : n= 91  r=+0.63 [+0.58,+0.68]  rho=+0.65  p_perm=0.0001  slope=+0.31 [+0.27,+0.36]  icpt=+76  resid_rms=32 cm  pull_sd=1.75
+  tier B all      S : n= 91  r=+0.68 [+0.63,+0.73]  rho=+0.68  p_perm=0.0001  slope=+0.32 [+0.27,+0.37]  icpt=+69  resid_rms=29 cm  pull_sd=1.91
+  tier B all      M : n= 91  r=+0.71 [+0.65,+0.76]  rho=+0.73  p_perm=0.0001  slope=+0.43 [+0.38,+0.47]  icpt=+72  resid_rms=35 cm  pull_sd=2.38
+  tier B all      Zw: n= 91  r=+0.63 [+0.58,+0.69]  rho=+0.64  p_perm=0.0001  slope=+0.32 [+0.27,+0.36]  icpt=+76  resid_rms=32 cm  pull_sd=1.86
+  tier A in-range Z : n= 19  r=+0.53 [+0.37,+0.69]  rho=+0.64  p_perm=0.0020  slope=+0.37 [+0.23,+0.54]  icpt=+69  resid_rms=38 cm  pull_sd=1.83
+  tier A in-range S : n= 19  r=+0.67 [+0.49,+0.84]  rho=+0.59  p_perm=0.0044  slope=+0.42 [+0.29,+0.54]  icpt=+57  resid_rms=29 cm  pull_sd=1.42
+  tier A in-range M : n= 19  r=+0.72 [+0.58,+0.85]  rho=+0.74  p_perm=0.0004  slope=+0.59 [+0.46,+0.72]  icpt=+40  resid_rms=36 cm  pull_sd=1.91
+  tier A in-range Zw: n= 19  r=+0.55 [+0.39,+0.71]  rho=+0.64  p_perm=0.0021  slope=+0.40 [+0.25,+0.57]  icpt=+66  resid_rms=38 cm  pull_sd=2.16
+  tier A controls: r(q_keep,drift)=+0.55  r(n_pix,drift)=+0.30  r(mu_Z,q_keep)=+0.07  r(mu_Z,ke_best)=+0.15
+  tier A all      Z : n= 26  r=+0.59 [+0.49,+0.69]  rho=+0.66  p_perm=0.0001  slope=+0.31 [+0.22,+0.40]  icpt=+82  resid_rms=35 cm  pull_sd=1.96
+  tier A all      S : n= 26  r=+0.70 [+0.57,+0.81]  rho=+0.65  p_perm=0.0003  slope=+0.33 [+0.25,+0.40]  icpt=+75  resid_rms=28 cm  pull_sd=1.79
+  tier A all      M : n= 26  r=+0.74 [+0.63,+0.83]  rho=+0.73  p_perm=0.0001  slope=+0.45 [+0.36,+0.53]  icpt=+69  resid_rms=34 cm  pull_sd=2.27
+  tier A all      Zw: n= 26  r=+0.62 [+0.53,+0.72]  rho=+0.67  p_perm=0.0004  slope=+0.33 [+0.24,+0.43]  icpt=+81  resid_rms=34 cm  pull_sd=2.32
+  drift [80,150): n=21  median mu_Z=94  q16/q84=87/120  median drift=114
+  drift [150,220): n=23  median mu_Z=119  q16/q84=102/162  median drift=188
+  drift [220,340): n=14  median mu_Z=173  q16/q84=133/216  median drift=255
+  doc 97 pick 039252_16/88 (attached): drift 113  mu_Z 92 +- 16  mu_M 102  ke 21 MeV  frac_lost 0.34  tier B
+  doc 97 pick 039252_17/88 (attached): drift 136  mu_Z 134 +- 34  mu_M 116  ke 24 MeV  frac_lost 0.21  tier B
+  doc 97 pick 039253_3/79 (both): drift 209  mu_Z 106 +- 20  mu_M 117  ke 15 MeV  frac_lost 0.41  tier B
+  doc 97 pick 039253_8/59 (both): drift 252  mu_Z 253 +- 32  mu_M 236  ke 51 MeV  frac_lost 0.12  tier A
+  mu_Z < 90 cm (floor-saturated): 24; mu_Z > 540: 0; drift < 80: 33
+
+SUCCESS CRITERION (PDVD tier B in-range Z: rho>0 and p_perm<0.01): MET  rho=+0.61 p=0.0001
+
+# model-free width: w2 = 25th percentile over channels of the per-channel tick RMS^2 within +-12 ticks of the column peak, Z crop [ticks^2]
+pdhd: n=32 r=-0.01 rho=-0.03 p_perm=0.5763 slope=-0.0003 ticks^2/cm (expected 2 D_L/v^3 = 0.0127 with D_L 6.20 cm2/s, v 1.576 mm/us) icpt=9.4
+pdvd: n=87 r=+0.07 rho=+0.06 p_perm=0.2774 slope=0.0038 ticks^2/cm (expected 2 D_L/v^3 = 0.0102 with D_L 4.13 cm2/s, v 1.481 mm/us) icpt=9.3
