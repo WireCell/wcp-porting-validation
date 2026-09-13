@@ -1,0 +1,32 @@
+det pdvd mode wirelookup: p97vwl vs p97voff | PDHD record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+=== 0. completeness, loader deaths, pins
+  pdvd p97voff dirs 120 with tracking-pr.root+tracking-stm.root 120 loader-deaths 0
+  [p97voff] libWireCellClus md5 30113227a531  (/home/xqian/tmp/h28/libpin_h28)
+  [p97voff] libWireCellClus md5 AFTER 30113227a531
+  pdvd p97vwl dirs 120 with tracking-pr.root+tracking-stm.root 120 loader-deaths 0
+  [p97vwl] libWireCellClus md5 30113227a531  (/home/xqian/tmp/h28/libpin_h28)
+  [p97vwl] libWireCellClus md5 AFTER 30113227a531
+
+=== 1. T_stm_michel: p97vwl 596 candidates vs p97voff 596
+    branches p97vwl 199, p97voff 198 | only in p97vwl: ['michel_q2d_n_rewired'] | only in p97voff: none
+    candidates with any moved branch 10 / 596; moved branches (candidates): {'michel_q2d_region_mu_u': 5, 'michel_q2d_region_n_u': 5, 'michel_q2d_region_u': 5, 'michel_ke_q2d_region': 4, 'michel_q2d_region': 4, 'michel_q2d_n_role0': 3, 'michel_ke_q2d_ctl': 2, 'michel_q2d_ctl': 2, 'michel_q2d_ctl_v': 2, 'michel_q2d_region_n_v': 2, 'michel_q2d_region_v': 2, 'michel_q2d_ctl_n_v': 1, 'michel_q2d_region_mu_v': 1}
+    branches moved OUTSIDE the registered region/control rule: none
+    is_stm flips 0, michel_found flips 0, reject_bits changes 0, candidates with a moved T_stm_michel_pts row 0
+    michel_q2d_n_rewired: > 0 on 233 / 596 candidates, p50 0 p90 282
+
+=== 2. every tree, zip members, calib json
+    120 events.  trees identical on every event: ['tracking-pr.root:T_bad_ch', 'tracking-pr.root:T_cluster', 'tracking-pr.root:T_proj', 'tracking-pr.root:T_proj_data', 'tracking-pr.root:T_rec_charge', 'tracking-pr.root:T_stm_michel_pts', 'tracking-pr.root:Trun', 'tracking-stm.root:T_bad_ch', 'tracking-stm.root:T_proj', 'tracking-stm.root:T_proj_data', 'tracking-stm.root:T_rec_charge', 'tracking-stm.root:T_stm_eval', 'tracking-stm.root:T_stm_pass', 'tracking-stm.root:Trun']
+    mabc-pr.zip members differ on 0 events  | calib json differ on 0 events 
+
+=== 3. T_stm_michel_2d rows, the negative control (K2)
+    U/V multi | identical                                        57230
+    U/V multi | placement moved                                  54891
+    U/V multi | row only in p97vwl | role 0                      9
+    U/V single | identical                                       354620
+    W | identical                                                270470
+    rows whose (apa, channel) is not in protodunevd-wires-larsoft-v7-uvwfit.json.bz2: 0 | events with no T_stm_michel_2d in either arm: 1
+
+=== 4. census on the record
+    all      p97vwl is_stm (242, 8, 34, 262) michel (142, 8, 19, 107) | p97voff is_stm (242, 8, 34, 262) michel (142, 8, 19, 107) -> same
+
+VERDICT: PASS -- only the registered region/control branches and multi-wire U/V placement moved; W and single-wire rows, verdicts, pts, trees, zips, calib and census identical

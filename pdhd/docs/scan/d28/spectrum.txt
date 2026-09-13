@@ -1,0 +1,30 @@
+hand Michel items: PDHD 44 (off 44, on 44), PDVD 134
+
+=== 1. PDHD, knob off vs on, median over items
+  region MeV                                           off    39.5  on    45.3
+  control MeV                                          off     8.5  on    11.1
+  michel_ke_best                                       off    25.3  on    25.3
+  role-0 cells in the region sum (michel_q2d_n_role0)  off   310.0  on   654.5
+  region plane U: sum MeV-eq off   39.1 on   56.3 | cells off   153 on   262 | control sum off    0.0 on   15.9
+  region plane V: sum MeV-eq off   39.1 on   54.8 | cells off   149 on   273 | control sum off    0.0 on   15.2
+  region plane W: sum MeV-eq off   46.9 on   46.9 | cells off   211 on   211 | control sum off   11.9 on   11.9
+  region dropped plane (none/U/V/W): off [13, 8, 8, 15] on [9, 16, 15, 4]
+  control dropped plane (none/U/V/W): off [15, 12, 9, 8] on [2, 15, 15, 12]
+  APA2 (n 13): region off 37.4 on 37.4 | control off 6.3 on 7.0
+  APA1/3 (n 31): region off 40.2 on 55.3 | control off 14.2 on 13.8
+
+=== 2. the corrected PDHD spectrum against PDVD production
+  PDHD off (was production)    n  44 region median  39.5 [ 37.4, 42.6] p90  59.8 above 52.8  12 (0.273) | control median   8.5 [  6.2, 12.7] above 10 0.477
+  PDHD on  (new production)    n  44 region median  45.3 [ 42.7, 54.4] p90  70.2 above 52.8  20 (0.455) | control median  11.1 [  7.5, 13.1] above 10 0.523
+  PDVD p96vprod                n 134 region median  34.3 [ 32.1, 35.8] p90  51.5 above 52.8  12 (0.090) | control median   2.6 [  2.5,  3.1] above 10 0.112
+  PDHD on vs PDVD region: KS p 0.0001, Mann-Whitney p 0.0001
+  per-item region shift on - off: p10/p50/p90 +0.0/+2.9/+23.0; unchanged 8
+  largest shifts:
+    029107_3/107    APA1/3 region   29.4 ->   70.0  control  97.6 ->  21.0  role-0 cells 198 -> 1011
+    028084_3/72     APA1/3 region   67.6 ->  106.2  control  17.4 ->  16.9  role-0 cells 487 -> 1114
+    028084_8/110    APA1/3 region   38.5 ->   70.3  control  47.0 ->  15.5  role-0 cells 133 -> 733
+    028084_12/117   APA1/3 region   43.6 ->   73.1  control  96.6 ->  26.1  role-0 cells 131 -> 1160
+    029107_3/99     APA1/3 region   16.4 ->   40.7  control   3.0 ->   3.8  role-0 cells 208 -> 644
+    028084_18/108   APA1/3 region   59.8 ->   79.9  control  12.6 ->  16.3  role-0 cells 283 -> 594
+    029107_9/109    APA1/3 region   45.6 ->   63.8  control  21.8 ->  38.4  role-0 cells 328 -> 715
+    028084_0/97     APA1/3 region   40.2 ->   57.0  control  26.7 ->  23.4  role-0 cells 111 -> 455

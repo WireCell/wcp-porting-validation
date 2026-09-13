@@ -1,0 +1,18 @@
+=== K3 (PDHD): U/V role-1 cells beyond 100 cm, by the channel's active-face wires
+  NONE: not on disk
+  NONE: not on disk
+
+=== K4 (PDHD): against doc 27's offline bounds
+  arms not on disk
+
+=== P1 (PDVD): how much the lookup moves
+  candidates 596; region or control moved on 6 (0.010); registered < 0.05
+  michel_q2d_n_rewired > 0 on 233, max 748
+  hand Michel (n 134) michel_ke_q2d_region: off 34.35 -> on 34.35
+  hand Michel (n 134) michel_ke_q2d_ctl: off 2.60 -> on 2.59
+    moved 039252_3/40: region 37.85 -> 37.85, control 2.55 -> 2.52, rewired 282
+    moved 039349_11/46: region 49.95 -> 49.90, control 3.90 -> 3.90, rewired 25
+    moved 039349_35/62: region 24.82 -> 24.82, control 0.09 -> 0.13, rewired 437
+    moved 039349_41/51: region 34.63 -> 34.44, control 3.36 -> 3.36, rewired 473
+    moved 039349_44/68: region 2.57 -> 2.74, control 28.66 -> 28.66, rewired 458
+    moved 039349_58/72: region 45.96 -> 45.97, control 6.12 -> 6.12, rewired 23

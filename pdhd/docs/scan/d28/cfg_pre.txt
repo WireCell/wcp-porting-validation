@@ -1,0 +1,13 @@
+compile h28cfg0 rc=0
+compile h28cfgT rc=0
+  h28cfg0 270398 bytes
+  h28cfgT 270441 bytes
+  PRE file md5 170a2e9e8cf7
+--- h28cfg0 -> h28cfgT: want exactly the one key
+before 95 keys -> after 96 keys
+ADDED   (1):
+  + michel_q2d_region_wire_lookup      True
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 1 added, 0 removed, 0 changed

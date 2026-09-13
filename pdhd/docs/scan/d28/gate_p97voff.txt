@@ -1,0 +1,21 @@
+det pdvd mode identical: p97voff vs p96vprod | PDHD record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+=== 0. completeness, loader deaths, pins
+  pdvd p96vprod dirs 120 with tracking-pr.root+tracking-stm.root 120 loader-deaths 0
+  pdvd p97voff dirs 120 with tracking-pr.root+tracking-stm.root 120 loader-deaths 0
+  [p97voff] libWireCellClus md5 30113227a531  (/home/xqian/tmp/h28/libpin_h28)
+  [p97voff] libWireCellClus md5 AFTER 30113227a531
+
+=== 1. T_stm_michel: p97voff 596 candidates vs p96vprod 596
+    branches p97voff 198, p96vprod 198 | only in p97voff: none | only in p96vprod: none
+    candidates with any moved branch 0 / 596; moved branches (candidates): none
+    branches moved OUTSIDE the no-change rule: none
+    is_stm flips 0, michel_found flips 0, reject_bits changes 0, candidates with a moved T_stm_michel_pts row 0
+
+=== 2. every tree, zip members, calib json
+    120 events.  trees identical on every event: ['tracking-pr.root:T_bad_ch', 'tracking-pr.root:T_cluster', 'tracking-pr.root:T_proj', 'tracking-pr.root:T_proj_data', 'tracking-pr.root:T_rec_charge', 'tracking-pr.root:T_stm_michel', 'tracking-pr.root:T_stm_michel_2d', 'tracking-pr.root:T_stm_michel_pts', 'tracking-pr.root:Trun', 'tracking-stm.root:T_bad_ch', 'tracking-stm.root:T_proj', 'tracking-stm.root:T_proj_data', 'tracking-stm.root:T_rec_charge', 'tracking-stm.root:T_stm_eval', 'tracking-stm.root:T_stm_pass', 'tracking-stm.root:Trun']
+    mabc-pr.zip members differ on 0 events  | calib json differ on 0 events 
+
+=== 4. census on the record
+    all      p97voff is_stm (242, 8, 34, 262) michel (142, 8, 19, 107) | p96vprod is_stm (242, 8, 34, 262) michel (142, 8, 19, 107) -> same
+
+VERDICT: PASS -- BIT-IDENTICAL on every branch, row, tree, zip, calib and census

@@ -1,0 +1,23 @@
+det pdhd mode identical: h26q2dprod vs h26conf | PDHD record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+=== 0. completeness, loader deaths, pins
+  pdhd h26conf dirs 61 with tracking-pr.root+tracking-stm.root 61 loader-deaths 0
+  pdhd h26q2dprod dirs 61 with tracking-pr.root+tracking-stm.root 61 loader-deaths 0
+
+=== 1. T_stm_michel: h26q2dprod 341 candidates vs h26conf 341
+    branches h26q2dprod 198, h26conf 149 | only in h26q2dprod: ['michel_ke_q2d', 'michel_ke_q2d_ctl', 'michel_ke_q2d_gamma', 'michel_ke_q2d_region', 'michel_ke_q2d_total', 'michel_q2d', 'michel_q2d_ctl', 'michel_q2d_ctl_dropped_plane', 'michel_q2d_ctl_n_u', 'michel_q2d_ctl_n_v', 'michel_q2d_ctl_n_w', 'michel_q2d_ctl_u', 'michel_q2d_ctl_v', 'michel_q2d_ctl_valid', 'michel_q2d_ctl_w', 'michel_q2d_dropped_plane', 'michel_q2d_gamma', 'michel_q2d_mu_u', 'michel_q2d_mu_v', 'michel_q2d_mu_w', 'michel_q2d_n_role0', 'michel_q2d_n_u', 'michel_q2d_n_v', 'michel_q2d_n_w', 'michel_q2d_nx_u', 'michel_q2d_nx_v', 'michel_q2d_nx_w', 'michel_q2d_raw_u', 'michel_q2d_raw_v', 'michel_q2d_raw_w', 'michel_q2d_reason', 'michel_q2d_region', 'michel_q2d_region_dropped_plane', 'michel_q2d_region_mu_u', 'michel_q2d_region_mu_v', 'michel_q2d_region_mu_w', 'michel_q2d_region_n_u', 'michel_q2d_region_n_v', 'michel_q2d_region_n_w', 'michel_q2d_region_nd_u', 'michel_q2d_region_nd_v', 'michel_q2d_region_nd_w', 'michel_q2d_region_u', 'michel_q2d_region_v', 'michel_q2d_region_w', 'michel_q2d_u', 'michel_q2d_v', 'michel_q2d_valid', 'michel_q2d_w'] | only in h26conf: none
+    candidates with any moved branch 0 / 341; moved branches (candidates): none
+    branches moved OUTSIDE the no-change rule: none
+    is_stm flips 0, michel_found flips 0, reject_bits changes 0, candidates with a moved T_stm_michel_pts row 0
+
+=== 2. every tree, zip members, calib json
+    61 events.  trees identical on every event: ['tracking-pr.root:T_bad_ch', 'tracking-pr.root:T_cluster', 'tracking-pr.root:T_proj', 'tracking-pr.root:T_proj_data', 'tracking-pr.root:T_rec_charge', 'tracking-pr.root:T_stm_michel_pts', 'tracking-pr.root:Trun', 'tracking-stm.root:T_bad_ch', 'tracking-stm.root:T_proj', 'tracking-stm.root:T_proj_data', 'tracking-stm.root:T_rec_charge', 'tracking-stm.root:T_stm_eval', 'tracking-stm.root:T_stm_pass', 'tracking-stm.root:Trun']
+    *** tracking-pr.root:T_stm_michel differs on 61 events: 028084_0 028084_1 028084_10 028084_11 028084_12 028084_13 028084_14 028084_15
+    *** tracking-pr.root:T_stm_michel_2d (only one arm) differs on 61 events: 028084_0 028084_1 028084_10 028084_11 028084_12 028084_13 028084_14 028084_15
+    mabc-pr.zip members differ on 0 events  | calib json differ on 0 events 
+
+=== 4. census on the record
+    strict   h26q2dprod is_stm (89, 1, 15, 67) michel (47, 3, 10, 38) | h26conf is_stm (89, 1, 15, 67) michel (47, 3, 10, 38) -> same
+    majority h26q2dprod is_stm (92, 2, 16, 68) michel (48, 3, 10, 40) | h26conf is_stm (92, 2, 16, 68) michel (48, 3, 10, 40) -> same
+    all      h26q2dprod is_stm (114, 2, 33, 105) michel (65, 3, 16, 54) | h26conf is_stm (114, 2, 33, 105) michel (65, 3, 16, 54) -> same
+
+VERDICT: *** FAIL: branch set; tree differs ***

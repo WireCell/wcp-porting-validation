@@ -1,0 +1,40 @@
+doc pdhd/28 -- the wire-lookup fix for the region Michel energy (doc pdhd/27 sec 2).  Written BEFORE any arm ran.
+
+CODE: toolkit clus/, new knob michel_q2d_region_wire_lookup (bool, C++ default false), new pure function
+stm_michel_pick_wire (StmMichelFunctions) with doctests.  Pin after install: /home/xqian/tmp/h28/libpin_h28.
+
+ARMS (fresh tags, M13):
+  h28off   PDHD production file, no TLA, new pin
+  p97voff  PDVD production file, no TLA, new pin
+  h28wl    PDHD production file + -S stm_michel_extra={michel_q2d_region_wire_lookup:true}, new pin
+  p97vwl   PDVD production file + the same TLA, new pin            (measurement only; PDVD is NOT flipped)
+  h28prod  PDHD flipped file (one key added), no TLA, new pin
+
+GATES AND PREDICTIONS
+G1  h28off == h26q2dprod (libpin_p96): every T_stm_michel branch, every T_stm_michel_pts row, every tree in
+    tracking-pr.root / tracking-stm.root (T_stm_michel_2d included), every mabc-pr.zip member, every calib json,
+    61/61 events.  FAIL => stop, no knob-on number is read.
+G2  p97voff == p96vprod: the same, PDVD events.  FAIL => stop.
+K1  h28wl vs h28off (PDHD): the ONLY moved T_stm_michel branches are in
+      michel_q2d_region_{u,v,w}, michel_q2d_region_mu_{u,v,w}, michel_q2d_region_n_{u,v,w}, michel_q2d_region_nd_{u,v,w},
+      michel_q2d_region_dropped_plane, michel_q2d_region, michel_ke_q2d_region, michel_q2d_n_role0,
+      michel_q2d_ctl_{u,v,w}, michel_q2d_ctl_n_{u,v,w}, michel_q2d_ctl_dropped_plane, michel_q2d_ctl, michel_ke_q2d_ctl
+    plus exactly one NEW branch michel_q2d_n_rewired.  0 is_stm / michel_found / reject_bits changes; every
+    T_stm_michel_pts row, every other tree, zip member, calib json and the smx27 census identical.  The association
+    branches (michel_q2d_{u,v,w}, michel_ke_q2d, _gamma, _total, _raw_*, _nx_*) do NOT move.
+K2  NEGATIVE CONTROL (T_stm_michel_2d, h28wl vs h28off): every W row identical in every column; every U/V row whose
+    channel maps to ONE (face, wire) identical in every column.  Rows may be added/removed only as role-0 U/V rows.
+K3  h28wl: michel_q2d_n_rewired > 0 on every APA1/APA3 is_stm & michel_found candidate that has U/V role-1 cells;
+    the U/V role-1 rows' recorded d_stop_cm beyond 100 cm fall from 0.64 (other face) / 0.49 (second segment) to
+    under 0.05.
+K4  AGAINST doc 27's offline bounds (d27/ghost_twin.json), PDHD hand Michel pooled medians:
+      region  38.9 <= median <= 44.0 MeV (+-1 MeV tolerance: the C++ adds role-0 cells the table never had and picks
+              by coverage, not by distance alone)
+      control  7.8 <= median <= 10.2 MeV (+-1 MeV)
+    and per item on >= 80 % of the 70 is_stm & michel_found candidates: fixlo - 2 MeV <= C++ <= fix + 2 MeV.
+    A miss is reported as a finding about the offline bound, not tuned away.
+P1  p97vwl vs p97voff (PDVD): same branch rule as K1; 0 verdict changes; the number of candidates whose region or
+    control moves is REPORTED (prediction: fewer than 5 % of 596, since PDVD had 0 cells beyond 100 cm).
+F   PDHD flip: compiled config of the flipped file vs production differs by exactly one added key
+    (michel_q2d_region_wire_lookup: true); vs h28wl's TLA config 0/0/0; PDVD's file unchanged.
+    h28prod == h28wl on everything (G1's comparator).

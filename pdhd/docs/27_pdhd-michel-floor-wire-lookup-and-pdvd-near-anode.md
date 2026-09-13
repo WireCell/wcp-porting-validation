@@ -4,6 +4,13 @@ Follow-up to doc pdhd/26, which ended on two open items (its §5): why PDHD's re
 body control against PDVD's 2.6, and why PDVD's x > 0 volume reads a lower dQ/dx near its anode. **No code or
 configuration is changed here**; the fix for the defect in §2 is proposed, not made.
 
+> **Update 2026-09-12 (doc pdhd/28).** The fix is made and in PDHD production.
+> * **The setting:** `michel_q2d_region_wire_lookup`, off by default.
+> * **Setting off:** bit-identical to production on both detectors.
+> * **Setting on:** no verdict moved.
+> * **The corrected hand-Michel region energy reads higher than this doc's offline bound:** 45.3 MeV against
+>   38.9–44.0, with a 11.1 MeV control. The fix restores unclaimed cells the offline correction could not see.
+
 ## Headline
 
 1. **PDHD's higher floor is real and mostly not a bug.** A detector-neutral control, using only the collection

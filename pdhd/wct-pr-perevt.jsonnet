@@ -428,6 +428,22 @@ function(
         michel_q2d_region_cm: 10.0,
         michel_q2d_region_ctl_cm: 35.0,
         michel_q2d_region_scope: 1,
+        // ---- doc pdhd/28: the WIRE LOOKUP for the region / control distances, PDHD PRODUCTION (owner's go
+        // 2026-09-12, "fix the bug", after doc pdhd/27 sec 2 found it) ----
+        // Without it a 2-D cell's distance to the stop / control centre is taken on its readout channel's FIRST
+        // (face, wire).  Every PDHD U/V channel wraps onto both APA faces (face 0 listed first) and 348 of 800 have
+        // two segments on one face, so on APA1/APA3 every muon-footprint U/V cell, and on every APA about half the
+        // two-segment ones, were measured on a wire the charge never touched (49-74 % of them beyond 100 cm).
+        // true: the cell is the first in-radius incarnation its own blobs cover (stm_michel_pick_wire).
+        // C++ default false.  Gates (docs/scan/d28/): the new build with the key absent is bit-identical to
+        // production h26q2dprod on 61/61 events (gate_h28off.txt); with it on (arm h28wl) only the region /
+        // control branches, michel_q2d_n_role0, the new michel_q2d_n_rewired and multi-wire U/V rows of
+        // T_stm_michel_2d move -- every W row, verdict, point row, tree, zip, calib and the smx27 census
+        // identical (gate_h28wl.txt).  U/V cells beyond 100 cm 0.49-0.74 -> 0.000; controls with no U/V cell
+        // 91 -> 6 of 341.  THE REGION READS HIGHER, not lower: hand Michel median 39.5 -> 45.3 MeV, above the
+        // 52.8 MeV endpoint 12 -> 20 of 44, body control 8.5 -> 11.1 -- the induction planes and unclaimed cells
+        // it restores carry the muon fit's under-prediction (doc pdhd/27 sec 1.4).  No verdict reads any of it.
+        michel_q2d_region_wire_lookup: true,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

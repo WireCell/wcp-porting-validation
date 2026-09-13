@@ -1,0 +1,42 @@
+=== K3 (PDHD): U/V role-1 cells beyond 100 cm, by the channel's active-face wires
+  [h28off]
+    channel has 1 active-face wire, recorded on the OTHER face     n  38727  p50  199.4  beyond 100 cm 0.740
+    channel has 1 active-face wire, recorded on the active face    n  51056  p50   10.5  beyond 100 cm 0.000
+    channel has 2 active-face wires, recorded on the OTHER face    n  30383  p50  108.0  beyond 100 cm 0.522
+    channel has 2 active-face wires, recorded on the active face   n  38359  p50   28.5  beyond 100 cm 0.492
+    candidates 341; control with no U and no V cell 91
+  [h28wl]
+    channel has 1 active-face wire, recorded on the OTHER face     n    358  p50   13.9  beyond 100 cm 0.000
+    channel has 1 active-face wire, recorded on the active face    n  89425  p50   10.6  beyond 100 cm 0.000
+    channel has 2 active-face wires, recorded on the OTHER face    n    176  p50   14.6  beyond 100 cm 0.000
+    channel has 2 active-face wires, recorded on the active face   n  68566  p50   11.0  beyond 100 cm 0.000
+    candidates 341; control with no U and no V cell 6
+    michel_q2d_n_rewired APA0: candidates 109, > 0 on 53, p50 0
+    michel_q2d_n_rewired APA1: candidates 56, > 0 on 56, p50 818
+    michel_q2d_n_rewired APA2: candidates 91, > 0 on 51, p50 36
+    michel_q2d_n_rewired APA3: candidates 80, > 0 on 80, p50 839
+
+=== K4 (PDHD): against doc 27's offline bounds
+  join check: 70 / 70 ghost_twin items found in h28off; max |chain - rec| 5.35e-05 MeV
+  hand Michel (n 44) region: off 39.5 -> on 45.3 MeV | registered bound [38.9, 44.0] +-1 -> MISSED
+  hand Michel (n 44) control: off 8.5 -> on 11.1 MeV | registered bound [7.8, 10.2] +-1 -> HELD
+  per candidate (both estimators): inside [fixlo-2, fix+2] on 121 / 140 = 0.864 (registered >= 0.80 -> HELD)
+    outside: 028084_10/108 ctl C++ 20.8 bounds 14.9..15.2
+    outside: 028084_12/117 region C++ 73.1 bounds 43.6..53.1
+    outside: 028084_18/108 ctl C++ 16.3 bounds 6.2..8.2
+    outside: 028084_21/26 region C++ 38.0 bounds 29.7..35.0
+    outside: 028084_2/49 ctl C++ 17.9 bounds 11.9..10.1
+    outside: 028084_3/72 region C++ 106.2 bounds 67.6..103.2
+    outside: 028084_8/110 region C++ 70.3 bounds 38.5..48.4
+    outside: 029107_10/44 ctl C++ 50.1 bounds 20.1..36.4
+    outside: 029107_18/146 ctl C++ 18.5 bounds 42.2..21.7
+    outside: 029107_1/85 region C++ 64.6 bounds 53.8..58.1
+    outside: 029107_3/107 region C++ 70.0 bounds 29.4..40.8
+    outside: 029107_3/111 region C++ 43.9 bounds 41.0..37.9
+    outside: 029107_4/56 ctl C++ 0.1 bounds 8.1..8.1
+    outside: 029107_4/58 ctl C++ 10.0 bounds 5.3..4.3
+    outside: 029107_4/69 ctl C++ 22.0 bounds 18.3..15.4
+  hand Michel region shift on - off: p10/p50/p90 +0.0/+2.9/+23.0; above 52.8 MeV off 12 on 20
+
+=== P1 (PDVD): how much the lookup moves
+  arms not on disk

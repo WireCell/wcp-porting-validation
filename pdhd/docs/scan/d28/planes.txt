@@ -1,0 +1,6 @@
+pdhd h28off    APA2   n  13: region sum MeV-eq median U/V/W  40.7/ 42.2/ 37.1 | per-item U/W 1.05 V/W 1.14 | U+V by role: claimed 72.5, footprint 14.1, unclaimed 0.0, cross-shared 0.0, on two-active-wire channels 0.7
+pdhd h28off    APA1/3 n  31: region sum MeV-eq median U/V/W  37.2/ 37.9/ 54.5 | per-item U/W 0.88 V/W 0.75 | U+V by role: claimed 78.7, footprint 0.0, unclaimed 0.0, cross-shared 0.0, on two-active-wire channels 32.8
+pdhd h28wl     APA2   n  13: region sum MeV-eq median U/V/W  40.7/ 48.8/ 37.1 | per-item U/W 1.14 V/W 1.15 | U+V by role: claimed 72.5, footprint 15.0, unclaimed 0.0, cross-shared 0.0, on two-active-wire channels 25.6
+pdhd h28wl     APA1/3 n  31: region sum MeV-eq median U/V/W  62.2/ 56.5/ 54.5 | per-item U/W 1.19 V/W 1.05 | U+V by role: claimed 78.3, footprint 21.3, unclaimed 1.5, cross-shared 0.0, on two-active-wire channels 39.9
+pdvd p96vprod  all    n 134: region sum MeV-eq median U/V/W  40.0/ 39.8/ 34.3 | per-item U/W 1.10 V/W 1.11 | U+V by role: claimed 61.3, footprint 10.8, unclaimed 0.4, cross-shared 0.0
+pdvd p97vwl    all    n 134: region sum MeV-eq median U/V/W  40.0/ 39.8/ 34.3 | per-item U/W 1.10 V/W 1.11 | U+V by role: claimed 61.3, footprint 10.8, unclaimed 0.4, cross-shared 0.0

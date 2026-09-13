@@ -1,0 +1,33 @@
+det pdhd mode wirelookup: h28wl vs h28off | PDHD record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+=== 0. completeness, loader deaths, pins
+  pdhd h28off dirs 61 with tracking-pr.root+tracking-stm.root 61 loader-deaths 0
+  [h28off] libWireCellClus md5 30113227a531  (/home/xqian/tmp/h28/libpin_h28)
+  [h28off] libWireCellClus md5 AFTER 30113227a531
+  pdhd h28wl dirs 61 with tracking-pr.root+tracking-stm.root 61 loader-deaths 0
+  [h28wl] libWireCellClus md5 30113227a531  (/home/xqian/tmp/h28/libpin_h28)
+  [h28wl] libWireCellClus md5 AFTER 30113227a531
+
+=== 1. T_stm_michel: h28wl 341 candidates vs h28off 341
+    branches h28wl 199, h28off 198 | only in h28wl: ['michel_q2d_n_rewired'] | only in h28off: none
+    candidates with any moved branch 245 / 341; moved branches (candidates): {'michel_q2d_n_role0': 241, 'michel_q2d_ctl': 221, 'michel_q2d_region': 216, 'michel_ke_q2d_region': 210, 'michel_ke_q2d_ctl': 209, 'michel_q2d_ctl_n_v': 190, 'michel_q2d_region_n_u': 184, 'michel_q2d_region_n_v': 184, 'michel_q2d_region_mu_v': 183, 'michel_q2d_region_mu_u': 182, 'michel_q2d_ctl_v': 181, 'michel_q2d_ctl_n_u': 178, 'michel_q2d_region_v': 176, 'michel_q2d_region_u': 172, 'michel_q2d_ctl_u': 168, 'michel_q2d_ctl_dropped_plane': 125, 'michel_q2d_region_dropped_plane': 116, 'michel_q2d_region_nd_u': 4, 'michel_q2d_region_nd_v': 2}
+    branches moved OUTSIDE the registered region/control rule: none
+    is_stm flips 0, michel_found flips 0, reject_bits changes 0, candidates with a moved T_stm_michel_pts row 0
+    michel_q2d_n_rewired: > 0 on 243 / 341 candidates, p50 387 p90 991
+
+=== 2. every tree, zip members, calib json
+    61 events.  trees identical on every event: ['tracking-pr.root:T_bad_ch', 'tracking-pr.root:T_cluster', 'tracking-pr.root:T_proj', 'tracking-pr.root:T_proj_data', 'tracking-pr.root:T_rec_charge', 'tracking-pr.root:T_stm_michel_pts', 'tracking-pr.root:Trun', 'tracking-stm.root:T_bad_ch', 'tracking-stm.root:T_proj', 'tracking-stm.root:T_proj_data', 'tracking-stm.root:T_rec_charge', 'tracking-stm.root:T_stm_eval', 'tracking-stm.root:T_stm_pass', 'tracking-stm.root:Trun']
+    mabc-pr.zip members differ on 0 events  | calib json differ on 0 events 
+
+=== 3. T_stm_michel_2d rows, the negative control (K2)
+    U/V multi | identical                                        177169
+    U/V multi | placement moved                                  94199
+    U/V multi | row only in h28wl | role 0                       85117
+    W | identical                                                170029
+    rows whose (apa, channel) is not in protodunehd-wires-larsoft-v1.json.bz2: 0 | events with no T_stm_michel_2d in either arm: 0
+
+=== 4. census on the record
+    strict   h28wl is_stm (89, 1, 15, 67) michel (47, 3, 10, 38) | h28off is_stm (89, 1, 15, 67) michel (47, 3, 10, 38) -> same
+    majority h28wl is_stm (92, 2, 16, 68) michel (48, 3, 10, 40) | h28off is_stm (92, 2, 16, 68) michel (48, 3, 10, 40) -> same
+    all      h28wl is_stm (114, 2, 33, 105) michel (65, 3, 16, 54) | h28off is_stm (114, 2, 33, 105) michel (65, 3, 16, 54) -> same
+
+VERDICT: PASS -- only the registered region/control branches and multi-wire U/V placement moved; W and single-wire rows, verdicts, pts, trees, zips, calib and census identical
