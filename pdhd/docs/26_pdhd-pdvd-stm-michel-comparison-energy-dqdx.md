@@ -24,6 +24,13 @@ energy estimation for this"* and *"Please flip it as default for PDHD"*.
    **8.5 MeV on PDHD against 2.6 on PDVD** — a floor difference about as large as the region difference. PDHD's
    region energy carries a larger non-Michel floor. The pre-registered expectation that PDHD would read
    *lower* (E1/E2 in `scan/d26/preregistered.txt`) **missed**.
+
+   > **Update 2026-09-12 (doc pdhd/28, §3.4): on the corrected production arm this conclusion no longer follows.**
+   > * **What changed.** PDHD production now takes the U/V distances on the right wire. The hand-Michel region reads
+   >   **45.3 [42.7, 54.1] MeV** with **20 of 44 (0.455) above 52.8 MeV**. The body control reads **11.1 MeV**.
+   > * **The floor no longer covers the gap.** The region gap to PDVD is 11.0 MeV and the control gap 8.5.
+   > * **Neither reading can be claimed.** The region estimator is not validated as a Michel energy on PDHD, so
+   >   neither "a more energetic PDHD Michel" nor "only a larger floor" can be claimed.
 5. **dQ/dx vs RR (§4).** **Both detectors match their own expectation on the plateau, with no free scale, and
    both fall short of it at the stop.** On hand stoppers the chain accepted on its own Bragg reading (PDHD 78,
    PDVD 213), the mean dQ/dx over the expectation is **0.95–1.01 on PDHD** and **0.92–0.99 on PDVD** from 8 to
@@ -37,6 +44,13 @@ energy estimation for this"* and *"Please flip it as default for PDHD"*.
 **Production.** §1 flips five keys into `pdhd/wct-pr-perevt.jsonnet` on the owner's go. No C++ change
 (toolkit `81ff37d7`, pin `libpin_p96`, `libWireCellClus` md5 `4e1db810`), no other detector's file, no record
 or label written, new tags only. Everything after §1 is read-only.
+
+**Update 2026-09-12 (doc pdhd/28).** A later C++ fix, toolkit `f516b013` (`michel_q2d_region_wire_lookup`), is on in
+PDHD production. Production is now arm `h28prod` (pin `libpin_h28`).
+* **§2 holds as written.** The fix is energy-only: doc 28's gate shows 0 `is_stm` / `michel_found` / reject-bit
+  changes on 341 candidates.
+* **§4 is untouched.** It reads `T_stm_michel_pts`, which the fix does not write.
+* **§3 moves.** §3.1–3.3 are the pre-fix arm; §3.4 is production now.
 
 ## 0. Repro
 
@@ -61,6 +75,11 @@ python3 $D/h25/d25_bragg_michel.py --pdhd h26conf,h26q2dprod --pdvd p96vprod > $
 python3 $X/d26_compare.py       > $X/compare.txt        # sec 2: 26_eff_purity.png, 26_eff_purity_units.png
 python3 $X/d26_michel_energy.py > $X/michel_energy.txt  # sec 3: 26_michel_energy{,_split,_cdf}.png
 python3 $X/d26_dqdx_rr.py       > $X/dqdx_rr.txt        # sec 4: 26_dqdx_rr{,_split}.png, 26_plateau_vs_drift.png
+
+# 3. sec 3.4, after doc pdhd/28 flipped the wire lookup (production arm h28prod; the default call above still reproduces sec 3.1-3.3)
+python3 $X/d26_michel_energy.py --pdhd h28prod --figsuffix _h28prod > $X/michel_energy_h28prod.txt   # 26_michel_energy{,_split,_cdf}_h28prod.png
+python3 $I/pdvd/docs/nf_sp_img_clus/scripts/d81_readout.py --det pdhd --arm h28prod --json <scratch>/readout_h28prod.json   # + d81_tail.py
+#   -> $X/q2d_readout_pdhd_h28prod.txt (identical to q2d_readout_pdhd.txt but for the json path)
 ```
 
 **Conventions (doc pdhd/25 §0, unchanged).** PDHD truth = record `smx27`, owner precedence
@@ -213,6 +232,9 @@ PDVD's census is the same from `p93vprod` to `p96vprod`: docs pdvd/95–96 only 
 
 ## 3. The Michel energy of what the chain identifies
 
+> **Update 2026-09-12 (doc pdhd/28).** §3.1–3.3 are on `h26q2dprod`, before the wire-lookup fix. PDHD production is
+> now `h28prod`. Its numbers are in §3.4, and they change §3.2's conclusion.
+
 `d26_michel_energy.py` → `scan/d26/michel_energy.txt`. Selection: `is_stm ∧ michel_found` on the judged
 populations; spectra on **hand Michel items** (PDHD strict 44, PDVD 134). The offline re-derivation of the
 region sum from `T_stm_michel_2d` with the C++ rule reproduces `michel_q2d_region_{u,v,w}` and the cell
@@ -245,7 +267,8 @@ The 7 non-Michel items in PDHD's selection read 21.3 MeV median (region), PDVD's
 
 ### 3.2 What the PDHD excess is — and is not
 
-> **Update 2026-09-12 (doc pdhd/27 §2–4).** The conclusion below stands; its attribution is refined.
+> **Update 2026-09-12 (doc pdhd/27 §2–4).** The conclusion below held on this pre-fix arm; its attribution is
+> refined here. **§3.4 shows it no longer follows on the corrected production arm.**
 > * **The 8.5 MeV control has three measured parts:**
 >   * the fit under-predicts PDHD's collection charge twice as much, over more muon in the foreshortened W view
 >     (neutral W-only control 6.5 vs 2.5 MeV);
@@ -295,6 +318,70 @@ both detectors.
 ![](figs/26_michel_energy_cdf.png)
 *Left: cumulative distributions, region (solid) and `michel_ke_best` (dashed). Right: region vs association per
 item.*
+
+### 3.4 Refresh on the corrected production arm `h28prod` (doc pdhd/28)
+
+`d26_michel_energy.py --pdhd h28prod --figsuffix _h28prod` → `scan/d26/michel_energy_h28prod.txt`. Same populations,
+same record and the same PDVD arm as §3.1; only the PDHD arm changes.
+* **Twin still holds.** The offline region twin reproduces `michel_q2d_region_{u,v,w}` and the cell counts on
+  133/133 PDHD candidates (worst relative deviation 5.9e-15). The split variables are still the estimator's own
+  cells under the new wire lookup.
+* **Association readout unchanged.** `d81_readout` / `d81_tail` on `h28prod` match `h26q2dprod` line for line, apart
+  from the json path. The fix moved distances, not association-cell membership or the association energies.
+
+![](figs/26_michel_energy_h28prod.png)
+*As §3's first figure, PDHD on `h28prod`. Middle panel unchanged: the fix does not touch `michel_ke_best`.*
+
+| hand Michel items | PDHD pre-fix `h26q2dprod` (§3.1) | **PDHD production `h28prod`** (n 44) | PDVD `p96vprod` (n 134) |
+|---|---|---|---|
+| **region**, median [68 % bootstrap] | 39.5 [37.4, 42.3] | **45.3 [42.7, 54.1] MeV** | 34.3 [32.0, 35.7] |
+| region p10 / p90 / max | 18.0 / 59.8 / 69.8 | 23.1 / 70.2 / 106.2 | 17.4 / 51.5 / 90.9 |
+| region above 52.8 MeV | 12 (0.273) | **20 (0.455)** | 12 (0.090) |
+| **body control**, median | 8.5 | **11.1** | 2.6 |
+| region − body control, median (diagnostic) | 26.3 [21.9, 29.5]; ≤ 0 on 6 | **32.7 [30.7, 36.6]**; ≤ 0 on 2 | 29.3 [27.1, 30.8]; ≤ 0 on 3 |
+| `michel_ke_best`, median | 25.3 | 25.3 (unchanged) | 23.3 |
+| region / `michel_ke_best`, median | 1.551 | 1.767 | 1.391 |
+| PDHD vs PDVD, region | KS D 0.205, p 0.104; MW p 0.028 | **KS D 0.372, p < 0.001; MW p < 0.001** | |
+| attached / bridged median (n) | 39.3 (31) / 42.7 (13) | 43.9 (31) / 59.4 (13) | 33.0 (109) / 39.5 (25) |
+| **no** / **some** cross-shared cell in the region, median (n) | 37.3 (29) / 42.7 (15) | **53.5 (27) / 42.7 (17)** | 34.4 (94) / 34.2 (40) |
+| judged selection with any cross-shared cell in the region sum | 19/51 | 21/51 | 40/139 |
+| cross-shared share of the region sum, p90 | 0.098 | 0.117 | 0.024 |
+| above the endpoint with a body control > 10 MeV | 6 of 12 | **14 of 20** | 1 of 12 |
+| non-Michel items in the selection, region median | 21.3 (n 7) | 21.3 (n 7) | 29.7 (n 5) |
+
+Split medians are the legends of `figs/26_michel_energy_split_h28prod.png`, printed by the same script.
+
+**Reading it.**
+* **The corrected PDHD region reads higher, and §3.2's argument no longer closes.**
+  * On the pre-fix arm the control gap (5.9 MeV) was about the size of the region gap (5.2), so a larger floor
+    could account for it.
+  * On `h28prod` the region gap is **11.0 MeV** and the control gap **8.5**.
+  * The per-item diagnostic region − control now puts PDHD **above** PDVD (32.7 against 29.3), where before it sat
+    below. The two 68 % intervals only meet (30.7 / 30.8).
+  * **"The spectra do not show a more energetic PDHD Michel" can no longer rest on the control alone.**
+* **The reading is still not a Michel energy we can claim.**
+  * **The endpoint.** The decay electron cannot carry more than 52.8 MeV. The same estimator puts 9 % of PDVD's
+    items above it, but **45 %** of PDHD's.
+  * **The hot controls.** 14 of those 20 have a body control above 10 MeV, so the track reads high there too.
+  * **The association estimator** still agrees across detectors (25.3 vs 23.3, KS p 0.23).
+  * **Doc pdhd/28 §4:** the rise sits on the induction planes. It is consistent with the muon's own footprint
+    re-entering the 10 cm radius where the fit under-predicts the charge.
+  * **Why the gaps can differ.** The region sits on the Bragg peak, with more muon charge than 35 cm upstream. An
+    under-prediction that scales with muon charge would therefore leave more floor in the region than in the
+    control. This is consistent with the 2.5 MeV residual, **but not measured here**.
+* **Cross-shared cells are not the driver.** PDHD items with *no* cross-shared cell in the region now read the higher
+  median (53.5 against 42.7 with some), and cross-shared cells still carry ≤ 12 % of the sum at p90.
+* **Bridged Michels moved most** (42.7 → 59.4 median), attached less (39.3 → 43.9).
+* **What this means for use.** On PDHD the region estimator is a charge sum around the stop that carries a
+  detector-dependent, unsubtracted muon component. It is not a Michel energy comparable to PDVD's until the fit's
+  under-prediction is corrected (doc pdhd/27 §1, next step 3) or subtracted by a control that measures it at the
+  stop.
+
+![](figs/26_michel_energy_split_h28prod.png)
+*As §3.3's split figure, PDHD on `h28prod`.*
+
+![](figs/26_michel_energy_cdf_h28prod.png)
+*As §3.3's CDF figure, PDHD on `h28prod`.*
 
 ## 4. dQ/dx vs residual range on the stoppers with a good dQ/dx-vs-RR
 
@@ -406,8 +493,12 @@ and triangles are medians in 50 cm bins with at least 3 tracks.*
 ## 5. What is NOT concluded
 
 * **Not an absolute efficiency** on either detector, and not a like-for-like record (§2.6).
-* **Not that PDHD's Michels are more energetic.** The region estimator's floor differs by about the size of
-  the difference (§3.2). No energy truth exists; the free-decay curve is a guide.
+* **Not that PDHD's Michels are more energetic — and, on the corrected arm, not that the difference is only floor.**
+  * On the pre-fix arm the floor differed by about the size of the difference (§3.2).
+  * On `h28prod` the region gap (11.0 MeV) exceeds the control gap (8.5), and 45 % of PDHD items sit above the
+    endpoint (§3.4).
+  * The estimator is not validated as a Michel energy on PDHD. No energy truth exists; the free-decay curve is a
+    guide.
 * **Not a validation of the region estimator on PDHD.** The flip was taken on the owner's go and is
   additive: it moves no verdict. Its PDHD floor (body control 8.5 MeV) is a measured property, not a
   tuned one, and nothing was re-selected on PDHD.
@@ -432,4 +523,5 @@ and triangles are medians in 50 cm bins with at least 3 tracks.*
 | `scan/d26/census.txt` | §2: `d25_bragg_michel.py` on `h26conf`, `h26q2dprod`, `p96vprod` (self-gated) |
 | `scan/d26/d26_compare.py`, `compare.txt` | §2 tables, `figs/26_eff_purity.png`, `figs/26_eff_purity_units.png` |
 | `scan/d26/d26_michel_energy.py`, `michel_energy.txt` | §3, `figs/26_michel_energy{,_split,_cdf}.png` |
+| `scan/d26/michel_energy_h28prod.txt`, `q2d_readout_pdhd_h28prod.txt` | §3.4, `figs/26_michel_energy{,_split,_cdf}_h28prod.png` (`--figsuffix` added to the script; the default call reproduces `michel_energy.txt` line for line) |
 | `scan/d26/d26_dqdx_rr.py`, `dqdx_rr.txt` | §4, `figs/26_dqdx_rr.png`, `figs/26_dqdx_rr_split.png`, `figs/26_plateau_vs_drift.png` |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """doc pdhd/26 sec 3 -- the energy of the Michels the chain identifies, PDHD against PDVD, on the region estimator.
 
-    STM_SCAN_RECORD=<smx27 record> python3 d26_michel_energy.py [--pdhd h26q2dprod] [--pdvd p96vprod] [--figdir ...]
+    STM_SCAN_RECORD=<smx27 record> python3 d26_michel_energy.py [--pdhd h26q2dprod] [--pdvd p96vprod] [--figdir ...] [--figsuffix _h28prod]
 
 SELECTION: the chain's STM+Michel -- is_stm == 1 AND michel_found == 1 -- on the judged populations of doc pdhd/25
 (d25_bragg_michel.items: PDHD APA0 strict, PDVD with a candidate), split by the record into
@@ -104,6 +104,7 @@ def main():
     ap.add_argument("--pdhd", default="h26q2dprod")
     ap.add_argument("--pdvd", default="p96vprod")
     ap.add_argument("--figdir", default=IMG + "/pdhd/docs/figs")
+    ap.add_argument("--figsuffix", default="", help="appended to the figure names, e.g. _h28prod (doc pdhd/26 sec 3.4)")
     a = ap.parse_args()
     print("PDHD record:", BM.HD_REC)
     S = {}
@@ -204,7 +205,7 @@ def main():
     axs[2].grid(alpha=0.3); axs[2].legend(fontsize=7.5)
     fig.suptitle("Energy of the Michels the chain identifies (is_stm AND michel_found) on hand-scanned Michel items: "
                  "PDHD (APA0 strict) vs PDVD", fontsize=11)
-    fig.tight_layout(); f1 = os.path.join(a.figdir, "26_michel_energy.png"); fig.savefig(f1, dpi=130); plt.close(fig)
+    fig.tight_layout(); f1 = os.path.join(a.figdir, "26_michel_energy%s.png" % a.figsuffix); fig.savefig(f1, dpi=130); plt.close(fig)
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 7.4), sharex=True)
     panels = [(CONN[1], lambda d: int(d["michel_conn_type"]) == 1),
@@ -220,7 +221,7 @@ def main():
         ax.set_title(name, fontsize=9.5)
     for ax in axs[1]: ax.set_xlabel("region Michel energy [MeV] (last bin = overflow)")
     fig.suptitle("Region Michel energy on hand Michel items, split so a pooled difference is not read as physics", fontsize=11)
-    fig.tight_layout(); f2 = os.path.join(a.figdir, "26_michel_energy_split.png"); fig.savefig(f2, dpi=130); plt.close(fig)
+    fig.tight_layout(); f2 = os.path.join(a.figdir, "26_michel_energy_split%s.png" % a.figsuffix); fig.savefig(f2, dpi=130); plt.close(fig)
 
     fig, axs = plt.subplots(1, 2, figsize=(12, 4.8))
     for det in ("pdhd", "pdvd"):
@@ -236,7 +237,7 @@ def main():
     axs[1].axhline(ENDPOINT, color="0.6", lw=0.8); axs[1].axvline(ENDPOINT, color="0.6", lw=0.8)
     axs[1].set_xlabel("michel_ke_best [MeV]"); axs[1].set_ylabel("michel_ke_q2d_region [MeV]"); axs[1].legend(fontsize=8)
     axs[1].set_title("region vs association, per item (clipped at 90)", fontsize=10)
-    fig.tight_layout(); f3 = os.path.join(a.figdir, "26_michel_energy_cdf.png"); fig.savefig(f3, dpi=130); plt.close(fig)
+    fig.tight_layout(); f3 = os.path.join(a.figdir, "26_michel_energy_cdf%s.png" % a.figsuffix); fig.savefig(f3, dpi=130); plt.close(fig)
     print("\nfigures: %s %s %s" % (f1, f2, f3))
 
 

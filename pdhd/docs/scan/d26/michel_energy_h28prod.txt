@@ -1,0 +1,94 @@
+PDHD record: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json
+
+=== PDHD h28prod (APA0 strict)
+  TWIN: offline region sum (C++ rule from T_stm_michel_2d) reproduces michel_q2d_region_u/v/w and the cell counts on 133 of 133 michel_found candidates (worst relative deviation 5.92e-15)
+  michel_found candidates in the arm 133; of them is_stm == 1: 72 (no truth, every APA)
+  judged STM+Michel selection 51: hand Michel 44, other 7 {'STM_ONLY/detached dots': 3, 'STM_ONLY/None': 2, 'THRU': 1, 'STM_MICHEL/None': 1}
+  [hand Michel]
+    region (michel_ke_q2d_region)      n  44  median  45.3 [ 42.7, 54.1]  mean  47.6  p10  23.1  p90  70.2  max  106.2  >52.8 MeV 20 (0.455)  zero 0  | body ctl median 11.1
+    association (michel_ke_best)       n  44  median  25.3 [ 23.8, 26.2]  mean  27.7  p10   9.5  p90  42.9  max  105.6  >52.8 MeV  4 (0.091)  zero 0
+  [other]
+    region (michel_ke_q2d_region)      n   7  median  21.3 [ 19.6, 31.1]  mean  25.1  p10   9.1  p90  42.2  max   46.9  >52.8 MeV  0 (0.000)  zero 0  | body ctl median 10.0
+    association (michel_ke_best)       n   7  median   7.8 [  6.6, 12.2]  mean  11.9  p10   5.4  p90  21.5  max   29.7  >52.8 MeV  0 (0.000)  zero 0
+  [all judged selection]
+    region (michel_ke_q2d_region)      n  51  median  42.7 [ 40.2, 46.9]  mean  44.5  p10  16.7  p90  70.0  max  106.2  >52.8 MeV 20 (0.392)  zero 0  | body ctl median 10.8
+    association (michel_ke_best)       n  51  median  24.0 [ 22.8, 25.6]  mean  25.5  p10   6.6  p90  40.7  max  105.6  >52.8 MeV  4 (0.078)  zero 0
+    region, every is_stm Michel (no truth) n  72  median  42.7 [ 39.7, 46.4]  mean  44.7  p10  11.6  p90  70.2  max  111.2  >52.8 MeV 28 (0.389)  zero 1  | body ctl median 13.0
+    [hand Michel] region - body control n  44  median  32.7 [ 30.7, 36.6]  mean  30.9  p10   6.4  p90  55.2  max   89.2  >52.8 MeV  7 (0.159)  zero 2
+    (region - control is a DIAGNOSTIC, not a published quantity: the control sits on the muon, where the fit's prediction is best, so it bounds the floor from below)
+  hand Michel: region / best median 1.767 (n 44); region >= best on 42 of 44
+  cross-shared cells in the region sum (judged selection): candidates with any 21 of 51 (0.412); share of the region sum from them p50 0.000 p90 0.117; share >= 0.20 on 3
+  by connection type (judged selection):
+    attached (conn 1) [hand Michel 31] n  36  median  40.4 [ 37.0, 44.4]  mean  43.6  p10  22.2  p90  64.2  max  106.2  >52.8 MeV 12 (0.333)  zero 0
+    bridged (conn 2) [hand Michel 13]  n  15  median  54.7 [ 42.7, 61.0]  mean  46.7  p10  11.7  p90  70.2  max   73.3  >52.8 MeV  8 (0.533)  zero 0
+  by cross-shared share (judged selection):
+    share < 0.20                       n  48  median  44.4 [ 40.2, 49.9]  mean  45.7  p10  18.7  p90  70.1  max  106.2  >52.8 MeV 20 (0.417)  zero 0
+    share >= 0.20                      n   3  median  28.8 [  8.4, 42.7]  mean  26.6  p10  12.5  p90  39.9  max   42.7  >52.8 MeV  0 (0.000)  zero 0
+  above the endpoint or at zero, by name (judged selection):
+    028084_3/72     STM_MICHEL attached       region  106.2  best   61.1  ctl  16.9  conn 1 len  21.6 cm  xshare 0.01
+    028084_18/108   STM_MICHEL both           region   79.9  best   23.4  ctl  16.3  conn 1 len  18.5 cm  xshare 0.00
+    029107_2/108    STM_MICHEL attached       region   73.3  best   38.0  ctl  12.3  conn 2 len   8.8 cm  xshare 0.01
+    028084_12/117   STM_MICHEL both           region   73.1  best   26.7  ctl  26.1  conn 1 len  11.7 cm  xshare 0.00
+    028084_8/110    STM_MICHEL attached       region   70.3  best   19.7  ctl  15.5  conn 2 len   8.6 cm  xshare 0.13
+    029107_3/107    STM_MICHEL both           region   70.0  best   19.0  ctl  21.0  conn 2 len   8.8 cm  xshare 0.00
+    029107_23/128   STM_MICHEL attached       region   69.0  best   33.9  ctl  17.5  conn 2 len   9.6 cm  xshare 0.00
+    029107_1/85     STM_MICHEL attached       region   64.6  best    9.1  ctl  43.6  conn 1 len   2.4 cm  xshare 0.00
+    029107_9/109    STM_MICHEL both           region   63.8  best   21.6  ctl  38.4  conn 1 len   8.8 cm  xshare 0.00
+    028084_17/97    STM_MICHEL both           region   63.0  best   40.7  ctl  39.8  conn 1 len  14.3 cm  xshare 0.00
+    029107_19/106   STM_MICHEL both           region   62.8  best   60.0  ctl  13.0  conn 2 len   7.9 cm  xshare 0.05
+    028084_4/119    STM_MICHEL both           region   61.0  best   24.0  ctl   7.0  conn 2 len   7.9 cm  xshare 0.00
+    028084_6/97     STM_MICHEL both           region   59.4  best   57.9  ctl   3.9  conn 2 len   4.3 cm  xshare 0.12
+    029107_20/139   STM_MICHEL attached       region   58.9  best   16.2  ctl   0.0  conn 1 len  19.2 cm  xshare 0.03
+    029107_24/19    STM_MICHEL attached       region   57.5  best   27.8  ctl   6.4  conn 1 len  12.5 cm  xshare 0.00
+    029107_9/115    STM_MICHEL attached       region   57.3  best   24.3  ctl   6.5  conn 1 len   9.7 cm  xshare 0.00
+    028084_0/97     STM_MICHEL attached       region   57.0  best   30.5  ctl  23.4  conn 1 len   8.4 cm  xshare 0.00
+    029107_19/95    STM_MICHEL both           region   55.3  best  105.6  ctl  36.8  conn 1 len  10.6 cm  xshare 0.00
+    028084_25/36    STM_MICHEL both           region   54.7  best   43.8  ctl   9.1  conn 2 len  15.9 cm  xshare 0.00
+    028084_1/142    STM_MICHEL attached       region   53.5  best   31.2  ctl  17.1  conn 1 len  10.8 cm  xshare 0.00
+
+=== PDVD p96vprod (with a candidate)
+  TWIN: offline region sum (C++ rule from T_stm_michel_2d) reproduces michel_q2d_region_u/v/w and the cell counts on 171 of 171 michel_found candidates (worst relative deviation 3.35e-15)
+  michel_found candidates in the arm 171; of them is_stm == 1: 147 (no truth, every APA)
+  judged STM+Michel selection 139: hand Michel 134, other 5 {'STM_ONLY/— not set —': 1, 'STM_ONLY/none': 2, 'STM_MICHEL/detached dots': 1, 'STM_ONLY/detached dots': 1}
+  [hand Michel]
+    region (michel_ke_q2d_region)      n 134  median  34.3 [ 32.0, 35.7]  mean  34.5  p10  17.4  p90  51.5  max   90.9  >52.8 MeV 12 (0.090)  zero 1  | body ctl median  2.6
+    association (michel_ke_best)       n 134  median  23.3 [ 21.4, 24.3]  mean  24.3  p10   8.7  p90  42.2  max   76.8  >52.8 MeV  1 (0.007)  zero 0
+  [other]
+    region (michel_ke_q2d_region)      n   5  median  29.7 [ 20.9, 31.3]  mean  28.9  p10  18.5  p90  40.1  max   45.9  >52.8 MeV  0 (0.000)  zero 0  | body ctl median  4.1
+    association (michel_ke_best)       n   5  median  15.0 [ 12.9, 20.2]  mean  14.6  p10   5.7  p90  22.4  max   23.8  >52.8 MeV  0 (0.000)  zero 0
+  [all judged selection]
+    region (michel_ke_q2d_region)      n 139  median  34.2 [ 31.6, 35.6]  mean  34.3  p10  17.2  p90  50.9  max   90.9  >52.8 MeV 12 (0.086)  zero 1  | body ctl median  2.6
+    association (michel_ke_best)       n 139  median  23.1 [ 21.0, 23.8]  mean  24.0  p10   8.5  p90  41.8  max   76.8  >52.8 MeV  1 (0.007)  zero 0
+    region, every is_stm Michel (no truth) n 147  median  34.3 [ 31.8, 35.7]  mean  34.7  p10  17.1  p90  52.2  max   90.9  >52.8 MeV 14 (0.095)  zero 1  | body ctl median  3.0
+    [hand Michel] region - body control n 134  median  29.3 [ 27.1, 30.8]  mean  30.2  p10  11.6  p90  48.9  max   87.4  >52.8 MeV 10 (0.075)  zero 3
+    (region - control is a DIAGNOSTIC, not a published quantity: the control sits on the muon, where the fit's prediction is best, so it bounds the floor from below)
+  hand Michel: region / best median 1.391 (n 134); region >= best on 108 of 134
+  cross-shared cells in the region sum (judged selection): candidates with any 40 of 139 (0.288); share of the region sum from them p50 0.000 p90 0.024; share >= 0.20 on 1
+  by connection type (judged selection):
+    attached (conn 1) [hand Michel 109] n 110  median  32.5 [ 30.9, 35.0]  mean  32.8  p10  17.1  p90  49.7  max   61.6  >52.8 MeV  7 (0.064)  zero 1
+    bridged (conn 2) [hand Michel 25]  n  29  median  37.1 [ 32.7, 45.9]  mean  39.9  p10  20.1  p90  60.3  max   90.9  >52.8 MeV  5 (0.172)  zero 0
+  by cross-shared share (judged selection):
+    share < 0.20                       n 138  median  34.2 [ 31.7, 35.6]  mean  34.4  p10  17.2  p90  51.0  max   90.9  >52.8 MeV 12 (0.087)  zero 1
+    share >= 0.20                      n   1  median  23.9 [ 23.9, 23.9]  mean  23.9  p10  23.9  p90  23.9  max   23.9  >52.8 MeV  0 (0.000)  zero 0
+  above the endpoint or at zero, by name (judged selection):
+    039349_2/56     STM_MICHEL attached       region   90.9  best   13.1  ctl   3.5  conn 2 len   6.5 cm  xshare 0.00
+    039349_31/51    STM_MICHEL attached       region   72.9  best   51.1  ctl   9.4  conn 2 len   1.8 cm  xshare 0.00
+    039349_5/64     STM_MICHEL attached       region   63.0  best   46.2  ctl   4.8  conn 2 len  14.9 cm  xshare 0.00
+    039349_22/22    STM_MICHEL attached       region   61.6  best   14.2  ctl   1.0  conn 1 len  11.2 cm  xshare 0.03
+    039252_9/52     STM_MICHEL attached       region   61.5  best   24.0  ctl   0.9  conn 1 len   6.6 cm  xshare 0.05
+    039349_22/63    STM_MICHEL attached       region   59.6  best   50.7  ctl   0.7  conn 2 len   7.9 cm  xshare 0.00
+    039253_13/39    STM_MICHEL attached       region   57.9  best   45.3  ctl   2.2  conn 2 len  15.7 cm  xshare 0.00
+    039349_5/54     STM_MICHEL attached       region   56.6  best   29.4  ctl   1.7  conn 1 len   5.9 cm  xshare 0.00
+    039349_48/54    STM_MICHEL attached       region   56.2  best   43.1  ctl   0.7  conn 1 len   5.1 cm  xshare 0.00
+    039253_15/105   STM_MICHEL both           region   54.8  best   23.5  ctl   0.0  conn 1 len   9.5 cm  xshare 0.00
+    039252_1/30     STM_MICHEL both           region   53.7  best   42.6  ctl   3.6  conn 1 len  15.4 cm  xshare 0.00
+    039253_8/62     STM_MICHEL both           region   53.1  best   18.0  ctl  16.7  conn 1 len   4.2 cm  xshare 0.00
+    039252_2/79     STM_MICHEL attached       region    0.0  best    8.9  ctl   0.0  conn 1 len   9.3 cm  xshare 0.00
+
+=== PDHD vs PDVD on hand Michel items
+  michel_ke_q2d_region   PDHD n 44 median 45.3 [42.7,54.1] | PDVD n 134 median 34.3 [32.0,35.7] | ratio of medians 1.320 | KS D 0.372 p 0.000 | Mann-Whitney p 0.000
+  michel_ke_best         PDHD n 44 median 25.3 [23.8,26.2] | PDVD n 134 median 23.3 [21.4,24.3] | ratio of medians 1.086 | KS D 0.175 p 0.232 | Mann-Whitney p 0.371
+  region, cross-shared share < 0.20 only: PDHD n 42 median 47.9 | PDVD n 133 median 34.4 | KS p 0.000
+  (KS / Mann-Whitney on these sample sizes have little power: a large p is NOT evidence of the same shape.)
+
+figures: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/figs/26_michel_energy_h28prod.png /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/figs/26_michel_energy_split_h28prod.png /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/figs/26_michel_energy_cdf_h28prod.png
