@@ -1,0 +1,1 @@
+-S stm_michel_extra={michel_q2d:true,michel_q2d_cells:true,michel_q2d_region_cm:10.0,michel_q2d_region_ctl_cm:35.0,michel_q2d_region_scope:1}

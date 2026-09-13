@@ -1,0 +1,62 @@
+compile h27cfg rc=0
+compile h27cfgoff rc=0
+  h27cfg0 270242 bytes, mtime 2026-09-12 18:04:53
+  h27cfgT 270398 bytes, mtime 2026-09-12 18:04:53
+  h27cfg 270392 bytes, mtime 2026-09-12 18:09:31
+  h27cfgoff 270411 bytes, mtime 2026-09-12 18:09:32
+  PRE file used for h27cfg0/h27cfgT: /home/xqian/tmp/h27/pre_wct-pr-perevt.jsonnet md5 d508417b0422 (= git HEAD's pdhd/wct-pr-perevt.jsonnet at the time)
+  POST file md5 170a2e9e8cf7
+
+--- A: h27cfgT (arm h26q2d's measured config) -> h27cfg (the flipped file): want 0/0/0
+before 95 keys -> after 95 keys
+ADDED   (0):
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 0 added, 0 removed, 0 changed
+--- whole compiled config, h27cfg with its work tag renamed h27cfg->h27cfgT, vs h27cfgT:
+  identical: True | bytes 270398 270392 | tag occurrences 6
+
+--- B: h27cfg0 (PRE) -> h27cfgoff (POST, keys forced to their C++ initializers): want exactly the 5 keys, at the initializers
+before 90 keys -> after 95 keys
+ADDED   (5):
+  + michel_q2d                         False
+  + michel_q2d_cells                   False
+  + michel_q2d_region_cm               0
+  + michel_q2d_region_ctl_cm           -1
+  + michel_q2d_region_scope            0
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 5 added, 0 removed, 0 changed
+  C++ initializers:
+    m_michel_q2d_cells{false}
+    m_michel_q2d_dis_cm{0.6}
+    m_michel_q2d{false}
+    m_michel_q2d_region_cm{0.0}
+    m_michel_q2d_region_ctl_cm{-1.0}
+    m_michel_q2d_region_scope{0}
+    m_michel_q2d_stm_window_cm{30.0}
+
+--- C: h27cfg0 (PRE) -> h27cfg (POST): want 5 added, 0 removed, 0 changed
+before 90 keys -> after 95 keys
+ADDED   (5):
+  + michel_q2d                         True
+  + michel_q2d_cells                   True
+  + michel_q2d_region_cm               10
+  + michel_q2d_region_ctl_cm           35
+  + michel_q2d_region_scope            1
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 5 added, 0 removed, 0 changed
+
+--- D: PDVD production file vs git HEAD
+  pdvd/wct-pr-perevt.jsonnet unchanged
+
+--- the production diff (non-comment lines)
++        michel_q2d: true,
++        michel_q2d_cells: true,
++        michel_q2d_region_cm: 10.0,
++        michel_q2d_region_ctl_cm: 35.0,
++        michel_q2d_region_scope: 1,

@@ -397,6 +397,37 @@ function(
         // C++ default false, so omitting the key is byte-identical.
         michel_unfit_from_model: true,
         michel_unfit_dedx: 2.1,
+        // ---- doc pdhd/26 part A: the region-based Michel energy, PDHD PRODUCTION (owner's go 2026-09-12:
+        // "PDHD should update to region based energy estimation" / "Please flip it as default for PDHD") ----
+        // The Michel's energy from the 2-D charge in a 10 cm region around the stop (own cells: main cluster +
+        // admitted companions), minus the charge the muon's trajectory fit predicts there, through the bound
+        // recombination model -- so it does not depend on how the Michel was segmented (doc pdvd/95, 96).
+        // Publishes michel_ke_q2d_region (+ the body control michel_ke_q2d_ctl 35 cm up the muon, the
+        // association reading michel_ke_q2d*, per-plane pieces) and the per-cell tree T_stm_michel_2d.
+        // KEY SET = PDVD PRODUCTION'S, INHERITED WITH NO PDHD TUNING, so the two detectors publish the same
+        // estimator: R = 10 is post-hoc on PDVD (doc 95) and scope 1 was flipped there on fidelity (doc 96).
+        // C++ defaults: michel_q2d false, michel_q2d_cells false, michel_q2d_region_cm 0.0 (off),
+        // michel_q2d_region_ctl_cm -1.0 (off), michel_q2d_region_scope 0.
+        //
+        // PURELY ADDITIVE, gated (docs/scan/d26/gate_h26q2d.txt): arm h26q2d (this file before the edit +
+        // these five keys, pin libpin_p96 = toolkit 81ff37d7, Clus md5 4e1db810) against production h26conf --
+        // 341/341 candidates bit-identical on all 149 pre-existing branches and every point row, 0 is_stm /
+        // michel_found / reject_bits changes, exactly 49 new branches + T_stm_michel_2d, every other tree,
+        // mabc-pr.zip and calib json identical on 61/61 events, census on smx27 unmoved.  No verdict reads it.
+        //
+        // CAVEAT the owner took this flip with (doc pdvd/81 sec 8a held PDHD OFF for it): PDHD Michels lean
+        // more on cross-shared cells, where the measurement is replaced by the fit's non-muon prediction --
+        // any such cell on 69 of 133 Michel candidates (52 %) against 40 of 171 (23 %) on PDVD (association
+        // cells, d81_readout).  Inside the 10 cm REGION it is smaller: 19 of 51 judged STM+Michel items carry
+        // one, share of the sum p50 0.00 / p90 0.10 (PDVD 0.00 / 0.02).  And PDHD's body control reads higher:
+        // median 8.5 MeV on hand Michel items against 2.6 on PDVD, where the region reads 39.5 vs 34.3 MeV --
+        // a PDHD region energy carries a larger non-Michel floor.  Doc pdhd/26 sec 3 has the spectra.
+        // No energy truth exists on either detector.
+        michel_q2d: true,
+        michel_q2d_cells: true,
+        michel_q2d_region_cm: 10.0,
+        michel_q2d_region_ctl_cm: 35.0,
+        michel_q2d_region_scope: 1,
     },
     // TrackFitting parameter JSON, required whenever tagger_check_stm is in the
     // pipeline: the C++ preset defaults are uBooNE-hard-coded, never right for

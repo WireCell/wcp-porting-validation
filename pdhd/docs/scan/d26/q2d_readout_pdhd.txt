@@ -1,0 +1,82 @@
+# python3 d81_readout.py --det pdhd --arm h26q2dprod --json <scratch>/readout_h26q2dprod.json ; python3 d81_tail.py <scratch>/readout_h26q2dprod.json pdhd
+files 61, with T_stm_michel_2d 61, candidates 341
+michel_q2d branches present on 341 candidates
+validity: {(1, 0): 341}
+Michel-carrying valid candidates: 133
+michel_ke_q2d_total / michel_ke_total : n 132 p10 0.404 p50 1.147 p90 2.138 mean 1.228
+michel_ke_q2d / michel_ke_best        : n 132 p10 0.415 p50 1.153 p90 2.165
+michel_ke_q2d / michel_ke_charge      : p50 0.829 (the shower-pair charge estimator)
+michel_ke_q2d_total MeV               : p10 1.7 p50 14.8 p90 60.5 max 106.3 | > 60 MeV: 14 (michel_ke_total > 60: 6)
+non-positive combined charge (energy 0): 4
+plane switch: dropped plane census {-1: 33, 0: 21, 1: 26, 2: 53}
+per-plane spread (max-min)/mean|q|     : p50 0.652 p90 1.612
+Michel cells per plane (u/v/w) p50    : 88 / 78 / 62
+subtracted muon charge / measured Michel-cell charge: p10 0.014 p50 0.169 p90 0.459
+cross-shared Michel cells / all Michel cells   : p10 0.000 p50 0.016 p90 0.708 | candidates with none 64 of 133
+headline sum / raw (measured - muon) sum, 3 planes: p10 0.565 p50 1.000 p90 1.000
+candidates with a gamma term: 31, gamma MeV p50 2.59 (chain michel_ke_gamma p50 3.91)
+extremes of michel_ke_q2d_total / michel_ke_total (key: q2d_total vs total, best, planes u/v/w e-, mu-subtracted, dropped):
+  028084_15/50       0.00 vs   2.90 (best   2.90, len   2.6 cm, conn 1) |    56713 -2852462    39491 | mu  3397820 | drop 0 | cells 31/35/23
+  028084_24/103      0.00 vs   2.25 (best   2.25, len   1.4 cm, conn 2) |    -6717    -9140    13855 | mu   209965 | drop 2 | cells 4/6/18
+  028084_7/135       0.00 vs   4.34 (best   4.34, len   1.4 cm, conn 2) |    -4348    17841        0 | mu   445494 | drop 1 | cells 7/16/15
+  029107_18/45       0.00 vs   7.60 (best   7.60, len   5.4 cm, conn 1) |   149767   159128 -5752304 | mu 14533041 | drop -1 | cells 50/28/24
+  029107_5/28        0.01 vs  14.24 (best  14.24, len  15.1 cm, conn 2) |        0    47039      207 | mu   251038 | drop 1 | cells 68/68/18
+  029107_20/139     46.47 vs  16.16 (best  16.16, len  19.2 cm, conn 1) |  1438628   966926  1164536 | mu  1176165 | drop 0 | cells 126/199/158
+  028084_18/108     67.79 vs  23.42 (best  23.42, len  18.5 cm, conn 1) |  1796192  1771206  1570023 | mu   444787 | drop -1 | cells 156/215/193
+  028084_1/25        6.76 vs   2.07 (best   2.07, len   2.9 cm, conn 2) |    94665   232656   428534 | mu   117241 | drop 2 | cells 20/36/27
+  028084_2/116      28.96 vs   7.80 (best   7.80, len   3.6 cm, conn 1) |   587550  1066127   729587 | mu  1092001 | drop 1 | cells 116/111/89
+  028084_21/17      13.90 vs   1.91 (best   1.91, len   1.6 cm, conn 1) |   220596   452564   595252 | mu   690461 | drop 2 | cells 30/43/37
+the largest chain energies:
+  029107_19/95     total 105.62 -> q2d_total  39.85
+  028084_18/122    total  80.31 -> q2d_total  81.83
+  029107_17/33     total  69.08 -> q2d_total 106.31
+the zero-energy ones (planes u/v/w e-, mu-subtracted per plane, cells):
+  028084_15/50     best   2.90 len   2.6 conn 1 |    56713 -2852462    39491 | mu    64483  3182721   150616 | cells 31/35/23
+  028084_24/103    best   2.25 len   1.4 conn 2 |    -6717    -9140    13855 | mu    24301    26186   159478 | cells 4/6/18
+  028084_7/135     best   4.34 len   1.4 conn 2 |    -4348    17841        0 | mu   129641   144706   171146 | cells 7/16/15
+  029107_18/45     best   7.60 len   5.4 conn 1 |   149767   159128 -5752304 | mu   125666    82928 14324447 | cells 50/28/24
+T_stm_michel_2d cells: role 1 (STM footprint) 209759, role 3 (Michel) 44870, role 4 (gamma) 3430 over 61 files
+closure sum(pred_mu | role1 or shared) / sum(pred_mu | all rows): min 1.0000 p50 1.0000 (1.000 = every predicted-muon cell is in the table)
+wrote /home/xqian/tmp/h27/readout_h26q2dprod.json
+
+== pdhd: 133 Michel-carrying valid candidates
+   conversion scale 4.1303e-05 MeV/e (linear, the unfitted-piece constant)
+
+-- ratio q2d_total / chain total, by michel_conn_type (1 attached, 2 bridged, 3 charge-only)
+   conn 1: n  77 | ratio p10 0.49 p50 1.23 p90 2.24 | zero-energy 2 | cross-shared cell frac p50 0.054
+   conn 2: n  41 | ratio p10 0.42 p50 1.11 p90 2.06 | zero-energy 2 | cross-shared cell frac p50 0.016
+   conn 3: n  15 | ratio p10 0.29 p50 0.59 p90 0.99 | zero-energy 0 | cross-shared cell frac p50 0.000
+
+-- headline vs raw (all-measured): median ke_q2d / ke_q2d_raw
+   n 128, p10 0.437 p50 1.000 p90 1.000 | candidates with any cross-shared cell 69 of 133 (52%)
+   on those 64 alone: p10 0.228 p50 0.821 p90 1.026 (1.0 = the substitution changed nothing)
+
+-- the tail, by name: q2d_total > 52.8 MeV (the Michel endpoint) or ratio outside [0.5, 2]
+   key              q2d_tot     raw   chain    len  conn  drop  cells  xshar  note
+   029107_17/33       106.3   112.5    69.1   21.7     2     1    907     85  chain also over endpoint; cross-shared 85/907; bridged
+   028084_27/27       105.9   105.9    53.9   10.2     2     2    732      0  chain also over endpoint; bridged
+   029107_19/30        93.7    93.7    63.1    9.6     1     2    721      0  chain also over endpoint
+   028084_3/72         88.0    92.1    61.1   21.6     1     2    735    101  chain also over endpoint; cross-shared 101/735
+   029107_27/64        83.9    66.6    39.1   16.6     1     2    708     27  cross-shared 27/708
+   029107_2/108        82.4    80.2    38.0    8.8     2    -1    775     43  cross-shared 43/775; bridged
+   028084_18/122       81.8    86.7    80.3    5.2     2     0    920     15  chain also over endpoint; cross-shared 15/920; bridged
+   029107_20/108       75.2   107.1    36.6   17.1     1     1    701    233  cross-shared 233/701
+   029107_19/106       70.3    70.3    60.0    7.9     2     1    752     20  chain also over endpoint; cross-shared 20/752; bridged
+   028084_28/110       68.0    75.0    46.2   18.6     1     1    759     50  cross-shared 50/759
+   028084_18/108       67.8    67.8    23.4   18.5     1    -1    564      0  
+   029107_23/128       66.8    66.8    33.9    9.6     2    -1    566      0  bridged
+   029107_5/93         65.9    68.1    63.0   10.1     2    -1    936    124  chain also over endpoint; cross-shared 124/936; bridged
+   028084_4/119        60.8    60.2    24.9    7.9     2    -1    502      0  bridged
+   029107_0/50         59.4    56.1    31.3   11.5     1    -1    681      0  
+   029107_10/44        57.9    57.9    23.9    7.9     1     2    523      0  
+   028084_6/97         55.5    68.7    59.6    4.3     2     0    744     29  chain also over endpoint; cross-shared 29/744; bridged
+   028084_17/97        54.8    42.1    49.9   14.3     1     2    487      0  
+   029107_9/115        53.9    53.9    24.3    9.7     1     0    477      0  
+   029107_3/111        53.5    48.0    44.5    8.9     1    -1    567      0  
+   028084_25/36        53.4    50.8    45.8   15.9     2     1    432      0  bridged
+   029107_24/19        53.0    53.0    27.8   12.5     1    -1    352      0  
+   029107_6/97         48.7    47.8    23.5    8.4     2     2    546      0  bridged
+   029107_20/139       46.5    58.2    16.2   19.2     1     0    483     59  cross-shared 59/483
+   028084_8/110        40.5    47.8    19.7    8.6     2     1    277    101  cross-shared 101/277; bridged
+   029107_19/95        39.8    39.8   105.6   10.6     1     2    477      0  chain also over endpoint
+   (54 of 133 candidates in the tail)

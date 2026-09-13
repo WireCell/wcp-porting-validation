@@ -1,0 +1,43 @@
+doc pdhd/26 part A -- the region-based Michel energy on PDHD, pre-registered 2026-09-12 BEFORE arm h26q2d launches.
+
+The owner's go: "PDHD should update to region based energy estimation for this" and "Please flip it as default for PDHD".
+
+KEY SET = PDVD production's exactly (docs pdvd/95 + 96), no PDHD tuning:
+  michel_q2d:true  michel_q2d_cells:true  michel_q2d_region_cm:10.0  michel_q2d_region_ctl_cm:35.0  michel_q2d_region_scope:1
+  R = 10 is post-hoc on PDVD (doc 95); scope 1 was flipped on fidelity (doc 96).  Both are INHERITED here,
+  so the PDHD and PDVD spectra are the same estimator.  A PDHD-selected radius would make them incomparable.
+
+ARMS (pin /home/xqian/tmp/p96/libpin_p96, Clus md5 4e1db810, toolkit 81ff37d7, SRC d16hnu, 61 events):
+  h26q2d      unedited pdhd/wct-pr-perevt.jsonnet (= production h26conf) + tla_q2d.txt   <- the measurement
+  h26q2dprod  the flipped file, no TLA                                                  <- the confirmation
+
+PREDICTION 1 -- ADDITIVE, h26q2d vs h26conf:
+  a. the same 341 candidates; every pre-existing T_stm_michel branch (149) bit-identical on every candidate;
+     every T_stm_michel_pts row (role, seg_id, x, y, z) identical.
+  b. 0 is_stm flips, 0 michel_found flips, 0 reject_bits changes.
+  c. exactly 49 new T_stm_michel branches = the set p96vprod carries beyond h26conf's 149 (read 2026-09-12
+     from 029107_17_h26conf vs 039252_0_p96vprod, before launch):
+       michel_ke_q2d michel_ke_q2d_ctl michel_ke_q2d_gamma michel_ke_q2d_region michel_ke_q2d_total
+       michel_q2d michel_q2d_ctl michel_q2d_ctl_dropped_plane michel_q2d_ctl_n_{u,v,w} michel_q2d_ctl_{u,v,w}
+       michel_q2d_ctl_valid michel_q2d_dropped_plane michel_q2d_gamma michel_q2d_mu_{u,v,w} michel_q2d_n_role0
+       michel_q2d_n_{u,v,w} michel_q2d_nx_{u,v,w} michel_q2d_raw_{u,v,w} michel_q2d_reason michel_q2d_region
+       michel_q2d_region_dropped_plane michel_q2d_region_mu_{u,v,w} michel_q2d_region_n_{u,v,w}
+       michel_q2d_region_nd_{u,v,w} michel_q2d_region_{u,v,w} michel_q2d_{u,v,w} michel_q2d_valid
+     plus ONE new tree, T_stm_michel_2d, in tracking-pr.root.  No branch or tree lost.
+  d. every other tree (tracking-pr.root: T_bad_ch T_cluster T_proj T_proj_data T_rec_charge T_stm_michel_pts Trun;
+     tracking-stm.root: all), mabc-pr.zip member hashes and calib-pr-evt*.json identical on 61/61 events.
+     RISK named in advance: michel_q2d sets keep_dqdx_response on the shared TrackFitting
+     (CheckSTM_Michel.cxx:2624); doc 81 saw it move nothing on PDHD then (p81hq2d), on an older binary.
+  e. michel_q2d_valid == 1 on every candidate (doc pdvd/81: 325/325 on PDHD).
+  f. census unmoved on smx27: APA0 strict is_stm 89/1/15/67, all APAs 114/2/33/105, Michel strict 47/3/10/38.
+  FAIL on any of a-f -> the production file is NOT edited; report the first divergent event and stop.
+
+PREDICTION 2 -- CONFIRMATION, h26q2dprod vs h26q2d: bit-identical on all 198 branches, every point row,
+  every T_stm_michel_2d row, every other tree, zips and calib.  Compiled-config proof A (PRE + TLA vs POST)
+  0 / 0 / 0; proof C exactly 5 keys added; PDVD file unchanged.
+
+EXPECTATIONS, stated but NOT gates (no energy truth exists on either detector; the record has no energy field):
+  E1 PDHD cross-shared Michel cells: doc pdvd/81 sec 8a measured 45 % of PDHD Michels carrying them against
+     22 % on PDVD.  Re-measured on h26q2dprod and reported; the owner has taken the flip with it known.
+  E2 PDHD region medians on found Michels are expected LOWER than PDVD's 34.3 MeV (doc pdvd/81: q2d_total p50
+     8.1 PDHD vs 32.1 PDVD, the association reading).  How much lower is a measurement, not a prediction.
