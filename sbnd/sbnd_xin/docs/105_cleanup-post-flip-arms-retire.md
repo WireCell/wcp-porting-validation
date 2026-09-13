@@ -1,6 +1,9 @@
 # 105 — cleanup round 2026-09-12: the post-flip STM/Michel arms, and four guards that were quietly wrong
 
-**Status: STAGED. Nothing in `work/` or `~/tmp` has been deleted.** Every step
+**Status: EXECUTED 2026-09-12 on the owner's instruction ("Can you run these for
+me? Push") — §12 is the post-state.** The original status is kept below.
+
+**Original status: STAGED. Nothing in `work/` or `~/tmp` had been deleted.** Every step
 up to the deletion has run: the sentinel suite, the scan-source census, the
 citation census, the planner (all interlocks PASS on all three trees), the
 frozen record layer, and the real `CONFIRM=yes` path under a stub and a causal
@@ -281,3 +284,42 @@ no-op.)
 | pdvd old flip evidence (`d42fit`, `d43*`, `d44*`, `d45prod`, `d48nu3`, `d41prod`, `d38qnewprod`) | ~4.6 | still named in `PROTECTED.txt`; doc 104 §13's "round 2", needs those lines retired deliberately |
 | `mg10*` (all three trees) + `wt-merge`/`wt-premerge` + `~/tmp/mg10` | ~8 | the master-merge validation round has no committed doc |
 | `h26*`/`h27*`/`h28*`/`p97*` arms, `~/tmp/h28` | ~2+ | live today (§5); next round |
+
+## 12. Post-execution: what ran, and what it left
+
+The owner asked this session to run §10 and push. The permission gate that had
+declined `CONFIRM=yes` all round allowed it once the owner asked directly.
+Every command ran in §10's order, and the `work/` releases each went through
+their own INTERLOCK A re-plan (`OK: all interlocks still PASS` in both
+`retire_confirm_{pdvd,pdhd}_20260912.log`).
+
+| step | result |
+|---|---|
+| dedup | 5663 files linked, 0 skipped; **19729 / 19729 files present, 0 missing**; pins 61.45 → 30.59 GiB on disk; free 266 → 296 G |
+| `retire 1 pdvd` | 7083 / 7083 deleted, rc=0; `pdvd/work` 106 → **69 G** |
+| `retire 1 pdhd` | 2326 / 2326 deleted, rc=0; `pdhd/work` 86 → **66 G**; free → **389 G** |
+| `sweep_tmp 1` | 10 / 10 worktrees removed by `git worktree remove`, rc=0; each HEAD re-verified against remote main `a7b378a5` |
+| `sweep_tmp 2` | 97 arm families alive after the release, 33 nested pins: 23 held value-first (e.g. `d53/libpin` by `d53h`/`d53v`, `p75`/`p80`/`p81` pins by the OPEN doc-81 arms, `p96/libpin_p96` by the `h25*` scan sources), 10 FREE; 8 of those refused by the purity filter as full `local/lib` snapshots (kept); **2 removed: `d51/libpin`, `p80/libpin_p80full`**, rc=0. `~/tmp` 133 → **99 G** (`du`); free → **394 G** |
+
+**Nothing protected was touched.** Broken symlinks: **0 / 0 / 0**, equal to
+the pre-round baseline. Every production, substrate, OPEN and scan-source name
+still resolves at its full count. For pdvd: `p96vprod`/`p96vscope` 120, `keep`
+240, `d27fresh`/`d51vclus` 120, `d41prov` 99, `d53v`/`d67v`/`d68a3`/`d68d4`/
+`p85vprod`/`p85vwh`/`p88vprod`/`p88v5fr`/`p90vprod` 120, `d08pv30on/off` 30,
+`p81voff3`/`p81vq2d3`/`p81vleg2` 120. For pdhd: `h26q2dprod`/`h26conf`/`h26q2d`
+61, `d51hclus`/`d09` 61, `stm0` 30, `d53h`/`h18s`/`h18b`/`h23conf`/`h25base`/
+`h25k`/`h25kr`/`h25r`/`h25va`/`h25vb`/`p82bhoff`/`p82hoff` 61, `d08cap10` 30,
+`d05mON` 6, `p81hoff3`/`p81hq2d3` 61.
+
+**The prefix protection earned itself.** The peer's round announced in §5
+created **431 dirs at 19:31, after the plan**: `h28off`, `h28prod` and `h28wl`
+(61 each) plus 8 `h27cfg*`/`h28cfg*` on pdhd, and `p97voff`/`p97vwl` (120 each)
+on pdvd. None was in a tier file, and all 431 survive. Because `h28*`/`p97*`
+were prefixes, INTERLOCK A's re-plan put them in KEEP and the tier files did
+not move. Without the prefix, the new dirs would have entered the confirm-time
+tier and the driver would have refused. That is the safe failure, but it would
+have blocked the round rather than protecting it.
+
+**Pushed:** `059c8e3c` was cherry-picked onto remote main `7061f57a` in a scratch
+worktree and pushed as **`a7b378a5`** over https. `git ls-remote` then read
+`refs/heads/main` = `a7b378a5`. Local `main` stays diverged, as in every round.
