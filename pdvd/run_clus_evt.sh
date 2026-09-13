@@ -264,9 +264,16 @@ PY
         fi
         echo "Trigger offsets: bot=${TRIGGER_OFFSET_BOT_US} top=${TRIGGER_OFFSET_TOP_US} us (metadata ${META_BOT}/${META_TOP} + run table ${RUN_OFF} + extra ${QL_EXTRA_OFF})"
 
-        # Real readout window (post-resample SP frame length, 10000 ticks x
-        # 0.5 us = 5 ms) for the window-truncation flag.
-        local _SPF
+        # Real readout window (post-resample SP frame length in ticks x 0.5 us; PDVD runs differ: 039252/039253 10000,
+        # 039349 6400) for QLMatching's window-truncation flag and, through the .tlas sidecar, PR's readout_edge_guard.
+        # First hit wins (doc pdvd/99 sec 4.4-4.5; owner 2026-09-13: production uses the real window):
+        #   1. PDVD_READOUT_NTICKS (below, explicit override)
+        #   2. an SP frame archive in the clustering input dir (its frame length)
+        #   3. readout_window_ticks.txt, "<run> <ticks>" (production staging links imaging archives only, no frames;
+        #      before this table existed such dirs ran 10000 on every event)
+        #   4. 10000, with a warning
+        local _SPF _RW
+        _RW=$(awk -v r="$RUN_STRIPPED" '$1 !~ /^#/ && NF >= 2 && $1+0 == r+0 {print $2}' "$PDVD_DIR/readout_window_ticks.txt" 2>/dev/null | head -1)
         _SPF=$(ls "$CLUS_INPUT"/protodune-sp-dnnroi-frames-anode*.tar.bz2 2>/dev/null | head -1)
         if [ -n "$_SPF" ]; then
             local _NT
@@ -279,11 +286,17 @@ PY
 )
             READOUT_NTICKS=${_NT:-10000}
             echo "Readout window: ${READOUT_NTICKS} ticks (from $(basename "$_SPF"))"
+            if [ -n "$_RW" ] && [ "$_RW" != "$READOUT_NTICKS" ]; then
+                echo "WARNING: run ${RUN_STRIPPED}: SP frame length ${READOUT_NTICKS} != readout_window_ticks.txt ${_RW}; using the frame" >&2
+            fi
+        elif [ -n "$_RW" ]; then
+            READOUT_NTICKS=$_RW
+            echo "Readout window: ${READOUT_NTICKS} ticks (readout_window_ticks.txt, run ${RUN_STRIPPED})"
+        else
+            echo "WARNING: run ${RUN_STRIPPED}: no SP frame in $CLUS_INPUT and no readout_window_ticks.txt entry; readout window falls back to ${READOUT_NTICKS} ticks" >&2
         fi
     fi
-    # PDVD_READOUT_NTICKS (doc pdvd/99 sec 4.4): the window given explicitly, for an input dir staged without SP frames
-    # (production staging holds imaging archives only, so the rule above falls back to 10000 on every event, while run
-    # 039349's frames are 6400 ticks).  Unset (the default) => the frame-or-10000 rule above, unchanged.
+    # PDVD_READOUT_NTICKS (doc pdvd/99 sec 4.4): the window given explicitly.  Unset (the default) => the rule above.
     if [ -n "${PDVD_READOUT_NTICKS:-}" ]; then
         READOUT_NTICKS=$PDVD_READOUT_NTICKS
         echo "Readout window: ${READOUT_NTICKS} ticks (PDVD_READOUT_NTICKS)"

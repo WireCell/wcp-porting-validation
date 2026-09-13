@@ -72,9 +72,13 @@ Driver `pdvd/run_clus_evt.sh`:
   `PDVD_QL_DIAG=1` forces 0 **and** loosens `require_containment=false`,
   `flash_minPE=100` (offset-hunt mode); `PDVD_QL_DIAG=2` keeps the measured
   offsets with the loosened knobs (closure validation).
-- `READOUT_NTICKS` read from the SP frame (10000 ticks × 0.5 µs = 5 ms in
-  039252/3; the charge window is per-run DAQ config — 039349 is 3.2 ms;
-  fallback 10000) for the window-truncation flag. Note the raw BDE 512 ns
+- `READOUT_NTICKS` for the window-truncation flag, and through the `.tlas` sidecar for PR's `readout_edge_guard`
+  (10000 ticks × 0.5 µs = 5 ms in 039252/3; the charge window is per-run DAQ config, and 039349 is 3.2 ms = 6400 ticks).
+  The first source found wins: `PDVD_READOUT_NTICKS`; an SP frame in the clustering input dir; the per-run table
+  `pdvd/readout_window_ticks.txt`; 10000, with a warning.
+  - Production staging (`scripts/stage_ql_tag.sh`, `stm/run_campaign.sh`) links imaging archives only, so until the
+    table existed every production event ran at 10000.
+  - That was wrong on run 039349 (doc pdvd/99 §4.4–4.5; production uses the real window since 2026-09-13). Note the raw BDE 512 ns
   sampling is resampled to 500 ns as the first SP step, so processed frames
   are uniformly 500 ns/tick with tick 0 = that crate's window start.
 

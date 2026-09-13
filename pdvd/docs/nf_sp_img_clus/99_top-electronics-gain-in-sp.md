@@ -34,7 +34,9 @@
   - Purity on the scanned objects that stay reads **0.889 against 0.929** (−0.040, 95 % [−0.143, +0.073]). The window
     explains about a third of the gap.
   - Where the window does not change, all four new arms reproduce their sources byte for byte.
-  - The new runner override `PDVD_READOUT_NTICKS` is unset by default; production is unchanged.
+  - **Production now uses the real window (§4.5, owner yes).** When no frame is staged, the clustering runner reads it
+    from `pdvd/readout_window_ticks.txt`. Gate `p99wflip` equals `p99rwprod` on 120/120 events and `p96vprod` on the 36
+    unchanged ones. The top gain stays OFF for its own round with the refits.
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -80,9 +82,10 @@ constant.
   NF or DNN-ROI changed since July except the wire file, which imaging had already adopted on 09-03.
 - **Two open issues predate this change and are not caused by it:**
   - production's SP frames carry the v5 wire order while its imaging, clustering and PR use v7-uvwfit (§4.3 item 4);
-  - on run 039349, production's PR edge guard runs a 10000-tick window over 6400-tick frames (§4.1, §4.4).
+  - on run 039349, production's PR edge guard ran a 10000-tick window over 6400-tick frames (§4.1, §4.4; production fixed
+    in §4.5).
 
-  The latest-configuration arms fix the first; the second is unchanged in every arm.
+  The latest-configuration arms fix the first; production fixes the second since §4.5.
 
 **2. The top/bottom charge asymmetry is fixed: confirmed for the charge, with one stated miss.**
 - **Per track:** top ×1.1228 [1.1176, 1.1275] against 1/s = 1.1249; bottom 1.0000 on 30/30.
@@ -175,6 +178,10 @@ python3 d99rw_identity.py --arm p99rwon --base p99rgon --nt 6400       # d99/rw_
 python3 d99rw_census.py --arms p96vprod p99rgprod p99rwprod p98vonq p99rgon p99rwon   # d99/rw_census.txt
 python3 d99rw_regrade.py --on p99rgon --prod p99rgprod                 # d99/rw_regrade_guard.txt
 python3 d99rw_regrade.py --on p99rwon --prod p99rwprod                 # d99/rw_regrade_full.txt
+# sec 4.5: production flip (pdvd/readout_window_ticks.txt read by run_clus_evt.sh when no frame is in the input dir)
+WAVE=full  ARM=p99wflip  SRC=d27fresh NOWIN=1 ./d99rw_arms.sh          # production staging, no override
+python3 d99rw_identity.py --arm p99wflip --base p99rwprod --nt all     # d99/rw_identity_p99wflip_vs_p99rwprod.txt
+python3 d99rw_identity.py --arm p99wflip --base p96vprod --nt 10000    # d99/rw_identity_p99wflip_10000.txt
 
 # round 2 (sec 0, 4.3, 6.3): July vs today's frames, the wire-file split, the record-free population
 python3 d99_frames.py --events 039252_0 039252_2 039253_0 039253_1 039349_0 039349_10 --arms keep p98voff   # d99/frames_july_vs_p98voff_6evt.txt
@@ -354,9 +361,8 @@ This is neither the gain constant nor the SP rerun. For this round the arms repr
   `img-provenance.txt`, no frames.
 - The `p98voff` clustering + PR pass is kept as the measurement of the difference.
 
-**Open for the owner** (not changed here; measured in §4.4): on run 039349 production's edge guard runs on a 10000-tick
-window over 6400-tick frames, so it cannot fire at the real readout edge. Enabling the real window would move STM tagging by about a hundred candidates and
-needs its own graded round.
+**Decided in §4.5** (owner yes, measured in §4.4): on run 039349 production's edge guard ran on a 10000-tick window over
+6400-tick frames, so it could not fire at the real readout edge. Production now uses the real window. It moved run 039349's STM candidates by about a hundred; §4.4 is its graded round.
 
 ### 4.2 Reproduction controls
 
@@ -534,14 +540,48 @@ Not judged: the 1 object new to on_only and the 34 unsampled members of prod_onl
   truncation by construction.
 - **The guard's 60 ticks is a knife edge:** an object whose stop moves by tens of ticks between arms crosses it
   (`039349_47/76`).
-- **Not a production change.** Production staging still runs 10000 on run 039349. Adopting the real window (by setting
-  `PDVD_READOUT_NTICKS` per run, or by staging the frames) is the owner's call.
+- **Now production (§4.5).** When these arms ran, production staging still used 10000 on run 039349; the owner then
+  chose the real window.
   - It moves run 039349's is_stm by −11 on production and −14 on the latest configuration, and its STM candidates by
     about a hundred.
   - **Most of those removals are unjudged.** The swap scan judged 1 of production's 11 and 8 of the latest
     configuration's 14. The rest were tagged on both arms, so the scan never drew them, and whether removing them is a
     gain or a loss is not measured here. Some carry a verdict in the carried record; that was not examined.
   - Adopting the window therefore wants a look at run 039349's removed tags, not just the knob.
+
+### 4.5 Production uses the real window (owner, 2026-09-13)
+
+> "Yes, the production should use the real window of course."
+
+**The change** is in `pdvd/run_clus_evt.sh` only; no C++ or jsonnet changes.
+- The clustering readout window now takes the first source found:
+  1. `PDVD_READOUT_NTICKS`;
+  2. an SP frame archive in the clustering input dir;
+  3. **new:** `pdvd/readout_window_ticks.txt`, one line per run: 039252 and 039253 10000, 039349 6400, from
+     `d99/frame_nticks_120evt.txt`;
+  4. 10000, with a warning.
+- A frame that disagrees with the table is used, with a warning.
+- Production staging (`scripts/stage_ql_tag.sh`, `stm/run_campaign.sh`) links imaging archives only, so it now reads the
+  table.
+- PR still takes the window from the `.tlas` sidecar.
+- The top gain stays OFF. Owner, same day: it gets its own round, together with the C and Michel-threshold refits.
+
+**Flip gate** (`p99wflip`: production staging from `d27fresh`, no override, pin `libpin_p96`):
+- **Window source:** every event takes its window from the table (36 × 10000 on runs 039252 and 039253, 84 × 6400 on
+  run 039349), with no fallback warning.
+- **Against the measured arm:** it equals `p99rwprod` on **120/120** events in pctree, `.tlas`, every PR branch and
+  `mabc-pr` (`d99/rw_identity_p99wflip_vs_p99rwprod.txt`).
+- **Against production:** it equals `p96vprod` on the 36 events whose window did not change, 36/36
+  (`d99/rw_identity_p99wflip_10000.txt`).
+- **Completion:** 119/120. The missing event is `039252_11`, which has no candidate, as on `p96vprod`.
+
+**What production now is.**
+- Production reproduces §4.4's `p99rwprod`, so §4.4's numbers are production's. On run 039349: is_stm 159 → 148, STM
+  candidates 409 → 314, guard firings 138 → 243. Runs 039252 and 039253 are byte-identical to before.
+- The grading baseline for production is now `p99wflip`. Records graded on `p96vprod` (the smx record, §6.4's control
+  side) were taken with the 10000-tick window on run 039349.
+- The removed tags are mostly unjudged (§4.4): the swap scan judged 1 of production's 11.
+- A new run needs a line in the table. A run without one falls back to 10000 and says so in the clustering log.
 
 ## 5. Carrying the hand-scan record
 
@@ -975,8 +1015,8 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
    - Only run 039349 is affected (6400-tick frames).
    - The guard untags 9 scanned objects; 7 of them are THRU or UNCLEAR.
    - The gap narrows from −0.061 to −0.040 but does not close.
-   - **Open for the owner:** whether production staging should use the real window on run 039349 (`PDVD_READOUT_NTICKS`
-     or the frames in the input dir). It removes 11 is_stm clusters on production and 14 on the latest configuration.
+   - **Decided (owner, 2026-09-13): production uses the real window (§4.5).** It removes 11 is_stm clusters on production
+     and 14 on the latest configuration, mostly unjudged.
    - After that comes the owner's look at the medium/low calls, including the 2 STM_ONLY calls the guard removes
      (`039349_7/67`, `039349_75/63`), and at the frame-edge items (`d99/swap_scan_reports/`).
 6. **Candidates rose on ON:** 597 → 656 (events with a candidate 119 → 120). Not traced here. The per-key grades above use
@@ -997,7 +1037,8 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
 | `scripts/d99_grade.py`, `d99_dqdx_drift.py` | grading and dQ/dx forks with their controls |
 | `scripts/d99_closure.py` | per-track OFF → ON plateau ratio, common-track samples |
 | `scripts/d99_readout_window.py` | §4.1: candidates, edge-guard firings and clustering window per arm |
-| `pdvd/run_clus_evt.sh` | `PDVD_READOUT_NTICKS` (§4.4): the clustering window given explicitly; unset = the frame-or-10000 rule (proven on `p99rwnul`) |
+| `pdvd/run_clus_evt.sh` | the clustering readout window, first hit: `PDVD_READOUT_NTICKS` (§4.4); an SP frame in the input dir; `pdvd/readout_window_ticks.txt` (§4.5, production); 10000 with a warning |
+| `pdvd/readout_window_ticks.txt` | §4.5: the PDVD readout window per run (039252, 039253 10000; 039349 6400), the production source for frameless staging |
 | `scripts/d99rw_arms.sh`, `d99rw_identity.py`, `d99rw_census.py`, `d99rw_regrade.py` | §4.4: the real-window arms (PR-only guard pair, re-clustered pair, unset control); identity against the sources; STM census by frame length; the §6.4 scan re-graded on the new pairs |
 | `d99/frame_nticks_120evt.txt`, `d99/rw_*` | §4.4: SP frame length per event; the identity gates, census and re-grades |
 | `scripts/d99_frame_identity.py` | §4.3: sample-level identity of two SP frame arms per anode, plane and frame tag |
