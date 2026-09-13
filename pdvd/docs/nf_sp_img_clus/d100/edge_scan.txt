@@ -1,0 +1,70 @@
+# doc pdvd/100 step A -- own100 (owner, 2026-09-13, not blind): 19 of 19 objects labelled
+# labels /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/stm_michel_labels/own100/labels.json; set /home/xqian/tmp/p100/scan
+
+== 1. each object (shown arm; the guard's ticks before the 6400-tick frame end; the chain's Michel on the shown arm)
+  039349_7/62    p98vonq  top    ticks latest 44.8,production 42.6  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record latest STM_ONLY (high); smx STM_ONLY (high)
+  039349_7/67    p98vonq  top    ticks latest 47.7                  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record latest STM_ONLY (medium); sw99 STM_ONLY (medium)
+  039349_18/46   p98vonq  top    ticks latest 44.2,production 43.3  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record none
+  039349_22/51   p98vonq  top    ticks latest 50.2                  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record latest THRU (medium); sw99 THRU (medium)
+  039349_26/23   p98vonq  bottom ticks latest 28.9                  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record latest THRU (high); sw99 THRU (high)
+  039349_32/48   p98vonq  top    ticks no guard line                chain michel_found 1 ke  12.6 | OWNER THRU                 | record latest THRU (medium); sw99 THRU (medium)
+  039349_40/48   p98vonq  top    ticks latest 55.5                  chain michel_found 1 ke   6.7 | OWNER STM_MICHEL attached  pin rr 3.6 | record latest UNCLEAR (low); sw99 UNCLEAR (low)
+  039349_47/57   p96vprod top    ticks production 12.1              chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record smx STM_ONLY (high)
+  039349_48/21   p96vprod bottom ticks production 34.2              chain michel_found 1 ke   8.7 | OWNER STM_MICHEL attached  pin rr 6.6 | record smx STM_MICHEL (owner)
+  039349_54/20   p98vonq  bottom ticks latest 45.0                  chain michel_found 0 ke   0.0 | OWNER THRU                 | record latest THRU (medium); sw99 THRU (high)
+  039349_59/14   p96vprod bottom ticks production 20.1              chain michel_found 0 ke   0.0 | OWNER THRU                 | record smx THRU (medium)
+  039349_64/65   p96vprod top    ticks production 53.8              chain michel_found 0 ke   0.0 | OWNER THRU                 | record smx STM_MICHEL (low)
+  039349_67/35   p98vonq  bottom ticks latest 40.2,production 40.2  chain michel_found 1 ke  13.7 | OWNER STM_MICHEL attached  | record latest STM_ONLY (high); smx STM_ONLY (high)
+  039349_69/44   p98vonq  top    ticks latest 27.0                  chain michel_found 0 ke   0.0 | OWNER STM_ONLY             | record latest UNCLEAR (medium); sw99 UNCLEAR (medium)
+  039349_72/9    p98vonq  bottom ticks latest 45.7,production 45.7  chain michel_found 0 ke   0.0 | OWNER THRU                 | record latest STM_MICHEL (owner); smx STM_MICHEL (owner)
+  039349_75/63   p98vonq  top    ticks latest 35.6                  chain michel_found 0 ke   0.0 | OWNER STM_MICHEL attached  | record latest STM_ONLY (medium); sw99 STM_ONLY (medium)
+  039349_76/31   p98vonq  bottom ticks latest 38.7,production 38.7  chain michel_found 0 ke   0.0 | OWNER THRU                 | record latest THRU (owner); smx THRU (owner)
+  039349_81/41   p96vprod top    ticks production 44.0              chain michel_found 1 ke   5.9 | OWNER STM_MICHEL attached  | record smx STM_MICHEL (medium)
+  039349_82/52   p98vonq  top    ticks latest 21.4,production 23.3  chain michel_found 0 ke   0.0 | OWNER THRU                 | record latest STM_ONLY (high); smx STM_ONLY (high)
+
+== 2. counts (an object in both lists counts on both sides)
+  owner verdicts: {'STM_ONLY': 7, 'THRU': 7, 'STM_MICHEL': 5}; stoppers 12 / non-stoppers 7
+  production (p96vprod -> p99wflip): 11 objects: stoppers 6, non-stoppers 5
+  latest (p98vonq -> p99rwon): 14 objects: stoppers 9, non-stoppers 5
+  top: 12: stoppers 9, non-stoppers 3
+  bottom: 7: stoppers 3, non-stoppers 4
+
+== 3. the owner against the existing records
+  new    039349_18/46   unjudged -> owner STM_ONLY
+  CLASS 039349_22/51   latest THRU (medium) -> owner STM_ONLY
+  CLASS 039349_22/51   sw99 THRU (medium) -> owner STM_ONLY
+  CLASS 039349_26/23   latest THRU (high) -> owner STM_ONLY
+  CLASS 039349_26/23   sw99 THRU (high) -> owner STM_ONLY
+  CLASS 039349_40/48   latest UNCLEAR (low) -> owner STM_MICHEL
+  CLASS 039349_40/48   sw99 UNCLEAR (low) -> owner STM_MICHEL
+  CLASS 039349_64/65   smx STM_MICHEL (low) -> owner THRU
+  kind  039349_67/35   latest STM_ONLY (high) -> owner STM_MICHEL
+  kind  039349_67/35   smx STM_ONLY (high) -> owner STM_MICHEL
+  CLASS 039349_69/44   latest UNCLEAR (medium) -> owner STM_ONLY
+  CLASS 039349_69/44   sw99 UNCLEAR (medium) -> owner STM_ONLY
+  CLASS 039349_72/9    latest STM_MICHEL (owner) -> owner THRU
+  CLASS 039349_72/9    smx STM_MICHEL (owner) -> owner THRU
+  kind  039349_75/63   latest STM_ONLY (medium) -> owner STM_MICHEL
+  kind  039349_75/63   sw99 STM_ONLY (medium) -> owner STM_MICHEL
+  CLASS 039349_82/52   latest STM_ONLY (high) -> owner THRU
+  CLASS 039349_82/52   smx STM_ONLY (high) -> owner THRU
+
+== 4. a smaller guard window (objects the guard removed; smallest ticks-before over the sides that name it)
+  guard-removed objects: 18 (stoppers 12, non-stoppers 6); not guard-removed: ['039349_32/48']
+  guard 10 ticks: still removes stoppers  0, non-stoppers  0
+  guard 20 ticks: still removes stoppers  1, non-stoppers  0
+  guard 30 ticks: still removes stoppers  3, non-stoppers  2
+  guard 40 ticks: still removes stoppers  5, non-stoppers  3
+  guard 50 ticks: still removes stoppers 10, non-stoppers  5
+  guard 60 ticks: still removes stoppers 12, non-stoppers  6
+  ticks before the end -- stoppers [12.1, 27.0, 28.9, 34.2, 35.6, 40.2, 42.6, 43.3, 44.0, 47.7, 50.2, 55.5]; non-stoppers [20.1, 21.4, 38.7, 45.0, 45.7, 53.8]
+
+== 5. the chain's own Michel as a separator (on the guard-removed objects)
+  chain michel_found 1: 4: stoppers 4 (['039349_40/48', '039349_48/21', '039349_67/35', '039349_81/41']), non-stoppers 0 ([])
+  chain michel_found 0: 14: stoppers 8 (['039349_7/62', '039349_7/67', '039349_18/46', '039349_22/51', '039349_26/23', '039349_47/57', '039349_69/44', '039349_75/63']), non-stoppers 6 (['039349_54/20', '039349_59/14', '039349_64/65', '039349_72/9', '039349_76/31', '039349_82/52'])
+
+== 6. production's 11 objects (the change shipped in wcp f52a374e)
+  before the window (p96vprod) all 11 were is_stm; with it (p99wflip) none is.  Owner: stoppers 6 (lost), non-stoppers 5 (removed correctly).
+  of them with a chain Michel: 3: stoppers 3, non-stoppers 0
+
+wrote ../../scan/pdvd_stm_michel_own100_verdicts.json: 25 items (one per arm key)

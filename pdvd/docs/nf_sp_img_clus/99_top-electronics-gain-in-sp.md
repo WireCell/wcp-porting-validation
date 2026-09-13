@@ -37,6 +37,10 @@
   - **Production now uses the real window (§4.5, owner yes).** When no frame is staged, the clustering runner reads it
     from `pdvd/readout_window_ticks.txt`. Gate `p99wflip` equals `p99rwprod` on 120/120 events and `p96vprod` on the 36
     unchanged ones. The top gain stays OFF for its own round with the refits.
+- **The gain round is doc pdvd/100 — NOT flipped.** The C refit (0.8630) closes and alone moves no verdict; the two
+  data-sized Michel thresholds have nothing to refit; the pre-registered Michel-purity criterion against production fails,
+  confounded by the wire order. The owner judged the 19 frame-edge objects: the edge guard loses 6 of production's
+  stoppers to remove 5 non-stoppers.
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -544,10 +548,11 @@ Not judged: the 1 object new to on_only and the 34 unsampled members of prod_onl
   chose the real window.
   - It moves run 039349's is_stm by −11 on production and −14 on the latest configuration, and its STM candidates by
     about a hundred.
-  - **Most of those removals are unjudged.** The swap scan judged 1 of production's 11 and 8 of the latest
-    configuration's 14. The rest were tagged on both arms, so the scan never drew them, and whether removing them is a
-    gain or a loss is not measured here. Some carry a verdict in the carried record; that was not examined.
-  - Adopting the window therefore wants a look at run 039349's removed tags, not just the knob.
+  - **The swap scan judged few of those removals** (1 of production's 11, 8 of the latest configuration's 14); the rest
+    were tagged on both arms, so the scan never drew them. The smx record had judged 10 of production's 11 (8 stoppers).
+  - **Judged since (doc pdvd/100 §1, the owner's look at all 19 objects, 2026-09-13):** 12 stoppers and 7 through-going.
+    On production's 11, the guard loses 6 stoppers and removes 5 non-stoppers. No tick window separates them; the chain's
+    own Michel does (4/4 stoppers where it found one).
 
 ### 4.5 Production uses the real window (owner, 2026-09-13)
 
@@ -580,7 +585,8 @@ Not judged: the 1 object new to on_only and the 34 unsampled members of prod_onl
   candidates 409 → 314, guard firings 138 → 243. Runs 039252 and 039253 are byte-identical to before.
 - The grading baseline for production is now `p99wflip`. Records graded on `p96vprod` (the smx record, §6.4's control
   side) were taken with the 10000-tick window on run 039349.
-- The removed tags are mostly unjudged (§4.4): the swap scan judged 1 of production's 11.
+- The removed tags were judged by the owner in doc pdvd/100 §1: on production's 11, 6 stoppers lost and 5 non-stoppers
+  removed.
 - A new run needs a line in the table. A run without one falls back to 10000 and says so in the clustering log.
 
 ## 5. Carrying the hand-scan record
@@ -1016,7 +1022,7 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
    - The guard untags 9 scanned objects; 7 of them are THRU or UNCLEAR.
    - The gap narrows from −0.061 to −0.040 but does not close.
    - **Decided (owner, 2026-09-13): production uses the real window (§4.5).** It removes 11 is_stm clusters on production
-     and 14 on the latest configuration, mostly unjudged.
+     and 14 on the latest configuration. The owner judged all 19 objects in doc pdvd/100 §1: 12 stoppers, 7 through-going.
    - After that comes the owner's look at the medium/low calls, including the 2 STM_ONLY calls the guard removes
      (`039349_7/67`, `039349_75/63`), and at the frame-edge items (`d99/swap_scan_reports/`).
 6. **Candidates rose on ON:** 597 → 656 (events with a candidate 119 → 120). Not traced here. The per-key grades above use

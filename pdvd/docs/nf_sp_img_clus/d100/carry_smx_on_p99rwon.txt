@@ -1,0 +1,4 @@
+record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json: 601 items; base p96vprod -> p99rwon
+carry: {'geometry ok': 555, 'geometry lost': 28, 'geometry merged': 16, 'geometry split': 2}
+collisions (two keys -> one cluster, dropped): 0 []
+carried 555; re-keyed 483: [('039252_0/35', '039252_0/34'), ('039252_0/82', '039252_0/83'), ('039252_1/109', '039252_1/114'), ('039252_10/103', '039252_10/101'), ('039252_10/73', '039252_10/74'), ('039252_12/114', '039252_12/110'), ('039252_12/123', '039252_12/117'), ('039252_12/44', '039252_12/36'), ('039252_12/45', '039252_12/40'), ('039252_12/90', '039252_12/84'), ('039252_12/95', '039252_12/93

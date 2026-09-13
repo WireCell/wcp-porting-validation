@@ -1,0 +1,54 @@
+pdvd: 120 event dirs, 119 with T_stm_michel, 501 candidates
+  is_stm with a usable chain: 254
+G0 PowerBox(p=1,k=b'*pivot,C=1) vs PracticalBox(E=0.4500): forward max rel 4.44e-16, inverse max rel 1.11e-15
+G1 python E_dQdx(C=0.7941) vs chain muon_ke_dqdx: median ratio 1.00170  (IQR 0.99993-1.00508) over 254 tracks / 71030 points
+   clamps at C=0.7941: sanity 0, ceiling 1 of 71030 points
+0b role-1 dQ/dx: max 320974 e/cm, n<=0 0 of 71030
+
+HEADLINE  muon_ke_dqdx / muon_ke_range (as the arm ran): median 1.0009  IQR 0.9043-1.0866  n=254
+
+FIT  C = 0.7923 +- 0.0051 (bootstrap 200)   -> ratio median 1.0000  IQR 0.9046-1.0802  rms(log) 0.224
+     clamps at C: sanity 0, ceiling 1 of 71030 points
+     for reference: the tables' fudge alone is 0.85; doc pdvd/50 sec 14.1 k_pop gives C ~ 0.85*k_pop
+
+ratio(C=0.7923) vs muon_len cm     n   median      p25      p75
+  0-80                          68   0.9883   0.8535   1.0985
+  80-120                        50   1.0165   0.9081   1.1125
+  120-180                       35   1.0260   0.9642   1.0777
+  180-250                       44   0.9972   0.9064   1.0605
+  250-1000000000                57   0.9957   0.9249   1.0585
+
+ratio vs mean drift cm           n   median      p25      p75
+  0-60                          78   0.9634   0.8680   1.0527
+  60-120                        76   0.9970   0.9106   1.0601
+  120-180                       54   1.0265   0.9578   1.1241
+  180-240                       26   1.0161   0.9657   1.1399
+  240-400                       20   1.0936   1.0050   1.1715
+  power p=0.85 -> C=0.7823  chi2(length bins)=1.23
+  power p=0.90 -> C=0.7854  chi2(length bins)=1.24
+  power p=0.95 -> C=0.7892  chi2(length bins)=1.18
+  power p=1.00 -> C=0.7923  chi2(length bins)=1.04
+  power p=1.05 -> C=0.7973  chi2(length bins)=0.84
+  power p=1.10 -> C=0.8027  chi2(length bins)=0.73
+  power p=1.20 -> C=0.8168  chi2(length bins)=1.15
+  BOX  p=1.00 -> C=0.7923  chi2(length bins)=1.04   [shipped unless dchi2 demands otherwise]
+  field E=0.4000 kV/cm -> C=0.8125  rms(log ratio)=0.2309
+  field E=0.4500 kV/cm -> C=0.7923  rms(log ratio)=0.2242
+  field E=0.4959 kV/cm -> C=0.7792  rms(log ratio)=0.2187
+  field E=0.5500 kV/cm -> C=0.7667  rms(log ratio)=0.2131
+  field E=0.6000 kV/cm -> C=0.7596  rms(log ratio)=0.2084
+
+  bottom (x<0, anodes 0-3)   n= 76 ratio median 1.1089
+  top (x>0, anodes 4-7)      n=178 ratio median 0.9716
+
+length control: |stop - tagger_stop| median 0.46 cm, p90 2.03, >2 cm on 26/254
+ratio vs |stop-tagger_stop| cm     n   median      p25      p75
+  0-1                          190   1.0156   0.9131   1.1008
+  1-2                           38   0.9475   0.8647   1.0003
+  2-5                           22   0.9998   0.9076   1.0805
+
+MCS: computed on 219/254 (86.2%); amb<0.2 on 105 (41.3%)
+  ke_MCS/ke_range all computed n=219 median 0.9548 IQR 0.8989-1.0365
+  ke_MCS/ke_range amb<0.2      n=105 median 0.9260 IQR 0.8898-0.9577
+
+wrote /home/xqian/tmp/p100/cfit/c_refit_p99wflip_{summary,tracks}.tsv

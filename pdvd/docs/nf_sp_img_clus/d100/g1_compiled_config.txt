@@ -1,0 +1,8 @@
+# doc pdvd/100 G1 -- compiled PR config (pdvd/wct-pr-perevt.jsonnet, runner TLAs of 039349_7_p99rwon incl. pipeline -nu -stm-fit) before/after the stm_recomb_C knob
+# toolkit cfg/pgrapher/experiment/protodunevd/pr.jsonnet arg stm_recomb_C=0.7941 -> pdvd_stm_recomb data.C; driver stm_recomb_C = 0.7941 forwarded
+447e0f65afd9f853f7d2177854a921a4  pr_before.json
+447e0f65afd9f853f7d2177854a921a4  pr_after_default.json
+18971a22b641b2ccb3b500d1de023b2f  pr_after_c0863.json
+before == after at default: IDENTICAL
+with -S stm_recomb_C=0.8630: 1 differing leaves
+  [56]/data/C (node PowerBoxRecombination pdvd_stm_recomb): 0.7941 -> 0.863

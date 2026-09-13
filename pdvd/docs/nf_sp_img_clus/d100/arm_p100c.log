@@ -1,0 +1,4 @@
+[p100c] wave pr src p99rwon PR_TLA '-S stm_recomb_C=0.8630' start 2026-09-13T15:57:36-07:00 pin Clus 4e1db8101769 events 120
+[p100c] staged 120, problems 0
+[p100c] pr done 2026-09-13T16:03:30-07:00: ok 119 FAIL 1 no-input 0 loadavg 7.56
+[p100c] finished 2026-09-13T16:03:30-07:00 pin Clus 4e1db8101769 (start 4e1db8101769)

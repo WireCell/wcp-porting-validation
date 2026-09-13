@@ -1,0 +1,4 @@
+record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json: 637 items; base p98vonq -> p99rwon
+carry: {'geometry ok': 635, 'geometry split': 1, 'geometry lost': 1}
+collisions (two keys -> one cluster, dropped): 0 []
+carried 635; re-keyed 0: []

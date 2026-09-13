@@ -1,0 +1,4 @@
+record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json: 637 items; base p98vonq -> p99wflip
+carry: {'geometry ok': 613, 'geometry merged': 5, 'geometry lost': 17, 'geometry split': 2}
+collisions (two keys -> one cluster, dropped): 0 []
+carried 613; re-keyed 537: [('039252_0/34', '039252_0/35'), ('039252_0/83', '039252_0/82'), ('039252_1/114', '039252_1/109'), ('039252_10/101', '039252_10/103'), ('039252_10/74', '039252_10/73'), ('039252_12/110', '039252_12/114'), ('039252_12/117', '039252_12/123'), ('039252_12/36', '039252_12/44'), ('039252_12/40', '039252_12/45'), ('039252_12/84', '039252_12/90'), ('039252_12/93', '039252_12/95

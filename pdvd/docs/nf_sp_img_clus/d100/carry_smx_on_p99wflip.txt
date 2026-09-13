@@ -1,0 +1,4 @@
+record /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json: 601 items; base p96vprod -> p99wflip
+carry: {'geometry ok': 600, 'geometry lost': 1}
+collisions (two keys -> one cluster, dropped): 0 []
+carried 600; re-keyed 0: []

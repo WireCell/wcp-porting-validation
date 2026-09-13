@@ -1,0 +1,27 @@
+# doc pdvd/100 -- (a) does plateau_mip_hi bind on p100c? (b) Michel admission quantities of the new top Michel FPs vs the top hand-Michel TPs
+# payloads: prep_stm_michel_scan.py --det pdvd --arm p100c (scratch); record: latest carried record on p99rwon keys (d100_carry_verdicts.py)
+
+(a) {'candidates': 533, 'bragg_valid': 499, 'plateau/MIP > 1.3': 18, 'plateau/MIP > 1.6': 2, 'plateau/MIP > 1.8': 1, 'plateau/MIP > 2.0': 0, 'plateau/MIP < 0.6 (lower edge)': 44, 'plateau_off_mip bit in reject_bits': 44}
+    plateau/MIP p1 / p50 / p99 / max: [0.208 1.051 1.449 1.998]
+    reading: the upper edge (plateau_mip_hi) binds on no record item at any grid value 1.6-2.5; every plateau rejection is the lower edge 0.6 (not in this round's scope)
+
+(b) top items michel_found 0 on p99wflip -> 1 on p100c whose hand verdict is not STM_MICHEL (grade_p99wflip_p100c_latest_record.txt movers):
+    039253_11/113   hand STM_ONLY  michel_conn_type=1 michel_mip=0.32 michel_ke_best=6.4 michel_len=8.05 michel_dis_cm=0.0 stop_x=236.73
+    039349_12/52    hand STM_ONLY  michel_conn_type=1 michel_mip=1.48 michel_ke_best=19.02 michel_len=3.25 michel_dis_cm=0.0 stop_x=246.87
+    039349_17/54    hand STM_ONLY  michel_conn_type=1 michel_mip=1.03 michel_ke_best=1.89 michel_len=0.56 michel_dis_cm=0.0 stop_x=272.16
+    039349_18/47    hand STM_ONLY  michel_conn_type=1 michel_mip=1.51 michel_ke_best=2.23 michel_len=0.62 michel_dis_cm=0.0 stop_x=291.53
+    039349_33/67    hand STM_ONLY  michel_conn_type=1 michel_mip=1.6 michel_ke_best=16.05 michel_len=3.91 michel_dis_cm=0.0 stop_x=69.11
+    039349_47/71    hand STM_ONLY  michel_conn_type=1 michel_mip=1.78 michel_ke_best=3.1 michel_len=0.9 michel_dis_cm=0.0 stop_x=266.43
+    039349_48/59    hand STM_ONLY  michel_conn_type=2 michel_mip=0.0 michel_ke_best=0.07 michel_len=0.06 michel_dis_cm=2.8 stop_x=39.2
+    039349_50/49    hand STM_ONLY  michel_conn_type=1 michel_mip=1.03 michel_ke_best=43.44 michel_len=24.85 michel_dis_cm=0.0 stop_x=123.85
+    039349_66/80    hand STM_ONLY  michel_conn_type=1 michel_mip=1.44 michel_ke_best=12.88 michel_len=5.46 michel_dis_cm=0.0 stop_x=266.68
+    039252_17/95    hand THRU      michel_conn_type=2 michel_mip=0.0 michel_ke_best=4.78 michel_len=11.19 michel_dis_cm=2.39 stop_x=308.02
+    039253_1/107    hand THRU      michel_conn_type=2 michel_mip=0.0 michel_ke_best=5.3 michel_len=21.7 michel_dis_cm=1.52 stop_x=180.16
+    039253_11/84    hand THRU      michel_conn_type=1 michel_mip=0.38 michel_ke_best=5.78 michel_len=8.04 michel_dis_cm=4.54 stop_x=266.2
+    039349_22/40    hand THRU      michel_conn_type=1 michel_mip=0.84 michel_ke_best=7.97 michel_len=4.56 michel_dis_cm=0.0 stop_x=150.7
+    039349_32/63    hand THRU      michel_conn_type=2 michel_mip=0.0 michel_ke_best=21.27 michel_len=8.61 michel_dis_cm=2.83 stop_x=196.87
+    039349_62/69    hand THRU      michel_conn_type=1 michel_mip=0.46 michel_ke_best=2.02 michel_len=1.12 michel_dis_cm=0.0 stop_x=143.7
+    039349_63/44    hand THRU      michel_conn_type=1 michel_mip=0.43 michel_ke_best=5.02 michel_len=6.55 michel_dis_cm=0.0 stop_x=310.41
+    039349_77/45    hand THRU      michel_conn_type=1 michel_mip=0.55 michel_ke_best=4.64 michel_len=6.25 michel_dis_cm=0.0 stop_x=243.24
+    new top FPs          n  17: michel_ke_best p16/50/84 [ 2.14  5.3  17.36]; michel_len [0.78 5.46 9.74]; michel_mip [0.   0.55 1.49]; detached (conn 2) 4
+    top hand-Michel TPs  n  90: michel_ke_best p16/50/84 [12.78 23.21 40.2 ]; michel_len [ 4.02  7.69 12.65]; michel_mip [0.33 1.02 1.3 ]; detached (conn 2) 13

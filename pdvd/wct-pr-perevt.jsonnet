@@ -1638,6 +1638,9 @@ function(
     // no verdict and no tagger energy moves; what moves is muon_ke_dqdx and
     // the Michel energies in T_stm_michel.  false = the pre-doc-16 job.
     stm_recomb_calibrated    = true,
+    // doc pdvd/100: the C of that inverse.  0.7941 = doc pdhd/16's fit on the
+    // pre-gain top scale (toolkit default; byte-identical).
+    stm_recomb_C             = 0.7941,
     // Single-photon stem dE/dx: DEFAULT ON (owner 2026-07-30) -- route
     // shw_sp_vec_{median,mean}_dedx through the configured recombination
     // model above, with sp_mean_dedx_cut = 2.23 MeV/cm, the physical-scale
@@ -4595,6 +4598,7 @@ function(
                              pseudo_shower_track_paint=pseudo_shower_track_paint,
                              use_power_recomb=use_power_recomb,
                              stm_recomb_calibrated=stm_recomb_calibrated,   // doc pdhd/16
+                             stm_recomb_C=stm_recomb_C,                     // doc pdvd/100
                              fast_xgb_forest=fast_xgb_forest,
                              tcn_knobs=tcn_knobs);
 
