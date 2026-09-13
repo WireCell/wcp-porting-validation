@@ -29,13 +29,8 @@ keep	SUBSTRATE, not an old arm: it holds the SP+DNNROI frames d27fresh borrows. 
 d27fresh	stage_pr_tag.sh:7's DOCUMENTED DEFAULT src_tag ("src_tag defaults to d27fresh, the v7-uvwfit baseline") -- primary source, not a name-read.  Every PR-only tag in the tree is seeded from it	doc pdvd/27, scripts/stage_pr_tag.sh:7,11
 d41prov	the staging source doc 43 sec 6 built its 99-event production set from; the biggest hub in the tree at 8255 inbound links	doc pdvd/43 sec 6
 d39r2prov	provenance arm the doc-39 round's arms borrow from (1525 inbound)	doc pdvd/39
-d143pnew	the src_tag today's d08* PDVD arms were staged from (36 inbound); releasing it breaks arms created 2026-09-06	doc pdhd/08
-d28dlfp d34base	the two mid-chain links of keep -> d27fresh -> d28dlfp -> d34base -> d37*; 3 dirs each, and d37off1/d37on05 borrow img-provenance.txt from d34base.  Keeping a dir means keeping its substrate -- this needs a transitive closure to a fixed point, not a one-pass exclusion	symlink census
 
 # --- THE CURRENT OPERATING POINT (2026-09-06 owner flip) ------------------
-d48nu7	doc pdvd/48 sec 11: the 120-event arm the 2026-09-06 flip RESTS ON -- PDHD's knob bag measured pre-flip, and sec 11's "a fresh arm on the flipped default is NOT taken here: d48nu7 already is that".  Pin /home/xqian/tmp/d47_libpin/new11, the shipped binary	doc pdvd/48 sec 11
-d48flipcfg	the compiled-config proof of the 09-06 flip (event 039252/0).  A config proof that cannot be re-read is a claim, not a proof	doc pdvd/48 sec 11
-d31r6e2e	end-to-end arm with 25 citations across both repos, incl. the cross-detector comparisons	doc pdvd/31
 magnify	the Magnify dump root; not an arm	-
 
 # --- label dirs: CLAUDE.md M13 -------------------------------------------
@@ -46,22 +41,36 @@ work/d08_scan_labels/ work/d08pv_scan_labels/	hand-scan labels, the scientific r
 # the scan arms come from scan_arms_20260910.py, which reads each scan prep
 # set's OWN provenance key rather than a name anybody chose.
 d51vclus	THE TREE'S SUBSTRATE.  Corrected symlink census 2026-09-10: 23728 inbound links, every p4*/p7*/p8* arm stages its clustering from it.  NOTE the census defect this number fixes: os.path.realpath() follows a chain, so a link into <evt>_keep/<file> whose target is itself a link into /home/xqian/pdvd-frame-store resolved PAST keep and scored it 0 inbound.  Resolve the target lexically.	symlink census; doc pdvd/50
-keep d27fresh d41prov d39r2prov d143pnew d28dlfp d34base d48nu7	the rest of the substrate chain, inbound 968 / 4113 / 3368 / 625 / 36 / 9 / 18 / 1524.  keep's own entries are links into /home/xqian/pdvd-frame-store -- that store is the true input and is OUTSIDE every tree this round touches.	symlink census
+keep d27fresh d41prov d39r2prov	the rest of the substrate chain, inbound 968 / 4113 / 3368 / 625 / 36 / 9 / 18 / 1524.  keep's own entries are links into /home/xqian/pdvd-frame-store -- that store is the true input and is OUTSIDE every tree this round touches.	symlink census
 d53v	**THE smx1/smx1a HAND-SCAN SOURCE.**  prep-pdvd names it as the arm for 569 of its 570 prep items.  The owner asked on 2026-09-10 to keep the STM hand scans for PDVD and PDHD; keeping labels without the dump they were scanned against does not keep a scan.  A fresh arm at a different operating point is never a substitute.	stm_michel_scan/prep-pdvd; work/stm_michel_labels/smx1,smx1a
 d67v d68d4	**THE smx3 HAND-SCAN SOURCE** (prep-pdvd-smx3: 13 items from d67v, 36 from d68d4).	stm_michel_scan/prep-pdvd-smx3; work/stm_michel_labels/smx3
 d68a3	**THE smx4 HAND-SCAN SOURCE** (prep-pdvd-smx4, 54 items).  Scanned 2026-09-10, the labels were written at 09:19 the same day.	stm_michel_scan/prep-pdvd-smx4; work/stm_michel_labels/smx4
 d08pv30on d08pv30off	**THE d08pvflip0 HAND-SCAN SOURCE** (d08pv_scan_viewer.py's ARM binding).  A hand-written list of scan dirs missed these; scan_arms_20260910.py discovers the scan dirs instead of enumerating them.	pdvd/d08_scan/d08pv_scan_viewer.py
-p81voff3 p81vq2d3 p81vleg2	an OPEN decision, not a closed one.  Doc pdvd/81 shipped michel_q2d and michel_q2d_cells default OFF and put the flip to the owner (sec 8-9); d81_proofs.sh is written and waiting.  These three are the gate and the ON reading that decision will be made on.	doc pdvd/81 sec 8-9
 work/stm_michel_labels/	hand-scan labels including the LIVE scan tag smx1 -- a bokeh server was serving it on 2026-09-08.  M13	M13; pdhd/stm_michel_scan/serve_stm_michel_scan.sh
 
 # --- added 2026-09-12 (doc 105): production moved, the new hand scans, a live peer ---
 # Same keep test as 09-10 (the owner: "please do it like what we did before").
 p96vprod p96vscope	**THE LATEST PDVD PRODUCTION ARM** and its measurement twin.  Primary source: doc pdvd/96 sec 0 ("p96vprod, the flipped file with NO TLA") and its confirm step `d96_confirm.py --arm p96vscope --confirm p96vprod`.  One claim, two arms.  Supersedes p79vprod (RETIRED below).	doc pdvd/96 sec 0, line 266
 p85vprod p85vwh p88vprod p88v5fr p90vprod	**THE smx5..smx9 HAND-SCAN SOURCES**, derived by scan_arms_20260912.py: the per-item arm key of prep-pdvd-smx5..smx9, and docs/scan/pdvd_stm_michel_smx{7,8,9}_{sheet,key}.tsv.  All five were scanned 2026-09-11.	stm_michel_scan/prep-pdvd-smx5..9; work/stm_michel_labels/smx5..smx9
-h28* p97voff p97vwl	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~19:30: pdvd work tags p97voff/p97vwl (also under p97*), pin ~/tmp/h28/libpin_h28, runner ~/tmp/h28/run_arm28.sh, uncommitted record pdhd/docs/scan/d28/.  Gate baselines p96vprod (kept as production).	peer message; ~/tmp/h28
-h26* h27* p97*	A LIVE ROUND, by PREFIX.  The peer session that wrote doc pdhd/26 (committed 18:24 2026-09-12) is still running: ~/tmp/h27 written 18:24, h27cfg* work dirs, transcript written 18:31; the PDHD rounds also write PDVD cfg dirs (h25vcfg).  p97 is the next PDVD round's name -- nothing on disk yet, and a prefix for a round that has not started costs nothing.	ps; ~/tmp/h27; work mtimes
+
+# --- added 2026-09-13 (doc 106, round C): the runner SRC and the production pin ---
+d16vnu	the PR runners' SRC tag for every PDVD arm (0 inbound links -- p9x arms link through to d51vclus -- but d95_arms.sh:54, d96_arms.sh:64 and ~/tmp/h28/run_arm28.sh:9 stage from it).  Production cannot be RE-RUN without it.	lexical census 2026-09-13; d96_arms.sh
+/home/xqian/tmp/p96/libpin_p96	THE PDVD PRODUCTION PIN: p96vprod and p96vscope ran on it (doc pdvd/96 Repro lines 14-17).  Permanent while p96vprod is production.	doc pdvd/96 sec 0
 
 # ================= RETIRED =================
+
+# 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
+#   owner, 2026-09-13 (round C, doc 106): "Note, we can retire the intermediate results now.
+#   Four directories ~/tmp, sbnd_xin, pdvd, pdhd, please. We can clean up a bit the work* directories."
+# d143pnew	the src_tag today's d08* PDVD arms were staged from (36 inbound); releasing it breaks arms created 2026-09-06	doc pdhd/08
+# d28dlfp d34base	the two mid-chain links of keep -> d27fresh -> d28dlfp -> d34base -> d37*; 3 dirs each, and d37off1/d37on05 borrow img-provenance.txt from d34base.  Keeping a dir means keeping its substrate -- this needs a transitive closure to a fixed point, not a one-pass exclusion	symlink census
+# d48nu7	doc pdvd/48 sec 11: the 120-event arm the 2026-09-06 flip RESTS ON -- PDHD's knob bag measured pre-flip, and sec 11's "a fresh arm on the flipped default is NOT taken here: d48nu7 already is that".  Pin /home/xqian/tmp/d47_libpin/new11, the shipped binary	doc pdvd/48 sec 11
+# d48flipcfg	the compiled-config proof of the 09-06 flip (event 039252/0).  A config proof that cannot be re-read is a claim, not a proof	doc pdvd/48 sec 11
+# d31r6e2e	end-to-end arm with 25 citations across both repos, incl. the cross-detector comparisons	doc pdvd/31
+# p81voff3 p81vq2d3 p81vleg2	an OPEN decision, not a closed one.  Doc pdvd/81 shipped michel_q2d and michel_q2d_cells default OFF and put the flip to the owner (sec 8-9); d81_proofs.sh is written and waiting.  These three are the gate and the ON reading that decision will be made on.	doc pdvd/81 sec 8-9
+# h28* p97voff p97vwl	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~19:30: pdvd work tags p97voff/p97vwl (also under p97*), pin ~/tmp/h28/libpin_h28, runner ~/tmp/h28/run_arm28.sh, uncommitted record pdhd/docs/scan/d28/.  Gate baselines p96vprod (kept as production).	peer message; ~/tmp/h28
+# h26* h27* p97*	A LIVE ROUND, by PREFIX.  The peer session that wrote doc pdhd/26 (committed 18:24 2026-09-12) is still running: ~/tmp/h27 written 18:24, h27cfg* work dirs, transcript written 18:31; the PDHD rounds also write PDVD cfg dirs (h25vcfg).  p97 is the next PDVD round's name -- nothing on disk yet, and a prefix for a round that has not started costs nothing.	ps; ~/tmp/h27; work mtimes
+#   -> the doc 81 OPEN decision closed (doc pdvd/95 flipped PDVD, doc pdhd/26 flipped PDHD with sec 8a known); the h26-h28/p97 peer round committed+pushed, its session writes nothing; d143pnew/d28dlfp/d34base/d48nu7/d31r6e2e have 0 inbound on the 2026-09-13 lexical census (d48nu7/d48flipcfg = evidence of the 09-06 flip, superseded by p96vprod).  Kept: p96vprod p96vscope, every hand-scan source, d51vclus keep d27fresh d41prov d39r2prov d16vnu.
 
 # 2026-09-12 round B (doc 105 sec 13): RELEASED on the owner's instruction --
 #   owner, 2026-09-12 (round B of doc 105): "These can be cleaned up: sbnd d145np ...;

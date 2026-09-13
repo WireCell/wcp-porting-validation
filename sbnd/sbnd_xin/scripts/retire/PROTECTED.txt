@@ -286,9 +286,6 @@ work-probe178410a	the ONLY on-disk proof mcp2k evt 178410's SIGSEGV is non-deter
 # work-87mrg-post-mcp1k work-87mrg-post-ncpi0 work-87mrg-post-nuecc48	doc 87 sec 1.4 post-merge gate arm	doc 87
 # same twelve-arm release -- see the block above.
 # work-87knob-def-mcp1k work-87knob-def-ncpi0 work-87knob-def-nuecc48	doc 87 sec 6.1 knobs-at-defaults gate arm	doc 87
-work-87knob-min-ncpi0 work-87knob-min-nuecc48 work-87knob-sup-ncpi0 work-87knob-sup-nuecc48	the ONLY minimal-output arms in the tree; doc 87 sec 6.2	doc 87
-work-87flip-ncpi0 work-87flip-nuecc48	doc 87 sec 4.6 flip-equivalence	doc 87
-work-87grp-def-ncpi0 work-87grp-min-ncpi0 work-87grp-nopct-ncpi0	doc 87 sec 6.4 group-mode arms	doc 87
 # RELEASED 2026-09-01b (doc 91).  The SBND_PR_CALIB matrix: 7 arms, 1 ncpi0
 # event each, 21 MB -- the worst dir-count-per-byte in the tree, which is what
 # this round was called to fix.  Re-runnable end to end from work-ncpi0-grp0825
@@ -334,8 +331,6 @@ work-mcp1k-d144fixprod work-mcp2k-d144fixprod work-ncpi0-d144fixprod work-nuecc4
 # bare-config / flip-equivalence arm is the mistake this file already records
 # twice (work-pr87-postflip-*, work-cbr3-bare2evt): the "shipped config ==
 # validated arm" claim becomes text-only the same day.
-work-mcp1k-d145prod work-mcp2k-d145prod work-ncpi0-d145prod work-nuecc48-d145prod	pr/145 item 4 SHIPPED arm: no PR_EXTRA_TLA at all, 35/35 rc=0, gated against work-*-d144fixprod (4 events move, all four the owner called cosmics)	doc pr/145 sec 8.3
-work-d147-tailflip-mcp1k work-d147-tailflip-mcp2k work-d147-flipchk-mcp1k work-d147-flipchk-mcp2k	pr/147's two flip-equivalence arms -- 34/34 for the tail-absorb flip, 44/44 for track_types.  These are the post-flip BARE runs that prove the shipped jsonnet reproduces the validated arm	doc pr/147 sec 15.1
 work-mcp1k-d146sv25 work-mcp2k-d146sv25 work-ncpi0-d146sv25 work-nuecc48-d146sv25	pr/146 sec 12's RECOMMENDED but not-yet-flipped operating point (kine_sat_cont_keep_deg 25).  An open owner decision needs its arm on disk	doc pr/146 sec 12
 #
 # THE SENTINEL WITNESS.  ITS ORIGINAL REASON IS SPENT, and the honest restatement
@@ -360,7 +355,6 @@ work-sent97-mcp1k work-sent97-mcp2k work-sent97-ncpi0 work-sent97-nuecc48	the 31
 # score.  This is doc 91's own failure mode (a census returning 0 for a genuinely
 # cited arm is indistinguishable from one that works).  Do not release it on a
 # zero-citation reading.
-work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodchk-nuecc48 work-dbg25a-d97prodchk	doc 97 sec 9: production default == the validated arm, 139 evts. AMENDED 2026-09-04 (doc 100 sec 4): the four sample arms are whole; work-dbg25a-d97prodchk is NOT -- its 20 ql_evt<N> OUTPUTS (mabc, pctree, logs), which are what sec 9 measures, are intact, but its imaging INPUT is gone (work-dbg25a-ql was deleted under it) so it can be re-read, NOT re-run. Regenerable via dbg25_stage.sh -> dbg25_run.sh -> d97_dbg25_arm.sh	doc 97, doc 98, doc 100
 #
 # A LIVE PEER ROUND OWNS work-*-doc25new* / work-*-doc25old (PDVD doc 25's SBND
 # regression-gate arms, gate round 7 in flight 2026-09-02).  Protected by
@@ -377,7 +371,6 @@ work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodch
 # work-probe178410a and work-dbg25a-d97prodchk.  Both are lines in this file.
 # That is the second round running in which this file has vetoed a deletion the
 # planner would otherwise have made; it is not decoration.
-work-ncpi0-d99r3prod work-ncpi0-d99r3prodpr	the ref/prod-2026-09-05 flip's own arm (doc 99 r3): knobs ON in the jsonnet defaults with no TLA, i.e. the path production actually takes.  The NEWEST operating point on disk -- work-*-d97fvpr2 is 3067 events but at prod-2026-09-04	doc 99 r3, doc 100
 #
 # *** DAMAGE RECORD, doc 100 sec 4 -- work-dbg25a-d97prodchk IS NO LONGER
 # SELF-CONTAINED. ***  This round deleted work-dbg25a-ql, which it borrowed its
@@ -847,6 +840,18 @@ ref/ products/	the generation records and the published score tables; not work d
 # PROTECTED arms that still borrow from grp0825 lose their imaging.
 
 # ================= RETIRED =================
+
+# 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
+#   owner, 2026-09-13 (round C, doc 106): "Note, we can retire the intermediate results now.
+#   Four directories ~/tmp, sbnd_xin, pdvd, pdhd, please. We can clean up a bit the work* directories."
+# work-87knob-min-ncpi0 work-87knob-min-nuecc48 work-87knob-sup-ncpi0 work-87knob-sup-nuecc48	the ONLY minimal-output arms in the tree; doc 87 sec 6.2	doc 87
+# work-87flip-ncpi0 work-87flip-nuecc48	doc 87 sec 4.6 flip-equivalence	doc 87
+# work-87grp-def-ncpi0 work-87grp-min-ncpi0 work-87grp-nopct-ncpi0	doc 87 sec 6.4 group-mode arms	doc 87
+# work-mcp1k-d145prod work-mcp2k-d145prod work-ncpi0-d145prod work-nuecc48-d145prod	pr/145 item 4 SHIPPED arm: no PR_EXTRA_TLA at all, 35/35 rc=0, gated against work-*-d144fixprod (4 events move, all four the owner called cosmics)	doc pr/145 sec 8.3
+# work-d147-tailflip-mcp1k work-d147-tailflip-mcp2k work-d147-flipchk-mcp1k work-d147-flipchk-mcp2k	pr/147's two flip-equivalence arms -- 34/34 for the tail-absorb flip, 44/44 for track_types.  These are the post-flip BARE runs that prove the shipped jsonnet reproduces the validated arm	doc pr/147 sec 15.1
+# work-d97prodchk-mcp1k work-d97prodchk-mcp2k work-d97prodchk-ncpi0 work-d97prodchk-nuecc48 work-dbg25a-d97prodchk	doc 97 sec 9: production default == the validated arm, 139 evts. AMENDED 2026-09-04 (doc 100 sec 4): the four sample arms are whole; work-dbg25a-d97prodchk is NOT -- its 20 ql_evt<N> OUTPUTS (mabc, pctree, logs), which are what sec 9 measures, are intact, but its imaging INPUT is gone (work-dbg25a-ql was deleted under it) so it can be re-read, NOT re-run. Regenerable via dbg25_stage.sh -> dbg25_run.sh -> d97_dbg25_arm.sh	doc 97, doc 98, doc 100
+# work-ncpi0-d99r3prod work-ncpi0-d99r3prodpr	the ref/prod-2026-09-05 flip's own arm (doc 99 r3): knobs ON in the jsonnet defaults with no TLA, i.e. the path production actually takes.  The NEWEST operating point on disk -- work-*-d97fvpr2 is 3067 events but at prod-2026-09-04	doc 99 r3, doc 100
+#   -> superseded evidence: production is work-*-d102m/d102mpr (doc 102).  d97prodchk = the prod-2026-09-04 check, d99r3prod* = the prod-09-05 flip arm, d145prod = pr/145's shipped arm gated against d144fixprod (itself gone), d147-* = pr/147 flip-equivalence (closed), 87* = doc 87 output-knob evidence (doc committed).  work-dbg25a-ql goes with its only borrower work-dbg25a-d97prodchk.  Kept: d102m/d102mpr, vtx105-base, pr130r1-probe*, pr134-f086, s144*, sent97, d146sv25 (OPEN), probe178410a, tfix388-r9.
 
 # 2026-09-12 round B (doc 105 sec 13): RELEASED on the owner's instruction --
 #   owner, 2026-09-12 (round B of doc 105): "These can be cleaned up: sbnd d145np ...;

@@ -49,23 +49,39 @@ input_data_14_old_coh_grouping	symlink -> /nfs/data/1/xning/wirecell-working/dat
 
 # --- added 2026-09-10 (doc 104): substrate, scans, production, live round ---
 d51hclus	THE TREE'S SUBSTRATE: 5132 inbound links on the corrected census (see the pdvd file for the realpath defect that number fixes).	symlink census
-d09 d09ctl d09ctl2 d11seponA d11sepoffA d11prod d02prod stmwc wcc d16hnu	the rest of the substrate, inbound 2010 / 240 / 950 / 310 / 62 / 2 / 12 / 62 / 4 / 8.  The 38 bare 029107_<N> dirs (847 inbound) were already protected and stay.	symlink census
+d09 d09ctl d09ctl2 wcc d16hnu	the rest of the substrate, inbound 2010 / 240 / 950 / 310 / 62 / 2 / 12 / 62 / 4 / 8.  The 38 bare 029107_<N> dirs (847 inbound) were already protected and stay.	symlink census
 d53h	**THE pdhd smx1 HAND-SCAN SOURCE** (prep-pdhd names it for 303 of 304 prep items).  The owner asked on 2026-09-10 to keep the STM hand scans for PDHD as well as PDVD.	stm_michel_scan/prep-pdhd; work/stm_michel_labels/smx1
-p81hoff3 p81hq2d3 p81hleg2	the PDHD half of doc pdvd/81's OPEN flip decision (sec 8-9): PDHD is the detector where 45% of Michels lean on the cross-shared fitted substitution, so it is the side the definition question turns on.	doc pdvd/81 sec 8-9
 work/stm_michel_labels/ work/stm_scan_labels/ work/ql_labels/	hand-scan labels, the scientific record itself.  M13	M13
 
 # --- added 2026-09-12 (doc 105): production moved, the new hand scans, a live peer ---
 # Same keep test as 09-10 (the owner: "please do it like what we did before").
-h26q2dprod h26conf	**THE LATEST PDHD PRODUCTION ARM** and its gate baseline.  Primary source: doc pdhd/26 line 121 -- "PDHD production = h26q2dprod (identical to h26conf on every verdict)"; line 104 grades h26q2d additively against h26conf.	doc pdhd/26 sec 1.2, lines 104-121
 h18s	**THE smx18..smx27 HAND-SCAN SOURCE.**  prep-pdhd-smx18/19 were built `--arm h18s` (317 items), and every later record smx20..smx27 re-uses prep-pdhd-smx19 (docs/scan/smx2x/provenance.json).  d53h (the 30 pinned-tranche items) is already protected above.	docs/scan/smx18..27/provenance.json; work/stm_michel_labels/smx18..21, own19..26
 h18b p82bhoff p82hoff	smx18's double-scan keys (docs/scan/smx18/pdhd_stm_michel_scan_key_{h18b,p82bhoff}.tsv) and the owner queue built from them; p82hoff is in smx18's provenance.	docs/scan/smx18
 h23conf	own23's ruled items (docs/scan/smx23/owner_rulings_own23.json) and prep-pdhd-h23conf.	docs/scan/smx23; stm_michel_scan/prep-pdhd-h23conf
 h25base h25k h25kr h25r h25va h25vb	smx25/smx26/smx27 + own25/own26: prep-pdhd-h25base, and the movers of lever 1 (h25k), compare_range_cm 45 (h25r) and both (h25kr) put in front of the blind two-scanner re-judge (docs/scan/smx25 key_smx25, items_a*).  h25va/h25vb are over-emitted from movers_*.tsv -- the safe direction.	docs/scan/smx25, smx26; doc pdhd/25 sec 5-8
-h28*	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~19:30: work tags h28off/h28wl/h28prod, pin ~/tmp/h28/libpin_h28 (runner ~/tmp/h28/run_arm28.sh), uncommitted record pdhd/docs/scan/d28/.  Gate baseline h26q2dprod (kept as production).  Protected by PREFIX before its arms exist.	peer message; ~/tmp/h28
-/home/xqian/tmp/h28	that round's scratch and pin; excluded from dedup_pins_20260912.py and pins_of_dead_rounds_20260912.py by name (LIVE_TMP).	peer message
-h26* h27*	A LIVE ROUND, by PREFIX.  The peer session that committed doc pdhd/26 at 18:24 2026-09-12 is still running (~/tmp/h27 written 18:24, h27cfg*/h27cfgoff/h27cfgT work dirs, transcript written 18:31).  live_tokens() cannot see ~/tmp and doc 26 is committed, so only the prefix holds it.	ps; ~/tmp/h27; work mtimes
+
+# --- added 2026-09-13 (doc 106, round C): PDHD production moved to h28prod ---
+h28prod h28wl	**THE LATEST PDHD PRODUCTION ARM** and its confirm twin.  Primary source: doc pdhd/28 line 12 ("PDHD's is now h28prod (pin libpin_h28, Clus md5 30113227)"); gate F h28prod == h28wl bit-identical (docs/scan/d28/gate_h28prod.txt).  One claim, two arms.  Supersedes h26q2dprod/h26conf (RETIRED below).	doc pdhd/28 sec 1, lines 12 and 119
+h28off	the knob-off baseline of michel_q2d_region_wire_lookup on the production pin: G1 h28off == h26q2dprod on every branch, row, tree, zip, calib and census (docs/scan/d28/gate_h28off.txt).  Kept so the OFF side of the flip stays re-checkable (doc 98); the only PDHD off baseline once h26q2dprod goes.	doc pdhd/28 G1; peer session 2026-09-13
+h28cfg h28cfg0 h28cfgT h28cfgoff	the compiled-config proofs of the doc pdhd/28 flip (F proofs: h28cfg0 -> h28cfgT +1 key, h28cfgT -> h28cfg 0/0/0)	doc pdhd/28 line 118
+/home/xqian/tmp/h28/libpin_h28	THE PDHD PRODUCTION PIN (libWireCellClus md5 30113227); h28prod/h28wl/h28off ran on it.  The rest of ~/tmp/h28 is scratch (~9 MB: launcher logs, private git indexes, superseded readouts -- per the session that wrote it).	doc pdhd/28 line 12
 
 # ================= RETIRED =================
+
+# 2026-09-13 round C (doc 106): RELEASED on the owner's instruction --
+#   owner, 2026-09-13 (round C, doc 106): "Note, we can retire the intermediate results now.
+#   Four directories ~/tmp, sbnd_xin, pdvd, pdhd, please. We can clean up a bit the work* directories."
+# p81hoff3 p81hq2d3 p81hleg2	the PDHD half of doc pdvd/81's OPEN flip decision (sec 8-9): PDHD is the detector where 45% of Michels lean on the cross-shared fitted substitution, so it is the side the definition question turns on.	doc pdvd/81 sec 8-9
+# h26q2dprod h26conf	**THE LATEST PDHD PRODUCTION ARM** and its gate baseline.  Primary source: doc pdhd/26 line 121 -- "PDHD production = h26q2dprod (identical to h26conf on every verdict)"; line 104 grades h26q2d additively against h26conf.	doc pdhd/26 sec 1.2, lines 104-121
+# h28*	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~19:30: work tags h28off/h28wl/h28prod, pin ~/tmp/h28/libpin_h28 (runner ~/tmp/h28/run_arm28.sh), uncommitted record pdhd/docs/scan/d28/.  Gate baseline h26q2dprod (kept as production).  Protected by PREFIX before its arms exist.	peer message; ~/tmp/h28
+# /home/xqian/tmp/h28	that round's scratch and pin; excluded from dedup_pins_20260912.py and pins_of_dead_rounds_20260912.py by name (LIVE_TMP).	peer message
+# h26* h27*	A LIVE ROUND, by PREFIX.  The peer session that committed doc pdhd/26 at 18:24 2026-09-12 is still running (~/tmp/h27 written 18:24, h27cfg*/h27cfgoff/h27cfgT work dirs, transcript written 18:31).  live_tokens() cannot see ~/tmp and doc 26 is committed, so only the prefix holds it.	ps; ~/tmp/h27; work mtimes
+# /home/xqian/tmp/d47_libpin/new11	the shipped binary (libWireCellClus.so a4ff5439) behind d03nu9 AND pdvd d48nu7.  A missing LD_LIBRARY_PATH entry is silently ignored (M1 shape), so dropping this makes both arms re-readable but not re-runnable, with no error	docs/03 sec 2, doc pdvd/48 sec 11, doc pr/143 sec 6.1
+#   -> PDHD production is h28prod (doc pdhd/28).  h26q2dprod is bit-identical to the kept h28off (G1); h26conf is the pre-q2d
+#      production baseline.  COST, stated: doc pdhd/26 secs 1-3.3 become read-only from their committed txt (census.txt,
+#      michel_energy.txt, gate files); its Repro block no longer regenerates them.  p81h*: doc 81's decision closed (doc pdhd/26
+#      lines 114-115, 8ae3bfba).  d11prod d11sepoffA d11seponA d02prod stmwc: 0 inbound on the 2026-09-13 lexical census.
+#      d47_libpin/new11 backed d03nu9 (gone since 09-06) and pdvd d48nu7 (released this round); the ~/tmp pin test decides it.
 
 # 2026-09-12 round B (doc 105 sec 13): RELEASED on the owner's instruction --
 #   owner, 2026-09-12 (round B of doc 105): "These can be cleaned up: sbnd d145np ...;
@@ -84,7 +100,6 @@ h26* h27*	A LIVE ROUND, by PREFIX.  The peer session that committed doc pdhd/26 
 # new6 3482ded8 -> d03nu3/4, new7 b4bd5aca -> d03nu5, new8 c557f0ff -> d03nu6,
 # new9 ea8d5540 -> d03nu7, new10 425577d6 -> d03nu8, new11 a4ff5439 -> d03nu9.
 029107_*_d03nu9	THE CENSUS ARM (doc pdhd/03 sec 7): 30 events, 166 STM-tagged candidates, run on the SHIPPED binary at the driver's DEFAULT bag -- i.e. the operating point doc pdvd/48 sec 11 then adopted as the PDVD default on 2026-09-06.  Every sec-7 number is read off this arm	docs/03_check-stm-michel-pdhd.md sec 2, sec 7
-/home/xqian/tmp/d47_libpin/new11	the shipped binary (libWireCellClus.so a4ff5439) behind d03nu9 AND pdvd d48nu7.  A missing LD_LIBRARY_PATH entry is silently ignored (M1 shape), so dropping this makes both arms re-readable but not re-runnable, with no error	docs/03 sec 2, doc pdvd/48 sec 11, doc pr/143 sec 6.1
 029107_*_d48ref2 029107_*_d48new4	doc pdvd/48 sec 7.2 row 4: the PDHD side of the byte-identity gate on the shared PdvdPrMagnifyTrackingVisitor class (zip 13 members SAME, both ROOT files' trees SAME).  A PDVD-only blast-radius check would not see these -- the doc 100 sec 10 shape	doc pdvd/48 sec 7.2, sec 9
 
 # --- doc pdhd/08, the retiler bridge cap (round closed 2026-09-06) ---------

@@ -1,0 +1,322 @@
+alive families after round C: 72 (work dirs released by the plan: 1375)
+
+== pin: KEEP 29  FREE 37
+  KEEP  d08_libpin/new                                               named by 3 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d08_libpin/new2                                              named by 7 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d08_libpin/ref                                               named by 3 file(s); survivors d08cap10 d08goff d08pv30off d08pv30on; non-.so 0 MiB
+  KEEP  d09_libpin/pin                                               named by 67 file(s); survivors d09ctl d09ctl2; non-.so 1 MiB
+  KEEP  d102m-libsnap                                                named by 7 file(s); survivors d102m d102mpr; non-.so 0 MiB
+  FREE  d144_libpin2                                                 named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d144_libpin4                                                 named by 6 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d145_libpin                                                  named by 7 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d145_libpin_cont                                             named by 2 file(s), no surviving arm; non-.so 0 MiB
+  KEEP  d146_libpin                                                  named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d146_libpin2                                                 named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  KEEP  d146_libpin_pre                                              named by 1 file(s); survivors d146sv25; non-.so 0 MiB
+  FREE  d30r2_cen                                                    named by 2 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d30r2_final                                                  named by 6 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d30r2_mv                                                     named by 2 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d41_libpin/new                                               named by 3 file(s), no surviving arm; non-.so 0 MiB
+  KEEP  d41_libpin/new6                                              named by 9 file(s); survivors d41prov; non-.so 0 MiB
+  FREE  d42_libpin/new                                               named by 0 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d42_libpin/new2                                              named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d42_libpin/ref                                               named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d44_libpin/new                                               named by 7 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d44_libpin/ref                                               named by 3 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/new                                               named by 1 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/new11                                             named by 6 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/new2                                              named by 3 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/new3                                              named by 0 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/new4                                              named by 2 file(s), no surviving arm; non-.so 0 MiB
+  FREE  d47_libpin/ref                                               named by 9 file(s), no surviving arm; non-.so 0 MiB
+  KEEP  d53/libpin                                                   named by 14 file(s); survivors d53h d53v; non-.so 0 MiB
+  FREE  d57/pin_lib                                                  named by 0 file(s), no surviving arm; non-.so 240 MiB
+  FREE  d58_libpin/lib                                               named by 1 file(s), no surviving arm; non-.so 240 MiB
+  FREE  d61/libpin                                                   named by 3 file(s), no surviving arm; non-.so 240 MiB
+  FREE  d61/libpin_item1_after                                       named by 0 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  d61/libpin_item1_before                                      named by 1 file(s); survivors d53h d67v; non-.so 240 MiB
+  FREE  d62/libpin                                                   named by 9 file(s), no surviving arm; non-.so 240 MiB
+  FREE  d63/libpin                                                   named by 3 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  d64/libpin                                                   named by 8 file(s); survivors d53h d53v; non-.so 240 MiB
+  FREE  d65/libpin                                                   named by 8 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  d66/libpin                                                   named by 14 file(s); survivors d53h d53v d67v d68a3 d68d4; non-.so 240 MiB
+  KEEP  d71/libpin_base                                              named by 3 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  d71/libpin_p1                                                named by 6 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  d97b-libsnap                                                 named by 31 file(s); survivors d102m d102mpr; non-.so 240 MiB
+  KEEP  h28/libpin_h28                                               PDHD production pin (doc pdhd/28 line 12; pdhd PROTECTED 2026-09-13)
+  KEEP  p4/libpin_p4                                                 named by 10 file(s); survivors d68a3; non-.so 240 MiB
+  KEEP  p65/libpin_p65                                               named by 15 file(s); survivors h23conf p82bhoff; non-.so 240 MiB
+  KEEP  p72/libpin_p72                                               named by 8 file(s); survivors d68a3; non-.so 240 MiB
+  FREE  p74/libpin_p74                                               named by 7 file(s), no surviving arm; non-.so 240 MiB
+  FREE  p75/libpin_p75                                               named by 15 file(s), no surviving arm; non-.so 240 MiB
+  FREE  p80/libpin_p80                                               named by 7 file(s), no surviving arm; non-.so 0 MiB
+  FREE  p81/libpin_p81                                               named by 1 file(s), no surviving arm; non-.so 240 MiB
+  FREE  p81/libpin_p81f                                              named by 2 file(s), no surviving arm; non-.so 240 MiB
+  FREE  p81/libpin_p81g                                              named by 5 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  p82/libpin_p82                                               named by 48 file(s); survivors d53h h18b h18s p82bhoff p82hoff; non-.so 0 MiB
+  KEEP  p83/libpin_p83                                               named by 11 file(s); survivors p82bhoff; non-.so 0 MiB
+  KEEP  p84/libpin_p84                                               named by 11 file(s); survivors d67v d68a3 d68d4; non-.so 0 MiB
+  KEEP  p85/libpin_p85                                               named by 11 file(s); survivors p85vprod p85vwh; non-.so 0 MiB
+  KEEP  p87/libpin_p87                                               named by 10 file(s); survivors p85vprod p85vwh; non-.so 0 MiB
+  KEEP  p88/libpin_p88                                               named by 19 file(s); survivors p85vprod p88v5fr p88vprod p90vprod; non-.so 0 MiB
+  KEEP  p92/libpin_p92                                               named by 15 file(s); survivors p90vprod; non-.so 0 MiB
+  FREE  p95/libpin_p95                                               named by 6 file(s), no surviving arm; non-.so 240 MiB
+  FREE  p95/libpin_p95b                                              named by 10 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  p96/libpin_p96                                               PDVD production pin (doc pdvd/96 Repro; pdvd PROTECTED 2026-09-13)
+  FREE  pdhd02_libpin                                                named by 2 file(s), no surviving arm; non-.so 240 MiB
+  KEEP  pdhdstm_libpin                                               pdhd PROTECTED line 37 (stm-tagger-chain line 901, backs the stm0/stmw scan)
+  FREE  pin_d59                                                      named by 0 file(s), no surviving arm; non-.so 0 MiB
+  FREE  xtrack_libpin                                                named by 5 file(s), no surviving arm; non-.so 240 MiB
+
+== prep: KEEP 14  FREE 106
+  KEEP  d67/prep_d67v                                                named by a scan record (served to the scanners)
+  KEEP  d68/prep_d68a3                                               named by a scan record (served to the scanners)
+  KEEP  d68/prep_d68d4                                               named by a scan record (served to the scanners)
+  KEEP  h18/prep_h18b                                                arm h18b survives round C
+  KEEP  h18/prep_h18s                                                arm h18s survives round C
+  KEEP  h18/prep_p82bhoff                                            arm p82bhoff survives round C
+  KEEP  h25r/prep_sheets                                             live prefix
+  KEEP  p85/prep_p85vwh                                              named by a scan record (served to the scanners)
+  KEEP  p87/prep_p85vprod                                            named by a scan record (served to the scanners)
+  KEEP  p88/prep_p88v5fr                                             arm p88v5fr survives round C
+  KEEP  p89/prep_p88vprod                                            named by a scan record (served to the scanners)
+  KEEP  p90/prep_p90vprod                                            named by a scan record (served to the scanners)
+  KEEP  p93/prep_p90vprod                                            arm p90vprod survives round C
+  KEEP  p96/prep_p96vscope                                           arm p96vscope survives round C
+  FREE by round: d56:1 d57:1 d58:1 d59:2 d61:1 d62:6 d63:1 d64:3 d65:7 d66:2 d67:3 d68:1 d71:4 h19:1 p4:5 p72:9 p74:6 p75:5 p76:2 p79:3 p80:1 p81:4 p82:9 p83:4 p84:5 p85:3 p87:5 p88:4 p90:3 p93:1 p95:2 p96:1
+
+== session: KEEP 4  FREE 40
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/08fdb8ab-e8d5-4f63-8dbe-9c4b6ad9d2df transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/19ebd1aa-de7b-4d61-89c7-d38bcb5ceaa3 transcript 14 h old, idle
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/1cab00a8-432a-4ff9-bce1-91f8710d5d7e peer pdhd25-lever-arms-blind-rejudge (open)
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/1f022d51-fa54-4664-b617-e7c60c5e00ec transcript 165 h old, idle
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/1fce3b9b-3cb7-4171-9cbd-f3e5eedce907 named by /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/smx19/cmp_review.txt
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/2165a952-d866-4b83-bf54-0d0ed2044586 transcript 141 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/217ba691-e575-45a1-bb28-4e01394618bf transcript 178 h old, idle
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/2279b083-d99b-4b7c-8de4-c2131283a379 this session
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/25919947-ee7d-43b7-9bc2-bd5b6388af71 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/32eda995-83dd-4feb-b6e0-dbfc249b16db transcript 153 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/37fe6842-539f-4afe-b02d-f373441c663c transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/3e47164a-1095-41db-a04d-b40d4793038c transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/4088b3b5-c570-48a5-8fe7-659d0a9d58a6 transcript 69 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/40938d35-e9c0-4171-8aa3-56f037698a27 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/40a6ecf6-eb75-4a41-a5e6-3c95ee629c08 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/49029fa1-2b6f-4e5c-8107-5639c290393d transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/4dd00133-34c5-4ea7-9d61-167658be2342 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/6f5995e8-a519-4e88-ae04-7c524bcfa3c1 transcript 47 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/8a0cef2e-505d-4c68-97ff-0da3dc37409e transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/8f73c953-6088-4296-8a18-72cff09ab68d transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/9bfd53e5-d5ff-4808-93d5-2464cf94dcb2 transcript 137 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/a48189f6-07e5-43a7-af9e-56ce3cc52a34 transcript 113 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/a7214112-b885-41c5-8247-8413cb2a6816 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/af86aedf-aa07-4fc8-9121-c7aefd82efb8 transcript 149 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/b48747db-62fd-47bf-b819-eb159eebd55f transcript 151 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/b687c776-4b9d-4c26-84ee-cc11f23f5d4b transcript 14 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/bd60ef7c-a084-45ea-be92-d406b0d03481 transcript 108 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/c4caa8ac-2a64-4f6b-bb6c-500b6687f510 transcript 87 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/c66ec729-15ce-4fb2-87ea-96bcfc36b06a transcript 151 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/d147e24a-841e-46fe-909c-3e720fb7454d transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/d751d6a6-8f06-4e28-984f-ebed25c846ba transcript 111 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/d8ce2ca9-5d6c-4e1e-8647-572731cd9999 transcript 497027 h old, idle
+  KEEP  claude-25225/-home-xqian-toolkit-dev-toolkit/d9d688aa-85d3-4ebf-900f-e2f746766f40 named by /home/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/nf_sp_img_clus/69_stm-campaign-determinism-audit.md
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/da5458cb-08df-4ccc-8187-1ee244815702 transcript 80 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/db61685c-32df-41ed-821a-bc24889514b7 transcript 67 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/e5b263b8-7c2d-4c98-b5df-10781993e271 transcript 66 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/e6773b66-8e9c-4623-8ced-0410dcfc98bd transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/ed0cb24a-f044-413e-84b9-1567473a47a1 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/f39eaf14-aaf3-42a2-ba40-5e9b4a0d7360 transcript 497027 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/f454ddac-35e9-4ca2-8c33-874c970ec877 transcript 95 h old, idle
+  FREE  claude-25225/-home-xqian-toolkit-dev-toolkit/f83ad438-ca90-463d-961f-12a7d305b356 transcript 497027 h old, idle
+  FREE  claude-25225/-nfs-data-1-xqian-toolkit-dev/d05831dc-4f14-4c00-bcfb-3dba1fb645ba transcript 681 h old, idle
+  FREE  claude-25225/-nfs-data-1-xqian-toolkit-dev-wcp-porting-img-sbnd/18459085-409b-43b0-a6c4-d0b40c37b0ee transcript 497027 h old, idle
+  FREE  claude-25225/-nfs-data-1-xqian-toolkit-dev-wcp-porting-img-sbnd-sbnd-xin/81062ef2-c602-4e75-8521-09c679661078 transcript 497027 h old, idle
+
+== scratch: KEEP 5  FREE 179
+  FREE  h28/DONE_h28off                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/DONE_h28prod                                             ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/DONE_h28wl                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/DONE_p97voff                                             ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/DONE_p97vwl                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28off                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28off.log                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28prod                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28prod.log                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28wl                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_h28wl.log                                            ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_p97voff                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_p97voff.log                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_p97vwl                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/arm_p97vwl.log                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/build.log                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/build.rc                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/build2.log                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/build2.rc                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/build_k.log                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cfg.log                                                  ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cfg0.log                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cfgT.log                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cfgoff.log                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cp26r.log                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cp27.log                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/cp28b.log                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/d26repro                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/doctest_clus.log                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/doctest_pick.log                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_ctl.py                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_ctl.txt                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_dqdx.py                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_dqdx.txt                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_dqdx2.py                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_dqdx2.txt                                        ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_face.py                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_face.txt                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_face2.py                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_face2.txt                                        ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_floor2.py                                        ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_floor2.txt                                       ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_geom.py                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/explore_geom.txt                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/fetch_d26.log                                            ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/geom_check.py                                            ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/geom_check.txt                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/ghost_twin.json                                          ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/ghost_twin.py                                            ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/ghost_twin.txt                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/idx_amend                                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/idx_d26                                                  ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/index27                                                  ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/index27b                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/index28                                                  ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/index_tk                                                 ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/install2.log                                             ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/install_k.log                                            ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/launch_h28off.log                                        ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/launch_h28prod.log                                       ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/launch_h28wl.log                                         ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/launch_p97voff.log                                       ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/launch_p97vwl.log                                        ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/libpin_md5_before.txt                                    ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/me_h28prod.err                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/pre_wct-pr-perevt.jsonnet                                ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/push26r.log                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/push27.log                                               ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/push28b.log                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/push_tk.log                                              ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/readout_h28prod.json                                     ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/run_arm28.sh                                             ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  h28/src_mtimes.txt                                           ~/tmp/h28 scratch (its author, 2026-09-13)
+  FREE  claude-25225/analyze637.py                                   harness leftover, 58 d old
+  FREE  claude-25225/archive.log                                     harness leftover, 10 d old
+  FREE  claude-25225/audit_qlm.diff                                  harness leftover, 57 d old
+  FREE  claude-25225/autos.txt                                       harness leftover, 58 d old
+  FREE  claude-25225/boundary-evt298637.jsonl                        harness leftover, 58 d old
+  FREE  claude-25225/census.tsv                                      harness leftover, 18 d old
+  FREE  claude-25225/cm-clus.log                                     harness leftover, 10 d old
+  FREE  claude-25225/cm-conf.log                                     harness leftover, 10 d old
+  FREE  claude-25225/cmp_set.C                                       harness leftover, 64 d old
+  FREE  claude-25225/cmp_track.C                                     harness leftover, 64 d old
+  FREE  claude-25225/commit_p4.log                                   harness leftover, 57 d old
+  FREE  claude-25225/commit_p5.log                                   harness leftover, 57 d old
+  FREE  claude-25225/commit_p5w.log                                  harness leftover, 57 d old
+  FREE  claude-25225/commit_p6.log                                   harness leftover, 57 d old
+  FREE  claude-25225/commit_p6doc.log                                harness leftover, 57 d old
+  FREE  claude-25225/crossers-evt298637.jsonl                        harness leftover, 58 d old
+  FREE  claude-25225/ctx-extra.jsonl                                 harness leftover, 58 d old
+  FREE  claude-25225/d1                                              harness leftover, 20709 d old
+  FREE  claude-25225/d2                                              harness leftover, 20709 d old
+  FREE  claude-25225/dd1                                             harness leftover, 64 d old
+  FREE  claude-25225/dd2                                             harness leftover, 64 d old
+  FREE  claude-25225/de1                                             harness leftover, 64 d old
+  FREE  claude-25225/de2                                             harness leftover, 64 d old
+  FREE  claude-25225/deflate-t1                                      harness leftover, 18 d old
+  FREE  claude-25225/df1                                             harness leftover, 64 d old
+  FREE  claude-25225/df2                                             harness leftover, 64 d old
+  FREE  claude-25225/dnn-test                                        harness leftover, 64 d old
+  FREE  claude-25225/f1                                              harness leftover, 20709 d old
+  FREE  claude-25225/f2                                              harness leftover, 20709 d old
+  FREE  claude-25225/fix34.py                                        harness leftover, 39 d old
+  FREE  claude-25225/fix34b.py                                       harness leftover, 39 d old
+  FREE  claude-25225/fix34c.py                                       harness leftover, 39 d old
+  FREE  claude-25225/fix34d.py                                       harness leftover, 39 d old
+  FREE  claude-25225/fixmem.py                                       harness leftover, 39 d old
+  FREE  claude-25225/fixmem2.py                                      harness leftover, 39 d old
+  FREE  claude-25225/knobflip.diff                                   harness leftover, 10 d old
+  FREE  claude-25225/l1.txt                                          harness leftover, 64 d old
+  FREE  claude-25225/l2.txt                                          harness leftover, 64 d old
+  FREE  claude-25225/late_autos.txt                                  harness leftover, 58 d old
+  FREE  claude-25225/late_autos4.txt                                 harness leftover, 58 d old
+  FREE  claude-25225/ltc.log                                         harness leftover, 52 d old
+  FREE  claude-25225/ltc2.log                                        harness leftover, 52 d old
+  FREE  claude-25225/m1.txt                                          harness leftover, 64 d old
+  FREE  claude-25225/m1_ctrl.txt                                     harness leftover, 18 d old
+  FREE  claude-25225/m2.txt                                          harness leftover, 64 d old
+  FREE  claude-25225/m2_ctrl.txt                                     harness leftover, 18 d old
+  FREE  claude-25225/merge-build.log                                 harness leftover, 10 d old
+  FREE  claude-25225/new_members.txt                                 harness leftover, 64 d old
+  FREE  claude-25225/old_members.txt                                 harness leftover, 64 d old
+  FREE  claude-25225/p5bisect_build.log                              harness leftover, 57 d old
+  FREE  claude-25225/p5bisect_install.log                            harness leftover, 57 d old
+  FREE  claude-25225/p5build.log                                     harness leftover, 57 d old
+  FREE  claude-25225/p5build2.log                                    harness leftover, 57 d old
+  FREE  claude-25225/p5doctest.log                                   harness leftover, 57 d old
+  FREE  claude-25225/p5doctest2.log                                  harness leftover, 57 d old
+  FREE  claude-25225/p5install.log                                   harness leftover, 57 d old
+  FREE  claude-25225/p5install2.log                                  harness leftover, 57 d old
+  FREE  claude-25225/passA.txt                                       harness leftover, 58 d old
+  FREE  claude-25225/passA_clean.txt                                 harness leftover, 58 d old
+  FREE  claude-25225/passA_mid.txt                                   harness leftover, 58 d old
+  FREE  claude-25225/passB_detail.txt                                harness leftover, 58 d old
+  FREE  claude-25225/png                                             harness leftover, 58 d old
+  FREE  claude-25225/postcheck                                       harness leftover, 18 d old
+  KEEP  claude-25225/pr33                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/33_em-shower-clustering-port-audit.md
+  KEEP  claude-25225/pr34                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/34_particle-flow-port-audit.md
+  KEEP  claude-25225/pr35                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/35_energy-reconstruction-port-audit.md
+  KEEP  claude-25225/pr36                                            named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/36_taggers-port-audit.md
+  FREE  claude-25225/pr36_backup.md                                  harness leftover, 39 d old
+  FREE  claude-25225/pr36_s10.md                                     harness leftover, 39 d old
+  FREE  claude-25225/pr36_s1015.md                                   harness leftover, 39 d old
+  KEEP  claude-25225/pr36f                                           named by /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/docs/pr/36_taggers-port-audit.md
+  FREE  claude-25225/pr86_res.json                                   harness leftover, 28 d old
+  FREE  claude-25225/pr91r3_build.log                                harness leftover, 25 d old
+  FREE  claude-25225/pr91r3_run.log                                  harness leftover, 25 d old
+  FREE  claude-25225/push.log                                        harness leftover, 52 d old
+  FREE  claude-25225/push36.log                                      harness leftover, 39 d old
+  FREE  claude-25225/push36b.log                                     harness leftover, 39 d old
+  FREE  claude-25225/push_p6.log                                     harness leftover, 57 d old
+  FREE  claude-25225/push_p6doc.log                                  harness leftover, 57 d old
+  FREE  claude-25225/push_toolkit.log                                harness leftover, 57 d old
+  FREE  claude-25225/push_wcp.log                                    harness leftover, 57 d old
+  FREE  claude-25225/qlcheck-head                                    harness leftover, 18 d old
+  FREE  claude-25225/qllog_p3gate.txt                                harness leftover, 57 d old
+  FREE  claude-25225/qllog_p5gatee.txt                               harness leftover, 57 d old
+  FREE  claude-25225/reb.log                                         harness leftover, 52 d old
+  FREE  claude-25225/recomp-test                                     harness leftover, 18 d old
+  FREE  claude-25225/recomp-v2                                       harness leftover, 18 d old
+  FREE  claude-25225/recomp2.log                                     harness leftover, 10 d old
+  FREE  claude-25225/recompress.log                                  harness leftover, 18 d old
+  FREE  claude-25225/render.log                                      harness leftover, 58 d old
+  FREE  claude-25225/rollup.log                                      harness leftover, 10 d old
+  FREE  claude-25225/scratch2.log                                    harness leftover, 10 d old
+  FREE  claude-25225/t.tar                                           harness leftover, 10 d old
+  FREE  claude-25225/t.tar.zst                                       harness leftover, 10 d old
+  FREE  claude-25225/t1                                              harness leftover, 20709 d old
+  FREE  claude-25225/t2                                              harness leftover, 20709 d old
+  FREE  claude-25225/tr1                                             harness leftover, 64 d old
+  FREE  claude-25225/tr2                                             harness leftover, 64 d old
+  FREE  claude-25225/vgdb-pipe-from-vgdb-to-1790710-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-from-vgdb-to-1805885-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-from-vgdb-to-1815481-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-shared-mem-vgdb-1790710-by-xqian-on-??? harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-shared-mem-vgdb-1805885-by-xqian-on-??? harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-shared-mem-vgdb-1815481-by-xqian-on-??? harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-to-vgdb-from-1790710-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-to-vgdb-from-1805885-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/vgdb-pipe-to-vgdb-from-1815481-by-xqian-on-???  harness leftover, 99 d old
+  FREE  claude-25225/write_decisions.py                              harness leftover, 58 d old
+  FREE  claude-25225/x                                               harness leftover, 58 d old
+  FREE  claude-25225/z1                                              harness leftover, 20709 d old
+  FREE  claude-25225/z2                                              harness leftover, 20709 d old
+
+release units 362 | nominal 79.46 GiB | FREED (every link inside the set) 45.07 GiB | shared with a kept file, frees nothing 3.49 GiB
+tier file: /home/xqian/toolkit-dev/wcp-porting-img/pdhd/scripts/retire/tmp_tier_20260913.txt (362 lines).  This script removed nothing.
+rc=0
