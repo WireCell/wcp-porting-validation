@@ -145,7 +145,9 @@ also within 10 cm of the stop:
 | (measured − prediction) / prediction | **+0.101** (n 43) | **+0.051** (p 0.001) |
 | by |cos_vert| < 0.7 / 0.7–0.9 / ≥ 0.9 | 4.3 / 6.1 / 7.2 | 4.5 / 0.7 / 0.6 |
 
-The two numbers multiply out: 0.10 × 72 ≈ 7 and 0.05 × 52 ≈ 2.6. The fit's under-prediction of measured charge is
+The medians are consistent with the product of the two: 0.10 × 72 ≈ 7 against 6.5, and 0.05 × 52 ≈ 2.6 against 2.5.
+That is a consistency check, not a factorisation: foreshortening changes which cells enter, and the bias varies cell
+by cell, so the two are not independent. The fit's under-prediction of measured charge is
 doc pdvd/96 §5's "prediction bias", diagnosed there on PDVD and left unfixed because `TrackFitting` is shared. On
 the whole muon footprint it is larger on PDHD's collection plane:
 
@@ -188,8 +190,11 @@ wrong wire is not a distance, with two consequences:
 2. **The plane rule loses its induction planes.** With no U or V cell it gives W weight 1, so the "drop the largest
    plane" switch can no longer remove a contaminated collection plane.
 
-A side finding needed to reproduce this: the chain's wire index on face 1 is the geometry file's order mirrored,
-n − 1 − index, for every cell including W; face 0 uses the file order (`wrap_face.txt` §2+3).
+A side finding needed to reproduce this: against the **raw JSON** `planes[].wires[]` order, the chain's wire index is
+the same on face 0 and mirrored on face 1 (n − 1 − index), W included (`wrap_face.txt` §2+3). The loader,
+`WireSchema::load`, evidently orders face 1 the other way. Every mapping here is checked against all recorded cells
+rather than assumed from the JSON, the trap `channels()` already set once. The "first-listed wire is face 0" statement
+is itself checked the same way: every role-1 U/V cell carries that entry.
 
 **Why it hid.**
 * **The work was done on PDVD.** The region estimator was built and tuned there (docs pdvd/95, 96), and PDVD's
@@ -202,8 +207,11 @@ n − 1 − index, for every cell including W; face 0 uses the file order (`wrap
   distances came from.
 
 **Scope.**
-* **PDHD only, energy only.** No verdict branch reads `michel_ke_q2d_region`, `michel_q2d_region` or the control;
-  they are only written and logged (grep of CheckSTM_Michel.cxx).
+* **PDHD only, energy only.** Nothing reads `michel_ke_q2d_region`, `michel_q2d_region`, `michel_ke_q2d_ctl` or
+  `michel_q2d_ctl` back. The repo-wide grep covered toolkit `clus/` and `cfg/` (C++ and jsonnet) and the PDHD/PDVD
+  jsonnet, sh and py outside `docs/` and `work/`:
+  * the only hits are `CheckSTM_Michel.cxx`'s own writer and log lines;
+  * and one comment, at `pdhd/wct-pr-perevt.jsonnet:405`.
 * **Other branches.** The association branches of doc pdvd/81 (`michel_q2d_*`) and cross-shared substitution choose
   cells by role, not by distance, so the lookup does not touch them.
 
