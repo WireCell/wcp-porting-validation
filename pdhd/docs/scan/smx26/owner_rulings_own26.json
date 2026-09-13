@@ -1,0 +1,89 @@
+{
+ "doc": "pdhd/docs/25_pdvd-config-on-pdhd-and-bragg-michel-fraction.md sec 8",
+ "date": "2026-09-12",
+ "viewer": "tag own26 on :5017, its own empty label tag; prepdir prep-pdhd-h25base (today's production, so the chain's answer on screen was is_stm 0 on all 10); --dead-points ON",
+ "how": "The owner judged the 10 items of own26_sheet.tsv (queue rule in preregistered_own26.md). Labels from own26/labels.json (2026-09-12T17:20:35, sha256 b009fa687fad041dbd40edc9fe046e76ab7df86e5dbfb4b0e2a9a0581cbd445d). Every other label tag byte-unchanged.",
+ "caveat": "The blind is gone (owner decision 2026-09-08): the chain's verdict was on screen, and the doc 25 report had named three of the items. Owner rulings, not independent blind verdicts.",
+ "items": {
+  "028084_10/46": {
+   "scan_id": 13,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY medium / STM_ONLY medium (confirmed); no pin placed"
+  },
+  "028084_2/116": {
+   "scan_id": 57,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL medium / STM_MICHEL medium (confirmed); no pin placed"
+  },
+  "028084_24/114": {
+   "scan_id": 89,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "THRU",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group control_thru, agents THRU medium / THRU medium (confirmed); no pin placed"
+  },
+  "028084_5/115": {
+   "scan_id": 132,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": "detached dots",
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY medium / STM_ONLY medium (confirmed); no pin placed"
+  },
+  "029107_1/85": {
+   "scan_id": 163,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_MICHEL",
+   "michel_kind": "attached",
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL medium / STM_MICHEL high (confirmed); no pin placed"
+  },
+  "029107_12/95": {
+   "scan_id": 178,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL medium / STM_MICHEL medium (confirmed); no pin placed"
+  },
+  "029107_12/118": {
+   "scan_id": 181,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY medium / STM_ONLY medium (confirmed); no pin placed"
+  },
+  "029107_19/123": {
+   "scan_id": 214,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "UNCLEAR",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group control_thru, agents THRU medium / FRAG_THRU medium (confirmed); no pin placed"
+  },
+  "029107_24/33": {
+   "scan_id": 245,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": "detached dots",
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY medium / STM_ONLY medium (confirmed); no pin placed"
+  },
+  "029107_28/109": {
+   "scan_id": 270,
+   "question": "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": "detached dots",
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL medium / STM_MICHEL medium (confirmed); no pin placed"
+  }
+ }
+}

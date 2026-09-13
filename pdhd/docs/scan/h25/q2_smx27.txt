@@ -1,0 +1,368 @@
+GATE pdhd h23conf all      is_stm (96, 1, 51, 106) want (96, 1, 51, 106); michel(stoppers) (65, 3, 16, 54) want (65, 3, 16, 54); michel(all judged) (66, 42, 16, 130) -> PASS
+GATE pdhd h23conf majority is_stm (79, 1, 29, 69) want (79, 1, 29, 69); michel(stoppers) (48, 3, 10, 40) want (48, 3, 10, 40); michel(all judged) (49, 31, 10, 88) -> PASS
+GATE pdhd h23conf strict   is_stm (77, 0, 27, 68) want (77, 0, 27, 68); michel(stoppers) (47, 3, 10, 38) want (47, 3, 10, 38); michel(all judged) (48, 30, 10, 84) -> PASS
+GATE pdvd p96vprod all      is_stm (242, 8, 34, 262) want (242, 8, 34, 262); michel(stoppers) (142, 8, 19, 107); michel(all judged) (144, 12, 20, 370) want (144, 12, 20) -> PASS
+
+=== PDHD h23conf  APA0 strict  (POP items with no candidate in this arm: 0)
+  is_stm census     77/0/27/68   purity 1.000 eff 0.740
+  michel census, hand stoppers vs michel_kind (PDHD graders)   47/3/10/38   purity 0.940 eff 0.825
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   48/30/10/84   purity 0.615 eff 0.828
+  hand stoppers 104  (hand Michel 57, STM_ONLY 46)
+  over ALL hand stoppers:
+    accepted                        77/104 = 0.740 +- 0.043
+    Bragg-path accept               69/104 = 0.663 +- 0.046
+      of which anchor-helped         4/104 = 0.038 +- 0.019
+    topology-rescued                 8/104 = 0.077 +- 0.026
+    GOLDEN (Bragg-path + Michel)    33/104 = 0.317 +- 0.046
+  over hand STM_ONLY:
+    Bragg-path accept               29/ 46 = 0.630 +- 0.071
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        47/ 57 = 0.825 +- 0.050
+    Bragg-path accept               39/ 57 = 0.684 +- 0.062
+    topology-rescued                 8/ 57 = 0.140 +- 0.046
+    michel_found (any accept)       47/ 57 = 0.825 +- 0.050
+    accepted AND michel_found       41/ 57 = 0.719 +- 0.060
+    GOLDEN                          33/ 57 = 0.579 +- 0.065
+    GOLDEN, no anchor help          30/ 57 = 0.526 +- 0.066
+    Michel found | Bragg-path       33/ 39 = 0.846 +- 0.058
+  chain's own golden selection: 36 items -> {'hand Michel': 33, 'STM_ONLY': 2, 'STM_MICHEL': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 58  contrast 1.241/1.561/1.873   ks_mu 0.047/0.064/0.107
+    hand STM_ONLY    n= 46  contrast 1.210/1.584/1.885   ks_mu 0.037/0.060/0.130
+    hand THRU        n= 68  contrast 0.678/0.909/1.320   ks_mu 0.103/0.131/0.164
+
+=== PDHD h23conf  APA0 majority  (POP items with no candidate in this arm: 0)
+  is_stm census     79/1/29/69   purity 0.988 eff 0.731
+  michel census, hand stoppers vs michel_kind (PDHD graders)   48/3/10/40   purity 0.941 eff 0.828
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   49/31/10/88   purity 0.613 eff 0.831
+  hand stoppers 108  (hand Michel 58, STM_ONLY 49)
+  over ALL hand stoppers:
+    accepted                        79/108 = 0.731 +- 0.043
+    Bragg-path accept               71/108 = 0.657 +- 0.046
+      of which anchor-helped         4/108 = 0.037 +- 0.018
+    topology-rescued                 8/108 = 0.074 +- 0.025
+    GOLDEN (Bragg-path + Michel)    34/108 = 0.315 +- 0.045
+  over hand STM_ONLY:
+    Bragg-path accept               30/ 49 = 0.612 +- 0.070
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        48/ 58 = 0.828 +- 0.050
+    Bragg-path accept               40/ 58 = 0.690 +- 0.061
+    topology-rescued                 8/ 58 = 0.138 +- 0.045
+    michel_found (any accept)       48/ 58 = 0.828 +- 0.050
+    accepted AND michel_found       42/ 58 = 0.724 +- 0.059
+    GOLDEN                          34/ 58 = 0.586 +- 0.065
+    GOLDEN, no anchor help          31/ 58 = 0.534 +- 0.065
+    Michel found | Bragg-path       34/ 40 = 0.850 +- 0.056
+  chain's own golden selection: 38 items -> {'hand Michel': 34, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 59  contrast 1.246/1.570/1.893   ks_mu 0.048/0.064/0.107
+    hand STM_ONLY    n= 49  contrast 1.198/1.571/1.863   ks_mu 0.038/0.060/0.130
+    hand THRU        n= 70  contrast 0.690/0.909/1.320   ks_mu 0.104/0.127/0.161
+
+=== PDHD h23conf  APA0 INCLUDED (all four APAs)  (POP items with no candidate in this arm: 0)
+  is_stm census     96/1/51/106   purity 0.990 eff 0.653
+  michel census, hand stoppers vs michel_kind (PDHD graders)   65/3/16/54   purity 0.956 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   66/42/16/130   purity 0.611 eff 0.805
+  hand stoppers 147  (hand Michel 81, STM_ONLY 65)
+  over ALL hand stoppers:
+    accepted                        96/147 = 0.653 +- 0.039
+    Bragg-path accept               84/147 = 0.571 +- 0.041
+      of which anchor-helped         6/147 = 0.041 +- 0.016
+    topology-rescued                12/147 = 0.082 +- 0.023
+    GOLDEN (Bragg-path + Michel)    38/147 = 0.259 +- 0.036
+  over hand STM_ONLY:
+    Bragg-path accept               38/ 65 = 0.585 +- 0.061
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        57/ 81 = 0.704 +- 0.051
+    Bragg-path accept               45/ 81 = 0.556 +- 0.055
+    topology-rescued                12/ 81 = 0.148 +- 0.039
+    michel_found (any accept)       65/ 81 = 0.802 +- 0.044
+    accepted AND michel_found       50/ 81 = 0.617 +- 0.054
+    GOLDEN                          38/ 81 = 0.469 +- 0.055
+    GOLDEN, no anchor help          33/ 81 = 0.407 +- 0.055
+    Michel found | Bragg-path       38/ 45 = 0.844 +- 0.054
+  chain's own golden selection: 42 items -> {'hand Michel': 38, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 82  contrast 1.094/1.532/1.931   ks_mu 0.057/0.078/0.131
+    hand STM_ONLY    n= 65  contrast 1.198/1.597/1.943   ks_mu 0.042/0.080/0.139
+    hand THRU        n=107  contrast 0.684/0.931/1.327   ks_mu 0.103/0.132/0.167
+
+=== PDHD h25k  APA0 strict  (POP items with no candidate in this arm: 0)
+  is_stm census     89/1/15/67   purity 0.989 eff 0.856
+  michel census, hand stoppers vs michel_kind (PDHD graders)   47/3/10/38   purity 0.940 eff 0.825
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   48/30/10/84   purity 0.615 eff 0.828
+  hand stoppers 104  (hand Michel 57, STM_ONLY 46)
+  over ALL hand stoppers:
+    accepted                        89/104 = 0.856 +- 0.034
+    Bragg-path accept               78/104 = 0.750 +- 0.042
+      of which anchor-helped         2/104 = 0.019 +- 0.013
+    topology-rescued                11/104 = 0.106 +- 0.030
+    GOLDEN (Bragg-path + Michel)    36/104 = 0.346 +- 0.047
+  over hand STM_ONLY:
+    Bragg-path accept               35/ 46 = 0.761 +- 0.063
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        50/ 57 = 0.877 +- 0.043
+    Bragg-path accept               42/ 57 = 0.737 +- 0.058
+    topology-rescued                 8/ 57 = 0.140 +- 0.046
+    michel_found (any accept)       47/ 57 = 0.825 +- 0.050
+    accepted AND michel_found       44/ 57 = 0.772 +- 0.056
+    GOLDEN                          36/ 57 = 0.632 +- 0.064
+    GOLDEN, no anchor help          35/ 57 = 0.614 +- 0.064
+    Michel found | Bragg-path       36/ 42 = 0.857 +- 0.054
+  chain's own golden selection: 40 items -> {'hand Michel': 36, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 58  contrast 1.241/1.561/1.873   ks_mu 0.047/0.064/0.107
+    hand STM_ONLY    n= 46  contrast 1.210/1.584/1.885   ks_mu 0.037/0.060/0.130
+    hand THRU        n= 68  contrast 0.678/0.909/1.320   ks_mu 0.103/0.131/0.164
+
+=== PDHD h25k  APA0 majority  (POP items with no candidate in this arm: 0)
+  is_stm census     92/2/16/68   purity 0.979 eff 0.852
+  michel census, hand stoppers vs michel_kind (PDHD graders)   48/3/10/40   purity 0.941 eff 0.828
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   49/31/10/88   purity 0.613 eff 0.831
+  hand stoppers 108  (hand Michel 58, STM_ONLY 49)
+  over ALL hand stoppers:
+    accepted                        92/108 = 0.852 +- 0.034
+    Bragg-path accept               81/108 = 0.750 +- 0.042
+      of which anchor-helped         2/108 = 0.019 +- 0.013
+    topology-rescued                11/108 = 0.102 +- 0.029
+    GOLDEN (Bragg-path + Michel)    37/108 = 0.343 +- 0.046
+  over hand STM_ONLY:
+    Bragg-path accept               37/ 49 = 0.755 +- 0.061
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        51/ 58 = 0.879 +- 0.043
+    Bragg-path accept               43/ 58 = 0.741 +- 0.057
+    topology-rescued                 8/ 58 = 0.138 +- 0.045
+    michel_found (any accept)       48/ 58 = 0.828 +- 0.050
+    accepted AND michel_found       45/ 58 = 0.776 +- 0.055
+    GOLDEN                          37/ 58 = 0.638 +- 0.063
+    GOLDEN, no anchor help          36/ 58 = 0.621 +- 0.064
+    Michel found | Bragg-path       37/ 43 = 0.860 +- 0.053
+  chain's own golden selection: 42 items -> {'hand Michel': 37, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 59  contrast 1.246/1.570/1.893   ks_mu 0.048/0.064/0.107
+    hand STM_ONLY    n= 49  contrast 1.198/1.571/1.863   ks_mu 0.038/0.060/0.130
+    hand THRU        n= 70  contrast 0.690/0.909/1.320   ks_mu 0.104/0.127/0.161
+
+=== PDHD h25k  APA0 INCLUDED (all four APAs)  (POP items with no candidate in this arm: 0)
+  is_stm census     114/2/33/105   purity 0.983 eff 0.776
+  michel census, hand stoppers vs michel_kind (PDHD graders)   65/3/16/54   purity 0.956 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   66/42/16/130   purity 0.611 eff 0.805
+  hand stoppers 147  (hand Michel 81, STM_ONLY 65)
+  over ALL hand stoppers:
+    accepted                       114/147 = 0.776 +- 0.034
+    Bragg-path accept              100/147 = 0.680 +- 0.038
+      of which anchor-helped         3/147 = 0.020 +- 0.012
+    topology-rescued                14/147 = 0.095 +- 0.024
+    GOLDEN (Bragg-path + Michel)    45/147 = 0.306 +- 0.038
+  over hand STM_ONLY:
+    Bragg-path accept               47/ 65 = 0.723 +- 0.056
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        63/ 81 = 0.778 +- 0.046
+    Bragg-path accept               52/ 81 = 0.642 +- 0.053
+    topology-rescued                11/ 81 = 0.136 +- 0.038
+    michel_found (any accept)       65/ 81 = 0.802 +- 0.044
+    accepted AND michel_found       56/ 81 = 0.691 +- 0.051
+    GOLDEN                          45/ 81 = 0.556 +- 0.055
+    GOLDEN, no anchor help          43/ 81 = 0.531 +- 0.055
+    Michel found | Bragg-path       45/ 52 = 0.865 +- 0.047
+  chain's own golden selection: 50 items -> {'hand Michel': 45, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 82  contrast 1.094/1.532/1.902   ks_mu 0.057/0.082/0.134
+    hand STM_ONLY    n= 65  contrast 1.198/1.597/1.943   ks_mu 0.042/0.080/0.139
+    hand THRU        n=107  contrast 0.684/0.931/1.327   ks_mu 0.103/0.132/0.167
+
+=== PDHD h25r  APA0 strict  (POP items with no candidate in this arm: 0)
+  is_stm census     80/0/24/68   purity 1.000 eff 0.769
+  michel census, hand stoppers vs michel_kind (PDHD graders)   47/3/10/38   purity 0.940 eff 0.825
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   48/30/10/84   purity 0.615 eff 0.828
+  hand stoppers 104  (hand Michel 57, STM_ONLY 46)
+  over ALL hand stoppers:
+    accepted                        80/104 = 0.769 +- 0.041
+    Bragg-path accept               71/104 = 0.683 +- 0.046
+      of which anchor-helped         4/104 = 0.038 +- 0.019
+    topology-rescued                 9/104 = 0.087 +- 0.028
+    GOLDEN (Bragg-path + Michel)    34/104 = 0.327 +- 0.046
+  over hand STM_ONLY:
+    Bragg-path accept               31/ 46 = 0.674 +- 0.069
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        48/ 57 = 0.842 +- 0.048
+    Bragg-path accept               40/ 57 = 0.702 +- 0.061
+    topology-rescued                 8/ 57 = 0.140 +- 0.046
+    michel_found (any accept)       47/ 57 = 0.825 +- 0.050
+    accepted AND michel_found       42/ 57 = 0.737 +- 0.058
+    GOLDEN                          34/ 57 = 0.596 +- 0.065
+    GOLDEN, no anchor help          31/ 57 = 0.544 +- 0.066
+    Michel found | Bragg-path       34/ 40 = 0.850 +- 0.056
+  chain's own golden selection: 36 items -> {'hand Michel': 34, 'STM_ONLY': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 58  contrast 1.241/1.561/1.873   ks_mu 0.046/0.066/0.104
+    hand STM_ONLY    n= 46  contrast 1.210/1.584/1.885   ks_mu 0.040/0.056/0.122
+    hand THRU        n= 68  contrast 0.678/0.909/1.320   ks_mu 0.100/0.121/0.161
+
+=== PDHD h25r  APA0 majority  (POP items with no candidate in this arm: 0)
+  is_stm census     82/1/26/69   purity 0.988 eff 0.759
+  michel census, hand stoppers vs michel_kind (PDHD graders)   48/3/10/40   purity 0.941 eff 0.828
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   49/31/10/88   purity 0.613 eff 0.831
+  hand stoppers 108  (hand Michel 58, STM_ONLY 49)
+  over ALL hand stoppers:
+    accepted                        82/108 = 0.759 +- 0.041
+    Bragg-path accept               73/108 = 0.676 +- 0.045
+      of which anchor-helped         4/108 = 0.037 +- 0.018
+    topology-rescued                 9/108 = 0.083 +- 0.027
+    GOLDEN (Bragg-path + Michel)    35/108 = 0.324 +- 0.045
+  over hand STM_ONLY:
+    Bragg-path accept               32/ 49 = 0.653 +- 0.068
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        49/ 58 = 0.845 +- 0.048
+    Bragg-path accept               41/ 58 = 0.707 +- 0.060
+    topology-rescued                 8/ 58 = 0.138 +- 0.045
+    michel_found (any accept)       48/ 58 = 0.828 +- 0.050
+    accepted AND michel_found       43/ 58 = 0.741 +- 0.057
+    GOLDEN                          35/ 58 = 0.603 +- 0.064
+    GOLDEN, no anchor help          32/ 58 = 0.552 +- 0.065
+    Michel found | Bragg-path       35/ 41 = 0.854 +- 0.055
+  chain's own golden selection: 38 items -> {'hand Michel': 35, 'STM_ONLY': 2, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 59  contrast 1.246/1.570/1.893   ks_mu 0.046/0.066/0.103
+    hand STM_ONLY    n= 49  contrast 1.198/1.571/1.863   ks_mu 0.039/0.056/0.123
+    hand THRU        n= 70  contrast 0.690/0.909/1.320   ks_mu 0.098/0.121/0.158
+
+=== PDHD h25r  APA0 INCLUDED (all four APAs)  (POP items with no candidate in this arm: 0)
+  is_stm census     101/1/46/106   purity 0.990 eff 0.687
+  michel census, hand stoppers vs michel_kind (PDHD graders)   65/3/16/54   purity 0.956 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   66/42/16/130   purity 0.611 eff 0.805
+  hand stoppers 147  (hand Michel 81, STM_ONLY 65)
+  over ALL hand stoppers:
+    accepted                       101/147 = 0.687 +- 0.038
+    Bragg-path accept               89/147 = 0.605 +- 0.040
+      of which anchor-helped         6/147 = 0.041 +- 0.016
+    topology-rescued                12/147 = 0.082 +- 0.023
+    GOLDEN (Bragg-path + Michel)    41/147 = 0.279 +- 0.037
+  over hand STM_ONLY:
+    Bragg-path accept               41/ 65 = 0.631 +- 0.060
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        59/ 81 = 0.728 +- 0.049
+    Bragg-path accept               48/ 81 = 0.593 +- 0.055
+    topology-rescued                11/ 81 = 0.136 +- 0.038
+    michel_found (any accept)       65/ 81 = 0.802 +- 0.044
+    accepted AND michel_found       52/ 81 = 0.642 +- 0.053
+    GOLDEN                          41/ 81 = 0.506 +- 0.056
+    GOLDEN, no anchor help          36/ 81 = 0.444 +- 0.055
+    Michel found | Bragg-path       41/ 48 = 0.854 +- 0.051
+  chain's own golden selection: 44 items -> {'hand Michel': 41, 'STM_ONLY': 2, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 82  contrast 1.094/1.532/1.931   ks_mu 0.051/0.072/0.117
+    hand STM_ONLY    n= 65  contrast 1.198/1.597/1.943   ks_mu 0.047/0.066/0.126
+    hand THRU        n=107  contrast 0.684/0.931/1.327   ks_mu 0.101/0.127/0.166
+
+=== PDHD h25kr  APA0 strict  (POP items with no candidate in this arm: 0)
+  is_stm census     89/1/15/67   purity 0.989 eff 0.856
+  michel census, hand stoppers vs michel_kind (PDHD graders)   47/3/10/38   purity 0.940 eff 0.825
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   48/30/10/84   purity 0.615 eff 0.828
+  hand stoppers 104  (hand Michel 57, STM_ONLY 46)
+  over ALL hand stoppers:
+    accepted                        89/104 = 0.856 +- 0.034
+    Bragg-path accept               78/104 = 0.750 +- 0.042
+      of which anchor-helped         2/104 = 0.019 +- 0.013
+    topology-rescued                11/104 = 0.106 +- 0.030
+    GOLDEN (Bragg-path + Michel)    36/104 = 0.346 +- 0.047
+  over hand STM_ONLY:
+    Bragg-path accept               35/ 46 = 0.761 +- 0.063
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        50/ 57 = 0.877 +- 0.043
+    Bragg-path accept               42/ 57 = 0.737 +- 0.058
+    topology-rescued                 8/ 57 = 0.140 +- 0.046
+    michel_found (any accept)       47/ 57 = 0.825 +- 0.050
+    accepted AND michel_found       44/ 57 = 0.772 +- 0.056
+    GOLDEN                          36/ 57 = 0.632 +- 0.064
+    GOLDEN, no anchor help          35/ 57 = 0.614 +- 0.064
+    Michel found | Bragg-path       36/ 42 = 0.857 +- 0.054
+  chain's own golden selection: 40 items -> {'hand Michel': 36, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 58  contrast 1.241/1.561/1.873   ks_mu 0.046/0.066/0.109
+    hand STM_ONLY    n= 46  contrast 1.210/1.584/1.885   ks_mu 0.040/0.056/0.122
+    hand THRU        n= 68  contrast 0.678/0.909/1.320   ks_mu 0.100/0.121/0.161
+
+=== PDHD h25kr  APA0 majority  (POP items with no candidate in this arm: 0)
+  is_stm census     92/2/16/68   purity 0.979 eff 0.852
+  michel census, hand stoppers vs michel_kind (PDHD graders)   48/3/10/40   purity 0.941 eff 0.828
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   49/31/10/88   purity 0.613 eff 0.831
+  hand stoppers 108  (hand Michel 58, STM_ONLY 49)
+  over ALL hand stoppers:
+    accepted                        92/108 = 0.852 +- 0.034
+    Bragg-path accept               81/108 = 0.750 +- 0.042
+      of which anchor-helped         2/108 = 0.019 +- 0.013
+    topology-rescued                11/108 = 0.102 +- 0.029
+    GOLDEN (Bragg-path + Michel)    37/108 = 0.343 +- 0.046
+  over hand STM_ONLY:
+    Bragg-path accept               37/ 49 = 0.755 +- 0.061
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        51/ 58 = 0.879 +- 0.043
+    Bragg-path accept               43/ 58 = 0.741 +- 0.057
+    topology-rescued                 8/ 58 = 0.138 +- 0.045
+    michel_found (any accept)       48/ 58 = 0.828 +- 0.050
+    accepted AND michel_found       45/ 58 = 0.776 +- 0.055
+    GOLDEN                          37/ 58 = 0.638 +- 0.063
+    GOLDEN, no anchor help          36/ 58 = 0.621 +- 0.064
+    Michel found | Bragg-path       37/ 43 = 0.860 +- 0.053
+  chain's own golden selection: 42 items -> {'hand Michel': 37, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 59  contrast 1.246/1.570/1.893   ks_mu 0.046/0.066/0.108
+    hand STM_ONLY    n= 49  contrast 1.198/1.571/1.863   ks_mu 0.039/0.056/0.123
+    hand THRU        n= 70  contrast 0.690/0.909/1.320   ks_mu 0.098/0.121/0.158
+
+=== PDHD h25kr  APA0 INCLUDED (all four APAs)  (POP items with no candidate in this arm: 0)
+  is_stm census     114/2/33/105   purity 0.983 eff 0.776
+  michel census, hand stoppers vs michel_kind (PDHD graders)   65/3/16/54   purity 0.956 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   66/42/16/130   purity 0.611 eff 0.805
+  hand stoppers 147  (hand Michel 81, STM_ONLY 65)
+  over ALL hand stoppers:
+    accepted                       114/147 = 0.776 +- 0.034
+    Bragg-path accept              100/147 = 0.680 +- 0.038
+      of which anchor-helped         3/147 = 0.020 +- 0.012
+    topology-rescued                14/147 = 0.095 +- 0.024
+    GOLDEN (Bragg-path + Michel)    45/147 = 0.306 +- 0.038
+  over hand STM_ONLY:
+    Bragg-path accept               47/ 65 = 0.723 +- 0.056
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                        63/ 81 = 0.778 +- 0.046
+    Bragg-path accept               52/ 81 = 0.642 +- 0.053
+    topology-rescued                11/ 81 = 0.136 +- 0.038
+    michel_found (any accept)       65/ 81 = 0.802 +- 0.044
+    accepted AND michel_found       56/ 81 = 0.691 +- 0.051
+    GOLDEN                          45/ 81 = 0.556 +- 0.055
+    GOLDEN, no anchor help          43/ 81 = 0.531 +- 0.055
+    Michel found | Bragg-path       45/ 52 = 0.865 +- 0.047
+  chain's own golden selection: 50 items -> {'hand Michel': 45, 'STM_ONLY': 2, 'STM_MICHEL': 1, 'THRU': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n= 82  contrast 1.094/1.532/1.902   ks_mu 0.051/0.072/0.124
+    hand STM_ONLY    n= 65  contrast 1.198/1.597/1.943   ks_mu 0.047/0.066/0.126
+    hand THRU        n=107  contrast 0.684/0.931/1.327   ks_mu 0.101/0.127/0.166
+
+=== PDVD p96vprod  with a candidate  (record items with no candidate: 31)
+  is_stm census     242/8/34/262   purity 0.968 eff 0.877
+  michel census, hand stoppers vs michel_kind (PDHD graders)   142/8/19/107   purity 0.947 eff 0.882
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   144/12/20/370   purity 0.923 eff 0.878
+  hand stoppers 276  (hand Michel 161, STM_ONLY 112)
+  over ALL hand stoppers:
+    accepted                       242/276 = 0.877 +- 0.020
+    Bragg-path accept              213/276 = 0.772 +- 0.025
+      of which anchor-helped        11/276 = 0.040 +- 0.012
+    topology-rescued                29/276 = 0.105 +- 0.018
+    GOLDEN (Bragg-path + Michel)   108/276 = 0.391 +- 0.029
+  over hand STM_ONLY:
+    Bragg-path accept               95/112 = 0.848 +- 0.034
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       143/161 = 0.888 +- 0.025
+    Bragg-path accept              117/161 = 0.727 +- 0.035
+    topology-rescued                26/161 = 0.161 +- 0.029
+    michel_found (any accept)      142/161 = 0.882 +- 0.025
+    accepted AND michel_found      134/161 = 0.832 +- 0.029
+    GOLDEN                         108/161 = 0.671 +- 0.037
+    GOLDEN, no anchor help         103/161 = 0.640 +- 0.038
+    Michel found | Bragg-path      108/117 = 0.923 +- 0.025
+  chain's own golden selection: 110 items -> {'hand Michel': 108, 'STM_ONLY': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=164  contrast 1.245/1.563/1.770   ks_mu 0.038/0.057/0.088
+    hand STM_ONLY    n=112  contrast 1.519/1.712/1.950   ks_mu 0.028/0.049/0.073
+    hand THRU        n=270  contrast 0.817/0.960/1.111   ks_mu 0.097/0.118/0.144

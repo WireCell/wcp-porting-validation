@@ -17,6 +17,11 @@ import argparse, csv, datetime, hashlib, json, os, sys
 ap = argparse.ArgumentParser()
 for f in ("--labels", "--sheet", "--key", "--record", "--shas-before", "--out"):
     ap.add_argument(f, required=True)
+# doc pdhd/25 sec 8 reuses this for own26; the defaults reproduce the own25 rulings file (date aside)
+ap.add_argument("--tag", default="own25")
+ap.add_argument("--section", default="sec 7")
+ap.add_argument("--question", default="is this a stopping muon, or through-going? -- smx25 items the two blind agents "
+                                      "split on or called with low confidence, plus one anchor")
 a = ap.parse_args()
 
 L = json.load(open(a.labels))
@@ -56,7 +61,7 @@ for k in sorted(skeys, key=lambda k: skeys[k]):
             + (f"; replaces the owner's earlier ruling {prev['verdict']} ({prev.get('source')}, {prev.get('date')})" if prev else "")
             + (f"; pin placed rr {pin.get('rr')} moved {pin.get('moved_cm')} cm" if pin.get("placed") else "; no pin placed"))
     items[k] = dict(scan_id=skeys[k],
-                    question="is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+                    question=a.question,
                     owner_verdict=v.get("label") or v.get("choice"), michel_kind=kind,
                     words=(v.get("notes") or "").strip() or None, note=note)
     if v.get("label") and v.get("choice") and v["label"] != v["choice"]:
@@ -64,12 +69,12 @@ for k in sorted(skeys, key=lambda k: skeys[k]):
 
 sha = hashlib.sha256(open(a.labels, "rb").read()).hexdigest()
 mtime = datetime.datetime.fromtimestamp(os.path.getmtime(a.labels)).isoformat(timespec="seconds")
-out = dict(doc="pdhd/docs/25_pdvd-config-on-pdhd-and-bragg-michel-fraction.md sec 7",
+out = dict(doc=f"pdhd/docs/25_pdvd-config-on-pdhd-and-bragg-michel-fraction.md {a.section}",
            date=datetime.date.today().isoformat(),
-           viewer="tag own25 on :5017, its own empty label tag; prepdir prep-pdhd-h25base (today's production, so the "
-                  "chain's answer on screen was is_stm 0 on all 8); --dead-points ON",
-           how=f"The owner judged the 8 items of own25_sheet.tsv (queue rule in preregistered_own25.md). Labels from "
-               f"own25/labels.json ({mtime}, sha256 {sha}). Every other label tag byte-unchanged.",
+           viewer=f"tag {a.tag} on :5017, its own empty label tag; prepdir prep-pdhd-h25base (today's production, so the "
+                  f"chain's answer on screen was is_stm 0 on all {len(items)}); --dead-points ON",
+           how=f"The owner judged the {len(items)} items of {a.tag}_sheet.tsv (queue rule in preregistered_{a.tag}.md). Labels from "
+               f"{a.tag}/labels.json ({mtime}, sha256 {sha}). Every other label tag byte-unchanged.",
            caveat="The blind is gone (owner decision 2026-09-08): the chain's verdict was on screen, and the doc 25 "
                   "report had named three of the items. Owner rulings, not independent blind verdicts.",
            items=items)

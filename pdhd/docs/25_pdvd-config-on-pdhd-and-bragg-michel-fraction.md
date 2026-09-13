@@ -25,10 +25,12 @@
    moves cost 22 false positives, so they are PDHD-specific. The 13 unreadable profiles and 2 plateau
    misses are what is left. **The blind re-judge (§6): 13 of 14 recoveries are stoppers on two further
    blind looks; one splits (stopper / unreadable). The owner then ruled the 8 items the agents could not
-   settle (§7): the split item `029107_21/65` is THRU. On the owner-ruled record `smx26` lever 1 costs
-   exactly one false positive on APA0 strict — 77/0/27/69 → 89/1/15/68, purity 0.989, efficiency
-   0.740 → 0.856 — so by the pre-registered rule it is not free, while `compare_range_cm` 45 is
-   (80/0/24/69). Taking lever 1 is a named one-false-positive trade, and the decision is the owner's.**
+   settle (§7): the split item `029107_21/65` is THRU. The owner then ruled lever 1's other 8 recoveries
+   (§8), and all 8 are stoppers. So every one of lever 1's 13 APA0-strict recoveries is owner-ruled: 12
+   stoppers and 1 through-going. On record `smx27` lever 1 goes 77/0/27/68 → 89/1/15/67, purity 0.989,
+   efficiency 0.740 → 0.856. That is not free by the pre-registered rule; it is a fully owner-ruled
+   one-false-positive trade. `compare_range_cm` 45 is free (80/0/24/68), and its three recoveries are all
+   owner-ruled stoppers. The decision is the owner's.**
 
 **Read-only for production.** No C++ change, no production jsonnet edit, no record or label touched.
 Six new arms on a pinned binary, new tags only.
@@ -110,6 +112,23 @@ export STM_SCAN_RECORD=$D/pdhd_stm_michel_smx26_verdicts.json \
     D25_GATES="p82bhoff=61/0/86/108;h23conf:strict=77/0/27/69,48/3/12/39;h23conf:majority=79/1/29/70,49/3/12/41;h23conf:all=96/1/51/107,66/3/18/55"
 { python3 $D/h23/d23_grade.py h25base h25k h25r h25kr ; python3 $D/h23/d23_apa.py h25base h25k h25r h25kr ; } > $X/census_smx26.txt
 python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h25r,h25kr --pdvd p96vprod > $X/q2_smx26.txt
+
+# 7. section 8: the owner's scan of lever 1's remaining recoveries, tag own26 -> record smx27
+#    (queue rule, sheet and label shas written first: smx26/preregistered_own26.md, own26_sheet.tsv, own26_label_shas_before.txt)
+(cd $I/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdhd --scan-tag own26 \
+    --manifest $D/smx26/own26_sheet.tsv --prepdir ./prep-pdhd-h25base --dead-points)
+python3 $X/d25_own25_rulings.py --labels $I/pdhd/work/stm_michel_labels/own26/labels.json --sheet $D/smx26/own26_sheet.tsv \
+    --key $D/smx25/key_smx25.tsv --record $D/pdhd_stm_michel_smx26_verdicts.json --shas-before $D/smx26/own26_label_shas_before.txt \
+    --out $D/smx26/owner_rulings_own26.json --tag own26 --section "sec 8" \
+    --question "is this a stopping muon, or through-going? -- lever 1's APA0-strict recoveries no owner had ruled, plus two THRU controls"
+python3 $I/pdhd/stm_michel_scan/campaign/mkowner_record.py $D/pdhd_stm_michel_smx26_verdicts.json $D/smx26/owner_rulings_own26.json \
+    $R/own26 $D/pdhd_stm_michel_smx27_verdicts.json $D/smx26/provenance_smx27.json --skip-v5 --arm h25base
+python3 $X/d25_score_smx25.py --key $D/smx25/key_smx25.tsv --round $R --record $D/pdhd_stm_michel_smx27_verdicts.json \
+    --reading-b-out $D/smx26/record_smx27_readingB.json --name smx27 > $X/score_smx27.txt
+export STM_SCAN_RECORD=$D/pdhd_stm_michel_smx27_verdicts.json \
+    D25_GATES="p82bhoff=61/0/86/107;h23conf:strict=77/0/27/68,47/3/10/38;h23conf:majority=79/1/29/69,48/3/10/40;h23conf:all=96/1/51/106,65/3/16/54"
+{ python3 $D/h23/d23_grade.py h25base h25k h25r h25kr && python3 $D/h23/d23_apa.py h25base h25k h25r h25kr ; } > $X/census_smx27.txt
+python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h25r,h25kr --pdvd p96vprod > $X/q2_smx27.txt
 ```
 
 Every grader self-gates before printing: `d23_*` on `p82bhoff` = 61/0/87/108 (smx23);
@@ -823,6 +842,7 @@ Against smx25 reading A (strict n 174 → 173), each move by counter:
   `029107_1/85`, `029107_12/118`, `029107_12/95`, `029107_24/33` and `029107_28/109` rest on the smx23 record
   plus two agent confirmations at medium or high, and nobody has shown the agents are unbiased: on 2 of
   the 8 items the owner scanned, the agents leaned toward a stopper where the owner saw none.
+  *(Settled in §8: the owner ruled all 8, and all 8 are stoppers.)*
 * **A flip.** A flip changes production and needs the owner's explicit go.
 
 **For the owner's decision:**
@@ -831,7 +851,105 @@ Against smx25 reading A (strict n 174 → 173), each move by counter:
    one false positive, purity 0.989. The rule says not free, so taking it is an explicit trade, like the
    Michel bag in doc pdhd/22.
 3. Before 2, optionally: an owner look at the 8 unreviewed strict recoveries, in the same viewer and under a
-   new tag. That would turn the remaining agent-only part of the gain into owner rulings.
+   new tag. That would turn the remaining agent-only part of the gain into owner rulings. *(The owner chose
+   this; done in §8.)*
+
+## 8. The owner's scan of lever 1's remaining recoveries (`own26` → record `smx27`)
+
+The owner chose §7.4 option 3. The queue was fixed by a rule and committed before serving
+(`smx26/preregistered_own26.md`, sha `97b83c10…`):
+* **all of lever 1's APA0-strict recoveries that no owner had ruled** (8);
+* **two THRU controls**, one per stratum, drawn with seed 2626 from the smx25 THRU controls that had no owner
+  block.
+
+That is 10 items, in sheet order seed 2626.
+
+* **Served, blindness, integrity** as in §7: tag `own26` on :5017, production frames with dead points, and
+  the chain's "not a stopper" on screen for all 10. The other nine label tags are byte-unchanged
+  (`smx26/own26_label_shas_before.txt`). `own26` was frozen at sha `b009fa68…` when the owner said they were
+  done, and the viewer was stopped at their request.
+* **Fold** on smx26: 317 records, exactly the 10 changed, no block lost; all 8 own25 rulings are kept. The
+  converter is `d25_own25_rulings.py --tag own26 --section "sec 8"`; with no options it still reproduces
+  `owner_rulings_own25.json` byte for byte. The whole chain was dry-run on synthetic labels first.
+
+### 8.1 The rulings
+
+| item | group | agents (smx25), both scans | owner (own26) | stopper-or-not | Michel |
+|---|---|---|---|---|---|
+| `028084_10/46` | decision | STM_ONLY, detached dots, medium / medium | STM_ONLY, kind not set | agrees | — |
+| `028084_2/116` | decision | STM_MICHEL, attached, medium / medium | STM_ONLY, kind not set | agrees | agents drew one, owner did not |
+| `028084_5/115` | decision, also `h25r` | STM_ONLY, detached dots, medium / medium | STM_ONLY, detached dots | agrees | agrees |
+| `029107_1/85` | decision | STM_MICHEL, attached, medium / high | STM_MICHEL, attached | agrees | agrees |
+| `029107_12/118` | decision | STM_ONLY, none, medium / medium | STM_ONLY, kind not set | agrees | — |
+| `029107_12/95` | decision | STM_MICHEL, attached, medium / medium | STM_ONLY, kind not set | agrees | agents drew one, owner did not |
+| `029107_24/33` | decision, also `h25r` | STM_ONLY, detached dots, medium / medium | STM_ONLY, detached dots | agrees | agrees |
+| `029107_28/109` | decision | STM_MICHEL, attached, medium / medium | STM_ONLY, detached dots | agrees | agents attached, owner detached |
+| `029107_19/123` | THRU control | THRU / FRAG_THRU, medium / medium | UNCLEAR | not a stopper on either | — |
+| `028084_24/114` | THRU control | THRU / THRU, medium / medium | THRU | agrees | — |
+
+* **All 8 recoveries are stoppers.** Neither control became one.
+* **Across §7 and §8, stopper-or-not.** On the 14 items where both agents called a stopper, the owner agreed
+  on 13. The exception is the control `028084_18/17`, which the owner called MESSY. The only other
+  stopper-or-not difference is the split item `029107_21/65`, which the owner called THRU. §7's caution about
+  the agents' stopper lean therefore rests on those two items. On the recoveries both agents confirmed, the
+  owner agreed every time.
+* **Across §7 and §8, the Michel.** On the 8 decision items where both agents drew an attached Michel, the
+  owner agreed on 3 (`028084_20/116`, `029107_3/99`, `029107_1/85`). On the other 5 the owner saw none or
+  saw detached dots (`028084_2/49`, `028084_29/53`, `028084_2/116`, `029107_12/95`, `029107_28/109`). The
+  agents' Michel lean is the strong one, and it touches the Michel census, not `is_stm`.
+
+### 8.2 The census on `smx27`
+
+Readings A and B coincide. The numbers come from `score_smx27.txt` (cross-checked 4/4 on smx23) and are
+reproduced by the committed graders on the derived gates (`census_smx27.txt`, `q2_smx27.txt`, every gate
+PASS).
+
+| smx27 | production `h25base` | **`h25k` lever 1** (= `h25kr`) | `h25r` `compare_range_cm` 45 |
+|---|---|---|---|
+| **APA0 strict** | 77/0/27/68 — 1.000 / 0.740 | **89/1/15/67 — 0.989 / 0.856** | 80/0/24/68 — 1.000 / 0.769 |
+| majority | 79/1/29/69 — 0.988 / 0.731 | 92/2/16/68 — 0.979 / 0.852 | 82/1/26/69 — 0.988 / 0.759 |
+| all four APAs | 96/1/51/106 — 0.990 / 0.653 | 114/2/33/105 — 0.983 / 0.776 | 101/1/46/106 — 0.990 / 0.687 |
+| GOLDEN, strict | 33/57 = 0.579 | **36/57 = 0.632** | 34/57 = 0.596 |
+| Michel, strict | 47/3/10/38 — 0.940 / 0.825 | unchanged | unchanged |
+
+Against smx26, by counter (strict n 173 → 172):
+* **No decision item changes class.** TP, FP and FN are unchanged on every arm.
+* **`029107_19/123`**, THRU → UNCLEAR, leaves the scored set: TN −1 on every arm (production and `h25r`
+  69 → 68, lever 1 68 → 67).
+* **The Michel census follows the owner's kinds:**
+  * `028084_2/116` (the chain found a Michel) and `029107_12/95` (it did not) become owner stoppers with no
+    kind and are excluded: TP −1, FN −1;
+  * `029107_28/109`'s detached dots with no chain Michel: FN → TN;
+  * `028084_10/46` and `029107_12/118` are owner stoppers with no kind and are excluded: TN −1 each.
+
+  The result is 47/3/10/38, with exclusions 5 → 9. The golden denominator drops 60 → 57, because three former
+  hand Michels leave it, and no numerator moves.
+
+### 8.3 The decision, on levers that are now fully owner-ruled
+
+| arm | new false positives, APA0 strict | verdict by the rule |
+|---|---|---|
+| `h25r` `compare_range_cm` 45 | none | **free** |
+| `h25k` lever 1 | `029107_21/65` | **not free** |
+| `h25kr` both | `029107_21/65` | **not free** |
+
+Every one of lever 1's 13 APA0-strict recoveries is now owner-ruled: 12 stoppers and 1 through-going. All 3
+of `compare_range_cm` 45's recoveries are owner-ruled stoppers. No agent call remains under either arm's
+strict gain. The rule has now been applied three times (smx25 reading B, smx26, smx27), with the same answer
+each time.
+
+### 8.4 For the owner's decision
+
+1. **`compare_range_cm` 45 alone.** Free: +3 stoppers at purity 1.000 (efficiency 0.740 → 0.769), golden
+   0.579 → 0.596.
+2. **Lever 1** (`compare_range_cm` adds nothing on top). +12 stoppers for one named false positive,
+   `029107_21/65`: purity 1.000 → 0.989, efficiency 0.740 → 0.856, golden 0.579 → 0.632. The rule says not
+   free, so taking it is an explicit trade, like the Michel bag in doc pdhd/22.
+3. **Neither.**
+
+A flip is not done here. It would be a production jsonnet edit that moves the chosen keys into the PDHD
+production STM/Michel bag, then a confirmation arm that must be bit-identical to the measured arm (`h25r`,
+or `h25k`), then a doc and a commit.
 
 ## Files
 
@@ -854,3 +972,5 @@ Against smx25 reading A (strict n 174 → 173), each move by counter:
 | §6, scoring | `docs/scan/h25/d25_score_smx25.py`, `score_smx25.txt`, `census_smx25_A.txt`, `census_smx25_B.txt`, `q2_smx25_A.txt`, `q2_smx25_B.txt`, `sens_smx25_split_unscored.txt`; grader overrides `STM_SCAN_RECORD` / `D25_GATES` in `h23/d23_grade.py`, `h23/d23_apa.py`, `h25/d25_bragg_michel.py` |
 | §7, the owner's scan | `docs/scan/smx25/preregistered_own25.md`, `own25_sheet.tsv`, `own25_label_shas_before.txt`, `own25_label_sha_at_fold.txt`, `owner_rulings_own25.json`; converter `docs/scan/h25/d25_own25_rulings.py`; labels tag `work/stm_michel_labels/own25` (sha `5c8176bc…`) |
 | §7, the record and scoring | `docs/scan/pdhd_stm_michel_smx26_verdicts.json` (317 records, `owner_review` on the 8), `smx25/provenance_smx26.json`, `smx25/record_smx26_readingB.json` (= reading A); `docs/scan/h25/score_smx26.txt` (`d25_score_smx25.py --name smx26`; the default output is unchanged), `census_smx26.txt`, `q2_smx26.txt` |
+| §8, the owner's scan | `docs/scan/smx26/preregistered_own26.md`, `own26_sheet.tsv`, `own26_label_shas_before.txt`, `own26_label_sha_at_fold.txt`, `owner_rulings_own26.json` (`d25_own25_rulings.py --tag own26`); labels tag `work/stm_michel_labels/own26` (sha `b009fa68…`) |
+| §8, the record and scoring | `docs/scan/pdhd_stm_michel_smx27_verdicts.json` (317 records, `owner_review` on 18 tranche items), `smx26/provenance_smx27.json`, `smx26/record_smx27_readingB.json` (= reading A); `docs/scan/h25/score_smx27.txt`, `census_smx27.txt`, `q2_smx27.txt` |

@@ -1,0 +1,18 @@
+{
+ "n_records": 317,
+ "n_owner_review": 10,
+ "n_v5": 0,
+ "v5_outcomes": {
+  "confirmed": 0,
+  "adopted": 0,
+  "split": 0
+ },
+ "adopted": [],
+ "rubric_shas": [
+  "2bf6ff5ca3ddf798823df7c8850bfafe7710b3858e5eb9607cb306a8f465f624",
+  "750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d",
+  "7b8406b842fc778c6197cec1a58c6b68e19822a90b937fb47af039ee755e028d",
+  "b0c3842e1d3d20a88b413f5e7405936074e6056f532208c8ab97fd41ff3a4d36",
+  "f0f695f08cc092f62522d8a5a83fbd4aa4577b25726203ba4c12af504958e3e1"
+ ]
+}

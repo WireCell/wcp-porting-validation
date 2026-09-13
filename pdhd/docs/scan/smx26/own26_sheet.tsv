@@ -1,0 +1,13 @@
+# doc pdhd/25 sec 8 -- owner queue own26: lever 1's 8 APA0-strict recoveries no owner has ruled, plus 2 THRU controls
+# NO verdict, NO group, NO agent call: those are in docs/scan/smx25/key_smx25.tsv. Order seed 2626.
+scan_id	tranche	event	cluster	npts	muon_len_cm	n_near	n_far
+214	2	029107_19	123	364	220.38	5181	7538
+270	2	029107_28	109	991	595.94	8134	7862
+57	2	028084_2	116	255	153.41	5158	7964
+13	2	028084_10	46	271	162.18	1170	7709
+163	2	029107_1	85	229	136.28	1572	7986
+245	2	029107_24	33	246	146.67	2141	7670
+132	2	028084_5	115	72	42.77	980	7936
+89	2	028084_24	114	82	47.67	480	7816
+178	2	029107_12	95	267	158.46	4087	7892
+181	2	029107_12	118	103	61.14	654	7680

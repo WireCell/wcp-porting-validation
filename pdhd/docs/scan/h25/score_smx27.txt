@@ -1,0 +1,99 @@
+==== 1. integrity ====
+  key items 26; scanned items 26; items not in key -
+  every item has exactly two scans from its two assigned scanners; rubric shas {'750751ea2dbf042f80f3147384033840a5b783ea52565615de4e883d2ea1db1d': 52}
+
+==== 2. outcomes (stopper-or-not) ====
+  control_stop  stratum M: agrees 2, held 2
+  control_stop  stratum N: agrees 2, held 2
+  control_thru  stratum M: MOVED 1, agrees 3, disagrees 1, held 3
+  control_thru  stratum N: agrees 4, held 4
+  decision      stratum M: agrees 6, split 1
+  decision      stratum N: agrees 7
+
+  item                  group         st  truth(in force, source, record conf)       scans                                                       fold      vs truth
+  028084_24/49          control_stop  M   STM_MICHEL agent        high     rv5_a3:STM_MICHEL/both/high  rv5_a5:STM_MICHEL/both/high               confirmed agrees
+  029107_19/120         control_stop  M   STM_MICHEL agent        medium   rv5_a3:STM_MICHEL/attached/high  rv5_a5:STM_MICHEL/attached/high       confirmed agrees
+  028084_23/53          control_stop  N   STM_ONLY   agent        medium   rv5_a3:STM_ONLY/none/medium  rv5_a5:STM_ONLY/none/medium               confirmed agrees
+  028084_8/120          control_stop  N   STM_ONLY   agent        medium   rv5_a1:STM_MICHEL/attached/medium  rv5_a6:STM_MICHEL/attached/medium   confirmed agrees
+  028084_18/122         control_thru  M   THRU       agent        medium   rv5_a3:FRAG_THRU/none/medium  rv5_a5:THRU/none/medium                  confirmed agrees
+  028084_18/17          control_thru  M   THRU       owner_review medium   rv5_a2:STM_MICHEL/attached/medium  rv5_a4:STM_MICHEL/attached/low      adopted   disagrees
+  029107_19/123         control_thru  M   THRU       agent        medium   rv5_a2:THRU/none/medium  rv5_a4:FRAG_THRU/none/medium                  confirmed agrees
+  029107_5/28           control_thru  M   THRU       agent        medium   rv5_a1:THRU/none/low  rv5_a6:THRU/none/medium                          confirmed agrees
+  028084_0/108          control_thru  N   THRU       agent        medium   rv5_a3:THRU/none/medium  rv5_a5:THRU/none/high                         confirmed agrees
+  028084_1/28           control_thru  N   THRU       agent        medium   rv5_a1:FRAG_THRU/none/medium  rv5_a6:FRAG_THRU/none/medium             confirmed agrees
+  028084_24/114         control_thru  N   THRU       agent        medium   rv5_a1:THRU/none/medium  rv5_a6:THRU/none/medium                       confirmed agrees
+  029107_4/118          control_thru  N   THRU       agent        medium   rv5_a1:THRU/none/medium  rv5_a6:THRU/none/medium                       confirmed agrees
+  028084_2/116          decision      M   STM_MICHEL agent        low      rv5_a2:STM_MICHEL/attached/medium  rv5_a4:STM_MICHEL/attached/medium   confirmed agrees
+  028084_2/49           decision      M   STM_MICHEL agent        medium   rv5_a2:STM_MICHEL/attached/low  rv5_a4:STM_MICHEL/attached/medium      confirmed agrees
+  028084_20/116         decision      M   STM_MICHEL agent        high     rv5_a2:STM_MICHEL/both/high  rv5_a4:STM_MICHEL/both/high               confirmed agrees
+  029107_1/85           decision      M   STM_MICHEL agent        medium   rv5_a3:STM_MICHEL/attached/medium  rv5_a5:STM_MICHEL/attached/high     confirmed agrees
+  029107_21/65          decision      M   STM_MICHEL agent        medium   rv5_a3:STM_ONLY/none/medium  rv5_a5:UNCLEAR/none/medium                split     split
+  029107_3/99           decision      M   STM_MICHEL agent        medium   rv5_a2:STM_MICHEL/attached/low  rv5_a4:STM_MICHEL/attached/low         confirmed agrees
+  029107_7/85           decision      M   STM_MICHEL agent        medium   rv5_a2:STM_ONLY/detached dots/low  rv5_a4:STM_ONLY/detached dots/medium confirmed agrees
+  028084_10/46          decision      N   STM_ONLY   agent        medium   rv5_a1:STM_ONLY/detached dots/medium  rv5_a6:STM_ONLY/detached dots/medium confirmed agrees
+  028084_29/53          decision      N   STM_ONLY   agent        medium   rv5_a1:STM_MICHEL/attached/medium  rv5_a6:STM_MICHEL/attached/low      confirmed agrees
+  028084_5/115          decision      N   STM_ONLY   agent        medium   rv5_a2:STM_ONLY/detached dots/medium  rv5_a4:STM_ONLY/detached dots/medium confirmed agrees
+  029107_12/118         decision      N   STM_ONLY   agent        medium   rv5_a2:STM_ONLY/none/medium  rv5_a4:STM_ONLY/none/medium               confirmed agrees
+  029107_12/95          decision      N   STM_MICHEL agent        medium   rv5_a1:STM_MICHEL/attached/medium  rv5_a6:STM_MICHEL/attached/medium   confirmed agrees
+  029107_24/33          decision      N   STM_ONLY   agent        medium   rv5_a3:STM_ONLY/detached dots/medium  rv5_a5:STM_ONLY/detached dots/medium confirmed agrees
+  029107_28/109         decision      N   STM_MICHEL agent        medium   rv5_a1:STM_MICHEL/attached/medium  rv5_a6:STM_MICHEL/attached/medium   confirmed agrees
+
+  owner-governed items in the tranche (calibration; the pass cannot override them): 028084_18/17 owner THRU: disagrees
+
+==== 3. reading B: split decision items set to THRU: none -> smx26/record_smx27_readingB.json
+
+==== 4. independent recount ====
+  cross-check smx23 p82bhoff all      is_stm (61, 0, 87, 108) michel (57, 11, 30, 47) -> PASS
+  cross-check smx23 h25base all      is_stm (96, 1, 52, 107) michel (69, 2, 18, 56) -> PASS
+  cross-check smx23 h25base majority is_stm (79, 1, 30, 70) michel (52, 2, 12, 42) -> PASS
+  cross-check smx23 h25base strict   is_stm (77, 0, 28, 69) michel (51, 2, 12, 39) -> PASS
+
+  --- smx23 ---
+    strict   h25base  is_stm  77/ 0/ 28/ 69  purity 1.000 eff 0.733   michel (51, 2, 12, 39)   new FP vs h25base: -
+    strict   h25k     is_stm  90/ 0/ 15/ 69  purity 1.000 eff 0.857   michel (51, 2, 12, 39)   new FP vs h25base: -
+    strict   h25r     is_stm  80/ 0/ 25/ 69  purity 1.000 eff 0.762   michel (51, 2, 12, 39)   new FP vs h25base: -
+    strict   h25kr    is_stm  90/ 0/ 15/ 69  purity 1.000 eff 0.857   michel (51, 2, 12, 39)   new FP vs h25base: -
+    majority h25base  is_stm  79/ 1/ 30/ 70  purity 0.988 eff 0.725   michel (52, 2, 12, 42)   new FP vs h25base: -
+    majority h25k     is_stm  93/ 1/ 16/ 70  purity 0.989 eff 0.853   michel (52, 2, 12, 42)   new FP vs h25base: -
+    majority h25r     is_stm  82/ 1/ 27/ 70  purity 0.988 eff 0.752   michel (52, 2, 12, 42)   new FP vs h25base: -
+    majority h25kr    is_stm  93/ 1/ 16/ 70  purity 0.989 eff 0.853   michel (52, 2, 12, 42)   new FP vs h25base: -
+    all      h25base  is_stm  96/ 1/ 52/107  purity 0.990 eff 0.649   michel (69, 2, 18, 56)   new FP vs h25base: -
+    all      h25k     is_stm 115/ 1/ 33/107  purity 0.991 eff 0.777   michel (69, 2, 18, 56)   new FP vs h25base: -
+    all      h25r     is_stm 101/ 1/ 47/107  purity 0.990 eff 0.682   michel (69, 2, 18, 56)   new FP vs h25base: -
+    all      h25kr    is_stm 115/ 1/ 33/107  purity 0.991 eff 0.777   michel (69, 2, 18, 56)   new FP vs h25base: -
+    D25_GATES="p82bhoff=61/0/87/108;h23conf:strict=77/0/28/69,51/2/12/39;h23conf:majority=79/1/30/70,52/2/12/42;h23conf:all=96/1/52/107,69/2/18/56"
+
+  --- smx27 reading A ---
+    strict   h25base  is_stm  77/ 0/ 27/ 68  purity 1.000 eff 0.740   michel (47, 3, 10, 38)   new FP vs h25base: -
+    strict   h25k     is_stm  89/ 1/ 15/ 67  purity 0.989 eff 0.856   michel (47, 3, 10, 38)   new FP vs h25base: 029107_21/65
+    strict   h25r     is_stm  80/ 0/ 24/ 68  purity 1.000 eff 0.769   michel (47, 3, 10, 38)   new FP vs h25base: -
+    strict   h25kr    is_stm  89/ 1/ 15/ 67  purity 0.989 eff 0.856   michel (47, 3, 10, 38)   new FP vs h25base: 029107_21/65
+    majority h25base  is_stm  79/ 1/ 29/ 69  purity 0.988 eff 0.731   michel (48, 3, 10, 40)   new FP vs h25base: -
+    majority h25k     is_stm  92/ 2/ 16/ 68  purity 0.979 eff 0.852   michel (48, 3, 10, 40)   new FP vs h25base: 029107_21/65
+    majority h25r     is_stm  82/ 1/ 26/ 69  purity 0.988 eff 0.759   michel (48, 3, 10, 40)   new FP vs h25base: -
+    majority h25kr    is_stm  92/ 2/ 16/ 68  purity 0.979 eff 0.852   michel (48, 3, 10, 40)   new FP vs h25base: 029107_21/65
+    all      h25base  is_stm  96/ 1/ 51/106  purity 0.990 eff 0.653   michel (65, 3, 16, 54)   new FP vs h25base: -
+    all      h25k     is_stm 114/ 2/ 33/105  purity 0.983 eff 0.776   michel (65, 3, 16, 54)   new FP vs h25base: 029107_21/65
+    all      h25r     is_stm 101/ 1/ 46/106  purity 0.990 eff 0.687   michel (65, 3, 16, 54)   new FP vs h25base: -
+    all      h25kr    is_stm 114/ 2/ 33/105  purity 0.983 eff 0.776   michel (65, 3, 16, 54)   new FP vs h25base: 029107_21/65
+    D25_GATES="p82bhoff=61/0/86/107;h23conf:strict=77/0/27/68,47/3/10/38;h23conf:majority=79/1/29/69,48/3/10/40;h23conf:all=96/1/51/106,65/3/16/54"
+
+  --- smx27 reading B ---
+    strict   h25base  is_stm  77/ 0/ 27/ 68  purity 1.000 eff 0.740   michel (47, 3, 10, 38)   new FP vs h25base: -
+    strict   h25k     is_stm  89/ 1/ 15/ 67  purity 0.989 eff 0.856   michel (47, 3, 10, 38)   new FP vs h25base: 029107_21/65
+    strict   h25r     is_stm  80/ 0/ 24/ 68  purity 1.000 eff 0.769   michel (47, 3, 10, 38)   new FP vs h25base: -
+    strict   h25kr    is_stm  89/ 1/ 15/ 67  purity 0.989 eff 0.856   michel (47, 3, 10, 38)   new FP vs h25base: 029107_21/65
+    majority h25base  is_stm  79/ 1/ 29/ 69  purity 0.988 eff 0.731   michel (48, 3, 10, 40)   new FP vs h25base: -
+    majority h25k     is_stm  92/ 2/ 16/ 68  purity 0.979 eff 0.852   michel (48, 3, 10, 40)   new FP vs h25base: 029107_21/65
+    majority h25r     is_stm  82/ 1/ 26/ 69  purity 0.988 eff 0.759   michel (48, 3, 10, 40)   new FP vs h25base: -
+    majority h25kr    is_stm  92/ 2/ 16/ 68  purity 0.979 eff 0.852   michel (48, 3, 10, 40)   new FP vs h25base: 029107_21/65
+    all      h25base  is_stm  96/ 1/ 51/106  purity 0.990 eff 0.653   michel (65, 3, 16, 54)   new FP vs h25base: -
+    all      h25k     is_stm 114/ 2/ 33/105  purity 0.983 eff 0.776   michel (65, 3, 16, 54)   new FP vs h25base: 029107_21/65
+    all      h25r     is_stm 101/ 1/ 46/106  purity 0.990 eff 0.687   michel (65, 3, 16, 54)   new FP vs h25base: -
+    all      h25kr    is_stm 114/ 2/ 33/105  purity 0.983 eff 0.776   michel (65, 3, 16, 54)   new FP vs h25base: 029107_21/65
+    D25_GATES="p82bhoff=61/0/86/107;h23conf:strict=77/0/27/68,47/3/10/38;h23conf:majority=79/1/29/69,48/3/10/40;h23conf:all=96/1/51/106,65/3/16/54"
+
+==== 5. pre-registered decision: free on the re-judged record iff 0 new FP on APA0 strict under reading B ====
+  h25k     strict reading B  89/ 1/ 15/ 67  purity 0.989 eff 0.856; new FP 029107_21/65 -> NOT free
+  h25r     strict reading B  80/ 0/ 24/ 68  purity 1.000 eff 0.769; new FP none -> FREE on the re-judged record
+  h25kr    strict reading B  89/ 1/ 15/ 67  purity 0.989 eff 0.856; new FP 029107_21/65 -> NOT free
