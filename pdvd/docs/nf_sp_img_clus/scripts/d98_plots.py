@@ -68,6 +68,72 @@ def fmt(s):
             f"resid_rms={s['resid_rms']:.0f} cm  pull_sd={s['pull_sd']:.2f}")
 
 
+SIM_PRED = "/home/xqian/toolkit-dev/DNN_ROI_SP/simulation/dunevd_singlep/diffusion_t0/ml/runs/m3-200k-w/predictions_test.csv"
+SIM_DX, SIM_DE, SIM_NRES = 15.0, 5.0, 2000        # neighbour window [cm], [MeV]; resamples
+SIM_EBINS = np.arange(5, 55, 5)                  # energy reweighting bins [MeV]
+BINS = (80, 150, 220, 340)
+
+
+def load_sim():
+    """the model's own simulation test split, electrons only (a Michel is an electron): y = the training label
+    (in-crop charge-weighted drift, as our tick route is charge-weighted over the Michel's pixels), mu, sigma, E"""
+    rows = [r for r in csv.DictReader(open(SIM_PRED)) if r["species"] == "e"]
+    f = lambda k: np.array([float(r[k]) for r in rows])
+    return dict(y=f("y_true_crop_cm"), mu=f("mu_cm"), sig=f("sigma_cm"), E=f("E_MeV"))
+
+
+def sim_band(sim, ke, edges=np.arange(70, 352, 20)):
+    """-> (centres, q025, q16, q50, q84, q975) of sim mu per true-drift bin, electrons reweighted to the data's
+    michel_ke_best spectrum (clipped to the simulated 5-50 MeV)"""
+    hd = np.histogram(np.clip(ke, 5, 49.99), SIM_EBINS)[0].astype(float)
+    hs = np.histogram(np.clip(sim["E"], 5, 49.99), SIM_EBINS)[0].astype(float)
+    wbin = np.where(hs > 0, hd / np.maximum(hs, 1), 0)
+    w = wbin[np.clip(np.digitize(sim["E"], SIM_EBINS) - 1, 0, len(wbin) - 1)]
+    out = []
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        s = (sim["y"] >= lo) & (sim["y"] < hi) & (w > 0)
+        m, ww = sim["mu"][s], w[s]; o = np.argsort(m); cw = np.cumsum(ww[o]) / ww.sum()
+        out.append([0.5 * (lo + hi)] + [float(np.interp(q, cw, m[o])) for q in (0.025, 0.16, 0.5, 0.84, 0.975)])
+    return np.array(out).T
+
+
+def sim_expect(x, ke, sim, rng):
+    """what the model's own simulation predicts for THIS sample: each data Michel is replaced by a simulated electron
+    drawn from its neighbours (|d drift| < SIM_DX, |d E| < SIM_DE, E = ke_best clipped to 5-50 MeV), and the
+    pre-registered readouts are recomputed; SIM_NRES draws -> the 16/50/84 % quantiles of each readout"""
+    ke = np.clip(ke, 5, 50)
+    nb = [np.nonzero((np.abs(sim["y"] - xi) < SIM_DX) & (np.abs(sim["E"] - ki) < SIM_DE))[0] for xi, ki in zip(x, ke)]
+    acc = {k: [] for k in ("rho", "r", "slope", "resid_rms", "pull_sd", "resid_drift")}
+    acc.update({f"h68_{lo}": [] for lo in BINS[:-1]})
+    for _ in range(SIM_NRES):
+        j = np.array([rng.choice(a) for a in nb])
+        ys, sg = sim["mu"][j], sim["sig"][j]
+        s, c = np.polyfit(x, ys, 1); res = ys - (s * x + c)
+        acc["rho"].append(stats.spearmanr(x, ys)[0]); acc["r"].append(stats.pearsonr(x, ys)[0])
+        acc["slope"].append(s); acc["resid_rms"].append(np.std(res)); acc["pull_sd"].append(np.std(res / sg))
+        acc["resid_drift"].append(np.std(res) / s)
+        for lo, hi in zip(BINS[:-1], BINS[1:]):
+            b = (x >= lo) & (x < hi)
+            acc[f"h68_{lo}"].append(0.5 * np.subtract(*np.quantile(ys[b], [0.84, 0.16])) if b.sum() >= 3 else np.nan)
+    q = {k: tuple(np.quantile(v, [0.16, 0.5, 0.84])) for k, v in acc.items()}
+    q["draws"] = {k: np.array(v) for k, v in acc.items()}
+    q["nb_min"] = min(len(a) for a in nb); q["nb_med"] = int(np.median([len(a) for a in nb]))
+    return q
+
+
+def data_bins(x, y, rng_b):
+    """data half-width of the q16-q84 of mu per true-drift bin, with a bootstrap 68 % interval"""
+    out = {}
+    for lo, hi in zip(BINS[:-1], BINS[1:]):
+        b = (x >= lo) & (x < hi); yb = y[b]
+        if len(yb) < 3:
+            continue
+        h = lambda a: 0.5 * np.subtract(*np.quantile(a, [0.84, 0.16]))
+        bs = [h(yb[rng_b.integers(0, len(yb), len(yb))]) for _ in range(N_BOOT)]
+        out[lo] = (len(yb), h(yb), *np.quantile(bs, [0.16, 0.84]))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tag", default="round1")
@@ -121,6 +187,41 @@ def main():
     print(txt)
     json.dump({"|".join(k): v for k, v in S.items()}, open(f"{OUT_TMP}/stats_{a.tag}.json", "w"), indent=1)
 
+    # ---- the simulation expectation (added after round 1; its own generator, so every readout above is unchanged)
+    rng_sim = np.random.default_rng(SEED + 1)
+    sim = load_sim()
+    BAND, EXP, DBIN = {}, {}, {}
+    simlines = [f"\n# simulation expectation: m3-200k-w test split ({len(sim['y'])} electrons, {os.path.basename(SIM_PRED)}), "
+          f"label y_true_crop_cm; each in-range Michel replaced by a sim electron with |d drift| < {SIM_DX:.0f} cm and "
+          f"|d E| < {SIM_DE:.0f} MeV (E = michel_ke_best clipped to 5-50), {SIM_NRES} draws, seed {SEED + 1}; "
+          "numbers are the 16/50/84 % quantiles over draws.  Isolated training-like electrons: no muon removal, no "
+          "truncated start, noise residue instead of zeros -- the null 'a real Michel reads like a sim electron'."]
+    for det in ("pdvd", "pdhd"):
+        R = [r for r in rows if r["det"] == det and r["inrange"] > 0]
+        if len(R) < 4:
+            continue
+        x = np.array([r["drift_tick"] for r in R]); y = np.array([r["mu_Z"] for r in R])
+        ke = np.array([r["ke_best"] for r in R])
+        BAND[det] = sim_band(sim, ke)
+        EXP[det] = e = sim_expect(x, ke, sim, rng_sim)
+        DBIN[det] = db = data_bins(x, y, rng_sim)
+        s = S[(det, "B", "in-range", "Z")]
+        qf = lambda k, f=".2f": f"{e[k][1]:{f}} [{e[k][0]:{f}}, {e[k][2]:{f}}]"
+        simlines.append(f"== {det} tier B in-range Z (n={len(R)}; neighbours per Michel min {e['nb_min']} median {e['nb_med']})")
+        simlines.append(f"  rho        data {s['rho']:+.2f}   sim-expected {qf('rho')}")
+        simlines.append(f"  r          data {s['r']:+.2f}   sim-expected {qf('r')}")
+        simlines.append(f"  slope      data {s['slope']:.2f}    sim-expected {qf('slope')}")
+        simlines.append(f"  resid rms  data {s['resid_rms']:.1f}    sim-expected {qf('resid_rms', '.1f')}  [cm of mu, about the sample's own OLS line]")
+        simlines.append(f"  resid/slope data {s['resid_rms'] / s['slope']:.1f}  sim-expected {qf('resid_drift', '.1f')}  [cm of drift: the scatter as a drift estimator]")
+        simlines.append(f"  pull sd    data {s['pull_sd']:.2f}    sim-expected {qf('pull_sd')}  [about the OLS line, over the model's own sigma]")
+        for lo, hi in zip(BINS[:-1], BINS[1:]):
+            if lo in db:
+                n_, h, hlo, hhi = db[lo]
+                simlines.append(f"  drift [{lo},{hi}) n={n_:2d}: half-width of mu q16-q84 data {h:.1f} [{hlo:.1f}, {hhi:.1f}]  "
+                          f"sim-expected {qf(f'h68_{lo}', '.1f')}")
+        for (bc, b025, b16, b50, b84, b975) in BAND[det].T:
+            simlines.append(f"  band drift {bc:5.0f}: sim mu q2.5/q16/q50/q84/q97.5 = {b025:.0f}/{b16:.0f}/{b50:.0f}/{b84:.0f}/{b975:.0f}")
+
     # ---- figures
     for det in ("pdhd", "pdvd"):
         R = [r for r in rows if r["det"] == det]
@@ -140,6 +241,9 @@ def main():
                 if (~inr).any():
                     A.plot(np.array(x)[~inr], np.array(y)[~inr], "x", color="k", ms=9, mew=1.2,
                            label="out of range (drift<80)" if tier == "B" else None)
+            if det in BAND:
+                bd = BAND[det]
+                A.fill_between(bd[0], bd[2], bd[4], color="tab:green", alpha=0.15, lw=0, label="sim electrons, same E: q16-q84")
             xx = np.array([0, 350]); A.plot(xx, xx, "k--", lw=1, label="identity")
             A.plot(xx, EXPECTED_SLOPE[det] * xx, "g:", lw=1.5, label=f"slope {EXPECTED_SLOPE[det]} (D_L, v_drift)")
             s = S.get((det, "B", "in-range", v), {})
@@ -216,7 +320,7 @@ def main():
 
     # the headline correlation figure: primary variant only, one panel per detector, binned medians with q16-q84
     # bands, tier A marked, the tier-B fit, identity, and the readouts written on the panel
-    fig, ax = plt.subplots(1, 2, figsize=(13, 5.8))
+    fig, ax = plt.subplots(1, 2, figsize=(13, 7.4))
     fig2, ax2 = plt.subplots(1, 2, figsize=(11, 5.2))
     for k, det in enumerate(("pdvd", "pdhd")):
         R = [r for r in rows if r["det"] == det and r["inrange"] > 0]
@@ -235,21 +339,29 @@ def main():
             if s.sum() >= 3:
                 bx.append(np.median(x[s])); bm.append(np.median(y[s]))
                 blo.append(np.quantile(y[s], .16)); bhi.append(np.quantile(y[s], .84))
-        A.fill_between(bx, blo, bhi, color="orange", alpha=0.2, label="binned q16-q84")
-        A.plot(bx, bm, "D-", color="darkorange", ms=9, lw=2, label="binned median", zorder=5)
+        bd = BAND[det]
+        A.fill_between(bd[0], bd[1], bd[5], color="tab:green", alpha=0.08, lw=0, zorder=0, label="simulation, same drift + energy: q2.5-q97.5")
+        A.fill_between(bd[0], bd[2], bd[4], color="tab:green", alpha=0.20, lw=0, zorder=0, label="simulation: q16-q84")
+        A.plot(bd[0], bd[3], "-", color="darkgreen", lw=1.5, zorder=1, label="simulation: median")
+        A.fill_between(bx, blo, bhi, color="orange", alpha=0.2, label="data binned q16-q84")
+        A.plot(bx, bm, "D-", color="darkorange", ms=9, lw=2, label="data binned median", zorder=5)
         xx = np.array([80, 340]); A.plot(xx, xx, "k--", lw=1, label="identity")
         s = S.get((det, "B", "in-range", "Z"), {})
         A.plot(xx, s["slope"] * xx + s["icpt"], "-", color="tab:blue", lw=2,
-               label=f"OLS fit: slope {s['slope']:.2f} [{s['slope_lo']:.2f}, {s['slope_hi']:.2f}]")
+               label=f"data OLS fit: slope {s['slope']:.2f} [{s['slope_lo']:.2f}, {s['slope_hi']:.2f}]")
         A.axhspan(0, 90, color="0.92", zorder=0)
-        A.text(0.03, 0.97, f"Pearson r = {s['r']:+.2f} [{s['r_lo']:+.2f}, {s['r_hi']:+.2f}]\nSpearman rho = {s['rho']:+.2f}\n"
-                           f"permutation p = {s['p_perm']:.1g}\nn = {s['n']} Michels, 80-340 cm",
-               transform=A.transAxes, va="top", fontsize=10, bbox=dict(fc="white", ec="0.5", alpha=0.9))
-        A.set_xlim(70, 350); A.set_ylim(0, 360)
+        e = EXP[det]
+        A.text(0.03, 0.97, f"{'':14s}data    sim-expected\nSpearman rho  {s['rho']:+.2f}   {e['rho'][1]:+.2f} [{e['rho'][0]:.2f}, {e['rho'][2]:.2f}]\n"
+                           f"OLS slope     {s['slope']:.2f}    {e['slope'][1]:.2f} [{e['slope'][0]:.2f}, {e['slope'][2]:.2f}]\n"
+                           f"resid rms     {s['resid_rms']:.0f} cm   {e['resid_rms'][1]:.0f} [{e['resid_rms'][0]:.0f}, {e['resid_rms'][2]:.0f}]\n"
+                           f"resid/slope   {s['resid_rms'] / s['slope']:.0f} cm   {e['resid_drift'][1]:.0f} [{e['resid_drift'][0]:.0f}, {e['resid_drift'][2]:.0f}]\n"
+                           f"Pearson r = {s['r']:+.2f}, permutation p = {s['p_perm']:.1g}\nn = {s['n']} Michels, 80-340 cm",
+               transform=A.transAxes, va="top", fontsize=8.5, family="monospace", bbox=dict(fc="white", ec="0.5", alpha=0.9))
+        A.set_xlim(70, 350); A.set_ylim(0, 400)
         A.set_xlabel("true drift distance of the Michel from Q-L matching  [cm]", fontsize=11)
         A.set_ylabel("regressor prediction mu  [cm]  (bars: the model's own sigma)", fontsize=11)
         A.set_title(f"{det.upper()} ({'p96vprod' if det == 'pdvd' else 'h28prod'}): Michel-only crop, muon removed", fontsize=12)
-        A.legend(fontsize=8.5, loc="lower right")
+        A.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.11), ncol=2, frameon=False)
         # rank-rank view (what Spearman sees)
         B = ax2[k]
         rx = stats.rankdata(x); ry = stats.rankdata(y)
@@ -276,9 +388,12 @@ def main():
         R = [r for r in rows if r["det"] == det and r["inrange"] > 0]
         if len(R) < 4:
             continue
-        fig, axs = plt.subplots(2, 3, figsize=(16, 9.5))
+        fig, axs = plt.subplots(2, 3, figsize=(16, 12))
         tl.append(f"== {det}")
+        simlines.append(f"== {det} topology groups: data rho / slope / resid rms  vs  sim-expected median [16, 84] for the group's own drifts and energies")
         for A, (name, pred, lab1, lab0) in zip(axs.ravel(), SPLITS):
+            bd = BAND[det]
+            A.fill_between(bd[0], bd[2], bd[4], color="0.6", alpha=0.25, lw=0, zorder=0, label="simulation q16-q84 (all in-range E)")
             xx = np.array([80, 340]); A.plot(xx, xx, "k--", lw=1, label="identity")
             for grp, col, mk in ((True, "tab:green", "o"), (False, "tab:purple", "^")):
                 G = [r for r in R if bool(pred(r)) == grp]
@@ -287,6 +402,11 @@ def main():
                     tl.append(f"  {name:12s} {lab:36s}: n=0"); continue
                 x = np.array([r["drift_tick"] for r in G]); y = np.array([r["mu_Z"] for r in G]); e = np.array([r["sig_Z"] for r in G])
                 s = readout(x, y, e, rng)
+                if s.get("n", 0) >= 4:
+                    eg = sim_expect(x, np.array([r["ke_best"] for r in G]), sim, rng_sim)
+                    simlines.append(f"  {name:12s} {lab:36s} n={len(G):2d}: rho {s['rho']:+.2f} vs {eg['rho'][1]:+.2f} [{eg['rho'][0]:+.2f}, {eg['rho'][2]:+.2f}]   "
+                              f"slope {s['slope']:.2f} vs {eg['slope'][1]:.2f} [{eg['slope'][0]:.2f}, {eg['slope'][2]:.2f}]   "
+                              f"resid {s['resid_rms']:.0f} vs {eg['resid_rms'][1]:.0f} [{eg['resid_rms'][0]:.0f}, {eg['resid_rms'][2]:.0f}] cm")
                 txt = (f"{lab} (n={len(G)}): rho={s['rho']:+.2f}, p={s['p_perm']:.2g}, slope {s['slope']:.2f}"
                        if s.get("n", 0) >= 4 else f"{lab} (n={len(G)})")
                 A.errorbar(x, y, yerr=e, fmt=mk, color=col, ms=6, alpha=0.7, lw=0.6, label=txt)
@@ -296,12 +416,38 @@ def main():
                 else:
                     tl.append(f"  {name:12s} {lab:36s}: n={len(G)} (too few)")
             A.axhspan(0, 90, color="0.92", zorder=0)
-            A.set_xlim(70, 350); A.set_ylim(0, 360)
+            A.set_xlim(70, 350); A.set_ylim(0, 420)
             A.set_xlabel("true drift from Q-L matching [cm]"); A.set_ylabel("regressor mu [cm]")
-            A.set_title(f"{det.upper()} split by {name}", fontsize=11); A.legend(fontsize=8, loc="upper left")
+            A.set_title(f"{det.upper()} split by {name}", fontsize=11)
+            A.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.13), frameon=False)
         fig.suptitle(f"doc pdvd/98 -- {det.upper()}: reco vs true drift by topology (variant Z, Michel only, 80-340 cm)", fontsize=12)
         fig.tight_layout(); fig.savefig(f"{FIGS}/98_topology_{det}.png", dpi=105); plt.close(fig)
     open(f"{SCAN}/stats_{a.tag}.txt", "a").write("\n".join(tl) + "\n"); print("\n".join(tl))
+    open(f"{SCAN}/stats_{a.tag}.txt", "a").write("\n".join(simlines) + "\n"); print("\n".join(simlines))
+
+    # is the data's spread (and its rank / slope) what the simulation expects for the same sample? the data value
+    # against the distribution of each readout over the SIM_NRES matched draws
+    RD = [("rho", "Spearman rho", "rho", 1.0), ("slope", "OLS slope of mu on drift", "slope", 1.0),
+          ("resid_rms", "scatter of mu about the OLS line [cm of mu]", "resid_rms", 1.0),
+          ("resid_drift", "scatter / slope [cm of drift]", None, 1.0)]
+    fig, ax = plt.subplots(2, 4, figsize=(17, 7.6))
+    for i, det in enumerate(("pdvd", "pdhd")):
+        if det not in EXP:
+            continue
+        s = S[(det, "B", "in-range", "Z")]
+        for j, (k, lab, sk, _) in enumerate(RD):
+            A = ax[i, j]; dr = EXP[det]["draws"][k]
+            dv = s[sk] if sk else s["resid_rms"] / s["slope"]
+            A.hist(dr, bins=40, color="tab:green", alpha=0.5, label=f"simulation, {SIM_NRES} matched draws")
+            A.axvline(dv, color="tab:red", lw=2.5, label=f"data {dv:.2f}" if k in ("rho", "slope") else f"data {dv:.0f}")
+            lo_, md, hi_ = EXP[det][k]
+            A.axvspan(lo_, hi_, color="tab:green", alpha=0.12)
+            A.set_title(f"{det.upper()}: {lab}\nsim {md:.2f} [{lo_:.2f}, {hi_:.2f}]" if k in ("rho", "slope")
+                        else f"{det.upper()}: {lab}\nsim {md:.0f} [{lo_:.0f}, {hi_:.0f}]", fontsize=10)
+            A.legend(fontsize=8); A.set_yticks([])
+    fig.suptitle("doc pdvd/98 -- data (red) vs the model's own simulation for the same drifts and Michel energies "
+                 "(tier B in-range, variant Z; sim = isolated electrons)", fontsize=11)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/98_data_vs_sim_expectation.png", dpi=105); plt.close(fig)
 
     # label check
     fig, ax = plt.subplots(1, 2, figsize=(10, 4.4))

@@ -89,3 +89,78 @@ pdvd: n=87 r=+0.07 rho=+0.06 p_perm=0.2774 slope=0.0038 ticks^2/cm (expected 2 D
   Bragg peak   < 0.8 (weak)                        : n= 12  r=+0.56 [+0.35,+0.76]  rho=+0.56  p_perm=0.0286  slope=+0.31 [+0.17,+0.49]  icpt=+76  resid_rms=35 cm  pull_sd=1.74
   tier         tier A (clean by every rule)        : n=2 (too few)
   tier         tier B rest                         : n= 26  r=+0.50 [+0.39,+0.61]  rho=+0.51  p_perm=0.0051  slope=+0.43 [+0.28,+0.58]  icpt=+47  resid_rms=60 cm  pull_sd=2.47
+
+# simulation expectation: m3-200k-w test split (9889 electrons, predictions_test.csv), label y_true_crop_cm; each in-range Michel replaced by a sim electron with |d drift| < 15 cm and |d E| < 5 MeV (E = michel_ke_best clipped to 5-50), 2000 draws, seed 20260914; numbers are the 16/50/84 % quantiles over draws.  Isolated training-like electrons: no muon removal, no truncated start, noise residue instead of zeros -- the null 'a real Michel reads like a sim electron'.
+== pdvd tier B in-range Z (n=58; neighbours per Michel min 72 median 123)
+  rho        data +0.61   sim-expected 0.86 [0.83, 0.90]
+  r          data +0.58   sim-expected 0.87 [0.83, 0.90]
+  slope      data 0.43    sim-expected 0.88 [0.80, 0.96]
+  resid rms  data 35.8    sim-expected 29.3 [26.0, 33.3]  [cm of mu, about the sample's own OLS line]
+  resid/slope data 82.6  sim-expected 33.6 [28.7, 39.4]  [cm of drift: the scatter as a drift estimator]
+  pull sd    data 1.51    sim-expected 1.01 [0.90, 1.12]  [about the OLS line, over the model's own sigma]
+  drift [80,150) n=21: half-width of mu q16-q84 data 16.4 [5.9, 20.3]  sim-expected 16.7 [12.8, 21.8]
+  drift [150,220) n=23: half-width of mu q16-q84 data 30.0 [18.8, 35.1]  sim-expected 33.7 [27.3, 40.6]
+  drift [220,340) n=14: half-width of mu q16-q84 data 41.6 [33.5, 58.4]  sim-expected 39.2 [29.7, 50.2]
+  band drift    80: sim mu q2.5/q16/q50/q84/q97.5 = 82/89/97/109/123
+  band drift   100: sim mu q2.5/q16/q50/q84/q97.5 = 84/93/102/116/142
+  band drift   120: sim mu q2.5/q16/q50/q84/q97.5 = 91/99/112/129/157
+  band drift   140: sim mu q2.5/q16/q50/q84/q97.5 = 93/107/125/151/179
+  band drift   160: sim mu q2.5/q16/q50/q84/q97.5 = 98/116/138/170/205
+  band drift   180: sim mu q2.5/q16/q50/q84/q97.5 = 108/133/163/191/220
+  band drift   200: sim mu q2.5/q16/q50/q84/q97.5 = 116/147/178/211/234
+  band drift   220: sim mu q2.5/q16/q50/q84/q97.5 = 131/160/199/234/278
+  band drift   240: sim mu q2.5/q16/q50/q84/q97.5 = 140/178/219/248/288
+  band drift   260: sim mu q2.5/q16/q50/q84/q97.5 = 159/203/241/269/309
+  band drift   280: sim mu q2.5/q16/q50/q84/q97.5 = 178/223/266/296/334
+  band drift   300: sim mu q2.5/q16/q50/q84/q97.5 = 182/238/281/316/356
+  band drift   320: sim mu q2.5/q16/q50/q84/q97.5 = 210/275/303/341/377
+  band drift   340: sim mu q2.5/q16/q50/q84/q97.5 = 216/282/323/359/400
+== pdhd tier B in-range Z (n=28; neighbours per Michel min 87 median 119)
+  rho        data +0.56   sim-expected 0.86 [0.80, 0.90]
+  r          data +0.52   sim-expected 0.89 [0.86, 0.92]
+  slope      data 0.45    sim-expected 0.91 [0.83, 0.98]
+  resid rms  data 58.1    sim-expected 36.3 [30.4, 42.6]  [cm of mu, about the sample's own OLS line]
+  resid/slope data 130.0  sim-expected 39.9 [32.8, 48.3]  [cm of drift: the scatter as a drift estimator]
+  pull sd    data 2.42    sim-expected 1.03 [0.88, 1.19]  [about the OLS line, over the model's own sigma]
+  drift [80,150) n= 5: half-width of mu q16-q84 data 15.9 [2.5, 36.8]  sim-expected 10.6 [6.3, 17.2]
+  drift [150,220) n= 5: half-width of mu q16-q84 data 14.7 [7.2, 19.7]  sim-expected 25.7 [17.0, 38.0]
+  drift [220,340) n=18: half-width of mu q16-q84 data 55.8 [46.5, 76.3]  sim-expected 47.2 [37.5, 58.4]
+  band drift    80: sim mu q2.5/q16/q50/q84/q97.5 = 84/90/98/109/124
+  band drift   100: sim mu q2.5/q16/q50/q84/q97.5 = 84/93/102/116/142
+  band drift   120: sim mu q2.5/q16/q50/q84/q97.5 = 91/100/112/129/156
+  band drift   140: sim mu q2.5/q16/q50/q84/q97.5 = 93/107/124/151/179
+  band drift   160: sim mu q2.5/q16/q50/q84/q97.5 = 98/115/138/170/214
+  band drift   180: sim mu q2.5/q16/q50/q84/q97.5 = 105/133/160/191/220
+  band drift   200: sim mu q2.5/q16/q50/q84/q97.5 = 114/146/177/212/234
+  band drift   220: sim mu q2.5/q16/q50/q84/q97.5 = 131/160/199/234/289
+  band drift   240: sim mu q2.5/q16/q50/q84/q97.5 = 141/177/217/245/288
+  band drift   260: sim mu q2.5/q16/q50/q84/q97.5 = 159/202/242/266/311
+  band drift   280: sim mu q2.5/q16/q50/q84/q97.5 = 179/220/266/298/333
+  band drift   300: sim mu q2.5/q16/q50/q84/q97.5 = 183/240/283/316/358
+  band drift   320: sim mu q2.5/q16/q50/q84/q97.5 = 205/273/302/339/377
+  band drift   340: sim mu q2.5/q16/q50/q84/q97.5 = 217/283/325/361/417
+== pdvd topology groups: data rho / slope / resid rms  vs  sim-expected median [16, 84] for the group's own drifts and energies
+  muon overlap Michel loses <20 % to the muon       n=25: rho +0.72 vs +0.91 [+0.87, +0.93]   slope 0.51 vs 0.89 [0.81, 0.98]   resid 39 vs 26 [22, 31] cm
+  muon overlap loses >=20 % (overlapping)           n=33: rho +0.45 vs +0.81 [+0.74, +0.87]   slope 0.31 vs 0.85 [0.71, 0.99]   resid 29 vs 30 [25, 35] cm
+  connection   attached to the stop                 n=46: rho +0.62 vs +0.85 [+0.81, +0.89]   slope 0.46 vs 0.89 [0.80, 0.97]   resid 34 vs 28 [24, 32] cm
+  connection   bridged (gap to the stop)            n=12: rho +0.64 vs +0.88 [+0.81, +0.94]   slope 0.39 vs 0.85 [0.70, 1.02]   resid 41 vs 29 [22, 39] cm
+  hand kind    Michel only (attached)               n=25: rho +0.63 vs +0.87 [+0.81, +0.91]   slope 0.48 vs 0.89 [0.77, 1.01]   resid 40 vs 29 [24, 36] cm
+  hand kind    Michel + gamma pieces (both)         n=33: rho +0.58 vs +0.84 [+0.79, +0.89]   slope 0.38 vs 0.85 [0.76, 0.95]   resid 31 vs 28 [24, 32] cm
+  energy       michel_ke_best >= 20 MeV             n=37: rho +0.69 vs +0.88 [+0.84, +0.91]   slope 0.60 vs 0.90 [0.82, 0.97]   resid 36 vs 25 [22, 29] cm
+  energy       < 20 MeV                             n=21: rho +0.48 vs +0.85 [+0.78, +0.90]   slope 0.28 vs 0.86 [0.73, 0.99]   resid 29 vs 33 [27, 40] cm
+  Bragg peak   contrast ratio >= 0.8 (clear)        n=42: rho +0.53 vs +0.85 [+0.80, +0.89]   slope 0.34 vs 0.85 [0.77, 0.94]   resid 35 vs 27 [24, 31] cm
+  Bragg peak   < 0.8 (weak)                         n=16: rho +0.77 vs +0.89 [+0.81, +0.94]   slope 0.66 vs 0.92 [0.76, 1.07]   resid 33 vs 31 [24, 40] cm
+  tier         tier A (clean by every rule)         n=19: rho +0.64 vs +0.90 [+0.85, +0.94]   slope 0.37 vs 0.88 [0.77, 0.99]   resid 38 vs 25 [20, 31] cm
+  tier         tier B rest                          n=39: rho +0.58 vs +0.84 [+0.79, +0.88]   slope 0.47 vs 0.88 [0.76, 0.99]   resid 34 vs 30 [26, 35] cm
+== pdhd topology groups: data rho / slope / resid rms  vs  sim-expected median [16, 84] for the group's own drifts and energies
+  muon overlap Michel loses <20 % to the muon       n= 7: rho +0.93 vs +0.79 [+0.57, +0.93]   slope 0.62 vs 0.89 [0.74, 1.02]   resid 58 vs 35 [24, 49] cm
+  muon overlap loses >=20 % (overlapping)           n=21: rho +0.50 vs +0.88 [+0.82, +0.93]   slope 0.36 vs 0.92 [0.84, 1.01]   resid 48 vs 34 [27, 41] cm
+  connection   attached to the stop                 n=18: rho +0.41 vs +0.83 [+0.74, +0.90]   slope 0.38 vs 0.95 [0.85, 1.05]   resid 51 vs 34 [28, 42] cm
+  connection   bridged (gap to the stop)            n=10: rho +0.85 vs +0.89 [+0.82, +0.95]   slope 0.63 vs 0.86 [0.73, 0.99]   resid 54 vs 34 [24, 46] cm
+  hand kind    Michel only (attached)               n=10: rho +0.56 vs +0.89 [+0.82, +0.95]   slope 0.16 vs 0.97 [0.85, 1.08]   resid 22 vs 28 [20, 36] cm
+  hand kind    Michel + gamma pieces (both)         n=18: rho +0.59 vs +0.83 [+0.73, +0.90]   slope 0.52 vs 0.88 [0.79, 0.97]   resid 63 vs 38 [30, 47] cm
+  energy       michel_ke_best >= 20 MeV             n=19: rho +0.51 vs +0.88 [+0.81, +0.93]   slope 0.31 vs 0.93 [0.85, 1.00]   resid 39 vs 30 [24, 36] cm
+  energy       < 20 MeV                             n= 9: rho +0.75 vs +0.83 [+0.70, +0.92]   slope 0.71 vs 0.87 [0.69, 1.03]   resid 72 vs 41 [30, 53] cm
+  Bragg peak   contrast ratio >= 0.8 (clear)        n=16: rho +0.61 vs +0.84 [+0.75, +0.91]   slope 0.55 vs 0.91 [0.81, 1.01]   resid 70 vs 38 [30, 47] cm
+  Bragg peak   < 0.8 (weak)                         n=12: rho +0.56 vs +0.87 [+0.80, +0.94]   slope 0.31 vs 0.91 [0.80, 1.01]   resid 35 vs 30 [22, 38] cm
+  tier         tier B rest                          n=26: rho +0.51 vs +0.85 [+0.79, +0.90]   slope 0.43 vs 0.91 [0.83, 0.98]   resid 60 vs 35 [29, 42] cm

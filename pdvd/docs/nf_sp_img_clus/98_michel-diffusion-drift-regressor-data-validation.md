@@ -20,7 +20,23 @@ the pre-registered success criterion is met with room to spare:
 
 *Predicted drift (mu, bars = the model's own sigma) against the true Q-L drift, Michel-only crops, the model's range.
 Orange: binned medians with the 16-84 % band. Red squares: the tier-A clean subset. Grey: below the model's trained
-floor. Section 6b splits these points by topology.*
+floor. Green: what the model's own simulation gives for isolated electrons at the same drift and energy (median,
+16-84 % and 2.5-97.5 % bands; section 6c). The corner table sets each readout beside its simulation expectation for a
+sample of the same size. Section 6b splits these points by topology.*
+
+**Against the model's own simulation (section 6c).** Replace every data Michel with a simulated electron from the
+model's test split at the same drift (+-15 cm) and energy (+-5 MeV). The model then gives rho 0.86 [0.83, 0.90] and
+slope 0.88 [0.80, 0.96] on PDVD (0.86 / 0.91 on PDHD); the data's 0.61 / 0.43 lie far outside that range. The spread
+question has two answers depending on the unit:
+
+- **In mu (the plotted axis), PDVD's spread is what simulation expects.** Within each drift band, the half-width of
+  the data's 16-84 % range is 16 / 30 / 42 cm, against 17 / 34 / 39 expected. About the fitted line the scatter is
+  36 cm against 29 [26, 33].
+- **As a drift measurement it is 2.5x worse**, 83 cm against 34 [29, 39]. The same scatter rides on half the
+  response to drift.
+
+So on PDVD the real images do not make the model noisier; they compress its response. PDHD is wider in both units
+(58 vs 36 [30, 43] cm in mu, 130 vs 40 cm in drift), and its pulls are 2.4 wide against 1.0.
 
 Binned, the prediction climbs monotonically with the true drift on both detectors (PDVD medians 94 -> 119 -> 173 cm
 for true drift ~114 / 188 / 255 cm; PDHD 88 -> 113 -> 174 cm for ~104 / 187 / 299 cm). Three controls say the model is
@@ -48,7 +64,10 @@ python3 d98_plots.py --tag round1                         # scan/d98/stats_round
 
 Read-only on every arm. Toolkit `f516b013`; wcp-porting-img production arms PDHD `h28prod` (61 events) and PDVD
 `p96vprod` (120 events); the model repository `DNN_ROI_SP` at `2ae4466` is imported by path and not modified. The
-crops (~124 x 4 variants x 1 MB) stay in `/home/xqian/tmp/d98/`.
+crops (~124 x 4 variants x 1 MB) stay in `/home/xqian/tmp/d98/`. The simulation expectation of section 6c reads that
+repository's `diffusion_t0/ml/runs/m3-200k-w/predictions_test.csv`. It was added after round 1 and draws from its own
+random generator (seed 20260914): the first 91 lines of `stats_round1.txt` are byte-identical to the round-1 commit
+`cbf9bf24`, and the new lines are appended after them.
 
 ## 1. The model and its contract
 
@@ -212,13 +231,16 @@ rho > 0); "in-range" = 80 <= drift <= 340 cm.
 ![mu vs drift PDHD](figs/98_mu_vs_drift_pdhd.png)
 
 *Left panels: the primary Michel-only crop (Z); right panels: the same Michels with the muon left in (M). Crosses are
-the near-anode events below the model's range.* The rank-rank view, which is what Spearman's rho measures:
+the near-anode events below the model's range. The green band is the simulation's 16-84 % range for isolated
+electrons with the detector's in-range Michel energy spectrum (section 6c).* The rank-rank view, which is what Spearman's rho measures:
 ![rank rank](figs/98_rank_rank.png)
 
 ### 6b. Reco vs true drift by topology
 
 The same axes, the in-range Michels split six ways (`figs/98_topology_{pdvd,pdhd}.png`; per-group numbers in
-`scan/d98/stats_round1.txt`, "topology splits"). Each group carries its own rho, permutation p and OLS slope.
+`scan/d98/stats_round1.txt`, "topology splits"). Each group carries its own rho, permutation p and OLS slope. The
+grey band is the simulation's 16-84 % expectation for the whole in-range sample. Section 6c gives each group's
+expectation for its own drifts and energies.
 
 ![topology PDVD](figs/98_topology_pdvd.png)
 ![topology PDHD](figs/98_topology_pdhd.png)
@@ -245,6 +267,83 @@ below. The STM-side quality (Bragg clarity, attached vs bridged, gamma pieces) d
 consistent direction. So a round-2 selection for the video or for a recalibration should key on `frac_lost < 0.2` and
 `michel_ke_best >= 20 MeV`; on PDVD that is the group with rho 0.72. The tier-A definition, which keys on the STM's
 Bragg ratio and the gamma count, is the wrong lever for this measurement.
+
+### 6c. Data against the model's own simulation expectation
+
+**Construction** (`d98_plots.py`: `sim_band`, `sim_expect`). The input is the model's own test split,
+`runs/m3-200k-w/predictions_test.csv`: 9 889 electrons of 5-50 MeV, labelled by `y_true_crop_cm`. That label is the
+in-crop charge-weighted drift, the same definition as our tick-route label, which is charge-weighted over the Michel's
+pixels. Two things are built from it:
+
+- **The band in the figures.** In each 20 cm bin of true drift, the weighted quantiles of the simulated mu, with the
+  electrons reweighted to the detector's in-range `michel_ke_best` spectrum.
+- **The "sim-expected" readouts.** Each in-range data Michel is replaced by a random simulated electron within
+  +-15 cm of its drift and +-5 MeV of its energy. The energy is clipped to 5-50 MeV. PDVD has at least 72 neighbours
+  per Michel (median 123); PDHD at least 87 (median 119). Every pre-registered readout is then recomputed; 2000
+  draws give the 16 / 50 / 84 % quantiles.
+
+The draws keep the data's sample size, drift distribution and near-anode events, so the n = 58 / 28 sampling noise
+and the model's ~85 cm floor are both inside the expectation.
+
+**What the expectation is not.** The simulated electrons are isolated, training-like particles: no muon removal, no
+truncated start, noise residue instead of exact zeros, and the training D_L, drift speed and wire filter. The band
+tests "a real Michel reads like a simulated electron at the same drift and energy". It is not an error budget for
+data. Three smaller caveats:
+
+- The energy match pairs the reconstructed `michel_ke_best` with the simulation's true energy.
+- The 9 % of simulated crops with an fp16-clipped pixel are included. Excluding them changes the in-range slope from
+  0.899 to 0.892.
+- No data pixel comes near that ceiling: the maximum is 34.5 k electrons, against 65 504.
+
+**Tier B, in-range, variant Z** (`scan/d98/stats_round1.txt`, "simulation expectation"; data intervals on the binned
+half-widths are 68 % bootstraps):
+
+| readout | PDVD data | PDVD sim-expected [16, 84] | PDHD data | PDHD sim-expected [16, 84] |
+|---|---|---|---|---|
+| Spearman rho | +0.61 | +0.86 [0.83, 0.90] | +0.56 | +0.86 [0.80, 0.90] |
+| Pearson r | +0.58 | +0.87 [0.83, 0.90] | +0.52 | +0.89 [0.86, 0.92] |
+| OLS slope | **0.43** | **0.88 [0.80, 0.96]** | **0.45** | **0.91 [0.83, 0.98]** |
+| scatter of mu about the OLS line [cm of mu] | 36 | 29 [26, 33] | **58** | **36 [30, 43]** |
+| scatter / slope [cm of drift] | **83** | **34 [29, 39]** | **130** | **40 [33, 48]** |
+| pull sd about the line (model's own sigma) | 1.51 | 1.01 [0.90, 1.12] | 2.42 | 1.03 [0.88, 1.19] |
+| half-width of mu q16-q84, drift 80-150 cm | 16 [6, 20] (n = 21) | 17 [13, 22] | 16 [3, 37] (n = 5) | 11 [6, 17] |
+| same, drift 150-220 cm | 30 [19, 35] (n = 23) | 34 [27, 41] | 15 [7, 20] (n = 5) | 26 [17, 38] |
+| same, drift 220-340 cm | 42 [34, 58] (n = 14) | 39 [30, 50] | 56 [47, 76] (n = 18) | 47 [38, 58] |
+
+![data vs simulation expectation](figs/98_data_vs_sim_expectation.png)
+
+*Each readout's distribution over the 2000 matched simulation draws (green, 16-84 % shaded), with the data value in
+red.*
+
+What it says:
+
+1. **Is the data's spread larger than expected? In mu, not on PDVD; in drift, yes, by 2.5x.** Within each drift band
+   the spread of mu equals the simulated one. The scatter about the fitted line is 36 cm against 29 [26, 33], just
+   above; a straight line fits the floor-bent data less well than it fits the simulation. The resolution in drift
+   is 83 cm against 34 [29, 39], because the same scatter rides on a response of 0.43 instead of 0.88. PDHD is wider
+   in both units (58 vs 36 [30, 43] cm; 130 vs 40 cm), with pulls 2.4 wide, as expected with both its pitch and its
+   D_L off the training values.
+2. **The lower rank correlation follows from the compression.** rho is 0.61 against 0.86 [0.83, 0.90]. With the
+   scatter in mu unchanged and the response halved, the ratio of signal to scatter halves, so rho drops without any
+   added noise.
+3. **The floor is inside the expectation.** The matched draws contain the same near-anode Michels and the model's
+   saturation, and still give a slope of 0.88. The floor costs at most ~0.1 of slope (simulation 0.88 against
+   identity, which also holds the model's own compression), not the ~0.45 between the simulation expectation and
+   the data. This supersedes the earlier "the fit's 0.43 is partly
+   the floor" in section 7.
+4. **No topology group recovers the simulated response.** The grey band is in the section 6b figures; the per-group
+   numbers are in `stats_round1.txt` under "topology groups". On PDVD every group's slope (0.28-0.66) sits below its
+   own expectation (0.85-0.92).
+
+   The section 6b levers act on the response more than on the scatter:
+   - The overlapping (`frac_lost >= 0.2`) and low-energy (< 20 MeV) Michels scatter at expectation (29 vs 30 [25, 35]
+     and 29 vs 33 [27, 40] cm) but respond with slopes of ~0.3. A truncated or faint Michel keeps its noise and loses
+     its response.
+   - The clean (`frac_lost < 0.2`) and >= 20 MeV groups respond more steeply (0.51, 0.60) and scatter more than
+     expected (39 vs 26 [22, 31]; 36 vs 25 [22, 29] cm).
+
+   In drift units, clean reads at 76 cm against 94 for overlapping, and >= 20 MeV at 60 cm against 104 below. The
+   simulation reaches ~30-40 cm for every group (ratio of the expected medians).
 
 **Binned medians of mu_Z, tier B in-range** (the trend without a fit):
 
@@ -299,15 +398,21 @@ as a slope difference. So the compression is not the transport constants. The ca
 separate are the wire-domain filter (the one SP setting that differs, in the direction of sharper data images, which the
 model would read as less diffused), the zero background and the truncated Michel start (the S and Zw variants and the
 tier-A cut move the slope by < 0.1, so the mask width and the zeroing are not it, but the training-domain shift of
-"zeros where noise residue was" remains untested), and the floor: the model cannot read below ~85 cm, and 21 of PDVD's
-58 in-range Michels are within 150 cm, where the floor pulls the OLS intercept up and the slope down (the binned medians
-in section 6 show the 220-340 cm bin reading 0.68 (PDVD) / 0.58 (PDHD) of its median drift, so the fit's 0.43 is
-partly the floor).
+"zeros where noise residue was" remains untested). The floor, which an earlier version of this doc named as a partial
+cause, is not it. The model cannot read below ~85 cm, and 21 of PDVD's 58 in-range Michels lie within 150 cm. But the
+matched simulation of section 6c contains the same Michels, drifts and floor, and still expects a slope of 0.88
+[0.80, 0.96] (PDHD 0.91 [0.83, 0.98]). The floor accounts for at most ~0.1 of slope, not for the data's ~0.45
+shortfall below that expectation. The binned medians say the same: the 220-340 cm band reads 0.68 (PDVD) / 0.58
+(PDHD) of its median drift, where the simulation band's median reads ~0.93.
 
 ## 8. What this doc does not claim
 
-- Not a calibrated drift measurement on data: the residual rms is 36 cm (PDVD) / 58 cm (PDHD) about a fitted line with
-  slope 0.43, and the pulls are 1.5-2.4 wide, so the model's sigma under-covers on data.
+- Not a calibrated drift measurement on data. The residual rms is 36 cm (PDVD) / 58 cm (PDHD) of mu about a fitted
+  line with slope 0.43 / 0.45, i.e. 83 / 130 cm of drift, against 34 / 40 cm for the matched simulation. The pulls
+  are 1.5 / 2.4 wide against 1.0 in simulation, so on data the model's sigma under-covers by those factors
+  (section 6c).
+- Not an error budget from simulation. The section 6c band is the isolated-electron expectation under the training
+  conditions. It does not include the muon removal, or the transport and wire-filter differences of section 7.
 - Not a statement about D_L: the slope is the wrong sign for a transport-constant reading, and the naive width check
   has no power.
 - Not PDHD-transferable as is: pitch and D_L differ from the training; the PDHD correlation is reported, not
@@ -322,9 +427,13 @@ partly the floor).
 1. **The wire filter is the one SP setting that differs.** Re-running SP on the 91 + 33 events with `Wire_col`
    sigma = 3.0/sqrt(pi) (a new arm, no production change) and re-scoring would test the leading named cause of the
    compressed slope with no retraining.
-2. **Fine-tune or recalibrate on data.** With rho ~0.6 established, a one-parameter recalibration (mu -> drift by the
-   fitted line) turns the ranking into a 36 cm-rms measurement on PDVD; a small fine-tune on the 58 in-range PDVD
-   Michels with a held-out third would say whether the compression is a domain shift the network can absorb.
+2. **Fine-tune or recalibrate on data.** With rho ~0.6 established, a recalibration of mu to drift along the fitted
+   line turns the ranking into a drift measurement of ~83 cm rms on PDVD. That figure is the 36 cm scatter of mu
+   divided by the 0.43 slope; an earlier version of this doc quoted the 36 cm itself, which is in the wrong unit. The
+   matched simulation reaches 34 cm (section 6c). Because PDVD's scatter in mu is already at the simulation
+   expectation, a relabelling cannot close that gap; only restoring the response can. That points to the wire filter
+   (item 1) or a fine-tune. A small fine-tune on the 58 in-range PDVD Michels, with a held-out third, would say
+   whether the compression is a domain shift the network can absorb.
 3. **A near-anode re-diffusion closure on data** (the study's P9 augmentation ladder): re-broaden the < 80 cm Michels
    (33 on PDVD) by the analytic kernel to emulate 200-300 cm and check that the model then reads them there.
 4. **PDHD retrain at 4.792 mm pitch** if PDHD is wanted quantitatively.
@@ -338,7 +447,8 @@ partly the floor).
 - `pdvd/docs/scan/d98/`: `candidates.tsv` (every hand Michel with the first failed rule), `crops.tsv` (per-candidate
   diagnostics and both labels), `scores.tsv` (labels, mu/sigma per variant, tier), `label_check.txt`, `closure.txt`,
   `stats_round1.txt`;
-- `figs/98_correlation_summary.png` (the headline), `98_topology_{pdhd,pdvd}.png` (section 6b), `98_rank_rank.png`,
+- `figs/98_correlation_summary.png` (the headline), `98_topology_{pdhd,pdvd}.png` (section 6b),
+  `98_data_vs_sim_expectation.png` (section 6c), `98_rank_rank.png`,
   `98_mu_vs_drift_{pdhd,pdvd}.png`, `98_resid_{pdhd,pdvd}.png`, `98_crops_{pdhd,pdvd}.png`, `98_label_check.png`,
   `98_width_vs_drift.png`;
 - the crops themselves in `/home/xqian/tmp/d98/crops_{pdhd,pdvd}.npz` (not committed; rebuilt in ~40 s).
