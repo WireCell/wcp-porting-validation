@@ -1,0 +1,54 @@
+# doc pdvd/99 sec 6.4 -- blind swap scan score (d99_swap_scan_score.py); key ../d99/swap_scan_key.tsv
+records 136 over 136 key items; duplicates 0 []
+key items with no record: 0 []; records not in the key: []
+rubric sha on the records: {'d760e223bfa1770a17df1ae18aa5869e3d849c310b980d17e001d71e93c2cdf8': 136}
+display-arm is_stm != 1 on a scanned item (must be empty): []
+
+== 1-2. purity per side (Wilson 68 %)
+  on_only                                      items  91  stoppers  66 / judged  78 = 0.846 [0.801, 0.883]  MESSY+UNCLEAR 13
+     verdicts: FRAG_STM_MICHEL 1  FRAG_THRU 1  MESSY 4  STM_MICHEL 45  STM_ONLY 20  THRU 11  UNCLEAR 9
+  prod_only                                    items  45  stoppers  39 / judged  43 = 0.907 [0.853, 0.942]  MESSY+UNCLEAR 2
+     verdicts: FRAG_THRU 1  MESSY 2  STM_MICHEL 24  STM_ONLY 15  THRU 3
+
+== 3. purity(on_only) - purity(prod_only), bootstrap over items (N 10000, seed 20260915)
+  difference -0.061  68 % [-0.120, +0.001]  95 % [-0.174, +0.060]  -> purity-neutral within this sample
+
+== 4. splits
+  on_only top                                  items  61  stoppers  42 / judged  48 = 0.875 [0.819, 0.915]  MESSY+UNCLEAR 13
+  on_only bottom                               items  30  stoppers  24 / judged  30 = 0.800 [0.718, 0.863]  MESSY+UNCLEAR 0
+  prod_only top                                items  33  stoppers  30 / judged  31 = 0.968 [0.919, 0.988]  MESSY+UNCLEAR 2
+  prod_only bottom                             items  12  stoppers   9 / judged  12 = 0.750 [0.609, 0.852]  MESSY+UNCLEAR 0
+  on_only production-side status not_candidate items  62  stoppers  46 / judged  53 = 0.868 [0.815, 0.908]  MESSY+UNCLEAR 9
+  prod_only production-side status not_candidate items  20  stoppers  18 / judged  20 = 0.900 [0.813, 0.949]  MESSY+UNCLEAR 0
+  on_only production-side status candidate_not_stm items  19  stoppers  13 / judged  17 = 0.765 [0.649, 0.851]  MESSY+UNCLEAR 2
+  prod_only production-side status candidate_not_stm items  18  stoppers  17 / judged  18 = 0.944 [0.864, 0.979]  MESSY+UNCLEAR 0
+  on_only object not matched (object_*)        items  10  stoppers   7 / judged   8 = 0.875 [0.715, 0.951]  MESSY+UNCLEAR 2
+  prod_only object not matched (object_*)      items   7  stoppers   4 / judged   5 = 0.800 [0.579, 0.921]  MESSY+UNCLEAR 2
+  on_only high confidence only                 items  43  stoppers  39 / judged  43 = 0.907 [0.853, 0.942]  MESSY+UNCLEAR 0
+  prod_only high confidence only               items  27  stoppers  23 / judged  25 = 0.920 [0.848, 0.959]  MESSY+UNCLEAR 2
+  on_only                                      confidence {'high': 43, 'low': 7, 'medium': 41}
+  prod_only                                    confidence {'high': 27, 'medium': 16, 'low': 2}
+  on_only                                      notes prefixes {'ISOCHRONOUS': 8, 'NO_MEASUREMENT': 7, 'SEAM': 9, 'DIRECTION': 10, 'DEAD': 4, 'FLAT_STOP': 1, 'Far specks': 1, 'Competing reading': 1, 'ANODE': 1, 'Shallow track': 1, 'Michel-vs-gamma': 2, 'Terminal falloff, not overshoot': 1, 'I call it Michel because it follows a clear Bragg peak (1.5-1.6e5) at plateau-or-below charge (4.4-4.8e4) falling outward to ~1.6e4 - the ordinary forward-Michel case, not a hot tip (no UNDERSHOOT). Competing reading': 1, 'Readout-window caveat': 1, 'the arms charge bump at 4-5 cm is below the hot-tip bar (competing reading': 1, 'CONTINUES': 3, 'V and W live and end cleanly. Tag doubt': 1, 'Tag doubt': 2, 'UNDERSHOOT': 1, 'real stop ~1.2 cm further on. FRAG because C59 on the backward line across the cathode. Tag doubt': 1, 'Short grey object from another bundle near the stop time in all planes, offset 20-30 channels, not colinear': 1, 'stop carried by a clear ~12 cm rise to 2e5, no arm. SEAM': 1, 'No pin move': 1, 'Busy stop (rule 6)': 1, 'OVERSHOOT': 4, 'Hard call': 1, 'Verdict STM_ONLY vs STM_MICHEL turns on the 2-point speck at 8.5 cm (between the 5 cm and 10 cm attachment edges)': 1, 'Busy stop': 1, 'competing reading THRU/FRAG_THRU (CONTINUES': 1, 'Hard': 1, 'Hard parts': 1, 'the readout-window edge acts like a dead region. Competing reading': 1}
+  prod_only                                    notes prefixes {'ISOCHRONOUS': 6, 'DIRECTION': 4, 'SEAM': 6, 'DEAD': 2, 'U and V show no continuation past the stop, so I read that W group as an ambiguity with the crossing track, not CONTINUES. Competing reading': 1, 'OVERSHOOT': 7, 'FLAT_STOP': 3, 'CONTINUES': 1, 'Pin left at the fit end': 1, 'only separate Michel row is the 2-pt stub 101005. Competing reading STM_ONLY. Tag doubt': 1, 'Tag doubt': 2, 'rise is two points after a near-zero dropout. DEAD': 1, 'Tag note': 1, 'if it is spurious the item is STM_ONLY. Competing overshoot reading': 1, 'Hard call': 1}
+
+== 5. Michel
+  on_only    hand STM_MICHEL / hand stoppers 46/66 = 0.697 [0.638, 0.750];  chain michel_found vs hand Michel (judged): TP 42 FP 5 FN 4  purity 0.894  eff 0.913
+  prod_only  hand STM_MICHEL / hand stoppers 24/39 = 0.615 [0.536, 0.689];  chain michel_found vs hand Michel (judged): TP 21 FP 2 FN 3  purity 0.913  eff 0.875
+
+== 6. stopper-or-not agreement with the existing record (carried on p98vonq / smx on p96vprod)
+  on_only    scanner high   agree 11/15
+  on_only    scanner medium agree 4/5
+  on_only    scanner low    agree 0/1
+  on_only    scanner all    agree 15/21
+    disagreements (key, record, scan, scan conf): [('039349_18/10', 'THRU', 'STM_MICHEL', 'high'), ('039349_77/45', 'THRU', 'STM_MICHEL', 'medium'), ('039252_8/96', 'THRU', 'STM_MICHEL', 'high'), ('039253_11/84', 'THRU', 'STM_MICHEL', 'low'), ('039349_32/63', 'THRU', 'STM_MICHEL', 'high'), ('039349_22/40', 'THRU', 'STM_MICHEL', 'high')]
+  prod_only  scanner high   agree 24/25
+  prod_only  scanner medium agree 11/14
+  prod_only  scanner low    agree 1/1
+  prod_only  scanner all    agree 36/40
+    disagreements (key, record, scan, scan conf): [('039253_12/41', 'STM_ONLY', 'THRU', 'medium'), ('039349_70/61', 'STM_MICHEL', 'THRU', 'medium'), ('039349_38/60', 'THRU', 'STM_ONLY', 'medium'), ('039349_43/66', 'STM_MICHEL', 'FRAG_THRU', 'high')]
+
+== 7. derived whole-arm is_stm purity, shared clusters from the record (MIXES INSTRUMENTS)
+  p98vonq   is_stm 273 = shared 182 (record judged 172, purity 0.983) + on_only 91 (scan purity 0.846) -> 0.937
+  p96vprod  is_stm 265 = shared 183 (record judged 173, purity 0.983) + prod_only 82 (scan purity 0.907) -> 0.959
+
+wrote /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_sw99_verdicts.json (136 records)

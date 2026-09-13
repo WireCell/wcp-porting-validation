@@ -1,0 +1,22 @@
+# doc pdvd/99 sec 6.4 -- POST-HOC: items whose blind scanner named the readout-window (frame) edge in notes or evidence
+# regex: readout[- ]window|time window|window edge|end of the (recorded|readout|measured)|frame end|slice ~?1[56]\d\d
+# frames are 6400 ticks = 1600 slices x 4 ticks (checked on 039349_7_p98von anode 4); key group verdict confidence match
+039252_8/96	on_only	STM_MICHEL	high	slice ~1630
+039349_19/27	on_only	THRU	high	slice ~1590
+039349_22/51	on_only	THRU	medium	end of the readout
+039349_26/23	on_only	THRU	high	end of the measured
+039349_32/48	on_only	THRU	medium	end of the readout
+039349_40/48	on_only	UNCLEAR	low	end of the measured
+039349_50/52	on_only	STM_ONLY	medium	slice ~1600
+039349_69/23	on_only	THRU	medium	frame end
+039349_7/57	on_only	THRU	medium	slice ~1578
+039349_7/67	on_only	STM_ONLY	medium	end of the recorded
+039349_75/63	on_only	STM_ONLY	medium	readout-window
+039252_2/79	prod_only	STM_MICHEL	medium	slice ~1505
+039253_10/77	prod_only	STM_MICHEL	medium	slice 1552
+039253_16/51	prod_only	STM_ONLY	high	time window
+039253_8/65	prod_only	STM_MICHEL	high	slice ~1590
+039349_59/14	prod_only	THRU	high	end of the recorded
+039349_70/61	prod_only	THRU	medium	end of the readout
+039349_81/51	prod_only	STM_ONLY	medium	slice ~1585
+039349_82/41	prod_only	STM_ONLY	high	slice ~1540

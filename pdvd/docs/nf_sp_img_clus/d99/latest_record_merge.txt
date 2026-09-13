@@ -1,0 +1,3 @@
+carried 569 + sw99 added 68 (already carried, kept carried: 23) -> 637 -> /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/docs/scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json
+added verdicts: {'STM_MICHEL': 32, 'MESSY': 4, 'STM_ONLY': 17, 'THRU': 8, 'UNCLEAR': 7}
+added STM_MICHEL kinds: {'both': 15, 'attached': 17}

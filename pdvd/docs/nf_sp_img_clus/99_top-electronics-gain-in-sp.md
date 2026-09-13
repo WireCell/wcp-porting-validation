@@ -19,6 +19,14 @@
     losses (§0, §6.3).
 - **Disk:** the OFF trim is done. The July SP frames are **retired** (owner yes, 2026-09-13: 768 archives, 29.4 GiB, a
   sha256 manifest first); they regenerate bit for bit with `--wires` (§9).
+- **Round 3 (§6.4): the newly tagged side was scanned blind.** Three blind agent scanners, one frozen rubric, 91 clusters
+  `p98vonq` tags that production does not, and 45 seeded controls production tags that `p98vonq` does not:
+  - purity **0.846 [0.801, 0.883]** on the newly tagged side against **0.907 [0.853, 0.942]** on the dropped side;
+  - difference −0.061, 95 % [−0.174, +0.060]: **purity-neutral within this sample** by the pre-registered reading, with
+    the point estimate on the low side;
+  - the newly tagged side holds three times as many objects no one can call (MESSY/UNCLEAR 14 % against 4 %);
+  - half of its non-stoppers end at the frame edge, where clustering assumes a 10000-tick window over 6400-tick frames
+    (§4.1, both arms).
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -105,7 +113,11 @@ Record-free census (`d99/population_is_stm_transitions.txt`, `d99/michel_ql_p96v
   tagged but not clusters that start. That is why record-based is_stm efficiency reads 0.877 (production) → 0.801 (off) →
   0.811 (on) while the tagged population does not shrink.
 - **What the record does measure on the scanned items:** purity 0.968 / 0.903 / 0.923.
-- **Unmeasured:** the purity of the clusters tagged only on the latest configuration. It needs a scan of that side (§10).
+- **Measured in round 3 (§6.4):** the purity of the clusters tagged only on the latest configuration, by a blind scan of
+  both sides of the swap. It is 0.846 against 0.907 on the side production alone tags (difference −0.061, 95 %
+  [−0.174, +0.060], purity-neutral within the sample). The newly tagged side carries more unjudgeable objects (14 % against
+  4 %), and half of its non-stoppers sit at the frame edge of §4.1. With those items set aside (post hoc) the two sides
+  read 0.912 and 0.943.
 
 ## Repro
 
@@ -169,6 +181,25 @@ python3 d99_closure.py --write-common <dq> > ../d99/closure_pertrack.txt   # the
 CONFIRM=1 ./d99_trim_off.sh
 ./d99_retire_keep_sp.sh ; NEGCTL=1 ./d99_retire_keep_sp.sh                 # dry run + negative control
 CONFIRM=1 ./d99_retire_keep_sp.sh    # owner yes 2026-09-13 -> d99/retire_keep_sp_confirm.txt, d99/retire_keep_sp_manifest.txt
+
+# round 3 (sec 6.4): the blind swap scan; R=/home/xqian/tmp/p99scan (scratch: preps, frames, scanner out dirs)
+C=../../../../pdhd/stm_michel_scan
+for A in p98vonq p96vprod; do (cd $C && ./prep_stm_michel_scan.py --det pdvd --arm $A --redraw --ctx-cells \
+    --outdir $R/prep_$A --sheetdir $R/sheet_$A); done                          # scratch only; no label, no repo sheet
+python3 d99_swap_scan_set.py --on p98vonq --prod p96vprod --n-controls 45 --seed 20260913 --out $R/set \
+    --prep-sheet p98vonq $R/sheet_p98vonq/pdvd_stm_michel_scan_sheet.tsv \
+    --prep-sheet p96vprod $R/sheet_p96vprod/pdvd_stm_michel_scan_sheet.tsv   # -> d99/swap_scan_key.tsv
+bash $C/campaign/shoot.sh $R/shoot_p98vonq pdvd $R/set/sheet_p98vonq.tsv $R/prep_p98vonq 3   # then p96vprod with 2
+python3 $C/campaign/mkzoom.py $R/shots; python3 $C/check_shots.py $R/shots        # -> d99/swap_scan_check_shots.txt
+python3 $C/campaign/nextwave.py $R $R/set/items_all.txt w1 --agents 3 --per 23   # w2 after every w1 report; rubric
+                                  # d99/swap_scan_rubric.md, task d99/swap_scan_agent_task.md, reports d99/swap_scan_reports/
+python3 d99_swap_scan_score.py --round $R --key ../d99/swap_scan_key.tsv \
+    --record-out ../../scan/pdvd_stm_michel_sw99_verdicts.json > ../d99/swap_scan_score.txt
+python3 d99_swap_scan_score.py --round $R --key ../d99/swap_scan_key.tsv \
+    --exclude-keys ../d99/swap_scan_window_flagged.tsv > ../d99/swap_scan_score_window_excluded.txt   # post hoc
+python3 d99_latest_record.py --carried ../../scan/pdvd_stm_michel_smx9_carried_p98vonq.json \
+    --sw99 ../../scan/pdvd_stm_michel_sw99_verdicts.json \
+    --out ../../scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json > ../d99/latest_record_merge.txt
 ```
 
 ## 1. The constant and where it acts
@@ -571,6 +602,120 @@ thresholds. It is then classified by what B's tagger says about the matched clus
   - The constant: losses split evenly between candidacy (24) and the tagger's own tests (22).
 - The hand-scan record measures only the clusters that leave.
 
+### 6.4 Round 3: a blind scan of both sides of the swap
+
+Owner, 2026-09-13: *"can you use up to 3 sub-agent to scan the clusters the latest configuration tags but production
+doesn't?"*
+
+**Design, fixed before any verdict** (`d99/swap_scan_prereg.md`, `scripts/d99_swap_scan_set.py` → `d99/swap_scan_key.tsv`).
+- **Scanned side (`on_only`):** all 91 clusters `p98vonq` tags (is_stm 1) that `p96vprod` does not. In production 62
+  were not candidates, 19 were candidates the tagger rejected, and for 10 the object itself did not match (§6.3's rows).
+- **Control side (`prod_only`):** a seeded 45 of the 80 clusters `p96vprod` tags that `p98vonq` does not. That is 82
+  minus the two event/cluster keys that also occur on the scanned side. The control is sized to the 3-agent budget, so
+  the difference's interval is control-limited.
+- **Why a control.** The record's own purity (§6) comes from other scanners under another rubric, partly with the chain's
+  answer visible. Comparing a fresh blind number against it would compare two instruments. Both sides here are judged by
+  the same scanners, under the same rubric, in one shuffled list.
+- **Display.** Each item is shown on the arm that tags it, so every item is "tagged" on its own display. Each arm has its
+  own prep (`prep_stm_michel_scan.py --ctx-cells`, scratch only).
+  - `scan_harness.py --blind --hide-selection` strips `is_stm`, the reject names, `in_fv` and the flow summary.
+  - 0 of 136 `context.json` files name an arm.
+  - `check_shots.py`: 0 blank, 0 incomplete, `c_3d_stop` unique colours min 1530 (`d99/swap_scan_check_shots.txt`).
+- **Rubric** (`d99/swap_scan_rubric.md`, sha `d760e223…`, stamped on all 136 records). It is the PDHD v5 rubric ported to
+  PDVD:
+  - vertical drift along x, with up = +x, checked on this sample's fit ends: 59 of 200 reach x > +320, 11 reach x < −320;
+  - rule 7 on `dx`;
+  - the anode planes at x = ±339.9 (99th percentile of |fit end x| 339.8);
+  - the CRU seams;
+  - the PDHD-only traps removed.
+
+  It was frozen for the whole round; the scanners' objections are recorded, not folded in.
+- **Scanners.** 3 general-purpose subagents per wave, 2 waves (23/23/23, then 23/23/21), each about 21–25 min. Private
+  out dirs; no scanner saw a key, a record or another scanner's calls.
+  - One scanner consulted its own advisor tool on one item and lowered that call's confidence (high → medium).
+  - Reports: `d99/swap_scan_reports/`.
+- **Readout, pre-registered.**
+  - stopper = `STM_MICHEL`, `STM_ONLY` and their `FRAG_`; non-stopper = `THRU`, `FRAG_THRU`; `MESSY`/`UNCLEAR` excluded
+    and counted;
+  - purity = stoppers / judged;
+  - the statistic is the difference on_only − prod_only, bootstrapped over items.
+
+**Result** (`scripts/d99_swap_scan_score.py` → `d99/swap_scan_score.txt`; record `../scan/pdvd_stm_michel_sw99_verdicts.json`):
+
+| | **newly tagged (`on_only`)** | **dropped (`prod_only`, control)** |
+|---|---|---|
+| items / judged / stoppers | 91 / 78 / 66 | 45 / 43 / 39 |
+| verdicts | STM_MICHEL 45, FRAG_STM_MICHEL 1, STM_ONLY 20, THRU 11, FRAG_THRU 1, MESSY 4, UNCLEAR 9 | STM_MICHEL 24, STM_ONLY 15, THRU 3, FRAG_THRU 1, MESSY 2 |
+| **purity** (Wilson 68 %) | **0.846 [0.801, 0.883]** | **0.907 [0.853, 0.942]** |
+| MESSY + UNCLEAR | **13 (14.3 %)** | 2 (4.4 %) |
+| purity with MESSY/UNCLEAR counted as not stoppers | 0.725 | 0.867 |
+| `high`-confidence calls only | 0.907 (39/43) | 0.920 (23/25) |
+| top / bottom | 0.875 (42/48) / 0.800 (24/30) | 0.968 (30/31) / 0.750 (9/12) |
+| production-side status: not a candidate | 0.868 (46/53) | 0.900 (18/20) |
+| production-side status: candidate, tagger rejected | **0.765 (13/17)** | **0.944 (17/18)** |
+| object not matched | 0.875 (7/8) | 0.800 (4/5) |
+| hand STM_MICHEL among hand stoppers | 0.697 (46/66) | 0.615 (24/39) |
+| chain `michel_found` against the hand Michel: purity / efficiency | 0.894 / 0.913 | 0.913 / 0.875 |
+
+**The statistic:** purity(on_only) − purity(prod_only) = **−0.061**, 68 % [−0.120, +0.001], 95 % [−0.174, +0.060]
+(10 000 bootstraps). By the pre-registered reading this is **purity-neutral within this sample**. The point estimate is on
+the low side, and the 68 % interval just reaches zero.
+
+**Where the difference sits.**
+- **Not in candidacy.** Clusters that became candidates only on the latest configuration are as pure as those that
+  stopped being candidates (0.868 against 0.900).
+- **In the tagger's own flips.** Candidates production's tagger rejected and `p98vonq` accepts read 0.765 (13/17). The
+  mirror set reads 0.944 (17/18).
+  - The gap is largest on top (0.875 against 0.968), where the ×1.125 charge moves the tagger's absolute thresholds, which
+    were fitted on the old scale (§8).
+  - Suggestive, not significant at these counts.
+- **In what cannot be judged.** The newly tagged side carries three times the MESSY/UNCLEAR rate. Most are near-isochronous
+  tracks and busy stops.
+
+**The frame edge — a blind, independent sighting of §4.1.**
+- All six scanner reports, unprompted, name the same thing: in run 039349, the dead-channel hatching and every grey track
+  in `f_meas` stop at slice ≈ 1588–1600.
+- The SP frames are 6400 ticks = 1600 slices × 4 ticks (checked on `039349_7_p98von`, anode 4: `frame_gauss` 1536 ×
+  6400). Clustering ran with `readout_window_ticks=10000` on **both** arms (`pctree-evt*.tlas` of `039349_7_p98vonq` and
+  `_p96vprod`). That is §4.1's staging.
+- A track the frame cuts reaches the tagger as though it ended inside the window.
+- 19 items name the edge (`d99/swap_scan_window_flagged.tsv`, a regex over notes and evidence, **post hoc**):
+  - **11 on the newly tagged side, 10 of them in run 039349.** Verdicts THRU 6, STM_ONLY 3, UNCLEAR 1, STM_MICHEL 1, so
+    **half of that side's 12 non-stoppers**.
+  - 8 on the control side.
+- **Sensitivity, post hoc, with those 19 set aside** (`d99/swap_scan_score_window_excluded.txt`): 0.912 (62/68) against
+  0.943 (33/35), difference −0.031, 95 % [−0.132, +0.070]; `high` calls 0.950 against 0.952. The pre-registered number
+  above is the result; this only shows where most of its gap comes from.
+
+**Calibration against the existing record** (stopper-or-not on the items that have one).
+- **Newly tagged side:** 15/21 agree (`high` 11/15). **All six disagreements go one way:** the record says THRU and the
+  blind scan says STM_MICHEL, four of them at `high`.
+  - These are objects production did not tag. The record's scanners saw "is_stm 0" on screen when they judged them.
+  - That is the under-call doc pdvd/68 found in the agent record taken with the answer visible
+    (`feedback_blind_the_scan_sheet`).
+  - It also means the carried record's "12 THRU among the 23 newly tagged items it covers" overstates this side's false
+    positives.
+- **Control side:** 36/40 (`high` 24/25), disagreements in both directions.
+- Neither number adjusts the purity statistic.
+
+**Derived, mixing instruments** (the shared, tagged-on-both clusters from the record, which carries that bias):
+- whole-arm is_stm purity `p98vonq` 0.937 against `p96vprod` 0.959;
+- with the frame-edge items set aside, 0.959 against 0.970.
+
+**The latest configuration's hand record.** `scripts/d99_latest_record.py` builds
+`../scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json`:
+- the 569 carried items (§5);
+- plus the 68 newly tagged clusters the carry did not reach (STM_MICHEL 32, STM_ONLY 17, THRU 8, MESSY 4, UNCLEAR 7);
+- the 23 items both cover keep their carried verdict (`d99/latest_record_merge.txt`).
+
+Doc pdvd/98 §11 grades on it. The smx record and the carried records are untouched (M13).
+
+**What the scanners could not settle, for the owner** (their reports list the keys):
+- whether the frame edge counts as a no-measurement end;
+- michel against gamma for pieces 5–10 cm out, which decides the verdict and not just the kind;
+- decay-like charge with no object row, which forces STM_ONLY;
+- the grey-continuation test cannot see across a CRU seam, because `f_meas` does not reach the neighbouring CRU.
+
 ## 7. dQ/dx closure against the pre-registration
 
 **Pre-registered** (doc pdhd/29 plan, before any rerun):
@@ -698,14 +843,19 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
    to avoid; it is a consistency production does not have yet. What a flip changes cluster by cluster is a symmetric
    swap of about 30 % of tagged clusters, and the purity of the newly tagged side is not yet measured.
 
-   **Recommended before flipping:** scan the clusters `p98vonq` tags that production does not (the "not a candidate /
-   not is_stm in production" side of §6.3), so that purity is measured on both sides of the swap.
+   **Scan of the newly tagged side — DONE in round 3 (§6.4).** Purity 0.846 against 0.907 on the dropped side,
+   purity-neutral within the sample (95 % [−0.174, +0.060]). The gap sits in the tagger's own flips and in the frame-edge
+   items, and the newly tagged side carries more unjudgeable objects.
 2. **Split the SP difference — DONE in round 2** (§4.3). The wire file is the whole difference; SP code and config did
    not drift.
 3. **Re-scan** the stopper items that cannot be carried without a look on the arm that is eventually adopted: on `p98vonq`,
    STM_MICHEL 39 + STM_ONLY 25 + MESSY 17 (`d99/rescan_p98vonq.tsv`).
 4. **Refit the downstream constants** for a flipped arm (§8): C (0.8630 on `p98vonq`), Michel thresholds, QtoL.
-5. **Readout window** (§4.1): production's edge guard sees 10000 ticks over 6400-tick frames.
+5. **Readout window** (§4.1): production's edge guard sees 10000 ticks over 6400-tick frames. **Round 3 saw its cost
+   blind** (§6.4): half of the newly tagged side's non-stoppers end at the frame edge, and both arms carry the same
+   staging. **Recommended next:** stage clustering with the frames' own 6400-tick window on both arms (a new arm pair, not
+   a production change), then re-grade the 19 frame-edge items. That tests whether the purity gap of §6.4 closes.
+   After that comes the owner's look at the medium/low calls and at the frame-edge items (`d99/swap_scan_reports/`).
 6. **Candidates rose on ON:** 597 → 656 (events with a candidate 119 → 120). Not traced here. The per-key grades above use
    only the record's items.
 7. **The 2–3 % residual** top-below-bottom on the common tracks (0.972 [0.952, 1.000]) is not significant here; a larger
@@ -729,4 +879,7 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
 | `scripts/d99_michel_ql.py` | Michel energy by volume, per-item ON/OFF, flash changes |
 | `scripts/d99_trim_off.sh`, `d99_retire_keep_sp.sh` | guarded OFF-frame trim; guarded retire of the July SP frames (executed 2026-09-13) |
 | `../scan/pdvd_stm_michel_smx9_carried_p98voffq.json`, `_p98vonq.json` | the carried hand-scan records (new keys; the smx record untouched) |
+| `scripts/d99_swap_scan_set.py`, `d99_swap_scan_score.py`, `d99_latest_record.py` | §6.4: blind swap-scan item set and key; the pre-registered scorer (and its post-hoc `--exclude-keys`); the latest configuration's hand record |
+| `d99/swap_scan_*` | §6.4: pre-registration, key, rubric, agent task, frame check, six scanner reports, scores, frame-edge list |
+| `../scan/pdvd_stm_michel_sw99_verdicts.json`, `../scan/pdvd_stm_michel_p98vonq_carried_sw99_verdicts.json` | the blind swap-scan record (tag `sw99`, 136 items); the carried record plus sw99 on `p98vonq` (637 items) |
 | `d99/` | gate records and every number in this doc |

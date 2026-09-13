@@ -1,0 +1,6 @@
+136 item dirs, 544 distinct 3-D frames
+incomplete dirs: 0
+blank 3-D frames (md5 shared by 3+ items): 0 frames over 0 items
+c_3d_stop.png unique colours: n 136, min 1530, median 4651; below 1000: 0
+harness context-loss record: none (_webgl_lost.txt absent -- written before doc 69, or by an older harness)
+VERDICT: clean
