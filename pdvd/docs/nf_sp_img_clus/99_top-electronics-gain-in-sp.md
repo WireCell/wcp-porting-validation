@@ -25,8 +25,16 @@
   - difference −0.061, 95 % [−0.174, +0.060]: **purity-neutral within this sample** by the pre-registered reading, with
     the point estimate on the low side;
   - the newly tagged side holds three times as many objects no one can call (MESSY/UNCLEAR 14 % against 4 %);
-  - half of its non-stoppers end at the frame edge, where clustering assumes a 10000-tick window over 6400-tick frames
-    (§4.1, both arms).
+  - half of its non-stoppers end at the frame edge. On run 039349, clustering and PR assume a 10000-tick window over
+    6400-tick frames on both arms (§4.1).
+- **Round 4 (§4.4): each event's real readout window, on both arms.**
+  - Only run 039349's frames are 6400 ticks; runs 039252 and 039253 are 10000.
+  - With the real window, the PR edge guard untags 9 of the 136 scanned objects, all in run 039349: THRU 5, UNCLEAR 2,
+    STM_ONLY 2.
+  - Purity on the scanned objects that stay reads **0.889 against 0.929** (−0.040, 95 % [−0.143, +0.073]). The window
+    explains about a third of the gap.
+  - Where the window does not change, all four new arms reproduce their sources byte for byte.
+  - The new runner override `PDVD_READOUT_NTICKS` is unset by default; production is unchanged.
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -72,7 +80,7 @@ constant.
   NF or DNN-ROI changed since July except the wire file, which imaging had already adopted on 09-03.
 - **Two open issues predate this change and are not caused by it:**
   - production's SP frames carry the v5 wire order while its imaging, clustering and PR use v7-uvwfit (§4.3 item 4);
-  - production's PR edge guard runs a 10000-tick window over 6400-tick frames (§4.1).
+  - on run 039349, production's PR edge guard runs a 10000-tick window over 6400-tick frames (§4.1, §4.4).
 
   The latest-configuration arms fix the first; the second is unchanged in every arm.
 
@@ -153,6 +161,20 @@ SRC=p98voff DST=p98voffq ./d99_stage_q.sh ; ARM=p98voffq ./d99_chain.sh clus ; A
 SRC=p98von  DST=p98vonq  ./d99_stage_q.sh ; ARM=p98vonq  ./d99_chain.sh clus ; ARM=p98vonq  ./d99_chain.sh pr
 python3 d99_frames.py --all --arms p98voff p98von --json <sums>            # d99/frame_sums_120evt.txt
 (cd ../../.. && python3 docs/nf_sp_img_clus/scripts/d99_readout_window.py)  # sec 4.1 -> d99/readout_window_effect_p98voff.txt
+
+# sec 4.4: each event's real readout window (d99/frame_nticks_120evt.txt, from the p98von frames)
+WAVE=guard ARM=p99rgon   SRC=p98vonq  ./d99rw_arms.sh     # PR only: source pctree linked, .tlas window set per event
+WAVE=guard ARM=p99rgprod SRC=p96vprod ./d99rw_arms.sh
+WAVE=full  ARM=p99rwnul  SRC=p98von EVENTS="039349_7" NOWIN=1 ./d99rw_arms.sh   # PDVD_READOUT_NTICKS unset control
+WAVE=full  ARM=p99rwon   SRC=p98von   ./d99rw_arms.sh     # clustering + PR, PDVD_READOUT_NTICKS per event
+WAVE=full  ARM=p99rwprod SRC=d27fresh ./d99rw_arms.sh
+python3 d99rw_identity.py --arm p99rwnul --base p98vonq --nt all --events 039349_7   # d99/rw_identity_p99rwnul.txt
+python3 d99rw_identity.py --arm <arm> --base <source> --nt 10000       # d99/rw_identity_<arm>_10000.txt (arm = p99rgon p99rgprod p99rwon p99rwprod)
+python3 d99rw_identity.py --arm p99rwon --base p98vonq --nt 6400       # d99/rw_identity_p99rwon_6400.txt; likewise p99rwprod vs p96vprod
+python3 d99rw_identity.py --arm p99rwon --base p99rgon --nt 6400       # d99/rw_identity_p99rwon_vs_p99rgon_6400.txt; likewise prod
+python3 d99rw_census.py --arms p96vprod p99rgprod p99rwprod p98vonq p99rgon p99rwon   # d99/rw_census.txt
+python3 d99rw_regrade.py --on p99rgon --prod p99rgprod                 # d99/rw_regrade_guard.txt
+python3 d99rw_regrade.py --on p99rwon --prod p99rwprod                 # d99/rw_regrade_full.txt
 
 # round 2 (sec 0, 4.3, 6.3): July vs today's frames, the wire-file split, the record-free population
 python3 d99_frames.py --events 039252_0 039252_2 039253_0 039253_1 039349_0 039349_10 --arms keep p98voff   # d99/frames_july_vs_p98voff_6evt.txt
@@ -316,8 +338,10 @@ The cause is in the clustering runner:
   one is there, and falls back to 10000 otherwise.
 - Production's `d51vclus` was staged by `scripts/stage_ql_tag.sh` with the imaging archives only, so **all 120 production
   events ran with 10000**.
-- The `p98voff` directories hold the SP frames themselves, so 84 events (run 039349) ran with **6400**, the frames' real
-  length (both the July and the new frames are 6400 ticks × 500 ns).
+- The `p98voff` directories hold the SP frames themselves, so every event ran with its frames' real length: **6400** ticks
+  on the 84 events of run 039349 and 10000 on the 36 events of runs 039252 and 039253 (`d99/frame_nticks_120evt.txt`; the
+  July frames regenerate sample for sample, §4.3). *Corrected in §4.4: an earlier version said all frames are 6400 ticks.*
+  Production's 10000 fallback is wrong on run 039349 only.
 - With the true window, the PR's `readout_edge_guard` fires 363 times instead of 264 and removes stoppers whose stop lies
   in the last 60 ticks.
 - The runner's own comment still says "10000 ticks × 0.5 us".
@@ -330,8 +354,8 @@ This is neither the gain constant nor the SP rerun. For this round the arms repr
   `img-provenance.txt`, no frames.
 - The `p98voff` clustering + PR pass is kept as the measurement of the difference.
 
-**Open for the owner** (not changed here): production's edge guard runs on a 10000-tick window over 6400-tick frames, so it
-cannot fire at the real readout edge. Enabling the real window would move STM tagging by about a hundred candidates and
+**Open for the owner** (not changed here; measured in §4.4): on run 039349 production's edge guard runs on a 10000-tick
+window over 6400-tick frames, so it cannot fire at the real readout edge. Enabling the real window would move STM tagging by about a hundred candidates and
 needs its own graded round.
 
 ### 4.2 Reproduction controls
@@ -428,6 +452,96 @@ not remove stoppers wholesale.
 - **Tuning:** the owner's STM tagging knobs were tuned on the v5-order SP.
 
 The top/bottom offset itself barely moved: 0.889 → 0.878, inside doc pdhd/29's CI.
+
+### 4.4 Round 4: each event's real readout window, on both arms
+
+**Frame length depends on the run** (`d99/frame_nticks_120evt.txt`, read from the `p98von` frames; the July frames
+regenerate sample for sample, §4.3):
+
+| runs | events | SP frame length | production staging's window |
+|---|---|---|---|
+| 039252, 039253 | 36 | 10000 ticks | 10000, correct |
+| 039349 | 84 | 6400 ticks | 10000, wrong |
+
+An earlier version of §4.1 and §6.4 said every frame is 6400 ticks; only run 039349's are.
+
+**Arms** (`scripts/d99rw_arms.sh`; per event, `setarch -R`, pin `libpin_p96` Clus `4e1db810` before and after):
+
+| arm | built from | what can move |
+|---|---|---|
+| `p99rgprod`, `p99rgon` | the `p96vprod` / `p98vonq` pctree linked, its `.tlas` copied with the event's window; PR only | PR's `readout_edge_guard`; clustering and cluster ids are the source's |
+| `p99rwprod`, `p99rwon` | the `d27fresh` / `p98von` imaging, staged like production (`d99_stage_q.sh`), clustering with `PDVD_READOUT_NTICKS` set per event, then PR | also clustering, through QLMatching's window-truncation flag |
+| `p99rwnul` | `p98von`, `039349_7`, `PDVD_READOUT_NTICKS` unset | nothing (control) |
+
+`PDVD_READOUT_NTICKS` is a new, default-unset override in `run_clus_evt.sh`. Production and every existing arm are
+unchanged.
+
+**Gates.**
+- **Knob unset:** `p99rwnul` equals `p98vonq` on `039349_7` in pctree, `.tlas`, all 343 PR branches and 25/25 `mabc-pr`
+  members (`d99/rw_identity_p99rwnul.txt`).
+- **Where the window does not change** (the 36 events with 10000-tick frames), all four arms reproduce their source byte
+  for byte: 36/36 each (`d99/rw_identity_{p99rgprod,p99rgon,p99rwprod,p99rwon}_10000.txt`).
+- **Completion:** 119/120 on every arm, judged by output, and the two missing events are different cases.
+  - `039252_11` on the production arms has no STM candidate, as on `p96vprod` (10000-tick frames, nothing changed).
+  - `039349_30` on the latest arms is a result: it had 2 candidates on `p98vonq`, and the real window rejects both (stops
+    at ticks 6342.6 and 6352.8). It is the only event the window empties, so PR writes no candidate summary line.
+
+**On run 039349, the window acts almost only through the PR guard.**
+- **Clustering hardly moves.** The pctree changes on 2 of 84 events on the latest arm (`039349_32`, `039349_62`) and on
+  1 on production (`039349_62`), each through a different flash match (`flash_id`, `cluster_t0`). Everywhere else the
+  re-clustered arm equals the PR-only arm (82/84 and 83/84, `d99/rw_identity_p99rw*_vs_p99rg*_6400.txt`).
+- **The guard does the rest** (`d99/rw_census.txt`, re-clustered arms; runs 039252 and 039253 identical):
+
+  | run 039349, 84 events | production: 10000 → real window | latest: 10000 → real window |
+  |---|---|---|
+  | `readout_edge_guard` firings | 138 → 243 | 174 → 305 |
+  | STM candidates | 409 → 314 | 450 → 334 |
+  | is_stm | 159 → 148 | 167 → 153 |
+  | is_stm with a Michel | 83 → 81 | 89 → 86 |
+
+**The §6.4 blind scan, re-graded on the real-window pair** (`d99/rw_regrade_full.txt`). All 136 scanned objects carry
+by geometry. The PR-only pair gives the same fates and the same purity numbers (`d99/rw_regrade_guard.txt`); the guard
+line differs on one item (`039349_32/48`, below).
+- **Swap sets:** on_only 91 → 84, prod_only 82 → 78. All of the change is in run 039349.
+- **9 scanned objects leave their set, all untagged on their own arm; none leaves because the other side now tags it.**
+  - Newly tagged side, 8 of 91: THRU 4 (`039349_22/51`, `_26/23`, `_32/48`, `_54/20`), UNCLEAR 2 (`039349_40/48`,
+    `_69/44`), STM_ONLY 2 (`039349_7/67`, `_75/63`, both `medium`).
+  - Control side, 1 of 45: THRU (`039349_59/14`).
+  - Each is rejected by the guard with its stop at ticks 6344–6388, inside the last 60 ticks. The exception is
+    `039349_32/48` on the re-clustered arm, where its event's flash match moved; on the PR-only arm the guard rejects it at
+    tick 6387.7.
+- **The 19 frame-edge items:**
+  - 7 leave, all in run 039349. The 5 in runs 039252 and 039253 stay, as they must.
+  - Run 039349's other 7 stay tagged. For the two checked, the tagger's stop lies 143 (`039349_69/23`) and 256
+    (`039349_82/41`) ticks before the edge.
+  - The regex had missed two edge items, which also leave (`039349_54/20`, `039349_69/44`).
+- **One unscanned object enters on_only:** `039349_47/76`. The same object stops at tick 6321 on the latest arm and at
+  6388 on production, 67 ticks apart across the 60-tick guard.
+
+**Purity on the scanned objects that stay** (not pre-registered: the sets changed):
+
+| | newly tagged side | control side | difference [95 %] |
+|---|---|---|---|
+| §6.4, pre-registered (10000-tick window everywhere) | 0.846 [0.801, 0.883] (66/78) | 0.907 [0.853, 0.942] (39/43) | −0.061 [−0.174, +0.060] |
+| real window, scanned objects that stay | **0.889** [0.846, 0.921] (64/72) | **0.929** [0.878, 0.959] (39/42) | **−0.040** [−0.143, +0.073] |
+
+Not judged: the 1 object new to on_only and the 34 unsampled members of prod_only (as in §6.4).
+
+**Reading.**
+- **The real window removes mostly what the scanners called non-stoppers or could not call:** 7 of the 9 leavers.
+- **It closes about a third of the §6.4 gap** (−0.061 → −0.040). The rest is not the window.
+- **The cost is 2 `medium` STM_ONLY calls.** Their stop lies in the last 60 ticks, where a stop cannot be told from a
+  truncation by construction.
+- **The guard's 60 ticks is a knife edge:** an object whose stop moves by tens of ticks between arms crosses it
+  (`039349_47/76`).
+- **Not a production change.** Production staging still runs 10000 on run 039349. Adopting the real window (by setting
+  `PDVD_READOUT_NTICKS` per run, or by staging the frames) is the owner's call.
+  - It moves run 039349's is_stm by −11 on production and −14 on the latest configuration, and its STM candidates by
+    about a hundred.
+  - **Most of those removals are unjudged.** The swap scan judged 1 of production's 11 and 8 of the latest
+    configuration's 14. The rest were tagged on both arms, so the scan never drew them, and whether removing them is a
+    gain or a loss is not measured here. Some carry a verdict in the carried record; that was not examined.
+  - Adopting the window therefore wants a look at run 039349's removed tags, not just the knob.
 
 ## 5. Carrying the hand-scan record
 
@@ -675,17 +789,21 @@ the low side, and the 68 % interval just reaches zero.
 **The frame edge — a blind, independent sighting of §4.1.**
 - All six scanner reports, unprompted, name the same thing: in run 039349, the dead-channel hatching and every grey track
   in `f_meas` stop at slice ≈ 1588–1600.
-- The SP frames are 6400 ticks = 1600 slices × 4 ticks (checked on `039349_7_p98von`, anode 4: `frame_gauss` 1536 ×
-  6400). Clustering ran with `readout_window_ticks=10000` on **both** arms (`pctree-evt*.tlas` of `039349_7_p98vonq` and
+- Run 039349's SP frames are 6400 ticks = 1600 slices × 4 ticks (checked on `039349_7_p98von`, anode 4: `frame_gauss`
+  1536 × 6400). Runs 039252 and 039253 have 10000-tick frames (`d99/frame_nticks_120evt.txt`). Clustering ran with `readout_window_ticks=10000` on **both** arms (`pctree-evt*.tlas` of `039349_7_p98vonq` and
   `_p96vprod`). That is §4.1's staging.
 - A track the frame cuts reaches the tagger as though it ended inside the window.
 - 19 items name the edge (`d99/swap_scan_window_flagged.tsv`, a regex over notes and evidence, **post hoc**):
   - **11 on the newly tagged side, 10 of them in run 039349.** Verdicts THRU 6, STM_ONLY 3, UNCLEAR 1, STM_MICHEL 1, so
     **half of that side's 12 non-stoppers**.
   - 8 on the control side.
+  - 5 of the 19 (1 newly tagged, 4 controls) are in runs 039252 and 039253, whose frames are 10000 ticks long. What those
+    scanners saw near slice 1500–1630 is not the readout window's end (§4.4).
 - **Sensitivity, post hoc, with those 19 set aside** (`d99/swap_scan_score_window_excluded.txt`): 0.912 (62/68) against
   0.943 (33/35), difference −0.031, 95 % [−0.132, +0.070]; `high` calls 0.950 against 0.952. The pre-registered number
   above is the result; this only shows where most of its gap comes from.
+- **Re-graded with each event's real window in §4.4:** 7 of the 19 leave their set (all in run 039349). Purity on the
+  scanned objects that stay reads 0.889 against 0.929 (−0.040).
 
 **Calibration against the existing record** (stopper-or-not on the items that have one).
 - **Newly tagged side:** 15/21 agree (`high` 11/15). **All six disagreements go one way:** the record says THRU and the
@@ -851,11 +969,16 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
 3. **Re-scan** the stopper items that cannot be carried without a look on the arm that is eventually adopted: on `p98vonq`,
    STM_MICHEL 39 + STM_ONLY 25 + MESSY 17 (`d99/rescan_p98vonq.tsv`).
 4. **Refit the downstream constants** for a flipped arm (§8): C (0.8630 on `p98vonq`), Michel thresholds, QtoL.
-5. **Readout window** (§4.1): production's edge guard sees 10000 ticks over 6400-tick frames. **Round 3 saw its cost
+5. **Readout window** (§4.1): on run 039349, production's edge guard sees 10000 ticks over 6400-tick frames. **Round 3 saw its cost
    blind** (§6.4): half of the newly tagged side's non-stoppers end at the frame edge, and both arms carry the same
-   staging. **Recommended next:** stage clustering with the frames' own 6400-tick window on both arms (a new arm pair, not
-   a production change), then re-grade the 19 frame-edge items. That tests whether the purity gap of §6.4 closes.
-   After that comes the owner's look at the medium/low calls and at the frame-edge items (`d99/swap_scan_reports/`).
+   staging. **Real-window arms and re-grade: DONE in round 4 (§4.4).**
+   - Only run 039349 is affected (6400-tick frames).
+   - The guard untags 9 scanned objects; 7 of them are THRU or UNCLEAR.
+   - The gap narrows from −0.061 to −0.040 but does not close.
+   - **Open for the owner:** whether production staging should use the real window on run 039349 (`PDVD_READOUT_NTICKS`
+     or the frames in the input dir). It removes 11 is_stm clusters on production and 14 on the latest configuration.
+   - After that comes the owner's look at the medium/low calls, including the 2 STM_ONLY calls the guard removes
+     (`039349_7/67`, `039349_75/63`), and at the frame-edge items (`d99/swap_scan_reports/`).
 6. **Candidates rose on ON:** 597 → 656 (events with a candidate 119 → 120). Not traced here. The per-key grades above use
    only the record's items.
 7. **The 2–3 % residual** top-below-bottom on the common tracks (0.972 [0.952, 1.000]) is not significant here; a larger
@@ -874,6 +997,9 @@ file carries a peer's uncommitted changes. The line now describes only the 24 ke
 | `scripts/d99_grade.py`, `d99_dqdx_drift.py` | grading and dQ/dx forks with their controls |
 | `scripts/d99_closure.py` | per-track OFF → ON plateau ratio, common-track samples |
 | `scripts/d99_readout_window.py` | §4.1: candidates, edge-guard firings and clustering window per arm |
+| `pdvd/run_clus_evt.sh` | `PDVD_READOUT_NTICKS` (§4.4): the clustering window given explicitly; unset = the frame-or-10000 rule (proven on `p99rwnul`) |
+| `scripts/d99rw_arms.sh`, `d99rw_identity.py`, `d99rw_census.py`, `d99rw_regrade.py` | §4.4: the real-window arms (PR-only guard pair, re-clustered pair, unset control); identity against the sources; STM census by frame length; the §6.4 scan re-graded on the new pairs |
+| `d99/frame_nticks_120evt.txt`, `d99/rw_*` | §4.4: SP frame length per event; the identity gates, census and re-grades |
 | `scripts/d99_frame_identity.py` | §4.3: sample-level identity of two SP frame arms per anode, plane and frame tag |
 | `scripts/d99_population.py` | §6.3: record-free STM census and is_stm transitions between arms (geometric match) |
 | `scripts/d99_michel_ql.py` | Michel energy by volume, per-item ON/OFF, flash changes |

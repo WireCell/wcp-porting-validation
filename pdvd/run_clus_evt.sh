@@ -281,6 +281,13 @@ PY
             echo "Readout window: ${READOUT_NTICKS} ticks (from $(basename "$_SPF"))"
         fi
     fi
+    # PDVD_READOUT_NTICKS (doc pdvd/99 sec 4.4): the window given explicitly, for an input dir staged without SP frames
+    # (production staging holds imaging archives only, so the rule above falls back to 10000 on every event, while run
+    # 039349's frames are 6400 ticks).  Unset (the default) => the frame-or-10000 rule above, unchanged.
+    if [ -n "${PDVD_READOUT_NTICKS:-}" ]; then
+        READOUT_NTICKS=$PDVD_READOUT_NTICKS
+        echo "Readout window: ${READOUT_NTICKS} ticks (PDVD_READOUT_NTICKS)"
+    fi
 
     if [ -n "$ANODE" ]; then
         ANODE_CODE="[$ANODE]"

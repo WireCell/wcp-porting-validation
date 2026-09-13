@@ -1,0 +1,3 @@
+# doc pdvd/99 sec 4.4 -- p99rwnul against p98vonq (pctree/tlas against p98vonq) on the 1 events with frame length all; d99rw_identity.py
+039349_7: IDENTICAL | pctree identical | tlas identical (readout_window_ticks=10000) | pr identical (343 branches) | mabc-pr identical 25/25 vs 25
+SUMMARY p99rwnul vs p98vonq, frame length all: identical 1/1

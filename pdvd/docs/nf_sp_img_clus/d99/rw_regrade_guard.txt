@@ -1,0 +1,48 @@
+# doc pdvd/99 sec 4.4 -- the sec 6.4 swap scan on p99rgon vs p99rgprod (each event's real readout window); scanned keys carried from p98vonq / p96vprod; d99rw_regrade.py
+
+== 1. swap sets (is_stm on one arm, the matched object not is_stm on the other)
+  on_only   039349    is_stm 167 -> 153; set  56 ->  49: stay  48, leave   8, enter   1 (ids comparable: same pctrees)
+  on_only   039252+3  is_stm 106 -> 106; set  35 ->  35: stay  35, leave   0, enter   0 (ids comparable: same pctrees)
+  on_only   all       is_stm 273 -> 259; set  91 ->  84: stay  83, leave   8, enter   1 (ids comparable: same pctrees)
+  prod_only 039349    is_stm 159 -> 148; set  47 ->  43: stay  43, leave   4, enter   0 (ids comparable: same pctrees)
+  prod_only 039252+3  is_stm 106 -> 106; set  35 ->  35: stay  35, leave   0, enter   0 (ids comparable: same pctrees)
+  prod_only all       is_stm 265 -> 254; set  82 ->  78: stay  78, leave   4, enter   0 (ids comparable: same pctrees)
+
+== 2. the scanned items (carry: {'same pctree': 136})
+  on_only   039349    scanned  56: stay 48 (stop 36, non 6, excl 6); own arm untagged 8 (stop 2, non 4, excl 2); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+  on_only   039252+3  scanned  35: stay 35 (stop 28, non 2, excl 5); own arm untagged 0 (stop 0, non 0, excl 0); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+  on_only   all       scanned  91: stay 83 (stop 64, non 8, excl 11); own arm untagged 8 (stop 2, non 4, excl 2); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+  prod_only 039349    scanned  22: stay 21 (stop 17, non 2, excl 2); own arm untagged 1 (stop 0, non 1, excl 0); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+  prod_only 039252+3  scanned  23: stay 23 (stop 22, non 1, excl 0); own arm untagged 0 (stop 0, non 0, excl 0); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+  prod_only all       scanned  45: stay 44 (stop 39, non 3, excl 2); own arm untagged 1 (stop 0, non 1, excl 0); other side now tags 0 (stop 0, non 0, excl 0); not matched 0 (stop 0, non 0, excl 0)
+
+== 3. the 19 frame-edge items (sec 6.4, post hoc regex)
+  039252_8/96    on_only   scan STM_MICHEL   high   -> stay                 (new 039252_8/96) 
+  039349_19/27   on_only   scan THRU         high   -> stay                 (new 039349_19/27) 
+  039349_22/51   on_only   scan THRU         medium -> own arm untagged     (new 039349_22/51) stop at tick 6349.8 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_26/23   on_only   scan THRU         high   -> own arm untagged     (new 039349_26/23) stop at tick 6371.1 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_32/48   on_only   scan THRU         medium -> own arm untagged     (new 039349_32/48) stop at tick 6387.7 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_40/48   on_only   scan UNCLEAR      low    -> own arm untagged     (new 039349_40/48) stop at tick 6344.5 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_50/52   on_only   scan STM_ONLY     medium -> stay                 (new 039349_50/52) 
+  039349_69/23   on_only   scan THRU         medium -> stay                 (new 039349_69/23) 
+  039349_7/57    on_only   scan THRU         medium -> stay                 (new 039349_7/57) 
+  039349_7/67    on_only   scan STM_ONLY     medium -> own arm untagged     (new 039349_7/67) stop at tick 6352.3 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_75/63   on_only   scan STM_ONLY     medium -> own arm untagged     (new 039349_75/63) stop at tick 6364.4 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039252_2/79    prod_only scan STM_MICHEL   medium -> stay                 (new 039252_2/79) 
+  039253_10/77   prod_only scan STM_MICHEL   medium -> stay                 (new 039253_10/77) 
+  039253_16/51   prod_only scan STM_ONLY     high   -> stay                 (new 039253_16/51) 
+  039253_8/65    prod_only scan STM_MICHEL   high   -> stay                 (new 039253_8/65) 
+  039349_59/14   prod_only scan THRU         high   -> own arm untagged     (new 039349_59/14) stop at tick 6379.9 within 60 ticks of the readout window edge (window truncation, not a stop)
+  039349_70/61   prod_only scan THRU         medium -> stay                 (new 039349_70/61) 
+  039349_81/51   prod_only scan STM_ONLY     medium -> stay                 (new 039349_81/51) 
+  039349_82/41   prod_only scan STM_ONLY     high   -> stay                 (new 039349_82/41) 
+  flagged items leaving their set: 7/19; unflagged items leaving: 2/117
+  unflagged leavers: [('039349_54/20', 'on_only', 'THRU', 'own arm untagged', 'stop at tick 6355.0 within 60 ticks of the readout window ed'), ('039349_69/44', 'on_only', 'UNCLEAR', 'own arm untagged', 'stop at tick 6373.0 within 60 ticks of the readout window ed')]
+
+== 4. purity on the scanned items that stay (NOT pre-registered; unscanned members of the new sets not judged)
+  on_only   scanned and staying  83: stoppers 64/72 = 0.889 [0.846, 0.921]; new set 84, unscanned members 1 {'039349': 1}
+  prod_only scanned and staying  44: stoppers 39/42 = 0.929 [0.878, 0.959]; new set 78, unscanned members 34 {'039252+3': 12, '039349': 22}
+  difference -0.040  68 % [-0.091, +0.016]  95 % [-0.143, +0.073]
+  (sec 6.4 pre-registered, 10000-tick window everywhere: 0.846 vs 0.907, -0.061 [-0.174, +0.060])
+  unscanned on_only: ['039349_47/76']
+  unscanned prod_only: ['039252_0/82', '039252_10/73', '039252_15/82', '039252_16/32', '039252_2/83', '039252_3/45', '039252_3/74', '039252_6/106', '039253_0/110', '039253_0/44', '039253_6/85', '039253_9/42', '039349_13/56', '039349_13/60', '039349_24/35', '039349_28/36', '039349_28/60', '039349_30/21', '039349_30/45', '039349_41/51', '039349_48/54', '039349_5/54', '039349_51/24', '039349_51/29', '039349_56/28', '039349_56/53', '039349_58/21', '039349_63/67', '039349_64/24', '039349_64/61', '039349_68/65', '039349_71/37', '039349_82/60', '039349_9/55']
