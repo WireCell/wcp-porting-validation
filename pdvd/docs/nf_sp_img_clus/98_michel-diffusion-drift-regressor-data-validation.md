@@ -16,6 +16,12 @@ the pre-registered success criterion is met with room to spare:
 | **PDVD** (`p96vprod`) | 91 (58) | **+0.58 [+0.50, +0.66]** | **+0.61** | **1e-4** | 0.43 [0.35, 0.52] |
 | **PDHD** (`h28prod`) | 33 (28) | **+0.52 [+0.43, +0.63]** | **+0.56** | **6e-4** | 0.45 [0.32, 0.60] |
 
+![correlation summary](figs/98_correlation_summary.png)
+
+*Predicted drift (mu, bars = the model's own sigma) against the true Q-L drift, Michel-only crops, the model's range.
+Orange: binned medians with the 16-84 % band. Red squares: the tier-A clean subset. Grey: below the model's trained
+floor. Section 6b splits these points by topology.*
+
 Binned, the prediction climbs monotonically with the true drift on both detectors (PDVD medians 94 -> 119 -> 173 cm
 for true drift ~114 / 188 / 255 cm; PDHD 88 -> 113 -> 174 cm for ~104 / 187 / 299 cm). Three controls say the model is
 not reading amplitude or pixel count (r with drift +0.17 / -0.06 to +0.09; r of mu with the crop charge -0.10 / +0.11),
@@ -205,6 +211,41 @@ rho > 0); "in-range" = 80 <= drift <= 340 cm.
 ![mu vs drift PDVD](figs/98_mu_vs_drift_pdvd.png)
 ![mu vs drift PDHD](figs/98_mu_vs_drift_pdhd.png)
 
+*Left panels: the primary Michel-only crop (Z); right panels: the same Michels with the muon left in (M). Crosses are
+the near-anode events below the model's range.* The rank-rank view, which is what Spearman's rho measures:
+![rank rank](figs/98_rank_rank.png)
+
+### 6b. Reco vs true drift by topology
+
+The same axes, the in-range Michels split six ways (`figs/98_topology_{pdvd,pdhd}.png`; per-group numbers in
+`scan/d98/stats_round1.txt`, "topology splits"). Each group carries its own rho, permutation p and OLS slope.
+
+![topology PDVD](figs/98_topology_pdvd.png)
+![topology PDHD](figs/98_topology_pdhd.png)
+
+| split | group | PDVD n / rho / p / slope | PDHD n / rho / p / slope | reading |
+|---|---|---|---|---|
+| **muon overlap** | Michel loses < 20 % of its cells to the muon | 25 / **+0.72** / 1e-4 / 0.51 | 7 / **+0.93** / 3e-3 / 0.62 | the cleanest separation gives the strongest correlation and the steepest slope on both detectors |
+| | loses >= 20 % (overlapping the muon) | 33 / +0.45 / 6e-3 / 0.31 | 21 / +0.50 / 0.011 / 0.36 | still correlated, but weaker and flatter: truncating the Michel's start costs slope |
+| **connection** | attached to the stop | 46 / +0.62 / 1e-4 / 0.46 | 18 / +0.41 / 0.049 / 0.38 | |
+| | bridged (a gap to the stop) | 12 / +0.64 / 0.014 / 0.39 | 10 / **+0.85** / 1.4e-3 / 0.63 | bridged Michels are the best-separated on PDHD and read best there |
+| **hand kind** | Michel only (`attached`) | 25 / +0.63 / 6e-4 / 0.48 | 10 / +0.56 / 0.046 / 0.16 | |
+| | Michel + isolated gamma pieces (`both`) | 33 / +0.58 / 2e-4 / 0.38 | 18 / +0.59 / 4.4e-3 / 0.52 | the gamma pieces are not in the crop (role 4 cells are excluded); no penalty visible |
+| **energy** | `michel_ke_best` >= 20 MeV | 37 / **+0.69** / 1e-4 / **0.60** | 19 / +0.51 / 0.014 / 0.31 | on PDVD the higher-energy Michels read with the steepest slope (0.60), as the simulation study found (MAE 28 cm at >= 20 MeV vs 56 at 5 MeV) |
+| | < 20 MeV | 21 / +0.48 / 0.015 / 0.28 | 9 / +0.75 / 0.013 / 0.71 | PDHD's 9 low-energy events go the other way; too few to read |
+| **Bragg peak** | contrast ratio >= 0.8 (clear) | 42 / +0.53 / 1e-4 / 0.34 | 16 / +0.61 / 8.5e-3 / 0.55 | the muon's Bragg clarity does not help the Michel reading; it is a purity cut on the STM, not on the Michel image |
+| | < 0.8 (weak) | 16 / +0.77 / 7e-4 / 0.66 | 12 / +0.56 / 0.029 / 0.31 | |
+| **tier** | A (clean by every rule) | 19 / +0.64 / 1.9e-3 / 0.37 | 2 / too few | |
+| | B (rest) | 39 / +0.58 / 1e-4 / 0.47 | 26 / +0.51 / 5.1e-3 / 0.43 | |
+
+What the splits say: the two things that matter for the Michel image are **how much of the Michel survives the muon
+removal** and **its energy**. Michels that keep >= 80 % of their cells read with rho 0.72 (PDVD) and 0.93 (PDHD, 7
+events), against 0.45-0.50 for the overlapping ones; Michels above 20 MeV read with slope 0.60 on PDVD against 0.28
+below. The STM-side quality (Bragg clarity, attached vs bridged, gamma pieces) does not move the correlation in a
+consistent direction. So a round-2 selection for the video or for a recalibration should key on `frac_lost < 0.2` and
+`michel_ke_best >= 20 MeV`; on PDVD that is the group with rho 0.72. The tier-A definition, which keys on the STM's
+Bragg ratio and the gamma count, is the wrong lever for this measurement.
+
 **Binned medians of mu_Z, tier B in-range** (the trend without a fit):
 
 | true drift band | PDVD n / median drift / median mu_Z (q16-q84) | PDHD n / median drift / median mu_Z (q16-q84) |
@@ -219,13 +260,19 @@ r(mu_Z, q_keep) = -0.10 / +0.11, r(mu_Z, ke_best) = -0.33 / +0.27. The crop's ch
 spread), and mu does not track the charge; the energy correlation has opposite
 signs on the two detectors. Saturation census: 8 / 24 events read below 90 cm (PDHD / PDVD), none above 540.
 
-**Model-free width** (`figs/98_width_vs_drift.png`): the 25th-percentile per-channel tick RMS^2 of the Z crop,
+![residuals PDVD](figs/98_resid_pdvd.png)
+
+*PDVD residuals to the tier-B fit against drift, against the Michel charge lost to the muon mask, and against energy.*
+
+**Model-free width** (`figs/98_width_vs_drift.png`, below): the 25th-percentile per-channel tick RMS^2 of the Z crop,
 windowed +-12 ticks around each column's peak, against drift: PDHD r = -0.01 (p = 0.58), PDVD r = +0.07 (p = 0.28),
 fitted slopes -0.0003 / +0.0038 ticks^2/cm against the expected 2 D_L / v^3 of 0.0127 / 0.0102. The intercept (~9-11
 ticks^2, i.e. ~3 ticks rms) is the response-plus-topology floor the simulation study measured at 2.3-3.4 ticks; the
 0.4-1.7-tick diffusion signal is invisible to a moment of a Michel track that is itself tilted in the drift direction.
 That is the whole reason the study trained a model, and it is why the model's rho of 0.6 is a result and not a
 restatement of a width plot.
+
+![width](figs/98_width_vs_drift.png)
 
 **The doc pdvd/97 showcase events**, for the video: PDVD `039253_8/59` (both, 51 MeV) drift 252 -> mu 253 +- 32;
 `039252_17/88` (attached) 136 -> 134 +- 34; `039252_16/88` 113 -> 92 +- 16; `039253_3/79` (15 MeV) 209 -> 106 +- 20.
@@ -281,8 +328,8 @@ partly the floor).
 3. **A near-anode re-diffusion closure on data** (the study's P9 augmentation ladder): re-broaden the < 80 cm Michels
    (33 on PDVD) by the analytic kernel to emulate 200-300 cm and check that the model then reads them there.
 4. **PDHD retrain at 4.792 mm pitch** if PDHD is wanted quantitatively.
-5. The 26 tier-A PDVD Michels are the natural first set for the video: `039253_8/59` (drift 252, mu 253) is the
-   cleanest single event.
+5. For the video, key on the section 6b levers (`frac_lost < 0.2`, `michel_ke_best >= 20 MeV`) rather than tier A;
+   `039253_8/59` (PDVD, 51 MeV, `frac_lost` 0.12, drift 252 -> mu 253) is the cleanest single event.
 
 ## 10. Files
 
@@ -291,6 +338,7 @@ partly the floor).
 - `pdvd/docs/scan/d98/`: `candidates.tsv` (every hand Michel with the first failed rule), `crops.tsv` (per-candidate
   diagnostics and both labels), `scores.tsv` (labels, mu/sigma per variant, tier), `label_check.txt`, `closure.txt`,
   `stats_round1.txt`;
-- `figs/98_mu_vs_drift_{pdhd,pdvd}.png`, `98_resid_{pdhd,pdvd}.png`, `98_crops_{pdhd,pdvd}.png`,
-  `98_label_check.png`, `98_width_vs_drift.png`;
+- `figs/98_correlation_summary.png` (the headline), `98_topology_{pdhd,pdvd}.png` (section 6b), `98_rank_rank.png`,
+  `98_mu_vs_drift_{pdhd,pdvd}.png`, `98_resid_{pdhd,pdvd}.png`, `98_crops_{pdhd,pdvd}.png`, `98_label_check.png`,
+  `98_width_vs_drift.png`;
 - the crops themselves in `/home/xqian/tmp/d98/crops_{pdhd,pdvd}.npz` (not committed; rebuilt in ~40 s).

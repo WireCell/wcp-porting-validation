@@ -61,3 +61,31 @@ SUCCESS CRITERION (PDVD tier B in-range Z: rho>0 and p_perm<0.01): MET  rho=+0.6
 # model-free width: w2 = 25th percentile over channels of the per-channel tick RMS^2 within +-12 ticks of the column peak, Z crop [ticks^2]
 pdhd: n=32 r=-0.01 rho=-0.03 p_perm=0.5763 slope=-0.0003 ticks^2/cm (expected 2 D_L/v^3 = 0.0127 with D_L 6.20 cm2/s, v 1.576 mm/us) icpt=9.4
 pdvd: n=87 r=+0.07 rho=+0.06 p_perm=0.2774 slope=0.0038 ticks^2/cm (expected 2 D_L/v^3 = 0.0102 with D_L 4.13 cm2/s, v 1.481 mm/us) icpt=9.3
+
+# topology splits, variant Z, in-range: per-group n / r / rho / p_perm / slope
+== pdvd
+  muon overlap Michel loses <20 % to the muon      : n= 25  r=+0.64 [+0.52,+0.75]  rho=+0.72  p_perm=0.0001  slope=+0.51 [+0.38,+0.66]  icpt=+48  resid_rms=39 cm  pull_sd=1.58
+  muon overlap loses >=20 % (overlapping)          : n= 33  r=+0.50 [+0.32,+0.65]  rho=+0.45  p_perm=0.0062  slope=+0.31 [+0.21,+0.38]  icpt=+65  resid_rms=29 cm  pull_sd=1.31
+  connection   attached to the stop                : n= 46  r=+0.58 [+0.49,+0.66]  rho=+0.62  p_perm=0.0001  slope=+0.46 [+0.36,+0.55]  icpt=+47  resid_rms=34 cm  pull_sd=1.55
+  connection   bridged (gap to the stop)           : n= 12  r=+0.59 [+0.39,+0.80]  rho=+0.64  p_perm=0.0136  slope=+0.39 [+0.21,+0.57]  icpt=+60  resid_rms=41 cm  pull_sd=1.23
+  hand kind    Michel only (attached)              : n= 25  r=+0.63 [+0.53,+0.75]  rho=+0.63  p_perm=0.0006  slope=+0.48 [+0.37,+0.60]  icpt=+52  resid_rms=40 cm  pull_sd=1.60
+  hand kind    Michel + gamma pieces (both)        : n= 33  r=+0.53 [+0.44,+0.63]  rho=+0.58  p_perm=0.0002  slope=+0.38 [+0.26,+0.50]  icpt=+55  resid_rms=31 cm  pull_sd=1.39
+  energy       michel_ke_best >= 20 MeV            : n= 37  r=+0.66 [+0.57,+0.75]  rho=+0.69  p_perm=0.0001  slope=+0.60 [+0.48,+0.71]  icpt=+28  resid_rms=36 cm  pull_sd=1.51
+  energy       < 20 MeV                            : n= 21  r=+0.55 [+0.32,+0.76]  rho=+0.48  p_perm=0.0150  slope=+0.28 [+0.16,+0.38]  icpt=+69  resid_rms=29 cm  pull_sd=1.07
+  Bragg peak   contrast ratio >= 0.8 (clear)       : n= 42  r=+0.46 [+0.35,+0.58]  rho=+0.53  p_perm=0.0001  slope=+0.34 [+0.23,+0.45]  icpt=+70  resid_rms=35 cm  pull_sd=1.72
+  Bragg peak   < 0.8 (weak)                        : n= 16  r=+0.79 [+0.75,+0.86]  rho=+0.77  p_perm=0.0007  slope=+0.66 [+0.53,+0.81]  icpt=-1  resid_rms=33 cm  pull_sd=1.38
+  tier         tier A (clean by every rule)        : n= 19  r=+0.53 [+0.37,+0.69]  rho=+0.64  p_perm=0.0019  slope=+0.37 [+0.23,+0.54]  icpt=+69  resid_rms=38 cm  pull_sd=1.83
+  tier         tier B rest                         : n= 39  r=+0.62 [+0.52,+0.71]  rho=+0.58  p_perm=0.0001  slope=+0.47 [+0.37,+0.56]  icpt=+42  resid_rms=34 cm  pull_sd=1.44
+== pdhd
+  muon overlap Michel loses <20 % to the muon      : n=  7  r=+0.68 [+0.61,+0.86]  rho=+0.93  p_perm=0.0030  slope=+0.62 [+0.37,+1.04]  icpt=+48  resid_rms=58 cm  pull_sd=1.89
+  muon overlap loses >=20 % (overlapping)          : n= 21  r=+0.49 [+0.38,+0.62]  rho=+0.50  p_perm=0.0115  slope=+0.36 [+0.22,+0.49]  icpt=+50  resid_rms=48 cm  pull_sd=2.21
+  connection   attached to the stop                : n= 18  r=+0.45 [+0.33,+0.59]  rho=+0.41  p_perm=0.0488  slope=+0.38 [+0.22,+0.53]  icpt=+44  resid_rms=51 cm  pull_sd=2.22
+  connection   bridged (gap to the stop)           : n= 10  r=+0.73 [+0.67,+0.86]  rho=+0.85  p_perm=0.0014  slope=+0.63 [+0.42,+0.87]  icpt=+32  resid_rms=54 cm  pull_sd=2.19
+  hand kind    Michel only (attached)              : n= 10  r=+0.48 [+0.25,+0.71]  rho=+0.56  p_perm=0.0464  slope=+0.16 [+0.08,+0.24]  icpt=+77  resid_rms=22 cm  pull_sd=1.35
+  hand kind    Michel + gamma pieces (both)        : n= 18  r=+0.57 [+0.44,+0.71]  rho=+0.59  p_perm=0.0044  slope=+0.52 [+0.35,+0.73]  icpt=+42  resid_rms=63 cm  pull_sd=2.90
+  energy       michel_ke_best >= 20 MeV            : n= 19  r=+0.54 [+0.39,+0.68]  rho=+0.51  p_perm=0.0142  slope=+0.31 [+0.21,+0.41]  icpt=+60  resid_rms=39 cm  pull_sd=2.21
+  energy       < 20 MeV                            : n=  9  r=+0.60 [+0.47,+0.80]  rho=+0.75  p_perm=0.0132  slope=+0.71 [+0.40,+1.35]  icpt=+10  resid_rms=72 cm  pull_sd=2.21
+  Bragg peak   contrast ratio >= 0.8 (clear)       : n= 16  r=+0.54 [+0.41,+0.66]  rho=+0.61  p_perm=0.0085  slope=+0.55 [+0.35,+0.75]  icpt=+18  resid_rms=70 cm  pull_sd=3.47
+  Bragg peak   < 0.8 (weak)                        : n= 12  r=+0.56 [+0.35,+0.76]  rho=+0.56  p_perm=0.0286  slope=+0.31 [+0.17,+0.49]  icpt=+76  resid_rms=35 cm  pull_sd=1.74
+  tier         tier A (clean by every rule)        : n=2 (too few)
+  tier         tier B rest                         : n= 26  r=+0.50 [+0.39,+0.61]  rho=+0.51  p_perm=0.0051  slope=+0.43 [+0.28,+0.58]  icpt=+47  resid_rms=60 cm  pull_sd=2.47

@@ -214,6 +214,95 @@ def main():
     txt2 = "\n".join(wl) + "\n"
     open(f"{SCAN}/stats_{a.tag}.txt", "a").write(txt2); print(txt2)
 
+    # the headline correlation figure: primary variant only, one panel per detector, binned medians with q16-q84
+    # bands, tier A marked, the tier-B fit, identity, and the readouts written on the panel
+    fig, ax = plt.subplots(1, 2, figsize=(13, 5.8))
+    fig2, ax2 = plt.subplots(1, 2, figsize=(11, 5.2))
+    for k, det in enumerate(("pdvd", "pdhd")):
+        R = [r for r in rows if r["det"] == det and r["inrange"] > 0]
+        if len(R) < 4:
+            continue
+        A = ax[k]
+        x = np.array([r["drift_tick"] for r in R]); y = np.array([r["mu_Z"] for r in R])
+        e = np.array([r["sig_Z"] for r in R]); ta = np.array([r["tier"] == "A" for r in R])
+        A.errorbar(x[~ta], y[~ta], yerr=e[~ta], fmt="o", color="tab:blue", ms=5, alpha=0.6, lw=0.7, label=f"tier B (n={(~ta).sum()})")
+        if ta.any():
+            A.errorbar(x[ta], y[ta], yerr=e[ta], fmt="s", color="tab:red", ms=6, alpha=0.9, lw=0.8, label=f"tier A, clean (n={ta.sum()})")
+        edges = [80, 150, 220, 340]
+        bx, bm, blo, bhi = [], [], [], []
+        for lo, hi in zip(edges[:-1], edges[1:]):
+            s = (x >= lo) & (x < hi)
+            if s.sum() >= 3:
+                bx.append(np.median(x[s])); bm.append(np.median(y[s]))
+                blo.append(np.quantile(y[s], .16)); bhi.append(np.quantile(y[s], .84))
+        A.fill_between(bx, blo, bhi, color="orange", alpha=0.2, label="binned q16-q84")
+        A.plot(bx, bm, "D-", color="darkorange", ms=9, lw=2, label="binned median", zorder=5)
+        xx = np.array([80, 340]); A.plot(xx, xx, "k--", lw=1, label="identity")
+        s = S.get((det, "B", "in-range", "Z"), {})
+        A.plot(xx, s["slope"] * xx + s["icpt"], "-", color="tab:blue", lw=2,
+               label=f"OLS fit: slope {s['slope']:.2f} [{s['slope_lo']:.2f}, {s['slope_hi']:.2f}]")
+        A.axhspan(0, 90, color="0.92", zorder=0)
+        A.text(0.03, 0.97, f"Pearson r = {s['r']:+.2f} [{s['r_lo']:+.2f}, {s['r_hi']:+.2f}]\nSpearman rho = {s['rho']:+.2f}\n"
+                           f"permutation p = {s['p_perm']:.1g}\nn = {s['n']} Michels, 80-340 cm",
+               transform=A.transAxes, va="top", fontsize=10, bbox=dict(fc="white", ec="0.5", alpha=0.9))
+        A.set_xlim(70, 350); A.set_ylim(0, 360)
+        A.set_xlabel("true drift distance of the Michel from Q-L matching  [cm]", fontsize=11)
+        A.set_ylabel("regressor prediction mu  [cm]  (bars: the model's own sigma)", fontsize=11)
+        A.set_title(f"{det.upper()} ({'p96vprod' if det == 'pdvd' else 'h28prod'}): Michel-only crop, muon removed", fontsize=12)
+        A.legend(fontsize=8.5, loc="lower right")
+        # rank-rank view (what Spearman sees)
+        B = ax2[k]
+        rx = stats.rankdata(x); ry = stats.rankdata(y)
+        B.plot(rx[~ta], ry[~ta], "o", color="tab:blue", ms=5, alpha=0.7, label="tier B")
+        if ta.any():
+            B.plot(rx[ta], ry[ta], "s", color="tab:red", ms=6, label="tier A")
+        B.plot([1, len(x)], [1, len(x)], "k--", lw=1)
+        B.set_xlabel("rank of true drift (1 = nearest anode)"); B.set_ylabel("rank of predicted mu")
+        B.set_title(f"{det.upper()}: rank vs rank, rho = {s['rho']:+.2f}, p = {s['p_perm']:.1g}")
+        B.legend(fontsize=9, loc="upper left")
+    fig.suptitle("doc pdvd/98 -- DUNE-VD-simulation-trained diffusion drift regressor (m3-200k-w) on real STM+Michel electrons", fontsize=12)
+    fig.tight_layout(); fig.savefig(f"{FIGS}/98_correlation_summary.png", dpi=120); plt.close(fig)
+    fig2.tight_layout(); fig2.savefig(f"{FIGS}/98_rank_rank.png", dpi=110); plt.close(fig2)
+
+    # topology splits: the same reco-vs-true axes, one panel per split, each group with its own rho / n
+    SPLITS = [("muon overlap", lambda r: r["frac_lost"] < 0.2, "Michel loses <20 % to the muon", "loses >=20 % (overlapping)"),
+              ("connection", lambda r: r["conn_type"] == 1, "attached to the stop", "bridged (gap to the stop)"),
+              ("hand kind", lambda r: r["kind"] == "attached", "Michel only (attached)", "Michel + gamma pieces (both)"),
+              ("energy", lambda r: r["ke_best"] >= 20, "michel_ke_best >= 20 MeV", "< 20 MeV"),
+              ("Bragg peak", lambda r: r["ratio"] >= 0.8, "contrast ratio >= 0.8 (clear)", "< 0.8 (weak)"),
+              ("tier", lambda r: r["tier"] == "A", "tier A (clean by every rule)", "tier B rest")]
+    tl = ["\n# topology splits, variant Z, in-range: per-group n / r / rho / p_perm / slope"]
+    for det in ("pdvd", "pdhd"):
+        R = [r for r in rows if r["det"] == det and r["inrange"] > 0]
+        if len(R) < 4:
+            continue
+        fig, axs = plt.subplots(2, 3, figsize=(16, 9.5))
+        tl.append(f"== {det}")
+        for A, (name, pred, lab1, lab0) in zip(axs.ravel(), SPLITS):
+            xx = np.array([80, 340]); A.plot(xx, xx, "k--", lw=1, label="identity")
+            for grp, col, mk in ((True, "tab:green", "o"), (False, "tab:purple", "^")):
+                G = [r for r in R if bool(pred(r)) == grp]
+                lab = lab1 if grp else lab0
+                if not G:
+                    tl.append(f"  {name:12s} {lab:36s}: n=0"); continue
+                x = np.array([r["drift_tick"] for r in G]); y = np.array([r["mu_Z"] for r in G]); e = np.array([r["sig_Z"] for r in G])
+                s = readout(x, y, e, rng)
+                txt = (f"{lab} (n={len(G)}): rho={s['rho']:+.2f}, p={s['p_perm']:.2g}, slope {s['slope']:.2f}"
+                       if s.get("n", 0) >= 4 else f"{lab} (n={len(G)})")
+                A.errorbar(x, y, yerr=e, fmt=mk, color=col, ms=6, alpha=0.7, lw=0.6, label=txt)
+                if s.get("n", 0) >= 4:
+                    A.plot(xx, s["slope"] * xx + s["icpt"], "-", color=col, lw=1.5)
+                    tl.append(f"  {name:12s} {lab:36s}: {fmt(s)}")
+                else:
+                    tl.append(f"  {name:12s} {lab:36s}: n={len(G)} (too few)")
+            A.axhspan(0, 90, color="0.92", zorder=0)
+            A.set_xlim(70, 350); A.set_ylim(0, 360)
+            A.set_xlabel("true drift from Q-L matching [cm]"); A.set_ylabel("regressor mu [cm]")
+            A.set_title(f"{det.upper()} split by {name}", fontsize=11); A.legend(fontsize=8, loc="upper left")
+        fig.suptitle(f"doc pdvd/98 -- {det.upper()}: reco vs true drift by topology (variant Z, Michel only, 80-340 cm)", fontsize=12)
+        fig.tight_layout(); fig.savefig(f"{FIGS}/98_topology_{det}.png", dpi=105); plt.close(fig)
+    open(f"{SCAN}/stats_{a.tag}.txt", "a").write("\n".join(tl) + "\n"); print("\n".join(tl))
+
     # label check
     fig, ax = plt.subplots(1, 2, figsize=(10, 4.4))
     for k, det in enumerate(("pdhd", "pdvd")):
