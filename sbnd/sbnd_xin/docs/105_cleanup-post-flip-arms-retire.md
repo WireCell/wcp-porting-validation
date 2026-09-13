@@ -323,3 +323,140 @@ have blocked the round rather than protecting it.
 **Pushed:** `059c8e3c` was cherry-picked onto remote main `7061f57a` in a scratch
 worktree and pushed as **`a7b378a5`** over https. `git ls-remote` then read
 `refs/heads/main` = `a7b378a5`. Local `main` stays diverged, as in every round.
+
+## 13. Round B: the three items the owner released after round A
+
+The owner, after §12: *"These can be cleaned up: sbnd d145np (9.85 GiB) ...;
+pdvd's old flip-evidence arms (~4.6 GiB): they need their PROTECTED.txt lines
+retired first; mg10 and the wt-merge/wt-premerge worktrees (~8 GiB)"*.
+
+Round B is stamped `_20260912b`, so none of round A's executed tier files, keep
+files or baselines is touched (§6). `plan_20260912b.py` is round A's planner with
+exactly three config changes, each the owner's:
+
+- sbnd `keep_arms`: `work-*-d145np` removed (pr/148's named input);
+- `open_prefix`: `mg10` removed from all three trees;
+- pdvd `substrate`: `d42fit` removed. It was listed from the 09-10 census, and
+  the transitive closure re-derives whether a kept arm still borrows from it.
+
+`PROTECTED.txt` lines moved to RETIRED with the owner's words as the ground:
+pdvd `d48nu3`, `d45prod`, the `d43*` line, `d42fit`+`d44*`, `d41prod`+`d38qnewprod`
+and `mg10*`; pdhd `mg10*`; sbnd `work-*-d145np`. **Not in the owner's list, and
+kept:** pdvd `d48flipcfg` and `d31r6e2e`, sbnd `work-*-d145prod` (pr/145's shipped
+arm), and the `d146_libpin*` pins that back the surviving `work-*-d146sv25`.
+
+Side effect, stated: the pr/145–148 analysis scripts (`pr148_pidset.py`,
+`pr148_a5_census.py`, `pr145_arms.sh`, …) name `d145np` and can no longer be re-run
+against it. The sentinel suite's defaults do not use it.
+
+### 13.1 The plan
+
+`plan_20260912b.py` releases **1096 dirs, 18.58 GiB**: sbnd 10 dirs / 12.29
+GiB, pdvd 1062 / 5.11, pdhd 24 / 1.18. The released families match the owner's
+list **exactly**. It was checked mechanically against a 30-family expected set
+written down before the plan ran: nothing unapproved is in it, and nothing
+approved is missing.
+
+**The first run failed INTERLOCK 14 on all three trees, and that was the guard
+working.** It refuses to release a family that maps to no committed doc, and
+`mg10` has none, which is why round A held it. The owner released it knowing
+that. So the `uncited_ok` hook, present in the planner config since 09-06 but
+never read, is now wired in with **exact family names only**
+(`mg10a`, `mg10a2`, `mg10a2pr`, `mg10b`, `mg10b2`, `mg10b2pr` on sbnd; `mg10a`,
+`mg10b`, `mg10pa`, `mg10pb` on pdvd and pdhd). Any other uncited family still
+fails, and the PASS line prints what it excused.
+
+**Two `d42fit` dirs stay, and the closure is why.** `039252_5_d42fit` and
+`039252_16_d42fit` are each borrowed by kept substrate `d11vtrace` (2 links apiece),
+so releasing them would leave kept substrate with dangling links. The planner
+printed "closure: +3"; read from disk, pdvd holds 1064 approved-family dirs, 1062
+of them in the tier. The third pulled-back dir is outside the approved families.
+Round A's pdvd plan printed "closure: +1" as well, and diffing round B's pdvd
+keep set against round A's shows no other change: `p97voff`/`p97vwl` added (the
+peer's new arms, 120 each), the approved families removed. So the third is the
+same standing pull-back, kept in both rounds and not released.
+
+Record layer, and the driver's confirm path under a stub and a negative control:
+see §13.3.
+
+### 13.2 `~/tmp` tier 1: the merge validation — frozen, then removed
+
+`~/tmp/mg10` was the only record the master-merge validation left: no doc was
+ever committed. So `sweep_tmp_20260912b.sh 1` **freezes before it removes**. It
+wrote 844 files hashed, 328 carried (RESULTS.md, logs, scripts) and 516 heavy
+files dropped, into `archive/records/cleanup-20260912b/tmp-tier1/mg10.*`
+(2.5 MiB), plus each worktree's `build.rc` and HEAD. Only then did it remove the
+two toolkit worktrees (`git worktree remove --force`, whose only untracked file
+was `build.rc`; both HEADs `98140fee`/`8b1374f9` are on `apply-pointcloud`) and
+`~/tmp/mg10`. rc=0. Free 395 → 401 G.
+
+**The first negative control proved nothing, and that is worth the paragraph.**
+It pointed the record path at `NOSUCH-` and expected the script to refuse to
+remove `~/tmp/mg10` because no manifest would exist. Instead it exited rc=0 and
+reached the (stubbed) `rm`. `archive_one()` runs `os.makedirs(..., exist_ok=True)`,
+so the "missing" target was created and written, and "a manifest exists" passed.
+The guard could not tell a good freeze from a freeze into the wrong place. Two
+fixes:
+
+- the script now aborts on the freeze's own **exit status** before any removal
+  (rc=13);
+- the negative control now breaks the freeze **itself**: the archive module it
+  imports does not exist. Result: rc=13, zero removal lines reached. The positive
+  stub then ran the real freeze with the destructive calls echoed.
+
+That is `feedback_guard_needs_causal_negative_control` exactly: corrupt the thing
+the guard protects, not a neighbour of it.
+
+**A leftover the permission gate would not let this session remove:**
+`sbnd/sbnd_xin/archive/records/NOSUCH-cleanup-20260912b/`, three `mg10.*` files
+written at 20:05 by the vacuous control. It is a misnamed duplicate of the real
+record. The owner can delete it.
+
+### 13.3 The `work/` release
+
+**Record layer first:** `archive_records_20260912b.py 1` froze **1096 / 1096**
+released dirs (sbnd 10, pdvd 1062, pdhd 24, 0 empty manifests). The round-B
+record tree is 86 MB, including §13.2's `mg10` record.
+
+**The driver's negative control was causal this time:** with the record path
+pointed at `NOSUCH-`, `CONFIRM=yes ./retire_20260912b.sh 1 pdhd` passed INTERLOCK A
+and then **refused with rc=6 before the first deletion**. Plan-time files were
+md5-identical, 24 / 24 targets present, and no `NOSUCH-` target was created: the
+driver only tests that the directory exists and never creates it, unlike
+§13.2's `archive_one()`.
+
+**Then per tree, a stub gate before the real run.** The real `CONFIRM=yes`
+started only if the stubbed confirm path returned rc=0, INTERLOCK A read OK, the
+stub echoed exactly the tier count, the plan-time files were md5-unchanged and
+0 targets were missing. All three gates passed.
+
+| tree | released | rc | targets left | kept, re-checked afterwards |
+|---|---|---|---|---|
+| sbnd | 10 dirs, 12.28 GiB | 0 | 0 | `d102m`/`d102mpr` production, `d145prod`, `d146sv25`, `vtx105-base`, `s144pos` |
+| pdvd | 1062 dirs, 5.11 GiB | 0 | 0 | the 2 `d42fit` dirs + their `d11vtrace` borrowers; `p96vprod`/`p96vscope` 120, `keep` 240, `d27fresh`/`d51vclus`/`d48nu7`/`d143pnew` 120, `d41prov` 99, `d48flipcfg`, `d31r6e2e`, `d53v`, `p90vprod`, the peer's `p97voff`/`p97vwl` 120 |
+| pdhd | 24 dirs, 1.18 GiB | 0 | 0 | `h26q2dprod`/`h26conf`, `h18s`, `h25k`, `d51hclus`, `d09`, `stm0`, `d53h`, `p81hoff3`, the peer's `h28off`/`h28prod`/`h28wl` 61 |
+
+Broken symlinks after every run: **0 / 0 / 0**. The sbnd sentinel suite, re-run on
+production after `d145np` went: **21 PASS / 0 FAIL / 2 OPEN / 7 INERT**, unchanged.
+Sizes: pdvd `work/` 69 → **64 G**, pdhd `work/` 66 → **65 G**, sbnd_xin 92 → **81 G**.
+
+### 13.4 `~/tmp` tier 2: the pins of the released arms
+
+`pins_of_released_arms_20260912b.py` applies the value-first test to the
+**top-level** pins, which the nested-pin tool never sees. A pin stays if any file
+naming it also names an arm still on disk in any tree, sbnd included.
+
+| pin | verdict | why |
+|---|---|---|
+| `d145_libpin`, `d145_libpin_cont` | KEEP | `d145prod`, pr/145's shipped arm, survives |
+| `d41_libpin` | KEEP | `d41prov`, same-round substrate: a real output of that pin |
+| `d42_libpin` | KEEP | the 2 surviving `d42fit` dirs |
+| `d44_libpin` | KEEP | names `d42fit`, probably as its input baseline rather than an output. Over-kept, and it costs 0.00 GiB unique after dedup |
+| **`d145_libpin_cont2`** | **removed** | no surviving arm; 0.00 GiB unique |
+| **`d45_libpin`** | **removed** | `d45prod` released; 1.86 GiB unique |
+
+`d146_libpin*` (backs the surviving `d146sv25`) and `d47_libpin` (backs `d48nu7`,
+`PROTECTED.txt`) were never candidates. rc=0.
+
+**Round B total:** `/home/xqian` free **395 → 421 G**; `~/tmp` 99 → **91 G** (`du`).
+Round A plus round B, from the start of this doc: free **266 → 421 G**.

@@ -1,0 +1,33 @@
+{
+ "pdvd": [
+  "d08pv30off",
+  "d08pv30on",
+  "d53v",
+  "d67v",
+  "d68a3",
+  "d68d4",
+  "p85vprod",
+  "p85vwh",
+  "p88v5fr",
+  "p88vprod",
+  "p90vprod"
+ ],
+ "pdhd": [
+  "d05mON",
+  "d08cap10",
+  "d08goff",
+  "d53h",
+  "h18b",
+  "h18s",
+  "h23conf",
+  "h25base",
+  "h25k",
+  "h25kr",
+  "h25r",
+  "h25va",
+  "h25vb",
+  "p82bhoff",
+  "p82hoff",
+  "stm0"
+ ]
+}

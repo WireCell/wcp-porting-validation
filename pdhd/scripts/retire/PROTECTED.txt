@@ -52,7 +52,6 @@ d51hclus	THE TREE'S SUBSTRATE: 5132 inbound links on the corrected census (see t
 d09 d09ctl d09ctl2 d11seponA d11sepoffA d11prod d02prod stmwc wcc d16hnu	the rest of the substrate, inbound 2010 / 240 / 950 / 310 / 62 / 2 / 12 / 62 / 4 / 8.  The 38 bare 029107_<N> dirs (847 inbound) were already protected and stay.	symlink census
 d53h	**THE pdhd smx1 HAND-SCAN SOURCE** (prep-pdhd names it for 303 of 304 prep items).  The owner asked on 2026-09-10 to keep the STM hand scans for PDHD as well as PDVD.	stm_michel_scan/prep-pdhd; work/stm_michel_labels/smx1
 p81hoff3 p81hq2d3 p81hleg2	the PDHD half of doc pdvd/81's OPEN flip decision (sec 8-9): PDHD is the detector where 45% of Michels lean on the cross-shared fitted substitution, so it is the side the definition question turns on.	doc pdvd/81 sec 8-9
-mg10*	A LIVE ROUND, by PREFIX.  See the pdvd file for the evidence.	ps; ~/tmp/mg10
 work/stm_michel_labels/ work/stm_scan_labels/ work/ql_labels/	hand-scan labels, the scientific record itself.  M13	M13
 
 # --- added 2026-09-12 (doc 105): production moved, the new hand scans, a live peer ---
@@ -67,6 +66,13 @@ h28*	A LIVE ROUND announced by the peer session (doc pdhd/27-28) on 2026-09-12 ~
 h26* h27*	A LIVE ROUND, by PREFIX.  The peer session that committed doc pdhd/26 at 18:24 2026-09-12 is still running (~/tmp/h27 written 18:24, h27cfg*/h27cfgoff/h27cfgT work dirs, transcript written 18:31).  live_tokens() cannot see ~/tmp and doc 26 is committed, so only the prefix holds it.	ps; ~/tmp/h27; work mtimes
 
 # ================= RETIRED =================
+
+# 2026-09-12 round B (doc 105 sec 13): RELEASED on the owner's instruction --
+#   owner, 2026-09-12 (round B of doc 105): "These can be cleaned up: sbnd d145np ...;
+#   pdvd's old flip-evidence arms (~4.6 GiB) ...; mg10 and the wt-merge/wt-premerge worktrees"
+# mg10*	A LIVE ROUND, by PREFIX.  See the pdvd file for the evidence.	ps; ~/tmp/mg10
+#   -> the master-merge validation round, released with its pdvd/sbnd arms and ~/tmp/mg10.
+
 # 2026-09-12 (cleanup round, doc 105): moved here deliberately --
 # p82*	A LIVE ROUND, by PREFIX.  doc pdvd/82 (82_peak-then-drop-stop.md) was written 2026-09-10 21:13 and is still UNCOMMITTED; its arms were being created while the cleanup round planned -- p82btp/p82boff/p82btp0 appeared AFTER the first plan run, which is the 09-04 shape exactly.  A derived live set only knows the tokens the doc has written down so far, so the prefix is what actually holds.	doc pdvd/82; work mtimes
 #   -> CLOSED.  doc pdvd/82 committed 2026-09-10 22:16 (045f5933).  p82bhoff/p82hoff

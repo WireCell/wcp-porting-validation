@@ -337,7 +337,6 @@ work-mcp1k-d144fixprod work-mcp2k-d144fixprod work-ncpi0-d144fixprod work-nuecc4
 work-mcp1k-d145prod work-mcp2k-d145prod work-ncpi0-d145prod work-nuecc48-d145prod	pr/145 item 4 SHIPPED arm: no PR_EXTRA_TLA at all, 35/35 rc=0, gated against work-*-d144fixprod (4 events move, all four the owner called cosmics)	doc pr/145 sec 8.3
 work-d147-tailflip-mcp1k work-d147-tailflip-mcp2k work-d147-flipchk-mcp1k work-d147-flipchk-mcp2k	pr/147's two flip-equivalence arms -- 34/34 for the tail-absorb flip, 44/44 for track_types.  These are the post-flip BARE runs that prove the shipped jsonnet reproduces the validated arm	doc pr/147 sec 15.1
 work-mcp1k-d146sv25 work-mcp2k-d146sv25 work-ncpi0-d146sv25 work-nuecc48-d146sv25	pr/146 sec 12's RECOMMENDED but not-yet-flipped operating point (kine_sat_cont_keep_deg 25).  An open owner decision needs its arm on disk	doc pr/146 sec 12
-work-mcp1k-d145np work-mcp2k-d145np work-ncpi0-d145np work-nuecc48-d145np	the full-sample (3067) arm doc pr/148 sec 16 names as what the NEXT round reads -- item 3's bisect and 137238's log lines.  A doc whose last section is a plan for the next session is an OPEN round	doc pr/148 sec 16
 #
 # THE SENTINEL WITNESS.  ITS ORIGINAL REASON IS SPENT, and the honest restatement
 # is below.  It was built because production was 30 PASS / 1 FAIL and 105074
@@ -846,3 +845,11 @@ ref/ products/	the generation records and the published score tables; not work d
 # in archive/records/cleanup-20260908/sbnd-tier2/.
 # ORDER IS NOT OPTIONAL: materialise_20260908.py must run first, or the five
 # PROTECTED arms that still borrow from grp0825 lose their imaging.
+
+# ================= RETIRED =================
+
+# 2026-09-12 round B (doc 105 sec 13): RELEASED on the owner's instruction --
+#   owner, 2026-09-12 (round B of doc 105): "These can be cleaned up: sbnd d145np ...;
+#   pdvd's old flip-evidence arms (~4.6 GiB) ...; mg10 and the wt-merge/wt-premerge worktrees"
+# work-mcp1k-d145np work-mcp2k-d145np work-ncpi0-d145np work-nuecc48-d145np	the full-sample (3067) arm doc pr/148 sec 16 names as what the NEXT round reads -- item 3's bisect and 137238's log lines.  A doc whose last section is a plan for the next session is an OPEN round	doc pr/148 sec 16
+#   -> pr/148's named input.  Released; production stays work-*-d102m/d102mpr, where the sentinel suite reads 21 PASS / 0 FAIL.  work-*-d145prod (pr/145's shipped arm) was NOT in the owner's list and stays.
