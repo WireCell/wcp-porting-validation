@@ -1,0 +1,87 @@
+record: pdhd_stm_michel_smx26_verdicts.json
+instrument validated: p82bhoff reproduces smx23's (61, 0, 86, 108)
+
+=== reading A ===
+  h25base    TP  96 FP  1 FN  51 TN 107 | n 255 | purity 0.990 efficiency 0.653
+  h25k       TP 114 FP  2 FN  33 TN 106 | n 255 | purity 0.983 efficiency 0.776
+  h25r       TP 101 FP  1 FN  46 TN 107 | n 255 | purity 0.990 efficiency 0.687
+  h25kr      TP 114 FP  2 FN  33 TN 106 | n 255 | purity 0.983 efficiency 0.776
+=== reading B ===
+  h25base    TP  66 FP  1 FN   9 TN  59 | n 135 | purity 0.985 efficiency 0.880
+  h25k       TP  71 FP  2 FN   4 TN  58 | n 135 | purity 0.973 efficiency 0.947
+  h25r       TP  67 FP  1 FN   8 TN  59 | n 135 | purity 0.985 efficiency 0.893
+  h25kr      TP  71 FP  2 FN   4 TN  58 | n 135 | purity 0.973 efficiency 0.947
+=== h25base ===   (candidates spanning >1 APA: 36)
+  all four APAs             96/ 1/ 51/107  n=255  purity 0.990  efficiency 0.653
+  APA0 EXCLUDED (majority)  79/ 1/ 29/ 70  n=179  purity 0.988  efficiency 0.731
+  APA0 EXCLUDED (strict)    77/ 0/ 27/ 69  n=173  purity 1.000  efficiency 0.740
+    APA0 only              17/ 0/ 22/ 37  n= 76  purity 1.000  efficiency 0.436
+    APA1 only              18/ 0/ 11/ 19  n= 48  purity 1.000  efficiency 0.621
+    APA2 only              26/ 1/  8/ 29  n= 64  purity 0.963  efficiency 0.765
+    APA3 only              35/ 0/ 10/ 22  n= 67  purity 1.000  efficiency 0.778
+
+=== h25k ===   (candidates spanning >1 APA: 36)
+  all four APAs            114/ 2/ 33/106  n=255  purity 0.983  efficiency 0.776
+  APA0 EXCLUDED (majority)  92/ 2/ 16/ 69  n=179  purity 0.979  efficiency 0.852
+  APA0 EXCLUDED (strict)    89/ 1/ 15/ 68  n=173  purity 0.989  efficiency 0.856
+    APA0 only              22/ 0/ 17/ 37  n= 76  purity 1.000  efficiency 0.564
+    APA1 only              24/ 0/  5/ 19  n= 48  purity 1.000  efficiency 0.828
+    APA2 only              30/ 2/  4/ 28  n= 64  purity 0.938  efficiency 0.882
+    APA3 only              38/ 0/  7/ 22  n= 67  purity 1.000  efficiency 0.844
+
+=== h25r ===   (candidates spanning >1 APA: 36)
+  all four APAs            101/ 1/ 46/107  n=255  purity 0.990  efficiency 0.687
+  APA0 EXCLUDED (majority)  82/ 1/ 26/ 70  n=179  purity 0.988  efficiency 0.759
+  APA0 EXCLUDED (strict)    80/ 0/ 24/ 69  n=173  purity 1.000  efficiency 0.769
+    APA0 only              19/ 0/ 20/ 37  n= 76  purity 1.000  efficiency 0.487
+    APA1 only              18/ 0/ 11/ 19  n= 48  purity 1.000  efficiency 0.621
+    APA2 only              27/ 1/  7/ 29  n= 64  purity 0.964  efficiency 0.794
+    APA3 only              37/ 0/  8/ 22  n= 67  purity 1.000  efficiency 0.822
+
+=== h25kr ===   (candidates spanning >1 APA: 36)
+  all four APAs            114/ 2/ 33/106  n=255  purity 0.983  efficiency 0.776
+  APA0 EXCLUDED (majority)  92/ 2/ 16/ 69  n=179  purity 0.979  efficiency 0.852
+  APA0 EXCLUDED (strict)    89/ 1/ 15/ 68  n=173  purity 0.989  efficiency 0.856
+    APA0 only              22/ 0/ 17/ 37  n= 76  purity 1.000  efficiency 0.564
+    APA1 only              24/ 0/  5/ 19  n= 48  purity 1.000  efficiency 0.828
+    APA2 only              30/ 2/  4/ 28  n= 64  purity 0.938  efficiency 0.882
+    APA3 only              38/ 0/  7/ 22  n= 67  purity 1.000  efficiency 0.844
+
+==================================================================
+MICHEL SIDE (michel_found vs hand michel_kind, hand stoppers only)
+
+=== h25base ===   (owner stoppers with no kind, excluded: 5)
+  all four APAs             66/ 3/ 18/ 55  n=142  purity 0.957  efficiency 0.786
+  APA0 EXCLUDED (majority)  49/ 3/ 12/ 41  n=105  purity 0.942  efficiency 0.803
+  APA0 EXCLUDED (strict)    48/ 3/ 12/ 39  n=102  purity 0.941  efficiency 0.800
+    APA0 only              17/ 0/  6/ 14  n= 37  purity 1.000  efficiency 0.739
+    APA1 only              15/ 1/  6/  7  n= 29  purity 0.938  efficiency 0.714
+    APA2 only              12/ 1/  3/ 15  n= 31  purity 0.923  efficiency 0.800
+    APA3 only              22/ 1/  3/ 19  n= 45  purity 0.957  efficiency 0.880
+
+=== h25k ===   (owner stoppers with no kind, excluded: 5)
+  all four APAs             66/ 3/ 18/ 55  n=142  purity 0.957  efficiency 0.786
+  APA0 EXCLUDED (majority)  49/ 3/ 12/ 41  n=105  purity 0.942  efficiency 0.803
+  APA0 EXCLUDED (strict)    48/ 3/ 12/ 39  n=102  purity 0.941  efficiency 0.800
+    APA0 only              17/ 0/  6/ 14  n= 37  purity 1.000  efficiency 0.739
+    APA1 only              15/ 1/  6/  7  n= 29  purity 0.938  efficiency 0.714
+    APA2 only              12/ 1/  3/ 15  n= 31  purity 0.923  efficiency 0.800
+    APA3 only              22/ 1/  3/ 19  n= 45  purity 0.957  efficiency 0.880
+
+=== h25r ===   (owner stoppers with no kind, excluded: 5)
+  all four APAs             66/ 3/ 18/ 55  n=142  purity 0.957  efficiency 0.786
+  APA0 EXCLUDED (majority)  49/ 3/ 12/ 41  n=105  purity 0.942  efficiency 0.803
+  APA0 EXCLUDED (strict)    48/ 3/ 12/ 39  n=102  purity 0.941  efficiency 0.800
+    APA0 only              17/ 0/  6/ 14  n= 37  purity 1.000  efficiency 0.739
+    APA1 only              15/ 1/  6/  7  n= 29  purity 0.938  efficiency 0.714
+    APA2 only              12/ 1/  3/ 15  n= 31  purity 0.923  efficiency 0.800
+    APA3 only              22/ 1/  3/ 19  n= 45  purity 0.957  efficiency 0.880
+
+=== h25kr ===   (owner stoppers with no kind, excluded: 5)
+  all four APAs             66/ 3/ 18/ 55  n=142  purity 0.957  efficiency 0.786
+  APA0 EXCLUDED (majority)  49/ 3/ 12/ 41  n=105  purity 0.942  efficiency 0.803
+  APA0 EXCLUDED (strict)    48/ 3/ 12/ 39  n=102  purity 0.941  efficiency 0.800
+    APA0 only              17/ 0/  6/ 14  n= 37  purity 1.000  efficiency 0.739
+    APA1 only              15/ 1/  6/  7  n= 29  purity 0.938  efficiency 0.714
+    APA2 only              12/ 1/  3/ 15  n= 31  purity 0.923  efficiency 0.800
+    APA3 only              22/ 1/  3/ 19  n= 45  purity 0.957  efficiency 0.880

@@ -1,0 +1,2 @@
+# own25 labels.json at the fold (2026-09-12, after the owner's 'I am done with the scanning'; viewer stopped; unchanged at scoring)
+5c8176bc0b2f2d23cd6a78478a4b4d3df5b0eed814888479fb0bd014bf5454cb  work/stm_michel_labels/own25/labels.json

@@ -1,0 +1,73 @@
+{
+ "doc": "pdhd/docs/25_pdvd-config-on-pdhd-and-bragg-michel-fraction.md sec 7",
+ "date": "2026-09-12",
+ "viewer": "tag own25 on :5017, its own empty label tag; prepdir prep-pdhd-h25base (today's production, so the chain's answer on screen was is_stm 0 on all 8); --dead-points ON",
+ "how": "The owner judged the 8 items of own25_sheet.tsv (queue rule in preregistered_own25.md). Labels from own25/labels.json (2026-09-12T17:04:14, sha256 5c8176bc0b2f2d23cd6a78478a4b4d3df5b0eed814888479fb0bd014bf5454cb). Every other label tag byte-unchanged.",
+ "caveat": "The blind is gone (owner decision 2026-09-08): the chain's verdict was on screen, and the doc 25 report had named three of the items. Owner rulings, not independent blind verdicts.",
+ "items": {
+  "028084_18/17": {
+   "scan_id": 46,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "MESSY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group control_thru, agents STM_MICHEL medium / STM_MICHEL low (adopted); replaces the owner's earlier ruling THRU (smx20/owner_rulings.json, 2026-09-11); no pin placed"
+  },
+  "028084_2/49": {
+   "scan_id": 56,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL low / STM_MICHEL medium (confirmed); no pin placed"
+  },
+  "028084_20/116": {
+   "scan_id": 63,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "STM_MICHEL",
+   "michel_kind": "attached",
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL high / STM_MICHEL high (confirmed); no pin placed"
+  },
+  "028084_29/53": {
+   "scan_id": 111,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL medium / STM_MICHEL low (confirmed); no pin placed"
+  },
+  "029107_21/65": {
+   "scan_id": 233,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "THRU",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY medium / UNCLEAR medium (split); no pin placed"
+  },
+  "029107_3/99": {
+   "scan_id": 277,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "STM_MICHEL",
+   "michel_kind": "attached",
+   "words": null,
+   "note": "smx25 group decision, agents STM_MICHEL low / STM_MICHEL low (confirmed); no pin placed"
+  },
+  "029107_5/28": {
+   "scan_id": 287,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "THRU",
+   "michel_kind": null,
+   "words": null,
+   "note": "smx25 group control_thru, agents THRU low / THRU medium (confirmed); no pin placed"
+  },
+  "029107_7/85": {
+   "scan_id": 306,
+   "question": "is this a stopping muon, or through-going? -- smx25 items the two blind agents split on or called with low confidence, plus one anchor",
+   "owner_verdict": "STM_ONLY",
+   "michel_kind": "detached dots",
+   "words": null,
+   "note": "smx25 group decision, agents STM_ONLY low / STM_ONLY medium (confirmed); no pin placed"
+  }
+ }
+}

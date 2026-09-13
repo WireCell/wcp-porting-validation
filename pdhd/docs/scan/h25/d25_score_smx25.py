@@ -108,6 +108,7 @@ def main():
     ap.add_argument("--record", required=True)
     ap.add_argument("--reading-b-out", required=True)
     ap.add_argument("--arms", default="h25base,h25k,h25r,h25kr")
+    ap.add_argument("--name", default="smx25", help="the record's name in section titles (doc pdhd/25 sec 7: smx26)")
     a = ap.parse_args()
     if os.path.exists(a.reading_b_out):
         sys.exit(f"REFUSING: {a.reading_b_out} exists (M13)")
@@ -202,7 +203,7 @@ def main():
         if not ok:
             sys.exit("recount does not reproduce the committed smx23 numbers")
     base_fp = {}
-    for lab, rec in (("smx23", rec23l), ("smx25 reading A", rec25), ("smx25 reading B", recB)):
+    for lab, rec in (("smx23", rec23l), (f"{a.name} reading A", rec25), (f"{a.name} reading B", recB)):
         print(f"\n  --- {lab} ---")
         gates = []
         for pop in ("strict", "majority", "all"):
@@ -221,7 +222,7 @@ def main():
     print("\n==== 5. pre-registered decision: free on the re-judged record iff 0 new FP on APA0 strict under reading B ====")
     for t in arms[1:]:
         c, m, fps = recount(recB, AR[t], "strict", POP)
-        new = sorted(set(fps) - base_fp[("smx25 reading B", "strict")])
+        new = sorted(set(fps) - base_fp[(f"{a.name} reading B", "strict")])
         print(f"  {t:8s} strict reading B {pe(c)}; new FP {' '.join(new) or 'none'} -> "
               f"{'FREE on the re-judged record' if not new else 'NOT free'}")
 

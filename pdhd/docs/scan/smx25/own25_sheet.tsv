@@ -1,0 +1,11 @@
+# doc pdhd/25 sec 7 -- owner queue own25: smx25 items with a split or a low-confidence agent scan, plus one anchor
+# NO verdict, NO group, NO agent call: those are in docs/scan/smx25/key_smx25.tsv. Order seed 2525.
+scan_id	tranche	event	cluster	npts	muon_len_cm	n_near	n_far
+63	2	028084_20	116	323	193.43	1798	7457
+233	2	029107_21	65	491	294.0	7967	7557
+56	2	028084_2	49	256	152.82	2759	7741
+46	2	028084_18	17	182	131.44	906	7774
+306	2	029107_7	85	334	199.19	3241	7991
+277	2	029107_3	99	189	112.2	4067	7537
+287	2	029107_5	28	55	32.4	153	7672
+111	2	028084_29	53	535	322.72	4536	7306
