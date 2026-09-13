@@ -1,0 +1,14 @@
+# doc pdvd/99 sec 4.3 -- compiled-config proof of the wires_file TLA (pdvd/wct-nf-sp-dnnroi.jsonnet) with the runner's TLAs, event 039252_0
+# production md5s from the G1 record: L1SP on 412e52524abaf728cf6314b85fbca96e, L1SP off d944ec948031ddfe0fb8edc9c393431e
+412e52524abaf728cf6314b85fbca96e prod_l1on_before
+412e52524abaf728cf6314b85fbca96e prod_l1on_after
+412e52524abaf728cf6314b85fbca96e prod_l1on_after_emptywires
+d944ec948031ddfe0fb8edc9c393431e prod_l1off_after
+83dd6f526e2fad93782d146b587c2750 prod_l1on_v5
+7d9273648f9dd6f99a6f74a3cf6759f0 prod_l1on_v6
+# prod_l1on_after vs wires_file=v5: every changed line
+      8 > 			"filename" : "protodunevd-wires-larsoft-v5.json.bz2"
+      8 < 			"filename" : "protodunevd-wires-larsoft-v7-uvwfit.json.bz2"
+# prod_l1on_after vs wires_file=v6: every changed line
+      8 > 			"filename" : "protodunevd-wires-larsoft-v6.json.bz2"
+      8 < 			"filename" : "protodunevd-wires-larsoft-v7-uvwfit.json.bz2"

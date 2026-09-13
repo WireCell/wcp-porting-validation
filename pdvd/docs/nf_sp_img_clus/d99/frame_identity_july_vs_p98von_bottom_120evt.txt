@@ -1,0 +1,159 @@
+base keep  arm p98von  events 120  anodes [0, 1, 2, 3]
+  members missing or channel/shape mismatch: 0
+  gauss0   U: identical 109/120 event-anodes; where not: median sum|diff|/sum 5.08e-05  max 3.38e-03  channels differing 558/57120
+  gauss0   V: identical 82/120 event-anodes; where not: median sum|diff|/sum 7.66e-06  max 2.06e-03  channels differing 9328/57120
+  gauss0   W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  gauss1   U: identical 0/120 event-anodes; where not: median sum|diff|/sum 9.34e-03  max 7.03e-02  channels differing 7938/57120
+  gauss1   V: identical 0/120 event-anodes; where not: median sum|diff|/sum 5.95e-02  max 1.41e-01  channels differing 33932/57120
+  gauss1   W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  gauss2   U: identical 0/120 event-anodes; where not: median sum|diff|/sum 6.40e-02  max 2.08e-01  channels differing 33578/57120
+  gauss2   V: identical 0/120 event-anodes; where not: median sum|diff|/sum 5.51e-02  max 2.32e-01  channels differing 34333/57120
+  gauss2   W: identical 0/120 event-anodes; where not: median sum|diff|/sum 9.70e-05  max 4.00e-03  channels differing 41298/70080
+  gauss3   U: identical 0/120 event-anodes; where not: median sum|diff|/sum 7.01e-02  max 2.18e-01  channels differing 33119/57120
+  gauss3   V: identical 0/120 event-anodes; where not: median sum|diff|/sum 1.87e-02  max 1.02e-01  channels differing 34286/57120
+  gauss3   W: identical 0/120 event-anodes; where not: median sum|diff|/sum 2.06e-04  max 6.24e-03  channels differing 40885/70080
+  raw0     U: identical 118/120 event-anodes; where not: median sum|diff|/sum 4.32e-03  max 4.75e-03  channels differing 18/57120
+  raw0     V: identical 88/120 event-anodes; where not: median sum|diff|/sum 7.48e-11  max 1.69e-03  channels differing 42/57120
+  raw0     W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  raw1     U: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/57120
+  raw1     V: identical 118/120 event-anodes; where not: median sum|diff|/sum 5.80e-03  max 5.98e-03  channels differing 31/57120
+  raw1     W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  raw2     U: identical 79/120 event-anodes; where not: median sum|diff|/sum 4.05e-03  max 6.43e-03  channels differing 309/57120
+  raw2     V: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/57120
+  raw2     W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  raw3     U: identical 86/120 event-anodes; where not: median sum|diff|/sum 4.04e-03  max 8.29e-03  channels differing 524/57120
+  raw3     V: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/57120
+  raw3     W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  wiener0  U: identical 109/120 event-anodes; where not: median sum|diff|/sum 5.08e-05  max 3.38e-03  channels differing 558/57120
+  wiener0  V: identical 82/120 event-anodes; where not: median sum|diff|/sum 7.66e-06  max 2.06e-03  channels differing 9328/57120
+  wiener0  W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  wiener1  U: identical 0/120 event-anodes; where not: median sum|diff|/sum 9.34e-03  max 7.03e-02  channels differing 7938/57120
+  wiener1  V: identical 0/120 event-anodes; where not: median sum|diff|/sum 5.95e-02  max 1.41e-01  channels differing 33932/57120
+  wiener1  W: identical 120/120 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/70080
+  wiener2  U: identical 0/120 event-anodes; where not: median sum|diff|/sum 6.40e-02  max 2.08e-01  channels differing 33578/57120
+  wiener2  V: identical 0/120 event-anodes; where not: median sum|diff|/sum 5.51e-02  max 2.32e-01  channels differing 34333/57120
+  wiener2  W: identical 0/120 event-anodes; where not: median sum|diff|/sum 9.70e-05  max 4.00e-03  channels differing 41298/70080
+  wiener3  U: identical 0/120 event-anodes; where not: median sum|diff|/sum 7.01e-02  max 2.18e-01  channels differing 33119/57120
+  wiener3  V: identical 0/120 event-anodes; where not: median sum|diff|/sum 1.87e-02  max 1.02e-01  channels differing 34286/57120
+  wiener3  W: identical 0/120 event-anodes; where not: median sum|diff|/sum 2.06e-04  max 6.24e-03  channels differing 40885/70080
+  events with every compared frame identical: 0/120  
+  differs 039252_0: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_1: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_10: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_11: 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_12: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_13: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_14: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_15: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_16: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_17: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_2: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_3: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_4: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_5: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_6: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_7: 0U:gauss0 0U:wiener0 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_8: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039252_9: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_0: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_1: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_10: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_11: 0U:gauss0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_12: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_13: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_14: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_15: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_16: 0U:gauss0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_17: 0U:gauss0 0U:wiener0 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_2: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_3: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_4: 0U:gauss0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_5: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_6: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_7: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_8: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039253_9: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_0: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_1: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_10: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_11: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_12: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_13: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_14: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_15: 0U:gauss0 0U:wiener0 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_16: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_17: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_18: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_19: 0U:gauss0 0U:raw0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_2: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_20: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_21: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:raw1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_22: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_23: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_24: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_25: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_26: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_27: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_28: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_29: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_3: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_30: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_31: 0U:gauss0 0U:raw0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_32: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_33: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_34: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_35: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_36: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_37: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_38: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_39: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_4: 0U:gauss0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_40: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_41: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_42: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_43: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_44: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_45: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_46: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_47: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_48: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_49: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_5: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_50: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_51: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_52: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_53: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_54: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_55: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_56: 0U:gauss0 0U:wiener0 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_57: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_58: 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_59: 1U:gauss1 1U:wiener1 1V:gauss1 1V:raw1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_6: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_60: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_61: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_62: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_63: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_64: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_65: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_66: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_67: 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_68: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_69: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_7: 0U:gauss0 0U:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_70: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_71: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_72: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_73: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_74: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_75: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_76: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_77: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_78: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_79: 0V:gauss0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_8: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_80: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_81: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_82: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_83: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3
+  differs 039349_9: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3

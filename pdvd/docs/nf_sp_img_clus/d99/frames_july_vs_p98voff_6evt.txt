@@ -1,0 +1,31 @@
+events 6  arms ['keep', 'p98voff']  nol1 None
+  anode 0 U  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 0 V  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 0 W  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 1 U  vol bottom  sum p98voff/keep 0.9970  per-event median-channel ratio p50 1.0000
+  anode 1 V  vol bottom  sum p98voff/keep 1.0102  per-event median-channel ratio p50 1.0000
+  anode 1 W  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 2 U  vol bottom  sum p98voff/keep 1.0017  per-event median-channel ratio p50 1.0000
+  anode 2 V  vol bottom  sum p98voff/keep 0.9977  per-event median-channel ratio p50 1.0000
+  anode 2 W  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 3 U  vol bottom  sum p98voff/keep 1.0043  per-event median-channel ratio p50 1.0000
+  anode 3 V  vol bottom  sum p98voff/keep 1.0043  per-event median-channel ratio p50 1.0000
+  anode 3 W  vol bottom  sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 4 U  vol top     sum p98voff/keep 0.9998  per-event median-channel ratio p50 0.9994
+  anode 4 V  vol top     sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 4 W  vol top     sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 5 U  vol top     sum p98voff/keep 1.0044  per-event median-channel ratio p50 1.0000
+  anode 5 V  vol top     sum p98voff/keep 0.9993  per-event median-channel ratio p50 1.0000
+  anode 5 W  vol top     sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 6 U  vol top     sum p98voff/keep 1.0003  per-event median-channel ratio p50 1.0000
+  anode 6 V  vol top     sum p98voff/keep 1.0020  per-event median-channel ratio p50 0.9995
+  anode 6 W  vol top     sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  anode 7 U  vol top     sum p98voff/keep 1.0028  per-event median-channel ratio p50 1.0000
+  anode 7 V  vol top     sum p98voff/keep 1.0022  per-event median-channel ratio p50 1.0000
+  anode 7 W  vol top     sum p98voff/keep 1.0000  per-event median-channel ratio p50 1.0000
+  bottom U: sum p98voff/keep 1.0009
+  bottom V: sum p98voff/keep 1.0029
+  bottom W: sum p98voff/keep 1.0000
+  top    U: sum p98voff/keep 1.0016
+  top    V: sum p98voff/keep 1.0008
+  top    W: sum p98voff/keep 1.0000

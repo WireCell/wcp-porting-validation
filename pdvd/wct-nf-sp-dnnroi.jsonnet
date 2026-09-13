@@ -103,9 +103,14 @@ function(
   // Default 1.0 = legacy => compiled config byte-identical.  The runner's
   // --top-gain-scale sets it.  doc pdvd/99 (s = 0.889).
   top_gain_scale           = 1.0,
+  // Wire-geometry file for this job only (e.g. 'protodunevd-wires-larsoft-v5.json.bz2', the file the July
+  // SP frames were made with).  '' = params.files.wires (production) => compiled config byte-identical.
+  // The runner's --wires sets it.  doc pdvd/99 sec 4.3 (SP depends on the per-plane channel order).
+  wires_file               = '',
 )
 
-  local tools = tools_all;
+  local tools = if wires_file == '' then tools_all
+                else tools_maker(params { files+: { wires: wires_file } });
   local use_resampler = (reality == 'data');
 
   local base = import 'pgrapher/experiment/protodunevd/chndb-base.jsonnet';

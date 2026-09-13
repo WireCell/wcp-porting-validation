@@ -1,0 +1,39 @@
+# doc pdvd/99 sec 4.3 -- what v6 -> v7-uvwfit changes in each plane's wire order (the order OmnibusSigProc's 2-D
+# deconvolution and NF groupings see).  seq = channel sequence in wire order; neighbour pairs = unordered adjacent pairs
+anode 0 face 0 U: wires 287->287  reversed True  channels added [] removed []  first differing position 0  neighbour pairs new in v7 0 of 286
+anode 0 face 0 V: wires 286->287  reversed False  channels added [1141] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 0 face 1 U: wires 286->287  reversed False  channels added [286] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 0 face 1 V: wires 287->287  reversed True  channels added [] removed []  first differing position 0  neighbour pairs new in v7 0 of 286
+anode 1 face 0 U: wires 286->287  reversed False  channels added [665] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 1 face 0 V: wires 287->287  reversed True  channels added [] removed []  first differing position 0  neighbour pairs new in v7 0 of 286
+anode 1 face 1 U: wires 287->287  reversed True  channels added [] removed []  first differing position 0  neighbour pairs new in v7 0 of 286
+anode 1 face 1 V: wires 286->287  reversed False  channels added [1714] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 2 face 0 U: wires 287->287  reversed False  channels added [3072, 3073, 3074, 3075] removed [3359, 3360, 3361, 3362]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 2 face 0 V: wires 286->287  reversed False  channels added [4024, 4025, 4026, 4027] removed [4311, 4312, 4313, 4314]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 2 face 0 W: wires 292->292  reversed False  channels added [4976, 4977, 4978, 4979] removed [5268, 5269, 5270, 5271]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 2 face 1 U: wires 286->287  reversed False  channels added [3358, 3359, 3360, 3361] removed [3072, 3073, 3074, 3075]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 2 face 1 V: wires 287->287  reversed False  channels added [4311, 4312, 4313, 4314] removed [4024, 4025, 4026, 4027]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 2 face 1 W: wires 292->292  reversed False  channels added [5268, 5269, 5270, 5271] removed [4976, 4977, 4978, 4979]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 3 face 0 U: wires 286->287  reversed False  channels added [3548, 3549, 3550, 3551] removed [3835, 3836, 3837, 3838]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 3 face 0 V: wires 287->287  reversed False  channels added [4500, 4501, 4502, 4503] removed [4787, 4788, 4789, 4790]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 3 face 0 W: wires 292->292  reversed False  channels added [5560, 5561, 5562, 5563] removed [5852, 5853, 5854, 5855]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 3 face 1 U: wires 287->287  reversed False  channels added [3835, 3836, 3837, 3838] removed [3548, 3549, 3550, 3551]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 3 face 1 V: wires 286->287  reversed False  channels added [4786, 4787, 4788, 4789] removed [4500, 4501, 4502, 4503]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 3 face 1 W: wires 292->292  reversed False  channels added [5852, 5853, 5854, 5855] removed [5560, 5561, 5562, 5563]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 4 face 0 V: wires 286->287  reversed False  channels added [7285] removed []  first differing position None  neighbour pairs new in v7 1 of 286
+anode 4 face 1 U: wires 286->287  reversed False  channels added [6430] removed []  first differing position None  neighbour pairs new in v7 1 of 286
+anode 5 face 0 U: wires 286->287  reversed False  channels added [6809] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 5 face 1 V: wires 286->287  reversed False  channels added [7858] removed []  first differing position 0  neighbour pairs new in v7 1 of 286
+anode 6 face 0 U: wires 287->287  reversed False  channels added [9216, 9217, 9218, 9219] removed [9503, 9504, 9505, 9506]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 6 face 0 V: wires 286->287  reversed False  channels added [10168, 10169, 10170, 10171] removed [10455, 10456, 10457, 10458]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 6 face 0 W: wires 292->292  reversed False  channels added [11120, 11121, 11122, 11123] removed [11412, 11413, 11414, 11415]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 6 face 1 U: wires 286->287  reversed False  channels added [9502, 9503, 9504, 9505] removed [9216, 9217, 9218, 9219]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 6 face 1 V: wires 287->287  reversed False  channels added [10455, 10456, 10457, 10458] removed [10168, 10169, 10170, 10171]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 6 face 1 W: wires 292->292  reversed False  channels added [11412, 11413, 11414, 11415] removed [11120, 11121, 11122, 11123]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 7 face 0 U: wires 286->287  reversed False  channels added [9692, 9693, 9694, 9695] removed [9979, 9980, 9981, 9982]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 7 face 0 V: wires 287->287  reversed False  channels added [10644, 10645, 10646, 10647] removed [10931, 10932, 10933, 10934]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 7 face 0 W: wires 292->292  reversed False  channels added [11704, 11705, 11706, 11707] removed [11996, 11997, 11998, 11999]  first differing position 0  neighbour pairs new in v7 291 of 291
+anode 7 face 1 U: wires 287->287  reversed False  channels added [9979, 9980, 9981, 9982] removed [9692, 9693, 9694, 9695]  first differing position 0  neighbour pairs new in v7 189 of 286
+anode 7 face 1 V: wires 286->287  reversed False  channels added [10930, 10931, 10932, 10933] removed [10644, 10645, 10646, 10647]  first differing position 0  neighbour pairs new in v7 190 of 286
+anode 7 face 1 W: wires 292->292  reversed False  channels added [11996, 11997, 11998, 11999] removed [11704, 11705, 11706, 11707]  first differing position 0  neighbour pairs new in v7 291 of 291
+# planes 48, order changed 36; neighbour pairs new in v7 5368 of 13792 v6 pairs

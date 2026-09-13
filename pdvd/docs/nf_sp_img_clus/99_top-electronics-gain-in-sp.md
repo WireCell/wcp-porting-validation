@@ -8,9 +8,17 @@
   (1/s = 1.1249), and the bottom is unchanged at 1.0000 on 30/30 tracks.
 - **Pre-registered closure: MISSED on the full sample.** Top/bottom is **0.967 [0.953, 0.987]**, a CI that does not cover
   1. On the 111 tracks present in both arms it reads 0.972 [0.952, 1.000] (§7). s was not retuned.
-- **Rerunning SP itself costs STM efficiency** against production, independent of the constant: is_stm eff 0.877 → 0.801
-  (§4.3).
-- **Disk:** the July SP-frame retire is **HELD** for the owner (§9). The OFF trim is done.
+- **Round 2 correction (§4.3): nothing in SP drifted since July except the wire file.**
+  - Today's SP code, run with the July wire file, reproduces the July frames sample for sample.
+  - Production ran SP with the v5 wire order and everything after SP with v7-uvwfit. The rerun arms use v7-uvwfit
+    throughout.
+  - The v7 channel order redistributes a few percent of U/V charge between neighbouring channels; plane sums stay within
+    1 %.
+  - Round 1's "rerunning SP costs is_stm efficiency 0.877 → 0.801" overstated it. The tagged population keeps its size
+    (265 / 255 / 273 is_stm), but about 30 % of the tagged clusters swap in both directions, and the record sees only the
+    losses (§0, §6.3).
+- **Disk:** the OFF trim is done. The July SP frames are still held, but they are no longer unique: they regenerate
+  bit for bit (§9).
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;
@@ -32,6 +40,72 @@ Owner, 2026-09-13:
 
 > "Note, we probably should keep the latest SP results, and we can retire the previous round's SP result"
 > (with "trim after imaging" for the control arm).
+
+## 0. Round 2: the owner's three points
+
+Owner, 2026-09-13 (round 2):
+
+> "What we want to demonstate that with latest configuration, 1. everything are good 2. the charge asymmetry between top
+> and bottom are fixed. 3. I assume the STM+Michel are largely staying the same as before. Please confirm."
+
+**The latest configuration** is arm `p98vonq`: v7-uvwfit wires in SP *and* in imaging, clustering and PR, plus
+`top_gain_scale=0.889`. Production (`p96vprod`) differs in two ways. Its SP frames predate v7 (§4.3), and it has no
+constant.
+
+**1. Everything is good: confirmed.**
+- With the knob off, the compiled production config is md5-identical (G1). It is still identical after round 2's
+  `wires_file` TLA (`d99/g1_wires_file_compiled_config.txt`).
+- With the knob on:
+  - exactly 20 config values change;
+  - bottom SP frames are identical on 120/120 events;
+  - top frames scale ×1.1249 per channel.
+- Every step after SP reproduces production byte for byte (§4.2).
+- Production's SP frames are reproduced sample for sample by today's code with the July wire file (§4.3). Nothing in SP,
+  NF or DNN-ROI changed since July except the wire file, which imaging had already adopted on 09-03.
+- **Two open issues predate this change and are not caused by it:**
+  - production's SP frames carry the v5 wire order while its imaging, clustering and PR use v7-uvwfit (§4.3 item 4);
+  - production's PR edge guard runs a 10000-tick window over 6400-tick frames (§4.1).
+
+  The latest-configuration arms fix the first; the second is unchanged in every arm.
+
+**2. The top/bottom charge asymmetry is fixed: confirmed for the charge, with one stated miss.**
+- **Per track:** top ×1.1228 [1.1176, 1.1275] against 1/s = 1.1249; bottom 1.0000 on 30/30.
+- **Michel region energy**, top/bottom on hand Michels: 0.807 → **0.983**.
+- **Stopper dQ/dx plateau**, top/bottom:
+  - full sample: 0.878 → **0.967 [0.953, 0.987]**. The pre-registered test (CI covers 1) misses.
+  - the 111 tracks in both arms: **0.972 [0.952, 1.000]**. The remaining 2–3 % is not significant there.
+- s was not retuned (§7).
+
+**3. STM+Michel largely stay the same: confirmed for the population, not for individual clusters.**
+
+Record-free census (`d99/population_is_stm_transitions.txt`, `d99/michel_ql_p96vprod_p98voffq_p98vonq.txt`):
+
+| | production `p96vprod` | latest, knob off `p98voffq` | **latest `p98vonq`** |
+|---|---|---|---|
+| STM candidates | 596 | 597 | 656 |
+| is_stm (top / bottom) | 265 (184 / 81) | 255 (171 / 84) | **273 (189 / 84)** |
+| is_stm with a Michel | 147 | 142 | **163** |
+| Michel region energy, all chain STM+Michel, top / bottom median MeV | 34.22 / 36.00 | 32.24 / 40.76 | 36.35 / 39.96 |
+
+- **The population keeps its size.** The latest configuration tags 3 % more stoppers than production and 11 % more with a
+  Michel.
+- **Individual clusters swap, symmetrically.**
+  - Of production's 265 is_stm clusters, 183 (0.691) are is_stm on `p98vonq`.
+  - Of `p98vonq`'s 273, 182 (0.667) were is_stm in production.
+  - The same swap appears between production and knob-off (0.694 / 0.722) and between knob-off and knob-on
+    (0.784 / 0.725).
+- **Floor and control.**
+  - Bottom clusters whose SP input is identical still swap 6–7 % (OFF → ON bottom 0.940). That is the floor from
+    cross-volume clustering and light matching.
+  - Production → production gives 1.000 (null control).
+  - A quarter to a third of tagged clusters sit close enough to a threshold that a few-percent change in the input flips
+    them, in both directions.
+  - For the wire-order change the threshold is mostly upstream of the tagger, in clustering or candidate selection (§6.3).
+- **Why the hand-scan record reads a drop.** The record holds production's candidates, so it sees clusters that stop being
+  tagged but not clusters that start. That is why record-based is_stm efficiency reads 0.877 (production) → 0.801 (off) →
+  0.811 (on) while the tagged population does not shrink.
+- **What the record does measure on the scanned items:** purity 0.968 / 0.903 / 0.923.
+- **Unmeasured:** the purity of the clusters tagged only on the latest configuration. It needs a scan of that side (§10).
 
 ## Repro
 
@@ -67,6 +141,18 @@ SRC=p98voff DST=p98voffq ./d99_stage_q.sh ; ARM=p98voffq ./d99_chain.sh clus ; A
 SRC=p98von  DST=p98vonq  ./d99_stage_q.sh ; ARM=p98vonq  ./d99_chain.sh clus ; ARM=p98vonq  ./d99_chain.sh pr
 python3 d99_frames.py --all --arms p98voff p98von --json <sums>            # d99/frame_sums_120evt.txt
 (cd ../../.. && python3 docs/nf_sp_img_clus/scripts/d99_readout_window.py)  # sec 4.1 -> d99/readout_window_effect_p98voff.txt
+
+# round 2 (sec 0, 4.3, 6.3): July vs today's frames, the wire-file split, the record-free population
+python3 d99_frames.py --events 039252_0 039252_2 039253_0 039253_1 039349_0 039349_10 --arms keep p98voff   # d99/frames_july_vs_p98voff_6evt.txt
+python3 d99_frames.py --all --arms keep p98von                                                             # d99/frames_july_vs_p98von_120evt.txt
+python3 d99_frame_identity.py --base keep --arm p98voff --events 039252_0 039252_2 039253_0 039253_1 039349_0 039349_10
+python3 d99_frame_identity.py --base keep --arm p98von --all --anodes 0 1 2 3
+(cd ../../.. && setarch x86_64 -R ./run_nf_sp_dnnroi_evt.sh --wires protodunevd-wires-larsoft-v5.json.bz2 -O _p99w5 039252 0)
+(cd ../../.. && setarch x86_64 -R ./run_nf_sp_dnnroi_evt.sh --wires protodunevd-wires-larsoft-v6.json.bz2 -O _p99w6 039252 0)
+(cd ../../.. && setarch x86_64 -R ./run_nf_sp_dnnroi_evt.sh --wires protodunevd-wires-larsoft-v6.json.bz2 -O _p99w6 039349 83)
+python3 d99_frame_identity.py --base keep --arm p99w5 --events 039252_0          # likewise keep/p99w6, p99w5/p99w6, p98voff/p99w5; keep/p99w6 on 039349_83
+python3 d99_population.py --pairs p96vprod:p96vprod p96vprod:p98voffq p98voffq:p96vprod p98voffq:p98vonq p98vonq:p98voffq p96vprod:p98vonq p98vonq:p96vprod
+# wire order v5/v6/v7: d99/wire_channel_order_v5_v6_v7.txt, d99/wire_neighbour_change_v6_v7.txt (inline python over the three wire files)
 
 # carry the record (sec 5), grade (sec 6), measure (sec 7-8); per ARM in p98voffq p98vonq
 python3 d99_match.py --arm $ARM --out <match.json> --carried ../../scan/pdvd_stm_michel_smx9_carried_$ARM.json   # d99/match_$ARM.txt
@@ -117,6 +203,7 @@ that were fitted on the old top scale (§8).
 | gate | what | result | record |
 |---|---|---|---|
 | **G1** compiled config | Production entry with the runner's TLAs, L1SP on and off: md5 before = after = after with `top_gain_scale=1.0`. 19 entry files import either jsonnet (default TLAs, external variables supplied where needed). 15 compile identically. 4 fail identically before and after: 3 `wcls-sim-drift-*` need real ext vars, and `pdvd/wcls-nf-sp-out.jsonnet` cannot find `params.jsonnet` (pre-existing, M12-type rot, not fixed). ON (s = 0.889): **exactly 20 values change**, the 5 keys of §1 on each of anodes 4–7 | **PASS** | `d99/g1_compiled_config.txt` |
+| **G1w** `wires_file` TLA (round 2) | production entry with the runner's TLAs: md5 with the new TLA absent or empty = G1's (L1SP on 412e5252…, L1SP off d944ec94…); with `wires_file` = v5 or v6: exactly 8 lines change, the `WireSchemaFile` filename | **PASS** | `d99/g1_wires_file_compiled_config.txt` |
 | knob-on smoke | top L1SP log: `kernels_scale=0.8890` (ON) vs `1.0000` (OFF) | seen | SP logs of 039252_0 |
 | **G2** determinism | 039252_0 OFF run twice under `setarch -R`: 8/8 frame archives have identical member-content hashes. ON vs OFF: anodes 0–3 identical, 4–7 differ | **PASS** | `d99/g2_determinism_hashes.txt` |
 | **G0** PR reproduction | PR on the `d51vclus` pctree with `libpin_p96` and today's `wct-pr-perevt.jsonnet` (arm `p98g0`; events 039252_0, 039253_0, 039349_10) vs `p96vprod`: every branch of 9+7 trees identical. The one apparent difference, `T_rec_charge.reduced_chi2`, is NaN≠NaN in a list compare: the NaN pattern is equal and the finite values are bit-equal. `mabc-pr.zip` 25/25 members identical, calib json identical | **PASS** | `d99/g0_pr_reproduction.txt` |
@@ -231,15 +318,57 @@ needs its own graded round.
   on the frames-in-dir pass (`d99/clus_tlas_vs_production.txt`).
 
 So with production staging, the whole chain downstream of SP reproduces production byte for byte. It follows that:
-- **every difference between `p98voffq` and `p96vprod` comes from rerunning SP**: July frames used v6 wires and the SP
-  code/config of 07-13; today's use v7-uvwfit wires and today's SP;
+- **every difference between `p98voffq` and `p96vprod` comes from rerunning SP**. §4.3 shows this means the wire file
+  alone: the July frames carry the v5 wire order, today's the v7-uvwfit order;
 - **every difference between `p98vonq` and `p98voffq` comes from the one constant.**
 
-### 4.3 What rerunning SP alone does (p98voffq against production)
+### 4.3 What differs between production's SP and today's (p98voffq against production)
 
-This is not the constant, but anyone flipping the constant pays it, because a flip means rerunning SP.
+**Correction to round 1.** Round 1 said here that "rerunning SP alone costs STM efficiency", and it left open whether the
+wires or the SP code/config were the cause. Round 2 measured it.
 
-| | `p96vprod` (July SP) | `p98voffq` (today's SP, knob off) | record |
+**1. The July frames carry the v5 wire order.**
+- The July SP arm (`_ct4`, its frames later linked as `<evt>_keep`) started 07-13 at 14:21.
+- `protodunevd-wires-larsoft-v6.json.bz2` entered wire-cell-data at 14:35, and `params.jsonnet` switched to it at 14:43
+  (toolkit `e4eda3c2`).
+- 25 of the 120 July jobs started before the v6 file existed; 95 started after (`d99/july_sp_job_start_times.txt`).
+- The per-plane wire order of v5 and v6 is the same (item 4), and SP gives identical frames with either (item 3). So all
+  July frames carry the v5 order. Round 1's "v6 wires" was wrong in name only.
+
+**2. The frames barely move.** Comparing July and today's knob-off frames, content member by member:
+- **Records:** `d99/frame_identity_july_vs_p98voff_6evt.txt`; bottom anodes on all 120 events
+  `d99/frame_identity_july_vs_p98von_bottom_120evt.txt`.
+- **W:** sample-identical on anodes 0, 1, 4, 5; on anodes 2, 3, 6, 7 it differs by at most 6.2e-3 sum|Δ|/sum (median ≤ 2.1e-4).
+- **U/V:** on anodes 1–7 they differ by a median 0.9–12 % sum|Δ|/sum; anode 0 is identical or nearly so.
+- **Plane sums:** still agree to within about 1 % (0.997–1.010), with a per-channel median ratio of 1.0000 (`d99/frames_july_vs_p98voff_6evt.txt`,
+  `d99/frames_july_vs_p98von_120evt.txt`).
+
+Charge is moved between neighbouring channels, not gained or lost.
+
+**3. The wire file is the whole difference.**
+- `run_nf_sp_dnnroi_evt.sh --wires <file>` (new TLA `wires_file`, default off; the compiled production config is unchanged,
+  `d99/g1_wires_file_compiled_config.txt`) runs today's SP with any wire file.
+- **Match:** on 039252_0, today's SP with the v5 wires, and again with the v6 wires, reproduces the July frames **sample
+  for sample on all 8 anodes and every frame tag** (raw, wiener, gauss). Records: `d99/frame_identity_keep_vs_p99w5_039252_0.txt`
+  and `…_keep_vs_p99w6_039252_0.txt`; v5 vs v6 is identical too.
+- **After the switch:** 039349_83, a July job that started at 14:58 (after v6 existed), is also reproduced sample for sample
+  by today's SP with the v6 wires (`d99/frame_identity_keep_vs_p99w6_039349_83.txt`).
+- **Contrast:** the same run differs from today's v7 frames in exactly the pattern of item 2 (`…_p98voff_vs_p99w5_039252_0.txt`).
+- **Conclusion:** no change to the SP code, the SP config, the DNN-ROI model or NF since July reaches these frames.
+
+**4. What v7-uvwfit changes for SP:** the per-plane wire order that OmnibusSigProc's 2-D deconvolution and NF's channel
+groupings run over (`d99/wire_neighbour_change_v6_v7.txt`, `d99/wire_channel_order_v5_v6_v7.txt`).
+- **Anodes 2, 3, 6, 7:** face 0 and face 1 exchange their channel sets (the face assignment doc pdvd/27 corrected). 189–190
+  of 286 U/V neighbour pairs in a face are new. W, deconvolved channel by channel, moves by at most 6e-3.
+- **Anodes 0, 1, 4, 5:** some planes are listed in reverse, and one wire is added per plane, with one new neighbour pair.
+  U/V output still changes by a few percent on anodes 1, 4 and 5.
+- **v5 → v6** moved U/V wire positions only, not the order.
+- **The mixed geometry:** production's imaging, clustering and PR already use v7-uvwfit (adopted 09-03, `228f1c39`), on SP
+  frames made with the v5 order. The rerun arms are the first with one geometry throughout.
+
+**5. What that does downstream.**
+
+| | `p96vprod` (SP with the v5 wire order) | `p98voffq` (SP with v7-uvwfit, knob off) | record |
 |---|---|---|---|
 | events with an STM candidate / candidates | 119 / 596 | 119 / 597 | `d99/c_refit_*.txt` |
 | is_stm with a usable chain | 265 | 255 | ″ |
@@ -251,12 +380,22 @@ This is not the constant, but anyone flipping the constant pays it, because a fl
 | top/bottom dQ/dx plateau, M2 bootstrap | 0.889 [0.875, 0.903] | 0.878 [0.858, 0.907] | `d99/g5b_space_charge_p96vprod.txt`, `d99/space_charge_p98voffq.txt` |
 | recombination C refit (reported only) | 0.7919 ± 0.0047 | 0.7994 ± 0.0059 | `d99/c_refit_*.txt` |
 
-The loss sits entirely in the **Bragg-path acceptance** (0.772 → 0.697). Topology rescue is flat (0.105 → 0.104). The tagger
-reads the new SP's charge profiles with its dQ/dx shape tests and rejects stoppers it accepted on the July SP. The owner's
-STM tagging knobs were tuned on the July SP.
+**On the record:** the record-based loss sits in the **Bragg-path acceptance** (0.772 → 0.697), and topology rescue is flat
+(0.105 → 0.104).
 
-The top/bottom offset itself barely moved: 0.889 → 0.878, inside doc pdhd/29's CI. Which of the SP differences (v6 → v7-uvwfit
-wires, or the SP code/config since 07-13) moves the shape tests is **not separated here** (§10).
+**Record-free** (§6.3):
+- the tagged population keeps its size: candidates 596 → 597, is_stm 265 → 255, with a Michel 147 → 142;
+- 31 % of production's tagged clusters are not tagged on `p98voffq`, and 28 % of `p98voffq`'s were not tagged in production.
+
+**Reading:** a few-percent redistribution of U/V charge changes *which* clusters are tagged, in both directions; it does
+not remove stoppers wholesale.
+- **Most of this churn is upstream of the tagger.** Of the 81 production is_stm clusters not tagged on `p98voffq`, 44
+  are not even STM candidates there, meaning clustering or candidate selection changed. Only 33 reach the tagger and fail
+  its tests.
+- **The record counts one side.** It was built from production's candidates, so it counts only the clusters that leave.
+- **Tuning:** the owner's STM tagging knobs were tuned on the v5-order SP.
+
+The top/bottom offset itself barely moved: 0.889 → 0.878, inside doc pdhd/29's CI.
 
 ## 5. Carrying the hand-scan record
 
@@ -338,7 +477,8 @@ item is flagged for any of:
 
 ## 6. Grades: the constant (OFF → ON), with production for context
 
-**Read OFF → ON for the constant.** `p96vprod` differs from both by the SP rerun (§4.3) and is context only.
+**Read OFF → ON for the constant.** `p96vprod` differs from both by the SP wire order (§4.3). The record-based numbers below
+count only production-scanned clusters, so read them together with the record-free census in §6.3.
 
 | is_stm (TP/FP/FN/TN), purity, eff | `p96vprod` | `p98voffq` | `p98vonq` |
 |---|---|---|---|
@@ -391,6 +531,44 @@ Per item, on the items carried onto both arms with a Michel found on both:
 Light matching barely moved:
 - top: 188 of 192 matched clusters keep their flash, and 4 have |Δt0| > 1 µs;
 - bottom: 144 of 145 keep it, and 1 has |Δt0| > 1 µs.
+
+### 6.3 The STM population without the record
+
+`scripts/d99_population.py` → `d99/population_is_stm_transitions.txt`.
+
+**Method.** Every is_stm cluster of arm A is found in arm B by geometry, with the record carry's own matcher and
+thresholds. It is then classified by what B's tagger says about the matched cluster.
+
+| A is_stm → B | n | stays is_stm | candidate, not is_stm | not a candidate | object not matched |
+|---|---|---|---|---|---|
+| `p96vprod` → `p96vprod` (null) | 265 | 265 (1.000) | 0 | 0 | 0 |
+| `p96vprod` → `p98voffq` | 265 | 184 (0.694) | 33 | 44 | 4 |
+| `p98voffq` → `p96vprod` | 255 | 184 (0.722) | 19 | 47 | 5 |
+| `p98voffq` → `p98vonq` | 255 | 200 (0.784) | 22 | 24 | 9 |
+| `p98vonq` → `p98voffq` | 273 | 198 (0.725) | 22 | 45 | 8 |
+| `p96vprod` → `p98vonq` | 265 | 183 (0.691) | 27 | 43 | 12 |
+| `p98vonq` → `p96vprod` | 273 | 182 (0.667) | 19 | 62 | 10 |
+
+**By volume.**
+- Knob-off → knob-on: top 0.708, bottom **0.940**. The bottom SP input is identical, so its 6 % is the floor set by
+  cross-volume clustering and light matching.
+- Knob-on → knob-off: top 0.635, bottom 0.929.
+- Production → knob-off: top 0.685, bottom 0.716. Both volumes see the U/V redistribution.
+
+**Michel, among clusters that stay is_stm.**
+- production → `p98voffq`: kept 95, lost 5, gained 12;
+- `p98voffq` → `p98vonq`: kept 111, lost 5, gained 5;
+- production → `p98vonq`: kept 92, lost 9, gained 15.
+
+**Reading.**
+- The swap is symmetric, and the tagged population and its Michel fraction are conserved (§0 point 3).
+- Between a quarter and a third of tagged clusters flip under a few-percent change in their input (the U/V
+  redistribution, or the ×1.125 top scale).
+- **Where they flip depends on the change.**
+  - Wire order: most losses are upstream of the tagger. 44 of 81 (production → `p98voffq`) and 43 of 82
+    (production → `p98vonq`) are no longer STM candidates, from clustering or candidate selection.
+  - The constant: losses split evenly between candidacy (24) and the tagger's own tests (22).
+- The hand-scan record measures only the clusters that leave.
 
 ## 7. dQ/dx closure against the pre-registration
 
@@ -451,7 +629,7 @@ Every constant fitted on reconstructed top charge was fitted on the old top scal
 
 Refitting any of these is the owner's decision, after the flip decision.
 
-## 9. Disk: OFF trim done; the previous round's SP frames HELD
+## 9. Disk: OFF trim done; the July SP frames regenerate bit for bit, retire recommended (not executed)
 
 Owner: trim the control arm's frames after imaging; keep the latest SP results; retire the previous round's.
 
@@ -470,7 +648,7 @@ Owner: trim the control arm's frames after imaging; keep the latest SP results; 
   member hashes. Any OFF event can be regenerated and checked.
 
 **The July SP frames — HELD, not executed** (`d99_retire_keep_sp.sh`). The frames are
-`/home/xqian/pdvd-frame-store/*_keep/protodune-sp-dnnroi-frames-anode*` (v6-wire SP of 07-13).
+`/home/xqian/pdvd-frame-store/*_keep/protodune-sp-dnnroi-frames-anode*` (SP of 07-13 with the v5 wire order).
 
 Dry run with the final keep list (`d99/retire_keep_sp_dryrun.txt`):
 - 768 archives, 29.37 GiB, and 1536 links pointing at them, closure reached in 2 passes;
@@ -482,10 +660,12 @@ Dry run with the final keep list (`d99/retire_keep_sp_dryrun.txt`):
 - negative control (an ON-arm frame injected): refused, rc 13;
 - liveness guard: refused while PR was running, rc 11.
 
-**Why it is held.** The owner's instruction came before §4.3 existed. The July frames are the only surviving copy of the SP
-that production (`p96vprod`) and every hand scan were built on. §4.3 shows that rerunning SP alone costs 0.07 in is_stm
-efficiency. Separating v6 wires from the SP code/config needs exactly these frames as the reference (§10 item 2). Deleting
-them is irreversible, and disk is not forcing it: `/home/xqian` has 385 G free.
+**Why it was held, and why that reason is gone.**
+- **Round 1:** the frames were held as the only copy of the SP that production and every hand scan were built on, and as
+  the reference for splitting the SP difference.
+- **Round 2:** that split is done (§4.3). Today's SP with `--wires protodunevd-wires-larsoft-v5.json.bz2` regenerates the
+  July frames sample for sample from the raw frames. They are no longer unique evidence.
+- **Recommendation:** retire them with the ready script. It remains the owner's call; nothing was deleted in round 2.
 
 The script and dry run are ready. `pdvd/scripts/retire/PROTECTED.txt`'s `keep` line ("it holds the SP+DNNROI frames d27fresh
 borrows") is untouched. **The owner decides.**
@@ -497,11 +677,16 @@ borrows") is untouched. **The owner decides.**
    - the Michel energy top/bottom goes 0.807 → 0.983;
    - is_stm is unchanged within churn against OFF.
 
-   Against flipping now: a flip requires rerunning SP, and today's SP alone costs is_stm efficiency 0.877 → 0.801 against
-   production (§4.3). **Recommended: do not flip until item 2 is understood.**
-2. **Split the SP-rerun loss** (§4.3):
-   - rerun SP on a handful of events with the v6 wires and today's SP config, then the reverse;
-   - compare Bragg-path acceptance against the July frames (held, §9) and `p98voffq`.
+   - the tagged STM population is the same size or larger (§0, §6.3).
+
+   The SP rerun that a flip implies also moves SP onto the v7-uvwfit order that imaging already uses. That is not a loss
+   to avoid; it is a consistency production does not have yet. What a flip changes cluster by cluster is a symmetric
+   swap of about 30 % of tagged clusters, and the purity of the newly tagged side is not yet measured.
+
+   **Recommended before flipping:** scan the clusters `p98vonq` tags that production does not (the "not a candidate /
+   not is_stm in production" side of §6.3), so that purity is measured on both sides of the swap.
+2. **Split the SP difference — DONE in round 2** (§4.3). The wire file is the whole difference; SP code and config did
+   not drift.
 3. **Re-scan** the stopper items that cannot be carried without a look on the arm that is eventually adopted: on `p98vonq`,
    STM_MICHEL 39 + STM_ONLY 25 + MESSY 17 (`d99/rescan_p98vonq.tsv`).
 4. **Refit the downstream constants** for a flipped arm (§8): C (0.8630 on `p98vonq`), Michel thresholds, QtoL.
@@ -516,7 +701,7 @@ borrows") is untouched. **The owner decides.**
 | file | what |
 |---|---|
 | toolkit `cfg/pgrapher/experiment/protodunevd/sp.jsonnet`, `l1sp_after_dnnroi.jsonnet` | `top_gain_scale` knob, default 1.0 |
-| `pdvd/wct-nf-sp-dnnroi.jsonnet`, `pdvd/run_nf_sp_dnnroi_evt.sh` | TLA + `--top-gain-scale` |
+| `pdvd/wct-nf-sp-dnnroi.jsonnet`, `pdvd/run_nf_sp_dnnroi_evt.sh` | TLAs + `--top-gain-scale`, `--wires` (both default off) |
 | `scripts/d99_sp_arm.sh`, `d99_chain.sh`, `d99_stage_q.sh` | SP arm driver; imaging → clustering → PR driver; production-style clustering staging |
 | `scripts/d99_frames.py`, `d99_manifest.py` | per-plane frame sums and L1SP share; frame manifests + G3 |
 | `scripts/d99_control_compare.py` | imaging / clustering / PR drift controls (pctree, tlas, NaN-aware trees, mabc) |
@@ -524,6 +709,8 @@ borrows") is untouched. **The owner decides.**
 | `scripts/d99_grade.py`, `d99_dqdx_drift.py` | grading and dQ/dx forks with their controls |
 | `scripts/d99_closure.py` | per-track OFF → ON plateau ratio, common-track samples |
 | `scripts/d99_readout_window.py` | §4.1: candidates, edge-guard firings and clustering window per arm |
+| `scripts/d99_frame_identity.py` | §4.3: sample-level identity of two SP frame arms per anode, plane and frame tag |
+| `scripts/d99_population.py` | §6.3: record-free STM census and is_stm transitions between arms (geometric match) |
 | `scripts/d99_michel_ql.py` | Michel energy by volume, per-item ON/OFF, flash changes |
 | `scripts/d99_trim_off.sh`, `d99_retire_keep_sp.sh` | guarded OFF-frame trim; guarded retire of the July SP frames (held) |
 | `../scan/pdvd_stm_michel_smx9_carried_p98voffq.json`, `_p98vonq.json` | the carried hand-scan records (new keys; the smx record untouched) |

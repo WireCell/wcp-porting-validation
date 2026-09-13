@@ -125,6 +125,9 @@ Options:
                  electronics in SP: top OmnibusSigProc postgain and top
                  L1SP gain_scale are set to <s> (top charge out ~ 1/s).
                  Absent = no TLA passed = legacy config (doc pdvd/99).
+  --wires <file> Wire-geometry file for this job (e.g.
+                 protodunevd-wires-larsoft-v5.json.bz2).  Absent = no TLA
+                 passed = params.jsonnet's file (doc pdvd/99 sec 4.3).
   -h             Show this help.
 
 Input:  input_data/<run_dir>/<evt_dir>/protodune-orig-frames-anode{0..7}.tar.bz2
@@ -158,6 +161,7 @@ L1SP_THRESH_BOTTOM=""
 L1SP_THRESH_TOP=""
 L1SP_THRESH_SINGLE=""
 TOP_GAIN_SCALE=""
+WIRES_FILE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -194,6 +198,7 @@ while [ $# -gt 0 ]; do
         --l1sp-thresh-top) L1SP_THRESH_TOP="$2"; shift 2 ;;
         --l1sp-thresh) L1SP_THRESH_SINGLE="$2"; shift 2 ;;
         --top-gain-scale) TOP_GAIN_SCALE="$2"; shift 2 ;;
+        --wires) WIRES_FILE="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -w*) WF_DUMP_DIR="${1#-w}"; shift ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
@@ -419,6 +424,13 @@ if [ -n "$TOP_GAIN_SCALE" ]; then
     echo "Top gain:    top_gain_scale=$TOP_GAIN_SCALE (anodes 4-7 SP postgain + L1SP gain_scale)"
 fi
 
+# Wire-geometry file override (doc pdvd/99 sec 4.3).  Only passed when given.
+WIRES_TLA=()
+if [ -n "$WIRES_FILE" ]; then
+    WIRES_TLA=(--tla-str wires_file="$WIRES_FILE")
+    echo "Wires:       wires_file=$WIRES_FILE"
+fi
+
 # L1SP-DNN per-ROI debug dump (one NPZ per call with channel, score,
 # fired, polarity, waveform, scalars). Required for LASSO-fire verification.
 L1SP_DNN_DBG_TLA=()
@@ -478,6 +490,7 @@ wire-cell \
     "${L1SP_DNN_DBG_TLA[@]}" \
     "${L1SP_CALIB_TLA[@]}" \
     "${TOP_GAIN_TLA[@]}" \
+    "${WIRES_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

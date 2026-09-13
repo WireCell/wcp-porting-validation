@@ -1,0 +1,81 @@
+base keep  arm p98voff  events 6  anodes [0, 1, 2, 3, 4, 5, 6, 7]
+  members missing or channel/shape mismatch: 0
+  gauss0   U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  gauss0   V: identical 3/6 event-anodes; where not: median sum|diff|/sum 9.25e-06  max 9.72e-06  channels differing 782/2856
+  gauss0   W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  gauss1   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.14e-02  max 2.47e-02  channels differing 416/2856
+  gauss1   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 5.83e-02  max 1.09e-01  channels differing 1835/2856
+  gauss1   W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  gauss2   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 5.69e-02  max 7.20e-02  channels differing 2169/2856
+  gauss2   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 4.67e-02  max 9.80e-02  channels differing 2062/2856
+  gauss2   W: identical 0/6 event-anodes; where not: median sum|diff|/sum 9.49e-05  max 1.88e-04  channels differing 2573/3504
+  gauss3   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.24e-02  max 9.04e-02  channels differing 1832/2856
+  gauss3   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.39e-02  max 5.66e-02  channels differing 2051/2856
+  gauss3   W: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.90e-04  max 2.54e-04  channels differing 2095/3504
+  gauss4   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.15e-01  max 1.46e-01  channels differing 2417/2856
+  gauss4   V: identical 1/6 event-anodes; where not: median sum|diff|/sum 3.14e-04  max 1.14e-03  channels differing 39/2856
+  gauss4   W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  gauss5   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.70e-02  max 4.96e-02  channels differing 1148/2856
+  gauss5   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.10e-02  max 3.88e-02  channels differing 1034/2856
+  gauss5   W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  gauss6   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.37e-02  max 5.96e-02  channels differing 2245/2856
+  gauss6   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 6.95e-02  max 8.07e-02  channels differing 2365/2856
+  gauss6   W: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.69e-05  max 3.10e-05  channels differing 2631/3504
+  gauss7   U: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.78e-02  max 1.40e-01  channels differing 2130/2856
+  gauss7   V: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.79e-02  max 1.18e-01  channels differing 2053/2856
+  gauss7   W: identical 0/6 event-anodes; where not: median sum|diff|/sum 3.58e-05  max 7.68e-05  channels differing 2397/3504
+  raw0     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw0     V: identical 3/6 event-anodes; where not: median sum|diff|/sum 2.93e-11  max 6.96e-11  channels differing 3/2856
+  raw0     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw1     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw1     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw1     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw2     U: identical 2/6 event-anodes; where not: median sum|diff|/sum 3.91e-03  max 4.05e-03  channels differing 28/2856
+  raw2     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw2     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw3     U: identical 5/6 event-anodes; where not: median sum|diff|/sum 3.61e-03  max 3.61e-03  channels differing 16/2856
+  raw3     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw3     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw4     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw4     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw4     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw5     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw5     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw5     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw6     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw6     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw6     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  raw7     U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw7     V: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  raw7     W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  wiener0  U: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/2856
+  wiener0  V: identical 3/6 event-anodes; where not: median sum|diff|/sum 9.25e-06  max 9.72e-06  channels differing 782/2856
+  wiener0  W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  wiener1  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.14e-02  max 2.47e-02  channels differing 416/2856
+  wiener1  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 5.83e-02  max 1.09e-01  channels differing 1835/2856
+  wiener1  W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  wiener2  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 5.69e-02  max 7.20e-02  channels differing 2169/2856
+  wiener2  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 4.67e-02  max 9.80e-02  channels differing 2062/2856
+  wiener2  W: identical 0/6 event-anodes; where not: median sum|diff|/sum 9.49e-05  max 1.88e-04  channels differing 2573/3504
+  wiener3  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.24e-02  max 9.04e-02  channels differing 1832/2856
+  wiener3  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.39e-02  max 5.66e-02  channels differing 2051/2856
+  wiener3  W: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.90e-04  max 2.54e-04  channels differing 2095/3504
+  wiener4  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.15e-01  max 1.46e-01  channels differing 2417/2856
+  wiener4  V: identical 1/6 event-anodes; where not: median sum|diff|/sum 3.14e-04  max 1.14e-03  channels differing 39/2856
+  wiener4  W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  wiener5  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 1.70e-02  max 4.96e-02  channels differing 1148/2856
+  wiener5  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.10e-02  max 3.88e-02  channels differing 1034/2856
+  wiener5  W: identical 6/6 event-anodes; where not: median sum|diff|/sum 0.00e+00  max 0.00e+00  channels differing 0/3504
+  wiener6  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.37e-02  max 5.96e-02  channels differing 2245/2856
+  wiener6  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 6.95e-02  max 8.07e-02  channels differing 2365/2856
+  wiener6  W: identical 0/6 event-anodes; where not: median sum|diff|/sum 2.69e-05  max 3.10e-05  channels differing 2631/3504
+  wiener7  U: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.78e-02  max 1.40e-01  channels differing 2130/2856
+  wiener7  V: identical 0/6 event-anodes; where not: median sum|diff|/sum 7.79e-02  max 1.18e-01  channels differing 2053/2856
+  wiener7  W: identical 0/6 event-anodes; where not: median sum|diff|/sum 3.58e-05  max 7.68e-05  channels differing 2397/3504
+  events with every compared frame identical: 0/6  
+  differs 039252_0: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
+  differs 039252_2: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 4V:gauss4 4V:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
+  differs 039253_0: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 4V:gauss4 4V:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
+  differs 039253_1: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 4V:gauss4 4V:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
+  differs 039349_0: 0V:gauss0 0V:raw0 0V:wiener0 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:raw2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 4V:gauss4 4V:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
+  differs 039349_10: 1U:gauss1 1U:wiener1 1V:gauss1 1V:wiener1 2U:gauss2 2U:wiener2 2V:gauss2 2V:wiener2 2W:gauss2 2W:wiener2 3U:gauss3 3U:raw3 3U:wiener3 3V:gauss3 3V:wiener3 3W:gauss3 3W:wiener3 4U:gauss4 4U:wiener4 4V:gauss4 4V:wiener4 5U:gauss5 5U:wiener5 5V:gauss5 5V:wiener5 6U:gauss6 6U:wiener6 6V:gauss6 6V:wiener6 6W:gauss6 6W:wiener6 7U:gauss7 7U:wiener7 7V:gauss7 7V:wiener7 7W:gauss7 7W:wiener7
