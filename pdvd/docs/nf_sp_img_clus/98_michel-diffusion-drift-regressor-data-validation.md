@@ -90,7 +90,8 @@ CUDA_VISIBLE_DEVICES=1 python3 d98_predict.py --run latest_sw99
 python3 d98_plots.py --run latest_sw99 --tag latest_sw99 --pdvd-arm p98vonq   # scan/d98/latest_sw99/stats_latest_sw99.txt, figs/98_latest_sw99_*.png
 python3 d98_compare_runs.py --run latest_sw99 > $S/d98/latest_sw99/compare_round1.txt
 CUDA_VISIBLE_DEVICES=1 python3 d98_rescale_check.py --run latest_sw99 > $S/d98/latest_sw99/rescale_check.txt  # gain in/out
-#   (reads round 1's PDVD crops from /home/xqian/tmp/d98/crops_pdvd.npz, md5 75d30270eebc4f49175e84f7f4bf5f8d)
+#   (reads round 1's PDVD crops from /home/xqian/tmp/d98/crops_pdvd.npz, md5 75d30270eebc4f49175e84f7f4bf5f8d; those crops
+#    cannot be rebuilt, so once scratch is cleaned this line no longer runs and rescale_check.txt is the record)
 # sensitivity, the carried record alone: --run latest --pdvd-record $S/pdvd_stm_michel_smx9_carried_p98vonq.json (tables only)
 ```
 
@@ -515,7 +516,7 @@ settled here.
      mu divided by the 0.42 slope.
    - **Why it is not enough.** The matched simulation reaches 32 cm (section 6c). PDVD's scatter in mu is close to the
      simulation expectation, so a relabelling cannot close that gap; only restoring the response can. That points to the
-     wire filter (item 1), the charge scale (item 2) or a fine-tune.
+     wire filter (item 1) or a fine-tune; the charge scale (item 2) is measured at ~0.05 of slope.
    - **The fine-tune test.** A small fine-tune on the 56 in-range PDVD Michels, with a held-out third, would say whether
      the compression is a domain shift the network can absorb.
 4. **A near-anode re-diffusion closure on data** (the study's P9 augmentation ladder): re-broaden the < 80 cm Michels
@@ -584,7 +585,12 @@ the latest results instead of production results?"* The latest configuration is 
 - 36 are scored only on production.
 
 **The same objects** (`scan/d98/latest_sw99/compare_round1.txt`). The drift label does not move (median 0.00 cm,
-p16/p84 -0.17/+0.24). mu_Z moves by a median -0.4 cm, and r(mu_Z latest, mu_Z production) = 0.75. On the objects in
+p16/p84 -0.17/+0.24), with one exception: `039349_53/48` (production `039349_53/45`, anode 5, in range on both arms). It
+is cut at the same crop origin with 367 → 361 pixels, but its label goes 200.3 → 138.5 cm (the next largest change
+among the 55 is 1.1 cm). Its `cluster_t0_us` moved 2394.9 → 2812.2 µs, i.e. the two arms matched it to different flashes.
+The model reads ~135 cm on both, but that does not say which flash is right. It enters both sides of each gain in/out
+pair with the same label, so the ~0.05 below is unaffected. Leaving it out moves the same-object slope drop by less
+than 0.03 (`rescale_check.txt` sections D, E). mu_Z moves by a median -0.4 cm, and r(mu_Z latest, mu_Z production) = 0.75. On the objects in
 range on both arms:
 
 | objects | n | latest rho / slope [68 %] | production rho / slope [68 %] | crop charge `q_keep` latest / production |
