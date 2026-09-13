@@ -1,0 +1,48 @@
+=== 1. GEOMETRY (protodunehd-wires-larsoft-v1.json.bz2), AnodePlane order
+  face idents per anode: [[0, 1], [0, 1], [0, 1], [0, 1]]
+  apa 0 plane U: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 0 plane V: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 0 plane W: channels 960, distinct faces per channel {1: 960}, face of the FIRST listed wire {0: 480, 1: 480}
+  apa 1 plane U: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 1 plane V: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 1 plane W: channels 960, distinct faces per channel {1: 960}, face of the FIRST listed wire {0: 480, 1: 480}
+  apa 2 plane U: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 2 plane V: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 2 plane W: channels 960, distinct faces per channel {1: 960}, face of the FIRST listed wire {0: 480, 1: 480}
+  apa 3 plane U: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 3 plane V: channels 800, distinct faces per channel {2: 800}, face of the FIRST listed wire {0: 800}
+  apa 3 plane W: channels 960, distinct faces per channel {1: 960}, face of the FIRST listed wire {0: 480, 1: 480}
+
+=== 2+3. RECORDED (face, wire) OF EVERY PDHD CELL vs THE GEOMETRY LIST
+  recorded face 0 U/V other roles  -> file index           95551
+  recorded face 0 U/V role 1       -> file index           158525
+  recorded face 0 W                -> file index           115194
+  recorded face 1 U/V other roles  -> mirrored n-1-index   17292
+  recorded face 1 W                -> mirrored n-1-index   54835
+  U/V role-1 cells, recorded (face, wire) against the channel's first geometry entry, by apa: {(0, 'FIRST entry'): 50651, (1, 'FIRST entry'): 28251, (2, 'FIRST entry'): 38764, (3, 'FIRST entry'): 40859}
+
+=== 4. SCALE, every candidate of the production arms
+
+  [pdhd h26q2dprod] candidates with W role-1 cells 336; (apa, muon face): {(0, 0): 109, (1, 1): 56, (2, 0): 91, (3, 1): 80}
+    fraction of U/V role-1 cells recorded on another face, per candidate: =0 200, (0,0.5) 0, [0.5,1) 0, =1 136
+    [all] n 336: majority on another face 136 (0.405); control with no U and no V cell 91
+    [is_stm & michel_found] n 70: majority on another face 38 (0.543); control with no U and no V cell 20
+    median other-face fraction by (apa, muon face): {(0, 0): 0.0, (1, 1): 1.0, (2, 0): 0.0, (3, 1): 1.0}
+    median d_stop of role-1 cells: W 8.3 cm | U/V on the muon's face 12.5 | U/V on another face 152.1
+
+  [pdvd p96vprod] candidates with W role-1 cells 595; (apa, muon face): {(0, 0): 13, (0, 1): 34, (1, 0): 25, (1, 1): 32, (2, 0): 30, (2, 1): 32, (3, 0): 30, (3, 1): 20, (4, 0): 43, (4, 1): 48, (5, 0): 26, (5, 1): 47, (6, 0): 77, (6, 1): 51, (7, 0): 32, (7, 1): 55}
+    fraction of U/V role-1 cells recorded on another face, per candidate: =0 464, (0,0.5) 47, [0.5,1) 55, =1 29
+    [all] n 595: majority on another face 84 (0.141); control with no U and no V cell 5
+    [is_stm & michel_found] n 147: majority on another face 25 (0.170); control with no U and no V cell 0
+    median other-face fraction by (apa, muon face): {(0, 0): 0.0, (0, 1): 0.0, (1, 0): 0.0, (1, 1): 0.0, (2, 0): 0.0, (2, 1): 0.0, (3, 0): 0.0, (3, 1): 0.0, (4, 0): 0.0, (4, 1): 0.0, (5, 0): 0.0, (5, 1): 0.03, (6, 0): 0.0, (6, 1): 0.0, (7, 0): 0.0, (7, 1): 0.0}
+    median d_stop of role-1 cells: W 13.6 cm | U/V on the muon's face 13.5 | U/V on another face 14.2
+
+=== 5. PER CELL (PDHD): the recorded wire against the channel's wires on its APA's ACTIVE face
+  W cells by (apa -> face counts): {0: {0: 83849}, 1: {1: 23705}, 2: {0: 31345}, 3: {1: 31130}} => active face {2: 0, 1: 1, 3: 1, 0: 0}
+  U/V channels by the number of their wires on the active face (apa, plane, n): {(0, 'U', 1): 452, (0, 'U', 2): 348, (0, 'V', 1): 452, (0, 'V', 2): 348, (1, 'U', 1): 452, (1, 'U', 2): 348, (1, 'V', 1): 452, (1, 'V', 2): 348, (2, 'U', 1): 452, (2, 'U', 2): 348, (2, 'V', 1): 452, (2, 'V', 2): 348, (3, 'U', 1): 452, (3, 'U', 2): 348, (3, 'V', 1): 452, (3, 'V', 2): 348}
+  active face, 2 active-face wires, recorded the first n  38359  d_stop p50   28.5  p90  378.0  beyond 100 cm 0.492
+  active face, channel has 1 active-face wire          n  51056  d_stop p50   10.5  p90   22.9  beyond 100 cm 0.000
+  other face (first-listed wire is on face 0)          n  69110  d_stop p50  148.2  p90  304.0  beyond 100 cm 0.644
+  PDVD plane U role-1 cells n 104145  d_stop p50 12.9  p90 25.5  beyond 100 cm 0.0000
+  PDVD plane V role-1 cells n 110024  d_stop p50 13.5  p90 25.6  beyond 100 cm 0.0000
+  PDVD plane W role-1 cells n 137834  d_stop p50 13.1  p90 25.1  beyond 100 cm 0.0000

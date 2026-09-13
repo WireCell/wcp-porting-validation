@@ -245,6 +245,15 @@ The 7 non-Michel items in PDHD's selection read 21.3 MeV median (region), PDVD's
 
 ### 3.2 What the PDHD excess is — and is not
 
+> **Update 2026-09-12 (doc pdhd/27 §2–4).** The conclusion below stands; its attribution is refined.
+> * **The 8.5 MeV control has three measured parts:**
+>   * the fit under-predicts PDHD's collection charge twice as much, over more muon in the foreshortened W view
+>     (neutral W-only control 6.5 vs 2.5 MeV);
+>   * the control overlaps the stop on steep muons;
+>   * a wire-lookup defect in PDHD's induction-plane distances.
+> * **The defect is energy-only, affects PDHD only, and moves individual items.** Pooled, the corrected hand-Michel
+>   region is 38.9–44.0 MeV and the control 7.8–10.2.
+
 * **The region reads higher on PDHD, and so does its floor.** The body control is the same sum on the muon,
   where there is no Michel and the fit's prediction should net the charge to about zero. It reads 8.5 MeV on
   PDHD against 2.6 on PDVD — a 5.9 MeV difference, about the size of the region difference (5.2 MeV). **The
@@ -387,6 +396,12 @@ and triangles are medians in 50 cm bins with at least 3 tracks.*
 * **PDVD's x > 0 volume rises with drift distance** — 0.88 near the anode to about 1.0 near the cathode. Electron
   attachment would do the opposite (more drift, less charge). So the low x > 0 plateau is not a lifetime loss; the
   deficit sits close to the anode. No correction exists in the chain, and this doc does not propose one.
+  *Update 2026-09-12 (doc pdhd/27 §5):*
+  * **It is a real position effect.** It holds within single tracks once the residual-range shape is separated out,
+    +11 %/100 cm [+4, +19].
+  * **Steepness does not explain it.**
+  * **All four top anodes read low.**
+  * **About half follows the fit's collection-plane prediction bias.**
 
 ## 5. What is NOT concluded
 
@@ -402,7 +417,7 @@ and triangles are medians in 50 cm bins with at least 3 tracks.*
 * **Not a high-dE/dx charge deficit.** The last-centimetre shortfall (§4.1) cannot be separated from sampling
   and stop placement on a steeply rising curve; it is similar on both detectors.
 * **Not an explanation of PDVD's near-anode deficit** in its x > 0 volume (§4.2). It is reported with its sign;
-  its mechanism is open.
+  its mechanism is open. Doc pdhd/27 §5 narrows it without closing it.
 
 ## Files
 

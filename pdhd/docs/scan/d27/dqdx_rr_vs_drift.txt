@@ -1,0 +1,34 @@
+SYNTHETIC convention check (alpha must follow a, beta must follow b):
+  input a -0.10 b +0.00 -> alpha -0.111 beta +0.001
+  input a +0.00 b +0.10 -> alpha -0.005 beta +0.088
+  input a -0.05 b +0.10 -> alpha -0.049 beta +0.090
+
+=== pdvd p96vprod: tracks 183
+  [x<0] n 40: d drift/d rr p10/p50/p90 -0.76/+0.69/+0.90 | s_rr median -0.026 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.306 [-0.638,+0.013]  beta +0.225 [-0.170,+0.650]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [x>0] n 135: d drift/d rr p10/p50/p90 -0.92/-0.77/+0.06 | s_rr median -0.101 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.041 [-0.102,+0.019]  beta +0.112 [+0.043,+0.187]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [both] n 175: d drift/d rr p10/p50/p90 -0.91/-0.66/+0.79 | s_rr median -0.087 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.111 [-0.149,-0.072]  beta +0.044 [+0.011,+0.079]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [x<0] n 42 per-plane measured/predicted on the muon footprint:
+      U: median 1.186  spearman vs drift -0.20 (p 0.206)  drift 0-100/100-200/200+: 1.174(11) 1.203(22) 1.117(9)
+      V: median 1.220  spearman vs drift -0.32 (p 0.039)  drift 0-100/100-200/200+: 1.239(11) 1.245(22) 1.165(9)
+      W: median 1.066  spearman vs drift -0.35 (p 0.025)  drift 0-100/100-200/200+: 1.068(11) 1.073(22) 1.025(9)
+      plateau ratio drift 0-100/100-200/200+: 1.000 1.051 1.070 | collection-implied (plateau x W meas/pred): 1.089 1.125 1.096  spearman -0.04 (p 0.814)
+  [x>0] n 141 per-plane measured/predicted on the muon footprint:
+      U: median 1.150  spearman vs drift -0.10 (p 0.223)  drift 0-100/100-200/200+: 1.167(59) 1.128(47) 1.145(35)
+      V: median 1.133  spearman vs drift -0.06 (p 0.500)  drift 0-100/100-200/200+: 1.148(59) 1.122(47) 1.138(35)
+      W: median 1.051  spearman vs drift -0.15 (p 0.085)  drift 0-100/100-200/200+: 1.064(58) 1.048(47) 1.038(34)
+      plateau ratio drift 0-100/100-200/200+: 0.881 0.915 0.967 | collection-implied (plateau x W meas/pred): 0.959 0.965 1.002  spearman +0.17 (p 0.049)
+
+=== pdhd h26q2dprod: tracks 74
+  [x<0] n 23: d drift/d rr p10/p50/p90 -0.52/-0.06/+0.44 | s_rr median -0.106 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.254 [-0.468,-0.054]  beta +0.068 [-0.166,+0.296]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [x>0] n 47: d drift/d rr p10/p50/p90 -0.44/+0.04/+0.56 | s_rr median -0.021 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.045 [-0.099,+0.007]  beta -0.068 [-0.141,+0.009]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [both] n 70: d drift/d rr p10/p50/p90 -0.44/+0.03/+0.56 | s_rr median -0.041 per 100 cm rr | fit s_rr = alpha + beta*(d drift/d rr): alpha -0.117 [-0.183,-0.043]  beta +0.014 [-0.061,+0.090]  (alpha = rr shape per 100 cm rr, beta = drift slope per 100 cm drift)
+  [x<0] n 24 per-plane measured/predicted on the muon footprint:
+      U: median 1.189  spearman vs drift +0.04 (p 0.844)  drift 0-100/100-200/200+: 1.140(4) 1.199(9) 1.170(10)
+      V: median 1.196  spearman vs drift +0.01 (p 0.957)  drift 0-100/100-200/200+: 1.176(4) 1.169(9) 1.197(10)
+      W: median 1.095  spearman vs drift -0.18 (p 0.411)  drift 0-100/100-200/200+: 1.082(4) 1.101(8) 1.077(10)
+      plateau ratio drift 0-100/100-200/200+: 0.988 0.988 1.003 | collection-implied (plateau x W meas/pred): 1.086 1.136 1.100  spearman -0.14 (p 0.526)
+  [x>0] n 50 per-plane measured/predicted on the muon footprint:
+      U: median 1.236  spearman vs drift -0.06 (p 0.657)  drift 0-100/100-200/200+: 1.323(7) 1.243(11) 1.232(31)
+      V: median 1.242  spearman vs drift -0.07 (p 0.629)  drift 0-100/100-200/200+: 1.338(7) 1.267(11) 1.233(32)
+      W: median 1.142  spearman vs drift +0.07 (p 0.647)  drift 0-100/100-200/200+: 1.188(7) 1.103(11) 1.136(30)
+      plateau ratio drift 0-100/100-200/200+: 0.984 0.988 0.995 | collection-implied (plateau x W meas/pred): 1.195 1.100 1.143  spearman +0.14 (p 0.349)

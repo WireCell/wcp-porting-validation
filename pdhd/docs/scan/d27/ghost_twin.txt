@@ -1,0 +1,34 @@
+pitch [cm] per plane (median over apa/face): {0: np.float64(0.4669), 1: np.float64(0.4669), 2: np.float64(0.4791)} spread 0.01229
+is_stm & michel_found candidates (every APA, no truth) 72; hand Michel (APA0 strict) 44
+  with W role-1 cells: 70
+s = cm per tick fitted on W cells of 12 items: 0.0788 (sum of rms 0.0062 cm)
+
+=== TWIN (recorded distances reproduced from the (tick, wire) lattice), rms residual cm, median / max
+  [muon face 0 (APA0/APA2)] n 32
+    rmsW_stop          n  32 median 0.0003 max 0.0050
+    rmsW_ctl           n  32 median 0.0002 max 0.0051
+    rms_mu_stop_0      n  32 median 0.0003 max 0.0031
+    rms_mu_stop_1      n  32 median 0.0002 max 0.0043
+  [muon face 1 (APA1/APA3)] n 38
+    rmsW_stop          n  38 median 0.0010 max 0.0039
+    rmsW_ctl           n  38 median 0.0011 max 0.0039
+    rms_mu_stop_0      n  38 median 0.0004 max 0.0023
+    rms_mu_stop_1      n  38 median 0.0003 max 0.0016
+    rms_other_stop_0   n  38 median 0.0000 max 0.0019
+    rms_other_stop_1   n  38 median 0.0000 max 0.0015
+    rms_other_ctl_0    n  38 median 0.0000 max 0.0014
+  chain vs offline recorded-distance sums: region max |diff| 3.54e-05 MeV, control 5.35e-05 MeV
+
+=== CORRECTION (U/V distances recomputed on the nearest muon-face wire of each channel)
+  NEGATIVE CONTROL: cells recorded on the muon's face on a one-muon-face-wire channel: 67536 (both centres), changed by more than 0.01 cm: 0
+  GHOST CHECK: cells recorded on the muon's face within 30 cm moved to another segment: 0
+  cells whose region distance changed: 24925, control distance: 24949
+  [muon on APA0/APA2 (face 0), corrected | every is_stm Michel] n 32: region  38.8 ->  39.9 MeV (items changed 10, median shift +0.0) | control  10.2 ->   9.6 (changed 10) | control U cells p50 246 -> 246 | cells whose own_blob had to be assumed p50 region 0 ctl 0
+  [muon on APA0/APA2 (face 0), corrected | hand Michel] n 13: region  37.4 ->  37.4 MeV (items changed 5, median shift +0.0) | control   6.3 ->   5.8 (changed 5) | control U cells p50 269 -> 269 | cells whose own_blob had to be assumed p50 region 0 ctl 0
+  [muon on APA1/APA3 (face 1), corrected | every is_stm Michel] n 38: region  39.2 ->  47.1 MeV (items changed 38, median shift +4.1) | control  13.4 ->   8.3 (changed 36) | control U cells p50 0 -> 100 | cells whose own_blob had to be assumed p50 region 208 ctl 201
+  [muon on APA1/APA3 (face 1), corrected | hand Michel] n 31: region  40.2 ->  50.7 MeV (items changed 31, median shift +4.3) | control  14.2 ->   8.2 (changed 29) | control U cells p50 0 -> 99 | cells whose own_blob had to be assumed p50 region 203 ctl 198
+
+=== PDHD hand Michel, pooled (every correctable item corrected), median MeV
+  rec    n 44: region  39.5 (above 52.8: 12) | control   8.5 (above 10: 21)
+  fix    n 44: region  44.0 (above 52.8: 18) | control   7.8 (above 10: 15)
+  fixlo  n 44: region  38.9 (above 52.8: 13) | control  10.2 (above 10: 22)

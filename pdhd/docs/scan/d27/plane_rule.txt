@@ -1,0 +1,32 @@
+
+=== pdhd h26q2dprod: hand Michel 44; twin of the combined ctl/region charge: 88/88
+  U/V role-1 cells on a face != the muon's face, per item: all-or-nothing? Counter({np.float64(1.0): 31, np.float64(0.0): 13})
+    apa 1 muon face 1 x>0 U/V WRONG: 12
+    apa 2 muon face 0 x<0 U/V right: 13
+    apa 3 muon face 1 x>0 U/V WRONG: 19
+  [all] n 44
+    ctl: chain median   8.5 | offline full   8.5 | W-only  11.9 | U/V-only  11.9 | W dropped by the switch on 8 | per-plane S p50 U/V/W   0.0/  0.0/ 11.9 | W (meas-mu)/mu p50 +0.179 | W mu p50  93.3 MeV-eq
+    reg: chain median  39.5 | offline full  39.5 | W-only  46.9 | U/V-only  38.9 | W dropped by the switch on 15 | per-plane S p50 U/V/W  39.1/ 39.1/ 46.9 | W (meas-mu)/mu p50 +0.694 | W mu p50  63.5 MeV-eq
+      |cos_vert| 0.0-0.70 n   8: ctl chain   4.3 W-only   4.3 U/V-only   6.4 | ctl W res +0.155 W mu  59.2 | region chain  34.0 W-only  37.2 U/V-only  35.6
+      |cos_vert| 0.7-0.90 n  21: ctl chain   7.0 W-only   6.3 U/V-only  15.4 | ctl W res +0.107 W mu  84.5 | region chain  39.3 W-only  53.4 U/V-only  37.6
+      |cos_vert| 0.9-1.01 n  15: ctl chain  21.8 W-only  30.8 U/V-only   8.7 | ctl W res +0.226 W mu 150.8 | region chain  43.6 W-only  59.5 U/V-only  44.5
+  [right face] n 13
+    ctl: chain median   6.3 | offline full   6.3 | W-only   6.3 | U/V-only   8.7 | W dropped by the switch on 1 | per-plane S p50 U/V/W   8.9/  8.3/  6.3 | W (meas-mu)/mu p50 +0.077 | W mu p50  73.6 MeV-eq
+    reg: chain median  37.4 | offline full  37.4 | W-only  37.1 | U/V-only  39.4 | W dropped by the switch on 1 | per-plane S p50 U/V/W  40.7/ 42.2/ 37.1 | W (meas-mu)/mu p50 +0.672 | W mu p50  59.9 MeV-eq
+      |cos_vert| 0.0-0.70 n   5: ctl chain   5.7 W-only   5.4 U/V-only   7.3 | ctl W res +0.116 W mu  60.4 | region chain  33.8 W-only  32.4 U/V-only  39.4
+      |cos_vert| 0.7-0.90 n   6: ctl chain   6.7 W-only   6.1 U/V-only  10.4 | ctl W res +0.061 W mu  86.5 | region chain  38.2 W-only  45.7 U/V-only  38.7
+      |cos_vert| 0.9-1.01 n   2: ctl chain   9.7 W-only  10.2 U/V-only   7.5 | ctl W res +0.080 W mu 134.4 | region chain  40.1 W-only  38.9 U/V-only  44.7
+  [WRONG face] n 31
+    ctl: chain median  14.2 | offline full  14.2 | W-only  15.9 | U/V-only  19.3 | W dropped by the switch on 7 | per-plane S p50 U/V/W   0.0/  0.0/ 15.9 | W (meas-mu)/mu p50 +0.226 | W mu p50 109.0 MeV-eq
+    reg: chain median  40.2 | offline full  40.2 | W-only  54.5 | U/V-only  38.5 | W dropped by the switch on 14 | per-plane S p50 U/V/W  37.2/ 37.9/ 54.5 | W (meas-mu)/mu p50 +0.716 | W mu p50  70.9 MeV-eq
+      |cos_vert| 0.0-0.70 n   3: ctl chain   0.8 W-only   3.1 U/V-only   0.0 | ctl W res +0.317 W mu  58.0 | region chain  34.2 W-only  39.2 U/V-only  33.6
+      |cos_vert| 0.7-0.90 n  15: ctl chain  12.6 W-only  13.4 U/V-only  20.8 | ctl W res +0.167 W mu  84.5 | region chain  39.3 W-only  53.4 U/V-only  37.3
+      |cos_vert| 0.9-1.01 n  13: ctl chain  26.7 W-only  60.0 U/V-only  15.6 | ctl W res +0.316 W mu 168.4 | region chain  45.6 W-only  59.6 U/V-only  44.5
+
+=== pdvd p96vprod: hand Michel 134; twin of the combined ctl/region charge: 268/268
+  [all] n 134
+    ctl: chain median   2.6 | offline full   2.6 | W-only   2.5 | U/V-only   5.7 | W dropped by the switch on 15 | per-plane S p50 U/V/W   8.4/  8.7/  2.5 | W (meas-mu)/mu p50 +0.063 | W mu p50  51.6 MeV-eq
+    reg: chain median  34.3 | offline full  34.3 | W-only  34.3 | U/V-only  35.7 | W dropped by the switch on 19 | per-plane S p50 U/V/W  40.0/ 39.8/ 34.3 | W (meas-mu)/mu p50 +0.868 | W mu p50  39.1 MeV-eq
+      |cos_vert| 0.0-0.70 n  53: ctl chain   5.0 W-only   4.5 U/V-only   6.7 | ctl W res +0.091 W mu  61.8 | region chain  37.3 W-only  38.5 U/V-only  35.0
+      |cos_vert| 0.7-0.90 n  35: ctl chain   2.1 W-only   0.7 U/V-only   5.6 | ctl W res +0.018 W mu  48.6 | region chain  37.7 W-only  37.7 U/V-only  37.8
+      |cos_vert| 0.9-1.01 n  38: ctl chain   1.1 W-only   0.6 U/V-only   5.0 | ctl W res +0.022 W mu  46.5 | region chain  29.3 W-only  28.3 U/V-only  32.7

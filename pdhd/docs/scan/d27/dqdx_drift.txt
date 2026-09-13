@@ -1,0 +1,36 @@
+
+=== pdvd p96vprod: good stoppers with a plateau 183
+  [x<0] n 42 | plateau median 1.039 | t0_us: zero 0, p10/p50/p90 1898/3762/5853
+     corr(plateau, drift) spearman +0.15 p 0.345 | corr(plateau, |cos_x|) +0.21 p 0.177 | corr(drift, |cos_x|) +0.47
+     plateau ~ a + b*drift/100cm + c*|cos_x|: a 0.877  b +0.017 [-0.013,+0.048]  c +0.166 [+0.055,+0.272]
+     |cos_x| 0.00-0.50: n   4 plateau 0.983 drift p50   145 | drift 0-100/100-200/200+: - 1.03(3) -
+     |cos_x| 0.50-0.85: n  27 plateau 1.046 drift p50   120 | drift 0-100/100-200/200+: 1.00(9) 1.04(14) 1.09(4)
+     |cos_x| 0.85-1.01: n  11 plateau 1.042 drift p50   181 | drift 0-100/100-200/200+: - 1.07(5) 0.96(5)
+     WITHIN-TRACK slope of normalised dQ/dx per 100 cm drift (rr 20-100, span >= 30 cm): median -0.059 [-0.164,-0.025] n 37
+     pooled track-normalised points vs drift: 0-25:- 25-50:1.018(453) 50-100:0.998(945) 100-150:0.985(1136) 150-200:1.006(1297) 200-250:1.014(693) 250-300:0.982(381) 300-360:0.968(172)
+     plateau by anode: {0: (1.066, 10), 1: (1.084, 10), 2: (1.044, 12), 3: (1.008, 10)}
+  [x>0] n 141 | plateau median 0.927 | t0_us: zero 0, p10/p50/p90 2191/3433/5075
+     corr(plateau, drift) spearman +0.30 p 0.000 | corr(plateau, |cos_x|) -0.12 p 0.146 | corr(drift, |cos_x|) +0.08
+     plateau ~ a + b*drift/100cm + c*|cos_x|: a 0.800  b +0.052 [+0.035,+0.066]  c +0.039 [-0.042,+0.105]
+     |cos_x| 0.00-0.50: n  28 plateau 0.880 drift p50    98 | drift 0-100/100-200/200+: 0.85(15) 0.92(10) 0.98(3)
+     |cos_x| 0.50-0.85: n  44 plateau 0.971 drift p50   135 | drift 0-100/100-200/200+: 0.97(15) 0.94(15) 1.00(14)
+     |cos_x| 0.85-1.01: n  69 plateau 0.910 drift p50   129 | drift 0-100/100-200/200+: 0.87(29) 0.91(22) 0.95(18)
+     WITHIN-TRACK slope of normalised dQ/dx per 100 cm drift (rr 20-100, span >= 30 cm): median +0.127 [+0.107,+0.178] n 117
+     pooled track-normalised points vs drift: 0-25:0.972(1270) 25-50:1.003(1895) 50-100:1.000(3842) 100-150:1.002(3130) 150-200:1.000(3037) 200-250:1.000(2226) 250-300:1.008(1171) 300-360:1.003(619)
+     plateau by anode: {0: (1.17, 3), 1: (0.973, 3), 2: (1.042, 3), 3: (1.06, 3), 4: (0.899, 35), 5: (0.923, 27), 6: (0.918, 43), 7: (0.887, 24)}
+
+=== pdhd h26q2dprod: good stoppers with a plateau 74
+  [x<0] n 24 | plateau median 0.991 | t0_us: zero 0, p10/p50/p90 -1469/-72/1135
+     corr(plateau, drift) spearman -0.06 p 0.793 | corr(plateau, |cos_x|) +0.41 p 0.049 | corr(drift, |cos_x|) +0.00
+     plateau ~ a + b*drift/100cm + c*|cos_x|: a 0.934  b -0.041 [-0.074,+0.001]  c +0.330 [+0.117,+0.508]
+     |cos_x| 0.00-0.50: n  19 plateau 0.983 drift p50   193 | drift 0-100/100-200/200+: 0.99(3) 0.98(8) 0.95(8)
+     |cos_x| 0.50-0.85: n   5 plateau 1.024 drift p50   204 | drift 0-100/100-200/200+: - - 1.08(3)
+     WITHIN-TRACK slope of normalised dQ/dx per 100 cm drift (rr 20-100, span >= 30 cm): median +0.141 [-0.058,+0.172] n 8
+     pooled track-normalised points vs drift: 0-25:- 25-50:1.014(67) 50-100:1.002(465) 100-150:1.000(762) 150-200:0.994(430) 200-250:1.000(186) 250-300:0.981(472) 300-360:1.015(528)
+  [x>0] n 50 | plateau median 0.987 | t0_us: zero 0, p10/p50/p90 -1475/-15/958
+     corr(plateau, drift) spearman +0.09 p 0.550 | corr(plateau, |cos_x|) +0.27 p 0.062 | corr(drift, |cos_x|) -0.29
+     plateau ~ a + b*drift/100cm + c*|cos_x|: a 0.810  b +0.021 [-0.010,+0.050]  c +0.276 [+0.144,+0.406]
+     |cos_x| 0.00-0.50: n  41 plateau 1.007 drift p50   266 | drift 0-100/100-200/200+: 0.86(5) 1.05(7) 1.01(29)
+     |cos_x| 0.50-0.85: n   9 plateau 0.984 drift p50   148 | drift 0-100/100-200/200+: 1.03(2) 0.98(4) 0.90(3)
+     WITHIN-TRACK slope of normalised dQ/dx per 100 cm drift (rr 20-100, span >= 30 cm): median -0.149 [-0.274,-0.027] n 13
+     pooled track-normalised points vs drift: 0-25:1.000(267) 25-50:1.042(108) 50-100:1.004(586) 100-150:0.988(549) 150-200:0.996(707) 200-250:1.008(547) 250-300:1.001(1779) 300-360:0.998(1504)

@@ -1,0 +1,52 @@
+
+=== pdhd h26q2dprod: hand Michel items 44; twin ctl u/v/w 44/44
+  MeV per 1e6 e (ke/q): median 41.3035  spread 41.3035..41.3035
+  ctl MeV median 8.52  valid Counter({1: 44})  dropped Counter({-1: 15, 0: 12, 1: 9, 2: 8})
+  plane U: cells p50     0 | sum MeV-eq p50   0.00 mean  10.38 | pred_mu p50    0.0 meas p50    0.0  (meas-mu)/mu p50 +0.000
+      xshared      MeV-eq p50   0.00 mean   0.09  nonzero 4
+      resid_pmu>0  MeV-eq p50   0.00 mean   6.75  nonzero 21
+      unpred_pmu0  MeV-eq p50   0.00 mean   3.54  nonzero 10
+      stop         MeV-eq p50   0.00 mean   5.50  nonzero 11
+      r34_         MeV-eq p50   0.00 mean   5.02  nonzero 9
+      neg          MeV-eq p50   0.00 mean  -3.08  nonzero 20
+  plane V: cells p50     0 | sum MeV-eq p50   0.00 mean  12.68 | pred_mu p50    0.0 meas p50    0.0  (meas-mu)/mu p50 +0.000
+      xshared      MeV-eq p50   0.00 mean   0.17  nonzero 1
+      resid_pmu>0  MeV-eq p50   0.00 mean   9.08  nonzero 17
+      unpred_pmu0  MeV-eq p50   0.00 mean   3.43  nonzero 14
+      stop         MeV-eq p50   0.00 mean   5.83  nonzero 8
+      r34_         MeV-eq p50   0.00 mean   5.24  nonzero 8
+      neg          MeV-eq p50   0.00 mean  -2.69  nonzero 17
+  plane W: cells p50   213 | sum MeV-eq p50  11.91 mean  25.48 | pred_mu p50   93.3 meas p50  105.7  (meas-mu)/mu p50 +0.179
+      xshared      MeV-eq p50   0.00 mean   0.13  nonzero 1
+      resid_pmu>0  MeV-eq p50   7.47 mean  15.59  nonzero 44
+      unpred_pmu0  MeV-eq p50   0.16 mean   9.77  nonzero 33
+      stop         MeV-eq p50   0.26 mean  13.81  nonzero 27
+      r34_         MeV-eq p50   0.00 mean   8.41  nonzero 13
+      neg          MeV-eq p50  -7.19 mean -13.59  nonzero 44
+  items (sorted by ctl): 029107_25/123:168.3, 029107_3/107:97.6, 028084_12/117:96.6, 029107_23/128:67.2, 028084_1/142:60.0, 029107_1/85:50.7, 028084_8/110:47.0, 029107_2/108:30.8, 028084_12/101:30.3, 028084_0/97:26.7, 029107_19/95:21.9, 029107_9/109:21.8
+
+=== pdvd p96vprod: hand Michel items 134; twin ctl u/v/w 134/134
+  MeV per 1e6 e (ke/q): median 42.7058  spread 42.7058..42.7058
+  ctl MeV median 2.60  valid Counter({1: 134})  dropped Counter({0: 65, 1: 48, 2: 15, -1: 6})
+  plane U: cells p50   152 | sum MeV-eq p50   8.39 mean  12.26 | pred_mu p50   50.6 meas p50   58.8  (meas-mu)/mu p50 +0.166
+      xshared      MeV-eq p50   0.00 mean   0.02  nonzero 1
+      resid_pmu>0  MeV-eq p50   6.83 mean   8.65  nonzero 134
+      unpred_pmu0  MeV-eq p50   0.06 mean   3.59  nonzero 94
+      stop         MeV-eq p50   0.00 mean   1.63  nonzero 25
+      r34_         MeV-eq p50   0.00 mean   0.40  nonzero 13
+      neg          MeV-eq p50  -3.18 mean  -6.84  nonzero 134
+  plane V: cells p50   152 | sum MeV-eq p50   8.72 mean  10.69 | pred_mu p50   48.7 meas p50   56.7  (meas-mu)/mu p50 +0.184
+      xshared      MeV-eq p50   0.00 mean   0.05  nonzero 1
+      resid_pmu>0  MeV-eq p50   7.14 mean   7.79  nonzero 133
+      unpred_pmu0  MeV-eq p50   0.05 mean   2.85  nonzero 96
+      stop         MeV-eq p50   0.00 mean   1.54  nonzero 14
+      r34_         MeV-eq p50   0.00 mean   0.56  nonzero 3
+      neg          MeV-eq p50  -3.56 mean  -4.45  nonzero 132
+  plane W: cells p50   195 | sum MeV-eq p50   2.50 mean   4.62 | pred_mu p50   51.6 meas p50   54.4  (meas-mu)/mu p50 +0.063
+      xshared      MeV-eq p50   0.00 mean   0.14  nonzero 2
+      resid_pmu>0  MeV-eq p50   2.09 mean   3.72  nonzero 133
+      unpred_pmu0  MeV-eq p50   0.16 mean   0.76  nonzero 131
+      stop         MeV-eq p50   0.00 mean   0.28  nonzero 12
+      r34_         MeV-eq p50   0.00 mean   0.13  nonzero 4
+      neg          MeV-eq p50  -3.27 mean  -3.41  nonzero 133
+  items (sorted by ctl): 039349_39/56:25.5, 039349_82/54:20.5, 039252_3/45:17.2, 039252_3/74:16.7, 039252_17/88:16.7, 039253_8/62:16.7, 039349_37/39:13.2, 039253_0/102:13.1, 039349_63/55:12.6, 039349_29/45:12.1, 039252_16/88:12.1, 039253_3/29:11.1
