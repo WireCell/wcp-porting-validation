@@ -261,9 +261,11 @@ function(
         // Bragg peak, which moves ks_mu/ks_flat, so h21f gained 19 where the naive union of
         // the single-knob arms predicted 17 (the pre-registered twin FAILED here; see
         // docs/scan/h21/census_h21f.txt).  Never re-derive this gain by adding single arms.
-        ks_margin: -0.02,              // C++ default 0.0.  shape_flat fires when ks_mu + margin >= ks_flat;
-                                       // arm h21k alone: +11 stoppers, 0 FP.  0 FP is structural here --
-                                       // the pool of hand-THRU items rejected by shape_flat ALONE is empty.
+        ks_margin: -0.10,              // C++ default 0.0.  shape_flat fires when ks_mu + margin >= ks_flat;
+                                       // doc pdhd/21 set -0.02: arm h21k alone +11 stoppers, 0 FP (0 FP was
+                                       // structural -- the pool of hand-THRU items rejected by shape_flat ALONE was empty).
+                                       // doc pdhd/25 sec 9 moves it to -0.10 TOGETHER WITH the two P1 floors after
+                                       // topology_stop_evidence below, as ONE unit ("lever 1", arm h25k).
         max_candidates: 64,            // C++ default 8.  The cap dropped 16 candidates on 7 of 61 events;
                                        // arm h21m: all 325 existing candidates BIT-IDENTICAL, 0 is_stm flips,
                                        // set 325 -> 341, and +5 hand stoppers / 0 FP among the extras.
@@ -319,6 +321,25 @@ function(
         topology_stop_evidence: true,    // C++ default false (doc pdvd/70 P1).  A Michel at the end
                                          // clears no_bragg|shape_flat AFTER every other bit, so is_stm
                                          // moves only 0 -> 1.  Cleared bits on 25 of 341; +12 stoppers.
+        // ---- doc pdhd/25: the owner's ruling of 2026-09-12 -- "lever 1" ----
+        // ks_margin -0.02 -> -0.10 (above) plus the two P1 floors here, graded as ONE unit on arm h25k
+        // (pin libpin_p96 = toolkit 81ff37d7, libWireCellClus md5 4e1db810).  The pre-registered twin held
+        // item by item.  On the owner-ruled record smx27, APA0 strict (doc pdhd/23 sec 7 convention):
+        //   is_stm 77/0/27/68 -> 89/1/15/67, purity 1.000 -> 0.989, efficiency 0.740 -> 0.856;
+        //   all APAs 96/1/51/106 -> 114/2/33/105; michel_found unchanged; golden 0.579 -> 0.632.
+        // All 13 APA0-strict recoveries were ruled by the owner (tags own25 + own26): 12 stoppers and ONE
+        // through-going muon, 029107_21/65 -- the named false positive this flip accepts, the same kind of
+        // trade as the doc-22 Michel bag.  Never re-derive this gain by adding single-key arms.
+        // compare_range_cm 45 (arm h25r, free, +3) is NOT part of this flip: on top of lever 1 it adds
+        // nothing (h25kr == h25k); its free verdict stands for a separate decision.
+        topology_michel_ke_min: 5.0,     // C++ default 10.0 MeV (= the T2c floor moved_stop_michel_ke_min)
+        topology_michel_len_min_cm: 1.5, // C++ default 3.0 cm (the range-energy distance)
+        // CAUTION: CheckSTM_Michel.cxx (the moved_stop_michel_kink_min / _reach_min_cm notes) says a Michel
+        // spared by the moved-stop veto cannot reach P1 only while moved_stop_michel_ke_min equals
+        // topology_michel_ke_min.  They now differ (10 vs 5).  Harmless HERE: moved_stop_michel_guard is
+        // not set (C++ default false), so T2c never fires on PDHD, nothing is spared, and the kink/reach
+        // exemption keys above are inert.  Turning that guard on would let a spared 5-10 MeV Michel reach
+        // P1 -- re-grade before doing it.
         // NOT set, and each for a measured PDHD reason (docs pdhd/21 sec 5, pdhd/22, pdhd/23):
         //   plateau_mip_hi 2.0    -- PDVD's doc 90 flip recovers ZERO on PDHD; and no plateau window
         //                            move earns its keep: the 12 plateau_off_mip misses are LONG tracks
@@ -328,6 +349,8 @@ function(
         //                            (identical to h22p1) while costing 2 more FP on all-truth.
         //   topology_michel_ke_min:3 -- arm h22p3: costs purity under BOTH readings, and flips 5
         //                            UNCLEAR + 1 MESSY item, a population the scanners could not judge.
+        //                            (doc pdhd/25 SETS it, to 5.0 with len 1.5 and ks_margin -0.10, as a
+        //                            separately graded unit -- see above.  3 on its own stays rejected.)
         //   absorb_bragg_stub     -- see the note above: it broke 029107/1 cluster 113.
         // min_chain_coverage is NOT set: measured 0.30-0.99 on clean stopping muons vs 0.46 on the
         // one EM blob (sec 6.5), so the guard does not separate; chain_coverage is persisted for scans.

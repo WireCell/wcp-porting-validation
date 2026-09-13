@@ -30,10 +30,13 @@
    stoppers and 1 through-going. On record `smx27` lever 1 goes 77/0/27/68 → 89/1/15/67, purity 0.989,
    efficiency 0.740 → 0.856. That is not free by the pre-registered rule; it is a fully owner-ruled
    one-false-positive trade. `compare_range_cm` 45 is free (80/0/24/68), and its three recoveries are all
-   owner-ruled stoppers. The decision is the owner's.**
+   owner-ruled stoppers. The owner took lever 1, and it is now flipped into PDHD production (§9). The
+   confirmation arm on the flipped file is bit-identical to the measured arm on all 341 candidates.
+   `compare_range_cm` 45 is not part of the flip.**
 
-**Read-only for production.** No C++ change, no production jsonnet edit, no record or label touched.
-Six new arms on a pinned binary, new tags only.
+**Production.** Sections 1–8 are read-only for production. §9 flips lever 1 into PDHD's production file
+`pdhd/wct-pr-perevt.jsonnet` on the owner's go. There is no C++ change, no other detector's config is
+touched, and no earlier record or label is written. All arms run on a pinned binary, under new tags only.
 
 ## 0. Repro
 
@@ -129,6 +132,18 @@ export STM_SCAN_RECORD=$D/pdhd_stm_michel_smx27_verdicts.json \
     D25_GATES="p82bhoff=61/0/86/107;h23conf:strict=77/0/27/68,47/3/10/38;h23conf:majority=79/1/29/69,48/3/10/40;h23conf:all=96/1/51/106,65/3/16/54"
 { python3 $D/h23/d23_grade.py h25base h25k h25r h25kr && python3 $D/h23/d23_apa.py h25base h25k h25r h25kr ; } > $X/census_smx27.txt
 python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h25r,h25kr --pdvd p96vprod > $X/q2_smx27.txt
+
+# 8. section 9: THE FLIP -- edit pdhd/wct-pr-perevt.jsonnet (stm_michel_knobs), then (smx27 env still exported from 7)
+(cd $I/pdhd && PDHD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh -nu -stm-fit -s h26cfg 29107 17)   # pctree symlinks of 029107_17_d51hclus
+python3 $D/h22/d22_cfg_keys.py $I/pdhd/work/029107_17_h25cfg0/.wct-pr_h25cfg0.json $I/pdhd/work/029107_17_h26cfg/.wct-pr_h26cfg.json  # 2/0/1
+python3 $D/h22/d22_cfg_keys.py $I/pdhd/work/029107_17_h25cfgK/.wct-pr_h25cfgK.json $I/pdhd/work/029107_17_h26cfg/.wct-pr_h26cfg.json  # 0/0/0
+bash $X/run_arm.sh h26conf                                                 # the flipped FILE, no TLA
+python3 $I/pdvd/docs/nf_sp_img_clus/scripts/d51g_branch_census.py --before "$I/pdhd/work/*_h25k" --after "$I/pdhd/work/*_h26conf" \
+    --before-arm h25k --after-arm h26conf --pts --out $X/g_h26conf.txt
+{ python3 $D/h23/d23_grade.py h25base h25k h26conf && python3 $D/h23/d23_apa.py h25base h25k h26conf ; } > $X/census_h26conf.txt
+python3 $X/d25_score_smx25.py --key $D/smx25/key_smx25.tsv --round $R --record $D/pdhd_stm_michel_smx27_verdicts.json \
+    --reading-b-out <scratch>.json --name smx27 --arms h25base,h25k,h26conf > $X/score_smx27_h26conf.txt
+python3 $X/d25_bragg_michel.py --pdhd h23conf,h25k,h26conf --pdvd p96vprod > $X/q2_h26conf.txt
 ```
 
 Every grader self-gates before printing: `d23_*` on `p82bhoff` = 61/0/87/108 (smx23);
@@ -947,9 +962,60 @@ each time.
    free, so taking it is an explicit trade, like the Michel bag in doc pdhd/22.
 3. **Neither.**
 
-A flip is not done here. It would be a production jsonnet edit that moves the chosen keys into the PDHD
+A flip is not done in this section; the owner then chose option 2, and §9 does it. A flip is a production jsonnet edit that moves the chosen keys into the PDHD
 production STM/Michel bag, then a confirmation arm that must be bit-identical to the measured arm (`h25r`,
 or `h25k`), then a doc and a commit.
+
+## 9. The flip: lever 1 into PDHD production (the owner's go, 2026-09-12)
+
+The owner chose §8.4 option 2. PDHD's production file `pdhd/wct-pr-perevt.jsonnet`, bag `stm_michel_knobs`:
+
+| key | before | after | C++ default |
+|---|---|---|---|
+| `ks_margin` | −0.02 (doc pdhd/21) | **−0.10** | 0.0 |
+| `topology_michel_ke_min` | not set | **5.0** MeV | 10.0 MeV |
+| `topology_michel_len_min_cm` | not set | **1.5** cm | 3.0 cm |
+
+The bag's comment names the measured numbers and the accepted false positive, and warns that the three keys
+are one unit. The old "NOT set" note, which rejected `topology_michel_ke_min:3` on its own, is kept and says
+that 5.0 is taken here as a separately graded unit. **`compare_range_cm` 45 is not part of the flip.** On
+top of lever 1 it adds nothing (`h25kr` = `h25k`), and its free verdict stands for a separate decision. There
+is no C++ change: the toolkit is unchanged at `81ff37d7`, and only PDHD's file is touched.
+
+### 9.1 Gates
+
+| gate | result |
+|---|---|
+| compiled config: production before (`h25cfg0`) → flipped file with no TLA (`h26cfg`) | **2 added, 0 removed, 1 changed** (`ks_margin` −0.02 → −0.1) |
+| flipped file (`h26cfg`) vs the measured arm's TLA config (`h25cfgK`) | **0 / 0 / 0** on the STM/Michel bag, and the **whole** compiled config is identical once the work tag is renamed (270242 bytes) (`cfg_proofs.txt`) |
+| confirmation arm `h26conf`: flipped file, no TLA, pin `libpin_p96` | 61/61 complete, rc 0; md5 `4e1db810` before and after |
+| `h25k` → `h26conf`, branch census with points (`g_h26conf.txt`) | **341/341 bit-identical on all 149 shared branches**; 0 new or dropped branches; **0 `is_stm` flips**; point geometry identical 341/341; 0 role moves |
+| census on smx27 (`census_h26conf.txt`: committed graders on derived gates, PASS; recount in `score_smx27_h26conf.txt`) | identical to `h25k`: APA0 strict **89/1/15/67**, majority 92/2/16/68, all APAs 114/2/33/105; Michel strict 47/3/10/38 |
+| golden (`q2_h26conf.txt`) | identical to `h25k`: strict 36/57 = 0.632, majority 37/58 = 0.638, all APAs 45/81 = 0.556 |
+
+### 9.2 A C++ invariant the flip steps past, and why it is harmless on PDHD
+
+Two notes in `CheckSTM_Michel.cxx`, on `moved_stop_michel_kink_min` and `moved_stop_michel_reach_min_cm`,
+say a Michel spared by the moved-stop veto cannot reach P1 only while `moved_stop_michel_ke_min` equals
+`topology_michel_ke_min`. Both are 10 MeV by default, and the flip makes them 10 and 5.
+* On PDHD the veto itself, `moved_stop_michel_guard`, is not set: it is absent from both compiled configs,
+  so the C++ default false applies.
+* So T2c never fires and nothing is spared. The exemption keys PDHD sets (kink 60°, reach 6.5 cm) are inert.
+
+The production comment records this, and warns that turning the guard on would let a spared 5–10 MeV Michel
+reach P1, which would need a re-grade first.
+
+### 9.3 PDHD production after the flip
+
+On `smx27`, APA0 strict:
+* `is_stm`: 77/0/27/68 → **89/1/15/67**. Purity 1.000 → 0.989, efficiency 0.740 → **0.856**.
+* All APAs: 96/1/51/106 → 114/2/33/105.
+* `michel_found` is unchanged. Golden 0.579 → 0.632.
+
+The one accepted false positive is `029107_21/65`, which the owner called THRU. The flip was measured on
+toolkit `81ff37d7` (`libWireCellClus` md5 `4e1db810`), which is the binary in `local/lib` today. As doc
+pdhd/22 found, a key the binary does not implement is silently ignored, so production must run this binary
+or a later one.
 
 ## Files
 
@@ -974,3 +1040,4 @@ or `h25k`), then a doc and a commit.
 | §7, the record and scoring | `docs/scan/pdhd_stm_michel_smx26_verdicts.json` (317 records, `owner_review` on the 8), `smx25/provenance_smx26.json`, `smx25/record_smx26_readingB.json` (= reading A); `docs/scan/h25/score_smx26.txt` (`d25_score_smx25.py --name smx26`; the default output is unchanged), `census_smx26.txt`, `q2_smx26.txt` |
 | §8, the owner's scan | `docs/scan/smx26/preregistered_own26.md`, `own26_sheet.tsv`, `own26_label_shas_before.txt`, `own26_label_sha_at_fold.txt`, `owner_rulings_own26.json` (`d25_own25_rulings.py --tag own26`); labels tag `work/stm_michel_labels/own26` (sha `b009fa68…`) |
 | §8, the record and scoring | `docs/scan/pdhd_stm_michel_smx27_verdicts.json` (317 records, `owner_review` on 18 tranche items), `smx26/provenance_smx27.json`, `smx26/record_smx27_readingB.json` (= reading A); `docs/scan/h25/score_smx27.txt`, `census_smx27.txt`, `q2_smx27.txt` |
+| §9, the flip | `pdhd/wct-pr-perevt.jsonnet` (`stm_michel_knobs`); compiled-config proofs appended to `docs/scan/h25/cfg_proofs.txt`; confirmation `docs/scan/h25/g_h26conf.txt`, `census_h26conf.txt`, `score_smx27_h26conf.txt`, `q2_h26conf.txt` |

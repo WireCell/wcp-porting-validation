@@ -129,3 +129,27 @@ REMOVED (0):
 CHANGED (0):
 
 PROOF LINE: 1 added, 0 removed, 0 changed
+
+================ doc pdhd/25 sec 9: THE FLIP (owner's go 2026-09-12, option 2 = lever 1) ================
+h26cfg = the edited production FILE pdhd/wct-pr-perevt.jsonnet, compiled with NO TLA:
+  PDHD_PR_COMPILE_ONLY=1 ./run_pr_evt.sh -nu -stm-fit -s h26cfg 29107 17   (pctree symlinks of 029107_17_d51hclus)
+
+--- h25cfg0 (production before) -> h26cfg: want 2 added, 0 removed, 1 changed
+before 88 keys -> after 90 keys
+ADDED   (2):
+  + topology_michel_ke_min             5
+  + topology_michel_len_min_cm         1.5
+REMOVED (0):
+CHANGED (1):
+  ~ ks_margin                          -0.02 -> -0.1
+
+PROOF LINE: 2 added, 0 removed, 1 changed
+--- h25cfgK (arm h25k's measured TLA config) -> h26cfg: want 0/0/0
+before 90 keys -> after 90 keys
+ADDED   (0):
+REMOVED (0):
+CHANGED (0):
+
+PROOF LINE: 0 added, 0 removed, 0 changed
+--- whole compiled config, h26cfg with its work tag renamed h26cfg->h25cfgK, vs h25cfgK:
+  identical: True | bytes 270242 270236 | tag occurrences 6
