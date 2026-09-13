@@ -1,0 +1,273 @@
+# doc pdvd/99 re-scan list for arm p98vonq (match match_p98vonq.json); one row per flagged record item; new_vs_identity = reason types not already flagged on the identity match
+volume	old_key	new_key	verdict	michel_kind	status	f_fwd	f_rev	dx_cm	stop_move_cm	new_vs_identity	reasons
+?	039252_16/31	039252_16/31	THRU	— not set —	ok	0.9963	0.9969	0.0		-	candidate:none
+?	039252_16/91	039252_16/93	MESSY	none	ok	0.9534	0.9296	0.0		-	candidate:none;class:MESSY
+?	039252_9/49	039252_9/111	STM_ONLY	detached dots	merged	0.9832	0.2226	96.7		match,michel_tag,t0	match:merged;t0:dx96.7;michel_tag:158024:lost;michel_tag:159025:lost
+?	039253_10/30	039253_10/28	THRU	— not set —	ok	0.996	0.9904	0.0		-	candidate:none
+?	039253_2/50	039253_2/50	THRU	— not set —	ok	0.996	0.998	0.0		-	candidate:none
+?	039253_3/60	039253_3/59	STM_MICHEL	both	ok	0.9913	0.9938	0.0		-	candidate:none
+?	039349_25/57	039349_25/59	THRU	— not set —	ok	0.989	0.9916	0.0		-	candidate:none
+?	039349_25/69	039349_25/73	THRU	— not set —	ok	0.9933	0.9944	0.0		-	candidate:none
+?	039349_25/71	039349_25/75	THRU	— not set —	ok	0.9921	0.9895	0.0		-	candidate:none
+?	039349_27/54	039349_27/63	THRU	— not set —	ok	0.9957	0.549	0.0		-	candidate:none
+?	039349_45/19	039349_45/24	THRU	— not set —	ok	0.969	0.9894	0.0		-	candidate:none
+?	039349_48/20	039349_48/22	THRU	— not set —	ok	0.9569	0.9812	0.0		-	candidate:none
+?	039349_50/55	039349_50/60	STM_ONLY	detached dots	ok	0.9977	0.9891	-47.1		michel_tag,t0	candidate:none;t0:dx-47.1;michel_tag:165001:lost;michel_tag:166002:lost;michel_tag:167003:lost
+?	039349_68/23	039349_68/22	THRU	— not set —	ok	0.987	1.0	0.0		-	candidate:none
+?	039349_7/20	039349_7/28	STM_MICHEL	attached	ok	0.9885	0.9716	0.0		-	candidate:none
+?	039349_74/53	039349_74/48	THRU	— not set —	ok	0.9917	0.995	0.0		-	candidate:none
+?	039349_81/21	039349_81/18	THRU	none	ok	0.9613	1.0	0.0		-	candidate:none
+?	039349_82/50	039349_82/50	THRU	— not set —	ok	0.9924	0.9953	0.0		-	candidate:none
+bottom	039252_12/45	039252_12/40	THRU	none	ok	0.9918	0.9952	0.0		candidate	candidate:none
+bottom	039252_14/37	039252_14/37	STM_MICHEL	both	ok	0.9777	0.9634	0.0	0.13	michel_tag	michel_tag:134013:lost
+bottom	039252_16/32	039252_16/32	STM_MICHEL	attached	ok	0.9764	0.9758	-95.2		candidate,t0	candidate:none;t0:dx-95.2
+bottom	039252_16/33	039252_16/33	THRU	none	ok	0.9488	0.9869	0.0		candidate	candidate:none
+bottom	039252_17/104	039252_17/78	STM_ONLY	detached dots	lost	0.5424	0.9939	-0.6		match	match:lost
+bottom	039252_3/45	039252_3/45	STM_MICHEL	attached	ok	0.9842	1.0	0.0		candidate	candidate:none
+bottom	039252_4/55	039252_4/55	THRU	none	ok	0.9954	0.9897	0.0		candidate	candidate:none
+bottom	039252_6/114	039252_6/25	THRU	— not set —	split	0.7839	0.9964	0.0		match	match:split
+bottom	039252_7/34	039252_7/29	THRU	none	ok	0.9967	1.0	0.0		candidate	candidate:none
+bottom	039252_9/52	039252_9/49	STM_MICHEL	attached	ok	0.945	0.9665	0.0	1.13	michel_tag	michel_tag:173014:lost
+bottom	039253_0/44	039253_0/39	STM_MICHEL	attached	ok	0.9963	1.0	0.0		candidate	candidate:none
+bottom	039253_1/116	039253_1/116	THRU	none	ok	0.9927	0.9953	0.0		candidate	candidate:none
+bottom	039253_10/25	039253_10/24	THRU	none	ok	0.9911	0.9888	0.0		candidate	candidate:none
+bottom	039253_10/35	039253_10/34	THRU	none	ok	0.9609	0.9667	0.0	26.12	stop	stop:26.1cm
+bottom	039253_11/44	039253_11/41	THRU	none	ok	0.9317	0.9972	0.0		candidate	candidate:none
+bottom	039253_12/41	039253_12/42	STM_ONLY	none	ok	0.9783	0.969	11.2		candidate,t0	candidate:none;t0:dx11.2
+bottom	039253_14/47	039253_14/43	THRU	none	ok	0.9968	0.9953	0.0		candidate	candidate:none
+bottom	039253_15/105	039253_15/107	STM_MICHEL	both	ok	0.9961	0.9925	0.0		candidate	candidate:none
+bottom	039253_15/36	039253_15/29	STM_MICHEL	attached	ok	0.9985	0.998	0.0		candidate	candidate:none
+bottom	039253_16/119	039253_16/130	THRU	none	ok	0.9968	0.9978	0.0		candidate	candidate:none
+bottom	039253_16/51	039253_16/52	STM_ONLY	detached dots	ok	1.0	0.9967	55.5		candidate,michel_tag,t0	candidate:none;t0:dx55.5;michel_tag:148003:lost
+bottom	039253_17/127	039253_17/23	STM_ONLY	none	lost	0.4847	0.9927	8.9		match,t0	match:lost;t0:dx8.9
+bottom	039253_2/13	039253_2/13	STM_MICHEL	attached	ok	0.986	0.9875	0.0		candidate	candidate:none
+bottom	039253_6/41	039253_6/44	STM_ONLY	detached dots	ok	0.9915	0.9957	0.0	0.03	michel_tag	michel_tag:173008:lost
+bottom	039253_8/31	039253_8/31	THRU	— not set —	ok	0.9853	0.9914	0.0		candidate	candidate:none
+bottom	039349_10/27	039349_10/30	THRU	— not set —	ok	0.9896	0.9808	0.0		candidate	candidate:none
+bottom	039349_11/24	039349_11/28	THRU	none	ok	0.9985	0.9975	0.0		candidate	candidate:none
+bottom	039349_13/32	039349_13/16	THRU	none	ok	0.9988	0.9994	0.0		candidate	candidate:none
+bottom	039349_15/18	039349_15/63	THRU	none	merged	0.8012	0.0501	231.7		match,t0	match:merged;t0:dx231.7
+bottom	039349_18/18	039349_18/19	THRU	none	ok	0.9964	0.9414	0.0		candidate	candidate:none
+bottom	039349_18/9	039349_18/16	THRU	none	ok	0.9832	0.9573	-91.8	4.06	t0	t0:dx-91.8
+bottom	039349_2/10	039349_2/13	THRU	none	ok	0.7919	0.9841	0.0		candidate	candidate:none
+bottom	039349_2/15	039349_2/18	THRU	none	ok	0.9924	0.9981	-13.0		candidate,t0	candidate:none;t0:dx-13.0
+bottom	039349_22/28	039349_22/30	THRU	none	ok	0.9841	0.9874	0.0		candidate	candidate:none
+bottom	039349_24/21	039349_24/22	UNCLEAR	none	ok	0.9625	0.9398	0.0	1.57	-	class:UNCLEAR
+bottom	039349_24/35	039349_24/37	STM_ONLY	detached dots	ok	0.9936	0.9561	0.0	5.6	michel_tag,stop	stop:5.6cm;michel_tag:124001:lost
+bottom	039349_26/18	039349_26/25	STM_ONLY	detached dots	ok	0.8642	0.9689	0.0		candidate	candidate:none
+bottom	039349_28/60	039349_28/66	STM_MICHEL	attached	ok	0.9957	0.9958	0.0		candidate	candidate:none
+bottom	039349_3/26	039349_3/26	THRU	none	ok	0.9926	0.988	0.0		candidate	candidate:none
+bottom	039349_30/28	039349_30/30	THRU	none	ok	0.9823	0.9934	0.0		candidate	candidate:none
+bottom	039349_30/66	039349_30/75	THRU	none	ok	0.987	0.9913	0.0		candidate	candidate:none
+bottom	039349_35/75	039349_35/78	STM_ONLY	none	ok	0.9551	0.9788	0.0		candidate	candidate:none
+bottom	039349_39/27	039349_39/24	THRU	none	ok	0.9917	0.9868	0.0		candidate	candidate:none
+bottom	039349_43/66	039349_43/66	STM_MICHEL	attached	merged	0.9955	0.3679	0.0		match,michel_tag	match:merged;michel_tag:172009:lost
+bottom	039349_47/24	039349_47/24	THRU	none	ok	0.8504	0.9138	0.0	35.71	stop	stop:35.7cm
+bottom	039349_51/17	039349_51/15	THRU	none	ok	0.9833	0.9901	0.0		candidate	candidate:none
+bottom	039349_51/24	039349_51/71	STM_MICHEL	detached dots	collision	0.9382	0.3894	0.0		match	match:collision
+bottom	039349_51/29	039349_51/27	STM_MICHEL	both	ok	0.9944	0.9908	0.0		candidate,michel_tag	candidate:none;michel_tag:106007:lost
+bottom	039349_54/30	039349_54/33	STM_MICHEL	both	ok	0.9937	0.9773	0.0		candidate,michel_tag	candidate:none;michel_tag:118015:lost
+bottom	039349_55/24	039349_55/23	STM_ONLY	none	ok	0.9905	0.9957	0.0		candidate	candidate:none
+bottom	039349_55/31	039349_55/29	THRU	none	ok	0.9318	0.986	0.0		candidate	candidate:none
+bottom	039349_56/18	039349_56/18	THRU	none	ok	0.9907	0.9753	0.0		candidate	candidate:none
+bottom	039349_56/28	039349_56/29	STM_ONLY	detached dots	ok	0.9788	0.945	0.0		candidate	candidate:none
+bottom	039349_56/30	039349_56/17	THRU	— not set —	lost	0.1834	0.3494	148073018.5		match,t0	match:lost;t0:dx148073018.5
+bottom	039349_57/26	039349_57/25	FRAG_THRU	none	ok	0.9983	0.9984	0.0	13.32	stop	stop:13.3cm;class:FRAG_THRU
+bottom	039349_58/21	039349_58/22	STM_ONLY	none	ok	1.0	1.0	0.0		candidate	candidate:none
+bottom	039349_59/14	039349_59/13	THRU	none	ok	0.8611	0.9405	0.0		candidate	candidate:none
+bottom	039349_59/25	039349_59/24	THRU	none	ok	0.9934	0.9758	0.0		candidate	candidate:none
+bottom	039349_61/30	039349_61/17	STM_ONLY	none	ok	0.9948	0.9957	0.0		candidate	candidate:none
+bottom	039349_62/32	039349_62/34	THRU	none	ok	0.9976	0.996	0.0		candidate	candidate:none
+bottom	039349_63/67	039349_63/66	STM_MICHEL	attached	ok	0.9843	0.9834	0.0		candidate	candidate:none
+bottom	039349_64/24	039349_64/22	STM_MICHEL	both	ok	0.9963	0.9924	0.0		candidate	candidate:none
+bottom	039349_66/33	039349_66/33	THRU	none	lost	0.1027	0.2016	148073183.6		match,t0	match:lost;t0:dx148073183.6
+bottom	039349_67/41	039349_67/39	THRU	none	ok	0.9715	0.9918	0.0		candidate	candidate:none
+bottom	039349_68/28	039349_68/27	THRU	— not set —	ok	0.9969	0.9938	0.0		candidate	candidate:none
+bottom	039349_68/34	039349_68/34	THRU	none	ok	0.9932	0.967	0.0	11.24	stop	stop:11.2cm
+bottom	039349_68/38	039349_68/37	THRU	none	ok	0.9947	0.9947	0.0		candidate	candidate:none
+bottom	039349_7/29	039349_7/26	THRU	none	ok	0.9849	0.9705	0.0	7.11	stop	stop:7.1cm
+bottom	039349_70/20	039349_70/14	THRU	none	ok	0.9399	0.9693	0.0		candidate	candidate:none
+bottom	039349_71/27	039349_71/25	FRAG_THRU	none	ok	0.7097	1.0	0.0		candidate	candidate:none;class:FRAG_THRU
+bottom	039349_73/25	039349_73/22	THRU	none	ok	0.9885	1.0	0.0		candidate	candidate:none
+bottom	039349_76/23	039349_76/29	STM_MICHEL	attached	ok	0.9976	0.9888	0.0		candidate	candidate:none
+bottom	039349_76/27	039349_76/33	THRU	none	ok	0.9865	0.9987	0.0		candidate	candidate:none
+bottom	039349_77/20	039349_77/19	THRU	none	ok	0.9872	0.9865	0.0		candidate	candidate:none
+bottom	039349_78/22	039349_78/20	STM_MICHEL	attached	ok	0.9821	0.9744	0.0		candidate	candidate:none
+bottom	039349_79/29	039349_79/33	THRU	none	ok	0.9074	0.5747	155.3		candidate,t0	candidate:none;t0:dx155.3
+bottom	039349_81/14	039349_81/12	THRU	none	ok	0.9981	1.0	0.0		candidate	candidate:none
+bottom	039349_82/60	039349_82/61	STM_ONLY	none	ok	0.9929	0.9894	0.0		candidate	candidate:none
+bottom	039349_83/23	039349_83/81	THRU	— not set —	collision	1.0	0.597	0.0	0.92	match	match:collision
+top	039252_0/82	039252_0/83	STM_MICHEL	both	ok	0.9939	0.9739	4.2		candidate,t0	candidate:none;t0:dx4.2
+top	039252_10/73	039252_10/74	STM_MICHEL	attached	ok	0.9987	0.9975	0.0		candidate	candidate:none
+top	039252_12/123	039252_12/117	STM_MICHEL	attached	ok	0.9885	0.9777	0.0	6.9	stop	stop:6.9cm
+top	039252_12/130	039252_12/42	THRU	none	lost	0.0283	0.1949	148073098.9		match,t0	match:lost;t0:dx148073098.9
+top	039252_12/88	-	THRU	none	lost	0.0	0.0	0.0		match	match:lost
+top	039252_13/66	039252_13/67	MESSY	none	lost	0.4715	0.0154	-40.6		match,t0	match:lost;t0:dx-40.6;class:MESSY
+top	039252_13/74	039252_13/71	THRU	none	lost	0.4118	0.0007	180.4		match,t0	match:lost;t0:dx180.4
+top	039252_13/91	039252_13/97	THRU	none	ok	0.9287	0.947	0.0		candidate	candidate:none
+top	039252_14/62	039252_14/97	THRU	none	merged	0.9881	0.0111	179.3		match,t0	match:merged;t0:dx179.3
+top	039252_14/64	039252_14/270	THRU	none	lost	0.6869	0.278	-154.8		match,t0	match:lost;t0:dx-154.8
+top	039252_14/84	039252_14/89	THRU	none	ok	0.9974	0.9479	79.3		candidate,t0	candidate:none;t0:dx79.3
+top	039252_15/82	039252_15/89	STM_MICHEL	attached	ok	0.928	0.9495	0.0		candidate	candidate:none
+top	039252_16/108	039252_16/131	STM_ONLY	none	merged	0.9672	0.0138	-66.8		match,t0	match:merged;t0:dx-66.8
+top	039252_17/90	039252_17/95	THRU	none	ok	0.9685	0.9263	0.0	7.33	stop	stop:7.3cm
+top	039252_17/91	039252_17/98	THRU	none	ok	0.9955	0.9729	0.0		candidate	candidate:none
+top	039252_2/103	039252_2/108	STM_MICHEL	both	ok	0.9298	0.9802	0.0		candidate	candidate:none;michel_tag:405012:split
+top	039252_2/79	039252_2/94	STM_MICHEL	attached	merged	0.9909	0.0194	198.1		match,t0	match:merged;t0:dx198.1
+top	039252_2/83	039252_2/86	STM_MICHEL	both	merged	1.0	0.2408	-217.2		match,michel_tag,t0	match:merged;t0:dx-217.2;michel_tag:224013:lost
+top	039252_2/87	039252_2/282	THRU	none	lost	0.4444	0.6667	17.8		match,t0	match:lost;t0:dx17.8
+top	039252_3/74	039252_3/89	STM_MICHEL	both	lost	0.5502	0.9974	0.0	1.6	match,michel_tag	match:lost;michel_tag:74036:lost
+top	039252_3/90	039252_3/263	THRU	none	lost	0.3209	0.0619	75.5		match,t0	match:lost;t0:dx75.5
+top	039252_5/73	039252_5/86	STM_MICHEL	attached	ok	0.9769	0.9153	0.0		candidate	candidate:none
+top	039252_6/88	039252_6/88	THRU	none	ok	0.8261	0.5806	0.0		candidate	candidate:none
+top	039252_7/99	039252_7/92	STM_MICHEL	attached	ok	0.9886	0.9859	0.0		candidate	candidate:none
+top	039252_8/77	039252_8/83	THRU	none	merged	0.912	0.1167	36.4		match,t0	match:merged;t0:dx36.4
+top	039252_8/93	039252_8/102	THRU	none	split	0.9942	0.9823	-65.0	0.32	match,t0	match:split;t0:dx-65.0
+top	039252_8/97	039252_8/105	THRU	none	ok	0.9877	0.9345	0.0		candidate	candidate:none
+top	039252_9/94	039252_9/95	STM_MICHEL	attached	ok	0.9903	0.9878	0.0	0.35	michel_tag	michel_tag:300017:lost
+top	039253_0/87	039253_0/94	STM_MICHEL	both	ok	0.9898	0.9899	0.0		candidate	candidate:none
+top	039253_0/99	039253_0/108	MESSY	none	ok	0.982	0.9879	0.0	1.27	-	class:MESSY
+top	039253_10/77	-	STM_MICHEL	attached	lost	0.0	0.0	0.0		match	match:lost
+top	039253_12/88	039253_12/86	THRU	none	ok	0.791	0.7914	0.0	43.76	stop	stop:43.8cm
+top	039253_13/73	039253_13/75	STM_MICHEL	both	ok	0.9925	0.9979	0.0	1.88	michel_tag	michel_tag:209017:lost
+top	039253_14/110	039253_14/115	STM_ONLY	detached dots	ok	0.9933	0.9925	0.0	0.2	michel_tag	michel_tag:443014:lost
+top	039253_16/95	039253_16/129	THRU	none	lost	0.6782	0.976	-0.3		match	match:lost
+top	039253_17/91	039253_17/87	MESSY	none	ok	0.981	0.956	0.0		candidate	candidate:none;class:MESSY
+top	039253_2/75	039253_2/116	THRU	none	lost	0.6549	0.0076	-53.8		match,t0	match:lost;t0:dx-53.8
+top	039253_4/91	039253_4/91	STM_ONLY	detached dots	ok	0.9936	0.9862	0.0		candidate	candidate:none
+top	039253_4/95	039253_4/96	THRU	none	ok	0.7833	0.8987	0.0		candidate	candidate:none
+top	039253_5/107	039253_5/113	STM_ONLY	detached dots	ok	1.0	0.9553	0.0	6.92	stop	stop:6.9cm
+top	039253_5/121	039253_5/125	THRU	none	ok	0.9823	0.996	0.0		candidate	candidate:none
+top	039253_6/76	039253_6/80	THRU	none	ok	0.9987	0.982	0.0	6.24	stop	stop:6.2cm
+top	039253_6/85	039253_6/85	STM_ONLY	— not set —	ok	0.9816	0.8889	0.0		candidate	candidate:none
+top	039253_6/90	039253_6/97	MESSY	— not set —	ok	0.9911	0.9792	98.5	0.62	t0	t0:dx98.5;class:MESSY
+top	039253_7/64	039253_7/74	THRU	— not set —	ok	0.9799	0.9838	0.0		candidate	candidate:none
+top	039253_7/92	039253_7/112	THRU	none	merged	0.9803	0.1656	0.0		match	match:merged
+top	039253_8/53	039253_8/71	MESSY	none	ok	0.9861	0.7537	-75.1		candidate,t0	candidate:none;t0:dx-75.1;class:MESSY
+top	039253_8/62	039253_8/82	STM_MICHEL	both	ok	0.968	0.8774	0.0		candidate,michel_tag	candidate:none;michel_tag:296024:lost;michel_tag:299025:lost
+top	039253_8/65	039253_8/69	STM_MICHEL	both	ok	0.9414	0.8978	0.0	1.22	michel_tag	michel_tag:306010:lost
+top	039253_9/108	039253_9/101	STM_ONLY	none	ok	0.992	0.9712	-95.3	1.5	t0	t0:dx-95.3
+top	039349_0/68	039349_0/65	THRU	— not set —	ok	0.9853	0.9912	0.0	3.64	pin	pin:pin=3.6
+top	039349_1/62	039349_1/65	THRU	none	ok	0.979	0.937	0.0		candidate	candidate:none
+top	039349_10/54	039349_10/62	MESSY	none	ok	0.9815	0.8347	0.0		candidate	candidate:none;class:MESSY
+top	039349_11/43	039349_11/49	THRU	none	merged	0.9485	0.0309	-85.7		match,t0	match:merged;t0:dx-85.7
+top	039349_11/46	039349_11/52	STM_MICHEL	both	ok	1.0	0.985	0.0	1.76	michel_tag	michel_tag:119024:lost
+top	039349_11/47	039349_11/51	THRU	none	ok	0.9906	0.9749	0.0		candidate	candidate:none
+top	039349_12/45	039349_12/53	MESSY	— not set —	ok	0.9977	1.0	0.0	0.61	-	class:MESSY
+top	039349_12/49	039349_12/57	THRU	none	ok	0.965	0.9881	0.0		candidate	candidate:none
+top	039349_12/54	039349_12/62	THRU	none	ok	0.9948	0.9886	205.2		candidate,t0	candidate:none;t0:dx205.2
+top	039349_13/56	039349_13/57	THRU	none	ok	1.0	0.8919	0.0		candidate	candidate:none
+top	039349_16/56	039349_16/50	THRU	none	lost	0.6068	0.5144	103.6	50.7	match,stop,t0	match:lost;stop:50.7cm;t0:dx103.6
+top	039349_16/70	039349_16/62	STM_ONLY	— not set —	merged	0.8723	0.0521	192.3		match,t0	match:merged;t0:dx192.3
+top	039349_17/52	039349_17/54	STM_ONLY	detached dots	ok	0.9963	1.0	0.0	0.26	michel_tag	michel_tag:94005:lost
+top	039349_17/62	039349_17/68	THRU	— not set —	ok	0.9804	0.8491	0.0	5.88	stop	stop:5.9cm
+top	039349_2/38	039349_2/38	STM_ONLY	none	ok	0.963	0.8581	0.0		candidate	candidate:none
+top	039349_2/41	039349_2/41	MESSY	none	ok	0.9438	0.8463	0.0		candidate	candidate:none;class:MESSY
+top	039349_20/77	039349_20/82	THRU	none	ok	0.994	0.9372	0.0		candidate	candidate:none
+top	039349_20/79	039349_20/80	THRU	none	ok	0.9783	0.9873	0.0	8.98	stop	stop:9.0cm
+top	039349_23/43	039349_23/59	THRU	none	ok	0.9444	0.9406	0.0		candidate	candidate:none
+top	039349_24/51	039349_24/61	THRU	none	ok	0.9825	0.9858	0.0		candidate	candidate:none
+top	039349_24/58	039349_24/69	THRU	— not set —	ok	1.0	0.9943	60.5		candidate,t0	candidate:none;t0:dx60.5
+top	039349_25/37	039349_25/38	THRU	none	ok	0.9969	0.9992	0.0		candidate	candidate:none
+top	039349_25/43	039349_25/50	THRU	none	ok	0.9701	0.9677	49.3		candidate,t0	candidate:none;t0:dx49.3
+top	039349_25/47	039349_25/45	STM_ONLY	none	ok	0.9247	0.8585	7.3	0.14	t0	t0:dx7.3
+top	039349_25/48	039349_25/154	THRU	none	lost	0.3893	0.9912	-41.4		match,t0	match:lost;t0:dx-41.4
+top	039349_26/34	039349_26/38	THRU	— not set —	lost	0.3025	0.0131	-5.9		match,t0	match:lost;t0:dx-5.9
+top	039349_26/40	039349_26/41	STM_MICHEL	attached	ok	0.983	0.9872	0.0		candidate	candidate:none
+top	039349_26/51	039349_26/50	THRU	none	ok	0.8083	0.8609	0.0		candidate	candidate:none
+top	039349_27/61	039349_27/68	THRU	none	ok	0.987	0.9917	0.0		candidate	candidate:none
+top	039349_28/36	039349_28/42	STM_MICHEL	both	ok	0.9844	0.9584	-125.8		candidate,t0	candidate:none;t0:dx-125.8
+top	039349_28/42	039349_28/52	THRU	none	ok	0.9666	0.9303	0.0	7.05	stop	stop:7.0cm
+top	039349_28/52	039349_28/55	MESSY	none	ok	0.9781	0.9566	0.0		candidate	candidate:none;class:MESSY
+top	039349_28/53	039349_28/58	THRU	none	ok	0.9913	0.9896	0.0		candidate	candidate:none
+top	039349_28/57	039349_28/62	THRU	none	ok	0.9983	0.9938	0.0		candidate	candidate:none
+top	039349_29/45	039349_29/48	STM_MICHEL	both	ok	0.9819	0.9676	-91.7	0.95	t0	t0:dx-91.7
+top	039349_29/47	039349_29/50	THRU	none	ok	0.9915	0.9705	0.0		candidate	candidate:none
+top	039349_3/50	039349_3/52	STM_ONLY	none	ok	1.0	0.9906	-123.9		candidate,t0	candidate:none;t0:dx-123.9
+top	039349_3/58	039349_3/60	THRU	none	ok	0.9858	0.9772	0.0		candidate	candidate:none
+top	039349_30/41	039349_30/51	THRU	none	ok	0.9447	0.9174	0.0		candidate	candidate:none
+top	039349_30/45	039349_30/55	STM_MICHEL	attached	ok	0.9935	0.9906	0.0		candidate	candidate:none
+top	039349_32/58	039349_32/57	THRU	none	ok	0.9798	0.5721	-5.0		candidate,t0	candidate:none;t0:dx-5.0
+top	039349_33/45	039349_33/53	THRU	none	lost	0.6936	0.9535	-180.3		match,t0	match:lost;t0:dx-180.3
+top	039349_33/66	039349_33/15	THRU	none	ok	0.8255	0.9867	0.0	533.32	stop	stop:533.3cm
+top	039349_34/40	039349_34/41	STM_ONLY	none	ok	0.9834	0.9963	0.0		candidate	candidate:none
+top	039349_34/48	039349_34/49	STM_ONLY	detached dots	ok	0.954	0.9543	-17.1	3.88	michel_tag,t0	t0:dx-17.1;michel_tag:114014:lost;michel_tag:115015:lost;michel_tag:113013:lost
+top	039349_36/46	039349_36/53	STM_MICHEL	attached	ok	0.9776	0.9086	0.0	5.08	pin,stop	stop:5.1cm;pin:pin=5.1
+top	039349_36/63	039349_36/68	STM_MICHEL	both	ok	0.9891	0.9826	0.0	12.2	michel_tag,stop	stop:12.2cm;michel_tag:183005:lost
+top	039349_37/33	039349_37/223	MESSY	none	lost	0.2093	0.9344	0.0		match	match:lost;class:MESSY
+top	039349_37/39	039349_37/38	STM_MICHEL	both	ok	0.9711	0.9561	0.0	4.55	-	michel_tag:140048:lost
+top	039349_37/52	039349_37/56	THRU	none	ok	0.8339	0.9178	0.0		candidate	candidate:none
+top	039349_38/57	039349_38/62	STM_MICHEL	attached	ok	0.964	0.9886	35.5	1.63	t0	t0:dx35.5
+top	039349_38/60	039349_38/59	THRU	none	ok	0.9282	0.994	0.0		candidate	candidate:none
+top	039349_38/61	039349_38/67	THRU	none	ok	0.9727	0.9819	0.0		candidate	candidate:none
+top	039349_4/54	039349_4/62	THRU	none	ok	1.0	0.9907	0.0		candidate	candidate:none
+top	039349_40/42	039349_40/43	THRU	none	ok	0.9891	0.9843	0.0		candidate	candidate:none
+top	039349_40/49	039349_40/50	MESSY	none	ok	0.9136	0.908	0.0	7.2	stop	stop:7.2cm;class:MESSY
+top	039349_42/41	039349_42/45	MESSY	none	ok	0.9886	0.9714	0.0		candidate	candidate:none;class:MESSY
+top	039349_42/53	039349_42/57	THRU	— not set —	ok	0.9895	0.9893	0.0	3.9	pin	pin:pin=3.9
+top	039349_44/53	039349_44/56	THRU	none	ok	0.9858	0.9893	12.3	0.99	t0	t0:dx12.3
+top	039349_44/66	039349_44/68	THRU	none	ok	0.9565	0.9514	0.0		candidate	candidate:none
+top	039349_44/72	039349_44/75	THRU	none	ok	0.9479	0.9864	0.0		candidate	candidate:none
+top	039349_45/52	039349_45/53	THRU	— not set —	ok	0.9865	0.9616	0.0		candidate	candidate:none
+top	039349_46/58	039349_46/58	MESSY	none	lost	0.1816	0.2727	-148073320.6		match,t0	match:lost;t0:dx-148073320.6;class:MESSY
+top	039349_48/49	039349_48/60	STM_ONLY	detached dots	ok	0.9948	0.9825	0.0	0.0	michel_tag	michel_tag:184005:lost
+top	039349_48/54	039349_48/64	STM_MICHEL	attached	ok	0.9949	0.9919	0.0		candidate	candidate:none
+top	039349_48/58	039349_48/59	STM_ONLY	detached dots	ok	0.9874	0.9928	0.0	1.96	michel_tag	michel_tag:222018:lost;michel_tag:220017:lost
+top	039349_5/54	039349_5/53	STM_MICHEL	attached	ok	0.9872	0.9941	0.0		candidate	candidate:none
+top	039349_5/64	039349_5/66	STM_MICHEL	attached	ok	0.9806	0.9719	0.0	8.7	stop	stop:8.7cm
+top	039349_50/46	039349_50/52	STM_MICHEL	attached	ok	0.9734	0.9957	0.0	8.65	stop	stop:8.7cm
+top	039349_50/58	039349_50/61	THRU	none	ok	1.0	0.9873	0.0		candidate	candidate:none
+top	039349_51/44	039349_51/71	STM_MICHEL	attached	collision	0.7736	0.1286	0.0		match	match:collision
+top	039349_52/36	039349_52/33	STM_MICHEL	both	ok	0.997	0.9956	0.0	1.01	michel_tag	michel_tag:96011:lost
+top	039349_52/52	039349_52/51	STM_ONLY	detached dots	ok	0.9901	0.7675	0.0	0.29	michel_tag	michel_tag:177014:lost
+top	039349_53/45	039349_53/48	STM_MICHEL	both	ok	0.9952	0.9845	61.5	0.27	t0	t0:dx61.5
+top	039349_54/56	039349_54/60	MESSY	— not set —	ok	0.8949	0.8587	0.0	13.63	stop	stop:13.6cm;class:MESSY
+top	039349_54/62	039349_54/67	FRAG_THRU	none	ok	0.976	0.9701	0.0	0.62	-	class:FRAG_THRU
+top	039349_54/65	039349_54/72	FRAG_THRU	none	ok	0.9705	0.966	0.0	0.53	-	class:FRAG_THRU
+top	039349_54/66	039349_54/73	THRU	none	ok	0.9672	0.8069	0.0		candidate	candidate:none
+top	039349_55/55	039349_55/59	THRU	none	ok	0.9915	0.9646	0.0		candidate	candidate:none
+top	039349_56/53	039349_56/54	STM_ONLY	detached dots	ok	0.9887	0.892	0.0		candidate	candidate:none
+top	039349_57/67	039349_57/78	THRU	none	ok	0.9879	0.9871	0.0		candidate	candidate:none
+top	039349_58/69	039349_58/63	STM_MICHEL	detached dots	ok	1.0	0.9861	0.0	0.9	michel_tag	michel_tag:161012:lost
+top	039349_6/56	039349_6/56	THRU	none	ok	0.996	0.9901	0.0		candidate	candidate:none
+top	039349_6/75	039349_6/75	THRU	none	ok	0.9781	0.9846	0.0		candidate	candidate:none
+top	039349_60/46	039349_60/49	MESSY	none	ok	0.8537	0.972	0.0	102.68	stop	stop:102.7cm;class:MESSY
+top	039349_60/47	039349_60/51	MESSY	none	lost	0.5714	0.752	0.0		match	match:lost;class:MESSY
+top	039349_61/58	039349_61/55	MESSY	— not set —	ok	0.9193	0.8438	0.0		candidate	candidate:none;class:MESSY
+top	039349_62/70	039349_62/73	THRU	none	ok	0.9309	0.7124	0.0	5.98	stop	stop:6.0cm
+top	039349_63/41	039349_63/53	MESSY	— not set —	ok	0.985	0.9829	0.0	0.79	michel_tag	class:MESSY;michel_tag:132001:lost;michel_tag:133002:lost
+top	039349_63/48	039349_63/41	THRU	none	ok	0.7017	0.9553	0.0	217.5	stop	stop:217.5cm
+top	039349_64/58	039349_64/49	THRU	none	ok	0.991	0.9413	-3.1	0.32	t0	t0:dx-3.1
+top	039349_64/61	039349_64/55	STM_ONLY	detached dots	ok	0.9798	0.9709	0.0		candidate,michel_tag	candidate:none;michel_tag:202024:lost
+top	039349_64/65	039349_64/60	STM_MICHEL	attached	ok	0.8509	0.9818	-7.6		candidate,t0	candidate:none;t0:dx-7.6
+top	039349_64/70	039349_64/65	THRU	none	ok	0.9783	0.9957	0.0		candidate	candidate:none
+top	039349_66/81	039349_66/85	THRU	none	ok	0.9788	0.8206	0.0		candidate	candidate:none
+top	039349_67/64	039349_67/64	THRU	none	ok	0.989	0.9859	0.0		candidate	candidate:none
+top	039349_68/63	039349_68/63	STM_MICHEL	attached	ok	0.9903	0.9801	0.0		candidate	candidate:none
+top	039349_68/65	039349_68/51	STM_ONLY	none	lost	0.5343	0.0087	-98.5		match,t0	match:lost;t0:dx-98.5
+top	039349_68/71	039349_68/73	MESSY	none	lost	0.4929	0.9455	0.0		match	match:lost;class:MESSY
+top	039349_7/65	039349_7/61	STM_ONLY	detached dots	ok	0.9968	0.9907	0.0		candidate,michel_tag	candidate:none;michel_tag:241006:lost
+top	039349_70/44	039349_70/36	THRU	none	ok	0.9977	1.0	0.0		candidate	candidate:none
+top	039349_71/37	039349_71/289	THRU	— not set —	lost	0.493	0.8926	-0.6		match	match:lost
+top	039349_71/51	039349_71/53	THRU	none	ok	0.9668	0.8569	0.0		candidate	candidate:none
+top	039349_71/59	-	THRU	none	lost	0.0	0.0	0.0		match	match:lost
+top	039349_72/51	039349_72/49	THRU	none	ok	0.9931	0.9847	0.0		candidate	candidate:none
+top	039349_72/54	039349_72/53	THRU	none	ok	0.9906	0.9695	0.0		candidate	candidate:none
+top	039349_73/55	039349_73/73	THRU	none	ok	0.9325	0.993	0.0		candidate	candidate:none
+top	039349_73/60	039349_73/55	STM_ONLY	detached dots	ok	1.0	1.0	0.0	0.02	michel_tag	michel_tag:132002:lost
+top	039349_73/62	039349_73/57	STM_MICHEL	both	ok	0.9878	0.9868	0.0	0.51	michel_tag	michel_tag:137003:lost
+top	039349_74/47	039349_74/63	THRU	none	ok	0.994	0.9874	0.0		candidate	candidate:none
+top	039349_75/72	039349_75/61	MESSY	none	lost	0.4484	0.0358	194.9		match,t0	match:lost;t0:dx194.9;class:MESSY
+top	039349_75/73	039349_75/71	THRU	none	ok	0.9845	0.8571	0.0		candidate	candidate:none
+top	039349_77/52	039349_77/176	MESSY	none	merged	0.9091	0.4539	-31.8		match,t0	match:merged;t0:dx-31.8;class:MESSY
+top	039349_8/52	039349_8/51	THRU	none	ok	0.9737	0.9848	0.0		candidate	candidate:none
+top	039349_80/48	039349_80/53	THRU	none	merged	0.9767	0.0197	92.0		match,t0	match:merged;t0:dx92.0
+top	039349_81/44	039349_81/44	STM_MICHEL	attached	ok	0.9592	0.963	-56.9	5.11	pin,stop,t0	stop:5.1cm;t0:dx-56.9;pin:pin=5.1
+top	039349_81/45	039349_81/48	MESSY	none	lost	0.6231	0.9753	0.0		match	match:lost;class:MESSY
+top	039349_81/51	039349_81/55	STM_ONLY	detached dots	ok	0.9939	0.8125	0.0	11.86	pin,stop	stop:11.9cm;pin:pin=10.4
+top	039349_81/54	039349_81/57	MESSY	none	ok	0.9417	0.9363	-25.1		candidate,t0	candidate:none;t0:dx-25.1;class:MESSY
+top	039349_82/41	039349_82/42	STM_ONLY	none	ok	0.977	0.995	0.0		candidate	candidate:none
+top	039349_82/54	039349_82/54	STM_MICHEL	both	ok	0.9882	0.8601	0.0		candidate	candidate:none
+top	039349_83/53	039349_83/81	THRU	none	collision	0.9648	0.3762	0.0	422.78	match,stop	match:collision;stop:422.8cm
+top	039349_83/68	039349_83/76	THRU	— not set —	ok	0.9908	0.9675	0.0		candidate	candidate:none
+top	039349_9/55	039349_9/59	STM_MICHEL	both	ok	0.976	0.888	0.0		candidate	candidate:none

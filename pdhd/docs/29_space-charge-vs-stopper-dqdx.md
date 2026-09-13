@@ -601,6 +601,9 @@ PDHD's two runs were read out at different gains:
 
   Each volume's charge scale was meant to stay where it was. Relative to the bottom, SP's assumed top response moved by
   1.0169, so top charge relative to bottom moved by 0.983. That is 1.7 %, against an 11 % offset.
+* **Applied as one SP constant: doc pdvd/99** (`pdvd/docs/nf_sp_img_clus/99_top-electronics-gain-in-sp.md`). s = 0.889 on
+  the top electronics (knob `top_gain_scale`, default OFF), full rerun of SP → imaging → clustering → PR, hand-scan record
+  carried by geometry.
 
 ## 9. The field in the Michel charge→energy conversion
 

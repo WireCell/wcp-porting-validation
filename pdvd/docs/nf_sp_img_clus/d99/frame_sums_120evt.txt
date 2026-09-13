@@ -1,0 +1,31 @@
+events 120  arms ['p98voff', 'p98von']  nol1 None
+  anode 0 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 0 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 0 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 1 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 1 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 1 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 2 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 2 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 2 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 3 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 3 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 3 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000
+  anode 4 U  vol top     sum p98von/p98voff 1.1430  per-event median-channel ratio p50 1.1249
+  anode 4 V  vol top     sum p98von/p98voff 1.1347  per-event median-channel ratio p50 1.1249
+  anode 4 W  vol top     sum p98von/p98voff 1.1257  per-event median-channel ratio p50 1.1249
+  anode 5 U  vol top     sum p98von/p98voff 1.1381  per-event median-channel ratio p50 1.1249
+  anode 5 V  vol top     sum p98von/p98voff 1.1334  per-event median-channel ratio p50 1.1249
+  anode 5 W  vol top     sum p98von/p98voff 1.1257  per-event median-channel ratio p50 1.1249
+  anode 6 U  vol top     sum p98von/p98voff 1.1385  per-event median-channel ratio p50 1.1249
+  anode 6 V  vol top     sum p98von/p98voff 1.1325  per-event median-channel ratio p50 1.1249
+  anode 6 W  vol top     sum p98von/p98voff 1.1257  per-event median-channel ratio p50 1.1249
+  anode 7 U  vol top     sum p98von/p98voff 1.1327  per-event median-channel ratio p50 1.1249
+  anode 7 V  vol top     sum p98von/p98voff 1.1314  per-event median-channel ratio p50 1.1249
+  anode 7 W  vol top     sum p98von/p98voff 1.1258  per-event median-channel ratio p50 1.1249
+  bottom U: sum p98von/p98voff 1.0000
+  bottom V: sum p98von/p98voff 1.0000
+  bottom W: sum p98von/p98voff 1.0000
+  top    U: sum p98von/p98voff 1.1383
+  top    V: sum p98von/p98voff 1.1331
+  top    W: sum p98von/p98voff 1.1257

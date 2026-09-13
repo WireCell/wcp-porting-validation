@@ -1,0 +1,36 @@
+
+=== p96vprod: Michel energy by drift volume, median MeV [p16,p84]  (record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json)
+  hand Michel           michel_ke_q2d_region  top n  96  34.22 [ 31.69, 35.17]  bottom n  38  36.85 [ 29.77, 38.98]  top/bottom 0.929
+  hand Michel           michel_ke_q2d_ctl     top n  96   3.02 [  2.53,  3.83]  bottom n  38   1.99 [  1.33,  2.54]  top/bottom 1.513
+  hand Michel           michel_ke_best        top n  96  23.35 [ 21.74, 25.13]  bottom n  38  21.09 [ 19.37, 24.07]  top/bottom 1.107
+  all chain STM+Michel  michel_ke_q2d_region  top n 106  34.22 [ 31.69, 35.00]  bottom n  41  36.00 [ 29.99, 38.49]  top/bottom 0.951
+  all chain STM+Michel  michel_ke_q2d_ctl     top n 106   3.65 [  2.91,  4.14]  bottom n  41   1.82 [  1.19,  2.53]  top/bottom 1.998
+  all chain STM+Michel  michel_ke_best        top n 106  23.35 [ 21.74, 24.90]  bottom n  41  20.79 [ 20.15, 23.91]  top/bottom 1.123
+
+=== p98voffq: Michel energy by drift volume, median MeV [p16,p84]  (record pdvd_stm_michel_smx9_carried_p98voffq.json)
+  hand Michel           michel_ke_q2d_region  top n  66  33.15 [ 32.21, 34.23]  bottom n  29  41.10 [ 37.76, 42.30]  top/bottom 0.807
+  hand Michel           michel_ke_q2d_ctl     top n  66   2.71 [  2.22,  2.98]  bottom n  29   2.48 [  2.27,  3.16]  top/bottom 1.093
+  hand Michel           michel_ke_best        top n  66  24.55 [ 22.56, 25.41]  bottom n  29  22.66 [ 20.79, 24.11]  top/bottom 1.084
+  all chain STM+Michel  michel_ke_q2d_region  top n  97  32.24 [ 31.47, 33.18]  bottom n  45  40.76 [ 38.19, 41.30]  top/bottom 0.791
+  all chain STM+Michel  michel_ke_q2d_ctl     top n  97   3.26 [  2.75,  4.05]  bottom n  45   2.48 [  2.27,  3.10]  top/bottom 1.316
+  all chain STM+Michel  michel_ke_best        top n  97  22.04 [ 19.29, 24.15]  bottom n  45  22.68 [ 22.18, 24.11]  top/bottom 0.972
+
+=== p98vonq: Michel energy by drift volume, median MeV [p16,p84]  (record pdvd_stm_michel_smx9_carried_p98vonq.json)
+  hand Michel           michel_ke_q2d_region  top n  65  40.38 [ 37.61, 41.81]  bottom n  29  41.10 [ 37.76, 42.30]  top/bottom 0.983
+  hand Michel           michel_ke_q2d_ctl     top n  65   3.69 [  2.84,  4.48]  bottom n  29   2.48 [  2.27,  3.16]  top/bottom 1.490
+  hand Michel           michel_ke_best        top n  65  26.01 [ 24.77, 28.29]  bottom n  29  22.66 [ 18.31, 24.11]  top/bottom 1.148
+  all chain STM+Michel  michel_ke_q2d_region  top n 114  36.35 [ 35.08, 38.04]  bottom n  49  39.96 [ 38.19, 41.40]  top/bottom 0.910
+  all chain STM+Michel  michel_ke_q2d_ctl     top n 114   4.77 [  4.28,  5.39]  bottom n  49   2.45 [  1.47,  3.11]  top/bottom 1.950
+  all chain STM+Michel  michel_ke_best        top n 114  24.59 [ 24.02, 25.68]  bottom n  49  22.66 [ 22.06, 24.73]  top/bottom 1.086
+
+=== per item ON / OFF on 337 items carried onto both arms
+  top    michel_found (OFF,ON): {(0, 0): 103, (0, 1): 14, (1, 0): 11, (1, 1): 64}
+    michel_ke_q2d_region  ON/OFF per item (both found, OFF > 1 MeV) n  64 median   1.14 [  1.10,  1.16]
+    michel_ke_q2d_ctl     ON/OFF per item (both found, OFF > 1 MeV) n  56 median   1.43 [  1.27,  1.47]
+  bottom michel_found (OFF,ON): {(0, 0): 111, (0, 1): 1, (1, 1): 33}
+    michel_ke_q2d_region  ON/OFF per item (both found, OFF > 1 MeV) n  33 median   1.00 [  1.00,  1.00]
+    michel_ke_q2d_ctl     ON/OFF per item (both found, OFF > 1 MeV) n  25 median   1.00 [  1.00,  1.00]
+
+=== charge-light: matched cluster flash_id / cluster_t0_us, OFF vs ON
+  top    {'same flash': 188, 'flash changed': 4}  |dt0| > 1 us: 4 of 192  (1 us = 0.148 cm of x)
+  bottom {'same flash': 144, 'flash changed': 1}  |dt0| > 1 us: 1 of 145  (1 us = 0.148 cm of x)

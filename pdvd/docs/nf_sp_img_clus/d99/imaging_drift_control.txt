@@ -1,0 +1,9 @@
+# doc pdvd/99 imaging-drift control: today's imaging (run_img_evt.sh, libpin_p96, arm p98kchk) on the July _keep SP frames vs d27fresh's imaging of the same frames (2026-09-03); abtest/hash_archive.py member-content hash of the 16 clusters-apa archives per event
+039349_81 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039349_4 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039349_15 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039349_68 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039349_2 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039252_13 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039252_0 imaging today (July frames) vs d27fresh: 16/16 archives identical
+039253_0 imaging today (July frames) vs d27fresh: 16/16 archives identical

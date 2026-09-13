@@ -1,0 +1,38 @@
+# doc pdvd/99: OFF SP events that exited rc=2 (runner set -e + nvidia-smi monitor) -- frames hashed (abtest/hash_archive.py) BEFORE the driver's second pass, compared after it
+rc=0 frames=8 039252_1 1 | 039252_1 rerun vs first-pass: 8/8 identical
+rc=0 frames=8 039253_10 1 | 039253_10 rerun vs first-pass: 8/8 identical
+rc=0 frames=8 039253_12 1 | 039253_12 rerun vs first-pass: 8/8 identical
+rc=0 frames=8 039253_8 1 | 039253_8 rerun vs first-pass: 8/8 identical
+# first-pass hashes:
+039252_1 faba14f7c1963aa361590f909408c75da009d0c73a0886d5d6ca5663e530633a  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode0.tar.bz2
+039252_1 2887a762f9c28880fc8176be0169d323a4639420c2bf9e198b81d52e41339826  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode1.tar.bz2
+039252_1 a90d42ff86b6cf76bc4fd78df5ee10552207fecab22d96835a39cef5837b00d5  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode2.tar.bz2
+039252_1 2643c43a0ed4b6aad4009cbe9d83c163ed36059d0ac3efc032c3e026d84a7f42  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode3.tar.bz2
+039252_1 0ac8adfb0596d37fcabc6626f7e5deae1237535063771523b023e0c3c6043077  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode4.tar.bz2
+039252_1 66f0bab043caf1e199563c29b333e56d55df7cb70266a1e2f85a372aef8d8b2e  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode5.tar.bz2
+039252_1 bd23324063ad4bb913c7ab635743106431eeafe73b8e7bd9f6b6c90e02ef58c9  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode6.tar.bz2
+039252_1 d5888edc943a9a20404b07e571b67dbecc1ae8976c0f1e5ad512f8125d550fa9  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_1_p98voff/protodune-sp-dnnroi-frames-anode7.tar.bz2
+039253_10 01a861c4c9ee1daa901694f11f40d953ed98f847e4fbd7dae45238b9265a85ee  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode0.tar.bz2
+039253_10 cc37b87a24a5e26605ad11949e41fcb8c8458a1063e483d83f0cb476609abbdc  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode1.tar.bz2
+039253_10 32e3ce2c16a170fa075918f4bbeba9f8536ab6856345c345c078a2eed7f89a66  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode2.tar.bz2
+039253_10 802781af7a52ca7d6e3c34fdf2728793ed0964694e2294a4efb396d051ebec41  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode3.tar.bz2
+039253_10 aa10106f693785db07a71382db21e1dc03deb18d541d991c62b80dda526789b5  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode4.tar.bz2
+039253_10 5f415848a07986638f75ef4ee12fcad6fe3f0cfc1c87af0dfe0ed55cfffe731f  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode5.tar.bz2
+039253_10 9ea126086029dbe6e7d67fc4161de3ae489a893273c2a07e93efcc8fa9897367  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode6.tar.bz2
+039253_10 07b6e1df547d70720723e9475a2153d88c385a02389b0709923a6bd9ebd6e9bf  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_10_p98voff/protodune-sp-dnnroi-frames-anode7.tar.bz2
+039253_12 497443836ba1f2f0aabc97c235145ffbdfb7c70ca50f079fc83dc2cc9186b525  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode0.tar.bz2
+039253_12 0a4d46186939a0d8b3ad8f8a9e969fb3a17b93520e5bfdbe083eb011dbe42778  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode1.tar.bz2
+039253_12 b12287d1bc3c312f25dcf258a334cc422ff4524674c165b210ab18e1439ae9e3  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode2.tar.bz2
+039253_12 14959d4c7585f59b2f422a6793aa9b2fb488ff46cebede5d6a807fea714a2f6f  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode3.tar.bz2
+039253_12 090423239409f81cd3039d392d08cf9cc579da1dc00ad58350c831a12c11ea99  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode4.tar.bz2
+039253_12 3655eb5ff0d20c35190748455734456d8255dd5dc8ae7773d68434c580eec133  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode5.tar.bz2
+039253_12 d83db38e0bd1a5095b9d06ce159bce5714fcc889c5d652fd159b6964a73d5d76  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode6.tar.bz2
+039253_12 876215e85a9ccfe3b38e76a53bd77059c2fb450f48062a5129d1270e3058bef4  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_12_p98voff/protodune-sp-dnnroi-frames-anode7.tar.bz2
+039253_8 4ba792319076c674aa66d1b096591b8306a8304c82950fc139c060c6b1a58a88  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode0.tar.bz2
+039253_8 43fff46f85cc964774e70873025cc405b2174a0069fb2c846206661a47eb30b6  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode1.tar.bz2
+039253_8 46400187e27d9c047fe0335476b8a7d21c565f21f96bcffa96a95930f000549d  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode2.tar.bz2
+039253_8 65f237356b116c198fef2b76c0706f64461e5faf7fa66952ef6282c59bed12ba  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode3.tar.bz2
+039253_8 2bba0c4ee58898a82f113b0adf790a562f0f936e517c1b6cf1147175e7834c20  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode4.tar.bz2
+039253_8 5fffa4e6d293477dd6576d6f7c5aab972f42736d7e657fd39264f61832facf4f  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode5.tar.bz2
+039253_8 7b457b1cd3e515f1e0cfa7925c62024eca0b67e724fa24c206c11cba1cad33d6  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode6.tar.bz2
+039253_8 e354e8607801c3eeff5e9c68e6ebd7b8e0bf7d92d4dd00f8c3fcea784675b938  12  /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039253_8_p98voff/protodune-sp-dnnroi-frames-anode7.tar.bz2

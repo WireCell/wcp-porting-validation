@@ -1,0 +1,3 @@
+# doc pdvd/98 gate G0 -- PR on d51vclus pctree, libpin_p96, today's wct-pr-perevt.jsonnet (arm p98g0) vs p96vprod
+039252_0 / 039253_0 / 039349_10: tracking-pr.root 9 trees 280 branches identical (T_rec_charge.reduced_chi2: NaN pattern equal 6/13/9 NaN, finite values bit-equal); tracking-stm.root 7 trees 63 branches identical; mabc-pr.zip 25/25 members identical (sha256); calib-pr-evt*.json identical
+# library pin: local/lib vs /home/xqian/tmp/p96/libpin_p96, 572 .so compared, differ: libWireCellClus.so only; SP jobs map no libWireCellClus (/proc/<pid>/maps)

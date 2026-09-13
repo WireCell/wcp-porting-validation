@@ -1,0 +1,115 @@
+GATE G5a p96vprod on pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json: is_stm (242, 8, 34, 262) want (242, 8, 34, 262); michel(all judged) (144, 12, 20) want (144, 12, 20) -> PASS
+
+##### p96vprod  record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json (601 items; items with no candidate in the arm: 31)
+  is_stm 242/8/34/262  purity 0.968 eff 0.877   michel(all judged) 144/12/20/370  purity 0.923 eff 0.878
+    top    n 337  is_stm 168/3/23/143  eff 0.880  michel 102/7/14/214  eff 0.879
+    bottom n 209  is_stm 74/5/11/119  eff 0.871  michel 42/5/6/156  eff 0.875
+
+=== PDVD p96vprod
+  is_stm census     242/8/34/262   purity 0.968 eff 0.877
+  michel census, hand stoppers vs michel_kind (PDHD graders)   142/8/19/107   purity 0.947 eff 0.882
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   144/12/20/370   purity 0.923 eff 0.878
+  hand stoppers 276  (hand Michel 161, STM_ONLY 112)
+  over ALL hand stoppers:
+    accepted                       242/276 = 0.877 +- 0.020
+    Bragg-path accept              213/276 = 0.772 +- 0.025
+      of which anchor-helped        11/276 = 0.040 +- 0.012
+    topology-rescued                29/276 = 0.105 +- 0.018
+    GOLDEN (Bragg-path + Michel)   108/276 = 0.391 +- 0.029
+  over hand STM_ONLY:
+    Bragg-path accept               95/112 = 0.848 +- 0.034
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       143/161 = 0.888 +- 0.025
+    Bragg-path accept              117/161 = 0.727 +- 0.035
+    topology-rescued                26/161 = 0.161 +- 0.029
+    michel_found (any accept)      142/161 = 0.882 +- 0.025
+    accepted AND michel_found      134/161 = 0.832 +- 0.029
+    GOLDEN                         108/161 = 0.671 +- 0.037
+    GOLDEN, no anchor help         103/161 = 0.640 +- 0.038
+    Michel found | Bragg-path      108/117 = 0.923 +- 0.025
+  chain's own golden selection: 110 items -> {'hand Michel': 108, 'STM_ONLY': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=164  contrast 1.245/1.563/1.770   ks_mu 0.038/0.057/0.088
+    hand STM_ONLY    n=112  contrast 1.519/1.712/1.950   ks_mu 0.028/0.049/0.073
+    hand THRU        n=270  contrast 0.817/0.960/1.111   ks_mu 0.097/0.118/0.144
+
+##### p98voffq  record pdvd_stm_michel_smx9_carried_p98voffq.json (574 items; items with no candidate in the arm: 166)
+  is_stm 177/19/44/154  purity 0.903 eff 0.801   michel(all judged) 103/21/25/245  purity 0.831 eff 0.805
+    top    n 241  is_stm 121/12/33/75  eff 0.786  michel 73/17/18/133  eff 0.802
+    bottom n 153  is_stm 56/7/11/79  eff 0.836  michel 30/4/7/112  eff 0.811
+
+=== PDVD p98voffq
+  is_stm census     177/19/44/154   purity 0.903 eff 0.801
+  michel census, hand stoppers vs michel_kind (PDHD graders)   101/11/25/84   purity 0.902 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   103/21/25/245   purity 0.831 eff 0.805
+  hand stoppers 221  (hand Michel 126, STM_ONLY 93)
+  over ALL hand stoppers:
+    accepted                       177/221 = 0.801 +- 0.027
+    Bragg-path accept              154/221 = 0.697 +- 0.031
+      of which anchor-helped         6/221 = 0.027 +- 0.011
+    topology-rescued                23/221 = 0.104 +- 0.021
+    GOLDEN (Bragg-path + Michel)    73/221 = 0.330 +- 0.032
+  over hand STM_ONLY:
+    Bragg-path accept               71/ 93 = 0.763 +- 0.044
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       104/126 = 0.825 +- 0.034
+    Bragg-path accept               82/126 = 0.651 +- 0.042
+    topology-rescued                22/126 = 0.175 +- 0.034
+    michel_found (any accept)      101/126 = 0.802 +- 0.036
+    accepted AND michel_found       95/126 = 0.754 +- 0.038
+    GOLDEN                          73/126 = 0.579 +- 0.044
+    GOLDEN, no anchor help          70/126 = 0.556 +- 0.044
+    Michel found | Bragg-path       73/ 82 = 0.890 +- 0.035
+  chain's own golden selection: 83 items -> {'hand Michel': 73, 'THRU': 2, 'STM_ONLY': 7, 'STM_MICHEL': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=128  contrast 1.198/1.527/1.813   ks_mu 0.037/0.054/0.093
+    hand STM_ONLY    n= 93  contrast 1.479/1.701/1.942   ks_mu 0.025/0.045/0.077
+    hand THRU        n=173  contrast 0.861/0.985/1.188   ks_mu 0.095/0.113/0.142
+
+##### p98vonq  record pdvd_stm_michel_smx9_carried_p98vonq.json (569 items; items with no candidate in the arm: 177)
+  is_stm 180/15/42/147  purity 0.923 eff 0.811   michel(all judged) 102/28/28/226  purity 0.785 eff 0.785
+    top    n 238  is_stm 128/8/32/70  eff 0.800  michel 73/23/22/120  eff 0.768
+    bottom n 146  is_stm 52/7/10/77  eff 0.839  michel 29/5/6/106  eff 0.829
+
+=== PDVD p98vonq
+  is_stm census     180/15/42/147   purity 0.923 eff 0.811
+  michel census, hand stoppers vs michel_kind (PDHD graders)   101/16/27/78   purity 0.863 eff 0.789
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   102/28/28/226   purity 0.785 eff 0.785
+  hand stoppers 222  (hand Michel 128, STM_ONLY 92)
+  over ALL hand stoppers:
+    accepted                       180/222 = 0.811 +- 0.026
+    Bragg-path accept              156/222 = 0.703 +- 0.031
+      of which anchor-helped         7/222 = 0.032 +- 0.012
+    topology-rescued                24/222 = 0.108 +- 0.021
+    GOLDEN (Bragg-path + Michel)    74/222 = 0.333 +- 0.032
+  over hand STM_ONLY:
+    Bragg-path accept               68/ 92 = 0.739 +- 0.046
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       107/128 = 0.836 +- 0.033
+    Bragg-path accept               87/128 = 0.680 +- 0.041
+    topology-rescued                20/128 = 0.156 +- 0.032
+    michel_found (any accept)      101/128 = 0.789 +- 0.036
+    accepted AND michel_found       94/128 = 0.734 +- 0.039
+    GOLDEN                          74/128 = 0.578 +- 0.044
+    GOLDEN, no anchor help          71/128 = 0.555 +- 0.044
+    Michel found | Bragg-path       74/ 87 = 0.851 +- 0.038
+  chain's own golden selection: 87 items -> {'hand Michel': 74, 'THRU': 2, 'STM_ONLY': 11}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=130  contrast 1.224/1.522/1.875   ks_mu 0.039/0.059/0.089
+    hand STM_ONLY    n= 92  contrast 1.416/1.701/1.935   ks_mu 0.033/0.048/0.080
+    hand THRU        n=162  contrast 0.845/0.969/1.163   ks_mu 0.092/0.114/0.149
+
+##### movers p98voffq -> p98vonq (by original record key)
+  common items 337; only in p98voffq: 57; only in p98vonq: 47
+  is_stm: 32 moved
+    top THRU 0->1                      3  039253_11/86 039349_32/63 039349_77/48
+    top THRU 1->0                      5  039252_17/80 039252_8/83 039349_20/73 039349_53/46 039349_67/76
+    top stopper 0->1                  12  039253_12/69 039253_6/79 039253_9/75 039349_1/52 039349_2/56 039349_47/68 039349_50/46 039349_58/69 039349_60/40 039349_66/78 039349_7/63 039349_82/52
+    top stopper 1->0                  12  039252_15/81 039252_17/88 039252_6/106 039253_0/110 039253_1/79 039253_12/93 039253_5/107 039253_8/65 039349_13/60 039349_31/39 039349_41/51 039349_56/41
+  michel_found: 26 moved
+    bottom STM_ONLY 0->1               1  039349_44/75
+    top STM_ONLY 0->1                  4  039349_17/52 039349_47/68 039349_50/45 039349_66/78
+    top THRU 0->1                      5  039253_11/86 039349_32/63 039349_62/66 039349_63/47 039349_77/48
+    top THRU 1->0                      1  039252_8/83
+    top michel 0->1                    5  039252_12/123 039252_9/101 039253_6/79 039349_1/52 039349_36/63
+    top michel 1->0                   10  039252_17/88 039253_12/93 039253_3/79 039253_7/80 039253_8/65 039349_31/39 039349_43/50 039349_58/69 039349_7/67 039349_8/54

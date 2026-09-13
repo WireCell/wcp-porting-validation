@@ -1,0 +1,1 @@
+GATE G5a p96vprod on pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json: is_stm (242, 8, 34, 262) want (242, 8, 34, 262); michel(all judged) (144, 12, 20) want (144, 12, 20) -> PASS

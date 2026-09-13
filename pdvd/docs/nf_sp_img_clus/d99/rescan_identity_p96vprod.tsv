@@ -1,0 +1,64 @@
+# doc pdvd/99 re-scan list for arm p96vprod (match g4a_identity.json); one row per flagged record item; new_vs_identity = reason types not already flagged on the identity match (no baseline given)
+volume	old_key	new_key	verdict	michel_kind	status	f_fwd	f_rev	dx_cm	stop_move_cm	new_vs_identity	reasons
+?	039252_1/109	039252_1/109	STM_MICHEL	both	ok	1.0	1.0	0.0		-	candidate:none
+?	039252_16/31	039252_16/31	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039252_16/91	039252_16/91	MESSY	none	ok	1.0	1.0	0.0		-	candidate:none;class:MESSY
+?	039252_8/72	039252_8/72	STM_ONLY	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039252_9/49	039252_9/49	STM_ONLY	detached dots	ok	1.0	1.0	0.0		-	candidate:none
+?	039253_10/30	039253_10/30	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039253_2/50	039253_2/50	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039253_3/60	039253_3/60	STM_MICHEL	both	ok	1.0	1.0	0.0		-	candidate:none
+?	039253_7/30	039253_7/30	STM_MICHEL	both	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_23/41	039349_23/41	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_25/57	039349_25/57	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_25/69	039349_25/69	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_25/71	039349_25/71	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_26/43	039349_26/43	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_27/54	039349_27/54	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_29/44	039349_29/44	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_33/60	039349_33/60	STM_MICHEL	attached	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_45/19	039349_45/19	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_48/20	039349_48/20	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_50/55	039349_50/55	STM_ONLY	detached dots	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_57/18	039349_57/18	STM_ONLY	none	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_66/77	039349_66/77	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_68/23	039349_68/23	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_68/55	039349_68/55	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_7/20	039349_7/20	STM_MICHEL	attached	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_74/53	039349_74/53	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_75/67	039349_75/67	STM_ONLY	detached dots	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_81/21	039349_81/21	THRU	none	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_82/50	039349_82/50	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_83/32	039349_83/32	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+?	039349_9/56	039349_9/56	THRU	— not set —	ok	1.0	1.0	0.0		-	candidate:none
+bottom	039349_24/21	039349_24/21	UNCLEAR	none	ok	1.0	1.0	0.0	0.0	-	class:UNCLEAR
+bottom	039349_57/26	039349_57/26	FRAG_THRU	none	ok	1.0	1.0	0.0	0.0	-	class:FRAG_THRU
+bottom	039349_71/27	039349_71/27	FRAG_THRU	none	ok	1.0	1.0	0.0	0.0	-	class:FRAG_THRU
+top	039252_13/66	039252_13/66	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039252_2/103	039252_2/103	STM_MICHEL	both	ok	1.0	1.0	0.0	0.0	-	michel_tag:405012:split
+top	039253_0/99	039253_0/99	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039253_17/91	039253_17/91	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039253_6/90	039253_6/90	MESSY	— not set —	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039253_8/53	039253_8/53	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_10/54	039349_10/54	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_12/45	039349_12/45	MESSY	— not set —	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_2/41	039349_2/41	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_26/40	039349_26/40	STM_MICHEL	attached	ok	1.0	1.0	0.0	0.0	-	pin:pin=5.9
+top	039349_28/52	039349_28/52	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_37/33	039349_37/33	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_37/39	039349_37/39	STM_MICHEL	both	ok	1.0	1.0	0.0	0.0	-	michel_tag:320064:split;michel_tag:320061:split;michel_tag:320063:split
+top	039349_40/49	039349_40/49	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_42/41	039349_42/41	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_46/58	039349_46/58	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_54/56	039349_54/56	MESSY	— not set —	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_54/62	039349_54/62	FRAG_THRU	none	ok	1.0	1.0	0.0	0.0	-	class:FRAG_THRU
+top	039349_54/65	039349_54/65	FRAG_THRU	none	ok	1.0	1.0	0.0	0.0	-	class:FRAG_THRU
+top	039349_60/46	039349_60/46	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_60/47	039349_60/47	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_61/58	039349_61/58	MESSY	— not set —	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_63/41	039349_63/41	MESSY	— not set —	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_68/71	039349_68/71	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_75/72	039349_75/72	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_77/52	039349_77/52	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_81/45	039349_81/45	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY
+top	039349_81/54	039349_81/54	MESSY	none	ok	1.0	1.0	0.0	0.0	-	class:MESSY

@@ -1,0 +1,82 @@
+=== 1. sensitivities
+  E 0.4000 kV/cm: v 1.423 mm/us, dlnv/dlnE 0.524 | recombination dlnQ/dlnE at dE/dx 2.1: 0.156, 2.4: 0.189, 5.0: 0.355, 10.0: 0.483, 20.0: 0.584
+  E 0.4500 kV/cm: v 1.511 mm/us, dlnv/dlnE 0.496 | recombination dlnQ/dlnE at dE/dx 2.1: 0.124, 2.4: 0.160, 5.0: 0.330, 10.0: 0.463, 20.0: 0.569
+  E 0.4959 kV/cm: v 1.584 mm/us, dlnv/dlnE 0.474 | recombination dlnQ/dlnE at dE/dx 2.1: 0.098, 2.4: 0.134, 5.0: 0.309, 10.0: 0.446, 20.0: 0.556
+  E 0.5500 kV/cm: v 1.662 mm/us, dlnv/dlnE 0.451 | recombination dlnQ/dlnE at dE/dx 2.1: 0.068, 2.4: 0.106, 5.0: 0.287, 10.0: 0.427, 20.0: 0.541
+
+=== 2. the toy, dQ/dx ratio vs drift distance from the anode (A = 1)
+  pdvd delta 0.05 cos^2 0.00: 0:0.992 60:0.992 120:0.995 180:0.999 240:1.004 300:1.010 340:1.014 | end-to-end +0.023
+  pdvd delta 0.05 cos^2 0.06: 0:0.990 60:0.991 120:0.994 180:0.998 240:1.005 300:1.012 340:1.017 | end-to-end +0.027
+  pdvd delta 0.05 cos^2 0.72: 0:0.973 60:0.976 120:0.983 180:0.996 240:1.013 300:1.033 340:1.048 | end-to-end +0.075
+  pdvd delta 0.05 cos^2 1.00: 0:0.966 60:0.970 120:0.979 180:0.995 240:1.016 300:1.042 340:1.062 | end-to-end +0.096
+  pdvd delta 0.10 cos^2 0.00: 0:0.982 60:0.984 120:0.989 180:0.997 240:1.007 300:1.018 340:1.025 | end-to-end +0.043
+  pdvd delta 0.10 cos^2 0.06: 0:0.979 60:0.981 120:0.987 180:0.997 240:1.009 300:1.022 340:1.030 | end-to-end +0.051
+  pdvd delta 0.10 cos^2 0.72: 0:0.944 60:0.950 120:0.966 180:0.992 240:1.025 300:1.063 340:1.089 | end-to-end +0.145
+  pdvd delta 0.10 cos^2 1.00: 0:0.931 60:0.937 120:0.957 180:0.989 240:1.032 300:1.082 340:1.118 | end-to-end +0.187
+  pdhd delta 0.05 cos^2 0.00: 0:0.993 60:0.993 120:0.995 180:0.999 240:1.003 300:1.007 340:1.011 | end-to-end +0.018
+  pdhd delta 0.05 cos^2 0.06: 0:0.991 60:0.992 120:0.994 180:0.998 240:1.003 300:1.009 340:1.013 | end-to-end +0.022
+  pdhd delta 0.05 cos^2 0.72: 0:0.975 60:0.978 120:0.984 180:0.995 240:1.010 300:1.027 340:1.040 | end-to-end +0.065
+  pdhd delta 0.05 cos^2 1.00: 0:0.969 60:0.972 120:0.980 180:0.994 240:1.012 300:1.035 340:1.053 | end-to-end +0.084
+  pdhd delta 0.10 cos^2 0.00: 0:0.985 60:0.986 120:0.990 180:0.997 240:1.005 300:1.014 340:1.019 | end-to-end +0.034
+  pdhd delta 0.10 cos^2 0.06: 0:0.981 60:0.983 120:0.988 180:0.997 240:1.006 300:1.017 340:1.023 | end-to-end +0.042
+  pdhd delta 0.10 cos^2 0.72: 0:0.948 60:0.953 120:0.968 180:0.990 240:1.019 300:1.052 340:1.075 | end-to-end +0.127
+  pdhd delta 0.10 cos^2 1.00: 0:0.935 60:0.941 120:0.959 180:0.987 240:1.024 300:1.068 340:1.100 | end-to-end +0.165
+  pdvd delta 0.05 cos^2 0.72 local slope per 100 cm by 60 cm step: +0.004 +0.013 +0.021 +0.028 +0.034
+  pdvd delta 0.10 cos^2 0.72 local slope per 100 cm by 60 cm step: +0.009 +0.027 +0.043 +0.055 +0.063
+
+=== 3. per volume: where the plateau sits, the drift trend by angle, and the fitted delta
+  == PDVD top (x>0) n 102 | |cos_x| p50 0.85 cos^2 p50 0.72 | plateau drift p10/p25/p50/p75/p90 32/72/129/180/246 cm
+     binned median plateau (n): 0-60:0.870(20) 60-120:0.898(27) 120-180:0.953(30) 180-240:0.910(13) 240-300:0.953(8) 300-360:1.066(4)
+     |cos_x| 0.00-0.50: n  16 observed slope per 100 cm +0.042 [-0.011,+0.111] | toy delta 0.10 predicts +0.015
+     |cos_x| 0.50-0.85: n  36 observed slope per 100 cm +0.029 [+0.003,+0.054] | toy delta 0.10 predicts +0.035
+     |cos_x| 0.85-1.01: n  50 observed slope per 100 cm +0.038 [+0.009,+0.065] | toy delta 0.10 predicts +0.046
+     shape, linear in drift: coefficient +0.0403, rms residual 0.1387, MAD 0.0654
+     shape, pure (drift)^2 : coefficient +0.0125, rms residual 0.1388, MAD 0.0644
+     fitted delta +0.040 [+0.030,+0.140] (A 0.927) | recombination-only fit needs delta +0.130
+  == PDVD bottom (x<0) n 32 | |cos_x| p50 0.80 cos^2 p50 0.65 | plateau drift p10/p25/p50/p75/p90 56/112/128/186/248 cm
+     binned median plateau (n): 0-60:0.994(5) 60-120:1.031(7) 120-180:1.064(10) 180-240:1.068(6) 240-300:-(2) 300-360:-(2)
+     |cos_x| 0.00-0.50: n 2 (too few)
+     |cos_x| 0.50-0.85: n  22 observed slope per 100 cm +0.031 [+0.008,+0.049] | toy delta 0.10 predicts +0.038
+     |cos_x| 0.85-1.01: n   8 observed slope per 100 cm -0.026 [-0.052,-0.004] | toy delta 0.10 predicts +0.057
+     shape, linear in drift: coefficient +0.0065, rms residual 0.0694, MAD 0.0518
+     shape, pure (drift)^2 : coefficient +0.0017, rms residual 0.0694, MAD 0.0533
+     fitted delta +0.050 [-0.040,+0.110] (A 1.062) | recombination-only fit needs delta +0.170
+  == PDHD x>0 n 50 | |cos_x| p50 0.25 cos^2 p50 0.06 | plateau drift p10/p25/p50/p75/p90 76/166/259/301/326 cm
+     binned median plateau (n): 0-60:0.922(4) 60-120:0.988(7) 120-180:1.014(6) 180-240:1.060(5) 240-300:0.852(15) 300-360:1.007(13)
+     |cos_x| 0.00-0.50: n  41 observed slope per 100 cm +0.017 [-0.022,+0.052] | toy delta 0.10 predicts +0.014
+     |cos_x| 0.50-0.85: n   9 observed slope per 100 cm -0.020 [-0.074,+0.025] | toy delta 0.10 predicts +0.035
+     |cos_x| 0.85-1.01: n 0 (too few)
+     shape, linear in drift: coefficient +0.0040, rms residual 0.2156, MAD 0.1157
+     shape, pure (drift)^2 : coefficient +0.0009, rms residual 0.2156, MAD 0.1145
+     fitted delta +0.010 [-0.140,+0.140] (A 0.989) | recombination-only fit needs delta +0.070
+  == PDHD x<0 n 24 | |cos_x| p50 0.33 cos^2 p50 0.11 | plateau drift p10/p25/p50/p75/p90 87/109/196/292/309 cm
+     binned median plateau (n): 0-60:-(0) 60-120:0.983(7) 120-180:0.921(4) 180-240:1.099(4) 240-300:0.955(5) 300-360:0.962(4)
+     |cos_x| 0.00-0.50: n  19 observed slope per 100 cm -0.059 [-0.111,-0.008] | toy delta 0.10 predicts +0.017
+     |cos_x| 0.50-0.85: n 5 (too few)
+     |cos_x| 0.85-1.01: n 0 (too few)
+     shape, linear in drift: coefficient -0.0416, rms residual 0.1824, MAD 0.0704
+     shape, pure (drift)^2 : coefficient -0.0115, rms residual 0.1816, MAD 0.0680
+     fitted delta +0.040 [-0.160,+0.050] (A 0.995) | recombination-only fit needs delta -0.130
+
+=== 4. PDVD top vs bottom: is the offset a position effect inside each half-volume?
+  matched drift distance from each volume's own anode: median plateau top | bottom | top/bottom
+      0- 60 cm: 0.870 ( 20) | 0.994 (  5) | 0.875
+     60-120 cm: 0.898 ( 27) | 1.031 (  7) | 0.871
+    120-180 cm: 0.953 ( 30) | 1.064 ( 10) | 0.896
+    180-240 cm: 0.910 ( 13) | 1.068 (  6) | 0.853
+    240-300 cm: 0.953 (  8) | nan (  2) | nan
+    300-360 cm: 1.066 (  4) | nan (  2) | nan
+    matched angle |cos_x| 0.5-0.85, drift 0-240 cm: top 0.956 (29) | bottom 1.058 (20)
+    matched angle |cos_x| 0.85-1.01, drift 0-240 cm: top 0.902 (46) | bottom 1.046 (6)
+  plateau by anode: top 4: 0.936 (25), 5: 0.948 (20), 6: 0.892 (30), 7: 0.876 (19) | bottom 0: 1.066 (10), 1: 1.098 (4), 2: 1.059 (9), 3: 1.000 (9)
+
+  model comparison over both PDVD volumes (n 134), L1 loss = sum |plateau - A x toy| (lower is better)
+    M1 common A, common delta            : loss 13.52  A 0.970 delta +0.060
+    M3 common A, delta_top, delta_bottom : loss 12.90  A 0.980 delta_top +0.140 delta_bottom -0.080   <- a position effect only, SCE size free per volume, no volume offset
+    M2 A_top, A_bottom, common delta     : loss 11.75  A_top 0.930 A_bottom 1.060 (ratio 0.877) delta +0.050
+    M4 everything separate               : loss 11.75  top A 0.930 delta +0.050 | bottom A 1.060 delta +0.040
+    bootstrap (150): M2 A_top/A_bottom 0.878 [0.858,0.907] | M3 delta_top +0.15 [+0.09,+0.21] delta_bottom -0.07 [-0.14,+0.00] | loss(M3) - loss(M2) +1.08 [+0.62,+1.65]
+    M3 vs data, top (delta +0.14: field 0.86 E0 at the anode, 1.28 E0 at the cathode): 0-60 data 0.870 pred 0.903 60-120 data 0.898 pred 0.919 120-180 data 0.953 pred 0.949 180-240 data 0.910 pred 0.990 240-300 data 0.953 pred 1.037 300-360 data 1.066 pred 1.087
+    M3 vs data, bottom (delta -0.08: field 1.08 E0 at the anode, 0.84 E0 at the cathode): 0-60 data 0.994 pred 1.015 60-120 data 1.031 pred 1.008 120-180 data 1.064 pred 0.995 180-240 data 1.068 pred 0.975
+
+figure: /home/xqian/tmp/p98/dq/sc_p98voffq.png

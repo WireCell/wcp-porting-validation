@@ -1,0 +1,15 @@
+plateau rows: p98voffq 134  p98vonq 133  common by original key 111
+  top    common  81  only p98voffq  21  only p98vonq  22  (side changed on 0)
+         per-track p98vonq/p98voffq plateau: median 1.1228 [1.1176, 1.1275]  p16/p84 of tracks 1.0511/1.1767
+         only p98voffq: median plateau 0.9654 (n 21)
+         only p98vonq: median plateau 0.9891 (n 22)
+  bottom common  30  only p98voffq   2  only p98vonq   0  (side changed on 0)
+         per-track p98vonq/p98voffq plateau: median 1.0000 [1.0000, 1.0000]  p16/p84 of tracks 1.0000/1.0000
+         only p98voffq: median plateau 1.0791 (n 2)
+  top/bottom ratio of median plateaus:
+    p98voffq full      top 0.9317 (n 102)  bottom 1.0577 (n 32)  top/bottom 0.8809
+    p98vonq full       top 1.0170 (n 103)  bottom 1.0577 (n 30)  top/bottom 0.9615
+    p98voffq common    top 0.9219 (n 81)  bottom 1.0577 (n 30)  top/bottom 0.8716
+    p98vonq common     top 1.0330 (n 81)  bottom 1.0577 (n 30)  top/bottom 0.9767
+  wrote /home/xqian/tmp/p98/dq/dqdx_p98voffq_common.json (111 pdvd rows)
+  wrote /home/xqian/tmp/p98/dq/dqdx_p98vonq_common.json (111 pdvd rows)

@@ -1,0 +1,10 @@
+census: cited literal events [039252_0 039252_2 039253_0] all KEPT
+link closure: 1536 links after 2 passes
+retire: 768 archives, 29.37 GiB; 1536 links; kept events: 24
+REFUSE liveness: wire-cell running
+rc=11
+# negative control (NEGCTL=1)
+census: cited literal events [039252_0 039252_2 039253_0] all KEPT
+NEGCTL: injected an ON-arm frame
+REFUSE scope: /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_0_p98von/protodune-sp-dnnroi-frames-anode0.tar.bz2
+rc=13

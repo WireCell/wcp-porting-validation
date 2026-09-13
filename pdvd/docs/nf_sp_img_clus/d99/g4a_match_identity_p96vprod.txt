@@ -1,0 +1,17 @@
+record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json  n=601  base=p96vprod  arm=p96vprod
+status: {'ok': 601}
+new_key == old key: 601/601
+  top    {'ok': 360}
+  bottom {'ok': 210}
+  STM_MICHEL {'ok': 169}
+  STM_ONLY   {'ok': 117}
+  THRU       {'ok': 286}
+  MESSY      {'ok': 24}
+  FRAG_THRU  {'ok': 4}
+  UNCLEAR    {'ok': 1}
+ok f_fwd p5/p50 1.000/1.000  f_rev p5/p50 1.000/1.000
+x offsets: retried 0, |dx|>1cm 0, dx p5/p50/p95 0.00/0.00/0.00
+stop move (candidate, matched): n 570  p50 0.00  p90 0.00  >5cm 0
+candidate on new arm: 570 of 601 matched-any
+tags cluster-level: {'ok': 3931, 'split': 5}  segment-level: {'ok': 3623, 'no_segment_within_1.5cm': 268, 'whole_cluster': 40, None: 5}
+pins carried with a new rr: 135

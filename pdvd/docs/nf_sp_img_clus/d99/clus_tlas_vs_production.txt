@@ -1,0 +1,5 @@
+# doc pdvd/99: clustering TLA sidecars (pctree-evt*.tlas) of the production-staged OFF arm p98voffq vs production d51vclus, all 120 events, token by token, excluding opflash_input= (path spelling) and img_wires=
+p98voffq readout_window_ticks:     120 readout_window_ticks=10000 
+d51vclus readout_window_ticks:     120 readout_window_ticks=10000 
+p98voff (frames in the clustering input dir) readout_window_ticks:      36 readout_window_ticks=10000      84 readout_window_ticks=6400 
+p98voffq sidecars differing from d51vclus: 0 of 120

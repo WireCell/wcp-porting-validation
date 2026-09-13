@@ -1,0 +1,91 @@
+GATE G5a p96vprod on pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json: is_stm (242, 8, 34, 262) want (242, 8, 34, 262); michel(all judged) (144, 12, 20) want (144, 12, 20) -> PASS
+
+##### p96vprod  record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json (601 items; items with no candidate in the arm: 31)
+  is_stm 242/8/34/262  purity 0.968 eff 0.877   michel(all judged) 144/12/20/370  purity 0.923 eff 0.878
+    top    n 337  is_stm 168/3/23/143  eff 0.880  michel 102/7/14/214  eff 0.879
+    bottom n 209  is_stm 74/5/11/119  eff 0.871  michel 42/5/6/156  eff 0.875
+
+=== PDVD p96vprod
+  is_stm census     242/8/34/262   purity 0.968 eff 0.877
+  michel census, hand stoppers vs michel_kind (PDHD graders)   142/8/19/107   purity 0.947 eff 0.882
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   144/12/20/370   purity 0.923 eff 0.878
+  hand stoppers 276  (hand Michel 161, STM_ONLY 112)
+  over ALL hand stoppers:
+    accepted                       242/276 = 0.877 +- 0.020
+    Bragg-path accept              213/276 = 0.772 +- 0.025
+      of which anchor-helped        11/276 = 0.040 +- 0.012
+    topology-rescued                29/276 = 0.105 +- 0.018
+    GOLDEN (Bragg-path + Michel)   108/276 = 0.391 +- 0.029
+  over hand STM_ONLY:
+    Bragg-path accept               95/112 = 0.848 +- 0.034
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       143/161 = 0.888 +- 0.025
+    Bragg-path accept              117/161 = 0.727 +- 0.035
+    topology-rescued                26/161 = 0.161 +- 0.029
+    michel_found (any accept)      142/161 = 0.882 +- 0.025
+    accepted AND michel_found      134/161 = 0.832 +- 0.029
+    GOLDEN                         108/161 = 0.671 +- 0.037
+    GOLDEN, no anchor help         103/161 = 0.640 +- 0.038
+    Michel found | Bragg-path      108/117 = 0.923 +- 0.025
+  chain's own golden selection: 110 items -> {'hand Michel': 108, 'STM_ONLY': 2}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=164  contrast 1.245/1.563/1.770   ks_mu 0.038/0.057/0.088
+    hand STM_ONLY    n=112  contrast 1.519/1.712/1.950   ks_mu 0.028/0.049/0.073
+    hand THRU        n=270  contrast 0.817/0.960/1.111   ks_mu 0.097/0.118/0.144
+
+##### p98voffq  record carried_p98voffq.json (574 items; items with no candidate in the arm: 166)
+  is_stm 177/19/44/154  purity 0.903 eff 0.801   michel(all judged) 103/21/25/245  purity 0.831 eff 0.805
+    top    n 241  is_stm 121/12/33/75  eff 0.786  michel 73/17/18/133  eff 0.802
+    bottom n 153  is_stm 56/7/11/79  eff 0.836  michel 30/4/7/112  eff 0.811
+
+=== PDVD p98voffq
+  is_stm census     177/19/44/154   purity 0.903 eff 0.801
+  michel census, hand stoppers vs michel_kind (PDHD graders)   101/11/25/84   purity 0.902 eff 0.802
+  michel census, all judged vs verdict STM_MICHEL (census_score 14.2)   103/21/25/245   purity 0.831 eff 0.805
+  hand stoppers 221  (hand Michel 126, STM_ONLY 93)
+  over ALL hand stoppers:
+    accepted                       177/221 = 0.801 +- 0.027
+    Bragg-path accept              154/221 = 0.697 +- 0.031
+      of which anchor-helped         6/221 = 0.027 +- 0.011
+    topology-rescued                23/221 = 0.104 +- 0.021
+    GOLDEN (Bragg-path + Michel)    73/221 = 0.330 +- 0.032
+  over hand STM_ONLY:
+    Bragg-path accept               71/ 93 = 0.763 +- 0.044
+  over hand MICHEL items (the GOLDEN denominator):
+    accepted                       104/126 = 0.825 +- 0.034
+    Bragg-path accept               82/126 = 0.651 +- 0.042
+    topology-rescued                22/126 = 0.175 +- 0.034
+    michel_found (any accept)      101/126 = 0.802 +- 0.036
+    accepted AND michel_found       95/126 = 0.754 +- 0.038
+    GOLDEN                          73/126 = 0.579 +- 0.044
+    GOLDEN, no anchor help          70/126 = 0.556 +- 0.044
+    Michel found | Bragg-path       73/ 82 = 0.890 +- 0.035
+  chain's own golden selection: 83 items -> {'hand Michel': 73, 'THRU': 2, 'STM_ONLY': 7, 'STM_MICHEL': 1}
+  shape quantities (p25 / p50 / p75):
+    hand STM_MICHEL  n=128  contrast 1.198/1.527/1.813   ks_mu 0.037/0.054/0.093
+    hand STM_ONLY    n= 93  contrast 1.479/1.701/1.942   ks_mu 0.025/0.045/0.077
+    hand THRU        n=173  contrast 0.861/0.985/1.188   ks_mu 0.095/0.113/0.142
+
+##### movers p96vprod -> p98voffq (by original record key)
+  common items 380; only in p96vprod: 166; only in p98voffq: 14
+  is_stm: 49 moved
+    bottom THRU 0->1                   4  039349_18/10 039349_26/16 039349_47/24 039349_54/18
+    bottom THRU 1->0                   1  039349_30/21
+    bottom stopper 0->1                1  039349_0/28
+    bottom stopper 1->0                5  039253_9/42 039349_20/32 039349_24/35 039349_28/60 039349_48/21
+    top THRU 0->1                     11  039252_17/80 039252_17/90 039252_8/82 039252_8/83 039253_1/105 039349_20/73 039349_22/39 039349_38/61 039349_53/46 039349_67/76 039349_7/57
+    top THRU 1->0                      2  039349_38/60 039349_71/37
+    top stopper 0->1                   3  039252_12/123 039252_5/73 039253_8/64
+    top stopper 1->0                  22  039252_3/74 039252_9/101 039253_1/98 039253_12/69 039253_6/79 039253_6/85 039253_7/80 039253_9/75 039349_1/52 039349_2/56 039349_28/36 039349_30/45 ...
+  michel_found: 40 moved
+    bottom STM_ONLY 0->1               2  039252_9/31 039349_67/37
+    bottom STM_ONLY 1->0               1  039349_20/32
+    bottom THRU 0->1                   2  039349_44/18 039349_47/24
+    bottom THRU 1->0                   1  039252_6/114
+    bottom michel 0->1                 1  039349_0/28
+    bottom michel 1->0                 5  039349_28/60 039349_35/30 039349_45/25 039349_48/21 039349_72/65
+    top STM_ONLY 0->1                  6  039253_11/106 039253_6/85 039349_12/44 039349_18/33 039349_33/58 039349_48/58
+    top THRU 0->1                      8  039252_17/90 039252_8/83 039253_1/105 039349_13/56 039349_22/39 039349_37/52 039349_38/61 039349_44/72
+    top THRU 1->0                      1  039349_0/68
+    top michel 0->1                    3  039252_8/102 039253_3/61 039349_58/69
+    top michel 1->0                   10  039252_2/79 039253_0/110 039253_6/79 039349_1/52 039349_10/58 039349_30/45 039349_36/63 039349_68/63 039349_81/41 039349_82/54

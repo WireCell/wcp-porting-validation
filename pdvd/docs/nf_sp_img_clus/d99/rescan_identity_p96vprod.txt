@@ -1,0 +1,2 @@
+p96vprod: flagged 62 of 601  by volume {'?': 31, 'bottom': 3, 'top': 28}  by reason {'candidate': 31, 'class': 29, 'michel_tag': 4, 'pin': 1}
+  cannot be carried without a look (match/candidate): 31  by volume {'?': 31}  by verdict {'STM_MICHEL': 5, 'THRU': 20, 'MESSY': 1, 'STM_ONLY': 5}

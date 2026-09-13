@@ -1,0 +1,18 @@
+record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json  n=601  base=p96vprod  arm=p98voffq
+status: {'collision': 4, 'lost': 23, 'merged': 8, 'ok': 565, 'split': 1}
+new_key == old key: 81/601
+  top    {'collision': 3, 'lost': 21, 'merged': 5, 'ok': 330, 'split': 1}
+  bottom {'collision': 1, 'lost': 2, 'merged': 2, 'ok': 205}
+  STM_MICHEL {'lost': 2, 'merged': 1, 'ok': 166}
+  STM_ONLY   {'collision': 1, 'lost': 1, 'merged': 3, 'ok': 112}
+  THRU       {'collision': 3, 'lost': 14, 'merged': 4, 'ok': 265}
+  MESSY      {'lost': 6, 'ok': 17, 'split': 1}
+  FRAG_THRU  {'ok': 4}
+  UNCLEAR    {'ok': 1}
+ok f_fwd p5/p50 0.932/0.991  f_rev p5/p50 0.922/0.990
+x offsets: retried 46, |dx|>1cm 44, dx p5/p50/p95 0.00/0.00/0.00
+stop move (candidate, matched): n 395  p50 0.59  p90 3.76  >5cm 28
+candidate on new arm: 409 of 597 matched-any
+tags cluster-level: {'ok': 3460, 'merged': 162, 'lost': 301, 'split': 13}  segment-level: {'ok': 1856, 'no_segment_within_1.5cm': 1730, 'whole_cluster': 36, None: 314}
+pins carried with a new rr: 111
+carried 574 items -> /home/xqian/tmp/p98/carry/carried_p98voffq.json; duplicate new keys 0

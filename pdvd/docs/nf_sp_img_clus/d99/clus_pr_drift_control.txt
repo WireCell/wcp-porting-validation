@@ -1,0 +1,10 @@
+# doc pdvd/99 clustering+PR drift control: today's run_clus_evt.sh + run_pr_evt.sh (libpin_p96, staged like stage_ql_tag.sh from d27fresh imaging; arm p98kq) vs production d51vclus (pctree, .tlas) and p96vprod (tracking-pr/stm.root NaN-aware, mabc-pr.zip members)
+039349_81: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039349_4: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039349_15: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039349_68: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039349_2: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039252_13: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039252_0: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+039253_0: pctree identical | tlas identical | tracking-pr identical (280 branches) | tracking-stm identical (63) | mabc-pr 25/25 vs 25
+SUMMARY p98kq vs d51vclus/p96vprod: pctree 8/8, tlas 8/8, PR trees 8/8, mabc-pr 8/8

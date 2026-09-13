@@ -1,0 +1,13 @@
+record pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json  n=601  base=p96vprod  arm=p96vprod  SHUFFLED
+status: {'lost': 600, 'merged': 1}
+new_key == old key: 0/601
+  top    {'lost': 359, 'merged': 1}
+  bottom {'lost': 210}
+  STM_MICHEL {'lost': 168, 'merged': 1}
+  STM_ONLY   {'lost': 117}
+  THRU       {'lost': 286}
+  MESSY      {'lost': 24}
+  FRAG_THRU  {'lost': 4}
+  UNCLEAR    {'lost': 1}
+tags cluster-level: {'lost': 3841, 'merged': 92, 'ok': 3}  segment-level: {None: 3841, 'no_segment_within_1.5cm': 90, 'whole_cluster': 3, 'ok': 2}
+pins carried with a new rr: 5

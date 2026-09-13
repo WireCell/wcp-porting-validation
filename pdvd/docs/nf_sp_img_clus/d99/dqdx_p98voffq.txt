@@ -1,0 +1,2 @@
+p98voffq x<0 n 32 plateau median 1.0577
+p98voffq x>0 n 102 plateau median 0.9317

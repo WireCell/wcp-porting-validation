@@ -1,0 +1,31 @@
+events 1  arms ['p98voff', 'p98von']  nol1 p98g2nol1
+  anode 0 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 3  share of OFF charge 0.0047  |OFF-noL1|/OFF 0.0304
+  anode 0 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 0 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 1 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 18  share of OFF charge 0.0034  |OFF-noL1|/OFF 0.0107
+  anode 1 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 12  share of OFF charge 0.0678  |OFF-noL1|/OFF 0.0129
+  anode 1 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 2 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 17  share of OFF charge 0.0321  |OFF-noL1|/OFF 0.0562
+  anode 2 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 10  share of OFF charge 0.0240  |OFF-noL1|/OFF 0.0143
+  anode 2 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 3 U  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 12  share of OFF charge 0.0474  |OFF-noL1|/OFF 0.1702
+  anode 3 V  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 1  share of OFF charge 0.0022  |OFF-noL1|/OFF 0.0008
+  anode 3 W  vol bottom  sum p98von/p98voff 1.0000  per-event median-channel ratio p50 1.0000  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 4 U  vol top     sum p98von/p98voff 1.1311  per-event median-channel ratio p50 1.1249  L1SP-touched chans 19  share of OFF charge 0.0321  |OFF-noL1|/OFF 0.0144
+  anode 4 V  vol top     sum p98von/p98voff 1.1246  per-event median-channel ratio p50 1.1249  L1SP-touched chans 16  share of OFF charge 0.0589  |OFF-noL1|/OFF 0.0183
+  anode 4 W  vol top     sum p98von/p98voff 1.1257  per-event median-channel ratio p50 1.1249  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 5 U  vol top     sum p98von/p98voff 1.1294  per-event median-channel ratio p50 1.1249  L1SP-touched chans 3  share of OFF charge 0.0041  |OFF-noL1|/OFF 0.0024
+  anode 5 V  vol top     sum p98von/p98voff 1.1495  per-event median-channel ratio p50 1.1249  L1SP-touched chans 3  share of OFF charge 0.0052  |OFF-noL1|/OFF 0.0227
+  anode 5 W  vol top     sum p98von/p98voff 1.1253  per-event median-channel ratio p50 1.1249  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 6 U  vol top     sum p98von/p98voff 1.1307  per-event median-channel ratio p50 1.1249  L1SP-touched chans 2  share of OFF charge 0.0020  |OFF-noL1|/OFF 0.0030
+  anode 6 V  vol top     sum p98von/p98voff 1.1271  per-event median-channel ratio p50 1.1249  L1SP-touched chans 2  share of OFF charge 0.0042  |OFF-noL1|/OFF 0.0147
+  anode 6 W  vol top     sum p98von/p98voff 1.1265  per-event median-channel ratio p50 1.1249  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  anode 7 U  vol top     sum p98von/p98voff 1.1301  per-event median-channel ratio p50 1.1249  L1SP-touched chans 11  share of OFF charge 0.0063  |OFF-noL1|/OFF 0.0165
+  anode 7 V  vol top     sum p98von/p98voff 1.1281  per-event median-channel ratio p50 1.1249  L1SP-touched chans 5  share of OFF charge 0.0249  |OFF-noL1|/OFF 0.0116
+  anode 7 W  vol top     sum p98von/p98voff 1.1267  per-event median-channel ratio p50 1.1249  L1SP-touched chans 0  share of OFF charge 0.0000  |OFF-noL1|/OFF 0.0000
+  bottom U: sum p98von/p98voff 1.0000
+  bottom V: sum p98von/p98voff 1.0000
+  bottom W: sum p98von/p98voff 1.0000
+  top    U: sum p98von/p98voff 1.1303
+  top    V: sum p98von/p98voff 1.1331
+  top    W: sum p98von/p98voff 1.1258

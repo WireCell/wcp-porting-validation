@@ -1,0 +1,3 @@
+p98voffq: flagged 254 of 601  by volume {'?': 17, 'bottom': 73, 'top': 164}  by reason {'candidate': 157, 'class': 29, 'match': 36, 't0': 44, 'michel_tag': 34, 'stop': 28, 'pin': 4}
+  NEW vs identity: 229 items  by volume {'?': 3, 'bottom': 72, 'top': 154}  by new reason {'match': 36, 'michel_tag': 28, 't0': 44, 'candidate': 141, 'stop': 28, 'pin': 4}
+  cannot be carried without a look (match/candidate): 193  by volume {'?': 17, 'bottom': 61, 'top': 115}  by verdict {'THRU': 116, 'MESSY': 11, 'STM_ONLY': 24, 'STM_MICHEL': 41, 'FRAG_THRU': 1}

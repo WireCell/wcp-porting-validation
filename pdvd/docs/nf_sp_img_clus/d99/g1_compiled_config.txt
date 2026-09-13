@@ -1,0 +1,51 @@
+# doc pdvd/98 gate G1 -- compiled config before/after the top_gain_scale edit (wcsonnet; md5 of stdout)
+# production entry pdvd/wct-nf-sp-dnnroi.jsonnet with the runner's TLAs (L1SP on = process mode; L1SP off = -L off):
+prod_l1on before 412e52524abaf728cf6314b85fbca96e after 412e52524abaf728cf6314b85fbca96e
+prod_l1off before d944ec948031ddfe0fb8edc9c393431e after d944ec948031ddfe0fb8edc9c393431e
+prod_l1on with --tla-code top_gain_scale=1.0: 412e52524abaf728cf6314b85fbca96e
+# every other importer of protodunevd/sp.jsonnet or l1sp_after_dnnroi.jsonnet (default TLAs; ext vars in <name>.args where needed)
+cfg_wcls-nf-dnnsp-img before 9dcd3fbe58d657895846c4eb4e277438 after 9dcd3fbe58d657895846c4eb4e277438 SAME
+cfg_wcls-nf before 89b51a2d710d2aac3c3ab7f0dd63d0b4 after 89b51a2d710d2aac3c3ab7f0dd63d0b4 SAME
+cfg_wcls-nf-sp-img before a7f162fd43770b6aeb90b8e39bb7b8c7 after a7f162fd43770b6aeb90b8e39bb7b8c7 SAME
+cfg_wcls-nf-sp before e47f052bda53b8db20fe670a3f18ee4b after e47f052bda53b8db20fe670a3f18ee4b SAME
+cfg_wcls-nf-sp-out before f3dbc90551091f0122bb56764f668610 after f3dbc90551091f0122bb56764f668610 SAME
+cfg_wcls-rawdigit-sp before 66bfec8446bb0efd65893c730de43905 after 66bfec8446bb0efd65893c730de43905 SAME
+cfg_wcls-sim-drift-deposplat before b0aa5814c66da058c857ae0be727fa25 after b0aa5814c66da058c857ae0be727fa25 SAME
+cfg_wcls-sim-drift-simchannel before e05b699daa6638bb391e29ae9b93a1a8 after b8d97f597ac148db794cd44f91610749 DIFF(error line timestamp only: RUNTIME ERROR: Unexpected type string, expected number)
+cfg_wcls-sim-drift-simchannel-splusn before 07e684f659f196c1dfa4f51093ffb640 after 377e8b2675f6a33e8146490b92ceadfc DIFF(error line timestamp only: RUNTIME ERROR: Unexpected type string, expected number)
+cfg_wcls-sim-drift-y-simchannel before 3aa58fdef078e6ffb0406ae09b616f9b after 960e6b52e89501c33c4ad57998a086cf DIFF(error line timestamp only: RUNTIME ERROR: Unexpected type string, expected number)
+cfg_wct-sim-check-dnnsp before ee3b06590053ab57c926e3d620e5b4a8 after ee3b06590053ab57c926e3d620e5b4a8 SAME
+cfg_wct-sim-check before 92e93c79adecc5db63d8da6832fe5e0e after 92e93c79adecc5db63d8da6832fe5e0e SAME
+cfg_wct-sim-drift-deposplat before 23d0c170c703e8fbb86398bcec3f5d72 after 23d0c170c703e8fbb86398bcec3f5d72 SAME
+cfg_wct-sim-fans before 49c055751eb8c16204a36ab736340723 after 49c055751eb8c16204a36ab736340723 SAME
+cfg_wct-sim-sigproc-fans before b82b6c1d2487c503bc55cc634996e0f7 after b82b6c1d2487c503bc55cc634996e0f7 SAME
+pdvd_wcls-nf-sp-out before 3ae6905b7813ea539bc81b818adf243b after 7cab6667b56c312684e322db001257bb DIFF(error line timestamp only: RUNTIME ERROR: couldn't open import "params.jsonnet": no match locally or in the Jsonnet l)
+pdvd_wct-nf-sp-dnnroi before 3f7a319d7b12c767b081558842c62113 after 3f7a319d7b12c767b081558842c62113 SAME
+pdvd_wct-nf-sp before 527bced039194acdf64daa26881c3714 after 527bced039194acdf64daa26881c3714 SAME
+pdvd_sim_wct-sim-xtrack-sp before 08745a5b0a616cd9923da9c7950fb0d0 after 08745a5b0a616cd9923da9c7950fb0d0 SAME
+# ON (top_gain_scale=0.889) vs before, every changed value:
+OmnibusSigProc anode4sigproc4 /data/postgain 1 -> 0.889
+L1SPFilterPD l1sppd_dnn4 /data/adc_sum_threshold 160 -> 142.24
+L1SPFilterPD l1sppd_dnn4 /data/kernels_scale 1 -> 0.889
+L1SPFilterPD l1sppd_dnn4 /data/l1_raw_asym_eps 20 -> 17.78
+L1SPFilterPD l1sppd_dnn4 /data/raw_ROI_th_adclimit 10 -> 8.89
+OmnibusSigProc anode5sigproc5 /data/postgain 1 -> 0.889
+L1SPFilterPD l1sppd_dnn5 /data/adc_sum_threshold 160 -> 142.24
+L1SPFilterPD l1sppd_dnn5 /data/kernels_scale 1 -> 0.889
+L1SPFilterPD l1sppd_dnn5 /data/l1_raw_asym_eps 20 -> 17.78
+L1SPFilterPD l1sppd_dnn5 /data/raw_ROI_th_adclimit 10 -> 8.89
+OmnibusSigProc anode6sigproc6 /data/postgain 1 -> 0.889
+L1SPFilterPD l1sppd_dnn6 /data/adc_sum_threshold 160 -> 142.24
+L1SPFilterPD l1sppd_dnn6 /data/kernels_scale 1 -> 0.889
+L1SPFilterPD l1sppd_dnn6 /data/l1_raw_asym_eps 20 -> 17.78
+L1SPFilterPD l1sppd_dnn6 /data/raw_ROI_th_adclimit 10 -> 8.89
+OmnibusSigProc anode7sigproc7 /data/postgain 1 -> 0.889
+L1SPFilterPD l1sppd_dnn7 /data/adc_sum_threshold 160 -> 142.24
+L1SPFilterPD l1sppd_dnn7 /data/kernels_scale 1 -> 0.889
+L1SPFilterPD l1sppd_dnn7 /data/l1_raw_asym_eps 20 -> 17.78
+L1SPFilterPD l1sppd_dnn7 /data/raw_ROI_th_adclimit 10 -> 8.89
+n_changed 20
+# re-proof 2026-09-13 after renumbering the doc-99 comments in sp.jsonnet, pdvd/wct-nf-sp-dnnroi.jsonnet and run_nf_sp_dnnroi_evt.sh (comment-only edits):
+prod_l1on before 412e52524abaf728cf6314b85fbca96e after-renumber 412e52524abaf728cf6314b85fbca96e
+prod_l1off before d944ec948031ddfe0fb8edc9c393431e after-renumber d944ec948031ddfe0fb8edc9c393431e
+prod_l1on top_gain_scale=0.889 first proof 1e8adb5750d377d5ebd2834f78b61881 after-renumber 1e8adb5750d377d5ebd2834f78b61881

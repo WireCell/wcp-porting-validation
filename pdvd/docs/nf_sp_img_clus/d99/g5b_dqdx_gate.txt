@@ -1,0 +1,3 @@
+p96vprod x<0 n 42 plateau median 1.0389
+p96vprod x>0 n 141 plateau median 0.9266
+GATE G5b p96vprod vs committed d27/dqdx_drift.json: rows 183 vs 183, identical 183 -> PASS

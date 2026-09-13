@@ -120,6 +120,11 @@ Options:
                  one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
                  Auto-enables dump-all-rois unless overridden by -A.
   -A <on|off>   Override dump-all-rois (default: on when -w is set).
+  --top-gain-scale <s>
+                 One charge-scale constant for the TOP (TDE, anodes 4-7)
+                 electronics in SP: top OmnibusSigProc postgain and top
+                 L1SP gain_scale are set to <s> (top charge out ~ 1/s).
+                 Absent = no TLA passed = legacy config (doc pdvd/99).
   -h             Show this help.
 
 Input:  input_data/<run_dir>/<evt_dir>/protodune-orig-frames-anode{0..7}.tar.bz2
@@ -152,6 +157,7 @@ ENERGY_FRAC_OVERRIDE=""
 L1SP_THRESH_BOTTOM=""
 L1SP_THRESH_TOP=""
 L1SP_THRESH_SINGLE=""
+TOP_GAIN_SCALE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -187,6 +193,7 @@ while [ $# -gt 0 ]; do
         --l1sp-thresh-bottom) L1SP_THRESH_BOTTOM="$2"; shift 2 ;;
         --l1sp-thresh-top) L1SP_THRESH_TOP="$2"; shift 2 ;;
         --l1sp-thresh) L1SP_THRESH_SINGLE="$2"; shift 2 ;;
+        --top-gain-scale) TOP_GAIN_SCALE="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -w*) WF_DUMP_DIR="${1#-w}"; shift ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
@@ -404,6 +411,14 @@ if [ -n "$L1SP_THRESH_TOP" ]; then
     echo "L1SP thresh: top=$L1SP_THRESH_TOP"
 fi
 
+# Top-electronics SP gain constant (doc pdvd/99).  Only passed when given, so
+# the wire-cell command line is unchanged without the flag.
+TOP_GAIN_TLA=()
+if [ -n "$TOP_GAIN_SCALE" ]; then
+    TOP_GAIN_TLA=(--tla-code top_gain_scale="$TOP_GAIN_SCALE")
+    echo "Top gain:    top_gain_scale=$TOP_GAIN_SCALE (anodes 4-7 SP postgain + L1SP gain_scale)"
+fi
+
 # L1SP-DNN per-ROI debug dump (one NPZ per call with channel, score,
 # fired, polarity, waveform, scalars). Required for LASSO-fire verification.
 L1SP_DNN_DBG_TLA=()
@@ -462,6 +477,7 @@ wire-cell \
     "${L1SP_THRESH_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \
     "${L1SP_CALIB_TLA[@]}" \
+    "${TOP_GAIN_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

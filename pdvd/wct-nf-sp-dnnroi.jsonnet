@@ -97,6 +97,12 @@ function(
   l1sp_pd_gmax_min         = 1500.0,
   l1sp_pd_min_length       = 30,
   l1sp_pd_energy_frac_thr  = 0.66,
+  // One charge-scale constant for the TOP (TDE) electronics, SP only: passed
+  // to both the top OmnibusSigProc postgain and the top L1SP gain_scale
+  // (toolkit protodunevd/sp.jsonnet make_sigproc + l1sp_after_dnnroi.jsonnet).
+  // Default 1.0 = legacy => compiled config byte-identical.  The runner's
+  // --top-gain-scale sets it.  doc pdvd/99 (s = 0.889).
+  top_gain_scale           = 1.0,
 )
 
   local tools = tools_all;
@@ -138,7 +144,8 @@ function(
   // (Velocity / §8.12 convention re-evaluation deferred.)
   local sp_pipes = [sp.make_sigproc(a, l1sp_pd_mode='',
                                     ctoffset_b=4*wc.microsecond,
-                                    ctoffset_t=4*wc.microsecond)
+                                    ctoffset_t=4*wc.microsecond,
+                                    top_gain_scale=top_gain_scale)
                     for a in tools.anodes];
 
   // TorchService instance shared by all per-anode DNN-ROI nodes.
@@ -273,7 +280,8 @@ function(
                            l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
                            l1sp_pd_gmax_min=l1sp_pd_gmax_min,
                            l1sp_pd_min_length=l1sp_pd_min_length,
-                           l1sp_pd_energy_frac_thr=l1sp_pd_energy_frac_thr)]
+                           l1sp_pd_energy_frac_thr=l1sp_pd_energy_frac_thr,
+                           top_gain_scale=top_gain_scale)]
       else [sp_pipes[n]]
            + (if use_dnnroi
               then [dnnroi_inner_pipes[n], dnn_to_gauss_retag(tools.anodes[n].data.ident)]
