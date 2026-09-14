@@ -27,7 +27,7 @@ write into an existing output dir.
 | Where is the reco? | `tracking-pr/tracking-pr_<tag>.root`. `T_tagger` holds `numu_score`, `nue_score`, `neutrino_type`, the ~1200 tagger/BDT variables and the `act_*` cosmic-tagger arrays. `T_kine` holds `kine_reco_Enu`. Both have one row per neutrino candidate. |
 | Where is the truth (type, Enu, vertex)? | **Only in Bee**, in `bee/bee_<tag>.zip::data/0/0-mc.json`. The tracking-pr ROOT files carry **no** truth branches. |
 | Does mc.json hold truth or reco particle flow? | **Both, in one tree.** The truth interaction nodes (id 9000000+) come from larwirecell's `TensorSetLabeler`. Our reco PF is grafted under a single `reco nu …` node (id 19999999, children ≥ 20000000), or a `no reco neutrino candidate (…)` marker replaces it. Each node is unambiguous by id and text (section 2.2). |
-| Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). |
+| Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). Requiring true Edep > 100 MeV in the signal raises the vertex number to 73.5 % and leaves both selections unchanged. At `nue_score>4.0` the nueCC purity is 14/22 = 63.6 % (efficiency 14/31) (section 5.6). |
 | Is the PR candidate the non-cosmic one? | **Yes, in 6236/6236 rows, by construction.** The per-bundle `pick()` skips any activity with TGM, STM or `lm_flag>0` (section 3). The informative numbers are the residuals in section 4. |
 
 ## 1. The sample
@@ -433,6 +433,76 @@ set) for signal and this sample for the numu/NC/cosmic background.
 Both figures: stacked `kine_reco_Enu`, last bin = overflow, with category counts in
 the legend. The categories and colours are the same on both, in fixed order; an
 empty category keeps its legend entry so the two plots stay comparable.
+
+## 5.6 Signal with true Edep > 100 MeV, and the nueCC cut at 4 (owner follow-up)
+
+Repro:
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 d107_selection.py products/d107 docs/107_sel_edep100 --edep-min 100 \
+    --cuts numu:0.9,nue:7.0,nue:4.0 > ~/tmp/d107_sel_edep100.log 2>&1; echo rc=$?
+# section 5.5 numbers plus the nue > 4 line under the original definition:
+python3 d107_selection.py products/d107 docs/107_sel --cuts numu:0.9,nue:7.0,nue:4.0
+```
+
+**Refined signal:** a true CC of that flavour, vertex in the FV, **and true deposited
+energy `Edep` > 100 MeV**. `Edep` is the labeler's sum of `SimEnergyDeposit` energy
+from that interaction's particles (section 2.2).
+- **Selection:** the score cut plus reco vertex in the FV, exactly as in section 5.5.
+- **Low-Edep CC:** a selected candidate matched to a signal-flavour CC in the FV with `Edep` ≤ 100 MeV counts as background.
+- **Q1 denominator:** also restricted to `Edep` > 100 MeV.
+
+The rerun of the section 5.5 definition with the updated script reproduces every
+section 5.5 number. Only the header text changes, plus the added nue > 4 block.
+
+### Q1 with Edep > 100 MeV
+
+| Population (true vertex in FV, Edep > 100 MeV) | Vertex within 5 cm | (sec 5.5, no Edep cut) |
+|---|---|---|
+| **all true neutrinos** | **3262/4439 = 73.5 %** [72.8, 74.1] | 67.7 % |
+| … only events that have a candidate | 3262/4128 = 79.0 % | 77.5 % |
+| true numuCC | 2801/3500 = 80.0 % | 80.0 % |
+| true NC | 437/908 = 48.1 % [46.5, 49.8] | 35.8 % |
+| true nueCC | 24/31 = 77.4 % | 77.4 % |
+
+The Edep cut removes 462 low-activity FV interactions, 460 of them NC. That is where
+the all-neutrino number moves from 67.7 % to 73.5 %.
+
+### numuCC and nueCC with Edep > 100 MeV
+
+| Selection | True signal in FV (Edep > 100 MeV) | Efficiency | Selected | Purity |
+|---|---|---|---|---|
+| `numu_score > 0.9` | 3 500 | **2415/3500 = 69.0 %** [68.2, 69.8] | 2 799 | **2415/2799 = 86.3 %** [85.6, 86.9] |
+| `nue_score > 7.0` | 31 | **11/31 = 35.5 %** [27.5, 44.4] | 12 | **11/12 = 91.7 %** [80.2, 96.8] |
+| `nue_score > 4.0` | 31 | **14/31 = 45.2 %** [36.5, 54.1] | 22 | **14/22 = 63.6 %** [53.0, 73.1] |
+
+**The Edep requirement does not move the selection numbers.**
+- **numuCC:** only 2 of the 3 502 true numuCC in the FV have `Edep` ≤ 100 MeV, and neither was selected. The efficiency denominator drops by 2 and the purity is unchanged.
+- **nueCC:** all 31 true nueCC in the FV have `Edep` > 100 MeV.
+- **Low-Edep background:** the category "same CC in FV, Edep ≤ 100 MeV" is empty in all three selections.
+
+**nueCC at `nue_score > 4.0`:** purity is **14/22 = 63.6 %** [53.0, 73.1], identical
+with and without the Edep cut. Loosening from 7.0 to 4.0 gains 3 signal (11 → 14)
+and 7 background (1 → 8). The 8 background candidates are:
+
+| Background at `nue_score > 4.0` | Count |
+|---|---|
+| true numuCC in FV (vertex within 5 cm) | 3 |
+| true NC in FV (vertex within 5 cm) | 2 |
+| no true vertex within 5 cm (nearest: an NC at 20-50 cm, a numuCC > 50 cm) | 2 |
+| true vertex outside FV | 1 |
+
+Without the reco-FV requirement, 27 candidates pass, with 14 signal (51.9 %). The
+statistics warning of section 5.5 applies even more here, since each background
+candidate moves the purity by ~4 %. The background composition (numuCC and NC
+leaking in above 4) is the part worth checking against the intrinsic-nue sample.
+
+![numuCC selection, signal Edep > 100 MeV](107_sel_edep100/d107_enu_numucc.png)
+
+![nueCC selection at nue_score > 7.0, signal Edep > 100 MeV](107_sel_edep100/d107_enu_nuecc.png)
+
+![nueCC selection at nue_score > 4.0, signal Edep > 100 MeV](107_sel_edep100/d107_enu_nuecc_cut4.png)
 
 ## 6. Open items (reported, not fixed)
 
