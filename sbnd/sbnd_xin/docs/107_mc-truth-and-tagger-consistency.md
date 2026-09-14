@@ -27,7 +27,7 @@ write into an existing output dir.
 | Where is the reco? | `tracking-pr/tracking-pr_<tag>.root`. `T_tagger` holds `numu_score`, `nue_score`, `neutrino_type`, the ~1200 tagger/BDT variables and the `act_*` cosmic-tagger arrays. `T_kine` holds `kine_reco_Enu`. Both have one row per neutrino candidate. |
 | Where is the truth (type, Enu, vertex)? | **Only in Bee**, in `bee/bee_<tag>.zip::data/0/0-mc.json`. The tracking-pr ROOT files carry **no** truth branches. |
 | Does mc.json hold truth or reco particle flow? | **Both, in one tree.** The truth interaction nodes (id 9000000+) come from larwirecell's `TensorSetLabeler`. Our reco PF is grafted under a single `reco nu …` node (id 19999999, children ≥ 20000000), or a `no reco neutrino candidate (…)` marker replaces it. Each node is unambiguous by id and text (section 2.2). |
-| Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). Requiring true Edep > 100 MeV in the signal raises the vertex number to 73.5 % and leaves both selections unchanged. At `nue_score>4.0` the nueCC purity is 14/22 = 63.6 % (efficiency 14/31) (section 5.6). |
+| Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). Requiring true Edep > 100 MeV in the signal raises the vertex number to 73.5 % and leaves both selections unchanged. At `nue_score>4.0` the nueCC purity is 14/22 = 63.6 % (efficiency 14/31) (section 5.6). Without the true-vs-reco vertex match, numuCC reads efficiency 77.0 % and purity 94.7 % (event level); the nueCC numbers are unchanged (section 5.7). |
 | Is the PR candidate the non-cosmic one? | **Yes, in 6236/6236 rows, by construction.** The per-bundle `pick()` skips any activity with TGM, STM or `lm_flag>0` (section 3). The informative numbers are the residuals in section 4. |
 
 ## 1. The sample
@@ -503,6 +503,56 @@ leaking in above 4) is the part worth checking against the intrinsic-nue sample.
 ![nueCC selection at nue_score > 7.0, signal Edep > 100 MeV](107_sel_edep100/d107_enu_nuecc.png)
 
 ![nueCC selection at nue_score > 4.0, signal Edep > 100 MeV](107_sel_edep100/d107_enu_nuecc_cut4.png)
+
+## 5.7 Efficiency and purity without the true-vs-reco vertex requirement (owner follow-up)
+
+Repro: the same two commands as sections 5.5 and 5.6. `d107_selection.py` now also
+prints a `-- no vertex requirement (sec 5.7) --` block for every cut, in
+`107_sel/d107_selection.txt` and `107_sel_edep100/d107_selection.txt`. Adding the
+block changed no earlier line and no figure; the regenerated PNGs are byte-identical.
+
+The selection is unchanged (score cut + reco vertex in FV), and so is the signal
+(true CC of that flavour, vertex in FV, Edep > 100 MeV). **Only the 5 cm match
+between the reco and true vertex is dropped.** Two ways to associate without it:
+- **Event level:** a true signal interaction counts as found if its event has ≥ 1 selected candidate. A selected candidate counts as signal if its event contains ≥ 1 true signal interaction. In a pileup/cosmic event this can credit the wrong cluster, so it is the **loose bound**.
+- **Nearest truth:** each selected candidate is assigned to its nearest true interaction at **any** distance.
+
+| Selection (signal Edep > 100 MeV) | Efficiency: 5 cm match (5.6) | event level | nearest truth | Purity: 5 cm match (5.6) | event level | nearest truth |
+|---|---|---|---|---|---|---|
+| `numu_score > 0.9` | 69.0 % | **2695/3500 = 77.0 %** [76.3, 77.7] | 2648/3500 = 75.7 % | 86.3 % | **2651/2799 = 94.7 %** [94.3, 95.1] | 2650/2799 = 94.7 % |
+| `nue_score > 7.0` | 35.5 % | **11/31 = 35.5 %** | 11/31 | 91.7 % | **11/12 = 91.7 %** | 11/12 |
+| `nue_score > 4.0` | 45.2 % | **14/31 = 45.2 %** | 14/31 | 63.6 % | **14/22 = 63.6 %** | 14/22 |
+
+Without the Edep cut (section 5.5 signal), numuCC reads efficiency 2696/3502 = 77.0 %
+and purity 2652/2799 = 94.7 %. The nueCC rows are unchanged.
+
+**numuCC.** Dropping the match raises efficiency by 8 points and purity by 8.4 points.
+- **Mostly vertex resolution, not selection:** purity gains 236 candidates (2415 → 2651). For 235 of them the nearest true interaction is itself the signal numuCC.
+
+  | Distance to that signal vertex | Candidates |
+  |---|---|
+  | 5-20 cm | 157 |
+  | 20-50 cm | 25 |
+  | > 50 cm | 53 (a badly misplaced vertex, or a different cluster, in a signal event) |
+
+  The remaining 1 is within 5 cm of a numuCC in the FV that fails Edep > 100 MeV, in an event that also holds a signal numuCC.
+- **Pileup is not inflating the loose bound:** the event-level and nearest-truth numbers agree within 1.3 points on efficiency and 1 candidate on purity.
+- **Event-level background (148 candidates, events with no signal numuCC):**
+
+| The event contains | Candidates |
+|---|---|
+| no true neutrino in the FV (out-of-FV ν or cosmic only) | 73 |
+| only NC in the FV | 65 |
+| a nueCC in the FV (no numuCC) | 9 |
+| a numuCC in the FV that fails Edep > 100 MeV | 1 |
+
+**nueCC.** Nothing moves: every selected candidate is either within 5 cm of a true
+nueCC vertex or in an event with no nueCC in the FV at all.
+- **Background at `nue_score > 7.0` (1):** an event with only an NC in the FV.
+- **Background at `nue_score > 4.0` (8):** 3 events with only NC in the FV, 3 with a numuCC, and 2 with no true neutrino in the FV.
+
+So the three numuCC columns bracket the answer. The 5 cm match is the strict bound
+(69.0 % / 86.3 %); dropping the match gives about 77 % / 95 %.
 
 ## 6. Open items (reported, not fixed)
 

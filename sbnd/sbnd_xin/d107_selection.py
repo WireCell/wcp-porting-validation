@@ -89,6 +89,9 @@ for t in T:
     # no Edep requirement at all when --edep-min is 0 (23 FV interactions have Edep = 0)
     t["edep_ok"] = EDEP_MIN <= 0 or f(t["Edep"]) > EDEP_MIN
     truth[(ev(t), t["idx"])] = t
+by_event = collections.defaultdict(list)
+for t in T:
+    by_event[ev(t)].append(t)
 for r in C:
     r["reco_fv"] = r["vertex_default"] == "0" and in_fv(f(r["nu_x"]), f(r["nu_y"]), f(r["nu_z"]))
     d = f(r["t_dist_cm"])
@@ -191,6 +194,47 @@ for flav, cut in CUTS:
     sel_all = [r for r in C if f(r[col]) > cut]
     p(f"  (no reco-FV requirement: {len(sel_all)} candidates, signal "
       + frac(sum(category(r, flav) == 'signal' for r in sel_all), len(sel_all)) + ")")
+    # sec 5.7: the same selection with NO true-vs-reco vertex requirement.
+    #  event level : a signal interaction is found if its event has >= 1 selected
+    #                candidate; a candidate is signal if its event holds >= 1 signal
+    #                interaction (pileup/cosmics can be credited -> loose bound)
+    #  nearest     : candidate -> its nearest true interaction at ANY distance
+    sigkeys = set(keys)
+    sigev = {k[0] for k in keys}
+    selev = {ev(r) for r in sel}
+    nearest = {(ev(r), r["t_idx"]) for r in sel if r["vertex_default"] == "0"}
+    p("  -- no vertex requirement (sec 5.7) --")
+    p("  event-level EFFICIENCY:                    " + frac(sum(k[0] in selev for k in keys), n))
+    p("  event-level PURITY:                        " + frac(sum(ev(r) in sigev for r in sel), len(sel)))
+    p("  nearest-truth (any distance) EFFICIENCY:   " + frac(sum(k in nearest for k in keys), n))
+    p("  nearest-truth (any distance) PURITY:       "
+      + frac(sum((ev(r), r["t_idx"]) in sigkeys for r in sel), len(sel)))
+    ebk = collections.Counter()
+    for r in sel:
+        if ev(r) in sigev:
+            continue
+        infv = [t for t in by_event[ev(r)] if t["fv"]]
+        if any(t["cls"] == sig for t in infv):
+            ebk[f"{sig} in FV failing the Edep cut"] += 1
+        elif any(t["ccnc"] == "CC" for t in infv):
+            ebk["other-flavour CC in FV"] += 1
+        elif infv:
+            ebk["only NC in FV"] += 1
+        else:
+            ebk["no true nu in FV (out-of-FV nu / cosmic)"] += 1
+    for c, v in ebk.most_common():
+        p(f"    event-level background: event has {c:40s} {v:5d}")
+    # what the event-level count gains over the 5 cm match: distance band to the
+    # nearest true interaction, and whether that nearest interaction is signal
+    gain = collections.Counter()
+    for r in sel:
+        if ev(r) not in sigev or category(r, flav) == "signal":
+            continue
+        d = f(r["t_dist_cm"])
+        b = "<5 cm" if d < 5 else "5-20 cm" if d < 20 else "20-50 cm" if d < 50 else ">50 cm"
+        gain[(b, "is" if (ev(r), r["t_idx"]) in sigkeys else "is not")] += 1
+    for (b, s), v in sorted(gain.items()):
+        p(f"    event-level gain over 5 cm match: nearest true vertex {b:8s} {s:6s} signal {v:5d}")
     summary[(flav, cut)] = (sel, cats)
 
 txt = "\n".join(out) + "\n"
