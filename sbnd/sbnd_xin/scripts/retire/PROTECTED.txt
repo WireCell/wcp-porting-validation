@@ -820,6 +820,14 @@ work-pr130r1-probe98-mcp1k work-pr130r1-probe98-mcp2k work-pr130r1-probe98-ncpi0
 work-mcp1k-d102m work-mcp2k-d102m work-ncpi0-d102m work-nuecc48-d102m	**LATEST PRODUCTION stage A** (imaging + clustering + Q/L), ref/prod-2026-09-08, 3067 events, toolkit eacacafe = master.  Supersedes work-*-d97fv	doc 102 sec 0, ref/prod-2026-09-08/README.md
 work-mcp1k-d102mpr work-mcp2k-d102mpr work-ncpi0-d102mpr work-nuecc48-d102mpr	**LATEST PRODUCTION stage B** (the 15-stage tagger + PR chain), ref/prod-2026-09-08, 3067 events; the source of products/prod0908/*-scores-prod0908.tsv.  Supersedes work-*-d144fixprod	doc 102, products/prod0908/
 ref/ products/	the generation records and the published score tables; not work dirs, named here so no future planner's grammar has to be lucky	doc 102 sec 6
+# 2026-09-14 (doc 109 rev 2): ref/prod-2026-09-08 is REMOVED from the tree on the
+# owner's word.  It no longer matched production (4 artifacts drifted through the
+# 2026-09-10 master merge 98140fee) and is replaced by ref/prod-2026-09-14 (toolkit
+# c203b400).  The d102m/d102mpr lines above still cite it: their generation record
+# stays in git -- `git show 70a49e8c:sbnd/sbnd_xin/ref/prod-2026-09-08/README.md` --
+# and the operating point is reproducible from toolkit eacacafe (compile
+# `git archive eacacafe cfg` against the restored consumers.sha256: PASS 21/21,
+# re-checked 2026-09-14).  Those samples are NOT at prod-2026-09-14.
 
 # --- STAGED FOR RETIREMENT 2026-09-08 (doc 103 tier 2) -- NOT YET EXECUTED ---
 # The three lines below are still ACTIVE protections.  They are listed here

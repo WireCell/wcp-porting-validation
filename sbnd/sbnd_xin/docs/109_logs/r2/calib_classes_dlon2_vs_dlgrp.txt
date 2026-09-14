@@ -1,0 +1,4 @@
+== d109dlon2 vs d109dlgrp nuecc48: meta.runNo + shower_id + wallclock off_ms: 28, shower_id + wallclock off_ms: 17, wallclock off_ms: 3
+== d109dlon2 vs d109dlgrp ncpi0: meta.runNo + shower_id + wallclock off_ms: 13, shower_id + wallclock off_ms: 4, wallclock off_ms: 2
+== d109dlon2 vs d109dlgrp mcp1k: identical: 2, meta.runNo + wallclock off_ms: 1, shower_id + wallclock off_ms: 79, wallclock off_ms: 12
+=== OTHER differences: 0

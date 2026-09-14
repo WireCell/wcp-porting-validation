@@ -13,6 +13,11 @@ SBND production job, keeping the C++ and jsonnet defaults OFF; push the toolkit 
 - **Toolkit:** `apply-pointcloud` `b207b6d8` (code, tests, knobs default OFF) and `c203b400` (SBND production flip).
 - **Knobs-off gate:** byte-identical.
 - **Knob-on:** reconstruction outputs byte-identical; only `tracking-pr.root` gains content.
+- **Rev 2 (same day, sec 7):**
+  - group mode gated: `tracking-pr.root` is byte-identical to per-event;
+  - new production reference `ref/prod-2026-09-14` (PASS 21/21, every drift attributed);
+  - `ref/prod-2026-09-08` removed;
+  - no toolkit code change.
 
 ## Repro block
 
@@ -51,9 +56,12 @@ scripts/cfg/compile_consumers.sh <toolkit>/cfg ~/tmp/d109-cfg/C
 scripts/cfg/cmp_consumers.sh ~/tmp/d109-cfg/A ~/tmp/d109-cfg/C          # docs/109_logs/cfg_gate_production_flip.txt
 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-08 --cfg ~/tmp/d109-cfg/pristine/cfg   # prod_cfg_gate_pristine_head_vs_0908.txt
 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-08                                     # prod_cfg_gate_flip_vs_0908.txt
+#    (rev 2 removed ref/prod-2026-09-08: restore it with `git -C .. checkout 70a49e8c -- sbnd_xin/ref/prod-2026-09-08`
+#     to rerun these two; the current reference is ref/prod-2026-09-14, sec 7.2)
 PR_EXTRA_STAGES=pr_display setarch x86_64 -R ./run_pr_chain_batch.sh work-nuecc48-d102m work-nuecc48-d109prod data 137238 269774 10550
 PR_EXTRA_STAGES=pr_display setarch x86_64 -R ./run_pr_chain_batch.sh work-mcp1k-d102m  work-mcp1k-d109prod  data <3 no-row events>
 python3 scripts/d109_root_checks.py d109prod --samples nuecc48 mcp1k  > docs/109_logs/checks_d109prod_smoke.txt
+# 6. rev 2 -- group mode, the base-binary control, the new production reference: sec 7.4
 ```
 
 ---
@@ -84,8 +92,12 @@ python3 scripts/d109_root_checks.py d109prod --samples nuecc48 mcp1k  > docs/109
 **Reader note:** `act_*` now also lists companions; use `act_role <= 1` for the old meaning
 (sec 2.1).
 
-**Left open for the owner:** `ref/prod-2026-09-08` is stale at unmodified HEAD, from earlier
-rounds, so it was not refreshed (sec 5).
+**Production reference (rev 2):** `ref/prod-2026-09-14` at `c203b400`, PASS 21/21.
+- **Rev 1's stale-reference drift is now named:** four inherited keys from the 2026-09-10
+  master merge.
+- **`ref/prod-2026-09-08` removed:** on the owner's word (sec 7.2).
+- **Group mode:** `tracking-pr.root` is byte-identical to per-event with both vertex modes
+  (sec 7.1).
 
 ---
 
@@ -342,16 +354,13 @@ stay off, so the lar 1-step chain, PDHD, PDVD and uBooNE do not move. The pre-fl
   - `fix_cluster_flags: true`;
   - the five-key `provenance` object.
 
-**Production reference (`prod_cfg_gate.py`) — not refreshed, and why.**
-- Against `ref/prod-2026-09-08`, **unmodified HEAD already drifts** in `prod.standalone`,
-  `sbnd_clus.json`, `sbnd_ql.json`, `sbnd_simcheck.json` (`109_logs/prod_cfg_gate_pristine_head_vs_0908.txt`).
-  That drift predates this round, and the reference stores only hashes for those artifacts, so
-  it cannot be named from here.
-- With the flip, the only added drift is `prod_prjob.json`, and the gate names exactly the
-  nine keys above (`prod_cfg_gate_flip_vs_0908.txt`).
-- A `--refresh` would adopt the unrelated drift together with this flip, so it is left to the
-  owner. The recommendation is to identify the four drifting artifacts' rounds first, then
-  refresh into a new `ref/prod-<date>/`.
+**Production reference (`prod_cfg_gate.py`): `ref/prod-2026-09-14`** (rev 2, sec 7.2).
+- In rev 1, `ref/prod-2026-09-08` already drifted at **unmodified HEAD** in four artifacts
+  (`109_logs/prod_cfg_gate_pristine_head_vs_0908.txt`). With the flip, the only added drift was
+  `prod_prjob.json`, and the gate named exactly the nine keys above (`prod_cfg_gate_flip_vs_0908.txt`).
+- Rev 2 names those four drifts key by key and attributes each to a commit. It then cuts
+  `ref/prod-2026-09-14` at `c203b400` (PASS 21/21) and removes `prod-2026-09-08`, on the
+  owner's word.
 
 **Installed library:** the production job loads `local/lib`. Its
 `libWireCellClus.so`/`libWireCellRoot.so` md5 equals the graded pin `new2`
@@ -383,11 +392,149 @@ literal is merged into a longer string there.
   is an intermediate, pre-overall vertex, and a branch named "selection vertex" would mislead.
 - **Per-blob G4 track ids through the PR splits** (doc 108 sec 2.5 c): not needed without
   per-candidate truth matching.
-- **Not exercised:** the runner's group / `multi_event` path. The new T_tagger/T_kine RSE
-  branches read the ensemble scalars MultiAlgBlobClustering sets there too, but only the
-  per-event path (production stage B) is gated.
-- **Turn the three TLAs on together.** `root_nu_record` on with `root_cluster_flags` off gives
-  real `act_*` verdicts beside T_cluster flag columns that still read 0; `beam_flash` needs the
-  census from `root_nu_record` (-1 without it).
+- **Group / `multi_event` path:** gated in rev 2 (sec 7.1).
+- **The three switches move together** (owner, rev 2).
+  - **Production:** `wct-pr-perevt.jsonnet` defaults all three to true, and the runner's
+    `SBND_ROOT_OUTPUT` sets all three.
+  - **Only by hand:** setting one alone takes an explicit TLA, and that is not a supported
+    configuration. `root_nu_record` on with `root_cluster_flags` off gives real `act_*`
+    verdicts beside T_cluster flag columns that still read 0, and `beam_flash` needs the
+    census from `root_nu_record` (-1 without it).
+  - **No code coupling added:** the compiled production job already carries all three.
 - **Unchanged here:** the one-file-name-per-process limitation of the two writers (doc 108
   sec 1.2), and the 80 ns flash-t0 merge bookkeeping issue (doc pr/94 sec 9.8).
+
+## 7. Revision 2 (2026-09-14): group mode, the three switches, a new production reference
+
+**Owner ask (2026-09-14):** "give a try on the group mode, and turn the three settings on
+together, create a new production configure reference would be nice. You can then remove the
+stale produciton config reference."
+
+**Rev 2 changes no toolkit code.** It adds arms, gates, the reference generation and this section.
+
+### 7.1 Group mode: `tracking-pr.root` is byte-identical to per-event
+
+**Arms.** Each group arm uses the per-event arm's pin (`new2`), cfg tree
+(`~/tmp/d109-cfg/new/cfg`) and env, plus `PR_GROUP_SIZE=16` (the runner's `multi_event` +
+`rse_map` path):
+- `d109grp` pairs with `d109on2` (geometric vertex);
+- `d109dlgrp` pairs with `d109dlon2` (DL vertex).
+
+**Allowed difference.** The gate allows `Trun.toolkit_git` and `Trun.wcp_git`, and only
+`toolkit_git` differs: the toolkit moved from `d3b398fc` plus uncommitted edits to the
+committed `c203b400` between the arms, with the same compiled job (same `op_config_sha256`).
+
+| sample | events | `mabc-pr.zip` / `pctree-pr` / nusel | `tracking-pr.root`: files / branches identical | `calib-pr-evt*.json` |
+|---|---|---|---|---|
+| nuecc48 | 48 | 48 / 48 / 48 identical | 48 / 66,768 | 45 differ, 3 identical |
+| ncpi0 | 19 | 19 / 19 / 19 identical | 19 / 26,429 | 17 differ, 2 identical |
+| mcp1k (first 200) | 200 | 200 / 200 / 200 identical | 200 / 139,858 | 79 differ, 121 identical, 106 not written (no candidate) |
+
+- **Every tree is identical**, including the new `T_bundle`, `T_flash`, the `T_tagger`/`T_kine`
+  run/subrun/event branches and the `Trun` census counters.
+- **This is the test that could have failed.** nuecc48 spans 12 runs, so a group-leader-run
+  bug in the new RSE branches would have shown on 45 of 48 files. The per-file content
+  check C5 cannot catch it, because it compares each tree with the same file's `Trun`.
+- **Content checks C1–C13 on `d109grp`** (267 events): **0 failures**
+  (`109_logs/r2/checks_d109grp.txt`).
+- **DL vertex** (`d109dlgrp` vs `d109dlon2`, the production vertex mode):
+  - **Byte gates:** the same result. `mabc-pr.zip`, `pctree-pr` and nusel are identical, and
+    so are all 66,768 / 26,429 / 139,858 ROOT branches (`gate_dlon2_vs_dlgrp_<s>.txt`).
+  - **Content checks:** C1–C13 have 0 failures (`checks_d109dlgrp.txt`). The DL-moved rows
+    are 3 / 10 / 4, as per-event, and there are 0 `DL vertex failed` lines.
+  - **So the new `vertex_moved_cluster` and `sel_cluster_id` survive group mode unchanged.**
+
+**The `calib-pr-evt*.json` differences predate doc 109 and are outside `tracking-pr.root`.**
+That file is `PrDisplayDump`, the `pr_display` stage. It has two group-mode defects:
+1. **Run number.** `meta.runNo`/`meta.subRunNo` come from the configure-time `m_runNo`/`m_subRunNo`
+   (`clus/src/PrDisplayDump.cxx:317-318`), which in group mode is the group leader's run.
+   Only `eventNo` is corrected per event (`:254`). Example, nuecc48 30504: `runNo` 18342 → 18255.
+2. **Shower ids.** `showers[].shower_id` comes from a process-wide
+   `static std::atomic<int> s_shower_id_counter` (`clus/src/PRShower.cxx:13, :185`). The
+   ids keep counting across the events of one process: 30504 has 0, 1, 2, 4, 6 per-event and
+   34, 35, 36, 38, 40 in group mode.
+
+A third calib difference appears **only with the DL vertex**, and it is not a defect.
+- **What it is:** `vertex_scoreboard.dual_chain.off_ms` is a wall-clock duration,
+  `MS(Clock::now() - t_total)` (`clus/src/TaggerCheckNeutrino.cxx:4339, :4404`). It differs
+  between any two runs; nuecc48 30504 took 6530 ms per-event and 2778 ms in the group.
+- **Everything else identical:** every other `dual_chain` field (vertex, distance, mode,
+  agreement) is identical.
+
+**Every differing file falls into these classes, with no other key**
+(`109_logs/r2/calib_classes_{on2_vs_grp,dlon2_vs_dlgrp}.txt`; `calib_classes.py` names any
+other key as OTHER, and there are 0 in both). Geometric vertex:
+
+| sample | run + shower ids | shower ids only | run only | identical |
+|---|---|---|---|---|
+| nuecc48 | 28 | 17 | 0 | 3 |
+| ncpi0 | 13 | 4 | 0 | 2 |
+| mcp1k | 0 | 78 | 1 | 15 (106 not written) |
+
+**Control arm: the defects predate doc 109.** `d109basegrp` is the **base** binary `d3b398fc`
+with the pristine cfg, in group mode on nuecc48, gated against `d109base`:
+- **Same classes, same counts:** 28 / 17 / 0 / 3, and 0 other keys
+  (`calib_classes_base_vs_basegrp.txt`).
+- **Everything else identical there too:** `mabc-pr.zip`, `pctree-pr`, nusel and all 63,120
+  ROOT branches (`gate_base_vs_basegrp_nuecc48.txt`).
+
+So both defects predate doc 109, and group mode already matched per-event on everything
+else before it. Neither defect is fixed here: each changes an output, so a fix would be its
+own default-OFF round.
+
+### 7.2 A new production reference: `ref/prod-2026-09-14`
+
+**The new generation.** `scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-14` → **PASS
+21/21** at toolkit `c203b400` (`109_logs/r2/gate_head_vs_0914.txt`). The generation record,
+with every key named, is `ref/prod-2026-09-14/README.md`.
+
+**How rev 1's unexplained drift was named.** `prod-2026-09-08` keeps only hashes for four of
+its artifacts, so they were recompiled instead:
+- **The old point reproduces exactly.** `git archive eacacafe cfg`, the commit 09-08 was cut
+  at, passes 09-08 **21/21** (`gate_eacacafe_vs_0908.txt`).
+- **Diff and attribution:** that compile was diffed key by key against `c203b400`
+  (`drift_eacacafe_to_c203b400.txt`, `drift_keys.py`), and each key was traced with
+  `git log -S/-G`.
+
+| artifact(s) | keys | origin |
+|---|---|---|
+| `prod_prjob.json` | the nine doc-109 keys (sec 5) | this doc, on the owner's word |
+| `prod.standalone`, `sbnd_clus.json`, `sbnd_ql.json` | `bee_points_sets[1].opflash_time = true` on `MultiAlgBlobClustering` | `b31a0db0` (2026-08-06), via the master merge `98140fee` (2026-09-10); a Bee-output column |
+| `sbnd_simcheck.json` | `roi_mad_rms`, `r_break_roi_loop_planes`, `troi_col_th_factor` 5 → 3, `troi_ind_th_factor` 3 → 1.8 on both `OmnibusSigProc` | `b8086bd6` + `06a02ccb` (2026-08-13), via `98140fee`; SP from raw ADC only (`sbnd_img.json` did not move) |
+
+The last two rows are inherited: no sbnd_xin round validated them. The README says so rather
+than presenting them as part of this flip.
+
+**The removed generation.** `ref/prod-2026-09-08` is removed on the owner's word. Its
+citations are updated so none dangles: the d102m/d102mpr lines in
+`scripts/retire/PROTECTED.txt`, doc 102's repro block, and `work-tags.md`. The record survives
+in git at wcp `70a49e8c`. **`work-*-d102m`/`d102mpr` stay at `eacacafe`, not at
+`prod-2026-09-14`.**
+
+### 7.3 The three switches
+
+- **Already coupled.** They move together in production and in the runner (sec 6), and the
+  compiled production job carries all three.
+- **No code added.** A coupling assertion in `pr()` would guard a configuration nothing sets.
+
+### 7.4 Repro (rev 2)
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+scripts/d109_arms.sh d109grp   ~/tmp/d109-libsnap/new2 SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=14 PR_GROUP_SIZE=16 PR_CFG_TREE=~/tmp/d109-cfg/new/cfg
+scripts/d109_arms.sh d109dlgrp ~/tmp/d109-libsnap/new2 SBND_ROOT_OUTPUT=1 PR_JOBS=16 PR_GROUP_SIZE=16 PR_CFG_TREE=~/tmp/d109-cfg/new/cfg
+LD_LIBRARY_PATH=~/tmp/d109-libsnap/base SBND_NO_DL=1 PR_CFG_TREE=~/tmp/d109-cfg/pristine/cfg PR_GROUP_SIZE=16 PR_JOBS=3 \
+  PR_EXTRA_STAGES=pr_display setarch x86_64 -R ./run_pr_chain_batch.sh work-nuecc48-d102m work-nuecc48-d109basegrp data
+for s in nuecc48 ncpi0 mcp1k; do
+  python3 scripts/d109_gate.py d109on2   d109grp   --samples $s --allow Trun.toolkit_git Trun.wcp_git > docs/109_logs/r2/gate_on2_vs_grp_$s.txt
+  python3 scripts/d109_gate.py d109dlon2 d109dlgrp --samples $s --allow Trun.toolkit_git Trun.wcp_git > docs/109_logs/r2/gate_dlon2_vs_dlgrp_$s.txt
+done
+python3 scripts/d109_gate.py d109base d109basegrp --samples nuecc48          > docs/109_logs/r2/gate_base_vs_basegrp_nuecc48.txt
+python3 docs/109_logs/r2/calib_classes.py d109on2   d109grp                  > docs/109_logs/r2/calib_classes_on2_vs_grp.txt
+python3 docs/109_logs/r2/calib_classes.py d109dlon2 d109dlgrp                > docs/109_logs/r2/calib_classes_dlon2_vs_dlgrp.txt
+python3 docs/109_logs/r2/calib_classes.py d109base  d109basegrp nuecc48      > docs/109_logs/r2/calib_classes_base_vs_basegrp.txt
+python3 scripts/d109_root_checks.py d109grp   > docs/109_logs/r2/checks_d109grp.txt
+python3 scripts/d109_root_checks.py d109dlgrp > docs/109_logs/r2/checks_d109dlgrp.txt
+# the reference: see ref/prod-2026-09-14/README.md "Reproduce"
+scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-14                       # PASS 21/21
+```

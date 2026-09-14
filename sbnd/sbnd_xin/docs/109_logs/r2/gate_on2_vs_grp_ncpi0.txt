@@ -1,0 +1,39 @@
+== d109 gate d109on2 vs d109grp (ncpi0)
+  ALLOWED Trun.toolkit_git                                     19
+  calib-pr FAIL differ                                         17
+  calib-pr same                                                2
+  events ncpi0                                                 19
+  mabc-pr.zip same                                             19
+  nusel same                                                   19
+  pctree-pr same                                               19
+  root branches compared                                       26429
+  root files compared                                          19
+  root tree compared T_bad_ch                                  19
+  root tree compared T_bundle                                  19
+  root tree compared T_cluster                                 19
+  root tree compared T_flash                                   19
+  root tree compared T_kine                                    19
+  root tree compared T_proj                                    19
+  root tree compared T_proj_data                               19
+  root tree compared T_rec_charge                              19
+  root tree compared T_tagger                                  19
+  root tree compared Trun                                      19
+== failing events: 17
+   ('ncpi0', '21073', ['record differs calib-pr-evt21073.json'])
+   ('ncpi0', '37112', ['record differs calib-pr-evt37112.json'])
+   ('ncpi0', '56982', ['record differs calib-pr-evt56982.json'])
+   ('ncpi0', '71372', ['record differs calib-pr-evt71372.json'])
+   ('ncpi0', '84229', ['record differs calib-pr-evt84229.json'])
+   ('ncpi0', '105946', ['record differs calib-pr-evt105946.json'])
+   ('ncpi0', '114446', ['record differs calib-pr-evt114446.json'])
+   ('ncpi0', '142421', ['record differs calib-pr-evt142421.json'])
+   ('ncpi0', '180801', ['record differs calib-pr-evt180801.json'])
+   ('ncpi0', '259542', ['record differs calib-pr-evt259542.json'])
+   ('ncpi0', '285567', ['record differs calib-pr-evt285567.json'])
+   ('ncpi0', '314838', ['record differs calib-pr-evt314838.json'])
+   ('ncpi0', '359980', ['record differs calib-pr-evt359980.json'])
+   ('ncpi0', '399860', ['record differs calib-pr-evt399860.json'])
+   ('ncpi0', '463565', ['record differs calib-pr-evt463565.json'])
+   ('ncpi0', '506746', ['record differs calib-pr-evt506746.json'])
+   ('ncpi0', '521075', ['record differs calib-pr-evt521075.json'])
+=== OVERALL: FAIL

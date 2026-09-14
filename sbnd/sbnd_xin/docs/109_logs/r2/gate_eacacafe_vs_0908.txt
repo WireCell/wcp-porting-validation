@@ -1,0 +1,5 @@
+reference : ref/prod-2026-09-08
+cfg tree  : /home/xqian/tmp/d110/cfg-eacacafe/cfg
+compiling : /home/xqian/tmp/d110/comp-eacacafe
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-08

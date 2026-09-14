@@ -1,0 +1,51 @@
+== d109 gate d109dlon2 vs d109dlgrp (nuecc48)
+  ALLOWED Trun.toolkit_git                                     48
+  calib-pr FAIL differ                                         48
+  events nuecc48                                               48
+  mabc-pr.zip same                                             48
+  nusel same                                                   48
+  pctree-pr same                                               48
+  root branches compared                                       66768
+  root files compared                                          48
+  root tree compared T_bad_ch                                  48
+  root tree compared T_bundle                                  48
+  root tree compared T_cluster                                 48
+  root tree compared T_flash                                   48
+  root tree compared T_kine                                    48
+  root tree compared T_proj                                    48
+  root tree compared T_proj_data                               48
+  root tree compared T_rec_charge                              48
+  root tree compared T_tagger                                  48
+  root tree compared Trun                                      48
+== failing events: 48
+   ('nuecc48', '388', ['record differs calib-pr-evt388.json'])
+   ('nuecc48', '10550', ['record differs calib-pr-evt10550.json'])
+   ('nuecc48', '30504', ['record differs calib-pr-evt30504.json'])
+   ('nuecc48', '38856', ['record differs calib-pr-evt38856.json'])
+   ('nuecc48', '42280', ['record differs calib-pr-evt42280.json'])
+   ('nuecc48', '46363', ['record differs calib-pr-evt46363.json'])
+   ('nuecc48', '52672', ['record differs calib-pr-evt52672.json'])
+   ('nuecc48', '54095', ['record differs calib-pr-evt54095.json'])
+   ('nuecc48', '69314', ['record differs calib-pr-evt69314.json'])
+   ('nuecc48', '74544', ['record differs calib-pr-evt74544.json'])
+   ('nuecc48', '81597', ['record differs calib-pr-evt81597.json'])
+   ('nuecc48', '90055', ['record differs calib-pr-evt90055.json'])
+   ('nuecc48', '111412', ['record differs calib-pr-evt111412.json'])
+   ('nuecc48', '116962', ['record differs calib-pr-evt116962.json'])
+   ('nuecc48', '122660', ['record differs calib-pr-evt122660.json'])
+   ('nuecc48', '131357', ['record differs calib-pr-evt131357.json'])
+   ('nuecc48', '137238', ['record differs calib-pr-evt137238.json'])
+   ('nuecc48', '138009', ['record differs calib-pr-evt138009.json'])
+   ('nuecc48', '163543', ['record differs calib-pr-evt163543.json'])
+   ('nuecc48', '168596', ['record differs calib-pr-evt168596.json'])
+   ('nuecc48', '172230', ['record differs calib-pr-evt172230.json'])
+   ('nuecc48', '174637', ['record differs calib-pr-evt174637.json'])
+   ('nuecc48', '196649', ['record differs calib-pr-evt196649.json'])
+   ('nuecc48', '214469', ['record differs calib-pr-evt214469.json'])
+   ('nuecc48', '219295', ['record differs calib-pr-evt219295.json'])
+   ('nuecc48', '234638', ['record differs calib-pr-evt234638.json'])
+   ('nuecc48', '235435', ['record differs calib-pr-evt235435.json'])
+   ('nuecc48', '239794', ['record differs calib-pr-evt239794.json'])
+   ('nuecc48', '246579', ['record differs calib-pr-evt246579.json'])
+   ('nuecc48', '256587', ['record differs calib-pr-evt256587.json'])
+=== OVERALL: FAIL

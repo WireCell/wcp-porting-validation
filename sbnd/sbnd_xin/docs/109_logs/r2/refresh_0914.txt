@@ -1,0 +1,18 @@
+reference : ref/prod-2026-09-14
+cfg tree  : /home/xqian/tmp/d110/cfg-head/cfg
+compiling : /home/xqian/tmp/d110/comp-head
+checked   : 21 artifacts
+DRIFT     : prod.standalone, prod_prjob.json, sbnd_clus.json, sbnd_ql.json, sbnd_simcheck.json
+
+SBND PR job, key by key (reference -> current tree):
+  ADDED   [21].data.nu_provenance = True
+  ADDED   [24].data.fix_cluster_flags = True
+  ADDED   [24].data.nu_provenance = True
+  ADDED   [24].data.provenance.bdt_weights_dir = 'uboone/weights'
+  ADDED   [24].data.provenance.dl_weights = ''
+  ADDED   [24].data.provenance.nue_xgboost_xml = 'uboone/weights/XGB_nue_seed2_0923.xml'
+  ADDED   [24].data.provenance.numu_xgboost_xml = 'uboone/weights/numu_scalars_scores_0923.xml'
+  ADDED   [24].data.provenance.trackfitting_config = 'pgrapher/experiment/sbnd/sbnd_track_fitting.json'
+  ADDED   [25].data.nu_provenance = True
+
+REFRESHED prod-2026-09-14 -- record in the round doc WHICH knob moved and on whose word.

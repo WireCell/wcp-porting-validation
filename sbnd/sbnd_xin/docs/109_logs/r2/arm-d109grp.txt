@@ -1,0 +1,12 @@
+=== d109grp start 2026-09-14_12:36:44 pin=/home/xqian/tmp/d109-libsnap/new2 env: SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=14 PR_GROUP_SIZE=16 PR_CFG_TREE=/home/xqian/tmp/d109-cfg/new/cfg
+0b6fbb578ba7eebc94ae31a50448a695  libWireCellClus.so
+118bc64078cd8195ff70d5bd379ee83f  libWireCellRoot.so
+=== d109grp nuecc48 12:36:45
+=== d109grp nuecc48 rc=0 dirs=48 not_rc0=0
+=== d109grp ncpi0 12:41:04
+=== d109grp ncpi0 rc=0 dirs=19 not_rc0=0
+=== d109grp mcp1k 12:42:50
+=== d109grp mcp1k rc=0 dirs=200 not_rc0=0
+0b6fbb578ba7eebc94ae31a50448a695  libWireCellClus.so
+118bc64078cd8195ff70d5bd379ee83f  libWireCellRoot.so
+=== d109grp done 2026-09-14_12:45:03

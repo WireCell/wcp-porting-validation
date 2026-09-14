@@ -1,0 +1,4 @@
+ef0822ec0b392096d47e7d7769f85816  libWireCellClus.so
+46bf51057716382e434f3aead9ae5036  libWireCellRoot.so
+basegrp_rc=0
+48

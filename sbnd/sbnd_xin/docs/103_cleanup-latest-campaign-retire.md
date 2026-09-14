@@ -53,6 +53,8 @@ that is a measurement, not a tier I failed to write (§4).
 
 Doc 102 produced `work-*-d102m` (stage A) + `work-*-d102mpr` (stage B) — 3067
 events at toolkit `eacacafe` = master, `ref/prod-2026-09-08`.
+(2026-09-14: that reference was removed from the tree, doc 109 rev 2. It survives at wcp
+`70a49e8c`, and `git archive eacacafe cfg` still passes it 21/21.)
 
 The first thing to establish was not "what is old" but **what the new campaign
 depends on**. A symlink census over the whole tree, resolving *both* target

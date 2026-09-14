@@ -52,6 +52,9 @@ for s in nuecc48 ncpi0 mcp1k mcp2k; do
   python3 pr_scores_table.py --root work-$s-d102mpr --sample $s \
           --out products/prod0908/$s-scores-prod0908.tsv; done
 scripts/cfg/prod_cfg_gate.py --ref ref/prod-2026-09-08         # PASS 21/21
+# 2026-09-14: ref/prod-2026-09-08 was removed from the tree (doc 109 rev 2). Restore it with
+#   git -C .. checkout 70a49e8c -- sbnd_xin/ref/prod-2026-09-08   (prod_prjob.json was never tracked)
+# and pass --cfg <git archive eacacafe cfg> to reproduce this PASS.
 ```
 
 ## 0. Why master had to move first, and what that changes
@@ -117,7 +120,9 @@ with `gh auth setup-git`. And **`origin/apply-pointcloud` was already at
 actually needed to move. Never `git checkout master` in this tree; it
 overwrites the untracked local `.claude/skills/`.
 
-Full generation record: **`ref/prod-2026-09-08/README.md`**.
+Full generation record: **`ref/prod-2026-09-08/README.md`**. It was removed from the tree on
+2026-09-14 (doc 109 rev 2) and survives in git:
+`git show 70a49e8c:sbnd/sbnd_xin/ref/prod-2026-09-08/README.md`.
 `ref/prod-2026-09-05` is left byte-untouched (M13).
 
 ## 1. The samples — what they are, and what they are not

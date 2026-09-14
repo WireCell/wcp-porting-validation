@@ -1,0 +1,4 @@
+== d109on2 vs d109grp nuecc48: identical: 3, meta.runNo + shower_id: 28, shower_id: 17
+== d109on2 vs d109grp ncpi0: identical: 2, meta.runNo + shower_id: 13, shower_id: 4
+== d109on2 vs d109grp mcp1k: identical: 15, meta.runNo: 1, shower_id: 78
+=== OTHER differences: 0

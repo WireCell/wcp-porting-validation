@@ -1,0 +1,29 @@
+== prod.standalone: 1 keys (eacacafe -> c203b400)
+  ADDED   [24].data.bee_points_sets[1].opflash_time = True
+== sbnd_clus.json: 1 keys (eacacafe -> c203b400)
+  ADDED   [66].data.bee_points_sets[1].opflash_time = True
+== sbnd_ql.json: 1 keys (eacacafe -> c203b400)
+  ADDED   [69].data.bee_points_sets[1].opflash_time = True
+== sbnd_simcheck.json: 12 keys (eacacafe -> c203b400)
+  ADDED   [37].data.r_break_roi_loop_planes[0] = 2
+  ADDED   [37].data.r_break_roi_loop_planes[1] = 2
+  ADDED   [37].data.r_break_roi_loop_planes[2] = 0
+  ADDED   [37].data.roi_mad_rms = True
+  CHANGED [37].data.troi_col_th_factor : 5 -> 3
+  CHANGED [37].data.troi_ind_th_factor : 3 -> 1.8
+  ADDED   [48].data.r_break_roi_loop_planes[0] = 2
+  ADDED   [48].data.r_break_roi_loop_planes[1] = 2
+  ADDED   [48].data.r_break_roi_loop_planes[2] = 0
+  ADDED   [48].data.roi_mad_rms = True
+  CHANGED [48].data.troi_col_th_factor : 5 -> 3
+  CHANGED [48].data.troi_ind_th_factor : 3 -> 1.8
+== prod_prjob.json: 9 keys (eacacafe -> c203b400)
+  ADDED   [21].data.nu_provenance = True
+  ADDED   [24].data.fix_cluster_flags = True
+  ADDED   [24].data.nu_provenance = True
+  ADDED   [24].data.provenance.bdt_weights_dir = 'uboone/weights'
+  ADDED   [24].data.provenance.dl_weights = ''
+  ADDED   [24].data.provenance.nue_xgboost_xml = 'uboone/weights/XGB_nue_seed2_0923.xml'
+  ADDED   [24].data.provenance.numu_xgboost_xml = 'uboone/weights/numu_scalars_scores_0923.xml'
+  ADDED   [24].data.provenance.trackfitting_config = 'pgrapher/experiment/sbnd/sbnd_track_fitting.json'
+  ADDED   [25].data.nu_provenance = True

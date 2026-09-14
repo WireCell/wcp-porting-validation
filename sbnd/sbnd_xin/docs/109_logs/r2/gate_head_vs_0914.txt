@@ -1,0 +1,5 @@
+reference : ref/prod-2026-09-14
+cfg tree  : /home/xqian/tmp/d110/cfg-head/cfg
+compiling : /home/xqian/tmp/prodcfg-7rq6n8e3
+checked   : 21 artifacts
+PASS -- the compiled operating point matches prod-2026-09-14

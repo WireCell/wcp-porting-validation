@@ -1,0 +1,53 @@
+== d109 gate d109on2 vs d109grp (mcp1k)
+  ALLOWED Trun.toolkit_git                                     200
+  calib-pr FAIL differ                                         79
+  calib-pr absent                                              106
+  calib-pr same                                                121
+  events mcp1k                                                 200
+  mabc-pr.zip same                                             200
+  nusel same                                                   200
+  pctree-pr same                                               200
+  root branches compared                                       139858
+  root files compared                                          200
+  root tree compared T_bad_ch                                  200
+  root tree compared T_bundle                                  200
+  root tree compared T_cluster                                 200
+  root tree compared T_flash                                   200
+  root tree compared T_kine                                    94
+  root tree compared T_proj                                    200
+  root tree compared T_proj_data                               92
+  root tree compared T_rec_charge                              94
+  root tree compared T_tagger                                  94
+  root tree compared Trun                                      200
+== failing events: 79
+   ('mcp1k', '48895', ['record differs calib-pr-evt48895.json'])
+   ('mcp1k', '49951', ['record differs calib-pr-evt49951.json'])
+   ('mcp1k', '50303', ['record differs calib-pr-evt50303.json'])
+   ('mcp1k', '50743', ['record differs calib-pr-evt50743.json'])
+   ('mcp1k', '51051', ['record differs calib-pr-evt51051.json'])
+   ('mcp1k', '51513', ['record differs calib-pr-evt51513.json'])
+   ('mcp1k', '51865', ['record differs calib-pr-evt51865.json'])
+   ('mcp1k', '52085', ['record differs calib-pr-evt52085.json'])
+   ('mcp1k', '52657', ['record differs calib-pr-evt52657.json'])
+   ('mcp1k', '52723', ['record differs calib-pr-evt52723.json'])
+   ('mcp1k', '53361', ['record differs calib-pr-evt53361.json'])
+   ('mcp1k', '53427', ['record differs calib-pr-evt53427.json'])
+   ('mcp1k', '54175', ['record differs calib-pr-evt54175.json'])
+   ('mcp1k', '54341', ['record differs calib-pr-evt54341.json'])
+   ('mcp1k', '54351', ['record differs calib-pr-evt54351.json'])
+   ('mcp1k', '55539', ['record differs calib-pr-evt55539.json'])
+   ('mcp1k', '55595', ['record differs calib-pr-evt55595.json'])
+   ('mcp1k', '55627', ['record differs calib-pr-evt55627.json'])
+   ('mcp1k', '55957', ['record differs calib-pr-evt55957.json'])
+   ('mcp1k', '56211', ['record differs calib-pr-evt56211.json'])
+   ('mcp1k', '56243', ['record differs calib-pr-evt56243.json'])
+   ('mcp1k', '56463', ['record differs calib-pr-evt56463.json'])
+   ('mcp1k', '57441', ['record differs calib-pr-evt57441.json'])
+   ('mcp1k', '57485', ['record differs calib-pr-evt57485.json'])
+   ('mcp1k', '57661', ['record differs calib-pr-evt57661.json'])
+   ('mcp1k', '57883', ['record differs calib-pr-evt57883.json'])
+   ('mcp1k', '57903', ['record differs calib-pr-evt57903.json'])
+   ('mcp1k', '58321', ['record differs calib-pr-evt58321.json'])
+   ('mcp1k', '58345', ['record differs calib-pr-evt58345.json'])
+   ('mcp1k', '58717', ['record differs calib-pr-evt58717.json'])
+=== OVERALL: FAIL

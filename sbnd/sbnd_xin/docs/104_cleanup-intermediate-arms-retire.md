@@ -87,7 +87,8 @@ and nothing this round changes that.
 - **PDHD = `p81hoff3`**, the knob-off half of the doc-81 gate, which is bare
   production config on the shipped binary.
 - **sbnd = `work-*-d102m` + `work-*-d102mpr`** (doc 102, ref/prod-2026-09-08),
-  unchanged from the 09-08 round.
+  unchanged from the 09-08 round. (2026-09-14: that reference was removed from the tree,
+  doc 109 rev 2. It survives at wcp `70a49e8c`.)
 - The sentinel suite was run against sbnd production **first, not last**:
   `pr127_sentinels.py --arms 'work-*-d102mpr'` reads **21 PASS / 0 FAIL / 2 OPEN
   / 7 INERT**. A cleanup round has surfaced a real silent regression this way
