@@ -1,0 +1,26 @@
+run_dir /nfs/data/1/xqian/sbnd_data/run
+   10415  act_fc_ones
+   19820  act_lm_value=0
+     134  act_stm_ones
+     483  act_tgm_ones
+   19820  activities
+    6236  candidate_rows
+     109  cluster_id vs selected: in_act_not_selected
+     379  cluster_id vs selected: not_in_act
+    5748  cluster_id vs selected: same
+   13216  events
+    7078  has_T_tagger=0 mc_reco_node=0
+    6138  has_T_tagger=1 mc_reco_node=1
+    6138  mc_markers=0
+    7078  mc_markers=1
+       0  mc_other_top_nodes
+    6138  mc_reco_Enu matches T_kine primary=1
+    7078  mc_reco_nodes=0
+    6138  mc_reco_nodes=1
+    5634  mc_truth_interactions=1
+    5223  mc_truth_interactions=2
+    1858  mc_truth_interactions=3
+     431  mc_truth_interactions=4
+      70  mc_truth_interactions=5+
+    6236  nsel=1
+    6236  selected tgm=0 stm=0 lm>0=0
