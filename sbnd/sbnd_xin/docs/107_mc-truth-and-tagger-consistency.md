@@ -27,6 +27,7 @@ write into an existing output dir.
 | Where is the reco? | `tracking-pr/tracking-pr_<tag>.root`. `T_tagger` holds `numu_score`, `nue_score`, `neutrino_type`, the ~1200 tagger/BDT variables and the `act_*` cosmic-tagger arrays. `T_kine` holds `kine_reco_Enu`. Both have one row per neutrino candidate. |
 | Where is the truth (type, Enu, vertex)? | **Only in Bee**, in `bee/bee_<tag>.zip::data/0/0-mc.json`. The tracking-pr ROOT files carry **no** truth branches. |
 | Does mc.json hold truth or reco particle flow? | **Both, in one tree.** The truth interaction nodes (id 9000000+) come from larwirecell's `TensorSetLabeler`. Our reco PF is grafted under a single `reco nu …` node (id 19999999, children ≥ 20000000), or a `no reco neutrino candidate (…)` marker replaces it. Each node is unambiguous by id and text (section 2.2). |
+| Vertex quality / numuCC / nueCC selection (FV 5<\|x\|<190, \|y\|<190, 10<z<450 cm; match = vertex within 5 cm) | Vertex within 5 cm for 67.7 % of true ν in the FV (80.0 % numuCC). numuCC with `numu_score>0.9`: efficiency **69.0 %**, purity **86.3 %**. nueCC with `nue_score>7.0`: 11/31 = 35.5 % efficiency and 11/12 purity, which is statistics-limited in this BNB sample (section 5.5). |
 | Is the PR candidate the non-cosmic one? | **Yes, in 6236/6236 rows, by construction.** The per-bundle `pick()` skips any activity with TGM, STM or `lm_flag>0` (section 3). The informative numbers are the residuals in section 4. |
 
 ## 1. The sample
@@ -329,6 +330,109 @@ within 5 cm for 63.5 % (44.9 % at 200-500, 19.9 % at 100-200 MeV).
 This is presence, not efficiency: there are no beam-window, FV or cosmic-overlap
 cuts on the truth, and the truth tree drops interactions with no particle above
 10 MeV.
+
+## 5.5 Vertex quality, and numuCC / nueCC efficiency and purity (owner follow-up)
+
+Repro (reads only `products/d107/`; writes the numbers and both figures):
+
+```bash
+cd /home/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 d107_selection.py products/d107 docs/107_sel > ~/tmp/d107_sel.log 2>&1; echo rc=$?
+# -> docs/107_sel/{d107_selection.txt, d107_enu_numucc.png, d107_enu_nuecc.png}
+```
+
+**Definitions** (the owner's choices):
+- **FV:** 5 < |x| < 190, |y| < 190, 10 < z < 450 cm (standard analysis FV with the cathode excluded). This is not the toolkit's tagger FV box, which is nearly the whole active volume.
+- **True vertex:** the generator vertex from mc.json. **Reco vertex:** `T_tagger` `nu_x/y/z`.
+- **Match:** the candidate's reco vertex is within **5 cm** of the true vertex. This is still vertex association (section 5), not a charge-based match.
+- **Selection:** score cut (`numu_score > 0.9` or `nue_score > 7.0`) **and** reco vertex in the FV.
+- **Signal:** a true CC of that flavour with its true vertex in the FV. A matched CC outside the FV counts as background.
+- **Efficiency** = true signal interactions with ≥ 1 matched selected candidate / true signal interactions in the FV.
+- **Purity** = selected candidates matched to a signal interaction / selected candidates.
+- **Intervals:** 68 % Wilson.
+- **Flavour caveat:** mc.json flavour names are sign-blind (`TensorSetLabeler.cxx:107-108` maps ±14 to `numu` and ±12 to `nue`), so "numuCC" includes anti-numu CC.
+
+The sample has 23 738 true interactions, **4 901 of them with the vertex in the FV**:
+3 502 numuCC, 1 368 NC and 31 nueCC.
+
+### Q1: reconstructed vertex within 5 cm, for true neutrinos in the FV
+
+| Population (true vertex in FV) | Vertex within 5 cm |
+|---|---|
+| **all true neutrinos** | **3316/4901 = 67.7 %** [67.0, 68.3] |
+| … only events that have a candidate | 3316/4276 = 77.5 % [76.9, 78.2] |
+| true numuCC | 2802/3502 = 80.0 % [79.3, 80.7] |
+| true NC | 490/1368 = 35.8 % [34.5, 37.1] |
+| true nueCC | 24/31 = 77.4 % [69.1, 84.0] |
+| Edep < 100 MeV | 54/462 = 11.7 % |
+| 100 ≤ Edep < 300 MeV | 407/782 = 52.0 % |
+| Edep ≥ 300 MeV | 2855/3657 = 78.1 % |
+
+Numerator and denominator are per true interaction (pileup events count each FV
+interaction). A miss includes "no candidate at all" as well as "candidate elsewhere".
+
+### Q2 + Q3: numuCC, `numu_score > 0.9`
+
+| Step (true numuCC in FV = 3 502) | Count | Fraction |
+|---|---|---|
+| a candidate vertex within 5 cm | 2 802 | 80.0 % |
+| … and the reco vertex in FV | 2 789 | 79.6 % |
+| … and `numu_score > 0.9` — **efficiency** | **2 415** | **69.0 %** [68.2, 69.7] |
+| score-cut efficiency given a matched FV candidate | 2415/2789 | 86.6 % |
+
+| Selected candidates (`numu_score > 0.9`, reco vertex in FV) | Count | Fraction |
+|---|---|---|
+| all selected (in 2 783 events) | 2 799 | |
+| **signal: true numuCC in FV, vertex within 5 cm — purity** | **2 415** | **86.3 %** [85.6, 86.9] |
+| no true vertex within 5 cm | 304 | 10.9 % |
+| … of which the nearest true vertex is a numuCC 5-20 cm away (misplaced vertex) | 166 | 5.9 % |
+| … nearest is a numuCC 20-50 cm away | 33 | 1.2 % |
+| … nearest true vertex > 50 cm away (cosmic / other activity) | 90 | 3.2 % |
+| … nearest is an NC, 5-50 cm away | 15 | 0.5 % |
+| true NC in FV | 40 | 1.4 % |
+| true vertex outside FV | 31 | 1.1 % |
+| true nueCC in FV | 9 | 0.3 % |
+
+Without the reco-FV requirement there are 3 427 candidates, of which 2 423 are signal
+(70.7 %). So the reco-FV cut removes 628 candidates, only 8 of them signal.
+
+The 5 cm match makes purity conservative. Over half of the unmatched background
+(166 + 33 of 304) is a real numuCC whose reco vertex landed 5-50 cm away. Counting
+those as signal would give about 93 %, and only ~3 % of the selection is more than
+50 cm from any true vertex.
+
+![numuCC selection: reconstructed Enu, signal vs background](107_sel/d107_enu_numucc.png)
+
+### Q4: nueCC, `nue_score > 7.0`
+
+| Step (true nueCC in FV = **31**) | Count | Fraction |
+|---|---|---|
+| a candidate vertex within 5 cm | 24 | 77.4 % |
+| … and the reco vertex in FV | 24 | 77.4 % |
+| … and `nue_score > 7.0` — **efficiency** | **11** | **35.5 %** [27.5, 44.4] |
+| score-cut efficiency given a matched FV candidate | 11/24 | 45.8 % |
+
+| Selected candidates (`nue_score > 7.0`, reco vertex in FV) | Count | Fraction |
+|---|---|---|
+| all selected | 12 | |
+| **signal: true nueCC in FV — purity** | **11** | **91.7 %** [80.2, 96.8] |
+| no true vertex within 5 cm | 1 | 8.3 % |
+
+**These nueCC numbers are statistics-limited and should not be quoted as the nueCC
+performance.** This is a BNB numu-dominated sample with only 245 true νe
+interactions, and 31 of them in the FV.
+- **The 7.0 cut:** of the 32 matched true nueCC candidates (any vertex position), the scores sorted are 3×(−15), −9.1 … 6.6, then 7.16, 9.6, 10.5 … 14.95. So 13 of 32 pass.
+- **Candidates passing looser cuts** (reco vertex in FV): 67 at `nue_score > 0`, 22 at > 4, 12 at > 7.
+- **Weights:** the scores come from the uBooNE-trained BDT weights (section 5.2).
+
+A proper nueCC efficiency/purity needs the intrinsic-nue sample (doc 102's nueCC
+set) for signal and this sample for the numu/NC/cosmic background.
+
+![nueCC selection: reconstructed Enu, signal vs background](107_sel/d107_enu_nuecc.png)
+
+Both figures: stacked `kine_reco_Enu`, last bin = overflow, with category counts in
+the legend. The categories and colours are the same on both, in fixed order; an
+empty category keeps its legend entry so the two plots stay comparable.
 
 ## 6. Open items (reported, not fixed)
 
