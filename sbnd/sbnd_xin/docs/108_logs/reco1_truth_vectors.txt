@@ -1,0 +1,46 @@
+# d108_reco1_truth_vectors.C, one entry per process, file /nfs/data/1/yuhw/2025-fall-prod-sample/round2-patrec/mc_paths-v10_14_02_03-100files/reco1-detsim-g4-gen-Gen2_2026-a6a0-2395-0263-6d62.root
+r713_s59_e9 entry 0: n_nu=1 n_corsika_MCTruth=1 n_mcparticle=8352 n_sed=138253
+   NU idx=0 pdg=14 ccnc=0 mode=2 int_type=1091 E_GeV=2.5218 vtx_cm=(84.64,-157.95,-457.27) t_ns=63.2
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=7943.9 (3130632973,0)=8.7  unmatched=0.0
+   (entry 0 rc=0)
+r713_s59_e15 entry 1: n_nu=2 n_corsika_MCTruth=1 n_mcparticle=7133 n_sed=183878
+   NU idx=0 pdg=12 ccnc=0 mode=0 int_type=1001 E_GeV=1.0638 vtx_cm=(162.50,242.45,71.21) t_ns=1501.4
+   NU idx=1 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.4395 vtx_cm=(330.04,161.68,-382.05) t_ns=407.3
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=10686.4 (3130632973,0)=4.1  unmatched=0.0
+   (entry 1 rc=0)
+r713_s59_e21 entry 2: n_nu=1 n_corsika_MCTruth=1 n_mcparticle=11017 n_sed=208270
+   NU idx=0 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.2881 vtx_cm=(-167.42,-14.96,20.43) t_ns=723.3
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=11757.7 (3130632973,0)=184.6  unmatched=0.0
+   (entry 2 rc=0)
+r713_s59_e22 entry 3: n_nu=2 n_corsika_MCTruth=1 n_mcparticle=6075 n_sed=134528
+   NU idx=0 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.5497 vtx_cm=(-159.71,119.14,70.34) t_ns=669.4
+   NU idx=1 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.5699 vtx_cm=(65.65,-121.69,-175.47) t_ns=1038.8
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=7208.0 (3130632973,0)=448.0  unmatched=0.0
+   (entry 3 rc=0)
+r713_s59_e23 entry 4: n_nu=2 n_corsika_MCTruth=1 n_mcparticle=10007 n_sed=243643
+   NU idx=0 pdg=14 ccnc=0 mode=1 int_type=1003 E_GeV=1.0553 vtx_cm=(158.04,-213.01,471.69) t_ns=1247.5
+   NU idx=1 pdg=14 ccnc=0 mode=10 int_type=1000 E_GeV=1.0957 vtx_cm=(110.21,56.14,504.49) t_ns=590.4
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=14591.8 (3130632973,0)=14.0 (3130632973,1)=4.7  unmatched=0.0
+   (entry 4 rc=0)
+r713_s59_e30 entry 5: n_nu=1 n_corsika_MCTruth=1 n_mcparticle=8602 n_sed=91678
+   NU idx=0 pdg=14 ccnc=1 mode=0 int_type=1002 E_GeV=0.3229 vtx_cm=(-31.80,18.83,332.41) t_ns=1283.4
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=5271.2 (3130632973,0)=45.5  unmatched=0.0
+   (entry 5 rc=0)
+r713_s59_e39 entry 6: n_nu=1 n_corsika_MCTruth=1 n_mcparticle=6366 n_sed=127412
+   NU idx=0 pdg=14 ccnc=0 mode=2 int_type=1091 E_GeV=1.2348 vtx_cm=(51.93,-130.66,379.91) t_ns=394.4
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=6926.3 (3130632973,0)=571.2  unmatched=0.0
+   (entry 6 rc=0)
+r713_s59_e40 entry 7: n_nu=2 n_corsika_MCTruth=1 n_mcparticle=6523 n_sed=129028
+   NU idx=0 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.5359 vtx_cm=(-578.74,512.57,293.34) t_ns=885.6
+   NU idx=1 pdg=14 ccnc=0 mode=2 int_type=1091 E_GeV=1.3941 vtx_cm=(215.59,-50.52,10.59) t_ns=1025.8
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=7361.2 (3130632973,1)=42.8  unmatched=0.0
+   (entry 7 rc=0)
+r713_s59_e41 entry 8: n_nu=2 n_corsika_MCTruth=1 n_mcparticle=5849 n_sed=135557
+   NU idx=0 pdg=12 ccnc=0 mode=0 int_type=1001 E_GeV=1.1470 vtx_cm=(249.37,-24.83,468.82) t_ns=550.3
+   NU idx=1 pdg=14 ccnc=1 mode=0 int_type=1002 E_GeV=0.2813 vtx_cm=(510.19,-135.57,75.79) t_ns=1010.6
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=7729.2 (3130632973,0)=13.8  unmatched=0.0
+   (entry 8 rc=0)
+r713_s59_e50 entry 9: n_nu=1 n_corsika_MCTruth=1 n_mcparticle=5436 n_sed=137115
+   NU idx=0 pdg=14 ccnc=0 mode=0 int_type=1001 E_GeV=0.5828 vtx_cm=(39.49,-18.26,59.69) t_ns=801.5
+   EDEP_MeV by (MCTruth product id, key): (647339619,0)=7196.8 (3130632973,0)=483.6  unmatched=0.0
+   (entry 9 rc=0)

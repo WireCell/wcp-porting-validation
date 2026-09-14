@@ -1,0 +1,18 @@
+generator MCTruth product id = crc32('simb::MCTruths_generator__GenieGen.') = 3130632973 | ids seen: [647339619, 3130632973]
+r713_s59_e9 nu0: pdg +14 | Bee numu DIS CC E 2521.8 vs 2521.8 | Edep Bee 8.7 vs reco1 8.7 | ALL OK
+r713_s59_e15 nu0: pdg +12 | Bee nue QE CC E 1063.8 vs 1063.8 | Edep Bee 4.1 vs reco1 4.1 | ALL OK
+r713_s59_e15 nu1: pdg +14 | Bee numu QE CC E 439.5 vs 439.5 | Edep Bee 0.0 vs reco1 0.0 | ALL OK
+r713_s59_e21 nu0: pdg +14 | Bee numu QE CC E 288.1 vs 288.1 | Edep Bee 184.6 vs reco1 184.6 | ALL OK
+r713_s59_e22 nu0: pdg +14 | Bee numu QE CC E 549.7 vs 549.7 | Edep Bee 448.0 vs reco1 448.0 | ALL OK
+r713_s59_e22 nu1: pdg +14 | Bee numu QE CC E 569.9 vs 569.9 | Edep Bee 0.0 vs reco1 0.0 | ALL OK
+r713_s59_e23 nu0: pdg +14 | Bee numu RES CC E 1055.3 vs 1055.3 | Edep Bee 14.0 vs reco1 14.0 | ALL OK
+r713_s59_e23 nu1: pdg +14 | Bee numu MEC CC E 1095.7 vs 1095.7 | Edep Bee 4.7 vs reco1 4.7 | ALL OK
+r713_s59_e30 nu0: pdg +14 | Bee numu QE NC E 322.9 vs 322.9 | Edep Bee 45.5 vs reco1 45.5 | ALL OK
+r713_s59_e39 nu0: pdg +14 | Bee numu DIS CC E 1234.8 vs 1234.8 | Edep Bee 571.2 vs reco1 571.2 | ALL OK
+r713_s59_e40 nu0: pdg +14 | Bee numu QE CC E 535.9 vs 535.9 | Edep Bee 0.0 vs reco1 0.0 | ALL OK
+r713_s59_e40 nu1: pdg +14 | Bee numu DIS CC E 1394.1 vs 1394.1 | Edep Bee 42.8 vs reco1 42.8 | ALL OK
+r713_s59_e41 nu0: pdg +12 | Bee nue QE CC E 1147.0 vs 1147.0 | Edep Bee 13.8 vs reco1 13.8 | ALL OK
+r713_s59_e41 nu1: pdg +14 | Bee numu QE NC E 281.3 vs 281.3 | Edep Bee 0.0 vs reco1 0.0 | ALL OK
+r713_s59_e50 nu0: pdg +14 | Bee numu QE CC E 582.8 vs 582.8 | Edep Bee 483.6 vs reco1 483.6 | ALL OK
+summary {'nu': 15, 'in_bee': 15, 'flav': 15, 'cc': 15, 'mode': 15, 'E': 15, 'vtx': 15, 'T': 15, 'edep': 15}
+rc=0

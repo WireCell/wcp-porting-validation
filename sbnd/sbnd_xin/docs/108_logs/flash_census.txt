@@ -1,0 +1,25 @@
+== A: 3000 events, beam window [0.2, 2.2) us
+  in-window flashes per event (3 = 3+): {0: 177, 1: 1741, 2: 1079, 3: 3}
+  in-window flashes with matched clusters per event: {0: 764, 1: 1617, 2: 618, 3: 1}
+  two-flash events: diff TPC, dt<0.1us, clusters on both          491
+  two-flash events: diff TPC, dt<0.1us, clusters on neither       83
+  two-flash events: diff TPC, dt<0.1us, clusters on one           267
+  two-flash events: diff TPC, dt>=0.1us, clusters on both         125
+  two-flash events: diff TPC, dt>=0.1us, clusters on neither      25
+  two-flash events: diff TPC, dt>=0.1us, clusters on one          87
+  two-flash events: same TPC, dt>=0.1us, clusters on both         1
+  |dt| of different-TPC in-window pairs (us): [0,0.01): 492, [0.01,0.02): 204, [0.02,0.05): 111, [0.05,0.1): 34, [0.1,0.2): 35, [0.2,0.5): 73, [0.5,2.0): 129
+== B: events with two T_tagger rows: 98
+  distinct flashes                   a row has no vertex                        4
+  distinct flashes                   both <5 cm of DIFFERENT true vertices      33
+  distinct flashes                   both vertices, <30 cm apart                2
+  distinct flashes                   both vertices, same nearest truth          12
+  distinct flashes                   events                                     74
+  one flash, both TPCs (dt<0.1us)    a row has no vertex                        22
+  one flash, both TPCs (dt<0.1us)    both <5 cm of DIFFERENT true vertices      0
+  one flash, both TPCs (dt<0.1us)    both vertices, <30 cm apart                0
+  one flash, both TPCs (dt<0.1us)    both vertices, same nearest truth          1
+  one flash, both TPCs (dt<0.1us)    events                                     24
+== C: flash time - true nu time (us), rows with reco vertex < 5 cm of it: 4098
+  median 0.136  5%..95% quantiles 0.132 .. 0.14  |delta - median| < 0.1 us: 0.989
+rc=0
