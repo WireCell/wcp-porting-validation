@@ -1,0 +1,29 @@
+# doc pdvd/100 round 3 -- truth pairs moving p100flip -> p101q (work/ql_scores, uid map keep, no time map/shift)
+uid-map counts (mapped clusters, unmapped truth) per event equal in both score logs: True (2059 clusters mapped, 35 truth entries unmapped)
+  total agree    p100flip  678  p101q  672  diff -6
+  total phantom  p100flip   97  p101q   95  diff -2
+  total missed   p100flip  163  p101q  169  diff +6
+  total unknown  p100flip  375  p101q  369  diff -6
+  total covered  p100flip  678  p101q  672  diff -6
+missed_list: distinct pairs p100flip 161 p101q 167; only p100flip 5, only p101q 11, common 156
+phantom_list: distinct pairs p100flip 97 p101q 95; only p100flip 7, only p101q 5, common 90
+unknown_list: distinct pairs p100flip 375 p101q 369; only p100flip 65, only p101q 59, common 310
+newly missed on p101q: 11 (top 8, bottom 3)
+    ('evt298567', 18, 3222.1)
+    ('evt298567', 4000101, 3472.2)
+    ('evt298595', 4000110, 2693.7)
+    ('evt298665', 5, -868.1)
+    ('evt298679', 4000026, 1558.9)
+    ('evt298721', 4000164, 3697.1)
+    ('evt298735', 4000117, 2949.2)
+    ('evt298735', 4000318, -1199.3)
+    ('evt298763', 124, 2674.1)
+    ('evt298763', 4000222, 669.5)
+    ('evt298763', 4000510, 2325.0)
+recovered on p101q: 5 (top 5, bottom 0)
+    ('evt298595', 4000077, 1200.9)
+    ('evt298679', 4000251, 4678.5)
+    ('evt298735', 4000027, 3318.5)
+    ('evt298763', 4000642, 2622.2)
+    ('evt298805', 4000407, 985.0)
+sign test newly missed 11 vs recovered 5 of 16 moving pairs: two-sided p = 0.210

@@ -106,7 +106,10 @@ see §4a), sparse_lasso, lasso_flag_weight (0.2), bundle_mask_ks, chi2_relax
 c2n — NOTE: true PDVD matches do not pass the KS ceilings yet, see §4a),
 require_containment (production only), flash_minPE 25, light_model 'library',
 **QtoL 0.094** (current geometry; 0.11 was the pre-Y-truncation value —
-see the §4a 2026-07-13 note) + pred-based pe_err (floor/frac/lowpe_frac/knee =
+see the §4a 2026-07-13 note; 2026-09-13: a knob, driver `ql_qtol` / runner
+`PDVD_QTOL`, default 0.094 — after the top-gain flip the crossers read 0.0783,
+measured but NOT adopted, hand-scan agreement fails its pre-registered rule,
+`nf_sp_img_clus/100_pdvd-gain-flip-refits.md` §8) + pred-based pe_err (floor/frac/lowpe_frac/knee =
 2.0/0.60/2.0/10.0) — both calibrated on the beam-flash gold pairs (§4a).
 
 OFF (deliberate): reject_overpred (gold scatter still ~x3 and per-channel PE

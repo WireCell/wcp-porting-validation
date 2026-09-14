@@ -1,0 +1,20 @@
+# doc pdvd/100 sec 8 (round 3) -- G1: compiled clustering config (run_clus_evt.sh PDVD_CLUS_COMPILE_ONLY=1, production staging, proof tag p101cfg)
+# before = toolkit 1e2447f2 + wcp cabbdd0b; after = + qlmatching.jsonnet qtol / wct-clustering.jsonnet ql_qtol / run_clus_evt.sh PDVD_QTOL
+45536b99e60b3d295a04919451ee59ff  039252_0_before_default.json
+bc12945fe598c3bd5ab470578f448137  039253_15_before_default.json
+cfd16922c2b105dbba4fba1a2200bca3  039349_7_before_default.json
+45536b99e60b3d295a04919451ee59ff  039252_0_after_default.json
+bc12945fe598c3bd5ab470578f448137  039253_15_after_default.json
+cfd16922c2b105dbba4fba1a2200bca3  039349_7_after_default.json
+8f5244ba305295b20e5175783a7d20a1  039252_0_after_q0783.json
+ca52782766d633e1fc4881a198a2c101  039253_15_after_q0783.json
+d905701a1e23a94d72fd2d1613155efe  039349_7_after_q0783.json
+039252_0 after (default) == before: IDENTICAL
+039253_15 after (default) == before: IDENTICAL
+039349_7 after (default) == before: IDENTICAL
+039252_0 PDVD_QTOL=0.0783 vs after default: 1 differing leaf/leaves [('[404]/data/QtoL', 0.094, 0.0783)]
+039253_15 PDVD_QTOL=0.0783 vs after default: 1 differing leaf/leaves [('[404]/data/QtoL', 0.094, 0.0783)]
+039349_7 PDVD_QTOL=0.0783 vs after default: 1 differing leaf/leaves [('[404]/data/QtoL', 0.094, 0.0783)]
+039252_0 rc=0 after the comment-only toolkit edit (default) == before: IDENTICAL
+039253_15 rc=0 after the comment-only toolkit edit (default) == before: IDENTICAL
+039349_7 rc=0 after the comment-only toolkit edit (default) == before: IDENTICAL

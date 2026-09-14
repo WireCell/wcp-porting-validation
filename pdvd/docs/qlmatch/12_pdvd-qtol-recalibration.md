@@ -1,5 +1,11 @@
 # PDVD QtoL recalibration on saturation-fixed dumps (crosser anchors)
 
+**Status 2026-09-13:** production keeps QtoL 0.094, now a knob (driver `ql_qtol`, runner `PDVD_QTOL`). After the top-gain
+SP flip the same fit on production (`p100flip`) reads 0.833 → 0.0783; a 0.0783 arm closes (1.000, cathode 0.987) but
+drops hand-scan agreement on run 039252 (−6 agree / +6 missed, phantom −2), so it is not adopted. Because prediction is
+QtoL × VUVEfficiency, any QtoL other than 0.094 renormalises all three §4 per-type factors together (PMT group 2.13 →
+2.56). See `../nf_sp_img_clus/100_pdvd-gain-flip-refits.md` §8.
+
 **Repro:**
 ```
 # inputs: the 120-event _satrep reprocess (all three runs)

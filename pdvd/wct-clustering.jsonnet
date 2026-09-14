@@ -223,6 +223,10 @@ function(
     // Per-channel multiplier on the MEASURED PE (length-40 array; Opflash
     // read).  null => key suppressed => byte-identical (C++ empty = identity).
     ql_measured_pe_scale = null,
+    // QLMatching QtoL, forwarded to qlmatching.jsonnet `qtol` (toolkit default
+    // 0.094; the key is always emitted, so 0.094 here => compiled config
+    // byte-identical).  run_clus_evt.sh PDVD_QTOL overrides.  Doc pdvd/100 sec 8.
+    ql_qtol = 0.094,
     // xtpc / selection quality gates (scan-tuning doc 19); null/false =>
     // keys suppressed => byte-identical legacy behaviour.
     ql_xtpc_pin_min_strength = null,
@@ -483,6 +487,7 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       pe_err_wall_lowpe_frac=ql_peerr_wall_lowpe_frac,
                       pe_err_wall_lowpe_knee=ql_peerr_wall_lowpe_knee,
                       measured_pe_scale=ql_measured_pe_scale,
+                      qtol=ql_qtol,
                       // xtpc / selection quality gates (doc 19).
                       xtpc_pin_min_strength=ql_xtpc_pin_min_strength,
                       xtpc_sc1_light_gate=ql_xtpc_sc1_light_gate,

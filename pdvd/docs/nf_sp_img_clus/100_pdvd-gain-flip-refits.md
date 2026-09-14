@@ -1,4 +1,13 @@
-# 100 — The PDVD gain round: the owner's look at the frame-edge tags, the C refit, the two data-sized Michel thresholds, QtoL measured; round 2: the Michel movers and the readout-edge exemption
+# 100 — The PDVD gain round: the owner's look at the frame-edge tags, the C refit, the two data-sized Michel thresholds, QtoL measured; round 2: the Michel movers and the readout-edge exemption; round 3: QtoL after the gain
+
+**Status (2026-09-13, round 3, §8): QtoL after the gain — measured 0.0783, NOT adopted; production keeps 0.094.**
+- On production (`p100flip`) the crosser anchors read 0.833 → QtoL 0.0783. The 0.0783 arm `p101q` closes (1.000; cathode
+  0.987) and the STM chain is unharmed on the owner-corrected record (is_stm purity 0.963 → 0.970, Michel 0.924 → 0.929).
+- The old hand scan (run 039252, 18 events) fails the pre-registered doc-23 rule: agree 678 → 672, missed 163 → 169,
+  phantom 97 → 95 (16 pairs move, 11 lost / 5 recovered, sign test p = 0.21). QtoL does not undo the gain flip's own
+  matching cost (`p99wflip` 701 / 100 / 140 → `p100flip` 678 / 97 / 163).
+- Built: the QtoL knob (toolkit `d3b398fc`, driver `ql_qtol`, runner `PDVD_QTOL`), default 0.094, compiled config
+  byte-identical. The owner decides whether to adopt against the scan result (§8.7).
 
 **Status (2026-09-13, round 2, §7): the gain-flip criterion PASSES on the owner-corrected record, and the gain bundle is FLIPPED into production (owner yes).**
 - The owner judged all 65 chain movers between production and the candidate (`own100m`). On the corrected record Michel purity is
@@ -89,6 +98,22 @@ PIN=/home/xqian/tmp/p100/libpin_p100b WAVE=flip ARM=p100flip $S/d100_arms.sh    
 python3 $S/d99rw_identity.py --arm p100flip --base p100c --nt all > d100/f1_identity_p100flip_p100c.txt
 (cd ../.. && setarch x86_64 -R ./run_nf_sp_dnnroi_evt.sh -O _p100spflip 039252 0)               # F2: SP at the new default
 python3 ../../../abtest/hash_archive.py ...  # F2 comparison against work/039252_0_p98von -> d100/f2_sp_frames_p100spflip_p98von.txt
+# ---- round 3 (sec 8; prereg d100/prereg_round3.md): QtoL after the gain.  Toolkit knob qlmatching.jsonnet qtol (d3b398fc);
+# driver ql_qtol; runner PDVD_QTOL
+(cd ../../ql_light_calib && python3 fit_qtol_crossers.py --tag p100flip) > d100/qtol_crossers_p100flip.txt       # the value
+(cd ../.. && for ev in "39252 0" "39253 15" "39349 7"; do ./scripts/stage_ql_tag.sh $ev p101cfg; \
+    PDVD_CLUS_COMPILE_ONLY=1 PDVD_LIGHT_SUFFIX=_keep [PDVD_QTOL=0.0783] ./run_clus_evt.sh -s p101cfg -calib -save-pctree $ev; done)   # G1 -> d100/g1_qtol_compiled_config.txt
+ARM=p101q QTOL=0.0783 setsid nohup bash $S/d100r3_arms.sh > /home/xqian/tmp/p101/arm_p101q.nohup 2>&1 < /dev/null &   # d100/arm_p101q.log
+(cd ../../ql_light_calib && python3 fit_qtol_crossers.py --tag p101q) > d100/qtol_crossers_p101q.txt              # Q1
+python3 $S/d100_qtol_halves.py --tag p100flip --tag p101q > d100/qtol_halves_r3.txt
+(cd ../.. && for A in p99wflip p100flip p101q; do python3 ql_display/ql_agree_score.py --tag $A --truth-uid-map-tag keep; done)  # Q2 -> work/ql_scores/<A>, d100/qtol_scan_scores_<A>.md
+python3 $S/d100r3_scan_pairs.py --base p100flip --arm p101q --base-log <score log> --arm-log <score log> > d100/qtol_scan_pairs.txt
+python3 $S/d99rw_census.py --arms p100flip p101q > d100/qtol_census_p100flip_p101q.txt                          # Q3
+python3 $S/d99_population.py --pairs p100flip:p100flip p100flip:p101q p101q:p100flip > d100/qtol_population.txt
+python3 $S/d100_carry_verdicts.py --record /home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json --base-arm p99rwon \
+    --arm p101q --out /home/xqian/tmp/p101/carry/corrected_on_p101q.json > d100/qtol_carry_corrected_on_p101q.txt
+python3 $S/d100r3_grade.py --arm p100flip:<corrected_on_p99rwon> --arm p101q:<corrected_on_p101q> > d100/qtol_grade_p100flip_p101q.txt  # controls: d100/qtol_grade_controls.txt
+python3 $S/d99_grade.py --arms p100flip:<corrected_on_p99rwon> p101q:<corrected_on_p101q> --movers p100flip,p101q > d100/qtol_grade_movers.txt
 ```
 
 ## 1. The owner's look at the 19 frame-edge objects (`own100`, not blind)
@@ -411,6 +436,116 @@ What production now is: **SP top gain 0.889 + v7-uvwfit wires (imaging `pvdimg`)
 `d27fresh` (gain-OFF imaging) stays on disk as the pre-flip production input; `p98von` stays as the study arm `pvdimg`
 links. Retiring either removes nothing from `pvdimg`.
 
+## 8. Round 3 (same day): QtoL after the top gain
+
+Owner, 2026-09-13, after §7.5: *"Let's proceed with the QtoL tuning then after the scaling of the gain for top. Please
+update this parameters. I believe we have the old hand scan results that may be used to help to validate the matching
+results."* Pre-registration `d100/prereg_round3.md`, written after the value was measured on production (read-only) and
+before the knob was built or any round-3 arm ran.
+
+### 8.1 The value, and what a QtoL change is
+
+`fit_qtol_crossers.py --tag p100flip` (`d100/qtol_crossers_p100flip.txt`; the fit reproduces §5's `p99rwon` row exactly —
+the gain-ON imaging and window are the same):
+
+| | anchors | global Σmeas/Σpred → QtoL | 039252 | 039253 | 039349 | cathode XA | PMTs |
+|---|---|---|---|---|---|---|---|
+| `p100flip` (production, QtoL 0.094) | 192 | **0.833 → 0.0783** | 0.757 (47) | 0.857 (32) | 0.860 (113) | 0.822 | 2.130 |
+
+- One global value is taken, no per-run value. The hand-scanned run 039252 is the low one (→ 0.0712).
+- **A QtoL change is a renormalisation of all three per-type factors.** Prediction = QtoL × VUVEfficiency, and the factors
+  in toolkit `protodunevd/qlmatching.jsonnet` (cathode ×10.116, membrane ×1.655, PMT ×0.352; docs/qlmatch/12 §4) were fit
+  so each type reads 1 at QtoL 0.094. 0.0783 = all three × 0.833. The cathode XAs dominate the sums, so they close and
+  the PMT group, already ×2 off before the gain (`p99wflip` 2.274), moves further off.
+
+### 8.2 The knob (G1)
+
+Toolkit `qlmatching.jsonnet` arg `qtol` (default 0.094; the key was a literal and is always emitted), commit `d3b398fc`;
+driver `pdvd/wct-clustering.jsonnet` `ql_qtol` (default 0.094); runner `pdvd/run_clus_evt.sh` `PDVD_QTOL` (unset = driver
+default). `d100/g1_qtol_compiled_config.txt`: `run_clus_evt.sh` compile-only on proof tag `p101cfg` (039252_0, 039253_15,
+039349_7) — after == before at the default, md5, on all three (re-checked after a comment-only toolkit edit); with
+`PDVD_QTOL=0.0783` exactly one leaf differs, `matching_joint` `data.QtoL` 0.094 → 0.0783.
+
+### 8.3 The arm `p101q`
+
+`scripts/d100r3_arms.sh` with `QTOL=0.0783`: production as shipped (staging from `pvdimg`, `_keep` light, the window
+table, `run_pr_evt.sh -nu -stm-fit`), pin `libpin_p100b` (the binary `p100flip` ran), 120 events
+(`d100/arm_p101q.log`): staging 120, clustering 120, PR 119 + 039349_30 (no STM candidate, as on `p100flip`). All 120
+calib dumps carry QtoL 0.0783. Against `p100flip` it is identical on **1/120** events (`d100/qtol_identity_p101q_p100flip.txt`):
+a global amplitude scale moves flash picks, t0s and therefore the post-matching clustering almost everywhere.
+
+### 8.4 Q1 closure — PASS
+
+`d100/qtol_crossers_p101q.txt`: global **1.000** [0.795, 1.758] on the same 192 anchors (limit [0.95, 1.05]); per run
+0.909 / 1.029 / 1.032; cathode XA **0.987**, PMTs **2.557** (§8.1's prediction). The per-half fit
+(`d100/qtol_halves_r3.txt`) scales by exactly 0.094 / 0.0783 = 1.201 on both halves (a_b 0.673 → 0.808, a_t 0.746 → 0.895)
+— the anchors' bundles did not change, so this closure is arithmetic, not a test of the matching; its footer's
+"prediction" line is round 1's and does not apply here.
+
+### 8.5 Q2 the old hand scan — FAILS the pre-registered rule
+
+`pdvd/ql_display/ql_agree_score.py` against its frozen run-039252 truth (owner gold scan `work/ql_labels/wfresc` evt298567
++ AI scan `ql_display/decisions-cathxa`, objective tiers gold/high/med, long tracks, tol 0.5 µs), 18 events:
+- **Truth cluster uids mapped by geometry** through `--truth-uid-map-tag keep`: the `keep` dumps carry all 1529 truth uids.
+  The July `tm0k`/`cathxa` calib dumps were dropped in the 2026-09-04 cleanup, so doc 26's reference 764 / 118 / 78 cannot be
+  replayed and the absolute numbers below are not comparable to it (today's clustering is v7 wires + gain + real window).
+- **No time shift** (production still at the truth's 13.507 µs pull). **No time map**: decided on `p100flip` before `p101q`
+  was scored — the tail-merge map joins less truth (766 vs 775 judged), as production reads the `_keep` light the truth
+  was recorded on (`d100/qtol_scan_timemap_decision.txt`).
+- Scored into new tags `work/ql_scores/{p99wflip,p100flip,p101q}` (copies `d100/qtol_scan_scores_*.md`).
+
+| arm | agree | phantom | agree % | missed | missed % | truth entries unmapped |
+|---|---|---|---|---|---|---|
+| `p99wflip` (production before the gain flip) | 701 | 100 | 87.5 % | 140 | 16.6 % | 15 |
+| `p100flip` (production now) | 678 | 97 | 87.5 % | 163 | 19.4 % | 35 |
+| `p101q` (QtoL 0.0783) | 672 | 95 | 87.6 % | 169 | 20.1 % | 35 |
+
+- **Rule (doc 23):** a metric improves and none regresses; one or two pairs against a metric is churn. Phantom improves by 2,
+  but agree drops by 6 and missed rises by 6: **FAIL**.
+- **Pairs** (`scripts/d100r3_scan_pairs.py` → `d100/qtol_scan_pairs.txt`): both arms' maps resolve the same number of
+  truth entries per event (2059 clusters mapped, 35 truth entries unmapped on each), and each arm is scored against the
+  truth mapped onto its own clustering (the arms' post-matching clustering differs on 119/120 events, §8.3). 16 truth
+  pairs move — 11 newly missed (top 8, bottom 3), 5 recovered (all top). Sign test p = 0.21: not significant by itself,
+  but the rule counts pairs and was fixed in advance.
+- **The 6-pair move is the matcher, not the join.** `p100flip` and `p101q` share the imaging, the unmapped truth (35 and
+  35), the tier and long-track filters, and nearly the same unknown count (375 vs 369), so the caveat below does not
+  apply to it.
+- **The gain flip's own matching cost is not a QtoL effect.** `p99wflip` → `p100flip` is −23 agree / +23 missed; rescaling
+  QtoL to the gain-ON charge moves it 6 further the same way. Part of that −23 may be the scorer's geometric map rather than
+  the matcher (unmapped truth 15 → 35 with the new imaging); not separated here.
+
+### 8.6 Q3 the STM chain — PASS
+
+- **Census** (`d100/qtol_census_p100flip_p101q.txt`): candidates 540 → 546, is_stm 259 → 259 (top 180 → 179, bottom
+  79 → 80), Michel 160 → 158; readout-edge guard firings 440 → 440.
+- **Record-free transitions** (`d100/qtol_population.txt`; null `p100flip:p100flip` 1.000): 253 of 259 is_stm stay in
+  each direction (0.977), churn on 6 events each way, no Michel lost or gained among those staying.
+- **Grade on the owner-corrected record** (round 2's `carry_r2`; carried to `p101q` by geometry 633 of 635, 2 lost,
+  `d100/qtol_carry_corrected_on_p101q.txt`; `d100/qtol_grade_p100flip_p101q.txt`; the grader reproduces §7.2 exactly and
+  reads `p100flip` = `p100c`, `d100/qtol_grade_controls.txt`):
+
+  | arm | is_stm TP/FP/FN/TN | is_stm purity | eff | Michel TP/FP/FN/TN | Michel purity | eff |
+  |---|---|---|---|---|---|---|
+  | `p100flip` | 231/9/34/95 | 0.963 ± 0.012 | 0.872 | 145/12/26/186 | 0.924 ± 0.021 | 0.848 |
+  | `p101q` | 229/7/33/97 | 0.970 ± 0.011 | 0.874 | 144/11/26/185 | 0.929 ± 0.021 | 0.847 |
+
+  is_stm purity +0.48σ, Michel purity +0.18σ: both within the bar (or higher). Record movers
+  (`d100/qtol_grade_movers.txt`): 2 — a THRU loses its tag (039349_23/58), a stopper gains one (039349_34/49).
+
+### 8.7 Decision and next
+
+**Not flipped: the pre-registered adoption needs Q1, Q2 and Q3, and Q2 fails.** Production keeps QtoL 0.094; the knob is
+committed at that default. Measured, for the owner's decision:
+- 0.0783 is what the crossers say after the gain, it keeps the STM chain as is (slightly better purity), and it costs 6
+  scan-agreed matches on run 039252 (16 pairs move, p = 0.21) while leaving the PMT group further from 1.
+- Adopting 0.0783 anyway is a one-line driver default (`ql_qtol`) with the §8.2 G1 recipe and an F1 arm (production, no
+  overrides, == `p101q` 120/120) as the gate.
+
+**Recommended next:** an owner look at the 16 moving truth pairs on the Q/L scan viewer (`pdvd/ql_scan`, port 5016,
+`p100flip` and `p101q` dumps side by side). The truth there is an AI scan mapped by geometry onto new clustering; if the 11
+newly missed are mapping artefacts or AI-scan errors, Q2 is churn and 0.0783 can go in; if they are real mis-picks, 0.094
+stays and the gain flip's matching cost (−23) is a separate question for the matcher, not for QtoL.
+
 ## Files
 
 | file | what |
@@ -433,3 +568,8 @@ links. Retiring either removes nothing from `pvdimg`.
 | `d100/flip_compiled_config.txt`, `pvdimg_sha256_manifest.txt`, `f1_*`, `f2_*` | §7.5 flip proofs |
 | `../scan/pdvd_stm_michel_own100m_verdicts.json`, `pdvd_stm_michel_own100x_verdicts.json` | the owner's 65 + 10 verdicts, one item per arm key (130, 11) |
 | work tags kept | `pvdimg` (PRODUCTION imaging, hard links), `p100boff`, `p100bg`, `p100bd`, `p100bx`, `p100bxp`, `p100flip`; PDHD `h100a`, `h100b` |
+| toolkit (`d3b398fc`) `cfg/.../protodunevd/qlmatching.jsonnet`; `pdvd/wct-clustering.jsonnet`, `pdvd/run_clus_evt.sh` | §8 QtoL knob (`qtol` / `ql_qtol` / `PDVD_QTOL`), default 0.094, byte-identical |
+| `d100/prereg_round3.md` | round 3 pre-registration |
+| `scripts/d100r3_arms.sh`, `d100r3_scan_pairs.py`, `d100r3_grade.py` | §8 arm (production staging + `PDVD_QTOL`), scan-pair breakdown, Q3 grade |
+| `d100/g1_qtol_compiled_config.txt`, `qtol_crossers_p100flip.txt`, `qtol_crossers_p101q.txt`, `qtol_halves_r3.txt`, `qtol_scan_*`, `qtol_identity_p101q_p100flip.txt`, `qtol_census_*`, `qtol_population.txt`, `qtol_carry_*`, `qtol_grade_*`, `arm_p101q.log` | round 3 records |
+| work tags kept | `p101q` (QtoL 0.0783 arm), `p101cfg` (3 events, compile-proof staging); `work/ql_scores/{p99wflip,p100flip,p101q}` |

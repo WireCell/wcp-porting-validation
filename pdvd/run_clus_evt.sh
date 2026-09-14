@@ -553,6 +553,11 @@ PY
     if [ -n "${PDVD_QL_MEASURED_PE_SCALE:-}" ]; then
         QL_PEERR_ARG+=(-S "ql_measured_pe_scale=${PDVD_QL_MEASURED_PE_SCALE}")
     fi
+    # PDVD_QTOL: QLMatching QtoL (wct-clustering.jsonnet ql_qtol).  Unset =>
+    # arg omitted => the driver default (doc pdvd/100 sec 8).
+    if [ -n "${PDVD_QTOL:-}" ]; then
+        QL_PEERR_ARG+=(-S "ql_qtol=${PDVD_QTOL}")
+    fi
     # ---- xtpc / selection quality gates (scan-tuning docs/qlmatch/19_*.md).
     # PDVD_QL_PIN_MIN_STRENGTH: pinned bundle loses the strength-cutoff exemption
     #   below this LASSO solution (scan: phantom pins strength p50 0.00).

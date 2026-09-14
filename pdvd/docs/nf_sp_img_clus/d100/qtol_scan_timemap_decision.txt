@@ -1,0 +1,7 @@
+# doc pdvd/100 sec 8 (round 3) -- prereg Q2: --truth-time-map decided on p100flip before p101q was scored (uid map keep, no time shift)
+# production clustering reads PDVD_LIGHT_SUFFIX=_keep light, the light the truth was recorded on; work/ql_scores/tm0/time_map.json maps _keep -> _tmerge times
+ql_scores_trial: | **all** | 678 | 97 | **87.5%** | 375 | 163 | 841 | **19.4%** | 0 | 48 | 4 |
+ql_scores_trial_tmap: | **all** | 670 | 96 | **87.5%** | 383 | 171 | 841 | **20.3%** | 0 | 49 | 4 |
+columns: evt | agree | phantom | agree% | unknown | missed | npos | missed% | miss-flashcut | low-agree | low-phantom
+without map: judged 678+97=775, covered 841-163=678; with map (16 truth times translated): judged 670+96=766, covered 841-171=670
+DECISION: no time map (joins more truth on both sides), used for every arm

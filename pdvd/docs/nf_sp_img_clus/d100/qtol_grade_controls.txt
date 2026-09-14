@@ -1,0 +1,24 @@
+# doc pdvd/100 round 3 -- positive controls of scripts/d100r3_grade.py (before p101q existed)
+# A: p99wflip vs p100c on round 2's corrected records must reproduce d100/michel_scan.txt sec 4 (it does, line for line)
+# doc pdvd/100 round 3 -- Q3 grade on the owner-corrected record (prereg_round3.md sec 3)
+  p99wflip is_stm 220/8/35/146 purity 0.965 +- 0.012 eff 0.863   michel 135/9/29/236 purity 0.938 +- 0.020 eff 0.823   (record latest_on_p99wflip_corrected.json: 613 items, no candidate 185)
+      top    is_stm 154/4/23/69 purity 0.975   michel 94/7/21/128 purity 0.931 eff 0.817
+      bottom is_stm 66/4/12/77 purity 0.943   michel 41/2/8/108 purity 0.953 eff 0.837
+  p100c    is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848   (record latest_on_p99rwon_corrected.json: 635 items, no candidate 246)
+      top    is_stm 159/4/27/42 purity 0.975   michel 101/9/19/103 purity 0.918 eff 0.842
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  Michel purity: p99wflip 0.938 -> p100c 0.924, difference -0.014 = -0.48 sigma  PASS
+  is_stm purity: p99wflip 0.965 -> p100c 0.963, difference -0.002 = -0.14 sigma  PASS
+  Q3: PASS
+
+# B: p100c vs p100flip on the same record (F1 identical arms) must read identical
+# doc pdvd/100 round 3 -- Q3 grade on the owner-corrected record (prereg_round3.md sec 3)
+  p100c    is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848   (record latest_on_p99rwon_corrected.json: 635 items, no candidate 246)
+      top    is_stm 159/4/27/42 purity 0.975   michel 101/9/19/103 purity 0.918 eff 0.842
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  p100flip is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848   (record latest_on_p99rwon_corrected.json: 635 items, no candidate 246)
+      top    is_stm 159/4/27/42 purity 0.975   michel 101/9/19/103 purity 0.918 eff 0.842
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  Michel purity: p100c 0.924 -> p100flip 0.924, difference +0.000 = +0.00 sigma  PASS
+  is_stm purity: p100c 0.963 -> p100flip 0.963, difference +0.000 = +0.00 sigma  PASS
+  Q3: PASS

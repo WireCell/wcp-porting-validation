@@ -1,0 +1,18 @@
+events 120
+  p100flip   cand 540 (top 354, bottom 186)  is_stm 259 (top 180, bottom 79)  is_stm_michel 160 (top 112, bottom 48)
+  p101q      cand 546 (top 351, bottom 195)  is_stm 259 (top 179, bottom 80)  is_stm_michel 158 (top 110, bottom 48)
+  p100flip is_stm -> p100flip: n 259
+    top    n 180  stays is_stm 180 (1.000)    | among those staying: Michel kept 112 lost 0 gained 0
+    bottom n  79  stays is_stm 79 (1.000)    | among those staying: Michel kept 48 lost 0 gained 0
+    all    n 259  stays is_stm 259 (1.000)    | among those staying: Michel kept 160 lost 0 gained 0
+    events with churn 0/120: 
+  p100flip is_stm -> p101q: n 259
+    top    n 180  stays is_stm 175 (0.972)  candidate_not_stm 1  not_candidate 4  | among those staying: Michel kept 109 lost 0 gained 0
+    bottom n  79  stays is_stm 78 (0.987)  not_candidate 1  | among those staying: Michel kept 47 lost 0 gained 0
+    all    n 259  stays is_stm 253 (0.977)  candidate_not_stm 1  not_candidate 5  | among those staying: Michel kept 156 lost 0 gained 0
+    events with churn 6/120: 039253_6:1 039349_23:1 039349_29:1 039349_5:1 039349_68:1 039349_73:1
+  p101q is_stm -> p100flip: n 259
+    top    n 179  stays is_stm 175 (0.978)  candidate_not_stm 1  not_candidate 3  | among those staying: Michel kept 109 lost 0 gained 0
+    bottom n  80  stays is_stm 78 (0.975)  not_candidate 1  object_lost 1  | among those staying: Michel kept 47 lost 0 gained 0
+    all    n 259  stays is_stm 253 (0.977)  candidate_not_stm 1  not_candidate 4  object_lost 1  | among those staying: Michel kept 156 lost 0 gained 0
+    events with churn 6/120: 039252_5:1 039253_2:1 039349_14:1 039349_34:1 039349_46:1 039349_67:1

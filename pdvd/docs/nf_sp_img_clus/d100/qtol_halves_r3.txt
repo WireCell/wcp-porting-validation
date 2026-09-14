@@ -1,0 +1,15 @@
+# doc pdvd/100 -- QtoL crosser anchors split by half (d100_qtol_halves.py); measured only
+
+== p100flip: dumps 120, anchors 192, dump QtoL [0.094]
+  pooled (the production script's estimator): median 0.833 [0.662, 1.464] n=192
+  a_b (bottom half)     : median 0.673 [0.000, 1.823] n=188
+  a_t (top half)        : median 0.746 [0.000, 1.907] n=188
+  bottom share of pred  : median 0.484 [0.332, 0.708] n=188
+
+== p101q: dumps 120, anchors 192, dump QtoL [0.0783]
+  pooled (the production script's estimator): median 1.000 [0.795, 1.758] n=192
+  a_b (bottom half)     : median 0.808 [0.000, 2.189] n=188
+  a_t (top half)        : median 0.895 [0.000, 2.289] n=188
+  bottom share of pred  : median 0.484 [0.332, 0.708] n=188
+
+p101q / p100flip: pooled 1.201; a_b 1.201; a_t 1.201 (prediction a_t 1/1.125 = 0.889, a_b 1.000)
