@@ -1,0 +1,81 @@
+== d109 gate d109off2 vs d109on2 (nuecc48, ncpi0, mcp1k)
+  ADDED branch T_cluster.flash_tpc                             267
+  ADDED branch T_cluster.matched_flash_gid                     267
+  ADDED branch T_kine.event                                    161
+  ADDED branch T_kine.has_vertex                               161
+  ADDED branch T_kine.run                                      161
+  ADDED branch T_kine.subrun                                   161
+  ADDED branch T_tagger.act_in_pr                              161
+  ADDED branch T_tagger.act_is_final                           161
+  ADDED branch T_tagger.act_role                               161
+  ADDED branch T_tagger.event                                  161
+  ADDED branch T_tagger.flash_group                            161
+  ADDED branch T_tagger.flash_pe                               161
+  ADDED branch T_tagger.flash_time_us                          161
+  ADDED branch T_tagger.flash_tpc                              161
+  ADDED branch T_tagger.has_vertex                             161
+  ADDED branch T_tagger.run                                    161
+  ADDED branch T_tagger.sel_cluster_id                         161
+  ADDED branch T_tagger.subrun                                 161
+  ADDED branch T_tagger.vertex_moved_cluster                   161
+  ADDED branch Trun.bdt_weights_dir                            267
+  ADDED branch Trun.beam_window_high_us                        267
+  ADDED branch Trun.beam_window_low_us                         267
+  ADDED branch Trun.cfg_tree                                   267
+  ADDED branch Trun.dl_weights                                 267
+  ADDED branch Trun.flash_pair_dt_us                           267
+  ADDED branch Trun.nu_beam_gate                               267
+  ADDED branch Trun.nu_census_filled                           267
+  ADDED branch Trun.nu_n_bundles                               267
+  ADDED branch Trun.nu_n_candidates                            267
+  ADDED branch Trun.nu_n_flashes                               267
+  ADDED branch Trun.nu_n_flashes_in_window                     267
+  ADDED branch Trun.nu_n_in_window_demoted                     267
+  ADDED branch Trun.nu_n_in_window_main                        267
+  ADDED branch Trun.nu_n_in_window_nogid                       267
+  ADDED branch Trun.nu_n_main                                  267
+  ADDED branch Trun.nu_per_bundle                              267
+  ADDED branch Trun.nue_xgboost_xml                            267
+  ADDED branch Trun.numu_xgboost_xml                           267
+  ADDED branch Trun.op_config_sha256                           267
+  ADDED branch Trun.runner                                     267
+  ADDED branch Trun.toolkit_git                                267
+  ADDED branch Trun.trackfitting_config                        267
+  ADDED branch Trun.wcp_git                                    267
+  ADDED branch Trun.wct_version                                267
+  ADDED tree T_bundle                                          267
+  ADDED tree T_flash                                           267
+  ALLOWED T_cluster.beam_flash                                 228
+  ALLOWED T_cluster.fc                                         140
+  ALLOWED T_cluster.lm                                         244
+  ALLOWED T_cluster.stm                                        26
+  ALLOWED T_cluster.tgm                                        71
+  APPENDED T_tagger.act_cluster_id                             153
+  APPENDED T_tagger.act_evaluated                              153
+  APPENDED T_tagger.act_fc                                     153
+  APPENDED T_tagger.act_is_demoted                             153
+  APPENDED T_tagger.act_is_selected                            153
+  APPENDED T_tagger.act_length_cm                              153
+  APPENDED T_tagger.act_lm                                     153
+  APPENDED T_tagger.act_stm                                    153
+  APPENDED T_tagger.act_tgm                                    153
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       214565
+  root files compared                                          267
+  root tree compared T_bad_ch                                  267
+  root tree compared T_cluster                                 267
+  root tree compared T_kine                                    161
+  root tree compared T_proj                                    267
+  root tree compared T_proj_data                               159
+  root tree compared T_rec_charge                              161
+  root tree compared T_tagger                                  161
+  root tree compared Trun                                      267
+== failing events: 0
+=== OVERALL: PASS

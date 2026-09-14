@@ -1,0 +1,12 @@
+=== d109base start 2026-09-14_10:46:19 pin=/home/xqian/tmp/d109-libsnap/base env: SBND_NO_DL=1 PR_CFG_TREE=/home/xqian/tmp/d109-cfg/pristine/cfg
+ef0822ec0b392096d47e7d7769f85816  libWireCellClus.so
+46bf51057716382e434f3aead9ae5036  libWireCellRoot.so
+=== d109base nuecc48 10:46:20
+=== d109base nuecc48 rc=0 dirs=48 not_rc0=0
+=== d109base ncpi0 10:48:25
+=== d109base ncpi0 rc=0 dirs=19 not_rc0=0
+=== d109base mcp1k 10:48:48
+=== d109base mcp1k rc=0 dirs=200 not_rc0=0
+ef0822ec0b392096d47e7d7769f85816  libWireCellClus.so
+46bf51057716382e434f3aead9ae5036  libWireCellRoot.so
+=== d109base done 2026-09-14_10:50:49

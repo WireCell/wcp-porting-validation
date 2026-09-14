@@ -289,6 +289,14 @@ fi
 # both derived from ONE mcs_enable TLA).  EMPTY = no TLA = job default false
 # = byte-identical pre-MCS config AND schema.  Env: SBND_MCS=<0|1>.
 [ -n "${SBND_MCS:-}" ] && CATH_TLA+=(--tla-code "mcs_enable=$([ "${SBND_MCS}" = 0 ] && echo false || echo true)")
+# sbnd_xin/docs/109: the self-describing tracking-pr.root knobs
+# (root_nu_record, root_cluster_flags, root_provenance).  Tri-state: unset = no
+# TLA = the job's defaults; 1 = force all three on; 0 = force all three off.
+# Env: SBND_ROOT_OUTPUT=<0|1>.
+case "${SBND_ROOT_OUTPUT:-}" in
+    1) CATH_TLA+=(--tla-code "root_nu_record=true" --tla-code "root_cluster_flags=true" --tla-code "root_provenance=true") ;;
+    0) CATH_TLA+=(--tla-code "root_nu_record=false" --tla-code "root_cluster_flags=false" --tla-code "root_provenance=false") ;;
+esac
 # doc 80 sec 7.5: cathode excised half-band (cm); 0 = excision off (the
 # sign-check arm).  EMPTY = no TLA = the job default 5.
 [ -n "${SBND_MCS_CATHODE_XCUT:-}" ] && CATH_TLA+=(--tla-code "mcs_cathode_xcut=${SBND_MCS_CATHODE_XCUT}")
@@ -1848,6 +1856,40 @@ true
 PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
 [ -r "$PYLIB" ] || { echo "ERROR: libpython not found: $PYLIB" >&2; exit 1; }
 
+# sbnd_xin/docs/109 group 4 -- a self-describing tracking-pr.root.  When the job
+# will write Trun provenance strings (root_provenance on: the job default since
+# the doc-109 production flip, or SBND_ROOT_OUTPUT=1), compile the job ONCE with
+# placeholder per-event TLAs, hash that JSON, and hand the hash plus the git
+# revisions to every event as provenance_extra.  The placeholders make the hash
+# a property of the OPERATING POINT (knobs, pipeline, cfg tree) -- the same for
+# every event and every batch run with the same settings.  A job that writes no
+# provenance (SBND_ROOT_OUTPUT=0, or a pre-doc-109 cfg tree) gets no TLA =>
+# byte-identical.  SBND_ROOT_PROVENANCE_EXTRA=0 skips the hash.
+PROV_TLA=()
+if [ "${SBND_ROOT_PROVENANCE_EXTRA:-1}" != 0 ]; then
+    _opjson="$OUTROOT/.d109-opcfg.json"
+    _optla=(
+        --tla-str  "input=/placeholder/pctree.tar.gz"
+        --tla-code "anode_indices=[0,1]"
+        --tla-str  "output_dir=/placeholder"
+        --tla-code "run=0" --tla-code "subrun=0" --tla-code "event=0"
+        --tla-str  "reality=$REALITY"
+        --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+        "${TFJSON_TLA[@]}"
+        "${CATH_TLA[@]}"
+    )
+    if wcsonnet "${_optla[@]}" -o "$_opjson" "$JSONNET" > "$OUTROOT/.d109-opcfg.log" 2>&1 \
+       && grep -q '"provenance"' "$_opjson"; then
+        _opsha=$(sha256sum "$_opjson" | cut -c1-64)
+        _tkgit=$(git -C "$TK" rev-parse HEAD 2>/dev/null || echo unknown)
+        git -C "$TK" diff --quiet HEAD -- 2>/dev/null || _tkgit="${_tkgit}-dirty"
+        _wcpgit=$(git -C "$SX" rev-parse HEAD 2>/dev/null || echo unknown)
+        git -C "$SX" diff --quiet HEAD -- . 2>/dev/null || _wcpgit="${_wcpgit}-dirty"
+        PROV_TLA=(--tla-code "provenance_extra={op_config_sha256: '$_opsha', toolkit_git: '$_tkgit', wcp_git: '$_wcpgit', runner: 'run_pr_chain_batch.sh', cfg_tree: '${PR_CFG_TREE:-$TK/cfg}'}")
+        echo "doc 109 provenance: op_config_sha256=$_opsha toolkit=$_tkgit wcp=$_wcpgit" >&2
+    fi
+fi
+
 process_event() {
     local EVT_ID=$1
     local QLDIR="$QLROOT/ql_evt${EVT_ID}"
@@ -1915,6 +1957,8 @@ process_event() {
             `# '' => TensorFileSink dump_mode => nothing written.  The sink NODE`
             `# stays in the graph; dropping it would break Pgrapher connectivity.`
             "${PCTREE_TLA[@]}"
+            `# sbnd_xin/docs/109: operating-point hash + git revisions (empty unless provenance is on)`
+            "${PROV_TLA[@]}"
         )
         # doc pr/97 sec.5: compile in a SEPARATE short-lived wcsonnet process
         # so this long job never hosts gojsonnet's Go runtime.  In-process, that
@@ -2071,6 +2115,7 @@ process_group() {
             --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
             "${TFJSON_TLA[@]}"
             "${CATH_TLA[@]}"
+            "${PROV_TLA[@]}"
             --tla-code "multi_event=true"
             --tla-str  "evt_subdir=pr_evt%1%"
             --tla-code "rse_map=$(cat "$GRSE")"

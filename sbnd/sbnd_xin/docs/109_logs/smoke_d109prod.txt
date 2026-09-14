@@ -1,0 +1,17 @@
+checks rc=0
+mcp1k no-row: 48301 48565 49445 
+doc 109 provenance: op_config_sha256=7809d5ec610455dbcb12e3401a79355f67c77a29b259b7ddc166f21eebc5a366 toolkit=c203b4002c27e74da489989dc8fd32d16c87125b wcp=089a884a1495523d87d5044d589111281216c0a0-dirty
+nuecc48 rc=0
+doc 109 provenance: op_config_sha256=7809d5ec610455dbcb12e3401a79355f67c77a29b259b7ddc166f21eebc5a366 toolkit=c203b4002c27e74da489989dc8fd32d16c87125b wcp=089a884a1495523d87d5044d589111281216c0a0-dirty
+mcp1k rc=0
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS
+work-mcp1k-d109prod pr_evt48301 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 6 | T_tagger None | T_bundle {'gid': [np.int32(3)], 'reason': [np.int32(3)], 'nu_index': [np.int32(-1)]}
+work-mcp1k-d109prod pr_evt48565 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 6 | T_tagger None | T_bundle {'gid': [], 'reason': [], 'nu_index': []}
+work-mcp1k-d109prod pr_evt49445 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 6 | T_tagger None | T_bundle {'gid': [np.int32(7)], 'reason': [np.int32(3)], 'nu_index': [np.int32(-1)]}
+work-nuecc48-d109prod pr_evt10550 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 10 | T_tagger {'cluster_id': [np.int32(7)], 'sel_cluster_id': [np.int32(7)], 'vertex_moved_cluster': [np.int32(0)], 'has_vertex': [np.int32(1)], 'flash_group': [np.int32(7)]} | T_bundle {'gid': [np.int32(7), np.int32(1000002)], 'reason': [np.int32(3), np.int32(0)], 'nu_index': [np.int32(-1), np.int32(0)]}
+work-nuecc48-d109prod pr_evt137238 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 10 | T_tagger {'cluster_id': [np.int32(144)], 'sel_cluster_id': [np.int32(7)], 'vertex_moved_cluster': [np.int32(1)], 'has_vertex': [np.int32(1)], 'flash_group': [np.int32(1)]} | T_bundle {'gid': [np.int32(1)], 'reason': [np.int32(0)], 'nu_index': [np.int32(0)]}
+work-nuecc48-d109prod pr_evt269774 toolkit_git c203b4002c27e74da489989dc8fd32d16c87125b dl uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth sha 7809d5ec6104 | trees 10 | T_tagger {'cluster_id': [np.int32(87)], 'sel_cluster_id': [np.int32(13)], 'vertex_moved_cluster': [np.int32(1)], 'has_vertex': [np.int32(1)], 'flash_group': [np.int32(7)]} | T_bundle {'gid': [np.int32(1000000)], 'reason': [np.int32(0)], 'nu_index': [np.int32(0)]}
+
+[exited with code 0]

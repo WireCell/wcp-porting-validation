@@ -1,0 +1,46 @@
+== nuecc48 (d109prod): 3 files
+  T_bundle reason 0 selected main                                3
+  T_bundle reason 3 length floor                                 1
+  T_cluster beam_flash=1                                         143
+  T_cluster fc=1                                                 38
+  T_cluster rows                                                 320
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                1
+  census filled                                                  3
+  cluster gid rows                                               320
+  events                                                         3
+  flash groups of 2                                              34
+  flash_tpc == gid//1e6                                          320
+  flashes                                                        81
+  flashes in window                                              6
+  in-window flash groups per event=1                             3
+  roster role 0                                                  7
+  roster role 1                                                  10
+  roster role 2                                                  124
+  roster role-1 entries also in PR pass                          10
+  rows                                                           3
+  rows has_vertex=1                                              3
+  rows vertex_moved_cluster=1                                    2
+== mcp1k (d109prod): 3 files
+  T_bundle reason 3 length floor                                 2
+  T_cluster beam_flash=1                                         14
+  T_cluster fc=1                                                 2
+  T_cluster rows                                                 134
+  T_cluster stm=1                                                1
+  T_cluster tgm=1                                                1
+  census filled                                                  3
+  cluster gid rows                                               134
+  events                                                         3
+  events with no T_tagger                                        3
+  flash groups of 2                                              34
+  flash_tpc == gid//1e6                                          134
+  flashes                                                        87
+  flashes in window                                              4
+  in-window flash groups per event=1                             3
+  no-row events with in-window flash(es)                         3
+  no-row events with nogid clusters                              0
+  no-row why: bundles rejected: length floor                     2
+  no-row why: no in-window main/demoted cluster                  1
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS

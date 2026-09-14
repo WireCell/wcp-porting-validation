@@ -1,0 +1,92 @@
+== nuecc48 (d109on): 48 files
+  T_bundle reason 0 selected main                                47
+  T_bundle reason 1 selected demoted                             1
+  T_bundle reason 2 all cosmic                                   2
+  T_bundle reason 3 length floor                                 4
+  T_cluster beam_flash=1                                         2021
+  T_cluster fc=1                                                 432
+  T_cluster rows                                                 4392
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                14
+  census filled                                                  48
+  cluster gid rows                                               4389
+  events                                                         48
+  flash groups of 2                                              555
+  flash_tpc == gid//1e6                                          4389
+  flashes                                                        1367
+  flashes in window                                              92
+  in-window flash groups per event=1                             43
+  in-window flash groups per event=2                             5
+  roster role 0                                                  67
+  roster role 1                                                  184
+  roster role 2                                                  1924
+  roster role 3                                                  1
+  rows                                                           48
+  rows has_vertex=1                                              48
+  rows vertex_moved_cluster=1                                    0
+== ncpi0 (d109on): 19 files
+  T_bundle reason 0 selected main                                20
+  T_bundle reason 3 length floor                                 3
+  T_cluster beam_flash=1                                         765
+  T_cluster fc=1                                                 172
+  T_cluster rows                                                 1872
+  T_cluster stm=1                                                0
+  T_cluster tgm=1                                                7
+  census filled                                                  19
+  cluster gid rows                                               1871
+  events                                                         19
+  flash groups of 2                                              223
+  flash_tpc == gid//1e6                                          1871
+  flashes                                                        552
+  flashes in window                                              37
+  in-window flash groups per event=1                             18
+  in-window flash groups per event=2                             1
+  roster role 0                                                  25
+  roster role 1                                                  127
+  roster role 2                                                  736
+  rows                                                           20
+  rows has_vertex=1                                              20
+  rows vertex_moved_cluster=1                                    0
+  two-row events                                                 1
+  two-row events sharing a flash_group                           0
+  two-row events sharing a group, a row without vertex           0
+== mcp1k (d109on): 200 files
+  T_bundle reason 0 selected main                                91
+  T_bundle reason 1 selected demoted                             4
+  T_bundle reason 2 all cosmic                                   40
+  T_bundle reason 3 length floor                                 37
+  T_cluster beam_flash=1                                         1268
+  T_cluster fc=1                                                 228
+  T_cluster rows                                                 11676
+  T_cluster stm=1                                                26
+  T_cluster tgm=1                                                56
+  census filled                                                  200
+  cluster gid rows                                               11663
+  events                                                         200
+  events with no T_tagger                                        106
+  flash groups of 2                                              2355
+  flash_tpc == gid//1e6                                          11663
+  flashes                                                        5781
+  flashes in window                                              292
+  in-window flash groups per event=0                             26
+  in-window flash groups per event=1                             165
+  in-window flash groups per event=2                             9
+  no-row events with in-window flash(es)                         80
+  no-row events with nogid clusters                              0
+  no-row why: bundles rejected: all cosmic                       36
+  no-row why: bundles rejected: length floor                     31
+  no-row why: no in-window main/demoted cluster                  39
+  roster role 0                                                  131
+  roster role 1                                                  228
+  roster role 2                                                  776
+  roster role 3                                                  1
+  rows                                                           95
+  rows has_vertex=0                                              4
+  rows has_vertex=1                                              91
+  rows vertex_moved_cluster=1                                    0
+  two-row events                                                 1
+  two-row events sharing a flash_group                           1
+  two-row events sharing a group, a row without vertex           1
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS

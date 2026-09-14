@@ -1,0 +1,9 @@
+reference : ref/prod-2026-09-08
+cfg tree  : /home/xqian/tmp/d109-cfg/pristine/cfg
+compiling : /home/xqian/tmp/d109-cfg/prodgate-pristine
+checked   : 21 artifacts
+DRIFT     : prod.standalone, sbnd_clus.json, sbnd_ql.json, sbnd_simcheck.json
+
+If this drift is an intended flip, re-run with --refresh and record it in the
+round doc.  If it is not, something changed the production operating point
+without a round behind it -- that is what this gate exists to catch.

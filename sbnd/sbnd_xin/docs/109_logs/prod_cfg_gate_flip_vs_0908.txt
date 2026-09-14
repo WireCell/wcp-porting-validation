@@ -1,0 +1,20 @@
+reference : ref/prod-2026-09-08
+cfg tree  : /home/xqian/toolkit-dev/toolkit/cfg
+compiling : /home/xqian/tmp/d109-cfg/prodgate-flip
+checked   : 21 artifacts
+DRIFT     : prod.standalone, prod_prjob.json, sbnd_clus.json, sbnd_ql.json, sbnd_simcheck.json
+
+SBND PR job, key by key (reference -> current tree):
+  ADDED   [21].data.nu_provenance = True
+  ADDED   [24].data.fix_cluster_flags = True
+  ADDED   [24].data.nu_provenance = True
+  ADDED   [24].data.provenance.bdt_weights_dir = 'uboone/weights'
+  ADDED   [24].data.provenance.dl_weights = ''
+  ADDED   [24].data.provenance.nue_xgboost_xml = 'uboone/weights/XGB_nue_seed2_0923.xml'
+  ADDED   [24].data.provenance.numu_xgboost_xml = 'uboone/weights/numu_scalars_scores_0923.xml'
+  ADDED   [24].data.provenance.trackfitting_config = 'pgrapher/experiment/sbnd/sbnd_track_fitting.json'
+  ADDED   [25].data.nu_provenance = True
+
+If this drift is an intended flip, re-run with --refresh and record it in the
+round doc.  If it is not, something changed the production operating point
+without a round behind it -- that is what this gate exists to catch.

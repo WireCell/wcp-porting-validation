@@ -1,0 +1,12 @@
+TEST CASE:  clus pr48 two-end break: kinked weak-rise junction fires R2 at the bend
+
+../clus/test/doctest_two_end_break.cxx:225: MESSAGE: r2case found=true r1=false r2=true idx_dip=42 idx_turn=37 turn=45 ratio=(3.28725,1.4627) sA=0.0175499 sB=0.333696 flagA=true flagB=false
+
+===============================================================================
+[doctest] test cases:   406 |   406 passed | 0 failed | 1 skipped
+[doctest] assertions: 23949 | 23949 passed | 0 failed |
+[doctest] Status: SUCCESS!
+===============================================================================
+[doctest] test cases:    8 |    8 passed | 0 failed | 0 skipped
+[doctest] assertions: 4063 | 4063 passed | 0 failed |
+[doctest] Status: SUCCESS!

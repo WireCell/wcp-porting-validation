@@ -1,6 +1,8 @@
 # doc 108 — improving the SBND tracking-pr ROOT output: plan, with the owner's decisions folded in
 
-**Status:** plan only. **No code is changed.**
+**Status:** plan only. **No code is changed.** Groups 1, 2 and 4 are implemented in
+doc 109 (`109_root-output-improvements.md`), which also settles this doc's "verify before"
+items.
 - **Revision 1** (2026-09-14): the information audit.
 - **Revision 2** (same day): the owner's decisions (sec 0.1) are folded in. The truth
   part is redone for the **standalone** chain with reco1 input, which is how the owner

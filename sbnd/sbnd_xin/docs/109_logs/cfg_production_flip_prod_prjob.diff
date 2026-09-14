@@ -1,0 +1,16 @@
+609a610
+>       "nu_provenance": true,
+794a796
+>       "fix_cluster_flags": true,
+798a801
+>       "nu_provenance": true,
+799a803,809
+>       "provenance": {
+>         "bdt_weights_dir": "uboone/weights",
+>         "dl_weights": "",
+>         "nue_xgboost_xml": "uboone/weights/XGB_nue_seed2_0923.xml",
+>         "numu_xgboost_xml": "uboone/weights/numu_scalars_scores_0923.xml",
+>         "trackfitting_config": "pgrapher/experiment/sbnd/sbnd_track_fitting.json"
+>       },
+812a823
+>       "nu_provenance": true,
