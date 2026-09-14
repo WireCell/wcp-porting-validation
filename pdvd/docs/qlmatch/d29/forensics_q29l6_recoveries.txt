@@ -1,0 +1,41 @@
+# doc qlmatch/29 -- forensics q29l6 -> p100flip (d29_forensics.py; truth map 'keep'; identity bounds npoints ratio (0.5, 2.0), x end move 10.0 cm)
+evt298581 truth uid 4000127 t=682.0 top: q29l6 uid 4000131 n=56 x[203,232] -> p100flip uid 4000131 n=56 x[203,232]  MIS-PICK
+    q29l6 truth (selected): t=    682.0 ks=0.123 c2n=   4.4 str=0.554 pred/meas= 0.23 fl=[Bk]
+    p100flip truth bundle   : t=    682.0 ks=0.123 c2n=   4.4 str=0.000 pred/meas= 0.23 fl=[Bk]
+    p100flip picked         : t=    664.9 ks=0.127 c2n=   0.1 str=0.000 pred/meas= 0.90 fl=[k]  (winner-str0-rescuepick)
+evt298735 truth uid 4000026 t=3318.5 top: q29l6 uid 4000027 n=742 x[-399,-295] -> p100flip uid 4000027 n=742 x[-399,-295]  MIS-PICK
+    q29l6 truth (selected): t=   3318.5 ks=0.057 c2n=   0.8 str=0.984 pred/meas= 0.48 fl=[Wck]
+    p100flip truth bundle   : t=   3318.5 ks=0.057 c2n=   0.8 str=0.000 pred/meas= 0.48 fl=[Wck]
+    p100flip picked         : t=   3926.0 ks=0.099 c2n=   4.3 str=0.983 pred/meas= 0.69 fl=[Wck]  (winner-plain-lasso)
+evt298735 truth uid 4000126 t=3926.0 top: q29l6 uid 4000001 n=37589 x[-349,-193] -> p100flip uid 4000001 n=37589 x[-349,-193]  MIS-PICK
+    q29l6 truth (selected): t=   3926.0 ks=0.138 c2n=   4.3 str=0.515 pred/meas= 7.01 fl=[Bk]
+    p100flip truth bundle   : t=   3926.0 ks=0.138 c2n=   4.3 str=0.000 pred/meas= 7.01 fl=[Bk]
+    p100flip picked         : t=   3378.0 ks=0.143 c2n=   1.6 str=0.796 pred/meas= 1.81 fl=[k]  (winner-plain-lasso)
+evt298763 truth uid 4000545 t=2622.2 top: q29l6 uid 4000642 n=1998 x[-168,-55] -> p100flip uid 4000642 n=1998 x[-168,-55]  MIS-PICK
+    q29l6 truth (selected): t=   2622.2 ks=0.045 c2n=   0.3 str=0.502 pred/meas= 1.50 fl=[Bck]
+    p100flip truth bundle   : t=   2622.2 ks=0.045 c2n=   0.3 str=0.000 pred/meas= 1.50 fl=[Bck]
+    p100flip picked         : t=   2674.1 ks=0.068 c2n=   0.3 str=0.985 pred/meas= 0.75 fl=[Bck]  (winner-plain-lasso)
+evt298777 truth uid 3 t=3664.3 bottom: q29l6 uid 3 n=528 x[317,399] -> p100flip uid 3 n=528 x[317,399]  MIS-PICK
+    q29l6 truth (selected): t=   3664.3 ks=0.193 c2n=   2.5 str=0.987 pred/meas= 1.00 fl=[Wk]
+    p100flip truth bundle   : t=   3664.3 ks=0.193 c2n=   2.5 str=0.000 pred/meas= 1.00 fl=[Wk]
+    p100flip picked         : t=   4154.4 ks=0.123 c2n=   1.9 str=0.000 pred/meas= 1.13 fl=[Wk]  (winner-str0-rescuepick)
+evt298791 truth uid 4000551 t=-1484.3 top: q29l6 uid 4000399 n=172 x[252,342] -> p100flip uid 4000399 n=172 x[252,342]  MIS-PICK
+    q29l6 truth (selected): t=  -1484.3 ks=0.029 c2n=   2.9 str=0.496 pred/meas= 0.43 fl=[Wck]
+    p100flip truth bundle   : t=  -1484.3 ks=0.029 c2n=   2.9 str=0.000 pred/meas= 0.43 fl=[Wck]
+    p100flip picked         : t=   -931.9 ks=0.070 c2n=   0.7 str=0.813 pred/meas= 0.63 fl=[Wck]  (winner-plain-lasso)
+
+classes: {'mis-pick': 6, 'mis-pick (top)': 5, 'mis-pick (bottom)': 1}
+mis-pick winners: {'winner-str0-rescuepick': 2, 'winner-plain-lasso': 4}
+truth-bundle flags lost (not identity changes): {}
+truth-bundle flags gained (not identity changes): {}
+  median c2n arm: 2.705 (n=6)
+  median c2n base: 2.705 (n=6)
+  median ks arm: 0.090 (n=6)
+  median ks base: 0.090 (n=6)
+  median strength arm: 0.000 (n=6)
+  median strength base: 0.535 (n=6)
+
+new phantoms (objective negatives rejected on q29l6, auto on p100flip): 3
+  evt298567 truth uid 18 -> 18 bottom  t=   3259.8 ks=0.219 c2n=   1.7 str=0.814 pred/meas= 0.69 fl=[BPWxk]
+  evt298679 truth uid 4000145 -> 4000173 top  t=   3990.0 ks=0.152 c2n=   0.5 str=0.000 pred/meas= 1.17 fl=[Bk]
+  evt298735 truth uid 4000026 -> 4000027 top  t=   3926.0 ks=0.099 c2n=   4.3 str=0.983 pred/meas= 0.69 fl=[Wck]

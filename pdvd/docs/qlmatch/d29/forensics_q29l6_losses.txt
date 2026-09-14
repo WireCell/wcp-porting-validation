@@ -1,0 +1,21 @@
+# doc qlmatch/29 -- forensics p100flip -> q29l6 (d29_forensics.py; truth map 'keep'; identity bounds npoints ratio (0.5, 2.0), x end move 10.0 cm)
+evt298721 truth uid 1 t=3202.0 bottom: p100flip uid 1 n=1046 x[170,245] -> q29l6 uid 1 n=1046 x[170,245]  MIS-PICK
+    p100flip truth (selected): t=   3202.0 ks=0.065 c2n=   0.3 str=0.920 pred/meas= 0.83 fl=[ck]
+    q29l6 truth bundle   : t=   3202.0 ks=0.065 c2n=   0.3 str=0.000 pred/meas= 0.83 fl=[ck]
+    q29l6 picked         : t=   3427.2 ks=0.042 c2n=   0.9 str=0.918 pred/meas= 3.13 fl=[B2Pck]  (winner-plain-lasso)
+
+classes: {'mis-pick': 1, 'mis-pick (bottom)': 1}
+mis-pick winners: {'winner-plain-lasso': 1}
+truth-bundle flags lost (not identity changes): {}
+truth-bundle flags gained (not identity changes): {}
+  median c2n arm: 0.330 (n=1)
+  median c2n base: 0.330 (n=1)
+  median ks arm: 0.065 (n=1)
+  median ks base: 0.065 (n=1)
+  median strength arm: 0.000 (n=1)
+  median strength base: 0.920 (n=1)
+
+new phantoms (objective negatives rejected on p100flip, auto on q29l6): 3
+  evt298581 truth uid 47 -> 46 bottom  t=  -1464.7 ks=0.560 c2n=   1.4 str=0.052 pred/meas=11.04 fl=[Wpk]
+  evt298595 truth uid 4000132 -> 4000186 top  t=  -1949.1 ks=0.186 c2n=  12.2 str=0.605 pred/meas= 0.52 fl=[Wk]
+  evt298679 truth uid 4000100 -> 4000173 top  t=   1971.5 ks=0.234 c2n=   1.5 str=0.177 pred/meas=13.38 fl=[CBx1k]

@@ -558,6 +558,13 @@ PY
     if [ -n "${PDVD_QTOL:-}" ]; then
         QL_PEERR_ARG+=(-S "ql_qtol=${PDVD_QTOL}")
     fi
+    # PDVD_CLUS_WIRES: wires file for this clustering job (wct-clustering.jsonnet wires_file), e.g.
+    # protodunevd-wires-larsoft-v6.json.bz2 to cluster July's v6 imaging (doc qlmatch/29).  Unset => arg omitted =>
+    # params.jsonnet's file.  The imaging-provenance guard below compares against the compiled file.
+    local CLUS_WIRES_ARG=()
+    if [ -n "${PDVD_CLUS_WIRES:-}" ]; then
+        CLUS_WIRES_ARG=(-A "wires_file=${PDVD_CLUS_WIRES}")
+    fi
     # ---- xtpc / selection quality gates (scan-tuning docs/qlmatch/19_*.md).
     # PDVD_QL_PIN_MIN_STRENGTH: pinned bundle loses the strength-cutoff exemption
     #   below this LASSO solution (scan: phantom pins strength p50 0.00).
@@ -657,12 +664,16 @@ PY
     # retightened to the phase-2 recalibrated chi2 scale, LASSO lambda 0.2
     # (sparser solutions, best phantom kill).  Export EMPTY (e.g.
     # PDVD_QL_LASSO_LAMBDA=) to recover the pre-tuning literals (35/60, 0.1).
+    # PRODUCTION DEFAULT since 2026-09-13 (doc qlmatch/29 lever scan on the v7
+    # wires + top gain, NOT doc 19): LASSO boundary weight 0.1.  Export EMPTY
+    # (PDVD_QL_LASSO_BWEIGHT=) to recover the qlmatching.jsonnet literal 0.2.
     # Other members unset => operating literals / C++ defaults unchanged.
     : "${PDVD_QL_HC_CLEAN_C2N=12}"
     : "${PDVD_QL_HC_GOOD_C2N=12}"
     : "${PDVD_QL_HC_TB_C2N=12}"
     : "${PDVD_QL_HC_MISS_C2N=30}"
     : "${PDVD_QL_LASSO_LAMBDA=0.2}"
+    : "${PDVD_QL_LASSO_BWEIGHT=0.1}"
     local QL_SWEEP_ARG=()
     [ -n "${PDVD_QL_HC_CLEAN_KS:-}" ]  && QL_SWEEP_ARG+=(-S "ql_hc_clean_ks=${PDVD_QL_HC_CLEAN_KS}")
     [ -n "${PDVD_QL_HC_CLEAN_C2N:-}" ] && QL_SWEEP_ARG+=(-S "ql_hc_clean_c2=${PDVD_QL_HC_CLEAN_C2N}")
@@ -869,6 +880,7 @@ PY
         -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}" \
         -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
         "${PCTREE_ARG[@]}" \
+        "${CLUS_WIRES_ARG[@]}" \
         "${QL_CATHEXT1_ARG[@]}" \
         "${QL_ANODEMARGIN_ARG[@]}" \
         "${QL_ROBUSTGAP_ARG[@]}" \

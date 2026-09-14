@@ -1,0 +1,3 @@
+# doc qlmatch/29 F1 -- calib dumps q29flip vs q29stm, byte for byte (cmp), events of pdvd/stm/events.txt
+SUMMARY calib dumps q29flip vs q29stm: identical 120/120, differ 0
+CONTROL calib dumps q29flip vs p100flip (pre-flip production): events differing 120/120 (must be > 0)

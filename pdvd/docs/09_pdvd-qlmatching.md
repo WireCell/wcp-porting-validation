@@ -109,7 +109,9 @@ require_containment (production only), flash_minPE 25, light_model 'library',
 see the §4a 2026-07-13 note; 2026-09-13: a knob, driver `ql_qtol` / runner
 `PDVD_QTOL`, default 0.094 — after the top-gain flip the crossers read 0.0783,
 measured but NOT adopted, hand-scan agreement fails its pre-registered rule,
-`nf_sp_img_clus/100_pdvd-gain-flip-refits.md` §8) + pred-based pe_err (floor/frac/lowpe_frac/knee =
+`nf_sp_img_clus/100_pdvd-gain-flip-refits.md` §8; the history of the matching since July, its attribution to the
+code, the v7 wires, today's SP and the gain, and the LASSO `lasso_boundary_weight` 0.2 → 0.1 production flip
+(runner `PDVD_QL_LASSO_BWEIGHT`, 2026-09-13) are in `qlmatch/29_pdvd-ql-matching-history-since-july.md`) + pred-based pe_err (floor/frac/lowpe_frac/knee =
 2.0/0.60/2.0/10.0) — both calibrated on the beam-flash gold pairs (§4a).
 
 OFF (deliberate): reject_overpred (gold scatter still ~x3 and per-channel PE

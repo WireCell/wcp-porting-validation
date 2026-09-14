@@ -1,6 +1,9 @@
 # 28 — Offset-0 LASSO-economy retune campaign (run 039252)
 
-Status: **COMPLETE** (2026-07-22). Verdict: the doc-19 economy transfers; no dial closes the residual class (phase 4). Owner-commissioned follow-up to doc 27
+Status: **COMPLETE** (2026-07-22). Verdict: the doc-19 economy transfers; no dial closes the residual class (phase 4).
+History since (2026-09-13): the hand-scan agreement of the production chain after the v7 wires, today's SP and the top gain,
+its attribution and a LASSO / ladder lever re-scan on today's clustering are in `29_pdvd-ql-matching-history-since-july.md`;
+rl5's `lasso_boundary_weight` 0.1, net-negative here at offset 0, passes at production's pulled frame and is production since then. Owner-commissioned follow-up to doc 27
 (decision point 3): re-derive the doc-19 LASSO/ladder economy at the physical
 (offset-0) frame, on top of the doc-27 rc14 op point, to close the residual
 ~24 net scan-agreed losses that the flag-window recalibration could not reach.

@@ -1,0 +1,10 @@
+# doc qlmatch/29 -- lever evaluation (d29_lever_eval.py) against p100flip; rule: d29/prereg.md sec 3
+control q29base calib dumps byte-identical to p100flip: 18/18
+base p100flip: full 678/97/163  even 319/50/101  odd 359/47/62  common 678/97/163   (common truth 1494 entries)
+
+q29c1     PASS merit +1 | full 679/98/162 (+1/+1/-1) ok | even 321/52/99 (+2/+2/-2) ok | odd 358/46/63 (-1/-1/+1) ok | common 679/98/162 (+1/+1/-1) ok
+          config leaves differing from q29base: 2 [('[404]/data/lasso_boundary_weight', 0.2, 0.1), ('[404]/data/lasso_lambda', 0.2, 0.3)]
+q29l6     PASS merit +10 | full 683/97/158 (+5/+0/-5) ok | even 323/49/97 (+4/-1/-4) ok | odd 360/48/61 (+1/+1/-1) ok | common 683/97/158 (+5/+0/-5) ok
+          config leaves differing from q29base: 1 [('[404]/data/lasso_boundary_weight', 0.2, 0.1)]
+
+passing arms by merit: [(10, 'q29l6'), (1, 'q29c1')]

@@ -1,0 +1,74 @@
+# doc qlmatch/29 -- Q/L hand-scan attribution (d29_attribution.py); truth uid map through 'keep', no time map/shift
+
+== 1. reproduction of the recorded scores
+  q29v6      recomputed 742/108/98 (unknown 232, positives 841)  recorded 742/108/98  REPRODUCED
+  p99wflip   recomputed 701/100/140 (unknown 306, positives 841)  recorded 701/100/140  REPRODUCED
+  p98voffq   recomputed 681/90/157 (unknown 344, positives 838)  recorded 681/90/157  REPRODUCED
+  p100flip   recomputed 678/97/163 (unknown 375, positives 841)  recorded 678/97/163  REPRODUCED
+
+== 2. full truth (1529 entries) and common truth (1469 entries mapping in every tag)
+  q29v6      full 742/108/98 (unknown 232, positives 841)   common 735/101/96 (unknown 249, positives 831)
+  p99wflip   full 701/100/140 (unknown 306, positives 841)   common 699/97/134 (unknown 313, positives 833)
+  p98voffq   full 681/90/157 (unknown 344, positives 838)   common 676/89/156 (unknown 354, positives 832)
+  p100flip   full 678/97/163 (unknown 375, positives 841)   common 674/95/160 (unknown 382, positives 834)
+
+== 3. per step, by original truth key (objective tiers)
+  -- q29v6 -> p99wflip
+     negative not-long->phantom   2  by volume {'bottom': 1, 'top': 1}  by region {'bottom y+ zlo': 1, 'top y+ zlo': 1}
+     negative not-long->rejected   3  by volume {'bottom': 2, 'top': 1}  by region {'bottom y+ zlo': 1, 'bottom y- zhi': 1, 'top y- zlo': 1}
+     negative not-long->unmapped   3  by volume {'top': 2, 'bottom': 1}  by region {'bottom y- zhi': 1, 'top y- zhi': 1, 'top y- zlo': 1}
+     negative phantom->unmapped   3  by volume {'top': 2, 'bottom': 1}  by region {'bottom y+ zlo': 1, 'top y+ zlo': 1, 'top y- zhi': 1}
+     negative rejected->not-long   7  by volume {'top': 3, 'bottom': 4}  by region {'bottom y+ zhi': 2, 'bottom y+ zlo': 1, 'bottom y- zhi': 1, 'top y+ zlo': 1, 'top y- zhi': 2}
+     negative rejected->unmapped   2  by volume {'top': 2}  by region {'top y+ zhi': 2}
+     negative unmapped->rejected   2  by volume {'bottom': 1, 'top': 1}  by region {'bottom y+ zlo': 1, 'top y+ zlo': 1}
+     new phantom              9  by volume {'top': 8, 'bottom': 1}  by region {'bottom y- zlo': 1, 'top y+ zhi': 3, 'top y+ zlo': 1, 'top y- zhi': 1, 'top y- zlo': 3}
+     newly missed            50  by volume {'bottom': 13, 'top': 37}  by region {'bottom y+ zhi': 5, 'bottom y- zhi': 6, 'bottom y- zlo': 2, 'top y+ zhi': 4, 'top y+ zlo': 5, 'top y- zhi': 14, 'top y- zlo': 14}
+     phantom resolved        15  by volume {'top': 11, 'bottom': 4}  by region {'bottom y+ zhi': 1, 'bottom y- zhi': 1, 'bottom y- zlo': 2, 'top y+ zhi': 3, 'top y+ zlo': 6, 'top y- zhi': 2}
+     positive covered->short   1  by volume {'top': 1}  by region {'top y+ zlo': 1}
+     positive covered->unmapped   3  by volume {'top': 3}  by region {'top y+ zhi': 1, 'top y- zhi': 1, 'top y- zlo': 1}
+     positive short->covered   2  by volume {'top': 2}  by region {'top y- zhi': 1, 'top y- zlo': 1}
+     positive short->missed   1  by volume {'bottom': 1}  by region {'bottom y+ zlo': 1}
+     positive unmapped->missed   1  by volume {'top': 1}  by region {'top y- zhi': 1}
+     recovered               10  by volume {'top': 8, 'bottom': 2}  by region {'bottom y- zlo': 2, 'top y+ zhi': 1, 'top y+ zlo': 1, 'top y- zhi': 1, 'top y- zlo': 5}
+     newly missed list: [(298567, 21, -1819.6, 'bottom y- zhi'), (298581, 37, 769.1, 'bottom y- zlo'), (298581, 4000051, 3651.7, 'top y- zhi'), (298581, 4000054, 2938.3, 'top y- zlo'), (298581, 4000352, 1905.2, 'top y+ zhi'), (298595, 2, 921.9, 'bottom y- zhi'), (298595, 4000009, 2778.5, 'top y- zlo'), (298595, 4000214, 1927.8, 'top y+ zlo'), (298595, 4000236, 1927.8, 'top y+ zlo'), (298609, 162, -300.1, 'bottom y+ zhi'), (298623, 87, 3655.9, 'bottom y+ zhi'), (298623, 92, 1598.8, 'bottom y- zhi'), (298623, 4000215, 1598.8, 'top y- zhi'), (298637, 15, 3340.9, 'bottom y- zhi'), (298651, 4000060, -265.4, 'top y- zlo'), (298651, 4000067, -784.4, 'top y- zlo'), (298651, 4000212, 2577.8, 'top y- zhi'), (298651, 4000214, 773.3, 'top y- zhi'), (298665, 4000018, 7.4, 'top y- zlo'), (298665, 4000184, 2933.2, 'top y- zhi'), (298679, 3999999, 3581.0, 'top y- zhi'), (298679, 4000026, 1558.9, 'top y- zlo'), (298693, 4000073, 3131.9, 'top y- zhi'), (298693, 4000152, 1587.9, 'top y- zhi'), (298693, 4000287, 1672.2, 'top y+ zhi'), (298707, 29, 2728.4, 'bottom y- zlo'), (298707, 86, -44.7, 'bottom y- zhi'), (298707, 204, -681.0, 'bottom y+ zhi'), (298707, 4000084, 4017.4, 'top y- zhi'), (298735, 63, 3378.0, 'bottom y+ zhi'), (298735, 4000238, 3068.7, 'top y+ zlo'), (298749, 4000130, 3956.3, 'top y- zhi'), (298763, 4000063, 3376.7, 'top y- zlo'), (298763, 4000245, 669.5, 'top y- zhi'), (298777, 89, 2634.6, 'bottom y- zhi'), (298777, 183, 2046.5, 'bottom y+ zhi'), (298777, 4000076, -130.3, 'top y- zlo'), (298777, 4000139, 1583.6, 'top y- zhi'), (298777, 4000243, 2011.2, 'top y+ zhi'), (298791, 4000020, 25.7, 'top y+ zhi'), (298791, 4000021, 61.9, 'top y+ zlo'), (298791, 4000038, -1432.7, 'top y- zlo'), (298791, 4000044, 61.9, 'top y+ zlo'), (298791, 4000132, 3537.2, 'top y- zlo'), (298805, 3999999, 3190.5, 'top y- zlo'), (298805, 4000005, 806.7, 'top y- zlo'), (298805, 4000006, 710.2, 'top y- zlo'), (298805, 4000206, 2042.8, 'top y- zhi'), (298805, 4000213, -409.1, 'top y- zhi'), (298805, 4000239, 1266.8, 'top y- zlo')]
+     recovered list: [(298581, 4000032, 205.8, 'top y- zlo'), (298595, 4000013, -8.1, 'top y- zlo'), (298637, 39, -1840.3, 'bottom y- zlo'), (298637, 119, 329.5, 'bottom y- zlo'), (298637, 4000040, 2512.5, 'top y+ zlo'), (298651, 4000519, 2700.8, 'top y+ zhi'), (298693, 4000038, 80.0, 'top y- zlo'), (298735, 4000030, -1152.9, 'top y- zlo'), (298735, 4000045, 2420.5, 'top y- zhi'), (298763, 4000006, 1312.7, 'top y- zlo')]
+  -- p99wflip -> p98voffq
+     negative not-long->rejected   7  by volume {'top': 4, 'bottom': 3}  by region {'bottom y+ zhi': 1, 'bottom y+ zlo': 1, 'bottom y- zhi': 1, 'top y+ zhi': 2, 'top y- zhi': 1, 'top y- zlo': 1}
+     negative not-long->unmapped   9  by volume {'bottom': 4, 'top': 5}  by region {'bottom y+ zhi': 3, 'bottom y- zhi': 1, 'top y+ zhi': 2, 'top y+ zlo': 2, 'top y- zlo': 1}
+     negative phantom->not-long   3  by volume {'top': 3}  by region {'top y+ zlo': 1, 'top y- zlo': 2}
+     negative phantom->unmapped   3  by volume {'bottom': 1, 'top': 2}  by region {'bottom y+ zlo': 1, 'top y+ zlo': 2}
+     negative rejected->not-long   6  by volume {'bottom': 3, 'top': 3}  by region {'bottom y+ zlo': 3, 'top y+ zlo': 2, 'top y- zlo': 1}
+     negative rejected->unmapped  13  by volume {'top': 8, 'bottom': 5}  by region {'bottom y+ zlo': 3, 'bottom y- zhi': 2, 'top y+ zhi': 2, 'top y+ zlo': 3, 'top y- zhi': 1, 'top y- zlo': 2}
+     negative unmapped->rejected   4  by volume {'top': 4}  by region {'top y+ zhi': 2, 'top y+ zlo': 1, 'top y- zlo': 1}
+     new phantom              6  by volume {'bottom': 2, 'top': 4}  by region {'bottom y- zhi': 2, 'top y+ zhi': 1, 'top y+ zlo': 2, 'top y- zlo': 1}
+     newly missed            35  by volume {'top': 24, 'bottom': 11}  by region {'bottom y+ zhi': 2, 'bottom y+ zlo': 5, 'bottom y- zhi': 2, 'bottom y- zlo': 2, 'top y+ zhi': 3, 'top y+ zlo': 8, 'top y- zhi': 3, 'top y- zlo': 10}
+     phantom resolved        11  by volume {'bottom': 4, 'top': 7}  by region {'bottom y+ zhi': 1, 'bottom y+ zlo': 1, 'bottom y- zhi': 1, 'bottom y- zlo': 1, 'top y+ zhi': 1, 'top y+ zlo': 2, 'top y- zhi': 2, 'top y- zlo': 2}
+     positive covered->unmapped   1  by volume {'top': 1}  by region {'top y- zhi': 1}
+     positive missed->short   1  by volume {'top': 1}  by region {'top y+ zlo': 1}
+     positive missed->unmapped   4  by volume {'top': 4}  by region {'top y+ zlo': 2, 'top y- zhi': 1, 'top y- zlo': 1}
+     positive short->unmapped   1  by volume {'bottom': 1}  by region {'bottom y- zhi': 1}
+     positive unmapped->covered   3  by volume {'top': 3}  by region {'top y+ zhi': 1, 'top y- zhi': 1, 'top y- zlo': 1}
+     recovered               13  by volume {'bottom': 5, 'top': 8}  by region {'bottom y+ zhi': 3, 'bottom y+ zlo': 1, 'bottom y- zhi': 1, 'top y+ zlo': 1, 'top y- zhi': 5, 'top y- zlo': 2}
+     newly missed list: [(298567, 4000188, 3112.4, 'top y+ zhi'), (298581, 4000041, -1464.7, 'top y- zlo'), (298595, 4000013, -8.1, 'top y- zlo'), (298623, 4000268, -278.8, 'top y+ zhi'), (298623, 4000460, 2359.8, 'top y+ zhi'), (298637, 53, 867.3, 'bottom y- zhi'), (298637, 4000040, 2512.5, 'top y+ zlo'), (298637, 4000116, 3195.4, 'top y- zhi'), (298637, 4000125, 867.3, 'top y- zhi'), (298651, 63, 3292.4, 'bottom y+ zlo'), (298651, 4000106, 829.6, 'top y- zlo'), (298651, 4000119, 3568.2, 'top y- zlo'), (298651, 4000165, 110.0, 'top y- zhi'), (298665, 4000307, -494.7, 'top y+ zlo'), (298679, 4000037, 327.8, 'top y- zlo'), (298693, 57, -1671.1, 'bottom y- zhi'), (298693, 101, 2283.6, 'bottom y+ zlo'), (298721, 87, 925.3, 'bottom y+ zhi'), (298735, 112, 231.3, 'bottom y+ zlo'), (298735, 4000175, 231.3, 'top y+ zlo'), (298735, 4000202, 3161.0, 'top y+ zlo'), (298763, 55, -725.2, 'bottom y+ zlo'), (298763, 67, 1303.8, 'bottom y+ zlo'), (298763, 3999999, 1837.0, 'top y+ zlo'), (298763, 4000002, 1868.4, 'top y- zlo'), (298763, 4000006, 1312.7, 'top y- zlo'), (298763, 4000163, 2778.7, 'top y- zlo'), (298763, 4000243, -725.2, 'top y+ zlo'), (298777, 3, 3664.3, 'bottom y- zlo'), (298777, 22, -2095.8, 'bottom y- zlo'), (298777, 4000033, 1700.2, 'top y- zlo'), (298777, 4000103, -1799.0, 'top y- zlo'), (298791, 4000339, 343.8, 'top y+ zlo'), (298805, 159, 46.9, 'bottom y+ zhi'), (298805, 4000268, 3439.8, 'top y+ zlo')]
+     recovered list: [(298567, 18, 3222.1, 'bottom y- zhi'), (298581, 4000051, 3651.7, 'top y- zhi'), (298623, 87, 3655.9, 'bottom y+ zhi'), (298623, 4000006, 2403.7, 'top y- zhi'), (298637, 4000291, 457.8, 'top y+ zlo'), (298693, 4000073, 3131.9, 'top y- zhi'), (298763, 63, 1515.9, 'bottom y+ zlo'), (298763, 4000245, 669.5, 'top y- zhi'), (298777, 183, 2046.5, 'bottom y+ zhi'), (298791, 189, 1820.1, 'bottom y+ zhi'), (298805, 3999999, 3190.5, 'top y- zlo'), (298805, 4000005, 806.7, 'top y- zlo'), (298805, 4000214, -983.2, 'top y- zhi')]
+  -- p98voffq -> p100flip
+     negative not-long->phantom   4  by volume {'top': 4}  by region {'top y+ zlo': 2, 'top y- zlo': 2}
+     negative not-long->rejected   8  by volume {'top': 8}  by region {'top y+ zhi': 1, 'top y+ zlo': 2, 'top y- zhi': 2, 'top y- zlo': 3}
+     negative not-long->unmapped   1  by volume {'top': 1}  by region {'top y+ zhi': 1}
+     negative phantom->unmapped   1  by volume {'top': 1}  by region {'top y+ zlo': 1}
+     negative rejected->not-long   3  by volume {'top': 3}  by region {'top y- zhi': 2, 'top y- zlo': 1}
+     negative unmapped->not-long   1  by volume {'top': 1}  by region {'top y+ zhi': 1}
+     negative unmapped->phantom   2  by volume {'top': 2}  by region {'top y+ zlo': 1, 'top y- zhi': 1}
+     negative unmapped->rejected   4  by volume {'top': 4}  by region {'top y+ zlo': 3, 'top y- zhi': 1}
+     new phantom              9  by volume {'top': 6, 'bottom': 3}  by region {'bottom y+ zhi': 2, 'bottom y- zlo': 1, 'top y+ zhi': 4, 'top y+ zlo': 1, 'top y- zhi': 1}
+     newly missed            20  by volume {'top': 17, 'bottom': 3}  by region {'bottom y+ zhi': 1, 'bottom y- zhi': 2, 'top y+ zhi': 2, 'top y+ zlo': 3, 'top y- zhi': 4, 'top y- zlo': 8}
+     phantom resolved         7  by volume {'top': 5, 'bottom': 2}  by region {'bottom y+ zhi': 1, 'bottom y+ zlo': 1, 'top y+ zhi': 3, 'top y+ zlo': 1, 'top y- zlo': 1}
+     positive covered->unmapped   1  by volume {'top': 1}  by region {'top y+ zhi': 1}
+     positive missed->unmapped   1  by volume {'top': 1}  by region {'top y+ zlo': 1}
+     positive short->covered   1  by volume {'top': 1}  by region {'top y- zlo': 1}
+     positive short->missed   1  by volume {'top': 1}  by region {'top y+ zlo': 1}
+     positive unmapped->covered   1  by volume {'top': 1}  by region {'top y- zhi': 1}
+     positive unmapped->missed   2  by volume {'top': 2}  by region {'top y+ zlo': 2}
+     recovered               16  by volume {'top': 13, 'bottom': 3}  by region {'bottom y+ zhi': 2, 'bottom y- zhi': 1, 'top y+ zhi': 1, 'top y+ zlo': 2, 'top y- zhi': 4, 'top y- zlo': 6}
+     newly missed list: [(298581, 4000051, 3651.7, 'top y- zhi'), (298595, 4000011, 3546.8, 'top y+ zlo'), (298595, 4000063, 1200.9, 'top y- zlo'), (298623, 4000006, 2403.7, 'top y- zhi'), (298623, 4000082, 2284.6, 'top y- zlo'), (298637, 59, 1373.5, 'bottom y- zhi'), (298637, 4000002, 399.1, 'top y- zlo'), (298637, 4000291, 457.8, 'top y+ zlo'), (298651, 4000224, 1962.2, 'top y- zhi'), (298679, 4000258, 4678.5, 'top y+ zlo'), (298707, 4000060, 1249.2, 'top y- zlo'), (298735, 4000026, 3318.5, 'top y- zlo'), (298735, 4000045, 2420.5, 'top y- zhi'), (298735, 4000331, 2337.7, 'top y+ zhi'), (298763, 4000141, -1904.5, 'top y- zlo'), (298763, 4000545, 2622.2, 'top y+ zhi'), (298791, 104, -623.5, 'bottom y- zhi'), (298791, 301, -79.9, 'bottom y+ zhi'), (298791, 4000017, 696.6, 'top y- zlo'), (298791, 4000122, 2264.2, 'top y- zlo')]
+     recovered list: [(298567, 4000079, 3472.2, 'top y- zhi'), (298567, 4000188, 3112.4, 'top y+ zhi'), (298581, 4000041, -1464.7, 'top y- zlo'), (298595, 4000013, -8.1, 'top y- zlo'), (298637, 53, 867.3, 'bottom y- zhi'), (298637, 4000116, 3195.4, 'top y- zhi'), (298637, 4000125, 867.3, 'top y- zhi'), (298651, 4000106, 829.6, 'top y- zlo'), (298651, 4000165, 110.0, 'top y- zhi'), (298679, 120, -405.9, 'bottom y+ zhi'), (298679, 4000026, 1558.9, 'top y- zlo'), (298721, 87, 925.3, 'bottom y+ zhi'), (298763, 4000163, 2778.7, 'top y- zlo'), (298777, 4000033, 1700.2, 'top y- zlo'), (298791, 4000339, 343.8, 'top y+ zlo'), (298805, 4000268, 3439.8, 'top y+ zlo')]

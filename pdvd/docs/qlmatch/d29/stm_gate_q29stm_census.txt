@@ -1,0 +1,8 @@
+# doc pdvd/99 sec 4.4 -- STM population per arm, split by frame length (d99rw_census.py)
+arm        runs             events guard firings candidates is_stm  top bottom michel  readout_window_ticks
+p100flip   039349 (6400)        84           305        334    153  110     43     86  {'6400': 84}
+p100flip   039252+3 (10000)     36           135        206    106   70     36     74  {'10000': 36}
+p100flip   all                 120           440        540    259  180     79    160  {'10000': 36, '6400': 84}
+q29stm     039349 (6400)        84           304        334    154  111     43     86  {'6400': 84}
+q29stm     039252+3 (10000)     36           134        208    107   71     36     74  {'10000': 36}
+q29stm     all                 120           438        542    261  182     79    160  {'10000': 36, '6400': 84}

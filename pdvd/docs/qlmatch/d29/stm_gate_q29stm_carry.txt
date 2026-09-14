@@ -1,0 +1,4 @@
+record /home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json: 635 items; base p99rwon -> q29stm
+carry: {'geometry ok': 635}
+collisions (two keys -> one cluster, dropped): 0 []
+carried 635; re-keyed 3: [('039349_39/46', '039349_39/48'), ('039349_39/56', '039349_39/58'), ('039349_46/65', '039349_46/63')]

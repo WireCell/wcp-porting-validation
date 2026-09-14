@@ -4,8 +4,9 @@
 - On production (`p100flip`) the crosser anchors read 0.833 → QtoL 0.0783. The 0.0783 arm `p101q` closes (1.000; cathode
   0.987) and the STM chain is unharmed on the owner-corrected record (is_stm purity 0.963 → 0.970, Michel 0.924 → 0.929).
 - The old hand scan (run 039252, 18 events) fails the pre-registered doc-23 rule: agree 678 → 672, missed 163 → 169,
-  phantom 97 → 95 (16 pairs move, 11 lost / 5 recovered, sign test p = 0.21). QtoL does not undo the gain flip's own
-  matching cost (`p99wflip` 701 / 100 / 140 → `p100flip` 678 / 97 / 163).
+  phantom 97 → 95 (16 pairs move, 11 lost / 5 recovered, sign test p = 0.21). QtoL does not undo the matching cost of
+  `p99wflip` 701 / 100 / 140 → `p100flip` 678 / 97 / 163, which doc qlmatch/29 §4 splits into the SP rerun on the v7
+  wires (−20) and the gain (−3).
 - Built: the QtoL knob (toolkit `d3b398fc`, driver `ql_qtol`, runner `PDVD_QTOL`), default 0.094, compiled config
   byte-identical. The owner decides whether to adopt against the scan result (§8.7).
 
@@ -510,9 +511,10 @@ a global amplitude scale moves flash picks, t0s and therefore the post-matching 
 - **The 6-pair move is the matcher, not the join.** `p100flip` and `p101q` share the imaging, the unmapped truth (35 and
   35), the tier and long-track filters, and nearly the same unknown count (375 vs 369), so the caveat below does not
   apply to it.
-- **The gain flip's own matching cost is not a QtoL effect.** `p99wflip` → `p100flip` is −23 agree / +23 missed; rescaling
-  QtoL to the gain-ON charge moves it 6 further the same way. Part of that −23 may be the scorer's geometric map rather than
-  the matcher (unmapped truth 15 → 35 with the new imaging); not separated here.
+- **The matching cost of `p99wflip` → `p100flip` is not a QtoL effect.** It is −23 agree / +23 missed; rescaling QtoL to
+  the gain-ON charge moves it 6 further the same way. **Correction (doc qlmatch/29 §4):** that −23 is two steps, not the
+  gain alone — the SP rerun with today's code on the v7 wires (`p98voffq`, gain off) 681 / 90 / 157 costs −20, the top gain
+  −3; and the geometric map is not the cause (common-truth scores move by at most 4).
 
 ### 8.6 Q3 the STM chain — PASS
 

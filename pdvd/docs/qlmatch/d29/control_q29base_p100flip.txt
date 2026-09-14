@@ -1,0 +1,20 @@
+# doc qlmatch/29 -- control: q29base (d29_arms.sh, production config, clustering only, 18 events) vs p100flip calib dumps (cmp)
+039252_0 identical
+039252_1 identical
+039252_2 identical
+039252_3 identical
+039252_4 identical
+039252_5 identical
+039252_6 identical
+039252_7 identical
+039252_8 identical
+039252_9 identical
+039252_10 identical
+039252_11 identical
+039252_12 identical
+039252_13 identical
+039252_14 identical
+039252_15 identical
+039252_16 identical
+039252_17 identical
+SUMMARY identical 18/18

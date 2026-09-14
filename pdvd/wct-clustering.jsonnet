@@ -23,6 +23,10 @@ function(
     // Stepped-sampler fallback: blobs the stepped grid leaves point-less get
     // one point at the blob center.  Default off -> bit-identical output.
     stepped_center_fallback = false,
+    // Wires file for this job's anodes (doc qlmatch/29: cluster July's v6 imaging with v6 geometry).  '' => the
+    // params.jsonnet file (v7-uvwfit) => compiled config byte-identical.  Same idiom as wct-nf-sp-dnnroi.jsonnet.
+    // run_clus_evt.sh: PDVD_CLUS_WIRES.
+    wires_file = '',
     // doc pdvd/28 round 2: the SBND Q/L-tail fast flavors, off by default.
     // ql_po_fast => ProtectOverclustering busy_num_threshold=200 (per-apa
     // stage); ql_dg_fast => Deghost on the 'ctpc_fast' graph flavor (per-apa
@@ -332,7 +336,9 @@ function(
     pctree_outname = '',
 )
 
-local anodes = [tools_all.anodes[i] for i in anode_indices];
+local params_w = if wires_file == '' then params else params { files+: { wires: wires_file } };
+local tools = if wires_file == '' then tools_all else tools_maker(params_w);
+local anodes = [tools.anodes[i] for i in anode_indices];
 
 local cluster_source(fname) = g.pnode({
     type: "ClusterFileSource",
@@ -419,7 +425,7 @@ local clus_all_tpc = if do_qlmatch
 // emits one merged tree (-> premerged clus_all_tpc).  PDVD imaging face is 0 for
 // both drift sides (the two faces of a CRP share x-bounds).
 local qlm = import 'pgrapher/experiment/protodunevd/qlmatching.jsonnet';
-local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_model,
+local qlm_maker = qlm(params_w, trigger_offset_bot, readout_window_ticks, light_model,
                       ql_require_containment, ql_flash_minpe,
                       trigger_offsets=[trigger_offset_bot, trigger_offset_top],
                       // Single recalibrated velocity => scalar override (the

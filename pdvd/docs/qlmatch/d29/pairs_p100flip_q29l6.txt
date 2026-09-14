@@ -1,0 +1,18 @@
+# doc qlmatch/29 -- Q/L hand-scan attribution (d29_attribution.py); truth uid map through 'keep', no time map/shift
+
+== 1. reproduction of the recorded scores
+  p100flip   recomputed 678/97/163 (unknown 375, positives 841)  recorded 678/97/163  REPRODUCED
+  q29l6      recomputed 683/97/158 (unknown 376, positives 841)  recorded 683/97/158  REPRODUCED
+
+== 2. full truth (1529 entries) and common truth (1494 entries mapping in every tag)
+  p100flip   full 678/97/163 (unknown 375, positives 841)   common 678/97/163 (unknown 375, positives 841)
+  q29l6      full 683/97/158 (unknown 376, positives 841)   common 683/97/158 (unknown 376, positives 841)
+
+== 3. per step, by original truth key (objective tiers)
+  -- p100flip -> q29l6
+     new phantom              3  by volume {'bottom': 1, 'top': 2}  by region {'bottom y- zlo': 1, 'top y+ zlo': 1, 'top y- zhi': 1}
+     newly missed             1  by volume {'bottom': 1}  by region {'bottom y- zlo': 1}
+     phantom resolved         3  by volume {'bottom': 1, 'top': 2}  by region {'bottom y- zhi': 1, 'top y+ zlo': 1, 'top y- zlo': 1}
+     recovered                6  by volume {'top': 5, 'bottom': 1}  by region {'bottom y- zlo': 1, 'top y+ zhi': 1, 'top y+ zlo': 2, 'top y- zhi': 1, 'top y- zlo': 1}
+     newly missed list: [(298721, 1, 3202.0, 'bottom y- zlo')]
+     recovered list: [(298581, 4000127, 682.0, 'top y- zhi'), (298735, 4000026, 3318.5, 'top y- zlo'), (298735, 4000126, 3926.0, 'top y+ zlo'), (298763, 4000545, 2622.2, 'top y+ zhi'), (298777, 3, 3664.3, 'bottom y- zlo'), (298791, 4000551, -1484.3, 'top y+ zlo')]

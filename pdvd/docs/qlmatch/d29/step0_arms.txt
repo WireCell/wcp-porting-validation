@@ -1,0 +1,10 @@
+# doc qlmatch/29 sec 5 -- wrapped_channel_charge=false against its partner arm (d29_arms.sh; clustering only, 18 events)
+q29v6 vs q29v6nw: calib dumps byte-identical 18/18; pctree members identical 0/18
+q29base vs q29v7nw: calib dumps byte-identical 18/18; pctree members identical 0/18
+compile-only config (idx 0) q29v6 vs q29base: 1 differing leaves, keys ['filename']
+compile-only config (idx 0) q29v6nw vs q29base: 17 differing leaves, keys ['filename', 'wrapped_channel_charge']
+compile-only config (idx 0) q29v7nw vs q29base: 16 differing leaves, keys ['wrapped_channel_charge']
+score q29v6: | **all** | 742 | 108 | **87.3%** | 232 | 98 | 841 | **11.7%** | 0 | 75 | 5 |
+score q29v6nw: | **all** | 742 | 108 | **87.3%** | 232 | 98 | 841 | **11.7%** | 0 | 75 | 5 |
+score q29v7nw: | **all** | 678 | 97 | **87.5%** | 375 | 163 | 841 | **19.4%** | 0 | 48 | 4 |
+score q29v6 without map (tm0k mode): | **all** | 708 | 106 | **87.0%** | 271 | 83 | 791 | **10.5%** | 0 | 72 | 5 |  Positives excluded: short 17, cluster-missing 47.

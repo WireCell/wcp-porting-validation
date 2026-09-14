@@ -1,0 +1,56 @@
+# doc qlmatch/29 -- uid-map audit (d29_uidmap_audit.py); run 039252, 18 events
+== truth entries (objective, long in keep): keep -> p99wflip
+  bottom y+ zhi    {'entries': 139, 'mapped': 139, 'dy>100cm': 0, 'bundle at truth flash': 131}  centroid d(y,z) median 1.0 cm, p90 5.4
+  bottom y+ zlo    {'entries': 108, 'mapped': 107, 'dy>100cm': 0, 'bundle at truth flash': 104, 'unmapped': 1}  centroid d(y,z) median 0.1 cm, p90 3.1
+  bottom y- zhi    {'entries': 115, 'mapped': 115, 'dy>100cm': 1, 'bundle at truth flash': 107}  centroid d(y,z) median 1.1 cm, p90 10.2
+  bottom y- zlo    {'entries': 124, 'mapped': 124, 'dy>100cm': 1, 'bundle at truth flash': 119}  centroid d(y,z) median 0.1 cm, p90 2.6
+  top y+ zhi       {'entries': 149, 'mapped': 146, 'dy>100cm': 0, 'bundle at truth flash': 136, 'unmapped': 3}  centroid d(y,z) median 1.0 cm, p90 11.7
+  top y+ zlo       {'entries': 195, 'mapped': 194, 'dy>100cm': 4, 'bundle at truth flash': 177, 'unmapped': 1}  centroid d(y,z) median 0.9 cm, p90 40.1
+  top y- zhi       {'entries': 178, 'mapped': 176, 'dy>100cm': 10, 'bundle at truth flash': 161, 'unmapped': 2}  centroid d(y,z) median 1.3 cm, p90 26.4
+  top y- zlo       {'entries': 200, 'mapped': 199, 'dy>100cm': 1, 'bundle at truth flash': 189, 'unmapped': 1}  centroid d(y,z) median 0.6 cm, p90 21.8
+  ALL {'entries': 1208, 'mapped': 1200, 'dy>100cm': 17, 'bundle at truth flash': 1124, 'unmapped': 8}  centroid d(y,z) median 0.8 cm, p90 12.0
+
+== truth entries (objective, long in keep): keep -> p98voffq
+  bottom y+ zhi    {'entries': 139, 'mapped': 139, 'dy>100cm': 0, 'bundle at truth flash': 127}  centroid d(y,z) median 1.0 cm, p90 6.4
+  bottom y+ zlo    {'entries': 108, 'mapped': 103, 'dy>100cm': 0, 'bundle at truth flash': 97, 'unmapped': 5}  centroid d(y,z) median 0.9 cm, p90 9.2
+  bottom y- zhi    {'entries': 115, 'mapped': 113, 'dy>100cm': 1, 'bundle at truth flash': 104, 'unmapped': 2}  centroid d(y,z) median 1.1 cm, p90 8.9
+  bottom y- zlo    {'entries': 124, 'mapped': 124, 'dy>100cm': 1, 'bundle at truth flash': 117}  centroid d(y,z) median 0.2 cm, p90 2.6
+  top y+ zhi       {'entries': 149, 'mapped': 147, 'dy>100cm': 0, 'bundle at truth flash': 137, 'unmapped': 2}  centroid d(y,z) median 1.6 cm, p90 10.4
+  top y+ zlo       {'entries': 195, 'mapped': 189, 'dy>100cm': 5, 'bundle at truth flash': 171, 'unmapped': 6}  centroid d(y,z) median 2.0 cm, p90 28.8
+  top y- zhi       {'entries': 178, 'mapped': 174, 'dy>100cm': 8, 'bundle at truth flash': 159, 'unmapped': 4}  centroid d(y,z) median 1.3 cm, p90 24.6
+  top y- zlo       {'entries': 200, 'mapped': 197, 'dy>100cm': 4, 'bundle at truth flash': 178, 'unmapped': 3}  centroid d(y,z) median 1.7 cm, p90 40.3
+  ALL {'entries': 1208, 'mapped': 1186, 'dy>100cm': 19, 'bundle at truth flash': 1090, 'unmapped': 22}  centroid d(y,z) median 1.2 cm, p90 17.2
+
+== truth entries (objective, long in keep): keep -> p100flip
+  bottom y+ zhi    {'entries': 139, 'mapped': 139, 'dy>100cm': 0, 'bundle at truth flash': 127}  centroid d(y,z) median 1.0 cm, p90 6.4
+  bottom y+ zlo    {'entries': 108, 'mapped': 103, 'dy>100cm': 0, 'bundle at truth flash': 97, 'unmapped': 5}  centroid d(y,z) median 0.9 cm, p90 9.2
+  bottom y- zhi    {'entries': 115, 'mapped': 113, 'dy>100cm': 1, 'bundle at truth flash': 104, 'unmapped': 2}  centroid d(y,z) median 1.1 cm, p90 8.9
+  bottom y- zlo    {'entries': 124, 'mapped': 124, 'dy>100cm': 1, 'bundle at truth flash': 117}  centroid d(y,z) median 0.2 cm, p90 2.6
+  top y+ zhi       {'entries': 149, 'mapped': 146, 'dy>100cm': 2, 'bundle at truth flash': 132, 'unmapped': 3}  centroid d(y,z) median 1.4 cm, p90 16.8
+  top y+ zlo       {'entries': 195, 'mapped': 192, 'dy>100cm': 8, 'bundle at truth flash': 170, 'unmapped': 3}  centroid d(y,z) median 2.4 cm, p90 48.8
+  top y- zhi       {'entries': 178, 'mapped': 177, 'dy>100cm': 10, 'bundle at truth flash': 157, 'unmapped': 1}  centroid d(y,z) median 1.5 cm, p90 26.3
+  top y- zlo       {'entries': 200, 'mapped': 197, 'dy>100cm': 1, 'bundle at truth flash': 177, 'unmapped': 3}  centroid d(y,z) median 1.8 cm, p90 38.0
+  ALL {'entries': 1208, 'mapped': 1191, 'dy>100cm': 23, 'bundle at truth flash': 1081, 'unmapped': 17}  centroid d(y,z) median 1.2 cm, p90 22.4
+
+== all long clusters of p99wflip: p99wflip -> p98voffq
+  bottom y+ zhi    {'clusters': 130, 'mapped': 128, 'dy>100cm': 0, 'unmapped': 2}  centroid d(y,z) median 0.6 cm, p90 3.4
+  bottom y+ zlo    {'clusters': 116, 'mapped': 113, 'dy>100cm': 0, 'unmapped': 3}  centroid d(y,z) median 0.7 cm, p90 8.8
+  bottom y- zhi    {'clusters': 112, 'mapped': 111, 'dy>100cm': 0, 'unmapped': 1}  centroid d(y,z) median 0.5 cm, p90 2.1
+  bottom y- zlo    {'clusters': 118, 'mapped': 118, 'dy>100cm': 0}  centroid d(y,z) median 0.0 cm, p90 0.5
+  top y+ zhi       {'clusters': 164, 'mapped': 163, 'dy>100cm': 0, 'unmapped': 1}  centroid d(y,z) median 0.9 cm, p90 11.2
+  top y+ zlo       {'clusters': 207, 'mapped': 202, 'dy>100cm': 8, 'unmapped': 5}  centroid d(y,z) median 1.3 cm, p90 41.1
+  top y- zhi       {'clusters': 199, 'mapped': 197, 'dy>100cm': 9, 'unmapped': 2}  centroid d(y,z) median 0.5 cm, p90 25.9
+  top y- zlo       {'clusters': 197, 'mapped': 193, 'dy>100cm': 3, 'unmapped': 4}  centroid d(y,z) median 1.1 cm, p90 32.2
+  ALL {'clusters': 1243, 'mapped': 1225, 'dy>100cm': 20, 'unmapped': 18}  centroid d(y,z) median 0.6 cm, p90 15.2
+
+== all long clusters of p98voffq: p98voffq -> p100flip
+  bottom y+ zhi    {'clusters': 127, 'mapped': 127, 'dy>100cm': 0}  centroid d(y,z) median 0.0 cm, p90 0.0
+  bottom y+ zlo    {'clusters': 113, 'mapped': 113, 'dy>100cm': 0}  centroid d(y,z) median 0.0 cm, p90 0.0
+  bottom y- zhi    {'clusters': 109, 'mapped': 109, 'dy>100cm': 0}  centroid d(y,z) median 0.0 cm, p90 0.0
+  bottom y- zlo    {'clusters': 117, 'mapped': 117, 'dy>100cm': 0}  centroid d(y,z) median 0.0 cm, p90 0.0
+  top y+ zhi       {'clusters': 165, 'mapped': 162, 'dy>100cm': 1, 'unmapped': 3}  centroid d(y,z) median 0.6 cm, p90 10.0
+  top y+ zlo       {'clusters': 218, 'mapped': 217, 'dy>100cm': 16, 'unmapped': 1}  centroid d(y,z) median 1.3 cm, p90 68.3
+  top y- zhi       {'clusters': 204, 'mapped': 199, 'dy>100cm': 8, 'unmapped': 5}  centroid d(y,z) median 0.7 cm, p90 22.8
+  top y- zlo       {'clusters': 192, 'mapped': 191, 'dy>100cm': 6, 'unmapped': 1}  centroid d(y,z) median 0.8 cm, p90 29.9
+  ALL {'clusters': 1245, 'mapped': 1235, 'dy>100cm': 31, 'unmapped': 10}  centroid d(y,z) median 0.2 cm, p90 12.9
+

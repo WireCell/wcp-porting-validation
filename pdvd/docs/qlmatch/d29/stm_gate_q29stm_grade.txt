@@ -1,0 +1,10 @@
+# doc pdvd/100 round 3 -- Q3 grade on the owner-corrected record (prereg_round3.md sec 3)
+  p100flip is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848   (record latest_on_p99rwon_corrected.json: 635 items, no candidate 246)
+      top    is_stm 159/4/27/42 purity 0.975   michel 101/9/19/103 purity 0.918 eff 0.842
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  q29stm   is_stm 231/9/33/95 purity 0.963 +- 0.012 eff 0.875   michel 145/12/25/186 purity 0.924 +- 0.021 eff 0.853   (record corrected_on_q29stm.json: 635 items, no candidate 246)
+      top    is_stm 159/4/26/42 purity 0.975   michel 101/9/18/103 purity 0.918 eff 0.849
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  Michel purity: p100flip 0.924 -> q29stm 0.924, difference +0.000 = +0.00 sigma  PASS
+  is_stm purity: p100flip 0.963 -> q29stm 0.963, difference +0.000 = +0.00 sigma  PASS
+  Q3: PASS

@@ -1,0 +1,17 @@
+# doc qlmatch/29 -- G1 for wct-clustering.jsonnet wires_file / run_clus_evt.sh PDVD_CLUS_WIRES (compile-only, proof tag p101cfg)
+# before = wcp b8eb56a8 driver/runner; after = + wires_file ('' default) / PDVD_CLUS_WIRES
+45536b99e60b3d295a04919451ee59ff  039252_0_before.json
+bc12945fe598c3bd5ab470578f448137  039253_15_before.json
+cfd16922c2b105dbba4fba1a2200bca3  039349_7_before.json
+45536b99e60b3d295a04919451ee59ff  039252_0_after_default.json
+bc12945fe598c3bd5ab470578f448137  039253_15_after_default.json
+cfd16922c2b105dbba4fba1a2200bca3  039349_7_after_default.json
+bbde4516c04675cc093ee8e4abb768fd  039252_0_after_v6.json
+139f0c3595dd717e807de4b417f995ed  039253_15_after_v6.json
+cf34cd2424315f9e4e75c5e3aea670ce  039349_7_after_v6.json
+039252_0 after (default) == before: IDENTICAL
+039252_0 PDVD_CLUS_WIRES=v6 vs default: 1 differing leaf/leaves [('[1]/data/filename', 'protodunevd-wires-larsoft-v7-uvwfit.json.bz2', 'protodunevd-wires-larsoft-v6.json.bz2')]
+039253_15 after (default) == before: IDENTICAL
+039253_15 PDVD_CLUS_WIRES=v6 vs default: 1 differing leaf/leaves [('[1]/data/filename', 'protodunevd-wires-larsoft-v7-uvwfit.json.bz2', 'protodunevd-wires-larsoft-v6.json.bz2')]
+039349_7 after (default) == before: IDENTICAL
+039349_7 PDVD_CLUS_WIRES=v6 vs default: 1 differing leaf/leaves [('[1]/data/filename', 'protodunevd-wires-larsoft-v7-uvwfit.json.bz2', 'protodunevd-wires-larsoft-v6.json.bz2')]

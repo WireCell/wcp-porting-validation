@@ -1,0 +1,120 @@
+# doc qlmatch/29 -- forensics p99wflip -> p98voffq (d29_forensics.py; truth map 'keep'; identity bounds npoints ratio (0.5, 2.0), x end move 10.0 cm)
+evt298567 truth uid 4000188 t=3112.4 top: p99wflip uid 4000170 n=1248 x[-295,-120] -> p98voffq uid 4000158 n=1272 x[-295,-120]  MIS-PICK
+    p99wflip truth (selected): t=   3112.4 ks=0.038 c2n=   2.7 str=0.984 pred/meas= 0.63 fl=[B2ck]
+    p98voffq truth bundle   : t=   3112.4 ks=0.038 c2n=   2.7 str=0.000 pred/meas= 0.62 fl=[B2ck]
+    p98voffq picked         : t=   1946.2 ks=0.680 c2n=  14.1 str=0.232 pred/meas= 0.72 fl=[CBpsk]  (winner-pinned)
+evt298581 truth uid 4000041 t=-1464.7 top: p99wflip uid 4000038 n=231 x[225,274] -> p98voffq uid 4000045 n=5360 x[-367,-284]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=  -1464.7 ks=0.363 c2n=   3.8 str=0.854 pred/meas= 0.67 fl=[pk]
+evt298595 truth uid 4000013 t=-8.1 top: p99wflip uid 4000013 n=228 x[326,340] -> p98voffq uid 4000001 n=23662 x[-400,-291]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=     -8.1 ks=0.047 c2n=  11.3 str=0.962 pred/meas= 0.11 fl=[B2ck]
+evt298623 truth uid 4000268 t=-278.8 top: p99wflip uid 4000405 n=1468 x[43,340] -> p98voffq uid 4000508 n=11623 x[269,302]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   -278.8 ks=0.020 c2n=   0.2 str=0.986 pred/meas= 0.88 fl=[CBck]
+    p98voffq truth bundle   : t=   -278.8 ks=0.242 c2n=   0.6 str=0.000 pred/meas= 0.26 fl=[k]
+evt298623 truth uid 4000460 t=2359.8 top: p99wflip uid 4000506 n=3228 x[-74,-49] -> p98voffq uid 4000508 n=11623 x[269,302]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   2359.8 ks=0.067 c2n=   0.1 str=0.925 pred/meas= 0.89 fl=[ck]
+evt298637 truth uid 4000125 t=867.3 top: p99wflip uid 4000055 n=7001 x[-169,72] -> p98voffq uid 4000030 n=10358 x[-205,1]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=    867.3 ks=0.131 c2n=   9.4 str=0.782 pred/meas= 1.92 fl=[2xp1k]
+evt298637 truth uid 53 t=867.3 bottom: p99wflip uid 50 n=934 x[18,125] -> p98voffq uid 54 n=904 x[18,125]  MIS-PICK
+    p99wflip truth (selected): t=    867.3 ks=0.377 c2n=  20.9 str=0.963 pred/meas= 0.51 fl=[CBpk]
+    p98voffq truth bundle   : t=    867.3 ks=0.377 c2n=  21.0 str=0.000 pred/meas= 0.51 fl=[CBk]
+    p98voffq picked         : t=   1846.8 ks=0.081 c2n=   7.7 str=0.917 pred/meas= 1.30 fl=[ck]  (winner-plain-lasso)
+evt298637 truth uid 4000040 t=2512.5 top: p99wflip uid 4000039 n=11445 x[-353,-198] -> p98voffq uid 4000001 n=14412 x[-102,72]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   2512.5 ks=0.270 c2n=   0.7 str=0.826 pred/meas= 1.43 fl=[k]
+evt298637 truth uid 4000116 t=3195.4 top: p99wflip uid 4000109 n=2461 x[-402,-132] -> p98voffq uid 4000105 n=2406 x[-402,-132]  MIS-PICK
+    p99wflip truth (selected): t=   3195.4 ks=0.067 c2n=   8.9 str=0.976 pred/meas= 0.53 fl=[BWcxk]
+    p98voffq truth bundle   : t=   3195.4 ks=0.067 c2n=   9.1 str=0.000 pred/meas= 0.52 fl=[BWcxk]
+    p98voffq picked         : t=   3108.3 ks=0.177 c2n=   9.3 str=0.958 pred/meas= 0.45 fl=[Wxk]  (winner-plain-lasso)
+evt298651 truth uid 4000165 t=110.0 top: p99wflip uid 4000182 n=763 x[-12,125] -> p98voffq uid 4000159 n=774 x[-12,125]  MIS-PICK
+    p99wflip truth (selected): t=    110.0 ks=0.098 c2n=   2.8 str=0.919 pred/meas= 1.04 fl=[ck]
+    p98voffq truth bundle   : t=    110.0 ks=0.098 c2n=   2.8 str=0.000 pred/meas= 1.03 fl=[ck]
+    p98voffq picked         : t=   1524.5 ks=0.082 c2n=   6.9 str=0.968 pred/meas= 0.28 fl=[Bck]  (winner-plain-lasso)
+evt298651 truth uid 4000106 t=829.6 top: p99wflip uid 4000104 n=135 x[196,220] -> p98voffq uid 4000098 n=121 x[211,220]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=    829.6 ks=0.100 c2n=   3.4 str=0.963 pred/meas= 0.17 fl=[B2ck]
+    p98voffq truth bundle   : t=    829.6 ks=0.100 c2n=   3.5 str=0.000 pred/meas= 0.17 fl=[B2k]
+evt298651 truth uid 63 t=3292.4 bottom: p99wflip uid 61 n=2106 x[162,398] -> p98voffq uid 51 n=2060 x[162,397]  MIS-PICK
+    p99wflip truth (selected): t=   3292.4 ks=0.068 c2n=   1.5 str=0.000 pred/meas= 0.70 fl=[Wck]
+    p98voffq truth bundle   : t=   3292.4 ks=0.068 c2n=   1.5 str=0.000 pred/meas= 0.69 fl=[ck]
+    p98voffq picked         : t=   3263.9 ks=0.155 c2n=   4.2 str=0.000 pred/meas= 2.20 fl=[k]  (winner-str0-rescuepick)
+evt298651 truth uid 4000119 t=3568.2 top: p99wflip uid 4000120 n=1562 x[-399,-186] -> p98voffq uid 4000107 n=1560 x[-399,-186]  MIS-PICK
+    p99wflip truth (selected): t=   3568.2 ks=0.086 c2n=   3.6 str=0.973 pred/meas= 0.39 fl=[BWck]
+    p98voffq truth bundle   : t=   3568.2 ks=0.087 c2n=   3.5 str=0.000 pred/meas= 0.40 fl=[BWck]
+    p98voffq picked         : t=   3431.7 ks=0.100 c2n=   0.2 str=0.982 pred/meas= 1.10 fl=[Wck]  (winner-plain-lasso)
+evt298665 truth uid 4000307 t=-494.7 top: p99wflip uid 4000243 n=164 x[317,341] -> p98voffq uid 4000016 n=169 x[279,341]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   -494.7 ks=0.095 c2n=   0.2 str=0.983 pred/meas= 0.80 fl=[Wck]
+    p98voffq truth bundle   : t=   -494.7 ks=0.096 c2n=   0.2 str=0.000 pred/meas= 0.81 fl=[Wck]
+evt298679 truth uid 4000037 t=327.8 top: p99wflip uid 4000044 n=2245 x[-74,287] -> p98voffq uid 4000014 n=13528 x[50,97]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=    327.8 ks=0.055 c2n=   0.9 str=0.976 pred/meas= 0.49 fl=[B2cxp1k]
+    p98voffq truth bundle   : t=    327.8 ks=0.214 c2n=   0.6 str=0.000 pred/meas= 0.88 fl=[k]
+evt298693 truth uid 57 t=-1671.1 bottom: p99wflip uid 56 n=799 x[-342,-266] -> p98voffq uid 67 n=2820 x[-342,-121]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=  -1671.1 ks=0.218 c2n=   2.9 str=0.976 pred/meas= 0.60 fl=[Wk]
+evt298693 truth uid 101 t=2283.6 bottom: p99wflip uid 105 n=1350 x[-20,183] -> p98voffq uid 105 n=2650 x[-20,237]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   2283.6 ks=0.048 c2n=   0.5 str=0.595 pred/meas= 2.14 fl=[ck]
+    p98voffq truth bundle   : t=   2283.6 ks=0.124 c2n=   1.5 str=0.000 pred/meas= 9.06 fl=[k]
+evt298721 truth uid 87 t=925.3 bottom: p99wflip uid 66 n=2579 x[-148,14] -> p98voffq uid 69 n=2630 x[-148,14]  MIS-PICK
+    p99wflip truth (selected): t=    925.3 ks=0.054 c2n=   0.4 str=0.877 pred/meas= 1.33 fl=[ck]
+    p98voffq truth bundle   : t=    925.3 ks=0.054 c2n=   0.4 str=0.000 pred/meas= 1.32 fl=[ck]
+    p98voffq picked         : t=     26.9 ks=0.259 c2n=   2.3 str=0.294 pred/meas= 8.75 fl=[CB2x1sk]  (winner-sc1-nopin)
+evt298735 truth uid 112 t=231.3 bottom: p99wflip uid 115 n=1778 x[-300,29] -> p98voffq uid 129 n=1934 x[-342,29]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=    231.3 ks=0.510 c2n=   0.7 str=0.583 pred/meas= 2.17 fl=[pk]
+evt298735 truth uid 4000175 t=231.3 top: p99wflip uid 4000217 n=821 x[-33,335] -> p98voffq uid 4000221 n=817 x[-33,336]  UNMATCHED
+    p99wflip truth (selected): t=    231.3 ks=0.501 c2n=   3.3 str=0.964 pred/meas= 0.74 fl=[CB2pk]
+    p98voffq truth bundle   : t=    231.3 ks=0.491 c2n=   3.1 str=0.966 pred/meas= 0.73 fl=[CB2sk]
+evt298735 truth uid 4000202 t=3161.0 top: p99wflip uid 4000176 n=38710 x[-349,-199] -> p98voffq uid 4000001 n=42753 x[-349,-161]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   3161.0 ks=0.099 c2n=   1.4 str=0.790 pred/meas= 1.85 fl=[ck]
+    p98voffq truth bundle   : t=   3161.0 ks=0.104 c2n=   1.3 str=0.000 pred/meas= 2.18 fl=[k]
+evt298763 truth uid 55 t=-725.2 bottom: p99wflip uid 71 n=1340 x[-259,-108] -> p98voffq uid 84 n=1358 x[-259,-108]  MIS-PICK
+    p99wflip truth (selected): t=   -725.2 ks=0.270 c2n=  39.3 str=0.949 pred/meas= 0.32 fl=[CB2xp1k]
+    p98voffq truth bundle   : t=   -725.2 ks=0.270 c2n=  39.4 str=0.951 pred/meas= 0.32 fl=[CB2k]
+    p98voffq picked         : t=     65.7 ks=0.113 c2n=   4.1 str=0.000 pred/meas= 0.43 fl=[k]  (winner-str0-rescuepick)
+evt298763 truth uid 4000243 t=-725.2 top: p99wflip uid 4000228 n=3143 x[107,341] -> p98voffq uid 4000230 n=4346 x[-78,341]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   -725.2 ks=0.123 c2n=   1.0 str=0.979 pred/meas= 0.66 fl=[CBWxp1k]
+evt298763 truth uid 67 t=1303.8 bottom: p99wflip uid 83 n=1525 x[73,189] -> p98voffq uid 72 n=1456 x[74,218]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   1303.8 ks=0.348 c2n=   0.8 str=0.962 pred/meas= 0.60 fl=[CBpk]
+    p98voffq truth bundle   : t=   1303.8 ks=0.348 c2n=   0.8 str=0.000 pred/meas= 0.60 fl=[CBk]
+evt298763 truth uid 4000006 t=1312.7 top: p99wflip uid 4000021 n=1877 x[-80,141] -> p98voffq uid 4000029 n=21086 x[282,318]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   1312.7 ks=0.050 c2n=   0.5 str=0.765 pred/meas= 1.04 fl=[Bck]
+evt298763 truth uid 3999999 t=1837.0 top: p99wflip uid 4000644 n=1165 x[-78,69] -> p98voffq uid 4000230 n=4346 x[-78,341]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   1837.0 ks=0.026 c2n=   0.1 str=0.932 pred/meas= 0.89 fl=[2csk]
+evt298763 truth uid 4000002 t=1868.4 top: p99wflip uid 4000003 n=6505 x[-62,-36] -> p98voffq uid 4000006 n=10661 x[47,159]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   1868.4 ks=0.089 c2n=   0.2 str=0.920 pred/meas= 1.12 fl=[ck]
+evt298763 truth uid 4000163 t=2778.7 top: p99wflip uid 4000173 n=735 x[-177,-73] -> p98voffq uid 4000125 n=8131 x[-2,32]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   2778.7 ks=0.063 c2n=   0.1 str=0.977 pred/meas= 0.50 fl=[Bck]
+evt298777 truth uid 22 t=-2095.8 bottom: p99wflip uid 20 n=526 x[-341,-316] -> p98voffq uid 21 n=526 x[-341,-316]  MIS-PICK
+    p99wflip truth (selected): t=  -2095.8 ks=0.282 c2n=   0.7 str=0.978 pred/meas= 1.14 fl=[Wx1k]
+    p98voffq truth bundle   : t=  -2095.8 ks=0.282 c2n=   0.7 str=0.000 pred/meas= 1.14 fl=[Wk]
+    p98voffq picked         : t=  -2017.2 ks=0.190 c2n=   0.3 str=0.975 pred/meas= 0.65 fl=[Wx1k]  (winner-sc1-nopin)
+evt298777 truth uid 4000103 t=-1799.0 top: p99wflip uid 4000086 n=565 x[268,342] -> p98voffq uid 4000075 n=12564 x[242,340]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=  -1799.0 ks=0.067 c2n=   1.4 str=0.000 pred/meas= 1.61 fl=[Wcxp1k]
+    p98voffq truth bundle   : t=  -1799.0 ks=0.359 c2n=   1.9 str=0.000 pred/meas= 4.00 fl=[CBk]
+evt298777 truth uid 4000033 t=1700.2 top: p99wflip uid 4000029 n=5579 x[-278,-199] -> p98voffq uid 4000034 n=5660 x[-278,-203]  NO-TRUTH-BUNDLE
+    p99wflip truth (selected): t=   1700.2 ks=0.086 c2n=   0.5 str=0.000 pred/meas= 2.07 fl=[CB2cx1sk]
+evt298777 truth uid 3 t=3664.3 bottom: p99wflip uid 3 n=528 x[317,399] -> p98voffq uid 3 n=528 x[317,399]  MIS-PICK
+    p99wflip truth (selected): t=   3664.3 ks=0.193 c2n=   2.5 str=0.977 pred/meas= 1.00 fl=[Wk]
+    p98voffq truth bundle   : t=   3664.3 ks=0.193 c2n=   2.5 str=0.000 pred/meas= 1.00 fl=[Wk]
+    p98voffq picked         : t=   4154.4 ks=0.123 c2n=   1.9 str=0.000 pred/meas= 1.13 fl=[Wk]  (winner-str0-rescuepick)
+evt298791 truth uid 4000339 t=343.8 top: p99wflip uid 4000488 n=1237 x[-56,26] -> p98voffq uid 4000478 n=1290 x[-61,26]  NO-TRUTH-BUNDLE
+    p99wflip truth (selected): t=    343.8 ks=0.336 c2n=   6.4 str=0.968 pred/meas= 0.59 fl=[CBpsk]
+evt298805 truth uid 159 t=46.9 bottom: p99wflip uid 122 n=125 x[-339,-313] -> p98voffq uid 126 n=226 x[-340,-305]  NO-TRUTH-BUNDLE
+    p99wflip truth (selected): t=     46.9 ks=0.224 c2n=   1.2 str=0.975 pred/meas= 1.06 fl=[BPk]
+evt298805 truth uid 4000268 t=3439.8 top: p99wflip uid 4000023 n=10791 x[-354,-203] -> p98voffq uid 4000258 n=7163 x[-329,-205]  CLUSTER-IDENTITY-CHANGE
+    p99wflip truth (selected): t=   3439.8 ks=0.098 c2n=   5.9 str=0.909 pred/meas= 0.90 fl=[ck]
+    p98voffq truth bundle   : t=   3439.8 ks=0.117 c2n=  12.6 str=0.000 pred/meas= 0.44 fl=[k]
+
+classes: {'mis-pick': 10, 'mis-pick (top)': 4, 'cluster-identity-change': 21, 'cluster-identity-change (top)': 17, 'mis-pick (bottom)': 6, 'cluster-identity-change (bottom)': 4, 'unmatched': 1, 'unmatched (top)': 1, 'no-truth-bundle': 3, 'no-truth-bundle (top)': 2, 'no-truth-bundle (bottom)': 1}
+mis-pick winners: {'winner-pinned': 1, 'winner-plain-lasso': 4, 'winner-str0-rescuepick': 3, 'winner-sc1-nopin': 2}
+truth-bundle flags lost (not identity changes): {'xtpc_pin': 3, 'window_truncated': 1, 'xtpc_consistent': 2, 'xtpc_scenario1': 2}
+truth-bundle flags gained (not identity changes): {'spec_end': 1}
+  median c2n arm: 2.845 (n=11)
+  median c2n base: 2.832 (n=11)
+  median ks arm: 0.098 (n=11)
+  median ks base: 0.098 (n=11)
+  median strength arm: 0.000 (n=11)
+  median strength base: 0.964 (n=11)
+
+new phantoms (objective negatives rejected on p99wflip, auto on p98voffq): 6
+  evt298567 truth uid 18 -> 18 bottom  t=   3259.8 ks=0.219 c2n=   1.7 str=0.505 pred/meas= 0.69 fl=[BPWxk]
+  evt298567 truth uid 64 -> 70 bottom  t=   3472.2 ks=0.084 c2n=   0.4 str=0.956 pred/meas= 1.91 fl=[Wck]
+  evt298651 truth uid 4000288 -> 4000403 top  t=  -2002.5 ks=0.424 c2n= 294.1 str=0.942 pred/meas= 0.00 fl=[CBpk]
+  evt298651 truth uid 4000066 -> 4000057 top  t=   -107.9 ks=0.060 c2n=   1.4 str=0.155 pred/meas= 4.68 fl=[ck]
+  evt298679 truth uid 4000145 -> 4000093 top  t=   3990.0 ks=0.136 c2n=   0.6 str=0.000 pred/meas= 1.33 fl=[Bk]
+  evt298791 truth uid 4000195 -> 4000221 top  t=    264.7 ks=0.239 c2n=   3.7 str=0.776 pred/meas= 0.40 fl=[Bk]

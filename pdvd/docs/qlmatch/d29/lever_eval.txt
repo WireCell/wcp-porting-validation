@@ -1,0 +1,28 @@
+# doc qlmatch/29 -- lever evaluation (d29_lever_eval.py) against p100flip; rule: d29/prereg.md sec 3
+control q29base calib dumps byte-identical to p100flip: 18/18
+base p100flip: full 678/97/163  even 319/50/101  odd 359/47/62  common 678/97/163   (common truth 1494 entries)
+
+q29l1     fail merit +4 | full 682/101/159 (+4/+4/-4) x | even 321/51/99 (+2/+1/-2) ok | odd 361/50/60 (+2/+3/-2) x | common 682/101/159 (+4/+4/-4) x
+          config leaves differing from q29base: 1 [('[404]/data/lasso_lambda', 0.2, 0.1)]
+q29l2     fail merit +0 | full 680/101/161 (+2/+4/-2) x | even 321/53/99 (+2/+3/-2) x | odd 359/48/62 (+0/+1/+0) x | common 680/101/161 (+2/+4/-2) x
+          config leaves differing from q29base: 1 [('[404]/data/lasso_lambda', 0.2, 0.15)]
+q29l3     PASS merit -1 | full 676/94/165 (-2/-3/+2) ok | even 317/48/103 (-2/-2/+2) ok | odd 359/46/62 (+0/-1/+0) ok | common 676/94/165 (-2/-3/+2) ok
+          config leaves differing from q29base: 1 [('[404]/data/lasso_lambda', 0.2, 0.3)]
+q29l4     fail merit +0 | full 679/99/162 (+1/+2/-1) ok | even 319/52/101 (+0/+2/+0) x | odd 360/47/61 (+1/+0/-1) ok | common 679/99/162 (+1/+2/-1) ok
+          config leaves differing from q29base: 1 [('[404]/data/strength_cutoff', None, 0.02)]
+q29l5     fail merit -1 | full 678/98/163 (+0/+1/+0) x | even 319/50/101 (+0/+0/+0) x | odd 359/48/62 (+0/+1/+0) x | common 678/98/163 (+0/+1/+0) x
+          config leaves differing from q29base: 1 [('[404]/data/bkg_weight', None, 0.3)]
+q29l6     PASS merit +10 | full 683/97/158 (+5/+0/-5) ok | even 323/49/97 (+4/-1/-4) ok | odd 360/48/61 (+1/+1/-1) ok | common 683/97/158 (+5/+0/-5) ok
+          config leaves differing from q29base: 1 [('[404]/data/lasso_boundary_weight', 0.2, 0.1)]
+q29l7     PASS merit +9 | full 677/86/164 (-1/-11/+1) ok | even 317/43/103 (-2/-7/+2) ok | odd 360/43/61 (+1/-4/-1) ok | common 677/86/164 (-1/-11/+1) ok
+          config leaves differing from q29base: 1 [('[404]/data/lasso_boundary_weight', 0.2, 0.4)]
+q29l8     fail merit -14 | full 673/101/168 (-5/+4/+5) x | even 317/52/103 (-2/+2/+2) x | odd 356/49/65 (-3/+2/+3) x | common 673/101/168 (-5/+4/+5) x
+          config leaves differing from q29base: 4 [('[404]/data/hc_clean_c2', 12, 35), ('[404]/data/hc_good_c2', 12, 35), ('[404]/data/hc_miss_c2', 30, 60), ('[404]/data/hc_tb_c2', 12, 35)]
+q29l9     fail merit -3 | full 680/104/161 (+2/+7/-2) x | even 320/53/100 (+1/+3/-1) x | odd 360/51/61 (+1/+4/-1) x | common 680/104/161 (+2/+7/-2) x
+          config leaves differing from q29base: 1 [('[404]/data/xtpc_pin_min_strength', 0.02, None)]
+q29v7nw   fail merit +0 | full 678/97/163 (+0/+0/+0) x | even 319/50/101 (+0/+0/+0) x | odd 359/47/62 (+0/+0/+0) x | common 678/97/163 (+0/+0/+0) x
+          config leaves differing from q29base: 16 [('[102]/data/wrapped_channel_charge', True, False), ('[127]/data/wrapped_channel_charge', True, False), ('[144]/data/wrapped_channel_charge', True, False), ('[169]/data/wrapped_channel_charge', True, False), ('[186]/data/wrapped_channel_charge', True, False), ('[235]/data/wrapped_channel_charge', True, False), ('[252]/data/wrapped_channel_charge', True, False), ('[277]/data/wrapped_channel_charge', True, False)]
+p101q     fail merit -10 | full 672/95/169 (-6/-2/+6) x | even 314/48/106 (-5/-2/+5) x | odd 358/47/63 (-1/+0/+1) x | common 672/95/169 (-6/-2/+6) x
+          (no compile-only config recorded)
+
+passing arms by merit: [(10, 'q29l6'), (9, 'q29l7'), (-1, 'q29l3')]

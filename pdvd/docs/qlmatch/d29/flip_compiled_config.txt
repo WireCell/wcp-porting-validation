@@ -1,0 +1,13 @@
+# doc qlmatch/29 sec 7 -- compiled-config proof of the PDVD_QL_LASSO_BWEIGHT=0.1 runner default (2026-09-13)
+# run_clus_evt.sh -s p101cfg -calib -save-pctree <run> <evt>, PDVD_CLUS_COMPILE_ONLY=1 PDVD_LIGHT_SUFFIX=_keep, other PDVD_* overrides unset
+# olddefault/oldbw01 = before the edit (no env / PDVD_QL_LASSO_BWEIGHT=0.1); newdefault/newempty = after (no env / PDVD_QL_LASSO_BWEIGHT= empty)
+039252_0   olddefault=45536b99e60b oldbw01=1d6f03730c25 newdefault=1d6f03730c25 newempty=45536b99e60b
+  newdefault == oldbw01 PASS
+  newempty == olddefault PASS
+039253_15  olddefault=bc12945fe598 oldbw01=237c7d9e4ac4 newdefault=237c7d9e4ac4 newempty=bc12945fe598
+  newdefault == oldbw01 PASS
+  newempty == olddefault PASS
+039349_7   olddefault=cfd16922c2b1 oldbw01=15f522cc7d19 newdefault=15f522cc7d19 newempty=cfd16922c2b1
+  newdefault == oldbw01 PASS
+  newempty == olddefault PASS
+# olddefault vs oldbw01 differ in exactly one leaf per event: /404/data/lasso_boundary_weight 0.2 -> 0.1 (leaf diff above)
