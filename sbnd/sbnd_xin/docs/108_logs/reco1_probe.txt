@@ -1,0 +1,23 @@
+== 1 coverage
+production events 13217 input files 1000 events/file min/max 5 23
+reco1 files on disk 10 of which production inputs 10
+production events covered 104 runs {'713': 104}
+candidate rows 44 truth interactions 193 {('numu', 'CC'): 136, ('numu', 'NC'): 52, ('nue', 'CC'): 5}
+truth in FV 50 {('numu', 'NC'): 17, ('numu', 'CC'): 32, ('nue', 'CC'): 1}
+== 2 products in reco1-detsim-g4-gen-Gen2_2026-1233-281b-350b-480e.root entries 6
+   present simb::MCTruths_generator__GenieGen.
+   present simb::GTruths_generator__GenieGen.
+   present simb::MCFluxs_generator__GenieGen.
+   present simb::MCParticles_largeant__GenieGen.
+   present simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__GenieGen.
+   present sim::ParticleAncestryMaps_largeant__GenieGen.
+   present sim::SimEnergyDeposits_ionandscint_priorSCE_G4.
+   present sim::SimChannels_simtpc2d_simpleSC_DetSim.
+   present simb::MCTruths_corsika__GenieGen.
+   present recob::Wires_simtpc2d_dnnsp_DetSim.
+== 3 uproot deserialization
+   FAIL EventAuxiliary DeserializationError while reading
+   FAIL simb::MCTruths_generator__GenieGen. NotImplementedError memberwise serialization of AsVector(simb::MCTruth)
+   FAIL simb::MCParticles_largeant__GenieGen. NotImplementedError memberwise serialization of AsVector(simb::MCParticle)
+   FAIL sim::SimChannels_simtpc2d_simpleSC_DetSim. NotImplementedError memberwise serialization of AsVector(sim::SimChannel)
+rc=0

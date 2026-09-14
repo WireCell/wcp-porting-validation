@@ -1,0 +1,30 @@
+files 13216 rows 6236
+rel {'same': 5748, 'not_in_act': 379, 'in_act': 109}
+== same 5748
+   kine_same {True: 5748}
+   vx_same {True: 5748}
+   cid_in_Tc {True: 5748}
+   cid_main {1: 5553, 0: 195}
+   cid_assoc {0: 5553, 1: 195}
+   cid_flash_eq_gid {True: 5748}
+   sel_main {1: 5553, 0: 195}
+   sel_assoc {0: 5553, 1: 195}
+== in_act 109
+   kine_same {True: 109}
+   vx_same {True: 109}
+   cid_in_Tc {True: 109}
+   cid_main {0: 109}
+   cid_assoc {1: 109}
+   cid_flash_eq_gid {True: 109}
+   sel_main {0: 17, 1: 92}
+   sel_assoc {1: 17, 0: 92}
+== not_in_act 379
+   kine_same {True: 379}
+   vx_same {True: 379}
+   cid_in_Tc {True: 379}
+   cid_main {0: 379}
+   cid_assoc {1: 379}
+   cid_flash_eq_gid {True: 379}
+   sel_main {1: 379}
+   sel_assoc {0: 379}
+rc=0

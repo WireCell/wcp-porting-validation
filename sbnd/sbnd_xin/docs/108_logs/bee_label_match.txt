@@ -1,0 +1,34 @@
+== A: layer membership of the truth label points, 25 events
+   truth_pts 681170
+   truth_pts_within_0.05cm_of_img-global 681170
+   truth_pts_within_0.05cm_of_clustering-global 989
+   truth_pts_within_0.05cm_of_clustering-pr-global 989
+== B: selected PR cluster vs truth labels, 25 T_tagger rows
+tag	cluster	npts	median_nn_cm	frac_within_1cm	top_attribution	nearest_truth_idx	nearest_truth_dist_cm
+r719_s36_e38	6	875	0.04	1.000	{'nu1': 1.0, 'unlabeled': 0.0}	2	0.39
+r713_s38_e25	12	4329	0.19	1.000	{'nu0': 0.98, 'unlabeled': 0.02, 'non-nu tree': 0.0}	1	3.28
+r714_s87_e2	3	862	0.05	1.000	{'non-nu tree': 0.95, 'unlabeled': 0.05}	1	118.37
+r720_s26_e39	14	1799	0.24	1.000	{'nu0': 1.0, 'unlabeled': 0.0}	1	0.93
+r720_s97_e30	12	767	0.14	1.000	{'nu0': 1.0, 'unlabeled': 0.0}	1	0.54
+r719_s73_e29	46	56	0.05	1.000	{'nu1': 1.0}	2	4.47
+r717_s72_e16	15	689	0.11	1.000	{'nu1': 0.88, 'unlabeled': 0.11, 'non-nu tree': 0.01}	2	3.07
+r471_s90_e13	2	4601	0.09	1.000	{'nu1': 0.97, 'unlabeled': 0.03}	2	0.39
+r716_s65_e31	15	1904	0.14	1.000	{'nu0': 0.89, 'non-nu tree': 0.07, 'unlabeled': 0.04}	1	0.42
+r713_s29_e22	20	225	0.21	1.000	{'nu0': 0.97, 'unlabeled': 0.03}	1	6.98
+r719_s69_e44	69	46	0.11	1.000	{'nu0': 1.0}	1	301.91
+r474_s82_e16	12	2580	0.11	1.000	{'nu0': 0.95, 'unlabeled': 0.05}	1	1.89
+r711_s87_e13	12	189	0.16	1.000	{'nu0': 0.98, 'unlabeled': 0.02}	1	0.79
+r711_s9_e21	18	2817	0.18	1.000	{'nu1': 0.93, 'unlabeled': 0.07}	2	1.71
+r715_s8_e9	2	109	0.21	1.000	{'nu0': 1.0}	1	0.76
+r716_s75_e4	18	351	0.25	1.000	{'nu0': 1.0}	1	2.31
+r713_s25_e26	6	1104	0.16	1.000	{'nu0': 0.94, 'unlabeled': 0.06, 'non-nu tree': 0.01}	1	0.10
+r715_s20_e22	10	6283	0.17	1.000	{'nu0': 0.89, 'unlabeled': 0.11}	1	0.61
+r717_s91_e36	16	527	0.10	1.000	{'nu0': 1.0, 'unlabeled': 0.0}	1	0.91
+r480_s87_e14	4	1518	0.10	1.000	{'nu1': 1.0, 'unlabeled': 0.0}	2	0.53
+r718_s52_e33	5	113	0.06	1.000	{'nu0': 0.99, 'unlabeled': 0.01}	1	358.66
+r713_s29_e40	19	832	0.19	1.000	{'nu0': 1.0}	1	1.04
+r471_s42_e34	8	1089	0.26	1.000	{'nu0': 0.99, 'unlabeled': 0.01}	1	0.39
+r720_s86_e3	11	1040	0.08	1.000	{'nu0': 0.94, 'unlabeled': 0.06, 'non-nu tree': 0.0}	1	0.29
+r712_s86_e32	22	2267	0.24	1.000	{'nu1': 0.92, 'non-nu tree': 0.05, 'unlabeled': 0.03}	2	3.47
+summary {'rows': 25, 'all_pts_within_1cm': 25, 'dominant_nu': 24, 'min_nu_dominant_frac_x100': 88, 'dominant_nu_equals_nearest_truth': 24, 'dominant_non-nu tree': 1}
+rc=0

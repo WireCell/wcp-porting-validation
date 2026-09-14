@@ -1,0 +1,14 @@
+compression ZLIB(1)
+tree T_bad_ch;1         entries     93 compressed      938 uncompressed     3148
+tree Trun;1             entries      1 compressed      404 uncompressed      404
+tree T_proj_data;1      entries      1 compressed    16393 uncompressed    46534
+tree T_rec_charge;1     entries    161 compressed    13722 uncompressed    22140
+tree T_cluster;1        entries     29 compressed     2282 uncompressed     3400
+tree T_proj;1           entries      1 compressed        0 uncompressed        0
+tree T_tagger;1         entries      1 compressed   120832 uncompressed   120846
+tree T_kine;1           entries      1 compressed     3175 uncompressed     3175
+sampled files 1500 with T_tagger 691
+non-act branches 1220 constant over sample 86
+constant by prefix [('ssm', 18), ('ssmsp', 15), ('cosmict', 13), ('shw', 7), ('br1', 4), ('stw', 4), ('br3', 3), ('vis', 3), ('br4', 2), ('lol', 2), ('mip', 2), ('tro', 2), ('cme', 1), ('gap', 1), ('hol', 1), ('mgo', 1), ('mgt', 1), ('mipid', 1), ('mipquality', 1), ('pio', 1), ('stem', 1), ('stemdir', 1), ('trimuon', 1)]
+constant ['br1_1_flag', 'br1_3_flag', 'br1_3_n_connected_p', 'br1_score', 'br3_1_flag', 'br3_6_v_flag', 'br3_score', 'br4_1_flag', 'br4_tro_score', 'cme_anc_score', 'cosmict_10_flag_dir_weak', 'cosmict_10_flag_inside', 'cosmict_2_4_score', 'cosmict_3_5_score', 'cosmict_6_flag_inside', 'cosmict_6_score', 'cosmict_7_score', 'cosmict_8_flag_out', 'cosmict_8_score', 'cosmict_flag_5', 'cosmict_flag_6', 'cosmict_flag_8', 'cosmict_score', 'gap_score', 'hol_lol_score', 'lol_1_v_flag', 'lol_2_v_flag_dir_weak', 'mgo_mgt_score', 'mgt_flag_indirect_max_pio', 'mip_quality_flag_inside_pi0', 'mip_quality_flag_proton', 'mipid_score', 'mipquality_score', 'pio_1_score', 'shw_sp_br1_1_flag', 'shw_sp_br1_2_flag', 'shw_sp_br1_3_flag', 'shw_sp_br1_3_n_connected_p', 'shw_sp_br1_flag', 'shw_sp_br3_6_v_flag', 'shw_sp_lol_1_v_flag', 'ssm_kine_energy_included', 'ssm_kine_energy_info', 'ssm_kine_energy_particle', 'ssm_kine_particle_type', 'ssm_kine_pio_angle', 'ssm_kine_pio_dis_1', 'ssm_kine_pio_dis_2', 'ssm_kine_pio_energy_1', 'ssm_kine_pio_energy_2', 'ssm_kine_pio_flag', 'ssm_kine_pio_mass', 'ssm_kine_pio_phi_1', 'ssm_kine_pio_phi_2', 'ssm_kine_pio_theta_1', 'ssm_kine_pio_theta_2', 'ssm_kine_pio_vtx_dis', 'ssm_kine_reco_Enu', 'ssm_kine_reco_add_energy', 'ssmsp_KE', 'ssmsp_Nsp', 'ssmsp_Nsp_tot', 'ssmsp_Ntrack', 'ssmsp_containing_shower_flag', 'ssmsp_containing_shower_id', 'ssmsp_containing_shower_ke', 'ssmsp_dQ', 'ssmsp_dx', 'ssmsp_id', 'ssmsp_mother', 'ssmsp_pdg', 'ssmsp_x', 'ssmsp_y', 'ssmsp_z', 'stem_len_flag', 'stemdir_br2_score', 'stw_2_v_flag', 'stw_3_v_flag', 'stw_4_v_flag', 'stw_spt_score', 'trimuon_score', 'tro_3_flag', 'tro_5_v_flag', 'vis_1_num_good_tracks', 'vis_1_score', 'vis_2_score']
+rc=0

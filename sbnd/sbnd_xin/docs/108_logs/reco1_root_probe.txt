@@ -1,0 +1,127 @@
+
+Processing d108_reco1_root_probe.C("/nfs/data/1/yuhw/2025-fall-prod-sample/round2-patrec/mc_paths-v10_14_02_03-100files/reco1-detsim-g4-gen-Gen2_2026-a6a0-2395-0263-6d62.root")...
+== art::EventAuxiliary v12
+   art::Hash<2>                                  processHistoryID_
+   art::EventID                                  id_
+   art::Timestamp                                time_
+   bool                                          isRealData_
+   art::EventAuxiliary::ExperimentType           experimentType_
+== art::EventID v12
+   art::SubRunID                                 subRun_
+   unsigned int                                  event_
+== simb::GTruth v15
+   TLorentzVector                                fVertex
+   double                                        fweight
+   double                                        fprobability
+   double                                        fXsec
+   double                                        fDiffXsec
+   int                                           fGPhaseSpace
+   int                                           fProbePDG
+   TLorentzVector                                fProbeP4
+   TLorentzVector                                fTgtP4
+   int                                           ftgtZ
+   int                                           ftgtA
+   int                                           ftgtPDG
+   int                                           fHitNucPDG
+   int                                           fHitQrkPDG
+   bool                                          fIsSeaQuark
+   TLorentzVector                                fHitNucP4
+   double                                        fHitNucPos
+   int                                           fGscatter
+   int                                           fGint
+   double                                        fgQ2
+   double                                        fgq2
+   double                                        fgW
+   double                                        fgT
+   double                                        fgX
+   double                                        fgY
+   double                                        fgWrun
+   TLorentzVector                                fFSleptonP4
+   TLorentzVector                                fFShadSystP4
+   bool                                          fIsCharm
+   int                                           fCharmHadronPdg
+   bool                                          fIsStrange
+   int                                           fStrangeHadronPdg
+   int                                           fNumProton
+   int                                           fNumNeutron
+   int                                           fNumPi0
+   int                                           fNumPiPlus
+   int                                           fNumPiMinus
+   int                                           fNumSingleGammas
+   int                                           fNumRho0
+   int                                           fNumRhoPlus
+   int                                           fNumRhoMinus
+   int                                           fResNum
+   int                                           fDecayMode
+   int                                           fFinalQuarkPdg
+   int                                           fFinalLeptonPdg
+== simb::MCTruth v12
+   vector<simb::MCParticle>                      fPartList
+   simb::MCNeutrino                              fMCNeutrino
+   simb::_ev_origin                              fOrigin
+   simb::MCGeneratorInfo                         fGenInfo
+   bool                                          fNeutrinoSet
+== simb::MCParticle v18
+   int                                           fstatus
+   int                                           ftrackId
+   int                                           fpdgCode
+   int                                           fmother
+   string                                        fprocess
+   string                                        fendprocess
+   simb::MCTrajectory                            ftrajectory
+   double                                        fmass
+   TVector3                                      fpolarization
+   set<int>                                      fdaughters
+   double                                        fWeight
+   TLorentzVector                                fGvtx
+   int                                           frescatter
+== simb::MCNeutrino v10
+   simb::MCParticle                              fNu
+   simb::MCParticle                              fLepton
+   int                                           fMode
+   int                                           fInteractionType
+   int                                           fCCNC
+   int                                           fTarget
+   int                                           fHitNuc
+   int                                           fHitQuark
+   double                                        fW
+   double                                        fX
+   double                                        fY
+   double                                        fQSqr
+== sim::SimEnergyDeposit v20
+   int                                           numPhotons
+   int                                           numElectrons
+   float                                         scintYieldRatio
+   float                                         edep
+   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag> startPos
+   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::GlobalCoordinateSystemTag> endPos
+   double                                        startTime
+   double                                        endTime
+   int                                           trackID
+   int                                           pdgCode
+   int                                           origTrackID
+== sim::GeneratedParticleInfo v1
+   unsigned long                                 fGeneratedParticleIndex
+== sim::ParticleAncestryMap v1
+   map<int,set<int> >                            fParticleMap
+== sim::SimChannel v15
+   unsigned int                                  fChannel
+   vector<pair<unsigned short,vector<sim::IDE> > > fTDCIDEs
+== sim::IDE v12
+   int                                           trackID
+   float                                         numElectrons
+   float                                         energy
+   float                                         x
+   float                                         y
+   float                                         z
+   int                                           origTrackID
+== sim::GeneratedParticleInfo v1
+   unsigned long                                 fGeneratedParticleIndex
+== sim::ParticleAncestryMap v1
+   map<int,set<int> >                            fParticleMap
+Error in <TBufferFile::CheckByteCount>: object of class unordered_map<string,string> read too few bytes: 12 instead of 45
+Error in <TBufferFile::CheckByteCount>: object of class unordered_map<string,string> read too few bytes: 12 instead of 45
+Error in <TBufferFile::CheckByteCount>: object of class unordered_map<string,string> read too few bytes: 12 instead of 45
+free(): invalid pointer
+(CheckByteCount errors: 40 )
+rc_root=0
