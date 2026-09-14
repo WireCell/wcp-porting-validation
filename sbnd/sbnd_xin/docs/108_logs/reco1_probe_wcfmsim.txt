@@ -1,0 +1,57 @@
+== /home/xqian/work/WC_FM_Sim/runs/nue/sp_nue_reco1.root entries 20 size_MB 297
+    recob::Wires_tpcrawdecoder_dnnsp_detsim.
+    recob::Wires_tpcrawdecoder_gauss_detsim.
+    recob::Wires_tpcrawdecoder_wiener_detsim.
+    sim::SimChannels_tpcrawdecoder_simpleSC_detsim.
+    simb::GTruths_generator__GenieGen.
+    simb::GTruthsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCFluxsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCParticles_largeant__G4.
+    simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__G4.
+    simb::MCTruths_generator__GenieGen.
+== /home/xqian/work/WC_FM_Sim/runs/numu/sp_numu_reco1.root entries 20 size_MB 83
+    recob::Wires_tpcrawdecoder_dnnsp_detsim.
+    recob::Wires_tpcrawdecoder_gauss_detsim.
+    recob::Wires_tpcrawdecoder_wiener_detsim.
+    sim::SimChannels_tpcrawdecoder_simpleSC_detsim.
+    simb::GTruths_generator__GenieGen.
+    simb::GTruthsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCFluxsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCParticles_largeant__G4.
+    simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__G4.
+    simb::MCTruths_generator__GenieGen.
+== /home/xqian/work/WC_FM_Sim/runs/nue_smeared/sp_nue_reco1.root entries 20 size_MB 532
+    recob::Wires_tpcrawdecoder_dnnsp_detsim.
+    recob::Wires_tpcrawdecoder_gauss_detsim.
+    recob::Wires_tpcrawdecoder_wiener_detsim.
+    sim::SimChannels_tpcrawdecoder_simpleSC_detsim.
+    simb::GTruths_generator__GenieGen.
+    simb::GTruthsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCFluxsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCParticles_largeant__G4.
+    simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__G4.
+    simb::MCTruths_generator__GenieGen.
+== /home/xqian/work/WC_FM_Sim/runs/numu_smeared/sp_numu_reco1.root entries 20 size_MB 142
+    recob::Wires_tpcrawdecoder_dnnsp_detsim.
+    recob::Wires_tpcrawdecoder_gauss_detsim.
+    recob::Wires_tpcrawdecoder_wiener_detsim.
+    sim::SimChannels_tpcrawdecoder_simpleSC_detsim.
+    simb::GTruths_generator__GenieGen.
+    simb::GTruthsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCFluxsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCParticles_largeant__G4.
+    simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__G4.
+    simb::MCTruths_generator__GenieGen.
+== /home/xqian/work/WC_FM_Sim/runs/nue/g4_nue.root entries 20 size_MB 162
+    sim::SimEnergyDeposits_IonAndScint__G4.
+    simb::GTruths_generator__GenieGen.
+    simb::GTruthsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCFluxsimb::MCTruthvoidart::Assns_generator__GenieGen.
+    simb::MCParticles_largeant__G4.
+    simb::MCParticlesimb::MCTruthsim::GeneratedParticleInfoart::Assns_largeant__G4.
+    simb::MCTruths_generator__GenieGen.
+rc=0
+prod10k root=0 h5=14000
+prod10k_nueswap root=0 h5=14000
+prod10k_nueswap2 root=0 h5=14000
+prod10k_numu root=0 h5=14000

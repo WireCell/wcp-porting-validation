@@ -28,13 +28,29 @@ TRUTH_PRODUCTS = [
 ]
 
 
+def products_only(paths):
+    """Entries and truth/wire product branches of arbitrary art files (no coverage join)."""
+    keys = ("MCTruth", "GTruth", "MCParticle", "SimEnergyDeposit", "SimChannel", "recob::Wire", "Assns_largeant")
+    for p in paths:
+        E = uproot.open(p)["Events"]
+        print("==", p, "entries", E.num_entries, "size_MB", os.path.getsize(p) // 2**20)
+        for n in sorted(b.name for b in E.branches):
+            if any(k in n for k in keys):
+                print("   ", n)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--reco1", default="/nfs/data/1/yuhw/2025-fall-prod-sample/round2-patrec/"
                     "mc_paths-v10_14_02_03-100files")
     ap.add_argument("--run", default="/nfs/data/1/xqian/sbnd_data/run")
     ap.add_argument("--d107", default="products/d107")
+    ap.add_argument("--products-only", nargs="+", metavar="ART_FILE",
+                    help="only list entries + truth products of these files (sec 3.5 second sample)")
     a = ap.parse_args()
+    if a.products_only:
+        products_only(a.products_only)
+        return
 
     have = set(f for f in os.listdir(a.reco1) if f.endswith(".root"))
     R = list(csv.DictReader(open(os.path.join(a.run, "summary-merged.csv"))))

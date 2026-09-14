@@ -13,6 +13,9 @@ python3 d108_cluster_id_census.py      > docs/108_logs/cluster_id_census.txt    
 python3 d108_tagger_branch_census.py   > docs/108_logs/tagger_branch_census.txt   # sec 4.4 (1 500-file sample)
 python3 d108_bee_label_match.py        > docs/108_logs/bee_label_match.txt        # sec 3.4 (needs products/d107)
 python3 d108_reco1_probe.py            > docs/108_logs/reco1_probe.txt            # sec 3.5 (needs products/d107)
+W=/home/xqian/work/WC_FM_Sim/runs
+python3 d108_reco1_probe.py --products-only $W/{nue,numu,nue_smeared,numu_smeared}/sp_*_reco1.root $W/nue/g4_nue.root \
+                                       > docs/108_logs/reco1_probe_wcfmsim.txt    # sec 3.5 second set (+ prod10k* file counts appended)
 root -l -b -q 'd108_reco1_root_probe.C("/nfs/data/1/yuhw/2025-fall-prod-sample/round2-patrec/mc_paths-v10_14_02_03-100files/reco1-detsim-g4-gen-Gen2_2026-a6a0-2395-0263-6d62.root")' \
                                        > docs/108_logs/reco1_root_probe.txt       # sec 3.5
 python3 d107_tables.py products/d107                                              # sec 2.1 association split
@@ -30,20 +33,23 @@ checked out locally, read through the GitHub API).
 
 | Group (from the owner discussion) | Information available at write time? | Blocker / caveat |
 |---|---|---|
-| **1** record what happened (both cluster ids, full activity roster, `has_vertex`, per-bundle tree incl. no-candidate) | **Yes** — all inside `TaggerCheckNeutrino` | two items to verify before implementing (sec 2.5) |
+| **1** record what happened (both cluster ids, full activity roster, `has_vertex`, per-bundle tree incl. no-candidate) | **Yes** — all inside `TaggerCheckNeutrino` | items (a) and (b) to verify before implementing (sec 2.5) |
 | **2** fix wrong/mislabelled fields (T_cluster flags, `flash_id`, RSE per row) | **Yes** | `beam_flash` has no SBND source; derive or drop (sec 4.1) |
-| **3** truth in ROOT | **Yes, without reco1** — the production chain already delivers truth *into* the PR node | a transport step to the ROOT visitors, and a trackid→interaction map for secondaries (sec 3.3) |
+| **3** truth in ROOT | **Yes, without reco1** — the production chain already delivers truth *into* the PR node | a transport step to the ROOT visitors, and a trackid→interaction map for secondaries (sec 3.3); per-blob trackid survival through the PR splits still to verify (sec 2.5 c) |
 | **4** self-describing files | **Mostly** | a compiled-config hash is not obtainable in-process; must be injected (sec 5) |
 
 **Reco1 question.** The truth for this production does **not** need the reco1 files:
 the entry jsonnet runs `clus_all_apa → labeler_truth → pr_node → labeler_tagger`, so
 the node that writes `tracking-pr.root` already receives the GENIE interaction
 metadata (signed `nu_pdg`, CC/NC, mode, Eν, vertex, Edep) and a per-blob G4 `trackid`
-(sec 3.1–3.2). The reco1 files on disk are **10 of the 1 000** production inputs
-(104 of 13 217 events, all run 713, one true νeCC in the FV): a good
-**development and validation** sample for a lar run of the chain, with a ready
-reference (the production Bee + tracking-pr of the same 104 events), but not a truth
-source for the sample, and not readable without LArSoft on this machine (sec 3.5).
+(sec 3.1–3.2). There are two reco1 sets on disk (sec 3.5).
+- **yuhw's SBND set:** **10 of the 1 000** production inputs (104 of 13 217 events, all
+  run 713, one true νeCC in the FV). It is a good **development and validation** sample
+  for a lar run of the chain, with a ready reference (the production Bee and tracking-pr
+  of the same 104 events). It is not a truth source for the sample, and it is not
+  readable without LArSoft on this machine.
+- **`/home/xqian/work/WC_FM_Sim`:** **DUNE FD-HD** GENIE-CC files (4 × 20 events). Wrong
+  detector for this chain, but proof that lar runs on `wcgpu1` in the SL7 container.
 
 **Interim, for the existing 13 216 events:** the production Bee zips already carry
 per-blob truth labels; on 25 T_tagger candidates they give a clean charge-based match
@@ -185,6 +191,16 @@ each explained by a `Trun` counter or `T_bundle` reason.
 - **(b) Which path moved the 488 clusters.** Confirm from the compiled production config
   (`dl_weights` resolved, `main_vertex_swap_apply`) or a debug log of one moved event.
   This decides where `vertex_moved_cluster` gets set.
+- **(c) Per-blob `trackid` survives into `clus_pr`'s clusters** (the premise of 3b,
+  sec 3.3).
+  - **Evidence today is secondhand:** the entry jsonnet's comment
+    (`wcls-img-clus-matching-xin.jsonnet:343-351`). The production ROOT and Bee products
+    cannot show it: the Bee label layer is written by `labeler_truth`, upstream of the PR
+    splits.
+  - **Check on the first lar validation run:** in the tracking visitor, count the final
+    candidate cluster's blobs whose `scalar` PC has a `trackid` array with values ≠ -1.
+    Expect the labelled fraction to match the event's label rate (notes §1: 59–97% of
+    blobs).
 
 ---
 
@@ -302,6 +318,7 @@ proposed now.
 | Readable here without LArSoft? | **No.** uproot: memberwise-serialization `NotImplementedError` on `MCTruth`/`MCParticle`/`SimChannel`, and a deserialization error on `EventAuxiliary`. Bare ROOT: complete StreamerInfo, but the emulated read produces no rows: 40 `TBufferFile::CheckByteCount` errors, then abort (`free(): invalid pointer`) |
 | What reading them would take | **Mirror classes:** the `wire-cell-sbnd-reco1` pattern, kept out of `libWireCellRoot` (toolkit issue #494), where the Assns is the hard part. **Or LArSoft:** the SL7 container (`/cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest`) with cvmfs `sbndcode v10_14_02_03` |
 | Can the lar chain run here? | Not as-is. No `/exp`; the only local `libWireCellAIML` (`/home/xqian/fdhd_dev`, larwirecell v10_03_05) predates the labeler. It needs a `dev-v10_14_02_02` larwirecell build, or yuhw's gpvm setup (`sbnd/docs/1-run-tests-sl7-local-builds-sbnd.md`) |
+| **Second set: `/home/xqian/work/WC_FM_Sim/runs/{nue,numu,nue_smeared,numu_smeared}/sp_*_reco1.root`** (`108_logs/reco1_probe_wcfmsim.txt`) | **DUNE FD-HD** (dune10kt 1x2x6) truth-labelling study, built 2026-07-02 on `wcgpu1` (dunesw v10_20_08d00 + custom larwirecell `xn/trackid_pid_map`; `WC_FM_Sim/docs/00_overview.md`). 20 events each; GENIE `EventGeneratorList: CC`, single flavour, no cosmics. Carries `MCTruth`, `GTruth`, `MCParticle` + Assns, `SimChannel` (`tpcrawdecoder`) and dnnsp/gauss/wiener wires; `SimEnergyDeposit` only in `g4_*.root`. The `prod10k*` campaigns hold HDF5 extracts only (56 000 `.h5`, no art ROOT). **Not usable for the SBND chain** (other detector, no SBND wires/flash). What it does prove: the SL7-container lar route runs on this host, which bears on decision 3 in sec 6 |
 
 **Verdict:**
 - **Not needed** for truth-in-ROOT of this chain (sec 3.1–3.3).
@@ -390,9 +407,10 @@ All go under one knob (`provenance_strings`). With the knob off, `Trun` is byte-
 
 1. **trackid → `nu_idx` source for 3b:** option T now, and/or L (larwirecell), sec 3.3.
 2. **`beam_flash`:** derive from the beam window, or drop the column (sec 4.1).
-3. **Where 3a/3b are developed:** a larwirecell `dev-v10_14_02_02` build on `wcgpu1`
-   (SL7 container + cvmfs available; no `/exp`), or yuhw's gpvm setup. The reco1 files
-   decide nothing here; the lar environment does.
+3. **Where 3a/3b are developed:** a larwirecell `dev-v10_14_02_02` build on `wcgpu1`, or
+   yuhw's gpvm setup. On `wcgpu1` the SL7 container + cvmfs are available and a
+   dunesw/larwirecell build already ran lar here (WC_FM_Sim, sec 3.5); there is no
+   `/exp`. The reco1 files decide nothing here; the lar environment does.
 4. **Backfill the 13 216-event sample** offline from the Bee zips (sec 3.4) now, or
    wait for a rerun with the knobs on.
 
