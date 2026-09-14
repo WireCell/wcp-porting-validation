@@ -27,6 +27,7 @@ python3 ql_display/ql_agree_score.py --tag p98voffq --truth-uid-map-tag keep    
 (cd $S && python3 d29_forensics.py --base p99wflip --arm p98voffq) > docs/qlmatch/d29/forensics_step2.txt
 (cd $S && python3 d29_forensics.py --base p98voffq --arm p100flip) > docs/qlmatch/d29/forensics_step3.txt
 # sec 5-6: knob wct-clustering.jsonnet wires_file / run_clus_evt.sh PDVD_CLUS_WIRES (G1 d29/g1_wires_file.txt), then the arms
+# (these ran BEFORE the sec-7 flip: to reproduce them now, add PDVD_QL_LASSO_BWEIGHT= (empty) to every arm but q29l6/q29l7)
 (cd $S && setsid nohup bash -c 'bash d29_chain.sh step0; bash d29_chain.sh levers' > /home/xqian/tmp/p29/chain.log 2>&1 < /dev/null &)
 (cd $S && python3 d29_lever_eval.py --base p100flip --control q29base --arms <arms> --cfg-dir /home/xqian/tmp/p29/cfg) > docs/qlmatch/d29/lever_eval.txt
 (cd $S && bash d29_chain.sh combo)                                                     # q29c1, then lever_eval_combo.txt
@@ -187,6 +188,10 @@ on the even-idx half (319 / 50 / 101), the odd-idx half (359 / 47 / 62) and comm
 - **The combination is worse than 0.1 alone** (+1 merit): λ 0.3 undoes what 0.1 recovers.
 - λ alone, the strength cutoff, the background weight, the old ladder ceilings and the pin exemption do not pass; neither
   wrapped charge (no effect) nor QtoL 0.0783.
+- **Re-running this table after the flip (§7).** The `p100flip` / `q29base` baseline and every lever arm except `q29l6` /
+  `q29l7` (which set the variable themselves) ran at boundary weight 0.2. Re-running them now gives 0.1 unless
+  `PDVD_QL_LASSO_BWEIGHT=` (empty) is added to the arm's `ENVS`. The same holds for any older PDVD Q/L or STM gate arm
+  (`d99*`, `d100*`) re-run against its archived outputs.
 
 ## 7. Decision: LASSO boundary weight 0.1 into production; what stays open
 
@@ -213,8 +218,12 @@ lost (sign test p ≈ 0.13) and holds on both halves; the rule was fixed before 
 doc 23–28 adoptions have. It should not be quoted as a measured 5-pair gain.
 
 **The flip** (owner, 2026-09-13: flip if all gates pass): `run_clus_evt.sh` gets `: "${PDVD_QL_LASSO_BWEIGHT=0.1}"` next to
-the λ default — the owning layer for PDVD production. The toolkit literal (0.2 in `qlmatching.jsonnet`) and the C++ default
-are untouched. `PDVD_QL_LASSO_BWEIGHT=` (exported empty) recovers 0.2; runs that set the variable explicitly are unaffected.
+the λ default, where the other tuned Q/L defaults (ladder, λ) already live. The toolkit literal (0.2 in `qlmatching.jsonnet`)
+and the C++ default are untouched. **Scope:** in this repository `run_clus_evt.sh` is the only job that compiles
+`wct-clustering.jsonnet` / `qlmatching.jsonnet` (`stm/run_campaign.sh`, `profile_ql.sh`, the staging and arm scripts all
+call it), so the whole wcp PDVD chain gets 0.1. A job that compiles the toolkit `qlmatching.jsonnet` directly (e.g. an
+external or LArSoft configuration) still gets 0.2, like the λ and ladder defaults before it. `PDVD_QL_LASSO_BWEIGHT=`
+(exported empty) recovers 0.2; runs that set the variable explicitly are unaffected.
 Proofs: compiled config after the flip == before the flip + `PDVD_QL_LASSO_BWEIGHT=0.1`, and after the flip with the
 variable empty == before the flip (md5, 3 events, `d29/flip_compiled_config.txt`: the only leaf that moves is the
 QLMatching `lasso_boundary_weight`). **F1 PASS** (`scripts/d29_f1_check.sh`): `q29flip` = production after the flip with no
