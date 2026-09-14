@@ -1,0 +1,11 @@
+# doc pdvd/100 sec 7.5 gate F2 -- SP at the new default: run_nf_sp_dnnroi_evt.sh -O _p100spflip 039252 0 (no --top-gain-scale) vs p98von (--top-gain-scale 0.889, doc 99); frame archives by member content (abtest/hash_archive.py)
+# runner 'Top gain:' lines in the p100spflip log (expect none: no TLA passed, the jsonnet default applies): 0
+anode0: IDENTICAL  p100spflip b92c3cf494469bfae95cc612a7eb1e1b17a75c79a8fc42d9e366a0faa594bacd 12  p98von b92c3cf494469bfae95cc612a7eb1e1b17a75c79a8fc42d9e366a0faa594bacd 12
+anode1: IDENTICAL  p100spflip d8b25e53b74a7365fe3eb67812c14e2f9945abfe48feaab40f97238cb39d2a6a 12  p98von d8b25e53b74a7365fe3eb67812c14e2f9945abfe48feaab40f97238cb39d2a6a 12
+anode2: IDENTICAL  p100spflip 1aba2c6307d47b2d1e3705615cc52830c803e259e1833fb5de7b0f86c914a5e2 12  p98von 1aba2c6307d47b2d1e3705615cc52830c803e259e1833fb5de7b0f86c914a5e2 12
+anode3: IDENTICAL  p100spflip cb3bb8bf295616b39b668afa028a4063cc5e090f2c4c7a147a8d7eb993311e52 12  p98von cb3bb8bf295616b39b668afa028a4063cc5e090f2c4c7a147a8d7eb993311e52 12
+anode4: IDENTICAL  p100spflip eddc7b2f3cf004e88e2c8573edf503f79a8db9ef7e70d202c672f798220fee44 12  p98von eddc7b2f3cf004e88e2c8573edf503f79a8db9ef7e70d202c672f798220fee44 12
+anode5: IDENTICAL  p100spflip 8626b2610779945c98c0d6de4c9916c7f345026f6986eddac3b0a6b8d68a2bb5 12  p98von 8626b2610779945c98c0d6de4c9916c7f345026f6986eddac3b0a6b8d68a2bb5 12
+anode6: IDENTICAL  p100spflip 8d289f5e3d28cb25d3198d0246ed324d5dc630f590d5dad9d19d59a921de1b79 12  p98von 8d289f5e3d28cb25d3198d0246ed324d5dc630f590d5dad9d19d59a921de1b79 12
+anode7: IDENTICAL  p100spflip fd1021f587bd9601e0f96c7875cd2af248703d72ca1bb29a31b161d086de9627 12  p98von fd1021f587bd9601e0f96c7875cd2af248703d72ca1bb29a31b161d086de9627 12
+SUMMARY F2: identical 8/8

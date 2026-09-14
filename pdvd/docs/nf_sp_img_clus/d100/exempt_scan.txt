@@ -1,0 +1,26 @@
+# doc pdvd/100 round 2 -- own100x (owner, 2026-09-13, not blind): 10 of 10 objects labelled
+# labels /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/stm_michel_labels/own100x/labels.json; set /home/xqian/tmp/p100/xscan
+
+== 1. each object
+   1 039252_8/88     p100bx   top    tick     6.8 early edge (frame start)         michel   7.7 MeV | OWNER STM_MICHEL
+   2 039252_9/42     p100bx   bottom tick     4.0 early edge (frame start)         michel   2.3 MeV | OWNER THRU
+   3 039252_14/104   p100bx   top    tick 10040.0 late edge of a 10000-tick frame  michel   5.5 MeV | OWNER STM_MICHEL
+   4 039252_15/74    p100bx   top    tick  9963.7 late edge of a 10000-tick frame  michel  29.3 MeV | OWNER STM_MICHEL
+   5 039253_1/85     p100bxp  top    tick     2.5 early edge (frame start)         michel   1.1 MeV | OWNER STM_MICHEL
+   6 039253_14/108   p100bxp  top    tick  9954.2 late edge of a 10000-tick frame  michel   3.8 MeV | OWNER STM_MICHEL
+   7 039253_15/98    p100bx   top    tick  9992.9 late edge of a 10000-tick frame  michel   1.3 MeV | OWNER THRU
+   8 039253_16/103   p100bx   top    tick  9947.7 late edge of a 10000-tick frame  michel   3.9 MeV | OWNER STM_MICHEL
+   9 039349_71/19    p100bx   bottom tick     5.1 early edge (frame start)         michel  13.8 MeV | OWNER STM_MICHEL  also p100bxp 039349_71/21
+  10 039349_78/20    p100bxp  bottom tick    21.1 early edge (frame start)         michel   7.0 MeV | OWNER STM_MICHEL
+
+wrote ../../scan/pdvd_stm_michel_own100x_verdicts.json: 11 items (one per arm key)
+
+== 2. the adoption rule (prereg_round2.md sec 2), per arm and by edge
+  p100bx (vs p100c): gained 9: stoppers 7, non-stoppers 2, excluded 0, unjudged 0; purity 0.778 vs bar 0.963 -> below the bar: 7 stoppers for 2 non-stoppers, owner decides
+      early     n 3: 039252_8/88 STM_MICHEL (own100x), 039252_9/42 THRU (own100x), 039349_71/19 STM_MICHEL (own100x)
+      late6400  n 2: 039349_40/48 STM_MICHEL (own100), 039349_67/35 STM_MICHEL (own100)
+      late10000 n 4: 039252_14/104 STM_MICHEL (own100x), 039252_15/74 STM_MICHEL (own100x), 039253_15/98 THRU (own100x), 039253_16/103 STM_MICHEL (own100x)
+  p100bxp (vs p99wflip): gained 6: stoppers 6, non-stoppers 0, excluded 0, unjudged 0; purity 1.000 vs bar 0.965 -> RECOMMEND
+      early     n 3: 039253_1/85 STM_MICHEL (own100x), 039349_71/21 STM_MICHEL (own100x), 039349_78/20 STM_MICHEL (own100x)
+      late6400  n 2: 039349_48/21 STM_MICHEL (own100), 039349_81/41 STM_MICHEL (own100)
+      late10000 n 1: 039253_14/108 STM_MICHEL (own100x)

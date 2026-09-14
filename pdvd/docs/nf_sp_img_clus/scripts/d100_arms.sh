@@ -15,7 +15,7 @@
 set -u
 WAVE=${WAVE:?set WAVE pr|flip}; ARM=${ARM:?set ARM}
 PDVD=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
-PIN=/home/xqian/tmp/p96/libpin_p96
+PIN=${PIN:-/home/xqian/tmp/p96/libpin_p96}   # round 2: the exemption's binary is libpin_p100b
 LOGD=/home/xqian/tmp/p100/arm_$ARM
 [ -e "$LOGD" ] && { echo "REFUSE existing log dir $LOGD" >&2; exit 2; }
 mkdir -p "$LOGD"

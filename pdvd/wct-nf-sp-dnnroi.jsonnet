@@ -100,9 +100,11 @@ function(
   // One charge-scale constant for the TOP (TDE) electronics, SP only: passed
   // to both the top OmnibusSigProc postgain and the top L1SP gain_scale
   // (toolkit protodunevd/sp.jsonnet make_sigproc + l1sp_after_dnnroi.jsonnet).
-  // Default 1.0 = legacy => compiled config byte-identical.  The runner's
-  // --top-gain-scale sets it.  doc pdvd/99 (s = 0.889).
-  top_gain_scale           = 1.0,
+  // PRODUCTION 0.889 since doc pdvd/100 sec 7.5 (owner 2026-09-13; measured in
+  // doc pdvd/99, s = 0.889).  1.0 = the pre-flip SP (compiled config byte-identical
+  // to the job before the knob); the runner's --top-gain-scale overrides it.  The
+  // toolkit sp.jsonnet default stays 1.0, so no other importer moves.
+  top_gain_scale           = 0.889,
   // Wire-geometry file for this job only (e.g. 'protodunevd-wires-larsoft-v5.json.bz2', the file the July
   // SP frames were made with).  '' = params.files.wires (production) => compiled config byte-identical.
   // The runner's --wires sets it.  doc pdvd/99 sec 4.3 (SP depends on the per-plane channel order).

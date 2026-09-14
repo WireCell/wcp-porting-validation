@@ -1,0 +1,13 @@
+# doc pdvd/100 sec 7.5 -- compiled-config proof of the production flip (wcsonnet, before the edits vs after)
+# SP entry pdvd/wct-nf-sp-dnnroi.jsonnet with -A orig_prefix/sp_prefix (039252_0) -A reality=data -S anode_indices=[0..7]
+c16158bba0d77626c208abbf15bdfb98  sp_before_default.json
+436c1480186647bfca10e9c28e9caa9a  sp_before_g0889.json
+436c1480186647bfca10e9c28e9caa9a  sp_after_default.json
+c16158bba0d77626c208abbf15bdfb98  sp_after_g1.json
+sp: after (new default 0.889) == before + -S top_gain_scale=0.889: IDENTICAL
+sp: after + -S top_gain_scale=1.0 == before default: IDENTICAL
+# PR driver pdvd/wct-pr-perevt.jsonnet with the G1 recipe (039349_7_p99rwon runner TLAs, pipeline -nu -stm-fit)
+18971a22b641b2ccb3b500d1de023b2f  pr_before_c0863.json
+18971a22b641b2ccb3b500d1de023b2f  pr_after_default.json
+18971a22b641b2ccb3b500d1de023b2f  ../g1/pr_after_c0863.json
+pr: after (new default 0.8630) == before + -S stm_recomb_C=0.8630: IDENTICAL; == G1's c0863 compile: IDENTICAL

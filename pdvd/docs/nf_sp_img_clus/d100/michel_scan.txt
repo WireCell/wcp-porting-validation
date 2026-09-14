@@ -1,0 +1,102 @@
+# doc pdvd/100 round 2 -- own100m (owner, 2026-09-13, not blind): 65 of 65 objects labelled (tranche 1: 46 of 46)
+# labels /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/stm_michel_labels/own100m/labels.json; set /home/xqian/tmp/p100/mscan
+
+== 1. each object (shown on p100c)
+   1 t1 039252_8/110   wflip 039252_8/102   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+   2 t1 039252_9/51    wflip 039252_9/31    bottom p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+   3 t1 039252_9/103   wflip 039252_9/101   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+   4 t1 039252_12/117  wflip 039252_12/123  top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+   5 t1 039252_17/94   wflip 039252_17/88   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+   6 t1 039252_17/95   wflip 039252_17/90   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (medium) -> OWNER STM_MICHEL attached  CLASS
+   7 t1 039253_0/104   wflip 039253_0/110   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (medium) -> OWNER STM_ONLY   kind
+   8 t1 039253_1/107   wflip 039253_1/105   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (medium) -> OWNER UNCLEAR   CLASS
+   9 t1 039253_3/61    wflip 039253_3/61    top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (medium) -> OWNER STM_MICHEL attached  same
+  10 t1 039253_3/78    wflip 039253_3/79    top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+  11 t1 039253_7/89    wflip 039253_7/80    top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (medium) -> OWNER STM_MICHEL attached  same
+  12 t1 039253_8/69    wflip 039253_8/65    top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  13 t1 039253_11/84   wflip 039253_11/86   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (high) -> OWNER STM_ONLY   CLASS
+  14 t1 039253_11/113  wflip 039253_11/106  top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_MICHEL attached  kind
+  15 t1 039253_12/92   wflip 039253_12/93   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  16 t1 039349_0/28    wflip 039349_0/28    bottom p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  17 t1 039349_7/66    wflip 039349_7/67    top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (medium) -> OWNER STM_MICHEL attached  same
+  18 t1 039349_8/53    wflip 039349_8/54    top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_ONLY   kind
+  19 t1 039349_10/66   wflip 039349_10/58   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (medium) -> OWNER STM_MICHEL attached  same
+  20 t1 039349_12/52   wflip 039349_12/44   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_MICHEL attached  kind
+  21 t1 039349_17/54   wflip 039349_17/52   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+  22 t1 039349_18/47   wflip 039349_18/33   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_MICHEL attached  kind
+  23 t1 039349_20/28   wflip 039349_20/32   bottom p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  24 t1 039349_22/40   wflip 039349_22/39   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (low) -> OWNER STM_MICHEL attached  CLASS
+  25 t1 039349_29/48   wflip 039349_29/45   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_ONLY   kind
+  26 t1 039349_31/48   wflip 039349_31/39   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (medium) -> OWNER STM_MICHEL attached  same
+  27 t1 039349_32/63   wflip 039349_32/63   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (owner) -> OWNER STM_MICHEL attached  CLASS
+  28 t1 039349_33/67   wflip 039349_33/58   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  29 t1 039349_35/32   wflip 039349_35/30   bottom p99wflip [is_stm 0, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  30 t1 039349_43/48   wflip 039349_43/50   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+  31 t1 039349_44/20   wflip 039349_44/18   bottom p99wflip [is_stm 0, michel_found 0] p100c [is_stm 0, michel_found 1] | record THRU (owner) -> OWNER STM_MICHEL attached  CLASS
+  32 t1 039349_44/78   wflip 039349_44/75   bottom p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  33 t1 039349_45/21   wflip 039349_45/25   bottom p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  34 t1 039349_47/24   wflip 039349_47/24   bottom p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (high) -> OWNER STM_MICHEL attached  CLASS
+  35 t1 039349_47/71   wflip 039349_47/68   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (medium) -> OWNER STM_ONLY   same
+  36 t1 039349_48/59   wflip 039349_48/58   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+  37 t1 039349_50/49   wflip 039349_50/45   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  38 t1 039349_62/68   wflip 039349_62/63   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_ONLY (high) -> OWNER STM_MICHEL attached  kind
+  39 t1 039349_62/69   wflip 039349_62/66   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 0, michel_found 1] | record THRU (medium) -> OWNER STM_MICHEL attached  CLASS
+  40 t1 039349_63/44   wflip 039349_63/47   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 0, michel_found 1] | record THRU (owner) -> OWNER MESSY   CLASS
+  41 t1 039349_64/45   wflip 039349_64/52   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  42 t1 039349_66/80   wflip 039349_66/78   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 1, michel_found 1] | record STM_ONLY (medium) -> OWNER STM_ONLY   same
+  43 t1 039349_70/58   wflip 039349_70/61   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_MICHEL (owner) -> OWNER THRU   CLASS
+  44 t1 039349_72/60   wflip 039349_72/65   bottom p99wflip [is_stm 1, michel_found 1] p100c [is_stm 1, michel_found 0] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+  45 t1 039349_77/45   wflip 039349_77/48   top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 1] | record THRU (owner) -> OWNER STM_MICHEL attached  CLASS
+  46 t1 039349_81/55   wflip 039349_81/51   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 0] | record STM_ONLY (owner) -> OWNER MESSY   CLASS
+  47 t2 039252_6/110   wflip 039252_6/106   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+  48 t2 039252_8/96    wflip 039252_8/82    top    p99wflip [is_stm 0, michel_found 1] p100c [is_stm 1, michel_found 1] | record THRU (owner) -> OWNER STM_MICHEL attached  CLASS
+  49 t2 039252_15/88   wflip 039252_15/81   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+  50 t2 039253_1/75    wflip 039253_1/79    top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  51 t2 039253_1/101   wflip 039253_1/98    top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (medium) -> OWNER STM_ONLY   same
+  52 t2 039253_5/113   wflip 039253_5/107   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+  53 t2 039253_8/68    wflip 039253_8/64    top    p99wflip [is_stm 0, michel_found 1] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  54 t2 039253_9/35    wflip 039253_9/42    bottom p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (medium) -> OWNER STM_MICHEL attached  kind
+  55 t2 039253_9/101   wflip 039253_9/108   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (medium) -> OWNER STM_ONLY   same
+  56 t2 039349_5/65    wflip 039349_5/65    top    p99wflip [is_stm 0, michel_found 1] p100c [is_stm 1, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  57 t2 039349_7/57    wflip 039349_7/57    top    p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 0] | record THRU (owner) -> OWNER THRU   same
+  58 t2 039349_13/61   wflip 039349_13/60   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+  59 t2 039349_18/10   wflip 039349_18/10   bottom p99wflip [is_stm 0, michel_found 0] p100c [is_stm 1, michel_found 0] | record THRU (medium) -> OWNER STM_ONLY   CLASS
+  60 t2 039349_22/59   wflip 039349_22/56   top    p99wflip [is_stm 0, michel_found 1] p100c [is_stm 1, michel_found 1] | record STM_ONLY (owner) -> OWNER STM_MICHEL attached  kind
+  61 t2 039349_24/37   wflip 039349_24/35   bottom p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (low) -> OWNER THRU   CLASS
+  62 t2 039349_36/68   wflip 039349_36/63   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (high) -> OWNER STM_MICHEL attached  same
+  63 t2 039349_39/56   wflip 039349_39/56   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (owner) -> OWNER THRU   CLASS
+  64 t2 039349_41/58   wflip 039349_41/51   top    p99wflip [is_stm 1, michel_found 1] p100c [is_stm 0, michel_found 1] | record STM_MICHEL (owner) -> OWNER STM_MICHEL attached  same
+  65 t2 039349_56/49   wflip 039349_56/41   top    p99wflip [is_stm 1, michel_found 0] p100c [is_stm 0, michel_found 0] | record STM_ONLY (high) -> OWNER STM_ONLY   same
+
+== 2. the owner's verdicts by mover kind (descriptive; NOT a purity -- the set is selected by the metric)
+  t1 bottom record michel, michel_found 0 -> 1                   {'STM_MICHEL': 1}
+  t1 bottom record michel, michel_found 1 -> 0                   {'STM_MICHEL': 3}
+  t1 bottom record no Michel, michel_found 0 -> 1                {'STM_ONLY': 1, 'STM_MICHEL': 3}
+  t1 bottom record no Michel, michel_found 1 -> 0                {'STM_MICHEL': 1}
+  t1 top    record michel, michel_found 0 -> 1                   {'STM_MICHEL': 5}
+  t1 top    record michel, michel_found 1 -> 0                   {'STM_MICHEL': 9, 'STM_ONLY': 3, 'THRU': 1}
+  t1 top    record no Michel, michel_found 0 -> 1                {'STM_MICHEL': 10, 'UNCLEAR': 1, 'STM_ONLY': 5, 'MESSY': 1}
+  t1 top    record no Michel, michel_found 1 -> 0                {'STM_MICHEL': 1, 'MESSY': 1}
+  t2 bottom record STM_ONLY, is_stm 1 -> 0                       {'STM_MICHEL': 1, 'THRU': 1}
+  t2 bottom record THRU, is_stm 0 -> 1                           {'STM_ONLY': 1}
+  t2 top    record STM_MICHEL, is_stm 0 -> 1                     {'STM_MICHEL': 2}
+  t2 top    record STM_MICHEL, is_stm 1 -> 0                     {'STM_MICHEL': 3, 'THRU': 1}
+  t2 top    record STM_ONLY, is_stm 0 -> 1                       {'STM_MICHEL': 1}
+  t2 top    record STM_ONLY, is_stm 1 -> 0                       {'STM_ONLY': 6, 'STM_MICHEL': 1}
+  t2 top    record THRU, is_stm 0 -> 1                           {'STM_MICHEL': 1, 'THRU': 1}
+
+== 3. wrote ../../scan/pdvd_stm_michel_own100m_verdicts.json: 130 items (one per arm key)
+  p99wflip: /home/xqian/tmp/p100/carry_r2/latest_on_p99wflip_corrected.json: 613 items; replaced by own100m 65 (of 65), by own100 10
+  p100c: /home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json: 635 items; replaced by own100m 65 (of 65), by own100 0
+
+== 4. re-grade on the corrected records (pre-registered criterion: prereg.md sec 2 / prereg_round2.md sec 1)
+  p99wflip is_stm 220/8/35/146 purity 0.965 +- 0.012 eff 0.863   michel 135/9/29/236 purity 0.938 +- 0.020 eff 0.823   (record 613 items, no candidate 185)
+      top    is_stm 154/4/23/69 purity 0.975   michel 94/7/21/128 purity 0.931 eff 0.817
+      bottom is_stm 66/4/12/77 purity 0.943   michel 41/2/8/108 purity 0.953 eff 0.837
+  p100c    is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848   (record 635 items, no candidate 246)
+      top    is_stm 159/4/27/42 purity 0.975   michel 101/9/19/103 purity 0.918 eff 0.842
+      bottom is_stm 72/5/7/53 purity 0.935   michel 44/3/7/83 purity 0.936 eff 0.863
+  Michel purity: p99wflip 0.938 -> p100c 0.924, difference -0.014 = -0.48 sigma  PASS
+  is_stm purity: p99wflip 0.965 -> p100c 0.963, difference -0.002 = -0.14 sigma  (reported)
+
+  unlabelled objects keep their carried verdict: 0

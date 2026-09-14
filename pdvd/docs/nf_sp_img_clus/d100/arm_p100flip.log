@@ -1,0 +1,5 @@
+[p100flip] wave flip src production staging PR_TLA '' start 2026-09-13T17:23:49-07:00 pin Clus ef0822ec0b39 events 120
+[p100flip] stage done 2026-09-13T17:23:49-07:00: ok 120 FAIL 0 no-input 0 loadavg 3.29
+[p100flip] clus done 2026-09-13T17:28:11-07:00: ok 120 FAIL 0 no-input 0 loadavg 15.59
+[p100flip] pr done 2026-09-13T17:34:15-07:00: ok 119 FAIL 1 no-input 0 loadavg 8.49
+[p100flip] finished 2026-09-13T17:34:15-07:00 pin Clus ef0822ec0b39 (start ef0822ec0b39)

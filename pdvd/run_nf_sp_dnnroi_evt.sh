@@ -124,7 +124,9 @@ Options:
                  One charge-scale constant for the TOP (TDE, anodes 4-7)
                  electronics in SP: top OmnibusSigProc postgain and top
                  L1SP gain_scale are set to <s> (top charge out ~ 1/s).
-                 Absent = no TLA passed = legacy config (doc pdvd/99).
+                 Absent = no TLA passed = the jsonnet default, PRODUCTION
+                 0.889 since doc pdvd/100 sec 7.5 (2026-09-13); pass 1.0
+                 for the pre-flip SP (doc pdvd/99).
   --wires <file> Wire-geometry file for this job (e.g.
                  protodunevd-wires-larsoft-v5.json.bz2).  Absent = no TLA
                  passed = params.jsonnet's file (doc pdvd/99 sec 4.3).

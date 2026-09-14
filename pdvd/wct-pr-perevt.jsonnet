@@ -1399,6 +1399,11 @@ function(
     // PDVD ON; SBND does not have the knob (C++ default false).
     stm_readout_edge_guard = true,
     stm_readout_edge_ticks = 60,   // 30 us = 4.4 cm of drift
+    // doc pdvd/100 round 2: the guard defers its veto to check_stm_michel,
+    // which keeps a stop at the window edge only with a Michel object at it --
+    // needs stm_michel_extra={readout_edge_require_michel:true} as well
+    // (without it the guard is effectively off).  false = production.
+    stm_readout_edge_defer = false,
     // Steiner-terminal per-point charge floor (e).  C++/SBND 4000 (prototype);
     // PDVD value from the doc-25 sec 13 threshold census (null = 4000).
     steiner_terminal_charge = 500,   // e; doc 25 sec 13.6 census over 4000/2000/1000/500 on 3 events: no-steiner exits 39 -> 14, STM tags 16 -> 18, first Bragg-clean track appears at 500; W-plane per-point median ~1400 e
@@ -1638,9 +1643,11 @@ function(
     // no verdict and no tagger energy moves; what moves is muon_ke_dqdx and
     // the Michel energies in T_stm_michel.  false = the pre-doc-16 job.
     stm_recomb_calibrated    = true,
-    // doc pdvd/100: the C of that inverse.  0.7941 = doc pdhd/16's fit on the
-    // pre-gain top scale (toolkit default; byte-identical).
-    stm_recomb_C             = 0.7941,
+    // doc pdvd/100: the C of that inverse.  PRODUCTION 0.8630 since doc pdvd/100
+    // sec 7.5 (owner 2026-09-13): the refit on the top-gain SP (sec 3), which
+    // goes with wct-nf-sp-dnnroi.jsonnet top_gain_scale 0.889.  0.7941 = doc
+    // pdhd/16's fit on the pre-gain top scale (the toolkit default).
+    stm_recomb_C             = 0.8630,
     // Single-photon stem dE/dx: DEFAULT ON (owner 2026-07-30) -- route
     // shw_sp_vec_{median,mean}_dedx through the configured recombination
     // model above, with sp_mean_dedx_cut = 2.23 MeV/cm, the physical-scale
@@ -4544,6 +4551,7 @@ function(
                              stm_cathode_guard_cm=stm_cathode_guard_cm,
                              stm_readout_edge_guard=stm_readout_edge_guard,
                              stm_readout_edge_ticks=stm_readout_edge_ticks,
+                             stm_readout_edge_defer=stm_readout_edge_defer,   // doc pdvd/100 round 2
                              steiner_terminal_charge=steiner_terminal_charge,
                              retile_wrapped_channel_activity=retile_wrapped_channel_activity,
                              retile_steiner_terminal_charge=retile_steiner_terminal_charge,

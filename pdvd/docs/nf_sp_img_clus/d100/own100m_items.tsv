@@ -1,0 +1,66 @@
+scan_id	tranche	key_p100c	key_p99wflip	record_key	vol	record_verdict	record_confidence	p99wflip	p100c	michel_mover	stm_mover	kind
+1	1	039252_8/110	039252_8/102	039252_8/110	top	STM_MICHEL	owner	is_stm 0, michel_found 0	is_stm 0, michel_found 1	1	0	record michel, michel_found 0 -> 1
+2	1	039252_9/51	039252_9/31	039252_9/51	bottom	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+3	1	039252_9/103	039252_9/101	039252_9/103	top	STM_MICHEL	owner	is_stm 1, michel_found 0	is_stm 0, michel_found 1	1	1	record michel, michel_found 0 -> 1
+4	1	039252_12/117	039252_12/123	039252_12/117	top	STM_MICHEL	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record michel, michel_found 0 -> 1
+5	1	039252_17/94	039252_17/88	039252_17/94	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+6	1	039252_17/95	039252_17/90	039252_17/95	top	THRU	medium	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+7	1	039253_0/104	039253_0/110	039253_0/104	top	STM_MICHEL	medium	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+8	1	039253_1/107	039253_1/105	039253_1/107	top	THRU	medium	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+9	1	039253_3/61	039253_3/61	039253_3/61	top	STM_MICHEL	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record michel, michel_found 0 -> 1
+10	1	039253_3/78	039253_3/79	039253_3/78	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+11	1	039253_7/89	039253_7/80	039253_7/89	top	STM_MICHEL	medium	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+12	1	039253_8/69	039253_8/65	039253_8/69	top	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+13	1	039253_11/84	039253_11/86	039253_11/84	top	THRU	high	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+14	1	039253_11/113	039253_11/106	039253_11/113	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+15	1	039253_12/92	039253_12/93	039253_12/92	top	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+16	1	039349_0/28	039349_0/28	039349_0/28	bottom	STM_MICHEL	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record michel, michel_found 0 -> 1
+17	1	039349_7/66	039349_7/67	039349_7/66	top	STM_MICHEL	medium	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+18	1	039349_8/53	039349_8/54	039349_8/53	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+19	1	039349_10/66	039349_10/58	039349_10/66	top	STM_MICHEL	medium	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+20	1	039349_12/52	039349_12/44	039349_12/52	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+21	1	039349_17/54	039349_17/52	039349_17/54	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+22	1	039349_18/47	039349_18/33	039349_18/47	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+23	1	039349_20/28	039349_20/32	039349_20/28	bottom	STM_ONLY	medium	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record no Michel, michel_found 1 -> 0
+24	1	039349_22/40	039349_22/39	039349_22/40	top	THRU	low	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+25	1	039349_29/48	039349_29/45	039349_29/48	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+26	1	039349_31/48	039349_31/39	039349_31/48	top	STM_MICHEL	medium	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+27	1	039349_32/63	039349_32/63	039349_32/63	top	THRU	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+28	1	039349_33/67	039349_33/58	039349_33/67	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+29	1	039349_35/32	039349_35/30	039349_35/32	bottom	STM_MICHEL	owner	is_stm 0, michel_found 1	is_stm 0, michel_found 0	1	0	record michel, michel_found 1 -> 0
+30	1	039349_43/48	039349_43/50	039349_43/48	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+31	1	039349_44/20	039349_44/18	039349_44/20	bottom	THRU	owner	is_stm 0, michel_found 0	is_stm 0, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+32	1	039349_44/78	039349_44/75	039349_44/78	bottom	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+33	1	039349_45/21	039349_45/25	039349_45/21	bottom	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+34	1	039349_47/24	039349_47/24	039349_47/24	bottom	THRU	high	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+35	1	039349_47/71	039349_47/68	039349_47/71	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+36	1	039349_48/59	039349_48/58	039349_48/59	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+37	1	039349_50/49	039349_50/45	039349_50/49	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+38	1	039349_62/68	039349_62/63	039349_62/68	top	STM_ONLY	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record no Michel, michel_found 1 -> 0
+39	1	039349_62/69	039349_62/66	039349_62/69	top	THRU	medium	is_stm 0, michel_found 0	is_stm 0, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+40	1	039349_63/44	039349_63/47	039349_63/44	top	THRU	owner	is_stm 0, michel_found 0	is_stm 0, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+41	1	039349_64/45	039349_64/52	039349_64/45	top	STM_MICHEL	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record michel, michel_found 0 -> 1
+42	1	039349_66/80	039349_66/78	039349_66/80	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 1, michel_found 1	1	0	record no Michel, michel_found 0 -> 1
+43	1	039349_70/58	039349_70/61	039349_70/58	top	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record michel, michel_found 1 -> 0
+44	1	039349_72/60	039349_72/65	039349_72/60	bottom	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 1, michel_found 0	1	0	record michel, michel_found 1 -> 0
+45	1	039349_77/45	039349_77/48	039349_77/45	top	THRU	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 1	1	1	record no Michel, michel_found 0 -> 1
+46	1	039349_81/55	039349_81/51	039349_81/55	top	STM_ONLY	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 0	1	1	record no Michel, michel_found 1 -> 0
+47	2	039252_6/110	039252_6/106	039252_6/110	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+48	2	039252_8/96	039252_8/82	039252_8/96	top	THRU	owner	is_stm 0, michel_found 1	is_stm 1, michel_found 1	0	1	record THRU, is_stm 0 -> 1
+49	2	039252_15/88	039252_15/81	039252_15/88	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 0, michel_found 1	0	1	record STM_MICHEL, is_stm 1 -> 0
+50	2	039253_1/75	039253_1/79	039253_1/75	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+51	2	039253_1/101	039253_1/98	039253_1/101	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+52	2	039253_5/113	039253_5/107	039253_5/113	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+53	2	039253_8/68	039253_8/64	039253_8/68	top	STM_MICHEL	owner	is_stm 0, michel_found 1	is_stm 1, michel_found 1	0	1	record STM_MICHEL, is_stm 0 -> 1
+54	2	039253_9/35	039253_9/42	039253_9/35	bottom	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+55	2	039253_9/101	039253_9/108	039253_9/101	top	STM_ONLY	medium	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+56	2	039349_5/65	039349_5/65	039349_5/65	top	STM_MICHEL	owner	is_stm 0, michel_found 1	is_stm 1, michel_found 1	0	1	record STM_MICHEL, is_stm 0 -> 1
+57	2	039349_7/57	039349_7/57	039349_7/57	top	THRU	owner	is_stm 0, michel_found 0	is_stm 1, michel_found 0	0	1	record THRU, is_stm 0 -> 1
+58	2	039349_13/61	039349_13/60	039349_13/61	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+59	2	039349_18/10	039349_18/10	039349_18/10	bottom	THRU	medium	is_stm 0, michel_found 0	is_stm 1, michel_found 0	0	1	record THRU, is_stm 0 -> 1
+60	2	039349_22/59	039349_22/56	039349_22/59	top	STM_ONLY	owner	is_stm 0, michel_found 1	is_stm 1, michel_found 1	0	1	record STM_ONLY, is_stm 0 -> 1
+61	2	039349_24/37	039349_24/35	039349_24/37	bottom	STM_ONLY	low	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0
+62	2	039349_36/68	039349_36/63	039349_36/68	top	STM_MICHEL	high	is_stm 1, michel_found 1	is_stm 0, michel_found 1	0	1	record STM_MICHEL, is_stm 1 -> 0
+63	2	039349_39/56	039349_39/56	039349_39/56	top	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 1	0	1	record STM_MICHEL, is_stm 1 -> 0
+64	2	039349_41/58	039349_41/51	039349_41/58	top	STM_MICHEL	owner	is_stm 1, michel_found 1	is_stm 0, michel_found 1	0	1	record STM_MICHEL, is_stm 1 -> 0
+65	2	039349_56/49	039349_56/41	039349_56/49	top	STM_ONLY	high	is_stm 1, michel_found 0	is_stm 0, michel_found 0	0	1	record STM_ONLY, is_stm 1 -> 0

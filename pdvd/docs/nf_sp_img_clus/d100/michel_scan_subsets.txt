@@ -1,0 +1,28 @@
+# doc pdvd/100 round 2 -- selection check on the corrected-record re-grade; d100_michel_scan_subsets.py
+# records {'p99wflip': '/home/xqian/tmp/p100/carry_r2/latest_on_p99wflip_corrected.json', 'p100c': '/home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json'}
+
+== p99wflip (corrected items with a candidate: 62)
+    all                    n 409  is_stm 220/8/35/146 purity 0.965 +- 0.012 eff 0.863   michel 135/9/29/236 purity 0.938 +- 0.020 eff 0.823
+    untouched              n 347  is_stm 180/5/17/145 purity 0.973 +- 0.012 eff 0.914   michel 114/4/8/221 purity 0.966 +- 0.017 eff 0.934
+    touched                n  62  is_stm 40/3/18/1 purity 0.930 +- 0.039 eff 0.690   michel 21/5/21/15 purity 0.808 +- 0.077 eff 0.500
+    common                 n 298  is_stm 183/5/27/83 purity 0.973 +- 0.012 eff 0.871   michel 109/7/26/156 purity 0.940 +- 0.022 eff 0.807
+    arm-only               n 111  is_stm 37/3/8/63 purity 0.925 +- 0.042 eff 0.822   michel 26/2/3/80 purity 0.929 +- 0.049 eff 0.897
+    common untouched       n 236  is_stm 143/2/9/82 purity 0.986 +- 0.010 eff 0.941   michel 88/2/5/141 purity 0.978 +- 0.016 eff 0.946
+    arm-only untouched     n 111  is_stm 37/3/8/63 purity 0.925 +- 0.042 eff 0.822   michel 26/2/3/80 purity 0.929 +- 0.049 eff 0.897
+
+== p100c (corrected items with a candidate: 62)
+    all                    n 369  is_stm 231/9/34/95 purity 0.963 +- 0.012 eff 0.872   michel 145/12/26/186 purity 0.924 +- 0.021 eff 0.848
+    untouched              n 307  is_stm 196/8/11/92 purity 0.961 +- 0.014 eff 0.947   michel 119/5/10/173 purity 0.960 +- 0.018 eff 0.922
+    touched                n  62  is_stm 35/1/23/3 purity 0.972 +- 0.027 eff 0.603   michel 26/7/16/13 purity 0.788 +- 0.071 eff 0.619
+    common                 n 298  is_stm 178/3/32/85 purity 0.983 +- 0.009 eff 0.848   michel 114/9/21/154 purity 0.927 +- 0.023 eff 0.844
+    arm-only               n  71  is_stm 53/6/2/10 purity 0.898 +- 0.039 eff 0.964   michel 31/3/5/32 purity 0.912 +- 0.049 eff 0.861
+    common untouched       n 236  is_stm 143/2/9/82 purity 0.986 +- 0.010 eff 0.941   michel 88/2/5/141 purity 0.978 +- 0.016 eff 0.946
+    arm-only untouched     n  71  is_stm 53/6/2/10 purity 0.898 +- 0.039 eff 0.964   michel 31/3/5/32 purity 0.912 +- 0.049 eff 0.861
+
+== p100c - p99wflip, in sigma (both arms in quadrature)
+  all                  Michel purity 0.938 -> 0.924 (-0.48 sigma)   is_stm purity 0.965 -> 0.963 (-0.14 sigma)
+  untouched            Michel purity 0.966 -> 0.960 (-0.26 sigma)   is_stm purity 0.973 -> 0.961 (-0.67 sigma)
+  common               Michel purity 0.940 -> 0.927 (-0.40 sigma)   is_stm purity 0.973 -> 0.983 (+0.66 sigma)
+  arm-only             Michel purity 0.929 -> 0.912 (-0.24 sigma)   is_stm purity 0.925 -> 0.898 (-0.47 sigma)
+  common untouched     Michel purity 0.978 -> 0.978 (+0.00 sigma)   is_stm purity 0.986 -> 0.986 (+0.00 sigma)
+  arm-only untouched   Michel purity 0.929 -> 0.912 (-0.24 sigma)   is_stm purity 0.925 -> 0.898 (-0.47 sigma)

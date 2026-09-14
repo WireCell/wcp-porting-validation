@@ -1,0 +1,6 @@
+record verdict unchanged 35, Michel kind changed 14, class changed 16 (of 65)
+record items of owner confidence changed: 9: ['039349_32/63 THRU->STM_MICHEL', '039349_44/20 THRU->STM_MICHEL', '039349_63/44 THRU->MESSY', '039349_70/58 STM_MICHEL->THRU', '039349_77/45 THRU->STM_MICHEL', '039349_81/55 STM_ONLY->MESSY', '039252_8/96 THRU->STM_MICHEL', '039349_22/59 STM_ONLY->STM_MICHEL', '039349_39/56 STM_MICHEL->THRU']
+  record Michel, p99wflip 0 -> p100c 1          {'STM_MICHEL': 6}
+  record Michel, p99wflip 1 -> p100c 0          {'STM_MICHEL': 12, 'STM_ONLY': 3, 'THRU': 1}
+  record no Michel, p99wflip 0 -> p100c 1       {'STM_ONLY': 6, 'STM_MICHEL': 13, 'UNCLEAR': 1, 'MESSY': 1}
+  record no Michel, p99wflip 1 -> p100c 0       {'STM_MICHEL': 2, 'MESSY': 1}

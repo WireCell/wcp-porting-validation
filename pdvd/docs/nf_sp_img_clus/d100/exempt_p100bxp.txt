@@ -1,0 +1,37 @@
+# doc pdvd/100 round 2 -- readout-edge exemption: p100bxp against p99wflip (production side); d100r2_exempt.py
+# events 120; with PR output on p100bxp: 120
+
+== 1. is_stm p99wflip -> p100bxp: gained 6, lost 0
+
+== 2. deferrals on p100bxp (log line 'readout_edge_guard: cluster N deferred')
+  deferred clusters 369 (by run {'039252': 62, '039253': 64, '039349': 243})
+     277  R_READOUT_EDGE + other bits
+      42  not a check_stm_michel candidate (tagger did not accept the deferred pass)
+      30  R_READOUT_EDGE only
+      14  rejected by other bits, has a Michel
+       6  is_stm (Michel present, nothing else rejects)
+
+== 4. E2: own100's 11 production-side objects located on p100bxp (from p96vprod by geometry)
+  039349_18/46   -> 039349_18/46   OWNER STM_ONLY   (stopper    ) not restored arm michel_found 0
+  039349_47/57   -> 039349_47/57   OWNER STM_ONLY   (stopper    ) not restored arm michel_found 0
+  039349_48/21   -> 039349_48/21   OWNER STM_MICHEL (stopper    ) RESTORED     arm michel_found 1
+  039349_59/14   -> 039349_59/14   OWNER THRU       (non-stopper) not restored arm michel_found 0
+  039349_64/65   -> 039349_64/65   OWNER THRU       (non-stopper) not restored arm michel_found 0
+  039349_67/37   -> 039349_67/37   OWNER STM_MICHEL (stopper    ) not restored arm michel_found 0
+  039349_7/63    -> 039349_7/63    OWNER STM_ONLY   (stopper    ) not restored arm michel_found 0
+  039349_72/11   -> 039349_72/11   OWNER THRU       (non-stopper) not restored arm michel_found 0
+  039349_76/25   -> 039349_76/25   OWNER THRU       (non-stopper) not restored arm michel_found 0
+  039349_81/41   -> 039349_81/41   OWNER STM_MICHEL (stopper    ) RESTORED     arm michel_found 1
+  039349_82/52   -> 039349_82/52   OWNER THRU       (non-stopper) not restored arm michel_found 0
+  restored: 2: stoppers 2, non-stoppers 0; located 11 of 11
+
+== 5. the gained set by verdict (6)
+  039253_1/85      top    tick     2.5 michel_ke   1.1 | none               -          
+  039253_14/108    top    tick  9954.2 michel_ke   3.8 | none               -          
+  039349_48/21     bottom tick  6365.8 michel_ke   8.7 | own100             STM_MICHEL stopper
+  039349_71/21     bottom tick     4.1 michel_ke  14.8 | none               -          
+  039349_78/20     bottom tick    21.1 michel_ke   7.0 | none               -          
+  039349_81/41     top    tick  6356.0 michel_ke   5.9 | own100             STM_MICHEL stopper
+  owner-judged gained: {'not owner-judged': 4, 'stopper': 2}
+  gained purity (owner-judged, excluded left out): 2/2 = 1.000
+  not owner-judged: 4 -> /home/xqian/tmp/p100/exempt_unjudged_p100bxp.tsv

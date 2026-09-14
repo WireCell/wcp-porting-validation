@@ -37,10 +37,12 @@
   - **Production now uses the real window (§4.5, owner yes).** When no frame is staged, the clustering runner reads it
     from `pdvd/readout_window_ticks.txt`. Gate `p99wflip` equals `p99rwprod` on 120/120 events and `p96vprod` on the 36
     unchanged ones. The top gain stays OFF for its own round with the refits.
-- **The gain round is doc pdvd/100 — NOT flipped.** The C refit (0.8630) closes and alone moves no verdict; the two
-  data-sized Michel thresholds have nothing to refit; the pre-registered Michel-purity criterion against production fails,
-  confounded by the wire order. The owner judged the 19 frame-edge objects: the edge guard loses 6 of production's
-  stoppers to remove 5 non-stoppers.
+- **The gain round is doc pdvd/100 — FLIPPED in its round 2 (§7.5, owner 2026-09-13).** Round 1: the C refit (0.8630)
+  closes and alone moves no verdict; the two data-sized Michel thresholds have nothing to refit; the pre-registered
+  Michel-purity criterion failed on the production-drawn record. Round 2: the owner judged all 65 chain movers
+  (`own100m`); on the corrected record Michel purity 0.938 → 0.924 (−0.48σ) and is_stm 0.965 → 0.963 pass. Production is
+  now SP top gain 0.889 (imaging tag `pvdimg`) + C 0.8630. The owner's 19 frame-edge objects: the edge guard loses 6 of
+  production's stoppers to remove 5 non-stoppers; a Michel exemption is built default OFF (doc 100 §7.4).
 
 Doc pdhd/29 §8–9 found PDVD top-volume stopper dQ/dx at **0.889 [0.875, 0.903]** of bottom (M2 fit). There:
 - bottom agreed with PDHD inside the budget;

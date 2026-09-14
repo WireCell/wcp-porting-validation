@@ -4,14 +4,17 @@
 # Creates work/<run6>_<idx>_<tag>/ with symlinks to the src_tag dir's
 # clusters-apa-*.tar.gz (and its img-provenance.txt) so run_clus_evt.sh -s <tag>
 # reruns matching only (clustering inputs identical by construction).
-# src_tag defaults to d27fresh (imaging on protodunevd-wires-larsoft-v7-uvwfit,
-# doc pdvd/27).  The July _keep archives were tiled with the v6 wires file;
-# run_clus_evt.sh refuses them under today's anodes (doc pdvd/27 sec 5.2).
+# src_tag defaults to pvdimg: the PRODUCTION imaging tag (doc pdvd/100 sec 7.5, owner
+# 2026-09-13) -- SP with the top-electronics gain (top_gain_scale 0.889, doc pdvd/99)
+# imaged on protodunevd-wires-larsoft-v7-uvwfit; hard links of p98von's archives, so
+# retiring the study arm cannot remove it.  Before 2026-09-13 the default was d27fresh
+# (gain-OFF SP, same wires, doc pdvd/27).  The July _keep archives were tiled with the
+# v6 wires file; run_clus_evt.sh refuses them under today's anodes (doc pdvd/27 sec 5.2).
 # Refuses to touch an existing tag dir: past tags are records (CLAUDE.md M13)
 # -- new run, new tag.
 set -e
 PDVD_DIR=$(cd "$(dirname "$0")/.." && pwd)
-RUN=${1:?run} IDX=${2:?idx} TAG=${3:?tag} SRC_TAG=${4:-d27fresh}
+RUN=${1:?run} IDX=${2:?idx} TAG=${3:?tag} SRC_TAG=${4:-pvdimg}
 RUN_PADDED=$(printf '%06d' "$((10#$RUN))")
 SRC="$PDVD_DIR/work/${RUN_PADDED}_${IDX}_${SRC_TAG}"
 DST="$PDVD_DIR/work/${RUN_PADDED}_${IDX}_${TAG}"
