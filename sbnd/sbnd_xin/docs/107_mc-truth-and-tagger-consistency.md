@@ -12,11 +12,13 @@ python3 d107_truth_tagger_consistency.py --run sbnd_mc_data --out products/d107 
     > ~/tmp/d107_run.log 2>&1; echo rc=$?
 # -> products/d107/{candidates.tsv, truth.tsv, summary.txt}
 # rc=0, "events 13216 candidate rows 6236 truth interactions 23738"
+python3 d107_tables.py products/d107 > ~/tmp/d107_tables.out 2>&1; echo rc=$?
 ```
 
-The tables in sections 4 and 5 are computed from `candidates.tsv` and `truth.tsv`,
-with the column names given in each table. The script refuses to write into an
-existing output dir.
+`summary.txt` holds the section 2 and 4.1/4.3/4.4 census counts. Every table in
+sections 4.2, 4.5, 4.6 and 5 is printed by `d107_tables.py` from `candidates.tsv`
+and `truth.tsv` (column names as in each table). The production script refuses to
+write into an existing output dir.
 
 ## 0. Answers in brief
 
@@ -172,6 +174,10 @@ the taggers and PR agree. The measurements are the residuals below.
 | tagged activity vetoed → another **main** chosen | 371 (362) | 0.655 | 1.7 cm |
 | tagged activity vetoed → **demoted-main fallback** chosen | 212 (212) | 0.472 | 7.7 cm |
 
+Every one of the 212 demoted-main selections follows a TGM/STM veto. There are 0
+rows where a demoted main was chosen in a bundle with no tagged activity, so the
+15 cm floor alone never forced the fallback here.
+
 After a veto, the other-main choice associates with a true neutrino vertex about as
 often as an untouched bundle. The demoted-main fallback is visibly weaker (0.47,
 with 34 % of rows > 50 cm from any true vertex).
@@ -263,8 +269,8 @@ vertex" into "made of that interaction's charge".
 | 0.616 | 0.674 | 0.758 | 0.180 | 1.7 cm |
 
 Every candidate within 5 cm is at an interaction with Edep > 0 (4 098/4 098). The
-second candidate of a two-row event (`nu_index`=1, 72 rows) associates like the
-primary (0.639 within 5 cm).
+second candidate of a two-row event (`nu_index`=1: 98 rows, 72 of them with a vertex)
+associates like the primary (0.639 within 5 cm).
 
 Spot check `r471_s0_e10`:
 - truth `1 numu QE CC Etot 1345.8 MeV Edep 671.1 MeV` at (−31.19, −26.57, 265.75);
