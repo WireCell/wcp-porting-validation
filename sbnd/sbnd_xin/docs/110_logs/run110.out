@@ -1,0 +1,125 @@
+=== d110dlgrp start 2026-09-14_13:43:08 pin=/home/xqian/tmp/d110-libsnap/new env: SBND_ROOT_OUTPUT=1 PR_JOBS=14 PR_GROUP_SIZE=16 PR_CFG_TREE=/home/xqian/tmp/d110-cfg/new/cfg
+=== d110dlgrp nuecc48 13:43:09
+=== d110dlgrp nuecc48 rc=0 dirs=48 not_rc0=0
+=== d110dlgrp ncpi0 13:52:46
+=== d110dlgrp ncpi0 rc=0 dirs=19 not_rc0=0
+=== d110dlgrp mcp1k 13:55:31
+=== d110dlgrp mcp1k rc=0 dirs=200 not_rc0=0
+=== d110dlgrp done 2026-09-14_13:58:16
+=== d110grpoff start 2026-09-14_13:38:32 pin=/home/xqian/tmp/d110-libsnap/new env: SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=12 PR_GROUP_SIZE=16 PR_CFG_TREE=/home/xqian/tmp/d109-cfg/new/cfg
+=== d110grpoff nuecc48 13:38:33
+=== d110grpoff nuecc48 rc=0 dirs=48 not_rc0=0
+=== d110grpoff ncpi0 13:43:18
+=== d110grpoff ncpi0 rc=0 dirs=19 not_rc0=0
+=== d110grpoff mcp1k 13:45:13
+=== d110grpoff mcp1k rc=0 dirs=200 not_rc0=0
+=== d110grpoff done 2026-09-14_13:47:58
+=== d110grp start 2026-09-14_13:33:27 pin=/home/xqian/tmp/d110-libsnap/new env: SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=12 PR_GROUP_SIZE=16 PR_CFG_TREE=/home/xqian/tmp/d110-cfg/new/cfg
+=== d110grp nuecc48 13:33:28
+=== d110grp nuecc48 rc=0 dirs=48 not_rc0=0
+=== d110grp ncpi0 13:38:51
+=== d110grp ncpi0 rc=0 dirs=19 not_rc0=0
+=== d110grp mcp1k 13:40:55
+=== d110grp mcp1k rc=0 dirs=200 not_rc0=0
+=== d110grp done 2026-09-14_13:43:08
+=== d110off start 2026-09-14_13:33:27 pin=/home/xqian/tmp/d110-libsnap/new env: SBND_NO_DL=1 SBND_ROOT_OUTPUT=1 PR_JOBS=16 PR_CFG_TREE=/home/xqian/tmp/d110-cfg/new/cfg
+=== d110off nuecc48 13:33:27
+=== d110off nuecc48 rc=0 dirs=48 not_rc0=0
+=== d110off ncpi0 13:35:59
+=== d110off ncpi0 rc=0 dirs=19 not_rc0=0
+=== d110off mcp1k 13:36:27
+=== d110off mcp1k rc=0 dirs=200 not_rc0=0
+=== d110off done 2026-09-14_13:38:32
+gate on2 vs d110off rc=1
+gate on2 vs d110grp rc=1
+gate d109grp vs d110grpoff rc=0
+gate dlon2 vs d110dlgrp rc=1
+classes on2 vs d110grp rc=0
+classes dlon2 vs d110dlgrp rc=0
+checks d110grp rc=0
+checks d110dlgrp rc=0
+## gate_dlon2_vs_d110dlgrp.txt
+== d109 gate d109dlon2 vs d110dlgrp (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  FAIL value                                                   267
+  calib-pr FAIL differ                                         159
+  calib-pr absent                                              106
+  calib-pr same                                                108
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 267
+=== OVERALL: FAIL
+## gate_grp_vs_d110grpoff.txt
+== d109 gate d109grp vs d110grpoff (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 0
+=== OVERALL: PASS
+## gate_on2_vs_d110grp.txt
+== d109 gate d109on2 vs d110grp (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  FAIL value                                                   267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 267
+=== OVERALL: FAIL
+## gate_on2_vs_d110off.txt
+== d109 gate d109on2 vs d110off (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  FAIL value                                                   267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 267
+=== OVERALL: FAIL
+== d109dlon2 vs d110dlgrp nuecc48: wallclock off_ms: 48
+== d109dlon2 vs d110dlgrp ncpi0: wallclock off_ms: 19
+== d109dlon2 vs d110dlgrp mcp1k: identical: 2, wallclock off_ms: 92
+=== OTHER differences: 0
+== d109on2 vs d110grp nuecc48: identical: 48
+== d109on2 vs d110grp ncpi0: identical: 19
+== d109on2 vs d110grp mcp1k: identical: 94
+=== OTHER differences: 0
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS
+--
+== check failures (0 expected everywhere)
+  none
+=== OVERALL: PASS
+DL vertex failed lines: 0
+ALL110_DONE

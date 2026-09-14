@@ -1,0 +1,15 @@
+== wcdoctest-clus
+===============================================================================
+[doctest] test cases:   409 |   409 passed | 0 failed | 1 skipped
+[doctest] assertions: 23960 | 23960 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== wcdoctest-root
+===============================================================================
+[doctest] test cases:    8 |    8 passed | 0 failed | 0 skipped
+[doctest] assertions: 4063 | 4063 passed | 0 failed |
+[doctest] Status: SUCCESS!
+== wcdoctest-clus -tc='*doc110*,*group-mode calib-dump*'
+===============================================================================
+[doctest] test cases:  3 |  3 passed | 0 failed | 407 skipped
+[doctest] assertions: 11 | 11 passed | 0 failed |
+[doctest] Status: SUCCESS!

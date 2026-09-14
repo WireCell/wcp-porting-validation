@@ -1,0 +1,56 @@
+== d109 gate d109on2 vs d110grp (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  FAIL value                                                   267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+  root tree compared T_bad_ch                                  267
+  root tree compared T_bundle                                  267
+  root tree compared T_cluster                                 267
+  root tree compared T_flash                                   267
+  root tree compared T_kine                                    161
+  root tree compared T_proj                                    267
+  root tree compared T_proj_data                               159
+  root tree compared T_rec_charge                              161
+  root tree compared T_tagger                                  161
+  root tree compared Trun                                      267
+== failing events: 267
+   ('nuecc48', '388', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '10550', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '30504', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '38856', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '42280', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '46363', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '52672', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '54095', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '69314', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '74544', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '81597', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '90055', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '111412', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '116962', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '122660', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '131357', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '137238', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '138009', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '163543', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '168596', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '172230', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '174637', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '196649', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '214469', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '219295', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '234638', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '235435', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '239794', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '246579', ['value differs Trun.cfg_tree'])
+   ('nuecc48', '256587', ['value differs Trun.cfg_tree'])
+=== OVERALL: FAIL

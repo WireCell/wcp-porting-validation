@@ -3140,3 +3140,18 @@ tagged here, never written to.
 - **KEEP**: this is the colleague-facing reference epoch and the newest full-population production on disk. Its inputs are the reco1 art files, not another arm, so unlike `work-*-d97fv` it does not pin `work-*-grp0825` -- but grp0825 and d97fv are still the A-side of doc 102's stage-A gate and must not be retired while that gate is the published evidence.
 - **2026-09-14 (doc 109 rev 2):** the operating-point record `ref/prod-2026-09-08` was removed from the tree on the owner's word. It survives in git at wcp `70a49e8c`, and `git archive eacacafe cfg` still passes it 21/21. The current generation `ref/prod-2026-09-14` (toolkit `c203b400`) does NOT describe these samples.
 - **A runner defect this round exposed, reported not fixed.** `run_chain_group.sh` names its per-group runner log `$OUTROOT/.g$K.log` by the INTERNAL group index, not the `--gbase`-offset directory name, and its final verdict is `grep -q "^\[g$K\] ok"` on that file. Two concurrent invocations into one out_root -- which is how a two-file sample like mcp2k is run -- therefore share `.g0.log .. .g62.log` and can each read the OTHER's success line. The group DIRECTORIES are offset, so no product ever collides; only the verdict does. Doc 102 gates stage A on products instead (`scripts/d102m_stageA_complete.sh`).
+
+## docs 109 + 110 -- self-describing tracking-pr.root, group mode, calib-dump fixes (2026-09-14)
+All are stage B on the doc 102 stage A `work-*-d102m`, with the same event set: nuecc48 48, ncpi0 19, and the first 200 mcp1k (`docs/109_logs/events_mcp1k200.txt`). Driver `scripts/d109_arms.sh`. None is a production sample.
+- **doc 109 rounds 1-2:**
+  - `work-{nuecc48,ncpi0,mcp1k}-d109base` -- toolkit `d3b398fc`, before doc 109 (pin `~/tmp/d109-libsnap/base`).
+  - `-d109off2` / `-d109on2` / `-d109dlon2` -- the graded build `new2`; `-d109off` / `-d109on` / `-d109dlon` -- round-1 build.
+  - `work-{nuecc48,mcp1k}-d109prod` -- production smoke, 6 events.
+- **doc 109 rev 2, group mode** (`PR_GROUP_SIZE=16`, `new2`):
+  - `-d109grp` / `-d109dlgrp`;
+  - `work-nuecc48-d109basegrp` -- the base-binary control that proved the calib-dump defects predate doc 109.
+- **doc 110, pin `~/tmp/d110-libsnap/new` = toolkit `67937f45`:**
+  - `-d110off` -- per-event, knobs absent;
+  - `-d110grpoff` -- group, old cfg tree, knobs absent;
+  - `-d110grp` / `-d110dlgrp` -- group, knobs on.
+- **Releasable** once docs 109/110 are accepted. The evidence lives in `docs/109_logs/` and `docs/110_logs/`; `d109on2` / `d109dlon2` are the per-event references both docs gate against.

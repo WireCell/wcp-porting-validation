@@ -1,0 +1,12 @@
+=== d110dlgrp start 2026-09-14_13:43:08 pin=/home/xqian/tmp/d110-libsnap/new env: SBND_ROOT_OUTPUT=1 PR_JOBS=14 PR_GROUP_SIZE=16 PR_CFG_TREE=/home/xqian/tmp/d110-cfg/new/cfg
+64c91641a89be8c438e98790f80c8ed0  libWireCellClus.so
+8caf1c6ac20032617d3ceddcddbb0d51  libWireCellRoot.so
+=== d110dlgrp nuecc48 13:43:09
+=== d110dlgrp nuecc48 rc=0 dirs=48 not_rc0=0
+=== d110dlgrp ncpi0 13:52:46
+=== d110dlgrp ncpi0 rc=0 dirs=19 not_rc0=0
+=== d110dlgrp mcp1k 13:55:31
+=== d110dlgrp mcp1k rc=0 dirs=200 not_rc0=0
+64c91641a89be8c438e98790f80c8ed0  libWireCellClus.so
+8caf1c6ac20032617d3ceddcddbb0d51  libWireCellRoot.so
+=== d110dlgrp done 2026-09-14_13:58:16

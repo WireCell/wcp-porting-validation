@@ -480,7 +480,8 @@ with the pristine cfg, in group mode on nuecc48, gated against `d109base`:
 
 So both defects predate doc 109, and group mode already matched per-event on everything
 else before it. Neither defect is fixed here: each changes an output, so a fix would be its
-own default-OFF round.
+own default-OFF round. **Fixed in doc 110** (`110_group-mode-calib-dump-fixes.md`, toolkit
+`67937f45`): knobs `rse_from_ensemble` / `reset_shower_ids_per_event`, ON for SBND group mode.
 
 ### 7.2 A new production reference: `ref/prod-2026-09-14`
 

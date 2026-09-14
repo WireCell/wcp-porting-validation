@@ -1,0 +1,3 @@
+== grp_prjob.json: 2 keys (pristine c203b400 -> this round)
+  ADDED   [26].data.rse_from_ensemble = True
+  ADDED   [40].data.reset_shower_ids_per_event = True

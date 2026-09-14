@@ -1,0 +1,57 @@
+RERUN on2 vs d110off rc=0
+RERUN on2 vs d110grp rc=0
+RERUN dlon2 vs d110dlgrp rc=1
+## gate_dlon2_vs_d110dlgrp_allowcfg.txt
+== d109 gate d109dlon2 vs d110dlgrp (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.cfg_tree                                        267
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  calib-pr FAIL differ                                         159
+  calib-pr absent                                              106
+  calib-pr same                                                108
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 159
+=== OVERALL: FAIL
+     30 record differs calib-pr-evt*.json
+## gate_on2_vs_d110grp_allowcfg.txt
+== d109 gate d109on2 vs d110grp (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.cfg_tree                                        267
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 0
+=== OVERALL: PASS
+## gate_on2_vs_d110off_allowcfg.txt
+== d109 gate d109on2 vs d110off (nuecc48, ncpi0, mcp1k)
+  ALLOWED Trun.cfg_tree                                        267
+  ALLOWED Trun.toolkit_git                                     267
+  ALLOWED Trun.wcp_git                                         267
+  calib-pr absent                                              106
+  calib-pr same                                                267
+  events mcp1k                                                 200
+  events ncpi0                                                 19
+  events nuecc48                                               48
+  mabc-pr.zip same                                             267
+  nusel same                                                   267
+  pctree-pr same                                               267
+  root branches compared                                       233055
+  root files compared                                          267
+== failing events: 0
+=== OVERALL: PASS
+RERUN_DONE
