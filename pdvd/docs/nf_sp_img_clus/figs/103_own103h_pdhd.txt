@@ -1,0 +1,67 @@
+# doc pdvd/103 own103h (owner, 2026-09-15): 27 of 27 items labelled; tag own103h; labels sha256 b7aa15289377; revealed the chain answer before labelling: 27 of 27 (NOT blind)
+# set /home/xqian/tmp/d103/own/set_pdhd_smx27; shown on d102hcs
+
+== 1. each item
+   1 029107_6/122   tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/detached dots (smx27, high) -> OWNER STM_MICHEL/attached | michel no michel -> michel notes: 'end track was not found correctly, so the dQ/dx is off near the end.'
+   2 029107_11/86   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (new_agent, medium) -> OWNER STM_MICHEL/both | michel no michel -> michel
+   3 029107_3/107   control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/both | same
+   4 029107_7/34    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/none (smx27, medium) -> OWNER THRU/None | class stopper -> non-stopper
+   5 029107_23/41   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label STM_ONLY/none (new_agent, medium) -> OWNER STM_ONLY/None | michel no michel -> stopper, kind unset
+   6 029107_12/33   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/detached dots (smx27, medium) -> OWNER MESSY/None | class stopper -> unjudged
+   7 029107_17/49   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 1] | label THRU/none (new_agent, high) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+   8 029107_22/22   tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, high) -> OWNER THRU/None | same
+   9 029107_3/86    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 0] | label THRU/none (smx27, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  10 028084_10/109  tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (smx27, medium) -> OWNER STM_ONLY/detached dots | same
+  11 029107_19/111  tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/detached dots (smx27, high) -> OWNER STM_ONLY/detached dots | same
+  12 029107_27/39   tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (smx27, medium) -> OWNER STM_ONLY/detached dots | same
+  13 029107_16/106  control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached | same
+  14 028084_18/122  tier1   A0 [is_stm 0 michel_found 1] A1 [is_stm 1 michel_found 1] | label THRU/none (smx27, medium) -> OWNER MESSY/None | class non-stopper -> unjudged
+  15 029107_16/46   tier1   A0 [is_stm 0 michel_found 1] A1 [is_stm 1 michel_found 1] | label THRU/none (smx27, high) -> OWNER THRU/None | same
+  16 028084_25/84   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_MICHEL/both (smx27, medium) -> OWNER STM_ONLY/detached dots | michel michel -> no michel
+  17 029107_2/64    tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label THRU/none (smx27, medium) -> OWNER UNCLEAR/None | class non-stopper -> unjudged
+  18 029107_3/111   control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached | same
+  19 029107_23/116  tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/none (smx27, medium) -> OWNER THRU/None | class stopper -> non-stopper
+  20 028084_9/27    tier1   A0 [not a candidate] A1 [is_stm 0 michel_found 1] | label STM_ONLY/detached dots (new_agent, medium) -> OWNER MESSY/None | class stopper -> unjudged
+  21 028084_19/59   control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_MICHEL/both (smx27, high) -> OWNER STM_MICHEL/attached | same
+  22 028084_8/120   tier1   A0 [is_stm 0 michel_found 0] A1 [is_stm 1 michel_found 1] | label STM_ONLY/none (smx27, medium) -> OWNER STM_MICHEL/attached | michel no michel -> michel pin moved 12.1 cm
+  23 029107_14/106  tier1   A0 [not a candidate] A1 [is_stm 1 michel_found 0] | label THRU/none (new_agent, low) -> OWNER STM_ONLY/None | class non-stopper -> stopper
+  24 029107_4/58    control A0 [is_stm 1 michel_found 1] A1 [is_stm 1 michel_found 1] | label STM_ONLY/detached dots (smx27, medium) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+  25 029107_27/99   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/detached dots (smx27, high) -> OWNER STM_ONLY/None | michel no michel -> stopper, kind unset
+  26 029107_26/111  tier1   A0 [is_stm 1 michel_found 0] A1 [is_stm 0 michel_found 1] | label STM_ONLY/none (smx27, high) -> OWNER STM_MICHEL/attached | michel no michel -> michel
+  27 029107_26/88   control A0 [is_stm 1 michel_found 0] A1 [is_stm 1 michel_found 0] | label STM_ONLY/none (smx27, high) -> OWNER STM_ONLY/None | michel no michel -> stopper, kind unset
+
+== 2. tier 1: what each charged false positive becomes (descriptive; NOT a purity)
+  029107_6/122   A1:michel: now a TP
+  029107_11/86   A1:michel: now a TP
+  029107_7/34    A1:michel: leaves the Michel population (not a stopper)
+  029107_23/41   A1:michel: leaves the Michel population (kind unset)
+  029107_12/33   A1:michel: leaves the population
+  029107_17/49   A1:is_stm: leaves the population
+  029107_22/22   A1:is_stm: FP confirmed
+  029107_3/86    A1:is_stm: leaves the population
+  028084_10/109  A1:michel: FP confirmed
+  029107_19/111  A1:michel: FP confirmed
+  029107_27/39   A1:michel: FP confirmed
+  028084_18/122  A1:is_stm: leaves the population
+  029107_16/46   A1:is_stm: FP confirmed
+  029107_2/64    A1:is_stm: leaves the population
+  029107_23/116  A1:michel: leaves the Michel population (not a stopper)
+  028084_9/27    A1:michel: leaves the population
+  028084_8/120   A1:michel: now a TP
+  029107_14/106  A1:is_stm: now a TP
+  029107_26/111  A1:michel: now a TP
+    is_stm  FP confirmed: 2
+    is_stm  leaves the population: 4
+    is_stm  now a TP: 1
+    michel  FP confirmed: 3
+    michel  leaves the Michel population (kind unset): 1
+    michel  leaves the Michel population (not a stopper): 2
+    michel  leaves the population: 2
+    michel  now a TP: 4
+
+== 3. controls (figs/103_pred_amend2.txt sec 4: >= 3 of 8 stopper-class changes -> not settled)
+  stopper class changed: 0 of 8 -> controls hold on the stopper call
+  Michel class changed (incl. kind set/unset): 4 of 8: ['028084_25/84', '029107_4/58', '029107_27/99', '029107_26/88']
+  null controls 7; shared-FP control(s) reported apart: [('029107_4/58', 'A0:michel,A1:michel', 'STM_ONLY/detached dots', 'STM_MICHEL/attached')]
+
+== 4. wrote /home/xqian/toolkit-dev/wcp-porting-img/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json: 27 items

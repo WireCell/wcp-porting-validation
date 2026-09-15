@@ -1,0 +1,27 @@
+doc pdvd/103 -- pre-registration, amendment 3 (2026-09-15).
+Written before the owner adjudication tag own103h is served, and before any owner label exists on it.
+103_pred.txt and amendments 1-2 stay in force except where this file changes them.
+
+1. The correction
+   * 103_pred.txt named PDHD record smx22 as the old-record truth. That was wrong. Since doc pdhd/25 the PDHD truth
+     record is smx27 (docs pdhd/25-28 set STM_SCAN_RECORD to it).
+   * smx27 has the same 317 keys as smx22 plus 20 owner_review blocks, all dated 2026-09-12 (own23 / own25 / own26).
+     These rulings existed before this doc began and were missed.
+   * 9 of them change a union-population item's class against the smx22 label the grade used, e.g. 028084_3/72:
+     agent THRU -> owner STM_MICHEL.
+
+2. The change
+   * The PDHD old-record truth becomes smx27, with the same precedence (owner_review > owner_smx1 > agent). The grader
+     takes it through D103_PDHD_RECORD. The committed round-1 figures stay as they were, on smx22.
+   * This amendment is not blind. It was written after the provisional grade on smx22 was read. It is a correction of
+     the truth source to the record the PDHD docs already use, not a choice among options, and it is applied whatever
+     it does to D1/D2.
+
+3. The served set
+   * Amendment 2's set definition is unchanged. It is rebuilt on the smx27 truth, so items the owner has already ruled
+     are not served again.
+   * The set built on smx22 (/home/xqian/tmp/d103/own/set_pdhd) is never served.
+
+4. Reporting
+   * The PDHD union grade is restated on smx27 before own103h, and again after it, with amendment 2's splits.
+   * The doc keeps the smx22 numbers and names this correction.

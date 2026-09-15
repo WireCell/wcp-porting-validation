@@ -1,0 +1,50 @@
+doc pdvd/103 -- pre-registration, amendment 4 (2026-09-15): the PDVD round on the production lineage.
+Written before any label of this round exists, and before the PDVD owner adjudication set is built.
+103_pred.txt and amendments 1-3 and 5 stay in force for PDHD. For PDVD this file replaces the round-1 cells, truth
+and label set.
+
+1. Cells (same pctrees, same pin /home/xqian/tmp/d102/libpin_d102, clus md5 091e142b9481)
+   * A0 d103v0 = production. PR -nu -stm-fit on SRC p100flip, no TLA. T_stm_michel identical to p100flip on 119/119
+     events; 039349_30 has no candidate on either.
+   * A1 d103v1 = both levers on: -A trackfitting_config=figs/101_tf_prod_pdvd_kf.json
+     -S retile_sampler_strategy='charge_stepped'.
+   * There are no K / S cells on this lineage.
+
+2. Truth
+   * Record: pdvd/docs/scan/pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json, a byte copy of doc 100 r2's
+     /home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json. Its keys are p99rwon = p100c = p100flip keys.
+     It holds the merged smx1a..smx9 record carried by geometry, the sw99 swap-scan labels, and the own100m owner
+     corrections.
+   * Read as its flat verdict (precedence "record", as d101_stm_grade_pdvd.py).
+   * An item is owner-labelled when its confidence is "owner".
+   * 103_pred.txt excluded carried records as truth. That exclusion is lifted here, because this is the only label set
+     on the production lineage. V2 (sec 4) measures it.
+   * Below it: the new blind record, tag smx11 (pdvd/docs/scan/pdvd_stm_michel_smx11_verdicts.json).
+   * The owner adjudication record own103v sits above both.
+
+3. The blind scan (d103_pdvd_items.py, d103_scan_set.py, round dir /home/xqian/tmp/d103/round_pdvd2)
+   * Items: every candidate of A0 or A1 whose key is not in the truth record. Plus 20 calibration items drawn with
+     random.Random(103) from judged truth items (not MESSY / UNCLEAR) that are candidates in A0 or A1.
+   * Each item is shown on A1 where it is a candidate there, else on A0.
+   * A candidate with no scan payload is reported and stays unlabelled.
+   * Rubric: the doc-99 PDVD blind port (sha d760e223...), unchanged. The same AGENT_TASK as round 1 (paths
+     renamed), verdict-blind shots (--blind --hide-selection), writes only through mkv.py, and every transcript passes
+     d103_audit.py with round name round_pdvd2.
+
+4. V2: if more than 25 % of judged calibration items disagree with the truth record on stopper-or-not, the labels are
+   not used to grade.
+
+5. Grade (D103_PDVD_CELLS=d103v0,d103v1 D103_PDVD_RECORD=<sec 2> d103_union_grade.py --det pdvd --new-record smx11)
+   * STM truth = a stopper verdict. Michel truth = verdict STM_MICHEL, which is already amendment 5's convention.
+   * Population: judged truth items that are candidates in A0, plus judged items that are candidates in either cell.
+   * Metrics, bootstrap and D1/D2 thresholds as 103_pred.txt, first with agent labels ("provisional").
+
+6. Owner adjudication own103v (as amendment 2, served on :5017)
+   * Tier 1: every judged, non-owner-labelled item that is a false positive in exactly one of A0/A1, on is_stm or
+     michel_found (PDVD definitions).
+   * Controls: 8, random.Random(103), candidates in both with identical (is_stm, michel_found) and is_stm 1.
+   * The panel is blind and identical for every item.
+   * Fold own103v first, then report: (a) all; (b) untouched; (c) common vs arm-only; the controls rule (3 or more of 8
+     stopper-class changes => not settled); the one-sidedness clause (if D1 depends on 2 or fewer items, serve a
+     seeded 20-item sample of the TP-movers before stating D1).
+   * If tier 1 exceeds 40 items, serve a seeded 40-item random subset of tier 1, and say so.

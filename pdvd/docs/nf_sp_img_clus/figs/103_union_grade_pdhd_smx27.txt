@@ -1,0 +1,26 @@
+# doc pdvd/103 union grade (pdhd); truth sources (items taken from each, in precedence order): [('pdhd_stm_michel_smx27_verdicts.json', 317), ('pdhd_stm_michel_smx28_verdicts.json', 103)]
+population fixed + judged candidates of any cell: 362 (fixed 254); candidates of any cell with no label anywhere: 33; unjudged (MESSY/UNCLEAR) candidates: 58
+population by label source: {'smx27': 213, 'new_agent': 95, 'owner': 25, 'owner_review': 29}
+
+== is_stm (population 362)
+  A0 d101hnew    TP 121 FP   2 FN  79 TN 160 | purity 0.984 [0.971, 0.993] efficiency 0.605 [0.570, 0.641]
+  K  d101hkf     TP 105 FP   7 FN  95 TN 155 | purity 0.938 [0.914, 0.962] efficiency 0.525 [0.490, 0.562]
+  S  d102hocs    TP 113 FP   8 FN  87 TN 154 | purity 0.934 [0.911, 0.957] efficiency 0.565 [0.533, 0.599]
+  A1 d102hcs     TP 117 FP   9 FN  83 TN 153 | purity 0.929 [0.906, 0.953] efficiency 0.585 [0.552, 0.620]
+
+== michel_found (population 191, excluded 9)
+  A0 d101hnew    TP  69 FP   3 FN  43 TN  76 | purity 0.958 [0.935, 0.984] efficiency 0.616 [0.562, 0.660]
+  K  d101hkf     TP  65 FP   6 FN  47 TN  73 | purity 0.915 [0.883, 0.947] efficiency 0.580 [0.530, 0.627]
+  S  d102hocs    TP  74 FP  11 FN  38 TN  68 | purity 0.871 [0.835, 0.908] efficiency 0.661 [0.610, 0.702]
+  A1 d102hcs     TP  72 FP  16 FN  40 TN  63 | purity 0.818 [0.776, 0.861] efficiency 0.643 [0.598, 0.687]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 72 candidates {'stopper': 32, 'non-stopper': 33, 'unjudged': 1, 'unlabelled': 6}; of them is_stm 1 on that side: {'stopper': 24, 'non-stopper': 3}
+  A0 only: 80 candidates {'stopper': 22, 'non-stopper': 38, 'unjudged': 10, 'unlabelled': 10}; of them is_stm 1 on that side: {'stopper': 16, 'non-stopper': 0}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.055
+  is_stm efficiency: A1 - A0 = -0.020
+  michel_found purity: A1 - A0 = -0.140
+  michel_found efficiency: A1 - A0 = +0.027
+  -> D2 (real cost)

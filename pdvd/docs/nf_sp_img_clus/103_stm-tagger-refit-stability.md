@@ -34,6 +34,12 @@
 * **Pre-registered reading** (`figs/103_pred.txt` + amendment 1): **D2, a real cost, on both detectors**, carried
   by purity; efficiency is within 0.02. The losing class is named in sec 7, with a round-2 proposal aimed at it.
 * **Not flipped. No production change.**
+* **Round 2 (sec 10, same day).**
+  - PDHD truth is corrected to `smx27`.
+  - The owner adjudicated 27 PDHD items. STM is now within 0.02. Michel purity still fails (−0.051): stoppers the
+    owner reads as having no visible Michel, where the chain attaches a piece. That is Michel admission, not the KS
+    test.
+  - PDVD's round-1 cells were not production. They are re-run on the production lineage, with labels in progress.
 
 ## 0. Repro
 
@@ -526,3 +532,183 @@ not pushed.
   - the grade: `103_union_grade_*`, `103_fp_classes_*`, `103_fp_path_*`, `103_owner_queue_{pdhd,pdvd}.md`.
 * **Scratch** (not committed): `/home/xqian/tmp/d103/`, holding the item lists with roles, preps, frames, agent
   records, task files, rubric copies and transcripts map.
+
+## 10. Round 2 (2026-09-15): the owner's adjudication and the production lineage
+
+The owner asked what it takes to turn both levers on. This round:
+* found two defects in round 1's comparison;
+* ran the owner's adjudication of the contested PDHD false positives;
+* re-ran PDVD on its production inputs.
+
+### 10.0 Repro
+
+```bash
+IMG=/home/xqian/toolkit-dev/wcp-porting-img; D=$IMG/pdvd/docs/nf_sp_img_clus; S=$D/scripts; F=$D/figs; O=/home/xqian/tmp/d103/own
+R27=$IMG/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json; N28=$IMG/pdhd/docs/scan/pdhd_stm_michel_smx28_verdicts.json
+OWN=$IMG/pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json
+for n in 2 3 4 5; do (cd $F && head -1 103_pred_amend$n.sha256 | sha256sum -c); done
+# 10.1 PDHD truth smx27 (amend3).  With D103_* unset every round-1 figure reproduces byte for byte.
+D103_PDHD_RECORD=$R27 python3 $S/d103_union_grade.py --det pdhd --new-record $N28 > $F/103_union_grade_pdhd_smx27.txt
+D103_PDHD_RECORD=$R27 python3 $S/d103_fp_classes.py  --det pdhd --new-record $N28 > $F/103_fp_classes_pdhd_smx27.txt
+# 10.2 the owner set (amend2), the display, the fold
+D103_PDHD_RECORD=$R27 python3 $S/d103_owner_scan_set.py --det pdhd --new-record $N28 --out $O/set_pdhd_smx27
+(cd $IMG/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdhd --scan-tag own103h --manifest $O/set_pdhd_smx27/manifest.tsv \
+    --prepdir $O/set_pdhd_smx27/prep --questions $O/set_pdhd_smx27/questions.json --dead-points)
+python3 $S/d103_owner_scan_score.py --set $O/set_pdhd_smx27 --labels $IMG/pdhd/work/stm_michel_labels/own103h/labels.json \
+    --record-out $OWN > $F/103_own103h_pdhd.txt
+# 10.3 the re-grade: headline with amend5 (--stm-only-unset-negative), the reading without it, the Michel FP list
+D103_PDHD_RECORD=$R27 python3 $S/d103_union_grade.py --det pdhd --new-record $N28 --owner-record $OWN --stm-only-unset-negative \
+    > $F/103_union_grade_pdhd_own103h_stmonlyneg.txt
+D103_PDHD_RECORD=$R27 python3 $S/d103_union_grade.py --det pdhd --new-record $N28 --owner-record $OWN > $F/103_union_grade_pdhd_own103h.txt
+D103_PDHD_RECORD=$R27 python3 $S/d103_michel_fp_list_own.py > $F/103_michel_fp_pdhd_own103h.txt
+# 10.5 PDVD on the production lineage (pin = doc 102's libpin_d102, clus md5 091e142b9481)
+PIN=/home/xqian/tmp/d102/libpin_d102
+ARM=d103v0 DET=pdvd SRC=p100flip JOBS=3 PIN=$PIN LOGD=/home/xqian/tmp/d103/arms/arm_d103v0 bash $S/d102_run_arms.sh
+ARM=d103v1 DET=pdvd SRC=p100flip JOBS=3 PIN=$PIN LOGD=/home/xqian/tmp/d103/arms/arm_d103v1 \
+    PR_TLA="-A trackfitting_config=$F/101_tf_prod_pdvd_kf.json -S retile_sampler_strategy='charge_stepped'" bash $S/d102_run_arms.sh
+python3 $S/d103_pdvd_prod_look.py > $F/103_pdvd_prod_look.txt      # reads the carry in /home/xqian/tmp/p100 (== the committed copy)
+D103_PDVD_CELLS=d103v0,d103v1 D103_PDVD_RECORD=$IMG/pdvd/docs/scan/pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json \
+    python3 $S/d103_pdvd_items.py --out /home/xqian/tmp/d103/items/pdvd2_items.tsv                  # amend4 sec 3
+```
+
+### 10.1 Two defects in round 1's comparison
+
+* **The PDHD truth record.**
+  - Sec 5 graded PDHD on `smx22`. The PDHD truth record since doc pdhd/25 is `smx27`: the same 317 keys plus 20
+    owner rulings from 2026-09-12. Example: 028084_3/72, agent THRU → owner STM_MICHEL.
+  - Amendment 3 corrects it, and the smx22 figures stay.
+  - On smx27, before any new owner label, PDHD still reads D2:
+    - `is_stm` purity 0.984 → 0.929 (−0.055);
+    - efficiency 0.605 → 0.585 (−0.020, at the limit);
+    - Michel purity 0.958 → 0.818 (−0.140); Michel efficiency +0.027.
+  - V2 on smx27 is 2 / 18 (11 %).
+* **The PDVD cells were not production.**
+  - `d101vnew` sits on the `d16vnu` / `d51vclus` pctrees: readout window 10000, pre-gain-flip imaging, 596 candidates.
+  - PDVD production since doc 100 §7.5 is `p100flip`: window 6400, SP top gain 0.889, 540 candidates.
+  - Only 36 of the 596 keys map by cluster id and a stop within 2 cm. So sec 5's PDVD grade says nothing about a
+    PDVD production flip.
+* **PDHD's A0 is production.** `d101hnew` and `h28prod` have identical `T_stm_michel` on 61 / 61 events.
+
+### 10.2 The owner's adjudication, PDHD `own103h`
+
+* **Set** (amendment 2, rebuilt on smx27 by amendment 3):
+  - 19 tier-1 items, each an agent-labelled item that is a false positive in exactly one of A0 / A1;
+  - 8 controls, shuffled in;
+  - all shown on A1, behind one identical question panel.
+* **The session.** Served on :5017; 27 / 27 labelled; no other label tag changed. **Not blind**: every item was
+  revealed before it was labelled.
+* **Tier 1**, read with amendment 5:
+
+  | Charged with | FP confirmed | Now a TP | Leaves the population |
+  |---|---|---|---|
+  | `is_stm` (7) | 2 | 1 | 4 (MESSY / UNCLEAR) |
+  | Michel (12) | 4 | 4 | 4 (2 THRU, 2 MESSY) |
+
+* **Controls.** None of the 8 changed stopper class. On the Michel call 2 of 8 flipped, one each way:
+  - 028084_25/84: Michel → detached dots;
+  - the shared false positive 029107_4/58: detached dots → attached.
+
+  So the attached-versus-detached call is itself unstable at this size.
+* **The owner's rulings** (amendment 5):
+  - *"STM with no Michel, there is no Michel there."* An owner STM_ONLY with no kind counts as no Michel.
+  - *"when I say not Michel, likely the Michel is too low energies, or we cannot see them."* The chain's Michel on
+    such a stopper stays a false positive.
+
+### 10.3 PDHD re-grade after the adjudication
+
+`103_union_grade_pdhd_own103h_stmonlyneg.txt` (the headline, amendment 5). Truth: own103h > smx27 > smx28.
+
+| A0 → A1 | Value | Change | Limit −0.02 |
+|---|---|---|---|
+| `is_stm` purity | 0.984 → 0.967 | −0.017 | pass |
+| `is_stm` efficiency | 0.614 → 0.599 | −0.015 | pass |
+| Michel purity | 0.946 → 0.895 | **−0.051** | **fail** |
+| Michel efficiency | 0.603 → 0.664 | +0.060 | pass |
+
+* **Reading: D2, on PDHD Michel purity only.** Without amendment 5 (a), Michel purity is 0.972 → 0.928 (−0.045).
+  The verdict is the same.
+* **The STM pass is fragile.** One more A1 false positive (118 / 122 → 117 / 122) makes it −0.025.
+* **Splits** (amendment 2):
+  - untouched items: `is_stm` purity −0.001, efficiency −0.022; Michel purity −0.011, efficiency +0.028;
+  - Michel purity per lever: K 0.880, S 0.906, A1 0.895.
+* **One-sidedness.** Tier 1 can only clear a charged false positive. D1 is not reached, so amendment 2's TP-mover
+  sample is not triggered.
+
+### 10.4 What the PDHD Michel cost is
+
+`103_michel_fp_pdhd_own103h.txt`: A0 has 4 Michel false positives and A1 has 9; 3 are shared. The A1-only ones:
+
+| A1-only | Owner truth | The chain's Michel |
+|---|---|---|
+| 029107_19/111 | STM, detached dots | 0.2 cm attached, 1.1 MeV |
+| 028084_10/109 | STM, detached dots | 1.1 cm attached, 2.4 MeV |
+| 029107_23/41 | STM, no Michel | charge-only piece 0.8 cm away, 7.7 MeV |
+| 029107_12/95 | STM, no Michel | 6.5 cm attached, 18.8 MeV |
+| 029107_27/39 | STM, detached dots | 14.6 cm bridged, 5.2 cm from the stop, 37 MeV |
+| 029107_28/109 | STM, detached dots | 19.4 cm attached, 64 MeV |
+
+A0-only: 028084_2/116, 3.6 cm attached, 7.8 MeV.
+
+* **Every one is a stopper the owner reads as having no visible Michel**, and the chain attaches a piece to it.
+  - This is CheckSTM_Michel's Michel **admission**, not the KS / Bragg tests of sec 4.
+  - The KS-denoise lever of sec 7 does not act on it.
+* **Two are below 2.5 MeV**, so an energy floor would remove them. The other four carry 7–64 MeV and need a rule for
+  what the attached piece is.
+
+### 10.5 PDVD on the production lineage
+
+* **Arms.** `d103v0` (production, no TLA) and `d103v1` (fit knobs + `charge_stepped`), on `p100flip`'s pctrees.
+  - `d103v0` equals `p100flip` on 119 / 119 events; 039349_30 has no candidate.
+  - Doc 102's g1 failure does not recur: 039349_78 keeps its candidate in `d103v1`.
+* **First look** (`103_pdvd_prod_look.txt`; not pre-registered). Doc 100's carried, owner-corrected record covers
+  451 of the 681 union candidates.
+
+  | A0 → A1 | On the carried labels | Bound over the 230 unlabelled |
+  |---|---|---|
+  | `is_stm` purity | 0.963 → 0.961 (−0.002) | −0.141 … +0.008 |
+  | `is_stm` efficiency | 0.794 → 0.759 (−0.034) | −0.023 … +0.091 |
+  | Michel purity | 0.924 → 0.872 (−0.052) | −0.185 … +0.018 |
+  | Michel efficiency | 0.763 → 0.716 (−0.047) | −0.048 … +0.098 |
+
+  - A1 tags the unlabelled candidates far more often than A0 does (48 `is_stm` vs 8). That is sec 3's
+    record-conditioning pattern.
+  - The 14 A1-only Michel false positives are unadjudicated carried labels.
+* **The round in progress** (amendment 4):
+  - the carried record is the PDVD truth on this lineage;
+  - blind agent labels (`smx11`) go on the unlabelled candidates, plus 20 calibration items;
+  - then the owner's adjudication, `own103v`, on :5017.
+
+### 10.6 What a flip takes
+
+1. **PDVD:** the smx11 labels, the grade and the owner's adjudication.
+2. **If Michel purity still fails** on either detector: a default-OFF Michel-admission knob aimed at sec 10.4's class,
+   not the KS denoise, graded on these records.
+3. **The flip as one unit, with the owner's go:**
+   - the sampler: `figs/102r2_flip.patch`;
+   - the fit knobs: the two keys in `pdhd_track_fitting.json` / `pdvd_track_fitting.json`. They cannot be
+     key-suppressed, so the proof is an arm identical to the graded one;
+   - the admission knob.
+
+   Gates: the compiled-config proof, the production-configuration arm graded as above, resources and completeness.
+
+### 10.7 Files (round 2)
+
+* **Rules:** `figs/103_pred_amend2.txt` … `103_pred_amend5.txt`, each with its `.sha256`.
+* **Scripts:**
+  - new: `d103_owner_scan_set.py`, `d103_owner_scan_score.py`, `d103_michel_fp_list_own.py`,
+    `d103_pdvd_prod_look.py`, `d103_pdvd_items.py`, and `figs/103_shoot_round.sh`;
+  - extended: `d103_union_grade.py` (`D103_PDHD_RECORD`, `D103_PDVD_RECORD`, `D103_PDVD_CELLS`, `--owner-record`,
+    `--stm-only-unset-negative`), `d103_audit.py` (a round name), `d103_scan_record.py`, `d103_fp_classes.py`,
+    `d103_owner_queue.py`.
+  - With the environment and the new options unset, the round-1 figures reproduce byte for byte:
+    `103_union_grade_{pdhd,pdvd}`, `103_v1_fixed_pdvd`, `103_owner_queue_pdhd`.
+  - The exception is `103_fp_classes_*`. Round 1 printed its Counter dicts in set-iteration order, which follows
+    Python's hash seed. They are now printed sorted and regenerated; the counts are unchanged.
+* **Records:**
+  - `pdhd/docs/scan/pdhd_stm_michel_own103h_verdicts.json` (owner, 27 items);
+  - `pdvd/docs/scan/pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json`, a byte copy of doc 100 r2's corrected
+    carry.
+* **Figures:** `103_union_grade_pdhd_smx27.txt`, `103_fp_classes_pdhd_smx27.txt`, `103_own103h_pdhd.txt`,
+  `103_union_grade_pdhd_own103h{,_stmonlyneg}.txt`, `103_michel_fp_pdhd_own103h.txt`, `103_pdvd_prod_look.txt`.
+* **Still on smx22 truth** (round-1 diagnostics, not re-run): `103_separation*`, `103_bounds_pdhd`, `103_moves_pdhd`,
+  `103_fp_path_pdhd`, `103_owner_queue_pdhd`.

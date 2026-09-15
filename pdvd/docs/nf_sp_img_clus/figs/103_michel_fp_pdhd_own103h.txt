@@ -1,0 +1,16 @@
+# doc pdvd/103 round 2: PDHD Michel false positives after own103h (truth own103h > smx27 > smx28; grader definition)
+== A0 d101hnew: Michel FPs 4
+  028084_2/116   truth STM_ONLY/None (owner_review) | michel_len 3.6 cm conn 1 pieces 3 dis 0.0 n_dots 1 ke 7.8 MeV kink 126 is_stm 1
+  028084_2/49    truth STM_ONLY/None (owner_review) | michel_len 1.8 cm conn 1 pieces 1 dis 0.0 n_dots 0 ke 6.6 MeV kink 49 is_stm 1
+  028084_23/114  truth STM_ONLY/detached dots (owner) | michel_len 2.9 cm conn 1 pieces 2 dis 0.0 n_dots 1 ke 5.4 MeV kink 21 is_stm 1
+  029107_7/85    truth STM_ONLY/detached dots (owner_review) | michel_len 1.7 cm conn 2 pieces 2 dis 6.4 n_dots 2 ke 12.2 MeV kink -1 is_stm 1
+== A1 d102hcs: Michel FPs 9
+  028084_10/109  truth STM_ONLY/detached dots (owner_review, own103h) | michel_len 1.1 cm conn 1 pieces 1 dis 0.0 n_dots 0 ke 2.4 MeV kink 156 is_stm 1
+  028084_2/49    truth STM_ONLY/None (owner_review) | michel_len 1.3 cm conn 1 pieces 1 dis 0.0 n_dots 0 ke 6.2 MeV kink 44 is_stm 0
+  028084_23/114  truth STM_ONLY/detached dots (owner) | michel_len 3.0 cm conn 1 pieces 2 dis 0.0 n_dots 1 ke 7.7 MeV kink 34 is_stm 1
+  029107_12/95   truth STM_ONLY/None (owner_review) | michel_len 6.5 cm conn 1 pieces 2 dis 0.0 n_dots 1 ke 18.8 MeV kink 97 is_stm 1
+  029107_19/111  truth STM_ONLY/detached dots (owner_review, own103h) | michel_len 0.2 cm conn 1 pieces 1 dis 0.0 n_dots 0 ke 1.1 MeV kink 64 is_stm 0
+  029107_23/41   truth STM_ONLY/None (owner_review, own103h) | michel_len 0.0 cm conn 3 pieces 1 dis 0.8 n_dots 0 ke 7.7 MeV kink -1 is_stm 1
+  029107_27/39   truth STM_ONLY/detached dots (owner_review, own103h) | michel_len 14.6 cm conn 2 pieces 1 dis 5.2 n_dots 1 ke 37.1 MeV kink -1 is_stm 1
+  029107_28/109  truth STM_ONLY/detached dots (owner_review) | michel_len 19.4 cm conn 1 pieces 1 dis 0.0 n_dots 0 ke 64.1 MeV kink 31 is_stm 1
+  029107_7/85    truth STM_ONLY/detached dots (owner_review) | michel_len 1.7 cm conn 2 pieces 2 dis 6.2 n_dots 2 ke 11.3 MeV kink -1 is_stm 1

@@ -1,0 +1,20 @@
+# /home/xqian/tmp/p100/carry_r2/latest_on_p99rwon_corrected.json
+# candidates A0 540 A1 563 union 681; judged 428; unjudged 23; unlabelled 230
+  A0 unlabelled candidates tagged is_stm 8, michel_found 21
+  A1 unlabelled candidates tagged is_stm 48, michel_found 44
+== is_stm (population 428)
+  A0 d103v0 TP 231 FP 9 FN 60 TN 128 | purity 0.963 [0.949, 0.974] efficiency 0.794 [0.768, 0.818]
+  A1 d103v1 TP 221 FP 9 FN 70 TN 128 | purity 0.961 [0.947, 0.974] efficiency 0.759 [0.735, 0.784]
+  A1 - A0: purity -0.002, efficiency -0.034
+  A1-only FPs 6 by source {'carried': 6}: ['039252_4/55', '039252_8/93', '039349_13/26', '039349_13/57', '039349_57/25', '039349_82/25']
+== michel_found (population 428)
+  A0 d103v0 TP 145 FP 12 FN 45 TN 226 | purity 0.924 [0.903, 0.945] efficiency 0.763 [0.733, 0.793]
+  A1 d103v1 TP 136 FP 20 FN 54 TN 218 | purity 0.872 [0.845, 0.899] efficiency 0.716 [0.684, 0.751]
+  A1 - A0: purity -0.052, efficiency -0.047
+  A1-only FPs 14 by source {'carried': 14}: ['039252_1/36', '039252_6/94', '039252_8/93', '039253_0/104', '039253_1/101', '039253_16/107', '039349_29/48', '039349_33/15', '039349_37/56', '039349_49/70', '039349_51/23', '039349_64/55', '039349_8/53', '039349_82/25']
+
+== bound over the unlabelled candidates (best case for A1 / worst case for A1)
+  is_stm best : A0 purity 0.960 eff 0.702 | A1 purity 0.968 eff 0.794 | A1 - A0 purity +0.008 eff +0.091
+  is_stm worst: A0 purity 0.935 eff 0.490 | A1 purity 0.795 eff 0.467 | A1 - A0 purity -0.141 eff -0.023
+  michel_found best : A0 purity 0.882 eff 0.671 | A1 purity 0.900 eff 0.769 | A1 - A0 purity +0.018 eff +0.098
+  michel_found worst: A0 purity 0.865 eff 0.410 | A1 purity 0.680 eff 0.362 | A1 - A0 purity -0.185 eff -0.048

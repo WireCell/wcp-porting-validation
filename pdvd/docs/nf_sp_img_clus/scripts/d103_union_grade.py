@@ -24,8 +24,16 @@ import numpy as np
 import uproot
 
 IMG = "/home/xqian/toolkit-dev/wcp-porting-img"
+# round-1 figures: smx22 (the default).  figs/103_pred_amend3.txt: the PDHD truth record is smx27 -> set this env
+PDHD_RECORD = os.environ.get("D103_PDHD_RECORD", f"{IMG}/pdhd/docs/scan/pdhd_stm_michel_smx22_verdicts.json")
 CELLS = {"pdhd": [("A0", "d101hnew"), ("K", "d101hkf"), ("S", "d102hocs"), ("A1", "d102hcs")],
          "pdvd": [("A0", "d101vnew"), ("K", "d101vkf"), ("S", "d102vocs"), ("A1", "d102vcsall")]}
+# sec 10 / figs/103_pred_amend4.txt: the PDVD production lineage (D103_PDVD_CELLS="d103v0,d103v1") graded on the
+# carried + owner-corrected record (D103_PDVD_RECORD).  Both unset => the round-1 cells and record (committed figures).
+PDVD_RECORD = os.environ.get("D103_PDVD_RECORD",
+                             f"{IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json")
+if os.environ.get("D103_PDVD_CELLS"):
+    CELLS["pdvd"] = list(zip(("A0", "A1"), os.environ["D103_PDVD_CELLS"].split(",")))
 
 
 def strip(v):
@@ -46,7 +54,7 @@ def row_truth(r, precedence):
     return strip(r["verdict"]), r.get("michel_kind"), precedence
 
 
-def load_truth(det, new_record):
+def load_truth(det, new_record, owner_record=None):
     T = {}
     def add(path, src):
         n = 0
@@ -56,11 +64,14 @@ def load_truth(det, new_record):
                 n += 1
         return n
     if det == "pdhd":
-        srcs = [(f"{IMG}/pdhd/docs/scan/pdhd_stm_michel_smx22_verdicts.json", "smx22")]
+        # figs/103_pred_amend3.txt: D103_PDHD_RECORD=<smx27> is the PDHD truth record (smx22 + 20 owner rulings)
+        srcs = [(PDHD_RECORD, os.path.basename(PDHD_RECORD).split("_")[3])]
     else:
         S = f"{IMG}/pdvd/docs/scan"
         # figs/103_pred_amend1.txt: own100 / own100m / own100x are keyed on other pctree lineages -> not truth here
-        srcs = [(f"{S}/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json", "record")]
+        srcs = [(PDVD_RECORD, "record")]
+    if owner_record:                       # figs/103_pred_amend2.txt sec 3: own103h above every other source
+        srcs.insert(0, (owner_record, "own103h"))
     if new_record:
         srcs.append((new_record, "new_agent"))
     counts = [(os.path.basename(p), add(p, s)) for p, s in srcs]
@@ -109,8 +120,10 @@ def main():
     ap.add_argument("--det", required=True, choices=["pdhd", "pdvd"])
     ap.add_argument("--new-record", default=None)
     ap.add_argument("--fixed-only", action="store_true")
+    ap.add_argument("--owner-record", default=None)   # amendment 2: owner adjudication record, first in precedence
+    ap.add_argument("--stm-only-unset-negative", action="store_true")   # sensitivity: an owner STM_ONLY with no kind = no Michel
     a = ap.parse_args()
-    T, src_counts = load_truth(a.det, a.new_record)
+    T, src_counts = load_truth(a.det, a.new_record, a.owner_record)
     R = {lab: cell_rows(a.det, arm) for lab, arm in CELLS[a.det]}
     judged = {k for k, (v, mk, s) in T.items() if v not in ("MESSY", "UNCLEAR")}
     if a.det == "pdhd":
@@ -119,7 +132,7 @@ def main():
             [l for l in open(f"{X}/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv") if not l.startswith("#")], delimiter="\t")}
         fixed &= judged
     else:
-        rec_keys = {r["key"] for r in json.load(open(f"{IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json"))}
+        rec_keys = {r["key"] for r in json.load(open(PDVD_RECORD))}
         fixed = {k for k in judged if k in rec_keys and k in R["A0"]}
     anycand = set().union(*[set(v) for v in R.values()])
     pop = sorted(fixed if a.fixed_only else fixed | (anycand & judged))
@@ -135,7 +148,8 @@ def main():
 
     stm_truth = {k: T[k][0] in ("STM_MICHEL", "STM_ONLY") for k in pop}
     if a.det == "pdhd":
-        mpop = [k for k in pop if stm_truth[k] and not (T[k][1] is None and T[k][2] == "owner_review")]
+        mpop = [k for k in pop if stm_truth[k] and not (T[k][1] is None and T[k][2] == "owner_review"
+                                                        and not (a.stm_only_unset_negative and T[k][0] == "STM_ONLY"))]
         m_truth = {k: T[k][1] in ("attached", "both") for k in mpop}
         mexcl = sum(1 for k in pop if stm_truth[k]) - len(mpop)
     else:
@@ -180,6 +194,28 @@ def main():
             print(f"  {title} {name}: A1 - A0 = {d:+.3f}")
     print(f"  -> {'D1 (record conditioning)' if min(worst) >= -0.02 else 'D2 (real cost)'}"
           f"{'  [fixed-only / old records: NOT the pre-registered reading]' if a.fixed_only or not a.new_record else ''}")
+
+    if a.owner_record:                     # figs/103_pred_amend2.txt sec 4: (b) untouched, (c) common vs arm-only
+        OWN = {r["key"] for r in json.load(open(a.owner_record))}
+        print(f"\n== amendment 2 splits (owner record {os.path.basename(a.owner_record)}, {len(OWN)} keys); (a) is above")
+        for title, P, TR, idx in (("is_stm", pop, stm_truth, 0), ("michel_found", mpop, m_truth, 1)):
+            UT = [k for k in P if k not in OWN]
+            print(f"  (b) {title}, untouched population {len(UT)} of {len(P)}")
+            d = {}
+            for lab in ("A0", "A1"):
+                chain = {k: v[idx] for k, v in R[lab].items()}
+                c = counts(UT, TR, chain)
+                p, e = pe(c)
+                (plo, phi), (elo, ehi) = boot(UT, TR, chain)
+                d[lab] = (p, e)
+                print(f"      {lab} TP {c['tp']:3d} FP {c['fp']:3d} FN {c['fn']:3d} TN {c['tn']:3d} | purity {p:.3f} "
+                      f"[{plo:.3f}, {phi:.3f}] efficiency {e:.3f} [{elo:.3f}, {ehi:.3f}]")
+            print(f"      A1 - A0: purity {d['A1'][0] - d['A0'][0]:+.3f}, efficiency {d['A1'][1] - d['A0'][1]:+.3f}")
+            g0 = {k for k in P if R["A0"].get(k, (0, 0))[idx]}
+            g1 = {k for k in P if R["A1"].get(k, (0, 0))[idx]}
+            for name, S in (("common tags (A0 and A1)", g0 & g1), ("A0-only tags", g0 - g1), ("A1-only tags", g1 - g0)):
+                tp = sum(1 for k in S if TR[k])
+                print(f"  (c) {title} {name}: n {len(S)}, TP {tp}, FP {len(S) - tp} (owner-judged {len(S & OWN)})")
 
 
 if __name__ == "__main__":

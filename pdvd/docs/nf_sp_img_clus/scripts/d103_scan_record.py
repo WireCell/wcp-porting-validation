@@ -40,7 +40,8 @@ def old_truth(det):
                 v = r["verdict"]
             out[r["key"]] = (v, r.get("confidence", ""))
         return out
-    rec = json.load(open(f"{IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json"))
+    rec = json.load(open(os.environ.get("D103_PDVD_RECORD",   # sec 10 / amend4: the production-lineage record
+                                        f"{IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json")))
     return {r["key"]: (r["verdict"], r.get("confidence", "")) for r in rec}
 
 

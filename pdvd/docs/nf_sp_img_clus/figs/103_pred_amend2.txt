@@ -1,0 +1,42 @@
+doc pdvd/103 -- pre-registration, amendment 2 (2026-09-15).
+Written before the owner adjudication tag own103h is served and before any owner label exists on it.
+103_pred.txt and amendment 1 stay in force except where this file adds to them.
+
+1. Scope
+   PDHD only. Its cells are production: A0 d101hnew has T_stm_michel identical to production h28prod on 61/61 events.
+   PDVD is NOT served. Its cells (d101vnew lineage d16vnu / d51vclus) are not current PDVD production p100flip:
+   * readout_window_ticks 10000 vs 6400;
+   * 596 vs 540 candidates;
+   * 36 of 596 keys map by cluster id plus a stop within 2 cm.
+   The PDVD cells are re-run on the production lineage first. A PDVD amendment is written before any PDVD owner label.
+
+2. The served set (d103_owner_scan_set.py --det pdhd)
+   * Tier 1: every judged (not MESSY/UNCLEAR), non-owner-labelled item that is a false positive in exactly one of A0
+     d101hnew / A1 d102hcs, on is_stm or michel_found (definitions as d103_union_grade.py). There are 21.
+   * Controls: 8 judged, non-owner-labelled items, drawn with random.Random(103). Each is a candidate in both A0 and A1
+     with identical (is_stm, michel_found), is_stm 1, and not in tier 1.
+   * All items are shown on the A1 payload and shuffled with random.Random(103).
+   * The question panel is identical for every item. It shows no chain answer, no prior label and no role.
+
+3. Fold
+   * An own103h verdict (label + michel_kind) becomes the item's truth, above every other source.
+   * MESSY/UNCLEAR removes the item from the population.
+   * An item the owner does not label keeps its existing label and is counted as unlabelled.
+
+4. Re-grade (d103_union_grade.py with own103h first)
+   * Cells: A0, K, S, A1.
+   * Metrics: is_stm and michel_found purity and efficiency, with bootstrap 68 %.
+   * Reported on: (a) all; (b) untouched (items not in own103h); (c) common (tagged in both A0 and A1) vs arm-only.
+   * No purity is computed on the served set itself.
+   * Controls: owner vs existing label, on stopper class and on michel_kind. If 3 or more of the 8 controls change
+     stopper class, the agent labels are unreliable beyond the served set. The re-grade is then reported as not
+     settled, and a wider review is proposed to the owner.
+
+5. Reading
+   * Thresholds and D1/D2 are unchanged from 103_pred.txt, read on (a).
+   * One-sidedness: tier 1 can only turn a charged false positive into a true positive (or remove it). The 68 PDHD
+     TP-movers (agent stopper labels tagged in one cell only) are not reviewed.
+   * If D1 on (a) depends on 2 or fewer items, a seeded 20-item sample of those TP-movers is served before D1 is
+     stated.
+   * Owner rulings on the rubric gaps (window edge, unfitted C-row gamma, 5-10 cm detached piece) are applied only to
+     the items the owner labels. Re-applying a ruling to other labels needs its own amendment.

@@ -1,0 +1,24 @@
+doc pdvd/103 -- pre-registration, amendment 5 (2026-09-15): the owner's rulings on the Michel convention.
+Written after the PDHD own103h re-grade (sec 10) had been read, with both readings shown to the owner. It is NOT blind.
+It records the owner's words and fixes which of the two already-computed readings is the headline.
+Amendments 1-3 stay in force. Amendment 4 is reserved for the PDVD production-lineage round.
+
+1. The owner's words (2026-09-15)
+   (a) "STM with no Michel, there is no Michel there."
+   (b) "when I say not Michel, likely the Michel is too low energies, or we cannot see them"
+
+2. What they change in the grade
+   (a) An owner stopper STM_ONLY with no michel_kind is Michel-NEGATIVE, not excluded.
+       * d103_union_grade.py --stm-only-unset-negative becomes the headline reading for every owner-labelled item
+         (own103h, and the owner_review blocks of smx27).
+       * An owner STM_MICHEL with no kind stays excluded; none exists in own103h.
+   (b) An owner "detached dots" / no-Michel stopper is Michel-negative. This is the grader's existing definition.
+       The chain's michel_found 1 on such an item stays a false positive.
+       The owner's reason, a Michel too low in energy or not visible, is recorded as the physics reading of this class.
+
+3. Headline PDHD reading after own103h: figs/103_union_grade_pdhd_own103h_stmonlyneg.txt.
+   * Thresholds are unchanged (103_pred.txt).
+   * The reading without (a) (figs/103_union_grade_pdhd_own103h.txt) is kept beside it.
+
+4. PDVD: the PDVD Michel truth is the verdict STM_MICHEL (d101_stm_grade_pdvd.py), so (a) and (b) are already that
+   convention there.

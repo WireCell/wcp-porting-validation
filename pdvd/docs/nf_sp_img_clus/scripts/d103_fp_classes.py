@@ -23,7 +23,7 @@ def main():
     T, _ = U.load_truth(a.det, a.new_record)
     R = {lab: U.cell_rows(a.det, arm) for lab, arm in U.CELLS[a.det]}
     conf = {}
-    base = (f"{U.IMG}/pdhd/docs/scan/pdhd_stm_michel_smx22_verdicts.json" if a.det == "pdhd" else
+    base = (U.PDHD_RECORD if a.det == "pdhd" else
             f"{U.IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json")
     for r in json.load(open(base)):
         conf[r["key"]] = r.get("confidence", "")
@@ -56,7 +56,9 @@ def main():
             src = collections.Counter(source(k) for k in S)
             cf = collections.Counter(conf.get(k, "") for k in S)
             cls = collections.Counter(f"{T[k][0]}/{T[k][1]}" if title == "michel_found" else T[k][0] for k in S)
-            print(f"  {lab:8s} n {len(S):3d} | source {dict(src)} | confidence {dict(cf)} | hand class {dict(cls.most_common())}")
+            # sorted: Counter order over a set follows PYTHONHASHSEED (round-1 figures differ only in this order)
+            print(f"  {lab:8s} n {len(S):3d} | source {dict(sorted(src.items()))} | confidence {dict(sorted(cf.items()))} | "
+                  f"hand class {dict(sorted(cls.items(), key=lambda kv: (-kv[1], kv[0])))}")
 
 
 if __name__ == "__main__":

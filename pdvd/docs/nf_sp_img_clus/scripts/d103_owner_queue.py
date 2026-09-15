@@ -30,7 +30,7 @@ def main():
     old = U.load_truth(a.det, None)[0]
     conf_old = {}
     if a.det == "pdhd":
-        for r in json.load(open(f"{U.IMG}/pdhd/docs/scan/pdhd_stm_michel_smx22_verdicts.json")):
+        for r in json.load(open(U.PDHD_RECORD)):
             conf_old[r["key"]] = r.get("confidence", "")
     else:
         for r in json.load(open(f"{U.IMG}/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json")):

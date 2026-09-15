@@ -1,0 +1,42 @@
+# doc pdvd/103 union grade (pdhd); truth sources (items taken from each, in precedence order): [('pdhd_stm_michel_own103h_verdicts.json', 27), ('pdhd_stm_michel_smx27_verdicts.json', 296), ('pdhd_stm_michel_smx28_verdicts.json', 97)]
+population fixed + judged candidates of any cell: 356 (fixed 250); candidates of any cell with no label anywhere: 33; unjudged (MESSY/UNCLEAR) candidates: 64
+population by label source: {'smx27': 192, 'new_agent': 89, 'owner': 25, 'owner_review': 50}
+
+== is_stm (population 356)
+  A0 d101hnew    TP 121 FP   2 FN  76 TN 157 | purity 0.984 [0.974, 0.993] efficiency 0.614 [0.579, 0.647]
+  K  d101hkf     TP 105 FP   6 FN  92 TN 153 | purity 0.946 [0.925, 0.966] efficiency 0.533 [0.498, 0.569]
+  S  d102hocs    TP 113 FP   8 FN  84 TN 151 | purity 0.934 [0.912, 0.957] efficiency 0.574 [0.540, 0.609]
+  A1 d102hcs     TP 118 FP   4 FN  79 TN 155 | purity 0.967 [0.952, 0.984] efficiency 0.599 [0.568, 0.634]
+
+== michel_found (population 184, excluded 13)
+  A0 d101hnew    TP  70 FP   2 FN  46 TN  66 | purity 0.972 [0.955, 0.988] efficiency 0.603 [0.559, 0.651]
+  K  d101hkf     TP  66 FP   4 FN  50 TN  64 | purity 0.943 [0.917, 0.971] efficiency 0.569 [0.525, 0.611]
+  S  d102hocs    TP  77 FP   5 FN  39 TN  63 | purity 0.939 [0.912, 0.965] efficiency 0.664 [0.619, 0.709]
+  A1 d102hcs     TP  77 FP   6 FN  39 TN  62 | purity 0.928 [0.899, 0.955] efficiency 0.664 [0.618, 0.704]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 72 candidates {'stopper': 32, 'non-stopper': 31, 'unjudged': 3, 'unlabelled': 6}; of them is_stm 1 on that side: {'stopper': 25, 'non-stopper': 1}
+  A0 only: 80 candidates {'stopper': 22, 'non-stopper': 38, 'unjudged': 10, 'unlabelled': 10}; of them is_stm 1 on that side: {'stopper': 16, 'non-stopper': 0}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.017
+  is_stm efficiency: A1 - A0 = -0.015
+  michel_found purity: A1 - A0 = -0.045
+  michel_found efficiency: A1 - A0 = +0.060
+  -> D2 (real cost)
+
+== amendment 2 splits (owner record pdhd_stm_michel_own103h_verdicts.json, 27 keys); (a) is above
+  (b) is_stm, untouched population 335 of 356
+      A0 TP 108 FP   2 FN  72 TN 153 | purity 0.982 [0.970, 0.992] efficiency 0.600 [0.566, 0.636]
+      A1 TP 104 FP   2 FN  76 TN 153 | purity 0.981 [0.969, 0.992] efficiency 0.578 [0.541, 0.614]
+      A1 - A0: purity -0.001, efficiency -0.022
+  (c) is_stm common tags (A0 and A1): n 88, TP 87, FP 1 (owner-judged 10)
+  (c) is_stm A0-only tags: n 35, TP 34, FP 1 (owner-judged 3)
+  (c) is_stm A1-only tags: n 34, TP 31, FP 3 (owner-judged 6)
+  (b) michel_found, untouched population 171 of 184
+      A0 TP  65 FP   2 FN  42 TN  62 | purity 0.970 [0.949, 0.987] efficiency 0.607 [0.561, 0.651]
+      A1 TP  68 FP   3 FN  39 TN  61 | purity 0.958 [0.933, 0.984] efficiency 0.636 [0.590, 0.680]
+      A1 - A0: purity -0.012, efficiency +0.028
+  (c) michel_found common tags (A0 and A1): n 52, TP 50, FP 2 (owner-judged 5)
+  (c) michel_found A0-only tags: n 20, TP 20, FP 0 (owner-judged 0)
+  (c) michel_found A1-only tags: n 31, TP 27, FP 4 (owner-judged 7)
