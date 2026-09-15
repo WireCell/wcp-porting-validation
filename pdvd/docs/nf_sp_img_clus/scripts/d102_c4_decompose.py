@@ -46,17 +46,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", default="cs1,cs2,cs3")
     ap.add_argument("--eval-dir", default="/home/xqian/tmp/d102/eval")
+    ap.add_argument("--base", default="d102b", help="baseline arm tag (round 2: d102o for the fit-knob-OFF pair)")
     a = ap.parse_args()
     for det in ("pdvd", "pdhd"):
         truth = {e["k"]: e for e in json.load(open(f"/home/xqian/tmp/d102/sim/truth_{det}.json"))["events"]}
-        B = ev(a.eval_dir, det, "d102b")
+        B = ev(a.eval_dir, det, a.base)
         for s in a.arms.split(","):
             arm = "d102" + s
             A = ev(a.eval_dir, det, arm)
             counts = {"stub_beside_improved_main": 0, "stub_beside_worse_main": 0, "fragmented_main": 0}
             lines = []
+            print(f"[{det}] base {a.base} -> arm {arm}")
             for k in range(16):
-                sb, _ = segments(det, k, "d102b")
+                sb, _ = segments(det, k, a.base)
                 sa, Ia = segments(det, k, arm)
                 if len(sa) <= len(sb):
                     continue

@@ -1,0 +1,34 @@
+michel_found moves d101hnew -> d102hocs on the hand stoppers of the fixed population:
+  NEW_FP: 3
+  LOST_TP: 18
+  GONE_FP: 1
+  NEW_TP: 6
+move	key	truth_michel_kind	truth_source	base	arm
+NEW_FP	028084_11/59	detached dots	owner	is_stm 1 michel 0	is_stm 1 michel 1
+NEW_FP	029107_12/33	detached dots	agent	is_stm 0 michel 0	is_stm 0 michel 1
+NEW_FP	029107_27/39	detached dots	agent	is_stm 1 michel 0	is_stm 0 michel 1
+LOST_TP	028084_18/108	both	owner	is_stm 1 michel 1	is_stm 1 michel 0
+LOST_TP	028084_2/116	attached	agent	is_stm 1 michel 1	is_stm 0 michel 0
+LOST_TP	028084_21/17	attached	agent	is_stm 1 michel 1	is_stm 1 michel 0
+LOST_TP	028084_21/26	attached	agent	is_stm 1 michel 1	absent
+LOST_TP	028084_27/27	both	agent	is_stm 1 michel 1	absent
+LOST_TP	028084_4/20	both	agent	is_stm 0 michel 1	is_stm 0 michel 0
+LOST_TP	028084_6/42	attached	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_1/85	both	agent	is_stm 1 michel 1	is_stm 0 michel 0
+LOST_TP	029107_11/90	both	agent	is_stm 1 michel 1	is_stm 1 michel 0
+LOST_TP	029107_19/106	both	agent	is_stm 1 michel 1	is_stm 1 michel 0
+LOST_TP	029107_19/30	both	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_21/65	attached	agent	is_stm 1 michel 1	is_stm 1 michel 0
+LOST_TP	029107_23/128	attached	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_25/110	attached	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_25/123	both	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_27/64	both	agent	is_stm 1 michel 1	absent
+LOST_TP	029107_3/23	both	agent	is_stm 1 michel 1	is_stm 0 michel 0
+LOST_TP	029107_9/109	both	agent	is_stm 1 michel 1	is_stm 1 michel 0
+GONE_FP	028084_23/114	detached dots	owner	is_stm 1 michel 1	is_stm 1 michel 0
+NEW_TP	028084_20/107	both	agent	is_stm 1 michel 0	is_stm 1 michel 1
+NEW_TP	028084_8/37	attached	agent	is_stm 1 michel 0	is_stm 1 michel 1
+NEW_TP	029107_12/95	attached	agent	is_stm 1 michel 0	is_stm 1 michel 1
+NEW_TP	029107_21/43	attached	owner_review	is_stm 0 michel 0	is_stm 1 michel 1
+NEW_TP	029107_28/109	attached	agent	is_stm 1 michel 0	is_stm 1 michel 1
+NEW_TP	029107_29/119	attached	agent	is_stm 0 michel 0	is_stm 0 michel 1

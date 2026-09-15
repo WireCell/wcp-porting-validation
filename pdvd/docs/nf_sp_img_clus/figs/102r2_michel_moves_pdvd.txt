@@ -1,0 +1,29 @@
+population = judged items with a payload in 'd101vnew': 546; arm 'd102vocs'
+
+=== is_stm: {'gained_verdict': 13, 'gone_fp_absent': 2, 'gone_fp_verdict': 3, 'lost_absent': 23, 'lost_verdict': 24, 'new_fp_verdict': 14}
+
+=== michel_found: {'gained_verdict': 7, 'gone_fp_absent': 1, 'gone_fp_verdict': 4, 'lost_absent': 14, 'lost_verdict': 22, 'new_fp_verdict': 23}
+new Michel false positives (hand non-Michel, michel_found 1 only in the arm):
+  039252_17/91
+  039252_3/75
+  039252_6/100
+  039252_6/88
+  039253_11/106
+  039253_6/76
+  039349_12/44
+  039349_15/30
+  039349_19/24
+  039349_22/39
+  039349_22/64
+  039349_29/49
+  039349_32/56
+  039349_32/63
+  039349_32/68
+  039349_33/45
+  039349_33/58
+  039349_33/66
+  039349_37/52
+  039349_51/25
+  039349_63/47
+  039349_7/57
+  039349_71/51

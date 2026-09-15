@@ -1,0 +1,43 @@
+doc pdvd/102 ROUND 2 -- PRE-REGISTERED reading for the production flip of the retile sampler and the
+fit-knob x sampler interaction.  Written before any round-2 arm ran.
+
+Owner instruction 2026-09-15 (after doc 102 r1): "You should clearly flip the charge_stepped knob for PDHD and
+PDVD running.  Is this also an issue with the SBND?  After the charge_stepped knob on, I wonder if the previous
+knob on the track trajectory fitting is still effective or not?"
+
+Setting flipped: charge_stepped with prototype defaults (wire product 2500, thresholds 4000,
+disable_mix_dead_cell false) = r1 'cs1', the only setting measured on data.  Production fit JSON unchanged
+(doc 101 fit knobs stay OFF in production).  Pin /home/xqian/tmp/d102/libpin_d102 (Clus md5 091e142b9481).
+
+A. THE FLIP'S OWN CONFIGURATION (production: fit knobs OFF + charge_stepped), data
+   arms d102hocs (PDHD 61, src d101hnew) / d102vocs (PDVD 120, src d101vnew), PR_TLA = charge_stepped only,
+   no trackfitting_config (as d101hnew / d101vnew ran).  Baseline = d101hnew / d101vnew.
+   Flip gate -- ALL must hold on both detectors, else STOP and report before pushing:
+     g1  every event that completes in the baseline completes in the arm (tracking-pr.root + tracking-stm.root +
+         the CheckSTM_Michel candidate line);
+     g2  median per-event peak RSS ratio <= 1.25 and median wall ratio <= 1.50 (load control reported);
+     g3  fixed-denominator tags no worse than the r1 knob-on arm's change that the owner saw when directing the
+         flip: PDHD STM efficiency drop <= 0.010 and Michel purity drop <= 0.080; PDVD STM efficiency drop
+         <= 0.017 and Michel efficiency drop <= 0.034 (r1: 0.000 / 0.080 / 0.007 / 0.024, + 0.01 margin);
+     g4  compiled PR config of the flipped default is byte-identical to the config the arm ran with (TLA), and
+         an explicit retile_sampler_strategy='stepped' compiles byte-identical to the pre-flip default.
+   Reported only: census reg / chords / grid, the owner's four PDHD spots, new Michel FPs listed for the owner.
+
+B. FIT KNOBS x SAMPLER INTERACTION (the owner's second question) -- descriptive, no gate.
+   Simulation cells (knobs = fit JSON 101_tf_sim_<det>_kf vs 101_tf_sim_<det>):
+     ISO set 900103/900104:  off+stepped d102o (NEW), on+stepped d102b, off+cs d102ocs (NEW), on+cs d102cs1
+     low set 900101/900102:  off+stepped d101koff, on+stepped d101kf, off+cs d102locs (NEW), on+cs d102lcs1
+   Data cells: off+stepped d101hnew/d101vnew, on+stepped d101hkf/d101vkf, on+cs d102hcs/d102vcsall,
+               off+cs d102hocs/d102vocs (NEW, = A).
+   Metrics: sim res_t_p90, dev_p90, dqdx_cv, dip_truth, snap_u/v/w (paired medians over tracks);
+            data d101_census.py dev p90 / cv / dip / snap; tags.
+   Reading, declared now: the fit knobs are "still effective under charge_stepped" on a detector if the median
+   paired knob effect (on - off) under charge_stepped has the same sign as under stepped for BOTH dev_p90 and
+   res_t_p90 and at least half its magnitude; "partly" if same sign but < half; "not" otherwise.  Ratio reported.
+   Segment changes are classified with the r1 rule, declared now: stub = new segment <= 10 points starting
+   within 5 cm of a track end, beside a main whose res_t_p90 does not worsen; fragmentation = an extra
+   >= 10-point pid-13 segment.
+
+C. SBND (read-only): same stepped retile in code (sbnd/clus.jsonnet:200-206, :2044-2048).  Measure the
+   retiled cloud's in-slice spacing (calib 'steiner') vs the image on work-mcp{1,2}k-d101snew.  No SBND config
+   change in this round.

@@ -22,6 +22,10 @@ for arm in $ARMS; do
         d102cs1) script=d102_sim_pr_arm.sh; extra="$CS" ;;
         d102cs2) script=d102_sim_pr_arm.sh; extra="$CS -S retile_sampler_charge_threshold=2000" ;;
         d102cs3) script=d102_sim_pr_arm.sh; extra="$CS -S retile_sampler_wire_product=10000" ;;
+        # round 2 (pred2.txt): the fit-knob-OFF cells, sim-matched JSON without the knob keys
+        d102o)    script=d102_sim_pr_arm.sh; extra="-S retile_sampler_strategy='stepped'"; TF=$F/101_tf_sim_${DET}.json ;;
+        d102ocs)  script=d102_sim_pr_arm.sh; extra="$CS"; TF=$F/101_tf_sim_${DET}.json ;;
+        d102locs) script=d101_sim_pr_arm.sh; extra="$CS"; TF=$F/101_tf_sim_${DET}.json ;;
         d102lcs1) script=d101_sim_pr_arm.sh; extra="$CS" ;;
         d102lcs2) script=d101_sim_pr_arm.sh; extra="$CS -S retile_sampler_charge_threshold=2000" ;;
         d102lcs3) script=d101_sim_pr_arm.sh; extra="$CS -S retile_sampler_wire_product=10000" ;;

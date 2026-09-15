@@ -1,0 +1,33 @@
+doc pdvd/102 -- PRE-REGISTERED selection rule for the retile-sampler (charge_stepped) arms on simulation.
+Written before any knob-on simulation arm ran.  Owner decision 2026-09-15: simulation truth decides; the
+fixed-denominator STM/Michel grades and the data proxies are reported but do not gate.
+
+Baseline everywhere: fit knobs ON (figs/101_tf_sim_<det>_kf.json), pin /home/xqian/tmp/d102/libpin_d102
+(libWireCellClus md5 091e142b9481 == doc 101 libpin_k).
+
+Samples:
+  ISO stratum    = d102 set, runs 900103 (PDVD) / 900104 (PDHD), k0-15 = theta {65,75,85,89} x phi {0,30,60,90},
+                   100 cm, 5000 e/mm; k16 = k0, k17 = k10 re-simulated (seed noise floor).  Baseline d102b, repeat
+                   d102brep (must equal d102b bit for bit).
+  low stratum    = doc 101 set, runs 900101/900102 _d101 pctrees, the 12 grid tracks with theta <= 60
+                   (k4-15 of theta {80,60,40,20}); baseline doc 101's d101kf (same pin md5, compiled default
+                   config proven byte-identical in doc 102 sec 6).
+Arms: d102cs1 = charge_stepped, prototype defaults (wire product 2500, charge thresholds 4000, disable_mix_dead_cell false)
+      d102cs2 = charge_stepped, charge thresholds 2000
+      d102cs3 = charge_stepped, wire product 10000
+      (low stratum: d102lcs1 / d102lcs2 / d102lcs3 on the doc 101 set)
+Metrics: d101_sim_fit_eval.py / d102_sim_fit_eval.py on tracking-pr.root (res_t p90, chord dev p90, dip_truth, segments).
+
+A lever PASSES on a detector when ALL hold:
+  ISO stratum, 16 tracks: median paired delta res_t_p90 < 0 AND median paired delta dev_p90 < 0;
+                          >= 10/16 tracks improve res_t_p90;
+                          median delta dip_truth <= +0.01;
+                          no track gains a spurious segment (PR segment count per event > baseline's).
+  low stratum, 12 tracks: median delta res_t_p90 <= +0.05 mm AND median delta dip_truth <= +0.01.
+  data resources (d102hcs / d102vcsall vs d101hkf / d101vkf): median per-event peak RSS <= +25 %, wall <= +50 %.
+Consequence: a setting that passes on BOTH detectors is proposed for the production flip (retile samplers only),
+presented to the owner with its evidence before any default change is committed or pushed (CLAUDE.md sec 5.1).
+If several pass, the prototype-default setting (cs1) is named if it passes, else the simplest passing one.
+If none passes, no flip is proposed and the doc reports the ranking.
+Reported, not gating: ISO reg_flag share, exact-cell on-charge per plane, off-image chords, the four owner spots,
+fixed-denominator STM/Michel grades.

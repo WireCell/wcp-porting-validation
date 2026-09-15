@@ -34,6 +34,17 @@
 * **No fit knob built (sec 9).** The dominant data mechanism is graph bridging, which a fit knob cannot reach.
 * **NOT flipped.** No setting qualifies under the frozen rule. The c4 reading and the PDHD Michel purity drop are
   for the owner (sec 10).
+* **Round 2 (sec 13): the owner asked to flip; the flip's own pre-registered gate FAILED, so it is still not
+  flipped.**
+  * Production runs the fit knobs OFF, so the flip configuration is knobs off + `charge_stepped`. It was measured
+    under the frozen rule `figs/102_pred2.txt`.
+  * **Passed:** resources, and the compile proof (the flipped default builds the measured config byte for byte).
+  * **Failed: the STM/Michel tags.** PDHD STM efficiency 0.776 → 0.592. PDVD STM efficiency 0.877 → 0.754, Michel
+    purity 0.923 → 0.792.
+  * The sampler costs the tagger what doc 101's fit knobs cost it, in count and in kind. The tagger was tuned on
+    the old trajectory.
+  * **Fit knobs** are still effective under `charge_stepped`, in simulation and on data.
+  * **SBND** has the same hard-coded `stepped` retile (no knob), with a cloud ~1.5× sparser than its image.
 
 **Owner request (2026-09-15).** *"Hi, the track fitting has improved. Before we retune the tagger, from my scan
 of the updated bee link, I see a few other issues worth improving. 1. for these points: (x, y, z) = (326.1,
@@ -544,3 +555,254 @@ If a flip is ever made, the prepared change is one jsonnet default:
   * data `028084_21_d102dbg` / `_d102cs`, `039253_8` and `039349_64` `_d102vdbg` / `_d102vcs`, `*_d102hcs`,
     `*_d102vcsall`;
   * simulation `90010[34]_k_d102{,b,brep,cs1,cs2,cs3}` and `90010[12]_k_d102lcs{1,2,3}`.
+
+---
+
+## 13. Round 2 (2026-09-15): the owner's go to flip, the flip's own configuration, and the fit knobs
+
+**Owner request.** *"You should clearly flip the charge_stepped knob for PDHD and PDVD running. Is this also an
+issue with the SBND? Aftr the charge_stepped knob on, I wonder if the previous knob on the track trajectory
+fitting is still effective or not? Can you explain to me?"*
+
+### 13.0 Repro (round 2)
+
+```bash
+IMG=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img; D=$IMG/pdvd/docs/nf_sp_img_clus; S=$D/scripts; F=$D/figs; W=$HOME/tmp/d102
+PIN=$W/libpin_d102; CS="-S retile_sampler_strategy='charge_stepped'"
+sha256sum $F/102_pred2.txt          # 90a73668...  frozen 2026-09-15T07:50:21; every round-2 arm started 07:50:22
+# data: the production configuration (fit knobs off = no trackfitting_config) + charge_stepped
+ARM=d102hocs DET=pdhd SRC=d101hnew JOBS=3 PIN=$PIN PR_TLA="$CS" bash $S/d102_run_arms.sh
+ARM=d102vocs DET=pdvd SRC=d101vnew JOBS=3 PIN=$PIN PR_TLA="$CS" bash $S/d102_run_arms.sh
+# simulation: the fit-knob-OFF cells
+for d in pdvd pdhd; do DET=$d PIN=$PIN JOBS=2 ARMS="d102o d102ocs d102locs" bash $S/d102_knob_arms.sh
+  for a in d102o d102ocs; do python3 $S/d102_sim_fit_eval.py --det $d --arm $a --out $W/eval/eval_${d}_$a.tsv; done
+  for a in d102locs d101koff; do python3 $S/d101_sim_fit_eval.py --det $d --arm $a --out $W/eval/eval_${d}_$a.tsv; done; done
+python3 $S/d102_interaction_report.py --dir $W/eval --out $W/interaction_sim.tsv
+python3 $S/d102_c4_decompose.py --base d102o --arms ocs
+# gate
+CFG_ROOT=$W/cfg_flip/cfg bash $S/d102_compile_pr.sh pdhd flipdef; CFG_ROOT=$W/cfg_flip/cfg bash $S/d102_compile_pr.sh pdhd flipst -S "retile_sampler_strategy='stepped'"   # and pdvd; cmp with on1_* / post_*
+python3 $S/d102_resource_report.py pdhd:d101hnew:d102hocs pdvd:d101vnew:d102vocs
+python3 $S/d101_stm_grade_pdhd.py d101hnew d102hocs d101hkf d102hcs
+python3 $S/d102_michel_fp_list.py d101hnew d102hocs
+M=$IMG/pdhd/stm_michel_scan; export STM_SCAN_RECORD=$IMG/pdvd/docs/scan/pdvd_stm_michel_smx1a_smx3_smx4_smx5_smx6_smx7_smx8_smx9_verdicts.json
+python3 $M/prep_stm_michel_scan.py --det pdvd --arm d102vocs --pin-tranche $HOME/tmp/d101/sheet_d101vkf/pdvd_stm_michel_scan_sheet.tsv --outdir $W/prep_d102vocs --sheetdir $W/sheet_d102vocs
+python3 $S/d101_stm_grade_pdvd.py d101vnew=$HOME/tmp/d101/prep_d101vnew d102vocs=$W/prep_d102vocs d101vkf=$HOME/tmp/d101/prep_d101vkf d102vcsall=$W/prep_d102vcsall2
+python3 $S/d102_pdvd_moves.py d101vnew=$HOME/tmp/d101/prep_d101vnew d102vocs=$W/prep_d102vocs    # and d101vkf=... for the fit knobs
+# reported: zig-zag census of the four data cells, reg/chord census, grid, SBND, the owner's event
+python3 $S/d101_census.py --out $W/census101_2x2 --arm phd_stm_off_st:pdhd:d101hnew:stm ...   # 16 --arm specs: {pdhd,pdvd} x {stm,pr} x 4 cells
+python3 $S/d102_census.py --out $W/census_r2_hd pdhd:d101hnew pdhd:d102hocs
+python3 $S/d102_census.py --out $W/census_r2_vd_common --exclude 039252_5,039252_11,039349_14,039349_78 pdvd:d101vnew pdvd:d102vocs
+python3 $S/d102_sbnd_grid.py --pd pdhd:d101hnew:30 --pd pdhd:d102hcs:30 --pd pdvd:d101vnew:30 --pd pdvd:d102vcsall:30
+cd $D && python3 $S/d102_spot_figs.py --det pdhd --event 028084_21 --arms d101hnew,d102hocs --uv-rank-verified --out figs/102r2_prod_pdhd
+```
+
+### 13.1 Why the flip was measured before it was made
+
+Production runs the doc 101 fit knobs **off**. Every `charge_stepped` data arm of round 1 ran them **on**, so the
+configuration a flip creates had never been measured.
+
+`figs/102_pred2.txt` was frozen before any round-2 arm. It declares the flip's own gate (sec A), the 2×2
+interaction reading (sec B) and the SBND measurement (sec C).
+
+The setting is cs1: prototype defaults, the only one measured on data.
+
+### 13.2 The flip gate — FAILED (not flipped)
+
+| clause | PDHD | PDVD |
+|---|---|---|
+| g1 every event that completes in the baseline completes | **PASS** (61 / 61) | **FAIL**: 039349_78 loses its only candidate (sec 13.2.3); 039252_11 is the reverse (0 in baseline, 2 in the arm) |
+| g2 resources (median wall ≤ ×1.50, RSS ≤ ×1.25) | **PASS**: wall ×1.00 (p90 1.25), RSS ×1.009 (max 1.44); Steiner stage ×1.58, load control ×0.92 | **PASS**: wall ×0.76 (p90 1.00), RSS ×0.993 (max 1.65); Steiner ×1.06, control ×0.87 |
+| g3 tags no worse than round 1's change | **FAIL**: STM efficiency −0.184 (limit 0.010); Michel purity −0.038 (limit 0.080, passes) | **FAIL**: STM efficiency −0.123 (limit 0.017); Michel efficiency −0.177 (limit 0.034); Michel purity −0.131 (not bounded by g3) |
+| g4 compile proof (scratch cfg tree) | **PASS**: flipped default ≡ `on1` 87a86589c767; flipped + `'stepped'` ≡ pre-flip 434208b1d840; 8 retile BlobSamplers differ, nothing else | **PASS**: ≡ 211a49a48229 / ≡ 920ecb4312ab; 16 BlobSamplers |
+
+The pre-registered consequence is **stop and report before pushing**. The flip is not committed.
+
+It is ready to apply: `figs/102r2_flip.patch`, one line per detector in `pr.jsonnet`, `null → 'charge_stepped'`.
+Explicit `'stepped'` stays the byte-identical escape hatch.
+
+#### 13.2.1 The tags on all four cells (fixed denominator)
+
+| det | cell | STM purity / efficiency | Michel purity / efficiency |
+|---|---|---|---|
+| PDHD (257) | knobs off, `stepped` (production) `d101hnew` | 0.974 / **0.776** | 0.971 / 0.791 |
+| PDHD | knobs on, `stepped` `d101hkf` | 0.947 / 0.605 | 0.919 / 0.663 |
+| PDHD | **knobs off, `charge_stepped` (the flip) `d102hocs`** | 0.946 / **0.592** | 0.933 / 0.651 |
+| PDHD | knobs on, `charge_stepped` `d102hcs` | 0.937 / 0.605 | 0.839 / 0.605 |
+| PDVD (546) | knobs off, `stepped` (production) `d101vnew` | 0.968 / **0.877** | **0.923 / 0.872** |
+| PDVD | knobs on, `stepped` `d101vkf` | 0.927 / 0.739 | 0.830 / 0.713 |
+| PDVD | **knobs off, `charge_stepped` (the flip) `d102vocs`** | 0.924 / **0.754** | **0.792 / 0.695** |
+| PDVD | knobs on, `charge_stepped` `d102vcsall` | 0.922 / 0.732 | 0.837 / 0.689 |
+
+#### 13.2.2 The sampler costs the tagger what the fit knobs cost it
+
+Hand positives the production tagger finds and the changed trajectory loses: a dropped candidate (absent from
+`T_stm_michel`) vs a changed verdict on a candidate still present.
+* PDHD split: `d102_michel_fp_list.py`-style join.
+* PDVD split: `d102_pdvd_moves.py`.
+
+| change from production | PDHD STM lost (dropped / verdict), gained | PDVD STM lost (dropped / verdict), gained, new FP | PDVD Michel lost (dropped / verdict), new FP |
+|---|---|---|---|
+| sampler: → knobs off + `charge_stepped` | 32 (17 / 15), 5 | 47 (23 / 24), 13, 14 | 36 (14 / 22), 23 |
+| fit knobs: → knobs on + `stepped` (doc 101) | 33 (18 / 15), 8 | 49 (26 / 23), 11, 15 | 33 (18 / 15), 17 |
+
+The two levers act on different layers but cost the tagger the same, in count and in kind.
+* **CheckSTM_Michel and TaggerCheckSTM were tuned on the production trajectory.** Any change to where the fitted
+  points sit moves the kink / stop decisions (sec 13.2.3) and which clusters reach candidacy.
+* **They do not stack.** Adding `charge_stepped` on top of the knobs costs PDHD STM efficiency nothing (0.605 →
+  0.605).
+* **Lists for adjudication:** `figs/102r2_michel_moves_pdhd.tsv` (PDHD: 3 new FP, 18 lost TP, 1 gone FP, 6 new TP)
+  and `figs/102r2_michel_moves_pdvd.txt` (PDVD: the 23 new Michel FPs).
+
+#### 13.2.3 PDVD 039349_78, the g1 failure
+
+It is not a crash: the run finalizes in 9 s.
+
+**Main-cluster stage: unchanged.** ClusteringFlagMatchedMains (43 mains), ClusteringUnmergeBundle (cluster 22:
+649 + 3 associated) and TaggerCheckTGM are identical in both logs.
+
+**Where it diverges: cluster 22's STM fit.**
+* **Production:** pass 0 has status 7, kink at point 280 of 280 (the track end), exit 176.5 cm. The readout-edge
+  and cathode guards run, and the result is `STM=1`.
+* **The flip:** pass 0 has status 2, **kink at point 7**, exit 4.5 cm, left 158.1 cm. Pass 1 has status 3, and the
+  result is `STM=0`. CheckSTM_Michel: "no STM-tagged main cluster; nothing to reconstruct".
+
+The denser retile moves the seed. The refitted trajectory shows a kink 7 points from its start, and the tagger
+takes that as the stop.
+
+### 13.3 Are the fit knobs still effective under `charge_stepped`? Yes
+
+**Mechanism.** The two knobs act inside `trajectory_fit` / `form_point_association` (doc 101 sec 2.3):
+* `fit_weight_pow` 1.5 softens the (q/err)² position weight that pulls a point onto the brightest wire;
+* `assoc_cont_center` 1 centres the association window on the continuous wire coordinate instead of the rounded
+  wire.
+
+Together they fight **wire-centre snapping**: the staircase zig-zag.
+
+`charge_stepped` acts one layer earlier, on the retiled cloud. That changes the Steiner graph, the rough-path seed
+and the cells a point can reach. It fights the **seed sitting off the charge** (spots 1–2) and the 3-wire grid.
+
+Neither layer can do the other's job, so the expectation is that both still bite, and the 2×2 confirms it.
+
+**Simulation** (`d102_interaction_report.py`; paired medians over tracks, mm). The knob effect is on − off; the
+sampler effect is `charge_stepped` − `stepped`, knobs off.
+
+| det, stratum | knob effect on res_t p90: @`stepped` → @`charge_stepped` | knob effect on chord dev p90: @`stepped` → @`charge_stepped` | sampler effect, knobs off: res_t p90 / dev p90 | pred2 reading |
+|---|---|---|---|---|
+| PDVD ISO (16) | −0.046 → −0.152 | −0.150 → −0.248 | −0.376 / −0.520 | still effective |
+| PDVD θ ≤ 60° (12) | −0.025 → −0.185 | −0.385 → −0.228 | −0.029 / −0.140 | still effective |
+| PDHD ISO (16) | −0.361 → −0.385 | −0.003 → −0.322 | −0.752 / −0.256 | still effective |
+| PDHD θ ≤ 60° (12) | −0.257 → −0.272 | −0.335 → −0.387 | +0.003 / −0.004 | still effective |
+
+(The report's cs/stepped ratios of 97 for PDHD ISO dev and 7.5 for PDVD low res_t come from near-zero denominators
+and are not quoted.)
+
+**Data, STM fit** (`d101_census.py`; zig-zag = chord-deviation p90, cm; dQ/dx robust CV; dip share; W lattice snap,
+where 1.0 = none):
+
+| det | knobs off, `stepped` | knobs on, `stepped` | knobs off, `charge_stepped` | knobs on, `charge_stepped` |
+|---|---|---|---|---|
+| PDHD | 0.564 / 0.247 / 4.2 % / 1.23 | 0.542 / 0.242 / 4.1 % / 1.13 | 0.451 / 0.218 / 3.0 % / 1.24 | **0.430 / 0.210 / 3.0 % / 1.15** |
+| PDVD | 0.478 / 0.212 / 3.6 % / 1.55 | 0.445 / 0.209 / 3.4 % / 1.44 | 0.330 / 0.197 / 2.1 % / 1.59 | **0.311 / 0.194 / 2.1 % / 1.46** |
+
+**Reading.**
+* **On data the sampler does most of the work.** It removes 0.11–0.15 cm of zig-zag p90 and ~1.3 points of dips;
+  the knobs remove 0.02–0.03 cm.
+* **Only the knobs reduce lattice snap**, and they still do under `charge_stepped` (PDVD W 1.59 → 1.46, PDHD
+  1.24 → 1.15). The sampler leaves snap unchanged or slightly worse.
+* **The best trajectory is both on** (last column), on both detectors.
+
+**On the owner's event** (knobs off + `charge_stepped` vs production; `figs/102r2_prod_pdhd_spots.tsv`). The
+sampler alone repairs spots 1–3:
+* spot 1: largest distance from ridge 1.78 → 0.84 cm, V on-charge 0.80 → 1.00, zero rows 9 → 0;
+* spot 2: 2.34 → 0.77 cm, V/W on-charge 0.76 / 0.80 → 1.00, PR segments 3 → 1;
+* **spot 3: dQ/dx median 12.7 → 49.5 ke/cm, zero rows 23 → 0**, the fit back on all three planes. This was the spot
+  round 1 credited to the fit knobs.
+
+Spot 4 (cl26) again gets no PR fit; see 13.5.
+
+**Segments, knobs-off pair** (`d102_c4_decompose.py --base d102o --arms ocs`):
+* PDVD: k9, a 9-point stub at the track start beside an improved main; k11, the same off-line side branch as round
+  1.
+* PDHD: k6, a 4-point stub at the start; k8, a 7-point stub at the track **end**, main +0.15 mm.
+
+### 13.4 SBND
+
+**Same divergence in code.** `sbnd/clus.jsonnet:200-206` hard-codes `strategy: ['stepped']` in `bs_live_face`, and
+the Steiner retile (`improve_cluster_2`, :2044-2048) uses it. The SBND PR job exposes **no** argument for it. Nothing
+was changed for SBND.
+
+**Measured like-for-like** (`d102_sbnd_grid.py`): in-slice nearest-neighbour spacing of the calib-dump retiled
+cloud vs the image, SBND `d101snew` (16 events) against the first 30 events of the PDHD/PDVD arms.
+
+| det (pitch) | cloud median | image median | cloud / image | cloud in pitches | near-ISO cloud / image | with `charge_stepped` |
+|---|---|---|---|---|---|---|
+| SBND (0.30 cm) | 1.039 cm | 0.693 cm | ×1.50 | 3.5 | ×1.38 | — (no knob) |
+| PDHD (0.479 cm) | 1.478 cm | 0.985 cm | ×1.50 | 3.1 | ×1.35 | 0.800 cm (×0.81) |
+| PDVD (0.51 cm W) | 1.767 cm | 1.062 cm | ×1.66 | 3.5 | ×1.39 | 0.883 cm (×0.83) |
+
+**Answer.**
+* **Yes, the same issue exists in kind.** SBND's retiled cloud is as much sparser than its image as PDHD's, in
+  pitches and in ratio.
+* **It is milder in effect.** The absolute spacing is 1 cm rather than 1.5–1.8 cm, and doc 101 sec 1 measured
+  SBND's fit symptoms at a fraction of PDHD's: PR chord dev p90 0.31 vs 0.56 cm, dips 1.2 % vs 4.3 %, snap ≈ 1.0.
+* **Indicative only.** SBND has 83 Steiner-cloud clusters against ~3000 per 30 PDHD events.
+
+Measuring `charge_stepped` on SBND would need a new default-OFF knob in `sbnd/clus.jsonnet`, plus the same arms.
+That is not done here.
+
+### 13.5 Correction to sec 2 / sec 3: cl26
+
+The round-1 statement "cl26 loses its PR fit" is **real, not a cluster-id renumbering**. Matched by image points,
+cl26 (16 137 points) and cl128 are the same clusters, with the same ids, in all four cells. In both
+`charge_stepped` arms cl26 and cl128 have zero `track_fit` rows.
+
+What the round-1 text missed: in the same arms a **separate** cluster, **cl27** (1185 points, 100 cm from cl26),
+gains the PR fit and becomes an STM candidate. It has none under `stepped`.
+
+So on this event the retile changes **which cluster the PR stage fits**, most likely the main-cluster choice
+inside a bundle. That is candidate churn upstream of the fit, not a fit that fails. Bundle membership was not
+checked.
+
+### 13.6 Census, knobs-off pair (reported)
+
+| | PDHD `d101hnew` → `d102hocs` (61) | PDVD `d101vnew` → `d102vocs` (116 common) |
+|---|---|---|
+| `reg_flag` share 65–75° / 75–85° / 85–90° | 0.137 / 0.163 / 0.269 → **0.113 / 0.147** / 0.259 | 0.258 / 0.335 / 0.389 → **0.212 / 0.289** / 0.384 |
+| off-image share 85–90° | 0.102 → 0.099 | 0.142 → 0.156 |
+| chords (≥ 10 off-image rows): count, total length | 289, 9477 cm → 288, 8785 cm | 297, 6482 cm → 298, 6802 cm |
+| Steiner in-slice spacing, 3-wire share | 1.478 cm, 0.594 → 0.800 cm, 0.102 | 1.767 cm, 0.064 → 0.883 cm, 0.104 |
+
+Same picture as round 1:
+* `reg_flag` falls by 12–18 % up to 85°;
+* the most isochronous bin does not improve;
+* chords stay: they are Steiner-graph bridges (sec 5.3).
+
+### 13.7 What a flip would need
+
+**The obstacle is the tagger, not the sampler.**
+* Both trajectory improvements, the sampler and the fit knobs, cost the STM/Michel chain the same. They cost it
+  through the same two channels: candidates that stop reaching CheckSTM_Michel, and kink/stop verdicts that move
+  (039349_78).
+* Neither lever makes the trajectory worse. On data they are the two best zig-zag cells, and together the best.
+
+The owner's opening message already said "before we retune the tagger". The consistent path is:
+1. **Adopt the best trajectory as the tagger-retune baseline:** knobs on + `charge_stepped` (`d102hcs` /
+   `d102vcsall`). Both samples are on disk with fixed-denominator grades.
+2. **Adjudicate the new false positives** in `figs/102r2_michel_moves_{pdhd,pdvd}.*` (most PDHD verdicts are agent
+   labels, not owner labels), so that the retune does not chase mislabels.
+3. **Retune** TaggerCheckSTM's kink/stop reading and CheckSTM_Michel's admission on that baseline.
+4. **Flip the sampler (`figs/102r2_flip.patch`), the fit knobs and the retuned tagger together**, graded on the
+   same records.
+
+Flipping the sampler alone now would cost production 12–18 points of STM efficiency on both detectors until the
+retune lands.
+
+### 13.8 Files (round 2)
+
+* **Scripts:**
+  * new: `d102_interaction_report.py`, `d102_sbnd_grid.py`, `d102_michel_fp_list.py`, `d102_pdvd_moves.py`;
+  * extended: `d102_knob_arms.sh` (arms `d102o` / `d102ocs` / `d102locs`), `d102_compile_pr.sh` (`CFG_ROOT`),
+    `d102_c4_decompose.py` (`--base`), `d102_census.py` (`--exclude`).
+* **Figures and records:** `figs/102_pred.txt` and `figs/102_pred2.txt` (the two frozen rules), `figs/102r2_flip.patch`,
+  `figs/102r2_prod_pdhd_spots.tsv`, `figs/102r2_michel_moves_pdhd.tsv`, `figs/102r2_michel_moves_pdvd.txt`.
+* **Work tags:** data `*_d102hocs`, `*_d102vocs`; simulation `90010[34]_k_d102{o,ocs}`, `90010[12]_k_d102locs`.

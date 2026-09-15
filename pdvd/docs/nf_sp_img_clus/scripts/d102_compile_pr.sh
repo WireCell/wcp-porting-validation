@@ -4,7 +4,9 @@
 set -u
 DET=$1; LAB=$2; shift 2
 B=/nfs/data/1/xqian/toolkit-dev
-export WIRECELL_PATH="$B/toolkit/cfg:$B/wire-cell-data"
+# CFG_ROOT: compile against another cfg tree (round 2: a scratch copy with the flip applied, so the proof is made
+# without touching toolkit/cfg while arms are running)
+export WIRECELL_PATH="${CFG_ROOT:-$B/toolkit/cfg}:$B/wire-cell-data"
 export LD_LIBRARY_PATH=/home/xqian/tmp/d102/libpin_d102
 O=/home/xqian/tmp/d102/cfg
 PIPE='["switch_scope","flag_mains","unmerge_assoc","steiner","fiducialutils","tagger_check_tgm","tagger_check_stm","tagger_check_fc","protect_bundle","steiner_refresh","check_stm_michel","tracking_visitor","pr_display","stm_magnify"]'
