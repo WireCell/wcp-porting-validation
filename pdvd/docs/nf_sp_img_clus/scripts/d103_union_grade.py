@@ -115,6 +115,35 @@ def boot(pop, truth, chain, n=1000, seed=103):
     return np.percentile(P, [16, 84]), np.percentile(E, [16, 84])
 
 
+def population(det, T, R, fixed_only=False, stm_only_unset_negative=False):
+    """The grade's population and truth (sec 5, amendments 2-5).  R holds the rows of EVERY cell of the lineage.
+    Shared by d103_d1_margin.py and d103_michel_floor_sizing.py so the definition lives in one place."""
+    judged = {k for k, (v, mk, s) in T.items() if v not in ("MESSY", "UNCLEAR")}
+    if det == "pdhd":
+        X = f"{IMG}/pdhd/docs/scan"
+        fixed = {"%s/%s" % (r["event"], r["cluster"]) for r in csv.DictReader(
+            [l for l in open(f"{X}/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv") if not l.startswith("#")], delimiter="\t")}
+        fixed &= judged
+    else:
+        rec_keys = {r["key"] for r in json.load(open(PDVD_RECORD))}
+        fixed = {k for k in judged if k in rec_keys and k in R["A0"]}
+    anycand = set().union(*[set(v) for v in R.values()])
+    pop = sorted(fixed if fixed_only else fixed | (anycand & judged))
+    unlabelled = sorted(k for k in anycand if k not in T)
+    stm_truth = {k: T[k][0] in ("STM_MICHEL", "STM_ONLY") for k in pop}
+    if det == "pdhd":
+        mpop = [k for k in pop if stm_truth[k] and not (T[k][1] is None and T[k][2] == "owner_review"
+                                                        and not (stm_only_unset_negative and T[k][0] == "STM_ONLY"))]
+        m_truth = {k: T[k][1] in ("attached", "both") for k in mpop}
+        mexcl = sum(1 for k in pop if stm_truth[k]) - len(mpop)
+    else:
+        mpop = list(pop)
+        m_truth = {k: T[k][0] == "STM_MICHEL" for k in pop}
+        mexcl = 0
+    return dict(judged=judged, fixed=fixed, anycand=anycand, pop=pop, unlabelled=unlabelled,
+                stm_truth=stm_truth, mpop=mpop, m_truth=m_truth, mexcl=mexcl)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--det", required=True, choices=["pdhd", "pdvd"])
@@ -125,18 +154,9 @@ def main():
     a = ap.parse_args()
     T, src_counts = load_truth(a.det, a.new_record, a.owner_record)
     R = {lab: cell_rows(a.det, arm) for lab, arm in CELLS[a.det]}
-    judged = {k for k, (v, mk, s) in T.items() if v not in ("MESSY", "UNCLEAR")}
-    if a.det == "pdhd":
-        X = f"{IMG}/pdhd/docs/scan"
-        fixed = {"%s/%s" % (r["event"], r["cluster"]) for r in csv.DictReader(
-            [l for l in open(f"{X}/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv") if not l.startswith("#")], delimiter="\t")}
-        fixed &= judged
-    else:
-        rec_keys = {r["key"] for r in json.load(open(PDVD_RECORD))}
-        fixed = {k for k in judged if k in rec_keys and k in R["A0"]}
-    anycand = set().union(*[set(v) for v in R.values()])
-    pop = sorted(fixed if a.fixed_only else fixed | (anycand & judged))
-    unlabelled = sorted(k for k in anycand if k not in T)
+    G = population(a.det, T, R, a.fixed_only, a.stm_only_unset_negative)
+    judged, fixed, anycand, pop, unlabelled = G["judged"], G["fixed"], G["anycand"], G["pop"], G["unlabelled"]
+    stm_truth, mpop, m_truth, mexcl = G["stm_truth"], G["mpop"], G["m_truth"], G["mexcl"]
     print(f"# doc pdvd/103 union grade ({a.det}); truth sources (items taken from each, in precedence order): {src_counts}")
     print(f"population {'fixed only' if a.fixed_only else 'fixed + judged candidates of any cell'}: {len(pop)} "
           f"(fixed {len(fixed)}); candidates of any cell with no label anywhere: {len(unlabelled)}; "
@@ -145,17 +165,6 @@ def main():
     for k in pop:
         src[T[k][2]] = src.get(T[k][2], 0) + 1
     print(f"population by label source: {src}")
-
-    stm_truth = {k: T[k][0] in ("STM_MICHEL", "STM_ONLY") for k in pop}
-    if a.det == "pdhd":
-        mpop = [k for k in pop if stm_truth[k] and not (T[k][1] is None and T[k][2] == "owner_review"
-                                                        and not (a.stm_only_unset_negative and T[k][0] == "STM_ONLY"))]
-        m_truth = {k: T[k][1] in ("attached", "both") for k in mpop}
-        mexcl = sum(1 for k in pop if stm_truth[k]) - len(mpop)
-    else:
-        mpop = list(pop)
-        m_truth = {k: T[k][0] == "STM_MICHEL" for k in pop}
-        mexcl = 0
 
     res = {}
     for title, P, TR, idx in (("is_stm", pop, stm_truth, 0), ("michel_found", mpop, m_truth, 1)):

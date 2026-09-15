@@ -1,6 +1,6 @@
-# doc pdvd/103 sec 11: offline Michel energy floor (michel_found := michel_found and michel_ke_best >= E); is_stm untouched; OFFLINE PREDICATE, not an arm
+# doc pdvd/103 sec 12.4: offline Michel energy floor (michel_found := michel_found and michel_ke_best >= E); is_stm untouched; OFFLINE PREDICATE, not an arm
 
-== pdhd (d101hnew -> d102hcs; Michel population 196, hand positives 116)
+== pdhd (d101hnew -> d102hcs; Michel population 196, excluded 1, hand positives 116)
    E MeV |  A0 TP  FP  FN purity  eff |  A1 TP  FP  FN purity  eff | A1-A0 purity   eff | reading
      0.0 |    70   4  46  0.946 0.603 |    77   9  39  0.895 0.664 |       -0.051 +0.060 | fails
      1.0 |    70   4  46  0.946 0.603 |    77   9  39  0.895 0.664 |       -0.051 +0.060 | fails
@@ -31,7 +31,7 @@
    A1 true Michels below 10 MeV (a floor there removes them): 13: 029107_3/99 1.9, 028084_7/61 2.0, 029107_18/130 2.5, 028084_17/55 3.2, 028084_26/109 3.5, 029107_26/111 4.1, 029107_6/122 4.1, 028084_8/110 4.5, 028084_22/3 5.3, 029107_10/80 6.4, 029107_11/26 6.8, 029107_12/108 7.7, 028084_2/20 9.4
    A1 Michel false positives by energy: 9: 029107_19/111 1.1, 028084_10/109 2.4, 028084_2/49 6.2, 029107_23/41 7.7, 028084_23/114 7.7, 029107_7/85 11.3, 029107_12/95 18.8, 029107_27/39 37.1, 029107_28/109 64.1
 
-== pdvd (d103v0 -> d103v1; Michel population 606, hand positives 239)
+== pdvd (d103v0 -> d103v1; Michel population 606, excluded 0, hand positives 239)
    E MeV |  A0 TP  FP  FN purity  eff |  A1 TP  FP  FN purity  eff | A1-A0 purity   eff | reading
      0.0 |   158  13  81  0.924 0.661 |   171  11  68  0.940 0.715 |       +0.016 +0.054 | both within 0.02
      1.0 |   157  12  82  0.929 0.657 |   171  10  68  0.945 0.715 |       +0.016 +0.059 | both within 0.02

@@ -49,27 +49,8 @@ def main():
     a = ap.parse_args()
     T, _ = U.load_truth(a.det, a.new_record, a.owner_record)
     R = {lab: U.cell_rows(a.det, arm) for lab, arm in U.CELLS[a.det]}
-    judged = {k for k, (v, mk, s) in T.items() if v not in ("MESSY", "UNCLEAR")}
-    if a.det == "pdhd":
-        import csv
-        X = f"{U.IMG}/pdhd/docs/scan"
-        fixed = {"%s/%s" % (r["event"], r["cluster"]) for r in csv.DictReader(
-            [l for l in open(f"{X}/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv") if not l.startswith("#")], delimiter="\t")}
-        fixed &= judged
-    else:
-        import json
-        rec_keys = {r["key"] for r in json.load(open(U.PDVD_RECORD))}
-        fixed = {k for k in judged if k in rec_keys and k in R["A0"]}
-    anycand = set().union(*[set(v) for v in R.values()])
-    pop = sorted(fixed | (anycand & judged))
-    stm_truth = {k: T[k][0] in ("STM_MICHEL", "STM_ONLY") for k in pop}
-    if a.det == "pdhd":
-        mpop = [k for k in pop if stm_truth[k] and not (T[k][1] is None and T[k][2] == "owner_review"
-                                                        and not (a.stm_only_unset_negative and T[k][0] == "STM_ONLY"))]
-        m_truth = {k: T[k][1] in ("attached", "both") for k in mpop}
-    else:
-        mpop = list(pop)
-        m_truth = {k: T[k][0] == "STM_MICHEL" for k in pop}
+    G = U.population(a.det, T, R, stm_only_unset_negative=a.stm_only_unset_negative)
+    pop, stm_truth, mpop, m_truth = G["pop"], G["stm_truth"], G["mpop"], G["m_truth"]
 
     print(f"# doc pdvd/103 D1/D2 label margin ({a.det}; cells {U.CELLS[a.det][0][1]} / {U.CELLS[a.det][-1][1]}; "
           f"owner record {os.path.basename(a.owner_record) if a.owner_record else '-'}); limit A1 - A0 >= {LIMIT}")

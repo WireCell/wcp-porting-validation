@@ -1,0 +1,48 @@
+doc pdvd/103 -- pre-registration, amendment 6 (2026-09-15): the symmetric check on PDVD before any flip.
+Written after the own103v re-grade (sec 12.2: D1 on all four metrics) had been read, and before any item of the check
+below is drawn, built or looked at. It is NOT blind to the re-grade. Amendments 1-5 stay in force.
+
+1. Why
+   * own103v could only clear false positives (amendment 2 sec 5, the one-sidedness). The PDVD D1 rests on those
+     clearances: is_stm FP A0 9 -> 5, A1 16 -> 5; tier 1 changed 29 of 32 labels, all 17 carried-record ones among
+     them, while 0 of 8 controls moved.
+   * Amendment 4 sec 6's clause ("if D1 depends on 2 or fewer items") is not triggered by its letter: the fewest
+     relabels that undo D1 are 6 (is_stm purity) and 7 (Michel purity), figs/103_d1_margin.txt.
+   * The check is added as a gate anyway. The review showed the labels are weakest where the two arms disagree, and
+     the stoppers tagged by one arm only (not reviewed) sit in that same disagreement set.
+
+2. Population (d103_union_grade.population; cells d103v0 / d103v1; truth own103v > carried record > smx11)
+   * A TP-mover is a judged item whose truth is not an owner label (truth source not owner_review, and carried
+     confidence not "owner") and that is hand-positive on a metric and tagged on that metric in exactly one cell:
+     - is_stm: a hand stopper with is_stm 1 in exactly one of A0 / A1;
+     - michel_found: a hand STM_MICHEL with michel_found 1 in exactly one of A0 / A1.
+   * Stratum A1: TP-movers tagged in A1 only (on either metric). Stratum A0: tagged in A0 only. An item that is in
+     both (one metric each way) belongs to stratum A1.
+
+3. The served set, tag own103v2 (free: no label dir, no record)
+   * 10 items from stratum A1 and 10 from stratum A0, each drawn with random.Random(106).sample over the sorted keys.
+     A stratum with fewer than 10 items is taken whole and not filled from the other.
+   * 4 controls, random.Random(106) over the sorted judged non-owner items that are candidates in both cells with
+     identical (is_stm, michel_found), is_stm 1, and not in own103v.
+   * 24 items, shuffled with random.Random(106), shown on the A1 payload where the item is an A1 candidate, else A0,
+     behind the own103v question panel with the tag renamed. No chain answer, prior label or role on screen.
+   * The builder writes the drawn keys only into the set dir; they are not printed, read or graded before the owner
+     has labelled the set.
+
+4. Fold and reading
+   * own103v2 sits above own103v. Re-grade (a) exactly as sec 12.2.
+   * Per stratum and metric, among the labelled items that were TP-movers on that metric:
+     - relabel-negative rate r_neg: the owner's verdict is hand-negative on that metric (is_stm: a non-stopper;
+       michel_found: not STM_MICHEL);
+     - removal rate r_rm: MESSY or UNCLEAR.
+     Each is reported with a 68 % Clopper-Pearson interval.
+   * Projection: the point rates are applied to that stratum's unreviewed TP-movers on that metric (expected counts,
+     not rounded). A relabel-negative moves the tagging cell TP -> FP and the other cell FN -> TN; a removal takes
+     the item out of both cells.
+   * PDVD D1 is stated only if every metric has A1 - A0 >= -0.020 on BOTH the folded grade (a) and the projection.
+     - Folded grade passes, projection fails: "not settled"; a wider review of the failing stratum is proposed.
+     - Folded grade fails: D2.
+   * Controls: 2 or more of the 4 change stopper class -> "not settled".
+
+5. Unchanged: metrics, thresholds, bootstrap, the D1/D2 rule of 103_pred.txt. PDHD is out of scope (D2 on Michel
+   purity, owner-backed, sec 12.3).

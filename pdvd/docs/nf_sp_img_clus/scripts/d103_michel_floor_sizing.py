@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""doc pdvd/103 sec 11 -- offline sizing of a Michel energy floor as the admission lever (read-only, no chain run).
+"""doc pdvd/103 sec 12.4 -- offline sizing of a Michel energy floor as the admission lever (read-only, no chain run).
 
 Question: does one simple admission rule, "michel_found only when the chain's Michel carries >= E MeV"
-(T_stm_michel.michel_ke_best), clear the PDHD Michel-purity failure of sec 10.3 without costing PDVD its D1 of sec 11?
+(T_stm_michel.michel_ke_best), clear the PDHD Michel-purity failure of sec 10.3 without costing PDVD its D1 of sec 12?
 
 This is an OFFLINE PREDICATE: michel_found is zeroed after the fact when michel_ke_best < E; is_stm is left as the arm
 wrote it.  A knob at CheckSTM_Michel's Michel admission can differ (a rejected Michel may change what else the tagger
 decides), so a promising floor must be re-derived from a real arm before it is believed.
 
-Truth, population and Michel definition are each detector's current headline (set here, so the script is self-contained):
+Truth is each detector's current headline, set here so the script is self-contained:
   PDHD  own103h > smx27 > smx28, --stm-only-unset-negative (amendments 3, 5); cells d101hnew / d102hcs
   PDVD  own103v > carried > smx11 (amendment 4);                            cells d103v0 / d103v1
-Floor 0 must reproduce figs/103_union_grade_pdhd_own103h_stmonlyneg.txt and figs/103_union_grade_pdvd_own103v.txt.
+Population and Michel truth come from d103_union_grade.population (the grader's own definition, all cells of the
+lineage).  Floor 0 must reproduce figs/103_union_grade_pdhd_own103h_stmonlyneg.txt and
+figs/103_union_grade_pdvd_own103v.txt, including the PDHD Michel exclusion count.
 
     python3 d103_michel_floor_sizing.py > figs/103_michel_floor_sizing.txt
 """
-import csv, glob, json, os, sys
+import glob, os, sys
 
 IMG = "/home/xqian/toolkit-dev/wcp-porting-img"
 os.environ["D103_PDHD_RECORD"] = f"{IMG}/pdhd/docs/scan/pdhd_stm_michel_smx27_verdicts.json"
@@ -49,29 +51,6 @@ def rows(det, arm):
     return out
 
 
-def population(det, T, R):
-    """exactly d103_union_grade.py: the candidates of EVERY cell of the lineage (PDHD also K d101hkf, S d102hocs)"""
-    judged = {k for k, (v, mk, s) in T.items() if v not in ("MESSY", "UNCLEAR")}
-    anycand = set().union(*[set(U.cell_rows(det, arm)) for _, arm in U.CELLS[det]])
-    if det == "pdhd":
-        X = f"{IMG}/pdhd/docs/scan"
-        fixed = {"%s/%s" % (r["event"], r["cluster"]) for r in csv.DictReader(
-            [l for l in open(f"{X}/smx18/pdhd_stm_michel_scan_key_p82bhoff.tsv") if not l.startswith("#")], delimiter="\t")}
-        fixed &= judged
-    else:
-        rec_keys = {r["key"] for r in json.load(open(U.PDVD_RECORD))}
-        fixed = {k for k in judged if k in rec_keys and k in R["A0"]}
-    pop = sorted(fixed | (anycand & judged))
-    stm = {k: T[k][0] in ("STM_MICHEL", "STM_ONLY") for k in pop}
-    if det == "pdhd":                                  # d103_union_grade.py --stm-only-unset-negative
-        mpop = [k for k in pop if stm[k] and not (T[k][1] is None and T[k][2] == "owner_review" and T[k][0] != "STM_ONLY")]
-        mt = {k: T[k][1] in ("attached", "both") for k in mpop}
-    else:
-        mpop = list(pop)
-        mt = {k: T[k][0] == "STM_MICHEL" for k in pop}
-    return mpop, mt
-
-
 def grade(P, TR, chain):
     tp = sum(1 for k in P if TR[k] and chain.get(k, 0))
     fp = sum(1 for k in P if not TR[k] and chain.get(k, 0))
@@ -80,13 +59,17 @@ def grade(P, TR, chain):
 
 
 def main():
-    print("# doc pdvd/103 sec 11: offline Michel energy floor (michel_found := michel_found and michel_ke_best >= E); "
+    print("# doc pdvd/103 sec 12.4: offline Michel energy floor (michel_found := michel_found and michel_ke_best >= E); "
           "is_stm untouched; OFFLINE PREDICATE, not an arm")
     for det, s in SETUP.items():
+        assert (U.CELLS[det][0][1], U.CELLS[det][-1][1]) == s["cells"], U.CELLS[det]
         T, _ = U.load_truth(det, s["new"], s["own"])
+        G = U.population(det, T, {lab: U.cell_rows(det, arm) for lab, arm in U.CELLS[det]}, stm_only_unset_negative=True)
+        P, TR = G["mpop"], G["m_truth"]
         R = {lab: rows(det, arm) for lab, arm in zip(("A0", "A1"), s["cells"])}
-        P, TR = population(det, T, R)
-        print(f"\n== {det} ({s['cells'][0]} -> {s['cells'][1]}; Michel population {len(P)}, hand positives {sum(TR.values())})")
+        assert all(set(R[lab]) == set(U.cell_rows(det, arm)) for lab, arm in zip(("A0", "A1"), s["cells"]))
+        print(f"\n== {det} ({s['cells'][0]} -> {s['cells'][1]}; Michel population {len(P)}, excluded {G['mexcl']}, "
+              f"hand positives {sum(TR.values())})")
         print("   E MeV |  A0 TP  FP  FN purity  eff |  A1 TP  FP  FN purity  eff | A1-A0 purity   eff | reading")
         for E in FLOORS:
             g = {lab: grade(P, TR, {k: int(v[1] and v[2] >= E) for k, v in R[lab].items()}) for lab in ("A0", "A1")}

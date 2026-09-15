@@ -49,8 +49,9 @@
   - **PDVD reads D1** on all four metrics: `is_stm` purity +0.002, efficiency +0.066; Michel purity +0.016,
     efficiency +0.054.
   - Controls: 0 of 8 changed. Tier 1: 29 of 32 labels changed, including all 17 carried-record labels.
-  - Undoing D1 takes 6 relabels, but the review could only clear false positives. A symmetric check on the stoppers
-    only one arm tags is recommended before a flip.
+  - **The D1 is conditional.** The review could only clear false positives, and D1 rests on those clearances.
+    Amendment 6 (frozen) makes a symmetric owner check of the stoppers tagged by one arm only a gate before D1 is
+    stated or a flip proposed.
   - **PDHD** still fails Michel purity (−0.051, owner-backed). No Michel energy floor fixes it.
 
 ## 0. Repro
@@ -860,6 +861,13 @@ python3 $S/d103_fp_classes.py  --det pdvd --new-record $N11 --owner-record $OWN 
   D103_PDHD_RECORD=$R27 python3 $S/d103_d1_margin.py --det pdhd --new-record $N28 --owner-record $OWNH --stm-only-unset-negative; } \
     > $F/103_d1_margin.txt
 python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # sets its own D103_* environment
+python3 -c "import json; r=json.load(open('$OWN')); json.dump([x for x in r if x['verdict'].replace('FRAG_','') in ('MESSY','UNCLEAR')], open('$O/own103v_removals_only.json','w'), indent=1)"
+python3 $S/d103_union_grade.py --det pdvd --new-record $N11 --owner-record $O/own103v_removals_only.json \
+    > $F/103_union_grade_pdvd_own103v_removals_only.txt
+# amendment 6, the symmetric check: the set builder prints counts only; the scorer was written before any label
+python3 $S/d103_tpmover_set.py --new-record $N11 --owner-record $OWN --out $O/set_pdvd_tpmover
+(cd $IMG/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdvd --scan-tag own103v2 --manifest $O/set_pdvd_tpmover/manifest.tsv \
+    --prepdir $O/set_pdvd_tpmover/prep --questions $O/set_pdvd_tpmover/questions.json --dead-points)
 ```
 
 ### 12.1 The session
@@ -871,6 +879,9 @@ python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # s
 * **Verdicts:** STM_MICHEL 14, STM_ONLY 10, MESSY 6, UNCLEAR 6, THRU 4. On every stopper the Michel kind agrees with
   the verdict.
 * **Controls: 0 of 8 changed**, on stopper class and on the Michel call.
+  - On PDVD the Michel call is part of the verdict (STM_MICHEL vs STM_ONLY), so it can still move while the stopper
+    class holds. None did.
+  - On PDHD's `own103h`, by contrast, 2 of 8 controls flipped Michel kind.
 * **Tier 1: 29 of 32 labels changed.**
 
   | Prior label (count) | To a stopper | To MESSY / UNCLEAR | Michel call changed | To a non-stopper | Unchanged |
@@ -913,12 +924,19 @@ python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # s
     positives read as stoppers.
   - Michel purity: 7.
   - Either efficiency: more than 12.
-  - Amendment 4's one-sidedness clause (2 or fewer) is not triggered.
-* **What the margin does not cover.**
+  - Amendment 4's one-sidedness clause ("if D1 depends on 2 or fewer items") is not triggered by its letter.
+* **What D1 rests on** (`103_own103v_pdvd.txt` sec 2, by the arm each false positive was charged to):
+  - `is_stm`: 7 A1 and 2 A0 false positives became TPs; 4 A1 and 2 A0 left the population; 1 A1 was confirmed.
+  - Michel: 7 A1 and 1 A0 became TPs; 8 A1 and 2 A0 left; 1 A1 and 3 A0 were confirmed.
+  - **Removals only** (`103_union_grade_pdvd_own103v_removals_only.txt`): only the owner's 12 MESSY / UNCLEAR verdicts
+    applied, none of the clearances.
+    - PDVD already reads D1: `is_stm` purity −0.016, Michel purity −0.017, efficiencies +0.055 / +0.031.
+    - The margins are only 0.004 and 0.003.
+* **What neither covers.**
   - The review could only clear false positives.
-  - The stoppers tagged by one arm only (`is_stm`: 76 in A1, 50 in A0) keep the labels whose reliability sec 12.1
-    questions, and A1 holds more of them.
-  - A relabel rate near tier 1's on those would decide the reading.
+  - The stoppers tagged by one arm only keep the labels whose reliability sec 12.1 questions: 79 non-owner TP-movers,
+    45 in the A1 stratum and 34 in the A0 stratum (`d103_tpmover_set.py`).
+  - Amendment 6 (sec 12.5) samples them before D1 is stated.
 
 ### 12.3 PDHD after both adjudications
 
@@ -948,10 +966,15 @@ python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # s
 
 ### 12.5 What a flip takes now
 
-1. **PDVD passes the tagger grade.** Before a production flip:
-   - **Recommended:** the symmetric check. A seeded 20-item sample of the one-arm stopper tags (A1-only and
-     A0-only), owner-labelled on :5017 under a new amendment frozen before it is served.
-   - **The flip unit:**
+1. **PDVD reads D1, conditional on amendment 6.**
+   - **First, the gate:** `figs/103_pred_amend6.txt`, sha256 `c740aba8`, frozen 2026-09-15T14:12:28, written
+     before any item was drawn.
+     - It serves 10 A1-only and 10 A0-only stopper tags plus 4 controls, tag `own103v2`. They are drawn from 45
+       A1-stratum and 34 A0-stratum TP-movers and served on :5017. `d103_tpmover_score.py` implements sec 4 and was
+       written before any label existed.
+     - D1 stands only if the folded grade AND a projection of each stratum's relabel rate onto its unreviewed items
+       both pass.
+   - **Then the flip unit:**
      - the sampler: `figs/102r2_flip.patch`;
      - the fit-knob keys in `pdvd_track_fitting.json`.
 
@@ -965,8 +988,12 @@ python3 $S/d103_michel_floor_sizing.py > $F/103_michel_floor_sizing.txt      # s
 
 ### 12.6 Files (round 4)
 
+* **Rules:** `figs/103_pred_amend6.txt` with its `.sha256`.
 * **Scripts:**
-  - new: `d103_d1_margin.py`, `d103_michel_floor_sizing.py`;
+  - new: `d103_d1_margin.py`, `d103_michel_floor_sizing.py`, `d103_tpmover_set.py`, and `d103_tpmover_score.py`
+    (written before any `own103v2` label);
+  - `d103_union_grade.py`: the population is now one function, `population()`, imported by the margin, floor and
+    TP-mover scripts. All nine committed union-grade figures and `103_d1_margin` reproduce byte for byte;
   - extended: `d103_owner_scan_score.py` (tag taken from the labels file; PDVD controls also report Michel changes
     within stoppers), `d103_fp_classes.py` (`--owner-record`).
   - With the new options unset, `103_fp_classes_{pdhd,pdvd,pdhd_smx27}` and `103_own103h_pdhd` reproduce byte for
