@@ -17,9 +17,11 @@ sys.path.insert(0, HERE)
 import d103_union_grade as U
 
 PREP = "/home/xqian/tmp/d103/round/prep_{arm}"
-TAG = {"pdhd": "own103h"}
-BASE = {"pdhd": U.PDHD_RECORD}          # figs/103_pred_amend3.txt: run with D103_PDHD_RECORD=<smx27>
+TAG = {"pdhd": "own103h", "pdvd": "own103v"}
+BASE = {"pdhd": U.PDHD_RECORD,          # figs/103_pred_amend3.txt: run with D103_PDHD_RECORD=<smx27>
+        "pdvd": U.PDVD_RECORD}          # figs/103_pred_amend4.txt: D103_PDVD_CELLS=d103v0,d103v1 D103_PDVD_RECORD=<carried>
 N_CONTROL = 8
+TIER1_CAP = 40                          # amendment 4 sec 6: a seeded 40-item subset when tier 1 is larger
 
 QUESTION = (
     "<b>own103h &mdash; owner adjudication</b> (doc pdvd/103). The same panel is shown for every item: it names no chain "
@@ -36,7 +38,7 @@ QUESTION = (
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--det", required=True, choices=["pdhd"])
+    ap.add_argument("--det", required=True, choices=["pdhd", "pdvd"])
     ap.add_argument("--new-record", required=True)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -61,18 +63,28 @@ def main():
             return False
         if i == 0:
             return not stopper(k)
+        if a.det == "pdvd":                                     # PDVD Michel truth = verdict STM_MICHEL
+            return T[k][0] != "STM_MICHEL"
         return stopper(k) and T[k][1] not in ("attached", "both") and not (T[k][1] is None and T[k][2] == "owner_review")
 
     def payload(k):
         ev, cid = k.split("/")
-        p = f"{PREP.format(arm=arm['A1'])}/smprep-{ev}-c{cid}.json"
-        return p if os.path.exists(p) else None
+        labs = ("A1", "A0") if a.det == "pdvd" else ("A1",)     # PDVD: an A0-only item is shown on A0
+        for lab in labs:
+            p = f"{PREP.format(arm=arm[lab])}/smprep-{ev}-c{cid}.json"
+            if k in R[lab] and os.path.exists(p):
+                return p
+        return None
 
     keys = sorted(set(R["A0"]) | set(R["A1"]))
     tier1 = [k for k in keys if judged(k) and not owner(k) and any(fp(k, "A0", i) != fp(k, "A1", i) for i in (0, 1))]
     miss = [k for k in tier1 if not payload(k)]
     if miss:
-        sys.exit(f"tier-1 items with no A1 payload: {miss}")
+        sys.exit(f"tier-1 items with no payload: {miss}")
+    n_tier1_all = len(tier1)
+    if len(tier1) > TIER1_CAP:
+        tier1 = sorted(random.Random(103).sample(tier1, TIER1_CAP))
+        print(f"tier 1 has {n_tier1_all} items > {TIER1_CAP}: serving a random.Random(103) subset of {TIER1_CAP} (amendment 4 sec 6)")
     pool = [k for k in keys if judged(k) and not owner(k) and k not in tier1 and k in R["A0"] and k in R["A1"]
             and R["A0"][k][:2] == R["A1"][k][:2] and R["A1"][k][0] and payload(k)]
     controls = sorted(random.Random(103).sample(pool, N_CONTROL))
@@ -90,7 +102,7 @@ def main():
         os.symlink(src, f"{a.out}/prep/smprep-{ev}-c{cid}.json")
         pay = json.load(open(src))
         man.append(f"{i}\t1\t{ev}\t{cid}\t{pay['npts']}\t{pay['muon_len_cm']:.1f}")
-        q[k] = dict(html=QUESTION)
+        q[k] = dict(html=QUESTION.replace("own103h", TAG[a.det]))
         fps = ",".join(f"{lab}:{('is_stm', 'michel')[j]}" for lab in ("A0", "A1") for j in (0, 1) if fp(k, lab, j))
         rows.append("\t".join(map(str, [i, k, role, fps or "-", ans("A0", k), ans("A1", k), T[k][0], T[k][1], T[k][2],
                                         conf.get(k, "")])))

@@ -26,9 +26,14 @@ def cls(v):
     return "stopper" if b in STOP else ("unjudged" if b in ("MESSY", "UNCLEAR", "") else "non-stopper")
 
 
+DET = "pdhd"
+
+
 def mcls(v, mk):
     if cls(v) != "stopper":
         return cls(v)
+    if DET == "pdvd":                                  # PDVD Michel truth = verdict STM_MICHEL (amendment 4 sec 5)
+        return "michel" if base(v) == "STM_MICHEL" else "no michel"
     if mk in UNSET:
         return "stopper, kind unset"
     return "michel" if mk in ("attached", "both") else "no michel"
@@ -50,7 +55,8 @@ def outcome(r, ov, omk):
         else:
             m = mcls(ov, omk)
             s = {"michel": "now a TP", "no michel": "FP confirmed", "stopper, kind unset": "leaves the Michel population (kind unset)",
-                 "non-stopper": "leaves the Michel population (not a stopper)", "unjudged": "leaves the population"}[m]
+                 "non-stopper": ("FP confirmed (not a stopper)" if DET == "pdvd" else "leaves the Michel population (not a stopper)"),
+                 "unjudged": "leaves the population"}[m]
             if m == "non-stopper" and tagged(r[cell], "is_stm"):
                 s += f"; becomes an is_stm FP in {cell}"
             out.append(f"{charge}: {s}")
@@ -63,7 +69,10 @@ def main():
     ap.add_argument("--labels", required=True)
     ap.add_argument("--record-out", required=True)
     ap.add_argument("--shown-arm", default="d102hcs")
+    ap.add_argument("--det", default="pdhd", choices=["pdhd", "pdvd"])
     a = ap.parse_args()
+    global DET
+    DET = a.det
     if os.path.exists(a.record_out):
         sys.exit(f"REFUSING: {a.record_out} exists (M13)")
     raw = open(a.labels, "rb").read()

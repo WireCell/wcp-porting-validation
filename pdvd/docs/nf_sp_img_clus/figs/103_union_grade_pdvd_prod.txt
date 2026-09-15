@@ -1,0 +1,22 @@
+# doc pdvd/103 union grade (pdvd); truth sources (items taken from each, in precedence order): [('pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json', 635), ('pdvd_stm_michel_smx11_verdicts.json', 219)]
+population fixed + judged candidates of any cell: 618 (fixed 369); candidates of any cell with no label anywhere: 11; unjudged (MESSY/UNCLEAR) candidates: 52
+population by label source: {'record': 428, 'new_agent': 190}
+
+== is_stm (population 618)
+  A0 d103v0      TP 238 FP   9 FN 144 TN 227 | purity 0.964 [0.951, 0.975] efficiency 0.623 [0.599, 0.650]
+  A1 d103v1      TP 259 FP  16 FN 123 TN 220 | purity 0.942 [0.927, 0.955] efficiency 0.678 [0.654, 0.703]
+
+== michel_found (population 618)
+  A0 d103v0      TP 157 FP  16 FN  72 TN 373 | purity 0.908 [0.887, 0.930] efficiency 0.686 [0.658, 0.718]
+  A1 d103v1      TP 164 FP  26 FN  65 TN 363 | purity 0.863 [0.838, 0.888] efficiency 0.716 [0.687, 0.743]
+
+== A1 vs A0: candidates on one side only, by hand class (judged; unlabelled shown separately)
+  A1 only: 141 candidates {'stopper': 57, 'non-stopper': 71, 'unjudged': 10, 'unlabelled': 3}; of them is_stm 1 on that side: {'stopper': 41, 'non-stopper': 4}
+  A0 only: 118 candidates {'stopper': 49, 'non-stopper': 50, 'unjudged': 17, 'unlabelled': 2}; of them is_stm 1 on that side: {'stopper': 27, 'non-stopper': 4}
+
+== decision (figs/103_pred.txt): every metric of A1 >= A0 - 0.02 -> D1, else D2
+  is_stm purity: A1 - A0 = -0.022
+  is_stm efficiency: A1 - A0 = +0.055
+  michel_found purity: A1 - A0 = -0.044
+  michel_found efficiency: A1 - A0 = +0.031
+  -> D2 (real cost)

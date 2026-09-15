@@ -1,0 +1,65 @@
+# doc pdvd/103 sec 11: smx11 items whose scanner names the recorded-time-window edge at the fit end: 37 of 239 (truth source of these keys on the union record: {'new_agent': 35, 'record': 2})
+by edge/tier: {'end/at': 30, 'end/near': 2, 'start/at': 5}
+by verdict:   {'THRU': 31, 'STM_ONLY': 6}
+
+scanner: verdicts on edge items
+  w1_a0   {'THRU': 4}
+  w1_a1   {'THRU': 1}
+  w1_a2   {'THRU': 6}
+  w1_a3   {'THRU': 3}
+  w1_a4   {'STM_ONLY': 1, 'THRU': 4}
+  w1_a5   {'STM_ONLY': 4, 'THRU': 2}
+  w1_a6   {'THRU': 3}
+  w1_a7   {'THRU': 2}
+  w1_a9   {'THRU': 4}
+  w1_a10  {'STM_ONLY': 1, 'THRU': 2}
+
+items: key | edge/tier | scanner | verdict (conf) | truth used | A0 is_stm,michel | A1 is_stm,michel | words
+  039349_38/50   end/at   w1_a4   STM_ONLY   (med) STM_ONLY   A0 0,0  A1 -   | the imaged window appears to end ~15 slices past the stop (profile rises)
+  039349_41/65   end/at   w1_a5   STM_ONLY   (med) STM_ONLY   A0 0,0  A1 -   | the event imaged slices end ~3 cm of drift past the fit end; rubric has no rule for this
+  039349_44/59   end/at   w1_a10  STM_ONLY   (med) STM_ONLY   A0 0,0  A1 0,0 | the measured time range appears to end at the fit end ... competing reading THRU
+  039349_47/51   end/at   w1_a5   STM_ONLY   (med) STM_ONLY   A0 -    A1 0,0 | ~10 cm of track before the event imaged slices end; rubric has no rule for this
+  039349_49/73   end/at   w1_a5   STM_ONLY   (med) STM_ONLY   A0 0,0  A1 -   | the event imaged slices end ~2-3 cm of drift past the fit end; rubric has no rule for this
+  039349_52/31   end/at   w1_a5   STM_ONLY   (med) STM_ONLY   A0 -    A1 0,0 | the event imaged slices end ~3 cm of drift past the fit end
+  039253_16/104  end/at   w1_a7   THRU       (med) THRU       A0 -    A1 0,0 | fit end ~18 slices before the end of the readout frame (blank past slice ~2500)
+  039349_1/72    end/at   w1_a10  THRU       (med) THRU       A0 -    A1 0,0 | the measured time range ends ~14 slices past the fit end
+  039349_11/27   end/at   w1_a9   THRU       (hig) THRU       A0 -    A1 0,0 | the end coincides with the end of the readout frame
+  039349_14/48   end/at   w1_a0   THRU       (med) THRU       A0 -    A1 0,0 | up to what looks like the readout-window edge (slice ~1595)
+  039349_23/52   end/near w1_a5   THRU       (med) THRU       A0 0,0  A1 -   | imaged slices end at ~1598, about 40 slices past the fit end (call rests on the z seam)
+  039349_23/55   end/at   w1_a2   THRU       (med) THRU       A0 -    A1 0,0 | fit end coincides with the end of the readout window (slice ~1597)
+  039349_3/68    end/at   w1_a9   THRU       (hig) THRU       A0 0,0  A1 -   | the end coincides with the end of the readout frame
+  039349_30/28   end/at   w1_a6   THRU       (med) THRU       A0 -    A1 0,0 | the end is ~20 time slices before the edge of the recorded window
+  039349_36/50   end/at   w1_a3   THRU       (med) THRU       A0 -    A1 0,0 | fit end coincides with the end of the recorded time window
+  039349_36/59   end/at   w1_a0   THRU       (med) THRU       A0 0,0  A1 0,0 | W carries the track line from the fit end (~1575) to the readout-window edge (~1592)
+  039349_38/25   end/at   w1_a2   THRU       (hig) THRU       A0 0,0  A1 -   | the end coincides with the end of the readout window (slice ~1597)
+  039349_5/25    end/at   w1_a4   THRU       (hig) THRU       A0 0,0  A1 0,0 | grey above the stop in W up to slice ~1590 where the imaged window appears to end
+  039349_53/28   end/at   w1_a10  THRU       (med) THRU       A0 -    A1 1,0 | the fit end sits at the end of the measured time range (slice ~1595)
+  039349_56/20   end/near w1_a6   THRU       (hig) THRU       A0 -    A1 0,0 | grey continues the line past the end to the edge of the time window (call rests on CONTINUES)
+  039349_56/56   end/at   w1_a0   THRU       (med) THRU       A0 -    A1 0,0 | fit end coincides with the end of the recorded time window (slice ~1570)
+  039349_57/21   end/at   w1_a6   THRU       (hig) THRU       A0 0,0  A1 0,0 | the end is at the edge of the recorded time window (t~1582 vs window end ~1590)
+  039349_60/61   end/at   w1_a3   THRU       (med) THRU       A0 -    A1 0,0 | fit end coincides with the end of the recorded time window (slice ~1585)
+  039349_68/24   end/at   w1_a4   THRU       (hig) THRU       A0 0,0  A1 -   | the track cells reach slice ~1585 where the imaged window appears to end
+  039349_69/20   end/at   w1_a3   THRU       (med) THRU       A0 0,0  A1 0,0 | the end profile is cut by the recorded time window (unruled rule-7 case)
+  039349_72/47   end/at   w1_a7   THRU       (med) THRU       A0 -    A1 0,0 | fit end ~10 slices before the end of the recorded frame
+  039349_73/70   end/at   w1_a9   THRU       (hig) THRU       A0 0,0  A1 -   | the end coincides with the end of the readout frame
+  039349_76/32   end/at   w1_a0   THRU       (med) THRU       A0 0,0  A1 1,0 | the fit end coincides with the end of the recorded time window (slice ~1580)
+  039349_76/72   end/at   w1_a2   THRU       (hig) THRU       A0 0,0  A1 -   | fit end coincides with the end of the readout window (slice ~1597)
+  039349_76/77   end/at   w1_a2   THRU       (med) THRU       A0 0,0  A1 0,0 | fit end ~10 slices before the end of the readout window
+  039349_77/34   end/at   w1_a9   THRU       (hig) THRU       A0 0,0  A1 -   | the end coincides with the end of the readout frame
+  039349_79/36   end/at   w1_a4   THRU       (hig) THRU       A0 0,0  A1 0,0 | the imaged window appears to end at the fit end
+  039349_29/40   start/at   w1_a2   THRU       (med) THRU       A0 -    A1 0,0 | stop at time slice ~22, near the start of the readout frame
+  039349_4/76    start/at   w1_a1   THRU       (med) THRU       A0 -    A1 0,1 | grey carries the line on to the readout-window edge (slice 0)
+  039349_52/59   start/at   w1_a4   THRU       (med) THRU       A0 0,0  A1 0,0 | the imaged window appears to start at slice ~8
+  039349_65/45   start/at   w1_a5   THRU       (hig) THRU       A0 -    A1 0,0 | the stop maps to about slice 0 ... the event imaged slices begin there
+  039349_71/64   start/at   w1_a2   THRU       (hig) THRU       A0 0,0  A1 0,0 | stop at time slice ~20 at the start of the readout window
+
+== A0 -> A1 grade three ways (amendment 4 definitions; provisional agent labels; D2 if any metric < -0.020)
+  as labelled (population 618; reproduces figs/103_union_grade_pdvd_prod.txt):
+    is_stm       purity 0.964 -> 0.942 (-0.022; FP 9 -> 16), efficiency 0.623 -> 0.678 (+0.055)
+    michel_found purity 0.908 -> 0.863 (-0.044; FP 16 -> 26), efficiency 0.686 -> 0.716 (+0.031)
+  edge class removed (population 581; 37 removed):
+    is_stm       purity 0.964 -> 0.949 (-0.015; FP 9 -> 14), efficiency 0.633 -> 0.689 (+0.056)
+    michel_found purity 0.908 -> 0.868 (-0.040; FP 16 -> 25), efficiency 0.686 -> 0.716 (+0.031)
+  edge = dead region: the class's new-agent stopper calls read as THRU (6: 039349_38/50, 039349_41/65, 039349_44/59, 039349_47/51, 039349_49/73, 039349_52/31):
+    is_stm       purity 0.964 -> 0.942 (-0.022; FP 9 -> 16), efficiency 0.633 -> 0.689 (+0.056)
+    michel_found purity 0.908 -> 0.863 (-0.044; FP 16 -> 26), efficiency 0.686 -> 0.716 (+0.031)

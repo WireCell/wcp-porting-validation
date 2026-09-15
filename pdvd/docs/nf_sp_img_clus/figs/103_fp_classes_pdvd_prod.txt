@@ -1,0 +1,11 @@
+# doc pdvd/103 false-positive classes (pdvd); union record, cells A0 d103v0 and A1 d103v1
+
+== is_stm: FP A0 9, A1 16 (shared 3, A1 only 13, A0 only 6)
+  A1 only  n  13 | source {'existing agent': 5, 'new blind agent': 7, 'owner': 1} | confidence {'': 3, 'high': 1, 'medium': 8, 'owner': 1} | hand class {'THRU': 13}
+  shared   n   3 | source {'existing agent': 3} | confidence {'': 2, 'high': 1} | hand class {'THRU': 3}
+  A0 only  n   6 | source {'existing agent': 5, 'owner': 1} | confidence {'': 5, 'owner': 1} | hand class {'THRU': 6}
+
+== michel_found: FP A0 16, A1 26 (shared 6, A1 only 20, A0 only 10)
+  A1 only  n  20 | source {'existing agent': 13, 'new blind agent': 5, 'owner': 2} | confidence {'': 7, 'high': 5, 'medium': 6, 'owner': 2} | hand class {'THRU/none': 11, 'STM_ONLY/None': 4, 'STM_ONLY/detached dots': 4, 'THRU/— not set —': 1}
+  shared   n   6 | source {'existing agent': 5, 'owner': 1} | confidence {'': 5, 'owner': 1} | hand class {'STM_ONLY/None': 2, 'STM_ONLY/detached dots': 1, 'STM_ONLY/— not set —': 1, 'THRU/None': 1, 'THRU/none': 1}
+  A0 only  n  10 | source {'existing agent': 6, 'new blind agent': 4} | confidence {'': 6, 'high': 2, 'medium': 2} | hand class {'STM_ONLY/None': 4, 'THRU/none': 3, 'STM_ONLY/none': 2, 'STM_ONLY/detached dots': 1}

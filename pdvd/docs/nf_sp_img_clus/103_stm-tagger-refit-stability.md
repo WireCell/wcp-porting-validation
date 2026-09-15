@@ -40,6 +40,11 @@
     owner reads as having no visible Michel, where the chain attaches a piece. That is Michel admission, not the KS
     test.
   - PDVD's round-1 cells were not production. They are re-run on the production lineage, with labels in progress.
+* **Round 3 (sec 11, same day).** PDVD on the production lineage, provisional (agent labels):
+  - 239 verdict-blind labels (`smx11`), calibration disagreement 11 %.
+  - Both purities fail: `is_stm` −0.022 (one false positive over the limit), Michel −0.044. Both efficiencies rise.
+  - The readout-window-edge rubric gap (37 items) does not carry the purity cost.
+  - The owner's adjudication `own103v` (40 items) is in progress.
 
 ## 0. Repro
 
@@ -712,3 +717,123 @@ A0-only: 028084_2/116, 3.6 cm attached, 7.8 MeV.
   `103_union_grade_pdhd_own103h{,_stmonlyneg}.txt`, `103_michel_fp_pdhd_own103h.txt`, `103_pdvd_prod_look.txt`.
 * **Still on smx22 truth** (round-1 diagnostics, not re-run): `103_separation*`, `103_bounds_pdhd`, `103_moves_pdhd`,
   `103_fp_path_pdhd`, `103_owner_queue_pdhd`.
+
+## 11. Round 3 (2026-09-15): PDVD labels, grade and owner set on the production lineage
+
+The grade here is provisional: the new items carry agent labels. The owner's adjudication `own103v` is in progress.
+Nothing here changes a default.
+
+### 11.0 Repro
+
+```bash
+# names from 10.0; amendment 4's cells and truth
+export D103_PDVD_CELLS=d103v0,d103v1 D103_PDVD_RECORD=$IMG/pdvd/docs/scan/pdvd_stm_michel_p99rwon_carried_corrected_verdicts.json
+N11=$IMG/pdvd/docs/scan/pdvd_stm_michel_smx11_verdicts.json; RD=/home/xqian/tmp/d103/round_pdvd2
+bash $F/103_shoot_round.sh pdvd round_pdvd2 3        # blind shots; then 11 agents on RUBRIC.md d760e223, each transcript audited
+python3 $S/d103_scan_record.py --det pdvd --round $RD --items /home/xqian/tmp/d103/items/pdvd2_items.tsv --tag smx11 \
+    --record-out $N11 > $F/103_scan_smx11_pdvd.txt
+python3 $S/d103_union_grade.py --det pdvd --new-record $N11 > $F/103_union_grade_pdvd_prod.txt
+python3 $S/d103_fp_classes.py  --det pdvd --new-record $N11 > $F/103_fp_classes_pdvd_prod.txt
+python3 $S/d103_window_edge.py > $F/103_window_edge_pdvd_prod.txt
+python3 $S/d103_owner_scan_set.py --det pdvd --new-record $N11 --out $O/set_pdvd_prod
+(cd $IMG/pdhd/stm_michel_scan && ./serve_stm_michel_scan.sh 5017 --det pdvd --scan-tag own103v --manifest $O/set_pdvd_prod/manifest.tsv \
+    --prepdir $O/set_pdvd_prod/prep --questions $O/set_pdvd_prod/questions.json --dead-points)
+# 103_scan_reports_pdvd_prod.md is $RD/logs/report_w1_a{0..10}.md concatenated, each followed by its audit line
+```
+
+### 11.1 The blind labels, `smx11`
+
+* **Items** (amendment 4 sec 3): the 230 unlabelled candidates of `d103v0` ∪ `d103v1`, plus 20 calibration items
+  from the carried record. 239 have a record; the 11 without one are listed in `103_scan_smx11_pdvd.txt`.
+* **Scan.**
+  - 11 agents, 22 items each. Every record carries the rubric sha `d760e223`.
+  - Every transcript was audited. The one flag (w1_a6) is a false positive: a grep inside its own output directory.
+    It is adjudicated in `103_scan_reports_pdvd_prod.md`.
+  - w1_a0 ended on an API error after writing all 22 of its records.
+* **Verdicts.** THRU 87, STM_ONLY 51, STM_MICHEL 39, UNCLEAR 18, FRAG_THRU 12, MESSY 11, FRAG_STM_ONLY 1. Confidence:
+  medium 131, high 74, low 14.
+* **V2 calibration.** 19 items are judged on both sides. 2 differ on stopper class (11 %, limit 25 %): **pass**.
+
+### 11.2 The provisional grade
+
+`103_union_grade_pdvd_prod.txt`. Truth: the carried record first, then `smx11`. The population is 618: 428 items
+from the record and 190 from `smx11`.
+
+| A0 → A1 | Value | Change | Limit −0.02 |
+|---|---|---|---|
+| `is_stm` purity | 0.964 → 0.942 | **−0.022** | **fail** |
+| `is_stm` efficiency | 0.623 → 0.678 | +0.055 | pass |
+| Michel purity | 0.908 → 0.863 | **−0.044** | **fail** |
+| Michel efficiency | 0.686 → 0.716 | +0.031 | pass |
+
+* **Reading: D2 on both purities, provisional.**
+  - The `is_stm` failure is one false positive. A1 at 15 instead of 16 gives 0.945 (−0.018).
+  - Michel purity needs about 5 of A1's 20 A1-only false positives to clear.
+* **Both efficiencies rise.** That is sec 3's swap, now that the gains are labelled.
+* **False-positive classes** (`103_fp_classes_pdvd_prod.txt`):
+  - **`is_stm`:** A0 has 9, A1 has 16. All 13 A1-only ones are THRU by hand: 7 new blind-agent labels, 5 carried
+    agent labels, 1 owner.
+  - **Michel:** A0 has 16, A1 has 26. The 20 A1-only ones split into two classes:
+    - 12 on through-going tracks;
+    - 8 on stoppers read without a visible Michel (4 detached dots, 4 no kind). This is sec 10.4's PDHD class.
+
+    Sources: 13 carried agent labels, 5 new agent labels, 2 owner.
+
+### 11.3 The readout-window edge
+
+* **The gap.** Run 039349's recorded frame closes at slice ~1595 and opens at slice 0. The rubric has no rule for a
+  fit end at either edge.
+* **The class** (`103_window_edge_pdvd_prod.txt`): a hand-curated list, because a phrase search both over- and
+  under-matches (the script's header says how).
+  - 37 items whose scanner names the edge at the fit end: 32 at the end of the frame, 5 at its start.
+  - 36 are on run 039349 and 1 on 039253.
+* **The scanners split.**
+  - 31 call THRU: the edge read as a dead region, "no measurement".
+  - 6 call STM_ONLY: w1_a5 4 of its 6 ("rubric has no rule for this"), w1_a4 1, w1_a10 1.
+* **It does not carry the purity cost.**
+  - Neither arm tags any of the 6 stopper calls. Reading them as THRU leaves both purities unchanged and moves
+    `is_stm` efficiency A1 − A0 by +0.001.
+  - The class holds 3 A1-only false positives, all in `own103v`: 039349_53/28 and 039349_76/32 (`is_stm`) and
+    039349_4/76 (Michel).
+  - With the class removed: `is_stm` purity −0.015, Michel purity −0.040.
+* **A ruling is still needed** so the record is consistent: is a fit end at the frame edge a dead region, or does
+  rule 3 apply as written?
+
+### 11.4 The owner set `own103v` (in progress)
+
+* **Built by** amendment 2's rules in amendment 4's PDVD form:
+  - tier 1 = judged, non-owner items that are a false positive in exactly one of A0 / A1: 32, under the 40 cap;
+  - 8 controls (`random.Random(103)`);
+  - 40 items, behind the same question panel as `own103h`;
+  - shown on `d103v1`; items that are candidates only in A0 are shown on `d103v0`.
+* **Served** on :5017. The sha256 of every other label tag is recorded before (`label_shas_before_own103v.txt`).
+* **After the session:**
+  - fold with `d103_owner_scan_score.py --det pdvd`;
+  - re-grade with `--owner-record`, plus amendment 2's splits;
+  - read the controls on both axes, stopper class and Michel call. On PDHD the Michel call moved on 2 of 8 controls.
+
+### 11.5 What a flip takes (updates sec 10.6)
+
+1. **PDVD `own103v`, then the re-grade.**
+   - `is_stm` purity passes if one A1-only false positive clears.
+   - Michel purity needs about 5.
+2. **If Michel purity still fails on either detector:** the Michel-admission knob of sec 10.6.
+   - On PDHD it targets sec 10.4's class.
+   - On PDVD it targets the same stopper class (8), plus the Michels the chain finds on through-going tracks (12).
+3. **The flip as one unit, with the owner's go.** Unchanged from sec 10.6.
+
+### 11.6 Files (round 3)
+
+* **Scripts:**
+  - new: `d103_window_edge.py`;
+  - extended:
+    - `d103_owner_scan_set.py`: PDVD, tag `own103v`, tier-1 cap 40, PDVD Michel truth = verdict STM_MICHEL, an
+      A0-only item shown on A0;
+    - `d103_owner_scan_score.py`: `--det`;
+    - `d103_fp_classes.py`: two-cell lineages.
+  - With the new options unset, the committed PDHD and round-1 outputs reproduce byte for byte:
+    - `103_fp_classes_{pdhd,pdvd,pdhd_smx27}`;
+    - `103_own103h_pdhd` and the `own103h` record. Only the output-path line differs.
+* **Record:** `pdvd/docs/scan/pdvd_stm_michel_smx11_verdicts.json`, 239 items, sha256 `5302d87c`.
+* **Figures:** `103_scan_smx11_pdvd.txt`, `103_scan_reports_pdvd_prod.md`, `103_union_grade_pdvd_prod.txt`,
+  `103_fp_classes_pdvd_prod.txt`, `103_window_edge_pdvd_prod.txt`.

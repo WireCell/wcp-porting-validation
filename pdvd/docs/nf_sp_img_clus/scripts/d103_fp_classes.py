@@ -38,7 +38,8 @@ def main():
 
     judged = lambda k: k in T and T[k][0] not in ("MESSY", "UNCLEAR")
     stopper = lambda k: T[k][0] in ("STM_MICHEL", "STM_ONLY")
-    print(f"# doc pdvd/103 false-positive classes ({a.det}); union record, cells A0 {U.CELLS[a.det][0][1]} and A1 {U.CELLS[a.det][3][1]}")
+    cells = dict(U.CELLS[a.det])       # sec 10: the production lineage has only A0 / A1
+    print(f"# doc pdvd/103 false-positive classes ({a.det}); union record, cells A0 {cells['A0']} and A1 {cells['A1']}")
     for title, idx in (("is_stm", 0), ("michel_found", 1)):
         def is_fp(k, lab):
             if not judged(k) or not R[lab].get(k, (0, 0))[idx]:
