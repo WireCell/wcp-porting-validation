@@ -1,0 +1,9 @@
+spot	cl	arm	stm_nearest_cm	n_win	ridge_med	ridge_max	steiner_med	reg_any	reg_v	lattice_lock	bee_q_le0	dqdx_med_ke	max_step_cm	pr_nearest_cm	pr_rows_win	pr_segments_win	pr_bee_zero_win	angle_to_drift_deg	img_inslice_nn_med	steiner_inslice_nn_med	stm_onq_pu	pr_onq_pu	steiner_onq_pu	steiner_proj_ok_pu	stm_onq_pv	pr_onq_pv	steiner_onq_pv	steiner_proj_ok_pv	stm_onq_pw	pr_onq_pw	steiner_onq_pw	steiner_proj_ok_pw	frame_from
+spot1	128	028084_21_d101smoff	0.93	40	0.39	1.78	0.48	0.3	0.28	0.07	9	50.6	0.94	nan	0	0	0	71.5	0.99	1.48	0.98	nan	nan	0/127	0.8	nan	0.8	127/127	1.0	nan	0.8	127/127	image
+spot1	128	028084_21_d101smkf	0.95	37	0.39	2.06	0.39	0.3	0.3	0.22	8	52.9	0.95	nan	0	0	0	71.5	0.99	1.48	0.97	nan	nan	0/127	0.79	nan	0.8	127/127	0.97	nan	0.8	127/127	image
+spot2	55	028084_21_d101smoff	0.05	37	0.54	2.34	0.37	0.41	0.41	0.11	5	47.8	0.95	3.23	43	3	0	64.7	0.99	1.48	1.0	1.0	0.77	206/206	0.76	1.0	nan	0/206	0.8	1.0	0.82	206/206	image
+spot2	55	028084_21_d101smkf	0.59	40	0.52	2.51	0.44	0.3	0.3	0.07	3	46.9	0.94	0.6	70	5	14	64.7	0.99	1.48	1.0	1.0	0.77	206/206	0.82	0.81	nan	0/206	0.86	0.87	0.82	206/206	image
+spot3	55	028084_21_d101smoff	0.8	39	1.13	2.37	0.54	0.59	0.13	0.15	23	12.7	0.8	1.09	87	5	48	70.0	1.48	1.48	0.89	0.87	0.82	268/268	0.86	0.87	nan	0/268	0.8	0.92	0.81	268/268	image
+spot3	55	028084_21_d101smkf	6.34	37	0.37	1.5	0.48	0.0	0.0	0.0	0	45.6	0.95	2.02	53	5	8	70.0	1.48	1.48	1.0	1.0	0.79	268/268	1.0	1.0	nan	0/268	1.0	0.98	0.81	268/268	image
+spot4	26	028084_21_d101smoff	3.61	39	0.31	0.9	0.51	0.1	0.0	0.13	5	30.4	0.9	3.63	161	9	87	85.7	1.43	1.48	1.0	0.87	0.77	513/726	1.0	0.87	nan	0/726	0.92	0.8	0.72	726/726	image
+spot4	26	028084_21_d101smkf	3.52	38	0.31	0.98	0.41	0.08	0.0	0.08	3	29.9	0.96	3.32	119	8	70	85.7	1.43	1.48	1.0	0.7	0.79	503/726	1.0	0.86	0.47	100/726	0.92	0.58	0.71	726/726	image

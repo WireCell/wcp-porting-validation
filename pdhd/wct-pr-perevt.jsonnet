@@ -189,6 +189,14 @@ function(
     // PDHD_PR_TLA="-S retile_sampler_half_pitch=true -S retile_sampler_min_step=1".
     retile_sampler_half_pitch = false,
     retile_sampler_min_step = null,
+    // doc pdvd/102: the PR RETILE samplers' strategy (Steiner cloud only).  null =>
+    // 'stepped' (production); 'charge_stepped' => the prototype's retile rule (every
+    // wire when N_max*N_min <= wire_product, C++ 2500; extra wires above
+    // charge_threshold, C++ 4000).  All null => byte-identical.  Set as code, e.g.
+    // PDHD_PR_TLA="-S retile_sampler_strategy='charge_stepped' -S retile_sampler_wire_product=10000".
+    retile_sampler_strategy = null,
+    retile_sampler_wire_product = null,
+    retile_sampler_charge_threshold = null,
     // PR visitors to run, by name (see clus_pr's cm_by_name in
     // cfg/pgrapher/experiment/sbnd/clus.jsonnet).  The default IS the SBND
     // production tagger chain (run_full1k_nusel.sh with -unmerge-assoc), so a
@@ -4136,6 +4144,9 @@ function(
                              flag_mains_unmatched=flag_mains_unmatched,   // doc pdvd/101
                              retile_sampler_half_pitch=retile_sampler_half_pitch,   // doc pdvd/101
                              retile_sampler_min_step=retile_sampler_min_step,
+                             retile_sampler_strategy=retile_sampler_strategy,   // doc pdvd/102
+                             retile_sampler_wire_product=retile_sampler_wire_product,
+                             retile_sampler_charge_threshold=retile_sampler_charge_threshold,
                              mip_dqdx_median=mip_dqdx_median,
                              pipeline_names=pipeline_names,
                              stm_michel_knobs=stm_michel_knobs + stm_michel_extra,   // doc pdhd/03; + doc pdvd/51 override bag

@@ -1,0 +1,3 @@
+spot	cl	arm	stm_nearest_cm	n_win	ridge_med	ridge_max	steiner_med	reg_any	reg_v	lattice_lock	bee_q_le0	dqdx_med_ke	max_step_cm	pr_nearest_cm	pr_rows_win	pr_segments_win	pr_bee_zero_win	angle_to_drift_deg	img_inslice_nn_med	steiner_inslice_nn_med	stm_onq_pu	pr_onq_pu	steiner_onq_pu	steiner_proj_ok_pu	stm_onq_pv	pr_onq_pv	steiner_onq_pv	steiner_proj_ok_pv	stm_onq_pw	pr_onq_pw	steiner_onq_pw	steiner_proj_ok_pw	frame_from
+pdvd_iso_on	61	039349_64_d101vnew	0.17	38	0.44	2.83	0.53	0.29	0.29	0.03	3	45.9	0.92	0.28	44	1	3	84.4	1.06	nan	1.0	1.0	0.65	249/249	0.9	0.89	nan	0/249	1.0	1.0	0.84	249/249	image
+pdvd_iso_on	61	039349_64_d101vkf	0.06	38	0.33	2.97	nan	0.29	0.29	0.0	1	47.8	0.92	nan	0	0	0	84.4	1.06	nan	1.0	nan	nan	0/0	0.95	nan	nan	0/0	1.0	nan	nan	0/0	image
